@@ -13,8 +13,9 @@ addresses is done at your own risk.
 
 > MMGen gives you four ways to access your Bitcoins:
 
->> 1) with a wallet encrypted using the crack-resistant scrypt hash function
->> + AES256. The wallet's password and hash strength can be changed.
+>> 1) with a wallet encrypted with AES256 using the crack-resistant scrypt 
+>> function to hash the password.  The wallet's password and hash
+>> strength can be changed.
 
 >> 2) from a one-line seed file (unencrypted);
 
