@@ -65,7 +65,7 @@ def show_hash_presets():
 	msg(fs.format("Preset","N","r","p"))
 	for i in sorted(hash_presets.keys()):
 		msg(fs.format("'%s'" % i, *hash_presets[i]))
-	msg("N = memory usage, p = iterations (rounds)")
+	msg("N = memory usage (power of two), p = iterations (rounds)")
 	sys.exit(0)
 
 
@@ -302,7 +302,7 @@ def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 	N,r,p = _get_hash_params(hash_preset)
 
   	import scrypt
-	return scrypt.hash(passwd, salt, N, r, p, buflen=buflen)
+	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
 def _get_seed_from_brain_passphrase(words,opts):
