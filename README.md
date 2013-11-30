@@ -15,7 +15,7 @@ addresses is done at your own risk.
 
 >> 1) with a wallet encrypted with AES256 using the crack-resistant scrypt 
 >> function to hash the password.  The wallet's password and hash
->> strength can be changed.
+>> strength can be changed;
 
 >> 2) with a one-line seed file (unencrypted);
 
@@ -45,10 +45,18 @@ addresses is done at your own risk.
 
 ### Install:
 >  Install the ecdsa, scrypt and pycrypto modules:
->> `sudo pip install ecdsa scrypt pycrypto`
+
+            sudo pip install ecdsa scrypt pycrypto
+
+>  Install vanitygen (optional but recommended):
+
+            git clone https://github.com/samr7/vanitygen.git
+
+            (build, put the 'keyconv' executable in your path)
 
 >  Install mmgen:
->> `cd mmgen; sudo ./setup.py install`
+
+            cd mmgen; sudo ./setup.py install
 
 ### Getting Started:
 > On your offline computer:
@@ -212,3 +220,19 @@ addresses is done at your own risk.
 > delete your mnemonic and seed files.  In Linux, you can achieve
 > additional security by writing the files to volatile memory in
 > '/dev/shm' instead of disk.
+
+### Vanitygen note:
+> When available, the 'keyconv' utility from the vanitygen package is
+> used to generate addresses because it's much faster than the python
+> ecdsa library.
+
+### Test suite:
+> To see what tests are available, run the scripts in the 'tests'
+> directory without arguments.  Some of the more interesting tests to
+> try:
+
+                tests/bitcoin.py keyconv_compare_randloop 10
+                tests/bitcoin.py hextob58_pad_randloop 1000
+                tests/mnemonic.py random128
+                tests/mnemonic.py random192
+                tests/mnemonic.py random256
