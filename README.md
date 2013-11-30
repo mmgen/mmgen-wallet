@@ -1,7 +1,7 @@
 #  mmgen = Multi-Mode GENerator
 ## command-line Bitcoin cold storage solution
 
-NOTE: for the time being, MMGen should be considered Alpha software.
+NOTE: For the time being, MMGen should be considered Alpha software.
 Downloading and testing it out is easy, risk-free and encouraged.
 However, spending significant amounts of BTC into your mmgen-generated
 addresses is done at your own risk.
@@ -140,7 +140,7 @@ addresses is done at your own risk.
 
             (build, install)
 
-> Import your addresses from '89ABCDEF[1-10].addrs':
+> Track the balances of the addresses in '89ABCDEF[1-10].addrs':
 
             $ bitcoind importaddress 16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE
             $ bitcoind importaddress 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc
