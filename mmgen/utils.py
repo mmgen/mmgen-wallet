@@ -342,14 +342,14 @@ def encrypt_seed(seed, key, opts):
 	return enc_seed
 
 
-def	write_to_stdout(data, confirm=True):
+def	write_to_stdout(data, what, confirm=True):
 	if sys.stdout.isatty() and confirm:
-		confirm_or_exit("",'output secret keys to screen')
+		confirm_or_exit("",'output {} to screen'.format(what))
 	elif not sys.stdout.isatty():
 		import os
 		of = os.readlink("/proc/%d/fd/1" % os.getpid())
 		msg("Writing data to file '%s'" % of)
-	sys.stdout.write("\n" + data)
+	sys.stdout.write(data)
 
 
 def get_default_wordlist():
@@ -386,7 +386,7 @@ def write_to_file(outfile,data,confirm=False):
 	f.close
 
 
-def write_seed_to_file(seed, opts):
+def write_seed(seed, opts):
 
 	outfile = "%s.%s" % (make_chksum_8(seed).upper(),seed_ext)
 	if 'outdir' in opts:
@@ -396,20 +396,32 @@ def write_seed_to_file(seed, opts):
 	data = col4(b58encode_pad(seed))
 	chk = _make_chksum_6(b58encode_pad(seed))
 
-	write_to_file(outfile, "%s %s\n" % (chk,data))
+	o = "%s %s\n" % (chk,data)
 
-	msg("%s data saved to file '%s'" % ("Seed",outfile))
+	if 'stdout' in opts:
+		write_to_stdout(o,"seed data",confirm=True)
+	elif not sys.stdout.isatty():
+		write_to_stdout(o,"seed data",confirm=False)
+	else:
+		write_to_file(outfile,o)
+		msg("%s data saved to file '%s'" % ("Seed",outfile))
 
 
-def write_mnemonic_to_file(mn, seed, opts):
+def write_mnemonic(mn, seed, opts):
 
 	outfile = "%s.words" % make_chksum_8(seed).upper()
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
-	write_to_file(outfile," ".join(mn) + "\n")
+	o = " ".join(mn) + "\n"
 
-	msg("%s data saved to file '%s'" % ("Mnemonic",outfile))
+	if 'stdout' in opts:
+		write_to_stdout(o,"mnemonic data",confirm=True)
+	elif not sys.stdout.isatty():
+		write_to_stdout(o,"mnemonic data",confirm=False)
+	else:
+		write_to_file(outfile,o)
+		msg("%s data saved to file '%s'" % ("Mnemonic",outfile))
 
 
 def _display_control_data(label,metadata,hash_preset,salt,enc_seed):

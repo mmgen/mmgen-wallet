@@ -168,8 +168,8 @@ if 'stdout' in opts:
 	if invoked_as == "keygen" and not 'quiet' in opts:
 		confirm = True
 	else: confirm = False
-	write_to_stdout(addr_data_str,confirm)
+	write_to_stdout(addr_data_str,"secret keys",confirm)
 elif not sys.stdout.isatty():
-	write_to_stdout(addr_data_str,confirm=False)
+	write_to_stdout(addr_data_str,"secret keys",confirm=False)
 else:
 	write_addr_data_to_file(seed, addr_data_str, start, end, opts)
