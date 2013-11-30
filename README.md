@@ -48,15 +48,15 @@ addresses is done at your own risk.
 
             sudo pip install ecdsa scrypt pycrypto
 
+>  Install mmgen:
+
+            cd mmgen; sudo ./setup.py install
+
 >  Install vanitygen (optional but recommended):
 
             git clone https://github.com/samr7/vanitygen.git
 
-            (build, put the 'keyconv' executable in your path)
-
->  Install mmgen:
-
-            cd mmgen; sudo ./setup.py install
+            (build and put the 'keyconv' executable in your path)
 
 ### Getting Started:
 > On your offline computer:
