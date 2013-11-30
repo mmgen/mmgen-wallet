@@ -6,7 +6,7 @@ setup(
 		version      = '0.6',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
-		url          = 'http://www.python.org/sigs/distutils-sig/',
+		url          = 'https://github.com/mmgen/mmgen',
 		py_modules = [
 			'mmgen.addr',
 			'mmgen.bitcoin',
