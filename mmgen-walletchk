@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+mmgen-walletchk: Check integrity of a mmgen deterministic wallet, display
+                 information about it and export seed and mnemonic data
+"""
+
+import sys
+import mmgen.Opts as Opts
+
+from mmgen.utils import *
+
+help_data = {
+	'desc':  """Check integrity of a %s deterministic wallet, display
+                    its information and export seed and mnemonic data."""\
+					% proj_name,
+	'usage':   "[opts] [filename]",
+	'options': """
+-h, --help             Print this help message
+-e, --echo-passphrase  Print passphrase to screen when typing it
+-m, --export-mnemonic  Export the wallet's mnemonic to file
+-s, --export-seed      Export the wallet's seed to file
+-v, --verbose          Produce more verbose output
+"""
+}
+
+short_opts = "hemsv"
+long_opts  = "help","echo_passphrase","export_mnemonic","export_seed","verbose"
+
+opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
+
+if len(cmd_args) != 1:
+	msg("One input file must be specified")
+	sys.exit(2)
+
+if 'export_mnemonic' in opts:
+	msg("Exporting mnemonic data to file by user request")
+if 'export_seed' in opts:
+	msg("Exporting seed data to file by user request")
+
+seed = get_seed_from_wallet(cmd_args[0], opts)
+msg("Wallet is OK")
+
+if 'export_mnemonic' in opts:
+	wl = get_default_wordlist()
+
+	from mmgen.mnemonic import get_mnemonic_from_seed
+	p = True if debug else False
+	mn = get_mnemonic_from_seed(seed, wl, default_wl, print_info=p)
+
+	write_mnemonic_to_file(mn, seed, opts)
+
+	if debug: print "Mnemonic:\n%s" % " ".join(mn)
+
+if 'export_seed' in opts:
+	write_seed_to_file(seed, opts)
+
+	if debug:
+		from mmgen.bitcoin import b58encode_pad
+		print "Seed: %s" % col4(b58encode_pad(seed))

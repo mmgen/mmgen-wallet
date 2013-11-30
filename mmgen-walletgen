@@ -1,0 +1,168 @@
+#!/usr/bin/env python
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+mmgen-walletgen: Generate a mmgen deterministic wallet
+"""
+
+import sys, os
+from hashlib import sha256
+
+from mmgen.Opts import *
+from mmgen.license import *
+from mmgen.config import *
+from mmgen.walletgen import *
+from mmgen.utils import *
+prog_name = sys.argv[0].split("/")[-1]
+
+help_data = {
+	'prog_name': prog_name,
+	'desc':    "Generate a {} deterministic wallet".format(proj_name),
+	'usage':   "[opts] [infile]",
+	'options': """
+-h, --help                 Print this help message
+-d, --outdir            d  Specify an alternate directory 'd' for output
+-e, --echo-passphrase      Print passphrase to screen when typing it
+-l, --seed-len          n  Create seed of length 'n'. Options: {}
+                           (default: {})
+-L, --label             l  Label to identify this wallet (32 chars max.
+                           Allowed symbols: A-Z, a-z, 0-9, " ", "_", ".")
+-p, --hash-preset       p  Use scrypt.hash() parameters from preset 'p'
+                           (default: '{}')
+-P, --show-hash-presets    Show information on available hash presets
+-q, --quiet                Suppress warnings; overwrite files without asking
+-u, --usr-randlen       n  Get 'n' characters of randomness from the user
+                           (default: {})
+
+-b, --from-brain       l,p Generate wallet from a user-created passphrase,
+                           i.e. a "brainwallet", using seed length 'l' and
+                           hash preset 'p' (comma-separated)
+-m, --from-mnemonic        Generate wallet from an Electrum-like mnemonic
+-s, --from-seed            Generate wallet from a seed in .{S} format
+
+By default (i.e. when invoked without any of the '--from-<what>' options),
+{} generates a wallet based on a random seed.
+
+Data for the --from-<what> options will be taken from <infile> if <infile>
+is specified.  Otherwise, the user will be prompted to enter the data.
+Note that passphrase data may be input in free-form fashion, using any
+combination of spaces or tabs (or newlines, in a file) between words.
+
+BRAINWALLET NOTE:
+
+As brainwallets require especially strong hashing to thwart dictionary
+attacks, the brainwallet hash preset must be specified by the user, using
+the 'p' parameter of the '--from-brain' option.  This preset should be
+stronger than the one used for hashing the seed (i.e. the default value or
+the one specified in the '--hash-preset' option).
+
+The '--from-brain' option also requires the user to specify a seed length
+(the 'l' parameter), which overrides both the default and any one given in
+the '--seed-len' option.
+
+For a brainwallet passphrase to always generate the same keys and addresses,
+the same 'l' and 'p' parameters to '--from-brain' must be used in all future
+invocations with that passphrase.
+""".format(
+		", ".join([str(i) for i in seed_lens]),
+		seed_len,
+		hash_preset,
+		usr_randlen,
+		prog_name,
+		S=seed_ext,
+	)
+}
+
+short_opts = "hd:el:L:p:Pqu:b:ms"
+long_opts  = "help","outdir=","echo_passphrase","seed_len=","label=",\
+		"hash_preset=","show_hash_presets","quiet","usr_randlen=",\
+        "from_brain=","from_mnemonic","from_seed"
+
+opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+
+if 'show_hash_presets' in opts: show_hash_presets()
+
+# Argument sanity checks and processing:
+
+set_if_unset_and_typeconvert(opts,(
+	('usr_randlen',usr_randlen,'int'),
+	('hash_preset',hash_preset,'str'),
+	('seed_len',seed_len,'int')
+))
+
+# Exits on invalid input
+check_opts(opts,
+	('usr_randlen','hash_preset','seed_len','outdir','label','from_brain')
+)
+
+if debug:
+	print "Processed options:     %s" % repr(opts)
+	print "Cmd args:              %s" % repr(cmd_args)
+
+if len(cmd_args) == 1 and (
+		'from_brain' in opts or
+		'from_mnemonic' in opts or
+		'from_seed' in opts):
+	infile = cmd_args[0]
+	check_infile(infile)
+elif len(cmd_args) == 0: infile = ""
+else: usage(help_data)
+
+# Begin execution
+
+if not 'quiet' in opts: do_license_msg()
+
+msg_r("Acquiring random data from your computer...")
+
+try:
+	from Crypto import Random
+	r = Random.new()
+	os_rand_data = (r.read(256),r.read(128))
+except:
+	msg("FAILED\nUnable to generate random numbers. Exiting")
+	sys.exit(2)
+
+msg("OK")
+
+if debug: display_os_random_data(os_rand_data)
+
+usr_keys,key_timings = get_random_data_from_user(opts)
+msg("")
+
+if debug: display_user_random_data(usr_keys,key_timings)
+
+usr_rand_data = sha256(usr_keys).digest() + \
+				sha256("".join(key_timings)).digest()
+
+s = get_seed(infile,opts,no_wallet=True)
+if s: seed = s
+else:
+	# Truncate random data for smaller seed lengths
+	seed = os_rand_data[0] + usr_rand_data
+	seed = sha256(seed).digest()[:opts['seed_len']/8]
+
+salt = os_rand_data[1] + usr_rand_data
+salt = sha256(salt).digest()[:salt_len]
+
+passwd = get_first_passphrase_from_user(
+		"{} wallet passphrase".format(proj_name), opts)
+
+key = make_key(passwd, salt, opts['hash_preset'])
+
+enc_seed = encrypt_seed(seed, key, opts)
+
+write_wallet_to_file(seed,passwd,make_chksum_8(key),salt,enc_seed,opts)

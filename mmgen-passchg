@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+mmgen-passchg: Change a mmgen deterministic wallet's passphrase, label or
+               hash preset
+"""
+
+import sys
+import mmgen.Opts as Opts
+
+from mmgen.utils import *
+from mmgen.config import *
+
+help_data = {
+	'desc':  """Change the passphrase, hash preset or label of a {}
+                  deterministic wallet""".format(proj_name),
+	'usage':   "[opts] [filename]",
+	'options': """
+-h, --help                  Print this help message
+-d, --outdir             d  Specify an alternate directory 'd' for output
+-k, --keep-old-passphrase   Keep old passphrase (use when changing hash 
+                            strength or label only)
+-L, --label                 Change the wallet's label
+-p, --hash-preset        p  Change scrypt.hash() parameters to preset 'p'
+                            (default: '{}')
+-P, --show-hash-presets     Show information on available hash presets
+-v, --verbose               Produce more verbose output
+
+NOTE: The key ID will change if either the passphrase or hash preset
+      are changed
+""".format(hash_preset)
+}
+
+short_opts = "hd:kL:p:Pv"
+long_opts  = "help","outdir=","keep_old_passphrase","label=","hash_preset=",\
+			   "show_hash_presets","verbose"
+
+opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
+
+if 'show_hash_presets' in opts: show_hash_presets()
+
+set_if_unset_and_typeconvert(opts,(('hash_preset',hash_preset,'str'),))
+check_opts(opts,('hash_preset','outdir','label'))
+
+if len(cmd_args) != 1:
+	msg("One input file must be specified")
+	sys.exit(2)
+infile = cmd_args[0]
+
+# Old key:
+label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile,opts)
+seed_id,key_id = metadata[:2]
+passwd = " ".join(get_words("","","Enter old passphrase: ",opts))
+key = make_key(passwd, salt, hash_preset)
+seed = decrypt_seed(enc_seed, key, seed_id, key_id)
+
+changed = {} 
+
+if 'label' in opts:
+	if opts['label'] != label:
+		msg("Label changed: '%s' -> '%s'" % (label, opts['label']))
+		changed['label'] = True
+	else:
+		msg("Label is unchanged: '%s'" % (label))
+else: opts['label'] = label  # Copy the old label
+
+if 'hash_preset' in opts:
+	if hash_preset != opts['hash_preset']:
+		msg("Hash preset has changed (%s -> %s)" %
+			(hash_preset, opts['hash_preset']))
+		changed['preset'] = True
+	else:
+		msg("Hash preset is unchanged")
+else:
+	opts['hash_preset'] = hash_preset
+
+if 'keep_old_passphrase' in opts:
+	msg("Keeping old passphrase by user request")
+else:
+	new_passwd = get_first_passphrase_from_user(
+			"new passphrase", {'quiet': True })
+
+	if new_passwd == passwd:
+		msg("Passphrase is unchanged")
+	else:
+		msg("Passphrase has changed")
+		passwd = new_passwd
+		changed['passwd'] = True
+
+if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
+	msg("Will update salt and key ID")
+
+	from hashlib import sha256
+	from Crypto import Random
+
+	salt = sha256(salt + Random.new().read(128)).digest()[:salt_len]
+	key = make_key(passwd, salt, opts['hash_preset'])
+	new_key_id = make_chksum_8(key)
+	msg("Key ID changed: %s -> %s" % (key_id,new_key_id))
+	key_id = new_key_id
+	enc_seed = encrypt_seed(seed, key, opts)
+elif not 'label' in changed:
+	msg("Data unchanged.  No file will be written")
+	sys.exit(2)
+
+write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts)
