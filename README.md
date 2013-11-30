@@ -17,11 +17,11 @@ addresses is done at your own risk.
 >> function to hash the password.  The wallet's password and hash
 >> strength can be changed.
 
->> 2) from a one-line seed file (unencrypted);
+>> 2) with a one-line seed file (unencrypted);
 
->> 3) from an Electrum-like mnemonic of 12, 18 or 24 words; or
+>> 3) with an Electrum-like mnemonic of 12, 18 or 24 words; or
 
->> 4) from a brain password (recommended for expert users only).
+>> 4) with a brain password (recommended for expert users only).
 
 > Furthermore, these methods can all be combined.  If you forget your
 > Electrum-like mnemonic, for example, you can regenerate it and your
