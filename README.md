@@ -127,7 +127,7 @@ addresses is done at your own risk.
 
             $ bitcoind importprivkey 5JCAfK1pjRoJgmpmd2HEMNwHxAzprGIXeQt8dz5qt3iLvU2KCbS
 
-> That's all there is to it!
+> You're done!  This address' balance can now be spent.
 
 > OPTIONAL: To track balances without exposing secret keys on your
 > online computer, download and compile sipa's bitcoind patched for
@@ -209,10 +209,10 @@ addresses is done at your own risk.
 > file.  Just omit the filename on the command line.
 
 > Mnemonic and seed data may be printed to standard output instead of a
-> file using the `-S` option of `mmgen-walletchk`
+> file using the `-S` option of `mmgen-walletchk`.
 
 > Mnemonic and seed files may be output to a directory of your choice
-> using the `-d` option of `mmgen-walletchk`
+> using the `-d` option of `mmgen-walletchk`.
 
 > Bear in mind that mnemonic and seed data is unencrypted.  If it's
 > compromised, your Bitcoins can easily be stolen.  Make sure no one's
