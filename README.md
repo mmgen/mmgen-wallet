@@ -133,7 +133,7 @@ addresses is done at your own risk.
 > online computer, download and compile sipa's bitcoind patched for
 > watch-only addresses:
 
-	        $ git clone https://github.com/sipa/bitcoin
+            $ git clone https://github.com/sipa/bitcoin
             $ git branch mywatchonly remotes/origin/watchonly
             $ git checkout mywatchonly
             (build, install)
