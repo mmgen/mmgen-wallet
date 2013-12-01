@@ -194,7 +194,6 @@ def confirm_or_exit(message, question):
 
 def set_if_unset_and_typeconvert(opts,item):
 
-#		('usr_randlen',usr_randlen,'int'),
 	for opt,var,dtype in item:
 		if   dtype == 'int': f,s = int,"an integer"
 		elif dtype == 'str': f,s = str,"a string"
@@ -311,7 +310,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 	seed_len,hash_preset = _get_from_brain_opt_params(opts)
 	if debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
 	msg_r("Hashing brainwallet data.  Please wait...")
-	# Use buflen arg to scrypt.hash() to get seed of desired length
+	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = _scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
 	msg("Done")
 	return seed
@@ -556,9 +555,6 @@ def _check_chksum_6(chk,val,desc,infile):
 	elif debug:
 	 	msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
-
-#def bin_pad(bindata,length):
-#	return unhexlify(hexlify(bindata).zfill(length*2))
 
 def get_data_from_wallet(infile,opts):
 

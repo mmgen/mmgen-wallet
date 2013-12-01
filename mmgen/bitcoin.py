@@ -98,7 +98,7 @@ def numtowif(numpriv):
 
 
 # The following are mmgen internal (non-bitcoin) b58 functions
-#
+
 # Drop-in replacements for b64encode() and b64decode():
 # (well, not exactly: they yield numeric but not bytewise equivalence)
 

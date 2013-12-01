@@ -39,7 +39,7 @@ salt_len    = 16
 hash_preset = '3'
 hash_presets = {
 #   Scrypt params:
-#   ID    N      p  r
+#   ID    N   p  r
 # N is a power of two
 	'1': [12, 8, 1],
 	'2': [13, 8, 4],

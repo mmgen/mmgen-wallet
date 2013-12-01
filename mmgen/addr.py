@@ -180,7 +180,6 @@ def write_addr_data_to_file(seed, data, start, end, opts):
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
-#	print outfile; sys.exit(3)
 	write_to_file(outfile,data)
 
 	dtype = "Address" if 'print_addresses_only' in opts else "Key"
