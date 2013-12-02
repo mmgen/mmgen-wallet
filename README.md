@@ -33,7 +33,7 @@ addresses is done at your own risk.
 > they've been correctly copied.  The base-58-encoded seed is short
 > enough to memorize, providing another brain storage alternative.
 
-> Implemented as a suite of lightweight python scripts with a
+> Implemented as a suite of lightweight Python scripts with a
 > command-line interface, MMGen demands practically no system resources.
 > Yet in tandem with a bitcoind enabled for watch-only addresses
 > (see below), it provides a complete solution for securely
@@ -137,6 +137,7 @@ addresses is done at your own risk.
             $ git branch mywatchonly remotes/origin/watchonly
             $ git checkout mywatchonly
             (build, install)
+            (You may have to install libboost-all-dev for the build to succeed)
 
 > With your newly-compiled bitcoind running, import the addresses from
 > '89ABCDEF[1-10].addrs' to track their balances:
@@ -223,7 +224,7 @@ addresses is done at your own risk.
 
 ### Vanitygen note:
 > When available, the 'keyconv' utility from the vanitygen package is
-> used to generate addresses as it's much faster than the python ecdsa
+> used to generate addresses as it's much faster than the Python ecdsa
 > library.
 
 ### Test suite:
