@@ -148,7 +148,7 @@ addresses is done at your own risk.
 
 ### Using the mnemonic and seed features:
 
-> Using our example above,
+> Continuing our example above,
 
 > Generate a mnemonic from the wallet:
 
@@ -248,8 +248,8 @@ addresses is done at your own risk.
 >> Generate a 12-word mnemonic from a random 128-bit seed:
 >>> `tests/mnemonic.py random128`
 
->> An 18-word mnemonic from a random 192-bit seed:
+>> or an 18-word mnemonic from a random 192-bit seed:
 >>> `tests/mnemonic.py random192`
 
->> A 24-word mnemonic from a random 256-bit seed:
+>> or a 24-word mnemonic from a random 256-bit seed:
 >>> `tests/mnemonic.py random256`
