@@ -28,6 +28,7 @@ __all__ = [
 	'mnemonic.py',
 	'mn_tirosh.py',
 	'Opts.py',
+	'tx.py',
 	'utils.py',
 	'walletgen.py'
 ]

@@ -28,27 +28,44 @@ def msg_r(s): sys.stderr.write(s)
 
 def bail(): sys.exit(9)
 
-def _my_getpass(prompt):
+def my_getpass(prompt):
 
 	from getpass import getpass
 	# getpass prompts to stderr, so no trickery required as with raw_input()
 	try: pw = getpass(prompt)
 	except:
-		msg("\nInterrupted by user")
+		msg("\nUser interrupt")
 		sys.exit(1)
 
 	return pw
 
+def get_char(prompt):
 
-def _my_raw_input(prompt):
+	import os
+	msg_r(prompt)
+	os.system(
+"stty -icanon min 1 time 0 -echo -echoe -echok -echonl -crterase noflsh"
+	)
+	try: ch = sys.stdin.read(1)
+	except:
+		os.system("stty sane")
+		msg("\nUser interrupt")
+		sys.exit(1)
+	else:
+		os.system("stty sane")
+
+	return ch
+
+
+def my_raw_input(prompt):
 
 	msg_r(prompt)
-	try: pw = raw_input()
+	try: reply = raw_input()
 	except:
-		msg("\nInterrupted by user")
+		msg("\nUser interrupt")
 		sys.exit(1)
 
-	return pw
+	return reply
 
 
 def _get_hash_params(hash_preset):
@@ -175,7 +192,8 @@ future, you must continue using these same parameters
 
 def confirm_or_exit(message, question):
 
-	if message.strip(): msg(message.strip())
+	m = message.strip()
+	if m: msg(m)
 	msg("")
 
 	conf_msg = "Type uppercase 'YES' to confirm: "
@@ -185,11 +203,26 @@ def confirm_or_exit(message, question):
 	else:
 		prompt = "Are you sure you want to %s?\n%s" % (question,conf_msg)
 
-	if _my_raw_input(prompt).strip() != "YES":
+	if my_raw_input(prompt).strip() != "YES":
 		msg("Program aborted by user")
 		sys.exit(2)
 
 	msg("")
+
+
+def user_confirm(prompt,default_yes=False):
+
+	q = "(Y/n)" if default_yes else "(y/N)"
+
+	while True:
+		reply = get_char("%s %s: " % (prompt, q)).strip()
+		msg("")
+
+		if not reply:
+			return True if default_yes else False
+		elif reply in 'yY': return True
+		elif reply in 'nN': return False
+		else: msg("Invalid reply")
 
 
 def set_if_unset_and_typeconvert(opts,item):
@@ -282,10 +315,10 @@ just hit ENTER twice.
 
 	for i in range(passwd_max_tries):
 		if 'echo_passphrase' in opts:
-			return _my_raw_input("Enter %s: " % what)
+			return my_raw_input("Enter %s: " % what)
 		else:
-			ret		= _my_getpass("Enter %s: " % what)
-			if ret == _my_getpass("Repeat %s: " % what):
+			ret		= my_getpass("Enter %s: " % what)
+			if ret == my_getpass("Repeat %s: " % what):
 				s = " (empty)" if not len(ret) else ""
 				msg("%ss match%s" % (what.capitalize(),s))
 				return ret
@@ -359,6 +392,16 @@ def get_default_wordlist():
 	return wl.strip().split("\n")
 
 
+def open_file_or_exit(filename,mode):
+	try:
+		f = open(filename, mode)
+	except:
+		what = "reading" if mode == 'r' else "writing"
+		msg("Unable to open file '%s' for %s" % (infile,what))
+		sys.exit(2)
+	return f
+
+
 def write_to_file(outfile,data,confirm=False):
 
 	if confirm:
@@ -370,11 +413,7 @@ def write_to_file(outfile,data,confirm=False):
 		else:
 			confirm_or_exit("","File '%s' already exists\nOverwrite?" % outfile)
 
-	try:
-		f = open(outfile,'w')
-	except:
-		msg("Failed to open file '%s' for writing" % outfile)
-		sys.exit(2)
+	f = open_file_or_exit(outfile,'w')
 
 	try:
 		f.write(data)
@@ -446,12 +485,12 @@ def col4(s):
 	nondiv = 1 if len(s) % 4 else 0
 	return " ".join([s[4*i:4*i+4] for i in range(len(s)/4 + nondiv)])
 
-
-def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
-
+def make_timestamp():
 	import time
 	tv = time.gmtime(time.time())[:6]
-	ts_hdr = "{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}".format(*tv)
+	return "{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}".format(*tv)
+
+def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	seed_id = make_chksum_8(seed)
 	seed_len = str(len(seed)*8)
@@ -470,7 +509,8 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	sf  = b58encode_pad(salt)
 	esf = b58encode_pad(enc_seed)
 
-	metadata = seed_id.lower(),key_id.lower(),seed_len,pw_status,ts_hdr
+	metadata = seed_id.lower(),key_id.lower(),\
+			   seed_len,pw_status,make_timestamp()
 
 	lines = (
 		label,
@@ -560,11 +600,7 @@ def get_data_from_wallet(infile,opts):
 
 	msg("Getting {} wallet data from file: {}".format(proj_name,infile))
 
-	try:
-		f = open(infile, 'r')
-	except:
-		msg("Unable to open file '" + infile + "' for reading")
-		sys.exit(2)
+	f = open_file_or_exit(infile, 'r')
 
 	lines = [i.strip() for i in f.readlines()]
 	f.close()
@@ -602,22 +638,26 @@ def get_data_from_wallet(infile,opts):
 def _get_words_from_user(opts, prompt):
 	# split() also strips
 	if 'echo_passphrase' in opts:
-		return _my_raw_input(prompt).split()
+		return my_raw_input(prompt).split()
 	else:
-		return _my_getpass(prompt).split()
+		return my_getpass(prompt).split()
 
 
 def _get_words_from_file(infile,what):
-	msg("Getting %s data from file '%s'" % (what,infile))
-	try:
-		f = open(infile, 'r')
-	except:
-		msg("Unable to open file '%s' for reading" % infile)
-		sys.exit(2)
-	lines = f.readlines()
-	f.close()
+	msg("Getting %s from file '%s'" % (what,infile))
+	f = open_file_or_exit(infile, 'r')
+	lines = f.readlines(); f.close()
 	# split() also strips
 	return [w for l in lines for w in l.split()]
+
+
+def get_lines_from_file(infile,what):
+	msg("Getting %s from file '%s'" % (what,infile))
+	f = open_file_or_exit(infile,'r')
+	data = f.read(); f.close()
+	# split() doesn't strip final newline
+	return data.strip().split("\n")
+
 
 def get_words(infile,what,prompt,opts):
 	if infile:
@@ -709,7 +749,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 def get_seed(infile,opts,no_wallet=False):
 	if 'from_mnemonic' in opts:
 		prompt = "Enter mnemonic: "
-		words = get_words(infile,"mnemonic",prompt,opts)
+		words = get_words(infile,"mnemonic data",prompt,opts)
 
 		wl = get_default_wordlist()
 		from mmgen.mnemonic import get_seed_from_mnemonic
@@ -723,11 +763,11 @@ def get_seed(infile,opts,no_wallet=False):
 					*_get_from_brain_opt_params(opts)),
 			"continue")
 		prompt = "Enter brainwallet passphrase: "
-		words = get_words(infile,"brainwallet",prompt,opts)
+		words = get_words(infile,"brainwallet data",prompt,opts)
 		return _get_seed_from_brain_passphrase(words,opts)
 	elif 'from_seed' in opts:
 		prompt = "Enter seed in %s format: " % seed_ext
-		words = get_words(infile,"seed",prompt,opts)
+		words = get_words(infile,"seed data",prompt,opts)
 		return get_seed_from_seed_data(words)
 	elif no_wallet:
 		return False

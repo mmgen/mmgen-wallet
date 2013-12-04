@@ -2,6 +2,8 @@
 mmgen-addrgen
 mmgen-keygen
 mmgen-passchg
+mmgen-txcreate
+mmgen-txsign
 mmgen-walletchk
 mmgen-walletgen
 setup.py
@@ -14,5 +16,6 @@ mmgen/license.py
 mmgen/mn_electrum.py
 mmgen/mn_tirosh.py
 mmgen/mnemonic.py
+mmgen/tx.py
 mmgen/utils.py
 mmgen/walletgen.py

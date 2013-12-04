@@ -66,6 +66,30 @@ def privnum2addr(numpriv):
 	pubkey = hexlify(pko.get_verifying_key().to_string())
 	return _pubhex2addr('04'+pubkey)
 
+def verify_addr(addr):
+
+	if addr[0] != "1":
+		print "%s Invalid address" % addr
+		return False
+
+	addr,lz = addr[1:],0
+	while addr[0] == "1": addr = addr[1:]; lz += 1
+		
+	addr_hex = lz * "00" + hex(_b58tonum(addr))[2:].rstrip("L")
+
+	if len(addr_hex) != 48:
+		print "%s Invalid address" % addr
+		return False
+
+	step1 = sha256(unhexlify('00'+addr_hex[:40])).digest()
+	step2 = sha256(step1).hexdigest()
+
+	if step2[:8] != addr_hex[40:]:
+		print "Invalid checksum in address %s" % addr
+		return False
+
+	return True
+
 # Reworked code from here:
 
 def _numtob58(num):

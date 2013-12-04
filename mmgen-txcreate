@@ -1,0 +1,106 @@
+#!/usr/bin/env python
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+mmgen-txcreate: Send BTC from specified outputs to specified addresses
+"""
+
+import sys
+#from hashlib import sha256
+
+from mmgen.Opts import *
+from mmgen.license import *
+from mmgen.config import *
+from mmgen.tx import *
+from mmgen.utils import check_opts, msg, user_confirm
+from decimal import Decimal
+
+prog_name = sys.argv[0].split("/")[-1]
+
+help_data = {
+	'prog_name': prog_name,
+	'desc':    "Send BTC from specified outputs to specified addresses",
+	'usage':   "[opts] <recipient address> <amount> <transaction fee> <change address>",
+	'options': """
+-h, --help                 Print this help message
+-d, --outdir            d  Specify an alternate directory 'd' for output
+-e, --echo-passphrase      Print passphrase to screen when typing it
+-q, --quiet                Suppress warnings; overwrite files without asking
+"""
+}
+
+short_opts = "hd:eq"
+long_opts  = "help","outdir=","echo_passphrase","quiet"
+
+opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+
+# Exits on invalid input
+check_opts(opts, ('outdir',))
+
+if debug:
+	print "Processed options:     %s" % repr(opts)
+	print "Cmd args:              %s" % repr(cmd_args)
+
+if len(cmd_args) == 4:
+	rcpt_addr,send_amt,tx_fee,change_addr = cmd_args	
+	check_address(change_addr)
+elif len(cmd_args) == 3:
+	rcpt_addr,send_amt,tx_fee = cmd_args	
+	change_addr = ""
+else: usage(help_data)
+
+check_address(rcpt_addr)
+send_amt = check_btc_amt(send_amt)
+tx_fee   = check_btc_amt(tx_fee)
+
+# Begin execution
+c = connect_to_bitcoind()
+
+if not 'quiet' in opts: do_license_msg()
+
+unspent = sort_and_view(c.listunspent())
+
+total = remove_exponent(sum([i.amount for i in unspent]))
+
+msg("Total unspent:   %s BTC" % total)
+msg("Amount to spend: %s BTC" % send_amt)
+msg("%s unspent outputs total" % len(unspent))
+
+sel_unspent = select_outputs(unspent,"Choose the outputs to spend: ")
+
+total_in = remove_exponent(sum([o.amount for o in sel_unspent]))
+change   = remove_exponent(total_in - (send_amt + tx_fee))
+
+if change < 0:
+	msg(txmsg['not_enough_btc'] % change)
+	sys.exit(2)
+elif change > 0 and not change_addr:
+	msg(txmsg['throwaway_change'] % (change, total_in-tx_fee))
+	sys.exit(2)
+
+tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
+tx_out = {rcpt_addr:float(send_amt), change_addr:float(change)}
+tx_hex = c.createrawtransaction(tx_in,tx_out)
+
+msg("Transaction successfully created\n")
+prompt = "View decoded transaction?"
+if user_confirm(prompt,default_yes=False):
+	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex)
+
+prompt = "Save transaction?"
+if user_confirm(prompt,default_yes=True):
+	print_tx_to_file(tx_hex,sel_unspent,send_amt,opts)

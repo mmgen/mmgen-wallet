@@ -21,18 +21,16 @@ license.py:  Show the license
 
 import sys
 from mmgen.config import proj_name
-from mmgen.utils import msg, msg_r
+from mmgen.utils import msg, msg_r, get_char
 
 gpl = {
 	'warning': """
-{} Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to
-redistribute it under certain conditions.
+{} Copyright (C) 2013 by Philemon <mmgen-py@yandex.com>.  This program
+comes with ABSOLUTELY NO WARRANTY.  This is free software, and you are
+welcome to redistribute it under certain conditions.
 """.format(proj_name),
 	'prompt': """
-Press 'c' for conditions, 'w' for warranty info,
-or ENTER to continue:
+Press 'c' for conditions, 'w' for warranty info, or ENTER to continue:
 """,
 	'conditions': """
                        TERMS AND CONDITIONS
@@ -620,30 +618,24 @@ copy of the Program in return for a fee.
 """
 }
 
+def do_pager(text):
+	import os
+	pager = os.environ['PAGER'] if 'PAGER' in os.environ else 'more'
+
+	p = os.popen(pager, 'w')
+	p.write(text)
+	p.close()
+	msg_r("\r")
+
+
 def do_license_msg():
-	ls = "\n  "
-	msg("  " + ls.join(gpl['warning'].strip().split("\n")))
+	msg("%s\n" % gpl['warning'].strip())
 
-	try:
-		import os
-		os.system(
-		"stty -icanon min 1 time 0 -echo -echoe -echok -echonl -crterase noflsh"
-		)
-		pager = os.environ['PAGER'] if 'PAGER' in os.environ else 'more'
+	while True:
 
-		while True:
-			msg_r(ls + ls.join(gpl['prompt'].strip().split("\n")) + " ")
-			reply = sys.stdin.read(1)
-			if   reply == 'c':
-				m = gpl['conditions']
-			elif reply == 'w':
-				m = gpl['warranty']
-			else: break
-			p = os.popen(pager, 'w')
-			p.write(m)
-			p.close()
-	except:
-		msg("\nInterrupted by user")
-		sys.exit(1)
-	finally:
-		os.system("stty sane")
+		prompt = "%s " % gpl['prompt'].strip()
+		reply = get_char(prompt)
+
+		if   reply == 'c': do_pager(gpl['conditions'])
+		elif reply == 'w': do_pager(gpl['warranty'])
+		else: msg("\n"); break
