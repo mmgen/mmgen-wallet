@@ -58,10 +58,10 @@ def generate_addrs(seed, start, end, opts):
 	installed.  Otherwise an internal function is used
 
 	Supported options:
-	  print_secret, no_addresses, no_keyconv, gen_what
+		print_secret, no_addresses, no_keyconv, gen_what
 	
 	Addresses are returned in a list of dictionaries with the following keys:
-	  num, sec, wif, addr
+		num, sec, wif, addr
 	"""
 
 	if not 'no_addresses' in opts:
@@ -121,9 +121,9 @@ def format_addr_data(addrlist, seed_chksum, opts):
 	By default, prints addresses only
 
 	Output can be customized with the following command line options:
-	  print_secret
-	  no_addresses
-	  b16
+		print_secret
+		no_addresses
+		b16
 	"""
 
 	start = addrlist[0]['num']

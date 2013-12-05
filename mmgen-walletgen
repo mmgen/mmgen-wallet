@@ -90,7 +90,7 @@ invocations with that passphrase.
 short_opts = "hd:el:L:p:Pqu:b:ms"
 long_opts  = "help","outdir=","echo_passphrase","seed_len=","label=",\
 		"hash_preset=","show_hash_presets","quiet","usr_randlen=",\
-        "from_brain=","from_mnemonic","from_seed"
+		"from_brain=","from_mnemonic","from_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 

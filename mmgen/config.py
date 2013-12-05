@@ -31,7 +31,11 @@ mnemonic_lens = [i / 32 * 3 for i in seed_lens]
 from os import getenv
 debug = True if getenv("MMGEN_DEBUG") else False
 
+<<<<<<< HEAD
 mins_per_block = 9
+=======
+mins_per_block = 8.5
+>>>>>>> my
 passwd_max_tries = 5
 max_randlen,min_randlen = 80,5
 usr_randlen = 20

@@ -19,8 +19,8 @@
 """
 mmgen-keygen: Generate addresses/secret keys from a mmgen deterministic 
               wallet for a range of addresses.
-			  Call as 'btc-addrgen' for safe, reduced functionality
-			  with no output of secret keys.
+              Call as 'btc-addrgen' for safe, reduced functionality
+              with no output of secret keys.
 """
 
 import sys
@@ -103,8 +103,8 @@ invocations with that passphrase
 
 so = "h","A","d:","e","K","l:","p:","P","q","S","v","x","b:","m","s"
 lo = "help","no_addresses","outdir=","echo_passphrase","no_keyconv",\
-	  "seed_len=","hash_preset=","show_hash_presets","quiet","stdout",\
-	  "verbose","b16","from_brain=","from_mnemonic","from_seed"
+		"seed_len=","hash_preset=","show_hash_presets","quiet","stdout",\
+		"verbose","b16","from_brain=","from_mnemonic","from_seed"
 
 if invoked_as == "addrgen":
 	short_opts = so[0:1] + so[2:10] + so[11:]
@@ -144,10 +144,9 @@ else: usage(help_data)
 
 start,end = parse_address_range(addr_range)
 
-if not 'quiet' in opts: do_license_msg(); msg("\n")
+if not 'quiet' in opts: do_license_msg()
 
 # Interact with user:
-
 if invoked_as == "keygen" and not 'quiet' in opts:
 	confirm_or_exit(cmessages['unencrypted_secret_keys'], 'continue')
 

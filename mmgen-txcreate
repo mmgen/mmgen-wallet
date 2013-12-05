@@ -36,6 +36,7 @@ help_data = {
 	'desc':    "Send BTC from specified outputs to specified addresses",
 	'usage':   "[opts] <recipient address> <amount> <transaction fee> <change address>",
 	'options': """
+<<<<<<< HEAD
 -h, --help                 Print this help message
 -d, --outdir            d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase      Print passphrase to screen when typing it
@@ -45,6 +46,21 @@ help_data = {
 
 short_opts = "hd:eq"
 long_opts  = "help","outdir=","echo_passphrase","quiet"
+=======
+-h, --help                Print this help message
+-d, --outdir           d  Specify an alternate directory 'd' for output
+-e, --echo-passphrase     Print passphrase to screen when typing it
+-i, --info                Display unspent outputs and exit
+-q, --quiet               Suppress warnings; overwrite files without asking
+
+Ages of transactions are approximate based on an estimated block discovery
+time of %s minutes.
+""" % mins_per_block
+}
+
+short_opts = "hd:eiq"
+long_opts  = "help","outdir=","echo_passphrase","info","quiet"
+>>>>>>> my
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
@@ -61,15 +77,27 @@ if len(cmd_args) == 4:
 elif len(cmd_args) == 3:
 	rcpt_addr,send_amt,tx_fee = cmd_args	
 	change_addr = ""
+<<<<<<< HEAD
 else: usage(help_data)
 
 check_address(rcpt_addr)
 send_amt = check_btc_amt(send_amt)
 tx_fee   = check_btc_amt(tx_fee)
+=======
+elif len(cmd_args) == 0 and 'info' in opts:
+	pass
+else: usage(help_data)
+
+if not 'info' in opts:
+	check_address(rcpt_addr)
+	send_amt = check_btc_amt(send_amt)
+	tx_fee   = check_btc_amt(tx_fee)
+>>>>>>> my
 
 # Begin execution
 c = connect_to_bitcoind()
 
+<<<<<<< HEAD
 if not 'quiet' in opts: do_license_msg()
 
 unspent = sort_and_view(c.listunspent())
@@ -89,6 +117,34 @@ if change < 0:
 	msg(txmsg['not_enough_btc'] % change)
 	sys.exit(2)
 elif change > 0 and not change_addr:
+=======
+if not 'quiet' in opts and not 'info' in opts: do_license_msg()
+
+unspent = sort_and_view(c.listunspent())
+
+total = trim_exponent(sum([i.amount for i in unspent]))
+
+msg("Total unspent:   %s BTC" % total)
+if 'info' in opts: sys.exit(0)
+
+msg("Amount to spend: %s BTC" % send_amt)
+msg("%s unspent outputs total" % len(unspent))
+
+
+while True:
+	sel_unspent = select_outputs(unspent,"Choose the outputs to spend: ")
+	total_in = trim_exponent(sum([o.amount for o in sel_unspent]))
+	change   = trim_exponent(total_in - (send_amt + tx_fee))
+
+	if change >= 0:
+		prompt = "Transaction produces %s BTC in change.  OK?" % change
+		if user_confirm(prompt,default_yes=True):
+			break
+
+	msg(txmsg['not_enough_btc'] % change)
+
+if change > 0 and not change_addr:
+>>>>>>> my
 	msg(txmsg['throwaway_change'] % (change, total_in-tx_fee))
 	sys.exit(2)
 
@@ -96,7 +152,11 @@ tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
 tx_out = {rcpt_addr:float(send_amt), change_addr:float(change)}
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 
+<<<<<<< HEAD
 msg("Transaction successfully created\n")
+=======
+msg("Transaction successfully created")
+>>>>>>> my
 prompt = "View decoded transaction?"
 if user_confirm(prompt,default_yes=False):
 	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex)

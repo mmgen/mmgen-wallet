@@ -190,21 +190,32 @@ future, you must continue using these same parameters
 """
 }
 
-def confirm_or_exit(message, question):
+def confirm_or_exit(message, question, expect="YES"):
+
+<<<<<<< HEAD
+	m = message.strip()
+	if m: msg(m)
+=======
+>>>>>>> my
+	msg("")
 
 	m = message.strip()
 	if m: msg(m)
-	msg("")
 
-	conf_msg = "Type uppercase 'YES' to confirm: "
+	conf_msg = "Type uppercase '%s' to confirm: " % expect
 
 	if question[0].isupper():
 		prompt = question + "  " + conf_msg
 	else:
 		prompt = "Are you sure you want to %s?\n%s" % (question,conf_msg)
 
+<<<<<<< HEAD
 	if my_raw_input(prompt).strip() != "YES":
 		msg("Program aborted by user")
+=======
+	if my_raw_input(prompt).strip() != expect:
+		msg("Exiting at user request")
+>>>>>>> my
 		sys.exit(2)
 
 	msg("")
@@ -313,7 +324,13 @@ no strength checking of passphrases is performed.  For an empty passphrase,
 just hit ENTER twice.
 """ % opts['hash_preset'])
 
+	if 'echo_passphrase' in opts:
+		ret = " ".join(_get_words_from_user(opts,"Enter %s: " % what))
+		if ret == "": msg("Empty passphrase")
+		return ret
+
 	for i in range(passwd_max_tries):
+<<<<<<< HEAD
 		if 'echo_passphrase' in opts:
 			return my_raw_input("Enter %s: " % what)
 		else:
@@ -324,8 +341,19 @@ just hit ENTER twice.
 				return ret
 			else:
 				msg("%ss do not match" % what.capitalize())
+=======
+		ret  = " ".join(_get_words_from_user(opts,"Enter %s: " % what))
+		ret2 = " ".join(_get_words_from_user(opts,"Repeat %s: " % what))
+		if debug: print "Passphrases: [%s] [%s]" % (ret,ret2)
+		if ret2 == ret:
+			s = " (empty)" if not len(ret) else ""
+			msg("%ss match%s" % (what.capitalize(),s))
+			return ret
+		else:
+			msg("%ss do not match" % what.capitalize())
+>>>>>>> my
 
-	msg("User failed to duplicate passphrase in " + str(passwd_max_tries) + " attempts")
+	msg("User failed to duplicate passphrase in %s attempts" % passwd_max_tries)
 	sys.exit(2)
 
 
@@ -333,7 +361,7 @@ def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
 	N,r,p = _get_hash_params(hash_preset)
 
-  	import scrypt
+	import scrypt
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
@@ -354,14 +382,14 @@ def encrypt_seed(seed, key, opts):
 	Encrypt a seed for a {} deterministic wallet
 	""".format(proj_name)
 
-    # 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
+	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
 	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
 	enc_seed = c.encrypt(seed)
 
- 	msg_r("Performing a test decryption of the seed...")
+	msg_r("Performing a test decryption of the seed...")
 
 	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
 	dec_seed = c.decrypt(enc_seed)
@@ -473,7 +501,7 @@ def _display_control_data(label,metadata,hash_preset,salt,enc_seed):
 		("Key  ID:",             metadata[1]),
 		("Seed length:",         metadata[2]),
 		("Scrypt hash params:",  "Preset '%s' (%s)" % (hash_preset,
-		 " ".join([str(i) for i in _get_hash_params(hash_preset)]))),
+			" ".join([str(i) for i in _get_hash_params(hash_preset)]))),
 		("Passphrase is empty:", pw_empty),
 		("Timestamp:",           "%s UTC" % metadata[4]),
 		("Salt:",                b58encode_pad(salt)),
@@ -510,7 +538,11 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	esf = b58encode_pad(enc_seed)
 
 	metadata = seed_id.lower(),key_id.lower(),\
+<<<<<<< HEAD
 			   seed_len,pw_status,make_timestamp()
+=======
+		seed_len,pw_status,make_timestamp()
+>>>>>>> my
 
 	lines = (
 		label,
@@ -593,12 +625,12 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
 	elif debug:
-	 	msg("%s checksum passed: %s" % (desc.capitalize(),chk))
+		msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
 
 def get_data_from_wallet(infile,opts):
 
-	msg("Getting {} wallet data from file: {}".format(proj_name,infile))
+	msg("Getting {} wallet data from file '{}'".format(proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
 
@@ -646,9 +678,21 @@ def _get_words_from_user(opts, prompt):
 def _get_words_from_file(infile,what):
 	msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile, 'r')
+<<<<<<< HEAD
 	lines = f.readlines(); f.close()
+=======
+	data = f.read(); f.close()
+>>>>>>> my
 	# split() also strips
-	return [w for l in lines for w in l.split()]
+	return data.split()
+
+
+def get_lines_from_file(infile,what):
+	msg("Getting %s from file '%s'" % (what,infile))
+	f = open_file_or_exit(infile,'r')
+	lines = f.readlines(); f.close()
+	return [i.strip("\n") for i in lines]
+
 
 
 def get_lines_from_file(infile,what):
@@ -773,3 +817,6 @@ def get_seed(infile,opts,no_wallet=False):
 		return False
 	else:
 		return get_seed_from_wallet(infile, opts)
+
+if __name__ == "__main__":
+	print get_lines_from_file("/tmp/lines","test file")

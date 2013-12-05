@@ -48,7 +48,7 @@ NOTE: The key ID will change if either the passphrase or hash preset
 
 short_opts = "hd:kL:p:Pv"
 long_opts  = "help","outdir=","keep_old_passphrase","label=","hash_preset=",\
-			   "show_hash_presets","verbose"
+				"show_hash_presets","verbose"
 
 opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
 

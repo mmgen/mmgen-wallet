@@ -25,10 +25,17 @@ from mmgen.utils import msg, msg_r, get_char
 
 gpl = {
 	'warning': """
+<<<<<<< HEAD
 {} Copyright (C) 2013 by Philemon <mmgen-py@yandex.com>.  This program
 comes with ABSOLUTELY NO WARRANTY.  This is free software, and you are
 welcome to redistribute it under certain conditions.
 """.format(proj_name),
+=======
+  MMGen Copyright (C) 2013 by Philemon <mmgen-py@yandex.com>.  This
+  program comes with ABSOLUTELY NO WARRANTY.  This is free software,
+  and you are welcome to redistribute it under certain conditions.
+""",
+>>>>>>> my
 	'prompt': """
 Press 'c' for conditions, 'w' for warranty info, or ENTER to continue:
 """,
@@ -629,7 +636,11 @@ def do_pager(text):
 
 
 def do_license_msg():
+<<<<<<< HEAD
 	msg("%s\n" % gpl['warning'].strip())
+=======
+	msg(gpl['warning'])
+>>>>>>> my
 
 	while True:
 
@@ -638,4 +649,8 @@ def do_license_msg():
 
 		if   reply == 'c': do_pager(gpl['conditions'])
 		elif reply == 'w': do_pager(gpl['warranty'])
+<<<<<<< HEAD
 		else: msg("\n"); break
+=======
+		else: msg(""); break
+>>>>>>> my

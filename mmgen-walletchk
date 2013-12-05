@@ -43,7 +43,7 @@ help_data = {
 
 short_opts = "hd:emsSv"
 long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
-			  "export_seed","stdout","verbose"
+				"export_seed","stdout","verbose"
 
 opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
 

@@ -147,8 +147,8 @@ def _b58_pad(s,a,b,pad,f,w):
 	try:
 		outlen = b[a.index(len(s))]
 	except:
-	 	print "_b58_pad() accepts only %s %s bytes long "\
-		 "(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s))
+		print "_b58_pad() accepts only %s %s bytes long "\
+			"(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s))
 		sys.exit(9)
 
 	out = f(s)
