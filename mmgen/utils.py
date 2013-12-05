@@ -192,11 +192,6 @@ future, you must continue using these same parameters
 
 def confirm_or_exit(message, question, expect="YES"):
 
-<<<<<<< HEAD
-	m = message.strip()
-	if m: msg(m)
-=======
->>>>>>> my
 	msg("")
 
 	m = message.strip()
@@ -209,13 +204,8 @@ def confirm_or_exit(message, question, expect="YES"):
 	else:
 		prompt = "Are you sure you want to %s?\n%s" % (question,conf_msg)
 
-<<<<<<< HEAD
-	if my_raw_input(prompt).strip() != "YES":
-		msg("Program aborted by user")
-=======
 	if my_raw_input(prompt).strip() != expect:
 		msg("Exiting at user request")
->>>>>>> my
 		sys.exit(2)
 
 	msg("")
@@ -330,18 +320,6 @@ just hit ENTER twice.
 		return ret
 
 	for i in range(passwd_max_tries):
-<<<<<<< HEAD
-		if 'echo_passphrase' in opts:
-			return my_raw_input("Enter %s: " % what)
-		else:
-			ret		= my_getpass("Enter %s: " % what)
-			if ret == my_getpass("Repeat %s: " % what):
-				s = " (empty)" if not len(ret) else ""
-				msg("%ss match%s" % (what.capitalize(),s))
-				return ret
-			else:
-				msg("%ss do not match" % what.capitalize())
-=======
 		ret  = " ".join(_get_words_from_user(opts,"Enter %s: " % what))
 		ret2 = " ".join(_get_words_from_user(opts,"Repeat %s: " % what))
 		if debug: print "Passphrases: [%s] [%s]" % (ret,ret2)
@@ -351,7 +329,6 @@ just hit ENTER twice.
 			return ret
 		else:
 			msg("%ss do not match" % what.capitalize())
->>>>>>> my
 
 	msg("User failed to duplicate passphrase in %s attempts" % passwd_max_tries)
 	sys.exit(2)
@@ -538,11 +515,7 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	esf = b58encode_pad(enc_seed)
 
 	metadata = seed_id.lower(),key_id.lower(),\
-<<<<<<< HEAD
-			   seed_len,pw_status,make_timestamp()
-=======
 		seed_len,pw_status,make_timestamp()
->>>>>>> my
 
 	lines = (
 		label,
@@ -678,11 +651,7 @@ def _get_words_from_user(opts, prompt):
 def _get_words_from_file(infile,what):
 	msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile, 'r')
-<<<<<<< HEAD
-	lines = f.readlines(); f.close()
-=======
 	data = f.read(); f.close()
->>>>>>> my
 	# split() also strips
 	return data.split()
 
@@ -692,15 +661,6 @@ def get_lines_from_file(infile,what):
 	f = open_file_or_exit(infile,'r')
 	lines = f.readlines(); f.close()
 	return [i.strip("\n") for i in lines]
-
-
-
-def get_lines_from_file(infile,what):
-	msg("Getting %s from file '%s'" % (what,infile))
-	f = open_file_or_exit(infile,'r')
-	data = f.read(); f.close()
-	# split() doesn't strip final newline
-	return data.strip().split("\n")
 
 
 def get_words(infile,what,prompt,opts):

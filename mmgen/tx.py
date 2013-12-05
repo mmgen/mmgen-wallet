@@ -50,17 +50,10 @@ def connect_to_bitcoind():
 	return c
 
 
-<<<<<<< HEAD
-def remove_exponent(d):
-    '''Remove exponent and trailing zeros.
-    '''
-    return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
-=======
 def trim_exponent(d):
 	'''Remove exponent and trailing zeros.
 	'''
 	return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
->>>>>>> my
 
 def	check_address(rcpt_address):
 	from mmgen.bitcoin import verify_addr
@@ -80,11 +73,7 @@ def check_btc_amt(send_amt):
 		msg("%s: Too many decimal places in amount" % send_amt)
 		sys.exit(3)
 	
-<<<<<<< HEAD
-	return remove_exponent(retval)
-=======
 	return trim_exponent(retval)
->>>>>>> my
 
 
 def get_cfg_options(cfg_keys):
@@ -120,37 +109,15 @@ def print_tx_to_file(tx,sel_unspent,send_amt,opts):
 	outfile = "%s[%s].tx" % (tx_id,send_amt)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
-<<<<<<< HEAD
-	input_data = sel_unspent
-	data = "%s\n%s\n%s\n%s\n" % (
-			make_timestamp(), tx, repr(sig_data),
-=======
 	metadata = "%s %s %s" % (tx_id, send_amt, make_timestamp())
 	data = "%s\n%s\n%s\n%s\n" % (
 			metadata, tx, repr(sig_data),
->>>>>>> my
 			repr([i.__dict__ for i in sel_unspent])
 		)
 	write_to_file(outfile,data,confirm=False)
 	msg("Transaction data saved to file '%s'" % outfile)
 
 
-<<<<<<< HEAD
-def print_signed_tx_to_file(tx,sig_tx,opts):
-	tx_id = make_chksum_8(unhexlify(tx))
-	outfile = "%s.txsig" % tx_id
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-	write_to_file(outfile,sig_tx+"\n",confirm=False)
-	msg("Signed transaction saved to file '%s'" % outfile)
-
-
-def print_sent_tx_to_file(tx):
-	outfile = "tx.out"
-	write_to_file(outfile,tx+"\n",confirm=False)
-	msg("Transaction ID saved to file '%s'" % outfile)
-
-=======
 def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
 	tx_id = make_chksum_8(unhexlify(tx))
 	outfile = "{}[{}].txsig".format(*metadata[:2])
@@ -169,7 +136,6 @@ def print_sent_tx_to_file(tx,metadata,opts):
 	msg("Transaction ID saved to file '%s'" % outfile)
 
 
->>>>>>> my
 def sort_and_view(unspent):
 
 	def s_amt(a,b):  return cmp(a.amount,b.amount)
@@ -178,19 +144,12 @@ def sort_and_view(unspent):
 	def s_addr(a,b): return cmp(a.address,b.address)
 	def s_age(a,b):  return cmp(b.confirmations,a.confirmations)
 
-<<<<<<< HEAD
-	fs = "%-4s %-11s %-2s %-34s %13s"
-	sort,group,reverse = "",False,False
-
-	from copy import deepcopy
-=======
 	fs =     " %-4s %-11s %-2s %-34s %13s %-s"
 	fs_hdr = " %-4s %-11s %-4s %-35s %-9s %-s"
 	sort,group,reverse = "",False,False
 
 	from copy import deepcopy
 	msg("")
->>>>>>> my
 	while True:
 		out = deepcopy(unspent)
 		for i in out: i.skip = ""
@@ -203,26 +162,11 @@ def sort_and_view(unspent):
 					out[n+1].skip = "t"
 
 		output = []
-<<<<<<< HEAD
-		output.append("Sort order: %s%s%s" % (
-=======
 		output.append("UNSPENT OUTPUTS (sort order: %s%s%s)" % (
->>>>>>> my
 				"reverse " if reverse else "",
 				sort if sort else "None",
 	" (grouped)" if group and (sort == "address" or sort == "txid") else ""
 			))
-<<<<<<< HEAD
-		output.append(fs % ("Num","TX id","Vout","Address","Amount       "))
-
-		for n,i in enumerate(out):
-			amt = str(remove_exponent(i.amount))
-			fill = 8 - len(amt.split(".")[-1]) if "." in amt else 9
-			addr = " |" + "-"*32 if i.skip == "d" else i.address
-			txid = "       |---" if i.skip == "t" else i.txid[:8]+"..."
-
-			output.append(fs % (str(n+1)+")", txid,i.vout,addr,amt+(" "*fill)))
-=======
 		output.append(fs_hdr % ("Num","TX id","Vout","Address","Amount",
 					"Age (days)"))
 
@@ -234,7 +178,6 @@ def sort_and_view(unspent):
 			days = int(i.confirmations * mins_per_block / (60*24))
 
 			output.append(fs % (str(n+1)+")", txid,i.vout,addr,amt+(" "*fill),days))
->>>>>>> my
 
 		while True:
 			reply = get_char("\n".join(output) +
@@ -259,82 +202,48 @@ Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [g]roup
 	return unspent
 
 
-<<<<<<< HEAD
-def view_tx_data(c,inputs_data,tx_hex,timestamp=""):
-=======
 def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
->>>>>>> my
 
 	td = c.decoderawtransaction(tx_hex)
 
 	msg("TRANSACTION DATA:\n")
 
-<<<<<<< HEAD
-	if timestamp: msg("Timestamp: %s\n" % timestamp)
-=======
 	if metadata: msg(
 		"Header: [ID: {}] [Amount: {} BTC] [Time: {}]\n".format(*metadata))
->>>>>>> my
 
 	msg("Inputs:")
 	total_in = 0
 	for n,i in enumerate(td['vin']):
 		for j in inputs_data:
 			if j['txid'] == i['txid'] and j['vout'] == i['vout']:
-<<<<<<< HEAD
-				days = j['confirmations'] * mins_per_block / (60*24)
-				total_in += j['amount']
-				msg("""
-%-3s tx,vout: %s,%s
-=======
 				days = int(j['confirmations'] * mins_per_block / (60*24))
 				total_in += j['amount']
 				msg(" " + """
 %-2s tx,vout: %s,%s
->>>>>>> my
     address:        %s
     amount:         %s BTC
     confirmations:  %s (around %s days)
 """.strip() %
 	(n+1,i['txid'],i['vout'],j['address'],
-<<<<<<< HEAD
-	 remove_exponent(j['amount']),j['confirmations'],days)+"\n")
-				break
-
-	msg("Total input: %s BTC\n" % remove_exponent(total_in))
-=======
 		trim_exponent(j['amount']),j['confirmations'],days)+"\n")
 				break
 
 	msg("Total input: %s BTC\n" % trim_exponent(total_in))
->>>>>>> my
 
 	total_out = 0
 	msg("Outputs:")
 	for n,i in enumerate(td['vout']):
 		total_out += i['value']
-<<<<<<< HEAD
- 		msg("""
-%-3s address: %s
-=======
 		msg(" " + """
 %-2s address: %s
->>>>>>> my
     amount:  %s BTC
 """.strip() % (
 		n,
 		i['scriptPubKey']['addresses'][0],
-<<<<<<< HEAD
-		remove_exponent(i['value']))
-	+ "\n")
-	msg("Total output: %s BTC" % remove_exponent(total_out))
-	msg("TX fee:       %s BTC\n" % remove_exponent(total_in-total_out))
-=======
 		trim_exponent(i['value']))
 	+ "\n")
 	msg("Total output: %s BTC" % trim_exponent(total_out))
 	msg("TX fee:       %s BTC\n" % trim_exponent(total_in-total_out))
->>>>>>> my
 
 
 def parse_tx_data(tx_data):
@@ -343,11 +252,6 @@ def parse_tx_data(tx_data):
 		msg("'%s': not a transaction file" % infile)
 		sys.exit(2)
 
-<<<<<<< HEAD
-	try: unhexlify(tx_data[1])
-	except:
-		msg("Transaction data is invalid")
-=======
 	err_fmt = "Transaction %s is invalid"
 
 	if len(tx_data[0].split()) != 3:
@@ -357,33 +261,21 @@ def parse_tx_data(tx_data):
 	try: unhexlify(tx_data[1])
 	except:
 		msg(err_fmt % "hex data")
->>>>>>> my
 		sys.exit(2)
 
 	try:
 		sig_data = eval(tx_data[2])
 	except:
-<<<<<<< HEAD
-		msg("Signature data is invalid")
-=======
 		msg(err_fmt % "signature data")
->>>>>>> my
 		sys.exit(2)
 
 	try:
 		inputs_data = eval(tx_data[3])
 	except:
-<<<<<<< HEAD
-		msg("Inputs data is invalid")
-		sys.exit(2)
-
-	return tx_data[0],tx_data[1],sig_data,inputs_data
-=======
 		msg(err_fmt % "inputs data")
 		sys.exit(2)
 
 	return tx_data[0].split(),tx_data[1],sig_data,inputs_data
->>>>>>> my
 
 
 def select_outputs(unspent,prompt):
