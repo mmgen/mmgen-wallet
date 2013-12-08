@@ -51,7 +51,7 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The "zero address":
 # 1111111111111111111114oLvT2 (use step2 = ("0" * 40) to generate)
 #
-def _pubhex2addr(pubhex):
+def pubhex2addr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()
 	step2 = hashlib_new('ripemd160',step1).hexdigest()
 	# See above:
@@ -64,28 +64,32 @@ def _pubhex2addr(pubhex):
 def privnum2addr(numpriv):
 	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
-	return _pubhex2addr('04'+pubkey)
+	return pubhex2addr('04'+pubkey)
 
 def verify_addr(addr):
 
 	if addr[0] != "1":
-		print "%s Invalid address" % addr
+		print "%s: Invalid address" % addr
 		return False
 
-	addr,lz = addr[1:],0
-	while addr[0] == "1": addr = addr[1:]; lz += 1
-		
-	addr_hex = lz * "00" + hex(_b58tonum(addr))[2:].rstrip("L")
+# 	addr,lz = addr[1:],0
+# 	while addr[0] == "1": addr = addr[1:]; lz += 1
+# 		
+#  	addr_hex = lz * "00" + hex(_b58tonum(addr))[2:].rstrip("L")
 
-	if len(addr_hex) != 48:
-		print "%s Invalid address" % addr
-		return False
+# 	if len(addr_hex) != 48:
+# 		print "%s: Invalid address hex length: %s" % ("1"+addr, len(addr_hex))
+# 		return False
+
+  	num = _b58tonum(addr[1:])
+	if num == False: return False
+  	addr_hex = hex(num)[2:].rstrip("L").zfill(48)
 
 	step1 = sha256(unhexlify('00'+addr_hex[:40])).digest()
 	step2 = sha256(step1).hexdigest()
 
 	if step2[:8] != addr_hex[40:]:
-		print "Invalid checksum in address %s" % addr
+		print "Invalid checksum in address %s" % ("1" + addr)
 		return False
 
 	return True
@@ -104,7 +108,7 @@ def _b58tonum(b58num):
 	for i in b58num:
 		if not i in b58a:
 			print "Invalid symbol in b58 number: '%s'" % i
-			sys.exit(9)
+			return False
 
 	b58deconv = []
 	b58num_r = b58num[::-1]
@@ -135,6 +139,7 @@ def b58decode(b58num):
 	if b58num == "": return ""
 	# Zap all spaces:
 	num = _b58tonum(b58num.translate(None,' \t\n\r'))
+	if num == False: return False
 	out = hex(num)[2:].rstrip('L')
 	return unhexlify("0" + out if len(out) % 2 else out)
 
@@ -149,9 +154,10 @@ def _b58_pad(s,a,b,pad,f,w):
 	except:
 		print "_b58_pad() accepts only %s %s bytes long "\
 			"(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s))
-		sys.exit(9)
+		return False
 
 	out = f(s)
+	if out == False: return False
 	return "%s%s" % (pad * (outlen - len(out)), out)
 
 def b58encode_pad(s):
@@ -168,10 +174,13 @@ def b58decode_pad(s):
 # To check validity, recode with numtowif()
 def wiftonum(wifpriv):
 	num = _b58tonum(wifpriv)
+	if num == False: return False
 	return (num % (1<<288)) >> 32
 
 def wiftohex(wifpriv):
-	key = hex(_b58tonum(wifpriv))[2:].rstrip('L')
+	num = _b58tonum(wifpriv)
+	if num == False: return False
+	key = hex(num)[2:].rstrip('L')
 	round1 = sha256(unhexlify(key[:66])).digest()
 	round2 = sha256(round1).hexdigest()
 	return key[2:66] if (key[:2] == '80' and key[66:] == round2[:8]) else False

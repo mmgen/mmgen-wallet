@@ -35,7 +35,7 @@ help_data = {
 -d, --outdir             d  Specify an alternate directory 'd' for output
 -k, --keep-old-passphrase   Keep old passphrase (use when changing hash 
                             strength or label only)
--L, --label                 Change the wallet's label
+-L, --label              l  Change the wallet's label to 'l'
 -p, --hash-preset        p  Change scrypt.hash() parameters to preset 'p'
                             (default: '{}')
 -P, --show-hash-presets     Show information on available hash presets
@@ -65,7 +65,8 @@ infile = cmd_args[0]
 # Old key:
 label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile,opts)
 seed_id,key_id = metadata[:2]
-passwd = " ".join(get_words("","","Enter old passphrase: ",opts))
+oldp = "" if 'keep_old_passphrase' in opts else "old "
+passwd = " ".join(get_words("","",("Enter %spassphrase: " % oldp),opts))
 key = make_key(passwd, salt, hash_preset)
 seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 

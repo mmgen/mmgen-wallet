@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-mmgen-txcreate: Send BTC from specified outputs to specified addresses
+mmgen-txcreate: Send BTC to specified addresses
 """
 
 import sys
@@ -33,14 +33,16 @@ prog_name = sys.argv[0].split("/")[-1]
 
 help_data = {
 	'prog_name': prog_name,
-	'desc':    "Send BTC from specified outputs to specified addresses",
-	'usage':   "[opts] <recipient address> <amount> <transaction fee> <change address>",
+	'desc':    "Send BTC to specified addresses",
+	'usage':   "[opts] <address:amount>[,...] <transaction fee> <change address>",
 	'options': """
 -h, --help                Print this help message
 -d, --outdir           d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase     Print passphrase to screen when typing it
 -i, --info                Display unspent outputs and exit
 -q, --quiet               Suppress warnings; overwrite files without asking
+
+Outputs to spend are chosen by the user via a menu.
 
 Ages of transactions are approximate based on an estimated block discovery
 time of %s minutes.
@@ -59,19 +61,20 @@ if debug:
 	print "Processed options:     %s" % repr(opts)
 	print "Cmd args:              %s" % repr(cmd_args)
 
-if len(cmd_args) == 4:
-	rcpt_addr,send_amt,tx_fee,change_addr = cmd_args	
+if len(cmd_args) == 3:
+	rcpt_arg,tx_fee,change_addr = cmd_args	
 	check_address(change_addr)
-elif len(cmd_args) == 3:
-	rcpt_addr,send_amt,tx_fee = cmd_args	
+elif len(cmd_args) == 2:
+	rcpt_arg,tx_fee = cmd_args	
 	change_addr = ""
 elif len(cmd_args) == 0 and 'info' in opts:
 	pass
 else: usage(help_data)
 
 if not 'info' in opts:
-	check_address(rcpt_addr)
-	send_amt = check_btc_amt(send_amt)
+	tx_out = make_tx_out(rcpt_arg)
+	for i in tx_out.keys():   check_address(i)
+	for i in tx_out.values(): check_btc_amt(i)
 	tx_fee   = check_btc_amt(tx_fee)
 
 # Begin execution
@@ -86,9 +89,9 @@ total = trim_exponent(sum([i.amount for i in unspent]))
 msg("Total unspent:   %s BTC" % total)
 if 'info' in opts: sys.exit(0)
 
-msg("Amount to spend: %s BTC" % send_amt)
+send_amt = sum(tx_out.values())
+msg("Total amount to spend: %s BTC" % send_amt)
 msg("%s unspent outputs total" % len(unspent))
-
 
 while True:
 	sel_unspent = select_outputs(unspent,"Choose the outputs to spend: ")
@@ -107,7 +110,8 @@ if change > 0 and not change_addr:
 	sys.exit(2)
 
 tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
-tx_out = {rcpt_addr:float(send_amt), change_addr:float(change)}
+for i in tx_out.keys(): tx_out[i] = float(tx_out[i])
+if change: tx_out[change_addr] = float(change)
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 
 msg("Transaction successfully created")

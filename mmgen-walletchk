@@ -49,9 +49,9 @@ opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
 
 check_opts(opts, ('outdir',))
 
-if len(cmd_args) != 1:
-	msg("One input file must be specified")
-	sys.exit(2)
+if len(cmd_args) != 1: usage(help_data)
+
+check_infile(cmd_args[0])
 
 if 'export_mnemonic' in opts:
 	msg("Exporting mnemonic data to file by user request")

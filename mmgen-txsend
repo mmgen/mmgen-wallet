@@ -83,7 +83,7 @@ confirm_or_exit(warn, what, expect)
 
 msg("Sending transaction")
 
-c = connect_to_bitcoind()
+c = connect_to_bitcoind(mmgen=True)
 
 try:
 	tx = c.sendrawtransaction(tx_sig)

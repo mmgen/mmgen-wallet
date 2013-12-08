@@ -118,7 +118,7 @@ if wallet_enc:
 if sig_tx['complete']:
 	msg("Signing completed")
 else:
-	msg("signrawtransaction() returned failure")
+	msg("Signing failed: 'complete=%s'" % sig_tx['complete'])
 	sys.exit(3)
 
 prompt = "Save signed transaction?"

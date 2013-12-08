@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.6.1',
+		version      = '0.6.2',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -19,15 +19,27 @@ setup(
 			'mmgen.Opts',
 			'mmgen.tx',
 			'mmgen.utils',
-			'mmgen.walletgen'
+			'mmgen.walletgen',
+			'mmgen.connection',
+			'mmgen.proxy',
+			'tests.addr',
+			'tests.bitcoin',
+			'tests.mn_electrum',
+			'tests.mnemonic',
+			'tests.mn_tirosh',
+			'tests.test',
+			'tests.utils',
+			'tests.walletgen'
 		],
 		data_files=[('/usr/local/bin', [
 			'mmgen-addrgen',
+			'mmgen-addrimport',
 			'mmgen-keygen',
 			'mmgen-passchg',
 			'mmgen-walletchk',
 			'mmgen-walletgen',
 			'mmgen-txcreate',
-			'mmgen-txsign'
+			'mmgen-txsign',
+			'mmgen-txsend'
 		])]
 	)

@@ -168,6 +168,10 @@ def hextosha256(s_in):
 	s_enc = sha256(unhexlify(s_in)).hexdigest()
 	print "Encoded data:   %s" % s_enc
 
+def pubhextoaddr(s_in):
+	print "Entered data:   %s" % s_in
+	s_enc = pubhex2addr(s_in)
+	print "Encoded data:   %s" % s_enc
 
 tests = {
 	"keyconv_compare":          ['wif [str]','quiet [bool=False]'],
@@ -183,6 +187,7 @@ tests = {
 	"numtowif_rand":            ['quiet [bool=False]'],
 	"hextosha256":              ['hexnum [str]','quiet [bool=False]'],
 	"hextowiftopubkey":         ['hexnum [str]','quiet [bool=False]'],
+	"pubhextoaddr":             ['hexnum [str]','quiet [bool=False]'],
 }
 
 

@@ -22,7 +22,6 @@ tx.py:  Bitcoin transaction routines
 from binascii import unhexlify
 from mmgen.utils import msg,msg_r,write_to_file,my_raw_input,get_char,make_chksum_8,make_timestamp
 import sys, os
-from bitcoinrpc.connection import *
 from decimal import Decimal
 from mmgen.config import *
 
@@ -36,13 +35,21 @@ specified recipient address.
 """.strip()
 }
 
-def connect_to_bitcoind():
+
+def connect_to_bitcoind(mmgen=False):
 
 	host,port,user,passwd = "localhost",8332,"rpcuser","rpcpassword"
 	cfg = get_cfg_options((user,passwd))
 
+	if mmgen:
+		import mmgen.connection
+		f = mmgen.connection.MMGenBitcoinConnection
+	else:
+		import bitcoinrpc.connection
+		f = bitcoinrpc.connection.BitcoinConnection
+
 	try:
-		c = BitcoinConnection(cfg[user],cfg[passwd],host,port)
+		c = f(cfg[user],cfg[passwd],host,port)
 	except:
 		msg("Unable to establish RPC connection with bitcoind")
 		sys.exit(2)
@@ -55,10 +62,12 @@ def trim_exponent(d):
 	'''
 	return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
+
 def	check_address(rcpt_address):
 	from mmgen.bitcoin import verify_addr
 	if not verify_addr(rcpt_address):
 		sys.exit(3)
+
 
 def check_btc_amt(send_amt):
 
@@ -298,3 +307,23 @@ def select_outputs(unspent,prompt):
 		msg("'%s': Invalid input" % reply)
 
 	return [unspent[i] for i in selected]
+
+
+def make_tx_out(rcpt_arg):
+
+	import decimal
+	try:
+		tx_out = dict([(i.split(":")[0],i.split(":")[1])
+							for i in rcpt_arg.split(",")])
+	except:
+		msg("Invalid format: %s" % rcpt_arg)
+		sys.exit(3)
+
+	try:
+		for i in tx_out.keys():
+			tx_out[i] = trim_exponent(Decimal(tx_out[i]))
+	except decimal.InvalidOperation:
+		msg("Decimal conversion error in suboption '%s:%s'" % (i,tx_out[i]))
+		sys.exit(3)
+
+	return tx_out

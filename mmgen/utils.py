@@ -22,6 +22,7 @@ utils.py:  Shared routines for the mmgen suite
 import sys
 from mmgen.config import *
 from binascii import hexlify,unhexlify
+from mmgen.bitcoin import b58decode_pad
 
 def msg(s):   sys.stderr.write(s + "\n")
 def msg_r(s): sys.stderr.write(s)
@@ -628,12 +629,14 @@ def get_data_from_wallet(infile,opts):
 		sys.exit(9)
 
 	res = {}
-	from mmgen.bitcoin import b58decode_pad
 	for i,key in (4,"salt"),(5,"enc_seed"):
 		l = lines[i].split()
 		val = "".join(l[1:])
 		_check_chksum_6(l[0], val, key, infile)
 		res[key] = b58decode_pad(val)
+		if res[key] == False:
+			msg("Invalid b58 number: %s" % val)
+			sys.exit(9)
 
 	_check_chksum_6(lines[0], " ".join(lines[1:]), "Master", infile)
 
@@ -683,8 +686,11 @@ def get_seed_from_seed_data(words):
 	msg_r("Validating %s checksum..." % seed_ext)
 
 	if compare_checksums(chk, "from seed", stored_chk, "from input"):
-		from mmgen.bitcoin import b58decode_pad
 		seed = b58decode_pad(seed_b58)
+		if seed == False:
+			msg("Invalid b58 number: %s" % val)
+			sys.exit(9)
+
 		msg("%s data produces seed ID: %s" % (seed_ext,make_chksum_8(seed)))
 		return seed
 	else:
@@ -777,6 +783,61 @@ def get_seed(infile,opts,no_wallet=False):
 		return False
 	else:
 		return get_seed_from_wallet(infile, opts)
+
+def remove_blanks_comments(lines):
+	import re
+#	re.sub(pattern, repl, string, count=0, flags=0)
+	ret = []
+	for i in lines:
+		i = re.sub('#.*','',i,1)
+		i = re.sub('\s+$','',i)
+		if i: ret.append(i)
+
+	return ret
+
+def parse_addrs_file(f):
+	lines = get_lines_from_file(f,"address data")
+	lines = remove_blanks_comments(lines)
+
+	seed_id,obrace = lines[0].split()
+ 	cbrace = lines[-1]
+
+	if   obrace != '{':
+		msg("'%s': invalid first line" % lines[0])
+	elif cbrace != '}':
+		msg("'%s': invalid last line" % cbrace)
+	elif len(seed_id) != 8:
+		msg("'%s': invalid Seed ID" % seed_id)
+	else:
+		try:
+			unhexlify(seed_id)
+		except:
+			msg("'%s': invalid Seed ID" % seed_id)
+			sys.exit(3)
+		
+		ret = []
+		for i in lines[1:-1]:
+			d = i.split()
+
+			try: d[0] = int(d[0])
+			except:
+				msg("'%s': invalid address num. in line: %s" % (d[0],d))
+				sys.exit(3)
+
+			from mmgen.bitcoin import verify_addr
+			if not verify_addr(d[1]):
+				msg("'%s': invalid address" % d[1])
+				sys.exit(3)
+
+			ret.append(d)
+
+		return seed_id,ret
+
+	sys.exit(3)
+
+
+
+
 
 if __name__ == "__main__":
 	print get_lines_from_file("/tmp/lines","test file")
