@@ -18,8 +18,8 @@
 """
 MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 """
-
 __all__ = [
+	'rpc',
 	'addr.py',
 	'bitcoin.py',
 	'config.py',

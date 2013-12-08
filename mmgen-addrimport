@@ -51,7 +51,7 @@ check_infile(cmd_args[0])
 seed_id,addr_data = parse_addrs_file(cmd_args[0])
 
 from mmgen.tx import connect_to_bitcoind
-c = connect_to_bitcoind(mmgen=True)
+c = connect_to_bitcoind(http_timeout=3600)
 
 message = """
 Importing addresses can take a long time, up to 30 min. per address on a

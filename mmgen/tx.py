@@ -36,20 +36,16 @@ specified recipient address.
 }
 
 
-def connect_to_bitcoind(mmgen=False):
+def connect_to_bitcoind(http_timeout=30):
 
 	host,port,user,passwd = "localhost",8332,"rpcuser","rpcpassword"
 	cfg = get_cfg_options((user,passwd))
 
-	if mmgen:
-		import mmgen.connection
-		f = mmgen.connection.MMGenBitcoinConnection
-	else:
-		import bitcoinrpc.connection
-		f = bitcoinrpc.connection.BitcoinConnection
+	import mmgen.rpc.connection
+	f = mmgen.rpc.connection.BitcoinConnection
 
 	try:
-		c = f(cfg[user],cfg[passwd],host,port)
+		c = f(cfg[user],cfg[passwd],host,port,http_timeout=http_timeout)
 	except:
 		msg("Unable to establish RPC connection with bitcoind")
 		sys.exit(2)

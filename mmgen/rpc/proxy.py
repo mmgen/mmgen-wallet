@@ -1,4 +1,9 @@
 """
+  Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+  Added configurable http_timeout
+
+  Previous copyright from bitcoin-python/proxy.py:
+
   Copyright 2011 Jeff Garzik
 
   AuthServiceProxy has the following improvements over python-jsonrpc's
@@ -47,9 +52,6 @@ except ImportError:
 
 USER_AGENT = "AuthServiceProxy/0.1"
 
-HTTP_TIMEOUT = 7200
-
-
 class JSONRPCException(Exception):
     def __init__(self, rpcError):
         Exception.__init__(self)
@@ -57,7 +59,7 @@ class JSONRPCException(Exception):
 
 
 class AuthServiceProxy(object):
-    def __init__(self, serviceURL, serviceName=None):
+    def __init__(self, serviceURL, serviceName=None, http_timeout=30):
         self.__serviceURL = serviceURL
         self.__serviceName = serviceName
         self.__url = urlparse.urlparse(serviceURL)
@@ -71,10 +73,10 @@ class AuthServiceProxy(object):
         self.__authhdr = "Basic ".encode('utf8') + base64.b64encode(authpair)
         if self.__url.scheme == 'https':
             self.__conn = httplib.HTTPSConnection(self.__url.hostname, port, None, None,False,
-                                             HTTP_TIMEOUT)
+                                             http_timeout)
         else:
             self.__conn = httplib.HTTPConnection(self.__url.hostname, port, False,
-                                             HTTP_TIMEOUT)
+                                             http_timeout)
 
     def __getattr__(self, name):
         if self.__serviceName != None:
