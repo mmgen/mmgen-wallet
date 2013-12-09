@@ -24,6 +24,7 @@ from hashlib import sha256, sha512
 from binascii import hexlify, unhexlify
 
 from mmgen.bitcoin import numtowif
+from mmgen.config import *
 
 def test_for_keyconv():
 	"""
@@ -47,15 +48,15 @@ address generation.
 		return True
 
 
-def generate_addrs(seed, start, end, opts):
+def generate_addrs(seed, addrnums, opts):
 	"""
 	generate_addresses(start, end, seed, opts)  => None
 
-	Generate a series of Bitcoin addresses from start to end based on a
-	seed, optionally outputting secret keys
+	Generate a Bitcoin address or addresses end based on a seed, optionally
+	outputting secret keys
 
-	The 'keyconv' utility will be used for address generation if
-	installed.  Otherwise an internal function is used
+	The 'keyconv' utility will be used for address generation if installed.
+	Otherwise an internal function is used
 
 	Supported options:
 		print_secret, no_addresses, no_keyconv, gen_what
@@ -73,17 +74,16 @@ def generate_addrs(seed, start, end, opts):
 			from subprocess import Popen, PIPE
 			keyconv = "keyconv"
 
-	total_addrs = end - start + 1
+	a,t_addrs,i,out = sorted(addrnums),len(addrnums),0,[]
 
-	addrlist = []
+	while a:
+		seed = sha512(seed).digest(); i += 1   # round /i/
+		if i < a[0]: continue
 
-	for i in range(1, end+1):
-		seed = sha512(seed).digest() # round /i/
+		a.pop(0)
 
-		if i < start: continue
-
-		sys.stderr.write("\rGenerating %s: %s of %s" %
-			(opts['gen_what'], (i-start)+1, total_addrs))
+		sys.stderr.write("\rGenerating %s %s (%s of %s)" %
+			(opts['gen_what'], i, t_addrs-len(a), t_addrs))
 
 		# Secret key is double sha256 of seed hash round /i/
 		sec = sha256(sha256(seed).digest()).hexdigest()
@@ -98,18 +98,18 @@ def generate_addrs(seed, start, end, opts):
 		if not 'no_addresses' in opts:
 			if keyconv:
 				p = Popen([keyconv, wif], stdout=PIPE)
-				addr = dict([j.split() for j in p.stdout.readlines()])['Address:']
+				addr = dict([j.split() for j in \
+						p.stdout.readlines()])['Address:']
 			else:
 				addr = privnum2addr(int(sec,16))
 
 			el['addr'] = addr
 
-		addrlist.append(el)
+		out.append(el)
 
-	sys.stderr.write("\rGenerated %s %s-%s%s\n" %
-		(opts['gen_what'], start, end, " "*9))
+	sys.stderr.write("\rGenerated %s %s%s\n"%(t_addrs,opts['gen_what']," "*15))
 
-	return addrlist
+	return out
 
 
 def format_addr_data(addrlist, seed_chksum, opts):
@@ -139,7 +139,16 @@ def format_addr_data(addrlist, seed_chksum, opts):
 			(5 if 'print_secret' in opts else 1) + len(wif_msg)
 		)
 
-	data = []
+	header = """
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is ignored.
+# A label may be added to the right of each address, and it will be
+# appended to the bitcoind wallet label upon import (max. 24 characters,
+# allowed characters: A-Za-z0-9, plus '{}').
+""".format("', '".join(wallet_addr_label_symbols)).strip()
+	data = [header + "\n"]
 	data.append("%s {" % seed_chksum.upper())
 
 	for el in addrlist:

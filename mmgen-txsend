@@ -74,7 +74,7 @@ except:
 
 if not 'quiet' in opts: do_license_msg()
 
-msg("Signed transaction file '%s' appears valid" % infile)
+msg("\nSigned transaction file '%s' appears valid" % infile)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"

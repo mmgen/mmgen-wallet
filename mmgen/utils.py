@@ -250,7 +250,7 @@ def make_chksum_8(s):
 	from hashlib import sha256
 	return sha256(sha256(s).digest()).hexdigest()[:8].upper()
 
-def _make_chksum_6(s):
+def make_chksum_6(s):
 	from hashlib import sha256
 	return sha256(s).hexdigest()[:6]
 
@@ -438,7 +438,7 @@ def write_seed(seed, opts):
 
 	from mmgen.bitcoin import b58encode_pad
 	data = col4(b58encode_pad(seed))
-	chk = _make_chksum_6(b58encode_pad(seed))
+	chk = make_chksum_6(b58encode_pad(seed))
 
 	o = "%s %s\n" % (chk,data)
 
@@ -522,11 +522,11 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 		label,
 		"{} {} {} {} {}".format(*metadata),
 		"{}: {} {} {}".format(hash_preset,*_get_hash_params(hash_preset)),
-		"{} {}".format(_make_chksum_6(sf),  col4(sf)),
-		"{} {}".format(_make_chksum_6(esf), col4(esf))
+		"{} {}".format(make_chksum_6(sf),  col4(sf)),
+		"{} {}".format(make_chksum_6(esf), col4(esf))
 	)
 
-	chk = _make_chksum_6(" ".join(lines))
+	chk = make_chksum_6(" ".join(lines))
 
 	confirm = False if 'quiet' in opts else True
 	write_to_file(outfile, "\n".join((chk,)+lines)+"\n", confirm)
@@ -593,7 +593,7 @@ def	check_wallet_format(infile, lines, opts):
 
 
 def _check_chksum_6(chk,val,desc,infile):
-	comp_chk = _make_chksum_6(val)
+	comp_chk = make_chksum_6(val)
 	if chk != comp_chk:
 		msg("%s checksum incorrect in file '%s'!" % (desc,infile))
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
@@ -682,7 +682,7 @@ def get_seed_from_seed_data(words):
 	stored_chk = words[0]
 	seed_b58 = "".join(words[1:])
 
-	chk = _make_chksum_6(seed_b58)
+	chk = make_chksum_6(seed_b58)
 	msg_r("Validating %s checksum..." % seed_ext)
 
 	if compare_checksums(chk, "from seed", stored_chk, "from input"):

@@ -20,7 +20,7 @@ tx.py:  Bitcoin transaction routines
 """
 
 from binascii import unhexlify
-from mmgen.utils import msg,msg_r,write_to_file,my_raw_input,get_char,make_chksum_8,make_timestamp
+from mmgen.utils import *
 import sys, os
 from decimal import Decimal
 from mmgen.config import *
@@ -110,7 +110,7 @@ def get_cfg_options(cfg_keys):
 def print_tx_to_file(tx,sel_unspent,send_amt,opts):
 	sig_data = [{"txid":i.txid,"vout":i.vout,"scriptPubKey":i.scriptPubKey}
 					for i in sel_unspent]
-	tx_id = make_chksum_8(unhexlify(tx))
+	tx_id = make_chksum_6(unhexlify(tx)).upper()
 	outfile = "%s[%s].tx" % (tx_id,send_amt)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
@@ -124,7 +124,7 @@ def print_tx_to_file(tx,sel_unspent,send_amt,opts):
 
 
 def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
-	tx_id = make_chksum_8(unhexlify(tx))
+	tx_id = make_chksum_6(unhexlify(tx)).upper()
 	outfile = "{}[{}].txsig".format(*metadata[:2])
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
@@ -148,10 +148,11 @@ def sort_and_view(unspent):
 		return cmp("%s %03s" % (a.txid,a.vout), "%s %03s" % (b.txid,b.vout))
 	def s_addr(a,b): return cmp(a.address,b.address)
 	def s_age(a,b):  return cmp(b.confirmations,a.confirmations)
+	def s_mmgen(a,b): return cmp(a.account,b.account)
 
 	fs =     " %-4s %-11s %-2s %-34s %13s %-s"
 	fs_hdr = " %-4s %-11s %-4s %-35s %-9s %-s"
-	sort,group,reverse = "",False,False
+	sort,group,mmaddr,reverse = "",False,False,False
 
 	from copy import deepcopy
 	msg("")
@@ -178,7 +179,16 @@ def sort_and_view(unspent):
 		for n,i in enumerate(out):
 			amt = str(trim_exponent(i.amount))
 			fill = 8 - len(amt.split(".")[-1]) if "." in amt else 9
-			addr = " |" + "-"*32 if i.skip == "d" else i.address
+			if i.skip == "d":
+				addr = " |" + "-"*32
+			else:
+				if mmaddr:
+					if i.account and verify_mmgen_label(i.account):
+						addr = "%s.. %s" % (i.address[:4],i.account)
+					else:
+						addr = i.address
+				else:
+					addr = i.address
 			txid = "       |---" if i.skip == "t" else i.txid[:8]+"..."
 			days = int(i.confirmations * mins_per_block / (60*24))
 
@@ -187,24 +197,44 @@ def sort_and_view(unspent):
 		while True:
 			reply = get_char("\n".join(output) +
 """\n
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [g]roup
+Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
+View options: [g]roup, show [m]mgen addr
 (Type 'q' to quit sorting): """).strip()
 			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"; break
 			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
 			elif reply == 'A': unspent.sort(s_age);  sort = "age"; break
+			elif reply == 'M': unspent.sort(s_mmgen); mmaddr,sort=True,"mmgen"; break
 			elif reply == 'r': 
 				reverse = False if reverse else True
 				unspent.reverse()
 				break
 			elif reply == 'g': group = False if group else True; break
+			elif reply == 'm': mmaddr = False if mmaddr else True; break
 			elif reply == 'q': break
 			else: msg("Invalid input")
 
 		msg("\n")
 		if reply == 'q': break
 
-	return unspent
+	return tuple(unspent)
+
+
+def verify_mmgen_label(s,return_str=False):
+
+	fail    = "" if return_str else False
+	success = s  if return_str else True
+
+	if not s: return fail
+
+	label = s.split()[0]
+	if label[8] != ':': return fail
+	for i in label[:8]:
+		if not i in "01234567890ABCDEF": return fail
+	for i in label[9:]:
+		if not i in "0123456789": return fail
+
+	return success
 
 
 def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
@@ -226,10 +256,11 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
 				msg(" " + """
 %-2s tx,vout: %s,%s
     address:        %s
+    label:          %s
     amount:         %s BTC
     confirmations:  %s (around %s days)
 """.strip() %
-	(n+1,i['txid'],i['vout'],j['address'],
+	(n+1,i['txid'],i['vout'],j['address'],verify_mmgen_label(j['account'],True),
 		trim_exponent(j['amount']),j['confirmations'],days)+"\n")
 				break
 
@@ -251,7 +282,7 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
 	msg("TX fee:       %s BTC\n" % trim_exponent(total_in-total_out))
 
 
-def parse_tx_data(tx_data):
+def parse_tx_data(tx_data,infile):
 
 	if len(tx_data) != 4:
 		msg("'%s': not a transaction file" % infile)
@@ -288,7 +319,7 @@ def select_outputs(unspent,prompt):
 	while True:
 		reply = my_raw_input(prompt).strip()
 		if reply:
-			selected = ()
+			selected = []
 			try:
 				selected = [int(i) - 1 for i in reply.split()]
 			except: pass
@@ -302,7 +333,7 @@ def select_outputs(unspent,prompt):
 
 		msg("'%s': Invalid input" % reply)
 
-	return [unspent[i] for i in selected]
+	return list(set(selected))
 
 
 def make_tx_out(rcpt_arg):
@@ -323,3 +354,18 @@ def make_tx_out(rcpt_arg):
 		sys.exit(3)
 
 	return tx_out
+
+def check_wallet_addr_label(label):
+
+	if len(label) > 16:
+		msg("'%s': illegal label (length must be <= 16 characters)" % label)
+		sys.exit(3)
+
+	from string import ascii_letters, digits
+	chrs = tuple(ascii_letters + digits) + wallet_addr_label_symbols
+	for ch in list(label):
+		if ch not in chrs:
+			msg("'%s': illegal character in label '%s'" % (ch,label))
+			msg("Permitted characters: A-Za-z0-9, plus '%s'" %
+					"', '".join(wallet_addr_label_symbols))
+			sys.exit(3)

@@ -21,11 +21,12 @@ mmgen-walletchk: Check integrity of a mmgen deterministic wallet, display
 """
 
 import sys
-import mmgen.Opts as Opts
+from mmgen.Opts import *
 
 from mmgen.utils import *
 
 help_data = {
+	'prog_name': sys.argv[0].split("/")[-1],
 	'desc':  """Check integrity of a %s deterministic wallet, display
                     its information and export seed and mnemonic data."""\
 					% proj_name,
@@ -45,7 +46,7 @@ short_opts = "hd:emsSv"
 long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
 				"export_seed","stdout","verbose"
 
-opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
+opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
 check_opts(opts, ('outdir',))
 

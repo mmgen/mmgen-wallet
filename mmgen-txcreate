@@ -94,7 +94,30 @@ msg("Total amount to spend: %s BTC" % send_amt)
 msg("%s unspent outputs total" % len(unspent))
 
 while True:
-	sel_unspent = select_outputs(unspent,"Choose the outputs to spend: ")
+	sel_nums = select_outputs(unspent,"Choose the outputs to spend: ")
+	sel_unspent = [unspent[i] for i in sel_nums]
+	mmgen_sel,other_sel = [],[]
+	for i in sel_nums:
+		if verify_mmgen_label(unspent[i].account):
+			mmgen_sel.append(i)
+		else:
+			other_sel.append(i)
+
+	if mmgen_sel and other_sel:
+		keygen_args = [unspent[i].account.split()[0][9:] for i in mmgen_sel]
+		msg("""
+NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
+which makes the signing process more complicated.  When signing the
+transaction, keys for the non-mmgen inputs must be supplied in a separate
+file using mmgen-txsign's '-k' option.  Alternatively, you may import the
+mmgen keys into the wallet.dat of your offline bitcoind, first running
+mmgen-keygen with address list '%s' to generate the keys.  Finally, run
+mmgen-txsign with the '-f' option to force the use of wallet.dat as the
+key source.
+""".strip() % ",".join(sorted(keygen_args)))
+		if not user_confirm("Accept?"):
+			continue
+
 	total_in = trim_exponent(sum([o.amount for o in sel_unspent]))
 	change   = trim_exponent(total_in - (send_amt + tx_fee))
 
@@ -102,8 +125,9 @@ while True:
 		prompt = "Transaction produces %s BTC in change.  OK?" % change
 		if user_confirm(prompt,default_yes=True):
 			break
+	else:
+		msg(txmsg['not_enough_btc'] % change)
 
-	msg(txmsg['not_enough_btc'] % change)
 
 if change > 0 and not change_addr:
 	msg(txmsg['throwaway_change'] % (change, total_in-tx_fee))

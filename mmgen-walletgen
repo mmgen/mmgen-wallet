@@ -59,8 +59,11 @@ By default (i.e. when invoked without any of the '--from-<what>' options),
 
 Data for the --from-<what> options will be taken from <infile> if <infile>
 is specified.  Otherwise, the user will be prompted to enter the data.
-Note that passphrase data may be input in free-form fashion, using any
-combination of spaces or tabs (or newlines, in a file) between words.
+
+For passphrases all combinations of whitespace are equal, and leading and
+trailing space are ignored.  This permits reading passphrase data from a
+multi-line file with free spacing and indentation.  This is particularly
+convenient for long brainwallet passphrases, for example.
 
 BRAINWALLET NOTE:
 

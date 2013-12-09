@@ -50,7 +50,12 @@ check_infile(cmd_args[0])
 
 seed_id,addr_data = parse_addrs_file(cmd_args[0])
 
-from mmgen.tx import connect_to_bitcoind
+from mmgen.tx import check_wallet_addr_label,connect_to_bitcoind
+
+for i in addr_data:
+	i[2] = " ".join(i[2:]) if len(i) > 2 else ""
+	check_wallet_addr_label(i[2])
+
 c = connect_to_bitcoind(http_timeout=3600)
 
 message = """
@@ -60,8 +65,7 @@ low-powered computer such as a netbook.
 confirm_or_exit(message, "continue", expect="YES")
 
 for n,i in enumerate(addr_data):
-	comment = " " + " ".join(i[2:]) if len(i) > 2 else ""
-	label = "%s:%s%s" % (seed_id,str(i[0]),comment)
+	label = "%s:%s %s" % (seed_id,str(i[0]),i[2])
 	msg("Importing %-6s %-34s (%s)" % (
 				("%s/%s:" % (n+1,len(addr_data))),
 				i[1], label)

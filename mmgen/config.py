@@ -48,3 +48,4 @@ hash_presets = {
 	'4': [15, 8, 12],
 	'5': [16, 8, 16],
 }
+wallet_addr_label_symbols = ".","_",",","-"," "

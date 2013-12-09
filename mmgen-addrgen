@@ -72,9 +72,12 @@ Address range may be a single number or a range in the form XXX-YYY{}
 If available, external 'keyconv' program will be used for address generation
 
 Data for the --from-<what> options will be taken from <infile> if <infile>
-is specified.  Otherwise, the user will be prompted to enter the data.  Note
-that passphrase data in a file may be arranged in free-form fashion, using
-any combination of spaces, tabs or newlines to separate words
+is specified.  Otherwise, the user will be prompted to enter the data.
+
+For passphrases all combinations of whitespace are equal, and leading and
+trailing space are ignored.  This permits reading passphrase data from a
+multi-line file with free spacing and indentation.  This is particularly
+convenient for long brainwallet passphrases, for example.
 
 BRAINWALLET NOTE:
 
@@ -158,7 +161,7 @@ else:
 
 seed          = get_seed(infile,opts)
 seed_id       = make_chksum_8(seed)
-addr_data     = generate_addrs(seed, start, end, opts)
+addr_data     = generate_addrs(seed, range(start, end+1), opts)
 addr_data_str = format_addr_data(addr_data, seed_id, opts)
 
 # Output data:
