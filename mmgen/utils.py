@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -143,7 +143,7 @@ def check_opts(opts,keys):
 				sys.exit(1)
 
 			if int(l) not in seed_lens:
-				msg("'%s': invalid 'l' %s.  Options: %s" % 
+				msg("'%s': invalid 'l' %s.  Options: %s" %
 						(l, what, ", ".join([str(i) for i in seed_lens])))
 				sys.exit(1)
 
@@ -277,27 +277,40 @@ def check_infile(f):
 		msg("Requested input file '%s' is unreadable by you.  Aborting" % f)
 		sys.exit(1)
 
+def validate_addr_num(n):
 
-def parse_address_range(arg):
-
-	import re
-	m = re.match(r'^(\d+)(-(\d+))*$', arg)
-
-	if m == None:
-		msg(arg + ": invalid argument for address range")
+	try: n = int(n)
+	except:
+		msg("'%s': invalid argument for address" % n)
 		sys.exit(2)
 
-	start,end = int(m.group(1)), int(m.group(3) or m.group(1))
-
-	if start < 1:
-		msg(args + ": First address must be >= 1")
+	if n < 1:
+		msg("'%s': address must be greater than zero" % n)
 		sys.exit(2)
 
-	if end < start:
-		msg(arg + ": Last address must be >= first address")
-		sys.exit(2)
+	return n
 
-	return start,end
+
+def parse_address_list(arg):
+
+	ret = []
+
+	for i in (arg.split(",")):
+
+		j = i.split("-")
+
+		if len(j) == 1:
+			i = validate_addr_num(i)
+			ret.append(i)
+		elif len(j) == 2:
+			beg = validate_addr_num(j[0])
+			end = validate_addr_num(j[1])
+			for k in range(beg,end+1): ret.append(k)
+		else:
+			msg("'%s': invalid argument for address range" % j)
+			sys.exit(2)
+
+	return sorted(set(ret))
 
 
 def get_first_passphrase_from_user(what, opts):
@@ -794,50 +807,6 @@ def remove_blanks_comments(lines):
 		if i: ret.append(i)
 
 	return ret
-
-def parse_addrs_file(f):
-	lines = get_lines_from_file(f,"address data")
-	lines = remove_blanks_comments(lines)
-
-	seed_id,obrace = lines[0].split()
- 	cbrace = lines[-1]
-
-	if   obrace != '{':
-		msg("'%s': invalid first line" % lines[0])
-	elif cbrace != '}':
-		msg("'%s': invalid last line" % cbrace)
-	elif len(seed_id) != 8:
-		msg("'%s': invalid Seed ID" % seed_id)
-	else:
-		try:
-			unhexlify(seed_id)
-		except:
-			msg("'%s': invalid Seed ID" % seed_id)
-			sys.exit(3)
-		
-		ret = []
-		for i in lines[1:-1]:
-			d = i.split()
-
-			try: d[0] = int(d[0])
-			except:
-				msg("'%s': invalid address num. in line: %s" % (d[0],d))
-				sys.exit(3)
-
-			from mmgen.bitcoin import verify_addr
-			if not verify_addr(d[1]):
-				msg("'%s': invalid address" % d[1])
-				sys.exit(3)
-
-			ret.append(d)
-
-		return seed_id,ret
-
-	sys.exit(3)
-
-
-
-
 
 if __name__ == "__main__":
 	print get_lines_from_file("/tmp/lines","test file")

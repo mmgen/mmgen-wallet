@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -60,7 +60,7 @@ def generate_addrs(seed, addrnums, opts):
 
 	Supported options:
 		print_secret, no_addresses, no_keyconv, gen_what
-	
+
 	Addresses are returned in a list of dictionaries with the following keys:
 		num, sec, wif, addr
 	"""
@@ -145,9 +145,10 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # This file is editable.
 # Everything following a hash symbol '#' is ignored.
 # A label may be added to the right of each address, and it will be
-# appended to the bitcoind wallet label upon import (max. 24 characters,
+# appended to the bitcoind wallet label upon import (max. {} characters,
 # allowed characters: A-Za-z0-9, plus '{}').
-""".format("', '".join(wallet_addr_label_symbols)).strip()
+""".format(max_wallet_addr_label_len,
+		"', '".join(wallet_addr_label_symbols)).strip()
 	data = [header + "\n"]
 	data.append("%s {" % seed_chksum.upper())
 
@@ -175,16 +176,18 @@ def format_addr_data(addrlist, seed_chksum, opts):
 	return "\n".join(data) + "\n"
 
 
-def write_addr_data_to_file(seed, data, start, end, opts):
+def write_addr_data_to_file(seed, data, addr_list, opts):
 
 	if 'print_addresses_only' in opts: ext = "addrs"
 	elif 'no_addresses' in opts:       ext = "keys"
 	else:                              ext = "akeys"
 
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")
-
+	beg = addr_list[0]
+	end = addr_list[-1]
+	sep = "-" if (end - beg == len(addr_list) - 1) else ".."
 	from mmgen.utils import write_to_file, make_chksum_8, msg
-	addr_range = str(start) if start == end else "%s-%s" % (start,end)
+	addr_range = beg if beg == end else "%s%s%s" % (beg,sep,end)
 	outfile = "{}[{}].{}".format(make_chksum_8(seed),addr_range,ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)

@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -73,11 +73,11 @@ def check_btc_amt(send_amt):
 	except:
 		msg("%s: Invalid amount" % send_amt)
 		sys.exit(3)
-	
+
 	if retval.as_tuple()[-1] < -8:
 		msg("%s: Too many decimal places in amount" % send_amt)
 		sys.exit(3)
-	
+
 	return trim_exponent(retval)
 
 
@@ -111,7 +111,7 @@ def print_tx_to_file(tx,sel_unspent,send_amt,opts):
 	sig_data = [{"txid":i.txid,"vout":i.vout,"scriptPubKey":i.scriptPubKey}
 					for i in sel_unspent]
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "%s[%s].tx" % (tx_id,send_amt)
+	outfile = "tx_%s[%s].raw" % (tx_id,send_amt)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	metadata = "%s %s %s" % (tx_id, send_amt, make_timestamp())
@@ -125,7 +125,7 @@ def print_tx_to_file(tx,sel_unspent,send_amt,opts):
 
 def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "{}[{}].txsig".format(*metadata[:2])
+	outfile = "tx_{}[{}].sig".format(*metadata[:2])
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	data = "%s\n%s\n" % (" ".join(metadata),sig_tx)
@@ -134,7 +134,7 @@ def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
 
 
 def print_sent_tx_to_file(tx,metadata,opts):
-	outfile = "{}[{}].txout".format(*metadata[:2])
+	outfile = "tx_{}[{}].out".format(*metadata[:2])
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	write_to_file(outfile,tx+"\n",confirm=False)
@@ -205,7 +205,7 @@ View options: [g]roup, show [m]mgen addr
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
 			elif reply == 'A': unspent.sort(s_age);  sort = "age"; break
 			elif reply == 'M': unspent.sort(s_mmgen); mmaddr,sort=True,"mmgen"; break
-			elif reply == 'r': 
+			elif reply == 'r':
 				reverse = False if reverse else True
 				unspent.reverse()
 				break
@@ -220,19 +220,22 @@ View options: [g]roup, show [m]mgen addr
 	return tuple(unspent)
 
 
-def verify_mmgen_label(s,return_str=False):
+def verify_mmgen_label(s,return_str=False,check_label_len=False):
 
 	fail    = "" if return_str else False
 	success = s  if return_str else True
 
 	if not s: return fail
 
-	label = s.split()[0]
-	if label[8] != ':': return fail
-	for i in label[:8]:
+	mminfo,comment = s.split(None,1)
+	if mminfo[8] != ':': return fail
+	for i in mminfo[:8]:
 		if not i in "01234567890ABCDEF": return fail
-	for i in label[9:]:
+	for i in mminfo[9:]:
 		if not i in "0123456789": return fail
+
+	if check_label_len:
+		check_wallet_addr_comment(comment)
 
 	return success
 
@@ -355,10 +358,11 @@ def make_tx_out(rcpt_arg):
 
 	return tx_out
 
-def check_wallet_addr_label(label):
+def check_wallet_addr_comment(label):
 
-	if len(label) > 16:
-		msg("'%s': illegal label (length must be <= 16 characters)" % label)
+	if len(label) > max_wallet_addr_label_len:
+		msg("'%s': overlong label (length must be <=%s)" %
+				(label,max_wallet_addr_label_len))
 		sys.exit(3)
 
 	from string import ascii_letters, digits
@@ -369,3 +373,46 @@ def check_wallet_addr_label(label):
 			msg("Permitted characters: A-Za-z0-9, plus '%s'" %
 					"', '".join(wallet_addr_label_symbols))
 			sys.exit(3)
+
+
+def parse_addrs_file(f):
+	lines = get_lines_from_file(f,"address data")
+	lines = remove_blanks_comments(lines)
+
+	seed_id,obrace = lines[0].split()
+	cbrace = lines[-1]
+
+	if   obrace != '{':
+		msg("'%s': invalid first line" % lines[0])
+	elif cbrace != '}':
+		msg("'%s': invalid last line" % cbrace)
+	elif len(seed_id) != 8:
+		msg("'%s': invalid Seed ID" % seed_id)
+	else:
+		try:
+			unhexlify(seed_id)
+		except:
+			msg("'%s': invalid Seed ID" % seed_id)
+			sys.exit(3)
+
+		ret = []
+		for i in lines[1:-1]:
+			d = i.split(None,2)
+
+			try: d[0] = int(d[0])
+			except:
+				msg("'%s': invalid address num. in line: %s" % (d[0],d))
+				sys.exit(3)
+
+			from mmgen.bitcoin import verify_addr
+			if not verify_addr(d[1]):
+				msg("'%s': invalid address" % d[1])
+				sys.exit(3)
+
+			if len(d) == 3: check_wallet_addr_comment(d[2])
+
+			ret.append(d)
+
+		return seed_id,ret
+
+	sys.exit(3)

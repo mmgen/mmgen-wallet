@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -25,7 +25,8 @@ import sys
 from mmgen.Opts   import *
 from mmgen.config import *
 from mmgen.license import *
-from mmgen.utils import check_infile,parse_addrs_file,confirm_or_exit
+from mmgen.utils import check_infile,confirm_or_exit
+from mmgen.tx import connect_to_bitcoind,parse_addrs_file
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
@@ -50,22 +51,17 @@ check_infile(cmd_args[0])
 
 seed_id,addr_data = parse_addrs_file(cmd_args[0])
 
-from mmgen.tx import check_wallet_addr_label,connect_to_bitcoind
-
-for i in addr_data:
-	i[2] = " ".join(i[2:]) if len(i) > 2 else ""
-	check_wallet_addr_label(i[2])
-
 c = connect_to_bitcoind(http_timeout=3600)
 
 message = """
-Importing addresses can take a long time, up to 30 min. per address on a
+Importing addresses can take a long time - up to 30 min. per address on a
 low-powered computer such as a netbook.
 """
 confirm_or_exit(message, "continue", expect="YES")
 
 for n,i in enumerate(addr_data):
-	label = "%s:%s %s" % (seed_id,str(i[0]),i[2])
+	comment = " " + i[2] if len(i) == 3 else ""
+	label = "%s:%s%s" % (seed_id,i[0],comment)
 	msg("Importing %-6s %-34s (%s)" % (
 				("%s/%s:" % (n+1,len(addr_data))),
 				i[1], label)

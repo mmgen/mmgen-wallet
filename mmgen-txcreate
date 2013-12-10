@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -62,10 +62,10 @@ if debug:
 	print "Cmd args:              %s" % repr(cmd_args)
 
 if len(cmd_args) == 3:
-	rcpt_arg,tx_fee,change_addr = cmd_args	
+	rcpt_arg,tx_fee,change_addr = cmd_args
 	check_address(change_addr)
 elif len(cmd_args) == 2:
-	rcpt_arg,tx_fee = cmd_args	
+	rcpt_arg,tx_fee = cmd_args
 	change_addr = ""
 elif len(cmd_args) == 0 and 'info' in opts:
 	pass
@@ -98,7 +98,7 @@ while True:
 	sel_unspent = [unspent[i] for i in sel_nums]
 	mmgen_sel,other_sel = [],[]
 	for i in sel_nums:
-		if verify_mmgen_label(unspent[i].account):
+		if verify_mmgen_label(unspent[i].account,check_label_len=True):
 			mmgen_sel.append(i)
 		else:
 			other_sel.append(i)

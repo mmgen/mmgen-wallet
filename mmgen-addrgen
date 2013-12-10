@@ -2,23 +2,23 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-addrgen: Generate a range of addresses from a mmgen deterministic 
-               wallet.
+mmgen-addrgen: Generate a list or range of addresses from a mmgen
+               deterministic wallet.
                Call as 'btc-keygen' to allow key generation as well.
 """
 
@@ -37,21 +37,21 @@ if invoked_as == "keygen":
 	extra_help_data = (
 		"\n-A, --no-addresses       Print only secret keys, no addresses",
 		"\n-x, --b16                Print secret keys in hexadecimal too",
-		".\nBy default, both addresses and secret keys are generated"
+		"\nBy default, both addresses and secret keys are generated."
 	)
 else: extra_help_data = ("","","")
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
-	'desc': """Generate a range of {} from a {} wallet, mnemonic,
-                  seed or password""".format(gen_what,proj_name),
-	'usage':"[opts] [infile] <address range>",
+	'desc': """Generate a list or range of {} from a {} wallet,
+	              mnemonic, seed or password""".format(gen_what,proj_name),
+	'usage':"[opts] [infile] <address list>",
 	'options': """
 -h, --help               Print this help message{}
 -d, --outdir          d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase    Display passphrase or mnemonic on screen upon entry
 -K, --no-keyconv         Use internal libraries for address generation
-                         instead of 'keyconv' 
+                         instead of 'keyconv'
 -l, --seed-len        N  Length of seed.  Options: {}
                          (default: {})
 -p, --hash-preset     p  Use scrypt.hash() parameters from preset 'p'
@@ -67,9 +67,11 @@ help_data = {
 -m, --from-mnemonic      Generate {W} from an electrum-like mnemonic
 -s, --from-seed          Generate {W} from a seed in .{S} format
 
-Address range may be a single number or a range in the form XXX-YYY{}
+Addresses are given in a comma-separated list.  Hyphen-separated
+ranges are also allowed.{}
 
-If available, external 'keyconv' program will be used for address generation
+If available, the external 'keyconv' program will be used for address
+generation.
 
 Data for the --from-<what> options will be taken from <infile> if <infile>
 is specified.  Otherwise, the user will be prompted to enter the data.
@@ -138,13 +140,13 @@ if   len(cmd_args) == 1 and (
 			'from_mnemonic' in opts or
 			'from_brain' in opts or
 			'from_seed' in opts
-		): infile,addr_range = "",cmd_args[0]
+		): infile,addr_list_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
-	infile,addr_range = cmd_args
+	infile,addr_list_arg = cmd_args
 	check_infile(infile)
 else: usage(help_data)
 
-start,end = parse_address_range(addr_range)
+addr_list = parse_address_list(addr_list_arg)
 
 if not 'quiet' in opts: do_license_msg()
 
@@ -161,7 +163,7 @@ else:
 
 seed          = get_seed(infile,opts)
 seed_id       = make_chksum_8(seed)
-addr_data     = generate_addrs(seed, range(start, end+1), opts)
+addr_data     = generate_addrs(seed, addr_list, opts)
 addr_data_str = format_addr_data(addr_data, seed_id, opts)
 
 # Output data:
@@ -173,4 +175,4 @@ if 'stdout' in opts:
 elif not sys.stdout.isatty():
 	write_to_stdout(addr_data_str,"secret keys",confirm=False)
 else:
-	write_addr_data_to_file(seed, addr_data_str, start, end, opts)
+	write_addr_data_to_file(seed, addr_data_str, addr_list, opts)
