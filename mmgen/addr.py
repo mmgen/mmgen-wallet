@@ -176,19 +176,37 @@ def format_addr_data(addrlist, seed_chksum, opts):
 	return "\n".join(data) + "\n"
 
 
+def fmt_addr_list(addr_list):
+
+	prev = addr_list[0]
+	ret = prev,
+
+	for i in addr_list[1:]:
+
+		if i == prev + 1:
+			if i == addr_list[-1]: ret += "-", i
+		else:
+			if prev != ret[-1]: ret += "-", prev
+			ret += ",", i
+
+		prev = i
+
+	return "".join([str(i) for i in ret])
+
+
 def write_addr_data_to_file(seed, data, addr_list, opts):
 
 	if 'print_addresses_only' in opts: ext = "addrs"
 	elif 'no_addresses' in opts:       ext = "keys"
 	else:                              ext = "akeys"
-
+	
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")
-	beg = addr_list[0]
-	end = addr_list[-1]
-	sep = "-" if (end - beg == len(addr_list) - 1) else ".."
 	from mmgen.utils import write_to_file, make_chksum_8, msg
-	addr_range = beg if beg == end else "%s%s%s" % (beg,sep,end)
-	outfile = "{}[{}].{}".format(make_chksum_8(seed),addr_range,ext)
+	outfile = "{}[{}].{}".format(
+			make_chksum_8(seed),
+			fmt_addr_list(addr_list),
+			ext
+		)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -196,3 +214,6 @@ def write_addr_data_to_file(seed, data, addr_list, opts):
 
 	dtype = "Address" if 'print_addresses_only' in opts else "Key"
 	msg("%s data saved to file '%s'" % (dtype,outfile))
+
+if __name__ == "__main__":
+	print fmt_addr_list(sorted(set([1,3,5,2,8,9,10,12,13,14,16])))
