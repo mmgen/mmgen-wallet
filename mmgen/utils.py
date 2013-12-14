@@ -675,8 +675,8 @@ def _get_words_from_file(infile,what):
 def get_lines_from_file(infile,what):
 	msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
-	lines = f.readlines(); f.close()
-	return [i.strip("\n") for i in lines]
+	lines = f.read().splitlines(); f.close()
+	return lines
 
 
 def get_words(infile,what,prompt,opts):

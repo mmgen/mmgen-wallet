@@ -47,9 +47,19 @@ help_data = {
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{} format
 
+Transactions with either mmgen or non-mmgen input addresses may be signed.
+For non-mmgen inputs, the bitcoind wallet.dat is used as the key source.
+For mmgen inputs, key data is generated from your seed as with the
+mmgen-addrgen and mmgen-keygen utilities.
+
 Data for the --from-<what> options will be taken from a file if a second
 file is specified on the command line.  Otherwise, the user will be
 prompted to enter the data.
+
+In cases of transactions with mixed mmgen and non-mmgen inputs, non-mmgen
+keys must be supplied in a separate file (WIF format, one key per line)
+using the '--keys-from-file' option.  Alternatively, one may import the
+required mmgen keys into wallet.dat and use the '--force-wallet-dat' option.
 """.format(seed_ext)
 }
 
@@ -80,9 +90,36 @@ tx_data = get_lines_from_file(tx_file,"transaction data")
 
 metadata,tx_hex,sig_data,inputs_data = parse_tx_data(tx_data,tx_file)
 
+if 'info' in opts:
+	view_tx_data(c,inputs_data,tx_hex,metadata)
+	sys.exit(0)
+
+if not 'quiet' in opts: do_license_msg()
+
+msg("Successfully opened transaction file '%s'" % tx_file)
+
+if user_confirm("View transaction data? ",default_yes=False):
+	view_tx_data(c,inputs_data,tx_hex,metadata)
+
+
+def sign_transaction(tx_hex,sig_data,keys=None):
+
+	from mmgen.rpc import exceptions
+
+	try:
+		sig_tx = c.signrawtransaction(tx_hex,sig_data,keys)
+	except exceptions.InvalidAddressOrKey:
+		msg("Invalid address or key")
+		sys.exit(3)
+# 	except:
+# 		msg("Failed to sign transaction")
+# 		sys.exit(3)
+
+	return sig_tx
+
+
 # Are inputs mmgen addresses?
 infile,mmgen_addrs,other_addrs = "",[],[]
-# Check that all the seed IDs are the same:
 
 for i in inputs_data:
 	if verify_mmgen_label(i['account']):
@@ -90,7 +127,8 @@ for i in inputs_data:
 	else:
 		other_addrs.append(i)
 
-if mmgen_addrs:
+if mmgen_addrs and not 'force_wallet_dat' in opts:
+	# Check that all the seed IDs are the same:
 	a_ids = list(set([i['account'][:8] for i in mmgen_addrs]))
 	if len(a_ids) != 1:
 		msg("Addresses come from different seeds! (%s)" % " ".join(a_ids))
@@ -98,18 +136,30 @@ if mmgen_addrs:
 
 	if len(cmd_args) == 2:
 		infile = cmd_args[1]
+	elif "from_brain" in opts or "from_mnemonic" in opts or "from_seed" in opts:
+		infile = ""
 	else:
-		if "from_brain" in opts \
-			or "from_mnemonic" in opts \
-				or "from_seed" in opts:
-			infile = ""
-		else:
-			msg("Inputs contain mmgen addresses.  An MMGen wallet file must be specified on the command line (or use the '-b', '-m' or '-s' options).".strip())
-			sys.exit(2)
+		msg("Inputs contain mmgen addresses.  An MMGen wallet file must be specified on the command line (or use the '-b', '-m' or '-s' options).".strip())
+		sys.exit(2)
+
+	seed    = get_seed(infile,opts)
+	seed_id = make_chksum_8(seed)
+
+	if seed_id != a_ids[0]:
+		msg("Seed ID of wallet (%s) doesn't match that of addresses (%s)"
+				% (seed_id,a_ids[0]))
+		sys.exit(3)
+
+	addr_nums = [int(i['account'].split()[0][9:]) for i in mmgen_addrs]
+
+	from mmgen.addr import generate_addrs
+	o = {'no_addresses': True, 'gen_what': "keys"}
+	keys = [i['wif'] for i in generate_addrs(seed, addr_nums, o)]
 
 	if other_addrs:
 		if 'keys_from_file' in opts:
-			add_keys = get_lines_from_file(opts['keys_from_file'])
+			keys += get_lines_from_file(opts['keys_from_file'],
+					"additional key data")
 		else:
 			msg("""
 A key file must be supplied (option '-f') for the following non-mmgen
@@ -119,35 +169,12 @@ address%s: %s""" % (
 	  ))
 			sys.exit(2)
 
-if 'info' in opts:
-	view_tx_data(c,inputs_data,tx_hex,metadata)
-	sys.exit(0)
+	sig_tx = sign_transaction(tx_hex,sig_data,keys)
 
-if not 'quiet' in opts and not 'info' in opts: do_license_msg()
+elif 'keys_from_file' in opts:
+	keys = get_lines_from_file(opts['keys_from_file'],"key data")
 
-msg("Successfully opened transaction file '%s'" % tx_file)
-
-if user_confirm("View transaction data? ",default_yes=False):
-	view_tx_data(c,inputs_data,tx_hex,metadata)
-
-if mmgen_addrs:
-	seed    = get_seed(infile,opts)
-	seed_id = make_chksum_8(seed)
-
-	if seed_id != a_ids[0]:
-		msg("Seed ID of wallet (%s) doesn't match that of addresses (%s)"
-				% (seed_id,a_ids[0]))
-		sys.exit(3)
-	addr_nums = [int(i['account'].split()[0][9:]) for i in mmgen_addrs]
-	from mmgen.addr import generate_addrs
-	o = {'no_addresses': True, 'gen_what': "keys"}
-	keys = [i['wif'] for i in generate_addrs(seed, addr_nums, o)]
-	if other_addrs: keys += add_keys
-	try:
-		sig_tx = c.signrawtransaction(tx_hex,sig_data,keys)
-	except:
-		msg("Failed to sign transaction")
-		sys.exit(3)
+	sig_tx = sign_transaction(tx_hex,sig_data,keys)
 else:
 	prompt = "Enter passphrase for bitcoind wallet: "
 	if 'echo_passphrase' in opts:
@@ -171,14 +198,7 @@ else:
 	else:
 		msg("Passphrase OK")
 
-	try:
-		sig_tx = c.signrawtransaction(tx_hex,sig_data)
-	except:
-		msg("Failed to sign transaction")
-		if wallet_enc:
-			c.walletlock()
-			msg("Locking wallet")
-		sys.exit(3)
+	sig_tx = sign_transaction(tx_hex,sig_data)
 
 	if wallet_enc:
 		c.walletlock()
@@ -187,7 +207,7 @@ else:
 if sig_tx['complete']:
 	msg("Signing completed")
 else:
-	msg("Signing failed: 'complete=%s'" % sig_tx['complete'])
+	msg("Not all keys could be found to sign this transaction")
 	sys.exit(3)
 
 prompt = "Save signed transaction?"

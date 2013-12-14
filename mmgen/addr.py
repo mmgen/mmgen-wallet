@@ -199,7 +199,7 @@ def write_addr_data_to_file(seed, data, addr_list, opts):
 	if 'print_addresses_only' in opts: ext = "addrs"
 	elif 'no_addresses' in opts:       ext = "keys"
 	else:                              ext = "akeys"
-	
+
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")
 	from mmgen.utils import write_to_file, make_chksum_8, msg
 	outfile = "{}[{}].{}".format(
