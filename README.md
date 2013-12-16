@@ -1,6 +1,12 @@
 #  mmgen = Multi-Mode GENerator
 ## a Bitcoin cold storage solution for the command line
 
+NOTE: Parts of this README are now **out of date**.  In particular, the
+new transaction scripts automate the process of offline signing, so that
+your private keys never touch the online machine.  An updated README is
+on the way.  For the time being, consult the `--help` option of the
+`mmgen-tx*` scripts.
+
 NOTE: For the time being, MMGen should be considered experimental software.
 Downloading and testing it out is easy, risk-free and encouraged.
 However, spending significant amounts of BTC into your mmgen-generated
@@ -43,9 +49,9 @@ addresses is done at your own risk.
 ### Instructions for Linux/Unix:
 
 ### Download/Install:
->  Install the ecdsa, scrypt and pycrypto modules:
+>  Install required Python modules:
 
-            sudo pip install ecdsa scrypt pycrypto
+            sudo pip install ecdsa scrypt pycrypto bitcoin-python
 
 >  Install mmgen:
 
