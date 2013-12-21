@@ -32,7 +32,19 @@ ERROR: This transaction produces change (%s BTC); however, no change
 address was specified.  Total inputs - transaction fee = %s BTC.
 To create a valid transaction with no change address, send this sum to the
 specified recipient address.
-""".strip()
+""".strip(),
+'mixed_inputs': """
+NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
+which makes the signing process more complicated.  When signing the
+transaction, keys for the non-mmgen inputs must be supplied in a separate
+file using the '-k' option of mmgen-txsign.
+
+Alternatively, you may import the mmgen keys into the wallet.dat of your
+offline bitcoind, first generating the required keys with mmgen-keygen and
+then running mmgen-txsign with the '-f' option to force the use of
+wallet.dat as the key source.
+
+Selected mmgen inputs: %s"""
 }
 
 
@@ -321,22 +333,20 @@ def select_outputs(unspent,prompt):
 
 	while True:
 		reply = my_raw_input(prompt).strip()
-		if reply:
-			selected = []
-			try:
-				selected = [int(i) - 1 for i in reply.split()]
-			except: pass
-			else:
-				for i in selected:
-					if i < 0 or i >= len(unspent):
-						msg(
-		"Input must be a number or numbers between 1 and %s" % len(unspent))
-						break
-				else: break
 
-		msg("'%s': Invalid input" % reply)
+		if not reply: continue
 
-	return list(set(selected))
+		from mmgen.utils import parse_address_list
+		selected = parse_address_list(reply,sep=None)
+
+		if not selected: continue
+
+		if selected[-1] > len(unspent):
+			msg("Inputs must be less than %s" % len(unspent))
+			continue
+
+		return selected
+
 
 
 def make_tx_out(rcpt_arg):

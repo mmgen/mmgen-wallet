@@ -149,7 +149,8 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # allowed characters: A-Za-z0-9, plus '{}').
 """.format(max_wallet_addr_label_len,
 		"', '".join(wallet_addr_label_symbols)).strip()
-	data = [header + "\n"]
+	data = []
+	if not 'stdout' in opts: data.append(header + "\n")
 	data.append("%s {" % seed_chksum.upper())
 
 	for el in addrlist:

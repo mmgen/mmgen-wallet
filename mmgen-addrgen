@@ -148,6 +148,8 @@ else: usage(help_data)
 
 addr_list = parse_address_list(addr_list_arg)
 
+if not addr_list: sys.exit(2)
+
 if not 'quiet' in opts: do_license_msg()
 
 # Interact with user:

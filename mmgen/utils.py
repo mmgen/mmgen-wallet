@@ -277,38 +277,45 @@ def check_infile(f):
 		msg("Requested input file '%s' is unreadable by you.  Aborting" % f)
 		sys.exit(1)
 
-def validate_addr_num(n):
+
+def _validate_addr_num(n):
 
 	try: n = int(n)
 	except:
 		msg("'%s': invalid argument for address" % n)
-		sys.exit(2)
+		return False
 
 	if n < 1:
 		msg("'%s': address must be greater than zero" % n)
-		sys.exit(2)
+		return False
 
 	return n
 
 
-def parse_address_list(arg):
+def parse_address_list(arg,sep=","):
 
 	ret = []
 
-	for i in (arg.split(",")):
+	for i in (arg.split(sep)):
 
 		j = i.split("-")
 
 		if len(j) == 1:
-			i = validate_addr_num(i)
+			i = _validate_addr_num(i)
+			if not i: return False
 			ret.append(i)
 		elif len(j) == 2:
-			beg = validate_addr_num(j[0])
-			end = validate_addr_num(j[1])
+			beg = _validate_addr_num(j[0])
+			if not beg: return False
+			end = _validate_addr_num(j[1])
+			if not end: return False
+			if end < beg:
+				msg("'%s-%s': end of range less than beginning" % (beg,end))
+				return False
 			for k in range(beg,end+1): ret.append(k)
 		else:
 			msg("'%s': invalid argument for address range" % j)
-			sys.exit(2)
+			return False
 
 	return sorted(set(ret))
 

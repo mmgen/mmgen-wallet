@@ -90,31 +90,21 @@ msg("Total unspent:   %s BTC" % total)
 if 'info' in opts: sys.exit(0)
 
 send_amt = sum(tx_out.values())
-msg("Total amount to spend: %s BTC" % send_amt)
-msg("%s unspent outputs total" % len(unspent))
+msg("Total amount to spend: %s BTC\n%s unspent outputs total" %
+		(send_amt, len(unspent)))
 
 while True:
 	sel_nums = select_outputs(unspent,"Choose the outputs to spend: ")
-	sel_unspent = [unspent[i] for i in sel_nums]
-	mmgen_sel,other_sel = [],[]
-	for i in sel_nums:
-		if verify_mmgen_label(unspent[i].account,check_label_len=True):
-			mmgen_sel.append(i)
-		else:
-			other_sel.append(i)
+	msg("Selected outputs: %s" % " ".join(str(i) for i in sel_nums))
+	sel_unspent = [unspent[i-1] for i in sel_nums]
 
-	if mmgen_sel and other_sel:
-		keygen_args = [unspent[i].account.split()[0][9:] for i in mmgen_sel]
-		msg("""
-NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
-which makes the signing process more complicated.  When signing the
-transaction, keys for the non-mmgen inputs must be supplied in a separate
-file using mmgen-txsign's '-k' option.  Alternatively, you may import the
-mmgen keys into the wallet.dat of your offline bitcoind, first running
-mmgen-keygen with address list '%s' to generate the keys.  Finally, run
-mmgen-txsign with the '-f' option to force the use of wallet.dat as the
-key source.
-""".strip() % ",".join(sorted(keygen_args)))
+	lbls = set([verify_mmgen_label(
+				i.account,return_str=True,check_label_len=True)
+					for i in sel_unspent])
+	lbls.discard("")
+
+	if lbls and len(lbls) < len(sel_unspent):
+		msg(txmsg['mixed_inputs'] % ", ".join(sorted(lbls)))
 		if not user_confirm("Accept?"):
 			continue
 
@@ -138,8 +128,7 @@ for i in tx_out.keys(): tx_out[i] = float(tx_out[i])
 if change: tx_out[change_addr] = float(change)
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 
-msg("Transaction successfully created")
-prompt = "View decoded transaction?"
+prompt = "Transaction successfully created\nView decoded transaction?"
 if user_confirm(prompt,default_yes=False):
 	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex)
 
