@@ -91,11 +91,16 @@ class AuthServiceProxy(object):
                 'method': self.__serviceName,
                 'params': args,
                 'id': self.__idcnt})
-         self.__conn.request('POST', self.__url.path, postdata,
-                 { 'Host' : self.__url.hostname,
-                  'User-Agent' : USER_AGENT,
-                  'Authorization' : self.__authhdr,
-                  'Content-type' : 'application/json' })
+         try:
+			 self.__conn.request('POST', self.__url.path, postdata,
+					 { 'Host' : self.__url.hostname,
+					  'User-Agent' : USER_AGENT,
+					  'Authorization' : self.__authhdr,
+					  'Content-type' : 'application/json' })
+         except:
+			 print "Unable to connect to bitcoind.  Exiting"
+			 import sys
+			 sys.exit(2)
 
          httpresp = self.__conn.getresponse()
          if httpresp is None:

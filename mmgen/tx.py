@@ -120,13 +120,13 @@ def get_cfg_options(cfg_keys):
 
 
 def print_tx_to_file(tx,sel_unspent,send_amt,opts):
-	sig_data = [{"txid":i.txid,"vout":i.vout,"scriptPubKey":i.scriptPubKey}
-					for i in sel_unspent]
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
 	outfile = "tx_%s[%s].raw" % (tx_id,send_amt)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	metadata = "%s %s %s" % (tx_id, send_amt, make_timestamp())
+	sig_data = [{"txid":i.txid,"vout":i.vout,"scriptPubKey":i.scriptPubKey}
+					for i in sel_unspent]
 	data = "%s\n%s\n%s\n%s\n" % (
 			metadata, tx, repr(sig_data),
 			repr([i.__dict__ for i in sel_unspent])
@@ -211,7 +211,7 @@ def sort_and_view(unspent):
 """\n
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 View options: [g]roup, show [m]mgen addr
-(Type 'q' to quit sorting): """).strip()
+(Type 'q' to quit sorting, 'p' to print to file): """).strip()
 			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"; break
 			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
@@ -223,11 +223,16 @@ View options: [g]roup, show [m]mgen addr
 				break
 			elif reply == 'g': group = False if group else True; break
 			elif reply == 'm': mmaddr = False if mmaddr else True; break
+			elif reply == 'p':
+				f = "listunspent.out"
+				write_to_file(f,"\n".join(output)+"\n")
+				msg("\nData written to '%s'" % f)
+				sys.exit(1)
 			elif reply == 'q': break
 			else: msg("Invalid input")
 
 		msg("\n")
-		if reply == 'q': break
+		if reply in 'q': break
 
 	return tuple(unspent)
 
@@ -426,3 +431,23 @@ def parse_addrs_file(f):
 		return seed_id,ret
 
 	sys.exit(3)
+
+
+def sign_transaction(c,tx_hex,sig_data,keys=None):
+
+	if keys:
+		msg("%s keys total" % len(keys))
+		if debug: print "Keys:\n  %s" % "\n  ".join(keys)
+
+	from mmgen.rpc import exceptions
+
+	try:
+		sig_tx = c.signrawtransaction(tx_hex,sig_data,keys)
+	except exceptions.InvalidAddressOrKey:
+		msg("Invalid address or key")
+		sys.exit(3)
+# 	except:
+# 		msg("Failed to sign transaction")
+# 		sys.exit(3)
+
+	return sig_tx

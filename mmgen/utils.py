@@ -473,7 +473,7 @@ def write_seed(seed, opts):
 
 def write_mnemonic(mn, seed, opts):
 
-	outfile = "%s.words" % make_chksum_8(seed).upper()
+	outfile = "%s.%s" % (make_chksum_8(seed).upper(),mn_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -524,7 +524,7 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	hash_preset = opts['hash_preset']
 
-	outfile = "{}-{}[{},{}].dat".format(seed_id,key_id,seed_len,hash_preset)
+	outfile="{}-{}[{},{}].{}".format(seed_id,key_id,seed_len,hash_preset,wallet_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -686,6 +686,14 @@ def get_lines_from_file(infile,what):
 	return lines
 
 
+def get_data_from_file(infile,what="data"):
+	msg("Getting %s from file '%s'" % (what,infile))
+	f = open_file_or_exit(infile,'r')
+	data = f.read()
+	f.close()
+	return data
+
+
 def get_words(infile,what,prompt,opts):
 	if infile:
 		words = _get_words_from_file(infile,what)
@@ -785,7 +793,6 @@ def get_seed(infile,opts,no_wallet=False):
 		from mmgen.mnemonic import get_seed_from_mnemonic
 		return get_seed_from_mnemonic(words,wl)
 	elif 'from_brain' in opts:
-		msg("")
 		if 'quiet' not in opts:
 			confirm_or_exit(
 				cmessages['brain_warning'].format(
@@ -803,6 +810,7 @@ def get_seed(infile,opts,no_wallet=False):
 		return False
 	else:
 		return get_seed_from_wallet(infile, opts)
+
 
 def remove_blanks_comments(lines):
 	import re
