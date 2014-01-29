@@ -31,6 +31,8 @@ seed_len  = 256
 
 mnemonic_lens = [i / 32 * 3 for i in seed_lens]
 
+http_timeout = 30
+
 from os import getenv
 debug = True if getenv("MMGEN_DEBUG") else False
 

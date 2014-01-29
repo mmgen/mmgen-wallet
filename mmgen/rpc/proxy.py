@@ -1,6 +1,6 @@
 """
   Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-  Added configurable http_timeout
+  Added http_timeout from mmgen.config
 
   Previous copyright from bitcoin-python/proxy.py:
 
@@ -10,7 +10,7 @@
   ServiceProxy class:
 
   - HTTP connections persist for the life of the AuthServiceProxy object
-    (if server supports HTTP/1.1)
+	(if server supports HTTP/1.1)
   - sends protocol 'version', per JSON-RPC 1.1
   - sends proper, incrementing 'id'
   - sends Basic HTTP authentication headers
@@ -39,99 +39,105 @@
 """
 
 try:
-    import http.client as httplib
+	import http.client as httplib
 except ImportError:
-    import httplib
+	import httplib
 import base64
 import json
 import decimal
 try:
-    import urllib.parse as urlparse
+	import urllib.parse as urlparse
 except ImportError:
-    import urlparse
+	import urlparse
 
 USER_AGENT = "AuthServiceProxy/0.1"
 
 class JSONRPCException(Exception):
-    def __init__(self, rpcError):
-        Exception.__init__(self)
-        self.error = rpcError
+	def __init__(self, rpcError):
+		Exception.__init__(self)
+		self.error = rpcError
 
+
+import mmgen.config
 
 class AuthServiceProxy(object):
-    def __init__(self, serviceURL, serviceName=None, http_timeout=30):
-        self.__serviceURL = serviceURL
-        self.__serviceName = serviceName
-        self.__url = urlparse.urlparse(serviceURL)
-        if self.__url.port is None:
-            port = 80
-        else:
-            port = self.__url.port
-        self.__idcnt = 0
-        authpair = "%s:%s" % (self.__url.username, self.__url.password)
-        authpair = authpair.encode('utf8')
-        self.__authhdr = "Basic ".encode('utf8') + base64.b64encode(authpair)
-        if self.__url.scheme == 'https':
-            self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
-					None, None, False, http_timeout)
-        else:
-            self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
-					False, http_timeout)
+	def __init__(self, serviceURL, serviceName = None):
 
-    def __getattr__(self, name):
-        if self.__serviceName != None:
-            name = "%s.%s" % (self.__serviceName, name)
-        return AuthServiceProxy(self.__serviceURL, name)
+		self.__serviceURL = serviceURL
+		self.__serviceName = serviceName
+		self.__url = urlparse.urlparse(serviceURL)
+		if self.__url.port is None:
+			port = 80
+		else:
+			port = self.__url.port
+		self.__idcnt = 0
+		authpair = "%s:%s" % (self.__url.username, self.__url.password)
+		authpair = authpair.encode('utf8')
+		self.__authhdr = "Basic ".encode('utf8') + base64.b64encode(authpair)
 
-    def __call__(self, *args):
-         self.__idcnt += 1
+		http_timeout = mmgen.config.http_timeout
 
-         postdata = json.dumps({
-                'version': '1.1',
-                'method': self.__serviceName,
-                'params': args,
-                'id': self.__idcnt})
-         try:
-			 self.__conn.request('POST', self.__url.path, postdata,
-					 { 'Host' : self.__url.hostname,
-					  'User-Agent' : USER_AGENT,
-					  'Authorization' : self.__authhdr,
-					  'Content-type' : 'application/json' })
-         except:
-			 print "Unable to connect to bitcoind.  Exiting"
-			 import sys
-			 sys.exit(2)
+		if self.__url.scheme == 'https':
+			self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,
+					None, None, False, timeout=http_timeout)
+		else:
+			self.__conn = httplib.HTTPConnection(self.__url.hostname, port,
+					False, timeout=http_timeout)
 
-         httpresp = self.__conn.getresponse()
-         if httpresp is None:
-             raise JSONRPCException({
-                     'code' : -342, 'message' : 'missing HTTP response from server'})
+	def __getattr__(self, name):
+		if self.__serviceName != None:
+			name = "%s.%s" % (self.__serviceName, name)
+		return AuthServiceProxy(self.__serviceURL, name)
 
-         resp = httpresp.read()
-         resp = resp.decode('utf8')
-         resp = json.loads(resp, parse_float=decimal.Decimal)
-         if 'error' in resp and resp['error'] != None:
-             raise JSONRPCException(resp['error'])
-         elif 'result' not in resp:
-             raise JSONRPCException({
-                     'code' : -343, 'message' : 'missing JSON-RPC result'})
-         else:
-             return resp['result']
+	def __call__(self, *args):
+		self.__idcnt += 1
 
-    def _batch(self, rpc_call_list):
-         postdata = json.dumps(list(rpc_call_list))
-         self.__conn.request('POST', self.__url.path, postdata,
-                 { 'Host' : self.__url.hostname,
-                  'User-Agent' : USER_AGENT,
-                  'Authorization' : self.__authhdr,
-                  'Content-type' : 'application/json' })
+		postdata = json.dumps({
+				'version': '1.1',
+				'method': self.__serviceName,
+				'params': args,
+				'id': self.__idcnt})
+		try:
+			self.__conn.request('POST', self.__url.path, postdata,
+					{ 'Host' : self.__url.hostname,
+					'User-Agent' : USER_AGENT,
+					'Authorization' : self.__authhdr,
+					'Content-type' : 'application/json' })
+		except:
+			print "Unable to connect to bitcoind.  Exiting"
+			import sys
+			sys.exit(2)
 
-         httpresp = self.__conn.getresponse()
-         if httpresp is None:
-             raise JSONRPCException({
-                     'code' : -342, 'message' : 'missing HTTP response from server'})
+		httpresp = self.__conn.getresponse()
+		if httpresp is None:
+			raise JSONRPCException({
+					'code' : -342, 'message' : 'missing HTTP response from server'})
 
-         resp = httpresp.read()
-         resp = resp.decode('utf8')
-         resp = json.loads(resp, parse_float=decimal.Decimal)
-         return resp
+		resp = httpresp.read()
+		resp = resp.decode('utf8')
+		resp = json.loads(resp, parse_float=decimal.Decimal)
+		if 'error' in resp and resp['error'] != None:
+			raise JSONRPCException(resp['error'])
+		elif 'result' not in resp:
+			raise JSONRPCException({
+					'code' : -343, 'message' : 'missing JSON-RPC result'})
+		else:
+			return resp['result']
+
+	def _batch(self, rpc_call_list):
+		postdata = json.dumps(list(rpc_call_list))
+		self.__conn.request('POST', self.__url.path, postdata,
+				{ 'Host' : self.__url.hostname,
+				'User-Agent' : USER_AGENT,
+				'Authorization' : self.__authhdr,
+				'Content-type' : 'application/json' })
+
+		httpresp = self.__conn.getresponse()
+		if httpresp is None:
+			raise JSONRPCException({
+					'code' : -342, 'message' : 'missing HTTP response from server'})
+
+		resp = httpresp.read()
+		resp = resp.decode('utf8')
+		resp = json.loads(resp, parse_float=decimal.Decimal)
+		return resp
