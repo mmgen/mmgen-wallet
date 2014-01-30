@@ -516,6 +516,11 @@ def make_timestamp():
 	tv = time.gmtime(time.time())[:6]
 	return "{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}".format(*tv)
 
+def make_timestr():
+	import time
+	tv = time.gmtime(time.time())[:6]
+	return "{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}".format(*tv)
+
 def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	seed_id = make_chksum_8(seed)

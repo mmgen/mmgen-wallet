@@ -30,6 +30,7 @@ mmgen/rpc/proxy.py
 mmgen/rpc/util.py
 scripts/bitcoind-walletunlock.py
 scripts/deinstall.sh
+scripts/pywallet.py
 tests/addr.py
 tests/bitcoin.py
 tests/mn_electrum.py

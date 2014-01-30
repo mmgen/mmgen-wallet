@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.6.3',
+		version      = '0.6.4',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -51,6 +51,7 @@ setup(
 		])],
 		scripts=[
 			'scripts/bitcoind-walletunlock.py',
+			'scripts/pywallet.py',
 			'scripts/deinstall.sh'
 		]
 	)

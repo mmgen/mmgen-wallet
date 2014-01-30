@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-mmgen-txcreate: Send BTC to specified addresses
+mmgen-txcreate: Create a BTC transaction, sending to specified addresses
 """
 
 import sys
@@ -33,7 +33,7 @@ prog_name = sys.argv[0].split("/")[-1]
 
 help_data = {
 	'prog_name': prog_name,
-	'desc':    "Send BTC to specified addresses",
+	'desc':    "Create a BTC transaction, sending to specified addresses",
 	'usage':   "[opts] <address:amount>[,...] <transaction fee> <change address>",
 	'options': """
 -h, --help                Print this help message

@@ -224,9 +224,14 @@ View options: [g]roup, show [m]mgen addr
 			elif reply == 'g': group = False if group else True; break
 			elif reply == 'm': mmaddr = False if mmaddr else True; break
 			elif reply == 'p':
-				f = "listunspent.out"
-				write_to_file(f,"\n".join(output)+"\n")
-				msg("\nData written to '%s'" % f)
+				outfile = "listunspent.out"
+				o = "Date: {} UTC\n\n{}\n\nTotal BTC: {}\n".format(
+						make_timestr(),
+						"\n".join(output),
+						trim_exponent(sum([i.amount for i in unspent]))
+					)
+				write_to_file(outfile, o)
+				msg("\nData written to '%s'" % outfile)
 				sys.exit(1)
 			elif reply == 'q': break
 			else: msg("Invalid input")
