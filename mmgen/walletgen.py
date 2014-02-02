@@ -67,7 +67,7 @@ displayed on the screen.
 		"User random data successfully acquired.  Press ENTER to continue: ")
 		raw_input()
 	except:
-		msg("\nUser random input interrupted.  Aborting")
+		msg("\nUser random input interrupted")
 		sys.exit(1)
 	finally:
 		os.system("stty sane")

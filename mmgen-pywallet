@@ -1,4 +1,23 @@
 #!/usr/bin/env python
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+mmgen-pywallet: Dump contents of a bitcoind wallet to file
+"""
 
 # Changes by Philemon:
 #   password entry at prompt
@@ -24,6 +43,7 @@
 # Alex Martelli (http://www.aleax.it)
 # Ported from C code written by Laurent Haan (http://www.progressive-coding.com)
 
+from mmgen.Opts import *
 from mmgen.utils import msg
 from bsddb.db import *
 import os, sys, time
@@ -46,15 +66,42 @@ json_db = {}
 private_keys = []
 password = None
 
-# def determine_db_dir():
-# 	import os
-# 	import os.path
-# 	import platform
-# 	if platform.system() == "Darwin":
-# 		return os.path.expanduser("~/Library/Application Support/Bitcoin/")
-# 	elif platform.system() == "Windows":
-# 		return os.path.join(os.environ['APPDATA'], "Bitcoin")
-# 	return os.path.expanduser("~/.bitcoin")
+prog_name = sys.argv[0].split("/")[-1]
+
+help_data = {
+	'prog_name': prog_name,
+	'desc':    "Dump contents of a bitcoind wallet to file",
+	'usage':   "[opts] <bitcoind wallet file>",
+	'options': """
+-h, --help             Print this help message
+-d, --outdir        d  Specify an alternate directory 'd' for output
+-j, --json             Dump wallet in json format
+-k, --keys             Dump all private keys (flat list)
+-a, --addrs            Dump all addresses (flat list)
+-K, --keysforaddrs  f  Dump private keys for addresses listed in file 'f'
+-q, --quiet            Suppress warnings; overwrite files without asking
+-S, --stdout           Dump to stdout rather than file
+"""
+}
+
+short_opts = "hd:jkaK:qS"
+long_opts  = "help","outdir=","json","keys","addrs","keysforaddrs=","quiet","stdout"
+
+opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+
+from mmgen.utils import check_infile,check_opts
+
+if len(cmd_args) == 1:
+	check_infile(cmd_args[0])
+else:
+	usage(help_data)
+
+check_opts(opts,('outdir',))
+
+if ('json' not in opts and 'keys' not in opts
+		and 'addrs' not in opts and 'keysforaddrs' not in opts):
+			usage(help_data)
+
 
 # from the SlowAES project, http://code.google.com/p/slowaes (aes.py)
 
@@ -1465,7 +1512,6 @@ def update_wallet(db, type, data):
 # wallet.dat reader / writer
 
 def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transactions, transaction_filter):
-	global password
 
 	db = open_wallet(db_env, db_file)
 
@@ -1474,6 +1520,8 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 	json_db['names'] = {}
 
 	def item_callback(type, d):
+
+		global password
 
 		if type == "name":
 			json_db['names'][d['hash']] = d['name']
@@ -1522,7 +1570,12 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 			mkey['vchOtherDerivationParameters'] = d['vchOtherDerivationParameters'].encode('hex')
 			json_db['mkey'] = mkey
 
-			if password:
+			if password == None and \
+				('json' in opts or 'keysforaddrs' in opts or 'keys' in opts):
+				from mmgen.utils import my_getpass
+				password = my_getpass("Enter password: ")
+
+			if password != None:
 				global crypter
 				if crypter == 'pycrypto':
 					crypter = Crypter_pycrypto()
@@ -1543,7 +1596,7 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 
 		elif type == "acc":
 			json_db['acc'] = d['account']
-			msg("Account %s (current key: %s)"%(d['account'], public_key_to_bc_address(d['public_key'])))
+#			msg("Account %s (current key: %s)"%(d['account'], public_key_to_bc_address(d['public_key'])))
 
 		elif type == "acentry":
 			json_db['acentry'] = (d['account'], d['nCreditDebit'], d['otherAccount'], time.ctime(d['nTime']), d['n'], d['comment'])
@@ -1565,14 +1618,7 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 		else:
 			k["reserve"] = 1
 
-	crypted = 'mkey' in json_db.keys()
-
-	if (crypted and not password) and \
-			(options.dump or options.keysforaddrs or options.privkeys):
-		print("Encrypted wallet.  Specify '--password' to decrypt")
-		sys.exit(1)
-
-	if crypted and password:
+	if 'mkey' in json_db.keys() and password != None:
 		check = True
 		for k in json_db['keys']:
 			ckey = k['ckey'].decode('hex')
@@ -1599,157 +1645,74 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 	del(json_db['pool'])
 	del(json_db['names'])
 
-def importprivkey(db, sec):
-
-	pkey = regenerate_key(sec)
-	if not pkey:
-		return False
-
-	compressed = is_compressed(sec)
-
-	secret = GetSecret(pkey)
-	private_key = GetPrivKey(pkey, compressed)
-	public_key = GetPubKey(pkey, compressed)
-	addr = public_key_to_bc_address(public_key)
-
-	print "Address: %s" % addr
-	print "Privkey: %s" % SecretToASecret(secret, compressed)
-
-	global crypter, password, json_db
-
-	crypted = 'mkey' in json_db.keys()
-
-	if crypted:
-		if password:
-			crypter.SetIV(Hash(public_key))
-			crypted_key = crypter.Encrypt(secret)
-			update_wallet(db, 'ckey', { 'public_key' : public_key, 'crypted_key' : crypted_key })
-			update_wallet(db, 'name', { 'hash' : addr, 'name' : '' })
-			return True
-		else:
-			logging.error("password not specified")
-			sys.exit(1)
-	else:
-		update_wallet(db, 'key', { 'public_key' : public_key, 'private_key' : private_key })
-		update_wallet(db, 'name', { 'hash' : addr, 'name' : '' })
-		return True
-
-	return False
-
 
 def parse_wallet_file_arg(path):
-
-	import os
-	try:
-		os.stat(path)
-	except:
-		print "File '%s' does not exist" % path
-		sys.exit(1)
 
 	s = path.rfind("/")
 
 	if path[0] == '/':
-		if s == 0:
-			return "/", path
-		else:
-			return path[0:s], path[s+1:]
+		if s == 0: return "/", path
+		else:      return path[0:s], path[s+1:]
 	else:
 		curdir = os.path.abspath(".")
-		if s == -1:
-			return curdir,path
-		else:
-			return curdir + "/" + path[0:s], path[s+1:]
+		if s == -1: return curdir,path
+		else:       return curdir + "/" + path[0:s], path[s+1:]
 
+# main()
 
-from optparse import OptionParser
-def main():
-
-	global max_version, addrtype
-
-	parser = OptionParser(usage="%prog [options] walletfile", version="%prog 1.2")
-
-	parser.add_option("--dumpwallet", dest="dump", action="store_true",
-		help="dump wallet in json format")
-
-	parser.add_option("--privkeys", dest="privkeys", action="store_true",
-		help="dump all private keys in wallet (flat list)")
-
-	parser.add_option("--addrs", dest="addrs", action="store_true",
-		help="dump all addresses in wallet (flat list)")
-
-	parser.add_option("--keysforaddrs", dest="keysforaddrs",
-		help="dump all private keys corresponding to addresses in file KEYSFORADDRS (flat list)")
-
-	parser.add_option("--importprivkey", dest="key",
-		help="import private key from vanitygen")
-
-	parser.add_option("--testnet", dest="testnet", action="store_true",
-		help="use testnet subdirectory and address type")
-
-	parser.add_option("--password", dest="password", action="store_true",
-		help="prompt for password for the encrypted wallet")
-
-	global options
-
-	(options, args) = parser.parse_args()
-
-	if options.dump is None and options.key is None \
-		and options.keysforaddrs is None \
-		and options.addrs is None and options.privkeys is None:
-		print "A mandatory option is missing\n"
-		parser.print_help()
-		sys.exit(1)
-
-	db_dir,db_file = parse_wallet_file_arg(args[0])
+db_dir,db_file = parse_wallet_file_arg(cmd_args[0])
 #	print "[%s] [%s]" % (db_dir,db_file)
-#	sys.exit()
 
-	if options.testnet: addrtype = 111
+db_env = create_env(db_dir)
 
-	db_env = create_env(db_dir)
+read_wallet(json_db, db_env, db_file, True, True, "")
 
-	global password
+if json_db.get('minversion') > max_version:
+	print "Version mismatch (must be <= %d)" % max_version
+	exit(1)
 
-	if options.password:
-		from mmgen.utils import my_getpass
-		password = my_getpass("Enter password: ")
+wallet_addrs = [i['addr'] for i in json_db['keys']]
 
-	read_wallet(json_db, db_env, db_file, True, True, "")
+data,ext,what = [],"",""
 
-	if json_db.get('minversion') > max_version:
-		print "Version mismatch (must be <= %d)" % max_version
-		exit(1)
+if 'json' in opts:
+	data = [ json.dumps(json_db, sort_keys=True, indent=4) ]
+	ext,what = "json","json dump"
 
-	if options.dump:
-		print json.dumps(json_db, sort_keys=True, indent=4)
+elif 'keys' in opts:
+	for i in json_db['keys']: data.append(i['sec'])
+	ext,what = "keys","private keys"
 
-	elif options.privkeys:
-		for i in json_db['keys']:
-			print i['sec']
+elif 'addrs' in opts:
+	for i in json_db['keys']: data.append(i['addr'])
+	ext,what = "addrs","addresses"
 
-	elif options.addrs:
-		for i in json_db['keys']:
-			print i['addr']
+elif 'keysforaddrs' in opts:
+	from mmgen.utils import get_lines_from_file
+	usr_addrs = get_lines_from_file(opts['keysforaddrs'],"addresses")
+	for addr in usr_addrs:
+		try:
+			idx = wallet_addrs.index(addr)
+			data.append(json_db['keys'][idx]['sec'])
+		except:
+			msg("WARNING: Address '%s' not found" % addr)
+	ext,what = "keys","private keys"
 
-	elif options.keysforaddrs:
-		from mmgen.utils import get_lines_from_file
-		addrs = get_lines_from_file(options.keysforaddrs,"addresses")
-		for i in json_db['keys']:
-			if i['addr'] in addrs:
-				print i['sec']
+len_arg = "%s" % len(wallet_addrs) \
+   if len(data) == len(wallet_addrs) or ext == "json" \
+   else "%s:%s" % (len(data),len(wallet_addrs))
 
-	elif options.key:
-		if options.key in private_keys:
-			print "Already exists"
-		else:
-			db = open_wallet(db_env, db_file, writable=True)
+from mmgen.utils import make_chksum_8,write_walletdat_dump_to_file,write_to_stdout
+wallet_id = make_chksum_8(str(sorted(wallet_addrs)))
 
-			if importprivkey(db, options.key):
-				print "Imported successfully"
-			else:
-				print "Bad private key"
+data = "\n".join(data) + "\n"
 
-			db.close()
-
-if __name__ == '__main__':
-	main()
+# Output data
+if 'stdout' in opts:
+	if 'addrs' in opts or 'quiet' in opts: confirm = False
+	else: confirm = True
+	write_to_stdout(data,"secret keys",confirm)
+elif not sys.stdout.isatty():
+	write_to_stdout(data,"secret keys",confirm=False)
+else:
+	write_walletdat_dump_to_file(wallet_id, data, len_arg, ext, what, opts)

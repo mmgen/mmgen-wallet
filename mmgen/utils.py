@@ -103,15 +103,15 @@ def check_opts(opts,keys):
 
 			try: mode = os.stat(d).st_mode
 			except:
-				msg("Unable to stat requested %s '%s'.  Aborting" % (what,d))
+				msg("Unable to stat requested %s '%s'" % (what,d))
 				sys.exit(1)
 
 			if not stat.S_ISDIR(mode):
-				msg("Requested %s '%s' is not a directory.  Aborting" %(what,d))
+				msg("Requested %s '%s' is not a directory" % (what,d))
 				sys.exit(1)
 
 			if not os.access(d, os.W_OK|os.X_OK):
-				msg("Requested %s '%s' is unwritable by you. Aborting"%(what,d))
+				msg("Requested %s '%s' is unwritable by you" % (what,d))
 				sys.exit(1)
 
 		elif key == 'label':
@@ -266,15 +266,15 @@ def check_infile(f):
 
 	try: mode = os.stat(f).st_mode
 	except:
-		msg("Unable to stat requested input file '%s'.  Aborting" % f)
+		msg("Unable to stat requested input file '%s'" % f)
 		sys.exit(1)
 
 	if not stat.S_ISREG(mode) or stat.S_ISLNK(mode):
-		msg("Requested input file '%s' is not a file.  Aborting" % f)
+		msg("Requested input file '%s' is not a file" % f)
 		sys.exit(1)
 
 	if not os.access(f, os.R_OK):
-		msg("Requested input file '%s' is unreadable by you.  Aborting" % f)
+		msg("Requested input file '%s' is unreadable by you" % f)
 		sys.exit(1)
 
 
@@ -394,13 +394,13 @@ def encrypt_seed(seed, key, opts):
 
 	if dec_seed == seed: msg("done")
 	else:
-		msg("FAILED.\nDecrypted seed doesn't match original seed.  Aborting.")
+		msg("FAILED.\nDecrypted seed doesn't match original seed")
 		sys.exit(2)
 
 	return enc_seed
 
 
-def	write_to_stdout(data, what, confirm=True):
+def write_to_stdout(data, what, confirm=True):
 	if sys.stdout.isatty() and confirm:
 		confirm_or_exit("",'output {} to screen'.format(what))
 	elif not sys.stdout.isatty():
@@ -423,7 +423,7 @@ def open_file_or_exit(filename,mode):
 		f = open(filename, mode)
 	except:
 		what = "reading" if mode == 'r' else "writing"
-		msg("Unable to open file '%s' for %s" % (infile,what))
+		msg("Unable to open file '%s' for %s" % (filename,what))
 		sys.exit(2)
 	return f
 
@@ -559,6 +559,14 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	msg("Wallet saved to file '%s'" % outfile)
 	if 'verbose' in opts:
 		_display_control_data(label,metadata,hash_preset,salt,enc_seed)
+
+
+def write_walletdat_dump_to_file(wallet_id,data,num_keys,ext,what,opts):
+	outfile = "wd_{}[{}].{}".format(wallet_id,num_keys,ext)
+	if 'outdir' in opts:
+		outfile = "%s/%s" % (opts['outdir'], outfile)
+	write_to_file(outfile,data,confirm=False)
+	msg("wallet.dat %s saved to file '%s'" % (what,outfile))
 
 
 def	compare_checksums(chksum1, desc1, chksum2, desc2):
