@@ -399,7 +399,12 @@ def parse_addrs_file(f):
 	lines = get_lines_from_file(f,"address data")
 	lines = remove_blanks_comments(lines)
 
-	seed_id,obrace = lines[0].split()
+	try:
+		seed_id,obrace = lines[0].split()
+	except:
+		msg("Invalid first line: '%s'" % lines[0])
+		sys.exit(3)
+
 	cbrace = lines[-1]
 
 	if   obrace != '{':
@@ -431,7 +436,7 @@ def parse_addrs_file(f):
 
 			if len(d) == 3: check_wallet_addr_comment(d[2])
 
-			ret.append(d)
+			ret.append(tuple(d))
 
 		return seed_id,ret
 

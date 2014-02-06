@@ -72,15 +72,6 @@ def verify_addr(addr):
 		print "%s: Invalid address" % addr
 		return False
 
-# 	addr,lz = addr[1:],0
-# 	while addr[0] == "1": addr = addr[1:]; lz += 1
-#
-#  	addr_hex = lz * "00" + hex(_b58tonum(addr))[2:].rstrip("L")
-
-# 	if len(addr_hex) != 48:
-# 		print "%s: Invalid address hex length: %s" % ("1"+addr, len(addr_hex))
-# 		return False
-
   	num = _b58tonum(addr[1:])
 	if num == False: return False
   	addr_hex = hex(num)[2:].rstrip("L").zfill(48)

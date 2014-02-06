@@ -47,11 +47,11 @@ setup(
 			'mmgen-walletgen',
 			'mmgen-txcreate',
 			'mmgen-txsign',
-			'mmgen-txsend'
+			'mmgen-txsend',
+			'mmgen-pywallet'
 		])],
 		scripts=[
 			'scripts/bitcoind-walletunlock.py',
-			'scripts/pywallet.py',
 			'scripts/deinstall.sh'
 		]
 	)
