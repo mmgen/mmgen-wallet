@@ -249,14 +249,18 @@ def verify_mmgen_label(s,return_str=False,check_label_len=False):
 
 	if not s: return fail
 
-	mminfo,comment = s.split(None,1)
+	try:
+		mminfo,comment = s.split(None,1)
+	except:
+		mminfo,comment = s,None
+
 	if mminfo[8] != ':': return fail
 	for i in mminfo[:8]:
 		if not i in "01234567890ABCDEF": return fail
 	for i in mminfo[9:]:
 		if not i in "0123456789": return fail
 
-	if check_label_len:
+	if check_label_len and comment:
 		check_wallet_addr_comment(comment)
 
 	return success
