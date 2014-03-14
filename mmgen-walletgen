@@ -151,8 +151,12 @@ if debug: display_user_random_data(usr_keys,key_timings)
 usr_rand_data = sha256(usr_keys).digest() + \
 				sha256("".join(key_timings)).digest()
 
-s = get_seed(infile,opts,no_wallet=True)
-if s: seed = s
+if 'from_mnemonic' in opts or 'from_brain' in opts or 'from_seed' in opts:
+	silent = False
+	while True:
+		seed = get_seed(infile,opts,silent=silent)
+		silent = True
+		if seed: break
 else:
 	# Truncate random data for smaller seed lengths
 	seed = os_rand_data[0] + usr_rand_data

@@ -66,9 +66,13 @@ infile = cmd_args[0]
 label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile,opts)
 seed_id,key_id = metadata[:2]
 oldp = "" if 'keep_old_passphrase' in opts else "old "
-passwd = " ".join(get_words("","",("Enter %spassphrase: " % oldp),opts))
-key = make_key(passwd, salt, hash_preset)
-seed = decrypt_seed(enc_seed, key, seed_id, key_id)
+
+# Repeat on incorrect pw entry
+while True:
+	passwd = " ".join(get_words("","",("Enter %spassphrase: " % oldp),opts))
+	key = make_key(passwd, salt, hash_preset)
+	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
+	if seed: break
 
 changed = {}
 

@@ -109,7 +109,7 @@ if user_confirm("View transaction data? ",default_yes=False):
 	view_tx_data(c,inputs_data,tx_hex,metadata)
 
 # Are inputs mmgen addresses?
-infile,mmgen_addrs,other_addrs,keys = "",[],[],[]
+mmgen_addrs,other_addrs,keys = [],[],[]
 
 for i in inputs_data:
 	if verify_mmgen_label(i['account']):
@@ -121,9 +121,11 @@ if mmgen_addrs and not 'force_wallet_dat' in opts:
 	# Check that all the seed IDs are the same:
 	seed_ids = list(set([i['account'][:8] for i in mmgen_addrs]))
 	while seed_ids:
+		infile = False
 		if cmd_args:
 			infile = cmd_args.pop()
 			ext = infile.split(".")[-1]
+			found = False
 			for e,o in (
 				(wallet_ext, {}),
 				(mn_ext,     {"from_mnemonic":True}),
@@ -131,15 +133,29 @@ if mmgen_addrs and not 'force_wallet_dat' in opts:
 				(brain_ext,  {})
 			):
 				if e == ext:
+					found = True
 					if e == brain_ext:
 						if "from_brain" in opts: o = opts
 						else:
 							msg("'--from-brain' option must be specified for brainwallet file")
 							sys.exit(2)
-					seed = get_seed(infile,o)
+					silent = False
+					while True:
+						seed = get_seed(infile,o,silent=silent)
+						silent = True
+						if seed: break
+
+			if not found:
+				msg("%s: invalid file extension" % ext)
+				sys.exit(2)
+
 		elif "from_brain" in opts or "from_mnemonic" in opts or "from_seed" in opts:
 			msg("Need data for seed ID %s" % seed_ids[0])
-			seed = get_seed("",opts)
+			silent = False
+			while True:
+				seed = get_seed("",opts,silent=silent)
+				silent = True
+				if seed: break
 		else:
 			msg("One of '-b', '-m' or '-s' must be specified for seed IDs: %s" %
 					" ".join(seed_ids))
@@ -158,7 +174,9 @@ if mmgen_addrs and not 'force_wallet_dat' in opts:
 			keys += [i['wif'] for i in generate_addrs(seed, seed_id_addrs, o)]
 		else:
 			msg("Supplied seed ID (%s) is incorrect" % seed_id)
-			sys.exit(2)
+			if infile:
+				msg("Invalid input file: %s" % infile)
+				sys.exit(2)
 
 	if other_addrs:
 		if 'keys_from_file' in opts:

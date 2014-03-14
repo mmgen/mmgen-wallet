@@ -536,7 +536,7 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
-	label = opts['label'] if 'label' in opts else "None"
+	label = opts['label'] if 'label' in opts else "No Label"
 
 	from mmgen.bitcoin import b58encode_pad
 
@@ -572,14 +572,15 @@ def write_walletdat_dump_to_file(wallet_id,data,num_keys,ext,what,opts):
 	msg("wallet.dat %s saved to file '%s'" % (what,outfile))
 
 
-def	compare_checksums(chksum1, desc1, chksum2, desc2):
+def compare_checksums(chksum1, desc1, chksum2, desc2):
 
 	if chksum1.lower() == chksum2.lower():
 		msg("OK (%s)" % chksum1.upper())
 		return True
 	else:
-		msg("ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
-			% (desc1,chksum1,desc2,chksum2))
+		if debug:
+			msg("ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
+				% (desc1,chksum1,desc2,chksum2))
 		return False
 
 def _is_hex(s):
@@ -588,7 +589,7 @@ def _is_hex(s):
 	else: return True
 
 
-def	check_mmseed_format(words):
+def _check_mmseed_format(words):
 
 	valid = False
 	what = "%s data" % seed_ext
@@ -602,12 +603,10 @@ def	check_mmseed_format(words):
 		msg("Incorrect length of checksum (%s) in %s" % (chklen,what))
 	else: valid = True
 
-	if valid == False:
-		msg("Invalid %s data" % seed_ext)
-		sys.exit(3)
+	return valid
 
 
-def	check_wallet_format(infile, lines, opts):
+def check_wallet_format(infile, lines, opts):
 
 	def vmsg(s):
 		if 'verbose' in opts: msg(s)
@@ -638,9 +637,10 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
 
-def get_data_from_wallet(infile,opts):
+def get_data_from_wallet(infile,opts,silent=False):
 
-	msg("Getting {} wallet data from file '{}'".format(proj_name,infile))
+	if not silent:
+		msg("Getting {} wallet data from file '{}'".format(proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
 
@@ -719,9 +719,11 @@ def get_words(infile,what,prompt,opts):
 	return words
 
 
-def get_seed_from_seed_data(words):
+def _get_seed_from_seed_data(words):
 
-	check_mmseed_format(words)
+	if not _check_mmseed_format(words):
+		msg("Invalid %s data" % seed_ext)
+		return False
 
 	stored_chk = words[0]
 	seed_b58 = "".join(words[1:])
@@ -733,19 +735,23 @@ def get_seed_from_seed_data(words):
 		seed = b58decode_pad(seed_b58)
 		if seed == False:
 			msg("Invalid b58 number: %s" % val)
-			sys.exit(9)
+			return False
 
 		msg("%s data produces seed ID: %s" % (seed_ext,make_chksum_8(seed)))
 		return seed
 	else:
 		msg("Invalid checksum for {} seed".format(proj_name))
-		sys.exit(9)
+		return False
 
 
-def get_seed_from_wallet(infile,opts,
-		prompt="Enter {} wallet passphrase: ".format(proj_name)):
+def get_seed_from_wallet(
+		infile,
+		opts,
+		prompt="Enter {} wallet passphrase: ".format(proj_name),
+		silent=False
+		):
 
-	wdata = get_data_from_wallet(infile,opts)
+	wdata = get_data_from_wallet(infile,opts,silent=silent)
 	label,metadata,hash_preset,salt,enc_seed = wdata
 
 	if 'verbose' in opts: _display_control_data(*wdata)
@@ -770,8 +776,8 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	msg_r("Checking key...")
 	chk = make_chksum_8(key)
 	if not compare_checksums(chk, "of key", key_id, "in header"):
-		msg("Passphrase incorrect?")
-		sys.exit(3)
+		msg("Incorrect passphrase")
+		return False
 
 	msg_r("Decrypting seed with key...")
 
@@ -793,21 +799,22 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 			else:
 				msg("Incorrect passphrase")
 
-		sys.exit(3)
+		return False
 
 	if debug: msg("key: %s" % hexlify(key))
 
 	return dec_seed
 
 
-def get_seed(infile,opts,no_wallet=False):
+def get_seed(infile,opts,silent=False):
 	if 'from_mnemonic' in opts:
 		prompt = "Enter mnemonic: "
+		what = "mnemonic"
 		words = get_words(infile,"mnemonic data",prompt,opts)
 
 		wl = get_default_wordlist()
 		from mmgen.mnemonic import get_seed_from_mnemonic
-		return get_seed_from_mnemonic(words,wl)
+		seed = get_seed_from_mnemonic(words,wl)
 	elif 'from_brain' in opts:
 		if 'quiet' not in opts:
 			confirm_or_exit(
@@ -816,16 +823,22 @@ def get_seed(infile,opts,no_wallet=False):
 					*_get_from_brain_opt_params(opts)),
 			"continue")
 		prompt = "Enter brainwallet passphrase: "
+		what = "brainwallet"
 		words = get_words(infile,"brainwallet data",prompt,opts)
-		return _get_seed_from_brain_passphrase(words,opts)
+		seed = _get_seed_from_brain_passphrase(words,opts)
 	elif 'from_seed' in opts:
 		prompt = "Enter seed in %s format: " % seed_ext
+		what = "seed"
 		words = get_words(infile,"seed data",prompt,opts)
-		return get_seed_from_seed_data(words)
-	elif no_wallet:
-		return False
+		seed = _get_seed_from_seed_data(words)
 	else:
-		return get_seed_from_wallet(infile, opts)
+		return get_seed_from_wallet(infile, opts, silent=silent)
+
+	if infile and not seed:
+		msg("Invalid %s file: %s" % (what,infile))
+		sys.exit(2)
+
+	return seed
 
 
 def remove_blanks_comments(lines):

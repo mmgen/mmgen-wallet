@@ -108,7 +108,10 @@ def generate_addrs(seed, addrnums, opts):
 		out.append(el)
 
 	w = opts['gen_what']
-	if t_addrs == 1: w = w[:-1]
+	if t_addrs == 1:
+		import re
+		w = re.sub('e*s$','',w)
+
 	sys.stderr.write("\rGenerated %s %s%s\n"%(t_addrs, w, " "*15))
 
 	return out

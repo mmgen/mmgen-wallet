@@ -50,12 +50,12 @@ def get_seed_from_mnemonic(mn,wl):
 	if len(mn) not in mnemonic_lens:
 		msg("Bad mnemonic (%i words).  Allowed numbers of words: %s" %
 				(len(mn)," ".join([str(i) for i in mnemonic_lens])))
-		sys.exit(2)
+		return False
 
 	for w in mn:
 		if w not in wl:
 			msg("Bad mnemonic: '%s' is not in the wordlist" % w)
-			sys.exit(2)
+			return False
 
 	from binascii import unhexlify
 	seed = unhexlify(baseNtohex(mn_base,mn,wl,mn_fill(mn)))
