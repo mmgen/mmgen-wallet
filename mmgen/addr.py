@@ -116,6 +116,10 @@ def generate_addrs(seed, addrnums, opts):
 
 	return out
 
+def generate_keys(seed, addrnums):
+	o = {'no_addresses': True, 'gen_what': "keys"}
+	return generate_addrs(seed, addrnums, o)
+
 
 def format_addr_data(addrlist, seed_chksum, opts):
 	"""

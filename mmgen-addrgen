@@ -163,13 +163,7 @@ if invoked_as == "addrgen":
 else:
 	if not 'no_addresses' in opts: opts['print_secret'] = True
 
-# Repeat on incorrect pw entry
-silent = False
-while True:
-	seed = get_seed(infile,opts,silent=silent)
-	silent = True
-	if seed: break
-
+seed          = get_seed_retry(infile,opts)
 seed_id       = make_chksum_8(seed)
 addr_data     = generate_addrs(seed, addr_list, opts)
 addr_data_str = format_addr_data(addr_data, seed_id, opts)

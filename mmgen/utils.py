@@ -593,7 +593,10 @@ def _check_mmseed_format(words):
 
 	valid = False
 	what = "%s data" % seed_ext
-	chklen = len(words[0])
+	try:
+		chklen = len(words[0])
+	except:
+		return False
 
 	if len(words) < 3 or len(words) > 12:
 		msg("Invalid data length (%s) in %s" % (len(words),what))
@@ -839,6 +842,14 @@ def get_seed(infile,opts,silent=False):
 		sys.exit(2)
 
 	return seed
+
+# Repeat if data entry is incorrect
+def get_seed_retry(infile,opts):
+	silent = False
+	while True:
+		seed = get_seed(infile,opts,silent=silent)
+		silent = True
+		if seed: return seed
 
 
 def remove_blanks_comments(lines):

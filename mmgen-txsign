@@ -74,25 +74,20 @@ short_opts = "hd:efik:qb:ms"
 long_opts  = "help","outdir=","echo_passphrase","force_wallet_dat","info",\
 		  "keys_from_file=","quiet","from_brain=","from_mnemonic","from_seed"
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
 
 # Exits on invalid input
 check_opts(opts, ('outdir','from_brain'))
 if 'keys_from_file' in opts: check_infile(opts['keys_from_file'])
 
-if debug:
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
-
-if len(cmd_args) > 0:
-	for i in cmd_args: check_infile(i)
-else: usage(help_data)
+if not infiles: usage(help_data)
+for i in infiles: check_infile(i)
 
 # Begin execution
 
 c = connect_to_bitcoind()
 
-tx_file = cmd_args.pop(0)
+tx_file = infiles.pop(0)
 tx_data = get_lines_from_file(tx_file,"transaction data")
 
 metadata,tx_hex,sig_data,inputs_data = parse_tx_data(tx_data,tx_file)
@@ -120,60 +115,50 @@ for i in inputs_data:
 if mmgen_addrs and not 'force_wallet_dat' in opts:
 	# Check that all the seed IDs are the same:
 	seed_ids = list(set([i['account'][:8] for i in mmgen_addrs]))
+	ext_data = (
+		(wallet_ext, {}),
+		(mn_ext,     {"from_mnemonic":True}),
+		(seed_ext,   {"from_seed":    True}),
+		(brain_ext,  opts)
+	)
 	while seed_ids:
 		infile = False
-		if cmd_args:
-			infile = cmd_args.pop()
+		if infiles:
+			infile = infiles.pop()
 			ext = infile.split(".")[-1]
-			found = False
-			for e,o in (
-				(wallet_ext, {}),
-				(mn_ext,     {"from_mnemonic":True}),
-				(seed_ext,   {"from_seed":    True}),
-				(brain_ext,  {})
-			):
+			for e,o in ext_data:
 				if e == ext:
-					found = True
 					if e == brain_ext:
-						if "from_brain" in opts: o = opts
-						else:
-							msg("'--from-brain' option must be specified for brainwallet file")
+						if "from_brain" not in opts:
+							msg(
+				"'--from-brain' option must be specified for brainwallet file")
 							sys.exit(2)
-					silent = False
-					while True:
-						seed = get_seed(infile,o,silent=silent)
-						silent = True
-						if seed: break
-
-			if not found:
-				msg("%s: invalid file extension" % ext)
+					seed = get_seed_retry(infile,o); break
+			else:
+				msg("Invalid file extension: '.%s'\nValid extensions: '.%s'" %
+					(ext,"' '.".join([i[0] for i in ext_data])))
 				sys.exit(2)
 
 		elif "from_brain" in opts or "from_mnemonic" in opts or "from_seed" in opts:
 			msg("Need data for seed ID %s" % seed_ids[0])
-			silent = False
-			while True:
-				seed = get_seed("",opts,silent=silent)
-				silent = True
-				if seed: break
+			seed = get_seed_retry("",opts)
 		else:
-			msg("One of '-b', '-m' or '-s' must be specified for seed IDs: %s" %
-					" ".join(seed_ids))
+			b,p,v = ("A seed","","is") if len(seed_ids) == 1 else ("Seed","s","are")
+			msg("ERROR: %s source%s %s required for the following seed ID%s: %s" %
+					(b,p,v,p," ".join(seed_ids)))
 			sys.exit(2)
 
 		seed_id = make_chksum_8(seed)
 		if seed_id in seed_ids:
 			seed_ids.remove(seed_id)
-			seed_id_addrs = []
-			for i in mmgen_addrs:
-				if i['account'][:8] == seed_id:
-					seed_id_addrs.append(int(i['account'].split()[0][9:]))
+			seed_id_addrs = [
+				int(i['account'].split()[0][9:]) for i in mmgen_addrs
+					if i['account'][:8] == seed_id]
 
-			from mmgen.addr import generate_addrs
-			o = {'no_addresses': True, 'gen_what': "keys"}
-			keys += [i['wif'] for i in generate_addrs(seed, seed_id_addrs, o)]
+			from mmgen.addr import generate_keys
+			keys += [i['wif'] for i in generate_keys(seed, seed_id_addrs)]
 		else:
-			msg("Supplied seed ID (%s) is incorrect" % seed_id)
+			msg("Seed source produced an invalid seed ID (%s)" % seed_id)
 			if infile:
 				msg("Invalid input file: %s" % infile)
 				sys.exit(2)

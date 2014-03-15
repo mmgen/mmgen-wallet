@@ -162,9 +162,9 @@ def sort_and_view(unspent):
 	def s_age(a,b):  return cmp(b.confirmations,a.confirmations)
 	def s_mmgen(a,b): return cmp(a.account,b.account)
 
-	fs =     " %-4s %-11s %-2s %-34s %13s %-s"
-	fs_hdr = " %-4s %-11s %-4s %-35s %-9s %-s"
-	sort,group,mmaddr,reverse = "",False,False,False
+	fs = " %-4s %-11s %-2s %-34s %-13s %-s"
+	sort,group,show_mmaddr,reverse = "",False,False,False
+	total = trim_exponent(sum([i.amount for i in unspent]))
 
 	from copy import deepcopy
 	msg("")
@@ -179,32 +179,35 @@ def sort_and_view(unspent):
 				elif sort == "txid" and a.txid == b.txid:
 					out[n+1].skip = "t"
 
-		output = []
-		output.append("UNSPENT OUTPUTS (sort order: %s%s%s)" % (
+		output = ["UNSPENT OUTPUTS (sort order: %s%s%s)  Total BTC: %s" % (
 				"reverse " if reverse else "",
 				sort if sort else "None",
-	" (grouped)" if group and (sort == "address" or sort == "txid") else ""
-			))
-		output.append(fs_hdr % ("Num","TX id","Vout","Address","Amount",
+	" (grouped)" if group and (sort == "address" or sort == "txid") else "",
+				total
+			)]
+		output.append(fs % ("Num","TX id  Vout","","Address","Amount (BTC)",
 					"Age (days)"))
 
-		for n,i in enumerate(out):
+		for i in out:
 			amt = str(trim_exponent(i.amount))
-			fill = 8 - len(amt.split(".")[-1]) if "." in amt else 9
+			lfill = 3 - len(amt.split(".")[0]) if "." in amt else 3 - len(amt)
+			i.amt = " "*lfill + amt
+			i.days = int(i.confirmations * mins_per_block / (60*24))
+
+		for n,i in enumerate(out):
 			if i.skip == "d":
 				addr = " |" + "-"*32
 			else:
-				if mmaddr:
-					if i.account and verify_mmgen_label(i.account):
+				if show_mmaddr:
+					if verify_mmgen_label(i.account):
 						addr = "%s.. %s" % (i.address[:4],i.account)
 					else:
 						addr = i.address
 				else:
 					addr = i.address
 			txid = "       |---" if i.skip == "t" else i.txid[:8]+"..."
-			days = int(i.confirmations * mins_per_block / (60*24))
 
-			output.append(fs % (str(n+1)+")", txid,i.vout,addr,amt+(" "*fill),days))
+			output.append(fs % (str(n+1)+")",txid,i.vout,addr,i.amt,i.days))
 
 		while True:
 			reply = get_char("\n".join(output) +
@@ -216,21 +219,33 @@ View options: [g]roup, show [m]mgen addr
 			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
 			elif reply == 'A': unspent.sort(s_age);  sort = "age"; break
-			elif reply == 'M': unspent.sort(s_mmgen); mmaddr,sort=True,"mmgen"; break
+			elif reply == 'M': unspent.sort(s_mmgen); show_mmaddr,sort=True,"mmgen"; break
 			elif reply == 'r':
 				reverse = False if reverse else True
 				unspent.reverse()
 				break
 			elif reply == 'g': group = False if group else True; break
-			elif reply == 'm': mmaddr = False if mmaddr else True; break
+			elif reply == 'm': show_mmaddr = False if show_mmaddr else True; break
 			elif reply == 'p':
-				outfile = "listunspent.out"
-				o = "Date: {} UTC\n\n{}\n\nTotal BTC: {}\n".format(
-						make_timestr(),
-						"\n".join(output),
-						trim_exponent(sum([i.amount for i in unspent]))
+				pfs  = " %-4s %-67s %-34s %-12s %-13s %-10s %s"
+				pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
+					"Amount (BTC)","Age (days)", "Comment")]
+
+				for n,i in enumerate(out):
+					if verify_mmgen_label(i.account):
+						s = i.account.split(None,1)
+						mmid,cmt = s[0],(s[1] if len(s) == 2 else "")
+					else:
+						mmid,cmt = "",i.account
+					os = pfs % (str(n+1)+")", str(i.txid)+","+str(i.vout),
+							i.address,mmid,i.amt,i.days,cmt)
+					pout.append(os.rstrip())
+
+				outdata = "Unspent outputs ({} UTC)\n\n{}\n\nTotal BTC: {}\n".format(
+						make_timestr(), "\n".join(pout), total
 					)
-				write_to_file(outfile, o)
+				outfile = "listunspent.out"
+				write_to_file(outfile, outdata)
 				msg("\nData written to '%s'" % outfile)
 				sys.exit(1)
 			elif reply == 'q': break
