@@ -37,14 +37,16 @@ help_data = {
 -h, --help                 Print this help message
 -d, --outdir            d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase      Print passphrase to screen when typing it
+-H, --show-hash-presets    Show information on available hash presets
 -l, --seed-len          n  Create seed of length 'n'. Options: {}
                            (default: {})
 -L, --label             l  Label to identify this wallet (32 chars max.
                            Allowed symbols: A-Z, a-z, 0-9, " ", "_", ".")
 -p, --hash-preset       p  Use scrypt.hash() parameters from preset 'p'
                            (default: '{}')
--P, --show-hash-presets    Show information on available hash presets
--q, --quiet                Suppress warnings; overwrite files without asking
+-P, --passwd-file       f  Get passphrase from file 'f'
+-q, --quiet                Suppress warnings; overwrite files without
+                           prompting
 -u, --usr-randlen       n  Get 'n' characters of randomness from the user
                            (default: {})
 
@@ -77,11 +79,11 @@ The '--from-brain' option also requires the user to specify a seed length
 (the 'l' parameter), which overrides both the default and any one given in
 the '--seed-len' option.
 
-For a brainwallet passphrase to always generate the same keys and addresses,
-the same 'l' and 'p' parameters to '--from-brain' must be used in all future
-invocations with that passphrase.
+For a brainwallet passphrase to always generate the same keys and
+addresses, the same 'l' and 'p' parameters to '--from-brain' must be used
+in all future invocations with that passphrase.
 """.format(
-		", ".join([str(i) for i in seed_lens]),
+		",".join([str(i) for i in seed_lens]),
 		seed_len,
 		hash_preset,
 		usr_randlen,
@@ -90,10 +92,10 @@ invocations with that passphrase.
 	)
 }
 
-short_opts = "hd:el:L:p:Pqu:b:ms"
-long_opts  = "help","outdir=","echo_passphrase","seed_len=","label=",\
-		"hash_preset=","show_hash_presets","quiet","usr_randlen=",\
-		"from_brain=","from_mnemonic","from_seed"
+short_opts = "hd:eHl:L:p:P:qu:b:ms"
+long_opts  = "help","outdir=","echo_passphrase","show_hash_presets","seed_len=",\
+			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=",\
+			"from_brain=","from_mnemonic","from_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
@@ -131,6 +133,9 @@ if not 'quiet' in opts: do_license_msg()
 
 msg_r("Acquiring random data from your computer...")
 
+from time import sleep
+sleep(1)
+
 try:
 	from Crypto import Random
 	r = Random.new()
@@ -162,8 +167,15 @@ else:
 salt = os_rand_data[1] + usr_rand_data
 salt = sha256(salt).digest()[:salt_len]
 
-passwd = get_first_passphrase_from_user(
-		"{} wallet passphrase".format(proj_name), opts)
+if not 'quiet' in opts:
+	msg("""
+Now you must choose a passphrase to encrypt the seed with.  A key will be
+generated from your passphrase using a hash preset of '%s'.  Please note that
+no strength checking of passphrases is performed.  For an empty passphrase,
+just hit ENTER twice.
+""" % opts['hash_preset'])
+
+passwd = get_new_passphrase("{} wallet passphrase".format(proj_name), opts)
 
 key = make_key(passwd, salt, opts['hash_preset'])
 

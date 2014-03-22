@@ -65,9 +65,10 @@ def connect_to_bitcoind():
 	return c
 
 
-def trim_exponent(d):
+def trim_exponent(n):
 	'''Remove exponent and trailing zeros.
 	'''
+	d = Decimal(n)
 	return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 
@@ -95,7 +96,16 @@ def check_btc_amt(send_amt):
 
 def get_cfg_options(cfg_keys):
 
-	cfg_file = "%s/%s" % (os.environ["HOME"], ".bitcoin/bitcoin.conf")
+	if "HOME" in os.environ:
+		cfg_file = "%s/%s" % (os.environ["HOME"], ".bitcoin/bitcoin.conf")
+	elif "HOMEPATH" in os.environ:
+	# Windows:
+		cfg_file = "%s%s" % (os.environ["HOMEPATH"],
+						r"\Application Data\Bitcoin\bitcoin.conf")
+	else:
+		msg("Unable to find bitcoin configuration file")
+		sys.exit(3)
+
 	try:
 		f = open(cfg_file)
 	except:
@@ -186,7 +196,7 @@ def sort_and_view(unspent):
 				total
 			)]
 		output.append(fs % ("Num","TX id  Vout","","Address","Amount (BTC)",
-					"Age (days)"))
+					"Age(days)"))
 
 		for i in out:
 			amt = str(trim_exponent(i.amount))
@@ -209,12 +219,17 @@ def sort_and_view(unspent):
 
 			output.append(fs % (str(n+1)+")",txid,i.vout,addr,i.amt,i.days))
 
+		skip_body = False
 		while True:
-			reply = get_char("\n".join(output) +
-"""\n
+			if skip_body: skip_body = False
+			else:
+				msg("\n".join(output))
+				msg("""
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-View options: [g]roup, show [m]mgen addr
-(Type 'q' to quit sorting, 'p' to print to file): """).strip()
+View options: [g]roup, show [m]mgen addr""")
+
+			reply = get_char(
+"(Type 'q' to quit sorting, 'p' to print to file, 'P' to view in pager): ")
 			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"; break
 			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
@@ -241,13 +256,19 @@ View options: [g]roup, show [m]mgen addr
 							i.address,mmid,i.amt,i.days,cmt)
 					pout.append(os.rstrip())
 
-				outdata = "Unspent outputs ({} UTC)\n\n{}\n\nTotal BTC: {}\n".format(
-						make_timestr(), "\n".join(pout), total
-					)
-				outfile = "listunspent.out"
+				sort_info = (
+					("reverse," if reverse else "") +
+					(sort if sort else "unsorted")
+				)
+				outdata = \
+"Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n".format(
+					make_timestr(), sort_info, "\n".join(pout), total
+				)
+				outfile = "listunspent[%s].out" % sort_info
 				write_to_file(outfile, outdata)
+				skip_body = True
 				msg("\nData written to '%s'" % outfile)
-				sys.exit(1)
+			elif reply == 'P': do_pager("\n".join(output))
 			elif reply == 'q': break
 			else: msg("Invalid input")
 
@@ -288,7 +309,7 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
 	msg("TRANSACTION DATA:\n")
 
 	if metadata: msg(
-		"Header: [ID: {}] [Amount: {} BTC] [Time: {}]\n".format(*metadata))
+		"Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n".format(*metadata))
 
 	msg("Inputs:")
 	total_in = 0
@@ -300,7 +321,7 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
 				msg(" " + """
 %-2s tx,vout: %s,%s
     address:        %s
-    label:          %s
+    ID/label:       %s
     amount:         %s BTC
     confirmations:  %s (around %s days)
 """.strip() %

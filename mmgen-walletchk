@@ -36,15 +36,16 @@ help_data = {
 -d, --outdir        d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -m, --export-mnemonic  Export the wallet's mnemonic to file
+-P, --passwd-file   f  Get passphrase from file 'f'
 -s, --export-seed      Export the wallet's seed to file
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
 """
 }
 
-short_opts = "hd:emsSv"
+short_opts = "hd:emP:sSv"
 long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
-				"export_seed","stdout","verbose"
+				"passwd_file=","export_seed","stdout","verbose"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 

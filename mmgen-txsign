@@ -36,16 +36,19 @@ help_data = {
 -h, --help               Print this help message
 -d, --outdir          d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase    Print passphrase to screen when typing it
--f, --force-wallet-dat   Force the use of wallet.dat as a key source
 -i, --info               Display information about the transaction and exit
+-I, --tx_id              Display transaction ID and exit
 -k, --keys-from-file  k  Provide additional key data from file 'k'
--q, --quiet              Suppress warnings; overwrite files without asking
+-P, --passwd-file     f  Get passphrase from file 'f'
+-q, --quiet              Suppress warnings; overwrite files without
+                         prompting
 
 -b, --from-brain     l,p Generate keys from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p' (comma-separated)
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{} format
+-w, --use-wallet-dat     Use the keys in the bitcoind wallet.dat file too
 
 Transactions with either mmgen or non-mmgen input addresses may be signed.
 For non-mmgen inputs, the bitcoind wallet.dat is used as the key source.
@@ -70,9 +73,10 @@ Seed data supplied in files must have the following extensions:
 """.format(seed_ext,wallet_ext,seed_ext,mn_ext,brain_ext)
 }
 
-short_opts = "hd:efik:qb:ms"
-long_opts  = "help","outdir=","echo_passphrase","force_wallet_dat","info",\
-		  "keys_from_file=","quiet","from_brain=","from_mnemonic","from_seed"
+short_opts = "hd:eiIk:P:qb:msw"
+long_opts  = "help","outdir=","echo_passphrase","info","tx_id",\
+			  "keys_from_file=","passwd_file=","quiet","from_brain=",\
+			  "from_mnemonic","from_seed","use_wallet_dat"
 
 opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
 
@@ -83,62 +87,18 @@ if 'keys_from_file' in opts: check_infile(opts['keys_from_file'])
 if not infiles: usage(help_data)
 for i in infiles: check_infile(i)
 
-# Begin execution
 
-c = connect_to_bitcoind()
+def get_keys_for_mmgen_addrs(mmgen_addrs,infiles):
 
-tx_file = infiles.pop(0)
-tx_data = get_lines_from_file(tx_file,"transaction data")
-
-metadata,tx_hex,sig_data,inputs_data = parse_tx_data(tx_data,tx_file)
-
-if 'info' in opts:
-	view_tx_data(c,inputs_data,tx_hex,metadata)
-	sys.exit(0)
-
-if not 'quiet' in opts: do_license_msg()
-
-msg("Successfully opened transaction file '%s'" % tx_file)
-
-if user_confirm("View transaction data? ",default_yes=False):
-	view_tx_data(c,inputs_data,tx_hex,metadata)
-
-# Are inputs mmgen addresses?
-mmgen_addrs,other_addrs,keys = [],[],[]
-
-for i in inputs_data:
-	if verify_mmgen_label(i['account']):
-		mmgen_addrs.append(i)
-	else:
-		other_addrs.append(i)
-
-if mmgen_addrs and not 'force_wallet_dat' in opts:
-	# Check that all the seed IDs are the same:
 	seed_ids = list(set([i['account'][:8] for i in mmgen_addrs]))
-	ext_data = (
-		(wallet_ext, {}),
-		(mn_ext,     {"from_mnemonic":True}),
-		(seed_ext,   {"from_seed":    True}),
-		(brain_ext,  opts)
-	)
+	seed_ids_save = seed_ids[0:]
+	keys = []
+
 	while seed_ids:
 		infile = False
 		if infiles:
 			infile = infiles.pop()
-			ext = infile.split(".")[-1]
-			for e,o in ext_data:
-				if e == ext:
-					if e == brain_ext:
-						if "from_brain" not in opts:
-							msg(
-				"'--from-brain' option must be specified for brainwallet file")
-							sys.exit(2)
-					seed = get_seed_retry(infile,o); break
-			else:
-				msg("Invalid file extension: '.%s'\nValid extensions: '.%s'" %
-					(ext,"' '.".join([i[0] for i in ext_data])))
-				sys.exit(2)
-
+			seed = get_seed(infile,opts)
 		elif "from_brain" in opts or "from_mnemonic" in opts or "from_seed" in opts:
 			msg("Need data for seed ID %s" % seed_ids[0])
 			seed = get_seed_retry("",opts)
@@ -158,65 +118,123 @@ if mmgen_addrs and not 'force_wallet_dat' in opts:
 			from mmgen.addr import generate_keys
 			keys += [i['wif'] for i in generate_keys(seed, seed_id_addrs)]
 		else:
-			msg("Seed source produced an invalid seed ID (%s)" % seed_id)
-			if infile:
-				msg("Invalid input file: %s" % infile)
-				sys.exit(2)
+			if seed_id in seed_ids_save:
+				msg_r("Ignoring duplicate seed source")
+				if infile: msg(" '%s'" % infile)
+				else:      msg(" for ID %s" % seed_id)
+			else:
+				msg("Seed source produced an invalid seed ID (%s)" % seed_id)
+				if infile:
+					msg("Invalid input file: %s" % infile)
+					sys.exit(2)
 
-	if other_addrs:
-		if 'keys_from_file' in opts:
-			keys += get_lines_from_file(opts['keys_from_file'],
-					"additional key data")
-		else:
-			msg("""
-A key file must be supplied (option '-f') for the following non-mmgen
-address%s: %s""" % (
-	"" if len(other_addrs) == 1 else "es",
-	" ".join([i['address'] for i in other_addrs])
-	  ))
-			sys.exit(2)
+	return keys
 
-	sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
 
-elif 'keys_from_file' in opts:
-	keys = get_lines_from_file(opts['keys_from_file'],"key data")
-
-	sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
-else:
-	prompt = "Enter passphrase for bitcoind wallet: "
-	if 'echo_passphrase' in opts:
-		password = my_raw_input(prompt)
-	else:
-		password = my_getpass(prompt)
-
-	wallet_enc = True
-	from mmgen.rpc import exceptions
+def sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys):
 
 	try:
-		c.walletpassphrase(password, 9999)
-	except exceptions.WalletWrongEncState:
-		msg("Wallet is unencrypted")
-		wallet_enc = False
-	except exceptions.WalletPassphraseIncorrect:
-		msg("Passphrase incorrect")
-		sys.exit(3)
-	except exceptions.WalletAlreadyUnlocked:
-		msg("WARNING: Wallet already unlocked!")
-	else:
-		msg("Passphrase OK")
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+	except:
+		from mmgen.rpc import exceptions
+		msg("Using keys in wallet.dat as per user request")
+		prompt = "Enter passphrase for bitcoind wallet: "
+		while True:
+			passwd = get_bitcoind_passphrase(prompt,opts)
 
-	sig_tx = sign_transaction(c,tx_hex,sig_data)
+			try:
+				c.walletpassphrase(passwd, 9999)
+			except exceptions.WalletPassphraseIncorrect:
+				msg("Passphrase incorrect")
+			else:
+				msg("Passphrase OK"); break
 
-	if wallet_enc:
-		c.walletlock()
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+
 		msg("Locking wallet")
+		try:
+			c.walletlock()
+		except:
+			msg("Failed to lock wallet")
+
+	return sig_tx
+
+
+def missing_keys_errormsg(other_addrs):
+	msg("""
+A key file (option '-f') or wallet.dat (option '-w') must be supplied
+for the following non-mmgen address%s: %s""" %
+	("" if len(other_addrs) == 1 else "es",
+	" ".join([i['address'] for i in other_addrs])
+	  ))
+
+# Begin execution
+
+c = connect_to_bitcoind()
+
+tx_file = infiles.pop(0)
+m = "" if 'tx_id' in opts else "transaction data"
+tx_data = get_lines_from_file(tx_file,m)
+
+metadata,tx_hex,sig_data,inputs_data = parse_tx_data(tx_data,tx_file)
+
+if 'tx_id' in opts:
+	msg(metadata[0])
+	sys.exit(0)
+
+if 'info' in opts:
+	view_tx_data(c,inputs_data,tx_hex,metadata)
+	sys.exit(0)
+
+if not 'quiet' in opts: do_license_msg()
+
+msg("Successfully opened transaction file '%s'" % tx_file)
+
+if user_confirm("View transaction data? ",default_yes=False):
+	view_tx_data(c,inputs_data,tx_hex,metadata)
+
+
+# Are inputs mmgen addresses?
+mmgen_addrs,other_addrs = [],[]
+
+for i in inputs_data:
+	if verify_mmgen_label(i['account']):
+		mmgen_addrs.append(i)
+	else:
+		other_addrs.append(i)
+
+
+if 'keys_from_file' in opts:
+	keys = get_lines_from_file(opts['keys_from_file'],"key data")
+else:
+	keys = []
+
+if mmgen_addrs:
+	if other_addrs and not keys and not 'use_wallet_dat' in opts:
+		missing_keys_errormsg(other_addrs)
+		sys.exit(2)
+
+	keys += get_keys_for_mmgen_addrs(mmgen_addrs,infiles)
+
+	if 'use_wallet_dat' in opts:
+		sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys)
+	else:
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+elif other_addrs:
+	if 'use_wallet_dat' in opts:
+		sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys)
+	else:
+		if keys:
+			sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+		else:
+			missing_keys_errormsg(other_addrs)
+			sys.exit(2)
 
 if sig_tx['complete']:
 	msg("Signing completed")
+	prompt = "Save signed transaction?"
+	if user_confirm(prompt,default_yes=True):
+		print_signed_tx_to_file(tx_hex,sig_tx['hex'],metadata,opts)
 else:
 	msg("Some keys were missing.  Transaction could not be signed.")
 	sys.exit(3)
-
-prompt = "Save signed transaction?"
-if user_confirm(prompt,default_yes=True):
-	print_signed_tx_to_file(tx_hex,sig_tx['hex'],metadata,opts)

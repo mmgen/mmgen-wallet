@@ -19,10 +19,14 @@
 config.py:  Constants and configuration options for the mmgen suite
 """
 proj_name     = "mmgen"
+
 wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
 mn_ext        = "mmwords"
 brain_ext     = "mmbrain"
+
+seed_exts = wallet_ext, seed_ext, mn_ext, brain_ext
+
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 

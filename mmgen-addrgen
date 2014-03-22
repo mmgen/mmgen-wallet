@@ -44,20 +44,22 @@ else: extra_help_data = ("","","")
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
 	'desc': """Generate a list or range of {} from a {} wallet,
-	              mnemonic, seed or password""".format(gen_what,proj_name),
+                  mnemonic, seed or password""".format(gen_what,proj_name),
 	'usage':"[opts] [infile] <address list>",
 	'options': """
 -h, --help               Print this help message{}
 -d, --outdir          d  Specify an alternate directory 'd' for output
--e, --echo-passphrase    Display passphrase or mnemonic on screen upon entry
+-e, --echo-passphrase    Echo passphrase or mnemonic to screen upon entry
+-H, --show-hash-presets  Show information on available hash presets
 -K, --no-keyconv         Use internal libraries for address generation
                          instead of 'keyconv'
 -l, --seed-len        N  Length of seed.  Options: {}
                          (default: {})
 -p, --hash-preset     p  Use scrypt.hash() parameters from preset 'p'
                          when hashing password (default: '{}')
--P, --show-hash-presets  Show information on available hash presets
--q, --quiet              Suppress warnings; overwrite files without asking
+-P, --passwd-file     f  Get passphrase from file 'f'
+-q, --quiet              Suppress warnings; overwrite files without
+                         prompting
 -S, --stdout             Print {W} to stdout
 -v, --verbose            Produce more verbose output{}
 
@@ -90,9 +92,9 @@ the 'p' parameter of the '--from-brain' option
 The '--from-brain' option also requires the user to specify a seed length
 (the 'l' parameter)
 
-For a brainwallet passphrase to always generate the same keys and addresses,
-the same 'l' and 'p' parameters to '--from-brain' must be used in all future
-invocations with that passphrase
+For a brainwallet passphrase to always generate the same keys and
+addresses, the same 'l' and 'p' parameters to '--from-brain' must be used
+in all future invocations with that passphrase
 """.format(
 		extra_help_data[0],
 		", ".join([str(i) for i in seed_lens]),
@@ -105,16 +107,16 @@ invocations with that passphrase
 	)
 }
 
-so = "h","A","d:","e","K","l:","p:","P","q","S","v","x","b:","m","s"
-lo = "help","no_addresses","outdir=","echo_passphrase","no_keyconv",\
-		"seed_len=","hash_preset=","show_hash_presets","quiet","stdout",\
-		"verbose","b16","from_brain=","from_mnemonic","from_seed"
+short_opts = ["h","A","d:","e","H","K","l:","p:","P:","q","S",
+				"v","x","b:","m","s"]
+long_opts = ["help","no_addresses","outdir=","echo_passphrase",
+			"show_hash_presets","no_keyconv","seed_len=","hash_preset=",
+			"passwd_file=","quiet","stdout","verbose","b16","from_brain=",
+			"from_mnemonic","from_seed"]
 
 if invoked_as == "addrgen":
-	short_opts = so[0:1] + so[2:10] + so[11:]
-	long_opts  = lo[0:1] + lo[2:10] + lo[11:]
-else:
-	short_opts,long_opts = so,lo
+	for i in "A","x":              short_opts.remove(i)
+	for i in "no_addresses","b16": long_opts.remove(i)
 
 opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 
@@ -131,10 +133,6 @@ set_if_unset_and_typeconvert(opts,(
 
 # Exits on invalid input
 check_opts(opts,('hash_preset','seed_len','outdir','from_brain'))
-
-if debug:
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
 
 if   len(cmd_args) == 1 and (
 			'from_mnemonic' in opts or

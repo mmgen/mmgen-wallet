@@ -26,7 +26,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.config import *
 from mmgen.tx import *
-from mmgen.utils import check_opts, msg, user_confirm
+from mmgen.utils import check_opts, msg, msg_r, user_confirm
 from decimal import Decimal
 
 prog_name = sys.argv[0].split("/")[-1]
@@ -40,12 +40,13 @@ help_data = {
 -d, --outdir           d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase     Print passphrase to screen when typing it
 -i, --info                Display unspent outputs and exit
--q, --quiet               Suppress warnings; overwrite files without asking
+-q, --quiet               Suppress warnings; overwrite files without
+                          prompting
 
 Outputs to spend are chosen by the user via a menu.
 
-Ages of transactions are approximate based on an estimated block discovery
-time of %s minutes.
+Ages of transactions are approximate based on an average block discovery
+interval of %s minutes.
 """ % mins_per_block
 }
 
@@ -88,21 +89,29 @@ if not 'quiet' in opts and not 'info' in opts: do_license_msg()
 # End test
 
 us = c.listunspent()
+
+if not us:
+	msg_r("""
+No spendable outputs found!  Import addresses with balances into your
+watch-only wallet using 'mmgen-addrimport' and then re-run this program.
+""")
+	sys.exit(2)
+
 # write_to_file("listunspent.json",repr(us))
 # sys.exit()
 unspent = sort_and_view(us)
 
 total = trim_exponent(sum([i.amount for i in unspent]))
 
-msg("Total unspent:   %s BTC" % total)
+msg("Total unspent: %s BTC (%s outputs)" % (total, len(unspent)))
 if 'info' in opts: sys.exit(0)
 
 send_amt = sum(tx_out.values())
-msg("Total amount to spend: %s BTC\n%s unspent outputs total" %
-		(send_amt, len(unspent)))
+msg("Total amount to spend: %s BTC" % send_amt)
 
 while True:
-	sel_nums = select_outputs(unspent,"Choose the outputs to spend: ")
+	sel_nums = select_outputs(unspent,
+			"Enter a range or space-separated list of outputs to spend: ")
 	msg("Selected outputs: %s" % " ".join(str(i) for i in sel_nums))
 	sel_unspent = [unspent[i-1] for i in sel_nums]
 

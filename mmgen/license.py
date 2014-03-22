@@ -30,7 +30,7 @@ gpl = {
   and you are welcome to redistribute it under certain conditions.
 """,
 	'prompt': """
-Press 'c' for conditions, 'w' for warranty info, or ENTER to continue:
+Press 'w' for conditions and warranty info, or 'c' to continue:
 """,
 	'conditions': """
                        TERMS AND CONDITIONS
@@ -582,60 +582,20 @@ reviewing courts shall apply local law that most closely approximates
 an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
-""",
-	'warranty': """
-  15. Disclaimer of Warranty.
-
-  THERE IS NO WARRANTY FOR THE PROGRAM, TO THE EXTENT PERMITTED BY
-APPLICABLE LAW.  EXCEPT WHEN OTHERWISE STATED IN WRITING THE COPYRIGHT
-HOLDERS AND/OR OTHER PARTIES PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY
-OF ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO,
-THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE PROGRAM
-IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF
-ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
-
-  16. Limitation of Liability.
-
-  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
-THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES, INCLUDING ANY
-GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE
-USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED TO LOSS OF
-DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD
-PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER PROGRAMS),
-EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
-
-  17. Interpretation of Sections 15 and 16.
-
-  If the disclaimer of warranty and limitation of liability provided
-above cannot be given local legal effect according to their terms,
-reviewing courts shall apply local law that most closely approximates
-an absolute waiver of all civil liability in connection with the
-Program, unless a warranty or assumption of liability accompanies a
-copy of the Program in return for a fee.
 """
 }
 
-def do_pager(text):
-	import os
-	pager = os.environ['PAGER'] if 'PAGER' in os.environ else 'more'
-
-	p = os.popen(pager, 'w')
-	p.write(text)
-	p.close()
-	msg_r("\r")
-
-
 def do_license_msg():
 	msg(gpl['warning'])
+	prompt = "%s " % gpl['prompt'].strip()
 
 	while True:
-
-		prompt = "%s " % gpl['prompt'].strip()
 		reply = get_char(prompt)
-
-		if   reply == 'c': do_pager(gpl['conditions'])
-		elif reply == 'w': do_pager(gpl['warranty'])
-		else: msg(""); break
+		if reply == 'w':
+			from mmgen.utils import do_pager
+			do_pager(gpl['conditions'],"END OF CONDITIONS AND WARRANTY")
+		elif reply == 'c':
+			msg(""); break
+		else:
+			msg_r("\r")
+	msg("")

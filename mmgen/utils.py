@@ -40,20 +40,44 @@ def my_getpass(prompt):
 
 	return pw
 
-def get_char(prompt):
+term = False
 
-	import os
+def get_char(prompt=""):
+
 	msg_r(prompt)
-	os.system(
-"stty -icanon min 1 time 0 -echo -echoe -echok -echonl -crterase noflsh"
-	)
-	try: ch = sys.stdin.read(1)
+
+	global term
+
+	if not term:
+		try:
+			import tty, termios
+			term = "unix"
+		except:
+			try:
+				import msvcrt
+				term = "mswin"
+			except:
+				msg("Unable to set terminal mode")
+				sys.exit(2)
+
+	try:
+		if term == "unix":
+			import tty, termios
+			fd = sys.stdin.fileno()
+			old = termios.tcgetattr(fd)
+			tty.setcbreak(fd)
+			ch = sys.stdin.read(1)
+		elif term == "mswin":
+			import msvcrt
+			ch = msvcrt.getch()
+			if ord(ch) == 3:
+				raise KeyboardInterrupt
 	except:
-		os.system("stty sane")
 		msg("\nUser interrupt")
 		sys.exit(1)
-	else:
-		os.system("stty sane")
+	finally:
+		if term == "unix":
+			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 	return ch
 
@@ -320,39 +344,29 @@ def parse_address_list(arg,sep=","):
 	return sorted(set(ret))
 
 
-def get_first_passphrase_from_user(what, opts):
-	"""
-	Prompt the user for a passphrase and return it
+def get_new_passphrase(what, opts):
 
-	Supported options: echo_passphrase
-	"""
-
-	if not 'quiet' in opts:
-		msg("""
-Now you must choose a passphrase to encrypt the seed with.  A key will be
-generated from your passphrase using a hash preset of '%s'.  Please note that
-no strength checking of passphrases is performed.  For an empty passphrase,
-just hit ENTER twice.
-""" % opts['hash_preset'])
-
-	if 'echo_passphrase' in opts:
-		ret = " ".join(_get_words_from_user(opts,"Enter %s: " % what))
-		if ret == "": msg("Empty passphrase")
-		return ret
-
-	for i in range(passwd_max_tries):
-		ret  = " ".join(_get_words_from_user(opts,"Enter %s: " % what))
-		ret2 = " ".join(_get_words_from_user(opts,"Repeat %s: " % what))
-		if debug: print "Passphrases: [%s] [%s]" % (ret,ret2)
-		if ret2 == ret:
-			s = " (empty)" if not len(ret) else ""
-			msg("%ss match%s" % (what.capitalize(),s))
-			return ret
+	if 'passwd_file' in opts:
+		pw = " ".join(_get_words_from_file(opts['passwd_file'],what))
+	elif 'echo_passphrase' in opts:
+		pw = " ".join(_get_words_from_user(("Enter %s: " % what), opts))
+	else:
+		for i in range(passwd_max_tries):
+			pw = " ".join(_get_words_from_user(("Enter %s: " % what),opts))
+			pw2 = " ".join(_get_words_from_user(("Repeat %s: " % what),opts))
+			if debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
+			if pw == pw2:
+				msg("%ss match" % what.capitalize())
+				break
+			else:
+				msg("%ss do not match" % what.capitalize())
 		else:
-			msg("%ss do not match" % what.capitalize())
+			msg("User failed to duplicate passphrase in %s attempts" %
+					passwd_max_tries)
+			sys.exit(2)
 
-	msg("User failed to duplicate passphrase in %s attempts" % passwd_max_tries)
-	sys.exit(2)
+	if pw == "": msg("WARNING: Empty passphrase")
+	return pw
 
 
 def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
@@ -404,9 +418,12 @@ def write_to_stdout(data, what, confirm=True):
 	if sys.stdout.isatty() and confirm:
 		confirm_or_exit("",'output {} to screen'.format(what))
 	elif not sys.stdout.isatty():
-		import os
-		of = os.readlink("/proc/%d/fd/1" % os.getpid())
-		msg("Writing data to file '%s'" % of)
+		try:
+			import os
+			of = os.readlink("/proc/%d/fd/1" % os.getpid())
+			msg("Redirecting output to file '%s'" % of)
+		except:
+			msg("Redirecting output to file")
 	sys.stdout.write(data)
 
 
@@ -682,24 +699,28 @@ def get_data_from_wallet(infile,opts,silent=False):
 	return label,metadata,hash_preset,res['salt'],res['enc_seed']
 
 
-def _get_words_from_user(opts, prompt):
+def _get_words_from_user(prompt, opts):
 	# split() also strips
 	if 'echo_passphrase' in opts:
-		return my_raw_input(prompt).split()
+		words = my_raw_input(prompt).split()
 	else:
-		return my_getpass(prompt).split()
+		words = my_getpass(prompt).split()
+	if debug: print "Sanitized input: [%s]" % " ".join(words)
+	return words
 
 
 def _get_words_from_file(infile,what):
 	msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile, 'r')
-	data = f.read(); f.close()
 	# split() also strips
-	return data.split()
+	words = f.read().split()
+	f.close()
+	if debug: print "Sanitized input: [%s]" % " ".join(words)
+	return words
 
 
-def get_lines_from_file(infile,what):
-	msg("Getting %s from file '%s'" % (what,infile))
+def get_lines_from_file(infile,what=""):
+	if what != "": msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
 	lines = f.read().splitlines(); f.close()
 	return lines
@@ -711,15 +732,6 @@ def get_data_from_file(infile,what="data"):
 	data = f.read()
 	f.close()
 	return data
-
-
-def get_words(infile,what,prompt,opts):
-	if infile:
-		words = _get_words_from_file(infile,what)
-	else:
-		words = _get_words_from_user(opts,prompt)
-	if debug: print "Sanitized input: [%s]" % " ".join(words)
-	return words
 
 
 def _get_seed_from_seed_data(words):
@@ -746,6 +758,34 @@ def _get_seed_from_seed_data(words):
 		msg("Invalid checksum for {} seed".format(proj_name))
 		return False
 
+passwd_file_used = False
+
+def mark_passwd_file_as_used(opts):
+	global passwd_file_used
+	if passwd_file_used:
+		msg_r("WARNING: Reusing passphrase from file '%s'." % opts['passwd_file'])
+		msg(" This may not be what you want!")
+	passwd_file_used = True
+
+
+def get_mmgen_passphrase(prompt,opts):
+	if 'passwd_file' in opts:
+		mark_passwd_file_as_used(opts)
+		return " ".join(_get_words_from_file(opts['passwd_file'],"passphrase"))
+	else:
+		return " ".join(_get_words_from_user(prompt,opts))
+
+
+def get_bitcoind_passphrase(prompt,opts):
+	if 'passwd_file' in opts:
+		mark_passwd_file_as_used(opts)
+		return get_data_from_file(opts['passwd_file'],"passphrase").strip("\r\n")
+	else:
+		if 'echo_passphrase' in opts:
+			return my_raw_input(prompt)
+		else:
+			return my_getpass(prompt)
+
 
 def get_seed_from_wallet(
 		infile,
@@ -759,7 +799,7 @@ def get_seed_from_wallet(
 
 	if 'verbose' in opts: _display_control_data(*wdata)
 
-	passwd = " ".join(get_words("","",prompt,opts))
+	passwd = get_mmgen_passphrase(prompt,opts)
 
 	key = make_key(passwd, salt, hash_preset)
 
@@ -809,41 +849,63 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	return dec_seed
 
 
-def get_seed(infile,opts,silent=False):
-	if 'from_mnemonic' in opts:
-		prompt = "Enter mnemonic: "
-		what = "mnemonic"
-		words = get_words(infile,"mnemonic data",prompt,opts)
+def _get_words(infile,what,prompt,opts):
+	if infile:
+		return _get_words_from_file(infile,what)
+	else:
+		return _get_words_from_user(prompt,opts)
 
+
+def get_seed(infile,opts,silent=False):
+
+	ext = infile.split(".")[-1]
+
+	if   ext == mn_ext:           source = "mnemonic"
+	elif ext == brain_ext:        source = "brainwallet"
+	elif ext == seed_ext:         source = "seed"
+	elif ext == wallet_ext:       source = "wallet"
+	elif 'from_mnemonic' in opts: source = "mnemonic"
+	elif 'from_brain'    in opts: source = "brainwallet"
+	elif 'from_seed'     in opts: source = "seed"
+	else:
+		if infile: msg(
+			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
+			(infile, "', '.".join(seed_exts)))
+		else: msg("No seed source type specified and no file supplied")
+		sys.exit(2)
+
+	if source == "mnemonic":
+		prompt = "Enter mnemonic: "
+		words = _get_words(infile,"mnemonic data",prompt,opts)
 		wl = get_default_wordlist()
 		from mmgen.mnemonic import get_seed_from_mnemonic
 		seed = get_seed_from_mnemonic(words,wl)
-	elif 'from_brain' in opts:
+	elif source == "brainwallet":
+		if 'from_brain' not in opts:
+			msg("'--from-brain' parameters must be specified for brainwallet file")
+			sys.exit(2)
 		if 'quiet' not in opts:
 			confirm_or_exit(
 				cmessages['brain_warning'].format(
-					proj_name.capitalize(),
-					*_get_from_brain_opt_params(opts)),
-			"continue")
+					proj_name.capitalize(), *_get_from_brain_opt_params(opts)),
+				"continue")
 		prompt = "Enter brainwallet passphrase: "
-		what = "brainwallet"
-		words = get_words(infile,"brainwallet data",prompt,opts)
+		words = _get_words(infile,"brainwallet data",prompt,opts)
 		seed = _get_seed_from_brain_passphrase(words,opts)
-	elif 'from_seed' in opts:
+	elif source == "seed":
 		prompt = "Enter seed in %s format: " % seed_ext
-		what = "seed"
-		words = get_words(infile,"seed data",prompt,opts)
+		words = _get_words(infile,"seed data",prompt,opts)
 		seed = _get_seed_from_seed_data(words)
-	else:
-		return get_seed_from_wallet(infile, opts, silent=silent)
+	elif source == "wallet":
+		seed = get_seed_from_wallet(infile, opts, silent=silent)
 
 	if infile and not seed:
-		msg("Invalid %s file: %s" % (what,infile))
+		msg("Invalid %s file: %s" % (source,infile))
 		sys.exit(2)
 
 	return seed
 
-# Repeat if data entry is incorrect
+# Repeat if entered data is invalid
 def get_seed_retry(infile,opts):
 	silent = False
 	while True:
@@ -863,5 +925,48 @@ def remove_blanks_comments(lines):
 
 	return ret
 
+def do_pager(text,endmsg=""):
+	import os
+	if sys.platform.startswith("linux"):
+		if 'PAGER' in os.environ and os.environ['PAGER']:
+			try:
+				p = os.popen(os.environ['PAGER'], 'w')
+			except:
+				print text
+			else:
+				try:
+					p.write(text)
+					p.close()
+				except:
+					p.close()
+				msg_r("\r")
+		else:
+			print text
+	elif sys.platform.startswith("win"):
+		try:
+			import msvcrt
+		except:
+			print text
+		else:
+			try:
+				from subprocess import Popen, PIPE, STDOUT
+				p = Popen(["more","/C"], stdin=PIPE, shell=True)
+				if endmsg:
+					p.stdin.write("%s\n%s\n\n" % (text,endmsg))
+				else:
+					p.stdin.write(text)
+			except:
+				msg("\nUser exit")
+
+			from time import sleep
+			# Flush stdin
+			while msvcrt.kbhit(): msvcrt.getch()
+			sleep(1)
+			while msvcrt.kbhit(): msvcrt.getch()
+			msg("")
+	else:
+		print text
+
+
 if __name__ == "__main__":
-	print get_lines_from_file("/tmp/lines","test file")
+	print "utils.py"

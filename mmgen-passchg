@@ -33,12 +33,13 @@ help_data = {
 	'options': """
 -h, --help                  Print this help message
 -d, --outdir             d  Specify an alternate directory 'd' for output
+-H, --show-hash-presets     Show information on available hash presets
 -k, --keep-old-passphrase   Keep old passphrase (use when changing hash
                             strength or label only)
 -L, --label              l  Change the wallet's label to 'l'
 -p, --hash-preset        p  Change scrypt.hash() parameters to preset 'p'
                             (default: '{}')
--P, --show-hash-presets     Show information on available hash presets
+-P, --passwd-file        f  Get new passphrase from file 'f'
 -v, --verbose               Produce more verbose output
 
 NOTE: The key ID will change if either the passphrase or hash preset
@@ -46,9 +47,9 @@ NOTE: The key ID will change if either the passphrase or hash preset
 """.format(hash_preset)
 }
 
-short_opts = "hd:kL:p:Pv"
-long_opts  = "help","outdir=","keep_old_passphrase","label=","hash_preset=",\
-				"show_hash_presets","verbose"
+short_opts = "hd:HkL:p:P:v"
+long_opts  = "help","outdir=","show_hash_presets","keep_old_passphrase",\
+			  "label=","hash_preset=","passwd_file=","verbose"
 
 opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
 
@@ -65,11 +66,12 @@ infile = cmd_args[0]
 # Old key:
 label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile,opts)
 seed_id,key_id = metadata[:2]
-oldp = "" if 'keep_old_passphrase' in opts else "old "
 
 # Repeat on incorrect pw entry
+prompt = "Enter %spassphrase: " % (""
+		if 'keep_old_passphrase' in opts else "old ")
 while True:
-	passwd = " ".join(get_words("","",("Enter %spassphrase: " % oldp),opts))
+	passwd = get_mmgen_passphrase(prompt,{})
 	key = make_key(passwd, salt, hash_preset)
 	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 	if seed: break
@@ -97,8 +99,7 @@ else:
 if 'keep_old_passphrase' in opts:
 	msg("Keeping old passphrase by user request")
 else:
-	new_passwd = get_first_passphrase_from_user(
-			"new passphrase", {'quiet': True })
+	new_passwd = get_new_passphrase("new passphrase", opts)
 
 	if new_passwd == passwd:
 		msg("Passphrase is unchanged")

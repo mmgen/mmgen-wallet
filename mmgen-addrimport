@@ -33,9 +33,9 @@ help_data = {
                      watching wallet""",
 	'usage':"[opts] [mmgen address file]",
 	'options': """
--h, --help         Print this help message
--l, --addrlist  f  Import the non-mmgen Bitcoin addresses listed in file 'f'
--q, --quiet        Suppress warnings
+-h, --help        Print this help message
+-l, --addrlist f  Import the non-mmgen Bitcoin addresses listed in file 'f'
+-q, --quiet       Suppress warnings
 """
 }
 

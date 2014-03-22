@@ -46,7 +46,7 @@ mmgen-pywallet: Dump contents of a bitcoind wallet to file
 from mmgen.Opts import *
 from mmgen.utils import msg
 from bsddb.db import *
-import os, sys, time
+import sys, time
 import json
 import logging
 import struct
@@ -75,17 +75,20 @@ help_data = {
 	'options': """
 -h, --help             Print this help message
 -d, --outdir        d  Specify an alternate directory 'd' for output
+-e, --echo-passphrase  Display passphrase on screen upon entry
 -j, --json             Dump wallet in json format
 -k, --keys             Dump all private keys (flat list)
 -a, --addrs            Dump all addresses (flat list)
 -K, --keysforaddrs  f  Dump private keys for addresses listed in file 'f'
--q, --quiet            Suppress warnings; overwrite files without asking
+-P, --passwd-file   f  Get passphrase from file 'f'
+-q, --quiet            Suppress warnings; overwrite files without prompting
 -S, --stdout           Dump to stdout rather than file
 """
 }
 
-short_opts = "hd:jkaK:qS"
-long_opts  = "help","outdir=","json","keys","addrs","keysforaddrs=","quiet","stdout"
+short_opts = "hd:ejkaK:P:qS"
+long_opts  = "help","outdir=","echo_passphrase","json","keys","addrs",\
+			  "keysforaddrs=","passwd_file=","quiet","stdout"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
@@ -1572,8 +1575,8 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 
 			if password == None and \
 				('json' in opts or 'keysforaddrs' in opts or 'keys' in opts):
-				from mmgen.utils import my_getpass
-				password = my_getpass("Enter password: ")
+				from mmgen.utils import get_bitcoind_passphrase
+				password = get_bitcoind_passphrase("Enter password: ",opts)
 
 			if password != None:
 				global crypter
@@ -1646,21 +1649,14 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 	del(json_db['names'])
 
 
-def parse_wallet_file_arg(path):
-
-	s = path.rfind("/")
-
-	if path[0] == '/':
-		if s == 0: return "/", path
-		else:      return path[0:s], path[s+1:]
-	else:
-		curdir = os.path.abspath(".")
-		if s == -1: return curdir,path
-		else:       return curdir + "/" + path[0:s], path[s+1:]
+# Non-portable.  For Windows, works only if supplied filename is in current dir
 
 # main()
 
-db_dir,db_file = parse_wallet_file_arg(cmd_args[0])
+import os.path
+infile = os.path.abspath(cmd_args[0])
+db_dir,db_file = os.path.dirname(infile),os.path.basename(infile)
+
 #	print "[%s] [%s]" % (db_dir,db_file)
 
 db_env = create_env(db_dir)
@@ -1673,18 +1669,16 @@ if json_db.get('minversion') > max_version:
 
 wallet_addrs = [i['addr'] for i in json_db['keys']]
 
-data,ext,what = [],"",""
-
 if 'json' in opts:
-	data = [ json.dumps(json_db, sort_keys=True, indent=4) ]
+	data = [json.dumps(json_db, sort_keys=True, indent=4)]
 	ext,what = "json","json dump"
 
 elif 'keys' in opts:
-	for i in json_db['keys']: data.append(i['sec'])
+	data = sorted([i['sec'] for i in json_db['keys']])
 	ext,what = "keys","private keys"
 
 elif 'addrs' in opts:
-	for i in json_db['keys']: data.append(i['addr'])
+	data = sorted([i['addr'] for i in json_db['keys']])
 	ext,what = "addrs","addresses"
 
 elif 'keysforaddrs' in opts:
@@ -1696,7 +1690,7 @@ elif 'keysforaddrs' in opts:
 			data.append(json_db['keys'][idx]['sec'])
 		except:
 			msg("WARNING: Address '%s' not found" % addr)
-	ext,what = "keys","private keys"
+	data,ext,what = sorted(data),"keys","private keys"
 
 len_arg = "%s" % len(wallet_addrs) \
    if len(data) == len(wallet_addrs) or ext == "json" \

@@ -38,9 +38,9 @@ def test_for_keyconv():
 		p = Popen([keyconv_exec, '-h'], stdout=PIPE, stderr=PIPE)
 	except:
 		sys.stderr.write("""
-Executable '%s' unavailable.  Falling back on (slow) internal ECDSA library.
-Please install '%s' from the %s package on your system for much faster
-address generation.
+Executable '%s' unavailable. Falling back on (slow) internal ECDSA library.
+Please install '%s' from the %s package on your system for much
+faster address generation.
 
 """ % (keyconv_exec, keyconv_exec, "vanitygen"))
 		return False
@@ -152,12 +152,14 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # MMGen address file
 #
 # This file is editable.
-# Everything following a hash symbol '#' is ignored.
-# A label may be added to the right of each address, and it will be
-# appended to the bitcoind wallet label upon import (max. {} characters,
-# allowed characters: A-Za-z0-9, plus '{}').
-""".format(max_wallet_addr_label_len,
-		"', '".join(wallet_addr_label_symbols)).strip()
+# Everything following a hash symbol '#' is a comment and ignored by {}.
+# A text label of {} characters or less may be added to the right of each
+# address, and it will be appended to the bitcoind wallet label upon import.
+# The label may contain ASCII letters, numerals, and the symbols
+# '{}' and '{}'.
+""".format(proj_name.capitalize(),max_wallet_addr_label_len,
+		"', '".join(wallet_addr_label_symbols[0:-1]),
+		wallet_addr_label_symbols[-1]).strip()
 	data = []
 	if not 'stdout' in opts: data.append(header + "\n")
 	data.append("%s {" % seed_chksum.upper())

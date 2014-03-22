@@ -20,7 +20,7 @@ walletgen.py:  Routines used for seed generation and wallet creation
 """
 
 import sys
-from mmgen.utils import msg, msg_r
+from mmgen.utils import msg, msg_r, get_char
 from binascii import hexlify
 
 def get_random_data_from_user(opts):
@@ -47,30 +47,18 @@ displayed on the screen.
 
 	user_rand_data,intervals = "",[]
 
-	try:
-		import os
-		os.system(
-		"stty -icanon min 1 time 0 -echo -echoe -echok -echonl -crterase noflsh"
-		)
-		for i in range(ulen):
-			user_rand_data += sys.stdin.read(1)
-			msg_r("\r" + prompt % (ulen - i - 1))
-			now = time.time()
-			intervals.append(now - saved_time)
-			saved_time = now
-		if 'quiet' in opts:
-			msg_r("\r")
-		else:
-			msg_r("\rThank you.  That's enough." + " "*15 + "\n\n")
-		time.sleep(0.5)
-		msg_r(
-		"User random data successfully acquired.  Press ENTER to continue: ")
-		raw_input()
-	except:
-		msg("\nUser random input interrupted")
-		sys.exit(1)
-	finally:
-		os.system("stty sane")
+	for i in range(ulen):
+		user_rand_data += get_char()
+		msg_r("\r" + prompt % (ulen - i - 1))
+		now = time.time()
+		intervals.append(now - saved_time)
+		saved_time = now
+	if 'quiet' in opts:
+		msg_r("\r")
+	else:
+		msg_r("\rThank you.  That's enough." + " "*15 + "\n\n")
+	time.sleep(0.5)
+	get_char("User random data successfully acquired.  Press ENTER to continue: ")
 
 	return user_rand_data, ["{:.22f}".format(i) for i in intervals]
 
