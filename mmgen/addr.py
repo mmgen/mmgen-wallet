@@ -157,9 +157,9 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain ASCII letters, numerals, and the symbols
 # '{}' and '{}'.
-""".format(proj_name.capitalize(),max_wallet_addr_label_len,
-		"', '".join(wallet_addr_label_symbols[0:-1]),
-		wallet_addr_label_symbols[-1]).strip()
+""".format(proj_name.capitalize(),max_addr_label_len,
+		"', '".join(addr_label_symbols[0:-1]),
+		addr_label_symbols[-1]).strip()
 	data = []
 	if not 'stdout' in opts: data.append(header + "\n")
 	data.append("%s {" % seed_chksum.upper())

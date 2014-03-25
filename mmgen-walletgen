@@ -101,30 +101,15 @@ opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
 
-# Argument sanity checks and processing:
+check_opts(opts,long_opts)
 
-set_if_unset_and_typeconvert(opts,(
-	('usr_randlen',usr_randlen,'int'),
-	('hash_preset',hash_preset,'str'),
-	('seed_len',seed_len,'int')
-))
+if debug: show_opts_and_cmd_args(opts,cmd_args)
 
-# Exits on invalid input
-check_opts(opts,
-	('usr_randlen','hash_preset','seed_len','outdir','label','from_brain')
-)
-
-if debug:
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
-
-if len(cmd_args) == 1 and (
-		'from_brain' in opts or
-		'from_mnemonic' in opts or
-		'from_seed' in opts):
+if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
-elif len(cmd_args) == 0: infile = ""
+elif len(cmd_args) == 0:
+	infile = ""
 else: usage(help_data)
 
 # Begin execution
@@ -134,7 +119,7 @@ if not 'quiet' in opts: do_license_msg()
 msg_r("Acquiring random data from your computer...")
 
 from time import sleep
-sleep(1)
+sleep(0.25)
 
 try:
 	from Crypto import Random
@@ -157,7 +142,7 @@ usr_rand_data = sha256(usr_keys).digest() + \
 				sha256("".join(key_timings)).digest()
 
 for i in 'from_mnemonic','from_brain','from_seed':
-	if i in opts:
+	if infile or (i in opts):
 		seed = get_seed_retry(infile,opts); break
 else:
 	# Truncate random data for smaller seed lengths

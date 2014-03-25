@@ -206,7 +206,7 @@ def sort_and_view(unspent):
 
 		for n,i in enumerate(out):
 			if i.skip == "d":
-				addr = " |" + "-"*32
+				addr = "|" + "." * 33
 			else:
 				if show_mmaddr:
 					if verify_mmgen_label(i.account):
@@ -215,21 +215,26 @@ def sort_and_view(unspent):
 						addr = i.address
 				else:
 					addr = i.address
-			txid = "       |---" if i.skip == "t" else i.txid[:8]+"..."
+			txid = "       |..." if i.skip == "t" else i.txid[:8]+"..."
 
 			output.append(fs % (str(n+1)+")",txid,i.vout,addr,i.amt,i.days))
 
 		skip_body = False
 		while True:
-			if skip_body: skip_body = False
+			if skip_body:
+				skip_body = False
+				immed_chars = "qpP"
 			else:
 				msg("\n".join(output))
 				msg("""
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 View options: [g]roup, show [m]mgen addr""")
+				immed_chars = "qpPtadArMgm"
 
 			reply = get_char(
-"(Type 'q' to quit sorting, 'p' to print to file, 'P' to view in pager): ")
+"(Type 'q' to quit sorting, 'p' to print to file, 'v' to view in pager): ",
+				immed_chars=immed_chars)
+
 			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"; break
 			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
 			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
@@ -268,7 +273,7 @@ View options: [g]roup, show [m]mgen addr""")
 				write_to_file(outfile, outdata)
 				skip_body = True
 				msg("\nData written to '%s'" % outfile)
-			elif reply == 'P': do_pager("\n".join(output))
+			elif reply == 'v': do_pager("\n".join(output))
 			elif reply == 'q': break
 			else: msg("Invalid input")
 
@@ -297,28 +302,28 @@ def verify_mmgen_label(s,return_str=False,check_label_len=False):
 		if not i in "0123456789": return fail
 
 	if check_label_len and comment:
-		check_wallet_addr_comment(comment)
+		check_addr_comment(comment)
 
 	return success
 
 
-def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
+def view_tx_data(c,inputs_data,tx_hex,metadata=[],pager=False):
 
 	td = c.decoderawtransaction(tx_hex)
 
-	msg("TRANSACTION DATA:\n")
+	out = "TRANSACTION DATA\n\n"
 
-	if metadata: msg(
-		"Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n".format(*metadata))
+	if metadata:
+		out += "Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n".format(*metadata)
 
-	msg("Inputs:")
+	out += "Inputs:\n\n"
 	total_in = 0
 	for n,i in enumerate(td['vin']):
 		for j in inputs_data:
 			if j['txid'] == i['txid'] and j['vout'] == i['vout']:
 				days = int(j['confirmations'] * mins_per_block / (60*24))
 				total_in += j['amount']
-				msg(" " + """
+				out += (" " + """
 %-2s tx,vout: %s,%s
     address:        %s
     ID/label:       %s
@@ -326,25 +331,29 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[]):
     confirmations:  %s (around %s days)
 """.strip() %
 	(n+1,i['txid'],i['vout'],j['address'],verify_mmgen_label(j['account'],True),
-		trim_exponent(j['amount']),j['confirmations'],days)+"\n")
+		trim_exponent(j['amount']),j['confirmations'],days)+"\n\n")
 				break
 
-	msg("Total input: %s BTC\n" % trim_exponent(total_in))
+	out += "Total input: %s BTC\n\n" % trim_exponent(total_in)
 
 	total_out = 0
-	msg("Outputs:")
+	out += "Outputs:\n\n"
 	for n,i in enumerate(td['vout']):
 		total_out += i['value']
-		msg(" " + """
+		out += (" " + """
 %-2s address: %s
     amount:  %s BTC
 """.strip() % (
 		n,
 		i['scriptPubKey']['addresses'][0],
 		trim_exponent(i['value']))
-	+ "\n")
-	msg("Total output: %s BTC" % trim_exponent(total_out))
-	msg("TX fee:       %s BTC\n" % trim_exponent(total_in-total_out))
+	+ "\n\n")
+	out += "Total output: %s BTC\n" % trim_exponent(total_out)
+	out += "TX fee:       %s BTC\n" % trim_exponent(total_in-total_out)
+
+	if pager: do_pager(out+"\n")
+	else:     msg("\n"+out)
+
 
 
 def parse_tx_data(tx_data,infile):
@@ -418,20 +427,20 @@ def make_tx_out(rcpt_arg):
 
 	return tx_out
 
-def check_wallet_addr_comment(label):
+def check_addr_comment(label):
 
-	if len(label) > max_wallet_addr_label_len:
+	if len(label) > max_addr_label_len:
 		msg("'%s': overlong label (length must be <=%s)" %
-				(label,max_wallet_addr_label_len))
+				(label,max_addr_label_len))
 		sys.exit(3)
 
 	from string import ascii_letters, digits
-	chrs = tuple(ascii_letters + digits) + wallet_addr_label_symbols
+	chrs = tuple(ascii_letters + digits) + addr_label_symbols
 	for ch in list(label):
 		if ch not in chrs:
 			msg("'%s': illegal character in label '%s'" % (ch,label))
 			msg("Permitted characters: A-Za-z0-9, plus '%s'" %
-					"', '".join(wallet_addr_label_symbols))
+					"', '".join(addr_label_symbols))
 			sys.exit(3)
 
 
@@ -474,7 +483,7 @@ def parse_addrs_file(f):
 				msg("'%s': invalid address" % d[1])
 				sys.exit(3)
 
-			if len(d) == 3: check_wallet_addr_comment(d[2])
+			if len(d) == 3: check_addr_comment(d[2])
 
 			ret.append(tuple(d))
 
@@ -501,3 +510,84 @@ def sign_transaction(c,tx_hex,sig_data,keys=None):
 # 		sys.exit(3)
 
 	return sig_tx
+
+
+def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,opts):
+
+	seed_ids = list(set([i['account'][:8] for i in mmgen_addrs]))
+	seed_ids_save = seed_ids[0:]
+	keys = []
+
+	while seed_ids:
+		infile = False
+		if infiles:
+			infile = infiles.pop()
+			seed = get_seed(infile,opts)
+		elif "from_brain" in opts or "from_mnemonic" in opts or "from_seed" in opts:
+			msg("Need data for seed ID %s" % seed_ids[0])
+			seed = get_seed_retry("",opts)
+		else:
+			b,p,v = ("A seed","","is") if len(seed_ids) == 1 else ("Seed","s","are")
+			msg("ERROR: %s source%s %s required for the following seed ID%s: %s" %
+					(b,p,v,p," ".join(seed_ids)))
+			sys.exit(2)
+
+		seed_id = make_chksum_8(seed)
+		if seed_id in seed_ids:
+			seed_ids.remove(seed_id)
+			seed_id_addrs = [
+				int(i['account'].split()[0][9:]) for i in mmgen_addrs
+					if i['account'][:8] == seed_id]
+
+			from mmgen.addr import generate_keys
+			keys += [i['wif'] for i in generate_keys(seed, seed_id_addrs)]
+		else:
+			if seed_id in seed_ids_save:
+				msg_r("Ignoring duplicate seed source")
+				if infile: msg(" '%s'" % infile)
+				else:      msg(" for ID %s" % seed_id)
+			else:
+				msg("Seed source produced an invalid seed ID (%s)" % seed_id)
+				if infile:
+					msg("Invalid input file: %s" % infile)
+					sys.exit(2)
+
+	return keys
+
+
+def sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts):
+
+	try:
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+	except:
+		from mmgen.rpc import exceptions
+		msg("Using keys in wallet.dat as per user request")
+		prompt = "Enter passphrase for bitcoind wallet: "
+		while True:
+			passwd = get_bitcoind_passphrase(prompt,opts)
+
+			try:
+				c.walletpassphrase(passwd, 9999)
+			except exceptions.WalletPassphraseIncorrect:
+				msg("Passphrase incorrect")
+			else:
+				msg("Passphrase OK"); break
+
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+
+		msg("Locking wallet")
+		try:
+			c.walletlock()
+		except:
+			msg("Failed to lock wallet")
+
+	return sig_tx
+
+
+def missing_keys_errormsg(other_addrs):
+	msg("""
+A key file (option '-f') or wallet.dat (option '-w') must be supplied
+for the following non-mmgen address%s: %s""" %
+	("" if len(other_addrs) == 1 else "es",
+	" ".join([i['address'] for i in other_addrs])
+	  ))

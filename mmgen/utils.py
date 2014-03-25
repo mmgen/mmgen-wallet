@@ -26,69 +26,94 @@ from mmgen.bitcoin import b58decode_pad
 
 def msg(s):   sys.stderr.write(s + "\n")
 def msg_r(s): sys.stderr.write(s)
-
 def bail(): sys.exit(9)
 
-def my_getpass(prompt):
 
-	from getpass import getpass
-	# getpass prompts to stderr, so no trickery required as with raw_input()
-	try: pw = getpass(prompt)
-	except:
-		msg("\nUser interrupt")
-		sys.exit(1)
-
-	return pw
-
-term = False
-
-def get_char(prompt=""):
+def get_keypress_unix(prompt="",immed_chars=""):
 
 	msg_r(prompt)
+	timeout = float(0.3)
 
-	global term
-
-	if not term:
-		try:
-			import tty, termios
-			term = "unix"
-		except:
-			try:
-				import msvcrt
-				term = "mswin"
-			except:
-				msg("Unable to set terminal mode")
-				sys.exit(2)
+	fd = sys.stdin.fileno()
+	old = termios.tcgetattr(fd)
+	tty.setcbreak(fd)
 
 	try:
-		if term == "unix":
-			import tty, termios
-			fd = sys.stdin.fileno()
-			old = termios.tcgetattr(fd)
-			tty.setcbreak(fd)
+		while True:
+			select([sys.stdin], [], [], False)
 			ch = sys.stdin.read(1)
-		elif term == "mswin":
-			import msvcrt
-			ch = msvcrt.getch()
-			if ord(ch) == 3:
-				raise KeyboardInterrupt
+			if immed_chars == "ALL" or ch in immed_chars:
+				return ch
+			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
+				return ch
+			second_key = select([sys.stdin], [], [], timeout)[0]
+			if second_key: continue
+			else: return ch
 	except:
-		msg("\nUser interrupt")
+		print "\nUser interrupt"
 		sys.exit(1)
 	finally:
-		if term == "unix":
-			termios.tcsetattr(fd, termios.TCSADRAIN, old)
-
-	return ch
+		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
-def my_raw_input(prompt):
+def get_keypress_mswin(prompt="",immed_chars=""):
 
 	msg_r(prompt)
-	try: reply = raw_input()
+	timeout = float(0.5)
+
+	try:
+		while True:
+			if msvcrt.kbhit():
+				ch = msvcrt.getch()
+
+				if ord(ch) == 3: raise KeyboardInterrupt
+
+				if immed_chars == "ALL" or ch in immed_chars:
+					return ch
+				if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
+					return ch
+
+				hit_time = time.time()
+
+				while True:
+					if msvcrt.kbhit(): break
+					if float(time.time() - hit_time) > timeout:
+						return ch
 	except:
 		msg("\nUser interrupt")
 		sys.exit(1)
+
+
+try:
+	import tty, termios
+	from select import select
+	get_char = get_keypress_unix
+except:
+	try:
+		import msvcrt, time
+		get_char = get_keypress_mswin
+	except:
+		if not sys.platform.startswith("linux") \
+				and not sys.platform.startswith("win"):
+			msg("Unsupported platform: %s" % sys.platform)
+			msg("This program currently runs only on Linux and Windows")
+		else:
+			msg("Unable to set terminal mode")
+		sys.exit(2)
+
+
+def my_raw_input(prompt,echo=True):
+
+	msg_r(prompt)
+	reply = ""
+
+	while True:
+		ch = get_char(immed_chars="ALL_EXCEPT_ENTER")
+		if echo: msg_r(ch)
+		if ch in "\n\r":
+			if not echo: msg("")
+			break
+		reply += ch
 
 	return reply
 
@@ -101,6 +126,7 @@ def _get_hash_params(hash_preset):
 		msg("%s: invalid 'hash_preset' value" % hash_preset)
 		sys.exit(3)
 
+
 def show_hash_presets():
 	fs = "  {:<7} {:<6} {:<3}  {}"
 	msg("Available parameters for scrypt.hash():")
@@ -109,87 +135,6 @@ def show_hash_presets():
 		msg(fs.format("'%s'" % i, *hash_presets[i]))
 	msg("N = memory usage (power of two), p = iterations (rounds)")
 	sys.exit(0)
-
-
-def check_opts(opts,keys):
-
-	for key in keys:
-		if key not in opts: continue
-
-		val = opts[key]
-		what = "parameter for '--%s' option" % key.replace("_","-")
-
-		if key == 'outdir':
-			what = "output directory"
-			import re, os, stat
-			d = re.sub(r'/*$','', val)
-			opts[key] = d
-
-			try: mode = os.stat(d).st_mode
-			except:
-				msg("Unable to stat requested %s '%s'" % (what,d))
-				sys.exit(1)
-
-			if not stat.S_ISDIR(mode):
-				msg("Requested %s '%s' is not a directory" % (what,d))
-				sys.exit(1)
-
-			if not os.access(d, os.W_OK|os.X_OK):
-				msg("Requested %s '%s' is unwritable by you" % (what,d))
-				sys.exit(1)
-
-		elif key == 'label':
-			label = val.strip()
-			opts[key] = label
-
-			if len(label) > 32:
-				msg("Label must be 32 characters or less")
-				sys.exit(1)
-
-			from string import ascii_letters, digits
-			label_chrs = list(ascii_letters + digits) + [".", "_", " "]
-			for ch in list(label):
-				if ch not in label_chrs:
-					msg("'%s': illegal character in label" % ch)
-					sys.exit(1)
-
-		elif key == 'from_brain':
-			try:
-				l,p = val.split(",")
-			except:
-				msg("'%s': invalid %s" % (val,what))
-				sys.exit(1)
-
-			try:
-				int(l)
-			except:
-				msg("'%s': invalid 'l' %s (not an integer)" % (l,what))
-				sys.exit(1)
-
-			if int(l) not in seed_lens:
-				msg("'%s': invalid 'l' %s.  Options: %s" %
-						(l, what, ", ".join([str(i) for i in seed_lens])))
-				sys.exit(1)
-
-			if p not in hash_presets:
-				hps = ", ".join([i for i in sorted(hash_presets.keys())])
-				msg("'%s': invalid 'p' %s.  Options: %s" % (p, what, hps))
-				sys.exit(1)
-		elif key == 'seed_len':
-			if val not in seed_lens:
-				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join([str(i) for i in seed_lens])))
-				sys.exit(2)
-		elif key == 'hash_preset':
-			if val not in hash_presets:
-				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join(sorted(hash_presets.keys()))))
-				sys.exit(2)
-		elif key == 'usr_randlen':
-			if val > max_randlen or val < min_randlen:
-				msg("'%s': invalid %s (must be >= %s and <= %s)"
-				% (val,what,min_randlen,max_randlen))
-				sys.exit(2)
 
 
 cmessages = {
@@ -215,6 +160,7 @@ future, you must continue using these same parameters
 """
 }
 
+
 def confirm_or_exit(message, question, expect="YES"):
 
 	msg("")
@@ -236,38 +182,34 @@ def confirm_or_exit(message, question, expect="YES"):
 	msg("")
 
 
-def user_confirm(prompt,default_yes=False):
+def user_confirm(prompt,default_yes=False,verbose=False):
 
 	q = "(Y/n)" if default_yes else "(y/N)"
 
 	while True:
-		reply = get_char("%s %s: " % (prompt, q)).strip()
-		msg("")
+		reply = get_char("%s %s: " % (prompt, q)).strip("\n\r")
 
 		if not reply:
-			return True if default_yes else False
-		elif reply in 'yY': return True
-		elif reply in 'nN': return False
-		else: msg("Invalid reply")
-
-
-def set_if_unset_and_typeconvert(opts,item):
-
-	for opt,var,dtype in item:
-		if   dtype == 'int': f,s = int,"an integer"
-		elif dtype == 'str': f,s = str,"a string"
-
-		if opt in opts:
-			val = opts[opt]
-			what = "invalid parameter for '--%s' option" % opt.replace("_","-")
-			try:
-				f(val)
-			except:
-				msg("'%s': %s (not %s)" % (val,what,s))
-				sys.exit(1)
-			opts[opt] = f(val)
+			if default_yes: msg(""); return True
+			else:           msg(""); return False
+		elif reply in 'yY': msg(""); return True
+		elif reply in 'nN': msg(""); return False
 		else:
-			opts[opt] = var
+			if verbose: msg("\nInvalid reply")
+			else: msg_r("\r")
+
+
+def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
+
+	while True:
+		reply = get_char("%s: " % prompt).strip("\n\r")
+
+		if reply in chars or (enter_ok and not reply):
+			msg("")
+			return reply
+
+		if verbose: msg("\nInvalid reply")
+		else: msg_r("\r")
 
 
 def make_chksum_8(s):
@@ -277,11 +219,6 @@ def make_chksum_8(s):
 def make_chksum_6(s):
 	from hashlib import sha256
 	return sha256(s).hexdigest()[:6]
-
-
-def _get_from_brain_opt_params(opts):
-	l,p = opts['from_brain'].split(",")
-	return(int(l),p)
 
 
 def check_infile(f):
@@ -375,6 +312,11 @@ def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
 	import scrypt
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
+
+
+def _get_from_brain_opt_params(opts):
+	l,p = opts['from_brain'].split(",")
+	return(int(l),p)
 
 
 def _get_seed_from_brain_passphrase(words,opts):
@@ -541,6 +483,7 @@ def make_timestr():
 def secs_to_hms(secs):
 	return "{:02d}:{:02d}:{:02d}".format(secs/3600, (secs/60) % 60, secs % 60)
 
+
 def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	seed_id = make_chksum_8(seed)
@@ -701,10 +644,8 @@ def get_data_from_wallet(infile,opts,silent=False):
 
 def _get_words_from_user(prompt, opts):
 	# split() also strips
-	if 'echo_passphrase' in opts:
-		words = my_raw_input(prompt).split()
-	else:
-		words = my_getpass(prompt).split()
+	words = my_raw_input(prompt,
+				echo=True if 'echo_passphrase' in opts else False).split()
 	if debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
@@ -758,6 +699,7 @@ def _get_seed_from_seed_data(words):
 		msg("Invalid checksum for {} seed".format(proj_name))
 		return False
 
+
 passwd_file_used = False
 
 def mark_passwd_file_as_used(opts):
@@ -781,10 +723,8 @@ def get_bitcoind_passphrase(prompt,opts):
 		mark_passwd_file_as_used(opts)
 		return get_data_from_file(opts['passwd_file'],"passphrase").strip("\r\n")
 	else:
-		if 'echo_passphrase' in opts:
-			return my_raw_input(prompt)
-		else:
-			return my_getpass(prompt)
+		return my_raw_input(prompt,
+					echo=True if 'echo_passphrase' in opts else False)
 
 
 def get_seed_from_wallet(
@@ -925,47 +865,45 @@ def remove_blanks_comments(lines):
 
 	return ret
 
-def do_pager(text,endmsg=""):
-	import os
-	if sys.platform.startswith("linux"):
-		if 'PAGER' in os.environ and os.environ['PAGER']:
-			try:
-				p = os.popen(os.environ['PAGER'], 'w')
-			except:
-				print text
-			else:
-				try:
-					p.write(text)
-					p.close()
-				except:
-					p.close()
-				msg_r("\r")
-		else:
-			print text
-	elif sys.platform.startswith("win"):
-		try:
-			import msvcrt
-		except:
-			print text
-		else:
-			try:
-				from subprocess import Popen, PIPE, STDOUT
-				p = Popen(["more","/C"], stdin=PIPE, shell=True)
-				if endmsg:
-					p.stdin.write("%s\n%s\n\n" % (text,endmsg))
-				else:
-					p.stdin.write(text)
-			except:
-				msg("\nUser exit")
 
-			from time import sleep
-			# Flush stdin
-			while msvcrt.kbhit(): msvcrt.getch()
-			sleep(1)
-			while msvcrt.kbhit(): msvcrt.getch()
-			msg("")
-	else:
-		print text
+def do_pager(text):
+
+	pagers = ["less","more"]
+	shell = False
+
+	from os import environ
+
+# Hack for MS Windows command line (i.e. non CygWin) environment
+# When 'shell' is true, Windows aborts the calling program if executable
+# not found.
+# When 'shell' is false, an exception is raised, invoking the fallback
+# 'print' instead of the pager.
+# We risk assuming that "more" will always be available on a stock
+# Windows installation.
+	if sys.platform.startswith("win") and 'HOME' not in environ:
+		shell = True
+		pagers = ["more"]
+
+	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
+		pagers = [environ['PAGER']] + pagers
+
+	for pager in pagers:
+		end = "" if pager == "less" else "\n(end of text)\n"
+		try:
+			from subprocess import Popen, PIPE, STDOUT
+			p = Popen([pager], stdin=PIPE, shell=shell)
+		except: pass
+		else:
+			try:
+				p.communicate(text+end+"\n")
+			except:
+				# Has no effect.  Why?
+				if pager != "less":
+					msg("\n(Interrupted by user)\n")
+			finally:
+				msg_r("\r")
+				break
+	else: print text+end
 
 
 if __name__ == "__main__":

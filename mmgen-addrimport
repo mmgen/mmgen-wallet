@@ -48,6 +48,8 @@ if len(cmd_args) != 1 and not 'addrlist' in opts:
 	msg("You must specify an mmgen address list (and/or non-mmgen addresses with the '--addrlist' option)")
 	sys.exit(1)
 
+check_opts(opts,long_opts)
+
 if cmd_args:
 	check_infile(cmd_args[0])
 	seed_id,addr_data = parse_addrs_file(cmd_args[0])
@@ -55,15 +57,15 @@ else:
 	seed_id,addr_data = "",[]
 
 if 'addrlist' in opts:
-	check_infile(opts['addrlist'])
 	l = get_lines_from_file(opts['addrlist'],"non-mmgen addresses")
 	addr_data += [(None,i) for i in l]
 
 msg_r("Validating addresses...")
-for i in [i[1] for i in addr_data]:
-	if not verify_addr(i):
+for i in addr_data:
+	if not verify_addr(i[1]):
 		msg("%s: invalid address" % i)
 		sys.exit(2)
+
 msg("OK")
 
 import mmgen.config

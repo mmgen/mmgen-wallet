@@ -585,15 +585,15 @@ copy of the Program in return for a fee.
 """
 }
 
-def do_license_msg():
+def do_license_msg(immed=False):
 	msg(gpl['warning'])
 	prompt = "%s " % gpl['prompt'].strip()
 
 	while True:
-		reply = get_char(prompt)
+		reply = get_char(prompt, immed_chars="wc" if immed else "")
 		if reply == 'w':
 			from mmgen.utils import do_pager
-			do_pager(gpl['conditions'],"END OF CONDITIONS AND WARRANTY")
+			do_pager(gpl['conditions'])
 		elif reply == 'c':
 			msg(""); break
 		else:

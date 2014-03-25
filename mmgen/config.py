@@ -30,6 +30,8 @@ seed_exts = wallet_ext, seed_ext, mn_ext, brain_ext
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 
+cl_override_vars = 'seed_len','hash_preset','usr_randlen'
+
 seed_lens = 128,192,256
 seed_len  = 256
 
@@ -56,6 +58,7 @@ hash_presets = {
 	'3': [14, 8, 8],
 	'4': [15, 8, 12],
 	'5': [16, 8, 16],
+	'6': [17, 8, 20],
 }
-wallet_addr_label_symbols = ".","_",",","-"," "
-max_wallet_addr_label_len = 16
+addr_label_symbols = ".","_",",","-"," "
+max_addr_label_len = 16

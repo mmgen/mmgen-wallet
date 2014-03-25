@@ -26,7 +26,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.config import *
 from mmgen.tx import *
-from mmgen.utils import check_opts, msg, msg_r, user_confirm
+from mmgen.utils import msg, msg_r, user_confirm
 from decimal import Decimal
 
 prog_name = sys.argv[0].split("/")[-1]
@@ -55,12 +55,9 @@ long_opts  = "help","outdir=","echo_passphrase","info","quiet"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
-# Exits on invalid input
-check_opts(opts, ('outdir',))
+check_opts(opts,long_opts)
 
-if debug:
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
+if debug: show_opts_and_cmd_args(opts,cmd_args)
 
 if len(cmd_args) == 3:
 	rcpt_arg,tx_fee,change_addr = cmd_args
@@ -81,7 +78,7 @@ if not 'info' in opts:
 # Begin execution
 c = connect_to_bitcoind()
 
-if not 'quiet' in opts and not 'info' in opts: do_license_msg()
+if not 'quiet' in opts and not 'info' in opts: do_license_msg(immed=True)
 
 # Begin test
 # import mmgen.rpc
@@ -145,10 +142,15 @@ for i in tx_out.keys(): tx_out[i] = float(tx_out[i])
 if change: tx_out[change_addr] = float(change)
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 
-prompt = "Transaction successfully created\nView decoded transaction?"
-if user_confirm(prompt,default_yes=False):
-	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex)
+msg("Transaction successfully created")
+prompt = "View decoded transaction? (y)es, (N)o, (v)iew in pager"
+reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
+if reply and reply in "YyVv":
+	pager = True if reply in "Vv" else False
+	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex,pager=pager)
 
 prompt = "Save transaction?"
 if user_confirm(prompt,default_yes=True):
 	print_tx_to_file(tx_hex,sel_unspent,send_amt,opts)
+else:
+	msg("Transaction not saved")

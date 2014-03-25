@@ -20,7 +20,7 @@ walletgen.py:  Routines used for seed generation and wallet creation
 """
 
 import sys
-from mmgen.utils import msg, msg_r, get_char
+from mmgen.utils import msg, msg_r, get_char, prompt_and_get_char
 from binascii import hexlify
 
 def get_random_data_from_user(opts):
@@ -48,17 +48,19 @@ displayed on the screen.
 	user_rand_data,intervals = "",[]
 
 	for i in range(ulen):
-		user_rand_data += get_char()
+		user_rand_data += get_char(immed_chars="ALL")
 		msg_r("\r" + prompt % (ulen - i - 1))
 		now = time.time()
 		intervals.append(now - saved_time)
 		saved_time = now
+
 	if 'quiet' in opts:
 		msg_r("\r")
 	else:
 		msg_r("\rThank you.  That's enough." + " "*15 + "\n\n")
-	time.sleep(0.5)
-	get_char("User random data successfully acquired.  Press ENTER to continue: ")
+
+	prompt = "User random data successfully acquired.  Press ENTER to continue"
+	prompt_and_get_char(prompt,"",enter_ok=True)
 
 	return user_rand_data, ["{:.22f}".format(i) for i in intervals]
 

@@ -92,14 +92,14 @@ long_opts  = "help","outdir=","echo_passphrase","json","keys","addrs",\
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
-from mmgen.utils import check_infile,check_opts
+from mmgen.utils import check_infile
+
+check_opts(opts,long_opts)
 
 if len(cmd_args) == 1:
 	check_infile(cmd_args[0])
 else:
 	usage(help_data)
-
-check_opts(opts,('outdir',))
 
 if ('json' not in opts and 'keys' not in opts
 		and 'addrs' not in opts and 'keysforaddrs' not in opts):

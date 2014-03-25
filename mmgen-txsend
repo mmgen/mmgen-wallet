@@ -25,7 +25,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.config import *
 from mmgen.tx import *
-from mmgen.utils import msg,check_opts,check_infile,get_lines_from_file,confirm_or_exit
+from mmgen.utils import msg,check_infile,get_lines_from_file,confirm_or_exit
 
 prog_name = sys.argv[0].split("/")[-1]
 
@@ -45,8 +45,7 @@ long_opts  = "help","outdir=","quiet"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
-# Exits on invalid input
-check_opts(opts, ('outdir',))
+check_opts(opts,long_opts)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]

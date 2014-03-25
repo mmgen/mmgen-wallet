@@ -21,8 +21,7 @@ mmgen-passchg: Change a mmgen deterministic wallet's passphrase, label or
 """
 
 import sys
-import mmgen.Opts as Opts
-
+from mmgen.Opts import *
 from mmgen.utils import *
 from mmgen.config import *
 
@@ -51,12 +50,11 @@ short_opts = "hd:HkL:p:P:v"
 long_opts  = "help","outdir=","show_hash_presets","keep_old_passphrase",\
 			  "label=","hash_preset=","passwd_file=","verbose"
 
-opts,cmd_args = Opts.process_opts(sys.argv,help_data,short_opts,long_opts)
+opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
 
-set_if_unset_and_typeconvert(opts,(('hash_preset',hash_preset,'str'),))
-check_opts(opts,('hash_preset','outdir','label'))
+check_opts(opts,long_opts)
 
 if len(cmd_args) != 1:
 	msg("One input file must be specified")

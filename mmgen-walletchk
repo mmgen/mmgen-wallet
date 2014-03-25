@@ -49,7 +49,8 @@ long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
-check_opts(opts, ('outdir',))
+# Argument sanity checks and processing:
+check_opts(opts,long_opts)
 
 if len(cmd_args) != 1: usage(help_data)
 
@@ -61,7 +62,7 @@ if 'export_seed' in opts:
 	msg("Exporting seed data to file by user request")
 
 seed = get_seed_from_wallet(cmd_args[0], opts)
-msg("Wallet is OK")
+if seed: msg("Wallet is OK")
 
 if 'export_mnemonic' in opts:
 	wl = get_default_wordlist()

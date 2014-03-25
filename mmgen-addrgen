@@ -122,23 +122,18 @@ opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
 
-# Sanity checking and processing of command-line arguments:
-
 opts['gen_what'] = gen_what
 
-set_if_unset_and_typeconvert(opts,(
-	('hash_preset',hash_preset,'str'),
-	('seed_len',seed_len,'int')
-))
+check_opts(opts,long_opts)
 
-# Exits on invalid input
-check_opts(opts,('hash_preset','seed_len','outdir','from_brain'))
+if debug: show_opts_and_cmd_args(opts,cmd_args)
 
-if   len(cmd_args) == 1 and (
+if len(cmd_args) == 1 and (
 			'from_mnemonic' in opts or
 			'from_brain' in opts or
 			'from_seed' in opts
-		): infile,addr_list_arg = "",cmd_args[0]
+		):
+	infile,addr_list_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
 	infile,addr_list_arg = cmd_args
 	check_infile(infile)
