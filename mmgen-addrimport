@@ -57,7 +57,8 @@ else:
 	seed_id,addr_data = "",[]
 
 if 'addrlist' in opts:
-	l = get_lines_from_file(opts['addrlist'],"non-mmgen addresses")
+	l = get_lines_from_file(
+			opts['addrlist'],"non-mmgen addresses",remove_comments=True)
 	addr_data += [(None,i) for i in l]
 
 msg_r("Validating addresses...")
@@ -68,8 +69,8 @@ for i in addr_data:
 
 msg("OK")
 
-import mmgen.config
-mmgen.config.http_timeout = 3600
+import mmgen.config as g
+g.http_timeout = 3600
 
 c = connect_to_bitcoind()
 
@@ -82,17 +83,28 @@ Importing addresses can take a long time (>30 min.) on a low-powered computer.
 import threading
 import time
 
+err_flag = False
+
+def import_address(addr,label):
+	try:
+		c.importaddress(addr,label)
+	except:
+		global err_flag
+		err_flag = True
+
+
 w1 = len(str(len(addr_data))) * 2 + 2
 w2 = len(str(max([i[0] for i in addr_data if i[0]]))) + 12
-msg_fmt = "\rImporting %-" + str(w1) + "s %-34s %-" + str(w2) + "s %s"
+msg_fmt = "\r%s %-" + str(w1) + "s %-34s %-" + str(w2) + "s"
 
+msg("Importing addresses")
 for n,i in enumerate(addr_data):
 	if i[0]:
 		comment = " " + i[2] if len(i) == 3 else ""
 		label = "%s:%s%s" % (seed_id,i[0],comment)
 	else: label = "non-mmgen"
 
-	t = threading.Thread(target=c.importaddress, args = (i[1],label))
+	t = threading.Thread(target=import_address, args = (i[1],label))
 	t.daemon = True
 	t.start()
 
@@ -102,11 +114,15 @@ for n,i in enumerate(addr_data):
 		if t.is_alive():
 			elapsed = int(time.time() - start)
 			msg_r(msg_fmt % (
+				secs_to_hms(elapsed),
 				("%s/%s:" % (n+1,len(addr_data))),
-				i[1], "(" + label + ")", secs_to_hms(elapsed))
+				i[1], "(" + label + ")"
+				)
 			)
+			time.sleep(1)
 		else:
-			msg("")
+			if err_flag:
+				msg("\nImport failed")
+				sys.exit(2)
+			msg("\nOK")
 			break
-
-		time.sleep(1)

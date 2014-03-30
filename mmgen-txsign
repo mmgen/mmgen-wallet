@@ -23,7 +23,7 @@ import sys
 
 from mmgen.Opts import *
 from mmgen.license import *
-from mmgen.config import *
+import mmgen.config as g
 from mmgen.tx import *
 from mmgen.utils import msg
 
@@ -69,7 +69,7 @@ Seed data supplied in files must have the following extensions:
    seed:        '.{}'
    mnemonic:    '.{}'
    brainwallet: '.{}'
-""".format(seed_ext,wallet_ext,seed_ext,mn_ext,brain_ext)
+""".format(g.seed_ext,g.wallet_ext,g.seed_ext,g.mn_ext,g.brain_ext)
 }
 
 short_opts = "hd:eiIk:P:qb:msw"

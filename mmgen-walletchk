@@ -29,7 +29,7 @@ help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
 	'desc':  """Check integrity of a %s deterministic wallet, display
                     its information and export seed and mnemonic data."""\
-					% proj_name,
+					% g.proj_name,
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help             Print this help message
@@ -68,8 +68,8 @@ if 'export_mnemonic' in opts:
 	wl = get_default_wordlist()
 
 	from mmgen.mnemonic import get_mnemonic_from_seed
-	p = True if debug else False
-	mn = get_mnemonic_from_seed(seed, wl, default_wl, print_info=p)
+	p = True if g.debug else False
+	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, print_info=p)
 
 	write_mnemonic(mn, seed, opts)
 

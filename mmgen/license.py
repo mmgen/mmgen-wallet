@@ -20,7 +20,6 @@ license.py:  Show the license
 """
 
 import sys
-from mmgen.config import proj_name
 from mmgen.utils import msg, msg_r, get_char
 
 gpl = {

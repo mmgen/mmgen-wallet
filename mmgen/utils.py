@@ -20,13 +20,32 @@ utils.py:  Shared routines for the mmgen suite
 """
 
 import sys
-from mmgen.config import *
+import mmgen.config as g
 from binascii import hexlify,unhexlify
 from mmgen.bitcoin import b58decode_pad
 
 def msg(s):   sys.stderr.write(s + "\n")
 def msg_r(s): sys.stderr.write(s)
 def bail(): sys.exit(9)
+
+def kb_hold_protect_unix():
+
+	fd = sys.stdin.fileno()
+	old = termios.tcgetattr(fd)
+	tty.setcbreak(fd)
+
+	timeout = float(0.3)
+
+	try:
+		while True:
+			key = select([sys.stdin], [], [], timeout)[0]
+			if key: sys.stdin.read(1)
+			else: break
+	except:
+		print "\nUser interrupt"
+		sys.exit(1)
+	finally:
+		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
 def get_keypress_unix(prompt="",immed_chars=""):
@@ -54,6 +73,24 @@ def get_keypress_unix(prompt="",immed_chars=""):
 		sys.exit(1)
 	finally:
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+
+def kb_hold_protect_mswin():
+
+	timeout = float(0.5)
+
+	try:
+		while True:
+			hit_time = time.time()
+			while True:
+				if msvcrt.kbhit():
+					msvcrt.getch()
+					break
+				if float(time.time() - hit_time) > timeout:
+					return
+	except:
+		msg("\nUser interrupt")
+		sys.exit(1)
 
 
 def get_keypress_mswin(prompt="",immed_chars=""):
@@ -88,10 +125,12 @@ try:
 	import tty, termios
 	from select import select
 	get_char = get_keypress_unix
+	kb_hold_protect = kb_hold_protect_unix
 except:
 	try:
 		import msvcrt, time
 		get_char = get_keypress_mswin
+		kb_hold_protect = kb_hold_protect_mswin
 	except:
 		if not sys.platform.startswith("linux") \
 				and not sys.platform.startswith("win"):
@@ -102,14 +141,35 @@ except:
 		sys.exit(2)
 
 
-def my_raw_input(prompt,echo=True):
+def my_raw_input(prompt,echo=True,allowed_chars=""):
+	try:
+		if echo:
+			reply = raw_input(prompt)
+		else:
+			from getpass import getpass
+			reply = getpass(prompt)
+	except:
+		print "\nUser interrupt"
+		sys.exit(1)
+
+	kb_hold_protect()
+	return reply
+
+
+def my_raw_input_old(prompt,echo=True,allowed_chars=""):
 
 	msg_r(prompt)
 	reply = ""
 
 	while True:
 		ch = get_char(immed_chars="ALL_EXCEPT_ENTER")
-		if echo: msg_r(ch)
+		if allowed_chars and ch not in allowed_chars+"\n\r\b"+chr(0x7f):
+			continue
+		if echo:
+			if ch in "\b"+chr(0x7f): # WIP
+				pass
+				# reply.pop(0)
+			else: msg_r(ch)
 		if ch in "\n\r":
 			if not echo: msg("")
 			break
@@ -119,8 +179,8 @@ def my_raw_input(prompt,echo=True):
 
 
 def _get_hash_params(hash_preset):
-	if hash_preset in hash_presets:
-		return hash_presets[hash_preset] # N,p,r,buflen
+	if hash_preset in g.hash_presets:
+		return g.hash_presets[hash_preset] # N,p,r,buflen
 	else:
 		# Shouldn't be here
 		msg("%s: invalid 'hash_preset' value" % hash_preset)
@@ -131,8 +191,8 @@ def show_hash_presets():
 	fs = "  {:<7} {:<6} {:<3}  {}"
 	msg("Available parameters for scrypt.hash():")
 	msg(fs.format("Preset","N","r","p"))
-	for i in sorted(hash_presets.keys()):
-		msg(fs.format("'%s'" % i, *hash_presets[i]))
+	for i in sorted(g.hash_presets.keys()):
+		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg("N = memory usage (power of two), p = iterations (rounds)")
 	sys.exit(0)
 
@@ -142,7 +202,7 @@ cmessages = {
 	'unencrypted_secret_keys': """
 This program generates secret keys from your {} seed, outputting them in
 UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
-""".format(proj_name),
+""".format(g.proj_name),
 	'brain_warning': """
 ############################## EXPERTS ONLY! ##############################
 
@@ -275,7 +335,7 @@ def parse_address_list(arg,sep=","):
 				return False
 			for k in range(beg,end+1): ret.append(k)
 		else:
-			msg("'%s': invalid argument for address range" % j)
+			msg("'%s': invalid argument for address range" % i)
 			return False
 
 	return sorted(set(ret))
@@ -288,10 +348,10 @@ def get_new_passphrase(what, opts):
 	elif 'echo_passphrase' in opts:
 		pw = " ".join(_get_words_from_user(("Enter %s: " % what), opts))
 	else:
-		for i in range(passwd_max_tries):
+		for i in range(g.passwd_max_tries):
 			pw = " ".join(_get_words_from_user(("Enter %s: " % what),opts))
 			pw2 = " ".join(_get_words_from_user(("Repeat %s: " % what),opts))
-			if debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
+			if g.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
 			if pw == pw2:
 				msg("%ss match" % what.capitalize())
 				break
@@ -299,7 +359,7 @@ def get_new_passphrase(what, opts):
 				msg("%ss do not match" % what.capitalize())
 		else:
 			msg("User failed to duplicate passphrase in %s attempts" %
-					passwd_max_tries)
+					g.passwd_max_tries)
 			sys.exit(2)
 
 	if pw == "": msg("WARNING: Empty passphrase")
@@ -321,9 +381,9 @@ def _get_from_brain_opt_params(opts):
 
 def _get_seed_from_brain_passphrase(words,opts):
 	bp = " ".join(words)
-	if debug: print "Sanitized brain passphrase: %s" % bp
+	if g.debug: print "Sanitized brain passphrase: %s" % bp
 	seed_len,hash_preset = _get_from_brain_opt_params(opts)
-	if debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
+	if g.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
 	msg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = _scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
@@ -334,7 +394,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 def encrypt_seed(seed, key, opts):
 	"""
 	Encrypt a seed for a {} deterministic wallet
-	""".format(proj_name)
+	""".format(g.proj_name)
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
@@ -371,7 +431,7 @@ def write_to_stdout(data, what, confirm=True):
 
 def get_default_wordlist():
 
-	wl_id = default_wl
+	wl_id = g.default_wl
 	if wl_id == "electrum": from mmgen.mn_electrum import electrum_words as wl
 	elif wl_id == "tirosh": from mmgen.mn_tirosh   import tirosh_words as wl
 	return wl.strip().split("\n")
@@ -411,7 +471,7 @@ def write_to_file(outfile,data,confirm=False):
 
 def write_seed(seed, opts):
 
-	outfile = "%s.%s" % (make_chksum_8(seed).upper(),seed_ext)
+	outfile = "%s.%s" % (make_chksum_8(seed).upper(),g.seed_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -432,7 +492,7 @@ def write_seed(seed, opts):
 
 def write_mnemonic(mn, seed, opts):
 
-	outfile = "%s.%s" % (make_chksum_8(seed).upper(),mn_ext)
+	outfile = "%s.%s" % (make_chksum_8(seed).upper(),g.mn_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -492,7 +552,7 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	hash_preset = opts['hash_preset']
 
-	outfile="{}-{}[{},{}].{}".format(seed_id,key_id,seed_len,hash_preset,wallet_ext)
+	outfile="{}-{}[{},{}].{}".format(seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 
@@ -538,7 +598,7 @@ def compare_checksums(chksum1, desc1, chksum2, desc2):
 		msg("OK (%s)" % chksum1.upper())
 		return True
 	else:
-		if debug:
+		if g.debug:
 			msg("ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
 				% (desc1,chksum1,desc2,chksum2))
 		return False
@@ -552,7 +612,7 @@ def _is_hex(s):
 def _check_mmseed_format(words):
 
 	valid = False
-	what = "%s data" % seed_ext
+	what = "%s data" % g.seed_ext
 	try:
 		chklen = len(words[0])
 	except:
@@ -596,14 +656,14 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("%s checksum incorrect in file '%s'!" % (desc,infile))
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
-	elif debug:
+	elif g.debug:
 		msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
 
 def get_data_from_wallet(infile,opts,silent=False):
 
 	if not silent:
-		msg("Getting {} wallet data from file '{}'".format(proj_name,infile))
+		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
 
@@ -646,7 +706,7 @@ def _get_words_from_user(prompt, opts):
 	# split() also strips
 	words = my_raw_input(prompt,
 				echo=True if 'echo_passphrase' in opts else False).split()
-	if debug: print "Sanitized input: [%s]" % " ".join(words)
+	if g.debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
 
@@ -656,15 +716,25 @@ def _get_words_from_file(infile,what):
 	# split() also strips
 	words = f.read().split()
 	f.close()
-	if debug: print "Sanitized input: [%s]" % " ".join(words)
+	if g.debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
 
-def get_lines_from_file(infile,what=""):
+def get_lines_from_file(infile,what="",remove_comments=False):
 	if what != "": msg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
 	lines = f.read().splitlines(); f.close()
-	return lines
+	if remove_comments:
+		import re
+		# re.sub(pattern, repl, string, count=0, flags=0)
+		ret = []
+		for i in lines:
+			i = re.sub('#.*','',i,1)
+			i = re.sub('\s+$','',i)
+			if i: ret.append(i)
+		return ret
+	else:
+		return lines
 
 
 def get_data_from_file(infile,what="data"):
@@ -678,14 +748,14 @@ def get_data_from_file(infile,what="data"):
 def _get_seed_from_seed_data(words):
 
 	if not _check_mmseed_format(words):
-		msg("Invalid %s data" % seed_ext)
+		msg("Invalid %s data" % g.seed_ext)
 		return False
 
 	stored_chk = words[0]
 	seed_b58 = "".join(words[1:])
 
 	chk = make_chksum_6(seed_b58)
-	msg_r("Validating %s checksum..." % seed_ext)
+	msg_r("Validating %s checksum..." % g.seed_ext)
 
 	if compare_checksums(chk, "from seed", stored_chk, "from input"):
 		seed = b58decode_pad(seed_b58)
@@ -693,10 +763,10 @@ def _get_seed_from_seed_data(words):
 			msg("Invalid b58 number: %s" % val)
 			return False
 
-		msg("%s data produces seed ID: %s" % (seed_ext,make_chksum_8(seed)))
+		msg("%s data produces seed ID: %s" % (g.seed_ext,make_chksum_8(seed)))
 		return seed
 	else:
-		msg("Invalid checksum for {} seed".format(proj_name))
+		msg("Invalid checksum for {} seed".format(g.proj_name))
 		return False
 
 
@@ -730,7 +800,7 @@ def get_bitcoind_passphrase(prompt,opts):
 def get_seed_from_wallet(
 		infile,
 		opts,
-		prompt="Enter {} wallet passphrase: ".format(proj_name),
+		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
 		silent=False
 		):
 
@@ -774,7 +844,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	if compare_checksums(chk,"of decrypted seed",seed_id,"in header"):
 		msg("Passphrase is OK")
 	else:
-		if not debug:
+		if not g.debug:
 			msg_r("Checking key ID...")
 			chk = make_chksum_8(key)
 			if compare_checksums(chk, "of key", key_id, "in header"):
@@ -784,7 +854,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 
 		return False
 
-	if debug: msg("key: %s" % hexlify(key))
+	if g.debug: msg("key: %s" % hexlify(key))
 
 	return dec_seed
 
@@ -800,17 +870,17 @@ def get_seed(infile,opts,silent=False):
 
 	ext = infile.split(".")[-1]
 
-	if   ext == mn_ext:           source = "mnemonic"
-	elif ext == brain_ext:        source = "brainwallet"
-	elif ext == seed_ext:         source = "seed"
-	elif ext == wallet_ext:       source = "wallet"
+	if   ext == g.mn_ext:           source = "mnemonic"
+	elif ext == g.brain_ext:        source = "brainwallet"
+	elif ext == g.seed_ext:         source = "seed"
+	elif ext == g.wallet_ext:       source = "wallet"
 	elif 'from_mnemonic' in opts: source = "mnemonic"
 	elif 'from_brain'    in opts: source = "brainwallet"
 	elif 'from_seed'     in opts: source = "seed"
 	else:
 		if infile: msg(
 			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
-			(infile, "', '.".join(seed_exts)))
+			(infile, "', '.".join(g.seedfile_exts)))
 		else: msg("No seed source type specified and no file supplied")
 		sys.exit(2)
 
@@ -827,19 +897,19 @@ def get_seed(infile,opts,silent=False):
 		if 'quiet' not in opts:
 			confirm_or_exit(
 				cmessages['brain_warning'].format(
-					proj_name.capitalize(), *_get_from_brain_opt_params(opts)),
+					g.proj_name.capitalize(), *_get_from_brain_opt_params(opts)),
 				"continue")
 		prompt = "Enter brainwallet passphrase: "
 		words = _get_words(infile,"brainwallet data",prompt,opts)
 		seed = _get_seed_from_brain_passphrase(words,opts)
 	elif source == "seed":
-		prompt = "Enter seed in %s format: " % seed_ext
+		prompt = "Enter seed in %s format: " % g.seed_ext
 		words = _get_words(infile,"seed data",prompt,opts)
 		seed = _get_seed_from_seed_data(words)
 	elif source == "wallet":
 		seed = get_seed_from_wallet(infile, opts, silent=silent)
 
-	if infile and not seed:
+	if infile and not seed and (source == "seed" or source == "mnemonic"):
 		msg("Invalid %s file: %s" % (source,infile))
 		sys.exit(2)
 
@@ -852,18 +922,6 @@ def get_seed_retry(infile,opts):
 		seed = get_seed(infile,opts,silent=silent)
 		silent = True
 		if seed: return seed
-
-
-def remove_blanks_comments(lines):
-	import re
-#	re.sub(pattern, repl, string, count=0, flags=0)
-	ret = []
-	for i in lines:
-		i = re.sub('#.*','',i,1)
-		i = re.sub('\s+$','',i)
-		if i: ret.append(i)
-
-	return ret
 
 
 def do_pager(text):
@@ -904,7 +962,6 @@ def do_pager(text):
 				msg_r("\r")
 				break
 	else: print text+end
-
 
 if __name__ == "__main__":
 	print "utils.py"

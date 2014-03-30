@@ -62,14 +62,14 @@ class BitcoinConnection(object):
 		"""
 		"""
 		try:
+# 			return self.proxy.badmethod(address,label) # DEBUG
 			return self.proxy.importaddress(address,label)
 		except JSONRPCException as e:
 			if e.error['message'] == "Method not found":
-				from mmgen.utils import msg
-				msg("""
-ERROR: 'importaddress' method not found.  Is your bitcoind enabled for
-watch-only addresses?""")
-			else: raise _wrap_exception(e.error)
+				from mmgen.utils import msg_r
+				msg_r("""
+ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-only addresses?""")
+			raise _wrap_exception(e.error)
 
 # sendrawtransaction <hex string> [allowhighfees=false]
 	def sendrawtransaction(self,tx):

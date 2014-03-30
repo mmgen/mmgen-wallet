@@ -23,11 +23,11 @@ mmgen-passchg: Change a mmgen deterministic wallet's passphrase, label or
 import sys
 from mmgen.Opts import *
 from mmgen.utils import *
-from mmgen.config import *
+import mmgen.config as g
 
 help_data = {
 	'desc':  """Change the passphrase, hash preset or label of a {}
-                  deterministic wallet""".format(proj_name),
+                  deterministic wallet""".format(g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help                  Print this help message
@@ -43,7 +43,7 @@ help_data = {
 
 NOTE: The key ID will change if either the passphrase or hash preset
       are changed
-""".format(hash_preset)
+""".format(g.hash_preset)
 }
 
 short_opts = "hd:HkL:p:P:v"
@@ -112,7 +112,7 @@ if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
 	from hashlib import sha256
 	from Crypto import Random
 
-	salt = sha256(salt + Random.new().read(128)).digest()[:salt_len]
+	salt = sha256(salt + Random.new().read(128)).digest()[:g.salt_len]
 	key = make_key(passwd, salt, opts['hash_preset'])
 	new_key_id = make_chksum_8(key)
 	msg("Key ID changed: %s -> %s" % (key_id,new_key_id))

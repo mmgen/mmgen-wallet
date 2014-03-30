@@ -58,7 +58,7 @@ class JSONRPCException(Exception):
 		self.error = rpcError
 
 
-import mmgen.config
+import mmgen.config as g
 
 class AuthServiceProxy(object):
 	def __init__(self, serviceURL, serviceName = None):
@@ -75,7 +75,7 @@ class AuthServiceProxy(object):
 		authpair = authpair.encode('utf8')
 		self.__authhdr = "Basic ".encode('utf8') + base64.b64encode(authpair)
 
-		http_timeout = mmgen.config.http_timeout
+		http_timeout = g.http_timeout
 
 		if self.__url.scheme == 'https':
 			self.__conn = httplib.HTTPSConnection(self.__url.hostname, port,

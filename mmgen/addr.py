@@ -24,25 +24,23 @@ from hashlib import sha256, sha512
 from binascii import hexlify, unhexlify
 
 from mmgen.bitcoin import numtowif
-from mmgen.config import *
+import mmgen.config as g
 
 def test_for_keyconv():
 	"""
 	Test for the presence of 'keyconv' utility on system
 	"""
 
-	keyconv_exec = "keyconv"
-
 	from subprocess import Popen, PIPE
 	try:
-		p = Popen([keyconv_exec, '-h'], stdout=PIPE, stderr=PIPE)
+		p = Popen([g.keyconv_exec, '-h'], stdout=PIPE, stderr=PIPE)
 	except:
 		sys.stderr.write("""
 Executable '%s' unavailable. Falling back on (slow) internal ECDSA library.
 Please install '%s' from the %s package on your system for much
 faster address generation.
 
-""" % (keyconv_exec, keyconv_exec, "vanitygen"))
+""" % (g.keyconv_exec, g.keyconv_exec, "vanitygen"))
 		return False
 	else:
 		return True
@@ -157,9 +155,8 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain ASCII letters, numerals, and the symbols
 # '{}' and '{}'.
-""".format(proj_name.capitalize(),max_addr_label_len,
-		"', '".join(addr_label_symbols[0:-1]),
-		addr_label_symbols[-1]).strip()
+""".format(g.proj_name.capitalize(),g.max_addr_label_len,
+		"', '".join(g.addr_label_punc[0:-1]), g.addr_label_punc[-1]).strip()
 	data = []
 	if not 'stdout' in opts: data.append(header + "\n")
 	data.append("%s {" % seed_chksum.upper())
@@ -208,8 +205,8 @@ def fmt_addr_list(addr_list):
 
 def write_addr_data_to_file(seed, data, addr_list, opts):
 
-	if 'print_addresses_only' in opts: ext = "addrs"
-	elif 'no_addresses' in opts:       ext = "keys"
+	if 'print_addresses_only' in opts: ext = g.addrfile_ext
+	elif 'no_addresses' in opts:       ext = g.keyfile_ext
 	else:                              ext = "akeys"
 
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")

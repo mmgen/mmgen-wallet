@@ -23,7 +23,7 @@ from binascii import unhexlify
 from mmgen.utils import *
 import sys, os
 from decimal import Decimal
-from mmgen.config import *
+import mmgen.config as g
 
 txmsg = {
 'not_enough_btc': "Not enough BTC in the inputs for this transaction (%s BTC)",
@@ -37,21 +37,22 @@ specified recipient address.
 NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
 which makes the signing process more complicated.  When signing the
 transaction, keys for the non-mmgen inputs must be supplied in a separate
-file using the '-k' option of mmgen-txsign.
-
-Alternatively, you may import the mmgen keys into the wallet.dat of your
-offline bitcoind, first generating the required keys with mmgen-keygen and
-then running mmgen-txsign with the '-f' option to force the use of
-wallet.dat as the key source.
+file using the '-k' option to mmgen-txsign.
 
 Selected mmgen inputs: %s"""
 }
+
+# Deleted text:
+# Alternatively, you may import the mmgen keys into the wallet.dat of your
+# offline bitcoind, first generating the required keys with mmgen-keygen and
+# then running mmgen-txsign with the '-f' option to force the use of
+# wallet.dat as the key source.
 
 
 def connect_to_bitcoind():
 
 	host,port,user,passwd = "localhost",8332,"rpcuser","rpcpassword"
-	cfg = get_cfg_options((user,passwd))
+	cfg = get_bitcoind_cfg_options((user,passwd))
 
 	import mmgen.rpc.connection
 	f = mmgen.rpc.connection.BitcoinConnection
@@ -72,7 +73,7 @@ def trim_exponent(n):
 	return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
 
-def	check_address(rcpt_address):
+def check_address(rcpt_address):
 	from mmgen.bitcoin import verify_addr
 	if not verify_addr(rcpt_address):
 		sys.exit(3)
@@ -87,6 +88,9 @@ def check_btc_amt(send_amt):
 		msg("%s: Invalid amount" % send_amt)
 		sys.exit(3)
 
+	if g.debug:
+		print "Decimal(amt): %s\nAs tuple: %s" % (send_amt,repr(retval.as_tuple()))
+
 	if retval.as_tuple()[-1] < -8:
 		msg("%s: Too many decimal places in amount" % send_amt)
 		sys.exit(3)
@@ -94,16 +98,18 @@ def check_btc_amt(send_amt):
 	return trim_exponent(retval)
 
 
-def get_cfg_options(cfg_keys):
+def get_bitcoind_cfg_options(cfg_keys):
 
 	if "HOME" in os.environ:
-		cfg_file = "%s/%s" % (os.environ["HOME"], ".bitcoin/bitcoin.conf")
+		data_dir = ".bitcoin"
+		cfg_file = "%s/%s/%s" % (os.environ["HOME"], data_dir, "bitcoin.conf")
 	elif "HOMEPATH" in os.environ:
 	# Windows:
-		cfg_file = "%s%s" % (os.environ["HOMEPATH"],
-						r"\Application Data\Bitcoin\bitcoin.conf")
+		data_dir = r"Application Data\Bitcoin"
+		cfg_file = "%s\%s\%s" % (os.environ["HOMEPATH"],data_dir,"bitcoin.conf")
 	else:
-		msg("Unable to find bitcoin configuration file")
+		msg("Neither $HOME nor %HOMEPATH% is set")
+		msg("Don't know where to look for 'bitcoin.conf'")
 		sys.exit(3)
 
 	try:
@@ -202,7 +208,7 @@ def sort_and_view(unspent):
 			amt = str(trim_exponent(i.amount))
 			lfill = 3 - len(amt.split(".")[0]) if "." in amt else 3 - len(amt)
 			i.amt = " "*lfill + amt
-			i.days = int(i.confirmations * mins_per_block / (60*24))
+			i.days = int(i.confirmations * g.mins_per_block / (60*24))
 
 		for n,i in enumerate(out):
 			if i.skip == "d":
@@ -321,7 +327,7 @@ def view_tx_data(c,inputs_data,tx_hex,metadata=[],pager=False):
 	for n,i in enumerate(td['vin']):
 		for j in inputs_data:
 			if j['txid'] == i['txid'] and j['vout'] == i['vout']:
-				days = int(j['confirmations'] * mins_per_block / (60*24))
+				days = int(j['confirmations'] * g.mins_per_block / (60*24))
 				total_in += j['amount']
 				out += (" " + """
 %-2s tx,vout: %s,%s
@@ -391,7 +397,7 @@ def parse_tx_data(tx_data,infile):
 def select_outputs(unspent,prompt):
 
 	while True:
-		reply = my_raw_input(prompt).strip()
+		reply = my_raw_input(prompt,allowed_chars="0123456789 -").strip()
 
 		if not reply: continue
 
@@ -407,46 +413,80 @@ def select_outputs(unspent,prompt):
 		return selected
 
 
+def mmgen_addr_to_btc_addr(m,addr_data):
 
-def make_tx_out(rcpt_arg):
+	ID,num = m.split(":")
+	from binascii import unhexlify
+	try: unhexlify(ID)
+	except: pass
+	else:
+		try: num = int(num)
+		except: pass
+		else:
+			if not addr_data:
+				msg("Address data must be supplied for MMgen address '%s'" % m)
+				sys.exit(2)
+			for i in addr_data:
+				if ID == i[0]:
+					for j in i[1]:
+						if j[0] == num:
+							return j[1]
+			msg("MMgen address '%s' not found in supplied address data" % m)
+			sys.exit(2)
+
+	msg("Invalid format: %s" % m)
+	sys.exit(3)
+
+
+
+def make_tx_out(tx_arg,addr_data):
+
+	tx = {}
+	for i in tx_arg:
+		addr,amt = i.split(",")
+
+		if ":" in addr:
+			addr = mmgen_addr_to_btc_addr(addr,addr_data)
+		else:
+			check_address(addr)
+
+		try: tx[addr] = amt
+		except:
+			msg("Invalid format: %s: %s" % (addr,amt))
+			sys.exit(3)
+
+	if g.debug:
+		print "TX (cl):   ", repr(tx_arg)
+		print "TX (proc): ", repr(tx)
 
 	import decimal
 	try:
-		tx_out = dict([(i.split(":")[0],i.split(":")[1])
-							for i in rcpt_arg.split(",")])
-	except:
-		msg("Invalid format: %s" % rcpt_arg)
-		sys.exit(3)
-
-	try:
-		for i in tx_out.keys():
-			tx_out[i] = trim_exponent(Decimal(tx_out[i]))
+		for i in tx.keys():
+			tx[i] = trim_exponent(Decimal(tx[i]))
 	except decimal.InvalidOperation:
-		msg("Decimal conversion error in suboption '%s:%s'" % (i,tx_out[i]))
+		msg("Decimal conversion error in suboption '%s:%s'" % (i,tx[i]))
 		sys.exit(3)
 
-	return tx_out
+	return tx
+
 
 def check_addr_comment(label):
 
-	if len(label) > max_addr_label_len:
+	if len(label) > g.max_addr_label_len:
 		msg("'%s': overlong label (length must be <=%s)" %
-				(label,max_addr_label_len))
+				(label,g.max_addr_label_len))
 		sys.exit(3)
 
-	from string import ascii_letters, digits
-	chrs = tuple(ascii_letters + digits) + addr_label_symbols
 	for ch in list(label):
-		if ch not in chrs:
+		if ch not in g.addr_label_symbols:
 			msg("'%s': illegal character in label '%s'" % (ch,label))
 			msg("Permitted characters: A-Za-z0-9, plus '%s'" %
-					"', '".join(addr_label_symbols))
+					"', '".join(g.addr_label_punc))
 			sys.exit(3)
 
 
 def parse_addrs_file(f):
-	lines = get_lines_from_file(f,"address data")
-	lines = remove_blanks_comments(lines)
+	lines = get_lines_from_file(f,"address data",remove_comments=True)
 
 	try:
 		seed_id,obrace = lines[0].split()
@@ -496,7 +536,7 @@ def sign_transaction(c,tx_hex,sig_data,keys=None):
 
 	if keys:
 		msg("%s keys total" % len(keys))
-		if debug: print "Keys:\n  %s" % "\n  ".join(keys)
+		if g.debug: print "Keys:\n  %s" % "\n  ".join(keys)
 
 	from mmgen.rpc import exceptions
 
@@ -591,3 +631,8 @@ for the following non-mmgen address%s: %s""" %
 	("" if len(other_addrs) == 1 else "es",
 	" ".join([i['address'] for i in other_addrs])
 	  ))
+
+def get_addr_data(cmd_args):
+	for f in cmd_args:
+		data = parse_addrs_file(f)
+		print repr(data); sys.exit() # DEBUG

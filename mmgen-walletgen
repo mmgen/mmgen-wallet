@@ -24,14 +24,14 @@ from hashlib import sha256
 
 from mmgen.Opts import *
 from mmgen.license import *
-from mmgen.config import *
+import mmgen.config as g
 from mmgen.walletgen import *
 from mmgen.utils import *
 prog_name = sys.argv[0].split("/")[-1]
 
 help_data = {
 	'prog_name': prog_name,
-	'desc':    "Generate a {} deterministic wallet".format(proj_name),
+	'desc':    "Generate a {} deterministic wallet".format(g.proj_name),
 	'usage':   "[opts] [infile]",
 	'options': """
 -h, --help                 Print this help message
@@ -83,12 +83,12 @@ For a brainwallet passphrase to always generate the same keys and
 addresses, the same 'l' and 'p' parameters to '--from-brain' must be used
 in all future invocations with that passphrase.
 """.format(
-		",".join([str(i) for i in seed_lens]),
-		seed_len,
-		hash_preset,
-		usr_randlen,
+		",".join([str(i) for i in g.seed_lens]),
+		g.seed_len,
+		g.hash_preset,
+		g.usr_randlen,
 		prog_name,
-		S=seed_ext,
+		S=g.seed_ext,
 	)
 }
 
@@ -103,7 +103,7 @@ if 'show_hash_presets' in opts: show_hash_presets()
 
 check_opts(opts,long_opts)
 
-if debug: show_opts_and_cmd_args(opts,cmd_args)
+if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
@@ -131,12 +131,12 @@ except:
 
 msg("OK")
 
-if debug: display_os_random_data(os_rand_data)
+if g.debug: display_os_random_data(os_rand_data)
 
 usr_keys,key_timings = get_random_data_from_user(opts)
 msg("")
 
-if debug: display_user_random_data(usr_keys,key_timings)
+if g.debug: display_user_random_data(usr_keys,key_timings)
 
 usr_rand_data = sha256(usr_keys).digest() + \
 				sha256("".join(key_timings)).digest()
@@ -150,7 +150,7 @@ else:
 	seed = sha256(seed).digest()[:opts['seed_len']/8]
 
 salt = os_rand_data[1] + usr_rand_data
-salt = sha256(salt).digest()[:salt_len]
+salt = sha256(salt).digest()[:g.salt_len]
 
 if not 'quiet' in opts:
 	msg("""
@@ -160,7 +160,7 @@ no strength checking of passphrases is performed.  For an empty passphrase,
 just hit ENTER twice.
 """ % opts['hash_preset'])
 
-passwd = get_new_passphrase("{} wallet passphrase".format(proj_name), opts)
+passwd = get_new_passphrase("{} wallet passphrase".format(g.proj_name), opts)
 
 key = make_key(passwd, salt, opts['hash_preset'])
 

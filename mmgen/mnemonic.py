@@ -32,7 +32,7 @@ def mn_len(hexnum): return len(hexnum) * 3 / 8
 import sys
 
 from mmgen.utils import msg,make_chksum_8
-from mmgen.config import *
+import mmgen.config as g
 
 # These universal base-conversion routines work for any base
 
@@ -47,9 +47,9 @@ def hextobaseN(base,hexnum,wordlist,mn_len):
 
 def get_seed_from_mnemonic(mn,wl):
 
-	if len(mn) not in mnemonic_lens:
+	if len(mn) not in g.mnemonic_lens:
 		msg("Bad mnemonic (%i words).  Allowed numbers of words: %s" %
-				(len(mn),", ".join([str(i) for i in mnemonic_lens])))
+				(len(mn),", ".join([str(i) for i in g.mnemonic_lens])))
 		return False
 
 	for n,w in enumerate(mn,1):

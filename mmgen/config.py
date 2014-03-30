@@ -18,6 +18,11 @@
 """
 config.py:  Constants and configuration options for the mmgen suite
 """
+
+from decimal import Decimal
+tx_fee        = Decimal("0.001")
+max_tx_fee    = Decimal("0.1")
+
 proj_name     = "mmgen"
 
 wallet_ext    = "mmdat"
@@ -25,7 +30,10 @@ seed_ext      = "mmseed"
 mn_ext        = "mmwords"
 brain_ext     = "mmbrain"
 
-seed_exts = wallet_ext, seed_ext, mn_ext, brain_ext
+seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext
+
+addrfile_ext = "addrs"
+keyfile_ext  = "keys"
 
 default_wl    = "electrum"
 #default_wl    = "tirosh"
@@ -38,6 +46,8 @@ seed_len  = 256
 mnemonic_lens = [i / 32 * 3 for i in seed_lens]
 
 http_timeout = 30
+
+keyconv_exec = "keyconv"
 
 from os import getenv
 debug = True if getenv("MMGEN_DEBUG") else False
@@ -60,5 +70,13 @@ hash_presets = {
 	'5': [16, 8, 16],
 	'6': [17, 8, 20],
 }
-addr_label_symbols = ".","_",",","-"," "
+
+from string import ascii_letters, digits
+
+addr_label_punc = ".","_",",","-"," "
+addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 max_addr_label_len = 16
+
+wallet_label_punc = ".", "_", " "
+wallet_label_symbols = tuple(ascii_letters + digits) + wallet_label_punc
+max_wallet_label_len = 32

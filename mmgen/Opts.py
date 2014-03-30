@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys, getopt
-from mmgen.config import *
+import mmgen.config as g
 from mmgen.utils import msg
 
 def usage(hd):
@@ -37,7 +37,7 @@ def process_opts(argv,help_data,short_opts,long_opts):
 
 	progname = argv[0].split("/")[-1]
 
-	if debug:
+	if g.debug:
 		print "Short opts: %s" % repr(short_opts)
 		print "Long opts:  %s" % repr(long_opts)
 
@@ -65,7 +65,7 @@ def process_opts(argv,help_data,short_opts,long_opts):
 			opts[long_opts[short_opts_l.index(opt[1:]+":")][:-1].replace("-","_")] = arg
 		else: assert False, "Invalid option"
 
-	if debug: print "User-selected options: %s" % repr(opts)
+	if g.debug: print "User-selected options: %s" % repr(opts)
 
 	return opts,args
 
@@ -73,7 +73,7 @@ def process_opts(argv,help_data,short_opts,long_opts):
 def check_opts(opts,long_opts):
 
 	# These must be set to the default values in mmgen.config:
-	for i in cl_override_vars:
+	for i in g.cl_override_vars:
 		if i+"=" in long_opts:
 			set_if_unset_and_typeconvert(opts,i)
 
@@ -110,14 +110,13 @@ def check_opts(opts,long_opts):
 			label = val.strip()
 			opts[opt] = label
 
-			if len(label) > 32:
-				msg("Label must be 32 characters or less")
+			if len(label) > g.max_wallet_label_len:
+				msg("Label must be %s characters or less" %
+					g.max_wallet_label_len)
 				sys.exit(1)
 
-			from string import ascii_letters, digits
-			label_chrs = list(ascii_letters + digits) + [".", "_", " "]
 			for ch in list(label):
-				if ch not in label_chrs:
+				if ch not in g.wallet_label_symbols:
 					msg("'%s': illegal character in label" % ch)
 					sys.exit(1)
 		elif opt == 'from_brain':
@@ -133,32 +132,32 @@ def check_opts(opts,long_opts):
 				msg("'%s': invalid 'l' %s (not an integer)" % (l,what))
 				sys.exit(1)
 
-			if int(l) not in seed_lens:
+			if int(l) not in g.seed_lens:
 				msg("'%s': invalid 'l' %s.  Options: %s" %
-						(l, what, ", ".join([str(i) for i in seed_lens])))
+						(l, what, ", ".join([str(i) for i in g.seed_lens])))
 				sys.exit(1)
 
-			if p not in hash_presets:
-				hps = ", ".join([i for i in sorted(hash_presets.keys())])
+			if p not in g.hash_presets:
+				hps = ", ".join([i for i in sorted(g.hash_presets.keys())])
 				msg("'%s': invalid 'p' %s.  Options: %s" % (p, what, hps))
 				sys.exit(1)
 		elif opt == 'seed_len':
-			if val not in seed_lens:
+			if val not in g.seed_lens:
 				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join([str(i) for i in seed_lens])))
+				% (val,what,", ".join([str(i) for i in g.seed_lens])))
 				sys.exit(2)
 		elif opt == 'hash_preset':
-			if val not in hash_presets:
+			if val not in g.hash_presets:
 				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join(sorted(hash_presets.keys()))))
+				% (val,what,", ".join(sorted(g.hash_presets.keys()))))
 				sys.exit(2)
 		elif opt == 'usr_randlen':
-			if val > max_randlen or val < min_randlen:
+			if val > g.max_randlen or val < g.min_randlen:
 				msg("'%s': invalid %s (must be >= %s and <= %s)"
-				% (val,what,min_randlen,max_randlen))
+				% (val,what,g.min_randlen,g.max_randlen))
 				sys.exit(2)
 		else:
-			if debug: print "check_opts(): No test for opt '%s'" % opt
+			if g.debug: print "check_opts(): No test for opt '%s'" % opt
 
 
 def show_opts_and_cmd_args(opts,cmd_args):
@@ -168,14 +167,16 @@ def show_opts_and_cmd_args(opts,cmd_args):
 
 def set_if_unset_and_typeconvert(opts,opt):
 
-	if opt in cl_override_vars:
+	if opt in g.cl_override_vars:
 		if opt not in opts:
 			# Set to similarly named default value in mmgen.config
-			opts[opt] = eval(opt)
+			opts[opt] = eval("g."+opt)
 		else:
-			vtype = type(eval(opt))
-			if   vtype == int: f,t = int,"an integer"
-			elif vtype == str: f,t = str,"a string"
+			vtype = type(eval("g."+opt))
+			if g.debug: print "Opt: %s, Type: %s" % (opt,vtype)
+			if   vtype == int:   f,t = int,"an integer"
+			elif vtype == str:   f,t = str,"a string"
+			elif vtype == float: f,t = float,"a float"
 
 			try:
 				opts[opt] = f(opts[opt])

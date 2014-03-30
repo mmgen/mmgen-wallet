@@ -23,7 +23,7 @@ import sys
 
 from mmgen.Opts import *
 from mmgen.license import *
-from mmgen.config import *
+import mmgen.config as g
 from mmgen.tx import *
 from mmgen.utils import msg,check_infile,get_lines_from_file,confirm_or_exit
 
