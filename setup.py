@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.6.7',
+		version      = '0.6.8b',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -41,7 +41,7 @@ setup(
 			'tests.utils',
 			'tests.walletgen'
 		],
-		data_files=[('bin', [
+		scripts=[
 			'mmgen-addrgen',
 			'mmgen-addrimport',
 			'mmgen-passchg',
@@ -51,9 +51,5 @@ setup(
 			'mmgen-txsign',
 			'mmgen-txsend',
 			'mmgen-pywallet'
-		])],
-		scripts=[
-			'scripts/bitcoind-walletunlock.py',
-			'scripts/deinstall.sh'
 		]
 	)
