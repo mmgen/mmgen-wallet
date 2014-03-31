@@ -8,6 +8,8 @@ setup(
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
 		py_modules = [
+			'__init__',
+
 			'mmgen.__init__',
 			'mmgen.addr',
 			'mmgen.bitcoin',
@@ -29,6 +31,7 @@ setup(
 			'mmgen.rpc.proxy',
 			'mmgen.rpc.util',
 
+			'tests.__init__',
 			'tests.addr',
 			'tests.bitcoin',
 			'tests.mn_electrum',
@@ -38,10 +41,9 @@ setup(
 			'tests.utils',
 			'tests.walletgen'
 		],
-		data_files=[('/usr/local/bin', [
+		data_files=[('bin', [
 			'mmgen-addrgen',
 			'mmgen-addrimport',
-			'mmgen-keygen',
 			'mmgen-passchg',
 			'mmgen-walletchk',
 			'mmgen-walletgen',

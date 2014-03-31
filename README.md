@@ -61,9 +61,9 @@ mnemonic.
 
 ### Download/Install
 
-> #### [Install on Microsoft Windows](doc/MMGenWindowsInstall.md)
+> #### [Install on Microsoft Windows](doc/MMGenInstallMSWin.md)
 
-> #### [Install on Debian/Ubuntu Linux](doc/MMGenLinuxInstall.md)
+> #### [Install on Debian/Ubuntu Linux](doc/MMGenInstallLinux.md)
 
 
 ### Using MMGen
