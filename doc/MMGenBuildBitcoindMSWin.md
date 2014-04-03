@@ -126,14 +126,15 @@ after the line:
 
 		LIBS="$LIBS $BOOST_LIBS $BOOST_CHRONO_LIB"
 
-From the prompt, run `configure` and `make` with the provided arguments:
+From the prompt, run `configure` and `make` with the arguments provided below:
 
 		$ ./configure --without-qt --with-incompatible-bdb CPPFLAGS=-I/usr/include LDFLAGS="-static -L/usr/lib -Wl,--allow-multiple-definition" BOOST_ROOT=/c/boost_1_55_0
 		$ make src/bitcoind.exe
 
 Strip the executable (`strip src/bitcoind.exe`), copy it to your path and test
-by running `bitcoind`.  You may need to supply an argument to the `-datadir`
-option so the daemon can find your wallet and configuration file.
+that the command `bitcoind` works.  You may want to use the `-datadir` option to
+point to the location where you plan to put your `bitcoin.conf` file, wallet and
+blockchain.
 
 [01]: http://download.oracle.com/berkeley-db/db-5.0.32.tar.gz
 [02]: http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index-082944.html

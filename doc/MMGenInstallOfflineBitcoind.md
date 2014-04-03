@@ -16,7 +16,7 @@ path and start it with the command:
 
 Note that in the absence of a blockchain the daemon starts very quickly and
 uses practically no CPU once running.  Thus a low-powered computer such as a
-netbook will serve quite nicely as an offline machine for signing transactions.
+netbook can serve quite nicely as an offline machine for signing transactions.
 
 [00]: https://bitcoin.org/en/download
 

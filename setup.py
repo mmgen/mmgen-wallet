@@ -20,7 +20,7 @@ setup(
 			'mmgen.mn_tirosh',
 			'mmgen.Opts',
 			'mmgen.tx',
-			'mmgen.utils',
+			'mmgen.util',
 			'mmgen.walletgen',
 
 			'mmgen.rpc.__init__',
@@ -38,7 +38,7 @@ setup(
 			'mmgen.tests.mnemonic',
 			'mmgen.tests.mn_tirosh',
 			'mmgen.tests.test',
-			'mmgen.tests.utils',
+			'mmgen.tests.util',
 			'mmgen.tests.walletgen'
 		],
 		scripts=[
