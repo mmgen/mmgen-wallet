@@ -44,7 +44,7 @@ mmgen-pywallet: Dump contents of a bitcoind wallet to file
 # Ported from C code written by Laurent Haan (http://www.progressive-coding.com)
 
 from mmgen.Opts import *
-from mmgen.utils import msg
+from mmgen.util import msg
 from bsddb.db import *
 import sys, time
 import json
@@ -92,7 +92,7 @@ long_opts  = "help","outdir=","echo_passphrase","json","keys","addrs",\
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 
-from mmgen.utils import check_infile
+from mmgen.util import check_infile
 
 check_opts(opts,long_opts)
 
@@ -1575,7 +1575,7 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 
 			if password == None and \
 				('json' in opts or 'keysforaddrs' in opts or 'keys' in opts):
-				from mmgen.utils import get_bitcoind_passphrase
+				from mmgen.util import get_bitcoind_passphrase
 				password = get_bitcoind_passphrase("Enter password: ",opts)
 
 			if password != None:
@@ -1682,7 +1682,7 @@ elif 'addrs' in opts:
 	ext,what = "addrs","addresses"
 
 elif 'keysforaddrs' in opts:
-	from mmgen.utils import get_lines_from_file
+	from mmgen.util import get_lines_from_file
 	usr_addrs = get_lines_from_file(opts['keysforaddrs'],"addresses")
 	for addr in usr_addrs:
 		try:
@@ -1696,7 +1696,7 @@ len_arg = "%s" % len(wallet_addrs) \
    if len(data) == len(wallet_addrs) or ext == "json" \
    else "%s:%s" % (len(data),len(wallet_addrs))
 
-from mmgen.utils import make_chksum_8,write_walletdat_dump_to_file,write_to_stdout
+from mmgen.util import make_chksum_8,write_walletdat_dump_to_file,write_to_stdout
 wallet_id = make_chksum_8(str(sorted(wallet_addrs)))
 
 data = "\n".join(data) + "\n"

@@ -210,7 +210,7 @@ def write_addr_data_to_file(seed, data, addr_list, opts):
 	else:                              ext = "akeys"
 
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")
-	from mmgen.utils import write_to_file, make_chksum_8, msg
+	from mmgen.util import write_to_file, make_chksum_8, msg
 	outfile = "{}[{}].{}".format(
 			make_chksum_8(seed),
 			fmt_addr_list(addr_list),

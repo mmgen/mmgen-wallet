@@ -31,15 +31,15 @@ setup(
 			'mmgen.rpc.proxy',
 			'mmgen.rpc.util',
 
-			'tests.__init__',
-			'tests.addr',
-			'tests.bitcoin',
-			'tests.mn_electrum',
-			'tests.mnemonic',
-			'tests.mn_tirosh',
-			'tests.test',
-			'tests.utils',
-			'tests.walletgen'
+			'mmgen.tests.__init__',
+			'mmgen.tests.addr',
+			'mmgen.tests.bitcoin',
+			'mmgen.tests.mn_electrum',
+			'mmgen.tests.mnemonic',
+			'mmgen.tests.mn_tirosh',
+			'mmgen.tests.test',
+			'mmgen.tests.utils',
+			'mmgen.tests.walletgen'
 		],
 		scripts=[
 			'mmgen-addrgen',

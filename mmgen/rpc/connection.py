@@ -66,7 +66,7 @@ class BitcoinConnection(object):
 			return self.proxy.importaddress(address,label)
 		except JSONRPCException as e:
 			if e.error['message'] == "Method not found":
-				from mmgen.utils import msg_r
+				from mmgen.util import msg_r
 				msg_r("""
 ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-only addresses?""")
 			raise _wrap_exception(e.error)

@@ -25,7 +25,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 import mmgen.config as g
 from mmgen.tx import *
-from mmgen.utils import msg
+from mmgen.util import msg
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],

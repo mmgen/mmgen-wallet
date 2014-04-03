@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-utils.py:  Shared routines for the mmgen suite
+util.py:  Shared routines for the mmgen suite
 """
 
 import sys
@@ -964,4 +964,4 @@ def do_pager(text):
 	else: print text+end
 
 if __name__ == "__main__":
-	print "utils.py"
+	print "util.py"

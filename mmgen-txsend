@@ -25,7 +25,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 import mmgen.config as g
 from mmgen.tx import *
-from mmgen.utils import msg,check_infile,get_lines_from_file,confirm_or_exit
+from mmgen.util import msg,check_infile,get_lines_from_file,confirm_or_exit
 
 prog_name = sys.argv[0].split("/")[-1]
 

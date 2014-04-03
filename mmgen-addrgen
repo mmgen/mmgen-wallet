@@ -27,7 +27,7 @@ import sys
 from mmgen.Opts   import *
 import mmgen.config as g
 from mmgen.license import *
-from mmgen.utils  import *
+from mmgen.util  import *
 from mmgen.addr   import *
 
 invoked_as = sys.argv[0].split("-")[-1]

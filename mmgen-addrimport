@@ -23,7 +23,7 @@ mmgen-addrimport: Import addresses into a bitcoind watching wallet.
 import sys
 from mmgen.Opts   import *
 from mmgen.license import *
-from mmgen.utils import check_infile,confirm_or_exit,msg,msg_r,secs_to_hms,get_lines_from_file
+from mmgen.util import check_infile,confirm_or_exit,msg,msg_r,secs_to_hms,get_lines_from_file
 from mmgen.tx import connect_to_bitcoind,parse_addrs_file
 from mmgen.bitcoin import verify_addr
 

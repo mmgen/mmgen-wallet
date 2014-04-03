@@ -23,7 +23,7 @@ mmgen-walletchk: Check integrity of a mmgen deterministic wallet, display
 import sys
 from mmgen.Opts import *
 
-from mmgen.utils import *
+from mmgen.util import *
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],

@@ -29,7 +29,7 @@ __all__ = [
 	'mn_tirosh.py',
 	'Opts.py',
 	'tx.py',
-	'utils.py',
+	'util.py',
 	'walletgen.py'
 ]
 

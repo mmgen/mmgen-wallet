@@ -18,7 +18,7 @@
 
 import sys, getopt
 import mmgen.config as g
-from mmgen.utils import msg
+from mmgen.util import msg
 
 def usage(hd):
 	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])

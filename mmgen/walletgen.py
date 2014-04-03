@@ -20,7 +20,7 @@ walletgen.py:  Routines used for seed generation and wallet creation
 """
 
 import sys
-from mmgen.utils import msg, msg_r, get_char, prompt_and_get_char
+from mmgen.util import msg, msg_r, get_char, prompt_and_get_char
 from binascii import hexlify
 
 def get_random_data_from_user(opts):

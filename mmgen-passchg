@@ -22,7 +22,7 @@ mmgen-passchg: Change a mmgen deterministic wallet's passphrase, label or
 
 import sys
 from mmgen.Opts import *
-from mmgen.utils import *
+from mmgen.util import *
 import mmgen.config as g
 
 help_data = {

@@ -31,7 +31,7 @@ def mn_len(hexnum): return len(hexnum) * 3 / 8
 
 import sys
 
-from mmgen.utils import msg,make_chksum_8
+from mmgen.util import msg,make_chksum_8
 import mmgen.config as g
 
 # These universal base-conversion routines work for any base

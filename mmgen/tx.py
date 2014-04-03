@@ -20,7 +20,7 @@ tx.py:  Bitcoin transaction routines
 """
 
 from binascii import unhexlify
-from mmgen.utils import *
+from mmgen.util import *
 import sys, os
 from decimal import Decimal
 import mmgen.config as g
@@ -169,6 +169,32 @@ def print_sent_tx_to_file(tx,metadata,opts):
 	msg("Transaction ID saved to file '%s'" % outfile)
 
 
+def format_unspent_outputs_for_printing(out,sort_info,total):
+
+	pfs  = " %-4s %-67s %-34s %-12s %-13s %-10s %s"
+	pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
+		"Amount (BTC)","Age (days)", "Comment")]
+
+	for n,i in enumerate(out):
+		if verify_mmgen_label(i.account):
+			s = i.account.split(None,1)
+			mmid,cmt = s[0],(s[1] if len(s) == 2 else "")
+		else:
+			mmid,cmt = "",i.account
+
+		addr = "=" if i.skip == "addr" and "grouped" in sort_info else i.address
+		tx = " " * 63 + "=" \
+			  if i.skip == "txid" and "grouped" in sort_info else str(i.txid)
+
+		s = pfs % (str(n+1)+")", tx+","+str(i.vout),addr,mmid,i.amt,i.days,cmt)
+		pout.append(s.rstrip())
+
+	return \
+"Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n".format(
+		make_timestr(), " ".join(sort_info), "\n".join(pout), total
+	)
+
+
 def sort_and_view(unspent):
 
 	def s_amt(a,b):  return cmp(a.amount,b.amount)
@@ -182,27 +208,28 @@ def sort_and_view(unspent):
 	sort,group,show_mmaddr,reverse = "",False,False,False
 	total = trim_exponent(sum([i.amount for i in unspent]))
 
+	hdr_fmt   = "UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s"
+	table_hdr = fs % ("Num","TX id  Vout","","Address","Amount (BTC)", "Age(days)")
+
+	options_msg = """
+Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
+Format options: [g]roup, show [m]mgen addr
+""".strip()
+	prompt = \
+"('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
+
 	from copy import deepcopy
+	print_to_file_msg = ""
 	msg("")
+
 	while True:
 		out = deepcopy(unspent)
 		for i in out: i.skip = ""
-		for n in range(len(out)):
-			if group and n < len(out)-1:
+		if group and (sort == "address" or sort == "txid"):
+			for n in range(len(out)-1):
 				a,b = out[n],out[n+1]
-				if sort == "address" and a.address == b.address:
-					out[n+1].skip = "d"
-				elif sort == "txid" and a.txid == b.txid:
-					out[n+1].skip = "t"
-
-		output = ["UNSPENT OUTPUTS (sort order: %s%s%s)  Total BTC: %s" % (
-				"reverse " if reverse else "",
-				sort if sort else "None",
-	" (grouped)" if group and (sort == "address" or sort == "txid") else "",
-				total
-			)]
-		output.append(fs % ("Num","TX id  Vout","","Address","Amount (BTC)",
-					"Age(days)"))
+				if sort == "address" and a.address == b.address: b.skip = "addr"
+				elif sort == "txid" and a.txid == b.txid:        b.skip = "txid"
 
 		for i in out:
 			amt = str(trim_exponent(i.amount))
@@ -210,81 +237,72 @@ def sort_and_view(unspent):
 			i.amt = " "*lfill + amt
 			i.days = int(i.confirmations * g.mins_per_block / (60*24))
 
-		for n,i in enumerate(out):
-			if i.skip == "d":
-				addr = "|" + "." * 33
+			if i.skip == "addr":
+				i.addr = "|" + "." * 33
 			else:
 				if show_mmaddr:
 					if verify_mmgen_label(i.account):
-						addr = "%s.. %s" % (i.address[:4],i.account)
+						i.addr = "%s.. %s" % (i.address[:4],i.account)
 					else:
-						addr = i.address
+						i.addr = i.address
 				else:
-					addr = i.address
-			txid = "       |..." if i.skip == "t" else i.txid[:8]+"..."
+					i.addr = i.address
 
-			output.append(fs % (str(n+1)+")",txid,i.vout,addr,i.amt,i.days))
+			i.tx = "       |..." if i.skip == "txid" else i.txid[:8]+"..."
 
-		skip_body = False
+		sort_info = ["reverse"] if reverse else []
+		sort_info.append(sort if sort else "unsorted")
+		if group and (sort == "address" or sort == "txid"):
+			sort_info.append("grouped")
+
+		output = [hdr_fmt % (" ".join(sort_info), total), table_hdr]
+
+		for n,i in enumerate(out):
+			output.append(fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,i.days))
+
+		msg("\n".join(output) +"\n\n" + print_to_file_msg + options_msg)
+		print_to_file_msg = ""
+
+		immed_chars = "qpPtadArMgm"
+		skip_prompt = False
+
 		while True:
-			if skip_body:
-				skip_body = False
-				immed_chars = "qpP"
-			else:
-				msg("\n".join(output))
-				msg("""
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-View options: [g]roup, show [m]mgen addr""")
-				immed_chars = "qpPtadArMgm"
+			reply = get_char(prompt, immed_chars=immed_chars)
 
-			reply = get_char(
-"(Type 'q' to quit sorting, 'p' to print to file, 'v' to view in pager): ",
-				immed_chars=immed_chars)
-
-			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"; break
-			elif reply == 't': unspent.sort(s_txid); sort = "txid"; break
-			elif reply == 'd': unspent.sort(s_addr); sort = "address"; break
-			elif reply == 'A': unspent.sort(s_age);  sort = "age"; break
-			elif reply == 'M': unspent.sort(s_mmgen); show_mmaddr,sort=True,"mmgen"; break
+			if   reply == 'a': unspent.sort(s_amt);  sort = "amount"
+			elif reply == 't': unspent.sort(s_txid); sort = "txid"
+			elif reply == 'd': unspent.sort(s_addr); sort = "address"
+			elif reply == 'A': unspent.sort(s_age);  sort = "age"
+			elif reply == 'M':
+				unspent.sort(s_mmgen)
+				sort = "mmgen"
+				show_mmaddr = True
 			elif reply == 'r':
-				reverse = False if reverse else True
 				unspent.reverse()
-				break
-			elif reply == 'g': group = False if group else True; break
-			elif reply == 'm': show_mmaddr = False if show_mmaddr else True; break
+				reverse = False if reverse else True
+			elif reply == 'g': group = False if group else True
+			elif reply == 'm': show_mmaddr = False if show_mmaddr else True
+			elif reply == 'q': pass
 			elif reply == 'p':
-				pfs  = " %-4s %-67s %-34s %-12s %-13s %-10s %s"
-				pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
-					"Amount (BTC)","Age (days)", "Comment")]
+				data = format_unspent_outputs_for_printing(out,sort_info,total)
+				outfile = "listunspent[%s].out" % ",".join(sort_info)
+				write_to_file(outfile, data)
+				print_to_file_msg = "Data written to '%s'\n\n" % outfile
+			elif reply == 'v':
+				do_pager("\n".join(output))
+				continue
+			elif reply == 'w':
+				data = format_unspent_outputs_for_printing(out,sort_info,total)
+				do_pager(data)
+				continue
+			else:
+				msg("\nInvalid input")
+				continue
 
-				for n,i in enumerate(out):
-					if verify_mmgen_label(i.account):
-						s = i.account.split(None,1)
-						mmid,cmt = s[0],(s[1] if len(s) == 2 else "")
-					else:
-						mmid,cmt = "",i.account
-					os = pfs % (str(n+1)+")", str(i.txid)+","+str(i.vout),
-							i.address,mmid,i.amt,i.days,cmt)
-					pout.append(os.rstrip())
-
-				sort_info = (
-					("reverse," if reverse else "") +
-					(sort if sort else "unsorted")
-				)
-				outdata = \
-"Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n".format(
-					make_timestr(), sort_info, "\n".join(pout), total
-				)
-				outfile = "listunspent[%s].out" % sort_info
-				write_to_file(outfile, outdata)
-				skip_body = True
-				msg("\nData written to '%s'" % outfile)
-			elif reply == 'v': do_pager("\n".join(output))
-			elif reply == 'q': break
-			else: msg("Invalid input")
+			break
 
 		msg("\n")
-		if reply in 'q': break
+		if reply == 'q': break
 
 	return tuple(unspent)
 
@@ -401,7 +419,7 @@ def select_outputs(unspent,prompt):
 
 		if not reply: continue
 
-		from mmgen.utils import parse_address_list
+		from mmgen.util import parse_address_list
 		selected = parse_address_list(reply,sep=None)
 
 		if not selected: continue

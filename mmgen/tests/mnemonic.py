@@ -2,17 +2,17 @@
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
@@ -66,7 +66,9 @@ def random192(): do_random_tests(24)
 def random256(): do_random_tests(32)
 def random512(): do_random_tests(64)
 def electrum():  check_wordlist(el,"electrum")
+def electrum_print():  print "%s" % el.strip()
 def tirosh():    check_wordlist(tl,"tirosh")
+def tirosh_print():  print "%s" % tl.strip()
 
 def base10tohex(num,quiet=False):
 	enc,dec = baseNtohex_test(num,10,"0123456789",quiet)
@@ -99,6 +101,8 @@ tests = {
 	"random512":      [],
 	"electrum":       [],
 	"tirosh":         [],
+	"electrum_print": [],
+	"tirosh_print":   [],
 	"base10tohex":    ['base10num [int]','quiet [bool=False]'],
 	"hextobase10":    ['hexnum [str]',   'quiet [bool=False]'],
 	"base8tohex":     ['base8num [int]', 'quiet [bool=False]'],
