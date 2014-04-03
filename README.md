@@ -66,3 +66,9 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.
 ### Using MMGen
 
 > #### See [Getting Started with MMGen](doc/MMGenGettingStarted.md)
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+[PGP Public Key](doc/MMGenPubKey.md)
+
+Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w

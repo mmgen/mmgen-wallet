@@ -96,9 +96,9 @@ The `C:\Python27;C:\Python27\Scripts` you added to your path in Step 1 of this
 page should be included in your PATH variable.  If not, then exit MSYS and open
 a new MSYS window to update your path.
 
-The MMGen commands beginning with `mmgen-` will now be available (type
-`mmgen-<TAB>` to test) and you may begin experimenting with MMGen as described
-in the first two steps of [Getting Started with MMGen][13].
+The MMGen commands beginning with `mmgen-` should now be available (type
+`mmgen-<TAB>` to test) and you can begin experimenting with MMGen as described
+in the first two steps of [**Getting Started with MMGen**][13].
 
 [00]: https://www.dlitz.net/software/pycrypto/
 [01]: http://www.voidspace.org.uk/python/modules.shtml#pycrypto

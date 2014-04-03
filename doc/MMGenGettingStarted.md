@@ -175,11 +175,11 @@ the change amount (3.399 BTC in this case) automatically.
 Alternatively, and more conveniently, you can list your three addresses in MMGen
 format:
 
-		$ mmgen-txcreate -a my_addrs 89ABCDEF:2,3.3 89ABCDEF:3,3.3 89ABCDEF:4
+		$ mmgen-txcreate 89ABCDEF:2,3.3 89ABCDEF:3,3.3 89ABCDEF:4 my_addrs
 
 Note that an MMGen address file containing the requested output addresses must
-be provided on the command line.  In this example, the extra address in the file
-is ignored.
+be provided on the command line.  Any extra addresses in the file will be
+ignored.
 
 Now hit ENTER, choose the transaction's input from the list (10 BTC, address
 1F9495H8EJL..., txid 04f97185...,2), and confirm.  If all goes well,

@@ -46,8 +46,8 @@ an Internet connection.
 
 Be advised that compiling bitcoind on Windows requires some time and patience.
 If you're ready to proceed, first read [**A word on text editors**][09] and
-install a text editor if you haven't yet done so; then follow the link on item 4
-above to begin the build process.
+install a Unix-capable text editor if you haven't yet done so; then follow the
+link on item 4 above to begin the build process.
 
 [01]: MMGenInstallMinGW_MSYS.md
 [02]: MMGenInstallDependenciesMSWin.md

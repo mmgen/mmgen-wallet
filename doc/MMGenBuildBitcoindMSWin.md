@@ -32,19 +32,18 @@ the following at the MSYS prompt:
 		$ cd /c/db-5.0.32/build_unix
 		$ ../dist/configure --enable-mingw --enable-cxx --disable-replication --prefix=/usr
 
-Edit the source file `db.h` in the `build_unix` directory, move to line 116 and
-change:
+Open the source file `db.h` in your editor.  Change the statement on line 116:
 
 		typedef pthread_t db_threadid_t;
 
-to:
+to read:
 
 		typedef u_int32_t db_threadid_t;
 
 **Note:** since `db.h` is created by `configure`, this must be done **after**
 `configure` is run.
 
-Now run `make` and `make install`.
+Save the file and run `make` and `make install`.
 
 #### 3. Install the MASM assembler (optional but recommended):
 
@@ -62,7 +61,7 @@ run:
 		bjam toolset=gcc link=static threading=single --build-type=minimal stage --with-system --with-filesystem --with-program_options --with-chrono --with-test
 		bjam toolset=gcc link=static threading=multi --build-type=minimal stage --with-thread
 
-These commands build just the few libraries you need, saving you from the
+These commands build just the few libraries you need, avoiding the
 time-consuming process of compiling the whole boost package.
 
 #### 5. Build Bitcoind:
@@ -102,11 +101,11 @@ Edit the following files,
 		src/wallet.cpp
 		src/walletdb.cpp
 
-adding the statement `#include <winsock2.h>` near the top of each file, above
+adding the line `#include <winsock2.h>` near the top of each file, above
 the first `#include` statement.
 
-At the MSYS prompt, run the following file-copying commands (this needs to be
-done just once):
+At the MSYS prompt, run the following commands (this needs to be done just
+once):
 
 		$ cp /mingw/bin/autoreconf-2.68 /mingw/bin/autoreconf
 		$ cp /mingw/bin/autoconf-2.68 /mingw/bin/autoconf
@@ -133,8 +132,10 @@ From the prompt, run `configure` and `make` with the arguments provided below:
 
 Strip the executable (`strip src/bitcoind.exe`), copy it to your path and test
 that the command `bitcoind` works.  You may want to use the `-datadir` option to
-point to the location where you plan to put your `bitcoin.conf` file, wallet and
-blockchain.
+point to the planned location of your `bitcoin.conf` file, wallet and blockchain.
+Of these files, the only one you need to create is `bitcoind.conf`.  If this file
+or its required user and password and lines are missing, `bitcoind` will exit
+with an error message instructing you how to create it.
 
 [01]: http://download.oracle.com/berkeley-db/db-5.0.32.tar.gz
 [02]: http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/downloads/index-082944.html
