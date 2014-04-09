@@ -106,7 +106,7 @@ class AuthServiceProxy(object):
 		except:
 			from mmgen.util import msg
 			import sys
-			msg("\nUnable to connect to bitcoind.")
+			msg("Unable to connect to bitcoind")
 			sys.exit(2)
 
 		httpresp = self.__conn.getresponse()

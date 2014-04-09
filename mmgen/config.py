@@ -18,12 +18,15 @@
 """
 config.py:  Constants and configuration options for the mmgen suite
 """
+quiet,verbose = False,False
+min_screen_width = 80
 
 from decimal import Decimal
 tx_fee        = Decimal("0.001")
 max_tx_fee    = Decimal("0.1")
 
 proj_name     = "mmgen"
+proj_name_cap = "MMGen"
 
 wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
@@ -71,12 +74,16 @@ hash_presets = {
 	'6': [17, 8, 20],
 }
 
+mmgen_idx_max_digits = 7
+
 from string import ascii_letters, digits
 
-addr_label_punc = ".","_",",","-"," "
-addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
-max_addr_label_len = 16
+addr_label_symbols = tuple([chr(i) for i in range(0x20,0x7f)])
+max_addr_label_len = 32
 
-wallet_label_punc = ".", "_", " "
-wallet_label_symbols = tuple(ascii_letters + digits) + wallet_label_punc
+wallet_label_symbols = addr_label_symbols
 max_wallet_label_len = 32
+
+#addr_label_punc = ".","_",",","-"," ","(",")"
+#addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
+#wallet_label_punc = addr_label_punc

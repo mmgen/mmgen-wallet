@@ -585,6 +585,10 @@ copy of the Program in return for a fee.
 }
 
 def do_license_msg(immed=False):
+
+	import mmgen.config as g
+	if g.quiet: return
+
 	msg(gpl['warning'])
 	prompt = "%s " % gpl['prompt'].strip()
 

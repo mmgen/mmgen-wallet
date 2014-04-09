@@ -23,9 +23,8 @@ mmgen-addrimport: Import addresses into a bitcoind watching wallet.
 import sys
 from mmgen.Opts   import *
 from mmgen.license import *
-from mmgen.util import check_infile,confirm_or_exit,msg,msg_r,secs_to_hms,get_lines_from_file
+from mmgen.util import *
 from mmgen.tx import connect_to_bitcoind,parse_addrs_file
-from mmgen.bitcoin import verify_addr
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
@@ -43,6 +42,7 @@ short_opts = "hl:q"
 long_opts  = "help", "addrlist=", "quiet"
 
 opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
+if 'quiet' in opts: g.quiet = True
 
 if len(cmd_args) != 1 and not 'addrlist' in opts:
 	msg("You must specify an mmgen address list (and/or non-mmgen addresses with the '--addrlist' option)")
@@ -57,28 +57,27 @@ else:
 	seed_id,addr_data = "",[]
 
 if 'addrlist' in opts:
-	l = get_lines_from_file(
-			opts['addrlist'],"non-mmgen addresses",remove_comments=True)
+	l = get_lines_from_file(opts['addrlist'],"non-mmgen addresses",
+			remove_comments=True)
 	addr_data += [(None,i) for i in l]
 
-msg_r("Validating addresses...")
+from mmgen.bitcoin import verify_addr
+qmsg_r("Validating addresses...")
 for i in addr_data:
-	if not verify_addr(i[1]):
+	if not verify_addr(i[1],verbose=True):
 		msg("%s: invalid address" % i)
 		sys.exit(2)
-
-msg("OK")
+qmsg("OK")
 
 import mmgen.config as g
 g.http_timeout = 3600
 
 c = connect_to_bitcoind()
 
-if not 'quiet' in opts:
-	message = """
+m = """
 Importing addresses can take a long time (>30 min.) on a low-powered computer.
-	"""
-	confirm_or_exit(message, "continue", expect="YES")
+""".strip()
+confirm_or_exit(m, "continue", expect="YES")
 
 import threading
 import time

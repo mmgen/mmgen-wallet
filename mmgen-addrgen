@@ -121,6 +121,8 @@ if invoked_as == "addrgen":
 opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
+if 'quiet' in opts: g.quiet = True
+if 'verbose' in opts: g.verbose = True
 
 opts['gen_what'] = gen_what
 
@@ -143,10 +145,10 @@ addr_list = parse_address_list(addr_list_arg)
 
 if not addr_list: sys.exit(2)
 
-if not 'quiet' in opts: do_license_msg()
+do_license_msg()
 
 # Interact with user:
-if invoked_as == "keygen" and not 'quiet' in opts:
+if invoked_as == "keygen" and not g.quiet:
 	confirm_or_exit(cmessages['unencrypted_secret_keys'], 'continue')
 
 # Generate data:
@@ -163,7 +165,7 @@ addr_data_str = format_addr_data(addr_data, seed_id, opts)
 
 # Output data:
 if 'stdout' in opts:
-	if invoked_as == "keygen" and not 'quiet' in opts:
+	if invoked_as == "keygen" and not g.quiet:
 		confirm = True
 	else: confirm = False
 	write_to_stdout(addr_data_str,"secret keys",confirm)

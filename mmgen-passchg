@@ -39,6 +39,8 @@ help_data = {
 -p, --hash-preset        p  Change scrypt.hash() parameters to preset 'p'
                             (default: '{}')
 -P, --passwd-file        f  Get new passphrase from file 'f'
+-q, --quiet                 Suppress warnings; overwrite files without
+                            prompting
 -v, --verbose               Produce more verbose output
 
 NOTE: The key ID will change if either the passphrase or hash preset
@@ -46,15 +48,16 @@ NOTE: The key ID will change if either the passphrase or hash preset
 """.format(g.hash_preset)
 }
 
-short_opts = "hd:HkL:p:P:v"
+short_opts = "hd:HkL:p:P:qv"
 long_opts  = "help","outdir=","show_hash_presets","keep_old_passphrase",\
-			  "label=","hash_preset=","passwd_file=","verbose"
+			  "label=","hash_preset=","passwd_file=","quiet","verbose"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+if 'quiet' in opts: g.quiet = True
+if 'verbose' in opts: g.verbose = True
+check_opts(opts,long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
-
-check_opts(opts,long_opts)
 
 if len(cmd_args) != 1:
 	msg("One input file must be specified")
@@ -62,7 +65,7 @@ if len(cmd_args) != 1:
 infile = cmd_args[0]
 
 # Old key:
-label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile,opts)
+label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile)
 seed_id,key_id = metadata[:2]
 
 # Repeat on incorrect pw entry
@@ -86,7 +89,7 @@ else: opts['label'] = label  # Copy the old label
 
 if 'hash_preset' in opts:
 	if hash_preset != opts['hash_preset']:
-		msg("Hash preset has changed (%s -> %s)" %
+		qmsg("Hash preset has changed (%s -> %s)" %
 			(hash_preset, opts['hash_preset']))
 		changed['preset'] = True
 	else:
@@ -100,14 +103,14 @@ else:
 	new_passwd = get_new_passphrase("new passphrase", opts)
 
 	if new_passwd == passwd:
-		msg("Passphrase is unchanged")
+		qmsg("Passphrase is unchanged")
 	else:
-		msg("Passphrase has changed")
+		qmsg("Passphrase has changed")
 		passwd = new_passwd
 		changed['passwd'] = True
 
 if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
-	msg("Will update salt and key ID")
+	qmsg("Will update salt and key ID")
 
 	from hashlib import sha256
 	from Crypto import Random
@@ -115,9 +118,9 @@ if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
 	salt = sha256(salt + Random.new().read(128)).digest()[:g.salt_len]
 	key = make_key(passwd, salt, opts['hash_preset'])
 	new_key_id = make_chksum_8(key)
-	msg("Key ID changed: %s -> %s" % (key_id,new_key_id))
+	qmsg("Key ID changed: %s -> %s" % (key_id,new_key_id))
 	key_id = new_key_id
-	enc_seed = encrypt_seed(seed, key, opts)
+	enc_seed = encrypt_seed(seed, key)
 elif not 'label' in changed:
 	msg("Data unchanged.  No file will be written")
 	sys.exit(2)

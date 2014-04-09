@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -61,15 +61,10 @@ def pubhex2addr(pubhex):
 	pubkey = int(step2 + step4[:8], 16)
 	return "1" + ("1" * extra_ones) + _numtob58(pubkey)
 
-def privnum2addr(numpriv):
-	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
-	pubkey = hexlify(pko.get_verifying_key().to_string())
-	return pubhex2addr('04'+pubkey)
-
-def verify_addr(addr):
+def verify_addr(addr,verbose=False):
 
 	if addr[0] != "1":
-		print "%s: Invalid address" % addr
+		if verbose: print "%s: Invalid address" % addr
 		return False
 
   	num = _b58tonum(addr[1:])
@@ -80,7 +75,7 @@ def verify_addr(addr):
 	step2 = sha256(step1).hexdigest()
 
 	if step2[:8] != addr_hex[40:]:
-		print "Invalid checksum in address %s" % ("1" + addr)
+		if verbose: print "Invalid checksum in address %s" % ("1" + addr)
 		return False
 
 	return True
@@ -115,8 +110,7 @@ def numtowif(numpriv):
 	key = step1 + step3[:8]
 	return _numtob58(int(key,16))
 
-
-# The following are mmgen internal (non-bitcoin) b58 functions
+# The following are MMGen internal (non-Bitcoin) b58 functions
 
 # Drop-in replacements for b64encode() and b64decode():
 # (well, not exactly: they yield numeric but not bytewise equivalence)
@@ -159,19 +153,36 @@ def b58decode_pad(s):
 	return _b58_pad(s,
 		a=b58_lens,b=bin_lens,pad='\0',f=b58decode,w="base 58 numbers")
 
+# Compressed address support:
 
-################### FUNCTIONS UNUSED BY MMGEN: ###################
+def wiftohex(wifpriv,compressed=False):
+	idx = 68 if compressed else 66
+	num = _b58tonum(wifpriv)
+	if num == False: return False
+	key = hex(num)[2:].rstrip('L')
+	if compressed and key[66:68] != '01': return False
+	round1 = sha256(unhexlify(key[:idx])).digest()
+	round2 = sha256(round1).hexdigest()
+	return key[2:66] if (key[:2] == '80' and key[idx:] == round2[:8]) else False
 
-# To check validity, recode with numtowif()
+def hextowif(hexpriv,compressed=False):
+	step1 = '80' + hexpriv + ('01' if compressed else '')
+	step2 = sha256(unhexlify(step1)).digest()
+	step3 = sha256(step2).hexdigest()
+	key = step1 + step3[:8]
+	return _numtob58(int(key,16))
+
+def privnum2addr(numpriv,compressed=False):
+	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
+	pubkey = hexlify(pko.get_verifying_key().to_string())
+	if compressed:
+		p = '03' if pubkey[-1] in "13579bdf" else '02'
+		return pubhex2addr(p+pubkey[:64])
+	else:
+		return pubhex2addr('04'+pubkey)
+
+# Used only in test suite.  To check validity, recode with numtowif()
 def wiftonum(wifpriv):
 	num = _b58tonum(wifpriv)
 	if num == False: return False
 	return (num % (1<<288)) >> 32
-
-def wiftohex(wifpriv):
-	num = _b58tonum(wifpriv)
-	if num == False: return False
-	key = hex(num)[2:].rstrip('L')
-	round1 = sha256(unhexlify(key[:66])).digest()
-	round2 = sha256(round1).hexdigest()
-	return key[2:66] if (key[:2] == '80' and key[66:] == round2[:8]) else False

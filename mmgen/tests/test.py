@@ -20,8 +20,8 @@ test.py:  Shared routines for mmgen test suite
 """
 
 import sys
-from mmgen.util import msg
 
+def msg(s): print s
 def nomsg(s): pass
 
 def test_equality(num_in,num_out,wl,quiet=False):

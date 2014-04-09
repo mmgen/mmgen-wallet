@@ -18,7 +18,7 @@
 
 import sys, getopt
 import mmgen.config as g
-from mmgen.util import msg
+from mmgen.util import msg,check_infile
 
 def usage(hd):
 	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])
@@ -117,7 +117,9 @@ def check_opts(opts,long_opts):
 
 			for ch in list(label):
 				if ch not in g.wallet_label_symbols:
-					msg("'%s': illegal character in label" % ch)
+					msg("""
+"%s": illegal character in label.  Only ASCII characters are permitted.
+""".strip() % ch)
 					sys.exit(1)
 		elif opt == 'from_brain':
 			try:

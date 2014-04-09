@@ -66,7 +66,7 @@ time-consuming process of compiling the whole boost package.
 
 #### 5. Build Bitcoind:
 
-Download Sipa's watchonly bitcoind [zip archive][05] (commit a13f1e8 [[check][]])
+Download Sipa's watchonly bitcoind [zip archive][05] (commit #a13f1e8 [[check][]])
 from GitHub and unpack it.  At the MSYS prompt, run:
 
 		$ cd /c/bitcoin-watchonly

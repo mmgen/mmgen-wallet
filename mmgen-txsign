@@ -25,7 +25,7 @@ from mmgen.Opts import *
 from mmgen.license import *
 import mmgen.config as g
 from mmgen.tx import *
-from mmgen.util import msg
+from mmgen.util import msg,qmsg
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
@@ -36,18 +36,19 @@ help_data = {
 -d, --outdir          d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase    Print passphrase to screen when typing it
 -i, --info               Display information about the transaction and exit
--I, --tx_id              Display transaction ID and exit
+-I, --tx-id              Display transaction ID and exit
 -k, --keys-from-file  k  Provide additional key data from file 'k'
 -P, --passwd-file     f  Get passphrase from file 'f'
 -q, --quiet              Suppress warnings; overwrite files without
                          prompting
+-V, --skip-key-preverify Skip optional key pre-verification step
 
 -b, --from-brain     l,p Generate keys from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
-                         hash preset 'p' (comma-separated)
+                         hash preset 'p'
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{} format
--w, --use-wallet-dat     Use the keys in the bitcoind wallet.dat file too
+-w, --use-wallet-dat     Get keys from a running bitcoind
 
 Transactions with either mmgen or non-mmgen input addresses may be signed.
 For non-mmgen inputs, the bitcoind wallet.dat is used as the key source.
@@ -60,9 +61,13 @@ prompted to enter the data.
 
 In cases of transactions with mixed mmgen and non-mmgen inputs, non-mmgen
 keys must be supplied in a separate file (WIF format, one key per line)
-using the '--keys-from-file' option.  Alternatively, one may import the
-required mmgen keys into the bitcoind wallet.dat and use the
-'--force-wallet-dat' option.
+using the '--keys-from-file' option.  Alternatively, one may get keys from
+a running bitcoind using the '--force-wallet-dat' option.  First import the
+required mmgen keys using 'bitcoind importprivkey'.
+
+For transaction outputs that are MMGen addresses, MMGen-to-Bitcoin address
+mappings are verified.  Therefore, seed material for these addresses must
+be supplied on the command line.
 
 Seed data supplied in files must have the following extensions:
    wallet:      '.{}'
@@ -72,78 +77,84 @@ Seed data supplied in files must have the following extensions:
 """.format(g.seed_ext,g.wallet_ext,g.seed_ext,g.mn_ext,g.brain_ext)
 }
 
-short_opts = "hd:eiIk:P:qb:msw"
+short_opts = "hd:eiIk:P:qVb:msw"
 long_opts  = "help","outdir=","echo_passphrase","info","tx_id",\
-			  "keys_from_file=","passwd_file=","quiet","from_brain=",\
-			  "from_mnemonic","from_seed","use_wallet_dat"
+			"keys_from_file=","passwd_file=","quiet","skip_key_preverify",\
+			"from_brain=","from_mnemonic","from_seed","use_wallet_dat"
 
 opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
-
+if "quiet" in opts: g.quiet = True
 check_opts(opts,long_opts)
 
 if not infiles: usage(help_data)
 for i in infiles: check_infile(i)
 
-# Begin execution
 c = connect_to_bitcoind()
 
 tx_file = infiles.pop(0)
 m = "" if 'tx_id' in opts else "transaction data"
 tx_data = get_lines_from_file(tx_file,m)
 
-metadata,tx_hex,sig_data,inputs_data = parse_tx_data(tx_data,tx_file)
+metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,tx_file)
 
 if 'tx_id' in opts:
 	msg(metadata[0])
 	sys.exit(0)
 
 if 'info' in opts:
-	view_tx_data(c,inputs_data,tx_hex,metadata)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata)
 	sys.exit(0)
 
-if not 'quiet' in opts: do_license_msg(immed=True)
+do_license_msg(immed=True)
 
-msg("Successfully opened transaction file '%s'" % tx_file)
+# Are inputs mmgen addresses?
+mmgen_addrs = [i for i in inputs_data if parse_mmgen_label(i['account'])[0]]
+other_addrs = [i for i in inputs_data if not parse_mmgen_label(i['account'])[0]]
+
+keys = get_lines_from_file(opts['keys_from_file'],"key data",remove_comments=True) \
+	if 'keys_from_file' in opts else []
+
+if other_addrs and not keys and not 'use_wallet_dat' in opts:
+	missing_keys_errormsg(other_addrs)
+	sys.exit(2)
+
+if other_addrs and keys and not 'skip_key_preverify' in opts:
+	a = [i['address'] for i in other_addrs]
+	preverify_keys(a, keys)
+
+seeds = {}
+check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,seeds,opts)
+
+qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
 reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
 if reply and reply in "YyVv":
 	p = True if reply in "Vv" else False
-	view_tx_data(c,inputs_data,tx_hex,metadata,pager=p)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata,pager=p)
 
-# Are inputs mmgen addresses?
-mmgen_addrs = [i for i in inputs_data if verify_mmgen_label(i['account'])]
-other_addrs = [i for i in inputs_data if not verify_mmgen_label(i['account'])]
-
-keys = get_lines_from_file(opts['keys_from_file'],"key data") \
-	if 'keys_from_file' in opts else []
+sig_data = [
+	{"txid":i['txid'],"vout":i['vout'],"scriptPubKey":i['scriptPubKey']}
+		for i in inputs_data]
 
 if mmgen_addrs:
-	if other_addrs and not keys and not 'use_wallet_dat' in opts:
-		missing_keys_errormsg(other_addrs)
-		sys.exit(2)
-
-	keys += get_keys_for_mmgen_addrs(mmgen_addrs,infiles,opts)
+	ml = [i['account'].split()[0] for i in mmgen_addrs]
+	keys += get_keys_for_mmgen_addrs(ml,infiles,seeds,opts)
 
 	if 'use_wallet_dat' in opts:
 		sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
 	else:
 		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
 elif other_addrs:
-	if 'use_wallet_dat' in opts:
-		sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
+	if keys:
+		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
 	else:
-		if keys:
-			sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
-		else:
-			missing_keys_errormsg(other_addrs)
-			sys.exit(2)
+		sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
 
 if sig_tx['complete']:
-	msg("Signing completed")
-	prompt = "Save signed transaction?"
+	prompt = "OK\nSave signed transaction?"
 	if user_confirm(prompt,default_yes=True):
 		print_signed_tx_to_file(tx_hex,sig_tx['hex'],metadata,opts)
 else:
-	msg("Some keys were missing.  Transaction could not be signed.")
+	msg("failed\nSome keys were missing.  Transaction could not be signed.")
 	sys.exit(3)

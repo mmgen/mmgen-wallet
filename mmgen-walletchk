@@ -37,17 +37,20 @@ help_data = {
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -P, --passwd-file   f  Get passphrase from file 'f'
+-q, --quiet            Suppress warnings; overwrite files without prompting
 -s, --export-seed      Export the wallet's seed to file
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
 """
 }
 
-short_opts = "hd:emP:sSv"
+short_opts = "hd:emP:qsSv"
 long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
-				"passwd_file=","export_seed","stdout","verbose"
+				"passwd_file=","quiet","export_seed","stdout","verbose"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+if 'quiet' in opts: g.quiet = True
+if 'verbose' in opts: g.verbose = True
 
 # Argument sanity checks and processing:
 check_opts(opts,long_opts)
@@ -57,12 +60,12 @@ if len(cmd_args) != 1: usage(help_data)
 check_infile(cmd_args[0])
 
 if 'export_mnemonic' in opts:
-	msg("Exporting mnemonic data to file by user request")
+	qmsg("Exporting mnemonic data to file by user request")
 if 'export_seed' in opts:
-	msg("Exporting seed data to file by user request")
+	qmsg("Exporting seed data to file by user request")
 
 seed = get_seed_from_wallet(cmd_args[0], opts)
-if seed: msg("Wallet is OK")
+if seed: qmsg("Wallet is OK")
 
 if 'export_mnemonic' in opts:
 	wl = get_default_wordlist()

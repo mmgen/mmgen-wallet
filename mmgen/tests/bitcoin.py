@@ -19,18 +19,19 @@
 bitcoin.py:  Test suite for mmgen.bitcoin module
 """
 
-from mmgen.bitcoin import *
-from mmgen.util import msg
-from test import *
+import mmgen.bitcoin as b
+from   mmgen.util import msg
+from   mmgen.tests.test import *
+from   binascii import hexlify, unhexlify
 
 import sys
 
 def b58_randenc():
 	r = get_random(24)
-	r_enc = b58encode(r)
+	r_enc = b.b58encode(r)
 	print "Data (hex):    %s" % hexlify(r)
 	print "Base 58:       %s" % r_enc
-	r_dec = b58decode(r_enc)
+	r_dec = b.b58decode(r_enc)
 	print "Decoded data:  %s" % hexlify(r_dec)
 	if r_dec != r:
 		print "ERROR!  Decoded data doesn't match original"
@@ -55,9 +56,8 @@ def keyconv_compare_randloop(loops, quiet=False):
 		else:
 			print "%s iterations completed" % i
 
-	except:
-		print "\nUser interrupt"
-
+	except KeyboardInterrupt:
+		msg("\nUser interrupt")
 
 def keyconv_compare(wif,quiet=False):
 	do_msg = nomsg if quiet else msg
@@ -69,7 +69,7 @@ def keyconv_compare(wif,quiet=False):
 		print "Error with execution of keyconv"
 		sys.exit(3)
 	kc_addr = dict([j.split() for j in p.stdout.readlines()])['Address:']
-	addr = privnum2addr(wiftonum(wif))
+	addr = b.privnum2addr(b.wiftonum(wif))
 	do_msg("Address (mmgen):   %s" % addr)
 	do_msg("Address (keyconv): %s" % kc_addr)
 	if (kc_addr != addr):
@@ -113,13 +113,13 @@ def numtowif_rand(quiet=False):
 
 def strtob58(s,quiet=False):
 	print "Input:         %s" % s
-	s_enc = b58encode(s)
+	s_enc = b.b58encode(s)
 	print "Encoded data:  %s" % s_enc
-	s_dec = b58decode(s_enc)
+	s_dec = b.b58decode(s_enc)
 	print "Decoded data:  %s" % s_dec
 	test_equality(s,s_dec,[""],quiet)
 
-def hextob58(s_in,f_enc=b58encode, f_dec=b58decode, quiet=False):
+def hextob58(s_in,f_enc=b.b58encode, f_dec=b.b58decode, quiet=False):
 	do_msg = nomsg if quiet else msg
 	do_msg("Input:         %s" % s_in)
 	s_bin = unhexlify(s_in)
@@ -129,7 +129,7 @@ def hextob58(s_in,f_enc=b58encode, f_dec=b58decode, quiet=False):
 	do_msg("Recoded data:  %s" % s_dec)
 	test_equality(s_in,s_dec,["0"],quiet)
 
-def b58tohex(s_in,f_dec=b58decode, f_enc=b58encode,quiet=False):
+def b58tohex(s_in,f_dec=b.b58decode, f_enc=b.b58encode,quiet=False):
 	print "Input:         %s" % s_in
 	s_dec = f_dec(s_in)
 	print "Decoded data:  %s" % hexlify(s_dec)
@@ -138,25 +138,25 @@ def b58tohex(s_in,f_dec=b58decode, f_enc=b58encode,quiet=False):
 	test_equality(s_in,s_enc,["1"],quiet)
 
 def hextob58_pad(s_in, quiet=False):
-	hextob58(s_in,f_enc=b58encode_pad, f_dec=b58decode_pad, quiet=quiet)
+	hextob58(s_in,f_enc=b.b58encode_pad, f_dec=b.b58decode_pad, quiet=quiet)
 
 def b58tohex_pad(s_in, quiet=False):
-	b58tohex(s_in,f_dec=b58decode_pad, f_enc=b58encode_pad, quiet=quiet)
+	b58tohex(s_in,f_dec=b.b58decode_pad, f_enc=b.b58encode_pad, quiet=quiet)
 
 def	hextob58_pad_randloop(loops, quiet=False):
 	try:
 		for i in range(1,int(loops)+1):
 			r = hexlify(get_random(32))
-			hextob58(r,f_enc=b58encode_pad, f_dec=b58decode_pad, quiet=quiet)
+			hextob58(r,f_enc=b.b58encode_pad, f_dec=b.b58decode_pad, quiet=quiet)
 			if not quiet: print
 			if not i % 100 and quiet:
 				sys.stderr.write("\riteration: %i " % i)
 
 		sys.stderr.write("\r%s iterations completed\n" % i)
-	except:
-		print "User interrupt"
+	except KeyboardInterrupt:
+		msg("\nUser interrupt")
 
-def test_wiftohex(s_in,f_dec=wiftohex,f_enc=numtowif):
+def test_wiftohex(s_in,f_dec=b.wiftohex,f_enc=b.numtowif):
 	print "Input:         %s" % s_in
 	s_dec = f_dec(s_in)
 	print "Decoded data:  %s" % s_dec
@@ -170,7 +170,31 @@ def hextosha256(s_in):
 
 def pubhextoaddr(s_in):
 	print "Entered data:   %s" % s_in
-	s_enc = pubhex2addr(s_in)
+	s_enc = b.pubhex2addr(s_in)
+	print "Encoded data:   %s" % s_enc
+
+def hextowif_comp(s_in):
+	print "Entered data:   %s" % s_in
+	s_enc = b.hextowif(s_in,compressed=True)
+	print "Encoded data:   %s" % s_enc
+	s_dec = b.wiftohex(s_enc,compressed=True)
+	print "Decoded data:   %s" % s_dec
+
+def wiftohex_comp(s_in):
+	print "Entered data:   %s" % s_in
+	s_enc = b.wiftohex(s_in,compressed=True)
+	print "Encoded data:   %s" % s_enc
+	s_dec = b.hextowif(s_enc,compressed=True)
+	print "Decoded data:   %s" % s_dec
+
+def privhextoaddr_comp(hexpriv):
+	print b.privnum2addr(int(hexpriv,16),compressed=True)
+
+def wiftoaddr_comp(s_in):
+	print "Entered data:   %s" % s_in
+	s_enc = b.wiftohex(s_in,compressed=True)
+	print "Encoded data:   %s" % s_enc
+	s_enc = b.privnum2addr(int(s_enc,16),compressed=True)
 	print "Encoded data:   %s" % s_enc
 
 tests = {
@@ -188,6 +212,10 @@ tests = {
 	"hextosha256":              ['hexnum [str]','quiet [bool=False]'],
 	"hextowiftopubkey":         ['hexnum [str]','quiet [bool=False]'],
 	"pubhextoaddr":             ['hexnum [str]','quiet [bool=False]'],
+	"hextowif_comp":            ['hexnum [str]'],
+	"wiftohex_comp":            ['wif [str]'],
+	"privhextoaddr_comp":       ['hexnum [str]'],
+	"wiftoaddr_comp":           ['wif [str]'],
 }
 
 

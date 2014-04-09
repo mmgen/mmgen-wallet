@@ -44,7 +44,7 @@ short_opts = "hd:q"
 long_opts  = "help","outdir=","quiet"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
-
+if 'quiet' in opts: g.quiet = True
 check_opts(opts,long_opts)
 
 if len(cmd_args) == 1:
@@ -71,9 +71,9 @@ except:
 	msg("Invalid signed transaction data")
 	sys.exit(3)
 
-if not 'quiet' in opts: do_license_msg()
+do_license_msg()
 
-msg("\nSigned transaction file '%s' appears valid" % infile)
+qmsg("Signed transaction file '%s' is valid" % infile)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"
@@ -86,7 +86,6 @@ c = connect_to_bitcoind()
 
 try:
 	tx = c.sendrawtransaction(tx_sig)
-#	tx = "deadbeef"
 except:
 	msg("Unable to send transaction")
 	sys.exit(3)

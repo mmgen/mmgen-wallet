@@ -20,14 +20,15 @@ walletgen.py:  Routines used for seed generation and wallet creation
 """
 
 import sys
-from mmgen.util import msg, msg_r, get_char, prompt_and_get_char
+import mmgen.config as g
+from mmgen.util import msg, msg_r, qmsg, qmsg_r, get_char, prompt_and_get_char
 from binascii import hexlify
 
 def get_random_data_from_user(opts):
 
 	ulen = opts['usr_randlen']
 
-	if 'quiet' in opts:
+	if g.quiet:
 		msg("Enter %s random symbols" % ulen)
 	else:
 		msg("""
@@ -54,7 +55,7 @@ displayed on the screen.
 		intervals.append(now - saved_time)
 		saved_time = now
 
-	if 'quiet' in opts:
+	if g.quiet:
 		msg_r("\r")
 	else:
 		msg_r("\rThank you.  That's enough." + " "*15 + "\n\n")

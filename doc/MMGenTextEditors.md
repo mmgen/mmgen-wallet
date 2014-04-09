@@ -2,7 +2,7 @@ MMGen = Multi-Mode GENerator
 ============================
 ##### a Bitcoin cold storage solution for the command line
 
-#### A word on text editors:
+### A word on text editors:
 
 The text file editors that come with Windows, "edit" and "notepad", are
 unsuitable for editing source code for many reasons, but above all because they

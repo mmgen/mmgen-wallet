@@ -45,10 +45,11 @@ help_data = {
 -p, --hash-preset       p  Use scrypt.hash() parameters from preset 'p'
                            (default: '{}')
 -P, --passwd-file       f  Get passphrase from file 'f'
--q, --quiet                Suppress warnings; overwrite files without
+-q, --quiet                Produce quieter output; overwrite files without
                            prompting
 -u, --usr-randlen       n  Get 'n' characters of randomness from the user
                            (default: {})
+-v, --verbose              Produce more verbose output
 
 -b, --from-brain       l,p Generate wallet from a user-created passphrase,
                            i.e. a "brainwallet", using seed length 'l' and
@@ -92,13 +93,14 @@ in all future invocations with that passphrase.
 	)
 }
 
-short_opts = "hd:eHl:L:p:P:qu:b:ms"
+short_opts = "hd:eHl:L:p:P:qu:vb:ms"
 long_opts  = "help","outdir=","echo_passphrase","show_hash_presets","seed_len=",\
 			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=",\
-			"from_brain=","from_mnemonic","from_seed"
+		    "verbose","from_brain=","from_mnemonic","from_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
-
+if 'quiet' in opts: g.quiet = True
+if 'verbose' in opts: g.verbose = True
 if 'show_hash_presets' in opts: show_hash_presets()
 
 check_opts(opts,long_opts)
@@ -108,15 +110,23 @@ if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
+	ext = infile.split(".")[-1]
+	ok_exts = g.seed_ext, g.mn_ext, g.brain_ext
+	for e in ok_exts:
+		if e == ext: break
+	else:
+		msg(
+"Input file must have one of the following extensions: .%s" % ", .".join(ok_exts))
+		sys.exit(1)
 elif len(cmd_args) == 0:
 	infile = ""
 else: usage(help_data)
 
 # Begin execution
 
-if not 'quiet' in opts: do_license_msg()
+do_license_msg()
 
-msg_r("Acquiring random data from your computer...")
+qmsg_r("Acquiring random data from your computer...")
 
 from time import sleep
 sleep(0.25)
@@ -129,12 +139,12 @@ except:
 	msg("FAILED\nUnable to generate random numbers. Exiting")
 	sys.exit(2)
 
-msg("OK")
+qmsg("OK")
 
 if g.debug: display_os_random_data(os_rand_data)
 
 usr_keys,key_timings = get_random_data_from_user(opts)
-msg("")
+qmsg("")
 
 if g.debug: display_user_random_data(usr_keys,key_timings)
 
@@ -143,7 +153,8 @@ usr_rand_data = sha256(usr_keys).digest() + \
 
 for i in 'from_mnemonic','from_brain','from_seed':
 	if infile or (i in opts):
-		seed = get_seed_retry(infile,opts); break
+		seed = get_seed_retry(infile,opts)
+		qmsg(""); break
 else:
 	# Truncate random data for smaller seed lengths
 	seed = os_rand_data[0] + usr_rand_data
@@ -152,9 +163,7 @@ else:
 salt = os_rand_data[1] + usr_rand_data
 salt = sha256(salt).digest()[:g.salt_len]
 
-if not 'quiet' in opts:
-	msg("""
-Now you must choose a passphrase to encrypt the seed with.  A key will be
+qmsg("""Now you must choose a passphrase to encrypt the seed with.  A key will be
 generated from your passphrase using a hash preset of '%s'.  Please note that
 no strength checking of passphrases is performed.  For an empty passphrase,
 just hit ENTER twice.
@@ -164,6 +173,6 @@ passwd = get_new_passphrase("{} wallet passphrase".format(g.proj_name), opts)
 
 key = make_key(passwd, salt, opts['hash_preset'])
 
-enc_seed = encrypt_seed(seed, key, opts)
+enc_seed = encrypt_seed(seed, key)
 
 write_wallet_to_file(seed,passwd,make_chksum_8(key),salt,enc_seed,opts)

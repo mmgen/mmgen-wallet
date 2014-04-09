@@ -23,123 +23,20 @@ import sys
 import mmgen.config as g
 from binascii import hexlify,unhexlify
 from mmgen.bitcoin import b58decode_pad
+from mmgen.term import *
 
-def msg(s):   sys.stderr.write(s + "\n")
-def msg_r(s): sys.stderr.write(s)
+def msg(s):    sys.stderr.write(s + "\n")
+def msg_r(s):  sys.stderr.write(s)
+def qmsg(s):
+	if not g.quiet: sys.stderr.write(s + "\n")
+def qmsg_r(s):
+	if not g.quiet: sys.stderr.write(s)
+def vmsg(s):
+	if g.verbose: sys.stderr.write(s + "\n")
+def vmsg_r(s):
+	if g.verbose: sys.stderr.write(s)
+
 def bail(): sys.exit(9)
-
-def kb_hold_protect_unix():
-
-	fd = sys.stdin.fileno()
-	old = termios.tcgetattr(fd)
-	tty.setcbreak(fd)
-
-	timeout = float(0.3)
-
-	try:
-		while True:
-			key = select([sys.stdin], [], [], timeout)[0]
-			if key: sys.stdin.read(1)
-			else: break
-	except:
-		print "\nUser interrupt"
-		sys.exit(1)
-	finally:
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
-
-
-def get_keypress_unix(prompt="",immed_chars=""):
-
-	msg_r(prompt)
-	timeout = float(0.3)
-
-	fd = sys.stdin.fileno()
-	old = termios.tcgetattr(fd)
-	tty.setcbreak(fd)
-
-	try:
-		while True:
-			select([sys.stdin], [], [], False)
-			ch = sys.stdin.read(1)
-			if immed_chars == "ALL" or ch in immed_chars:
-				return ch
-			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
-				return ch
-			second_key = select([sys.stdin], [], [], timeout)[0]
-			if second_key: continue
-			else: return ch
-	except:
-		print "\nUser interrupt"
-		sys.exit(1)
-	finally:
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
-
-
-def kb_hold_protect_mswin():
-
-	timeout = float(0.5)
-
-	try:
-		while True:
-			hit_time = time.time()
-			while True:
-				if msvcrt.kbhit():
-					msvcrt.getch()
-					break
-				if float(time.time() - hit_time) > timeout:
-					return
-	except:
-		msg("\nUser interrupt")
-		sys.exit(1)
-
-
-def get_keypress_mswin(prompt="",immed_chars=""):
-
-	msg_r(prompt)
-	timeout = float(0.5)
-
-	try:
-		while True:
-			if msvcrt.kbhit():
-				ch = msvcrt.getch()
-
-				if ord(ch) == 3: raise KeyboardInterrupt
-
-				if immed_chars == "ALL" or ch in immed_chars:
-					return ch
-				if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
-					return ch
-
-				hit_time = time.time()
-
-				while True:
-					if msvcrt.kbhit(): break
-					if float(time.time() - hit_time) > timeout:
-						return ch
-	except:
-		msg("\nUser interrupt")
-		sys.exit(1)
-
-
-try:
-	import tty, termios
-	from select import select
-	get_char = get_keypress_unix
-	kb_hold_protect = kb_hold_protect_unix
-except:
-	try:
-		import msvcrt, time
-		get_char = get_keypress_mswin
-		kb_hold_protect = kb_hold_protect_mswin
-	except:
-		if not sys.platform.startswith("linux") \
-				and not sys.platform.startswith("win"):
-			msg("Unsupported platform: %s" % sys.platform)
-			msg("This program currently runs only on Linux and Windows")
-		else:
-			msg("Unable to set terminal mode")
-		sys.exit(2)
-
 
 def my_raw_input(prompt,echo=True,allowed_chars=""):
 	try:
@@ -148,8 +45,8 @@ def my_raw_input(prompt,echo=True,allowed_chars=""):
 		else:
 			from getpass import getpass
 			reply = getpass(prompt)
-	except:
-		print "\nUser interrupt"
+	except KeyboardInterrupt:
+		msg("\nUser interrupt")
 		sys.exit(1)
 
 	kb_hold_protect()
@@ -202,7 +99,7 @@ cmessages = {
 	'unencrypted_secret_keys': """
 This program generates secret keys from your {} seed, outputting them in
 UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
-""".format(g.proj_name),
+""".format(g.proj_name_cap),
 	'brain_warning': """
 ############################## EXPERTS ONLY! ##############################
 
@@ -223,7 +120,7 @@ future, you must continue using these same parameters
 
 def confirm_or_exit(message, question, expect="YES"):
 
-	msg("")
+	vmsg("")
 
 	m = message.strip()
 	if m: msg(m)
@@ -353,7 +250,7 @@ def get_new_passphrase(what, opts):
 			pw2 = " ".join(_get_words_from_user(("Repeat %s: " % what),opts))
 			if g.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
 			if pw == pw2:
-				msg("%ss match" % what.capitalize())
+				vmsg("%ss match" % what.capitalize())
 				break
 			else:
 				msg("%ss do not match" % what.capitalize())
@@ -362,7 +259,7 @@ def get_new_passphrase(what, opts):
 					g.passwd_max_tries)
 			sys.exit(2)
 
-	if pw == "": msg("WARNING: Empty passphrase")
+	if pw == "": qmsg("WARNING: Empty passphrase")
 	return pw
 
 
@@ -384,17 +281,17 @@ def _get_seed_from_brain_passphrase(words,opts):
 	if g.debug: print "Sanitized brain passphrase: %s" % bp
 	seed_len,hash_preset = _get_from_brain_opt_params(opts)
 	if g.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
-	msg_r("Hashing brainwallet data.  Please wait...")
+	vmsg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = _scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
-	msg("Done")
+	vmsg("Done")
 	return seed
 
 
-def encrypt_seed(seed, key, opts):
+def encrypt_seed(seed, key):
 	"""
-	Encrypt a seed for a {} deterministic wallet
-	""".format(g.proj_name)
+	Encrypt a seed for an {} deterministic wallet
+	""".format(g.proj_name_cap)
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
@@ -403,14 +300,14 @@ def encrypt_seed(seed, key, opts):
 	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
 	enc_seed = c.encrypt(seed)
 
-	msg_r("Performing a test decryption of the seed...")
+	vmsg_r("Performing a test decryption of the seed...")
 
 	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
 	dec_seed = c.decrypt(enc_seed)
 
-	if dec_seed == seed: msg("done")
+	if dec_seed == seed: vmsg("done")
 	else:
-		msg("FAILED.\nDecrypted seed doesn't match original seed")
+		msg("ERROR.\nDecrypted seed doesn't match original seed")
 		sys.exit(2)
 
 	return enc_seed
@@ -576,11 +473,11 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 
 	chk = make_chksum_6(" ".join(lines))
 
-	confirm = False if 'quiet' in opts else True
+	confirm = False if g.quiet else True
 	write_to_file(outfile, "\n".join((chk,)+lines)+"\n", confirm)
 
 	msg("Wallet saved to file '%s'" % outfile)
-	if 'verbose' in opts:
+	if g.verbose:
 		_display_control_data(label,metadata,hash_preset,salt,enc_seed)
 
 
@@ -592,10 +489,10 @@ def write_walletdat_dump_to_file(wallet_id,data,num_keys,ext,what,opts):
 	msg("wallet.dat %s saved to file '%s'" % (what,outfile))
 
 
-def compare_checksums(chksum1, desc1, chksum2, desc2):
+def _compare_checksums(chksum1, desc1, chksum2, desc2):
 
 	if chksum1.lower() == chksum2.lower():
-		msg("OK (%s)" % chksum1.upper())
+		vmsg("OK (%s)" % chksum1.upper())
 		return True
 	else:
 		if g.debug:
@@ -608,6 +505,8 @@ def _is_hex(s):
 	except: return False
 	else: return True
 
+def match_ext(addr,ext):
+	return addr.split(".")[-1] == ext
 
 def _check_mmseed_format(words):
 
@@ -629,10 +528,7 @@ def _check_mmseed_format(words):
 	return valid
 
 
-def check_wallet_format(infile, lines, opts):
-
-	def vmsg(s):
-		if 'verbose' in opts: msg(s)
+def _check_wallet_format(infile, lines):
 
 	what = "wallet file '%s'" % infile
 	valid = False
@@ -660,17 +556,19 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
 
-def get_data_from_wallet(infile,opts,silent=False):
+def get_data_from_wallet(infile,silent=False):
 
+	# Don't make this a qmsg: User will be prompted for passphrase and must see
+	# the filename.
 	if not silent:
-		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
+		msg("Getting {} wallet data from file '{}'".format(g.proj_name_cap,infile))
 
 	f = open_file_or_exit(infile, 'r')
 
 	lines = [i.strip() for i in f.readlines()]
 	f.close()
 
-	check_wallet_format(infile, lines, opts)
+	_check_wallet_format(infile, lines)
 
 	label = lines[1]
 
@@ -711,7 +609,7 @@ def _get_words_from_user(prompt, opts):
 
 
 def _get_words_from_file(infile,what):
-	msg("Getting %s from file '%s'" % (what,infile))
+	qmsg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile, 'r')
 	# split() also strips
 	words = f.read().split()
@@ -721,7 +619,8 @@ def _get_words_from_file(infile,what):
 
 
 def get_lines_from_file(infile,what="",remove_comments=False):
-	if what != "": msg("Getting %s from file '%s'" % (what,infile))
+	if what != "":
+		qmsg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
 	lines = f.read().splitlines(); f.close()
 	if remove_comments:
@@ -738,7 +637,7 @@ def get_lines_from_file(infile,what="",remove_comments=False):
 
 
 def get_data_from_file(infile,what="data"):
-	msg("Getting %s from file '%s'" % (what,infile))
+	qmsg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
 	data = f.read()
 	f.close()
@@ -755,18 +654,18 @@ def _get_seed_from_seed_data(words):
 	seed_b58 = "".join(words[1:])
 
 	chk = make_chksum_6(seed_b58)
-	msg_r("Validating %s checksum..." % g.seed_ext)
+	vmsg_r("Validating %s checksum..." % g.seed_ext)
 
-	if compare_checksums(chk, "from seed", stored_chk, "from input"):
+	if _compare_checksums(chk, "from seed", stored_chk, "from input"):
 		seed = b58decode_pad(seed_b58)
 		if seed == False:
 			msg("Invalid b58 number: %s" % val)
 			return False
 
-		msg("%s data produces seed ID: %s" % (g.seed_ext,make_chksum_8(seed)))
+		vmsg("%s data produces seed ID: %s" % (g.seed_ext,make_chksum_8(seed)))
 		return seed
 	else:
-		msg("Invalid checksum for {} seed".format(g.proj_name))
+		msg("Invalid checksum for {} seed".format(g.proj_name_cap))
 		return False
 
 
@@ -791,7 +690,8 @@ def get_mmgen_passphrase(prompt,opts):
 def get_bitcoind_passphrase(prompt,opts):
 	if 'passwd_file' in opts:
 		mark_passwd_file_as_used(opts)
-		return get_data_from_file(opts['passwd_file'],"passphrase").strip("\r\n")
+		return get_data_from_file(opts['passwd_file'],
+				"passphrase").strip("\r\n")
 	else:
 		return my_raw_input(prompt,
 					echo=True if 'echo_passphrase' in opts else False)
@@ -800,14 +700,14 @@ def get_bitcoind_passphrase(prompt,opts):
 def get_seed_from_wallet(
 		infile,
 		opts,
-		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
+		prompt="Enter {} wallet passphrase: ".format(g.proj_name_cap),
 		silent=False
 		):
 
-	wdata = get_data_from_wallet(infile,opts,silent=silent)
+	wdata = get_data_from_wallet(infile,silent=silent)
 	label,metadata,hash_preset,salt,enc_seed = wdata
 
-	if 'verbose' in opts: _display_control_data(*wdata)
+	if g.verbose: _display_control_data(*wdata)
 
 	passwd = get_mmgen_passphrase(prompt,opts)
 
@@ -818,21 +718,21 @@ def get_seed_from_wallet(
 
 def make_key(passwd, salt, hash_preset):
 
-	msg_r("Hashing passphrase.  Please wait...")
+	vmsg_r("Hashing passphrase.  Please wait...")
 	key = _scrypt_hash_passphrase(passwd, salt, hash_preset)
-	msg("done")
+	vmsg("done")
 	return key
 
 
 def decrypt_seed(enc_seed, key, seed_id, key_id):
 
-	msg_r("Checking key...")
+	vmsg_r("Checking key...")
 	chk = make_chksum_8(key)
-	if not compare_checksums(chk, "of key", key_id, "in header"):
+	if not _compare_checksums(chk, "of key", key_id, "in header"):
 		msg("Incorrect passphrase")
 		return False
 
-	msg_r("Decrypting seed with key...")
+	vmsg_r("Decrypting seed with key...")
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
@@ -841,13 +741,13 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	dec_seed = c.decrypt(enc_seed)
 
 	chk = make_chksum_8(dec_seed)
-	if compare_checksums(chk,"of decrypted seed",seed_id,"in header"):
-		msg("Passphrase is OK")
+	if _compare_checksums(chk,"of decrypted seed",seed_id,"in header"):
+		qmsg("Passphrase is OK")
 	else:
 		if not g.debug:
 			msg_r("Checking key ID...")
 			chk = make_chksum_8(key)
-			if compare_checksums(chk, "of key", key_id, "in header"):
+			if _compare_checksums(chk, "of key", key_id, "in header"):
 				msg("Key ID is correct but decryption of seed failed")
 			else:
 				msg("Incorrect passphrase")
@@ -894,10 +794,10 @@ def get_seed(infile,opts,silent=False):
 		if 'from_brain' not in opts:
 			msg("'--from-brain' parameters must be specified for brainwallet file")
 			sys.exit(2)
-		if 'quiet' not in opts:
+		if not g.quiet:
 			confirm_or_exit(
 				cmessages['brain_warning'].format(
-					g.proj_name.capitalize(), *_get_from_brain_opt_params(opts)),
+					g.proj_name_cap, *_get_from_brain_opt_params(opts)),
 				"continue")
 		prompt = "Enter brainwallet passphrase: "
 		words = _get_words(infile,"brainwallet data",prompt,opts)
@@ -954,10 +854,10 @@ def do_pager(text):
 		else:
 			try:
 				p.communicate(text+end+"\n")
-			except:
+			except KeyboardInterrupt:
 				# Has no effect.  Why?
 				if pager != "less":
-					msg("\n(Interrupted by user)\n")
+					msg("\n(User interrupt)\n")
 			finally:
 				msg_r("\r")
 				break

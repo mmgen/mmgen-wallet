@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.6.9',
+		version      = '0.7.0',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -19,6 +19,7 @@ setup(
 			'mmgen.mnemonic',
 			'mmgen.mn_tirosh',
 			'mmgen.Opts',
+			'mmgen.term',
 			'mmgen.tx',
 			'mmgen.util',
 			'mmgen.walletgen',

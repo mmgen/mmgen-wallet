@@ -24,6 +24,7 @@ from hashlib import sha256, sha512
 from binascii import hexlify, unhexlify
 
 from mmgen.bitcoin import numtowif
+from mmgen.util import msg,qmsg,qmsg_r
 import mmgen.config as g
 
 def test_for_keyconv():
@@ -47,27 +48,12 @@ faster address generation.
 
 
 def generate_addrs(seed, addrnums, opts):
-	"""
-	generate_addresses(start, end, seed, opts)  => None
-
-	Generate a Bitcoin address or addresses end based on a seed, optionally
-	outputting secret keys
-
-	The 'keyconv' utility will be used for address generation if installed.
-	Otherwise an internal function is used
-
-	Supported options:
-		print_secret, no_addresses, no_keyconv, gen_what
-
-	Addresses are returned in a list of dictionaries with the following keys:
-		num, sec, wif, addr
-	"""
 
 	if not 'no_addresses' in opts:
 		if 'no_keyconv' in opts or test_for_keyconv() == False:
-			sys.stderr.write("Using (slow) internal ECDSA library for address generation\n")
+			msg("Using (slow) internal ECDSA library for address generation")
 			from mmgen.bitcoin import privnum2addr
-			keyconv = ""
+			keyconv = False
 		else:
 			from subprocess import Popen, PIPE
 			keyconv = "keyconv"
@@ -75,12 +61,13 @@ def generate_addrs(seed, addrnums, opts):
 	a,t_addrs,i,out = sorted(addrnums),len(addrnums),0,[]
 
 	while a:
-		seed = sha512(seed).digest(); i += 1   # round /i/
+		seed = sha512(seed).digest()
+		i += 1 # round /i/
 		if i < a[0]: continue
 
 		a.pop(0)
 
-		sys.stderr.write("\rGenerating %s %s (%s of %s)" %
+		qmsg_r("\rGenerating %s %s (%s of %s)" %
 			(opts['gen_what'], i, t_addrs-len(a), t_addrs))
 
 		# Secret key is double sha256 of seed hash round /i/
@@ -110,7 +97,7 @@ def generate_addrs(seed, addrnums, opts):
 		import re
 		w = re.sub('e*s$','',w)
 
-	sys.stderr.write("\rGenerated %s %s%s\n"%(t_addrs, w, " "*15))
+	qmsg("\rGenerated %s %s%s"%(t_addrs, w, " "*15))
 
 	return out
 
@@ -153,10 +140,9 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # Everything following a hash symbol '#' is a comment and ignored by {}.
 # A text label of {} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
-# The label may contain ASCII letters, numerals, and the symbols
-# '{}' and '{}'.
-""".format(g.proj_name.capitalize(),g.max_addr_label_len,
-		"', '".join(g.addr_label_punc[0:-1]), g.addr_label_punc[-1]).strip()
+# The label may contain printable ASCII symbols.
+""".strip().format(g.proj_name_cap,g.max_addr_label_len)
+
 	data = []
 	if not 'stdout' in opts: data.append(header + "\n")
 	data.append("%s {" % seed_chksum.upper())
@@ -210,7 +196,7 @@ def write_addr_data_to_file(seed, data, addr_list, opts):
 	else:                              ext = "akeys"
 
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")
-	from mmgen.util import write_to_file, make_chksum_8, msg
+	from mmgen.util import write_to_file, make_chksum_8
 	outfile = "{}[{}].{}".format(
 			make_chksum_8(seed),
 			fmt_addr_list(addr_list),

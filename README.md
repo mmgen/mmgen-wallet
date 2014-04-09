@@ -13,8 +13,8 @@ addresses can be tracked and spent as well, creating an easy migration path from
 other wallets.
 
 To track address balances, MMGen relies on a bitcoin daemon modified by
-Bitcoin's core developer team to support watch-only addresses.  This feature
-is soon to be included in the mainline Satoshi build.  In the meantime,
+Bitcoin core developers to support watch-only addresses.  This feature
+will one day be included in the mainline Satoshi build.  In the meantime,
 instructions are provided below for compiling the modified bitcoind.  Under
 Linux, this is a trivial task for even a casual user.  Unfortunately, the same
 can't be said for Windows, but the thoroughly tested, step-by-step Windows build

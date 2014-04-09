@@ -58,7 +58,7 @@ the version should be 1.48 or greater):
 		libboost-test-dev
 		libboost-thread-dev
 
-Download the bitcoin-watchonly [zip archive][00] (commit a13f1e8 [[check][]])
+Download the bitcoin-watchonly [zip archive][00] (commit #a13f1e8 [[check][]])
 from GitHub, configure, and build:
 
 		$ unzip watchonly.zip

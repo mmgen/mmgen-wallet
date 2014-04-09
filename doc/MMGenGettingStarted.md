@@ -154,7 +154,7 @@ sending it to the addresses labeled "Storage 1", "Storage 2" and "Storage 3"
 
 To refresh your memory, here are the three addresses in question:
 
-		$ cat my_addrs
+		$ cat my.addrs
 		# My first MMGen addresses
 		89ABCDEF {
 		  1    16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations
@@ -175,11 +175,7 @@ the change amount (3.399 BTC in this case) automatically.
 Alternatively, and more conveniently, you can list your three addresses in MMGen
 format:
 
-		$ mmgen-txcreate 89ABCDEF:2,3.3 89ABCDEF:3,3.3 89ABCDEF:4 my_addrs
-
-Note that an MMGen address file containing the requested output addresses must
-be provided on the command line.  Any extra addresses in the file will be
-ignored.
+		$ mmgen-txcreate 89ABCDEF:2,3.3 89ABCDEF:3,3.3 89ABCDEF:4
 
 Now hit ENTER, choose the transaction's input from the list (10 BTC, address
 1F9495H8EJL..., txid 04f97185...,2), and confirm.  If all goes well,
