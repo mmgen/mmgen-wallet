@@ -67,9 +67,9 @@ def verify_addr(addr,verbose=False):
 		if verbose: print "%s: Invalid address" % addr
 		return False
 
-  	num = _b58tonum(addr[1:])
+	num = _b58tonum(addr[1:])
 	if num == False: return False
-  	addr_hex = hex(num)[2:].rstrip("L").zfill(48)
+	addr_hex = hex(num)[2:].rstrip("L").zfill(48)
 
 	step1 = sha256(unhexlify('00'+addr_hex[:40])).digest()
 	step2 = sha256(step1).hexdigest()

@@ -24,11 +24,11 @@ mmgen-addrgen: Generate a list or range of addresses from a mmgen
 
 import sys
 
-from mmgen.Opts   import *
 import mmgen.config as g
+from mmgen.Opts import *
 from mmgen.license import *
-from mmgen.util  import *
-from mmgen.addr   import *
+from mmgen.util import *
+from mmgen.addr import *
 
 invoked_as = sys.argv[0].split("-")[-1]
 gen_what = "addresses" if invoked_as == "addrgen" else "keys"

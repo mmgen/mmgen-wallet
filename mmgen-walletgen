@@ -96,7 +96,7 @@ in all future invocations with that passphrase.
 short_opts = "hd:eHl:L:p:P:qu:vb:ms"
 long_opts  = "help","outdir=","echo_passphrase","show_hash_presets","seed_len=",\
 			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=",\
-		    "verbose","from_brain=","from_mnemonic","from_seed"
+			"verbose","from_brain=","from_mnemonic","from_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True

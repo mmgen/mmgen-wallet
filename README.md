@@ -58,17 +58,22 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.
 
 ### Download/Install
 
-> #### [Install on Microsoft Windows](doc/MMGenInstallMSWin.md)
+> #### [Install on Microsoft Windows][1]
 
-> #### [Install on Debian/Ubuntu Linux](doc/MMGenInstallLinux.md)
+> #### [Install on Debian/Ubuntu Linux][2]
 
 
 ### Using MMGen
 
-> #### See [Getting Started with MMGen](doc/MMGenGettingStarted.md)
+> #### See [Getting Started with MMGen][3]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-[PGP Public Key](doc/MMGenPubKey.md)
+[PGP Public Key][4]
 
 Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
+
+[1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows
+[2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Debian-or-Ubuntu-Linux
+[3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
+[4]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key

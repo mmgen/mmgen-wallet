@@ -88,7 +88,7 @@ help_data = {
 
 short_opts = "hd:ejkaK:P:S"
 long_opts  = "help","outdir=","echo_passphrase","json","keys","addrs",\
-			  "keysforaddrs=","passwd_file=","stdout"
+			"keysforaddrs=","passwd_file=","stdout"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 check_opts(opts,long_opts)
@@ -1487,30 +1487,6 @@ def update_wallet(db, type, data):
 		print("data dictionary: %r"%data)
 		traceback.print_exc()
 
-# def rewrite_wallet(db_env, destFileName, pre_put_callback=None):
-# 	db = open_wallet(db_env)
-#
-# 	db_out = DB(db_env)
-# 	try:
-# 		r = db_out.open(destFileName, "main", DB_BTREE, DB_CREATE)
-# 	except DBError:
-# 		r = True
-#
-# 	if r is not None:
-# 		logging.error("Couldn't open %s."%destFileName)
-# 		sys.exit(1)
-#
-# 	def item_callback(type, d):
-# 		if (pre_put_callback is None or pre_put_callback(type, d)):
-# 			db_out.put(d["__key__"], d["__value__"])
-#
-# 	parse_wallet(db, item_callback)
-# 	db_out.close()
-# 	db.close()
-#
-# end of bitcointools wallet.dat handling code
-
-# wallet.dat reader / writer
 
 def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transactions, transaction_filter):
 

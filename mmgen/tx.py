@@ -181,7 +181,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 	for n,i in enumerate(out):
 		addr = "=" if i.skip == "addr" and "grouped" in sort_info else i.address
 		tx = " " * 63 + "=" \
-			  if i.skip == "txid" and "grouped" in sort_info else str(i.txid)
+			if i.skip == "txid" and "grouped" in sort_info else str(i.txid)
 
 		s = pfs % (str(n+1)+")", tx+","+str(i.vout),addr,i.mmid,i.amt,i.days,i.label)
 		pout.append(s.rstrip())

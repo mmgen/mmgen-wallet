@@ -62,7 +62,7 @@ class BitcoinConnection(object):
 		"""
 		"""
 		try:
-# 			return self.proxy.badmethod(address,label) # DEBUG
+#			return self.proxy.badmethod(address,label) # DEBUG
 			return self.proxy.importaddress(address,label)
 		except JSONRPCException as e:
 			if e.error['message'] == "Method not found":
@@ -745,7 +745,7 @@ ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-onl
 		Arguments:
 
 		- *dont_raise* -- instead of raising
-		  `~mmgen.rpc.exceptions.WalletPassphraseIncorrect` return False.
+			`~mmgen.rpc.exceptions.WalletPassphraseIncorrect` return False.
 		"""
 		try:
 			self.proxy.walletpassphrasechange(oldpassphrase, newpassphrase)

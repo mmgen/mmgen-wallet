@@ -50,7 +50,7 @@ NOTE: The key ID will change if either the passphrase or hash preset
 
 short_opts = "hd:HkL:p:P:qv"
 long_opts  = "help","outdir=","show_hash_presets","keep_old_passphrase",\
-			  "label=","hash_preset=","passwd_file=","quiet","verbose"
+			"label=","hash_preset=","passwd_file=","quiet","verbose"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
