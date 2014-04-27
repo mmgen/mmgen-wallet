@@ -69,11 +69,12 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-[PGP Public Key][4]
-
+[**Forum**][4] |
+[PGP Public Key][5] |
 Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 
 [1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows
 [2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Debian-or-Ubuntu-Linux
 [3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
-[4]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
+[4]: https://bitcointalk.org/index.php?topic=567069.0
+[5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
