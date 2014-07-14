@@ -293,8 +293,7 @@ Display options: [g]roup, show [m]mgen addr, r[e]draw screen
 			elif reply == 'd': unspent.sort(key=s_addr); sort = "address"
 			elif reply == 'A': unspent.sort(key=s_age);  sort = "age"
 			elif reply == 'M':
-				unspent.sort(s_mmgen)
-				sort = "mmgen"
+				unspent.sort(key=s_mmgen); sort = "mmgen"
 				show_mmaddr = True
 			elif reply == 'r':
 				unspent.reverse()
