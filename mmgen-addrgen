@@ -66,6 +66,9 @@ help_data = {
 -b, --from-brain     l,p Generate {W} from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p' (comma-separated)
+-g, --from-incognito     Generate {W} from an incognito-format wallet
+-G, --hidden-incog-data  f,o,l  Generate {W} from incognito data in file
+                                'f' at offset 'o', with seed length of 'l'
 -m, --from-mnemonic      Generate {W} from an electrum-like mnemonic
 -s, --from-seed          Generate {W} from a seed in .{S} format
 
@@ -107,12 +110,14 @@ in all future invocations with that passphrase
 	)
 }
 
-short_opts = ["h","A","d:","e","H","K","l:","p:","P:","q","S",
-				"v","x","b:","m","s"]
+short_opts = ["h","A","d:","e",
+			"H","K","l:","p:",
+			"P:","q","S","v","x","b:",
+			"g","G:","m","s"]
 long_opts = ["help","no_addresses","outdir=","echo_passphrase",
 			"show_hash_presets","no_keyconv","seed_len=","hash_preset=",
 			"passwd_file=","quiet","stdout","verbose","b16","from_brain=",
-			"from_mnemonic","from_seed"]
+			"from_incognito","hidden_incog_data=","from_mnemonic","from_seed"]
 
 if invoked_as == "addrgen":
 	for i in "A","x":              short_opts.remove(i)
@@ -123,6 +128,7 @@ opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 if 'show_hash_presets' in opts: show_hash_presets()
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
+if 'hidden_incog_data' in opts: opts['from_incognito'] = True
 
 opts['gen_what'] = gen_what
 
@@ -131,9 +137,10 @@ check_opts(opts,long_opts)
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
 if len(cmd_args) == 1 and (
-			'from_mnemonic' in opts or
-			'from_brain' in opts or
-			'from_seed' in opts
+			'from_mnemonic' in opts
+			or 'from_brain' in opts
+			or 'from_seed' in opts
+			or 'from_incognito' in opts
 		):
 	infile,addr_list_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
@@ -160,6 +167,7 @@ else:
 
 seed          = get_seed_retry(infile,opts)
 seed_id       = make_chksum_8(seed)
+
 addr_data     = generate_addrs(seed, addr_list, opts)
 addr_data_str = format_addr_data(addr_data, seed_id, opts)
 

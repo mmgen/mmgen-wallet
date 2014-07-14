@@ -32,8 +32,9 @@ wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
 mn_ext        = "mmwords"
 brain_ext     = "mmbrain"
+incog_ext     = "mmincog"
 
-seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext
+seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
 
 addrfile_ext = "addrs"
 keyfile_ext  = "keys"
@@ -53,13 +54,15 @@ http_timeout = 30
 keyconv_exec = "keyconv"
 
 from os import getenv
-debug = True if getenv("MMGEN_DEBUG") else False
+debug      = True if getenv("MMGEN_DEBUG") else False
+no_license = True if getenv("MMGEN_NOLICENSE") else False
 
 mins_per_block = 8.5
 passwd_max_tries = 5
 max_randlen,min_randlen = 80,5
 usr_randlen = 20
 salt_len    = 16
+aesctr_iv_len  = 16
 
 hash_preset = '3'
 hash_presets = {
@@ -72,6 +75,7 @@ hash_presets = {
 	'4': [15, 8, 12],
 	'5': [16, 8, 16],
 	'6': [17, 8, 20],
+	'7': [18, 8, 24],
 }
 
 mmgen_idx_max_digits = 7

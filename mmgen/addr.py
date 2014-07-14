@@ -63,6 +63,9 @@ def generate_addrs(seed, addrnums, opts):
 	while a:
 		seed = sha512(seed).digest()
 		i += 1 # round /i/
+
+		if g.debug: print "Seed round %s: %s" % (i, hexlify(seed))
+
 		if i < a[0]: continue
 
 		a.pop(0)
@@ -73,6 +76,9 @@ def generate_addrs(seed, addrnums, opts):
 		# Secret key is double sha256 of seed hash round /i/
 		sec = sha256(sha256(seed).digest()).hexdigest()
 		wif = numtowif(int(sec,16))
+
+		if g.debug:
+			print "Privkey round %s:\n  hex: %s\n  wif: %s" % (i, sec, wif)
 
 		el = { 'num': i }
 
@@ -140,7 +146,7 @@ def format_addr_data(addrlist, seed_chksum, opts):
 # Everything following a hash symbol '#' is a comment and ignored by {}.
 # A text label of {} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
-# The label may contain printable ASCII symbols.
+# The label may contain any printable ASCII symbol.
 """.strip().format(g.proj_name_cap,g.max_addr_label_len)
 
 	data = []

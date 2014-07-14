@@ -35,22 +35,27 @@ help_data = {
 -h, --help             Print this help message
 -d, --outdir        d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--m, --export-mnemonic  Export the wallet's mnemonic to file
 -P, --passwd-file   f  Get passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
--s, --export-seed      Export the wallet's seed to file
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
+-g, --export-incognito Export wallet to incognito format
+-G, --hide-incog-data  f,o  Hide incognito data in existing file 'f'
+                            at offset 'o' (comma-separated)
+-m, --export-mnemonic  Export the wallet's mnemonic to file
+-s, --export-seed      Export the wallet's seed to file
 """
 }
 
-short_opts = "hd:emP:qsSv"
-long_opts  = "help","outdir=","echo_passphrase","export_mnemonic",\
-				"passwd_file=","quiet","export_seed","stdout","verbose"
+short_opts = "hd:eP:qSvgG:ms"
+long_opts  = "help","outdir=","echo_passphrase","passwd_file=","quiet",\
+			"stdout","verbose",\
+			"export_incognito","hide_incog_data=","export_mnemonic","export_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
+if 'hide_incog_data' in opts: opts['export_incognito'] = True
 
 # Argument sanity checks and processing:
 check_opts(opts,long_opts)
@@ -61,20 +66,69 @@ check_infile(cmd_args[0])
 
 if 'export_mnemonic' in opts:
 	qmsg("Exporting mnemonic data to file by user request")
-if 'export_seed' in opts:
+elif 'export_seed' in opts:
 	qmsg("Exporting seed data to file by user request")
+elif 'export_incognito' in opts:
+	qmsg("Exporting wallet to incognito format by user request")
+
+	d = get_data_from_wallet(cmd_args[0],silent=True)
+	seed_id,key_id,preset,salt,enc_seed = \
+			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
+
+	passwd = get_mmgen_passphrase("Enter mmgen passphrase: ",opts)
+	key = make_key(passwd, salt, preset, "main key")
+	# We don't need the seed; just do this to verify password.
+	if decrypt_seed(enc_seed, key, seed_id, key_id) == False:
+		sys.exit(2)
+
+	from Crypto import Random
+	iv = Random.new().read(g.aesctr_iv_len)
+	iv_id = make_chksum_8(iv)
+	qmsg("IV ID: %s" % iv_id)
+
+	from binascii import hexlify
+	from hashlib import sha256
+	# IV is used BOTH to initialize counter and to salt password!
+	key = make_key(passwd, iv, preset, "wrapper key")
+	incog_enc = encrypt_seed(salt + enc_seed, key, iv=int(hexlify(iv),16))
+
+	if "hide_incog_data" in opts:
+		fname,offset = opts['hide_incog_data'].split(",") # Already sanity-checked
+		offset = int(offset)
+
+		check_data_fits_file_at_offset(fname,offset,len(iv + incog_enc),"write")
+
+		if not g.quiet: confirm_or_exit("","alter file '%s'" % fname)
+		f = os.open(fname,os.O_RDWR)
+		os.lseek(f, offset, os.SEEK_SET)
+		os.write(f, iv + incog_enc)
+		os.close(f)
+		qmsg("Data written to file '%s' at offset %s" % (fname,offset),
+				"Data written to file")
+	else:
+		fn = "%s-%s-%s[%s,%s].%s" % (seed_id, key_id, iv_id,
+			len(enc_seed)*8, preset, g.incog_ext)
+		export_to_file(fn, iv + incog_enc, "incognito wallet data", opts)
+
+	sys.exit()
 
 seed = get_seed_from_wallet(cmd_args[0], opts)
 if seed: qmsg("Wallet is OK")
+else:
+	msg("Error opening wallet")
+	sys.exit(2)
 
 if 'export_mnemonic' in opts:
 	wl = get_default_wordlist()
-
 	from mmgen.mnemonic import get_mnemonic_from_seed
 	p = True if g.debug else False
 	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, print_info=p)
+	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.mn_ext)
+	export_to_file(fn, " ".join(mn)+"\n", "mnemonic data", opts)
 
-	write_mnemonic(mn, seed, opts)
-
-if 'export_seed' in opts:
-	write_seed(seed, opts)
+elif 'export_seed' in opts:
+	from mmgen.bitcoin import b58encode_pad
+	data = col4(b58encode_pad(seed))
+	chk = make_chksum_6(b58encode_pad(seed))
+	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.seed_ext)
+	export_to_file(fn, "%s %s\n" % (chk,data), "seed data", opts)

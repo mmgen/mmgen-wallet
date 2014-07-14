@@ -18,7 +18,6 @@
 
 import sys, getopt
 import mmgen.config as g
-from mmgen.util import msg,check_infile
 
 def usage(hd):
 	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])
@@ -70,6 +69,15 @@ def process_opts(argv,help_data,short_opts,long_opts):
 	return opts,args
 
 
+def show_opts_and_cmd_args(opts,cmd_args):
+	print "Processed options:     %s" % repr(opts)
+	print "Cmd args:              %s" % repr(cmd_args)
+
+
+# Everything below here is MMGen-specific:
+
+from mmgen.util import msg,check_infile
+
 def check_opts(opts,long_opts):
 
 	# These must be set to the default values in mmgen.config:
@@ -91,6 +99,7 @@ def check_opts(opts,long_opts):
 		if opt == 'outdir':
 			what = "output directory"
 			import re, os, stat
+			# TODO Non-portable:
 			d = re.sub(r'/*$','', val)
 			opts[opt] = d
 
@@ -121,12 +130,61 @@ def check_opts(opts,long_opts):
 "%s": illegal character in label.  Only ASCII characters are permitted.
 """.strip() % ch)
 					sys.exit(1)
+		elif opt == 'hide_incog_data' or opt == 'hidden_incog_data':
+			try:
+				if opt == 'hide_incog_data':
+					outfile,offset = val.split(",")
+				else:
+					outfile,offset,seed_len = val.split(",")
+			except:
+				msg("'%s': invalid %s" % (val,what))
+				sys.exit(1)
+
+			try:
+				o = int(offset)
+			except:
+				msg("'%s': invalid 'o' %s (not an integer)" % (offset,what))
+				sys.exit(1)
+
+			if o < 0:
+				msg("'%s': invalid 'o' %s (less than zero)" % (offset,what))
+				sys.exit(1)
+
+			if opt == 'hidden_incog_data':
+				try:
+					sl = int(seed_len)
+				except:
+					msg("'%s': invalid 'l' %s (not an integer)" % (sl,what))
+					sys.exit(1)
+
+				if sl not in g.seed_lens:
+					msg("'%s': invalid 'l' %s (valid choices: %s)" %
+						(sl,what," ".join(str(i) for i in g.seed_lens)))
+					sys.exit(1)
+
+			import os, stat
+			try: mode = os.stat(outfile).st_mode
+			except:
+				msg("Unable to stat requested %s '%s'" % (what,outfile))
+				sys.exit(1)
+
+			if not (stat.S_ISREG(mode) or stat.S_ISBLK(mode)):
+				msg("Requested %s '%s' is not a file or block device" %
+						(what,outfile))
+				sys.exit(1)
+
+			ac,m = (os.W_OK,"writ") \
+				if "hide_incog_data" in opts else (os.R_OK,"read")
+			if not os.access(outfile, ac):
+				msg("Requested %s '%s' is un%sable by you" % (what,outfile,m))
+				sys.exit(1)
+
 		elif opt == 'from_brain':
 			try:
 				l,p = val.split(",")
 			except:
 				msg("'%s': invalid %s" % (val,what))
-				sys.exit(1)
+				sys.exit(2)
 
 			try:
 				int(l)
@@ -160,11 +218,6 @@ def check_opts(opts,long_opts):
 				sys.exit(2)
 		else:
 			if g.debug: print "check_opts(): No test for opt '%s'" % opt
-
-
-def show_opts_and_cmd_args(opts,cmd_args):
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
 
 
 def set_if_unset_and_typeconvert(opts,opt):

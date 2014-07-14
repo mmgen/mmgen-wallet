@@ -46,9 +46,10 @@ help_data = {
 -b, --from-brain     l,p Generate keys from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p'
+-w, --use-wallet-dat     Get keys from a running bitcoind
+-g, --from-incognito     Generate keys from an incognito-format wallet
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{} format
--w, --use-wallet-dat     Get keys from a running bitcoind
 
 Transactions with either mmgen or non-mmgen input addresses may be signed.
 For non-mmgen inputs, the bitcoind wallet.dat is used as the key source.
@@ -77,10 +78,11 @@ Seed data supplied in files must have the following extensions:
 """.format(g.seed_ext,g.wallet_ext,g.seed_ext,g.mn_ext,g.brain_ext)
 }
 
-short_opts = "hd:eiIk:P:qVb:msw"
+short_opts = "hd:eiIk:P:qVb:wgms"
 long_opts  = "help","outdir=","echo_passphrase","info","tx_id",\
 			"keys_from_file=","passwd_file=","quiet","skip_key_preverify",\
-			"from_brain=","from_mnemonic","from_seed","use_wallet_dat"
+			"from_brain=","use_wallet_dat",\
+			"from_incognito","from_mnemonic","from_seed"
 
 opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
 if "quiet" in opts: g.quiet = True

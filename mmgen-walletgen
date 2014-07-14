@@ -54,6 +54,7 @@ help_data = {
 -b, --from-brain       l,p Generate wallet from a user-created passphrase,
                            i.e. a "brainwallet", using seed length 'l' and
                            hash preset 'p' (comma-separated)
+-g, --from-incognito       Generate wallet from an incognito-format wallet
 -m, --from-mnemonic        Generate wallet from an Electrum-like mnemonic
 -s, --from-seed            Generate wallet from a seed in .{S} format
 
@@ -93,10 +94,10 @@ in all future invocations with that passphrase.
 	)
 }
 
-short_opts = "hd:eHl:L:p:P:qu:vb:ms"
+short_opts = "hd:eHl:L:p:P:qu:vb:gms"
 long_opts  = "help","outdir=","echo_passphrase","show_hash_presets","seed_len=",\
-			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=",\
-			"verbose","from_brain=","from_mnemonic","from_seed"
+			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=","verbose",\
+			"from_brain=","from_incognito","from_mnemonic","from_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
@@ -111,7 +112,7 @@ if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
 	ext = infile.split(".")[-1]
-	ok_exts = g.seed_ext, g.mn_ext, g.brain_ext
+	ok_exts = g.seedfile_exts
 	for e in ok_exts:
 		if e == ext: break
 	else:
@@ -151,10 +152,13 @@ if g.debug: display_user_random_data(usr_keys,key_timings)
 usr_rand_data = sha256(usr_keys).digest() + \
 				sha256("".join(key_timings)).digest()
 
-for i in 'from_mnemonic','from_brain','from_seed':
+for i in 'from_mnemonic','from_brain','from_seed','from_incognito':
 	if infile or (i in opts):
 		seed = get_seed_retry(infile,opts)
-		qmsg(""); break
+		if "from_incognito" in opts or get_extension(infile) == g.incog_ext:
+			qmsg(cmessages['incognito'] % make_chksum_8(seed))
+		else: qmsg("")
+		break
 else:
 	# Truncate random data for smaller seed lengths
 	seed = os_rand_data[0] + usr_rand_data

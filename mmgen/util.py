@@ -27,16 +27,22 @@ from mmgen.term import *
 
 def msg(s):    sys.stderr.write(s + "\n")
 def msg_r(s):  sys.stderr.write(s)
-def qmsg(s):
-	if not g.quiet: sys.stderr.write(s + "\n")
-def qmsg_r(s):
-	if not g.quiet: sys.stderr.write(s)
+def qmsg(s,alt=""):
+	if g.quiet:
+		if alt: sys.stderr.write(alt + "\n")
+	else: sys.stderr.write(s + "\n")
+def qmsg_r(s,alt=""):
+	if g.quiet:
+		if alt: sys.stderr.write(alt)
+	else: sys.stderr.write(s)
 def vmsg(s):
 	if g.verbose: sys.stderr.write(s + "\n")
 def vmsg_r(s):
 	if g.verbose: sys.stderr.write(s)
 
 def bail(): sys.exit(9)
+
+def get_extension(f): return f.split(".")[-1]
 
 def my_raw_input(prompt,echo=True,allowed_chars=""):
 	try:
@@ -96,6 +102,25 @@ def show_hash_presets():
 
 cmessages = {
 	'null': "",
+	'incognito_iv_id': """
+   If you know your IV ID, check it against the value above.  If it's
+   incorrect, then your incognito data is invalid.
+""",
+	'incognito_iv_id_hidden': """
+   If you know your IV ID, check it against the value above.  If it's
+   incorrect, then your incognito data is invalid or you've supplied
+   an incorrect offset.
+""",
+	'incognito_key_id': """
+   Check that the generated seed ID is correct.  If it's not, then your
+   password or hash preset is incorrect or incognito data is corrupted.
+""",
+	'incognito_key_id_hidden': """
+   Check that the generated seed ID is correct.  If it's not, then your
+   password or hash preset is incorrect or incognito data is corrupted.
+   If the key ID is correct but the seed ID is not, then you might have
+   chosen an incorrect seed length.
+""",
 	'unencrypted_secret_keys': """
 This program generates secret keys from your {} seed, outputting them in
 UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
@@ -136,7 +161,7 @@ def confirm_or_exit(message, question, expect="YES"):
 		msg("Exiting at user request")
 		sys.exit(2)
 
-	msg("")
+	vmsg("")
 
 
 def user_confirm(prompt,default_yes=False,verbose=False):
@@ -265,6 +290,9 @@ def get_new_passphrase(what, opts):
 
 def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
+	# Buflen arg is for brainwallets only, which use this function to generate
+	# the seed directly.
+
 	N,r,p = _get_hash_params(hash_preset)
 
 	import scrypt
@@ -288,7 +316,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 	return seed
 
 
-def encrypt_seed(seed, key):
+def encrypt_seed(seed, key, iv=1):
 	"""
 	Encrypt a seed for an {} deterministic wallet
 	""".format(g.proj_name_cap)
@@ -297,12 +325,14 @@ def encrypt_seed(seed, key):
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
-	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
+	c = AES.new(key, AES.MODE_CTR,
+			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	enc_seed = c.encrypt(seed)
 
 	vmsg_r("Performing a test decryption of the seed...")
 
-	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
+	c = AES.new(key, AES.MODE_CTR,
+			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	dec_seed = c.decrypt(enc_seed)
 
 	if dec_seed == seed: vmsg("done")
@@ -366,60 +396,44 @@ def write_to_file(outfile,data,confirm=False):
 	f.close
 
 
-def write_seed(seed, opts):
-
-	outfile = "%s.%s" % (make_chksum_8(seed).upper(),g.seed_ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-
-	from mmgen.bitcoin import b58encode_pad
-	data = col4(b58encode_pad(seed))
-	chk = make_chksum_6(b58encode_pad(seed))
-
-	o = "%s %s\n" % (chk,data)
+def export_to_file(outfile, data, label, opts):
 
 	if 'stdout' in opts:
-		write_to_stdout(o,"seed data",confirm=True)
+		write_to_stdout(data, label, confirm=True)
 	elif not sys.stdout.isatty():
-		write_to_stdout(o,"seed data",confirm=False)
+		write_to_stdout(data, label, confirm=False)
 	else:
-		write_to_file(outfile,o)
-		msg("%s data saved to file '%s'" % ("Seed",outfile))
-
-
-def write_mnemonic(mn, seed, opts):
-
-	outfile = "%s.%s" % (make_chksum_8(seed).upper(),g.mn_ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-
-	o = " ".join(mn) + "\n"
-
-	if 'stdout' in opts:
-		write_to_stdout(o,"mnemonic data",confirm=True)
-	elif not sys.stdout.isatty():
-		write_to_stdout(o,"mnemonic data",confirm=False)
-	else:
-		write_to_file(outfile,o)
-		msg("%s data saved to file '%s'" % ("Mnemonic",outfile))
+		if 'outdir' in opts:
+			outfile = "%s/%s" % (opts['outdir'], outfile)
+		write_to_file(outfile, data, confirm=False if g.quiet else True)
+		msg("%s saved to file '%s'" % (label.capitalize(), outfile))
 
 
 def _display_control_data(label,metadata,hash_preset,salt,enc_seed):
 	msg("WALLET DATA")
-	fs = "  {:25} {}"
+	fs = "  {:18} {}"
 	pw_empty = "yes" if metadata[3] == "E" else "no"
 	from mmgen.bitcoin import b58encode_pad
 	for i in (
 		("Label:",               label),
 		("Seed ID:",             metadata[0]),
 		("Key  ID:",             metadata[1]),
-		("Seed length:",         metadata[2]),
-		("Scrypt hash params:",  "Preset '%s' (%s)" % (hash_preset,
-			" ".join([str(i) for i in _get_hash_params(hash_preset)]))),
-		("Passphrase is empty:", pw_empty),
+		("Seed length:",         "%s bits (%s bytes)" %
+				(metadata[2],int(metadata[2])/8)),
+		("Scrypt params:",  "Preset '%s' (%s)" % (hash_preset,
+				" ".join([str(i) for i in _get_hash_params(hash_preset)]))),
+		("Passphrase empty?", pw_empty.capitalize()),
 		("Timestamp:",           "%s UTC" % metadata[4]),
-		("Salt:",                b58encode_pad(salt)),
-		("Encrypted seed:",      b58encode_pad(enc_seed))
+	): msg(fs.format(*i))
+
+	fs = "  {:6} {}"
+	for i in (
+		("Salt:",    ""),
+		("  b58:",      b58encode_pad(salt)),
+		("  hex:",      hexlify(salt)),
+		("Encrypted seed:", ""),
+		("  b58:",      b58encode_pad(enc_seed)),
+		("  hex:",      hexlify(enc_seed))
 	): msg(fs.format(*i))
 
 
@@ -496,8 +510,9 @@ def _compare_checksums(chksum1, desc1, chksum2, desc2):
 		return True
 	else:
 		if g.debug:
-			msg("ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
-				% (desc1,chksum1,desc2,chksum2))
+			print \
+	"ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
+			% (desc1,chksum1,desc2,chksum2)
 		return False
 
 def _is_hex(s):
@@ -553,7 +568,7 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
 	elif g.debug:
-		msg("%s checksum passed: %s" % (desc.capitalize(),chk))
+		print "%s checksum passed: %s" % (desc.capitalize(),chk)
 
 
 def get_data_from_wallet(infile,silent=False):
@@ -716,45 +731,143 @@ def get_seed_from_wallet(
 	return decrypt_seed(enc_seed, key, metadata[0], metadata[1])
 
 
-def make_key(passwd, salt, hash_preset):
+def check_data_fits_file_at_offset(fname,offset,dlen,action):
+	# TODO: Check for Windows
+	import os, stat
+	if stat.S_ISBLK(os.stat(fname).st_mode):
+		fd = os.open(fname, os.O_RDONLY)
+		fsize = os.lseek(fd, 0, os.SEEK_END)
+		os.close(fd)
+	else:
+		fsize = os.stat(fname).st_size
 
-	vmsg_r("Hashing passphrase.  Please wait...")
+	if fsize < offset + dlen:
+		msg(
+"Destination file has length %s, too short to %s %s bytes of data at offset %s"
+			% (fsize,action,dlen,offset))
+		sys.exit(1)
+
+
+def get_hidden_incog_data(opts):
+		# Already sanity-checked:
+		fname,offset,seed_len = opts['hidden_incog_data'].split(",")
+		qmsg("Getting hidden incog data from file '%s'" % fname)
+
+		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8)
+
+		fsize = check_data_fits_file_at_offset(fname,int(offset),dlen,"read")
+
+		f = os.open(fname,os.O_RDONLY)
+		os.lseek(f, int(offset), os.SEEK_SET)
+		data = os.read(f, dlen)
+		os.close(f)
+		qmsg("Data read from file '%s' at offset %s" % (fname,offset),
+				"Data read from file")
+		return data
+
+def get_seed_from_incog_wallet(
+		infile,
+		opts,
+		prompt="Enter %s wallet passphrase: " % g.proj_name_cap,
+		silent=False
+		):
+
+	what = "incognito wallet data"
+
+	if "hidden_incog_data" in opts:
+		d = get_hidden_incog_data(opts)
+	else:
+		d = get_data_from_file(infile,what)
+		# File could be of invalid length, so check:
+		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len for i in g.seed_lens]
+		if len(d) not in valid_dlens:
+			qmsg("Invalid incognito file size: %s.  Valid sizes (in bytes): %s" %
+					(len(d), " ".join([str(i) for i in valid_dlens]))
+				)
+			return False
+
+	iv, enc_incog_data = d[0:g.aesctr_iv_len], d[g.aesctr_iv_len:]
+
+	qmsg("IV ID: %s.  Check this value if possible." % make_chksum_8(iv))
+	vmsg(cmessages['incognito_iv_id_hidden' if "hidden_incog_data" in opts
+			else 'incognito_iv_id'])
+
+	passwd = get_mmgen_passphrase(prompt,opts)
+
+	msg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
+	while True:
+		p = "Enter hash preset for %s wallet (default='%s'): "
+		hp = my_raw_input(p % (g.proj_name_cap, g.hash_preset))
+		if not hp:
+			hp = g.hash_preset; break
+		elif hp in g.hash_presets:
+			break
+		msg("%s: Invalid hash preset" % hp)
+
+	from hashlib import sha256
+	# IV is used BOTH to initialize counter and to salt password!
+	key = make_key(passwd, iv, hp, "wrapper key")
+	d = decrypt_seed(enc_incog_data, key, "", "", iv=int(hexlify(iv),16))
+	if d == False: sys.exit(2)
+
+	salt,enc_seed = d[0:g.salt_len], d[g.salt_len:]
+
+	key = make_key(passwd, salt, hp, "main key")
+	vmsg("Key ID: %s" % make_chksum_8(key))
+
+	seed = decrypt_seed(enc_seed, key, "", "")
+	qmsg("Seed ID: %s.  Check that this value is correct." % make_chksum_8(seed))
+	vmsg(cmessages['incognito_key_id_hidden' if "hidden_incog_data" in opts
+			else 'incognito_key_id'])
+
+	return seed
+
+
+def make_key(passwd, salt, hash_preset, what="key"):
+
+	vmsg_r("Generating %s from passphrase.  Please wait..." % what)
 	key = _scrypt_hash_passphrase(passwd, salt, hash_preset)
 	vmsg("done")
+	if g.debug: print "Key: %s" % hexlify(key)
 	return key
 
 
-def decrypt_seed(enc_seed, key, seed_id, key_id):
+def decrypt_seed(enc_seed, key, seed_id, key_id, iv=1):
 
-	vmsg_r("Checking key...")
-	chk = make_chksum_8(key)
-	if not _compare_checksums(chk, "of key", key_id, "in header"):
-		msg("Incorrect passphrase")
-		return False
+	vmsg("Checking key...")
+	chk1 = make_chksum_8(key)
+	if key_id:
+		if not _compare_checksums(chk1, "of key", key_id, "in header"):
+			msg("Incorrect passphrase")
+			return False
 
-	vmsg_r("Decrypting seed with key...")
+	vmsg("Decrypting seed with key...")
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
-	c = AES.new(key, AES.MODE_CTR,counter=Counter.new(128))
+	c = AES.new(key, AES.MODE_CTR,
+			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	dec_seed = c.decrypt(enc_seed)
 
-	chk = make_chksum_8(dec_seed)
-	if _compare_checksums(chk,"of decrypted seed",seed_id,"in header"):
-		qmsg("Passphrase is OK")
-	else:
-		if not g.debug:
-			msg_r("Checking key ID...")
-			chk = make_chksum_8(key)
-			if _compare_checksums(chk, "of key", key_id, "in header"):
-				msg("Key ID is correct but decryption of seed failed")
-			else:
-				msg("Incorrect passphrase")
+	chk2 = make_chksum_8(dec_seed)
+	if seed_id:
+		if _compare_checksums(chk2,"of decrypted seed",seed_id,"in header"):
+			qmsg("Passphrase is OK")
+		else:
+			if not g.debug:
+				msg_r("Checking key ID...")
+				chk1 = make_chksum_8(key)
+				if _compare_checksums(chk1, "of key", key_id, "in header"):
+					msg("Key ID is correct but decryption of seed failed")
+				else:
+					msg("Incorrect passphrase")
 
-		return False
+			return False
+#	else:
+#		qmsg("Generated IDs (Seed/Key): %s/%s" % (chk2,chk1))
 
-	if g.debug: msg("key: %s" % hexlify(key))
+	if g.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
 
 	return dec_seed
 
@@ -774,9 +887,11 @@ def get_seed(infile,opts,silent=False):
 	elif ext == g.brain_ext:        source = "brainwallet"
 	elif ext == g.seed_ext:         source = "seed"
 	elif ext == g.wallet_ext:       source = "wallet"
-	elif 'from_mnemonic' in opts: source = "mnemonic"
-	elif 'from_brain'    in opts: source = "brainwallet"
-	elif 'from_seed'     in opts: source = "seed"
+	elif ext == g.incog_ext:        source = "incognito wallet"
+	elif 'from_mnemonic'  in opts: source = "mnemonic"
+	elif 'from_brain'     in opts: source = "brainwallet"
+	elif 'from_seed'      in opts: source = "seed"
+	elif 'from_incognito' in opts: source = "incognito wallet"
 	else:
 		if infile: msg(
 			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
@@ -808,10 +923,16 @@ def get_seed(infile,opts,silent=False):
 		seed = _get_seed_from_seed_data(words)
 	elif source == "wallet":
 		seed = get_seed_from_wallet(infile, opts, silent=silent)
+	elif source == "incognito wallet":
+		seed = get_seed_from_incog_wallet(infile, opts, silent=silent)
 
-	if infile and not seed and (source == "seed" or source == "mnemonic"):
-		msg("Invalid %s file: %s" % (source,infile))
+
+	if infile and not seed and (
+		source == "seed" or source == "mnemonic" or source == "incognito wallet"):
+		msg("Invalid %s file '%s'" % (source,infile))
 		sys.exit(2)
+
+	if g.debug: print "Seed: %s" % hexlify(seed)
 
 	return seed
 
@@ -862,6 +983,7 @@ def do_pager(text):
 				msg_r("\r")
 				break
 	else: print text+end
+
 
 if __name__ == "__main__":
 	print "util.py"
