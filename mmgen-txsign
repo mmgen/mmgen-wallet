@@ -47,7 +47,10 @@ help_data = {
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p'
 -w, --use-wallet-dat     Get keys from a running bitcoind
--g, --from-incognito     Generate keys from an incognito-format wallet
+-g, --from-incog         Generate keys from an incognito wallet
+-X, --from-incog-hex     Generate keys from an incognito hexadecimal wallet
+-G, --from-incog-hidden  f,o,l  Generate keys from incognito data in file
+                                 'f' at offset 'o', with seed length of 'l'
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{} format
 
@@ -78,14 +81,19 @@ Seed data supplied in files must have the following extensions:
 """.format(g.seed_ext,g.wallet_ext,g.seed_ext,g.mn_ext,g.brain_ext)
 }
 
-short_opts = "hd:eiIk:P:qVb:wgms"
+short_opts = "hd:eiIk:P:qVb:wgXG:ms"
 long_opts  = "help","outdir=","echo_passphrase","info","tx_id",\
 			"keys_from_file=","passwd_file=","quiet","skip_key_preverify",\
 			"from_brain=","use_wallet_dat",\
-			"from_incognito","from_mnemonic","from_seed"
+			"from_incog","from_incog_hex","from_incog_hidden=",\
+			"from_mnemonic","from_seed"
 
 opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
+
 if "quiet" in opts: g.quiet = True
+if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
+	opts['from_incog'] = True
+
 check_opts(opts,long_opts)
 
 if not infiles: usage(help_data)

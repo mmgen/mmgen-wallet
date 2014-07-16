@@ -33,6 +33,7 @@ seed_ext      = "mmseed"
 mn_ext        = "mmwords"
 brain_ext     = "mmbrain"
 incog_ext     = "mmincog"
+incog_hex_ext = "mmincox"
 
 seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
 

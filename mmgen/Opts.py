@@ -130,9 +130,9 @@ def check_opts(opts,long_opts):
 "%s": illegal character in label.  Only ASCII characters are permitted.
 """.strip() % ch)
 					sys.exit(1)
-		elif opt == 'hide_incog_data' or opt == 'hidden_incog_data':
+		elif opt == 'export_incog_hidden' or opt == 'from_incog_hidden':
 			try:
-				if opt == 'hide_incog_data':
+				if opt == 'export_incog_hidden':
 					outfile,offset = val.split(",")
 				else:
 					outfile,offset,seed_len = val.split(",")
@@ -150,7 +150,7 @@ def check_opts(opts,long_opts):
 				msg("'%s': invalid 'o' %s (less than zero)" % (offset,what))
 				sys.exit(1)
 
-			if opt == 'hidden_incog_data':
+			if opt == 'from_incog_hidden':
 				try:
 					sl = int(seed_len)
 				except:
@@ -174,7 +174,7 @@ def check_opts(opts,long_opts):
 				sys.exit(1)
 
 			ac,m = (os.W_OK,"writ") \
-				if "hide_incog_data" in opts else (os.R_OK,"read")
+				if "export_incog_hidden" in opts else (os.R_OK,"read")
 			if not os.access(outfile, ac):
 				msg("Requested %s '%s' is un%sable by you" % (what,outfile,m))
 				sys.exit(1)

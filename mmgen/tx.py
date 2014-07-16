@@ -677,7 +677,7 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,seeds,opts,gen_pairs=False):
 				infile = infiles.pop(0)
 				seed = get_seed_retry(infile,opts)
 			elif "from_brain" in opts or "from_mnemonic" in opts \
-				or "from_seed" in opts or "from_incognito" in opts:
+				or "from_seed" in opts or "from_incog" in opts:
 				msg("Need data for seed ID %s" % seed_ids[0])
 				seed = get_seed_retry("",opts)
 			else:
@@ -706,7 +706,7 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,seeds,opts,gen_pairs=False):
 				else:      msg(" for ID %s" % seed_id)
 			else:
 				msg("Seed source produced an invalid seed ID (%s)" % seed_id)
-				if "from_incognito" in opts or infile.split(".")[-1] == g.incog_ext:
+				if "from_incog" in opts or infile.split(".")[-1] == g.incog_ext:
 					msg(
 """Incorrect hash preset, password or incognito wallet data
 

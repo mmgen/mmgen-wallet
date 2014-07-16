@@ -102,20 +102,20 @@ def show_hash_presets():
 
 cmessages = {
 	'null': "",
-	'incognito_iv_id': """
+	'incog_iv_id': """
    If you know your IV ID, check it against the value above.  If it's
    incorrect, then your incognito data is invalid.
 """,
-	'incognito_iv_id_hidden': """
+	'incog_iv_id_hidden': """
    If you know your IV ID, check it against the value above.  If it's
    incorrect, then your incognito data is invalid or you've supplied
    an incorrect offset.
 """,
-	'incognito_key_id': """
+	'incog_key_id': """
    Check that the generated seed ID is correct.  If it's not, then your
    password or hash preset is incorrect or incognito data is corrupted.
 """,
-	'incognito_key_id_hidden': """
+	'incog_key_id_hidden': """
    Check that the generated seed ID is correct.  If it's not, then your
    password or hash preset is incorrect or incognito data is corrupted.
    If the key ID is correct but the seed ID is not, then you might have
@@ -750,7 +750,7 @@ def check_data_fits_file_at_offset(fname,offset,dlen,action):
 
 def get_hidden_incog_data(opts):
 		# Already sanity-checked:
-		fname,offset,seed_len = opts['hidden_incog_data'].split(",")
+		fname,offset,seed_len = opts['from_incog_hidden'].split(",")
 		qmsg("Getting hidden incog data from file '%s'" % fname)
 
 		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8)
@@ -769,15 +769,22 @@ def get_seed_from_incog_wallet(
 		infile,
 		opts,
 		prompt="Enter %s wallet passphrase: " % g.proj_name_cap,
-		silent=False
-		):
+		silent=False,
+		hex_input=False
+	):
 
 	what = "incognito wallet data"
 
-	if "hidden_incog_data" in opts:
+	if "from_incog_hidden" in opts:
 		d = get_hidden_incog_data(opts)
 	else:
 		d = get_data_from_file(infile,what)
+		if hex_input:
+			try:
+				d = unhexlify("".join(d.split()).strip())
+			except:
+				msg("Data in file '%s' is not in hexadecimal format" % infile)
+				sys.exit(2)
 		# File could be of invalid length, so check:
 		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len for i in g.seed_lens]
 		if len(d) not in valid_dlens:
@@ -789,8 +796,8 @@ def get_seed_from_incog_wallet(
 	iv, enc_incog_data = d[0:g.aesctr_iv_len], d[g.aesctr_iv_len:]
 
 	qmsg("IV ID: %s.  Check this value if possible." % make_chksum_8(iv))
-	vmsg(cmessages['incognito_iv_id_hidden' if "hidden_incog_data" in opts
-			else 'incognito_iv_id'])
+	vmsg(cmessages['incog_iv_id_hidden' if "from_incog_hidden" in opts
+			else 'incog_iv_id'])
 
 	passwd = get_mmgen_passphrase(prompt,opts)
 
@@ -817,8 +824,8 @@ def get_seed_from_incog_wallet(
 
 	seed = decrypt_seed(enc_seed, key, "", "")
 	qmsg("Seed ID: %s.  Check that this value is correct." % make_chksum_8(seed))
-	vmsg(cmessages['incognito_key_id_hidden' if "hidden_incog_data" in opts
-			else 'incognito_key_id'])
+	vmsg(cmessages['incog_key_id_hidden' if "from_incog_hidden" in opts
+			else 'incog_key_id'])
 
 	return seed
 
@@ -888,10 +895,11 @@ def get_seed(infile,opts,silent=False):
 	elif ext == g.seed_ext:         source = "seed"
 	elif ext == g.wallet_ext:       source = "wallet"
 	elif ext == g.incog_ext:        source = "incognito wallet"
+	elif ext == g.incog_hex_ext:    source = "incognito wallet"
 	elif 'from_mnemonic'  in opts: source = "mnemonic"
 	elif 'from_brain'     in opts: source = "brainwallet"
 	elif 'from_seed'      in opts: source = "seed"
-	elif 'from_incognito' in opts: source = "incognito wallet"
+	elif 'from_incog'     in opts: source = "incognito wallet"
 	else:
 		if infile: msg(
 			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
@@ -924,7 +932,8 @@ def get_seed(infile,opts,silent=False):
 	elif source == "wallet":
 		seed = get_seed_from_wallet(infile, opts, silent=silent)
 	elif source == "incognito wallet":
-		seed = get_seed_from_incog_wallet(infile, opts, silent=silent)
+		h = True if ext == g.incog_hex_ext or 'from_incog_hex' in opts else False
+		seed = get_seed_from_incog_wallet(infile, opts, silent=silent, hex_input=h)
 
 
 	if infile and not seed and (

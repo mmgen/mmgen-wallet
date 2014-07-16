@@ -39,23 +39,26 @@ help_data = {
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
--g, --export-incognito Export wallet to incognito format
--G, --hide-incog-data  f,o  Hide incognito data in existing file 'f'
-                            at offset 'o' (comma-separated)
+-g, --export-incog     Export wallet to incognito format
+-X, --export-incog-hex Export wallet to incognito hexadecimal format
+-G, --export-incog-hidden  f,o  Hide incognito data in existing file 'f'
+                           at offset 'o' (comma-separated)
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -s, --export-seed      Export the wallet's seed to file
 """
 }
 
-short_opts = "hd:eP:qSvgG:ms"
+short_opts = "hd:eP:qSvgXG:ms"
 long_opts  = "help","outdir=","echo_passphrase","passwd_file=","quiet",\
 			"stdout","verbose",\
-			"export_incognito","hide_incog_data=","export_mnemonic","export_seed"
+			"export_incog","export_incog_hex","export_incog_hidden=",\
+			"export_mnemonic","export_seed"
 
 opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
-if 'hide_incog_data' in opts: opts['export_incognito'] = True
+if 'export_incog_hidden' in opts or 'export_incog_hex' in opts:
+	opts['export_incog'] = True
 
 # Argument sanity checks and processing:
 check_opts(opts,long_opts)
@@ -68,7 +71,7 @@ if 'export_mnemonic' in opts:
 	qmsg("Exporting mnemonic data to file by user request")
 elif 'export_seed' in opts:
 	qmsg("Exporting seed data to file by user request")
-elif 'export_incognito' in opts:
+elif 'export_incog' in opts:
 	qmsg("Exporting wallet to incognito format by user request")
 
 	d = get_data_from_wallet(cmd_args[0],silent=True)
@@ -92,8 +95,8 @@ elif 'export_incognito' in opts:
 	key = make_key(passwd, iv, preset, "wrapper key")
 	incog_enc = encrypt_seed(salt + enc_seed, key, iv=int(hexlify(iv),16))
 
-	if "hide_incog_data" in opts:
-		fname,offset = opts['hide_incog_data'].split(",") # Already sanity-checked
+	if "export_incog_hidden" in opts:
+		fname,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
 		offset = int(offset)
 
 		check_data_fits_file_at_offset(fname,offset,len(iv + incog_enc),"write")
@@ -106,9 +109,15 @@ elif 'export_incognito' in opts:
 		qmsg("Data written to file '%s' at offset %s" % (fname,offset),
 				"Data written to file")
 	else:
-		fn = "%s-%s-%s[%s,%s].%s" % (seed_id, key_id, iv_id,
-			len(enc_seed)*8, preset, g.incog_ext)
-		export_to_file(fn, iv + incog_enc, "incognito wallet data", opts)
+		fn = "%s-%s-%s[%s,%s].%s" % (
+			seed_id, key_id, iv_id, len(enc_seed)*8, preset,
+			g.incog_hex_ext if "export_incog_hex" in opts else g.incog_ext
+		)
+		data = iv + incog_enc
+		if "export_incog_hex" in opts:
+			data = "".join([hexlify(data[i*2:i*2+2]) + (" " if (i+1)%8 else "\n")
+				for i in range(len(data)/2)])
+		export_to_file(fn, data, "incognito wallet data", opts)
 
 	sys.exit()
 

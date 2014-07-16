@@ -90,8 +90,8 @@ if not 'info' in opts:
 		if "," in a:
 			a1,a2 = a.split(",")
 			if is_mmgen_addr(a1) or is_btc_addr(a1):
-				if is_mmgen_addr(a1):
-					btaddr = mm2btc_addr_proc(c,a1,acct_data,addr_data,b2m_map)
+				btaddr = mm2btc_addr_proc(c,a1,acct_data,addr_data,b2m_map) \
+					if is_mmgen_addr(a1) else a1
 				if is_btc_amt(a2):
 					tx_out[btaddr] = check_btc_amt(a2)
 				else:

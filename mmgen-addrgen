@@ -66,9 +66,10 @@ help_data = {
 -b, --from-brain     l,p Generate {W} from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p' (comma-separated)
--g, --from-incognito     Generate {W} from an incognito-format wallet
--G, --hidden-incog-data  f,o,l  Generate {W} from incognito data in file
-                                'f' at offset 'o', with seed length of 'l'
+-g, --from-incog         Generate {W} from an incognito wallet
+-X, --from-incog-hex     Generate {W} from an incognito hexadecimal wallet
+-G, --from-incog-hidden  f,o,l  Generate {W} from incognito data in file
+                         'f' at offset 'o', with seed length of 'l'
 -m, --from-mnemonic      Generate {W} from an electrum-like mnemonic
 -s, --from-seed          Generate {W} from a seed in .{S} format
 
@@ -113,11 +114,12 @@ in all future invocations with that passphrase
 short_opts = ["h","A","d:","e",
 			"H","K","l:","p:",
 			"P:","q","S","v","x","b:",
-			"g","G:","m","s"]
+			"g","X","G:","m","s"]
 long_opts = ["help","no_addresses","outdir=","echo_passphrase",
 			"show_hash_presets","no_keyconv","seed_len=","hash_preset=",
 			"passwd_file=","quiet","stdout","verbose","b16","from_brain=",
-			"from_incognito","hidden_incog_data=","from_mnemonic","from_seed"]
+			"from_incog","from_incog_hex","from_incog_hidden=",
+			"from_mnemonic","from_seed"]
 
 if invoked_as == "addrgen":
 	for i in "A","x":              short_opts.remove(i)
@@ -126,9 +128,10 @@ if invoked_as == "addrgen":
 opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 
 if 'show_hash_presets' in opts: show_hash_presets()
-if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
-if 'hidden_incog_data' in opts: opts['from_incognito'] = True
+if 'quiet' in opts: g.quiet = True
+if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
+	opts['from_incog'] = True
 
 opts['gen_what'] = gen_what
 
@@ -140,7 +143,7 @@ if len(cmd_args) == 1 and (
 			'from_mnemonic' in opts
 			or 'from_brain' in opts
 			or 'from_seed' in opts
-			or 'from_incognito' in opts
+			or 'from_incog_hidden' in opts
 		):
 	infile,addr_list_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
