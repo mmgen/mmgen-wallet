@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.7.2',
+		version      = '0.7.3',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
