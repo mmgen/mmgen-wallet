@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -79,36 +79,36 @@ if not 'info' in opts:
 			check_infile(a)
 			addr_data.append(parse_addrs_file(a))
 
-	def mm2btc_addr_proc(c,mmadr,acct_data,addr_data,b2m_map):
-		btaddr,label = mmgen_addr_to_walletd(c,mmadr,acct_data)
-		if not btaddr:
-			btaddr,label = mmgen_addr_to_addr_data(mmadr,addr_data)
-		b2m_map[btaddr] = mmadr,label
-		return btaddr
+	def mm_addr2btc_addr(c,mmadr,acct_data,addr_data,b2m_map):
+		btcaddr,label = mmgen_addr_to_walletd(c,mmadr,acct_data)
+		if not btcaddr:
+			btcaddr,label = mmgen_addr_to_addr_data(mmadr,addr_data)
+		b2m_map[btcaddr] = mmadr,label
+		return btcaddr
 
 	for a in [i for i in cmd_args if not match_ext(i,g.addrfile_ext)]:
 		if "," in a:
 			a1,a2 = a.split(",")
-			if is_mmgen_addr(a1) or is_btc_addr(a1):
-				btaddr = mm2btc_addr_proc(c,a1,acct_data,addr_data,b2m_map) \
-					if is_mmgen_addr(a1) else a1
-				if is_btc_amt(a2):
-					tx_out[btaddr] = check_btc_amt(a2)
-				else:
-					msg("%s: invalid amount in argument '%s'" % (a2,a))
-					sys.exit(2)
+			if is_btc_addr(a1):
+				btcaddr = a1
+			elif is_mmgen_addr(a1):
+				btcaddr = mm_addr2btc_addr(c,a1,acct_data,addr_data,b2m_map)
 			else:
 				msg("%s: unrecognized subargument in argument '%s'" % (a1,a))
 				sys.exit(2)
+
+			if is_btc_amt(a2):
+				tx_out[btcaddr] = check_btc_amt(a2)
+			else:
+				msg("%s: invalid amount in argument '%s'" % (a2,a))
+				sys.exit(2)
 		elif is_mmgen_addr(a) or is_btc_addr(a):
 			if change_addr:
-				msg("More than one change address specified: %s, %s" %
+				msg("ERROR: More than one change address specified: %s, %s" %
 						(change_addr, a))
 				sys.exit(2)
-			if is_mmgen_addr(a):
-				change_addr = mm2btc_addr_proc(c,a,acct_data,addr_data,b2m_map)
-			else:
-				change_addr = a
+			change_addr = a if is_btc_addr(a) else \
+				mm_addr2btc_addr(c,a,acct_data,addr_data,b2m_map)
 			tx_out[change_addr] = 0
 		else:
 			msg("%s: unrecognized argument" % a)
@@ -157,7 +157,9 @@ msg("Total amount to spend: %s%s" % (
 while True:
 	sel_nums = select_outputs(unspent,
 			"Enter a range or space-separated list of outputs to spend: ")
-	msg("Selected outputs: %s" % " ".join(str(i) for i in sel_nums))
+	msg("Selected output%s: %s" %
+		(("" if len(sel_nums) == 1 else "s"), " ".join(str(i) for i in sel_nums))
+	)
 	sel_unspent = [unspent[i-1] for i in sel_nums]
 
 	mmaddrs = set([parse_mmgen_label(i.account)[0] for i in sel_unspent])

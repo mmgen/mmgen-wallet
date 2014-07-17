@@ -19,11 +19,12 @@
 mnemonic.py:  Test suite for mmgen.mnemonic module
 """
 
-from mmgen.mnemonic import *
 from test import *
 
 import sys
 from binascii import hexlify
+
+from mmgen.mnemonic import *
 from mmgen.mn_electrum  import electrum_words as el
 from mmgen.mn_tirosh    import tirosh_words   as tl
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -992,6 +992,62 @@ def do_pager(text):
 				msg_r("\r")
 				break
 	else: print text+end
+
+
+def export_to_hidden_incog(incog_enc,opts):
+	fname,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
+
+	check_data_fits_file_at_offset(fname,int(offset),len(incog_enc),"write")
+
+	if not g.quiet: confirm_or_exit("","alter file '%s'" % fname)
+	f = os.open(fname,os.O_RDWR)
+	os.lseek(f, int(offset), os.SEEK_SET)
+	os.write(f, incog_enc)
+	os.close(f)
+	qmsg("Data written to file '%s' at offset %s" % (fname,offset),
+			"Data written to file")
+
+
+def pretty_hexdump(data,gw,cols,line_nums=False):
+	r = 1 if len(data) % gw else 0
+	return "".join(
+		[
+			("" if (line_nums == False or i % cols) else "%03i: " % (i/cols)) +
+			hexlify(data[i*gw:i*gw+gw]) +
+			(" " if (i+1) % cols else "\n")
+				for i in range(len(data)/gw + r)
+		]
+	).rstrip()
+
+def decode_pretty_hexdump(data):
+	import re
+	lines = [re.sub('^\d+:\s+','',l) for l in data.split("\n")]
+	return unhexlify("".join(("".join(lines).split())))
+
+def wallet_to_incog_data(infile,opts):
+
+	d = get_data_from_wallet(infile,silent=True)
+	seed_id,key_id,preset,salt,enc_seed = \
+			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
+
+	passwd = get_mmgen_passphrase("Enter mmgen passphrase: ",opts)
+	key = make_key(passwd, salt, preset, "main key")
+	# We don't need the seed; just do this to verify password.
+	if decrypt_seed(enc_seed, key, seed_id, key_id) == False:
+		sys.exit(2)
+
+	from Crypto import Random
+	iv = Random.new().read(g.aesctr_iv_len)
+	iv_id = make_chksum_8(iv)
+	qmsg("IV ID: %s" % iv_id)
+
+	from binascii import hexlify
+	from hashlib import sha256
+	# IV is used BOTH to initialize counter and to salt password!
+	key = make_key(passwd, iv, preset, "wrapper key")
+	wrap_enc = encrypt_seed(salt + enc_seed, key, iv=int(hexlify(iv),16))
+
+	return iv+wrap_enc,seed_id,key_id,iv_id,preset
 
 
 if __name__ == "__main__":

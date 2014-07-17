@@ -20,6 +20,7 @@ setup(
 			'mmgen.mn_tirosh',
 			'mmgen.Opts',
 			'mmgen.term',
+			'mmgen.tool',
 			'mmgen.tx',
 			'mmgen.util',
 			'mmgen.walletgen',
@@ -52,5 +53,6 @@ setup(
 			'mmgen-txsign',
 			'mmgen-txsend',
 			'mmgen-pywallet'
+			'mmgen-tool',
 		]
 	)

@@ -218,6 +218,5 @@ tests = {
 	"wiftoaddr_comp":           ['wif [str]'],
 }
 
-
 args = process_test_args(sys.argv, tests)
 eval(sys.argv[1])(*args)

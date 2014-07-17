@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,9 +24,9 @@ from mmgen.util import msg, msg_r, get_char
 
 gpl = {
 	'warning': """
-  MMGen Copyright (C) 2013 by Philemon <mmgen-py@yandex.com>.  This
-  program comes with ABSOLUTELY NO WARRANTY.  This is free software,
-  and you are welcome to redistribute it under certain conditions.
+  MMGen Copyright (C) 2013-2014 by Philemon <mmgen-py@yandex.com>.  This
+  program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
+  you are welcome to redistribute it under certain conditions.
 """,
 	'prompt': """
 Press 'w' for conditions and warranty info, or 'c' to continue:

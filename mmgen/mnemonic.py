@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
+# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -95,7 +95,7 @@ def check_wordlist(wl_str,label):
 
 	from hashlib import sha256
 
-	print "Length:   %i" % len(wl)
+	print "Length:   %i words" % len(wl)
 	new_chksum = sha256(" ".join(wl)).hexdigest()[:8]
 
 	if new_chksum != wl_checksums[label]:
