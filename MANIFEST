@@ -4,6 +4,7 @@ mmgen-addrgen
 mmgen-addrimport
 mmgen-passchg
 mmgen-pywallet
+mmgen-tool
 mmgen-txcreate
 mmgen-txsend
 mmgen-txsign
@@ -20,6 +21,7 @@ mmgen/mn_electrum.py
 mmgen/mn_tirosh.py
 mmgen/mnemonic.py
 mmgen/term.py
+mmgen/tool.py
 mmgen/tx.py
 mmgen/util.py
 mmgen/walletgen.py

@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.7.3',
+		version      = '0.7.3b',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -52,7 +52,7 @@ setup(
 			'mmgen-txcreate',
 			'mmgen-txsign',
 			'mmgen-txsend',
-			'mmgen-pywallet'
+			'mmgen-pywallet',
 			'mmgen-tool',
 		]
 	)
