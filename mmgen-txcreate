@@ -34,7 +34,7 @@ prog_name = sys.argv[0].split("/")[-1]
 help_data = {
 	'prog_name': prog_name,
 	'desc':    "Create a BTC transaction with outputs to specified addresses",
-	'usage':   "[opts]  <addr,amt> ... [change addr] [tx fee] [addr file] ...",
+	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
 -h, --help                Print this help message
 -d, --outdir           d  Specify an alternate directory 'd' for output

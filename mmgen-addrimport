@@ -34,12 +34,14 @@ help_data = {
 	'options': """
 -h, --help        Print this help message
 -l, --addrlist f  Import the non-mmgen Bitcoin addresses listed in file 'f'
+-r, --rescan      Rescan the blockchain.  Required if address to import is
+                  on the blockchain and has a balance.  Rescanning is slow.
 -q, --quiet       Suppress warnings
 """
 }
 
-short_opts = "hl:q"
-long_opts  = "help", "addrlist=", "quiet"
+short_opts = "hl:qr"
+long_opts  = "help", "addrlist=", "quiet", "rescan"
 
 opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 if 'quiet' in opts: g.quiet = True
@@ -75,18 +77,23 @@ g.http_timeout = 3600
 c = connect_to_bitcoind()
 
 m = """
-Importing addresses can take a long time (>30 min.) on a low-powered computer.
+WARNING: You've chosen the '--rescan' option.  Rescanning the block chain is
+necessary only if an address you're importing is already on the block chain
+and has a balance.  Note that the rescanning process is very slow (>30 min.
+for each imported address on a low-powered computer).
+	""".strip() if "rescan" in opts else """
+WARNING: If any of the addresses you're importing is already on the block chain
+and has a balance, you must exit the program now and rerun it using the
+'--rescan' option.  Otherwise you may ignore this message and continue.
 """.strip()
-confirm_or_exit(m, "continue", expect="YES")
 
-import threading
-import time
+confirm_or_exit(m, "continue", expect="YES")
 
 err_flag = False
 
-def import_address(addr,label):
+def import_address(addr,label,rescan):
 	try:
-		c.importaddress(addr,label)
+		c.importaddress(addr,label,rescan)
 	except:
 		global err_flag
 		err_flag = True
@@ -94,7 +101,13 @@ def import_address(addr,label):
 
 w1 = len(str(len(addr_data))) * 2 + 2
 w2 = len(str(max([i[0] for i in addr_data if i[0]]))) + 12
-msg_fmt = "\r%s %-" + str(w1) + "s %-34s %-" + str(w2) + "s"
+
+if "rescan" in opts:
+	import threading
+	import time
+	msg_fmt = "\r%s %-" + str(w1) + "s %-34s %-" + str(w2) + "s"
+else:
+	msg_fmt = "\r%-" + str(w1) + "s %-34s %-" + str(w2) + "s"
 
 msg("Importing addresses")
 for n,i in enumerate(addr_data):
@@ -103,25 +116,33 @@ for n,i in enumerate(addr_data):
 		label = "%s:%s%s" % (seed_id,i[0],comment)
 	else: label = "non-mmgen"
 
-	t = threading.Thread(target=import_address, args = (i[1],label))
-	t.daemon = True
-	t.start()
+	if "rescan" in opts:
+		t = threading.Thread(target=import_address, args=(i[1],label,True))
+		t.daemon = True
+		t.start()
 
-	start = int(time.time())
+		start = int(time.time())
 
-	while True:
-		if t.is_alive():
-			elapsed = int(time.time() - start)
-			msg_r(msg_fmt % (
-				secs_to_hms(elapsed),
+		while True:
+			if t.is_alive():
+				elapsed = int(time.time() - start)
+				msg_r(msg_fmt % (
+						secs_to_hms(elapsed),
+						("%s/%s:" % (n+1,len(addr_data))),
+						i[1], "(" + label + ")"
+					)
+				)
+				time.sleep(1)
+			else:
+				if err_flag: msg("\nImport failed"); sys.exit(2)
+				msg("\nOK")
+				break
+	else:
+		import_address(i[1],label,rescan=False)
+		msg_r(msg_fmt % (
 				("%s/%s:" % (n+1,len(addr_data))),
 				i[1], "(" + label + ")"
-				)
 			)
-			time.sleep(1)
-		else:
-			if err_flag:
-				msg("\nImport failed")
-				sys.exit(2)
-			msg("\nOK")
-			break
+		)
+		if err_flag: msg("\nImport failed"); sys.exit(2)
+		msg(" - OK")

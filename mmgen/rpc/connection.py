@@ -58,12 +58,12 @@ class BitcoinConnection(object):
 			raise _wrap_exception(e.error)
 
 # importaddress <address> [label] [rescan=true]
-	def importaddress(self,address,label=None):
+	def importaddress(self,address,label=None,rescan=True):
 		"""
 		"""
 		try:
 #			return self.proxy.badmethod(address,label) # DEBUG
-			return self.proxy.importaddress(address,label)
+			return self.proxy.importaddress(address,label,rescan)
 		except JSONRPCException as e:
 			if e.error['message'] == "Method not found":
 				from mmgen.util import msg_r
