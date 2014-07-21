@@ -38,7 +38,8 @@ help_data = {
 -v, --verbose              Produce more verbose output
 
 COMMANDS:{}
-Type '{} <command> --help for usage information on a particular command
+Type '{} <command> --help for usage information on a particular
+command
 """.format(command_help,prog_name)
 }
 
@@ -62,7 +63,7 @@ if cmd_args and cmd_args[0] == '--help':
 	tool_usage(prog_name, command)
 	sys.exit(0)
 
-args = process_args(prog_name, command, cmd_args) if cmd_args else []
+args = process_args(prog_name, command, cmd_args)
 
 #print command + "(" + ", ".join(args) + ")"
 eval(command + "(" + ", ".join(args) + ")")

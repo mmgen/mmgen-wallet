@@ -141,7 +141,7 @@ def get_bitcoind_cfg_options(cfg_keys):
 
 def print_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "tx_%s[%s].raw" % (tx_id,send_amt)
+	outfile = "tx_%s[%s].%s" % (tx_id,send_amt,g.rawtx_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	metadata = "%s %s %s" % (tx_id, send_amt, make_timestamp())
@@ -156,7 +156,7 @@ def print_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
 
 def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "tx_{}[{}].sig".format(*metadata[:2])
+	outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
 	data = "%s\n%s\n" % (" ".join(metadata),sig_tx)
@@ -174,16 +174,17 @@ def print_sent_tx_to_file(tx,metadata,opts):
 
 def format_unspent_outputs_for_printing(out,sort_info,total):
 
-	pfs  = " %-4s %-67s %-34s %-12s %-13s %-10s %s"
+	pfs  = " %-4s %-67s %-34s %-12s %-13s %-8s %-10s %s"
 	pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
-		"Amount (BTC)","Age (days)", "Comment")]
+		"Amount (BTC)","Confirms","Age (days)", "Comment")]
 
 	for n,i in enumerate(out):
 		addr = "=" if i.skip == "addr" and "grouped" in sort_info else i.address
 		tx = " " * 63 + "=" \
 			if i.skip == "txid" and "grouped" in sort_info else str(i.txid)
 
-		s = pfs % (str(n+1)+")", tx+","+str(i.vout),addr,i.mmid,i.amt,i.days,i.label)
+		s = pfs % (str(n+1)+")", tx+","+str(i.vout),addr,
+				i.mmid,i.amt,i.confirmations,i.days,i.label)
 		pout.append(s.rstrip())
 
 	return \
@@ -200,14 +201,16 @@ def sort_and_view(unspent):
 	def s_age(i):   return i.confirmations
 	def s_mmgen(i): return i.account
 
-	sort,group,show_mmaddr,reverse = "",False,False,False
+	sort,group,show_days,show_mmaddr,reverse = "age",False,False,True,True
+	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
+
 	total = trim_exponent(sum([i.amount for i in unspent]))
 
 	hdr_fmt   = "UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s"
 
 	options_msg = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: [g]roup, show [m]mgen addr, r[e]draw screen
+Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 """.strip()
 	prompt = \
 "('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
@@ -230,8 +233,8 @@ Display options: [g]roup, show [m]mgen addr, r[e]draw screen
 		addr_w = min(34+((1+max_acct_len) if show_mmaddr else 0),cols-46)
 		tx_w = max(11,min(64, cols-addr_w-32))
 		fs = " %-4s %-" + str(tx_w) + "s %-2s %-" + str(addr_w) + "s %-13s %-s"
-		table_hdr = fs % ("Num","TX id  Vout","","Address",
-							"Amount (BTC)","Age(d)")
+		a = "Age(d)" if show_days else "Confirms"
+		table_hdr = fs % ("Num","TX id  Vout","","Address", "Amount (BTC)",a)
 
 		unsp = deepcopy(unspent)
 		for i in unsp: i.skip = ""
@@ -277,12 +280,13 @@ Display options: [g]roup, show [m]mgen addr, r[e]draw screen
 		out = [hdr_fmt % (" ".join(sort_info), total), table_hdr]
 
 		for n,i in enumerate(unsp):
-			out.append(fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,i.days))
+			d = i.days if show_days else i.confirmations
+			out.append(fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,d))
 
 		msg("\n".join(out) +"\n\n" + print_to_file_msg + options_msg)
 		print_to_file_msg = ""
 
-		immed_chars = "atdAMrgmeqpvw"
+		immed_chars = "atDdAMrgmeqpvw"
 		skip_prompt = False
 
 		while True:
@@ -290,6 +294,7 @@ Display options: [g]roup, show [m]mgen addr, r[e]draw screen
 
 			if   reply == 'a': unspent.sort(key=s_amt);  sort = "amount"
 			elif reply == 't': unspent.sort(key=s_txid); sort = "txid"
+			elif reply == 'D': show_days = False if show_days else True
 			elif reply == 'd': unspent.sort(key=s_addr); sort = "address"
 			elif reply == 'A': unspent.sort(key=s_age);  sort = "age"
 			elif reply == 'M':

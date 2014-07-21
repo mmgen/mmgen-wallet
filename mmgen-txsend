@@ -77,7 +77,10 @@ qmsg("Signed transaction file '%s' is valid" % infile)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"
-expect = "yes, i really want to do this".upper()
+expect =  "YES, I REALLY WANT TO DO THIS"
+
+if g.quiet: warn,expect = "","YES"
+
 confirm_or_exit(warn, what, expect)
 
 msg("Sending transaction")

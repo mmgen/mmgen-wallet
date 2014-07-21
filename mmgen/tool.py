@@ -51,13 +51,21 @@ commands = {
 	"mn_rand192":   ['wordlist [str="electrum"]'],
 	"mn_rand256":   ['wordlist [str="electrum"]'],
 	"mn_stats":     ['wordlist [str="electrum"]'],
-	"mn_printlist": ['wordlist [str="electrum"]']
+	"mn_printlist": ['wordlist [str="electrum"]'],
+	"id8":          ['<infile> [str]'],
+	"id6":          ['<infile> [str]'],
+	"listaccounts": ['minconf [int=1]'],
+	"getbalance":   ['minconf [int=1]'],
 }
 
 command_help = """
-General operations:
-hexdump      - encode binary data in formatted hexadecimal form
-unhexdump    - decode formatted hexadecimal data
+File operations
+hexdump      - encode data into formatted hexadecimal form (file or stdin)
+unhexdump    - decode formatted hexadecimal data (file or stdin)
+
+MMGen-specific operations
+id8          - generate 8-character MMGen ID checksum for file (or stdin)
+id6          - generate 6-character MMGen ID checksum for file (or stdin)
 
 Bitcoin operations:
 strtob58     - convert a string to base 58
@@ -68,12 +76,19 @@ randwif      - generate a random private key in WIF format
 randpair     - generate a random private key/address pair
 wif2addr     - generate a Bitcoin address from a key in WIF format
 
-Mnemonic operations (choose "electrum" (default), "tirosh" or "all" wordlists):
+Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
+wordlists):
 mn_rand128   - generate random 128-bit mnemonic
 mn_rand192   - generate random 192-bit mnemonic
 mn_rand256   - generate random 256-bit mnemonic
 mn_stats     - show stats for mnemonic wordlist
 mn_printlist - print mnemonic wordlist
+
+Bitcoind operations (bitcoind must be running):
+listaccounts - like 'bitcoind listaccounts' but shows MMGen wallet balances
+               too
+getbalance   - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
+               spendable/unspendable
 
 IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
 computed using a different algorithm and are NOT Electrum-compatible!
@@ -119,17 +134,23 @@ def process_args(prog_name, command, uargs):
 
 	ret = []
 
+	def normalize_arg(arg, arg_type):
+		if arg_type == "bool":
+			if arg.lower() in ("true","yes","1","on"): return "True"
+			if arg.lower() in ("false","no","0","off"): return "False"
+		return arg
+
 	for i in range(len(cargs_req)):
-		arg,arg_type = uargs_req[i], cargs_req[i][1]
-		if arg == "true" or arg == "false": arg = arg.capitalize()
+		arg_type = cargs_req[i][1]
+		arg = normalize_arg(uargs_req[i], arg_type)
 		if arg_type == "str":
 			ret.append('"%s"' % (arg))
 		elif test_type(arg_type, arg, "#"+str(i+1)):
 			ret.append('%s' % (arg))
 
 	for k in uargs_nam.keys():
-		arg,arg_type = uargs_nam[k], cargs_nam[k][0]
-		if arg == "true" or arg == "false": arg = arg.capitalize()
+		arg_type = cargs_nam[k][0]
+		arg = normalize_arg(uargs_nam[k], arg_type)
 		if arg_type == "str":
 			ret.append('%s="%s"' % (k, arg))
 		elif test_type(arg_type, arg, "'"+k+"'"):
@@ -149,13 +170,13 @@ def print_convert_results(indata,enc,dec,no_recode=False):
 			msg("WARNING! Recoded number doesn't match input stringwise!")
 
 def hexdump(infile, cols=8, line_nums=True):
-	data = get_data_from_file(infile)
-	o = pretty_hexdump(data, 2, cols, line_nums)
+	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
+	o = pretty_hexdump(d, 2, cols, line_nums)
 	print o
 
 def unhexdump(infile):
-	data = get_data_from_file(infile)
-	o = decode_pretty_hexdump(data)
+	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
+	o = decode_pretty_hexdump(d)
 	sys.stdout.write(o)
 
 def strtob58(s):
@@ -242,3 +263,61 @@ def mn_stats(wordlist="electrum"):
 def mn_printlist(wordlist="electrum"):
 	l = get_wordlist(wordlist)
 	print "%s" % l.strip()
+
+def id8(infile):
+	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
+	print make_chksum_8(d)
+
+def id6(infile):
+	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
+	print make_chksum_6(d)
+
+
+def listaccounts(minconf=1):
+	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
+	def s_mmgen(i):
+		ma = i[0].split(" ")[0] if " " in i[0] else i[0]
+		if is_mmgen_addr(ma):
+			mmid,idx = ma.split(":")
+			return mmid + ":" + ("%04i" % int(idx))
+		else:
+			return "G"+i[0]
+
+	c = connect_to_bitcoind()
+	data = [(a,c.getbalance(a,minconf)) for a in c.listaccounts()]
+	data.sort(key=s_mmgen)
+	col_w = max([len(d[0]) for d in data])
+	fs = "%-"+str(col_w)+"s   %s"
+	print fs % ("ACCOUNT","BALANCE")
+	totals = {}
+	for d in data:
+		ma = d[0].split(" ")[0] if " " in d[0] else d[0]
+		if is_mmgen_addr(ma):
+			mmid = ma.split(":")[0]
+			if mmid not in totals: totals[mmid] = 0
+			totals[mmid] += d[1]
+		print fs % (
+			d[0] if d[0] else 'TOTAL:',
+			trim_exponent(d[1])
+		)
+	print "\nMMGEN WALLET BALANCES"
+	for k in totals.keys():
+		print "%s: %s" % (k, trim_exponent(totals[k]))
+
+def getbalance(minconf=1):
+	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
+	c = connect_to_bitcoind()
+	data = c.listunspent(0)
+	o = [0,0,0,0,0,0] # su,sb,sc, uu,ub,uc
+	for d in data:
+		j = 0 if d.spendable else 3
+		if d.confirmations == 0: o[j] += d.amount
+		k = 1 if d.confirmations < minconf else 2
+		o[j+k] += d.amount
+
+	fs = "{}:\n  {:<12} unconfirmed\n  {:<12} <{M}  {C}\n  {:<12} >={M} {C}"
+	for lbl,n in ("Spendable",0),("Unspendable",3):
+		if sum(o[n:3+n]) == 0:
+			print "{}: {}".format(lbl,"NONE")
+		else:
+			print fs.format(lbl,o[n+0],o[n+1],o[n+2],M=minconf,C="confirmations")

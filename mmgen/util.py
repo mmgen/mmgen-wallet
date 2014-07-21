@@ -42,7 +42,9 @@ def vmsg_r(s):
 
 def bail(): sys.exit(9)
 
-def get_extension(f): return f.split(".")[-1]
+def get_extension(f):
+	try: return f.split(".")[-1]
+	except: return ""
 
 def my_raw_input(prompt,echo=True,allowed_chars=""):
 	try:

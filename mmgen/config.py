@@ -37,6 +37,8 @@ incog_hex_ext = "mmincox"
 
 seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
 
+rawtx_ext    = "raw"
+sigtx_ext    = "sig"
 addrfile_ext = "addrs"
 keyfile_ext  = "keys"
 
