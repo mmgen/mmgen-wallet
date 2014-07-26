@@ -23,6 +23,7 @@ import sys
 import mmgen.bitcoin as bitcoin
 
 from mmgen.util import *
+from mmgen.tx import *
 
 commands = {
 #	"keyconv_compare":          ['wif [str]'],
@@ -54,44 +55,47 @@ commands = {
 	"mn_printlist": ['wordlist [str="electrum"]'],
 	"id8":          ['<infile> [str]'],
 	"id6":          ['<infile> [str]'],
-	"listaccounts": ['minconf [int=1]'],
+	"listaddresses": ['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
+	"viewtx":       ['<MMGen tx file> [str]'],
+	"check_addrfile":  ['<MMGen addr file> [str]']
 }
 
 command_help = """
-File operations
-hexdump      - encode data into formatted hexadecimal form (file or stdin)
-unhexdump    - decode formatted hexadecimal data (file or stdin)
+  File operations
+  hexdump      - encode data into formatted hexadecimal form (file or stdin)
+  unhexdump    - decode formatted hexadecimal data (file or stdin)
 
-MMGen-specific operations
-id8          - generate 8-character MMGen ID checksum for file (or stdin)
-id6          - generate 6-character MMGen ID checksum for file (or stdin)
+  MMGen-specific operations
+  id8          - generate 8-character MMGen ID checksum for file (or stdin)
+  id6          - generate 6-character MMGen ID checksum for file (or stdin)
 
-Bitcoin operations:
-strtob58     - convert a string to base 58
-hextob58     - convert a hexadecimal number to base 58
-b58tohex     - convert a base 58 number to hexadecimal
-b58randenc   - generate a random 32-byte number and convert it to base 58
-randwif      - generate a random private key in WIF format
-randpair     - generate a random private key/address pair
-wif2addr     - generate a Bitcoin address from a key in WIF format
+  Bitcoin operations:
+  strtob58     - convert a string to base 58
+  hextob58     - convert a hexadecimal number to base 58
+  b58tohex     - convert a base 58 number to hexadecimal
+  b58randenc   - generate a random 32-byte number and convert it to base 58
+  randwif      - generate a random private key in WIF format
+  randpair     - generate a random private key/address pair
+  wif2addr     - generate a Bitcoin address from a key in WIF format
 
-Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
-wordlists):
-mn_rand128   - generate random 128-bit mnemonic
-mn_rand192   - generate random 192-bit mnemonic
-mn_rand256   - generate random 256-bit mnemonic
-mn_stats     - show stats for mnemonic wordlist
-mn_printlist - print mnemonic wordlist
+  Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
+  wordlists):
+  mn_rand128   - generate random 128-bit mnemonic
+  mn_rand192   - generate random 192-bit mnemonic
+  mn_rand256   - generate random 256-bit mnemonic
+  mn_stats     - show stats for mnemonic wordlist
+  mn_printlist - print mnemonic wordlist
 
-Bitcoind operations (bitcoind must be running):
-listaccounts - like 'bitcoind listaccounts' but shows MMGen wallet balances
-               too
-getbalance   - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
-               spendable/unspendable
+  Bitcoind operations (bitcoind must be running):
+  listaddresses - show MMGen addresses and their balances
+  getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
+                  spendable/unspendable
+  viewtx        - show raw transaction in human-readable form
+  check_addrfile - compute checksum and address list for MMGen address file
 
-IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
-computed using a different algorithm and are NOT Electrum-compatible!
+  IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
+  computed using a different algorithm and are NOT Electrum-compatible!
 """
 
 def tool_usage(prog_name, command):
@@ -170,14 +174,10 @@ def print_convert_results(indata,enc,dec,no_recode=False):
 			msg("WARNING! Recoded number doesn't match input stringwise!")
 
 def hexdump(infile, cols=8, line_nums=True):
-	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
-	o = pretty_hexdump(d, 2, cols, line_nums)
-	print o
+	print pretty_hexdump(get_data_from_file(infile,dash=True), 2, cols, line_nums)
 
 def unhexdump(infile):
-	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
-	o = decode_pretty_hexdump(d)
-	sys.stdout.write(o)
+	sys.stdout.write(decode_pretty_hexdump(get_data_from_file(infile,dash=True)))
 
 def strtob58(s):
 	enc = bitcoin.b58encode(s)
@@ -264,60 +264,79 @@ def mn_printlist(wordlist="electrum"):
 	l = get_wordlist(wordlist)
 	print "%s" % l.strip()
 
-def id8(infile):
-	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
-	print make_chksum_8(d)
+def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True))
+def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True))
 
-def id6(infile):
-	d = sys.stdin.read() if infile == "-" else get_data_from_file(infile)
-	print make_chksum_6(d)
-
-
-def listaccounts(minconf=1):
+# List MMGen addresses and their balances:
+def listaddresses(minconf=1,showempty=False):
 	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
-	def s_mmgen(i):
-		ma = i[0].split(" ")[0] if " " in i[0] else i[0]
-		if is_mmgen_addr(ma):
-			mmid,idx = ma.split(":")
-			return mmid + ":" + ("%04i" % int(idx))
-		else:
-			return "G"+i[0]
-
 	c = connect_to_bitcoind()
-	data = [(a,c.getbalance(a,minconf)) for a in c.listaccounts()]
-	data.sort(key=s_mmgen)
-	col_w = max([len(d[0]) for d in data])
-	fs = "%-"+str(col_w)+"s   %s"
-	print fs % ("ACCOUNT","BALANCE")
-	totals = {}
-	for d in data:
-		ma = d[0].split(" ")[0] if " " in d[0] else d[0]
-		if is_mmgen_addr(ma):
-			mmid = ma.split(":")[0]
-			if mmid not in totals: totals[mmid] = 0
-			totals[mmid] += d[1]
-		print fs % (
-			d[0] if d[0] else 'TOTAL:',
-			trim_exponent(d[1])
-		)
-	print "\nMMGEN WALLET BALANCES"
-	for k in totals.keys():
-		print "%s: %s" % (k, trim_exponent(totals[k]))
+
+	addrs = {}
+	for d in c.listunspent(0):
+		ma,comment = split2(d.account)
+		if is_mmgen_addr(ma) and d.confirmations >= minconf:
+			key = "_".join(ma.split(":"))
+			if key not in addrs: addrs[key] = [0,comment]
+			addrs[key][0] += d.amount
+
+	# "bitcoind getbalance <account>" can produce a false balance
+	# (sipa watchonly bitcoind), so use only for empty accounts
+	if showempty:
+		# Show accts with not enough confirmations as empty!
+		# A feature, not a bug!
+		for (ma,comment),bal in [(split2(a),c.getbalance(a,minconf=minconf))
+			for a in c.listaccounts(0)]:
+			if is_mmgen_addr(ma) and bal == 0:
+				key = "_".join(ma.split(":"))
+				if key not in addrs: addrs[key] = [0,comment]
+
+	fs = "%-{}s  %-{}s   %s".format(
+		max([len(k) for k in addrs.keys()]),
+		max([len(str(addrs[k][1])) for k in addrs.keys()])
+	)
+	print fs % ("ADDRESS","COMMENT","BALANCE")
+
+	def s_mmgen(ma):
+		return "{}:{:>0{w}}".format(w=g.mmgen_idx_max_digits, *ma.split("_"))
+
+	old_sid = ""
+	for k in sorted(addrs.keys(),key=s_mmgen):
+		sid,num = k.split("_")
+		if old_sid and old_sid != sid: print
+		old_sid = sid
+		print fs % (sid+":"+num, addrs[k][1], trim_exponent(addrs[k][0]))
+
 
 def getbalance(minconf=1):
 	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
-	c = connect_to_bitcoind()
-	data = c.listunspent(0)
-	o = [0,0,0,0,0,0] # su,sb,sc, uu,ub,uc
-	for d in data:
-		j = 0 if d.spendable else 3
-		if d.confirmations == 0: o[j] += d.amount
-		k = 1 if d.confirmations < minconf else 2
-		o[j+k] += d.amount
 
-	fs = "{}:\n  {:<12} unconfirmed\n  {:<12} <{M}  {C}\n  {:<12} >={M} {C}"
-	for lbl,n in ("Spendable",0),("Unspendable",3):
-		if sum(o[n:3+n]) == 0:
-			print "{}: {}".format(lbl,"NONE")
-		else:
-			print fs.format(lbl,o[n+0],o[n+1],o[n+2],M=minconf,C="confirmations")
+	accts = {}
+	for d in connect_to_bitcoind().listunspent(0):
+		ma = split2(d.account)[0]
+		keys = ["TOTAL"]
+		if d.spendable: keys += ["SPENDABLE"]
+		if is_mmgen_addr(ma): keys += [ma.split(":")[0]]
+		c = d.confirmations
+		i = 2 if c >= minconf else 1
+
+		for key in keys:
+			if key not in accts: accts[key] = [0,0,0]
+			for j in ([0] if c == 0 else []) + [i]:
+				accts[key][j] += d.amount
+
+	fs = "{:12}  {:<%s} {:<%s} {:<}" % (16,16)
+	mc,lbl = str(minconf),"confirms"
+	print fs.format("Wallet","Unconfirmed",
+			"<%s %s"%(mc,lbl),">=%s %s"%(mc,lbl))
+	for key in sorted(accts.keys()):
+		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
+
+def viewtx(infile):
+	c = connect_to_bitcoind()
+	tx_data = get_lines_from_file(infile,"transaction data")
+
+	metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,infile)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata)
+
+def check_addrfile(infile): parse_addrs_file(infile)

@@ -37,34 +37,32 @@ help_data = {
 	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
 -h, --help                Print this help message
--d, --outdir           d  Specify an alternate directory 'd' for output
+-d, --outdir=          d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase     Print passphrase to screen when typing it
+-f, --tx-fee=          f  Transaction fee (default: {g.tx_fee} BTC)
 -i, --info                Display unspent outputs and exit
 -q, --quiet               Suppress warnings; overwrite files without
                           prompting
-
--f, --tx-fee           f  Transaction fee (default: %s BTC)
+""".format(g=g),
+	'notes': """
 
 Transaction inputs are chosen from a list of the user's unpent outputs
 via an interactive menu.
 
 Ages of transactions are approximate based on an average block creation
-interval of %s minutes.
+interval of {g.mins_per_block} minutes.
 
 Addresses on the command line can be Bitcoin addresses or MMGen addresses
 of the form <seed ID>:<number>.
 
 To send all inputs (minus TX fee) to a single output, specify one address
 with no amount on the command line.
-""" % (Decimal(g.tx_fee),g.mins_per_block)
+""".format(g=g)
 }
 
-short_opts = "hd:eiqf:"
-long_opts  = "help","outdir=","echo_passphrase","info","quiet","tx_fee="
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
-check_opts(opts,long_opts)
 
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
@@ -74,31 +72,39 @@ if not 'info' in opts:
 
 	tx_out,addr_data,b2m_map,acct_data,change_addr = {},[],{},[],""
 
-	for a in [i for i in cmd_args if match_ext(i,g.addrfile_ext)]:
-		if match_ext(a,g.addrfile_ext):
-			check_infile(a)
-			addr_data.append(parse_addrs_file(a))
+	addrfiles = [a for a in cmd_args if get_extension(a) == g.addrfile_ext]
+	cmd_args = set(cmd_args) - set(addrfiles)
 
-	def mm_addr2btc_addr(c,mmadr,acct_data,addr_data,b2m_map):
-		btcaddr,label = mmgen_addr_to_walletd(c,mmadr,acct_data)
+	for a in addrfiles:
+		check_infile(a)
+		addr_data.append(parse_addrs_file(a))
+
+	def mmaddr2btcaddr(c,mmaddr,acct_data,addr_data,b2m_map):
+		# assume mmaddr has already been checked
+		btcaddr,label = mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data)
 		if not btcaddr:
-			btcaddr,label = mmgen_addr_to_addr_data(mmadr,addr_data)
-		b2m_map[btcaddr] = mmadr,label
+			if addr_data:
+				btcaddr,label = mmaddr2btcaddr_addrfile(mmaddr,addr_data)
+			else:
+				msg(txmsg['addrfile_no_data_msg'] % mmaddr)
+				sys.exit(2)
+
+		b2m_map[btcaddr] = mmaddr,label
 		return btcaddr
 
-	for a in [i for i in cmd_args if not match_ext(i,g.addrfile_ext)]:
+	for a in cmd_args:
 		if "," in a:
 			a1,a2 = a.split(",")
 			if is_btc_addr(a1):
 				btcaddr = a1
 			elif is_mmgen_addr(a1):
-				btcaddr = mm_addr2btc_addr(c,a1,acct_data,addr_data,b2m_map)
+				btcaddr = mmaddr2btcaddr(c,a1,acct_data,addr_data,b2m_map)
 			else:
 				msg("%s: unrecognized subargument in argument '%s'" % (a1,a))
 				sys.exit(2)
 
 			if is_btc_amt(a2):
-				tx_out[btcaddr] = check_btc_amt(a2)
+				tx_out[btcaddr] = normalize_btc_amt(a2)
 			else:
 				msg("%s: invalid amount in argument '%s'" % (a2,a))
 				sys.exit(2)
@@ -108,7 +114,7 @@ if not 'info' in opts:
 						(change_addr, a))
 				sys.exit(2)
 			change_addr = a if is_btc_addr(a) else \
-				mm_addr2btc_addr(c,a,acct_data,addr_data,b2m_map)
+				mmaddr2btcaddr(c,a,acct_data,addr_data,b2m_map)
 			tx_out[change_addr] = 0
 		else:
 			msg("%s: unrecognized argument" % a)
@@ -119,7 +125,7 @@ if not 'info' in opts:
 		sys.exit(2)
 
 	tx_fee = opts['tx_fee'] if 'tx_fee' in opts else g.tx_fee
-	tx_fee = check_btc_amt(tx_fee)
+	tx_fee = normalize_btc_amt(tx_fee)
 	if tx_fee > g.max_tx_fee:
 		msg("Transaction fee too large: %s > %s" % (tx_fee,g.max_tx_fee))
 		sys.exit(2)
@@ -128,21 +134,15 @@ if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
 if not 'info' in opts: do_license_msg(immed=True)
 
-# Begin test
-# import mmgen.rpc
-# us = eval(get_data_from_file("listunspent.json"))
-# End test
+#write_to_file("bogus_unspent.json", repr(us)); sys.exit()
+if g.bogus_wallet_data:
+	import mmgen.rpc
+	us = eval(get_data_from_file("bogus_unspent.json"))
+else:
+	us = c.listunspent()
 
-us = c.listunspent()
+if not us: msg(txmsg['no_spendable_outputs']); sys.exit(2)
 
-if not us:
-	msg("""
-No spendable outputs found!  Import addresses with balances into your
-watch-only wallet using 'mmgen-addrimport' and then re-run this program.""")
-	sys.exit(2)
-
-# write_to_file("listunspent.json",repr(us))
-# sys.exit()
 unspent = sort_and_view(us)
 
 total = trim_exponent(sum([i.amount for i in unspent]))
@@ -209,6 +209,6 @@ if reply and reply in "YyVv":
 
 prompt = "Save transaction?"
 if user_confirm(prompt,default_yes=True):
-	print_tx_to_file(tx_hex,sel_unspent,send_amt or change,b2m_map,opts)
+	write_tx_to_file(tx_hex,sel_unspent,send_amt or change,b2m_map,opts)
 else:
 	msg("Transaction not saved")

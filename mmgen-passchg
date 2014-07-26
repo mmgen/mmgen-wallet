@@ -26,37 +26,34 @@ from mmgen.util import *
 import mmgen.config as g
 
 help_data = {
-	'desc':  """Change the passphrase, hash preset or label of a {}
+	'desc':  """Change the passphrase, hash preset or label of an {}
                   deterministic wallet""".format(g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help                  Print this help message
--d, --outdir             d  Specify an alternate directory 'd' for output
+-d, --outdir=            d  Specify an alternate directory 'd' for output
 -H, --show-hash-presets     Show information on available hash presets
 -k, --keep-old-passphrase   Keep old passphrase (use when changing hash
                             strength or label only)
--L, --label              l  Change the wallet's label to 'l'
--p, --hash-preset        p  Change scrypt.hash() parameters to preset 'p'
-                            (default: '{}')
--P, --passwd-file        f  Get new passphrase from file 'f'
+-L, --label=             l  Change the wallet's label to 'l'
+-p, --hash-preset=       p  Change scrypt.hash() parameters to preset 'p'
+                            (default: '{g.hash_preset}')
+-P, --passwd-file=       f  Get new passphrase from file 'f'
 -q, --quiet                 Suppress warnings; overwrite files without
                             prompting
 -v, --verbose               Produce more verbose output
+""".format(g=g),
+	'notes': """
 
-NOTE: The key ID will change if either the passphrase or hash preset
-      are changed
-""".format(g.hash_preset)
+NOTE: The key ID will change if either the passphrase or hash preset are
+      changed
+"""
 }
 
-short_opts = "hd:HkL:p:P:qv"
-long_opts  = "help","outdir=","show_hash_presets","keep_old_passphrase",\
-			"label=","hash_preset=","passwd_file=","quiet","verbose"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
-check_opts(opts,long_opts)
-
 if 'show_hash_presets' in opts: show_hash_presets()
 
 if len(cmd_args) != 1:

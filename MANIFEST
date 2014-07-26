@@ -41,4 +41,3 @@ mmgen/tests/mnemonic.py
 mmgen/tests/test.py
 mmgen/tests/util.py
 mmgen/tests/walletgen.py
-test/test.py

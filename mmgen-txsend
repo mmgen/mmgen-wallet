@@ -35,45 +35,36 @@ help_data = {
 	'usage':   "[opts] <signed transaction file>",
 	'options': """
 -h, --help          Print this help message
--d, --outdir     d  Specify an alternate directory 'd' for output
+-d, --outdir=    d  Specify an alternate directory 'd' for output
 -q, --quiet         Suppress warnings; overwrite files without prompting
 """
 }
 
-short_opts = "hd:q"
-long_opts  = "help","outdir=","quiet"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
-check_opts(opts,long_opts)
 
 if len(cmd_args) == 1:
-	infile = cmd_args[0]
-	check_infile(infile)
+	infile = cmd_args[0]; check_infile(infile)
 else: usage(help_data)
 
 # Begin execution
 
-try:
-	metadata,tx_sig = get_lines_from_file(infile,"signed transaction")
-except:
-	msg("Invalid signed transaction file")
-	sys.exit(3)
-
-metadata = metadata.split()
-if len(metadata) != 3:
-	msg("Invalid file header")
-	sys.exit(3)
-
-from binascii import unhexlify
-try: unhexlify(tx_sig)
-except:
-	msg("Invalid signed transaction data")
-	sys.exit(3)
-
 do_license_msg()
 
+tx_data = get_lines_from_file(infile,"signed transaction data")
+
+metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,infile)
+
 qmsg("Signed transaction file '%s' is valid" % infile)
+
+c = connect_to_bitcoind()
+
+prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
+reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
+if reply and reply in "YyVv":
+	p = True if reply in "Vv" else False
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata,pager=p)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"
@@ -85,14 +76,12 @@ confirm_or_exit(warn, what, expect)
 
 msg("Sending transaction")
 
-c = connect_to_bitcoind()
-
 try:
-	tx = c.sendrawtransaction(tx_sig)
+	tx_id = c.sendrawtransaction(tx_hex)
 except:
 	msg("Unable to send transaction")
 	sys.exit(3)
 
-msg("Transaction sent: %s" % tx)
+msg("Transaction sent: %s" % tx_id)
 
-print_sent_tx_to_file(tx,metadata,opts)
+write_sent_tx_num_to_file(tx_id,metadata,opts)

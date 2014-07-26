@@ -31,35 +31,37 @@ prog_name = sys.argv[0].split("/")[-1]
 
 help_data = {
 	'prog_name': prog_name,
-	'desc':    "Generate a {} deterministic wallet".format(g.proj_name),
+	'desc':    "Generate an {} deterministic wallet".format(g.proj_name),
 	'usage':   "[opts] [infile]",
 	'options': """
 -h, --help                 Print this help message
--d, --outdir            d  Specify an alternate directory 'd' for output
+-d, --outdir=           d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase      Print passphrase to screen when typing it
 -H, --show-hash-presets    Show information on available hash presets
--l, --seed-len          n  Create seed of length 'n'. Options: {}
-                           (default: {})
--L, --label             l  Label to identify this wallet (32 chars max.
+-l, --seed-len=         n  Create seed of length 'n'. Options: {seed_lens}
+                           (default: {g.seed_len})
+-L, --label=            l  Label to identify this wallet (32 chars max.
                            Allowed symbols: A-Z, a-z, 0-9, " ", "_", ".")
--p, --hash-preset       p  Use scrypt.hash() parameters from preset 'p'
-                           (default: '{}')
--P, --passwd-file       f  Get passphrase from file 'f'
+-p, --hash-preset=      p  Use scrypt.hash() parameters from preset 'p'
+                           (default: '{g.hash_preset}')
+-P, --passwd-file=      f  Get passphrase from file 'f'
 -q, --quiet                Produce quieter output; overwrite files without
                            prompting
--u, --usr-randlen       n  Get 'n' characters of randomness from the user
-                           (default: {})
+-u, --usr-randlen=      n  Get 'n' characters of randomness from the user
+                           (default: {g.usr_randlen})
 -v, --verbose              Produce more verbose output
 
--b, --from-brain       l,p Generate wallet from a user-created passphrase,
+-b, --from-brain=      l,p Generate wallet from a user-created passphrase,
                            i.e. a "brainwallet", using seed length 'l' and
                            hash preset 'p' (comma-separated)
 -g, --from-incog           Generate wallet from an incognito-format wallet
 -m, --from-mnemonic        Generate wallet from an Electrum-like mnemonic
--s, --from-seed            Generate wallet from a seed in .{S} format
+-s, --from-seed            Generate wallet from a seed in .{g.seed_ext} format
+""".format(seed_lens=",".join([str(i) for i in g.seed_lens]), g=g),
+	'notes': """
 
 By default (i.e. when invoked without any of the '--from-<what>' options),
-{} generates a wallet based on a random seed.
+{prog_name} generates a wallet based on a random seed.
 
 Data for the --from-<what> options will be taken from <infile> if <infile>
 is specified.  Otherwise, the user will be prompted to enter the data.
@@ -84,27 +86,14 @@ the '--seed-len' option.
 For a brainwallet passphrase to always generate the same keys and
 addresses, the same 'l' and 'p' parameters to '--from-brain' must be used
 in all future invocations with that passphrase.
-""".format(
-		",".join([str(i) for i in g.seed_lens]),
-		g.seed_len,
-		g.hash_preset,
-		g.usr_randlen,
-		prog_name,
-		S=g.seed_ext,
-	)
+""".format(prog_name=prog_name)
 }
 
-short_opts = "hd:eHl:L:p:P:qu:vb:gms"
-long_opts  = "help","outdir=","echo_passphrase","show_hash_presets","seed_len=",\
-			"label=","hash_preset=","passwd_file=","quiet","usr_randlen=","verbose",\
-			"from_brain=","from_incog","from_mnemonic","from_seed"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
 if 'show_hash_presets' in opts: show_hash_presets()
-
-check_opts(opts,long_opts)
 
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 

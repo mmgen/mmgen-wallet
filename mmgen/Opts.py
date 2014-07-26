@@ -23,18 +23,28 @@ def usage(hd):
 	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])
 	sys.exit(2)
 
+def print_version_info(progname):
+	print """
+'{}' version {g.version}.  Part of the {g.proj_name} suite.
+Copyright (C) {g.Cdates} by {g.author} {g.email}.
+""".format(progname, g=g).strip()
 
 def print_help(progname,help_data):
 	pn_len = str(len(progname)+2)
-	print ("  %-"+pn_len+"s %s")    % (progname.upper()+":", help_data['desc'])
-	print ("  %-"+pn_len+"s %s %s") % ("USAGE:", progname, help_data['usage'])
+	print ("  %-"+pn_len+"s %s") % (progname.upper()+":", help_data['desc'].strip())
+	print ("  %-"+pn_len+"s %s %s")%("USAGE:", progname, help_data['usage'].strip())
 	sep = "\n    "
 	print "  OPTIONS:"+sep+"%s" % sep.join(help_data['options'].strip().split("\n"))
+	if "notes" in help_data:
+		print "  %s" % "\n  ".join(help_data['notes'][1:-1].split("\n"))
 
 
 def process_opts(argv,help_data,short_opts,long_opts):
 
 	progname = argv[0].split("/")[-1]
+
+	if len(argv) == 2 and argv[1] == '--version': # MMGen only!
+		print_version_info(progname); sys.exit()
 
 	if g.debug:
 		print "Short opts: %s" % repr(short_opts)
@@ -69,6 +79,26 @@ def process_opts(argv,help_data,short_opts,long_opts):
 	return opts,args
 
 
+def parse_opts(argv,help_data):
+
+	lines = help_data['options'].strip().split("\n")
+	import re
+	pat = r"^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{1,64})(=*) (.*)"
+	opt_data = [m.groups() for m in [re.match(pat,l) for l in lines] if m]
+
+	short_opts = "".join([d[0]+(":" if d[2] else "") for d in opt_data if d])
+	long_opts = [d[1].replace("-","_")+d[2] for d in opt_data if d]
+	help_data['options'] = "\n".join(
+		["-{0}, --{1}{w} {3}".format(w=" " if m.group(3) else "", *m.groups())
+			if m else k for m,k in [(re.match(pat,l),l) for l in lines]]
+	)
+	opts,infiles = process_opts(argv,help_data,short_opts,long_opts)
+
+	if not check_opts(opts,long_opts): sys.exit(1) # MMGen only!
+
+	return opts,infiles
+
+
 def show_opts_and_cmd_args(opts,cmd_args):
 	print "Processed options:     %s" % repr(opts)
 	print "Cmd args:              %s" % repr(cmd_args)
@@ -85,51 +115,41 @@ def check_opts(opts,long_opts):
 		if i+"=" in long_opts:
 			set_if_unset_and_typeconvert(opts,i)
 
-	for opt in opts.keys():
+	for opt,val in opts.items():
 
-		val = opts[opt]
 		what = "parameter for '--%s' option" % opt.replace("_","-")
 
 		# Check for file existence and readability
-		for i in 'keys_from_file','addrlist','passwd_file','keysforaddrs':
-			if opt == i:
-				check_infile(val)
-				return
+		if opt in ('keys_from_file','addrlist','passwd_file','keysforaddrs'):
+			check_infile(val)
+			return True
 
 		if opt == 'outdir':
 			what = "output directory"
-			import re, os, stat
-			# TODO Non-portable:
-			d = re.sub(r'/*$','', val)
-			opts[opt] = d
+			import os
+			if os.path.isdir(val):
+				if os.access(val, os.W_OK|os.X_OK):
+					opts[opt] = os.path.normpath(val)
+				else:
+					msg("Requested %s '%s' is unwritable by you" % (what,val))
+					return False
+			else:
+				msg("Requested %s '%s' doen not exist" % (what,val))
+				return False
 
-			try: mode = os.stat(d).st_mode
-			except:
-				msg("Unable to stat requested %s '%s'" % (what,d))
-				sys.exit(1)
-
-			if not stat.S_ISDIR(mode):
-				msg("Requested %s '%s' is not a directory" % (what,d))
-				sys.exit(1)
-
-			if not os.access(d, os.W_OK|os.X_OK):
-				msg("Requested %s '%s' is unwritable by you" % (what,d))
-				sys.exit(1)
 		elif opt == 'label':
-			label = val.strip()
-			opts[opt] = label
 
-			if len(label) > g.max_wallet_label_len:
+			if len(val) > g.max_wallet_label_len:
 				msg("Label must be %s characters or less" %
 					g.max_wallet_label_len)
-				sys.exit(1)
+				return False
 
-			for ch in list(label):
-				if ch not in g.wallet_label_symbols:
-					msg("""
-"%s": illegal character in label.  Only ASCII characters are permitted.
-""".strip() % ch)
-					sys.exit(1)
+			for ch in list(val):
+				chs = g.wallet_label_symbols
+				if ch not in chs:
+					msg("'%s': ERROR: label contains an illegal symbol" % val)
+					msg("The following symbols are permitted:\n%s" % "".join(chs))
+					return False
 		elif opt == 'export_incog_hidden' or opt == 'from_incog_hidden':
 			try:
 				if opt == 'export_incog_hidden':
@@ -138,86 +158,88 @@ def check_opts(opts,long_opts):
 					outfile,offset,seed_len = val.split(",")
 			except:
 				msg("'%s': invalid %s" % (val,what))
-				sys.exit(1)
+				return False
 
 			try:
 				o = int(offset)
 			except:
 				msg("'%s': invalid 'o' %s (not an integer)" % (offset,what))
-				sys.exit(1)
+				return False
 
 			if o < 0:
 				msg("'%s': invalid 'o' %s (less than zero)" % (offset,what))
-				sys.exit(1)
+				return False
 
 			if opt == 'from_incog_hidden':
 				try:
 					sl = int(seed_len)
 				except:
 					msg("'%s': invalid 'l' %s (not an integer)" % (sl,what))
-					sys.exit(1)
+					return False
 
 				if sl not in g.seed_lens:
 					msg("'%s': invalid 'l' %s (valid choices: %s)" %
 						(sl,what," ".join(str(i) for i in g.seed_lens)))
-					sys.exit(1)
+					return False
 
 			import os, stat
 			try: mode = os.stat(outfile).st_mode
 			except:
 				msg("Unable to stat requested %s '%s'" % (what,outfile))
-				sys.exit(1)
+				return False
 
 			if not (stat.S_ISREG(mode) or stat.S_ISBLK(mode)):
 				msg("Requested %s '%s' is not a file or block device" %
 						(what,outfile))
-				sys.exit(1)
+				return False
 
 			ac,m = (os.W_OK,"writ") \
 				if "export_incog_hidden" in opts else (os.R_OK,"read")
 			if not os.access(outfile, ac):
 				msg("Requested %s '%s' is un%sable by you" % (what,outfile,m))
-				sys.exit(1)
+				return False
 
 		elif opt == 'from_brain':
 			try:
 				l,p = val.split(",")
 			except:
 				msg("'%s': invalid %s" % (val,what))
-				sys.exit(2)
+				return False
 
 			try:
 				int(l)
 			except:
 				msg("'%s': invalid 'l' %s (not an integer)" % (l,what))
-				sys.exit(1)
+				return False
 
 			if int(l) not in g.seed_lens:
 				msg("'%s': invalid 'l' %s.  Options: %s" %
 						(l, what, ", ".join([str(i) for i in g.seed_lens])))
-				sys.exit(1)
+				return False
 
 			if p not in g.hash_presets:
 				hps = ", ".join([i for i in sorted(g.hash_presets.keys())])
 				msg("'%s': invalid 'p' %s.  Options: %s" % (p, what, hps))
-				sys.exit(1)
+				return False
 		elif opt == 'seed_len':
 			if val not in g.seed_lens:
 				msg("'%s': invalid %s.  Options: %s"
 				% (val,what,", ".join([str(i) for i in g.seed_lens])))
-				sys.exit(2)
+				return False
 		elif opt == 'hash_preset':
 			if val not in g.hash_presets:
 				msg("'%s': invalid %s.  Options: %s"
 				% (val,what,", ".join(sorted(g.hash_presets.keys()))))
-				sys.exit(2)
+				return False
 		elif opt == 'usr_randlen':
 			if val > g.max_randlen or val < g.min_randlen:
 				msg("'%s': invalid %s (must be >= %s and <= %s)"
 				% (val,what,g.min_randlen,g.max_randlen))
-				sys.exit(2)
+				return False
 		else:
 			if g.debug: print "check_opts(): No test for opt '%s'" % opt
+
+	return True
 
 
 def set_if_unset_and_typeconvert(opts,opt):

@@ -43,10 +43,10 @@ def vmsg_r(s):
 def bail(): sys.exit(9)
 
 def get_extension(f):
-	try: return f.split(".")[-1]
-	except: return ""
+	import os
+	return os.path.splitext(f)[1][1:]
 
-def my_raw_input(prompt,echo=True,allowed_chars=""):
+def my_raw_input(prompt,echo=True):
 	try:
 		if echo:
 			reply = raw_input(prompt)
@@ -61,33 +61,10 @@ def my_raw_input(prompt,echo=True,allowed_chars=""):
 	return reply
 
 
-def my_raw_input_old(prompt,echo=True,allowed_chars=""):
-
-	msg_r(prompt)
-	reply = ""
-
-	while True:
-		ch = get_char(immed_chars="ALL_EXCEPT_ENTER")
-		if allowed_chars and ch not in allowed_chars+"\n\r\b"+chr(0x7f):
-			continue
-		if echo:
-			if ch in "\b"+chr(0x7f): # WIP
-				pass
-				# reply.pop(0)
-			else: msg_r(ch)
-		if ch in "\n\r":
-			if not echo: msg("")
-			break
-		reply += ch
-
-	return reply
-
-
 def _get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
 		return g.hash_presets[hash_preset] # N,p,r,buflen
-	else:
-		# Shouldn't be here
+	else: # Shouldn't be here
 		msg("%s: invalid 'hash_preset' value" % hash_preset)
 		sys.exit(3)
 
@@ -126,7 +103,7 @@ cmessages = {
 	'unencrypted_secret_keys': """
 This program generates secret keys from your {} seed, outputting them in
 UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
-""".format(g.proj_name_cap),
+""".format(g.proj_name),
 	'brain_warning': """
 ############################## EXPERTS ONLY! ##############################
 
@@ -154,12 +131,10 @@ def confirm_or_exit(message, question, expect="YES"):
 
 	conf_msg = "Type uppercase '%s' to confirm: " % expect
 
-	if question[0].isupper():
-		prompt = question + "  " + conf_msg
-	else:
-		prompt = "Are you sure you want to %s?\n%s" % (question,conf_msg)
+	p = question+"  "+conf_msg if question[0].isupper() else \
+		"Are you sure you want to %s?\n%s" % (question,conf_msg)
 
-	if my_raw_input(prompt).strip() != expect:
+	if my_raw_input(p).strip() != expect:
 		msg("Exiting at user request")
 		sys.exit(2)
 
@@ -196,9 +171,10 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 		else: msg_r("\r")
 
 
-def make_chksum_8(s):
+def make_chksum_8(s,sep=False):
 	from hashlib import sha256
-	return sha256(sha256(s).digest()).hexdigest()[:8].upper()
+	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
+	return "{} {}".format(s[:4],s[4:]) if sep else s
 
 def make_chksum_6(s):
 	from hashlib import sha256
@@ -222,12 +198,14 @@ def check_infile(f):
 		msg("Requested input file '%s' is unreadable by you" % f)
 		sys.exit(1)
 
+	return True
+
 
 def _validate_addr_num(n):
 
 	try: n = int(n)
 	except:
-		msg("'%s': invalid argument for address" % n)
+		msg("'%s': address must be an integer" % n)
 		return False
 
 	if n < 1:
@@ -321,7 +299,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 def encrypt_seed(seed, key, iv=1):
 	"""
 	Encrypt a seed for an {} deterministic wallet
-	""".format(g.proj_name_cap)
+	""".format(g.proj_name)
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
@@ -438,6 +416,13 @@ def _display_control_data(label,metadata,hash_preset,salt,enc_seed):
 		("  hex:",      hexlify(enc_seed))
 	): msg(fs.format(*i))
 
+
+def splitN(s,n,sep=None):                      # always return an n-element list
+	ret = s.split(sep,n-1)
+	return ret + ["" for i in range(n-len(ret))]
+
+def split2(s,sep=None): return splitN(s,2,sep) # always return a 2-element list
+def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
 
 def col4(s):
 	nondiv = 1 if len(s) % 4 else 0
@@ -578,7 +563,7 @@ def get_data_from_wallet(infile,silent=False):
 	# Don't make this a qmsg: User will be prompted for passphrase and must see
 	# the filename.
 	if not silent:
-		msg("Getting {} wallet data from file '{}'".format(g.proj_name_cap,infile))
+		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
 
@@ -653,7 +638,8 @@ def get_lines_from_file(infile,what="",remove_comments=False):
 		return lines
 
 
-def get_data_from_file(infile,what="data"):
+def get_data_from_file(infile,what="data",dash=False):
+	if dash and infile == "-": return sys.stdin.read()
 	qmsg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'r')
 	data = f.read()
@@ -682,7 +668,7 @@ def _get_seed_from_seed_data(words):
 		vmsg("%s data produces seed ID: %s" % (g.seed_ext,make_chksum_8(seed)))
 		return seed
 	else:
-		msg("Invalid checksum for {} seed".format(g.proj_name_cap))
+		msg("Invalid checksum for {} seed".format(g.proj_name))
 		return False
 
 
@@ -717,7 +703,7 @@ def get_bitcoind_passphrase(prompt,opts):
 def get_seed_from_wallet(
 		infile,
 		opts,
-		prompt="Enter {} wallet passphrase: ".format(g.proj_name_cap),
+		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
 		silent=False
 		):
 
@@ -770,7 +756,7 @@ def get_hidden_incog_data(opts):
 def get_seed_from_incog_wallet(
 		infile,
 		opts,
-		prompt="Enter %s wallet passphrase: " % g.proj_name_cap,
+		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
 		silent=False,
 		hex_input=False
 	):
@@ -806,7 +792,7 @@ def get_seed_from_incog_wallet(
 	msg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
 	while True:
 		p = "Enter hash preset for %s wallet (default='%s'): "
-		hp = my_raw_input(p % (g.proj_name_cap, g.hash_preset))
+		hp = my_raw_input(p % (g.proj_name, g.hash_preset))
 		if not hp:
 			hp = g.hash_preset; break
 		elif hp in g.hash_presets:
@@ -890,7 +876,7 @@ def _get_words(infile,what,prompt,opts):
 
 def get_seed(infile,opts,silent=False):
 
-	ext = infile.split(".")[-1]
+	ext = get_extension(infile)
 
 	if   ext == g.mn_ext:           source = "mnemonic"
 	elif ext == g.brain_ext:        source = "brainwallet"
@@ -922,7 +908,7 @@ def get_seed(infile,opts,silent=False):
 		if not g.quiet:
 			confirm_or_exit(
 				cmessages['brain_warning'].format(
-					g.proj_name_cap, *_get_from_brain_opt_params(opts)),
+					g.proj_name, *_get_from_brain_opt_params(opts)),
 				"continue")
 		prompt = "Enter brainwallet passphrase: "
 		words = _get_words(infile,"brainwallet data",prompt,opts)

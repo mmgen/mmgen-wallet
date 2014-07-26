@@ -33,26 +33,27 @@ help_data = {
 	'usage':   "[opts] <transaction file>,.. [mmgen wallet/seed/words/brainwallet file]...",
 	'options': """
 -h, --help               Print this help message
--d, --outdir          d  Specify an alternate directory 'd' for output
+-d, --outdir=         d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase    Print passphrase to screen when typing it
 -i, --info               Display information about the transaction and exit
 -I, --tx-id              Display transaction ID and exit
--k, --keys-from-file  k  Provide additional key data from file 'k'
--P, --passwd-file     f  Get passphrase from file 'f'
+-k, --keys-from-file= k  Provide additional key data from file 'k'
+-P, --passwd-file=    f  Get passphrase from file 'f'
 -q, --quiet              Suppress warnings; overwrite files without
                          prompting
 -V, --skip-key-preverify Skip optional key pre-verification step
-
--b, --from-brain     l,p Generate keys from a user-created password,
+-b, --from-brain=    l,p Generate keys from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p'
 -w, --use-wallet-dat     Get keys from a running bitcoind
 -g, --from-incog         Generate keys from an incognito wallet
 -X, --from-incog-hex     Generate keys from an incognito hexadecimal wallet
--G, --from-incog-hidden  f,o,l  Generate keys from incognito data in file
+-G, --from-incog-hidden= f,o,l  Generate keys from incognito data in file
                                  'f' at offset 'o', with seed length of 'l'
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
--s, --from-seed          Generate keys from a seed in .{} format
+-s, --from-seed          Generate keys from a seed in .{g.seed_ext} format
+""".format(g=g),
+	'notes': """
 
 Transactions with either mmgen or non-mmgen input addresses may be signed.
 For non-mmgen inputs, the bitcoind wallet.dat is used as the key source.
@@ -74,34 +75,25 @@ mappings are verified.  Therefore, seed material for these addresses must
 be supplied on the command line.
 
 Seed data supplied in files must have the following extensions:
-   wallet:      '.{}'
-   seed:        '.{}'
-   mnemonic:    '.{}'
-   brainwallet: '.{}'
-""".format(g.seed_ext,g.wallet_ext,g.seed_ext,g.mn_ext,g.brain_ext)
+   wallet:      '.{g.wallet_ext}'
+   seed:        '.{g.seed_ext}'
+   mnemonic:    '.{g.mn_ext}'
+   brainwallet: '.{g.brain_ext}'
+""".format(g=g)
 }
 
-short_opts = "hd:eiIk:P:qVb:wgXG:ms"
-long_opts  = "help","outdir=","echo_passphrase","info","tx_id",\
-			"keys_from_file=","passwd_file=","quiet","skip_key_preverify",\
-			"from_brain=","use_wallet_dat",\
-			"from_incog","from_incog_hex","from_incog_hidden=",\
-			"from_mnemonic","from_seed"
-
-opts,infiles = process_opts(sys.argv,help_data,short_opts,long_opts)
+opts,infiles = parse_opts(sys.argv,help_data)
 
 if "quiet" in opts: g.quiet = True
 if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
 	opts['from_incog'] = True
-
-check_opts(opts,long_opts)
 
 if not infiles: usage(help_data)
 for i in infiles: check_infile(i)
 
 c = connect_to_bitcoind()
 
-seeds = {}
+saved_seeds = {}
 tx_files = [i for i in set(infiles) if get_extension(i) == g.rawtx_ext]
 infiles  = list(set(infiles) - set(tx_files))
 
@@ -139,9 +131,10 @@ for tx_file in tx_files:
 		preverify_keys(a, keys)
 		opts['skip_key_preverify'] = True
 
-	check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,seeds,opts)
+	check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,saved_seeds,opts)
 
-	if len(tx_files) > 1: msg("\nTransaction #%s:" % (tx_files.index(tx_file)+1))
+	if len(tx_files) > 1:
+		msg("\nTransaction %s/%s:" % (tx_files.index(tx_file)+1,len(tx_files)))
 	qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
@@ -156,7 +149,7 @@ for tx_file in tx_files:
 
 	if mmgen_addrs:
 		ml = [i['account'].split()[0] for i in mmgen_addrs]
-		keys += get_keys_for_mmgen_addrs(ml,infiles,seeds,opts)
+		keys += get_keys_for_mmgen_addrs(ml,infiles,saved_seeds,opts)
 
 		if 'use_wallet_dat' in opts:
 			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
@@ -171,7 +164,7 @@ for tx_file in tx_files:
 	if sig_tx['complete']:
 		prompt = "OK\nSave signed transaction?"
 		if user_confirm(prompt,default_yes=True):
-			print_signed_tx_to_file(tx_hex,sig_tx['hex'],metadata,opts)
+			write_signed_tx_to_file(tx_hex,sig_tx['hex'],metadata,inputs_data,b2m_map,opts)
 	else:
 		msg("failed\nSome keys were missing.  Transaction could not be signed.")
 		sys.exit(3)

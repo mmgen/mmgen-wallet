@@ -36,6 +36,8 @@ help_data = {
 -h, --help                 Print this help message
 -q, --quiet                Produce quieter output
 -v, --verbose              Produce more verbose output
+""",
+	'notes': """
 
 COMMANDS:{}
 Type '{} <command> --help for usage information on a particular
@@ -43,11 +45,9 @@ command
 """.format(command_help,prog_name)
 }
 
-short_opts = "hqv"
-long_opts  = "help","quiet","verbose"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
-if 'quiet' in opts: g.quiet = True
+if 'quiet' in opts:   g.quiet = True
 if 'verbose' in opts: g.verbose = True
 
 if len(cmd_args) < 1:

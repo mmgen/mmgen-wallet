@@ -75,26 +75,21 @@ help_data = {
 	'usage':   "[opts] <bitcoind wallet file>",
 	'options': """
 -h, --help             Print this help message
--d, --outdir        d  Specify an alternate directory 'd' for output
+-d, --outdir=       d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Display passphrase on screen upon entry
 -j, --json             Dump wallet in json format
 -k, --keys             Dump all private keys (flat list)
 -a, --addrs            Dump all addresses (flat list)
--K, --keysforaddrs  f  Dump private keys for addresses listed in file 'f'
--P, --passwd-file   f  Get passphrase from file 'f'
+-K, --keysforaddrs= f  Dump private keys for addresses listed in file 'f'
+-P, --passwd-file=  f  Get passphrase from file 'f'
 -S, --stdout           Dump to stdout rather than file
 """
 }
 
-short_opts = "hd:ejkaK:P:S"
-long_opts  = "help","outdir=","echo_passphrase","json","keys","addrs",\
-			"keysforaddrs=","passwd_file=","stdout"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
-check_opts(opts,long_opts)
-
-from mmgen.util import check_infile
 if len(cmd_args) == 1:
+	from mmgen.util import check_infile
 	check_infile(cmd_args[0])
 else:
 	usage(help_data)

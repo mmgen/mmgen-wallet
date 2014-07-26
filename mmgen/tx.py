@@ -37,7 +37,31 @@ which makes the signing process more complicated.  When signing the
 transaction, keys for the non-mmgen inputs must be supplied in a separate
 file using the '-k' option to mmgen-txsign.
 
-Selected mmgen inputs: %s"""
+Selected mmgen inputs: %s""",
+'too_many_acct_addresses': """
+ERROR: More than one address found for account: "%s".
+The tracking "wallet.dat" file appears to have been altered by a non-{g.proj_name}
+program.  Please restore "wallet.dat" from a backup or create a new wallet
+and re-import your addresses.""".strip().format(g=g),
+	'addrfile_no_data_msg': """
+No data found for MMgen address '%s'. Please import this address into
+your tracking wallet, or supply an address file for it on the command line.
+""".strip(),
+	'addrfile_warn_msg': """
+Warning: no data for address '{mmaddr}' was found in the tracking wallet, so
+this information was taken from the user-supplied address file. You're strongly
+advised to import this address into your tracking wallet before proceeding with
+this transaction.  The address will not be tracked until you do so.
+""".strip(),
+	'addrfile_fail_msg': """
+No data for MMgen address '{mmaddr}' could be found in either the tracking
+wallet or the supplied address file.  Please import this address into your
+tracking wallet, or supply an address file for it on the command line.
+""".strip(),
+	'no_spendable_outputs': """
+No spendable outputs found!  Import addresses with balances into your
+watch-only wallet using 'mmgen-addrimport' and then re-run this program.
+""".strip()
 }
 
 # Deleted text:
@@ -73,6 +97,7 @@ def trim_exponent(n):
 
 
 def is_btc_amt(amt):
+	# amt must be a string!
 
 	from decimal import Decimal
 	try:
@@ -94,12 +119,11 @@ def is_btc_amt(amt):
 
 	return trim_exponent(ret)
 
-def check_btc_amt(amt):
+
+def normalize_btc_amt(amt):
 	ret = is_btc_amt(amt)
-	if ret:
-		return ret
-	else:
-		sys.exit(3)
+	if ret: return ret
+	else:   sys.exit(3)
 
 
 def get_bitcoind_cfg_options(cfg_keys):
@@ -116,37 +140,24 @@ def get_bitcoind_cfg_options(cfg_keys):
 		msg("Don't know where to look for 'bitcoin.conf'")
 		sys.exit(3)
 
-	try:
-		f = open(cfg_file)
-	except:
-		msg("Unable to open file '%s' for reading" % cfg_file)
+	cfg = dict([(k,v) for k,v in [split2(line.translate(None,"\t "),"=")
+			for line in get_lines_from_file(cfg_file)] if k in cfg_keys])
+
+	for k in set(cfg_keys) - set(cfg.keys()):
+		msg("Configuration option '%s' must be set in %s" % (k,cfg_file))
 		sys.exit(2)
-
-	cfg = {}
-
-	for line in f.readlines():
-		s = line.translate(None,"\n\t ").split("=")
-		for k in cfg_keys:
-			if s[0] == k: cfg[k] = s[1]
-
-	f.close()
-
-	for k in cfg_keys:
-		if not k in cfg:
-			msg("Configuration option '%s' must be set in %s" % (k,cfg_file))
-			sys.exit(2)
 
 	return cfg
 
 
-def print_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
+def write_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
 	outfile = "tx_%s[%s].%s" % (tx_id,send_amt,g.rawtx_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
-	metadata = "%s %s %s" % (tx_id, send_amt, make_timestamp())
-	data = "%s\n%s\n%s\n%s\n" % (
-			metadata, tx,
+	data = "{} {} {}\n{}\n{}\n{}\n".format(
+			tx_id, send_amt, make_timestamp(),
+			tx,
 			repr([i.__dict__ for i in sel_unspent]),
 			repr(b2m_map)
 		)
@@ -154,17 +165,22 @@ def print_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
 	msg("Transaction data saved to file '%s'" % outfile)
 
 
-def print_signed_tx_to_file(tx,sig_tx,metadata,opts):
+def write_signed_tx_to_file(tx,sig_tx,metadata,inputs_data,b2m_map,opts):
 	tx_id = make_chksum_6(unhexlify(tx)).upper()
 	outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
-	data = "%s\n%s\n" % (" ".join(metadata),sig_tx)
+	data = "{}\n{}\n{}\n{}\n".format(
+			" ".join(metadata[:2] + [make_timestamp()]),
+			sig_tx,
+			repr(inputs_data),
+			repr(b2m_map)
+		)
 	write_to_file(outfile,data,confirm=False)
 	msg("Signed transaction saved to file '%s'" % outfile)
 
 
-def print_sent_tx_to_file(tx,metadata,opts):
+def write_sent_tx_num_to_file(tx,metadata,opts):
 	outfile = "tx_{}[{}].out".format(*metadata[:2])
 	if 'outdir' in opts:
 		outfile = "%s/%s" % (opts['outdir'], outfile)
@@ -176,7 +192,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 
 	pfs  = " %-4s %-67s %-34s %-12s %-13s %-8s %-10s %s"
 	pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
-		"Amount (BTC)","Confirms","Age (days)", "Comment")]
+		"Amount (BTC)","Conf.","Age (days)", "Comment")]
 
 	for n,i in enumerate(out):
 		addr = "=" if i.skip == "addr" and "grouped" in sort_info else i.address
@@ -199,7 +215,10 @@ def sort_and_view(unspent):
 	def s_txid(i):  return "%s %03s" % (i.txid,i.vout)
 	def s_addr(i):  return i.address
 	def s_age(i):   return i.confirmations
-	def s_mmgen(i): return i.account
+	def s_mmgen(i):
+		m = parse_mmgen_label(i.account)[0]
+		if m: return "{}:{:>0{w}}".format(w=g.mmgen_idx_max_digits, *m.split(":"))
+		else: return "G" + i.account
 
 	sort,group,show_days,show_mmaddr,reverse = "age",False,False,True,True
 	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
@@ -216,7 +235,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 "('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
 
 	from copy import deepcopy
-	print_to_file_msg = ""
+	write_to_file_msg = ""
 	msg("")
 
 	from mmgen.term import get_terminal_size
@@ -233,7 +252,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		addr_w = min(34+((1+max_acct_len) if show_mmaddr else 0),cols-46)
 		tx_w = max(11,min(64, cols-addr_w-32))
 		fs = " %-4s %-" + str(tx_w) + "s %-2s %-" + str(addr_w) + "s %-13s %-s"
-		a = "Age(d)" if show_days else "Confirms"
+		a = "Age(d)" if show_days else "Conf."
 		table_hdr = fs % ("Num","TX id  Vout","","Address", "Amount (BTC)",a)
 
 		unsp = deepcopy(unspent)
@@ -283,14 +302,13 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			d = i.days if show_days else i.confirmations
 			out.append(fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,d))
 
-		msg("\n".join(out) +"\n\n" + print_to_file_msg + options_msg)
-		print_to_file_msg = ""
+		msg("\n".join(out) +"\n\n" + write_to_file_msg + options_msg)
+		write_to_file_msg = ""
 
-		immed_chars = "atDdAMrgmeqpvw"
 		skip_prompt = False
 
 		while True:
-			reply = get_char(prompt, immed_chars=immed_chars)
+			reply = get_char(prompt, immed_chars="atDdAMrgmeqpvw")
 
 			if   reply == 'a': unspent.sort(key=s_amt);  sort = "amount"
 			elif reply == 't': unspent.sort(key=s_txid); sort = "txid"
@@ -311,7 +329,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				data = format_unspent_outputs_for_printing(unsp,sort_info,total)
 				outfile = "listunspent[%s].out" % ",".join(sort_info)
 				write_to_file(outfile, data)
-				print_to_file_msg = "Data written to '%s'\n\n" % outfile
+				write_to_file_msg = "Data written to '%s'\n\n" % outfile
 			elif reply == 'v':
 				do_pager("\n".join(out))
 				continue
@@ -332,15 +350,10 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 
 def parse_mmgen_label(s,check_label_len=False):
-
-	if not s: return "",""
-
-	try:    w1,w2 = s.split(None,1)
-	except: w1,w2 = s,""
-
-	if not is_mmgen_addr(w1): return "",w1
-	if check_label_len: check_addr_label(w2)
-	return w1,w2
+	l = split2(s)
+	if not is_mmgen_addr(l[0]): return "",s
+	if check_label_len: check_addr_label(l[1])
+	return tuple(l)
 
 
 def view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata=[],pager=False):
@@ -401,53 +414,51 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata=[],pager=False):
 	out += "TX fee:       %s BTC\n" % trim_exponent(total_in-total_out)
 
 	if pager: do_pager(out)
-	else:     msg("\n"+out)
+	else:     print "\n"+out
 
 
 def parse_tx_data(tx_data,infile):
 
-	if len(tx_data) != 4:
+	try:
+		metadata,tx_hex,inputs_data,outputs_data = tx_data
+	except:
 		msg("'%s': not a transaction file" % infile)
 		sys.exit(2)
 
 	err_fmt = "Transaction %s is invalid"
 
-	if len(tx_data[0].split()) != 3:
+	if len(metadata.split()) != 3:
 		msg(err_fmt % "metadata")
 		sys.exit(2)
 
-	try: unhexlify(tx_data[1])
+	try: unhexlify(tx_hex)
 	except:
 		msg(err_fmt % "hex data")
 		sys.exit(2)
 	else:
-		if not tx_data:
+		if not tx_hex:
 			msg("Transaction is empty!")
 			sys.exit(2)
 
 	try:
-		inputs_data = eval(tx_data[2])
+		inputs_data = eval(inputs_data)
 	except:
 		msg(err_fmt % "inputs data")
 		sys.exit(2)
-	else:
-		if not inputs_data:
-			msg("Transaction has no inputs!")
-			sys.exit(2)
 
 	try:
-		map_data = eval(tx_data[3])
+		outputs_data = eval(outputs_data)
 	except:
 		msg(err_fmt % "mmgen to btc address map data")
 		sys.exit(2)
 
-	return tx_data[0].split(),tx_data[1],inputs_data,map_data
+	return metadata.split(),tx_hex,inputs_data,outputs_data
 
 
 def select_outputs(unspent,prompt):
 
 	while True:
-		reply = my_raw_input(prompt,allowed_chars="0123456789 -").strip()
+		reply = my_raw_input(prompt).strip()
 
 		if not reply: continue
 
@@ -462,111 +473,61 @@ def select_outputs(unspent,prompt):
 
 		return selected
 
-def is_mmgen_seed(s):
+def is_mmgen_seed_id(s):
 	import re
-	return len(s) == 8 and re.match(r"^[0123456789ABCDEF]*$",s)
+	return True if re.match(r"^[0123456789ABCDEF]{8}$",s) else False
 
-def is_mmgen_num(s):
+def is_mmgen_idx(s):
 	import re
-	return len(s) <= g.mmgen_idx_max_digits \
-		and re.match(r"^[123456789]+[0123456789]*$",s)
+	m = g.mmgen_idx_max_digits
+	return True if re.match(r"^[0123456789]{1,"+str(m)+r"}$",s) else False
 
 def is_mmgen_addr(s):
-	import re
-	return len(s) > 9 and s[8] == ':' \
-		and re.match(r"^[0123456789ABCDEF]*$",s[:8]) \
-		and len(s[9:]) <= g.mmgen_idx_max_digits \
-		and re.match(r"^[123456789]+[0123456789]*$",s[9:])
+	seed_id,idx = split2(s,":")
+	return is_mmgen_seed_id(seed_id) and is_mmgen_idx(idx)
 
 def is_btc_addr(s):
 	from mmgen.bitcoin import verify_addr
 	return verify_addr(s)
 
 
-def btc_addr_to_mmgen_addr(btc_addr,b2m_map):
-	if btc_addr in b2m_map:
-		return b2m_map[btc_addr]
-	return "",""
-
-
-def mmgen_addr_to_walletd(c,mmaddr,acct_data):
+def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 
 	# We don't want to create a new object, so we'll use append()
 	if not acct_data:
 		for i in c.listaccounts():
 			acct_data.append(i)
 
-	for a in acct_data:
-		if not a: continue
-		try:
-			w1,w2 = a.split(None,1)
-		except:
-			w1,w2 = a,""
-		if w1 == mmaddr:
-			acct = a
-			break
-	else:
-		return "",""
+	for acct in acct_data:
+		m,comment = parse_mmgen_label(acct)
+		if m == mmaddr:
+			addrlist = c.getaddressesbyaccount(acct)
+			if len(addrlist) == 1:
+				return addrlist[0],comment
+			else:
+				msg(txmsg['too_many_acct_addresses'] % acct); sys.exit(2)
 
-	alist = c.getaddressesbyaccount(acct)
-
-	if len(alist) != 1:
-		msg("""
-ERROR: More than one address found for account: "%s".
-The tracking "wallet.dat" file appears to have been altered by a non-%s
-program.  Please restore "wallet.dat" from a backup or create a new wallet
-and re-import your addresses.
-""".strip() % (acct,g.proj_name_cap))
-		sys.exit(3)
-
-	return alist[0],w2
+	return "",""
 
 
-def mmgen_addr_to_addr_data(m,addr_data):
+def mmaddr2btcaddr_addrfile(mmaddr,addr_data):
 
-	no_data_msg = """
-No data found for MMgen address '%s'. Please import this address into
-your tracking wallet, or supply an address file for it on the command line.
-""".strip() % m
-	warn_msg = """
-Warning: no data for address '%s' exists in the wallet, so it was
-taken from the user-supplied address file.  You're strongly advised to
-import this address into your tracking wallet before proceeding with
-this transaction.  The address will not be tracked until you do so.
-""".strip() % m
-	fail_msg = """
-No data found for MMgen address '%s' in either wallet or supplied
-address file.  Please import this address into your tracking wallet, or
-supply an address file for it on the command line.
-""".strip() % m
+	mmid,mmidx = mmaddr.split(":")
 
-	ID,num = m.split(":")
-	from binascii import unhexlify
-	try: unhexlify(ID)
-	except: pass
-	else:
-		try: num = int(num)
-		except: pass
-		else:
-			if not addr_data:
-				msg(no_data_msg)
-				sys.exit(2)
-			for i in addr_data:
-				if ID == i[0]:
-					for j in i[1]:
-						if j[0] == num:
-							msg(warn_msg)
-							if not user_confirm("Continue anyway?"):
-								sys.exit(1)
-							return j[1],(j[2] if len(j) == 3 else "")
-			msg(fail_msg)
-			sys.exit(2)
+	for ad in addr_data:
+		if mmid == ad[0]:
+			for j in ad[1]:
+				if j[0] == mmidx:
+					msg(txmsg['addrfile_warn_msg'].format(mmaddr=mmaddr))
+					if not user_confirm("Continue anyway?"):
+						sys.exit(1)
+					return j[1:] if len(j) == 3 else (j[1],"")
 
-	msg("Invalid format: %s" % m)
-	sys.exit(3)
+	msg(txmsg['addrfile_fail_msg'].format(mmaddr=mmaddr))
+	sys.exit(2)
 
 
-def check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,seeds,opts):
+def check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,saved_seeds,opts):
 	in_maplist = [(i['account'].split()[0],i['address'])
 		for i in inputs_data if i['account']
 			and is_mmgen_addr(i['account'].split()[0])]
@@ -578,7 +539,7 @@ def check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,seeds,opts):
 		mmaddrs = [i[0] for i in maplist]
 		from copy import deepcopy
 		pairs = get_keys_for_mmgen_addrs(mmaddrs,
-				deepcopy(infiles),seeds,opts,gen_pairs=True)
+				infiles,saved_seeds,opts,gen_pairs=True)
 		for a,b in zip(sorted(pairs),sorted(maplist)):
 			if a != b:
 				msg("""
@@ -607,6 +568,17 @@ Only ASCII printable characters are permitted.
 			sys.exit(3)
 
 
+def check_addr_data_hash(seed_id,addr_data):
+	from hashlib import new as hashlib_new
+	addr_data_chksum = make_chksum_8(
+		" ".join(["{} {}".format(*d[:2]) for d in addr_data]), sep=True
+	)
+	from mmgen.addr import fmt_addr_list
+	fl = fmt_addr_list([int(a[0]) for a in addr_data])
+	msg("Computed address data checksum for '{}[{}]': {}".format(
+				seed_id,fl,addr_data_chksum))
+	msg("Check this value against your records")
+
 def parse_addrs_file(f):
 
 	lines = get_lines_from_file(f,"address data",remove_comments=True)
@@ -623,14 +595,14 @@ def parse_addrs_file(f):
 		msg("'%s': invalid first line" % lines[0])
 	elif cbrace != '}':
 		msg("'%s': invalid last line" % cbrace)
-	elif not is_mmgen_seed(seed_id):
+	elif not is_mmgen_seed_id(seed_id):
 		msg("'%s': invalid Seed ID" % seed_id)
 	else:
-		ret = []
+		addr_data = []
 		for i in lines[1:-1]:
 			d = i.split(None,2)
 
-			if not is_mmgen_num(d[0]):
+			if not is_mmgen_idx(d[0]):
 				msg("'%s': invalid address num. in line: %s" % (d[0],d))
 				sys.exit(3)
 
@@ -641,9 +613,11 @@ def parse_addrs_file(f):
 			if len(d) == 3:
 				check_addr_label(d[2])
 
-			ret.append(tuple(d))
+			addr_data.append(tuple(d))
 
-		return seed_id,ret
+		check_addr_data_hash(seed_id,addr_data)
+
+		return seed_id,addr_data
 
 	sys.exit(3)
 
@@ -664,62 +638,46 @@ def sign_transaction(c,tx_hex,sig_data,keys=None):
 
 	return sig_tx
 
+def get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts):
 
-def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,seeds,opts,gen_pairs=False):
+	if seed_id in saved_seeds.keys():
+		return saved_seeds[seed_id]
+
+	while True:
+		if infiles:
+			seed = get_seed_retry(infiles.pop(0),opts)
+		elif "from_brain" in opts or "from_mnemonic" in opts \
+			or "from_seed" in opts or "from_incog" in opts:
+			msg("Need data for seed ID %s" % seed_id)
+			seed = get_seed_retry("",opts)
+		else:
+			msg("ERROR: No seed source found for seed ID: %s" % seed_id)
+			sys.exit(2)
+
+		s_id = make_chksum_8(seed)
+		saved_seeds[s_id] = seed
+
+		if s_id == seed_id: return seed
+
+
+def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts,gen_pairs=False):
 
 	seed_ids = list(set([i[:8] for i in mmgen_addrs]))
 	seed_ids_save = seed_ids[0:]  # deep copy
 	ret = []
 
-	seeds_keys = [i for i in seed_ids if i in seeds]
+	for seed_id in seed_ids:
+		# Returns only if seed is found
+		seed = get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts)
 
-	while seed_ids:
-		if seeds_keys:
-			seed = seeds[seeds_keys.pop(0)]
+		addr_ids = [int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id]
+		from mmgen.addr import generate_keys,generate_addrs
+		if gen_pairs:
+			o = {"gen_what":"addresses"}
+			ret += [("%s:%s" % (seed_id,i['num']),i['addr'])
+				for i in generate_addrs(seed, addr_ids, o)]
 		else:
-			infile = False
-			if infiles:
-				infile = infiles.pop(0)
-				seed = get_seed_retry(infile,opts)
-			elif "from_brain" in opts or "from_mnemonic" in opts \
-				or "from_seed" in opts or "from_incog" in opts:
-				msg("Need data for seed ID %s" % seed_ids[0])
-				seed = get_seed_retry("",opts)
-			else:
-				b,p,v = ("A seed","","is") if len(seed_ids) == 1 \
-						else ("Seed","s","are")
-				msg("ERROR: %s source%s %s required for the following seed ID%s: %s"%
-						(b,p,v,p," ".join(seed_ids)))
-				sys.exit(2)
-
-		seed_id = make_chksum_8(seed)
-		if seed_id in seed_ids:
-			seed_ids.remove(seed_id)
-			addr_ids = [int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id]
-			seeds[seed_id] = seed
-			from mmgen.addr import generate_keys,generate_addrs
-			if gen_pairs:
-				o = {"gen_what":"addresses"}
-				ret += [("%s:%s" % (seed_id,i['num']),i['addr'])
-					for i in generate_addrs(seed, addr_ids, o)]
-			else:
-				ret += [i['wif'] for i in generate_keys(seed, addr_ids)]
-		else:
-			if seed_id in seed_ids_save:
-				msg_r("Ignoring duplicate seed source")
-				if infile: msg(" '%s'" % infile)
-				else:      msg(" for ID %s" % seed_id)
-			else:
-				msg("Seed source produced an invalid seed ID (%s)" % seed_id)
-				if "from_incog" in opts or infile.split(".")[-1] == g.incog_ext:
-					msg(
-"""Incorrect hash preset, password or incognito wallet data
-
-Trying again...""")
-					infiles.insert(0,infile) # ugly!
-				elif infile:
-					msg("Invalid input file '%s'" % infile)
-					sys.exit(2)
+			ret += [i['wif'] for i in generate_keys(seed, addr_ids)]
 
 	return ret
 
@@ -759,7 +717,7 @@ def preverify_keys(addrs_orig, keys_orig):
 
 	if len(keys) < len(addrs):
 		msg("ERROR: not enough keys (%s) for number of non-%s addresses (%s)" %
-				(len(keys),g.proj_name_cap,len(addrs)))
+				(len(keys),g.proj_name,len(addrs)))
 		sys.exit(2)
 
 	import mmgen.bitcoin as b
@@ -803,7 +761,7 @@ def preverify_keys(addrs_orig, keys_orig):
 		if addrs:
 			s = "" if len(addrs) == 1 else "es"
 			msg("No keys found for the following non-%s address%s:" %
-					(g.proj_name_cap,s))
+					(g.proj_name,s))
 			print "  %s" % "\n  ".join(addrs)
 			sys.exit(2)
 

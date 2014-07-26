@@ -27,41 +27,33 @@ from mmgen.util import *
 
 help_data = {
 	'prog_name': sys.argv[0].split("/")[-1],
-	'desc':  """Check integrity of a %s deterministic wallet, display
-                    its information and export seed and mnemonic data."""\
-					% g.proj_name,
+	'desc':  """Check integrity of an {} deterministic wallet, display
+                    its information, and export seed and mnemonic data.
+             """.format(g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help             Print this help message
--d, --outdir        d  Specify an alternate directory 'd' for output
+-d, --outdir=       d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--P, --passwd-file   f  Get passphrase from file 'f'
+-P, --passwd-file=  f  Get passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
 -g, --export-incog     Export wallet to incognito format
 -X, --export-incog-hex Export wallet to incognito hexadecimal format
--G, --export-incog-hidden  f,o  Hide incognito data in existing file 'f'
+-G, --export-incog-hidden= f,o  Hide incognito data in existing file 'f'
                            at offset 'o' (comma-separated)
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -s, --export-seed      Export the wallet's seed to file
 """
 }
 
-short_opts = "hd:eP:qSvgXG:ms"
-long_opts  = "help","outdir=","echo_passphrase","passwd_file=","quiet",\
-			"stdout","verbose",\
-			"export_incog","export_incog_hex","export_incog_hidden=",\
-			"export_mnemonic","export_seed"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
 if 'export_incog_hidden' in opts or 'export_incog_hex' in opts:
 	opts['export_incog'] = True
-
-# Argument sanity checks and processing:
-check_opts(opts,long_opts)
 
 if len(cmd_args) != 1: usage(help_data)
 

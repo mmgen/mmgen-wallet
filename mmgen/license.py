@@ -21,13 +21,14 @@ license.py:  Show the license
 
 import sys
 from mmgen.util import msg, msg_r, get_char
+import mmgen.config as g
 
 gpl = {
 	'warning': """
-  MMGen Copyright (C) 2013-2014 by Philemon <mmgen-py@yandex.com>.  This
+  MMGen Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
   program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
   you are welcome to redistribute it under certain conditions.
-""",
+""".format(g=g),
 	'prompt': """
 Press 'w' for conditions and warranty info, or 'c' to continue:
 """,
@@ -586,7 +587,6 @@ copy of the Program in return for a fee.
 
 def do_license_msg(immed=False):
 
-	import mmgen.config as g
 	if g.quiet or g.no_license: return
 
 	msg(gpl['warning'])

@@ -33,24 +33,20 @@ help_data = {
 	'usage':"[opts] [mmgen address file]",
 	'options': """
 -h, --help        Print this help message
--l, --addrlist f  Import the non-mmgen Bitcoin addresses listed in file 'f'
+-l, --addrlist= f Import the non-mmgen Bitcoin addresses listed in file 'f'
+-q, --quiet       Suppress warnings
 -r, --rescan      Rescan the blockchain.  Required if address to import is
                   on the blockchain and has a balance.  Rescanning is slow.
--q, --quiet       Suppress warnings
 """
 }
 
-short_opts = "hl:qr"
-long_opts  = "help", "addrlist=", "quiet", "rescan"
+opts,cmd_args = parse_opts(sys.argv,help_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,"".join(short_opts),long_opts)
 if 'quiet' in opts: g.quiet = True
 
 if len(cmd_args) != 1 and not 'addrlist' in opts:
 	msg("You must specify an mmgen address list (and/or non-mmgen addresses with the '--addrlist' option)")
 	sys.exit(1)
-
-check_opts(opts,long_opts)
 
 if cmd_args:
 	check_infile(cmd_args[0])
@@ -59,9 +55,9 @@ else:
 	seed_id,addr_data = "",[]
 
 if 'addrlist' in opts:
-	l = get_lines_from_file(opts['addrlist'],"non-mmgen addresses",
+	lines = get_lines_from_file(opts['addrlist'],"non-mmgen addresses",
 			remove_comments=True)
-	addr_data += [(None,i) for i in l]
+	addr_data += [(None,l) for l in lines]
 
 from mmgen.bitcoin import verify_addr
 qmsg_r("Validating addresses...")

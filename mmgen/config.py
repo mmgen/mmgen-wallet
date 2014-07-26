@@ -18,15 +18,20 @@
 """
 config.py:  Constants and configuration options for the mmgen suite
 """
+
+author = "Philemon"
+email = "<mmgen-py@yandex.com>"
+Cdates = '2013-2014'
+version = '0.7.4'
+
 quiet,verbose = False,False
 min_screen_width = 80
 
 from decimal import Decimal
-tx_fee        = Decimal("0.001")
-max_tx_fee    = Decimal("0.1")
+tx_fee        = Decimal("0.0001")
+max_tx_fee    = Decimal("0.01")
 
-proj_name     = "mmgen"
-proj_name_cap = "MMGen"
+proj_name     = "MMGen"
 
 wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
@@ -59,6 +64,7 @@ keyconv_exec = "keyconv"
 from os import getenv
 debug      = True if getenv("MMGEN_DEBUG") else False
 no_license = True if getenv("MMGEN_NOLICENSE") else False
+bogus_wallet_data = True if getenv("MMGEN_BOGUS_WALLET_DATA") else False
 
 mins_per_block = 8.5
 passwd_max_tries = 5
