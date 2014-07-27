@@ -279,7 +279,7 @@ def _scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
-def _get_from_brain_opt_params(opts):
+def get_from_brain_opt_params(opts):
 	l,p = opts['from_brain'].split(",")
 	return(int(l),p)
 
@@ -287,7 +287,7 @@ def _get_from_brain_opt_params(opts):
 def _get_seed_from_brain_passphrase(words,opts):
 	bp = " ".join(words)
 	if g.debug: print "Sanitized brain passphrase: %s" % bp
-	seed_len,hash_preset = _get_from_brain_opt_params(opts)
+	seed_len,hash_preset = get_from_brain_opt_params(opts)
 	if g.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
 	vmsg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
@@ -905,11 +905,6 @@ def get_seed(infile,opts,silent=False):
 		if 'from_brain' not in opts:
 			msg("'--from-brain' parameters must be specified for brainwallet file")
 			sys.exit(2)
-		if not g.quiet:
-			confirm_or_exit(
-				cmessages['brain_warning'].format(
-					g.proj_name, *_get_from_brain_opt_params(opts)),
-				"continue")
 		prompt = "Enter brainwallet passphrase: "
 		words = _get_words(infile,"brainwallet data",prompt,opts)
 		seed = _get_seed_from_brain_passphrase(words,opts)
@@ -996,7 +991,7 @@ def export_to_hidden_incog(incog_enc,opts):
 			"Data written to file")
 
 
-def pretty_hexdump(data,gw,cols,line_nums=False):
+def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	r = 1 if len(data) % gw else 0
 	return "".join(
 		[

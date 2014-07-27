@@ -141,6 +141,11 @@ if g.debug: display_user_random_data(usr_keys,key_timings)
 usr_rand_data = sha256(usr_keys).digest() + \
 				sha256("".join(key_timings)).digest()
 
+if 'from_brain' in opts and not g.quiet:
+	confirm_or_exit(cmessages['brain_warning'].format(
+			g.proj_name, *get_from_brain_opt_params(opts)),
+		"continue")
+
 for i in 'from_mnemonic','from_brain','from_seed','from_incog':
 	if infile or (i in opts):
 		seed = get_seed_retry(infile,opts)
@@ -156,11 +161,12 @@ else:
 salt = os_rand_data[1] + usr_rand_data
 salt = sha256(salt).digest()[:g.salt_len]
 
-qmsg("""Now you must choose a passphrase to encrypt the seed with.  A key will be
+qmsg("""
+Now you must choose a passphrase to encrypt the wallet with.  A key will be
 generated from your passphrase using a hash preset of '%s'.  Please note that
 no strength checking of passphrases is performed.  For an empty passphrase,
 just hit ENTER twice.
-""" % opts['hash_preset'])
+""".strip() % opts['hash_preset'])
 
 passwd = get_new_passphrase("{} wallet passphrase".format(g.proj_name), opts)
 

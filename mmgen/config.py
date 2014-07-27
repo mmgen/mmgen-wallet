@@ -22,7 +22,7 @@ config.py:  Constants and configuration options for the mmgen suite
 author = "Philemon"
 email = "<mmgen-py@yandex.com>"
 Cdates = '2013-2014'
-version = '0.7.4'
+version = '0.7.5'
 
 quiet,verbose = False,False
 min_screen_width = 80
@@ -62,9 +62,9 @@ http_timeout = 30
 keyconv_exec = "keyconv"
 
 from os import getenv
-debug      = True if getenv("MMGEN_DEBUG") else False
-no_license = True if getenv("MMGEN_NOLICENSE") else False
-bogus_wallet_data = True if getenv("MMGEN_BOGUS_WALLET_DATA") else False
+debug      = getenv("MMGEN_DEBUG")
+no_license = getenv("MMGEN_NOLICENSE")
+bogus_wallet_data = getenv("MMGEN_BOGUS_WALLET_DATA")
 
 mins_per_block = 8.5
 passwd_max_tries = 5

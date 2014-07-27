@@ -51,17 +51,22 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The "zero address":
 # 1111111111111111111114oLvT2 (use step2 = ("0" * 40) to generate)
 #
-def pubhex2addr(pubhex):
+def pubhex2hexaddr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()
-	step2 = hashlib_new('ripemd160',step1).hexdigest()
+	return hashlib_new('ripemd160',step1).hexdigest()
+
+def hexaddr2addr(hexaddr):
 	# See above:
-	extra_ones = (len(step2) - len(step2.lstrip("0"))) / 2
-	step3 = sha256(unhexlify('00'+step2)).digest()
-	step4 = sha256(step3).hexdigest()
-	pubkey = int(step2 + step4[:8], 16)
+	extra_ones = (len(hexaddr) - len(hexaddr.lstrip("0"))) / 2
+	step1 = sha256(unhexlify('00'+hexaddr)).digest()
+	step2 = sha256(step1).hexdigest()
+	pubkey = int(hexaddr + step2[:8], 16)
 	return "1" + ("1" * extra_ones) + _numtob58(pubkey)
 
-def verify_addr(addr,verbose=False):
+def pubhex2addr(pubhex):
+	return hexaddr2addr(pubhex2hexaddr(pubhex))
+
+def verify_addr(addr,verbose=False,return_hex=False):
 
 	if addr[0] != "1":
 		if verbose: print "%s: Invalid address" % addr
@@ -78,7 +83,7 @@ def verify_addr(addr,verbose=False):
 		if verbose: print "Invalid checksum in address %s" % ("1" + addr)
 		return False
 
-	return True
+	return addr_hex[:40] if return_hex else True
 
 # Reworked code from here:
 
@@ -172,14 +177,17 @@ def hextowif(hexpriv,compressed=False):
 	key = step1 + step3[:8]
 	return _numtob58(int(key,16))
 
-def privnum2addr(numpriv,compressed=False):
+def privnum2pubhex(numpriv,compressed=False):
 	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
 	if compressed:
 		p = '03' if pubkey[-1] in "13579bdf" else '02'
-		return pubhex2addr(p+pubkey[:64])
+		return p+pubkey[:64]
 	else:
-		return pubhex2addr('04'+pubkey)
+		return '04'+pubkey
+
+def privnum2addr(numpriv,compressed=False):
+	return pubhex2addr(privnum2pubhex(numpriv,compressed))
 
 # Used only in test suite.  To check validity, recode with numtowif()
 def wiftonum(wifpriv):

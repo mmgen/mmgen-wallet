@@ -137,7 +137,7 @@ if not 'info' in opts: do_license_msg(immed=True)
 #write_to_file("bogus_unspent.json", repr(us)); sys.exit()
 if g.bogus_wallet_data:
 	import mmgen.rpc
-	us = eval(get_data_from_file("bogus_unspent.json"))
+	us = eval(get_data_from_file(g.bogus_wallet_data))
 else:
 	us = c.listunspent()
 

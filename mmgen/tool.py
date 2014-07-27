@@ -21,31 +21,29 @@ tool.py:  Routines and data for the mmgen-tool utility
 
 import sys
 import mmgen.bitcoin as bitcoin
+import binascii as ba
 
 from mmgen.util import *
 from mmgen.tx import *
 
+def Msg(s):    sys.stdout.write(s + "\n")
+def Msg_r(s):  sys.stdout.write(s)
+def Vmsg(s):
+	if g.verbose: sys.stdout.write(s + "\n")
+def Vmsg_r(s):
+	if g.verbose: sys.stdout.write(s)
+
 commands = {
-#	"keyconv_compare":          ['wif [str]'],
-#	"keyconv_compare_randloop": ['iterations [int]'],
-#	"hextob58_pad":             ['hexnum [str]],
-#	"b58tohex_pad":             ['b58num [str]'],
-#	"hextob58_pad_randloop":    ['iterations [int]'],
-#	"test_wiftohex":            ['wif [str]'],
-#	"hextosha256":              ['hexnum [str]'],
-#	"hextowiftopubkey":         ['hexnum [str]'],
-#	"pubhextoaddr":             ['hexnum [str]'],
-#	"hextowif_comp":            ['hexnum [str]'],
-#	"wiftohex_comp":            ['wif [str]'],
-#	"privhextoaddr_comp":       ['hexnum [str]'],
-#	"wiftoaddr_comp":           ['wif [str]'],
 	"strtob58":     ['<string> [str]'],
 	"hextob58":     ['<hex number> [str]'],
 	"b58tohex":     ['<b58 number> [str]'],
 	"b58randenc":   [],
+	"getrand":      ['bytes [int=32]'],
 	"randwif":      ['compressed [bool=False]'],
 	"randpair":     ['compressed [bool=False]'],
+	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
 	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
+	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
 	"unhexdump":    ['<infile> [str]'],
 	"mn_rand128":   ['wordlist [str="electrum"]'],
@@ -58,7 +56,16 @@ commands = {
 	"listaddresses": ['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
 	"viewtx":       ['<MMGen tx file> [str]'],
-	"check_addrfile":  ['<MMGen addr file> [str]']
+	"check_addrfile":  ['<MMGen addr file> [str]'],
+	"hexreverse":   ['<hexadecimal string> [str]'],
+	"sha256x2":     ['<str, hexstr or filename> [str]',
+					'hex_input [bool=False]','file_input [bool=False]'],
+	"hexlify":      ['<string> [str]'],
+	"hexaddr2addr": ['<btc address in hex format> [str]'],
+	"addr2hexaddr": ['<btc address> [str]'],
+	"pubkey2addr":  ['<public key in hex format> [str]'],
+	"pubkey2hexaddr": ['<public key in hex format> [str]'],
+	"privhex2addr": ['<private key in hex format> [str]','compressed [bool=False]'],
 }
 
 command_help = """
@@ -69,6 +76,7 @@ command_help = """
   MMGen-specific operations
   id8          - generate 8-character MMGen ID checksum for file (or stdin)
   id6          - generate 6-character MMGen ID checksum for file (or stdin)
+  check_addrfile - compute checksum and address list for MMGen address file
 
   Bitcoin operations:
   strtob58     - convert a string to base 58
@@ -77,7 +85,20 @@ command_help = """
   b58randenc   - generate a random 32-byte number and convert it to base 58
   randwif      - generate a random private key in WIF format
   randpair     - generate a random private key/address pair
+  wif2hex      - convert a private key from WIF to hex format
+  hex2wif      - convert a private key from hex to WIF format
   wif2addr     - generate a Bitcoin address from a key in WIF format
+  pubkey2addr  - convert Bitcoin public key to address
+  pubkey2hexaddr  - convert Bitcoin public key to address in hex format
+  hexaddr2addr - convert Bitcoin address from hex to base58 format
+  addr2hexaddr - convert Bitcoin address from base58 to hex format
+  privhex2addr - generate Bitcoin address from private key in hex format
+
+  Miscellaneous operations:
+  hexreverse   - reverse bytes of a hexadecimal string
+  hexlify      - display string in hexadecimal format
+  sha256x2     - compute a double sha256 hash of data
+  getrand      - print 'n' bytes (default 32) of random data in hex format
 
   Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
   wordlists):
@@ -92,7 +113,6 @@ command_help = """
   getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable
   viewtx        - show raw transaction in human-readable form
-  check_addrfile - compute checksum and address list for MMGen address file
 
   IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
@@ -117,7 +137,6 @@ def process_args(prog_name, command, uargs):
 
 	n = len(cargs_req)
 	if len(uargs_req) != n:
-		print "ERROR: %s argument%s required" % (n, " is" if n==1 else "s are")
 		tool_usage(prog_name, command)
 		sys.exit(1)
 
@@ -166,15 +185,16 @@ def process_args(prog_name, command, uargs):
 # Individual commands
 
 def print_convert_results(indata,enc,dec,no_recode=False):
-	vmsg("Input:         [%s]" % indata)
-	vmsg_r("Encoded data:  ["); msg_r(enc); vmsg_r("]"); msg("")
+	Vmsg("Input:         [%s]" % indata)
+	Vmsg_r("Encoded data:  ["); Msg_r(enc); Vmsg_r("]"); Msg("")
 	if not no_recode:
-		vmsg("Recoded data:  [%s]" % dec)
+		Vmsg("Recoded data:  [%s]" % dec)
 		if indata != dec:
-			msg("WARNING! Recoded number doesn't match input stringwise!")
+			Msg("WARNING! Recoded number doesn't match input stringwise!")
 
 def hexdump(infile, cols=8, line_nums=True):
-	print pretty_hexdump(get_data_from_file(infile,dash=True), 2, cols, line_nums)
+	print pretty_hexdump(get_data_from_file(infile,dash=True),
+			cols=cols, line_nums=line_nums)
 
 def unhexdump(infile):
 	sys.stdout.write(decode_pretty_hexdump(get_data_from_file(infile,dash=True)))
@@ -185,15 +205,15 @@ def strtob58(s):
 	print_convert_results(s,enc,dec)
 
 def hextob58(s,f_enc=bitcoin.b58encode, f_dec=bitcoin.b58decode):
-	enc = f_enc(unhexlify(s))
-	dec = hexlify(f_dec(enc))
+	enc = f_enc(ba.unhexlify(s))
+	dec = ba.hexlify(f_dec(enc))
 	print_convert_results(s,enc,dec)
 
 def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	tmp = f_enc(s)
 	if tmp == False: sys.exit(1)
-	enc = hexlify(tmp)
-	dec = f_dec(unhexlify(enc))
+	enc = ba.hexlify(tmp)
+	dec = f_dec(ba.unhexlify(enc))
 	print_convert_results(s,enc,dec)
 
 def get_random(length):
@@ -204,28 +224,31 @@ def b58randenc():
 	r = get_random(32)
 	enc = bitcoin.b58encode(r)
 	dec = bitcoin.b58decode(enc)
-	print_convert_results(hexlify(r),enc,hexlify(dec))
+	print_convert_results(ba.hexlify(r),enc,ba.hexlify(dec))
+
+def getrand(bytes='32'):
+	print ba.hexlify(get_random(int(bytes)))
 
 def randwif(compressed=False):
-	r_hex = hexlify(get_random(32))
+	r_hex = ba.hexlify(get_random(32))
 	enc = bitcoin.hextowif(r_hex,compressed)
 	print_convert_results(r_hex,enc,"",no_recode=True)
 
 def randpair(compressed=False):
-	r_hex = hexlify(get_random(32))
+	r_hex = ba.hexlify(get_random(32))
 	wif = bitcoin.hextowif(r_hex,compressed)
 	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
-	vmsg("Key (hex):  %s" % r_hex)
-	vmsg_r("Key (WIF):  "); msg(wif)
-	vmsg_r("Addr:       "); msg(addr)
+	Vmsg("Key (hex):  %s" % r_hex)
+	Vmsg_r("Key (WIF):  "); Msg(wif)
+	Vmsg_r("Addr:       "); Msg(addr)
 
-def wif2addr(s_in,compressed=False):
-	s_enc = bitcoin.wiftohex(s_in,compressed)
+def wif2addr(wif,compressed=False):
+	s_enc = bitcoin.wiftohex(wif,compressed)
 	if s_enc == False:
-		msg("Invalid address")
+		Msg("Invalid address")
 		sys.exit(1)
 	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
-	vmsg_r("Addr: "); msg(addr)
+	Vmsg_r("Addr: "); Msg(addr)
 
 from mmgen.mnemonic import *
 from mmgen.mn_electrum  import electrum_words as el
@@ -236,7 +259,7 @@ wordlists = sorted(wl_checksums.keys())
 def get_wordlist(wordlist):
 	wordlist = wordlist.lower()
 	if wordlist not in wordlists:
-		msg('"%s": invalid wordlist.  Valid choices: %s' %
+		Msg('"%s": invalid wordlist.  Valid choices: %s' %
 			(wordlist,'"'+'" "'.join(wordlists)+'"'))
 		sys.exit(1)
 	return el if wordlist == "electrum" else tl
@@ -246,10 +269,10 @@ def do_random_mn(nbytes,wordlist):
 	wlists = wordlists if wordlist == "all" else [wordlist]
 	for wl in wlists:
 		l = get_wordlist(wl)
-		if wl == wlists[0]: vmsg("Seed: %s" % hexlify(r))
+		if wl == wlists[0]: Vmsg("Seed: %s" % ba.hexlify(r))
 		mn = get_mnemonic_from_seed(r,l.strip().split("\n"),
 				wordlist,print_info=False)
-		vmsg("%s wordlist mnemonic:" % (wl.capitalize()))
+		Vmsg("%s wordlist mnemonic:" % (wl.capitalize()))
 		print " ".join(mn)
 
 def mn_rand128(wordlist="electrum"): do_random_mn(16,wordlist)
@@ -340,3 +363,37 @@ def viewtx(infile):
 	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata)
 
 def check_addrfile(infile): parse_addrs_file(infile)
+
+def hexreverse(hex_str):
+	print ba.hexlify(decode_pretty_hexdump(hex_str)[::-1])
+
+def hexlify(s):
+	print ba.hexlify(s)
+
+def sha256x2(s, file_input=False, hex_input=False):
+	from hashlib import sha256
+	if file_input:  b = get_data_from_file(s)
+	elif hex_input: b = decode_pretty_hexdump(s)
+	else:           b = s
+	print sha256(sha256(b).digest()).hexdigest()
+
+def hexaddr2addr(hexaddr):
+	print bitcoin.hexaddr2addr(hexaddr)
+
+def addr2hexaddr(addr):
+	print bitcoin.verify_addr(addr,return_hex=True)
+
+def pubkey2hexaddr(pubkeyhex):
+	print bitcoin.pubhex2hexaddr(pubkeyhex)
+
+def pubkey2addr(pubkeyhex):
+	print bitcoin.pubhex2addr(pubkeyhex)
+
+def privhex2addr(privkeyhex,compressed=False):
+	print bitcoin.privnum2addr(int(privkeyhex,16),compressed)
+
+def wif2hex(wif,compressed=False):
+	print bitcoin.wiftohex(wif,compressed)
+
+def hex2wif(hexpriv,compressed=False):
+	print bitcoin.hextowif(hexpriv,compressed)

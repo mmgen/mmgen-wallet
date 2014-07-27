@@ -107,6 +107,7 @@ for tx_file in tx_files:
 	tx_data = get_lines_from_file(tx_file,m)
 
 	metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,tx_file)
+	qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	if 'tx_id' in opts:
 		msg(metadata[0])
@@ -135,7 +136,6 @@ for tx_file in tx_files:
 
 	if len(tx_files) > 1:
 		msg("\nTransaction %s/%s:" % (tx_files.index(tx_file)+1,len(tx_files)))
-	qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
 	reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)

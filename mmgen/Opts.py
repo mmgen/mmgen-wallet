@@ -94,6 +94,8 @@ def parse_opts(argv,help_data):
 	)
 	opts,infiles = process_opts(argv,help_data,short_opts,long_opts)
 
+	if g.debug: print "processed user opts: %s" % opts
+
 	if not check_opts(opts,long_opts): sys.exit(1) # MMGen only!
 
 	return opts,infiles
@@ -121,8 +123,8 @@ def check_opts(opts,long_opts):
 
 		# Check for file existence and readability
 		if opt in ('keys_from_file','addrlist','passwd_file','keysforaddrs'):
-			check_infile(val)
-			return True
+			check_infile(val)  # exits on error
+			continue
 
 		if opt == 'outdir':
 			what = "output directory"

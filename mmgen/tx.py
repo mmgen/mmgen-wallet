@@ -373,14 +373,8 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata=[],pager=False):
 				days = int(j['confirmations'] * g.mins_per_block / (60*24))
 				total_in += j['amount']
 				addr = j['address']
-
-				if j['account']:
-					tmp = j['account'].split(None,1)
-					mmid,label = tmp if len(tmp) == 2 else (tmp[0],"")
-					label = label or ""
-				else:
-					mmid,label = "",""
-
+				mmid,label = parse_mmgen_label(j['account']) \
+							 if 'account' in j else ("","")
 				mmid_str = ((34-len(addr))*" " + " (%s)" % mmid) if mmid else ""
 
 				for d in (
@@ -650,6 +644,7 @@ def get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts):
 			or "from_seed" in opts or "from_incog" in opts:
 			msg("Need data for seed ID %s" % seed_id)
 			seed = get_seed_retry("",opts)
+			msg("User input produced seed ID %s" % make_chksum_8(seed))
 		else:
 			msg("ERROR: No seed source found for seed ID: %s" % seed_id)
 			sys.exit(2)
