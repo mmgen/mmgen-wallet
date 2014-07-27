@@ -563,12 +563,13 @@ Only ASCII printable characters are permitted.
 
 
 def check_addr_data_hash(seed_id,addr_data):
-	from hashlib import new as hashlib_new
+	def s_addrdata(a): return int(a[0])
+	addr_data.sort(key=s_addrdata)
 	addr_data_chksum = make_chksum_8(
 		" ".join(["{} {}".format(*d[:2]) for d in addr_data]), sep=True
 	)
-	from mmgen.addr import fmt_addr_list
-	fl = fmt_addr_list([int(a[0]) for a in addr_data])
+	from mmgen.addr import fmt_addr_idxs
+	fl = fmt_addr_idxs([int(a[0]) for a in addr_data])
 	msg("Computed address data checksum for '{}[{}]': {}".format(
 				seed_id,fl,addr_data_chksum))
 	msg("Check this value against your records")

@@ -125,7 +125,7 @@ def generate_keys(seed, addrnums):
 	return generate_addrs(seed, addrnums, o)
 
 
-def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_list, opts):
+def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 
 	start = addr_data[0]['num']
 	end   = addr_data[-1]['num']
@@ -143,7 +143,7 @@ def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_list, opts):
 	data = []
 	if not 'stdout' in opts: data.append(addrmsgs['addrfile_header'] + "\n")
 	data.append("# Address data checksum for {}[{}]: {}".format(
-				seed_id, fmt_addr_list(addr_list), addr_data_chksum))
+				seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum))
 	data.append("# Record this value to a secure location\n")
 	data.append("%s {" % seed_id.upper())
 
@@ -171,16 +171,16 @@ def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_list, opts):
 	return "\n".join(data) + "\n"
 
 
-def fmt_addr_list(addr_list):
+def fmt_addr_idxs(addr_idxs):
 
-	addr_list = list(set(sorted(addr_list)))
+	addr_idxs = list(sorted(set(addr_idxs)))
 
-	prev = addr_list[0]
+	prev = addr_idxs[0]
 	ret = prev,
 
-	for i in addr_list[1:]:
+	for i in addr_idxs[1:]:
 		if i == prev + 1:
-			if i == addr_list[-1]: ret += "-", i
+			if i == addr_idxs[-1]: ret += "-", i
 		else:
 			if prev != ret[-1]: ret += "-", prev
 			ret += ",", i
@@ -189,7 +189,7 @@ def fmt_addr_list(addr_list):
 	return "".join([str(i) for i in ret])
 
 
-def write_addr_data_to_file(seed, addr_data_str, addr_list, opts):
+def write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts):
 
 	if 'print_addresses_only' in opts: ext = g.addrfile_ext
 	elif 'no_addresses' in opts:       ext = g.keyfile_ext
@@ -199,7 +199,7 @@ def write_addr_data_to_file(seed, addr_data_str, addr_list, opts):
 	from mmgen.util import write_to_file, make_chksum_8
 	outfile = "{}[{}].{}".format(
 			make_chksum_8(seed),
-			fmt_addr_list(addr_list),
+			fmt_addr_idxs(addr_idxs),
 			ext
 		)
 	if 'outdir' in opts:

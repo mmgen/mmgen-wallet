@@ -121,15 +121,15 @@ if len(cmd_args) == 1 and (
 			or 'from_seed' in opts
 			or 'from_incog_hidden' in opts
 		):
-	infile,addr_list_arg = "",cmd_args[0]
+	infile,addr_idx_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
-	infile,addr_list_arg = cmd_args
+	infile,addr_idx_arg = cmd_args
 	check_infile(infile)
 else: usage(help_data)
 
-addr_list = parse_address_list(addr_list_arg)
+addr_idxs = parse_address_list(addr_idx_arg)
 
-if not addr_list: sys.exit(2)
+if not addr_idxs: sys.exit(2)
 
 do_license_msg()
 
@@ -147,13 +147,13 @@ else:
 seed          = get_seed_retry(infile,opts)
 seed_id       = make_chksum_8(seed)
 
-addr_data     = generate_addrs(seed, addr_list, opts)
+addr_data     = generate_addrs(seed, addr_idxs, opts)
 addr_data_chksum = make_chksum_8(
 	" ".join(["{} {}".format(a['num'],a['addr']) for a in addr_data]),
 	sep=True
 )
 addr_data_str = format_addr_data(
-		addr_data, addr_data_chksum, seed_id, addr_list, opts)
+		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
 
 # Output data:
 if 'stdout' in opts:
@@ -164,9 +164,9 @@ if 'stdout' in opts:
 elif not sys.stdout.isatty():
 	write_to_stdout(addr_data_str,"secret keys",confirm=False)
 else:
-	write_addr_data_to_file(seed, addr_data_str, addr_list, opts)
+	write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts)
 
 msg("""
 Checksum for address data {}[{}]: {}
 Remember this checksum or save it to a secure location
-""".format(seed_id, fmt_addr_list(addr_list), addr_data_chksum).strip())
+""".format(seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum).strip())
