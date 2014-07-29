@@ -61,7 +61,25 @@ tracking wallet, or supply an address file for it on the command line.
 	'no_spendable_outputs': """
 No spendable outputs found!  Import addresses with balances into your
 watch-only wallet using 'mmgen-addrimport' and then re-run this program.
-""".strip()
+""".strip(),
+	'mapping_error': """
+MMGen -> BTC address mappings differ!
+In transaction:      %s
+Generated from seed: %s
+""".strip(),
+	'skip_mapping_checks_warning': """
+You've chosen the '--all-keys-from-file' option.  Since all signing keys will
+be taken from this file, no {pnm} seed source will be consulted and {pnm}-to-
+BTC mapping checks cannot not be performed.  Were an attacker to compromise
+your tracking wallet or raw transaction file, he could thus cause you to spend
+coin to an unintended address.  For greater security, supply a trusted {pnm}
+address file for your output addresses on the command line.
+""".strip().format(pnm=g.proj_name),
+	'missing_mappings': """
+No information was found in the supplied address files for the following {pnm}
+addresses: %s
+The {pnm}-to-BTC mappings for these addresses cannot be verified!
+""".strip().format(pnm=g.proj_name),
 }
 
 # Deleted text:
@@ -504,7 +522,7 @@ def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 	return "",""
 
 
-def mmaddr2btcaddr_addrfile(mmaddr,addr_data):
+def mmaddr2btcaddr_addrfile(mmaddr,addr_data,silent=False):
 
 	mmid,mmidx = mmaddr.split(":")
 
@@ -512,35 +530,28 @@ def mmaddr2btcaddr_addrfile(mmaddr,addr_data):
 		if mmid == ad[0]:
 			for j in ad[1]:
 				if j[0] == mmidx:
-					msg(txmsg['addrfile_warn_msg'].format(mmaddr=mmaddr))
-					if not user_confirm("Continue anyway?"):
-						sys.exit(1)
+					if not silent:
+						msg(txmsg['addrfile_warn_msg'].format(mmaddr=mmaddr))
+						if not user_confirm("Continue anyway?"):
+							sys.exit(1)
 					return j[1:] if len(j) == 3 else (j[1],"")
 
-	msg(txmsg['addrfile_fail_msg'].format(mmaddr=mmaddr))
-	sys.exit(2)
+	if silent: return "",""
+	else: msg(txmsg['addrfile_fail_msg'].format(mmaddr=mmaddr)); sys.exit(2)
 
 
-def check_mmgen_to_btc_addr_mappings(inputs_data,b2m_map,infiles,saved_seeds,opts):
-	in_maplist = [(i['account'].split()[0],i['address'])
-		for i in inputs_data if i['account']
-			and is_mmgen_addr(i['account'].split()[0])]
+def check_mmgen_to_btc_addr_mappings(mmgen_inputs,b2m_map,infiles,saved_seeds,opts):
+	in_maplist  = [(i['account'].split()[0],i['address']) for i in mmgen_inputs]
 	out_maplist = [(i[1][0],i[0]) for i in b2m_map.items()]
 
 	for maplist,label in (in_maplist,"inputs"), (out_maplist,"outputs"):
 		if not maplist: continue
 		qmsg("Checking MMGen -> BTC address mappings for %s" % label)
-		mmaddrs = [i[0] for i in maplist]
-		from copy import deepcopy
-		pairs = get_keys_for_mmgen_addrs(mmaddrs,
+		pairs = get_keys_for_mmgen_addrs([i[0] for i in maplist],
 				infiles,saved_seeds,opts,gen_pairs=True)
 		for a,b in zip(sorted(pairs),sorted(maplist)):
 			if a != b:
-				msg("""
-MMGen -> BTC address mappings differ!
-In transaction:      %s
-Generated from seed: %s
-	""".strip() % (" ".join(a)," ".join(b)))
+				msg(txmsg['mapping_error'] % (" ".join(a)," ".join(b)))
 				sys.exit(3)
 
 	qmsg("Address mappings OK")
@@ -659,7 +670,6 @@ def get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts):
 def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts,gen_pairs=False):
 
 	seed_ids = list(set([i[:8] for i in mmgen_addrs]))
-	seed_ids_save = seed_ids[0:]  # deep copy
 	ret = []
 
 	for seed_id in seed_ids:
@@ -733,6 +743,7 @@ def preverify_keys(addrs_orig, keys_orig):
 		sys.exit(2)
 	else: qmsg("OK")
 
+	# Check that keys match addresses:
 	msg('Pre-verifying keys in user-supplied key list (Ctrl-C to skip)')
 
 	try:
@@ -768,3 +779,28 @@ A key file must be supplied (or use the "-w" option) for the following
 non-mmgen address%s:
 """.strip() % ("" if len(other_addrs) == 1 else "es"))
 	print "  %s" % "\n  ".join([i['address'] for i in other_addrs])
+
+
+def check_mmgen_to_btc_addr_mappings_addrfile(mmgen_inputs,b2m_map,addrfiles):
+	addr_data = [parse_addrs_file(a) for a in addrfiles]
+	in_maplist  = [(i['account'].split()[0],i['address']) for i in mmgen_inputs]
+	out_maplist = [(i[1][0],i[0]) for i in b2m_map.items()]
+
+	missing,wrong = [],[]
+	for maplist,label in (in_maplist,"inputs"), (out_maplist,"outputs"):
+		qmsg("Checking MMGen -> BTC address mappings for %s" % label)
+		for i in maplist:
+			btaddr = mmaddr2btcaddr_addrfile(i[0],addr_data,silent=True)[0]
+			if not btaddr: missing.append(i[0])
+			elif btaddr != i[1]: wrong.append((i[0],i[1],btaddr))
+
+	if wrong:
+		fs = " {:11} {:35} {}"
+		msg("ERROR: The following address mappings did not match!")
+		msg(fs.format("MMGen addr","In TX file:","In address file:"))
+		for w in wrong: msg(fs.format(*w))
+		sys.exit(3)
+
+	if missing:
+		confirm_or_exit(txmsg['missing_mappings'] % " ".join(missing),"continue")
+	else: qmsg("Address mappings OK")

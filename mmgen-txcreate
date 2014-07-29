@@ -36,13 +36,13 @@ help_data = {
 	'desc':    "Create a BTC transaction with outputs to specified addresses",
 	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
--h, --help                Print this help message
--d, --outdir=          d  Specify an alternate directory 'd' for output
--e, --echo-passphrase     Print passphrase to screen when typing it
--f, --tx-fee=          f  Transaction fee (default: {g.tx_fee} BTC)
--i, --info                Display unspent outputs and exit
--q, --quiet               Suppress warnings; overwrite files without
-                          prompting
+-h, --help            Print this help message
+-d, --outdir=       d Specify an alternate directory 'd' for output
+-e, --echo-passphrase Print passphrase to screen when typing it
+-f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC)
+-i, --info            Display unspent outputs and exit
+-q, --quiet           Suppress warnings; overwrite files without
+                      prompting
 """.format(g=g),
 	'notes': """
 
@@ -52,12 +52,12 @@ via an interactive menu.
 Ages of transactions are approximate based on an average block creation
 interval of {g.mins_per_block} minutes.
 
-Addresses on the command line can be Bitcoin addresses or MMGen addresses
+Addresses on the command line can be Bitcoin addresses or {pnm} addresses
 of the form <seed ID>:<number>.
 
 To send all inputs (minus TX fee) to a single output, specify one address
 with no amount on the command line.
-""".format(g=g)
+""".format(g=g,pnm=g.proj_name)
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)

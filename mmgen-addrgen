@@ -38,36 +38,40 @@ help_data = {
                   mnemonic, seed or password""".format(gen_what,g=g),
 	'usage':"[opts] [infile] <address list>",
 	'options': """
--h, --help               Print this help message{}
--d, --outdir=         d  Specify an alternate directory 'd' for output
--e, --echo-passphrase    Echo passphrase or mnemonic to screen upon entry
--H, --show-hash-presets  Show information on available hash presets
--K, --no-keyconv         Use internal libraries for address generation
-                         instead of 'keyconv'
--l, --seed-len=       N  Length of seed.  Options: {seed_lens}
-                         (default: {g.seed_len})
--p, --hash-preset=    p  Use scrypt.hash() parameters from preset 'p' when
-                         hashing password (default: '{g.hash_preset}')
--P, --passwd-file=    f  Get passphrase from file 'f'
--q, --quiet              Suppress warnings; overwrite files without
-                         prompting
--S, --stdout             Print {what} to stdout
--v, --verbose            Produce more verbose output{}
+-h, --help              Print this help message{}
+-d, --outdir=       d   Specify an alternate directory 'd' for output
+-e, --echo-passphrase   Echo passphrase or mnemonic to screen upon entry{}
+-H, --show-hash-presets Show information on available hash presets
+-K, --no-keyconv        Use internal libraries for address generation
+                        instead of 'keyconv'
+-l, --seed-len=     N   Length of seed.  Options: {seed_lens}
+                        (default: {g.seed_len})
+-p, --hash-preset=  p   Use scrypt.hash() parameters from preset 'p' when
+                        hashing password (default: '{g.hash_preset}')
+-P, --passwd-file=  f   Get passphrase from file 'f'
+-q, --quiet             Suppress warnings; overwrite files without
+                        prompting
+-S, --stdout            Print {what} to stdout
+-v, --verbose           Produce more verbose output{}
 
--b, --from-brain=    l,p Generate {what} from a user-created password,
-                         i.e. a "brainwallet", using seed length 'l' and
-                         hash preset 'p' (comma-separated)
--g, --from-incog         Generate {what} from an incognito wallet
--X, --from-incog-hex     Generate {what} from incognito hexadecimal wallet
--G, --from-incog-hidden= f,o,l  Generate {what} from incognito data in file
-                         'f' at offset 'o', with seed length of 'l'
--m, --from-mnemonic      Generate {what} from an electrum-like mnemonic
--s, --from-seed          Generate {what} from a seed in .{g.seed_ext} format
+-b, --from-brain=  l,p  Generate {what} from a user-created password,
+                        i.e. a "brainwallet", using seed length 'l' and
+                        hash preset 'p' (comma-separated)
+-g, --from-incog        Generate {what} from an incognito wallet
+-X, --from-incog-hex    Generate {what} from incognito hexadecimal wallet
+-G, --from-incog-hidden=f,o,l Generate {what} from incognito data in file
+                        'f' at offset 'o', with seed length of 'l'
+-m, --from-mnemonic     Generate {what} from an electrum-like mnemonic
+-s, --from-seed         Generate {what} from a seed in .{g.seed_ext} format
 """.format(
 		*(
-		   ("\n-A, --no-addresses       Print only secret keys, no addresses",
-		    "\n-x, --b16                Print secret keys in hexadecimal too")
-		if gen_what == "keys" else ("","")),
+		   (
+"\n-A, --no-addresses       Print only secret keys, no addresses",
+"\n-f, --flat-list          Produce a flat list of keys suitable for use with" +
+"\n                         'mmgen-txsign'",
+"\n-x, --b16                Print secret keys in hexadecimal too"
+			)
+		if gen_what == "keys" else ("","","")),
 		seed_lens=", ".join([str(i) for i in g.seed_lens]),
 		what=gen_what, g=g
 ),
@@ -160,9 +164,9 @@ if 'stdout' in opts:
 	if gen_what == "keys" and not g.quiet:
 		confirm = True
 	else: confirm = False
-	write_to_stdout(addr_data_str,"secret keys",confirm)
+	write_to_stdout(addr_data_str,gen_what,confirm)
 elif not sys.stdout.isatty():
-	write_to_stdout(addr_data_str,"secret keys",confirm=False)
+	write_to_stdout(addr_data_str,gen_what,confirm=False)
 else:
 	write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts)
 

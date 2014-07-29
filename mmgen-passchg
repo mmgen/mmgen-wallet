@@ -30,18 +30,20 @@ help_data = {
                   deterministic wallet""".format(g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
--h, --help                  Print this help message
--d, --outdir=            d  Specify an alternate directory 'd' for output
--H, --show-hash-presets     Show information on available hash presets
--k, --keep-old-passphrase   Keep old passphrase (use when changing hash
-                            strength or label only)
--L, --label=             l  Change the wallet's label to 'l'
--p, --hash-preset=       p  Change scrypt.hash() parameters to preset 'p'
-                            (default: '{g.hash_preset}')
--P, --passwd-file=       f  Get new passphrase from file 'f'
--q, --quiet                 Suppress warnings; overwrite files without
-                            prompting
--v, --verbose               Produce more verbose output
+-h, --help                Print this help message
+-d, --outdir=           d Specify an alternate directory 'd' for output
+-H, --show-hash-presets   Show information on available hash presets
+-k, --keep-old-passphrase Keep old passphrase (use when changing hash
+                          strength or label only)
+-L, --label=            l Change the wallet's label to 'l'
+-p, --hash-preset=      p Change scrypt.hash() parameters to preset 'p'
+                          (default: '{g.hash_preset}')
+-P, --passwd-file=      f Get new passphrase from file 'f'
+-r, --usr-randchars=    n Get 'n' characters of additional randomness from
+                          user (min={g.min_urandchars}, max={g.max_urandchars})
+-q, --quiet               Suppress warnings; overwrite files without
+                          prompting
+-v, --verbose             Produce more verbose output
 """.format(g=g),
 	'notes': """
 
@@ -110,9 +112,8 @@ if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
 	qmsg("Will update salt and key ID")
 
 	from hashlib import sha256
-	from Crypto import Random
 
-	salt = sha256(salt + Random.new().read(128)).digest()[:g.salt_len]
+	salt = sha256(salt + get_random(128,opts)).digest()[:g.salt_len]
 	key = make_key(passwd, salt, opts['hash_preset'])
 	new_key_id = make_chksum_8(key)
 	qmsg("Key ID changed: %s -> %s" % (key_id,new_key_id))

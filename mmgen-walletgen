@@ -47,8 +47,8 @@ help_data = {
 -P, --passwd-file=      f  Get passphrase from file 'f'
 -q, --quiet                Produce quieter output; overwrite files without
                            prompting
--u, --usr-randlen=      n  Get 'n' characters of randomness from the user
-                           (default: {g.usr_randlen})
+-r, --usr-randchars=    n  Get 'n' characters of additional randomness from
+                           user (min={g.min_urandchars}, max={g.max_urandchars})
 -v, --verbose              Produce more verbose output
 
 -b, --from-brain=      l,p Generate wallet from a user-created passphrase,
@@ -70,6 +70,11 @@ For passphrases all combinations of whitespace are equal, and leading and
 trailing space are ignored.  This permits reading passphrase data from a
 multi-line file with free spacing and indentation.  This is particularly
 convenient for long brainwallet passphrases, for example.
+
+Since good randomness is particularly important when generating wallets,
+the '--usr-randchars' option is turned on by default to gather additional
+entropy from the user.  If you fully trust your OS's random number gener-
+ator and wish to disable this option, specify '-r0' on the command line.
 
 BRAINWALLET NOTE:
 
@@ -94,6 +99,7 @@ opts,cmd_args = parse_opts(sys.argv,help_data)
 if 'quiet' in opts: g.quiet = True
 if 'verbose' in opts: g.verbose = True
 if 'show_hash_presets' in opts: show_hash_presets()
+if opts['usr_randchars'] == -1: opts['usr_randchars'] = g.usr_randchars_dfl
 
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
@@ -116,31 +122,6 @@ else: usage(help_data)
 
 do_license_msg()
 
-qmsg_r("Acquiring random data from your computer...")
-
-from time import sleep
-sleep(0.25)
-
-try:
-	from Crypto import Random
-	r = Random.new()
-	os_rand_data = (r.read(256),r.read(128))
-except:
-	msg("FAILED\nUnable to generate random numbers. Exiting")
-	sys.exit(2)
-
-qmsg("OK")
-
-if g.debug: display_os_random_data(os_rand_data)
-
-usr_keys,key_timings = get_random_data_from_user(opts)
-qmsg("")
-
-if g.debug: display_user_random_data(usr_keys,key_timings)
-
-usr_rand_data = sha256(usr_keys).digest() + \
-				sha256("".join(key_timings)).digest()
-
 if 'from_brain' in opts and not g.quiet:
 	confirm_or_exit(cmessages['brain_warning'].format(
 			g.proj_name, *get_from_brain_opt_params(opts)),
@@ -155,18 +136,11 @@ for i in 'from_mnemonic','from_brain','from_seed','from_incog':
 		break
 else:
 	# Truncate random data for smaller seed lengths
-	seed = os_rand_data[0] + usr_rand_data
-	seed = sha256(seed).digest()[:opts['seed_len']/8]
+	seed = sha256(get_random(128,opts)).digest()[:opts['seed_len']/8]
 
-salt = os_rand_data[1] + usr_rand_data
-salt = sha256(salt).digest()[:g.salt_len]
+salt = sha256(get_random(128,opts)).digest()[:g.salt_len]
 
-qmsg("""
-Now you must choose a passphrase to encrypt the wallet with.  A key will be
-generated from your passphrase using a hash preset of '%s'.  Please note that
-no strength checking of passphrases is performed.  For an empty passphrase,
-just hit ENTER twice.
-""".strip() % opts['hash_preset'])
+qmsg(cmessages['choose_wallet_passphrase'] % opts['hash_preset'])
 
 passwd = get_new_passphrase("{} wallet passphrase".format(g.proj_name), opts)
 

@@ -37,14 +37,24 @@ help_data = {
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -P, --passwd-file=  f  Get passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
+-r, --usr-randchars= n Get 'n' characters of additional randomness from
+                       user (min={g.min_urandchars}, max={g.max_urandchars})
 -S, --stdout           Print seed or mnemonic data to standard output
 -v, --verbose          Produce more verbose output
 -g, --export-incog     Export wallet to incognito format
 -X, --export-incog-hex Export wallet to incognito hexadecimal format
--G, --export-incog-hidden= f,o  Hide incognito data in existing file 'f'
-                           at offset 'o' (comma-separated)
+-G, --export-incog-hidden=f,o  Hide incognito data in existing file 'f'
+                       at offset 'o' (comma-separated)
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -s, --export-seed      Export the wallet's seed to file
+""".format(g=g),
+	'notes': """
+
+Since good randomness is particularly important for incognito wallets,
+the '--usr-randchars' option is turned on by default to gather additional
+entropy from the user when one of the '--export-incog*' options is
+selected.  If you fully trust your OS's random number generator and wish
+to disable this option, then specify '-r0' on the command line.
 """
 }
 
@@ -64,6 +74,7 @@ if 'export_mnemonic' in opts:
 elif 'export_seed' in opts:
 	qmsg("Exporting seed data to file by user request")
 elif 'export_incog' in opts:
+	if opts['usr_randchars'] == -1: opts['usr_randchars'] = g.usr_randchars_dfl
 	qmsg("Exporting wallet to incognito format by user request")
 	incog_enc,seed_id,key_id,iv_id,preset = \
 		wallet_to_incog_data(cmd_args[0],opts)

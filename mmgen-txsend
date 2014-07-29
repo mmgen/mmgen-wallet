@@ -34,9 +34,9 @@ help_data = {
 	'desc':    "Send a Bitcoin transaction signed by mmgen-txsign",
 	'usage':   "[opts] <signed transaction file>",
 	'options': """
--h, --help          Print this help message
--d, --outdir=    d  Specify an alternate directory 'd' for output
--q, --quiet         Suppress warnings; overwrite files without prompting
+-h, --help      Print this help message
+-d, --outdir= d Specify an alternate directory 'd' for output
+-q, --quiet     Suppress warnings; overwrite files without prompting
 """
 }
 

@@ -46,11 +46,13 @@ rawtx_ext    = "raw"
 sigtx_ext    = "sig"
 addrfile_ext = "addrs"
 keyfile_ext  = "keys"
+keylist_ext  = "keylist"
+mmenc_ext    = "mmenc"
 
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 
-cl_override_vars = 'seed_len','hash_preset','usr_randlen'
+cl_override_vars = 'seed_len','hash_preset','usr_randchars'
 
 seed_lens = 128,192,256
 seed_len  = 256
@@ -68,8 +70,8 @@ bogus_wallet_data = getenv("MMGEN_BOGUS_WALLET_DATA")
 
 mins_per_block = 8.5
 passwd_max_tries = 5
-max_randlen,min_randlen = 80,5
-usr_randlen = 20
+usr_randchars,usr_randchars_dfl = -1,30 # see get_random()
+max_urandchars,min_urandchars = 80,10
 salt_len    = 16
 aesctr_iv_len  = 16
 
@@ -97,6 +99,7 @@ max_addr_label_len = 32
 wallet_label_symbols = addr_label_symbols
 max_wallet_label_len = 32
 
+user_entropy = ""
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 #wallet_label_punc = addr_label_punc

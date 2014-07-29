@@ -20,8 +20,10 @@ util.py:  Shared routines for the mmgen suite
 """
 
 import sys
-import mmgen.config as g
+from hashlib import sha256
 from binascii import hexlify,unhexlify
+
+import mmgen.config as g
 from mmgen.bitcoin import b58decode_pad
 from mmgen.term import *
 
@@ -45,6 +47,60 @@ def bail(): sys.exit(9)
 def get_extension(f):
 	import os
 	return os.path.splitext(f)[1][1:]
+
+
+def get_random_data_from_user(uchars):
+
+	if g.quiet: msg("Enter %s random symbols" % uchars)
+	else:       msg(cmessages['usr_rand_notice'] % uchars)
+
+	prompt = "You may begin typing.  %s symbols left: "
+	msg_r(prompt % uchars)
+
+	import time
+	# time.clock() always returns zero, so we'll use time.time()
+	saved_time = time.time()
+
+	key_data,time_data = "",[]
+
+	for i in range(uchars):
+		key_data += get_char(immed_chars="ALL")
+		msg_r("\r" + prompt % (uchars - i - 1))
+		now = time.time()
+		time_data.append(now - saved_time)
+		saved_time = now
+
+	if g.quiet: msg_r("\r")
+	else: msg_r("\rThank you.  That's enough.%s\n\n" % (" "*18))
+
+	fmt_time_data = ["{:.22f}".format(i) for i in time_data]
+
+	if g.debug:
+		msg("\nUser input:\n%s\nKeystroke time intervals:\n%s\n" %
+				(key_data,"\n".join(fmt_time_data)))
+
+	prompt = "User random data successfully acquired.  Press ENTER to continue"
+	prompt_and_get_char(prompt,"",enter_ok=True)
+	msg("")
+
+	return key_data+"".join(fmt_time_data)
+
+
+def get_random(length,opts):
+	from Crypto import Random
+	os_rand = Random.new().read(length)
+	if 'usr_randchars' in opts and opts['usr_randchars'] not in (0,-1):
+		kwhat = "a key from random data with "
+		if not g.user_entropy:
+			g.user_entropy = sha256(
+				get_random_data_from_user(opts['usr_randchars'])).digest()
+			kwhat += "user entropy"
+		else:
+			kwhat += "saved user entropy"
+		key = make_key(g.user_entropy, "", '2', what=kwhat)
+		return encrypt_data(os_rand,key,what="random data")
+	else:
+		return os_rand
 
 def my_raw_input(prompt,echo=True):
 	try:
@@ -118,7 +174,21 @@ recommended to use one of the higher-numbered presets
 Remember the seed length and hash preset parameters you've specified.  To
 generate the correct keys/addresses associated with this passphrase in the
 future, you must continue using these same parameters
-"""
+""",
+	'usr_rand_notice': """
+You've chosen to not fully trust your OS's random number generator and provide
+some additional entropy of your own.  Please type %s symbols on your keyboard.
+Type slowly and choose your symbols carefully for maximum randomness.  Try to
+use both upper and lowercase as well as punctuation and numerals.  What you
+type will not be displayed on the screen.  Note that the timings between your
+keystrokes will also be used as a source of randomness.
+""",
+	'choose_wallet_passphrase': """
+Now you must choose a passphrase to encrypt the wallet with.  A key will be
+generated from your passphrase using a hash preset of '%s'.  Please note that
+no strength checking of passphrases is performed.  For an empty passphrase,
+just hit ENTER twice.
+""".strip()
 }
 
 
@@ -172,12 +242,10 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 
 def make_chksum_8(s,sep=False):
-	from hashlib import sha256
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
 	return "{} {}".format(s[:4],s[4:]) if sep else s
 
 def make_chksum_6(s):
-	from hashlib import sha256
 	return sha256(s).hexdigest()[:6]
 
 
@@ -296,31 +364,36 @@ def _get_seed_from_brain_passphrase(words,opts):
 	return seed
 
 
-def encrypt_seed(seed, key, iv=1):
+def encrypt_seed(seed, key):
+	return encrypt_data(seed, key, iv=1, what="seed")
+
+def encrypt_data(data, key, iv=1, what="data"):
 	"""
-	Encrypt a seed for an {} deterministic wallet
-	""".format(g.proj_name)
+	Encrypt arbitrary data using AES256 in counter mode
+	"""
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
-	c = AES.new(key, AES.MODE_CTR,
-			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	enc_seed = c.encrypt(seed)
-
-	vmsg_r("Performing a test decryption of the seed...")
+	vmsg("Encrypting %s" % what)
 
 	c = AES.new(key, AES.MODE_CTR,
 			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	dec_seed = c.decrypt(enc_seed)
+	enc_data = c.encrypt(data)
 
-	if dec_seed == seed: vmsg("done")
+	vmsg_r("Performing a test decryption of the %s..." % what)
+
+	c = AES.new(key, AES.MODE_CTR,
+			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
+	dec_data = c.decrypt(enc_data)
+
+	if dec_data == data: vmsg("done\n")
 	else:
-		msg("ERROR.\nDecrypted seed doesn't match original seed")
+		msg("ERROR.\nDecrypted %s doesn't match original %s" % (what,what))
 		sys.exit(2)
 
-	return enc_seed
+	return enc_data
 
 
 def write_to_stdout(data, what, confirm=True):
@@ -354,7 +427,9 @@ def open_file_or_exit(filename,mode):
 	return f
 
 
-def write_to_file(outfile,data,confirm=False):
+def write_to_file(outfile,data,confirm=False,verbose=False):
+
+	if verbose: qmsg("Writing data to file '%s'" % outfile)
 
 	if confirm:
 		from os import stat
@@ -396,8 +471,8 @@ def _display_control_data(label,metadata,hash_preset,salt,enc_seed):
 	from mmgen.bitcoin import b58encode_pad
 	for i in (
 		("Label:",               label),
-		("Seed ID:",             metadata[0]),
-		("Key  ID:",             metadata[1]),
+		("Seed ID:",             metadata[0].upper()),
+		("Key  ID:",             metadata[1].upper()),
 		("Seed length:",         "%s bits (%s bytes)" %
 				(metadata[2],int(metadata[2])/8)),
 		("Scrypt params:",  "Preset '%s' (%s)" % (hash_preset,
@@ -799,10 +874,9 @@ def get_seed_from_incog_wallet(
 			break
 		msg("%s: Invalid hash preset" % hp)
 
-	from hashlib import sha256
 	# IV is used BOTH to initialize counter and to salt password!
 	key = make_key(passwd, iv, hp, "wrapper key")
-	d = decrypt_seed(enc_incog_data, key, "", "", iv=int(hexlify(iv),16))
+	d = decrypt_data(enc_incog_data, key, int(hexlify(iv),16), "incog data")
 	if d == False: sys.exit(2)
 
 	salt,enc_seed = d[0:g.salt_len], d[g.salt_len:]
@@ -820,14 +894,14 @@ def get_seed_from_incog_wallet(
 
 def make_key(passwd, salt, hash_preset, what="key"):
 
-	vmsg_r("Generating %s from passphrase.  Please wait..." % what)
+	vmsg_r("Generating %s.  Please wait..." % what)
 	key = _scrypt_hash_passphrase(passwd, salt, hash_preset)
 	vmsg("done")
 	if g.debug: print "Key: %s" % hexlify(key)
 	return key
 
 
-def decrypt_seed(enc_seed, key, seed_id, key_id, iv=1):
+def decrypt_seed(enc_seed, key, seed_id, key_id):
 
 	vmsg("Checking key...")
 	chk1 = make_chksum_8(key)
@@ -836,23 +910,16 @@ def decrypt_seed(enc_seed, key, seed_id, key_id, iv=1):
 			msg("Incorrect passphrase")
 			return False
 
-	vmsg("Decrypting seed with key...")
-
-	from Crypto.Cipher import AES
-	from Crypto.Util import Counter
-
-	c = AES.new(key, AES.MODE_CTR,
-			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	dec_seed = c.decrypt(enc_seed)
+	dec_seed = decrypt_data(enc_seed, key, iv=1, what="seed")
 
 	chk2 = make_chksum_8(dec_seed)
+
 	if seed_id:
 		if _compare_checksums(chk2,"of decrypted seed",seed_id,"in header"):
 			qmsg("Passphrase is OK")
 		else:
 			if not g.debug:
 				msg_r("Checking key ID...")
-				chk1 = make_chksum_8(key)
 				if _compare_checksums(chk1, "of key", key_id, "in header"):
 					msg("Key ID is correct but decryption of seed failed")
 				else:
@@ -865,6 +932,20 @@ def decrypt_seed(enc_seed, key, seed_id, key_id, iv=1):
 	if g.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
 
 	return dec_seed
+
+
+def decrypt_data(enc_data, key, iv=1, what="data"):
+
+	vmsg("Decrypting %s with key..." % what)
+
+	from Crypto.Cipher import AES
+	from Crypto.Util import Counter
+
+	c = AES.new(key, AES.MODE_CTR,
+			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
+
+	return c.decrypt(enc_data)
+
 
 
 def _get_words(infile,what,prompt,opts):
@@ -1007,6 +1088,7 @@ def decode_pretty_hexdump(data):
 	lines = [re.sub('^\d+:\s+','',l) for l in data.split("\n")]
 	return unhexlify("".join(("".join(lines).split())))
 
+
 def wallet_to_incog_data(infile,opts):
 
 	d = get_data_from_wallet(infile,silent=True)
@@ -1019,16 +1101,14 @@ def wallet_to_incog_data(infile,opts):
 	if decrypt_seed(enc_seed, key, seed_id, key_id) == False:
 		sys.exit(2)
 
-	from Crypto import Random
-	iv = Random.new().read(g.aesctr_iv_len)
+	iv = get_random(g.aesctr_iv_len,opts)
 	iv_id = make_chksum_8(iv)
 	qmsg("IV ID: %s" % iv_id)
 
-	from binascii import hexlify
-	from hashlib import sha256
 	# IV is used BOTH to initialize counter and to salt password!
 	key = make_key(passwd, iv, preset, "wrapper key")
-	wrap_enc = encrypt_seed(salt + enc_seed, key, iv=int(hexlify(iv),16))
+	m = "incog data"
+	wrap_enc = encrypt_data(salt + enc_seed, key, int(hexlify(iv),16), m)
 
 	return iv+wrap_enc,seed_id,key_id,iv_id,preset
 

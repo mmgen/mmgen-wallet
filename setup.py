@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.7.5',
+		version      = '0.7.6',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -45,6 +45,7 @@ setup(
 		],
 		scripts=[
 			'mmgen-addrgen',
+			'mmgen-keygen',
 			'mmgen-addrimport',
 			'mmgen-passchg',
 			'mmgen-walletchk',

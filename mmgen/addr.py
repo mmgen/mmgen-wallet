@@ -93,11 +93,11 @@ def generate_addrs(seed, addrnums, opts):
 		if g.debug:
 			print "Privkey round %s:\n  hex: %s\n  wif: %s" % (i, sec, wif)
 
-		el = { 'num': i }
+		d = { 'num': i }
 
 		if not 'print_addresses_only' in opts:
-			el['sec'] = sec
-			el['wif'] = wif
+			d['sec'] = sec
+			d['wif'] = wif
 
 		if not 'no_addresses' in opts:
 			if keyconv:
@@ -107,9 +107,9 @@ def generate_addrs(seed, addrnums, opts):
 			else:
 				addr = privnum2addr(int(sec,16))
 
-			el['addr'] = addr
+			d['addr'] = addr
 
-		out.append(el)
+		out.append(d)
 
 	w = opts['gen_what']
 	if t_addrs == 1:
@@ -127,6 +127,10 @@ def generate_keys(seed, addrnums):
 
 def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 
+	if 'flat_list' in opts:
+		return "\n\n".join(["# %s:%s %s\n%s" % (seed_id,d['num'],d['addr'],d['wif'])
+			for d in addr_data])+"\n\n"
+
 	start = addr_data[0]['num']
 	end   = addr_data[-1]['num']
 
@@ -140,35 +144,35 @@ def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 			(5 if 'print_secret' in opts else 1) + len(wif_msg)
 		)
 
-	data = []
-	if not 'stdout' in opts: data.append(addrmsgs['addrfile_header'] + "\n")
-	data.append("# Address data checksum for {}[{}]: {}".format(
+	out = []
+	if not 'stdout' in opts: out.append(addrmsgs['addrfile_header'] + "\n")
+	out.append("# Address data checksum for {}[{}]: {}".format(
 				seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum))
-	data.append("# Record this value to a secure location\n")
-	data.append("%s {" % seed_id.upper())
+	out.append("# Record this value to a secure location\n")
+	out.append("%s {" % seed_id.upper())
 
-	for el in addr_data:
-		col1 = el['num']
+	for d in addr_data:
+		col1 = d['num']
 		if 'no_addresses' in opts:
 			if 'b16' in opts:
-				data.append(fa % (col1, " (hex):", el['sec']))
+				out.append(fa % (col1, " (hex):", d['sec']))
 				col1 = ""
-			data.append(fa % (col1, " (wif):", el['wif']))
-			if 'b16' in opts: data.append("")
+			out.append(fa % (col1, " (wif):", d['wif']))
+			if 'b16' in opts: out.append("")
 		elif 'print_secret' in opts:
 			if 'b16' in opts:
-				data.append(fa % (col1, "sec (hex):", el['sec']))
+				out.append(fa % (col1, "sec (hex):", d['sec']))
 				col1 = ""
-			data.append(fa % (col1, "sec"+wif_msg+":", el['wif']))
-			data.append(fa % ("",   "addr:", el['addr']))
-			data.append("")
+			out.append(fa % (col1, "sec"+wif_msg+":", d['wif']))
+			out.append(fa % ("",   "addr:", d['addr']))
+			out.append("")
 		else:
-			data.append(fa % (col1, "", el['addr']))
+			out.append(fa % (col1, "", d['addr']))
 
-	if not data[-1]: data.pop()
-	data.append("}")
+	if not out[-1]: out.pop()
+	out.append("}")
 
-	return "\n".join(data) + "\n"
+	return "\n".join(out) + "\n"
 
 
 def fmt_addr_idxs(addr_idxs):
@@ -193,6 +197,7 @@ def write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts):
 
 	if 'print_addresses_only' in opts: ext = g.addrfile_ext
 	elif 'no_addresses' in opts:       ext = g.keyfile_ext
+	elif 'flat_list' in opts:          ext = g.keylist_ext
 	else:                              ext = "akeys"
 
 	if 'b16' in opts: ext = ext.replace("keys","xkeys")

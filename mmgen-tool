@@ -25,7 +25,7 @@ from hashlib import sha256
 from mmgen.Opts import *
 import mmgen.config as g
 from mmgen.util import pretty_hexdump
-from mmgen.tool import *
+import mmgen.tool as tool
 prog_name = sys.argv[0].split("/")[-1]
 
 help_data = {
@@ -33,16 +33,18 @@ help_data = {
 	'desc':    "Perform various BTC-related operations",
 	'usage':   "[opts] <command> <args>",
 	'options': """
--h, --help                 Print this help message
--q, --quiet                Produce quieter output
--v, --verbose              Produce more verbose output
-""",
+-h, --help            Print this help message
+-q, --quiet           Produce quieter output
+-r, --usr-randchars=n Get 'n' characters of additional randomness from
+                      user (min={g.min_urandchars}, max={g.max_urandchars})
+-v, --verbose         Produce more verbose output
+""".format(g=g),
 	'notes': """
 
 COMMANDS:{}
 Type '{} <command> --help for usage information on a particular
 command
-""".format(command_help,prog_name)
+""".format(tool.command_help,prog_name)
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
@@ -53,17 +55,20 @@ if 'verbose' in opts: g.verbose = True
 if len(cmd_args) < 1:
 	usage(help_data)
 	sys.exit(1)
-else: command = cmd_args.pop(0)
 
-if command not in commands.keys():
+command = cmd_args.pop(0)
+
+if command not in tool.commands.keys():
 	msg("'%s': No such command" % command)
 	sys.exit(1)
 
 if cmd_args and cmd_args[0] == '--help':
-	tool_usage(prog_name, command)
+	tool.tool_usage(prog_name, command)
 	sys.exit(0)
 
-args = process_args(prog_name, command, cmd_args)
+args = tool.process_args(prog_name, command, cmd_args)
+
+tool.opts = opts
 
 #print command + "(" + ", ".join(args) + ")"
-eval(command + "(" + ", ".join(args) + ")")
+eval("tool." + command + "(" + ", ".join(args) + ")")

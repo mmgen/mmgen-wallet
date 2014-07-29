@@ -83,27 +83,38 @@ def parse_opts(argv,help_data):
 
 	lines = help_data['options'].strip().split("\n")
 	import re
-	pat = r"^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{1,64})(=*) (.*)"
-	opt_data = [m.groups() for m in [re.match(pat,l) for l in lines] if m]
+	pat = r"^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{1,64})(=| )(.+)"
+	rep = r"-{0}, --{1}{w}{3}"
+	opt_data = [list(m.groups()) for m in [re.match(pat,l) for l in lines] if m]
+#	for o in opt_data: print o
+#	sys.exit()
 
-	short_opts = "".join([d[0]+(":" if d[2] else "") for d in opt_data if d])
-	long_opts = [d[1].replace("-","_")+d[2] for d in opt_data if d]
+	for d in opt_data:
+		if d[2] == " ": d[2] = ""
+	short_opts = "".join([d[0]+d[2].replace("=",":") for d in opt_data])
+	long_opts = [d[1].replace("-","_")+d[2] for d in opt_data]
 	help_data['options'] = "\n".join(
-		["-{0}, --{1}{w} {3}".format(w=" " if m.group(3) else "", *m.groups())
+		[rep.format(w=" ", *m.groups())
 			if m else k for m,k in [(re.match(pat,l),l) for l in lines]]
 	)
 	opts,infiles = process_opts(argv,help_data,short_opts,long_opts)
 
-	if g.debug: print "processed user opts: %s" % opts
+	# check_opts() doesn't touch opts[]
+	if not check_opts(opts,long_opts): sys.exit(1)
 
-	if not check_opts(opts,long_opts): sys.exit(1) # MMGen only!
+	# If unset, set these to the default values in mmgen.config:
+	for v in g.cl_override_vars:
+		if v in opts: typeconvert_override_var(opts,v)
+		else: opts[v] = eval("g."+v)
+
+	if g.debug: print "processed opts: %s" % opts
 
 	return opts,infiles
 
 
 def show_opts_and_cmd_args(opts,cmd_args):
-	print "Processed options:     %s" % repr(opts)
-	print "Cmd args:              %s" % repr(cmd_args)
+	print "Processed options: %s" % repr(opts)
+	print "Cmd args:          %s" % repr(cmd_args)
 
 
 # Everything below here is MMGen-specific:
@@ -112,17 +123,13 @@ from mmgen.util import msg,check_infile
 
 def check_opts(opts,long_opts):
 
-	# These must be set to the default values in mmgen.config:
-	for i in g.cl_override_vars:
-		if i+"=" in long_opts:
-			set_if_unset_and_typeconvert(opts,i)
-
 	for opt,val in opts.items():
 
 		what = "parameter for '--%s' option" % opt.replace("_","-")
 
 		# Check for file existence and readability
-		if opt in ('keys_from_file','addrlist','passwd_file','keysforaddrs'):
+		if opt in ('keys_from_file','all_keys_from_file','addrlist',
+				'passwd_file','keysforaddrs'):
 			check_infile(val)  # exits on error
 			continue
 
@@ -233,10 +240,14 @@ def check_opts(opts,long_opts):
 				msg("'%s': invalid %s.  Options: %s"
 				% (val,what,", ".join(sorted(g.hash_presets.keys()))))
 				return False
-		elif opt == 'usr_randlen':
-			if val > g.max_randlen or val < g.min_randlen:
-				msg("'%s': invalid %s (must be >= %s and <= %s)"
-				% (val,what,g.min_randlen,g.max_randlen))
+		elif opt == 'usr_randchars':
+			try: v = int(val)
+			except:
+				msg("'%s': invalid value for %s (not an integer)" % (val,what))
+				return False
+			if v != 0 and not (g.min_urandchars <= v <= g.max_urandchars):
+				msg("'%s': invalid %s (must be >= %s and <= %s (or zero))"
+				% (v,what,g.min_urandchars,g.max_urandchars))
 				return False
 		else:
 			if g.debug: print "check_opts(): No test for opt '%s'" % opt
@@ -244,22 +255,18 @@ def check_opts(opts,long_opts):
 	return True
 
 
-def set_if_unset_and_typeconvert(opts,opt):
+def typeconvert_override_var(opts,opt):
 
-	if opt in g.cl_override_vars:
-		if opt not in opts:
-			# Set to similarly named default value in mmgen.config
-			opts[opt] = eval("g."+opt)
-		else:
-			vtype = type(eval("g."+opt))
-			if g.debug: print "Opt: %s, Type: %s" % (opt,vtype)
-			if   vtype == int:   f,t = int,"an integer"
-			elif vtype == str:   f,t = str,"a string"
-			elif vtype == float: f,t = float,"a float"
+	vtype = type(eval("g."+opt))
+	if g.debug: print "Override opt: %-15s [%s]" % (opt,vtype)
 
-			try:
-				opts[opt] = f(opts[opt])
-			except:
-				msg("'%s': invalid parameter for '--%s' option (not %s)" %
-						(opts[opt],opt.replace("_","-"),t))
-				sys.exit(1)
+	if   vtype == int:   f,t = int,"an integer"
+	elif vtype == str:   f,t = str,"a string"
+	elif vtype == float: f,t = float,"a float"
+
+	try:
+		opts[opt] = f(opts[opt])
+	except:
+		msg("'%s': invalid parameter for '--%s' option (not %s)" %
+				(opts[opt],opt.replace("_","-"),t))
+		sys.exit(1)

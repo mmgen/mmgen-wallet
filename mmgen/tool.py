@@ -23,6 +23,7 @@ import sys
 import mmgen.bitcoin as bitcoin
 import binascii as ba
 
+import mmgen.config as g
 from mmgen.util import *
 from mmgen.tx import *
 
@@ -33,6 +34,7 @@ def Vmsg(s):
 def Vmsg_r(s):
 	if g.verbose: sys.stdout.write(s)
 
+opts = {}
 commands = {
 	"strtob58":     ['<string> [str]'],
 	"hextob58":     ['<hex number> [str]'],
@@ -66,6 +68,8 @@ commands = {
 	"pubkey2addr":  ['<public key in hex format> [str]'],
 	"pubkey2hexaddr": ['<public key in hex format> [str]'],
 	"privhex2addr": ['<private key in hex format> [str]','compressed [bool=False]'],
+	"encrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
+	"decrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
 }
 
 command_help = """
@@ -73,10 +77,10 @@ command_help = """
   hexdump      - encode data into formatted hexadecimal form (file or stdin)
   unhexdump    - decode formatted hexadecimal data (file or stdin)
 
-  MMGen-specific operations
-  id8          - generate 8-character MMGen ID checksum for file (or stdin)
-  id6          - generate 6-character MMGen ID checksum for file (or stdin)
-  check_addrfile - compute checksum and address list for MMGen address file
+  {pnm}-specific operations
+  id8          - generate 8-character {pnm} ID checksum for file (or stdin)
+  id6          - generate 6-character {pnm} ID checksum for file (or stdin)
+  check_addrfile - compute checksum and address list for {pnm} address file
 
   Bitcoin operations:
   strtob58     - convert a string to base 58
@@ -89,7 +93,7 @@ command_help = """
   hex2wif      - convert a private key from hex to WIF format
   wif2addr     - generate a Bitcoin address from a key in WIF format
   pubkey2addr  - convert Bitcoin public key to address
-  pubkey2hexaddr  - convert Bitcoin public key to address in hex format
+  pubkey2hexaddr - convert Bitcoin public key to address in hex format
   hexaddr2addr - convert Bitcoin address from hex to base58 format
   addr2hexaddr - convert Bitcoin address from base58 to hex format
   privhex2addr - generate Bitcoin address from private key in hex format
@@ -100,6 +104,14 @@ command_help = """
   sha256x2     - compute a double sha256 hash of data
   getrand      - print 'n' bytes (default 32) of random data in hex format
 
+  Encryption operations:
+  encrypt      - encrypt a file using {pnm}'s encryption suite
+  decrypt      - decrypt an {pnm}-encrypted file
+    {pnm} encryption suite:
+      * Key: Scrypt (user-configurable hash parameters, 32-byte salt)
+      * Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
+      * The encrypted file is indistinguishable from random data
+
   Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
   wordlists):
   mn_rand128   - generate random 128-bit mnemonic
@@ -109,14 +121,14 @@ command_help = """
   mn_printlist - print mnemonic wordlist
 
   Bitcoind operations (bitcoind must be running):
-  listaddresses - show MMGen addresses and their balances
+  listaddresses - show {pnm} addresses and their balances
   getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable
-  viewtx        - show raw transaction in human-readable form
+  viewtx        - show raw/signed {pnm} transaction in human-readable form
 
-  IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
+  IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
-"""
+""".format(pnm=g.proj_name)
 
 def tool_usage(prog_name, command):
 	print "USAGE: '%s %s%s'" % (prog_name, command,
@@ -216,26 +228,22 @@ def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	dec = f_dec(ba.unhexlify(enc))
 	print_convert_results(s,enc,dec)
 
-def get_random(length):
-	from Crypto import Random
-	return Random.new().read(length)
-
 def b58randenc():
-	r = get_random(32)
+	r = get_random(32,opts)
 	enc = bitcoin.b58encode(r)
 	dec = bitcoin.b58decode(enc)
 	print_convert_results(ba.hexlify(r),enc,ba.hexlify(dec))
 
 def getrand(bytes='32'):
-	print ba.hexlify(get_random(int(bytes)))
+	print ba.hexlify(get_random(int(bytes),opts))
 
 def randwif(compressed=False):
-	r_hex = ba.hexlify(get_random(32))
+	r_hex = ba.hexlify(get_random(32,opts))
 	enc = bitcoin.hextowif(r_hex,compressed)
 	print_convert_results(r_hex,enc,"",no_recode=True)
 
 def randpair(compressed=False):
-	r_hex = ba.hexlify(get_random(32))
+	r_hex = ba.hexlify(get_random(32,opts))
 	wif = bitcoin.hextowif(r_hex,compressed)
 	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
 	Vmsg("Key (hex):  %s" % r_hex)
@@ -265,7 +273,7 @@ def get_wordlist(wordlist):
 	return el if wordlist == "electrum" else tl
 
 def do_random_mn(nbytes,wordlist):
-	r = get_random(nbytes)
+	r = get_random(nbytes,opts)
 	wlists = wordlists if wordlist == "all" else [wordlist]
 	for wl in wlists:
 		l = get_wordlist(wl)
@@ -397,3 +405,40 @@ def wif2hex(wif,compressed=False):
 
 def hex2wif(hexpriv,compressed=False):
 	print bitcoin.hextowif(hexpriv,compressed)
+
+salt_len,sha256_len,nonce_len = 32,32,32
+
+def encrypt(infile,outfile="",hash_preset=''):
+	d = get_data_from_file(infile,"data for encryption")
+	salt,iv,nonce = get_random(salt_len,opts),\
+		get_random(g.aesctr_iv_len,opts), get_random(nonce_len,opts)
+	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
+	qmsg("Using %s hash preset of '%s'" % (m,hp))
+	passwd = get_new_passphrase("passphrase",{})
+	key = make_key(passwd, salt, hp)
+	from hashlib import sha256
+	enc_d = encrypt_data(sha256(nonce+d).digest() + nonce + d, key,
+				int(ba.hexlify(iv),16))
+	if outfile == '-':  sys.stdout.write(salt+iv+enc_d)
+	else: write_to_file((outfile or infile+"."+g.mmenc_ext),salt+iv+enc_d,True,True)
+
+def decrypt(infile,outfile="",hash_preset=''):
+	d = get_data_from_file(infile,"encrypted data")
+	dstart = salt_len + g.aesctr_iv_len
+	salt,iv,enc_d = d[:salt_len],d[salt_len:dstart],d[dstart:]
+	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
+	qmsg("Using %s hash preset of '%s'" % (m,hp))
+	passwd = get_mmgen_passphrase("Enter passphrase: ",{})
+	key = make_key(passwd, salt, hp)
+	dec_d = decrypt_data(enc_d, key, int(ba.hexlify(iv),16))
+	from hashlib import sha256
+	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
+		out = dec_d[sha256_len+nonce_len:]
+		if outfile == '-': sys.stdout.write(out)
+		else:
+			import re
+			of = re.sub(r'\.%s$'%g.mmenc_ext,r'',infile)
+			if of == infile: of = infile+".dec"
+			write_to_file((outfile or of), out, True,True)
+	else:
+		msg("Incorrect passphrase or hash preset")
