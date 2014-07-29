@@ -80,4 +80,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
 [4]: https://bitcointalk.org/index.php?topic=567069.0
 [5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
-[6]: https://github.com/mmgen/mmgen/wiki/cmdhelp/Command-Help
+[6]: https://github.com/mmgen/mmgen/wiki/Command-Help
