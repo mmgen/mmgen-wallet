@@ -43,9 +43,6 @@ mmgen-pywallet: Dump contents of a bitcoind wallet to file
 # Alex Martelli (http://www.aleax.it)
 # Ported from C code written by Laurent Haan (http://www.progressive-coding.com)
 
-from mmgen.Opts import *
-from mmgen.util import msg
-import mmgen.config as g
 from bsddb.db import *
 import sys, time
 import json
@@ -61,16 +58,18 @@ import hashlib
 import random
 import math
 
+import mmgen.config as g
+from mmgen.Opts import *
+from mmgen.util import msg
+
 max_version = 60000
 addrtype = 0
 json_db = {}
 private_keys = []
 password = None
 
-prog_name = sys.argv[0].split("/")[-1]
-
 help_data = {
-	'prog_name': prog_name,
+	'prog_name': g.prog_name,
 	'desc':    "Dump contents of a bitcoind wallet to file",
 	'usage':   "[opts] <bitcoind wallet file>",
 	'options': """

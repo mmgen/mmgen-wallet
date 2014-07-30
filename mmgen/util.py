@@ -24,7 +24,7 @@ from hashlib import sha256
 from binascii import hexlify,unhexlify
 
 import mmgen.config as g
-from mmgen.bitcoin import b58decode_pad
+from mmgen.bitcoin import b58decode_pad,b58encode_pad
 from mmgen.term import *
 
 def msg(s):    sys.stderr.write(s + "\n")
@@ -47,7 +47,6 @@ def bail(): sys.exit(9)
 def get_extension(f):
 	import os
 	return os.path.splitext(f)[1][1:]
-
 
 def get_random_data_from_user(uchars):
 
@@ -241,6 +240,12 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 		else: msg_r("\r")
 
 
+def make_chksum_N(s,n,sep=False):
+	if n%4 or not (4 <= n <= 64): return False
+	s = sha256(sha256(s).digest()).hexdigest().upper()
+	sep = " " if sep else ""
+	return sep.join([s[i*4:i*4+4] for i in range(n/4)])
+
 def make_chksum_8(s,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
 	return "{} {}".format(s[:4],s[4:]) if sep else s
@@ -427,9 +432,9 @@ def open_file_or_exit(filename,mode):
 	return f
 
 
-def write_to_file(outfile,data,confirm=False,verbose=False):
+def write_to_file(outfile,data,opts,what="data",confirm=False,verbose=False):
 
-	if verbose: qmsg("Writing data to file '%s'" % outfile)
+	if 'outdir' in opts: outfile = "%s/%s" % (opts['outdir'], outfile)
 
 	if confirm:
 		from os import stat
@@ -441,27 +446,26 @@ def write_to_file(outfile,data,confirm=False,verbose=False):
 			confirm_or_exit("","File '%s' already exists\nOverwrite?" % outfile)
 
 	f = open_file_or_exit(outfile,'w')
-
 	try:
 		f.write(data)
 	except:
-		msg("Failed to write to file '%s'" % outfile)
+		msg("Failed to write %s to file '%s'" % (what,outfile))
 		sys.exit(2)
-
 	f.close
 
+	if verbose: msg("%s written to file '%s'" % (what.capitalize(),outfile))
 
-def export_to_file(outfile, data, label, opts):
+
+
+def export_to_file(outfile, data, opts, what="data"):
 
 	if 'stdout' in opts:
-		write_to_stdout(data, label, confirm=True)
+		write_to_stdout(data, what, confirm=True)
 	elif not sys.stdout.isatty():
-		write_to_stdout(data, label, confirm=False)
+		write_to_stdout(data, what, confirm=False)
 	else:
-		if 'outdir' in opts:
-			outfile = "%s/%s" % (opts['outdir'], outfile)
-		write_to_file(outfile, data, confirm=False if g.quiet else True)
-		msg("%s saved to file '%s'" % (label.capitalize(), outfile))
+		c = False if g.quiet else True
+		write_to_file(outfile,data,opts,what,c,True)
 
 
 def _display_control_data(label,metadata,hash_preset,salt,enc_seed):
@@ -522,22 +526,12 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	seed_id = make_chksum_8(seed)
 	seed_len = str(len(seed)*8)
 	pw_status = "NE" if len(passwd) else "E"
-
 	hash_preset = opts['hash_preset']
-
-	outfile="{}-{}[{},{}].{}".format(seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-
 	label = opts['label'] if 'label' in opts else "No Label"
-
-	from mmgen.bitcoin import b58encode_pad
-
+	metadata = seed_id.lower(),key_id.lower(),seed_len,\
+		pw_status,make_timestamp()
 	sf  = b58encode_pad(salt)
 	esf = b58encode_pad(enc_seed)
-
-	metadata = seed_id.lower(),key_id.lower(),\
-		seed_len,pw_status,make_timestamp()
 
 	lines = (
 		label,
@@ -548,21 +542,15 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	)
 
 	chk = make_chksum_6(" ".join(lines))
+	outfile="{}-{}[{},{}].{}".format(
+		seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
 
-	confirm = False if g.quiet else True
-	write_to_file(outfile, "\n".join((chk,)+lines)+"\n", confirm)
+	c = False if g.quiet else True
+	d = "\n".join((chk,)+lines)+"\n"
+	write_to_file(outfile,d,opts,"wallet",c,True)
 
-	msg("Wallet saved to file '%s'" % outfile)
 	if g.verbose:
 		_display_control_data(label,metadata,hash_preset,salt,enc_seed)
-
-
-def write_walletdat_dump_to_file(wallet_id,data,num_keys,ext,what,opts):
-	outfile = "wd_{}[{}].{}".format(wallet_id,num_keys,ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-	write_to_file(outfile,data,confirm=False)
-	msg("wallet.dat %s saved to file '%s'" % (what,outfile))
 
 
 def _compare_checksums(chksum1, desc1, chksum2, desc2):
@@ -637,7 +625,7 @@ def get_data_from_wallet(infile,silent=False):
 
 	# Don't make this a qmsg: User will be prompted for passphrase and must see
 	# the filename.
-	if not silent:
+	if not silent and not g.quiet:
 		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
@@ -864,7 +852,7 @@ def get_seed_from_incog_wallet(
 
 	passwd = get_mmgen_passphrase(prompt,opts)
 
-	msg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
+	qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
 	while True:
 		p = "Enter hash preset for %s wallet (default='%s'): "
 		hp = my_raw_input(p % (g.proj_name, g.hash_preset))

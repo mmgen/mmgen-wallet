@@ -19,6 +19,9 @@
 config.py:  Constants and configuration options for the mmgen suite
 """
 
+import sys, os
+prog_name = os.path.basename(sys.argv[0])
+
 author = "Philemon"
 email = "<mmgen-py@yandex.com>"
 Cdates = '2013-2014'

@@ -27,7 +27,7 @@ from mmgen.util import *
 from mmgen.tx import connect_to_bitcoind,parse_addrs_file
 
 help_data = {
-	'prog_name': sys.argv[0].split("/")[-1],
+	'prog_name': g.prog_name,
 	'desc': """Import addresses (both {pnm} and non-{pnm}) into a bitcoind
                      watching wallet""".format(pnm=g.proj_name),
 	'usage':"[opts] [mmgen address file]",

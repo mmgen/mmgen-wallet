@@ -20,19 +20,16 @@ mmgen-txcreate: Create a BTC transaction, sending to specified addresses
 """
 
 import sys
-#from hashlib import sha256
-
-from mmgen.Opts import *
-from mmgen.license import *
-import mmgen.config as g
-from mmgen.tx import *
-from mmgen.util import msg, msg_r, user_confirm
 from decimal import Decimal
 
-prog_name = sys.argv[0].split("/")[-1]
+import mmgen.config as g
+from mmgen.Opts import *
+from mmgen.license import *
+from mmgen.tx import *
+from mmgen.util import msg, msg_r, user_confirm
 
 help_data = {
-	'prog_name': prog_name,
+	'prog_name': g.prog_name,
 	'desc':    "Create a BTC transaction with outputs to specified addresses",
 	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
@@ -69,6 +66,7 @@ if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 c = connect_to_bitcoind()
 
 if not 'info' in opts:
+	do_license_msg(immed=True)
 
 	tx_out,addr_data,b2m_map,acct_data,change_addr = {},[],{},[],""
 
@@ -132,9 +130,9 @@ if not 'info' in opts:
 
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
-if not 'info' in opts: do_license_msg(immed=True)
+#write_to_file("bogus_unspent.json", repr(us), opts); sys.exit()
 
-#write_to_file("bogus_unspent.json", repr(us)); sys.exit()
+#if False:
 if g.bogus_wallet_data:
 	import mmgen.rpc
 	us = eval(get_data_from_file(g.bogus_wallet_data))
@@ -143,7 +141,7 @@ else:
 
 if not us: msg(txmsg['no_spendable_outputs']); sys.exit(2)
 
-unspent = sort_and_view(us)
+unspent = sort_and_view(us,opts)
 
 total = trim_exponent(sum([i.amount for i in unspent]))
 
@@ -209,6 +207,15 @@ if reply and reply in "YyVv":
 
 prompt = "Save transaction?"
 if user_confirm(prompt,default_yes=True):
-	write_tx_to_file(tx_hex,sel_unspent,send_amt or change,b2m_map,opts)
+	amt = send_amt or change
+	tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
+	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
+	data = "{} {} {}\n{}\n{}\n{}\n".format(
+			tx_id, amt, make_timestamp(),
+			tx_hex,
+			repr([i.__dict__ for i in sel_unspent]),
+			repr(b2m_map)
+		)
+	write_to_file(outfile,data,opts,"transaction",False,True)
 else:
 	msg("Transaction not saved")

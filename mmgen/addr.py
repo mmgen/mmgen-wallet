@@ -133,43 +133,27 @@ def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 
 	start = addr_data[0]['num']
 	end   = addr_data[-1]['num']
-
-	wif_msg = ""
-	if ('b16' in opts and 'print_secret' in opts) \
-		or 'no_addresses' in opts:
-			wif_msg = " (wif)"
-
-	fa = "%s%%-%ss %%-%ss %%s" % (
-			" "*2, len(str(end)) + (0 if 'no_addresses' in opts else 1),
-			(5 if 'print_secret' in opts else 1) + len(wif_msg)
-		)
-
+	fs = "  %-{}s  %s".format(len(str(end)))
 	out = []
-	if not 'stdout' in opts: out.append(addrmsgs['addrfile_header'] + "\n")
-	out.append("# Address data checksum for {}[{}]: {}".format(
-				seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum))
-	out.append("# Record this value to a secure location\n")
+
+	if not 'no_addresses' in opts:
+		if not 'stdout' in opts: out.append(addrmsgs['addrfile_header'] + "\n")
+		out.append("# Address data checksum for {}[{}]: {}".format(
+					seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum))
+		out.append("# Record this value to a secure location\n")
+
 	out.append("%s {" % seed_id.upper())
 
 	for d in addr_data:
-		col1 = d['num']
 		if 'no_addresses' in opts:
-			if 'b16' in opts:
-				out.append(fa % (col1, " (hex):", d['sec']))
-				col1 = ""
-			out.append(fa % (col1, " (wif):", d['wif']))
-			if 'b16' in opts: out.append("")
-		elif 'print_secret' in opts:
-			if 'b16' in opts:
-				out.append(fa % (col1, "sec (hex):", d['sec']))
-				col1 = ""
-			out.append(fa % (col1, "sec"+wif_msg+":", d['wif']))
-			out.append(fa % ("",   "addr:", d['addr']))
-			out.append("")
+			out.append(fs % (d['num'], "wif: " + d['wif']))
 		else:
-			out.append(fa % (col1, "", d['addr']))
+			out.append(fs % (d['num'], d['addr']))
+		if 'b16' in opts:
+			out.append(fs % ("", "hex: " + d['sec']))
+		if 'print_secret' in opts and not 'no_addresses' in opts:
+			out.append(fs % ("", "wif: " + d['wif']))
 
-	if not out[-1]: out.pop()
 	out.append("}")
 
 	return "\n".join(out) + "\n"
@@ -191,26 +175,3 @@ def fmt_addr_idxs(addr_idxs):
 		prev = i
 
 	return "".join([str(i) for i in ret])
-
-
-def write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts):
-
-	if 'print_addresses_only' in opts: ext = g.addrfile_ext
-	elif 'no_addresses' in opts:       ext = g.keyfile_ext
-	elif 'flat_list' in opts:          ext = g.keylist_ext
-	else:                              ext = "akeys"
-
-	if 'b16' in opts: ext = ext.replace("keys","xkeys")
-	from mmgen.util import write_to_file, make_chksum_8
-	outfile = "{}[{}].{}".format(
-			make_chksum_8(seed),
-			fmt_addr_idxs(addr_idxs),
-			ext
-		)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-
-	write_to_file(outfile,addr_data_str)
-
-	dtype = "Address" if 'print_addresses_only' in opts else "Key"
-	msg("%s data saved to file '%s'" % (dtype,outfile))

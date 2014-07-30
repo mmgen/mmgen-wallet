@@ -21,17 +21,15 @@ mmgen-txsend: Broadcast a Bitcoin transaction to the network
 
 import sys
 
+import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.license import *
-import mmgen.config as g
 from mmgen.tx import *
 from mmgen.util import msg,check_infile,get_lines_from_file,confirm_or_exit
 
-prog_name = sys.argv[0].split("/")[-1]
-
 help_data = {
-	'prog_name': prog_name,
-	'desc':    "Send a Bitcoin transaction signed by mmgen-txsign",
+	'prog_name': g.prog_name,
+	'desc':    "Send a Bitcoin transaction signed by {}-txsign".format(g.proj_name.lower()),
 	'usage':   "[opts] <signed transaction file>",
 	'options': """
 -h, --help      Print this help message
@@ -84,4 +82,5 @@ except:
 
 msg("Transaction sent: %s" % tx_id)
 
-write_sent_tx_num_to_file(tx_id,metadata,opts)
+of = "tx_{}[{}].out".format(*metadata[:2])
+write_to_file(of, tx_id+"\n",opts,"transaction ID",True,True)

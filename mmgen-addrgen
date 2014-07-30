@@ -29,17 +29,19 @@ from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.util import *
 from mmgen.addr import *
+from mmgen.tx import make_addr_data_chksum
 
 gen_what = "addresses" if sys.argv[0].split("-")[-1] == "addrgen" else "keys"
 
 help_data = {
-	'prog_name': sys.argv[0].split("/")[-1],
+	'prog_name': g.prog_name,
 	'desc': """Generate a list or range of {} from an {g.proj_name} wallet,
                   mnemonic, seed or password""".format(gen_what,g=g),
 	'usage':"[opts] [infile] <address list>",
 	'options': """
 -h, --help              Print this help message{}
 -d, --outdir=       d   Specify an alternate directory 'd' for output
+-c, --save-checksum     Save address list checksum to file
 -e, --echo-passphrase   Echo passphrase or mnemonic to screen upon entry{}
 -H, --show-hash-presets Show information on available hash presets
 -K, --no-keyconv        Use internal libraries for address generation
@@ -66,10 +68,10 @@ help_data = {
 """.format(
 		*(
 		   (
-"\n-A, --no-addresses       Print only secret keys, no addresses",
-"\n-f, --flat-list          Produce a flat list of keys suitable for use with" +
-"\n                         'mmgen-txsign'",
-"\n-x, --b16                Print secret keys in hexadecimal too"
+"\n-A, --no-addresses      Print only secret keys, no addresses",
+"\n-f, --flat-list         Produce a flat list of keys suitable for use with" +
+"\n                        '{}-txsign'".format(g.proj_name.lower()),
+"\n-x, --b16               Print secret keys in hexadecimal too"
 			)
 		if gen_what == "keys" else ("","","")),
 		seed_lens=", ".join([str(i) for i in g.seed_lens]),
@@ -148,29 +150,36 @@ if gen_what == "addresses":
 else:
 	if not 'no_addresses' in opts: opts['print_secret'] = True
 
-seed          = get_seed_retry(infile,opts)
-seed_id       = make_chksum_8(seed)
+seed    = get_seed_retry(infile,opts)
+seed_id = make_chksum_8(seed)
 
-addr_data     = generate_addrs(seed, addr_idxs, opts)
-addr_data_chksum = make_chksum_8(
-	" ".join(["{} {}".format(a['num'],a['addr']) for a in addr_data]),
-	sep=True
-)
-addr_data_str = format_addr_data(
+addr_data        = generate_addrs(seed, addr_idxs, opts)
+addr_data_chksum = make_addr_data_chksum([(a['num'],a['addr'])
+		for a in addr_data]) if not 'no_addresses' in opts else ""
+addr_data_str    = format_addr_data(
 		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
+
+outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
 
 # Output data:
 if 'stdout' in opts:
-	if gen_what == "keys" and not g.quiet:
-		confirm = True
-	else: confirm = False
+	confirm = True if (gen_what == "keys" and not g.quiet) else False
 	write_to_stdout(addr_data_str,gen_what,confirm)
 elif not sys.stdout.isatty():
 	write_to_stdout(addr_data_str,gen_what,confirm=False)
 else:
-	write_addr_data_to_file(seed, addr_data_str, addr_idxs, opts)
+	confirm = False if g.quiet else True
+	outfile = outfile_base + "." + (
+		g.addrfile_ext if 'print_addresses_only' in opts else (
+		g.keyfile_ext if 'no_addresses' in opts else (
+		g.keylist_ext if 'flat_list' in opts else "akeys"))
+	)
+	write_to_file(outfile,addr_data_str,opts,gen_what,confirm,True)
 
-msg("""
-Checksum for address data {}[{}]: {}
-Remember this checksum or save it to a secure location
-""".format(seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum).strip())
+if not 'no_addresses' in opts:
+	msg("Checksum for address data {}: {}".format(outfile_base,addr_data_chksum))
+	if 'save_checksum' in opts:
+		a = "address data checksum"
+		write_to_file(outfile_base+".chk",addr_data_chksum,opts,a,confirm,True)
+	else:
+		qmsg("Save this information to a secure location")

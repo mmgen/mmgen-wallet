@@ -19,11 +19,12 @@
 tx.py:  Bitcoin transaction routines
 """
 
-from binascii import unhexlify
-from mmgen.util import *
 import sys, os
+from binascii import unhexlify
 from decimal import Decimal
+
 import mmgen.config as g
+from mmgen.util import *
 
 txmsg = {
 'not_enough_btc': "Not enough BTC in the inputs for this transaction (%s BTC)",
@@ -35,9 +36,9 @@ address was specified.
 NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
 which makes the signing process more complicated.  When signing the
 transaction, keys for the non-mmgen inputs must be supplied in a separate
-file using the '-k' option to mmgen-txsign.
+file using the '-k' option to {}-txsign.
 
-Selected mmgen inputs: %s""",
+Selected mmgen inputs: %s""".format(g.proj_name.lower()),
 'too_many_acct_addresses': """
 ERROR: More than one address found for account: "%s".
 The tracking "wallet.dat" file appears to have been altered by a non-{g.proj_name}
@@ -60,8 +61,8 @@ tracking wallet, or supply an address file for it on the command line.
 """.strip(),
 	'no_spendable_outputs': """
 No spendable outputs found!  Import addresses with balances into your
-watch-only wallet using 'mmgen-addrimport' and then re-run this program.
-""".strip(),
+watch-only wallet using '{}-addrimport' and then re-run this program.
+""".strip().format(g.proj_name.lower()),
 	'mapping_error': """
 MMGen -> BTC address mappings differ!
 In transaction:      %s
@@ -81,12 +82,6 @@ addresses: %s
 The {pnm}-to-BTC mappings for these addresses cannot be verified!
 """.strip().format(pnm=g.proj_name),
 }
-
-# Deleted text:
-# Alternatively, you may import the mmgen keys into the wallet.dat of your
-# offline bitcoind, first generating the required keys with mmgen-keygen and
-# then running mmgen-txsign with the '-f' option to force the use of
-# wallet.dat as the key source.
 
 
 def connect_to_bitcoind():
@@ -168,44 +163,6 @@ def get_bitcoind_cfg_options(cfg_keys):
 	return cfg
 
 
-def write_tx_to_file(tx,sel_unspent,send_amt,b2m_map,opts):
-	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "tx_%s[%s].%s" % (tx_id,send_amt,g.rawtx_ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-	data = "{} {} {}\n{}\n{}\n{}\n".format(
-			tx_id, send_amt, make_timestamp(),
-			tx,
-			repr([i.__dict__ for i in sel_unspent]),
-			repr(b2m_map)
-		)
-	write_to_file(outfile,data,confirm=False)
-	msg("Transaction data saved to file '%s'" % outfile)
-
-
-def write_signed_tx_to_file(tx,sig_tx,metadata,inputs_data,b2m_map,opts):
-	tx_id = make_chksum_6(unhexlify(tx)).upper()
-	outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-	data = "{}\n{}\n{}\n{}\n".format(
-			" ".join(metadata[:2] + [make_timestamp()]),
-			sig_tx,
-			repr(inputs_data),
-			repr(b2m_map)
-		)
-	write_to_file(outfile,data,confirm=False)
-	msg("Signed transaction saved to file '%s'" % outfile)
-
-
-def write_sent_tx_num_to_file(tx,metadata,opts):
-	outfile = "tx_{}[{}].out".format(*metadata[:2])
-	if 'outdir' in opts:
-		outfile = "%s/%s" % (opts['outdir'], outfile)
-	write_to_file(outfile,tx+"\n",confirm=False)
-	msg("Transaction ID saved to file '%s'" % outfile)
-
-
 def format_unspent_outputs_for_printing(out,sort_info,total):
 
 	pfs  = " %-4s %-67s %-34s %-12s %-13s %-8s %-10s %s"
@@ -227,7 +184,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 	)
 
 
-def sort_and_view(unspent):
+def sort_and_view(unspent,opts):
 
 	def s_amt(i):   return i.amount
 	def s_txid(i):  return "%s %03s" % (i.txid,i.vout)
@@ -242,9 +199,9 @@ def sort_and_view(unspent):
 	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
 
 	total = trim_exponent(sum([i.amount for i in unspent]))
+	max_acct_len = max([len(i.account) for i in unspent])
 
 	hdr_fmt   = "UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s"
-
 	options_msg = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -253,31 +210,31 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 "('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
 
 	from copy import deepcopy
-	write_to_file_msg = ""
-	msg("")
-
 	from mmgen.term import get_terminal_size
 
-	max_acct_len = max([len(i.account) for i in unspent])
+	write_to_file_msg = ""
+	msg("")
 
 	while True:
 		cols = get_terminal_size()[0]
 		if cols < g.min_screen_width:
-			msg("mmgen-txcreate requires a screen at least %s characters wide" %
-					g.min_screen_width)
+			msg("%s-txcreate requires a screen at least %s characters wide" %
+					(g.proj_name.lower(),g.min_screen_width))
 			sys.exit(2)
 
 		addr_w = min(34+((1+max_acct_len) if show_mmaddr else 0),cols-46)
+		acct_w   = min(max_acct_len, max(24,int(addr_w-10)))
+		btaddr_w = addr_w - acct_w - 1
 		tx_w = max(11,min(64, cols-addr_w-32))
+		txdots = "..." if tx_w < 64 else ""
 		fs = " %-4s %-" + str(tx_w) + "s %-2s %-" + str(addr_w) + "s %-13s %-s"
-		a = "Age(d)" if show_days else "Conf."
-		table_hdr = fs % ("Num","TX id  Vout","","Address", "Amount (BTC)",a)
+		table_hdr = fs % ("Num","TX id  Vout","","Address","Amount (BTC)",
+							"Age(d)" if show_days else "Conf.")
 
 		unsp = deepcopy(unspent)
 		for i in unsp: i.skip = ""
 		if group and (sort == "address" or sort == "txid"):
-			for n in range(len(unsp)-1):
-				a,b = unsp[n],unsp[n+1]
+			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
 				if sort == "address" and a.address == b.address: b.skip = "addr"
 				elif sort == "txid" and a.txid == b.txid:        b.skip = "txid"
 
@@ -286,18 +243,14 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			lfill = 3 - len(amt.split(".")[0]) if "." in amt else 3 - len(amt)
 			i.amt = " "*lfill + amt
 			i.days = int(i.confirmations * g.mins_per_block / (60*24))
-
+			i.age = i.days if show_days else i.confirmations
 			i.mmid,i.label = parse_mmgen_label(i.account)
 
 			if i.skip == "addr":
 				i.addr = "|" + "." * 33
 			else:
-				if show_mmaddr and i.mmid:
-					acct_w   = min(max_acct_len, max(24,int(addr_w-10)))
-					btaddr_w = addr_w - acct_w - 1
-
+				if show_mmaddr:
 					dots = ".." if btaddr_w < len(i.address) else ""
-
 					i.addr = "%s%s %s" % (
 						i.address[:btaddr_w-len(dots)],
 						dots,
@@ -305,20 +258,17 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				else:
 					i.addr = i.address
 
-			dots = "..." if tx_w < 64 else ""
 			i.tx = " " * (tx_w-4) + "|..." if i.skip == "txid" \
-					else i.txid[:tx_w-len(dots)]+dots
+					else i.txid[:tx_w-len(txdots)]+txdots
 
 		sort_info = ["reverse"] if reverse else []
 		sort_info.append(sort if sort else "unsorted")
 		if group and (sort == "address" or sort == "txid"):
 			sort_info.append("grouped")
 
-		out = [hdr_fmt % (" ".join(sort_info), total), table_hdr]
-
-		for n,i in enumerate(unsp):
-			d = i.days if show_days else i.confirmations
-			out.append(fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,d))
+		out  = [hdr_fmt % (" ".join(sort_info), total), table_hdr]
+		out += [fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,i.age)
+					for n,i in enumerate(unsp)]
 
 		msg("\n".join(out) +"\n\n" + write_to_file_msg + options_msg)
 		write_to_file_msg = ""
@@ -344,10 +294,10 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			elif reply == 'e': pass
 			elif reply == 'q': pass
 			elif reply == 'p':
-				data = format_unspent_outputs_for_printing(unsp,sort_info,total)
-				outfile = "listunspent[%s].out" % ",".join(sort_info)
-				write_to_file(outfile, data)
-				write_to_file_msg = "Data written to '%s'\n\n" % outfile
+				d = format_unspent_outputs_for_printing(unsp,sort_info,total)
+				of = "listunspent[%s].out" % ",".join(sort_info)
+				write_to_file(of, d, opts,"",False,False)
+				write_to_file_msg = "Data written to '%s'\n\n" % of
 			elif reply == 'v':
 				do_pager("\n".join(out))
 				continue
@@ -572,16 +522,18 @@ Only ASCII printable characters are permitted.
 """.strip() % (ch,label))
 			sys.exit(3)
 
+def make_addr_data_chksum(addr_data):
+	nchars = 24
+	return make_chksum_N(
+		" ".join(["{} {}".format(*d[:2]) for d in addr_data]), nchars, sep=True
+	)
 
 def check_addr_data_hash(seed_id,addr_data):
 	def s_addrdata(a): return int(a[0])
-	addr_data.sort(key=s_addrdata)
-	addr_data_chksum = make_chksum_8(
-		" ".join(["{} {}".format(*d[:2]) for d in addr_data]), sep=True
-	)
+	addr_data_chksum = make_addr_data_chksum(sorted(addr_data,key=s_addrdata))
 	from mmgen.addr import fmt_addr_idxs
 	fl = fmt_addr_idxs([int(a[0]) for a in addr_data])
-	msg("Computed address data checksum for '{}[{}]': {}".format(
+	msg("Computed checksum for addr data {}[{}]: {}".format(
 				seed_id,fl,addr_data_chksum))
 	msg("Check this value against your records")
 
