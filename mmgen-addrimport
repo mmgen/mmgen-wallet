@@ -83,6 +83,7 @@ and has a balance, you must exit the program now and rerun it using the
 '--rescan' option.  Otherwise you may ignore this message and continue.
 """.strip()
 
+if g.quiet: m = ""
 confirm_or_exit(m, "continue", expect="YES")
 
 err_flag = False
@@ -135,10 +136,7 @@ for n,i in enumerate(addr_data):
 				break
 	else:
 		import_address(i[1],label,rescan=False)
-		msg_r(msg_fmt % (
-				("%s/%s:" % (n+1,len(addr_data))),
-				i[1], "(" + label + ")"
-			)
-		)
+		msg_r(msg_fmt % (("%s/%s:" % (n+1,len(addr_data))),
+							i[1], "(" + label + ")"))
 		if err_flag: msg("\nImport failed"); sys.exit(2)
 		msg(" - OK")

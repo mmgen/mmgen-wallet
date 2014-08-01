@@ -2,6 +2,7 @@
 __init__.py
 mmgen-addrgen
 mmgen-addrimport
+mmgen-keygen
 mmgen-passchg
 mmgen-pywallet
 mmgen-tool

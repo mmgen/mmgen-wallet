@@ -40,7 +40,7 @@ commands = {
 	"hextob58":     ['<hex number> [str]'],
 	"b58tohex":     ['<b58 number> [str]'],
 	"b58randenc":   [],
-	"getrand":      ['bytes [int=32]'],
+	"randhex":      ['nbytes [int=32]'],
 	"randwif":      ['compressed [bool=False]'],
 	"randpair":     ['compressed [bool=False]'],
 	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
@@ -58,7 +58,8 @@ commands = {
 	"listaddresses": ['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
 	"viewtx":       ['<MMGen tx file> [str]'],
-	"check_addrfile":  ['<MMGen addr file> [str]'],
+	"check_addrfile": ['<MMGen addr file> [str]'],
+	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
 	"hexreverse":   ['<hexadecimal string> [str]'],
 	"sha256x2":     ['<str, hexstr or filename> [str]',
 					'hex_input [bool=False]','file_input [bool=False]'],
@@ -70,47 +71,56 @@ commands = {
 	"privhex2addr": ['<private key in hex format> [str]','compressed [bool=False]'],
 	"encrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
 	"decrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
+	"rand2file":    ['<outfile> [str]','<nbytes> [str]','threads [int=4]'],
+	"bytespec":     ['<bytespec> [str]'],
 }
 
 command_help = """
-  File operations
-  hexdump      - encode data into formatted hexadecimal form (file or stdin)
-  unhexdump    - decode formatted hexadecimal data (file or stdin)
-
-  {pnm}-specific operations
-  id8          - generate 8-character {pnm} ID checksum for file (or stdin)
-  id6          - generate 6-character {pnm} ID checksum for file (or stdin)
-  check_addrfile - compute checksum and address list for {pnm} address file
-
-  Bitcoin operations:
-  strtob58     - convert a string to base 58
-  hextob58     - convert a hexadecimal number to base 58
-  b58tohex     - convert a base 58 number to hexadecimal
+  Bitcoin address/key operations (compressed addresses supported):
+  addr2hexaddr - convert Bitcoin address from base58 to hex format
   b58randenc   - generate a random 32-byte number and convert it to base 58
-  randwif      - generate a random private key in WIF format
-  randpair     - generate a random private key/address pair
-  wif2hex      - convert a private key from WIF to hex format
+  b58tohex     - convert a base 58 number to hexadecimal
   hex2wif      - convert a private key from hex to WIF format
-  wif2addr     - generate a Bitcoin address from a key in WIF format
+  hexaddr2addr - convert Bitcoin address from hex to base58 format
+  hextob58     - convert a hexadecimal number to base 58
+  privhex2addr - generate Bitcoin address from private key in hex format
   pubkey2addr  - convert Bitcoin public key to address
   pubkey2hexaddr - convert Bitcoin public key to address in hex format
-  hexaddr2addr - convert Bitcoin address from hex to base58 format
-  addr2hexaddr - convert Bitcoin address from base58 to hex format
-  privhex2addr - generate Bitcoin address from private key in hex format
+  randpair     - generate a random private key/address pair
+  randwif      - generate a random private key in WIF format
+  strtob58     - convert a string to base 58
+  wif2addr     - generate a Bitcoin address from a key in WIF format
+  wif2hex      - convert a private key from WIF to hex format
 
-  Miscellaneous operations:
-  hexreverse   - reverse bytes of a hexadecimal string
+  Wallet/TX operations (bitcoind must be running):
+  getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
+                  spendable/unspendable balances for individual {pnm} wallets
+  listaddresses - list {pnm} addresses and their balances
+  viewtx        - show raw/signed {pnm} transaction in human-readable form
+
+  General utilities:
+  bytespec     - convert a byte specifier such as '1GB' into a plain integer
+  hexdump      - encode data into formatted hexadecimal form (file or stdin)
   hexlify      - display string in hexadecimal format
+  hexreverse   - reverse bytes of a hexadecimal string
+  rand2file    - write 'n' bytes of random data to specified file
+  randhex      - print 'n' bytes (default 32) of random data in hex format
   sha256x2     - compute a double sha256 hash of data
-  getrand      - print 'n' bytes (default 32) of random data in hex format
+  unhexdump    - decode formatted hexadecimal data (file or stdin)
 
-  Encryption operations:
-  encrypt      - encrypt a file using {pnm}'s encryption suite
-  decrypt      - decrypt an {pnm}-encrypted file
+  File encryption:
+  encrypt      - encrypt a file
+  decrypt      - decrypt a file
     {pnm} encryption suite:
       * Key: Scrypt (user-configurable hash parameters, 32-byte salt)
       * Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
       * The encrypted file is indistinguishable from random data
+
+  {pnm}-specific operations:
+  check_addrfile - compute checksum and address list for {pnm} address file
+  find_incog_data - Use an Incog ID to find hidden incognito wallet data
+  id6          - generate 6-character {pnm} ID checksum for file (or stdin)
+  id8          - generate 8-character {pnm} ID checksum for file (or stdin)
 
   Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
   wordlists):
@@ -119,12 +129,6 @@ command_help = """
   mn_rand256   - generate random 256-bit mnemonic
   mn_stats     - show stats for mnemonic wordlist
   mn_printlist - print mnemonic wordlist
-
-  Bitcoind operations (bitcoind must be running):
-  listaddresses - show {pnm} addresses and their balances
-  getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
-                  spendable/unspendable
-  viewtx        - show raw/signed {pnm} transaction in human-readable form
 
   IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
@@ -234,8 +238,8 @@ def b58randenc():
 	dec = bitcoin.b58decode(enc)
 	print_convert_results(ba.hexlify(r),enc,ba.hexlify(dec))
 
-def getrand(bytes='32'):
-	print ba.hexlify(get_random(int(bytes),opts))
+def randhex(nbytes='32'):
+	print ba.hexlify(get_random(int(nbytes),opts))
 
 def randwif(compressed=False):
 	r_hex = ba.hexlify(get_random(32,opts))
@@ -443,3 +447,107 @@ def decrypt(infile,outfile="",hash_preset=''):
 			write_to_file((outfile or of),out,opts,"decrypted data",True,True)
 	else:
 		msg("Incorrect passphrase or hash preset")
+
+
+def find_incog_data(filename,iv_id,keep_searching=False):
+	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
+	n,carry = 0," "*ivsize
+	f = os.open(filename,os.O_RDONLY)
+	while True:
+		d = os.read(f,bsize)
+		if not d: break
+		d = carry + d
+		for i in range(bsize):
+			if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == iv_id:
+				if n+i < ivsize: continue
+				msg("\rIncog data for ID %s found at offset %s" %
+					(iv_id,n+i-ivsize))
+				if not keep_searching: sys.exit(0)
+		carry = d[len(d)-ivsize:]
+		n += bsize
+		if not n % mod: msg_r("\rSearched: %s bytes" % n)
+
+	msg("")
+	os.close(f)
+
+# From "man dd":
+# c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
+# GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
+
+def parse_nbytes(nbytes):
+	import re
+	m = re.match(r'([0123456789]+)(.*)',nbytes)
+	smap = ("c",1),("w",2),("b",512),("kB",1000),("K",1024),("MB",1000*1000),\
+			("M",1024*1024),("GB",1000*1000*1000),("G",1024*1024*1024)
+	if m:
+		if m.group(2):
+			for k,v in smap:
+				if k == m.group(2):
+					return int(m.group(1)) * v
+			else:
+				msg("Valid byte specifiers: '%s'" % "' '".join([i[0] for i in smap]))
+		else:
+			return int(nbytes)
+
+	msg("'%s': invalid byte specifier" % nbytes)
+	sys.exit(1)
+
+
+def rand2file(outfile, nbytes, threads=4):
+	nbytes = parse_nbytes(nbytes)
+	from Crypto import Random
+	rh = Random.new()
+	from Queue import Queue
+	from threading import Thread
+	bsize = 2**20
+	roll = bsize * 4
+	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
+	f = open(outfile,"w")
+
+	from Crypto.Cipher import AES
+	from Crypto.Util import Counter
+
+	key = get_random(32,opts)
+
+	def encrypt_worker(wid):
+		while True:
+			i,d = q1.get()
+			c = AES.new(key, AES.MODE_CTR,
+					counter=Counter.new(g.aesctr_iv_len*8,initial_value=i))
+			enc_data = c.encrypt(d)
+			q2.put(enc_data)
+			q1.task_done()
+
+	def output_worker():
+		while True:
+			data = q2.get()
+			f.write(data)
+			q2.task_done()
+
+	q1 = Queue()
+	for i in range(max(1,threads-2)):
+		t = Thread(target=encrypt_worker, args=(i,))
+		t.daemon = True
+		t.start()
+
+	q2 = Queue()
+	t = Thread(target=output_worker)
+	t.daemon = True
+	t.start()
+
+	i = 1; rbytes = nbytes
+	while rbytes > 0:
+		d = rh.read(min(bsize,rbytes))
+		q1.put((i,d))
+		rbytes -= bsize
+		i += 1
+		if not (bsize*i) % roll:
+			msg_r("\rRead: %s bytes" % (bsize*i))
+
+	msg("\rRead: %s bytes" % nbytes)
+	qmsg("\r%s bytes written to file '%s'" % (nbytes,outfile))
+	q1.join()
+	q2.join()
+	f.close()
+
+def bytespec(s): print parse_nbytes(s)

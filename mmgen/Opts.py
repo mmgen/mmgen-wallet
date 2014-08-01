@@ -23,16 +23,17 @@ def usage(hd):
 	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])
 	sys.exit(2)
 
-def print_version_info(progname):
+def print_version_info(): # MMGen only
 	print """
-'{}' version {g.version}.  Part of the {g.proj_name} suite.
+'{g.prog_name}' version {g.version}.  Part of the {g.proj_name} suite.
 Copyright (C) {g.Cdates} by {g.author} {g.email}.
-""".format(progname, g=g).strip()
+""".format(g=g).strip()
 
-def print_help(progname,help_data):
-	pn_len = str(len(progname)+2)
-	print ("  %-"+pn_len+"s %s") % (progname.upper()+":", help_data['desc'].strip())
-	print ("  %-"+pn_len+"s %s %s")%("USAGE:", progname, help_data['usage'].strip())
+def print_help(help_data):
+	pn = help_data['prog_name']
+	pn_len = str(len(pn)+2)
+	print ("  %-"+pn_len+"s %s") % (pn.upper()+":", help_data['desc'].strip())
+	print ("  %-"+pn_len+"s %s %s")%("USAGE:", pn, help_data['usage'].strip())
 	sep = "\n    "
 	print "  OPTIONS:"+sep+"%s" % sep.join(help_data['options'].strip().split("\n"))
 	if "notes" in help_data:
@@ -41,10 +42,8 @@ def print_help(progname,help_data):
 
 def process_opts(argv,help_data,short_opts,long_opts):
 
-	progname = argv[0].split("/")[-1]
-
 	if len(argv) == 2 and argv[1] == '--version': # MMGen only!
-		print_version_info(progname); sys.exit()
+		print_version_info(); sys.exit()
 
 	if g.debug:
 		print "Short opts: %s" % repr(short_opts)
@@ -63,7 +62,7 @@ def process_opts(argv,help_data,short_opts,long_opts):
 		else:        short_opts_l     += i
 
 	for opt, arg in cl_opts:
-		if   opt in ("-h","--help"): print_help(progname,help_data); sys.exit()
+		if   opt in ("-h","--help"): print_help(help_data); sys.exit()
 		elif opt[:2] == "--" and opt[2:] in long_opts:
 			opts[opt[2:].replace("-","_")] = True
 		elif opt[:2] == "--" and opt[2:]+"=" in long_opts:
@@ -143,7 +142,7 @@ def check_opts(opts,long_opts):
 					msg("Requested %s '%s' is unwritable by you" % (what,val))
 					return False
 			else:
-				msg("Requested %s '%s' doen not exist" % (what,val))
+				msg("Requested %s '%s' does not exist" % (what,val))
 				return False
 
 		elif opt == 'label':

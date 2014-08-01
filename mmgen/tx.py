@@ -141,17 +141,16 @@ def normalize_btc_amt(amt):
 
 def get_bitcoind_cfg_options(cfg_keys):
 
-	if "HOME" in os.environ:
-		data_dir = ".bitcoin"
-		cfg_file = "%s/%s/%s" % (os.environ["HOME"], data_dir, "bitcoin.conf")
-	elif "HOMEPATH" in os.environ:
-	# Windows:
-		data_dir = r"Application Data\Bitcoin"
-		cfg_file = "%s\%s\%s" % (os.environ["HOMEPATH"],data_dir,"bitcoin.conf")
+	if "HOME" in os.environ:       # Linux
+		homedir,datadir = os.environ["HOME"],".bitcoin"
+	elif "HOMEPATH" in os.environ: # Windows:
+		homedir,data_dir = os.environ["HOMEPATH"],r"Application Data\Bitcoin"
 	else:
 		msg("Neither $HOME nor %HOMEPATH% are set")
 		msg("Don't know where to look for 'bitcoin.conf'")
 		sys.exit(3)
+
+	cfg_file = os.sep.join((homedir, datadir, "bitcoin.conf"))
 
 	cfg = dict([(k,v) for k,v in [split2(line.translate(None,"\t "),"=")
 			for line in get_lines_from_file(cfg_file)] if k in cfg_keys])
@@ -535,7 +534,7 @@ def check_addr_data_hash(seed_id,addr_data):
 	fl = fmt_addr_idxs([int(a[0]) for a in addr_data])
 	msg("Computed checksum for addr data {}[{}]: {}".format(
 				seed_id,fl,addr_data_chksum))
-	msg("Check this value against your records")
+	qmsg("Check this value against your records")
 
 def parse_addrs_file(f):
 

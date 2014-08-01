@@ -80,7 +80,6 @@ def get_random_data_from_user(uchars):
 
 	prompt = "User random data successfully acquired.  Press ENTER to continue"
 	prompt_and_get_char(prompt,"",enter_ok=True)
-	msg("")
 
 	return key_data+"".join(fmt_time_data)
 
@@ -97,7 +96,7 @@ def get_random(length,opts):
 		else:
 			kwhat += "saved user entropy"
 		key = make_key(g.user_entropy, "", '2', what=kwhat)
-		return encrypt_data(os_rand,key,what="random data")
+		return encrypt_data(os_rand,key,what="random data",verify=False)
 	else:
 		return os_rand
 
@@ -137,11 +136,11 @@ def show_hash_presets():
 cmessages = {
 	'null': "",
 	'incog_iv_id': """
-   If you know your IV ID, check it against the value above.  If it's
+   If you know your Incog ID, check it against the value above.  If it's
    incorrect, then your incognito data is invalid.
 """,
 	'incog_iv_id_hidden': """
-   If you know your IV ID, check it against the value above.  If it's
+   If you know your Incog ID, check it against the value above.  If it's
    incorrect, then your incognito data is invalid or you've supplied
    an incorrect offset.
 """,
@@ -252,6 +251,9 @@ def make_chksum_8(s,sep=False):
 
 def make_chksum_6(s):
 	return sha256(s).hexdigest()[:6]
+
+def make_iv_chksum(s):
+	return sha256(s).hexdigest()[:8].upper()
 
 
 def check_infile(f):
@@ -372,7 +374,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 def encrypt_seed(seed, key):
 	return encrypt_data(seed, key, iv=1, what="seed")
 
-def encrypt_data(data, key, iv=1, what="data"):
+def encrypt_data(data, key, iv=1, what="data", verify=True):
 	"""
 	Encrypt arbitrary data using AES256 in counter mode
 	"""
@@ -387,16 +389,17 @@ def encrypt_data(data, key, iv=1, what="data"):
 			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	enc_data = c.encrypt(data)
 
-	vmsg_r("Performing a test decryption of the %s..." % what)
+	if verify:
+		vmsg_r("Performing a test decryption of the %s..." % what)
 
-	c = AES.new(key, AES.MODE_CTR,
-			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	dec_data = c.decrypt(enc_data)
+		c = AES.new(key, AES.MODE_CTR,
+				counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
+		dec_data = c.decrypt(enc_data)
 
-	if dec_data == data: vmsg("done\n")
-	else:
-		msg("ERROR.\nDecrypted %s doesn't match original %s" % (what,what))
-		sys.exit(2)
+		if dec_data == data: vmsg("done\n")
+		else:
+			msg("ERROR.\nDecrypted %s doesn't match original %s" % (what,what))
+			sys.exit(2)
 
 	return enc_data
 
@@ -432,9 +435,15 @@ def open_file_or_exit(filename,mode):
 	return f
 
 
+def make_full_path(outdir,outfile):
+	import os
+	return os.path.normpath(os.sep.join([outdir, os.path.basename(outfile)]))
+#	os.path.join() doesn't work?
+
+
 def write_to_file(outfile,data,opts,what="data",confirm=False,verbose=False):
 
-	if 'outdir' in opts: outfile = "%s/%s" % (opts['outdir'], outfile)
+	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
 	if confirm:
 		from os import stat
@@ -454,7 +463,6 @@ def write_to_file(outfile,data,opts,what="data",confirm=False,verbose=False):
 	f.close
 
 	if verbose: msg("%s written to file '%s'" % (what.capitalize(),outfile))
-
 
 
 def export_to_file(outfile, data, opts, what="data"):
@@ -846,7 +854,8 @@ def get_seed_from_incog_wallet(
 
 	iv, enc_incog_data = d[0:g.aesctr_iv_len], d[g.aesctr_iv_len:]
 
-	qmsg("IV ID: %s.  Check this value if possible." % make_chksum_8(iv))
+	msg("Incog ID: %s (IV ID: %s)" % (make_iv_chksum(iv),make_chksum_8(iv)))
+	qmsg("Check the applicable value against your records.")
 	vmsg(cmessages['incog_iv_id_hidden' if "from_incog_hidden" in opts
 			else 'incog_iv_id'])
 
@@ -1047,17 +1056,18 @@ def do_pager(text):
 
 
 def export_to_hidden_incog(incog_enc,opts):
-	fname,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
+	outfile,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
+	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
-	check_data_fits_file_at_offset(fname,int(offset),len(incog_enc),"write")
+	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
 
-	if not g.quiet: confirm_or_exit("","alter file '%s'" % fname)
-	f = os.open(fname,os.O_RDWR)
+	if not g.quiet: confirm_or_exit("","alter file '%s'" % outfile)
+	f = os.open(outfile,os.O_RDWR)
 	os.lseek(f, int(offset), os.SEEK_SET)
 	os.write(f, incog_enc)
 	os.close(f)
-	qmsg("Data written to file '%s' at offset %s" % (fname,offset),
-			"Data written to file")
+	msg("Data written to file '%s' at offset %s" %
+			(os.path.relpath(outfile),offset))
 
 
 def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
@@ -1090,8 +1100,8 @@ def wallet_to_incog_data(infile,opts):
 		sys.exit(2)
 
 	iv = get_random(g.aesctr_iv_len,opts)
-	iv_id = make_chksum_8(iv)
-	qmsg("IV ID: %s" % iv_id)
+	iv_id = make_iv_chksum(iv)
+	msg("Incog ID: %s" % iv_id)
 
 	# IV is used BOTH to initialize counter and to salt password!
 	key = make_key(passwd, iv, preset, "wrapper key")

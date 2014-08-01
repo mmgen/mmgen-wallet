@@ -182,4 +182,5 @@ if not 'no_addresses' in opts:
 		a = "address data checksum"
 		write_to_file(outfile_base+".chk",addr_data_chksum,opts,a,confirm,True)
 	else:
-		qmsg("Save this information to a secure location")
+		qmsg("This checksum will be used to verify the address file in the future.")
+		qmsg("Record it to a safe location.")
