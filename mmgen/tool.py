@@ -424,8 +424,10 @@ def encrypt(infile,outfile="",hash_preset=''):
 	enc_d = encrypt_data(sha256(nonce+d).digest() + nonce + d, key,
 				int(ba.hexlify(iv),16))
 	if outfile == '-':  sys.stdout.write(salt+iv+enc_d)
-	else: write_to_file((outfile or infile+"."+g.mmenc_ext),
-			salt+iv+enc_d,opts,"encrypted data",True,True)
+	else:
+		if not outfile:
+			outfile = os.path.basename(infile) + "." + g.mmenc_ext
+		write_to_file(outfile, salt+iv+enc_d, opts,"encrypted data",True,True)
 
 def decrypt(infile,outfile="",hash_preset=''):
 	d = get_data_from_file(infile,"encrypted data")
@@ -439,12 +441,15 @@ def decrypt(infile,outfile="",hash_preset=''):
 	from hashlib import sha256
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
 		out = dec_d[sha256_len+nonce_len:]
-		if outfile == '-': sys.stdout.write(out)
+		if outfile == '-':  sys.stdout.write(out)
 		else:
-			import re
-			of = re.sub(r'\.%s$'%g.mmenc_ext,r'',infile)
-			if of == infile: of = infile+".dec"
-			write_to_file((outfile or of),out,opts,"decrypted data",True,True)
+			if not outfile:
+				outfile = os.path.basename(infile)
+				if outfile[-len(g.mmenc_ext)-1:] == "."+g.mmenc_ext:
+					outfile = outfile[:-len(g.mmenc_ext)-1]
+				else:
+					outfile = outfile + ".dec"
+			write_to_file(outfile, out, opts,"decrypted data",True,True)
 	else:
 		msg("Incorrect passphrase or hash preset")
 

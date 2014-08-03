@@ -26,6 +26,7 @@ from mmgen.util import *
 import mmgen.config as g
 
 help_data = {
+	'prog_name': g.prog_name,
 	'desc':  """Change the passphrase, hash preset or label of an {}
                   deterministic wallet""".format(g.proj_name),
 	'usage':   "[opts] [filename]",

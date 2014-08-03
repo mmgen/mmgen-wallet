@@ -33,36 +33,33 @@ addrmsgs = {
 # MMGen address file
 #
 # This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {}.
+# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
 # A text label of {} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain any printable ASCII symbol.
-""".strip().format(g.proj_name,g.max_addr_label_len)
+""".strip().format(g.max_addr_label_len,pnm=g.proj_name),
+	'no_keyconv_msg': """
+Executable '{kcexe}' unavailable. Falling back on (slow) internal ECDSA library.
+Please install '{kcexe}' from the {vanityg} package on your system for much
+faster address generation.
+""".format(kcexe=g.keyconv_exec, vanityg="vanitygen")
 }
 
 def test_for_keyconv():
-	"""
-	Test for the presence of 'keyconv' utility on system
-	"""
 
 	from subprocess import Popen, PIPE
 	try:
 		p = Popen([g.keyconv_exec, '-h'], stdout=PIPE, stderr=PIPE)
 	except:
-		sys.stderr.write("""
-Executable '%s' unavailable. Falling back on (slow) internal ECDSA library.
-Please install '%s' from the %s package on your system for much
-faster address generation.
-
-""" % (g.keyconv_exec, g.keyconv_exec, "vanitygen"))
+		msg(addrmsgs['no_keyconv_msg'])
 		return False
-	else:
-		return True
+
+	return True
 
 
 def generate_addrs(seed, addrnums, opts):
 
-	if not 'no_addresses' in opts:
+	if 'addrs' in opts['gen_what']:
 		if 'no_keyconv' in opts or test_for_keyconv() == False:
 			msg("Using (slow) internal ECDSA library for address generation")
 			from mmgen.bitcoin import privnum2addr
@@ -71,73 +68,62 @@ def generate_addrs(seed, addrnums, opts):
 			from subprocess import Popen, PIPE
 			keyconv = "keyconv"
 
-	a,t_addrs,i,out = sorted(addrnums),len(addrnums),0,[]
+	fmt = "num addr" if opts['gen_what'] == ("addrs") else (
+		"num sec wif" if opts['gen_what'] == ("keys") else "num sec wif addr")
 
-	while a:
-		seed = sha512(seed).digest()
-		i += 1 # round /i/
+	from collections import namedtuple
+	addrinfo = namedtuple("addrinfo",fmt)
+	addrinfo_args = "%s" % ",".join(fmt.split())
 
-		if g.debug: print "Seed round %s: %s" % (i, hexlify(seed))
+	t_addrs,num,pos,out = len(addrnums),0,0,[]
+	addrnums.sort()  # needed only if caller didn't sort
 
-		if i < a[0]: continue
+	try:
+		while pos != t_addrs:
+			seed = sha512(seed).digest()
+			num += 1 # round
 
-		a.pop(0)
+			if g.debug: print "Seed round %s: %s" % (num, hexlify(seed))
+			if num != addrnums[pos]: continue
 
-		qmsg_r("\rGenerating %s %s (%s of %s)" %
-			(opts['gen_what'], i, t_addrs-len(a), t_addrs))
+			pos += 1
 
-		# Secret key is double sha256 of seed hash round /i/
-		sec = sha256(sha256(seed).digest()).hexdigest()
-		wif = numtowif(int(sec,16))
+			qmsg_r("\rGenerating %s %s (%s of %s)" %
+						(opts['gen_what'][-1],num,pos,t_addrs))
 
-		if g.debug:
-			print "Privkey round %s:\n  hex: %s\n  wif: %s" % (i, sec, wif)
+			# Secret key is double sha256 of seed hash round /num/
+			sec = sha256(sha256(seed).digest()).hexdigest()
+			wif = numtowif(int(sec,16))
 
-		d = { 'num': i }
+			if 'addrs' in opts['gen_what']: addr = \
+				Popen([keyconv, wif], stdout=PIPE).stdout.readline().split()[1] \
+				if keyconv else privnum2addr(int(sec,16))
 
-		if not 'print_addresses_only' in opts:
-			d['sec'] = sec
-			d['wif'] = wif
+			out.append(eval("addrinfo("+addrinfo_args+")"))
 
-		if not 'no_addresses' in opts:
-			if keyconv:
-				p = Popen([keyconv, wif], stdout=PIPE)
-				addr = dict([j.split() for j in \
-						p.stdout.readlines()])['Address:']
-			else:
-				addr = privnum2addr(int(sec,16))
+	except KeyboardInterrupt:
+		msg("\nUser interrupt")
+		sys.exit(1)
 
-			d['addr'] = addr
-
-		out.append(d)
-
-	w = opts['gen_what']
-	if t_addrs == 1:
-		import re
-		w = re.sub('e*s$','',w)
+	w = 'key' if 'keys' in opts['gen_what'] else 'address'
+	if t_addrs != 1: w = w+"s" if w == 'key' else w+"es"
 
 	qmsg("\rGenerated %s %s%s"%(t_addrs, w, " "*15))
 
 	return out
 
-def generate_keys(seed, addrnums):
-	o = {'no_addresses': True, 'gen_what': "keys"}
-	return generate_addrs(seed, addrnums, o)
-
 
 def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 
 	if 'flat_list' in opts:
-		return "\n\n".join(["# %s:%s %s\n%s" % (seed_id,d['num'],d['addr'],d['wif'])
+		return "\n\n".join(["# {}:{d.num} {d.addr}\n{d.wif}".format(seed_id,d=d)
 			for d in addr_data])+"\n\n"
 
-	start = addr_data[0]['num']
-	end   = addr_data[-1]['num']
-	fs = "  %-{}s  %s".format(len(str(end)))
-	out = []
+	fs = "  {:<%s}  {}" % len(str(addr_data[-1].num))
 
-	if not 'no_addresses' in opts:
-		if not 'stdout' in opts: out.append(addrmsgs['addrfile_header'] + "\n")
+	if 'addrs' not in opts['gen_what']: out = []
+	else:
+		out = [] if 'stdout' in opts else [addrmsgs['addrfile_header']+"\n"]
 		out.append("# Address data checksum for {}[{}]: {}".format(
 					seed_id, fmt_addr_idxs(addr_idxs), addr_data_chksum))
 		out.append("# Record this value to a secure location\n")
@@ -145,14 +131,16 @@ def format_addr_data(addr_data, addr_data_chksum, seed_id, addr_idxs, opts):
 	out.append("%s {" % seed_id.upper())
 
 	for d in addr_data:
-		if 'no_addresses' in opts:
-			out.append(fs % (d['num'], "wif: " + d['wif']))
+		if 'addrs' in opts['gen_what']:  # First line with number
+			out.append(fs.format(d.num, d.addr))
 		else:
-			out.append(fs % (d['num'], d['addr']))
-		if 'b16' in opts:
-			out.append(fs % ("", "hex: " + d['sec']))
-		if 'print_secret' in opts and not 'no_addresses' in opts:
-			out.append(fs % ("", "wif: " + d['wif']))
+			out.append(fs.format(d.num, "wif: "+d.wif))
+
+		if 'keys' in opts['gen_what']:   # Subsequent lines
+			if 'b16' in opts:
+				out.append(fs.format("", "hex: "+d.sec))
+			if 'addrs' in opts['gen_what']:
+				out.append(fs.format("", "wif: "+d.wif))
 
 	out.append("}")
 

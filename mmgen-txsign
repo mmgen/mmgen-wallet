@@ -89,6 +89,11 @@ Seed data supplied in files must have the following extensions:
 
 opts,infiles = parse_opts(sys.argv,help_data)
 
+for l in (
+('tx_id', 'info'),
+('keys_from_file','all_keys_from_file')
+): check_incompatible_opts(opts,l)
+
 if "quiet" in opts: g.quiet = True
 if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
 	opts['from_incog'] = True

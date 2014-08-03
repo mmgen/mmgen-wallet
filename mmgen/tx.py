@@ -628,13 +628,13 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts,gen_pairs=Fals
 		seed = get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts)
 
 		addr_ids = [int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id]
-		from mmgen.addr import generate_keys,generate_addrs
+		from mmgen.addr import generate_addrs
 		if gen_pairs:
-			o = {"gen_what":"addresses"}
-			ret += [("%s:%s" % (seed_id,i['num']),i['addr'])
-				for i in generate_addrs(seed, addr_ids, o)]
+			ret += [("{}:{}".format(seed_id,i.num),i.addr)
+				for i in generate_addrs(seed, addr_ids, {'gen_what':("addrs")})]
 		else:
-			ret += [i['wif'] for i in generate_keys(seed, addr_ids)]
+			ret += [i.wif for i in generate_addrs(
+						seed,addr_ids,{'gen_what':("keys")})]
 
 	return ret
 

@@ -16,111 +16,100 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, getopt
+import sys
 import mmgen.config as g
+import mmgen.opt.Opts
+from mmgen.util import msg,check_infile,check_outfile,check_outdir
 
-def usage(hd):
-	print "USAGE: %s %s" % (hd['prog_name'], hd['usage'])
-	sys.exit(2)
+def usage(hd): mmgen.opt.Opts.usage(hd)
 
-def print_version_info(): # MMGen only
+def print_version_info():
 	print """
 '{g.prog_name}' version {g.version}.  Part of the {g.proj_name} suite.
 Copyright (C) {g.Cdates} by {g.author} {g.email}.
 """.format(g=g).strip()
 
-def print_help(help_data):
-	pn = help_data['prog_name']
-	pn_len = str(len(pn)+2)
-	print ("  %-"+pn_len+"s %s") % (pn.upper()+":", help_data['desc'].strip())
-	print ("  %-"+pn_len+"s %s %s")%("USAGE:", pn, help_data['usage'].strip())
-	sep = "\n    "
-	print "  OPTIONS:"+sep+"%s" % sep.join(help_data['options'].strip().split("\n"))
-	if "notes" in help_data:
-		print "  %s" % "\n  ".join(help_data['notes'][1:-1].split("\n"))
-
-
-def process_opts(argv,help_data,short_opts,long_opts):
-
-	if len(argv) == 2 and argv[1] == '--version': # MMGen only!
-		print_version_info(); sys.exit()
-
-	if g.debug:
-		print "Short opts: %s" % repr(short_opts)
-		print "Long opts:  %s" % repr(long_opts)
-
-	long_opts  = [i.replace("_","-") for i in long_opts]
-
-	try: cl_opts, args = getopt.getopt(argv[1:], short_opts, long_opts)
-	except getopt.GetoptError as err:
-		print str(err); sys.exit(2)
-
-	opts,short_opts_l = {},[]
-
-	for i in short_opts:
-		if i == ":": short_opts_l[-1] += i
-		else:        short_opts_l     += i
-
-	for opt, arg in cl_opts:
-		if   opt in ("-h","--help"): print_help(help_data); sys.exit()
-		elif opt[:2] == "--" and opt[2:] in long_opts:
-			opts[opt[2:].replace("-","_")] = True
-		elif opt[:2] == "--" and opt[2:]+"=" in long_opts:
-			opts[opt[2:].replace("-","_")] = arg
-		elif opt[0] == "-" and opt[1]     in short_opts_l:
-			opts[long_opts[short_opts_l.index(opt[1:])].replace("-","_")] = True
-		elif opt[0] == "-" and opt[1:]+":" in short_opts_l:
-			opts[long_opts[short_opts_l.index(opt[1:]+":")][:-1].replace("-","_")] = arg
-		else: assert False, "Invalid option"
-
-	if g.debug: print "User-selected options: %s" % repr(opts)
-
-	return opts,args
-
+def check_incompatible_opts(opts,incompat_list):
+	bad = [k for k in opts.keys() if k in incompat_list]
+	if len(bad) > 1:
+		msg("Mutually exclusive options: %s" % " ".join(
+					["--"+b.replace("_","-") for b in bad]))
+		sys.exit(1)
 
 def parse_opts(argv,help_data):
 
-	lines = help_data['options'].strip().split("\n")
-	import re
-	pat = r"^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{1,64})(=| )(.+)"
-	rep = r"-{0}, --{1}{w}{3}"
-	opt_data = [list(m.groups()) for m in [re.match(pat,l) for l in lines] if m]
-#	for o in opt_data: print o
-#	sys.exit()
+	if len(argv) == 2 and argv[1] == '--version':
+		print_version_info(); sys.exit()
 
-	for d in opt_data:
-		if d[2] == " ": d[2] = ""
-	short_opts = "".join([d[0]+d[2].replace("=",":") for d in opt_data])
-	long_opts = [d[1].replace("-","_")+d[2] for d in opt_data]
-	help_data['options'] = "\n".join(
-		[rep.format(w=" ", *m.groups())
-			if m else k for m,k in [(re.match(pat,l),l) for l in lines]]
-	)
-	opts,infiles = process_opts(argv,help_data,short_opts,long_opts)
+	opts,args,short_opts,long_opts = mmgen.opt.Opts.parse_opts(argv,help_data)
+
+	if g.debug:
+		print "short opts: %s" % repr(short_opts)
+		print "long opts:  %s" % repr(long_opts)
+		print "user-selected opts: %s" % repr(opts)
+		print "cmd args:           %s" % repr(args)
+
+	for l in (
+	('outdir', 'export_incog_hidden'),
+	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),
+	('export_incog','export_incog_hex','export_incog_hidden','export_mnemonic',
+	 'export_seed'),
+	('quiet','verbose')
+	): check_incompatible_opts(opts,l)
 
 	# check_opts() doesn't touch opts[]
 	if not check_opts(opts,long_opts): sys.exit(1)
 
-	# If unset, set these to the default values in mmgen.config:
+	# If unset, set these to default values in mmgen.config:
 	for v in g.cl_override_vars:
 		if v in opts: typeconvert_override_var(opts,v)
 		else: opts[v] = eval("g."+v)
 
-	if g.debug: print "processed opts: %s" % opts
+	if g.debug: print "opts after typeconvert: %s" % opts
 
-	return opts,infiles
+	return opts,args
 
 
 def show_opts_and_cmd_args(opts,cmd_args):
 	print "Processed options: %s" % repr(opts)
 	print "Cmd args:          %s" % repr(cmd_args)
 
-
-# Everything below here is MMGen-specific:
-
-from mmgen.util import msg,check_infile
-
 def check_opts(opts,long_opts):
+
+	def opt_splits(val,sep,n,what):
+		sepword = "comma" if sep == "," else (
+					"colon" if sep == ":" else ("'"+sep+"'"))
+		try: l = val.split(sep)
+		except:
+			msg("'%s': invalid %s (not %s-separated list)" % (val,what,sepword))
+			return False
+
+		if len(l) == n: return True
+		else:
+			msg("'%s': invalid %s (%s %s-separated items required)" %
+					(val,what,n,sepword))
+			return False
+
+	def opt_compares(val,op,target,what):
+		if not eval("%s %s %s" % (val, op, target)):
+			msg("%s: invalid %s (not %s %s)" % (val,what,op,target))
+			return False
+		return True
+
+	def opt_is_int(val,what):
+		try: int(val)
+		except:
+			msg("'%s': invalid %s (not an integer)" % (val,what))
+			return False
+		return True
+
+	def opt_is_in_list(val,lst,what):
+		if val not in lst:
+			q,sep = ("'","','") if type(lst[0]) == str else ("",",")
+			msg("{q}{}{q}: invalid {}\nValid options: {q}{}{q}".format(
+					val,what,sep.join([str(i) for i in sorted(lst)]),q=q))
+			return False
+		return True
 
 	for opt,val in opts.items():
 
@@ -133,121 +122,49 @@ def check_opts(opts,long_opts):
 			continue
 
 		if opt == 'outdir':
-			what = "output directory"
-			import os
-			if os.path.isdir(val):
-				if os.access(val, os.W_OK|os.X_OK):
-					opts[opt] = os.path.normpath(val)
-				else:
-					msg("Requested %s '%s' is unwritable by you" % (what,val))
-					return False
-			else:
-				msg("Requested %s '%s' does not exist" % (what,val))
-				return False
-
+			check_outdir(val)  # exits on error
 		elif opt == 'label':
-
-			if len(val) > g.max_wallet_label_len:
-				msg("Label must be %s characters or less" %
-					g.max_wallet_label_len)
+			if not opt_compares(len(val),"<=",g.max_wallet_label_len,"label length"):
 				return False
-
+			try: val.decode("ascii")
+			except:
+				msg("ERROR: label contains a non-ASCII symbol")
+				return False
+			w = "character in label"
 			for ch in list(val):
-				chs = g.wallet_label_symbols
-				if ch not in chs:
-					msg("'%s': ERROR: label contains an illegal symbol" % val)
-					msg("The following symbols are permitted:\n%s" % "".join(chs))
-					return False
+				if not opt_is_in_list(ch,g.wallet_label_symbols,w): return False
 		elif opt == 'export_incog_hidden' or opt == 'from_incog_hidden':
-			try:
-				if opt == 'export_incog_hidden':
-					outfile,offset = val.split(",")
-				else:
-					outfile,offset,seed_len = val.split(",")
-			except:
-				msg("'%s': invalid %s" % (val,what))
-				return False
-
-			try:
-				o = int(offset)
-			except:
-				msg("'%s': invalid 'o' %s (not an integer)" % (offset,what))
-				return False
-
-			if o < 0:
-				msg("'%s': invalid 'o' %s (less than zero)" % (offset,what))
-				return False
-
 			if opt == 'from_incog_hidden':
-				try:
-					sl = int(seed_len)
-				except:
-					msg("'%s': invalid 'l' %s (not an integer)" % (sl,what))
-					return False
-
-				if sl not in g.seed_lens:
-					msg("'%s': invalid 'l' %s (valid choices: %s)" %
-						(sl,what," ".join(str(i) for i in g.seed_lens)))
-					return False
-
-			import os, stat
-			try: mode = os.stat(outfile).st_mode
-			except:
-				msg("Unable to stat requested %s '%s'" % (what,outfile))
-				return False
-
-			if not (stat.S_ISREG(mode) or stat.S_ISBLK(mode)):
-				msg("Requested %s '%s' is not a file or block device" %
-						(what,outfile))
-				return False
-
-			ac,m = (os.W_OK,"writ") \
-				if "export_incog_hidden" in opts else (os.R_OK,"read")
-			if not os.access(outfile, ac):
-				msg("Requested %s '%s' is un%sable by you" % (what,outfile,m))
-				return False
-
+				if not opt_splits(val,",",3,what): return False
+				infile,offset,seed_len = val.split(",")
+				check_infile(infile)
+				w = "seed length " + what
+				if not opt_is_int(seed_len,w): return False
+				if not opt_is_in_list(int(seed_len),g.seed_lens,w): return False
+			else:
+				if not opt_splits(val,",",2,what): return False
+				outfile,offset = val.split(",")
+				check_outfile(outfile)
+			w = "offset " + what
+			if not opt_is_int(offset,w): return False
+			if not opt_compares(offset,">=",0,what): return False
 		elif opt == 'from_brain':
-			try:
-				l,p = val.split(",")
-			except:
-				msg("'%s': invalid %s" % (val,what))
-				return False
-
-			try:
-				int(l)
-			except:
-				msg("'%s': invalid 'l' %s (not an integer)" % (l,what))
-				return False
-
-			if int(l) not in g.seed_lens:
-				msg("'%s': invalid 'l' %s.  Options: %s" %
-						(l, what, ", ".join([str(i) for i in g.seed_lens])))
-				return False
-
-			if p not in g.hash_presets:
-				hps = ", ".join([i for i in sorted(g.hash_presets.keys())])
-				msg("'%s': invalid 'p' %s.  Options: %s" % (p, what, hps))
-				return False
+			if not opt_splits(val,",",2,what): return False
+			l,p = val.split(",")
+			w = "seed length " + what
+			if not opt_is_int(l,w): return False
+			if not opt_is_in_list(int(l),g.seed_lens,w): return False
+			w = "hash preset " + what
+			if not opt_is_in_list(p,g.hash_presets.keys(),w): return False
 		elif opt == 'seed_len':
-			if val not in g.seed_lens:
-				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join([str(i) for i in g.seed_lens])))
-				return False
+			if not opt_is_int(val,what): return False
+			if not opt_is_in_list(int(val),g.seed_lens,what): return False
 		elif opt == 'hash_preset':
-			if val not in g.hash_presets:
-				msg("'%s': invalid %s.  Options: %s"
-				% (val,what,", ".join(sorted(g.hash_presets.keys()))))
-				return False
+			if not opt_is_in_list(val,g.hash_presets.keys(),what): return False
 		elif opt == 'usr_randchars':
-			try: v = int(val)
-			except:
-				msg("'%s': invalid value for %s (not an integer)" % (val,what))
-				return False
-			if v != 0 and not (g.min_urandchars <= v <= g.max_urandchars):
-				msg("'%s': invalid %s (must be >= %s and <= %s (or zero))"
-				% (v,what,g.min_urandchars,g.max_urandchars))
-				return False
+			if not opt_is_int(val,what): return False
+			if not opt_compares(val,">=",g.min_urandchars,what): return False
+			if not opt_compares(val,"<=",g.max_urandchars,what): return False
 		else:
 			if g.debug: print "check_opts(): No test for opt '%s'" % opt
 

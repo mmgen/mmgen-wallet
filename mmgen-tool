@@ -19,13 +19,10 @@
 mmgen-tool: Perform various Bitcoin-related operations - part of the MMGen suite
 """
 
-import sys, os
-from hashlib import sha256
-
+import sys
 import mmgen.config as g
 import mmgen.tool as tool
 from mmgen.Opts import *
-from mmgen.util import pretty_hexdump
 
 help_data = {
 	'prog_name': g.prog_name,

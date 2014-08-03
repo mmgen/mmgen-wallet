@@ -256,25 +256,36 @@ def make_iv_chksum(s):
 	return sha256(s).hexdigest()[:8].upper()
 
 
-def check_infile(f):
+def check_file_type_and_access(fname,ftype):
 
 	import os, stat
 
-	try: mode = os.stat(f).st_mode
+	typ2,tdesc2,access,action  = (stat.S_ISLNK,"symbolic link",os.R_OK,"read")\
+	if ftype == "input file" else (stat.S_ISBLK,"block device",os.W_OK,"writ")
+
+	if ftype == "directory":
+		typ1,typ2,tdesc = stat.S_ISDIR,stat.S_ISDIR,"directory"
+	else:
+		typ1,tdesc = stat.S_ISREG,"regular file or "+tdesc2
+
+	try: mode = os.stat(fname).st_mode
 	except:
-		msg("Unable to stat requested input file '%s'" % f)
+		msg("Unable to stat requested %s '%s'" % (ftype,fname))
 		sys.exit(1)
 
-	if not stat.S_ISREG(mode) or stat.S_ISLNK(mode):
-		msg("Requested input file '%s' is not a file" % f)
+	if not (typ1(mode) or typ2(mode)):
+		msg("Requested %s '%s' is not a %s" % (ftype,fname,tdesc))
 		sys.exit(1)
 
-	if not os.access(f, os.R_OK):
-		msg("Requested input file '%s' is unreadable by you" % f)
+	if not os.access(fname, access):
+		msg("Requested %s '%s' is un%sable by you" % (ftype,fname,action))
 		sys.exit(1)
 
 	return True
 
+def check_infile(f):  return check_file_type_and_access(f,"input file")
+def check_outfile(f): return check_file_type_and_access(f,"output file")
+def check_outdir(f):  return check_file_type_and_access(f,"directory")
 
 def _validate_addr_num(n):
 

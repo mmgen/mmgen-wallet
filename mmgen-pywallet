@@ -86,6 +86,8 @@ help_data = {
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
+from mmgen.Opts import check_incompatible_opts
+check_incompatible_opts(opts,('json','keys','addrs','keysforaddrs'))
 
 if len(cmd_args) == 1:
 	from mmgen.util import check_infile
