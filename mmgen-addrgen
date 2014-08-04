@@ -19,7 +19,7 @@
 """
 mmgen-addrgen: Generate a list or range of addresses from a mmgen
                deterministic wallet.
-               Call as 'btc-keygen' to allow key generation as well.
+               Call as 'btc-keygen' to allow key generation.
 """
 
 import sys
@@ -28,6 +28,7 @@ import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.util import *
+from mmgen.crypto import *
 from mmgen.addr import *
 from mmgen.tx import make_addr_data_chksum
 
@@ -149,7 +150,7 @@ seed_id = make_chksum_8(seed)
 for l in (
 	('flat_list', 'no_addresses'),
 	('flat_list', 'b16'),
-): check_incompatible_opts(opts,l)
+): warn_incompatible_opts(opts,l)
 
 opts['gen_what'] = \
 	("addrs") if what == "addresses" else (
@@ -162,6 +163,17 @@ addr_data_str    = format_addr_data(
 		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
 
 outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
+
+if 'flat_list' in opts:
+	confirm = False if g.quiet else True
+	outfile = "%s.%s" % (outfile_base,g.keylist_ext)
+	if (user_confirm("Encrypt key list?")):
+		enc_data = mmgen_encrypt(addr_data_str,"",opts)
+		outfile += "."+g.mmenc_ext
+		write_to_file(outfile,enc_data,opts,"encrypted key list",confirm,True)
+	else:
+		write_to_file(outfile,addr_data_str,opts,"key list",confirm,True)
+	sys.exit()
 
 # Output data:
 if 'stdout' in opts:

@@ -24,6 +24,7 @@ import sys
 import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.util import *
+from mmgen.crypto import get_seed_from_wallet,wallet_to_incog_data
 
 help_data = {
 	'prog_name': g.prog_name,

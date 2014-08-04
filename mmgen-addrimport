@@ -56,7 +56,7 @@ else:
 
 if 'addrlist' in opts:
 	lines = get_lines_from_file(opts['addrlist'],"non-mmgen addresses",
-			remove_comments=True)
+			trim_comments=True)
 	addr_data += [(None,l) for l in lines]
 
 from mmgen.bitcoin import verify_addr

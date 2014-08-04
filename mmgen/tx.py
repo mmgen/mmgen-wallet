@@ -25,6 +25,8 @@ from decimal import Decimal
 
 import mmgen.config as g
 from mmgen.util import *
+from mmgen.crypto import get_seed_retry
+from mmgen.term import do_pager,get_char
 
 txmsg = {
 'not_enough_btc': "Not enough BTC in the inputs for this transaction (%s BTC)",
@@ -538,7 +540,7 @@ def check_addr_data_hash(seed_id,addr_data):
 
 def parse_addrs_file(f):
 
-	lines = get_lines_from_file(f,"address data",remove_comments=True)
+	lines = get_lines_from_file(f,"address data",trim_comments=True)
 
 	try:
 		seed_id,obrace = lines[0].split()

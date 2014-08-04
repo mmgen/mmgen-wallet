@@ -20,9 +20,7 @@ term.py:  Terminal-handling routines for the mmgen suite
 """
 
 import sys, os, struct
-
-def msg(s):   sys.stderr.write(s + "\n")
-def msg_r(s): sys.stderr.write(s)
+from mmgen.util import msg, msg_r
 
 def _kb_hold_protect_unix():
 
@@ -122,7 +120,6 @@ def _get_terminal_size_linux():
 	def ioctl_GWINSZ(fd):
 		try:
 			import fcntl
-			import termios
 			cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
 			return cr
 		except:
@@ -165,18 +162,23 @@ def _get_terminal_size_mswin():
 	except:
 		return 80,25
 
+def mswin_dummy_flush(fd,termconst): pass
+
 try:
 	import tty, termios
 	from select import select
 	get_char = _get_keypress_unix
 	kb_hold_protect = _kb_hold_protect_unix
 	get_terminal_size = _get_terminal_size_linux
+	myflush = termios.tcflush
+# call: myflush(sys.stdin, termios.TCIOFLUSH)
 except:
 	try:
 		import msvcrt, time
 		get_char = _get_keypress_mswin
 		kb_hold_protect = _kb_hold_protect_mswin
 		get_terminal_size = _get_terminal_size_mswin
+		myflush = mswin_dummy_flush
 	except:
 		if not sys.platform.startswith("linux") \
 				and not sys.platform.startswith("win"):
@@ -186,5 +188,42 @@ except:
 			msg("Unable to set terminal mode")
 		sys.exit(2)
 
-if __name__ == "__main__":
-	print "columns: {}, rows: {}".format(*get_terminal_size())
+
+def do_pager(text):
+
+	pagers = ["less","more"]
+	shell = False
+
+	from os import environ
+
+# Hack for MS Windows command line (i.e. non CygWin) environment
+# When 'shell' is true, Windows aborts the calling program if executable
+# not found.
+# When 'shell' is false, an exception is raised, invoking the fallback
+# 'print' instead of the pager.
+# We risk assuming that "more" will always be available on a stock
+# Windows installation.
+	if sys.platform.startswith("win") and 'HOME' not in environ:
+		shell = True
+		pagers = ["more"]
+
+	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
+		pagers = [environ['PAGER']] + pagers
+
+	for pager in pagers:
+		end = "" if pager == "less" else "\n(end of text)\n"
+		try:
+			from subprocess import Popen, PIPE, STDOUT
+			p = Popen([pager], stdin=PIPE, shell=shell)
+		except: pass
+		else:
+			try:
+				p.communicate(text+end+"\n")
+			except KeyboardInterrupt:
+				# Has no effect.  Why?
+				if pager != "less":
+					msg("\n(User interrupt)\n")
+			finally:
+				msg_r("\r")
+				break
+	else: print text+end

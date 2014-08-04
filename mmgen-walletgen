@@ -26,6 +26,7 @@ import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.util import *
+from mmgen.crypto import *
 
 help_data = {
 	'prog_name': g.prog_name,

@@ -20,7 +20,8 @@ license.py:  Show the license
 """
 
 import sys
-from mmgen.util import msg, msg_r, get_char
+from mmgen.util import msg, msg_r
+from mmgen.term import get_char
 import mmgen.config as g
 
 gpl = {
@@ -595,7 +596,7 @@ def do_license_msg(immed=False):
 	while True:
 		reply = get_char(prompt, immed_chars="wc" if immed else "")
 		if reply == 'w':
-			from mmgen.util import do_pager
+			from mmgen.term import do_pager
 			do_pager(gpl['conditions'])
 		elif reply == 'c':
 			msg(""); break

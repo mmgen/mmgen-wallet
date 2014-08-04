@@ -86,8 +86,8 @@ help_data = {
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
-from mmgen.Opts import check_incompatible_opts
-check_incompatible_opts(opts,('json','keys','addrs','keysforaddrs'))
+from mmgen.Opts import warn_incompatible_opts
+warn_incompatible_opts(opts,('json','keys','addrs','keysforaddrs'))
 
 if len(cmd_args) == 1:
 	from mmgen.util import check_infile
@@ -1653,7 +1653,7 @@ elif 'addrs' in opts:
 
 elif 'keysforaddrs' in opts:
 	from mmgen.util import get_lines_from_file
-	usr_addrs = set(get_lines_from_file(opts['keysforaddrs'],"addresses",remove_comments=True))
+	usr_addrs = set(get_lines_from_file(opts['keysforaddrs'],"addresses",trim_comments=True))
 	data = [i['sec'] for i in json_db['keys'] if i['addr'] in usr_addrs]
 	ext,what = "keys","private keys"
 	if len(data) < len(usr_addrs):

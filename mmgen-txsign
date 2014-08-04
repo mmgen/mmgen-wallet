@@ -92,7 +92,7 @@ opts,infiles = parse_opts(sys.argv,help_data)
 for l in (
 ('tx_id', 'info'),
 ('keys_from_file','all_keys_from_file')
-): check_incompatible_opts(opts,l)
+): warn_incompatible_opts(opts,l)
 
 if "quiet" in opts: g.quiet = True
 if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
@@ -114,8 +114,18 @@ infiles  = list(set(infiles) - set(tx_files) - set(addrfiles))
 if not "info" in opts: do_license_msg(immed=True)
 
 if 'keys_from_file' in opts:
-	keys_from_file = get_lines_from_file(opts['keys_from_file'],"key data",
-						remove_comments=True)
+	from mmgen.crypto import mmgen_decrypt
+	fn = opts['keys_from_file']
+	if get_extension(fn) == g.mmenc_ext:
+		enc_d = get_data_from_file(fn,"encrypted keylist")
+		dec_d = mmgen_decrypt(enc_d,"",opts)
+		if dec_d:
+			keys_from_file = remove_comments(dec_d.split("\n"))
+		else:
+			msg("Decryption of encrypted keylist failed")
+			sys.exit(2)
+	else:
+		keys_from_file = get_lines_from_file(fn,"key data",trim_comments=True)
 else: keys_from_file = []
 
 for tx_file in tx_files:

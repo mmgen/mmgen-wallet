@@ -29,7 +29,7 @@ def print_version_info():
 Copyright (C) {g.Cdates} by {g.author} {g.email}.
 """.format(g=g).strip()
 
-def check_incompatible_opts(opts,incompat_list):
+def warn_incompatible_opts(opts,incompat_list):
 	bad = [k for k in opts.keys() if k in incompat_list]
 	if len(bad) > 1:
 		msg("Mutually exclusive options: %s" % " ".join(
@@ -55,7 +55,7 @@ def parse_opts(argv,help_data):
 	('export_incog','export_incog_hex','export_incog_hidden','export_mnemonic',
 	 'export_seed'),
 	('quiet','verbose')
-	): check_incompatible_opts(opts,l)
+	): warn_incompatible_opts(opts,l)
 
 	# check_opts() doesn't touch opts[]
 	if not check_opts(opts,long_opts): sys.exit(1)

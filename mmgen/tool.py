@@ -24,6 +24,7 @@ import mmgen.bitcoin as bitcoin
 import binascii as ba
 
 import mmgen.config as g
+from mmgen.crypto import *
 from mmgen.util import *
 from mmgen.tx import *
 
@@ -55,7 +56,8 @@ commands = {
 	"mn_printlist": ['wordlist [str="electrum"]'],
 	"id8":          ['<infile> [str]'],
 	"id6":          ['<infile> [str]'],
-	"listaddresses": ['minconf [int=1]', 'showempty [bool=False]'],
+	"str2id6":      ['<string (spaces are ignored)> [str]'],
+	"listaddresses":['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
 	"viewtx":       ['<MMGen tx file> [str]'],
 	"check_addrfile": ['<MMGen addr file> [str]'],
@@ -119,8 +121,9 @@ command_help = """
   {pnm}-specific operations:
   check_addrfile - compute checksum and address list for {pnm} address file
   find_incog_data - Use an Incog ID to find hidden incognito wallet data
-  id6          - generate 6-character {pnm} ID checksum for file (or stdin)
-  id8          - generate 8-character {pnm} ID checksum for file (or stdin)
+  id6          - generate 6-character {pnm} ID for a file (or stdin)
+  id8          - generate 8-character {pnm} ID for a file (or stdin)
+  str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
 
   Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
   wordlists):
@@ -301,6 +304,7 @@ def mn_printlist(wordlist="electrum"):
 
 def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True))
 def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True))
+def str2id6(s):  print make_chksum_6("".join(s.split()))
 
 # List MMGen addresses and their balances:
 def listaddresses(minconf=1,showempty=False):
@@ -410,48 +414,31 @@ def wif2hex(wif,compressed=False):
 def hex2wif(hexpriv,compressed=False):
 	print bitcoin.hextowif(hexpriv,compressed)
 
-salt_len,sha256_len,nonce_len = 32,32,32
 
 def encrypt(infile,outfile="",hash_preset=''):
-	d = get_data_from_file(infile,"data for encryption")
-	salt,iv,nonce = get_random(salt_len,opts),\
-		get_random(g.aesctr_iv_len,opts), get_random(nonce_len,opts)
-	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
-	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_new_passphrase("passphrase",{})
-	key = make_key(passwd, salt, hp)
-	from hashlib import sha256
-	enc_d = encrypt_data(sha256(nonce+d).digest() + nonce + d, key,
-				int(ba.hexlify(iv),16))
-	if outfile == '-':  sys.stdout.write(salt+iv+enc_d)
+	data = get_data_from_file(infile,"data for encryption")
+	enc_d = mmgen_encrypt(data,hash_preset,opts)
+	if outfile == '-':
+		write_to_stdout(enc_d,"encrypted data",confirm=True)
 	else:
 		if not outfile:
 			outfile = os.path.basename(infile) + "." + g.mmenc_ext
-		write_to_file(outfile, salt+iv+enc_d, opts,"encrypted data",True,True)
+		write_to_file(outfile, enc_d, opts,"encrypted data",True,True)
+
 
 def decrypt(infile,outfile="",hash_preset=''):
-	d = get_data_from_file(infile,"encrypted data")
-	dstart = salt_len + g.aesctr_iv_len
-	salt,iv,enc_d = d[:salt_len],d[salt_len:dstart],d[dstart:]
-	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
-	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_mmgen_passphrase("Enter passphrase: ",{})
-	key = make_key(passwd, salt, hp)
-	dec_d = decrypt_data(enc_d, key, int(ba.hexlify(iv),16))
-	from hashlib import sha256
-	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
-		out = dec_d[sha256_len+nonce_len:]
-		if outfile == '-':  sys.stdout.write(out)
-		else:
-			if not outfile:
-				outfile = os.path.basename(infile)
-				if outfile[-len(g.mmenc_ext)-1:] == "."+g.mmenc_ext:
-					outfile = outfile[:-len(g.mmenc_ext)-1]
-				else:
-					outfile = outfile + ".dec"
-			write_to_file(outfile, out, opts,"decrypted data",True,True)
+	enc_d = get_data_from_file(infile,"encrypted data")
+	dec_d = mmgen_decrypt(enc_d,hash_preset,opts)
+	if outfile == '-':
+		write_to_stdout(dec_d,"decrypted data",confirm=True)
 	else:
-		msg("Incorrect passphrase or hash preset")
+		if not outfile:
+			outfile = os.path.basename(infile)
+			if outfile[-len(g.mmenc_ext)-1:] == "."+g.mmenc_ext:
+				outfile = outfile[:-len(g.mmenc_ext)-1]
+			else:
+				outfile = outfile + ".dec"
+		write_to_file(outfile, dec_d, opts,"decrypted data",True,True)
 
 
 def find_incog_data(filename,iv_id,keep_searching=False):
