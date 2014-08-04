@@ -163,6 +163,7 @@ def check_opts(opts,long_opts):
 			if not opt_is_in_list(val,g.hash_presets.keys(),what): return False
 		elif opt == 'usr_randchars':
 			if not opt_is_int(val,what): return False
+			if val == '0': return True
 			if not opt_compares(val,">=",g.min_urandchars,what): return False
 			if not opt_compares(val,"<=",g.max_urandchars,what): return False
 		else:

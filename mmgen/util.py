@@ -688,12 +688,14 @@ def export_to_hidden_incog(incog_enc,opts):
 from mmgen.term import kb_hold_protect,get_char
 
 def my_raw_input(prompt,echo=True):
+	msg_r(prompt)
+	kb_hold_protect()
 	try:
 		if echo:
-			reply = raw_input(prompt)
+			reply = raw_input("")
 		else:
 			from getpass import getpass
-			reply = getpass(prompt)
+			reply = getpass("")
 	except KeyboardInterrupt:
 		msg("\nUser interrupt")
 		sys.exit(1)

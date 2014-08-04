@@ -42,7 +42,7 @@ def _kb_hold_protect_unix():
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 
-def _get_keypress_unix(prompt="",immed_chars=""):
+def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 
 	msg_r(prompt)
 	timeout = float(0.3)
@@ -53,14 +53,18 @@ def _get_keypress_unix(prompt="",immed_chars=""):
 
 	try:
 		while True:
-			select([sys.stdin], [], [], False)
+			# Protect against held-down key before read()
+			key = select([sys.stdin], [], [], timeout)[0]
 			ch = sys.stdin.read(1)
+			if prehold_protect:
+				if key: continue
 			if immed_chars == "ALL" or ch in immed_chars:
 				return ch
 			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
 				return ch
-			second_key = select([sys.stdin], [], [], timeout)[0]
-			if second_key: continue
+			# Protect against long keypress
+			key = select([sys.stdin], [], [], timeout)[0]
+			if key: continue
 			else: return ch
 	except KeyboardInterrupt:
 		msg("\nUser interrupt")
@@ -87,7 +91,7 @@ def _kb_hold_protect_mswin():
 		sys.exit(1)
 
 
-def _get_keypress_mswin(prompt="",immed_chars=""):
+def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 
 	msg_r(prompt)
 	timeout = float(0.5)

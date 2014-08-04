@@ -139,10 +139,11 @@ def get_random_data_from_user(uchars):
 	# time.clock() always returns zero, so we'll use time.time()
 	saved_time = time.time()
 
-	key_data,time_data = "",[]
+	key_data,time_data,pp = "",[],True
 
 	for i in range(uchars):
-		key_data += get_char(immed_chars="ALL")
+		key_data += get_char(immed_chars="ALL",prehold_protect=pp)
+		if i == 0: pp = False
 		msg_r("\r" + prompt % (uchars - i - 1))
 		now = time.time()
 		time_data.append(now - saved_time)
@@ -167,7 +168,7 @@ def get_random(length,opts):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
 	if 'usr_randchars' in opts and opts['usr_randchars'] not in (0,-1):
-		kwhat = "a key from random data with "
+		kwhat = "a key from OS random data + "
 		if not g.user_entropy:
 			g.user_entropy = sha256(
 				get_random_data_from_user(opts['usr_randchars'])).digest()
