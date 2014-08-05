@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Opts.py:  Option handling routines for the MMGen suite
+"""
 
 import sys
 import mmgen.config as g
@@ -64,6 +68,9 @@ def parse_opts(argv,help_data):
 	for v in g.cl_override_vars:
 		if v in opts: typeconvert_override_var(opts,v)
 		else: opts[v] = eval("g."+v)
+
+	if "verbose" in opts: g.verbose = True
+	if "quiet" in opts:   g.quiet = True
 
 	if g.debug: print "opts after typeconvert: %s" % opts
 

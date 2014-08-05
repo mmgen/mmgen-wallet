@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
-addr.py:  Address generation/display routines for mmgen suite
+addr.py:  Address generation/display routines for the MMGen suite
 """
 
 import sys
@@ -68,8 +69,8 @@ def generate_addrs(seed, addrnums, opts):
 			from subprocess import Popen, PIPE
 			keyconv = "keyconv"
 
-	fmt = "num addr" if opts['gen_what'] == ("addrs") else (
-		"num sec wif" if opts['gen_what'] == ("keys") else "num sec wif addr")
+	fmt = "num addr" if opts['gen_what'] == ["addrs"] else (
+		"num sec wif" if opts['gen_what'] == ["keys"] else "num sec wif addr")
 
 	from collections import namedtuple
 	addrinfo = namedtuple("addrinfo",fmt)
@@ -78,37 +79,31 @@ def generate_addrs(seed, addrnums, opts):
 	t_addrs,num,pos,out = len(addrnums),0,0,[]
 	addrnums.sort()  # needed only if caller didn't sort
 
-	try:
-		while pos != t_addrs:
-			seed = sha512(seed).digest()
-			num += 1 # round
+	ws = 'key' if 'keys' in opts['gen_what'] else 'address'
+	if t_addrs != 1: wp = ws+"s" if ws == 'key' else ws+"es"
 
-			if g.debug: print "Seed round %s: %s" % (num, hexlify(seed))
-			if num != addrnums[pos]: continue
+	while pos != t_addrs:
+		seed = sha512(seed).digest()
+		num += 1 # round
 
-			pos += 1
+		if g.debug: print "Seed round %s: %s" % (num, hexlify(seed))
+		if num != addrnums[pos]: continue
 
-			qmsg_r("\rGenerating %s %s (%s of %s)" %
-						(opts['gen_what'][-1],num,pos,t_addrs))
+		pos += 1
 
-			# Secret key is double sha256 of seed hash round /num/
-			sec = sha256(sha256(seed).digest()).hexdigest()
-			wif = numtowif(int(sec,16))
+		qmsg_r("\rGenerating %s #%s (%s of %s)" % (ws,num,pos,t_addrs))
 
-			if 'addrs' in opts['gen_what']: addr = \
-				Popen([keyconv, wif], stdout=PIPE).stdout.readline().split()[1] \
-				if keyconv else privnum2addr(int(sec,16))
+		# Secret key is double sha256 of seed hash round /num/
+		sec = sha256(sha256(seed).digest()).hexdigest()
+		wif = numtowif(int(sec,16))
 
-			out.append(eval("addrinfo("+addrinfo_args+")"))
+		if 'addrs' in opts['gen_what']: addr = \
+			Popen([keyconv, wif], stdout=PIPE).stdout.readline().split()[1] \
+			if keyconv else privnum2addr(int(sec,16))
 
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
+		out.append(eval("addrinfo("+addrinfo_args+")"))
 
-	w = 'key' if 'keys' in opts['gen_what'] else 'address'
-	if t_addrs != 1: w = w+"s" if w == 'key' else w+"es"
-
-	qmsg("\rGenerated %s %s%s"%(t_addrs, w, " "*15))
+	qmsg("\rGenerated %s %s%s"%(t_addrs, wp, " "*15))
 
 	return out
 

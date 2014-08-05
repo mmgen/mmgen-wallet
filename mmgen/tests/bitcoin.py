@@ -38,26 +38,23 @@ def b58_randenc():
 		sys.exit(9)
 
 def keyconv_compare_randloop(loops, quiet=False):
-	try:
-		for i in range(1,int(loops)+1):
+	for i in range(1,int(loops)+1):
 
 
-			wif = numtowif_rand(quiet=True)
+		wif = numtowif_rand(quiet=True)
 
-			if not quiet: sys.stderr.write("-- %s --\n" % i)
-			ret = keyconv_compare(wif,quiet)
-			if ret == False: sys.exit(9)
-
-			if quiet:
-				sys.stderr.write("\riteration: %i " % i)
+		if not quiet: sys.stderr.write("-- %s --\n" % i)
+		ret = keyconv_compare(wif,quiet)
+		if ret == False: sys.exit(9)
 
 		if quiet:
-			sys.stderr.write("\r%s iterations completed\n" % i)
-		else:
-			print "%s iterations completed" % i
+			sys.stderr.write("\riteration: %i " % i)
 
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
+	if quiet:
+		sys.stderr.write("\r%s iterations completed\n" % i)
+	else:
+		print "%s iterations completed" % i
+
 
 def keyconv_compare(wif,quiet=False):
 	do_msg = nomsg if quiet else msg
@@ -144,17 +141,14 @@ def b58tohex_pad(s_in, quiet=False):
 	b58tohex(s_in,f_dec=b.b58decode_pad, f_enc=b.b58encode_pad, quiet=quiet)
 
 def	hextob58_pad_randloop(loops, quiet=False):
-	try:
-		for i in range(1,int(loops)+1):
-			r = hexlify(get_random(32))
-			hextob58(r,f_enc=b.b58encode_pad, f_dec=b.b58decode_pad, quiet=quiet)
-			if not quiet: print
-			if not i % 100 and quiet:
-				sys.stderr.write("\riteration: %i " % i)
+	for i in range(1,int(loops)+1):
+		r = hexlify(get_random(32))
+		hextob58(r,f_enc=b.b58encode_pad, f_dec=b.b58decode_pad, quiet=quiet)
+		if not quiet: print
+		if not i % 100 and quiet:
+			sys.stderr.write("\riteration: %i " % i)
 
-		sys.stderr.write("\r%s iterations completed\n" % i)
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
+	sys.stderr.write("\r%s iterations completed\n" % i)
 
 def test_wiftohex(s_in,f_dec=b.wiftohex,f_enc=b.numtowif):
 	print "Input:         %s" % s_in

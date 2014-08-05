@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
-term.py:  Terminal-handling routines for the mmgen suite
+term.py:  Terminal-handling routines for the MMGen suite
 """
 
 import sys, os, struct
@@ -30,16 +31,12 @@ def _kb_hold_protect_unix():
 
 	timeout = float(0.3)
 
-	try:
-		while True:
-			key = select([sys.stdin], [], [], timeout)[0]
-			if key: sys.stdin.read(1)
-			else: break
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
-	finally:
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
+	while True:
+		key = select([sys.stdin], [], [], timeout)[0]
+		if key: sys.stdin.read(1)
+		else:
+			termios.tcsetattr(fd, termios.TCSADRAIN, old)
+			break
 
 
 def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
@@ -51,44 +48,35 @@ def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
 
-	try:
-		while True:
-			# Protect against held-down key before read()
-			key = select([sys.stdin], [], [], timeout)[0]
-			ch = sys.stdin.read(1)
-			if prehold_protect:
-				if key: continue
-			if immed_chars == "ALL" or ch in immed_chars:
-				return ch
-			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
-				return ch
-			# Protect against long keypress
-			key = select([sys.stdin], [], [], timeout)[0]
+	while True:
+		# Protect against held-down key before read()
+		key = select([sys.stdin], [], [], timeout)[0]
+		ch = sys.stdin.read(1)
+		if prehold_protect:
 			if key: continue
-			else: return ch
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
-	finally:
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
+		if immed_chars == "ALL" or ch in immed_chars: break
+		if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r": break
+		# Protect against long keypress
+		key = select([sys.stdin], [], [], timeout)[0]
+		if not key: break
+
+	termios.tcsetattr(fd, termios.TCSADRAIN, old)
+	return ch
+
 
 
 def _kb_hold_protect_mswin():
 
 	timeout = float(0.5)
 
-	try:
+	while True:
+		hit_time = time.time()
 		while True:
-			hit_time = time.time()
-			while True:
-				if msvcrt.kbhit():
-					msvcrt.getch()
-					break
-				if float(time.time() - hit_time) > timeout:
-					return
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
+			if msvcrt.kbhit():
+				msvcrt.getch()
+				break
+			if float(time.time() - hit_time) > timeout:
+				return
 
 
 def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
@@ -96,27 +84,23 @@ def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 	msg_r(prompt)
 	timeout = float(0.5)
 
-	try:
-		while True:
-			if msvcrt.kbhit():
-				ch = msvcrt.getch()
+	while True:
+		if msvcrt.kbhit():
+			ch = msvcrt.getch()
 
-				if ord(ch) == 3: raise KeyboardInterrupt
+			if ord(ch) == 3: raise KeyboardInterrupt
 
-				if immed_chars == "ALL" or ch in immed_chars:
+			if immed_chars == "ALL" or ch in immed_chars:
+				return ch
+			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
+				return ch
+
+			hit_time = time.time()
+
+			while True:
+				if msvcrt.kbhit(): break
+				if float(time.time() - hit_time) > timeout:
 					return ch
-				if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
-					return ch
-
-				hit_time = time.time()
-
-				while True:
-					if msvcrt.kbhit(): break
-					if float(time.time() - hit_time) > timeout:
-						return ch
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
 
 
 def _get_terminal_size_linux():
@@ -221,13 +205,7 @@ def do_pager(text):
 			p = Popen([pager], stdin=PIPE, shell=shell)
 		except: pass
 		else:
-			try:
-				p.communicate(text+end+"\n")
-			except KeyboardInterrupt:
-				# Has no effect.  Why?
-				if pager != "less":
-					msg("\n(User interrupt)\n")
-			finally:
-				msg_r("\r")
-				break
+			p.communicate(text+end+"\n")
+			msg_r("\r")
+			break
 	else: print text+end

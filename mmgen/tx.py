@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 tx.py:  Bitcoin transaction routines
 """
@@ -453,6 +454,12 @@ def is_btc_addr(s):
 	from mmgen.bitcoin import verify_addr
 	return verify_addr(s)
 
+def is_b58_str(s):
+	from mmgen.bitcoin import b58a
+	for ch in s:
+		if ch not in b58a: return False
+	return True
+
 
 def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 
@@ -720,8 +727,7 @@ def preverify_keys(addrs_orig, keys_orig):
 
 		if addrs:
 			s = "" if len(addrs) == 1 else "es"
-			msg("No keys found for the following non-%s address%s:" %
-					(g.proj_name,s))
+			msg("No keys found for the following address%s:" % s)
 			print "  %s" % "\n  ".join(addrs)
 			sys.exit(2)
 

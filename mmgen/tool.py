@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
-tool.py:  Routines and data for the mmgen-tool utility
+tool.py:  Routines and data for the 'mmgen-tool' utility
 """
 
 import sys
@@ -415,9 +416,9 @@ def hex2wif(hexpriv,compressed=False):
 	print bitcoin.hextowif(hexpriv,compressed)
 
 
-def encrypt(infile,outfile="",hash_preset=''):
+def encrypt(infile,outfile="",hash_preset='3'):
 	data = get_data_from_file(infile,"data for encryption")
-	enc_d = mmgen_encrypt(data,hash_preset,opts)
+	enc_d = mmgen_encrypt(data,"",hash_preset,opts)
 	if outfile == '-':
 		write_to_stdout(enc_d,"encrypted data",confirm=True)
 	else:
@@ -426,9 +427,9 @@ def encrypt(infile,outfile="",hash_preset=''):
 		write_to_file(outfile, enc_d, opts,"encrypted data",True,True)
 
 
-def decrypt(infile,outfile="",hash_preset=''):
+def decrypt(infile,outfile="",hash_preset='3'):
 	enc_d = get_data_from_file(infile,"encrypted data")
-	dec_d = mmgen_decrypt(enc_d,hash_preset,opts)
+	dec_d = mmgen_decrypt(enc_d,"",hash_preset,opts)
 	if outfile == '-':
 		write_to_stdout(dec_d,"decrypted data",confirm=True)
 	else:

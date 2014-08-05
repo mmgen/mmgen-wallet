@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
-crypto.py:  Cryptographic and related routines for the mmgen-tool utility
+crypto.py:  Cryptographic and related routines for the 'mmgen-tool' utility
 """
 
 import sys
@@ -368,27 +369,30 @@ def _get_seed_from_brain_passphrase(words,opts):
 # Vars for mmgen_*crypt functions only
 salt_len,sha256_len,nonce_len = 32,32,32
 
-def mmgen_encrypt(data,hash_preset,opts):
+def mmgen_encrypt(data,what="data",hash_preset='3',opts={}):
 	salt,iv,nonce = get_random(salt_len,opts),\
 		get_random(g.aesctr_iv_len,opts), get_random(nonce_len,opts)
 	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
+	vmsg("Encrypting %s" % what)
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
 	passwd = get_new_passphrase("passphrase",{})
 	key = make_key(passwd, salt, hp)
 	enc_d = encrypt_data(sha256(nonce+data).digest() + nonce + data, key,
-				int(hexlify(iv),16))
+				int(hexlify(iv),16), what=what)
 	return salt+iv+enc_d
 
 
-def mmgen_decrypt(data,hash_preset,opts):
+def mmgen_decrypt(data,what="data",hash_preset='3',opts={}):
 	dstart = salt_len + g.aesctr_iv_len
 	salt,iv,enc_d = data[:salt_len],data[salt_len:dstart],data[dstart:]
 	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
+	vmsg("Preparing to decrypt %s" % what)
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
 	passwd = get_mmgen_passphrase("Enter passphrase: ",{})
 	key = make_key(passwd, salt, hp)
-	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16))
+	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
+		vmsg("Success. Passphrase and hash preset are correct")
 		return dec_d[sha256_len+nonce_len:]
 	else:
 		msg("Incorrect passphrase or hash preset")

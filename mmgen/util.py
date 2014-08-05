@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C) 2013-2014 by philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 """
 util.py:  Low-level routines imported by other modules for the MMGen suite
 """
@@ -342,11 +343,11 @@ def write_to_stdout(data, what, confirm=True):
 	sys.stdout.write(data)
 
 
-def write_to_file(outfile,data,opts,what="data",confirm=False,verbose=False):
+def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False):
 
 	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
-	if confirm:
+	if confirm_overwrite:
 		from os import stat
 		try:
 			stat(outfile)
@@ -370,11 +371,9 @@ def export_to_file(outfile, data, opts, what="data"):
 
 	if 'stdout' in opts:
 		write_to_stdout(data, what, confirm=True)
-	elif not sys.stdout.isatty():
-		write_to_stdout(data, what, confirm=False)
 	else:
-		c = False if g.quiet else True
-		write_to_file(outfile,data,opts,what,c,True)
+		confirm_overwrite = False if g.quiet else True
+		write_to_file(outfile,data,opts,what,confirm_overwrite,True)
 
 
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
@@ -430,9 +429,9 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 	outfile="{}-{}[{},{}].{}".format(
 		seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
 
-	c = False if g.quiet else True
 	d = "\n".join((chk,)+lines)+"\n"
-	write_to_file(outfile,d,opts,"wallet",c,True)
+	confirm_overwrite = False if g.quiet else True
+	write_to_file(outfile,d,opts,"wallet",confirm_overwrite,True)
 
 	if g.verbose:
 		display_control_data(label,metadata,hash_preset,salt,enc_seed)
@@ -684,22 +683,29 @@ def export_to_hidden_incog(incog_enc,opts):
 	msg("Data written to file '%s' at offset %s" %
 			(os.path.relpath(outfile),offset))
 
-
 from mmgen.term import kb_hold_protect,get_char
+
+def get_hash_preset_from_user(hp='3'):
+	p = "Enter hash preset, or hit ENTER to accept the default ('%s'): " % hp
+	while True:
+		ret = my_raw_input(p)
+		if ret:
+			if ret in g.hash_presets.keys(): return ret
+			else:
+				msg("Invalid input.  Valid choices are %s" %
+						", ".join(sorted(g.hash_presets.keys())))
+				continue
+		else: return hp
+
 
 def my_raw_input(prompt,echo=True):
 	msg_r(prompt)
 	kb_hold_protect()
-	try:
-		if echo:
-			reply = raw_input("")
-		else:
-			from getpass import getpass
-			reply = getpass("")
-	except KeyboardInterrupt:
-		msg("\nUser interrupt")
-		sys.exit(1)
-
+	if echo:
+		reply = raw_input("")
+	else:
+		from getpass import getpass
+		reply = getpass("")
 	kb_hold_protect()
 	return reply
 
