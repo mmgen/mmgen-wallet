@@ -161,8 +161,7 @@ addr_data_str    = format_addr_data(
 outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
 
 if 'flat_list' in opts and user_confirm("Encrypt key list?"):
-	hp = get_hash_preset_from_user('3')
-	addr_data_str = mmgen_encrypt(addr_data_str,"key list",hp,opts)
+	addr_data_str = mmgen_encrypt(addr_data_str,"key list","",opts)
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
 

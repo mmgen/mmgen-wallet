@@ -369,10 +369,11 @@ def _get_seed_from_brain_passphrase(words,opts):
 # Vars for mmgen_*crypt functions only
 salt_len,sha256_len,nonce_len = 32,32,32
 
-def mmgen_encrypt(data,what="data",hash_preset='3',opts={}):
+def mmgen_encrypt(data,what="data",hash_preset='',opts={}):
 	salt,iv,nonce = get_random(salt_len,opts),\
 		get_random(g.aesctr_iv_len,opts), get_random(nonce_len,opts)
-	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
+	hp = hash_preset or get_hash_preset_from_user('3',what)
+	m = "default" if hp == '3' else "user-requested"
 	vmsg("Encrypting %s" % what)
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
 	passwd = get_new_passphrase("passphrase",{})
@@ -382,11 +383,12 @@ def mmgen_encrypt(data,what="data",hash_preset='3',opts={}):
 	return salt+iv+enc_d
 
 
-def mmgen_decrypt(data,what="data",hash_preset='3',opts={}):
+def mmgen_decrypt(data,what="data",hash_preset='',opts={}):
 	dstart = salt_len + g.aesctr_iv_len
 	salt,iv,enc_d = data[:salt_len],data[salt_len:dstart],data[dstart:]
-	hp,m = (hash_preset,"user-requested") if hash_preset else ('3',"default")
 	vmsg("Preparing to decrypt %s" % what)
+	hp = hash_preset or get_hash_preset_from_user('3',what)
+	m = "default" if hp == '3' else "user-requested"
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
 	passwd = get_mmgen_passphrase("Enter passphrase: ",{})
 	key = make_key(passwd, salt, hp)

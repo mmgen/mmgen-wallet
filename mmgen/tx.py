@@ -137,6 +137,7 @@ def is_btc_amt(amt):
 
 
 def normalize_btc_amt(amt):
+	# amt must be a string!
 	ret = is_btc_amt(amt)
 	if ret: return ret
 	else:   sys.exit(3)
@@ -460,10 +461,15 @@ def is_b58_str(s):
 		if ch not in b58a: return False
 	return True
 
+def is_btc_key(s):
+	if s == "": return False
+	compressed = False if s[0] == '5' else True
+	from mmgen.bitcoin import wiftohex
+	return True if wiftohex(s,compressed) else False
 
 def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 
-	# We don't want to create a new object, so we'll use append()
+	# Don't want to create a new object, so use append()
 	if not acct_data:
 		for i in c.listaccounts():
 			acct_data.append(i)
@@ -677,31 +683,21 @@ def sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts):
 	return sig_tx
 
 
-def preverify_keys(addrs_orig, keys_orig):
+def preverify_keys(addrs_in, keys_in, mm_inputs):
 
-	addrs,keys,wrong_keys = set(addrs_orig[0:]),set(keys_orig[0:]),[]
-
-	if len(keys) < len(addrs):
-		msg("ERROR: not enough keys (%s) for number of non-%s addresses (%s)" %
-				(len(keys),g.proj_name,len(addrs)))
-		sys.exit(2)
+	addrs,keys,extra_keys = set(addrs_in),set(keys_in),[]
 
 	import mmgen.bitcoin as b
 
 	qmsg_r('Checking that user-supplied key list contains valid keys...')
 
-	invalid_keys = []
-
-	for n,k in enumerate(keys,1):
-		c = False if k[0] == '5' else True
-		if b.wiftohex(k,compressed=c) == False:
-			invalid_keys.append(k)
-
+	invalid_keys = [k for k in keys if not is_btc_key(k)]
 	if invalid_keys:
 		s = "" if len(invalid_keys) == 1 else "s"
 		msg("\n%s/%s invalid key%s in keylist!\n" % (len(invalid_keys),len(keys),s))
 		sys.exit(2)
-	else: qmsg("OK")
+
+	qmsg("OK")
 
 	# Check that keys match addresses:
 	msg('Pre-verifying keys in user-supplied key list (Ctrl-C to skip)')
@@ -716,19 +712,23 @@ def preverify_keys(addrs_orig, keys_orig):
 				addrs.remove(addr)
 				if not addrs: break
 			else:
-				wrong_keys.append(k)
+				extra_keys.append(k)
 	except KeyboardInterrupt:
 		msg("\nSkipping")
 	else:
 		msg("")
-		if wrong_keys:
-			s = "" if len(wrong_keys) == 1 else "s"
-			msg("%s extra key%s found" % (len(wrong_keys),s))
+		if extra_keys:
+			s = "" if len(extra_keys) == 1 else "s"
+			msg("%s extra key%s found" % (len(extra_keys),s))
 
 		if addrs:
+			mms = dict([(i['address'],i['account'].split()[0])
+					for i in mm_inputs if i['address'] in addrs])
 			s = "" if len(addrs) == 1 else "es"
-			msg("No keys found for the following address%s:" % s)
-			print "  %s" % "\n  ".join(addrs)
+			msg(
+"Cannot sign transaction. No keys found for the following address%s:"%s)
+			for a in sorted(addrs):
+				print "  %s%s" % (a, "  ({})".format(mms[a]) if a in mms else "")
 			sys.exit(2)
 
 

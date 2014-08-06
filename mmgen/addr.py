@@ -80,7 +80,8 @@ def generate_addrs(seed, addrnums, opts):
 	addrnums.sort()  # needed only if caller didn't sort
 
 	ws = 'key' if 'keys' in opts['gen_what'] else 'address'
-	if t_addrs != 1: wp = ws+"s" if ws == 'key' else ws+"es"
+	if t_addrs == 1: wp = ws
+	else: wp = ws+"s" if ws == 'key' else ws+"es"
 
 	while pos != t_addrs:
 		seed = sha512(seed).digest()

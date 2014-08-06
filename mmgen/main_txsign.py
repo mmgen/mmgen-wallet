@@ -100,7 +100,6 @@ if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
 	opts['from_incog'] = True
 if 'all_keys_from_file' in opts:
 	opts['keys_from_file'] = opts['all_keys_from_file']
-#	opts['skip_key_preverify'] = True
 
 if not infiles: usage(help_data)
 for i in infiles: check_infile(i)
@@ -110,20 +109,19 @@ c = connect_to_bitcoind()
 saved_seeds = {}
 tx_files  = [i for i in set(infiles) if get_extension(i) == g.rawtx_ext]
 addrfiles = [a for a in set(infiles) if get_extension(a) == g.addrfile_ext]
-infiles  = list(set(infiles) - set(tx_files) - set(addrfiles))
+seed_files  = list(set(infiles) - set(tx_files) - set(addrfiles))
 
 if not "info" in opts: do_license_msg(immed=True)
 
 if 'keys_from_file' in opts:
-	from mmgen.crypto import mmgen_decrypt
 	fn = opts['keys_from_file']
 	d = get_data_from_file(fn,"keylist")
 	if get_extension(fn) == g.mmenc_ext or not \
-		  is_b58_str(remove_comments(d.split("\n"))[0][:55]):
+		  is_btc_key(remove_comments(d.split("\n"))[0][:55]):
 		qmsg("Keylist appears to be encrypted")
+		from mmgen.crypto import mmgen_decrypt
 		while True:
-			hp = get_hash_preset_from_user('3')
-			d_dec = mmgen_decrypt(d,"encrypted keylist",hp,opts)
+			d_dec = mmgen_decrypt(d,"encrypted keylist","",opts)
 			if d_dec: d = d_dec; break
 			else: msg("Trying again...")
 	keys_from_file = remove_comments(d.split("\n"))
@@ -157,8 +155,9 @@ for tx_file in tx_files:
 		sys.exit(2)
 
 	if other_inputs and keys and not 'skip_key_preverify' in opts:
-		a = [i['address'] for i in other_inputs]
-		preverify_keys(a, keys)
+		addrs = [i['address'] for i in other_inputs]
+		mm_inputs = mmgen_inputs if 'all_keys_from_file' in opts else []
+		preverify_keys(addrs, keys, mm_inputs)
 		opts['skip_key_preverify'] = True
 
 	if 'all_keys_from_file' in opts:
@@ -168,7 +167,7 @@ for tx_file in tx_files:
 			confirm_or_exit(txmsg['skip_mapping_checks_warning'],"continue")
 	else:
 		check_mmgen_to_btc_addr_mappings(
-				mmgen_inputs,b2m_map,infiles,saved_seeds,opts)
+				mmgen_inputs,b2m_map,seed_files,saved_seeds,opts)
 
 	if len(tx_files) > 1:
 		msg("\nTransaction %s/%s:" % (tx_files.index(tx_file)+1,len(tx_files)))
@@ -185,7 +184,7 @@ for tx_file in tx_files:
 
 	if mmgen_inputs and not 'all_keys_from_file' in opts:
 		ml = [i['account'].split()[0] for i in mmgen_inputs]
-		keys += get_keys_for_mmgen_addrs(ml,infiles,saved_seeds,opts)
+		keys += get_keys_for_mmgen_addrs(ml,seed_files,saved_seeds,opts)
 
 		if 'use_wallet_dat' in opts:
 			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
@@ -207,7 +206,8 @@ for tx_file in tx_files:
 					repr(inputs_data),
 					repr(b2m_map)
 				)
-			write_to_file(outfile,data,opts,"signed transaction",True,True)
+			confirm = False if g.quiet else True
+			write_to_file(outfile,data,opts,"signed transaction",confirm,True)
 	else:
 		msg("failed\nSome keys were missing.  Transaction could not be signed.")
 		sys.exit(3)

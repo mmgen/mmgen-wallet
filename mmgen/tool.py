@@ -72,8 +72,8 @@ commands = {
 	"pubkey2addr":  ['<public key in hex format> [str]'],
 	"pubkey2hexaddr": ['<public key in hex format> [str]'],
 	"privhex2addr": ['<private key in hex format> [str]','compressed [bool=False]'],
-	"encrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
-	"decrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str="3"]'],
+	"encrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]'],
+	"decrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]'],
 	"rand2file":    ['<outfile> [str]','<nbytes> [str]','threads [int=4]'],
 	"bytespec":     ['<bytespec> [str]'],
 }
@@ -416,9 +416,9 @@ def hex2wif(hexpriv,compressed=False):
 	print bitcoin.hextowif(hexpriv,compressed)
 
 
-def encrypt(infile,outfile="",hash_preset='3'):
+def encrypt(infile,outfile="",hash_preset=''):
 	data = get_data_from_file(infile,"data for encryption")
-	enc_d = mmgen_encrypt(data,"",hash_preset,opts)
+	enc_d = mmgen_encrypt(data,"user data","",opts)
 	if outfile == '-':
 		write_to_stdout(enc_d,"encrypted data",confirm=True)
 	else:
@@ -427,9 +427,9 @@ def encrypt(infile,outfile="",hash_preset='3'):
 		write_to_file(outfile, enc_d, opts,"encrypted data",True,True)
 
 
-def decrypt(infile,outfile="",hash_preset='3'):
+def decrypt(infile,outfile="",hash_preset=''):
 	enc_d = get_data_from_file(infile,"encrypted data")
-	dec_d = mmgen_decrypt(enc_d,"",hash_preset,opts)
+	dec_d = mmgen_decrypt(enc_d,"user data","",opts)
 	if outfile == '-':
 		write_to_stdout(dec_d,"decrypted data",confirm=True)
 	else:

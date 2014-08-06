@@ -20,25 +20,24 @@
 main.py - Script launcher for the MMGen suite
 """
 
-import sys, termios
-from mmgen.util import msg
+def launch_addrgen():    import mmgen.main_addrgen
+def launch_addrimport(): import mmgen.main_addrimport
+def launch_keygen():     import mmgen.main_addrgen
+def launch_passchg():    import mmgen.main_passchg
+def launch_pywallet():   import mmgen.main_pywallet
+def launch_tool():       import mmgen.main_tool
+def launch_txcreate():   import mmgen.main_txcreate
+def launch_txsend():     import mmgen.main_txsend
+def launch_txsign():     import mmgen.main_txsign
+def launch_walletchk():  import mmgen.main_walletchk
+def launch_walletgen():  import mmgen.main_walletgen
 
 def main(progname):
+	import sys, termios
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
-	try:
-		if   progname == "addrgen":    import mmgen.main_addrgen
-		elif progname == "addrimport": import mmgen.main_addrimport
-		elif progname == "keygen":     import mmgen.main_addrgen
-		elif progname == "passchg":    import mmgen.main_passchg
-		elif progname == "pywallet":   import mmgen.main_pywallet
-		elif progname == "tool":       import mmgen.main_tool
-		elif progname == "txcreate":   import mmgen.main_txcreate
-		elif progname == "txsend":     import mmgen.main_txsend
-		elif progname == "txsign":     import mmgen.main_txsign
-		elif progname == "walletchk":  import mmgen.main_walletchk
-		elif progname == "walletgen":  import mmgen.main_walletgen
+	try: eval("launch_"+progname+"()")
 	except KeyboardInterrupt:
-		msg("\nUser interrupt")
+		sys.stderr.write("\nUser interrupt\n")
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 		sys.exit(1)

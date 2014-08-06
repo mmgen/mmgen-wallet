@@ -347,14 +347,14 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 
 	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
-	if confirm_overwrite:
-		from os import stat
-		try:
-			stat(outfile)
-		except:
-			pass
-		else:
+	from os import stat
+	try:    stat(outfile)
+	except: pass
+	else:
+		if confirm_overwrite:
 			confirm_or_exit("","File '%s' already exists\nOverwrite?" % outfile)
+		else:
+			msg("Overwriting file '%s'" % outfile)
 
 	f = open_file_or_exit(outfile,'w')
 	try:
@@ -685,8 +685,9 @@ def export_to_hidden_incog(incog_enc,opts):
 
 from mmgen.term import kb_hold_protect,get_char
 
-def get_hash_preset_from_user(hp='3'):
-	p = "Enter hash preset, or hit ENTER to accept the default ('%s'): " % hp
+def get_hash_preset_from_user(hp='3',what="data"):
+	p = "Enter hash preset for %s, or ENTER to accept the default ('%s'): " \
+		 % (what,hp)
 	while True:
 		ret = my_raw_input(p)
 		if ret:
