@@ -646,10 +646,10 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts,gen_pairs=Fals
 		from mmgen.addr import generate_addrs
 		if gen_pairs:
 			ret += [("{}:{}".format(seed_id,i.num),i.addr)
-				for i in generate_addrs(seed, addr_ids, {'gen_what':("addrs")})]
+				for i in generate_addrs(seed, addr_ids, {'gen_what':["addrs"]})]
 		else:
 			ret += [i.wif for i in generate_addrs(
-						seed,addr_ids,{'gen_what':("keys")})]
+						seed,addr_ids,{'gen_what':["keys"]})]
 
 	return ret
 

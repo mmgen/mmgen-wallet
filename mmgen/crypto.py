@@ -185,7 +185,7 @@ def get_random(length,opts):
 def get_seed_from_wallet(
 		infile,
 		opts,
-		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
+		prompt="{} wallet".format(g.proj_name),
 		silent=False
 		):
 
@@ -204,7 +204,7 @@ def get_seed_from_wallet(
 def get_seed_from_incog_wallet(
 		infile,
 		opts,
-		prompt="Enter {} wallet passphrase: ".format(g.proj_name),
+		prompt="{} wallet".format(g.proj_name),
 		silent=False,
 		hex_input=False
 	):
@@ -272,7 +272,7 @@ def wallet_to_incog_data(infile,opts):
 	seed_id,key_id,preset,salt,enc_seed = \
 			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
 
-	passwd = get_mmgen_passphrase("Enter mmgen passphrase: ",opts)
+	passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name),opts)
 	key = make_key(passwd, salt, preset, "main key")
 	# We don't need the seed; just do this to verify password.
 	if decrypt_seed(enc_seed, key, seed_id, key_id) == False:
@@ -390,7 +390,7 @@ def mmgen_decrypt(data,what="data",hash_preset='',opts={}):
 	hp = hash_preset or get_hash_preset_from_user('3',what)
 	m = "default" if hp == '3' else "user-requested"
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_mmgen_passphrase(("Enter passphrase for %s: " % what),{})
+	passwd = get_mmgen_passphrase(what,{})
 	key = make_key(passwd, salt, hp)
 	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():

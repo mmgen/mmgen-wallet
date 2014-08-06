@@ -300,7 +300,7 @@ def get_new_passphrase(what, opts, passchg=False):
 			if g.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
 			if pw == pw2:
 				vmsg("Passphrases match"); break
-			else: msg("Passphrases do not match")
+			else: msg("Passphrases do not match.  Try again.")
 		else:
 			msg("User failed to duplicate passphrase in %s attempts" %
 					g.passwd_max_tries)
@@ -615,7 +615,9 @@ def mark_passwd_file_as_used(opts):
 	passwd_file_used = True
 
 
-def get_mmgen_passphrase(prompt,opts):
+def get_mmgen_passphrase(pinfo,opts,passchg=False):
+	prompt = "Enter {}passphrase for {}: ".format(
+			"old " if passchg else "",pinfo)
 	if 'passwd_file' in opts:
 		mark_passwd_file_as_used(opts)
 		return " ".join(_get_words_from_file(opts['passwd_file'],"passphrase"))

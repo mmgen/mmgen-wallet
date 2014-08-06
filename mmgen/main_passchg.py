@@ -69,12 +69,9 @@ label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile)
 seed_id,key_id = metadata[:2]
 
 # Repeat on incorrect pw entry
-prompt = "Enter {}{} wallet passphrase: ".format(
-			("" if 'keep_old_passphrase' in opts else "old "),
-			g.proj_name
-		)
 while True:
-	passwd = get_mmgen_passphrase(prompt,{})
+	p = "{} wallet".format(g.proj_name)
+	passwd = get_mmgen_passphrase(p,{},not 'keep_old_passphrase' in opts)
 	key = make_key(passwd, salt, hash_preset)
 	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 	if seed: break
