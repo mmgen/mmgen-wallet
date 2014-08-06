@@ -376,7 +376,7 @@ def mmgen_encrypt(data,what="data",hash_preset='',opts={}):
 	m = "default" if hp == '3' else "user-requested"
 	vmsg("Encrypting %s" % what)
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_new_passphrase("passphrase",{})
+	passwd = get_new_passphrase(what, {})
 	key = make_key(passwd, salt, hp)
 	enc_d = encrypt_data(sha256(nonce+data).digest() + nonce + data, key,
 				int(hexlify(iv),16), what=what)
@@ -390,7 +390,7 @@ def mmgen_decrypt(data,what="data",hash_preset='',opts={}):
 	hp = hash_preset or get_hash_preset_from_user('3',what)
 	m = "default" if hp == '3' else "user-requested"
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_mmgen_passphrase("Enter passphrase: ",{})
+	passwd = get_mmgen_passphrase(("Enter passphrase for %s: " % what),{})
 	key = make_key(passwd, salt, hp)
 	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():

@@ -286,22 +286,21 @@ def parse_address_list(arg,sep=","):
 	return sorted(set(ret))
 
 
-def get_new_passphrase(what, opts):
+def get_new_passphrase(what, opts, passchg=False):
 
+	w = "{}passphrase for {}".format("new " if passchg else "", what)
 	if 'passwd_file' in opts:
-		pw = " ".join(_get_words_from_file(opts['passwd_file'],what))
+		pw = " ".join(_get_words_from_file(opts['passwd_file'],w))
 	elif 'echo_passphrase' in opts:
-		pw = " ".join(_get_words_from_user(("Enter %s: " % what), opts))
+		pw = " ".join(_get_words_from_user("Enter {}: ".format(w), opts))
 	else:
 		for i in range(g.passwd_max_tries):
-			pw = " ".join(_get_words_from_user(("Enter %s: " % what),opts))
-			pw2 = " ".join(_get_words_from_user(("Repeat %s: " % what),opts))
+			pw = " ".join(_get_words_from_user("Enter {}: ".format(w),opts))
+			pw2 = " ".join(_get_words_from_user("Repeat passphrase: ",opts))
 			if g.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
 			if pw == pw2:
-				vmsg("%ss match" % what.capitalize())
-				break
-			else:
-				msg("%ss do not match" % what.capitalize())
+				vmsg("Passphrases match"); break
+			else: msg("Passphrases do not match")
 		else:
 			msg("User failed to duplicate passphrase in %s attempts" %
 					g.passwd_max_tries)

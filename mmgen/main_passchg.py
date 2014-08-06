@@ -69,8 +69,10 @@ label,metadata,hash_preset,salt,enc_seed = get_data_from_wallet(infile)
 seed_id,key_id = metadata[:2]
 
 # Repeat on incorrect pw entry
-prompt = "Enter %spassphrase: " % (""
-		if 'keep_old_passphrase' in opts else "old ")
+prompt = "Enter {}{} wallet passphrase: ".format(
+			("" if 'keep_old_passphrase' in opts else "old "),
+			g.proj_name
+		)
 while True:
 	passwd = get_mmgen_passphrase(prompt,{})
 	key = make_key(passwd, salt, hash_preset)
@@ -100,7 +102,8 @@ else:
 if 'keep_old_passphrase' in opts:
 	msg("Keeping old passphrase by user request")
 else:
-	new_passwd = get_new_passphrase("new passphrase", opts)
+	new_passwd = get_new_passphrase(
+			"{} wallet".format(g.proj_name), opts, True)
 
 	if new_passwd == passwd:
 		qmsg("Passphrase is unchanged")

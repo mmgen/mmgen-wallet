@@ -79,9 +79,8 @@ def generate_addrs(seed, addrnums, opts):
 	t_addrs,num,pos,out = len(addrnums),0,0,[]
 	addrnums.sort()  # needed only if caller didn't sort
 
-	ws = 'key' if 'keys' in opts['gen_what'] else 'address'
-	if t_addrs == 1: wp = ws
-	else: wp = ws+"s" if ws == 'key' else ws+"es"
+	ws,wp = ('key','keys') if 'keys' in opts['gen_what'] \
+			else ('address','addresses')
 
 	while pos != t_addrs:
 		seed = sha512(seed).digest()
@@ -104,7 +103,7 @@ def generate_addrs(seed, addrnums, opts):
 
 		out.append(eval("addrinfo("+addrinfo_args+")"))
 
-	qmsg("\rGenerated %s %s%s"%(t_addrs, wp, " "*15))
+	qmsg("\rGenerated %s %s%s"%(t_addrs, (ws if t_addrs == 1 else wp), " "*15))
 
 	return out
 

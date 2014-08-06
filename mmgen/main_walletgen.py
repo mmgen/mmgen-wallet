@@ -140,7 +140,7 @@ salt = sha256(get_random(128,opts)).digest()[:g.salt_len]
 
 qmsg(cmessages['choose_wallet_passphrase'] % opts['hash_preset'])
 
-passwd = get_new_passphrase("{} wallet passphrase".format(g.proj_name), opts)
+passwd = get_new_passphrase("{} wallet".format(g.proj_name), opts)
 
 key = make_key(passwd, salt, opts['hash_preset'])
 
