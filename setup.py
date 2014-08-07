@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.7.7',
+		version      = '0.7.8',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -14,6 +14,7 @@ setup(
 			'mmgen.addr',
 			'mmgen.bitcoin',
 			'mmgen.config',
+			'mmgen.crypto',
 			'mmgen.license',
 			'mmgen.mn_electrum',
 			'mmgen.mnemonic',
@@ -25,6 +26,21 @@ setup(
 			'mmgen.util',
 			'mmgen.walletgen',
 
+			'mmgen.main',
+			'mmgen.main_addrgen',
+			'mmgen.main_addrimport',
+			'mmgen.main_passchg',
+			'mmgen.main_pywallet',
+			'mmgen.main_tool',
+			'mmgen.main_txcreate',
+			'mmgen.main_txsend',
+			'mmgen.main_txsign',
+			'mmgen.main_walletchk',
+			'mmgen.main_walletgen',
+
+			'mmgen.opt.__init__',
+			'mmgen.opt.Opts',
+
 			'mmgen.rpc.__init__',
 			'mmgen.rpc.config',
 			'mmgen.rpc.connection',
@@ -34,14 +50,9 @@ setup(
 			'mmgen.rpc.util',
 
 			'mmgen.tests.__init__',
-			'mmgen.tests.addr',
 			'mmgen.tests.bitcoin',
-			'mmgen.tests.mn_electrum',
 			'mmgen.tests.mnemonic',
-			'mmgen.tests.mn_tirosh',
 			'mmgen.tests.test',
-			'mmgen.tests.util',
-			'mmgen.tests.walletgen'
 		],
 		scripts=[
 			'mmgen-addrgen',
