@@ -119,11 +119,13 @@ def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
-def make_key(passwd, salt, hash_preset, what="key"):
+def make_key(passwd, salt, hash_preset, what="key", verbose=False):
 
-	vmsg_r("Generating %s.  Please wait..." % what)
+	if g.verbose or verbose:
+		msg_r("Generating %s.  Please wait..." % what)
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
-	vmsg("done")
+	if g.verbose or verbose:
+		msg("done")
 	if g.debug: print "Key: %s" % hexlify(key)
 	return key
 
@@ -169,14 +171,14 @@ def get_random(length,opts):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
 	if 'usr_randchars' in opts and opts['usr_randchars'] not in (0,-1):
-		kwhat = "a key from OS random data + "
+		kwhat = "a key from OS random data plus "
 		if not g.user_entropy:
 			g.user_entropy = sha256(
 				get_random_data_from_user(opts['usr_randchars'])).digest()
 			kwhat += "user entropy"
 		else:
 			kwhat += "saved user entropy"
-		key = make_key(g.user_entropy, "", '2', what=kwhat)
+		key = make_key(g.user_entropy, "", '2', what=kwhat, verbose=True)
 		return encrypt_data(os_rand,key,what="random data",verify=False)
 	else:
 		return os_rand
@@ -204,7 +206,7 @@ def get_seed_from_wallet(
 def get_seed_from_incog_wallet(
 		infile,
 		opts,
-		prompt="{} wallet".format(g.proj_name),
+		prompt_what="{} incognito wallet".format(g.proj_name),
 		silent=False,
 		hex_input=False
 	):
@@ -236,7 +238,7 @@ def get_seed_from_incog_wallet(
 	vmsg(cmessages['incog_iv_id_hidden' if "from_incog_hidden" in opts
 			else 'incog_iv_id'])
 
-	passwd = get_mmgen_passphrase(prompt,opts)
+	passwd = get_mmgen_passphrase(prompt_what,opts)
 
 	qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
 	while True:

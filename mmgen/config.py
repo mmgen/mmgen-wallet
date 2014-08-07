@@ -49,6 +49,7 @@ seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
 rawtx_ext    = "raw"
 sigtx_ext    = "sig"
 addrfile_ext = "addrs"
+addrfile_chksum_ext = "chk"
 keyfile_ext  = "keys"
 keylist_ext  = "keylist"
 mmenc_ext    = "mmenc"

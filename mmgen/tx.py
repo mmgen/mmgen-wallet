@@ -39,7 +39,7 @@ address was specified.
 NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
 which makes the signing process more complicated.  When signing the
 transaction, keys for the non-mmgen inputs must be supplied in a separate
-file using the '-k' option to {}-txsign.
+file using either the '-k' or '-K' option to '{}-txsign'.
 
 Selected mmgen inputs: %s""".format(g.proj_name.lower()),
 'too_many_acct_addresses': """
@@ -52,10 +52,9 @@ No data found for MMgen address '%s'. Please import this address into
 your tracking wallet, or supply an address file for it on the command line.
 """.strip(),
 	'addrfile_warn_msg': """
-Warning: no data for address '{mmaddr}' was found in the tracking wallet, so
-this information was taken from the user-supplied address file. You're strongly
-advised to import this address into your tracking wallet before proceeding with
-this transaction.  The address will not be tracked until you do so.
+Warning: output address '{mmaddr}' is not in the tracking wallet, which means
+its balance will not be tracked.  You're strongly advised to import the address
+into your tracking wallet before broadcasting this transaction.
 """.strip(),
 	'addrfile_fail_msg': """
 No data for MMgen address '{mmaddr}' could be found in either the tracking
@@ -496,12 +495,14 @@ def mmaddr2btcaddr_addrfile(mmaddr,addr_data,silent=False):
 				if j[0] == mmidx:
 					if not silent:
 						msg(txmsg['addrfile_warn_msg'].format(mmaddr=mmaddr))
-						if not user_confirm("Continue anyway?"):
+						if not keypress_confirm("Continue anyway?"):
 							sys.exit(1)
 					return j[1:] if len(j) == 3 else (j[1],"")
 
 	if silent: return "",""
-	else: msg(txmsg['addrfile_fail_msg'].format(mmaddr=mmaddr)); sys.exit(2)
+	else:
+		msg(txmsg['addrfile_fail_msg'].format(mmaddr=mmaddr))
+		sys.exit(2)
 
 
 def check_mmgen_to_btc_addr_mappings(mmgen_inputs,b2m_map,infiles,saved_seeds,opts):
@@ -594,13 +595,13 @@ def parse_addrs_file(f):
 	sys.exit(3)
 
 
-def sign_transaction(c,tx_hex,sig_data,keys=None):
+def sign_transaction(c,tx_hex,tx_num_str,sig_data,keys=None):
 
 	if keys:
 		qmsg("%s keys total" % len(keys))
 		if g.debug: print "Keys:\n  %s" % "\n  ".join(keys)
 
-	msg_r("Signing transaction...")
+	msg_r("Signing transaction{}...".format(tx_num_str))
 	from mmgen.rpc import exceptions
 	try:
 		sig_tx = c.signrawtransaction(tx_hex,sig_data,keys)
@@ -646,18 +647,19 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts,gen_pairs=Fals
 		from mmgen.addr import generate_addrs
 		if gen_pairs:
 			ret += [("{}:{}".format(seed_id,i.num),i.addr)
-				for i in generate_addrs(seed, addr_ids, {'gen_what':["addrs"]})]
+				for i in generate_addrs(seed,addr_ids,
+						{'gen_what':["addrs"]})]
 		else:
-			ret += [i.wif for i in generate_addrs(
-						seed,addr_ids,{'gen_what':["keys"]})]
+			ret += [i.wif for i in generate_addrs(seed,addr_ids,
+						{'gen_what':["keys"]})]
 
 	return ret
 
 
-def sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts):
+def sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts):
 
 	try:
-		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+		sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
 	except:
 		from mmgen.rpc import exceptions
 		msg("Using keys in wallet.dat as per user request")
@@ -672,7 +674,7 @@ def sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts):
 			else:
 				msg("Passphrase OK"); break
 
-		sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+		sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
 
 		msg("Locking wallet")
 		try:
@@ -761,5 +763,6 @@ def check_mmgen_to_btc_addr_mappings_addrfile(mmgen_inputs,b2m_map,addrfiles):
 		sys.exit(3)
 
 	if missing:
-		confirm_or_exit(txmsg['missing_mappings'] % " ".join(missing),"continue")
+		confirm_or_exit(txmsg['missing_mappings'] %
+				" ".join(missing),"continue")
 	else: qmsg("Address mappings OK")

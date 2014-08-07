@@ -41,7 +41,7 @@ help_data = {
 -L, --label=            l Change the wallet's label to 'l'
 -p, --hash-preset=      p Change scrypt.hash() parameters to preset 'p'
                           (default: '{g.hash_preset}')
--P, --passwd-file=      f Get new passphrase from file 'f'
+-P, --passwd-file=      f Get new MMGen wallet passphrase from file 'f'
 -r, --usr-randchars=    n Get 'n' characters of additional randomness from
                           user (min={g.min_urandchars}, max={g.max_urandchars})
 -q, --quiet               Suppress warnings; overwrite files without

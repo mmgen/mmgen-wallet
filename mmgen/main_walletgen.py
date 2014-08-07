@@ -44,7 +44,7 @@ help_data = {
                            Allowed symbols: A-Z, a-z, 0-9, " ", "_", ".")
 -p, --hash-preset=      p  Use scrypt.hash() parameters from preset 'p'
                            (default: '{g.hash_preset}')
--P, --passwd-file=      f  Get passphrase from file 'f'
+-P, --passwd-file=      f  Get MMGen wallet passphrase from file 'f'
 -q, --quiet                Produce quieter output; overwrite files without
                            prompting
 -r, --usr-randchars=    n  Get 'n' characters of additional randomness from

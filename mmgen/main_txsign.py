@@ -44,7 +44,7 @@ help_data = {
                          for online signing without an {pnm} seed source.
                          {pnm}-to-BTC mappings can optionally be verified
                          using address file(s) listed on the command line
--P, --passwd-file=    f  Get passphrase from file 'f'
+-P, --passwd-file=    f  Get MMGen wallet or bitcoind passphrase from file 'f'
 -q, --quiet              Suppress warnings; overwrite files without
                          prompting
 -v, --verbose            Produce more verbose output
@@ -127,7 +127,12 @@ if 'keys_from_file' in opts:
 	keys_from_file = remove_comments(d.split("\n"))
 else: keys_from_file = []
 
-for tx_file in tx_files:
+tx_num_str = ""
+for tx_num,tx_file in enumerate(tx_files,1):
+	if len(tx_files) > 1:
+		msg("\nTransaction #%s of %s:" % (tx_num,len(tx_files)))
+		tx_num_str = " #%s" % tx_num
+
 	m = "" if 'tx_id' in opts else "transaction data"
 	tx_data = get_lines_from_file(tx_file,m)
 
@@ -169,11 +174,8 @@ for tx_file in tx_files:
 		check_mmgen_to_btc_addr_mappings(
 				mmgen_inputs,b2m_map,seed_files,saved_seeds,opts)
 
-	if len(tx_files) > 1:
-		msg("\nTransaction %s/%s:" % (tx_files.index(tx_file)+1,len(tx_files)))
-
-	prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
-	reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
+	p = "View data for transaction{}? (y)es, (N)o, (v)iew in pager"
+	reply = prompt_and_get_char(p.format(tx_num_str),"YyNnVv",enter_ok=True)
 	if reply and reply in "YyVv":
 		p = True if reply in "Vv" else False
 		view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata,pager=p)
@@ -187,27 +189,27 @@ for tx_file in tx_files:
 		keys += get_keys_for_mmgen_addrs(ml,seed_files,saved_seeds,opts)
 
 		if 'use_wallet_dat' in opts:
-			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
+			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts)
 		else:
-			sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+			sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
 	elif other_inputs:
 		if keys:
-			sig_tx = sign_transaction(c,tx_hex,sig_data,keys)
+			sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
 		else:
-			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,sig_data,keys,opts)
+			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts)
 
 	if sig_tx['complete']:
-		prompt = "OK\nSave signed transaction?"
-		if user_confirm(prompt,default_yes=True):
-			outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
-			data = "{}\n{}\n{}\n{}\n".format(
-					" ".join(metadata[:2] + [make_timestamp()]),
-					sig_tx['hex'],
-					repr(inputs_data),
-					repr(b2m_map)
-				)
-			confirm = False if g.quiet else True
-			write_to_file(outfile,data,opts,"signed transaction",confirm,True)
+		msg("OK")
+		outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
+		data = "{}\n{}\n{}\n{}\n".format(
+				" ".join(metadata[:2] + [make_timestamp()]),
+				sig_tx['hex'],
+				repr(inputs_data),
+				repr(b2m_map)
+			)
+		w = "signed transaction{}".format(tx_num_str)
+		write_to_file(outfile,data,opts,w,(not g.quiet),True,False)
 	else:
-		msg("failed\nSome keys were missing.  Transaction could not be signed.")
+		msg_r("failed\nSome keys were missing.  ")
+		msg("Transaction %scould not be signed." % tx_num_str)
 		sys.exit(3)

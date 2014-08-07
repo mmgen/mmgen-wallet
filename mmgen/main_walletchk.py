@@ -25,7 +25,7 @@ import sys
 import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.util import *
-from mmgen.crypto import get_seed_from_wallet,wallet_to_incog_data
+from mmgen.crypto import get_seed_retry,wallet_to_incog_data
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -37,7 +37,7 @@ help_data = {
 -h, --help             Print this help message
 -d, --outdir=       d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--P, --passwd-file=  f  Get passphrase from file 'f'
+-P, --passwd-file=  f  Get MMGen wallet passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -r, --usr-randchars= n Get 'n' characters of additional randomness from
                        user (min={g.min_urandchars}, max={g.max_urandchars})
@@ -89,12 +89,12 @@ elif 'export_incog' in opts:
 		)
 		data = pretty_hexdump(incog_enc,2,8,line_nums=False) \
 					if "export_incog_hex" in opts else incog_enc
-		export_to_file(fn, data, opts, "incognito wallet data")
+		write_to_file_or_stdout(fn, data, opts, "incognito wallet data")
 
 	sys.exit()
 
-seed = get_seed_from_wallet(cmd_args[0], opts)
-if seed: qmsg("Wallet is OK")
+seed = get_seed_retry(cmd_args[0], opts)
+if seed: msg("Wallet is OK")
 else:
 	msg("Error opening wallet")
 	sys.exit(2)
@@ -105,11 +105,11 @@ if 'export_mnemonic' in opts:
 	p = True if g.debug else False
 	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, print_info=p)
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.mn_ext)
-	export_to_file(fn, " ".join(mn)+"\n", opts, "mnemonic data")
+	write_to_file_or_stdout(fn, " ".join(mn)+"\n", opts, "mnemonic data")
 
 elif 'export_seed' in opts:
 	from mmgen.bitcoin import b58encode_pad
 	data = col4(b58encode_pad(seed))
 	chk = make_chksum_6(b58encode_pad(seed))
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.seed_ext)
-	export_to_file(fn, "%s %s\n" % (chk,data), opts, "seed data")
+	write_to_file_or_stdout(fn, "%s %s\n" % (chk,data), opts, "seed data")

@@ -311,6 +311,11 @@ def get_new_passphrase(what, opts, passchg=False):
 
 
 def confirm_or_exit(message, question, expect="YES"):
+	if not confirm_or_false(message, question, expect):
+		msg("Exiting at user request")
+		sys.exit(2)
+
+def confirm_or_false(message, question, expect="YES"):
 
 	vmsg("")
 
@@ -322,11 +327,11 @@ def confirm_or_exit(message, question, expect="YES"):
 	p = question+"  "+conf_msg if question[0].isupper() else \
 		"Are you sure you want to %s?\n%s" % (question,conf_msg)
 
-	if my_raw_input(p).strip() != expect:
-		msg("Exiting at user request")
-		sys.exit(2)
+	ret = True if my_raw_input(p).strip() == expect else False
 
 	vmsg("")
+	return ret
+
 
 
 def write_to_stdout(data, what, confirm=True):
@@ -342,7 +347,7 @@ def write_to_stdout(data, what, confirm=True):
 	sys.stdout.write(data)
 
 
-def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False):
+def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True):
 
 	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
@@ -351,7 +356,13 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 	except: pass
 	else:
 		if confirm_overwrite:
-			confirm_or_exit("","File '%s' already exists\nOverwrite?" % outfile)
+			q = "File '%s' already exists\nOverwrite?" % outfile
+			if exit_on_error:
+				confirm_or_exit("",q)
+			else:
+				if not confirm_or_false("",q):
+					msg("Not overwriting file at user request")
+					return False
 		else:
 			msg("Overwriting file '%s'" % outfile)
 
@@ -364,11 +375,12 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 	f.close
 
 	if verbose: msg("%s written to file '%s'" % (what.capitalize(),outfile))
+	return True
 
 
-def export_to_file(outfile, data, opts, what="data"):
+def write_to_file_or_stdout(outfile, data, opts, what="data"):
 
-	if 'stdout' in opts:
+	if 'stdout' in opts or not sys.stdout.isatty():
 		write_to_stdout(data, what, confirm=True)
 	else:
 		confirm_overwrite = False if g.quiet else True
@@ -615,9 +627,9 @@ def mark_passwd_file_as_used(opts):
 	passwd_file_used = True
 
 
-def get_mmgen_passphrase(pinfo,opts,passchg=False):
+def get_mmgen_passphrase(prompt_info,opts,passchg=False):
 	prompt = "Enter {}passphrase for {}: ".format(
-			"old " if passchg else "",pinfo)
+			"old " if passchg else "",prompt_info)
 	if 'passwd_file' in opts:
 		mark_passwd_file_as_used(opts)
 		return " ".join(_get_words_from_file(opts['passwd_file'],"passphrase"))
@@ -712,7 +724,7 @@ def my_raw_input(prompt,echo=True):
 	return reply
 
 
-def user_confirm(prompt,default_yes=False,verbose=False):
+def keypress_confirm(prompt,default_yes=False,verbose=False):
 
 	q = "(Y/n)" if default_yes else "(y/N)"
 

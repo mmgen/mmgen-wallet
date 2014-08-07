@@ -28,7 +28,7 @@ import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.tx import *
-from mmgen.util import msg, msg_r, user_confirm
+from mmgen.util import msg, msg_r, keypress_confirm
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -165,7 +165,7 @@ while True:
 
 	if mmaddrs and len(mmaddrs) < len(sel_unspent):
 		msg(txmsg['mixed_inputs'] % ", ".join(sorted(mmaddrs)))
-		if not user_confirm("Accept?"):
+		if not keypress_confirm("Accept?"):
 			continue
 
 	total_in = trim_exponent(sum([i.amount for i in sel_unspent]))
@@ -173,7 +173,7 @@ while True:
 
 	if change >= 0:
 		prompt = "Transaction produces %s BTC in change.  OK?" % change
-		if user_confirm(prompt,default_yes=True):
+		if keypress_confirm(prompt,default_yes=True):
 			break
 	else:
 		msg(txmsg['not_enough_btc'] % change)
@@ -206,7 +206,7 @@ if reply and reply in "YyVv":
 	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,pager=pager)
 
 prompt = "Save transaction?"
-if user_confirm(prompt,default_yes=True):
+if keypress_confirm(prompt,default_yes=True):
 	amt = send_amt or change
 	tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
 	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)

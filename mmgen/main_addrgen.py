@@ -35,9 +35,9 @@ what = "keys" if sys.argv[0].split("-")[-1] == "keygen" else "addresses"
 
 help_data = {
 	'prog_name': g.prog_name,
-	'desc': """Generate a list or range of {} from an {g.proj_name} wallet,
+	'desc': """Generate a range or list of {} from an {g.proj_name} wallet,
                   mnemonic, seed or password""".format(what,g=g),
-	'usage':"[opts] [infile] <address list>",
+	'usage':"[opts] [infile] <address range or list>",
 	'options': """
 -h, --help              Print this help message{}
 -d, --outdir=       d   Specify an alternate directory 'd' for output
@@ -50,7 +50,7 @@ help_data = {
                         (default: {g.seed_len})
 -p, --hash-preset=  p   Use scrypt.hash() parameters from preset 'p' when
                         hashing password (default: '{g.hash_preset}')
--P, --passwd-file=  f   Get passphrase from file 'f'
+-P, --passwd-file=  f   Get MMGen wallet passphrase from file 'f'
 -q, --quiet             Suppress warnings; overwrite files without
                         prompting
 -S, --stdout            Print {what} to stdout
@@ -159,8 +159,16 @@ addr_data_str    = format_addr_data(
 		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
 
 outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
+if 'addrs' in opts['gen_what']:
+	qmsg("Checksum for address data %s: %s" % (outfile_base,addr_data_chksum))
+	if 'save_checksum' in opts:
+		write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
+			addr_data_chksum+"\n",opts,"address data checksum",True,True,False)
+	else:
+		qmsg("This checksum will be used to verify the address file in the future.")
+		qmsg("Record it to a safe location.")
 
-if 'flat_list' in opts and user_confirm("Encrypt key list?"):
+if 'flat_list' in opts and keypress_confirm("Encrypt key list?"):
 	addr_data_str = mmgen_encrypt(addr_data_str,"key list","",opts)
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
@@ -176,15 +184,7 @@ else:
 	confirm_overwrite = False if g.quiet else True
 	outfile = "%s.%s%s" % (outfile_base, (
 		g.keylist_ext if 'flat_list' in opts else (
-		g.keyfile_ext if opts['gen_what'] == ("keys") else (
-		g.addrfile_ext if opts['gen_what'] == ("addrs") else "akeys"))), enc_ext)
+		g.keyfile_ext if opts['gen_what'] == ["keys"] else (
+		g.addrfile_ext if opts['gen_what'] == ["addrs"] else "akeys"))), enc_ext)
 	write_to_file(outfile,addr_data_str,opts,what,confirm_overwrite,True)
 
-if 'addrs' in opts['gen_what']:
-	msg("Checksum for address data {}: {}".format(outfile_base,addr_data_chksum))
-	if 'save_checksum' in opts:
-		a = "address data checksum"
-		write_to_file(outfile_base+".chk",addr_data_chksum,opts,a,False,True)
-	else:
-		qmsg("This checksum will be used to verify the address file in the future.")
-		qmsg("Record it to a safe location.")
