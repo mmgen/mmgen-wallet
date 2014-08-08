@@ -30,6 +30,7 @@ version = '0.7.7'
 
 quiet,verbose = False,False
 min_screen_width = 80
+max_tx_comment_len = 72
 
 from decimal import Decimal
 tx_fee        = Decimal("0.0001")

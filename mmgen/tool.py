@@ -60,7 +60,7 @@ commands = {
 	"str2id6":      ['<string (spaces are ignored)> [str]'],
 	"listaddresses":['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
-	"viewtx":       ['<MMGen tx file> [str]'],
+	"txview":       ['<MMGen tx file> [str]','pager [bool=False]'],
 	"check_addrfile": ['<MMGen addr file> [str]'],
 	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
 	"hexreverse":   ['<hexadecimal string> [str]'],
@@ -99,7 +99,7 @@ command_help = """
   getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddresses - list {pnm} addresses and their balances
-  viewtx        - show raw/signed {pnm} transaction in human-readable form
+  txview        - show raw/signed {pnm} transaction in human-readable form
 
   General utilities:
   bytespec     - convert a byte specifier such as '1GB' into a plain integer
@@ -372,12 +372,12 @@ def getbalance(minconf=1):
 	for key in sorted(accts.keys()):
 		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
 
-def viewtx(infile):
+def txview(infile,pager=False):
 	c = connect_to_bitcoind()
 	tx_data = get_lines_from_file(infile,"transaction data")
 
-	metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,infile)
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata)
+	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,infile)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager)
 
 def check_addrfile(infile): parse_addrs_file(infile)
 
@@ -429,7 +429,10 @@ def encrypt(infile,outfile="",hash_preset=''):
 
 def decrypt(infile,outfile="",hash_preset=''):
 	enc_d = get_data_from_file(infile,"encrypted data")
-	dec_d = mmgen_decrypt(enc_d,"user data","",opts)
+	while True:
+		dec_d = mmgen_decrypt(enc_d,"user data","",opts)
+		if dec_d: break
+		msg("Trying again...")
 	if outfile == '-':
 		write_to_stdout(dec_d,"decrypted data",confirm=True)
 	else:

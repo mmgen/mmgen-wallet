@@ -36,6 +36,7 @@ help_data = {
 	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
 -h, --help            Print this help message
+-c, --comment-file= f Source the transaction's comment from file 'f'
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -e, --echo-passphrase Print passphrase to screen when typing it
 -f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC)
@@ -196,26 +197,35 @@ if g.debug:
 	print "tx_in:", repr(tx_in)
 	print "tx_out:", repr(tx_out)
 
+if 'comment_file' in opts:
+	comment = get_tx_comment_from_file(opts['comment_file'])
+	if comment == False: sys.exit(2)
+	if keypress_confirm("Edit comment?",False):
+		comment = get_tx_comment_from_user(comment)
+else:
+	if keypress_confirm("Add a comment to transaction?",False):
+		comment = get_tx_comment_from_user()
+	else: comment = False
+
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 qmsg("Transaction successfully created")
+
 prompt = "View decoded transaction? (y)es, (N)o, (v)iew in pager"
 reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
 
+amt = send_amt or change
+tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
+metadata = tx_id, amt, make_timestamp()
+
 if reply and reply in "YyVv":
-	pager = True if reply in "Vv" else False
-	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,pager=pager)
+	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,
+			comment,metadata,True if reply in "Vv" else False)
 
 prompt = "Save transaction?"
 if keypress_confirm(prompt,default_yes=True):
-	amt = send_amt or change
-	tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
 	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
-	data = "{} {} {}\n{}\n{}\n{}\n".format(
-			tx_id, amt, make_timestamp(),
-			tx_hex,
-			repr([i.__dict__ for i in sel_unspent]),
-			repr(b2m_map)
-		)
+	data = make_tx_data("{} {} {}".format(*metadata), tx_hex,
+			[i.__dict__ for i in sel_unspent], b2m_map, comment)
 	write_to_file(outfile,data,opts,"transaction",False,True)
 else:
 	msg("Transaction not saved")

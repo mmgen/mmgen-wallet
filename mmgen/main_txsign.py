@@ -123,7 +123,7 @@ if 'keys_from_file' in opts:
 		while True:
 			d_dec = mmgen_decrypt(d,"encrypted keylist","",opts)
 			if d_dec: d = d_dec; break
-			else: msg("Trying again...")
+			msg("Trying again...")
 	keys_from_file = remove_comments(d.split("\n"))
 else: keys_from_file = []
 
@@ -136,7 +136,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	m = "" if 'tx_id' in opts else "transaction data"
 	tx_data = get_lines_from_file(tx_file,m)
 
-	metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,tx_file)
+	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,tx_file)
 	qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	if 'tx_id' in opts:
@@ -144,7 +144,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		sys.exit(0)
 
 	if 'info' in opts:
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata)
+		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata)
 		sys.exit(0)
 
 # Are inputs mmgen addresses?
@@ -177,8 +177,8 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	p = "View data for transaction{}? (y)es, (N)o, (v)iew in pager"
 	reply = prompt_and_get_char(p.format(tx_num_str),"YyNnVv",enter_ok=True)
 	if reply and reply in "YyVv":
-		p = True if reply in "Vv" else False
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata,pager=p)
+		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
+							True if reply in "Vv" else False)
 
 	sig_data = [
 		{"txid":i['txid'],"vout":i['vout'],"scriptPubKey":i['scriptPubKey']}
@@ -200,13 +200,11 @@ for tx_num,tx_file in enumerate(tx_files,1):
 
 	if sig_tx['complete']:
 		msg("OK")
+		if keypress_confirm("Edit transaction comment?"):
+			comment = get_tx_comment_from_user(comment)
 		outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
-		data = "{}\n{}\n{}\n{}\n".format(
-				" ".join(metadata[:2] + [make_timestamp()]),
-				sig_tx['hex'],
-				repr(inputs_data),
-				repr(b2m_map)
-			)
+		data = make_tx_data("{} {} {t}".format(*metadata[:2], t=make_timestamp()),
+				sig_tx['hex'], inputs_data, b2m_map, comment)
 		w = "signed transaction{}".format(tx_num_str)
 		write_to_file(outfile,data,opts,w,(not g.quiet),True,False)
 	else:

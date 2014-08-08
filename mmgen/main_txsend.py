@@ -51,7 +51,7 @@ do_license_msg()
 
 tx_data = get_lines_from_file(infile,"signed transaction data")
 
-metadata,tx_hex,inputs_data,b2m_map = parse_tx_data(tx_data,infile)
+metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,infile)
 
 qmsg("Signed transaction file '%s' is valid" % infile)
 
@@ -60,8 +60,16 @@ c = connect_to_bitcoind()
 prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
 reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
 if reply and reply in "YyVv":
-	p = True if reply in "Vv" else False
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata,pager=p)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
+					pager=True if reply in "Vv" else False)
+
+if keypress_confirm("Edit transaction comment?"):
+	comment = get_tx_comment_from_user(comment)
+	data = make_tx_data("{} {} {}".format(*metadata), tx_hex,
+				inputs_data, b2m_map, comment)
+	w = "signed transaction with edited comment"
+	outfile = infile
+	write_to_file(outfile,data,opts,w,False,True,True)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"
@@ -81,5 +89,5 @@ except:
 
 msg("Transaction sent: %s" % tx_id)
 
-of = "tx_{}[{}].out".format(*metadata[:2])
+of = "tx_{}[{}].txid".format(*metadata[:2])
 write_to_file(of, tx_id+"\n",opts,"transaction ID",True,True)

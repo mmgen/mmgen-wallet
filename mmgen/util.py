@@ -712,14 +712,21 @@ def get_hash_preset_from_user(hp='3',what="data"):
 		else: return hp
 
 
-def my_raw_input(prompt,echo=True):
-	msg_r(prompt)
+def my_raw_input(prompt,echo=True,insert_txt=""):
+
+	if not sys.stdout.isatty(): insert_txt = ""
+
+	import readline
+	def st_hook(): readline.insert_text(insert_txt)
+	readline.set_startup_hook(st_hook)
+
+	msg_r("" if insert_txt else prompt)
 	kb_hold_protect()
 	if echo:
-		reply = raw_input("")
+		reply = raw_input(prompt if insert_txt else "")
 	else:
 		from getpass import getpass
-		reply = getpass("")
+		reply = getpass(prompt if insert_txt else "")
 	kb_hold_protect()
 	return reply
 

@@ -32,14 +32,14 @@ from mmgen.term import do_pager,get_char
 txmsg = {
 'not_enough_btc': "Not enough BTC in the inputs for this transaction (%s BTC)",
 'throwaway_change': """
-ERROR: This transaction produces change (%s BTC); however, no change
-address was specified.
+ERROR: This transaction produces change (%s BTC); however, no change address
+was specified.
 """.strip(),
 'mixed_inputs': """
-NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs,
-which makes the signing process more complicated.  When signing the
-transaction, keys for the non-mmgen inputs must be supplied in a separate
-file using either the '-k' or '-K' option to '{}-txsign'.
+NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs, which
+makes the signing process more complicated.  When signing the transaction, keys
+for the non-mmgen inputs must be supplied in a separate file using either the
+'-k' or '-K' option to '{}-txsign'.
 
 Selected mmgen inputs: %s""".format(g.proj_name.lower()),
 'too_many_acct_addresses': """
@@ -326,16 +326,15 @@ def parse_mmgen_label(s,check_label_len=False):
 	return tuple(l)
 
 
-def view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata=[],pager=False):
+def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False):
 
 	td = c.decoderawtransaction(tx_hex)
 
 	out = "TRANSACTION DATA\n\n"
-
-	if metadata:
-		out += "Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n".format(*metadata)
-
+	out += "Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n".format(*metadata)
+	if comment: out += "Comment: %s\n\n" % comment
 	out += "Inputs:\n\n"
+
 	total_in = 0
 	for n,i in enumerate(td['vin']):
 		for j in inputs_data:
@@ -377,46 +376,46 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,metadata=[],pager=False):
 	out += "Total output: %s BTC\n" % trim_exponent(total_out)
 	out += "TX fee:       %s BTC\n" % trim_exponent(total_in-total_out)
 
-	if pager: do_pager(out)
-	else:     print "\n"+out
+	o = out.encode("utf8")
+	if pager: do_pager(o)
+	else: print "\n"+o
 
 
 def parse_tx_data(tx_data,infile):
 
-	try:
+	err_str,err_fmt = "","Invalid %s in transaction file"
+
+	if len(tx_data) == 5:
+		metadata,tx_hex,inputs_data,outputs_data,comment = tx_data
+	elif len(tx_data) == 4:
 		metadata,tx_hex,inputs_data,outputs_data = tx_data
-	except:
-		msg("'%s': not a transaction file" % infile)
-		sys.exit(2)
+		comment = ""
+	else:
+		err_str = "number of lines"
 
-	err_fmt = "Transaction %s is invalid"
+	if not err_str:
+		if len(metadata.split()) != 3:
+			err_str = "metadata"
+		else:
+			try: unhexlify(tx_hex)
+			except: err_str = "hex data"
+			else:
+				try: inputs_data = eval(inputs_data)
+				except: err_str = "inputs data"
+				else:
+					try: outputs_data = eval(outputs_data)
+					except: err_str = "mmgen-to-btc address map data"
+					else:
+						if is_valid_tx_comment(comment,True):
+							comment = comment.decode("utf8")
+						else:
+							err_str = "comment"
 
-	if len(metadata.split()) != 3:
-		msg(err_fmt % "metadata")
-		sys.exit(2)
-
-	try: unhexlify(tx_hex)
-	except:
-		msg(err_fmt % "hex data")
+	if err_str:
+		msg(err_fmt % err_str)
 		sys.exit(2)
 	else:
-		if not tx_hex:
-			msg("Transaction is empty!")
-			sys.exit(2)
-
-	try:
-		inputs_data = eval(inputs_data)
-	except:
-		msg(err_fmt % "inputs data")
-		sys.exit(2)
-
-	try:
-		outputs_data = eval(outputs_data)
-	except:
-		msg(err_fmt % "mmgen to btc address map data")
-		sys.exit(2)
-
-	return metadata.split(),tx_hex,inputs_data,outputs_data
+		return metadata.split(),tx_hex,inputs_data,outputs_data,comment
 
 
 def select_outputs(unspent,prompt):
@@ -687,7 +686,7 @@ def sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts):
 
 def preverify_keys(addrs_in, keys_in, mm_inputs):
 
-	addrs,keys,extra_keys = set(addrs_in),set(keys_in),[]
+	addrs,keys = set(addrs_in),set(keys_in)
 
 	import mmgen.bitcoin as b
 
@@ -713,16 +712,10 @@ def preverify_keys(addrs_in, keys_in, mm_inputs):
 			if addr in addrs:
 				addrs.remove(addr)
 				if not addrs: break
-			else:
-				extra_keys.append(k)
 	except KeyboardInterrupt:
 		msg("\nSkipping")
 	else:
 		msg("")
-		if extra_keys:
-			s = "" if len(extra_keys) == 1 else "s"
-			msg("%s extra key%s found" % (len(extra_keys),s))
-
 		if addrs:
 			mms = dict([(i['address'],i['account'].split()[0])
 					for i in mm_inputs if i['address'] in addrs])
@@ -732,6 +725,12 @@ def preverify_keys(addrs_in, keys_in, mm_inputs):
 			for a in sorted(addrs):
 				print "  %s%s" % (a, "  ({})".format(mms[a]) if a in mms else "")
 			sys.exit(2)
+		else:
+			extra_keys = len(keys) - len(set(addrs_in))
+			if extra_keys > 0:
+				s = "" if extra_keys == 1 else "s"
+				msg("%s extra key%s found" % (extra_keys,s))
+
 
 
 def missing_keys_errormsg(other_addrs):
@@ -766,3 +765,41 @@ def check_mmgen_to_btc_addr_mappings_addrfile(mmgen_inputs,b2m_map,addrfiles):
 		confirm_or_exit(txmsg['missing_mappings'] %
 				" ".join(missing),"continue")
 	else: qmsg("Address mappings OK")
+
+
+def is_valid_tx_comment(c, verbose=True):
+	if len(c) > g.max_tx_comment_len:
+		if verbose: msg("Invalid transaction comment (longer than %s characters)" %
+				g.max_tx_comment_len)
+		return False
+	try: c.decode("utf8")
+	except:
+		if verbose: msg("Invalid transaction comment (not UTF-8)")
+		return False
+	else: return True
+
+def get_tx_comment_from_file(infile):
+	c = get_data_from_file(infile,"transaction comment")
+	if is_valid_tx_comment(c, verbose=True):
+		return c.decode("utf8").strip()
+	else: return False
+
+
+def get_tx_comment_from_user(comment=""):
+
+	try:
+		while True:
+			c = my_raw_input("Comment: ", echo=True,
+					insert_txt=comment.encode("utf8"))
+			if c == "": return False
+			if is_valid_tx_comment(c, verbose=True):
+				return c.decode("utf8")
+	except KeyboardInterrupt:
+	   msg("User interrupt")
+	   return False
+
+
+def make_tx_data(metadata_fmt, tx_hex, inputs_data, b2m_map, comment):
+	lines = (metadata_fmt, tx_hex, repr(inputs_data), repr(b2m_map)) + \
+			((comment,) if comment else ())
+	return "\n".join(lines).encode("utf8")+"\n"
