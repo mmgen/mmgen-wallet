@@ -475,7 +475,7 @@ def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 
 	# Don't want to create a new object, so use append()
 	if not acct_data:
-		for i in c.listaccounts():
+		for i in c.listaccounts(minconf=0):
 			acct_data.append(i)
 
 	for acct in acct_data:
@@ -773,21 +773,21 @@ def check_mmgen_to_btc_addr_mappings_addrfile(mmgen_inputs,b2m_map,addrfiles):
 	else: qmsg("Address mappings OK")
 
 
-def is_valid_tx_comment(c, verbose=True):
-	if len(c) > g.max_tx_comment_len:
+def is_valid_tx_comment(s, verbose=True):
+	if len(s) > g.max_tx_comment_len:
 		if verbose: msg("Invalid transaction comment (longer than %s characters)" %
 				g.max_tx_comment_len)
 		return False
-	try: c.decode("utf8")
+	try: s.decode("utf8")
 	except:
 		if verbose: msg("Invalid transaction comment (not UTF-8)")
 		return False
 	else: return True
 
 def get_tx_comment_from_file(infile):
-	c = get_data_from_file(infile,"transaction comment")
-	if is_valid_tx_comment(c, verbose=True):
-		return c.decode("utf8").strip()
+	s = get_data_from_file(infile,"transaction comment")
+	if is_valid_tx_comment(s, verbose=True):
+		return s.decode("utf8").strip()
 	else: return False
 
 
@@ -795,11 +795,10 @@ def get_tx_comment_from_user(comment=""):
 
 	try:
 		while True:
-			c = my_raw_input("Comment: ", echo=True,
-					insert_txt=comment.encode("utf8"))
-			if c == "": return False
-			if is_valid_tx_comment(c, verbose=True):
-				return c.decode("utf8")
+			s = my_raw_input("Comment: ",insert_txt=comment.encode("utf8"))
+			if s == "": return False
+			if is_valid_tx_comment(s, verbose=True):
+				return s.decode("utf8")
 	except KeyboardInterrupt:
 	   msg("User interrupt")
 	   return False
@@ -807,6 +806,6 @@ def get_tx_comment_from_user(comment=""):
 
 def make_tx_data(metadata_fmt, tx_hex, inputs_data, b2m_map, comment):
 	from mmgen.bitcoin import b58encode
-	c = (b58encode(comment.encode("utf8")),) if comment else ()
-	lines = (metadata_fmt, tx_hex, repr(inputs_data), repr(b2m_map)) + c
+	s = (b58encode(comment.encode("utf8")),) if comment else ()
+	lines = (metadata_fmt, tx_hex, repr(inputs_data), repr(b2m_map)) + s
 	return "\n".join(lines)+"\n"

@@ -712,23 +712,25 @@ def get_hash_preset_from_user(hp='3',what="data"):
 		else: return hp
 
 
-def my_raw_input(prompt,echo=True,insert_txt=""):
+def my_raw_input(prompt,echo=True,insert_txt="",use_readline=True):
 
-	if not sys.stdout.isatty(): insert_txt = ""
+	if use_readline and sys.stdout.isatty():
+		import readline
+		def st_hook(): readline.insert_text(insert_txt)
+		readline.set_startup_hook(st_hook)
+	else:
+		msg_r(prompt)
+		prompt = ""
 
-	import readline
-	def st_hook(): readline.insert_text(insert_txt)
-	readline.set_startup_hook(st_hook)
-
-	msg_r("" if insert_txt else prompt)
 	kb_hold_protect()
 	if echo:
-		reply = raw_input(prompt if insert_txt else "")
+		reply = raw_input(prompt)
 	else:
 		from getpass import getpass
-		reply = getpass(prompt if insert_txt else "")
+		reply = getpass(prompt)
 	kb_hold_protect()
-	return reply
+
+	return reply.strip()
 
 
 def keypress_confirm(prompt,default_yes=False,verbose=False):

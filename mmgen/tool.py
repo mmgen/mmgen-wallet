@@ -328,14 +328,13 @@ def listaddresses(minconf=1,showempty=False):
 			if key not in addrs: addrs[key] = [0,comment]
 			addrs[key][0] += d.amount
 
-	# "bitcoind getbalance <account>" can produce a false balance
-	# (sipa watchonly bitcoind), so use only for empty accounts
 	if showempty:
 		# Show accts with not enough confirmations as empty!
 		# A feature, not a bug!
-		for (ma,comment),bal in [(split2(a),c.getbalance(a,minconf=minconf))
-			for a in c.listaccounts(0)]:
-			if is_mmgen_addr(ma) and bal == 0:
+		accts = c.listaccounts(minconf=0,as_dict=True)
+		for k in accts.keys():
+			ma,comment = split2(k)
+			if is_mmgen_addr(ma) and accts[k] == 0:
 				key = "_".join(ma.split(":"))
 				if key not in addrs: addrs[key] = [0,comment]
 
@@ -372,12 +371,12 @@ def getbalance(minconf=1):
 		keys = ["TOTAL"]
 		if d.spendable: keys += ["SPENDABLE"]
 		if is_mmgen_addr(ma): keys += [ma.split(":")[0]]
-		c = d.confirmations
-		i = 2 if c >= minconf else 1
+		confs = d.confirmations
+		i = 2 if confs >= minconf else 1
 
 		for key in keys:
 			if key not in accts: accts[key] = [0,0,0]
-			for j in ([0] if c == 0 else []) + [i]:
+			for j in ([0] if confs == 0 else []) + [i]:
 				accts[key][j] += d.amount
 
 	fs = "{:12}  {:<%s} {:<%s} {:<}" % (16,16)

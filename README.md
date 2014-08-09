@@ -5,32 +5,33 @@ MMGen = Multi-Mode GENerator
 ### Description
 
 MMGen is a Bitcoin cold-storage system implemented as a suite of Python
-command-line scripts requiring only a bare minimum of system resources.  The
-scripts work in tandem with a modified Satoshi bitcoind running on an online
-computer and a stock bitcoind running offline to provide a robust solution for
+command-line scripts that require only a bare minimum of system resources.  The
+scripts work in tandem with the reference Bitcoin Core daemon (bitcoind) running
+on both an online and an offline computer to provide a robust solution for
 securely storing, tracking, sending and receiving Bitcoins.  "Non-MMGen"
 addresses can be tracked and spent as well, creating an easy migration path from
 other wallets.
 
-To track address balances, MMGen relies on a bitcoin daemon modified by
-Bitcoin core developers to support watch-only addresses.  This feature
-will one day be included in the mainline Satoshi build.  In the meantime,
-instructions are provided below for compiling the modified bitcoind.  Under
-Linux, this is a trivial task for even a casual user.  Unfortunately, the same
-can't be said for Windows, but the thoroughly tested, step-by-step Windows build
-instructions provided here should guarantee success if followed carefully and
-make the process as painless as possible.
+To track address balances, MMGen relies on Bitcoin Core's newly included support
+for watch-only addresses.  Binary builds with this feature will become available
+with the next release of Bitcoin Core.  In the meantime, users can download the
+Bitcoin source from the project's official repository on Github and compile it,
+a trivial task on Linux.  Compilation instructions for Windows are also
+included, though Windows users may find it easier to wait for the binary from
+the upcoming release.
 
-MMGen is designed for reliability by having the reference Satoshi daemon, rather
-than less-tested third-party software, do all the "heavy lifting" of tracking
-and signing transactions.  It's also designed for privacy: unlike some other
-online/offline wallet solutions, the MMGen system is completely self-contained,
-requiring no external server to do its work, which means no third party will
-know which addresses you're tracking.
+MMGen is designed for reliability by having the reference Bitcoin Core daemon,
+rather than less-tested third-party software, do all the "heavy lifting" of
+tracking and signing transactions.  It's also designed for privacy: unlike some
+other online/offline wallet solutions, MMGen plus Bitcoin Core is a **completely
+self-contained system** requiring no external Internet resources except for the
+Bitcoin network itself to do its work: no third parties are involved, and thus
+no information regarding which addresses you're tracking is leaked to the
+outside world.
 
 Like all deterministic wallets, MMGen can generate a virtually unlimited number
 of address/key pairs from a single seed.  Your wallet never changes, so you need
-to back it up only once.  Transactions are signed offline: your seed and private
+back it up only once.  Transactions are signed offline: your seed and private
 keys never touch an online computer.
 
 At the heart of the MMGen system is the seed, the "master key" providing access
@@ -65,7 +66,7 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.
 
 ### Using MMGen
 
-> #### See [Getting Started with MMGen][3]
+> #### [Getting Started with MMGen][3]
 
 > #### [MMGen command help][6]
 
