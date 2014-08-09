@@ -406,15 +406,16 @@ def parse_tx_data(tx_data,infile):
 					try: outputs_data = eval(outputs_data)
 					except: err_str = "mmgen-to-btc address map data"
 					else:
-						from mmgen.bitcoin import b58decode
-						comment = b58decode(comment)
-						if comment == False:
-							err_str = "encoded comment (not base58)"
-						else:
-							if is_valid_tx_comment(comment,True):
-								comment = comment.decode("utf8")
+						if comment:
+							from mmgen.bitcoin import b58decode
+							comment = b58decode(comment)
+							if comment == False:
+								err_str = "encoded comment (not base58)"
 							else:
-								err_str = "comment"
+								if is_valid_tx_comment(comment,True):
+									comment = comment.decode("utf8")
+								else:
+									err_str = "comment"
 
 	if err_str:
 		msg(err_fmt % err_str)
@@ -552,8 +553,8 @@ def check_addr_data_hash(seed_id,addr_data):
 	addr_data_chksum = make_addr_data_chksum(sorted(addr_data,key=s_addrdata))
 	from mmgen.addr import fmt_addr_idxs
 	fl = fmt_addr_idxs([int(a[0]) for a in addr_data])
-	msg("Computed checksum for addr data {}[{}]: {}".format(
-				seed_id,fl,addr_data_chksum))
+	qmsg_r("Computed checksum for addr data {}[{}]: ".format(seed_id,fl))
+	msg(addr_data_chksum)
 	qmsg("Check this value against your records")
 
 def parse_addrs_file(f):
