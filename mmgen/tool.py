@@ -331,7 +331,7 @@ def listaddresses(minconf=1,showempty=False):
 	if showempty:
 		# Show accts with not enough confirmations as empty!
 		# A feature, not a bug!
-		accts = c.listaccounts(minconf=0,as_dict=True)
+		accts = c.listaccounts(minconf=0,includeWatchonly=True,as_dict=True)
 		for k in accts.keys():
 			ma,comment = split2(k)
 			if is_mmgen_addr(ma) and accts[k] == 0:

@@ -456,7 +456,7 @@ ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-onl
 		except JSONRPCException as e:
 			raise _wrap_exception(e.error)
 
-	def listaccounts(self, minconf=1, as_dict=False):
+	def listaccounts(self, minconf=1, includeWatchonly=False, as_dict=False):
 		"""
 		Returns a list of account names.
 
@@ -467,9 +467,9 @@ ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-onl
 		"""
 		try:
 			if as_dict:
-				return dict(self.proxy.listaccounts(minconf,True))
+				return dict(self.proxy.listaccounts(minconf,includeWatchonly))
 			else:
-				return self.proxy.listaccounts(minconf).keys()
+				return self.proxy.listaccounts(minconf,includeWatchonly).keys()
 		except JSONRPCException as e:
 			raise _wrap_exception(e.error)
 

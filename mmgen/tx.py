@@ -475,7 +475,7 @@ def mmaddr2btcaddr_bitcoind(c,mmaddr,acct_data):
 
 	# Don't want to create a new object, so use append()
 	if not acct_data:
-		for i in c.listaccounts(minconf=0):
+		for i in c.listaccounts(minconf=0,includeWatchonly=True):
 			acct_data.append(i)
 
 	for acct in acct_data:
