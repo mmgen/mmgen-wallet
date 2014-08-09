@@ -24,7 +24,6 @@ setup(
 			'mmgen.tool',
 			'mmgen.tx',
 			'mmgen.util',
-			'mmgen.walletgen',
 
 			'mmgen.main',
 			'mmgen.main_addrgen',
