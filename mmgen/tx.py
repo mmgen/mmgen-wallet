@@ -406,10 +406,15 @@ def parse_tx_data(tx_data,infile):
 					try: outputs_data = eval(outputs_data)
 					except: err_str = "mmgen-to-btc address map data"
 					else:
-						if is_valid_tx_comment(comment,True):
-							comment = comment.decode("utf8")
+						from mmgen.bitcoin import b58decode
+						comment = b58decode(comment)
+						if comment == False:
+							err_str = "encoded comment (not base58)"
 						else:
-							err_str = "comment"
+							if is_valid_tx_comment(comment,True):
+								comment = comment.decode("utf8")
+							else:
+								err_str = "comment"
 
 	if err_str:
 		msg(err_fmt % err_str)
@@ -800,6 +805,7 @@ def get_tx_comment_from_user(comment=""):
 
 
 def make_tx_data(metadata_fmt, tx_hex, inputs_data, b2m_map, comment):
-	lines = (metadata_fmt, tx_hex, repr(inputs_data), repr(b2m_map)) + \
-			((comment,) if comment else ())
-	return "\n".join(lines).encode("utf8")+"\n"
+	from mmgen.bitcoin import b58encode
+	c = (b58encode(comment.encode("utf8")),) if comment else ()
+	lines = (metadata_fmt, tx_hex, repr(inputs_data), repr(b2m_map)) + c
+	return "\n".join(lines)+"\n"

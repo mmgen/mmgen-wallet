@@ -41,6 +41,7 @@ commands = {
 	"strtob58":     ['<string> [str]'],
 	"hextob58":     ['<hex number> [str]'],
 	"b58tohex":     ['<b58 number> [str]'],
+	"b58tostr":     ['<b58 number> [str]'],
 	"b58randenc":   [],
 	"randhex":      ['nbytes [int=32]'],
 	"randwif":      ['compressed [bool=False]'],
@@ -60,7 +61,7 @@ commands = {
 	"str2id6":      ['<string (spaces are ignored)> [str]'],
 	"listaddresses":['minconf [int=1]', 'showempty [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
-	"txview":       ['<MMGen tx file> [str]','pager [bool=False]'],
+	"viewtx":       ['<MMGen tx file> [str]','pager [bool=False]'],
 	"check_addrfile": ['<MMGen addr file> [str]'],
 	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
 	"hexreverse":   ['<hexadecimal string> [str]'],
@@ -83,6 +84,7 @@ command_help = """
   addr2hexaddr - convert Bitcoin address from base58 to hex format
   b58randenc   - generate a random 32-byte number and convert it to base 58
   b58tohex     - convert a base 58 number to hexadecimal
+  b58tostr     - convert a base 58 number to a string
   hex2wif      - convert a private key from hex to WIF format
   hexaddr2addr - convert Bitcoin address from hex to base58 format
   hextob58     - convert a hexadecimal number to base 58
@@ -99,7 +101,7 @@ command_help = """
   getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddresses - list {pnm} addresses and their balances
-  txview        - show raw/signed {pnm} transaction in human-readable form
+  viewtx        - show raw/signed {pnm} transaction in human-readable form
 
   General utilities:
   bytespec     - convert a byte specifier such as '1GB' into a plain integer
@@ -236,6 +238,12 @@ def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	dec = f_dec(ba.unhexlify(enc))
 	print_convert_results(s,enc,dec)
 
+def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
+	enc = f_enc(s)
+	if enc == False: sys.exit(1)
+	dec = f_dec(enc)
+	print_convert_results(s,enc,dec)
+
 def b58randenc():
 	r = get_random(32,opts)
 	enc = bitcoin.b58encode(r)
@@ -331,6 +339,13 @@ def listaddresses(minconf=1,showempty=False):
 				key = "_".join(ma.split(":"))
 				if key not in addrs: addrs[key] = [0,comment]
 
+	if not addrs:
+		if showempty:
+			msg("No tracked addresses!")
+		else:
+			msg("No addresses with balances!")
+		sys.exit(1)
+
 	fs = "%-{}s  %-{}s   %s".format(
 		max([len(k) for k in addrs.keys()]),
 		max([len(str(addrs[k][1])) for k in addrs.keys()])
@@ -372,7 +387,7 @@ def getbalance(minconf=1):
 	for key in sorted(accts.keys()):
 		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
 
-def txview(infile,pager=False):
+def viewtx(infile,pager=False):
 	c = connect_to_bitcoind()
 	tx_data = get_lines_from_file(infile,"transaction data")
 
