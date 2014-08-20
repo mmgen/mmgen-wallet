@@ -39,9 +39,9 @@ def Vmsg_r(s):
 opts = {}
 commands = {
 	"strtob58":     ['<string> [str]'],
+	"b58tostr":     ['<b58 number> [str]'],
 	"hextob58":     ['<hex number> [str]'],
 	"b58tohex":     ['<b58 number> [str]'],
-	"b58tostr":     ['<b58 number> [str]'],
 	"b58randenc":   [],
 	"randhex":      ['nbytes [int=32]'],
 	"randwif":      ['compressed [bool=False]'],
@@ -51,6 +51,8 @@ commands = {
 	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
 	"unhexdump":    ['<infile> [str]'],
+	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
+	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
 	"mn_rand128":   ['wordlist [str="electrum"]'],
 	"mn_rand192":   ['wordlist [str="electrum"]'],
 	"mn_rand256":   ['wordlist [str="electrum"]'],
@@ -59,10 +61,11 @@ commands = {
 	"id8":          ['<infile> [str]'],
 	"id6":          ['<infile> [str]'],
 	"str2id6":      ['<string (spaces are ignored)> [str]'],
-	"listaddresses":['minconf [int=1]', 'showempty [bool=False]'],
+	"listaddresses":['minconf [int=1]','showempty [bool=False]','pager [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
 	"viewtx":       ['<MMGen tx file> [str]','pager [bool=False]'],
-	"check_addrfile": ['<MMGen addr file> [str]'],
+	"addrfile_chksum": ['<MMGen addr file> [str]'],
+	"keyaddrfile_chksum": ['<MMGen addr file> [str]'],
 	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
 	"hexreverse":   ['<hexadecimal string> [str]'],
 	"sha256x2":     ['<str, hexstr or filename> [str]',
@@ -122,8 +125,9 @@ command_help = """
       * The encrypted file is indistinguishable from random data
 
   {pnm}-specific operations:
-  check_addrfile - compute checksum and address list for {pnm} address file
-  find_incog_data - Use an Incog ID to find hidden incognito wallet data
+  addrfile_chksum    - compute checksum for {pnm} address file
+  keyaddrfile_chksum - compute checksum for {pnm} key file
+  find_incog_data    - Use an Incog ID to find hidden incognito wallet data
   id6          - generate 6-character {pnm} ID for a file (or stdin)
   id8          - generate 8-character {pnm} ID for a file (or stdin)
   str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
@@ -135,6 +139,8 @@ command_help = """
   mn_rand256   - generate random 256-bit mnemonic
   mn_stats     - show stats for mnemonic wordlist
   mn_printlist - print mnemonic wordlist
+  hex2mn       - convert a 16, 24 or 32-byte number in hex format to a mnemonic
+  mn2hex       - convert a 12, 18 or 24-word mnemonic to a number in hex format
 
   IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
@@ -286,37 +292,45 @@ def get_wordlist(wordlist):
 		Msg('"%s": invalid wordlist.  Valid choices: %s' %
 			(wordlist,'"'+'" "'.join(wordlists)+'"'))
 		sys.exit(1)
-	return el if wordlist == "electrum" else tl
+	return (el if wordlist == "electrum" else tl).strip().split("\n")
 
 def do_random_mn(nbytes,wordlist):
 	r = get_random(nbytes,opts)
-	wlists = wordlists if wordlist == "all" else [wordlist]
-	for wl in wlists:
-		l = get_wordlist(wl)
-		if wl == wlists[0]: Vmsg("Seed: %s" % ba.hexlify(r))
-		mn = get_mnemonic_from_seed(r,l.strip().split("\n"),
-				wordlist,print_info=False)
-		Vmsg("%s wordlist mnemonic:" % (wl.capitalize()))
+	Vmsg("Seed: %s" % ba.hexlify(r))
+	for wlname in (wordlists if wordlist == "all" else [wordlist]):
+		wl = get_wordlist(wlname)
+		mn = get_mnemonic_from_seed(r,wl,wordlist)
+		Vmsg("%s wordlist mnemonic:" % (wlname.capitalize()))
 		print " ".join(mn)
 
 def mn_rand128(wordlist="electrum"): do_random_mn(16,wordlist)
 def mn_rand192(wordlist="electrum"): do_random_mn(24,wordlist)
 def mn_rand256(wordlist="electrum"): do_random_mn(32,wordlist)
 
+def hex2mn(s,wordlist="electrum"):
+	import mmgen.mnemonic
+	wl = get_wordlist(wordlist)
+	print " ".join(get_mnemonic_from_seed(ba.unhexlify(s), wl, wordlist))
+
+def mn2hex(s,wordlist="electrum"):
+	import mmgen.mnemonic
+	wl = get_wordlist(wordlist)
+	print ba.hexlify(get_seed_from_mnemonic(s.split(),wl,True))
+
 def mn_stats(wordlist="electrum"):
 	l = get_wordlist(wordlist)
 	check_wordlist(l,wordlist)
 
 def mn_printlist(wordlist="electrum"):
-	l = get_wordlist(wordlist)
-	print "%s" % l.strip()
+	wl = get_wordlist(wordlist)
+	print "\n".join(wl)
 
 def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True))
 def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True))
 def str2id6(s):  print make_chksum_6("".join(s.split()))
 
 # List MMGen addresses and their balances:
-def listaddresses(minconf=1,showempty=False):
+def listaddresses(minconf=1,showempty=False,pager=False):
 	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
 	c = connect_to_bitcoind()
 
@@ -349,7 +363,7 @@ def listaddresses(minconf=1,showempty=False):
 		max([len(k) for k in addrs.keys()]),
 		max([len(str(addrs[k][1])) for k in addrs.keys()])
 	)
-	print fs % ("ADDRESS","COMMENT","BALANCE")
+	out = [ fs % ("ADDRESS","COMMENT","BALANCE") ]
 
 	def s_mmgen(ma):
 		return "{}:{:>0{w}}".format(w=g.mmgen_idx_max_digits, *ma.split("_"))
@@ -357,9 +371,13 @@ def listaddresses(minconf=1,showempty=False):
 	old_sid = ""
 	for k in sorted(addrs.keys(),key=s_mmgen):
 		sid,num = k.split("_")
-		if old_sid and old_sid != sid: print
+		if old_sid and old_sid != sid: out.append("")
 		old_sid = sid
-		print fs % (sid+":"+num, addrs[k][1], trim_exponent(addrs[k][0]))
+		out.append(fs % (sid+":"+num, addrs[k][1], trim_exponent(addrs[k][0])))
+
+	o = "\n".join(out)
+	if pager: do_pager(o)
+	else: print o
 
 
 def getbalance(minconf=1):
@@ -390,10 +408,11 @@ def viewtx(infile,pager=False):
 	c = connect_to_bitcoind()
 	tx_data = get_lines_from_file(infile,"transaction data")
 
-	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,infile)
+	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager)
 
-def check_addrfile(infile): parse_addrs_file(infile)
+def addrfile_chksum(infile): parse_addrfile(infile,{})
+def keyaddrfile_chksum(infile): parse_keyaddr_file(infile,{})
 
 def hexreverse(hex_str):
 	print ba.hexlify(decode_pretty_hexdump(hex_str)[::-1])
@@ -418,7 +437,7 @@ def pubkey2hexaddr(pubkeyhex):
 	print bitcoin.pubhex2hexaddr(pubkeyhex)
 
 def pubkey2addr(pubkeyhex):
-	print bitcoin.pubhex2addr(pubkeyhex)
+	print bitcoin.hexaddr2addr(bitcoin.pubhex2hexaddr(pubkeyhex))
 
 def privhex2addr(privkeyhex,compressed=False):
 	print bitcoin.privnum2addr(int(privkeyhex,16),compressed)
@@ -444,7 +463,7 @@ def encrypt(infile,outfile="",hash_preset=''):
 def decrypt(infile,outfile="",hash_preset=''):
 	enc_d = get_data_from_file(infile,"encrypted data")
 	while True:
-		dec_d = mmgen_decrypt(enc_d,"user data","",opts)
+		dec_d = mmgen_decrypt(enc_d,"user data")
 		if dec_d: break
 		msg("Trying again...")
 	if outfile == '-':
@@ -463,6 +482,10 @@ def find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
 	n,carry = 0," "*ivsize
 	f = os.open(filename,os.O_RDONLY)
+	for ch in iv_id:
+		if ch not in "0123456789ABCDEF":
+			msg("'%s': invalid Incog ID" % iv_id)
+			sys.exit(2)
 	while True:
 		d = os.read(f,bsize)
 		if not d: break

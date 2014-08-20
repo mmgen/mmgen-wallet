@@ -1671,7 +1671,7 @@ data = "\n".join(data) + "\n"
 
 # Output data
 if 'stdout' in opts or not sys.stdout.isatty():
-	c = False if ('addrs' in opts or not sys.stdout.isatty()) else True
-	write_to_stdout(data,"secret keys",c)
+	conf = not ('addrs' in opts or not sys.stdout.isatty())
+	write_to_stdout(data,"secret keys",conf)
 else:
 	write_walletdat_dump_to_file(wallet_id, data, len_arg, ext, what, opts)

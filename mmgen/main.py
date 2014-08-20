@@ -41,3 +41,7 @@ def main(progname):
 		sys.stderr.write("\nUser interrupt\n")
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 		sys.exit(1)
+	except EOFError:
+		sys.stderr.write("\nEnd of file\n")
+		termios.tcsetattr(fd, termios.TCSADRAIN, old)
+		sys.exit(1)

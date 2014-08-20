@@ -52,65 +52,56 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The "zero address":
 # 1111111111111111111114oLvT2 (use step2 = ("0" * 40) to generate)
 #
+
 def pubhex2hexaddr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()
 	return hashlib_new('ripemd160',step1).hexdigest()
 
-def hexaddr2addr(hexaddr):
+def hexaddr2addr(hexaddr, vers_num='00'):
 	# See above:
-	extra_ones = (len(hexaddr) - len(hexaddr.lstrip("0"))) / 2
-	step1 = sha256(unhexlify('00'+hexaddr)).digest()
+	hexaddr2 = vers_num + hexaddr
+	step1 = sha256(unhexlify(hexaddr2)).digest()
 	step2 = sha256(step1).hexdigest()
-	pubkey = int(hexaddr + step2[:8], 16)
-	return "1" + ("1" * extra_ones) + _numtob58(pubkey)
-
-def pubhex2addr(pubhex):
-	return hexaddr2addr(pubhex2hexaddr(pubhex))
+	pubkey = hexaddr2 + step2[:8]
+	lzeroes = (len(hexaddr2) - len(hexaddr2.lstrip("0"))) / 2
+	return ("1" * lzeroes) + _numtob58(int(pubkey,16))
 
 def verify_addr(addr,verbose=False,return_hex=False):
 
-	if addr[0] != "1":
-		if verbose: print "%s: Invalid address" % addr
-		return False
+	for vers_num,ldigit in ('00','1'),('05','3'):
+		if addr[0] != ldigit: continue
+		num = _b58tonum(addr)
+		if num == False: break
+		addr_hex = "{:050x}".format(num)
+		if addr_hex[:2] != vers_num: continue
+		step1 = sha256(unhexlify(addr_hex[:42])).digest()
+		step2 = sha256(step1).hexdigest()
+		if step2[:8] == addr_hex[42:]:
+			return addr_hex[2:42] if return_hex else True
+		else:
+			if verbose: print "Invalid checksum in address '%s'" % addr
+			break
 
-	num = _b58tonum(addr[1:])
-	if num == False: return False
-	addr_hex = hex(num)[2:].rstrip("L").zfill(48)
+	if verbose: print "Invalid address '%s'" % addr
+	return False
 
-	step1 = sha256(unhexlify('00'+addr_hex[:40])).digest()
-	step2 = sha256(step1).hexdigest()
-
-	if step2[:8] != addr_hex[40:]:
-		if verbose: print "Invalid checksum in address %s" % ("1" + addr)
-		return False
-
-	return addr_hex[:40] if return_hex else True
 
 # Reworked code from here:
 
 def _numtob58(num):
-	b58conv,i = [],0
-	while True:
-		n = num / (58**i); i += 1
-		if not n: break
-		b58conv.append(b58a[n % 58])
-	return ''.join(b58conv)[::-1]
+	ret = []
+	while num:
+		ret.append(b58a[num % 58])
+		num /= 58
+	return ''.join(ret)[::-1]
 
 def _b58tonum(b58num):
 	for i in b58num:
-		if not i in b58a:
-			print "Invalid symbol in b58 number: '%s'" % i
-			return False
-
-	b58deconv = []
-	b58num_r = b58num[::-1]
-	for i in range(len(b58num)):
-		idx = b58a.index(b58num_r[i])
-		b58deconv.append(idx * (58**i))
-	return sum(b58deconv)
+		if not i in b58a: return False
+	return sum([b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1]))])
 
 def numtowif(numpriv):
-	step1 = '80'+hex(numpriv)[2:].rstrip('L').zfill(64)
+	step1 = '80' + "{:064x}".format(numpriv)
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
 	key = step1 + step3[:8]
@@ -131,8 +122,8 @@ def b58decode(b58num):
 	# Zap all spaces:
 	num = _b58tonum(b58num.translate(None,' \t\n\r'))
 	if num == False: return False
-	out = hex(num)[2:].rstrip('L')
-	return unhexlify("0" + out if len(out) % 2 else out)
+	out = "{:x}".format(num)
+	return unhexlify("0"*(len(out)%2) + out)
 
 # These yield bytewise equivalence in our special cases:
 
@@ -165,7 +156,7 @@ def wiftohex(wifpriv,compressed=False):
 	idx = 68 if compressed else 66
 	num = _b58tonum(wifpriv)
 	if num == False: return False
-	key = hex(num)[2:].rstrip('L')
+	key = "{:x}".format(num)
 	if compressed and key[66:68] != '01': return False
 	round1 = sha256(unhexlify(key[:idx])).digest()
 	round2 = sha256(round1).hexdigest()
@@ -182,16 +173,10 @@ def privnum2pubhex(numpriv,compressed=False):
 	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
 	if compressed:
-		p = '03' if pubkey[-1] in "13579bdf" else '02'
+		p = '02' if pubkey[-1] in "02468ace" else '03'
 		return p+pubkey[:64]
 	else:
 		return '04'+pubkey
 
 def privnum2addr(numpriv,compressed=False):
-	return pubhex2addr(privnum2pubhex(numpriv,compressed))
-
-# Used only in test suite.  To check validity, recode with numtowif()
-def wiftonum(wifpriv):
-	num = _b58tonum(wifpriv)
-	if num == False: return False
-	return (num % (1<<288)) >> 32
+	return hexaddr2addr(pubhex2hexaddr(privnum2pubhex(numpriv,compressed)))

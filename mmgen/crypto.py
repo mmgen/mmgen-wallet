@@ -28,13 +28,41 @@ import mmgen.config as g
 from mmgen.util import *
 from mmgen.term import get_char
 
+crmsg = {
+	'incog_iv_id': """
+   Check that the generated Incog ID above is correct.
+   If it's not, then your incognito data is incorrect or corrupted.
+""",
+	'incog_iv_id_hidden': """
+   Check that the generated Incog ID above is correct.
+   If it's not, then your incognito data is incorrect or corrupted,
+   or you've supplied an incorrect offset.
+""",
+	'usr_rand_notice': """
+You've chosen to not fully trust your OS's random number generator and provide
+some additional entropy of your own.  Please type %s symbols on your keyboard.
+Type slowly and choose your symbols carefully for maximum randomness.  Try to
+use both upper and lowercase as well as punctuation and numerals.  What you
+type will not be displayed on the screen.  Note that the timings between your
+keystrokes will also be used as a source of randomness.
+""",
+	'incorrect_incog_passphrase_try_again': """
+Incorrect passphrase, hash preset, or maybe old-format incog wallet.
+Try again? (Y)es, (n)o, (m)ore information:
+""".strip(),
+	'confirm_seed_id': """
+If the seed ID above is correct but you're seeing this message, then you need
+to exit and re-run the program with the '--old-incog-fmt' option.
+""".strip(),
+}
+
 def encrypt_seed(seed, key):
 	return encrypt_data(seed, key, iv=1, what="seed")
 
 
 def decrypt_seed(enc_seed, key, seed_id, key_id):
 
-	vmsg("Checking key...")
+	vmsg_r("Checking key...")
 	chk1 = make_chksum_8(key)
 	if key_id:
 		if not compare_checksums(chk1, "of key", key_id, "in header"):
@@ -56,12 +84,14 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 				else:
 					msg("Incorrect passphrase")
 
+			vmsg("")
 			return False
 #	else:
 #		qmsg("Generated IDs (Seed/Key): %s/%s" % (chk2,chk1))
 
 	if g.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
 
+	vmsg("OK")
 	return dec_seed
 
 
@@ -97,7 +127,7 @@ def encrypt_data(data, key, iv=1, what="data", verify=True):
 
 def decrypt_data(enc_data, key, iv=1, what="data"):
 
-	vmsg("Decrypting %s with key..." % what)
+	vmsg_r("Decrypting %s with key..." % what)
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
@@ -119,10 +149,10 @@ def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
-def make_key(passwd, salt, hash_preset, what="key", verbose=False):
+def make_key(passwd, salt, hash_preset, what="encryption key", verbose=False):
 
 	if g.verbose or verbose:
-		msg_r("Generating %s.  Please wait..." % what)
+		msg_r("Generating %s from passphrase.\nPlease wait..." % what)
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
 	if g.verbose or verbose:
 		msg("done")
@@ -133,7 +163,7 @@ def make_key(passwd, salt, hash_preset, what="key", verbose=False):
 def get_random_data_from_user(uchars):
 
 	if g.quiet: msg("Enter %s random symbols" % uchars)
-	else:       msg(cmessages['usr_rand_notice'] % uchars)
+	else:       msg(crmsg['usr_rand_notice'] % uchars)
 
 	prompt = "You may begin typing.  %s symbols left: "
 	msg_r(prompt % uchars)
@@ -187,26 +217,60 @@ def get_random(length,opts):
 def get_seed_from_wallet(
 		infile,
 		opts,
-		prompt="{} wallet".format(g.proj_name),
+		prompt_info="{} wallet".format(g.proj_name),
 		silent=False
 		):
 
 	wdata = get_data_from_wallet(infile,silent=silent)
 	label,metadata,hash_preset,salt,enc_seed = wdata
 
-	if g.verbose: display_control_data(*wdata)
+	if g.debug: display_control_data(*wdata)
 
-	passwd = get_mmgen_passphrase(prompt,opts)
+	padd = " "+infile if g.quiet else ""
+	passwd = get_mmgen_passphrase(prompt_info+padd,opts)
 
 	key = make_key(passwd, salt, hash_preset)
 
 	return decrypt_seed(enc_seed, key, metadata[0], metadata[1])
 
 
+def get_hidden_incog_data(opts):
+		# Already sanity-checked:
+		fname,offset,seed_len = opts['from_incog_hidden'].split(",")
+		qmsg("Getting hidden incog data from file '%s'" % fname)
+
+		z = 0 if 'old_incog_fmt' in opts else 8
+		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8) + z
+
+		fsize = check_data_fits_file_at_offset(fname,int(offset),dlen,"read")
+
+		import os
+		f = os.open(fname,os.O_RDONLY)
+		os.lseek(f, int(offset), os.SEEK_SET)
+		data = os.read(f, dlen)
+		os.close(f)
+		qmsg("Data read from file '%s' at offset %s" % (fname,offset),
+				"Data read from file")
+		return data
+
+def confirm_old_format():
+
+	while True:
+		reply = get_char(
+			crmsg['incorrect_incog_passphrase_try_again']+" ").strip("\n\r")
+		if not reply:       msg(""); return False
+		elif reply in 'yY': msg(""); return False
+		elif reply in 'nN': msg("\nExiting at user request"); sys.exit(1)
+		elif reply in 'mM': msg(""); return True
+		else:
+			if g.verbose: msg("\nInvalid reply")
+			else: msg_r("\r")
+
+
 def get_seed_from_incog_wallet(
 		infile,
 		opts,
-		prompt_what="{} incognito wallet".format(g.proj_name),
+		prompt_info="{} incognito wallet".format(g.proj_name),
 		silent=False,
 		hex_input=False
 	):
@@ -224,75 +288,66 @@ def get_seed_from_incog_wallet(
 				msg("Data in file '%s' is not in hexadecimal format" % infile)
 				sys.exit(2)
 		# File could be of invalid length, so check:
-		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len for i in g.seed_lens]
+		z = 0 if 'old_incog_fmt' in opts else 8
+		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len + z for i in g.seed_lens]
+		# New fmt: [56, 64, 72]. Old fmt: [48, 56, 64].
 		if len(d) not in valid_dlens:
-			qmsg("Invalid incognito file size: %s.  Valid sizes (in bytes): %s" %
-					(len(d), " ".join([str(i) for i in valid_dlens]))
-				)
+			vn = [i/8 + g.aesctr_iv_len + g.salt_len + 8 for i in g.seed_lens]
+			if len(d) in vn:
+				msg("Re-run the program without the '--old-incog-fmt' option")
+				sys.exit()
+			else: qmsg(
+			"Invalid incognito file size: %s.  Valid sizes (in bytes): %s" %
+						(len(d), " ".join([str(i) for i in valid_dlens])))
 			return False
 
 	iv, enc_incog_data = d[0:g.aesctr_iv_len], d[g.aesctr_iv_len:]
 
-	msg("Incog ID: %s (IV ID: %s)" % (make_iv_chksum(iv),make_chksum_8(iv)))
+	incog_id = make_iv_chksum(iv)
+	msg("Incog ID: %s (IV ID: %s)" % (incog_id,make_chksum_8(iv)))
 	qmsg("Check the applicable value against your records.")
-	vmsg(cmessages['incog_iv_id_hidden' if "from_incog_hidden" in opts
+	vmsg(crmsg['incog_iv_id_hidden' if "from_incog_hidden" in opts
 			else 'incog_iv_id'])
 
-	passwd = get_mmgen_passphrase(prompt_what,opts)
-
-	qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
 	while True:
-		p = "Enter hash preset for %s wallet (default='%s'): "
-		hp = my_raw_input(p % (g.proj_name, g.hash_preset))
-		if not hp:
-			hp = g.hash_preset; break
-		elif hp in g.hash_presets:
-			break
-		msg("%s: Invalid hash preset" % hp)
+		passwd = get_mmgen_passphrase(prompt_info+" "+incog_id,opts)
 
-	# IV is used BOTH to initialize counter and to salt password!
-	key = make_key(passwd, iv, hp, "wrapper key")
-	d = decrypt_data(enc_incog_data, key, int(hexlify(iv),16), "incog data")
-	if d == False: sys.exit(2)
+		qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
+		hp = get_hash_preset_from_user(what="incog wallet")
 
-	salt,enc_seed = d[0:g.salt_len], d[g.salt_len:]
+		# IV is used BOTH to initialize counter and to salt password!
+		key = make_key(passwd, iv, hp, "wrapper key")
+		d = decrypt_data(enc_incog_data, key, int(hexlify(iv),16), "incog data")
 
-	key = make_key(passwd, salt, hp, "main key")
-	vmsg("Key ID: %s" % make_chksum_8(key))
+		salt,enc_seed = d[0:g.salt_len], d[g.salt_len:]
 
-	seed = decrypt_seed(enc_seed, key, "", "")
-	qmsg("Seed ID: %s.  Check that this value is correct." % make_chksum_8(seed))
-	vmsg(cmessages['incog_key_id_hidden' if "from_incog_hidden" in opts
-			else 'incog_key_id'])
+		key = make_key(passwd, salt, hp, "main key")
+		vmsg("Key ID: %s" % make_chksum_8(key))
+
+		seed = decrypt_seed(enc_seed, key, "", "")
+		old_fmt_sid = make_chksum_8(seed)
+
+		def confirm_correct_seed_id(sid):
+			m = "Seed ID: %s.  Is the Seed ID correct?" % sid
+			return keypress_confirm(m, True)
+
+		if 'old_incog_fmt' in opts:
+			if confirm_correct_seed_id(old_fmt_sid):
+				break
+		else:
+			chk,seed_maybe = seed[:8],seed[8:]
+			if sha256(seed_maybe).digest()[:8] == chk:
+				msg("Passphrase and hash preset are correct")
+				seed = seed_maybe
+				break
+			elif confirm_old_format():
+				if confirm_correct_seed_id(old_fmt_sid):
+					break
 
 	return seed
 
 
-def wallet_to_incog_data(infile,opts):
-
-	d = get_data_from_wallet(infile,silent=True)
-	seed_id,key_id,preset,salt,enc_seed = \
-			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
-
-	passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name),opts)
-	key = make_key(passwd, salt, preset, "main key")
-	# We don't need the seed; just do this to verify password.
-	if decrypt_seed(enc_seed, key, seed_id, key_id) == False:
-		sys.exit(2)
-
-	iv = get_random(g.aesctr_iv_len,opts)
-	iv_id = make_iv_chksum(iv)
-	msg("Incog ID: %s" % iv_id)
-
-	# IV is used BOTH to initialize counter and to salt password!
-	key = make_key(passwd, iv, preset, "wrapper key")
-	m = "incog data"
-	wrap_enc = encrypt_data(salt + enc_seed, key, int(hexlify(iv),16), m)
-
-	return iv+wrap_enc,seed_id,key_id,iv_id,preset
-
-
-def get_seed(infile,opts,silent=False):
+def _get_seed(infile,opts,silent=False,seed_id=""):
 
 	ext = get_extension(infile)
 
@@ -313,8 +368,9 @@ def get_seed(infile,opts,silent=False):
 		else: msg("No seed source type specified and no file supplied")
 		sys.exit(2)
 
+	seed_id_str = " for seed ID "+seed_id if seed_id else ""
 	if source == "mnemonic":
-		prompt = "Enter mnemonic: "
+		prompt = "Enter mnemonic%s: " % seed_id_str
 		words = get_words(infile,"mnemonic data",prompt,opts)
 		wl = get_default_wordlist()
 		from mmgen.mnemonic import get_seed_from_mnemonic
@@ -323,17 +379,17 @@ def get_seed(infile,opts,silent=False):
 		if 'from_brain' not in opts:
 			msg("'--from-brain' parameters must be specified for brainwallet file")
 			sys.exit(2)
-		prompt = "Enter brainwallet passphrase: "
+		prompt = "Enter brainwallet passphrase%s: " % seed_id_str
 		words = get_words(infile,"brainwallet data",prompt,opts)
 		seed = _get_seed_from_brain_passphrase(words,opts)
 	elif source == "seed":
-		prompt = "Enter seed in %s format: " % g.seed_ext
+		prompt = "Enter seed%s in %s format: " % (seed_id_str,g.seed_ext)
 		words = get_words(infile,"seed data",prompt,opts)
 		seed = get_seed_from_seed_data(words)
 	elif source == "wallet":
 		seed = get_seed_from_wallet(infile, opts, silent=silent)
 	elif source == "incognito wallet":
-		h = True if ext == g.incog_hex_ext or 'from_incog_hex' in opts else False
+		h = ext == g.incog_hex_ext or 'from_incog_hex' in opts
 		seed = get_seed_from_incog_wallet(infile, opts, silent=silent, hex_input=h)
 
 
@@ -348,10 +404,10 @@ def get_seed(infile,opts,silent=False):
 
 
 # Repeat if entered data is invalid
-def get_seed_retry(infile,opts):
+def get_seed_retry(infile,opts,seed_id=""):
 	silent = False
 	while True:
-		seed = get_seed(infile,opts,silent=silent)
+		seed = _get_seed(infile,opts,silent=silent,seed_id=seed_id)
 		silent = True
 		if seed: return seed
 
@@ -385,7 +441,7 @@ def mmgen_encrypt(data,what="data",hash_preset='',opts={}):
 	return salt+iv+enc_d
 
 
-def mmgen_decrypt(data,what="data",hash_preset='',opts={}):
+def mmgen_decrypt(data,what="data",hash_preset=""):
 	dstart = salt_len + g.aesctr_iv_len
 	salt,iv,enc_d = data[:salt_len],data[salt_len:dstart],data[dstart:]
 	vmsg("Preparing to decrypt %s" % what)
@@ -396,8 +452,14 @@ def mmgen_decrypt(data,what="data",hash_preset='',opts={}):
 	key = make_key(passwd, salt, hp)
 	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
-		vmsg("Success. Passphrase and hash preset are correct")
+		vmsg("OK")
 		return dec_d[sha256_len+nonce_len:]
 	else:
 		msg("Incorrect passphrase or hash preset")
 		return False
+
+def mmgen_decrypt_retry(d,what="data"):
+	while True:
+		d_dec = mmgen_decrypt(d,what)
+		if d_dec: return d_dec
+		msg("Trying again...")

@@ -28,7 +28,8 @@ email = "<mmgen-py@yandex.com>"
 Cdates = '2013-2014'
 version = '0.7.7'
 
-quiet,verbose = False,False
+quiet,verbose,no_keyconv = False,False,False
+
 min_screen_width = 80
 max_tx_comment_len = 72
 
@@ -52,18 +53,18 @@ sigtx_ext    = "sig"
 addrfile_ext = "addrs"
 addrfile_chksum_ext = "chk"
 keyfile_ext  = "keys"
-keylist_ext  = "keylist"
+keyaddrfile_ext  = "akeys"
 mmenc_ext    = "mmenc"
 
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 
-cl_override_vars = 'seed_len','hash_preset','usr_randchars'
+dfl_vars = "seed_len","hash_preset","usr_randchars"
 
 seed_lens = 128,192,256
 seed_len  = 256
 
-mnemonic_lens = [i / 32 * 3 for i in seed_lens]
+mn_lens = [i / 32 * 3 for i in seed_lens]
 
 http_timeout = 30
 

@@ -24,7 +24,7 @@ import sys
 from mmgen.Opts   import *
 from mmgen.license import *
 from mmgen.util import *
-from mmgen.tx import connect_to_bitcoind,parse_addrs_file
+from mmgen.tx import connect_to_bitcoind,parse_addrfile,parse_keyaddr_file
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -32,38 +32,44 @@ help_data = {
                      watching wallet""".format(pnm=g.proj_name),
 	'usage':"[opts] [mmgen address file]",
 	'options': """
--h, --help        Print this help message
--l, --addrlist= f Import the non-mmgen Bitcoin addresses listed in file 'f'
--q, --quiet       Suppress warnings
--r, --rescan      Rescan the blockchain.  Required if address to import is
-                  on the blockchain and has a balance.  Rescanning is slow.
+-h, --help         Print this help message
+-l, --addrlist     Address source is a flat list of addresses
+-k, --keyaddr-file Address source is a key-address file
+-q, --quiet        Suppress warnings
+-r, --rescan       Rescan the blockchain.  Required if address to import is
+                   on the blockchain and has a balance.  Rescanning is slow.
 """
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
 
-if len(cmd_args) != 1 and not 'addrlist' in opts:
-	msg("You must specify an mmgen address list (and/or non-mmgen addresses with the '--addrlist' option)")
-	sys.exit(1)
-
-if cmd_args:
-	check_infile(cmd_args[0])
-	seed_id,addr_data = parse_addrs_file(cmd_args[0])
+if len(cmd_args) == 1:
+	infile = cmd_args[0]
+	check_infile(infile)
+	if 'addrlist' in opts:
+		lines = get_lines_from_file(infile,"non-{} addresses".format(g.proj_name),
+				trim_comments=True)
+		addr_list = [(None,l) for l in lines]
+		seed_id = ""
+	else:
+		addr_data = {}
+		pf = parse_keyaddr_file if 'keyaddr_file' in opts else parse_addrfile
+		pf(infile,addr_data)
+		seed_id = addr_data.keys()[0]
+		e = addr_data[seed_id]
+		addr_list = [(k,e[k][0],e[k][1]) for k in e.keys()]
 else:
-	seed_id,addr_data = "",[]
-
-if 'addrlist' in opts:
-	lines = get_lines_from_file(opts['addrlist'],"non-mmgen addresses",
-			trim_comments=True)
-	addr_data += [(None,l) for l in lines]
+	msg_r("You must specify an mmgen address list (or a list of ")
+	msg("non-%s addresses with\nthe '--addrlist' option)" % g.proj_name)
+	sys.exit(1)
 
 from mmgen.bitcoin import verify_addr
 qmsg_r("Validating addresses...")
-for i in addr_data:
+for n,i in enumerate(addr_list,1):
 	if not verify_addr(i[1],verbose=True):
 		msg("%s: invalid address" % i)
 		sys.exit(2)
-qmsg("OK")
+qmsg("OK. %s addresses%s" % (n," from seed ID "+seed_id if seed_id else ""))
 
 import mmgen.config as g
 g.http_timeout = 3600
@@ -94,8 +100,9 @@ def import_address(addr,label,rescan):
 		err_flag = True
 
 
-w1 = len(str(len(addr_data))) * 2 + 2
-w2 = len(str(max([i[0] for i in addr_data if i[0]]))) + 12
+w1 = len(str(len(addr_list))) * 2 + 2
+w2 = "" if 'addrlist' in opts else \
+		len(str(max([i[0] for i in addr_list if i[0]]))) + 12 \
 
 if "rescan" in opts:
 	import threading
@@ -105,10 +112,9 @@ else:
 	msg_fmt = "\r%-" + str(w1) + "s %-34s %-" + str(w2) + "s"
 
 msg("Importing addresses")
-for n,i in enumerate(addr_data):
+for n,i in enumerate(addr_list):
 	if i[0]:
-		comment = " " + i[2] if len(i) == 3 else ""
-		label = "%s:%s%s" % (seed_id,i[0],comment)
+		label = "%s:%s%s" % (seed_id,i[0], (" "+i[2] if i[2] else ""))
 	else: label = "non-mmgen"
 
 	if "rescan" in opts:
@@ -123,7 +129,7 @@ for n,i in enumerate(addr_data):
 				elapsed = int(time.time() - start)
 				msg_r(msg_fmt % (
 						secs_to_hms(elapsed),
-						("%s/%s:" % (n+1,len(addr_data))),
+						("%s/%s:" % (n+1,len(addr_list))),
 						i[1], "(" + label + ")"
 					)
 				)
@@ -134,7 +140,7 @@ for n,i in enumerate(addr_data):
 				break
 	else:
 		import_address(i[1],label,rescan=False)
-		msg_r(msg_fmt % (("%s/%s:" % (n+1,len(addr_data))),
+		msg_r(msg_fmt % (("%s/%s:" % (n+1,len(addr_list))),
 							i[1], "(" + label + ")"))
 		if err_flag: msg("\nImport failed"); sys.exit(2)
 		msg(" - OK")

@@ -17,8 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mnemonic.py:  Mnemomic routines for the MMGen suite
+mnemonic.py:  Mnemonic routines for the MMGen suite
 """
+
+import sys
+from mmgen.util import msg,msg_r,make_chksum_8
+import mmgen.config as g
 
 wl_checksums = {
 	"electrum": '5ca31424',
@@ -27,70 +31,77 @@ wl_checksums = {
 
 # These are the only base-1626 specific configs:
 mn_base = 1626
-def mn_fill(mn):    return len(mn) * 8 / 3
-def mn_len(hexnum): return len(hexnum) * 3 / 8
+def mn2hex_pad(mn):     return len(mn) * 8 / 3
+def hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
 
-import sys
-
-from mmgen.util import msg,make_chksum_8
-import mmgen.config as g
-
-# These universal base-conversion routines work for any base
-
-def baseNtohex(base,words,wordlist,fill=0):
+# Universal base-conversion routines:
+def baseNtohex(base,words,wordlist,pad=0):
 	deconv = \
 		[wordlist.index(words[::-1][i])*(base**i) for i in range(len(words))]
-	return hex(sum(deconv))[2:].rstrip('L').zfill(fill)
+	return ("{:0%sx}"%pad).format(sum(deconv))
 
-def hextobaseN(base,hexnum,wordlist,mn_len):
-	num = int(hexnum,16)
-	return [wordlist[num / (base**i) % base] for i in range(mn_len)][::-1]
+def hextobaseN(base,hexnum,wordlist,pad=0):
+	num,ret = int(hexnum,16),[]
+	while num:
+		ret.append(num % base)
+		num /= base
+	return [wordlist[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 
-def get_seed_from_mnemonic(mn,wl):
+def get_seed_from_mnemonic(mn,wl,silent=False,label=""):
 
-	if len(mn) not in g.mnemonic_lens:
-		msg("Bad mnemonic (%i words).  Allowed numbers of words: %s" %
-				(len(mn),", ".join([str(i) for i in g.mnemonic_lens])))
-		return False
+	if len(mn) not in g.mn_lens:
+		msg("Invalid mnemonic (%i words).  Allowed numbers of words: %s" %
+				(len(mn),", ".join([str(i) for i in g.mn_lens])))
+		sys.exit(3)
 
 	for n,w in enumerate(mn,1):
 		if w not in wl:
-			msg("Bad mnemonic: word number %s is not in the wordlist" % n)
-			return False
+			msg("Invalid mnemonic: word #%s is not in the wordlist" % n)
+			sys.exit(3)
 
 	from binascii import unhexlify
-	seed = unhexlify(baseNtohex(mn_base,mn,wl,mn_fill(mn)))
-	msg("Valid mnemomic for seed ID %s" % make_chksum_8(seed))
+	hseed = baseNtohex(mn_base,mn,wl,mn2hex_pad(mn))
 
-	return seed
+	rev = hextobaseN(mn_base,hseed,wl,hex2mn_pad(hseed))
+	if rev != mn:
+		msg("ERROR: mnemonic recomputed from seed not the same as original")
+		msg("Recomputed mnemonic:\n%s" % " ".join(rev))
+		sys.exit(3)
+
+	if not silent:
+		msg("Valid mnemonic for seed ID %s" % make_chksum_8(unhexlify(hseed)))
+
+	return unhexlify(hseed)
 
 
-def get_mnemonic_from_seed(seed, wl, label, print_info=False):
+def get_mnemonic_from_seed(seed, wl, label="", verbose=False):
+
+	if len(seed)*8 not in g.seed_lens:
+		msg("%s: invalid seed length" % len(seed))
+		sys.exit(3)
 
 	from binascii import hexlify
 
-	if print_info:
-		msg("Wordlist:    %s" % label.capitalize())
-		msg("Seed length: %s bits" % (len(seed) * 8))
-		msg("Seed:        %s" % hexlify(seed))
-
 	hseed = hexlify(seed)
-	mn = hextobaseN(mn_base,hseed,wl,mn_len(hseed))
+	mn = hextobaseN(mn_base,hseed,wl,hex2mn_pad(hseed))
 
-	if print_info:
+	if verbose:
+		msg("Wordlist:    %s"          % label.capitalize())
+		msg("Seed length: %s bits"     % (len(seed) * 8))
+		msg("Seed:        %s"          % hseed)
 		msg("mnemonic (%s words):\n%s" % (len(mn), " ".join(mn)))
 
-	if int(baseNtohex(mn_base,mn,wl,mn_fill(mn)),16) != int(hexlify(seed),16):
+	rev = baseNtohex(mn_base,mn,wl,mn2hex_pad(mn))
+	if rev != hseed:
 		msg("ERROR: seed recomputed from wordlist not the same as original seed!")
-		msg("Recomputed seed %s" % baseNtohex(mn_base,mn,wl,mn_fill(mn)))
+		msg("Original seed:   %s" % hseed)
+		msg("Recomputed seed: %s" % rev)
 		sys.exit(3)
 
 	return mn
 
 
-def check_wordlist(wl_str,label):
-
-	wl = wl_str.strip().split("\n")
+def check_wordlist(wl,label):
 
 	print "Wordlist: %s" % label.capitalize()
 

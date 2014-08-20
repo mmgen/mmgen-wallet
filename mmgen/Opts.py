@@ -57,7 +57,7 @@ def parse_opts(argv,help_data):
 	('outdir', 'export_incog_hidden'),
 	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),
 	('export_incog','export_incog_hex','export_incog_hidden','export_mnemonic',
-	 'export_seed'),
+	'export_seed'),
 	('quiet','verbose')
 	): warn_incompatible_opts(opts,l)
 
@@ -65,12 +65,14 @@ def parse_opts(argv,help_data):
 	if not check_opts(opts,long_opts): sys.exit(1)
 
 	# If unset, set these to default values in mmgen.config:
-	for v in g.cl_override_vars:
+	for v in g.dfl_vars:
 		if v in opts: typeconvert_override_var(opts,v)
 		else: opts[v] = eval("g."+v)
 
-	if "verbose" in opts: g.verbose = True
-	if "quiet" in opts:   g.quiet = True
+	# Opposite of above: if set, override the default values in mmgen.config:
+	if 'no_keyconv' in opts: g.no_keyconv = opts['no_keyconv']
+	if 'verbose' in opts:    g.verbose = opts['verbose']
+	if 'quiet' in opts:      g.quiet = opts['quiet']
 
 	if g.debug: print "opts after typeconvert: %s" % opts
 
@@ -123,8 +125,8 @@ def check_opts(opts,long_opts):
 		what = "parameter for '--%s' option" % opt.replace("_","-")
 
 		# Check for file existence and readability
-		if opt in ('keys_from_file','all_keys_from_file','addrlist',
-				'passwd_file','keysforaddrs'):
+		if opt in ('keys_from_file','mmgen_keys_from_file',
+				'passwd_file','keysforaddrs','comment_file'):
 			check_infile(val)  # exits on error
 			continue
 
@@ -170,7 +172,7 @@ def check_opts(opts,long_opts):
 			if not opt_is_in_list(val,g.hash_presets.keys(),what): return False
 		elif opt == 'usr_randchars':
 			if not opt_is_int(val,what): return False
-			if val == '0': return True
+			if val == '0': continue
 			if not opt_compares(val,">=",g.min_urandchars,what): return False
 			if not opt_compares(val,"<=",g.max_urandchars,what): return False
 		else:
@@ -187,6 +189,7 @@ def typeconvert_override_var(opts,opt):
 	if   vtype == int:   f,t = int,"an integer"
 	elif vtype == str:   f,t = str,"a string"
 	elif vtype == float: f,t = float,"a float"
+	elif vtype == bool:  f,t = bool,"a boolean value"
 
 	try:
 		opts[opt] = f(opts[opt])

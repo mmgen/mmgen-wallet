@@ -55,6 +55,9 @@ help_data = {
                            i.e. a "brainwallet", using seed length 'l' and
                            hash preset 'p' (comma-separated)
 -g, --from-incog           Generate wallet from an incognito-format wallet
+-G, --from-incog-hidden=   f,o,l  Generate keys from incognito data in file
+                           'f' at offset 'o', with seed length of 'l'
+-o, --old-incog-fmt        Use old (pre-0.7.8) incog format
 -m, --from-mnemonic        Generate wallet from an Electrum-like mnemonic
 -s, --from-seed            Generate wallet from a seed in .{g.seed_ext} format
 """.format(seed_lens=",".join([str(i) for i in g.seed_lens]), g=g),
@@ -94,6 +97,30 @@ in all future invocations with that passphrase.
 """.format(g=g)
 }
 
+wmsg = {
+	'choose_wallet_passphrase': """
+You must choose a passphrase to encrypt the wallet with.  A key will be
+generated from your passphrase using a hash preset of '%s'.  Please note that
+no strength checking of passphrases is performed.  For an empty passphrase,
+just hit ENTER twice.
+""".strip(),
+	'brain_warning': """
+############################## EXPERTS ONLY! ##############################
+
+A brainwallet will be secure only if you really know what you're doing and
+have put much care into its creation.  {} assumes no responsibility for
+coins stolen as a result of a poorly crafted brainwallet passphrase.
+
+A key will be generated from your passphrase using the parameters requested
+by you: seed length {}, hash preset '{}'.  For brainwallets it's highly
+recommended to use one of the higher-numbered presets
+
+Remember the seed length and hash preset parameters you've specified.  To
+generate the correct keys/addresses associated with this passphrase in the
+future, you must continue using these same parameters
+""",
+}
+
 opts,cmd_args = parse_opts(sys.argv,help_data)
 
 if 'show_hash_presets' in opts: show_hash_presets()
@@ -121,16 +148,17 @@ else: usage(help_data)
 do_license_msg()
 
 if 'from_brain' in opts and not g.quiet:
-	confirm_or_exit(cmessages['brain_warning'].format(
+	confirm_or_exit(wmsg['brain_warning'].format(
 			g.proj_name, *get_from_brain_opt_params(opts)),
 		"continue")
 
 for i in 'from_mnemonic','from_brain','from_seed','from_incog':
 	if infile or (i in opts):
 		seed = get_seed_retry(infile,opts)
-		if "from_incog" in opts or get_extension(infile) == g.incog_ext:
-			qmsg(cmessages['incog'] % make_chksum_8(seed))
-		else: qmsg("")
+#		if "from_incog" in opts or get_extension(infile) == g.incog_ext:
+#			qmsg(cmessages['incog'] % make_chksum_8(seed))
+#		else: qmsg("")
+		qmsg("")
 		break
 else:
 	# Truncate random data for smaller seed lengths
@@ -138,7 +166,7 @@ else:
 
 salt = sha256(get_random(128,opts)).digest()[:g.salt_len]
 
-qmsg(cmessages['choose_wallet_passphrase'] % opts['hash_preset'])
+qmsg(wmsg['choose_wallet_passphrase'] % opts['hash_preset'])
 
 passwd = get_new_passphrase("new {} wallet".format(g.proj_name), opts)
 

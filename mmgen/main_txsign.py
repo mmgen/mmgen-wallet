@@ -26,7 +26,6 @@ import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.license import *
 from mmgen.tx import *
-from mmgen.util import msg,qmsg
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -39,16 +38,18 @@ help_data = {
 -i, --info               Display information about the transaction and exit
 -I, --tx-id              Display transaction ID and exit
 -k, --keys-from-file= f  Provide additional keys for non-{pnm} addresses
--K, --all-keys-from-file=f  Like '-k', only use the keyfile as key source
-                         for ALL inputs, including {pnm} ones.  Can be used
-                         for online signing without an {pnm} seed source.
-                         {pnm}-to-BTC mappings can optionally be verified
-                         using address file(s) listed on the command line
+-K, --no-keyconv         Force use of internal libraries for address gener-
+                         ation, even if 'keyconv' is available
+-M, --mmgen-keys-from-file=f  Provide keys for {pnm} addresses in a key-
+                         address file (output of '{pnl}-keygen'). Permits
+                         online signing without an {pnm} seed source.
+                         The key-address file is also used to verify
+                         {pnm}-to-BTC mappings, so its checksum should
+                         be recorded by the user.
 -P, --passwd-file=    f  Get MMGen wallet or bitcoind passphrase from file 'f'
 -q, --quiet              Suppress warnings; overwrite files without
                          prompting
 -v, --verbose            Produce more verbose output
--V, --skip-key-preverify Skip optional key pre-verification step
 -b, --from-brain=    l,p Generate keys from a user-created password,
                          i.e. a "brainwallet", using seed length 'l' and
                          hash preset 'p'
@@ -57,9 +58,10 @@ help_data = {
 -X, --from-incog-hex     Generate keys from an incognito hexadecimal wallet
 -G, --from-incog-hidden= f,o,l  Generate keys from incognito data in file
                          'f' at offset 'o', with seed length of 'l'
+-o, --old-incog-fmt      Use old (pre-0.7.8) incog format
 -m, --from-mnemonic      Generate keys from an electrum-like mnemonic
 -s, --from-seed          Generate keys from a seed in .{g.seed_ext} format
-""".format(g=g,pnm=g.proj_name),
+""".format(g=g,pnm=g.proj_name,pnl=g.proj_name.lower()),
 	'notes': """
 
 Transactions with either {pnm} or non-{pnm} input addresses may be signed.
@@ -89,17 +91,204 @@ Seed data supplied in files must have the following extensions:
 """.format(g=g,pnm=g.proj_name,pnl=g.proj_name.lower())
 }
 
+wmsg = {
+	'mm2btc_mapping_error': """
+MMGen -> BTC address mappings differ!
+From %-18s %s -> %s
+From %-18s %s -> %s
+""".strip(),
+	'removed_dups': """
+Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
+""".strip().format(pnm=g.proj_name),
+}
+
+def get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts):
+
+	if seed_id in saved_seeds.keys():
+		return saved_seeds[seed_id]
+
+	from mmgen.crypto import get_seed_retry
+
+	while True:
+		if infiles:
+			seed = get_seed_retry(infiles.pop(0),opts)
+		elif "from_brain" in opts or "from_mnemonic" in opts \
+			or "from_seed" in opts or "from_incog" in opts:
+			qmsg("Need seed data for seed ID %s" % seed_id)
+			seed = get_seed_retry("",opts,seed_id)
+			msg("User input produced seed ID %s" % make_chksum_8(seed))
+		else:
+			msg("ERROR: No seed source found for seed ID: %s" % seed_id)
+			sys.exit(2)
+
+		sid = make_chksum_8(seed)
+		saved_seeds[sid] = seed
+
+		if sid == seed_id: return seed
+
+
+def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts):
+
+	seed_ids = set([i[:8] for i in mmgen_addrs])
+	vmsg("Need seed%s: %s" % (suf(seed_ids,"k")," ".join(seed_ids)))
+	d = []
+
+	from mmgen.addr import generate_addrs
+	for seed_id in seed_ids:
+		# Returns only if seed is found
+		seed = get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts)
+		addr_nums = [int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id]
+#		num sec wif addr
+		d += [("{}:{}".format(seed_id,r.num),r.addr,r.wif)
+			for r in generate_addrs(seed,addr_nums,{'gen_what':"ka"},seed_id)]
+	return d
+
+
+def sign_transaction(c,tx_hex,tx_num_str,sig_data,keys=None):
+
+	if keys:
+		qmsg("Passing %s key%s to bitcoind" % (len(keys),suf(keys,"k")))
+		if g.debug: print "Keys:\n  %s" % "\n  ".join(keys)
+
+	msg_r("Signing transaction{}...".format(tx_num_str))
+	from mmgen.rpc import exceptions
+	try:
+		sig_tx = c.signrawtransaction(tx_hex,sig_data,keys)
+	except exceptions.InvalidAddressOrKey:
+		msg("failed\nInvalid address or key")
+		sys.exit(3)
+
+	return sig_tx
+
+
+def sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts):
+
+	try:
+		sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
+	except:
+		from mmgen.rpc import exceptions
+		msg("Using keys in wallet.dat as per user request")
+		prompt = "Enter passphrase for bitcoind wallet: "
+		while True:
+			passwd = get_bitcoind_passphrase(prompt,opts)
+
+			try:
+				c.walletpassphrase(passwd, 9999)
+			except exceptions.WalletPassphraseIncorrect:
+				msg("Passphrase incorrect")
+			else:
+				msg("Passphrase OK"); break
+
+		sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
+
+		msg("Locking wallet")
+		try:
+			c.walletlock()
+		except:
+			msg("Failed to lock wallet")
+
+	return sig_tx
+
+
+def check_maps_from_seeds(maplist,label,infiles,saved_seeds,opts,return_keys=False):
+
+	if not maplist: return []
+	qmsg("Checking MMGen -> BTC address mappings for %ss (from seeds)" % label)
+	d = get_keys_for_mmgen_addrs(maplist.keys(),infiles,saved_seeds,opts)
+#	0=mmaddr 1=addr 2=wif
+	m = dict([(e[0],e[1]) for e in d])
+	for a,b in zip(sorted(m),sorted(maplist)):
+		if a != b:
+			al,bl = "generated seed:","tx file:"
+			msg(wmsg['mm2btc_mapping_error'] % (al,a,m[a],bl,b,maplist[b]))
+			sys.exit(3)
+	if return_keys:
+		ret = [e[2] for e in d]
+		vmsg("Added %s wif key%s from seeds" % (len(ret),suf(ret,"k")))
+		return ret
+
+def missing_keys_errormsg(addrs):
+	print """
+A key file must be supplied (or use the '--use-wallet-dat' option)
+for the following non-{} address{}:\n    {}""".format(
+	g.proj_name,suf(addrs,"a"),"\n    ".join(addrs)).strip()
+
+
+def parse_mmgen_keyaddr_file(opts):
+	adata = {}
+	parse_keyaddr_file(opts['mmgen_keys_from_file'],adata)
+	for sid in adata.keys(): # one seed id, one loop
+		idxs = adata[sid]
+		count = len(idxs.keys())
+		vmsg("Found %s wif key%s for seed ID %s" % (count,suf(count,"k"),sid))
+		# idx: (0=addr, 1=comment 2=wif) -> mmaddr: (0=addr, 1=wif)
+		return dict([("{}:{}".format(sid,k),(idxs[k][0],idxs[k][2]))
+				for k in idxs.keys()])
+
+
+def parse_keylist(opts,from_file):
+	fn = opts['keys_from_file']
+	d = get_data_from_file(fn,"non-%s keylist" % g.proj_name)
+	enc_ext = get_extension(fn) == g.mmenc_ext
+	if enc_ext or not is_utf8(d):
+		if not enc_ext: qmsg("Keylist file appears to be encrypted")
+		from crypto import mmgen_decrypt_retry
+		d = mmgen_decrypt_retry(d,"encrypted keylist")
+	# Check for duplication with key-address file
+	keys_all = set(remove_comments(d.split("\n")))
+	d = from_file['mmdata']
+	kawifs = [d[k][1] for k in d.keys()]
+	keys = [k for k in keys_all if k not in kawifs]
+	removed = len(keys_all) - len(keys)
+	if removed: vmsg(wmsg['removed_dups'] % (removed,suf(removed,"k")))
+	addrs = []
+	wif2addr_f = get_wif2addr_f()
+	for n,k in enumerate(keys,1):
+		qmsg_r("\rGenerating addresses from keylist: %s/%s" % (n,len(keys)))
+		addrs.append(wif2addr_f(k))
+	qmsg("\rGenerated addresses from keylist: %s/%s " % (n,len(keys)))
+
+	return dict(zip(addrs,keys))
+
+
+# Check inputs and outputs maps against key-address file, deleting entries:
+def check_maps_from_kafile(imap,what,kadata,return_keys=False):
+	qmsg("Checking MMGen -> BTC address mappings for %ss (from key-address file)" % what)
+	ret = []
+	for k in imap.keys():
+		if k in kadata.keys():
+			if kadata[k][0] == imap[k]:
+				del imap[k]
+				ret += [kadata[k][1]]
+			else:
+				kl,il = "key-address file:","tx file:"
+				msg(wmsg['mm2btc_mapping_error']%(kl,k,kadata[k][0],il,k,imap[k]))
+				sys.exit(2)
+	if ret: vmsg("Removed %s address%s from %ss map" % (len(ret),suf(ret,"a"),what))
+	if return_keys:
+		vmsg("Added %s wif key%s from %ss map" % (len(ret),suf(ret,"k"),what))
+		return ret
+
+
+def get_keys_from_keylist(kldata,other_addrs):
+	ret = []
+	for addr in other_addrs[:]:
+		if addr in kldata.keys():
+			ret += [kldata[addr]]
+			other_addrs.remove(addr)
+	vmsg("Added %s wif key%s from user-supplied keylist" %
+			(len(ret),suf(ret,"k")))
+	return ret
+
+
 opts,infiles = parse_opts(sys.argv,help_data)
 
 for l in (
-('tx_id', 'info'),
-('keys_from_file','all_keys_from_file')
+('tx_id', 'info')
 ): warn_incompatible_opts(opts,l)
 
 if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
 	opts['from_incog'] = True
-if 'all_keys_from_file' in opts:
-	opts['keys_from_file'] = opts['all_keys_from_file']
 
 if not infiles: usage(help_data)
 for i in infiles: check_infile(i)
@@ -108,24 +297,15 @@ c = connect_to_bitcoind()
 
 saved_seeds = {}
 tx_files  = [i for i in set(infiles) if get_extension(i) == g.rawtx_ext]
-addrfiles = [a for a in set(infiles) if get_extension(a) == g.addrfile_ext]
-seed_files  = list(set(infiles) - set(tx_files) - set(addrfiles))
+seed_files  = list(set(infiles) - set(tx_files))
 
 if not "info" in opts: do_license_msg(immed=True)
 
+from_file = { 'mmdata':{}, 'kldata':{} }
+if 'mmgen_keys_from_file' in opts:
+	from_file['mmdata'] = parse_mmgen_keyaddr_file(opts) or {}
 if 'keys_from_file' in opts:
-	fn = opts['keys_from_file']
-	d = get_data_from_file(fn,"keylist")
-	if get_extension(fn) == g.mmenc_ext or not \
-		  is_btc_key(remove_comments(d.split("\n"))[0][:55]):
-		qmsg("Keylist appears to be encrypted")
-		from mmgen.crypto import mmgen_decrypt
-		while True:
-			d_dec = mmgen_decrypt(d,"encrypted keylist","",opts)
-			if d_dec: d = d_dec; break
-			msg("Trying again...")
-	keys_from_file = remove_comments(d.split("\n"))
-else: keys_from_file = []
+	from_file['kldata'] = parse_keylist(opts,from_file) or {}
 
 tx_num_str = ""
 for tx_num,tx_file in enumerate(tx_files,1):
@@ -136,7 +316,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	m = "" if 'tx_id' in opts else "transaction data"
 	tx_data = get_lines_from_file(tx_file,m)
 
-	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,tx_file)
+	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,tx_file)
 	qmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	if 'tx_id' in opts:
@@ -147,56 +327,47 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata)
 		sys.exit(0)
 
-# Are inputs mmgen addresses?
-	mmgen_inputs = [i for i in inputs_data if parse_mmgen_label(i['account'])[0]]
-	other_inputs = [i for i in inputs_data if not parse_mmgen_label(i['account'])[0]]
-
-	if 'all_keys_from_file' in opts: other_inputs = inputs_data
-
-	keys = keys_from_file
-
-	if other_inputs and not keys and not 'use_wallet_dat' in opts:
-		missing_keys_errormsg(other_inputs)
-		sys.exit(2)
-
-	if other_inputs and keys and not 'skip_key_preverify' in opts:
-		addrs = [i['address'] for i in other_inputs]
-		mm_inputs = mmgen_inputs if 'all_keys_from_file' in opts else []
-		preverify_keys(addrs, keys, mm_inputs)
-		opts['skip_key_preverify'] = True
-
-	if 'all_keys_from_file' in opts:
-		if addrfiles:
-			check_mmgen_to_btc_addr_mappings_addrfile(mmgen_inputs,b2m_map,addrfiles)
-		else:
-			confirm_or_exit(txmsg['skip_mapping_checks_warning'],"continue")
-	else:
-		check_mmgen_to_btc_addr_mappings(
-				mmgen_inputs,b2m_map,seed_files,saved_seeds,opts)
-
 	p = "View data for transaction{}? (y)es, (N)o, (v)iew in pager"
 	reply = prompt_and_get_char(p.format(tx_num_str),"YyNnVv",enter_ok=True)
 	if reply and reply in "YyVv":
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
-							True if reply in "Vv" else False)
+		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,reply in "Vv")
 
+	# Start
+	other_addrs = list(set([i['address'] for i in inputs_data
+			if not parse_mmgen_label(i['account'])[0]]))
+
+	keys = get_keys_from_keylist(from_file['kldata'],other_addrs)
+
+	if other_addrs and not 'use_wallet_dat' in opts:
+		missing_keys_errormsg(other_addrs)
+		sys.exit(2)
+
+	imap = dict([(i['account'].split()[0],i['address']) for i in inputs_data
+					if parse_mmgen_label(i['account'])[0]])
+	omap = dict([(j[0],i) for i,j in b2m_map.items()])
+	sids = set([i[:8] for i in imap.keys()])
+
+	keys += check_maps_from_kafile(imap,"input",from_file['mmdata'],True)
+	check_maps_from_kafile(omap,"output",from_file['mmdata'])
+
+	keys += check_maps_from_seeds(imap,"input",seed_files,saved_seeds,opts,True)
+	check_maps_from_seeds(omap,"output",seed_files,saved_seeds,opts)
+
+	extra_sids = set(saved_seeds.keys()) - sids
+	if extra_sids:
+		msg("Unused seed ID%s: %s" %
+			(suf(extra_sids,"k")," ".join(extra_sids)))
+
+	# Begin signing
 	sig_data = [
 		{"txid":i['txid'],"vout":i['vout'],"scriptPubKey":i['scriptPubKey']}
 			for i in inputs_data]
 
-	if mmgen_inputs and not 'all_keys_from_file' in opts:
-		ml = [i['account'].split()[0] for i in mmgen_inputs]
-		keys += get_keys_for_mmgen_addrs(ml,seed_files,saved_seeds,opts)
-
-		if 'use_wallet_dat' in opts:
-			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts)
-		else:
-			sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
-	elif other_inputs:
-		if keys:
-			sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
-		else:
-			sig_tx = sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys,opts)
+	if 'use_wallet_dat' in opts:
+		sig_tx = sign_tx_with_bitcoind_wallet(
+				c,tx_hex,tx_num_str,sig_data,keys,opts)
+	else:
+		sig_tx = sign_transaction(c,tx_hex,tx_num_str,sig_data,keys)
 
 	if sig_tx['complete']:
 		msg("OK")

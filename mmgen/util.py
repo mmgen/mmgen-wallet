@@ -28,74 +28,33 @@ import mmgen.config as g
 
 def msg(s):    sys.stderr.write(s + "\n")
 def msg_r(s):  sys.stderr.write(s)
-def qmsg(s,alt=""):
+def qmsg(s,alt=False):
 	if g.quiet:
-		if alt: sys.stderr.write(alt + "\n")
+		if alt != False: sys.stderr.write(alt + "\n")
 	else: sys.stderr.write(s + "\n")
-def qmsg_r(s,alt=""):
+def qmsg_r(s,alt=False):
 	if g.quiet:
-		if alt: sys.stderr.write(alt)
+		if alt != False: sys.stderr.write(alt)
 	else: sys.stderr.write(s)
 def vmsg(s):
 	if g.verbose: sys.stderr.write(s + "\n")
 def vmsg_r(s):
 	if g.verbose: sys.stderr.write(s)
 
-cmessages = {
-	'null': "",
-	'incog_iv_id': """
-   If you know your Incog ID, check it against the value above.  If it's
-   incorrect, then your incognito data is invalid.
-""",
-	'incog_iv_id_hidden': """
-   If you know your Incog ID, check it against the value above.  If it's
-   incorrect, then your incognito data is invalid or you've supplied
-   an incorrect offset.
-""",
-	'incog_key_id': """
-   Check that the generated seed ID is correct.  If it's not, then your
-   password or hash preset is incorrect or incognito data is corrupted.
-""",
-	'incog_key_id_hidden': """
-   Check that the generated seed ID is correct.  If it's not, then your
-   password or hash preset is incorrect or incognito data is corrupted.
-   If the key ID is correct but the seed ID is not, then you might have
-   chosen an incorrect seed length.
-""",
-	'unencrypted_secret_keys': """
-This program generates secret keys from your {} seed, outputting them in
-UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
-""".format(g.proj_name),
-	'brain_warning': """
-############################## EXPERTS ONLY! ##############################
+def suf(arg,what):
+	t = type(arg)
+	if t == int:
+		n = arg
+	elif t == list or t == tuple or t == set:
+		n = len(arg)
+	else:
+		msg("%s: invalid parameter" % arg)
+		return ""
 
-A brainwallet will be secure only if you really know what you're doing and
-have put much care into its creation.  {} assumes no responsibility for
-coins stolen as a result of a poorly crafted brainwallet passphrase.
-
-A key will be generated from your passphrase using the parameters requested
-by you: seed length {}, hash preset '{}'.  For brainwallets it's highly
-recommended to use one of the higher-numbered presets
-
-Remember the seed length and hash preset parameters you've specified.  To
-generate the correct keys/addresses associated with this passphrase in the
-future, you must continue using these same parameters
-""",
-	'usr_rand_notice': """
-You've chosen to not fully trust your OS's random number generator and provide
-some additional entropy of your own.  Please type %s symbols on your keyboard.
-Type slowly and choose your symbols carefully for maximum randomness.  Try to
-use both upper and lowercase as well as punctuation and numerals.  What you
-type will not be displayed on the screen.  Note that the timings between your
-keystrokes will also be used as a source of randomness.
-""",
-	'choose_wallet_passphrase': """
-Now you must choose a passphrase to encrypt the wallet with.  A key will be
-generated from your passphrase using a hash preset of '%s'.  Please note that
-no strength checking of passphrases is performed.  For an empty passphrase,
-just hit ENTER twice.
-""".strip()
-}
+	if what in "a":
+		return "" if n == 1 else "es"
+	if what in "k":
+		return "" if n == 1 else "s"
 
 def get_extension(f):
 	import os
@@ -138,6 +97,11 @@ def _is_hex(s):
 	except: return False
 	else: return True
 
+def is_utf8(s):
+	try: s.decode("utf8")
+	except: return False
+	else: return True
+
 def match_ext(addr,ext):
 	return addr.split(".")[-1] == ext
 
@@ -149,7 +113,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	r = 1 if len(data) % gw else 0
 	return "".join(
 		[
-			("" if (line_nums == False or i % cols) else "%03i: " % (i/cols)) +
+			("" if (line_nums == False or i % cols) else "{:06x}: ".format(i*gw)) +
 			hexlify(data[i*gw:i*gw+gw]) +
 			(" " if (i+1) % cols else "\n")
 				for i in range(len(data)/gw + r)
@@ -158,7 +122,8 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 
 def decode_pretty_hexdump(data):
 	import re
-	lines = [re.sub('^\d+:\s+','',l) for l in data.split("\n")]
+	from string import hexdigits
+	lines = [re.sub('^['+hexdigits+']+:\s+','',l) for l in data.split("\n")]
 	return unhexlify("".join(("".join(lines).split())))
 
 def get_hash_params(hash_preset):
@@ -237,7 +202,6 @@ def check_infile(f):  return check_file_type_and_access(f,"input file")
 def check_outfile(f): return check_file_type_and_access(f,"output file")
 def check_outdir(f):  return check_file_type_and_access(f,"directory")
 
-
 def _validate_addr_num(n):
 
 	try: n = int(n)
@@ -258,7 +222,7 @@ def make_full_path(outdir,outfile):
 #	os.path.join() doesn't work?
 
 
-def parse_address_list(arg,sep=","):
+def parse_addr_idxs(arg,sep=","):
 
 	ret = []
 
@@ -278,7 +242,7 @@ def parse_address_list(arg,sep=","):
 			if end < beg:
 				msg("'%s-%s': end of range less than beginning" % (beg,end))
 				return False
-			for k in range(beg,end+1): ret.append(k)
+			ret.extend(range(beg,end+1))
 		else:
 			msg("'%s': invalid argument for address range" % i)
 			return False
@@ -327,11 +291,8 @@ def confirm_or_false(message, question, expect="YES"):
 	p = question+"  "+conf_msg if question[0].isupper() else \
 		"Are you sure you want to %s?\n%s" % (question,conf_msg)
 
-	ret = True if my_raw_input(p).strip() == expect else False
-
 	vmsg("")
-	return ret
-
+	return my_raw_input(p).strip() == expect
 
 
 def write_to_stdout(data, what, confirm=True):
@@ -341,7 +302,9 @@ def write_to_stdout(data, what, confirm=True):
 		try:
 			import os
 			of = os.readlink("/proc/%d/fd/1" % os.getpid())
-			msg("Redirecting output to file '%s'" % os.path.relpath(of))
+			of_maybe = os.path.relpath(of)
+			of = of if of_maybe.find(os.path.pardir) == 0 else of_maybe
+			msg("Redirecting output to file '%s'" % of)
 		except:
 			msg("Redirecting output to file")
 	sys.stdout.write(data)
@@ -383,8 +346,7 @@ def write_to_file_or_stdout(outfile, data, opts, what="data"):
 	if 'stdout' in opts or not sys.stdout.isatty():
 		write_to_stdout(data, what, confirm=True)
 	else:
-		confirm_overwrite = False if g.quiet else True
-		write_to_file(outfile,data,opts,what,confirm_overwrite,True)
+		write_to_file(outfile,data,opts,what,not g.quiet,True)
 
 
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
@@ -441,10 +403,9 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 		seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
 
 	d = "\n".join((chk,)+lines)+"\n"
-	confirm_overwrite = False if g.quiet else True
-	write_to_file(outfile,d,opts,"wallet",confirm_overwrite,True)
+	write_to_file(outfile,d,opts,"wallet",not g.quiet,True)
 
-	if g.verbose:
+	if g.debug:
 		display_control_data(label,metadata,hash_preset,salt,enc_seed)
 
 
@@ -542,8 +503,7 @@ def get_data_from_wallet(infile,silent=False):
 
 def _get_words_from_user(prompt, opts):
 	# split() also strips
-	words = my_raw_input(prompt,
-				echo=True if 'echo_passphrase' in opts else False).split()
+	words = my_raw_input(prompt, echo='echo_passphrase' in opts).split()
 	if g.debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
@@ -610,7 +570,7 @@ def get_seed_from_seed_data(words):
 			msg("Invalid b58 number: %s" % val)
 			return False
 
-		vmsg("%s data produces seed ID: %s" % (g.seed_ext,make_chksum_8(seed)))
+		msg("Valid seed data for seed ID %s" % make_chksum_8(seed))
 		return seed
 	else:
 		msg("Invalid checksum for {} seed".format(g.proj_name))
@@ -643,8 +603,7 @@ def get_bitcoind_passphrase(prompt,opts):
 		return get_data_from_file(opts['passwd_file'],
 				"passphrase").strip("\r\n")
 	else:
-		return my_raw_input(prompt,
-					echo=True if 'echo_passphrase' in opts else False)
+		return my_raw_input(prompt, echo='echo_passphrase' in opts)
 
 
 def check_data_fits_file_at_offset(fname,offset,dlen,action):
@@ -664,43 +623,11 @@ def check_data_fits_file_at_offset(fname,offset,dlen,action):
 		sys.exit(1)
 
 
-def get_hidden_incog_data(opts):
-		# Already sanity-checked:
-		fname,offset,seed_len = opts['from_incog_hidden'].split(",")
-		qmsg("Getting hidden incog data from file '%s'" % fname)
-
-		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8)
-
-		fsize = check_data_fits_file_at_offset(fname,int(offset),dlen,"read")
-
-		f = os.open(fname,os.O_RDONLY)
-		os.lseek(f, int(offset), os.SEEK_SET)
-		data = os.read(f, dlen)
-		os.close(f)
-		qmsg("Data read from file '%s' at offset %s" % (fname,offset),
-				"Data read from file")
-		return data
-
-
-def export_to_hidden_incog(incog_enc,opts):
-	outfile,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
-	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
-
-	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
-
-	if not g.quiet: confirm_or_exit("","alter file '%s'" % outfile)
-	f = os.open(outfile,os.O_RDWR)
-	os.lseek(f, int(offset), os.SEEK_SET)
-	os.write(f, incog_enc)
-	os.close(f)
-	msg("Data written to file '%s' at offset %s" %
-			(os.path.relpath(outfile),offset))
-
 from mmgen.term import kb_hold_protect,get_char
 
 def get_hash_preset_from_user(hp='3',what="data"):
 	p = "Enter hash preset for %s, or ENTER to accept the default ('%s'): " \
-		 % (what,hp)
+			% (what,hp)
 	while True:
 		ret = my_raw_input(p)
 		if ret:
@@ -761,5 +688,3 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 		if verbose: msg("\nInvalid reply")
 		else: msg_r("\r")
-
-

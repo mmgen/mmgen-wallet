@@ -25,7 +25,7 @@ import sys
 import mmgen.config as g
 from mmgen.Opts import *
 from mmgen.util import *
-from mmgen.crypto import get_seed_retry,wallet_to_incog_data
+from mmgen.crypto import *
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -47,6 +47,7 @@ help_data = {
 -X, --export-incog-hex Export wallet to incognito hexadecimal format
 -G, --export-incog-hidden=f,o  Hide incognito data in existing file 'f'
                        at offset 'o' (comma-separated)
+-o, --old-incog-fmt    Use old (pre-0.7.8) incog format
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -s, --export-seed      Export the wallet's seed to file
 """.format(g=g),
@@ -59,6 +60,54 @@ selected.  If you fully trust your OS's random number generator and wish
 to disable this option, then specify '-r0' on the command line.
 """
 }
+
+def wallet_to_incog_data(infile,opts):
+
+	d = get_data_from_wallet(infile,silent=True)
+	seed_id,key_id,preset,salt,enc_seed = \
+			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
+
+	while True:
+		passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name),opts)
+		key = make_key(passwd, salt, preset, "main key")
+		seed = decrypt_seed(enc_seed, key, seed_id, key_id)
+		if seed: break
+
+	iv = get_random(g.aesctr_iv_len,opts)
+	iv_id = make_iv_chksum(iv)
+	msg("Incog ID: %s" % iv_id)
+
+	if not 'old_incog_fmt' in opts:
+		salt = get_random(g.salt_len,opts)
+		key = make_key(passwd, salt, preset, "incog wallet key")
+		key_id = make_chksum_8(key)
+		from hashlib import sha256
+		chk = sha256(seed).digest()[:8]
+		enc_seed = encrypt_data(chk+seed, key, 1, "seed")
+
+	# IV is used BOTH to initialize counter and to salt password!
+	key = make_key(passwd, iv, preset, "incog wrapper key")
+	m = "incog data"
+	wrap_enc = encrypt_data(salt + enc_seed, key, int(hexlify(iv),16), m)
+
+	return iv+wrap_enc,seed_id,key_id,iv_id,preset
+
+
+def export_to_hidden_incog(incog_enc,opts):
+	outfile,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
+	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
+
+	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
+
+	if not g.quiet: confirm_or_exit("","alter file '%s'" % outfile)
+	import os
+	f = os.open(outfile,os.O_RDWR)
+	os.lseek(f, int(offset), os.SEEK_SET)
+	os.write(f, incog_enc)
+	os.close(f)
+	msg("Data written to file '%s' at offset %s" %
+			(os.path.relpath(outfile),offset))
+
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
 
@@ -82,7 +131,8 @@ elif 'export_incog' in opts:
 	if "export_incog_hidden" in opts:
 		export_to_hidden_incog(incog_enc,opts)
 	else:
-		seed_len = (len(incog_enc)-g.salt_len-g.aesctr_iv_len)*8
+		z = 0 if 'old_incog_fmt' in opts else 8
+		seed_len = (len(incog_enc)-g.salt_len-g.aesctr_iv_len-z)*8
 		fn = "%s-%s-%s[%s,%s].%s" % (
 			seed_id, key_id, iv_id, seed_len, preset,
 			g.incog_hex_ext if "export_incog_hex" in opts else g.incog_ext
@@ -102,8 +152,7 @@ else:
 if 'export_mnemonic' in opts:
 	wl = get_default_wordlist()
 	from mmgen.mnemonic import get_mnemonic_from_seed
-	p = True if g.debug else False
-	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, print_info=p)
+	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, g.debug)
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.mn_ext)
 	write_to_file_or_stdout(fn, " ".join(mn)+"\n", opts, "mnemonic data")
 

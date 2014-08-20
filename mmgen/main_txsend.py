@@ -51,7 +51,7 @@ do_license_msg()
 
 tx_data = get_lines_from_file(infile,"signed transaction data")
 
-metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_data(tx_data,infile)
+metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 
 qmsg("Signed transaction file '%s' is valid" % infile)
 
@@ -60,8 +60,7 @@ c = connect_to_bitcoind()
 prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
 reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
 if reply and reply in "YyVv":
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
-					pager=True if reply in "Vv" else False)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,reply in "Vv")
 
 if keypress_confirm("Edit transaction comment?"):
 	comment = get_tx_comment_from_user(comment)

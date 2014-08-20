@@ -42,10 +42,10 @@ help_data = {
 -h, --help              Print this help message{}
 -d, --outdir=       d   Specify an alternate directory 'd' for output
 -c, --save-checksum     Save address list checksum to file
--e, --echo-passphrase   Echo passphrase or mnemonic to screen upon entry{}
+-e, --echo-passphrase   Echo passphrase or mnemonic to screen upon entry
 -H, --show-hash-presets Show information on available hash presets
--K, --no-keyconv        Use internal libraries for address generation
-                        instead of 'keyconv'
+-K, --no-keyconv        Force use of internal libraries for address gener-
+                        ation, even if 'keyconv' is available
 -l, --seed-len=     N   Length of seed.  Options: {seed_lens}
                         (default: {g.seed_len})
 -p, --hash-preset=  p   Use scrypt.hash() parameters from preset 'p' when
@@ -63,17 +63,16 @@ help_data = {
 -X, --from-incog-hex    Generate {what} from incognito hexadecimal wallet
 -G, --from-incog-hidden=f,o,l Generate {what} from incognito data in file
                         'f' at offset 'o', with seed length of 'l'
+-o, --old-incog-fmt     Use old (pre-0.7.8) incog format
 -m, --from-mnemonic     Generate {what} from an electrum-like mnemonic
 -s, --from-seed         Generate {what} from a seed in .{g.seed_ext} format
 """.format(
 		*(
-		   (
+			(
 "\n-A, --no-addresses      Print only secret keys, no addresses",
-"\n-f, --flat-list         Produce a flat list of keys suitable for use with" +
-"\n                        '{}-txsign'".format(g.proj_name.lower()),
 "\n-x, --b16               Print secret keys in hexadecimal too"
 			)
-		if what == "keys" else ("","","")),
+		if what == "keys" else ("","")),
 		seed_lens=", ".join([str(i) for i in g.seed_lens]),
 		what=what, g=g
 ),
@@ -109,6 +108,13 @@ invocations with that passphrase
 				if what == "keys" else "")
 }
 
+wmsg = {
+	'unencrypted_secret_keys': """
+This program generates secret keys from your {} seed, outputting them in
+UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
+""".format(g.proj_name),
+}
+
 opts,cmd_args = parse_opts(sys.argv,help_data)
 
 if 'show_hash_presets' in opts: show_hash_presets()
@@ -129,7 +135,7 @@ elif len(cmd_args) == 2:
 	check_infile(infile)
 else: usage(help_data)
 
-addr_idxs = parse_address_list(addr_idx_arg)
+addr_idxs = parse_addr_idxs(addr_idx_arg)
 
 if not addr_idxs: sys.exit(2)
 
@@ -137,38 +143,44 @@ do_license_msg()
 
 # Interact with user:
 if what == "keys" and not g.quiet:
-	confirm_or_exit(cmessages['unencrypted_secret_keys'], 'continue')
+	confirm_or_exit(wmsg['unencrypted_secret_keys'], 'continue')
 
 # Generate data:
 
 seed    = get_seed_retry(infile,opts)
 seed_id = make_chksum_8(seed)
 
-for l in (
-	('flat_list', 'no_addresses'),
-	('flat_list', 'b16'),
-): warn_incompatible_opts(opts,l)
+opts['gen_what'] = "a" if what == "addresses" else (
+	"k" if 'no_addresses' in opts else "ka")
 
-opts['gen_what'] = \
-	["addrs"] if what == "addresses" else (
-	["keys"] if 'no_addresses' in opts else ["addrs","keys"])
-addr_data        = generate_addrs(seed, addr_idxs, opts)
-addr_data_chksum = make_addr_data_chksum([(a.num,a.addr)
-		for a in addr_data]) if 'addrs' in opts['gen_what'] else ""
-addr_data_str    = format_addr_data(
+addr_data = generate_addrs(seed, addr_idxs, opts)
+
+if 'a' in opts['gen_what']:
+	if 'k' in opts['gen_what']:
+		def l(a): return ( a.num, (a.addr,"",a.wif) )
+		keys = True
+	else:
+		def l(a): return ( a.num, (a.addr,) )
+		keys = False
+	addr_data_chksum = make_addr_data_chksum([l(a) for a in addr_data],keys)
+else:
+	addr_data_chksum = ""
+
+addr_data_str = format_addr_data(
 		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
 
 outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
-if 'addrs' in opts['gen_what']:
-	qmsg("Checksum for address data %s: %s" % (outfile_base,addr_data_chksum))
+if 'a' in opts['gen_what']:
+	w = "key-address" if 'k' in opts['gen_what'] else "address"
+	qmsg("Checksum for %s data %s: %s" % (w,outfile_base,addr_data_chksum))
 	if 'save_checksum' in opts:
 		write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
-			addr_data_chksum+"\n",opts,"address data checksum",True,True,False)
+			addr_data_chksum+"\n",opts,"%s data checksum" % w,True,True,False)
 	else:
-		qmsg("This checksum will be used to verify the address file in the future.")
+		qmsg("This checksum will be used to verify the %s file in the future."%w)
 		qmsg("Record it to a safe location.")
 
-if 'flat_list' in opts and keypress_confirm("Encrypt key list?"):
+if 'k' in opts['gen_what'] and keypress_confirm("Encrypt key list?"):
 	addr_data_str = mmgen_encrypt(addr_data_str,"key list","",opts)
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
@@ -178,13 +190,11 @@ if 'stdout' in opts or not sys.stdout.isatty():
 	if enc_ext and sys.stdout.isatty():
 		msg("Cannot write encrypted data to screen.  Exiting")
 		sys.exit(2)
-	c = True if (what == "keys" and not g.quiet and sys.stdout.isatty()) else False
-	write_to_stdout(addr_data_str,what,c)
+	write_to_stdout(addr_data_str,what,
+		(what=="keys"and not g.quiet and sys.stdout.isatty()))
 else:
-	confirm_overwrite = False if g.quiet else True
 	outfile = "%s.%s%s" % (outfile_base, (
-		g.keylist_ext if 'flat_list' in opts else (
-		g.keyfile_ext if opts['gen_what'] == ["keys"] else (
-		g.addrfile_ext if opts['gen_what'] == ["addrs"] else "akeys"))), enc_ext)
-	write_to_file(outfile,addr_data_str,opts,what,confirm_overwrite,True)
-
+		g.keyaddrfile_ext if "ka" in opts['gen_what'] else (
+		g.keyfile_ext if "k" in opts['gen_what'] else
+		g.addrfile_ext)), enc_ext)
+	write_to_file(outfile,addr_data_str,opts,what,not g.quiet,True)
