@@ -26,7 +26,7 @@ prog_name = os.path.basename(sys.argv[0])
 author = "Philemon"
 email = "<mmgen-py@yandex.com>"
 Cdates = '2013-2014'
-version = '0.7.7'
+version = '0.7.8'
 
 quiet,verbose,no_keyconv = False,False,False
 
