@@ -53,6 +53,8 @@ commands = {
 	"unhexdump":    ['<infile> [str]'],
 	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
 	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
+	"b32tohex":     ['<b32 num> [str]'],
+	"hextob32":     ['<hex num> [str]'],
 	"mn_rand128":   ['wordlist [str="electrum"]'],
 	"mn_rand192":   ['wordlist [str="electrum"]'],
 	"mn_rand256":   ['wordlist [str="electrum"]'],
@@ -83,20 +85,15 @@ commands = {
 }
 
 command_help = """
-  Bitcoin address/key operations (compressed addresses supported):
+  Bitcoin address/key operations (compressed public keys supported):
   addr2hexaddr - convert Bitcoin address from base58 to hex format
-  b58randenc   - generate a random 32-byte number and convert it to base 58
-  b58tohex     - convert a base 58 number to hexadecimal
-  b58tostr     - convert a base 58 number to a string
   hex2wif      - convert a private key from hex to WIF format
   hexaddr2addr - convert Bitcoin address from hex to base58 format
-  hextob58     - convert a hexadecimal number to base 58
   privhex2addr - generate Bitcoin address from private key in hex format
   pubkey2addr  - convert Bitcoin public key to address
   pubkey2hexaddr - convert Bitcoin public key to address in hex format
   randpair     - generate a random private key/address pair
   randwif      - generate a random private key in WIF format
-  strtob58     - convert a string to base 58
   wif2addr     - generate a Bitcoin address from a key in WIF format
   wif2hex      - convert a private key from WIF to hex format
 
@@ -107,14 +104,21 @@ command_help = """
   viewtx        - show raw/signed {pnm} transaction in human-readable form
 
   General utilities:
-  bytespec     - convert a byte specifier such as '1GB' into a plain integer
   hexdump      - encode data into formatted hexadecimal form (file or stdin)
+  unhexdump    - decode formatted hexadecimal data (file or stdin)
+  bytespec     - convert a byte specifier such as '1GB' into an integer
   hexlify      - display string in hexadecimal format
   hexreverse   - reverse bytes of a hexadecimal string
   rand2file    - write 'n' bytes of random data to specified file
   randhex      - print 'n' bytes (default 32) of random data in hex format
   sha256x2     - compute a double sha256 hash of data
-  unhexdump    - decode formatted hexadecimal data (file or stdin)
+  b58randenc   - generate a random 32-byte number and convert it to base 58
+  b58tostr     - convert a base 58 number to a string
+  strtob58     - convert a string to base 58
+  b58tohex     - convert a base 58 number to hexadecimal
+  hextob58     - convert a hexadecimal number to base 58
+  b32tohex     - convert a base 32 number to hexadecimal
+  hextob32     - convert a hexadecimal number to base 32
 
   File encryption:
   encrypt      - encrypt a file
@@ -126,7 +130,7 @@ command_help = """
 
   {pnm}-specific operations:
   addrfile_chksum    - compute checksum for {pnm} address file
-  keyaddrfile_chksum - compute checksum for {pnm} key file
+  keyaddrfile_chksum - compute checksum for {pnm} key-address file
   find_incog_data    - Use an Incog ID to find hidden incognito wallet data
   id6          - generate 6-character {pnm} ID for a file (or stdin)
   id8          - generate 8-character {pnm} ID for a file (or stdin)
@@ -316,6 +320,16 @@ def mn2hex(s,wordlist="electrum"):
 	import mmgen.mnemonic
 	wl = get_wordlist(wordlist)
 	print ba.hexlify(get_seed_from_mnemonic(s.split(),wl,True))
+
+def b32tohex(s):
+	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+	import mmgen.mnemonic
+	print baseNtohex(32,s,b32a)
+
+def hextob32(s):
+	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+	import mmgen.mnemonic
+	print "".join(hextobaseN(32,s,b32a))
 
 def mn_stats(wordlist="electrum"):
 	l = get_wordlist(wordlist)
