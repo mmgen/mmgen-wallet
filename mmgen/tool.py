@@ -423,7 +423,7 @@ def viewtx(infile,pager=False):
 	tx_data = get_lines_from_file(infile,"transaction data")
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False)
 
 def addrfile_chksum(infile): parse_addrfile(infile,{})
 def keyaddrfile_chksum(infile): parse_keyaddr_file(infile,{})

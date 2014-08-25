@@ -33,15 +33,18 @@ def launch_walletchk():  import mmgen.main_walletchk
 def launch_walletgen():  import mmgen.main_walletgen
 
 def main(progname):
-	import sys, termios
-	fd = sys.stdin.fileno()
-	old = termios.tcgetattr(fd)
-	try: eval("launch_"+progname+"()")
-	except KeyboardInterrupt:
-		sys.stderr.write("\nUser interrupt\n")
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
-		sys.exit(1)
-	except EOFError:
-		sys.stderr.write("\nEnd of file\n")
-		termios.tcsetattr(fd, termios.TCSADRAIN, old)
-		sys.exit(1)
+	try: import termios
+	except: eval("launch_"+progname+"()") # Windows
+	else:
+		import sys
+		fd = sys.stdin.fileno()
+		old = termios.tcgetattr(fd)
+		try: eval("launch_"+progname+"()")
+		except KeyboardInterrupt:
+			sys.stderr.write("\nUser interrupt\n")
+			termios.tcsetattr(fd, termios.TCSADRAIN, old)
+			sys.exit(1)
+		except EOFError:
+			sys.stderr.write("\nEnd of file\n")
+			termios.tcsetattr(fd, termios.TCSADRAIN, old)
+			sys.exit(1)

@@ -165,7 +165,7 @@ def open_file_or_exit(filename,mode):
 	try:
 		f = open(filename, mode)
 	except:
-		what = "reading" if mode == 'r' else "writing"
+		what = "reading" if 'r' in mode else "writing"
 		msg("Unable to open file '%s' for %s" % (filename,what))
 		sys.exit(2)
 	return f
@@ -329,7 +329,7 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 		else:
 			msg("Overwriting file '%s'" % outfile)
 
-	f = open_file_or_exit(outfile,'w')
+	f = open_file_or_exit(outfile,'wb')
 	try:
 		f.write(data)
 	except:
@@ -546,7 +546,7 @@ def get_lines_from_file(infile,what="",trim_comments=False):
 def get_data_from_file(infile,what="data",dash=False):
 	if dash and infile == "-": return sys.stdin.read()
 	qmsg("Getting %s from file '%s'" % (what,infile))
-	f = open_file_or_exit(infile,'r')
+	f = open_file_or_exit(infile,'rb')
 	data = f.read()
 	f.close()
 	return data
@@ -641,8 +641,10 @@ def get_hash_preset_from_user(hp='3',what="data"):
 
 def my_raw_input(prompt,echo=True,insert_txt="",use_readline=True):
 
+	try: import readline
+	except: use_readline = False # Windows
+
 	if use_readline and sys.stdout.isatty():
-		import readline
 		def st_hook(): readline.insert_text(insert_txt)
 		readline.set_startup_hook(st_hook)
 	else:

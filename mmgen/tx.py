@@ -133,7 +133,7 @@ Only ASCII printable characters are permitted.
 			sys.exit(3)
 
 
-def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False):
+def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause=True):
 
 	td = c.decoderawtransaction(tx_hex)
 
@@ -187,8 +187,9 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False):
 	if pager: do_pager(o)
 	else:
 		print "\n"+o
-		get_char("Press any key to continue: ")
-		msg("")
+		if pause:
+			get_char("Press any key to continue: ")
+			msg("")
 
 
 def parse_tx_file(tx_data,infile):

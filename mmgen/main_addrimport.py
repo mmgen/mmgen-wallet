@@ -57,7 +57,8 @@ if len(cmd_args) == 1:
 		pf(infile,addr_data)
 		seed_id = addr_data.keys()[0]
 		e = addr_data[seed_id]
-		addr_list = [(k,e[k][0],e[k][1]) for k in e.keys()]
+		def s_addrdata(a): return ("{:>0%s}"%g.mmgen_idx_max_digits).format(a)
+		addr_list = [(k,e[k][0],e[k][1]) for k in sorted(e.keys(),key=s_addrdata)]
 else:
 	msg_r("You must specify an mmgen address list (or a list of ")
 	msg("non-%s addresses with\nthe '--addrlist' option)" % g.proj_name)

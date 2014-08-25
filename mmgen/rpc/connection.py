@@ -66,9 +66,14 @@ class BitcoinConnection(object):
 			return self.proxy.importaddress(address,label,rescan)
 		except JSONRPCException as e:
 			if e.error['message'] == "Method not found":
-				from mmgen.util import msg_r
-				msg_r("""
-ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-only addresses?""")
+				from mmgen.util import msg
+				msg("""
+*******************************************************************************
+*******************************************************************************
+ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
+*******************************************************************************
+*******************************************************************************
+""")
 			raise _wrap_exception(e.error)
 
 # sendrawtransaction <hex string> [allowhighfees=false]
@@ -471,6 +476,14 @@ ERROR: 'importaddress' method not found.  Is your bitcoind enabled for watch-onl
 			else:
 				return self.proxy.listaccounts(minconf,includeWatchonly).keys()
 		except JSONRPCException as e:
+			from mmgen.util import msg
+			msg("""
+*******************************************************************************
+*******************************************************************************
+ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
+*******************************************************************************
+*******************************************************************************
+""")
 			raise _wrap_exception(e.error)
 
 	def listreceivedbyaccount(self, minconf=1, includeempty=False):
