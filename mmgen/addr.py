@@ -48,9 +48,9 @@ faster address generation.
 
 def test_for_keyconv():
 
-	from subprocess import Popen, PIPE
+	from subprocess import check_output,STDOUT
 	try:
-		p = Popen([g.keyconv_exec, '-h'], stdout=PIPE, stderr=PIPE)
+		check_output([g.keyconv_exec, '-G'],stderr=STDOUT)
 	except:
 		msg(addrmsgs['no_keyconv_msg'])
 		return False
@@ -66,15 +66,14 @@ def generate_addrs(seed, addrnums, opts, seed_id=""):
 			from mmgen.bitcoin import privnum2addr
 			keyconv = False
 		else:
-			from subprocess import Popen, PIPE
+			from subprocess import check_output
 			keyconv = "keyconv"
 
-	fmt = "num sec wif addr" if 'ka' in opts['gen_what'] else (
-		"num sec wif" if 'k' in opts['gen_what'] else "num addr")
+	ai_attrs = ("num,sec,wif,addr") if 'ka' in opts['gen_what'] else (
+		("num,sec,wif") if 'k' in opts['gen_what'] else ("num,addr"))
 
 	from collections import namedtuple
-	addrinfo = namedtuple("addrinfo",fmt)
-	addrinfo_args = "%s" % ",".join(fmt.split())
+	addrinfo = namedtuple("addrinfo",ai_attrs.split(","))
 
 	addrnums = sorted(set(addrnums)) # don't trust the calling function
 	t_addrs,num,pos,out = len(addrnums),0,0,[]
@@ -100,11 +99,13 @@ def generate_addrs(seed, addrnums, opts, seed_id=""):
 		sec = sha256(sha256(seed).digest()).hexdigest()
 		wif = numtowif(int(sec,16))
 
-		if 'a' in opts['gen_what']: addr = \
-			Popen([keyconv, wif], stdout=PIPE).stdout.readline().split()[1] \
-			if keyconv else privnum2addr(int(sec,16))
+		if 'a' in opts['gen_what']:
+			if keyconv:
+				addr = check_output([keyconv, wif]).split()[1]
+			else:
+				addr = privnum2addr(int(sec,16))
 
-		out.append(eval("addrinfo("+addrinfo_args+")"))
+		out.append(addrinfo(*eval(ai_attrs)))
 
 	m = w[0] if t_addrs == 1 else w[0]+w[1]
 	if seed_id:

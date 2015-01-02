@@ -176,7 +176,7 @@ def get_random_data_from_user(uchars):
 
 	for i in range(uchars):
 		key_data += get_char(immed_chars="ALL",prehold_protect=pp)
-		if i == 0: pp = False
+		pp = False
 		msg_r("\r" + prompt % (uchars - i - 1))
 		now = time.time()
 		time_data.append(now - saved_time)

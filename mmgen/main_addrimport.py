@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-addrimport: Import addresses into a MMGen bitcoind watching wallet
+mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 """
 
 import sys
@@ -29,7 +29,7 @@ from mmgen.tx import connect_to_bitcoind,parse_addrfile,parse_keyaddr_file
 help_data = {
 	'prog_name': g.prog_name,
 	'desc': """Import addresses (both {pnm} and non-{pnm}) into a bitcoind
-                     watching wallet""".format(pnm=g.proj_name),
+                     tracking wallet""".format(pnm=g.proj_name),
 	'usage':"[opts] [mmgen address file]",
 	'options': """
 -h, --help         Print this help message
@@ -38,6 +38,10 @@ help_data = {
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
                    on the blockchain and has a balance.  Rescanning is slow.
+""",
+	'notes': """\n
+This command can also be used to update the comment fields of addresses already
+in the tracking wallet.
 """
 }
 
@@ -78,14 +82,16 @@ g.http_timeout = 3600
 c = connect_to_bitcoind()
 
 m = """
-WARNING: You've chosen the '--rescan' option.  Rescanning the block chain is
-necessary only if an address you're importing is already on the block chain
-and has a balance.  Note that the rescanning process is very slow (>30 min.
-for each imported address on a low-powered computer).
+WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
+necessary only if an address you're importing is already on the blockchain,
+has a balance and is not already in your tracking wallet.  Note that the
+rescanning process is very slow (>30 min. for each imported address on a
+low-powered computer).
 	""".strip() if "rescan" in opts else """
-WARNING: If any of the addresses you're importing is already on the block chain
-and has a balance, you must exit the program now and rerun it using the
-'--rescan' option.  Otherwise you may ignore this message and continue.
+WARNING: If any of the addresses you're importing is already on the blockchain,
+has a balance and is not already in your tracking wallet, you must exit the
+program now and rerun it using the '--rescan' option.  Otherwise you may ignore
+this message and continue.
 """.strip()
 
 if g.quiet: m = ""

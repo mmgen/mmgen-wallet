@@ -118,6 +118,9 @@ if len(cmd_args) != 1: usage(help_data)
 
 check_infile(cmd_args[0])
 
+if set(['outdir','export_incog_hidden']).issubset(set(opts.keys())):
+	msg("Warning: '--outdir' option is ignored when exporting hidden incog data")
+
 if 'export_mnemonic' in opts:
 	qmsg("Exporting mnemonic data to file by user request")
 elif 'export_seed' in opts:

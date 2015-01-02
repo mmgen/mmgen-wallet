@@ -34,7 +34,7 @@ min_screen_width = 80
 max_tx_comment_len = 72
 
 from decimal import Decimal
-tx_fee        = Decimal("0.0001")
+tx_fee        = Decimal("0.00005")
 max_tx_fee    = Decimal("0.01")
 
 proj_name     = "MMGen"
@@ -70,10 +70,11 @@ http_timeout = 30
 
 keyconv_exec = "keyconv"
 
-from os import getenv
-debug      = getenv("MMGEN_DEBUG")
-no_license = getenv("MMGEN_NOLICENSE")
-bogus_wallet_data = getenv("MMGEN_BOGUS_WALLET_DATA")
+# returns None if env var unset
+debug             = os.getenv("MMGEN_DEBUG")
+no_license        = os.getenv("MMGEN_NOLICENSE")
+bogus_wallet_data = os.getenv("MMGEN_BOGUS_WALLET_DATA")
+disable_hold_protect = os.getenv("MMGEN_DISABLE_HOLD_PROTECT")
 
 mins_per_block = 8.5
 passwd_max_tries = 5

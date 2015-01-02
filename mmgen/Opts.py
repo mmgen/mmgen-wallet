@@ -54,7 +54,6 @@ def parse_opts(argv,help_data):
 		print "cmd args:           %s" % repr(args)
 
 	for l in (
-	('outdir', 'export_incog_hidden'),
 	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),
 	('export_incog','export_incog_hex','export_incog_hidden','export_mnemonic',
 	'export_seed'),
@@ -64,15 +63,14 @@ def parse_opts(argv,help_data):
 	# check_opts() doesn't touch opts[]
 	if not check_opts(opts,long_opts): sys.exit(1)
 
-	# If unset, set these to default values in mmgen.config:
+	# If unset, set these to default values in mmgen.config (g):
 	for v in g.dfl_vars:
 		if v in opts: typeconvert_override_var(opts,v)
-		else: opts[v] = eval("g."+v)
+		else: opts[v] = g.__dict__[v]
 
-	# Opposite of above: if set, override the default values in mmgen.config:
-	if 'no_keyconv' in opts: g.no_keyconv = opts['no_keyconv']
-	if 'verbose' in opts:    g.verbose = opts['verbose']
-	if 'quiet' in opts:      g.quiet = opts['quiet']
+	# Opposite of above: if set, override the default values in mmgen.config (g):
+	for k in 'no_keyconv','verbose','quiet':
+		if k in opts: g.__dict__[k] = opts[k]
 
 	if g.debug: print "opts after typeconvert: %s" % opts
 

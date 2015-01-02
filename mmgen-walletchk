@@ -21,5 +21,5 @@ mmgen-walletchk: Check integrity of an MMGen deterministic wallet, display
                  information about it and export it to various formats
 """
 
-import mmgen.main
-mmgen.main.main("walletchk")
+from mmgen.main import launch
+launch("walletchk")

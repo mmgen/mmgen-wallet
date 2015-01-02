@@ -181,7 +181,7 @@ if 'a' in opts['gen_what']:
 		qmsg("Record it to a safe location.")
 
 if 'k' in opts['gen_what'] and keypress_confirm("Encrypt key list?"):
-	addr_data_str = mmgen_encrypt(addr_data_str,"key list","",opts)
+	addr_data_str = mmgen_encrypt(addr_data_str,"new key list","",opts)
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
 

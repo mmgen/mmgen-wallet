@@ -3,13 +3,11 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		version      = '0.7.8',
+		version      = '0.7.9',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
 		py_modules = [
-			'__init__',
-
 			'mmgen.__init__',
 			'mmgen.addr',
 			'mmgen.bitcoin',

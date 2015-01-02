@@ -218,8 +218,7 @@ def _validate_addr_num(n):
 
 def make_full_path(outdir,outfile):
 	import os
-	return os.path.normpath(os.sep.join([outdir, os.path.basename(outfile)]))
-#	os.path.join() doesn't work?
+	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
 
 def parse_addr_idxs(arg,sep=","):

@@ -38,6 +38,7 @@ def Vmsg_r(s):
 
 opts = {}
 commands = {
+	"help":         [],
 	"strtob58":     ['<string> [str]'],
 	"b58tostr":     ['<b58 number> [str]'],
 	"hextob58":     ['<hex number> [str]'],
@@ -65,7 +66,7 @@ commands = {
 	"str2id6":      ['<string (spaces are ignored)> [str]'],
 	"listaddresses":['minconf [int=1]','showempty [bool=False]','pager [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
-	"viewtx":       ['<MMGen tx file> [str]','pager [bool=False]'],
+	"txview":       ['<MMGen tx file> [str]','pager [bool=False]'],
 	"addrfile_chksum": ['<MMGen addr file> [str]'],
 	"keyaddrfile_chksum": ['<MMGen addr file> [str]'],
 	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
@@ -101,7 +102,7 @@ command_help = """
   getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddresses - list {pnm} addresses and their balances
-  viewtx        - show raw/signed {pnm} transaction in human-readable form
+  txview        - show raw/signed {pnm} transaction in human-readable form
 
   General utilities:
   hexdump      - encode data into formatted hexadecimal form (file or stdin)
@@ -215,6 +216,11 @@ def process_args(prog_name, command, uargs):
 
 
 # Individual commands
+
+def help():
+	Msg("Available commands:")
+	for k in commands.keys():
+		Msg("%-16s %s" % (k," ".join(commands[k])))
 
 def print_convert_results(indata,enc,dec,no_recode=False):
 	Vmsg("Input:         [%s]" % indata)
@@ -418,7 +424,7 @@ def getbalance(minconf=1):
 	for key in sorted(accts.keys()):
 		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
 
-def viewtx(infile,pager=False):
+def txview(infile,pager=False):
 	c = connect_to_bitcoind()
 	tx_data = get_lines_from_file(infile,"transaction data")
 

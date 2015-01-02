@@ -148,14 +148,15 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 			if j['txid'] == i['txid'] and j['vout'] == i['vout']:
 				days = int(j['confirmations'] * g.mins_per_block / (60*24))
 				total_in += j['amount']
-				addr = j['address']
-				mmid,label = parse_mmgen_label(j['account']) \
-						if 'account' in j else ("","")
-				mmid_str = ((34-len(addr))*" " + " (%s)" % mmid) if mmid else ""
+				mmid,label,mmid_str = "","",""
+				if 'account' in j:
+					mmid,label = parse_mmgen_label(j['account'])
+					if not mmid: mmid = "non-%s address" % g.proj_name
+					mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
 
 				for d in (
 	(n+1, "tx,vout:",       "%s,%s" % (i['txid'], i['vout'])),
-	("",  "address:",       addr + mmid_str),
+	("",  "address:",       j['address'] + mmid_str),
 	("",  "label:",         label),
 	("",  "amount:",        "%s BTC" % trim_exponent(j['amount'])),
 	("",  "confirmations:", "%s (around %s days)" % (j['confirmations'], days))
@@ -169,7 +170,8 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 	for n,i in enumerate(td['vout']):
 		addr = i['scriptPubKey']['addresses'][0]
 		mmid,label = b2m_map[addr] if addr in b2m_map else ("","")
-		mmid_str = ((34-len(addr))*" " + " (%s)" % mmid) if mmid else ""
+		if not mmid: mmid = "non-%s address" % g.proj_name
+		mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
 		total_out += i['value']
 		for d in (
 				(n+1, "address:",  addr + mmid_str),
@@ -275,7 +277,7 @@ def _parse_addrfile_body(lines,keys=False,check=False):
 			else:
 				comment = ""
 
-			ret.append((d[0],d[1],comment))
+			ret.append([d[0],d[1],comment])
 
 		return ret
 
@@ -298,7 +300,9 @@ def _parse_addrfile_body(lines,keys=False,check=False):
 
 	z = len(lines) / 2
 	if keys:
+        # returns list of lists
 		adata = parse_addr_lines([lines[i*2] for i in range(z)])
+        # returns list of strings
 		kdata = parse_key_lines([lines[i*2+1] for i in range(z)])
 		if len(adata) != len(kdata):
 			msg("Odd number of lines in key file")
@@ -312,17 +316,17 @@ def _parse_addrfile_body(lines,keys=False,check=False):
 							kdata[i],adata[i][1])
 					sys.exit(2)
 			msg(" - done")
-		return [adata[i] + (kdata[i],) for i in range(z)]
+		return [adata[i] + [kdata[i]] for i in range(z)]
 	else:
 		return parse_addr_lines(lines)
 
 
-def parse_addrfile(f,addr_data,keys=False):
+def parse_addrfile(f,addr_data,keys=False,return_chk_and_sid=False):
 	return parse_addrfile_lines(
 				get_lines_from_file(f,"address data",trim_comments=True),
-					addr_data,keys)
+					addr_data,keys,return_chk_and_sid=return_chk_and_sid)
 
-def parse_addrfile_lines(lines,addr_data,keys=False,exit_on_error=True):
+def parse_addrfile_lines(lines,addr_data,keys=False,exit_on_error=True,return_chk_and_sid=False):
 
 	try:
 		seed_id,obrace = lines[0].split()
@@ -342,6 +346,7 @@ def parse_addrfile_lines(lines,addr_data,keys=False,exit_on_error=True):
 			for l in ldata:
 				addr_data[seed_id][l[0]] = l[1:]
 			chk = get_addr_data_hash(addr_data[seed_id],keys)
+			if return_chk_and_sid: return chk,seed_id
 			from mmgen.addr import fmt_addr_idxs
 			fl = fmt_addr_idxs([int(i) for i in addr_data[seed_id].keys()])
 			w = "key" if keys else "addr"
@@ -413,7 +418,7 @@ def get_bitcoind_cfg_options(cfg_keys):
 		msg("Don't know where to look for 'bitcoin.conf'")
 		sys.exit(3)
 
-	cfg_file = os.sep.join((homedir, datadir, "bitcoin.conf"))
+	cfg_file = os.path.join(homedir, datadir, "bitcoin.conf")
 
 	cfg = dict([(k,v) for k,v in [split2(line.translate(None,"\t "),"=")
 			for line in get_lines_from_file(cfg_file)] if k in cfg_keys])
@@ -442,9 +447,8 @@ def connect_to_bitcoind():
 
 
 def wiftoaddr_keyconv(wif):
-	from subprocess import Popen, PIPE
 	if wif[0] == '5':
-		return Popen(["keyconv", wif],
-			stdout=PIPE).stdout.readline().split()[1]
+		from subprocess import check_output
+		return check_output(["keyconv", wif]).split()[1]
 	else:
 		return wiftoaddr(wif)

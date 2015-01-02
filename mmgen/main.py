@@ -32,19 +32,18 @@ def launch_txsign():     import mmgen.main_txsign
 def launch_walletchk():  import mmgen.main_walletchk
 def launch_walletgen():  import mmgen.main_walletgen
 
-def main(progname):
+def launch(what):
 	try: import termios
-	except: eval("launch_"+progname+"()") # Windows
+	except: globals()["launch_"+what]() # Windows
 	else:
-		import sys
+		import sys,atexit
 		fd = sys.stdin.fileno()
 		old = termios.tcgetattr(fd)
-		try: eval("launch_"+progname+"()")
+		def at_exit():
+			termios.tcsetattr(fd, termios.TCSADRAIN, old)
+		atexit.register(at_exit)
+		try: globals()["launch_"+what]()
 		except KeyboardInterrupt:
 			sys.stderr.write("\nUser interrupt\n")
-			termios.tcsetattr(fd, termios.TCSADRAIN, old)
-			sys.exit(1)
 		except EOFError:
 			sys.stderr.write("\nEnd of file\n")
-			termios.tcsetattr(fd, termios.TCSADRAIN, old)
-			sys.exit(1)

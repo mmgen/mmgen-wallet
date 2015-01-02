@@ -20,5 +20,5 @@
 mmgen-walletgen: Generate an MMGen deterministic wallet
 """
 
-import mmgen.main
-mmgen.main.main("walletgen")
+from mmgen.main import launch
+launch("walletgen")

@@ -20,5 +20,5 @@
 mmgen-pywallet: Dump contents of a bitcoind wallet to file
 """
 
-import mmgen.main
-mmgen.main.main("pywallet")
+from mmgen.main import launch
+launch("pywallet")

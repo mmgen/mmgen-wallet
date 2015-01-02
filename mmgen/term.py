@@ -21,6 +21,7 @@ term.py:  Terminal-handling routines for the MMGen suite
 """
 
 import sys, os, struct
+import mmgen.config as g
 from mmgen.util import msg, msg_r
 
 def _kb_hold_protect_unix():
@@ -38,6 +39,7 @@ def _kb_hold_protect_unix():
 			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 			break
 
+def _kb_hold_protect_unix_raw(): pass
 
 def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 
@@ -64,6 +66,21 @@ def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 	return ch
 
 
+def _get_keypress_unix_raw(prompt="",immed_chars="",prehold_protect=None):
+
+	msg_r(prompt)
+
+	fd = sys.stdin.fileno()
+	old = termios.tcgetattr(fd)
+	tty.setcbreak(fd)
+
+	ch = sys.stdin.read(1)
+
+	termios.tcsetattr(fd, termios.TCSADRAIN, old)
+
+	return ch
+
+
 
 def _kb_hold_protect_mswin():
 
@@ -78,6 +95,7 @@ def _kb_hold_protect_mswin():
 			if float(time.time() - hit_time) > timeout:
 				return
 
+def _kb_hold_protect_mswin_raw(): pass
 
 def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 
@@ -101,6 +119,13 @@ def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 				if msvcrt.kbhit(): break
 				if float(time.time() - hit_time) > timeout:
 					return ch
+
+def _get_keypress_mswin_raw(prompt="",immed_chars="",prehold_protect=None):
+
+	msg_r(prompt)
+	ch = msvcrt.getch()
+	if ord(ch) == 3: raise KeyboardInterrupt
+	return ch
 
 
 def _get_terminal_size_linux():
@@ -155,16 +180,24 @@ def mswin_dummy_flush(fd,termconst): pass
 try:
 	import tty, termios
 	from select import select
-	get_char = _get_keypress_unix
-	kb_hold_protect = _kb_hold_protect_unix
+	if g.disable_hold_protect:
+		get_char = _get_keypress_unix_raw
+		kb_hold_protect = _kb_hold_protect_unix_raw
+	else:
+		get_char = _get_keypress_unix
+		kb_hold_protect = _kb_hold_protect_unix
 	get_terminal_size = _get_terminal_size_linux
 	myflush = termios.tcflush
 # call: myflush(sys.stdin, termios.TCIOFLUSH)
 except:
 	try:
 		import msvcrt, time
-		get_char = _get_keypress_mswin
-		kb_hold_protect = _kb_hold_protect_mswin
+		if g.disable_hold_protect:
+			get_char = _get_keypress_mswin_raw
+			kb_hold_protect = _kb_hold_protect_mswin_raw
+		else:
+			get_char = _get_keypress_mswin
+			kb_hold_protect = _kb_hold_protect_mswin
 		get_terminal_size = _get_terminal_size_mswin
 		myflush = mswin_dummy_flush
 	except:
