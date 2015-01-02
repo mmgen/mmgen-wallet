@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,8 +25,8 @@ prog_name = os.path.basename(sys.argv[0])
 
 author = "Philemon"
 email = "<mmgen-py@yandex.com>"
-Cdates = '2013-2014'
-version = '0.7.8'
+Cdates = '2013-2015'
+version = '0.7.9'
 
 quiet,verbose,no_keyconv = False,False,False
 

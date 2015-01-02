@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2014 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
