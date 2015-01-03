@@ -16,6 +16,8 @@ cmd_data = OrderedDict([
 #     test               description                  depends
 	['walletgen',       (1,'wallet generation',        [[[],1]])],
 	['walletchk',       (1,'wallet check',             [[["mmdat"],1]])],
+	['passchg',         (5,'password, label and hash preset change',[[["mmdat"],1]])],
+	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[["mmdat"],5]])],
 	['addrgen',         (1,'address generation',       [[["mmdat"],1]])],
 	['addrimport',      (1,'address import',           [[["addrs"],1]])],
 	['txcreate',        (1,'transaction creation',     [[["addrs"],1]])],
@@ -51,12 +53,12 @@ cmd_data = OrderedDict([
 	['walletgen4',(4,'wallet generation (4) (brainwallet)', [])],
 	['addrgen4',  (4,'address generation (4)',              [[["mmdat"],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[["addrs"],1],[["addrs"],2],[["addrs"],3],[["addrs"],4]])],
-	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw",non_mmgen_fn],4]])],
+	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw"],4]])],
 ])
 
 utils = {
-	'check_deps': 'check dependencies for specified command, deleting out-of-date files',
-	'clean':      'clean specified tmp dir(s) (1,2,3,4; no arg = all tmpdirs)',
+	'check_deps': 'check dependencies for specified command',
+	'clean':      'clean specified tmp dir(s) 1, 2, 3 or 4 (no arg = all dirs)',
 }
 
 addrs_per_wallet = 8
@@ -112,19 +114,29 @@ cfgs = {
 			'addrs':       "addrgen4",
 			'raw':         "txcreate4",
 			'sig':         "txsign4",
-			non_mmgen_fn:  "txcreate4"
 		},
 		'bw_filename': "brainwallet.mmbrain",
 		'bw_params':   "256,1",
 	},
+	'5': {
+		'tmpdir':        "test/tmp5",
+		'wpasswd':       "My changed password",
+		'dep_generators': {
+			'mmdat':       "passchg",
+		},
+	},
 }
-cfg = cfgs['1']
 
 from binascii import hexlify
 def getrand(n): return int(hexlify(os.urandom(n)),16)
-def msgrepr(d): sys.stderr.write(repr(d)+"\n")
-def msgrepr_exit(d):
-	sys.stderr.write(repr(d)+"\n")
+
+def msgrepr(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
+
+def msgrepr_exit(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
 	sys.exit()
 
 # total of two outputs must be < 10 BTC
@@ -135,6 +147,7 @@ for k in cfgs.keys():
 
 meta_cmds = OrderedDict([
 	['gen',    (1,("walletgen","walletchk","addrgen"))],
+	['pass',   (5,("passchg","walletchk_newpass"))],
 	['tx',     (1,("txcreate","txsign","txsend"))],
 	['export', (1,[k for k in cmd_data if k[:7] == "export_" and cmd_data[k][0] == 1])],
 	['gen_sp', (1,[k for k in cmd_data if k[:8] == "addrgen_" and cmd_data[k][0] == 1])],
@@ -278,19 +291,18 @@ def cleandir(d):
 	for f in files:
 		os.unlink(os.path.join(d,f))
 
-def get_file_with_ext(ext,mydir,delete=False):
-	flist = [os.path.join(mydir,f)
-				for f in os.listdir(mydir) if f.split(".")[-1] == ext]
-	if not flist:
-		flist = [os.path.join(mydir,f)
-			for f in os.listdir(mydir) if ".".join(f.split(".")[-2:]) == ext]
-		if not flist:
-			return False
+def get_file_with_ext(ext,mydir,delete=True):
 
-	if len(flist) > 1 or delete:
-		if not quiet:
-			msg("Multiple *.%s files in '%s' - deleting" % (ext,mydir))
-		for f in flist: os.unlink(f)
+	flist = [os.path.join(mydir,f) for f in os.listdir(mydir)
+				if f == ext or f[-(len(ext)+1):] == "."+ext]
+
+	if not flist: return False
+
+	if len(flist) > 1:
+		if delete:
+			if not quiet:
+				msg("Multiple *.%s files in '%s' - deleting" % (ext,mydir))
+			for f in flist: os.unlink(f)
 		return False
 	else:
 		return flist[0]
@@ -323,6 +335,7 @@ class MMGenExpect(object):
 			)
 		else:
 			msg_r("Testing %s " % (desc+":"))
+#		msgrepr(mmgen_cmd,cmd_args); msg("")
 		if env: self.p = pexpect.spawn(mmgen_cmd,cmd_args,env=env)
 		else:   self.p = pexpect.spawn(mmgen_cmd,cmd_args)
 		if exact_output: self.p.logfile = sys.stdout
@@ -348,8 +361,9 @@ class MMGenExpect(object):
 		my_expect(self.p,("Enter passphrase for new %s: " % what), passphrase+"\n")
 		my_expect(self.p,"Repeat passphrase: ", passphrase+"\n")
 
-	def passphrase(self,what,passphrase):
-		my_expect(self.p,("Enter passphrase for %s.*?: " % what),
+	def passphrase(self,what,passphrase,pwtype=""):
+		if pwtype: pwtype += " "
+		my_expect(self.p,("Enter %spassphrase for %s.*?: " % (pwtype,what)),
 				passphrase+"\n",regex=True)
 
 	def hash_preset(self,what,preset=''):
@@ -486,22 +500,14 @@ def do_between():
 
 def do_cmd(ts,cmd):
 
-	al = []
-	for exts,idx in cmd_data[cmd][2]:
-		global cfg
-		cfg = cfgs[str(idx)]
-		for ext in exts:
-			while True:
-				infile = get_file_with_ext(ext,cfg['tmpdir'])
-				if infile:
-					al.append(infile); break
-				else:
-					dg = cfg['dep_generators'][ext]
-					if not quiet: msg("Need *.%s from '%s'" % (ext,dg))
-					do_cmd(ts,dg)
-					do_between()
+	d = [(str(num),ext) for exts,num in cmd_data[cmd][2] for ext in exts]
+	al = [get_file_with_ext(ext,cfgs[num]['tmpdir']) for num,ext in d]
+
+	global cfg
+	cfg = cfgs[str(cmd_data[cmd][0])]
 
 	MMGenTestSuite.__dict__[cmd](*([ts,cmd] + al))
+
 
 hincog_bytes   = 1024*1024
 hincog_offset  = 98765
@@ -509,30 +515,58 @@ hincog_seedlen = 256
 
 rebuild_list = OrderedDict()
 
-def check_if_needs_rebuild(num,ext):
-	ret = False
+def get_num_ext_for_cmd(cmd):
+	num = str(cmd_data[cmd][0])
+	dgl = cfgs[num]['dep_generators']
+#	msgrepr(num,cmd,dgl)
+	if cmd in dgl.values():
+		ext = [k for k in dgl if dgl[k] == cmd][0]
+		return (num,ext)
+	else:
+		return ('','')
 
-	fn = get_file_with_ext(ext,cfgs[num]['tmpdir'])
-	if not fn: ret = True
+def check_needs_rerun(cmd,build=False,root=True,force_delete=False):
 
-	cmd = cfgs[num]['dep_generators'][ext]
-	deps = [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
+	rerun = True if root else False
+
+	num,ext = get_num_ext_for_cmd(cmd) # does cmd produce a needed dependency?
+	if num and (force_delete or not root):
+		fn = get_file_with_ext(ext,cfgs[num]['tmpdir'],delete=build)
+		if not fn: rerun = True
+		if fn and force_delete:
+			os.unlink(fn); fn = ""
+	else: fn = ""
+
+	fdeps = [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
+	cdeps = [cfgs[str(n)]['dep_generators'][e] for n,e in fdeps]
 
 	if fn:
 		my_age = os.stat(fn).st_mtime
-		for num,ext in deps:
-			f = get_file_with_ext(ext,cfgs[num]['tmpdir'])
-			if f and os.stat(f).st_mtime > my_age: ret = True
+		for num,ext in fdeps:
+			f = get_file_with_ext(ext,cfgs[num]['tmpdir'],delete=build)
+			if f and os.stat(f).st_mtime > my_age: rerun = True
 
-	for num,ext in deps:
-		if check_if_needs_rebuild(num,ext): ret = True
+	for cdep in cdeps:
+		if check_needs_rerun(cdep,build=build,root=False): rerun = True
 
-	if ret and fn:
-		if not quiet: msg("File '%s' out of date - deleting" % fn)
-		os.unlink(fn)
+	if build:
+		if rerun:
+			if fn and not root:
+				os.unlink(fn)
+			do_cmd(ts,cmd)
+			if not root: do_between()
+	else:
+		# If prog produces multiple files:
+		if cmd not in rebuild_list or rerun == True:
+			rebuild_list[cmd] = (rerun,fn)
 
-	rebuild_list[cmd] = ret
-	return ret
+	return rerun
+
+def mk_tmpdir(cfg):
+	try: os.mkdir(cfg['tmpdir'],0755)
+	except OSError as e:
+		if e.errno != 17: raise
+	else: msg("Created directory '%s'" % cfg['tmpdir'])
 
 
 class MMGenTestSuite(object):
@@ -551,19 +585,17 @@ class MMGenTestSuite(object):
 			msg("'%s': unrecognized command" % cmd)
 			sys.exit(1)
 
-		d = [(str(num),ext) for exts,num in cmd_data[cmd][2] for ext in exts]
-
 		if not quiet:
-			w = "Checking" if d else "No"
-			msg("%s dependencies for '%s'" % (w,cmd))
+			msg("Checking dependencies for '%s'" % (cmd))
 
-		for num,ext in d:
-			check_if_needs_rebuild(num,ext)
+		check_needs_rerun(cmd,build=False)
 
-		if debug:
-			for cmd in rebuild_list:
-				msg("cmd: %-15s rebuild: %s" %
-						(cmd, cyan("Yes") if rebuild_list[cmd] else "No"))
+		w = max(len(i) for i in rebuild_list) + 1
+		for cmd in rebuild_list:
+			c = rebuild_list[cmd]
+			m = "Rebuild" if (c[0] and c[1]) else "Build" if c[0] else "OK"
+			msg("cmd {:<{w}} {}".format(cmd+":", m, w=w))
+# 			msgrepr(cmd,c)
 
 
 	def clean(self,name,dirs=[]):
@@ -576,11 +608,7 @@ class MMGenTestSuite(object):
 				sys.exit(1)
 
 	def walletgen(self,name,brain=False):
-		try: os.mkdir(cfg['tmpdir'],0755)
-		except OSError as e:
-			if e.errno != 17: raise
-		else: msg("Created directory '%s'" % cfg['tmpdir'])
-		# cleandir(cfg['tmpdir'])
+		mk_tmpdir(cfg)
 
 		args = ["-d",cfg['tmpdir'],"-p1","-r10"]
 		if brain:
@@ -604,6 +632,25 @@ class MMGenTestSuite(object):
 
 		t.passphrase_new("MMGen wallet",cfg['wpasswd'])
 		t.written_to_file("Wallet")
+		t.ok()
+
+	def passchg(self,name,walletfile):
+		mk_tmpdir(cfg)
+
+		t = MMGenExpect(name,"mmgen-passchg",
+			["-d",cfg['tmpdir'],"-p","2","-L","New Label","-r","16",walletfile])
+		t.passphrase("MMGen wallet",cfgs['1']['wpasswd'],pwtype="old")
+		t.expect_getend("Label changed: ")
+		t.expect_getend("Hash preset has changed ")
+		t.passphrase("MMGen wallet",cfg['wpasswd'],pwtype="new")
+		t.expect("Repeat passphrase: ",cfg['wpasswd']+"\n")
+		t.usr_rand(16)
+		t.expect_getend("Key ID changed: ")
+		t.written_to_file("Wallet")
+		t.ok()
+
+	def walletchk_newpass(self,name,walletfile):
+		t = self.walletchk_beg(name,[walletfile])
 		t.ok()
 
 	def walletchk_beg(self,name,args):
@@ -838,8 +885,6 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def walletgen2(self,name):
-		global cfg
-		cfg = cfgs['2']
 		self.walletgen(name)
 
 	def addrgen2(self,name,walletfile):
@@ -865,8 +910,6 @@ class MMGenTestSuite(object):
 		self.export_mnemonic(name,walletfile)
 
 	def walletgen3(self,name):
-		global cfg
-		cfg = cfgs['3']
 		self.walletgen(name)
 
 	def addrgen3(self,name,walletfile):
@@ -890,8 +933,6 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def walletgen4(self,name):
-		global cfg
-		cfg = cfgs['4']
 		self.walletgen(name,brain=True)
 
 	def addrgen4(self,name,walletfile):
@@ -900,7 +941,8 @@ class MMGenTestSuite(object):
 	def txcreate4(self,name,f1,f2,f3,f4):
 		self.txcreate_common(name,sources=['1','2','3','4'],non_mmgen_input='4')
 
-	def txsign4(self,name,f1,f2,f3,f4,f5,non_mm_fn):
+	def txsign4(self,name,f1,f2,f3,f4,f5):
+		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		t = MMGenExpect(name,"mmgen-txsign",
 			["-d",cfg['tmpdir'],"-b",cfg['bw_params'],"-k",non_mm_fn,f1,f2,f3,f4,f5])
 		t.license()
@@ -933,22 +975,18 @@ try:
 	if cmd_args:
 		arg1 = cmd_args[0]
 		if arg1 in utils:
-			if arg1 == "check_deps": debug = True
 			MMGenTestSuite.__dict__[arg1](ts,arg1,cmd_args[1:])
 			sys.exit()
 		elif arg1 in meta_cmds:
 			if len(cmd_args) == 1:
-				ts.clean("clean",str(meta_cmds[arg1][0]))
 				for cmd in meta_cmds[arg1][1]:
-					do_cmd(ts,cmd)
-					if cmd is not cmd_data.keys()[-1]: do_between()
+					check_needs_rerun(cmd,build=True,force_delete=True)
 			else:
 				msg("Only one meta command may be specified")
 				sys.exit(1)
 		elif arg1 in cmd_data:
 			if len(cmd_args) == 1:
-				ts.check_deps("check_deps",[arg1])
-				do_cmd(ts,arg1)
+				check_needs_rerun(arg1,build=True)
 			else:
 				msg("Only one command may be specified")
 				sys.exit(1)
