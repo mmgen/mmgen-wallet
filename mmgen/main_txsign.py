@@ -36,6 +36,7 @@ help_data = {
 -d, --outdir=         d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase    Print passphrase to screen when typing it
 -i, --info               Display information about the transaction and exit
+-t, --terse-info         Like '--info', but produce more concise output
 -I, --tx-id              Display transaction ID and exit
 -k, --keys-from-file= f  Provide additional keys for non-{MMG} addresses
 -K, --no-keyconv         Force use of internal libraries for address gener-
@@ -284,7 +285,8 @@ def get_keys_from_keylist(kldata,other_addrs):
 opts,infiles = parse_opts(sys.argv,help_data)
 
 for l in (
-('tx_id', 'info')
+('tx_id', 'info'),
+('tx_id', 'terse_info'),
 ): warn_incompatible_opts(opts,l)
 
 if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
@@ -299,7 +301,8 @@ saved_seeds = {}
 tx_files   = [i for i in infiles if get_extension(i) == g.rawtx_ext]
 seed_files = [i for i in infiles if get_extension(i) != g.rawtx_ext]
 
-if not "info" in opts: do_license_msg(immed=True)
+if not "info" in opts and not "terse_info" in opts:
+	do_license_msg(immed=True)
 
 from_file = { 'mmdata':{}, 'kldata':{} }
 if 'mmgen_keys_from_file' in opts:
@@ -317,20 +320,19 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	tx_data = get_lines_from_file(tx_file,m)
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,tx_file)
-	qmsg("Successfully opened transaction file '%s'" % tx_file)
+	vmsg("Successfully opened transaction file '%s'" % tx_file)
 
 	if 'tx_id' in opts:
 		msg(metadata[0])
 		sys.exit(0)
 
-	if 'info' in opts:
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata)
+	if 'info' in opts or 'terse_info' in opts:
+		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pause=False,
+				terse='terse_info' in opts)
 		sys.exit(0)
 
-	p = "View data for transaction{}? (y)es, (N)o, (v)iew in pager"
-	reply = prompt_and_get_char(p.format(tx_num_str),"YyNnVv",enter_ok=True)
-	if reply and reply in "YyVv":
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,reply in "Vv")
+	prompt_and_view_tx_data(c,"View data for transaction{}?".format(tx_num_str),
+		inputs_data,tx_hex,b2m_map,comment,metadata)
 
 	# Start
 	other_addrs = list(set([i['address'] for i in inputs_data

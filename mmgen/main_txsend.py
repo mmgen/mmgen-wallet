@@ -57,10 +57,8 @@ qmsg("Signed transaction file '%s' is valid" % infile)
 
 c = connect_to_bitcoind()
 
-prompt = "View transaction data? (y)es, (N)o, (v)iew in pager"
-reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
-if reply and reply in "YyVv":
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,reply in "Vv")
+prompt_and_view_tx_data(c,"View transaction data?",
+	inputs_data,tx_hex,b2m_map,comment,metadata)
 
 if keypress_confirm("Edit transaction comment?"):
 	comment = get_tx_comment_from_user(comment)

@@ -391,7 +391,7 @@ class MMGenExpect(object):
 		self.expect("Exiting at user request")
 
 	def tx_view(self):
-		my_expect(self.p,r"View .*?transaction.*? \(y\)es, \(N\)o, \(v\)iew in pager: ","\n",regex=True)
+		my_expect(self.p,r"View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ","\n",regex=True)
 
 	def expect_getend(self,s,regex=False):
 		ret = self.expect(s,regex=regex,nonl=True)
@@ -595,7 +595,7 @@ class MMGenTestSuite(object):
 			c = rebuild_list[cmd]
 			m = "Rebuild" if (c[0] and c[1]) else "Build" if c[0] else "OK"
 			msg("cmd {:<{w}} {}".format(cmd+":", m, w=w))
-# 			msgrepr(cmd,c)
+#			msgrepr(cmd,c)
 
 
 	def clean(self,name,dirs=[]):
@@ -878,7 +878,7 @@ class MMGenTestSuite(object):
 		t.hash_preset("key-address file",'1')
 		t.passphrase("key-address file",cfg['kapasswd'])
 		t.expect("Check key-to-address validity? (y/N): ","y")
-		t.expect("View data for transaction? (y)es, (N)o, (v)iew in pager: ","\n")
+		t.tx_view()
 		t.expect("Signing transaction...OK")
 		t.expect("Edit transaction comment? (y/N): ","\n")
 		t.written_to_file("Signed transaction")

@@ -465,16 +465,12 @@ else:
 tx_hex = c.createrawtransaction(tx_in,tx_out)
 qmsg("Transaction successfully created")
 
-prompt = "View decoded transaction? (y)es, (N)o, (v)iew in pager"
-reply = prompt_and_get_char(prompt,"YyNnVv",enter_ok=True)
-
 amt = send_amt or change
 tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
 metadata = tx_id, amt, make_timestamp()
 
-if reply and reply in "YyVv":
-	view_tx_data(c,[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,
-			comment,metadata,reply in "Vv")
+prompt_and_view_tx_data(c,"View decoded transaction?",
+	[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,comment,metadata)
 
 prompt = "Save transaction?"
 if keypress_confirm(prompt,default_yes=True):

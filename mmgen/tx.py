@@ -132,15 +132,28 @@ Only ASCII printable characters are permitted.
 """.strip() % (ch,label))
 			sys.exit(3)
 
+def prompt_and_view_tx_data(c,prompt,inputs_data,tx_hex,b2m_map,comment,metadata):
 
-def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause=True):
+	prompt += " (y)es, (N)o, pager (v)iew, (t)erse view"
+
+	reply = prompt_and_get_char(prompt,"YyNnVvTt",enter_ok=True)
+
+	if reply and reply in "YyVvTt":
+		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
+				pager=reply in "Vv",terse=reply in "Tt")
+
+
+def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause=True,terse=False):
 
 	td = c.decoderawtransaction(tx_hex)
 
-	out = "TRANSACTION DATA\n\n"
-	out += "Header: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n".format(*metadata)
-	if comment: out += "Comment: %s\n\n" % comment
-	out += "Inputs:\n\n"
+	fs = "Transaction {} - {} BTC - {} GMT\n" if terse else \
+	"TRANSACTION DATA\n\nHeader: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n"
+	out = fs.format(*metadata)
+
+	enl = "" if terse else "\n"
+	if comment: out += "Comment: %s\n%s" % (comment,enl)
+	out += "Inputs:\n" + enl
 
 	total_in = 0
 	for n,i in enumerate(td['vin']):
@@ -154,41 +167,53 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 					if not mmid: mmid = "non-%s address" % g.proj_name
 					mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
 
-				for d in (
+				if terse:
+					out += "  %s: %-54s %s BTC" % (n+1,j['address'] + mmid_str,
+							trim_exponent(j['amount']))
+				else:
+					for d in (
 	(n+1, "tx,vout:",       "%s,%s" % (i['txid'], i['vout'])),
 	("",  "address:",       j['address'] + mmid_str),
 	("",  "label:",         label),
 	("",  "amount:",        "%s BTC" % trim_exponent(j['amount'])),
 	("",  "confirmations:", "%s (around %s days)" % (j['confirmations'], days))
 					):
-					if d[2]: out += ("%3s %-8s %s\n" % d)
+						if d[2]: out += ("%3s %-8s %s\n" % d)
 				out += "\n"
 
 				break
 	total_out = 0
-	out += "Outputs:\n\n"
+	out += "Outputs:\n" + enl
 	for n,i in enumerate(td['vout']):
 		addr = i['scriptPubKey']['addresses'][0]
 		mmid,label = b2m_map[addr] if addr in b2m_map else ("","")
 		if not mmid: mmid = "non-%s address" % g.proj_name
 		mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
 		total_out += i['value']
-		for d in (
-				(n+1, "address:",  addr + mmid_str),
-				("",  "label:",    label),
-				("",  "amount:",   trim_exponent(i['value']))
-			):
-			if d[2]: out += ("%3s %-8s %s\n" % d)
+		if terse:
+			out += "  %s: %-54s %s BTC" % (n+1,addr + mmid_str,
+					trim_exponent(i['value']))
+		else:
+			for d in (
+					(n+1, "address:",  addr + mmid_str),
+					("",  "label:",    label),
+					("",  "amount:",   trim_exponent(i['value']))
+				):
+				if d[2]: out += ("%3s %-8s %s\n" % d)
 		out += "\n"
 
-	out += "Total input:  %s BTC\n" % trim_exponent(total_in)
-	out += "Total output: %s BTC\n" % trim_exponent(total_out)
-	out += "TX fee:       %s BTC\n" % trim_exponent(total_in-total_out)
+	fs = "In %s BTC - Out %s BTC - Fee %s BTC\n" if terse else \
+		"Total input:  %s BTC\nTotal output: %s BTC\nTX fee:       %s BTC\n"
+	out += fs % (
+		trim_exponent(total_in),
+		trim_exponent(total_out),
+		trim_exponent(total_in-total_out)
+	)
 
 	o = out.encode("utf8")
 	if pager: do_pager(o)
 	else:
-		print "\n"+o
+		print o
 		if pause:
 			get_char("Press any key to continue: ")
 			msg("")

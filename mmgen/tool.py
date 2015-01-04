@@ -66,7 +66,7 @@ commands = {
 	"str2id6":      ['<string (spaces are ignored)> [str]'],
 	"listaddresses":['minconf [int=1]','showempty [bool=False]','pager [bool=False]'],
 	"getbalance":   ['minconf [int=1]'],
-	"txview":       ['<MMGen tx file> [str]','pager [bool=False]'],
+	"txview":       ['<MMGen tx file> [str]','pager [bool=False]','terse [bool=False]'],
 	"addrfile_chksum": ['<MMGen addr file> [str]'],
 	"keyaddrfile_chksum": ['<MMGen addr file> [str]'],
 	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
@@ -424,12 +424,12 @@ def getbalance(minconf=1):
 	for key in sorted(accts.keys()):
 		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
 
-def txview(infile,pager=False):
+def txview(infile,pager=False,terse=False):
 	c = connect_to_bitcoind()
 	tx_data = get_lines_from_file(infile,"transaction data")
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False)
+	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False,terse=terse)
 
 def addrfile_chksum(infile): parse_addrfile(infile,{})
 def keyaddrfile_chksum(infile): parse_keyaddr_file(infile,{})
