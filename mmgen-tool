@@ -20,6 +20,10 @@
 mmgen-tool:  Perform various Bitcoin-related operations.
              Part of the MMGen suite
 """
+import sys
+print "MMGEN-TOOL was determined to be buggy and is in the process of maintenance."
+print "Please check back soon!"
+sys.exit(3)
 
 from mmgen.main import launch
 launch("tool")
