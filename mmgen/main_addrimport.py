@@ -20,11 +20,12 @@
 mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 """
 
-import sys
+import sys, time
 from mmgen.Opts   import *
 from mmgen.license import *
 from mmgen.util import *
-from mmgen.tx import connect_to_bitcoind,parse_addrfile,parse_keyaddr_file
+from mmgen.tx import connect_to_bitcoind
+from mmgen.addr import AddrInfo,AddrInfoEntry
 
 help_data = {
 	'prog_name': g.prog_name,
@@ -38,6 +39,7 @@ help_data = {
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
                    on the blockchain and has a balance.  Rescanning is slow.
+-t, --test         Simulate operation; don't actually import addresses
 """,
 	'notes': """\n
 This command can also be used to update the comment fields of addresses already
@@ -51,35 +53,38 @@ if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
 	if 'addrlist' in opts:
-		lines = get_lines_from_file(infile,"non-{} addresses".format(g.proj_name),
-				trim_comments=True)
-		addr_list = [(None,l) for l in lines]
-		seed_id = ""
+		lines = get_lines_from_file(
+			infile,"non-{} addresses".format(g.proj_name),trim_comments=True)
+		ai,adata = AddrInfo(),[]
+		for btcaddr in lines:
+			a = AddrInfoEntry()
+			a.idx,a.addr,a.comment = None,btcaddr,None
+			adata.append(a)
+		ai.initialize(None,adata)
 	else:
-		addr_data = {}
-		pf = parse_keyaddr_file if 'keyaddr_file' in opts else parse_addrfile
-		pf(infile,addr_data)
-		seed_id = addr_data.keys()[0]
-		e = addr_data[seed_id]
-		def s_addrdata(a): return ("{:>0%s}"%g.mmgen_idx_max_digits).format(a)
-		addr_list = [(k,e[k][0],e[k][1]) for k in sorted(e.keys(),key=s_addrdata)]
+		ai = AddrInfo(infile,has_keys='keyaddr_file' in opts)
 else:
-	msg_r("You must specify an mmgen address list (or a list of ")
-	msg("non-%s addresses with\nthe '--addrlist' option)" % g.proj_name)
+	msg("""
+"You must specify an mmgen address file (or a list of non-%s addresses
+with the '--addrlist' option)
+""".strip() % g.proj_name)
 	sys.exit(1)
 
 from mmgen.bitcoin import verify_addr
 qmsg_r("Validating addresses...")
-for n,i in enumerate(addr_list,1):
-	if not verify_addr(i[1],verbose=True):
-		msg("%s: invalid address" % i)
+for e in ai.addrdata:
+	if not verify_addr(e.addr,verbose=True):
+		msg("%s: invalid address" % e.addr)
 		sys.exit(2)
-qmsg("OK. %s addresses%s" % (n," from seed ID "+seed_id if seed_id else ""))
+
+m = (" from seed ID %s" % ai.seed_id) if ai.seed_id else ""
+qmsg("OK. %s addresses%s" % (ai.num_addrs,m))
 
 import mmgen.config as g
 g.http_timeout = 3600
 
-c = connect_to_bitcoind()
+if not 'test' in opts:
+	c = connect_to_bitcoind()
 
 m = """
 WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
@@ -101,31 +106,30 @@ err_flag = False
 
 def import_address(addr,label,rescan):
 	try:
-		c.importaddress(addr,label,rescan)
+		if not 'test' in opts:
+			c.importaddress(addr,label,rescan)
 	except:
 		global err_flag
 		err_flag = True
 
-
-w1 = len(str(len(addr_list))) * 2 + 2
-w2 = "" if 'addrlist' in opts else \
-		len(str(max([i[0] for i in addr_list if i[0]]))) + 12 \
+w_n_of_m = len(str(ai.num_addrs)) * 2 + 2
+w_mmid   = "" if 'addrlist' in opts else len(str(max(ai.idxs()))) + 12
 
 if "rescan" in opts:
 	import threading
-	import time
-	msg_fmt = "\r%s %-" + str(w1) + "s %-34s %-" + str(w2) + "s"
+	msg_fmt = "\r%s %-{}s %-34s %s".format(w_n_of_m)
 else:
-	msg_fmt = "\r%-" + str(w1) + "s %-34s %-" + str(w2) + "s"
+	msg_fmt = "\r%-{}s %-34s %s".format(w_n_of_m, w_mmid)
 
 msg("Importing addresses")
-for n,i in enumerate(addr_list):
-	if i[0]:
-		label = "%s:%s%s" % (seed_id,i[0], (" "+i[2] if i[2] else ""))
-	else: label = "non-mmgen"
+for n,e in enumerate(ai.addrdata):
+	if e.idx:
+		label = "%s:%s" % (ai.seed_id,e.idx)
+		if e.comment: label += " " + e.comment
+	else: label = "non-%s" % g.proj_name
 
 	if "rescan" in opts:
-		t = threading.Thread(target=import_address, args=(i[1],label,True))
+		t = threading.Thread(target=import_address, args=(e.addr,label,True))
 		t.daemon = True
 		t.start()
 
@@ -134,20 +138,18 @@ for n,i in enumerate(addr_list):
 		while True:
 			if t.is_alive():
 				elapsed = int(time.time() - start)
-				msg_r(msg_fmt % (
-						secs_to_hms(elapsed),
-						("%s/%s:" % (n+1,len(addr_list))),
-						i[1], "(" + label + ")"
-					)
-				)
+				count = "%s/%s:" % (n+1, ai.num_addrs)
+				msg_r(msg_fmt % (secs_to_hms(elapsed),count,e.addr,"(%s)"%label))
 				time.sleep(1)
 			else:
 				if err_flag: msg("\nImport failed"); sys.exit(2)
 				msg("\nOK")
 				break
 	else:
-		import_address(i[1],label,rescan=False)
-		msg_r(msg_fmt % (("%s/%s:" % (n+1,len(addr_list))),
-							i[1], "(" + label + ")"))
-		if err_flag: msg("\nImport failed"); sys.exit(2)
+		import_address(e.addr,label,rescan=False)
+		count = "%s/%s:" % (n+1, ai.num_addrs)
+		msg_r(msg_fmt % (count, e.addr, "(%s)"%label))
+		if err_flag:
+			msg("\nImport failed")
+			sys.exit(2)
 		msg(" - OK")

@@ -87,8 +87,7 @@ def wallet_to_incog_data(infile,opts):
 
 	# IV is used BOTH to initialize counter and to salt password!
 	key = make_key(passwd, iv, preset, "incog wrapper key")
-	m = "incog data"
-	wrap_enc = encrypt_data(salt + enc_seed, key, int(hexlify(iv),16), m)
+	wrap_enc = encrypt_data(salt+enc_seed,key,int(hexlify(iv),16),"incog data")
 
 	return iv+wrap_enc,seed_id,key_id,iv_id,preset
 
@@ -118,15 +117,16 @@ if len(cmd_args) != 1: usage(help_data)
 
 check_infile(cmd_args[0])
 
-if set(['outdir','export_incog_hidden']).issubset(set(opts.keys())):
+if set(['outdir','export_incog_hidden']) <= set(opts.keys()):
 	msg("Warning: '--outdir' option is ignored when exporting hidden incog data")
+
+g.use_urandchars = True
 
 if 'export_mnemonic' in opts:
 	qmsg("Exporting mnemonic data to file by user request")
 elif 'export_seed' in opts:
 	qmsg("Exporting seed data to file by user request")
 elif 'export_incog' in opts:
-	if opts['usr_randchars'] == -1: opts['usr_randchars'] = g.usr_randchars_dfl
 	qmsg("Exporting wallet to incognito format by user request")
 	incog_enc,seed_id,key_id,iv_id,preset = \
 		wallet_to_incog_data(cmd_args[0],opts)

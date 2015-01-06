@@ -29,7 +29,6 @@ from mmgen.license import *
 from mmgen.util import *
 from mmgen.crypto import *
 from mmgen.addr import *
-from mmgen.tx import make_addr_data_chksum
 
 what = "keys" if sys.argv[0].split("-")[-1] == "keygen" else "addresses"
 
@@ -148,40 +147,27 @@ if what == "keys" and not g.quiet:
 # Generate data:
 
 seed    = get_seed_retry(infile,opts)
-seed_id = make_chksum_8(seed)
 
 opts['gen_what'] = "a" if what == "addresses" else (
 	"k" if 'no_addresses' in opts else "ka")
 
-addr_data = generate_addrs(seed, addr_idxs, opts)
+ainfo = generate_addrs(seed, addr_idxs, opts)
 
-if 'a' in opts['gen_what']:
-	if 'k' in opts['gen_what']:
-		def l(a): return ( a.num, (a.addr,"",a.wif) )
-		keys = True
-	else:
-		def l(a): return ( a.num, (a.addr,) )
-		keys = False
-	addr_data_chksum = make_addr_data_chksum([l(a) for a in addr_data],keys)
-else:
-	addr_data_chksum = ""
+addrdata_str = ainfo.fmt_data()
+outfile_base = "{}[{}]".format(make_chksum_8(seed), ainfo.idxs_fmt)
 
-addr_data_str = format_addr_data(
-		addr_data, addr_data_chksum, seed_id, addr_idxs, opts)
-
-outfile_base = "{}[{}]".format(seed_id, fmt_addr_idxs(addr_idxs))
 if 'a' in opts['gen_what']:
 	w = "key-address" if 'k' in opts['gen_what'] else "address"
-	qmsg("Checksum for %s data %s: %s" % (w,outfile_base,addr_data_chksum))
+	qmsg("Checksum for %s data %s: %s" % (w,outfile_base,ainfo.checksum))
 	if 'save_checksum' in opts:
 		write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
-			addr_data_chksum+"\n",opts,"%s data checksum" % w,True,True,False)
+			ainfo.checksum+"\n",opts,"%s data checksum" % w,True,True,False)
 	else:
 		qmsg("This checksum will be used to verify the %s file in the future."%w)
 		qmsg("Record it to a safe location.")
 
 if 'k' in opts['gen_what'] and keypress_confirm("Encrypt key list?"):
-	addr_data_str = mmgen_encrypt(addr_data_str,"new key list","",opts)
+	addrdata_str = mmgen_encrypt(addrdata_str,"new key list","",opts)
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
 
@@ -190,11 +176,11 @@ if 'stdout' in opts or not sys.stdout.isatty():
 	if enc_ext and sys.stdout.isatty():
 		msg("Cannot write encrypted data to screen.  Exiting")
 		sys.exit(2)
-	write_to_stdout(addr_data_str,what,
+	write_to_stdout(addrdata_str,what,
 		(what=="keys"and not g.quiet and sys.stdout.isatty()))
 else:
 	outfile = "%s.%s%s" % (outfile_base, (
 		g.keyaddrfile_ext if "ka" in opts['gen_what'] else (
 		g.keyfile_ext if "k" in opts['gen_what'] else
 		g.addrfile_ext)), enc_ext)
-	write_to_file(outfile,addr_data_str,opts,what,not g.quiet,True)
+	write_to_file(outfile,addrdata_str,opts,what,not g.quiet,True)

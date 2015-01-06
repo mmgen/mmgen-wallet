@@ -23,6 +23,7 @@ tx.py:  Bitcoin transaction routines
 import sys, os
 from binascii import unhexlify
 from decimal import Decimal
+from collections import OrderedDict
 
 import mmgen.config as g
 from mmgen.util import *
@@ -34,7 +35,7 @@ def trim_exponent(n):
 	d = Decimal(n)
 	return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
-def is_btc_amt(amt):
+def normalize_btc_amt(amt):
 	# amt must be a string!
 
 	from decimal import Decimal
@@ -57,12 +58,6 @@ def is_btc_amt(amt):
 
 	return trim_exponent(ret)
 
-def normalize_btc_amt(amt):
-	# amt must be a string!
-	ret = is_btc_amt(amt)
-	if ret: return ret
-	else:   sys.exit(3)
-
 def parse_mmgen_label(s,check_label_len=False):
 	l = split2(s)
 	if not is_mmgen_addr(l[0]): return "",s
@@ -74,9 +69,9 @@ def is_mmgen_seed_id(s):
 	return re.match(r"^[0123456789ABCDEF]{8}$",s) is not None
 
 def is_mmgen_idx(s):
-	import re
-	m = g.mmgen_idx_max_digits
-	return re.match(r"^[0123456789]{1,"+str(m)+r"}$",s) is not None
+	try: int(s)
+	except: return False
+	return len(s) <= g.mmgen_idx_max_digits
 
 def is_mmgen_addr(s):
 	seed_id,idx = split2(s,":")
@@ -88,11 +83,9 @@ def is_btc_addr(s):
 
 def is_b58_str(s):
 	from mmgen.bitcoin import b58a
-	for ch in s:
-		if ch not in b58a: return False
-	return True
+	return set(list(s)) <= set(b58a)
 
-def is_btc_key(s):
+def is_wip_key(s):
 	if s == "": return False
 	compressed = not s[0] == '5'
 	from mmgen.bitcoin import wiftohex
@@ -132,14 +125,14 @@ Only ASCII printable characters are permitted.
 """.strip() % (ch,label))
 			sys.exit(3)
 
-def prompt_and_view_tx_data(c,prompt,inputs_data,tx_hex,b2m_map,comment,metadata):
+def prompt_and_view_tx_data(c,prompt,inputs_data,tx_hex,adata,comment,metadata):
 
 	prompt += " (y)es, (N)o, pager (v)iew, (t)erse view"
 
 	reply = prompt_and_get_char(prompt,"YyNnVvTt",enter_ok=True)
 
 	if reply and reply in "YyVvTt":
-		view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,
+		view_tx_data(c,inputs_data,tx_hex,adata,comment,metadata,
 				pager=reply in "Vv",terse=reply in "Tt")
 
 
@@ -155,26 +148,24 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 	if comment: out += "Comment: %s\n%s" % (comment,enl)
 	out += "Inputs:\n" + enl
 
+	nonmm_str = "non-%s address" % g.proj_name
+
 	total_in = 0
 	for n,i in enumerate(td['vin']):
 		for j in inputs_data:
 			if j['txid'] == i['txid'] and j['vout'] == i['vout']:
 				days = int(j['confirmations'] * g.mins_per_block / (60*24))
 				total_in += j['amount']
-				mmid,label,mmid_str = "","",""
-				if 'account' in j:
-					mmid,label = parse_mmgen_label(j['account'])
-					if not mmid: mmid = "non-%s address" % g.proj_name
-					mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
-
+				if not j['mmid']: j['mmid'] = nonmm_str
+				mmid_fmt = " ({:>{l}})".format(j['mmid'],l=34-len(j['address']))
 				if terse:
-					out += "  %s: %-54s %s BTC" % (n+1,j['address'] + mmid_str,
+					out += "  %s: %-54s %s BTC" % (n+1,j['address'] + mmid_fmt,
 							trim_exponent(j['amount']))
 				else:
 					for d in (
 	(n+1, "tx,vout:",       "%s,%s" % (i['txid'], i['vout'])),
-	("",  "address:",       j['address'] + mmid_str),
-	("",  "label:",         label),
+	("",  "address:",       j['address'] + mmid_fmt),
+	("",  "comment:",       j['comment']),
 	("",  "amount:",        "%s BTC" % trim_exponent(j['amount'])),
 	("",  "confirmations:", "%s (around %s days)" % (j['confirmations'], days))
 					):
@@ -185,18 +176,17 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 	total_out = 0
 	out += "Outputs:\n" + enl
 	for n,i in enumerate(td['vout']):
-		addr = i['scriptPubKey']['addresses'][0]
-		mmid,label = b2m_map[addr] if addr in b2m_map else ("","")
-		if not mmid: mmid = "non-%s address" % g.proj_name
-		mmid_str = " ({:>{l}})".format(mmid,l=34-len(j['address']))
+		btcaddr = i['scriptPubKey']['addresses'][0]
+		mmid,comment=b2m_map[btcaddr] if btcaddr in b2m_map else (nonmm_str,"")
+		mmid_fmt = " ({:>{l}})".format(mmid,l=34-len(j['address']))
 		total_out += i['value']
 		if terse:
-			out += "  %s: %-54s %s BTC" % (n+1,addr + mmid_str,
+			out += "  %s: %-54s %s BTC" % (n+1,btcaddr + mmid_fmt,
 					trim_exponent(i['value']))
 		else:
 			for d in (
-					(n+1, "address:",  addr + mmid_str),
-					("",  "label:",    label),
+					(n+1, "address:",  btcaddr + mmid_fmt),
+					("",  "comment:",  comment),
 					("",  "amount:",   trim_exponent(i['value']))
 				):
 				if d[2]: out += ("%3s %-8s %s\n" % d)
@@ -213,7 +203,7 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 	o = out.encode("utf8")
 	if pager: do_pager(o)
 	else:
-		print o
+		sys.stdout.write(o)
 		if pause:
 			get_char("Press any key to continue: ")
 			msg("")
@@ -262,140 +252,17 @@ def parse_tx_file(tx_data,infile):
 		return metadata.split(),tx_hex,inputs_data,outputs_data,comment
 
 
+def wiftoaddr_keyconv(wif):
+	if wif[0] == '5':
+		from subprocess import check_output
+		return check_output(["keyconv", wif]).split()[1]
+	else:
+		return wiftoaddr(wif)
+
 def get_wif2addr_f():
 	if g.no_keyconv: return wiftoaddr
 	from mmgen.addr import test_for_keyconv
 	return wiftoaddr_keyconv if test_for_keyconv() else wiftoaddr
-
-
-def make_addr_data_chksum(adata,keys=False):
-	nchars = 24
-	return make_chksum_N(" ".join([" ".join(
-					[str(n),d[0],d[2]] if keys else [str(n),d[0]]
-				) for n,d in adata]), nchars, sep=True)
-
-
-def get_addr_data_hash(e,keys=False):
-	def s_addrdata(a): return int(a[0])
-	adata = [(k,e[k]) for k in e.keys()]
-	return make_addr_data_chksum(sorted(adata,key=s_addrdata),keys)
-
-
-def _parse_addrfile_body(lines,keys=False,check=False):
-
-	def parse_addr_lines(lines):
-		ret = []
-		for l in lines:
-			d = l.split(None,2)
-
-			if not is_mmgen_idx(d[0]):
-				msg("'%s': invalid address num. in line: '%s'" % (d[0],l))
-				sys.exit(3)
-
-			if not is_btc_addr(d[1]):
-				msg("'%s': invalid Bitcoin address" % d[1])
-				sys.exit(3)
-
-			if len(d) == 3:
-				comment = d[2]
-				check_addr_label(comment)
-			else:
-				comment = ""
-
-			ret.append([d[0],d[1],comment])
-
-		return ret
-
-	def parse_key_lines(lines):
-		ret = []
-		for l in lines:
-			d = l.split(None,2)
-
-			if d[0] != "wif:":
-				msg("Invalid key line in file: '%s'" % l)
-				sys.exit(3)
-
-			if not is_btc_key(d[1]):
-				msg("'%s': invalid Bitcoin key" % d[1])
-				sys.exit(3)
-
-			ret.append(d[1])
-
-		return ret
-
-	z = len(lines) / 2
-	if keys:
-        # returns list of lists
-		adata = parse_addr_lines([lines[i*2] for i in range(z)])
-        # returns list of strings
-		kdata = parse_key_lines([lines[i*2+1] for i in range(z)])
-		if len(adata) != len(kdata):
-			msg("Odd number of lines in key file")
-			sys.exit(2)
-		if check or keypress_confirm("Check key-to-address validity?"):
-			wif2addr_f = get_wif2addr_f()
-			for i in range(z):
-				msg_r("\rVerifying keys %s/%s" % (i+1,z))
-				if adata[i][1] != wif2addr_f(kdata[i]):
-					msg("Key doesn't match address!\n  %s\n  %s" %
-							kdata[i],adata[i][1])
-					sys.exit(2)
-			msg(" - done")
-		return [adata[i] + [kdata[i]] for i in range(z)]
-	else:
-		return parse_addr_lines(lines)
-
-
-def parse_addrfile(f,addr_data,keys=False,return_chk_and_sid=False):
-	return parse_addrfile_lines(
-				get_lines_from_file(f,"address data",trim_comments=True),
-					addr_data,keys,return_chk_and_sid=return_chk_and_sid)
-
-def parse_addrfile_lines(lines,addr_data,keys=False,exit_on_error=True,return_chk_and_sid=False):
-
-	try:
-		seed_id,obrace = lines[0].split()
-	except:
-		errmsg = "Invalid first line: '%s'" % lines[0]
-	else:
-		cbrace = lines[-1]
-		if obrace != '{':
-			errmsg = "'%s': invalid first line" % lines[0]
-		elif cbrace != '}':
-			errmsg = "'%s': invalid last line" % cbrace
-		elif not is_mmgen_seed_id(seed_id):
-			errmsg = "'%s': invalid Seed ID" % seed_id
-		else:
-			ldata = _parse_addrfile_body(lines[1:-1],keys)
-			if seed_id not in addr_data: addr_data[seed_id] = {}
-			for l in ldata:
-				addr_data[seed_id][l[0]] = l[1:]
-			chk = get_addr_data_hash(addr_data[seed_id],keys)
-			if return_chk_and_sid: return chk,seed_id
-			from mmgen.addr import fmt_addr_idxs
-			fl = fmt_addr_idxs([int(i) for i in addr_data[seed_id].keys()])
-			w = "key" if keys else "addr"
-			qmsg_r("Computed checksum for "+w+" data ",w.capitalize()+" checksum ")
-			msg("{}[{}]: {}".format(seed_id,fl,chk))
-			qmsg("Check this value against your records")
-			return True
-
-	if exit_on_error:
-		msg(errmsg)
-		sys.exit(3)
-	else:
-		return False
-
-
-def parse_keyaddr_file(infile,addr_data):
-	d = get_data_from_file(infile,"%s key-address file data" % g.proj_name)
-	enc_ext = get_extension(infile) == g.mmenc_ext
-	if enc_ext or not is_utf8(d):
-		m = "Decrypting" if enc_ext else "Attempting to decrypt"
-		msg("%s key-address file %s" % (m,infile))
-		from crypto import mmgen_decrypt_retry
-		d = mmgen_decrypt_retry(d,"key-address file")
-	parse_addrfile_lines(remove_comments(d.split("\n")),addr_data,True,False)
 
 
 def get_tx_comment_from_file(infile):
@@ -469,11 +336,3 @@ def connect_to_bitcoind():
 		sys.exit(2)
 
 	return c
-
-
-def wiftoaddr_keyconv(wif):
-	if wif[0] == '5':
-		from subprocess import check_output
-		return check_output(["keyconv", wif]).split()[1]
-	else:
-		return wiftoaddr(wif)

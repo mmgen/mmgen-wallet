@@ -59,7 +59,11 @@ mmenc_ext    = "mmenc"
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 
-dfl_vars = "seed_len","hash_preset","usr_randchars"
+# Global value sets user opt
+dfl_vars = "seed_len","hash_preset"
+
+# User opt sets global value
+usr_set_vars = "no_keyconv","verbose","quiet","usr_randchars"
 
 seed_lens = 128,192,256
 seed_len  = 256
@@ -78,8 +82,11 @@ disable_hold_protect = os.getenv("MMGEN_DISABLE_HOLD_PROTECT")
 
 mins_per_block = 8.5
 passwd_max_tries = 5
-usr_randchars,usr_randchars_dfl = -1,30 # see get_random()
+
+usr_randchars = 30
 max_urandchars,min_urandchars = 80,10
+use_urandchars = False
+
 salt_len    = 16
 aesctr_iv_len  = 16
 

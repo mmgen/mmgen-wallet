@@ -23,7 +23,7 @@ Opts.py:  Option handling routines for the MMGen suite
 import sys
 import mmgen.config as g
 import mmgen.opt.Opts
-from mmgen.util import msg,check_infile,check_outfile,check_outdir
+from mmgen.util import msg,check_infile,check_outfile,check_outdir,msgrepr_exit,msgrepr
 
 def usage(hd): mmgen.opt.Opts.usage(hd)
 
@@ -60,17 +60,28 @@ def parse_opts(argv,help_data):
 	('quiet','verbose')
 	): warn_incompatible_opts(opts,l)
 
-	# check_opts() doesn't touch opts[]
+	if 'usr_randchars' in opts: g.use_urandchars = True
+
+	# check opts[] dictionary without modifying it
 	if not check_opts(opts,long_opts): sys.exit(1)
 
-	# If unset, set these to default values in mmgen.config (g):
+	# If user opt is unset, set it to default value in mmgen.config (g):
 	for v in g.dfl_vars:
 		if v in opts: typeconvert_override_var(opts,v)
 		else: opts[v] = g.__dict__[v]
 
-	# Opposite of above: if set, override the default values in mmgen.config (g):
-	for k in 'no_keyconv','verbose','quiet':
-		if k in opts: g.__dict__[k] = opts[k]
+	# Opposite of above: set the value in mmgen.config (g) from user opt:
+	for k in g.usr_set_vars:
+		if k in opts:
+			v = opts[k]
+			try: v = type(g.__dict__[k])(v)
+			except:
+				msg(
+	"Argument '%s' for option '--%s' cannot be converted to target type %s" %
+		(v,k.replace("_","-"),type(g.__dict__[k]))
+				)
+				sys.exit(1)
+			g.__dict__[k] = v
 
 	if g.debug: print "opts after typeconvert: %s" % opts
 
@@ -170,7 +181,6 @@ def check_opts(opts,long_opts):
 			if not opt_is_in_list(val,g.hash_presets.keys(),what): return False
 		elif opt == 'usr_randchars':
 			if not opt_is_int(val,what): return False
-			if val == '0': continue
 			if not opt_compares(val,">=",g.min_urandchars,what): return False
 			if not opt_compares(val,"<=",g.max_urandchars,what): return False
 		else:

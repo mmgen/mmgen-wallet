@@ -431,8 +431,13 @@ def txview(infile,pager=False,terse=False):
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False,terse=terse)
 
-def addrfile_chksum(infile): parse_addrfile(infile,{})
-def keyaddrfile_chksum(infile): parse_keyaddr_file(infile,{})
+def addrfile_chksum(infile):
+	from mmgen.addr import AddrInfo
+	AddrInfo(infile)
+
+def keyaddrfile_chksum(infile):
+	from mmgen.addr import AddrInfo
+	AddrInfo(infile,has_keys=True)
 
 def hexreverse(hex_str):
 	print ba.hexlify(decode_pretty_hexdump(hex_str)[::-1])

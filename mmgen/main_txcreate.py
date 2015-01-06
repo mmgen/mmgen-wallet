@@ -115,7 +115,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 			if i.skip == "txid" and "grouped" in sort_info else str(i.txid)
 
 		s = pfs % (str(n+1)+")", tx+","+str(i.vout),addr,
-				i.mmid,i.amt,i.confirmations,i.days,i.label)
+				i.mmid,i.amt,i.confirmations,i.days,i.comment)
 		pout.append(s.rstrip())
 
 	return \
@@ -131,15 +131,16 @@ def sort_and_view(unspent,opts):
 	def s_addr(i):  return i.address
 	def s_age(i):   return i.confirmations
 	def s_mmgen(i):
-		m = parse_mmgen_label(i.account)[0]
-		if m: return "{}:{:>0{w}}".format(w=g.mmgen_idx_max_digits, *m.split(":"))
-		else: return "G" + i.account
+		if i.mmid:
+			return "{}:{:>0{w}}".format(
+				*i.mmid.split(":"), w=g.mmgen_idx_max_digits)
+		else: return "G" + i.comment
 
 	sort,group,show_days,show_mmaddr,reverse = "age",False,False,True,True
 	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
 
 	total = trim_exponent(sum([i.amount for i in unspent]))
-	max_acct_len = max([len(i.account) for i in unspent])
+	max_acct_len = max([len(i.mmid+" "+i.comment) for i in unspent])
 
 	hdr_fmt   = "UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s"
 	options_msg = """
@@ -149,6 +150,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	prompt = \
 "('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
 
+	mmid_w = max(len(i.mmid) for i in unspent)
 	from copy import deepcopy
 	from mmgen.term import get_terminal_size
 
@@ -184,7 +186,6 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			i.amt = " "*lfill + amt
 			i.days = int(i.confirmations * g.mins_per_block / (60*24))
 			i.age = i.days if show_days else i.confirmations
-			i.mmid,i.label = parse_mmgen_label(i.account)
 
 			if i.skip == "addr":
 				i.addr = "|" + "." * 33
@@ -193,8 +194,10 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 					dots = ".." if btaddr_w < len(i.address) else ""
 					i.addr = "%s%s %s" % (
 						i.address[:btaddr_w-len(dots)],
-						dots,
-						i.account[:acct_w])
+						dots, (
+                        ("{:<{w}} ".format(i.mmid,w=mmid_w) if i.mmid else "")
+                            + i.comment)[:acct_w]
+                        )
 				else:
 					i.addr = i.address
 
@@ -295,7 +298,7 @@ def get_acct_data_from_wallet(c,acct_data):
 
 def mmaddr2btcaddr_unspent(unspent,mmaddr):
 	vmsg_r("Searching for {g.proj_name} address {m} in wallet...".format(g=g,m=mmaddr))
-	m = [u for u in unspent if u.account.split()[0] == mmaddr]
+	m = [u for u in unspent if u.mmid == mmaddr]
 	if len(m) == 0:
 		vmsg("not found")
 		return "",""
@@ -303,18 +306,19 @@ def mmaddr2btcaddr_unspent(unspent,mmaddr):
 		msg(wmsg['too_many_acct_addresses'] % acct); sys.exit(2)
 	else:
 		vmsg("success (%s)" % m[0].address)
-		return m[0].address, split2(m[0].account)[1]
+		return m[0].address, m[0].comment
 	sys.exit()
 
 
-def mmaddr2btcaddr(c,mmaddr,acct_data,addr_data,b2m_map):
+def mmaddr2btcaddr(c,mmaddr,acct_data,ail):
 	# assume mmaddr has already been checked
 	if not acct_data: get_acct_data_from_wallet(c,acct_data)
-	btcaddr,comment = mmaddr2btcaddr_addrdata(mmaddr,acct_data,"wallet")
+	btcaddr = mmaddr2btcaddr_addrdata(mmaddr,acct_data,"wallet")[0]
 #	btcaddr,comment = mmaddr2btcaddr_unspent(us,mmaddr)
 	if not btcaddr:
-		if addr_data:
-			btcaddr,comment = mmaddr2btcaddr_addrdata(mmaddr,addr_data,"addr file")
+		if ail:
+			sid,idx = mmaddr.split(":")
+			btcaddr = ail.addrinfo(sid).btcaddr(int(idx))
 			if btcaddr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm("Continue anyway?"):
@@ -326,7 +330,6 @@ def mmaddr2btcaddr(c,mmaddr,acct_data,addr_data,b2m_map):
 			msg(wmsg['addr_not_found_no_addrfile'].format(mmgenaddr=mmaddr))
 			sys.exit(2)
 
-	b2m_map[btcaddr] = mmaddr,comment
 	return btcaddr
 
 
@@ -342,14 +345,16 @@ c = connect_to_bitcoind()
 if not 'info' in opts:
 	do_license_msg(immed=True)
 
-	tx_out,addr_data,b2m_map,acct_data,change_addr = {},{},{},{},""
+	tx_out,acct_data,change_addr = {},{},""
+	from mmgen.addr import AddrInfo,AddrInfoList
+	ail = AddrInfoList()
 
 	addrfiles = [a for a in cmd_args if get_extension(a) == g.addrfile_ext]
 	cmd_args = set(cmd_args) - set(addrfiles)
 
 	for a in addrfiles:
 		check_infile(a)
-		parse_addrfile(a,addr_data)
+		ail.add(AddrInfo(a))
 
 	for a in cmd_args:
 		if "," in a:
@@ -357,13 +362,14 @@ if not 'info' in opts:
 			if is_btc_addr(a1):
 				btcaddr = a1
 			elif is_mmgen_addr(a1):
-				btcaddr = mmaddr2btcaddr(c,a1,acct_data,addr_data,b2m_map)
+				btcaddr = mmaddr2btcaddr(c,a1,acct_data,ail)
 			else:
 				msg("%s: unrecognized subargument in argument '%s'" % (a1,a))
 				sys.exit(2)
 
-			if is_btc_amt(a2):
-				tx_out[btcaddr] = normalize_btc_amt(a2)
+			ret = normalize_btc_amt(a2)
+			if ret:
+				tx_out[btcaddr] = ret
 			else:
 				msg("%s: invalid amount in argument '%s'" % (a2,a))
 				sys.exit(2)
@@ -373,7 +379,7 @@ if not 'info' in opts:
 						(change_addr, a))
 				sys.exit(2)
 			change_addr = a if is_btc_addr(a) else \
-				mmaddr2btcaddr(c,a,acct_data,addr_data,b2m_map)
+							mmaddr2btcaddr(c,a,acct_data,ail)
 			tx_out[change_addr] = 0
 		else:
 			msg("%s: unrecognized argument" % a)
@@ -398,7 +404,9 @@ else:
 #	write_to_file("bogus_unspent.json", repr(us), opts); sys.exit()
 
 if not us: msg(wmsg['no_spendable_outputs']); sys.exit(2)
-
+for o in us:
+	o.mmid,o.comment = parse_mmgen_label(o.account)
+	del o.account
 unspent = sort_and_view(us,opts)
 
 total = trim_exponent(sum([i.amount for i in unspent]))
@@ -418,7 +426,7 @@ while True:
 	)
 	sel_unspent = [unspent[i-1] for i in sel_nums]
 
-	mmaddrs = set([parse_mmgen_label(i.account)[0] for i in sel_unspent])
+	mmaddrs = set([i.mmid for i in sel_unspent])
 	mmaddrs.discard("")
 
 	if mmaddrs and len(mmaddrs) < len(sel_unspent):
@@ -468,15 +476,23 @@ qmsg("Transaction successfully created")
 amt = send_amt or change
 tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
 metadata = tx_id, amt, make_timestamp()
+sel_unspent = [i.__dict__ for i in sel_unspent]
+
+def make_b2m_map(inputs_data,tx_out):
+	m = [(d['address'],(d['mmid'],d['comment'])) for d in inputs_data if d['mmid']]
+	d = ail.make_reverse_dict(tx_out.keys())
+	d.update(m)
+	return d
+
+b2m_map = make_b2m_map(sel_unspent,tx_out)
 
 prompt_and_view_tx_data(c,"View decoded transaction?",
-	[i.__dict__ for i in sel_unspent],tx_hex,b2m_map,comment,metadata)
+		sel_unspent,tx_hex,b2m_map,comment,metadata)
 
-prompt = "Save transaction?"
-if keypress_confirm(prompt,default_yes=True):
+if keypress_confirm("Save transaction?",default_yes=False):
 	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
-	data = make_tx_data("{} {} {}".format(*metadata), tx_hex,
-			[i.__dict__ for i in sel_unspent], b2m_map, comment)
+	data = make_tx_data("{} {} {}".format(*metadata),
+				tx_hex,sel_unspent,b2m_map,comment)
 	write_to_file(outfile,data,opts,"transaction",False,True)
 else:
 	msg("Transaction not saved")

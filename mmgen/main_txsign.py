@@ -139,9 +139,8 @@ def get_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds,opts):
 		# Returns only if seed is found
 		seed = get_seed_for_seed_id(seed_id,infiles,saved_seeds,opts)
 		addr_nums = [int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id]
-#		num sec wif addr
-		d += [("{}:{}".format(seed_id,r.num),r.addr,r.wif)
-			for r in generate_addrs(seed,addr_nums,{'gen_what':"ka"},seed_id)]
+		ai = generate_addrs(seed,addr_nums,{'gen_what':"ka"})
+		d += [("{}:{}".format(seed_id,e.idx),e.addr,e.wif) for e in ai.addrdata]
 	return d
 
 
@@ -216,15 +215,13 @@ for the following non-{} address{}:\n    {}""".format(
 
 
 def parse_mmgen_keyaddr_file(opts):
-	adata = {}
-	parse_keyaddr_file(opts['mmgen_keys_from_file'],adata)
-	for sid in adata.keys(): # one seed id, one loop
-		idxs = adata[sid]
-		count = len(idxs.keys())
-		vmsg("Found %s wif key%s for seed ID %s" % (count,suf(count,"k"),sid))
-		# idx: (0=addr, 1=comment 2=wif) -> mmaddr: (0=addr, 1=wif)
-		return dict([("{}:{}".format(sid,k),(idxs[k][0],idxs[k][2]))
-				for k in idxs.keys()])
+	from mmgen.addr import AddrInfo
+	ai = AddrInfo(opts['mmgen_keys_from_file'],has_keys=True)
+	vmsg("Found %s wif key%s for seed ID %s" %
+			(ai.num_addrs, suf(ai.num_addrs,"k"), ai.seed_id))
+	# idx: (0=addr, 1=comment 2=wif) -> mmaddr: (0=addr, 1=wif)
+	return dict(
+		[("%s:%s"%(ai.seed_id,e.idx), (e.addr,e.wif)) for e in ai.addrdata])
 
 
 def parse_keylist(opts,from_file):
@@ -335,8 +332,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		inputs_data,tx_hex,b2m_map,comment,metadata)
 
 	# Start
-	other_addrs = list(set([i['address'] for i in inputs_data
-			if not parse_mmgen_label(i['account'])[0]]))
+	other_addrs = list(set([i['address'] for i in inputs_data if not i['mmid']]))
 
 	keys = get_keys_from_keylist(from_file['kldata'],other_addrs)
 
@@ -344,8 +340,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		missing_keys_errormsg(other_addrs)
 		sys.exit(2)
 
-	imap = dict([(i['account'].split()[0],i['address']) for i in inputs_data
-					if parse_mmgen_label(i['account'])[0]])
+	imap = dict([(i['mmid'],i['address']) for i in inputs_data if i['mmid']])
 	omap = dict([(j[0],i) for i,j in b2m_map.items()])
 	sids = set([i[:8] for i in imap.keys()])
 

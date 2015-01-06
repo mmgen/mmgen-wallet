@@ -41,6 +41,14 @@ def vmsg(s):
 def vmsg_r(s):
 	if g.verbose: sys.stderr.write(s)
 
+def msgrepr(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
+def msgrepr_exit(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
+	sys.exit()
+
 def suf(arg,what):
 	t = type(arg)
 	if t == int:
@@ -65,6 +73,7 @@ def make_chksum_N(s,n,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = " " if sep else ""
 	return sep.join([s[i*4:i*4+4] for i in range(n/4)])
+
 def make_chksum_8(s,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
 	return "{} {}".format(s[:4],s[4:]) if sep else s
@@ -206,11 +215,11 @@ def _validate_addr_num(n):
 
 	try: n = int(n)
 	except:
-		msg("'%s': address must be an integer" % n)
+		msg("'%s': addr index must be an integer" % n)
 		return False
 
 	if n < 1:
-		msg("'%s': address must be greater than zero" % n)
+		msg("'%s': addr index must be greater than zero" % n)
 		return False
 
 	return n
@@ -279,8 +288,6 @@ def confirm_or_exit(message, question, expect="YES"):
 		sys.exit(2)
 
 def confirm_or_false(message, question, expect="YES"):
-
-	vmsg("")
 
 	m = message.strip()
 	if m: msg(m)

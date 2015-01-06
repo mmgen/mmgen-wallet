@@ -124,7 +124,6 @@ future, you must continue using these same parameters
 opts,cmd_args = parse_opts(sys.argv,help_data)
 
 if 'show_hash_presets' in opts: show_hash_presets()
-if opts['usr_randchars'] == -1: opts['usr_randchars'] = g.usr_randchars_dfl
 
 if g.debug: show_opts_and_cmd_args(opts,cmd_args)
 
@@ -142,6 +141,8 @@ if len(cmd_args) == 1:
 elif len(cmd_args) == 0:
 	infile = ""
 else: usage(help_data)
+
+g.use_urandchars = True
 
 # Begin execution
 

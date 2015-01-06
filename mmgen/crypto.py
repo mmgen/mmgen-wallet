@@ -117,7 +117,7 @@ def encrypt_data(data, key, iv=1, what="data", verify=True):
 				counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 		dec_data = c.decrypt(enc_data)
 
-		if dec_data == data: vmsg("done\n")
+		if dec_data == data: vmsg("done")
 		else:
 			msg("ERROR.\nDecrypted %s doesn't match original %s" % (what,what))
 			sys.exit(2)
@@ -149,10 +149,12 @@ def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
 
 
-def make_key(passwd, salt, hash_preset, what="encryption key", verbose=False):
+def make_key(passwd,salt,hash_preset,
+		what="encryption key",from_what="passphrase",verbose=False):
 
+	if from_what: what += " from "
 	if g.verbose or verbose:
-		msg_r("Generating %s from passphrase.\nPlease wait..." % what)
+		msg_r("Generating %s%s.\nPlease wait..." % (what,from_what))
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
 	if g.verbose or verbose:
 		msg("done")
@@ -200,15 +202,15 @@ def get_random_data_from_user(uchars):
 def get_random(length,opts):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
-	if 'usr_randchars' in opts and opts['usr_randchars'] not in (0,-1):
-		kwhat = "a key from OS random data plus "
+	if g.use_urandchars:
+		from_what = "OS random data"
 		if not g.user_entropy:
-			g.user_entropy = sha256(
-				get_random_data_from_user(opts['usr_randchars'])).digest()
-			kwhat += "user entropy"
+			g.user_entropy = \
+				sha256(get_random_data_from_user(g.usr_randchars)).digest()
+			from_what += " plus user-supplied entropy"
 		else:
-			kwhat += "saved user entropy"
-		key = make_key(g.user_entropy, "", '2', what=kwhat, verbose=True)
+			from_what += " plus saved user-supplied entropy"
+		key = make_key(g.user_entropy, "", '2', from_what=from_what, verbose=True)
 		return encrypt_data(os_rand,key,what="random data",verify=False)
 	else:
 		return os_rand
