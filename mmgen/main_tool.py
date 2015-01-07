@@ -62,9 +62,9 @@ if cmd_args and cmd_args[0] == '--help':
 	tool.tool_usage(g.prog_name, command)
 	sys.exit(0)
 
-args = tool.process_args(g.prog_name, command, cmd_args)
+args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
 
+#msgrepr(args,kwargs)
 tool.opts = opts
 
-#print command + "(" + ", ".join(args) + ")"
-eval("tool." + command + "(" + ", ".join(args) + ")")
+tool.__dict__[command](*args,**kwargs)

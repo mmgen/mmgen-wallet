@@ -155,65 +155,53 @@ def tool_usage(prog_name, command):
 	print "USAGE: '%s %s%s'" % (prog_name, command,
 		(" "+" ".join(commands[command]) if commands[command] else ""))
 
-def process_args(prog_name, command, uargs):
-	cargs = commands[command]
-	cargs_req = [[i.split(" [")[0],i.split(" [")[1][:-1]]
-		for i in cargs if "=" not in i]
-	cargs_nam = dict([[
+def process_args(prog_name, command, cmd_args):
+	c_args = [[i.split(" [")[0],i.split(" [")[1][:-1]]
+		for i in commands[command] if "=" not in i]
+	c_kwargs = dict([[
 			i.split(" [")[0],
 			[i.split(" [")[1].split("=")[0], i.split(" [")[1].split("=")[1][:-1]]
-		] for i in cargs if "=" in i])
-	uargs_req = [i for i in uargs if "=" not in i]
-	uargs_nam = dict([i.split("=") for i in uargs if "=" in i])
+		] for i in commands[command] if "=" in i])
+	u_args = cmd_args[:len(c_args)]
+	u_kwargs = dict([i.split("=") for i in cmd_args[len(c_args):]])
 
-#	print cargs_req; print cargs_nam; print uargs_req; print uargs_nam; sys.exit()
+#	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
 
-	n = len(cargs_req)
-	if len(uargs_req) != n:
+	if len(u_args) != len(c_args):
 		tool_usage(prog_name, command)
 		sys.exit(1)
 
-	for a in uargs_nam.keys():
-		if a not in cargs_nam.keys():
-			print "'%s' invalid named argument" % a
-			sys.exit(1)
+	if set(u_kwargs) > set(c_kwargs):
+		print "Invalid named argument"
+		sys.exit(1)
 
-	def test_type(arg_type,arg,name=""):
+	def convert_type(arg,arg_name,arg_type):
 		try:
-			t = type(eval(arg))
-			assert(t == eval(arg_type))
+			return __builtins__[arg_type](arg)
 		except:
 			print "'%s': Invalid argument for argument %s ('%s' required)" % \
-				(arg, name, arg_type)
+				(arg, arg_name, arg_type)
 			sys.exit(1)
-		return True
 
-	ret = []
-
-	def normalize_arg(arg, arg_type):
+	def convert_to_bool_maybe(arg, arg_type):
 		if arg_type == "bool":
-			if arg.lower() in ("true","yes","1","on"): return "True"
-			if arg.lower() in ("false","no","0","off"): return "False"
+			if arg.lower() in ("true","yes","1","on"): return True
+			if arg.lower() in ("false","no","0","off"): return False
 		return arg
 
-	for i in range(len(cargs_req)):
-		arg_type = cargs_req[i][1]
-		arg = normalize_arg(uargs_req[i], arg_type)
-		if arg_type == "str":
-			ret.append('"%s"' % (arg))
-		elif test_type(arg_type, arg, "#"+str(i+1)):
-			ret.append('%s' % (arg))
+	args = []
+	for i in range(len(c_args)):
+		arg_type = c_args[i][1]
+		arg = convert_to_bool_maybe(u_args[i], arg_type)
+		args.append(convert_type(arg,c_args[i][0],arg_type))
 
-	for k in uargs_nam.keys():
-		arg_type = cargs_nam[k][0]
-		arg = normalize_arg(uargs_nam[k], arg_type)
-		if arg_type == "str":
-			ret.append('%s="%s"' % (k, arg))
-		elif test_type(arg_type, arg, "'"+k+"'"):
-			ret.append('%s=%s' % (k, arg))
+	kwargs = {}
+	for k in u_kwargs:
+		arg_type = c_kwargs[k][0]
+		arg = convert_to_bool_maybe(u_kwargs[k], arg_type)
+		kwargs[k] = convert_type(arg,k,arg_type)
 
-	return ret
-
+	return args,kwargs
 
 # Individual commands
 

@@ -45,22 +45,54 @@ cmd_data = OrderedDict([
 	['keyaddrgen',    (1,'key-address file generation', [[["mmdat"],1]])],
 	['txsign_keyaddr',(1,'transaction signing with key-address file', [[["akeys.mmenc","raw"],1]])],
 
-	['walletgen2',(2,'wallet generation (2), 128-bit seed (WIP)',     [])],
+	['walletgen2',(2,'wallet generation (2)',     [])],
+#	['walletgen2',(2,'wallet generation (2), 128-bit seed (WIP)',     [])],
 	['addrgen2',  (2,'address generation (2)',    [[["mmdat"],2]])],
 	['txcreate2', (2,'transaction creation (2)',  [[["addrs"],2]])],
 	['txsign2',   (2,'transaction signing, two transactions',[[["mmdat","raw"],1],[["mmdat","raw"],2]])],
-	['export_mnemonic2', (2,'seed export to mmwords format (2), 128-bit seed (WIP)',[[["mmdat"],2]])],
+	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[["mmdat"],2]])],
+#	['export_mnemonic2', (2,'seed export to mmwords format (2), 128-bit seed (WIP)',[[["mmdat"],2]])],
 
 	['walletgen3',(3,'wallet generation (3)',         [])],
 	['addrgen3',  (3,'address generation (3)',        [[["mmdat"],3]])],
 	['txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[["addrs"],1],[["addrs"],3]])],
 	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[["mmdat"],1],[["mmdat","raw"],3]])],
 
-	['walletgen4',(4,'wallet generation (4) (brainwallet, 192-bit seed (WIP))', [])],
+	['walletgen4',(4,'wallet generation (4) (brainwallet)', [])],
+#	['walletgen4',(4,'wallet generation (4) (brainwallet, 192-bit seed (WIP))', [])],
 	['addrgen4',  (4,'address generation (4)',              [[["mmdat"],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[["addrs"],1],[["addrs"],2],[["addrs"],3],[["addrs"],4]])],
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw"],4]])],
 ])
+
+tool_cmd_data = OrderedDict([
+	['strtob58',   (10, '',   [])],
+	['b58tostr',   (10, '',   [[["strtob58.in","strtob58.out"],10]])],
+	['hextob58',   (10, '',   [])],
+	['b58tohex',   (10, '',   [[["hextob58.in","hextob58.out"],10]])],
+# 	"b58randenc":   [],
+# 	"randhex":      ['nbytes [int=32]'],
+# 	"randwif":      ['compressed [bool=False]'],
+# 	"randpair":     ['compressed [bool=False]'],
+# 	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
+# 	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
+# 	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
+# 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
+# 	"unhexdump":    ['<infile> [str]'],
+# 	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
+# 	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
+# 	"b32tohex":     ['<b32 num> [str]'],
+# 	"hextob32":     ['<hex num> [str]'],
+# 	"mn_rand128":   ['wordlist [str="electrum"]'],
+# 	"mn_rand192":   ['wordlist [str="electrum"]'],
+# 	"mn_rand256":   ['wordlist [str="electrum"]'],
+# 	"mn_stats":     ['wordlist [str="electrum"]'],
+# 	"mn_printlist": ['wordlist [str="electrum"]'],
+# 	"id8":          ['<infile> [str]'],
+# 	"id6":          ['<infile> [str]'],
+# 	"str2id6":      ['<string (spaces are ignored)> [str]'],
+])
+
 
 utils = {
 	'check_deps': 'check dependencies for specified command',
@@ -69,6 +101,16 @@ utils = {
 
 addrs_per_wallet = 8
 cfgs = {
+	'10': {
+		'name':          "test the tool utility",
+		'enc_passwd':    "Ten Satoshis",
+		'tmpdir':        "test/tmp10",
+		'dep_generators':  {
+			'strtob58.out': "strtob58",
+			'strtob58.in':  "strtob58",
+		},
+
+	},
 	'6': {
 		'name':            "reference wallet check",
 		'bw_passwd':       "abc",
@@ -156,6 +198,7 @@ cfgs = {
 
 from binascii import hexlify
 def getrand(n): return int(hexlify(os.urandom(n)),16)
+def getrandhex(n): return hexlify(os.urandom(n))
 
 # total of two outputs must be < 10 BTC
 for k in cfgs.keys():
@@ -342,12 +385,17 @@ def verify_checksum_or_exit(checksum,chk):
 		sys.exit(1)
 	vmsg(green("Checksums match: %s") % (cyan(chk)))
 
+def get_rand_printable_chars(num_chars,no_punc=False):
+	return [chr(ord(i)%94+33) for i in list(os.urandom(num_chars))]
+
+
 class MMGenExpect(object):
 
 	def __init__(self,name,mmgen_cmd,cmd_args=[],env=env):
 		if not 'system' in opts:
 			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
 		desc = cmd_data[name][1]
+		if not desc: desc = name
 		if verbose or exact_output:
 			sys.stderr.write(
 				green("Testing %s\nExecuting " % desc) +
@@ -365,7 +413,7 @@ class MMGenExpect(object):
 		my_expect(self.p,p,'c')
 
 	def usr_rand(self,num_chars):
-		rand_chars = [chr(ord(i)%94+33) for i in list(os.urandom(num_chars))]
+		rand_chars = get_rand_printable_chars(num_chars)
 		my_expect(self.p,'symbols left: ','x')
 		try:
 			vmsg_r("SEND ")
@@ -429,7 +477,10 @@ class MMGenExpect(object):
 	def readline(self):
 		return self.p.readline()
 
-	def read(self,n):
+	def readlines(self):
+		return [l.rstrip()+"\n" for l in self.p.readlines()]
+
+	def read(self,n=None):
 		return self.p.read(n)
 
 
@@ -513,7 +564,7 @@ def do_cmd(ts,cmd):
 	global cfg
 	cfg = cfgs[str(cmd_data[cmd][0])]
 
-	MMGenTestSuite.__dict__[cmd](*([ts,cmd] + al))
+	ts.__class__.__dict__[cmd](*([ts,cmd] + al))
 
 
 hincog_bytes   = 1024*1024
@@ -590,7 +641,6 @@ def ok():
 	if verbose or exact_output:
 		sys.stderr.write(green("OK\n"))
 	else: msg(" OK")
-
 
 class MMGenTestSuite(object):
 
@@ -1004,10 +1054,85 @@ class MMGenTestSuite(object):
 		t.written_to_file("Signed transaction")
 		ok()
 
-# main()
-ts = MMGenTestSuite()
-start_time = int(time.time())
 
+def write_to_tmpfile(fn,data):
+	write_to_file(os.path.join(cfg['tmpdir'],fn),data,{},silent=True)
+
+def read_from_tmpfile(fn):
+	from mmgen.util import get_data_from_file
+	return get_data_from_file(os.path.join(cfg['tmpdir'],fn),silent=True)
+
+def read_from_file(fn):
+	from mmgen.util import get_data_from_file
+	return get_data_from_file(fn,silent=True)
+
+class MMGenToolTestSuite(object):
+
+	def __init__(self):
+		global cmd_data,tool_cmd_data
+		cmd_data = tool_cmd_data
+		pass
+
+	def clean(self,name):
+		cleandir(cfgs['10']['tmpdir'])
+
+	def cmd(self,name,tool_args):
+		mk_tmpdir(cfg)
+		t = MMGenExpect(name,"mmgen-tool", ["-d",cfg['tmpdir']] + tool_args)
+		return t.read()
+
+	def cmd_to_tmpfile(self,name,tool_args,tmpfile):
+		ret = self.cmd(name,tool_args)
+		if ret:
+			write_to_tmpfile(tmpfile,ret)
+			ok()
+
+	def strtob58(self,name):
+		s = "".join(get_rand_printable_chars(15))
+		write_to_tmpfile('strtob58.in',s)
+		self.cmd_to_tmpfile(name,["strtob58",s],'strtob58.out')
+
+	def b58tostr(self,name,f1,f2):
+		idata = read_from_file(f1)
+		odata = read_from_file(f2)[:-2]
+		res = self.cmd(name,["b58tostr",odata])[:-2]
+		if res == idata: ok()
+		else: errmsg(red("Error"))
+
+	def hextob58(self,name):
+		hexnum = getrandhex(32)
+		write_to_tmpfile('hextob58.in',hexnum)
+		self.cmd_to_tmpfile(name,["hextob58",hexnum],'hextob58.out')
+
+	def b58tohex(self,name,f1,f2):
+		idata = read_from_file(f1)
+		odata = read_from_file(f2)[:-2]
+		res = self.cmd(name,["b58tohex",odata])[:-2]
+		if res == idata: ok()
+		else: errmsg(red("Error"))
+# 	"b58randenc":   [],
+# 	"randhex":      ['nbytes [int=32]'],
+# 	"randwif":      ['compressed [bool=False]'],
+# 	"randpair":     ['compressed [bool=False]'],
+# 	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
+# 	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
+# 	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
+# 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
+# 	"unhexdump":    ['<infile> [str]'],
+# 	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
+# 	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
+# 	"b32tohex":     ['<b32 num> [str]'],
+# 	"hextob32":     ['<hex num> [str]'],
+# 	"mn_rand128":   ['wordlist [str="electrum"]'],
+# 	"mn_rand192":   ['wordlist [str="electrum"]'],
+# 	"mn_rand256":   ['wordlist [str="electrum"]'],
+# 	"mn_stats":     ['wordlist [str="electrum"]'],
+# 	"mn_printlist": ['wordlist [str="electrum"]'],
+# 	"id8":          ['<infile> [str]'],
+# 	"id6":          ['<infile> [str]'],
+# 	"str2id6":      ['<string (spaces are ignored)> [str]'],
+
+# main()
 if pause:
 	import termios,atexit
 	fd = sys.stdin.fileno()
@@ -1016,20 +1141,24 @@ if pause:
 		termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	atexit.register(at_exit)
 
+start_time = int(time.time())
+
 try:
-	if cmd_args:
+	if cmd_args and cmd_args[0] != "tool":
 		arg1 = cmd_args[0]
 		if arg1 in utils:
 			MMGenTestSuite.__dict__[arg1](ts,arg1,cmd_args[1:])
 			sys.exit()
 		elif arg1 in meta_cmds:
+			ts = MMGenTestSuite()
 			if len(cmd_args) == 1:
 				for cmd in meta_cmds[arg1][1]:
 					check_needs_rerun(cmd,build=True,force_delete=True)
 			else:
 				msg("Only one meta command may be specified")
 				sys.exit(1)
-		elif arg1 in cmd_data:
+		elif arg1 in cmd_data.keys() + tool_cmd_data.keys():
+			ts = MMGenTestSuite() if arg1 in cmd_data else MMGenToolTestSuite()
 			if len(cmd_args) == 1:
 				check_needs_rerun(arg1,build=True)
 			else:
@@ -1039,6 +1168,14 @@ try:
 			errmsg("%s: unrecognized command" % arg1)
 			sys.exit(1)
 	else:
+		if cmd_args: # tool
+			if len(cmd_args) != 1:
+				msg("Only one command may be specified")
+				sys.exit(1)
+			ts = MMGenToolTestSuite()
+		else:
+			ts = MMGenTestSuite()
+
 		ts.clean("clean")
 		for cmd in cmd_data:
 			do_cmd(ts,cmd)

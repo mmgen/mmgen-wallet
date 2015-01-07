@@ -316,7 +316,7 @@ def write_to_stdout(data, what, confirm=True):
 	sys.stdout.write(data)
 
 
-def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True):
+def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True,silent=False):
 
 	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
 
@@ -333,13 +333,13 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 					msg("Not overwriting file at user request")
 					return False
 		else:
-			msg("Overwriting file '%s'" % outfile)
+			if not silent: msg("Overwriting file '%s'" % outfile)
 
 	f = open_file_or_exit(outfile,'wb')
 	try:
 		f.write(data)
 	except:
-		msg("Failed to write %s to file '%s'" % (what,outfile))
+		if not silent: msg("Failed to write %s to file '%s'" % (what,outfile))
 		sys.exit(2)
 	f.close
 
@@ -549,9 +549,10 @@ def get_lines_from_file(infile,what="",trim_comments=False):
 	return remove_comments(lines) if trim_comments else lines
 
 
-def get_data_from_file(infile,what="data",dash=False):
+def get_data_from_file(infile,what="data",dash=False,silent=False):
 	if dash and infile == "-": return sys.stdin.read()
-	qmsg("Getting %s from file '%s'" % (what,infile))
+	if not silent:
+		qmsg("Getting %s from file '%s'" % (what,infile))
 	f = open_file_or_exit(infile,'rb')
 	data = f.read()
 	f.close()
