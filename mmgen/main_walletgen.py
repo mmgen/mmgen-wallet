@@ -163,9 +163,9 @@ for i in 'from_mnemonic','from_brain','from_seed','from_incog':
 		break
 else:
 	# Truncate random data for smaller seed lengths
-	seed = sha256(get_random(128,opts)).digest()[:opts['seed_len']/8]
+	seed = sha256(get_random(128)).digest()[:opts['seed_len']/8]
 
-salt = sha256(get_random(128,opts)).digest()[:g.salt_len]
+salt = sha256(get_random(128)).digest()[:g.salt_len]
 
 qmsg(wmsg['choose_wallet_passphrase'] % opts['hash_preset'])
 

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-tool:  Perform various Bitcoin-related operations.
+mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
              Part of the MMGen suite
 """
 
@@ -28,7 +28,7 @@ from mmgen.Opts import *
 
 help_data = {
 	'prog_name': g.prog_name,
-	'desc':    "Perform various BTC-related operations",
+	'desc':    "Perform various MMGen- and Bitcoin-related operations",
 	'usage':   "[opts] <command> <command args>",
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
@@ -41,9 +41,9 @@ help_data = {
 	'notes': """
 
 COMMANDS:{}
-Type '{} <command> --help for usage information on a particular
+Type '{} usage <command> for usage information on a particular
 command
-""".format(tool.command_help,g.prog_name)
+""".format(tool.cmd_help,g.prog_name)
 }
 
 opts,cmd_args = parse_opts(sys.argv,help_data)
@@ -54,7 +54,7 @@ if len(cmd_args) < 1:
 
 command = cmd_args.pop(0)
 
-if command not in tool.commands.keys():
+if command not in tool.cmd_data:
 	msg("'%s': No such command" % command)
 	sys.exit(1)
 
@@ -64,7 +64,6 @@ if cmd_args and cmd_args[0] == '--help':
 
 args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
 
-#msgrepr(args,kwargs)
 tool.opts = opts
 
 tool.__dict__[command](*args,**kwargs)

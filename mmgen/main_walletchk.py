@@ -73,12 +73,12 @@ def wallet_to_incog_data(infile,opts):
 		seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 		if seed: break
 
-	iv = get_random(g.aesctr_iv_len,opts)
+	iv = get_random(g.aesctr_iv_len)
 	iv_id = make_iv_chksum(iv)
 	msg("Incog ID: %s" % iv_id)
 
 	if not 'old_incog_fmt' in opts:
-		salt = get_random(g.salt_len,opts)
+		salt = get_random(g.salt_len)
 		key = make_key(passwd, salt, preset, "incog wallet key")
 		key_id = make_chksum_8(key)
 		from hashlib import sha256

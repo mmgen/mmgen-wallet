@@ -8,109 +8,14 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
-from mmgen.util import msgrepr, msgrepr_exit
+import mmgen.config as g
+from mmgen.util import msgrepr,msgrepr_exit,Msg
+from mmgen.test import *
 
 hincog_fn = "rand_data"
 non_mmgen_fn = "btckey"
 
-from collections import OrderedDict
-cmd_data = OrderedDict([
-#     test               description                  depends
-	['refwalletgen',    (6,'reference wallet seed ID',    [[[],6]])],
-	['refaddrgen',      (6,'reference wallet address checksum', [[["mmdat"],6]])],
-	['refkeyaddrgen',   (6,'reference wallet key-address checksum', [[["mmdat"],6]])],
-
-	['walletgen',       (1,'wallet generation',        [[[],1]])],
-	['walletchk',       (1,'wallet check',             [[["mmdat"],1]])],
-	['passchg',         (5,'password, label and hash preset change',[[["mmdat"],1]])],
-	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[["mmdat"],5]])],
-	['addrgen',         (1,'address generation',       [[["mmdat"],1]])],
-	['addrimport',      (1,'address import',           [[["addrs"],1]])],
-	['txcreate',        (1,'transaction creation',     [[["addrs"],1]])],
-	['txsign',          (1,'transaction signing',      [[["mmdat","raw"],1]])],
-	['txsend',          (1,'transaction sending',      [[["sig"],1]])],
-
-	['export_seed',     (1,'seed export to mmseed format',   [[["mmdat"],1]])],
-	['export_mnemonic', (1,'seed export to mmwords format',  [[["mmdat"],1]])],
-	['export_incog',    (1,'seed export to mmincog format',  [[["mmdat"],1]])],
-	['export_incog_hex',(1,'seed export to mmincog hex format', [[["mmdat"],1]])],
-	['export_incog_hidden',(1,'seed export to hidden mmincog format', [[["mmdat"],1]])],
-
-	['addrgen_seed',    (1,'address generation from mmseed file', [[["mmseed","addrs"],1]])],
-	['addrgen_mnemonic',(1,'address generation from mmwords file',[[["mmwords","addrs"],1]])],
-	['addrgen_incog',   (1,'address generation from mmincog file',[[["mmincog","addrs"],1]])],
-	['addrgen_incog_hex',(1,'address generation from mmincog hex file',[[["mmincox","addrs"],1]])],
-	['addrgen_incog_hidden',(1,'address generation from hidden mmincog file', [[[hincog_fn,"addrs"],1]])],
-
-	['keyaddrgen',    (1,'key-address file generation', [[["mmdat"],1]])],
-	['txsign_keyaddr',(1,'transaction signing with key-address file', [[["akeys.mmenc","raw"],1]])],
-
-	['walletgen2',(2,'wallet generation (2)',     [])],
-#	['walletgen2',(2,'wallet generation (2), 128-bit seed (WIP)',     [])],
-	['addrgen2',  (2,'address generation (2)',    [[["mmdat"],2]])],
-	['txcreate2', (2,'transaction creation (2)',  [[["addrs"],2]])],
-	['txsign2',   (2,'transaction signing, two transactions',[[["mmdat","raw"],1],[["mmdat","raw"],2]])],
-	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[["mmdat"],2]])],
-#	['export_mnemonic2', (2,'seed export to mmwords format (2), 128-bit seed (WIP)',[[["mmdat"],2]])],
-
-	['walletgen3',(3,'wallet generation (3)',         [])],
-	['addrgen3',  (3,'address generation (3)',        [[["mmdat"],3]])],
-	['txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[["addrs"],1],[["addrs"],3]])],
-	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[["mmdat"],1],[["mmdat","raw"],3]])],
-
-	['walletgen4',(4,'wallet generation (4) (brainwallet)', [])],
-#	['walletgen4',(4,'wallet generation (4) (brainwallet, 192-bit seed (WIP))', [])],
-	['addrgen4',  (4,'address generation (4)',              [[["mmdat"],4]])],
-	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[["addrs"],1],[["addrs"],2],[["addrs"],3],[["addrs"],4]])],
-	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw"],4]])],
-])
-
-tool_cmd_data = OrderedDict([
-	['strtob58',   (10, '',   [])],
-	['b58tostr',   (10, '',   [[["strtob58.in","strtob58.out"],10]])],
-	['hextob58',   (10, '',   [])],
-	['b58tohex',   (10, '',   [[["hextob58.in","hextob58.out"],10]])],
-# 	"b58randenc":   [],
-# 	"randhex":      ['nbytes [int=32]'],
-# 	"randwif":      ['compressed [bool=False]'],
-# 	"randpair":     ['compressed [bool=False]'],
-# 	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
-# 	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
-# 	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
-# 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
-# 	"unhexdump":    ['<infile> [str]'],
-# 	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
-# 	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
-# 	"b32tohex":     ['<b32 num> [str]'],
-# 	"hextob32":     ['<hex num> [str]'],
-# 	"mn_rand128":   ['wordlist [str="electrum"]'],
-# 	"mn_rand192":   ['wordlist [str="electrum"]'],
-# 	"mn_rand256":   ['wordlist [str="electrum"]'],
-# 	"mn_stats":     ['wordlist [str="electrum"]'],
-# 	"mn_printlist": ['wordlist [str="electrum"]'],
-# 	"id8":          ['<infile> [str]'],
-# 	"id6":          ['<infile> [str]'],
-# 	"str2id6":      ['<string (spaces are ignored)> [str]'],
-])
-
-
-utils = {
-	'check_deps': 'check dependencies for specified command',
-	'clean':      'clean specified tmp dir(s) 1, 2, 3 or 4 (no arg = all dirs)',
-}
-
-addrs_per_wallet = 8
 cfgs = {
-	'10': {
-		'name':          "test the tool utility",
-		'enc_passwd':    "Ten Satoshis",
-		'tmpdir':        "test/tmp10",
-		'dep_generators':  {
-			'strtob58.out': "strtob58",
-			'strtob58.in':  "strtob58",
-		},
-
-	},
 	'6': {
 		'name':            "reference wallet check",
 		'bw_passwd':       "abc",
@@ -194,17 +99,94 @@ cfgs = {
 			'mmdat':       "passchg",
 		},
 	},
+	'9': {
+		'tmpdir':        "test/tmp9",
+		'tool_enc_passwd': "Scrypt it, don't hash it!",
+		'tool_enc_reftext':
+	"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n",
+		'tool_enc_infn':      "tool_encrypt.in",
+		'tool_enc_ref_infn':  "tool_encrypt_ref.in",
+		'dep_generators': {
+			'tool_encrypt.in':            "tool_encrypt",
+			'tool_encrypt.in.mmenc':      "tool_encrypt",
+			'tool_encrypt_ref.in':        "tool_encrypt_ref",
+			'tool_encrypt_ref.in.mmenc':  "tool_encrypt_ref",
+		},
+	},
 }
 
-from binascii import hexlify
-def getrand(n): return int(hexlify(os.urandom(n)),16)
-def getrandhex(n): return hexlify(os.urandom(n))
+from collections import OrderedDict
+cmd_data = OrderedDict([
+#     test               description                  depends
+	['refwalletgen',    (6,'reference wallet seed ID',    [[[],6]])],
+	['refaddrgen',      (6,'reference wallet address checksum', [[["mmdat"],6]])],
+	['refkeyaddrgen',   (6,'reference wallet key-address checksum', [[["mmdat"],6]])],
+
+	['walletgen',       (1,'wallet generation',        [[[],1]])],
+	['walletchk',       (1,'wallet check',             [[["mmdat"],1]])],
+	['passchg',         (5,'password, label and hash preset change',[[["mmdat"],1]])],
+	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[["mmdat"],5]])],
+	['addrgen',         (1,'address generation',       [[["mmdat"],1]])],
+	['addrimport',      (1,'address import',           [[["addrs"],1]])],
+	['txcreate',        (1,'transaction creation',     [[["addrs"],1]])],
+	['txsign',          (1,'transaction signing',      [[["mmdat","raw"],1]])],
+	['txsend',          (1,'transaction sending',      [[["sig"],1]])],
+
+	['export_seed',     (1,'seed export to mmseed format',   [[["mmdat"],1]])],
+	['export_mnemonic', (1,'seed export to mmwords format',  [[["mmdat"],1]])],
+	['export_incog',    (1,'seed export to mmincog format',  [[["mmdat"],1]])],
+	['export_incog_hex',(1,'seed export to mmincog hex format', [[["mmdat"],1]])],
+	['export_incog_hidden',(1,'seed export to hidden mmincog format', [[["mmdat"],1]])],
+
+	['addrgen_seed',    (1,'address generation from mmseed file', [[["mmseed","addrs"],1]])],
+	['addrgen_mnemonic',(1,'address generation from mmwords file',[[["mmwords","addrs"],1]])],
+	['addrgen_incog',   (1,'address generation from mmincog file',[[["mmincog","addrs"],1]])],
+	['addrgen_incog_hex',(1,'address generation from mmincog hex file',[[["mmincox","addrs"],1]])],
+	['addrgen_incog_hidden',(1,'address generation from hidden mmincog file', [[[hincog_fn,"addrs"],1]])],
+
+	['keyaddrgen',    (1,'key-address file generation', [[["mmdat"],1]])],
+	['txsign_keyaddr',(1,'transaction signing with key-address file', [[["akeys.mmenc","raw"],1]])],
+
+	['walletgen2',(2,'wallet generation (2)',     [])],
+#	['walletgen2',(2,'wallet generation (2), 128-bit seed (WIP)',     [])],
+	['addrgen2',  (2,'address generation (2)',    [[["mmdat"],2]])],
+	['txcreate2', (2,'transaction creation (2)',  [[["addrs"],2]])],
+	['txsign2',   (2,'transaction signing, two transactions',[[["mmdat","raw"],1],[["mmdat","raw"],2]])],
+	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[["mmdat"],2]])],
+#	['export_mnemonic2', (2,'seed export to mmwords format (2), 128-bit seed (WIP)',[[["mmdat"],2]])],
+
+	['walletgen3',(3,'wallet generation (3)',                  [])],
+	['addrgen3',  (3,'address generation (3)',                 [[["mmdat"],3]])],
+	['txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[["addrs"],1],[["addrs"],3]])],
+	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[["mmdat"],1],[["mmdat","raw"],3]])],
+
+	['walletgen4',(4,'wallet generation (4) (brainwallet)',    [])],
+#	['walletgen4',(4,'wallet generation (4) (brainwallet, 192-bit seed (WIP))', [])],
+	['addrgen4',  (4,'address generation (4)',                 [[["mmdat"],4]])],
+	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[["addrs"],1],[["addrs"],2],[["addrs"],3],[["addrs"],4]])],
+	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw"],4]])],
+	['tool_encrypt',     (9,"'mmgen-tool encrypt' (random data)",     [])],
+	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)",
+		[[[cfgs['9']['tool_enc_infn'],
+		   cfgs['9']['tool_enc_infn']+".mmenc"],9]])],
+	['tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])],
+	['tool_decrypt_ref', (9,"'mmgen-tool decrypt' (reference text)",
+		[[[cfgs['9']['tool_enc_ref_infn'],
+		   cfgs['9']['tool_enc_ref_infn']+".mmenc"],9]])],
+])
+
+utils = {
+	'check_deps': 'check dependencies for specified command',
+	'clean':      'clean specified tmp dir(s) 1,2,3,4,5 or 6 (no arg = all dirs)',
+}
+
+addrs_per_wallet = 8
 
 # total of two outputs must be < 10 BTC
 for k in cfgs.keys():
 	cfgs[k]['amts'] = [0,0]
 	for idx,mod in (0,6),(1,4):
-		cfgs[k]['amts'][idx] = "%s.%s" % ((getrand(2) % mod), str(getrand(4))[:5])
+		cfgs[k]['amts'][idx] = "%s.%s" % ((getrandnum(2) % mod), str(getrandnum(4))[:5])
 
 meta_cmds = OrderedDict([
 	['ref',    (6,("refwalletgen","refaddrgen","refkeyaddrgen"))],
@@ -217,11 +199,12 @@ meta_cmds = OrderedDict([
 	['2', (2,[k for k in cmd_data if cmd_data[k][0] == 2])],
 	['3', (3,[k for k in cmd_data if cmd_data[k][0] == 3])],
 	['4', (4,[k for k in cmd_data if cmd_data[k][0] == 4])],
+	['tool',   (9,("tool_encrypt","tool_decrypt","tool_encrypt_ref","tool_decrypt_ref"))],
 ])
 
 from mmgen.Opts import *
 help_data = {
-	'prog_name': "test.py",
+	'prog_name': g.prog_name,
 	'desc': "Test suite for the MMGen suite",
 	'usage':"[options] [command or metacommand]",
 	'options': """
@@ -253,69 +236,60 @@ else:
 	env["MMGEN_DISABLE_HOLD_PROTECT"] = "1"
 
 for k in 'debug','verbose','exact_output','pause','quiet':
-	globals()[k] = True if k in opts else False
+	g.__dict__[k] = True if k in opts else False
 
-if debug: verbose = True
+if g.debug: g.verbose = True
 
-if exact_output:
+if g.exact_output:
 	def msg(s): pass
 	vmsg = vmsg_r = msg_r = msg
 else:
 	def msg(s): sys.stderr.write(s+"\n")
 	def vmsg(s):
-		if verbose: sys.stderr.write(s+"\n")
+		if g.verbose: sys.stderr.write(s+"\n")
 	def msg_r(s): sys.stderr.write(s)
 	def vmsg_r(s):
-		if verbose: sys.stderr.write(s)
+		if g.verbose: sys.stderr.write(s)
 
 stderr_save = sys.stderr
 
 def silence():
-	if not (verbose or exact_output):
+	if not (g.verbose or g.exact_output):
 		sys.stderr = open("/dev/null","a")
 
 def end_silence():
-	if not (verbose or exact_output):
+	if not (g.verbose or g.exact_output):
 		sys.stderr = stderr_save
 
 def errmsg(s): stderr_save.write(s+"\n")
 def errmsg_r(s): stderr_save.write(s)
 
-def Msg(s): sys.stdout.write(s+"\n")
-
 if "list_cmds" in opts:
+	fs = "  {:<{w}} - {}"
 	Msg("Available commands:")
 	w = max([len(i) for i in cmd_data])
 	for cmd in cmd_data:
-		Msg("  {:<{w}} - {}".format(cmd,cmd_data[cmd][1],w=w))
+		Msg(fs.format(cmd,cmd_data[cmd][1],w=w))
 	Msg("\nAvailable metacommands:")
 	w = max([len(i) for i in meta_cmds])
 	for cmd in meta_cmds:
-		Msg("  {:<{w}} - {}".format(cmd," + ".join(meta_cmds[cmd][1]),w=w))
+		Msg(fs.format(cmd," + ".join(meta_cmds[cmd][1]),w=w))
 	Msg("\nAvailable utilities:")
 	w = max([len(i) for i in utils])
 	for cmd in sorted(utils):
-		Msg("  {:<{w}} - {}".format(cmd,utils[cmd],w=w))
+		Msg(fs.format(cmd,utils[cmd],w=w))
 	sys.exit()
 
 import pexpect,time,re
 import mmgen.config as g
 from mmgen.util import get_data_from_file,write_to_file,get_lines_from_file
 
-redc,grnc,yelc,cyac,reset = (
-	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
-)
-def red(s):    return redc+s+reset
-def green(s):  return grnc+s+reset
-def yellow(s): return yelc+s+reset
-def cyan(s):   return cyac+s+reset
-
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
 	ret = p.send(t) # returns num bytes written
 	if delay: time.sleep(delay)
-	if verbose:
-		ls = "" if debug or not s else " "
+	if g.verbose:
+		ls = "" if g.debug or not s else " "
 		es = "" if s else "  "
 		msg("%sSEND %s%s" % (ls,es,yellow("'%s'"%t.replace('\n',r'\n'))))
 	return ret
@@ -323,7 +297,7 @@ def my_send(p,t,delay=send_delay,s=False):
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 	quo = "'" if type(s) == str else ""
 
-	if verbose: msg_r("EXPECT %s" % yellow(quo+str(s)+quo))
+	if g.verbose: msg_r("EXPECT %s" % yellow(quo+str(s)+quo))
 	else:       msg_r("+")
 
 	try:
@@ -335,7 +309,7 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 		errmsg(red("\nERROR.  Expect %s%s%s timed out.  Exiting" % (quo,s,quo)))
 		sys.exit(1)
 
-	if debug or (verbose and type(s) != str): msg_r(" ==> %s " % ret)
+	if g.debug or (g.verbose and type(s) != str): msg_r(" ==> %s " % ret)
 
 	if ret == -1:
 		errmsg("Error.  Expect returned %s" % ret)
@@ -346,14 +320,6 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 		else: ret = my_send(p,t,delay,s)
 		return ret
 
-def cleandir(d):
-	try:    files = os.listdir(d)
-	except: return
-
-	msg(green("Cleaning directory '%s'" % d))
-	for f in files:
-		os.unlink(os.path.join(d,f))
-
 def get_file_with_ext(ext,mydir,delete=True):
 
 	flist = [os.path.join(mydir,f) for f in os.listdir(mydir)
@@ -363,7 +329,7 @@ def get_file_with_ext(ext,mydir,delete=True):
 
 	if len(flist) > 1:
 		if delete:
-			if not quiet:
+			if not g.quiet:
 				msg("Multiple *.%s files in '%s' - deleting" % (ext,mydir))
 			for f in flist: os.unlink(f)
 		return False
@@ -375,7 +341,7 @@ def get_addrfile_checksum(display=False):
 	silence()
 	from mmgen.addr import AddrInfo
 	chk = AddrInfo(addrfile).checksum
-	if verbose and display: msg("Checksum: %s" % cyan(chk))
+	if g.verbose and display: msg("Checksum: %s" % cyan(chk))
 	end_silence()
 	return chk
 
@@ -385,9 +351,6 @@ def verify_checksum_or_exit(checksum,chk):
 		sys.exit(1)
 	vmsg(green("Checksums match: %s") % (cyan(chk)))
 
-def get_rand_printable_chars(num_chars,no_punc=False):
-	return [chr(ord(i)%94+33) for i in list(os.urandom(num_chars))]
-
 
 class MMGenExpect(object):
 
@@ -395,8 +358,7 @@ class MMGenExpect(object):
 		if not 'system' in opts:
 			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
 		desc = cmd_data[name][1]
-		if not desc: desc = name
-		if verbose or exact_output:
+		if g.verbose or g.exact_output:
 			sys.stderr.write(
 				green("Testing %s\nExecuting " % desc) +
 				cyan("'%s %s'\n" % (mmgen_cmd," ".join(cmd_args)))
@@ -406,27 +368,27 @@ class MMGenExpect(object):
 #		msgrepr(mmgen_cmd,cmd_args); msg("")
 		if env: self.p = pexpect.spawn(mmgen_cmd,cmd_args,env=env)
 		else:   self.p = pexpect.spawn(mmgen_cmd,cmd_args)
-		if exact_output: self.p.logfile = sys.stdout
+		if g.exact_output: self.p.logfile = sys.stdout
 
 	def license(self):
 		p = "'w' for conditions and warranty info, or 'c' to continue: "
 		my_expect(self.p,p,'c')
 
 	def usr_rand(self,num_chars):
-		rand_chars = get_rand_printable_chars(num_chars)
+		rand_chars = list(getrandstr(num_chars,no_space=True))
 		my_expect(self.p,'symbols left: ','x')
 		try:
 			vmsg_r("SEND ")
 			while self.p.expect('left: ',0.1) == 0:
 				ch = rand_chars.pop(0)
-				msg_r(yellow(ch)+" " if verbose else "+")
+				msg_r(yellow(ch)+" " if g.verbose else "+")
 				self.p.send(ch)
 		except:
 			vmsg("EOT")
 		my_expect(self.p,"ENTER to continue: ",'\n')
 
 	def passphrase_new(self,what,passphrase):
-		my_expect(self.p,("Enter passphrase for new %s: " % what), passphrase+"\n")
+		my_expect(self.p,("Enter passphrase for %s: " % what), passphrase+"\n")
 		my_expect(self.p,"Repeat passphrase: ", passphrase+"\n")
 
 	def passphrase(self,what,passphrase,pwtype=""):
@@ -483,7 +445,6 @@ class MMGenExpect(object):
 	def read(self,n=None):
 		return self.p.read(n)
 
-
 from mmgen.rpc.data import TransactionInfo
 from decimal import Decimal
 from mmgen.bitcoin import verify_addr
@@ -491,13 +452,13 @@ from mmgen.bitcoin import verify_addr
 def add_fake_unspent_entry(out,address,comment):
 	out.append(TransactionInfo(
 		account = unicode(comment),
-		vout = int(getrand(4) % 8),
+		vout = int(getrandnum(4) % 8),
 		txid = unicode(hexlify(os.urandom(32))),
-		amount = Decimal("%s.%s" % (10+(getrand(4) % 40), getrand(4) % 100000000)),
+		amount = Decimal("%s.%s" % (10+(getrandnum(4) % 40), getrandnum(4) % 100000000)),
 		address = address,
 		spendable = False,
 		scriptPubKey = ("76a914"+verify_addr(address,return_hex=True)+"88ac"),
-		confirmations = getrand(4) % 500
+		confirmations = getrandnum(4) % 500
 	))
 
 def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input=''):
@@ -511,7 +472,7 @@ def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input='')
 
 	if non_mmgen_input:
 		from mmgen.bitcoin import privnum2addr,hextowif
-		privnum = getrand(32)
+		privnum = getrandnum(32)
 		btcaddr = privnum2addr(privnum,compressed=True)
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_to_file(of, hextowif("{:064x}".format(privnum),
@@ -538,33 +499,23 @@ def make_brainwallet_file(fn):
 	wl = tirosh_words.split("\n")
 	nwords,ws_list,max_spaces = 10,"    \n",5
 	def rand_ws_seq():
-		nchars = getrand(1) % max_spaces + 1
-		return "".join([ws_list[getrand(1)%len(ws_list)] for i in range(nchars)])
-	rand_pairs = [wl[getrand(4) % len(wl)] + rand_ws_seq() for i in range(nwords)]
+		nchars = getrandnum(1) % max_spaces + 1
+		return "".join([ws_list[getrandnum(1)%len(ws_list)] for i in range(nchars)])
+	rand_pairs = [wl[getrandnum(4) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = "".join(rand_pairs).rstrip() + "\n"
-	if verbose: msg_r("Brainwallet password:\n%s" % cyan(d))
+	if g.verbose: msg_r("Brainwallet password:\n%s" % cyan(d))
 	write_to_file(fn,d,{},"brainwallet password")
 
 def do_between():
-	if pause:
+	if g.pause:
 		from mmgen.util import keypress_confirm
 		if keypress_confirm(green("Continue?"),default_yes=True):
-			if verbose or exact_output: sys.stderr.write("\n")
+			if g.verbose or g.exact_output: sys.stderr.write("\n")
 		else:
 			errmsg("Exiting at user request")
 			sys.exit()
-	elif verbose or exact_output:
+	elif g.verbose or g.exact_output:
 		sys.stderr.write("\n")
-
-def do_cmd(ts,cmd):
-
-	d = [(str(num),ext) for exts,num in cmd_data[cmd][2] for ext in exts]
-	al = [get_file_with_ext(ext,cfgs[num]['tmpdir']) for num,ext in d]
-
-	global cfg
-	cfg = cfgs[str(cmd_data[cmd][0])]
-
-	ts.__class__.__dict__[cmd](*([ts,cmd] + al))
 
 
 hincog_bytes   = 1024*1024
@@ -573,115 +524,129 @@ hincog_seedlen = 256
 
 rebuild_list = OrderedDict()
 
-def get_num_ext_for_cmd(cmd):
-	num = str(cmd_data[cmd][0])
-	dgl = cfgs[num]['dep_generators']
-#	msgrepr(num,cmd,dgl)
-	if cmd in dgl.values():
-		ext = [k for k in dgl if dgl[k] == cmd][0]
-		return (num,ext)
-	else:
-		return ('','')
+def check_needs_rerun(ts,cmd,build=False,root=True,force_delete=False,dpy=False):
 
-def check_needs_rerun(cmd,build=False,root=True,force_delete=False):
+	rerun = True if root else False  # force_delete is not passed to recursive call
 
-	rerun = True if root else False
+	fns = []
+	if force_delete or not root:
+		ret = ts.get_num_exts_for_cmd(cmd,dpy) #does cmd produce a needed dependency?
+		if ret:
+			for ext in ret[1]:
+				fn = get_file_with_ext(ext,cfgs[ret[0]]['tmpdir'],delete=build)
+				if fn:
+					if force_delete: os.unlink(fn)
+					else: fns.append(fn)
+				else: rerun = True
 
-	num,ext = get_num_ext_for_cmd(cmd) # does cmd produce a needed dependency?
-	if num and (force_delete or not root):
-		fn = get_file_with_ext(ext,cfgs[num]['tmpdir'],delete=build)
-		if not fn: rerun = True
-		if fn and force_delete:
-			os.unlink(fn); fn = ""
-	else: fn = ""
+	fdeps = ts.generate_file_deps(cmd)
+	cdeps = ts.generate_cmd_deps(fdeps)
 
-	fdeps = [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
-	cdeps = [cfgs[str(n)]['dep_generators'][e] for n,e in fdeps]
-
-	if fn:
+	for fn in fns:
 		my_age = os.stat(fn).st_mtime
 		for num,ext in fdeps:
 			f = get_file_with_ext(ext,cfgs[num]['tmpdir'],delete=build)
 			if f and os.stat(f).st_mtime > my_age: rerun = True
 
 	for cdep in cdeps:
-		if check_needs_rerun(cdep,build=build,root=False): rerun = True
+		if check_needs_rerun(ts,cdep,build=build,root=False,dpy=cmd): rerun = True
 
 	if build:
 		if rerun:
-			if fn and not root:
-				os.unlink(fn)
-			do_cmd(ts,cmd)
+			for fn in fns:
+				if not root: os.unlink(fn)
+			ts.do_cmd(cmd)
 			if not root: do_between()
 	else:
 		# If prog produces multiple files:
 		if cmd not in rebuild_list or rerun == True:
-			rebuild_list[cmd] = (rerun,fn)
+			rebuild_list[cmd] = (rerun,fns[0] if fns else "") # FIX
 
 	return rerun
-
-def mk_tmpdir(cfg):
-	try: os.mkdir(cfg['tmpdir'],0755)
-	except OSError as e:
-		if e.errno != 17: raise
-	else: msg("Created directory '%s'" % cfg['tmpdir'])
 
 def refcheck(what,chk,refchk):
 	vmsg("Comparing %s '%s' to stored reference" % (what,chk))
 	if chk == refchk:
 		ok()
 	else:
-		if not verbose: errmsg("")
+		if not g.verbose: errmsg("")
 		errmsg(red("""
 Fatal error - %s '%s' does not match reference value '%s'.  Aborting test
 """.strip() % (what,chk,refchk)))
 		sys.exit(3)
 
-def ok():
-	if verbose or exact_output:
-		sys.stderr.write(green("OK\n"))
-	else: msg(" OK")
+def check_deps(ts,name,cmds):
+	if len(cmds) != 1:
+		msg("Usage: %s check_deps <command>" % g.prog_name)
+		sys.exit(1)
+
+	cmd = cmds[0]
+
+	if cmd not in cmd_data:
+		msg("'%s': unrecognized command" % cmd)
+		sys.exit(1)
+
+	if not g.quiet:
+		msg("Checking dependencies for '%s'" % (cmd))
+
+	check_needs_rerun(ts,cmd,build=False)
+
+	w = max(len(i) for i in rebuild_list) + 1
+	for cmd in rebuild_list:
+		c = rebuild_list[cmd]
+		m = "Rebuild" if (c[0] and c[1]) else "Build" if c[0] else "OK"
+		msg("cmd {:<{w}} {}".format(cmd+":", m, w=w))
+#			msgrepr(cmd,c)
+
+
+def clean(dirs=[]):
+	ts = MMGenTestSuite()
+	dirlist = ts.list_tmp_dirs()
+	if not dirs: dirs = dirlist.keys()
+	for d in dirs:
+		if d in sorted(dirlist):
+			cleandir(dirlist[d])
+		else:
+			msg("%s: invalid directory number" % d)
+			sys.exit(1)
 
 class MMGenTestSuite(object):
 
 	def __init__(self):
 		pass
 
-	def check_deps(self,name,cmds):
-		if len(cmds) != 1:
-			msg("Usage: %s check_deps <command>" % g.prog_name)
-			sys.exit(1)
+	def list_tmp_dirs(self):
+		d = {}
+		for k in cfgs: d[k] = cfgs[k]['tmpdir']
+		return d
 
-		cmd = cmds[0]
+	def get_num_exts_for_cmd(self,cmd,dpy=False): # dpy ignored here
+		num = str(cmd_data[cmd][0])
+		dgl = cfgs[num]['dep_generators']
+#	msgrepr(num,cmd,dgl)
+		if cmd in dgl.values():
+			ext = [k for k in dgl if dgl[k] == cmd][0]
+			return (num,[ext])
+		else:
+			return None
 
-		if cmd not in cmd_data:
-			msg("'%s': unrecognized command" % cmd)
-			sys.exit(1)
+	def do_cmd(self,cmd):
 
-		if not quiet:
-			msg("Checking dependencies for '%s'" % (cmd))
+		d = [(str(num),ext) for exts,num in cmd_data[cmd][2] for ext in exts]
+		al = [get_file_with_ext(ext,cfgs[num]['tmpdir']) for num,ext in d]
 
-		check_needs_rerun(cmd,build=False)
+		global cfg
+		cfg = cfgs[str(cmd_data[cmd][0])]
 
-		w = max(len(i) for i in rebuild_list) + 1
-		for cmd in rebuild_list:
-			c = rebuild_list[cmd]
-			m = "Rebuild" if (c[0] and c[1]) else "Build" if c[0] else "OK"
-			msg("cmd {:<{w}} {}".format(cmd+":", m, w=w))
-#			msgrepr(cmd,c)
+		self.__class__.__dict__[cmd](*([self,cmd] + al))
 
+	def generate_file_deps(self,cmd):
+		return [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
 
-	def clean(self,name,dirs=[]):
-		dirlist = dirs if dirs else sorted(cfgs.keys())
-		for k in dirlist:
-			if k in cfgs:
-				cleandir(cfgs[k]['tmpdir'])
-			else:
-				msg("%s: invalid directory index" % k)
-				sys.exit(1)
+	def generate_cmd_deps(self,fdeps):
+		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
 	def walletgen(self,name,brain=False):
-		mk_tmpdir(cfg)
 
 		args = ["-d",cfg['tmpdir'],"-p1","-r10"]
 #        if 'seed_len' in cfg: args += ["-l",cfg['seed_len']]
@@ -703,22 +668,20 @@ class MMGenTestSuite(object):
 			t.expect("Generating encryption key from OS random data plus %s" % s)
 			if brain: break
 
-		t.passphrase_new("MMGen wallet",cfg['wpasswd'])
+		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
 		t.written_to_file("Wallet")
 		ok()
 
 	def refwalletgen(self,name):
-		mk_tmpdir(cfg)
 		args = ["-q","-d",cfg['tmpdir'],"-p1","-r10","-b"+cfg['bw_hashparams']]
 		t = MMGenExpect(name,"mmgen-walletgen", args)
 		t.expect("passphrase: ",cfg['bw_passwd']+"\n")
 		t.usr_rand(10)
-		t.passphrase_new("MMGen wallet",cfg['wpasswd'])
+		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
 		key_id = t.written_to_file("Wallet").split("-")[0].split("/")[-1]
 		refcheck("key id",key_id,cfg['key_id'])
 
 	def passchg(self,name,walletfile):
-		mk_tmpdir(cfg)
 
 		t = MMGenExpect(name,"mmgen-passchg",
 			["-d",cfg['tmpdir'],"-p","2","-L","New Label","-r","16",walletfile])
@@ -778,7 +741,7 @@ class MMGenTestSuite(object):
 		self.txcreate_common(name,sources=['1'])
 
 	def txcreate_common(self,name,sources=['1'],non_mmgen_input=''):
-		if verbose or exact_output:
+		if g.verbose or g.exact_output:
 			sys.stderr.write(green("Generating fake transaction info\n"))
 		silence()
 		from mmgen.addr import AddrInfo,AddrInfoList
@@ -805,7 +768,7 @@ class MMGenTestSuite(object):
 
 		# make the command line
 		from mmgen.bitcoin import privnum2addr
-		btcaddr = privnum2addr(getrand(32),compressed=True)
+		btcaddr = privnum2addr(getrandnum(32),compressed=True)
 
 		cmd_args = ["-d",cfg['tmpdir']]
 		for num in tx_data.keys():
@@ -823,7 +786,7 @@ class MMGenTestSuite(object):
 
 		env["MMGEN_BOGUS_WALLET_DATA"] = unspent_data_file
 		end_silence()
-		if verbose or exact_output: sys.stderr.write("\n")
+		if g.verbose or g.exact_output: sys.stderr.write("\n")
 
 		t = MMGenExpect(name,"mmgen-txcreate",cmd_args,env)
 		t.license()
@@ -908,7 +871,7 @@ class MMGenTestSuite(object):
 	def export_incog_hidden(self,name,walletfile):
 		rf,rd = os.path.join(cfg['tmpdir'],hincog_fn),os.urandom(hincog_bytes)
 		vmsg(green("Writing %s bytes of data to file '%s'" % (hincog_bytes,rf)))
-		write_to_file(rf,rd,{},verbose=verbose)
+		write_to_file(rf,rd,{},verbose=g.verbose)
 		t = self.export_incog(name,walletfile,args=["-G","%s,%s"%(rf,hincog_offset)])
 		t.written_to_file("Data",query="")
 		ok()
@@ -960,7 +923,7 @@ class MMGenTestSuite(object):
 			return
 		t.expect("Encrypt key list? (y/N): ","y")
 		t.hash_preset("new key list",'1')
-		t.passphrase_new("key list",cfg['kapasswd'])
+		t.passphrase_new("new key list",cfg['kapasswd'])
 		t.written_to_file("Keys")
 		ok()
 
@@ -1054,86 +1017,41 @@ class MMGenTestSuite(object):
 		t.written_to_file("Signed transaction")
 		ok()
 
+	def tool_encrypt(self,name,infile=""):
+		if infile:
+			infn = infile
+		else:
+			d = os.urandom(1033)
+			tmp_fn = cfg['tool_enc_infn']
+			write_to_tmpfile(cfg,tmp_fn,d)
+			infn = get_tmpfile_fn(cfg,tmp_fn)
+		t = MMGenExpect(name,"mmgen-tool",["-d",cfg['tmpdir'],"encrypt",infn])
+		t.hash_preset("user data",'1')
+		t.passphrase_new("user data",cfg['tool_enc_passwd'])
+		t.written_to_file("Encrypted data")
+		ok()
 
-def write_to_tmpfile(fn,data):
-	write_to_file(os.path.join(cfg['tmpdir'],fn),data,{},silent=True)
+	def tool_encrypt_ref(self,name):
+		infn = get_tmpfile_fn(cfg,cfg['tool_enc_ref_infn'])
+		write_to_file(infn,cfg['tool_enc_reftext'],{},silent=True)
+		self.tool_encrypt(name,infn)
 
-def read_from_tmpfile(fn):
-	from mmgen.util import get_data_from_file
-	return get_data_from_file(os.path.join(cfg['tmpdir'],fn),silent=True)
+	# Two deps produced by one prog is broken - TODO
+	def tool_decrypt(self,name,f1,f2):
+		of = name + ".out"
+		t = MMGenExpect(name,"mmgen-tool",
+			["-d",cfg['tmpdir'],"decrypt",f2,"outfile="+of,"hash_preset=1"])
+		t.passphrase("user data",cfg['tool_enc_passwd'])
+		t.written_to_file("Decrypted data")
+		d1 = read_from_file(f1)
+		d2 = read_from_file(get_tmpfile_fn(cfg,of))
+		cmp_or_die(d1,d2)
 
-def read_from_file(fn):
-	from mmgen.util import get_data_from_file
-	return get_data_from_file(fn,silent=True)
-
-class MMGenToolTestSuite(object):
-
-	def __init__(self):
-		global cmd_data,tool_cmd_data
-		cmd_data = tool_cmd_data
-		pass
-
-	def clean(self,name):
-		cleandir(cfgs['10']['tmpdir'])
-
-	def cmd(self,name,tool_args):
-		mk_tmpdir(cfg)
-		t = MMGenExpect(name,"mmgen-tool", ["-d",cfg['tmpdir']] + tool_args)
-		return t.read()
-
-	def cmd_to_tmpfile(self,name,tool_args,tmpfile):
-		ret = self.cmd(name,tool_args)
-		if ret:
-			write_to_tmpfile(tmpfile,ret)
-			ok()
-
-	def strtob58(self,name):
-		s = "".join(get_rand_printable_chars(15))
-		write_to_tmpfile('strtob58.in',s)
-		self.cmd_to_tmpfile(name,["strtob58",s],'strtob58.out')
-
-	def b58tostr(self,name,f1,f2):
-		idata = read_from_file(f1)
-		odata = read_from_file(f2)[:-2]
-		res = self.cmd(name,["b58tostr",odata])[:-2]
-		if res == idata: ok()
-		else: errmsg(red("Error"))
-
-	def hextob58(self,name):
-		hexnum = getrandhex(32)
-		write_to_tmpfile('hextob58.in',hexnum)
-		self.cmd_to_tmpfile(name,["hextob58",hexnum],'hextob58.out')
-
-	def b58tohex(self,name,f1,f2):
-		idata = read_from_file(f1)
-		odata = read_from_file(f2)[:-2]
-		res = self.cmd(name,["b58tohex",odata])[:-2]
-		if res == idata: ok()
-		else: errmsg(red("Error"))
-# 	"b58randenc":   [],
-# 	"randhex":      ['nbytes [int=32]'],
-# 	"randwif":      ['compressed [bool=False]'],
-# 	"randpair":     ['compressed [bool=False]'],
-# 	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
-# 	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
-# 	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
-# 	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
-# 	"unhexdump":    ['<infile> [str]'],
-# 	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
-# 	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
-# 	"b32tohex":     ['<b32 num> [str]'],
-# 	"hextob32":     ['<hex num> [str]'],
-# 	"mn_rand128":   ['wordlist [str="electrum"]'],
-# 	"mn_rand192":   ['wordlist [str="electrum"]'],
-# 	"mn_rand256":   ['wordlist [str="electrum"]'],
-# 	"mn_stats":     ['wordlist [str="electrum"]'],
-# 	"mn_printlist": ['wordlist [str="electrum"]'],
-# 	"id8":          ['<infile> [str]'],
-# 	"id6":          ['<infile> [str]'],
-# 	"str2id6":      ['<string (spaces are ignored)> [str]'],
+	def tool_decrypt_ref(self,name,f1,f2):
+		self.tool_decrypt(name,f1,f2)
 
 # main()
-if pause:
+if g.pause:
 	import termios,atexit
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
@@ -1142,25 +1060,26 @@ if pause:
 	atexit.register(at_exit)
 
 start_time = int(time.time())
+ts = MMGenTestSuite()
+
+for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
 
 try:
-	if cmd_args and cmd_args[0] != "tool":
+	if cmd_args:
 		arg1 = cmd_args[0]
 		if arg1 in utils:
-			MMGenTestSuite.__dict__[arg1](ts,arg1,cmd_args[1:])
+			globals()[arg1](cmd_args[1:])
 			sys.exit()
 		elif arg1 in meta_cmds:
-			ts = MMGenTestSuite()
 			if len(cmd_args) == 1:
 				for cmd in meta_cmds[arg1][1]:
-					check_needs_rerun(cmd,build=True,force_delete=True)
+					check_needs_rerun(ts,cmd,build=True,force_delete=True)
 			else:
 				msg("Only one meta command may be specified")
 				sys.exit(1)
-		elif arg1 in cmd_data.keys() + tool_cmd_data.keys():
-			ts = MMGenTestSuite() if arg1 in cmd_data else MMGenToolTestSuite()
+		elif arg1 in cmd_data.keys():
 			if len(cmd_args) == 1:
-				check_needs_rerun(arg1,build=True)
+				check_needs_rerun(ts,arg1,build=True)
 			else:
 				msg("Only one command may be specified")
 				sys.exit(1)
@@ -1168,17 +1087,9 @@ try:
 			errmsg("%s: unrecognized command" % arg1)
 			sys.exit(1)
 	else:
-		if cmd_args: # tool
-			if len(cmd_args) != 1:
-				msg("Only one command may be specified")
-				sys.exit(1)
-			ts = MMGenToolTestSuite()
-		else:
-			ts = MMGenTestSuite()
-
-		ts.clean("clean")
+		clean()
 		for cmd in cmd_data:
-			do_cmd(ts,cmd)
+			ts.do_cmd(cmd)
 			if cmd is not cmd_data.keys()[-1]: do_between()
 except:
 	sys.stderr = stderr_save

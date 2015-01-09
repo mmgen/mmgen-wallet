@@ -41,6 +41,14 @@ def vmsg(s):
 def vmsg_r(s):
 	if g.verbose: sys.stderr.write(s)
 
+def Msg(s):    sys.stdout.write(s + "\n")
+def Msg_r(s):  sys.stdout.write(s)
+def Vmsg(s):
+	if g.verbose: sys.stdout.write(s + "\n")
+def Vmsg_r(s):
+	if g.verbose: sys.stdout.write(s)
+
+
 def msgrepr(*args):
 	for d in args:
 		sys.stdout.write(repr(d)+"\n")

@@ -19,6 +19,7 @@ setup(
 			'mmgen.mn_tirosh',
 			'mmgen.Opts',
 			'mmgen.term',
+			'mmgen.test',
 			'mmgen.tool',
 			'mmgen.tx',
 			'mmgen.util',
@@ -46,10 +47,9 @@ setup(
 			'mmgen.rpc.proxy',
 			'mmgen.rpc.util',
 
-			'mmgen.tests.__init__',
-			'mmgen.tests.bitcoin',
-			'mmgen.tests.mnemonic',
-			'mmgen.tests.test',
+			'test.__init__',
+			'test.test',
+			'test.tooltest',
 		],
 		scripts=[
 			'mmgen-addrgen',

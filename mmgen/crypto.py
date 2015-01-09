@@ -199,7 +199,7 @@ def get_random_data_from_user(uchars):
 	return key_data+"".join(fmt_time_data)
 
 
-def get_random(length,opts):
+def get_random(length):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
 	if g.use_urandchars:
@@ -430,8 +430,9 @@ def _get_seed_from_brain_passphrase(words,opts):
 salt_len,sha256_len,nonce_len = 32,32,32
 
 def mmgen_encrypt(data,what="data",hash_preset='',opts={}):
-	salt,iv,nonce = get_random(salt_len,opts),\
-		get_random(g.aesctr_iv_len,opts), get_random(nonce_len,opts)
+	salt,iv,nonce = get_random(salt_len),\
+					get_random(g.aesctr_iv_len), \
+					get_random(nonce_len)
 	hp = hash_preset or get_hash_preset_from_user('3',what)
 	m = "default" if hp == '3' else "user-requested"
 	vmsg("Encrypting %s" % what)

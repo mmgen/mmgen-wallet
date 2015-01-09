@@ -29,63 +29,64 @@ from mmgen.crypto import *
 from mmgen.util import *
 from mmgen.tx import *
 
-def Msg(s):    sys.stdout.write(s + "\n")
-def Msg_r(s):  sys.stdout.write(s)
-def Vmsg(s):
-	if g.verbose: sys.stdout.write(s + "\n")
-def Vmsg_r(s):
-	if g.verbose: sys.stdout.write(s)
-
 opts = {}
-commands = {
-	"help":         [],
-	"strtob58":     ['<string> [str]'],
-	"b58tostr":     ['<b58 number> [str]'],
-	"hextob58":     ['<hex number> [str]'],
-	"b58tohex":     ['<b58 number> [str]'],
-	"b58randenc":   [],
-	"randhex":      ['nbytes [int=32]'],
-	"randwif":      ['compressed [bool=False]'],
-	"randpair":     ['compressed [bool=False]'],
-	"wif2hex":      ['<wif> [str]', 'compressed [bool=False]'],
-	"wif2addr":     ['<wif> [str]', 'compressed [bool=False]'],
-	"hex2wif":      ['<private key in hex format> [str]', 'compressed [bool=False]'],
-	"hexdump":      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]'],
-	"unhexdump":    ['<infile> [str]'],
-	"hex2mn":       ['<hexadecimal string> [str]','wordlist [str="electrum"]'],
-	"mn2hex":       ['<mnemonic> [str]', 'wordlist [str="electrum"]'],
-	"b32tohex":     ['<b32 num> [str]'],
-	"hextob32":     ['<hex num> [str]'],
-	"mn_rand128":   ['wordlist [str="electrum"]'],
-	"mn_rand192":   ['wordlist [str="electrum"]'],
-	"mn_rand256":   ['wordlist [str="electrum"]'],
-	"mn_stats":     ['wordlist [str="electrum"]'],
-	"mn_printlist": ['wordlist [str="electrum"]'],
-	"id8":          ['<infile> [str]'],
-	"id6":          ['<infile> [str]'],
-	"str2id6":      ['<string (spaces are ignored)> [str]'],
-	"listaddresses":['minconf [int=1]','showempty [bool=False]','pager [bool=False]'],
-	"getbalance":   ['minconf [int=1]'],
-	"txview":       ['<MMGen tx file> [str]','pager [bool=False]','terse [bool=False]'],
-	"addrfile_chksum": ['<MMGen addr file> [str]'],
-	"keyaddrfile_chksum": ['<MMGen addr file> [str]'],
-	"find_incog_data": ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]'],
-	"hexreverse":   ['<hexadecimal string> [str]'],
-	"sha256x2":     ['<str, hexstr or filename> [str]',
-					'hex_input [bool=False]','file_input [bool=False]'],
-	"hexlify":      ['<string> [str]'],
-	"hexaddr2addr": ['<btc address in hex format> [str]'],
-	"addr2hexaddr": ['<btc address> [str]'],
-	"pubkey2addr":  ['<public key in hex format> [str]'],
-	"pubkey2hexaddr": ['<public key in hex format> [str]'],
-	"privhex2addr": ['<private key in hex format> [str]','compressed [bool=False]'],
-	"encrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]'],
-	"decrypt":      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]'],
-	"rand2file":    ['<outfile> [str]','<nbytes> [str]','threads [int=4]'],
-	"bytespec":     ['<bytespec> [str]'],
-}
+from collections import OrderedDict
+cmd_data = OrderedDict([
+	("help",         []),
+	("usage",        ['<tool command> [str]']),
+	("strtob58",     ['<string> [str]']),
+	("b58tostr",     ['<b58 number> [str]']),
+	("hextob58",     ['<hex number> [str]']),
+	("b58tohex",     ['<b58 number> [str]']),
+	("b58randenc",   []),
+	("b32tohex",     ['<b32 num> [str]']),
+	("hextob32",     ['<hex num> [str]']),
+	("randhex",      ['nbytes [int=32]']),
+	("id8",          ['<infile> [str]']),
+	("id6",          ['<infile> [str]']),
+	("sha256x2",     ['<str, hexstr or filename> [str]',
+							'hex_input [bool=False]','file_input [bool=False]']),
+	("str2id6",      ['<string (spaces are ignored)> [str]']),
+	("hexdump",      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]']),
+	("unhexdump",    ['<infile> [str]']),
+	("hexreverse",   ['<hexadecimal string> [str]']),
+	("hexlify",      ['<string> [str]']),
+	("rand2file",    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False']),
 
-command_help = """
+	("randwif",    ['compressed [bool=False]']),
+	("randpair",   ['compressed [bool=False]']),
+	("hex2wif",    ['<private key in hex format> [str]', 'compressed [bool=False]']),
+	("wif2hex",    ['<wif> [str]', 'compressed [bool=False]']),
+	("wif2addr",   ['<wif> [str]', 'compressed [bool=False]']),
+	("hexaddr2addr", ['<btc address in hex format> [str]']),
+	("addr2hexaddr", ['<btc address> [str]']),
+	("pubkey2addr",  ['<public key in hex format> [str]']),
+	("pubkey2hexaddr", ['<public key in hex format> [str]']),
+	("privhex2addr", ['<private key in hex format> [str]','compressed [bool=False]']),
+
+	("hex2mn",       ['<hexadecimal string> [str]','wordlist [str="electrum"]']),
+	("mn2hex",       ['<mnemonic> [str]', 'wordlist [str="electrum"]']),
+	("mn_rand128",   ['wordlist [str="electrum"]']),
+	("mn_rand192",   ['wordlist [str="electrum"]']),
+	("mn_rand256",   ['wordlist [str="electrum"]']),
+	("mn_stats",     ['wordlist [str="electrum"]']),
+	("mn_printlist", ['wordlist [str="electrum"]']),
+
+
+	("listaddresses",['minconf [int=1]','showempty [bool=False]','pager [bool=False]']),
+	("getbalance",   ['minconf [int=1]']),
+	("txview",       ['<MMGen tx file> [str]','pager [bool=False]','terse [bool=False]']),
+
+	("addrfile_chksum", ['<MMGen addr file> [str]']),
+	("keyaddrfile_chksum", ['<MMGen addr file> [str]']),
+	("find_incog_data", ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
+
+	("encrypt",      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]']),
+	("decrypt",      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]']),
+	("bytespec",     ['<bytespec> [str]']),
+])
+
+cmd_help = """
   Bitcoin address/key operations (compressed public keys supported):
   addr2hexaddr - convert Bitcoin address from base58 to hex format
   hex2wif      - convert a private key from hex to WIF format
@@ -153,23 +154,32 @@ command_help = """
 
 def tool_usage(prog_name, command):
 	print "USAGE: '%s %s%s'" % (prog_name, command,
-		(" "+" ".join(commands[command]) if commands[command] else ""))
+		(" "+" ".join(cmd_data[command]) if cmd_data[command] else ""))
 
 def process_args(prog_name, command, cmd_args):
 	c_args = [[i.split(" [")[0],i.split(" [")[1][:-1]]
-		for i in commands[command] if "=" not in i]
+		for i in cmd_data[command] if "=" not in i]
 	c_kwargs = dict([[
 			i.split(" [")[0],
 			[i.split(" [")[1].split("=")[0], i.split(" [")[1].split("=")[1][:-1]]
-		] for i in commands[command] if "=" in i])
+		] for i in cmd_data[command] if "=" in i])
+
 	u_args = cmd_args[:len(c_args)]
-	u_kwargs = dict([i.split("=") for i in cmd_args[len(c_args):]])
+	u_kwargs = cmd_args[len(c_args):]
 
-#	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
-
-	if len(u_args) != len(c_args):
+	if len(u_args) < len(c_args):
+		msg("%s args required" % len(c_args))
 		tool_usage(prog_name, command)
 		sys.exit(1)
+
+	if len(u_kwargs) > len(c_kwargs):
+		msg("Too many arguments")
+		tool_usage(prog_name, command)
+		sys.exit(1)
+
+	u_kwargs = dict([a.split("=") for a in u_kwargs])
+
+#	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
 
 	if set(u_kwargs) > set(c_kwargs):
 		print "Invalid named argument"
@@ -203,67 +213,84 @@ def process_args(prog_name, command, cmd_args):
 
 	return args,kwargs
 
-# Individual commands
+# Individual cmd_data
 
 def help():
 	Msg("Available commands:")
-	for k in commands.keys():
-		Msg("%-16s %s" % (k," ".join(commands[k])))
+	for k in cmd_data.keys():
+		Msg("%-16s %s" % (k," ".join(cmd_data[k])))
 
-def print_convert_results(indata,enc,dec,no_recode=False):
-	Vmsg("Input:         [%s]" % indata)
-	Vmsg_r("Encoded data:  ["); Msg_r(enc); Vmsg_r("]"); Msg("")
-	if not no_recode:
-		Vmsg("Recoded data:  [%s]" % dec)
-		if indata != dec:
-			Msg("WARNING! Recoded number doesn't match input stringwise!")
+def are_equal(a,b,dtype=""):
+	if dtype == "str": return a.lstrip("\0") == b.lstrip("\0")
+	if dtype == "hex": return a.lstrip("0") == b.lstrip("0")
+	if dtype == "b58": return a.lstrip("1") == b.lstrip("1")
+	else:              return a == b
+
+def print_convert_results(indata,enc,dec,dtype):
+
+	error = False if are_equal(indata,dec,dtype) else True
+
+	if error or g.verbose:
+		Msg("Input:         %s" % repr(indata))
+		Msg("Encoded data:  %s" % repr(enc))
+		Msg("Recoded data:  %s" % repr(dec))
+	else: Msg(enc)
+
+	if error:
+		Msg("Error! Recoded data doesn't match input!")
+		sys.exit(3)
+
+def usage(cmd):
+	tool_usage(g.prog_name, cmd)
 
 def hexdump(infile, cols=8, line_nums=True):
-	print pretty_hexdump(get_data_from_file(infile,dash=True),
+	print pretty_hexdump(get_data_from_file(infile,dash=True,silent=True),
 			cols=cols, line_nums=line_nums)
 
 def unhexdump(infile):
-	sys.stdout.write(decode_pretty_hexdump(get_data_from_file(infile,dash=True)))
+	sys.stdout.write(decode_pretty_hexdump(
+				get_data_from_file(infile,dash=True,silent=True)))
 
 def strtob58(s):
 	enc = bitcoin.b58encode(s)
 	dec = bitcoin.b58decode(enc)
-	print_convert_results(s,enc,dec)
+	print_convert_results(s,enc,dec,"str")
 
 def hextob58(s,f_enc=bitcoin.b58encode, f_dec=bitcoin.b58decode):
 	enc = f_enc(ba.unhexlify(s))
 	dec = ba.hexlify(f_dec(enc))
-	print_convert_results(s,enc,dec)
+	print_convert_results(s,enc,dec,"hex")
 
 def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	tmp = f_enc(s)
 	if tmp == False: sys.exit(1)
 	enc = ba.hexlify(tmp)
 	dec = f_dec(ba.unhexlify(enc))
-	print_convert_results(s,enc,dec)
+	print_convert_results(s,enc,dec,"b58")
 
 def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	enc = f_enc(s)
 	if enc == False: sys.exit(1)
 	dec = f_dec(enc)
-	print_convert_results(s,enc,dec)
+	print_convert_results(s,enc,dec,"b58")
 
 def b58randenc():
-	r = get_random(32,opts)
+	r = get_random(32)
 	enc = bitcoin.b58encode(r)
 	dec = bitcoin.b58decode(enc)
-	print_convert_results(ba.hexlify(r),enc,ba.hexlify(dec))
+	print_convert_results(r,enc,dec,"str")
 
 def randhex(nbytes='32'):
-	print ba.hexlify(get_random(int(nbytes),opts))
+	print ba.hexlify(get_random(int(nbytes)))
 
 def randwif(compressed=False):
-	r_hex = ba.hexlify(get_random(32,opts))
+	r_hex = ba.hexlify(get_random(32))
 	enc = bitcoin.hextowif(r_hex,compressed)
-	print_convert_results(r_hex,enc,"",no_recode=True)
+	dec = bitcoin.wiftohex(enc,compressed)
+	print_convert_results(r_hex,enc,dec,"hex")
 
 def randpair(compressed=False):
-	r_hex = ba.hexlify(get_random(32,opts))
+	r_hex = ba.hexlify(get_random(32))
 	wif = bitcoin.hextowif(r_hex,compressed)
 	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
 	Vmsg("Key (hex):  %s" % r_hex)
@@ -279,27 +306,6 @@ def wif2addr(wif,compressed=False):
 	Vmsg_r("Addr: "); Msg(addr)
 
 from mmgen.mnemonic import *
-from mmgen.mn_electrum  import electrum_words as el
-from mmgen.mn_tirosh    import tirosh_words   as tl
-
-wordlists = sorted(wl_checksums.keys())
-
-def get_wordlist(wordlist):
-	wordlist = wordlist.lower()
-	if wordlist not in wordlists:
-		Msg('"%s": invalid wordlist.  Valid choices: %s' %
-			(wordlist,'"'+'" "'.join(wordlists)+'"'))
-		sys.exit(1)
-	return (el if wordlist == "electrum" else tl).strip().split("\n")
-
-def do_random_mn(nbytes,wordlist):
-	r = get_random(nbytes,opts)
-	Vmsg("Seed: %s" % ba.hexlify(r))
-	for wlname in (wordlists if wordlist == "all" else [wordlist]):
-		wl = get_wordlist(wlname)
-		mn = get_mnemonic_from_seed(r,wl,wordlist)
-		Vmsg("%s wordlist mnemonic:" % (wlname.capitalize()))
-		print " ".join(mn)
 
 def mn_rand128(wordlist="electrum"): do_random_mn(16,wordlist)
 def mn_rand192(wordlist="electrum"): do_random_mn(24,wordlist)
@@ -333,8 +339,8 @@ def mn_printlist(wordlist="electrum"):
 	wl = get_wordlist(wordlist)
 	print "\n".join(wl)
 
-def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True))
-def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True))
+def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True,silent=True))
+def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True,silent=True))
 def str2id6(s):  print make_chksum_6("".join(s.split()))
 
 # List MMGen addresses and their balances:
@@ -462,9 +468,9 @@ def hex2wif(hexpriv,compressed=False):
 	print bitcoin.hextowif(hexpriv,compressed)
 
 
-def encrypt(infile,outfile="",hash_preset=''):
+def encrypt(infile,outfile="",hash_preset=""):
 	data = get_data_from_file(infile,"data for encryption")
-	enc_d = mmgen_encrypt(data,"user data","",opts)
+	enc_d = mmgen_encrypt(data,"user data",hash_preset,opts)
 	if outfile == '-':
 		write_to_stdout(enc_d,"encrypted data",confirm=True)
 	else:
@@ -473,10 +479,10 @@ def encrypt(infile,outfile="",hash_preset=''):
 		write_to_file(outfile, enc_d, opts,"encrypted data",True,True)
 
 
-def decrypt(infile,outfile="",hash_preset=''):
+def decrypt(infile,outfile="",hash_preset=""):
 	enc_d = get_data_from_file(infile,"encrypted data")
 	while True:
-		dec_d = mmgen_decrypt(enc_d,"user data")
+		dec_d = mmgen_decrypt(enc_d,"user data",hash_preset)
 		if dec_d: break
 		msg("Trying again...")
 	if outfile == '-':
@@ -539,7 +545,7 @@ def parse_nbytes(nbytes):
 	sys.exit(1)
 
 
-def rand2file(outfile, nbytes, threads=4):
+def rand2file(outfile, nbytes, threads=4, silent=False):
 	nbytes = parse_nbytes(nbytes)
 	from Crypto import Random
 	rh = Random.new()
@@ -553,7 +559,7 @@ def rand2file(outfile, nbytes, threads=4):
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
-	key = get_random(32,opts)
+	key = get_random(32)
 
 	def encrypt_worker(wid):
 		while True:
@@ -590,8 +596,9 @@ def rand2file(outfile, nbytes, threads=4):
 		if not (bsize*i) % roll:
 			msg_r("\rRead: %s bytes" % (bsize*i))
 
-	msg("\rRead: %s bytes" % nbytes)
-	qmsg("\r%s bytes written to file '%s'" % (nbytes,outfile))
+	if not silent:
+		msg("\rRead: %s bytes" % nbytes)
+		qmsg("\r%s bytes written to file '%s'" % (nbytes,outfile))
 	q1.join()
 	q2.join()
 	f.close()

@@ -33,6 +33,7 @@ mmgen/mn_electrum.py
 mmgen/mn_tirosh.py
 mmgen/mnemonic.py
 mmgen/term.py
+mmgen/test.py
 mmgen/tool.py
 mmgen/tx.py
 mmgen/util.py
@@ -45,8 +46,6 @@ mmgen/rpc/data.py
 mmgen/rpc/exceptions.py
 mmgen/rpc/proxy.py
 mmgen/rpc/util.py
-mmgen/tests/__init__.py
-mmgen/tests/bitcoin.py
-mmgen/tests/mnemonic.py
-mmgen/tests/test.py
+test/__init__.py
 test/test.py
+test/tooltest.py

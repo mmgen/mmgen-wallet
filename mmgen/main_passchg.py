@@ -114,7 +114,7 @@ if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
 
 	from hashlib import sha256
 
-	salt = sha256(salt + get_random(128,opts)).digest()[:g.salt_len]
+	salt = sha256(salt + get_random(128)).digest()[:g.salt_len]
 	key = make_key(passwd, salt, opts['hash_preset'])
 	new_key_id = make_chksum_8(key)
 	qmsg("Key ID changed: %s -> %s" % (key_id,new_key_id))

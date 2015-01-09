@@ -85,7 +85,7 @@ def is_b58_str(s):
 	from mmgen.bitcoin import b58a
 	return set(list(s)) <= set(b58a)
 
-def is_wip_key(s):
+def is_wif(s):
 	if s == "": return False
 	compressed = not s[0] == '5'
 	from mmgen.bitcoin import wiftohex

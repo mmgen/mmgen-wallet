@@ -21,7 +21,9 @@ mnemonic.py:  Mnemonic routines for the MMGen suite
 """
 
 import sys
-from mmgen.util import msg,msg_r,make_chksum_8
+from binascii import hexlify
+from mmgen.util import msg,msg_r,make_chksum_8,Vmsg
+from mmgen.crypto import get_random
 import mmgen.config as g
 
 wl_checksums = {
@@ -38,7 +40,8 @@ def hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
 def baseNtohex(base,words,wordlist,pad=0):
 	deconv = \
 		[wordlist.index(words[::-1][i])*(base**i) for i in range(len(words))]
-	return ("{:0%sx}"%pad).format(sum(deconv))
+	ret = ("{:0%sx}" % pad).format(sum(deconv))
+	return "%s%s" % (('0' if len(ret) % 2 else ''), ret)
 
 def hextobaseN(base,hexnum,wordlist,pad=0):
 	num,ret = int(hexnum,16),[]
@@ -122,3 +125,24 @@ def check_wordlist(wl,label):
 	else:
 		print "ERROR: List is not sorted!"
 		sys.exit(3)
+
+from mmgen.mn_electrum  import electrum_words as el
+from mmgen.mn_tirosh    import tirosh_words   as tl
+wordlists = sorted(wl_checksums)
+
+def get_wordlist(wordlist):
+	wordlist = wordlist.lower()
+	if wordlist not in wordlists:
+		Msg('"%s": invalid wordlist.  Valid choices: %s' %
+			(wordlist,'"'+'" "'.join(wordlists)+'"'))
+		sys.exit(1)
+	return (el if wordlist == "electrum" else tl).strip().split("\n")
+
+def do_random_mn(nbytes,wordlist):
+	r = get_random(nbytes)
+	Vmsg("Seed: %s" % hexlify(r))
+	for wlname in (wordlists if wordlist == "all" else [wordlist]):
+		wl = get_wordlist(wlname)
+		mn = get_mnemonic_from_seed(r,wl,wordlist)
+		Vmsg("%s wordlist mnemonic:" % (wlname.capitalize()))
+		print " ".join(mn)

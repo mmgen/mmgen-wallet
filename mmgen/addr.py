@@ -28,7 +28,7 @@ from binascii import hexlify, unhexlify
 from mmgen.bitcoin import numtowif
 # from mmgen.util import msg,qmsg,qmsg_r,make_chksum_N,get_lines_from_file,get_data_from_file,get_extension
 from mmgen.util import *
-from mmgen.tx import is_mmgen_idx,is_mmgen_seed_id,is_btc_addr,is_wip_key,get_wif2addr_f
+from mmgen.tx import is_mmgen_idx,is_mmgen_seed_id,is_btc_addr,is_wif,get_wif2addr_f
 import mmgen.config as g
 
 addrmsgs = {
@@ -147,7 +147,7 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 
 			if d[0] != "wif:":
 				return "Invalid key line in file: '%s'" % l
-			if not is_wip_key(d[1]):
+			if not is_wif(d[1]):
 				return "'%s': invalid Bitcoin key" % d[1]
 
 			a.wif = unicode(d[1])
