@@ -23,7 +23,7 @@ addr.py:  Shared routines for the test suites
 import sys,os
 from binascii import hexlify
 from mmgen.util import msg,write_to_file
-import mmgen.config as g
+import mmgen.opt as opt
 
 _red,_grn,_yel,_cya,_reset = (
 	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
@@ -58,7 +58,7 @@ def get_tmpfile_fn(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 
 def write_to_tmpfile(cfg,fn,data):
-	write_to_file(os.path.join(cfg['tmpdir'],fn),data,{},silent=True)
+	write_to_file(os.path.join(cfg['tmpdir'],fn),data,silent=True)
 
 def read_from_tmpfile(cfg,fn):
 	from mmgen.util import get_data_from_file
@@ -69,7 +69,7 @@ def read_from_file(fn):
 	return get_data_from_file(fn,silent=True)
 
 def ok():
-	if g.verbose or g.exact_output:
+	if opt.verbose or opt.exact_output:
 		sys.stderr.write(green("OK\n"))
 	else: msg(" OK")
 

@@ -21,14 +21,14 @@ mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 """
 
 import sys, time
-from mmgen.Opts   import *
+import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.license import *
 from mmgen.util import *
 from mmgen.tx import connect_to_bitcoind
 from mmgen.addr import AddrInfo,AddrInfoEntry
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc': """Import addresses (both {pnm} and non-{pnm}) into a bitcoind
                      tracking wallet""".format(pnm=g.proj_name),
 	'usage':"[opts] [mmgen address file]",
@@ -47,12 +47,12 @@ in the tracking wallet.
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
-	if 'addrlist' in opts:
+	if opt.addrlist:
 		lines = get_lines_from_file(
 			infile,"non-{} addresses".format(g.proj_name),trim_comments=True)
 		ai,adata = AddrInfo(),[]
@@ -62,7 +62,7 @@ if len(cmd_args) == 1:
 			adata.append(a)
 		ai.initialize(None,adata)
 	else:
-		ai = AddrInfo(infile,has_keys='keyaddr_file' in opts)
+		ai = AddrInfo(infile,has_keys=opt.keyaddr_file)
 else:
 	msg("""
 "You must specify an mmgen address file (or a list of non-%s addresses
@@ -80,10 +80,9 @@ for e in ai.addrdata:
 m = (" from seed ID %s" % ai.seed_id) if ai.seed_id else ""
 qmsg("OK. %s addresses%s" % (ai.num_addrs,m))
 
-import mmgen.config as g
 g.http_timeout = 3600
 
-if not 'test' in opts:
+if not opt.test:
 	c = connect_to_bitcoind()
 
 m = """
@@ -92,30 +91,30 @@ necessary only if an address you're importing is already on the blockchain,
 has a balance and is not already in your tracking wallet.  Note that the
 rescanning process is very slow (>30 min. for each imported address on a
 low-powered computer).
-	""".strip() if "rescan" in opts else """
+	""".strip() if opt.rescan else """
 WARNING: If any of the addresses you're importing is already on the blockchain,
 has a balance and is not already in your tracking wallet, you must exit the
 program now and rerun it using the '--rescan' option.  Otherwise you may ignore
 this message and continue.
 """.strip()
 
-if g.quiet: m = ""
+if opt.quiet: m = ""
 confirm_or_exit(m, "continue", expect="YES")
 
 err_flag = False
 
 def import_address(addr,label,rescan):
 	try:
-		if not 'test' in opts:
+		if not opt.test:
 			c.importaddress(addr,label,rescan)
 	except:
 		global err_flag
 		err_flag = True
 
 w_n_of_m = len(str(ai.num_addrs)) * 2 + 2
-w_mmid   = "" if 'addrlist' in opts else len(str(max(ai.idxs()))) + 12
+w_mmid   = "" if opt.addrlist else len(str(max(ai.idxs()))) + 12
 
-if "rescan" in opts:
+if opt.rescan:
 	import threading
 	msg_fmt = "\r%s %-{}s %-34s %s".format(w_n_of_m)
 else:
@@ -128,7 +127,7 @@ for n,e in enumerate(ai.addrdata):
 		if e.comment: label += " " + e.comment
 	else: label = "non-%s" % g.proj_name
 
-	if "rescan" in opts:
+	if opt.rescan:
 		t = threading.Thread(target=import_address, args=(e.addr,label,True))
 		t.daemon = True
 		t.start()

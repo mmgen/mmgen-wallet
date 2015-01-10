@@ -23,12 +23,11 @@ mmgen-walletchk: Check integrity of an MMGen deterministic wallet, display
 
 import sys
 import mmgen.config as g
-from mmgen.Opts import *
+import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.crypto import *
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':  """Check integrity of an {} deterministic wallet, display
                     its information, and export seed and mnemonic data.
              """.format(g.proj_name),
@@ -61,14 +60,14 @@ to disable this option, then specify '-r0' on the command line.
 """
 }
 
-def wallet_to_incog_data(infile,opts):
+def wallet_to_incog_data(infile):
 
 	d = get_data_from_wallet(infile,silent=True)
 	seed_id,key_id,preset,salt,enc_seed = \
 			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
 
 	while True:
-		passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name),opts)
+		passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name))
 		key = make_key(passwd, salt, preset, "main key")
 		seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 		if seed: break
@@ -77,7 +76,7 @@ def wallet_to_incog_data(infile,opts):
 	iv_id = make_iv_chksum(iv)
 	msg("Incog ID: %s" % iv_id)
 
-	if not 'old_incog_fmt' in opts:
+	if not opt.old_incog_fmt:
 		salt = get_random(g.salt_len)
 		key = make_key(passwd, salt, preset, "incog wallet key")
 		key_id = make_chksum_8(key)
@@ -92,13 +91,13 @@ def wallet_to_incog_data(infile,opts):
 	return iv+wrap_enc,seed_id,key_id,iv_id,preset
 
 
-def export_to_hidden_incog(incog_enc,opts):
-	outfile,offset = opts['export_incog_hidden'].split(",") #Already sanity-checked
-	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
+def export_to_hidden_incog(incog_enc):
+	outfile,offset = opt.export_incog_hidden.split(",") #Already sanity-checked
+	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
 	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
 
-	if not g.quiet: confirm_or_exit("","alter file '%s'" % outfile)
+	if not opt.quiet: confirm_or_exit("","alter file '%s'" % outfile)
 	import os
 	f = os.open(outfile,os.O_RDWR)
 	os.lseek(f, int(offset), os.SEEK_SET)
@@ -108,60 +107,60 @@ def export_to_hidden_incog(incog_enc,opts):
 			(os.path.relpath(outfile),offset))
 
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
-if 'export_incog_hidden' in opts or 'export_incog_hex' in opts:
-	opts['export_incog'] = True
+if opt.export_incog_hidden or opt.export_incog_hex:
+	opt.export_incog = True
 
-if len(cmd_args) != 1: usage(help_data)
+if len(cmd_args) != 1: opt.opts.usage(opts_data)
 
 check_infile(cmd_args[0])
 
-if set(['outdir','export_incog_hidden']) <= set(opts.keys()):
+if opt.outdir and opt.export_incog_hidden:
 	msg("Warning: '--outdir' option is ignored when exporting hidden incog data")
 
 g.use_urandchars = True
 
-if 'export_mnemonic' in opts:
+if opt.export_mnemonic:
 	qmsg("Exporting mnemonic data to file by user request")
-elif 'export_seed' in opts:
+elif opt.export_seed:
 	qmsg("Exporting seed data to file by user request")
-elif 'export_incog' in opts:
+elif opt.export_incog:
 	qmsg("Exporting wallet to incognito format by user request")
 	incog_enc,seed_id,key_id,iv_id,preset = \
-		wallet_to_incog_data(cmd_args[0],opts)
+		wallet_to_incog_data(cmd_args[0])
 
-	if "export_incog_hidden" in opts:
-		export_to_hidden_incog(incog_enc,opts)
+	if opt.export_incog_hidden:
+		export_to_hidden_incog(incog_enc)
 	else:
-		z = 0 if 'old_incog_fmt' in opts else 8
+		z = 0 if opt.old_incog_fmt else 8
 		seed_len = (len(incog_enc)-g.salt_len-g.aesctr_iv_len-z)*8
 		fn = "%s-%s-%s[%s,%s].%s" % (
 			seed_id, key_id, iv_id, seed_len, preset,
-			g.incog_hex_ext if "export_incog_hex" in opts else g.incog_ext
+			g.incog_hex_ext if opt.export_incog_hex else g.incog_ext
 		)
 		data = pretty_hexdump(incog_enc,2,8,line_nums=False) \
-					if "export_incog_hex" in opts else incog_enc
-		write_to_file_or_stdout(fn, data, opts, "incognito wallet data")
+					if opt.export_incog_hex else incog_enc
+		write_to_file_or_stdout(fn, data, "incognito wallet data")
 
 	sys.exit()
 
-seed = get_seed_retry(cmd_args[0], opts)
+seed = get_seed_retry(cmd_args[0])
 if seed: msg("Wallet is OK")
 else:
 	msg("Error opening wallet")
 	sys.exit(2)
 
-if 'export_mnemonic' in opts:
+if opt.export_mnemonic:
 	wl = get_default_wordlist()
 	from mmgen.mnemonic import get_mnemonic_from_seed
-	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, g.debug)
+	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, opt.debug)
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.mn_ext)
-	write_to_file_or_stdout(fn, " ".join(mn)+"\n", opts, "mnemonic data")
+	write_to_file_or_stdout(fn, " ".join(mn)+"\n", "mnemonic data")
 
-elif 'export_seed' in opts:
+elif opt.export_seed:
 	from mmgen.bitcoin import b58encode_pad
 	data = col4(b58encode_pad(seed))
 	chk = make_chksum_6(b58encode_pad(seed))
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.seed_ext)
-	write_to_file_or_stdout(fn, "%s %s\n" % (chk,data), opts, "seed data")
+	write_to_file_or_stdout(fn, "%s %s\n" % (chk,data), "seed data")

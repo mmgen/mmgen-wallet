@@ -30,6 +30,7 @@ from mmgen.bitcoin import numtowif
 from mmgen.util import *
 from mmgen.tx import is_mmgen_idx,is_mmgen_seed_id,is_btc_addr,is_wif,get_wif2addr_f
 import mmgen.config as g
+import mmgen.opt as opt
 
 addrmsgs = {
 	'addrfile_header': """
@@ -60,13 +61,13 @@ def test_for_keyconv():
 	return True
 
 
-def generate_addrs(seed, addrnums, opts):
+def generate_addrs(seed, addrnums):
 
 	from util import make_chksum_8
 	seed_id = make_chksum_8(seed) # Must do this before seed gets clobbered
 
-	if 'a' in opts['gen_what']:
-		if g.no_keyconv or test_for_keyconv() == False:
+	if 'a' in opt.gen_what:
+		if opt.no_keyconv or test_for_keyconv() == False:
 			msg("Using (slow) internal ECDSA library for address generation")
 			from mmgen.bitcoin import privnum2addr
 			keyconv = False
@@ -81,7 +82,7 @@ def generate_addrs(seed, addrnums, opts):
 		'ka': ('key/address pair','s'),
 		'k':  ('key','s'),
 		'a':  ('address','es')
-	}[opts['gen_what']]
+	}[opt.gen_what]
 
 	from mmgen.addr import AddrInfoEntry,AddrInfo
 
@@ -89,7 +90,7 @@ def generate_addrs(seed, addrnums, opts):
 		seed = sha512(seed).digest()
 		num += 1 # round
 
-		if g.debug: print "Seed round %s: %s" % (num, hexlify(seed))
+		if opt.debug: print "Seed round %s: %s" % (num, hexlify(seed))
 		if num != addrnums[pos]: continue
 
 		pos += 1
@@ -103,20 +104,20 @@ def generate_addrs(seed, addrnums, opts):
 		sec = sha256(sha256(seed).digest()).hexdigest()
 		wif = numtowif(int(sec,16))
 
-		if 'a' in opts['gen_what']:
+		if 'a' in opt.gen_what:
 			if keyconv:
 				e.addr = check_output([keyconv, wif]).split()[1]
 			else:
 				e.addr = privnum2addr(int(sec,16))
 
-		if 'k' in opts['gen_what']: e.wif = wif
-		if 'b16' in opts: e.sec = sec
+		if 'k' in opt.gen_what: e.wif = wif
+		if opt.b16: e.sec = sec
 
 		out.append(e)
 
 	m = w[0] if t_addrs == 1 else w[0]+w[1]
 	qmsg("\r%s: %s %s generated%s" % (seed_id,t_addrs,m," "*15))
-	a = AddrInfo(has_keys='k' in opts['gen_what'])
+	a = AddrInfo(has_keys='k' in opt.gen_what)
 	a.initialize(seed_id,out)
 	return a
 

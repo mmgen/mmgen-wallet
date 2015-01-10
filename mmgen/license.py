@@ -24,6 +24,7 @@ import sys
 from mmgen.util import msg, msg_r
 from mmgen.term import get_char
 import mmgen.config as g
+import mmgen.opt as opt
 
 gpl = {
 	'warning': """
@@ -589,7 +590,7 @@ copy of the Program in return for a fee.
 
 def do_license_msg(immed=False):
 
-	if g.quiet or g.no_license: return
+	if opt.quiet or g.no_license: return
 
 	msg(gpl['warning'])
 	prompt = "%s " % gpl['prompt'].strip()

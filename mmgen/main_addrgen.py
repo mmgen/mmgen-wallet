@@ -24,7 +24,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 import sys
 
 import mmgen.config as g
-from mmgen.Opts import *
+import mmgen.opt as opt
 from mmgen.license import *
 from mmgen.util import *
 from mmgen.crypto import *
@@ -32,8 +32,7 @@ from mmgen.addr import *
 
 what = "keys" if sys.argv[0].split("-")[-1] == "keygen" else "addresses"
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc': """Generate a range or list of {} from an {g.proj_name} wallet,
                   mnemonic, seed or password""".format(what,g=g),
 	'usage':"[opts] [infile] <address range or list>",
@@ -114,25 +113,24 @@ UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
 """.format(g.proj_name),
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
 
-if 'show_hash_presets' in opts: show_hash_presets()
-if 'from_incog_hex' in opts or 'from_incog_hidden' in opts:
-	opts['from_incog'] = True
+if opt.show_hash_presets: show_hash_presets()
+if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
-if g.debug: show_opts_and_cmd_args(opts,cmd_args)
+if opt.debug: opt.opts.show_opts_and_cmd_args(cmd_args)
 
 if len(cmd_args) == 1 and (
-			'from_mnemonic' in opts
-			or 'from_brain' in opts
-			or 'from_seed' in opts
-			or 'from_incog_hidden' in opts
+			opt.from_mnemonic
+			or opt.from_brain
+			or opt.from_seed
+			or opt.from_incog_hidden
 		):
 	infile,addr_idx_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
 	infile,addr_idx_arg = cmd_args
 	check_infile(infile)
-else: usage(help_data)
+else: opt.opts.usage(opts_data)
 
 addr_idxs = parse_addr_idxs(addr_idx_arg)
 
@@ -141,46 +139,46 @@ if not addr_idxs: sys.exit(2)
 do_license_msg()
 
 # Interact with user:
-if what == "keys" and not g.quiet:
+if what == "keys" and not opt.quiet:
 	confirm_or_exit(wmsg['unencrypted_secret_keys'], 'continue')
 
 # Generate data:
 
-seed    = get_seed_retry(infile,opts)
+seed    = get_seed_retry(infile)
 
-opts['gen_what'] = "a" if what == "addresses" else (
-	"k" if 'no_addresses' in opts else "ka")
+opt.gen_what = "a" if what == "addresses" else (
+	"k" if opt.no_addresses else "ka")
 
-ainfo = generate_addrs(seed, addr_idxs, opts)
+ainfo = generate_addrs(seed, addr_idxs)
 
 addrdata_str = ainfo.fmt_data()
 outfile_base = "{}[{}]".format(make_chksum_8(seed), ainfo.idxs_fmt)
 
-if 'a' in opts['gen_what']:
-	w = "key-address" if 'k' in opts['gen_what'] else "address"
+if 'a' in opt.gen_what:
+	w = "key-address" if 'k' in opt.gen_what else "address"
 	qmsg("Checksum for %s data %s: %s" % (w,outfile_base,ainfo.checksum))
-	if 'save_checksum' in opts:
+	if opt.save_checksum:
 		write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
-			ainfo.checksum+"\n",opts,"%s data checksum" % w,True,True,False)
+			ainfo.checksum+"\n","%s data checksum" % w,True,True,False)
 	else:
 		qmsg("This checksum will be used to verify the %s file in the future."%w)
 		qmsg("Record it to a safe location.")
 
-if 'k' in opts['gen_what'] and keypress_confirm("Encrypt key list?"):
-	addrdata_str = mmgen_encrypt(addrdata_str,"new key list","",opts)
+if 'k' in opt.gen_what and keypress_confirm("Encrypt key list?"):
+	addrdata_str = mmgen_encrypt(addrdata_str,"new key list","")
 	enc_ext = "." + g.mmenc_ext
 else: enc_ext = ""
 
 # Output data:
-if 'stdout' in opts or not sys.stdout.isatty():
+if opt.stdout or not sys.stdout.isatty():
 	if enc_ext and sys.stdout.isatty():
 		msg("Cannot write encrypted data to screen.  Exiting")
 		sys.exit(2)
 	write_to_stdout(addrdata_str,what,
-		(what=="keys"and not g.quiet and sys.stdout.isatty()))
+		(what=="keys"and not opt.quiet and sys.stdout.isatty()))
 else:
 	outfile = "%s.%s%s" % (outfile_base, (
-		g.keyaddrfile_ext if "ka" in opts['gen_what'] else (
-		g.keyfile_ext if "k" in opts['gen_what'] else
+		g.keyaddrfile_ext if "ka" in opt.gen_what else (
+		g.keyfile_ext if "k" in opt.gen_what else
 		g.addrfile_ext)), enc_ext)
-	write_to_file(outfile,addrdata_str,opts,what,not g.quiet,True)
+	write_to_file(outfile,addrdata_str,what,not opt.quiet,True)

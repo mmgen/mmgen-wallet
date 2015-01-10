@@ -22,13 +22,12 @@ mmgen-passchg: Change an MMGen deterministic wallet's passphrase, label or
 """
 
 import sys
-from mmgen.Opts import *
 from mmgen.util import *
 from mmgen.crypto import *
 import mmgen.config as g
+import mmgen.opt as opt
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':  """Change the passphrase, hash preset or label of an {}
                   deterministic wallet""".format(g.proj_name),
 	'usage':   "[opts] [filename]",
@@ -55,9 +54,9 @@ NOTE: The key ID will change if either the passphrase or hash preset are
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
-if 'show_hash_presets' in opts: show_hash_presets()
+if opt.show_hash_presets: show_hash_presets()
 
 if len(cmd_args) != 1:
 	msg("One input file must be specified")
@@ -71,36 +70,36 @@ seed_id,key_id = metadata[:2]
 # Repeat on incorrect pw entry
 while True:
 	p = "{} wallet".format(g.proj_name)
-	passwd = get_mmgen_passphrase(p,{},not 'keep_old_passphrase' in opts)
+	passwd = get_mmgen_passphrase(p,not opt.keep_old_passphrase)
 	key = make_key(passwd, salt, hash_preset)
 	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 	if seed: break
 
 changed = {}
 
-if 'label' in opts:
-	if opts['label'] != label:
-		msg("Label changed: '%s' -> '%s'" % (label, opts['label']))
+if opt.label:
+	if opt.label != label:
+		msg("Label changed: '%s' -> '%s'" % (label, opt.label))
 		changed['label'] = True
 	else:
 		msg("Label is unchanged: '%s'" % (label))
-else: opts['label'] = label  # Copy the old label
+else: opt.label = label  # Copy the old label
 
-if 'hash_preset' in opts:
-	if hash_preset != opts['hash_preset']:
+if opt.hash_preset:
+	if hash_preset != opt.hash_preset:
 		qmsg("Hash preset has changed (%s -> %s)" %
-			(hash_preset, opts['hash_preset']))
+			(hash_preset, opt.hash_preset))
 		changed['preset'] = True
 	else:
 		msg("Hash preset is unchanged")
 else:
-	opts['hash_preset'] = hash_preset
+	opt.hash_preset = hash_preset
 
-if 'keep_old_passphrase' in opts:
+if opt.keep_old_passphrase:
 	msg("Keeping old passphrase by user request")
 else:
 	new_passwd = get_new_passphrase(
-			"{} wallet".format(g.proj_name), opts, True)
+			"{} wallet".format(g.proj_name), True)
 
 	if new_passwd == passwd:
 		qmsg("Passphrase is unchanged")
@@ -115,7 +114,7 @@ if 'preset' in changed or 'passwd' in changed: # Update key ID, salt
 	from hashlib import sha256
 
 	salt = sha256(salt + get_random(128)).digest()[:g.salt_len]
-	key = make_key(passwd, salt, opts['hash_preset'])
+	key = make_key(passwd, salt, opt.hash_preset)
 	new_key_id = make_chksum_8(key)
 	qmsg("Key ID changed: %s -> %s" % (key_id,new_key_id))
 	key_id = new_key_id
@@ -124,4 +123,4 @@ elif not 'label' in changed:
 	msg("Data unchanged.  No file will be written")
 	sys.exit(2)
 
-write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts)
+write_wallet_to_file(seed, passwd, key_id, salt, enc_seed)

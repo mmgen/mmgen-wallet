@@ -24,13 +24,12 @@ import sys, os
 from hashlib import sha256
 
 import mmgen.config as g
-from mmgen.Opts import *
+import mmgen.opt as opt
 from mmgen.license import *
 from mmgen.util import *
 from mmgen.crypto import *
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':    "Generate an {} deterministic wallet".format(g.proj_name),
 	'usage':   "[opts] [infile]",
 	'options': """
@@ -121,11 +120,12 @@ future, you must continue using these same parameters
 """,
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+import mmgen.opt as opt
+cmd_args = opt.opts.init(opts_data)
 
-if 'show_hash_presets' in opts: show_hash_presets()
+if opt.show_hash_presets: show_hash_presets()
 
-if g.debug: show_opts_and_cmd_args(opts,cmd_args)
+if opt.debug: opt.opts.show_opts_and_cmd_args(cmd_args)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
@@ -140,7 +140,7 @@ if len(cmd_args) == 1:
 		sys.exit(1)
 elif len(cmd_args) == 0:
 	infile = ""
-else: usage(help_data)
+else: opt.opts.usage(opts_data)
 
 g.use_urandchars = True
 
@@ -148,31 +148,27 @@ g.use_urandchars = True
 
 do_license_msg()
 
-if 'from_brain' in opts and not g.quiet:
+if opt.from_brain and not opt.quiet:
 	confirm_or_exit(wmsg['brain_warning'].format(
-			g.proj_name, *get_from_brain_opt_params(opts)),
+			g.proj_name, *get_from_brain_opt_params()),
 		"continue")
 
-for i in 'from_mnemonic','from_brain','from_seed','from_incog':
-	if infile or (i in opts):
-		seed = get_seed_retry(infile,opts)
-#		if "from_incog" in opts or get_extension(infile) == g.incog_ext:
-#			qmsg(cmessages['incog'] % make_chksum_8(seed))
-#		else: qmsg("")
-		qmsg("")
-		break
+if infile or (opt.from_mnemonic or opt.from_brain
+				or opt.from_seed or opt.from_incog):
+	seed = get_seed_retry(infile)
+	qmsg("")
 else:
 	# Truncate random data for smaller seed lengths
-	seed = sha256(get_random(128)).digest()[:opts['seed_len']/8]
+	seed = sha256(get_random(128)).digest()[:opt.seed_len/8]
 
 salt = sha256(get_random(128)).digest()[:g.salt_len]
 
-qmsg(wmsg['choose_wallet_passphrase'] % opts['hash_preset'])
+qmsg(wmsg['choose_wallet_passphrase'] % opt.hash_preset)
 
-passwd = get_new_passphrase("new {} wallet".format(g.proj_name), opts)
+passwd = get_new_passphrase("new {} wallet".format(g.proj_name))
 
-key = make_key(passwd, salt, opts['hash_preset'])
+key = make_key(passwd, salt, opt.hash_preset)
 
 enc_seed = encrypt_seed(seed, key)
 
-write_wallet_to_file(seed,passwd,make_chksum_8(key),salt,enc_seed,opts)
+write_wallet_to_file(seed,passwd,make_chksum_8(key),salt,enc_seed)

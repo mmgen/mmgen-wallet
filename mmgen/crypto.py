@@ -25,6 +25,7 @@ from binascii import hexlify
 from hashlib import sha256
 
 import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.term import get_char
 
@@ -77,7 +78,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 		if compare_checksums(chk2,"of decrypted seed",seed_id,"in header"):
 			qmsg("Passphrase is OK")
 		else:
-			if not g.debug:
+			if not opt.debug:
 				msg_r("Checking key ID...")
 				if compare_checksums(chk1, "of key", key_id, "in header"):
 					msg("Key ID is correct but decryption of seed failed")
@@ -89,7 +90,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 #	else:
 #		qmsg("Generated IDs (Seed/Key): %s/%s" % (chk2,chk1))
 
-	if g.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
+	if opt.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
 
 	vmsg("OK")
 	return dec_seed
@@ -153,18 +154,18 @@ def make_key(passwd,salt,hash_preset,
 		what="encryption key",from_what="passphrase",verbose=False):
 
 	if from_what: what += " from "
-	if g.verbose or verbose:
+	if opt.verbose or verbose:
 		msg_r("Generating %s%s.\nPlease wait..." % (what,from_what))
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
-	if g.verbose or verbose:
+	if opt.verbose or verbose:
 		msg("done")
-	if g.debug: print "Key: %s" % hexlify(key)
+	if opt.debug: print "Key: %s" % hexlify(key)
 	return key
 
 
 def get_random_data_from_user(uchars):
 
-	if g.quiet: msg("Enter %s random symbols" % uchars)
+	if opt.quiet: msg("Enter %s random symbols" % uchars)
 	else:       msg(crmsg['usr_rand_notice'] % uchars)
 
 	prompt = "You may begin typing.  %s symbols left: "
@@ -184,12 +185,12 @@ def get_random_data_from_user(uchars):
 		time_data.append(now - saved_time)
 		saved_time = now
 
-	if g.quiet: msg_r("\r")
+	if opt.quiet: msg_r("\r")
 	else: msg_r("\rThank you.  That's enough.%s\n\n" % (" "*18))
 
 	fmt_time_data = ["{:.22f}".format(i) for i in time_data]
 
-	if g.debug:
+	if opt.debug:
 		msg("\nUser input:\n%s\nKeystroke time intervals:\n%s\n" %
 				(key_data,"\n".join(fmt_time_data)))
 
@@ -206,7 +207,7 @@ def get_random(length):
 		from_what = "OS random data"
 		if not g.user_entropy:
 			g.user_entropy = \
-				sha256(get_random_data_from_user(g.usr_randchars)).digest()
+				sha256(get_random_data_from_user(opt.usr_randchars)).digest()
 			from_what += " plus user-supplied entropy"
 		else:
 			from_what += " plus saved user-supplied entropy"
@@ -218,7 +219,6 @@ def get_random(length):
 
 def get_seed_from_wallet(
 		infile,
-		opts,
 		prompt_info="{} wallet".format(g.proj_name),
 		silent=False
 		):
@@ -226,22 +226,22 @@ def get_seed_from_wallet(
 	wdata = get_data_from_wallet(infile,silent=silent)
 	label,metadata,hash_preset,salt,enc_seed = wdata
 
-	if g.debug: display_control_data(*wdata)
+	if opt.debug: display_control_data(*wdata)
 
-	padd = " "+infile if g.quiet else ""
-	passwd = get_mmgen_passphrase(prompt_info+padd,opts)
+	padd = " "+infile if opt.quiet else ""
+	passwd = get_mmgen_passphrase(prompt_info+padd)
 
 	key = make_key(passwd, salt, hash_preset)
 
 	return decrypt_seed(enc_seed, key, metadata[0], metadata[1])
 
 
-def get_hidden_incog_data(opts):
+def get_hidden_incog_data():
 		# Already sanity-checked:
-		fname,offset,seed_len = opts['from_incog_hidden'].split(",")
+		fname,offset,seed_len = opt.from_incog_hidden.split(",")
 		qmsg("Getting hidden incog data from file '%s'" % fname)
 
-		z = 0 if 'old_incog_fmt' in opts else 8
+		z = 0 if opt.old_incog_fmt else 8
 		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8) + z
 
 		fsize = check_data_fits_file_at_offset(fname,int(offset),dlen,"read")
@@ -265,13 +265,12 @@ def confirm_old_format():
 		elif reply in 'nN': msg("\nExiting at user request"); sys.exit(1)
 		elif reply in 'mM': msg(""); return True
 		else:
-			if g.verbose: msg("\nInvalid reply")
+			if opt.verbose: msg("\nInvalid reply")
 			else: msg_r("\r")
 
 
 def get_seed_from_incog_wallet(
 		infile,
-		opts,
 		prompt_info="{} incognito wallet".format(g.proj_name),
 		silent=False,
 		hex_input=False
@@ -279,8 +278,8 @@ def get_seed_from_incog_wallet(
 
 	what = "incognito wallet data"
 
-	if "from_incog_hidden" in opts:
-		d = get_hidden_incog_data(opts)
+	if opt.from_incog_hidden:
+		d = get_hidden_incog_data()
 	else:
 		d = get_data_from_file(infile,what)
 		if hex_input:
@@ -290,7 +289,7 @@ def get_seed_from_incog_wallet(
 				msg("Data in file '%s' is not in hexadecimal format" % infile)
 				sys.exit(2)
 		# File could be of invalid length, so check:
-		z = 0 if 'old_incog_fmt' in opts else 8
+		z = 0 if opt.old_incog_fmt else 8
 		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len + z for i in g.seed_lens]
 		# New fmt: [56, 64, 72]. Old fmt: [48, 56, 64].
 		if len(d) not in valid_dlens:
@@ -308,11 +307,11 @@ def get_seed_from_incog_wallet(
 	incog_id = make_iv_chksum(iv)
 	msg("Incog ID: %s (IV ID: %s)" % (incog_id,make_chksum_8(iv)))
 	qmsg("Check the applicable value against your records.")
-	vmsg(crmsg['incog_iv_id_hidden' if "from_incog_hidden" in opts
+	vmsg(crmsg['incog_iv_id_hidden' if opt.from_incog_hidden
 			else 'incog_iv_id'])
 
 	while True:
-		passwd = get_mmgen_passphrase(prompt_info+" "+incog_id,opts)
+		passwd = get_mmgen_passphrase(prompt_info+" "+incog_id)
 
 		qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
 		hp = get_hash_preset_from_user(what="incog wallet")
@@ -333,7 +332,7 @@ def get_seed_from_incog_wallet(
 			m = "Seed ID: %s.  Is the Seed ID correct?" % sid
 			return keypress_confirm(m, True)
 
-		if 'old_incog_fmt' in opts:
+		if opt.old_incog_fmt:
 			if confirm_correct_seed_id(old_fmt_sid):
 				break
 		else:
@@ -349,7 +348,7 @@ def get_seed_from_incog_wallet(
 	return seed
 
 
-def _get_seed(infile,opts,silent=False,seed_id=""):
+def _get_seed(infile,silent=False,seed_id=""):
 
 	ext = get_extension(infile)
 
@@ -359,10 +358,10 @@ def _get_seed(infile,opts,silent=False,seed_id=""):
 	elif ext == g.wallet_ext:       source = "wallet"
 	elif ext == g.incog_ext:        source = "incognito wallet"
 	elif ext == g.incog_hex_ext:    source = "incognito wallet"
-	elif 'from_mnemonic'  in opts: source = "mnemonic"
-	elif 'from_brain'     in opts: source = "brainwallet"
-	elif 'from_seed'      in opts: source = "seed"
-	elif 'from_incog'     in opts: source = "incognito wallet"
+	elif opt.from_mnemonic : source = "mnemonic"
+	elif opt.from_brain    : source = "brainwallet"
+	elif opt.from_seed     : source = "seed"
+	elif opt.from_incog    : source = "incognito wallet"
 	else:
 		if infile: msg(
 			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
@@ -373,26 +372,26 @@ def _get_seed(infile,opts,silent=False,seed_id=""):
 	seed_id_str = " for seed ID "+seed_id if seed_id else ""
 	if source == "mnemonic":
 		prompt = "Enter mnemonic%s: " % seed_id_str
-		words = get_words(infile,"mnemonic data",prompt,opts)
+		words = get_words(infile,"mnemonic data",prompt)
 		wl = get_default_wordlist()
 		from mmgen.mnemonic import get_seed_from_mnemonic
 		seed = get_seed_from_mnemonic(words,wl)
 	elif source == "brainwallet":
-		if 'from_brain' not in opts:
+		if not opt.from_brain:
 			msg("'--from-brain' parameters must be specified for brainwallet file")
 			sys.exit(2)
 		prompt = "Enter brainwallet passphrase%s: " % seed_id_str
-		words = get_words(infile,"brainwallet data",prompt,opts)
-		seed = _get_seed_from_brain_passphrase(words,opts)
+		words = get_words(infile,"brainwallet data",prompt)
+		seed = _get_seed_from_brain_passphrase(words)
 	elif source == "seed":
 		prompt = "Enter seed%s in %s format: " % (seed_id_str,g.seed_ext)
-		words = get_words(infile,"seed data",prompt,opts)
+		words = get_words(infile,"seed data",prompt)
 		seed = get_seed_from_seed_data(words)
 	elif source == "wallet":
-		seed = get_seed_from_wallet(infile, opts, silent=silent)
+		seed = get_seed_from_wallet(infile, silent=silent)
 	elif source == "incognito wallet":
-		h = ext == g.incog_hex_ext or 'from_incog_hex' in opts
-		seed = get_seed_from_incog_wallet(infile, opts, silent=silent, hex_input=h)
+		h = (ext == g.incog_hex_ext) or opt.from_incog_hex
+		seed = get_seed_from_incog_wallet(infile, silent=silent, hex_input=h)
 
 
 	if infile and not seed and (
@@ -400,25 +399,25 @@ def _get_seed(infile,opts,silent=False,seed_id=""):
 		msg("Invalid %s file '%s'" % (source,infile))
 		sys.exit(2)
 
-	if g.debug: print "Seed: %s" % hexlify(seed)
+	if opt.debug: print "Seed: %s" % hexlify(seed)
 
 	return seed
 
 
 # Repeat if entered data is invalid
-def get_seed_retry(infile,opts,seed_id=""):
+def get_seed_retry(infile,seed_id=""):
 	silent = False
 	while True:
-		seed = _get_seed(infile,opts,silent=silent,seed_id=seed_id)
+		seed = _get_seed(infile,silent=silent,seed_id=seed_id)
 		silent = True
 		if seed: return seed
 
 
-def _get_seed_from_brain_passphrase(words,opts):
+def _get_seed_from_brain_passphrase(words):
 	bp = " ".join(words)
-	if g.debug: print "Sanitized brain passphrase: %s" % bp
-	seed_len,hash_preset = get_from_brain_opt_params(opts)
-	if g.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
+	if opt.debug: print "Sanitized brain passphrase: %s" % bp
+	seed_len,hash_preset = get_from_brain_opt_params()
+	if opt.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
 	vmsg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
@@ -429,7 +428,7 @@ def _get_seed_from_brain_passphrase(words,opts):
 # Vars for mmgen_*crypt functions only
 salt_len,sha256_len,nonce_len = 32,32,32
 
-def mmgen_encrypt(data,what="data",hash_preset='',opts={}):
+def mmgen_encrypt(data,what="data",hash_preset=''):
 	salt,iv,nonce = get_random(salt_len),\
 					get_random(g.aesctr_iv_len), \
 					get_random(nonce_len)
@@ -451,7 +450,7 @@ def mmgen_decrypt(data,what="data",hash_preset=""):
 	hp = hash_preset or get_hash_preset_from_user('3',what)
 	m = "default" if hp == '3' else "user-requested"
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_mmgen_passphrase(what,{})
+	passwd = get_mmgen_passphrase(what)
 	key = make_key(passwd, salt, hp)
 	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():

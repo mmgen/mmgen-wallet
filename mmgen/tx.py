@@ -26,6 +26,7 @@ from decimal import Decimal
 from collections import OrderedDict
 
 import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.term import do_pager
 
@@ -45,7 +46,7 @@ def normalize_btc_amt(amt):
 		msg("%s: Invalid amount" % amt)
 		return False
 
-	if g.debug:
+	if opt.debug:
 		print "Decimal(amt): %s\nAs tuple: %s" % (amt,repr(ret.as_tuple()))
 
 	if ret.as_tuple()[-1] < -8:
@@ -260,7 +261,7 @@ def wiftoaddr_keyconv(wif):
 		return wiftoaddr(wif)
 
 def get_wif2addr_f():
-	if g.no_keyconv: return wiftoaddr
+	if opt.no_keyconv: return wiftoaddr
 	from mmgen.addr import test_for_keyconv
 	return wiftoaddr_keyconv if test_for_keyconv() else wiftoaddr
 

@@ -23,11 +23,10 @@ mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
 
 import sys
 import mmgen.config as g
+import mmgen.opt as opt
 import mmgen.tool as tool
-from mmgen.Opts import *
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':    "Perform various MMGen- and Bitcoin-related operations",
 	'usage':   "[opts] <command> <command args>",
 	'options': """
@@ -46,10 +45,10 @@ command
 """.format(tool.cmd_help,g.prog_name)
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
 if len(cmd_args) < 1:
-	usage(help_data)
+	opt.opts.usage(opts_data)
 	sys.exit(1)
 
 command = cmd_args.pop(0)
@@ -63,7 +62,5 @@ if cmd_args and cmd_args[0] == '--help':
 	sys.exit(0)
 
 args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
-
-tool.opts = opts
 
 tool.__dict__[command](*args,**kwargs)

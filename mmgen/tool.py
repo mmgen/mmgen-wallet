@@ -25,11 +25,11 @@ import mmgen.bitcoin as bitcoin
 import binascii as ba
 
 import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.crypto import *
 from mmgen.util import *
 from mmgen.tx import *
 
-opts = {}
 from collections import OrderedDict
 cmd_data = OrderedDict([
 	("help",         []),
@@ -230,7 +230,7 @@ def print_convert_results(indata,enc,dec,dtype):
 
 	error = False if are_equal(indata,dec,dtype) else True
 
-	if error or g.verbose:
+	if error or opt.verbose:
 		Msg("Input:         %s" % repr(indata))
 		Msg("Encoded data:  %s" % repr(enc))
 		Msg("Recoded data:  %s" % repr(dec))
@@ -470,13 +470,13 @@ def hex2wif(hexpriv,compressed=False):
 
 def encrypt(infile,outfile="",hash_preset=""):
 	data = get_data_from_file(infile,"data for encryption")
-	enc_d = mmgen_encrypt(data,"user data",hash_preset,opts)
+	enc_d = mmgen_encrypt(data,"user data",hash_preset)
 	if outfile == '-':
 		write_to_stdout(enc_d,"encrypted data",confirm=True)
 	else:
 		if not outfile:
 			outfile = os.path.basename(infile) + "." + g.mmenc_ext
-		write_to_file(outfile, enc_d, opts,"encrypted data",True,True)
+		write_to_file(outfile,enc_d,"encrypted data",True,True)
 
 
 def decrypt(infile,outfile="",hash_preset=""):
@@ -494,7 +494,7 @@ def decrypt(infile,outfile="",hash_preset=""):
 				outfile = outfile[:-len(g.mmenc_ext)-1]
 			else:
 				outfile = outfile + ".dec"
-		write_to_file(outfile, dec_d, opts,"decrypted data",True,True)
+		write_to_file(outfile, dec_d, "decrypted data",True,True)
 
 
 def find_incog_data(filename,iv_id,keep_searching=False):
@@ -553,7 +553,7 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 	from threading import Thread
 	bsize = 2**20
 	roll = bsize * 4
-	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
+	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 	f = open(outfile,"w")
 
 	from Crypto.Cipher import AES

@@ -25,12 +25,11 @@ import sys
 from decimal import Decimal
 
 import mmgen.config as g
-from mmgen.Opts import *
+import mmgen.opt as opt
 from mmgen.license import *
 from mmgen.tx import *
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':    "Create a BTC transaction with outputs to specified addresses",
 	'usage':   "[opts]  <addr,amt> ... [change addr] [addr file] ...",
 	'options': """
@@ -124,7 +123,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 	)
 
 
-def sort_and_view(unspent,opts):
+def sort_and_view(unspent):
 
 	def s_amt(i):   return i.amount
 	def s_txid(i):  return "%s %03s" % (i.txid,i.vout)
@@ -239,7 +238,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			elif reply == 'p':
 				d = format_unspent_outputs_for_printing(unsp,sort_info,total)
 				of = "listunspent[%s].out" % ",".join(sort_info)
-				write_to_file(of, d, opts,"",False,False)
+				write_to_file(of, d, "",False,False)
 				write_to_file_msg = "Data written to '%s'\n\n" % of
 			elif reply == 'v':
 				do_pager("\n".join(out))
@@ -333,16 +332,16 @@ def mmaddr2btcaddr(c,mmaddr,acct_data,ail):
 	return btcaddr
 
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
-if g.debug: show_opts_and_cmd_args(opts,cmd_args)
+if opt.debug: show_opts_and_cmd_args(cmd_args)
 
-if 'comment_file' in opts:
-	comment = get_tx_comment_from_file(opts['comment_file'])
+if opt.comment_file:
+	comment = get_tx_comment_from_file(opt.comment_file)
 
 c = connect_to_bitcoind()
 
-if not 'info' in opts:
+if not opt.info:
 	do_license_msg(immed=True)
 
 	tx_out,acct_data,change_addr = {},{},""
@@ -389,30 +388,31 @@ if not 'info' in opts:
 		msg("At least one output must be specified on the command line")
 		sys.exit(2)
 
-	tx_fee = opts['tx_fee'] if 'tx_fee' in opts else g.tx_fee
+	tx_fee = opt.tx_fee if opt.tx_fee else g.tx_fee
 	tx_fee = normalize_btc_amt(tx_fee)
 	if tx_fee > g.max_tx_fee:
 		msg("Transaction fee too large: %s > %s" % (tx_fee,g.max_tx_fee))
 		sys.exit(2)
 
-if g.debug: show_opts_and_cmd_args(opts,cmd_args)
+if opt.debug: show_opts_and_cmd_args(cmd_args)
 
 if g.bogus_wallet_data:  # for debugging purposes only
+	import mmgen.rpc.data
 	us = eval(get_data_from_file(g.bogus_wallet_data))
 else:
 	us = c.listunspent()
-#	write_to_file("bogus_unspent.json", repr(us), opts); sys.exit()
+#	write_to_file("bogus_unspent.json", repr(us)); sys.exit()
 
 if not us: msg(wmsg['no_spendable_outputs']); sys.exit(2)
 for o in us:
 	o.mmid,o.comment = parse_mmgen_label(o.account)
 	del o.account
-unspent = sort_and_view(us,opts)
+unspent = sort_and_view(us)
 
 total = trim_exponent(sum([i.amount for i in unspent]))
 
 msg("Total unspent: %s BTC (%s outputs)" % (total, len(unspent)))
-if 'info' in opts: sys.exit(0)
+if opt.info: sys.exit(0)
 
 send_amt = sum([tx_out[i] for i in tx_out.keys()])
 msg("Total amount to spend: %s%s" % (
@@ -458,11 +458,11 @@ if change > 0: tx_out[change_addr] = float(change)
 
 tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
 
-if g.debug:
+if opt.debug:
 	print "tx_in:", repr(tx_in)
 	print "tx_out:", repr(tx_out)
 
-if 'comment_file' in opts:
+if opt.comment_file:
 	if keypress_confirm("Edit comment?",False):
 		comment = get_tx_comment_from_user(comment)
 else:
@@ -493,6 +493,6 @@ if keypress_confirm("Save transaction?",default_yes=False):
 	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
 	data = make_tx_data("{} {} {}".format(*metadata),
 				tx_hex,sel_unspent,b2m_map,comment)
-	write_to_file(outfile,data,opts,"transaction",False,True)
+	write_to_file(outfile,data,"transaction",False,True)
 else:
 	msg("Transaction not saved")

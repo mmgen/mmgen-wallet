@@ -9,6 +9,7 @@ os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
 import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.util import msgrepr,msgrepr_exit,Msg
 from mmgen.test import *
 
@@ -202,15 +203,14 @@ meta_cmds = OrderedDict([
 	['tool',   (9,("tool_encrypt","tool_decrypt","tool_encrypt_ref","tool_decrypt_ref"))],
 ])
 
-from mmgen.Opts import *
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc': "Test suite for the MMGen suite",
 	'usage':"[options] [command or metacommand]",
 	'options': """
 -h, --help         Print this help message
 -b, --buf-keypress Use buffered keypresses as with real human input
 -d, --debug        Produce debugging output
+-D, --direct-exec  Bypass pexpect and execute a command directly (for debugging only)
 -e, --exact-output Show the exact output of the MMGen script(s) being run
 -l, --list-cmds    List and describe the tests and commands in the test suite
 -p, --pause        Pause between tests, resuming on keypress
@@ -224,47 +224,43 @@ If no command is given, the whole suite of tests is run.
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
-if 'system' in opts: sys.path.pop(0)
+if opt.system: sys.path.pop(0)
 
-env = os.environ
-if 'buf_keypress' in opts:
+if opt.buf_keypress:
 	send_delay = 0.3
 else:
 	send_delay = 0
-	env["MMGEN_DISABLE_HOLD_PROTECT"] = "1"
+	os.environ["MMGEN_DISABLE_HOLD_PROTECT"] = "1"
 
-for k in 'debug','verbose','exact_output','pause','quiet':
-	g.__dict__[k] = True if k in opts else False
+if opt.debug: opt.verbose = True
 
-if g.debug: g.verbose = True
-
-if g.exact_output:
+if opt.exact_output:
 	def msg(s): pass
 	vmsg = vmsg_r = msg_r = msg
 else:
 	def msg(s): sys.stderr.write(s+"\n")
 	def vmsg(s):
-		if g.verbose: sys.stderr.write(s+"\n")
+		if opt.verbose: sys.stderr.write(s+"\n")
 	def msg_r(s): sys.stderr.write(s)
 	def vmsg_r(s):
-		if g.verbose: sys.stderr.write(s)
+		if opt.verbose: sys.stderr.write(s)
 
 stderr_save = sys.stderr
 
 def silence():
-	if not (g.verbose or g.exact_output):
+	if not (opt.verbose or opt.exact_output):
 		sys.stderr = open("/dev/null","a")
 
 def end_silence():
-	if not (g.verbose or g.exact_output):
+	if not (opt.verbose or opt.exact_output):
 		sys.stderr = stderr_save
 
 def errmsg(s): stderr_save.write(s+"\n")
 def errmsg_r(s): stderr_save.write(s)
 
-if "list_cmds" in opts:
+if opt.list_cmds:
 	fs = "  {:<{w}} - {}"
 	Msg("Available commands:")
 	w = max([len(i) for i in cmd_data])
@@ -281,15 +277,14 @@ if "list_cmds" in opts:
 	sys.exit()
 
 import pexpect,time,re
-import mmgen.config as g
 from mmgen.util import get_data_from_file,write_to_file,get_lines_from_file
 
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
 	ret = p.send(t) # returns num bytes written
 	if delay: time.sleep(delay)
-	if g.verbose:
-		ls = "" if g.debug or not s else " "
+	if opt.verbose:
+		ls = "" if opt.debug or not s else " "
 		es = "" if s else "  "
 		msg("%sSEND %s%s" % (ls,es,yellow("'%s'"%t.replace('\n',r'\n'))))
 	return ret
@@ -297,7 +292,7 @@ def my_send(p,t,delay=send_delay,s=False):
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 	quo = "'" if type(s) == str else ""
 
-	if g.verbose: msg_r("EXPECT %s" % yellow(quo+str(s)+quo))
+	if opt.verbose: msg_r("EXPECT %s" % yellow(quo+str(s)+quo))
 	else:       msg_r("+")
 
 	try:
@@ -309,7 +304,7 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 		errmsg(red("\nERROR.  Expect %s%s%s timed out.  Exiting" % (quo,s,quo)))
 		sys.exit(1)
 
-	if g.debug or (g.verbose and type(s) != str): msg_r(" ==> %s " % ret)
+	if opt.debug or (opt.verbose and type(s) != str): msg_r(" ==> %s " % ret)
 
 	if ret == -1:
 		errmsg("Error.  Expect returned %s" % ret)
@@ -329,7 +324,7 @@ def get_file_with_ext(ext,mydir,delete=True):
 
 	if len(flist) > 1:
 		if delete:
-			if not g.quiet:
+			if not opt.quiet:
 				msg("Multiple *.%s files in '%s' - deleting" % (ext,mydir))
 			for f in flist: os.unlink(f)
 		return False
@@ -341,7 +336,7 @@ def get_addrfile_checksum(display=False):
 	silence()
 	from mmgen.addr import AddrInfo
 	chk = AddrInfo(addrfile).checksum
-	if g.verbose and display: msg("Checksum: %s" % cyan(chk))
+	if opt.verbose and display: msg("Checksum: %s" % cyan(chk))
 	end_silence()
 	return chk
 
@@ -354,21 +349,24 @@ def verify_checksum_or_exit(checksum,chk):
 
 class MMGenExpect(object):
 
-	def __init__(self,name,mmgen_cmd,cmd_args=[],env=env):
-		if not 'system' in opts:
+	def __init__(self,name,mmgen_cmd,cmd_args=[]):
+		if not opt.system:
 			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
 		desc = cmd_data[name][1]
-		if g.verbose or g.exact_output:
+		if opt.verbose or opt.exact_output:
 			sys.stderr.write(
 				green("Testing %s\nExecuting " % desc) +
 				cyan("'%s %s'\n" % (mmgen_cmd," ".join(cmd_args)))
 			)
 		else:
 			msg_r("Testing %s " % (desc+":"))
-#		msgrepr(mmgen_cmd,cmd_args); msg("")
-		if env: self.p = pexpect.spawn(mmgen_cmd,cmd_args,env=env)
-		else:   self.p = pexpect.spawn(mmgen_cmd,cmd_args)
-		if g.exact_output: self.p.logfile = sys.stdout
+
+		if opt.direct_exec:
+			os.system(" ".join([mmgen_cmd] + cmd_args))
+			sys.exit()
+		else:
+			self.p = pexpect.spawn(mmgen_cmd,cmd_args)
+			if opt.exact_output: self.p.logfile = sys.stdout
 
 	def license(self):
 		p = "'w' for conditions and warranty info, or 'c' to continue: "
@@ -381,7 +379,7 @@ class MMGenExpect(object):
 			vmsg_r("SEND ")
 			while self.p.expect('left: ',0.1) == 0:
 				ch = rand_chars.pop(0)
-				msg_r(yellow(ch)+" " if g.verbose else "+")
+				msg_r(yellow(ch)+" " if opt.verbose else "+")
 				self.p.send(ch)
 		except:
 			vmsg("EOT")
@@ -476,12 +474,12 @@ def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input='')
 		btcaddr = privnum2addr(privnum,compressed=True)
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_to_file(of, hextowif("{:064x}".format(privnum),
-					compressed=True)+"\n",{},"compressed bitcoin key")
+					compressed=True)+"\n","compressed bitcoin key")
 
 		add_fake_unspent_entry(out,btcaddr,"Non-MMGen address")
 
 #	msg("\n".join([repr(o) for o in out])); sys.exit()
-	write_to_file(unspent_data_file,repr(out),{},"Unspent outputs",verbose=True)
+	write_to_file(unspent_data_file,repr(out),"Unspent outputs",verbose=True)
 
 
 def add_comments_to_addr_file(addrfile,tfile):
@@ -503,18 +501,18 @@ def make_brainwallet_file(fn):
 		return "".join([ws_list[getrandnum(1)%len(ws_list)] for i in range(nchars)])
 	rand_pairs = [wl[getrandnum(4) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = "".join(rand_pairs).rstrip() + "\n"
-	if g.verbose: msg_r("Brainwallet password:\n%s" % cyan(d))
-	write_to_file(fn,d,{},"brainwallet password")
+	if opt.verbose: msg_r("Brainwallet password:\n%s" % cyan(d))
+	write_to_file(fn,d,"brainwallet password")
 
 def do_between():
-	if g.pause:
+	if opt.pause:
 		from mmgen.util import keypress_confirm
 		if keypress_confirm(green("Continue?"),default_yes=True):
-			if g.verbose or g.exact_output: sys.stderr.write("\n")
+			if opt.verbose or opt.exact_output: sys.stderr.write("\n")
 		else:
 			errmsg("Exiting at user request")
 			sys.exit()
-	elif g.verbose or g.exact_output:
+	elif opt.verbose or opt.exact_output:
 		sys.stderr.write("\n")
 
 
@@ -569,7 +567,7 @@ def refcheck(what,chk,refchk):
 	if chk == refchk:
 		ok()
 	else:
-		if not g.verbose: errmsg("")
+		if not opt.verbose: errmsg("")
 		errmsg(red("""
 Fatal error - %s '%s' does not match reference value '%s'.  Aborting test
 """.strip() % (what,chk,refchk)))
@@ -586,7 +584,7 @@ def check_deps(ts,name,cmds):
 		msg("'%s': unrecognized command" % cmd)
 		sys.exit(1)
 
-	if not g.quiet:
+	if not opt.quiet:
 		msg("Checking dependencies for '%s'" % (cmd))
 
 	check_needs_rerun(ts,cmd,build=False)
@@ -603,8 +601,8 @@ def clean(dirs=[]):
 	ts = MMGenTestSuite()
 	dirlist = ts.list_tmp_dirs()
 	if not dirs: dirs = dirlist.keys()
-	for d in dirs:
-		if d in sorted(dirlist):
+	for d in sorted(dirs):
+		if d in dirlist:
 			cleandir(dirlist[d])
 		else:
 			msg("%s: invalid directory number" % d)
@@ -741,7 +739,7 @@ class MMGenTestSuite(object):
 		self.txcreate_common(name,sources=['1'])
 
 	def txcreate_common(self,name,sources=['1'],non_mmgen_input=''):
-		if g.verbose or g.exact_output:
+		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green("Generating fake transaction info\n"))
 		silence()
 		from mmgen.addr import AddrInfo,AddrInfoList
@@ -784,11 +782,11 @@ class MMGenTestSuite(object):
 
 		for num in tx_data: cmd_args += [tx_data[num]['addrfile']]
 
-		env["MMGEN_BOGUS_WALLET_DATA"] = unspent_data_file
+		os.environ["MMGEN_BOGUS_WALLET_DATA"] = unspent_data_file
 		end_silence()
-		if g.verbose or g.exact_output: sys.stderr.write("\n")
+		if opt.verbose or opt.exact_output: sys.stderr.write("\n")
 
-		t = MMGenExpect(name,"mmgen-txcreate",cmd_args,env)
+		t = MMGenExpect(name,"mmgen-txcreate",cmd_args)
 		t.license()
 		for num in tx_data.keys():
 			t.expect_getend("Getting address data from file ")
@@ -871,7 +869,7 @@ class MMGenTestSuite(object):
 	def export_incog_hidden(self,name,walletfile):
 		rf,rd = os.path.join(cfg['tmpdir'],hincog_fn),os.urandom(hincog_bytes)
 		vmsg(green("Writing %s bytes of data to file '%s'" % (hincog_bytes,rf)))
-		write_to_file(rf,rd,{},verbose=g.verbose)
+		write_to_file(rf,rd,verbose=opt.verbose)
 		t = self.export_incog(name,walletfile,args=["-G","%s,%s"%(rf,hincog_offset)])
 		t.written_to_file("Data",query="")
 		ok()
@@ -1033,7 +1031,7 @@ class MMGenTestSuite(object):
 
 	def tool_encrypt_ref(self,name):
 		infn = get_tmpfile_fn(cfg,cfg['tool_enc_ref_infn'])
-		write_to_file(infn,cfg['tool_enc_reftext'],{},silent=True)
+		write_to_file(infn,cfg['tool_enc_reftext'],silent=True)
 		self.tool_encrypt(name,infn)
 
 	# Two deps produced by one prog is broken - TODO
@@ -1051,7 +1049,7 @@ class MMGenTestSuite(object):
 		self.tool_decrypt(name,f1,f2)
 
 # main()
-if g.pause:
+if opt.pause:
 	import termios,atexit
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)

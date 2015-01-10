@@ -21,23 +21,38 @@ config.py:  Constants and configuration options for the MMGen suite
 """
 
 import sys, os
-prog_name = os.path.basename(sys.argv[0])
 
-author = "Philemon"
-email = "<mmgen-py@yandex.com>"
-Cdates = '2013-2015'
-version = '0.7.9'
+# Variables - these might be altered at runtime:
 
-quiet,verbose,no_keyconv = False,False,False
+user_entropy   = ""
+hash_preset    = '3'
+usr_randchars  = 30
+use_urandchars = False
 
-min_screen_width = 80
-max_tx_comment_len = 72
+# returns None if env var unset
+debug                = os.getenv("MMGEN_DEBUG")
+no_license           = os.getenv("MMGEN_NOLICENSE")
+bogus_wallet_data    = os.getenv("MMGEN_BOGUS_WALLET_DATA")
+disable_hold_protect = os.getenv("MMGEN_DISABLE_HOLD_PROTECT")
 
 from decimal import Decimal
 tx_fee        = Decimal("0.00005")
 max_tx_fee    = Decimal("0.01")
 
-proj_name     = "MMGen"
+seed_len     = 256
+http_timeout = 30
+
+# Constants - these don't change at runtime
+
+proj_name = "MMGen"
+prog_name = os.path.basename(sys.argv[0])
+author    = "Philemon"
+email     = "<mmgen-py@yandex.com>"
+Cdates    = '2013-2015'
+version   = '0.7.9'
+
+min_screen_width = 80
+max_tx_comment_len = 72
 
 wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
@@ -48,49 +63,37 @@ incog_hex_ext = "mmincox"
 
 seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
 
-rawtx_ext    = "raw"
-sigtx_ext    = "sig"
-addrfile_ext = "addrs"
+rawtx_ext           = "raw"
+sigtx_ext           = "sig"
+addrfile_ext        = "addrs"
 addrfile_chksum_ext = "chk"
-keyfile_ext  = "keys"
-keyaddrfile_ext  = "akeys"
-mmenc_ext    = "mmenc"
+keyfile_ext         = "keys"
+keyaddrfile_ext     = "akeys"
+mmenc_ext           = "mmenc"
 
 default_wl    = "electrum"
 #default_wl    = "tirosh"
 
-# Global value sets user opt
-dfl_vars = "seed_len","hash_preset"
+# If user opt is set, different global opt is set to 'True'
+usr_set_vars = { "usr_randchars": "use_urandchars" }
 
-# User opt sets global value
-usr_set_vars = "no_keyconv","verbose","quiet","usr_randchars"
+# Global value sets user opt
+dfl_vars = "seed_len","hash_preset","usr_randchars","debug"
 
 seed_lens = 128,192,256
-seed_len  = 256
 
 mn_lens = [i / 32 * 3 for i in seed_lens]
 
-http_timeout = 30
-
 keyconv_exec = "keyconv"
 
-# returns None if env var unset
-debug             = os.getenv("MMGEN_DEBUG")
-no_license        = os.getenv("MMGEN_NOLICENSE")
-bogus_wallet_data = os.getenv("MMGEN_BOGUS_WALLET_DATA")
-disable_hold_protect = os.getenv("MMGEN_DISABLE_HOLD_PROTECT")
-
-mins_per_block = 8.5
+mins_per_block   = 8.5
 passwd_max_tries = 5
 
-usr_randchars = 30
 max_urandchars,min_urandchars = 80,10
-use_urandchars = False
 
-salt_len    = 16
-aesctr_iv_len  = 16
+salt_len      = 16
+aesctr_iv_len = 16
 
-hash_preset = '3'
 hash_presets = {
 #   Scrypt params:
 #   ID    N   p  r
@@ -114,7 +117,6 @@ max_addr_label_len = 32
 wallet_label_symbols = addr_label_symbols
 max_wallet_label_len = 32
 
-user_entropy = ""
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 #wallet_label_punc = addr_label_punc

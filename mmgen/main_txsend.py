@@ -23,13 +23,12 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 import sys
 
 import mmgen.config as g
-from mmgen.Opts import *
+import mmgen.opt as opt
 from mmgen.license import *
 from mmgen.tx import *
 from mmgen.util import msg,check_infile,get_lines_from_file,confirm_or_exit
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':    "Send a Bitcoin transaction signed by {}-txsign".format(g.proj_name.lower()),
 	'usage':   "[opts] <signed transaction file>",
 	'options': """
@@ -39,11 +38,11 @@ help_data = {
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
-else: usage(help_data)
+else: opt.opts.usage(opts_data)
 
 # Begin execution
 
@@ -66,13 +65,13 @@ if keypress_confirm("Edit transaction comment?"):
 				inputs_data, b2m_map, comment)
 	w = "signed transaction with edited comment"
 	outfile = infile
-	write_to_file(outfile,data,opts,w,False,True,True)
+	write_to_file(outfile,data,w,False,True,True)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 what   = "broadcast this transaction to the network"
 expect =  "YES, I REALLY WANT TO DO THIS"
 
-if g.quiet: warn,expect = "","YES"
+if opt.quiet: warn,expect = "","YES"
 
 confirm_or_exit(warn, what, expect)
 
@@ -87,4 +86,4 @@ except:
 msg("Transaction sent: %s" % tx_id)
 
 of = "tx_{}[{}].txid".format(*metadata[:2])
-write_to_file(of, tx_id+"\n",opts,"transaction ID",True,True)
+write_to_file(of, tx_id+"\n","transaction ID",True,True)

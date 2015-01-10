@@ -26,27 +26,37 @@ from binascii import hexlify,unhexlify
 
 import mmgen.config as g
 
-def msg(s):    sys.stderr.write(s + "\n")
+_red,_grn,_yel,_cya,_reset = (
+	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
+)
+def red(s):    return _red+s+_reset
+def green(s):  return _grn+s+_reset
+def yellow(s): return _yel+s+_reset
+def cyan(s):   return _cya+s+_reset
+
+def msgred(s):    sys.stderr.write(red(s+"\n"))
+
+def msg(s):    sys.stderr.write(s+"\n")
 def msg_r(s):  sys.stderr.write(s)
 def qmsg(s,alt=False):
-	if g.quiet:
+	if opt.quiet:
 		if alt != False: sys.stderr.write(alt + "\n")
 	else: sys.stderr.write(s + "\n")
 def qmsg_r(s,alt=False):
-	if g.quiet:
+	if opt.quiet:
 		if alt != False: sys.stderr.write(alt)
 	else: sys.stderr.write(s)
 def vmsg(s):
-	if g.verbose: sys.stderr.write(s + "\n")
+	if opt.verbose: sys.stderr.write(s + "\n")
 def vmsg_r(s):
-	if g.verbose: sys.stderr.write(s)
+	if opt.verbose: sys.stderr.write(s)
 
 def Msg(s):    sys.stdout.write(s + "\n")
 def Msg_r(s):  sys.stdout.write(s)
 def Vmsg(s):
-	if g.verbose: sys.stdout.write(s + "\n")
+	if opt.verbose: sys.stdout.write(s + "\n")
 def Vmsg_r(s):
-	if g.verbose: sys.stdout.write(s)
+	if opt.verbose: sys.stdout.write(s)
 
 
 def msgrepr(*args):
@@ -122,8 +132,10 @@ def is_utf8(s):
 def match_ext(addr,ext):
 	return addr.split(".")[-1] == ext
 
-def get_from_brain_opt_params(opts):
-	l,p = opts['from_brain'].split(",")
+import opt as opt
+
+def get_from_brain_opt_params():
+	l,p = opt.from_brain.split(",")
 	return(int(l),p)
 
 def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
@@ -165,7 +177,7 @@ def compare_checksums(chksum1, desc1, chksum2, desc2):
 		vmsg("OK (%s)" % chksum1.upper())
 		return True
 	else:
-		if g.debug:
+		if opt.debug:
 			print \
 	"ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
 			% (desc1,chksum1,desc2,chksum2)
@@ -266,18 +278,18 @@ def parse_addr_idxs(arg,sep=","):
 	return sorted(set(ret))
 
 
-def get_new_passphrase(what, opts, passchg=False):
+def get_new_passphrase(what,  passchg=False):
 
 	w = "{}passphrase for {}".format("new " if passchg else "", what)
-	if 'passwd_file' in opts:
-		pw = " ".join(_get_words_from_file(opts['passwd_file'],w))
-	elif 'echo_passphrase' in opts:
-		pw = " ".join(_get_words_from_user("Enter {}: ".format(w), opts))
+	if opt.passwd_file:
+		pw = " ".join(_get_words_from_file(opt.passwd_file,w))
+	elif opt.echo_passphrase:
+		pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
 	else:
 		for i in range(g.passwd_max_tries):
-			pw = " ".join(_get_words_from_user("Enter {}: ".format(w),opts))
-			pw2 = " ".join(_get_words_from_user("Repeat passphrase: ",opts))
-			if g.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
+			pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
+			pw2 = " ".join(_get_words_from_user("Repeat passphrase: "))
+			if opt.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
 			if pw == pw2:
 				vmsg("Passphrases match"); break
 			else: msg("Passphrases do not match.  Try again.")
@@ -324,9 +336,9 @@ def write_to_stdout(data, what, confirm=True):
 	sys.stdout.write(data)
 
 
-def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True,silent=False):
+def write_to_file(outfile,data,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True,silent=False):
 
-	if 'outdir' in opts: outfile = make_full_path(opts['outdir'],outfile)
+	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
 	from os import stat
 	try:    stat(outfile)
@@ -355,18 +367,18 @@ def write_to_file(outfile,data,opts,what="data",confirm_overwrite=False,verbose=
 	return True
 
 
-def write_to_file_or_stdout(outfile, data, opts, what="data"):
+def write_to_file_or_stdout(outfile, data,  what="data"):
 
-	if 'stdout' in opts or not sys.stdout.isatty():
+	if opt.stdout or not sys.stdout.isatty():
 		write_to_stdout(data, what, confirm=True)
 	else:
-		write_to_file(outfile,data,opts,what,not g.quiet,True)
+		write_to_file(outfile,data,what,not opt.quiet,True)
 
 
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
 
 def display_control_data(label,metadata,hash_preset,salt,enc_seed):
-	msg("WALLET DATA")
+	print "WALLET DATA"
 	fs = "  {:18} {}"
 	pw_empty = "yes" if metadata[3] == "E" else "no"
 	for i in (
@@ -379,7 +391,7 @@ def display_control_data(label,metadata,hash_preset,salt,enc_seed):
 				" ".join([str(i) for i in get_hash_params(hash_preset)]))),
 		("Passphrase empty?", pw_empty.capitalize()),
 		("Timestamp:",           "%s UTC" % metadata[4]),
-	): msg(fs.format(*i))
+	): print fs.format(*i)
 
 	fs = "  {:6} {}"
 	for i in (
@@ -389,16 +401,16 @@ def display_control_data(label,metadata,hash_preset,salt,enc_seed):
 		("Encrypted seed:", ""),
 		("  b58:",      b58encode_pad(enc_seed)),
 		("  hex:",      hexlify(enc_seed))
-	): msg(fs.format(*i))
+	): print fs.format(*i)
 
 
-def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
+def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
 
 	seed_id = make_chksum_8(seed)
 	seed_len = str(len(seed)*8)
 	pw_status = "NE" if len(passwd) else "E"
-	hash_preset = opts['hash_preset']
-	label = opts['label'] if 'label' in opts else "No Label"
+	hash_preset = opt.hash_preset
+	label = opt.label if opt.label else "No Label"
 	metadata = seed_id.lower(),key_id.lower(),seed_len,\
 		pw_status,make_timestamp()
 	sf  = b58encode_pad(salt)
@@ -417,9 +429,9 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed, opts):
 		seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
 
 	d = "\n".join((chk,)+lines)+"\n"
-	write_to_file(outfile,d,opts,"wallet",not g.quiet,True)
+	write_to_file(outfile,d,"wallet",not opt.quiet,True)
 
-	if g.debug:
+	if opt.debug:
 		display_control_data(label,metadata,hash_preset,salt,enc_seed)
 
 
@@ -467,7 +479,7 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("%s checksum incorrect in file '%s'!" % (desc,infile))
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
-	elif g.debug:
+	elif opt.debug:
 		print "%s checksum passed: %s" % (desc.capitalize(),chk)
 
 
@@ -475,7 +487,7 @@ def get_data_from_wallet(infile,silent=False):
 
 	# Don't make this a qmsg: User will be prompted for passphrase and must see
 	# the filename.
-	if not silent and not g.quiet:
+	if not silent and not opt.quiet:
 		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
 
 	f = open_file_or_exit(infile, 'r')
@@ -515,10 +527,10 @@ def get_data_from_wallet(infile,silent=False):
 	return label,metadata,hash_preset,res['salt'],res['enc_seed']
 
 
-def _get_words_from_user(prompt, opts):
+def _get_words_from_user(prompt):
 	# split() also strips
-	words = my_raw_input(prompt, echo='echo_passphrase' in opts).split()
-	if g.debug: print "Sanitized input: [%s]" % " ".join(words)
+	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
+	if opt.debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
 
@@ -528,15 +540,15 @@ def _get_words_from_file(infile,what):
 	# split() also strips
 	words = f.read().split()
 	f.close()
-	if g.debug: print "Sanitized input: [%s]" % " ".join(words)
+	if opt.debug: print "Sanitized input: [%s]" % " ".join(words)
 	return words
 
 
-def get_words(infile,what,prompt,opts):
+def get_words(infile,what,prompt):
 	if infile:
 		return _get_words_from_file(infile,what)
 	else:
-		return _get_words_from_user(prompt,opts)
+		return _get_words_from_user(prompt)
 
 def remove_comments(lines):
 	import re
@@ -594,31 +606,31 @@ def get_seed_from_seed_data(words):
 
 passwd_file_used = False
 
-def mark_passwd_file_as_used(opts):
+def mark_passwd_file_as_used():
 	global passwd_file_used
 	if passwd_file_used:
-		msg_r("WARNING: Reusing passphrase from file '%s'." % opts['passwd_file'])
+		msg_r("WARNING: Reusing passphrase from file '%s'." % opt.passwd_file)
 		msg(" This may not be what you want!")
 	passwd_file_used = True
 
 
-def get_mmgen_passphrase(prompt_info,opts,passchg=False):
+def get_mmgen_passphrase(prompt_info,passchg=False):
 	prompt = "Enter {}passphrase for {}: ".format(
 			"old " if passchg else "",prompt_info)
-	if 'passwd_file' in opts:
-		mark_passwd_file_as_used(opts)
-		return " ".join(_get_words_from_file(opts['passwd_file'],"passphrase"))
+	if opt.passwd_file:
+		mark_passwd_file_as_used()
+		return " ".join(_get_words_from_file(opt.passwd_file,"passphrase"))
 	else:
-		return " ".join(_get_words_from_user(prompt,opts))
+		return " ".join(_get_words_from_user(prompt))
 
 
-def get_bitcoind_passphrase(prompt,opts):
-	if 'passwd_file' in opts:
-		mark_passwd_file_as_used(opts)
-		return get_data_from_file(opts['passwd_file'],
+def get_bitcoind_passphrase(prompt):
+	if opt.passwd_file:
+		mark_passwd_file_as_used()
+		return get_data_from_file(opt.passwd_file,
 				"passphrase").strip("\r\n")
 	else:
-		return my_raw_input(prompt, echo='echo_passphrase' in opts)
+		return my_raw_input(prompt, echo=opt.echo_passphrase)
 
 
 def check_data_fits_file_at_offset(fname,offset,dlen,action):

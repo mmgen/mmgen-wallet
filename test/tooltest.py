@@ -8,7 +8,7 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
-import mmgen.config as g
+import mmgen.opt as opt
 from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,msgrepr, msgrepr_exit
 from collections import OrderedDict
 
@@ -74,9 +74,7 @@ cfg = {
 	'tmpdir_num':    10,
 }
 
-from mmgen.Opts import *
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc': "Test suite for the 'mmgen-tool' utility",
 	'usage':"[options] [command]",
 	'options': """
@@ -92,18 +90,15 @@ If no command is given, the whole suite of tests is run.
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
+cmd_args = opt.opts.init(opts_data,add_opts=["exact_output"])
 
-if 'system' in opts: sys.path.pop(0)
+if opt.system: sys.path.pop(0)
 
 env = os.environ
 
-for k in 'debug','verbose','quiet','exact_output':
-	g.__dict__[k] = True if k in opts else False
+if opt.debug: opt.verbose = True
 
-if g.debug: g.verbose = True
-
-if "list_cmds" in opts:
+if opt.list_cmds:
 	fs = "  {:<{w}} - {}"
 	Msg("Available commands:")
 	w = max([len(i) for i in cmd_data])
@@ -114,7 +109,6 @@ if "list_cmds" in opts:
 	sys.exit()
 
 import binascii
-import mmgen.config as g
 from mmgen.test import *
 from mmgen.util import get_data_from_file,write_to_file,get_lines_from_file
 from mmgen.tx import is_wif,is_btc_addr,is_b58_str
@@ -162,14 +156,14 @@ class MMGenToolTestSuite(object):
 
 	def run_cmd(self,name,tool_args,kwargs="",extra_msg="",silent=False):
 		mmgen_tool = "mmgen-tool"
-		if not 'system' in opts:
+		if not opt.system:
 			mmgen_tool = os.path.join(os.curdir,mmgen_tool)
 
 		sys_cmd = [mmgen_tool, "-d",cfg['tmpdir'], name] + tool_args + kwargs.split()
 		if extra_msg: extra_msg = "(%s)" % extra_msg
 		full_name = " ".join([name]+kwargs.split()+extra_msg.split())
 		if not silent:
-			if g.verbose:
+			if opt.verbose:
 				sys.stderr.write(green("Testing %s\nExecuting " % full_name))
 				sys.stderr.write("%s\n" % cyan(repr(sys_cmd)))
 			else:
