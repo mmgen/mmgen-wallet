@@ -28,7 +28,7 @@ from binascii import hexlify, unhexlify
 from mmgen.bitcoin import numtowif
 # from mmgen.util import msg,qmsg,qmsg_r,make_chksum_N,get_lines_from_file,get_data_from_file,get_extension
 from mmgen.util import *
-from mmgen.tx import is_mmgen_idx,is_mmgen_seed_id,is_btc_addr,is_wif,get_wif2addr_f
+from mmgen.tx import *
 import mmgen.config as g
 import mmgen.opt as opt
 
