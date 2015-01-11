@@ -20,7 +20,7 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		decription   = 'A complete Bitcoin cold-storage solution for the command line',
+		description   = 'A complete Bitcoin cold-storage solution for the command line',
 		version      = '0.7.9',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',

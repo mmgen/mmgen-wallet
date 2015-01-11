@@ -291,7 +291,11 @@ class AddrInfo(object):
 
 	def set_comment(self,idx,comment):
 		for e in self.addrdata:
-			if idx == e.idx: e.comment = comment
+			if idx == e.idx:
+				if is_valid_tx_comment(comment):
+					e.comment = comment
+				else:
+					sys.exit(2)
 
 	def make_reverse_dict(self,btcaddrs):
 		d = {}
@@ -302,58 +306,67 @@ class AddrInfo(object):
 			except: pass
 		return d
 
+
 	def make_addrdata_chksum(self):
 		nchars = 24
 		lines = [" ".join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
 						for e in self.addrdata]
 		self.checksum = make_chksum_N(" ".join(lines), nchars, sep=True)
 
-	def fmt_data(self):
 
-		fs = "  {:<%s}  {}" % len(str(self.addrdata[-1].idx))
+	def fmt_data(self,enable_comments=False):
 
-		# Header
-		have_addrs,have_wifs,have_secs = True,True,True
+		# Check data integrity - either all or none must exist for each attr
+		attrs  = ['addr','wif','sec']
+		status = [0,0,0]
+		for i in range(self.num_addrs):
+			for j,attr in enumerate(attrs):
+				try:
+					getattr(self.addrdata[i],attr)
+					status[j] += 1
+				except: pass
 
-		try: self.addrdata[0].addr
-		except: have_addrs = False
+		for i,s in enumerate(status):
+			if s != 0 and s != self.num_addrs:
+				msg("%s missing %s in addr data"% (self.num_addrs-s,attrs[i]))
+				sys.exit(3)
 
-		try: self.addrdata[0].wif
-		except: have_wifs = False
-
-		try: self.addrdata[0].sec
-		except: have_secs = False
-
-		if not (have_addrs or have_wifs):
-			msg("No addresses or wifs in addr data!")
+		if status[0] == None and status[1] == None:
+			msg("Addr data contains neither addresses nor keys")
 			sys.exit(3)
 
+		# Header
 		out = []
-		if have_addrs:
-			from mmgen.addr import addrmsgs
-			out.append(addrmsgs['addrfile_header'] + "\n")
-			w = "Key-address" if have_wifs else "Address"
-			out.append("# {} data checksum for {}[{}]: {}".format(
-						w, self.seed_id, self.idxs_fmt, self.checksum))
-			out.append("# Record this value to a secure location\n")
-
+		from mmgen.addr import addrmsgs
+		out.append(addrmsgs['addrfile_header'] + "\n")
+		w = "Key-address" if status[1] else "Address"
+		out.append("# {} data checksum for {}[{}]: {}".format(
+					w, self.seed_id, self.idxs_fmt, self.checksum))
+		out.append("# Record this value to a secure location\n")
 		out.append("%s {" % self.seed_id)
 
+		# Body
+		fs = "  {:<%s}  {:<34}{}" % len(str(self.addrdata[-1].idx))
 		for e in self.addrdata:
-			if have_addrs:  # First line with idx
-				out.append(fs.format(e.idx, e.addr))
+			c = ""
+			if enable_comments:
+				try:    c = " "+e.comment
+				except: pass
+			if status[0]:  # First line with idx
+				out.append(fs.format(e.idx, e.addr,c))
 			else:
-				out.append(fs.format(e.idx, "wif: "+e.wif))
+				out.append(fs.format(e.idx, "wif: "+e.wif,c))
 
-			if have_wifs:   # Subsequent lines
-				if have_secs:
-					out.append(fs.format("", "hex: "+e.sec))
-				if have_addrs:
-					out.append(fs.format("", "wif: "+e.wif))
+			if status[1]:   # Subsequent lines
+				if status[2]:
+					out.append(fs.format("", "hex: "+e.sec,c))
+				if status[0]:
+					out.append(fs.format("", "wif: "+e.wif,c))
 
 		out.append("}")
 
-		return "\n".join(out)
+		return "\n".join([l.rstrip() for l in out])
+
 
 	def fmt_addr_idxs(self):
 

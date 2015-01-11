@@ -19,6 +19,7 @@ non_mmgen_fn = "btckey"
 cfgs = {
 	'6': {
 		'name':            "reference wallet check",
+		'wallet_label':    "test.py reference wallet (password 'abc')",
 		'bw_passwd':       "abc",
 		'bw_hashparams':   "256,1",
 		'key_id':          "98831F3A",
@@ -671,7 +672,9 @@ class MMGenTestSuite(object):
 		ok()
 
 	def refwalletgen(self,name):
-		args = ["-q","-d",cfg['tmpdir'],"-p1","-r10","-b"+cfg['bw_hashparams']]
+		label = cfg['wallet_label']
+		args = ["-q","-d",cfg['tmpdir'],"-p1","-r10",
+					"-b"+cfg['bw_hashparams'],"-L",label]
 		t = MMGenExpect(name,"mmgen-walletgen", args)
 		t.expect("passphrase: ",cfg['bw_passwd']+"\n")
 		t.usr_rand(10)

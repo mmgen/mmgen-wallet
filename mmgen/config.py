@@ -115,7 +115,7 @@ addr_label_symbols = tuple([chr(i) for i in range(0x20,0x7f)])
 max_addr_label_len = 32
 
 wallet_label_symbols = addr_label_symbols
-max_wallet_label_len = 32
+max_wallet_label_len = 48
 
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc

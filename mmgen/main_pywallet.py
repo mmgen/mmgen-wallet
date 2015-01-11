@@ -60,8 +60,8 @@ import random
 import math
 
 import mmgen.config as g
-from mmgen.Opts import *
-from mmgen.util import msg
+import mmgen.opt as opt
+from mmgen.util import msg,msgrepr,msgrepr_exit
 
 max_version = 60000
 addrtype = 0
@@ -69,8 +69,7 @@ json_db = {}
 private_keys = []
 password = None
 
-help_data = {
-	'prog_name': g.prog_name,
+opts_data = {
 	'desc':    "Dump contents of a bitcoind wallet to file",
 	'usage':   "[opts] <bitcoind wallet file>",
 	'options': """
@@ -86,20 +85,17 @@ help_data = {
 """
 }
 
-opts,cmd_args = parse_opts(sys.argv,help_data)
-from mmgen.Opts import warn_incompatible_opts
-warn_incompatible_opts(opts,('json','keys','addrs','keysforaddrs'))
+cmd_args = opt.opts.init(opts_data)
+opt.opts.warn_incompatible_opts(['json','keys','addrs','keysforaddrs'])
 
 if len(cmd_args) == 1:
 	from mmgen.util import check_infile
 	check_infile(cmd_args[0])
 else:
-	usage(help_data)
+	opt.opts.usage(opts_data)
 
-if ('json' not in opts and 'keys' not in opts
-		and 'addrs' not in opts and 'keysforaddrs' not in opts):
-			usage(help_data)
-
+if (not opt.json and not opt.keys and not opt.addrs and not opt.keysforaddrs):
+			opt.opts.usage(opts_data)
 
 # from the SlowAES project, http://code.google.com/p/slowaes (aes.py)
 
@@ -1544,10 +1540,9 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 			mkey['vchOtherDerivationParameters'] = d['vchOtherDerivationParameters'].encode('hex')
 			json_db['mkey'] = mkey
 
-			if password == None and \
-				('json' in opts or 'keysforaddrs' in opts or 'keys' in opts):
+			if password == None and (opt.json or opt.keysforaddr or opt.keys):
 				from mmgen.util import get_bitcoind_passphrase
-				password = get_bitcoind_passphrase("Enter password: ",opts)
+				password = get_bitcoind_passphrase("Enter password: ")
 
 			if password != None:
 				global crypter
@@ -1640,21 +1635,21 @@ if json_db.get('minversion') > max_version:
 
 wallet_addrs = [i['addr'] for i in json_db['keys']]
 
-if 'json' in opts:
+if opt.json:
 	data = [json.dumps(json_db, sort_keys=True, indent=4)]
 	ext,what = "json","json dump"
 
-elif 'keys' in opts:
+elif opt.keys:
 	data = sorted([i['sec'] for i in json_db['keys']])
 	ext,what = "keys","private keys"
 
-elif 'addrs' in opts:
+elif opt.addrs:
 	data = sorted([i['addr'] for i in json_db['keys']])
 	ext,what = "addrs","addresses"
 
-elif 'keysforaddrs' in opts:
+elif opt.keysforaddrs:
 	from mmgen.util import get_lines_from_file
-	usr_addrs = set(get_lines_from_file(opts['keysforaddrs'],"addresses",trim_comments=True))
+	usr_addrs = set(get_lines_from_file(opt.keysforaddrs,"addresses",trim_comments=True))
 	data = [i['sec'] for i in json_db['keys'] if i['addr'] in usr_addrs]
 	ext,what = "keys","private keys"
 	if len(data) < len(usr_addrs):
@@ -1664,14 +1659,15 @@ len_arg = "%s" % len(wallet_addrs) \
    if len(data) == len(wallet_addrs) or ext == "json" \
    else "%s:%s" % (len(data),len(wallet_addrs))
 
-from mmgen.util import make_chksum_8,write_walletdat_dump_to_file,write_to_stdout
+from mmgen.util import make_chksum_8,write_to_file,write_to_stdout
 wallet_id = make_chksum_8(str(sorted(wallet_addrs)))
 
 data = "\n".join(data) + "\n"
 
 # Output data
-if 'stdout' in opts or not sys.stdout.isatty():
-	conf = not ('addrs' in opts or not sys.stdout.isatty())
+if opt.stdout or not sys.stdout.isatty():
+	conf = not (opt.addrs or not sys.stdout.isatty())
 	write_to_stdout(data,"secret keys",conf)
 else:
-	write_walletdat_dump_to_file(wallet_id, data, len_arg, ext, what, opts)
+	of = "wd_%s[%s].%s" % (wallet_id,len_arg,ext)
+	write_to_file(of, data, what, confirm_overwrite=True,verbose=True)

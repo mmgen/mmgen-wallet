@@ -20,21 +20,21 @@
 main.py - Script launcher for the MMGen suite
 """
 
-def launch_addrgen():    import mmgen.main_addrgen
-def launch_addrimport(): import mmgen.main_addrimport
-def launch_keygen():     import mmgen.main_addrgen
-def launch_passchg():    import mmgen.main_passchg
-def launch_pywallet():   import mmgen.main_pywallet
-def launch_tool():       import mmgen.main_tool
-def launch_txcreate():   import mmgen.main_txcreate
-def launch_txsend():     import mmgen.main_txsend
-def launch_txsign():     import mmgen.main_txsign
-def launch_walletchk():  import mmgen.main_walletchk
-def launch_walletgen():  import mmgen.main_walletgen
-
 def launch(what):
+	def launch_addrgen():    import mmgen.main_addrgen
+	def launch_addrimport(): import mmgen.main_addrimport
+	def launch_keygen():     import mmgen.main_addrgen
+	def launch_passchg():    import mmgen.main_passchg
+	def launch_pywallet():   import mmgen.main_pywallet
+	def launch_tool():       import mmgen.main_tool
+	def launch_txcreate():   import mmgen.main_txcreate
+	def launch_txsend():     import mmgen.main_txsend
+	def launch_txsign():     import mmgen.main_txsign
+	def launch_walletchk():  import mmgen.main_walletchk
+	def launch_walletgen():  import mmgen.main_walletgen
+
 	try: import termios
-	except: globals()["launch_"+what]() # Windows
+	except: locals()["launch_"+what]() # Windows
 	else:
 		import sys,atexit
 		fd = sys.stdin.fileno()
@@ -42,7 +42,7 @@ def launch(what):
 		def at_exit():
 			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 		atexit.register(at_exit)
-		try: globals()["launch_"+what]()
+		try: locals()["launch_"+what]()
 		except KeyboardInterrupt:
 			sys.stderr.write("\nUser interrupt\n")
 		except EOFError:
