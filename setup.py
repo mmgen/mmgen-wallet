@@ -72,6 +72,7 @@ setup(
 			'test.__init__',
 			'test.test',
 			'test.tooltest',
+			'test.gentest',
 		],
 		scripts=[
 			'mmgen-addrgen',
