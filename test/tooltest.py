@@ -81,7 +81,8 @@ opts_data = {
 -h, --help         Print this help message
 -d, --debug        Produce debugging output
 -l, --list-cmds    List and describe the tests and commands in the test suite
--s, --system       Test scripts and modules installed on system rather than those in the repo root
+-s, --system       Test scripts and modules installed on system rather than
+                   those in the repo root
 -v, --verbose      Produce more verbose output
 """,
 	'notes': """

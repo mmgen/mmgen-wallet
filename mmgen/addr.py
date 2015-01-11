@@ -49,13 +49,13 @@ faster address generation.
 """.format(kcexe=g.keyconv_exec, vanityg="vanitygen")
 }
 
-def test_for_keyconv():
+def test_for_keyconv(silent=False):
 
 	from subprocess import check_output,STDOUT
 	try:
 		check_output([g.keyconv_exec, '-G'],stderr=STDOUT)
 	except:
-		msg(addrmsgs['no_keyconv_msg'])
+		if not silent: msg(addrmsgs['no_keyconv_msg'])
 		return False
 
 	return True

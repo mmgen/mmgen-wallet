@@ -13,7 +13,12 @@ import mmgen.opt as opt
 from mmgen.util import msgrepr,msgrepr_exit,Msg
 from mmgen.test import *
 
-hincog_fn = "rand_data"
+hincog_fn      = "rand_data"
+hincog_bytes   = 1024*1024
+hincog_offset  = 98765
+hincog_seedlen = 256
+
+incog_id_fn  = "incog_id"
 non_mmgen_fn = "btckey"
 
 cfgs = {
@@ -51,7 +56,8 @@ cfgs = {
 			'mmseed':      "export_seed",
 			'mmincog':     "export_incog",
 			'mmincox':     "export_incog_hex",
-			hincog_fn:    "export_incog_hidden",
+			hincog_fn:     "export_incog_hidden",
+			incog_id_fn:   "export_incog_hidden",
 			'akeys.mmenc': "keyaddrgen"
 		},
 	},
@@ -175,6 +181,7 @@ cmd_data = OrderedDict([
 	['tool_decrypt_ref', (9,"'mmgen-tool decrypt' (reference text)",
 		[[[cfgs['9']['tool_enc_ref_infn'],
 		   cfgs['9']['tool_enc_ref_infn']+".mmenc"],9]])],
+	['tool_find_incog_data', (9,"'mmgen-tool find_incog_data'", [[[hincog_fn],1],[[incog_id_fn],1]])],
 ])
 
 utils = {
@@ -201,7 +208,7 @@ meta_cmds = OrderedDict([
 	['2', (2,[k for k in cmd_data if cmd_data[k][0] == 2])],
 	['3', (3,[k for k in cmd_data if cmd_data[k][0] == 3])],
 	['4', (4,[k for k in cmd_data if cmd_data[k][0] == 4])],
-	['tool',   (9,("tool_encrypt","tool_decrypt","tool_encrypt_ref","tool_decrypt_ref"))],
+	['tool', (9,("tool_encrypt","tool_decrypt","tool_encrypt_ref","tool_decrypt_ref","tool_find_incog_data"))],
 ])
 
 opts_data = {
@@ -211,12 +218,14 @@ opts_data = {
 -h, --help         Print this help message
 -b, --buf-keypress Use buffered keypresses as with real human input
 -d, --debug        Produce debugging output
--D, --direct-exec  Bypass pexpect and execute a command directly (for debugging only)
+-D, --direct-exec  Bypass pexpect and execute a command directly (for
+                   debugging only)
 -e, --exact-output Show the exact output of the MMGen script(s) being run
 -l, --list-cmds    List and describe the tests and commands in the test suite
 -p, --pause        Pause between tests, resuming on keypress
 -q, --quiet        Produce minimal output.  Suppress dependency info
--s, --system       Test scripts and modules installed on system rather than those in the repo root
+-s, --system       Test scripts and modules installed on system rather than
+                   those in the repo root
 -v, --verbose      Produce more verbose output
 """,
 	'notes': """
@@ -517,10 +526,6 @@ def do_between():
 		sys.stderr.write("\n")
 
 
-hincog_bytes   = 1024*1024
-hincog_offset  = 98765
-hincog_seedlen = 256
-
 rebuild_list = OrderedDict()
 
 def check_needs_rerun(ts,cmd,build=False,root=True,force_delete=False,dpy=False):
@@ -529,7 +534,8 @@ def check_needs_rerun(ts,cmd,build=False,root=True,force_delete=False,dpy=False)
 
 	fns = []
 	if force_delete or not root:
-		ret = ts.get_num_exts_for_cmd(cmd,dpy) #does cmd produce a needed dependency?
+		# does cmd produce a needed dependency(ies)?
+		ret = ts.get_num_exts_for_cmd(cmd,dpy)
 		if ret:
 			for ext in ret[1]:
 				fn = get_file_with_ext(ext,cfgs[ret[0]]['tmpdir'],delete=build)
@@ -574,7 +580,7 @@ Fatal error - %s '%s' does not match reference value '%s'.  Aborting test
 """.strip() % (what,chk,refchk)))
 		sys.exit(3)
 
-def check_deps(ts,name,cmds):
+def check_deps(cmds):
 	if len(cmds) != 1:
 		msg("Usage: %s check_deps <command>" % g.prog_name)
 		sys.exit(1)
@@ -624,8 +630,8 @@ class MMGenTestSuite(object):
 		dgl = cfgs[num]['dep_generators']
 #	msgrepr(num,cmd,dgl)
 		if cmd in dgl.values():
-			ext = [k for k in dgl if dgl[k] == cmd][0]
-			return (num,[ext])
+			exts = [k for k in dgl if dgl[k] == cmd]
+			return (num,exts)
 		else:
 			return None
 
@@ -860,7 +866,8 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,"mmgen-walletchk",args+["-d",cfg['tmpdir'],"-r","10",walletfile])
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
 		t.usr_rand(10)
-		t.expect_getend("Incog ID: ")
+		incog_id = t.expect_getend("Incog ID: ")
+		write_to_tmpfile(cfg,incog_id_fn,incog_id+"\n")
 		if args[0] == "-G": return t
 		t.written_to_file("Incognito wallet data",overwrite_unlikely=True)
 		ok()
@@ -1037,7 +1044,6 @@ class MMGenTestSuite(object):
 		write_to_file(infn,cfg['tool_enc_reftext'],silent=True)
 		self.tool_encrypt(name,infn)
 
-	# Two deps produced by one prog is broken - TODO
 	def tool_decrypt(self,name,f1,f2):
 		of = name + ".out"
 		t = MMGenExpect(name,"mmgen-tool",
@@ -1050,6 +1056,14 @@ class MMGenTestSuite(object):
 
 	def tool_decrypt_ref(self,name,f1,f2):
 		self.tool_decrypt(name,f1,f2)
+
+	def tool_find_incog_data(self,name,f1,f2):
+		i_id = read_from_file(f2).rstrip()
+		vmsg("Incog ID: %s" % cyan(i_id))
+		t = MMGenExpect(name,"mmgen-tool",
+				["-d",cfg['tmpdir'],"find_incog_data",f1,i_id])
+		o = t.expect_getend("Incog data for ID \w{8} found at offset ",regex=True)
+		cmp_or_die(hincog_offset,int(o))
 
 # main()
 if opt.pause:
