@@ -94,8 +94,6 @@ cmd_args = opt.opts.init(opts_data,add_opts=["exact_output"])
 
 if opt.system: sys.path.pop(0)
 
-if opt.debug_scripts: os.environ["MMGEN_DEBUG"] = "1"
-
 if opt.debug: opt.verbose = True
 
 if opt.list_cmds:
