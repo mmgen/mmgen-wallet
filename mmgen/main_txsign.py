@@ -147,7 +147,7 @@ def sign_transaction(c,tx_hex,tx_num_str,sig_data,keys=None):
 
 	if keys:
 		qmsg("Passing %s key%s to bitcoind" % (len(keys),suf(keys,"k")))
-		if opt.debug: print "Keys:\n  %s" % "\n  ".join(keys)
+		if opt.debug: Msg("Keys:\n  %s" % "\n  ".join(keys))
 
 	msg_r("Signing transaction{}...".format(tx_num_str))
 	from mmgen.rpc import exceptions
@@ -207,10 +207,10 @@ def check_maps_from_seeds(maplist,label,infiles,saved_seeds,return_keys=False):
 		return ret
 
 def missing_keys_errormsg(addrs):
-	print """
+	Msg("""
 A key file must be supplied (or use the '--use-wallet-dat' option)
 for the following non-{} address{}:\n    {}""".format(
-	g.proj_name,suf(addrs,"a"),"\n    ".join(addrs)).strip()
+	g.proj_name,suf(addrs,"a"),"\n    ".join(addrs)).strip())
 
 
 def parse_mmgen_keyaddr_file():
@@ -287,7 +287,7 @@ for l in (
 
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
-if not infiles: opt.opts.usage(opts_data)
+if not infiles: opt.opts.usage()
 for i in infiles: check_infile(i)
 
 c = connect_to_bitcoind()

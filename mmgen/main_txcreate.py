@@ -334,8 +334,6 @@ def mmaddr2btcaddr(c,mmaddr,acct_data,ail):
 
 cmd_args = opt.opts.init(opts_data)
 
-if opt.debug: show_opts_and_cmd_args(cmd_args)
-
 if opt.comment_file:
 	comment = get_tx_comment_from_file(opt.comment_file)
 
@@ -393,8 +391,6 @@ if not opt.info:
 	if tx_fee > g.max_tx_fee:
 		msg("Transaction fee too large: %s > %s" % (tx_fee,g.max_tx_fee))
 		sys.exit(2)
-
-if opt.debug: show_opts_and_cmd_args(cmd_args)
 
 if g.bogus_wallet_data:  # for debugging purposes only
 	import mmgen.rpc.data
@@ -459,8 +455,8 @@ if change > 0: tx_out[change_addr] = float(change)
 tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
 
 if opt.debug:
-	print "tx_in:", repr(tx_in)
-	print "tx_out:", repr(tx_out)
+	Msg("tx_in:  " + repr(tx_in))
+	Msg("tx_out: " + repr(tx_out))
 
 if opt.comment_file:
 	if keypress_confirm("Edit comment?",False):

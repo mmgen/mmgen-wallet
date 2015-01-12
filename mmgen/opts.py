@@ -17,24 +17,25 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-opts.py:  Further options processing after mmgen.share.Opts
+opts.py:  MMGen-specific options processing after general processing by share.Opts
 """
 import sys
 
 import mmgen.config as g
 import mmgen.share.Opts
 import opt
-from mmgen.util import msg,msgrepr_exit,msgrepr
+from mmgen.util import msg,msgrepr_exit,msgrepr,Msg
 
-def usage(opts_data):
-	print "USAGE: %s %s" % (opts_data['prog_name'], opts_data['usage'])
+def usage():
+	Msg("USAGE: %s %s" % (g.prog_name, usage_txt))
 	sys.exit(2)
 
 def print_version_info():
-	print """
-'{g.prog_name}' version {g.version}.  Part of the {g.proj_name} suite.
-Copyright (C) {g.Cdates} by {g.author} {g.email}.
-""".format(g=g).strip()
+	Msg("""
+{pnu} version {g.version}.  Part of the {g.proj_name} suite, a Bitcoin
+cold-storage solution for the command line.  Copyright (C) {g.Cdates}
+by {g.author} {g.email}
+""".format(g=g,pnu=g.prog_name.upper()).strip())
 
 def warn_incompatible_opts(incompat_list):
 	bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in incompat_list]
@@ -43,13 +44,15 @@ def warn_incompatible_opts(incompat_list):
 					["--"+b.replace("_","-") for b in bad]))
 		sys.exit(1)
 
-def typeconvert_from_dfl(opts,opt):
+def typeconvert_from_dfl(key):
 
-	vtype = type(g.__dict__[opt])
-	if g.debug: print "Override opt: %-15s [%s]" % (opt,vtype)
+	vtype = type(g.__dict__[key])
+	if g.debug: Msg("Override opt: %-15s [%s]" % (key,vtype))
+
+	global opt
 
 	try:
-		opts[opt] = vtype(opts[opt])
+		opt.__dict__[key] = vtype(opt.__dict__[key])
 	except:
 		d = {
 			'int':   'an integer',
@@ -57,9 +60,10 @@ def typeconvert_from_dfl(opts,opt):
 			'float': 'a float',
 			'bool':  'a boolean value',
 		}
-		m = [d[k] for k in d if __builtins__[k] == vtype][0]
-		msg("'%s': invalid parameter for '--%s' option (not %s)" %
-				(opts[opt],opt.replace("_","-"),m))
+		m = [d[k] for k in d if __builtins__[k] == vtype]
+		msgrepr_exit(key,vtype)
+		fs = "'%s': invalid parameter for '--%s' option (not %s)"
+		msg(fs % (opt.__dict__[key],opt.replace("_","-"),m))
 		sys.exit(1)
 
 def init(opts_data,add_opts=[]):
@@ -67,39 +71,55 @@ def init(opts_data,add_opts=[]):
 	if len(sys.argv) == 2 and sys.argv[1] == '--version':
 		print_version_info(); sys.exit()
 
-	opts,args,short_opts,long_opts = mmgen.share.Opts.parse_opts(sys.argv,opts_data)
+	uopts,args,short_opts,long_opts = \
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data)
 
 	if g.debug:
-		print "short opts: %s" % repr(short_opts)
-		print "long opts:  %s" % repr(long_opts)
-		print "user-selected opts: %s" % repr(opts)
-		print "cmd args:           %s" % repr(args)
+		d = (
+			("short opts",         short_opts),
+			("long opts",          long_opts),
+			("user-selected opts", uopts),
+			("cmd args",           args),
+		)
+		for e in d: Msg("{:<20}: {}".format(*e))
 
-	# check opts without modifying them
-	if not check_opts(opts,long_opts): sys.exit(1)
+	# Save this for usage()
+	global usage_txt
+	usage_txt = opts_data['usage']
 
-	# If user opt is set, an opt in mmgen.config is set to 'True'
-	for v in g.usr_set_vars:
-		if v in opts:
-			g.__dict__[g.usr_set_vars[v]] = True
+	# We don't need this data anymore
+	del mmgen.share.Opts
+	for k in 'prog_name','desc','usage','options','notes':
+		if k in opts_data: del opts_data[k]
+
+	# Remove all unneeded attributes from opt, our special global namespace
+	for k in dir(opt):
+		if k[:2] == "__": del opt.__dict__[k]
+
+	# Transfer uopts into opt, setting required opts to None if not set by user
+	for o in [s.rstrip("=") for s in long_opts] + g.required_opts + add_opts:
+		opt.__dict__[o] = uopts[o] if o in uopts else None
+
+	# check user-set opts without modifying them
+	if not check_opts(uopts): sys.exit(1)
+
+	# A special case - do this here, before opt gets set from g.dfl_vars
+	if opt.usr_randchars: g.use_urandchars = True
 
 	# If user opt is unset, set it to default value in mmgen.config (g):
 	# If set, convert its type based on value in mmgen.config
-	for v in g.dfl_vars:
-		if v in opts: typeconvert_from_dfl(opts,v)
-		else: opts[v] = g.__dict__[v]
+	for k in g.dfl_vars:
+		if k in opt.__dict__ and opt.__dict__[k] != None:
+			typeconvert_from_dfl(k)
+		else: opt.__dict__[k] = g.__dict__[k]
 
-	if g.debug: print "opts after typeconvert: %s" % opts
+	if opt.debug: opt.verbose = True
 
-	# A hack, but harmless
-	extra_opts = [
-		"quiet","verbose","debug",
-		"outdir","echo_passphrase","passwd_file"
-	] + add_opts
-
-	# Transfer opts into our custom namespace
-	for o in [s.rstrip("=") for s in long_opts] + extra_opts:
-		opt.__dict__[o] = opts[o] if o in opts else None
+	if g.debug:
+		Msg("opts after typeconvert:")
+		for k in opt.__dict__:
+			if opt.__dict__[k] != None and k != "opts":
+ 				msg("    %-18s: %s" % (k,opt.__dict__[k]))
 
 	for l in (
 	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),
@@ -108,25 +128,17 @@ def init(opts_data,add_opts=[]):
 	('quiet','verbose')
 	): warn_incompatible_opts(l)
 
-	del mmgen.share.Opts
 	return args
 
-def show_opts_and_cmd_args(cmd_args):
-	print "Processed options:"
-	d = opt.__dict__
-	for k in d:
-		if k[:2] != "__" and k != "opts" and d[k] != None:
-			msg("%-20s: %s" % (k, d[k]))
-	print "Cmd args: %s" % repr(cmd_args)
-
+# save for debugging
 def show_all_opts():
 	msg("Processed options:")
 	d = opt.__dict__
-	for k in d:
-		if k[:2] != "__" and k != "opts":
-			msg("%-20s: %s" % (k, d[k]))
+	for k in [o for o in d if o != "opts"]:
+		tstr = type(d[k]) if d[k] not in (None,False,True) else ""
+		msg("%-20s: %-8s %s" % (k, d[k], tstr))
 
-def check_opts(opts,long_opts):       # Returns false if any check fails
+def check_opts(usr_opts):       # Returns false if any check fails
 
 	def opt_splits(val,sep,n,what):
 		sepword = "comma" if sep == "," else (
@@ -163,21 +175,22 @@ def check_opts(opts,long_opts):       # Returns false if any check fails
 			return False
 		return True
 
-	for opt,val in opts.items():
+	global opt
+	for key,val in [(k,getattr(opt,k)) for k in usr_opts]:
 
-		what = "parameter for '--%s' option" % opt.replace("_","-")
+		what = "parameter for '--%s' option" % key.replace("_","-")
 
 		# Check for file existence and readability
-		if opt in ('keys_from_file','mmgen_keys_from_file',
+		if key in ('keys_from_file','mmgen_keys_from_file',
 				'passwd_file','keysforaddrs','comment_file'):
 			from mmgen.util import check_infile
 			check_infile(val)  # exits on error
 			continue
 
-		if opt == 'outdir':
+		if key == 'outdir':
 			from mmgen.util import check_outdir
 			check_outdir(val)  # exits on error
-		elif opt == 'label':
+		elif key == 'label':
 			if not opt_compares(len(val),"<=",g.max_wallet_label_len,"label length"):
 				return False
 			try: val.decode("ascii")
@@ -187,8 +200,8 @@ def check_opts(opts,long_opts):       # Returns false if any check fails
 			w = "character in label"
 			for ch in list(val):
 				if not opt_is_in_list(ch,g.wallet_label_symbols,w): return False
-		elif opt == 'export_incog_hidden' or opt == 'from_incog_hidden':
-			if opt == 'from_incog_hidden':
+		elif key == 'export_incog_hidden' or key == 'from_incog_hidden':
+			if key == 'from_incog_hidden':
 				if not opt_splits(val,",",3,what): return False
 				infile,offset,seed_len = val.split(",")
 				from mmgen.util import check_infile
@@ -204,7 +217,7 @@ def check_opts(opts,long_opts):       # Returns false if any check fails
 			w = "offset " + what
 			if not opt_is_int(offset,w): return False
 			if not opt_compares(offset,">=",0,what): return False
-		elif opt == 'from_brain':
+		elif key == 'from_brain':
 			if not opt_splits(val,",",2,what): return False
 			l,p = val.split(",")
 			w = "seed length " + what
@@ -212,16 +225,16 @@ def check_opts(opts,long_opts):       # Returns false if any check fails
 			if not opt_is_in_list(int(l),g.seed_lens,w): return False
 			w = "hash preset " + what
 			if not opt_is_in_list(p,g.hash_presets.keys(),w): return False
-		elif opt == 'seed_len':
+		elif key == 'seed_len':
 			if not opt_is_int(val,what): return False
 			if not opt_is_in_list(int(val),g.seed_lens,what): return False
-		elif opt == 'hash_preset':
+		elif key == 'hash_preset':
 			if not opt_is_in_list(val,g.hash_presets.keys(),what): return False
-		elif opt == 'usr_randchars':
+		elif key == 'usr_randchars':
 			if not opt_is_int(val,what): return False
 			if not opt_compares(val,">=",g.min_urandchars,what): return False
 			if not opt_compares(val,"<=",g.max_urandchars,what): return False
 		else:
-			if 'debug' in opts: print "check_opts(): No test for opt '%s'" % opt
+			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 
 	return True

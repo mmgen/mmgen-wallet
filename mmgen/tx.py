@@ -47,7 +47,7 @@ def normalize_btc_amt(amt):
 		return False
 
 	if opt.debug:
-		print "Decimal(amt): %s\nAs tuple: %s" % (amt,repr(ret.as_tuple()))
+		Msg("Decimal(amt): %s\nAs tuple: %s" % (amt,repr(ret.as_tuple())))
 
 	if ret.as_tuple()[-1] < -8:
 		msg("%s: Too many decimal places in amount" % amt)

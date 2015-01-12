@@ -242,4 +242,4 @@ def do_pager(text):
 			p.communicate(text+end+"\n")
 			msg_r("\r")
 			break
-	else: print text+end
+	else: Msg(text+end)

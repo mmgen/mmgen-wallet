@@ -125,8 +125,6 @@ cmd_args = opt.opts.init(opts_data)
 
 if opt.show_hash_presets: show_hash_presets()
 
-if opt.debug: opt.opts.show_opts_and_cmd_args(cmd_args)
-
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
@@ -140,7 +138,7 @@ if len(cmd_args) == 1:
 		sys.exit(1)
 elif len(cmd_args) == 0:
 	infile = ""
-else: opt.opts.usage(opts_data)
+else: opt.opts.usage()
 
 g.use_urandchars = True
 

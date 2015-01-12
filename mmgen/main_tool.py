@@ -48,7 +48,7 @@ command
 cmd_args = opt.opts.init(opts_data)
 
 if len(cmd_args) < 1:
-	opt.opts.usage(opts_data)
+	opt.opts.usage()
 	sys.exit(1)
 
 command = cmd_args.pop(0)

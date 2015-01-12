@@ -42,7 +42,7 @@ cmd_args = opt.opts.init(opts_data)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
-else: opt.opts.usage(opts_data)
+else: opt.opts.usage()
 
 # Begin execution
 

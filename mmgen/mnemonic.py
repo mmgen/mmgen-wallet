@@ -22,7 +22,7 @@ mnemonic.py:  Mnemonic routines for the MMGen suite
 
 import sys
 from binascii import hexlify
-from mmgen.util import msg,msg_r,make_chksum_8,Vmsg
+from mmgen.util import msg,msg_r,make_chksum_8,Vmsg,Msg
 from mmgen.crypto import get_random
 import mmgen.config as g
 import mmgen.opt as opt
@@ -107,24 +107,24 @@ def get_mnemonic_from_seed(seed, wl, label="", verbose=False):
 
 def check_wordlist(wl,label):
 
-	print "Wordlist: %s" % label.capitalize()
+	Msg("Wordlist: %s" % label.capitalize())
 
 	from hashlib import sha256
 
-	print "Length:   %i words" % len(wl)
+	Msg("Length:   %i words" % len(wl))
 	new_chksum = sha256(" ".join(wl)).hexdigest()[:8]
 
 	if new_chksum != wl_checksums[label]:
-		print "ERROR: Checksum mismatch.  Computed: %s, Saved: %s" % \
-			(new_chksum,wl_checksums[label])
+		Msg("ERROR: Checksum mismatch.  Computed: %s, Saved: %s" % \
+			(new_chksum,wl_checksums[label]))
 		sys.exit(3)
 
-	print "Checksum: %s (matches)" % new_chksum
+	Msg("Checksum: %s (matches)" % new_chksum)
 
 	if (sorted(wl) == wl):
-		print "List is sorted"
+		Msg("List is sorted")
 	else:
-		print "ERROR: List is not sorted!"
+		Msg("ERROR: List is not sorted!")
 		sys.exit(3)
 
 from mmgen.mn_electrum  import electrum_words as el
@@ -146,4 +146,4 @@ def do_random_mn(nbytes,wordlist):
 		wl = get_wordlist(wlname)
 		mn = get_mnemonic_from_seed(r,wl,wordlist)
 		Vmsg("%s wordlist mnemonic:" % (wlname.capitalize()))
-		print " ".join(mn)
+		Msg(" ".join(mn))

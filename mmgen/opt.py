@@ -17,6 +17,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-opt.py: an empty namespace for the global opt variables
+opt.py: a namespace for the global opt variables
 """
 import opts

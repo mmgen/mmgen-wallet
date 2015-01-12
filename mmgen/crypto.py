@@ -90,7 +90,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 #	else:
 #		qmsg("Generated IDs (Seed/Key): %s/%s" % (chk2,chk1))
 
-	if opt.debug: print "Decrypted seed: %s" % hexlify(dec_seed)
+	if opt.debug: Msg("Decrypted seed: %s" % hexlify(dec_seed))
 
 	vmsg("OK")
 	return dec_seed
@@ -155,11 +155,10 @@ def make_key(passwd,salt,hash_preset,
 
 	if from_what: what += " from "
 	if opt.verbose or verbose:
-		msg_r("Generating %s%s.\nPlease wait..." % (what,from_what))
+		msg_r("Generating %s%s..." % (what,from_what))
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
-	if opt.verbose or verbose:
-		msg("done")
-	if opt.debug: print "Key: %s" % hexlify(key)
+	if opt.verbose or verbose: msg("done")
+	if opt.debug: Msg("Key: %s" % hexlify(key))
 	return key
 
 
@@ -399,7 +398,7 @@ def _get_seed(infile,silent=False,seed_id=""):
 		msg("Invalid %s file '%s'" % (source,infile))
 		sys.exit(2)
 
-	if opt.debug: print "Seed: %s" % hexlify(seed)
+	if opt.debug: Msg("Seed: %s" % hexlify(seed))
 
 	return seed
 
@@ -415,9 +414,9 @@ def get_seed_retry(infile,seed_id=""):
 
 def _get_seed_from_brain_passphrase(words):
 	bp = " ".join(words)
-	if opt.debug: print "Sanitized brain passphrase: %s" % bp
+	if opt.debug: Msg("Sanitized brain passphrase: %s" % bp)
 	seed_len,hash_preset = get_from_brain_opt_params()
-	if opt.debug: print "Brainwallet l = %s, p = %s" % (seed_len,hash_preset)
+	if opt.debug: Msg("Brainwallet l = %s, p = %s" % (seed_len,hash_preset))
 	vmsg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)

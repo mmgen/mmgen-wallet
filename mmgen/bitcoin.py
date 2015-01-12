@@ -79,10 +79,10 @@ def verify_addr(addr,verbose=False,return_hex=False):
 		if step2[:8] == addr_hex[42:]:
 			return addr_hex[2:42] if return_hex else True
 		else:
-			if verbose: print "Invalid checksum in address '%s'" % addr
+			if verbose: Msg("Invalid checksum in address '%s'" % addr)
 			break
 
-	if verbose: print "Invalid address '%s'" % addr
+	if verbose: Msg("Invalid address '%s'" % addr)
 	return False
 
 
@@ -134,8 +134,8 @@ def _b58_pad(s,a,b,pad,f,w):
 	try:
 		outlen = b[a.index(len(s))]
 	except:
-		print "_b58_pad() accepts only %s %s bytes long "\
-			"(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s))
+		Msg("_b58_pad() accepts only %s %s bytes long "\
+			"(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s)))
 		return False
 
 	out = f(s)

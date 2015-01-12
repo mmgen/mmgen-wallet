@@ -95,6 +95,8 @@ def export_to_hidden_incog(incog_enc):
 	outfile,offset = opt.export_incog_hidden.split(",") #Already sanity-checked
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
+	if opt.debug:
+		Msg("Incog data len %s, offset %s" % (len(incog_enc),offset))
 	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
 
 	if not opt.quiet: confirm_or_exit("","alter file '%s'" % outfile)
@@ -112,7 +114,7 @@ cmd_args = opt.opts.init(opts_data)
 if opt.export_incog_hidden or opt.export_incog_hex:
 	opt.export_incog = True
 
-if len(cmd_args) != 1: opt.opts.usage(opts_data)
+if len(cmd_args) != 1: opt.opts.usage()
 
 check_infile(cmd_args[0])
 

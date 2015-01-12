@@ -78,12 +78,12 @@ opts_data = {
 	'desc': "Test suite for the 'mmgen-tool' utility",
 	'usage':"[options] [command]",
 	'options': """
--h, --help         Print this help message
--d, --debug        Produce debugging output
--l, --list-cmds    List and describe the tests and commands in the test suite
--s, --system       Test scripts and modules installed on system rather than
-                   those in the repo root
--v, --verbose      Produce more verbose output
+-h, --help          Print this help message
+-d, --debug-scripts Turn on debugging output in executed scripts
+-l, --list-cmds     List and describe the tests and commands in the test suite
+-s, --system        Test scripts and modules installed on system rather than
+                    those in the repo root
+-v, --verbose       Produce more verbose output
 """,
 	'notes': """
 
@@ -95,7 +95,7 @@ cmd_args = opt.opts.init(opts_data,add_opts=["exact_output"])
 
 if opt.system: sys.path.pop(0)
 
-env = os.environ
+if opt.debug_scripts: os.environ["MMGEN_DEBUG"] = "1"
 
 if opt.debug: opt.verbose = True
 

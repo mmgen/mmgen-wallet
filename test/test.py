@@ -155,8 +155,8 @@ cmd_data = OrderedDict([
 	['keyaddrgen',    (1,'key-address file generation', [[["mmdat"],1]])],
 	['txsign_keyaddr',(1,'transaction signing with key-address file', [[["akeys.mmenc","raw"],1]])],
 
-	['walletgen2',(2,'wallet generation (2)',     [])],
-#	['walletgen2',(2,'wallet generation (2), 128-bit seed (WIP)',     [])],
+#	['walletgen2',(2,'wallet generation (2)',     [])],
+	['walletgen2',(2,'wallet generation (2), 128-bit seed',     [])],
 	['addrgen2',  (2,'address generation (2)',    [[["mmdat"],2]])],
 	['txcreate2', (2,'transaction creation (2)',  [[["addrs"],2]])],
 	['txsign2',   (2,'transaction signing, two transactions',[[["mmdat","raw"],1],[["mmdat","raw"],2]])],
@@ -215,18 +215,18 @@ opts_data = {
 	'desc': "Test suite for the MMGen suite",
 	'usage':"[options] [command or metacommand]",
 	'options': """
--h, --help         Print this help message
--b, --buf-keypress Use buffered keypresses as with real human input
--d, --debug        Produce debugging output
--D, --direct-exec  Bypass pexpect and execute a command directly (for
-                   debugging only)
--e, --exact-output Show the exact output of the MMGen script(s) being run
--l, --list-cmds    List and describe the tests and commands in the test suite
--p, --pause        Pause between tests, resuming on keypress
--q, --quiet        Produce minimal output.  Suppress dependency info
--s, --system       Test scripts and modules installed on system rather than
-                   those in the repo root
--v, --verbose      Produce more verbose output
+-h, --help          Print this help message
+-b, --buf-keypress  Use buffered keypresses as with real human input
+-d, --debug-scripts Turn on debugging output in executed scripts
+-D, --direct-exec   Bypass pexpect and execute a command directly (for
+                    debugging only)
+-e, --exact-output  Show the exact output of the MMGen script(s) being run
+-l, --list-cmds     List and describe the tests and commands in the test suite
+-p, --pause         Pause between tests, resuming on keypress
+-q, --quiet         Produce minimal output.  Suppress dependency info
+-s, --system        Test scripts and modules installed on system rather than
+                    those in the repo root
+-v, --verbose       Produce more verbose output
 """,
 	'notes': """
 
@@ -237,6 +237,8 @@ If no command is given, the whole suite of tests is run.
 cmd_args = opt.opts.init(opts_data)
 
 if opt.system: sys.path.pop(0)
+
+if opt.debug_scripts: os.environ["MMGEN_DEBUG"] = "1"
 
 if opt.buf_keypress:
 	send_delay = 0.3
@@ -651,9 +653,10 @@ class MMGenTestSuite(object):
 	def generate_cmd_deps(self,fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
-	def walletgen(self,name,brain=False):
+	def walletgen(self,name,brain=False,seed_len=None):
 
 		args = ["-d",cfg['tmpdir'],"-p1","-r10"]
+		if seed_len: args += ["-l",str(seed_len)]
 #        if 'seed_len' in cfg: args += ["-l",cfg['seed_len']]
 		if brain:
 			bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
@@ -951,7 +954,7 @@ class MMGenTestSuite(object):
 		ok()
 
 	def walletgen2(self,name):
-		self.walletgen(name)
+		self.walletgen(name,seed_len=128)
 
 	def addrgen2(self,name,walletfile):
 		self.addrgen(name,walletfile)
@@ -1111,5 +1114,6 @@ except:
 	raise
 
 t = int(time.time()) - start_time
-msg(green(
-	"All requested tests finished OK, elapsed time: %02i:%02i" % (t/60,t%60)))
+sys.stderr.write(green(
+	"All requested tests finished OK, elapsed time: %02i:%02i\n"
+	% (t/60,t%60)))

@@ -90,7 +90,6 @@ def generate_addrs(seed, addrnums):
 		seed = sha512(seed).digest()
 		num += 1 # round
 
-		if opt.debug: print "Seed round %s: %s" % (num, hexlify(seed))
 		if num != addrnums[pos]: continue
 
 		pos += 1

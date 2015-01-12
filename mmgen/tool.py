@@ -153,8 +153,8 @@ cmd_help = """
 """.format(pnm=g.proj_name)
 
 def tool_usage(prog_name, command):
-	print "USAGE: '%s %s%s'" % (prog_name, command,
-		(" "+" ".join(cmd_data[command]) if cmd_data[command] else ""))
+	Msg("USAGE: '%s %s%s'" % (prog_name, command,
+		(" "+" ".join(cmd_data[command]) if cmd_data[command] else "")))
 
 def process_args(prog_name, command, cmd_args):
 	c_args = [[i.split(" [")[0],i.split(" [")[1][:-1]]
@@ -182,15 +182,15 @@ def process_args(prog_name, command, cmd_args):
 #	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
 
 	if set(u_kwargs) > set(c_kwargs):
-		print "Invalid named argument"
+		Msg("Invalid named argument")
 		sys.exit(1)
 
 	def convert_type(arg,arg_name,arg_type):
 		try:
 			return __builtins__[arg_type](arg)
 		except:
-			print "'%s': Invalid argument for argument %s ('%s' required)" % \
-				(arg, arg_name, arg_type)
+			Msg("'%s': Invalid argument for argument %s ('%s' required)" % \
+				(arg, arg_name, arg_type))
 			sys.exit(1)
 
 	def convert_to_bool_maybe(arg, arg_type):
@@ -244,8 +244,8 @@ def usage(cmd):
 	tool_usage(g.prog_name, cmd)
 
 def hexdump(infile, cols=8, line_nums=True):
-	print pretty_hexdump(get_data_from_file(infile,dash=True,silent=True),
-			cols=cols, line_nums=line_nums)
+	Msg(pretty_hexdump(get_data_from_file(infile,dash=True,silent=True),
+			cols=cols, line_nums=line_nums))
 
 def unhexdump(infile):
 	sys.stdout.write(decode_pretty_hexdump(
@@ -281,7 +281,7 @@ def b58randenc():
 	print_convert_results(r,enc,dec,"str")
 
 def randhex(nbytes='32'):
-	print ba.hexlify(get_random(int(nbytes)))
+	Msg(ba.hexlify(get_random(int(nbytes))))
 
 def randwif(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
@@ -314,22 +314,22 @@ def mn_rand256(wordlist="electrum"): do_random_mn(32,wordlist)
 def hex2mn(s,wordlist="electrum"):
 	import mmgen.mnemonic
 	wl = get_wordlist(wordlist)
-	print " ".join(get_mnemonic_from_seed(ba.unhexlify(s), wl, wordlist))
+	Msg(" ".join(get_mnemonic_from_seed(ba.unhexlify(s), wl, wordlist)))
 
 def mn2hex(s,wordlist="electrum"):
 	import mmgen.mnemonic
 	wl = get_wordlist(wordlist)
-	print ba.hexlify(get_seed_from_mnemonic(s.split(),wl,True))
+	Msg(ba.hexlify(get_seed_from_mnemonic(s.split(),wl,True)))
 
 def b32tohex(s):
 	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 	import mmgen.mnemonic
-	print baseNtohex(32,s,b32a)
+	Msg(baseNtohex(32,s,b32a))
 
 def hextob32(s):
 	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 	import mmgen.mnemonic
-	print "".join(hextobaseN(32,s,b32a))
+	Msg("".join(hextobaseN(32,s,b32a)))
 
 def mn_stats(wordlist="electrum"):
 	l = get_wordlist(wordlist)
@@ -337,11 +337,11 @@ def mn_stats(wordlist="electrum"):
 
 def mn_printlist(wordlist="electrum"):
 	wl = get_wordlist(wordlist)
-	print "\n".join(wl)
+	Msg("\n".join(wl))
 
-def id8(infile): print make_chksum_8(get_data_from_file(infile,dash=True,silent=True))
-def id6(infile): print make_chksum_6(get_data_from_file(infile,dash=True,silent=True))
-def str2id6(s):  print make_chksum_6("".join(s.split()))
+def id8(infile): Msg(make_chksum_8(get_data_from_file(infile,dash=True,silent=True)))
+def id6(infile): Msg(make_chksum_6(get_data_from_file(infile,dash=True,silent=True)))
+def str2id6(s):  Msg(make_chksum_6("".join(s.split())))
 
 # List MMGen addresses and their balances:
 def listaddresses(minconf=1,showempty=False,pager=False):
@@ -391,7 +391,7 @@ def listaddresses(minconf=1,showempty=False,pager=False):
 
 	o = "\n".join(out)
 	if pager: do_pager(o)
-	else: print o
+	else: Msg(o)
 
 
 def getbalance(minconf=1):
@@ -413,10 +413,10 @@ def getbalance(minconf=1):
 
 	fs = "{:12}  {:<%s} {:<%s} {:<}" % (16,16)
 	mc,lbl = str(minconf),"confirms"
-	print fs.format("Wallet","Unconfirmed",
-			"<%s %s"%(mc,lbl),">=%s %s"%(mc,lbl))
+	Msg(fs.format("Wallet","Unconfirmed","<%s %s"%(mc,lbl),">=%s %s"%(mc,lbl)))
 	for key in sorted(accts.keys()):
-		print fs.format(key+":", *[str(trim_exponent(a))+" BTC" for a in accts[key]])
+		Msg(fs.format(key+":", *[str(trim_exponent(a))+" BTC"
+				for a in accts[key]]))
 
 def txview(infile,pager=False,terse=False):
 	c = connect_to_bitcoind()
@@ -434,38 +434,38 @@ def keyaddrfile_chksum(infile):
 	AddrInfo(infile,has_keys=True)
 
 def hexreverse(hex_str):
-	print ba.hexlify(decode_pretty_hexdump(hex_str)[::-1])
+	Msg(ba.hexlify(decode_pretty_hexdump(hex_str)[::-1]))
 
 def hexlify(s):
-	print ba.hexlify(s)
+	Msg(ba.hexlify(s))
 
 def sha256x2(s, file_input=False, hex_input=False):
 	from hashlib import sha256
 	if file_input:  b = get_data_from_file(s)
 	elif hex_input: b = decode_pretty_hexdump(s)
 	else:           b = s
-	print sha256(sha256(b).digest()).hexdigest()
+	Msg(sha256(sha256(b).digest()).hexdigest())
 
 def hexaddr2addr(hexaddr):
-	print bitcoin.hexaddr2addr(hexaddr)
+	Msg(bitcoin.hexaddr2addr(hexaddr))
 
 def addr2hexaddr(addr):
-	print bitcoin.verify_addr(addr,return_hex=True)
+	Msg(bitcoin.verify_addr(addr,return_hex=True))
 
 def pubkey2hexaddr(pubkeyhex):
-	print bitcoin.pubhex2hexaddr(pubkeyhex)
+	Msg(bitcoin.pubhex2hexaddr(pubkeyhex))
 
 def pubkey2addr(pubkeyhex):
-	print bitcoin.hexaddr2addr(bitcoin.pubhex2hexaddr(pubkeyhex))
+	Msg(bitcoin.hexaddr2addr(bitcoin.pubhex2hexaddr(pubkeyhex)))
 
 def privhex2addr(privkeyhex,compressed=False):
-	print bitcoin.privnum2addr(int(privkeyhex,16),compressed)
+	Msg(bitcoin.privnum2addr(int(privkeyhex,16),compressed))
 
 def wif2hex(wif,compressed=False):
-	print bitcoin.wiftohex(wif,compressed)
+	Msg(bitcoin.wiftohex(wif,compressed))
 
 def hex2wif(hexpriv,compressed=False):
-	print bitcoin.hextowif(hexpriv,compressed)
+	Msg(bitcoin.hextowif(hexpriv,compressed))
 
 
 def encrypt(infile,outfile="",hash_preset=""):
@@ -603,4 +603,4 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 	q2.join()
 	f.close()
 
-def bytespec(s): print parse_nbytes(s)
+def bytespec(s): Msg(parse_nbytes(s))

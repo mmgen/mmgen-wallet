@@ -51,6 +51,9 @@ email     = "<mmgen-py@yandex.com>"
 Cdates    = '2013-2015'
 version   = '0.7.9'
 
+required_opts = [ # list must contain "usr_randchars"
+	"quiet","verbose","debug","outdir","echo_passphrase","passwd_file","usr_randchars"
+]
 min_screen_width = 80
 max_tx_comment_len = 72
 
@@ -73,9 +76,6 @@ mmenc_ext           = "mmenc"
 
 default_wl    = "electrum"
 #default_wl    = "tirosh"
-
-# If user opt is set, different global opt is set to 'True'
-usr_set_vars = { "usr_randchars": "use_urandchars" }
 
 # Global value sets user opt
 dfl_vars = "seed_len","hash_preset","usr_randchars","debug"

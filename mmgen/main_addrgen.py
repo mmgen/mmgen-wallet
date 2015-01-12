@@ -118,8 +118,6 @@ cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
 if opt.show_hash_presets: show_hash_presets()
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
-if opt.debug: opt.opts.show_opts_and_cmd_args(cmd_args)
-
 if len(cmd_args) == 1 and (
 			opt.from_mnemonic
 			or opt.from_brain
@@ -130,7 +128,7 @@ if len(cmd_args) == 1 and (
 elif len(cmd_args) == 2:
 	infile,addr_idx_arg = cmd_args
 	check_infile(infile)
-else: opt.opts.usage(opts_data)
+else: opt.opts.usage()
 
 addr_idxs = parse_addr_idxs(addr_idx_arg)
 

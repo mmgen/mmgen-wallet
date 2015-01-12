@@ -178,9 +178,9 @@ def compare_checksums(chksum1, desc1, chksum2, desc2):
 		return True
 	else:
 		if opt.debug:
-			print \
-	"ERROR!\nComputed checksum %s (%s) doesn't match checksum %s (%s)" \
-			% (desc1,chksum1,desc2,chksum2)
+			Msg(
+	"ERROR: Computed checksum %s (%s) doesn't match checksum %s (%s)"
+			% (desc1,chksum1,desc2,chksum2))
 		return False
 
 def get_default_wordlist():
@@ -289,7 +289,7 @@ def get_new_passphrase(what,  passchg=False):
 		for i in range(g.passwd_max_tries):
 			pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
 			pw2 = " ".join(_get_words_from_user("Repeat passphrase: "))
-			if opt.debug: print "Passphrases: [%s] [%s]" % (pw,pw2)
+			if opt.debug: Msg("Passphrases: [%s] [%s]" % (pw,pw2))
 			if pw == pw2:
 				vmsg("Passphrases match"); break
 			else: msg("Passphrases do not match.  Try again.")
@@ -378,7 +378,7 @@ def write_to_file_or_stdout(outfile, data,  what="data"):
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
 
 def display_control_data(label,metadata,hash_preset,salt,enc_seed):
-	print "WALLET DATA"
+	Msg("WALLET DATA")
 	fs = "  {:18} {}"
 	pw_empty = "yes" if metadata[3] == "E" else "no"
 	for i in (
@@ -391,7 +391,7 @@ def display_control_data(label,metadata,hash_preset,salt,enc_seed):
 				" ".join([str(i) for i in get_hash_params(hash_preset)]))),
 		("Passphrase empty?", pw_empty.capitalize()),
 		("Timestamp:",           "%s UTC" % metadata[4]),
-	): print fs.format(*i)
+	): Msg(fs.format(*i))
 
 	fs = "  {:6} {}"
 	for i in (
@@ -401,7 +401,7 @@ def display_control_data(label,metadata,hash_preset,salt,enc_seed):
 		("Encrypted seed:", ""),
 		("  b58:",      b58encode_pad(enc_seed)),
 		("  hex:",      hexlify(enc_seed))
-	): print fs.format(*i)
+	): Msg(fs.format(*i))
 
 
 def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
@@ -480,7 +480,7 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
 	elif opt.debug:
-		print "%s checksum passed: %s" % (desc.capitalize(),chk)
+		Msg("%s checksum passed: %s" % (desc.capitalize(),chk))
 
 
 def get_data_from_wallet(infile,silent=False):
@@ -530,7 +530,7 @@ def get_data_from_wallet(infile,silent=False):
 def _get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
-	if opt.debug: print "Sanitized input: [%s]" % " ".join(words)
+	if opt.debug: Msg("Sanitized input: [%s]" % " ".join(words))
 	return words
 
 
@@ -540,7 +540,7 @@ def _get_words_from_file(infile,what):
 	# split() also strips
 	words = f.read().split()
 	f.close()
-	if opt.debug: print "Sanitized input: [%s]" % " ".join(words)
+	if opt.debug: Msg("Sanitized input: [%s]" % " ".join(words))
 	return words
 
 
