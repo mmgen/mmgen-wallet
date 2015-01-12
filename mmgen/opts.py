@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-opts.py:  MMGen-specific options processing after general processing by share.Opts
+opts.py:  MMGen-specific options processing after generic processing by share.Opts
 """
 import sys
 
@@ -32,10 +32,10 @@ def usage():
 
 def print_version_info():
 	Msg("""
-{pnu} version {g.version}.  Part of the {g.proj_name} suite, a Bitcoin
+{progname_uc} version {g.version}.  Part of the {g.proj_name} suite, a Bitcoin
 cold-storage solution for the command line.  Copyright (C) {g.Cdates}
 by {g.author} {g.email}
-""".format(g=g,pnu=g.prog_name.upper()).strip())
+""".format(g=g,progname_uc=g.prog_name.upper()).strip())
 
 def warn_incompatible_opts(incompat_list):
 	bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in incompat_list]

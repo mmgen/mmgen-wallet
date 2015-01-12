@@ -151,8 +151,8 @@ if opt.from_brain and not opt.quiet:
 			g.proj_name, *get_from_brain_opt_params()),
 		"continue")
 
-if infile or (opt.from_mnemonic or opt.from_brain
-				or opt.from_seed or opt.from_incog):
+if infile or any([
+		opt.from_mnemonic,opt.from_brain,opt.from_seed,opt.from_incog]):
 	seed = get_seed_retry(infile)
 	qmsg("")
 else:

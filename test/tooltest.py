@@ -79,7 +79,6 @@ opts_data = {
 	'usage':"[options] [command]",
 	'options': """
 -h, --help          Print this help message
--d, --debug-scripts Turn on debugging output in executed scripts
 -l, --list-cmds     List and describe the tests and commands in the test suite
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root

@@ -112,7 +112,7 @@ def get_seed_for_seed_id(seed_id,infiles,saved_seeds):
 	while True:
 		if infiles:
 			seed = get_seed_retry(infiles.pop(0))
-		elif opt.from_brain or opt.from_mnemonic or opt.from_seed or opt.from_incog:
+		elif any([opt.from_brain,opt.from_mnemonic,opt.from_seed,opt.from_incog]):
 			qmsg("Need seed data for seed ID %s" % seed_id)
 			seed = get_seed_retry("",seed_id)
 			msg("User input produced seed ID %s" % make_chksum_8(seed))

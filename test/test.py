@@ -682,9 +682,11 @@ class MMGenTestSuite(object):
 
 	def refwalletgen(self,name):
 		label = cfg['wallet_label']
-		args = ["-q","-d",cfg['tmpdir'],"-p1","-r10",
+		args = ["-d",cfg['tmpdir'],"-p1","-r10",
 					"-b"+cfg['bw_hashparams'],"-L",label]
 		t = MMGenExpect(name,"mmgen-walletgen", args)
+		t.license()
+		t.expect("Type uppercase 'YES' to confirm: ","YES\n")
 		t.expect("passphrase: ",cfg['bw_passwd']+"\n")
 		t.usr_rand(10)
 		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])

@@ -118,12 +118,8 @@ cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
 if opt.show_hash_presets: show_hash_presets()
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
-if len(cmd_args) == 1 and (
-			opt.from_mnemonic
-			or opt.from_brain
-			or opt.from_seed
-			or opt.from_incog_hidden
-		):
+if len(cmd_args) == 1 and any([
+		opt.from_mnemonic,opt.from_brain,opt.from_seed,opt.from_incog_hidden]):
 	infile,addr_idx_arg = "",cmd_args[0]
 elif len(cmd_args) == 2:
 	infile,addr_idx_arg = cmd_args
