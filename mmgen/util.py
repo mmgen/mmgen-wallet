@@ -58,6 +58,10 @@ def Vmsg(s):
 def Vmsg_r(s):
 	if opt.verbose: sys.stdout.write(s)
 
+def die(ev,s):
+	sys.stderr.write(s+"\n"); sys.exit(ev)
+def Die(ev,s):
+	sys.stdout.write(s+"\n"); sys.exit(ev)
 
 def msgrepr(*args):
 	for d in args:

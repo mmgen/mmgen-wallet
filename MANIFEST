@@ -11,7 +11,6 @@ mmgen-txsign
 mmgen-walletchk
 mmgen-walletgen
 setup.py
-mmgen/Opts.py
 mmgen/__init__.py
 mmgen/addr.py
 mmgen/bitcoin.py
@@ -32,13 +31,13 @@ mmgen/main_walletgen.py
 mmgen/mn_electrum.py
 mmgen/mn_tirosh.py
 mmgen/mnemonic.py
+mmgen/opt.py
+mmgen/opts.py
 mmgen/term.py
 mmgen/test.py
 mmgen/tool.py
 mmgen/tx.py
 mmgen/util.py
-mmgen/opt/Opts.py
-mmgen/opt/__init__.py
 mmgen/rpc/__init__.py
 mmgen/rpc/config.py
 mmgen/rpc/connection.py
@@ -46,6 +45,9 @@ mmgen/rpc/data.py
 mmgen/rpc/exceptions.py
 mmgen/rpc/proxy.py
 mmgen/rpc/util.py
+mmgen/share/Opts.py
+mmgen/share/__init__.py
 test/__init__.py
+test/gentest.py
 test/test.py
 test/tooltest.py

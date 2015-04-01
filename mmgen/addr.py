@@ -208,8 +208,10 @@ def _parse_keyaddr_file(infile):
 
 class AddrInfoList(object):
 
-	def __init__(self,addrinfo=None):
+	def __init__(self,addrinfo=None,bitcoind_connection=None):
 		self.data = {}
+		if bitcoind_connection:
+			self.add_wallet_data(bitcoind_connection)
 
 	def seed_ids(self):
 		return self.data.keys()
@@ -218,6 +220,28 @@ class AddrInfoList(object):
 		# TODO: Validate sid
 		if sid in self.data:
 			return self.data[sid]
+
+	def add_wallet_data(self,c):
+		vmsg_r("Getting account data from wallet...")
+		data,accts,i = {},c.listaccounts(minconf=0,includeWatchonly=True),0
+		for acct in accts:
+			ma,comment = parse_mmgen_label(acct)
+			if ma:
+				i += 1
+				addrlist = c.getaddressesbyaccount(acct)
+				if len(addrlist) != 1:
+					msg(wmsg['too_many_acct_addresses'] % acct)
+					sys.exit(2)
+				seed_id,idx = ma.split(":")
+				if seed_id not in data:
+					data[seed_id] = []
+				a = AddrInfoEntry()
+				a.idx,a.addr,a.comment = \
+					int(idx),unicode(addrlist[0]),unicode(comment)
+				data[seed_id].append(a)
+		vmsg("%s %s addresses found, %s accounts total" % (i,g.proj_name,len(accts)))
+		for sid in data:
+			self.add(AddrInfo(sid=sid,adata=data[sid]))
 
 	def add(self,addrinfo):
 		if type(addrinfo) == AddrInfo:
@@ -235,17 +259,23 @@ class AddrInfoList(object):
 
 class AddrInfoEntry(object):
 
-	def __init__(self):
-		pass
+	def __init__(self): pass
 
 class AddrInfo(object):
 
-	def __init__(self,addrfile="",has_keys=False):
+	def __init__(self,addrfile="",has_keys=False,sid="",adata=[]):
 		self.has_keys=has_keys
 		if addrfile:
 			f = _parse_keyaddr_file if has_keys else _parse_addrfile
 			sid,adata = f(addrfile)
-			self.initialize(sid,adata)
+		elif sid and adata: # data from wallet
+			pass
+		elif sid or adata:
+			die(3,"Must specify address file, or seed_id + adata")
+		else:
+			return
+
+		self.initialize(sid,adata)
 
 	def initialize(self,seed_id,addrdata):
 		if seed_id in self.__dict__:
@@ -297,11 +327,10 @@ class AddrInfo(object):
 					sys.exit(2)
 
 	def make_reverse_dict(self,btcaddrs):
-		d = {}
+		d,b = {},btcaddrs
 		for e in self.addrdata:
 			try:
-				i = btcaddrs.index(e.addr)
-				d[btcaddrs[i]] = ("%s:%s"%(self.seed_id,e.idx),e.comment)
+				d[b[b.index(e.addr)]] = ("%s:%s"%(self.seed_id,e.idx),e.comment)
 			except: pass
 		return d
 

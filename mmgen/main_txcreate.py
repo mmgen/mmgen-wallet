@@ -277,24 +277,6 @@ def select_outputs(unspent,prompt):
 		return selected
 
 
-def get_acct_data_from_wallet(c,acct_data):
-	# acct_data is global object initialized by caller
-	vmsg_r("Getting account data from wallet...")
-	accts,i = c.listaccounts(minconf=0,includeWatchonly=True),0
-	for acct in accts:
-		ma,comment = parse_mmgen_label(acct)
-		if ma:
-			i += 1
-			addrlist = c.getaddressesbyaccount(acct)
-			if len(addrlist) != 1:
-				msg(wmsg['too_many_acct_addresses'] % acct)
-				sys.exit(2)
-			seed_id,idx = ma.split(":")
-			if seed_id not in acct_data:
-				acct_data[seed_id] = {}
-			acct_data[seed_id][idx] = (addrlist[0],comment)
-	vmsg("%s %s addresses found, %s accounts total" % (i,g.proj_name,len(accts)))
-
 def mmaddr2btcaddr_unspent(unspent,mmaddr):
 	vmsg_r("Searching for {g.proj_name} address {m} in wallet...".format(g=g,m=mmaddr))
 	m = [u for u in unspent if u.mmid == mmaddr]
@@ -309,15 +291,17 @@ def mmaddr2btcaddr_unspent(unspent,mmaddr):
 	sys.exit()
 
 
-def mmaddr2btcaddr(c,mmaddr,acct_data,ail):
+def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
 	# assume mmaddr has already been checked
-	if not acct_data: get_acct_data_from_wallet(c,acct_data)
-	btcaddr = mmaddr2btcaddr_addrdata(mmaddr,acct_data,"wallet")[0]
-#	btcaddr,comment = mmaddr2btcaddr_unspent(us,mmaddr)
+	sid,idx = mmaddr.split(":")
+	btcaddr = ""
+
+	if sid in ail_w.seed_ids():
+		btcaddr = ail_w.addrinfo(sid).btcaddr(int(idx))
+
 	if not btcaddr:
-		if ail:
-			sid,idx = mmaddr.split(":")
-			btcaddr = ail.addrinfo(sid).btcaddr(int(idx))
+		if ail_f and sid in ail_f.seed_ids():
+			btcaddr = ail_f.addrinfo(sid).btcaddr(int(idx))
 			if btcaddr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm("Continue anyway?"):
@@ -332,6 +316,13 @@ def mmaddr2btcaddr(c,mmaddr,acct_data,ail):
 	return btcaddr
 
 
+def make_b2m_map(inputs_data,tx_out,ail_w,ail_f):
+	d = dict([(d['address'], (d['mmid'],d['comment']))
+				for d in inputs_data if d['mmid']])
+	d.update(ail_w.make_reverse_dict(tx_out.keys()))
+	d.update(ail_f.make_reverse_dict(tx_out.keys()))
+	return d
+
 cmd_args = opt.opts.init(opts_data)
 
 if opt.comment_file:
@@ -342,16 +333,18 @@ c = connect_to_bitcoind()
 if not opt.info:
 	do_license_msg(immed=True)
 
-	tx_out,acct_data,change_addr = {},{},""
-	from mmgen.addr import AddrInfo,AddrInfoList
-	ail = AddrInfoList()
+	tx_out,change_addr = {},""
 
 	addrfiles = [a for a in cmd_args if get_extension(a) == g.addrfile_ext]
 	cmd_args = set(cmd_args) - set(addrfiles)
 
+	from mmgen.addr import AddrInfo,AddrInfoList
+	ail_f = AddrInfoList()
 	for a in addrfiles:
 		check_infile(a)
-		ail.add(AddrInfo(a))
+		ail_f.add(AddrInfo(a))
+
+	ail_w = AddrInfoList(bitcoind_connection=c)
 
 	for a in cmd_args:
 		if "," in a:
@@ -359,7 +352,7 @@ if not opt.info:
 			if is_btc_addr(a1):
 				btcaddr = a1
 			elif is_mmgen_addr(a1):
-				btcaddr = mmaddr2btcaddr(c,a1,acct_data,ail)
+				btcaddr = mmaddr2btcaddr(c,a1,ail_w,ail_f)
 			else:
 				msg("%s: unrecognized subargument in argument '%s'" % (a1,a))
 				sys.exit(2)
@@ -376,7 +369,7 @@ if not opt.info:
 						(change_addr, a))
 				sys.exit(2)
 			change_addr = a if is_btc_addr(a) else \
-							mmaddr2btcaddr(c,a,acct_data,ail)
+							mmaddr2btcaddr(c,a,ail_w,ail_f)
 			tx_out[change_addr] = 0
 		else:
 			msg("%s: unrecognized argument" % a)
@@ -474,13 +467,7 @@ tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
 metadata = tx_id, amt, make_timestamp()
 sel_unspent = [i.__dict__ for i in sel_unspent]
 
-def make_b2m_map(inputs_data,tx_out):
-	m = [(d['address'],(d['mmid'],d['comment'])) for d in inputs_data if d['mmid']]
-	d = ail.make_reverse_dict(tx_out.keys())
-	d.update(m)
-	return d
-
-b2m_map = make_b2m_map(sel_unspent,tx_out)
+b2m_map = make_b2m_map(sel_unspent,tx_out,ail_w,ail_f)
 
 prompt_and_view_tx_data(c,"View decoded transaction?",
 		sel_unspent,tx_hex,b2m_map,comment,metadata)
