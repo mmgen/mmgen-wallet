@@ -26,7 +26,7 @@
 # list of words from:
 # http://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
 
-electrum_words = """
+words = """
 able
 about
 above

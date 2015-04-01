@@ -20,9 +20,10 @@
 util.py:  Low-level routines imported by other modules for the MMGen suite
 """
 
-import sys
+import sys,os,time,stat,re
 from hashlib import sha256
 from binascii import hexlify,unhexlify
+from string import hexdigits
 
 import mmgen.config as g
 
@@ -34,10 +35,25 @@ def green(s):  return _grn+s+_reset
 def yellow(s): return _yel+s+_reset
 def cyan(s):   return _cya+s+_reset
 
-def msgred(s):    sys.stderr.write(red(s+"\n"))
-
 def msg(s):    sys.stderr.write(s+"\n")
 def msg_r(s):  sys.stderr.write(s)
+def Msg(s):    sys.stdout.write(s + "\n")
+def Msg_r(s):  sys.stdout.write(s)
+def msgred(s): sys.stderr.write(red(s+"\n"))
+def msgrepr(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
+def msgrepr_exit(*args):
+	for d in args:
+		sys.stdout.write(repr(d)+"\n")
+	sys.exit()
+
+def die(ev,s):
+	sys.stderr.write(s+"\n"); sys.exit(ev)
+def Die(ev,s):
+	sys.stdout.write(s+"\n"); sys.exit(ev)
+
+import opt
 def qmsg(s,alt=False):
 	if opt.quiet:
 		if alt != False: sys.stderr.write(alt + "\n")
@@ -51,25 +67,10 @@ def vmsg(s):
 def vmsg_r(s):
 	if opt.verbose: sys.stderr.write(s)
 
-def Msg(s):    sys.stdout.write(s + "\n")
-def Msg_r(s):  sys.stdout.write(s)
 def Vmsg(s):
 	if opt.verbose: sys.stdout.write(s + "\n")
 def Vmsg_r(s):
 	if opt.verbose: sys.stdout.write(s)
-
-def die(ev,s):
-	sys.stderr.write(s+"\n"); sys.exit(ev)
-def Die(ev,s):
-	sys.stdout.write(s+"\n"); sys.exit(ev)
-
-def msgrepr(*args):
-	for d in args:
-		sys.stdout.write(repr(d)+"\n")
-def msgrepr_exit(*args):
-	for d in args:
-		sys.stdout.write(repr(d)+"\n")
-	sys.exit()
 
 def suf(arg,what):
 	t = type(arg)
@@ -87,7 +88,6 @@ def suf(arg,what):
 		return "" if n == 1 else "s"
 
 def get_extension(f):
-	import os
 	return os.path.splitext(f)[1][1:]
 
 def make_chksum_N(s,n,sep=False):
@@ -100,6 +100,8 @@ def make_chksum_8(s,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
 	return "{} {}".format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s): return sha256(s).hexdigest()[:6]
+def is_chksum_6(s): return len(s) == 6 and is_hexstring_lc(s)
+
 def make_iv_chksum(s): return sha256(s).hexdigest()[:8].upper()
 
 def splitN(s,n,sep=None):                      # always return an n-element list
@@ -108,25 +110,31 @@ def splitN(s,n,sep=None):                      # always return an n-element list
 def split2(s,sep=None): return splitN(s,2,sep) # always return a 2-element list
 def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
 
-def col4(s):
-	nondiv = 1 if len(s) % 4 else 0
-	return " ".join([s[4*i:4*i+4] for i in range(len(s)/4 + nondiv)])
+def split_into_columns(col_wid,s):
+	return " ".join([s[col_wid*i:col_wid*(i+1)]
+					for i in range(len(s)/col_wid+1)]).rstrip()
 
 def make_timestamp():
-	import time
 	tv = time.gmtime(time.time())[:6]
 	return "{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}".format(*tv)
 def make_timestr():
-	import time
 	tv = time.gmtime(time.time())[:6]
 	return "{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}".format(*tv)
 def secs_to_hms(secs):
 	return "{:02d}:{:02d}:{:02d}".format(secs/3600, (secs/60) % 60, secs % 60)
 
-def _is_hex(s):
-	try: int(s,16)
-	except: return False
-	else: return True
+def _is_whatstring(s,chars):
+	return set(list(s)) <= set(chars)
+
+def is_hexstring(s):
+	return _is_whatstring(s.lower(),hexdigits.lower())
+def is_hexstring_lc(s):
+	return _is_whatstring(s,hexdigits.lower())
+def is_hexstring_uc(s):
+	return _is_whatstring(s,hexdigits.upper())
+def is_b58string(s):
+	from mmgen.bitcoin import b58a
+	return _is_whatstring(s,b58a)
 
 def is_utf8(s):
 	try: s.decode("utf8")
@@ -154,7 +162,6 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	).rstrip()
 
 def decode_pretty_hexdump(data):
-	import re
 	from string import hexdigits
 	lines = [re.sub('^['+hexdigits+']+:\s+','',l) for l in data.split("\n")]
 	return unhexlify("".join(("".join(lines).split())))
@@ -166,32 +173,29 @@ def get_hash_params(hash_preset):
 		msg("%s: invalid 'hash_preset' value" % hash_preset)
 		sys.exit(3)
 
-def show_hash_presets():
-	fs = "  {:<7} {:<6} {:<3}  {}"
-	msg("Available parameters for scrypt.hash():")
-	msg(fs.format("Preset","N","r","p"))
-	for i in sorted(g.hash_presets.keys()):
-		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
-	msg("N = memory usage (power of two), p = iterations (rounds)")
-	sys.exit(0)
+def compare_chksums(chk1, desc1, chk2, desc2, die=True):
 
-def compare_checksums(chksum1, desc1, chksum2, desc2):
+	if not chk1 == chk2:
+		if die:
+			die(3,"Checksum error: %s checksum (%s) doesn't match %s checksum (%s)"
+				% (desc2,chk2,desc1,chk1))
+		else: return False
 
-	if chksum1.lower() == chksum2.lower():
-		vmsg("OK (%s)" % chksum1.upper())
-		return True
-	else:
-		if opt.debug:
-			Msg(
-	"ERROR: Computed checksum %s (%s) doesn't match checksum %s (%s)"
-			% (desc1,chksum1,desc2,chksum2))
-		return False
+	vmsg("%s checksum OK (%s)" % (desc1.capitalize(),chk1))
+	return True
+
+def compare_or_die(val1, desc1, val2, desc2):
+	if cmp(val1,val2):
+		die(3,"Error: %s (%s) doesn't match %s (%s)"
+				% (desc2,val2,desc1,val1))
+	vmsg("%s OK (%s)" % (desc2.capitalize(),val2))
+	return True
 
 def get_default_wordlist():
 
-	wl_id = g.default_wl
-	if wl_id == "electrum": from mmgen.mn_electrum import electrum_words as wl
-	elif wl_id == "tirosh": from mmgen.mn_tirosh   import tirosh_words as wl
+	wl_id = g.default_wordlist
+	if wl_id == "electrum": from mmgen.mn_electrum import words as wl
+	elif wl_id == "tirosh": from mmgen.mn_tirosh   import words as wl
 	return wl.strip().split("\n")
 
 def open_file_or_exit(filename,mode):
@@ -250,7 +254,6 @@ def _validate_addr_num(n):
 
 
 def make_full_path(outdir,outfile):
-	import os
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
 
@@ -282,7 +285,7 @@ def parse_addr_idxs(arg,sep=","):
 	return sorted(set(ret))
 
 
-def get_new_passphrase(what,  passchg=False):
+def get_new_passphrase(what,passchg=False):
 
 	w = "{}passphrase for {}".format("new " if passchg else "", what)
 	if opt.passwd_file:
@@ -330,7 +333,6 @@ def write_to_stdout(data, what, confirm=True):
 		confirm_or_exit("",'output {} to screen'.format(what))
 	elif not sys.stdout.isatty():
 		try:
-			import os
 			of = os.readlink("/proc/%d/fd/1" % os.getpid())
 			of_maybe = os.path.relpath(of)
 			of = of if of_maybe.find(os.path.pardir) == 0 else of_maybe
@@ -344,8 +346,7 @@ def write_to_file(outfile,data,what="data",confirm_overwrite=False,verbose=False
 
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
-	from os import stat
-	try:    stat(outfile)
+	try:    os.stat(outfile)
 	except: pass
 	else:
 		if confirm_overwrite:
@@ -424,8 +425,8 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
 		label,
 		"{} {} {} {} {}".format(*metadata),
 		"{}: {} {} {}".format(hash_preset,*get_hash_params(hash_preset)),
-		"{} {}".format(make_chksum_6(sf),  col4(sf)),
-		"{} {}".format(make_chksum_6(esf), col4(esf))
+		"{} {}".format(make_chksum_6(sf),  split_into_columns(4,sf)),
+		"{} {}".format(make_chksum_6(esf), split_into_columns(4,esf))
 	)
 
 	chk = make_chksum_6(" ".join(lines))
@@ -450,7 +451,7 @@ def _check_mmseed_format(words):
 
 	if len(words) < 3 or len(words) > 12:
 		msg("Invalid data length (%s) in %s" % (len(words),what))
-	elif not _is_hex(words[0]):
+	elif not is_hexstring(words[0]):
 		msg("Invalid format of checksum '%s' in %s"%(words[0], what))
 	elif chklen != 6:
 		msg("Incorrect length of checksum (%s) in %s" % (chklen,what))
@@ -468,7 +469,7 @@ def _check_wallet_format(infile, lines):
 		vmsg("Invalid number of lines (%s) in %s" % (len(lines),what))
 	elif chklen != 6:
 		vmsg("Incorrect length of Master checksum (%s) in %s" % (chklen,what))
-	elif not _is_hex(lines[0]):
+	elif not is_hexstring(lines[0]):
 		vmsg("Invalid format of Master checksum '%s' in %s"%(lines[0], what))
 	else: valid = True
 
@@ -555,7 +556,6 @@ def get_words(infile,what,prompt):
 		return _get_words_from_user(prompt)
 
 def remove_comments(lines):
-	import re
 	# re.sub(pattern, repl, string, count=0, flags=0)
 	ret = []
 	for i in lines:
@@ -572,6 +572,11 @@ def get_lines_from_file(infile,what="",trim_comments=False):
 	f.close()
 	return remove_comments(lines) if trim_comments else lines
 
+
+def get_data_from_user(what="data",silent=False):
+	data = my_raw_input("Enter %s: " % what, echo=opt.echo_passphrase)
+	if opt.debug: Msg("User input: [%s]" % data)
+	return data
 
 def get_data_from_file(infile,what="data",dash=False,silent=False):
 	if dash and infile == "-": return sys.stdin.read()
@@ -595,7 +600,7 @@ def get_seed_from_seed_data(words):
 	chk = make_chksum_6(seed_b58)
 	vmsg_r("Validating %s checksum..." % g.seed_ext)
 
-	if compare_checksums(chk, "from seed", stored_chk, "from input"):
+	if compare_chksums(chk, "seed", stored_chk, "input",die=False):
 		seed = b58decode_pad(seed_b58)
 		if seed == False:
 			msg("Invalid b58 number: %s" % val)
@@ -639,7 +644,6 @@ def get_bitcoind_passphrase(prompt):
 
 def check_data_fits_file_at_offset(fname,offset,dlen,action):
 	# TODO: Check for Windows
-	import os, stat
 	if stat.S_ISBLK(os.stat(fname).st_mode):
 		fd = os.open(fname, os.O_RDONLY)
 		fsize = os.lseek(fd, 0, os.SEEK_END)
@@ -656,9 +660,9 @@ def check_data_fits_file_at_offset(fname,offset,dlen,action):
 
 from mmgen.term import kb_hold_protect,get_char
 
-def get_hash_preset_from_user(hp='3',what="data"):
-	p = "Enter hash preset for %s, or ENTER to accept the default ('%s'): " \
-			% (what,hp)
+def get_hash_preset_from_user(hp=g.hash_preset,what="data"):
+	p = """Enter hash preset for %s,
+or hit ENTER to accept the default value ('%s'): """ % (what,hp)
 	while True:
 		ret = my_raw_input(p)
 		if ret:
@@ -721,3 +725,23 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 		if verbose: msg("\nInvalid reply")
 		else: msg_r("\r")
+
+
+def do_license_msg(immed=False):
+
+	from mmgen.license import gpl
+	if opt.quiet or g.no_license: return
+
+	msg(gpl['warning'])
+	prompt = "%s " % gpl['prompt'].strip()
+
+	while True:
+		reply = get_char(prompt, immed_chars="wc" if immed else "")
+		if reply == 'w':
+			from mmgen.term import do_pager
+			do_pager(gpl['conditions'])
+		elif reply == 'c':
+			msg(""); break
+		else:
+			msg_r("\r")
+	msg("")

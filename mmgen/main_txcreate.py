@@ -26,7 +26,6 @@ from decimal import Decimal
 
 import mmgen.config as g
 import mmgen.opt as opt
-from mmgen.license import *
 from mmgen.tx import *
 
 opts_data = {

@@ -127,8 +127,8 @@ def check_wordlist(wl,label):
 		Msg("ERROR: List is not sorted!")
 		sys.exit(3)
 
-from mmgen.mn_electrum  import electrum_words as el
-from mmgen.mn_tirosh    import tirosh_words   as tl
+from mmgen.mn_electrum  import words as el
+from mmgen.mn_tirosh    import words as tl
 wordlists = sorted(wl_checksums)
 
 def get_wordlist(wordlist):

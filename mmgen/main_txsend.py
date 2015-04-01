@@ -24,9 +24,8 @@ import sys
 
 import mmgen.config as g
 import mmgen.opt as opt
-from mmgen.license import *
 from mmgen.tx import *
-from mmgen.util import msg,check_infile,get_lines_from_file,confirm_or_exit
+from mmgen.util import *
 
 opts_data = {
 	'desc':    "Send a Bitcoin transaction signed by {}-txsign".format(g.proj_name.lower()),

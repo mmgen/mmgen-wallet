@@ -156,13 +156,13 @@ else:
 if opt.export_mnemonic:
 	wl = get_default_wordlist()
 	from mmgen.mnemonic import get_mnemonic_from_seed
-	mn = get_mnemonic_from_seed(seed, wl, g.default_wl, opt.debug)
+	mn = get_mnemonic_from_seed(seed, wl, g.default_wordlist, opt.debug)
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.mn_ext)
 	write_to_file_or_stdout(fn, " ".join(mn)+"\n", "mnemonic data")
 
 elif opt.export_seed:
 	from mmgen.bitcoin import b58encode_pad
-	data = col4(b58encode_pad(seed))
+	data = split_into_columns(4,b58encode_pad(seed))
 	chk = make_chksum_6(b58encode_pad(seed))
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.seed_ext)
 	write_to_file_or_stdout(fn, "%s %s\n" % (chk,data), "seed data")

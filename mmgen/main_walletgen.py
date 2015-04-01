@@ -25,7 +25,6 @@ from hashlib import sha256
 
 import mmgen.config as g
 import mmgen.opt as opt
-from mmgen.license import *
 from mmgen.util import *
 from mmgen.crypto import *
 
@@ -122,8 +121,6 @@ future, you must continue using these same parameters
 
 import mmgen.opt as opt
 cmd_args = opt.opts.init(opts_data)
-
-if opt.show_hash_presets: show_hash_presets()
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]

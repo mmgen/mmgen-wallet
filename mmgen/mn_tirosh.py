@@ -48,7 +48,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-tirosh_words = """
+words = """
 abraham
 absent
 absorb

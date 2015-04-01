@@ -66,6 +66,15 @@ def typeconvert_from_dfl(key):
 		msg(fs % (opt.__dict__[key],opt.replace("_","-"),m))
 		sys.exit(1)
 
+def _show_hash_presets():
+	fs = "  {:<7} {:<6} {:<3}  {}"
+	msg("Available parameters for scrypt.hash():")
+	msg(fs.format("Preset","N","r","p"))
+	for i in sorted(g.hash_presets.keys()):
+		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
+	msg("N = memory usage (power of two), p = iterations (rounds)")
+	sys.exit(0)
+
 def init(opts_data,add_opts=[]):
 
 	if len(sys.argv) == 2 and sys.argv[1] == '--version':
@@ -113,6 +122,7 @@ def init(opts_data,add_opts=[]):
 			typeconvert_from_dfl(k)
 		else: opt.__dict__[k] = g.__dict__[k]
 
+	if opt.show_hash_presets: _show_hash_presets()
 	if opt.debug: opt.verbose = True
 
 	if g.debug:

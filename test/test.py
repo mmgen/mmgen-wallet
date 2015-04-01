@@ -407,8 +407,8 @@ class MMGenExpect(object):
 				passphrase+"\n",regex=True)
 
 	def hash_preset(self,what,preset=''):
-		my_expect(self.p,("Enter hash preset for %s, or ENTER .*?:" % what),
-				str(preset)+"\n",regex=True)
+		my_expect(self.p,("Enter hash preset for %s," % what))
+		my_expect(self.p,("or hit ENTER .*?:"), str(preset)+"\n",regex=True)
 
 	def written_to_file(self,what,overwrite_unlikely=False,query="Overwrite?  "):
 		s1 = "%s written to file " % what
@@ -505,8 +505,8 @@ def add_comments_to_addr_file(addrfile,tfile):
 
 def make_brainwallet_file(fn):
 	# Print random words with random whitespace in between
-	from mmgen.mn_tirosh import tirosh_words
-	wl = tirosh_words.split("\n")
+	from mmgen.mn_tirosh import words
+	wl = words.split("\n")
 	nwords,ws_list,max_spaces = 10,"    \n",5
 	def rand_ws_seq():
 		nchars = getrandnum(1) % max_spaces + 1

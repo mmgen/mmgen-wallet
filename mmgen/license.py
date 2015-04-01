@@ -17,14 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-license.py:  Show the license
+license.py:  Text of GPLv3
 """
-
-import sys
-from mmgen.util import msg, msg_r
-from mmgen.term import get_char
 import mmgen.config as g
-import mmgen.opt as opt
 
 gpl = {
 	'warning': """
@@ -587,22 +582,3 @@ Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 """
 }
-
-def do_license_msg(immed=False):
-
-	if opt.quiet or g.no_license: return
-
-	msg(gpl['warning'])
-	prompt = "%s " % gpl['prompt'].strip()
-
-	while True:
-		from mmgen.util import my_raw_input
-		reply = get_char(prompt, immed_chars="wc" if immed else "")
-		if reply == 'w':
-			from mmgen.term import do_pager
-			do_pager(gpl['conditions'])
-		elif reply == 'c':
-			msg(""); break
-		else:
-			msg_r("\r")
-	msg("")

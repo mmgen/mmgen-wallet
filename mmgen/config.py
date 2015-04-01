@@ -51,8 +51,9 @@ email     = "<mmgen-py@yandex.com>"
 Cdates    = '2013-2015'
 version   = '0.8.0'
 
-required_opts = [ # list must contain "usr_randchars"
-	"quiet","verbose","debug","outdir","echo_passphrase","passwd_file","usr_randchars"
+required_opts = [
+	"quiet","verbose","debug","outdir","echo_passphrase","passwd_file",
+	"usr_randchars","stdout","show_hash_presets"
 ]
 min_screen_width = 80
 max_tx_comment_len = 72
@@ -64,7 +65,9 @@ brain_ext     = "mmbrain"
 incog_ext     = "mmincog"
 incog_hex_ext = "mmincox"
 
-seedfile_exts = wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext
+seedfile_exts = (
+	wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext, incog_hex_ext
+)
 
 rawtx_ext           = "raw"
 sigtx_ext           = "sig"
@@ -74,8 +77,8 @@ keyfile_ext         = "keys"
 keyaddrfile_ext     = "akeys"
 mmenc_ext           = "mmenc"
 
-default_wl    = "electrum"
-#default_wl    = "tirosh"
+default_wordlist    = "electrum"
+#default_wordlist    = "tirosh"
 
 # Global value sets user opt
 dfl_vars = "seed_len","hash_preset","usr_randchars","debug"
@@ -93,6 +96,7 @@ max_urandchars,min_urandchars = 80,10
 
 salt_len      = 16
 aesctr_iv_len = 16
+hincog_chk_len = 8
 
 hash_presets = {
 #   Scrypt params:
@@ -117,6 +121,8 @@ max_addr_label_len = 32
 wallet_label_symbols = addr_label_symbols
 max_wallet_label_len = 48
 
+printable_nospc = [chr(i+33) for i in range(94)]
+printable       = printable_nospc + [' ','\n','\t']
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 #wallet_label_punc = addr_label_punc

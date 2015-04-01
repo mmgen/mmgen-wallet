@@ -56,8 +56,6 @@ NOTE: The key ID will change if either the passphrase or hash preset are
 
 cmd_args = opt.opts.init(opts_data)
 
-if opt.show_hash_presets: show_hash_presets()
-
 if len(cmd_args) != 1:
 	msg("One input file must be specified")
 	sys.exit(2)

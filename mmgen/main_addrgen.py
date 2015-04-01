@@ -25,7 +25,6 @@ import sys
 
 import mmgen.config as g
 import mmgen.opt as opt
-from mmgen.license import *
 from mmgen.util import *
 from mmgen.crypto import *
 from mmgen.addr import *
@@ -115,7 +114,6 @@ UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
 
 cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
 
-if opt.show_hash_presets: show_hash_presets()
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
 if len(cmd_args) == 1 and any([

@@ -66,7 +66,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	vmsg_r("Checking key...")
 	chk1 = make_chksum_8(key)
 	if key_id:
-		if not compare_checksums(chk1, "of key", key_id, "in header"):
+		if not compare_chksums(key_id,"key id",chk1,"computed",die=False):
 			msg("Incorrect passphrase")
 			return False
 
@@ -75,12 +75,12 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	chk2 = make_chksum_8(dec_seed)
 
 	if seed_id:
-		if compare_checksums(chk2,"of decrypted seed",seed_id,"in header"):
+		if compare_chksums(seed_id,"seed id",chk2,"decrypted seed",die=False):
 			qmsg("Passphrase is OK")
 		else:
 			if not opt.debug:
 				msg_r("Checking key ID...")
-				if compare_checksums(chk1, "of key", key_id, "in header"):
+				if compare_chksums(key_id,"key id",chk1,"computed",die=False):
 					msg("Key ID is correct but decryption of seed failed")
 				else:
 					msg("Incorrect passphrase")
