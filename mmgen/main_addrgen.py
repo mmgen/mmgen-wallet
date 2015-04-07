@@ -32,8 +32,8 @@ from mmgen.addr import *
 what = "keys" if sys.argv[0].split("-")[-1] == "keygen" else "addresses"
 
 opts_data = {
-	'desc': """Generate a range or list of {} from an {g.proj_name} wallet,
-                  mnemonic, seed or password""".format(what,g=g),
+	'desc': """Generate a range or list of {w} from an {pnm} wallet,
+                  mnemonic, seed or password""".format(w=what,pnm=g.proj_name),
 	'usage':"[opts] [infile] <address range or list>",
 	'options': """
 -h, --help              Print this help message{}
@@ -47,7 +47,7 @@ opts_data = {
                         (default: {g.seed_len})
 -p, --hash-preset=  p   Use scrypt.hash() parameters from preset 'p' when
                         hashing password (default: '{g.hash_preset}')
--P, --passwd-file=  f   Get MMGen wallet passphrase from file 'f'
+-P, --passwd-file=  f   Get {pnm} wallet passphrase from file 'f'
 -q, --quiet             Suppress warnings; overwrite files without
                         prompting
 -S, --stdout            Print {what} to stdout
@@ -71,7 +71,7 @@ opts_data = {
 			)
 		if what == "keys" else ("","")),
 		seed_lens=", ".join([str(i) for i in g.seed_lens]),
-		what=what, g=g
+		what=what,g=g,pnm=g.proj_name
 ),
 	'notes': """
 
@@ -107,9 +107,9 @@ invocations with that passphrase
 
 wmsg = {
 	'unencrypted_secret_keys': """
-This program generates secret keys from your {} seed, outputting them in
+This program generates secret keys from your {pnm} seed, outputting them in
 UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
-""".format(g.proj_name),
+""".format(pnm=g.proj_name),
 }
 
 cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
@@ -136,25 +136,20 @@ if what == "keys" and not opt.quiet:
 
 # Generate data:
 
-seed    = get_seed_retry(infile)
+seed = get_seed_retry(infile)
 
 opt.gen_what = "a" if what == "addresses" else (
 	"k" if opt.no_addresses else "ka")
 
-ainfo = generate_addrs(seed, addr_idxs)
+ainfo = generate_addrs(seed,addr_idxs)
 
 addrdata_str = ainfo.fmt_data()
 outfile_base = "{}[{}]".format(make_chksum_8(seed), ainfo.idxs_fmt)
 
-if 'a' in opt.gen_what:
+if 'a' in opt.gen_what and opt.save_checksum:
 	w = "key-address" if 'k' in opt.gen_what else "address"
-	qmsg("Checksum for %s data %s: %s" % (w,outfile_base,ainfo.checksum))
-	if opt.save_checksum:
-		write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
-			ainfo.checksum+"\n","%s data checksum" % w,True,True,False)
-	else:
-		qmsg("This checksum will be used to verify the %s file in the future."%w)
-		qmsg("Record it to a safe location.")
+	write_to_file(outfile_base+"."+g.addrfile_chksum_ext,
+		ainfo.checksum+"\n","%s data checksum" % w,True,True,False)
 
 if 'k' in opt.gen_what and keypress_confirm("Encrypt key list?"):
 	addrdata_str = mmgen_encrypt(addrdata_str,"new key list","")

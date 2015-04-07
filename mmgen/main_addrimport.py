@@ -53,7 +53,7 @@ if len(cmd_args) == 1:
 	check_infile(infile)
 	if opt.addrlist:
 		lines = get_lines_from_file(
-			infile,"non-{} addresses".format(g.proj_name),trim_comments=True)
+			infile,"non-{pnm} addresses".format(pnm=g.proj_name),trim_comments=True)
 		ai,adata = AddrInfo(),[]
 		for btcaddr in lines:
 			a = AddrInfoEntry()
@@ -64,9 +64,9 @@ if len(cmd_args) == 1:
 		ai = AddrInfo(infile,has_keys=opt.keyaddr_file)
 else:
 	msg("""
-"You must specify an mmgen address file (or a list of non-%s addresses
+"You must specify an mmgen address file (or a list of non-{pnm} addresses
 with the '--addrlist' option)
-""".strip() % g.proj_name)
+""".strip().format(pnm=g.proj_name))
 	sys.exit(1)
 
 from mmgen.bitcoin import verify_addr
@@ -124,7 +124,7 @@ for n,e in enumerate(ai.addrdata):
 	if e.idx:
 		label = "%s:%s" % (ai.seed_id,e.idx)
 		if e.comment: label += " " + e.comment
-	else: label = "non-%s" % g.proj_name
+	else: label = "non-{pnm}".format(pnm=g.proj_name)
 
 	if opt.rescan:
 		t = threading.Thread(target=import_address, args=(e.addr,label,True))

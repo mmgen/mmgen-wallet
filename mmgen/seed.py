@@ -29,6 +29,8 @@ from mmgen.util import *
 from mmgen.bitcoin import b58encode_pad,b58decode_pad
 from mmgen.crypto import *
 
+pnm = g.proj_name
+
 class Seed(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -293,7 +295,7 @@ class SeedFile (SeedSourceUnenc):
 
 class Wallet (SeedSourceEnc):
 
-	desc = "%s wallet" % g.proj_name
+	desc = "{pnm} wallet".format(pnm=pnm)
 
 	def _encode(self):
 		d = self.ssdata
@@ -341,8 +343,8 @@ class Wallet (SeedSourceEnc):
 
 	def _deformat(self):
 
-		qmsg("Getting {} wallet data from file '{}'".format(
-			g.proj_name,self.infile.name))
+		qmsg("Getting {pnm} wallet data from file '{f}'".format(
+			pnm=pnm,f=self.infile.name))
 
 		lines = self.fmt_data.rstrip().split("\n")
 
@@ -518,13 +520,13 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.incog_id       = self._make_iv_chksum(d.iv)
 		d.enc_incog_data = raw_d[g.aesctr_iv_len:]
 		msg("Incog ID: %s" % d.incog_id)
-		qmsg("Check the applicable value against your records.")
+		qmsg("Check the applicable value against your records")
 		k = 'incog_iv_id_hidden' if opt.from_incog_hidden else 'incog_iv_id'
 		vmsg("\n%s\n" % self._icg_msg[k])
 
 	def _decode(self):
 		d = self.ssdata
-		prompt_info="{} incognito wallet".format(g.proj_name)
+		prompt_info="{pnm} incognito wallet".format(pnm=pnm)
 
 		while True:
 			passwd = get_mmgen_passphrase(prompt_info+" "+d.incog_id)

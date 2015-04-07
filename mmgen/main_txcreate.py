@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-txcreate: Create a Bitcoin transaction from MMGen- or non-MMGen inputs
-                to MMGen- or non-MMGen outputs
+mmgen-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen
+                inputs and outputs
 """
 
 import sys
@@ -27,6 +27,8 @@ from decimal import Decimal
 import mmgen.config as g
 import mmgen.opt as opt
 from mmgen.tx import *
+
+pnm = g.proj_name
 
 opts_data = {
 	'desc':    "Create a BTC transaction with outputs to specified addresses",
@@ -55,7 +57,7 @@ of the form <seed ID>:<number>.
 
 To send all inputs (minus TX fee) to a single output, specify one address
 with no amount on the command line.
-""".format(g=g,pnm=g.proj_name)
+""".format(g=g,pnm=pnm)
 }
 
 wmsg = {
@@ -64,34 +66,34 @@ ERROR: More than one address found for account: "%s".
 Your "wallet.dat" file appears to have been altered by a non-{pnm} program.
 Please restore your tracking wallet from a backup or create a new one and
 re-import your addresses.
-""".strip().format(pnm=g.proj_name),
+""".strip().format(pnm=pnm),
 	'addr_in_addrfile_only': """
 Warning: output address {mmgenaddr} is not in the tracking wallet, which means
 its balance will not be tracked.  You're strongly advised to import the address
 into your tracking wallet before broadcasting this transaction.
 """.strip(),
 	'addr_not_found': """
-No data for MMgen address {mmgenaddr} could be found in either the tracking
+No data for {pnm} address {mmgenaddr} could be found in either the tracking
 wallet or the supplied address file.  Please import this address into your
 tracking wallet, or supply an address file for it on the command line.
 """.strip(),
 	'addr_not_found_no_addrfile': """
-No data for MMgen address {mmgenaddr} could be found in the tracking wallet.
+No data for {pnm} address {mmgenaddr} could be found in the tracking wallet.
 Please import this address into your tracking wallet or supply an address file
 for it on the command line.
 """.strip(),
 	'no_spendable_outputs': """
 No spendable outputs found!  Import addresses with balances into your
 watch-only wallet using '{pnm}-addrimport' and then re-run this program.
-""".strip().format(pnm=g.proj_name.lower()),
+""".strip(),
 	'mixed_inputs': """
-NOTE: This transaction uses a mixture of both mmgen and non-mmgen inputs, which
+NOTE: This transaction uses a mixture of both {pnm} and non-{pnm} inputs, which
 makes the signing process more complicated.  When signing the transaction, keys
 for the non-{pnm} inputs must be supplied to '{pnl}-txsign' in a file with the
 '--keys-from-file' option.
 
 Selected mmgen inputs: %s
-""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower()),
+""".strip().format(pnm=pnm,pnl=pnm.lower()),
 	'not_enough_btc': """
 Not enough BTC in the inputs for this transaction (%s BTC)
 """.strip(),
@@ -104,7 +106,7 @@ was specified.
 def format_unspent_outputs_for_printing(out,sort_info,total):
 
 	pfs  = " %-4s %-67s %-34s %-12s %-13s %-8s %-10s %s"
-	pout = [pfs % ("Num","TX id,Vout","Address","MMgen ID",
+	pout = [pfs % ("Num","TX id,Vout","Address","{pnm} ID".format(pnm=pnm),
 		"Amount (BTC)","Conf.","Age (days)", "Comment")]
 
 	for n,i in enumerate(out):
@@ -158,8 +160,9 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	while True:
 		cols = get_terminal_size()[0]
 		if cols < g.min_screen_width:
-			msg("%s-txcreate requires a screen at least %s characters wide" %
-					(g.proj_name.lower(),g.min_screen_width))
+			msg(
+	"{pnl}-txcreate requires a screen at least {w} characters wide".format(
+					pnl=pnm.lower(),w=g.min_screen_width))
 			sys.exit(2)
 
 		addr_w = min(34+((1+max_acct_len) if show_mmaddr else 0),cols-46)
@@ -277,7 +280,7 @@ def select_outputs(unspent,prompt):
 
 
 def mmaddr2btcaddr_unspent(unspent,mmaddr):
-	vmsg_r("Searching for {g.proj_name} address {m} in wallet...".format(g=g,m=mmaddr))
+	vmsg_r("Searching for {pnm} address {m} in wallet...".format(pnm=pnm,m=mmaddr))
 	m = [u for u in unspent if u.mmid == mmaddr]
 	if len(m) == 0:
 		vmsg("not found")
@@ -306,10 +309,10 @@ def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
 				if not keypress_confirm("Continue anyway?"):
 					sys.exit(1)
 			else:
-				msg(wmsg['addr_not_found'].format(mmgenaddr=mmaddr))
+				msg(wmsg['addr_not_found'].format(pnm=pnm,mmgenaddr=mmaddr))
 				sys.exit(2)
 		else:
-			msg(wmsg['addr_not_found_no_addrfile'].format(mmgenaddr=mmaddr))
+			msg(wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
 			sys.exit(2)
 
 	return btcaddr

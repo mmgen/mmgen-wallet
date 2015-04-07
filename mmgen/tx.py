@@ -100,16 +100,21 @@ def wiftoaddr(s):
 	if not hex_key: return False
 	return privnum2addr(int(hex_key,16),compressed)
 
-def is_valid_tx_comment(s, verbose=True):
+
+def is_valid_tx_comment(s):
+
+	try: s = s.decode("utf8")
+	except:
+		msg("Invalid transaction comment (not UTF-8)")
+		return False
+
 	if len(s) > g.max_tx_comment_len:
-		if verbose: msg("Invalid transaction comment (longer than %s characters)" %
+		msg("Invalid transaction comment (longer than %s characters)" %
 				g.max_tx_comment_len)
 		return False
-	try: s.decode("utf8")
-	except:
-		if verbose: msg("Invalid transaction comment (not UTF-8)")
-		return False
-	else: return True
+
+	return True
+
 
 def check_addr_label(label):
 
@@ -149,7 +154,7 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 	if comment: out += "Comment: %s\n%s" % (comment,enl)
 	out += "Inputs:\n" + enl
 
-	nonmm_str = "non-%s address" % g.proj_name
+	nonmm_str = "non-{pnm} address".format(pnm=g.proj_name)
 
 	total_in = 0
 	for n,i in enumerate(td['vin']):
@@ -241,7 +246,7 @@ def parse_tx_file(tx_data,infile):
 							if comment == False:
 								err_str = "encoded comment (not base58)"
 							else:
-								if is_valid_tx_comment(comment,True):
+								if is_valid_tx_comment(comment):
 									comment = comment.decode("utf8")
 								else:
 									err_str = "comment"
@@ -268,7 +273,7 @@ def get_wif2addr_f():
 
 def get_tx_comment_from_file(infile):
 	s = get_data_from_file(infile,"transaction comment")
-	if is_valid_tx_comment(s, verbose=True):
+	if is_valid_tx_comment(s):
 		return s.decode("utf8").strip()
 	else:
 		sys.exit(2)
@@ -278,7 +283,7 @@ def get_tx_comment_from_user(comment=""):
 		while True:
 			s = my_raw_input("Comment: ",insert_txt=comment.encode("utf8"))
 			if s == "": return False
-			if is_valid_tx_comment(s, verbose=True):
+			if is_valid_tx_comment(s):
 				return s.decode("utf8")
 	except KeyboardInterrupt:
 		msg("User interrupt")

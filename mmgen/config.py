@@ -56,7 +56,6 @@ required_opts = [
 	"usr_randchars","stdout","show_hash_presets"
 ]
 min_screen_width = 80
-max_tx_comment_len = 72
 
 wallet_ext    = "mmdat"
 seed_ext      = "mmseed"
@@ -84,12 +83,11 @@ default_wordlist    = "electrum"
 dfl_vars = "seed_len","hash_preset","usr_randchars","debug"
 
 seed_lens = 128,192,256
-
 mn_lens = [i / 32 * 3 for i in seed_lens]
 
 keyconv_exec = "keyconv"
 
-mins_per_block   = 8.5
+mins_per_block   = 9
 passwd_max_tries = 5
 
 max_urandchars,min_urandchars = 80,10
@@ -113,16 +111,15 @@ hash_presets = {
 
 mmgen_idx_max_digits = 7
 
-from string import ascii_letters, digits
+printable_nonl = [chr(i+32) for i in range(95)]
+printable = printable_nonl + ['\n','\t']
 
-addr_label_symbols = tuple([chr(i) for i in range(0x20,0x7f)])
+addr_label_symbols = wallet_label_symbols = printable_nonl
+
 max_addr_label_len = 32
-
-wallet_label_symbols = addr_label_symbols
 max_wallet_label_len = 48
+max_tx_comment_len = 72   # Comment is b58 encoded, so can permit all UTF-8
 
-printable_nospc = [chr(i+33) for i in range(94)]
-printable       = printable_nospc + [' ','\n','\t']
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 #wallet_label_punc = addr_label_punc

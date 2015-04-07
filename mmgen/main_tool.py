@@ -27,7 +27,7 @@ import mmgen.opt as opt
 import mmgen.tool as tool
 
 opts_data = {
-	'desc':    "Perform various MMGen- and Bitcoin-related operations",
+	'desc':    "Perform various {pnm}- and Bitcoin-related operations".format(pnm=g.proj_name),
 	'usage':   "[opts] <command> <command args>",
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
@@ -45,7 +45,7 @@ command
 """.format(tool.cmd_help,g.prog_name)
 }
 
-cmd_args = opt.opts.init(opts_data)
+cmd_args = opt.opts.init(opts_data,add_opts=["no_keyconv"])
 
 if len(cmd_args) < 1:
 	opt.opts.usage()
@@ -54,6 +54,7 @@ if len(cmd_args) < 1:
 command = cmd_args.pop(0)
 
 if command not in tool.cmd_data:
+	from mmgen.util import msg
 	msg("'%s': No such command" % command)
 	sys.exit(1)
 

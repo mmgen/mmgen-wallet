@@ -20,7 +20,7 @@
 filename.py:  Filename class and methods for the MMGen suite
 """
 import sys,os
-from mmgen.obj import MMGenObject
+from mmgen.obj import *
 import mmgen.config as g
 from mmgen.util import msg
 

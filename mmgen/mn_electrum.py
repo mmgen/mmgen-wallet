@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # ------------------------------------------------------------------------------
-# MMgen note: this is a sorted version of the wordlist.  The original
+# MMGen note: this is a sorted version of the wordlist.  The original
 # can be found at:
 # https://github.com/spesmilo/electrum/blob/master/lib/mnemonic.py
 # and in the file 'wordlists/mnemonic.py' of the mmgen distribution.

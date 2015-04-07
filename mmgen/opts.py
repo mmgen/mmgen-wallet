@@ -32,10 +32,10 @@ def usage():
 
 def print_version_info():
 	Msg("""
-{progname_uc} version {g.version}.  Part of the {g.proj_name} suite, a Bitcoin
-cold-storage solution for the command line.  Copyright (C) {g.Cdates}
-by {g.author} {g.email}
-""".format(g=g,progname_uc=g.prog_name.upper()).strip())
+{progname_uc} version {g.version}
+Part of the {pnm} suite, a Bitcoin cold-storage solution for the com-
+mand line.   Copyright (C) {g.Cdates} {g.author} {g.email}
+""".format(pnm=g.proj_name,g=g,progname_uc=g.prog_name.upper()).strip())
 
 def warn_incompatible_opts(incompat_list):
 	bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in incompat_list]
@@ -61,7 +61,6 @@ def typeconvert_from_dfl(key):
 			'bool':  'a boolean value',
 		}
 		m = [d[k] for k in d if __builtins__[k] == vtype]
-		msgrepr_exit(key,vtype)
 		fs = "'%s': invalid parameter for '--%s' option (not %s)"
 		msg(fs % (opt.__dict__[key],opt.replace("_","-"),m))
 		sys.exit(1)

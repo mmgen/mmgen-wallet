@@ -29,24 +29,27 @@ from mmgen.bitcoin import numtowif
 # from mmgen.util import msg,qmsg,qmsg_r,make_chksum_N,get_lines_from_file,get_data_from_file,get_extension
 from mmgen.util import *
 from mmgen.tx import *
+from mmgen.obj import *
 import mmgen.config as g
 import mmgen.opt as opt
 
+pnm = g.proj_name
+
 addrmsgs = {
 	'addrfile_header': """
-# MMGen address file
+# {pnm} address file
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {} characters or less may be added to the right of each
+# A text label of {n} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain any printable ASCII symbol.
-""".strip().format(g.max_addr_label_len,pnm=g.proj_name),
+""".strip().format(n=g.max_addr_label_len,pnm=pnm),
 	'no_keyconv_msg': """
-Executable '{kcexe}' unavailable. Falling back on (slow) internal ECDSA library.
-Please install '{kcexe}' from the {vanityg} package on your system for much
+Executable '{kconv}' unavailable. Falling back on (slow) internal ECDSA library.
+Please install '{kconv}' from the {vgen} package on your system for much
 faster address generation.
-""".format(kcexe=g.keyconv_exec, vanityg="vanitygen")
+""".format(kconv=g.keyconv_exec, vgen="vanitygen")
 }
 
 def test_for_keyconv(silent=False):
@@ -61,7 +64,7 @@ def test_for_keyconv(silent=False):
 	return True
 
 
-def generate_addrs(seed, addrnums):
+def generate_addrs(seed, addrnums, source="addrgen"):
 
 	from util import make_chksum_8
 	seed_id = make_chksum_8(seed) # Must do this before seed gets clobbered
@@ -116,7 +119,7 @@ def generate_addrs(seed, addrnums):
 
 	m = w[0] if t_addrs == 1 else w[0]+w[1]
 	qmsg("\r%s: %s %s generated%s" % (seed_id,t_addrs,m," "*15))
-	a = AddrInfo(has_keys='k' in opt.gen_what)
+	a = AddrInfo(has_keys='k' in opt.gen_what, source=source)
 	a.initialize(seed_id,out)
 	return a
 
@@ -182,7 +185,7 @@ def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 		elif cbrace != '}':
 			errmsg = "'%s': invalid last line" % cbrace
 		elif not is_mmgen_seed_id(sid):
-			errmsg = "'%s': invalid Seed ID" % sid
+			errmsg = "'%s': invalid seed ID" % sid
 		else:
 			ret = _parse_addrfile_body(lines[1:-1],has_keys)
 			if type(ret) == list: return sid,ret
@@ -196,7 +199,7 @@ def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 
 
 def _parse_keyaddr_file(infile):
-	d = get_data_from_file(infile,"%s key-address file data" % g.proj_name)
+	d = get_data_from_file(infile,"{pnm} key-address file data".format(pnm=pnm))
 	enc_ext = get_extension(infile) == g.mmenc_ext
 	if enc_ext or not is_utf8(d):
 		m = "Decrypting" if enc_ext else "Attempting to decrypt"
@@ -206,7 +209,7 @@ def _parse_keyaddr_file(infile):
 	return _parse_addrfile("",buf=d,has_keys=True,exit_on_error=False)
 
 
-class AddrInfoList(object):
+class AddrInfoList(MMGenObject):
 
 	def __init__(self,addrinfo=None,bitcoind_connection=None):
 		self.data = {}
@@ -239,7 +242,8 @@ class AddrInfoList(object):
 				a.idx,a.addr,a.comment = \
 					int(idx),unicode(addrlist[0]),unicode(comment)
 				data[seed_id].append(a)
-		vmsg("%s %s addresses found, %s accounts total" % (i,g.proj_name,len(accts)))
+		vmsg("{n} {pnm} addresses found, {m} accounts total".format(
+				n=i,pnm=pnm,m=len(accts)))
 		for sid in data:
 			self.add(AddrInfo(sid=sid,adata=data[sid]))
 
@@ -257,22 +261,25 @@ class AddrInfoList(object):
 			d.update(self.data[k].make_reverse_dict(btcaddrs))
 		return d
 
-class AddrInfoEntry(object):
+class AddrInfoEntry(MMGenObject):
 
 	def __init__(self): pass
 
-class AddrInfo(object):
+class AddrInfo(MMGenObject):
 
-	def __init__(self,addrfile="",has_keys=False,sid="",adata=[]):
-		self.has_keys=has_keys
+	def __init__(self,addrfile="",has_keys=False,sid="",adata=[], source=""):
+		self.has_keys = has_keys
+		do_chksum = True
 		if addrfile:
 			f = _parse_keyaddr_file if has_keys else _parse_addrfile
 			sid,adata = f(addrfile)
+			self.source = "addrfile"
 		elif sid and adata: # data from wallet
-			pass
+			self.source = "wallet"
 		elif sid or adata:
 			die(3,"Must specify address file, or seed_id + adata")
 		else:
+			self.source = source if source else "unknown"
 			return
 
 		self.initialize(sid,adata)
@@ -284,12 +291,21 @@ class AddrInfo(object):
 		self.seed_id = seed_id
 		self.addrdata = addrdata
 		self.num_addrs = len(addrdata)
-		self.make_addrdata_chksum()
-		self.fmt_addr_idxs()
-		w = "key" if self.has_keys else "addr"
-		qmsg("Computed checksum for %s data %s[%s]: %s" %
-				(w,self.seed_id,self.idxs_fmt,self.checksum))
-		qmsg("Check this value against your records")
+		if self.source in ("wallet","txsign") or \
+				(self.source == "addrgen" and opt.gen_what == "k"):
+			self.checksum = None
+			self.idxs_fmt = None
+		else: # self.source in addrfile, addrgen
+			self.make_addrdata_chksum()
+			self.fmt_addr_idxs()
+			w = "key-address" if self.has_keys else "address"
+			qmsg("Checksum for %s data %s[%s]: %s" %
+					(w,self.seed_id,self.idxs_fmt,self.checksum))
+			if self.source == "addrgen":
+				qmsg(
+		"This checksum will be used to verify the address file in the future")
+			elif self.source == "addrfile":
+				qmsg("Check this value against your records")
 
 	def idxs(self):
 		return [e.idx for e in self.addrdata]
@@ -337,7 +353,7 @@ class AddrInfo(object):
 
 	def make_addrdata_chksum(self):
 		nchars = 24
-		lines = [" ".join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
+		lines=[" ".join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
 						for e in self.addrdata]
 		self.checksum = make_chksum_N(" ".join(lines), nchars, sep=True)
 

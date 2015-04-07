@@ -28,8 +28,8 @@ import mmgen.config as g
 import mmgen.opt as opt
 
 opts_data = {
-	'desc':  """Change the passphrase, hash preset or label of an {}
-                  deterministic wallet""".format(g.proj_name),
+	'desc':  """Change the passphrase, hash preset or label of an {pnm}
+                  deterministic wallet""".format(pnm=g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help                Print this help message
@@ -40,13 +40,13 @@ opts_data = {
 -L, --label=            l Change the wallet's label to 'l'
 -p, --hash-preset=      p Change scrypt.hash() parameters to preset 'p'
                           (default: '{g.hash_preset}')
--P, --passwd-file=      f Get new MMGen wallet passphrase from file 'f'
+-P, --passwd-file=      f Get new {pnm} wallet passphrase from file 'f'
 -r, --usr-randchars=    n Get 'n' characters of additional randomness from
                           user (min={g.min_urandchars}, max={g.max_urandchars})
 -q, --quiet               Suppress warnings; overwrite files without
                           prompting
 -v, --verbose             Produce more verbose output
-""".format(g=g),
+""".format(g=g,pnm=g.proj_name),
 	'notes': """
 
 NOTE: The key ID will change if either the passphrase or hash preset are
@@ -67,7 +67,7 @@ seed_id,key_id = metadata[:2]
 
 # Repeat on incorrect pw entry
 while True:
-	p = "{} wallet".format(g.proj_name)
+	p = "{pnm} wallet".format(pnm=g.proj_name)
 	passwd = get_mmgen_passphrase(p,not opt.keep_old_passphrase)
 	key = make_key(passwd, salt, hash_preset)
 	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
@@ -85,7 +85,7 @@ else: opt.label = label  # Copy the old label
 
 if opt.hash_preset:
 	if hash_preset != opt.hash_preset:
-		qmsg("Hash preset has changed (%s -> %s)" %
+		qmsg("Hash preset changed: '%s' -> '%s'" %
 			(hash_preset, opt.hash_preset))
 		changed['preset'] = True
 	else:
@@ -97,7 +97,7 @@ if opt.keep_old_passphrase:
 	msg("Keeping old passphrase by user request")
 else:
 	new_passwd = get_new_passphrase(
-			"{} wallet".format(g.proj_name), True)
+			"{pnm} wallet".format(pnm=g.proj_name), True)
 
 	if new_passwd == passwd:
 		qmsg("Passphrase is unchanged")

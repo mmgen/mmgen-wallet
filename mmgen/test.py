@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addr.py:  Shared routines for the test suites
+test.py:  Shared routines for the test suites
 """
 
 import sys,os
@@ -86,6 +86,7 @@ def cmp_or_die(s,t,skip_ok=False):
 	if s == t:
 	   if not skip_ok: ok()
 	else:
-		msg(red("Recoded data:\n%s\ndiffers from original data:\n%s\n" %
-					(repr(t),repr(s))))
+		sys.stderr.write(red(
+			"ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n" %
+				(repr(t),repr(s))))
 		sys.exit(3)

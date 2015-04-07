@@ -218,7 +218,7 @@ def get_random(length):
 
 def get_seed_from_wallet(
 		infile,
-		prompt_info="{} wallet".format(g.proj_name),
+		prompt_info="{pnm} wallet".format(pnm=g.proj_name),
 		silent=False
 		):
 
@@ -270,7 +270,7 @@ def confirm_old_format():
 
 def get_seed_from_incog_wallet(
 		infile,
-		prompt_info="{} incognito wallet".format(g.proj_name),
+		prompt_info="{pnm} incognito wallet".format(pnm=g.proj_name),
 		silent=False,
 		hex_input=False
 	):
@@ -305,7 +305,7 @@ def get_seed_from_incog_wallet(
 
 	incog_id = make_iv_chksum(iv)
 	msg("Incog ID: %s (IV ID: %s)" % (incog_id,make_chksum_8(iv)))
-	qmsg("Check the applicable value against your records.")
+	qmsg("Check the applicable value against your records")
 	vmsg(crmsg['incog_iv_id_hidden' if opt.from_incog_hidden
 			else 'incog_iv_id'])
 
@@ -328,7 +328,7 @@ def get_seed_from_incog_wallet(
 		old_fmt_sid = make_chksum_8(seed)
 
 		def confirm_correct_seed_id(sid):
-			m = "Seed ID: %s.  Is the Seed ID correct?" % sid
+			m = "Seed ID: %s.  Is the seed ID correct?" % sid
 			return keypress_confirm(m, True)
 
 		if opt.old_incog_fmt:
@@ -344,6 +344,7 @@ def get_seed_from_incog_wallet(
 				if confirm_correct_seed_id(old_fmt_sid):
 					break
 
+	msg("Valid incog data for seed ID %s" % make_chksum_8(seed))
 	return seed
 
 
@@ -412,7 +413,7 @@ def get_seed_retry(infile,seed_id=""):
 		if seed: return seed
 
 
-def _get_seed_from_brain_passphrase(words):
+def _get_seed_from_brain_passphrase(words,silent=False):
 	bp = " ".join(words)
 	if opt.debug: Msg("Sanitized brain passphrase: %s" % bp)
 	seed_len,hash_preset = get_from_brain_opt_params()
@@ -421,6 +422,10 @@ def _get_seed_from_brain_passphrase(words):
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
 	vmsg("Done")
+
+	if not silent:
+		msg("Valid brainwallet for seed ID %s" % make_chksum_8(seed))
+
 	return seed
 
 

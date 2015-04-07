@@ -27,6 +27,8 @@ from string import hexdigits
 
 import mmgen.config as g
 
+pnm = g.proj_name
+
 _red,_grn,_yel,_cya,_reset = (
 	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
 )
@@ -493,7 +495,7 @@ def get_data_from_wallet(infile,silent=False):
 	# Don't make this a qmsg: User will be prompted for passphrase and must see
 	# the filename.
 	if not silent and not opt.quiet:
-		msg("Getting {} wallet data from file '{}'".format(g.proj_name,infile))
+		msg("Getting {pnm} wallet data from file '{f}'".format(pnm=pnm,f=infile))
 
 	f = open_file_or_exit(infile, 'r')
 
@@ -609,7 +611,7 @@ def get_seed_from_seed_data(words):
 		msg("Valid seed data for seed ID %s" % make_chksum_8(seed))
 		return seed
 	else:
-		msg("Invalid checksum for {} seed".format(g.proj_name))
+		msg("Invalid checksum for {pnm} seed".format(pnm=pnm))
 		return False
 
 

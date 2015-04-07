@@ -23,10 +23,10 @@ import mmgen.config as g
 
 gpl = {
 	'warning': """
-  MMGen Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
+  {pnm} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
   program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
   you are welcome to redistribute it under certain conditions.
-""".format(g=g),
+""".format(g=g,pnm=g.proj_name),
 	'prompt': """
 Press 'w' for conditions and warranty info, or 'c' to continue:
 """,

@@ -28,15 +28,15 @@ from mmgen.util import *
 from mmgen.crypto import *
 
 opts_data = {
-	'desc':  """Check integrity of an {} deterministic wallet, display
+	'desc':  """Check integrity of an {pnm} deterministic wallet, display
                     its information, and export seed and mnemonic data.
-             """.format(g.proj_name),
+             """.format(pnm=g.proj_name),
 	'usage':   "[opts] [filename]",
 	'options': """
 -h, --help             Print this help message
 -d, --outdir=       d  Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--P, --passwd-file=  f  Get MMGen wallet passphrase from file 'f'
+-P, --passwd-file=  f  Get {pnm} wallet passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -r, --usr-randchars= n Get 'n' characters of additional randomness from
                        user (min={g.min_urandchars}, max={g.max_urandchars})
@@ -49,7 +49,7 @@ opts_data = {
 -o, --old-incog-fmt    Use old (pre-0.7.8) incog format
 -m, --export-mnemonic  Export the wallet's mnemonic to file
 -s, --export-seed      Export the wallet's seed to file
-""".format(g=g),
+""".format(g=g,pnm=g.proj_name),
 	'notes': """
 
 Since good randomness is particularly important for incognito wallets,
@@ -67,7 +67,7 @@ def wallet_to_incog_data(infile):
 			d[1][0], d[1][1], d[2].split(":")[0], d[3], d[4]
 
 	while True:
-		passwd = get_mmgen_passphrase("{} wallet".format(g.proj_name))
+		passwd = get_mmgen_passphrase("{pnm} wallet".format(pnm=g.proj_name))
 		key = make_key(passwd, salt, preset, "main key")
 		seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 		if seed: break

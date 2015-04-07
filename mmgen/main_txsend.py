@@ -28,7 +28,8 @@ from mmgen.tx import *
 from mmgen.util import *
 
 opts_data = {
-	'desc':    "Send a Bitcoin transaction signed by {}-txsign".format(g.proj_name.lower()),
+	'desc':    "Send a Bitcoin transaction signed by {pnm}-txsign".format(
+					pnm=g.proj_name.lower()),
 	'usage':   "[opts] <signed transaction file>",
 	'options': """
 -h, --help      Print this help message

@@ -28,8 +28,10 @@ import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.crypto import *
 
+pnm = g.proj_name
+
 opts_data = {
-	'desc':    "Generate an {} deterministic wallet".format(g.proj_name),
+	'desc':    "Generate an {pnm} deterministic wallet".format(pnm=pnm),
 	'usage':   "[opts] [infile]",
 	'options': """
 -h, --help                 Print this help message
@@ -42,7 +44,7 @@ opts_data = {
                            Allowed symbols: A-Z, a-z, 0-9, " ", "_", ".")
 -p, --hash-preset=      p  Use scrypt.hash() parameters from preset 'p'
                            (default: '{g.hash_preset}')
--P, --passwd-file=      f  Get MMGen wallet passphrase from file 'f'
+-P, --passwd-file=      f  Get {pnm} wallet passphrase from file 'f'
 -q, --quiet                Produce quieter output; overwrite files without
                            prompting
 -r, --usr-randchars=    n  Get 'n' characters of additional randomness from
@@ -58,7 +60,7 @@ opts_data = {
 -o, --old-incog-fmt        Use old (pre-0.7.8) incog format
 -m, --from-mnemonic        Generate wallet from an Electrum-like mnemonic
 -s, --from-seed            Generate wallet from a seed in .{g.seed_ext} format
-""".format(seed_lens=",".join([str(i) for i in g.seed_lens]), g=g),
+""".format(seed_lens=",".join([str(i) for i in g.seed_lens]),g=g,pnm=pnm),
 	'notes': """
 
 By default (i.e. when invoked without any of the '--from-<what>' options),
@@ -106,16 +108,17 @@ just hit ENTER twice.
 ############################## EXPERTS ONLY! ##############################
 
 A brainwallet will be secure only if you really know what you're doing and
-have put much care into its creation.  {} assumes no responsibility for
-coins stolen as a result of a poorly crafted brainwallet passphrase.
+have put much care into its creation.  The creators of {pnm} assume no
+responsibility for coins stolen as a result of a poorly crafted brainwallet
+passphrase.
 
 A key will be generated from your passphrase using the parameters requested
 by you: seed length {}, hash preset '{}'.  For brainwallets it's highly
-recommended to use one of the higher-numbered presets
+recommended to use one of the higher-numbered presets.
 
 Remember the seed length and hash preset parameters you've specified.  To
 generate the correct keys/addresses associated with this passphrase in the
-future, you must continue using these same parameters
+future, you must continue using these same parameters.
 """,
 }
 
@@ -145,7 +148,7 @@ do_license_msg()
 
 if opt.from_brain and not opt.quiet:
 	confirm_or_exit(wmsg['brain_warning'].format(
-			g.proj_name, *get_from_brain_opt_params()),
+			pnm=pnm, *get_from_brain_opt_params()),
 		"continue")
 
 if infile or any([
@@ -160,7 +163,7 @@ salt = sha256(get_random(128)).digest()[:g.salt_len]
 
 qmsg(wmsg['choose_wallet_passphrase'] % opt.hash_preset)
 
-passwd = get_new_passphrase("new {} wallet".format(g.proj_name))
+passwd = get_new_passphrase("new {pnm} wallet".format(pnm=pnm))
 
 key = make_key(passwd, salt, opt.hash_preset)
 

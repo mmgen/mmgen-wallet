@@ -30,6 +30,8 @@ from mmgen.crypto import *
 from mmgen.util import *
 from mmgen.tx import *
 
+pnm = g.proj_name
+
 from collections import OrderedDict
 cmd_data = OrderedDict([
 	("help",         []),
@@ -75,10 +77,10 @@ cmd_data = OrderedDict([
 
 	("listaddresses",['minconf [int=1]','showempty [bool=False]','pager [bool=False]']),
 	("getbalance",   ['minconf [int=1]']),
-	("txview",       ['<MMGen tx file> [str]','pager [bool=False]','terse [bool=False]']),
+	("txview",       ['<{pnm} tx file> [str]','pager [bool=False]','terse [bool=False]'.format(pnm=pnm)]),
 
-	("addrfile_chksum", ['<MMGen addr file> [str]']),
-	("keyaddrfile_chksum", ['<MMGen addr file> [str]']),
+	("addrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
+	("keyaddrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
 	("find_incog_data", ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
 
 	("encrypt",      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]']),
@@ -150,7 +152,7 @@ cmd_help = """
 
   IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
-""".format(pnm=g.proj_name)
+""".format(pnm=pnm)
 
 def tool_usage(prog_name, command):
 	Msg("USAGE: '%s %s%s'" % (prog_name, command,
@@ -486,7 +488,7 @@ def decrypt(infile,outfile="",hash_preset=""):
 		if dec_d: break
 		msg("Trying again...")
 	if outfile == '-':
-		write_to_stdout(dec_d,"decrypted data",confirm=True)
+		write_to_stdout(dec_d,"decrypted data",confirm=not opt.quiet)
 	else:
 		if not outfile:
 			outfile = os.path.basename(infile)
