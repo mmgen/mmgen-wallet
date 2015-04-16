@@ -34,7 +34,7 @@ pnm = g.proj_name
 
 from collections import OrderedDict
 cmd_data = OrderedDict([
-	("help",         []),
+	("help",         ['<tool command> [str]']),
 	("usage",        ['<tool command> [str]']),
 	("strtob58",     ['<string> [str]']),
 	("b58tostr",     ['<b58 number> [str]']),
@@ -79,6 +79,8 @@ cmd_data = OrderedDict([
 	("getbalance",   ['minconf [int=1]']),
 	("txview",       ['<{pnm} tx file> [str]','pager [bool=False]','terse [bool=False]'.format(pnm=pnm)]),
 
+	("add_label",       ['<{pnm} address> [str]'.format(pnm=pnm),'<label> [str]']),
+	("remove_label",    ['<{pnm} address> [str]'.format(pnm=pnm)]),
 	("addrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
 	("keyaddrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
 	("find_incog_data", ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
@@ -133,6 +135,8 @@ cmd_help = """
       * The encrypted file is indistinguishable from random data
 
   {pnm}-specific operations:
+  add_label          - add descriptive label for {pnm} address in tracking wallet
+  remove_label       - remove descriptive label from {pnm} address in tracking wallet
   addrfile_chksum    - compute checksum for {pnm} address file
   keyaddrfile_chksum - compute checksum for {pnm} key-address file
   find_incog_data    - Use an Incog ID to find hidden incognito wallet data
@@ -170,7 +174,7 @@ def process_args(prog_name, command, cmd_args):
 	u_kwargs = cmd_args[len(c_args):]
 
 	if len(u_args) < len(c_args):
-		msg("%s args required" % len(c_args))
+		msg("%s arg%s required" % (len(c_args),suf(c_args,"k")))
 		tool_usage(prog_name, command)
 		sys.exit(1)
 
@@ -217,10 +221,10 @@ def process_args(prog_name, command, cmd_args):
 
 # Individual cmd_data
 
-def help():
-	Msg("Available commands:")
-	for k in cmd_data.keys():
-		Msg("%-16s %s" % (k," ".join(cmd_data[k])))
+# def help():
+# 	Msg("Available commands:")
+# 	for k in sorted(cmd_data.keys()):
+# 		Msg("%-16s %s" % (k," ".join(cmd_data[k])))
 
 def are_equal(a,b,dtype=""):
 	if dtype == "str": return a.lstrip("\0") == b.lstrip("\0")
@@ -244,6 +248,8 @@ def print_convert_results(indata,enc,dec,dtype):
 
 def usage(cmd):
 	tool_usage(g.prog_name, cmd)
+
+help = usage
 
 def hexdump(infile, cols=8, line_nums=True):
 	Msg(pretty_hexdump(get_data_from_file(infile,dash=True,silent=True),
@@ -426,6 +432,34 @@ def txview(infile,pager=False,terse=False):
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False,terse=terse)
+
+def add_label(mmaddr,label,remove=False):
+	if not is_mmgen_addr(mmaddr):
+		die(1,"{a}: not a valid {pnm} address".format(pnm=pnm,a=mmaddr))
+	check_addr_label(label)  # Exits on failure
+
+	c = connect_to_bitcoind()
+	from mmgen.addr import AddrInfoList
+	ail = AddrInfoList(bitcoind_connection=c)
+
+	btcaddr = ""
+	sid,idx = mmaddr.split(":")
+	if sid in ail.seed_ids():
+		btcaddr = ail.addrinfo(sid).btcaddr(int(idx))
+	if not btcaddr:
+		die(1,"{pnm} address {a} not found in tracking wallet".format(
+				pnm=pnm,a=mmaddr))
+
+	try:
+		c.importaddress(btcaddr," ".join((mmaddr,label)),rescan=False)
+	except:
+		die(1,"Unable to add label")
+
+	s = "{pnm} address {a} in tracking wallet".format(a=mmaddr,pnm=pnm)
+	if remove: msg("Removed label from {}".format(s))
+	else:      msg("Added label '{}' for {}".format(label,s))
+
+def remove_label(mmaddr): add_label(mmaddr,"",remove=True)
 
 def addrfile_chksum(infile):
 	from mmgen.addr import AddrInfo
