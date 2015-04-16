@@ -20,9 +20,10 @@
 filename.py:  Filename class and methods for the MMGen suite
 """
 import sys,os
+import mmgen.opt as opt
 from mmgen.obj import *
-import mmgen.config as g
-from mmgen.util import msg
+import mmgen.globalvars as g
+from mmgen.util import msg,fmt_code_to_sstype
 
 class Filename(MMGenObject):
 
@@ -58,7 +59,6 @@ class Filename(MMGenObject):
 	}
 
 	def __init__(self,fn,ftype=""):
-		import os
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
 		self.basename = os.path.basename(fn)
@@ -66,6 +66,7 @@ class Filename(MMGenObject):
 
 		def mf1(k): return k == ftype
 		def mf2(k): return '.'+k == fn[-len('.'+k):]
+
 		# find file info for ftype or extension
 		e,attr,have_match = (self.ftypes,"ftype",mf1) if ftype else \
 							(self.exts,"ext",mf2)
@@ -75,7 +76,7 @@ class Filename(MMGenObject):
 				if have_match(j):
 					setattr(self,attr,j)
 					self.fclass = k
-					self.linked_obj = e[k][j]
+					self.sstype = e[k][j]
 
 		if not hasattr(self,attr):
 			die(2,"Unrecognized %s for file '%s'" % (attr,fn))

@@ -25,7 +25,7 @@ from hashlib import sha256
 from binascii import hexlify,unhexlify
 from string import hexdigits
 
-import mmgen.config as g
+import mmgen.globalvars as g
 
 pnm = g.proj_name
 
@@ -55,7 +55,20 @@ def die(ev,s):
 def Die(ev,s):
 	sys.stdout.write(s+"\n"); sys.exit(ev)
 
+def fmt_type(x): return "%s" % str(type(x)).split("'")[1]
+
 import opt
+
+def fmt_code_to_sstype(fmt_code):
+	for e in g.wallet_fmt_codes:
+		if fmt_code in e: return e[0]
+	die(2,"'%s': unrecognized format code" % fmt_code)
+
+def format_fmt_codes():
+	return "".join(
+		["%-20s  " % (e[0]+":") + ",".join(e[1:]) + "\n"
+			for e in g.wallet_fmt_codes])
+
 def qmsg(s,alt=False):
 	if opt.quiet:
 		if alt != False: sys.stderr.write(alt + "\n")
@@ -128,6 +141,13 @@ def secs_to_hms(secs):
 def _is_whatstring(s,chars):
 	return set(list(s)) <= set(chars)
 
+def is_int(s):
+	try:
+		int(s)
+		return True
+	except:
+		return False
+
 def is_hexstring(s):
 	return _is_whatstring(s.lower(),hexdigits.lower())
 def is_hexstring_lc(s):
@@ -161,7 +181,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 			(" " if (i+1) % cols else "\n")
 				for i in range(len(data)/gw + r)
 		]
-	).rstrip()
+	).rstrip() + "\n"
 
 def decode_pretty_hexdump(data):
 	from string import hexdigits

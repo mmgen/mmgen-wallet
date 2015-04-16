@@ -25,7 +25,7 @@ from binascii import unhexlify
 from decimal import Decimal
 from collections import OrderedDict
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.term import do_pager

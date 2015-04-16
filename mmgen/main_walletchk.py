@@ -22,7 +22,7 @@ mmgen-walletchk: Check integrity of an MMGen deterministic wallet, display
 """
 
 import sys
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.crypto import *

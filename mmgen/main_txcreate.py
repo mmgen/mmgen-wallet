@@ -24,7 +24,7 @@ mmgen-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen
 import sys
 from decimal import Decimal
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.tx import *
 

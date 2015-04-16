@@ -21,7 +21,7 @@ mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 """
 
 import sys, time
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.tx import connect_to_bitcoind

@@ -19,10 +19,10 @@
 """
 seed.py:  Seed-related classes and methods for the MMGen suite
 """
-import sys
+import sys,os
 from binascii import hexlify,unhexlify
 
-import mmgen.config as g
+import mmgen.globalvars as g
 from mmgen.obj import *
 from mmgen.filename import *
 from mmgen.util import *
@@ -51,23 +51,15 @@ class SeedSource(MMGenObject):
 	class SeedSourceData(MMGenObject): pass
 
 	desc = "seed source"
-	seed_opts = {
-		"mnemonic":     "Mnemonic",
-		"brain":        "Brainwallet",
-		"seed":         "SeedFile",
-		"incog":        "IncogWallet",
-		"incog_hex":    "IncogWalletHex",
-		"incog_hidden": "IncogWalletHidden",
-	}
 
 	def __init__(self,fn=None,seed=None,passwd=None):
 
 		self.ssdata = self.SeedSourceData()
+		self.ssdata.passwd = passwd
 
 		if seed:
 			self.desc = "new " + self.desc
 			self.seed = seed
-			self.ssdata.passwd = passwd
 			self._pre_encode()
 			self._encode()
 		else:
@@ -85,27 +77,24 @@ class SeedSource(MMGenObject):
 
 	def _pre_encode(self): pass
 
-	def init(cls,fn=None,seed=None,passwd=None):
+	def init(cls,infile=None,seed=None,passwd=None):
 
 		sstype = None
-		sopts=["%s_%s" % (l,k) for k in cls.seed_opts for l in "from","export"]
-		for o in sopts:
-			if o in opt.__dict__ and opt.__dict__[o]:
-				sstype = cls.seed_opts[o.split("_",1)[1]]
-				break
 
 		if seed:
-			return globals()[sstype or "Wallet"](seed=seed)
+			if opt.out_fmt:
+				sstype = fmt_code_to_sstype(opt.out_fmt)
+			# Output format defaults to "Wallet"
+			return globals()[sstype or "Wallet"](seed=seed,passwd=passwd)
 		else:
-			if fn:
-				if opt.from_incog_hidden:
-					fn = Filename(fn,ftype="hincog")
-				else:
-					fn = Filename(fn)
-				sstype = fn.linked_obj
-				return globals()[sstype](fn=fn)
+			if infile:
+				fn = Filename(infile)
+				return globals()[fn.sstype](fn=fn,passwd=passwd)
+			elif opt.in_fmt:  # Input format
+				sstype = fmt_code_to_sstype(opt.in_fmt)
+				return globals()[sstype](passwd=passwd)
 			else:
-				return globals()[sstype or "Wallet"]()
+				die(2,"Either an input file or input format must be specified")
 
 	init = classmethod(init)
 
@@ -127,9 +116,8 @@ empty passphrase, just hit ENTER twice.
 	}
 
 	def _pre_encode(self):
-		if not self.ssdata.passwd:
-			self._get_hash_preset()
-			self._get_first_passwd()
+		if self.ssdata.passwd == None: self._get_first_passwd()
+		self._get_hash_preset()
 		self._encrypt_seed()
 
 	def _get_first_passwd(self):
@@ -326,6 +314,7 @@ class Wallet (SeedSourceEnc):
 		passwd = get_mmgen_passphrase(self.desc+prompt_add)
 		key = make_key(passwd, d.salt, d.hash_preset)
 		self.seed = Seed(decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id))
+		self.ssdata.passwd = passwd
 
 	def _check_master_chksum(self,lines):
 
@@ -483,7 +472,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, "incog wrapper key")
 		d.key_id = make_chksum_8(d.wrapper_key)
-		d.data_len = self._get_incog_data_len(opt.seed_len)
+		d.target_data_len = self._get_incog_data_len(opt.seed_len)
 
 	def _format(self):
 		d = self.ssdata
@@ -506,14 +495,17 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _deformat(self):
 
-		# Data could be of invalid length, so check:
-		valid_dlens = map(self._get_incog_data_len, g.seed_lens)
-		# => [56, 64, 72]
+		# Data could be of invalid length, so check: [56, 64, 72]
+		valid_dlen = self._get_incog_data_len(opt.seed_len)
 		raw_d = self.fmt_data
-		if len(raw_d) not in valid_dlens:
-			die(1,
-		"Invalid incognito file size: %s.  Valid sizes (in bytes): %s" %
-				(len(raw_d), " ".join(map(str, valid_dlens))))
+		if len(raw_d) != valid_dlen:
+			msg("Invalid incognito data size: %s" % len(raw_d))
+			msg("Valid incognito data size for this seed length: %s bytes" %
+					valid_dlen)
+			for sl in g.seed_lens:
+				if len(raw_d) == self._get_incog_data_len(sl):
+					die(1,"Maybe you need to specify a seed length of %s?" % sl)
+			die(1,"The data size is invalid for all available seed lengths")
 
 		d = self.ssdata
 		d.iv             = raw_d[0:g.aesctr_iv_len]
@@ -521,8 +513,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.enc_incog_data = raw_d[g.aesctr_iv_len:]
 		msg("Incog ID: %s" % d.incog_id)
 		qmsg("Check the applicable value against your records")
-		k = 'incog_iv_id_hidden' if opt.from_incog_hidden else 'incog_iv_id'
-		vmsg("\n%s\n" % self._icg_msg[k])
+		ksuf = '_hidden' if self.__class__ == "IncogWalletHidden" else ""
+		vmsg("\n%s\n" % self._icg_msg['incog_iv_id' + ksuf])
 
 	def _decode(self):
 		d = self.ssdata
@@ -565,24 +557,35 @@ class IncogWalletHex (IncogWallet):
 		self.fmt_data = decode_pretty_hexdump(self.fmt_data)
 		IncogWallet._deformat(self)
 
+	def _format(self):
+		IncogWallet._format(self)
+		self.fmt_data = pretty_hexdump(self.fmt_data)
+
+	def _filename(self):
+		return IncogWallet._filename(self)[:-len(g.incog_ext)] + g.incog_hex_ext
+
 
 class IncogWalletHidden (IncogWallet):
 
-	def _parse_hincog_opt(self):
-		class HincogParams(MMGenObject): pass
-		o = opt.from_incog_hidden or opt.export_incog_hidden
-		p = HincogParams()
-		a,b = o.split(",")
-		p.filename = a
-		p.offset   = int(b)
-		return p
+	_hicg_msg = {
+		'choose_file_size': """
+You must choose a size for your new hidden incog data.  The minimum size is
+{} bytes, which puts the incog data right at the end of the file. Since you
+probably want to hide your data somewhere in the middle of the file where
+it's harder to find, you're advised to choose a much larger file size.
+	""".strip(),
+	}
+
+	def _get_hincog_params(self):
+		a,b = opt.hidden_incog_params.split(",")
+		return a,int(b)
 
 	def _check_valid_offset(self,fn,action):
 		d = self.ssdata
-		if fn.size < d.hincog_offset + d.data_len:
+		if fn.size < d.hincog_offset + d.target_data_len:
 			die(1,
 "Destination file has length %s, too short to %s %s bytes of data at offset %s"
-				% (f.size,action,d.data_len,d.hincog_offset))
+				% (fn.size,action,d.target_data_len,d.hincog_offset))
 
 
 	# overrides method in SeedSource
@@ -590,43 +593,62 @@ class IncogWalletHidden (IncogWallet):
 		if fn: die(1,
 "Specify the filename as a parameter of the '--from-hidden-incog' option")
 		d = self.ssdata
-		p = self._parse_hincog_opt()
-		d.hincog_offset = p.offset
-		self.infile = Filename(p.filename,ftype="hincog")
+		f,d.hincog_offset = self._get_hincog_params()
+		self.infile = Filename(f,ftype="hincog")
 
 		qmsg("Getting hidden incog data from file '%s'" % self.infile.name)
 
 		# Already sanity-checked:
-		d.data_len = self._get_incog_data_len(opt.seed_len)
+		d.target_data_len = self._get_incog_data_len(opt.seed_len)
 		self._check_valid_offset(self.infile,"read")
 
-		import os
 		fh = os.open(self.infile.name,os.O_RDONLY)
-		os.lseek(fh,int(p.offset),os.SEEK_SET)
-		self.fmt_data = os.read(fh,d.data_len)
+		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
+		self.fmt_data = os.read(fh,d.target_data_len)
 		os.close(fh)
 		qmsg("Data read from file '%s' at offset %s" %
-				(self.infile.name,p.offset), "Data read from file")
+				(self.infile.name,d.hincog_offset), "Data read from file")
 
 
 	# overrides method in SeedSource
 	def write_to_file(self):
 		d = self.ssdata
 		self._format()
-		compare_or_die(d.data_len, "target data length",
+		compare_or_die(d.target_data_len, "target data length",
 				len(self.fmt_data),"length of formatted " + self.desc)
-		p = self._parse_hincog_opt()
-		d.hincog_offset = p.offset
-		self.outfile = f = Filename(p.filename,ftype="hincog")
+		fn,d.hincog_offset = self._get_hincog_params()
+
+		self.hincog_data_is_new = False
+		try:
+			os.stat(fn)
+		except:
+			if keypress_confirm("Requested file '%s' does not exist.  Create?"
+					% fn, default_yes=True):
+				min_fsize = d.target_data_len + d.hincog_offset
+				msg(self._hicg_msg['choose_file_size'].format(min_fsize))
+				while True:
+					fsize = my_raw_input("Enter file size: ")
+					if is_int(fsize) and int(fsize) >= min_fsize: break
+					msg("File size must be an integer no less than %s" % min_fsize)
+
+				g.use_urandchars = True
+				from mmgen.tool import rand2file
+				rand2file(fn, str(fsize))
+				self.hincog_data_is_new = True
+			else:
+				die(1,"Exiting at user request")
+
+		self.outfile = f = Filename(fn,ftype="hincog")
 
 		if opt.debug:
-			Msg("Incog data len %s, offset %s" % (d.data_len,p.offset))
-		self._check_valid_offset(f,"write")
+			Msg("Incog data len %s, offset %s" % (d.target_data_len,d.hincog_offset))
 
-		if not opt.quiet: confirm_or_exit("","alter file '%s'" % f.name)
-		import os
+		if not self.hincog_data_is_new:
+			self._check_valid_offset(f,"write")
+			if not opt.quiet: confirm_or_exit("","alter file '%s'" % f.name)
+
 		fh = os.open(f.name,os.O_RDWR)
-		os.lseek(fh, int(p.offset), os.SEEK_SET)
+		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)
 		os.close(fh)
-		msg("Data written to file '%s' at offset %s" % (f.name,p.offset))
+		msg("Incog data written to file '%s' at offset %s" % (f.name,d.hincog_offset))

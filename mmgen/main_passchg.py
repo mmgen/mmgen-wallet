@@ -24,7 +24,7 @@ mmgen-passchg: Change an MMGen deterministic wallet's passphrase, label or
 import sys
 from mmgen.util import *
 from mmgen.crypto import *
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 
 opts_data = {

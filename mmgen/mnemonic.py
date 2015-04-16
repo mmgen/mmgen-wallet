@@ -24,7 +24,7 @@ import sys
 from binascii import hexlify
 from mmgen.util import msg,msg_r,make_chksum_8,Vmsg,Msg
 from mmgen.crypto import get_random
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 
 wl_checksums = {

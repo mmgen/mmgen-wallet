@@ -24,7 +24,7 @@ import sys
 from binascii import hexlify
 from hashlib import sha256
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.term import get_char

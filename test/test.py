@@ -8,7 +8,7 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import msgrepr,msgrepr_exit,Msg,die
 from mmgen.test import *

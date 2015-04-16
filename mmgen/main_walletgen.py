@@ -23,7 +23,7 @@ mmgen-walletgen: Generate an MMGen deterministic wallet
 import sys, os
 from hashlib import sha256
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.crypto import *

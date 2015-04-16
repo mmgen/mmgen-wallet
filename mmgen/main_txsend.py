@@ -22,7 +22,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 
 import sys
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.tx import *
 from mmgen.util import *

@@ -21,10 +21,10 @@ opts.py:  MMGen-specific options processing after generic processing by share.Op
 """
 import sys
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.share.Opts
 import opt
-from mmgen.util import msg,msgrepr_exit,msgrepr,Msg
+from mmgen.util import msg,msgrepr_exit,msgrepr,Msg,fmt_type
 
 def usage():
 	Msg("USAGE: %s %s" % (g.prog_name, usage_txt))
@@ -44,15 +44,17 @@ def warn_incompatible_opts(incompat_list):
 					["--"+b.replace("_","-") for b in bad]))
 		sys.exit(1)
 
-def typeconvert_from_dfl(key):
-
-	vtype = type(g.__dict__[key])
-	if g.debug: Msg("Override opt: %-15s [%s]" % (key,vtype))
+def _typeconvert_from_dfl(key):
 
 	global opt
 
+	gval = g.__dict__[key]
+	uval = opt.__dict__[key]
+	gtype = type(gval)
+	utype = type(uval)
+
 	try:
-		opt.__dict__[key] = vtype(opt.__dict__[key])
+		opt.__dict__[key] = gtype(opt.__dict__[key])
 	except:
 		d = {
 			'int':   'an integer',
@@ -60,10 +62,16 @@ def typeconvert_from_dfl(key):
 			'float': 'a float',
 			'bool':  'a boolean value',
 		}
-		m = [d[k] for k in d if __builtins__[k] == vtype]
+		m = [d[k] for k in d if __builtins__[k] == gtype]
 		fs = "'%s': invalid parameter for '--%s' option (not %s)"
 		msg(fs % (opt.__dict__[key],opt.replace("_","-"),m))
 		sys.exit(1)
+
+	if g.debug:
+		Msg("Opt overriden by user:\n    %-18s: %s" % (
+				key, ("%s -> %s" % (gval,uval))
+			))
+
 
 def _show_hash_presets():
 	fs = "  {:<7} {:<6} {:<3}  {}"
@@ -72,7 +80,6 @@ def _show_hash_presets():
 	for i in sorted(g.hash_presets.keys()):
 		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg("N = memory usage (power of two), p = iterations (rounds)")
-	sys.exit(0)
 
 def init(opts_data,add_opts=[]):
 
@@ -84,11 +91,12 @@ def init(opts_data,add_opts=[]):
 
 	if g.debug:
 		d = (
-			("short opts",         short_opts),
-			("long opts",          long_opts),
-			("user-selected opts", uopts),
-			("cmd args",           args),
+			("Short opts",         short_opts),
+			("Long opts",          long_opts),
+			("User-selected opts", uopts),
+			("Cmd args",           args),
 		)
+		Msg("\n### BEGIN OPTS.PY ###")
 		for e in d: Msg("{:<20}: {}".format(*e))
 
 	# Save this for usage()
@@ -114,21 +122,24 @@ def init(opts_data,add_opts=[]):
 	# A special case - do this here, before opt gets set from g.dfl_vars
 	if opt.usr_randchars: g.use_urandchars = True
 
-	# If user opt is unset, set it to default value in mmgen.config (g):
-	# If set, convert its type based on value in mmgen.config
+	# If user opt is set, convert its type based on value in mmgen.globalvars
+	# If unset, set it to default value in mmgen.globalvars (g):
 	for k in g.dfl_vars:
 		if k in opt.__dict__ and opt.__dict__[k] != None:
-			typeconvert_from_dfl(k)
+			_typeconvert_from_dfl(k)
 		else: opt.__dict__[k] = g.__dict__[k]
 
-	if opt.show_hash_presets: _show_hash_presets()
+	if opt.show_hash_presets:
+		_show_hash_presets(); sys.exit(0)
 	if opt.debug: opt.verbose = True
 
 	if g.debug:
-		Msg("opts after typeconvert:")
+		Msg("Opts after processing:")
 		for k in opt.__dict__:
-			if opt.__dict__[k] != None and k != "opts":
- 				msg("    %-18s: %s" % (k,opt.__dict__[k]))
+			v = opt.__dict__[k]
+			if v != None and k != "opts":
+ 				Msg("    %-18s: %-6s [%s]" % (k,v,fmt_type(v)))
+		Msg("### END OPTS.PY ###\n")
 
 	for l in (
 	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),

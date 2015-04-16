@@ -21,7 +21,7 @@ term.py:  Terminal-handling routines for the MMGen suite
 """
 
 import sys, os, struct
-import mmgen.config as g
+import mmgen.globalvars as g
 import opt
 from mmgen.util import msg, msg_r
 

@@ -1,6 +1,6 @@
 """
   Copyright (C) 2013 by philemon <mmgen-py@yandex.com>
-  Added http_timeout from mmgen.config
+  Added http_timeout from mmgen.globalvars
 
   Previous copyright from bitcoin-python/proxy.py:
 
@@ -58,7 +58,7 @@ class JSONRPCException(Exception):
 		self.error = rpcError
 
 
-import mmgen.config as g
+import mmgen.globalvars as g
 
 class AuthServiceProxy(object):
 	def __init__(self, serviceURL, serviceName = None):

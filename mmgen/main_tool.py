@@ -22,7 +22,7 @@ mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
 """
 
 import sys
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 import mmgen.tool as tool
 

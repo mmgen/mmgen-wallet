@@ -19,7 +19,7 @@
 """
 license.py:  Text of GPLv3
 """
-import mmgen.config as g
+import mmgen.globalvars as g
 
 gpl = {
 	'warning': """

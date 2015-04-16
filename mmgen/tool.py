@@ -24,7 +24,7 @@ import sys
 import mmgen.bitcoin as bitcoin
 import binascii as ba
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.crypto import *
 from mmgen.util import *
@@ -600,7 +600,7 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 
 	if not silent:
 		msg("\rRead: %s bytes" % nbytes)
-		qmsg("\r%s bytes written to file '%s'" % (nbytes,outfile))
+		qmsg("\r%s bytes of random data written to file '%s'" % (nbytes,outfile))
 	q1.join()
 	q2.join()
 	f.close()

@@ -120,6 +120,15 @@ max_addr_label_len = 32
 max_wallet_label_len = 48
 max_tx_comment_len = 72   # Comment is b58 encoded, so can permit all UTF-8
 
+wallet_fmt_codes = (
+	( "Wallet",            "wallet", "w" ),
+	( "SeedFile",          "mmseed","seed", "s" ),
+	( "Mnemonic",          "mmwords","words","mnemonic","mnem","m" ),
+	( "Brainwallet",       "mmbrain","brainwallet","brain","bw","b" ),
+	( "IncogWallet",       "mmincog","incog","i" ),
+	( "IncogWalletHex",    "mmincox","incog_hex","ix" ),
+	( "IncogWalletHidden", "incog_hidden","ih" ),
+)
 #addr_label_punc = ".","_",",","-"," ","(",")"
 #addr_label_symbols = tuple(ascii_letters + digits) + addr_label_punc
 #wallet_label_punc = addr_label_punc

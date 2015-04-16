@@ -23,7 +23,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 
 import sys
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.util import *
 from mmgen.crypto import *

@@ -30,7 +30,7 @@ from mmgen.bitcoin import numtowif
 from mmgen.util import *
 from mmgen.tx import *
 from mmgen.obj import *
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
 
 pnm = g.proj_name

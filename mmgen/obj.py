@@ -19,7 +19,7 @@
 """
 obj.py:  The MMGenObject class and methods
 """
-import mmgen.config as g
+import mmgen.globalvars as g
 from mmgen.util import msgrepr_exit,msgrepr
 
 lvl = 0
@@ -89,4 +89,5 @@ class MMGenObject(object):
 				lvl -= 1
 			else:
 				out.append(fs % (k, conv(val,col_w)))
-		return "\n".join(out)
+
+		return repr(self) + "\n    " + "\n    ".join(out)
