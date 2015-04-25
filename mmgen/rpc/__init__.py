@@ -23,7 +23,7 @@ bitcoin-python - Easy-to-use Bitcoin API client
 
 
 def connect_to_local(filename=None):
-    """
+	"""
     Connect to default bitcoin instance owned by this user, on this machine.
 
     Returns a :class:`~mmgen.rpc.connection.BitcoinConnection` object.
@@ -31,24 +31,23 @@ def connect_to_local(filename=None):
     Arguments:
 
         - `filename`: Path to a configuration file in a non-standard location (optional)
-    """
-    from mmgen.rpc.connection import BitcoinConnection
-    from mmgen.rpc.config import read_default_config
+	"""
+	from mmgen.rpc.connection import BitcoinConnection
+	from mmgen.rpc.config import read_default_config
 
-    cfg = read_default_config(filename)
-    port = int(cfg.get('rpcport', '18332' if cfg.get('testnet') else '8332'))
-    rcpuser = cfg.get('rpcuser', '')
+	cfg = read_default_config(filename)
+	port = int(cfg.get('rpcport', '18332' if cfg.get('testnet') else '8332'))
+	rcpuser = cfg.get('rpcuser', '')
 
-    return BitcoinConnection(rcpuser, cfg['rpcpassword'], 'localhost', port)
+	return BitcoinConnection(rcpuser, cfg['rpcpassword'], 'localhost', port)
 
 
-def connect_to_remote(user, password, host='localhost', port=8332,
-                      use_https=False):
-    """
+def connect_to_remote(user,password,host='localhost',port=8332,use_https=False):
+	"""
     Connect to remote or alternative local bitcoin client instance.
 
     Returns a :class:`~mmgen.rpc.connection.BitcoinConnection` object.
-    """
-    from mmgen.rpc.connection import BitcoinConnection
+	"""
+	from mmgen.rpc.connection import BitcoinConnection
 
-    return BitcoinConnection(user, password, host, port, use_https)
+	return BitcoinConnection(user, password, host, port, use_https)

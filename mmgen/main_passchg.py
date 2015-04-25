@@ -67,8 +67,8 @@ seed_id,key_id = metadata[:2]
 
 # Repeat on incorrect pw entry
 while True:
-	p = "{pnm} wallet".format(pnm=g.proj_name)
-	passwd = get_mmgen_passphrase(p,not opt.keep_old_passphrase)
+	desc = "{pnm} wallet".format(pnm=g.proj_name)
+	passwd = get_mmgen_passphrase(desc,not opt.keep_old_passphrase)
 	key = make_key(passwd, salt, hash_preset)
 	seed = decrypt_seed(enc_seed, key, seed_id, key_id)
 	if seed: break

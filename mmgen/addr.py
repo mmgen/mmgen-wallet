@@ -224,6 +224,13 @@ class AddrInfoList(MMGenObject):
 		if sid in self.data:
 			return self.data[sid]
 
+	def mmaddr2btcaddr(self,mmaddr):
+		btcaddr = ""
+		sid,idx = mmaddr.split(":")
+		if sid in self.seed_ids():
+			btcaddr = self.addrinfo(sid).btcaddr(int(idx))
+		return btcaddr
+
 	def add_wallet_data(self,c):
 		vmsg_r("Getting account data from wallet...")
 		data,accts,i = {},c.listaccounts(minconf=0,includeWatchonly=True),0
@@ -291,10 +298,12 @@ class AddrInfo(MMGenObject):
 		self.seed_id = seed_id
 		self.addrdata = addrdata
 		self.num_addrs = len(addrdata)
-		if self.source in ("wallet","txsign") or \
-				(self.source == "addrgen" and opt.gen_what == "k"):
+		if self.source in ("wallet","txsign"):
 			self.checksum = None
 			self.idxs_fmt = None
+		elif self.source == "addrgen" and opt.gen_what == "k":
+			self.checksum = None
+			self.fmt_addr_idxs()
 		else: # self.source in addrfile, addrgen
 			self.make_addrdata_chksum()
 			self.fmt_addr_idxs()
@@ -383,10 +392,11 @@ class AddrInfo(MMGenObject):
 		out = []
 		from mmgen.addr import addrmsgs
 		out.append(addrmsgs['addrfile_header'] + "\n")
-		w = "Key-address" if status[1] else "Address"
-		out.append("# {} data checksum for {}[{}]: {}".format(
-					w, self.seed_id, self.idxs_fmt, self.checksum))
-		out.append("# Record this value to a secure location\n")
+		if self.checksum:
+			w = "Key-address" if status[1] else "Address"
+			out.append("# {} data checksum for {}[{}]: {}".format(
+						w, self.seed_id, self.idxs_fmt, self.checksum))
+			out.append("# Record this value to a secure location\n")
 		out.append("%s {" % self.seed_id)
 
 		# Body
@@ -409,7 +419,7 @@ class AddrInfo(MMGenObject):
 
 		out.append("}")
 
-		return "\n".join([l.rstrip() for l in out])
+		return "\n".join([l.rstrip() for l in out]) + "\n"
 
 
 	def fmt_addr_idxs(self):

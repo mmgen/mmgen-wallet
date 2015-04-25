@@ -25,7 +25,7 @@ import sys
 import mmgen.globalvars as g
 import mmgen.opt as opt
 from mmgen.tx import *
-from mmgen.util import do_license_msg
+from mmgen.util import do_license_msg,dmsg
 
 pnm = g.proj_name
 pnl = pnm.lower()
@@ -150,7 +150,7 @@ def sign_transaction(c,tx_hex,tx_num_str,sig_data,keys=None):
 
 	if keys:
 		qmsg("Passing %s key%s to bitcoind" % (len(keys),suf(keys,"k")))
-		if opt.debug: Msg("Keys:\n  %s" % "\n  ".join(keys))
+		dmsg("Keys:\n  %s" % "\n  ".join(keys))
 
 	msg_r("Signing transaction{}...".format(tx_num_str))
 	from mmgen.rpc import exceptions
@@ -192,11 +192,11 @@ def sign_tx_with_bitcoind_wallet(c,tx_hex,tx_num_str,sig_data,keys):
 	return sig_tx
 
 
-def check_maps_from_seeds(maplist,what,infiles,saved_seeds,return_keys=False):
+def check_maps_from_seeds(maplist,desc,infiles,saved_seeds,return_keys=False):
 
 	if not maplist: return []
 	qmsg("Checking {pnm} -> BTC address mappings for {w}s (from seed(s))".format(
-				pnm=pnm,w=what))
+				pnm=pnm,w=desc))
 	d = get_keys_for_mmgen_addrs(maplist.keys(),infiles,saved_seeds)
 #	0=mmaddr 1=addr 2=wif
 	m = dict([(e[0],e[1]) for e in d])
@@ -253,9 +253,9 @@ def parse_keylist(from_file):
 
 
 # Check inputs and outputs maps against key-address file, deleting entries:
-def check_maps_from_kafile(imap,what,kadata,return_keys=False):
+def check_maps_from_kafile(imap,desc,kadata,return_keys=False):
 	if not kadata: return []
-	qmsg("Checking {pnm} -> BTC address mappings for {w}s (from key-address file)".format(pnm=pnm,w=what))
+	qmsg("Checking {pnm} -> BTC address mappings for {w}s (from key-address file)".format(pnm=pnm,w=desc))
 	ret = []
 	for k in imap.keys():
 		if k in kadata.keys():
@@ -266,9 +266,9 @@ def check_maps_from_kafile(imap,what,kadata,return_keys=False):
 				kl,il = "key-address file:","tx file:"
 				msg(wmsg['mm2btc_mapping_error']%(kl,k,kadata[k][0],il,k,imap[k]))
 				sys.exit(2)
-	if ret: vmsg("Removed %s address%s from %ss map" % (len(ret),suf(ret,"a"),what))
+	if ret: vmsg("Removed %s address%s from %ss map" % (len(ret),suf(ret,"a"),desc))
 	if return_keys:
-		vmsg("Added %s wif key%s from %ss map" % (len(ret),suf(ret,"k"),what))
+		vmsg("Added %s wif key%s from %ss map" % (len(ret),suf(ret,"k"),desc))
 		return ret
 
 
@@ -288,7 +288,7 @@ infiles = opt.opts.init(opts_data,add_opts=["b16"])
 for l in (
 ('tx_id', 'info'),
 ('tx_id', 'terse_info'),
-): opt.opts.warn_incompatible_opts(l)
+): opt.opts.die_on_incompatible_opts(l)
 
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 

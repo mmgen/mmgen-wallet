@@ -9,7 +9,7 @@ os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
 import mmgen.opt as opt
-from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,msgrepr, msgrepr_exit
+from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,mmsg,mdie
 from collections import OrderedDict
 
 cmd_data = OrderedDict([
@@ -93,8 +93,6 @@ If no command is given, the whole suite of tests is run.
 cmd_args = opt.opts.init(opts_data,add_opts=["exact_output"])
 
 if opt.system: sys.path.pop(0)
-
-if opt.debug: opt.verbose = True
 
 if opt.list_cmds:
 	fs = "  {:<{w}} - {}"

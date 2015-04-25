@@ -10,7 +10,7 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
 import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import msgrepr,msgrepr_exit,Msg,die
+from mmgen.util import mmsg,mdie,Msg,die
 from mmgen.test import *
 
 hincog_fn      = "rand_data"
@@ -35,6 +35,9 @@ ref_kafile_pass        = "kafile password"
 ref_kafile_hash_preset = "1"
 
 ref_enc_fn = "sample-text.mmenc"
+tool_enc_passwd = "Scrypt it, don't hash it!"
+sample_text = \
+	"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n"
 
 cfgs = {
 	'6': {
@@ -46,8 +49,11 @@ cfgs = {
 		'keyaddrfile_chk': "CF83 32FB 8A8B 08E2 0F00 D601",
 		'wpasswd':         "reference password",
 		'ref_wallet':      "FE3C6545-D782B529[128,1].mmdat",
-		'ic_wallet':       "FE3C6545-161E495F-BEB7548E[128:1].incog-offset123",
-		'ic_wallet_old':   "FE3C6545-161E495F-9860A85B[128:1].incog-old.offset123",
+		'ic_wallet':       "FE3C6545-E29303EA-5E229E30[128,1].mmincog",
+		'ic_wallet_hex':   "FE3C6545-BC4BE3F2-32586837[128,1].mmincox",
+
+		'hic_wallet':       "FE3C6545-161E495F-BEB7548E[128:1].incog-offset123",
+		'hic_wallet_old':   "FE3C6545-161E495F-9860A85B[128:1].incog-old.offset123",
 
 		'tmpdir':        os.path.join("test","tmp6"),
 		'kapasswd':      "",
@@ -68,8 +74,11 @@ cfgs = {
 		'keyaddrfile_chk': "9648 5132 B98E 3AD9 6FC3 C5AD",
 		'wpasswd':         "reference password",
 		'ref_wallet':      "1378FC64-6F0F9BB4[192,1].mmdat",
-		'ic_wallet':       "1378FC64-B55E9958-77256FC1[192:1].incog.offset123",
-		'ic_wallet_old':   "1378FC64-B55E9958-D85FF20C[192:1].incog-old.offset123",
+		'ic_wallet':       "1378FC64-2907DE97-F980D21F[192,1].mmincog",
+		'ic_wallet_hex':   "1378FC64-4DCB5174-872806A7[192,1].mmincox",
+
+		'hic_wallet':       "1378FC64-B55E9958-77256FC1[192:1].incog.offset123",
+		'hic_wallet_old':   "1378FC64-B55E9958-D85FF20C[192:1].incog-old.offset123",
 
 		'tmpdir':        os.path.join("test","tmp7"),
 		'kapasswd':      "",
@@ -97,8 +106,11 @@ cfgs = {
 
 #		'ref_fake_unspent_data':"98831F3A_unspent.json",
 		'ref_tx_file':     "tx_FFB367[1.234].raw",
-		'ic_wallet':       "98831F3A-F59B07A0-559CEF19[256:1].incog.offset123",
-		'ic_wallet_old':   "98831F3A-F59B07A0-848535F3[256:1].incog-old.offset123",
+		'ic_wallet':       "98831F3A-5482381C-18460FB1[256,1].mmincog",
+		'ic_wallet_hex':   "98831F3A-1630A9F2-870376A9[256,1].mmincox",
+
+		'hic_wallet':       "98831F3A-F59B07A0-559CEF19[256:1].incog.offset123",
+		'hic_wallet_old':   "98831F3A-F59B07A0-848535F3[256:1].incog-old.offset123",
 
 		'tmpdir':        os.path.join("test","tmp8"),
 		'kapasswd':      "",
@@ -108,7 +120,6 @@ cfgs = {
 			'addrs':       "refaddrgen3",
 			'akeys.mmenc': "refkeyaddrgen3"
 		},
-
 	},
 	'1': {
 		'tmpdir':        os.path.join("test","tmp1"),
@@ -133,7 +144,7 @@ cfgs = {
 		'tmpdir':        os.path.join("test","tmp2"),
 		'wpasswd':       "Hodling away",
 		'addr_idx_list': "37,45,3-6,22-23",  # 8 addresses
-        'seed_len':      128,
+		'seed_len':      128,
 		'dep_generators': {
 			'mmdat':       "walletgen2",
 			'addrs':       "addrgen2",
@@ -157,7 +168,7 @@ cfgs = {
 		'tmpdir':        os.path.join("test","tmp4"),
 		'wpasswd':       "Hashrate rising",
 		'addr_idx_list': "63,1004,542-544,7-9", # 8 addresses
-        'seed_len':      192,
+		'seed_len':      192,
 		'dep_generators': {
 			'mmdat':       "walletgen4",
 			'mmbrain':     "walletgen4",
@@ -177,9 +188,6 @@ cfgs = {
 	},
 	'9': {
 		'tmpdir':        os.path.join("test","tmp9"),
-		'tool_enc_passwd': "Scrypt it, don't hash it!",
-		'sample_text':
-	"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n",
 		'tool_enc_infn':      "tool_encrypt.in",
 #		'tool_enc_ref_infn':  "tool_encrypt_ref.in",
 		'dep_generators': {
@@ -191,46 +199,14 @@ cfgs = {
 	},
 }
 
+from copy import deepcopy
+for a,b in ('6','11'),('7','12'),('8','13'):
+	cfgs[b] = deepcopy(cfgs[a])
+	cfgs[b]['tmpdir'] = os.path.join("test","tmp"+b)
+
 from collections import OrderedDict
 cmd_data = OrderedDict([
 #     test               description                  depends
-	# Check saved reference files:
-	['ref_wallet_chk1', (6,'saved reference wallet (128-bit)', [[[],6]])],
-	['ref_wallet_chk2', (7,'saved reference wallet (192-bit)', [[[],7]])],
-	['ref_wallet_chk3', (8,'saved reference wallet (256-bit)', [[[],8]])],
-	['ref_seed_chk1',   (6,'saved seed file (128-bit)', [[[],6]])],
-	['ref_seed_chk2',   (7,'saved seed file (192-bit)', [[[],7]])],
-	['ref_seed_chk3',   (8,'saved seed file (256-bit)', [[[],8]])],
-	['ref_mn_chk1',     (6,'saved mnemonic file (128-bit)', [[[],6]])],
-	['ref_mn_chk2',     (7,'saved mnemonic file (192-bit)', [[[],7]])],
-	['ref_mn_chk3',     (8,'saved mnemonic file (256-bit)', [[[],8]])],
-	['ref_incog_chk1',  (6,'saved incog reference wallet (128-bit)', [[[],6]])],
-	['ref_incog_chk2',  (7,'saved incog reference wallet (192-bit)', [[[],7]])],
-	['ref_incog_chk3',  (8,'saved incog reference wallet (256-bit)', [[[],8]])],
-	['ref_brain_chk1',  (6,'saved brainwallet (128-bit)', [[[],6]])],
-	['ref_brain_chk2',  (7,'saved brainwallet (192-bit)', [[[],7]])],
-	['ref_brain_chk3',  (8,'saved brainwallet (256-bit)', [[[],8]])],
-	['ref_brain_chk3_spc', (8,'saved brainwallet (256-bit, non-standard spacing)', [[[],8]])],
-
-	['ref_addrfile_chk',  (8,'saved reference address file', [[[],8]])],
-	['ref_keyaddrfile_chk', (8,'saved reference key-address file', [[[],8]])],
-# Create the fake inputs:
-#	['txcreate8',        (8,'transaction creation (8)',  [[["addrs"],8]])],
-	['ref_tx_chk',       (8,'saved reference tx file', [[[],8]])],
-
-	['ref_tool_decrypt', (9,'decryption of saved MMGen-encrypted file', [[[],9]])],
-
-	# Generate new reference ('abc' brainwallet) files:
-	['refwalletgen1', (6,'gen new refwallet (128-bit)', [[[],6]])],
-	['refwalletgen2', (7,'gen new refwallet (192-bit)', [[[],7]])],
-	['refwalletgen3', (8,'gen new refwallet (256-bit)', [[[],8]])],
-	['refaddrgen1',   (6,'new refwallet addr chksum (128-bit)', [[["mmdat"],6]])],
-	['refaddrgen2',   (7,'new refwallet addr chksum (192-bit)', [[["mmdat"],7]])],
-	['refaddrgen3',   (8,'new refwallet addr chksum (256-bit)', [[["mmdat"],8]])],
-	['refkeyaddrgen1', (6,'new refwallet key-addr chksum (128-bit)', [[["mmdat"],6]])],
-	['refkeyaddrgen2', (7,'new refwallet key-addr chksum (192-bit)', [[["mmdat"],7]])],
-	['refkeyaddrgen3', (8,'new refwallet key-addr chksum (256-bit)', [[["mmdat"],8]])],
-
 	['walletgen',       (1,'wallet generation',        [[[],1]])],
 #	['walletchk',       (1,'wallet check',             [[["mmdat"],1]])],
 	['passchg',         (5,'password, label and hash preset change',[[["mmdat"],1]])],
@@ -256,13 +232,11 @@ cmd_data = OrderedDict([
 	['keyaddrgen',    (1,'key-address file generation', [[["mmdat"],1]])],
 	['txsign_keyaddr',(1,'transaction signing with key-address file', [[["akeys.mmenc","raw"],1]])],
 
-#	['walletgen2',(2,'wallet generation (2)',     [])],
 	['walletgen2',(2,'wallet generation (2), 128-bit seed',     [])],
 	['addrgen2',  (2,'address generation (2)',    [[["mmdat"],2]])],
 	['txcreate2', (2,'transaction creation (2)',  [[["addrs"],2]])],
 	['txsign2',   (2,'transaction signing, two transactions',[[["mmdat","raw"],1],[["mmdat","raw"],2]])],
 	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[["mmdat"],2]])],
-#	['export_mnemonic2', (2,'seed export to mmwords format (2), 128-bit seed (WIP)',[[["mmdat"],2]])],
 
 	['walletgen3',(3,'wallet generation (3)',                  [])],
 	['addrgen3',  (3,'address generation (3)',                 [[["mmdat"],3]])],
@@ -270,17 +244,82 @@ cmd_data = OrderedDict([
 	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[["mmdat"],1],[["mmdat","raw"],3]])],
 
 	['walletgen4',(4,'wallet generation (4) (brainwallet)',    [])],
-#	['walletgen4',(4,'wallet generation (4) (brainwallet, 192-bit seed (WIP))', [])],
 	['addrgen4',  (4,'address generation (4)',                 [[["mmdat"],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[["addrs"],1],[["addrs"],2],[["addrs"],3],[["addrs"],4]])],
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[["mmincog"],1],[["mmwords"],2],[["mmdat"],3],[["mmbrain","raw"],4]])],
 	['tool_encrypt',     (9,"'mmgen-tool encrypt' (random data)",     [])],
-	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)",
-		[[[cfgs['9']['tool_enc_infn'],
-		   cfgs['9']['tool_enc_infn']+".mmenc"],9]])],
+	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)", [[[cfgs['9']['tool_enc_infn'],cfgs['9']['tool_enc_infn']+".mmenc"],9]])],
 #	['tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])],
 	['tool_find_incog_data', (9,"'mmgen-tool find_incog_data'", [[[hincog_fn],1],[[incog_id_fn],1]])],
 ])
+
+# saved reference data
+cmd_data_ref = (
+	# reading
+	('ref_wallet_chk', ([],'saved reference wallet')),
+	('ref_seed_chk',   ([],'saved seed file')),
+	('ref_mn_chk',     ([],'saved mnemonic file')),
+	('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
+	('ref_brain_chk',  ([],'saved brainwallet')),
+	# generating new reference ('abc' brainwallet) files:
+	('refwalletgen',   ([],'gen new refwallet')),
+	('refaddrgen',     (["mmdat"],'new refwallet addr chksum')),
+	('refkeyaddrgen',  (["mmdat"],'new refwallet key-addr chksum'))
+)
+
+# misc. saved reference data
+cmd_data_ref_other = (
+	('ref_addrfile_chk',   'saved reference address file'),
+	('ref_keyaddrfile_chk','saved reference key-address file'),
+#	Create the fake inputs:
+#	('txcreate8',          'transaction creation (8)'),
+	('ref_tx_chk',         'saved reference tx file'),
+	('ref_brain_chk_spc3', 'saved brainwallet (non-standard spacing)'),
+	('ref_tool_decrypt',   'decryption of saved MMGen-encrypted file'),
+)
+
+# mmgen-walletconv:
+cmd_data_conv_in = ( # reading
+	('ref_wallet_conv',    'conversion of saved reference wallet'),
+	('ref_mn_conv',        'conversion of saved mnemonic'),
+	('ref_seed_conv',      'conversion of saved seed file'),
+	('ref_brain_conv',     'conversion of ref brainwallet'),
+	('ref_incog_conv',     'conversion of saved incog wallet'),
+	('ref_incox_conv',     'conversion of saved hex incog wallet'),
+	('ref_hincog_conv',    'conversion of saved hidden incog wallet'),
+	('ref_hincog_conv_old','conversion of saved hidden incog wallet (old format)')
+)
+cmd_data_conv_out = ( # writing
+	('ref_wallet_conv_out', 'ref seed conversion to wallet'),
+	('ref_mn_conv_out',     'ref seed conversion to mnemonic'),
+	('ref_seed_conv_out',   'ref seed conversion to seed'),
+	('ref_incog_conv_out',  'ref seed conversion to incog data'),
+	('ref_incox_conv_out',  'ref seed conversion to hex incog data'),
+	('ref_hincog_conv_out', 'ref seed conversion to hidden incog data')
+)
+
+cmd_groups = OrderedDict([
+	('main',      cmd_data.keys()),
+	('ref',       [c[0]+str(i) for c in cmd_data_ref for i in (1,2,3)]),
+	('ref_other', [c[0] for c in cmd_data_ref_other]),
+	('conv_in',   [c[0]+str(i) for c in cmd_data_conv_in for i in (1,2,3)]),
+	('conv_out',  [c[0]+str(i) for c in cmd_data_conv_out for i in (1,2,3)]),
+])
+
+for a,b in cmd_data_ref:
+	for i,j in (1,128),(2,192),(3,256):
+		cmd_data[a+str(i)] = (5+i,"%s (%s-bit)" % (b[1],j),[[b[0],5+i]])
+
+for a,b in cmd_data_ref_other:
+	cmd_data[a] = (8,b,[[[],8]])
+
+for a,b in cmd_data_conv_in:
+	for i,j in (1,128),(2,192),(3,256):
+		cmd_data[a+str(i)] = (10+i,"%s (%s-bit)" % (b,j),[[[],10+i]])
+
+for a,b in cmd_data_conv_out:
+	for i,j in (1,128),(2,192),(3,256):
+		cmd_data[a+str(i)] = (10+i,"%s (%s-bit)" % (b,j),[[[],10+i]])
 
 utils = {
 	'check_deps': 'check dependencies for specified command',
@@ -296,23 +335,34 @@ for k in cfgs.keys():
 		cfgs[k]['amts'][idx] = "%s.%s" % ((getrandnum(2) % mod), str(getrandnum(4))[:5])
 
 meta_cmds = OrderedDict([
-	['saved_ref1', (6,("ref_wallet_chk1","ref_seed_chk1","ref_mn_chk1","ref_brain_chk1","ref_incog_chk1"))],
-	['saved_ref2', (7,("ref_wallet_chk2","ref_seed_chk2","ref_mn_chk2","ref_brain_chk2","ref_incog_chk2"))],
-	['saved_ref3', (8,("ref_wallet_chk3","ref_seed_chk3","ref_mn_chk3","ref_brain_chk3","ref_incog_chk3","ref_brain_chk3_spc"))],
-	['saved_ref_other',  (8,("ref_addrfile_chk","ref_tx_chk","ref_tool_decrypt"))],
-	['ref1', (6,("refwalletgen1","refaddrgen1","refkeyaddrgen1"))],
-	['ref2', (7,("refwalletgen2","refaddrgen2","refkeyaddrgen2"))],
-	['ref3', (8,("refwalletgen3","refaddrgen3","refkeyaddrgen3"))],
-	['gen',  (1,("walletgen","addrgen"))],
-	['pass', (5,("passchg","walletchk_newpass"))],
-	['tx',   (1,("txcreate","txsign","txsend"))],
-	['export', (1,[k for k in cmd_data if k[:7] == "export_" and cmd_data[k][0] == 1])],
-	['gen_sp', (1,[k for k in cmd_data if k[:8] == "addrgen_" and cmd_data[k][0] == 1])],
-	['online', (1,("keyaddrgen","txsign_keyaddr"))],
-	['2', (2,[k for k in cmd_data if cmd_data[k][0] == 2])],
-	['3', (3,[k for k in cmd_data if cmd_data[k][0] == 3])],
-	['4', (4,[k for k in cmd_data if cmd_data[k][0] == 4])],
-	['tool', (9,("tool_encrypt","tool_decrypt","tool_find_incog_data"))],
+	['ref1', ("refwalletgen1","refaddrgen1","refkeyaddrgen1")],
+	['ref2', ("refwalletgen2","refaddrgen2","refkeyaddrgen2")],
+	['ref3', ("refwalletgen3","refaddrgen3","refkeyaddrgen3")],
+	['gen',  ("walletgen","addrgen")],
+	['pass', ("passchg","walletchk_newpass")],
+	['tx',   ("addrimport","txcreate","txsign","txsend")],
+	['export', [k for k in cmd_data if k[:7] == "export_" and cmd_data[k][0] == 1]],
+	['gen_sp', [k for k in cmd_data if k[:8] == "addrgen_" and cmd_data[k][0] == 1]],
+	['online', ("keyaddrgen","txsign_keyaddr")],
+	['2', [k for k in cmd_data if cmd_data[k][0] == 2]],
+	['3', [k for k in cmd_data if cmd_data[k][0] == 3]],
+	['4', [k for k in cmd_data if cmd_data[k][0] == 4]],
+
+	['tool', ("tool_encrypt","tool_decrypt","tool_find_incog_data")],
+
+	['saved_ref1', [c[0]+"1" for c in cmd_data_ref]],
+	['saved_ref2', [c[0]+"2" for c in cmd_data_ref]],
+	['saved_ref3', [c[0]+"3" for c in cmd_data_ref]],
+
+	['saved_ref_other', [c[0] for c in cmd_data_ref_other]],
+
+	['saved_ref_conv_in1', [c[0]+"1" for c in cmd_data_conv_in]],
+	['saved_ref_conv_in2', [c[0]+"2" for c in cmd_data_conv_in]],
+	['saved_ref_conv_in3', [c[0]+"3" for c in cmd_data_conv_in]],
+
+	['saved_ref_conv_out1', [c[0]+"1" for c in cmd_data_conv_out]],
+	['saved_ref_conv_out2', [c[0]+"2" for c in cmd_data_conv_out]],
+	['saved_ref_conv_out3', [c[0]+"3" for c in cmd_data_conv_out]],
 ])
 
 opts_data = {
@@ -350,8 +400,6 @@ else:
 	send_delay = 0
 	os.environ["MMGEN_DISABLE_HOLD_PROTECT"] = "1"
 
-if opt.debug: opt.verbose = True
-
 if opt.exact_output:
 	def msg(s): pass
 	vmsg = vmsg_r = msg_r = msg
@@ -378,15 +426,22 @@ def errmsg_r(s): stderr_save.write(s)
 
 if opt.list_cmds:
 	fs = "  {:<{w}} - {}"
-	Msg("Available commands:")
+	Msg("AVAILABLE COMMANDS:")
 	w = max([len(i) for i in cmd_data])
 	for cmd in cmd_data:
 		Msg(fs.format(cmd,cmd_data[cmd][1],w=w))
-	Msg("\nAvailable metacommands:")
+
 	w = max([len(i) for i in meta_cmds])
+	Msg("\nAVAILABLE METACOMMANDS:")
 	for cmd in meta_cmds:
-		Msg(fs.format(cmd," + ".join(meta_cmds[cmd][1]),w=w))
-	Msg("\nAvailable utilities:")
+		Msg(fs.format(cmd," ".join(meta_cmds[cmd]),w=w))
+
+	w = max([len(i) for i in cmd_groups.keys()])
+	Msg("\nAVAILABLE COMMAND GROUPS:")
+	for g in cmd_groups.keys():
+		Msg(fs.format(g," ".join(cmd_groups[g]),w=w))
+
+	Msg("\nAVAILABLE UTILITIES:")
 	w = max([len(i) for i in utils])
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
@@ -428,7 +483,8 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 	else:
 		if t == '':
 			if not nonl: vmsg("")
-		else: ret = my_send(p,t,delay,s)
+		else:
+			my_send(p,t,delay,s)
 		return ret
 
 def get_file_with_ext(ext,mydir,delete=True):
@@ -502,28 +558,32 @@ class MMGenExpect(object):
 			vmsg("EOT")
 		my_expect(self.p,"ENTER to continue: ",'\n')
 
-	def passphrase_new(self,what,passphrase):
-		my_expect(self.p,("Enter passphrase for %s: " % what), passphrase+"\n")
+	def passphrase_new(self,desc,passphrase):
+		my_expect(self.p,("Enter passphrase for %s: " % desc), passphrase+"\n")
 		my_expect(self.p,"Repeat passphrase: ", passphrase+"\n")
 
-	def passphrase(self,what,passphrase,pwtype=""):
+	def passphrase(self,desc,passphrase,pwtype=""):
 		if pwtype: pwtype += " "
-		my_expect(self.p,("Enter %spassphrase for %s.*?: " % (pwtype,what)),
+		my_expect(self.p,("Enter %spassphrase for %s.*?: " % (pwtype,desc)),
 				passphrase+"\n",regex=True)
 
-	def hash_preset(self,what,preset=''):
-		my_expect(self.p,("Enter hash preset for %s," % what))
+	def hash_preset(self,desc,preset=''):
+		my_expect(self.p,("Enter hash preset for %s," % desc))
 		my_expect(self.p,("or hit ENTER .*?:"), str(preset)+"\n",regex=True)
 
-	def written_to_file(self,what,overwrite_unlikely=False,query="Overwrite?  "):
-		s1 = "%s written to file " % what
+	def written_to_file(self,desc,overwrite_unlikely=False,query="Overwrite?  ",oo=False):
+		s1 = "%s written to file " % desc
 		s2 = query + "Type uppercase 'YES' to confirm: "
 		ret = my_expect(self.p,s1 if overwrite_unlikely else [s1,s2])
 		if ret == 1:
 			my_send(self.p,"YES\n")
-			ret = my_expect(self.p,s1)
+			if oo:
+				outfile = self.expect_getend("Overwriting file '").rstrip("'")
+				return outfile
+			else:
+				ret = my_expect(self.p,s1)
 		outfile = self.p.readline().strip().strip("'")
-		vmsg("%s file: %s" % (what,cyan(outfile.replace("'",""))))
+		vmsg("%s file: %s" % (desc,cyan(outfile.replace("'",""))))
 		return outfile
 
 	def no_overwrite(self):
@@ -679,15 +739,15 @@ def check_needs_rerun(ts,cmd,build=False,root=True,force_delete=False,dpy=False)
 
 	return rerun
 
-def refcheck(what,chk,refchk):
-	vmsg("Comparing %s '%s' to stored reference" % (what,chk))
+def refcheck(desc,chk,refchk):
+	vmsg("Comparing %s '%s' to stored reference" % (desc,chk))
 	if chk == refchk:
 		ok()
 	else:
 		if not opt.verbose: errmsg("")
 		errmsg(red("""
 Fatal error - %s '%s' does not match reference value '%s'.  Aborting test
-""".strip() % (what,chk,refchk)))
+""".strip() % (desc,chk,refchk)))
 		sys.exit(3)
 
 def check_deps(cmds):
@@ -711,7 +771,7 @@ def check_deps(cmds):
 		c = rebuild_list[cmd]
 		m = "Rebuild" if (c[0] and c[1]) else "Build" if c[0] else "OK"
 		msg("cmd {:<{w}} {}".format(cmd+":", m, w=w))
-#			msgrepr(cmd,c)
+#			mmsg(cmd,c)
 
 
 def clean(dirs=[]):
@@ -738,7 +798,7 @@ class MMGenTestSuite(object):
 	def get_num_exts_for_cmd(self,cmd,dpy=False): # dpy ignored here
 		num = str(cmd_data[cmd][0])
 		dgl = cfgs[num]['dep_generators']
-#	msgrepr(num,cmd,dgl)
+#	mmsg(num,cmd,dgl)
 		if cmd in dgl.values():
 			exts = [k for k in dgl if dgl[k] == cmd]
 			return (num,exts)
@@ -801,9 +861,9 @@ class MMGenTestSuite(object):
 		t.usr_rand(10)
 		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
 		seed_id = t.written_to_file("Wallet").split("-")[0].split("/")[-1]
-		refcheck("seed id",seed_id,cfg['seed_id'])
+		refcheck("seed ID",seed_id,cfg['seed_id'])
 
- 	refwalletgen1 = refwalletgen2 = refwalletgen3 = refwalletgen
+	refwalletgen1 = refwalletgen2 = refwalletgen3 = refwalletgen
 
 	def passchg(self,name,walletfile):
 
@@ -850,7 +910,7 @@ class MMGenTestSuite(object):
 		d = " (%s-bit seed)" % cfg['seed_len']
 		self.addrgen(name,walletfile,check_ref=True)
 
- 	refaddrgen1 = refaddrgen2 = refaddrgen3 = refaddrgen
+	refaddrgen1 = refaddrgen2 = refaddrgen3 = refaddrgen
 
 	def addrimport(self,name,addrfile):
 		outfile = os.path.join(cfg['tmpdir'],"addrfile_w_comments")
@@ -1014,11 +1074,11 @@ class MMGenTestSuite(object):
 		t.written_to_file("Data",query="")
 		ok()
 
-	def addrgen_seed(self,name,walletfile,foo,what="seed data",arg="-s"):
+	def addrgen_seed(self,name,walletfile,foo,desc="seed data",arg="-s"):
 		t = MMGenExpect(name,"mmgen-addrgen",
 				[arg,"-d",cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
 		t.license()
-		t.expect_getend("Valid %s for seed ID " % what)
+		t.expect_getend("Valid %s for seed ID " % desc)
 		vmsg("Comparing generated checksum with checksum from previous address file")
 		chk = t.expect_getend(r"Checksum for address data .*?: ",regex=True)
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
@@ -1026,14 +1086,14 @@ class MMGenTestSuite(object):
 		ok()
 
 	def addrgen_mnemonic(self,name,walletfile,foo):
-		self.addrgen_seed(name,walletfile,foo,what="mnemonic",arg="-m")
+		self.addrgen_seed(name,walletfile,foo,desc="mnemonic",arg="-m")
 
 	def addrgen_incog(self,name,walletfile,foo,args=["-g"]):
 		t = MMGenExpect(name,"mmgen-addrgen",args+["-d",
 				cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
 		t.license()
 		t.expect_getend("Incog ID: ")
-		t.passphrase("MMGen incognito wallet \w{8}", cfg['wpasswd'])
+		t.passphrase("incognito wallet data \w{8}", cfg['wpasswd'])
 		t.hash_preset("incog wallet",'1')
 		vmsg("Comparing generated checksum with checksum from address file")
 		chk = t.expect_getend(r"Checksum for address data .*?: ",regex=True)
@@ -1068,7 +1128,7 @@ class MMGenTestSuite(object):
 	def refkeyaddrgen(self,name,walletfile):
 		self.keyaddrgen(name,walletfile,check_ref=True)
 
- 	refkeyaddrgen1 = refkeyaddrgen2 = refkeyaddrgen3 = refkeyaddrgen
+	refkeyaddrgen1 = refkeyaddrgen2 = refkeyaddrgen3 = refkeyaddrgen
 
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,"mmgen-txsign", ["-d",cfg['tmpdir'],"-M",keyaddr_file,txfile])
@@ -1136,9 +1196,9 @@ class MMGenTestSuite(object):
 		t.license()
 		t.tx_view()
 
-		for cnum,what,app in ('1',"incognito"," incognito"),('3',"MMGen",""):
-			t.expect_getend("Getting %s wallet data from file " % what)
-			t.passphrase("MMGen%s wallet"%app,cfgs[cnum]['wpasswd'])
+		for cnum,desc,app in ('1',"incognito","incognito"),('3',"MMGen","MMGen"):
+			t.expect_getend("Getting %s wallet data from file " % desc)
+			t.passphrase("%s wallet"%app,cfgs[cnum]['wpasswd'])
 			if cnum == '1':
 				t.hash_preset("incog wallet",'1')
 
@@ -1155,7 +1215,7 @@ class MMGenTestSuite(object):
 			infn = get_tmpfile_fn(cfg,tmp_fn)
 		t = MMGenExpect(name,"mmgen-tool",["-d",cfg['tmpdir'],"encrypt",infn])
 		t.hash_preset("user data",'1')
-		t.passphrase_new("user data",cfg['tool_enc_passwd'])
+		t.passphrase_new("user data",tool_enc_passwd)
 		t.written_to_file("Encrypted data")
 		ok()
 # Generate the reference mmenc file
@@ -1168,7 +1228,7 @@ class MMGenTestSuite(object):
 		of = name + ".out"
 		t = MMGenExpect(name,"mmgen-tool",
 			["-d",cfg['tmpdir'],"decrypt",f2,"outfile="+of,"hash_preset=1"])
-		t.passphrase("user data",cfg['tool_enc_passwd'])
+		t.passphrase("user data",tool_enc_passwd)
 		t.written_to_file("Decrypted data")
 		d1 = read_from_file(f1)
 		d2 = read_from_file(get_tmpfile_fn(cfg,of))
@@ -1182,7 +1242,127 @@ class MMGenTestSuite(object):
 		o = t.expect_getend("Incog data for ID \w{8} found at offset ",regex=True)
 		cmp_or_die(hincog_offset,int(o))
 
+	def walletconv_out(self,name,desc,out_fmt="w",uopts=[],uopts_chk=[],pw=False):
+		opts = ["-d",cfg['tmpdir'],"-r10","-p1","-o",out_fmt] + uopts
+		infile = os.path.join(ref_dir,cfg['seed_id']+".mmwords")
+		d = "(convert)"
+		t = MMGenExpect(name,"mmgen-walletconv",opts+[infile],extra_desc=d)
+		t.license()
+		if pw:
+			t.passphrase_new("new "+desc,cfg['wpasswd'])
+			t.usr_rand(10)
+		if desc == "hidden incognito data":
+			ret = t.expect(["Create? (Y/n): ","'YES' to confirm: "],"YES\n")
+			if ret == 0:
+				t.expect("Enter file size: ","1234\n")
+		wf = t.written_to_file(desc[0].upper()+desc[1:],oo=True)
+		ok()
+
+		d = "(check)"
+		if desc == "hidden incognito data":
+			self.keygen_chksum_chk_hincog(name,cfg['seed_id'],uopts_chk)
+# 		elif pw:
+# 			self.walletchk_chksum_chk(name,wf,cfg['seed_id'],uopts=uopts_chk)
+		else:
+			self.keygen_chksum_chk(name,wf,cfg['seed_id'],pw=pw)
+
+	def walletconv_in(self,name,infile,desc,uopts=[],pw=False,oo=False):
+		opts = ["-d",cfg['tmpdir'],"-o","words","-r10"]
+		if_arg = [infile] if infile else []
+		d = "(convert)"
+		t = MMGenExpect(name,"mmgen-walletconv",opts+uopts+if_arg,extra_desc=d)
+		t.license()
+		if desc == "brainwallet":
+			t.expect("Enter brainwallet: ",ref_wallet_brainpass+"\n")
+		if pw:
+			t.passphrase(desc,cfg['wpasswd'])
+			if name[:19] == "ref_hincog_conv_old":
+				t.expect("Is the seed ID correct? (Y/n): ","\n")
+			else:
+				t.expect(["Passphrase is OK"," are correct"])
+		# Output
+		wf = t.written_to_file("Mnemonic data",oo=oo)
+		t.close()
+		ok()
+		# back check of result
+		d = "(check)"
+		self.keygen_chksum_chk(name,wf,cfg['seed_id'])
+
 	# Saved reference file tests
+	def ref_wallet_conv(self,name):
+		wf = os.path.join(ref_dir,cfg['ref_wallet'])
+		self.walletconv_in(name,wf,"MMGen wallet",pw=True,oo=True)
+
+	def ref_mn_conv(self,name,ext="mmwords",desc="Mnemonic data"):
+		wf = os.path.join(ref_dir,cfg['seed_id']+"."+ext)
+		self.walletconv_in(name,wf,desc,oo=True)
+
+	def ref_seed_conv(self,name):
+		self.ref_mn_conv(name,ext="mmseed",desc="Seed data")
+
+	def ref_brain_conv(self,name):
+		uopts = ["-i","b","-p","1","-l",str(cfg['seed_len'])]
+		self.walletconv_in(name,None,"brainwallet",uopts,oo=True)
+
+	def ref_incog_conv(self,name,wfk="ic_wallet",in_fmt="i",desc="incognito data"):
+		uopts = ["-i",in_fmt,"-p","1","-l",str(cfg['seed_len'])]
+		wf = os.path.join(ref_dir,cfg[wfk])
+		self.walletconv_in(name,wf,desc,uopts,oo=True,pw=True)
+
+	def ref_incox_conv(self,name):
+		self.ref_incog_conv(name,in_fmt="xi",wfk="ic_wallet_hex",desc="hex incognito data")
+
+	def ref_hincog_conv(self,name,wfk='hic_wallet',add_uopts=[]):
+		ic_f = os.path.join(ref_dir,cfg[wfk])
+		uopts = ["-i","hi","-p","1","-l",str(cfg['seed_len'])] + add_uopts
+		hi_opt = ["-H","%s,%s" % (ic_f,ref_wallet_incog_offset)]
+		self.walletconv_in(name,None,"hidden incognito data",uopts+hi_opt,oo=True,pw=True)
+
+	def ref_hincog_conv_old(self,name):
+		self.ref_hincog_conv(name,wfk='hic_wallet_old',add_uopts=["-O"])
+
+	def ref_wallet_conv_out(self,name):
+		self.walletconv_out(name,"MMGen wallet","w",pw=True)
+
+	def ref_mn_conv_out(self,name):
+		self.walletconv_out(name,"mnemonic data","mn")
+
+	def ref_seed_conv_out(self,name):
+		self.walletconv_out(name,"seed data","seed")
+
+	def ref_incog_conv_out(self,name):
+		self.walletconv_out(name,"incognito data",out_fmt="i",pw=True)
+
+	def ref_incox_conv_out(self,name):
+		self.walletconv_out(name,"hex incognito data",out_fmt="xi",pw=True)
+
+	def ref_hincog_conv_out(self,name,extra_uopts=[]):
+		ic_f = os.path.join(cfg['tmpdir'],"rand.data")
+		hi_parms = "%s,%s" % (ic_f,ref_wallet_incog_offset)
+		hi_parms_legacy = "%s,%s,%s"%(ic_f,ref_wallet_incog_offset,cfg['seed_len'])
+		self.walletconv_out(name,
+			"hidden incognito data", "hi",
+			uopts=["-J",hi_parms] + extra_uopts,
+			uopts_chk=["-G",hi_parms_legacy],
+			pw=True
+		)
+
+	ref_wallet_conv1 = ref_wallet_conv2 = ref_wallet_conv3 = ref_wallet_conv
+	ref_mn_conv1 = ref_mn_conv2 = ref_mn_conv3 = ref_mn_conv
+	ref_seed_conv1 = ref_seed_conv2 = ref_seed_conv3 = ref_seed_conv
+	ref_brain_conv1 = ref_brain_conv2 = ref_brain_conv3 = ref_brain_conv
+	ref_incog_conv1 = ref_incog_conv2 = ref_incog_conv3 = ref_incog_conv
+	ref_incox_conv1 = ref_incox_conv2 = ref_incox_conv3 = ref_incox_conv
+	ref_hincog_conv1 = ref_hincog_conv2 = ref_hincog_conv3 = ref_hincog_conv
+	ref_hincog_conv_old1 = ref_hincog_conv_old2 = ref_hincog_conv_old3 = ref_hincog_conv_old
+
+	ref_wallet_conv_out1 = ref_wallet_conv_out2 = ref_wallet_conv_out3 = ref_wallet_conv_out
+	ref_mn_conv_out1 = ref_mn_conv_out2 = ref_mn_conv_out3 = ref_mn_conv_out
+	ref_seed_conv_out1 = ref_seed_conv_out2 = ref_seed_conv_out3 = ref_seed_conv_out
+	ref_incog_conv_out1 = ref_incog_conv_out2 = ref_incog_conv_out3 = ref_incog_conv_out
+	ref_incox_conv_out1 = ref_incox_conv_out2 = ref_incox_conv_out3 = ref_incox_conv_out
+	ref_hincog_conv_out1 = ref_hincog_conv_out2 = ref_hincog_conv_out3 = ref_hincog_conv_out
+
 	def ref_wallet_chk(self,name):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
 		self.walletchk(name,wf)
@@ -1191,8 +1371,8 @@ class MMGenTestSuite(object):
 
 	def ref_seed_chk(self,name,ext=g.seed_ext):
 		wf = os.path.join(ref_dir,"%s.%s" % (cfg['seed_id'],ext))
-		what = "seed data" if ext == g.seed_ext else "mnemonic"
-		self.keygen_chksum_chk(name,wf,cfg['seed_id'],what)
+		desc = "seed data" if ext == g.seed_ext else "mnemonic"
+		self.keygen_chksum_chk(name,wf,cfg['seed_id'])
 
 	ref_seed_chk1 = ref_seed_chk2 = ref_seed_chk3 = ref_seed_chk
 
@@ -1203,37 +1383,60 @@ class MMGenTestSuite(object):
 	def ref_brain_chk(self,name,bw_file=ref_bw_file):
 		wf = os.path.join(ref_dir,bw_file)
 		arg = "-b%s,%s" % (cfg['seed_len'],ref_bw_hash_preset)
-		self.keygen_chksum_chk(name,wf,cfg['ref_bw_seed_id'],"brainwallet",[arg])
+		self.keygen_chksum_chk(name,wf,cfg['ref_bw_seed_id'],[arg])
 
-	def keygen_chksum_chk(self,name,wf,seed_id,what,args=[]):
-		t = MMGenExpect(name,"mmgen-keygen", ["-q","-A"]+args+[wf,"1"])
-		chk = t.expect_getend("Valid %s for seed ID " % what)
+	def keygen_chksum_chk_hincog(self,name,seed_id,hincog_parm):
+		t = MMGenExpect(name,"mmgen-keygen", ["-p1","-q","-S","-A"]+hincog_parm+["1"],extra_desc="(check)")
+		t.passphrase("",cfg['wpasswd'])
+		t.expect("Encrypt key list? (y/N): ","\n")
+		t.expect("any printable ASCII symbol.\r\n")
+		chk = t.readline()[:8]
+		vmsg("Seed ID: %s" % cyan(chk))
+		cmp_or_die(seed_id,chk)
+
+	def keygen_chksum_chk(self,name,wf,seed_id,args=[],pw=False):
+		hp_arg = ["-p1"] if pw else []
+		t = MMGenExpect(name,"mmgen-keygen", ["-q","-S","-A"]+args+hp_arg+[wf,"1"],extra_desc="(check)")
+		if pw:
+			t.passphrase("",cfg['wpasswd'])
+		t.expect("Encrypt key list? (y/N): ","\n")
+		t.expect("any printable ASCII symbol.\r\n")
+		chk = t.readline()[:8]
+		vmsg("Seed ID: %s" % cyan(chk))
+		cmp_or_die(seed_id,chk)
+
+	# Use this for encrypted wallets instead of keygen_chksum_chk()
+	def walletchk_chksum_chk(self,name,wf,seed_id,uopts=[]):
+		t = MMGenExpect(name,"mmgen-walletchk",["-v", wf]+uopts,
+							extra_desc="(check)")
+		t.passphrase("",cfg['wpasswd'])
+		chk = t.expect_getend("Seed ID checksum OK (")[:8]
 		t.close()
 		cmp_or_die(seed_id,chk)
 
 	ref_brain_chk1 = ref_brain_chk2 = ref_brain_chk3 = ref_brain_chk
 
-	def ref_brain_chk3_spc(self,name):
+	def ref_brain_chk_spc3(self,name):
 		self.ref_brain_chk(name,bw_file=ref_bw_file_spc)
 
-	def ref_incog_chk(self,name):
-		for wtype,desc,earg in ('ic_wallet','',[]), \
-							   ('ic_wallet_old','(old format)',["-o"]):
+	def ref_hincog_chk(self,name):
+		for wtype,desc,earg in ('hic_wallet','',[]), \
+								('hic_wallet_old','(old format)',["-o"]):
 			ic_arg = "%s,%s,%s" % (
 						os.path.join(ref_dir,cfg[wtype]),
 						ref_wallet_incog_offset,cfg['seed_len']
 					)
 			t = MMGenExpect(name,"mmgen-keygen",
 					["-q","-A"]+earg+["-G"]+[ic_arg]+['1'],extra_desc=desc)
-			t.passphrase("MMGen incognito wallet",cfg['wpasswd'])
+			t.passphrase("incognito wallet",cfg['wpasswd'])
 			t.hash_preset("incog wallet","1")
-			if wtype == 'ic_wallet_old':
+			if wtype == 'hic_wallet_old':
 				t.expect("Is the seed ID correct? (Y/n): ","\n")
 			chk = t.expect_getend("Valid incog data for seed ID ")
 			t.close()
 			cmp_or_die(cfg['seed_id'],chk)
 
- 	ref_incog_chk1 = ref_incog_chk2 = ref_incog_chk3 = ref_incog_chk
+	ref_hincog_chk1 = ref_hincog_chk2 = ref_hincog_chk3 = ref_hincog_chk
 
 	def ref_addrfile_chk(self,name,ftype="addr"):
 		wf = os.path.join(ref_dir,cfg['ref_'+ftype+'file'])
@@ -1261,11 +1464,11 @@ class MMGenTestSuite(object):
 		f = os.path.join(ref_dir,ref_enc_fn)
 		t = MMGenExpect(name,"mmgen-tool",
 				["-q","decrypt",f,"outfile=-","hash_preset=1"])
-		t.passphrase("user data",cfg['tool_enc_passwd'])
+		t.passphrase("user data",tool_enc_passwd)
 		t.readline()
 		import re
 		o = re.sub('\r\n','\n',t.read())
-		cmp_or_die(cfg['sample_text'],o)
+		cmp_or_die(sample_text,o)
 
 # main()
 if opt.pause:
@@ -1288,8 +1491,11 @@ try:
 				globals()[arg](cmd_args[cmd_args.index(arg)+1:])
 				sys.exit()
 			elif arg in meta_cmds:
-				for cmd in meta_cmds[arg][1]:
-					check_needs_rerun(ts,cmd,build=True,force_delete=True)
+				for cmd in meta_cmds[arg]:
+					check_needs_rerun(ts,cmd,build=True)
+			elif arg in cmd_groups.keys():
+				for cmd in cmd_groups[arg]:
+					check_needs_rerun(ts,cmd,build=True)
 			elif arg in cmd_data:
 				check_needs_rerun(ts,arg,build=True)
 			else:

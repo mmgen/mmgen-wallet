@@ -42,10 +42,10 @@ def msg_r(s):  sys.stderr.write(s)
 def Msg(s):    sys.stdout.write(s + "\n")
 def Msg_r(s):  sys.stdout.write(s)
 def msgred(s): sys.stderr.write(red(s+"\n"))
-def msgrepr(*args):
+def mmsg(*args):
 	for d in args:
 		sys.stdout.write(repr(d)+"\n")
-def msgrepr_exit(*args):
+def mdie(*args):
 	for d in args:
 		sys.stdout.write(repr(d)+"\n")
 	sys.exit()
@@ -55,19 +55,7 @@ def die(ev,s):
 def Die(ev,s):
 	sys.stdout.write(s+"\n"); sys.exit(ev)
 
-def fmt_type(x): return "%s" % str(type(x)).split("'")[1]
-
 import opt
-
-def fmt_code_to_sstype(fmt_code):
-	for e in g.wallet_fmt_codes:
-		if fmt_code in e: return e[0]
-	die(2,"'%s': unrecognized format code" % fmt_code)
-
-def format_fmt_codes():
-	return "".join(
-		["%-20s  " % (e[0]+":") + ",".join(e[1:]) + "\n"
-			for e in g.wallet_fmt_codes])
 
 def qmsg(s,alt=False):
 	if opt.quiet:
@@ -87,7 +75,10 @@ def Vmsg(s):
 def Vmsg_r(s):
 	if opt.verbose: sys.stdout.write(s)
 
-def suf(arg,what):
+def dmsg(s):
+	if opt.debug: sys.stdout.write(s + "\n")
+
+def suf(arg,suf_type):
 	t = type(arg)
 	if t == int:
 		n = arg
@@ -97,9 +88,9 @@ def suf(arg,what):
 		msg("%s: invalid parameter" % arg)
 		return ""
 
-	if what in "a":
+	if suf_type in ("a","es"):
 		return "" if n == 1 else "es"
-	if what in "k":
+	if suf_type in ("k","s"):
 		return "" if n == 1 else "s"
 
 def get_extension(f):
@@ -125,9 +116,13 @@ def splitN(s,n,sep=None):                      # always return an n-element list
 def split2(s,sep=None): return splitN(s,2,sep) # always return a 2-element list
 def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
 
-def split_into_columns(col_wid,s):
+def split_into_cols(col_wid,s):
 	return " ".join([s[col_wid*i:col_wid*(i+1)]
 					for i in range(len(s)/col_wid+1)]).rstrip()
+
+def capfirst(s):
+	if len(s) == 0: return s
+	return s[0].upper() + (s[1:] if len(s) > 1 else "")
 
 def make_timestamp():
 	tv = time.gmtime(time.time())[:6]
@@ -166,6 +161,13 @@ def is_utf8(s):
 def match_ext(addr,ext):
 	return addr.split(".")[-1] == ext
 
+def file_exists(f):
+	try:
+		os.stat(f)
+		return True
+	except:
+		return False
+
 import opt as opt
 
 def get_from_brain_opt_params():
@@ -186,7 +188,11 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 def decode_pretty_hexdump(data):
 	from string import hexdigits
 	lines = [re.sub('^['+hexdigits+']+:\s+','',l) for l in data.split("\n")]
-	return unhexlify("".join(("".join(lines).split())))
+	try:
+		return unhexlify("".join(("".join(lines).split())))
+	except:
+		msg("Data not in hexdump format")
+		return False
 
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
@@ -195,22 +201,25 @@ def get_hash_params(hash_preset):
 		msg("%s: invalid 'hash_preset' value" % hash_preset)
 		sys.exit(3)
 
-def compare_chksums(chk1, desc1, chk2, desc2, die=True):
+def compare_chksums(chk1, desc1, chk2, desc2, hdr="", die_on_fail=False):
 
 	if not chk1 == chk2:
-		if die:
-			die(3,"Checksum error: %s checksum (%s) doesn't match %s checksum (%s)"
-				% (desc2,chk2,desc1,chk1))
-		else: return False
+		m = "%s ERROR: %s checksum (%s) doesn't match %s checksum (%s)"\
+				% ((hdr+":\n   " if hdr else "CHECKSUM"),desc2,chk2,desc1,chk1)
+		if die_on_fail:
+			die(3,m)
+		else:
+			msg(m)
+			return False
 
-	vmsg("%s checksum OK (%s)" % (desc1.capitalize(),chk1))
+	vmsg("%s checksum OK (%s)" % (capfirst(desc1),chk1))
 	return True
 
-def compare_or_die(val1, desc1, val2, desc2):
+def compare_or_die(val1, desc1, val2, desc2, e="Error"):
 	if cmp(val1,val2):
-		die(3,"Error: %s (%s) doesn't match %s (%s)"
-				% (desc2,val2,desc1,val1))
-	vmsg("%s OK (%s)" % (desc2.capitalize(),val2))
+		die(3,"%s: %s (%s) doesn't match %s (%s)"
+				% (e,desc2,val2,desc1,val1))
+	dmsg("%s OK (%s)" % (capfirst(desc2),val2))
 	return True
 
 def get_default_wordlist():
@@ -224,8 +233,8 @@ def open_file_or_exit(filename,mode):
 	try:
 		f = open(filename, mode)
 	except:
-		what = "reading" if 'r' in mode else "writing"
-		msg("Unable to open file '%s' for %s" % (filename,what))
+		op = "reading" if 'r' in mode else "writing"
+		msg("Unable to open file '%s' for %s" % (filename,op))
 		sys.exit(2)
 	return f
 
@@ -307,9 +316,9 @@ def parse_addr_idxs(arg,sep=","):
 	return sorted(set(ret))
 
 
-def get_new_passphrase(what,passchg=False):
+def get_new_passphrase(desc,passchg=False):
 
-	w = "{}passphrase for {}".format("new " if passchg else "", what)
+	w = "{}passphrase for {}".format("new " if passchg else "", desc)
 	if opt.passwd_file:
 		pw = " ".join(_get_words_from_file(opt.passwd_file,w))
 	elif opt.echo_passphrase:
@@ -318,7 +327,7 @@ def get_new_passphrase(what,passchg=False):
 		for i in range(g.passwd_max_tries):
 			pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
 			pw2 = " ".join(_get_words_from_user("Repeat passphrase: "))
-			if opt.debug: Msg("Passphrases: [%s] [%s]" % (pw,pw2))
+			dmsg("Passphrases: [%s] [%s]" % (pw,pw2))
 			if pw == pw2:
 				vmsg("Passphrases match"); break
 			else: msg("Passphrases do not match.  Try again.")
@@ -332,27 +341,21 @@ def get_new_passphrase(what,passchg=False):
 
 
 def confirm_or_exit(message, question, expect="YES"):
-	if not confirm_or_false(message, question, expect):
-		msg("Exiting at user request")
-		sys.exit(2)
-
-def confirm_or_false(message, question, expect="YES"):
 
 	m = message.strip()
 	if m: msg(m)
 
-	conf_msg = "Type uppercase '%s' to confirm: " % expect
+	a = question+"  " if question[0].isupper() else \
+			"Are you sure you want to %s?\n" % question
+	b = "Type uppercase '%s' to confirm: " % expect
 
-	p = question+"  "+conf_msg if question[0].isupper() else \
-		"Are you sure you want to %s?\n%s" % (question,conf_msg)
-
-	vmsg("")
-	return my_raw_input(p).strip() == expect
+	if my_raw_input(a+b).strip() != expect:
+		die(2,"Exiting at user request")
 
 
-def write_to_stdout(data, what, confirm=True):
-	if sys.stdout.isatty() and confirm:
-		confirm_or_exit("",'output {} to screen'.format(what))
+def write_to_stdout(data, desc, ask_terminal=True):
+	if sys.stdout.isatty() and ask_terminal:
+		confirm_or_exit("",'output {} to screen'.format(desc))
 	elif not sys.stdout.isatty():
 		try:
 			of = os.readlink("/proc/%d/fd/1" % os.getpid())
@@ -363,8 +366,83 @@ def write_to_stdout(data, what, confirm=True):
 			msg("Redirecting output to file")
 	sys.stdout.write(data)
 
+# New function
+def write_data_to_file(
+		outfile,
+		data,
+		desc="data",
+		ask_write=False,
+		ask_write_prompt="",
+		ask_write_default_yes=False,
+		ask_overwrite=True,
+		ask_tty=True,
+		no_tty=False,
+		silent=False
+	):
+	if opt.stdout or not sys.stdout.isatty():
+		qmsg("Output to STDOUT requested")
+		write_ok = False
+		if sys.stdout.isatty():
+			if no_tty:
+				die(2,"Printing %s to screen is not allowed" % desc)
+			if ask_tty:
+				confirm_or_exit("",'output %s to screen' % desc)
+		else:
+			try:    of = os.readlink("/proc/%d/fd/1" % os.getpid()) # Linux
+			except: of = None # Windows
 
-def write_to_file(outfile,data,what="data",confirm_overwrite=False,verbose=False,exit_on_error=True,silent=False):
+			if of:
+				if of[:5] == "pipe:":
+					if no_tty:
+						die(2,"Writing %s to pipe is not allowed" % desc)
+					if ask_tty:
+						confirm_or_exit("",'output %s to pipe' % desc)
+						msg("")
+				of2,pd = os.path.relpath(of),os.path.pardir
+				msg("Redirecting output to file '%s'" %
+						(of if of2[:len(pd)] == pd else of2))
+			else:
+				msg("Redirecting output to file")
+
+		sys.stdout.write(data)
+	else:
+		if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
+
+		if ask_write:
+			if not keypress_confirm(ask_write_prompt,
+						default_yes=ask_write_default_yes):
+				die(1,"Exiting at user request")
+
+		hush = False
+		if file_exists(outfile):
+			if ask_overwrite:
+				q = "File '%s' already exists\nOverwrite?" % outfile
+				confirm_or_exit("",q)
+			if not silent: msg("Overwriting file '%s'" % outfile)
+			hush = True
+
+		f = open_file_or_exit(outfile,'wb')
+		try:
+			f.write(data)
+		except:
+			if not silent: msg("Failed to write %s to file '%s'" % (desc,outfile))
+			sys.exit(2)
+		f.close
+
+		if not hush:
+			msg("%s written to file '%s'" % (capfirst(desc),outfile))
+
+		return True
+
+
+def write_to_file(
+		outfile,
+		data,
+		desc="data",
+		confirm_overwrite=False,
+		verbose=False,
+		silent=False
+	):
 
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
@@ -373,12 +451,7 @@ def write_to_file(outfile,data,what="data",confirm_overwrite=False,verbose=False
 	else:
 		if confirm_overwrite:
 			q = "File '%s' already exists\nOverwrite?" % outfile
-			if exit_on_error:
-				confirm_or_exit("",q)
-			else:
-				if not confirm_or_false("",q):
-					msg("Not overwriting file at user request")
-					return False
+			confirm_or_exit("",q)
 		else:
 			if not silent: msg("Overwriting file '%s'" % outfile)
 
@@ -386,20 +459,20 @@ def write_to_file(outfile,data,what="data",confirm_overwrite=False,verbose=False
 	try:
 		f.write(data)
 	except:
-		if not silent: msg("Failed to write %s to file '%s'" % (what,outfile))
+		if not silent: msg("Failed to write %s to file '%s'" % (desc,outfile))
 		sys.exit(2)
 	f.close
 
-	if verbose: msg("%s written to file '%s'" % (what.capitalize(),outfile))
+	if verbose: msg("%s written to file '%s'" % (capfirst(desc),outfile))
 	return True
 
 
-def write_to_file_or_stdout(outfile, data,  what="data"):
+def write_to_file_or_stdout(outfile, data,  desc="data"):
 
 	if opt.stdout or not sys.stdout.isatty():
-		write_to_stdout(data, what, confirm=True)
+		write_to_stdout(data, desc)
 	else:
-		write_to_file(outfile,data,what,not opt.quiet,True)
+		write_to_file(outfile,data,desc,not opt.quiet,True)
 
 
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
@@ -437,7 +510,7 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
 	seed_len = str(len(seed)*8)
 	pw_status = "NE" if len(passwd) else "E"
 	hash_preset = opt.hash_preset
-	label = opt.label if opt.label else "No Label"
+	label = opt.label or "No Label"
 	metadata = seed_id.lower(),key_id.lower(),seed_len,\
 		pw_status,make_timestamp()
 	sf  = b58encode_pad(salt)
@@ -447,8 +520,8 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
 		label,
 		"{} {} {} {} {}".format(*metadata),
 		"{}: {} {} {}".format(hash_preset,*get_hash_params(hash_preset)),
-		"{} {}".format(make_chksum_6(sf),  split_into_columns(4,sf)),
-		"{} {}".format(make_chksum_6(esf), split_into_columns(4,esf))
+		"{} {}".format(make_chksum_6(sf),  split_into_cols(4,sf)),
+		"{} {}".format(make_chksum_6(esf), split_into_cols(4,esf))
 	)
 
 	chk = make_chksum_6(" ".join(lines))
@@ -465,18 +538,18 @@ def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
 def _check_mmseed_format(words):
 
 	valid = False
-	what = "%s data" % g.seed_ext
+	desc = "%s data" % g.seed_ext
 	try:
 		chklen = len(words[0])
 	except:
 		return False
 
 	if len(words) < 3 or len(words) > 12:
-		msg("Invalid data length (%s) in %s" % (len(words),what))
+		msg("Invalid data length (%s) in %s" % (len(words),desc))
 	elif not is_hexstring(words[0]):
-		msg("Invalid format of checksum '%s' in %s"%(words[0], what))
+		msg("Invalid format of checksum '%s' in %s"%(words[0], desc))
 	elif chklen != 6:
-		msg("Incorrect length of checksum (%s) in %s" % (chklen,what))
+		msg("Incorrect length of checksum (%s) in %s" % (chklen,desc))
 	else: valid = True
 
 	return valid
@@ -484,19 +557,19 @@ def _check_mmseed_format(words):
 
 def _check_wallet_format(infile, lines):
 
-	what = "wallet file '%s'" % infile
+	desc = "wallet file '%s'" % infile
 	valid = False
 	chklen = len(lines[0])
 	if len(lines) != 6:
-		vmsg("Invalid number of lines (%s) in %s" % (len(lines),what))
+		vmsg("Invalid number of lines (%s) in %s" % (len(lines),desc))
 	elif chklen != 6:
-		vmsg("Incorrect length of Master checksum (%s) in %s" % (chklen,what))
+		vmsg("Incorrect length of Master checksum (%s) in %s" % (chklen,desc))
 	elif not is_hexstring(lines[0]):
-		vmsg("Invalid format of Master checksum '%s' in %s"%(lines[0], what))
+		vmsg("Invalid format of Master checksum '%s' in %s"%(lines[0], desc))
 	else: valid = True
 
 	if valid == False:
-		msg("Invalid %s" % what)
+		msg("Invalid %s" % desc)
 		sys.exit(2)
 
 
@@ -506,8 +579,7 @@ def _check_chksum_6(chk,val,desc,infile):
 		msg("%s checksum incorrect in file '%s'!" % (desc,infile))
 		msg("Checksum: %s. Computed value: %s" % (chk,comp_chk))
 		sys.exit(2)
-	elif opt.debug:
-		Msg("%s checksum passed: %s" % (desc.capitalize(),chk))
+	dmsg("%s checksum passed: %s" % (capfirst(desc),chk))
 
 
 def get_data_from_wallet(infile,silent=False):
@@ -557,23 +629,23 @@ def get_data_from_wallet(infile,silent=False):
 def _get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
-	if opt.debug: Msg("Sanitized input: [%s]" % " ".join(words))
+	dmsg("Sanitized input: [%s]" % " ".join(words))
 	return words
 
 
-def _get_words_from_file(infile,what):
-	qmsg("Getting %s from file '%s'" % (what,infile))
+def _get_words_from_file(infile,desc):
+	qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile, 'r')
 	# split() also strips
 	words = f.read().split()
 	f.close()
-	if opt.debug: Msg("Sanitized input: [%s]" % " ".join(words))
+	dmsg("Sanitized input: [%s]" % " ".join(words))
 	return words
 
 
-def get_words(infile,what,prompt):
+def get_words(infile,desc,prompt):
 	if infile:
-		return _get_words_from_file(infile,what)
+		return _get_words_from_file(infile,desc)
 	else:
 		return _get_words_from_user(prompt)
 
@@ -586,24 +658,24 @@ def remove_comments(lines):
 		if i: ret.append(i)
 	return ret
 
-def get_lines_from_file(infile,what="",trim_comments=False):
-	if what != "":
-		qmsg("Getting %s from file '%s'" % (what,infile))
+def get_lines_from_file(infile,desc="",trim_comments=False):
+	if desc != "":
+		qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile,'r')
 	lines = f.read().splitlines()
 	f.close()
 	return remove_comments(lines) if trim_comments else lines
 
 
-def get_data_from_user(what="data",silent=False):
-	data = my_raw_input("Enter %s: " % what, echo=opt.echo_passphrase)
-	if opt.debug: Msg("User input: [%s]" % data)
+def get_data_from_user(desc="data",silent=False):
+	data = my_raw_input("Enter %s: " % desc, echo=opt.echo_passphrase)
+	dmsg("User input: [%s]" % data)
 	return data
 
-def get_data_from_file(infile,what="data",dash=False,silent=False):
+def get_data_from_file(infile,desc="data",dash=False,silent=False):
 	if dash and infile == "-": return sys.stdin.read()
 	if not silent:
-		qmsg("Getting %s from file '%s'" % (what,infile))
+		qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile,'rb')
 	data = f.read()
 	f.close()
@@ -622,7 +694,7 @@ def get_seed_from_seed_data(words):
 	chk = make_chksum_6(seed_b58)
 	vmsg_r("Validating %s checksum..." % g.seed_ext)
 
-	if compare_chksums(chk, "seed", stored_chk, "input",die=False):
+	if compare_chksums(chk, "seed", stored_chk, "input"):
 		seed = b58decode_pad(seed_b58)
 		if seed == False:
 			msg("Invalid b58 number: %s" % val)
@@ -645,9 +717,8 @@ def mark_passwd_file_as_used():
 	passwd_file_used = True
 
 
-def get_mmgen_passphrase(prompt_info,passchg=False):
-	prompt = "Enter {}passphrase for {}: ".format(
-			"old " if passchg else "",prompt_info)
+def get_mmgen_passphrase(desc,passchg=False):
+	prompt ="Enter {}passphrase for {}: ".format("old " if passchg else "",desc)
 	if opt.passwd_file:
 		mark_passwd_file_as_used()
 		return " ".join(_get_words_from_file(opt.passwd_file,"passphrase"))
@@ -674,17 +745,18 @@ def check_data_fits_file_at_offset(fname,offset,dlen,action):
 		fsize = os.stat(fname).st_size
 
 	if fsize < offset + dlen:
+		m = "Destination" if action == "write" else "Input"
 		msg(
-"Destination file has length %s, too short to %s %s bytes of data at offset %s"
-			% (fsize,action,dlen,offset))
+	"%s file has length %s, too short to %s %s bytes of data at offset %s"
+			% (m,fsize,action,dlen,offset))
 		sys.exit(1)
 
 
 from mmgen.term import kb_hold_protect,get_char
 
-def get_hash_preset_from_user(hp=g.hash_preset,what="data"):
+def get_hash_preset_from_user(hp=g.hash_preset,desc="data"):
 	p = """Enter hash preset for %s,
-or hit ENTER to accept the default value ('%s'): """ % (what,hp)
+ or hit ENTER to accept the default value ('%s'): """ % (desc,hp)
 	while True:
 		ret = my_raw_input(p)
 		if ret:
@@ -751,17 +823,18 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 def do_license_msg(immed=False):
 
-	from mmgen.license import gpl
+	import mmgen.license as gpl
 	if opt.quiet or g.no_license: return
 
-	msg(gpl['warning'])
-	prompt = "%s " % gpl['prompt'].strip()
+	p = "Press 'w' for conditions and warranty info, or 'c' to continue:"
+	msg(gpl.warning)
+	prompt = "%s " % p.strip()
 
 	while True:
 		reply = get_char(prompt, immed_chars="wc" if immed else "")
 		if reply == 'w':
 			from mmgen.term import do_pager
-			do_pager(gpl['conditions'])
+			do_pager(gpl.conditions)
 		elif reply == 'c':
 			msg(""); break
 		else:

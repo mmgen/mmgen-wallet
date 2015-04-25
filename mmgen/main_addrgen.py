@@ -161,8 +161,8 @@ if opt.stdout or not sys.stdout.isatty():
 	if enc_ext and sys.stdout.isatty():
 		msg("Cannot write encrypted data to screen.  Exiting")
 		sys.exit(2)
-	write_to_stdout(addrdata_str,what,
-		(what=="keys"and not opt.quiet and sys.stdout.isatty()))
+	write_to_stdout(addrdata_str,what,ask_terminal=(what=="keys"
+						and not opt.quiet and sys.stdout.isatty()))
 else:
 	outfile = "%s.%s%s" % (outfile_base, (
 		g.keyaddrfile_ext if "ka" in opt.gen_what else (

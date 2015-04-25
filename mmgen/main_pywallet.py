@@ -180,8 +180,8 @@ class AES(object):
 	def rotate(self, word):
 		""" Rijndael's key schedule rotate operation.
 
-		Rotate a word eight bits to the left: eg, rotate(1d2c3a4f) == 2c3a4f1d
-		Word is an char list of size 4 (32 bits overall).
+        Rotate a word eight bits to the left: eg, rotate(1d2c3a4f) == 2c3a4f1d
+        Word is an char list of size 4 (32 bits overall).
 		"""
 		return word[1:] + word[:1]
 
@@ -230,10 +230,10 @@ class AES(object):
 	def expandKey(self, key, size, expandedKeySize):
 		"""Rijndael's key expansion.
 
-		Expands an 128,192,256 key into an 176,208,240 bytes key
+        Expands an 128,192,256 key into an 176,208,240 bytes key
 
-		expandedKey is a char list of large enough size,
-		key is the non-expanded key.
+        expandedKey is a char list of large enough size,
+        key is the non-expanded key.
 		"""
 		# current expanded keySize, in bytes
 		currentSize = 0
@@ -276,8 +276,8 @@ class AES(object):
 
 	def createRoundKey(self, expandedKey, roundKeyPointer):
 		"""Create a round key.
-		Creates a round key from the given expanded key and the
-		position within the expanded key.
+        Creates a round key from the given expanded key and the
+        position within the expanded key.
 		"""
 		roundKey = [0] * 16
 		for i in range(4):
@@ -1183,8 +1183,8 @@ def parse_BlockLocator(vds):
 		return d
 
 def deserialize_BlockLocator(d):
-  result = "Block Locator top: "+d['hashes'][0][::-1].encode('hex_codec')
-  return result
+	result = "Block Locator top: "+d['hashes'][0][::-1].encode('hex_codec')
+	return result
 
 def parse_setting(setting, vds):
 	if setting[0] == "f":    # flag (boolean) settings
@@ -1404,11 +1404,11 @@ def parse_wallet(db, item_callback):
 
 def update_wallet(db, type, data):
 	"""Write a single item to the wallet.
-	db must be open with writable=True.
-	type and data are the type code and data dictionary as parse_wallet would
-	give to item_callback.
-	data's __key__, __value__ and __type__ are ignored; only the primary data
-	fields are used.
+    db must be open with writable=True.
+    type and data are the type code and data dictionary as parse_wallet would
+    give to item_callback.
+    data's __key__, __value__ and __type__ are ignored; only the primary data
+    fields are used.
 	"""
 	d = data
 	kds = BCDataStream()
@@ -1656,8 +1656,8 @@ elif opt.keysforaddrs:
 		msg("Warning: not all requested keys found")
 
 len_arg = "%s" % len(wallet_addrs) \
-   if len(data) == len(wallet_addrs) or ext == "json" \
-   else "%s:%s" % (len(data),len(wallet_addrs))
+	if len(data) == len(wallet_addrs) or ext == "json" \
+		else "%s:%s" % (len(data),len(wallet_addrs))
 
 from mmgen.util import make_chksum_8,write_to_file,write_to_stdout
 wallet_id = make_chksum_8(str(sorted(wallet_addrs)))

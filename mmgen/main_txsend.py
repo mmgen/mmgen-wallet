@@ -68,12 +68,12 @@ if keypress_confirm("Edit transaction comment?"):
 	write_to_file(outfile,data,w,False,True,True)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
-what   = "broadcast this transaction to the network"
+action = "broadcast this transaction to the network"
 expect =  "YES, I REALLY WANT TO DO THIS"
 
 if opt.quiet: warn,expect = "","YES"
 
-confirm_or_exit(warn, what, expect)
+confirm_or_exit(warn, action, expect)
 
 msg("Sending transaction")
 

@@ -439,19 +439,17 @@ def add_label(mmaddr,label,remove=False):
 	check_addr_label(label)  # Exits on failure
 
 	c = connect_to_bitcoind()
-	from mmgen.addr import AddrInfoList
-	ail = AddrInfoList(bitcoind_connection=c)
 
-	btcaddr = ""
-	sid,idx = mmaddr.split(":")
-	if sid in ail.seed_ids():
-		btcaddr = ail.addrinfo(sid).btcaddr(int(idx))
+	from mmgen.addr import AddrInfoList
+	btcaddr = AddrInfoList(bitcoind_connection=c).mmaddr2btcaddr(mmaddr)
+
 	if not btcaddr:
 		die(1,"{pnm} address {a} not found in tracking wallet".format(
 				pnm=pnm,a=mmaddr))
 
 	try:
-		c.importaddress(btcaddr," ".join((mmaddr,label)),rescan=False)
+		l = " " + label if label else ""
+		c.importaddress(btcaddr,mmaddr+l,rescan=False)
 	except:
 		die(1,"Unable to add label")
 
@@ -508,7 +506,7 @@ def encrypt(infile,outfile="",hash_preset=""):
 	data = get_data_from_file(infile,"data for encryption")
 	enc_d = mmgen_encrypt(data,"user data",hash_preset)
 	if outfile == '-':
-		write_to_stdout(enc_d,"encrypted data",confirm=True)
+		write_to_stdout(enc_d,"encrypted data")
 	else:
 		if not outfile:
 			outfile = os.path.basename(infile) + "." + g.mmenc_ext
@@ -522,7 +520,7 @@ def decrypt(infile,outfile="",hash_preset=""):
 		if dec_d: break
 		msg("Trying again...")
 	if outfile == '-':
-		write_to_stdout(dec_d,"decrypted data",confirm=not opt.quiet)
+		write_to_stdout(dec_d,"decrypted data",ask_terminal=not opt.quiet)
 	else:
 		if not outfile:
 			outfile = os.path.basename(infile)

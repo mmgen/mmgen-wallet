@@ -11,8 +11,8 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 from binascii import hexlify
 
 import mmgen.opt as opt
-import mmgen.config as g
-from mmgen.util import msg,msg_r,msgrepr,msgrepr_exit,red,green
+import mmgen.globalvars as g
+from mmgen.util import msg,msg_r,mmsg,mdie,red,green,vmsg
 from mmgen.bitcoin import hextowif,privnum2addr
 
 rounds = 100
@@ -23,6 +23,7 @@ opts_data = {
 -h, --help         Print this help message
 -s, --system       Test scripts and modules installed on system rather than
                    those in the repo root
+-v, --verbose      Produce more verbose output
 """,
 	'notes': """
 
@@ -63,6 +64,7 @@ for i in range(1,rounds+1):
 	sec = hexlify(os.urandom(32))
 	wif = hextowif(sec)
 	a = privnum2addr(int(sec,16))
+	vmsg("\nkey:  %s\naddr: %s\n" % (wif,a))
 	b = check_output(["keyconv", wif]).split()[1]
 	if a != b:
 		msg_r(red("\nERROR: Addresses do not match!"))
@@ -74,4 +76,4 @@ for i in range(1,rounds+1):
 """.format(sec,wif,a,b,pnm=g.proj_name).rstrip())
 		sys.exit(3)
 
-msg(green("\nOK"))
+msg(green("%sOK" % ("" if opt.verbose else "\n")))

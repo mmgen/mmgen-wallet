@@ -23,18 +23,25 @@ import sys,os
 from binascii import hexlify,unhexlify
 
 import mmgen.globalvars as g
+import mmgen.opt as opt
+from mmgen.bitcoin import b58encode_pad,b58decode_pad,b58_lens
 from mmgen.obj import *
 from mmgen.filename import *
 from mmgen.util import *
-from mmgen.bitcoin import b58encode_pad,b58decode_pad
 from mmgen.crypto import *
 
 pnm = g.proj_name
 
+def check_usr_seed_len(seed_len):
+	if opt.seed_len != seed_len and 'seed_len' in opt.set_by_user:
+		m = "ERROR: requested seed length (%s) " + \
+			"doesn't match seed length of source (%s)"
+		die(1, m % (opt.seed_len,seed_len))
+
+
 class Seed(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
-			from mmgen.crypto import get_random
 			# Truncate random data for smaller seed lengths
 			seed_bin = sha256(get_random(1033)).digest()[:opt.seed_len/8]
 		elif len(seed_bin)*8 not in g.seed_lens:
@@ -43,101 +50,221 @@ class Seed(MMGenObject):
 		self.data      = seed_bin
 		self.hexdata   = hexlify(seed_bin)
 		self.sid       = make_chksum_8(seed_bin)
-		self.len_bytes = len(seed_bin)
-		self.len_bits  = len(seed_bin) * 8
+		self.length    = len(seed_bin) * 8
+
 
 class SeedSource(MMGenObject):
 
+	desc = g.proj_name + " seed source"
+	stdin_ok = False
+	ask_tty = True
+	no_tty  = False
+	_msg = {}
+
 	class SeedSourceData(MMGenObject): pass
 
-	desc = "seed source"
+	def __new__(cls,fn=None,ss=None,ignore_in_fmt_opt=False):
 
-	def __init__(self,fn=None,seed=None,passwd=None):
+		def die_on_opt_mismatch(opt,sstype):
+			opt_sstype = cls.fmt_code_to_sstype(opt)
+			compare_or_die(
+				opt_sstype.__name__, "input format specified on command line",
+				sstype.__name__,     "input file format"
+			)
+
+		if ss:
+			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
+			me = super(cls,cls).__new__(sstype or Wallet) # output default: Wallet
+			me.seed = ss.seed
+			me.ss_in = ss
+		elif fn or opt.hidden_incog_input_params:
+			if fn:
+				f = Filename(fn)
+				sstype = cls.ext_to_sstype(f.ext)
+			else:
+				fn = opt.hidden_incog_input_params.split(",")[0]
+				f  = Filename(fn,ftype="hincog")
+				sstype = cls.fmt_code_to_sstype("hincog")
+
+			if opt.in_fmt and not ignore_in_fmt_opt:
+				die_on_opt_mismatch(opt.in_fmt,sstype)
+
+			me = super(cls,cls).__new__(sstype)
+			me.infile = f
+		elif opt.in_fmt:  # Input format
+			sstype = cls.fmt_code_to_sstype(opt.in_fmt)
+			me = super(cls,cls).__new__(sstype)
+		else: # Called with no inputs - initialize with random seed
+			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
+			me = super(cls,cls).__new__(sstype or Wallet) # output default: Wallet
+			me.seed = Seed()
+
+		return me
+
+	def __init__(self,fn=None,ss=None,ignore_in_fmt_opt=False):
 
 		self.ssdata = self.SeedSourceData()
-		self.ssdata.passwd = passwd
+		self.msg = {}
 
-		if seed:
-			self.desc = "new " + self.desc
-			self.seed = seed
-			self._pre_encode()
-			self._encode()
-		else:
-			self._get_formatted_data(fn)
-			self._deformat()
-			self._decode()
+		for c in reversed(self.__class__.__mro__):
+			if hasattr(c,'_msg'):
+				self.msg.update(c._msg)
 
-	def _get_formatted_data(self,fn):
-		if fn:
-			self.infile = fn
-			self.fmt_data = get_data_from_file(fn.name,self.desc)
+		if hasattr(self,'seed'):
+			g.use_urandchars = True
+			self._encrypt()
+		elif hasattr(self,'infile'):
+			self._deformat_once()
+			self._decrypt_retry()
 		else:
-			self.infile = None
+			if not self.stdin_ok:
+				die(1,"Reading from standard input not supported for %s format"
+						% self.desc)
+			self._deformat_retry()
+			self._decrypt_retry()
+
+	def _get_data(self):
+		if hasattr(self,'infile'):
+			self.fmt_data = get_data_from_file(self.infile.name,self.desc)
+		else:
 			self.fmt_data = get_data_from_user(self.desc)
 
-	def _pre_encode(self): pass
+	def _deformat_once(self):
+		self._get_data()
+		if not self._deformat():
+			die(2,"Invalid format for input data")
 
-	def init(cls,infile=None,seed=None,passwd=None):
+	def _deformat_retry(self):
+		while True:
+			self._get_data()
+			if self._deformat(): break
+			msg("Trying again...")
 
-		sstype = None
+	def _decrypt_retry(self):
+		while True:
+			if self._decrypt(): break
+			msg("Trying again...")
 
-		if seed:
-			if opt.out_fmt:
-				sstype = fmt_code_to_sstype(opt.out_fmt)
-			# Output format defaults to "Wallet"
-			return globals()[sstype or "Wallet"](seed=seed,passwd=passwd)
-		else:
-			if infile:
-				fn = Filename(infile)
-				return globals()[fn.sstype](fn=fn,passwd=passwd)
-			elif opt.in_fmt:  # Input format
-				sstype = fmt_code_to_sstype(opt.in_fmt)
-				return globals()[sstype](passwd=passwd)
-			else:
-				die(2,"Either an input file or input format must be specified")
+	subclasses = []
 
-	init = classmethod(init)
+	@classmethod
+	def _get_subclasses(cls):
+
+		if cls.subclasses: return cls.subclasses
+
+		ret,gl = [],globals()
+		for c in [gl[k] for k in gl]:
+			try:
+				if issubclass(c,cls):
+					ret.append(c)
+			except:
+				pass
+
+		cls.subclasses = ret
+		return ret
+
+	@classmethod
+	def fmt_code_to_sstype(cls,fmt_code):
+		if not fmt_code: return None
+		for c in cls._get_subclasses():
+			if hasattr(c,"fmt_codes") and fmt_code in c.fmt_codes:
+				return c
+		return None
+
+	@classmethod
+	def ext_to_sstype(cls,ext):
+		if not ext: return None
+		for c in cls._get_subclasses():
+			if hasattr(c,"ext") and ext == c.ext:
+				return c
+		return None
+
+	@classmethod
+	def format_fmt_codes(cls):
+		d = [(c.__name__,",".join(c.fmt_codes)) for c in cls._get_subclasses()
+				if hasattr(c,"fmt_codes")]
+		w = max([len(a) for a,b in d])
+		ret = ["{:<{w}}  {}".format(a,b,w=w) for a,b in [
+			("Format","Valid codes"),
+			("------","-----------")
+			] + sorted(d)]
+		return "\n".join(ret) + "\n"
 
 	def write_to_file(self):
 		self._format()
-		write_to_file_or_stdout(self._filename(),self.fmt_data, self.desc)
+		kwargs = {
+			'desc':     self.desc,
+			'ask_tty':  self.ask_tty,
+			'no_tty':   self.no_tty
+		}
+		write_data_to_file(self._filename(),self.fmt_data,**kwargs)
 
-class SeedSourceUnenc(SeedSource): pass
+
+class SeedSourceUnenc(SeedSource):
+
+	def _decrypt_retry(self): pass
+	def _encrypt(self): pass
+
 
 class SeedSourceEnc(SeedSource):
 
-	_ss_enc_msg = {
+	_msg = {
 		'choose_passphrase': """
 You must choose a passphrase to encrypt your new %s with.
 A key will be generated from your passphrase using a hash preset of '%s'.
-Please note that no strength checking of passphrases is performed.  For an
-empty passphrase, just hit ENTER twice.
+Please note that no strength checking of passphrases is performed.  For
+an empty passphrase, just hit ENTER twice.
 	""".strip()
 	}
 
-	def _pre_encode(self):
-		if self.ssdata.passwd == None: self._get_first_passwd()
-		self._get_hash_preset()
-		self._encrypt_seed()
+	def _get_pw(self,desc=None):
+		self.ssdata.passwd = get_mmgen_passphrase(desc)
 
-	def _get_first_passwd(self):
-		qmsg(self._ss_enc_msg['choose_passphrase'] % (self.desc,opt.hash_preset))
-		self.ssdata.passwd = get_new_passphrase(what=self.desc)
+	def _get_hash_preset(self,desc=None):
+		# Converting:
+		desc = desc or self.desc
+		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
+			if opt.keep_hash_preset:
+				a = self.ss_in.ssdata.hash_preset
+				qmsg("Reusing hash preset '%s' as per user request" % a)
+			elif 'hash_preset' in opt.set_by_user:
+				# Prompt, but use user-requested value as default
+				a = get_hash_preset_from_user(hp=opt.hash_preset,desc=desc)
+			else:
+				a = get_hash_preset_from_user(desc=desc)
+		elif 'hash_preset' in opt.set_by_user:
+			a = opt.hash_preset
+			qmsg("Using user-requested hash preset of '%s'" % a)
+		else:
+			a = get_hash_preset_from_user(desc=self.desc)
+		self.ssdata.hash_preset = a
 
-	def _get_hash_preset(self):
-		self.ssdata.hash_preset = \
-			opt.hash_preset or get_hash_preset_from_user(what=self.desc)
-
-	def _encrypt_seed(self):
+	def _get_first_pw_and_hp_and_encrypt_seed(self):
 		d = self.ssdata
+
+		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'passwd') \
+				and opt.keep_passphrase:
+			d.passwd = self.ss_in.ssdata.passwd
+			qmsg("Reusing passphrase as per user request")
+
+		self._get_hash_preset(desc="new " + self.desc)
+
+		if not hasattr(d,'passwd'):
+			qmsg(self.msg['choose_passphrase'] % (self.desc,self.ssdata.hash_preset))
+			d.passwd = get_new_passphrase(desc="new " + self.desc)
+
 		d.salt     = sha256(get_random(128)).digest()[:g.salt_len]
 		key        = make_key(d.passwd, d.salt, d.hash_preset)
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = encrypt_seed(self.seed.data,key)
 
+
 class Mnemonic (SeedSourceUnenc):
 
+	stdin_ok = True
+	fmt_codes = "mmwords","words","mnemonic","mnem","mn","m"
 	desc = "mnemonic data"
+	ext = "mmwords"
 	wl_checksums = {
 		"electrum": '5ca31424',
 		"tirosh":   '1a5faeff'
@@ -176,23 +303,18 @@ class Mnemonic (SeedSourceUnenc):
 
 		return words.strip().split("\n")
 
-	def _encode(self):
-
+	def _format(self):
 		wl = self._get_wordlist()
-		seed_hex = hexlify(self.seed.data)
+		seed_hex = self.seed.hexdata
 		mn = self._hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
-		rev = self._baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
-		if rev != seed_hex:
-			msg("ERROR: seed recomputed from wordlist doesn't match original seed!")
-			msg("Original seed:   %s" % seed_hex)
-			msg("Recomputed seed: %s" % rev)
-			sys.exit(3)
+		ret = self._baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		# Internal error, so just die on fail
+		compare_or_die(ret,"recomputed seed",
+						seed_hex,"original",e="Internal error")
 
 		self.ssdata.mnemonic = mn
-
-	def _format(self):
-		self.fmt_data = " ".join(self.ssdata.mnemonic) + "\n"
+		self.fmt_data = " ".join(mn) + "\n"
 
 	def _deformat(self):
 
@@ -200,92 +322,103 @@ class Mnemonic (SeedSourceUnenc):
 		wl = self._get_wordlist()
 
 		if len(mn) not in g.mn_lens:
-			die(3,"Invalid mnemonic (%i words).  Allowed numbers of words: %s" %
+			msg("Invalid mnemonic (%i words).  Allowed numbers of words: %s" %
 					(len(mn),", ".join([str(i) for i in g.mn_lens])))
+			return False
 
 		for n,w in enumerate(mn,1):
 			if w not in wl:
-				die(3,"Invalid mnemonic: word #%s is not in the wordlist" % n)
-
-		self.ssdata.mnemonic = mn
-
-	def _decode(self):
-
-		mn = self.ssdata.mnemonic
-		wl = self._get_wordlist()
+				msg("Invalid mnemonic: word #%s is not in the wordlist" % n)
+				return False
 
 		seed_hex = self._baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
 
-		rev = self._hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
-		if rev != mn:
-			msg("ERROR: mnemonic recomputed from seed not the same as original")
-			die(3,"Recomputed mnemonic:\n%s" % " ".join(rev))
+		ret = self._hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
-		qmsg("Valid mnemonic for seed ID %s" % make_chksum_8(unhexlify(seed_hex)))
+		# Internal error, so just die
+		compare_or_die(" ".join(ret),"recomputed mnemonic",
+						" ".join(mn),"original",e="Internal error")
 
 		self.seed = Seed(unhexlify(seed_hex))
+		self.ssdata.mnemonic = mn
+
+		check_usr_seed_len(self.seed.length)
+
+		qmsg("Valid mnemonic for seed ID %s" % make_chksum_8(self.seed.data))
+		return True
 
 	def _filename(self):
-		return "%s.%s" % (self.seed.sid, g.mn_ext)
+		return "%s[%s].%s" % (self.seed.sid,self.seed.length,self.ext)
+
 
 class SeedFile (SeedSourceUnenc):
 
+	stdin_ok = True
+	fmt_codes = "mmseed","seed","s"
 	desc = "seed data"
+	ext = "mmseed"
 
-	def _encode(self):
+	def _format(self):
 		b58seed = b58encode_pad(self.seed.data)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
-
-	def _decode(self):
-
-		seed = b58decode_pad(self.ssdata.b58seed)
-		if seed == False:
-			msg("Invalid base 58 string: %s" % val)
-			return False
-
-		msg("Valid seed data for seed ID %s" % make_chksum_8(seed))
-		self.seed = Seed(seed)
-
-	def _format(self):
 		self.fmt_data = "%s %s\n" % (
 				self.ssdata.chksum,
-				split_into_columns(4,self.ssdata.b58seed)
+				split_into_cols(4,b58seed)
 			)
 
 	def _deformat(self):
-		what = self.desc
+		desc = self.desc
 		ld = self.fmt_data.split()
 
 		if not (7 <= len(ld) <= 12): # 6 <= padded b58 data (ld[1:]) <= 11
-			msg("Invalid data length (%s) in %s" % (len(ld),what))
+			msg("Invalid data length (%s) in %s" % (len(ld),desc))
 			return False
 
 		a,b = ld[0],"".join(ld[1:])
 
 		if not is_chksum_6(a):
-			msg("'%s': invalid checksum format, in %s" % (a, what))
+			msg("'%s': invalid checksum format in %s" % (a, desc))
 			return False
 
 		if not is_b58string(b):
-			msg("'%s': not a base 58 string, in %s" % (b, what))
+			msg("'%s': not a base 58 string, in %s" % (b, desc))
 			return False
 
-		vmsg_r("Validating %s checksum..." % what)
+		vmsg_r("Validating %s checksum..." % desc)
 
-		compare_chksums(a,"checksum",make_chksum_6(b),"base 58 data")
+		if not compare_chksums(
+				a,"checksum",make_chksum_6(b),"base 58 data"):
+			return False
 
+		ret = b58decode_pad(b)
+
+		if ret == False:
+			msg("Invalid base-58 encoded seed: %s" % val)
+			return False
+
+		self.seed = Seed(ret)
 		self.ssdata.chksum = a
 		self.ssdata.b58seed = b
 
+		check_usr_seed_len(self.seed.length)
+
+		qmsg("Valid seed data for seed ID %s" % make_chksum_8(self.seed.data))
+
+		return True
+
 	def _filename(self):
-		return "%s.%s" % (self.seed.sid, g.seed_ext)
+		return "%s[%s].%s" % (self.seed.sid,self.seed.length,self.ext)
+
 
 class Wallet (SeedSourceEnc):
 
-	desc = "{pnm} wallet".format(pnm=pnm)
+	fmt_codes = "wallet","w"
+	desc = g.proj_name + " wallet"
+	ext = "mmdat"
 
-	def _encode(self):
+	def _encrypt(self):
+		self._get_first_pw_and_hp_and_encrypt_seed()
 		d = self.ssdata
 		d.label = opt.label or "No Label"
 		d.pw_status = "NE" if len(d.passwd) else "E"
@@ -294,50 +427,42 @@ class Wallet (SeedSourceEnc):
 	def _format(self):
 		d = self.ssdata
 		s = self.seed
-		s_fmt  = b58encode_pad(d.salt)
+		slt_fmt  = b58encode_pad(d.salt)
 		es_fmt = b58encode_pad(d.enc_seed)
 		lines = (
 			d.label,
 			"{} {} {} {} {}".format(s.sid.lower(), d.key_id.lower(),
-										s.len_bits, d.pw_status, d.timestamp),
+										s.length, d.pw_status, d.timestamp),
 			"{}: {} {} {}".format(d.hash_preset,*get_hash_params(d.hash_preset)),
-			"{} {}".format(make_chksum_6(s_fmt),  split_into_columns(4,s_fmt)),
-			"{} {}".format(make_chksum_6(es_fmt), split_into_columns(4,es_fmt))
+			"{} {}".format(make_chksum_6(slt_fmt),split_into_cols(4,slt_fmt)),
+			"{} {}".format(make_chksum_6(es_fmt), split_into_cols(4,es_fmt))
 		)
 		chksum = make_chksum_6(" ".join(lines))
 		self.fmt_data = "%s\n" % "\n".join((chksum,)+lines)
 
-	def _decode(self):
-		d = self.ssdata
-		# Needed for multiple transactions with {}-txsign
-		prompt_add = " "+self.infile.name if opt.quiet else ""
-		passwd = get_mmgen_passphrase(self.desc+prompt_add)
-		key = make_key(passwd, d.salt, d.hash_preset)
-		self.seed = Seed(decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id))
-		self.ssdata.passwd = passwd
-
-	def _check_master_chksum(self,lines):
-
-		if len(lines) != 6:
-			vmsg("Invalid number of lines (%s) in %s data" % (len(lines),self.desc))
-		elif not is_chksum_6(lines[0]):
-			vmsg("Incorrect Master checksum (%s) in %s data" % (lines[0],self.desc))
-		else:
-			chk = make_chksum_6(" ".join(lines[1:]))
-			if compare_chksums(lines[0],"master wallet",chk,"computed"):
-				return True
-
-		msg("Invalid %s data" % self.desc)
-		sys.exit(2)
-
 	def _deformat(self):
 
-		qmsg("Getting {pnm} wallet data from file '{f}'".format(
-			pnm=pnm,f=self.infile.name))
+		def check_master_chksum(lines,desc):
+
+			if len(lines) != 6:
+				msg("Invalid number of lines (%s) in %s data" %
+						(len(lines),desc))
+				return False
+
+			if not is_chksum_6(lines[0]):
+				msg("Incorrect master checksum (%s) in %s data" %
+						(lines[0],desc))
+				return False
+
+			chk = make_chksum_6(" ".join(lines[1:]))
+			if not compare_chksums(lines[0],"master",chk,"computed",
+						hdr="For wallet master checksum"):
+				return False
+
+			return True
 
 		lines = self.fmt_data.rstrip().split("\n")
-
-		self._check_master_chksum(lines)
+		if not check_master_chksum(lines,self.desc): return False
 
 		d = self.ssdata
 		d.label = lines[1]
@@ -345,39 +470,67 @@ class Wallet (SeedSourceEnc):
 		d1,d2,d3,d4,d5 = lines[2].split()
 		d.seed_id = d1.upper()
 		d.key_id  = d2.upper()
-		d.seed_len = int(d3)
+		check_usr_seed_len(int(d3))
 		d.pw_status,d.timestamp = d4,d5
 
 		hpdata = lines[3].split()
-		d.hash_preset = hpdata[0][:-1]  # a string!
+
+		d.hash_preset = hp = hpdata[0][:-1]  # a string!
+		qmsg("Hash preset of wallet: '%s'" % hp)
+		uhp = opt.hash_preset
+		if uhp and 'hash_preset' in opt.set_by_user and uhp != hp:
+			msg("Warning: ignoring user-requested hash preset '%s'" % uhp)
+
 		hash_params = [int(i) for i in hpdata[1:]]
 
 		if hash_params != get_hash_params(d.hash_preset):
 			msg("Hash parameters '%s' don't match hash preset '%s'" %
 					(" ".join(hash_params), d.hash_preset))
-			sys.exit(3)
+			return False
 
+		lmin,lmax = b58_lens[0],b58_lens[-1] # 22,33,44
 		for i,key in (4,"salt"),(5,"enc_seed"):
-			l = lines[i].split(" ",1)
-			if len(l) != 2:
-				msg("Invalid format for %s in %s: %s" % (key,self.desc,val))
-				sys.exit(3)
-			chk,val = l[0],l[1].replace(" ","")
-			compare_chksums(chk,"wallet "+key,
-								make_chksum_6(val),"computed checksum")
-			val_bin = b58decode_pad(val)
-			if val_bin == False:
-				msg("Invalid base 58 number: %s" % val)
-				sys.exit(3)
-			setattr(d,key,val_bin)
+			l = lines[i].split(" ")
+			chk = l.pop(0)
+			b58_val = "".join(l)
+
+			if len(b58_val) < lmin or len(b58_val) > lmax:
+				msg("Invalid format for %s in %s: %s" % (key,self.desc,l))
+				return False
+
+			if not compare_chksums(chk,key,
+					make_chksum_6(b58_val),"computed checksum"):
+				return False
+
+			val = b58decode_pad(b58_val)
+			if val == False:
+				msg("Invalid base 58 number: %s" % b58_val)
+				return False
+
+			setattr(d,key,val)
+
+		return True
+
+	def _decrypt(self):
+		d = self.ssdata
+		# Needed for multiple transactions with {}-txsign
+		add = " "+self.infile.name if opt.quiet else ""
+		self._get_pw(self.desc+add)
+		key = make_key(d.passwd, d.salt, d.hash_preset)
+		ret = decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)
+		if ret:
+			self.seed = Seed(ret)
+			return True
+		else:
+			return False
 
 	def _filename(self):
 		return "{}-{}[{},{}].{}".format(
 				self.seed.sid,
 				self.ssdata.key_id,
-				self.seed.len_bits,
+				self.seed.length,
 				self.ssdata.hash_preset,
-				g.wallet_ext
+				self.ext
 			)
 
 # 	def __str__(self):
@@ -391,7 +544,7 @@ class Wallet (SeedSourceEnc):
 # 			("Label:",         d.label),
 # 			("Seed ID:",       s.sid),
 # 			("Key  ID:",       d.key_id),
-# 			("Seed length:",   "%s bits (%s bytes)" % (s.len_bits,s.len_bytes)),
+# 			("Seed length:",   "%s bits (%s bytes)" % (s.length,s.length/8)),
 # 			("Scrypt params:", "Preset '%s' (%s)" % (opt.hash_preset,
 # 					" ".join([str(i) for i in get_hash_params(opt.hash_preset)])
 # 					)
@@ -412,14 +565,19 @@ class Wallet (SeedSourceEnc):
 #
 # 		return "\n".join(out)
 
+
 class Brainwallet (SeedSourceEnc):
 
+	stdin_ok = True
+	fmt_codes = "mmbrain","brainwallet","brain","bw","b"
 	desc = "brainwallet"
+	ext = "mmbrain"
 
 	def _deformat(self):
 		self.brainpasswd = " ".join(self.fmt_data.split())
+		return True
 
-	def _decode(self):
+	def _decrypt(self):
 		self._get_hash_preset()
 		vmsg_r("Hashing brainwallet data.  Please wait...")
 		# Use buflen arg of scrypt.hash() to get seed of desired length
@@ -427,43 +585,75 @@ class Brainwallet (SeedSourceEnc):
 					self.ssdata.hash_preset, buflen=opt.seed_len/8)
 		vmsg("Done")
 		self.seed = Seed(seed)
+		msg("Seed ID: %s" % self.seed.sid)
+		qmsg("Check this value against your records")
+		return True
 
 
 class IncogWallet (SeedSourceEnc):
 
-	desc = "incognito wallet"
+	fmt_codes = "mmincog","incog","icg","i"
+	desc = "incognito data"
+	ext = "mmincog"
+	no_tty = True
 
-	_icg_msg = {
-		'incog_iv_id': """
-Check that the generated Incog ID above is correct.  If it's not, then your
-incognito data is incorrect or corrupted.
-	""".strip(),
-		'incog_iv_id_hidden': """
-Check that the generated Incog ID above is correct.  If it's not, then your
-incognito data is incorrect or corrupted, or you've supplied an incorrect
-offset.
-	""".strip(),
-	'incorrect_incog_passphrase_try_again': """
+	_msg = {
+		'check_incog_id': """
+  Check the generated Incog ID above against your records.  If it doesn't
+  match, then your incognito data is incorrect or corrupted.
+	""",
+		'record_incog_id': """
+  Make a record of the Incog ID but keep it secret.  You will use it to
+  identify your incog wallet data in the future.
+	""",
+		'incorrect_incog_passphrase_try_again': """
 Incorrect passphrase, hash preset, or maybe old-format incog wallet.
 Try again? (Y)es, (n)o, (m)ore information:
 """.strip(),
-	'confirm_seed_id': """
+		'confirm_seed_id': """
 If the seed ID above is correct but you're seeing this message, then you need
 to exit and re-run the program with the '--old-incog-fmt' option.
 """.strip(),
+		'dec_chk': " %s hash preset"
 	}
 
 	def _make_iv_chksum(self,s): return sha256(s).hexdigest()[:8].upper()
 
 	def _get_incog_data_len(self,seed_len):
-		return g.aesctr_iv_len + g.salt_len + g.hincog_chk_len + seed_len/8
+		e = 0 if opt.old_incog_fmt else g.hincog_chk_len
+		return g.aesctr_iv_len + g.salt_len + e + seed_len/8
 
-	def _encode (self):
+	def _incog_data_size_chk(self):
+		# valid sizes: 56, 64, 72
+		dlen = len(self.fmt_data)
+		valid_dlen = self._get_incog_data_len(opt.seed_len)
+		if dlen == valid_dlen:
+			return True
+		else:
+			if opt.old_incog_fmt:
+				msg("WARNING: old-style incognito format requested.  " +
+					"Are you sure this is correct?")
+			msg(("Invalid incognito data size (%s bytes) for this " +
+				"seed length (%s bits)") % (dlen,opt.seed_len))
+			msg("Valid data size for this seed length: %s bytes" % valid_dlen)
+			for sl in g.seed_lens:
+				if dlen == self._get_incog_data_len(sl):
+					die(1,"Valid seed length for this data size: %s bits" % sl)
+			msg(("This data size (%s bytes) is invalid for all available " +
+				"seed lengths") % dlen)
+			return False
+
+	def _encrypt (self):
+		self._get_first_pw_and_hp_and_encrypt_seed()
+		if opt.old_incog_fmt:
+			die(1,"Writing old-format incog wallets is unsupported")
 		d = self.ssdata
 		# IV is used BOTH to initialize counter and to salt password!
 		d.iv = get_random(g.aesctr_iv_len)
 		d.iv_id = self._make_iv_chksum(d.iv)
-		msg("Incog ID: %s" % d.iv_id)
+		msg("New Incog Wallet ID: %s" % d.iv_id)
+		qmsg("Make a record of this value")
+		vmsg(self.msg['record_incog_id'])
 
 		d.salt = get_random(g.salt_len)
 		key = make_key(d.passwd, d.salt, d.hash_preset, "incog wallet key")
@@ -472,7 +662,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, "incog wrapper key")
 		d.key_id = make_chksum_8(d.wrapper_key)
-		d.target_data_len = self._get_incog_data_len(opt.seed_len)
+		vmsg("Key ID: %s" % d.key_id)
+		d.target_data_len = self._get_incog_data_len(self.seed.length)
 
 	def _format(self):
 		d = self.ssdata
@@ -480,121 +671,144 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 							d.salt + d.enc_seed,
 							d.wrapper_key,
 							int(hexlify(d.iv),16),
-							"incog data"
+							self.desc
 						)
 
 	def _filename(self):
+		s = self.seed
+		d = self.ssdata
 		return "{}-{}-{}[{},{}].{}".format(
-				self.seed.sid,
-				self.ssdata.key_id,
-				self.ssdata.iv_id,
-				self.seed.len_bits,
-				self.ssdata.hash_preset,
-				g.incog_ext
+				s.sid,
+				d.key_id,
+				d.iv_id,
+				s.length,
+				d.hash_preset,
+				self.ext
 			)
 
 	def _deformat(self):
 
-		# Data could be of invalid length, so check: [56, 64, 72]
-		valid_dlen = self._get_incog_data_len(opt.seed_len)
-		raw_d = self.fmt_data
-		if len(raw_d) != valid_dlen:
-			msg("Invalid incognito data size: %s" % len(raw_d))
-			msg("Valid incognito data size for this seed length: %s bytes" %
-					valid_dlen)
-			for sl in g.seed_lens:
-				if len(raw_d) == self._get_incog_data_len(sl):
-					die(1,"Maybe you need to specify a seed length of %s?" % sl)
-			die(1,"The data size is invalid for all available seed lengths")
+		if not self._incog_data_size_chk(): return False
 
 		d = self.ssdata
-		d.iv             = raw_d[0:g.aesctr_iv_len]
+		d.iv             = self.fmt_data[0:g.aesctr_iv_len]
 		d.incog_id       = self._make_iv_chksum(d.iv)
-		d.enc_incog_data = raw_d[g.aesctr_iv_len:]
-		msg("Incog ID: %s" % d.incog_id)
-		qmsg("Check the applicable value against your records")
-		ksuf = '_hidden' if self.__class__ == "IncogWalletHidden" else ""
-		vmsg("\n%s\n" % self._icg_msg['incog_iv_id' + ksuf])
+		d.enc_incog_data = self.fmt_data[g.aesctr_iv_len:]
+		msg("Incog Wallet ID: %s" % d.incog_id)
+		qmsg("Check this value against your records")
+		vmsg(self.msg['check_incog_id'])
 
-	def _decode(self):
+		return True
+
+	def _verify_seed_newfmt(self,data):
+		chk,seed = data[:8],data[8:]
+		if sha256(seed).digest()[:8] == chk:
+			qmsg("Passphrase%s are correct" % (self.msg['dec_chk'] % "and"))
+			return seed
+		else:
+			msg("Incorrect passphrase%s" % (self.msg['dec_chk'] % "or"))
+			return False
+
+	def _verify_seed_oldfmt(self,seed):
+		m = "Seed ID: %s.  Is the seed ID correct?" % make_chksum_8(seed)
+		if keypress_confirm(m, True):
+			return seed
+		else:
+			return False
+
+	def _decrypt(self):
 		d = self.ssdata
-		prompt_info="{pnm} incognito wallet".format(pnm=pnm)
+		desc = self.desc+" "+d.incog_id
+		self._get_hash_preset(desc)
+		self._get_pw(desc)
 
-		while True:
-			passwd = get_mmgen_passphrase(prompt_info+" "+d.incog_id)
+		# IV is used BOTH to initialize counter and to salt password!
+		key = make_key(d.passwd, d.iv, d.hash_preset, "wrapper key")
+		dd = decrypt_data(d.enc_incog_data, key,
+				int(hexlify(d.iv),16), "incog data")
 
-			qmsg("Configured hash presets: %s" %
-						" ".join(sorted(g.hash_presets)))
-			d.hash_preset = get_hash_preset_from_user(what="incog wallet")
+		d.salt     = dd[0:g.salt_len]
+		d.enc_seed = dd[g.salt_len:]
 
-			# IV is used BOTH to initialize counter and to salt password!
-			key = make_key(passwd, d.iv, d.hash_preset, "wrapper key")
-			dd = decrypt_data(d.enc_incog_data, key,
-					int(hexlify(d.iv),16), "incog data")
+		key = make_key(d.passwd, d.salt, d.hash_preset, "main key")
+		msg("Key ID: %s" % make_chksum_8(key))
 
-			d.salt     = dd[0:g.salt_len]
-			d.enc_seed = dd[g.salt_len:]
+		verify_seed = self._verify_seed_oldfmt if opt.old_incog_fmt else \
+						self._verify_seed_newfmt
 
-			key = make_key(passwd, d.salt, d.hash_preset, "main key")
-			vmsg("Key ID: %s" % make_chksum_8(key))
+		seed = verify_seed(decrypt_seed(d.enc_seed, key, "", ""))
 
-			ret = decrypt_seed(d.enc_seed, key, "", "")
-
-			chk,seed_maybe = ret[:8],ret[8:]
-			if sha256(seed_maybe).digest()[:8] == chk:
-				msg("Passphrase and hash preset are correct")
-				seed = seed_maybe
-				break
-			else:
-				msg("Incorrect passphrase or hash preset")
-
-		self.seed = Seed(seed)
+		if seed:
+			self.seed = Seed(seed)
+			msg("Seed ID: %s" % self.seed.sid)
+			return True
+		else:
+			return False
 
 
 class IncogWalletHex (IncogWallet):
 
+	desc = "hex incognito data"
+	fmt_codes = "mmincox","incog_hex","xincog","ix","xi"
+	ext = "mmincox"
+	no_tty = False
+
 	def _deformat(self):
-		self.fmt_data = decode_pretty_hexdump(self.fmt_data)
-		IncogWallet._deformat(self)
+		ret = decode_pretty_hexdump(self.fmt_data)
+		if ret:
+			self.fmt_data = ret
+			return IncogWallet._deformat(self)
+		else:
+			return False
 
 	def _format(self):
 		IncogWallet._format(self)
 		self.fmt_data = pretty_hexdump(self.fmt_data)
 
-	def _filename(self):
-		return IncogWallet._filename(self)[:-len(g.incog_ext)] + g.incog_hex_ext
-
 
 class IncogWalletHidden (IncogWallet):
 
-	_hicg_msg = {
+	desc = "hidden incognito data"
+	fmt_codes = "incog_hidden","hincog","ih","hi"
+	ext = None
+
+	_msg = {
 		'choose_file_size': """
 You must choose a size for your new hidden incog data.  The minimum size is
 {} bytes, which puts the incog data right at the end of the file. Since you
-probably want to hide your data somewhere in the middle of the file where
-it's harder to find, you're advised to choose a much larger file size.
+probably want to hide your data somewhere in the middle of the file where it's
+harder to find, you're advised to choose a much larger file size than this.
 	""".strip(),
+		'check_incog_id': """
+  Check generated Incog ID above against your records.  If it doesn't
+  match, then your incognito data is incorrect or corrupted, or you
+  may have specified an incorrect offset.
+	""",
+		'record_incog_id': """
+  Make a record of the Incog ID but keep it secret.  You will used it to
+  identify the incog wallet data in the future and to locate the offset
+  where the data is hidden in the event you forget it.
+	""",
+		'dec_chk': ", hash preset, offset %s seed length"
 	}
 
-	def _get_hincog_params(self):
-		a,b = opt.hidden_incog_params.split(",")
+
+	def _get_hincog_params(self,wtype):
+		p = getattr(opt,'hidden_incog_'+ wtype +'_params')
+		a,b = p.split(",")
 		return a,int(b)
 
 	def _check_valid_offset(self,fn,action):
 		d = self.ssdata
+		m = "Destination" if action == "write" else "Input"
 		if fn.size < d.hincog_offset + d.target_data_len:
 			die(1,
-"Destination file has length %s, too short to %s %s bytes of data at offset %s"
-				% (fn.size,action,d.target_data_len,d.hincog_offset))
+	"%s file has length %s, too short to %s %s bytes of data at offset %s"
+				% (m,fn.size,action,d.target_data_len,d.hincog_offset))
 
-
-	# overrides method in SeedSource
-	def _get_formatted_data(self,fn):
-		if fn: die(1,
-"Specify the filename as a parameter of the '--from-hidden-incog' option")
+	def _get_data(self):
 		d = self.ssdata
-		f,d.hincog_offset = self._get_hincog_params()
-		self.infile = Filename(f,ftype="hincog")
+		d.hincog_offset = self._get_hincog_params("input")[1]
 
 		qmsg("Getting hidden incog data from file '%s'" % self.infile.name)
 
@@ -616,7 +830,7 @@ it's harder to find, you're advised to choose a much larger file size.
 		self._format()
 		compare_or_die(d.target_data_len, "target data length",
 				len(self.fmt_data),"length of formatted " + self.desc)
-		fn,d.hincog_offset = self._get_hincog_params()
+		fn,d.hincog_offset = self._get_hincog_params("output")
 
 		self.hincog_data_is_new = False
 		try:
@@ -625,13 +839,13 @@ it's harder to find, you're advised to choose a much larger file size.
 			if keypress_confirm("Requested file '%s' does not exist.  Create?"
 					% fn, default_yes=True):
 				min_fsize = d.target_data_len + d.hincog_offset
-				msg(self._hicg_msg['choose_file_size'].format(min_fsize))
+				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
 					fsize = my_raw_input("Enter file size: ")
 					if is_int(fsize) and int(fsize) >= min_fsize: break
-					msg("File size must be an integer no less than %s" % min_fsize)
+					msg("File size must be an integer no less than %s" %
+							min_fsize)
 
-				g.use_urandchars = True
 				from mmgen.tool import rand2file
 				rand2file(fn, str(fsize))
 				self.hincog_data_is_new = True
@@ -640,8 +854,7 @@ it's harder to find, you're advised to choose a much larger file size.
 
 		self.outfile = f = Filename(fn,ftype="hincog")
 
-		if opt.debug:
-			Msg("Incog data len %s, offset %s" % (d.target_data_len,d.hincog_offset))
+		dmsg("Incog data len %s, offset %s" % (d.target_data_len,d.hincog_offset))
 
 		if not self.hincog_data_is_new:
 			self._check_valid_offset(f,"write")
@@ -651,4 +864,6 @@ it's harder to find, you're advised to choose a much larger file size.
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)
 		os.close(fh)
-		msg("Incog data written to file '%s' at offset %s" % (f.name,d.hincog_offset))
+		msg("%s written to file '%s' at offset %s" % (
+				self.desc[0].upper()+self.desc[1:],
+				f.name,d.hincog_offset))

@@ -64,7 +64,7 @@ if len(cmd_args) == 1:
 		ai = AddrInfo(infile,has_keys=opt.keyaddr_file)
 else:
 	msg("""
-"You must specify an mmgen address file (or a list of non-{pnm} addresses
+You must specify an {pnm} address file (or a list of non-{pnm} addresses
 with the '--addrlist' option)
 """.strip().format(pnm=g.proj_name))
 	sys.exit(1)

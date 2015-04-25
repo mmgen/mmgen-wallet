@@ -31,6 +31,7 @@ def launch(what):
 	def launch_txsend():     import mmgen.main_txsend
 	def launch_txsign():     import mmgen.main_txsign
 	def launch_walletchk():  import mmgen.main_walletchk
+	def launch_walletconv(): import mmgen.main_walletconv
 	def launch_walletgen():  import mmgen.main_walletgen
 
 	try: import termios

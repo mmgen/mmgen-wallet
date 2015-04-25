@@ -26,6 +26,7 @@ from decimal import Decimal
 
 import mmgen.globalvars as g
 import mmgen.opt as opt
+from mmgen.util import dmsg
 from mmgen.tx import *
 
 pnm = g.proj_name
@@ -196,9 +197,9 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 					i.addr = "%s%s %s" % (
 						i.address[:btaddr_w-len(dots)],
 						dots, (
-                        ("{:<{w}} ".format(i.mmid,w=mmid_w) if i.mmid else "")
-                            + i.comment)[:acct_w]
-                        )
+						("{:<{w}} ".format(i.mmid,w=mmid_w) if i.mmid else "")
+							+ i.comment)[:acct_w]
+						)
 				else:
 					i.addr = i.address
 
@@ -294,16 +295,13 @@ def mmaddr2btcaddr_unspent(unspent,mmaddr):
 
 
 def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
-	# assume mmaddr has already been checked
-	sid,idx = mmaddr.split(":")
-	btcaddr = ""
 
-	if sid in ail_w.seed_ids():
-		btcaddr = ail_w.addrinfo(sid).btcaddr(int(idx))
+	# assume mmaddr has already been checked
+	btcaddr = ail_w.mmaddr2btcaddr(mmaddr)
 
 	if not btcaddr:
-		if ail_f and sid in ail_f.seed_ids():
-			btcaddr = ail_f.addrinfo(sid).btcaddr(int(idx))
+		if ail_f:
+			btcaddr = ail_f.mmaddr2btcaddr(mmaddr)
 			if btcaddr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm("Continue anyway?"):
@@ -449,9 +447,7 @@ if change > 0: tx_out[change_addr] = float(change)
 
 tx_in = [{"txid":i.txid, "vout":i.vout} for i in sel_unspent]
 
-if opt.debug:
-	Msg("tx_in:  " + repr(tx_in))
-	Msg("tx_out: " + repr(tx_out))
+dmsg("tx_in:  %s\ntx_out: %s" % (repr(tx_in),repr(tx_out)))
 
 if opt.comment_file:
 	if keypress_confirm("Edit comment?",False):

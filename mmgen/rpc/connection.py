@@ -32,21 +32,21 @@ from mmgen.rpc.data import (ServerInfo, AccountInfo, AddressInfo, TransactionInf
 
 class BitcoinConnection(object):
 	"""
-	A BitcoinConnection object defines a connection to a bitcoin server.
-	It is a thin wrapper around a JSON-RPC API connection.
+    A BitcoinConnection object defines a connection to a bitcoin server.
+    It is a thin wrapper around a JSON-RPC API connection.
 
-	Up-to-date for SVN revision 198.
+    Up-to-date for SVN revision 198.
 
-	Arguments to constructor:
+    Arguments to constructor:
 
-	- *user* -- Authenticate as user.
-	- *password* -- Authentication password.
-	- *host* -- Bitcoin JSON-RPC host.
-	- *port* -- Bitcoin JSON-RPC port.
+    - *user* -- Authenticate as user.
+    - *password* -- Authentication password.
+    - *host* -- Bitcoin JSON-RPC host.
+    - *port* -- Bitcoin JSON-RPC port.
 	"""
 	def __init__(self, user, password, host='localhost', port=8332, use_https=False):
 		"""
-		Create a new bitcoin server connection.
+        Create a new bitcoin server connection.
 		"""
 		url = 'http{s}://{user}:{password}@{host}:{port}/'.format(
 			s='s' if use_https else '',
@@ -59,8 +59,6 @@ class BitcoinConnection(object):
 
 # importaddress <address> [label] [rescan=true]
 	def importaddress(self,address,label=None,rescan=True):
-		"""
-		"""
 		try:
 #			return self.proxy.badmethod(address,label) # DEBUG
 			return self.proxy.importaddress(address,label,rescan)
@@ -78,8 +76,6 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 # sendrawtransaction <hex string> [allowhighfees=false]
 	def sendrawtransaction(self,tx):
-		"""
-		"""
 		try:
 			return self.proxy.sendrawtransaction(tx)
 		except JSONRPCException as e:
@@ -87,7 +83,7 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def stop(self):
 		"""
-		Stop bitcoin server.
+        Stop bitcoin server.
 		"""
 		try:
 			self.proxy.stop()
@@ -96,7 +92,7 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getblock(self, hash):
 		"""
-		Returns information about the given block hash.
+        Returns information about the given block hash.
 		"""
 		try:
 			return self.proxy.getblock(hash)
@@ -105,7 +101,7 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getblockcount(self):
 		"""
-		Returns the number of blocks in the longest block chain.
+        Returns the number of blocks in the longest block chain.
 		"""
 		try:
 			return self.proxy.getblockcount()
@@ -114,9 +110,9 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getblockhash(self, index):
 		"""
-		Returns hash of block in best-block-chain at index.
+        Returns hash of block in best-block-chain at index.
 
-		:param index: index ob the block
+        :param index: index ob the block
 
 		"""
 		try:
@@ -126,14 +122,14 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getblocknumber(self):
 		"""
-		Returns the block number of the latest block in the longest block chain.
-		Deprecated. Use getblockcount instead.
+        Returns the block number of the latest block in the longest block chain.
+        Deprecated. Use getblockcount instead.
 		"""
 		return self.getblockcount()
 
 	def getconnectioncount(self):
 		"""
-		Returns the number of connections to other nodes.
+        Returns the number of connections to other nodes.
 		"""
 		try:
 			return self.proxy.getconnectioncount()
@@ -142,7 +138,7 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getdifficulty(self):
 		"""
-		Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
+        Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
 		"""
 		try:
 			return self.proxy.getdifficulty()
@@ -151,8 +147,8 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getgenerate(self):
 		"""
-		Returns :const:`True` or :const:`False`, depending on whether
-		generation is enabled.
+        Returns :const:`True` or :const:`False`, depending on whether
+        generation is enabled.
 		"""
 		try:
 			return self.proxy.getgenerate()
@@ -161,14 +157,14 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def setgenerate(self, generate, genproclimit=None):
 		"""
-		Enable or disable generation (mining) of coins.
+        Enable or disable generation (mining) of coins.
 
-		Arguments:
+        Arguments:
 
-		- *generate* -- is :const:`True` or :const:`False` to turn generation
-		on or off.
-		- *genproclimit* -- Number of processors that are used for generation,
-		-1 is unlimited.
+        - *generate* -- is :const:`True` or :const:`False` to turn generation
+        on or off.
+        - *genproclimit* -- Number of processors that are used for generation,
+        -1 is unlimited.
 
 		"""
 		try:
@@ -181,7 +177,7 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def gethashespersec(self):
 		"""
-		Returns a recent hashes per second performance measurement while generating.
+        Returns a recent hashes per second performance measurement while generating.
 		"""
 		try:
 			return self.proxy.gethashespersec()
@@ -190,8 +186,8 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getinfo(self):
 		"""
-		Returns an :class:`~mmgen.rpc.data.ServerInfo` object containing
-		various state info.
+        Returns an :class:`~mmgen.rpc.data.ServerInfo` object containing
+        various state info.
 		"""
 		try:
 			return ServerInfo(**self.proxy.getinfo())
@@ -200,8 +196,8 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getmininginfo(self):
 		"""
-		Returns an :class:`~mmgen.rpc.data.MiningInfo` object containing various
-		mining state info.
+        Returns an :class:`~mmgen.rpc.data.MiningInfo` object containing various
+        mining state info.
 		"""
 		try:
 			return MiningInfo(**self.proxy.getmininginfo())
@@ -210,13 +206,13 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getnewaddress(self, account=None):
 		"""
-		Returns a new bitcoin address for receiving payments.
+        Returns a new bitcoin address for receiving payments.
 
-		Arguments:
+        Arguments:
 
-		- *account* -- If account is specified (recommended), it is added to the
-		address book so that payments received with the address will be
-		credited to it.
+        - *account* -- If account is specified (recommended), it is added to the
+        address book so that payments received with the address will be
+        credited to it.
 
 		"""
 		try:
@@ -229,11 +225,11 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getaccountaddress(self, account):
 		"""
-		Returns the current bitcoin address for receiving payments to an account.
+        Returns the current bitcoin address for receiving payments to an account.
 
-		Arguments:
+        Arguments:
 
-		- *account* -- Account for which the address should be returned.
+        - *account* -- Account for which the address should be returned.
 
 		"""
 		try:
@@ -243,12 +239,12 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def setaccount(self, bitcoinaddress, account):
 		"""
-		Sets the account associated with the given address.
+        Sets the account associated with the given address.
 
-		Arguments:
+        Arguments:
 
-		- *bitcoinaddress* -- Bitcoin address to associate.
-		- *account* -- Account to associate the address to.
+        - *bitcoinaddress* -- Bitcoin address to associate.
+        - *account* -- Account to associate the address to.
 
 		"""
 		try:
@@ -258,11 +254,11 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getaccount(self, bitcoinaddress):
 		"""
-		Returns the account associated with the given address.
+        Returns the account associated with the given address.
 
-		Arguments:
+        Arguments:
 
-		- *bitcoinaddress* -- Bitcoin address to get account for.
+        - *bitcoinaddress* -- Bitcoin address to get account for.
 		"""
 		try:
 			return self.proxy.getaccount(bitcoinaddress)
@@ -271,11 +267,11 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getaddressesbyaccount(self, account):
 		"""
-		Returns the list of addresses for the given account.
+        Returns the list of addresses for the given account.
 
-		Arguments:
+        Arguments:
 
-		- *account* -- Account to get list of addresses for.
+        - *account* -- Account to get list of addresses for.
 		"""
 		try:
 			return self.proxy.getaddressesbyaccount(account)
@@ -284,16 +280,16 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def sendtoaddress(self, bitcoinaddress, amount, comment=None, comment_to=None):
 		"""
-		Sends *amount* from the server's available balance to *bitcoinaddress*.
+        Sends *amount* from the server's available balance to *bitcoinaddress*.
 
-		Arguments:
+        Arguments:
 
-		- *bitcoinaddress* -- Bitcoin address to send to.
-		- *amount* -- Amount to send (float, rounded to the nearest 0.01).
-		- *minconf* -- Minimum number of confirmations required for transferred
-		balance.
-		- *comment* -- Comment for transaction.
-		- *comment_to* -- Comment for to-address.
+        - *bitcoinaddress* -- Bitcoin address to send to.
+        - *amount* -- Amount to send (float, rounded to the nearest 0.01).
+        - *minconf* -- Minimum number of confirmations required for transferred
+        balance.
+        - *comment* -- Comment for transaction.
+        - *comment_to* -- Comment for to-address.
 
 		"""
 		try:
@@ -308,14 +304,14 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getreceivedbyaddress(self, bitcoinaddress, minconf=1):
 		"""
-		Returns the total amount received by a bitcoin address in transactions
-		with at least a certain number of confirmations.
+        Returns the total amount received by a bitcoin address in transactions
+        with at least a certain number of confirmations.
 
-		Arguments:
+        Arguments:
 
-		- *bitcoinaddress* -- Address to query for total amount.
+        - *bitcoinaddress* -- Address to query for total amount.
 
-		- *minconf* -- Number of confirmations to require, defaults to 1.
+        - *minconf* -- Number of confirmations to require, defaults to 1.
 		"""
 		try:
 			return self.proxy.getreceivedbyaddress(bitcoinaddress, minconf)
@@ -324,13 +320,13 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getreceivedbyaccount(self, account, minconf=1):
 		"""
-		Returns the total amount received by addresses with an account in
-		transactions with at least a certain number of confirmations.
+        Returns the total amount received by addresses with an account in
+        transactions with at least a certain number of confirmations.
 
-		Arguments:
+        Arguments:
 
-		- *account* -- Account to query for total amount.
-		- *minconf* -- Number of confirmations to require, defaults to 1.
+        - *account* -- Account to query for total amount.
+        - *minconf* -- Number of confirmations to require, defaults to 1.
 
 		"""
 		try:
@@ -340,11 +336,11 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def gettransaction(self, txid):
 		"""
-		Get detailed information about transaction
+        Get detailed information about transaction
 
-		Arguments:
+        Arguments:
 
-		- *txid* -- Transactiond id for which the info should be returned
+        - *txid* -- Transactiond id for which the info should be returned
 
 		"""
 		try:
@@ -354,12 +350,12 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def getrawtransaction(self, txid, verbose=True):
 		"""
-		Get transaction raw info
+        Get transaction raw info
 
-		Arguments:
+        Arguments:
 
-		- *txid* -- Transactiond id for which the info should be returned.
-		- *verbose* -- If False, return only the "hex" of the transaction.
+        - *txid* -- Transactiond id for which the info should be returned.
+        - *verbose* -- If False, return only the "hex" of the transaction.
 
 		"""
 		try:
@@ -371,24 +367,24 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def createrawtransaction(self, inputs, outputs):
 		"""
-		Creates a raw transaction spending given inputs
-		(a list of dictionaries, each containing a transaction id and an output
-		number), sending to given address(es).
+        Creates a raw transaction spending given inputs
+        (a list of dictionaries, each containing a transaction id and an output
+        number), sending to given address(es).
 
-		Returns hex-encoded raw transaction.
+        Returns hex-encoded raw transaction.
 
-		Example usage:
-		>>> conn.createrawtransaction(
-				[{"txid": "a9d4599e15b53f3eb531608ddb31f48c695c3d0b3538a6bda871e8b34f2f430c",
-				"vout": 0}],
-				{"mkZBYBiq6DNoQEKakpMJegyDbw2YiNQnHT":50})
+        Example usage:
+        >>> conn.createrawtransaction(
+               [{"txid": "a9d4599e15b53f3eb531608ddb31f48c695c3d0b3538a6bda871e8b34f2f430c",
+               "vout": 0}],
+               {"mkZBYBiq6DNoQEKakpMJegyDbw2YiNQnHT":50})
 
 
-		Arguments:
+        Arguments:
 
-		- *inputs* -- A list of {"txid": txid, "vout": n} dictionaries.
-		- *outputs* -- A dictionary mapping (public) addresses to the amount
-					they are to be paid.
+        - *inputs* -- A list of {"txid": txid, "vout": n} dictionaries.
+        - *outputs* -- A dictionary mapping (public) addresses to the amount
+                    they are to be paid.
 		"""
 		try:
 			return self.proxy.createrawtransaction(inputs, outputs)
@@ -397,22 +393,22 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def signrawtransaction(self, hexstring, previous_transactions=None, private_keys=None):
 		"""
-		Sign inputs for raw transaction (serialized, hex-encoded).
+        Sign inputs for raw transaction (serialized, hex-encoded).
 
-		Returns a dictionary with the keys:
-			"hex": raw transaction with signature(s) (hex-encoded string)
-			"complete": 1 if transaction has a complete set of signature(s), 0 if not
+        Returns a dictionary with the keys:
+            "hex": raw transaction with signature(s) (hex-encoded string)
+            "complete": 1 if transaction has a complete set of signature(s), 0 if not
 
-		Arguments:
+        Arguments:
 
-		- *hexstring* -- A hex string of the transaction to sign.
-		- *previous_transactions* -- A (possibly empty) list of dictionaries of
-		the form:
-			{"txid": txid, "vout": n, "scriptPubKey": hex, "redeemScript": hex},
-			representing previous transaction outputs that this transaction depends
-			on but may not yet be in the block chain.
-		- *private_keys* -- A (possibly empty) list of base58-encoded private
-		keys that, if given, will be the only keys used to sign the transaction.
+        - *hexstring* -- A hex string of the transaction to sign.
+        - *previous_transactions* -- A (possibly empty) list of dictionaries of
+        the form:
+            {"txid": txid, "vout": n, "scriptPubKey": hex, "redeemScript": hex},
+            representing previous transaction outputs that this transaction depends
+            on but may not yet be in the block chain.
+        - *private_keys* -- A (possibly empty) list of base58-encoded private
+        keys that, if given, will be the only keys used to sign the transaction.
 		"""
 		try:
 			return dict(self.proxy.signrawtransaction(hexstring,
@@ -422,11 +418,11 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def decoderawtransaction(self, hexstring):
 		"""
-		Produces a human-readable JSON object for a raw transaction.
+        Produces a human-readable JSON object for a raw transaction.
 
-		Arguments:
+        Arguments:
 
-		- *hexstring* -- A hex string of the transaction to be decoded.
+        - *hexstring* -- A hex string of the transaction to be decoded.
 		"""
 		try:
 			return dict(self.proxy.decoderawtransaction(hexstring))
@@ -443,16 +439,16 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def listreceivedbyaddress(self, minconf=1, includeempty=False):
 		"""
-		Returns a list of addresses.
+        Returns a list of addresses.
 
-		Each address is represented with a
-		:class:`~mmgen.rpc.data.AddressInfo` object.
+        Each address is represented with a
+        :class:`~mmgen.rpc.data.AddressInfo` object.
 
-		Arguments:
+        Arguments:
 
-		- *minconf* -- Minimum number of confirmations before payments are included.
-		- *includeempty* -- Whether to include addresses that haven't received
-		any payments.
+        - *minconf* -- Minimum number of confirmations before payments are included.
+        - *includeempty* -- Whether to include addresses that haven't received
+        any payments.
 
 		"""
 		try:
@@ -463,12 +459,12 @@ ERROR: 'importaddress' not found.  Does your bitcoind support watch-only addrs?
 
 	def listaccounts(self, minconf=1, includeWatchonly=False, as_dict=False):
 		"""
-		Returns a list of account names.
+        Returns a list of account names.
 
-		Arguments:
+        Arguments:
 
-		- *minconf* -- Minimum number of confirmations before payments are included.
-		- *as_dict* -- Returns a dictionary of account names, with their balance as values.
+        - *minconf* -- Minimum number of confirmations before payments are included.
+        - *as_dict* -- Returns a dictionary of account names, with their balance as values.
 		"""
 		try:
 			if as_dict:
@@ -488,15 +484,15 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def listreceivedbyaccount(self, minconf=1, includeempty=False):
 		"""
-		Returns a list of accounts.
+        Returns a list of accounts.
 
-		Each account is represented with a :class:`~mmgen.rpc.data.AccountInfo` object.
+        Each account is represented with a :class:`~mmgen.rpc.data.AccountInfo` object.
 
-		Arguments:
+        Arguments:
 
-		- *minconf* -- Minimum number of confirmations before payments are included.
+        - *minconf* -- Minimum number of confirmations before payments are included.
 
-		- *includeempty* -- Whether to include addresses that haven't received any payments.
+        - *includeempty* -- Whether to include addresses that haven't received any payments.
 		"""
 		try:
 			return [AccountInfo(**x) for x in
@@ -506,17 +502,17 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def listtransactions(self, account=None, count=10, from_=0, address=None):
 		"""
-		Returns a list of the last transactions for an account.
+        Returns a list of the last transactions for an account.
 
-		Each transaction is represented with a :class:`~mmgen.rpc.data.TransactionInfo` object.
+        Each transaction is represented with a :class:`~mmgen.rpc.data.TransactionInfo` object.
 
-		Arguments:
+        Arguments:
 
-		- *account* -- Account to list transactions from. Return transactions from
-					all accounts if None.
-		- *count* -- Number of transactions to return.
-		- *from_* -- Skip the first <from_> transactions.
-		- *address* -- Receive address to consider
+        - *account* -- Account to list transactions from. Return transactions from
+                    all accounts if None.
+        - *count* -- Number of transactions to return.
+        - *from_* -- Skip the first <from_> transactions.
+        - *address* -- Receive address to consider
 		"""
 		accounts = [account] if account is not None else self.listaccounts(as_dict=True).iterkeys()
 		try:
@@ -528,11 +524,11 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def backupwallet(self, destination):
 		"""
-		Safely copies ``wallet.dat`` to *destination*, which can be a directory or a path
-		with filename.
+        Safely copies ``wallet.dat`` to *destination*, which can be a directory or a path
+        with filename.
 
-		Arguments:
-		- *destination* -- directory or path with filename to backup wallet to.
+        Arguments:
+        - *destination* -- directory or path with filename to backup wallet to.
 
 		"""
 		try:
@@ -542,14 +538,14 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def validateaddress(self, validateaddress):
 		"""
-		Validate a bitcoin address and return information for it.
+        Validate a bitcoin address and return information for it.
 
-		The information is represented by a :class:`~mmgen.rpc.data.AddressValidation` object.
+        The information is represented by a :class:`~mmgen.rpc.data.AddressValidation` object.
 
-		Arguments: -- Address to validate.
+        Arguments: -- Address to validate.
 
 
-		- *validateaddress*
+        - *validateaddress*
 		"""
 		try:
 			return AddressValidation(**self.proxy.validateaddress(validateaddress))
@@ -558,11 +554,11 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def getbalance(self, account=None, minconf=None):
 		"""
-		Get the current balance, either for an account or the total server balance.
+        Get the current balance, either for an account or the total server balance.
 
-		Arguments:
-		- *account* -- If this parameter is specified, returns the balance in the account.
-		- *minconf* -- Minimum number of confirmations required for transferred balance.
+        Arguments:
+        - *account* -- If this parameter is specified, returns the balance in the account.
+        - *minconf* -- Minimum number of confirmations required for transferred balance.
 
 		"""
 		args = []
@@ -577,15 +573,15 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def move(self, fromaccount, toaccount, amount, minconf=1, comment=None):
 		"""
-		Move from one account in your wallet to another.
+        Move from one account in your wallet to another.
 
-		Arguments:
+        Arguments:
 
-		- *fromaccount* -- Source account name.
-		- *toaccount* -- Destination account name.
-		- *amount* -- Amount to transfer.
-		- *minconf* -- Minimum number of confirmations required for transferred balance.
-		- *comment* -- Comment to add to transaction log.
+        - *fromaccount* -- Source account name.
+        - *toaccount* -- Destination account name.
+        - *amount* -- Amount to transfer.
+        - *minconf* -- Minimum number of confirmations required for transferred balance.
+        - *comment* -- Comment to add to transaction log.
 
 		"""
 		try:
@@ -599,19 +595,19 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 	def sendfrom(self, fromaccount, tobitcoinaddress, amount, minconf=1, comment=None,
 				comment_to=None):
 		"""
-		Sends amount from account's balance to bitcoinaddress. This method will fail
-		if there is less than amount bitcoins with minconf confirmations in the account's
-		balance (unless account is the empty-string-named default account; it
-		behaves like the sendtoaddress method). Returns transaction ID on success.
+        Sends amount from account's balance to bitcoinaddress. This method will fail
+        if there is less than amount bitcoins with minconf confirmations in the account's
+        balance (unless account is the empty-string-named default account; it
+        behaves like the sendtoaddress method). Returns transaction ID on success.
 
-		Arguments:
+        Arguments:
 
-		- *fromaccount* -- Account to send from.
-		- *tobitcoinaddress* -- Bitcoin address to send to.
-		- *amount* -- Amount to send (float, rounded to the nearest 0.01).
-		- *minconf* -- Minimum number of confirmations required for transferred balance.
-		- *comment* -- Comment for transaction.
-		- *comment_to* -- Comment for to-address.
+        - *fromaccount* -- Account to send from.
+        - *tobitcoinaddress* -- Bitcoin address to send to.
+        - *amount* -- Amount to send (float, rounded to the nearest 0.01).
+        - *minconf* -- Minimum number of confirmations required for transferred balance.
+        - *comment* -- Comment for transaction.
+        - *comment_to* -- Comment for to-address.
 
 		"""
 		try:
@@ -626,20 +622,20 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def sendmany(self, fromaccount, todict, minconf=1, comment=None):
 		"""
-		Sends specified amounts from account's balance to bitcoinaddresses.
-		This method will fail if there is less than total amount bitcoins with
-		minconf confirmations in the account's balance (unless account is the
-		empty-string-named default account; Returns transaction ID on
-		success.
+        Sends specified amounts from account's balance to bitcoinaddresses.
+        This method will fail if there is less than total amount bitcoins with
+        minconf confirmations in the account's balance (unless account is the
+        empty-string-named default account; Returns transaction ID on
+        success.
 
-		Arguments:
+        Arguments:
 
-		- *fromaccount* -- Account to send from.
-		- *todict* -- Dictionary with Bitcoin addresses as keys and amounts as
-		values.
-		- *minconf* -- Minimum number of confirmations required for transferred
-		balance.
-		- *comment* -- Comment for transaction.
+        - *fromaccount* -- Account to send from.
+        - *todict* -- Dictionary with Bitcoin addresses as keys and amounts as
+        values.
+        - *minconf* -- Minimum number of confirmations required for transferred
+        balance.
+        - *comment* -- Comment for transaction.
 
 		"""
 		try:
@@ -652,15 +648,15 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def verifymessage(self, bitcoinaddress, signature, message):
 		"""
-		Verifies a signature given the bitcoinaddress used to sign,
-		the signature itself, and the message that was signed.
-		Returns :const:`True` if the signature is valid, and :const:`False` if it is invalid.
+        Verifies a signature given the bitcoinaddress used to sign,
+        the signature itself, and the message that was signed.
+        Returns :const:`True` if the signature is valid, and :const:`False` if it is invalid.
 
-		Arguments:
+        Arguments:
 
-		- *bitcoinaddress* -- the bitcoinaddress used to sign the message
-		- *signature* -- the signature to be verified
-		- *message* -- the message that was originally signed
+        - *bitcoinaddress* -- the bitcoinaddress used to sign the message
+        - *signature* -- the signature to be verified
+        - *message* -- the message that was originally signed
 
 		"""
 		try:
@@ -670,15 +666,15 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def getwork(self, data=None):
 		"""
-		Get work for remote mining, or submit result.
-		If data is specified, the server tries to solve the block
-		using the provided data and returns :const:`True` if it was successful.
-		If not, the function returns formatted hash data (:class:`~mmgen.rpc.data.WorkItem`)
-		to work on.
+        Get work for remote mining, or submit result.
+        If data is specified, the server tries to solve the block
+        using the provided data and returns :const:`True` if it was successful.
+        If not, the function returns formatted hash data (:class:`~mmgen.rpc.data.WorkItem`)
+        to work on.
 
-		Arguments:
+        Arguments:
 
-		- *data* -- Result from remote mining.
+        - *data* -- Result from remote mining.
 
 		"""
 		try:
@@ -692,13 +688,13 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def listunspent(self, minconf=1, maxconf=999999):
 		"""
-		Returns a list of unspent transaction inputs in the wallet.
+        Returns a list of unspent transaction inputs in the wallet.
 
-		Arguments:
+        Arguments:
 
-		- *minconf* -- Minimum number of confirmations required to be listed.
+        - *minconf* -- Minimum number of confirmations required to be listed.
 
-		- *maxconf* -- Maximal number of confirmations allowed to be listed.
+        - *maxconf* -- Maximal number of confirmations allowed to be listed.
 
 
 		"""
@@ -717,15 +713,15 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def walletpassphrase(self, passphrase, timeout, dont_raise=False):
 		"""
-		Stores the wallet decryption key in memory for <timeout> seconds.
+        Stores the wallet decryption key in memory for <timeout> seconds.
 
-		- *passphrase* -- The wallet passphrase.
+        - *passphrase* -- The wallet passphrase.
 
-		- *timeout* -- Time in seconds to keep the wallet unlocked
-					(by keeping the passphrase in memory).
+        - *timeout* -- Time in seconds to keep the wallet unlocked
+                    (by keeping the passphrase in memory).
 
-		- *dont_raise* -- instead of raising `~mmgen.rpc.exceptions.WalletPassphraseIncorrect`
-						return False.
+        - *dont_raise* -- instead of raising `~mmgen.rpc.exceptions.WalletPassphraseIncorrect`
+                       return False.
 		"""
 		try:
 			self.proxy.walletpassphrase(passphrase, timeout)
@@ -741,10 +737,10 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def walletlock(self):
 		"""
-		Removes the wallet encryption key from memory, locking the wallet.
-		After calling this method, you will need to call walletpassphrase
-		again before being able to call any methods which require the wallet
-		to be unlocked.
+        Removes the wallet encryption key from memory, locking the wallet.
+        After calling this method, you will need to call walletpassphrase
+        again before being able to call any methods which require the wallet
+        to be unlocked.
 		"""
 		try:
 			return self.proxy.walletlock()
@@ -753,12 +749,12 @@ ERROR: 'listaccounts' failed.  Does your bitcoind support watch-only addresses?
 
 	def walletpassphrasechange(self, oldpassphrase, newpassphrase, dont_raise=False):
 		"""
-		Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.
+        Changes the wallet passphrase from <oldpassphrase> to <newpassphrase>.
 
-		Arguments:
+        Arguments:
 
-		- *dont_raise* -- instead of raising
-			`~mmgen.rpc.exceptions.WalletPassphraseIncorrect` return False.
+        - *dont_raise* -- instead of raising
+               `~mmgen.rpc.exceptions.WalletPassphraseIncorrect` return False.
 		"""
 		try:
 			self.proxy.walletpassphrasechange(oldpassphrase, newpassphrase)

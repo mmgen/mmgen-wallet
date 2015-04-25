@@ -77,14 +77,14 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 	try: ret = chk_func(val)
 	except: ret = False
 	if ret:
-	   if not skip_ok: ok()
+		if not skip_ok: ok()
 	else:
 		msg(red("Returned value '%s' is not a %s" % (val,s)))
 		sys.exit(3)
 
 def cmp_or_die(s,t,skip_ok=False):
 	if s == t:
-	   if not skip_ok: ok()
+		if not skip_ok: ok()
 	else:
 		sys.stderr.write(red(
 			"ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n" %

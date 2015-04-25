@@ -95,8 +95,7 @@ def export_to_hidden_incog(incog_enc):
 	outfile,offset = opt.export_incog_hidden.split(",") #Already sanity-checked
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
-	if opt.debug:
-		Msg("Incog data len %s, offset %s" % (len(incog_enc),offset))
+	dmsg("Incog data len %s, offset %s" % (len(incog_enc),offset))
 	check_data_fits_file_at_offset(outfile,int(offset),len(incog_enc),"write")
 
 	if not opt.quiet: confirm_or_exit("","alter file '%s'" % outfile)
@@ -162,7 +161,7 @@ if opt.export_mnemonic:
 
 elif opt.export_seed:
 	from mmgen.bitcoin import b58encode_pad
-	data = split_into_columns(4,b58encode_pad(seed))
+	data = split_into_cols(4,b58encode_pad(seed))
 	chk = make_chksum_6(b58encode_pad(seed))
 	fn = "%s.%s" % (make_chksum_8(seed).upper(), g.seed_ext)
 	write_to_file_or_stdout(fn, "%s %s\n" % (chk,data), "seed data")

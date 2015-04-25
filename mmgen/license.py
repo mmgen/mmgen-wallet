@@ -19,18 +19,16 @@
 """
 license.py:  Text of GPLv3
 """
+
 import mmgen.globalvars as g
 
-gpl = {
-	'warning': """
+warning = """
   {pnm} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
   program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
   you are welcome to redistribute it under certain conditions.
-""".format(g=g,pnm=g.proj_name),
-	'prompt': """
-Press 'w' for conditions and warranty info, or 'c' to continue:
-""",
-	'conditions': """
+""".format(g=g,pnm=g.proj_name)
+
+conditions = """
                        TERMS AND CONDITIONS
 
   0. Definitions.
@@ -581,4 +579,3 @@ an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 """
-}

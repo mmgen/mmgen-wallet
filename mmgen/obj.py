@@ -20,7 +20,7 @@
 obj.py:  The MMGenObject class and methods
 """
 import mmgen.globalvars as g
-from mmgen.util import msgrepr_exit,msgrepr
+from mmgen.util import mdie,mmsg
 
 lvl = 0
 
@@ -72,18 +72,18 @@ class MMGenObject(object):
 		col_w = max(len(k) for k in keys)
 		fs = "{}%-{}s: %s".format(indent,col_w)
 
-  		methods = [k for k in keys if repr(getattr(self,k))[:14] == '<bound method ']
+		methods = [k for k in keys if repr(getattr(self,k))[:14] == '<bound method ']
 
-  		def f(k): return repr(getattr(self,k))[:14] == '<bound method '
-  		methods = filter(f,keys)
-  		def f(k): return repr(getattr(self,k))[:7] == '<mmgen.'
-  		objects = filter(f,keys)
+		def f(k): return repr(getattr(self,k))[:14] == '<bound method '
+		methods = filter(f,keys)
+		def f(k): return repr(getattr(self,k))[:7] == '<mmgen.'
+		objects = filter(f,keys)
 		other = list(set(keys) - set(methods) - set(objects))
 
 		for k in sorted(methods) + sorted(other) + sorted(objects):
 			val = getattr(self,k)
 			if str(type(val))[:13] == "<class 'mmgen": # recurse into sub-objects
-				out.append("\n%s%s (%s):" % (indent,k,repr(type(val))))
+				out.append("\n%s%s (%s):" % (indent,k,type(val)))
 				lvl += 1
 				out.append(str(getattr(self,k))+"\n")
 				lvl -= 1

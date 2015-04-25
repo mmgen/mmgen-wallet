@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-crypto.py:  Cryptographic and related routines for the 'mmgen-tool' utility
+crypto.py:  Cryptographic and related routines for the MMGen suite
 """
 
 import sys
@@ -58,7 +58,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 }
 
 def encrypt_seed(seed, key):
-	return encrypt_data(seed, key, iv=1, what="seed")
+	return encrypt_data(seed, key, iv=1, desc="seed")
 
 
 def decrypt_seed(enc_seed, key, seed_id, key_id):
@@ -66,21 +66,21 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	vmsg_r("Checking key...")
 	chk1 = make_chksum_8(key)
 	if key_id:
-		if not compare_chksums(key_id,"key id",chk1,"computed",die=False):
+		if not compare_chksums(key_id,"key ID",chk1,"computed"):
 			msg("Incorrect passphrase")
 			return False
 
-	dec_seed = decrypt_data(enc_seed, key, iv=1, what="seed")
+	dec_seed = decrypt_data(enc_seed, key, iv=1, desc="seed")
 
 	chk2 = make_chksum_8(dec_seed)
 
 	if seed_id:
-		if compare_chksums(seed_id,"seed id",chk2,"decrypted seed",die=False):
+		if compare_chksums(seed_id,"seed ID",chk2,"decrypted seed"):
 			qmsg("Passphrase is OK")
 		else:
 			if not opt.debug:
 				msg_r("Checking key ID...")
-				if compare_chksums(key_id,"key id",chk1,"computed",die=False):
+				if compare_chksums(key_id,"key ID",chk1,"computed"):
 					msg("Key ID is correct but decryption of seed failed")
 				else:
 					msg("Incorrect passphrase")
@@ -90,29 +90,25 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 #	else:
 #		qmsg("Generated IDs (Seed/Key): %s/%s" % (chk2,chk1))
 
-	if opt.debug: Msg("Decrypted seed: %s" % hexlify(dec_seed))
+	dmsg("Decrypted seed: %s" % hexlify(dec_seed))
 
-	vmsg("OK")
 	return dec_seed
 
 
-def encrypt_data(data, key, iv=1, what="data", verify=True):
-	"""
-	Encrypt arbitrary data using AES256 in counter mode
-	"""
+def encrypt_data(data, key, iv=1, desc="data", verify=True):
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
 
-	vmsg("Encrypting %s" % what)
+	vmsg("Encrypting %s" % desc)
 
 	c = AES.new(key, AES.MODE_CTR,
 			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	enc_data = c.encrypt(data)
 
 	if verify:
-		vmsg_r("Performing a test decryption of the %s..." % what)
+		vmsg_r("Performing a test decryption of the %s..." % desc)
 
 		c = AES.new(key, AES.MODE_CTR,
 				counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
@@ -120,15 +116,15 @@ def encrypt_data(data, key, iv=1, what="data", verify=True):
 
 		if dec_data == data: vmsg("done")
 		else:
-			msg("ERROR.\nDecrypted %s doesn't match original %s" % (what,what))
+			msg("ERROR.\nDecrypted %s doesn't match original %s" % (desc,desc))
 			sys.exit(2)
 
 	return enc_data
 
 
-def decrypt_data(enc_data, key, iv=1, what="data"):
+def decrypt_data(enc_data, key, iv=1, desc="data"):
 
-	vmsg_r("Decrypting %s with key..." % what)
+	vmsg_r("Decrypting %s with key..." % desc)
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
@@ -151,18 +147,18 @@ def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
 
 def make_key(passwd,salt,hash_preset,
-		what="encryption key",from_what="passphrase",verbose=False):
+		desc="encryption key",from_what="passphrase",verbose=False):
 
-	if from_what: what += " from "
+	if from_what: desc += " from "
 	if opt.verbose or verbose:
-		msg_r("Generating %s%s..." % (what,from_what))
+		msg_r("Generating %s%s..." % (desc,from_what))
 	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
 	if opt.verbose or verbose: msg("done")
-	if opt.debug: Msg("Key: %s" % hexlify(key))
+	dmsg("Key: %s" % hexlify(key))
 	return key
 
 
-def get_random_data_from_user(uchars):
+def _get_random_data_from_user(uchars):
 
 	if opt.quiet: msg("Enter %s random symbols" % uchars)
 	else:       msg(crmsg['usr_rand_notice'] % uchars)
@@ -189,8 +185,7 @@ def get_random_data_from_user(uchars):
 
 	fmt_time_data = ["{:.22f}".format(i) for i in time_data]
 
-	if opt.debug:
-		msg("\nUser input:\n%s\nKeystroke time intervals:\n%s\n" %
+	dmsg("\nUser input:\n%s\nKeystroke time intervals:\n%s\n" %
 				(key_data,"\n".join(fmt_time_data)))
 
 	prompt = "User random data successfully acquired.  Press ENTER to continue"
@@ -202,23 +197,23 @@ def get_random_data_from_user(uchars):
 def get_random(length):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
-	if g.use_urandchars:
+	if g.use_urandchars and opt.usr_randchars:
 		from_what = "OS random data"
 		if not g.user_entropy:
 			g.user_entropy = \
-				sha256(get_random_data_from_user(opt.usr_randchars)).digest()
+				sha256(_get_random_data_from_user(opt.usr_randchars)).digest()
 			from_what += " plus user-supplied entropy"
 		else:
 			from_what += " plus saved user-supplied entropy"
 		key = make_key(g.user_entropy, "", '2', from_what=from_what, verbose=True)
-		return encrypt_data(os_rand,key,what="random data",verify=False)
+		return encrypt_data(os_rand,key,desc="random data",verify=False)
 	else:
 		return os_rand
 
 
 def get_seed_from_wallet(
 		infile,
-		prompt_info="{pnm} wallet".format(pnm=g.proj_name),
+		desc="{pnm} wallet".format(pnm=g.proj_name),
 		silent=False
 		):
 
@@ -228,7 +223,7 @@ def get_seed_from_wallet(
 	if opt.debug: display_control_data(*wdata)
 
 	padd = " "+infile if opt.quiet else ""
-	passwd = get_mmgen_passphrase(prompt_info+padd)
+	passwd = get_mmgen_passphrase(desc+padd)
 
 	key = make_key(passwd, salt, hash_preset)
 
@@ -270,17 +265,17 @@ def confirm_old_format():
 
 def get_seed_from_incog_wallet(
 		infile,
-		prompt_info="{pnm} incognito wallet".format(pnm=g.proj_name),
+		desc="{pnm} incognito wallet".format(pnm=g.proj_name),
 		silent=False,
 		hex_input=False
 	):
 
-	what = "incognito wallet data"
+	desc = "incognito wallet data"
 
 	if opt.from_incog_hidden:
 		d = get_hidden_incog_data()
 	else:
-		d = get_data_from_file(infile,what)
+		d = get_data_from_file(infile,desc)
 		if hex_input:
 			try:
 				d = unhexlify("".join(d.split()).strip())
@@ -310,10 +305,13 @@ def get_seed_from_incog_wallet(
 			else 'incog_iv_id'])
 
 	while True:
-		passwd = get_mmgen_passphrase(prompt_info+" "+incog_id)
+		passwd = get_mmgen_passphrase(desc+" "+incog_id)
 
 		qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
-		hp = get_hash_preset_from_user(what="incog wallet")
+		if 'hash_preset' in opt.set_by_user:
+			hp = opt.hash_preset
+		else:
+			hp = get_hash_preset_from_user(desc="incog wallet")
 
 		# IV is used BOTH to initialize counter and to salt password!
 		key = make_key(passwd, iv, hp, "wrapper key")
@@ -399,7 +397,7 @@ def _get_seed(infile,silent=False,seed_id=""):
 		msg("Invalid %s file '%s'" % (source,infile))
 		sys.exit(2)
 
-	if opt.debug: Msg("Seed: %s" % hexlify(seed))
+	dmsg("Seed: %s" % hexlify(seed))
 
 	return seed
 
@@ -415,9 +413,9 @@ def get_seed_retry(infile,seed_id=""):
 
 def _get_seed_from_brain_passphrase(words,silent=False):
 	bp = " ".join(words)
-	if opt.debug: Msg("Sanitized brain passphrase: %s" % bp)
+	dmsg("Sanitized brain passphrase: %s" % bp)
 	seed_len,hash_preset = get_from_brain_opt_params()
-	if opt.debug: Msg("Brainwallet l = %s, p = %s" % (seed_len,hash_preset))
+	dmsg("Brainwallet l = %s, p = %s" % (seed_len,hash_preset))
 	vmsg_r("Hashing brainwallet data.  Please wait...")
 	# Use buflen arg of scrypt.hash() to get seed of desired length
 	seed = scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
@@ -432,31 +430,31 @@ def _get_seed_from_brain_passphrase(words,silent=False):
 # Vars for mmgen_*crypt functions only
 salt_len,sha256_len,nonce_len = 32,32,32
 
-def mmgen_encrypt(data,what="data",hash_preset=''):
+def mmgen_encrypt(data,desc="data",hash_preset=''):
 	salt,iv,nonce = get_random(salt_len),\
 					get_random(g.aesctr_iv_len), \
 					get_random(nonce_len)
-	hp = hash_preset or get_hash_preset_from_user('3',what)
+	hp = hash_preset or get_hash_preset_from_user('3',desc)
 	m = "default" if hp == '3' else "user-requested"
-	vmsg("Encrypting %s" % what)
+	vmsg("Encrypting %s" % desc)
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_new_passphrase(what, {})
+	passwd = get_new_passphrase(desc, {})
 	key = make_key(passwd, salt, hp)
 	enc_d = encrypt_data(sha256(nonce+data).digest() + nonce + data, key,
-				int(hexlify(iv),16), what=what)
+				int(hexlify(iv),16), desc=desc)
 	return salt+iv+enc_d
 
 
-def mmgen_decrypt(data,what="data",hash_preset=""):
+def mmgen_decrypt(data,desc="data",hash_preset=""):
 	dstart = salt_len + g.aesctr_iv_len
 	salt,iv,enc_d = data[:salt_len],data[salt_len:dstart],data[dstart:]
-	vmsg("Preparing to decrypt %s" % what)
-	hp = hash_preset or get_hash_preset_from_user('3',what)
+	vmsg("Preparing to decrypt %s" % desc)
+	hp = hash_preset or get_hash_preset_from_user('3',desc)
 	m = "default" if hp == '3' else "user-requested"
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_mmgen_passphrase(what)
+	passwd = get_mmgen_passphrase(desc)
 	key = make_key(passwd, salt, hp)
-	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), what)
+	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), desc)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
 		vmsg("OK")
 		return dec_d[sha256_len+nonce_len:]
@@ -464,8 +462,8 @@ def mmgen_decrypt(data,what="data",hash_preset=""):
 		msg("Incorrect passphrase or hash preset")
 		return False
 
-def mmgen_decrypt_retry(d,what="data"):
+def mmgen_decrypt_retry(d,desc="data"):
 	while True:
-		d_dec = mmgen_decrypt(d,what)
+		d_dec = mmgen_decrypt(d,desc)
 		if d_dec: return d_dec
 		msg("Trying again...")

@@ -10,7 +10,7 @@
   ServiceProxy class:
 
   - HTTP connections persist for the life of the AuthServiceProxy object
-	(if server supports HTTP/1.1)
+    (if server supports HTTP/1.1)
   - sends protocol 'version', per JSON-RPC 1.1
   - sends proper, incrementing 'id'
   - sends Basic HTTP authentication headers

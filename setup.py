@@ -59,6 +59,7 @@ setup(
 			'mmgen.main_txsend',
 			'mmgen.main_txsign',
 			'mmgen.main_walletchk',
+			'mmgen.main_walletconv',
 			'mmgen.main_walletgen',
 
 			'mmgen.share.__init__',
@@ -83,6 +84,7 @@ setup(
 			'mmgen-addrimport',
 			'mmgen-passchg',
 			'mmgen-walletchk',
+			'mmgen-walletconv',
 			'mmgen-walletgen',
 			'mmgen-txcreate',
 			'mmgen-txsign',
