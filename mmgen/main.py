@@ -21,21 +21,18 @@ main.py - Script launcher for the MMGen suite
 """
 
 def launch(what):
-	def launch_addrgen():    import mmgen.main_addrgen
-	def launch_addrimport(): import mmgen.main_addrimport
-	def launch_keygen():     import mmgen.main_addrgen
-	def launch_passchg():    import mmgen.main_passchg
-	def launch_pywallet():   import mmgen.main_pywallet
-	def launch_tool():       import mmgen.main_tool
-	def launch_txcreate():   import mmgen.main_txcreate
-	def launch_txsend():     import mmgen.main_txsend
-	def launch_txsign():     import mmgen.main_txsign
-	def launch_walletchk():  import mmgen.main_walletchk
-	def launch_walletconv(): import mmgen.main_walletconv
-	def launch_walletgen():  import mmgen.main_walletgen
+
+	import os
+	t = "MMGEN_USE_OLD_SCRIPTS"
+	if not (t in os.environ and os.environ[t]):
+		if what in ("walletgen","walletchk","passchg"):
+			what = "wallet"
+
+	if what == "walletconv": what = "wallet"
+	if what == "keygen":     what = "addrgen"
 
 	try: import termios
-	except: locals()["launch_"+what]() # Windows
+	except: __import__("mmgen.main_" + what) # Windows
 	else:
 		import sys,atexit
 		fd = sys.stdin.fileno()
@@ -43,7 +40,7 @@ def launch(what):
 		def at_exit():
 			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 		atexit.register(at_exit)
-		try: locals()["launch_"+what]()
+		try: __import__("mmgen.main_" + what)
 		except KeyboardInterrupt:
 			sys.stderr.write("\nUser interrupt\n")
 		except EOFError:

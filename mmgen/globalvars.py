@@ -56,6 +56,12 @@ required_opts = [
 	"usr_randchars","stdout","show_hash_presets","label",
 	"keep_passphrase","keep_hash_preset"
 ]
+incompatible_opts = (
+	("quiet","verbose"),
+	("label","keep_label"),
+	("tx_id", "info"),
+	("tx_id", "terse_info"),
+)
 min_screen_width = 80
 
 wallet_ext    = "mmdat"

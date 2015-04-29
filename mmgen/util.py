@@ -55,6 +55,42 @@ def die(ev,s):
 def Die(ev,s):
 	sys.stdout.write(s+"\n"); sys.exit(ev)
 
+def is_mmgen_wallet_label(s):
+	if len(s) > g.max_wallet_label_len:
+		msg("ERROR: wallet label length (%s chars) > maximum allowed (%s chars)" % (len(s),g.max_wallet_label_len))
+		return False
+
+	try: s = s.decode("utf8")
+	except: pass
+
+	for ch in s:
+		if ch not in g.wallet_label_symbols:
+			msg("ERROR: wallet label contains illegal symbol (%s)" % ch)
+			return False
+	return True
+
+# From "man dd":
+# c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
+# GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
+
+def parse_nbytes(nbytes):
+	import re
+	m = re.match(r'([0123456789]+)(.*)',nbytes)
+	smap = ("c",1),("w",2),("b",512),("kB",1000),("K",1024),("MB",1000*1000),\
+			("M",1024*1024),("GB",1000*1000*1000),("G",1024*1024*1024)
+	if m:
+		if m.group(2):
+			for k,v in smap:
+				if k == m.group(2):
+					return int(m.group(1)) * v
+			else:
+				msg("Valid byte specifiers: '%s'" % "' '".join([i[0] for i in smap]))
+		else:
+			return int(nbytes)
+
+	msg("'%s': invalid byte specifier" % nbytes)
+	sys.exit(1)
+
 import opt
 
 def qmsg(s,alt=False):
@@ -121,8 +157,8 @@ def split_into_cols(col_wid,s):
 					for i in range(len(s)/col_wid+1)]).rstrip()
 
 def capfirst(s):
-	if len(s) == 0: return s
-	return s[0].upper() + (s[1:] if len(s) > 1 else "")
+	return s if len(s) == 0 else \
+		(s[0].upper() + (s[1:] if len(s) > 1 else ""))
 
 def make_timestamp():
 	tv = time.gmtime(time.time())[:6]
@@ -168,8 +204,6 @@ def file_exists(f):
 	except:
 		return False
 
-import opt as opt
-
 def get_from_brain_opt_params():
 	l,p = opt.from_brain.split(",")
 	return(int(l),p)
@@ -209,7 +243,7 @@ def compare_chksums(chk1, desc1, chk2, desc2, hdr="", die_on_fail=False):
 		if die_on_fail:
 			die(3,m)
 		else:
-			msg(m)
+			vmsg(m)
 			return False
 
 	vmsg("%s checksum OK (%s)" % (capfirst(desc1),chk1))
@@ -320,13 +354,13 @@ def get_new_passphrase(desc,passchg=False):
 
 	w = "{}passphrase for {}".format("new " if passchg else "", desc)
 	if opt.passwd_file:
-		pw = " ".join(_get_words_from_file(opt.passwd_file,w))
+		pw = " ".join(get_words_from_file(opt.passwd_file,w))
 	elif opt.echo_passphrase:
-		pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
+		pw = " ".join(get_words_from_user("Enter {}: ".format(w)))
 	else:
 		for i in range(g.passwd_max_tries):
-			pw = " ".join(_get_words_from_user("Enter {}: ".format(w)))
-			pw2 = " ".join(_get_words_from_user("Repeat passphrase: "))
+			pw = " ".join(get_words_from_user("Enter {}: ".format(w)))
+			pw2 = " ".join(get_words_from_user("Repeat passphrase: "))
 			dmsg("Passphrases: [%s] [%s]" % (pw,pw2))
 			if pw == pw2:
 				vmsg("Passphrases match"); break
@@ -626,15 +660,16 @@ def get_data_from_wallet(infile,silent=False):
 	return label,metadata,hash_preset,res['salt'],res['enc_seed']
 
 
-def _get_words_from_user(prompt):
+def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
 	dmsg("Sanitized input: [%s]" % " ".join(words))
 	return words
 
 
-def _get_words_from_file(infile,desc):
-	qmsg("Getting %s from file '%s'" % (desc,infile))
+def get_words_from_file(infile,desc,silent=False):
+	if not silent:
+		qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile, 'r')
 	# split() also strips
 	words = f.read().split()
@@ -645,9 +680,9 @@ def _get_words_from_file(infile,desc):
 
 def get_words(infile,desc,prompt):
 	if infile:
-		return _get_words_from_file(infile,desc)
+		return get_words_from_file(infile,desc)
 	else:
-		return _get_words_from_user(prompt)
+		return get_words_from_user(prompt)
 
 def remove_comments(lines):
 	# re.sub(pattern, repl, string, count=0, flags=0)
@@ -709,26 +744,27 @@ def get_seed_from_seed_data(words):
 
 passwd_file_used = False
 
-def mark_passwd_file_as_used():
+def pwfile_reuse_warning():
 	global passwd_file_used
 	if passwd_file_used:
-		msg_r("WARNING: Reusing passphrase from file '%s'." % opt.passwd_file)
-		msg(" This may not be what you want!")
+		qmsg("Reusing passphrase from file '%s' at user request" % opt.passwd_file)
+		return True
 	passwd_file_used = True
+	return False
 
 
 def get_mmgen_passphrase(desc,passchg=False):
 	prompt ="Enter {}passphrase for {}: ".format("old " if passchg else "",desc)
 	if opt.passwd_file:
-		mark_passwd_file_as_used()
-		return " ".join(_get_words_from_file(opt.passwd_file,"passphrase"))
+		pwfile_reuse_warning()
+		return " ".join(get_words_from_file(opt.passwd_file,"passphrase"))
 	else:
-		return " ".join(_get_words_from_user(prompt))
+		return " ".join(get_words_from_user(prompt))
 
 
 def get_bitcoind_passphrase(prompt):
 	if opt.passwd_file:
-		mark_passwd_file_as_used()
+		pwfile_reuse_warning()
 		return get_data_from_file(opt.passwd_file,
 				"passphrase").strip("\r\n")
 	else:

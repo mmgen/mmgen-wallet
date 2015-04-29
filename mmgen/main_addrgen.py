@@ -29,14 +29,20 @@ from mmgen.util import *
 from mmgen.crypto import *
 from mmgen.addr import *
 
-what = "keys" if sys.argv[0].split("-")[-1] == "keygen" else "addresses"
+if sys.argv[0].split("-")[-1] == "keygen":
+	gen_what = "keys"
+	opt_filter = None
+else:
+	gen_what = "addresses"
+	opt_filter = "hdceHKlpPqSvbgXGoms"
 
 opts_data = {
-	'desc': """Generate a range or list of {w} from an {pnm} wallet,
-                  mnemonic, seed or password""".format(w=what,pnm=g.proj_name),
+	'desc': """Generate a range or list of {what} from an {pnm} wallet,
+                  mnemonic, seed or password""".format(what=gen_what,pnm=g.proj_name),
 	'usage':"[opts] [infile] <address range or list>",
 	'options': """
--h, --help              Print this help message{}
+-h, --help              Print this help message
+-A, --no-addresses      Print only secret keys, no addresses
 -d, --outdir=       d   Specify an alternate directory 'd' for output
 -c, --save-checksum     Save address list checksum to file
 -e, --echo-passphrase   Echo passphrase or mnemonic to screen upon entry
@@ -51,7 +57,8 @@ opts_data = {
 -q, --quiet             Suppress warnings; overwrite files without
                         prompting
 -S, --stdout            Print {what} to stdout
--v, --verbose           Produce more verbose output{}
+-v, --verbose           Produce more verbose output
+-x, --b16               Print secret keys in hexadecimal too
 
 -b, --from-brain=  l,p  Generate {what} from a user-created password,
                         i.e. a "brainwallet", using seed length 'l' and
@@ -64,19 +71,14 @@ opts_data = {
 -m, --from-mnemonic     Generate {what} from an electrum-like mnemonic
 -s, --from-seed         Generate {what} from a seed in .{g.seed_ext} format
 """.format(
-		*(
-			(
-"\n-A, --no-addresses      Print only secret keys, no addresses",
-"\n-x, --b16               Print secret keys in hexadecimal too"
-			)
-		if what == "keys" else ("","")),
-		seed_lens=", ".join([str(i) for i in g.seed_lens]),
-		what=what,g=g,pnm=g.proj_name
+	seed_lens=", ".join([str(i) for i in g.seed_lens]),
+	pnm=g.proj_name,
+	what=gen_what,g=g
 ),
 	'notes': """
 
 Addresses are given in a comma-separated list.  Hyphen-separated ranges are
-also allowed.{}
+also allowed.{a}
 
 If available, the external 'keyconv' program will be used for address
 generation.
@@ -101,8 +103,8 @@ The '--from-brain' option also requires the user to specify a seed length
 For a brainwallet passphrase to always generate the same keys and addresses,
 the same 'l' and 'p' parameters to '--from-brain' must be used in all future
 invocations with that passphrase
-""".format("\n\nBy default, both addresses and secret keys are generated."
-				if what == "keys" else "")
+""".format(a="\n\nBy default, both addresses and secret keys are generated."
+				if gen_what == "keys" else "")
 }
 
 wmsg = {
@@ -112,7 +114,7 @@ UNENCRYPTED form.  Generate only the key(s) you need and guard them carefully.
 """.format(pnm=g.proj_name),
 }
 
-cmd_args = opt.opts.init(opts_data,add_opts=["b16"])
+cmd_args = opt.opts.init(opts_data,add_opts=["b16"],opt_filter=opt_filter)
 
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
@@ -131,14 +133,14 @@ if not addr_idxs: sys.exit(2)
 do_license_msg()
 
 # Interact with user:
-if what == "keys" and not opt.quiet:
+if gen_what == "keys" and not opt.quiet:
 	confirm_or_exit(wmsg['unencrypted_secret_keys'], 'continue')
 
 # Generate data:
 
 seed = get_seed_retry(infile)
 
-opt.gen_what = "a" if what == "addresses" else (
+opt.gen_what = "a" if gen_what == "addresses" else (
 	"k" if opt.no_addresses else "ka")
 
 ainfo = generate_addrs(seed,addr_idxs)
@@ -161,11 +163,11 @@ if opt.stdout or not sys.stdout.isatty():
 	if enc_ext and sys.stdout.isatty():
 		msg("Cannot write encrypted data to screen.  Exiting")
 		sys.exit(2)
-	write_to_stdout(addrdata_str,what,ask_terminal=(what=="keys"
+	write_to_stdout(addrdata_str,gen_what,ask_terminal=(gen_what=="keys"
 						and not opt.quiet and sys.stdout.isatty()))
 else:
 	outfile = "%s.%s%s" % (outfile_base, (
 		g.keyaddrfile_ext if "ka" in opt.gen_what else (
 		g.keyfile_ext if "k" in opt.gen_what else
 		g.addrfile_ext)), enc_ext)
-	write_to_file(outfile,addrdata_str,what,not opt.quiet,True)
+	write_to_file(outfile,addrdata_str,gen_what,not opt.quiet,True)

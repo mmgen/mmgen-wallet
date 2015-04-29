@@ -24,7 +24,7 @@ import sys
 import mmgen.globalvars as g
 import mmgen.share.Opts
 import opt
-from mmgen.util import msg,msg_r,mdie,mmsg,Msg,die
+from mmgen.util import msg,msg_r,mdie,mmsg,Msg,die,is_mmgen_wallet_label
 
 def usage():
 	Msg("USAGE: %s %s" % (g.prog_name, usage_txt))
@@ -38,9 +38,10 @@ mand line.   Copyright (C) {g.Cdates} {g.author} {g.email}
 """.format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip())
 
 def die_on_incompatible_opts(incompat_list):
-	bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in incompat_list]
-	if len(bad) > 1:
-		die(1,"Conflicting options: %s" % ", ".join([fmt_opt(b) for b in bad]))
+	for group in incompat_list:
+		bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in group]
+		if len(bad) > 1:
+			die(1,"Conflicting options: %s" % ", ".join([fmt_opt(b) for b in bad]))
 
 def _typeconvert_from_dfl(key):
 
@@ -80,18 +81,19 @@ def _show_hash_presets():
 		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg("N = memory usage (power of two), p = iterations (rounds)")
 
-def init(opts_data,add_opts=[]):
+def init(opts_data,add_opts=[],opt_filter=None):
 
 	if len(sys.argv) == 2 and sys.argv[1] == '--version':
 		print_version_info(); sys.exit()
 
-	uopts,args,short_opts,long_opts = \
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data)
+	uopts,args,short_opts,long_opts,skipped_opts = \
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.debug:
 		d = (
 			("Short opts",         short_opts),
 			("Long opts",          long_opts),
+			("Skipped opts",       skipped_opts),
 			("User-selected opts", uopts),
 			("Cmd args",           args),
 		)
@@ -112,7 +114,8 @@ def init(opts_data,add_opts=[]):
 		if k[:2] == "__": del opt.__dict__[k]
 
 	# Transfer uopts into opt, setting required opts to None if not set by user
-	for o in [s.rstrip("=") for s in long_opts] + g.required_opts + add_opts:
+	for o in [s.rstrip("=") for s in long_opts] + \
+			g.required_opts + add_opts + skipped_opts:
 		opt.__dict__[o] = uopts[o] if o in uopts else None
 
 	# A special case - do this here, before opt gets set from g.dfl_vars
@@ -144,12 +147,7 @@ def init(opts_data,add_opts=[]):
 				Msg("    %-18s: %-6s [%s]" % (k,v,type(v).__name__))
 		Msg("### END OPTS.PY ###\n")
 
-	for l in (
-	('from_incog_hidden','from_incog','from_seed','from_mnemonic','from_brain'),
-	('export_incog','export_incog_hex','export_incog_hidden','export_mnemonic',
-	'export_seed'),
-	('quiet','verbose')
-	): die_on_incompatible_opts(l)
+	die_on_incompatible_opts(g.incompatible_opts)
 
 	return args
 
@@ -225,15 +223,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			from mmgen.util import check_outdir
 			check_outdir(val)  # exits on error
 		elif key == 'label':
-			if not opt_compares(len(val),"<=",g.max_wallet_label_len,"label length"):
+			if not is_mmgen_wallet_label(val):
+				msg("Illegal value for option '%s': '%s'" % (fmt_opt(key),val))
 				return False
-			try: val.decode("ascii")
-			except:
-				msg("ERROR: label contains a non-ASCII symbol")
-				return False
-			w = "character in label"
-			for ch in list(val):
-				if not opt_is_in_list(ch,g.wallet_label_symbols,w): return False
 		# NEW
 		elif key in ('in_fmt','out_fmt'):
 			from mmgen.seed import SeedSource,IncogWallet,Brainwallet,IncogWalletHidden

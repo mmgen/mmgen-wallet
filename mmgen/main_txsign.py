@@ -285,11 +285,6 @@ def get_keys_from_keylist(kldata,other_addrs):
 
 infiles = opt.opts.init(opts_data,add_opts=["b16"])
 
-for l in (
-('tx_id', 'info'),
-('tx_id', 'terse_info'),
-): opt.opts.die_on_incompatible_opts(l)
-
 if opt.from_incog_hex or opt.from_incog_hidden: opt.from_incog = True
 
 if not infiles: opt.opts.usage()

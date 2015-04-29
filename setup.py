@@ -58,8 +58,8 @@ setup(
 			'mmgen.main_txcreate',
 			'mmgen.main_txsend',
 			'mmgen.main_txsign',
+			'mmgen.main_wallet',
 			'mmgen.main_walletchk',
-			'mmgen.main_walletconv',
 			'mmgen.main_walletgen',
 
 			'mmgen.share.__init__',

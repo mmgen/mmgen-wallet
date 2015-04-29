@@ -59,9 +59,9 @@ import hashlib
 import random
 import math
 
-import mmgen.config as g
+import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import msg,msgrepr,msgrepr_exit
+from mmgen.util import msg,mdie,mmsg
 
 max_version = 60000
 addrtype = 0
@@ -86,7 +86,7 @@ opts_data = {
 }
 
 cmd_args = opt.opts.init(opts_data)
-opt.opts.warn_incompatible_opts(['json','keys','addrs','keysforaddrs'])
+opt.opts.die_on_incompatible_opts(['json','keys','addrs','keysforaddrs'])
 
 if len(cmd_args) == 1:
 	from mmgen.util import check_infile

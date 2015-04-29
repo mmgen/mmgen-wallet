@@ -45,6 +45,12 @@ addrmsgs = {
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain any printable ASCII symbol.
 """.strip().format(n=g.max_addr_label_len,pnm=pnm),
+	'keyfile_header': """
+# {pnm} key file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
+""".strip().format(pnm=pnm),
 	'no_keyconv_msg': """
 Executable '{kconv}' unavailable. Falling back on (slow) internal ECDSA library.
 Please install '{kconv}' from the {vgen} package on your system for much
@@ -312,7 +318,7 @@ class AddrInfo(MMGenObject):
 					(w,self.seed_id,self.idxs_fmt,self.checksum))
 			if self.source == "addrgen":
 				qmsg(
-		"This checksum will be used to verify the address file in the future")
+"Record this checksum: it will be used to verify the address file in the future")
 			elif self.source == "addrfile":
 				qmsg("Check this value against your records")
 
@@ -368,35 +374,33 @@ class AddrInfo(MMGenObject):
 
 
 	def fmt_data(self,enable_comments=False):
-
 		# Check data integrity - either all or none must exist for each attr
 		attrs  = ['addr','wif','sec']
 		status = [0,0,0]
-		for i in range(self.num_addrs):
+		for d in self.addrdata:
 			for j,attr in enumerate(attrs):
-				try:
-					getattr(self.addrdata[i],attr)
+				if hasattr(d,attr):
 					status[j] += 1
-				except: pass
 
 		for i,s in enumerate(status):
 			if s != 0 and s != self.num_addrs:
 				msg("%s missing %s in addr data"% (self.num_addrs-s,attrs[i]))
 				sys.exit(3)
 
-		if status[0] == None and status[1] == None:
+		if status[0] == status[1] == 0:
 			msg("Addr data contains neither addresses nor keys")
 			sys.exit(3)
 
 		# Header
 		out = []
 		from mmgen.addr import addrmsgs
-		out.append(addrmsgs['addrfile_header'] + "\n")
+		k = ('addrfile_header','keyfile_header')[int(status[0]==0)]
+		out.append(addrmsgs[k]+"\n")
 		if self.checksum:
-			w = "Key-address" if status[1] else "Address"
+			w = ("Key-address","Address")[int(status[1]==0)]
 			out.append("# {} data checksum for {}[{}]: {}".format(
 						w, self.seed_id, self.idxs_fmt, self.checksum))
-			out.append("# Record this value to a secure location\n")
+			out.append("# Record this value to a secure location.\n")
 		out.append("%s {" % self.seed_id)
 
 		# Body

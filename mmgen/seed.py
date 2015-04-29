@@ -59,24 +59,29 @@ class SeedSource(MMGenObject):
 	stdin_ok = False
 	ask_tty = True
 	no_tty  = False
+	op = None
 	_msg = {}
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,ignore_in_fmt_opt=False):
+	def __new__(cls,fn=None,ss=None,ignore_in_fmt_opt=False,passchg=False):
 
 		def die_on_opt_mismatch(opt,sstype):
 			opt_sstype = cls.fmt_code_to_sstype(opt)
 			compare_or_die(
-				opt_sstype.__name__, "input format specified on command line",
+				opt_sstype.__name__, "input format requested on command line",
 				sstype.__name__,     "input file format"
 			)
 
 		if ss:
-			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet) # output default: Wallet
+			if passchg:
+				sstype = ss.__class__
+			else:
+				sstype = cls.fmt_code_to_sstype(opt.out_fmt)
+			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
 			me.seed = ss.seed
 			me.ss_in = ss
+			me.op = ("conv","pwchg_new")[int(passchg)]
 		elif fn or opt.hidden_incog_input_params:
 			if fn:
 				f = Filename(fn)
@@ -91,17 +96,20 @@ class SeedSource(MMGenObject):
 
 			me = super(cls,cls).__new__(sstype)
 			me.infile = f
+			me.op = ("old","pwchg_old")[int(passchg)]
 		elif opt.in_fmt:  # Input format
 			sstype = cls.fmt_code_to_sstype(opt.in_fmt)
 			me = super(cls,cls).__new__(sstype)
+			me.op = ("old","pwchg_old")[int(passchg)]
 		else: # Called with no inputs - initialize with random seed
 			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet) # output default: Wallet
+			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
 			me.seed = Seed()
+			me.op = "new"
 
 		return me
 
-	def __init__(self,fn=None,ss=None,ignore_in_fmt_opt=False):
+	def __init__(self,fn=None,ss=None,ignore_in_fmt_opt=False,passchg=False):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
@@ -113,6 +121,7 @@ class SeedSource(MMGenObject):
 		if hasattr(self,'seed'):
 			g.use_urandchars = True
 			self._encrypt()
+			return
 		elif hasattr(self,'infile'):
 			self._deformat_once()
 			self._decrypt_retry()
@@ -122,6 +131,9 @@ class SeedSource(MMGenObject):
 						% self.desc)
 			self._deformat_retry()
 			self._decrypt_retry()
+
+		m = (""," length %s" % self.seed.length)[int(self.seed.length != 256)]
+		qmsg("Valid %s for seed ID %s%s" % (self.desc,self.seed.sid,m))
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
@@ -217,41 +229,113 @@ an empty passphrase, just hit ENTER twice.
 	""".strip()
 	}
 
-	def _get_pw(self,desc=None):
-		self.ssdata.passwd = get_mmgen_passphrase(desc)
-
-	def _get_hash_preset(self,desc=None):
-		# Converting:
-		desc = desc or self.desc
-		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
-			if opt.keep_hash_preset:
-				a = self.ss_in.ssdata.hash_preset
-				qmsg("Reusing hash preset '%s' as per user request" % a)
-			elif 'hash_preset' in opt.set_by_user:
-				# Prompt, but use user-requested value as default
-				a = get_hash_preset_from_user(hp=opt.hash_preset,desc=desc)
+	def _get_hash_preset_from_user(self,hp,desc_suf=""):
+# 					hp=a,
+		n = ("","old ")[int(self.op=="pwchg_old")]
+		m,n = (("to accept the default",n),("to reuse the old","new "))[
+						int(self.op=="pwchg_new")]
+		fs = "Enter {}hash preset for {}{}{},\n or hit ENTER {} value ('{}'): "
+		p = fs.format(
+			n,
+			("","new ")[int(self.op=="new")],
+			self.desc,
+			(""," "+desc_suf)[int(bool(desc_suf))],
+			m,
+			hp
+		)
+		while True:
+			ret = my_raw_input(p)
+			if ret:
+				if ret in g.hash_presets.keys():
+					self.ssdata.hash_preset = ret
+					return ret
+				else:
+					msg("Invalid input.  Valid choices are %s" %
+							", ".join(sorted(g.hash_presets.keys())))
 			else:
-				a = get_hash_preset_from_user(desc=desc)
+				self.ssdata.hash_preset = hp
+				return hp
+
+	def _get_hash_preset(self,desc_suf=""):
+		if hasattr(self,"ss_in") and hasattr(self.ss_in.ssdata,"hash_preset"):
+			old_hp = self.ss_in.ssdata.hash_preset
+			if opt.keep_hash_preset:
+				qmsg("Reusing hash preset '%s' at user request" % old_hp)
+				self.ssdata.hash_preset = old_hp
+			elif 'hash_preset' in opt.set_by_user:
+				hp = self.ssdata.hash_preset = opt.hash_preset
+				qmsg("Using hash preset '%s' requested on command line"
+						% opt.hash_preset)
+			else: # Prompt, using old value as default
+				hp = self._get_hash_preset_from_user(old_hp,desc_suf)
+
+			if (not opt.keep_hash_preset) and self.op == "pwchg_new":
+				m = ("changed to '%s'" % hp,"unchanged")[int(hp==old_hp)]
+				qmsg("Hash preset %s" % m)
 		elif 'hash_preset' in opt.set_by_user:
-			a = opt.hash_preset
-			qmsg("Using user-requested hash preset of '%s'" % a)
+			self.ssdata.hash_preset = opt.hash_preset
+			qmsg("Using hash preset '%s' requested on command line"%opt.hash_preset)
 		else:
-			a = get_hash_preset_from_user(desc=self.desc)
-		self.ssdata.hash_preset = a
+			self._get_hash_preset_from_user(opt.hash_preset,desc_suf)
+
+	def _get_new_passphrase(self):
+		desc = "{}passphrase for {}{}".format(
+				("","new ")[int(self.op=="pwchg_new")],
+				("","new ")[int(self.op in ("new","conv"))],
+				self.desc
+			)
+		if opt.passwd_file:
+			w = pwfile_reuse_warning()
+			pw = " ".join(get_words_from_file(opt.passwd_file,desc,silent=w))
+		elif opt.echo_passphrase:
+			pw = " ".join(get_words_from_user("Enter %s: " % desc))
+		else:
+			for i in range(g.passwd_max_tries):
+				pw = " ".join(get_words_from_user("Enter %s: " % desc))
+				pw2 = " ".join(get_words_from_user("Repeat passphrase: "))
+				dmsg("Passphrases: [%s] [%s]" % (pw,pw2))
+				if pw == pw2:
+					vmsg("Passphrases match"); break
+				else: msg("Passphrases do not match.  Try again.")
+			else:
+				msg("User failed to duplicate passphrase in %s attempts" %
+						g.passwd_max_tries)
+				sys.exit(2)
+
+		if pw == "": qmsg("WARNING: Empty passphrase")
+		self.ssdata.passwd = pw
+		return pw
+
+	def _get_passphrase(self,desc_suf=""):
+		desc ="{}passphrase for {}{}".format(
+			("","old ")[int(self.op=="pwchg_old")],
+			self.desc,
+			(""," "+desc_suf)[int(bool(desc_suf))]
+		)
+		if opt.passwd_file:
+			w = pwfile_reuse_warning()
+			ret = " ".join(get_words_from_file(opt.passwd_file,desc,silent=w))
+		else:
+			ret = " ".join(get_words_from_user("Enter %s: " % desc))
+		self.ssdata.passwd = ret
 
 	def _get_first_pw_and_hp_and_encrypt_seed(self):
 		d = self.ssdata
+		self._get_hash_preset()
 
-		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'passwd') \
-				and opt.keep_passphrase:
-			d.passwd = self.ss_in.ssdata.passwd
-			qmsg("Reusing passphrase as per user request")
-
-		self._get_hash_preset(desc="new " + self.desc)
-
-		if not hasattr(d,'passwd'):
-			qmsg(self.msg['choose_passphrase'] % (self.desc,self.ssdata.hash_preset))
-			d.passwd = get_new_passphrase(desc="new " + self.desc)
+		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'passwd'):
+			old_pw = self.ss_in.ssdata.passwd
+			if opt.keep_passphrase:
+				d.passwd = old_pw
+				qmsg("Reusing passphrase at user request")
+			else:
+				pw = self._get_new_passphrase()
+				if self.op == "pwchg_new":
+					m = ("changed","unchanged")[int(pw==old_pw)]
+					qmsg("Passphrase %s" % m)
+		else:
+			qmsg(self.msg['choose_passphrase'] % (self.desc,d.hash_preset))
+			self._get_new_passphrase()
 
 		d.salt     = sha256(get_random(128)).digest()[:g.salt_len]
 		key        = make_key(d.passwd, d.salt, d.hash_preset)
@@ -279,7 +363,7 @@ class Mnemonic (SeedSourceUnenc):
 		deconv =  [wl.index(words[::-1][i])*(base**i)
 					for i in range(len(words))]
 		ret = ("{:0%sx}" % pad).format(sum(deconv))
-		return "%s%s" % (('0' if len(ret) % 2 else ''), ret)
+		return ('','0')[len(ret) % 2] + ret
 
 	def _hextobaseN(self,base,hexnum,wl,pad=0):
 		num,ret = int(hexnum,16),[]
@@ -344,7 +428,6 @@ class Mnemonic (SeedSourceUnenc):
 
 		check_usr_seed_len(self.seed.length)
 
-		qmsg("Valid mnemonic for seed ID %s" % make_chksum_8(self.seed.data))
 		return True
 
 	def _filename(self):
@@ -403,8 +486,6 @@ class SeedFile (SeedSourceUnenc):
 
 		check_usr_seed_len(self.seed.length)
 
-		qmsg("Valid seed data for seed ID %s" % make_chksum_8(self.seed.data))
-
 		return True
 
 	def _filename(self):
@@ -417,11 +498,47 @@ class Wallet (SeedSourceEnc):
 	desc = g.proj_name + " wallet"
 	ext = "mmdat"
 
+	def _get_label_from_user(self,old_lbl=""):
+		d = ("to reuse the label '%s'" % old_lbl) if old_lbl else "for no label"
+		p = "Enter a wallet label, or hit ENTER %s: " % d
+		while True:
+			ret = my_raw_input(p)
+			if ret:
+				if is_mmgen_wallet_label(ret):
+					self.ssdata.label = ret; return ret
+				else:
+					msg("Invalid label.  Trying again...")
+			else:
+				ret = old_lbl or "No Label"
+				self.ssdata.label = ret; return ret
+
+	# nearly identical to _get_hash_preset() - factor?
+	def _get_label(self):
+		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
+			old_lbl = self.ss_in.ssdata.label
+			if opt.keep_label:
+				qmsg("Reusing label '%s' at user request" % old_lbl)
+				self.ssdata.label = old_lbl
+			elif opt.label:
+				qmsg("Using label '%s' requested on command line" % opt.label)
+				lbl = self.ssdata.label = opt.label
+			else: # Prompt, using old value as default
+				lbl = self._get_label_from_user(old_lbl)
+
+			if (not opt.keep_label) and self.op == "pwchg_new":
+				m = ("changed to '%s'" % lbl,"unchanged")[int(lbl==old_lbl)]
+				qmsg("Label %s" % m)
+		elif opt.label:
+			qmsg("Using label '%s' requested on command line" % opt.label)
+			self.ssdata.label = opt.label
+		else:
+			self._get_label_from_user()
+
 	def _encrypt(self):
 		self._get_first_pw_and_hp_and_encrypt_seed()
+		self._get_label()
 		d = self.ssdata
-		d.label = opt.label or "No Label"
-		d.pw_status = "NE" if len(d.passwd) else "E"
+		d.pw_status = ("NE","E")[int(len(d.passwd)==0)]
 		d.timestamp = make_timestamp()
 
 	def _format(self):
@@ -477,9 +594,10 @@ class Wallet (SeedSourceEnc):
 
 		d.hash_preset = hp = hpdata[0][:-1]  # a string!
 		qmsg("Hash preset of wallet: '%s'" % hp)
-		uhp = opt.hash_preset
-		if uhp and 'hash_preset' in opt.set_by_user and uhp != hp:
-			msg("Warning: ignoring user-requested hash preset '%s'" % uhp)
+		if 'hash_preset' in opt.set_by_user:
+			uhp = opt.hash_preset
+			if uhp != hp:
+				qmsg("Warning: ignoring user-requested hash preset '%s'" % uhp)
 
 		hash_params = [int(i) for i in hpdata[1:]]
 
@@ -514,8 +632,8 @@ class Wallet (SeedSourceEnc):
 	def _decrypt(self):
 		d = self.ssdata
 		# Needed for multiple transactions with {}-txsign
-		add = " "+self.infile.name if opt.quiet else ""
-		self._get_pw(self.desc+add)
+		suf = ("",self.infile.name)[int(bool(opt.quiet))]
+		self._get_passphrase(desc_suf=suf)
 		key = make_key(d.passwd, d.salt, d.hash_preset)
 		ret = decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)
 		if ret:
@@ -572,6 +690,7 @@ class Brainwallet (SeedSourceEnc):
 	fmt_codes = "mmbrain","brainwallet","brain","bw","b"
 	desc = "brainwallet"
 	ext = "mmbrain"
+	# brainwallet warning message? TODO
 
 	def _deformat(self):
 		self.brainpasswd = " ".join(self.fmt_data.split())
@@ -620,7 +739,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _make_iv_chksum(self,s): return sha256(s).hexdigest()[:8].upper()
 
 	def _get_incog_data_len(self,seed_len):
-		e = 0 if opt.old_incog_fmt else g.hincog_chk_len
+		e = (g.hincog_chk_len,0)[int(bool(opt.old_incog_fmt))]
 		return g.aesctr_iv_len + g.salt_len + e + seed_len/8
 
 	def _incog_data_size_chk(self):
@@ -718,9 +837,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _decrypt(self):
 		d = self.ssdata
-		desc = self.desc+" "+d.incog_id
-		self._get_hash_preset(desc)
-		self._get_pw(desc)
+		self._get_hash_preset(desc_suf=d.incog_id)
+		self._get_passphrase(desc_suf=d.incog_id)
 
 		# IV is used BOTH to initialize counter and to salt password!
 		key = make_key(d.passwd, d.iv, d.hash_preset, "wrapper key")
@@ -731,10 +849,10 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.enc_seed = dd[g.salt_len:]
 
 		key = make_key(d.passwd, d.salt, d.hash_preset, "main key")
-		msg("Key ID: %s" % make_chksum_8(key))
+		qmsg("Key ID: %s" % make_chksum_8(key))
 
-		verify_seed = self._verify_seed_oldfmt if opt.old_incog_fmt else \
-						self._verify_seed_newfmt
+		verify_seed = getattr(self,"_verify_seed_"+
+						("newfmt","oldfmt")[int(bool(opt.old_incog_fmt))])
 
 		seed = verify_seed(decrypt_seed(d.enc_seed, key, "", ""))
 
@@ -749,7 +867,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 class IncogWalletHex (IncogWallet):
 
 	desc = "hex incognito data"
-	fmt_codes = "mmincox","incog_hex","xincog","ix","xi"
+	fmt_codes = "mmincox","incox","incog_hex","xincog","ix","xi"
 	ext = "mmincox"
 	no_tty = False
 
@@ -800,7 +918,7 @@ harder to find, you're advised to choose a much larger file size than this.
 
 	def _check_valid_offset(self,fn,action):
 		d = self.ssdata
-		m = "Destination" if action == "write" else "Input"
+		m = ("Input","Destination")[int(action=="write")]
 		if fn.size < d.hincog_offset + d.target_data_len:
 			die(1,
 	"%s file has length %s, too short to %s %s bytes of data at offset %s"
@@ -830,9 +948,11 @@ harder to find, you're advised to choose a much larger file size than this.
 		self._format()
 		compare_or_die(d.target_data_len, "target data length",
 				len(self.fmt_data),"length of formatted " + self.desc)
-		fn,d.hincog_offset = self._get_hincog_params("output")
 
-		self.hincog_data_is_new = False
+		k = ("output","input")[int(self.op=="pwchg_new")]
+		fn,d.hincog_offset = self._get_hincog_params(k)
+
+		check_offset = True
 		try:
 			os.stat(fn)
 		except:
@@ -841,14 +961,14 @@ harder to find, you're advised to choose a much larger file size than this.
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
-					fsize = my_raw_input("Enter file size: ")
-					if is_int(fsize) and int(fsize) >= min_fsize: break
+					fsize = parse_nbytes(my_raw_input("Enter file size: "))
+					if fsize >= min_fsize: break
 					msg("File size must be an integer no less than %s" %
 							min_fsize)
 
 				from mmgen.tool import rand2file
 				rand2file(fn, str(fsize))
-				self.hincog_data_is_new = True
+				check_offset = False
 			else:
 				die(1,"Exiting at user request")
 
@@ -856,7 +976,7 @@ harder to find, you're advised to choose a much larger file size than this.
 
 		dmsg("Incog data len %s, offset %s" % (d.target_data_len,d.hincog_offset))
 
-		if not self.hincog_data_is_new:
+		if check_offset:
 			self._check_valid_offset(f,"write")
 			if not opt.quiet: confirm_or_exit("","alter file '%s'" % f.name)
 
@@ -865,5 +985,5 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.write(fh, self.fmt_data)
 		os.close(fh)
 		msg("%s written to file '%s' at offset %s" % (
-				self.desc[0].upper()+self.desc[1:],
+				capfirst(self.desc),
 				f.name,d.hincog_offset))

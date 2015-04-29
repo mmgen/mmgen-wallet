@@ -556,28 +556,6 @@ def find_incog_data(filename,iv_id,keep_searching=False):
 	msg("")
 	os.close(f)
 
-# From "man dd":
-# c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
-# GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
-
-def parse_nbytes(nbytes):
-	import re
-	m = re.match(r'([0123456789]+)(.*)',nbytes)
-	smap = ("c",1),("w",2),("b",512),("kB",1000),("K",1024),("MB",1000*1000),\
-			("M",1024*1024),("GB",1000*1000*1000),("G",1024*1024*1024)
-	if m:
-		if m.group(2):
-			for k,v in smap:
-				if k == m.group(2):
-					return int(m.group(1)) * v
-			else:
-				msg("Valid byte specifiers: '%s'" % "' '".join([i[0] for i in smap]))
-		else:
-			return int(nbytes)
-
-	msg("'%s': invalid byte specifier" % nbytes)
-	sys.exit(1)
-
 
 def rand2file(outfile, nbytes, threads=4, silent=False):
 	nbytes = parse_nbytes(nbytes)

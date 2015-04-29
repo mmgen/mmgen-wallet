@@ -394,7 +394,7 @@ cmd_args = opt.opts.init(opts_data)
 if opt.system: sys.path.pop(0)
 
 # temporary
-#os.environ["MMGEN_USE_OLD_SCRIPTS"] = "1"
+os.environ["MMGEN_USE_OLD_SCRIPTS"] = "1"
 
 if opt.debug_scripts: os.environ["MMGEN_DEBUG"] = "1"
 
@@ -657,9 +657,8 @@ def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input='')
 	for s in tx_data.keys():
 		sid = tx_data[s]['sid']
 		a = adata.addrinfo(sid)
-		for n,(idx,btcaddr) in enumerate(a.addrpairs(),1):
-			lbl = (""," addr %02i" % n)[int(bool(n%3))]
-			add_fake_unspent_entry(out,btcaddr,"%s:%s%s" % (sid,idx,lbl))
+		for idx,btcaddr in a.addrpairs():
+			add_fake_unspent_entry(out,btcaddr,"%s:%s Test Wallet" % (sid,idx))
 
 	if non_mmgen_input:
 		from mmgen.bitcoin import privnum2addr,hextowif
@@ -834,32 +833,49 @@ class MMGenTestSuite(object):
 	def generate_cmd_deps(self,fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
-	def walletgen(self,name,seed_len=None):
+	def walletgen(self,name,brain=False,seed_len=None):
+
 		args = ["-d",cfg['tmpdir'],"-p1","-r10"]
 		if seed_len: args += ["-l",str(seed_len)]
+#        if 'seed_len' in cfg: args += ["-l",cfg['seed_len']]
+		if brain:
+			bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
+			args += ["-b",cfg['bw_params'],bwf]
+			make_brainwallet_file(bwf)
+
 		t = MMGenExpect(name,"mmgen-walletgen", args)
 		t.license()
+
+		if brain:
+			t.expect(
+	"A brainwallet will be secure only if you really know what you're doing")
+			t.expect("Type uppercase 'YES' to confirm: ","YES\n")
+
 		t.usr_rand(10)
+#		t.usr_rand_out()
+
 		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
-		t.label()
-		t.written_to_file("MMGen wallet")
+		t.written_to_file("Wallet")
+# 		if not brain:
+# 			t.usr_rand_out(saved=True)
+# 		t.label()
+# 		t.written_to_file("MMGen wallet")
 		ok()
 
-	def brainwalletgen_ref(self,name):
-		sl_arg = "-l%s" % cfg['seed_len']
-		hp_arg = "-p%s" % ref_wallet_hash_preset
+	def refwalletgen(self,name):
 		label = "test.py ref. wallet (pw '%s', seed len %s)" \
-				% (ref_wallet_brainpass,cfg['seed_len'])
-		args = ["-d",cfg['tmpdir'],hp_arg,"-r10",sl_arg,"-ib","-L",label]
-		t = MMGenExpect(name,"mmgen-walletconv", args)
+					% (ref_wallet_brainpass,cfg['seed_len'])
+		bw_arg = "-b%s,%s" % (cfg['seed_len'], ref_wallet_hash_preset)
+		args = ["-d",cfg['tmpdir'],"-p1","-r10",bw_arg,"-L",label]
+		d = " (%s-bit seed)" % cfg['seed_len']
+		t = MMGenExpect(name,"mmgen-walletgen", args)
 		t.license()
-		t.expect("Enter brainwallet: ", ref_wallet_brainpass+"\n")
-		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
+		t.expect("Type uppercase 'YES' to confirm: ","YES\n")
+		t.expect("passphrase: ",ref_wallet_brainpass+"\n")
 		t.usr_rand(10)
-		sid = t.written_to_file("MMGen wallet").split("-")[0].split("/")[-1]
-		refcheck("seed ID",sid,cfg['seed_id'])
-
-	def refwalletgen(self,name): self.brainwalletgen_ref(name)
+		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
+		seed_id = t.written_to_file("Wallet").split("-")[0].split("/")[-1]
+		refcheck("seed ID",seed_id,cfg['seed_id'])
 
 	refwalletgen1 = refwalletgen2 = refwalletgen3 = refwalletgen
 
@@ -867,23 +883,23 @@ class MMGenTestSuite(object):
 
 		t = MMGenExpect(name,"mmgen-passchg",
 			["-d",cfg['tmpdir'],"-p","2","-L","New Label","-r","16",walletfile])
-		t.license()
+#		t.license()
 		t.passphrase("MMGen wallet",cfgs['1']['wpasswd'],pwtype="old")
-		t.expect_getend("Hash preset changed to ")
+		t.expect_getend("Label changed: ")
+		t.expect_getend("Hash preset changed: ")
 		t.passphrase("MMGen wallet",cfg['wpasswd'],pwtype="new")
 		t.expect("Repeat passphrase: ",cfg['wpasswd']+"\n")
 		t.usr_rand(16)
-		t.expect_getend("Label changed to ")
-#		t.expect_getend("Key ID changed: ")
-		t.written_to_file("MMGen wallet")
+		t.expect_getend("Key ID changed: ")
+		t.written_to_file("Wallet")
 		ok()
 
 	def walletchk_beg(self,name,args):
 		t = MMGenExpect(name,"mmgen-walletchk", args)
-		t.expect("Getting MMGen wallet from file '%s'" % args[-1])
+		t.expect("Getting MMGen wallet data from file '%s'" % args[-1])
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
 		t.expect("Passphrase is OK")
-		t.expect_getend("Valid MMGen wallet for seed ID ")
+		t.expect("Wallet is OK")
 		return t
 
 	def walletchk(self,name,walletfile):
@@ -1035,67 +1051,53 @@ class MMGenTestSuite(object):
 		vmsg("This is a simulation; no transaction was sent")
 		ok()
 
-	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt="w",pw=False):
-		opts = ["-d",cfg['tmpdir'],"-o",out_fmt] + uargs + [wf]
-		t = MMGenExpect(name,"mmgen-walletconv",opts)
-		t.license()
-		t.passphrase("MMGen wallet",cfg['wpasswd'])
-		if pw:
-			t.passphrase_new("new "+desc,cfg['wpasswd'])
-			t.usr_rand(10)
-		if " ".join(desc.split()[-2:]) == "incognito data":
-			t.expect("Generating encryption key from OS random data ")
-			t.expect("Generating encryption key from OS random data ")
-			ic_id = t.expect_getend("New Incog Wallet ID: ")
-			t.expect("Generating encryption key from OS random data ")
-		if desc == "hidden incognito data":
-			write_to_tmpfile(cfg,incog_id_fn,ic_id)
-			ret = t.expect(["Create? (Y/n): ","'YES' to confirm: "])
-			if ret == 0:
-				t.send("\n")
-				t.expect("Enter file size: ",str(hincog_bytes)+"\n")
-			else:
-				t.send("YES\n")
-		if out_fmt == "w": t.label()
-		return t.written_to_file(capfirst(desc),oo=True)
-
-	def export_seed(self,name,wf,desc="seed data",out_fmt="seed"):
-		f = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt)
+	def export_seed(self,name,walletfile):
+		t = self.walletchk_beg(name,["-s","-d",cfg['tmpdir'],walletfile])
+		f = t.written_to_file("Seed data")
 		silence()
-		msg("%s: %s" % (capfirst(desc),cyan(get_data_from_file(f,desc))))
+		msg("Seed data: %s" % cyan(get_data_from_file(f,"seed data")))
 		end_silence()
 		ok()
 
-	def export_mnemonic(self,name,wf):
-		self.export_seed(name,wf,desc="mnemonic data",out_fmt="words")
-
-	def export_incog(self,name,wf,desc="incognito data",out_fmt="i",add_args=[]):
-		uargs = ["-p1","-r10"] + add_args
-		self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,pw=True)
+	def export_mnemonic(self,name,walletfile):
+		t = self.walletchk_beg(name,["-m","-d",cfg['tmpdir'],walletfile])
+		f = t.written_to_file("Mnemonic data")
+		silence()
+		msg_r("Mnemonic data: %s" % cyan(get_data_from_file(f,"mnemonic data")))
+		end_silence()
 		ok()
 
-	def export_incog_hex(self,name,wf):
-		self.export_incog(name,wf,desc="hex incognito data",out_fmt="xi")
+	def export_incog(self,name,walletfile,args=["-g"]):
+		t = MMGenExpect(name,"mmgen-walletchk",args+["-d",cfg['tmpdir'],"-r","10",walletfile])
+		t.passphrase("MMGen wallet",cfg['wpasswd'])
+		t.usr_rand(10)
+		incog_id = t.expect_getend("Incog ID: ")
+		write_to_tmpfile(cfg,incog_id_fn,incog_id+"\n")
+		if args[0] == "-G": return t
+		t.written_to_file("Incognito wallet data",overwrite_unlikely=True)
+		ok()
+
+	def export_incog_hex(self,name,walletfile):
+		self.export_incog(name,walletfile,args=["-X"])
 
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
-	def export_incog_hidden(self,name,wf):
-		rf = os.path.join(cfg['tmpdir'],hincog_fn)
-		add_args = ["-J","%s,%s"%(rf,hincog_offset)]
-		self.export_incog(
-			name,wf,desc="hidden incognito data",out_fmt="hi",add_args=add_args)
+	def export_incog_hidden(self,name,walletfile):
+		rf,rd = os.path.join(cfg['tmpdir'],hincog_fn),os.urandom(hincog_bytes)
+		vmsg(green("Writing %s bytes of data to file '%s'" % (hincog_bytes,rf)))
+		write_to_file(rf,rd,verbose=opt.verbose)
+		t = self.export_incog(name,walletfile,args=["-G","%s,%s"%(rf,hincog_offset)])
+		t.written_to_file("Data",query="")
+		ok()
 
 	def addrgen_seed(self,name,walletfile,foo,desc="seed data",arg="-s"):
-		stdout = (False,True)[int(desc=="seed data")] #capture output to screen once
-		add_arg = ([],["-S"])[int(stdout)]
-		t = MMGenExpect(name,"mmgen-addrgen", add_arg +
+		t = MMGenExpect(name,"mmgen-addrgen",
 				[arg,"-d",cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
 		t.license()
 		t.expect_getend("Valid %s for seed ID " % desc)
 		vmsg("Comparing generated checksum with checksum from previous address file")
 		chk = t.expect_getend(r"Checksum for address data .*?: ",regex=True)
-		if stdout: t.read()
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
-#		t.no_overwrite()
+		t.no_overwrite()
 		ok()
 
 	def addrgen_mnemonic(self,name,walletfile,foo):
@@ -1110,9 +1112,8 @@ class MMGenTestSuite(object):
 		t.hash_preset("incog wallet",'1')
 		vmsg("Comparing generated checksum with checksum from address file")
 		chk = t.expect_getend(r"Checksum for address data .*?: ",regex=True)
-		t.close()
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
-#		t.no_overwrite()
+		t.no_overwrite()
 		ok()
 
 	def addrgen_incog_hex(self,name,walletfile,foo):
@@ -1194,20 +1195,8 @@ class MMGenTestSuite(object):
 		self.txsign_end(t)
 		ok()
 
-	def brainwalletgen_pwfile(self,name):
-		bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
-		make_brainwallet_file(bwf)
-		seed_len = str(cfg['seed_len'])
-		args = ["-d",cfg['tmpdir'],"-p1","-r10","-l"+seed_len,"-ib"]
-		t = MMGenExpect(name,"mmgen-walletconv", args + [bwf])
-		t.license()
-		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
-		t.usr_rand(10)
-		t.label()
-		t.written_to_file("MMGen wallet")
-		ok()
-
-	def walletgen4(self,name): self.brainwalletgen_pwfile(name)
+	def walletgen4(self,name):
+		self.walletgen(name,brain=True)
 
 	def addrgen4(self,name,walletfile):
 		self.addrgen(name,walletfile)
@@ -1265,14 +1254,15 @@ class MMGenTestSuite(object):
 		vmsg("Incog ID: %s" % cyan(i_id))
 		t = MMGenExpect(name,"mmgen-tool",
 				["-d",cfg['tmpdir'],"find_incog_data",f1,i_id])
-		o = t.expect_getend("Incog data for ID %s found at offset " % i_id)
+		o = t.expect_getend("Incog data for ID \w{8} found at offset ",regex=True)
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
 	def walletconv_out(self,name,desc,out_fmt="w",uopts=[],uopts_chk=[],pw=False):
 		opts = ["-d",cfg['tmpdir'],"-r10","-p1","-o",out_fmt] + uopts
 		infile = os.path.join(ref_dir,cfg['seed_id']+".mmwords")
-		t = MMGenExpect(name,"mmgen-walletconv",opts+[infile],extra_desc="(convert)")
+		d = "(convert)"
+		t = MMGenExpect(name,"mmgen-walletconv",opts+[infile],extra_desc=d)
 		t.license()
 		if pw:
 			t.passphrase_new("new "+desc,cfg['wpasswd'])
@@ -1281,17 +1271,18 @@ class MMGenTestSuite(object):
 			for i in (1,2,3):
 				t.expect("Generating encryption key from OS random data ")
 		if desc == "hidden incognito data":
-			ret = t.expect(["Create? (Y/n): ","'YES' to confirm: "])
+			ret = t.expect(["Create? (Y/n): ","'YES' to confirm: "],"YES\n")
 			if ret == 0:
-				t.send("\n")
-				t.expect("Enter file size: ",str(hincog_bytes)+"\n")
-			else:
-				t.send("YES\n")
+				t.expect("Enter file size: ","1234\n")
 		if out_fmt == "w": t.label()
 		wf = t.written_to_file(capfirst(desc),oo=True)
 		ok()
+
+		d = "(check)"
 		if desc == "hidden incognito data":
 			self.keygen_chksum_chk_hincog(name,cfg['seed_id'],uopts_chk)
+# 		elif pw:
+# 			self.walletchk_chksum_chk(name,wf,cfg['seed_id'],uopts=uopts_chk)
 		else:
 			self.keygen_chksum_chk(name,wf,cfg['seed_id'],pw=pw)
 
@@ -1418,7 +1409,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,"mmgen-keygen", ["-p1","-q","-S","-A"]+hincog_parm+["1"],extra_desc="(check)")
 		t.passphrase("",cfg['wpasswd'])
 		t.expect("Encrypt key list? (y/N): ","\n")
-		t.expect("ignored by MMGen.\r\n")
+		t.expect("any printable ASCII symbol.\r\n")
 		chk = t.readline()[:8]
 		vmsg("Seed ID: %s" % cyan(chk))
 		cmp_or_die(seed_id,chk)
@@ -1429,7 +1420,7 @@ class MMGenTestSuite(object):
 		if pw:
 			t.passphrase("",cfg['wpasswd'])
 		t.expect("Encrypt key list? (y/N): ","\n")
-		t.expect("ignored by MMGen.\r\n")
+		t.expect("any printable ASCII symbol.\r\n")
 		chk = t.readline()[:8]
 		vmsg("Seed ID: %s" % cyan(chk))
 		cmp_or_die(seed_id,chk)
