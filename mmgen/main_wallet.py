@@ -33,10 +33,12 @@ usage = "[opts] [infile]"
 nargs = 1
 iaction = "convert"
 oaction = "convert"
+bw_note = opt.opts.bw_note
+pw_note = opt.opts.pw_note
 
 if invoked_as == "gen":
 	desc = "Generate an {pnm} wallet from a random seed"
-	opt_filter = "hdoJlLpPqrSv"
+	opt_filter = "ehdoJlLpPqrSvz"
 	usage = "[opts]"
 	oaction = "output"
 	nargs = 0
@@ -45,21 +47,25 @@ elif invoked_as == "conv":
 	opt_filter = None
 elif invoked_as == "chk":
 	desc = "Check validity of an {pnm} wallet"
-	opt_filter = "hiHOlpPqrv"
+	opt_filter = "ehiHOlpPqrvz"
 	iaction = "input"
 elif invoked_as == "passchg":
 	desc = "Change the password, hash preset or label of an {pnm} wallet"
-	opt_filter = "hdiHkKOlLmpPqrSv"
+	opt_filter = "ehdiHkKOlLmpPqrSvz"
 	iaction = "input"
+	bw_note = ""
 else:
 	die(1,"'%s': unrecognized invocation" % bn)
 
 opts_data = {
+# Can't use: share/Opts doesn't know anything about fmt codes
+#	'sets': [('hidden_incog_output_params',bool,'out_fmt','hi')],
 	'desc': desc.format(pnm=g.proj_name),
 	'usage': usage,
 	'options': """
 -h, --help            Print this help message.
 -d, --outdir=      d  Output files to directory 'd' instead of working dir.
+-e, --echo-passphrase Echo passphrases and other user input to screen.
 -i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below).
 -o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below).
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
@@ -78,20 +84,28 @@ opts_data = {
 -m, --keep-label      Reuse label of input wallet for output wallet.
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
                       for password hashing (default: '{g.hash_preset}').
--P, --passwd-file= f  Get wallet passphrase from file 'f'
+-z, --show-hash-presets Show information on available hash presets.
+-P, --passwd-file= f  Get wallet passphrase from file 'f'.
 -q, --quiet           Produce quieter output; suppress some warnings.
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
                       (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars}).
 -S, --stdout          Write wallet data to stdout instead of file.
 -v, --verbose         Produce more verbose output.
-
-FMT CODES:
-  {f}
 """.format(
 		g=g,
 		iaction=capfirst(iaction),
 		oaction=capfirst(oaction),
-		f="\n  ".join(SeedSource.format_fmt_codes().split("\n"))
+	),
+	'notes': """
+
+{pw_note}{bw_note}
+
+FMT CODES:
+  {f}
+""".format(
+	f="\n  ".join(SeedSource.format_fmt_codes().split("\n")),
+	pw_note=pw_note,
+	bw_note=("","\n\n" + bw_note)[int(bool(bw_note))]
 	)
 }
 

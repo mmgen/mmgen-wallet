@@ -12,6 +12,7 @@
 * <a href=#11>Using the mnemonic and seed features</a>
 * <a href=#12>Mnemonics and seeds — additional information</a>
 * <a href=#13>Incognito wallets</a>
+	* <a href=#13a>Hidden incognito wallets</a>
 
 
 ### <a name=01>Basic Operations</a>
@@ -22,7 +23,7 @@ On your offline computer, generate a wallet with a random seed:
 
 		$ mmgen-walletgen
 		...
-		Wallet saved to file '89ABCDEF-76543210[256,3].mmdat'
+		MMGen wallet written to file '89ABCDEF-76543210[256,3].mmdat'
 
 "89ABCDEF" is the Seed ID; "76543210" is the Key ID. These are randomly
 generated, so your IDs will of course be different than the fictitious ones used
@@ -41,7 +42,7 @@ Now generate ten addresses with your just-created wallet:
 
 		$ mmgen-addrgen 89ABCDEF-76543210[256,3].mmdat 1-10
 		...
-		Address data saved to file '89ABCDEF[1-10].addrs'
+		Addresses written to file '89ABCDEF[1-10].addrs'
 
 		$ cat '89ABCDEF[1-10].addrs'
 		89ABCDEF {
@@ -58,7 +59,7 @@ Now generate ten addresses with your just-created wallet:
 		}
 
 Note that the address range, "1-10", is reflected in the resulting filename.
-MMGen addresses are identified by their seed ID and index number, separated by a
+MMGen addresses are identified by their Seed ID and index number, separated by a
 colon.  In this example, "89ABCDEF:1" is the MMGen equivalent of Bitcoin address
 16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE, "89ABCDEF:2" the equivalent of
 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc, and so forth.
@@ -93,9 +94,9 @@ Copy this file onto a USB stick and transfer it to your online computer.
 #### <a name=04>Import addresses (online computer):</a>
 
 On your online computer, go to your bitcoind data directory and move any
-existing 'wallet.dat' file out of the way.  Start bitcoind and let it generate
-a new 'wallet.dat', which you'll use as your **tracking wallet**.  Import your
-four addresses into the new tracking wallet with the command:
+existing 'wallet.dat' file out of harm's way.  Start bitcoind and let it
+generate a new 'wallet.dat', which you'll use as your **tracking wallet**.
+Import your four addresses into the new tracking wallet with the command:
 
 		$ mmgen-addrimport my.addrs
 
@@ -138,7 +139,7 @@ harmless until they're signed and broadcast to the network, so feel free to
 experiment with different transactions using different combinations of inputs
 and outputs.
 
-First of all you'll want to examine your balances.  Note that 'mmgen-tool
+First of all, you'll want to examine your balances.  Note that 'mmgen-tool
 listaddresses' shows only MMGen address balances; to view **all** balances,
 including your non-MMGen ones, use the 'mmgen-txcreate' command:
 
@@ -147,8 +148,8 @@ including your non-MMGen ones, use the 'mmgen-txcreate' command:
 A list of all unspent outputs will appear, along with a menu allowing you to
 sort the outputs by four criteria: transaction ID, address, amount and
 transaction age.  Your overall balance in BTC appears at the top of the screen.
-The list may be viewed in a pager or printed to file.  For a wallet with ten
-unspent outputs, the display might look something like this:
+The list may optionally be viewed in a pager or printed to file.  For a wallet
+with ten unspent outputs, the display might look something like this:
 
 		UNSPENT OUTPUTS (sort order: reverse amount)  Total BTC: 39.72
 		 Num  TX id  Vout    Address                            Amount (BTC)  Age(days)
@@ -168,126 +169,143 @@ unspent outputs, the display might look something like this:
 		(Type 'q' to quit sorting, 'p' to print to file, 'v' to view in pager):
 
 Now let's actually create a transaction.  Let's say you've decided to gradually
-begin moving your 39.72 BTC balance into your shiny new MMGen wallet with seed
+begin moving your 39.72 BTC balance into your shiny new MMGen wallet with Seed
 ID 89ABCDEF.
 
 Before moving any funds into your MMGen wallet, you should back it up in several
 places and possibly on several media too: paper, flash memory or CD-ROM, for
-example.  Of course the wallet should have a passphrase.  Otherwise, anyone who
-gains physical access to one of your backups can easily steal your coins.
+example.  You're advised to use a passphrase on your wallet.  Otherwise, anyone
+who gains physical access to one of your backups can easily steal your coins.
 
 Recall that there's no limit to the number of addresses you can generate with
 your seed.  You've wisely determined that having many addresses with relatively
-small balances is a Good Idea.  So you've decided to begin by breaking up the
-address with the largest balance, 10 BTC, into three roughly equal parts,
-sending it to the addresses labeled "Storage 1", "Storage 2" and "Storage 3"
-(89ABCDEF:2, 89ABCDEF:3 and 89ABCDEF:4).
+small balances is a Good Idea.  So you've decided to begin by breaking up your
+address with the largest balance, 10 BTC, address 1F93Znz..., into three roughly
+equal parts and send them to the addresses labeled "Storage 1", "Storage 2" and
+"Storage 3" (89ABCDEF:2, 89ABCDEF:3 and 89ABCDEF:4).
 
-To refresh your memory, here are the three addresses in question:
+To refresh your memory, here are the three destination addresses in question:
 
-		$ cat my.addrs
+		$ cat my.addrs | grep -v Donations
 		# My first MMGen addresses
 		89ABCDEF {
-		  1    16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations
 		  2    1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1
 		  3    1HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2
 		  4    14Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3
 		}
 
-The following command will send 3.3 BTC to the first two addresses and the
-remainder of the transaction's 10 BTC input to the third, subtracting a default
-transaction fee of 0.001 BTC:
+The following command does just this, sending 6.6 BTC of the transaction's 10
+BTC input to the first two addresses and the remainder to the third address,
+for which no amount has been specified:
 
 		$ mmgen-txcreate 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,3.3 1HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N,3.3 14Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s
 
-The bare address with no amount is the **change address**.  MMGen will compute
-the change amount (3.399 BTC in this case) automatically.
+The address with no amount is the **change address**; MMGen will calculate
+the amount sent to it automatically by subtracting the sum of the outputs
+plus transaction fee, if any, from the inputs.  In our example, 3.39995 BTC (10
+BTC - (3.3 + 3.3 BTC) - .00005 BTC default transaction fee) will go to this
+address.
 
-Note that the above transaction can be written much more elegantly and concisely
-using MMGen addresses in place of their Bitcoin equivalents:
+Note that the above transaction can be expressed much more concisely by
+replacing the Bitcoin addresses with their MMGen equivalents:
 
 		$ mmgen-txcreate 89ABCDEF:2,3.3 89ABCDEF:3,3.3 89ABCDEF:4
 
-After hitting ENTER you'll be presented with the same display produced by the
-'-i' option above, plus an interactive menu.  After quitting with 'q', you'll
-be prompted to choose the transaction's inputs.
+For this to work, the addresses must be imported into your tracking wallet,
+which they should be in any case.
+
+After hitting ENTER you'll be presented with the same UNSPENT OUTPUTS display as
+with the '-i' option above.  In our example, note that the output with 10 BTC
+which you wish to spend, 1F93Znz..., is listed as number '1'.  Remember this.
+After quitting the menu with 'q' you'll see the following prompt:
 
 		Enter a range or space-separated list of outputs to spend:
 
-Find the input with the 10 BTC balance in the list.  This is input 1), so type
-'1' and ENTER.  After several more prompts and confirmations 'mmgen-txcreate'
-will exit with the message:
+Type your remembered '1' here and hit ENTER.  After several more prompts and
+confirmations, your transaction will be saved:
 
-		Transaction data saved to file 'tx_1EDCBA[6.6].raw'
+		Transaction written to file 'tx_FEDCBA[6.6].raw'
 
-Note that the transaction has a unique ID, and the non-change spend amount, 6.6
-BTC, is conveniently included in the filename.
+Note that the transaction has a unique ID, and the non-change spend amount of
+6.6 BTC is included in the filename.
 
 #### <a name=06>Sign a transaction (offline computer):</a>
 
 Now copy the raw transaction you've just created to a USB stick and transfer it
-to your offline computer for signing.  You need to find the key for your
-transaction's one input address, 1F9495H8EJL....  If the key in question is in a
-bitcoin 'wallet.dat', there's an included command (a modified version of the
-well-known pywallet utility) that will conveniently extract it for you:
+to your offline computer for signing.  For this you'll need the key corresponding
+to the transaction's input address, 1F93Znz....  If the key in question is in a
+bitcoind 'wallet.dat', copy 'wallet.dat' to your offline machine as well and use
+the included command 'mmgen-pywallet' (a modified version of the well-known
+pywallet utility) to extract the required key from it.
 
 		$ mmgen-pywallet -k wallet.dat
 		...
-		wallet.dat secret keys saved to file wd_EDBC983A[102].keys
+		Private keys written to file 'wd_EDBC983A[102].keys'
 
 You've in fact extracted a list of all of the wallet's 102 keys here, but that's
-not a problem, since the unused keys will be ignored (you can extract only the
-keys you need using the '--keys-for-addrs' option).  Now go ahead and sign the
-transaction using this list of keys.
+not a problem, since the unused keys will be ignored (if you wish, you can
+extract only the one key you need using the '--keys-for-addrs' option).  Now go
+ahead and sign the transaction using this key list:
 
-		$ mmgen-txsign -k wd_EDBC983A[102].keys tx_1EDCBA[6.6].raw
+		$ mmgen-txsign -k wd_EDBC983A[102].keys tx_FEDCBA[6.6].raw
 		...
-		Signed transaction saved to file tx_ABCDEF[0.1].sig
+		Signed transaction written to file 'tx_FEDCBA[6.6].sig'
 
 Note that 'mmgen-pywallet's output is just a flat list of keys.  So if you have
-several Bitcoin wallets with balances, you can just dump all their keys and
-merge them into a single file which you can use to sign all future transactions
-with wallet.dat inputs:
+several Bitcoin wallets with balances, you can just concatenate these lists into
+a single file which you can use to sign all future transactions with
+'wallet.dat' inputs:
 
 		$ mmgen-pywallet -k wallet1.dat
 		$ mmgen-pywallet -k wallet2.dat
 		$ mmgen-pywallet -k wallet3.dat
 		$ cat wd_*.keys > all_keys
 
-For your future transactions with MMGen address inputs, you'll list the MMGen
-seed source (wallet, mnemonic or seed file) on the command line after the
-transaction file, and the required keys will be generated automatically, as in
-this example:
+Once you've migrated your funds to MMGen, such key files will no longer be
+needed.  Instead, you'll sign transactions by listing an MMGen seed source
+(wallet, mnemonic or seed file) on the command line after the transaction,
+and the required keys will be generated on the fly, as in this example:
 
-		$ mmgen-txsign tx_9D2C3A[1.23].raw B73B58EA-125FB230[256,3].mmdat
-		...
-		Signed transaction saved to file tx_9D2C3A[1.23].sig
+		$ mmgen-txsign tx_ABCDE[1.2345].raw 1234567A-BCDEF123[256,3].mmdat
 
-Transactions may contain a mixture of MMGen and non-MMGen inputs as well as
-inputs with more than one MMGen seed ID.  Just provide a seed source for each
-seed ID on the command line.
+Transactions may contain a mixture of MMGen and non-MMGen inputs, as well as
+inputs with more than one MMGen Seed ID.  Just list a seed source for each
+MMGen input on the command line after the transaction, as in this example:
 
-Eventually, when you've placed all your BTC under MMGen control, you'll never
-have deal with keys directly again, because MMGen generates all keys on the fly
-using the seed.
+		$ mmgen-txsign -k key_list my_tx.raw a.mmdat b.mmwords c.mmseed
 
 #### <a name=07>Send a transaction (online computer):</a>
 
-Now you're ready for the final step: broadcasting the transaction to the network.
-Copy the 'tx_*.sig' file to your online computer, start bitcoind, if it's not
-running, and execute the command:
+Now you're ready for the final step: broadcasting the transaction to the
+network.  Copy just-created signed transaction file to your online computer,
+start bitcoind and issue the command:
 
-		$ mmgen-txsend tx_1EDCBA[6.6].sig
+		$ mmgen-txsend tx_FEDCBA[6.6].sig
 
-Like all MMGen commands, 'mmgen-txsend' is interactive, so you'll be asked for
-confirmation before the transaction is actually sent.
+Like all MMGen commands, 'mmgen-txsend' is interactive, so you'll be prompted
+before the transaction is actually sent.
 
-Once the transaction's confirmed by the network, your three new MMGen addresses
-will appear on the listing of 'mmgen-txcreate -i'.  Type 'm' at the menu to
-see them displayed in MMGen format.
+Once the transaction is broadcast to the network, you can view your three new
+MMGen addresses and their balances:
+
+		$ mmgen-tool listaddresses minconf=0
+		ADDRESS        COMMENT                            BALANCE
+		89ABCDEF:2     Storage 1                          3.3
+		89ABCDEF:3     Storage 2                          3.3
+		89ABCDEF:4     Storage 3                          3.39995
+
+Your total MMGen balance will also now be visible:
+
+		$ mmgen-tool getbalance minconf=0
+		Wallet        Unconfirmed      <0 confirms      >=0 confirms
+		89ABCDEF:     0 BTC            0 BTC            9.99995 BTC
+		TOTAL:        0 BTC            0 BTC            9.99995 BTC
+
+To verify that your transaction's received its first, second, third and so forth
+confirmation, increase the 'minconf' value to 1, 2, 3 and so forth.
 
 Congratulations!  You've performed your first MMGen transaction and placed your
-first funds under MMGen's control.
+first funds under MMGen control.
 
 ### <a name=10>Additional Features</a>
 
@@ -295,9 +313,9 @@ first funds under MMGen's control.
 
 Continuing our example above, generate a mnemonic from the wallet:
 
-		$ mmgen-walletchk -m '89ABCDEF-76543210[256,3].mmdat'
+		$ mmgen-walletconv -o words '89ABCDEF-76543210[256,3].mmdat'
 		...
-		Mnemonic data saved to file '89ABCDEF.mmwords'
+		Mnemonic data written to file '89ABCDEF.mmwords'
 
 		$ cat 89ABCDEF.mmwords
 		pleasure tumble spider laughter many stumble secret bother after search
@@ -309,114 +327,139 @@ words.  You may generate a wallet with these seed lengths using the '-l'
 option to 'mmgen-walletgen'.
 
 Though some consider 128 bits of entropy to provide adequate security for the
-foreseeable future, you should stick to the default 256-bit seed length if
-you're not planning to use the mnemonic feature.
+foreseeable future, it's advisable to stick to the default 256-bit seed length
+if you're not planning to use the mnemonic feature.
 
 NOTE: MMGen mnemonics are generated from the Electrum wordlist, but using
 ordinary base conversion instead of Electrum's more complicated algorithm.
 
-Generate addresses 1-11 of seed 89ABCDEF using the mnemonic instead of the
-wallet:
+The mnemonic file may be used any place you'd use a MMGen wallet with the same
+Seed ID.  You can generate ten addresses with it just as you did with the
+wallet, for example:
 
-		$ mmgen-addrgen 89ABCDEF.mmwords 1-11
+		$ mmgen-addrgen 89ABCDEF.mmwords 1-10
 		...
-		Address data saved to file '89ABCDEF[1-11].addrs'
+		Address data written to file '89ABCDEF[1-10].addrs'
 
-Compare the first ten addresses with those earlier generated by the wallet.
-You'll see they're the same.
+The resulting address file will be identical to one generated by any wallet with
+Seed ID '89ABCDEF'.
 
-Regenerate a lost wallet using the mnemonic:
+The mnemonic can be used to regenerate a lost wallet:
 
-		$ mmgen-walletgen 89ABCDEF.mmwords
+		$ mmgen-walletconv 89ABCDEF.mmwords
 		...
-		Wallet saved to file '89ABCDEF-01234567[256,3].mmdat'
+		MMGen wallet written to file '89ABCDEF-01234567[256,3].mmdat'
 
 Note that the regenerated wallet has a different Key ID but of course the same
 Seed ID.
 
-Seed files bear the extension '.mmseed' and are listed on the command line the
-same way mnemonic files are.
+Seed files bear the extension '.mmseed' and are generated and used exactly
+the same way as mnemonic files:
 
-A seed file for a 256-bit seed looks like this:
+		$ mmgen-walletconv -o seed '89ABCDEF-76543210[256,3].mmdat'
+		...
+		Seed data written to file '89ABCDEF.mmseed'
+
+And they can also be used to regenerate a wallet:
+
+		$ mmgen-walletconv 89ABCDEF.mmseed
+		...
+		MMGen wallet written to file '89ABCDEF-23456701[256,3].mmdat'
+
+Here's a sample seed file for a 256-bit wallet:
 
 		$ cat 8B7392ED.mmseed
 		f4c84b C5ZT wWpT Jsoi wRVw 2dm9 Aftd WLb8 FggQ eC8h Szjd da9L
 
-And for a 128-bit seed:
+And for a 128-bit wallet:
 
 		$ cat 8E0DFB78.mmseed
 		0fe02f XnyC NfPH piuW dQ2d nM47 VU
 
-As you can see, the latter file is short enough to be memorized or written down
-on a scrap of paper.  From the unix command line, you can test your memory using
-the seed's checksum ("0fe02f" in this example) as follows:
+As you can see, seed files are short enough to be easily written out by hand or
+even memorized.  And their built-in checksum makes it easy to test your memory
+using a simple Unix shell command:
 
-		$ echo -n XnyC NfPH piuW dQ2d nM47 VU | tr -d ' ' |sha256sum |cut -c 1-6
+		$ echo -n XnyC NfPH piuW dQ2d nM47 VU | tr -d ' '| sha256sum | cut -c 1-6
 		0fe02f
 
-Or better yet, use 'mmgen-tool' to do the same thing:
+Or you can do the same thing with 'mmgen-tool':
 
 		$ mmgen-tool str2id6 'XnyC NfPH piuW dQ2d nM47 VU'
 		0fe02f
 
 #### <a name=12>Mnemonics and seeds — additional information:</a>
 
-With the '-m' or '-s' option, MMGen commands that take mnemonic and seed
-data may receive the data from a prompt instead of a file.
+MMGen commands that take mnemonic and seed data may receive the data from a
+prompt instead of a file.  Just omit the file name and specify the input format:
 
-MMGen commands that produce mnemonic and seed data may be forced to print it to
-standard output instead of file with the '-S' option.  This feature has
-intentionally been made optional to safeguard against looking-over-the-shoulder,
-Van Eyck phreaking and other side-channel attacks.  MMGen commands never print
-private data to the screen unless explicitly asked to.
+		$ mmgen-walletconv -i words
+		...
+		Enter mnemonic data: <type or paste your mnemonic here>
+
+With the '-S' option, MMGen commands may be requested to print wallet data to
+screen instead of a file.  To safeguard against over-the-shoulder, Van Eck
+phreaking and other side-channel attacks, you'll be prompted before this
+sensitive data is actually displayed.  MMGen never prints unencrypted private
+data to screen by default.
 
 The output of any MMGen command may be written to a directory of your choice
 using the '-d' option.  For example, on a Linux system you can use
-'-d /dev/shm' to write key and seed data to volatile memory instead of disk.
-This also has obvious security benefits, ensuring that no sensitive data
-remains on disk after your computer's been powered down.
+'-d /dev/shm' to write keys and seeds to volatile memory instead of disk,
+ensuring that no trace of this sensitive data remains once your computer's been
+powered down.
 
 #### <a name=13><a name=incog>Incognito wallets</a>
 
-A wallet exported to incognito format is indistinguishable from random data,
-allowing you to hide your wallet at an offset within a random-filled file or
-partition.  Thus both the location and nature of the data are unknown to a
-potential attacker, who in addition cannot be sure that the file or partition
-contains anything useful at all, barring any inside knowledge.
+An incognito format wallet is indistinguishable from random data, allowing you
+to hide your wallet at an offset within a random-data-filled file or partition.
+Barring any inside knowledge, a potential attacker has no way of knowing where
+the wallet is hidden, or whether the file or partition contains anything of
+interest at all for that matter.
 
 An incognito wallet with a reasonably secure password could even be hidden on
 unencrypted cloud storage.  Hiding your wallet at some offset in a 1 GB file
 increases the difficulty of any attack by a factor of one billion, assuming
-a potential attacker even knows or suspects you have an MMGen wallet hidden
-there.
+again that any potential attacker even knows or suspects you have an MMGen
+wallet hidden there.
 
 If you plan to store your incognito wallet in an insecure location such as cloud
-storage, you're advised to use a strong scrypt preset and a strong password.
-These can be changed using the 'mmgen-passchg' utility:
+storage, you're advised to use a strong scrypt (hash) preset and a strong
+password.  These can be changed using the 'mmgen-passchg' utility:
 
 		$ mmgen-passchg -p 5 89ABCDEF-01234567[256,3].mmdat
 		...
-		Hash preset has changed (3 -> 5)
-		Enter new passphrase: <my new strong passphrase>
+		Hash preset of wallet: '3'
+		Enter old passphrase for MMGen wallet: <old weak passphrase>
 		...
-		Wallet saved to file '89ABCDEF-87654321[256,5].mmdat'
-
-The new scrypt preset is indicated by the numeral '5' after the comma in the new
-wallet filename.  Now export your new strengthened wallet to incognito format:
-
-		$ mmgen-walletchk -g 89ABCDEF-87654321[256,5].mmdat
+		Hash preset changed to '5'
+		Enter new passphrase for MMGen wallet: <new strong passphrase>
 		...
-		Incognito wallet data saved to file '89ABCDEF-87654321-ECA86420[256,5].mmincog'
+		MMGen wallet written to file '89ABCDEF-87654321[256,5].mmdat'
 
-'ECA86420' is the Incog ID.  This can be used by the 'mmgen-tool' utility to
-search through a file or partition and locate your wallet if you've forgotten
-where you hid it (see below).
+The scrypt preset is the numeral in the wallet filename following the seed
+length.  As you can see, it's now changed to '5'.  Now export your new toughened
+wallet to incognito format, using the '-k' option to leave the passphrase
+unchanged:
 
-Repeat the same export operation, but output to hexadecimal:
-
-		$ mmgen-walletchk -X 89ABCDEF-87654321[256,5].mmdat
+		$ mmgen-walletconv -k -o incog 89ABCDEF-87654321[256,5].mmdat
 		...
-		Incognito wallet data saved to file '89ABCDEF-87654321-CA86420E[256,5].mmincox'
+		Reusing passphrase at user request
+		...
+		New Incog Wallet ID: ECA86420
+		...
+		Incognito data written to file '89ABCDEF-87654321-ECA86420[256,5].mmincog'
+
+Incog wallets have a special identifier, the Incog ID, which can be used to
+locate the wallet data if you've forgotten where you hid it (see the example
+below).  Naturally, an attacker could use this ID to find the data too, so it
+should be kept secret.
+
+Incog wallets can also be output to hexadecimal format:
+
+		$ mmgen-walletconv -k -o incox 89ABCDEF-87654321[256,5].mmdat
+		...
+		Hex incognito data written to file '89ABCDEF-87654321-CA86420E[256,5].mmincox'
 
 		$ cat 89ABCDEF-87654321-1EE402F4[256,5].mmincox
 		6772 edb2 10cf ad0d c7dd 484b cc7e 42e9
@@ -424,72 +467,67 @@ Repeat the same export operation, but output to hexadecimal:
 		3706 c5ce 56e0 7590 e677 6c6e 750a d057
 		b43a 21f9 82c7 6bd1 fe96 bad9 2d54 c4c0
 
-Note that the Incog ID is different here: it's generated from the init vector,
+Note that the Incog ID is different here: it's generated from an init vector,
 which is a different random number each time, making the incog data as a whole
 different as well.  This allows you to store your incog data in multiple
-insecure locations without having repeated "random" wallet data give you away.
+public locations without having repeated "random" wallet data give you away.
 
-As you can see, this data is ideally suited for a paper wallet.  Just print it
-out on a printer and you're ready to go.
+Indistinguishable from any random hex dump, this data is ideally suited for a
+paper wallet that could potentially fall into the wrong hands.
 
 Your incognito wallet (whether hex or binary) can be used just like any other
-MMGen wallet, mnemonic or seed file.  Generate addresses with it like this:
+MMGen wallet, mnemonic or seed file to generate addresses and sign transactions:
 
-		$ mmgen-addrgen 89ABCDEF-87654321-CA86420E[256,5].mmincox 100-110
+		$ mmgen-addrgen 89ABCDEF-87654321-CA86420E[256,5].mmincox 101-110
 		...
 		Generated 10 addresses
-		Addresses written to file '89ABCDEF[100-110].addrs'
-
-
-Or sign a transaction like this:
+		Addresses written to file '89ABCDEF[101-110].addrs'
 
 		$ mmgen-txsign tx_FABCDE[0.3].raw 89ABCDEF-87654321-CA86420E[256,5].mmincox
 		...
-		Signed transaction saved to file tx_FABCDE[0.3].sig
+		Signed transaction written to file tx_FABCDE[0.3].sig
 
-You can create an incognito wallet and hide it at a specified offset in a file or
-partition in one convenient operation using the '-G' ('--export-incog-hidden')
-option. Here's how you'd hide a wallet in a 1GB file filled with random data.
-First create the random file:
+##### <a name=13a><a name=incog>Hidden incognito wallets</a>
 
-		$ dd if=/dev/urandom of=random.dat bs=1K count=1M
+With the '-o hincog' option, incognito wallet data can be created and hidden at
+a specified offset in a file or partition in a single convenient operation, with
+the random file being created automatically if required.  Here's how you'd
+create a 1GB file 'random.dat' and hide a wallet in it at offset 123456789:
 
-Or better yet, use 'mmgen-tool' to do the same job but with some additional user
-entropy and a progress meter:
-
-		$ mmgen-tool -r40 rand2file random.dat 1G
-
-Now export your wallet to hidden incognito format, hiding it in this 1GB random
-file at offset 123456789:
-
-		$ mmgen-walletchk -G random.dat,123456789 89ABCDEF-87654321[256,5].mmdat
+		$ mmgen-walletconv -k -o hincog -J random.dat,123456789 89ABCDEF-87654321[256,5].mmdat
 		...
-		Incog ID: ED1F2ACB
+		New Incog Wallet ID: ED1F2ACB
+		...
+		Requested file 'random.dat' does not exist.  Create? (Y/n): Y
+		Enter file size: 1G
+		...
 		Data written to file 'random.dat' at offset 123456789
 
-The altered random file can now be uploaded to a cloud storage service, for
-example, or some other, preferably non-public, location on the Net (in a
-real-life situation you'll choose a less obvious offset than '123456789'
-though, won't you?).
+Your "random" file can now be uploaded to a cloud storage service, for example,
+or some other, preferably non-public, location on the Net (in a real-life
+situation you will choose a less obvious offset than '123456789' though, won't
+you?).
 
-If at some point in the future you download this file to recover your wallet
-data but find you've forgotten the offset, you can recover it using the saved
-Incog ID as follows:
+Now let's say at some point in the future you download this file to recover
+your wallet and realize you've forgotten the offset where the data is hidden.
+If you've saved your Incog ID, you're in luck:
 
 		$ mmgen-tool find_incog_data random.dat ED1F2ACB
 		...
 		Incog data for ID ED1F2ACB found at offset 123456789
 
-Hidden incog wallets are almost as convenient to use as ordinary ones.
+The search process can be slow, so patience is required.  In addition, on
+large files 'false positives' are a distinct possibility, in which case you'll
+need to use the 'keep_searching=1' parameter to keep going until you find the
+real offset.
+
+Hidden incog wallets are nearly as convenient to use as ordinary ones.
 Generating ten addresses with your hidden incog data is as easy as this:
 
-		$ mmgen-addrgen -G random.dat,123456789,256 32-42
+		$ mmgen-addrgen -H random.dat,123456789 101-110
 
-Use the same syntax to sign a transaction:
+Transaction signing uses the same syntax:
 
-		$ mmgen-txsign -G random.dat,123456789,256 tx_ABCDEE[0.1].raw
+		$ mmgen-txsign -H random.dat,123456789 tx_ABCDEF[0.1].raw
 		...
-		Signed transaction saved to file tx_ABCDEE[0.1].sig
-
-Note that the seed length parameter here will always be '256' unless you're
-using a non-default seed length.
+		Signed transaction written to file 'tx_ABCDEF[0.1].sig'

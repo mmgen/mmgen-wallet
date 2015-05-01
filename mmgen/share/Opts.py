@@ -39,7 +39,7 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
 	long_opts  = [i.replace("_","-") for i in long_opts]
 
-	try: cl_opts, args = getopt.getopt(argv[1:], short_opts, long_opts)
+	try: cl_opts,args = getopt.getopt(argv[1:], short_opts, long_opts)
 	except getopt.GetoptError as err:
 		print str(err); sys.exit(2)
 

@@ -26,6 +26,20 @@ import mmgen.share.Opts
 import opt
 from mmgen.util import msg,msg_r,mdie,mmsg,Msg,die,is_mmgen_wallet_label
 
+pw_note = """
+For passphrases all combinations of whitespace are equal and leading and
+trailing space is ignored.  This permits reading passphrase or brainwallet
+data from a multi-line file with free spacing and indentation.
+""".strip()
+
+bw_note = """
+BRAINWALLET NOTE:
+
+To thwart dictionary attacks, it's recommended to use a strong hash preset
+with brainwallets.  For a brainwallet passphrase to generate the correct
+seed, the same seed length and hash preset parameters must always be used.
+""".strip()
+
 def usage():
 	Msg("USAGE: %s %s" % (g.prog_name, usage_txt))
 	sys.exit(2)
@@ -175,9 +189,10 @@ def check_opts(usr_opts):       # Returns false if any check fails
 					(val,desc,n,sepword))
 			return False
 
-	def opt_compares(val,op,target,desc):
+	def opt_compares(val,op,target,desc,what=""):
+		if what: what += " "
 		if not eval("%s %s %s" % (val, op, target)):
-			msg("%s: invalid %s (not %s %s)" % (val,desc,op,target))
+			msg("%s: invalid %s (%snot %s %s)" % (val,desc,what,op,target))
 			return False
 		return True
 
@@ -212,15 +227,14 @@ def check_opts(usr_opts):       # Returns false if any check fails
 
 		desc = "parameter for '%s' option" % fmt_opt(key)
 
+		from mmgen.util import check_infile,check_outfile,check_outdir
 		# Check for file existence and readability
-		from mmgen.util import check_infile
 		if key in ('keys_from_file','mmgen_keys_from_file',
 				'passwd_file','keysforaddrs','comment_file'):
 			check_infile(val)  # exits on error
 			continue
 
 		if key == 'outdir':
-			from mmgen.util import check_outdir
 			check_outdir(val)  # exits on error
 		elif key == 'label':
 			if not is_mmgen_wallet_label(val):
@@ -244,10 +258,22 @@ def check_opts(usr_opts):       # Returns false if any check fails
 				elif issubclass(sstype,Brainwallet):
 					die(1,"Output to brainwallet format unsupported")
 		elif key in ('hidden_incog_input_params','hidden_incog_output_params'):
+			a = val.split(",")
+			if len(a) != 2:
+				opt_display(key,val)
+				msg("Option requires two comma-separated arguments")
+				return False
+			if not opt_is_int(a[1],desc): return False
 			if key == 'hidden_incog_input_params':
-				check_infile(val.split(",")[0])
+				check_infile(a[0],blkdev_ok=True)
 				key2 = 'in_fmt'
 			else:
+				import os
+				try: os.stat(a[0])
+				except:
+					b = os.path.dirname(a[0])
+					if b: check_outdir(b)
+				else: check_outfile(a[0],blkdev_ok=True)
 				key2 = 'out_fmt'
 			if hasattr(opt,key2):
 				val2 = getattr(opt,key2)
@@ -257,47 +283,22 @@ def check_opts(usr_opts):       # Returns false if any check fails
 						"Option conflict:\n  %s, with\n  %s=%s" % (
 						fmt_opt(key),fmt_opt(key2),val2
 					))
-
-		# begin OLD, deprecated
-		elif key == 'hidden_incog_params':
-			from mmgen.util import check_outfile
-			if not opt_splits(val,",",2,desc): return False
-			outfile,offset = val.split(",")
-			check_outfile(outfile)
-			w = "offset " + desc
-			if not opt_is_int(offset,w): return False
-			if not opt_compares(offset,">=",0,desc): return False
-		elif key == 'export_incog_hidden' or key == 'from_incog_hidden':
-			if key == 'from_incog_hidden':
-				if not opt_splits(val,",",3,desc): return False
-				infile,offset,seed_len = val.split(",")
-				from mmgen.util import check_infile
-				check_infile(infile)
-				w = "seed length " + desc
-				if not opt_is_int(seed_len,w): return False
-				if not opt_is_in_list(int(seed_len),g.seed_lens,w): return False
-			else:
-				from mmgen.util import check_outfile
-				if not opt_splits(val,",",2,desc): return False
-				outfile,offset = val.split(",")
-				check_outfile(outfile)
-			w = "offset " + desc
-			if not opt_is_int(offset,w): return False
-			if not opt_compares(offset,">=",0,desc): return False
-		elif key == 'from_brain':
-			if not opt_splits(val,",",2,desc): return False
-			l,p = val.split(",")
-			w = "seed length " + desc
-			if not opt_is_int(l,w): return False
-			if not opt_is_in_list(int(l),g.seed_lens,w): return False
-			w = "hash preset " + desc
-			if not opt_is_in_list(p,g.hash_presets.keys(),w): return False
-		# end OLD
 		elif key == 'seed_len':
 			if not opt_is_int(val,desc): return False
 			if not opt_is_in_list(int(val),g.seed_lens,desc): return False
 		elif key == 'hash_preset':
 			if not opt_is_in_list(val,g.hash_presets.keys(),desc): return False
+		elif key == 'brain_params':
+			a = val.split(",")
+			if len(a) != 2:
+				opt_display(key,val)
+				msg("Option requires two comma-separated arguments")
+				return False
+			d = "seed length " + desc
+			if not opt_is_int(a[0],d): return False
+			if not opt_is_in_list(int(a[0]),g.seed_lens,d): return False
+			d = "hash preset " + desc
+			if not opt_is_in_list(a[1],g.hash_presets.keys(),d): return False
 		elif key == 'usr_randchars':
 			if val == 0: continue
 			if not opt_is_int(val,desc): return False

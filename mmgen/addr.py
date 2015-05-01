@@ -26,7 +26,6 @@ from hashlib import new as hashlib_new
 from binascii import hexlify, unhexlify
 
 from mmgen.bitcoin import numtowif
-# from mmgen.util import msg,qmsg,qmsg_r,make_chksum_N,get_lines_from_file,get_data_from_file,get_extension
 from mmgen.util import *
 from mmgen.tx import *
 from mmgen.obj import *
@@ -367,10 +366,9 @@ class AddrInfo(MMGenObject):
 
 
 	def make_addrdata_chksum(self):
-		nchars = 24
 		lines=[" ".join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
 						for e in self.addrdata]
-		self.checksum = make_chksum_N(" ".join(lines), nchars, sep=True)
+		self.checksum = make_chksum_N(" ".join(lines), nchars=24, sep=True)
 
 
 	def fmt_data(self,enable_comments=False):

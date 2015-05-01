@@ -22,14 +22,9 @@ main.py - Script launcher for the MMGen suite
 
 def launch(what):
 
-	import os
-	t = "MMGEN_USE_OLD_SCRIPTS"
-	if not (t in os.environ and os.environ[t]):
-		if what in ("walletgen","walletchk","passchg"):
-			what = "wallet"
-
-	if what == "walletconv": what = "wallet"
-	if what == "keygen":     what = "addrgen"
+	if what in ("walletgen","walletchk","walletconv","passchg"):
+		what = "wallet"
+	if what == "keygen": what = "addrgen"
 
 	try: import termios
 	except: __import__("mmgen.main_" + what) # Windows

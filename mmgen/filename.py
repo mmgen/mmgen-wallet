@@ -25,7 +25,7 @@ from mmgen.util import die,get_extension,check_infile
 
 class Filename(MMGenObject):
 
-	def __init__(self,fn,ftype=None):
+	def __init__(self,fn,ftype=None,write=False):
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
 		self.basename = os.path.basename(fn)
@@ -41,10 +41,17 @@ class Filename(MMGenObject):
 				die(2,"Unrecognized extension '.%s' for file '%s'" % (self.ext,fn))
 
 		# TODO: Check for Windows
+		mode = (os.O_RDONLY,os.O_RDWR)[int(write)]
 		import stat
 		if stat.S_ISBLK(os.stat(fn).st_mode):
-			fd = os.open(fn, os.O_RDONLY)
-			self.size = os.lseek(fd, 0, os.SEEK_END)
-			os.close(fd)
+			try:
+				fd = os.open(fn, mode)
+			except OSError as e:
+				if e.errno == 13:
+					die(2,"'%s': permission denied" % fn)
+#				if e.errno != 17: raise
+			else:
+				self.size = os.lseek(fd, 0, os.SEEK_END)
+				os.close(fd)
 		else:
 			self.size = os.stat(fn).st_size

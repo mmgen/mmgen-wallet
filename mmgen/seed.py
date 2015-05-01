@@ -64,7 +64,7 @@ class SeedSource(MMGenObject):
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,ignore_in_fmt_opt=False,passchg=False):
+	def __new__(cls,fn=None,ss=None,ignore_in_fmt=False,passchg=False):
 
 		def die_on_opt_mismatch(opt,sstype):
 			opt_sstype = cls.fmt_code_to_sstype(opt)
@@ -91,7 +91,7 @@ class SeedSource(MMGenObject):
 				f  = Filename(fn,ftype="hincog")
 				sstype = cls.fmt_code_to_sstype("hincog")
 
-			if opt.in_fmt and not ignore_in_fmt_opt:
+			if opt.in_fmt and not ignore_in_fmt:
 				die_on_opt_mismatch(opt.in_fmt,sstype)
 
 			me = super(cls,cls).__new__(sstype)
@@ -109,7 +109,7 @@ class SeedSource(MMGenObject):
 
 		return me
 
-	def __init__(self,fn=None,ss=None,ignore_in_fmt_opt=False,passchg=False):
+	def __init__(self,fn=None,ss=None,ignore_in_fmt=False,passchg=False):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
@@ -692,16 +692,26 @@ class Brainwallet (SeedSourceEnc):
 	ext = "mmbrain"
 	# brainwallet warning message? TODO
 
+	def get_bw_params(self):
+		# already checked
+		a = opt.brain_params.split(",")
+		return int(a[0]),a[1]
+
 	def _deformat(self):
 		self.brainpasswd = " ".join(self.fmt_data.split())
 		return True
 
 	def _decrypt(self):
-		self._get_hash_preset()
+		d = self.ssdata
+		if hasattr(opt,"brain_params"):
+			seed_len,d.hash_preset = self.get_bw_params()
+		else:
+			self._get_hash_preset()
+			seed_len = opt.seed_len
 		vmsg_r("Hashing brainwallet data.  Please wait...")
 		# Use buflen arg of scrypt.hash() to get seed of desired length
 		seed = scrypt_hash_passphrase(self.brainpasswd, "",
-					self.ssdata.hash_preset, buflen=opt.seed_len/8)
+					d.hash_preset, buflen=seed_len/8)
 		vmsg("Done")
 		self.seed = Seed(seed)
 		msg("Seed ID: %s" % self.seed.sid)
@@ -921,8 +931,8 @@ harder to find, you're advised to choose a much larger file size than this.
 		m = ("Input","Destination")[int(action=="write")]
 		if fn.size < d.hincog_offset + d.target_data_len:
 			die(1,
-	"%s file has length %s, too short to %s %s bytes of data at offset %s"
-				% (m,fn.size,action,d.target_data_len,d.hincog_offset))
+	"%s file '%s' has length %s, too short to %s %s bytes of data at offset %s"
+				% (m,fn.name,fn.size,action,d.target_data_len,d.hincog_offset))
 
 	def _get_data(self):
 		d = self.ssdata
@@ -940,7 +950,6 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.close(fh)
 		qmsg("Data read from file '%s' at offset %s" %
 				(self.infile.name,d.hincog_offset), "Data read from file")
-
 
 	# overrides method in SeedSource
 	def write_to_file(self):
@@ -972,9 +981,10 @@ harder to find, you're advised to choose a much larger file size than this.
 			else:
 				die(1,"Exiting at user request")
 
-		self.outfile = f = Filename(fn,ftype="hincog")
+		self.outfile = f = Filename(fn,ftype=self.fmt_codes[0],write=True)
 
-		dmsg("Incog data len %s, offset %s" % (d.target_data_len,d.hincog_offset))
+		dmsg("%s data len %s, offset %s" % (
+				capfirst(self.desc),d.target_data_len,d.hincog_offset))
 
 		if check_offset:
 			self._check_valid_offset(f,"write")
@@ -985,5 +995,4 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.write(fh, self.fmt_data)
 		os.close(fh)
 		msg("%s written to file '%s' at offset %s" % (
-				capfirst(self.desc),
-				f.name,d.hincog_offset))
+				capfirst(self.desc),f.name,d.hincog_offset))

@@ -132,11 +132,11 @@ def suf(arg,suf_type):
 def get_extension(f):
 	return os.path.splitext(f)[1][1:]
 
-def make_chksum_N(s,n,sep=False):
-	if n%4 or not (4 <= n <= 64): return False
+def make_chksum_N(s,nchars,sep=False):
+	if nchars%4 or not (4 <= nchars <= 64): return False
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = " " if sep else ""
-	return sep.join([s[i*4:i*4+4] for i in range(n/4)])
+	return sep.join([s[i*4:i*4+4] for i in range(nchars/4)])
 
 def make_chksum_8(s,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
@@ -273,36 +273,43 @@ def open_file_or_exit(filename,mode):
 	return f
 
 
-def check_file_type_and_access(fname,ftype):
+def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	import os, stat
 
-	typ2,tdesc2,access,action  = (stat.S_ISLNK,"symbolic link",os.R_OK,"read")\
-	if ftype == "input file" else (stat.S_ISBLK,"block device",os.W_OK,"writ")
+	a = ((os.R_OK,"read"),(os.W_OK,"writ"))
+	access,m = a[int(ftype in ("output file","output directory"))]
 
-	if ftype == "directory":
-		typ1,typ2,tdesc = stat.S_ISDIR,stat.S_ISDIR,"directory"
-	else:
-		typ1,tdesc = stat.S_ISREG,"regular file or "+tdesc2
+	ok_types = [
+		(stat.S_ISREG,"regular file"),
+		(stat.S_ISLNK,"symbolic link")
+	]
+	if blkdev_ok: ok_types.append((stat.S_ISBLK,"block device"))
+	if ftype == "output directory": ok_types = [(stat.S_ISDIR, "output directory")]
 
 	try: mode = os.stat(fname).st_mode
 	except:
 		msg("Unable to stat requested %s '%s'" % (ftype,fname))
 		sys.exit(1)
 
-	if not (typ1(mode) or typ2(mode)):
-		msg("Requested %s '%s' is not a %s" % (ftype,fname,tdesc))
+	for t in ok_types:
+		if t[0](mode): break
+	else:
+		msg("Requested %s '%s' is not a %s" % (ftype,fname,
+				" or ".join([t[1] for t in ok_types])))
 		sys.exit(1)
 
 	if not os.access(fname, access):
-		msg("Requested %s '%s' is un%sable by you" % (ftype,fname,action))
+		msg("Requested %s '%s' is not %sable by you" % (ftype,fname,m))
 		sys.exit(1)
 
 	return True
 
-def check_infile(f):  return check_file_type_and_access(f,"input file")
-def check_outfile(f): return check_file_type_and_access(f,"output file")
-def check_outdir(f):  return check_file_type_and_access(f,"directory")
+def check_infile(f,blkdev_ok=False):
+	return check_file_type_and_access(f,"input file",blkdev_ok=blkdev_ok)
+def check_outfile(f,blkdev_ok=False):
+	return check_file_type_and_access(f,"output file",blkdev_ok=blkdev_ok)
+def check_outdir(f):  return check_file_type_and_access(f,"output directory")
 
 def _validate_addr_num(n):
 

@@ -30,15 +30,6 @@ from mmgen.util import *
 from mmgen.term import get_char
 
 crmsg = {
-	'incog_iv_id': """
-   Check that the generated Incog ID above is correct.
-   If it's not, then your incognito data is incorrect or corrupted.
-""",
-	'incog_iv_id_hidden': """
-   Check that the generated Incog ID above is correct.
-   If it's not, then your incognito data is incorrect or corrupted,
-   or you've supplied an incorrect offset.
-""",
 	'usr_rand_notice': """
 You've chosen to not fully trust your OS's random number generator and provide
 some additional entropy of your own.  Please type %s symbols on your keyboard.
@@ -47,14 +38,23 @@ use both upper and lowercase as well as punctuation and numerals.  What you
 type will not be displayed on the screen.  Note that the timings between your
 keystrokes will also be used as a source of randomness.
 """,
-	'incorrect_incog_passphrase_try_again': """
-Incorrect passphrase, hash preset, or maybe old-format incog wallet.
-Try again? (Y)es, (n)o, (m)ore information:
-""".strip(),
-	'confirm_seed_id': """
-If the seed ID above is correct but you're seeing this message, then you need
-to exit and re-run the program with the '--old-incog-fmt' option.
-""".strip(),
+# 	'incog_iv_id': """
+#    Check that the generated Incog ID above is correct.
+#    If it's not, then your incognito data is incorrect or corrupted.
+# """,
+# 	'incog_iv_id_hidden': """
+#    Check that the generated Incog ID above is correct.
+#    If it's not, then your incognito data is incorrect or corrupted,
+#    or you've supplied an incorrect offset.
+# """,
+# 	'incorrect_incog_passphrase_try_again': """
+# Incorrect passphrase, hash preset, or maybe old-format incog wallet.
+# Try again? (Y)es, (n)o, (m)ore information:
+# """.strip(),
+# 	'confirm_seed_id': """
+# If the seed ID above is correct but you're seeing this message, then you need
+# to exit and re-run the program with the '--old-incog-fmt' option.
+# """.strip(),
 }
 
 def encrypt_seed(seed, key):
@@ -209,222 +209,6 @@ def get_random(length):
 		return encrypt_data(os_rand,key,desc="random data",verify=False)
 	else:
 		return os_rand
-
-
-def get_seed_from_wallet(
-		infile,
-		desc="{pnm} wallet".format(pnm=g.proj_name),
-		silent=False
-		):
-
-	wdata = get_data_from_wallet(infile,silent=silent)
-	label,metadata,hash_preset,salt,enc_seed = wdata
-
-	if opt.debug: display_control_data(*wdata)
-
-	padd = " "+infile if opt.quiet else ""
-	passwd = get_mmgen_passphrase(desc+padd)
-
-	key = make_key(passwd, salt, hash_preset)
-
-	return decrypt_seed(enc_seed, key, metadata[0], metadata[1])
-
-
-def get_hidden_incog_data():
-		# Already sanity-checked:
-		fname,offset,seed_len = opt.from_incog_hidden.split(",")
-		qmsg("Getting hidden incog data from file '%s'" % fname)
-
-		z = 0 if opt.old_incog_fmt else 8
-		dlen = g.aesctr_iv_len + g.salt_len + (int(seed_len)/8) + z
-
-		fsize = check_data_fits_file_at_offset(fname,int(offset),dlen,"read")
-
-		import os
-		f = os.open(fname,os.O_RDONLY)
-		os.lseek(f, int(offset), os.SEEK_SET)
-		data = os.read(f, dlen)
-		os.close(f)
-		qmsg("Data read from file '%s' at offset %s" % (fname,offset),
-				"Data read from file")
-		return data
-
-def confirm_old_format():
-
-	while True:
-		reply = get_char(
-			crmsg['incorrect_incog_passphrase_try_again']+" ").strip("\n\r")
-		if not reply:       msg(""); return False
-		elif reply in 'yY': msg(""); return False
-		elif reply in 'nN': msg("\nExiting at user request"); sys.exit(1)
-		elif reply in 'mM': msg(""); return True
-		else:
-			if opt.verbose: msg("\nInvalid reply")
-			else: msg_r("\r")
-
-
-def get_seed_from_incog_wallet(
-		infile,
-		desc="{pnm} incognito wallet".format(pnm=g.proj_name),
-		silent=False,
-		hex_input=False
-	):
-
-	desc = "incognito wallet data"
-
-	if opt.from_incog_hidden:
-		d = get_hidden_incog_data()
-	else:
-		d = get_data_from_file(infile,desc)
-		if hex_input:
-			try:
-				d = unhexlify("".join(d.split()).strip())
-			except:
-				msg("Data in file '%s' is not in hexadecimal format" % infile)
-				sys.exit(2)
-		# File could be of invalid length, so check:
-		z = 0 if opt.old_incog_fmt else 8
-		valid_dlens = [i/8 + g.aesctr_iv_len + g.salt_len + z for i in g.seed_lens]
-		# New fmt: [56, 64, 72]. Old fmt: [48, 56, 64].
-		if len(d) not in valid_dlens:
-			vn = [i/8 + g.aesctr_iv_len + g.salt_len + 8 for i in g.seed_lens]
-			if len(d) in vn:
-				msg("Re-run the program without the '--old-incog-fmt' option")
-				sys.exit()
-			else: qmsg(
-			"Invalid incognito file size: %s.  Valid sizes (in bytes): %s" %
-						(len(d), " ".join([str(i) for i in valid_dlens])))
-			return False
-
-	iv, enc_incog_data = d[0:g.aesctr_iv_len], d[g.aesctr_iv_len:]
-
-	incog_id = make_iv_chksum(iv)
-	msg("Incog ID: %s (IV ID: %s)" % (incog_id,make_chksum_8(iv)))
-	qmsg("Check the applicable value against your records")
-	vmsg(crmsg['incog_iv_id_hidden' if opt.from_incog_hidden
-			else 'incog_iv_id'])
-
-	while True:
-		passwd = get_mmgen_passphrase(desc+" "+incog_id)
-
-		qmsg("Configured hash presets: %s" % " ".join(sorted(g.hash_presets)))
-		if 'hash_preset' in opt.set_by_user:
-			hp = opt.hash_preset
-		else:
-			hp = get_hash_preset_from_user(desc="incog wallet")
-
-		# IV is used BOTH to initialize counter and to salt password!
-		key = make_key(passwd, iv, hp, "wrapper key")
-		d = decrypt_data(enc_incog_data, key, int(hexlify(iv),16), "incog data")
-
-		salt,enc_seed = d[0:g.salt_len], d[g.salt_len:]
-
-		key = make_key(passwd, salt, hp, "main key")
-		vmsg("Key ID: %s" % make_chksum_8(key))
-
-		seed = decrypt_seed(enc_seed, key, "", "")
-		old_fmt_sid = make_chksum_8(seed)
-
-		def confirm_correct_seed_id(sid):
-			m = "Seed ID: %s.  Is the seed ID correct?" % sid
-			return keypress_confirm(m, True)
-
-		if opt.old_incog_fmt:
-			if confirm_correct_seed_id(old_fmt_sid):
-				break
-		else:
-			chk,seed_maybe = seed[:8],seed[8:]
-			if sha256(seed_maybe).digest()[:8] == chk:
-				msg("Passphrase and hash preset are correct")
-				seed = seed_maybe
-				break
-			elif confirm_old_format():
-				if confirm_correct_seed_id(old_fmt_sid):
-					break
-
-	msg("Valid incog data for seed ID %s" % make_chksum_8(seed))
-	return seed
-
-
-def _get_seed(infile,silent=False,seed_id=""):
-
-	ext = get_extension(infile)
-
-	if   ext == g.mn_ext:           source = "mnemonic"
-	elif ext == g.brain_ext:        source = "brainwallet"
-	elif ext == g.seed_ext:         source = "seed"
-	elif ext == g.wallet_ext:       source = "wallet"
-	elif ext == g.incog_ext:        source = "incognito wallet"
-	elif ext == g.incog_hex_ext:    source = "incognito wallet"
-	elif opt.from_mnemonic : source = "mnemonic"
-	elif opt.from_brain    : source = "brainwallet"
-	elif opt.from_seed     : source = "seed"
-	elif opt.from_incog    : source = "incognito wallet"
-	else:
-		if infile: msg(
-			"Invalid file extension for file: %s\nValid extensions: '.%s'" %
-			(infile, "', '.".join(g.seedfile_exts)))
-		else: msg("No seed source type specified and no file supplied")
-		sys.exit(2)
-
-	seed_id_str = " for seed ID "+seed_id if seed_id else ""
-	if source == "mnemonic":
-		prompt = "Enter mnemonic%s: " % seed_id_str
-		words = get_words(infile,"mnemonic data",prompt)
-		wl = get_default_wordlist()
-		from mmgen.mnemonic import get_seed_from_mnemonic
-		seed = get_seed_from_mnemonic(words,wl)
-	elif source == "brainwallet":
-		if not opt.from_brain:
-			msg("'--from-brain' parameters must be specified for brainwallet file")
-			sys.exit(2)
-		prompt = "Enter brainwallet passphrase%s: " % seed_id_str
-		words = get_words(infile,"brainwallet data",prompt)
-		seed = _get_seed_from_brain_passphrase(words)
-	elif source == "seed":
-		prompt = "Enter seed%s in %s format: " % (seed_id_str,g.seed_ext)
-		words = get_words(infile,"seed data",prompt)
-		seed = get_seed_from_seed_data(words)
-	elif source == "wallet":
-		seed = get_seed_from_wallet(infile, silent=silent)
-	elif source == "incognito wallet":
-		h = (ext == g.incog_hex_ext) or opt.from_incog_hex
-		seed = get_seed_from_incog_wallet(infile, silent=silent, hex_input=h)
-
-
-	if infile and not seed and (
-		source == "seed" or source == "mnemonic" or source == "incognito wallet"):
-		msg("Invalid %s file '%s'" % (source,infile))
-		sys.exit(2)
-
-	dmsg("Seed: %s" % hexlify(seed))
-
-	return seed
-
-
-# Repeat if entered data is invalid
-def get_seed_retry(infile,seed_id=""):
-	silent = False
-	while True:
-		seed = _get_seed(infile,silent=silent,seed_id=seed_id)
-		silent = True
-		if seed: return seed
-
-
-def _get_seed_from_brain_passphrase(words,silent=False):
-	bp = " ".join(words)
-	dmsg("Sanitized brain passphrase: %s" % bp)
-	seed_len,hash_preset = get_from_brain_opt_params()
-	dmsg("Brainwallet l = %s, p = %s" % (seed_len,hash_preset))
-	vmsg_r("Hashing brainwallet data.  Please wait...")
-	# Use buflen arg of scrypt.hash() to get seed of desired length
-	seed = scrypt_hash_passphrase(bp, "", hash_preset, buflen=seed_len/8)
-	vmsg("Done")
-
-	if not silent:
-		msg("Valid brainwallet for seed ID %s" % make_chksum_8(seed))
-
-	return seed
 
 
 # Vars for mmgen_*crypt functions only
