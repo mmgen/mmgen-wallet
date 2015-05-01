@@ -74,7 +74,14 @@ This is a workaround for a dependency issue with the package's setup script.
 If your Python is installed in a different location, you'll have to adjust the
 destination path accordingly.
 
-#### 7. Install MMGen:
+#### 7. Install the colorama Python module (optional but recommended):
+
+Grab the [tarball][14] and unpack it.  At the MSYS prompt, run:
+
+		$ cd /c/colorama-0.3.3
+		$ python setup.py install
+
+#### 8. Install MMGen:
 
 Get the [zip archive][10] from GitHub and unpack it.  At the MSYS prompt, run:
 
@@ -103,3 +110,4 @@ a new MSYS window to update your path.
 [11]: http://slproweb.com/download/Win32OpenSSL-1_0_1f.exe
 [12]: http://www.openssl.org/related/binaries.html
 [13]: Getting-Started-with-MMGen
+[14]: https://pypi.python.org/pypi/colorama

@@ -61,7 +61,7 @@ import math
 
 import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import msg,mdie,mmsg
+from mmgen.util import msg,mdie,mmsg,write_data_to_file
 
 max_version = 60000
 addrtype = 0
@@ -73,15 +73,16 @@ opts_data = {
 	'desc':    "Dump contents of a bitcoind wallet to file",
 	'usage':   "[opts] <bitcoind wallet file>",
 	'options': """
--h, --help             Print this help message
--d, --outdir=       d  Specify an alternate directory 'd' for output
--e, --echo-passphrase  Display passphrase on screen upon entry
--j, --json             Dump wallet in json format
--k, --keys             Dump all private keys (flat list)
--a, --addrs            Dump all addresses (flat list)
--K, --keysforaddrs= f  Dump private keys for addresses listed in file 'f'
--P, --passwd-file=  f  Get passphrase from file 'f'
--S, --stdout           Dump to stdout rather than file
+-h, --help             Print this help message.
+-d, --outdir=       d  Specify an alternate directory 'd' for output.
+-e, --echo-passphrase  Display passphrase on screen upon entry.
+-j, --json             Dump wallet in json format.
+-k, --keys             Dump all private keys (flat list).
+-a, --addrs            Dump all addresses (flat list).
+-K, --keysforaddrs= f  Dump private keys for addresses listed in file 'f'.
+-P, --passwd-file=  f  Get passphrase from file 'f'.
+-q, --quiet            Produce quieter output; suppress some warnings.
+-S, --stdout           Dump to stdout rather than file.
 """
 }
 
@@ -1540,9 +1541,13 @@ def read_wallet(json_db, db_env, db_file, print_wallet, print_wallet_transaction
 			mkey['vchOtherDerivationParameters'] = d['vchOtherDerivationParameters'].encode('hex')
 			json_db['mkey'] = mkey
 
-			if password == None and (opt.json or opt.keysforaddr or opt.keys):
-				from mmgen.util import get_bitcoind_passphrase
-				password = get_bitcoind_passphrase("Enter password: ")
+			if password == None and (opt.json or opt.keysforaddrs or opt.keys):
+				if opt.passwd_file:
+					from mmgen.util import get_data_from_file
+					password = get_data_from_file(opt.passwd_file).rstrip()
+				else:
+					from mmgen.util import get_bitcoind_passphrase
+					password = get_bitcoind_passphrase("Enter password: ")
 
 			if password != None:
 				global crypter
@@ -1665,9 +1670,15 @@ wallet_id = make_chksum_8(str(sorted(wallet_addrs)))
 data = "\n".join(data) + "\n"
 
 # Output data
-if opt.stdout or not sys.stdout.isatty():
-	conf = not (opt.addrs or not sys.stdout.isatty())
-	write_to_stdout(data,"secret keys",conf)
-else:
-	of = "wd_%s[%s].%s" % (wallet_id,len_arg,ext)
-	write_to_file(of, data, what, confirm_overwrite=True,verbose=True)
+of = "wd_%s[%s].%s" % (wallet_id,len_arg,ext)
+write_data_to_file(of, data, what, ask_overwrite=not opt.quiet)
+# 		outfile,
+# 		data,
+# 		desc="data",
+# 		ask_write=False,
+# 		ask_write_prompt="",
+# 		ask_write_default_yes=False,
+# 		ask_overwrite=True,
+# 		ask_tty=True,
+# 		no_tty=False,
+# 		silent=False

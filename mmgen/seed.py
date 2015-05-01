@@ -155,6 +155,8 @@ class SeedSource(MMGenObject):
 	def _decrypt_retry(self):
 		while True:
 			if self._decrypt(): break
+			if opt.passwd_file:
+				die(2,"Passphrase from password file, so exiting")
 			msg("Trying again...")
 
 	subclasses = []

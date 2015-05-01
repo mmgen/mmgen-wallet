@@ -67,7 +67,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	chk1 = make_chksum_8(key)
 	if key_id:
 		if not compare_chksums(key_id,"key ID",chk1,"computed"):
-			msg("Incorrect passphrase")
+			msg("Incorrect passphrase or hash preset")
 			return False
 
 	dec_seed = decrypt_data(enc_seed, key, iv=1, desc="seed")
@@ -83,7 +83,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 				if compare_chksums(key_id,"key ID",chk1,"computed"):
 					msg("Key ID is correct but decryption of seed failed")
 				else:
-					msg("Incorrect passphrase")
+					msg("Incorrect passphrase or hash preset")
 
 			vmsg("")
 			return False

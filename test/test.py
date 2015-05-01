@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Chdir to repo root.
 # Since script is not in repo root, fix sys.path so that modules are
@@ -8,10 +8,25 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
+scripts = (
+	"addrgen", "addrimport", "keygen",
+	"passchg", "pywallet", "tool",
+	"txcreate", "txsend", "txsign",
+	"walletchk", "walletconv", "walletgen"
+)
+
 import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import mmsg,mdie,Msg,die,capfirst
+from mmgen.util import mmsg,mdie,Msg,die,capfirst,write_data_to_file
 from mmgen.test import *
+
+if sys.platform[:3] == "win":
+	try:
+		import colorama
+		colorama.init(strip=True,convert=True)
+	except:
+		def nocolor(s): return s
+		red = green = yellow = cyan = nocolor
 
 tb_cmd = "scripts/traceback.py"
 hincog_fn      = "rand_data"
@@ -21,6 +36,7 @@ hincog_seedlen = 256
 
 incog_id_fn  = "incog_id"
 non_mmgen_fn = "btckey"
+pwfile = "passwd_file"
 
 ref_dir = os.path.join("test","ref")
 
@@ -41,6 +57,74 @@ sample_text = \
 	"The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n"
 
 cfgs = {
+	'1': {
+		'tmpdir':        os.path.join("test","tmp1"),
+		'wpasswd':       "Dorian",
+		'kapasswd':      "Grok the blockchain",
+		'addr_idx_list': "12,99,5-10,5,12", # 8 addresses
+		'dep_generators':  {
+			pwfile:        "walletgen",
+			'mmdat':       "walletgen",
+			'addrs':       "addrgen",
+			'raw':         "txcreate",
+			'sig':         "txsign",
+			'mmwords':     "export_mnemonic",
+			'mmseed':      "export_seed",
+			'mmincog':     "export_incog",
+			'mmincox':     "export_incog_hex",
+			hincog_fn:     "export_incog_hidden",
+			incog_id_fn:   "export_incog_hidden",
+			'akeys.mmenc': "keyaddrgen"
+		},
+	},
+	'2': {
+		'tmpdir':        os.path.join("test","tmp2"),
+		'wpasswd':       "Hodling away",
+		'addr_idx_list': "37,45,3-6,22-23",  # 8 addresses
+		'seed_len':      128,
+		'dep_generators': {
+			'mmdat':       "walletgen2",
+			'addrs':       "addrgen2",
+			'raw':         "txcreate2",
+			'sig':         "txsign2",
+			'mmwords':     "export_mnemonic2",
+		},
+	},
+	'3': {
+		'tmpdir':        os.path.join("test","tmp3"),
+		'wpasswd':       "Major miner",
+		'addr_idx_list': "73,54,1022-1023,2-5", # 8 addresses
+		'dep_generators': {
+			'mmdat':       "walletgen3",
+			'addrs':       "addrgen3",
+			'raw':         "txcreate3",
+			'sig':         "txsign3"
+		},
+	},
+	'4': {
+		'tmpdir':        os.path.join("test","tmp4"),
+		'wpasswd':       "Hashrate rising",
+		'addr_idx_list': "63,1004,542-544,7-9", # 8 addresses
+		'seed_len':      192,
+		'dep_generators': {
+			'mmdat':       "walletgen4",
+			'mmbrain':     "walletgen4",
+			'addrs':       "addrgen4",
+			'raw':         "txcreate4",
+			'sig':         "txsign4",
+		},
+		'bw_filename': "brainwallet.mmbrain",
+		'bw_params':   "192,1",
+	},
+	'5': {
+		'tmpdir':        os.path.join("test","tmp5"),
+		'wpasswd':       "My changed password",
+		'hash_preset':   '2',
+		'dep_generators': {
+			'mmdat':       "passchg",
+			pwfile:        "passchg",
+		},
+	},
 	'6': {
 		'name':            "reference wallet check (128-bit)",
 		'seed_len':        128,
@@ -122,75 +206,11 @@ cfgs = {
 			'akeys.mmenc': "refkeyaddrgen3"
 		},
 	},
-	'1': {
-		'tmpdir':        os.path.join("test","tmp1"),
-		'wpasswd':       "Dorian",
-		'kapasswd':      "Grok the blockchain",
-		'addr_idx_list': "12,99,5-10,5,12", # 8 addresses
-		'dep_generators':  {
-			'mmdat':       "walletgen",
-			'addrs':       "addrgen",
-			'raw':         "txcreate",
-			'sig':         "txsign",
-			'mmwords':     "export_mnemonic",
-			'mmseed':      "export_seed",
-			'mmincog':     "export_incog",
-			'mmincox':     "export_incog_hex",
-			hincog_fn:     "export_incog_hidden",
-			incog_id_fn:   "export_incog_hidden",
-			'akeys.mmenc': "keyaddrgen"
-		},
-	},
-	'2': {
-		'tmpdir':        os.path.join("test","tmp2"),
-		'wpasswd':       "Hodling away",
-		'addr_idx_list': "37,45,3-6,22-23",  # 8 addresses
-		'seed_len':      128,
-		'dep_generators': {
-			'mmdat':       "walletgen2",
-			'addrs':       "addrgen2",
-			'raw':         "txcreate2",
-			'sig':         "txsign2",
-			'mmwords':     "export_mnemonic2",
-		},
-	},
-	'3': {
-		'tmpdir':        os.path.join("test","tmp3"),
-		'wpasswd':       "Major miner",
-		'addr_idx_list': "73,54,1022-1023,2-5", # 8 addresses
-		'dep_generators': {
-			'mmdat':       "walletgen3",
-			'addrs':       "addrgen3",
-			'raw':         "txcreate3",
-			'sig':         "txsign3"
-		},
-	},
-	'4': {
-		'tmpdir':        os.path.join("test","tmp4"),
-		'wpasswd':       "Hashrate rising",
-		'addr_idx_list': "63,1004,542-544,7-9", # 8 addresses
-		'seed_len':      192,
-		'dep_generators': {
-			'mmdat':       "walletgen4",
-			'mmbrain':     "walletgen4",
-			'addrs':       "addrgen4",
-			'raw':         "txcreate4",
-			'sig':         "txsign4",
-		},
-		'bw_filename': "brainwallet.mmbrain",
-		'bw_params':   "192,1",
-	},
-	'5': {
-		'tmpdir':        os.path.join("test","tmp5"),
-		'wpasswd':       "My changed password",
-		'dep_generators': {
-			'mmdat':       "passchg",
-		},
-	},
 	'9': {
 		'tmpdir':        os.path.join("test","tmp9"),
 		'tool_enc_infn':      "tool_encrypt.in",
 #		'tool_enc_ref_infn':  "tool_encrypt_ref.in",
+		'wpasswd':         "reference password",
 		'dep_generators': {
 			'tool_encrypt.in':            "tool_encrypt",
 			'tool_encrypt.in.mmenc':      "tool_encrypt",
@@ -208,14 +228,15 @@ for a,b in ('6','11'),('7','12'),('8','13'):
 from collections import OrderedDict
 cmd_data = OrderedDict([
 #     test               description                  depends
-	['walletgen',       (1,'wallet generation',        [[[],1]])],
+	['helpscreens',     (1,'help screens',             [],1)],
+	['walletgen',       (1,'wallet generation',        [[[],1]],1)],
 #	['walletchk',       (1,'wallet check',             [[["mmdat"],1]])],
-	['passchg',         (5,'password, label and hash preset change',[[["mmdat"],1]])],
-	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[["mmdat"],5]])],
-	['addrgen',         (1,'address generation',       [[["mmdat"],1]])],
-	['addrimport',      (1,'address import',           [[["addrs"],1]])],
-	['txcreate',        (1,'transaction creation',     [[["addrs"],1]])],
-	['txsign',          (1,'transaction signing',      [[["mmdat","raw"],1]])],
+	['passchg',         (5,'password, label and hash preset change',[[["mmdat",pwfile],1]],1)],
+	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[["mmdat",pwfile],5]],1)],
+	['addrgen',         (1,'address generation',       [[["mmdat",pwfile],1]],1)],
+	['addrimport',      (1,'address import',           [[["addrs"],1]],1)],
+	['txcreate',        (1,'transaction creation',     [[["addrs"],1]],1)],
+	['txsign',          (1,'transaction signing',      [[["mmdat","raw",pwfile],1]],1)],
 	['txsend',          (1,'transaction sending',      [[["sig"],1]])],
 
 	['export_seed',     (1,'seed export to mmseed format',   [[["mmdat"],1]])],
@@ -252,6 +273,7 @@ cmd_data = OrderedDict([
 	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)", [[[cfgs['9']['tool_enc_infn'],cfgs['9']['tool_enc_infn']+".mmenc"],9]])],
 #	['tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])],
 	['tool_find_incog_data', (9,"'mmgen-tool find_incog_data'", [[[hincog_fn],1],[[incog_id_fn],1]])],
+	['pywallet', (9,"'mmgen-pywallet'", [],1)],
 ])
 
 # saved reference data
@@ -349,7 +371,7 @@ meta_cmds = OrderedDict([
 	['3', [k for k in cmd_data if cmd_data[k][0] == 3]],
 	['4', [k for k in cmd_data if cmd_data[k][0] == 4]],
 
-	['tool', ("tool_encrypt","tool_decrypt","tool_find_incog_data")],
+	['tool', ("tool_encrypt","tool_decrypt","tool_find_incog_data","pywallet")],
 
 	['saved_ref1', [c[0]+"1" for c in cmd_data_ref]],
 	['saved_ref2', [c[0]+"2" for c in cmd_data_ref]],
@@ -367,23 +389,25 @@ meta_cmds = OrderedDict([
 ])
 
 opts_data = {
+#	'sets': [('non_interactive',bool,'verbose',None)],
 	'desc': "Test suite for the MMGen suite",
 	'usage':"[options] [command(s) or metacommand(s)]",
 	'options': """
--h, --help          Print this help message
--b, --buf-keypress  Use buffered keypresses as with real human input
--d, --debug-scripts Turn on debugging output in executed scripts
+-h, --help          Print this help message.
+-b, --buf-keypress  Use buffered keypresses as with real human input.
+-d, --debug-scripts Turn on debugging output in executed scripts.
 -D, --direct-exec   Bypass pexpect and execute a command directly (for
-                    debugging only)
--e, --exact-output  Show the exact output of the MMGen script(s) being run
--l, --list-cmds     List and describe the tests and commands in the test suite
--n, --names         Display command names instead of descriptions
--p, --pause         Pause between tests, resuming on keypress
--q, --quiet         Produce minimal output.  Suppress dependency info
--s, --system        Test scripts and modules installed on system rather than
-                    those in the repo root
--t, --traceback     Run the command inside the '{tb_cmd}' script
--v, --verbose       Produce more verbose output
+                    debugging only).
+-e, --exact-output  Show the exact output of the MMGen script(s) being run.
+-l, --list-cmds     List and describe the commands in the test suite.
+-n, --names         Display command names instead of descriptions.
+-I, --non-interactive Non-interactive operation (MS Windows mode)
+-p, --pause         Pause between tests, resuming on keypress.
+-q, --quiet         Produce minimal output.  Suppress dependency info.
+-s, --system        Test scripts and modules installed on system rather
+                    than those in the repo root.
+-t, --traceback     Run the command inside the '{tb_cmd}' script.
+-v, --verbose       Produce more verbose output.
 """.format(tb_cmd=tb_cmd),
 	'notes': """
 
@@ -394,6 +418,7 @@ If no command is given, the whole suite of tests is run.
 cmd_args = opt.opts.init(opts_data)
 
 if opt.system: sys.path.pop(0)
+ni = bool(opt.non_interactive)
 
 # temporary
 #os.environ["MMGEN_USE_OLD_SCRIPTS"] = "1"
@@ -421,7 +446,8 @@ stderr_save = sys.stderr
 
 def silence():
 	if not (opt.verbose or opt.exact_output):
-		sys.stderr = open("/dev/null","a")
+		f = ("/dev/null","stderr.out")[int(sys.platform[:3] == "win")]
+		sys.stderr = open(f,"a")
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):
@@ -453,7 +479,13 @@ if opt.list_cmds:
 		Msg(fs.format(cmd,utils[cmd],w=w))
 	sys.exit()
 
-import pexpect,time,re
+import time,re
+try:
+	import pexpect
+except: # Windows
+	msg(red("MS Windows detected (or missing pexpect module).  Running in non-interactive mode"))
+	ni = True
+
 from mmgen.util import get_data_from_file,write_to_file,get_lines_from_file
 
 def my_send(p,t,delay=send_delay,s=False):
@@ -527,7 +559,7 @@ def verify_checksum_or_exit(checksum,chk):
 
 class MMGenExpect(object):
 
-	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc=""):
+	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc="",no_output=False):
 		if not opt.system:
 			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
 		desc = (cmd_data[name][1],name)[int(bool(opt.names))]
@@ -540,9 +572,11 @@ class MMGenExpect(object):
 		else:
 			msg_r("Testing %s: " % desc)
 
-		if opt.direct_exec:
-			os.system(" ".join([mmgen_cmd] + cmd_args))
-			sys.exit()
+		if opt.direct_exec or ni:
+			msg("")
+			from subprocess import check_call,check_output
+			f = (check_call,check_output)[int(no_output)]
+			f(["python", mmgen_cmd] + cmd_args)
 		else:
 			if opt.traceback:
 				cmd_args = [mmgen_cmd] + cmd_args
@@ -825,6 +859,8 @@ class MMGenTestSuite(object):
 
 	def do_cmd(self,cmd):
 
+		if ni and (len(cmd_data[cmd]) < 4 or cmd_data[cmd][3] != 1): return
+
 		d = [(str(num),ext) for exts,num in cmd_data[cmd][2] for ext in exts]
 		al = [get_file_with_ext(ext,cfgs[num]['tmpdir']) for num,ext in d]
 
@@ -839,10 +875,21 @@ class MMGenTestSuite(object):
 	def generate_cmd_deps(self,fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
+	def helpscreens(self,name):
+		for s in scripts:
+			t = MMGenExpect(name,("mmgen-"+s),["--help"],
+				extra_desc="(mmgen-%s)"%s,no_output=True)
+			if not ni:
+				t.read(); ok()
+
 	def walletgen(self,name,seed_len=None):
-		args = ["-d",cfg['tmpdir'],"-p1","-r10"]
+		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+"\n")
+		add_args = (["-r10"],
+			["-q","-r0","-L","NI Wallet","-P",get_tmpfile_fn(cfg,pwfile)])[int(ni)]
+		args = ["-d",cfg['tmpdir'],"-p1"]
 		if seed_len: args += ["-l",str(seed_len)]
-		t = MMGenExpect(name,"mmgen-walletgen", args)
+		t = MMGenExpect(name,"mmgen-walletgen", args + add_args)
+		if ni: return
 		t.license()
 		t.usr_rand(10)
 		t.passphrase_new("new MMGen wallet",cfg['wpasswd'])
@@ -868,10 +915,15 @@ class MMGenTestSuite(object):
 
 	refwalletgen1 = refwalletgen2 = refwalletgen3 = refwalletgen
 
-	def passchg(self,name,walletfile):
-
-		t = MMGenExpect(name,"mmgen-passchg",
-			["-d",cfg['tmpdir'],"-p","2","-L","New Label","-r","16",walletfile])
+	def passchg(self,name,wf,pf):
+		# ni: reuse password, since there's no way to change it non-interactively
+		silence()
+		write_to_tmpfile(cfg,pwfile,get_data_from_file(pf))
+		end_silence()
+		add_args = (["-r16"],["-q","-r0","-P",pf])[int(ni)]
+		t = MMGenExpect(name,"mmgen-passchg", add_args +
+				["-d",cfg['tmpdir'],"-p","2","-L","New Label",wf])
+		if ni: return
 		t.license()
 		t.passphrase("MMGen wallet",cfgs['1']['wpasswd'],pwtype="old")
 		t.expect_getend("Hash preset changed to ")
@@ -883,22 +935,24 @@ class MMGenTestSuite(object):
 		t.written_to_file("MMGen wallet")
 		ok()
 
-	def walletchk_beg(self,name,args):
-		t = MMGenExpect(name,"mmgen-walletchk", args)
-		t.expect("Getting MMGen wallet from file '%s'" % args[-1])
+	def walletchk(self,name,wf,pf):
+		args = ["-P",pf,"-q"] if ni and pf else []
+		hp = cfg['hash_preset'] if 'hash_preset' in cfg else '1'
+		t = MMGenExpect(name,"mmgen-walletchk", args + ["-p",hp] + [wf])
+		if ni: return
+		t.expect("Getting MMGen wallet from file '%s'" % wf)
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
 		t.expect("Passphrase is OK")
 		t.expect_getend("Valid MMGen wallet for seed ID ")
-		return t
-
-	def walletchk(self,name,walletfile):
-		self.walletchk_beg(name,[walletfile])
 		ok()
 
 	walletchk_newpass = walletchk
 
-	def addrgen(self,name,walletfile,check_ref=False):
-		t = MMGenExpect(name,"mmgen-addrgen",["-d",cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
+	def addrgen(self,name,wf,pf,check_ref=False):
+		add_args = ["-P",pf,"-q"] if ni else []
+		t = MMGenExpect(name,"mmgen-addrgen", add_args +
+				["-d",cfg['tmpdir'],wf,cfg['addr_idx_list']])
+		if ni: return
 		t.license()
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
 		t.expect("Passphrase is OK")
@@ -909,16 +963,18 @@ class MMGenTestSuite(object):
 		t.written_to_file("Addresses",oo=True)
 		ok()
 
-	def refaddrgen(self,name,walletfile):
+	def refaddrgen(self,name,wf):
 		d = " (%s-bit seed)" % cfg['seed_len']
-		self.addrgen(name,walletfile,check_ref=True)
+		self.addrgen(name,wf,pf="",check_ref=True)
 
 	refaddrgen1 = refaddrgen2 = refaddrgen3 = refaddrgen
 
 	def addrimport(self,name,addrfile):
+		add_args = ["-q","-t"] if ni else []
 		outfile = os.path.join(cfg['tmpdir'],"addrfile_w_comments")
 		add_comments_to_addr_file(addrfile,outfile)
-		t = MMGenExpect(name,"mmgen-addrimport",[outfile])
+		t = MMGenExpect(name,"mmgen-addrimport", add_args + [outfile])
+		if ni: return
 		t.expect_getend(r"Checksum for address data .*\[.*\]: ",regex=True)
 		t.expect_getend("Validating addresses...OK. ")
 		t.expect("Type uppercase 'YES' to confirm: ","\n")
@@ -976,7 +1032,13 @@ class MMGenTestSuite(object):
 		end_silence()
 		if opt.verbose or opt.exact_output: sys.stderr.write("\n")
 
-		t = MMGenExpect(name,"mmgen-txcreate",cmd_args)
+		add_args = ["-q"] if ni else []
+		if ni:
+			m = "Answer the interactive prompts as follows:\n" + \
+				" 'y', 'y', 'q', '1-8', ENTER, ENTER, ENTER, 'y'"
+			msg(green(m))
+		t = MMGenExpect(name,"mmgen-txcreate",add_args + cmd_args)
+		if ni: return
 		t.license()
 		for num in tx_data.keys():
 			t.expect_getend("Getting address data from file ")
@@ -1014,9 +1076,14 @@ class MMGenTestSuite(object):
 		add = " #" + tnum if tnum else ""
 		t.written_to_file("Signed transaction" + add)
 
-	def txsign(self,name,txfile,walletfile,save=True):
-		t = MMGenExpect(name,"mmgen-txsign",
-				["-d",cfg['tmpdir'],txfile,walletfile])
+	def txsign(self,name,txfile,wf,pf="",save=True):
+		add_args = ["-q","-P",pf] if ni else []
+		if ni:
+			m = "Answer the interactive prompts as follows:\n  ENTER, ENTER, 'y'"
+			msg(green(m))
+		t = MMGenExpect(name,"mmgen-txsign", add_args +
+				["-d",cfg['tmpdir'],txfile,wf])
+		if ni: return
 		t.license()
 		t.tx_view()
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
@@ -1088,11 +1155,11 @@ class MMGenTestSuite(object):
 		self.export_incog(
 			name,wf,desc="hidden incognito data",out_fmt="hi",add_args=add_args)
 
-	def addrgen_seed(self,name,walletfile,foo,desc="seed data",in_fmt="seed"):
+	def addrgen_seed(self,name,wf,foo,desc="seed data",in_fmt="seed"):
 		stdout = (False,True)[int(desc=="seed data")] #capture output to screen once
 		add_arg = ([],["-S"])[int(stdout)]
 		t = MMGenExpect(name,"mmgen-addrgen", add_arg +
-				["-i"+in_fmt,"-d",cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
+				["-i"+in_fmt,"-d",cfg['tmpdir'],wf,cfg['addr_idx_list']])
 		t.license()
 		t.expect_getend("Valid %s for seed ID " % desc)
 		vmsg("Comparing generated checksum with checksum from previous address file")
@@ -1130,9 +1197,9 @@ class MMGenTestSuite(object):
 		self.addrgen_incog(name,[],"",in_fmt="hi",desc="hidden incognito data",
 			args=["-H","%s,%s"%(rf,hincog_offset),"-l",str(hincog_seedlen)])
 
-	def keyaddrgen(self,name,walletfile,check_ref=False):
+	def keyaddrgen(self,name,wf,check_ref=False):
 		t = MMGenExpect(name,"mmgen-keygen",
-				["-d",cfg['tmpdir'],walletfile,cfg['addr_idx_list']])
+				["-d",cfg['tmpdir'],wf,cfg['addr_idx_list']])
 		t.license()
 		t.passphrase("MMGen wallet",cfg['wpasswd'])
 		chk = t.expect_getend(r"Checksum for key-address data .*?: ",regex=True)
@@ -1145,8 +1212,8 @@ class MMGenTestSuite(object):
 		t.written_to_file("Secret keys",oo=True)
 		ok()
 
-	def refkeyaddrgen(self,name,walletfile):
-		self.keyaddrgen(name,walletfile,check_ref=True)
+	def refkeyaddrgen(self,name,wf):
+		self.keyaddrgen(name,wf,check_ref=True)
 
 	refkeyaddrgen1 = refkeyaddrgen2 = refkeyaddrgen3 = refkeyaddrgen
 
@@ -1163,8 +1230,8 @@ class MMGenTestSuite(object):
 	def walletgen2(self,name):
 		self.walletgen(name,seed_len=128)
 
-	def addrgen2(self,name,walletfile):
-		self.addrgen(name,walletfile)
+	def addrgen2(self,name,wf):
+		self.addrgen(name,wf,pf="")
 
 	def txcreate2(self,name,addrfile):
 		self.txcreate_common(name,sources=['2'])
@@ -1178,14 +1245,14 @@ class MMGenTestSuite(object):
 			self.txsign_end(t,cnum)
 		ok()
 
-	def export_mnemonic2(self,name,walletfile):
-		self.export_mnemonic(name,walletfile)
+	def export_mnemonic2(self,name,wf):
+		self.export_mnemonic(name,wf)
 
 	def walletgen3(self,name):
 		self.walletgen(name)
 
-	def addrgen3(self,name,walletfile):
-		self.addrgen(name,walletfile)
+	def addrgen3(self,name,wf):
+		self.addrgen(name,wf,pf="")
 
 	def txcreate3(self,name,addrfile1,addrfile2):
 		self.txcreate_common(name,sources=['1','3'])
@@ -1215,8 +1282,8 @@ class MMGenTestSuite(object):
 
 	def walletgen4(self,name): self.brainwalletgen_pwfile(name)
 
-	def addrgen4(self,name,walletfile):
-		self.addrgen(name,walletfile)
+	def addrgen4(self,name,wf):
+		self.addrgen(name,wf,pf="")
 
 	def txcreate4(self,name,f1,f2,f3,f4):
 		self.txcreate_common(name,sources=['1','2','3','4'],non_mmgen_input='4')
@@ -1271,6 +1338,27 @@ class MMGenTestSuite(object):
 		o = t.expect_getend("Incog data for ID %s found at offset " % i_id)
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
+
+	def pywallet(self,name):  # TODO - check output
+		pf = get_tmpfile_fn(cfg,pwfile)
+		write_data_to_file(pf,cfg['wpasswd']+"\n",silent=True)
+		args = ["-q","-P",pf] if ni else []
+		unenc_wf = os.path.join(ref_dir,"wallet-unenc.dat")
+		enc_wf   = os.path.join(ref_dir,"wallet-enc.dat")
+		for wf,enc in (unenc_wf,False),(enc_wf,True):
+			for w,o,pk in (
+				("addresses","a",False),
+				("private keys","k",True),
+				("json dump","j",True)
+			):
+				ed = "(%sencrypted wallet, %s)" % (("un","")[int(enc)],w)
+				t = MMGenExpect(name,"mmgen-pywallet", args +
+						["-"+o,"-d",cfg['tmpdir']] + [wf], extra_desc=ed)
+				if ni: continue
+				if pk and enc and not ni:
+					t.expect("Enter password: ",cfg['wpasswd']+"\n")
+				t.written_to_file(capfirst(w),oo=True)
+				if not ni: ok()
 
 	def walletconv_out(self,name,desc,out_fmt="w",uopts=[],uopts_chk=[],pw=False):
 		opts = ["-d",cfg['tmpdir'],"-r10","-p1","-o",out_fmt] + uopts
@@ -1397,7 +1485,7 @@ class MMGenTestSuite(object):
 
 	def ref_wallet_chk(self,name):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
-		self.walletchk(name,wf)
+		self.walletchk(name,wf,pf="")
 
 	ref_wallet_chk1 = ref_wallet_chk2 = ref_wallet_chk3 = ref_wallet_chk
 

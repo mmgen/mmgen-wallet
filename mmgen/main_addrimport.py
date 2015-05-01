@@ -97,8 +97,7 @@ program now and rerun it using the '--rescan' option.  Otherwise you may ignore
 this message and continue.
 """.strip()
 
-if opt.quiet: m = ""
-confirm_or_exit(m, "continue", expect="YES")
+if not opt.quiet: confirm_or_exit(m, "continue", expect="YES")
 
 err_flag = False
 

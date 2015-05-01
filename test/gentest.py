@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # Chdir to repo root.
 # Since script is not in repo root, fix sys.path so that modules are

@@ -30,8 +30,10 @@ import mmgen.globalvars as g
 pnm = g.proj_name
 
 _red,_grn,_yel,_cya,_reset = (
-	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
-)
+	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"],
+	["","","","",""]
+)[int(sys.platform[:3] == "win")]
+
 def red(s):    return _red+s+_reset
 def green(s):  return _grn+s+_reset
 def yellow(s): return _yel+s+_reset
@@ -456,10 +458,10 @@ def write_data_to_file(
 
 		hush = False
 		if file_exists(outfile):
-			if ask_overwrite:
-				q = "File '%s' already exists\nOverwrite?" % outfile
-				confirm_or_exit("",q)
-			if not silent: msg("Overwriting file '%s'" % outfile)
+			if ask_overwrite and not silent:
+					q = "File '%s' already exists\nOverwrite?" % outfile
+					confirm_or_exit("",q)
+					msg("Overwriting file '%s'" % outfile)
 			hush = True
 
 		f = open_file_or_exit(outfile,'wb')
