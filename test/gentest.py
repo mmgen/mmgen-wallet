@@ -12,8 +12,10 @@ from binascii import hexlify
 
 import mmgen.opt as opt
 import mmgen.globalvars as g
-from mmgen.util import msg,msg_r,mmsg,mdie,red,green,vmsg
+from mmgen.util import msg,msg_r,mmsg,mdie,red,green,vmsg,start_mscolor
 from mmgen.bitcoin import hextowif,privnum2addr
+
+start_mscolor()
 
 rounds = 100
 opts_data = {

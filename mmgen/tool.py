@@ -256,8 +256,11 @@ def hexdump(infile, cols=8, line_nums=True):
 			cols=cols, line_nums=line_nums))
 
 def unhexdump(infile):
+	if sys.platform[:3] == "win":
+		import msvcrt
+		msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 	sys.stdout.write(decode_pretty_hexdump(
-				get_data_from_file(infile,dash=True,silent=True)))
+			get_data_from_file(infile,dash=True,silent=True)))
 
 def strtob58(s):
 	enc = bitcoin.b58encode(s)
@@ -566,7 +569,7 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 	bsize = 2**20
 	roll = bsize * 4
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
-	f = open(outfile,"w")
+	f = open(outfile,"wb")
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter

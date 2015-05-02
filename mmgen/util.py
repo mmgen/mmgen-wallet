@@ -29,15 +29,27 @@ import mmgen.globalvars as g
 
 pnm = g.proj_name
 
-_red,_grn,_yel,_cya,_reset = (
-	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"],
-	["","","","",""]
-)[int(sys.platform[:3] == "win")]
+_red,_grn,_yel,_cya,_reset = \
+	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
 
-def red(s):    return _red+s+_reset
-def green(s):  return _grn+s+_reset
-def yellow(s): return _yel+s+_reset
-def cyan(s):   return _cya+s+_reset
+def red(s):     return _red+s+_reset
+def green(s):   return _grn+s+_reset
+def yellow(s):  return _yel+s+_reset
+def cyan(s):    return _cya+s+_reset
+def nocolor(s): return s
+
+def start_mscolor():
+	if sys.platform[:3] == "win":
+		global red,green,yellow,cyan,nocolor
+		import os
+		if "MMGEN_NOMSCOLOR" in os.environ:
+			red = green = yellow = cyan = nocolor
+		else:
+			try:
+				import colorama
+				colorama.init(strip=True,convert=True)
+			except:
+				red = green = yellow = cyan = nocolor
 
 def msg(s):    sys.stderr.write(s+"\n")
 def msg_r(s):  sys.stderr.write(s)
@@ -484,7 +496,8 @@ def write_to_file(
 		desc="data",
 		confirm_overwrite=False,
 		verbose=False,
-		silent=False
+		silent=False,
+		mode='wb'
 	):
 
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
@@ -498,7 +511,7 @@ def write_to_file(
 		else:
 			if not silent: msg("Overwriting file '%s'" % outfile)
 
-	f = open_file_or_exit(outfile,'wb')
+	f = open_file_or_exit(outfile,mode)
 	try:
 		f.write(data)
 	except:

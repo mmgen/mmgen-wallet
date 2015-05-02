@@ -17,16 +17,11 @@ scripts = (
 
 import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import mmsg,mdie,Msg,die,capfirst,write_data_to_file
-from mmgen.test import *
+from mmgen.util import *
 
-if sys.platform[:3] == "win":
-	try:
-		import colorama
-		colorama.init(strip=True,convert=True)
-	except:
-		def nocolor(s): return s
-		red = green = yellow = cyan = nocolor
+start_mscolor()
+
+from mmgen.test import *
 
 tb_cmd = "scripts/traceback.py"
 hincog_fn      = "rand_data"
@@ -420,8 +415,8 @@ cmd_args = opt.opts.init(opts_data)
 if opt.system: sys.path.pop(0)
 ni = bool(opt.non_interactive)
 
-# temporary
-#os.environ["MMGEN_USE_OLD_SCRIPTS"] = "1"
+# Disable MS color in spawned scripts due to bad interactions
+os.environ["MMGEN_NOMSCOLOR"] = "1"
 
 if opt.debug_scripts: os.environ["MMGEN_DEBUG"] = "1"
 

@@ -27,7 +27,10 @@ def launch(what):
 	if what == "keygen": what = "addrgen"
 
 	try: import termios
-	except: __import__("mmgen.main_" + what) # Windows
+	except: # Windows
+		from mmgen.util import start_mscolor
+		start_mscolor()
+		__import__("mmgen.main_" + what)
 	else:
 		import sys,atexit
 		fd = sys.stdin.fileno()

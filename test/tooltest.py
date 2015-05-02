@@ -9,8 +9,10 @@ os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
 import mmgen.opt as opt
-from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,mmsg,mdie
+from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,mmsg,mdie,start_mscolor
 from collections import OrderedDict
+
+start_mscolor()
 
 cmd_data = OrderedDict([
 	('util', {
@@ -150,12 +152,12 @@ class MMGenToolTestSuite(object):
 		self.__class__.__dict__[cmd](*([self,cmd] + file_list))
 
 
-	def run_cmd(self,name,tool_args,kwargs="",extra_msg="",silent=False):
+	def run_cmd(self,name,tool_args,kwargs="",extra_msg="",silent=False,strip=True):
 		mmgen_tool = "mmgen-tool"
 		if not opt.system:
 			mmgen_tool = os.path.join(os.curdir,mmgen_tool)
 
-		sys_cmd = [mmgen_tool, "-d",cfg['tmpdir'], name] + tool_args + kwargs.split()
+		sys_cmd = ["python", mmgen_tool, "-d",cfg['tmpdir'], name] + tool_args + kwargs.split()
 		if extra_msg: extra_msg = "(%s)" % extra_msg
 		full_name = " ".join([name]+kwargs.split()+extra_msg.split())
 		if not silent:
@@ -166,12 +168,13 @@ class MMGenToolTestSuite(object):
 				msg_r("Testing %-31s%s" % (full_name+":",""))
 
 		import subprocess
-		return subprocess.check_output(sys_cmd)
+		ret = subprocess.check_output(sys_cmd)
+		return (ret,ret.rstrip())[int(strip)]
 
 	def run_cmd_chk(self,name,f1,f2,kwargs="",extra_msg=""):
-		idata = read_from_file(f1)[:-1]
-		odata = read_from_file(f2)[:-1]
-		ret = self.run_cmd(name,[odata],kwargs=kwargs,extra_msg=extra_msg)[:-1]
+		idata = read_from_file(f1).rstrip()
+		odata = read_from_file(f2).rstrip()
+		ret = self.run_cmd(name,[odata],kwargs=kwargs,extra_msg=extra_msg)
 		vmsg("In:   " + repr(odata))
 		vmsg("Out:  " + repr(ret))
 		if ret == idata: ok()
@@ -182,32 +185,32 @@ class MMGenToolTestSuite(object):
 		return ret
 
 	def run_cmd_nochk(self,name,f1,kwargs=""):
-		odata = read_from_file(f1)[:-1]
-		ret = self.run_cmd(name,[odata],kwargs=kwargs)[:-1]
+		odata = read_from_file(f1).rstrip()
+		ret = self.run_cmd(name,[odata],kwargs=kwargs)
 		vmsg("In:   " + repr(odata))
 		vmsg("Out:  " + repr(ret))
 		return ret
 
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs="",fn_idx="",extra_msg=""):
-		if carg: write_to_tmpfile(cfg,"%s%s.in" % (name,fn_idx),carg+"\n")
+		if carg: write_to_tmpfile(cfg,"%s%s.in" % (name,fn_idx),carg+"\n",mode='w')
 		ret = self.run_cmd(name,[carg] if carg else [],kwargs=kwargs,extra_msg=extra_msg)
 		if carg: vmsg("In:   " + repr(carg))
-		vmsg("Out:  " + repr(ret[:-1]))
+		vmsg("Out:  " + repr(ret))
 		if ret:
-			write_to_tmpfile(cfg,"%s%s.out" % (name,fn_idx),ret)
+			write_to_tmpfile(cfg,"%s%s.out" % (name,fn_idx),ret+"\n",mode='w')
 			if Return: return ret
 			else:   ok()
 		else:
 			msg(red("Error for command '%s'" % name))
 			sys.exit(3)
 
-	def run_cmd_randfileinput(self,name):
+	def run_cmd_randinput(self,name,strip=True):
 		s = os.urandom(128)
 		fn = name+".in"
 		write_to_tmpfile(cfg,fn,s)
-		ret = self.run_cmd(name,[get_tmpfile_fn(cfg,fn)])
+		ret = self.run_cmd(name,[get_tmpfile_fn(cfg,fn)],strip=strip)
 		fn = name+".out"
-		write_to_tmpfile(cfg,fn,ret)
+		write_to_tmpfile(cfg,fn,ret+"\n",mode='w')
 		ok()
 		vmsg("Returned: %s" % ret)
 
@@ -235,19 +238,19 @@ class MMGenToolTestSuite(object):
 		self.run_cmd(name,[])
 		ok()
 
-	def id6(self,name):     self.run_cmd_randfileinput(name)
-	def id8(self,name):     self.run_cmd_randfileinput(name)
-	def hexdump(self,name): self.run_cmd_randfileinput(name)
+	def id6(self,name):     self.run_cmd_randinput(name)
+	def id8(self,name):     self.run_cmd_randinput(name)
+	def hexdump(self,name): self.run_cmd_randinput(name,strip=False)
 
 	def unhexdump(self,name,fn1,fn2):
-		ret = self.run_cmd(name,[fn2])
+		ret = self.run_cmd(name,[fn2],strip=False)
 		orig = read_from_file(fn1)
 		cmp_or_die(orig,ret)
 
 	def rand2file(self,name):
 		of = name + ".out"
 		dlen = 1024
-		self.run_cmd(name,[of,str(1024),"threads=4","silent=1"])
+		self.run_cmd(name,[of,str(1024),"threads=4","silent=1"],strip=False)
 		d = read_from_tmpfile(cfg,of)
 		cmp_or_die(dlen,len(d))
 
@@ -262,14 +265,14 @@ class MMGenToolTestSuite(object):
 	def b32tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
 	def b58randenc(self,name):
 		ret = self.run_cmd_out(name,Return=True)
-		ok_or_die(ret[:-1],is_b58_str,"base 58 string")
+		ok_or_die(ret,is_b58_str,"base 58 string")
 	def randhex(self,name):
 		ret = self.run_cmd_out(name,Return=True)
-		ok_or_die(ret[:-1],binascii.unhexlify,"hex string")
+		ok_or_die(ret,binascii.unhexlify,"hex string")
 	def randwif(self,name):
 		for n,k in enumerate(["","compressed=1"]):
 			ret = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1)
-			ok_or_die(ret[:-1],is_wif,"WIF key")
+			ok_or_die(ret,is_wif,"WIF key")
 	def randpair(self,name):
 		for n,k in enumerate(["","compressed=1"]):
 			wif,addr = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1).split()

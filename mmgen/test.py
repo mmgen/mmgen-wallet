@@ -22,16 +22,8 @@ test.py:  Shared routines for the test suites
 
 import sys,os
 from binascii import hexlify
-from mmgen.util import msg,write_to_file
+from mmgen.util import msg,write_to_file,red,green
 import mmgen.opt as opt
-
-_red,_grn,_yel,_cya,_reset = (
-	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
-)
-def red(s):    return _red+s+_reset
-def green(s):  return _grn+s+_reset
-def yellow(s): return _yel+s+_reset
-def cyan(s):   return _cya+s+_reset
 
 def cleandir(d):
 	try:    files = os.listdir(d)
@@ -57,8 +49,8 @@ def mk_tmpdir(cfg):
 def get_tmpfile_fn(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 
-def write_to_tmpfile(cfg,fn,data):
-	write_to_file(os.path.join(cfg['tmpdir'],fn),data,silent=True)
+def write_to_tmpfile(cfg,fn,data,mode='wb'):
+	write_to_file(os.path.join(cfg['tmpdir'],fn),data,silent=True,mode=mode)
 
 def read_from_tmpfile(cfg,fn):
 	from mmgen.util import get_data_from_file
