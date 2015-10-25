@@ -21,7 +21,7 @@ from distutils.core import setup
 setup(
 		name         = 'mmgen',
 		description   = 'A complete Bitcoin cold-storage solution for the command line',
-		version      = '0.8.1',
+		version      = '0.8.2',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',

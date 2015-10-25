@@ -49,7 +49,7 @@ prog_name = os.path.basename(sys.argv[0])
 author    = "Philemon"
 email     = "<mmgen-py@yandex.com>"
 Cdates    = '2013-2015'
-version   = '0.8.1'
+version   = '0.8.2'
 
 required_opts = [
 	"quiet","verbose","debug","outdir","echo_passphrase","passwd_file",
