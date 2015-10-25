@@ -103,7 +103,7 @@ opts_data = {
 FMT CODES:
   {f}
 """.format(
-	f="\n  ".join(SeedSource.format_fmt_codes().split("\n")),
+	f="\n  ".join(SeedSource.format_fmt_codes().splitlines()),
 	pw_note=pw_note,
 	bw_note=("","\n\n" + bw_note)[int(bool(bw_note))]
 	)

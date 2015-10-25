@@ -155,7 +155,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	from copy import deepcopy
 	from mmgen.term import get_terminal_size
 
-	write_to_file_msg = ""
+	written_to_file_msg = ""
 	msg("")
 
 	while True:
@@ -215,8 +215,8 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		out += [fs % (str(n+1)+")",i.tx,i.vout,i.addr,i.amt,i.age)
 					for n,i in enumerate(unsp)]
 
-		msg("\n".join(out) +"\n\n" + write_to_file_msg + options_msg)
-		write_to_file_msg = ""
+		msg("\n".join(out) +"\n\n" + written_to_file_msg + options_msg)
+		written_to_file_msg = ""
 
 		skip_prompt = False
 
@@ -241,8 +241,8 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			elif reply == 'p':
 				d = format_unspent_outputs_for_printing(unsp,sort_info,total)
 				of = "listunspent[%s].out" % ",".join(sort_info)
-				write_to_file(of, d, "",False,False)
-				write_to_file_msg = "Data written to '%s'\n\n" % of
+				write_data_to_file(of,d,"unspent outputs listing")
+				written_to_file_msg = "Data written to '%s'\n\n" % of
 			elif reply == 'v':
 				do_pager("\n".join(out))
 				continue
@@ -390,7 +390,8 @@ if g.bogus_wallet_data:  # for debugging purposes only
 	us = eval(get_data_from_file(g.bogus_wallet_data))
 else:
 	us = c.listunspent()
-#	write_to_file("bogus_unspent.json", repr(us)); sys.exit()
+#	write_data_to_file("bogus_unspent.json", repr(us), "bogus unspent data")
+#	sys.exit()
 
 if not us: msg(wmsg['no_spendable_outputs']); sys.exit(2)
 for o in us:
@@ -470,10 +471,7 @@ b2m_map = make_b2m_map(sel_unspent,tx_out,ail_w,ail_f)
 prompt_and_view_tx_data(c,"View decoded transaction?",
 		sel_unspent,tx_hex,b2m_map,comment,metadata)
 
-if keypress_confirm("Save transaction?",default_yes=False):
-	outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
-	data = make_tx_data("{} {} {}".format(*metadata),
-				tx_hex,sel_unspent,b2m_map,comment)
-	write_to_file(outfile,data,"transaction",False,True)
-else:
-	msg("Transaction not saved")
+outfile = "tx_%s[%s].%s" % (tx_id,amt,g.rawtx_ext)
+data = make_tx_data("{} {} {}".format(*metadata),
+			tx_hex,sel_unspent,b2m_map,comment)
+write_data_to_file(outfile,data,"transaction",ask_write_default_yes=False)

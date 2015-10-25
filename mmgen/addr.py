@@ -176,7 +176,7 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 
 def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 
-	if buf: lines = remove_comments(buf.split("\n"))
+	if buf: lines = remove_comments(buf.splitlines()) # DOS-safe
 	else:   lines = get_lines_from_file(fn,"address data",trim_comments=True)
 
 	try:
@@ -190,7 +190,7 @@ def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 		elif cbrace != '}':
 			errmsg = "'%s': invalid last line" % cbrace
 		elif not is_mmgen_seed_id(sid):
-			errmsg = "'%s': invalid seed ID" % sid
+			errmsg = "'%s': invalid Seed ID" % sid
 		else:
 			ret = _parse_addrfile_body(lines[1:-1],has_keys)
 			if type(ret) == list: return sid,ret
@@ -203,14 +203,9 @@ def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 		return False
 
 
-def _parse_keyaddr_file(infile):
-	d = get_data_from_file(infile,"{pnm} key-address file data".format(pnm=pnm))
-	enc_ext = get_extension(infile) == g.mmenc_ext
-	if enc_ext or not is_utf8(d):
-		m = "Decrypting" if enc_ext else "Attempting to decrypt"
-		msg("%s key-address file %s" % (m,infile))
-		from crypto import mmgen_decrypt_retry
-		d = mmgen_decrypt_retry(d,"key-address file")
+def _parse_keyaddr_file(fn):
+	from mmgen.crypto import mmgen_decrypt_file_maybe
+	d = mmgen_decrypt_file_maybe(fn,"key-address file")
 	return _parse_addrfile("",buf=d,has_keys=True,exit_on_error=False)
 
 

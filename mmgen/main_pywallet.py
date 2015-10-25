@@ -61,7 +61,7 @@ import math
 
 import mmgen.globalvars as g
 import mmgen.opt as opt
-from mmgen.util import msg,mdie,mmsg,write_data_to_file
+from mmgen.util import msg
 
 max_version = 60000
 addrtype = 0
@@ -1664,7 +1664,7 @@ len_arg = "%s" % len(wallet_addrs) \
 	if len(data) == len(wallet_addrs) or ext == "json" \
 		else "%s:%s" % (len(data),len(wallet_addrs))
 
-from mmgen.util import make_chksum_8,write_to_file,write_to_stdout
+from mmgen.util import make_chksum_8,write_data_to_file
 wallet_id = make_chksum_8(str(sorted(wallet_addrs)))
 
 data = "\n".join(data) + "\n"

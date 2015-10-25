@@ -32,6 +32,7 @@ opts_data = {
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
+-P, --passwd-file= f  Get passphrase from file 'f'.
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
@@ -45,7 +46,12 @@ command
 """.format(tool.cmd_help,g.prog_name)
 }
 
-cmd_args = opt.opts.init(opts_data,add_opts=["no_keyconv"])
+cmd_args = opt.opts.init(opts_data,
+	add_opts=[
+		"no_keyconv",
+		"hidden_incog_input_params",
+		"in_fmt"
+		])
 
 if len(cmd_args) < 1:
 	opt.opts.usage()

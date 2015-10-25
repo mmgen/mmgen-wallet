@@ -63,9 +63,7 @@ if keypress_confirm("Edit transaction comment?"):
 	comment = get_tx_comment_from_user(comment)
 	data = make_tx_data("{} {} {}".format(*metadata), tx_hex,
 				inputs_data, b2m_map, comment)
-	w = "signed transaction with edited comment"
-	outfile = infile
-	write_to_file(outfile,data,w,False,True,True)
+	write_data_to_file(infile,data,"signed transaction with edited comment")
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 action = "broadcast this transaction to the network"
@@ -86,4 +84,4 @@ except:
 msg("Transaction sent: %s" % tx_id)
 
 of = "tx_{}[{}].txid".format(*metadata[:2])
-write_to_file(of, tx_id+"\n","transaction ID",True,True)
+write_data_to_file(of, tx_id+"\n","transaction ID",ask_overwrite=True)

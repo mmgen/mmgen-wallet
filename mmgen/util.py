@@ -29,11 +29,12 @@ import mmgen.globalvars as g
 
 pnm = g.proj_name
 
-_red,_grn,_yel,_cya,_reset = \
-	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0"]
+_red,_grn,_yel,_cya,_reset,_grnbg = \
+	["\033[%sm" % c for c in "31;1","32;1","33;1","36;1","0","30;102"]
 
 def red(s):     return _red+s+_reset
 def green(s):   return _grn+s+_reset
+def grnbg(s):    return _grnbg+s+_reset
 def yellow(s):  return _yel+s+_reset
 def cyan(s):    return _cya+s+_reset
 def nocolor(s): return s
@@ -43,13 +44,13 @@ def start_mscolor():
 		global red,green,yellow,cyan,nocolor
 		import os
 		if "MMGEN_NOMSCOLOR" in os.environ:
-			red = green = yellow = cyan = nocolor
+			red = green = yellow = cyan = grnbg = nocolor
 		else:
 			try:
 				import colorama
 				colorama.init(strip=True,convert=True)
 			except:
-				red = green = yellow = cyan = nocolor
+				red = green = yellow = cyan = grnbg = nocolor
 
 def msg(s):    sys.stderr.write(s+"\n")
 def msg_r(s):  sys.stderr.write(s)
@@ -144,7 +145,12 @@ def suf(arg,suf_type):
 		return "" if n == 1 else "s"
 
 def get_extension(f):
-	return os.path.splitext(f)[1][1:]
+	a,b = os.path.splitext(f)
+	return ('',b[1:])[int(len(b) > 1)]
+
+def remove_extension(f,e):
+	a,b = os.path.splitext(f)
+	return (f,a)[int(len(b) > 1 and b[1:] == e)]
 
 def make_chksum_N(s,nchars,sep=False):
 	if nchars%4 or not (4 <= nchars <= 64): return False
@@ -208,6 +214,11 @@ def is_utf8(s):
 	except: return False
 	else: return True
 
+def is_ascii(s):
+	try: s.decode("ascii")
+	except: return False
+	else: return True
+
 def match_ext(addr,ext):
 	return addr.split(".")[-1] == ext
 
@@ -235,7 +246,8 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 
 def decode_pretty_hexdump(data):
 	from string import hexdigits
-	lines = [re.sub('^['+hexdigits+']+:\s+','',l) for l in data.split("\n")]
+	pat = r'^[%s]+:\s+' % hexdigits
+	lines = [re.sub(pat,'',l) for l in data.splitlines()]
 	try:
 		return unhexlify("".join(("".join(lines).split())))
 	except:
@@ -270,20 +282,12 @@ def compare_or_die(val1, desc1, val2, desc2, e="Error"):
 	dmsg("%s OK (%s)" % (capfirst(desc2),val2))
 	return True
 
-def get_default_wordlist():
-
-	wl_id = g.default_wordlist
-	if wl_id == "electrum": from mmgen.mn_electrum import words as wl
-	elif wl_id == "tirosh": from mmgen.mn_tirosh   import words as wl
-	return wl.strip().split("\n")
-
 def open_file_or_exit(filename,mode):
 	try:
 		f = open(filename, mode)
 	except:
-		op = "reading" if 'r' in mode else "writing"
-		msg("Unable to open file '%s' for %s" % (filename,op))
-		sys.exit(2)
+		op = ("writing","reading")[int('r' in mode)]
+		die(2,"Unable to open file '%s' for %s" % (filename,op))
 	return f
 
 
@@ -408,19 +412,6 @@ def confirm_or_exit(message, question, expect="YES"):
 		die(2,"Exiting at user request")
 
 
-def write_to_stdout(data, desc, ask_terminal=True):
-	if sys.stdout.isatty() and ask_terminal:
-		confirm_or_exit("",'output {} to screen'.format(desc))
-	elif not sys.stdout.isatty():
-		try:
-			of = os.readlink("/proc/%d/fd/1" % os.getpid())
-			of_maybe = os.path.relpath(of)
-			of = of if of_maybe.find(os.path.pardir) == 0 else of_maybe
-			msg("Redirecting output to file '%s'" % of)
-		except:
-			msg("Redirecting output to file")
-	sys.stdout.write(data)
-
 # New function
 def write_data_to_file(
 		outfile,
@@ -428,19 +419,26 @@ def write_data_to_file(
 		desc="data",
 		ask_write=False,
 		ask_write_prompt="",
-		ask_write_default_yes=False,
+		ask_write_default_yes=True,
 		ask_overwrite=True,
 		ask_tty=True,
 		no_tty=False,
-		silent=False
+		silent=False,
+		binary=False
 	):
-	if opt.stdout or not sys.stdout.isatty():
+
+	if silent: ask_tty = ask_overwrite = False
+	if opt.quiet: ask_overwrite = False
+
+	if ask_write_default_yes == False or ask_write_prompt:
+		ask_write = True
+
+	if opt.stdout or not sys.stdout.isatty() or outfile in ('','-'):
 		qmsg("Output to STDOUT requested")
-		write_ok = False
 		if sys.stdout.isatty():
 			if no_tty:
 				die(2,"Printing %s to screen is not allowed" % desc)
-			if ask_tty:
+			if ask_tty and not opt.quiet:
 				confirm_or_exit("",'output %s to screen' % desc)
 		else:
 			try:    of = os.readlink("/proc/%d/fd/1" % os.getpid()) # Linux
@@ -450,7 +448,7 @@ def write_data_to_file(
 				if of[:5] == "pipe:":
 					if no_tty:
 						die(2,"Writing %s to pipe is not allowed" % desc)
-					if ask_tty:
+					if ask_tty and not opt.quiet:
 						confirm_or_exit("",'output %s to pipe' % desc)
 						msg("")
 				of2,pd = os.path.relpath(of),os.path.pardir
@@ -459,137 +457,40 @@ def write_data_to_file(
 			else:
 				msg("Redirecting output to file")
 
+		if binary and sys.platform[:3] == "win":
+			import msvcrt
+			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
+
 		sys.stdout.write(data)
 	else:
 		if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
 
 		if ask_write:
+			if not ask_write_prompt: ask_write_prompt = "Save %s?" % desc
 			if not keypress_confirm(ask_write_prompt,
 						default_yes=ask_write_default_yes):
-				die(1,"Exiting at user request")
+				die(1,"%s not saved" % capfirst(desc))
 
 		hush = False
-		if file_exists(outfile):
-			if ask_overwrite and not silent:
-					q = "File '%s' already exists\nOverwrite?" % outfile
-					confirm_or_exit("",q)
-					msg("Overwriting file '%s'" % outfile)
+		if file_exists(outfile) and ask_overwrite:
+			q = "File '%s' already exists\nOverwrite?" % outfile
+			confirm_or_exit("",q)
+			msg("Overwriting file '%s'" % outfile)
 			hush = True
 
-		f = open_file_or_exit(outfile,'wb')
+		f = open_file_or_exit(outfile,'w'+('','b')[int(binary)])
 		try:
 			f.write(data)
 		except:
-			if not silent: msg("Failed to write %s to file '%s'" % (desc,outfile))
-			sys.exit(2)
+			die(2,"Failed to write %s to file '%s'" % (desc,outfile))
 		f.close
 
-		if not hush:
+		if not (hush or silent):
 			msg("%s written to file '%s'" % (capfirst(desc),outfile))
 
 		return True
 
-
-def write_to_file(
-		outfile,
-		data,
-		desc="data",
-		confirm_overwrite=False,
-		verbose=False,
-		silent=False,
-		mode='wb'
-	):
-
-	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
-
-	try:    os.stat(outfile)
-	except: pass
-	else:
-		if confirm_overwrite:
-			q = "File '%s' already exists\nOverwrite?" % outfile
-			confirm_or_exit("",q)
-		else:
-			if not silent: msg("Overwriting file '%s'" % outfile)
-
-	f = open_file_or_exit(outfile,mode)
-	try:
-		f.write(data)
-	except:
-		if not silent: msg("Failed to write %s to file '%s'" % (desc,outfile))
-		sys.exit(2)
-	f.close
-
-	if verbose: msg("%s written to file '%s'" % (capfirst(desc),outfile))
-	return True
-
-
-def write_to_file_or_stdout(outfile, data,  desc="data"):
-
-	if opt.stdout or not sys.stdout.isatty():
-		write_to_stdout(data, desc)
-	else:
-		write_to_file(outfile,data,desc,not opt.quiet,True)
-
-
 from mmgen.bitcoin import b58decode_pad,b58encode_pad
-
-def display_control_data(label,metadata,hash_preset,salt,enc_seed):
-	Msg("WALLET DATA")
-	fs = "  {:18} {}"
-	pw_empty = "yes" if metadata[3] == "E" else "no"
-	for i in (
-		("Label:",               label),
-		("Seed ID:",             metadata[0].upper()),
-		("Key  ID:",             metadata[1].upper()),
-		("Seed length:",         "%s bits (%s bytes)" %
-				(metadata[2],int(metadata[2])/8)),
-		("Scrypt params:",  "Preset '%s' (%s)" % (hash_preset,
-				" ".join([str(i) for i in get_hash_params(hash_preset)]))),
-		("Passphrase empty?", pw_empty.capitalize()),
-		("Timestamp:",           "%s UTC" % metadata[4]),
-	): Msg(fs.format(*i))
-
-	fs = "  {:6} {}"
-	for i in (
-		("Salt:",    ""),
-		("  b58:",      b58encode_pad(salt)),
-		("  hex:",      hexlify(salt)),
-		("Encrypted seed:", ""),
-		("  b58:",      b58encode_pad(enc_seed)),
-		("  hex:",      hexlify(enc_seed))
-	): Msg(fs.format(*i))
-
-
-def write_wallet_to_file(seed, passwd, key_id, salt, enc_seed):
-
-	seed_id = make_chksum_8(seed)
-	seed_len = str(len(seed)*8)
-	pw_status = "NE" if len(passwd) else "E"
-	hash_preset = opt.hash_preset
-	label = opt.label or "No Label"
-	metadata = seed_id.lower(),key_id.lower(),seed_len,\
-		pw_status,make_timestamp()
-	sf  = b58encode_pad(salt)
-	esf = b58encode_pad(enc_seed)
-
-	lines = (
-		label,
-		"{} {} {} {} {}".format(*metadata),
-		"{}: {} {} {}".format(hash_preset,*get_hash_params(hash_preset)),
-		"{} {}".format(make_chksum_6(sf),  split_into_cols(4,sf)),
-		"{} {}".format(make_chksum_6(esf), split_into_cols(4,esf))
-	)
-
-	chk = make_chksum_6(" ".join(lines))
-	outfile="{}-{}[{},{}].{}".format(
-		seed_id,key_id,seed_len,hash_preset,g.wallet_ext)
-
-	d = "\n".join((chk,)+lines)+"\n"
-	write_to_file(outfile,d,"wallet",not opt.quiet,True)
-
-	if opt.debug:
-		display_control_data(label,metadata,hash_preset,salt,enc_seed)
-
 
 def _check_mmseed_format(words):
 
@@ -638,50 +539,6 @@ def _check_chksum_6(chk,val,desc,infile):
 	dmsg("%s checksum passed: %s" % (capfirst(desc),chk))
 
 
-def get_data_from_wallet(infile,silent=False):
-
-	# Don't make this a qmsg: User will be prompted for passphrase and must see
-	# the filename.
-	if not silent and not opt.quiet:
-		msg("Getting {pnm} wallet data from file '{f}'".format(pnm=pnm,f=infile))
-
-	f = open_file_or_exit(infile, 'r')
-
-	lines = [i.strip() for i in f.readlines()]
-	f.close()
-
-	_check_wallet_format(infile, lines)
-
-	label = lines[1]
-
-	metadata = lines[2].split()
-
-	for i in 0,1: metadata[i] = metadata[i].upper()
-
-	hd = lines[3].split()
-	hash_preset = hd[0][:-1]
-	hash_params = [int(i) for i in hd[1:]]
-
-	if hash_params != get_hash_params(hash_preset):
-		msg("Hash parameters '%s' don't match hash preset '%s'" %
-				(" ".join(hash_params), hash_preset))
-		sys.exit(9)
-
-	res = {}
-	for i,key in (4,"salt"),(5,"enc_seed"):
-		l = lines[i].split()
-		val = "".join(l[1:])
-		_check_chksum_6(l[0], val, key, infile)
-		res[key] = b58decode_pad(val)
-		if res[key] == False:
-			msg("Invalid b58 number: %s" % val)
-			sys.exit(9)
-
-	_check_chksum_6(lines[0], " ".join(lines[1:]), "Master", infile)
-
-	return label,metadata,hash_preset,res['salt'],res['enc_seed']
-
-
 def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
@@ -719,7 +576,7 @@ def get_lines_from_file(infile,desc="",trim_comments=False):
 	if desc != "":
 		qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile,'r')
-	lines = f.read().splitlines()
+	lines = f.read().splitlines() # DOS-safe
 	f.close()
 	return remove_comments(lines) if trim_comments else lines
 
@@ -729,11 +586,11 @@ def get_data_from_user(desc="data",silent=False):
 	dmsg("User input: [%s]" % data)
 	return data
 
-def get_data_from_file(infile,desc="data",dash=False,silent=False):
+def get_data_from_file(infile,desc="data",dash=False,silent=False,binary=False):
 	if dash and infile == "-": return sys.stdin.read()
 	if not silent:
 		qmsg("Getting %s from file '%s'" % (desc,infile))
-	f = open_file_or_exit(infile,'rb')
+	f = open_file_or_exit(infile,'r'+('','b')[int(binary)])
 	data = f.read()
 	f.close()
 	return data
@@ -757,7 +614,7 @@ def get_seed_from_seed_data(words):
 			msg("Invalid b58 number: %s" % val)
 			return False
 
-		msg("Valid seed data for seed ID %s" % make_chksum_8(seed))
+		msg("Valid seed data for Seed ID %s" % make_chksum_8(seed))
 		return seed
 	else:
 		msg("Invalid checksum for {pnm} seed".format(pnm=pnm))
@@ -787,8 +644,7 @@ def get_mmgen_passphrase(desc,passchg=False):
 def get_bitcoind_passphrase(prompt):
 	if opt.passwd_file:
 		pwfile_reuse_warning()
-		return get_data_from_file(opt.passwd_file,
-				"passphrase").strip("\r\n")
+		return get_data_from_file(opt.passwd_file,"passphrase").strip("\r\n")
 	else:
 		return my_raw_input(prompt, echo=opt.echo_passphrase)
 

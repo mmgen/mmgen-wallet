@@ -252,8 +252,9 @@ def usage(cmd):
 help = usage
 
 def hexdump(infile, cols=8, line_nums=True):
-	Msg(pretty_hexdump(get_data_from_file(infile,dash=True,silent=True),
-			cols=cols, line_nums=line_nums))
+	Msg(pretty_hexdump(
+			get_data_from_file(infile,dash=True,silent=True,binary=True),
+				cols=cols,line_nums=line_nums))
 
 def unhexdump(infile):
 	if sys.platform[:3] == "win":
@@ -316,42 +317,54 @@ def wif2addr(wif,compressed=False):
 	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
 	Vmsg_r("Addr: "); Msg(addr)
 
-from mmgen.mnemonic import *
+wordlists = "electrum","tirosh"
+dfl_wordlist = "electrum"
 
-def mn_rand128(wordlist="electrum"): do_random_mn(16,wordlist)
-def mn_rand192(wordlist="electrum"): do_random_mn(24,wordlist)
-def mn_rand256(wordlist="electrum"): do_random_mn(32,wordlist)
+from mmgen.seed import Mnemonic
+def do_random_mn(nbytes,wordlist):
+	hexrand = ba.hexlify(get_random(nbytes))
+	Vmsg("Seed: %s" % hexrand)
+	for wlname in (wordlists if wordlist == "all" else [wordlist]):
+		if wordlist == "all":
+			Msg("%s mnemonic:" % (wlname.capitalize()))
+		mn = Mnemonic.hex2mn(hexrand,wordlist=wlname)
+		Msg(" ".join(mn))
 
-def hex2mn(s,wordlist="electrum"):
-	import mmgen.mnemonic
-	wl = get_wordlist(wordlist)
-	Msg(" ".join(get_mnemonic_from_seed(ba.unhexlify(s), wl, wordlist)))
+def mn_rand128(wordlist=dfl_wordlist): do_random_mn(16,wordlist)
+def mn_rand192(wordlist=dfl_wordlist): do_random_mn(24,wordlist)
+def mn_rand256(wordlist=dfl_wordlist): do_random_mn(32,wordlist)
 
-def mn2hex(s,wordlist="electrum"):
-	import mmgen.mnemonic
-	wl = get_wordlist(wordlist)
-	Msg(ba.hexlify(get_seed_from_mnemonic(s.split(),wl,True)))
+def hex2mn(s,wordlist=dfl_wordlist):
+	mn = Mnemonic.hex2mn(s,wordlist)
+	Msg(" ".join(mn))
+
+def mn2hex(s,wordlist=dfl_wordlist):
+	hexnum = Mnemonic.mn2hex(s.split(),wordlist)
+	Msg(hexnum)
 
 def b32tohex(s):
 	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-	import mmgen.mnemonic
-	Msg(baseNtohex(32,s,b32a))
+	Msg(Mnemonic.baseNtohex(32,s,b32a))
 
 def hextob32(s):
 	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-	import mmgen.mnemonic
-	Msg("".join(hextobaseN(32,s,b32a)))
+	Msg("".join(Mnemonic.hextobaseN(32,s,b32a)))
 
-def mn_stats(wordlist="electrum"):
-	l = get_wordlist(wordlist)
-	check_wordlist(l,wordlist)
+def mn_stats(wordlist=dfl_wordlist):
+	Mnemonic.check_wordlist(wordlist)
 
-def mn_printlist(wordlist="electrum"):
-	wl = get_wordlist(wordlist)
+def mn_printlist(wordlist=dfl_wordlist):
+	wl = Mnemonic.get_wordlist(wordlist)
 	Msg("\n".join(wl))
 
-def id8(infile): Msg(make_chksum_8(get_data_from_file(infile,dash=True,silent=True)))
-def id6(infile): Msg(make_chksum_6(get_data_from_file(infile,dash=True,silent=True)))
+def id8(infile):
+	Msg(make_chksum_8(
+		get_data_from_file(infile,dash=True,silent=True,binary=True)
+	))
+def id6(infile):
+	Msg(make_chksum_6(
+		get_data_from_file(infile,dash=True,silent=True,binary=True)
+	))
 def str2id6(s):  Msg(make_chksum_6("".join(s.split())))
 
 # List MMGen addresses and their balances:
@@ -478,7 +491,7 @@ def hexlify(s):
 
 def sha256x2(s, file_input=False, hex_input=False):
 	from hashlib import sha256
-	if file_input:  b = get_data_from_file(s)
+	if file_input:  b = get_data_from_file(s,binary=True)
 	elif hex_input: b = decode_pretty_hexdump(s)
 	else:           b = s
 	Msg(sha256(sha256(b).digest()).hexdigest())
@@ -506,32 +519,27 @@ def hex2wif(hexpriv,compressed=False):
 
 
 def encrypt(infile,outfile="",hash_preset=""):
-	data = get_data_from_file(infile,"data for encryption")
+	data = get_data_from_file(infile,"data for encryption",binary=True)
 	enc_d = mmgen_encrypt(data,"user data",hash_preset)
-	if outfile == '-':
-		write_to_stdout(enc_d,"encrypted data")
-	else:
-		if not outfile:
-			outfile = os.path.basename(infile) + "." + g.mmenc_ext
-		write_to_file(outfile,enc_d,"encrypted data",True,True)
+	if not outfile:
+		outfile = "%s.%s" % (os.path.basename(infile),g.mmenc_ext)
+
+	write_data_to_file(outfile,enc_d,"encrypted data",binary=True)
 
 
 def decrypt(infile,outfile="",hash_preset=""):
-	enc_d = get_data_from_file(infile,"encrypted data")
+	enc_d = get_data_from_file(infile,"encrypted data",binary=True)
 	while True:
 		dec_d = mmgen_decrypt(enc_d,"user data",hash_preset)
 		if dec_d: break
 		msg("Trying again...")
-	if outfile == '-':
-		write_to_stdout(dec_d,"decrypted data",ask_terminal=not opt.quiet)
-	else:
-		if not outfile:
-			outfile = os.path.basename(infile)
-			if outfile[-len(g.mmenc_ext)-1:] == "."+g.mmenc_ext:
-				outfile = outfile[:-len(g.mmenc_ext)-1]
-			else:
-				outfile = outfile + ".dec"
-		write_to_file(outfile, dec_d, "decrypted data",True,True)
+
+	if not outfile:
+		o = os.path.basename(infile)
+		outfile = remove_extension(o,g.mmenc_ext)
+		if outfile == o: outfile += ".dec"
+
+	write_data_to_file(outfile,dec_d,"decrypted data",binary=True)
 
 
 def find_incog_data(filename,iv_id,keep_searching=False):
@@ -618,4 +626,4 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 	q2.join()
 	f.close()
 
-def bytespec(s): Msg(parse_nbytes(s))
+def bytespec(s): Msg(str(parse_nbytes(s)))

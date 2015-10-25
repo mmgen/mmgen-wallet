@@ -9,7 +9,7 @@ os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
 import mmgen.opt as opt
-from mmgen.util import msg,msg_r,vmsg,vmsg_r,Msg,mmsg,mdie,start_mscolor
+from mmgen.util import *
 from collections import OrderedDict
 
 start_mscolor()
@@ -108,9 +108,7 @@ if opt.list_cmds:
 
 import binascii
 from mmgen.test import *
-from mmgen.util import get_data_from_file,write_to_file,get_lines_from_file
 from mmgen.tx import is_wif,is_btc_addr,is_b58_str
-from mmgen.mnemonic import get_seed_from_mnemonic
 
 class MMGenToolTestSuite(object):
 
@@ -192,12 +190,12 @@ class MMGenToolTestSuite(object):
 		return ret
 
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs="",fn_idx="",extra_msg=""):
-		if carg: write_to_tmpfile(cfg,"%s%s.in" % (name,fn_idx),carg+"\n",mode='w')
+		if carg: write_to_tmpfile(cfg,"%s%s.in" % (name,fn_idx),carg+"\n")
 		ret = self.run_cmd(name,[carg] if carg else [],kwargs=kwargs,extra_msg=extra_msg)
 		if carg: vmsg("In:   " + repr(carg))
 		vmsg("Out:  " + repr(ret))
 		if ret:
-			write_to_tmpfile(cfg,"%s%s.out" % (name,fn_idx),ret+"\n",mode='w')
+			write_to_tmpfile(cfg,"%s%s.out" % (name,fn_idx),ret+"\n")
 			if Return: return ret
 			else:   ok()
 		else:
@@ -207,10 +205,10 @@ class MMGenToolTestSuite(object):
 	def run_cmd_randinput(self,name,strip=True):
 		s = os.urandom(128)
 		fn = name+".in"
-		write_to_tmpfile(cfg,fn,s)
+		write_to_tmpfile(cfg,fn,s,binary=True)
 		ret = self.run_cmd(name,[get_tmpfile_fn(cfg,fn)],strip=strip)
 		fn = name+".out"
-		write_to_tmpfile(cfg,fn,ret+"\n",mode='w')
+		write_to_tmpfile(cfg,fn,ret+"\n")
 		ok()
 		vmsg("Returned: %s" % ret)
 
@@ -244,14 +242,14 @@ class MMGenToolTestSuite(object):
 
 	def unhexdump(self,name,fn1,fn2):
 		ret = self.run_cmd(name,[fn2],strip=False)
-		orig = read_from_file(fn1)
+		orig = read_from_file(fn1,binary=True)
 		cmp_or_die(orig,ret)
 
 	def rand2file(self,name):
 		of = name + ".out"
 		dlen = 1024
 		self.run_cmd(name,[of,str(1024),"threads=4","silent=1"],strip=False)
-		d = read_from_tmpfile(cfg,of)
+		d = read_from_tmpfile(cfg,of,binary=True)
 		cmp_or_die(dlen,len(d))
 
 	def strtob58(self,name):       self.run_cmd_out(name,getrandstr(16))
@@ -297,8 +295,8 @@ class MMGenToolTestSuite(object):
 		for n,fi,fo,m in (1,f1,f2,""),(2,f3,f4,"from compressed"):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
 	def privhex2addr(self,name,f1,f2):
-		key1 = read_from_file(f1)
-		key2 = read_from_file(f2)
+		key1 = read_from_file(f1).rstrip()
+		key2 = read_from_file(f2).rstrip()
 		for n,args in enumerate([[key1],[key2,"compressed=1"]]):
 			ret = self.run_cmd(name,args).rstrip()
 			iaddr = read_from_tmpfile(cfg,"randpair%s.out" % (n+1)).split()[-1]

@@ -28,9 +28,9 @@ def print_help(opts_data):
 	print ("  %-"+pn_len+"s %s") % (pn.upper()+":", opts_data['desc'].strip())
 	print ("  %-"+pn_len+"s %s %s")%("USAGE:", pn, opts_data['usage'].strip())
 	sep = "\n    "
-	print "  OPTIONS:"+sep+"%s" % sep.join(opts_data['options'].strip().split("\n"))
+	print "  OPTIONS:"+sep+"%s" % sep.join(opts_data['options'].strip().splitlines())
 	if "notes" in opts_data:
-		print "  %s" % "\n  ".join(opts_data['notes'][1:-1].split("\n"))
+		print "  %s" % "\n  ".join(opts_data['notes'][1:-1].splitlines())
 
 
 def process_opts(argv,opts_data,short_opts,long_opts):
@@ -86,7 +86,7 @@ def parse_opts(argv,opts_data,opt_filter=None):
 	pat = r"^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{2,64})(=| )(.+)"
 	od,skip = [],True
 
-	for l in opts_data['options'].strip().split("\n"):
+	for l in opts_data['options'].strip().splitlines():
 		m = re.match(pat,l)
 		if m:
 			skip = True if (opt_filter and m.group(1) not in opt_filter) else False

@@ -76,7 +76,7 @@ for e in ai.addrdata:
 		msg("%s: invalid address" % e.addr)
 		sys.exit(2)
 
-m = (" from seed ID %s" % ai.seed_id) if ai.seed_id else ""
+m = (" from Seed ID %s" % ai.seed_id) if ai.seed_id else ""
 qmsg("OK. %s addresses%s" % (ai.num_addrs,m))
 
 g.http_timeout = 3600

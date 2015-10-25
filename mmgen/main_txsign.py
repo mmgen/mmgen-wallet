@@ -101,7 +101,7 @@ Seed data supplied in files must have the following extensions:
 FMT CODES:
   {f}
 """.format(
-		f="\n  ".join(SeedSource.format_fmt_codes().split("\n")),
+		f="\n  ".join(SeedSource.format_fmt_codes().splitlines()),
 		g=g,pnm=pnm,pnl=pnl
 	)
 }
@@ -126,11 +126,11 @@ def get_seed_for_seed_id(seed_id,infiles,saved_seeds):
 		if infiles:
 			ss = SeedSource(infiles.pop(0),ignore_in_fmt=True)
 		elif opt.in_fmt:
-			qmsg("Need seed data for seed ID %s" % seed_id)
+			qmsg("Need seed data for Seed ID %s" % seed_id)
 			ss = SeedSource()
-			msg("User input produced seed ID %s" % make_chksum_8(seed))
+			msg("User input produced Seed ID %s" % make_chksum_8(seed))
 		else:
-			msg("ERROR: No seed source found for seed ID: %s" % seed_id)
+			msg("ERROR: No seed source found for Seed ID: %s" % seed_id)
 			sys.exit(2)
 
 		saved_seeds[ss.seed.sid] = ss.seed.data
@@ -229,7 +229,7 @@ for the following non-{pnm} address{suf}:\n    {l}""".format(
 def parse_mmgen_keyaddr_file():
 	from mmgen.addr import AddrInfo
 	ai = AddrInfo(opt.mmgen_keys_from_file,has_keys=True)
-	vmsg("Found %s wif key%s for seed ID %s" %
+	vmsg("Found %s wif key%s for Seed ID %s" %
 			(ai.num_addrs, suf(ai.num_addrs,"k"), ai.seed_id))
 	# idx: (0=addr, 1=comment 2=wif) -> mmaddr: (0=addr, 1=wif)
 	return dict(
@@ -238,14 +238,10 @@ def parse_mmgen_keyaddr_file():
 
 def parse_keylist(from_file):
 	fn = opt.keys_from_file
-	d = get_data_from_file(fn,"non-{pnm} keylist".format(pnm=pnm))
-	enc_ext = get_extension(fn) == g.mmenc_ext
-	if enc_ext or not is_utf8(d):
-		if not enc_ext: qmsg("Keylist file appears to be encrypted")
-		from crypto import mmgen_decrypt_retry
-		d = mmgen_decrypt_retry(d,"encrypted keylist")
-	# Check for duplication with key-address file
-	keys_all = set(remove_comments(d.split("\n")))
+	from mmgen.crypto import mmgen_decrypt_file_maybe
+	dec = mmgen_decrypt_file_maybe(fn,"non-{} keylist file".format(pnm))
+	# Remove possible dups from key-address file
+	keys_all = set(remove_comments(dec.splitlines())) # DOS-safe
 	d = from_file['mmdata']
 	kawifs = [d[k][1] for k in d.keys()]
 	keys = [k for k in keys_all if k not in kawifs]
@@ -359,7 +355,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 
 	extra_sids = set(saved_seeds.keys()) - sids
 	if extra_sids:
-		msg("Unused seed ID%s: %s" %
+		msg("Unused Seed ID%s: %s" %
 			(suf(extra_sids,"k")," ".join(extra_sids)))
 
 	# Begin signing
@@ -378,13 +374,16 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		if keypress_confirm("Edit transaction comment?"):
 			comment = get_tx_comment_from_user(comment)
 		outfile = "tx_%s[%s].%s" % (metadata[0],metadata[1],g.sigtx_ext)
-		data = make_tx_data("{} {} {t}".format(*metadata[:2], t=make_timestamp()),
-				sig_tx['hex'], inputs_data, b2m_map, comment)
-		w = "signed transaction{}".format(tx_num_str)
-		if keypress_confirm("Save signed transaction?",default_yes=False):
-			write_to_file(outfile,data,w,(not opt.quiet),True,False)
-		else:
-			msg("Signed transaction not saved")
+		data = make_tx_data(
+				"{} {} {t}".format(*metadata[:2],
+				t=make_timestamp()),
+				sig_tx['hex'], inputs_data, b2m_map, comment
+			)
+		write_data_to_file(
+			outfile,data,
+			"signed transaction{}".format(tx_num_str),
+			ask_write_prompt="Save signed transaction?"
+		)
 	else:
 		msg_r("failed\nSome keys were missing.  ")
 		msg("Transaction %scould not be signed." % tx_num_str)

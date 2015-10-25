@@ -52,7 +52,7 @@ keystrokes will also be used as a source of randomness.
 # Try again? (Y)es, (n)o, (m)ore information:
 # """.strip(),
 # 	'confirm_seed_id': """
-# If the seed ID above is correct but you're seeing this message, then you need
+# If the Seed ID above is correct but you're seeing this message, then you need
 # to exit and re-run the program with the '--old-incog-fmt' option.
 # """.strip(),
 }
@@ -75,7 +75,7 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 	chk2 = make_chksum_8(dec_seed)
 
 	if seed_id:
-		if compare_chksums(seed_id,"seed ID",chk2,"decrypted seed"):
+		if compare_chksums(seed_id,"Seed ID",chk2,"decrypted seed"):
 			qmsg("Passphrase is OK")
 		else:
 			if not opt.debug:
@@ -245,6 +245,15 @@ def mmgen_decrypt(data,desc="data",hash_preset=""):
 	else:
 		msg("Incorrect passphrase or hash preset")
 		return False
+
+def mmgen_decrypt_file_maybe(fn,desc):
+	d = get_data_from_file(fn,"{} data".format(desc),binary=True)
+	have_enc_ext = get_extension(fn) == g.mmenc_ext
+	if have_enc_ext or not is_ascii(d):
+		m = ("Attempting to decrypt","Decrypting")[int(have_enc_ext)]
+		msg("%s %s %s" % (m,desc,fn))
+		d = mmgen_decrypt_retry(d,desc)
+	return d
 
 def mmgen_decrypt_retry(d,desc="data"):
 	while True:

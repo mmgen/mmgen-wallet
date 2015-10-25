@@ -22,7 +22,7 @@ test.py:  Shared routines for the test suites
 
 import sys,os
 from binascii import hexlify
-from mmgen.util import msg,write_to_file,red,green
+from mmgen.util import msg,write_data_to_file,red,green
 import mmgen.opt as opt
 
 def cleandir(d):
@@ -49,16 +49,20 @@ def mk_tmpdir(cfg):
 def get_tmpfile_fn(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 
-def write_to_tmpfile(cfg,fn,data,mode='wb'):
-	write_to_file(os.path.join(cfg['tmpdir'],fn),data,silent=True,mode=mode)
+def write_to_tmpfile(cfg,fn,data,binary=False):
+	write_data_to_file(
+		os.path.join(cfg['tmpdir'],fn),
+		data,
+		silent=True,
+		binary=binary
+	)
 
-def read_from_tmpfile(cfg,fn):
+def read_from_file(fn,binary=False):
 	from mmgen.util import get_data_from_file
-	return get_data_from_file(os.path.join(cfg['tmpdir'],fn),silent=True)
+	return get_data_from_file(fn,silent=True,binary=binary)
 
-def read_from_file(fn):
-	from mmgen.util import get_data_from_file
-	return get_data_from_file(fn,silent=True)
+def read_from_tmpfile(cfg,fn,binary=False):
+	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
 
 def ok():
 	if opt.verbose or opt.exact_output:

@@ -56,6 +56,7 @@ class Seed(MMGenObject):
 class SeedSource(MMGenObject):
 
 	desc = g.proj_name + " seed source"
+	file_mode = "text"
 	stdin_ok = False
 	ask_tty = True
 	no_tty  = False
@@ -64,7 +65,8 @@ class SeedSource(MMGenObject):
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,ignore_in_fmt=False,passchg=False):
+	def __new__(cls,fn=None,ss=None,seed=None,
+				ignore_in_fmt=False,passchg=False):
 
 		def die_on_opt_mismatch(opt,sstype):
 			opt_sstype = cls.fmt_code_to_sstype(opt)
@@ -104,12 +106,13 @@ class SeedSource(MMGenObject):
 		else: # Called with no inputs - initialize with random seed
 			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
 			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
-			me.seed = Seed()
+			me.seed = Seed(seed_bin=seed or None)
 			me.op = "new"
 
 		return me
 
-	def __init__(self,fn=None,ss=None,ignore_in_fmt=False,passchg=False):
+	def __init__(self,fn=None,ss=None,seed=None,
+					ignore_in_fmt=False,passchg=False):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
@@ -132,12 +135,13 @@ class SeedSource(MMGenObject):
 			self._deformat_retry()
 			self._decrypt_retry()
 
-		m = (""," length %s" % self.seed.length)[int(self.seed.length != 256)]
-		qmsg("Valid %s for seed ID %s%s" % (self.desc,self.seed.sid,m))
+		m = ("",", seed length %s" % self.seed.length)[int(self.seed.length != 256)]
+		qmsg("Valid %s for Seed ID %s%s" % (self.desc,self.seed.sid,m))
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
-			self.fmt_data = get_data_from_file(self.infile.name,self.desc)
+			self.fmt_data = get_data_from_file(self.infile.name,self.desc,
+								binary=self.file_mode=="binary")
 		else:
 			self.fmt_data = get_data_from_user(self.desc)
 
@@ -204,12 +208,17 @@ class SeedSource(MMGenObject):
 			] + sorted(d)]
 		return "\n".join(ret) + "\n"
 
+	def get_fmt_data(self):
+		self._format()
+		return self.fmt_data
+
 	def write_to_file(self):
 		self._format()
 		kwargs = {
 			'desc':     self.desc,
 			'ask_tty':  self.ask_tty,
-			'no_tty':   self.no_tty
+			'no_tty':   self.no_tty,
+			'binary':   self.file_mode == "binary"
 		}
 		write_data_to_file(self._filename(),self.fmt_data,**kwargs)
 
@@ -358,43 +367,70 @@ class Mnemonic (SeedSourceUnenc):
 	mn_base = 1626
 	wordlists = sorted(wl_checksums)
 
-	def _mn2hex_pad(self,mn): return len(mn) * 8 / 3
-	def _hex2mn_pad(self,hexnum): return len(hexnum) * 3 / 8
+	@staticmethod
+	def _mn2hex_pad(mn): return len(mn) * 8 / 3
 
-	def _baseNtohex(self,base,words,wl,pad=0):
+	@staticmethod
+	def _hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
+
+	@staticmethod
+	def baseNtohex(base,words,wl,pad=0):
 		deconv =  [wl.index(words[::-1][i])*(base**i)
 					for i in range(len(words))]
 		ret = ("{:0%sx}" % pad).format(sum(deconv))
 		return ('','0')[len(ret) % 2] + ret
 
-	def _hextobaseN(self,base,hexnum,wl,pad=0):
+	@staticmethod
+	def hextobaseN(base,hexnum,wl,pad=0):
 		num,ret = int(hexnum,16),[]
 		while num:
 			ret.append(num % base)
 			num /= base
 		return [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 
-	def _get_wordlist(self,wordlist=g.default_wordlist):
-		wordlist = wordlist.lower()
-		if wordlist not in self.wordlists:
+	@classmethod
+	def hex2mn(cls,hexnum,wordlist):
+		wl = cls.get_wordlist(wordlist)
+		return cls.hextobaseN(cls.mn_base,hexnum,wl,cls._hex2mn_pad(hexnum))
+
+	@classmethod
+	def mn2hex(cls,mn,wordlist):
+		wl = cls.get_wordlist(wordlist)
+		return cls.baseNtohex(cls.mn_base,mn,wl,cls._mn2hex_pad(mn))
+
+	@classmethod
+	def get_wordlist(cls,wordlist=None):
+		wordlist = wordlist or g.default_wordlist
+		if wordlist not in cls.wordlists:
 			die(1,'"%s": invalid wordlist.  Valid choices: %s' %
-				(wordlist,'"'+'" "'.join(self.wordlists)+'"'))
+				(wordlist,'"'+'" "'.join(cls.wordlists)+'"'))
 
-		if wordlist == "electrum":
-			from mmgen.mn_electrum  import words
-		elif wordlist == "tirosh":
-			from mmgen.mn_tirosh    import words
+		return __import__("mmgen.mn_"+wordlist,fromlist=["words"]).words.split()
+
+	@classmethod
+	def check_wordlist(cls,wlname):
+
+		wl = cls.get_wordlist(wlname)
+		Msg("Wordlist: %s\nLength: %i words" % (capfirst(wlname),len(wl)))
+		new_chksum = sha256(" ".join(wl)).hexdigest()[:8]
+
+		if (sorted(wl) == wl):
+			Msg("List is sorted")
 		else:
-			die(3,"Internal error: unknown wordlist")
+			die(3,"ERROR: List is not sorted!")
 
-		return words.strip().split("\n")
+		compare_chksums(
+			new_chksum,"generated checksum",
+			cls.wl_checksums[wlname],"saved checksum",
+			die_on_fail=True)
+		Msg("Checksum %s matches" % new_chksum)
 
 	def _format(self):
-		wl = self._get_wordlist()
+		wl = self.get_wordlist()
 		seed_hex = self.seed.hexdata
-		mn = self._hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
+		mn = self.hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
-		ret = self._baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		ret = self.baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
 		# Internal error, so just die on fail
 		compare_or_die(ret,"recomputed seed",
 						seed_hex,"original",e="Internal error")
@@ -405,7 +441,7 @@ class Mnemonic (SeedSourceUnenc):
 	def _deformat(self):
 
 		mn = self.fmt_data.split()
-		wl = self._get_wordlist()
+		wl = self.get_wordlist()
 
 		if len(mn) not in g.mn_lens:
 			msg("Invalid mnemonic (%i words).  Allowed numbers of words: %s" %
@@ -417,9 +453,9 @@ class Mnemonic (SeedSourceUnenc):
 				msg("Invalid mnemonic: word #%s is not in the wordlist" % n)
 				return False
 
-		seed_hex = self._baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		seed_hex = self.baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
 
-		ret = self._hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
+		ret = self.hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
 		# Internal error, so just die
 		compare_or_die(" ".join(ret),"recomputed mnemonic",
@@ -580,7 +616,7 @@ class Wallet (SeedSourceEnc):
 
 			return True
 
-		lines = self.fmt_data.rstrip().split("\n")
+		lines = self.fmt_data.splitlines()
 		if not check_master_chksum(lines,self.desc): return False
 
 		d = self.ssdata
@@ -723,6 +759,7 @@ class Brainwallet (SeedSourceEnc):
 
 class IncogWallet (SeedSourceEnc):
 
+	file_mode = "binary"
 	fmt_codes = "mmincog","incog","icg","i"
 	desc = "incognito data"
 	ext = "mmincog"
@@ -742,7 +779,7 @@ Incorrect passphrase, hash preset, or maybe old-format incog wallet.
 Try again? (Y)es, (n)o, (m)ore information:
 """.strip(),
 		'confirm_seed_id': """
-If the seed ID above is correct but you're seeing this message, then you need
+If the Seed ID above is correct but you're seeing this message, then you need
 to exit and re-run the program with the '--old-incog-fmt' option.
 """.strip(),
 		'dec_chk': " %s hash preset"
@@ -841,7 +878,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 			return False
 
 	def _verify_seed_oldfmt(self,seed):
-		m = "Seed ID: %s.  Is the seed ID correct?" % make_chksum_8(seed)
+		m = "Seed ID: %s.  Is the Seed ID correct?" % make_chksum_8(seed)
 		if keypress_confirm(m, True):
 			return seed
 		else:
@@ -878,6 +915,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 class IncogWalletHex (IncogWallet):
 
+	file_mode = "text"
 	desc = "hex incognito data"
 	fmt_codes = "mmincox","incox","incog_hex","xincog","ix","xi"
 	ext = "mmincox"

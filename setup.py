@@ -37,7 +37,6 @@ setup(
 			'mmgen.filename',
 			'mmgen.license',
 			'mmgen.mn_electrum',
-			'mmgen.mnemonic',
 			'mmgen.mn_tirosh',
 			'mmgen.obj',
 			'mmgen.opts',

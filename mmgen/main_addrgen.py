@@ -92,7 +92,7 @@ FMT CODES:
   {f}
 """.format(
 		n=note1,
-		f="\n  ".join(SeedSource.format_fmt_codes().split("\n")),
+		f="\n  ".join(SeedSource.format_fmt_codes().splitlines()),
 		o=opt.opts
 	)
 }
