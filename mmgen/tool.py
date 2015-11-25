@@ -75,7 +75,7 @@ cmd_data = OrderedDict([
 	("mn_printlist", ['wordlist [str="electrum"]']),
 
 
-	("listaddresses",['minconf [int=1]','showempty [bool=False]','pager [bool=False]']),
+	("listaddresses",['minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddr [bool=False]']),
 	("getbalance",   ['minconf [int=1]']),
 	("txview",       ['<{pnm} tx file> [str]','pager [bool=False]','terse [bool=False]'.format(pnm=pnm)]),
 
@@ -368,52 +368,68 @@ def id6(infile):
 def str2id6(s):  Msg(make_chksum_6("".join(s.split())))
 
 # List MMGen addresses and their balances:
-def listaddresses(minconf=1,showempty=False,pager=False):
+def listaddresses(minconf=1,showempty=False,pager=False,showbtcaddr=False):
 	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
 	c = connect_to_bitcoind()
 
 	addrs = {}
+	from decimal import Decimal
+	total = Decimal('0')
 	for d in c.listunspent(0):
-		ma,comment = split2(d.account)
-		if is_mmgen_addr(ma) and d.confirmations >= minconf:
-			key = "_".join(ma.split(":"))
-			if key not in addrs: addrs[key] = [0,comment]
+		mmaddr,comment = split2(d.account)
+		if is_mmgen_addr(mmaddr) and d.confirmations >= minconf:
+			key = mmaddr.replace(':','_')
+			if key in addrs:
+				if addrs[key][2] != d.address:
+					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
+							(d.address, addrs[key][2])))
+			else:
+				addrs[key] = [0,comment,d.address]
 			addrs[key][0] += d.amount
+			total += d.amount
 
+	# We use listaccounts only for empty addresses, as it shows false positive balances
 	if showempty:
-		# Show accts with not enough confirmations as empty!
-		# A feature, not a bug!
 		accts = c.listaccounts(minconf=0,includeWatchonly=True,as_dict=True)
-		for k in accts.keys():
-			ma,comment = split2(k)
-			if is_mmgen_addr(ma) and accts[k] == 0:
-				key = "_".join(ma.split(":"))
-				if key not in addrs: addrs[key] = [0,comment]
+		for a in accts:
+			mmaddr,comment = split2(a)
+			if is_mmgen_addr(mmaddr):
+				key = mmaddr.replace(':','_')
+				if key not in addrs:
+					if showbtcaddr:
+						tmp = c.getaddressesbyaccount(a)
+						if len(tmp) != 1:
+							die(2,"Account '%s' has more or less than one BTC address!" % a)
+						baddr = tmp[0]
+					else:
+						baddr = ''
+					addrs[key] = [0,comment,baddr]
 
 	if not addrs:
 		if showempty:
-			msg("No tracked addresses!")
+			msg('No tracked addresses!')
 		else:
-			msg("No addresses with balances!")
+			msg('No addresses with balances!')
 		sys.exit(1)
 
-	fs = "%-{}s  %-{}s   %s".format(
-		max([len(k) for k in addrs.keys()]),
-		max([len(str(addrs[k][1])) for k in addrs.keys()])
+	fs = '%-{}s %-{}s %-{}s %s'.format(
+		max(len(k) for k in addrs),
+		(0,36)[showbtcaddr],
+		max(len(addrs[k][1]) for k in addrs) + 1
 	)
-	out = [ fs % ("ADDRESS","COMMENT","BALANCE") ]
 
-	def s_mmgen(ma):
-		return "{}:{:>0{w}}".format(w=g.mmgen_idx_max_digits, *ma.split("_"))
+	def s_mmgen(key):
+		return '{}:{:>0{w}}'.format(w=g.mmgen_idx_max_digits, *key.split('_'))
 
-	old_sid = ""
-	for k in sorted(addrs.keys(),key=s_mmgen):
-		sid,num = k.split("_")
-		if old_sid and old_sid != sid: out.append("")
-		old_sid = sid
-		out.append(fs % (sid+":"+num, addrs[k][1], trim_exponent(addrs[k][0])))
+	out = []
+	for k in sorted(addrs,key=s_mmgen):
+		if out and k.split('_')[0] != out[-1].split(':')[0]: out.append('')
+		baddr = ' ' + addrs[k][2] if showbtcaddr else ''
+		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], trim_exponent(addrs[k][0])))
 
-	o = "\n".join(out)
+	o = (fs + '\n%s\nTOTAL: %s BTC') % (
+			'ADDRESS','','COMMENT','BALANCE', '\n'.join(out), trim_exponent(total)
+		)
 	if pager: do_pager(o)
 	else: Msg(o)
 

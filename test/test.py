@@ -292,9 +292,9 @@ cmd_group['ref'] = (
 	('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
 	('ref_brain_chk',  ([],'saved brainwallet')),
 	# generating new reference ('abc' brainwallet) files:
- 	('refwalletgen',   ([],'gen new refwallet')),
- 	('refaddrgen',     (["mmdat",pwfile],'new refwallet addr chksum')),
- 	('refkeyaddrgen',  (["mmdat",pwfile],'new refwallet key-addr chksum'))
+	('refwalletgen',   ([],'gen new refwallet')),
+	('refaddrgen',     (["mmdat",pwfile],'new refwallet addr chksum')),
+	('refkeyaddrgen',  (["mmdat",pwfile],'new refwallet key-addr chksum'))
 )
 
 # misc. saved reference data
