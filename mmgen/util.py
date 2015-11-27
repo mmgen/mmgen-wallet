@@ -327,25 +327,19 @@ def check_infile(f,blkdev_ok=False):
 	return check_file_type_and_access(f,"input file",blkdev_ok=blkdev_ok)
 def check_outfile(f,blkdev_ok=False):
 	return check_file_type_and_access(f,"output file",blkdev_ok=blkdev_ok)
-def check_outdir(f):  return check_file_type_and_access(f,"output directory")
-
-def _validate_addr_num(n):
-
-	try: n = int(n)
-	except:
-		msg("'%s': addr index must be an integer" % n)
-		return False
-
-	if n < 1:
-		msg("'%s': addr index must be greater than zero" % n)
-		return False
-
-	return n
-
+def check_outdir(f):
+	return check_file_type_and_access(f,"output directory")
 
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
+def _validate_addr_num(n):
+	from mmgen.tx import is_mmgen_idx
+	if is_mmgen_idx(n):
+		return int(n)
+	else:
+		msg("'%s': invalid %s address index" % (n,g.proj_name))
+		return False
 
 def parse_addr_idxs(arg,sep=","):
 
@@ -365,11 +359,11 @@ def parse_addr_idxs(arg,sep=","):
 			end = _validate_addr_num(j[1])
 			if not end: return False
 			if end < beg:
-				msg("'%s-%s': end of range less than beginning" % (beg,end))
+				msg("'%s-%s': invalid range (end is less than beginning)" % (beg,end))
 				return False
 			ret.extend(range(beg,end+1))
 		else:
-			msg("'%s': invalid argument for address range" % i)
+			msg("'%s': invalid address range argument" % i)
 			return False
 
 	return sorted(set(ret))

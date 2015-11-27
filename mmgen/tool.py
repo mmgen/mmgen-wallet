@@ -75,7 +75,7 @@ cmd_data = OrderedDict([
 	("mn_printlist", ['wordlist [str="electrum"]']),
 
 
-	("listaddresses",['minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddr [bool=False]']),
+	("listaddresses",['addrs [str='']','minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
 	("getbalance",   ['minconf [int=1]']),
 	("txview",       ['<{pnm} tx file> [str]','pager [bool=False]','terse [bool=False]'.format(pnm=pnm)]),
 
@@ -135,8 +135,8 @@ cmd_help = """
       * The encrypted file is indistinguishable from random data
 
   {pnm}-specific operations:
-  add_label          - add descriptive label for {pnm} address in tracking wallet
-  remove_label       - remove descriptive label from {pnm} address in tracking wallet
+  add_label    - add descriptive label for {pnm} address in tracking wallet
+  remove_label - remove descriptive label for {pnm} address in tracking wallet
   addrfile_chksum    - compute checksum for {pnm} address file
   keyaddrfile_chksum - compute checksum for {pnm} key-address file
   find_incog_data    - Use an Incog ID to find hidden incognito wallet data
@@ -188,16 +188,14 @@ def process_args(prog_name, command, cmd_args):
 #	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
 
 	if set(u_kwargs) > set(c_kwargs):
-		Msg("Invalid named argument")
-		sys.exit(1)
+		die(1,"Invalid named argument")
 
 	def convert_type(arg,arg_name,arg_type):
 		try:
 			return __builtins__[arg_type](arg)
 		except:
-			Msg("'%s': Invalid argument for argument %s ('%s' required)" % \
+			die(1,"'%s': Invalid argument for argument %s ('%s' required)" % \
 				(arg, arg_name, arg_type))
-			sys.exit(1)
 
 	def convert_to_bool_maybe(arg, arg_type):
 		if arg_type == "bool":
@@ -243,8 +241,7 @@ def print_convert_results(indata,enc,dec,dtype):
 	else: Msg(enc)
 
 	if error:
-		Msg("Error! Recoded data doesn't match input!")
-		sys.exit(3)
+		die(3,"Error! Recoded data doesn't match input!")
 
 def usage(cmd):
 	tool_usage(g.prog_name, cmd)
@@ -312,8 +309,7 @@ def randpair(compressed=False):
 def wif2addr(wif,compressed=False):
 	s_enc = bitcoin.wiftohex(wif,compressed)
 	if s_enc == False:
-		Msg("Invalid address")
-		sys.exit(1)
+		die(1,"Invalid address")
 	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
 	Vmsg_r("Addr: "); Msg(addr)
 
@@ -368,15 +364,31 @@ def id6(infile):
 def str2id6(s):  Msg(make_chksum_6("".join(s.split())))
 
 # List MMGen addresses and their balances:
-def listaddresses(minconf=1,showempty=False,pager=False,showbtcaddr=False):
-	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
+def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False):
+
+	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr,is_mmgen_seed_id
+
+	usr_addr_list = []
+	if addrs:
+		sid,idxs = split2(addrs,':')
+		if not idxs:
+			s1 = "'%s': invalid address argument\n"
+			s2 = "Address argument format: <%s Seed ID>':'<index or range>"
+			die(1, (s1+s2) % (addrs,g.proj_name))
+		if not is_mmgen_seed_id(sid):
+			die(1,'%s: invalid %s Seed ID' % (g.proj_name,sid))
+		tmp = parse_addr_idxs(idxs)
+		if not tmp: return False
+		usr_addr_list = ['%s:%s' % (sid,i) for i in tmp]
+
 	c = connect_to_bitcoind()
 
-	addrs = {}
+	addrs = {} # reusing variable name!
 	from decimal import Decimal
 	total = Decimal('0')
 	for d in c.listunspent(0):
 		mmaddr,comment = split2(d.account)
+		if usr_addr_list and (mmaddr not in usr_addr_list): continue
 		if is_mmgen_addr(mmaddr) and d.confirmations >= minconf:
 			key = mmaddr.replace(':','_')
 			if key in addrs:
@@ -393,10 +405,11 @@ def listaddresses(minconf=1,showempty=False,pager=False,showbtcaddr=False):
 		accts = c.listaccounts(minconf=0,includeWatchonly=True,as_dict=True)
 		for a in accts:
 			mmaddr,comment = split2(a)
+			if usr_addr_list and (mmaddr not in usr_addr_list): continue
 			if is_mmgen_addr(mmaddr):
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
-					if showbtcaddr:
+					if showbtcaddrs:
 						tmp = c.getaddressesbyaccount(a)
 						if len(tmp) != 1:
 							die(2,"Account '%s' has more or less than one BTC address!" % a)
@@ -406,15 +419,11 @@ def listaddresses(minconf=1,showempty=False,pager=False,showbtcaddr=False):
 					addrs[key] = [0,comment,baddr]
 
 	if not addrs:
-		if showempty:
-			msg('No tracked addresses!')
-		else:
-			msg('No addresses with balances!')
-		sys.exit(1)
+		die(1,('No addresses with balances!','No tracked addresses!')[showempty])
 
 	fs = '%-{}s %-{}s %-{}s %s'.format(
 		max(len(k) for k in addrs),
-		(0,36)[showbtcaddr],
+		(0,36)[showbtcaddrs],
 		max(len(addrs[k][1]) for k in addrs) + 1
 	)
 
@@ -424,7 +433,7 @@ def listaddresses(minconf=1,showempty=False,pager=False,showbtcaddr=False):
 	out = []
 	for k in sorted(addrs,key=s_mmgen):
 		if out and k.split('_')[0] != out[-1].split(':')[0]: out.append('')
-		baddr = ' ' + addrs[k][2] if showbtcaddr else ''
+		baddr = ' ' + addrs[k][2] if showbtcaddrs else ''
 		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], trim_exponent(addrs[k][0])))
 
 	o = (fs + '\n%s\nTOTAL: %s BTC') % (
@@ -564,8 +573,7 @@ def find_incog_data(filename,iv_id,keep_searching=False):
 	f = os.open(filename,os.O_RDONLY)
 	for ch in iv_id:
 		if ch not in "0123456789ABCDEF":
-			msg("'%s': invalid Incog ID" % iv_id)
-			sys.exit(2)
+			die(2,"'%s': invalid Incog ID" % iv_id)
 	while True:
 		d = os.read(f,bsize)
 		if not d: break
