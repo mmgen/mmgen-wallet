@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,10 @@
 test.py:  Shared routines for the test suites
 """
 
-import sys,os
+import os
 from binascii import hexlify
-from mmgen.util import msg,write_data_to_file,red,green
-import mmgen.opt as opt
+
+from mmgen.common import *
 
 def cleandir(d):
 	try:    files = os.listdir(d)
@@ -38,7 +38,7 @@ def getrandhex(n): return hexlify(os.urandom(n))
 def getrandstr(num_chars,no_space=False):
 	n,m = 95,32
 	if no_space: n,m = 94,33
-	return "".join([chr(ord(i)%n+m) for i in list(os.urandom(num_chars))])
+	return ''.join([chr(ord(i)%n+m) for i in list(os.urandom(num_chars))])
 
 def mk_tmpdir(cfg):
 	try: os.mkdir(cfg['tmpdir'],0755)
@@ -66,8 +66,8 @@ def read_from_tmpfile(cfg,fn,binary=False):
 
 def ok():
 	if opt.verbose or opt.exact_output:
-		sys.stderr.write(green("OK\n"))
-	else: msg(" OK")
+		sys.stderr.write(green('OK\n'))
+	else: msg(' OK')
 
 def ok_or_die(val,chk_func,s,skip_ok=False):
 	try: ret = chk_func(val)
@@ -83,6 +83,6 @@ def cmp_or_die(s,t,skip_ok=False):
 		if not skip_ok: ok()
 	else:
 		sys.stderr.write(red(
-			"ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n" %
+			'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
 				(repr(t),repr(s))))
 		sys.exit(3)

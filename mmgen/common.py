@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-opt.py: a namespace for the global opt variables
+common.py:  Common imports for all MMGen scripts
 """
-import opts
+
+import sys
+import mmgen.globalvars as g
+import mmgen.opts as opts
+from mmgen.opts import opt
+from mmgen.util import *

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,14 +21,12 @@ mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
              Part of the MMGen suite
 """
 
-import sys
-import mmgen.globalvars as g
-import mmgen.opt as opt
+from mmgen.common import *
 import mmgen.tool as tool
 
 opts_data = {
-	'desc':    "Perform various {pnm}- and Bitcoin-related operations".format(pnm=g.proj_name),
-	'usage':   "[opts] <command> <command args>",
+	'desc':    'Perform various {pnm}- and Bitcoin-related operations'.format(pnm=g.proj_name),
+	'usage':   '[opts] <command> <command args>',
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
@@ -46,27 +44,25 @@ command
 """.format(tool.cmd_help,g.prog_name)
 }
 
-cmd_args = opt.opts.init(opts_data,
+cmd_args = opts.init(opts_data,
 	add_opts=[
-		"no_keyconv",
-		"hidden_incog_input_params",
-		"in_fmt"
+		'no_keyconv',
+		'hidden_incog_input_params',
+		'in_fmt'
 		])
 
 if len(cmd_args) < 1:
-	opt.opts.usage()
+	opts.usage()
 	sys.exit(1)
 
 command = cmd_args.pop(0)
 
 if command not in tool.cmd_data:
-	from mmgen.util import msg
-	msg("'%s': No such command" % command)
-	sys.exit(1)
+	die(1,"'%s': no such command" % command)
 
 if cmd_args and cmd_args[0] == '--help':
 	tool.tool_usage(g.prog_name, command)
-	sys.exit(0)
+	sys.exit()
 
 args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
 

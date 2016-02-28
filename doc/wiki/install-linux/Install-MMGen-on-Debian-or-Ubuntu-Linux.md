@@ -12,17 +12,16 @@ Install the pexpect Python module:
 
 		$ sudo pip install pexpect
 
-		Note: pexpect v4.0.1 (the latest version as of this writing) is
-		BROKEN and will cause errors when running the test suite!
-		If this is the version you just installed on your system (examine the
-		output of 'pip freeze' to find out), then you must downgrade.  Note
-		that newer versions may be broken as well.  Version 3.1 is known to work
-		and can be found [here][03].  First, uninstall the broken pexpect:
+>> Note: pexpect v4.0.1 (the latest version as of this writing) is BROKEN and
+>> will cause errors when running the test suite!  If this is the version you
+>> just installed on your system (examine the output of 'pip freeze' to find
+>> out), then you must downgrade.  Note that newer versions may be broken as
+>> well.  Version 3.1 is known to work.  If this is the version on your system,
+>> then you may skip the next step.  Otherwise, download the [v3.1 tarball][03],
+>> unpack it, cd to the archive root and run:
 
-		$ sudo pip uninstall pexpect
-
-		Then download and unpack the v3.1 tarball, cd to the archive root and
-		run 'sudo python setup.py install' to install it.
+			$ sudo pip uninstall pexpect
+			$ sudo python setup.py install
 
 Install MMGen:
 

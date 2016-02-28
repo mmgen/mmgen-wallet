@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ class Filename(MMGenObject):
 				die(2,"Unrecognized extension '.%s' for file '%s'" % (self.ext,fn))
 
 		# TODO: Check for Windows
-		mode = (os.O_RDONLY,os.O_RDWR)[int(write)]
+		mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
 		import stat
 		if stat.S_ISBLK(os.stat(fn).st_mode):
 			try:

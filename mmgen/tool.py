@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,74 +20,71 @@
 tool.py:  Routines and data for the 'mmgen-tool' utility
 """
 
-import sys
-import mmgen.bitcoin as bitcoin
 import binascii as ba
 
-import mmgen.globalvars as g
-import mmgen.opt as opt
+import mmgen.bitcoin as bitcoin
+from mmgen.common import *
 from mmgen.crypto import *
-from mmgen.util import *
 from mmgen.tx import *
 
 pnm = g.proj_name
 
 from collections import OrderedDict
 cmd_data = OrderedDict([
-	("help",         ['<tool command> [str]']),
-	("usage",        ['<tool command> [str]']),
-	("strtob58",     ['<string> [str]']),
-	("b58tostr",     ['<b58 number> [str]']),
-	("hextob58",     ['<hex number> [str]']),
-	("b58tohex",     ['<b58 number> [str]']),
-	("b58randenc",   []),
-	("b32tohex",     ['<b32 num> [str]']),
-	("hextob32",     ['<hex num> [str]']),
-	("randhex",      ['nbytes [int=32]']),
-	("id8",          ['<infile> [str]']),
-	("id6",          ['<infile> [str]']),
-	("sha256x2",     ['<str, hexstr or filename> [str]',
+	('help',         ['<tool command> [str]']),
+	('usage',        ['<tool command> [str]']),
+	('strtob58',     ['<string> [str]']),
+	('b58tostr',     ['<b58 number> [str]']),
+	('hextob58',     ['<hex number> [str]']),
+	('b58tohex',     ['<b58 number> [str]']),
+	('b58randenc',   []),
+	('b32tohex',     ['<b32 num> [str]']),
+	('hextob32',     ['<hex num> [str]']),
+	('randhex',      ['nbytes [int=32]']),
+	('id8',          ['<infile> [str]']),
+	('id6',          ['<infile> [str]']),
+	('sha256x2',     ['<str, hexstr or filename> [str]',
 							'hex_input [bool=False]','file_input [bool=False]']),
-	("str2id6",      ['<string (spaces are ignored)> [str]']),
-	("hexdump",      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]']),
-	("unhexdump",    ['<infile> [str]']),
-	("hexreverse",   ['<hexadecimal string> [str]']),
-	("hexlify",      ['<string> [str]']),
-	("rand2file",    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False']),
+	('str2id6',      ['<string (spaces are ignored)> [str]']),
+	('hexdump',      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]']),
+	('unhexdump',    ['<infile> [str]']),
+	('hexreverse',   ['<hexadecimal string> [str]']),
+	('hexlify',      ['<string> [str]']),
+	('rand2file',    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False]']),
 
-	("randwif",    ['compressed [bool=False]']),
-	("randpair",   ['compressed [bool=False]']),
-	("hex2wif",    ['<private key in hex format> [str]', 'compressed [bool=False]']),
-	("wif2hex",    ['<wif> [str]', 'compressed [bool=False]']),
-	("wif2addr",   ['<wif> [str]', 'compressed [bool=False]']),
-	("hexaddr2addr", ['<btc address in hex format> [str]']),
-	("addr2hexaddr", ['<btc address> [str]']),
-	("pubkey2addr",  ['<public key in hex format> [str]']),
-	("pubkey2hexaddr", ['<public key in hex format> [str]']),
-	("privhex2addr", ['<private key in hex format> [str]','compressed [bool=False]']),
+	('randwif',    ['compressed [bool=False]']),
+	('randpair',   ['compressed [bool=False]']),
+	('hex2wif',    ['<private key in hex format> [str]', 'compressed [bool=False]']),
+	('wif2hex',    ['<wif> [str]', 'compressed [bool=False]']),
+	('wif2addr',   ['<wif> [str]', 'compressed [bool=False]']),
+	('hexaddr2addr', ['<btc address in hex format> [str]']),
+	('addr2hexaddr', ['<btc address> [str]']),
+	('pubkey2addr',  ['<public key in hex format> [str]']),
+	('pubkey2hexaddr', ['<public key in hex format> [str]']),
+	('privhex2addr', ['<private key in hex format> [str]','compressed [bool=False]']),
 
-	("hex2mn",       ['<hexadecimal string> [str]','wordlist [str="electrum"]']),
-	("mn2hex",       ['<mnemonic> [str]', 'wordlist [str="electrum"]']),
-	("mn_rand128",   ['wordlist [str="electrum"]']),
-	("mn_rand192",   ['wordlist [str="electrum"]']),
-	("mn_rand256",   ['wordlist [str="electrum"]']),
-	("mn_stats",     ['wordlist [str="electrum"]']),
-	("mn_printlist", ['wordlist [str="electrum"]']),
+	('hex2mn',       ['<hexadecimal string> [str]',"wordlist [str='electrum']"]),
+	('mn2hex',       ['<mnemonic> [str]', "wordlist [str='electrum']"]),
+	('mn_rand128',   ["wordlist [str='electrum']"]),
+	('mn_rand192',   ["wordlist [str='electrum']"]),
+	('mn_rand256',   ["wordlist [str='electrum']"]),
+	('mn_stats',     ["wordlist [str='electrum']"]),
+	('mn_printlist', ["wordlist [str='electrum']"]),
 
 
-	("listaddresses",['addrs [str='']','minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
-	("getbalance",   ['minconf [int=1]']),
-	("txview",       ['<{pnm} tx file> [str]','pager [bool=False]','terse [bool=False]'.format(pnm=pnm)]),
+	('listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
+	('getbalance',   ['minconf [int=1]']),
+	('txview',       ['<{} TX file> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]']),
 
-	("add_label",       ['<{pnm} address> [str]'.format(pnm=pnm),'<label> [str]']),
-	("remove_label",    ['<{pnm} address> [str]'.format(pnm=pnm)]),
-	("addrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
-	("keyaddrfile_chksum", ['<{pnm} addr file> [str]'.format(pnm=pnm)]),
-	("find_incog_data", ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
+	('add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
+	('remove_label',    ['<{} address> [str]'.format(pnm)]),
+	('addrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
+	('keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
+	('find_incog_data', ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
 
-	("encrypt",      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]']),
-	("decrypt",      ['<infile> [str]','outfile [str=""]','hash_preset [str=""]']),
-	("bytespec",     ['<bytespec> [str]']),
+	('encrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
+	('decrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
+	('bytespec',     ['<bytespec> [str]']),
 ])
 
 cmd_help = """
@@ -144,7 +141,7 @@ cmd_help = """
   id8          - generate 8-character {pnm} ID for a file (or stdin)
   str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
 
-  Mnemonic operations (choose "electrum" (default), "tirosh" or "all"
+  Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
   wordlists):
   mn_rand128   - generate random 128-bit mnemonic
   mn_rand192   - generate random 192-bit mnemonic
@@ -159,36 +156,38 @@ cmd_help = """
 """.format(pnm=pnm)
 
 def tool_usage(prog_name, command):
-	Msg("USAGE: '%s %s%s'" % (prog_name, command,
-		(" "+" ".join(cmd_data[command]) if cmd_data[command] else "")))
+	if command in cmd_data:
+		Msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cmd_data[command])))
+	else:
+		Msg("'%s': no such tool command" % command)
 
 def process_args(prog_name, command, cmd_args):
-	c_args = [[i.split(" [")[0],i.split(" [")[1][:-1]]
-		for i in cmd_data[command] if "=" not in i]
+	c_args = [[i.split(' [')[0],i.split(' [')[1][:-1]]
+		for i in cmd_data[command] if '=' not in i]
 	c_kwargs = dict([[
-			i.split(" [")[0],
-			[i.split(" [")[1].split("=")[0], i.split(" [")[1].split("=")[1][:-1]]
-		] for i in cmd_data[command] if "=" in i])
+			i.split(' [')[0],
+			[i.split(' [')[1].split('=')[0], i.split(' [')[1].split('=')[1][:-1]]
+		] for i in cmd_data[command] if '=' in i])
 
 	u_args = cmd_args[:len(c_args)]
 	u_kwargs = cmd_args[len(c_args):]
 
 	if len(u_args) < len(c_args):
-		msg("%s arg%s required" % (len(c_args),suf(c_args,"k")))
+		msg('%s argument%s required' % (len(c_args),suf(c_args,'k')))
 		tool_usage(prog_name, command)
 		sys.exit(1)
 
 	if len(u_kwargs) > len(c_kwargs):
-		msg("Too many arguments")
+		msg('Too many arguments')
 		tool_usage(prog_name, command)
 		sys.exit(1)
 
-	u_kwargs = dict([a.split("=") for a in u_kwargs])
+	u_kwargs = dict([a.split('=') for a in u_kwargs])
 
 #	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
 
 	if set(u_kwargs) > set(c_kwargs):
-		die(1,"Invalid named argument")
+		die(1,'Invalid named argument')
 
 	def convert_type(arg,arg_name,arg_type):
 		try:
@@ -198,9 +197,9 @@ def process_args(prog_name, command, cmd_args):
 				(arg, arg_name, arg_type))
 
 	def convert_to_bool_maybe(arg, arg_type):
-		if arg_type == "bool":
-			if arg.lower() in ("true","yes","1","on"): return True
-			if arg.lower() in ("false","no","0","off"): return False
+		if arg_type == 'bool':
+			if arg.lower() in ('true','yes','1','on'): return True
+			if arg.lower() in ('false','no','0','off'): return False
 		return arg
 
 	args = []
@@ -220,24 +219,24 @@ def process_args(prog_name, command, cmd_args):
 # Individual cmd_data
 
 # def help():
-# 	Msg("Available commands:")
+# 	Msg('Available commands:')
 # 	for k in sorted(cmd_data.keys()):
-# 		Msg("%-16s %s" % (k," ".join(cmd_data[k])))
+# 		Msg('%-16s %s' % (k,' '.join(cmd_data[k])))
 
-def are_equal(a,b,dtype=""):
-	if dtype == "str": return a.lstrip("\0") == b.lstrip("\0")
-	if dtype == "hex": return a.lstrip("0") == b.lstrip("0")
-	if dtype == "b58": return a.lstrip("1") == b.lstrip("1")
+def are_equal(a,b,dtype=''):
+	if dtype == 'str': return a.lstrip('\0') == b.lstrip('\0')
+	if dtype == 'hex': return a.lstrip('0') == b.lstrip('0')
+	if dtype == 'b58': return a.lstrip('1') == b.lstrip('1')
 	else:              return a == b
 
 def print_convert_results(indata,enc,dec,dtype):
 
-	error = False if are_equal(indata,dec,dtype) else True
+	error = (True,False)[are_equal(indata,dec,dtype)]
 
 	if error or opt.verbose:
-		Msg("Input:         %s" % repr(indata))
-		Msg("Encoded data:  %s" % repr(enc))
-		Msg("Recoded data:  %s" % repr(dec))
+		Msg('Input:         %s' % repr(indata))
+		Msg('Encoded data:  %s' % repr(enc))
+		Msg('Recoded data:  %s' % repr(dec))
 	else: Msg(enc)
 
 	if error:
@@ -254,7 +253,7 @@ def hexdump(infile, cols=8, line_nums=True):
 				cols=cols,line_nums=line_nums))
 
 def unhexdump(infile):
-	if sys.platform[:3] == "win":
+	if sys.platform[:3] == 'win':
 		import msvcrt
 		msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 	sys.stdout.write(decode_pretty_hexdump(
@@ -263,31 +262,31 @@ def unhexdump(infile):
 def strtob58(s):
 	enc = bitcoin.b58encode(s)
 	dec = bitcoin.b58decode(enc)
-	print_convert_results(s,enc,dec,"str")
+	print_convert_results(s,enc,dec,'str')
 
 def hextob58(s,f_enc=bitcoin.b58encode, f_dec=bitcoin.b58decode):
 	enc = f_enc(ba.unhexlify(s))
 	dec = ba.hexlify(f_dec(enc))
-	print_convert_results(s,enc,dec,"hex")
+	print_convert_results(s,enc,dec,'hex')
 
 def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	tmp = f_enc(s)
 	if tmp == False: sys.exit(1)
 	enc = ba.hexlify(tmp)
 	dec = f_dec(ba.unhexlify(enc))
-	print_convert_results(s,enc,dec,"b58")
+	print_convert_results(s,enc,dec,'b58')
 
 def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	enc = f_enc(s)
 	if enc == False: sys.exit(1)
 	dec = f_dec(enc)
-	print_convert_results(s,enc,dec,"b58")
+	print_convert_results(s,enc,dec,'b58')
 
 def b58randenc():
 	r = get_random(32)
 	enc = bitcoin.b58encode(r)
 	dec = bitcoin.b58decode(enc)
-	print_convert_results(r,enc,dec,"str")
+	print_convert_results(r,enc,dec,'str')
 
 def randhex(nbytes='32'):
 	Msg(ba.hexlify(get_random(int(nbytes))))
@@ -296,35 +295,35 @@ def randwif(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
 	enc = bitcoin.hextowif(r_hex,compressed)
 	dec = bitcoin.wiftohex(enc,compressed)
-	print_convert_results(r_hex,enc,dec,"hex")
+	print_convert_results(r_hex,enc,dec,'hex')
 
 def randpair(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
 	wif = bitcoin.hextowif(r_hex,compressed)
 	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
-	Vmsg("Key (hex):  %s" % r_hex)
-	Vmsg_r("Key (WIF):  "); Msg(wif)
-	Vmsg_r("Addr:       "); Msg(addr)
+	Vmsg('Key (hex):  %s' % r_hex)
+	Vmsg_r('Key (WIF):  '); Msg(wif)
+	Vmsg_r('Addr:       '); Msg(addr)
 
 def wif2addr(wif,compressed=False):
 	s_enc = bitcoin.wiftohex(wif,compressed)
 	if s_enc == False:
-		die(1,"Invalid address")
+		die(1,'Invalid address')
 	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
-	Vmsg_r("Addr: "); Msg(addr)
+	Vmsg_r('Addr: '); Msg(addr)
 
-wordlists = "electrum","tirosh"
-dfl_wordlist = "electrum"
+wordlists = 'electrum','tirosh'
+dfl_wordlist = 'electrum'
 
 from mmgen.seed import Mnemonic
 def do_random_mn(nbytes,wordlist):
 	hexrand = ba.hexlify(get_random(nbytes))
-	Vmsg("Seed: %s" % hexrand)
-	for wlname in (wordlists if wordlist == "all" else [wordlist]):
-		if wordlist == "all":
-			Msg("%s mnemonic:" % (wlname.capitalize()))
+	Vmsg('Seed: %s' % hexrand)
+	for wlname in ([wordlist],wordlists)[wordlist=='all']:
+		if wordlist == 'all':
+			Msg('%s mnemonic:' % (wlname.capitalize()))
 		mn = Mnemonic.hex2mn(hexrand,wordlist=wlname)
-		Msg(" ".join(mn))
+		Msg(' '.join(mn))
 
 def mn_rand128(wordlist=dfl_wordlist): do_random_mn(16,wordlist)
 def mn_rand192(wordlist=dfl_wordlist): do_random_mn(24,wordlist)
@@ -332,26 +331,26 @@ def mn_rand256(wordlist=dfl_wordlist): do_random_mn(32,wordlist)
 
 def hex2mn(s,wordlist=dfl_wordlist):
 	mn = Mnemonic.hex2mn(s,wordlist)
-	Msg(" ".join(mn))
+	Msg(' '.join(mn))
 
 def mn2hex(s,wordlist=dfl_wordlist):
 	hexnum = Mnemonic.mn2hex(s.split(),wordlist)
 	Msg(hexnum)
 
 def b32tohex(s):
-	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
 	Msg(Mnemonic.baseNtohex(32,s,b32a))
 
 def hextob32(s):
-	b32a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-	Msg("".join(Mnemonic.hextobaseN(32,s,b32a)))
+	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+	Msg(''.join(Mnemonic.hextobaseN(32,s,b32a)))
 
 def mn_stats(wordlist=dfl_wordlist):
 	Mnemonic.check_wordlist(wordlist)
 
 def mn_printlist(wordlist=dfl_wordlist):
 	wl = Mnemonic.get_wordlist(wordlist)
-	Msg("\n".join(wl))
+	Msg('\n'.join(wl))
 
 def id8(infile):
 	Msg(make_chksum_8(
@@ -361,12 +360,10 @@ def id6(infile):
 	Msg(make_chksum_6(
 		get_data_from_file(infile,dash=True,silent=True,binary=True)
 	))
-def str2id6(s):  Msg(make_chksum_6("".join(s.split())))
+def str2id6(s):  Msg(make_chksum_6(''.join(s.split())))
 
 # List MMGen addresses and their balances:
 def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False):
-
-	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr,is_mmgen_seed_id
 
 	usr_addr_list = []
 	if addrs:
@@ -387,36 +384,37 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	from decimal import Decimal
 	total = Decimal('0')
 	for d in c.listunspent(0):
-		mmaddr,comment = split2(d.account)
+		mmaddr,comment = split2(d['account'])
 		if usr_addr_list and (mmaddr not in usr_addr_list): continue
-		if is_mmgen_addr(mmaddr) and d.confirmations >= minconf:
+		if is_mmgen_addr(mmaddr) and d['confirmations'] >= minconf:
 			key = mmaddr.replace(':','_')
 			if key in addrs:
-				if addrs[key][2] != d.address:
+				if addrs[key][2] != d['address']:
 					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
-							(d.address, addrs[key][2])))
+							(d['address'], addrs[key][2])))
 			else:
-				addrs[key] = [0,comment,d.address]
-			addrs[key][0] += d.amount
-			total += d.amount
+				addrs[key] = [0,comment,d['address']]
+			addrs[key][0] += d['amount']
+			total += d['amount']
 
 	# We use listaccounts only for empty addresses, as it shows false positive balances
 	if showempty:
-		accts = c.listaccounts(minconf=0,includeWatchonly=True,as_dict=True)
-		for a in accts:
-			mmaddr,comment = split2(a)
+		accts = c.listaccounts(0,True) # minconf,watchonly
+		save_a = []
+		for acct in accts:
+			mmaddr,comment = split2(acct)
 			if usr_addr_list and (mmaddr not in usr_addr_list): continue
 			if is_mmgen_addr(mmaddr):
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
-					if showbtcaddrs:
-						tmp = c.getaddressesbyaccount(a)
-						if len(tmp) != 1:
-							die(2,"Account '%s' has more or less than one BTC address!" % a)
-						baddr = tmp[0]
-					else:
-						baddr = ''
-					addrs[key] = [0,comment,baddr]
+					if showbtcaddrs: save_a.append([acct])
+					addrs[key] = [0,comment,'']
+
+		for acct,addr in zip(save_a,c.getaddressesbyaccount(save_a,batch=True)):
+			if len(addr) != 1:
+				die(2,"Account '%s' has more or less than one BTC address!" % addr)
+			key = split2(acct[0])[0].replace(':','_')
+			addrs[key][2] = addr[0]
 
 	if not addrs:
 		die(1,('No addresses with balances!','No tracked addresses!')[showempty])
@@ -424,7 +422,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	fs = '%-{}s %-{}s %-{}s %s'.format(
 		max(len(k) for k in addrs),
 		(0,36)[showbtcaddrs],
-		max(len(addrs[k][1]) for k in addrs) + 1
+		max(max(len(addrs[k][1]) for k in addrs) + 1,8) # pad 8 if no comments
 	)
 
 	def s_mmgen(key):
@@ -444,39 +442,38 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 
 
 def getbalance(minconf=1):
-	from mmgen.tx import connect_to_bitcoind,trim_exponent,is_mmgen_addr
 
 	accts = {}
 	for d in connect_to_bitcoind().listunspent(0):
-		ma = split2(d.account)[0]
-		keys = ["TOTAL"]
-		if d.spendable: keys += ["SPENDABLE"]
-		if is_mmgen_addr(ma): keys += [ma.split(":")[0]]
-		confs = d.confirmations
-		i = 2 if confs >= minconf else 1
+		ma = split2(d['account'])[0]
+		keys = ['TOTAL']
+		if d['spendable']: keys += ['SPENDABLE']
+		if is_mmgen_addr(ma): keys += [ma.split(':')[0]]
+		confs = d['confirmations']
+		i = (1,2)[confs >= minconf]
 
 		for key in keys:
 			if key not in accts: accts[key] = [0,0,0]
-			for j in ([0] if confs == 0 else []) + [i]:
-				accts[key][j] += d.amount
+			for j in ([],[0])[confs==0] + [i]:
+				accts[key][j] += d['amount']
 
-	fs = "{:12}  {:<%s} {:<%s} {:<}" % (16,16)
-	mc,lbl = str(minconf),"confirms"
-	Msg(fs.format("Wallet","Unconfirmed","<%s %s"%(mc,lbl),">=%s %s"%(mc,lbl)))
+	fs = '{:12}  {:<%s} {:<%s} {:<}' % (16,16)
+	mc,lbl = str(minconf),'confirms'
+	Msg(fs.format('Wallet','Unconfirmed','<%s %s'%(mc,lbl),'>=%s %s'%(mc,lbl)))
 	for key in sorted(accts.keys()):
-		Msg(fs.format(key+":", *[str(trim_exponent(a))+" BTC"
+		Msg(fs.format(key+':', *[str(trim_exponent(a))+' BTC'
 				for a in accts[key]]))
 
 def txview(infile,pager=False,terse=False):
 	c = connect_to_bitcoind()
-	tx_data = get_lines_from_file(infile,"transaction data")
+	tx_data = get_lines_from_file(infile,'transaction data')
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False,terse=terse)
 
 def add_label(mmaddr,label,remove=False):
 	if not is_mmgen_addr(mmaddr):
-		die(1,"{a}: not a valid {pnm} address".format(pnm=pnm,a=mmaddr))
+		die(1,'{a}: not a valid {pnm} address'.format(pnm=pnm,a=mmaddr))
 	check_addr_label(label)  # Exits on failure
 
 	c = connect_to_bitcoind()
@@ -485,28 +482,28 @@ def add_label(mmaddr,label,remove=False):
 	btcaddr = AddrInfoList(bitcoind_connection=c).mmaddr2btcaddr(mmaddr)
 
 	if not btcaddr:
-		die(1,"{pnm} address {a} not found in tracking wallet".format(
+		die(1,'{pnm} address {a} not found in tracking wallet'.format(
 				pnm=pnm,a=mmaddr))
 
 	try:
-		l = " " + label if label else ""
-		c.importaddress(btcaddr,mmaddr+l,rescan=False)
+		l = ' ' + label if label else ''
+		c.importaddress(btcaddr,mmaddr+l,False) # addr,label,rescan,p2sh
 	except:
-		die(1,"Unable to add label")
+		die(1,'Unable to add label')
 
-	s = "{pnm} address {a} in tracking wallet".format(a=mmaddr,pnm=pnm)
-	if remove: msg("Removed label from {}".format(s))
+	s = '{pnm} address {a} in tracking wallet'.format(a=mmaddr,pnm=pnm)
+	if remove: msg('Removed label from {}'.format(s))
 	else:      msg("Added label '{}' for {}".format(label,s))
 
-def remove_label(mmaddr): add_label(mmaddr,"",remove=True)
+def remove_label(mmaddr): add_label(mmaddr,'',remove=True)
 
 def addrfile_chksum(infile):
 	from mmgen.addr import AddrInfo
-	AddrInfo(infile)
+	AddrInfo(infile,caller='tool')
 
 def keyaddrfile_chksum(infile):
 	from mmgen.addr import AddrInfo
-	AddrInfo(infile,has_keys=True)
+	AddrInfo(infile,has_keys=True,caller='tool')
 
 def hexreverse(hex_str):
 	Msg(ba.hexlify(decode_pretty_hexdump(hex_str)[::-1]))
@@ -543,36 +540,36 @@ def hex2wif(hexpriv,compressed=False):
 	Msg(bitcoin.hextowif(hexpriv,compressed))
 
 
-def encrypt(infile,outfile="",hash_preset=""):
-	data = get_data_from_file(infile,"data for encryption",binary=True)
-	enc_d = mmgen_encrypt(data,"user data",hash_preset)
+def encrypt(infile,outfile='',hash_preset=''):
+	data = get_data_from_file(infile,'data for encryption',binary=True)
+	enc_d = mmgen_encrypt(data,'user data',hash_preset)
 	if not outfile:
-		outfile = "%s.%s" % (os.path.basename(infile),g.mmenc_ext)
+		outfile = '%s.%s' % (os.path.basename(infile),g.mmenc_ext)
 
-	write_data_to_file(outfile,enc_d,"encrypted data",binary=True)
+	write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
 
 
-def decrypt(infile,outfile="",hash_preset=""):
-	enc_d = get_data_from_file(infile,"encrypted data",binary=True)
+def decrypt(infile,outfile='',hash_preset=''):
+	enc_d = get_data_from_file(infile,'encrypted data',binary=True)
 	while True:
-		dec_d = mmgen_decrypt(enc_d,"user data",hash_preset)
+		dec_d = mmgen_decrypt(enc_d,'user data',hash_preset)
 		if dec_d: break
-		msg("Trying again...")
+		msg('Trying again...')
 
 	if not outfile:
 		o = os.path.basename(infile)
 		outfile = remove_extension(o,g.mmenc_ext)
-		if outfile == o: outfile += ".dec"
+		if outfile == o: outfile += '.dec'
 
-	write_data_to_file(outfile,dec_d,"decrypted data",binary=True)
+	write_data_to_file(outfile,dec_d,'decrypted data',binary=True)
 
 
 def find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
-	n,carry = 0," "*ivsize
+	n,carry = 0,' '*ivsize
 	f = os.open(filename,os.O_RDONLY)
 	for ch in iv_id:
-		if ch not in "0123456789ABCDEF":
+		if ch not in '0123456789ABCDEF':
 			die(2,"'%s': invalid Incog ID" % iv_id)
 	while True:
 		d = os.read(f,bsize)
@@ -581,14 +578,14 @@ def find_incog_data(filename,iv_id,keep_searching=False):
 		for i in range(bsize):
 			if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == iv_id:
 				if n+i < ivsize: continue
-				msg("\rIncog data for ID %s found at offset %s" %
+				msg('\rIncog data for ID %s found at offset %s' %
 					(iv_id,n+i-ivsize))
-				if not keep_searching: sys.exit(0)
+				if not keep_searching: sys.exit()
 		carry = d[len(d)-ivsize:]
 		n += bsize
-		if not n % mod: msg_r("\rSearched: %s bytes" % n)
+		if not n % mod: msg_r('\rSearched: %s bytes' % n)
 
-	msg("")
+	msg('')
 	os.close(f)
 
 
@@ -601,7 +598,7 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 	bsize = 2**20
 	roll = bsize * 4
 	if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
-	f = open(outfile,"wb")
+	f = open(outfile,'wb')
 
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
@@ -641,10 +638,10 @@ def rand2file(outfile, nbytes, threads=4, silent=False):
 		rbytes -= bsize
 		i += 1
 		if not (bsize*i) % roll:
-			msg_r("\rRead: %s bytes" % (bsize*i))
+			msg_r('\rRead: %s bytes' % (bsize*i))
 
 	if not silent:
-		msg("\rRead: %s bytes" % nbytes)
+		msg('\rRead: %s bytes' % nbytes)
 		qmsg("\r%s bytes of random data written to file '%s'" % (nbytes,outfile))
 	q1.join()
 	q2.join()

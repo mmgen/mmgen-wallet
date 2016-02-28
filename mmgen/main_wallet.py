@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,40 +20,39 @@
 mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 """
 
-import sys,os,re
-import mmgen.globalvars as g
-import mmgen.opt as opt
-from mmgen.util import die,msg,green,do_license_msg,check_infile,mdie,mmsg,qmsg,capfirst
+import os,re
+
+from mmgen.common import *
 from mmgen.seed import SeedSource
 
 bn = os.path.basename(sys.argv[0])
-invoked_as = re.sub(r'^wallet','',bn.split("-")[-1])
+invoked_as = re.sub(r'^wallet','',bn.split('-')[-1])
 
-usage = "[opts] [infile]"
+usage = '[opts] [infile]'
 nargs = 1
-iaction = "convert"
-oaction = "convert"
-bw_note = opt.opts.bw_note
-pw_note = opt.opts.pw_note
+iaction = 'convert'
+oaction = 'convert'
+bw_note = opts.bw_note
+pw_note = opts.pw_note
 
-if invoked_as == "gen":
-	desc = "Generate an {pnm} wallet from a random seed"
-	opt_filter = "ehdoJlLpPqrSvz"
-	usage = "[opts]"
-	oaction = "output"
+if invoked_as == 'gen':
+	desc = 'Generate an {pnm} wallet from a random seed'
+	opt_filter = 'ehdoJlLpPqrSvz'
+	usage = '[opts]'
+	oaction = 'output'
 	nargs = 0
-elif invoked_as == "conv":
-	desc = "Convert an {pnm} wallet from one format to another"
+elif invoked_as == 'conv':
+	desc = 'Convert an {pnm} wallet from one format to another'
 	opt_filter = None
-elif invoked_as == "chk":
-	desc = "Check validity of an {pnm} wallet"
-	opt_filter = "ehiHOlpPqrvz"
-	iaction = "input"
-elif invoked_as == "passchg":
-	desc = "Change the password, hash preset or label of an {pnm} wallet"
-	opt_filter = "ehdiHkKOlLmpPqrSvz"
-	iaction = "input"
-	bw_note = ""
+elif invoked_as == 'chk':
+	desc = 'Check validity of an {pnm} wallet'
+	opt_filter = 'ehiHOlpPqrvz'
+	iaction = 'input'
+elif invoked_as == 'passchg':
+	desc = 'Change the password, hash preset or label of an {pnm} wallet'
+	opt_filter = 'ehdiHkKOlLmpPqrSvz'
+	iaction = 'input'
+	bw_note = ''
 else:
 	die(1,"'%s': unrecognized invocation" % bn)
 
@@ -103,36 +102,36 @@ opts_data = {
 FMT CODES:
   {f}
 """.format(
-	f="\n  ".join(SeedSource.format_fmt_codes().splitlines()),
+	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 	pw_note=pw_note,
-	bw_note=("","\n\n" + bw_note)[int(bool(bw_note))]
+	bw_note=('','\n\n' + bw_note)[bool(bw_note)]
 	)
 }
 
-cmd_args = opt.opts.init(opts_data,opt_filter=opt_filter)
+cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 
 if len(cmd_args) < nargs \
 		and not opt.hidden_incog_input_params and not opt.in_fmt:
-	die(1,"An input file or input format must be specified")
+	die(1,'An input file or input format must be specified')
 elif len(cmd_args) > nargs \
 		or (len(cmd_args) == nargs and opt.hidden_incog_input_params):
-	msg("No input files may be specified" if invoked_as == "gen"
-			else "Too many input files specified")
-	opt.opts.usage()
+	msg('No input files may be specified' if invoked_as == 'gen'
+			else 'Too many input files specified')
+	opts.usage()
 
 if cmd_args: check_infile(cmd_args[0])
 
-if not invoked_as == "chk": do_license_msg()
+if not invoked_as == 'chk': do_license_msg()
 
-if invoked_as in ("conv","passchg"): msg(green("Processing input wallet"))
+if invoked_as in ('conv','passchg'): msg(green('Processing input wallet'))
 
-ss_in = None if invoked_as == "gen" \
-			else SeedSource(*cmd_args,passchg=invoked_as=="passchg")
+ss_in = None if invoked_as == 'gen' \
+			else SeedSource(*cmd_args,passchg=invoked_as=='passchg')
 
-if invoked_as == "chk":
+if invoked_as == 'chk':
 	sys.exit()
 
-if invoked_as in ("conv","passchg"): msg(green("Processing output wallet"))
+if invoked_as in ('conv','passchg'): msg(green('Processing output wallet'))
 
-ss_out = SeedSource(ss=ss_in,passchg=invoked_as=="passchg")
+ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 ss_out.write_to_file()

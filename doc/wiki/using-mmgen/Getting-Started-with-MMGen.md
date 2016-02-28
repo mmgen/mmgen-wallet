@@ -229,55 +229,66 @@ confirmations, your transaction will be saved:
 Note that the transaction has a unique ID, and the non-change spend amount of
 6.6 BTC is included in the filename.
 
+#### <a name=06>Create a keylist file (online computer):</a>
+
+To sign your transaction, you'll need the Bitcoin private key corresponding to
+its input address, '1F93Znz....'
+
+If the key in question is in a bitcoind wallet ('wallet.dat'), you'll want to
+extract the key (along with all the other keys in the wallet) to a keylist
+file.  This is done using the 'bitcoin-cli dumpwallet' command with bitcoind
+running.
+
+		$ bitcoin-cli dumpwallet my_secret.keys
+
+This will write the keylist file 'my_secret.keys' (or whatever filename you've
+chosen) to your home directory (or maybe to your Bitcoin data directory, results
+may vary).  If you want it written to another location, provide an absolute
+path.
+
+Note that the keylist file lists your private keys in *unencrypted* form, even
+if your 'wallet.dat' was encrypted.  Therefore, it should be backed up to a safe
+location—to a USB stick, say, or to your offline computer.  After you've backed
+it up, securely delete all copies of it on your online computer.
+
+You'll use this keylist file to sign all transactions that spend from addresses
+in your bitcoind wallet.
+
+If the key/address pair in question came from another source, you may create
+your own file 'my_secret.keys' (or whatever) in a plain text editor and just
+list the key in this file.  In the case of multiple keys, just list them all,
+one key per line.  In our example, the file will have one line containing a
+single private key corresponding to the address '1F93Znz....'
+
 #### <a name=06>Sign a transaction (offline computer):</a>
 
-Now copy the raw transaction you've just created to a USB stick and transfer it
-to your offline computer for signing.  For this you'll need the key corresponding
-to the transaction's input address, 1F93Znz....  If the key in question is in a
-bitcoind 'wallet.dat', copy 'wallet.dat' to your offline machine as well and use
-the included command 'mmgen-pywallet' (a modified version of the well-known
-pywallet utility) to extract the required key from it.
+Now transfer the the raw transaction file and just-created keylist file to your
+offline computer and run:
 
-		$ mmgen-pywallet -k wallet.dat
-		...
-		Private keys written to file 'wd_EDBC983A[102].keys'
-
-You've in fact extracted a list of all of the wallet's 102 keys here, but that's
-not a problem, since the unused keys will be ignored (if you wish, you can
-extract only the one key you need using the '--keys-for-addrs' option).  Now go
-ahead and sign the transaction using this key list:
-
-		$ mmgen-txsign -k wd_EDBC983A[102].keys tx_FEDCBA[6.6].raw
+		$ mmgen-txsign -k my_secret.keys tx_FEDCBA[6.6].raw
 		...
 		Signed transaction written to file 'tx_FEDCBA[6.6].sig'
 
-Note that 'mmgen-pywallet's output is just a flat list of keys.  So if you have
-several Bitcoin wallets with balances, you can just concatenate these lists into
-a single file which you can use to sign all future transactions with
-'wallet.dat' inputs:
+The signed transaction is written to a new file whose name differs from the raw
+transaction file only by its '.sig' extension.
 
-		$ mmgen-pywallet -k wallet1.dat
-		$ mmgen-pywallet -k wallet2.dat
-		$ mmgen-pywallet -k wallet3.dat
-		$ cat wd_*.keys > all_keys
-
-Once you've migrated your funds to MMGen, such key files will no longer be
+NOTE: once you've migrated your funds to MMGen, the keylist file will no longer be
 needed.  Instead, you'll sign transactions by listing an MMGen seed source
-(wallet, mnemonic or seed file) on the command line after the transaction,
-and the required keys will be generated on the fly, as in this example:
+(wallet, mnemonic or seed file) on the command line after the transaction, and
+the required keys will be generated on the fly, as in the following example:
 
-		$ mmgen-txsign tx_ABCDE[1.2345].raw 1234567A-BCDEF123[256,3].mmdat
+		$ mmgen-txsign tx_ABCDE[1].raw my_mmgen_wallet.mmdat
 
-Transactions may contain a mixture of MMGen and non-MMGen inputs, as well as
-inputs with more than one MMGen Seed ID.  Just list a seed source for each
+NOTE: transactions may contain a mixture of MMGen and non-MMGen inputs, as well
+as inputs with more than one MMGen Seed ID.  Just list a seed source for each
 MMGen input on the command line after the transaction, as in this example:
 
-		$ mmgen-txsign -k key_list my_tx.raw a.mmdat b.mmwords c.mmseed
+		$ mmgen-txsign -k my_secret.keys my_tx.raw a.mmdat b.mmwords c.mmseed
 
 #### <a name=07>Send a transaction (online computer):</a>
 
 Now you're ready for the final step: broadcasting the transaction to the
-network.  Copy just-created signed transaction file to your online computer,
+network.  Copy the just-created signed transaction file to your online computer,
 start bitcoind and issue the command:
 
 		$ mmgen-txsend tx_FEDCBA[6.6].sig
@@ -301,7 +312,7 @@ Your total MMGen balance will also now be visible:
 		89ABCDEF:     0 BTC            0 BTC            9.99995 BTC
 		TOTAL:        0 BTC            0 BTC            9.99995 BTC
 
-To verify that your transaction's received its first, second, third and so forth
+To verify that your transaction's received its first, second, third, and so on,
 confirmation, increase the 'minconf' value to 1, 2, 3 and so forth.
 
 Congratulations!  You've performed your first MMGen transaction and placed your

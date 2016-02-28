@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,17 +20,13 @@
 mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 """
 
-import sys
-
-import mmgen.globalvars as g
-import mmgen.opt as opt
+from mmgen.common import *
 from mmgen.tx import *
-from mmgen.util import *
 
 opts_data = {
-	'desc':    "Send a Bitcoin transaction signed by {pnm}-txsign".format(
+	'desc':    'Send a Bitcoin transaction signed by {pnm}-txsign'.format(
 					pnm=g.proj_name.lower()),
-	'usage':   "[opts] <signed transaction file>",
+	'usage':   '[opts] <signed transaction file>',
 	'options': """
 -h, --help      Print this help message
 -d, --outdir= d Specify an alternate directory 'd' for output
@@ -38,17 +34,17 @@ opts_data = {
 """
 }
 
-cmd_args = opt.opts.init(opts_data)
+cmd_args = opts.init(opts_data)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
-else: opt.opts.usage()
+else: opts.usage()
 
 # Begin execution
 
 do_license_msg()
 
-tx_data = get_lines_from_file(infile,"signed transaction data")
+tx_data = get_lines_from_file(infile,'signed transaction data')
 
 metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 
@@ -56,32 +52,31 @@ qmsg("Signed transaction file '%s' is valid" % infile)
 
 c = connect_to_bitcoind()
 
-prompt_and_view_tx_data(c,"View transaction data?",
+prompt_and_view_tx_data(c,'View transaction data?',
 	inputs_data,tx_hex,b2m_map,comment,metadata)
 
-if keypress_confirm("Edit transaction comment?"):
+if keypress_confirm('Edit transaction comment?'):
 	comment = get_tx_comment_from_user(comment)
-	data = make_tx_data("{} {} {}".format(*metadata), tx_hex,
+	data = make_tx_data('{} {} {}'.format(*metadata), tx_hex,
 				inputs_data, b2m_map, comment)
-	write_data_to_file(infile,data,"signed transaction with edited comment")
+	write_data_to_file(infile,data,'signed transaction with edited comment')
 
 warn   = "Once this transaction is sent, there's no taking it back!"
-action = "broadcast this transaction to the network"
-expect =  "YES, I REALLY WANT TO DO THIS"
+action = 'broadcast this transaction to the network'
+expect =  'YES, I REALLY WANT TO DO THIS'
 
-if opt.quiet: warn,expect = "","YES"
+if opt.quiet: warn,expect = '','YES'
 
 confirm_or_exit(warn, action, expect)
 
-msg("Sending transaction")
+msg('Sending transaction')
 
 try:
 	tx_id = c.sendrawtransaction(tx_hex)
 except:
-	msg("Unable to send transaction")
-	sys.exit(3)
+	die(3,'Unable to send transaction')
 
-msg("Transaction sent: %s" % tx_id)
+msg('Transaction sent: %s' % tx_id)
 
-of = "tx_{}[{}].txid".format(*metadata[:2])
-write_data_to_file(of, tx_id+"\n","transaction ID",ask_overwrite=True)
+of = 'tx_{}[{}].txid'.format(*metadata[:2])
+write_data_to_file(of, tx_id+'\n','transaction ID',ask_overwrite=True)

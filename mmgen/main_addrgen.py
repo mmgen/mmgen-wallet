@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,24 +21,20 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
                deterministic wallet
 """
 
-import sys
-
-import mmgen.globalvars as g
-import mmgen.opt as opt
-from mmgen.util import *
+from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
 from mmgen.seed import SeedSource
 
-if sys.argv[0].split("-")[-1] == "keygen":
-	gen_what = "keys"
+if sys.argv[0].split('-')[-1] == 'keygen':
+	gen_what = 'keys'
 	opt_filter = None
 	note1 = """
 By default, both addresses and secret keys are generated.
 """.strip()
 else:
-	gen_what = "addresses"
-	opt_filter = "hcdeiHOKlpzPqSv"
+	gen_what = 'addresses'
+	opt_filter = 'hcdeiHOKlpzPqSv'
 	note1 = """
 If available, the external 'keyconv' program will be used for address
 generation.
@@ -48,7 +44,7 @@ opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'desc': """Generate a range or list of {what} from an {pnm} wallet,
                   mnemonic, seed or password""".format(what=gen_what,pnm=g.proj_name),
-	'usage':"[opts] [infile] <address range or list>",
+	'usage':'[opts] [infile] <address range or list>',
 	'options': """
 -h, --help            Print this help message.
 -A, --no-addresses    Print only secret keys, no addresses.
@@ -73,7 +69,7 @@ opts_data = {
 -v, --verbose         Produce more verbose output.
 -x, --b16             Print secret keys in hexadecimal too.
 """.format(
-	seed_lens=", ".join([str(i) for i in g.seed_lens]),
+	seed_lens=', '.join([str(i) for i in g.seed_lens]),
 	pnm=g.proj_name,
 	what=gen_what,g=g
 ),
@@ -92,21 +88,20 @@ FMT CODES:
   {f}
 """.format(
 		n=note1,
-		f="\n  ".join(SeedSource.format_fmt_codes().splitlines()),
-		o=opt.opts
+		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+		o=opts
 	)
 }
 
-
-cmd_args = opt.opts.init(opts_data,add_opts=["b16"],opt_filter=opt_filter)
+cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
 nargs = 2
 if len(cmd_args) < nargs \
 		and not opt.hidden_incog_input_params and not opt.in_fmt:
-	opt.opts.usage()
+	opts.usage()
 elif len(cmd_args) > nargs \
 		or (len(cmd_args) == nargs and opt.hidden_incog_input_params):
-			opt.opts.usage()
+			opts.usage()
 
 addrlist_arg = cmd_args.pop()
 addr_idxs = parse_addr_idxs(addrlist_arg)
@@ -115,8 +110,8 @@ if not addr_idxs:
 
 do_license_msg()
 
-opt.gen_what = "a" if gen_what == "addresses" \
-					else "k" if opt.no_addresses else "ka"
+opt.gen_what = 'a' if gen_what == 'addresses' \
+					else 'k' if opt.no_addresses else 'ka'
 
 # Generate data:
 ss = SeedSource(*cmd_args)
@@ -124,19 +119,19 @@ ss = SeedSource(*cmd_args)
 ainfo = generate_addrs(ss.seed.data,addr_idxs)
 
 addrdata_str = ainfo.fmt_data()
-outfile_base = "{}[{}]".format(ss.seed.sid, ainfo.idxs_fmt)
+outfile_base = '{}[{}]'.format(ss.seed.sid, ainfo.idxs_fmt)
 
 if 'a' in opt.gen_what and opt.print_checksum:
 	Die(0,ainfo.checksum)
 
-if 'k' in opt.gen_what and keypress_confirm("Encrypt key list?"):
-	addrdata_str = mmgen_encrypt(addrdata_str,"new key list","")
-	enc_ext = "." + g.mmenc_ext
-else: enc_ext = ""
+if 'k' in opt.gen_what and keypress_confirm('Encrypt key list?'):
+	addrdata_str = mmgen_encrypt(addrdata_str,'new key list','')
+	enc_ext = '.' + g.mmenc_ext
+else: enc_ext = ''
 
-ext = (g.keyfile_ext,g.keyaddrfile_ext)[int("ka" in opt.gen_what)]
-ext = (g.addrfile_ext,ext)[int("k" in opt.gen_what)]
-outfile = "%s.%s%s" % (outfile_base, ext, enc_ext)
-ask_tty = "k" in opt.gen_what and not opt.quiet
-if gen_what == "keys": gen_what = "secret keys"
+ext = (g.keyfile_ext,g.keyaddrfile_ext)['ka' in opt.gen_what]
+ext = (g.addrfile_ext,ext)['k' in opt.gen_what]
+outfile = '%s.%s%s' % (outfile_base, ext, enc_ext)
+ask_tty = 'k' in opt.gen_what and not opt.quiet
+if gen_what == 'keys': gen_what = 'secret keys'
 write_data_to_file(outfile,addrdata_str,gen_what,ask_tty=ask_tty)

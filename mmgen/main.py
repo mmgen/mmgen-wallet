@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,15 +22,15 @@ main.py - Script launcher for the MMGen suite
 
 def launch(what):
 
-	if what in ("walletgen","walletchk","walletconv","passchg"):
-		what = "wallet"
-	if what == "keygen": what = "addrgen"
+	if what in ('walletgen','walletchk','walletconv','passchg'):
+		what = 'wallet'
+	if what == 'keygen': what = 'addrgen'
 
 	try: import termios
 	except: # Windows
 		from mmgen.util import start_mscolor
 		start_mscolor()
-		__import__("mmgen.main_" + what)
+		__import__('mmgen.main_' + what)
 	else:
 		import sys,atexit
 		fd = sys.stdin.fileno()
@@ -38,8 +38,8 @@ def launch(what):
 		def at_exit():
 			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 		atexit.register(at_exit)
-		try: __import__("mmgen.main_" + what)
+		try: __import__('mmgen.main_' + what)
 		except KeyboardInterrupt:
-			sys.stderr.write("\nUser interrupt\n")
+			sys.stderr.write('\nUser interrupt\n')
 		except EOFError:
-			sys.stderr.write("\nEnd of file\n")
+			sys.stderr.write('\nEnd of file\n')

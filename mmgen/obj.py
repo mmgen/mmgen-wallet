@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,7 +20,6 @@
 obj.py:  The MMGenObject class and methods
 """
 import mmgen.globalvars as g
-from mmgen.util import mdie,mmsg
 
 lvl = 0
 
@@ -29,16 +28,16 @@ class MMGenObject(object):
 	# Pretty-print any object of type MMGenObject, recursing into sub-objects
 	def __str__(self):
 		global lvl
-		indent = lvl * "    "
+		indent = lvl * '    '
 
 		def fix_linebreaks(v,fixed_indent=None):
-			if "\n" in v:
-				i = indent+"    " if fixed_indent == None else fixed_indent*" "
-				return "\n"+i + v.replace("\n","\n"+i)
+			if '\n' in v:
+				i = indent+'    ' if fixed_indent == None else fixed_indent*' '
+				return '\n'+i + v.replace('\n','\n'+i)
 			else: return repr(v)
 
 		def conv(v,col_w):
-			vret = ""
+			vret = ''
 			if type(v) == str:
 				if not (set(list(v)) <= set(list(g.printable))):
 					vret = repr(v)
@@ -47,30 +46,30 @@ class MMGenObject(object):
 			elif type(v) == int or type(v) == long:
 				vret = str(v)
 			elif type(v) == dict:
-				sep = "\n{}{}".format(indent," "*4)
+				sep = '\n{}{}'.format(indent,' '*4)
 				cw = max(len(k) for k in v) + 2
-				t = sep.join(["{:<{w}}: {}".format(
+				t = sep.join(['{:<{w}}: {}'.format(
 					repr(k),
 	(fix_linebreaks(v[k],fixed_indent=0) if type(v[k]) == str else v[k]),
 					w=cw)
 				for k in sorted(v)])
-				vret = "{" + sep + t + "\n" + indent + "}"
+				vret = '{' + sep + t + '\n' + indent + '}'
 			elif type(v) in (list,tuple):
-				sep = "\n{}{}".format(indent," "*4)
-				t = " ".join([repr(e) for e in sorted(v)])
-				o,c = ("[","]") if type(v) == list else ("(",")")
-				vret = o + sep + t + "\n" + indent + c
+				sep = '\n{}{}'.format(indent,' '*4)
+				t = ' '.join([repr(e) for e in sorted(v)])
+				o,c = (('(',')'),('[',']'))[type(v)==list]
+				vret = o + sep + t + '\n' + indent + c
 			elif repr(v)[:14] == '<bound method ':
-				vret = " ".join(repr(v).split()[0:3]) + ">"
+				vret = ' '.join(repr(v).split()[0:3]) + '>'
 #				vret = repr(v)
 
 			return vret or type(v)
 
 		out = []
-		def f(k): return k[:2] != "__"
+		def f(k): return k[:2] != '__'
 		keys = filter(f, dir(self))
 		col_w = max(len(k) for k in keys)
-		fs = "{}%-{}s: %s".format(indent,col_w)
+		fs = '{}%-{}s: %s'.format(indent,col_w)
 
 		methods = [k for k in keys if repr(getattr(self,k))[:14] == '<bound method ']
 
@@ -83,11 +82,11 @@ class MMGenObject(object):
 		for k in sorted(methods) + sorted(other) + sorted(objects):
 			val = getattr(self,k)
 			if str(type(val))[:13] == "<class 'mmgen": # recurse into sub-objects
-				out.append("\n%s%s (%s):" % (indent,k,type(val)))
+				out.append('\n%s%s (%s):' % (indent,k,type(val)))
 				lvl += 1
-				out.append(str(getattr(self,k))+"\n")
+				out.append(str(getattr(self,k))+'\n')
 				lvl -= 1
 			else:
 				out.append(fs % (k, conv(val,col_w)))
 
-		return repr(self) + "\n    " + "\n    ".join(out)
+		return repr(self) + '\n    ' + '\n    '.join(out)

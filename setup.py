@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,19 +20,20 @@ from distutils.core import setup
 
 setup(
 		name         = 'mmgen',
-		description   = 'A complete Bitcoin cold-storage solution for the command line',
-		version      = '0.8.2',
+		description  = 'A complete Bitcoin cold-storage solution for the command line',
+		version      = '0.8.3',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows',
-		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind',
+		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical',
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',
 			'mmgen.bitcoin',
 			'mmgen.globalvars',
+			'mmgen.common',
 			'mmgen.crypto',
 			'mmgen.filename',
 			'mmgen.license',
@@ -40,7 +41,7 @@ setup(
 			'mmgen.mn_tirosh',
 			'mmgen.obj',
 			'mmgen.opts',
-			'mmgen.opt',
+			'mmgen.rpc',
 			'mmgen.seed',
 			'mmgen.term',
 			'mmgen.test',
@@ -51,7 +52,6 @@ setup(
 			'mmgen.main',
 			'mmgen.main_addrgen',
 			'mmgen.main_addrimport',
-			'mmgen.main_pywallet',
 			'mmgen.main_tool',
 			'mmgen.main_txcreate',
 			'mmgen.main_txsend',
@@ -60,14 +60,6 @@ setup(
 
 			'mmgen.share.__init__',
 			'mmgen.share.Opts',
-
-			'mmgen.rpc.__init__',
-			'mmgen.rpc.config',
-			'mmgen.rpc.connection',
-			'mmgen.rpc.data',
-			'mmgen.rpc.exceptions',
-			'mmgen.rpc.proxy',
-			'mmgen.rpc.util',
 
 			'test.__init__',
 			'test.test',
@@ -85,7 +77,6 @@ setup(
 			'mmgen-txcreate',
 			'mmgen-txsign',
 			'mmgen-txsend',
-			'mmgen-pywallet',
 			'mmgen-tool',
 		]
 	)

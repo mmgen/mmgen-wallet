@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,17 +20,13 @@
 addr.py:  Address generation/display routines for the MMGen suite
 """
 
-import sys
-from hashlib import sha256, sha512
-from hashlib import new as hashlib_new
+from hashlib import sha256, sha512, new as hashlib_new
 from binascii import hexlify, unhexlify
 
+from mmgen.common import *
 from mmgen.bitcoin import numtowif
-from mmgen.util import *
 from mmgen.tx import *
 from mmgen.obj import *
-import mmgen.globalvars as g
-import mmgen.opt as opt
 
 pnm = g.proj_name
 
@@ -54,7 +50,7 @@ addrmsgs = {
 Executable '{kconv}' unavailable. Falling back on (slow) internal ECDSA library.
 Please install '{kconv}' from the {vgen} package on your system for much
 faster address generation.
-""".format(kconv=g.keyconv_exec, vgen="vanitygen")
+""".format(kconv=g.keyconv_exec, vgen='vanitygen')
 }
 
 def test_for_keyconv(silent=False):
@@ -69,19 +65,19 @@ def test_for_keyconv(silent=False):
 	return True
 
 
-def generate_addrs(seed, addrnums, source="addrgen"):
+def generate_addrs(seed, addrnums, source='addrgen'):
 
 	from util import make_chksum_8
 	seed_id = make_chksum_8(seed) # Must do this before seed gets clobbered
 
 	if 'a' in opt.gen_what:
 		if opt.no_keyconv or test_for_keyconv() == False:
-			msg("Using (slow) internal ECDSA library for address generation")
+			msg('Using (slow) internal ECDSA library for address generation')
 			from mmgen.bitcoin import privnum2addr
 			keyconv = False
 		else:
 			from subprocess import check_output
-			keyconv = "keyconv"
+			keyconv = 'keyconv'
 
 	addrnums = sorted(set(addrnums)) # don't trust the calling function
 	t_addrs,num,pos,out = len(addrnums),0,0,[]
@@ -102,7 +98,7 @@ def generate_addrs(seed, addrnums, source="addrgen"):
 
 		pos += 1
 
-		qmsg_r("\rGenerating %s #%s (%s of %s)" % (w[0],num,pos,t_addrs))
+		qmsg_r('\rGenerating %s #%s (%s of %s)' % (w[0],num,pos,t_addrs))
 
 		e = AddrInfoEntry()
 		e.idx = num
@@ -123,7 +119,7 @@ def generate_addrs(seed, addrnums, source="addrgen"):
 		out.append(e)
 
 	m = w[0] if t_addrs == 1 else w[0]+w[1]
-	qmsg("\r%s: %s %s generated%s" % (seed_id,t_addrs,m," "*15))
+	qmsg('\r%s: %s %s generated%s' % (seed_id,t_addrs,m,' '*15))
 	a = AddrInfo(has_keys='k' in opt.gen_what, source=source)
 	a.initialize(seed_id,out)
 	return a
@@ -131,7 +127,7 @@ def generate_addrs(seed, addrnums, source="addrgen"):
 def _parse_addrfile_body(lines,has_keys=False,check=False):
 
 	if has_keys and len(lines) % 2:
-		return "Key-address file has odd number of lines"
+		return 'Key-address file has odd number of lines'
 
 	ret = []
 	while lines:
@@ -145,7 +141,7 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 			return "'%s': invalid Bitcoin address" % d[1]
 
 		if len(d) == 3: check_addr_label(d[2])
-		else:           d.append("")
+		else:           d.append('')
 
 		a.idx,a.addr,a.comment = int(d[0]),unicode(d[1]),unicode(d[2])
 
@@ -153,7 +149,7 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 			l = lines.pop(0)
 			d = l.split(None,2)
 
-			if d[0] != "wif:":
+			if d[0] != 'wif:':
 				return "Invalid key line in file: '%s'" % l
 			if not is_wif(d[1]):
 				return "'%s': invalid Bitcoin key" % d[1]
@@ -162,14 +158,14 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 
 		ret.append(a)
 
-	if has_keys and keypress_confirm("Check key-to-address validity?"):
+	if has_keys and keypress_confirm('Check key-to-address validity?'):
 		wif2addr_f = get_wif2addr_f()
 		llen = len(ret)
 		for n,e in enumerate(ret):
-			msg_r("\rVerifying keys %s/%s" % (n+1,llen))
+			msg_r('\rVerifying keys %s/%s' % (n+1,llen))
 			if e.addr != wif2addr_f(e.wif):
 				return "Key doesn't match address!\n  %s\n  %s" % (e.wif,e.addr)
-		msg(" - done")
+		msg(' - done')
 
 	return ret
 
@@ -177,7 +173,7 @@ def _parse_addrfile_body(lines,has_keys=False,check=False):
 def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 
 	if buf: lines = remove_comments(buf.splitlines()) # DOS-safe
-	else:   lines = get_lines_from_file(fn,"address data",trim_comments=True)
+	else:   lines = get_lines_from_file(fn,'address data',trim_comments=True)
 
 	try:
 		sid,obrace = lines[0].split()
@@ -196,17 +192,14 @@ def _parse_addrfile(fn,buf=[],has_keys=False,exit_on_error=True):
 			if type(ret) == list: return sid,ret
 			else: errmsg = ret
 
-	if exit_on_error:
-		msg(errmsg)
-		sys.exit(3)
-	else:
-		return False
+	if exit_on_error: die(3,errmsg)
+	else:             return False
 
 
 def _parse_keyaddr_file(fn):
 	from mmgen.crypto import mmgen_decrypt_file_maybe
-	d = mmgen_decrypt_file_maybe(fn,"key-address file")
-	return _parse_addrfile("",buf=d,has_keys=True,exit_on_error=False)
+	d = mmgen_decrypt_file_maybe(fn,'key-address file')
+	return _parse_addrfile('',buf=d,has_keys=True,exit_on_error=False)
 
 
 class AddrInfoList(MMGenObject):
@@ -225,31 +218,31 @@ class AddrInfoList(MMGenObject):
 			return self.data[sid]
 
 	def mmaddr2btcaddr(self,mmaddr):
-		btcaddr = ""
-		sid,idx = mmaddr.split(":")
+		btcaddr = ''
+		sid,idx = mmaddr.split(':')
 		if sid in self.seed_ids():
 			btcaddr = self.addrinfo(sid).btcaddr(int(idx))
 		return btcaddr
 
 	def add_wallet_data(self,c):
-		vmsg_r("Getting account data from wallet...")
-		data,accts,i = {},c.listaccounts(minconf=0,includeWatchonly=True),0
+		vmsg_r('Getting account data from wallet...')
+		accts = c.listaccounts(0,True)
+		data,i = {},0
 		for acct in accts:
 			ma,comment = parse_mmgen_label(acct)
 			if ma:
 				i += 1
 				addrlist = c.getaddressesbyaccount(acct)
 				if len(addrlist) != 1:
-					msg(wmsg['too_many_acct_addresses'] % acct)
-					sys.exit(2)
-				seed_id,idx = ma.split(":")
+					die(2,wmsg['too_many_acct_addresses'] % acct)
+				seed_id,idx = ma.split(':')
 				if seed_id not in data:
 					data[seed_id] = []
 				a = AddrInfoEntry()
 				a.idx,a.addr,a.comment = \
 					int(idx),unicode(addrlist[0]),unicode(comment)
 				data[seed_id].append(a)
-		vmsg("{n} {pnm} addresses found, {m} accounts total".format(
+		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(
 				n=i,pnm=pnm,m=len(accts)))
 		for sid in data:
 			self.add(AddrInfo(sid=sid,adata=data[sid]))
@@ -259,8 +252,7 @@ class AddrInfoList(MMGenObject):
 			self.data[addrinfo.seed_id] = addrinfo
 			return True
 		else:
-			msg("Error: object %s is not of type AddrInfo" % repr(addrinfo))
-			sys.exit(1)
+			die(1,'Error: object %s is not of type AddrInfo' % repr(addrinfo))
 
 	def make_reverse_dict(self,btcaddrs):
 		d = {}
@@ -274,53 +266,57 @@ class AddrInfoEntry(MMGenObject):
 
 class AddrInfo(MMGenObject):
 
-	def __init__(self,addrfile="",has_keys=False,sid="",adata=[], source=""):
+	def __init__(self,addrfile='',has_keys=False,sid='',adata=[],source='',caller=''):
 		self.has_keys = has_keys
+		self.caller = caller
 		do_chksum = True
 		if addrfile:
-			f = _parse_keyaddr_file if has_keys else _parse_addrfile
+			f = (_parse_addrfile,_parse_keyaddr_file)[bool(has_keys)]
 			sid,adata = f(addrfile)
-			self.source = "addrfile"
+			self.source = 'addrfile'
 		elif sid and adata: # data from wallet
-			self.source = "wallet"
+			self.source = 'wallet'
 		elif sid or adata:
-			die(3,"Must specify address file, or seed_id + adata")
+			die(3,'Must specify address file, or seed_id + adata')
 		else:
-			self.source = source if source else "unknown"
+			self.source = source if source else 'unknown'
 			return
 
 		self.initialize(sid,adata)
 
 	def initialize(self,seed_id,addrdata):
 		if seed_id in self.__dict__:
-			msg("Seed ID already set for object %s" % self)
+			msg('Seed ID already set for object %s' % self)
 			return False
 		self.seed_id = seed_id
 		self.addrdata = addrdata
 		self.num_addrs = len(addrdata)
-		if self.source in ("wallet","txsign"):
+		if self.source in ('wallet','txsign'):
 			self.checksum = None
 			self.idxs_fmt = None
-		elif self.source == "addrgen" and opt.gen_what == "k":
+		elif self.source == 'addrgen' and opt.gen_what == 'k':
 			self.checksum = None
 			self.fmt_addr_idxs()
 		else: # self.source in addrfile, addrgen
 			self.make_addrdata_chksum()
-			self.fmt_addr_idxs()
-			w = "key-address" if self.has_keys else "address"
-			qmsg("Checksum for %s data %s[%s]: %s" %
-					(w,self.seed_id,self.idxs_fmt,self.checksum))
-			if self.source == "addrgen":
-				qmsg(
-"Record this checksum: it will be used to verify the address file in the future")
-			elif self.source == "addrfile":
-				qmsg("Check this value against your records")
+			if self.caller == 'tool':
+				Msg(self.checksum)
+			else:
+				self.fmt_addr_idxs()
+				w = ('address','key-address')[bool(self.has_keys)]
+				qmsg('Checksum for %s data %s[%s]: %s' %
+						(w,self.seed_id,self.idxs_fmt,self.checksum))
+				if self.source == 'addrgen':
+					qmsg(
+	'Record this checksum: it will be used to verify the address file in the future')
+				elif self.source == 'addrfile':
+					qmsg('Check this value against your records')
 
 	def idxs(self):
 		return [e.idx for e in self.addrdata]
 
 	def addrs(self):
-		return ["%s:%s"%(self.seed_id,e.idx) for e in self.addrdata]
+		return ['%s:%s'%(self.seed_id,e.idx) for e in self.addrdata]
 
 	def addrpairs(self):
 		return [(e.idx,e.addr) for e in self.addrdata]
@@ -355,15 +351,15 @@ class AddrInfo(MMGenObject):
 		d,b = {},btcaddrs
 		for e in self.addrdata:
 			try:
-				d[b[b.index(e.addr)]] = ("%s:%s"%(self.seed_id,e.idx),e.comment)
+				d[b[b.index(e.addr)]] = ('%s:%s'%(self.seed_id,e.idx),e.comment)
 			except: pass
 		return d
 
 
 	def make_addrdata_chksum(self):
-		lines=[" ".join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
+		lines=[' '.join([str(e.idx),e.addr]+([e.wif] if self.has_keys else []))
 						for e in self.addrdata]
-		self.checksum = make_chksum_N(" ".join(lines), nchars=24, sep=True)
+		self.checksum = make_chksum_N(' '.join(lines), nchars=24, sep=True)
 
 
 	def fmt_data(self,enable_comments=False):
@@ -377,53 +373,51 @@ class AddrInfo(MMGenObject):
 
 		for i,s in enumerate(status):
 			if s != 0 and s != self.num_addrs:
-				msg("%s missing %s in addr data"% (self.num_addrs-s,attrs[i]))
-				sys.exit(3)
+				die(3,'%s missing %s in addr data'% (self.num_addrs-s,attrs[i]))
 
 		if status[0] == status[1] == 0:
-			msg("Addr data contains neither addresses nor keys")
-			sys.exit(3)
+			die(3,'Addr data contains neither addresses nor keys')
 
 		# Header
 		out = []
 		from mmgen.addr import addrmsgs
-		k = ('addrfile_header','keyfile_header')[int(status[0]==0)]
-		out.append(addrmsgs[k]+"\n")
+		k = ('addrfile_header','keyfile_header')[status[0]==0]
+		out.append(addrmsgs[k]+'\n')
 		if self.checksum:
-			w = ("Key-address","Address")[int(status[1]==0)]
-			out.append("# {} data checksum for {}[{}]: {}".format(
+			w = ('Key-address','Address')[status[1]==0]
+			out.append('# {} data checksum for {}[{}]: {}'.format(
 						w, self.seed_id, self.idxs_fmt, self.checksum))
-			out.append("# Record this value to a secure location.\n")
-		out.append("%s {" % self.seed_id)
+			out.append('# Record this value to a secure location.\n')
+		out.append('%s {' % self.seed_id)
 
 		# Body
-		fs = "  {:<%s}  {:<34}{}" % len(str(self.addrdata[-1].idx))
+		fs = '  {:<%s}  {:<34}{}' % len(str(self.addrdata[-1].idx))
 		for e in self.addrdata:
-			c = ""
+			c = ''
 			if enable_comments:
-				try:    c = " "+e.comment
+				try:    c = ' '+e.comment
 				except: pass
 			if status[0]:  # First line with idx
 				out.append(fs.format(e.idx, e.addr,c))
 			else:
-				out.append(fs.format(e.idx, "wif: "+e.wif,c))
+				out.append(fs.format(e.idx, 'wif: '+e.wif,c))
 
 			if status[1]:   # Subsequent lines
 				if status[2]:
-					out.append(fs.format("", "hex: "+e.sec,c))
+					out.append(fs.format('', 'hex: '+e.sec,c))
 				if status[0]:
-					out.append(fs.format("", "wif: "+e.wif,c))
+					out.append(fs.format('', 'wif: '+e.wif,c))
 
-		out.append("}")
+		out.append('}')
 
-		return "\n".join([l.rstrip() for l in out]) + "\n"
+		return '\n'.join([l.rstrip() for l in out]) + '\n'
 
 
 	def fmt_addr_idxs(self):
 
 		try: int(self.addrdata[0].idx)
 		except:
-			self.idxs_fmt = "(no idxs)"
+			self.idxs_fmt = '(no idxs)'
 			return
 
 		addr_idxs = [e.idx for e in self.addrdata]
@@ -432,10 +426,10 @@ class AddrInfo(MMGenObject):
 
 		for i in addr_idxs[1:]:
 			if i == prev + 1:
-				if i == addr_idxs[-1]: ret += "-", i
+				if i == addr_idxs[-1]: ret += '-', i
 			else:
-				if prev != ret[-1]: ret += "-", prev
-				ret += ",", i
+				if prev != ret[-1]: ret += '-', prev
+				ret += ',', i
 			prev = i
 
-		self.idxs_fmt = "".join([str(i) for i in ret])
+		self.idxs_fmt = ''.join([str(i) for i in ret])

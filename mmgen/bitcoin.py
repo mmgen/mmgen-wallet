@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ _Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
 curve_secp256k1 = ecdsa.ellipticcurve.CurveFp( _p, _a, _b )
 generator_secp256k1 = ecdsa.ellipticcurve.Point( curve_secp256k1, _Gx, _Gy, _r )
 oid_secp256k1 = (1,3,132,0,10)
-secp256k1 = ecdsa.curves.Curve("secp256k1", curve_secp256k1, generator_secp256k1, oid_secp256k1)
+secp256k1 = ecdsa.curves.Curve('secp256k1', curve_secp256k1, generator_secp256k1, oid_secp256k1)
 
 b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -49,8 +49,8 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 #
 # Test: 5JbQQTs3cnoYN9vDYaGY6nhQ1DggVsY4FJNBUfEfpSQqrEp3srk
 #
-# The "zero address":
-# 1111111111111111111114oLvT2 (use step2 = ("0" * 40) to generate)
+# The 'zero address':
+# 1111111111111111111114oLvT2 (use step2 = ('0' * 40) to generate)
 #
 
 def pubhex2hexaddr(pubhex):
@@ -63,8 +63,8 @@ def hexaddr2addr(hexaddr, vers_num='00'):
 	step1 = sha256(unhexlify(hexaddr2)).digest()
 	step2 = sha256(step1).hexdigest()
 	pubkey = hexaddr2 + step2[:8]
-	lzeroes = (len(hexaddr2) - len(hexaddr2.lstrip("0"))) / 2
-	return ("1" * lzeroes) + _numtob58(int(pubkey,16))
+	lzeroes = (len(hexaddr2) - len(hexaddr2.lstrip('0'))) / 2
+	return ('1' * lzeroes) + _numtob58(int(pubkey,16))
 
 def verify_addr(addr,verbose=False,return_hex=False):
 
@@ -72,7 +72,7 @@ def verify_addr(addr,verbose=False,return_hex=False):
 		if addr[0] != ldigit: continue
 		num = _b58tonum(addr)
 		if num == False: break
-		addr_hex = "{:050x}".format(num)
+		addr_hex = '{:050x}'.format(num)
 		if addr_hex[:2] != vers_num: continue
 		step1 = sha256(unhexlify(addr_hex[:42])).digest()
 		step2 = sha256(step1).hexdigest()
@@ -101,7 +101,7 @@ def _b58tonum(b58num):
 	return sum([b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1]))])
 
 def numtowif(numpriv):
-	step1 = '80' + "{:064x}".format(numpriv)
+	step1 = '80' + '{:064x}'.format(numpriv)
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
 	key = step1 + step3[:8]
@@ -113,17 +113,17 @@ def numtowif(numpriv):
 # (well, not exactly: they yield numeric but not bytewise equivalence)
 
 def b58encode(s):
-	if s == "": return ""
+	if s == '': return ''
 	num = int(hexlify(s),16)
 	return _numtob58(num)
 
 def b58decode(b58num):
-	if b58num == "": return ""
+	if b58num == '': return ''
 	# Zap all spaces:
 	num = _b58tonum(b58num.translate(None,' \t\n\r'))
 	if num == False: return False
-	out = "{:x}".format(num)
-	return unhexlify("0"*(len(out)%2) + out)
+	out = '{:x}'.format(num)
+	return unhexlify('0'*(len(out)%2) + out)
 
 # These yield bytewise equivalence in our special cases:
 
@@ -134,36 +134,36 @@ def _b58_pad(s,a,b,pad,f,w):
 	try:
 		outlen = b[a.index(len(s))]
 	except:
-		Msg("_b58_pad() accepts only %s %s bytes long "\
-			"(input was %s bytes)" % (w,",".join([str(i) for i in a]),len(s)))
+		Msg('_b58_pad() accepts only %s %s bytes long '\
+			'(input was %s bytes)' % (w,','.join([str(i) for i in a]),len(s)))
 		return False
 
 	out = f(s)
 	if out == False: return False
-	return "%s%s" % (pad * (outlen - len(out)), out)
+	return '%s%s' % (pad * (outlen - len(out)), out)
 
 def b58encode_pad(s):
 	return _b58_pad(s,
-		a=bin_lens,b=b58_lens,pad="1",f=b58encode,w="binary strings")
+		a=bin_lens,b=b58_lens,pad='1',f=b58encode,w='binary strings')
 
 def b58decode_pad(s):
 	return _b58_pad(s,
-		a=b58_lens,b=bin_lens,pad='\0',f=b58decode,w="base 58 numbers")
+		a=b58_lens,b=bin_lens,pad='\0',f=b58decode,w='base 58 numbers')
 
 # Compressed address support:
 
 def wiftohex(wifpriv,compressed=False):
-	idx = 68 if compressed else 66
+	idx = (66,68)[bool(compressed)]
 	num = _b58tonum(wifpriv)
 	if num == False: return False
-	key = "{:x}".format(num)
+	key = '{:x}'.format(num)
 	if compressed and key[66:68] != '01': return False
 	round1 = sha256(unhexlify(key[:idx])).digest()
 	round2 = sha256(round1).hexdigest()
 	return key[2:66] if (key[:2] == '80' and key[idx:] == round2[:8]) else False
 
 def hextowif(hexpriv,compressed=False):
-	step1 = '80' + hexpriv + ('01' if compressed else '')
+	step1 = '80' + hexpriv + ('','01')[bool(compressed)]
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
 	key = step1 + step3[:8]
@@ -173,7 +173,7 @@ def privnum2pubhex(numpriv,compressed=False):
 	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
 	if compressed:
-		p = '02' if pubkey[-1] in "02468ace" else '03'
+		p = ('03','02')[pubkey[-1] in '02468ace']
 		return p+pubkey[:64]
 	else:
 		return '04'+pubkey

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2015 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2016 Philemon <mmgen-py@yandex.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,9 @@
 term.py:  Terminal-handling routines for the MMGen suite
 """
 
-import sys, os, struct
-import mmgen.globalvars as g
-import opt
-from mmgen.util import msg, msg_r
+import os,struct
+
+from mmgen.common import *
 
 def _kb_hold_protect_unix():
 
@@ -42,7 +41,7 @@ def _kb_hold_protect_unix():
 
 def _kb_hold_protect_unix_raw(): pass
 
-def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
+def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
 
 	msg_r(prompt)
 	timeout = float(0.3)
@@ -57,8 +56,8 @@ def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 		ch = sys.stdin.read(1)
 		if prehold_protect:
 			if key: continue
-		if immed_chars == "ALL" or ch in immed_chars: break
-		if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r": break
+		if immed_chars == 'ALL' or ch in immed_chars: break
+		if immed_chars == 'ALL_EXCEPT_ENTER' and not ch in '\n\r': break
 		# Protect against long keypress
 		key = select([sys.stdin], [], [], timeout)[0]
 		if not key: break
@@ -67,7 +66,7 @@ def _get_keypress_unix(prompt="",immed_chars="",prehold_protect=True):
 	return ch
 
 
-def _get_keypress_unix_raw(prompt="",immed_chars="",prehold_protect=None):
+def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 
 	msg_r(prompt)
 
@@ -98,7 +97,7 @@ def _kb_hold_protect_mswin():
 
 def _kb_hold_protect_mswin_raw(): pass
 
-def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
+def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True):
 
 	msg_r(prompt)
 	timeout = float(0.5)
@@ -109,9 +108,9 @@ def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 
 			if ord(ch) == 3: raise KeyboardInterrupt
 
-			if immed_chars == "ALL" or ch in immed_chars:
+			if immed_chars == 'ALL' or ch in immed_chars:
 				return ch
-			if immed_chars == "ALL_EXCEPT_ENTER" and not ch in "\n\r":
+			if immed_chars == 'ALL_EXCEPT_ENTER' and not ch in '\n\r':
 				return ch
 
 			hit_time = time.time()
@@ -121,7 +120,7 @@ def _get_keypress_mswin(prompt="",immed_chars="",prehold_protect=True):
 				if float(time.time() - hit_time) > timeout:
 					return ch
 
-def _get_keypress_mswin_raw(prompt="",immed_chars="",prehold_protect=None):
+def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None):
 
 	msg_r(prompt)
 	ch = msvcrt.getch()
@@ -160,7 +159,7 @@ def _get_terminal_size_linux():
 
 def _get_terminal_size_mswin():
 	try:
-		from ctypes import windll, create_string_buffer
+		from ctypes import windll,create_string_buffer
 		# stdin handle is -10
 		# stdout handle is -11
 		# stderr handle is -12
@@ -169,7 +168,7 @@ def _get_terminal_size_mswin():
 		res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
 		if res:
 			(bufx, bufy, curx, cury, wattr, left, top, right, bottom,
-			maxx, maxy) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+			maxx, maxy) = struct.unpack('hhhhHhhhhhh', csbi.raw)
 			sizex = right - left + 1
 			sizey = bottom - top + 1
 			return sizex, sizey
@@ -179,7 +178,7 @@ def _get_terminal_size_mswin():
 def mswin_dummy_flush(fd,termconst): pass
 
 try:
-	import tty, termios
+	import tty,termios
 	from select import select
 	if g.disable_hold_protect:
 		get_char = _get_keypress_unix_raw
@@ -192,7 +191,7 @@ try:
 # call: myflush(sys.stdin, termios.TCIOFLUSH)
 except:
 	try:
-		import msvcrt, time
+		import msvcrt,time
 		if g.disable_hold_protect:
 			get_char = _get_keypress_mswin_raw
 			kb_hold_protect = _kb_hold_protect_mswin_raw
@@ -202,18 +201,18 @@ except:
 		get_terminal_size = _get_terminal_size_mswin
 		myflush = mswin_dummy_flush
 	except:
-		if not sys.platform.startswith("linux") \
-				and not sys.platform.startswith("win"):
-			msg("Unsupported platform: %s" % sys.platform)
-			msg("This program currently runs only on Linux and Windows")
+		if not sys.platform.startswith('linux') \
+				and not sys.platform.startswith('win'):
+			msg('Unsupported platform: %s' % sys.platform)
+			msg('This program currently runs only on Linux and Windows')
 		else:
-			msg("Unable to set terminal mode")
+			msg('Unable to set terminal mode')
 		sys.exit(2)
 
 
 def do_pager(text):
 
-	pagers = ["less","more"]
+	pagers = ['less','more']
 	shell = False
 
 	from os import environ
@@ -223,23 +222,23 @@ def do_pager(text):
 # not found.
 # When 'shell' is false, an exception is raised, invoking the fallback
 # 'print' instead of the pager.
-# We risk assuming that "more" will always be available on a stock
+# We risk assuming that 'more' will always be available on a stock
 # Windows installation.
-	if sys.platform.startswith("win") and 'HOME' not in environ:
+	if sys.platform.startswith('win') and 'HOME' not in environ:
 		shell = True
-		pagers = ["more"]
+		pagers = ['more']
 
 	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
 		pagers = [environ['PAGER']] + pagers
 
 	for pager in pagers:
-		end = "" if pager == "less" else "\n(end of text)\n"
+		end = ('\n(end of text)\n','')[pager=='less']
 		try:
-			from subprocess import Popen, PIPE, STDOUT
+			from subprocess import Popen,PIPE,STDOUT
 			p = Popen([pager], stdin=PIPE, shell=shell)
 		except: pass
 		else:
-			p.communicate(text+end+"\n")
-			msg_r("\r")
+			p.communicate(text+end+'\n')
+			msg_r('\r')
 			break
 	else: Msg(text+end)
