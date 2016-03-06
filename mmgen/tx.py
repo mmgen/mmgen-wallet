@@ -309,32 +309,3 @@ def mmaddr2btcaddr_addrdata(mmaddr,addr_data,source=''):
 			return addr_data[seed_id][idx]
 
 	return '',''
-
-def get_bitcoind_cfg_options(cfg_keys):
-
-	cfg_file = os.path.join(get_homedir(), get_datadir(), 'bitcoin.conf')
-
-	cfg = dict([(k,v) for k,v in [split2(line.translate(None,'\t '),'=')
-			for line in get_lines_from_file(cfg_file)] if k in cfg_keys])
-
-	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
-	return cfg
-
-def get_bitcoind_auth_cookie():
-
-	f = os.path.join(get_homedir(), get_datadir(), '.cookie')
-
-	if file_is_readable(f):
-		return get_lines_from_file(f)[0]
-	else:
-		return ''
-
-def connect_to_bitcoind():
-
-	host,port,user,passwd = 'localhost',8332,'rpcuser','rpcpassword'
-	cfg = get_bitcoind_cfg_options((user,passwd))
-	auth_cookie = get_bitcoind_auth_cookie()
-
-	import mmgen.rpc
-	return mmgen.rpc.BitcoinRPCConnection(
-				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)

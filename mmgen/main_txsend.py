@@ -50,7 +50,7 @@ metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
 
 qmsg("Signed transaction file '%s' is valid" % infile)
 
-c = connect_to_bitcoind()
+c = bitcoin_connection()
 
 prompt_and_view_tx_data(c,'View transaction data?',
 	inputs_data,tx_hex,b2m_map,comment,metadata)

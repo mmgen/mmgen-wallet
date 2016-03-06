@@ -759,3 +759,35 @@ def do_license_msg(immed=False):
 		else:
 			msg_r('\r')
 	msg('')
+
+
+def get_bitcoind_cfg_options(cfg_keys):
+
+	cfg_file = os.path.join(get_homedir(), get_datadir(), 'bitcoin.conf')
+
+	cfg = dict([(k,v) for k,v in [split2(line.translate(None,'\t '),'=')
+			for line in get_lines_from_file(cfg_file)] if k in cfg_keys]) \
+				if file_is_readable(cfg_file) else {}
+
+	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
+
+	return cfg
+
+def get_bitcoind_auth_cookie():
+
+	f = os.path.join(get_homedir(), get_datadir(), '.cookie')
+
+	if file_is_readable(f):
+		return get_lines_from_file(f)[0]
+	else:
+		return ''
+
+def bitcoin_connection():
+
+	host,port,user,passwd = 'localhost',8332,'rpcuser','rpcpassword'
+	cfg = get_bitcoind_cfg_options((user,passwd))
+	auth_cookie = get_bitcoind_auth_cookie()
+
+	import mmgen.rpc
+	return mmgen.rpc.BitcoinRPCConnection(
+				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)

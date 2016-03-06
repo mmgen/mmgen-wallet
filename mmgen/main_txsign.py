@@ -291,7 +291,7 @@ infiles = opts.init(opts_data,add_opts=['b16'])
 if not infiles: opts.usage()
 for i in infiles: check_infile(i)
 
-c = connect_to_bitcoind()
+c = bitcoin_connection()
 
 saved_seeds = {}
 tx_files   = [i for i in infiles if get_extension(i) == g.rawtx_ext]

@@ -48,8 +48,8 @@ def usage():
 def print_version_info():
 	Msg("""
 {pgnm_uc} version {g.version}
-Part of the {pnm} suite, a Bitcoin cold-storage solution for the com-
-mand line.   Copyright (C) {g.Cdates} {g.author} {g.email}
+Part of the {pnm} suite, a Bitcoin cold-storage solution for the command line.
+Copyright (C) {g.Cdates} {g.author} {g.email}
 """.format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip())
 
 def die_on_incompatible_opts(incompat_list):

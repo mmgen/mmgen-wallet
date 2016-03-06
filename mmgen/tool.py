@@ -378,7 +378,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		if not tmp: return False
 		usr_addr_list = ['%s:%s' % (sid,i) for i in tmp]
 
-	c = connect_to_bitcoind()
+	c = bitcoin_connection()
 
 	addrs = {} # reusing variable name!
 	from decimal import Decimal
@@ -444,7 +444,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 def getbalance(minconf=1):
 
 	accts = {}
-	for d in connect_to_bitcoind().listunspent(0):
+	for d in bitcoin_connection().listunspent(0):
 		ma = split2(d['account'])[0]
 		keys = ['TOTAL']
 		if d['spendable']: keys += ['SPENDABLE']
@@ -465,7 +465,7 @@ def getbalance(minconf=1):
 				for a in accts[key]]))
 
 def txview(infile,pager=False,terse=False):
-	c = connect_to_bitcoind()
+	c = bitcoin_connection()
 	tx_data = get_lines_from_file(infile,'transaction data')
 
 	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
@@ -476,7 +476,7 @@ def add_label(mmaddr,label,remove=False):
 		die(1,'{a}: not a valid {pnm} address'.format(pnm=pnm,a=mmaddr))
 	check_addr_label(label)  # Exits on failure
 
-	c = connect_to_bitcoind()
+	c = bitcoin_connection()
 
 	from mmgen.addr import AddrInfoList
 	btcaddr = AddrInfoList(bitcoind_connection=c).mmaddr2btcaddr(mmaddr)

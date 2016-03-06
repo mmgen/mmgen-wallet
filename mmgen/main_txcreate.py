@@ -322,7 +322,7 @@ cmd_args = opts.init(opts_data)
 if opt.comment_file:
 	comment = get_tx_comment_from_file(opt.comment_file)
 
-c = connect_to_bitcoind()
+c = bitcoin_connection()
 
 if not opt.info:
 	do_license_msg(immed=True)

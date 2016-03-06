@@ -23,7 +23,6 @@ mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 import time
 
 from mmgen.common import *
-from mmgen.tx import connect_to_bitcoind
 from mmgen.addr import AddrInfo,AddrInfoEntry
 
 opts_data = {
@@ -78,7 +77,7 @@ m = (' from Seed ID %s' % ai.seed_id) if ai.seed_id else ''
 qmsg('OK. %s addresses%s' % (ai.num_addrs,m))
 
 if not opt.test:
-	c = connect_to_bitcoind()
+	c = bitcoin_connection()
 
 m = """
 WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is

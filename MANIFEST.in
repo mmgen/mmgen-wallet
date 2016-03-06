@@ -1,0 +1,4 @@
+include test/*.py
+include test/ref/*
+include MMGenLive/build_system.sh
+prune test/ref/__db*
