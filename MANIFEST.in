@@ -1,4 +1,5 @@
+include README.md SIGNING_KEY.pub LICENSE INSTALL
+include doc/wiki/using-mmgen/*
 include test/*.py
 include test/ref/*
-include MMGenLive/build_system.sh
 prune test/ref/__db*
