@@ -44,10 +44,9 @@
 > now created will be used as your **tracking wallet**.
 
 > If you're connected to the Internet, bitcoind will begin downloading and
-> verifying the blockchain.  This can take many hours if you're downloading the
-> blockchain from scratch.  To speed up the process you may want to use the
-> [bootstrap.dat][bd] torrent provided by the Bitcoin Core developers.
-> Instructions are provided on the linked page.
+> verifying the blockchain.  This can take from several hours to several days
+> (depending on the speed of your computer) if you're downloading the blockchain
+> from scratch.
 
 > **On the offline computer:**
 

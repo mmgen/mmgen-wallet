@@ -1,27 +1,12 @@
 #### Perform the following steps on both your online and offline computers:
 
-Install the pip Python installer:
+Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-pip python-dev
+		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git
 
-Install required Python modules:
+Install the Python Cryptography Toolkit:
 
-		$ sudo pip install ecdsa scrypt pycrypto bitcoin-python
-
-Install the pexpect Python module:
-
-		$ sudo pip install pexpect
-
->> Note: pexpect v4.0.1 (the latest version as of this writing) is BROKEN and
->> will cause errors when running the test suite!  If this is the version you
->> just installed on your system (examine the output of 'pip freeze' to find
->> out), then you must downgrade.  Note that newer versions may be broken as
->> well.  Version 3.1 is known to work.  If this is the version on your system,
->> then you may skip the next step.  Otherwise, download the [v3.1 tarball][03],
->> unpack it, cd to the archive root and run:
-
-			$ sudo pip uninstall pexpect
-			$ sudo python setup.py install
+		$ sudo pip install pycrypto
 
 Install MMGen:
 
@@ -33,7 +18,7 @@ Install vanitygen (optional but recommended):
 		$ sudo apt-get install libpcre3-dev
 		$ git clone https://github.com/samr7/vanitygen.git
 		$ cd vanitygen; make
-		(copy the "keyconv" executable to your path)
+		(copy the "keyconv" executable to your execution path)
 
 Install bitcoind:
 

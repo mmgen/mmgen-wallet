@@ -14,6 +14,14 @@
 * <a href=#13>Incognito wallets</a>
 	* <a href=#13a>Hidden incognito wallets</a>
 
+IMPORTANT NOTE: The following primer presupposes you have MMGen installed
+on two computers, one offline and one online.  However, if you have an online
+computer and a few Bitcoin addresses with small balances, it's perfectly
+possible to practice the operations decribed below on a single machine.
+
+If you're just looking to get your feet wet, wallet generation, wallet format
+conversions, address and key generation, and address import may all be practiced
+on an online or offline computer with no blockchain and no Bitcoin balance.
 
 ### <a name=01>Basic Operations</a>
 
