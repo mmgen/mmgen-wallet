@@ -110,6 +110,7 @@ class BitcoinRPCConnection(object):
 
 
 	rpcmethods = (
+		'estimatefee',
 		'getinfo',
 		'getbalance',
 		'getaddressesbyaccount',

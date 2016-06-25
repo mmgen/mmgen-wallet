@@ -559,7 +559,7 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 		if s == '': ret = 0
 		else:
 			f = (p.expect_exact,p.expect)[bool(regex)]
-			ret = f(s,timeout=3)
+			ret = f(s,timeout=60)
 	except pexpect.TIMEOUT:
 		errmsg(red('\nERROR.  Expect %s%s%s timed out.  Exiting' % (quo,s,quo)))
 		sys.exit(1)
@@ -1141,7 +1141,8 @@ class MMGenTestSuite(object):
 		t.expect('Enter a range or space-separated list of outputs to spend: ',
 				' '.join([str(i) for i in outputs_list])+'\n')
 		if non_mmgen_input: t.expect('Accept? (y/N): ','y')
-		t.expect('OK? (Y/n): ','y')
+		t.expect('OK? (Y/n): ','y') # fee OK?
+		t.expect('OK? (Y/n): ','y') # change OK?
 		t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.tx_view()
 		t.expect('Save transaction? (y/N): ','y')
@@ -1757,7 +1758,23 @@ if opt.pause:
 start_time = int(time.time())
 ts = MMGenTestSuite()
 
-for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
+# Laggy flash media cause pexpect to crash, so read and write all temporary
+# files to volatile memory in '/dev/shm'
+if sys.platform[:3] == 'win':
+	for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
+else:
+	d,pfx = '/dev/shm','mmgen-test-'
+	try:
+		import subprocess
+		subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
+	except Exception as e:
+		die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
+	try:
+		import tempfile
+		shm_dir = tempfile.mkdtemp('',pfx,d)
+	except Exception as e:
+		die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
+	for cfg in sorted(cfgs): mk_tmpdir_path(shm_dir,cfgs[cfg])
 
 try:
 	if cmd_args:

@@ -35,9 +35,10 @@ opts_data = {
 	'options': """
 -h, --help            Print this help message
 -c, --comment-file= f Source the transaction's comment from file 'f'
+-C, --tx-confs=     c Estimated confirmations (default: {g.tx_confs})
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -e, --echo-passphrase Print passphrase to screen when typing it
--f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC)
+-f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
 -i, --info            Display unspent outputs and exit
 -q, --quiet           Suppress warnings; overwrite files without
                       prompting
@@ -47,6 +48,11 @@ opts_data = {
 
 Transaction inputs are chosen from a list of the user's unpent outputs
 via an interactive menu.
+
+If not specified by the user, transaction fees are calculated using
+bitcoind's "estimatefee" function for the default (or user-specified)
+number of confirmations.  Only if "estimatefee" fails is the default fee
+of {g.tx_fee} BTC used.
 
 Ages of transactions are approximate based on an average block creation
 interval of {g.mins_per_block} minutes.
@@ -104,9 +110,9 @@ was specified.
 
 def format_unspent_outputs_for_printing(out,sort_info,total):
 
-	pfs  = ' %-4s %-67s %-34s %-12s %-13s %-8s %-10s %s'
-	pout = [pfs % ('Num','TX id,Vout','Address','{pnm} ID'.format(pnm=pnm),
-		'Amount (BTC)','Conf.','Age (days)', 'Comment')]
+	pfs  = ' %-4s %-67s %-34s %-14s %-12s %-8s %-6s %s'
+	pout = [pfs % ('Num','Tx ID,Vout','Address','{pnm} ID'.format(pnm=pnm),
+		'Amount(BTC)','Conf.','Age(d)', 'Comment')]
 
 	for n,i in enumerate(out):
 		addr = '=' if i['skip'] == 'addr' and 'grouped' in sort_info else i['address']
@@ -114,7 +120,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 			if i['skip'] == 'txid' and 'grouped' in sort_info else str(i['txid'])
 
 		s = pfs % (str(n+1)+')', tx+','+str(i['vout']),addr,
-				i['mmid'],i['amt'],i['confirmations'],i['days'],i['comment'])
+				i['mmid'],i['amt'].strip(),i['confirmations'],i['days'],i['comment'])
 		pout.append(s.rstrip())
 
 	return \
@@ -317,6 +323,50 @@ def make_b2m_map(inputs_data,tx_out,ail_w,ail_f):
 	d.update(ail_f.make_reverse_dict(tx_out.keys()))
 	return d
 
+def get_fee_estimate():
+	if 'tx_fee' in opt.set_by_user:
+		return None
+	else:
+		ret = c.estimatefee(opt.tx_confs)
+		if ret != -1:
+			return ret
+		else:
+			m = """
+Fee estimation failed!
+Your possible courses of action (from best to worst):
+    1) Re-run script with a different '--tx-confs' parameter (now '{c}')
+    2) Re-run script with the '--tx-fee' option (specify fee manually)
+    3) Accept the global default fee of {f} BTC
+Accept the global default fee of {f} BTC?
+""".format(c=opt.tx_confs,f=opt.tx_fee).strip()
+			if keypress_confirm(m):
+				return None
+			else:
+				die(1,'Exiting at user request')
+
+# see: https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
+def get_tx_size_and_fee(inputs,outputs):
+	tx_size = len(inputs)*180 + len(outputs)*34 + 10
+	if fee_estimate:
+		ftype,fee = 'Calculated','{:.8f}'.format(fee_estimate * tx_size / 1024)
+	else:
+		ftype,fee = 'User-selected',opt.tx_fee
+	if not keypress_confirm('{} TX fee: {} BTC.  OK?'.format(ftype,fee),default_yes=True):
+		while True:
+			ufee = my_raw_input('Enter transaction fee: ')
+			if normalize_btc_amt(ufee):
+				if Decimal(ufee) > g.max_tx_fee:
+					msg('{} BTC: fee too large (maximum fee: {} BTC)'.format(ufee,g.max_tx_fee))
+				else:
+					fee = ufee
+					break
+	vmsg('Inputs:{}  Outputs:{}  TX size:{}'.format(len(sel_unspent),len(tx_out),tx_size))
+	vmsg('Fee estimate: {} (1024 bytes, {} confs)'.format(fee_estimate,opt.tx_confs))
+	vmsg('TX fee:       {}'.format(fee))
+	return tx_size,normalize_btc_amt(fee)
+
+# main(): execution begins here
+
 cmd_args = opts.init(opts_data)
 
 if opt.comment_file:
@@ -367,10 +417,11 @@ if not opt.info:
 	if not tx_out:
 		die(2,'At least one output must be specified on the command line')
 
-	tx_fee = (g.tx_fee,opt.tx_fee)[bool(opt.tx_fee)]
-	tx_fee = normalize_btc_amt(tx_fee)
-	if tx_fee > g.max_tx_fee:
-		die(2,'Transaction fee too large: %s > %s' % (tx_fee,g.max_tx_fee))
+	if opt.tx_fee > g.max_tx_fee:
+		die(2,'Transaction fee too large: %s > %s' % (opt.tx_fee,g.max_tx_fee))
+
+	fee_estimate = get_fee_estimate()
+
 
 if g.bogus_wallet_data:  # for debugging purposes only
 	us = eval(get_data_from_file(g.bogus_wallet_data))
@@ -404,15 +455,16 @@ while True:
 	sel_unspent = [unspent[i-1] for i in sel_nums]
 
 	mmaddrs = set([i['mmid'] for i in sel_unspent])
-	mmaddrs.discard('')
 
-	if mmaddrs and len(mmaddrs) < len(sel_unspent):
+	if '' in mmaddrs and len(mmaddrs) > 1:
+		mmaddrs.discard('')
 		msg(wmsg['mixed_inputs'] % ', '.join(sorted(mmaddrs)))
 		if not keypress_confirm('Accept?'):
 			continue
 
 	total_in = trim_exponent(sum([i['amount'] for i in sel_unspent]))
-	change   = trim_exponent(total_in - (send_amt + tx_fee))
+	tx_size,tx_fee = get_tx_size_and_fee(sel_unspent,tx_out)
+	change = trim_exponent(total_in - (send_amt + tx_fee))
 
 	if change >= 0:
 		prompt = 'Transaction produces %s BTC in change.  OK?' % change

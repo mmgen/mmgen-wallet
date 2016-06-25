@@ -417,7 +417,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			addrs[key][2] = addr[0]
 
 	if not addrs:
-		die(1,('No addresses with balances!','No tracked addresses!')[showempty])
+		die(0,('No addresses with balances!','No tracked addresses!')[showempty])
 
 	fs = '%-{}s %-{}s %-{}s %s'.format(
 		max(len(k) for k in addrs),

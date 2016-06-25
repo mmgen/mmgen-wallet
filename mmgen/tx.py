@@ -42,7 +42,7 @@ def normalize_btc_amt(amt):
 	try:
 		ret = Decimal(amt)
 	except:
-		msg('%s: Invalid amount' % amt)
+		msg('%s: Invalid BTC amount' % amt)
 		return False
 
 	dmsg('Decimal(amt): %s\nAs tuple: %s' % (amt,repr(ret.as_tuple())))
@@ -146,7 +146,7 @@ def view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager=False,pause
 
 	fs = (
 		'TRANSACTION DATA\n\nHeader: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n',
-		'Transaction {} - {} BTC - {} GMT\n'
+		'Transaction {} - {} BTC - {} UTC\n'
 	)[bool(terse)]
 
 	out = fs.format(*metadata)

@@ -232,7 +232,7 @@ class MMGenToolTestSuite(object):
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,extra_msg=extra_msg)
 		if carg: vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret)[literal])
-		if ret:
+		if ret or ret == '':
 			write_to_tmpfile(cfg,'%s%s.out' % (name,fn_idx),ret+'\n')
 			if chkdata:
 				cmp_or_die(ret,chkdata)

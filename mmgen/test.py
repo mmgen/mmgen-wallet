@@ -46,6 +46,21 @@ def mk_tmpdir(cfg):
 		if e.errno != 17: raise
 	else: msg("Created directory '%s'" % cfg['tmpdir'])
 
+def mk_tmpdir_path(path,cfg):
+	try:
+		name = os.path.split(cfg['tmpdir'])[-1]
+		src = os.path.join(path,name)
+		try:
+			os.unlink(cfg['tmpdir'])
+		except OSError as e:
+			if e.errno != 2: raise
+		finally:
+			os.mkdir(src)
+			os.symlink(src,cfg['tmpdir'])
+	except OSError as e:
+		if e.errno != 17: raise
+	else: msg("Created directory '%s'" % cfg['tmpdir'])
+
 def get_tmpfile_fn(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 

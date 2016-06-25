@@ -36,8 +36,9 @@ bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
 
 from decimal import Decimal
-tx_fee        = Decimal('0.00005')
+tx_fee        = Decimal('0.0003')
 max_tx_fee    = Decimal('0.01')
+tx_confs      = 3
 
 seed_len     = 256
 http_timeout = 60
@@ -49,7 +50,7 @@ prog_name = os.path.basename(sys.argv[0])
 author    = 'Philemon'
 email     = '<mmgen-py@yandex.com>'
 Cdates    = '2013-2016'
-version   = '0.8.3'
+version   = '0.8.4'
 
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
@@ -87,7 +88,7 @@ default_wordlist    = 'electrum'
 #default_wordlist    = 'tirosh'
 
 # Global value sets user opt
-dfl_vars = 'seed_len','hash_preset','usr_randchars','debug'
+dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_fee','tx_confs'
 
 seed_lens = 128,192,256
 mn_lens = [i / 32 * 3 for i in seed_lens]
