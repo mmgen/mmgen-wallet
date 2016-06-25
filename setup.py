@@ -27,7 +27,7 @@ setup(
 		url          = 'https://github.com/mmgen/mmgen',
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows',
-		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical',
+		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous',
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',
