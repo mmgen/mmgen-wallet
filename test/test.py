@@ -1116,7 +1116,7 @@ class MMGenTestSuite(object):
 			m = '\nAnswer the interactive prompts as follows:\n' + \
 				" 'y', 'y', 'q', '1-8'<ENTER>, ENTER, ENTER, ENTER, 'y'"
 			msg(grnbg(m))
-		t = MMGenExpect(name,'mmgen-txcreate',add_args + cmd_args)
+		t = MMGenExpect(name,'mmgen-txcreate',['-f','0.0001'] + add_args + cmd_args)
 		if ni: return
 		t.license()
 		for num in tx_data:

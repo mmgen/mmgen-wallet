@@ -34,14 +34,14 @@ opts_data = {
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 	'options': """
 -h, --help            Print this help message
+-a, --tx-fee-adj=   f Adjust transaction fee by factor 'f' (see below)
 -c, --comment-file= f Source the transaction's comment from file 'f'
--C, --tx-confs=     c Estimated confirmations (default: {g.tx_confs})
+-C, --tx-confs=     c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -e, --echo-passphrase Print passphrase to screen when typing it
 -f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
 -i, --info            Display unspent outputs and exit
--q, --quiet           Suppress warnings; overwrite files without
-                      prompting
+-q, --quiet           Suppress warnings; overwrite files without prompting
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """
@@ -49,19 +49,21 @@ opts_data = {
 Transaction inputs are chosen from a list of the user's unpent outputs
 via an interactive menu.
 
-If not specified by the user, transaction fees are calculated using
-bitcoind's "estimatefee" function for the default (or user-specified)
-number of confirmations.  Only if "estimatefee" fails is the default fee
-of {g.tx_fee} BTC used.
+If the transaction fee is not specified by the user, it will be calculated
+using bitcoind's "estimatefee" function for the default (or user-specified)
+number of confirmations.  If "estimatefee" fails, the global default fee of
+{g.tx_fee} BTC will be used.
 
-Ages of transactions are approximate based on an average block creation
+Dynamic fees will be multiplied by the value of '--tx-fee-adj', if specified.
+
+Ages of transactions are approximate based on an average block discovery
 interval of {g.mins_per_block} minutes.
 
-Addresses on the command line can be Bitcoin addresses or {pnm} addresses
-of the form <seed ID>:<number>.
+All addresses on the command line can be either Bitcoin addresses or {pnm}
+addresses of the form <seed ID>:<index>.
 
-To send all inputs (minus TX fee) to a single output, specify one address
-with no amount on the command line.
+To send the value of all inputs (minus TX fee) to a single output, specify
+one address with no amount on the command line.
 """.format(g=g,pnm=pnm)
 }
 
@@ -348,7 +350,7 @@ Accept the global default fee of {f} BTC?
 def get_tx_size_and_fee(inputs,outputs):
 	tx_size = len(inputs)*180 + len(outputs)*34 + 10
 	if fee_estimate:
-		ftype,fee = 'Calculated','{:.8f}'.format(fee_estimate * tx_size / 1024)
+		ftype,fee = 'Calculated','{:.8f}'.format(fee_estimate*opt.tx_fee_adj*tx_size / 1024)
 	else:
 		ftype,fee = 'User-selected',opt.tx_fee
 	if not keypress_confirm('{} TX fee: {} BTC.  OK?'.format(ftype,fee),default_yes=True):
@@ -362,7 +364,8 @@ def get_tx_size_and_fee(inputs,outputs):
 					break
 	vmsg('Inputs:{}  Outputs:{}  TX size:{}'.format(len(sel_unspent),len(tx_out),tx_size))
 	vmsg('Fee estimate: {} (1024 bytes, {} confs)'.format(fee_estimate,opt.tx_confs))
-	vmsg('TX fee:       {}'.format(fee))
+	m = ('',' (after %sx adjustment)' % opt.tx_fee_adj)[opt.tx_fee_adj != 1]
+	vmsg('TX fee:       {}{}'.format(fee,m))
 	return tx_size,normalize_btc_amt(fee)
 
 # main(): execution begins here

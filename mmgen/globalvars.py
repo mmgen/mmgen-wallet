@@ -38,6 +38,7 @@ disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
 from decimal import Decimal
 tx_fee        = Decimal('0.0003')
 max_tx_fee    = Decimal('0.01')
+tx_fee_adj    = Decimal('1.0')
 tx_confs      = 3
 
 seed_len     = 256
@@ -88,7 +89,7 @@ default_wordlist    = 'electrum'
 #default_wordlist    = 'tirosh'
 
 # Global value sets user opt
-dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_fee','tx_confs'
+dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_fee','tx_confs','tx_fee_adj'
 
 seed_lens = 128,192,256
 mn_lens = [i / 32 * 3 for i in seed_lens]
