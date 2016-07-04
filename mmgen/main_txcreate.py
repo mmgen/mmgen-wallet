@@ -341,51 +341,6 @@ Accept the global default fee of {f} BTC?
 
 # main(): execution begins here
 
-def get_fee_estimate():
-	if 'tx_fee' in opt.set_by_user:
-		return None
-	else:
-		ret = c.estimatefee(opt.tx_confs)
-		if ret != -1:
-			return ret
-		else:
-			m = """
-Fee estimation failed!
-Your possible courses of action (from best to worst):
-    1) Re-run script with a different '--tx-confs' parameter (now '{c}')
-    2) Re-run script with the '--tx-fee' option (specify fee manually)
-    3) Accept the global default fee of {f} BTC
-Accept the global default fee of {f} BTC?
-""".format(c=opt.tx_confs,f=opt.tx_fee).strip()
-			if keypress_confirm(m):
-				return None
-			else:
-				die(1,'Exiting at user request')
-
-# see: https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
-def get_tx_size_and_fee(inputs,outputs):
-	tx_size = len(inputs)*180 + len(outputs)*34 + 10
-	if fee_estimate:
-		ftype,fee = 'Calculated','{:.8f}'.format(fee_estimate*opt.tx_fee_adj*tx_size / 1024)
-	else:
-		ftype,fee = 'User-selected',opt.tx_fee
-	if not keypress_confirm('{} TX fee: {} BTC.  OK?'.format(ftype,fee),default_yes=True):
-		while True:
-			ufee = my_raw_input('Enter transaction fee: ')
-			if normalize_btc_amt(ufee):
-				if Decimal(ufee) > g.max_tx_fee:
-					msg('{} BTC: fee too large (maximum fee: {} BTC)'.format(ufee,g.max_tx_fee))
-				else:
-					fee = ufee
-					break
-	vmsg('Inputs:{}  Outputs:{}  TX size:{}'.format(len(sel_unspent),len(tx_out),tx_size))
-	vmsg('Fee estimate: {} (1024 bytes, {} confs)'.format(fee_estimate,opt.tx_confs))
-	m = ('',' (after %sx adjustment)' % opt.tx_fee_adj)[opt.tx_fee_adj != 1]
-	vmsg('TX fee:       {}{}'.format(fee,m))
-	return tx_size,normalize_btc_amt(fee)
-
-# main(): execution begins here
-
 cmd_args = opts.init(opts_data)
 
 tx = MMGenTX()
