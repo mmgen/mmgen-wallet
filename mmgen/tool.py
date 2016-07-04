@@ -432,10 +432,10 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	for k in sorted(addrs,key=s_mmgen):
 		if out and k.split('_')[0] != out[-1].split(':')[0]: out.append('')
 		baddr = ' ' + addrs[k][2] if showbtcaddrs else ''
-		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], trim_exponent(addrs[k][0])))
+		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], normalize_btc_amt(addrs[k][0])))
 
 	o = (fs + '\n%s\nTOTAL: %s BTC') % (
-			'ADDRESS','','COMMENT','BALANCE', '\n'.join(out), trim_exponent(total)
+			'ADDRESS','','COMMENT','BALANCE', '\n'.join(out), normalize_btc_amt(total)
 		)
 	if pager: do_pager(o)
 	else: Msg(o)
@@ -444,7 +444,9 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 def getbalance(minconf=1):
 
 	accts = {}
-	for d in bitcoin_connection().listunspent(0):
+	us = bitcoin_connection().listunspent(0)
+#	pp_die(us)
+	for d in us:
 		ma = split2(d['account'])[0]
 		keys = ['TOTAL']
 		if d['spendable']: keys += ['SPENDABLE']
@@ -453,7 +455,7 @@ def getbalance(minconf=1):
 		i = (1,2)[confs >= minconf]
 
 		for key in keys:
-			if key not in accts: accts[key] = [0,0,0]
+			if key not in accts: accts[key] = [Decimal('0')] * 3
 			for j in ([],[0])[confs==0] + [i]:
 				accts[key][j] += d['amount']
 
@@ -461,15 +463,14 @@ def getbalance(minconf=1):
 	mc,lbl = str(minconf),'confirms'
 	Msg(fs.format('Wallet','Unconfirmed','<%s %s'%(mc,lbl),'>=%s %s'%(mc,lbl)))
 	for key in sorted(accts.keys()):
-		Msg(fs.format(key+':', *[str(trim_exponent(a))+' BTC'
-				for a in accts[key]]))
+		line = [str(normalize_btc_amt(a))+' BTC' for a in accts[key]]
+		Msg(fs.format(key+':', *line))
 
 def txview(infile,pager=False,terse=False):
 	c = bitcoin_connection()
-	tx_data = get_lines_from_file(infile,'transaction data')
-
-	metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
-	view_tx_data(c,inputs_data,tx_hex,b2m_map,comment,metadata,pager,pause=False,terse=terse)
+	tx = MMGenTX()
+	tx.parse_tx_file(infile,'transaction data')
+	tx.view(pager,pause=False,terse=terse)
 
 def add_label(mmaddr,label,remove=False):
 	if not is_mmgen_addr(mmaddr):

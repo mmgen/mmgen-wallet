@@ -52,9 +52,12 @@ class BitcoinRPCConnection(object):
 	# Normal mode: call with arg list unrolled, exactly as with 'bitcoin-cli'
 	# Batch mode:  call with list of arg lists as first argument
 	# kwargs are for local use and are not passed to server
+
+	# By default, dies with an error msg on all errors and exceptions
+	# With ret_on_error=True, returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
-		cf = { 'timeout': g.http_timeout, 'batch': False }
+		cf = { 'timeout':g.http_timeout, 'batch':False, 'ret_on_error':False }
 
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
@@ -66,6 +69,12 @@ class BitcoinRPCConnection(object):
 		else:
 			p = {'method':cmd,'params':args,'id':1}
 
+		def die_maybe(*args):
+			if cf['ret_on_error']:
+				return 'rpcfail',args
+			else:
+				die(*args[1:])
+
 		dmsg('=== rpc.py debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
 
@@ -75,34 +84,33 @@ class BitcoinRPCConnection(object):
 				'Authorization': 'Basic ' + base64.b64encode(self.auth_str)
 			})
 		except Exception as e:
-			die(2,'%s\nUnable to connect to bitcoind' % e)
+			return die_maybe(None,2,'%s\nUnable to connect to bitcoind' % e)
 
 		r = c.getresponse() # returns HTTPResponse instance
 
-		if r.status == 401:
-			m1 = 'RPC authentication error'
-			m2 = 'Check that rpcuser/rpcpassword in Bitcoin config file are correct'
-			m3 = '(or, alternatively, copy the authentication cookie to Bitcoin data dir'
-			m4 = 'if {} and Bitcoin are running as different users)'.format(g.proj_name)
-			die(1,'\n'.join((m1,m2,m3,m4)))
-		elif r.status != 200:
-			die(1,'RPC error: %s %s\n%s' % (r.status, r.reason, r.read()))
+		if r.status != 200:
+			e1 = r.read()
+			try:
+				e2 = json.loads(e1)['error']['message']
+			except:
+				e2 = str(e1)
+			return die_maybe(r,1,e2)
 
 		r2 = r.read()
 
 		dmsg('    RPC REPLY data ==> %s\n' % r2)
 
 		if not r2:
-			die(2,'Error: empty reply')
+			return die_maybe(r,2,'Error: empty reply')
 
 		r3 = json.loads(r2.decode('utf8'), parse_float=decimal.Decimal)
 		ret = []
 
 		for resp in r3 if cf['batch'] else [r3]:
 			if 'error' in resp and resp['error'] != None:
-				die(1,'Bitcoind returned an error: %s' % resp['error'])
+				return die_maybe(r,1,'Bitcoind returned an error: %s' % resp['error'])
 			elif 'result' not in resp:
-				die(1, 'Missing JSON-RPC result\n' + repr(resps))
+				return die_maybe(r,1, 'Missing JSON-RPC result\n' + repr(resps))
 			else:
 				ret.append(resp['result'])
 
@@ -110,20 +118,28 @@ class BitcoinRPCConnection(object):
 
 
 	rpcmethods = (
-		'estimatefee',
-		'getinfo',
-		'getbalance',
-		'getaddressesbyaccount',
-		'listunspent',
-		'listaccounts',
-		'importaddress',
-		'decoderawtransaction',
 		'createrawtransaction',
-		'signrawtransaction',
+		'backupwallet',
+		'decoderawtransaction',
+		'estimatefee',
+		'getaddressesbyaccount',
+		'getbalance',
+		'getblock',
+		'getblockcount',
+		'getblockhash',
+		'getinfo',
+		'importaddress',
+		'listaccounts',
+		'listunspent',
 		'sendrawtransaction',
-		'walletpassphrase',
-		'walletlock',
+		'signrawtransaction',
 	)
 
 	for name in rpcmethods:
 		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
+
+def rpc_error(ret):
+	return ret is list and ret and ret[0] == 'rpcfail'
+
+def rpc_errmsg(ret,e):
+	return (False,True)[ret[1][2].find(e) == -1]

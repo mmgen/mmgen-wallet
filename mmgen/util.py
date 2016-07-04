@@ -176,12 +176,25 @@ def split_into_cols(col_wid,s):
 def capfirst(s):
 	return s if len(s) == 0 else s[0].upper() + s[1:]
 
-def make_timestamp():
-	tv = time.gmtime(time.time())[:6]
+def decode_timestamp(s):
+# 	with open('/etc/timezone') as f:
+# 		tz_save = f.read().rstrip()
+	os.environ['TZ'] = 'UTC'
+	ts = time.strptime(s,'%Y%m%d_%H%M%S')
+	t = time.mktime(ts)
+# 	os.environ['TZ'] = tz_save
+	return int(t)
+
+def make_timestamp(secs=None):
+	t = int(secs) if secs else time.time()
+	tv = time.gmtime(t)[:6]
 	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*tv)
-def make_timestr():
-	tv = time.gmtime(time.time())[:6]
+
+def make_timestr(secs=None):
+	t = int(secs) if secs else time.time()
+	tv = time.gmtime(t)[:6]
 	return '{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}'.format(*tv)
+
 def secs_to_hms(secs):
 	return '{:02d}:{:02d}:{:02d}'.format(secs/3600, (secs/60) % 60, secs % 60)
 
@@ -791,3 +804,15 @@ def bitcoin_connection():
 	import mmgen.rpc
 	return mmgen.rpc.BitcoinRPCConnection(
 				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)
+
+def pp_format(d):
+	import pprint
+	return pprint.PrettyPrinter(indent=4).pformat(d)
+
+def pp_die(d):
+	import pprint
+	die(1,pprint.PrettyPrinter(indent=4).pformat(d))
+
+def pp_msg(d):
+	import pprint
+	msg(pprint.PrettyPrinter(indent=4).pformat(d))

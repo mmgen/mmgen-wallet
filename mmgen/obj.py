@@ -20,6 +20,7 @@
 obj.py:  The MMGenObject class and methods
 """
 import mmgen.globalvars as g
+from decimal import Decimal
 
 lvl = 0
 
@@ -38,16 +39,16 @@ class MMGenObject(object):
 
 		def conv(v,col_w):
 			vret = ''
-			if type(v) == str:
+			if type(v) in (str,unicode):
 				if not (set(list(v)) <= set(list(g.printable))):
 					vret = repr(v)
 				else:
 					vret = fix_linebreaks(v,fixed_indent=0)
-			elif type(v) == int or type(v) == long:
+			elif type(v) in (int,long,Decimal):
 				vret = str(v)
 			elif type(v) == dict:
 				sep = '\n{}{}'.format(indent,' '*4)
-				cw = max(len(k) for k in v) + 2
+				cw = (max(len(k) for k in v) if v else 0) + 2
 				t = sep.join(['{:<{w}}: {}'.format(
 					repr(k),
 	(fix_linebreaks(v[k],fixed_indent=0) if type(v[k]) == str else v[k]),

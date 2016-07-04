@@ -35,6 +35,8 @@ no_license           = os.getenv('MMGEN_NOLICENSE')
 bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
 
+btc_amt_decimal_places = 8
+
 from decimal import Decimal
 tx_fee        = Decimal('0.0003')
 max_tx_fee    = Decimal('0.01')
@@ -77,8 +79,9 @@ seedfile_exts = (
 	wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext, incog_hex_ext
 )
 
-rawtx_ext           = 'raw'
-sigtx_ext           = 'sig'
+rawtx_ext           = 'rawtx'
+sigtx_ext           = 'sigtx'
+txid_ext            = 'txid'
 addrfile_ext        = 'addrs'
 addrfile_chksum_ext = 'chk'
 keyfile_ext         = 'keys'

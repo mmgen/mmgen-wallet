@@ -103,7 +103,7 @@ cfg = {
 	'tmpdir':        'test/tmp10',
 	'tmpdir_num':    10,
 	'refdir':        'test/ref',
-	'txfile':        'tx_FFB367[1.234].raw',
+	'txfile':        'FFB367[1.234].rawtx',
 	'addrfile':      '98831F3A[1,31-33,500-501,1010-1011].addrs',
 	'addrfile_chk':  '6FEF 6FB9 7B13 5D91 854A 0BD3',
 }

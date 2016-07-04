@@ -125,7 +125,7 @@ def init(opts_data,add_opts=[],opt_filter=None):
 	for k in 'prog_name','desc','usage','options','notes':
 		if k in opts_data: del opts_data[k]
 
-	# Transfer uopts into opt, setting required opts to None if not set by user
+	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
 	for o in [s.rstrip('=') for s in long_opts] + \
 			g.required_opts + add_opts + skipped_opts:
 		setattr(opt,o,uopts[o] if o in uopts else None)

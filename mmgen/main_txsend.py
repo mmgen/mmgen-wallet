@@ -44,39 +44,32 @@ else: opts.usage()
 
 do_license_msg()
 
-tx_data = get_lines_from_file(infile,'signed transaction data')
+tx = MMGenTX()
 
-metadata,tx_hex,inputs_data,b2m_map,comment = parse_tx_file(tx_data,infile)
-
-qmsg("Signed transaction file '%s' is valid" % infile)
+tx.parse_tx_file(infile,'signed transaction data')
 
 c = bitcoin_connection()
 
-prompt_and_view_tx_data(c,'View transaction data?',
-	inputs_data,tx_hex,b2m_map,comment,metadata)
+if not tx.check_signed(c):
+	die(1,'Transaction has no signature!')
 
-if keypress_confirm('Edit transaction comment?'):
-	comment = get_tx_comment_from_user(comment)
-	data = make_tx_data('{} {} {}'.format(*metadata), tx_hex,
-				inputs_data, b2m_map, comment)
-	write_data_to_file(infile,data,'signed transaction with edited comment')
+qmsg("Signed transaction file '%s' is valid" % infile)
+
+tx.view_with_prompt('View transaction data?')
+
+if tx.add_comment(): # edits an existing comment, returns true if changed
+	tx.write_to_file(ask_write_default_yes=True)
 
 warn   = "Once this transaction is sent, there's no taking it back!"
 action = 'broadcast this transaction to the network'
-expect =  'YES, I REALLY WANT TO DO THIS'
+expect = 'YES, I REALLY WANT TO DO THIS'
 
 if opt.quiet: warn,expect = '','YES'
 
-confirm_or_exit(warn, action, expect)
+confirm_or_exit(warn,action,expect)
 
 msg('Sending transaction')
 
-try:
-	tx_id = c.sendrawtransaction(tx_hex)
-except:
-	die(3,'Unable to send transaction')
+tx.send(c,bogus=True)
 
-msg('Transaction sent: %s' % tx_id)
-
-of = 'tx_{}[{}].txid'.format(*metadata[:2])
-write_data_to_file(of, tx_id+'\n','transaction ID',ask_overwrite=True)
+tx.write_txid_to_file()

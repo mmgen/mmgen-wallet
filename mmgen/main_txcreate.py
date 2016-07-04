@@ -127,7 +127,7 @@ def format_unspent_outputs_for_printing(out,sort_info,total):
 
 	return \
 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n'.format(
-		make_timestr(), ' '.join(sort_info), '\n'.join(pout), total
+		make_timestr(), ' '.join(sort_info), '\n'.join(pout), normalize_btc_amt(total)
 	)
 
 
@@ -146,7 +146,7 @@ def sort_and_view(unspent):
 	sort,group,show_days,show_mmaddr,reverse = 'age',False,False,True,True
 	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
 
-	total = trim_exponent(sum([i['amount'] for i in unspent]))
+	total = sum([i['amount'] for i in unspent])
 	max_acct_len = max([len(i['mmid']+' '+i['comment']) for i in unspent])
 
 	hdr_fmt   = 'UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s'
@@ -188,7 +188,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				elif sort == 'txid' and a['txid'] == b['txid']:        b['skip'] = 'txid'
 
 		for i in unsp:
-			amt = str(trim_exponent(i['amount']))
+			amt = str(normalize_btc_amt(i['amount']))
 			lfill = 3 - len(amt.split('.')[0]) if '.' in amt else 3 - len(amt)
 			i['amt'] = ' '*lfill + amt
 			i['days'] = int(i['confirmations'] * g.mins_per_block / (60*24))
@@ -216,7 +216,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		if group and (sort == 'address' or sort == 'txid'):
 			sort_info.append('grouped')
 
-		out  = [hdr_fmt % (' '.join(sort_info), total), table_hdr]
+		out  = [hdr_fmt % (' '.join(sort_info), normalize_btc_amt(total)), table_hdr]
 		out += [fs % (str(n+1)+')',i['tx'],i['vout'],i['addr'],i['amt'],i['age'])
 					for n,i in enumerate(unsp)]
 
@@ -301,12 +301,12 @@ def mmaddr2btcaddr_unspent(unspent,mmaddr):
 def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
 
 	# assume mmaddr has already been checked
-	btcaddr = ail_w.mmaddr2btcaddr(mmaddr)
+	btc_addr = ail_w.mmaddr2btcaddr(mmaddr)
 
-	if not btcaddr:
+	if not btc_addr:
 		if ail_f:
-			btcaddr = ail_f.mmaddr2btcaddr(mmaddr)
-			if btcaddr:
+			btc_addr = ail_f.mmaddr2btcaddr(mmaddr)
+			if btc_addr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm('Continue anyway?'):
 					sys.exit(1)
@@ -315,15 +315,31 @@ def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
 		else:
 			die(2,wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
 
-	return btcaddr
+	return btc_addr
 
 
-def make_b2m_map(inputs_data,tx_out,ail_w,ail_f):
-	d = dict([(d['address'], (d['mmid'],d['comment']))
-				for d in inputs_data if d['mmid']])
-	d.update(ail_w.make_reverse_dict(tx_out.keys()))
-	d.update(ail_f.make_reverse_dict(tx_out.keys()))
-	return d
+def get_fee_estimate():
+	if 'tx_fee' in opt.set_by_user:
+		return None
+	else:
+		ret = c.estimatefee(opt.tx_confs)
+		if ret != -1:
+			return ret
+		else:
+			m = """
+Fee estimation failed!
+Your possible courses of action (from best to worst):
+    1) Re-run script with a different '--tx-confs' parameter (now '{c}')
+    2) Re-run script with the '--tx-fee' option (specify fee manually)
+    3) Accept the global default fee of {f} BTC
+Accept the global default fee of {f} BTC?
+""".format(c=opt.tx_confs,f=opt.tx_fee).strip()
+			if keypress_confirm(m):
+				return None
+			else:
+				die(1,'Exiting at user request')
+
+# main(): execution begins here
 
 def get_fee_estimate():
 	if 'tx_fee' in opt.set_by_user:
@@ -372,15 +388,14 @@ def get_tx_size_and_fee(inputs,outputs):
 
 cmd_args = opts.init(opts_data)
 
-if opt.comment_file:
-	comment = get_tx_comment_from_file(opt.comment_file)
+tx = MMGenTX()
+
+if opt.comment_file: tx.add_comment(opt.comment_file)
 
 c = bitcoin_connection()
 
 if not opt.info:
 	do_license_msg(immed=True)
-
-	tx_out,change_addr = {},''
 
 	addrfiles = [a for a in cmd_args if get_extension(a) == g.addrfile_ext]
 	cmd_args = set(cmd_args) - set(addrfiles)
@@ -397,27 +412,27 @@ if not opt.info:
 		if ',' in a:
 			a1,a2 = split2(a,',')
 			if is_btc_addr(a1):
-				btcaddr = a1
+				btc_addr = a1
 			elif is_mmgen_addr(a1):
-				btcaddr = mmaddr2btcaddr(c,a1,ail_w,ail_f)
+				btc_addr = mmaddr2btcaddr(c,a1,ail_w,ail_f)
 			else:
 				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
 
-			ret = normalize_btc_amt(a2)
-			if ret:
-				tx_out[btcaddr] = ret
+			btc_amt = convert_to_btc_amt(a2)
+			if btc_amt:
+				tx.add_output(btc_addr,btc_amt)
 			else:
 				die(2,"%s: invalid amount in argument '%s'" % (a2,a))
 		elif is_mmgen_addr(a) or is_btc_addr(a):
-			if change_addr:
+			if tx.change_addr:
 				die(2,'ERROR: More than one change address specified: %s, %s' %
 						(change_addr, a))
-			change_addr = a if is_btc_addr(a) else mmaddr2btcaddr(c,a,ail_w,ail_f)
-			tx_out[change_addr] = 0
+			tx.change_addr = a if is_btc_addr(a) else mmaddr2btcaddr(c,a,ail_w,ail_f)
+			tx.add_output(tx.change_addr,Decimal('0'))
 		else:
 			die(2,'%s: unrecognized argument' % a)
 
-	if not tx_out:
+	if not tx.outputs:
 		die(2,'At least one output must be specified on the command line')
 
 	if opt.tx_fee > g.max_tx_fee:
@@ -440,13 +455,14 @@ for o in us:
 	del o['account']
 unspent = sort_and_view(us)
 
-total = trim_exponent(sum([i['amount'] for i in unspent]))
+total = sum([i['amount'] for i in unspent])
 
-msg('Total unspent: %s BTC (%s outputs)' % (total, len(unspent)))
+msg('Total unspent: %s BTC (%s outputs)' % (normalize_btc_amt(total), len(unspent)))
 if opt.info: sys.exit()
 
-send_amt = sum([tx_out[i] for i in tx_out.keys()])
-msg('Total amount to spend: %s' % ('%s BTC'%send_amt,'Unknown')[bool(send_amt)])
+tx.send_amt = tx.sum_outputs()
+
+msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt,)[bool(tx.send_amt)])
 
 while True:
 	sel_nums = select_outputs(unspent,
@@ -465,53 +481,42 @@ while True:
 		if not keypress_confirm('Accept?'):
 			continue
 
-	total_in = trim_exponent(sum([i['amount'] for i in sel_unspent]))
-	tx_size,tx_fee = get_tx_size_and_fee(sel_unspent,tx_out)
-	change = trim_exponent(total_in - (send_amt + tx_fee))
+	tx.copy_inputs(sel_unspent)              # makes tx.inputs
 
-	if change >= 0:
-		prompt = 'Transaction produces %s BTC in change.  OK?' % change
+	tx.calculate_size_and_fee(fee_estimate)  # sets tx.size, tx.fee
+
+	change_amt = tx.sum_inputs() - tx.send_amt - tx.fee
+
+	if change_amt >= 0:
+		prompt = 'Transaction produces %s BTC in change.  OK?' % change_amt
 		if keypress_confirm(prompt,default_yes=True):
 			break
 	else:
-		msg(wmsg['not_enough_btc'] % change)
+		msg(wmsg['not_enough_btc'] % change_amt)
 
-if change > 0 and not change_addr:
-	die(2,wmsg['throwaway_change'] % change)
-
-if change_addr in tx_out and not change:
+if change_amt > 0:
+	if not tx.change_addr:
+		die(2,wmsg['throwaway_change'] % change_amt)
+	tx.add_output(tx.change_addr,change_amt)
+elif tx.change_addr:
 	msg('Warning: Change address will be unused as transaction produces no change')
-	del tx_out[change_addr]
+	tx.del_output(tx.change_addr)
 
-for k,v in tx_out.items(): tx_out[k] = float(v)
+if not tx.send_amt:
+	tx.send_amt = change_amt
 
-if change > 0: tx_out[change_addr] = float(change)
+dmsg('tx: %s' % tx)
 
-tx_in = [{'txid':i['txid'], 'vout':i['vout']} for i in sel_unspent]
+tx.add_comment()   # edits an existing comment
+tx.create_raw(c)   # creates tx.hex, tx.txid
+tx.add_mmaddrs_to_outputs(ail_w,ail_f)
+tx.add_timestamp()
+tx.add_blockcount(c)
 
-dmsg('tx_in:  %s\ntx_out: %s' % (repr(tx_in),repr(tx_out)))
-
-if opt.comment_file:
-	if keypress_confirm('Edit comment?',False):
-		comment = get_tx_comment_from_user(comment)
-else:
-	if keypress_confirm('Add a comment to transaction?',False):
-		comment = get_tx_comment_from_user()
-	else: comment = False
-
-tx_hex = c.createrawtransaction(tx_in,tx_out)
 qmsg('Transaction successfully created')
 
-amt = send_amt or change
-tx_id = make_chksum_6(unhexlify(tx_hex)).upper()
-metadata = tx_id, amt, make_timestamp()
+dmsg('TX (final): %s' % tx)
 
-b2m_map = make_b2m_map(sel_unspent,tx_out,ail_w,ail_f)
+tx.view_with_prompt('View decoded transaction?')
 
-prompt_and_view_tx_data(c,'View decoded transaction?',
-		sel_unspent,tx_hex,b2m_map,comment,metadata)
-
-outfile = 'tx_%s[%s].%s' % (tx_id,amt,g.rawtx_ext)
-data = make_tx_data('{} {} {}'.format(*metadata),
-			tx_hex,sel_unspent,b2m_map,comment)
-write_data_to_file(outfile,data,'transaction',ask_write_default_yes=False)
+tx.write_to_file(ask_write_default_yes=False)
