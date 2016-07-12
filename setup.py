@@ -47,6 +47,7 @@ setup(
 			'mmgen.test',
 			'mmgen.tool',
 			'mmgen.tx',
+			'mmgen.tw',
 			'mmgen.util',
 
 			'mmgen.main',

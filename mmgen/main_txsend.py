@@ -44,9 +44,7 @@ else: opts.usage()
 
 do_license_msg()
 
-tx = MMGenTX()
-
-tx.parse_tx_file(infile,'signed transaction data')
+tx = MMGenTX(infile)
 
 c = bitcoin_connection()
 

@@ -77,8 +77,8 @@ cfgs = {
 			pwfile:        'walletgen',
 			'mmdat':       'walletgen',
 			'addrs':       'addrgen',
-			'raw':         'txcreate',
-			'sig':         'txsign',
+			'rawtx':         'txcreate',
+			'sigtx':         'txsign',
 			'mmwords':     'export_mnemonic',
 			'mmseed':      'export_seed',
 			'mmincog':     'export_incog',
@@ -96,8 +96,8 @@ cfgs = {
 		'dep_generators': {
 			'mmdat':       'walletgen2',
 			'addrs':       'addrgen2',
-			'raw':         'txcreate2',
-			'sig':         'txsign2',
+			'rawtx':         'txcreate2',
+			'sigtx':         'txsign2',
 			'mmwords':     'export_mnemonic2',
 		},
 	},
@@ -108,8 +108,8 @@ cfgs = {
 		'dep_generators': {
 			'mmdat':       'walletgen3',
 			'addrs':       'addrgen3',
-			'raw':         'txcreate3',
-			'sig':         'txsign3'
+			'rawtx':         'txcreate3',
+			'sigtx':         'txsign3'
 		},
 	},
 	'4': {
@@ -121,8 +121,8 @@ cfgs = {
 			'mmdat':       'walletgen4',
 			'mmbrain':     'walletgen4',
 			'addrs':       'addrgen4',
-			'raw':         'txcreate4',
-			'sig':         'txsign4',
+			'rawtx':         'txcreate4',
+			'sigtx':         'txsign4',
 		},
 		'bw_filename': 'brainwallet.mmbrain',
 		'bw_params':   '192,1',
@@ -203,7 +203,7 @@ cfgs = {
 		'ref_keyaddrfile_chksum': '9F2D D781 1812 8BAD C396 9DEB',
 
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
-		'ref_tx_file':     'tx_FFB367[1.234].raw',
+		'ref_tx_file':     'FFB367[1.234].rawtx',
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 
@@ -256,8 +256,8 @@ cmd_group['main'] = OrderedDict([
 	['addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]],1)],
 	['addrimport',      (1,'address import',           [[['addrs'],1]],1)],
 	['txcreate',        (1,'transaction creation',     [[['addrs'],1]],1)],
-	['txsign',          (1,'transaction signing',      [[['mmdat','raw',pwfile],1]],1)],
-	['txsend',          (1,'transaction sending',      [[['sig'],1]])],
+	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile],1]],1)],
+	['txsend',          (1,'transaction sending',      [[['sigtx'],1]])],
 
 	['export_seed',     (1,'seed export to mmseed format',   [[['mmdat'],1]])],
 	['export_mnemonic', (1,'seed export to mmwords format',  [[['mmdat'],1]])],
@@ -272,23 +272,23 @@ cmd_group['main'] = OrderedDict([
 	['addrgen_incog_hidden',(1,'address generation from hidden mmincog file', [[[hincog_fn,'addrs'],1]])],
 
 	['keyaddrgen',    (1,'key-address file generation', [[['mmdat',pwfile],1]])],
-	['txsign_keyaddr',(1,'transaction signing with key-address file', [[['akeys.mmenc','raw'],1]])],
+	['txsign_keyaddr',(1,'transaction signing with key-address file', [[['akeys.mmenc','rawtx'],1]])],
 
 	['walletgen2',(2,'wallet generation (2), 128-bit seed',     [])],
 	['addrgen2',  (2,'address generation (2)',    [[['mmdat'],2]])],
 	['txcreate2', (2,'transaction creation (2)',  [[['addrs'],2]])],
-	['txsign2',   (2,'transaction signing, two transactions',[[['mmdat','raw'],1],[['mmdat','raw'],2]])],
+	['txsign2',   (2,'transaction signing, two transactions',[[['mmdat','rawtx'],1],[['mmdat','rawtx'],2]])],
 	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[['mmdat'],2]])],
 
 	['walletgen3',(3,'wallet generation (3)',                  [])],
 	['addrgen3',  (3,'address generation (3)',                 [[['mmdat'],3]])],
 	['txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[['addrs'],1],[['addrs'],3]])],
-	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[['mmdat'],1],[['mmdat','raw'],3]])],
+	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[['mmdat'],1],[['mmdat','rawtx'],3]])],
 
 	['walletgen4',(4,'wallet generation (4) (brainwallet)',    [])],
 	['addrgen4',  (4,'address generation (4)',                 [[['mmdat'],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, plus non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4]])],
-	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','raw'],4]])],
+	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet and brainwallet, plus non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4]])],
 ])
 
 cmd_group['tool'] = OrderedDict([
@@ -428,6 +428,7 @@ meta_cmds = OrderedDict([
 ])
 
 del cmd_group
+log_file = 'test.py_log'
 
 opts_data = {
 #	'sets': [('non_interactive',bool,'verbose',None)],
@@ -441,15 +442,17 @@ opts_data = {
                     debugging only).
 -e, --exact-output  Show the exact output of the MMGen script(s) being run.
 -l, --list-cmds     List and describe the commands in the test suite.
+-L, --log           Log commands to file {lf}
 -n, --names         Display command names instead of descriptions.
 -I, --non-interactive Non-interactive operation (MS Windows mode)
 -p, --pause         Pause between tests, resuming on keypress.
 -q, --quiet         Produce minimal output.  Suppress dependency info.
 -s, --system        Test scripts and modules installed on system rather
                     than those in the repo root.
+-S, --skip-deps     Skip dependency checking for command
 -t, --traceback     Run the command inside the '{tb_cmd}' script.
 -v, --verbose       Produce more verbose output.
-""".format(tb_cmd=tb_cmd),
+""".format(tb_cmd=tb_cmd,lf=log_file),
 	'notes': """
 
 If no command is given, the whole suite of tests is run.
@@ -457,6 +460,9 @@ If no command is given, the whole suite of tests is run.
 }
 
 cmd_args = opts.init(opts_data)
+if opt.log:
+	log_fd = open(log_file,'a')
+	log_fd.write('\nLog started: %s\n' % make_timestr())
 
 if opt.system: sys.path.pop(0)
 ni = bool(opt.non_interactive)
@@ -616,11 +622,11 @@ class MMGenExpect(object):
 			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
 		desc = (cmd_data[name][1],name)[bool(opt.names)]
 		if extra_desc: desc += ' ' + extra_desc
+		cmd_str = mmgen_cmd + ' ' + ' '.join(cmd_args)
+		if opt.log:
+			log_fd.write(cmd_str+'\n')
 		if opt.verbose or opt.exact_output:
-			sys.stderr.write(
-				green('Testing: %s\nExecuting ' % desc) +
-				cyan("'%s %s'\n" % (mmgen_cmd,' '.join(cmd_args)))
-			)
+			sys.stderr.write(green('Testing: %s\nExecuting %s\n' % (desc,cyan(cmd_str))))
 		else:
 			m = 'Testing %s: ' % desc
 			msg_r((m,yellow(m))[ni])
@@ -845,7 +851,8 @@ def check_needs_rerun(
 		if rerun:
 			for fn in fns:
 				if not root: os.unlink(fn)
-			ts.do_cmd(cmd)
+			if not (dpy and opt.skip_deps):
+				ts.do_cmd(cmd)
 			if not root: do_between()
 	else:
 		# If prog produces multiple files:
@@ -888,6 +895,7 @@ def check_deps(cmds):
 
 
 def clean(usr_dirs=[]):
+	if opt.skip_deps: return
 	all_dirs = MMGenTestSuite().list_tmp_dirs()
 	dirs = (usr_dirs or all_dirs)
 	for d in sorted(dirs):
@@ -1149,14 +1157,15 @@ class MMGenTestSuite(object):
 		t.written_to_file('Transaction')
 		ok()
 
-	def txsign_end(self,t,tnum=None):
+	def txsign_end(self,t,tnum=None,has_comment=False):
 		t.expect('Signing transaction')
-		t.expect('Edit transaction comment? (y/N): ','\n')
-		t.expect('Save signed transaction? (Y/n): ','y')
+		cprompt = ('Add a comment to transaction','Edit transaction comment')[has_comment]
+		t.expect('%s? (y/N): ' % cprompt,'\n')
+		t.expect('Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
 		add = ' #' + tnum if tnum else ''
 		t.written_to_file('Signed transaction' + add, oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',save=True):
+	def txsign(self,name,txfile,wf,pf='',save=True,has_comment=False):
 		add_args = ([],['-q','-P',pf])[ni]
 		if ni:
 			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
@@ -1167,9 +1176,10 @@ class MMGenTestSuite(object):
 		t.tx_view()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		if save:
-			self.txsign_end(t)
+			self.txsign_end(t,has_comment=has_comment)
 		else:
-			t.expect('Edit transaction comment? (y/N): ','\n')
+			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_comment]
+			t.expect('%s? (y/N): ' % cprompt,'\n')
 			t.close()
 		ok()
 
@@ -1177,7 +1187,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-txsend', ['-d',cfg['tmpdir'],sigfile])
 		t.license()
 		t.tx_view()
-		t.expect('Edit transaction comment? (y/N): ','\n')
+		t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.expect('broadcast this transaction to the network?')
 		t.expect("'YES, I REALLY WANT TO DO THIS' to confirm: ",'\n')
 		t.expect('Exiting at user request')
@@ -1601,7 +1611,7 @@ class MMGenTestSuite(object):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
 		pf = get_tmpfile_fn(cfg,pwfile)
-		self.txsign(name,tf,wf,pf,save=False)
+		self.txsign(name,tf,wf,pf,save=False,has_comment=True)
 
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
@@ -1760,21 +1770,22 @@ ts = MMGenTestSuite()
 
 # Laggy flash media cause pexpect to crash, so read and write all temporary
 # files to volatile memory in '/dev/shm'
-if sys.platform[:3] == 'win':
-	for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
-else:
-	d,pfx = '/dev/shm','mmgen-test-'
-	try:
-		import subprocess
-		subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
-	except Exception as e:
-		die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
-	try:
-		import tempfile
-		shm_dir = tempfile.mkdtemp('',pfx,d)
-	except Exception as e:
-		die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
-	for cfg in sorted(cfgs): mk_tmpdir_path(shm_dir,cfgs[cfg])
+if not opt.skip_deps:
+	if sys.platform[:3] == 'win':
+		for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
+	else:
+		d,pfx = '/dev/shm','mmgen-test-'
+		try:
+			import subprocess
+			subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
+		except Exception as e:
+			die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
+		try:
+			import tempfile
+			shm_dir = tempfile.mkdtemp('',pfx,d)
+		except Exception as e:
+			die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
+		for cfg in sorted(cfgs): mk_tmpdir_path(shm_dir,cfgs[cfg])
 
 try:
 	if cmd_args:

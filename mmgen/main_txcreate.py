@@ -25,7 +25,7 @@ from decimal import Decimal
 
 from mmgen.common import *
 from mmgen.tx import *
-from mmgen.term import get_char
+from mmgen.tw import *
 
 pnm = g.proj_name
 
@@ -68,12 +68,6 @@ one address with no amount on the command line.
 }
 
 wmsg = {
-	'too_many_acct_addresses': """
-ERROR: More than one address found for account: '%s'.
-Your 'wallet.dat' file appears to have been altered by a non-{pnm} program.
-Please restore your tracking wallet from a backup or create a new one and
-re-import your addresses.
-""".strip().format(pnm=pnm),
 	'addr_in_addrfile_only': """
 Warning: output address {mmgenaddr} is not in the tracking wallet, which means
 its balance will not be tracked.  You're strongly advised to import the address
@@ -88,10 +82,6 @@ tracking wallet, or supply an address file for it on the command line.
 No data for {pnm} address {mmgenaddr} could be found in the tracking wallet.
 Please import this address into your tracking wallet or supply an address file
 for it on the command line.
-""".strip(),
-	'no_spendable_outputs': """
-No spendable outputs found!  Import addresses with balances into your
-watch-only wallet using '{pnm}-addrimport' and then re-run this program.
 """.strip(),
 	'mixed_inputs': """
 NOTE: This transaction uses a mixture of both {pnm} and non-{pnm} inputs, which
@@ -109,163 +99,6 @@ ERROR: This transaction produces change (%s BTC); however, no change address
 was specified.
 """.strip(),
 }
-
-def format_unspent_outputs_for_printing(out,sort_info,total):
-
-	pfs  = ' %-4s %-67s %-34s %-14s %-12s %-8s %-6s %s'
-	pout = [pfs % ('Num','Tx ID,Vout','Address','{pnm} ID'.format(pnm=pnm),
-		'Amount(BTC)','Conf.','Age(d)', 'Comment')]
-
-	for n,i in enumerate(out):
-		addr = '=' if i['skip'] == 'addr' and 'grouped' in sort_info else i['address']
-		tx = ' ' * 63 + '=' \
-			if i['skip'] == 'txid' and 'grouped' in sort_info else str(i['txid'])
-
-		s = pfs % (str(n+1)+')', tx+','+str(i['vout']),addr,
-				i['mmid'],i['amt'].strip(),i['confirmations'],i['days'],i['comment'])
-		pout.append(s.rstrip())
-
-	return \
-'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n'.format(
-		make_timestr(), ' '.join(sort_info), '\n'.join(pout), normalize_btc_amt(total)
-	)
-
-
-def sort_and_view(unspent):
-
-	def s_amt(i):   return i['amount']
-	def s_txid(i):  return '%s %03s' % (i['txid'],i['vout'])
-	def s_addr(i):  return i['address']
-	def s_age(i):   return i['confirmations']
-	def s_mmgen(i):
-		if i['mmid']:
-			return '{}:{:>0{w}}'.format(
-				*i['mmid'].split(':'), w=g.mmgen_idx_max_digits)
-		else: return 'G' + i['comment']
-
-	sort,group,show_days,show_mmaddr,reverse = 'age',False,False,True,True
-	unspent.sort(key=s_age,reverse=reverse) # Reverse age sort by default
-
-	total = sum([i['amount'] for i in unspent])
-	max_acct_len = max([len(i['mmid']+' '+i['comment']) for i in unspent])
-
-	hdr_fmt   = 'UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s'
-	options_msg = """
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
-""".strip()
-	prompt = \
-"('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
-
-	mmid_w = max(len(i['mmid']) for i in unspent)
-	from copy import deepcopy
-	from mmgen.term import get_terminal_size
-
-	written_to_file_msg = ''
-	msg('')
-
-	while True:
-		cols = get_terminal_size()[0]
-		if cols < g.min_screen_width:
-			die(2,
-	'{pnl}-txcreate requires a screen at least {w} characters wide'.format(
-					pnl=pnm.lower(),w=g.min_screen_width))
-
-		addr_w = min(34+((1+max_acct_len) if show_mmaddr else 0),cols-46)
-		acct_w   = min(max_acct_len, max(24,int(addr_w-10)))
-		btaddr_w = addr_w - acct_w - 1
-		tx_w = max(11,min(64, cols-addr_w-32))
-		txdots = ('','...')[tx_w < 64]
-		fs = ' %-4s %-' + str(tx_w) + 's %-2s %-' + str(addr_w) + 's %-13s %-s'
-		table_hdr = fs % ('Num','TX id  Vout','','Address','Amount (BTC)',
-							('Conf.','Age(d)')[show_days])
-
-		unsp = deepcopy(unspent)
-		for i in unsp: i['skip'] = ''
-		if group and (sort == 'address' or sort == 'txid'):
-			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
-				if sort == 'address' and a['address'] == b['address']: b['skip'] = 'addr'
-				elif sort == 'txid' and a['txid'] == b['txid']:        b['skip'] = 'txid'
-
-		for i in unsp:
-			amt = str(normalize_btc_amt(i['amount']))
-			lfill = 3 - len(amt.split('.')[0]) if '.' in amt else 3 - len(amt)
-			i['amt'] = ' '*lfill + amt
-			i['days'] = int(i['confirmations'] * g.mins_per_block / (60*24))
-			i['age'] = i['days'] if show_days else i['confirmations']
-
-			addr_disp = (i['address'],'|' + '.'*33)[i['skip']=='addr']
-			mmid_disp = (i['mmid'],'.'*len(i['mmid']))[i['skip']=='addr']
-
-			if show_mmaddr:
-				dots = ('','..')[btaddr_w < len(i['address'])]
-				i['addr'] = '%s%s %s' % (
-					addr_disp[:btaddr_w-len(dots)],
-					dots, (
-					('{:<{w}} '.format(mmid_disp,w=mmid_w) if i['mmid'] else '')
-						+ i['comment'])[:acct_w]
-					)
-			else:
-				i['addr'] = addr_disp
-
-			i['tx'] = ' ' * (tx_w-4) + '|...' if i['skip'] == 'txid' \
-					else i['txid'][:tx_w-len(txdots)]+txdots
-
-		sort_info = ([],['reverse'])[reverse]
-		sort_info.append(sort if sort else 'unsorted')
-		if group and (sort == 'address' or sort == 'txid'):
-			sort_info.append('grouped')
-
-		out  = [hdr_fmt % (' '.join(sort_info), normalize_btc_amt(total)), table_hdr]
-		out += [fs % (str(n+1)+')',i['tx'],i['vout'],i['addr'],i['amt'],i['age'])
-					for n,i in enumerate(unsp)]
-
-		msg('\n'.join(out) +'\n\n' + written_to_file_msg + options_msg)
-		written_to_file_msg = ''
-
-		skip_prompt = False
-
-		while True:
-			reply = get_char(prompt, immed_chars='atDdAMrgmeqpvw')
-
-			if   reply == 'a': unspent.sort(key=s_amt);  sort = 'amount'
-			elif reply == 't': unspent.sort(key=s_txid); sort = 'txid'
-			elif reply == 'D': show_days = not show_days
-			elif reply == 'd': unspent.sort(key=s_addr); sort = 'address'
-			elif reply == 'A': unspent.sort(key=s_age);  sort = 'age'
-			elif reply == 'M':
-				unspent.sort(key=s_mmgen); sort = 'mmgen'
-				show_mmaddr = True
-			elif reply == 'r':
-				unspent.reverse()
-				reverse = not reverse
-			elif reply == 'g': group = not group
-			elif reply == 'm': show_mmaddr = not show_mmaddr
-			elif reply == 'e': pass
-			elif reply == 'q': pass
-			elif reply == 'p':
-				d = format_unspent_outputs_for_printing(unsp,sort_info,total)
-				of = 'listunspent[%s].out' % ','.join(sort_info)
-				write_data_to_file(of,d,'unspent outputs listing')
-				written_to_file_msg = "Data written to '%s'\n\n" % of
-			elif reply == 'v':
-				do_pager('\n'.join(out))
-				continue
-			elif reply == 'w':
-				data = format_unspent_outputs_for_printing(unsp,sort_info,total)
-				do_pager(data)
-				continue
-			else:
-				msg('\nInvalid input')
-				continue
-
-			break
-
-		msg('\n')
-		if reply == 'q': break
-
-	return tuple(unspent)
-
 
 def select_outputs(unspent,prompt):
 
@@ -285,20 +118,7 @@ def select_outputs(unspent,prompt):
 		return selected
 
 
-def mmaddr2btcaddr_unspent(unspent,mmaddr):
-	vmsg_r('Searching for {pnm} address {m} in wallet...'.format(pnm=pnm,m=mmaddr))
-	m = [u for u in unspent if u['mmid'] == mmaddr]
-	if len(m) == 0:
-		vmsg('not found')
-		return '',''
-	elif len(m) > 1:
-		die(2,wmsg['too_many_acct_addresses'] % acct)
-	else:
-		vmsg('success (%s)' % m[0].address)
-		return m[0].address, m[0].comment
-
-
-def mmaddr2btcaddr(c,mmaddr,ail_w,ail_f):
+def mmaddr2baddr(c,mmaddr,ail_w,ail_f):
 
 	# assume mmaddr has already been checked
 	btc_addr = ail_w.mmaddr2btcaddr(mmaddr)
@@ -369,7 +189,7 @@ if not opt.info:
 			if is_btc_addr(a1):
 				btc_addr = a1
 			elif is_mmgen_addr(a1):
-				btc_addr = mmaddr2btcaddr(c,a1,ail_w,ail_f)
+				btc_addr = mmaddr2baddr(c,a1,ail_w,ail_f)
 			else:
 				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
 
@@ -382,7 +202,7 @@ if not opt.info:
 			if tx.change_addr:
 				die(2,'ERROR: More than one change address specified: %s, %s' %
 						(change_addr, a))
-			tx.change_addr = a if is_btc_addr(a) else mmaddr2btcaddr(c,a,ail_w,ail_f)
+			tx.change_addr = a if is_btc_addr(a) else mmaddr2baddr(c,a,ail_w,ail_f)
 			tx.add_output(tx.change_addr,Decimal('0'))
 		else:
 			die(2,'%s: unrecognized argument' % a)
@@ -395,24 +215,10 @@ if not opt.info:
 
 	fee_estimate = get_fee_estimate()
 
+tw = MMGenTrackingWallet()
+tw.view_and_sort()
+tw.display_total()
 
-if g.bogus_wallet_data:  # for debugging purposes only
-	us = eval(get_data_from_file(g.bogus_wallet_data))
-else:
-	us = c.listunspent()
-#	write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
-#	sys.exit()
-
-if not us:
-	die(2,wmsg['no_spendable_outputs'])
-for o in us:
-	o['mmid'],o['comment'] = parse_mmgen_label(o['account'])
-	del o['account']
-unspent = sort_and_view(us)
-
-total = sum([i['amount'] for i in unspent])
-
-msg('Total unspent: %s BTC (%s outputs)' % (normalize_btc_amt(total), len(unspent)))
 if opt.info: sys.exit()
 
 tx.send_amt = tx.sum_outputs()
@@ -420,13 +226,13 @@ tx.send_amt = tx.sum_outputs()
 msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt,)[bool(tx.send_amt)])
 
 while True:
-	sel_nums = select_outputs(unspent,
+	sel_nums = select_outputs(tw.unspent,
 			'Enter a range or space-separated list of outputs to spend: ')
 	msg('Selected output%s: %s' % (
 			('s','')[len(sel_nums)==1],
 			' '.join(str(i) for i in sel_nums)
 		))
-	sel_unspent = [unspent[i-1] for i in sel_nums]
+	sel_unspent = [tw.unspent[i-1] for i in sel_nums]
 
 	mmaddrs = set([i['mmid'] for i in sel_unspent])
 

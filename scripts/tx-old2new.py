@@ -99,18 +99,17 @@ tx.send_amt = Decimal(send_amt)
 
 c = bitcoin_connection()
 
-tx.blockcount = find_block_by_time(c,tx.timestamp)
+tx.copy_inputs(inputs)
+if tx.check_signed(c):
+	msg('Transaction is signed')
 
 dec_tx = c.decoderawtransaction(tx.hex)
-
-tx.copy_inputs(inputs)
 tx.outputs = dict([(i['scriptPubKey']['addresses'][0],(i['value'],)) for i in dec_tx['vout']])
+
+tx.blockcount = find_block_by_time(c,tx.timestamp)
+
 for k in tx.outputs:
 	if k in b2m_map:
 		tx.outputs[k] += b2m_map[k]
 
-#tx.view_with_prompt('View decoded transaction?')
-#tx.format()
-#print(str(tx))
-# do_pager('OLD:\n' + pp_format(inputs) + '\nNEW:\n' + pp_format(tx.inputs))
 tx.write_to_file(ask_write=False)

@@ -70,6 +70,18 @@ def die(ev,s):
 def Die(ev,s):
 	sys.stdout.write(s+'\n'); sys.exit(ev)
 
+def pp_format(d):
+	import pprint
+	return pprint.PrettyPrinter(indent=4).pformat(d)
+
+def pp_die(d):
+	import pprint
+	die(1,pprint.PrettyPrinter(indent=4).pformat(d))
+
+def pp_msg(d):
+	import pprint
+	msg(pprint.PrettyPrinter(indent=4).pformat(d))
+
 def is_mmgen_wallet_label(s):
 	if len(s) > g.max_wallet_label_len:
 		msg('ERROR: wallet label length (%s chars) > maximum allowed (%s chars)' % (len(s),g.max_wallet_label_len))
@@ -804,15 +816,3 @@ def bitcoin_connection():
 	import mmgen.rpc
 	return mmgen.rpc.BitcoinRPCConnection(
 				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)
-
-def pp_format(d):
-	import pprint
-	return pprint.PrettyPrinter(indent=4).pformat(d)
-
-def pp_die(d):
-	import pprint
-	die(1,pprint.PrettyPrinter(indent=4).pformat(d))
-
-def pp_msg(d):
-	import pprint
-	msg(pprint.PrettyPrinter(indent=4).pformat(d))

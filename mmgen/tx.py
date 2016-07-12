@@ -176,6 +176,9 @@ def mmaddr2btcaddr_addrdata(mmaddr,addr_data,source=''):
 from mmgen.obj import *
 
 class MMGenTX(MMGenObject):
+	ext  = g.rawtx_ext
+	desc = 'transaction'
+
 	def __init__(self,filename=None):
 		self.inputs      = []
 		self.outputs     = {}
@@ -191,7 +194,10 @@ class MMGenTX(MMGenObject):
 		self.chksum      = ''
 		self.fmt_data    = ''
 		self.blockcount  = 0
-		self.isSigned    = False
+		if filename:
+			if get_extension(filename) == g.sigtx_ext:
+				self.mark_signed()
+			self.parse_tx_file(filename)
 
 	def add_output(self,btcaddr,amt):
 		self.outputs[btcaddr] = (amt,)
@@ -261,17 +267,8 @@ class MMGenTX(MMGenObject):
 		return sum([i['amount'] for i in self.inputs])
 
 	def create_raw(self,c):
-		inputs,outputs = [],{}
-		def dec2str(d):
-			tmp = {}
-			for k in d:
-				tmp[k] = str(d[k]) if type(d[k]) is Decimal else d[k]
-			return tmp
-		inputs = [dec2str(d) for d in self.inputs]
-		for k in self.outputs:
-			outputs[k] = str(self.outputs[k][0])
-#		mdie(inputs,outputs)
-		self.hex = c.createrawtransaction(inputs,outputs)
+		o = dict([(k,v[0]) for k,v in self.outputs.items()])
+		self.hex = c.createrawtransaction(self.inputs,o)
 		self.txid = make_chksum_6(unhexlify(self.hex)).upper()
 
 # 	def make_b2m_map(self,ail_w,ail_f):
@@ -327,17 +324,22 @@ class MMGenTX(MMGenObject):
 		if sig_tx['complete']:
 			msg('OK')
 			self.hex = sig_tx['hex']
-			self.isSigned = True
+			self.mark_signed()
 			return True
 		else:
 			msg('failed\nBitcoind returned the following errors:')
 			pp_msg(sig_tx['errors'])
 			return False
 
+	def mark_signed(self):
+		self.desc = 'signed transaction'
+		self.ext = g.sigtx_ext
+
 	def check_signed(self,c):
 		d = c.decoderawtransaction(self.hex)
-		self.isSigned = bool(d['vin'][0]['scriptSig']['hex'])
-		return self.isSigned
+		ret = bool(d['vin'][0]['scriptSig']['hex'])
+		if ret: self.mark_signed()
+		return ret
 
 	def send(self,c,bogus=False):
 		if bogus:
@@ -354,13 +356,12 @@ class MMGenTX(MMGenObject):
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
 
-	def write_to_file(self,ask_write=True,ask_write_default_yes=False):
+	def write_to_file(self,add_desc='',ask_write=True,ask_write_default_yes=False):
 		if ask_write == False:
 			ask_write_default_yes=True
 		self.format()
-		fn = '%s[%s].%s' % (self.txid,self.send_amt,
-			(g.rawtx_ext,g.sigtx_ext)[self.isSigned])
-		write_data_to_file(fn,self.fmt_data,'transaction',
+		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.ext)
+		write_data_to_file(fn,self.fmt_data,self.desc+add_desc,
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
 
@@ -453,9 +454,9 @@ class MMGenTX(MMGenObject):
 
 		return out
 
-	def parse_tx_file(self,infile,desc):
+	def parse_tx_file(self,infile):
 
-		self.parse_tx_data(get_lines_from_file(infile,desc))
+		self.parse_tx_data(get_lines_from_file(infile,self.desc+' data'))
 
 	def parse_tx_data(self,tx_data):
 

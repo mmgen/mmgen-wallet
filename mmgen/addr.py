@@ -31,6 +31,12 @@ from mmgen.obj import *
 pnm = g.proj_name
 
 addrmsgs = {
+	'too_many_acct_addresses': """
+ERROR: More than one address found for account: '%s'.
+Your 'wallet.dat' file appears to have been altered by a non-{pnm} program.
+Please restore your tracking wallet from a backup or create a new one and
+re-import your addresses.
+""".strip().format(pnm=pnm),
 	'addrfile_header': """
 # {pnm} address file
 #
@@ -228,13 +234,14 @@ class AddrInfoList(MMGenObject):
 		vmsg_r('Getting account data from wallet...')
 		accts = c.listaccounts(0,True)
 		data,i = {},0
-		for acct in accts:
+		alists = c.getaddressesbyaccount([[k] for k in accts],batch=True)
+		for acct,addrlist in zip(accts,alists):
 			ma,comment = parse_mmgen_label(acct)
 			if ma:
 				i += 1
-				addrlist = c.getaddressesbyaccount(acct)
+#				addrlist = c.getaddressesbyaccount(acct)
 				if len(addrlist) != 1:
-					die(2,wmsg['too_many_acct_addresses'] % acct)
+					die(2,addrmsgs['too_many_acct_addresses'] % acct)
 				seed_id,idx = ma.split(':')
 				if seed_id not in data:
 					data[seed_id] = []
@@ -380,7 +387,6 @@ class AddrInfo(MMGenObject):
 
 		# Header
 		out = []
-		from mmgen.addr import addrmsgs
 		k = ('addrfile_header','keyfile_header')[status[0]==0]
 		out.append(addrmsgs[k]+'\n')
 		if self.checksum:

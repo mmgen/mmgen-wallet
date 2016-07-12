@@ -39,8 +39,7 @@ opts_data = {
 	'notes': """
 
 COMMANDS:{}
-Type '{} usage <command> for usage information on a particular
-command
+Type '{} help <command> for help on a particular command
 """.format(tool.cmd_help,g.prog_name)
 }
 

@@ -75,6 +75,7 @@ cmd_data = OrderedDict([
 	('listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
 	('getbalance',   ['minconf [int=1]']),
 	('txview',       ['<{} TX file> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]']),
+	('twview',       ["sort [str='age']",'reverse [bool=False]','wide [bool=False]','pager [bool=False]']),
 
 	('add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
 	('remove_label',    ['<{} address> [str]'.format(pnm)]),
@@ -105,6 +106,7 @@ cmd_help = """
                   spendable/unspendable balances for individual {pnm} wallets
   listaddresses - list {pnm} addresses and their balances
   txview        - show raw/signed {pnm} transaction in human-readable form
+  twview        - view tracking wallet
 
   General utilities:
   hexdump      - encode data into formatted hexadecimal form (file or stdin)
@@ -157,6 +159,10 @@ cmd_help = """
 
 def tool_usage(prog_name, command):
 	if command in cmd_data:
+		for line in cmd_help.split('\n'):
+			if '  ' + command in line:
+				c,h = line.split('-',1)
+				Msg('{}: {}'.format(c.strip(),h.strip()))
 		Msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cmd_data[command])))
 	else:
 		Msg("'%s': no such tool command" % command)
@@ -393,7 +399,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
 							(d['address'], addrs[key][2])))
 			else:
-				addrs[key] = [0,comment,d['address']]
+				addrs[key] = [Decimal('0'),comment,d['address']]
 			addrs[key][0] += d['amount']
 			total += d['amount']
 
@@ -408,7 +414,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
 					if showbtcaddrs: save_a.append([acct])
-					addrs[key] = [0,comment,'']
+					addrs[key] = [Decimal('0'),comment,'']
 
 		for acct,addr in zip(save_a,c.getaddressesbyaccount(save_a,batch=True)):
 			if len(addr) != 1:
@@ -468,9 +474,15 @@ def getbalance(minconf=1):
 
 def txview(infile,pager=False,terse=False):
 	c = bitcoin_connection()
-	tx = MMGenTX()
-	tx.parse_tx_file(infile,'transaction data')
+	tx = MMGenTX(infile)
 	tx.view(pager,pause=False,terse=terse)
+
+def twview(pager=False,reverse=False,wide=False,sort='age'):
+	from mmgen.tw import MMGenTrackingWallet
+	tw = MMGenTrackingWallet()
+	tw.do_sort(sort,reverse=reverse)
+	out = tw.format(wide=wide)
+	do_pager(out) if pager else sys.stdout.write(out)
 
 def add_label(mmaddr,label,remove=False):
 	if not is_mmgen_addr(mmaddr):

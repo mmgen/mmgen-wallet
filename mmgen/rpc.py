@@ -78,8 +78,17 @@ class BitcoinRPCConnection(object):
 		dmsg('=== rpc.py debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
 
+		from decimal import Decimal
+		class JSONDecEncoder(json.JSONEncoder):
+			def default(self, obj):
+				if isinstance(obj, Decimal):
+					return str(obj)
+				return json.JSONEncoder.default(self, obj)
+
+#		pp_msg(json.dumps(p,cls=JSONDecEncoder))
+
 		try:
-			c.request('POST', '/', json.dumps(p), {
+			c.request('POST', '/', json.dumps(p,cls=JSONDecEncoder), {
 				'Host': self.host,
 				'Authorization': 'Basic ' + base64.b64encode(self.auth_str)
 			})
