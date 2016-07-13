@@ -34,7 +34,7 @@ By default, both addresses and secret keys are generated.
 """.strip()
 else:
 	gen_what = 'addresses'
-	opt_filter = 'hcdeiHOKlpzPqSv'
+	opt_filter = 'hbcdeiHOKlpzPqSv'
 	note1 = """
 If available, the external 'keyconv' program will be used for address
 generation.
@@ -48,6 +48,8 @@ opts_data = {
 	'options': """
 -h, --help            Print this help message.
 -A, --no-addresses    Print only secret keys, no addresses.
+-b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for brain-
+                      wallet input.
 -c, --print-checksum  Print address list checksum and exit.
 -d, --outdir=      d  Output files to directory 'd' instead of working dir.
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry.
@@ -96,12 +98,10 @@ FMT CODES:
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
 nargs = 2
-if len(cmd_args) < nargs \
-		and not opt.hidden_incog_input_params and not opt.in_fmt:
+if len(cmd_args) < nargs and not (opt.hidden_incog_input_params or opt.in_fmt):
 	opts.usage()
-elif len(cmd_args) > nargs \
-		or (len(cmd_args) == nargs and opt.hidden_incog_input_params):
-			opts.usage()
+elif len(cmd_args) > nargs - int(bool(opt.hidden_incog_input_params)):
+	opts.usage()
 
 addrlist_arg = cmd_args.pop()
 addr_idxs = parse_addr_idxs(addrlist_arg)

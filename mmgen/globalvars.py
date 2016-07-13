@@ -58,7 +58,7 @@ version   = '0.8.4'
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
 	'usr_randchars','stdout','show_hash_presets','label',
-	'keep_passphrase','keep_hash_preset'
+	'keep_passphrase','keep_hash_preset','brain_params'
 ]
 incompatible_opts = (
 	('quiet','verbose'),

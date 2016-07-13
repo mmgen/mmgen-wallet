@@ -133,8 +133,8 @@ def init(opts_data,add_opts=[],opt_filter=None):
 	# A special case - do this here, before opt gets set from g.dfl_vars
 	if opt.usr_randchars: g.use_urandchars = True
 
-	# If user opt is set, convert its type based on value in mmgen.globalvars
-	# If unset, set it to default value in mmgen.globalvars (g):
+	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
+	# If unset, set it to default value in mmgen.globalvars (g)
 	setattr(opt,'set_by_user',[])
 	for k in g.dfl_vars:
 		if k in opt.__dict__ and opt.__dict__[k] != None:

@@ -198,12 +198,13 @@ class SeedSource(MMGenObject):
 
 	@classmethod
 	def format_fmt_codes(cls):
-		d = [(c.__name__,','.join(c.fmt_codes)) for c in cls._get_subclasses()
+		d = [(c.__name__,('.'+c.ext if c.ext else c.ext),','.join(c.fmt_codes))
+					for c in cls._get_subclasses()
 				if hasattr(c,'fmt_codes')]
-		w = max([len(a) for a,b in d])
-		ret = ['{:<{w}}  {}'.format(a,b,w=w) for a,b in [
-			('Format','Valid codes'),
-			('------','-----------')
+		w = max([len(a) for a,b,c in d])
+		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
+			('Format','FileExt','Valid codes'),
+			('------','-------','-----------')
 			] + sorted(d)]
 		return '\n'.join(ret) + '\n'
 
@@ -707,16 +708,19 @@ class Brainwallet (SeedSourceEnc):
 
 	def _decrypt(self):
 		d = self.ssdata
-		if hasattr(opt,'brain_params'):
+		if opt.brain_params:
 			seed_len,d.hash_preset = self.get_bw_params()
 		else:
+			m1 = 'Warning: using default seed length of %s'
+			m2 = 'If this is not what you want, use the --brain-params option'
+			qmsg((m1+'\n'+m2) % opt.seed_len)
 			self._get_hash_preset()
 			seed_len = opt.seed_len
-		vmsg_r('Hashing brainwallet data.  Please wait...')
+		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
 		seed = scrypt_hash_passphrase(self.brainpasswd, '',
 					d.hash_preset, buflen=seed_len/8)
-		vmsg('Done')
+		qmsg('Done')
 		self.seed = Seed(seed)
 		msg('Seed ID: %s' % self.seed.sid)
 		qmsg('Check this value against your records')
@@ -805,8 +809,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 							d.salt + d.enc_seed,
 							d.wrapper_key,
 							int(hexlify(d.iv),16),
-							self.desc
-						)
+							self.desc)
 
 	def _filename(self):
 		s = self.seed
@@ -817,8 +820,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 				d.iv_id,
 				s.length,
 				d.hash_preset,
-				self.ext
-			)
+				self.ext)
 
 	def _deformat(self):
 

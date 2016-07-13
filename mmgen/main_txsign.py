@@ -34,9 +34,7 @@ opts_data = {
 	'options': """
 -h, --help            Print this help message.
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for brain-
-                      wallet input.  Required only if these parameters dif-
-                      fer from those of an incognito wallet also being used
-                      as a seed source.
+                      wallet input.
 -d, --outdir=      d  Specify an alternate directory 'd' for output.
 -D, --tx-id           Display transaction ID and exit.
 -e, --echo-passphrase Print passphrase to screen when typing it.
