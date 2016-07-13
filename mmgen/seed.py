@@ -708,12 +708,14 @@ class Brainwallet (SeedSourceEnc):
 
 	def _decrypt(self):
 		d = self.ssdata
+		# Don't set opt.seed_len! In txsign, BW seed len might differ from other seed srcs
 		if opt.brain_params:
 			seed_len,d.hash_preset = self.get_bw_params()
 		else:
-			m1 = 'Warning: using default seed length of %s'
-			m2 = 'If this is not what you want, use the --brain-params option'
-			qmsg((m1+'\n'+m2) % opt.seed_len)
+			if 'seed_len' not in opt.set_by_user:
+				m1 = 'Using default seed length of %s bits'
+				m2 = 'If this is not what you want, use the --seed-len option'
+				qmsg((m1+'\n'+m2) % yellow(str(opt.seed_len)))
 			self._get_hash_preset()
 			seed_len = opt.seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
@@ -968,6 +970,9 @@ harder to find, you're advised to choose a much larger file size than this.
 
 		k = ('output','input')[self.op=='pwchg_new']
 		fn,d.hincog_offset = self._get_hincog_params(k)
+
+		if opt.outdir and not os.path.dirname(fn):
+			fn = os.path.join(opt.outdir,fn)
 
 		check_offset = True
 		try:

@@ -48,8 +48,6 @@ opts_data = {
 	'options': """
 -h, --help            Print this help message.
 -A, --no-addresses    Print only secret keys, no addresses.
--b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for brain-
-                      wallet input.
 -c, --print-checksum  Print address list checksum and exit.
 -d, --outdir=      d  Output files to directory 'd' instead of working dir.
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry.

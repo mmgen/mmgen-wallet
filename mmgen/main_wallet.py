@@ -63,8 +63,6 @@ opts_data = {
 	'usage': usage,
 	'options': """
 -h, --help            Print this help message.
--b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for brain-
-                      wallet input.
 -d, --outdir=      d  Output files to directory 'd' instead of working dir.
 -e, --echo-passphrase Echo passphrases and other user input to screen.
 -i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below).
