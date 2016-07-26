@@ -48,10 +48,10 @@ class Filename(MMGenObject):
 				die(3,"'%s': not a recognized extension for SeedSource" % self.ext)
 
 
-		# TODO: Check for Windows
-		mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
 		import stat
 		if stat.S_ISBLK(os.stat(fn).st_mode):
+			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
+			if sys.platform[:3] == 'win': mode |= os.O_BINARY
 			try:
 				fd = os.open(fn, mode)
 			except OSError as e:

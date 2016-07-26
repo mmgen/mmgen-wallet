@@ -572,7 +572,8 @@ def decrypt(infile,outfile='',hash_preset=''):
 def find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
 	n,carry = 0,' '*ivsize
-	f = os.open(filename,os.O_RDONLY)
+	flgs = os.O_RDONLY|os.O_BINARY if sys.platform[:3] == 'win' else os.O_RDONLY
+	f = os.open(filename,flgs)
 	for ch in iv_id:
 		if ch not in '0123456789ABCDEF':
 			die(2,"'%s': invalid Incog ID" % iv_id)

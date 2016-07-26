@@ -561,7 +561,6 @@ def get_words(infile,desc,prompt):
 		return get_words_from_user(prompt)
 
 def remove_comments(lines):
-	# re.sub(pattern, repl, string, count=0, flags=0)
 	ret = []
 	for i in lines:
 		i = re.sub(ur'#.*',u'',i,1)
@@ -617,29 +616,12 @@ def get_mmgen_passphrase(desc,passchg=False):
 	else:
 		return ' '.join(get_words_from_user(prompt))
 
-
 def get_bitcoind_passphrase(prompt):
 	if opt.passwd_file:
 		pwfile_reuse_warning()
 		return get_data_from_file(opt.passwd_file,'passphrase').strip('\r\n')
 	else:
 		return my_raw_input(prompt, echo=opt.echo_passphrase)
-
-
-def check_data_fits_file_at_offset(fname,offset,dlen,action):
-	# TODO: Check for Windows
-	if stat.S_ISBLK(os.stat(fname).st_mode):
-		fd = os.open(fname, os.O_RDONLY)
-		fsize = os.lseek(fd, 0, os.SEEK_END)
-		os.close(fd)
-	else:
-		fsize = os.stat(fname).st_size
-
-	if fsize < offset + dlen:
-		m = ('Input','Destination')[action == 'write']
-		die(1,
-	'%s file has length %s, too short to %s %s bytes of data at offset %s'
-			% (m,fsize,action,dlen,offset))
 
 
 def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
@@ -766,5 +748,7 @@ def bitcoin_connection():
 	auth_cookie = get_bitcoind_auth_cookie()
 
 	import mmgen.rpc
-	return mmgen.rpc.BitcoinRPCConnection(
+	c = mmgen.rpc.BitcoinRPCConnection(
 				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)
+	c.client_version = int(c.getinfo()['version'])
+	return c

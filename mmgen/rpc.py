@@ -26,6 +26,8 @@ from mmgen.common import *
 
 class BitcoinRPCConnection(object):
 
+	client_version = 0
+
 	def __init__(
 				self,
 				host='localhost',port=8332,
@@ -79,10 +81,11 @@ class BitcoinRPCConnection(object):
 		dmsg('    RPC POST data ==> %s\n' % p)
 
 		from mmgen.obj import BTCAmt
+		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
 				if isinstance(obj, BTCAmt):
-					return str(obj)
+					return (float,str)[caller.client_version>=120000](obj)
 				return json.JSONEncoder.default(self, obj)
 
 #		pp_msg(json.dumps(p,cls=MyJSONEncoder))

@@ -668,7 +668,8 @@ class MMGenExpect(object):
 		if extra_desc: desc += ' ' + extra_desc
 		for i in cmd_args:
 			if type(i) not in (str,unicode):
-				die(2,'Error: missing input files in cmd line?:\n%s' % cmd_args)
+				fs = 'Error: missing input files in cmd line?:\nName: {}\nCmd: {}\nCmd args: {}'
+				die(2,fs.format(name,mmgen_cmd,cmd_args))
 		cmd_str = mmgen_cmd + ' ' + ' '.join(cmd_args)
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
@@ -1215,7 +1216,7 @@ class MMGenTestSuite(object):
 		add_args = ([],['-q'])[ni]
 		if ni:
 			m = '\nAnswer the interactive prompts as follows:\n' + \
-				" 'y', 'y', 'q', '1-8'<ENTER>, ENTER, ENTER, ENTER, 'y'"
+				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, 'y'"
 			msg(grnbg(m))
 		t = MMGenExpect(name,'mmgen-txcreate',['-f','0.0001'] + add_args + cmd_args)
 		if ni: return

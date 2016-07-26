@@ -224,9 +224,12 @@ def do_pager(text):
 # 'print' instead of the pager.
 # We risk assuming that 'more' will always be available on a stock
 # Windows installation.
-	if sys.platform.startswith('win') and 'HOME' not in environ:
-		shell = True
-		pagers = ['more']
+	if sys.platform.startswith('win'):
+		if 'HOME' not in environ: # native Windows terminal
+			shell = True
+			pagers = ['more']
+		else:                     # MSYS
+			environ['LESS'] = '-cR' # clear screen, disable line chopping
 
 	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
 		pagers = [environ['PAGER']] + pagers

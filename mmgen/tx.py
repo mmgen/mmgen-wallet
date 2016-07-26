@@ -228,12 +228,12 @@ class MMGenTX(MMGenObject):
 				self.txid,
 				self.send_amt,
 				self.timestamp,
-				(self.blockcount or 'None')
+				self.blockcount
 			),
 			self.hex,
 			repr([e.__dict__ for e in self.inputs]),
 			repr([e.__dict__ for e in self.outputs])
-		) + ((b58encode(self.label),) if self.label else ())
+		) + ((b58encode(self.label.encode('utf8')),) if self.label else ())
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join((self.chksum,) + lines)+'\n'
 
