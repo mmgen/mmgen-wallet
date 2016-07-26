@@ -78,17 +78,17 @@ class BitcoinRPCConnection(object):
 		dmsg('=== rpc.py debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
 
-		from decimal import Decimal
-		class JSONDecEncoder(json.JSONEncoder):
+		from mmgen.obj import BTCAmt
+		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
-				if isinstance(obj, Decimal):
+				if isinstance(obj, BTCAmt):
 					return str(obj)
 				return json.JSONEncoder.default(self, obj)
 
-#		pp_msg(json.dumps(p,cls=JSONDecEncoder))
+#		pp_msg(json.dumps(p,cls=MyJSONEncoder))
 
 		try:
-			c.request('POST', '/', json.dumps(p,cls=JSONDecEncoder), {
+			c.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
 				'Host': self.host,
 				'Authorization': 'Basic ' + base64.b64encode(self.auth_str)
 			})
@@ -112,7 +112,8 @@ class BitcoinRPCConnection(object):
 		if not r2:
 			return die_maybe(r,2,'Error: empty reply')
 
-		r3 = json.loads(r2.decode('utf8'), parse_float=decimal.Decimal)
+		from decimal import Decimal
+		r3 = json.loads(r2.decode('utf8'), parse_float=Decimal)
 		ret = []
 
 		for resp in r3 if cf['batch'] else [r3]:

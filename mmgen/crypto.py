@@ -242,15 +242,6 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 		msg('Incorrect passphrase or hash preset')
 		return False
 
-def mmgen_decrypt_file_maybe(fn,desc):
-	d = get_data_from_file(fn,'{} data'.format(desc),binary=True)
-	have_enc_ext = get_extension(fn) == g.mmenc_ext
-	if have_enc_ext or not is_ascii(d):
-		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		msg('%s %s %s' % (m,desc,fn))
-		d = mmgen_decrypt_retry(d,desc)
-	return d
-
 def mmgen_decrypt_retry(d,desc='data'):
 	while True:
 		d_dec = mmgen_decrypt(d,desc)

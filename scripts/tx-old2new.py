@@ -94,22 +94,44 @@ def find_block_by_time(c,timestamp):
 
 tx = MMGenTX()
 
-[tx.txid,send_amt,tx.timestamp],tx.hex,inputs,b2m_map,tx.comment = parse_tx_file(cmd_args[0])
+[tx.txid,send_amt,tx.timestamp],tx.hex,inputs,b2m_map,tx.label = parse_tx_file(cmd_args[0])
 tx.send_amt = Decimal(send_amt)
 
 c = bitcoin_connection()
 
-tx.copy_inputs(inputs)
+# attrs = 'txid','vout','amt','comment','mmid','addr','wif'
+#pp_msg(inputs)
+for i in inputs:
+	if not 'mmid' in i and 'account' in i:
+		from mmgen.tw import parse_tw_acct_label
+		a,b = parse_tw_acct_label(i['account'])
+		if a:
+			i['mmid'] = a.decode('utf8')
+			if b: i['comment'] = b.decode('utf8')
+
+#pp_msg(inputs)
+tx.inputs = tx.decode_io_oldfmt(inputs)
+
 if tx.check_signed(c):
 	msg('Transaction is signed')
 
 dec_tx = c.decoderawtransaction(tx.hex)
-tx.outputs = dict([(i['scriptPubKey']['addresses'][0],(i['value'],)) for i in dec_tx['vout']])
+tx.outputs = [MMGenTxOutput(addr=i['scriptPubKey']['addresses'][0],amt=i['value'])
+				for i in dec_tx['vout']]
 
+for e in tx.outputs:
+	if e.addr in b2m_map:
+		f = b2m_map[e.addr]
+		e.mmid = f[0]
+		if f[1]: e.label = f[1].decode('utf8')
+	else:
+		for f in tx.inputs:
+			if e.addr == f.addr and f.mmid:
+				e.mmid = f.mmid
+				if f.label: e.label = f.label.decode('utf8')
+#for i in tx.inputs: print i
+#for i in tx.outputs: print i
+#die(1,'')
 tx.blockcount = find_block_by_time(c,tx.timestamp)
-
-for k in tx.outputs:
-	if k in b2m_map:
-		tx.outputs[k] += b2m_map[k]
 
 tx.write_to_file(ask_write=False)

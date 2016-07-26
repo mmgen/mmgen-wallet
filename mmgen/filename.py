@@ -29,16 +29,24 @@ class Filename(MMGenObject):
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
 		self.basename = os.path.basename(fn)
-		self.ext      = None
-		self.ftype    = ftype
+		self.ext      = get_extension(fn)
+		self.ftype    = None # the file's associated class
 
-# This should be done before license msg instead
-#		check_infile(fn)
+		from mmgen.seed import SeedSource
+		if ftype:
+			if type(ftype) == type:
+				if issubclass(ftype,SeedSource):
+					self.ftype = ftype
+				# elif: # other MMGen file types
+				else:
+					die(3,"'%s': not a recognized file type for SeedSource" % ftype)
+			else:
+				die(3,"'%s': not a class" % ftype)
+		else:
+			self.ftype = SeedSource.ext_to_type(self.ext)
+			if not self.ftype:
+				die(3,"'%s': not a recognized extension for SeedSource" % self.ext)
 
-		if not ftype:
-			self.ext = get_extension(fn)
-			if not (self.ext):
-				die(2,"Unrecognized extension '.%s' for file '%s'" % (self.ext,fn))
 
 		# TODO: Check for Windows
 		mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]

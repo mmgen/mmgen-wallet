@@ -29,14 +29,31 @@ import mmgen.globalvars as g
 
 pnm = g.proj_name
 
-_red,_grn,_yel,_cya,_reset,_grnbg = \
-	['\033[%sm' % c for c in '31;1','32;1','33;1','36;1','0','30;102']
+# If 88- or 256-color support is compiled, the following apply.
+#    P s = 3 8 ; 5 ; P s -> Set foreground color to the second P s .
+#    P s = 4 8 ; 5 ; P s -> Set background color to the second P s .
+if os.environ['TERM'][-8:] == '256color':
+	_blk,_red,_grn,_yel,_blu,_mag,_cya,_bright,_dim,_ybright,_ydim,_pnk,_orng,_gry = [
+	'\033[38;5;%s;1m' % c for c in 232,210,121,229,75,90,122,231,245,187,243,218,215,246]
+	_redbg = '\033[38;5;232;48;5;210;1m'
+	_grnbg = '\033[38;5;232;48;5;121;1m'
+	_grybg = '\033[38;5;231;48;5;240;1m'
+	_reset = '\033[0m'
+else:
+	_blk,_red,_grn,_yel,_blu,_mag,_cya,_reset,_grnbg = \
+		['\033[%sm' % c for c in '30;1','31;1','32;1','33;1','34;1','35;1','36;1','0','30;102']
+	_gry = _orng = _pnk = _redbg = _ybright = _ydim = _bright = _dim = _grybg = _mag  # TODO
 
 def red(s):     return _red+s+_reset
 def green(s):   return _grn+s+_reset
-def grnbg(s):    return _grnbg+s+_reset
+def grnbg(s):   return _grnbg+s+_reset
 def yellow(s):  return _yel+s+_reset
 def cyan(s):    return _cya+s+_reset
+def blue(s):    return _blu+s+_reset
+def pink(s):    return _pnk+s+_reset
+def orange(s):  return _orng+s+_reset
+def gray(s):    return _gry+s+_reset
+def magenta(s): return _mag+s+_reset
 def nocolor(s): return s
 
 def start_mscolor():
@@ -65,10 +82,12 @@ def mdie(*args):
 		sys.stdout.write(repr(d)+'\n')
 	sys.exit()
 
-def die(ev,s):
-	sys.stderr.write(s+'\n'); sys.exit(ev)
-def Die(ev,s):
-	sys.stdout.write(s+'\n'); sys.exit(ev)
+def die(ev=0,s=''):
+	if s: sys.stderr.write(s+'\n')
+	sys.exit(ev)
+def Die(ev=0,s=''):
+	if s: sys.stdout.write(s+'\n')
+	sys.exit(ev)
 
 def pp_format(d):
 	import pprint
@@ -144,7 +163,7 @@ def suf(arg,suf_type):
 	t = type(arg)
 	if t == int:
 		n = arg
-	elif t == list or t == tuple or t == set:
+	elif t in (list,tuple,set,dict):
 		n = len(arg)
 	else:
 		msg('%s: invalid parameter' % arg)
@@ -376,7 +395,7 @@ def _validate_addr_num(n):
 		msg("'%s': invalid %s address index" % (n,g.proj_name))
 		return False
 
-def parse_addr_idxs(arg,sep=','):
+def parse_addr_idxs(arg,sep=','):  # TODO - delete
 
 	ret = []
 
@@ -517,52 +536,6 @@ def write_data_to_file(
 
 		return True
 
-
-def _check_mmseed_format(words):
-
-	valid = False
-	desc = '%s data' % g.seed_ext
-	try:
-		chklen = len(words[0])
-	except:
-		return False
-
-	if len(words) < 3 or len(words) > 12:
-		msg('Invalid data length (%s) in %s' % (len(words),desc))
-	elif not is_hexstring(words[0]):
-		msg("Invalid format of checksum '%s' in %s"%(words[0], desc))
-	elif chklen != 6:
-		msg('Incorrect length of checksum (%s) in %s' % (chklen,desc))
-	else: valid = True
-
-	return valid
-
-
-def _check_wallet_format(infile, lines):
-
-	desc = "wallet file '%s'" % infile
-	valid = False
-	chklen = len(lines[0])
-	if len(lines) != 6:
-		vmsg('Invalid number of lines (%s) in %s' % (len(lines),desc))
-	elif chklen != 6:
-		vmsg('Incorrect length of Master checksum (%s) in %s' % (chklen,desc))
-	elif not is_hexstring(lines[0]):
-		vmsg("Invalid format of Master checksum '%s' in %s"%(lines[0], desc))
-	else: valid = True
-
-	if valid == False:
-		die(2,'Invalid %s' % desc)
-
-
-def _check_chksum_6(chk,val,desc,infile):
-	comp_chk = make_chksum_6(val)
-	if chk != comp_chk:
-		msg("%s checksum incorrect in file '%s'!" % (desc,infile))
-		die(2,'Checksum: %s. Computed value: %s' % (chk,comp_chk))
-	dmsg('%s checksum passed: %s' % (capfirst(desc),chk))
-
-
 def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
@@ -591,19 +564,25 @@ def remove_comments(lines):
 	# re.sub(pattern, repl, string, count=0, flags=0)
 	ret = []
 	for i in lines:
-		i = re.sub('#.*','',i,1)
-		i = re.sub('\s+$','',i)
+		i = re.sub(ur'#.*',u'',i,1)
+		i = re.sub(ur'\s+$',u'',i)
 		if i: ret.append(i)
 	return ret
 
-def get_lines_from_file(infile,desc='',trim_comments=False):
-	if desc != '':
-		qmsg("Getting %s from file '%s'" % (desc,infile))
-	f = open_file_or_exit(infile,'r')
-	lines = f.read().splitlines() # DOS-safe
-	f.close()
-	return remove_comments(lines) if trim_comments else lines
+def mmgen_decrypt_file_maybe(fn,desc=''):
+	d = get_data_from_file(fn,desc,binary=True)
+	have_enc_ext = get_extension(fn) == g.mmenc_ext
+	if have_enc_ext or not is_ascii(d):
+		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
+		msg("%s %s '%s'" % (m,desc,fn))
+		from mmgen.crypto import mmgen_decrypt_retry
+		d = mmgen_decrypt_retry(d,desc)
+	return d
 
+def get_lines_from_file(fn,desc='',trim_comments=False):
+	dec = mmgen_decrypt_file_maybe(fn,desc)
+	ret = dec.decode('utf8').splitlines() # DOS-safe
+	return remove_comments(ret) if trim_comments else ret
 
 def get_data_from_user(desc='data',silent=False):
 	data = my_raw_input('Enter %s: ' % desc, echo=opt.echo_passphrase)
@@ -612,39 +591,12 @@ def get_data_from_user(desc='data',silent=False):
 
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
 	if dash and infile == '-': return sys.stdin.read()
-	if not silent:
+	if not silent and desc:
 		qmsg("Getting %s from file '%s'" % (desc,infile))
 	f = open_file_or_exit(infile,('r','rb')[bool(binary)])
 	data = f.read()
 	f.close()
 	return data
-
-
-def get_seed_from_seed_data(words):
-
-	if not _check_mmseed_format(words):
-		msg('Invalid %s data' % g.seed_ext)
-		return False
-
-	stored_chk = words[0]
-	seed_b58 = ''.join(words[1:])
-
-	chk = make_chksum_6(seed_b58)
-	vmsg_r('Validating %s checksum...' % g.seed_ext)
-
-	if compare_chksums(chk, 'seed', stored_chk, 'input'):
-		from mmgen.bitcoin import b58decode_pad
-		seed = b58decode_pad(seed_b58)
-		if seed == False:
-			msg('Invalid b58 number: %s' % val)
-			return False
-
-		msg('Valid seed data for Seed ID %s' % make_chksum_8(seed))
-		return seed
-	else:
-		msg('Invalid checksum for {pnm} seed'.format(pnm=pnm))
-		return False
-
 
 passwd_file_used = False
 
@@ -790,8 +742,8 @@ def get_bitcoind_cfg_options(cfg_keys):
 
 	cfg_file = os.path.join(get_homedir(), get_datadir(), 'bitcoin.conf')
 
-	cfg = dict([(k,v) for k,v in [split2(line.translate(None,'\t '),'=')
-			for line in get_lines_from_file(cfg_file)] if k in cfg_keys]) \
+	cfg = dict([(k,v) for k,v in [split2(str(line).translate(None,'\t '),'=')
+			for line in get_lines_from_file(cfg_file,'')] if k in cfg_keys]) \
 				if file_is_readable(cfg_file) else {}
 
 	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
@@ -803,7 +755,7 @@ def get_bitcoind_auth_cookie():
 	f = os.path.join(get_homedir(), get_datadir(), '.cookie')
 
 	if file_is_readable(f):
-		return get_lines_from_file(f)[0]
+		return get_lines_from_file(f,'')[0]
 	else:
 		return ''
 

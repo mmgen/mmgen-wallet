@@ -24,6 +24,7 @@ import os,re
 
 from mmgen.common import *
 from mmgen.seed import SeedSource
+from mmgen.obj import MMGenWalletLabel
 
 bn = os.path.basename(sys.argv[0])
 invoked_as = re.sub(r'^wallet','',bn.split('-')[-1])
@@ -110,6 +111,9 @@ FMT CODES:
 
 cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 
+if opt.label:
+	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
+
 if len(cmd_args) < nargs \
 		and not opt.hidden_incog_input_params and not opt.in_fmt:
 	die(1,'An input file or input format must be specified')
@@ -128,10 +132,12 @@ if invoked_as in ('conv','passchg'): msg(green('Processing input wallet'))
 ss_in = None if invoked_as == 'gen' \
 			else SeedSource(*cmd_args,passchg=invoked_as=='passchg')
 
-if invoked_as == 'chk':
-	sys.exit()
+if invoked_as == 'chk': sys.exit()
 
 if invoked_as in ('conv','passchg'): msg(green('Processing output wallet'))
 
 ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
+
+if invoked_as == 'gen': qmsg("This wallet's Seed ID: %s" % ss_out.seed.sid.hl())
+
 ss_out.write_to_file()

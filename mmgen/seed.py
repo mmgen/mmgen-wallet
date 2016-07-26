@@ -37,7 +37,6 @@ def check_usr_seed_len(seed_len):
 			"doesn't match seed length of source (%s)"
 		die(1, m % (opt.seed_len,seed_len))
 
-
 class Seed(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -48,8 +47,11 @@ class Seed(MMGenObject):
 
 		self.data      = seed_bin
 		self.hexdata   = hexlify(seed_bin)
-		self.sid       = make_chksum_8(seed_bin)
+		self.sid       = SeedID(seed=self)
 		self.length    = len(seed_bin) * 8
+
+	def get_data(self):
+		return self.data
 
 
 class SeedSource(MMGenObject):
@@ -64,21 +66,17 @@ class SeedSource(MMGenObject):
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,seed=None,
-				ignore_in_fmt=False,passchg=False):
+	def __new__(cls,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False):
 
 		def die_on_opt_mismatch(opt,sstype):
-			opt_sstype = cls.fmt_code_to_sstype(opt)
+			opt_sstype = cls.fmt_code_to_type(opt)
 			compare_or_die(
 				opt_sstype.__name__, 'input format requested on command line',
 				sstype.__name__,     'input file format'
 			)
 
 		if ss:
-			if passchg:
-				sstype = ss.__class__
-			else:
-				sstype = cls.fmt_code_to_sstype(opt.out_fmt)
+			sstype = ss.__class__ if passchg else cls.fmt_code_to_type(opt.out_fmt)
 			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
 			me.seed = ss.seed
 			me.ss_in = ss
@@ -86,32 +84,28 @@ class SeedSource(MMGenObject):
 		elif fn or opt.hidden_incog_input_params:
 			if fn:
 				f = Filename(fn)
-				sstype = cls.ext_to_sstype(f.ext)
 			else:
 				fn = opt.hidden_incog_input_params.split(',')[0]
-				f  = Filename(fn,ftype='hincog')
-				sstype = cls.fmt_code_to_sstype('hincog')
-
+				f = Filename(fn,ftype=IncogWalletHidden)
 			if opt.in_fmt and not ignore_in_fmt:
-				die_on_opt_mismatch(opt.in_fmt,sstype)
-
-			me = super(cls,cls).__new__(sstype)
+				die_on_opt_mismatch(opt.in_fmt,f.ftype)
+			me = super(cls,cls).__new__(f.ftype)
 			me.infile = f
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		elif opt.in_fmt:  # Input format
-			sstype = cls.fmt_code_to_sstype(opt.in_fmt)
+			sstype = cls.fmt_code_to_type(opt.in_fmt)
 			me = super(cls,cls).__new__(sstype)
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		else: # Called with no inputs - initialize with random seed
-			sstype = cls.fmt_code_to_sstype(opt.out_fmt)
+			sstype = cls.fmt_code_to_type(opt.out_fmt)
 			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
 			me.seed = Seed(seed_bin=seed or None)
 			me.op = 'new'
+#			die(1,me.seed.sid.hl()) # DEBUG
 
 		return me
 
-	def __init__(self,fn=None,ss=None,seed=None,
-					ignore_in_fmt=False,passchg=False):
+	def __init__(self,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
@@ -135,7 +129,7 @@ class SeedSource(MMGenObject):
 			self._decrypt_retry()
 
 		m = ('',', seed length %s' % self.seed.length)[self.seed.length!=256]
-		qmsg('Valid %s for Seed ID %s%s' % (self.desc,self.seed.sid,m))
+		qmsg('Valid %s for Seed ID %s%s' % (self.desc,self.seed.sid.hl(),m))
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
@@ -162,36 +156,36 @@ class SeedSource(MMGenObject):
 				die(2,'Passphrase from password file, so exiting')
 			msg('Trying again...')
 
-	subclasses = []
+	@classmethod
+	def get_subclasses(cls):
+		if not hasattr(cls,'subclasses'):
+			gl = globals()
+			setattr(cls,'subclasses',
+				[gl[k] for k in gl if type(gl[k]) == type and issubclass(gl[k],cls)])
+		return cls.subclasses
 
 	@classmethod
-	def _get_subclasses(cls):
-
-		if cls.subclasses: return cls.subclasses
-
-		ret,gl = [],globals()
-		for c in [gl[k] for k in gl]:
-			try:
-				if issubclass(c,cls):
-					ret.append(c)
-			except:
-				pass
-
-		cls.subclasses = ret
-		return ret
+	def get_subclasses_str(cls):
+		def GetSubclassesTree(cls):
+			return ''.join([c.__name__ +' '+ GetSubclassesTree(c) for c in cls.__subclasses__()])
+		return GetSubclassesTree(cls)
 
 	@classmethod
-	def fmt_code_to_sstype(cls,fmt_code):
+	def get_extensions(cls):
+		return [s.ext for s in cls.get_subclasses() if hasattr(s,'ext')]
+
+	@classmethod
+	def fmt_code_to_type(cls,fmt_code):
 		if not fmt_code: return None
-		for c in cls._get_subclasses():
+		for c in cls.get_subclasses():
 			if hasattr(c,'fmt_codes') and fmt_code in c.fmt_codes:
 				return c
 		return None
 
 	@classmethod
-	def ext_to_sstype(cls,ext):
+	def ext_to_type(cls,ext):
 		if not ext: return None
-		for c in cls._get_subclasses():
+		for c in cls.get_subclasses():
 			if hasattr(c,'ext') and ext == c.ext:
 				return c
 		return None
@@ -199,7 +193,7 @@ class SeedSource(MMGenObject):
 	@classmethod
 	def format_fmt_codes(cls):
 		d = [(c.__name__,('.'+c.ext if c.ext else c.ext),','.join(c.fmt_codes))
-					for c in cls._get_subclasses()
+					for c in cls.get_subclasses()
 				if hasattr(c,'fmt_codes')]
 		w = max([len(a) for a,b,c in d])
 		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
@@ -365,6 +359,8 @@ class Mnemonic (SeedSourceUnenc):
 	}
 	mn_base = 1626
 	wordlists = sorted(wl_checksums)
+	dfl_wordlist = 'electrum'
+	# dfl_wordlist = 'tirosh'
 
 	@staticmethod
 	def _mn2hex_pad(mn): return len(mn) * 8 / 3
@@ -399,7 +395,7 @@ class Mnemonic (SeedSourceUnenc):
 
 	@classmethod
 	def get_wordlist(cls,wordlist=None):
-		wordlist = wordlist or g.default_wordlist
+		wordlist = wordlist or cls.dfl_wordlist
 		if wordlist not in cls.wordlists:
 			die(1,"'%s': invalid wordlist.  Valid choices: '%s'" %
 				(wordlist,"' '".join(cls.wordlists)))
@@ -536,28 +532,31 @@ class Wallet (SeedSourceEnc):
 	ext = 'mmdat'
 
 	def _get_label_from_user(self,old_lbl=''):
-		d = ("to reuse the label '%s'" % old_lbl) if old_lbl else 'for no label'
+		d = ("to reuse the label '%s'" % old_lbl.hl()) if old_lbl else 'for no label'
 		p = 'Enter a wallet label, or hit ENTER %s: ' % d
 		while True:
-			ret = my_raw_input(p)
+			msg_r(p)
+			ret = my_raw_input('')
 			if ret:
-				if is_mmgen_wallet_label(ret):
-					self.ssdata.label = ret; return ret
+				self.ssdata.label = MMGenWalletLabel(ret,on_fail='return')
+				if self.ssdata.label:
+					break
 				else:
 					msg('Invalid label.  Trying again...')
 			else:
-				ret = old_lbl or 'No Label'
-				self.ssdata.label = ret; return ret
+				self.ssdata.label = old_lbl or MMGenWalletLabel('No Label')
+				break
+		return self.ssdata.label
 
 	# nearly identical to _get_hash_preset() - factor?
 	def _get_label(self):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
-				qmsg("Reusing label '%s' at user request" % old_lbl)
+				qmsg("Reusing label '%s' at user request" % old_lbl.hl())
 				self.ssdata.label = old_lbl
 			elif opt.label:
-				qmsg("Using label '%s' requested on command line" % opt.label)
+				qmsg("Using label '%s' requested on command line" % opt.label.hl())
 				lbl = self.ssdata.label = opt.label
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
@@ -566,7 +565,7 @@ class Wallet (SeedSourceEnc):
 				m = ("changed to '%s'" % lbl,'unchanged')[lbl==old_lbl]
 				qmsg('Label %s' % m)
 		elif opt.label:
-			qmsg("Using label '%s' requested on command line" % opt.label)
+			qmsg("Using label '%s' requested on command line" % opt.label.hl())
 			self.ssdata.label = opt.label
 		else:
 			self._get_label_from_user()
@@ -619,7 +618,7 @@ class Wallet (SeedSourceEnc):
 		if not check_master_chksum(lines,self.desc): return False
 
 		d = self.ssdata
-		d.label = lines[1]
+		d.label = MMGenWalletLabel(lines[1])
 
 		d1,d2,d3,d4,d5 = lines[2].split()
 		d.seed_id = d1.upper()
@@ -994,7 +993,7 @@ harder to find, you're advised to choose a much larger file size than this.
 			else:
 				die(1,'Exiting at user request')
 
-		self.outfile = f = Filename(fn,ftype=self.fmt_codes[0],write=True)
+		f = Filename(fn,ftype=type(self),write=True)
 
 		dmsg('%s data len %s, offset %s' % (
 				capfirst(self.desc),d.target_data_len,d.hincog_offset))

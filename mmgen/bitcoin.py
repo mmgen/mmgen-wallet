@@ -120,10 +120,11 @@ def b58encode(s):
 def b58decode(b58num):
 	if b58num == '': return ''
 	# Zap all spaces:
-	num = _b58tonum(b58num.translate(None,' \t\n\r'))
+	# Use translate() only with str, not unicode
+	num = _b58tonum(str(b58num).translate(None,' \t\n\r'))
 	if num == False: return False
-	out = '{:x}'.format(num)
-	return unhexlify('0'*(len(out)%2) + out)
+	out = u'{:x}'.format(num)
+	return unhexlify(u'0'*(len(out)%2) + out)
 
 # These yield bytewise equivalence in our special cases:
 

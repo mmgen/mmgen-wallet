@@ -21,8 +21,6 @@ mmgen-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen
                 inputs and outputs
 """
 
-from decimal import Decimal
-
 from mmgen.common import *
 from mmgen.tx import *
 from mmgen.tw import *
@@ -83,13 +81,12 @@ No data for {pnm} address {mmgenaddr} could be found in the tracking wallet.
 Please import this address into your tracking wallet or supply an address file
 for it on the command line.
 """.strip(),
-	'mixed_inputs': """
-NOTE: This transaction uses a mixture of both {pnm} and non-{pnm} inputs, which
-makes the signing process more complicated.  When signing the transaction, keys
-for the non-{pnm} inputs must be supplied to '{pnl}-txsign' in a file with the
-'--keys-from-file' option.
-
-Selected mmgen inputs: %s
+	'non_mmgen_inputs': """
+NOTE: This transaction includes non-{pnm} inputs, which makes the signing
+process more complicated.  When signing the transaction, keys for non-{pnm}
+inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
+option.
+Selected non-{pnm} inputs: %s
 """.strip().format(pnm=pnm,pnl=pnm.lower()),
 	'not_enough_btc': """
 Not enough BTC in the inputs for this transaction (%s BTC)
@@ -100,7 +97,7 @@ was specified.
 """.strip(),
 }
 
-def select_outputs(unspent,prompt):
+def select_unspent(unspent,prompt):
 
 	while True:
 		reply = my_raw_input(prompt).strip()
@@ -118,14 +115,14 @@ def select_outputs(unspent,prompt):
 		return selected
 
 
-def mmaddr2baddr(c,mmaddr,ail_w,ail_f):
+def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 
 	# assume mmaddr has already been checked
-	btc_addr = ail_w.mmaddr2btcaddr(mmaddr)
+	btc_addr = ad_w.mmaddr2btcaddr(mmaddr)
 
 	if not btc_addr:
-		if ail_f:
-			btc_addr = ail_f.mmaddr2btcaddr(mmaddr)
+		if ad_f:
+			btc_addr = ad_f.mmaddr2btcaddr(mmaddr)
 			if btc_addr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm('Continue anyway?'):
@@ -135,16 +132,16 @@ def mmaddr2baddr(c,mmaddr,ail_w,ail_f):
 		else:
 			die(2,wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
 
-	return btc_addr
+	return BTCAddr(btc_addr)
 
 
 def get_fee_estimate():
-	if 'tx_fee' in opt.set_by_user:
+	if 'tx_fee' in opt.set_by_user: # TODO
 		return None
 	else:
 		ret = c.estimatefee(opt.tx_confs)
 		if ret != -1:
-			return ret
+			return BTCAmt(ret)
 		else:
 			m = """
 Fee estimation failed!
@@ -172,46 +169,41 @@ c = bitcoin_connection()
 if not opt.info:
 	do_license_msg(immed=True)
 
-	addrfiles = [a for a in cmd_args if get_extension(a) == g.addrfile_ext]
+	from mmgen.addr import AddrList,AddrData
+	addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
 	cmd_args = set(cmd_args) - set(addrfiles)
 
-	from mmgen.addr import AddrInfo,AddrInfoList
-	ail_f = AddrInfoList()
+	ad_f = AddrData()
 	for a in addrfiles:
 		check_infile(a)
-		ail_f.add(AddrInfo(a))
+		ad_f.add(AddrList(a))
 
-	ail_w = AddrInfoList(bitcoind_connection=c)
+	ad_w = AddrData(source='tw')
 
 	for a in cmd_args:
 		if ',' in a:
-			a1,a2 = split2(a,',')
+			a1,a2 = a.split(',',1)
 			if is_btc_addr(a1):
-				btc_addr = a1
-			elif is_mmgen_addr(a1):
-				btc_addr = mmaddr2baddr(c,a1,ail_w,ail_f)
+				btc_addr = BTCAddr(a1)
+			elif is_mmgen_id(a1):
+				btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f)
 			else:
 				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
-
-			btc_amt = convert_to_btc_amt(a2)
-			if btc_amt:
-				tx.add_output(btc_addr,btc_amt)
-			else:
-				die(2,"%s: invalid amount in argument '%s'" % (a2,a))
-		elif is_mmgen_addr(a) or is_btc_addr(a):
+			tx.add_output(btc_addr,BTCAmt(a2))
+		elif is_mmgen_id(a) or is_btc_addr(a):
 			if tx.change_addr:
 				die(2,'ERROR: More than one change address specified: %s, %s' %
 						(change_addr, a))
-			tx.change_addr = a if is_btc_addr(a) else mmaddr2baddr(c,a,ail_w,ail_f)
-			tx.add_output(tx.change_addr,Decimal('0'))
+			tx.change_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
+			tx.add_output(tx.change_addr,BTCAmt('0'))
 		else:
 			die(2,'%s: unrecognized argument' % a)
 
 	if not tx.outputs:
 		die(2,'At least one output must be specified on the command line')
 
-	if opt.tx_fee > g.max_tx_fee:
-		die(2,'Transaction fee too large: %s > %s' % (opt.tx_fee,g.max_tx_fee))
+	if opt.tx_fee > tx.max_fee:
+		die(2,'Transaction fee too large: %s > %s' % (opt.tx_fee,tx.max_fee))
 
 	fee_estimate = get_fee_estimate()
 
@@ -223,10 +215,10 @@ if opt.info: sys.exit()
 
 tx.send_amt = tx.sum_outputs()
 
-msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt,)[bool(tx.send_amt)])
+msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt.hl())[bool(tx.send_amt)])
 
 while True:
-	sel_nums = select_outputs(tw.unspent,
+	sel_nums = select_unspent(tw.unspent,
 			'Enter a range or space-separated list of outputs to spend: ')
 	msg('Selected output%s: %s' % (
 			('s','')[len(sel_nums)==1],
@@ -234,31 +226,31 @@ while True:
 		))
 	sel_unspent = [tw.unspent[i-1] for i in sel_nums]
 
-	mmaddrs = set([i['mmid'] for i in sel_unspent])
-
-	if '' in mmaddrs and len(mmaddrs) > 1:
-		mmaddrs.discard('')
-		msg(wmsg['mixed_inputs'] % ', '.join(sorted(mmaddrs)))
+	non_mmaddrs = [i for i in sel_unspent if i.mmid == None]
+	if non_mmaddrs:
+		msg(wmsg['non_mmgen_inputs'] % ', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs]))))
 		if not keypress_confirm('Accept?'):
 			continue
 
-	tx.copy_inputs(sel_unspent)              # makes tx.inputs
+	tx.copy_inputs_from_tw(sel_unspent)      # makes tx.inputs
 
 	tx.calculate_size_and_fee(fee_estimate)  # sets tx.size, tx.fee
 
 	change_amt = tx.sum_inputs() - tx.send_amt - tx.fee
 
 	if change_amt >= 0:
-		prompt = 'Transaction produces %s BTC in change.  OK?' % change_amt
+		prompt = 'Transaction produces %s BTC in change.  OK?' % change_amt.hl()
 		if keypress_confirm(prompt,default_yes=True):
 			break
 	else:
 		msg(wmsg['not_enough_btc'] % change_amt)
 
 if change_amt > 0:
+	change_amt = BTCAmt(change_amt)
 	if not tx.change_addr:
 		die(2,wmsg['throwaway_change'] % change_amt)
-	tx.add_output(tx.change_addr,change_amt)
+	tx.del_output(tx.change_addr)
+	tx.add_output(BTCAddr(tx.change_addr),change_amt)
 elif tx.change_addr:
 	msg('Warning: Change address will be unused as transaction produces no change')
 	tx.del_output(tx.change_addr)
@@ -270,7 +262,7 @@ dmsg('tx: %s' % tx)
 
 tx.add_comment()   # edits an existing comment
 tx.create_raw(c)   # creates tx.hex, tx.txid
-tx.add_mmaddrs_to_outputs(ail_w,ail_f)
+tx.add_mmaddrs_to_outputs(ad_w,ad_f)
 tx.add_timestamp()
 tx.add_blockcount(c)
 

@@ -34,13 +34,11 @@ debug                = os.getenv('MMGEN_DEBUG')
 no_license           = os.getenv('MMGEN_NOLICENSE')
 bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
+color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
 
-btc_amt_decimal_places = 8
-
-from decimal import Decimal
-tx_fee        = Decimal('0.0003')
-max_tx_fee    = Decimal('0.01')
-tx_fee_adj    = Decimal('1.0')
+from mmgen.obj import BTCAmt
+tx_fee        = BTCAmt('0.0003')
+tx_fee_adj    = 1.0
 tx_confs      = 3
 
 seed_len     = 256
@@ -58,7 +56,7 @@ version   = '0.8.4'
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
 	'usr_randchars','stdout','show_hash_presets','label',
-	'keep_passphrase','keep_hash_preset','brain_params'
+	'keep_passphrase','keep_hash_preset','brain_params','b16'
 ]
 incompatible_opts = (
 	('quiet','verbose'),
@@ -66,46 +64,27 @@ incompatible_opts = (
 	('tx_id', 'info'),
 	('tx_id', 'terse_info'),
 )
+
 min_screen_width = 80
 
-wallet_ext    = 'mmdat'
-seed_ext      = 'mmseed'
-mn_ext        = 'mmwords'
-brain_ext     = 'mmbrain'
-incog_ext     = 'mmincog'
-incog_hex_ext = 'mmincox'
-
-seedfile_exts = (
-	wallet_ext, seed_ext, mn_ext, brain_ext, incog_ext, incog_hex_ext
-)
-
-rawtx_ext           = 'rawtx'
-sigtx_ext           = 'sigtx'
-txid_ext            = 'txid'
-addrfile_ext        = 'addrs'
-addrfile_chksum_ext = 'chk'
-keyfile_ext         = 'keys'
-keyaddrfile_ext     = 'akeys'
-mmenc_ext           = 'mmenc'
-
-default_wordlist    = 'electrum'
-#default_wordlist    = 'tirosh'
-
 # Global value sets user opt
-dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_fee','tx_confs','tx_fee_adj'
-
-seed_lens = 128,192,256
-mn_lens = [i / 32 * 3 for i in seed_lens]
+dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee'
 
 keyconv_exec = 'keyconv'
 
 mins_per_block   = 9
 passwd_max_tries = 5
 
-max_urandchars,min_urandchars = 80,10
+max_urandchars = 80
+_x = os.getenv('MMGEN_MIN_URANDCHARS')
+min_urandchars = int(_x) if _x and int(_x) else 10
 
-salt_len      = 16
-aesctr_iv_len = 16
+seed_lens = 128,192,256
+mn_lens = [i / 32 * 3 for i in seed_lens]
+
+mmenc_ext      = 'mmenc'
+salt_len       = 16
+aesctr_iv_len  = 16
 hincog_chk_len = 8
 
 hash_presets = {
@@ -125,9 +104,8 @@ mmgen_idx_max_digits = 7
 
 printable_nonl = [chr(i+32) for i in range(95)]
 printable = printable_nonl + ['\n','\t']
-
 addr_label_symbols = wallet_label_symbols = printable_nonl
 
-max_addr_label_len = 32
+max_addr_label_len   = 32
 max_wallet_label_len = 48
-max_tx_comment_len = 72   # Comment is b58 encoded, so can permit all UTF-8
+max_tx_comment_len   = 72 # Comment is b58 encoded, so can permit UTF-8

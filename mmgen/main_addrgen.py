@@ -101,35 +101,21 @@ if len(cmd_args) < nargs and not (opt.hidden_incog_input_params or opt.in_fmt):
 elif len(cmd_args) > nargs - int(bool(opt.hidden_incog_input_params)):
 	opts.usage()
 
-addrlist_arg = cmd_args.pop()
-addr_idxs = parse_addr_idxs(addrlist_arg)
-if not addr_idxs:
-	die(1,"'%s': invalid address list argument" % addrlist_arg)
+addridxlist_str = cmd_args.pop()
+idxs = AddrIdxList(fmt_str=addridxlist_str)
 
 do_license_msg()
 
-opt.gen_what = 'a' if gen_what == 'addresses' \
-					else 'k' if opt.no_addresses else 'ka'
+ss = SeedSource(*cmd_args) # *(cmd_args[0] if cmd_args else [])
 
-# Generate data:
-ss = SeedSource(*cmd_args)
+i = (gen_what=='addresses') or bool(opt.no_addresses)*2
+al = (KeyAddrList,AddrList,KeyList)[i](seed=ss.seed,addr_idxs=idxs)
+al.format()
 
-ainfo = generate_addrs(ss.seed.data,addr_idxs)
+if al.gen_addrs and opt.print_checksum:
+	Die(0,al.checksum)
 
-addrdata_str = ainfo.fmt_data()
-outfile_base = '{}[{}]'.format(ss.seed.sid, ainfo.idxs_fmt)
+if al.gen_keys and keypress_confirm('Encrypt key list?'):
+	al.encrypt()
 
-if 'a' in opt.gen_what and opt.print_checksum:
-	Die(0,ainfo.checksum)
-
-if 'k' in opt.gen_what and keypress_confirm('Encrypt key list?'):
-	addrdata_str = mmgen_encrypt(addrdata_str,'new key list','')
-	enc_ext = '.' + g.mmenc_ext
-else: enc_ext = ''
-
-ext = (g.keyfile_ext,g.keyaddrfile_ext)['ka' in opt.gen_what]
-ext = (g.addrfile_ext,ext)['k' in opt.gen_what]
-outfile = '%s.%s%s' % (outfile_base, ext, enc_ext)
-ask_tty = 'k' in opt.gen_what and not opt.quiet
-if gen_what == 'keys': gen_what = 'secret keys'
-write_data_to_file(outfile,addrdata_str,gen_what,ask_tty=ask_tty)
+al.write_to_file()

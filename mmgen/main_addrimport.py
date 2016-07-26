@@ -23,7 +23,7 @@ mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
 import time
 
 from mmgen.common import *
-from mmgen.addr import AddrInfo,AddrInfoEntry
+from mmgen.addr import AddrList,KeyAddrList
 
 opts_data = {
 	'desc': """Import addresses (both {pnm} and non-{pnm}) into a bitcoind
@@ -53,14 +53,9 @@ if len(cmd_args) == 1:
 	if opt.addrlist:
 		lines = get_lines_from_file(
 			infile,'non-{pnm} addresses'.format(pnm=g.proj_name),trim_comments=True)
-		ai,adata = AddrInfo(),[]
-		for btcaddr in lines:
-			a = AddrInfoEntry()
-			a.idx,a.addr,a.comment = None,btcaddr,None
-			adata.append(a)
-		ai.initialize(None,adata)
+		ai = AddrList(addrlist=lines)
 	else:
-		ai = AddrInfo(infile,has_keys=opt.keyaddr_file)
+		ai = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
 else:
 	die(1,"""
 You must specify an {pnm} address file (or a list of non-{pnm} addresses
@@ -69,7 +64,7 @@ with the '--addrlist' option)
 
 from mmgen.bitcoin import verify_addr
 qmsg_r('Validating addresses...')
-for e in ai.addrdata:
+for e in ai.data:
 	if not verify_addr(e.addr,verbose=True):
 		die(2,'%s: invalid address' % e.addr)
 
@@ -114,13 +109,13 @@ else:
 	msg_fmt = '\r%-{}s %-34s %s'.format(w_n_of_m, w_mmid)
 
 msg("Importing %s addresses from '%s'%s" %
-		(len(ai.addrdata),infile,('',' (batch mode)')[bool(opt.batch)]))
+		(len(ai.data),infile,('',' (batch mode)')[bool(opt.batch)]))
 
 arg_list = []
-for n,e in enumerate(ai.addrdata):
+for n,e in enumerate(ai.data):
 	if e.idx:
 		label = '%s:%s' % (ai.seed_id,e.idx)
-		if e.comment: label += ' ' + e.comment
+		if e.label: label += ' ' + e.label
 	else: label = 'non-{pnm}'.format(pnm=g.proj_name)
 
 	if opt.batch:

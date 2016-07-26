@@ -105,7 +105,7 @@ cfg = {
 	'refdir':        'test/ref',
 	'txfile':        'FFB367[1.234].rawtx',
 	'addrfile':      '98831F3A[1,31-33,500-501,1010-1011].addrs',
-	'addrfile_chk':  '6FEF 6FB9 7B13 5D91 854A 0BD3',
+	'addrfile_chk':  '6FEF 6FB9 7B13 5D91',
 }
 
 opts_data = {

@@ -230,14 +230,10 @@ def check_opts(usr_opts):       # Returns false if any check fails
 
 		if key == 'outdir':
 			check_outdir(val)  # exits on error
-		elif key == 'label':
-			if not is_mmgen_wallet_label(val):
-				msg("Illegal value for option '%s': '%s'" % (fmt_opt(key),val))
-				return False
-		# NEW
+# 		# NEW
 		elif key in ('in_fmt','out_fmt'):
 			from mmgen.seed import SeedSource,IncogWallet,Brainwallet,IncogWalletHidden
-			sstype = SeedSource.fmt_code_to_sstype(val)
+			sstype = SeedSource.fmt_code_to_type(val)
 			if not sstype:
 				return opt_unrecognized(key,val,'format code')
 			if key == 'out_fmt':

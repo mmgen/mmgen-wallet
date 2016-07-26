@@ -20,86 +20,17 @@
 tx.py:  Bitcoin transaction routines
 """
 
-import sys, os
+import sys,os
 from stat import *
-from binascii import hexlify,unhexlify
-from decimal import Decimal
-from collections import OrderedDict
-
+from binascii import unhexlify
 from mmgen.common import *
+from mmgen.obj import *
 from mmgen.term import do_pager
 
-def normalize_btc_amt(amt):
-	'''Remove exponent and trailing zeros.
-	'''
-	# to_integral() needed to keep ints > 9 from being shown in exp. notation
-	if is_btc_amt(amt):
-		return amt.quantize(Decimal(1)) if amt == amt.to_integral() else amt.normalize()
-	else:
-		die(2,'%s: not a BTC amount' % amt)
-
-def is_btc_amt(amt):
-
-	if type(amt) is not Decimal:
-		msg('%s: not a decimal number' % amt)
-		return False
-
-	if amt.as_tuple()[-1] < -g.btc_amt_decimal_places:
-		msg('%s: Too many decimal places in amount' % amt)
-		return False
-
-	return True
-
-def convert_to_btc_amt(amt,return_on_fail=False):
-	# amt must be a string!
-
-	from decimal import Decimal
-	try:
-		ret = Decimal(amt)
-	except:
-		m = '%s: amount cannot be converted to decimal' % amt
-		if return_on_fail:
-			msg(m); return False
-		else:
-			die(2,m)
-
-	dmsg('Decimal(amt): %s' % repr(amt))
-
-	if ret.as_tuple()[-1] < -g.btc_amt_decimal_places:
-		m = '%s: Too many decimal places in amount' % amt
-		if return_on_fail:
-			msg(m); return False
-		else:
-			die(2,m)
-
-	if ret == 0:
-		msg('WARNING: BTC amount is zero')
-
-	return ret
-
-
-def parse_mmgen_label(s,check_label_len=False):
-	l = split2(s)
-	if not is_mmgen_addr(l[0]): return '',s
-	if check_label_len: check_addr_label(l[1])
-	return tuple(l)
-
-def is_mmgen_seed_id(s):
-	import re
-	return re.match(r'^[0123456789ABCDEF]{8}$',s) is not None
-
-def is_mmgen_idx(s):
-	try: int(s)
-	except: return False
-	return len(s) <= g.mmgen_idx_max_digits
-
-def is_mmgen_addr(s):
-	seed_id,idx = split2(s,':')
-	return is_mmgen_seed_id(seed_id) and is_mmgen_idx(idx)
-
-def is_btc_addr(s):
-	from mmgen.bitcoin import verify_addr
-	return verify_addr(s)
+def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
+def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
+def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
+def is_btc_addr(s):      return BTCAddr(s,on_fail='silent')
 
 def is_b58_str(s):
 	from mmgen.bitcoin import b58a
@@ -111,7 +42,7 @@ def is_wif(s):
 	from mmgen.bitcoin import wiftohex
 	return wiftohex(s,compressed) is not False
 
-def wiftoaddr(s):
+def _wiftoaddr(s):
 	if s == '': return False
 	compressed = not s[0] == '5'
 	from mmgen.bitcoin import wiftohex,privnum2addr
@@ -119,75 +50,51 @@ def wiftoaddr(s):
 	if not hex_key: return False
 	return privnum2addr(int(hex_key,16),compressed)
 
-
-def is_valid_tx_comment(s):
-
-	try: s = s.decode('utf8')
-	except:
-		msg('Invalid transaction comment (not UTF-8)')
-		return False
-
-	if len(s) > g.max_tx_comment_len:
-		msg('Invalid transaction comment (longer than %s characters)' %
-				g.max_tx_comment_len)
-		return False
-
-	return True
-
-
-def check_addr_label(label):
-
-	if len(label) > g.max_addr_label_len:
-		msg("'%s': overlong label (length must be <=%s)" %
-				(label,g.max_addr_label_len))
-		sys.exit(3)
-
-	for ch in label:
-		if ch not in g.addr_label_symbols:
-			msg("""
-'%s': illegal character in label '%s'.
-Only ASCII printable characters are permitted.
-""".strip() % (ch,label))
-			sys.exit(3)
-
-def wiftoaddr_keyconv(wif):
+def _wiftoaddr_keyconv(wif):
 	if wif[0] == '5':
 		from subprocess import check_output
 		return check_output(['keyconv', wif]).split()[1]
 	else:
-		return wiftoaddr(wif)
+		return _wiftoaddr(wif)
 
 def get_wif2addr_f():
-	if opt.no_keyconv: return wiftoaddr
+	if opt.no_keyconv: return _wiftoaddr
 	from mmgen.addr import test_for_keyconv
-	return (wiftoaddr,wiftoaddr_keyconv)[bool(test_for_keyconv())]
+	return (_wiftoaddr,_wiftoaddr_keyconv)[bool(test_for_keyconv())]
 
+class MMGenTxInputOldFmt(MMGenListItem):  # for converting old tx files only
+	tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
+	attrs = 'txid','vout','amt','label','mmid','addr','confs','scriptPubKey','wif'
+	attrs_priv = 'tr',
 
-def mmaddr2btcaddr_addrdata(mmaddr,addr_data,source=''):
-	seed_id,idx = mmaddr.split(':')
-	if seed_id in addr_data:
-		if idx in addr_data[seed_id]:
-			vmsg('%s -> %s%s' % (mmaddr,addr_data[seed_id][idx][0],
-				' (from %s)' % source if source else ''))
-			return addr_data[seed_id][idx]
+class MMGenTxInput(MMGenListItem):
+	attrs = 'txid','vout','amt','label','mmid','addr','confs','scriptPubKey','have_wif'
+	label = MMGenListItemAttr('label','MMGenAddrLabel')
 
-	return '',''
-
-from mmgen.obj import *
+class MMGenTxOutput(MMGenListItem):
+	attrs = 'txid','vout','amt','label','mmid','addr','have_wif'
+	label = MMGenListItemAttr('label','MMGenAddrLabel')
 
 class MMGenTX(MMGenObject):
-	ext  = g.rawtx_ext
+	ext      = 'rawtx'
+	raw_ext  = 'rawtx'
+	sig_ext  = 'sigtx'
+	txid_ext = 'txid'
 	desc = 'transaction'
+
+	max_fee = BTCAmt('0.01')
 
 	def __init__(self,filename=None):
 		self.inputs      = []
-		self.outputs     = {}
+		self.inputs_enc  = []
+		self.outputs     = []
+		self.outputs_enc = []
 		self.change_addr = ''
 		self.size        = 0             # size of raw serialized tx
-		self.fee         = Decimal('0')
-		self.send_amt    = Decimal('0')  # total amt minus change
+		self.fee         = BTCAmt('0')
+		self.send_amt    = BTCAmt('0')  # total amt minus change
 		self.hex         = ''            # raw serialized hex transaction
-		self.comment     = ''
+		self.label       = MMGenTXLabel('')
 		self.txid        = ''
 		self.btc_txid    = ''
 		self.timestamp   = ''
@@ -195,37 +102,56 @@ class MMGenTX(MMGenObject):
 		self.fmt_data    = ''
 		self.blockcount  = 0
 		if filename:
-			if get_extension(filename) == g.sigtx_ext:
+			if get_extension(filename) == self.sig_ext:
 				self.mark_signed()
 			self.parse_tx_file(filename)
 
-	def add_output(self,btcaddr,amt):
-		self.outputs[btcaddr] = (amt,)
+	def add_output(self,btcaddr,amt): # 'txid','vout','amount','label','mmid','address'
+		self.outputs.append(MMGenTxOutput(addr=btcaddr,amt=amt))
 
 	def del_output(self,btcaddr):
-		del self.outputs[btcaddr]
+		for i in range(len(self.outputs)):
+			if self.outputs[i].addr == btcaddr:
+				self.outputs.pop(i); return
+		raise ValueError
 
 	def sum_outputs(self):
-		return sum([self.outputs[k][0] for k in self.outputs])
+		return BTCAmt(sum([e.amt for e in self.outputs]))
+
+	def add_mmaddrs_to_outputs(self,ad_w,ad_f):
+		a = [e.addr for e in self.outputs]
+		d = ad_w.make_reverse_dict(a)
+		d.update(ad_f.make_reverse_dict(a))
+		for e in self.outputs:
+			if e.addr and e.addr in d:
+				e.mmid,f = d[e.addr]
+				if f: e.label = f
+
+#	def encode_io(self,desc):
+# 		tr = getattr((MMGenTxOutput,MMGenTxInput)[desc=='inputs'],'tr')
+# 		tr_rev = dict([(v,k) for k,v in tr.items()])
+# 		return [dict([(tr_rev[e] if e in tr_rev else e,getattr(d,e)) for e in d.__dict__])
+# 					for d in getattr(self,desc)]
+#
+	def create_raw(self,c):
+		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
+		o = dict([(e.addr,e.amt) for e in self.outputs])
+		self.hex = c.createrawtransaction(i,o)
+		self.txid = make_chksum_6(unhexlify(self.hex)).upper()
 
 	# returns true if comment added or changed
 	def add_comment(self,infile=None):
 		if infile:
-			s = get_data_from_file(infile,'transaction comment')
-			if is_valid_tx_comment(s):
-				self.comment = s.decode('utf8').strip()
-				return True
-			else:
-				sys.exit(2)
+			self.label = MMGenTXLabel(get_data_from_file(infile,'transaction comment'))
 		else: # get comment from user, or edit existing comment
-			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.comment)]
+			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
 			if keypress_confirm(m,default_yes=False):
 				while True:
-					s = my_raw_input('Comment: ',insert_txt=self.comment.encode('utf8'))
-					if is_valid_tx_comment(s):
-						csave = self.comment
-						self.comment = s.decode('utf8').strip()
-						return (True,False)[csave == self.comment]
+					s = MMGenTXLabel(my_raw_input('Comment: ',insert_txt=self.label))
+					if s:
+						lbl_save = self.label
+						self.label = s
+						return (True,False)[lbl_save == self.label]
 					else:
 						msg('Invalid comment')
 			return False
@@ -237,53 +163,57 @@ class MMGenTX(MMGenObject):
 	def calculate_size_and_fee(self,fee_estimate):
 		self.size = len(self.inputs)*180 + len(self.outputs)*34 + 10
 		if fee_estimate:
-			ftype,fee = 'Calculated','{:.8f}'.format(fee_estimate*opt.tx_fee_adj*self.size / 1024)
+			ftype,fee = 'Calculated',fee_estimate*opt.tx_fee_adj*self.size / 1024
 		else:
 			ftype,fee = 'User-selected',opt.tx_fee
 
 		ufee = None
-		if not keypress_confirm('{} TX fee: {} BTC.  OK?'.format(ftype,fee),default_yes=True):
+		if not keypress_confirm('{} TX fee is {} BTC.  OK?'.format(ftype,fee.hl()),default_yes=True):
 			while True:
 				ufee = my_raw_input('Enter transaction fee: ')
-				if convert_to_btc_amt(ufee,return_on_fail=True):
-					if Decimal(ufee) > g.max_tx_fee:
-						msg('{} BTC: fee too large (maximum fee: {} BTC)'.format(ufee,g.max_tx_fee))
+				if BTCAmt(ufee,on_fail='return'):
+					ufee = BTCAmt(ufee)
+					if ufee > self.max_fee:
+						msg('{} BTC: fee too large (maximum fee: {} BTC)'.format(ufee,self.max_fee))
 					else:
 						fee = ufee
 						break
-		self.fee = convert_to_btc_amt(fee)
+		self.fee = fee
 		vmsg('Inputs:{}  Outputs:{}  TX size:{}'.format(
 				len(self.inputs),len(self.outputs),self.size))
 		vmsg('Fee estimate: {} (1024 bytes, {} confs)'.format(fee_estimate,opt.tx_confs))
 		m = ('',' (after %sx adjustment)' % opt.tx_fee_adj)[opt.tx_fee_adj != 1 and not ufee]
 		vmsg('TX fee:       {}{}'.format(self.fee,m))
 
-	def copy_inputs(self,source):
-		copy_keys = 'txid','vout','amount','comment','mmid','address',\
-					'confirmations','scriptPubKey'
-		self.inputs = [dict([(k,d[k] if k in d else '') for k in copy_keys]) for d in source]
+	# inputs methods
+	def list_wifs(self,desc,mmaddrs_only=False):
+		return [e.wif for e in getattr(self,desc) if e.mmid] if mmaddrs_only \
+			else [e.wif for e in getattr(self,desc)]
+
+	def delete_attrs(self,desc,attr):
+		for e in getattr(self,desc):
+			if hasattr(e,attr): delattr(e,attr)
+
+	def decode_io(self,desc,data):
+		io = (MMGenTxOutput,MMGenTxInput)[desc=='inputs']
+		return [io(**dict([(k,d[k]) for k in io.attrs
+					if k in d and d[k] not in ('',None)])) for d in data]
+
+	def decode_io_oldfmt(self,data):
+		io = MMGenTxInputOldFmt
+		tr_rev = dict([(v,k) for k,v in io.tr.items()])
+		copy_keys = [tr_rev[k] if k in tr_rev else k for k in io.attrs]
+		return [io(**dict([(io.tr[k] if k in io.tr else k,d[k])
+					for k in copy_keys if k in d and d[k] != ''])) for d in data]
+
+	def copy_inputs_from_tw(self,data):
+		self.inputs = self.decode_io('inputs',[e.__dict__ for e in data])
+
+	def get_input_sids(self):
+		return set([e.mmid[:8] for e in self.inputs if e.mmid])
 
 	def sum_inputs(self):
-		return sum([i['amount'] for i in self.inputs])
-
-	def create_raw(self,c):
-		o = dict([(k,v[0]) for k,v in self.outputs.items()])
-		self.hex = c.createrawtransaction(self.inputs,o)
-		self.txid = make_chksum_6(unhexlify(self.hex)).upper()
-
-# 	def make_b2m_map(self,ail_w,ail_f):
-# 		d = dict([(d['address'], (d['mmid'],d['comment']))
-# 					for d in self.inputs if d['mmid']])
-# 		d = ail_w.make_reverse_dict(self.outputs.keys())
-# 		d.update(ail_f.make_reverse_dict(self.outputs.keys()))
-# 		self.b2m_map = d
-
-	def add_mmaddrs_to_outputs(self,ail_w,ail_f):
-		d = ail_w.make_reverse_dict(self.outputs.keys())
-		d.update(ail_f.make_reverse_dict(self.outputs.keys()))
-		for k in self.outputs:
-			if k in d:
-				self.outputs[k] += d[k]
+		return sum([e.amt for e in self.inputs])
 
 	def add_timestamp(self):
 		self.timestamp = make_timestamp()
@@ -301,20 +231,28 @@ class MMGenTX(MMGenObject):
 				(self.blockcount or 'None')
 			),
 			self.hex,
-			repr(self.inputs),
-			repr(self.outputs)
-		) + ((b58encode(self.comment.encode('utf8')),) if self.comment else ())
+			repr([e.__dict__ for e in self.inputs]),
+			repr([e.__dict__ for e in self.outputs])
+		) + ((b58encode(self.label),) if self.label else ())
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join((self.chksum,) + lines)+'\n'
 
+
+	def get_non_mmaddrs(self,desc):
+		return list(set([i.addr for i in getattr(self,desc) if not i.mmid]))
+
 	# return true or false, don't exit
-	def sign(self,c,tx_num_str,keys=None):
+	def sign(self,c,tx_num_str,keys):
 
-		if keys:
-			qmsg('Passing %s key%s to bitcoind' % (len(keys),suf(keys,'k')))
-			dmsg('Keys:\n  %s' % '\n  '.join(keys))
+		if not keys:
+			msg('No keys. Cannot sign!')
+			return False
 
-		sig_data = [dict([(k,d[k]) for k in 'txid','vout','scriptPubKey']) for d in self.inputs]
+		qmsg('Passing %s key%s to bitcoind' % (len(keys),suf(keys,'k')))
+		dmsg('Keys:\n  %s' % '\n  '.join(keys))
+
+		sig_data = [dict([(k,getattr(d,k)) for k in 'txid','vout','scriptPubKey'])
+						for d in self.inputs]
 		dmsg('Sig data:\n%s' % pp_format(sig_data))
 		dmsg('Raw hex:\n%s' % self.hex)
 
@@ -333,7 +271,7 @@ class MMGenTX(MMGenObject):
 
 	def mark_signed(self):
 		self.desc = 'signed transaction'
-		self.ext = g.sigtx_ext
+		self.ext = self.sig_ext
 
 	def check_signed(self,c):
 		d = c.decoderawtransaction(self.hex)
@@ -351,7 +289,7 @@ class MMGenTX(MMGenObject):
 		msg(m % self.btc_txid)
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
-		fn = '%s[%s].%s' % (self.txid,self.send_amt,g.txid_ext)
+		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.txid_ext)
 		write_data_to_file(fn,self.btc_txid+'\n','transaction ID',
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
@@ -392,49 +330,45 @@ class MMGenTX(MMGenObject):
 			'Transaction {} - {} BTC - {} UTC\n'
 		)[bool(terse)]
 
-		out = fs.format(self.txid,self.send_amt,self.timestamp)
+		out = fs.format(self.txid,self.send_amt.hl(),self.timestamp)
 
 		enl = ('\n','')[bool(terse)]
-		if self.comment:
-			out += 'Comment: %s\n%s' % (self.comment,enl)
+		if self.label:
+			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
 		out += 'Inputs:\n' + enl
 
-		nonmm_str = 'non-{pnm} address'.format(pnm=g.proj_name)
-
-		for n,i in enumerate(self.inputs):
+		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
+#		for i in self.inputs: print i #DEBUG
+		for n,e in enumerate(self.inputs):
 			if blockcount:
-				confirmations = i['confirmations'] + blockcount - self.blockcount
-				days = int(confirmations * g.mins_per_block / (60*24))
-			if not i['mmid']:
-				i['mmid'] = nonmm_str
-			mmid_fmt = ' ({:>{l}})'.format(i['mmid'],l=34-len(i['address']))
+				confs = e.confs + blockcount - self.blockcount
+				days = int(confs * g.mins_per_block / (60*24))
+			mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True) if e.mmid \
+						else MMGenID.hlc(nonmm_str)
 			if terse:
-				out += '  %s: %-54s %s BTC' % (n+1,i['address'] + mmid_fmt,
-						normalize_btc_amt(i['amount']))
+				out += '%3s: %s %s %s BTC' % (n+1, e.addr.fmt(color=True),mmid_fmt, e.amt.hl())
 			else:
 				for d in (
-	(n+1, 'tx,vout:',       '%s,%s' % (i['txid'], i['vout'])),
-	('',  'address:',       i['address'] + mmid_fmt),
-	('',  'comment:',       i['comment']),
-	('',  'amount:',        '%s BTC' % normalize_btc_amt(i['amount'])),
-	('',  'confirmations:', '%s (around %s days)' % (confirmations,days) if blockcount else '')
+	(n+1, 'tx,vout:',       '%s,%s' % (e.txid, e.vout)),
+	('',  'address:',       e.addr.fmt(color=True) + ' ' + mmid_fmt),
+	('',  'comment:',       e.label.hl() if e.label else ''),
+	('',  'amount:',        '%s BTC' % e.amt.hl()),
+	('',  'confirmations:', '%s (around %s days)' % (confs,days) if blockcount else '')
 				):
 					if d[2]: out += ('%3s %-8s %s\n' % d)
 			out += '\n'
 
 		out += 'Outputs:\n' + enl
-		for n,k in enumerate(self.outputs):
-			btcaddr = k
-			v = self.outputs[k]
-			btc_amt,mmid,comment = (v[0],'Non-MMGen address','') if len(v) == 1 else v
-			mmid_fmt = ' ({:>{l}})'.format(mmid,l=34-len(btcaddr))
+		for n,e in enumerate(self.outputs):
+			mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True) if e.mmid \
+						else MMGenID.hlc(nonmm_str)
 			if terse:
-				out += '  %s: %-54s %s BTC' % (n+1, btcaddr+mmid_fmt, normalize_btc_amt(btc_amt))
+				out += '%3s: %s %s %s BTC' % (n+1, e.addr.fmt(color=True),mmid_fmt, e.amt.hl())
 			else:
 				for d in (
-						(n+1, 'address:',  btcaddr + mmid_fmt),
-						('',  'comment:',  comment),
-						('',  'amount:',   '%s BTC' % normalize_btc_amt(btc_amt))
+						(n+1, 'address:',  e.addr.fmt(color=True) + ' ' + mmid_fmt),
+						('',  'comment:',  e.label.hl() if e.label else ''),
+						('',  'amount:',   '%s BTC' % e.amt.hl())
 					):
 					if d[2]: out += ('%3s %-8s %s\n' % d)
 			out += '\n'
@@ -447,9 +381,9 @@ class MMGenTX(MMGenObject):
 		total_in  = self.sum_inputs()
 		total_out = self.sum_outputs()
 		out += fs % (
-			normalize_btc_amt(total_in),
-			normalize_btc_amt(total_out),
-			normalize_btc_amt(total_in-total_out)
+			total_in.hl(),
+			total_out.hl(),
+			(total_in-total_out).hl()
 		)
 
 		return out
@@ -477,15 +411,15 @@ class MMGenTX(MMGenObject):
 				err_str = 'metadata'
 			else:
 				self.txid,send_amt,self.timestamp,blockcount = metadata.split()
-				self.send_amt = Decimal(send_amt)
+				self.send_amt = BTCAmt(send_amt)
 				self.blockcount = int(blockcount)
 				try: unhexlify(self.hex)
 				except: err_str = 'hex data'
 				else:
-					try: self.inputs = eval(inputs_data)
+					try: self.inputs = self.decode_io('inputs',eval(inputs_data))
 					except: err_str = 'inputs data'
 					else:
-						try: self.outputs = eval(outputs_data)
+						try: self.outputs = self.decode_io('outputs',eval(outputs_data))
 						except: err_str = 'btc-to-mmgen address map data'
 						else:
 							if comment:
@@ -494,13 +428,10 @@ class MMGenTX(MMGenObject):
 								if comment == False:
 									err_str = 'encoded comment (not base58)'
 								else:
-									if is_valid_tx_comment(comment):
-										self.comment = comment.decode('utf8')
-									else:
+									self.label = MMGenTXLabel(comment,on_fail='return')
+									if not self.label:
 										err_str = 'comment'
 
 		if err_str:
 			msg(err_fmt % err_str)
 			sys.exit(2)
-
-

@@ -162,10 +162,11 @@ def tool_usage(prog_name, command):
 		for line in cmd_help.split('\n'):
 			if '  ' + command in line:
 				c,h = line.split('-',1)
-				Msg('{}: {}'.format(c.strip(),h.strip()))
-		Msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cmd_data[command])))
+				Msg('MMGEN-TOOL {}: {}'.format(c.strip().upper(),h.strip()))
+		msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cmd_data[command])))
 	else:
-		Msg("'%s': no such tool command" % command)
+		msg("'%s': no such tool command" % command)
+	sys.exit(1)
 
 def process_args(prog_name, command, cmd_args):
 	c_args = [[i.split(' [')[0],i.split(' [')[1][:-1]]
@@ -174,60 +175,52 @@ def process_args(prog_name, command, cmd_args):
 			i.split(' [')[0],
 			[i.split(' [')[1].split('=')[0], i.split(' [')[1].split('=')[1][:-1]]
 		] for i in cmd_data[command] if '=' in i])
-
-	u_args = cmd_args[:len(c_args)]
-	u_kwargs = cmd_args[len(c_args):]
+	u_args   = [a for a in cmd_args[:len(c_args)]]
 
 	if len(u_args) < len(c_args):
-		msg('%s argument%s required' % (len(c_args),suf(c_args,'k')))
-		tool_usage(prog_name, command)
-		sys.exit(1)
+		msg('Command requires exactly %s non-keyword argument%s' % (len(c_args),suf(c_args,'k')))
+		tool_usage(prog_name,command)
 
-	if len(u_kwargs) > len(c_kwargs):
-		msg('Too many arguments')
-		tool_usage(prog_name, command)
-		sys.exit(1)
+	extra_args = len(cmd_args) - len(c_args)
+	u_kwargs = {}
+	if extra_args > 0:
+		u_kwargs = dict([a.split('=') for a in cmd_args[len(c_args):] if '=' in a])
+		if len(u_kwargs) != extra_args:
+			msg('Command requires exactly %s non-keyword argument%s'
+				% (len(c_args),suf(c_args,'k')))
+			tool_usage(prog_name,command)
+		if len(u_kwargs) > len(c_kwargs):
+			msg('Command requires exactly %s keyword argument%s'
+				% (len(c_kwargs),suf(c_kwargs,'k')))
+			tool_usage(prog_name,command)
 
-	u_kwargs = dict([a.split('=') for a in u_kwargs])
+#	mdie(c_args,c_kwargs,u_args,u_kwargs)
 
-#	print c_args; print c_kwargs; print u_args; print u_kwargs; sys.exit()
+	for k in u_kwargs:
+		if k not in c_kwargs:
+			msg("'%s': invalid keyword argument" % k)
+			tool_usage(prog_name,command)
 
-	if set(u_kwargs) > set(c_kwargs):
-		die(1,'Invalid named argument')
-
-	def convert_type(arg,arg_name,arg_type):
+	def conv_type(arg,arg_name,arg_type):
+		if arg_type == 'bool':
+			if arg.lower() in ('true','yes','1','on'): arg = True
+			elif arg.lower() in ('false','no','0','off'): arg = False
+			else:
+				msg("'%s': invalid boolean value for keyword argument" % arg)
+				tool_usage(prog_name,command)
 		try:
 			return __builtins__[arg_type](arg)
 		except:
 			die(1,"'%s': Invalid argument for argument %s ('%s' required)" % \
 				(arg, arg_name, arg_type))
 
-	def convert_to_bool_maybe(arg, arg_type):
-		if arg_type == 'bool':
-			if arg.lower() in ('true','yes','1','on'): return True
-			if arg.lower() in ('false','no','0','off'): return False
-		return arg
+	args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
+	kwargs = dict([(k,conv_type(u_kwargs[k],k,c_kwargs[k][0])) for k in u_kwargs])
 
-	args = []
-	for i in range(len(c_args)):
-		arg_type = c_args[i][1]
-		arg = convert_to_bool_maybe(u_args[i], arg_type)
-		args.append(convert_type(arg,c_args[i][0],arg_type))
-
-	kwargs = {}
-	for k in u_kwargs:
-		arg_type = c_kwargs[k][0]
-		arg = convert_to_bool_maybe(u_kwargs[k], arg_type)
-		kwargs[k] = convert_type(arg,k,arg_type)
-
+#	mdie(args,kwargs)
 	return args,kwargs
 
 # Individual cmd_data
-
-# def help():
-# 	Msg('Available commands:')
-# 	for k in sorted(cmd_data.keys()):
-# 		Msg('%-16s %s' % (k,' '.join(cmd_data[k])))
 
 def are_equal(a,b,dtype=''):
 	if dtype == 'str': return a.lstrip('\0') == b.lstrip('\0')
@@ -387,19 +380,19 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	c = bitcoin_connection()
 
 	addrs = {} # reusing variable name!
-	from decimal import Decimal
-	total = Decimal('0')
+	from mmgen.obj import BTCAmt
+	total = BTCAmt('0')
 	for d in c.listunspent(0):
 		mmaddr,comment = split2(d['account'])
 		if usr_addr_list and (mmaddr not in usr_addr_list): continue
-		if is_mmgen_addr(mmaddr) and d['confirmations'] >= minconf:
+		if is_mmgen_id(mmaddr) and d['confirmations'] >= minconf:
 			key = mmaddr.replace(':','_')
 			if key in addrs:
 				if addrs[key][2] != d['address']:
 					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
 							(d['address'], addrs[key][2])))
 			else:
-				addrs[key] = [Decimal('0'),comment,d['address']]
+				addrs[key] = [BTCAmt('0'),comment,d['address']]
 			addrs[key][0] += d['amount']
 			total += d['amount']
 
@@ -410,11 +403,11 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		for acct in accts:
 			mmaddr,comment = split2(acct)
 			if usr_addr_list and (mmaddr not in usr_addr_list): continue
-			if is_mmgen_addr(mmaddr):
+			if is_mmgen_id(mmaddr):
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
 					if showbtcaddrs: save_a.append([acct])
-					addrs[key] = [Decimal('0'),comment,'']
+					addrs[key] = [BTCAmt('0'),comment,'']
 
 		for acct,addr in zip(save_a,c.getaddressesbyaccount(save_a,batch=True)):
 			if len(addr) != 1:
@@ -431,17 +424,17 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		max(max(len(addrs[k][1]) for k in addrs) + 1,8) # pad 8 if no comments
 	)
 
-	def s_mmgen(key):
+	def s_mmgen(key): # TODO
 		return '{}:{:>0{w}}'.format(w=g.mmgen_idx_max_digits, *key.split('_'))
 
 	out = []
 	for k in sorted(addrs,key=s_mmgen):
 		if out and k.split('_')[0] != out[-1].split(':')[0]: out.append('')
 		baddr = ' ' + addrs[k][2] if showbtcaddrs else ''
-		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], normalize_btc_amt(addrs[k][0])))
+		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], addrs[k][0].fmt('3.0',color=1)))
 
 	o = (fs + '\n%s\nTOTAL: %s BTC') % (
-			'ADDRESS','','COMMENT','BALANCE', '\n'.join(out), normalize_btc_amt(total)
+			'ADDRESS','','COMMENT',' BALANCE', '\n'.join(out), total.hl()
 		)
 	if pager: do_pager(o)
 	else: Msg(o)
@@ -456,21 +449,21 @@ def getbalance(minconf=1):
 		ma = split2(d['account'])[0]
 		keys = ['TOTAL']
 		if d['spendable']: keys += ['SPENDABLE']
-		if is_mmgen_addr(ma): keys += [ma.split(':')[0]]
+		if is_mmgen_id(ma): keys += [ma.split(':')[0]]
 		confs = d['confirmations']
 		i = (1,2)[confs >= minconf]
 
 		for key in keys:
-			if key not in accts: accts[key] = [Decimal('0')] * 3
+			if key not in accts: accts[key] = [BTCAmt('0')] * 3
 			for j in ([],[0])[confs==0] + [i]:
 				accts[key][j] += d['amount']
 
-	fs = '{:12}  {:<%s} {:<%s} {:<}' % (16,16)
+	fs = '{:13} {} {} {}'
 	mc,lbl = str(minconf),'confirms'
-	Msg(fs.format('Wallet','Unconfirmed','<%s %s'%(mc,lbl),'>=%s %s'%(mc,lbl)))
+	Msg(fs.format('Wallet',
+		*[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)]))
 	for key in sorted(accts.keys()):
-		line = [str(normalize_btc_amt(a))+' BTC' for a in accts[key]]
-		Msg(fs.format(key+':', *line))
+		Msg(fs.format(key+':', *[a.fmt(color=True,suf=' BTC') for a in accts[key]]))
 
 def txview(infile,pager=False,terse=False):
 	c = bitcoin_connection()
@@ -481,23 +474,22 @@ def twview(pager=False,reverse=False,wide=False,sort='age'):
 	from mmgen.tw import MMGenTrackingWallet
 	tw = MMGenTrackingWallet()
 	tw.do_sort(sort,reverse=reverse)
-	out = tw.format(wide=wide)
+	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
 	do_pager(out) if pager else sys.stdout.write(out)
 
 def add_label(mmaddr,label,remove=False):
-	if not is_mmgen_addr(mmaddr):
+	if not is_mmgen_id(mmaddr):
 		die(1,'{a}: not a valid {pnm} address'.format(pnm=pnm,a=mmaddr))
-	check_addr_label(label)  # Exits on failure
+	MMGenAddrLabel(label)  # Exits on failure
 
-	c = bitcoin_connection()
-
-	from mmgen.addr import AddrInfoList
-	btcaddr = AddrInfoList(bitcoind_connection=c).mmaddr2btcaddr(mmaddr)
+	from mmgen.addr import AddrData
+	btcaddr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
 
 	if not btcaddr:
 		die(1,'{pnm} address {a} not found in tracking wallet'.format(
 				pnm=pnm,a=mmaddr))
 
+	c = bitcoin_connection()
 	try:
 		l = ' ' + label if label else ''
 		c.importaddress(btcaddr,mmaddr+l,False) # addr,label,rescan,p2sh
@@ -511,12 +503,12 @@ def add_label(mmaddr,label,remove=False):
 def remove_label(mmaddr): add_label(mmaddr,'',remove=True)
 
 def addrfile_chksum(infile):
-	from mmgen.addr import AddrInfo
-	AddrInfo(infile,caller='tool')
+	from mmgen.addr import AddrList
+	AddrList(infile,chksum_only=True)
 
 def keyaddrfile_chksum(infile):
-	from mmgen.addr import AddrInfo
-	AddrInfo(infile,has_keys=True,caller='tool')
+	from mmgen.addr import KeyAddrList
+	KeyAddrList(infile,chksum_only=True)
 
 def hexreverse(hex_str):
 	Msg(ba.hexlify(decode_pretty_hexdump(hex_str)[::-1]))
