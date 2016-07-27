@@ -1,5 +1,9 @@
-MMGen = Multi-Mode GENerator
-============================
+***Note: This is the source code repository of the MMGen wallet system.  For an
+easier way to install MMGen, check out the prebuilt bootable USB images on the
+[MMGenLive][8] home page.***
+
+# MMGen = Multi-Mode GENerator
+
 ##### a Bitcoin cold storage solution for the command line
 
 ### Description
@@ -10,30 +14,29 @@ scripts work in tandem with a reference Bitcoin Core daemon (bitcoind) running
 on both an online and an offline computer to provide a robust solution for
 securely storing, tracking, sending and receiving Bitcoins.  To track address
 balances without exposing keys on the online computer, MMGen relies on Bitcoin
-Core's newly included watch-only address support.  Ordinary Bitcoin addresses
-can also be tracked and spent, creating an easy migration path from other
-wallets.
+Core’s watch-only address support.  Ordinary Bitcoin addresses can be tracked
+and spent too, creating an easy migration path from other wallets.
 
 MMGen is designed for reliability by having the reference Bitcoin Core daemon,
-rather than less-tested third-party software, do all the "heavy lifting" of
-tracking and signing transactions.  It's also designed for privacy: unlike some
-other online/offline wallet solutions, MMGen plus Bitcoin Core is a **completely
-self-contained system** requiring no external Internet resources except for the
-Bitcoin network itself to do its work: no third parties are involved, and thus
-no information regarding which addresses you're tracking is leaked to the
-outside world.
+rather than less-tested third-party software, do all the “heavy lifting” of
+tracking and signing transactions.  It’s also designed for privacy: unlike some
+other online/offline wallet solutions, MMGen plus Bitcoin Core is a completely
+self-contained system that makes **no connections to the Internet** except for
+the Bitcoin network itself: no third parties are involved, and thus no
+information about which addresses you’re tracking is leaked to the outside
+world.
 
 Like all deterministic wallets, MMGen can generate a virtually unlimited number
 of address/key pairs from a single seed.  Your wallet never changes, so you need
 back it up only once.  Transactions are signed offline: your seed and private
 keys never touch an online computer.
 
-At the heart of the MMGen system is the seed, the "master key" providing access
+At the heart of the MMGen system is the seed, the “master key” providing access
 to all your Bitcoins.  The seed can be stored in five different ways:
 
   1. as a password-encrypted wallet.  For password hashing, the crack-resistant
-	 scrypt hash function is used.  Scrypt's parameters can be tuned on the
-	 command line to make your wallet's password virtually impossible to crack
+	 scrypt hash function is used.  Scrypt’s parameters can be tuned on the
+	 command line to make your wallet’s password virtually impossible to crack
 	 should it fall into the wrong hands.  The wallet is a tiny, six-line text
 	 file suitable for printing or even writing out by hand;
 
@@ -48,7 +51,7 @@ to all your Bitcoins.  The seed can be stored in five different ways:
 	 tunable parameters, making it much harder to crack than standard SHA-256
 	 brainwallets; or
 
-  5. as "incognito data", an MMGen wallet encrypted to make it indistinguishable
+  5. as “incognito data”, an MMGen wallet encrypted to make it indistinguishable
 	 from random data.  This data can be hidden in and retrieved from a
 	 random-data filled disk partition or file at an offset of your choice.
 	 This makes it possible to hide a wallet in a public location -- on cloud
@@ -60,26 +63,25 @@ The best part is that all these methods can be combined.  If you forget your
 mnemonic, for example, you can regenerate it and your keys from the stored
 wallet or seed file.  Correspondingly, a lost wallet can be regenerated from the
 mnemonic or seed or a lost seed from the wallet or mnemonic.  Keys from a
-forgotten brainwallet can be recovered from the brainwallet's corresponding
+forgotten brainwallet can be recovered from the brainwallet’s corresponding
 wallet file.
 
 #### Why MMGen is not a BIP32 wallet
 
 Most popular deterministic wallets use the elliptic-curve-based BIP32 or
 Electrum protocols to generate their key/address pairs.  MMGen, on the other
-hand, uses a much simpler system: a simple SHA-512 hash chain with double
-SHA-256 branches.  One advantage of this system is that you can recover your
-keys from an MMGen seed without the MMGen program itself using standard
-command-line utilities.  But the most important advantage is security:
-elliptic-curve wallets are not only cryptographically weaker than hash-bashed
-ones but have a dangerous flaw -- their 'master public key' feature allows an
-attacker to recover any key in the wallet from a single compromised key (for a
-detailed discussion of this problem, see Vitalik Buterin's article
-[Deterministic Wallets, Their Advantages and Their Understated Flaws][7]).
-Though the master public key feature of BIP32 and Electrum wallets is undeniably
-convenient, MMGen makes up for its absence by allowing you to save a virtually
-unlimited number of Bitcoin addresses for future use in an address file, which
-addresses may safely be made public.
+hand, uses a much simpler system: a SHA-512 hash chain with double SHA-256
+branches.  One advantage of this system is that you can recover your keys from
+an MMGen seed without the MMGen program itself using standard command-line
+utilities.  But the most important advantage is security: elliptic-curve wallets
+are not only cryptographically weaker than hash-bashed ones but have a dangerous
+flaw -- their “master public key” feature allows an attacker to recover any key
+in the wallet from a single compromised key (for a detailed discussion of this
+problem, see Vitalik Buterin’s article [Deterministic Wallets, Their Advantages
+and Their Understated Flaws][7]).  Though the master public key feature of BIP32
+and Electrum wallets is undeniably convenient, MMGen makes up for its absence by
+allowing you to save a virtually unlimited number of Bitcoin addresses for
+future use in an address file, which addresses may safely be made public.
 
 
 ### Download/Install
@@ -108,3 +110,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
+[8]: https://github.com/mmgen/MMGenLive
