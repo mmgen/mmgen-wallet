@@ -66,6 +66,9 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.  Keys from a
 forgotten brainwallet can be recovered from the brainwallet’s corresponding
 wallet file.
 
+***mmgen-txcreate running in an Rxvt terminal window***
+![mmgen-txcreate running in an Rxvt terminal window][9]
+
 #### Why MMGen is not a BIP32 wallet
 
 Most popular deterministic wallets use the elliptic-curve-based BIP32 or
@@ -111,3 +114,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]: https://github.com/mmgen/MMGenLive
+[9]: https://cloud.githubusercontent.com/assets/6071028/17191894/b34fe6d0-543b-11e6-92e5-122e9b9ca431.png
