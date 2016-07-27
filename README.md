@@ -4,7 +4,7 @@ easier way to install MMGen, check out the prebuilt bootable USB images on the
 
 # MMGen = Multi-Mode GENerator
 
-##### a Bitcoin cold storage solution for the command line
+##### a Bitcoin cold-storage solution for the command line
 
 ### Description
 
