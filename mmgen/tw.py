@@ -84,7 +84,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def s_mmid(self,i):
 		if i.mmid:
 			return '{}:{:>0{w}}'.format(
-				*i.mmid.split(':'), w=g.mmgen_idx_max_digits)
+				*i.mmid.split(':'), w=AddrIdx.max_digits)
 		else: return 'G' + (i.label or '')
 
 	def do_sort(self,key,reverse=None):
@@ -97,7 +97,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
-		ret.append(self.sort.capitalize().replace('Mmid','MMGenId'))
+		ret.append(self.sort.capitalize().replace('Mmid','MMGenID'))
 		if include_group and self.group and (self.sort in ('addr','txid','mmid')):
 			ret.append('Grouped')
 		return ret

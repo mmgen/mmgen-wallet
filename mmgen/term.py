@@ -21,7 +21,6 @@ term.py:  Terminal-handling routines for the MMGen suite
 """
 
 import os,struct
-
 from mmgen.common import *
 
 def _kb_hold_protect_unix():
@@ -201,14 +200,8 @@ except:
 		get_terminal_size = _get_terminal_size_mswin
 		myflush = mswin_dummy_flush
 	except:
-		if not sys.platform.startswith('linux') \
-				and not sys.platform.startswith('win'):
-			msg('Unsupported platform: %s' % sys.platform)
-			msg('This program currently runs only on Linux and Windows')
-		else:
-			msg('Unable to set terminal mode')
+		msg('Unable to set terminal mode')
 		sys.exit(2)
-
 
 def do_pager(text):
 
@@ -224,7 +217,7 @@ def do_pager(text):
 # 'print' instead of the pager.
 # We risk assuming that 'more' will always be available on a stock
 # Windows installation.
-	if sys.platform.startswith('win'):
+	if g.platform == 'win':
 		if 'HOME' not in environ: # native Windows terminal
 			shell = True
 			pagers = ['more']

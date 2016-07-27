@@ -252,7 +252,7 @@ def hexdump(infile, cols=8, line_nums=True):
 				cols=cols,line_nums=line_nums))
 
 def unhexdump(infile):
-	if sys.platform[:3] == 'win':
+	if g.platform == 'win':
 		import msvcrt
 		msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 	sys.stdout.write(decode_pretty_hexdump(
@@ -425,7 +425,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	)
 
 	def s_mmgen(key): # TODO
-		return '{}:{:>0{w}}'.format(w=g.mmgen_idx_max_digits, *key.split('_'))
+		return '{}:{:>0{w}}'.format(w=AddrIdx.max_digits, *key.split('_'))
 
 	out = []
 	for k in sorted(addrs,key=s_mmgen):
@@ -572,7 +572,7 @@ def decrypt(infile,outfile='',hash_preset=''):
 def find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
 	n,carry = 0,' '*ivsize
-	flgs = os.O_RDONLY|os.O_BINARY if sys.platform[:3] == 'win' else os.O_RDONLY
+	flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 	f = os.open(filename,flgs)
 	for ch in iv_id:
 		if ch not in '0123456789ABCDEF':

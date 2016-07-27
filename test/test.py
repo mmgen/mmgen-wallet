@@ -482,6 +482,7 @@ opts_data = {
 -s, --system        Test scripts and modules installed on system rather
                     than those in the repo root.
 -S, --skip-deps     Skip dependency checking for command
+-u, --usr-random    Get random data interactively from user
 -t, --traceback     Run the command inside the '{tb_cmd}' script.
 -v, --verbose       Produce more verbose output.
 """.format(tb_cmd=tb_cmd,lf=log_file),
@@ -497,6 +498,9 @@ if opt.resume: opt.skip_deps = True
 if opt.log:
 	log_fd = open(log_file,'a')
 	log_fd.write('\nLog started: %s\n' % make_timestr())
+
+usr_rand_chars = (5,30)[bool(opt.usr_random)]
+usr_rand_arg = '-r%s' % usr_rand_chars
 
 if opt.system: sys.path.pop(0)
 ni = bool(opt.non_interactive)
@@ -530,7 +534,7 @@ stderr_save = sys.stderr
 
 def silence():
 	if not (opt.verbose or opt.exact_output):
-		f = ('/dev/null','stderr.out')[sys.platform[:3]=='win']
+		f = ('/dev/null','stderr.out')[g.platform=='win']
 		sys.stderr = open(f,'a')
 
 def end_silence():
@@ -708,17 +712,21 @@ class MMGenExpect(object):
 		my_expect(self.p,'Generating encryption key from OS random data plus ' + m)
 
 	def usr_rand(self,num_chars):
-		rand_chars = list(getrandstr(num_chars,no_space=True))
-		my_expect(self.p,'symbols left: ','x')
-		try:
-			vmsg_r('SEND ')
-			while self.p.expect('left: ',0.1) == 0:
-				ch = rand_chars.pop(0)
-				msg_r(yellow(ch)+' ' if opt.verbose else '+')
-				self.p.send(ch)
-		except:
-			vmsg('EOT')
-		my_expect(self.p,'ENTER to continue: ','\n')
+		if opt.usr_random:
+			self.interactive()
+			my_send(self.p,'\n')
+		else:
+			rand_chars = list(getrandstr(num_chars,no_space=True))
+			my_expect(self.p,'symbols left: ','x')
+			try:
+				vmsg_r('SEND ')
+				while self.p.expect('left: ',0.1) == 0:
+					ch = rand_chars.pop(0)
+					msg_r(yellow(ch)+' ' if opt.verbose else '+')
+					self.p.send(ch)
+			except:
+				vmsg('EOT')
+			my_expect(self.p,'ENTER to continue: ','\n')
 
 	def passphrase_new(self,desc,passphrase):
 		my_expect(self.p,('Enter passphrase for %s: ' % desc), passphrase+'\n')
@@ -807,7 +815,7 @@ labels = [
 	"Healthcare",
 	"Freelancing 1",
 	"Freelancing 2",
-	"Alice's assets",
+	"Alice's allowance",
 	"Bob's bequest",
 	"House purchase",
 	"Real estate fund",
@@ -1043,14 +1051,14 @@ class MMGenTestSuite(object):
 
 	def walletgen(self,name,seed_len=None):
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+'\n')
-		add_args = (['-r5'],
+		add_args = ([usr_rand_arg],
 			['-q','-r0','-L','NI Wallet','-P',get_tmpfile_fn(cfg,pwfile)])[bool(ni)]
 		args = ['-d',cfg['tmpdir'],'-p1']
 		if seed_len: args += ['-l',str(seed_len)]
 		t = MMGenExpect(name,'mmgen-walletgen', args + add_args)
 		if ni: return
 		t.license()
-		t.usr_rand(10)
+		t.usr_rand(usr_rand_chars)
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.label()
 		t.written_to_file('MMGen wallet')
@@ -1069,13 +1077,13 @@ class MMGenTestSuite(object):
 			add_args = ['-r0', '-q', '-P%s' % get_tmpfile_fn(cfg,pwfile),
 							get_tmpfile_fn(cfg,bf)]
 		else:
-			add_args = ['-r5']
+			add_args = [usr_rand_arg]
 		t = MMGenExpect(name,'mmgen-walletconv', args + add_args)
 		if ni: return
 		t.license()
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
-		t.usr_rand(10)
+		t.usr_rand(usr_rand_chars)
 		sid = t.written_to_file('MMGen wallet').split('-')[0].split('/')[-1]
 		refcheck('Seed ID',sid,cfg['seed_id'])
 
@@ -1086,7 +1094,7 @@ class MMGenTestSuite(object):
 		silence()
 		write_to_tmpfile(cfg,pwfile,get_data_from_file(pf))
 		end_silence()
-		add_args = (['-r16'],['-q','-r0','-P',pf])[bool(ni)]
+		add_args = ([usr_rand_arg],['-q','-r0','-P',pf])[bool(ni)]
 		t = MMGenExpect(name,'mmgen-passchg', add_args +
 				['-d',cfg['tmpdir'],'-p','2','-L','New Label',wf])
 		if ni: return
@@ -1095,7 +1103,7 @@ class MMGenTestSuite(object):
 		t.expect_getend('Hash preset changed to ')
 		t.passphrase('MMGen wallet',cfg['wpasswd'],pwtype='new')
 		t.expect('Repeat passphrase: ',cfg['wpasswd']+'\n')
-		t.usr_rand(16)
+		t.usr_rand(usr_rand_chars)
 		t.expect_getend('Label changed to ')
 #		t.expect_getend('Key ID changed: ')
 		t.written_to_file('MMGen wallet')
@@ -1295,7 +1303,7 @@ class MMGenTestSuite(object):
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		if pw:
 			t.passphrase_new('new '+desc,cfg['wpasswd'])
-			t.usr_rand(10)
+			t.usr_rand(usr_rand_chars)
 		if ' '.join(desc.split()[-2:]) == 'incognito data':
 			t.expect('Generating encryption key from OS random data ')
 			t.expect('Generating encryption key from OS random data ')
@@ -1323,7 +1331,7 @@ class MMGenTestSuite(object):
 		self.export_seed(name,wf,desc='mnemonic data',out_fmt='words')
 
 	def export_incog(self,name,wf,desc='incognito data',out_fmt='i',add_args=[]):
-		uargs = ['-p1','-r5'] + add_args
+		uargs = ['-p1',usr_rand_arg] + add_args
 		self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,pw=True)
 		ok()
 
@@ -1453,11 +1461,11 @@ class MMGenTestSuite(object):
 		bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
 		make_brainwallet_file(bwf)
 		seed_len = str(cfg['seed_len'])
-		args = ['-d',cfg['tmpdir'],'-p1','-r5','-l'+seed_len,'-ib']
+		args = ['-d',cfg['tmpdir'],'-p1',usr_rand_arg,'-l'+seed_len,'-ib']
 		t = MMGenExpect(name,'mmgen-walletconv', args + [bwf])
 		t.license()
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
-		t.usr_rand(10)
+		t.usr_rand(usr_rand_chars)
 		t.label()
 		t.written_to_file('MMGen wallet')
 		ok()
@@ -1734,7 +1742,7 @@ class MMGenTestSuite(object):
 
 	# wallet conversion tests
 	def walletconv_in(self,name,infile,desc,uopts=[],pw=False,oo=False):
-		opts = ['-d',cfg['tmpdir'],'-o','words','-r5']
+		opts = ['-d',cfg['tmpdir'],'-o','words',usr_rand_arg]
 		if_arg = [infile] if infile else []
 		d = '(convert)'
 		if ni:
@@ -1788,7 +1796,7 @@ class MMGenTestSuite(object):
 				rd = os.urandom(ref_wallet_incog_offset+128)
 				write_to_tmpfile(cfg,hincog_fn,rd)
 		else:
-			aa = ['-r5']
+			aa = [usr_rand_arg]
 		infile = os.path.join(ref_dir,cfg['seed_id']+'.mmwords')
 		t = MMGenExpect(name,'mmgen-walletconv',aa+opts+[infile],extra_desc='(convert)')
 
@@ -1807,7 +1815,7 @@ class MMGenTestSuite(object):
 			t.license()
 			if pw:
 				t.passphrase_new('new '+desc,cfg['wpasswd'])
-				t.usr_rand(10)
+				t.usr_rand(usr_rand_chars)
 			if ' '.join(desc.split()[-2:]) == 'incognito data':
 				for i in (1,2,3):
 					t.expect('Generating encryption key from OS random data ')
@@ -1876,7 +1884,7 @@ ts = MMGenTestSuite()
 # Laggy flash media cause pexpect to crash, so read and write all temporary
 # files to volatile memory in '/dev/shm'
 if not opt.skip_deps:
-	if sys.platform[:3] == 'win':
+	if g.platform == 'win':
 		for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
 	else:
 		d,pfx = '/dev/shm','mmgen-test-'

@@ -51,7 +51,7 @@ class Filename(MMGenObject):
 		import stat
 		if stat.S_ISBLK(os.stat(fn).st_mode):
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
-			if sys.platform[:3] == 'win': mode |= os.O_BINARY
+			if g.platform == 'win': mode |= os.O_BINARY
 			try:
 				fd = os.open(fn, mode)
 			except OSError as e:

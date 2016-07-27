@@ -39,8 +39,8 @@ class MMGenObject(object):
 		def conv(v,col_w):
 			vret = ''
 			if type(v) in (str,unicode):
-				import mmgen.globalvars as g
-				if not (set(list(v)) <= set(list(g.printable))):
+				from string import printable
+				if not (set(list(v)) <= set(list(printable))):
 					vret = repr(v)
 				else:
 					vret = fix_linebreaks(v,fixed_indent=0)

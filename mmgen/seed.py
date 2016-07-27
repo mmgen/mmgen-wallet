@@ -955,7 +955,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		d.target_data_len = self._get_incog_data_len(opt.seed_len)
 		self._check_valid_offset(self.infile,'read')
 
-		flgs = os.O_RDONLY|os.O_BINARY if sys.platform[:3] == 'win' else os.O_RDONLY
+		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 		fh = os.open(self.infile.name,flgs)
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
@@ -1005,7 +1005,7 @@ harder to find, you're advised to choose a much larger file size than this.
 			self._check_valid_offset(f,'write')
 			if not opt.quiet: confirm_or_exit('',"alter file '%s'" % f.name)
 
-		flgs = os.O_RDWR|os.O_BINARY if sys.platform[:3] == 'win' else os.O_RDWR
+		flgs = os.O_RDWR|os.O_BINARY if g.platform == 'win' else os.O_RDWR
 		fh = os.open(f.name,flgs)
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)

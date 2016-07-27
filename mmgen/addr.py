@@ -89,7 +89,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 # A text label of {n} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain any printable ASCII symbol.
-""".strip().format(n=g.max_addr_label_len,pnm=pnm),
+""".strip().format(n=MMGenAddrLabel.max_len,pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the address file in the future
 """.strip(),

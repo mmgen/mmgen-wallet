@@ -57,7 +57,7 @@ def magenta(s): return _mag+s+_reset
 def nocolor(s): return s
 
 def start_mscolor():
-	if sys.platform[:3] == 'win':
+	if g.platform == 'win':
 		global red,green,yellow,cyan,nocolor
 		import os
 		if 'MMGEN_NOMSCOLOR' in os.environ:
@@ -100,20 +100,6 @@ def pp_die(d):
 def pp_msg(d):
 	import pprint
 	msg(pprint.PrettyPrinter(indent=4).pformat(d))
-
-def is_mmgen_wallet_label(s):
-	if len(s) > g.max_wallet_label_len:
-		msg('ERROR: wallet label length (%s chars) > maximum allowed (%s chars)' % (len(s),g.max_wallet_label_len))
-		return False
-
-	try: s = s.decode('utf8')
-	except: pass
-
-	for ch in s:
-		if ch not in g.wallet_label_symbols:
-			msg('ERROR: wallet label contains illegal symbol (%s)' % ch)
-			return False
-	return True
 
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
@@ -503,7 +489,7 @@ def write_data_to_file(
 			else:
 				msg('Redirecting output to file')
 
-		if binary and sys.platform[:3] == 'win':
+		if binary and g.platform == 'win':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 

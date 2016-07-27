@@ -20,7 +20,7 @@
 globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
-import sys, os
+import sys,os
 
 # Variables - these might be altered at runtime:
 
@@ -28,13 +28,6 @@ user_entropy   = ''
 hash_preset    = '3'
 usr_randchars  = 30
 use_urandchars = False
-
-# returns None if env var unset
-debug                = os.getenv('MMGEN_DEBUG')
-no_license           = os.getenv('MMGEN_NOLICENSE')
-bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
-disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
-color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
 
 from mmgen.obj import BTCAmt
 tx_fee        = BTCAmt('0.0003')
@@ -46,12 +39,19 @@ http_timeout = 60
 
 # Constants - these don't change at runtime
 
+# os.getenv() returns None if environmental var is unset
+debug                = os.getenv('MMGEN_DEBUG')
+no_license           = os.getenv('MMGEN_NOLICENSE')
+bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
+disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
+color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
+
 proj_name = 'MMGen'
 prog_name = os.path.basename(sys.argv[0])
 author    = 'Philemon'
 email     = '<mmgen-py@yandex.com>'
 Cdates    = '2013-2016'
-version   = '0.8.4'
+version   = '0.8.5rc1'
 
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
@@ -100,12 +100,8 @@ hash_presets = {
 	'7': [18, 8, 24],
 }
 
-mmgen_idx_max_digits = 7
-
-printable_nonl = [chr(i+32) for i in range(95)]
-printable = printable_nonl + ['\n','\t']
-addr_label_symbols = wallet_label_symbols = printable_nonl
-
-max_addr_label_len   = 32
-max_wallet_label_len = 48
-max_tx_comment_len   = 72 # Comment is b58 encoded, so can permit UTF-8
+for k in ('win','linux'):
+	if sys.platform[:len(k)] == k: platform = k; break
+else:
+	sys.stderr.write("'%s': platform not supported by %s\n" % (sys.platform,proj_name))
+	sys.exit(1)
