@@ -68,6 +68,6 @@ confirm_or_exit(warn,action,expect)
 
 msg('Sending transaction')
 
-tx.send(c,bogus=True)
+tx.send(c,bogus=False)
 
 tx.write_txid_to_file()

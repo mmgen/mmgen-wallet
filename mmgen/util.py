@@ -215,6 +215,9 @@ def make_timestr(secs=None):
 def secs_to_hms(secs):
 	return '{:02d}:{:02d}:{:02d}'.format(secs/3600, (secs/60) % 60, secs % 60)
 
+def secs_to_ms(secs):
+	return '{:02d}:{:02d}'.format(secs/60, secs % 60)
+
 def _is_whatstring(s,chars):
 	return set(list(s)) <= set(chars)
 

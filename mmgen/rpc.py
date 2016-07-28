@@ -146,6 +146,7 @@ class BitcoinRPCConnection(object):
 		'listunspent',
 		'sendrawtransaction',
 		'signrawtransaction',
+		'getrawmempool',
 	)
 
 	for name in rpcmethods:
