@@ -56,10 +56,10 @@ class BitcoinRPCConnection(object):
 	# kwargs are for local use and are not passed to server
 
 	# By default, dies with an error msg on all errors and exceptions
-	# With ret_on_error=True, returns 'rpcfail',(resp_object,(die_args))
+	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
-		cf = { 'timeout':g.http_timeout, 'batch':False, 'ret_on_error':False }
+		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'die' }
 
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
@@ -72,7 +72,7 @@ class BitcoinRPCConnection(object):
 			p = {'method':cmd,'params':args,'id':1}
 
 		def die_maybe(*args):
-			if cf['ret_on_error']:
+			if cf['on_fail'] == 'return':
 				return 'rpcfail',args
 			else:
 				die(*args[1:])
@@ -88,7 +88,10 @@ class BitcoinRPCConnection(object):
 					return (float,str)[caller.client_version>=120000](obj)
 				return json.JSONEncoder.default(self, obj)
 
-#		pp_msg(json.dumps(p,cls=MyJSONEncoder))
+# Can't do UTF-8 labels yet: httplib only ascii?
+# 		if type(p) != list and p['method'] == 'importaddress':
+# 			dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
+# 			print(dump)
 
 		try:
 			c.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
@@ -153,7 +156,6 @@ class BitcoinRPCConnection(object):
 		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
 
 def rpc_error(ret):
-	return ret is list and ret and ret[0] == 'rpcfail'
+	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
 
-def rpc_errmsg(ret,e):
-	return (False,True)[ret[1][2].find(e) == -1]
+def rpc_errmsg(ret): return ret[1][2]

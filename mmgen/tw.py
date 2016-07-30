@@ -46,7 +46,26 @@ No spendable outputs found!  Import addresses with balances into your
 watch-only wallet using '{}-addrimport' and then re-run this program.
 """.strip().format(g.proj_name)
 	}
+	sort_keys = 'addr','age','amt','txid','mmid'
+
 	def __init__(self):
+		self.unspent      = []
+		self.fmt_display  = ''
+		self.fmt_print    = ''
+		self.cols         = None
+		self.reverse      = False
+		self.group        = False
+		self.show_days    = True
+		self.show_mmid    = True
+		self.get_data()
+		self.sort_key     = 'age'
+		self.do_sort()
+		self.total        = self.get_total_btc()
+
+	def get_total_btc(self):
+		return sum([i.amt for i in self.unspent])
+
+	def get_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data))
 		else:
@@ -56,27 +75,15 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		if not us_rpc: die(2,self.wmsg['no_spendable_outputs'])
 		for o in us_rpc:
-			o['mmid'],o['label'] = parse_tw_acct_label(o['account'])
+			o['mmid'],o['label'] = parse_tw_acct_label(o['account']) if 'account' in o else ('','')
 			o['days'] = int(o['confirmations'] * g.mins_per_block / (60*24))
 			o['amt'] = o['amount'] # TODO
 			o['addr'] = o['address']
 			o['confs'] = o['confirmations']
-		us = [MMGenTWOutput(**dict([(k,v) for k,v in o.items() if k in MMGenTWOutput.attrs and o[k] not in (None,'')])) for o in us_rpc]
-#		die(1,''.join([str(i)+'\n' for i in us]))
+		self.unspent = [MMGenTWOutput(**dict([(k,v) for k,v in o.items() if k in MMGenTWOutput.attrs and o[k] not in (None,'')])) for o in us_rpc]
 #		die(1,''.join([pp_format(i)+'\n' for i in us_rpc]))
+#		die(1,''.join([str(i)+'\n' for i in self.unspent]))
 
-		self.unspent  = us
-		self.fmt_display  = ''
-		self.fmt_print    = ''
-		self.cols         = None
-		self.reverse      = False
-		self.group        = False
-		self.show_days    = True
-		self.show_mmid    = True
-		self.do_sort('age')
-		self.total        = sum([i.amt for i in self.unspent])
-
-	sort_keys = 'addr','age','amt','txid','mmid'
 	def s_addr(self,i):  return i.addr
 	def s_age(self,i):   return 0 - i.confs
 	def s_amt(self,i):   return i.amt
@@ -87,18 +94,20 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				*i.mmid.split(':'), w=AddrIdx.max_digits)
 		else: return 'G' + (i.label or '')
 
-	def do_sort(self,key,reverse=None):
+	def do_sort(self,key=None,reverse=None):
+		if not key: key = self.sort_key
+		assert key
+		self.sort_key = key
 		if key not in self.sort_keys:
 			fs = "'{}': invalid sort key.  Valid keys: [{}]"
 			die(2,fs.format(key,' '.join(self.sort_keys)))
 		if reverse == None: reverse = self.reverse
-		self.sort = key
 		self.unspent.sort(key=getattr(self,'s_'+key),reverse=reverse)
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
-		ret.append(self.sort.capitalize().replace('Mmid','MMGenID'))
-		if include_group and self.group and (self.sort in ('addr','txid','mmid')):
+		ret.append(self.sort_key.capitalize().replace('Mmid','MMGenID'))
+		if include_group and self.group and (self.sort_key in ('addr','txid','mmid')):
 			ret.append('Grouped')
 		return ret
 
@@ -122,7 +131,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			if i.label == None: i.label = ''
 			i.skip = ''
 
-		mmid_w = max(len(i.mmid or '') for i in unsp)
+		mmid_w = max(len(i.mmid or '') for i in unsp) or 10
 		max_acct_len = max([len((i.mmid or '')+i.label)+1 for i in unsp])
 		addr_w = min(34+((1+max_acct_len) if self.show_mmid else 0),self.cols-46) + 6
 		acct_w   = min(max_acct_len, max(24,int(addr_w-10)))
@@ -138,10 +147,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			'Amt(BTC) ',
 			('Conf.','Age(d)')[self.show_days])
 
-		if self.group and (self.sort in ('addr','txid','mmid')):
+		if self.group and (self.sort_key in ('addr','txid','mmid')):
 			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
 				for k in ('addr','txid','mmid'):
-					if self.sort == k and getattr(a,k) == getattr(b,k):
+					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='mmid']
 
 		hdr_fmt   = 'UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s'
@@ -156,7 +165,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				addr_out = '%s %s' % (
 					type(i.addr).fmtc(addr_dots,width=btaddr_w,color=True) if i.skip == 'addr' \
 						else i.addr.fmt(width=btaddr_w,color=True),
-					'{} {}'.format(mmid_disp,i.label.fmt(width=label_w,color=True))
+					'{} {}'.format(mmid_disp,i.label.fmt(width=label_w,color=True) if label_w > 0 else '')
 				)
 			else:
 				addr_out = type(i.addr).fmtc(addr_dots,width=addr_w,color=True) if i.skip=='addr' \
@@ -177,12 +186,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		out = [fs % ('Num','Tx ID,Vout','Address'.ljust(34),'MMGen ID'.ljust(15),
 			'Amount(BTC)','Conf.','Age(d)', 'Label')]
 
+		max_lbl_len = max(len(i.label) for i in self.unspent if i.label) or 1
 		for n,i in enumerate(self.unspent):
 			addr = '=' if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
 			tx = ' ' * 63 + '=' if i.skip == 'txid' and self.group else str(i.txid)
 			s = fs % (str(n+1)+')', tx+','+str(i.vout),addr,
-					(i.mmid.fmt(14,color=color) if i.mmid else ''.ljust(14)),
-					i.amt.fmt(color=color),i.confs,i.days,i.label.hl(color=color) if i.label else '')
+					(i.mmid.fmt(width=14,color=color) if i.mmid else
+						MMGenID.fmtc('',width=14,nullrepl='-',color=color)),
+					i.amt.fmt(color=color),i.confs,i.days,
+					i.label.hl(color=color) if i.label else
+						MMGenAddrLabel.fmtc('',color=color,nullrepl='-',width=max_lbl_len))
 			out.append(s.rstrip())
 
 		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n'
@@ -197,6 +210,30 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		fs = '\nTotal unspent: %s BTC (%s outputs)'
 		msg(fs % (self.total.hl(),len(self.unspent)))
 
+	def get_idx_and_label_from_user(self):
+		msg('')
+		while True:
+			ret = my_raw_input("Enter unspent output number (or 'q' to return to main menu): ")
+			if ret == 'q': return None,None
+			n = AddrIdx(ret,on_fail='silent') # hacky way to test and convert to integer
+			if not n or n < 1 or n > len(self.unspent):
+				msg('Choice must be a single number between 1 and %s' % len(self.unspent))
+			elif not self.unspent[n-1].mmid:
+				msg('Address #%s is not an %s address. No label can be added to it' %
+						(n,g.proj_name))
+			else:
+				while True:
+					s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
+					if s == 'q':
+						return None,None
+					elif s == '':
+						if keypress_confirm(
+							"Removing label for address #%s.  Is this what you want?" % n):
+							return n,s
+					elif s:
+						if MMGenAddrLabel(s,on_fail='return'):
+							return n,s
+
 	def view_and_sort(self):
 		from mmgen.term import do_pager
 		prompt = """
@@ -206,27 +243,37 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		self.display()
 		msg(prompt)
 
-		p = "('q' = quit sorting, 'p' = print to file, 'v' = pager view, 'w' = wide view): "
+		p = "'q'=quit view, 'p'=print to file, 'v'=pager view, 'w'=wide view, 'l'=add label:\b"
 		while True:
 			reply = get_char(p, immed_chars='atDdAMrgmeqpvw')
 			if   reply == 'a': self.do_sort('amt')
-			elif reply == 't': self.do_sort('txid')
-			elif reply == 'D': self.show_days = not self.show_days
-			elif reply == 'd': self.do_sort('addr')
 			elif reply == 'A': self.do_sort('age')
-			elif reply == 'M': self.do_sort('mmid'); self.show_mmid = True
-			elif reply == 'r': self.unspent.reverse(); self.reverse = not self.reverse
+			elif reply == 'd': self.do_sort('addr')
+			elif reply == 'D': self.show_days = not self.show_days
+			elif reply == 'e': msg('\n%s\n%s\n%s' % (self.fmt_display,prompt,p))
 			elif reply == 'g': self.group = not self.group
+			elif reply == 'l':
+				idx,lbl = self.get_idx_and_label_from_user()
+				if idx:
+					e = self.unspent[idx-1]
+					if type(self).add_label(e.mmid,lbl,addr=e.addr):
+						self.get_data()
+						self.do_sort()
+						msg('%s\n%s\n%s' % (self.fmt_display,prompt,p))
+					else:
+						msg('Label could not be added\n%s\n%s' % (prompt,p))
+			elif reply == 'M': self.do_sort('mmid'); self.show_mmid = True
 			elif reply == 'm': self.show_mmid = not self.show_mmid
-			elif reply == 'e': msg("\n%s\n%s\n%s" % (self.fmt_display,prompt,p))
-			elif reply == 'q': return self.unspent
 			elif reply == 'p':
-				of = 'listunspent[%s].out' % ','.join(self.sort_info(include_group=False))
 				msg('')
+				of = 'listunspent[%s].out' % ','.join(self.sort_info(include_group=False)).lower()
 				write_data_to_file(of,self.format_for_printing(),'unspent outputs listing')
 				m = yellow("Data written to '%s'" % of)
 				msg('\n%s\n%s\n\n%s' % (self.fmt_display,m,prompt))
 				continue
+			elif reply == 'q': return self.unspent
+			elif reply == 'r': self.unspent.reverse(); self.reverse = not self.reverse
+			elif reply == 't': self.do_sort('txid')
 			elif reply == 'v':
 				do_pager(self.fmt_display)
 				continue
@@ -240,3 +287,30 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			msg('\n')
 			self.display()
 			msg(prompt)
+
+	# returns on failure
+	@classmethod
+	def add_label(cls,mmaddr,label='',addr=None):
+		mmaddr = MMGenID(mmaddr)
+
+		if addr: # called from view_and_sort()
+			if not BTCAddr(addr,on_fail='return'): return False
+		else:
+			from mmgen.addr import AddrData
+			addr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
+			if not addr:
+				msg('{} address {} not found in tracking wallet'.format(g.proj_name,mmaddr))
+				return False
+
+		label = MMGenAddrLabel(label,on_fail='return')
+		if not label and label != '': return False
+
+		acct = mmaddr + (' ' + label if label else '') # label is ASCII for now
+		# return on failure - args: addr,label,rescan,p2sh
+		ret = bitcoin_connection().importaddress(addr,acct,False,on_fail='return')
+		from mmgen.rpc import rpc_error,rpc_errmsg
+		if rpc_error(ret): msg('From bitcoind: ' + rpc_errmsg(ret))
+		return not rpc_error(ret)
+
+	@classmethod
+	def remove_label(cls,mmaddr): cls.add_label(mmaddr,'')

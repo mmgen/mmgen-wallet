@@ -71,7 +71,6 @@ cmd_data = OrderedDict([
 	('mn_stats',     ["wordlist [str='electrum']"]),
 	('mn_printlist', ["wordlist [str='electrum']"]),
 
-
 	('listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
 	('getbalance',   ['minconf [int=1]']),
 	('txview',       ['<{} TX file> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]']),
@@ -102,7 +101,7 @@ cmd_help = """
   wif2hex      - convert a private key from WIF to hex format
 
   Wallet/TX operations (bitcoind must be running):
-  getbalance    - like 'bitcoind getbalance' but shows confirmed/unconfirmed,
+  getbalance    - like 'bitcoin-cli getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddresses - list {pnm} addresses and their balances
   txview        - show raw/signed {pnm} transaction in human-readable form
@@ -229,15 +228,12 @@ def are_equal(a,b,dtype=''):
 	else:              return a == b
 
 def print_convert_results(indata,enc,dec,dtype):
-
 	error = (True,False)[are_equal(indata,dec,dtype)]
-
 	if error or opt.verbose:
 		Msg('Input:         %s' % repr(indata))
 		Msg('Encoded data:  %s' % repr(enc))
 		Msg('Recoded data:  %s' % repr(dec))
 	else: Msg(enc)
-
 	if error:
 		die(3,"Error! Recoded data doesn't match input!")
 
@@ -364,23 +360,15 @@ def str2id6(s):  Msg(make_chksum_6(''.join(s.split())))
 # List MMGen addresses and their balances:
 def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False):
 
+	# TODO - move some or all of this code to AddrList
 	usr_addr_list = []
 	if addrs:
-		sid,idxs = split2(addrs,':')
-		if not idxs:
-			s1 = "'%s': invalid address argument\n"
-			s2 = "Address argument format: <%s Seed ID>':'<index or range>"
-			die(1, (s1+s2) % (addrs,g.proj_name))
-		if not is_mmgen_seed_id(sid):
-			die(1,'%s: invalid %s Seed ID' % (g.proj_name,sid))
-		tmp = parse_addr_idxs(idxs)
-		if not tmp: return False
-		usr_addr_list = ['%s:%s' % (sid,i) for i in tmp]
+		sid_s,idxs = split2(addrs,':')
+		sid = SeedID(sid=sid_s)
+		usr_addr_list = ['{}:{}'.format(sid,a) for a in AddrIdxList(idxs)]
 
 	c = bitcoin_connection()
-
 	addrs = {} # reusing variable name!
-	from mmgen.obj import BTCAmt
 	total = BTCAmt('0')
 	for d in c.listunspent(0):
 		mmaddr,comment = split2(d['account'])
@@ -392,7 +380,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
 							(d['address'], addrs[key][2])))
 			else:
-				addrs[key] = [BTCAmt('0'),comment,d['address']]
+				addrs[key] = [BTCAmt('0'),MMGenAddrLabel(comment),BTCAddr(d['address'])]
 			addrs[key][0] += d['amount']
 			total += d['amount']
 
@@ -407,45 +395,47 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
 					if showbtcaddrs: save_a.append([acct])
-					addrs[key] = [BTCAmt('0'),comment,'']
+					addrs[key] = [BTCAmt('0'),MMGenAddrLabel(comment),'']
 
 		for acct,addr in zip(save_a,c.getaddressesbyaccount(save_a,batch=True)):
 			if len(addr) != 1:
 				die(2,"Account '%s' has more or less than one BTC address!" % addr)
 			key = split2(acct[0])[0].replace(':','_')
-			addrs[key][2] = addr[0]
+			addrs[key][2] = BTCAddr(addr[0])
 
 	if not addrs:
 		die(0,('No addresses with balances!','No tracked addresses!')[showempty])
 
-	fs = '%-{}s %-{}s %-{}s %s'.format(
-		max(len(k) for k in addrs),
-		(0,36)[showbtcaddrs],
-		max(max(len(addrs[k][1]) for k in addrs) + 1,8) # pad 8 if no comments
-	)
+	fs = ('{mid} {lbl} {amt}','{mid} {addr} {lbl} {amt}')[showbtcaddrs]
+	max_mmid_len = max(len(k) for k in addrs) or 10
+	max_lbl_len =  max(len(addrs[k][1]) for k in addrs) or 7
+	out = [fs.format(
+			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
+			addr=BTCAddr.fmtc('ADDRESS'),
+			lbl=MMGenAddrLabel.fmtc('COMMENT',width=max_lbl_len),
+			amt='BALANCE'
+			)]
 
-	def s_mmgen(key): # TODO
-		return '{}:{:>0{w}}'.format(w=AddrIdx.max_digits, *key.split('_'))
-
-	out = []
+	old_sid = ''
+	def s_mmgen(k): return '{:>0{w}}'.format(k,w=AddrIdx.max_digits+9) # TODO
 	for k in sorted(addrs,key=s_mmgen):
-		if out and k.split('_')[0] != out[-1].split(':')[0]: out.append('')
-		baddr = ' ' + addrs[k][2] if showbtcaddrs else ''
-		out.append(fs % (k.replace('_',':'), baddr, addrs[k][1], addrs[k][0].fmt('3.0',color=1)))
+		if old_sid and old_sid != k[:8]: out.append('')
+		old_sid = k[:8]
+		out.append(fs.format(
+			mid=MMGenID(k.replace('_',':')).fmt(width=max_mmid_len,color=True),
+			addr=(addrs[k][2].fmt(color=True) if showbtcaddrs else None),
+			lbl=addrs[k][1].fmt(width=max_lbl_len,color=True,nullrepl='-'),
+			amt=addrs[k][0].fmt('3.0',color=True)))
 
-	o = (fs + '\n%s\nTOTAL: %s BTC') % (
-			'ADDRESS','','COMMENT',' BALANCE', '\n'.join(out), total.hl()
-		)
+	out.append('\nTOTAL: %s BTC' % total.hl(color=True))
+	o = '\n'.join(out)
 	if pager: do_pager(o)
 	else: Msg(o)
-
 
 def getbalance(minconf=1):
 
 	accts = {}
-	us = bitcoin_connection().listunspent(0)
-#	pp_die(us)
-	for d in us:
+	for d in bitcoin_connection().listunspent(0):
 		ma = split2(d['account'])[0]
 		keys = ['TOTAL']
 		if d['spendable']: keys += ['SPENDABLE']
@@ -477,30 +467,16 @@ def twview(pager=False,reverse=False,wide=False,sort='age'):
 	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
 	do_pager(out) if pager else sys.stdout.write(out)
 
-def add_label(mmaddr,label,remove=False):
-	if not is_mmgen_id(mmaddr):
-		die(1,'{a}: not a valid {pnm} address'.format(pnm=pnm,a=mmaddr))
-	MMGenAddrLabel(label)  # Exits on failure
+def add_label(mmaddr,label):
+	from mmgen.tw import MMGenTrackingWallet
+	if MMGenTrackingWallet.add_label(mmaddr,label): # returns on failure
+		s = '{pnm} address {a} in tracking wallet'.format(a=mmaddr,pnm=pnm)
+		if label: msg("Added label '{}' for {}".format(label,s))
+		else:     msg('Removed label for {}'.format(s))
+	else:
+		die(1,'Label could not be %s' % ('removed','added')[bool(label)])
 
-	from mmgen.addr import AddrData
-	btcaddr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
-
-	if not btcaddr:
-		die(1,'{pnm} address {a} not found in tracking wallet'.format(
-				pnm=pnm,a=mmaddr))
-
-	c = bitcoin_connection()
-	try:
-		l = ' ' + label if label else ''
-		c.importaddress(btcaddr,mmaddr+l,False) # addr,label,rescan,p2sh
-	except:
-		die(1,'Unable to add label')
-
-	s = '{pnm} address {a} in tracking wallet'.format(a=mmaddr,pnm=pnm)
-	if remove: msg('Removed label from {}'.format(s))
-	else:      msg("Added label '{}' for {}".format(label,s))
-
-def remove_label(mmaddr): add_label(mmaddr,'',remove=True)
+def remove_label(mmaddr): add_label(mmaddr,'')
 
 def addrfile_chksum(infile):
 	from mmgen.addr import AddrList
@@ -544,7 +520,6 @@ def wif2hex(wif,compressed=False):
 def hex2wif(hexpriv,compressed=False):
 	Msg(bitcoin.hextowif(hexpriv,compressed))
 
-
 def encrypt(infile,outfile='',hash_preset=''):
 	data = get_data_from_file(infile,'data for encryption',binary=True)
 	enc_d = mmgen_encrypt(data,'user data',hash_preset)
@@ -552,7 +527,6 @@ def encrypt(infile,outfile='',hash_preset=''):
 		outfile = '%s.%s' % (os.path.basename(infile),g.mmenc_ext)
 
 	write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
-
 
 def decrypt(infile,outfile='',hash_preset=''):
 	enc_d = get_data_from_file(infile,'encrypted data',binary=True)
@@ -567,7 +541,6 @@ def decrypt(infile,outfile='',hash_preset=''):
 		if outfile == o: outfile += '.dec'
 
 	write_data_to_file(outfile,dec_d,'decrypted data',binary=True)
-
 
 def find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
@@ -593,7 +566,6 @@ def find_incog_data(filename,iv_id,keep_searching=False):
 
 	msg('')
 	os.close(f)
-
 
 def rand2file(outfile, nbytes, threads=4, silent=False):
 	nbytes = parse_nbytes(nbytes)

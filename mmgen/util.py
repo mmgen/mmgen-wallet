@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-util.py:  Low-level routines imported by other modules for the MMGen suite
+util.py:  Low-level routines imported by other modules in the MMGen suite
 """
 
 import sys,os,time,stat,re
@@ -136,12 +136,10 @@ def vmsg(s):
 	if opt.verbose: sys.stderr.write(s + '\n')
 def vmsg_r(s):
 	if opt.verbose: sys.stderr.write(s)
-
 def Vmsg(s):
 	if opt.verbose: sys.stdout.write(s + '\n')
 def Vmsg_r(s):
 	if opt.verbose: sys.stdout.write(s)
-
 def dmsg(s):
 	if opt.debug: sys.stdout.write(s + '\n')
 
@@ -190,7 +188,7 @@ def split_into_cols(col_wid,s):
 	return ' '.join([s[col_wid*i:col_wid*(i+1)]
 					for i in range(len(s)/col_wid+1)]).rstrip()
 
-def capfirst(s):
+def capfirst(s): # different from str.capitalize() - doesn't downcase any uc in string
 	return s if len(s) == 0 else s[0].upper() + s[1:]
 
 def decode_timestamp(s):
@@ -338,7 +336,6 @@ def open_file_or_exit(filename,mode):
 		die(2,"Unable to open file '%s' for %s" % (filename,op))
 	return f
 
-
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	a = ((os.R_OK,'read'),(os.W_OK,'writ'))
@@ -372,45 +369,8 @@ def check_outfile(f,blkdev_ok=False):
 	return check_file_type_and_access(f,'output file',blkdev_ok=blkdev_ok)
 def check_outdir(f):
 	return check_file_type_and_access(f,'output directory')
-
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
-
-def _validate_addr_num(n):
-	from mmgen.tx import is_mmgen_idx
-	if is_mmgen_idx(n):
-		return int(n)
-	else:
-		msg("'%s': invalid %s address index" % (n,g.proj_name))
-		return False
-
-def parse_addr_idxs(arg,sep=','):  # TODO - delete
-
-	ret = []
-
-	for i in (arg.split(sep)):
-
-		j = i.split('-')
-
-		if len(j) == 1:
-			i = _validate_addr_num(i)
-			if not i: return False
-			ret.append(i)
-		elif len(j) == 2:
-			beg = _validate_addr_num(j[0])
-			if not beg: return False
-			end = _validate_addr_num(j[1])
-			if not end: return False
-			if end < beg:
-				msg("'%s-%s': invalid range (end is less than beginning)" % (beg,end))
-				return False
-			ret.extend(range(beg,end+1))
-		else:
-			msg("'%s': invalid address range argument" % i)
-			return False
-
-	return sorted(set(ret))
-
 
 def get_new_passphrase(desc,passchg=False):
 
@@ -586,16 +546,12 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
 	f.close()
 	return data
 
-passwd_file_used = False
-
 def pwfile_reuse_warning():
-	global passwd_file_used
-	if passwd_file_used:
+	if 'passwd_file_used' in globals():
 		qmsg("Reusing passphrase from file '%s' at user request" % opt.passwd_file)
 		return True
-	passwd_file_used = True
+	globals()['passwd_file_used'] = True
 	return False
-
 
 def get_mmgen_passphrase(desc,passchg=False):
 	prompt ='Enter {}passphrase for {}: '.format(('','old ')[bool(passchg)],desc)
@@ -604,28 +560,6 @@ def get_mmgen_passphrase(desc,passchg=False):
 		return ' '.join(get_words_from_file(opt.passwd_file,'passphrase'))
 	else:
 		return ' '.join(get_words_from_user(prompt))
-
-def get_bitcoind_passphrase(prompt):
-	if opt.passwd_file:
-		pwfile_reuse_warning()
-		return get_data_from_file(opt.passwd_file,'passphrase').strip('\r\n')
-	else:
-		return my_raw_input(prompt, echo=opt.echo_passphrase)
-
-
-def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
-	p = """Enter hash preset for %s,
- or hit ENTER to accept the default value ('%s'): """ % (desc,hp)
-	while True:
-		ret = my_raw_input(p)
-		if ret:
-			if ret in g.hash_presets.keys(): return ret
-			else:
-				msg('Invalid input.  Valid choices are %s' %
-						', '.join(sorted(g.hash_presets.keys())))
-				continue
-		else: return hp
-
 
 def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
@@ -651,7 +585,6 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	return reply.strip()
 
-
 def keypress_confirm(prompt,default_yes=False,verbose=False):
 
 	from mmgen.term import get_char
@@ -670,7 +603,6 @@ def keypress_confirm(prompt,default_yes=False,verbose=False):
 			if verbose: msg('\nInvalid reply')
 			else: msg_r('\r')
 
-
 def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 	from mmgen.term import get_char
@@ -684,7 +616,6 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 		if verbose: msg('\nInvalid reply')
 		else: msg_r('\r')
-
 
 def do_license_msg(immed=False):
 
@@ -707,7 +638,6 @@ def do_license_msg(immed=False):
 		else:
 			msg_r('\r')
 	msg('')
-
 
 def get_bitcoind_cfg_options(cfg_keys):
 

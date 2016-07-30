@@ -187,7 +187,7 @@ class AddrIdx(int,InitErrors):
 			assert type(num) is not float
 			me = int.__new__(cls,num)
 		except:
-			m = "'%s': value cannot be converted to addr idx" % num
+			m = "'%s': value cannot be converted to address index" % num
 		else:
 			if len(str(me)) > cls.max_digits:
 				m = "'%s': too many digits in addr idx" % num
@@ -205,9 +205,11 @@ class AddrIdxList(list,InitErrors):
 		self.arg_chk(type(self),on_fail)
 		assert fmt_str or idx_list
 		if idx_list:
-			return list.__init__(self,sorted(set(idx_list)))
+			# dies on failure
+			return list.__init__(self,sorted(set([AddrIdx(i) for i in idx_list])))
 		elif fmt_str:
-			ret,fs = [],"'%s': value cannot be converted to addr idx"
+			desc = fmt_str
+			ret,fs = [],"'%s': value cannot be converted to address index"
 			from mmgen.util import msg
 			for i in (fmt_str.split(sep)):
 				j = i.split('-')
@@ -228,7 +230,7 @@ class AddrIdxList(list,InitErrors):
 			else:
 				return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
 
-		return self.init_fail(fs % err,on_fail,silent=True)
+			return self.init_fail((fs + ' list') % desc,on_fail)
 
 class Hilite(object):
 
@@ -238,19 +240,21 @@ class Hilite(object):
 	trunc_ok = True
 
 	@classmethod
-	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None):
+	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,center=False,nullrepl=''):
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
 		assert width > 0
+		if s == '' and nullrepl:
+			s,center = nullrepl,True
+		if center: s = s.center(width)
 		assert type(encl) is str and len(encl) in (0,2)
 		a,b = list(encl) if encl else ('','')
 		if trunc_ok and len(s) > width: s = s[:width]
 		return cls.colorize((a+s+b).ljust(width),color=color)
 
-	def fmt(self,width=None,color=False,encl='',trunc_ok=None):
-		if width == None: width = self.width
-		if trunc_ok == None: trunc_ok = self.trunc_ok
-		return self.fmtc(self,width=width,color=color,encl=encl,trunc_ok=trunc_ok)
+	def fmt(self,*args,**kwargs):
+		assert args == () # forbid invocation w/o keywords
+		return self.fmtc(self,*args,**kwargs)
 
 	@classmethod
 	def hlc(cls,s,color=True):
@@ -266,7 +270,8 @@ class Hilite(object):
 	def colorize(cls,s,color=True):
 		import mmgen.globalvars as g
 		from mmgen.util import red,blue,green,yellow,pink,cyan,gray,orange,magenta
-		return locals()[cls.color](s) if (color or cls.color_always) and g.color else s
+		k = color if type(color) is str else cls.color # hack: override color with str value
+		return locals()[k](s) if (color or cls.color_always) and g.color else s
 
 class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
@@ -337,7 +342,6 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other,context=None):
 		return type(self)(Decimal.__neg__(self,other,context))
 
-
 class BTCAddr(str,Hilite,InitErrors):
 	color = 'cyan'
 	width = 34
@@ -351,16 +355,15 @@ class BTCAddr(str,Hilite,InitErrors):
 			m = "'%s': value is not a Bitcoin address" % s
 		return cls.init_fail(m,on_fail)
 
-	def fmt(self,width=width,color=False):
-		return self.fmtc(self,width=width,color=color)
-
 	@classmethod
-	def fmtc(cls,s,width=width,color=False):
-		if width >= len(s):
-			s = s.ljust(width)
-		else:
-			s = s[:width-2] +  '..'
-		return cls.colorize(s,color=color)
+	def fmtc(cls,s,**kwargs):
+		# True -> 'cyan': use the str value override hack
+		if 'color' in kwargs and kwargs['color'] == True:
+			kwargs['color'] = cls.color
+		if not 'width' in kwargs: kwargs['width'] = cls.width
+		if kwargs['width'] < len(s):
+			s = s[:kwargs['width']-2] +  '..'
+		return Hilite.fmtc(s,**kwargs)
 
 class SeedID(str,Hilite,InitErrors):
 	color = 'blue'
@@ -431,6 +434,7 @@ class MMGenWalletLabel(MMGenLabel):
 
 class MMGenAddrLabel(MMGenLabel):
 	max_len = 32
+	allowed = [chr(i+32) for i in range(95)]
 	desc = 'address label'
 
 class MMGenTXLabel(MMGenLabel):

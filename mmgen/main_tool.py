@@ -64,5 +64,5 @@ if cmd_args and cmd_args[0] == '--help':
 	sys.exit()
 
 args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
-
-tool.__dict__[command](*args,**kwargs)
+ret = tool.__dict__[command](*args,**kwargs)
+sys.exit(0 if ret in (None,True) else 1) # some commands die, some return False on failure

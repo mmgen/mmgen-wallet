@@ -28,8 +28,8 @@ from mmgen.term import get_char
 
 crmsg = {
 	'usr_rand_notice': """
-You've chosen to not fully trust your OS's random number generator and provide
-some additional entropy of your own.  Please type %s symbols on your keyboard.
+Since we don't fully trust our OS's random number generator, we'll provide
+some additional entropy of our own.  Please type %s symbols on your keyboard.
 Type slowly and choose your symbols carefully for maximum randomness.  Try to
 use both upper and lowercase as well as punctuation and numerals.  What you
 type will not be displayed on the screen.  Note that the timings between your
@@ -56,7 +56,6 @@ keystrokes will also be used as a source of randomness.
 
 def encrypt_seed(seed, key):
 	return encrypt_data(seed, key, iv=1, desc='seed')
-
 
 def decrypt_seed(enc_seed, key, seed_id, key_id):
 
@@ -91,7 +90,6 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 
 	return dec_seed
 
-
 def encrypt_data(data, key, iv=1, desc='data', verify=True):
 
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
@@ -117,7 +115,6 @@ def encrypt_data(data, key, iv=1, desc='data', verify=True):
 
 	return enc_data
 
-
 def decrypt_data(enc_data, key, iv=1, desc='data'):
 
 	vmsg_r('Decrypting %s with key...' % desc)
@@ -130,7 +127,6 @@ def decrypt_data(enc_data, key, iv=1, desc='data'):
 
 	return c.decrypt(enc_data)
 
-
 def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
 	# Buflen arg is for brainwallets only, which use this function to generate
@@ -140,7 +136,6 @@ def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
 
 	import scrypt
 	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
-
 
 def make_key(passwd,salt,hash_preset,
 		desc='encryption key',from_what='passphrase',verbose=False):
@@ -152,7 +147,6 @@ def make_key(passwd,salt,hash_preset,
 	if opt.verbose or verbose: msg('done')
 	dmsg('Key: %s' % hexlify(key))
 	return key
-
 
 def _get_random_data_from_user(uchars):
 
@@ -189,7 +183,6 @@ def _get_random_data_from_user(uchars):
 
 	return key_data+''.join(fmt_time_data)
 
-
 def get_random(length):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
@@ -206,6 +199,18 @@ def get_random(length):
 	else:
 		return os_rand
 
+def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
+	p = """Enter hash preset for %s,
+ or hit ENTER to accept the default value ('%s'): """ % (desc,hp)
+	while True:
+		ret = my_raw_input(p)
+		if ret:
+			if ret in g.hash_presets.keys(): return ret
+			else:
+				msg('Invalid input.  Valid choices are %s' %
+						', '.join(sorted(g.hash_presets.keys())))
+				continue
+		else: return hp
 
 # Vars for mmgen_*crypt functions only
 salt_len,sha256_len,nonce_len = 32,32,32
@@ -223,7 +228,6 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	enc_d = encrypt_data(sha256(nonce+data).digest() + nonce + data, key,
 				int(hexlify(iv),16), desc=desc)
 	return salt+iv+enc_d
-
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
 	dstart = salt_len + g.aesctr_iv_len

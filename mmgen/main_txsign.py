@@ -164,7 +164,14 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'k'),desc))
 	return new_keys
 
-# # function unneeded - use bitcoin-cli walletdump instead
+# # functions unneeded - use bitcoin-cli walletdump instead
+# def get_bitcoind_passphrase(prompt):
+# 	if opt.passwd_file:
+# 		pwfile_reuse_warning()
+# 		return get_data_from_file(opt.passwd_file,'passphrase').strip('\r\n')
+# 	else:
+# 		return my_raw_input(prompt, echo=opt.echo_passphrase)
+#
 # def sign_tx_with_bitcoind_wallet(c,tx,tx_num_str,keys):
 # 	ok = tx.sign(c,tx_num_str,keys) # returns false on failure
 # 	if ok:
@@ -174,7 +181,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 # 		prompt = 'Enter passphrase for bitcoind wallet: '
 # 		while True:
 # 			passwd = get_bitcoind_passphrase(prompt)
-# 			ret = c.walletpassphrase(passwd, 9999,ret_on_error=True)
+# 			ret = c.walletpassphrase(passwd, 9999,on_fail='return')
 # 			if rpc_error(ret):
 # 				if rpc_errmsg(ret,'unencrypted wallet, but walletpassphrase was called'):
 # 					msg('Wallet is unencrypted'); break
@@ -184,12 +191,11 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 # 		ok = tx.sign(c,tx_num_str,keys)
 #
 # 		msg('Locking wallet')
-# 		ret = c.walletlock(ret_on_error=True)
+# 		ret = c.walletlock(on_fail='return')
 # 		if rpc_error(ret):
 # 			msg('Failed to lock wallet')
 #
 # 		return ok
-#
 
 # main(): execution begins here
 

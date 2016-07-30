@@ -1176,13 +1176,13 @@ class MMGenTestSuite(object):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 		silence()
-		from mmgen.addr import AddrList,AddrData
+		from mmgen.addr import AddrList,AddrData,AddrIdxList
 		tx_data,ad = {},AddrData()
 		for s in sources:
 			afile = get_file_with_ext('addrs',cfgs[s]['tmpdir'])
 			ai = AddrList(afile)
 			ad.add(ai)
-			aix = parse_addr_idxs(cfgs[s]['addr_idx_list'])
+			aix = AddrIdxList(fmt_str=cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
 				errmsg(red('Address index list length != %s: %s' %
 							(addrs_per_wallet,repr(aix))))
@@ -1244,8 +1244,8 @@ class MMGenTestSuite(object):
 
 		for num in tx_data:
 			t.expect('Continue anyway? (y/N): ','y')
-		t.expect(r"'q' = quit sorting, .*?: ",'M', regex=True)
-		t.expect(r"'q' = quit sorting, .*?: ",'q', regex=True)
+		t.expect(r"'q'=quit view, .*?:.",'M', regex=True)
+		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 		t.expect('Enter a range or space-separated list of outputs to spend: ',

@@ -98,22 +98,14 @@ was specified.
 }
 
 def select_unspent(unspent,prompt):
-
 	while True:
 		reply = my_raw_input(prompt).strip()
-
-		if not reply: continue
-
-		selected = parse_addr_idxs(reply,sep=None)
-
-		if not selected: continue
-
-		if selected[-1] > len(unspent):
-			msg('Inputs must be less than %s' % len(unspent))
-			continue
-
-		return selected
-
+		if reply:
+			selected = AddrIdxList(fmt_str=','.join(reply.split()),on_fail='return')
+			if selected:
+				if selected[-1] <= len(unspent):
+					return selected
+				msg('Unspent output number must be <= %s' % len(unspent))
 
 def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 

@@ -53,7 +53,6 @@ class Seed(MMGenObject):
 	def get_data(self):
 		return self.data
 
-
 class SeedSource(MMGenObject):
 
 	desc = g.proj_name + ' seed source'
@@ -216,12 +215,10 @@ class SeedSource(MMGenObject):
 		}
 		write_data_to_file(self._filename(),self.fmt_data,**kwargs)
 
-
 class SeedSourceUnenc(SeedSource):
 
 	def _decrypt_retry(self): pass
 	def _encrypt(self): pass
-
 
 class SeedSourceEnc(SeedSource):
 
@@ -346,7 +343,6 @@ an empty passphrase, just hit ENTER twice.
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = encrypt_seed(self.seed.data,key)
 
-
 class Mnemonic (SeedSourceUnenc):
 
 	stdin_ok = True
@@ -466,7 +462,6 @@ class Mnemonic (SeedSourceUnenc):
 	def _filename(self):
 		return '%s[%s].%s' % (self.seed.sid,self.seed.length,self.ext)
 
-
 class SeedFile (SeedSourceUnenc):
 
 	stdin_ok = True
@@ -523,7 +518,6 @@ class SeedFile (SeedSourceUnenc):
 
 	def _filename(self):
 		return '%s[%s].%s' % (self.seed.sid,self.seed.length,self.ext)
-
 
 class Wallet (SeedSourceEnc):
 
@@ -687,7 +681,6 @@ class Wallet (SeedSourceEnc):
 				self.ext
 			)
 
-
 class Brainwallet (SeedSourceEnc):
 
 	stdin_ok = True
@@ -726,7 +719,6 @@ class Brainwallet (SeedSourceEnc):
 		msg('Seed ID: %s' % self.seed.sid)
 		qmsg('Check this value against your records')
 		return True
-
 
 class IncogWallet (SeedSourceEnc):
 
@@ -883,7 +875,6 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		else:
 			return False
 
-
 class IncogWalletHex (IncogWallet):
 
 	file_mode = 'text'
@@ -903,7 +894,6 @@ class IncogWalletHex (IncogWallet):
 	def _format(self):
 		IncogWallet._format(self)
 		self.fmt_data = pretty_hexdump(self.fmt_data)
-
 
 class IncogWalletHidden (IncogWallet):
 
@@ -930,7 +920,6 @@ harder to find, you're advised to choose a much larger file size than this.
 	""",
 		'dec_chk': ', hash preset, offset %s seed length'
 	}
-
 
 	def _get_hincog_params(self,wtype):
 		p = getattr(opt,'hidden_incog_'+ wtype +'_params')
