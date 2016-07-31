@@ -232,7 +232,7 @@ After quitting the menu with 'q' you'll see the following prompt:
 Type your remembered '1' here and hit ENTER.  After several more prompts and
 confirmations, your transaction will be saved:
 
-		Transaction written to file 'tx_FEDCBA[6.6].raw'
+		Transaction written to file 'FEDCBA[6.6].rawtx'
 
 Note that the transaction has a unique ID, and the non-change spend amount of
 6.6 BTC is included in the filename.
@@ -273,9 +273,9 @@ single private key corresponding to the address '1F93Znz....'
 Now transfer the the raw transaction file and just-created keylist file to your
 offline computer and run:
 
-		$ mmgen-txsign -k my_secret.keys tx_FEDCBA[6.6].raw
+		$ mmgen-txsign -k my_secret.keys FEDCBA[6.6].rawtx
 		...
-		Signed transaction written to file 'tx_FEDCBA[6.6].sig'
+		Signed transaction written to file 'FEDCBA[6.6].sigtx'
 
 The signed transaction is written to a new file whose name differs from the raw
 transaction file only by its '.sig' extension.
@@ -285,7 +285,7 @@ needed.  Instead, you'll sign transactions by listing an MMGen seed source
 (wallet, mnemonic or seed file) on the command line after the transaction, and
 the required keys will be generated on the fly, as in the following example:
 
-		$ mmgen-txsign tx_ABCDE[1].raw my_mmgen_wallet.mmdat
+		$ mmgen-txsign ABCDE[1].rawtx my_mmgen_wallet.mmdat
 
 NOTE: transactions may contain a mixture of MMGen and non-MMGen inputs, as well
 as inputs with more than one MMGen Seed ID.  Just list a seed source for each
@@ -299,7 +299,7 @@ Now you're ready for the final step: broadcasting the transaction to the
 network.  Copy the just-created signed transaction file to your online computer,
 start bitcoind and issue the command:
 
-		$ mmgen-txsend tx_FEDCBA[6.6].sig
+		$ mmgen-txsend FEDCBA[6.6].sigtx
 
 Like all MMGen commands, 'mmgen-txsend' is interactive, so you'll be prompted
 before the transaction is actually sent.
@@ -502,9 +502,9 @@ MMGen wallet, mnemonic or seed file to generate addresses and sign transactions:
 		Generated 10 addresses
 		Addresses written to file '89ABCDEF[101-110].addrs'
 
-		$ mmgen-txsign tx_FABCDE[0.3].raw 89ABCDEF-87654321-CA86420E[256,5].mmincox
+		$ mmgen-txsign FABCDE[0.3].rawtx 89ABCDEF-87654321-CA86420E[256,5].mmincox
 		...
-		Signed transaction written to file tx_FABCDE[0.3].sig
+		Signed transaction written to file FABCDE[0.3].sigtx
 
 ##### <a name=13a><a name=incog>Hidden incognito wallets</a>
 
@@ -547,6 +547,6 @@ Generating ten addresses with your hidden incog data is as easy as this:
 
 Transaction signing uses the same syntax:
 
-		$ mmgen-txsign -H random.dat,123456789 tx_ABCDEF[0.1].raw
+		$ mmgen-txsign -H random.dat,123456789 ABCDEF[0.1].rawtx
 		...
-		Signed transaction written to file 'tx_ABCDEF[0.1].sig'
+		Signed transaction written to file 'ABCDEF[0.1].sigtx'

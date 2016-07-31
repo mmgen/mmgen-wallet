@@ -225,7 +225,9 @@ def do_pager(text):
 			shell = True
 			pagers = ['more']
 		else:                     # MSYS
-			environ['LESS'] = '-cR' # clear screen, disable line chopping
+			environ['LESS'] = '-cR' # disable buggy line chopping
+	else:
+		environ['LESS'] = '-RS'
 
 	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
 		pagers = [environ['PAGER']] + pagers
