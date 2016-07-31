@@ -71,6 +71,12 @@ ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'
 ref_wallet_incog_offset = 123
 
+from mmgen.obj import MMGenTXLabel
+ref_tx_label = ''.join([unichr(i) for i in  range(65,91) +
+											range(1040,1072) + # cyrillic
+											range(913,939) +   # greek
+											range(97,123)])[:MMGenTXLabel.max_len]
+
 ref_bw_hash_preset = '1'
 ref_bw_file        = 'wallet.mmbrain'
 ref_bw_file_spc    = 'wallet-spaced.mmbrain'
@@ -1172,7 +1178,7 @@ class MMGenTestSuite(object):
 	def txcreate(self,name,addrfile):
 		self.txcreate_common(name,sources=['1'])
 
-	def txcreate_common(self,name,sources=['1'],non_mmgen_input=''):
+	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 		silence()
@@ -1253,21 +1259,25 @@ class MMGenTestSuite(object):
 		if non_mmgen_input: t.expect('Accept? (y/N): ','y')
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
-		t.expect('Add a comment to transaction? (y/N): ','\n')
+		if do_label:
+			t.expect('Add a comment to transaction? (y/N): ','y')
+			t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
+		else:
+			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.tx_view()
 		t.expect('Save transaction? (y/N): ','y')
 		t.written_to_file('Transaction')
 		ok()
 
-	def txsign_end(self,t,tnum=None,has_comment=False):
+	def txsign_end(self,t,tnum=None,has_label=False):
 		t.expect('Signing transaction')
-		cprompt = ('Add a comment to transaction','Edit transaction comment')[has_comment]
+		cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
 		t.expect('%s? (y/N): ' % cprompt,'\n')
 		t.expect('Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
 		add = ' #' + tnum if tnum else ''
 		t.written_to_file('Signed transaction' + add, oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',save=True,has_comment=False):
+	def txsign(self,name,txfile,wf,pf='',save=True,has_label=False):
 		add_args = ([],['-q','-P',pf])[ni]
 		if ni:
 			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
@@ -1278,9 +1288,9 @@ class MMGenTestSuite(object):
 		t.tx_view()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		if save:
-			self.txsign_end(t,has_comment=has_comment)
+			self.txsign_end(t,has_label=has_label)
 		else:
-			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_comment]
+			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
 			t.expect('%s? (y/N): ' % cprompt,'\n')
 			t.close()
 		ok()
@@ -1474,7 +1484,7 @@ class MMGenTestSuite(object):
 		self.addrgen(name,wf,pf='')
 
 	def txcreate4(self,name,f1,f2,f3,f4,f5,f6):
-		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4')
+		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1)
 
 	def txsign4(self,name,f1,f2,f3,f4,f5,f6):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
@@ -1491,7 +1501,7 @@ class MMGenTestSuite(object):
 		for cnum,desc in ('1','incognito data'),('3','MMGen wallet'):
 			t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
 
-		self.txsign_end(t)
+		self.txsign_end(t,has_label=True)
 		ok()
 
 	def tool_encrypt(self,name,infile=''):
@@ -1722,7 +1732,7 @@ class MMGenTestSuite(object):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
 		pf = get_tmpfile_fn(cfg,pwfile)
-		self.txsign(name,tf,wf,pf,save=False,has_comment=True)
+		self.txsign(name,tf,wf,pf,save=False,has_label=True)
 
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)

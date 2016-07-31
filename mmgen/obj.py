@@ -85,7 +85,7 @@ class MMGenObject(object):
 			if str(type(val))[:13] == "<class 'mmgen": # recurse into sub-objects
 				out.append('\n%s%s (%s):' % (indent,k,type(val)))
 				lvl += 1
-				out.append(str(getattr(self,k))+'\n')
+				out.append(unicode(getattr(self,k))+'\n')
 				lvl -= 1
 			else:
 				out.append(fs % (k, conv(val,col_w)))
