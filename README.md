@@ -89,6 +89,8 @@ future use in an address file, which addresses may safely be made public.
 
 ### Download/Install
 
+> #### [Install a prebuilt bootable image (MMGenLive) on a USB stick][8]
+
 > #### [Install on Microsoft Windows][1]
 
 > #### [Install on Debian/Ubuntu Linux][2]
