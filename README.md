@@ -91,9 +91,9 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Install a prebuilt bootable image (MMGenLive) on a USB stick][8]
 
-> #### [Install on Microsoft Windows][1]
+> #### [Install from source on Microsoft Windows][1]
 
-> #### [Install on Debian/Ubuntu Linux][2]
+> #### [Install from source on Debian/Ubuntu Linux][2]
 
 
 ### Using MMGen
