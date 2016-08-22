@@ -1,3 +1,8 @@
+***Warning: the MMGen installation process on Windows is not for the faint of
+heart, and the user experience is less than optimal.  You're urged to use the
+prebuilt [MMGenLive][00] USB image instead.  It's now the preferred way for all
+non-Linux users to run MMGen.***
+
 Install MMGen on Windows by completing the following three steps:
 
 > 1. [Install MinGW and MSYS][01], if you haven't already;
@@ -12,3 +17,4 @@ Congratulations, your MMGen installation is now complete!  Now move on to
 [02]: Install-MMGen-and-Its-Dependencies-on-Microsoft-Windows
 [07]: Install-Bitcoind
 [08]: Getting-Started-with-MMGen
+[00]: https://github.com/mmgen/MMGenLive

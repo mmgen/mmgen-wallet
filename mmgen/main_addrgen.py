@@ -55,8 +55,8 @@ opts_data = {
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated).
 -O, --old-incog-fmt   Specify old-format incognito input.
--K, --no-keyconv      Force use of internal libraries for address genera-
-                      tion, even if 'keyconv' is available.
+-K, --key-generator=m Use method 'm' for public key generation.
+                      Options: {kgs} (default: {kg})
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.seed_len}-bit) seed lengths.
@@ -71,6 +71,8 @@ opts_data = {
 """.format(
 	seed_lens=', '.join([str(i) for i in g.seed_lens]),
 	pnm=g.proj_name,
+	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+	kg=g.key_generator,
 	what=gen_what,g=g
 ),
 	'notes': """

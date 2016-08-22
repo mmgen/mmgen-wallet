@@ -45,7 +45,6 @@ Type '{} help <command> for help on a particular command
 
 cmd_args = opts.init(opts_data,
 	add_opts=[
-		'no_keyconv',
 		'hidden_incog_input_params',
 		'in_fmt'
 		])

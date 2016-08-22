@@ -288,20 +288,20 @@ def randhex(nbytes='32'):
 
 def randwif(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
-	enc = bitcoin.hextowif(r_hex,compressed)
-	dec = bitcoin.wiftohex(enc,compressed)
+	enc = bitcoin.hex2wif(r_hex,compressed)
+	dec = bitcoin.wif2hex(enc)
 	print_convert_results(r_hex,enc,dec,'hex')
 
 def randpair(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
-	wif = bitcoin.hextowif(r_hex,compressed)
+	wif = bitcoin.hex2wif(r_hex,compressed)
 	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
 	Vmsg('Key (hex):  %s' % r_hex)
 	Vmsg_r('Key (WIF):  '); Msg(wif)
 	Vmsg_r('Addr:       '); Msg(addr)
 
 def wif2addr(wif,compressed=False):
-	s_enc = bitcoin.wiftohex(wif,compressed)
+	s_enc = bitcoin.wif2hex(wif)
 	if s_enc == False:
 		die(1,'Invalid address')
 	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
@@ -515,10 +515,10 @@ def privhex2addr(privkeyhex,compressed=False):
 	Msg(bitcoin.privnum2addr(int(privkeyhex,16),compressed))
 
 def wif2hex(wif,compressed=False):
-	Msg(bitcoin.wiftohex(wif,compressed))
+	Msg(bitcoin.wif2hex(wif))
 
 def hex2wif(hexpriv,compressed=False):
-	Msg(bitcoin.hextowif(hexpriv,compressed))
+	Msg(bitcoin.hex2wif(hexpriv,compressed))
 
 def encrypt(infile,outfile='',hash_preset=''):
 	data = get_data_from_file(infile,'data for encryption',binary=True)

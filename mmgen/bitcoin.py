@@ -34,14 +34,13 @@ _b = 0x0000000000000000000000000000000000000000000000000000000000000007L
 _a = 0x0000000000000000000000000000000000000000000000000000000000000000L
 _Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798L
 _Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
-curve_secp256k1 = ecdsa.ellipticcurve.CurveFp( _p, _a, _b )
-generator_secp256k1 = ecdsa.ellipticcurve.Point( curve_secp256k1, _Gx, _Gy, _r )
-oid_secp256k1 = (1,3,132,0,10)
-secp256k1 = ecdsa.curves.Curve('secp256k1', curve_secp256k1, generator_secp256k1, oid_secp256k1)
+_curve_secp256k1 = ecdsa.ellipticcurve.CurveFp(_p,_a,_b)
+_generator_secp256k1 = ecdsa.ellipticcurve.Point(_curve_secp256k1,_Gx,_Gy,_r)
+_oid_secp256k1 = (1,3,132,0,10)
+_secp256k1 = ecdsa.curves.Curve('secp256k1',_curve_secp256k1,_generator_secp256k1,_oid_secp256k1)
 
 b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-#
 # From en.bitcoin.it:
 #   The Base58 encoding used is home made, and has some differences.
 #   Especially, leading zeroes are kept as single zeroes when conversion
@@ -51,7 +50,6 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 #
 # The 'zero address':
 # 1111111111111111111114oLvT2 (use step2 = ('0' * 40) to generate)
-#
 
 def pubhex2hexaddr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()
@@ -100,13 +98,6 @@ def _b58tonum(b58num):
 		if not i in b58a: return False
 	return sum([b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1]))])
 
-def numtowif(numpriv):
-	step1 = '80' + '{:064x}'.format(numpriv)
-	step2 = sha256(unhexlify(step1)).digest()
-	step3 = sha256(step2).hexdigest()
-	key = step1 + step3[:8]
-	return _numtob58(int(key,16))
-
 # The following are MMGen internal (non-Bitcoin) b58 functions
 
 # Drop-in replacements for b64encode() and b64decode():
@@ -153,9 +144,10 @@ def b58decode_pad(s):
 
 # Compressed address support:
 
-def wiftohex(wifpriv,compressed=False):
+def wif2hex(wif):
+	compressed = wif[0] != '5'
 	idx = (66,68)[bool(compressed)]
-	num = _b58tonum(wifpriv)
+	num = _b58tonum(wif)
 	if num == False: return False
 	key = '{:x}'.format(num)
 	if compressed and key[66:68] != '01': return False
@@ -163,7 +155,7 @@ def wiftohex(wifpriv,compressed=False):
 	round2 = sha256(round1).hexdigest()
 	return key[2:66] if (key[:2] == '80' and key[idx:] == round2[:8]) else False
 
-def hextowif(hexpriv,compressed=False):
+def hex2wif(hexpriv,compressed=False):
 	step1 = '80' + hexpriv + ('','01')[bool(compressed)]
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
@@ -171,7 +163,7 @@ def hextowif(hexpriv,compressed=False):
 	return _numtob58(int(key,16))
 
 def privnum2pubhex(numpriv,compressed=False):
-	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,secp256k1)
+	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,_secp256k1)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
 	if compressed:
 		p = ('03','02')[pubkey[-1] in '02468ace']

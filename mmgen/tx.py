@@ -38,29 +38,8 @@ def is_b58_str(s):
 
 def is_wif(s):
 	if s == '': return False
-	compressed = not s[0] == '5'
-	from mmgen.bitcoin import wiftohex
-	return wiftohex(s,compressed) is not False
-
-def _wiftoaddr(s):
-	if s == '': return False
-	compressed = not s[0] == '5'
-	from mmgen.bitcoin import wiftohex,privnum2addr
-	hex_key = wiftohex(s,compressed)
-	if not hex_key: return False
-	return privnum2addr(int(hex_key,16),compressed)
-
-def _wiftoaddr_keyconv(wif):
-	if wif[0] == '5':
-		from subprocess import check_output
-		return check_output(['keyconv', wif]).split()[1]
-	else:
-		return _wiftoaddr(wif)
-
-def get_wif2addr_f():
-	if opt.no_keyconv: return _wiftoaddr
-	from mmgen.addr import test_for_keyconv
-	return (_wiftoaddr,_wiftoaddr_keyconv)[bool(test_for_keyconv())]
+	from mmgen.bitcoin import wif2hex
+	return bool(wif2hex(s))
 
 class MMGenTxInputOldFmt(MMGenListItem):  # for converting old tx files only
 	tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}

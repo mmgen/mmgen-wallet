@@ -18,10 +18,8 @@
 
 #### Download:
 
-> For the time being, Windows installers and Linux binary tarballs can be
-> obtained [here][00].  Once version 0.10 is released, get them from Bitcoin
-> Core's [main download page][01] instead.  Choose the 32-bit or 64-bit versions
-> appropriate for your respective computers.
+> Go to the Bitcoin Core [main download page][01].  Choose the 32-bit or 64-bit
+> versions appropriate for your respective computers.
 
 #### Install:
 
@@ -57,6 +55,5 @@
 > Note that in the absence of a blockchain the daemon starts very quickly and
 > uses practically no CPU once running.
 
-[00]: https://bitcoin.org/bin/0.10.0/test/
 [01]: https://bitcoin.org/en/download
 [bd]: https://bitcoin.org/bin/blockchain/

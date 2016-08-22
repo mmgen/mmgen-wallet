@@ -8,12 +8,21 @@ Install the Python Cryptography Toolkit:
 
 		$ sudo pip install pycrypto
 
+Install the secp256k1 library
+
+		$ git clone https://github.com/bitcoin-core/secp256k1.git
+		$ cd secp256k1
+		$ ./autogen.sh
+		$ ./configure
+		$ make
+		$ sudo make install
+
 Install MMGen:
 
 		$ git clone https://github.com/mmgen/mmgen.git
 		$ cd mmgen; sudo ./setup.py install
 
-Install vanitygen (optional but recommended):
+Install vanitygen (optional):
 
 		$ sudo apt-get install libpcre3-dev
 		$ git clone https://github.com/samr7/vanitygen.git

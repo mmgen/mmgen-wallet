@@ -294,6 +294,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_int(val,desc): return False
 			if not opt_compares(val,'>=',g.min_urandchars,desc): return False
 			if not opt_compares(val,'<=',g.max_urandchars,desc): return False
+		elif key == 'key_generator':
+			if not opt_compares(val,'<=',len(g.key_generators),desc): return False
+			if not opt_compares(val,'>',0,desc): return False
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 

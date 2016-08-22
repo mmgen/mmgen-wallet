@@ -22,28 +22,86 @@ addr.py:  Address generation/display routines for the MMGen suite
 
 from hashlib import sha256, sha512
 from mmgen.common import *
-from mmgen.bitcoin import numtowif
+from mmgen.bitcoin import privnum2addr,hex2wif,wif2hex
 from mmgen.obj import *
 from mmgen.tx import *
 from mmgen.tw import *
 
 pnm = g.proj_name
 
-def test_for_keyconv(silent=False):
+def _test_for_keyconv(silent=False):
 	no_keyconv_errmsg = """
-Executable '{kconv}' unavailable. Falling back on (slow) internal ECDSA library.
-Please install '{kconv}' from the {vgen} package on your system for much
-faster address generation.
+Executable '{kconv}' unavailable.  Please install '{kconv}' from the {vgen}
+package on your system or specify the secp256k1 library.
 """.format(kconv=g.keyconv_exec, vgen='vanitygen')
-
 	from subprocess import check_output,STDOUT
 	try:
 		check_output([g.keyconv_exec, '-G'],stderr=STDOUT)
 	except:
-		if not silent: msg(no_keyconv_errmsg)
+		if not silent: msg(no_keyconv_errmsg.strip())
 		return False
-
 	return True
+
+def _test_for_secp256k1(silent=False):
+	no_secp256k1_errmsg = """
+secp256k1 library unavailable.  Will use '{kconv}', or failing that, the (slow)
+internal ECDSA library for address generation.
+""".format(kconv=g.keyconv_exec)
+	try:
+		from mmgen.secp256k1 import priv2pub
+		assert priv2pub(os.urandom(32),1)
+	except:
+		if not silent: msg(no_secp256k1_errmsg.strip())
+		return False
+	return True
+
+def _wif2addr_python(wif):
+	privhex = wif2hex(wif)
+	if not privhex: return False
+	return privnum2addr(int(privhex,16),wif[0] != '5')
+
+def _wif2addr_keyconv(wif):
+	if wif[0] == '5':
+		from subprocess import check_output
+		return check_output(['keyconv', wif]).split()[1]
+	else:
+		return _wif2addr_python(wif)
+
+def _wif2addr_secp256k1(wif):
+	return _privhex2addr_secp256k1(wif2hex(wif),wif[0] != '5')
+
+def _privhex2addr_python(privhex,compressed=False):
+	return privnum2addr(int(privhex,16),compressed)
+
+def _privhex2addr_keyconv(privhex,compressed=False):
+	if compressed:
+		return privnum2addr(int(privhex,16),compressed)
+	else:
+		from subprocess import check_output
+		return check_output(['keyconv', hex2wif(privhex,compressed=False)]).split()[1]
+
+def _privhex2addr_secp256k1(privhex,compressed=False):
+	from mmgen.secp256k1 import priv2pub
+	from mmgen.bitcoin import hexaddr2addr,pubhex2hexaddr
+	from binascii import hexlify,unhexlify
+	pubkey = priv2pub(unhexlify(privhex),int(compressed))
+	return hexaddr2addr(pubhex2hexaddr(hexlify(pubkey)))
+
+def _keygen_selector():
+	if opt.key_generator == 3 and _test_for_secp256k1():
+		return 2
+	elif opt.key_generator in (2,3) and _test_for_keyconv():
+		return 1
+	else:
+		msg('Using (slow) internal ECDSA library for address generation')
+		return 0
+
+def get_wif2addr_f():
+	return (_wif2addr_python,_wif2addr_keyconv,_wif2addr_secp256k1)[_keygen_selector()]
+
+def get_privhex2addr_f(selector=None):
+	sel = selector-1 if selector else _keygen_selector()
+	return (_privhex2addr_python,_privhex2addr_keyconv,_privhex2addr_secp256k1)[sel]
 
 class AddrListEntry(MMGenListItem):
 	attrs = 'idx','addr','label','wif','sec'
@@ -166,13 +224,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 		seed = seed.get_data()
 
 		if self.gen_addrs:
-			if opt.no_keyconv or test_for_keyconv() == False:
-				msg('Using (slow) internal ECDSA library for address generation')
-				from mmgen.bitcoin import privnum2addr
-				keyconv = False
-			else:
-				from subprocess import check_output
-				keyconv = 'keyconv'
+			privhex2addr_f = get_privhex2addr_f()
 
 		t_addrs,num,pos,out = len(addrnums),0,0,[]
 
@@ -190,16 +242,12 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 
 			# Secret key is double sha256 of seed hash round /num/
 			sec = sha256(sha256(seed).digest()).hexdigest()
-			wif = numtowif(int(sec,16))
 
 			if self.gen_addrs:
-				if keyconv:
-					e.addr = check_output([keyconv, wif]).split()[1]
-				else:
-					e.addr = privnum2addr(int(sec,16))
+				e.addr = privhex2addr_f(sec,compressed=False)
 
 			if self.gen_keys:
-				e.wif = wif
+				e.wif = hex2wif(sec,compressed=False)
 				if opt.b16: e.sec = sec
 
 			out.append(e)

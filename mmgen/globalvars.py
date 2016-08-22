@@ -51,7 +51,7 @@ prog_name = os.path.basename(sys.argv[0])
 author    = 'Philemon'
 email     = '<mmgen-py@yandex.com>'
 Cdates    = '2013-2016'
-version   = '0.8.5'
+version   = '0.8.6rc1'
 
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
@@ -68,7 +68,7 @@ incompatible_opts = (
 min_screen_width = 80
 
 # Global value sets user opt
-dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee'
+dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee','key_generator'
 
 keyconv_exec = 'keyconv'
 
@@ -86,6 +86,9 @@ mmenc_ext      = 'mmenc'
 salt_len       = 16
 aesctr_iv_len  = 16
 hincog_chk_len = 8
+
+key_generators = 'python-ecdsa','keyconv','secp256k1'
+key_generator = 3 # secp256k1 is default
 
 hash_presets = {
 #   Scrypt params:

@@ -50,8 +50,8 @@ opts_data = {
                       for password hashing (default: '{g.hash_preset}').
 -z, --show-hash-presets Show information on available hash presets.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --no-keyconv      Force use of internal libraries for address gener-
-                      ation, even if 'keyconv' is available.
+-K, --key-generator=m Use method 'm' for public key generation.
+                      Options: {kgs} (default: {kg})
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                       address file (output of '{pnl}-keygen'). Permits
                       online signing without an {pnm} seed source.
@@ -64,7 +64,10 @@ opts_data = {
 -I, --info            Display information about the transaction and exit.
 -t, --terse-info      Like '--info', but produce more concise output.
 -v, --verbose         Produce more verbose output
-""".format(g=g,pnm=pnm,pnl=pnm.lower()),
+""".format(
+		g=g,pnm=pnm,pnl=pnm.lower(),
+		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+		kg=g.key_generator),
 	'notes': """
 
 Transactions with either {pnm} or non-{pnm} input addresses may be signed.

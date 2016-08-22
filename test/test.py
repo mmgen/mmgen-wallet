@@ -854,11 +854,11 @@ def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input='')
 				out.append(create_fake_unspent_entry(btcaddr,sid,idx,lbl))
 
 	if non_mmgen_input:
-		from mmgen.bitcoin import privnum2addr,hextowif
+		from mmgen.bitcoin import privnum2addr,hex2wif
 		privnum = getrandnum(32)
 		btcaddr = privnum2addr(privnum,compressed=True)
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
-		write_data_to_file(of, hextowif('{:064x}'.format(privnum),
+		write_data_to_file(of, hex2wif('{:064x}'.format(privnum),
 					compressed=True)+'\n','compressed bitcoin key',silent=True)
 
 		out.append(create_fake_unspent_entry(btcaddr,non_mmgen='Non-MMGen address'))
