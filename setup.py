@@ -18,7 +18,7 @@
 
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
-import os
+import sys,os
 from shutil import copy2
 
 # install extension module in repository after building
@@ -45,7 +45,7 @@ module1 = Extension(
 setup(
 		name         = 'mmgen',
 		description  = 'A complete Bitcoin offline/online wallet solution for the command line',
-		version      = '0.8.6rc1',
+		version      = '0.8.6',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -53,7 +53,8 @@ setup(
 		platforms    = 'Linux, MS Windows, Raspberry PI',
 		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous',
 		cmdclass     = { 'build_ext': my_build_ext },
-		ext_modules = [module1],
+		# disable building of secp256k1 extension module on Windows
+		ext_modules = [module1] if sys.platform[:5] == 'linux' else [],
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',

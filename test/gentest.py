@@ -48,8 +48,8 @@ opts_data = {
 as specified by the user:
 
     1) with the native Python ecdsa library (very slow)
-    2) with the 'keyconv' utility from the 'vanitygen' package (the default)
-    3) using bitcoincore.org's secp256k1 library (very fast, experimental)
+    2) with the 'keyconv' utility from the 'vanitygen' package (old default)
+    3) using bitcoincore.org's secp256k1 library (default from v0.8.6)
 
 This test suite compares the output of these different methods against each
 other over set of randomly generated secret keys ({snum} by default).
