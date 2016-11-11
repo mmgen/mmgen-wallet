@@ -227,10 +227,9 @@ if opt.mmgen_keys_from_file:
 
 if opt.keys_from_file:
 	l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
-	kl = KeyAddrList(keylist=l)
+	kl = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept bitcoind wallet dumps
 	if kal: kl.remove_dups(kal,key='wif')
 	kl.generate_addrs()
-# pp_die(kl)
 
 tx_num_str = ''
 for tx_num,tx_file in enumerate(tx_files,1):

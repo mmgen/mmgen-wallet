@@ -25,14 +25,17 @@ import time
 from mmgen.common import *
 from mmgen.addr import AddrList,KeyAddrList
 
+# In batch mode, bitcoind just rescans each address separately anyway, so make
+# --batch and --rescan incompatible.
+
 opts_data = {
-	'desc': """Import addresses (both {pnm} and non-{pnm}) into a bitcoind
+	'desc': """Import addresses (both {pnm} and non-{pnm}) into an {pnm}
                      tracking wallet""".format(pnm=g.proj_name),
 	'usage':'[opts] [mmgen address file]',
 	'options': """
 -h, --help         Print this help message
--b, --batch        Batch mode.  Import all addresses in one RPC call
--l, --addrlist     Address source is a flat list of addresses
+-b, --batch        Import all addresses in one RPC call.
+-l, --addrlist     Address source is a flat list of (non-MMGen) Bitcoin addresses
 -k, --keyaddr-file Address source is a key-address file
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
@@ -42,6 +45,8 @@ opts_data = {
 	'notes': """\n
 This command can also be used to update the comment fields of addresses already
 in the tracking wallet.
+
+The --batch option cannot be used with the --rescan option.
 """
 }
 
@@ -116,12 +121,15 @@ for n,e in enumerate(ai.data):
 	if e.idx:
 		label = '%s:%s' % (ai.seed_id,e.idx)
 		if e.label: label += ' ' + e.label
-	else: label = 'non-{pnm}'.format(pnm=g.proj_name)
+		m = label
+	else:
+		label = 'btc:{}'.format(e.addr)
+		m = 'non-'+g.proj_name
 
 	if opt.batch:
 		arg_list.append((e.addr,label,False))
 	elif opt.rescan:
-		t = threading.Thread(target=import_address, args=(e.addr,label,True))
+		t = threading.Thread(target=import_address,args=[e.addr,label,True])
 		t.daemon = True
 		t.start()
 
@@ -131,7 +139,7 @@ for n,e in enumerate(ai.data):
 			if t.is_alive():
 				elapsed = int(time.time() - start)
 				count = '%s/%s:' % (n+1, ai.num_addrs)
-				msg_r(msg_fmt % (secs_to_hms(elapsed),count,e.addr,'(%s)'%label))
+				msg_r(msg_fmt % (secs_to_hms(elapsed),count,e.addr,'(%s)' % m))
 				time.sleep(1)
 			else:
 				if err_flag: die(2,'\nImport failed')
@@ -140,12 +148,10 @@ for n,e in enumerate(ai.data):
 	else:
 		import_address(e.addr,label,False)
 		count = '%s/%s:' % (n+1, ai.num_addrs)
-		msg_r(msg_fmt % (count, e.addr, '(%s)'%label))
+		msg_r(msg_fmt % (count, e.addr, '(%s)' % m))
 		if err_flag: die(2,'\nImport failed')
 		msg(' - OK')
 
 if opt.batch:
-	if opt.rescan:
-		msg('Warning: this command may take a long time to complete!')
-	ret = c.importaddress(arg_list,batch=True,timeout=(False,3600)[bool(opt.rescan)])
+	ret = c.importaddress(arg_list,batch=True)
 	msg('OK: %s addresses imported' % len(ret))

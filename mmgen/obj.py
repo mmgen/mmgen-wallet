@@ -195,6 +195,7 @@ class AddrIdx(int,InitErrors):
 				m = "'%s': addr idx cannot be less than one" % num
 			else:
 				return me
+
 		return cls.init_fail(m,on_fail)
 
 class AddrIdxList(list,InitErrors):
@@ -349,7 +350,7 @@ class BTCAddr(str,Hilite,InitErrors):
 		cls.arg_chk(cls,on_fail)
 		me = str.__new__(cls,s)
 		from mmgen.bitcoin import verify_addr
-		if verify_addr(s):
+		if type(s) in (str,unicode,BTCAddr) and verify_addr(s):
 			return me
 		else:
 			m = "'%s': value is not a Bitcoin address" % s
@@ -375,13 +376,14 @@ class SeedID(str,Hilite,InitErrors):
 		if seed:
 			from mmgen.seed import Seed
 			from mmgen.util import make_chksum_8
-			assert type(seed) == Seed
-			return str.__new__(cls,make_chksum_8(seed.get_data()))
+			if type(seed) == Seed:
+				return str.__new__(cls,make_chksum_8(seed.get_data()))
 		elif sid:
 			from string import hexdigits
-			assert len(sid) == cls.width and set(sid) <= set(hexdigits.upper())
-			return str.__new__(cls,sid)
-		m = "'%s': value cannot be converted to SeedID" % s
+			if len(sid) == cls.width and set(sid) <= set(hexdigits.upper()):
+				return str.__new__(cls,sid)
+
+		m = "'%s': value cannot be converted to SeedID" % str(seed or sid)
 		return cls.init_fail(m,on_fail)
 
 class MMGenID(str,Hilite,InitErrors):
@@ -395,9 +397,9 @@ class MMGenID(str,Hilite,InitErrors):
 		s = str(s)
 		if ':' in s:
 			a,b = s.split(':',1)
-			sid = SeedID(sid=a,on_fail='return')
+			sid = SeedID(sid=a,on_fail='silent')
 			if sid:
-				idx = AddrIdx(b,on_fail='return')
+				idx = AddrIdx(b,on_fail='silent')
 				if idx:
 					return str.__new__(cls,'%s:%s' % (sid,idx))
 

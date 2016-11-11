@@ -45,6 +45,7 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.test import *
+tn_desc = ('','.testnet')[g.testnet]
 
 start_mscolor()
 
@@ -175,8 +176,8 @@ cfgs = {
 		'seed_len':        128,
 		'seed_id':         'FE3C6545',
 		'ref_bw_seed_id':  '33F10310',
-		'addrfile_chk':    'B230 7526 638F 38CB',
-		'keyaddrfile_chk': 'CF83 32FB 8A8B 08E2',
+		'addrfile_chk':    ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE')[g.testnet],
+		'keyaddrfile_chk': ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35')[g.testnet],
 		'wpasswd':         'reference password',
 		'ref_wallet':      'FE3C6545-D782B529[128,1].mmdat',
 		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
@@ -201,8 +202,8 @@ cfgs = {
 		'seed_len':        192,
 		'seed_id':         '1378FC64',
 		'ref_bw_seed_id':  'CE918388',
-		'addrfile_chk':    '8C17 A5FA 0470 6E89',
-		'keyaddrfile_chk': '9648 5132 B98E 3AD9',
+		'addrfile_chk':    ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81')[g.testnet],
+		'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC')[g.testnet],
 		'wpasswd':         'reference password',
 		'ref_wallet':      '1378FC64-6F0F9BB4[192,1].mmdat',
 		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
@@ -227,17 +228,17 @@ cfgs = {
 		'seed_len':        256,
 		'seed_id':         '98831F3A',
 		'ref_bw_seed_id':  'B48CD7FC',
-		'addrfile_chk':    '6FEF 6FB9 7B13 5D91',
-		'keyaddrfile_chk': '9F2D D781 1812 8BAD',
+		'addrfile_chk':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
+		'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
 		'wpasswd':         'reference password',
-		'ref_wallet':      '98831F3A-27F2BF93[256,1].mmdat',
-		'ref_addrfile':    '98831F3A[1,31-33,500-501,1010-1011].addrs',
-		'ref_keyaddrfile': '98831F3A[1,31-33,500-501,1010-1011].akeys.mmenc',
-		'ref_addrfile_chksum':    '6FEF 6FB9 7B13 5D91',
-		'ref_keyaddrfile_chksum': '9F2D D781 1812 8BAD',
+		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
+		'ref_addrfile':    '98831F3A[1,31-33,500-501,1010-1011]{}.addrs'.format(tn_desc),
+		'ref_keyaddrfile': '98831F3A[1,31-33,500-501,1010-1011]{}.akeys.mmenc'.format(tn_desc),
+		'ref_addrfile_chksum':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
+		'ref_keyaddrfile_chksum': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
 
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
-		'ref_tx_file':     'FFB367[1.234].rawtx',
+		'ref_tx_file':     'FFB367[1.234]{}.rawtx'.format(tn_desc),
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 
@@ -483,6 +484,7 @@ opts_data = {
 -n, --names         Display command names instead of descriptions.
 -I, --non-interactive Non-interactive operation (MS Windows mode)
 -p, --pause         Pause between tests, resuming on keypress.
+-P, --profile       Record the execution time of each script.
 -q, --quiet         Produce minimal output.  Suppress dependency info.
 -r, --resume=c      Resume at command 'c' after interrupted run
 -s, --system        Test scripts and modules installed on system rather
@@ -500,6 +502,7 @@ If no command is given, the whole suite of tests is run.
 
 cmd_args = opts.init(opts_data)
 
+if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True
 if opt.log:
 	log_fd = open(log_file,'a')
@@ -1040,7 +1043,10 @@ class MMGenTestSuite(object):
 			else:
 				return
 
+		if opt.profile: start = time.time()
 		self.__class__.__dict__[cmd](*([self,cmd] + al))
+		if opt.profile:
+			msg('\r\033[50C{:.4f}'.format(time.time() - start))
 
 	def generate_file_deps(self,cmd):
 		return [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
@@ -1410,6 +1416,7 @@ class MMGenTestSuite(object):
 			return
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.hash_preset('new key list','1')
+#		t.passphrase_new('new key list','kafile password')
 		t.passphrase_new('new key list',cfg['kapasswd'])
 		t.written_to_file('Secret keys',oo=True)
 		ok()
@@ -1558,27 +1565,6 @@ class MMGenTestSuite(object):
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
-# 	def pywallet(self,name):  # TODO - check output
-# 		pf = get_tmpfile_fn(cfg,pwfile)
-# 		write_data_to_file(pf,cfg['wpasswd']+'\n',silent=True)
-# 		args = ([],['-q','-P',pf])[ni]
-# 		unenc_wf = os.path.join(ref_dir,'wallet-unenc.dat')
-# 		enc_wf   = os.path.join(ref_dir,'wallet-enc.dat')
-# 		for wf,enc in (unenc_wf,False),(enc_wf,True):
-# 			for w,o,pk in (
-# 				('addresses','a',False),
-# 				('private keys','k',True),
-# 				('json dump','j',True)
-# 			):
-# 				ed = '(%sencrypted wallet, %s)' % (('un','')[bool(enc)],w)
-# 				t = MMGenExpect(name,'mmgen-pywallet', args +
-# 						['-'+o,'-d',cfg['tmpdir']] + [wf], extra_desc=ed)
-# 				if ni: continue
-# 				if pk and enc and not ni:
-# 					t.expect('Enter password: ',cfg['wpasswd']+'\n')
-# 				t.written_to_file(capfirst(w),oo=True)
-# 				if not ni: ok()
-
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
@@ -1685,6 +1671,7 @@ class MMGenTestSuite(object):
 				m = grnbg("Answer 'y' at the interactive prompt if Seed ID is")
 				n = cyan(cfg['seed_id'])
 				msg('\n%s %s' % (m,n))
+			if wtype == 'hic_wallet_old' and opt.profile: msg('')
 			t = MMGenExpect(name,'mmgen-walletchk',
 				add_args + slarg + hparg + of_arg + ic_arg,
 				extra_desc=edesc)
@@ -1789,6 +1776,7 @@ class MMGenTestSuite(object):
 		t.close()
 		ok()
 		# back check of result
+		if opt.profile: msg('')
 		self.walletchk(name,wf,pf=None,
 				desc='mnemonic data',
 				sid=cfg['seed_id'],
@@ -1844,6 +1832,7 @@ class MMGenTestSuite(object):
 		if desc == 'hidden incognito data':
 			add_args += uopts_chk
 			wf = None
+		if opt.profile: msg('')
 		self.walletchk(name,wf,pf=pf,
 			desc=desc,sid=cfg['seed_id'],pw=pw,
 			add_args=add_args,

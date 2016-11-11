@@ -35,73 +35,139 @@ start_mscolor()
 
 rounds = 100
 opts_data = {
-	'desc': "Test address generation using various methods",
-	'usage':'[options] a:b [rounds]',
+	'desc': "Test address generation in various ways",
+	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
 -h, --help         Print this help message
--s, --system       Test scripts and modules installed on system rather than
-                   those in the repo root
 -v, --verbose      Produce more verbose output
+-q, --quiet        Produce quieter output
 """,
 	'notes': """
-{pnm} can generate addresses from secret keys using one of three methods,
-as specified by the user:
+    Tests:
+       A/B:     {prog} a:b [rounds]  (compare output of two key generators)
+       Speed:   {prog} a [rounds]    (test speed of one key generator)
+       Compare: {prog} a <dump file> (compare output of a key generator against wallet dump)
+          where a and b are one of:
+             '1' - native Python ecdsa library (very slow)
+             '2' - 'keyconv' utility from the 'vanitygen' package (old default)
+             '3' - bitcoincore.org's secp256k1 library (default from v0.8.6)
 
-    1) with the native Python ecdsa library (very slow)
-    2) with the 'keyconv' utility from the 'vanitygen' package (old default)
-    3) using bitcoincore.org's secp256k1 library (default from v0.8.6)
-
-This test suite compares the output of these different methods against each
-other over set of randomly generated secret keys ({snum} by default).
-
-EXAMPLE:
-  gentest.py 2:3 1000
-  (compare output of 'keyconv' with secp256k1 library, 1000 rounds)
-""".format(pnm=g.proj_name,snum=rounds)
+EXAMPLES:
+  {prog} 2:3 1000
+    (compare output of 'keyconv' with secp256k1 library, 1000 rounds)
+  {prog} 3 1000
+    (test speed of secp256k1 library address generation, 1000 rounds)
+  {prog} 3 my.dump
+    (compare addrs generated with secp256k1 library to bitcoind wallet dump)
+""".format(prog='gentest.py',pnm=g.proj_name,snum=rounds)
 }
 cmd_args = opts.init(opts_data,add_opts=['exact_output'])
 
 if not 1 <= len(cmd_args) <= 2: opts.usage()
 
+urounds,fh = None,None
+dump = []
 if len(cmd_args) == 2:
 	try:
-		rounds = int(cmd_args[1])
-		assert rounds > 0
+		urounds = int(cmd_args[1])
+		assert urounds > 0
 	except:
-		die(1,"'rounds' must be a positive integer")
+		try:
+			fh = open(cmd_args[1])
+		except:
+			die(1,"Second argument must be filename or positive integer")
+		else:
+			for line in fh.readlines():
+				if 'addr=' in line:
+					x,addr = line.split('addr=')
+					dump.append([x.split()[0],addr.split()[0]])
 
+if urounds: rounds = urounds
+
+a,b = None,None
 try:
 	a,b = cmd_args[0].split(':')
-	a,b = int(a),int(b)
-	for i in a,b: assert 1 <= i <= len(g.key_generators)
-	assert a != b
 except:
-	die(1,"%s: incorrect 'a:b' specifier" % cmd_args[0])
+	try:
+		a = cmd_args[0]
+		a = int(a)
+		assert 1 <= a <= len(g.key_generators)
+	except:
+		die(1,"First argument must be one or two generator IDs, colon separated")
+else:
+	try:
+		a,b = int(a),int(b)
+		for i in a,b: assert 1 <= i <= len(g.key_generators)
+		assert a != b
+	except:
+		die(1,"%s: invalid generator IDs" % cmd_args[0])
 
-if opt.system: sys.path.pop(0)
+def match_error(sec,wif,a_addr,b_addr,a,b):
+	m = ['','py-ecdsa','keyconv','secp256k1','dump']
+	msg_r(red('\nERROR: Addresses do not match!'))
+	die(3,"""
+  sec key   : {}
+  WIF key   : {}
+  {a:10}: {}
+  {b:10}: {}
+""".format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=m[a],b=m[b]).rstrip())
 
-m = "Comparing address generators '{}' and '{}'"
-msg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
-from mmgen.addr import get_privhex2addr_f
-gen_a = get_privhex2addr_f(selector=a)
-gen_b = get_privhex2addr_f(selector=b)
-compressed = False
-for i in range(1,rounds+1):
-	msg_r('\rRound %s/%s ' % (i,rounds))
-	sec = hexlify(os.urandom(32))
-	wif = hex2wif(sec,compressed=compressed)
-	a_addr = gen_a(sec,compressed)
-	b_addr = gen_b(sec,compressed)
-	vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
-	if a_addr != b_addr:
-		msg_r(red('\nERROR: Addresses do not match!'))
-		die(3,"""
-  sec key: {}
-  WIF key: {}
-  {pnm}:   {}
-  keyconv: {}
-""".format(sec,wif,a_addr,b_addr,pnm=g.proj_name).rstrip())
-	if a != 2 and b != 2:
-		compressed = not compressed
+if a and b:
+	m = "Comparing address generators '{}' and '{}'"
+	msg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
+	from mmgen.addr import get_privhex2addr_f
+	gen_a = get_privhex2addr_f(selector=a)
+	gen_b = get_privhex2addr_f(selector=b)
+	compressed = False
+	for i in range(1,rounds+1):
+		msg_r('\rRound %s/%s ' % (i,rounds))
+		sec = hexlify(os.urandom(32))
+		wif = hex2wif(sec,compressed=compressed)
+		a_addr = gen_a(sec,compressed)
+		b_addr = gen_b(sec,compressed)
+		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
+		if a_addr != b_addr:
+			match_error(sec,wif,a_addr,b_addr,a,b)
+		if a != 2 and b != 2:
+			compressed = not compressed
 
-msg(green(('\n','')[bool(opt.verbose)] + 'OK'))
+	msg(green(('\n','')[bool(opt.verbose)] + 'OK'))
+elif a and not fh:
+	m = "Testing speed of address generator '{}'"
+	msg(green(m.format(g.key_generators[a-1])))
+	from mmgen.addr import get_privhex2addr_f
+	gen_a = get_privhex2addr_f(selector=a)
+	import time
+	start = time.time()
+	from struct import pack,unpack
+	seed = os.urandom(28)
+	print 'Incrementing key with each round'
+	print 'Starting key:', hexlify(seed+pack('I',0))
+	compressed = False
+	for i in range(rounds):
+		if not opt.quiet: msg_r('\rRound %s/%s ' % (i+1,rounds))
+		sec = hexlify(seed+pack('I',i))
+		wif = hex2wif(sec,compressed=compressed)
+		a_addr = gen_a(sec,compressed)
+		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
+		if a != 2:
+			compressed = not compressed
+	elapsed = int(time.time() - start)
+	if not opt.quiet: msg('')
+	msg('%s addresses generated in %s second%s' % (rounds,elapsed,('s','')[elapsed==1]))
+elif a and dump:
+	m = "Comparing output of address generator '{}' against wallet dump '{}'"
+	msg(green(m.format(g.key_generators[a-1],cmd_args[1])))
+	if a == 2:
+		msg("NOTE: for compressed addresses, 'python-ecdsa' generator will be used")
+	from mmgen.addr import get_privhex2addr_f
+	gen_a = get_privhex2addr_f(selector=a)
+	from mmgen.bitcoin import wif2hex
+	for n,[wif,a_addr] in enumerate(dump,1):
+		msg_r('\rKey %s/%s ' % (n,len(dump)))
+		sec = wif2hex(wif)
+		compressed = wif[0] != ('5','9')[g.testnet]
+		b_addr = gen_a(sec,compressed)
+		if a_addr != b_addr:
+			match_error(sec,wif,a_addr,b_addr,1 if compressed and a==2 else a,4)
+	msg(green(('\n','')[bool(opt.verbose)] + 'OK'))

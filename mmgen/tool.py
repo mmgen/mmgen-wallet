@@ -74,7 +74,7 @@ cmd_data = OrderedDict([
 	('listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
 	('getbalance',   ['minconf [int=1]']),
 	('txview',       ['<{} TX file> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]']),
-	('twview',       ["sort [str='age']",'reverse [bool=False]','wide [bool=False]','pager [bool=False]']),
+	('twview',       ["sort [str='age']",'reverse [bool=False]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
 
 	('add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
 	('remove_label',    ['<{} address> [str]'.format(pnm)]),
@@ -373,7 +373,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	for d in c.listunspent(0):
 		mmaddr,comment = split2(d['account'])
 		if usr_addr_list and (mmaddr not in usr_addr_list): continue
-		if is_mmgen_id(mmaddr) and d['confirmations'] >= minconf:
+		if (mmaddr[:4] == 'btc:' or is_mmgen_id(mmaddr)) and d['confirmations'] >= minconf:
 			key = mmaddr.replace(':','_')
 			if key in addrs:
 				if addrs[key][2] != d['address']:
@@ -391,7 +391,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		for acct in accts:
 			mmaddr,comment = split2(acct)
 			if usr_addr_list and (mmaddr not in usr_addr_list): continue
-			if is_mmgen_id(mmaddr):
+			if mmaddr[:4] == 'btc:' or is_mmgen_id(mmaddr):
 				key = mmaddr.replace(':','_')
 				if key not in addrs:
 					if showbtcaddrs: save_a.append([acct])
@@ -407,7 +407,7 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		die(0,('No addresses with balances!','No tracked addresses!')[showempty])
 
 	fs = ('{mid} {lbl} {amt}','{mid} {addr} {lbl} {amt}')[showbtcaddrs]
-	max_mmid_len = max(len(k) for k in addrs) or 10
+	max_mmid_len = max([len(k) for k in addrs if k[:4] != 'btc_'] or [10])
 	max_lbl_len =  max(len(addrs[k][1]) for k in addrs) or 7
 	out = [fs.format(
 			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
@@ -419,10 +419,11 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	old_sid = ''
 	def s_mmgen(k): return '{:>0{w}}'.format(k,w=AddrIdx.max_digits+9) # TODO
 	for k in sorted(addrs,key=s_mmgen):
-		if old_sid and old_sid != k[:8]: out.append('')
-		old_sid = k[:8]
+		if old_sid and old_sid != k.split('_')[0]: out.append('')
+		old_sid = k.split('_')[0]
+		m = 'non-'+g.proj_name if k[:4] == 'btc_' else k.replace('_',':')
 		out.append(fs.format(
-			mid=MMGenID(k.replace('_',':')).fmt(width=max_mmid_len,color=True),
+			mid = MMGenID.fmtc(m,width=max_mmid_len,color=True),
 			addr=(addrs[k][2].fmt(color=True) if showbtcaddrs else None),
 			lbl=addrs[k][1].fmt(width=max_lbl_len,color=True,nullrepl='-'),
 			amt=addrs[k][0].fmt('3.0',color=True)))
@@ -460,9 +461,9 @@ def txview(infile,pager=False,terse=False):
 	tx = MMGenTX(infile)
 	tx.view(pager,pause=False,terse=terse)
 
-def twview(pager=False,reverse=False,wide=False,sort='age'):
+def twview(pager=False,reverse=False,wide=False,minconf=1,sort='age'):
 	from mmgen.tw import MMGenTrackingWallet
-	tw = MMGenTrackingWallet()
+	tw = MMGenTrackingWallet(minconf=minconf)
 	tw.do_sort(sort,reverse=reverse)
 	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
 	do_pager(out) if pager else sys.stdout.write(out)

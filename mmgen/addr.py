@@ -58,17 +58,17 @@ internal ECDSA library for address generation.
 def _wif2addr_python(wif):
 	privhex = wif2hex(wif)
 	if not privhex: return False
-	return privnum2addr(int(privhex,16),wif[0] != '5')
+	return privnum2addr(int(privhex,16),wif[0] != ('5','9')[g.testnet])
 
 def _wif2addr_keyconv(wif):
-	if wif[0] == '5':
+	if wif[0] == ('5','9')[g.testnet]:
 		from subprocess import check_output
 		return check_output(['keyconv', wif]).split()[1]
 	else:
 		return _wif2addr_python(wif)
 
 def _wif2addr_secp256k1(wif):
-	return _privhex2addr_secp256k1(wif2hex(wif),wif[0] != '5')
+	return _privhex2addr_secp256k1(wif2hex(wif),wif[0] != ('5','9')[g.testnet])
 
 def _privhex2addr_python(privhex,compressed=False):
 	return privnum2addr(int(privhex,16),compressed)

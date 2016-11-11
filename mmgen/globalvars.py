@@ -45,6 +45,7 @@ no_license           = os.getenv('MMGEN_NOLICENSE')
 bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
 color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
+testnet = (False,True)[bool(os.getenv('MMGEN_TESTNET'))]
 
 proj_name = 'MMGen'
 prog_name = os.path.basename(sys.argv[0])
@@ -63,12 +64,14 @@ incompatible_opts = (
 	('label','keep_label'),
 	('tx_id', 'info'),
 	('tx_id', 'terse_info'),
+	('batch', 'rescan'),
 )
 
 min_screen_width = 80
+minconf = 1
 
 # Global value sets user opt
-dfl_vars = 'seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee','key_generator'
+dfl_vars = 'minconf','seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee','key_generator'
 
 keyconv_exec = 'keyconv'
 

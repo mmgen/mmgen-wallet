@@ -662,7 +662,8 @@ def get_bitcoind_auth_cookie():
 
 def bitcoin_connection():
 
-	host,port,user,passwd = 'localhost',8332,'rpcuser','rpcpassword'
+	port = (8332,18332)[g.testnet]
+	host,user,passwd = 'localhost','rpcuser','rpcpassword'
 	cfg = get_bitcoind_cfg_options((user,passwd))
 	auth_cookie = get_bitcoind_auth_cookie()
 

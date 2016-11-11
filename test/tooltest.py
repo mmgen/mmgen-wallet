@@ -124,7 +124,7 @@ If no command is given, the whole suite of tests is run.
 """
 }
 
-cmd_args = opts.init(opts_data,add_opts=['exact_output'])
+cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
 
 if opt.system: sys.path.pop(0)
 

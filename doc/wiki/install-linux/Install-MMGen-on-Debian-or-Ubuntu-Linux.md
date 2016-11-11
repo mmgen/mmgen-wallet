@@ -2,13 +2,13 @@
 
 Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git
+		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool
 
 Install the Python Cryptography Toolkit:
 
 		$ sudo pip install pycrypto
 
-Install the secp256k1 library
+Install the secp256k1 library:
 
 		$ git clone https://github.com/bitcoin-core/secp256k1.git
 		$ cd secp256k1

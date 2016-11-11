@@ -80,6 +80,7 @@ def read_from_tmpfile(cfg,fn,binary=False):
 	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
 
 def ok():
+	if opt.profile: return
 	if opt.verbose or opt.exact_output:
 		sys.stderr.write(green('OK\n'))
 	else: msg(' OK')

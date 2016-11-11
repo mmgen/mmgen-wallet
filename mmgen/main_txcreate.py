@@ -36,8 +36,9 @@ opts_data = {
 -c, --comment-file= f Source the transaction's comment from file 'f'
 -C, --tx-confs=     c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=       d Specify an alternate directory 'd' for output
--e, --echo-passphrase Print passphrase to screen when typing it
+-e, --clear-screen    Clear screen before displaying unspent outputs
 -f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
+-m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
 -i, --info            Display unspent outputs and exit
 -q, --quiet           Suppress warnings; overwrite files without prompting
 -v, --verbose         Produce more verbose output
@@ -199,7 +200,7 @@ if not opt.info:
 
 	fee_estimate = get_fee_estimate()
 
-tw = MMGenTrackingWallet()
+tw = MMGenTrackingWallet(minconf=opt.minconf)
 tw.view_and_sort()
 tw.display_total()
 

@@ -51,13 +51,15 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The 'zero address':
 # 1111111111111111111114oLvT2 (use step2 = ('0' * 40) to generate)
 
+import mmgen.globalvars as g
+
 def pubhex2hexaddr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()
 	return hashlib_new('ripemd160',step1).hexdigest()
 
-def hexaddr2addr(hexaddr, vers_num='00'):
-	# See above:
-	hexaddr2 = vers_num + hexaddr
+def hexaddr2addr(hexaddr,p2sh=False):
+	# devdoc/ref_transactions.md:
+	hexaddr2 = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr
 	step1 = sha256(unhexlify(hexaddr2)).digest()
 	step2 = sha256(step1).hexdigest()
 	pubkey = hexaddr2 + step2[:8]
@@ -65,9 +67,8 @@ def hexaddr2addr(hexaddr, vers_num='00'):
 	return ('1' * lzeroes) + _numtob58(int(pubkey,16))
 
 def verify_addr(addr,verbose=False,return_hex=False):
-
-	for vers_num,ldigit in ('00','1'),('05','3'):
-		if addr[0] != ldigit: continue
+	for vers_num,ldigit in ('00','1'),('05','3'),('6f','mn'),('c4','2'):
+		if addr[0] not in ldigit: continue
 		num = _b58tonum(addr)
 		if num == False: break
 		addr_hex = '{:050x}'.format(num)
@@ -145,7 +146,7 @@ def b58decode_pad(s):
 # Compressed address support:
 
 def wif2hex(wif):
-	compressed = wif[0] != '5'
+	compressed = wif[0] != ('5','9')[g.testnet]
 	idx = (66,68)[bool(compressed)]
 	num = _b58tonum(wif)
 	if num == False: return False
@@ -153,19 +154,25 @@ def wif2hex(wif):
 	if compressed and key[66:68] != '01': return False
 	round1 = sha256(unhexlify(key[:idx])).digest()
 	round2 = sha256(round1).hexdigest()
-	return key[2:66] if (key[:2] == '80' and key[idx:] == round2[:8]) else False
+	return key[2:66] if (key[:2] == ('80','ef')[g.testnet] and key[idx:] == round2[:8]) else False
 
 def hex2wif(hexpriv,compressed=False):
-	step1 = '80' + hexpriv + ('','01')[bool(compressed)]
+	step1 = ('80','ef')[g.testnet] + hexpriv + ('','01')[bool(compressed)]
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
 	key = step1 + step3[:8]
 	return _numtob58(int(key,16))
 
+# devdoc/guide_wallets.md:
+# Uncompressed public keys start with 0x04; compressed public keys begin with
+# 0x03 or 0x02 depending on whether they're greater or less than the midpoint
+# of the curve.
 def privnum2pubhex(numpriv,compressed=False):
 	pko = ecdsa.SigningKey.from_secret_exponent(numpriv,_secp256k1)
+	# pubkey = 32-byte X coord + 32-byte Y coord (unsigned big-endian)
 	pubkey = hexlify(pko.get_verifying_key().to_string())
-	if compressed:
+	if compressed: # discard Y coord, replace with appropriate version byte
+		# even Y: <0, odd Y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
 		p = ('03','02')[pubkey[-1] in '02468ace']
 		return p+pubkey[:64]
 	else:

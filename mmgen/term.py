@@ -23,9 +23,6 @@ term.py:  Terminal-handling routines for the MMGen suite
 import os,struct
 from mmgen.common import *
 
-CUR_SHOW = '\033[?25h'
-CUR_HIDE = '\033[?25l'
-
 def _kb_hold_protect_unix():
 
 	fd = sys.stdin.fileno()

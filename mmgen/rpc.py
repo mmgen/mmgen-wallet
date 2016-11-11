@@ -20,9 +20,11 @@
 rpc.py:  Bitcoin RPC library for the MMGen suite
 """
 
-import httplib,base64,json,decimal
+import httplib,base64,json
 
 from mmgen.common import *
+from decimal import Decimal
+from mmgen.obj import BTCAmt
 
 class BitcoinRPCConnection(object):
 
@@ -30,7 +32,7 @@ class BitcoinRPCConnection(object):
 
 	def __init__(
 				self,
-				host='localhost',port=8332,
+				host='localhost',port=(8332,18332)[g.testnet],
 				user=None,passwd=None,auth_cookie=None,
 			):
 
@@ -64,7 +66,7 @@ class BitcoinRPCConnection(object):
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
 
-		c = httplib.HTTPConnection(self.host, self.port, False, cf['timeout'])
+		hc = httplib.HTTPConnection(self.host, self.port, False, cf['timeout'])
 
 		if cf['batch']:
 			p = [{'method':cmd,'params':r,'id':n} for n,r in enumerate(args[0],1)]
@@ -80,7 +82,6 @@ class BitcoinRPCConnection(object):
 		dmsg('=== rpc.py debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
 
-		from mmgen.obj import BTCAmt
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
@@ -94,14 +95,14 @@ class BitcoinRPCConnection(object):
 # 			print(dump)
 
 		try:
-			c.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
+			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
 				'Host': self.host,
 				'Authorization': 'Basic ' + base64.b64encode(self.auth_str)
 			})
 		except Exception as e:
 			return die_maybe(None,2,'%s\nUnable to connect to bitcoind' % e)
 
-		r = c.getresponse() # returns HTTPResponse instance
+		r = hc.getresponse() # returns HTTPResponse instance
 
 		if r.status != 200:
 			e1 = r.read()
@@ -118,7 +119,7 @@ class BitcoinRPCConnection(object):
 		if not r2:
 			return die_maybe(r,2,'Error: empty reply')
 
-		from decimal import Decimal
+#		from decimal import Decimal
 		r3 = json.loads(r2.decode('utf8'), parse_float=Decimal)
 		ret = []
 
