@@ -1,0 +1,58 @@
+## Tracking and spending ordinary Bitcoin (non-MMGen) addresses
+
+While not recommended, it is possible to use MMGen to track and spend ordinary
+Bitcoin addresses too, i.e. addresses whose keys you control but which haven't
+been spent to your MMGen wallet.
+
+#### Import the Bitcoin addresses for tracking (online computer):
+
+Make a plain list of the addresses, one address per line, and import the list
+into the tracking wallet:
+
+		$ mmgen-addrimport --rescan -l my_existing_addrs
+
+NOTE: The '--rescan' option forces a rescan of the entire block chain, which is
+required for all addresses with existing balances.  The rescanning process is
+very slow, and Bitcoin Core unfortunately doesn't support rescanning in batch
+mode.  This is why you should always import new addresses into the tracking
+wallet *before* spending into them, whenever possible.
+
+#### Create a keylist file for signing transactions (online computer):
+
+To sign transactions that spend from the Bitcoin addresses you've imported, you
+need their corresponding private keys.
+
+If the key or keys in question are in a bitcoind wallet ('wallet.dat'), you can
+extract them to a keylist file using the 'bitcoin-cli dumpwallet' command:
+
+		$ bitcoin-cli dumpwallet my_secret.keys
+
+This will write the keylist file 'my_secret.keys' to your home directory (or
+maybe to your Bitcoin data directory, results may vary).  If you want it written
+to another location, provide an absolute path.
+
+Note that the keylist file lists your private keys in *unencrypted* form.
+Therefore, it should be backed up to a safe location—to a USB stick, say, or
+your offline computer.  After backing up, securely delete all copies of the list
+on your online computer using a utility such as 'wipe'.
+
+You may also create your own 'my_secret.keys' (or whatever you choose to call
+it) file in a plain text editor.  In it, just list the WIF-format keys
+corresponding to the addresses you've imported, one key per line.
+
+#### Sign a transaction using the keylist (offline computer):
+
+After creating a transaction that spends from one of your ordinary Bitcoin
+addresses, transfer the raw transaction file to your offline computer and sign
+it with the keylist file:
+
+		$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx
+		...
+		Signed transaction written to file 'F9DCBA[6.6].sigtx'
+
+If your transaction also contains MMGen inputs, you'll need to provide a wallet
+for them too, listing it at the end of the command line, like this:
+
+		$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx 89ABCDEF-76543210[256,3].mmdat
+
+That's it!  Your signed transaction is ready to broadcast.

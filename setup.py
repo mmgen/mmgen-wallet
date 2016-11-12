@@ -45,7 +45,7 @@ module1 = Extension(
 setup(
 		name         = 'mmgen',
 		description  = 'A complete Bitcoin offline/online wallet solution for the command line',
-		version      = '0.8.7rc1',
+		version      = '0.8.7',
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',

@@ -46,13 +46,14 @@ bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
 color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
 testnet = (False,True)[bool(os.getenv('MMGEN_TESTNET'))]
+testnet_name = 'testnet3'
 
 proj_name = 'MMGen'
 prog_name = os.path.basename(sys.argv[0])
 author    = 'Philemon'
 email     = '<mmgen-py@yandex.com>'
 Cdates    = '2013-2016'
-version   = '0.8.7rc1'
+version   = '0.8.7'
 
 required_opts = [
 	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',

@@ -105,6 +105,7 @@ class BitcoinRPCConnection(object):
 		r = hc.getresponse() # returns HTTPResponse instance
 
 		if r.status != 200:
+			msgred('RPC Error: {} {}'.format(r.status,r.reason))
 			e1 = r.read()
 			try:
 				e2 = json.loads(e1)['error']['message']

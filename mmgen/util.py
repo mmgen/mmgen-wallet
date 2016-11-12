@@ -653,7 +653,7 @@ def get_bitcoind_cfg_options(cfg_keys):
 
 def get_bitcoind_auth_cookie():
 
-	f = os.path.join(get_homedir(), get_datadir(), '.cookie')
+	f = os.path.join(get_homedir(),get_datadir(),('',g.testnet_name)[g.testnet],'.cookie')
 
 	if file_is_readable(f):
 		return get_lines_from_file(f,'')[0]
