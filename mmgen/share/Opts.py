@@ -21,6 +21,7 @@ Opts.py:  Generic options handling
 """
 
 import sys, getopt
+from mmgen.util import pp_die,pp_msg # DEBUG
 
 def usage(opts_data):
 	print 'USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage'])
@@ -43,26 +44,27 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
 	long_opts  = [i.replace('_','-') for i in long_opts]
 
-	try: cl_opts,args = getopt.getopt(argv[1:], short_opts, long_opts)
+#	pp_msg(long_opts) # DEBUG
+	try: cl_opts,args = getopt.getopt(argv[1:], short_opts.replace('-',''), long_opts)
 	except getopt.GetoptError as err:
 		print str(err); sys.exit(2)
 
-	opts,short_opts_l = {},[]
+	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
+	opts = {}
 
-	for i in short_opts:
-		if i == ':': short_opts_l[-1] += i
-		else:        short_opts_l     += i
-
+#	pp_msg(cl_opts) # DEBUG
+#	pp_msg(sopts_list) # DEBUG
+#	pp_die(args)
 	for opt, arg in cl_opts:
 		if   opt in ('-h','--help'): print_help(opts_data); sys.exit()
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
 			opts[opt[2:].replace('-','_')] = arg
-		elif opt[0] == '-' and opt[1]     in short_opts_l:
-			opts[long_opts[short_opts_l.index(opt[1:])].replace('-','_')] = True
-		elif opt[0] == '-' and opt[1:]+':' in short_opts_l:
-			opts[long_opts[short_opts_l.index(
+		elif opt[1] != '-' and opt[1] in sopts_list:
+			opts[long_opts[sopts_list.index(opt[1:])].replace('-','_')] = True
+		elif opt[1] != '-' and opt[1:]+':' in sopts_list:
+			opts[long_opts[sopts_list.index(
 					opt[1:]+':')][:-1].replace('-','_')] = arg
 		else: assert False, 'Invalid option'
 
@@ -87,7 +89,7 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 def parse_opts(argv,opts_data,opt_filter=None):
 
 	import re
-	pat = r'^-([a-zA-Z0-9]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
+	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
 	od,skip = [],True
 
 	for l in opts_data['options'].strip().splitlines():
@@ -100,12 +102,18 @@ def parse_opts(argv,opts_data,opt_filter=None):
 			if not skip: od[-1][3] += '\n' + l
 
 	opts_data['options'] = '\n'.join(
-		['-{}, --{} {}'.format(d[0],d[1],d[3]) for d in od if d[6] == False]
+		['{:<3} --{} {}'.format(
+			('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
 	)
+#	print opts_data['options']; sys.exit() # DEBUG
+# 	pp_die(od) # DEBUG
 	short_opts    = ''.join([d[0]+d[4] for d in od if d[6] == False])
 	long_opts     = [d[1].replace('-','_')+d[5] for d in od if d[6] == False]
 	skipped_opts  = [d[1].replace('-','_') for d in od if d[6] == True]
+#	pp_die(short_opts) # DEBUG
+#	pp_msg(long_opts) # DEBUG
 
 	opts,args = process_opts(argv,opts_data,short_opts,long_opts)
+#	pp_die(opts) # DEBUG
 
 	return opts,args,short_opts,long_opts,skipped_opts

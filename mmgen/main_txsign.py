@@ -63,6 +63,7 @@ opts_data = {
                       prompting
 -I, --info            Display information about the transaction and exit.
 -t, --terse-info      Like '--info', but produce more concise output.
+--, --testnet         Transaction is for Bitcoin testnet rather than mainnet
 -v, --verbose         Produce more verbose output
 """.format(
 		g=g,pnm=pnm,pnl=pnm.lower(),

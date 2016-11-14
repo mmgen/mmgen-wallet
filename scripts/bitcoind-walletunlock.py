@@ -19,43 +19,22 @@
 bitcoind-walletunlock.py: Unlock a Bitcoin wallet securely
 """
 
-import sys
-from mmgen.Opts import *
-from mmgen.tx import *
-from mmgen.util import msg, my_getpass, my_raw_input
+import sys,getpass
+from mmgen.common import *
 
-prog_name = sys.argv[0].split("/")[-1]
-
-help_data = {
-	'prog_name': prog_name,
+opts_data = {
+	'prog_name': sys.argv[0].split('/')[-1],
 	'desc':    "Unlock a Bitcoin wallet securely",
 	'usage':   "[opts]",
 	'options': """
--h, --help                 Print this help message
--e, --echo-passphrase      Print passphrase to screen when typing it
+-h, --help              Print this help message
+-e, --echo-passphrase   Print passphrase to screen when typing it
+--, --testnet           Use testnet instead of mainnet
 """
 }
 
-short_opts = "he"
-long_opts  = "help","echo_passphrase"
+cmd_args = opts.init(opts_data)
 
-opts,cmd_args = process_opts(sys.argv,help_data,short_opts,long_opts)
+password = (getpass.getpass,raw_input)[bool(opt.echo_passphrase)]('Enter passphrase: ')
 
-c = connect_to_bitcoind()
-
-prompt = "Enter passphrase: "
-if 'echo_passphrase' in opts:
-	password = my_raw_input(prompt)
-else:
-	password = my_getpass(prompt)
-
-from bitcoinrpc import exceptions
-
-try:
-	c.walletpassphrase(password, 9999)
-except exceptions.WalletWrongEncState:
-	msg("Wallet is unencrypted")
-except exceptions.WalletPassphraseIncorrect:
-	msg("Passphrase incorrect")
-except exceptions.WalletAlreadyUnlocked:
-	msg("WARNING: Wallet already unlocked!")
+bitcoin_connection().walletpassphrase(password, 9999); msg('OK')

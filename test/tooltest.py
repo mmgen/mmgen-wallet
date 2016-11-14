@@ -116,6 +116,7 @@ opts_data = {
 -l, --list-cmds     List and describe the tests and commands in the test suite
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root
+--, --testnet       Run on testnet rather than mainnet
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
@@ -125,6 +126,7 @@ If no command is given, the whole suite of tests is run.
 }
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
+if opt.testnet: os.environ['MMGEN_TESTNET'] = '1'
 
 if opt.system: sys.path.pop(0)
 

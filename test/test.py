@@ -45,6 +45,45 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.test import *
+
+tb_cmd = 'scripts/traceback.py'
+log_file = 'test.py_log'
+
+opts_data = {
+#	'sets': [('non_interactive',bool,'verbose',None)],
+	'desc': 'Test suite for the MMGen suite',
+	'usage':'[options] [command(s) or metacommand(s)]',
+	'options': """
+-h, --help          Print this help message.
+-b, --buf-keypress  Use buffered keypresses as with real human input.
+-d, --debug-scripts Turn on debugging output in executed scripts.
+-D, --direct-exec   Bypass pexpect and execute a command directly (for
+                    debugging only).
+-e, --exact-output  Show the exact output of the MMGen script(s) being run.
+-l, --list-cmds     List and describe the commands in the test suite.
+-L, --log           Log commands to file {lf}
+-n, --names         Display command names instead of descriptions.
+-I, --non-interactive Non-interactive operation (MS Windows mode)
+-p, --pause         Pause between tests, resuming on keypress.
+-P, --profile       Record the execution time of each script.
+-q, --quiet         Produce minimal output.  Suppress dependency info.
+-r, --resume=c      Resume at command 'c' after interrupted run
+-s, --system        Test scripts and modules installed on system rather
+                    than those in the repo root.
+-S, --skip-deps     Skip dependency checking for command
+-u, --usr-random    Get random data interactively from user
+--, --testnet       Run on testnet rather than mainnet
+-t, --traceback     Run the command inside the '{tb_cmd}' script.
+-v, --verbose       Produce more verbose output.
+""".format(tb_cmd=tb_cmd,lf=log_file),
+	'notes': """
+
+If no command is given, the whole suite of tests is run.
+"""
+}
+
+cmd_args = opts.init(opts_data)
+
 tn_desc = ('','.testnet')[g.testnet]
 
 start_mscolor()
@@ -56,7 +95,6 @@ scripts = (
 	'walletchk', 'walletconv', 'walletgen'
 )
 
-tb_cmd         = 'scripts/traceback.py'
 hincog_fn      = 'rand_data'
 hincog_bytes   = 1024*1024
 hincog_offset  = 98765
@@ -466,41 +504,8 @@ meta_cmds = OrderedDict([
 ])
 
 del cmd_group
-log_file = 'test.py_log'
 
-opts_data = {
-#	'sets': [('non_interactive',bool,'verbose',None)],
-	'desc': 'Test suite for the MMGen suite',
-	'usage':'[options] [command(s) or metacommand(s)]',
-	'options': """
--h, --help          Print this help message.
--b, --buf-keypress  Use buffered keypresses as with real human input.
--d, --debug-scripts Turn on debugging output in executed scripts.
--D, --direct-exec   Bypass pexpect and execute a command directly (for
-                    debugging only).
--e, --exact-output  Show the exact output of the MMGen script(s) being run.
--l, --list-cmds     List and describe the commands in the test suite.
--L, --log           Log commands to file {lf}
--n, --names         Display command names instead of descriptions.
--I, --non-interactive Non-interactive operation (MS Windows mode)
--p, --pause         Pause between tests, resuming on keypress.
--P, --profile       Record the execution time of each script.
--q, --quiet         Produce minimal output.  Suppress dependency info.
--r, --resume=c      Resume at command 'c' after interrupted run
--s, --system        Test scripts and modules installed on system rather
-                    than those in the repo root.
--S, --skip-deps     Skip dependency checking for command
--u, --usr-random    Get random data interactively from user
--t, --traceback     Run the command inside the '{tb_cmd}' script.
--v, --verbose       Produce more verbose output.
-""".format(tb_cmd=tb_cmd,lf=log_file),
-	'notes': """
-
-If no command is given, the whole suite of tests is run.
-"""
-}
-
-cmd_args = opts.init(opts_data)
+if opt.testnet: os.environ['MMGEN_TESTNET'] = '1'
 
 if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True

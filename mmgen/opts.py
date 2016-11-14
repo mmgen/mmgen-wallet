@@ -130,8 +130,10 @@ def init(opts_data,add_opts=[],opt_filter=None):
 			g.required_opts + add_opts + skipped_opts:
 		setattr(opt,o,uopts[o] if o in uopts else None)
 
-	# A special case - do this here, before opt gets set from g.dfl_vars
+	# User opt sets global var - do these here, before opt gets set from g.dfl_vars
 	if opt.usr_randchars: g.use_urandchars = True
+	for k in g.usr_sets_global:
+		if getattr(opt,k): setattr(g,k,True)
 
 	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
 	# If unset, set it to default value in mmgen.globalvars (g)

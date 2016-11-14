@@ -20,6 +20,9 @@
 globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
+version      = '0.8.7a'
+release_date = 'November 2016'
+
 import sys,os
 
 # Variables - these might be altered at runtime:
@@ -53,12 +56,11 @@ prog_name = os.path.basename(sys.argv[0])
 author    = 'Philemon'
 email     = '<mmgen-py@yandex.com>'
 Cdates    = '2013-2016'
-version   = '0.8.7'
 
 required_opts = [
-	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file',
-	'usr_randchars','stdout','show_hash_presets','label',
-	'keep_passphrase','keep_hash_preset','brain_params','b16'
+	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
+	'show_hash_presets','label','keep_passphrase','keep_hash_preset',
+	'brain_params','b16','usr_randchars'
 ]
 incompatible_opts = (
 	('quiet','verbose'),
@@ -71,8 +73,12 @@ incompatible_opts = (
 min_screen_width = 80
 minconf = 1
 
-# Global value sets user opt
+# Global var sets user opt:
 dfl_vars = 'minconf','seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee','key_generator'
+
+# User opt sets global var:
+usr_sets_global = ['testnet']
+required_opts += usr_sets_global
 
 keyconv_exec = 'keyconv'
 

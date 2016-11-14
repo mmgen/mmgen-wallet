@@ -2,4 +2,10 @@ include README.md SIGNING_KEY.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
 include test/*.py
 include test/ref/*
+
+include scripts/bitcoind-walletunlock.py
+include scripts/compute-file-chksum.py
+include scripts/deinstall.sh
+include scripts/tx-old2new.py
+
 prune test/ref/__db*

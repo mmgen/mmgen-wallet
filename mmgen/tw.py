@@ -123,7 +123,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			my_raw_input(m1+'\n'+m2.format(g.min_screen_width))
 
 	def display(self):
-		if opt.clear_screen: msg(CUR_HOME+ERASE_ALL)
+		if not opt.no_blank: msg(CUR_HOME+ERASE_ALL)
 		msg(self.format_for_display())
 
 	def format_for_display(self):

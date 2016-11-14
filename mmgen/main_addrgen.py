@@ -34,7 +34,7 @@ By default, both addresses and secret keys are generated.
 """.strip()
 else:
 	gen_what = 'addresses'
-	opt_filter = 'hbcdeiHOKlpzPqSv'
+	opt_filter = 'hbcdeiHOKlpzPqSv-'
 	note1 = """
 If available, the external 'keyconv' program will be used for address
 generation.
@@ -66,6 +66,7 @@ opts_data = {
 -P, --passwd-file= f  Get wallet passphrase from file 'f'.
 -q, --quiet           Produce quieter output; suppress some warnings.
 -S, --stdout          Print {what} to stdout.
+--, --testnet         Generate testnet keys/addresses instead of mainnet ones
 -v, --verbose         Produce more verbose output.
 -x, --b16             Print secret keys in hexadecimal too.
 """.format(

@@ -39,8 +39,9 @@ opts_data = {
 	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
 -h, --help         Print this help message
--v, --verbose      Produce more verbose output
 -q, --quiet        Produce quieter output
+--, --testnet      Run for testnet rather than mainnet
+-v, --verbose      Produce more verbose output
 """,
 	'notes': """
     Tests:

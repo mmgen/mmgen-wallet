@@ -42,10 +42,11 @@ module1 = Extension(
 	include_dirs = ['/usr/local/include'],
 	)
 
+from mmgen.globalvars import version
 setup(
 		name         = 'mmgen',
 		description  = 'A complete Bitcoin offline/online wallet solution for the command line',
-		version      = '0.8.7',
+		version      = version,
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -100,6 +101,6 @@ setup(
 			'mmgen-txcreate',
 			'mmgen-txsign',
 			'mmgen-txsend',
-			'mmgen-tool',
+			'mmgen-tool'
 		]
 	)

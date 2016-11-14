@@ -1,7 +1,9 @@
 #!/bin/bash
 
-CMD='rm -r /usr/local/bin/mmgen-* /usr/local/lib/python2.7/dist-packages/mmgen*'
+CMD='rm -rf /usr/local/bin/mmgen-* /usr/local/lib/python2.7/dist-packages/mmgen*'
 
-set -x
-
-if [ "$EUID" = 0 ]; then $CMD; else sudo $CMD; fi
+if [ "$EUID" = 0 ]; then
+	set -x; $CMD
+else
+	set -x; sudo $CMD
+fi

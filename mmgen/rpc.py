@@ -152,6 +152,7 @@ class BitcoinRPCConnection(object):
 		'sendrawtransaction',
 		'signrawtransaction',
 		'getrawmempool',
+		'walletpassphrase',
 	)
 
 	for name in rpcmethods:

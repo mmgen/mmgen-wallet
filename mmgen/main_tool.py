@@ -34,6 +34,7 @@ opts_data = {
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
+--, --testnet         Use Bitcoin testnet instead of mainnet
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """

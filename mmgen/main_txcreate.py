@@ -33,14 +33,15 @@ opts_data = {
 	'options': """
 -h, --help            Print this help message
 -a, --tx-fee-adj=   f Adjust transaction fee by factor 'f' (see below)
+-B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file= f Source the transaction's comment from file 'f'
 -C, --tx-confs=     c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=       d Specify an alternate directory 'd' for output
--e, --clear-screen    Clear screen before displaying unspent outputs
 -f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
 -m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
 -i, --info            Display unspent outputs and exit
 -q, --quiet           Suppress warnings; overwrite files without prompting
+--, --testnet         Create transaction for Bitcoin testnet instead of mainnet
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """
