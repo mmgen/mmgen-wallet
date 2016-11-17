@@ -18,6 +18,7 @@
 
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
+from distutils.command.install_data import install_data
 import sys,os
 from shutil import copy2
 
@@ -32,6 +33,12 @@ class my_build_ext(build_ext):
 		os.chmod(ext_src,0755)
 		print 'copying %s to %s' % (ext_src,ext_dest)
 		copy2(ext_src,ext_dest)
+
+class my_install_data(install_data):
+	def run(self):
+		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
+			os.chmod('data_files/'+f,0644)
+		install_data.run(self)
 
 module1 = Extension(
 	name         = 'mmgen.secp256k1',
@@ -53,7 +60,7 @@ setup(
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows, Raspberry PI',
 		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous',
-		cmdclass     = { 'build_ext': my_build_ext },
+		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
 		# disable building of secp256k1 extension module on Windows
 		ext_modules = [module1] if sys.platform[:5] == 'linux' else [],
 		data_files = [('share/mmgen', [

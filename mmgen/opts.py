@@ -58,6 +58,7 @@ def die_on_incompatible_opts(incompat_list):
 		if len(bad) > 1:
 			die(1,'Conflicting options: %s' % ', '.join([fmt_opt(b) for b in bad]))
 
+# TODO - delete
 # def _typeconvert_from_dfl(key):
 #
 # 	global opt

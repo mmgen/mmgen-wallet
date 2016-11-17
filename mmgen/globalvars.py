@@ -116,7 +116,7 @@ class g(object):
 
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
-						'tx_confs','tx_fee_adj','tx_fee','key_generator']
+                       'tx_confs','tx_fee_adj','tx_fee','key_generator']
 
 	keyconv_exec = 'keyconv'
 
