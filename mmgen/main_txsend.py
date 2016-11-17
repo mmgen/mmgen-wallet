@@ -29,9 +29,9 @@ opts_data = {
 	'usage':   '[opts] <signed transaction file>',
 	'options': """
 -h, --help      Print this help message
+--, --longhelp  Print help message for long options (common options)
 -d, --outdir= d Specify an alternate directory 'd' for output
 -q, --quiet     Suppress warnings; overwrite files without prompting
---, --testnet   Use Bitcoin testnet instead of mainnet
 """
 }
 

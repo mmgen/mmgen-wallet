@@ -92,6 +92,7 @@ class MMGenObject(object):
 
 		return repr(self) + '\n    ' + '\n    '.join(out)
 
+# Descriptor: https://docs.python.org/2/howto/descriptor.html
 class MMGenListItemAttr(object):
 	def __init__(self,name,dtype):
 		self.name = name
@@ -109,7 +110,7 @@ class MMGenListItem(MMGenObject):
 	addr = MMGenListItemAttr('addr','BTCAddr')
 	amt  = MMGenListItemAttr('amt','BTCAmt')
 	mmid = MMGenListItemAttr('mmid','MMGenID')
-	label = MMGenListItemAttr('label','MMGenLabel')
+	label = MMGenListItemAttr('label','MMGenAddrLabel')
 
 	attrs = ()
 	attrs_priv = ()
@@ -269,7 +270,7 @@ class Hilite(object):
 
 	@classmethod
 	def colorize(cls,s,color=True):
-		import mmgen.globalvars as g
+		from mmgen.globalvars import g
 		from mmgen.util import red,blue,green,yellow,pink,cyan,gray,orange,magenta
 		k = color if type(color) is str else cls.color # hack: override color with str value
 		return locals()[k](s) if (color or cls.color_always) and g.color else s

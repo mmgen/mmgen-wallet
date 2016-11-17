@@ -114,7 +114,6 @@ class SeedSource(MMGenObject):
 				self.msg.update(c._msg)
 
 		if hasattr(self,'seed'):
-			g.use_urandchars = True
 			self._encrypt()
 			return
 		elif hasattr(self,'infile'):

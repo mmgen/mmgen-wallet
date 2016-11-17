@@ -32,14 +32,14 @@ class BitcoinRPCConnection(object):
 
 	def __init__(
 				self,
-				host='localhost',port=(8332,18332)[g.testnet],
+				host=g.rpc_host,port=(8332,18332)[g.testnet],
 				user=None,passwd=None,auth_cookie=None,
 			):
 
-		if auth_cookie:
-			self.auth_str = auth_cookie
-		elif user and passwd:
+		if user and passwd:
 			self.auth_str = '{}:{}'.format(user,passwd)
+		elif auth_cookie:
+			self.auth_str = auth_cookie
 		else:
 			msg('Error: no Bitcoin RPC authentication method found')
 			if passwd: die(1,"'rpcuser' entry missing in bitcoin.conf")

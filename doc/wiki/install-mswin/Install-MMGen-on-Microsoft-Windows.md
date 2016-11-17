@@ -1,7 +1,7 @@
 ***Warning: the MMGen installation process on Windows is not for the faint of
-heart, and the user experience is less than optimal.  You're urged to use the
-prebuilt [MMGenLive][00] USB image instead.  It's now the preferred way for all
-non-Linux users to run MMGen.***
+heart, success is not guaranteed and the user experience is less than optimal.
+You're urged to use the prebuilt [MMGenLive][00] USB image instead.  It's now
+the preferred way for all non-Linux users to run MMGen.***
 
 Install MMGen on Windows by completing the following three steps:
 

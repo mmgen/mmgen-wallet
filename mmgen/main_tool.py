@@ -30,11 +30,11 @@ opts_data = {
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
 -P, --passwd-file= f  Get passphrase from file 'f'.
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
---, --testnet         Use Bitcoin testnet instead of mainnet
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """

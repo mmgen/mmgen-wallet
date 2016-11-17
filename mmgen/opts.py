@@ -23,7 +23,7 @@ import sys
 
 class opt(object): pass
 
-import mmgen.globalvars as g
+from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
@@ -58,34 +58,34 @@ def die_on_incompatible_opts(incompat_list):
 		if len(bad) > 1:
 			die(1,'Conflicting options: %s' % ', '.join([fmt_opt(b) for b in bad]))
 
-def _typeconvert_from_dfl(key):
-
-	global opt
-
-	gval = g.__dict__[key]
-	uval = opt.__dict__[key]
-	gtype = type(gval)
-
-	try:
-		setattr(opt,key,gtype(uval))
-	except:
-		d = {
-			'int':   'an integer',
-			'str':   'a string',
-			'float': 'a float',
-			'bool':  'a boolean value',
-		}
-		die(1, "'%s': invalid parameter for '--%s' option (not %s)" % (
-			uval,
-			key.replace('_','-'),
-			d[gtype.__name__]
-		))
-
-	if g.debug:
-		Msg('Opt overriden by user:\n    %-18s: %s' % (
-				key, ('%s -> %s' % (gval,uval))
-			))
-
+# def _typeconvert_from_dfl(key):
+#
+# 	global opt
+#
+# 	gval = g.__dict__[key]
+# 	uval = opt.__dict__[key]
+# 	gtype = type(gval)
+#
+# 	try:
+# 		setattr(opt,key,gtype(uval))
+# 	except:
+# 		d = {
+# 			'int':   'an integer',
+# 			'str':   'a string',
+# 			'float': 'a float',
+# 			'bool':  'a boolean value',
+# 		}
+# 		die(1, "'%s': invalid parameter for '--%s' option (not %s)" % (
+# 			uval,
+# 			key.replace('_','-'),
+# 			d[gtype.__name__]
+# 		))
+#
+# 	if g.debug:
+# 		Msg('Opt overriden by user:\n    %-18s: %s' % (
+# 				key, ('%s -> %s' % (gval,uval))
+# 			))
+#
 def fmt_opt(o): return '--' + o.replace('_','-')
 
 def _show_hash_presets():
@@ -96,17 +96,27 @@ def _show_hash_presets():
 		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
+common_opts_data = """
+--, --color=b      Set 'b' to '0' to disable color output, '1' to enable
+--, --no-license   Suppress the GPL license prompt
+--, --rpc-host=h   Communicate with bitcoind running on host 'h'
+--, --testnet      Use testnet instead of mainnet
+"""
+
 def init(opts_data,add_opts=[],opt_filter=None):
 
 	if len(sys.argv) == 2 and sys.argv[1] == '--version':
 		print_version_info()
 		sys.exit()
 
+	opts_data['long_options'] = common_opts_data
+
 	uopts,args,short_opts,long_opts,skipped_opts = \
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.debug:
 		d = (
+			('Cmdline',            ' '.join(sys.argv)),
 			('Short opts',         short_opts),
 			('Long opts',          long_opts),
 			('Skipped opts',       skipped_opts),
@@ -127,20 +137,21 @@ def init(opts_data,add_opts=[],opt_filter=None):
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
 	for o in [s.rstrip('=') for s in long_opts] + \
-			g.required_opts + add_opts + skipped_opts:
+			g.required_opts + add_opts + skipped_opts + g.common_opts:
 		setattr(opt,o,uopts[o] if o in uopts else None)
 
-	# User opt sets global var - do these here, before opt gets set from g.dfl_vars
-	if opt.usr_randchars: g.use_urandchars = True
-	for k in g.usr_sets_global:
-		if getattr(opt,k): setattr(g,k,True)
+	# User opt sets global var - do these here, before opt is set from g.global_sets_opt
+	for k in g.common_opts:
+		val = getattr(opt,k)
+		if val != None: setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
 	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
 	# If unset, set it to default value in mmgen.globalvars (g)
 	setattr(opt,'set_by_user',[])
-	for k in g.dfl_vars:
-		if k in opt.__dict__ and opt.__dict__[k] != None:
-			_typeconvert_from_dfl(k)
+	for k in g.global_sets_opt:
+		if k in opt.__dict__ and getattr(opt,k) != None:
+#			_typeconvert_from_dfl(k)
+			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
 			opt.set_by_user.append(k)
 		else:
 			setattr(opt,k,g.__dict__[k])
@@ -153,9 +164,8 @@ def init(opts_data,add_opts=[],opt_filter=None):
 		_show_hash_presets()
 		sys.exit()
 
-	if opt.debug: opt.verbose = True
-
 	if g.debug:
+		opt.verbose = True
 		a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
 		b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
 		Msg('    Opts after processing:')

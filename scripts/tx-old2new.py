@@ -9,6 +9,7 @@ from mmgen.common import *
 from mmgen.tool import *
 from mmgen.tx import *
 from mmgen.bitcoin import *
+from mmgen.obj import MMGenTXLabel
 from mmgen.seed import *
 from mmgen.term import do_pager
 
@@ -24,7 +25,6 @@ import mmgen.opts
 cmd_args = opts.init(help_data)
 
 if len(cmd_args) != 1: opts.usage()
-
 def parse_tx_file(infile):
 
 	err_str,err_fmt = '','Invalid %s in transaction file'
@@ -57,9 +57,9 @@ def parse_tx_file(infile):
 							if comment == False:
 								err_str = 'encoded comment (not base58)'
 							else:
-								if is_valid_tx_comment(comment):
-									comment = comment.decode('utf8')
-								else:
+								try:
+									comment = MMGenTXLabel(comment)
+								except:
 									err_str = 'comment'
 
 	if err_str:

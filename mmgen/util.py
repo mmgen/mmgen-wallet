@@ -25,10 +25,6 @@ from hashlib import sha256
 from binascii import hexlify,unhexlify
 from string import hexdigits
 
-import mmgen.globalvars as g
-
-pnm = g.proj_name
-
 # If 88- or 256-color support is compiled, the following apply.
 #    P s = 3 8 ; 5 ; P s -> Set foreground color to the second P s .
 #    P s = 4 8 ; 5 ; P s -> Set background color to the second P s .
@@ -56,19 +52,6 @@ def gray(s):    return _gry+s+_reset
 def magenta(s): return _mag+s+_reset
 def nocolor(s): return s
 
-def start_mscolor():
-	if g.platform == 'win':
-		global red,green,yellow,cyan,nocolor
-		import os
-		if 'MMGEN_NOMSCOLOR' in os.environ:
-			red = green = yellow = cyan = grnbg = nocolor
-		else:
-			try:
-				import colorama
-				colorama.init(strip=True,convert=True)
-			except:
-				red = green = yellow = cyan = grnbg = nocolor
-
 def msg(s):    sys.stderr.write(s+'\n')
 def msg_r(s):  sys.stderr.write(s)
 def Msg(s):    sys.stdout.write(s + '\n')
@@ -83,9 +66,11 @@ def mdie(*args):
 	sys.exit()
 
 def die(ev=0,s=''):
+	assert type(ev) == int
 	if s: sys.stderr.write(s+'\n')
 	sys.exit(ev)
 def Die(ev=0,s=''):
+	assert type(ev) == int
 	if s: sys.stdout.write(s+'\n')
 	sys.exit(ev)
 
@@ -100,6 +85,23 @@ def pp_die(d):
 def pp_msg(d):
 	import pprint
 	msg(pprint.PrettyPrinter(indent=4).pformat(d))
+
+def set_for_type(val,refval,desc,invert_bool=False,src=None):
+	src_str = (''," in '{}'".format(src))[bool(src)]
+	if type(refval) == bool:
+		v = str(val).lower()
+		if v in ('true','yes','1'):          ret = True
+		elif v in ('false','no','none','0'): ret = False
+		else: die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
+				val,desc,src_str,'bool'))
+		if invert_bool: ret = not ret
+	else:
+		try:
+			ret = type(refval)((val,not val)[invert_bool])
+		except:
+			die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
+				val,desc,src_str,type(refval).__name__))
+	return ret
 
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
@@ -265,18 +267,6 @@ def file_is_readable(f):
 	else:
 		return True
 
-def get_homedir():
-	if 'HOME' in os.environ:       # Linux
-		return os.environ['HOME']
-	elif 'HOMEPATH' in os.environ: # Windows:
-		return os.environ['HOMEPATH']
-	else:
-		msg('Neither $HOME nor %HOMEPATH% are set')
-		die(2,"Don't know where to look for bitcoin data directory")
-
-def get_datadir():
-	return (r'Application Data\Bitcoin','.bitcoin')['HOME' in os.environ]
-
 def get_from_brain_opt_params():
 	l,p = opt.from_brain.split(',')
 	return(int(l),p)
@@ -300,6 +290,27 @@ def decode_pretty_hexdump(data):
 	except:
 		msg('Data not in hexdump format')
 		return False
+
+def strip_comments(line):
+	return re.sub(ur'\s+$',u'',re.sub(ur'#.*',u'',line,1))
+
+def remove_comments(lines):
+	return [m for m in [strip_comments(l) for l in lines] if m != '']
+
+from mmgen.globalvars import g
+
+def start_mscolor():
+	if g.platform == 'win':
+		global red,green,yellow,cyan,nocolor
+		import os
+		if 'MMGEN_NOMSCOLOR' in os.environ:
+			red = green = yellow = cyan = grnbg = nocolor
+		else:
+			try:
+				import colorama
+				colorama.init(strip=True,convert=True)
+			except:
+				red = green = yellow = cyan = grnbg = nocolor
 
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
@@ -509,14 +520,6 @@ def get_words(infile,desc,prompt):
 	else:
 		return get_words_from_user(prompt)
 
-def remove_comments(lines):
-	ret = []
-	for i in lines:
-		i = re.sub(ur'#.*',u'',i,1)
-		i = re.sub(ur'\s+$',u'',i)
-		if i: ret.append(i)
-	return ret
-
 def mmgen_decrypt_file_maybe(fn,desc=''):
 	d = get_data_from_file(fn,desc,binary=True)
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
@@ -641,7 +644,7 @@ def do_license_msg(immed=False):
 
 def get_bitcoind_cfg_options(cfg_keys):
 
-	cfg_file = os.path.join(get_homedir(), get_datadir(), 'bitcoin.conf')
+	cfg_file = os.path.join(g.bitcoin_data_dir,'bitcoin.conf')
 
 	cfg = dict([(k,v) for k,v in [split2(str(line).translate(None,'\t '),'=')
 			for line in get_lines_from_file(cfg_file,'')] if k in cfg_keys]) \
@@ -653,7 +656,8 @@ def get_bitcoind_cfg_options(cfg_keys):
 
 def get_bitcoind_auth_cookie():
 
-	f = os.path.join(get_homedir(),get_datadir(),('',g.testnet_name)[g.testnet],'.cookie')
+	f = os.path.join(g.bitcoin_data_dir,('',g.testnet_name)[g.testnet],
+						('.','_')[g.platform=='win']+'cookie')
 
 	if file_is_readable(f):
 		return get_lines_from_file(f,'')[0]
@@ -663,7 +667,7 @@ def get_bitcoind_auth_cookie():
 def bitcoin_connection():
 
 	port = (8332,18332)[g.testnet]
-	host,user,passwd = 'localhost','rpcuser','rpcpassword'
+	host,user,passwd = g.rpc_host,'rpcuser','rpcpassword'
 	cfg = get_bitcoind_cfg_options((user,passwd))
 	auth_cookie = get_bitcoind_auth_cookie()
 

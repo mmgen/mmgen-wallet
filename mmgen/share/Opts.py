@@ -21,20 +21,21 @@ Opts.py:  Generic options handling
 """
 
 import sys, getopt
-from mmgen.util import pp_die,pp_msg # DEBUG
+# from mmgen.util import mdie,die,pp_die,pp_msg # DEBUG
 
 def usage(opts_data):
 	print 'USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage'])
 	sys.exit(2)
 
-def print_help(opts_data):
+def print_help(opts_data,longhelp=False):
 	pn = opts_data['prog_name']
 	pn_len = str(len(pn)+2)
 	print ('  %-'+pn_len+'s %s') % (pn.upper()+':', opts_data['desc'].strip())
 	print ('  %-'+pn_len+'s %s %s')%('USAGE:', pn, opts_data['usage'].strip())
-	sep = '\n    '
-	print '  OPTIONS:' + sep + sep.join(opts_data['options'].strip().splitlines())
-	if 'notes' in opts_data:
+	od_opts = opts_data[('options','long_options')[longhelp]].strip().splitlines()
+	sep,m,ls = (('\n    ','  OPTIONS:',''),('\n','  LONG OPTIONS:','    '))[longhelp]
+	print m + sep + ls + sep.join(od_opts)
+	if 'notes' in opts_data and not longhelp:
 		print '  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
 
 
@@ -44,19 +45,17 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
 	long_opts  = [i.replace('_','-') for i in long_opts]
 
-#	pp_msg(long_opts) # DEBUG
-	try: cl_opts,args = getopt.getopt(argv[1:], short_opts.replace('-',''), long_opts)
+	so_str = short_opts.replace('-:','').replace('-','')
+	try: cl_opts,args = getopt.getopt(argv[1:], so_str, long_opts)
 	except getopt.GetoptError as err:
 		print str(err); sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
 	opts = {}
 
-#	pp_msg(cl_opts) # DEBUG
-#	pp_msg(sopts_list) # DEBUG
-#	pp_die(args)
 	for opt, arg in cl_opts:
 		if   opt in ('-h','--help'): print_help(opts_data); sys.exit()
+		elif opt == '--longhelp':    print_help(opts_data,longhelp=True); sys.exit()
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
@@ -90,30 +89,28 @@ def parse_opts(argv,opts_data,opt_filter=None):
 
 	import re
 	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
-	od,skip = [],True
+	od_all = []
 
-	for l in opts_data['options'].strip().splitlines():
-		m = re.match(pat,l)
-		if m:
-			skip = (False,True)[bool(opt_filter) and m.group(1) not in opt_filter]
-			app = (['',''],[':','='])[m.group(3) == '=']
-			od.append(list(m.groups()) + app + [skip])
-		else:
-			if not skip: od[-1][3] += '\n' + l
+	for k in ('options','long_options'):
+		od,skip = [],True
+		for l in opts_data[k].strip().splitlines():
+			m = re.match(pat,l)
+			if m:
+				skip = (False,True)[bool(opt_filter) and m.group(1) not in opt_filter]
+				app = (['',''],[':','='])[m.group(3) == '=']
+				od.append(list(m.groups()) + app + [skip])
+			else:
+				if not skip: od[-1][3] += '\n' + l
 
-	opts_data['options'] = '\n'.join(
-		['{:<3} --{} {}'.format(
-			('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
-	)
-#	print opts_data['options']; sys.exit() # DEBUG
-# 	pp_die(od) # DEBUG
-	short_opts    = ''.join([d[0]+d[4] for d in od if d[6] == False])
-	long_opts     = [d[1].replace('-','_')+d[5] for d in od if d[6] == False]
-	skipped_opts  = [d[1].replace('-','_') for d in od if d[6] == True]
-#	pp_die(short_opts) # DEBUG
-#	pp_msg(long_opts) # DEBUG
+		opts_data[k] = '\n'.join(
+			['{:<3} --{} {}'.format(
+				('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
+		)
+		od_all += od
+	short_opts    = ''.join([d[0]+d[4] for d in od_all if d[6] == False])
+	long_opts     = [d[1].replace('-','_')+d[5] for d in od_all if d[6] == False]
+	skipped_opts  = [d[1].replace('-','_') for d in od_all if d[6] == True]
 
 	opts,args = process_opts(argv,opts_data,short_opts,long_opts)
-#	pp_die(opts) # DEBUG
 
 	return opts,args,short_opts,long_opts,skipped_opts

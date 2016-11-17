@@ -51,7 +51,7 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The 'zero address':
 # 1111111111111111111114oLvT2 (use step2 = ('0' * 40) to generate)
 
-import mmgen.globalvars as g
+from mmgen.globalvars import g
 
 def pubhex2hexaddr(pubhex):
 	step1 = sha256(unhexlify(pubhex)).digest()

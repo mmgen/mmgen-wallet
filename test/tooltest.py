@@ -113,10 +113,10 @@ opts_data = {
 	'usage':'[options] [command]',
 	'options': """
 -h, --help          Print this help message
+--, --longhelp      Print help message for long options (common options)
 -l, --list-cmds     List and describe the tests and commands in the test suite
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root
---, --testnet       Run on testnet rather than mainnet
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
@@ -126,7 +126,10 @@ If no command is given, the whole suite of tests is run.
 }
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
-if opt.testnet: os.environ['MMGEN_TESTNET'] = '1'
+add_spawn_args = ' '.join(['{} {}'.format(
+	'--'+k.replace('_','-'),
+	getattr(opt,k) if getattr(opt,k) != True else ''
+	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
 
 if opt.system: sys.path.pop(0)
 
@@ -187,7 +190,7 @@ class MMGenToolTestSuite(object):
 		if not opt.system:
 			mmgen_tool = os.path.join(os.curdir,mmgen_tool)
 
-		sys_cmd = ['python', mmgen_tool, '-d',cfg['tmpdir'], name] + tool_args + kwargs.split()
+		sys_cmd = ['python',mmgen_tool] + add_spawn_args + ['-r0','-d',cfg['tmpdir'],name] + tool_args + kwargs.split()
 		if extra_msg: extra_msg = '(%s)' % extra_msg
 		full_name = ' '.join([name]+kwargs.split()+extra_msg.split())
 		if not silent:

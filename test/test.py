@@ -319,6 +319,7 @@ cmd_group = OrderedDict()
 cmd_group['help'] = OrderedDict([
 #     test               description                  depends
 	['helpscreens',     (1,'help screens',             [],1)],
+	['longhelpscreens', (1,'help screens (--longhelp)',[],1)],
 ])
 
 cmd_group['main'] = OrderedDict([
@@ -505,7 +506,10 @@ meta_cmds = OrderedDict([
 
 del cmd_group
 
-if opt.testnet: os.environ['MMGEN_TESTNET'] = '1'
+add_spawn_args = ' '.join(['{} {}'.format(
+	'--'+k.replace('_','-'),
+	getattr(opt,k) if getattr(opt,k) != True else ''
+	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
 
 if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True
@@ -521,7 +525,7 @@ ni = bool(opt.non_interactive)
 
 # Disable MS color in spawned scripts due to bad interactions
 os.environ['MMGEN_NOMSCOLOR'] = '1'
-os.environ['MMGEN_NOLICENSE'] = '1'
+os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_DISABLE_COLOR'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 
@@ -688,7 +692,8 @@ class MMGenExpect(object):
 			if type(i) not in (str,unicode):
 				fs = 'Error: missing input files in cmd line?:\nName: {}\nCmd: {}\nCmd args: {}'
 				die(2,fs.format(name,mmgen_cmd,cmd_args))
-		cmd_str = mmgen_cmd + ' ' + ' '.join(cmd_args)
+		cmd_args = add_spawn_args + cmd_args
+		cmd_str = '{} {}'.format(mmgen_cmd,' '.join(cmd_args))
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
 		if opt.verbose or opt.exact_output:
@@ -713,7 +718,7 @@ class MMGenExpect(object):
 			if opt.exact_output: self.p.logfile = sys.stdout
 
 	def license(self):
-		if 'MMGEN_NOLICENSE' in os.environ: return
+		if 'MMGEN_NO_LICENSE' in os.environ: return
 		p = "'w' for conditions and warranty info, or 'c' to continue: "
 		my_expect(self.p,p,'c')
 
@@ -1059,12 +1064,14 @@ class MMGenTestSuite(object):
 	def generate_cmd_deps(self,fdeps):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
-	def helpscreens(self,name):
+	def helpscreens(self,name,arg='--help'):
 		for s in scripts:
-			t = MMGenExpect(name,('mmgen-'+s),['--help'],
+			t = MMGenExpect(name,('mmgen-'+s),[arg],
 				extra_desc='(mmgen-%s)'%s,no_output=True)
 			if not ni:
 				t.read(); ok()
+
+	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
 
 	def walletgen(self,name,seed_len=None):
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+'\n')
@@ -1406,7 +1413,7 @@ class MMGenTestSuite(object):
 			args=['-H','%s,%s'%(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False):
-		args = ['-d',cfg['tmpdir'],wf,cfg['addr_idx_list']]
+		args = ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
 		if ni:
 			m = "\nAnswer 'n' at the interactive prompt"
 			msg(grnbg(m))
@@ -1420,6 +1427,7 @@ class MMGenTestSuite(object):
 			refcheck('key-address data checksum',chk,cfg['keyaddrfile_chk'])
 			return
 		t.expect('Encrypt key list? (y/N): ','y')
+		t.usr_rand(usr_rand_chars)
 		t.hash_preset('new key list','1')
 #		t.passphrase_new('new key list','kafile password')
 		t.passphrase_new('new key list',cfg['kapasswd'])
@@ -1531,8 +1539,9 @@ class MMGenTestSuite(object):
 			app = ['hash_preset=1']
 		else:
 			pre,app = [],[]
-		t = MMGenExpect(name,'mmgen-tool',pre+['-d',cfg['tmpdir'],'encrypt',infn]+app)
+		t = MMGenExpect(name,'mmgen-tool',pre+['-d',cfg['tmpdir'],usr_rand_arg,'encrypt',infn]+app)
 		if ni: return
+		t.usr_rand(usr_rand_chars)
 		t.hash_preset('user data','1')
 		t.passphrase_new('user data',tool_enc_passwd)
 		t.written_to_file('Encrypted data')

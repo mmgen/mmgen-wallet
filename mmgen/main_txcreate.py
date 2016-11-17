@@ -32,6 +32,7 @@ opts_data = {
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 	'options': """
 -h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
 -a, --tx-fee-adj=   f Adjust transaction fee by factor 'f' (see below)
 -B, --no-blank        Don't blank screen before displaying unspent outputs
 -c, --comment-file= f Source the transaction's comment from file 'f'
@@ -41,7 +42,6 @@ opts_data = {
 -m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
 -i, --info            Display unspent outputs and exit
 -q, --quiet           Suppress warnings; overwrite files without prompting
---, --testnet         Create transaction for Bitcoin testnet instead of mainnet
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """

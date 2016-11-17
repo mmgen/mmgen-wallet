@@ -179,24 +179,24 @@ def mswin_dummy_flush(fd,termconst): pass
 try:
 	import tty,termios
 	from select import select
-	if g.disable_hold_protect:
-		get_char = _get_keypress_unix_raw
-		kb_hold_protect = _kb_hold_protect_unix_raw
-	else:
+	if g.hold_protect:
 		get_char = _get_keypress_unix
 		kb_hold_protect = _kb_hold_protect_unix
+	else:
+		get_char = _get_keypress_unix_raw
+		kb_hold_protect = _kb_hold_protect_unix_raw
 	get_terminal_size = _get_terminal_size_linux
 	myflush = termios.tcflush
 # call: myflush(sys.stdin, termios.TCIOFLUSH)
 except:
 	try:
 		import msvcrt,time
-		if g.disable_hold_protect:
-			get_char = _get_keypress_mswin_raw
-			kb_hold_protect = _kb_hold_protect_mswin_raw
-		else:
+		if g.hold_protect:
 			get_char = _get_keypress_mswin
 			kb_hold_protect = _kb_hold_protect_mswin
+		else:
+			get_char = _get_keypress_mswin_raw
+			kb_hold_protect = _kb_hold_protect_mswin_raw
 		get_terminal_size = _get_terminal_size_mswin
 		myflush = mswin_dummy_flush
 	except:
@@ -222,9 +222,9 @@ def do_pager(text):
 			shell = True
 			pagers = ['more']
 		else:                     # MSYS
-			environ['LESS'] = '-cR' # disable buggy line chopping
+			environ['LESS'] = '-cR -#1' # disable buggy line chopping
 	else:
-		environ['LESS'] = '-RS'
+		environ['LESS'] = '-RS -#1' # raw, chop, scroll right 1 char
 
 	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
 		pagers = [environ['PAGER']] + pagers

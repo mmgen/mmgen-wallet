@@ -20,101 +20,197 @@
 globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
-version      = '0.8.7a'
-release_date = 'November 2016'
-
 import sys,os
-
-# Variables - these might be altered at runtime:
-
-user_entropy   = ''
-hash_preset    = '3'
-usr_randchars  = 30
-use_urandchars = False
-
 from mmgen.obj import BTCAmt
-tx_fee        = BTCAmt('0.0003')
-tx_fee_adj    = 1.0
-tx_confs      = 3
 
-seed_len     = 256
-http_timeout = 60
+# Global vars are set to dfl values in class g.
+# They're overridden in this order:
+#   1 - config file
+#   2 - environmental vars
+#   3 - command line
 
-# Constants - these don't change at runtime
+class g(object):
 
-# os.getenv() returns None if environmental var is unset
-debug                = os.getenv('MMGEN_DEBUG')
-no_license           = os.getenv('MMGEN_NOLICENSE')
-bogus_wallet_data    = os.getenv('MMGEN_BOGUS_WALLET_DATA')
-disable_hold_protect = os.getenv('MMGEN_DISABLE_HOLD_PROTECT')
-color = (False,True)[sys.stdout.isatty() and not os.getenv('MMGEN_DISABLE_COLOR')]
-testnet = (False,True)[bool(os.getenv('MMGEN_TESTNET'))]
-testnet_name = 'testnet3'
+	def die(ev=0,s=''):
+		if s: sys.stderr.write(s+'\n')
+		sys.exit(ev)
+	# Variables - these might be altered at runtime:
 
-proj_name = 'MMGen'
-prog_name = os.path.basename(sys.argv[0])
-author    = 'Philemon'
-email     = '<mmgen-py@yandex.com>'
-Cdates    = '2013-2016'
+	version      = '0.8.7a'
+	release_date = 'November 2016'
 
-required_opts = [
-	'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
-	'show_hash_presets','label','keep_passphrase','keep_hash_preset',
-	'brain_params','b16','usr_randchars'
-]
-incompatible_opts = (
-	('quiet','verbose'),
-	('label','keep_label'),
-	('tx_id', 'info'),
-	('tx_id', 'terse_info'),
-	('batch', 'rescan'),
-)
+	proj_name = 'MMGen'
+	prog_name = os.path.basename(sys.argv[0])
+	author    = 'Philemon'
+	email     = '<mmgen-py@yandex.com>'
+	Cdates    = '2013-2016'
 
-min_screen_width = 80
-minconf = 1
+	user_entropy   = ''
+	hash_preset    = '3'
+	usr_randchars  = 30
 
-# Global var sets user opt:
-dfl_vars = 'minconf','seed_len','hash_preset','usr_randchars','debug','tx_confs','tx_fee_adj','tx_fee','key_generator'
+	tx_fee        = BTCAmt('0.0003')
+	tx_fee_adj    = 1.0
+	tx_confs      = 3
 
-# User opt sets global var:
-usr_sets_global = ['testnet']
-required_opts += usr_sets_global
+	seed_len     = 256
+	http_timeout = 60
 
-keyconv_exec = 'keyconv'
+	# Constants - some of these might be overriden, but they don't change thereafter
 
-mins_per_block   = 9
-passwd_max_tries = 5
+	debug                = False
+	no_license           = False
+	hold_protect         = True
+	color                = (False,True)[sys.stdout.isatty()]
+	testnet              = False
+	bogus_wallet_data    = ''
+	rpc_host             = 'localhost'
+	testnet_name         = 'testnet3'
 
-max_urandchars = 80
-_x = os.getenv('MMGEN_MIN_URANDCHARS')
-min_urandchars = int(_x) if _x and int(_x) else 10
+	for k in ('win','linux'):
+		if sys.platform[:len(k)] == k:
+			platform = k; break
+	else:
+		die(1,"'%s': platform not supported by %s\n" % (sys.platform,proj_name))
 
-seed_lens = 128,192,256
-mn_lens = [i / 32 * 3 for i in seed_lens]
+	if os.getenv('HOME'):                             # Linux or MSYS
+		home_dir = os.getenv('HOME')
+	elif platform == 'win' and os.getenv('HOMEPATH'): # Windows:
+		home_dir = os.getenv('HOMEPATH')
+	else:
+		m = ('$HOME is not set','Neither $HOME nor %HOMEPATH% are set')[platform=='win']
+		die(2,m + '\nUnable to determine home directory')
 
-mmenc_ext      = 'mmenc'
-salt_len       = 16
-aesctr_iv_len  = 16
-hincog_chk_len = 8
+	data_dir = (os.path.join(home_dir,'Application Data',proj_name),
+				os.path.join(home_dir,'.'+proj_name.lower()))[bool(os.getenv('HOME'))]
+	bitcoin_data_dir = (os.path.join(home_dir,'Application Data','Bitcoin'),
+				os.path.join(home_dir,'.bitcoin'))[bool(os.getenv('HOME'))]
+	cfg_file = os.path.join(data_dir,'{}.cfg'.format(proj_name.lower()))
 
-key_generators = 'python-ecdsa','keyconv','secp256k1'
-key_generator = 3 # secp256k1 is default
+	common_opts = ['color','no_license','rpc_host','testnet']
+	required_opts = [
+		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
+		'show_hash_presets','label','keep_passphrase','keep_hash_preset',
+		'brain_params','b16','usr_randchars'
+	]
+	incompatible_opts = (
+		('quiet','verbose'),
+		('label','keep_label'),
+		('tx_id','info'),
+		('tx_id','terse_info'),
+		('batch','rescan'),
+	)
+	env_opts = (
+		'MMGEN_BOGUS_WALLET_DATA',
+		'MMGEN_DEBUG',
+		'MMGEN_DISABLE_COLOR',
+		'MMGEN_DISABLE_HOLD_PROTECT',
+		'MMGEN_MIN_URANDCHARS',
+		'MMGEN_NO_LICENSE',
+		'MMGEN_RPC_HOST',
+		'MMGEN_TESTNET'
+	)
 
-hash_presets = {
+	min_screen_width = 80
+	minconf = 1
+
+	# Global var sets user opt:
+	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
+						'tx_confs','tx_fee_adj','tx_fee','key_generator']
+
+	keyconv_exec = 'keyconv'
+
+	mins_per_block   = 9
+	passwd_max_tries = 5
+
+	max_urandchars = 80
+	min_urandchars = 10
+
+	seed_lens = 128,192,256
+	mn_lens = [i / 32 * 3 for i in seed_lens]
+
+	mmenc_ext      = 'mmenc'
+	salt_len       = 16
+	aesctr_iv_len  = 16
+	hincog_chk_len = 8
+
+	key_generators = 'python-ecdsa','keyconv','secp256k1' # 1,2,3
+	key_generator  = 3 # secp256k1 is default
+
+	hash_presets = {
 #   Scrypt params:
 #   ID    N   p  r
 # N is a power of two
-	'1': [12, 8, 1],
-	'2': [13, 8, 4],
-	'3': [14, 8, 8],
-	'4': [15, 8, 12],
-	'5': [16, 8, 16],
-	'6': [17, 8, 20],
-	'7': [18, 8, 24],
-}
+		'1': [12, 8, 1],
+		'2': [13, 8, 4],
+		'3': [14, 8, 8],
+		'4': [15, 8, 12],
+		'5': [16, 8, 16],
+		'6': [17, 8, 20],
+		'7': [18, 8, 24],
+	}
 
-for k in ('win','linux'):
-	if sys.platform[:len(k)] == k: platform = k; break
-else:
-	sys.stderr.write("'%s': platform not supported by %s\n" % (sys.platform,proj_name))
-	sys.exit(1)
+def create_data_dir(g):
+	from mmgen.util import msg,die
+	try:
+		os.listdir(g.data_dir)
+	except:
+		try:
+			os.mkdir(g.data_dir,0700)
+		except:
+			die(2,"ERROR: unable to read or create '{}'".format(g.data_dir))
+
+def get_data_from_config_file(g):
+	from mmgen.util import msg,die
+	# https://wiki.debian.org/Python:
+	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
+	# TODO - test for Windows
+	# This must match the configuration in setup.py
+	data = u''
+	try:
+		with open(g.cfg_file,'rb') as f: data = f.read().decode('utf8')
+	except:
+		cfg_template = os.path.join(*([sys.prefix]
+					+ ([''],['local','share'])[bool(os.getenv('HOME'))]
+					+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
+		try:
+			with open(cfg_template,'rb') as f: template_data = f.read()
+		except:
+			msg("WARNING: configuration template not found at '{}'".format(cfg_template))
+		else:
+			try:
+				with open(g.cfg_file,'wb') as f: f.write(template_data)
+				os.chmod(g.cfg_file,0600)
+			except:
+				die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
+	return data
+
+def override_from_cfg_file(g,cfg_data):
+	from mmgen.util import die,strip_comments,set_for_type
+	cvars = ('color','debug','hash_preset','http_timeout','no_license','rpc_host',
+			'testnet','tx_fee','tx_fee_adj','usr_randchars')
+	import re
+	for n,l in enumerate(cfg_data.splitlines(),1): # DOS-safe
+		l = strip_comments(l)
+		if l == '': continue
+		m = re.match(r'(\w+)\s+(\S+)$',l)
+		if not m: die(2,"Parse error in file '{}', line {}".format(g.cfg_file,n))
+		name,val = m.groups()
+		if name in cvars:
+			setattr(g,name,set_for_type(val,getattr(g,name),name,src=g.cfg_file))
+		else:
+			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
+
+def override_from_env(g):
+	from mmgen.util import set_for_type
+	for name in g.env_opts:
+		idx,invert_bool = ((6,False),(14,True))[name[:14]=='MMGEN_DISABLE_']
+		val = os.getenv(name) # os.getenv() returns None if env var is unset
+		if val:
+			gname = name[idx:].lower()
+			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
+
+create_data_dir(g)
+cfg_data = get_data_from_config_file(g)
+override_from_cfg_file(g,cfg_data)
+override_from_env(g)

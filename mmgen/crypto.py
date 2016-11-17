@@ -186,7 +186,7 @@ def _get_random_data_from_user(uchars):
 def get_random(length):
 	from Crypto import Random
 	os_rand = Random.new().read(length)
-	if g.use_urandchars and opt.usr_randchars:
+	if opt.usr_randchars:
 		from_what = 'OS random data'
 		if not g.user_entropy:
 			g.user_entropy = \

@@ -34,6 +34,7 @@ opts_data = {
 	'usage':'[opts] [mmgen address file]',
 	'options': """
 -h, --help         Print this help message
+--, --longhelp     Print help message for long options (common options)
 -b, --batch        Import all addresses in one RPC call.
 -l, --addrlist     Address source is a flat list of (non-MMGen) Bitcoin addresses
 -k, --keyaddr-file Address source is a key-address file
@@ -41,7 +42,6 @@ opts_data = {
 -r, --rescan       Rescan the blockchain.  Required if address to import is
                    on the blockchain and has a balance.  Rescanning is slow.
 -t, --test         Simulate operation; don't actually import addresses
---, --testnet      Use Bitcoin testnet instead of mainnet
 """,
 	'notes': """\n
 This command can also be used to update the comment fields of addresses already

@@ -34,7 +34,7 @@ By default, both addresses and secret keys are generated.
 """.strip()
 else:
 	gen_what = 'addresses'
-	opt_filter = 'hbcdeiHOKlpzPqSv-'
+	opt_filter = 'hbcdeiHOKlpzPqrSv-'
 	note1 = """
 If available, the external 'keyconv' program will be used for address
 generation.
@@ -46,29 +46,31 @@ opts_data = {
                   mnemonic, seed or password""".format(what=gen_what,pnm=g.proj_name),
 	'usage':'[opts] [infile] <address range or list>',
 	'options': """
--h, --help            Print this help message.
--A, --no-addresses    Print only secret keys, no addresses.
--c, --print-checksum  Print address list checksum and exit.
--d, --outdir=      d  Output files to directory 'd' instead of working dir.
--e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry.
--i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below).
+-h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
+-A, --no-addresses    Print only secret keys, no addresses
+-c, --print-checksum  Print address list checksum and exit
+-d, --outdir=      d  Output files to directory 'd' instead of working dir
+-e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
+-i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
-                      'f' at offset 'o' (comma-separated).
--O, --old-incog-fmt   Specify old-format incognito input.
--K, --key-generator=m Use method 'm' for public key generation.
+                      'f' at offset 'o' (comma-separated)
+-O, --old-incog-fmt   Specify old-format incognito input
+-K, --key-generator=m Use method 'm' for public key generation
                       Options: {kgs} (default: {kg})
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
-                      with non-standard (< {g.seed_len}-bit) seed lengths.
+                      with non-standard (< {g.seed_len}-bit) seed lengths
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.hash_preset}').
--z, --show-hash-presets Show information on available hash presets.
--P, --passwd-file= f  Get wallet passphrase from file 'f'.
--q, --quiet           Produce quieter output; suppress some warnings.
--S, --stdout          Print {what} to stdout.
---, --testnet         Generate testnet keys/addresses instead of mainnet ones
--v, --verbose         Produce more verbose output.
--x, --b16             Print secret keys in hexadecimal too.
+                      for password hashing (default: '{g.hash_preset}')
+-z, --show-hash-presets Show information on available hash presets
+-P, --passwd-file= f  Get wallet passphrase from file 'f'
+-q, --quiet           Produce quieter output; suppress some warnings
+-r, --usr-randchars=n Get 'n' characters of additional randomness from user
+                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+-S, --stdout          Print {what} to stdout
+-v, --verbose         Produce more verbose output
+-x, --b16             Print secret keys in hexadecimal too
 """.format(
 	seed_lens=', '.join([str(i) for i in g.seed_lens]),
 	pnm=g.proj_name,

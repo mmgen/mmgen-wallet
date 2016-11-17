@@ -38,7 +38,7 @@ pw_note = opts.pw_note
 
 if invoked_as == 'gen':
 	desc = 'Generate an {pnm} wallet from a random seed'
-	opt_filter = 'ehdoJlLpPqrSvz'
+	opt_filter = 'ehdoJlLpPqrSvz-'
 	usage = '[opts]'
 	oaction = 'output'
 	nargs = 0
@@ -47,11 +47,11 @@ elif invoked_as == 'conv':
 	opt_filter = None
 elif invoked_as == 'chk':
 	desc = 'Check validity of an {pnm} wallet'
-	opt_filter = 'ehiHOlpPqrvz'
+	opt_filter = 'ehiHOlpPqrvz-'
 	iaction = 'input'
 elif invoked_as == 'passchg':
 	desc = 'Change the password, hash preset or label of an {pnm} wallet'
-	opt_filter = 'ehdiHkKOlLmpPqrSvz'
+	opt_filter = 'ehdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
 	bw_note = ''
 else:
@@ -63,34 +63,34 @@ opts_data = {
 	'desc': desc.format(pnm=g.proj_name),
 	'usage': usage,
 	'options': """
--h, --help            Print this help message.
--d, --outdir=      d  Output files to directory 'd' instead of working dir.
--e, --echo-passphrase Echo passphrases and other user input to screen.
--i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below).
--o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below).
+-h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
+-d, --outdir=      d  Output files to directory 'd' instead of working dir
+-e, --echo-passphrase Echo passphrases and other user input to screen
+-i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below)
+-o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
-                      'f' at offset 'o' (comma-separated).
--J, --hidden-incog-output-params=f,o  Write hidden incognito data to file
-                      'f' at offset 'o' (comma-separated).  If file 'f'
-                      doesn't exist, it will be created and filled with
-                      random data.
--O, --old-incog-fmt   Specify old-format incognito input.
--k, --keep-passphrase Reuse passphrase of input wallet for output wallet.
--K, --keep-hash-preset Reuse hash preset of input wallet for output wallet.
+                      'f' at offset 'o' (comma-separated)
+-J, --hidden-incog-output-params=f,o  Write hidden incognito data to file 'f'
+                      at offset 'o' (comma-separated).  File 'f' will be cre-
+                      ated and filled with random data if it doesn't exist.
+-O, --old-incog-fmt   Specify old-format incognito input
+-k, --keep-passphrase Reuse passphrase of input wallet for output wallet
+-K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.seed_len}-bit) seed lengths.
--L, --label=       l  Specify a label 'l' for output wallet.
--m, --keep-label      Reuse label of input wallet for output wallet.
+-L, --label=       l  Specify a label 'l' for output wallet
+-m, --keep-label      Reuse label of input wallet for output wallet
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.hash_preset}').
--z, --show-hash-presets Show information on available hash presets.
--P, --passwd-file= f  Get wallet passphrase from file 'f'.
--q, --quiet           Produce quieter output; suppress some warnings.
+                      for password hashing (default: '{g.hash_preset}')
+-z, --show-hash-presets Show information on available hash presets
+-P, --passwd-file= f  Get wallet passphrase from file 'f'
+-q, --quiet           Produce quieter output; suppress some warnings
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
-                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars}).
--S, --stdout          Write wallet data to stdout instead of file.
--v, --verbose         Produce more verbose output.
+                      (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
+-S, --stdout          Write wallet data to stdout instead of file
+-v, --verbose         Produce more verbose output
 """.format(
 		g=g,
 		iaction=capfirst(iaction),

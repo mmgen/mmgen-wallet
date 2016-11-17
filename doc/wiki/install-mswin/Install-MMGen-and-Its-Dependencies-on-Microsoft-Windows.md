@@ -1,3 +1,8 @@
+***Warning: the MMGen installation process on Windows is not for the faint of
+heart, success is not guaranteed and the user experience is less than optimal.
+You're urged to use the prebuilt [MMGenLive][20] USB image instead.  It's now
+the preferred way for all non-Linux users to run MMGen.***
+
 ##### Note: The following instructions assume you'll be unpacking all archives to `C:\`, the root directory on most Windows installations.  If you choose to unpack to another location, the `cd` commands must be adjusted accordingly.
 
 #### 1. Install the Python interpreter:
@@ -83,9 +88,9 @@ Grab the [tarball][14] and unpack it.  At the MSYS prompt, run:
 
 #### 8. Install MMGen:
 
-Get the [zip archive][10] from GitHub and unpack it.  At the MSYS prompt, run:
+Get the [zip archive][10b] from GitHub and unpack it.  At the MSYS prompt, run:
 
-		$ cd /c/mmgen-master
+		$ cd /c/mmgen-stable_mswin
 		$ sudo ./setup.py install
 
 Type:
@@ -107,7 +112,9 @@ a new MSYS window to update your path.
 [06]: http://www.openssl.org/source/openssl-1.0.1g.tar.gz
 [05]: http://www.openssl.org/source/
 [10]: https://github.com/mmgen/mmgen/archive/master.zip
+[10b]: https://github.com/mmgen/mmgen/archive/stable_mswin.zip
 [11]: http://slproweb.com/download/Win32OpenSSL-1_0_1f.exe
 [12]: http://www.openssl.org/related/binaries.html
 [13]: Getting-Started-with-MMGen
 [14]: https://pypi.python.org/pypi/colorama
+[20]: https://github.com/mmgen/MMGenLive

@@ -20,7 +20,7 @@
 license.py:  Copyright notice and text of GPLv3
 """
 
-import mmgen.globalvars as g
+from mmgen.globalvars import g
 
 warning = """
   {pnm} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This

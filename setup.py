@@ -42,11 +42,11 @@ module1 = Extension(
 	include_dirs = ['/usr/local/include'],
 	)
 
-from mmgen.globalvars import version
+from mmgen.globalvars import g
 setup(
 		name         = 'mmgen',
 		description  = 'A complete Bitcoin offline/online wallet solution for the command line',
-		version      = version,
+		version      = g.version,
 		author       = 'Philemon',
 		author_email = 'mmgen-py@yandex.com',
 		url          = 'https://github.com/mmgen/mmgen',
@@ -56,6 +56,11 @@ setup(
 		cmdclass     = { 'build_ext': my_build_ext },
 		# disable building of secp256k1 extension module on Windows
 		ext_modules = [module1] if sys.platform[:5] == 'linux' else [],
+		data_files = [('share/mmgen', [
+				'data_files/mmgen.cfg',     # source files must have 0644 mode
+				'data_files/mn_wordlist.c',
+				'data_files/mnemonic.py'
+				]),],
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',
