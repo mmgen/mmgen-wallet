@@ -19,7 +19,7 @@
 """
 opts.py:  MMGen-specific options processing after generic processing by share.Opts
 """
-import sys
+import sys,os
 
 class opt(object): pass
 
@@ -41,16 +41,13 @@ with brainwallets.  For a brainwallet passphrase to generate the correct
 seed, the same seed length and hash preset parameters must always be used.
 """.strip()
 
-def usage():
-	Msg('USAGE: %s %s' % (g.prog_name, usage_txt))
-	sys.exit(2)
-
-def print_version_info():
-	Msg("""
+version_info = """
 {pgnm_uc} version {g.version}
 Part of the {pnm} suite, a Bitcoin cold-storage solution for the command line.
 Copyright (C) {g.Cdates} {g.author} {g.email}
-""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip())
+""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
+
+def usage(): Die(2,'USAGE: %s %s' % (g.prog_name, usage_txt))
 
 def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:
@@ -58,35 +55,6 @@ def die_on_incompatible_opts(incompat_list):
 		if len(bad) > 1:
 			die(1,'Conflicting options: %s' % ', '.join([fmt_opt(b) for b in bad]))
 
-# TODO - delete
-# def _typeconvert_from_dfl(key):
-#
-# 	global opt
-#
-# 	gval = g.__dict__[key]
-# 	uval = opt.__dict__[key]
-# 	gtype = type(gval)
-#
-# 	try:
-# 		setattr(opt,key,gtype(uval))
-# 	except:
-# 		d = {
-# 			'int':   'an integer',
-# 			'str':   'a string',
-# 			'float': 'a float',
-# 			'bool':  'a boolean value',
-# 		}
-# 		die(1, "'%s': invalid parameter for '--%s' option (not %s)" % (
-# 			uval,
-# 			key.replace('_','-'),
-# 			d[gtype.__name__]
-# 		))
-#
-# 	if g.debug:
-# 		Msg('Opt overriden by user:\n    %-18s: %s' % (
-# 				key, ('%s -> %s' % (gval,uval))
-# 			))
-#
 def fmt_opt(o): return '--' + o.replace('_','-')
 
 def _show_hash_presets():
@@ -98,34 +66,115 @@ def _show_hash_presets():
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
 common_opts_data = """
---, --color=b      Set 'b' to '0' to disable color output, '1' to enable
---, --no-license   Suppress the GPL license prompt
---, --rpc-host=h   Communicate with bitcoind running on host 'h'
---, --testnet      Use testnet instead of mainnet
-"""
+--, --color=c       Set to '0' to disable color output, '1' to enable
+--, --data-dir=d    Specify the location of {pnm}'s data directory
+--, --no-license    Suppress the GPL license prompt
+--, --rpc-host=h    Communicate with bitcoind running on host 'h'
+--, --skip-cfg-file Skip reading the configuration file
+--, --testnet       Use testnet instead of mainnet
+--, --version       Print version information and exit
+""".format(pnm=g.proj_name)
+
+def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
+	d = (
+		('Cmdline',            ' '.join(sys.argv)),
+		('Short opts',         short_opts),
+		('Long opts',          long_opts),
+		('Skipped opts',       skipped_opts),
+		('User-selected opts', uopts),
+		('Cmd args',           args),
+	)
+	Msg('\n=== opts.py debug ===')
+	for e in d: Msg('    {:<20}: {}'.format(*e))
+
+def opt_postproc_debug():
+	opt.verbose,opt.quiet = True,None
+	a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
+	b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
+	Msg('    Opts after processing:')
+	for k in a:
+		v = getattr(opt,k)
+		Msg('        %-18s: %-6s [%s]' % (k,v,type(v).__name__))
+	Msg("    Opts set to 'None':")
+	Msg('        %s\n' % '\n        '.join(b))
+	Msg('    Global vars:')
+	for e in [d for d in dir(g) if d[:2] != '__']:
+		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
+	Msg('\n=== end opts.py debug ===')
+
+def opt_postproc_actions():
+	from mmgen.term import set_terminal_vars
+	set_terminal_vars()
+	# testnet data_dir differs from data_dir_root, so check or create
+	from mmgen.util import msg,die,check_or_create_dir
+	check_or_create_dir(g.data_dir) # dies on error
+
+def	set_data_dir_root():
+
+	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
+		(os.path.join(g.home_dir,'Application Data',g.proj_name),
+			os.path.join(g.home_dir,'.'+g.proj_name.lower()))[bool(os.getenv('HOME'))]
+
+	# mainnet and testnet share cfg file, as with Core
+	g.cfg_file = os.path.join(g.data_dir_root,'{}.cfg'.format(g.proj_name.lower()))
+
+def get_data_from_config_file():
+	from mmgen.util import msg,die,check_or_create_dir
+	check_or_create_dir(g.data_dir_root) # dies on error
+
+	# https://wiki.debian.org/Python:
+	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
+	# TODO - test for Windows
+	# This must match the configuration in setup.py
+	data = u''
+	try:
+		with open(g.cfg_file,'rb') as f: data = f.read().decode('utf8')
+	except:
+		cfg_template = os.path.join(*([sys.prefix]
+					+ ([''],['local','share'])[bool(os.getenv('HOME'))]
+					+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
+		try:
+			with open(cfg_template,'rb') as f: template_data = f.read()
+		except:
+			msg("WARNING: configuration template not found at '{}'".format(cfg_template))
+		else:
+			try:
+				with open(g.cfg_file,'wb') as f: f.write(template_data)
+				os.chmod(g.cfg_file,0600)
+			except:
+				die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
+	return data
+
+def override_from_cfg_file(cfg_data):
+	from mmgen.util import die,strip_comments,set_for_type
+	import re
+	for n,l in enumerate(cfg_data.splitlines(),1): # DOS-safe
+		l = strip_comments(l)
+		if l == '': continue
+		m = re.match(r'(\w+)\s+(\S+)$',l)
+		if not m: die(2,"Parse error in file '{}', line {}".format(g.cfg_file,n))
+		name,val = m.groups()
+		if name in g.cfg_file_opts:
+			setattr(g,name,set_for_type(val,getattr(g,name),name,src=g.cfg_file))
+		else:
+			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
+
+def override_from_env():
+	from mmgen.util import set_for_type
+	for name in g.env_opts:
+		idx,invert_bool = ((6,False),(14,True))[name[:14]=='MMGEN_DISABLE_']
+		val = os.getenv(name) # os.getenv() returns None if env var is unset
+		if val: # exclude empty string values too
+			gname = name[idx:].lower()
+			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
 
 def init(opts_data,add_opts=[],opt_filter=None):
-
-	if len(sys.argv) == 2 and sys.argv[1] == '--version':
-		print_version_info()
-		sys.exit()
-
 	opts_data['long_options'] = common_opts_data
 
 	uopts,args,short_opts,long_opts,skipped_opts = \
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
-	if g.debug:
-		d = (
-			('Cmdline',            ' '.join(sys.argv)),
-			('Short opts',         short_opts),
-			('Long opts',          long_opts),
-			('Skipped opts',       skipped_opts),
-			('User-selected opts', uopts),
-			('Cmd args',           args),
-		)
-		Msg('\n=== opts.py debug ===')
-		for e in d: Msg('    {:<20}: {}'.format(*e))
+	if g.debug: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
 	# Save this for usage()
 	global usage_txt
@@ -137,14 +186,29 @@ def init(opts_data,add_opts=[],opt_filter=None):
 		if k in opts_data: del opts_data[k]
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
-	for o in [s.rstrip('=') for s in long_opts] + \
-			g.required_opts + add_opts + skipped_opts + g.common_opts:
+	for o in tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts) + \
+				g.required_opts + g.common_opts:
 		setattr(opt,o,uopts[o] if o in uopts else None)
+
+	if opt.version: Die(0,version_info)
+
+	# === Interaction with global vars begins here ===
+
+	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
+	# Must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
+	set_data_dir_root()
+	if not opt.skip_cfg_file:
+		cfg_data = get_data_from_config_file()
+		override_from_cfg_file(cfg_data)
+	override_from_env()
 
 	# User opt sets global var - do these here, before opt is set from g.global_sets_opt
 	for k in g.common_opts:
 		val = getattr(opt,k)
 		if val != None: setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
+
+#	Global vars are now final, including g.testnet, so we can set g.data_dir
+	g.data_dir=os.path.normpath(os.path.join(g.data_dir_root,('',g.testnet_name)[g.testnet]))
 
 	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
 	# If unset, set it to default value in mmgen.globalvars (g)
@@ -165,21 +229,15 @@ def init(opts_data,add_opts=[],opt_filter=None):
 		_show_hash_presets()
 		sys.exit()
 
-	if g.debug:
-		opt.verbose = True
-		a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
-		b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
-		Msg('    Opts after processing:')
-		for k in a:
-			v = getattr(opt,k)
-			Msg('        %-18s: %-6s [%s]' % (k,v,type(v).__name__))
-		Msg("    Opts set to 'None':")
-		Msg('        %s\n' % '\n        '.join(b))
+	if g.debug: opt_postproc_debug()
+
+	if opt.verbose: opt.quiet = None
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
-	return args
+	opt_postproc_actions()
 
+	return args
 
 def check_opts(usr_opts):       # Returns false if any check fails
 
@@ -271,7 +329,6 @@ def check_opts(usr_opts):       # Returns false if any check fails
 				check_infile(a[0],blkdev_ok=True)
 				key2 = 'in_fmt'
 			else:
-				import os
 				try: os.stat(a[0])
 				except:
 					b = os.path.dirname(a[0])

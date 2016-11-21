@@ -23,7 +23,8 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 import os,re
 
 from mmgen.common import *
-from mmgen.seed import SeedSource
+from mmgen.seed import SeedSource,Wallet
+from mmgen.filename import find_file_in_dir
 from mmgen.obj import MMGenWalletLabel
 
 bn = os.path.basename(sys.argv[0])
@@ -36,6 +37,7 @@ oaction = 'convert'
 bw_note = opts.bw_note
 pw_note = opts.pw_note
 
+# full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
 	desc = 'Generate an {pnm} wallet from a random seed'
 	opt_filter = 'ehdoJlLpPqrSvz-'
@@ -44,14 +46,14 @@ if invoked_as == 'gen':
 	nargs = 0
 elif invoked_as == 'conv':
 	desc = 'Convert an {pnm} wallet from one format to another'
-	opt_filter = None
+	opt_filter = 'dehHiJkKlLmoOpPqrSvz-'
 elif invoked_as == 'chk':
 	desc = 'Check validity of an {pnm} wallet'
 	opt_filter = 'ehiHOlpPqrvz-'
 	iaction = 'input'
 elif invoked_as == 'passchg':
-	desc = 'Change the password, hash preset or label of an {pnm} wallet'
-	opt_filter = 'ehdiHkKOlLmpPqrSvz-'
+	desc = 'Change the passphrase, hash preset or label of an {pnm} wallet'
+	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
 	bw_note = ''
 else:
@@ -67,6 +69,7 @@ opts_data = {
 --, --longhelp        Print help message for long options (common options)
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrases and other user input to screen
+-f, --force-update    Force update of wallet even if nothing has changed
 -i, --in-fmt=      f  {iaction} from wallet format 'f' (see FMT CODES below)
 -o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
@@ -114,30 +117,56 @@ cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 if opt.label:
 	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
 
-if len(cmd_args) < nargs \
-		and not opt.hidden_incog_input_params and not opt.in_fmt:
-	die(1,'An input file or input format must be specified')
-elif len(cmd_args) > nargs \
-		or (len(cmd_args) == nargs and opt.hidden_incog_input_params):
-	msg('No input files may be specified' if invoked_as == 'gen'
-			else 'Too many input files specified')
-	opts.usage()
-
-if cmd_args: check_infile(cmd_args[0])
+sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
 
 if not invoked_as == 'chk': do_license_msg()
 
-if invoked_as in ('conv','passchg'): msg(green('Processing input wallet'))
+dw_msg = ('',yellow(' (default wallet)'))[bool(sf and os.path.dirname(sf)==g.data_dir)]
 
-ss_in = None if invoked_as == 'gen' \
-			else SeedSource(*cmd_args,passchg=invoked_as=='passchg')
+if invoked_as in ('conv','passchg'):
+	msg(green('Processing input wallet')+dw_msg)
+
+ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
 
 if invoked_as == 'chk': sys.exit()
 
-if invoked_as in ('conv','passchg'): msg(green('Processing output wallet'))
+if invoked_as in ('conv','passchg'):
+	msg(green('Processing output wallet'))
 
 ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 
-if invoked_as == 'gen': qmsg("This wallet's Seed ID: %s" % ss_out.seed.sid.hl())
+if invoked_as == 'gen':
+	qmsg("This wallet's Seed ID: %s" % ss_out.seed.sid.hl())
 
-ss_out.write_to_file()
+if invoked_as == 'passchg':
+	if not (opt.force_update or [k for k in 'passwd','hash_preset','label'
+		if getattr(ss_out.ssdata,k) != getattr(ss_in.ssdata,k)]):
+		die(1,'Password, hash preset and label are unchanged.  Taking no action')
+
+m1 = yellow('Confirmation of default wallet update')
+m2 = 'update the default wallet'
+m3 = 'Make this wallet your default and move it to the data directory?'
+
+if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
+	confirm_or_exit(m1,m2,exit_msg='Password not changed')
+	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
+	msg('Deleting old wallet')
+	from subprocess import check_call
+	try:
+		check_call(['wipe','-s',ss_in.infile.name])
+	except:
+		msg('WARNING: wipe failed, using regular file delete instead')
+		os.unlink(ss_in.infile.name)
+elif invoked_as == 'gen' and not find_file_in_dir(Wallet,g.data_dir) \
+	and not opt.stdout and keypress_confirm(m3,default_yes=True):
+	ss_out.write_to_file(outdir=g.data_dir)
+else:
+	ss_out.write_to_file()
+
+if invoked_as == 'passchg':
+	if ss_out.ssdata.passwd == ss_in.ssdata.passwd:
+		msg('New and old passphrases are the same')
+	else:
+		msg('Wallet passphrase has changed')
+	if ss_out.ssdata.hash_preset != ss_in.ssdata.hash_preset:
+		msg("Hash preset has been changed to '{}'".format(ss_out.ssdata.hash_preset))

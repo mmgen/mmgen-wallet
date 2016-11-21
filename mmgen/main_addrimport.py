@@ -47,7 +47,7 @@ opts_data = {
 This command can also be used to update the comment fields of addresses already
 in the tracking wallet.
 
-The --batch option cannot be used with the --rescan option.
+The --batch and --rescan options cannot be used together.
 """
 }
 

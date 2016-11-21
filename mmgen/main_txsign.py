@@ -69,37 +69,34 @@ opts_data = {
 		kg=g.key_generator),
 	'notes': """
 
-Transactions with either {pnm} or non-{pnm} input addresses may be signed.
-For non-{pnm} inputs, the bitcoind wallet.dat is used as the key source.
-For {pnm} inputs, key data is generated from your seed as with the
-{pnl}-addrgen and {pnl}-keygen utilities.
+Transactions may contain both {pnm} or non-{pnm} input addresses.
 
-Data for the --from-<what> options will be taken from a file if a second
-file is specified on the command line.  Otherwise, the user will be
-prompted to enter the data.
+To sign non-{pnm} inputs, a bitcoind wallet dump or flat key list is used
+as the key source ('--keys-from-file' option).
 
-In cases of transactions with mixed {pnm} and non-{pnm} inputs, non-{pnm}
-keys must be supplied in a separate file (WIF format, one key per line)
-using the '--keys-from-file' option.  Alternatively, one may get keys from
-a running bitcoind using the '--force-wallet-dat' option.  First import the
-required {pnm} keys using 'bitcoind importprivkey'.
+To sign {pnm} inputs, key data is generated from a seed as with the
+{pnl}-addrgen and {pnl}-keygen commands.  Alternatively, a key-address file
+may be used (--mmgen-keys-from-file option).
 
-For transaction outputs that are {pnm} addresses, {pnm}-to-Bitcoin address
-mappings are verified.  Therefore, seed material or a key-address file for
-these addresses must be supplied on the command line.
+Multiple wallets or other seed files can be listed on the command line in
+any order.  If the seeds required to sign the transaction's inputs are not
+found in these files (or in the default wallet), the user will be prompted
+for seed data interactively.
 
-Seed data supplied in files must have the following extensions:
-   wallet:      '.{w.ext}'
-   seed:        '.{s.ext}'
-   mnemonic:    '.{m.ext}'
-   brainwallet: '.{b.ext}'
+To prevent an attacker from crafting transactions with bogus {pnm}-to-Bitcoin
+address mappings, all outputs to {pnm} addresses are verified with a seed
+source.  Therefore, seed files or a key-address file for all {pnm} outputs
+must also be supplied on the command line if the data can't be found in the
+default wallet.
 
-FMT CODES:
+Seed source files must have the canonical extensions listed in the 'FileExt'
+column below:
+
   {f}
 """.format(
 		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 		pnm=pnm,pnl=pnm.lower(),
-		w=Wallet,s=SeedFile,m=Mnemonic,b=Brainwallet
+		w=Wallet,s=SeedFile,m=Mnemonic,b=Brainwallet,x=IncogWalletHex,h=IncogWallet
 	)
 }
 
@@ -166,39 +163,6 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'k'),desc))
 	return new_keys
 
-# # functions unneeded - use bitcoin-cli walletdump instead
-# def get_bitcoind_passphrase(prompt):
-# 	if opt.passwd_file:
-# 		pwfile_reuse_warning()
-# 		return get_data_from_file(opt.passwd_file,'passphrase').strip('\r\n')
-# 	else:
-# 		return my_raw_input(prompt, echo=opt.echo_passphrase)
-#
-# def sign_tx_with_bitcoind_wallet(c,tx,tx_num_str,keys):
-# 	ok = tx.sign(c,tx_num_str,keys) # returns false on failure
-# 	if ok:
-# 		return ok
-# 	else:
-# 		msg('Using keys in wallet.dat as per user request')
-# 		prompt = 'Enter passphrase for bitcoind wallet: '
-# 		while True:
-# 			passwd = get_bitcoind_passphrase(prompt)
-# 			ret = c.walletpassphrase(passwd, 9999,on_fail='return')
-# 			if rpc_error(ret):
-# 				if rpc_errmsg(ret,'unencrypted wallet, but walletpassphrase was called'):
-# 					msg('Wallet is unencrypted'); break
-# 			else:
-# 				msg('Passphrase OK'); break
-#
-# 		ok = tx.sign(c,tx_num_str,keys)
-#
-# 		msg('Locking wallet')
-# 		ret = c.walletlock(on_fail='return')
-# 		if rpc_error(ret):
-# 			msg('Failed to lock wallet')
-#
-# 		return ok
-
 # main(): execution begins here
 
 infiles = opts.init(opts_data,add_opts=['b16'])
@@ -211,6 +175,10 @@ c = bitcoin_connection()
 saved_seeds = {}
 tx_files   = [i for i in infiles if get_extension(i) == MMGenTX.raw_ext]
 seed_files = [i for i in infiles if get_extension(i) in SeedSource.get_extensions()]
+
+from mmgen.filename import find_file_in_dir
+wf = find_file_in_dir(Wallet,g.data_dir)
+if wf: seed_files.append(wf)
 
 if not tx_files:
 	die(1,'You must specify a raw transaction file!')

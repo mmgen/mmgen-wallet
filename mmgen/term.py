@@ -23,6 +23,17 @@ term.py:  Terminal-handling routines for the MMGen suite
 import os,struct
 from mmgen.common import *
 
+try:
+	import tty,termios
+	from select import select
+	_platform = 'linux'
+except:
+	try:
+		import msvcrt,time
+		_platform = 'win'
+	except:
+		die(2,'Unable to set terminal mode')
+
 def _kb_hold_protect_unix():
 
 	fd = sys.stdin.fileno()
@@ -63,7 +74,6 @@ def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
 
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	return ch
-
 
 def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 
@@ -155,7 +165,6 @@ def _get_terminal_size_linux():
 
 	return int(cr[1]), int(cr[0])
 
-
 def _get_terminal_size_mswin():
 	try:
 		from ctypes import windll,create_string_buffer
@@ -176,67 +185,15 @@ def _get_terminal_size_mswin():
 
 def mswin_dummy_flush(fd,termconst): pass
 
-try:
-	import tty,termios
-	from select import select
-	if g.hold_protect:
-		get_char = _get_keypress_unix
-		kb_hold_protect = _kb_hold_protect_unix
+def set_terminal_vars():
+	global get_char,kb_hold_protect,get_terminal_size
+	if _platform == 'linux':
+		get_char = (_get_keypress_unix_raw,_get_keypress_unix)[g.hold_protect]
+		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
+		get_terminal_size = _get_terminal_size_linux
+		myflush = termios.tcflush   # call: myflush(sys.stdin, termios.TCIOFLUSH)
 	else:
-		get_char = _get_keypress_unix_raw
-		kb_hold_protect = _kb_hold_protect_unix_raw
-	get_terminal_size = _get_terminal_size_linux
-	myflush = termios.tcflush
-# call: myflush(sys.stdin, termios.TCIOFLUSH)
-except:
-	try:
-		import msvcrt,time
-		if g.hold_protect:
-			get_char = _get_keypress_mswin
-			kb_hold_protect = _kb_hold_protect_mswin
-		else:
-			get_char = _get_keypress_mswin_raw
-			kb_hold_protect = _kb_hold_protect_mswin_raw
+		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
+		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
 		get_terminal_size = _get_terminal_size_mswin
 		myflush = mswin_dummy_flush
-	except:
-		msg('Unable to set terminal mode')
-		sys.exit(2)
-
-def do_pager(text):
-
-	pagers = ['less','more']
-	shell = False
-
-	from os import environ
-
-# Hack for MS Windows command line (i.e. non CygWin) environment
-# When 'shell' is true, Windows aborts the calling program if executable
-# not found.
-# When 'shell' is false, an exception is raised, invoking the fallback
-# 'print' instead of the pager.
-# We risk assuming that 'more' will always be available on a stock
-# Windows installation.
-	if g.platform == 'win':
-		if 'HOME' not in environ: # native Windows terminal
-			shell = True
-			pagers = ['more']
-		else:                     # MSYS
-			environ['LESS'] = '-cR -#1' # disable buggy line chopping
-	else:
-		environ['LESS'] = '-RS -#1' # raw, chop, scroll right 1 char
-
-	if 'PAGER' in environ and environ['PAGER'] != pagers[0]:
-		pagers = [environ['PAGER']] + pagers
-
-	for pager in pagers:
-		end = ('\n(end of text)\n','')[pager=='less']
-		try:
-			from subprocess import Popen,PIPE,STDOUT
-			p = Popen([pager], stdin=PIPE, shell=shell)
-		except: pass
-		else:
-			p.communicate(text+end+'\n')
-			msg_r('\r')
-			break
-	else: Msg(text+end)

@@ -22,7 +22,6 @@ tw: Tracking wallet methods for the MMGen suite
 
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.term import get_char
 from mmgen.tx import is_mmgen_id
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
@@ -237,7 +236,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							return n,s
 
 	def view_and_sort(self):
-		from mmgen.term import do_pager
 		prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -245,6 +243,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		self.display()
 		msg(prompt)
 
+		from mmgen.term import get_char
 		p = "'q'=quit view, 'p'=print to file, 'v'=pager view, 'w'=wide view, 'l'=add label:\b"
 		while True:
 			reply = get_char(p, immed_chars='atDdAMrgmeqpvw')

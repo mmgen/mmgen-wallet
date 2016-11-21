@@ -81,7 +81,6 @@ class BitcoinRPCConnection(object):
 
 		dmsg('=== rpc.py debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
-
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
@@ -94,15 +93,18 @@ class BitcoinRPCConnection(object):
 # 			dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
 # 			print(dump)
 
+		dmsg('    RPC AUTHORIZATION data ==> [Basic {}]\n'.format(base64.b64encode(self.auth_str)))
 		try:
 			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
 				'Host': self.host,
-				'Authorization': 'Basic ' + base64.b64encode(self.auth_str)
+				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str))
 			})
 		except Exception as e:
 			return die_maybe(None,2,'%s\nUnable to connect to bitcoind' % e)
 
 		r = hc.getresponse() # returns HTTPResponse instance
+
+		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
 			msgred('RPC Error: {} {}'.format(r.status,r.reason))

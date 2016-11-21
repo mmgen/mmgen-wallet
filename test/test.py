@@ -46,47 +46,11 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 from mmgen.common import *
 from mmgen.test import *
 
+g.quiet = False # if 'quiet' was set in config file, disable here
+os.environ['MMGEN_QUIET'] = '0' # and for the spawned scripts
+
 tb_cmd = 'scripts/traceback.py'
 log_file = 'test.py_log'
-
-opts_data = {
-#	'sets': [('non_interactive',bool,'verbose',None)],
-	'desc': 'Test suite for the MMGen suite',
-	'usage':'[options] [command(s) or metacommand(s)]',
-	'options': """
--h, --help          Print this help message.
--b, --buf-keypress  Use buffered keypresses as with real human input.
--d, --debug-scripts Turn on debugging output in executed scripts.
--D, --direct-exec   Bypass pexpect and execute a command directly (for
-                    debugging only).
--e, --exact-output  Show the exact output of the MMGen script(s) being run.
--l, --list-cmds     List and describe the commands in the test suite.
--L, --log           Log commands to file {lf}
--n, --names         Display command names instead of descriptions.
--I, --non-interactive Non-interactive operation (MS Windows mode)
--p, --pause         Pause between tests, resuming on keypress.
--P, --profile       Record the execution time of each script.
--q, --quiet         Produce minimal output.  Suppress dependency info.
--r, --resume=c      Resume at command 'c' after interrupted run
--s, --system        Test scripts and modules installed on system rather
-                    than those in the repo root.
--S, --skip-deps     Skip dependency checking for command
--u, --usr-random    Get random data interactively from user
---, --testnet       Run on testnet rather than mainnet
--t, --traceback     Run the command inside the '{tb_cmd}' script.
--v, --verbose       Produce more verbose output.
-""".format(tb_cmd=tb_cmd,lf=log_file),
-	'notes': """
-
-If no command is given, the whole suite of tests is run.
-"""
-}
-
-cmd_args = opts.init(opts_data)
-
-tn_desc = ('','.testnet')[g.testnet]
-
-start_mscolor()
 
 scripts = (
 	'addrgen', 'addrimport', 'keygen',
@@ -128,7 +92,88 @@ tool_enc_passwd = "Scrypt it, don't hash it!"
 sample_text = \
 	'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n'
 
+# Laggy flash media cause pexpect to crash, so create a temporary directory
+# under '/dev/shm' and put datadir and temp files here.
+if g.platform == 'win':
+	data_dir = os.path.join('test','data_dir')
+else:
+	d,pfx = '/dev/shm','mmgen-test-'
+	try:
+		import subprocess
+		subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
+	except Exception as e:
+		die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
+	try:
+		import tempfile
+		shm_dir = tempfile.mkdtemp('',pfx,d)
+	except Exception as e:
+		die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
+	data_dir = os.path.join(shm_dir,'data_dir')
+
+os.mkdir(data_dir,0755)
+
+opts_data = {
+#	'sets': [('non_interactive',bool,'verbose',None)],
+	'desc': 'Test suite for the MMGen suite',
+	'usage':'[options] [command(s) or metacommand(s)]',
+	'options': """
+-h, --help          Print this help message
+--, --longhelp      Print help message for long options (common options)
+-b, --buf-keypress  Use buffered keypresses as with real human input
+-d, --debug-scripts Turn on debugging output in executed scripts
+-D, --direct-exec   Bypass pexpect and execute a command directly (for
+                    debugging only)
+-e, --exact-output  Show the exact output of the MMGen script(s) being run
+-l, --list-cmds     List and describe the commands in the test suite
+-L, --log           Log commands to file {lf}
+-n, --names         Display command names instead of descriptions
+-I, --non-interactive Non-interactive operation (MS Windows mode)
+-p, --pause         Pause between tests, resuming on keypress
+-P, --profile       Record the execution time of each script
+-q, --quiet         Produce minimal output.  Suppress dependency info
+-r, --resume=c      Resume at command 'c' after interrupted run
+-s, --system        Test scripts and modules installed on system rather
+                    than those in the repo root
+-S, --skip-deps     Skip dependency checking for command
+-u, --usr-random    Get random data interactively from user
+--, --testnet       Run on testnet rather than mainnet
+-t, --traceback     Run the command inside the '{tb_cmd}' script
+-v, --verbose       Produce more verbose output
+""".format(tb_cmd=tb_cmd,lf=log_file),
+	'notes': """
+
+If no command is given, the whole suite of tests is run.
+"""
+}
+
+sys.argv = [sys.argv[0]] + ['--data-dir',data_dir] + sys.argv[1:]
+
+cmd_args = opts.init(opts_data)
+
+tn_desc = ('','.testnet')[g.testnet]
+
 cfgs = {
+	'15': {
+		'tmpdir':        os.path.join('test','tmp15'),
+		'wpasswd':       'Dorian',
+		'kapasswd':      'Grok the blockchain',
+		'addr_idx_list': '12,99,5-10,5,12', # 8 addresses
+		'dep_generators':  {
+			pwfile:        'walletgen_dfl_wallet',
+			'addrs':       'addrgen_dfl_wallet',
+			'rawtx':       'txcreate_dfl_wallet',
+			'sigtx':       'txsign_dfl_wallet',
+			'mmseed':      'export_seed_dfl_wallet',
+		},
+	},
+	'16': {
+		'tmpdir':        os.path.join('test','tmp16'),
+		'wpasswd':       'My changed password',
+		'hash_preset':   '2',
+		'dep_generators': {
+			pwfile:        'passchg_dfl_wallet',
+		},
+	},
 	'1': {
 		'tmpdir':        os.path.join('test','tmp1'),
 		'wpasswd':       'Dorian',
@@ -307,6 +352,8 @@ cfgs = {
 	},
 }
 
+start_mscolor()
+
 from copy import deepcopy
 for a,b in ('6','11'),('7','12'),('8','13'):
 	cfgs[b] = deepcopy(cfgs[a])
@@ -323,6 +370,14 @@ cmd_group['help'] = OrderedDict([
 ])
 
 cmd_group['main'] = OrderedDict([
+	['walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]],15)],
+	['addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]],15)],
+	['txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]],15)],
+	['txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]],15)],
+	['export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]])],
+	['passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]],15)],
+	['walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]],15)],
+	['delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]],15)],
 	['walletgen',       (1,'wallet generation',        [[[],1]],1)],
 #	['walletchk',       (1,'wallet check',             [[['mmdat'],1]])],
 	['passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]],1)],
@@ -510,6 +565,7 @@ add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
 	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
+add_spawn_args += ['--data-dir',data_dir]
 
 if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True
@@ -1073,7 +1129,7 @@ class MMGenTestSuite(object):
 
 	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
 
-	def walletgen(self,name,seed_len=None):
+	def walletgen(self,name,seed_len=None,make_dfl_rsp='n'):
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+'\n')
 		add_args = ([usr_rand_arg],
 			['-q','-r0','-L','NI Wallet','-P',get_tmpfile_fn(cfg,pwfile)])[bool(ni)]
@@ -1085,8 +1141,12 @@ class MMGenTestSuite(object):
 		t.usr_rand(usr_rand_chars)
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.label()
+		t.expect('move it to the data directory? (Y/n): ',make_dfl_rsp)
 		t.written_to_file('MMGen wallet')
 		ok()
+
+	def walletgen_dfl_wallet(self,name,seed_len=None):
+		self.walletgen(name,seed_len=seed_len,make_dfl_rsp='y')
 
 	def brainwalletgen_ref(self,name):
 		sl_arg = '-l%s' % cfg['seed_len']
@@ -1120,7 +1180,7 @@ class MMGenTestSuite(object):
 		end_silence()
 		add_args = ([usr_rand_arg],['-q','-r0','-P',pf])[bool(ni)]
 		t = MMGenExpect(name,'mmgen-passchg', add_args +
-				['-d',cfg['tmpdir'],'-p','2','-L','New Label',wf])
+				['-d',cfg['tmpdir'],'-p','2','-L','New Label'] + ([],[wf])[bool(wf)])
 		if ni: return
 		t.license()
 		t.passphrase('MMGen wallet',cfgs['1']['wpasswd'],pwtype='old')
@@ -1130,8 +1190,17 @@ class MMGenTestSuite(object):
 		t.usr_rand(usr_rand_chars)
 		t.expect_getend('Label changed to ')
 #		t.expect_getend('Key ID changed: ')
-		t.written_to_file('MMGen wallet')
+		if not wf:
+			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
+			t.written_to_file('New wallet')
+			t.expect('Okay to WIPE 1 regular file ? (Yes/No)','Yes\n')
+			t.expect_getend('has been changed to ')
+		else:
+			t.written_to_file('MMGen wallet')
 		ok()
+
+	def passchg_dfl_wallet(self,name,pf):
+		return self.passchg(name=name,wf=None,pf=pf)
 
 	def walletchk(self,name,wf,pf,desc='MMGen wallet',
 			add_args=[],sid=None,pw=False,extra_desc=''):
@@ -1148,7 +1217,7 @@ class MMGenTestSuite(object):
 				msg(grnbg('%s %s' % (m,cyan(sid))))
 			return
 		if desc != 'hidden incognito data':
-			t.expect("Getting %s from file '%s'" % (desc,wf))
+			t.expect("Getting %s from file '" % (desc))
 		if pw:
 			t.passphrase(desc,cfg['wpasswd'])
 			t.expect(
@@ -1159,13 +1228,22 @@ class MMGenTestSuite(object):
 		if sid: cmp_or_die(chk,sid)
 		else: ok()
 
-	def walletchk_newpass (self,name,wf,pf):
+	def walletchk_newpass(self,name,wf,pf):
 		return self.walletchk(name,wf,pf,pw=True)
+
+	def walletchk_newpass_dfl_wallet(self,name,pf):
+		return self.walletchk_newpass(name,wf=None,pf=pf)
+
+	def delete_dfl_wallet(self,name,pf):
+		for wf in [f for f in os.listdir(g.data_dir) if f[-6:]=='.mmdat']:
+			os.unlink(os.path.join(g.data_dir,wf))
+		MMGenExpect(name,'true')
+		ok()
 
 	def addrgen(self,name,wf,pf=None,check_ref=False):
 		add_args = ([],['-q'] + ([],['-P',pf])[bool(pf)])[ni]
 		t = MMGenExpect(name,'mmgen-addrgen', add_args +
-				['-d',cfg['tmpdir'],wf,cfg['addr_idx_list']])
+				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + [cfg['addr_idx_list']])
 		if ni: return
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
@@ -1176,6 +1254,9 @@ class MMGenTestSuite(object):
 			return
 		t.written_to_file('Addresses',oo=True)
 		ok()
+
+	def addrgen_dfl_wallet(self,name,wf,pf=None,check_ref=False):
+		return self.addrgen(name,wf=None,pf=pf,check_ref=check_ref)
 
 	def refaddrgen(self,name,wf,pf):
 		d = ' (%s-bit seed)' % cfg['seed_len']
@@ -1195,6 +1276,9 @@ class MMGenTestSuite(object):
 
 	def txcreate(self,name,addrfile):
 		self.txcreate_common(name,sources=['1'])
+
+	def txcreate_dfl_wallet(self,name,addrfile):
+		self.txcreate_common(name,sources=['15'])
 
 	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False):
 		if opt.verbose or opt.exact_output:
@@ -1300,7 +1384,7 @@ class MMGenTestSuite(object):
 		if ni:
 			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
 			msg(grnbg(m))
-		t = MMGenExpect(name,'mmgen-txsign', add_args+['-d',cfg['tmpdir'],txfile,wf])
+		t = MMGenExpect(name,'mmgen-txsign', add_args+['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
 		if ni: return
 		t.license()
 		t.tx_view()
@@ -1312,6 +1396,9 @@ class MMGenTestSuite(object):
 			t.expect('%s? (y/N): ' % cprompt,'\n')
 			t.close()
 		ok()
+
+	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
+		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
 
 	def txsend(self,name,sigfile):
 		t = MMGenExpect(name,'mmgen-txsend', ['-d',cfg['tmpdir'],sigfile])
@@ -1325,7 +1412,7 @@ class MMGenTestSuite(object):
 		ok()
 
 	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pw=False):
-		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + [wf]
+		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + ([],[wf])[bool(wf)]
 		t = MMGenExpect(name,'mmgen-walletconv',opts)
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
@@ -1354,6 +1441,9 @@ class MMGenTestSuite(object):
 		msg('%s: %s' % (capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
 		ok()
+
+	def export_seed_dfl_wallet(self,name,pw,desc='seed data',out_fmt='seed'):
+		return self.export_seed(name,wf=None,desc=desc,out_fmt=out_fmt)
 
 	def export_mnemonic(self,name,wf):
 		self.export_seed(name,wf,desc='mnemonic data',out_fmt='words')
@@ -1851,7 +1941,7 @@ class MMGenTestSuite(object):
 			desc=desc,sid=cfg['seed_id'],pw=pw,
 			add_args=add_args,
 			extra_desc='(check)')
-
+	# END methods
 	for k in (
 			'ref_wallet_conv',
 			'ref_mn_conv',
@@ -1881,6 +1971,20 @@ class MMGenTestSuite(object):
 
 	for k in ('walletgen','addrgen','keyaddrgen'): locals()[k+'14'] = locals()[k]
 
+# create temporary dirs
+if g.platform == 'win':
+	for cfg in sorted(cfgs):
+		mk_tmpdir(cfgs[cfg]['tmpdir'])
+else:
+	for cfg in sorted(cfgs):
+		src = os.path.join(shm_dir,cfgs[cfg]['tmpdir'].split('/')[-1])
+		mk_tmpdir(src)
+		try:
+			os.unlink(cfgs[cfg]['tmpdir'])
+		except OSError as e:
+			if e.errno != 2: raise
+		finally:
+			os.symlink(src,cfgs[cfg]['tmpdir'])
 
 # main()
 if opt.pause:
@@ -1893,25 +1997,6 @@ if opt.pause:
 
 start_time = int(time.time())
 ts = MMGenTestSuite()
-
-# Laggy flash media cause pexpect to crash, so read and write all temporary
-# files to volatile memory in '/dev/shm'
-if not opt.skip_deps:
-	if g.platform == 'win':
-		for cfg in sorted(cfgs): mk_tmpdir(cfgs[cfg])
-	else:
-		d,pfx = '/dev/shm','mmgen-test-'
-		try:
-			import subprocess
-			subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
-		except Exception as e:
-			die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
-		try:
-			import tempfile
-			shm_dir = tempfile.mkdtemp('',pfx,d)
-		except Exception as e:
-			die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
-		for cfg in sorted(cfgs): mk_tmpdir_path(shm_dir,cfgs[cfg])
 
 try:
 	if cmd_args:

@@ -24,7 +24,6 @@ from binascii import hexlify
 from hashlib import sha256
 
 from mmgen.common import *
-from mmgen.term import get_char
 
 crmsg = {
 	'usr_rand_notice': """
@@ -157,6 +156,7 @@ def _get_random_data_from_user(uchars):
 	msg_r(prompt % uchars)
 
 	import time
+	from mmgen.term import get_char
 	# time.clock() always returns zero, so we'll use time.time()
 	saved_time = time.time()
 

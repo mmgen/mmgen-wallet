@@ -91,6 +91,7 @@ cmd_data = OrderedDict([
 				('addrfile_chksum', ()),
 				('getbalance',      ()),
 				('listaddresses',   ()),
+				('twview',          ()),
 				('txview',          ()),
 			])
 		}
@@ -124,6 +125,8 @@ opts_data = {
 If no command is given, the whole suite of tests is run.
 """
 }
+
+sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
 add_spawn_args = ' '.join(['{} {}'.format(
@@ -358,6 +361,8 @@ class MMGenToolTestSuite(object):
 		self.run_cmd_out(name,literal=True)
 	def listaddresses(self,name):
 		self.run_cmd_out(name,literal=True)
+	def twview(self,name):
+		self.run_cmd_out(name,literal=True)
 	def txview(self,name):
 		fn = os.path.join(cfg['refdir'],cfg['txfile'])
 		self.run_cmd_out(name,fn,literal=True)
@@ -369,7 +374,7 @@ class MMGenToolTestSuite(object):
 import time
 start_time = int(time.time())
 ts = MMGenToolTestSuite()
-mk_tmpdir(cfg)
+mk_tmpdir(cfg['tmpdir'])
 
 if cmd_args:
 	if len(cmd_args) != 1:

@@ -204,15 +204,15 @@ class SeedSource(MMGenObject):
 		self._format()
 		return self.fmt_data
 
-	def write_to_file(self):
+	def write_to_file(self,outdir='',desc=''):
 		self._format()
 		kwargs = {
-			'desc':     self.desc,
+			'desc':     desc or self.desc,
 			'ask_tty':  self.ask_tty,
 			'no_tty':   self.no_tty,
 			'binary':   self.file_mode == 'binary'
 		}
-		write_data_to_file(self._filename(),self.fmt_data,**kwargs)
+		write_data_to_file(os.path.join(outdir,self._filename()),self.fmt_data,**kwargs)
 
 class SeedSourceUnenc(SeedSource):
 
@@ -661,7 +661,7 @@ class Wallet (SeedSourceEnc):
 	def _decrypt(self):
 		d = self.ssdata
 		# Needed for multiple transactions with {}-txsign
-		suf = ('',self.infile.name)[bool(opt.quiet)]
+		suf = ('',os.path.basename(self.infile.name))[bool(opt.quiet)]
 		self._get_passphrase(desc_suf=suf)
 		key = make_key(d.passwd, d.salt, d.hash_preset)
 		ret = decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)

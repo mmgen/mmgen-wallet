@@ -25,7 +25,6 @@ from stat import *
 from binascii import unhexlify
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.term import do_pager
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')

@@ -59,13 +59,14 @@ class g(object):
 	# Constants - some of these might be overriden, but they don't change thereafter
 
 	debug                = False
+	quiet                = False
 	no_license           = False
 	hold_protect         = True
 	color                = (False,True)[sys.stdout.isatty()]
 	testnet              = False
-	bogus_wallet_data    = ''
 	rpc_host             = 'localhost'
 	testnet_name         = 'testnet3'
+	bogus_wallet_data    = '' # for debugging, used by test suite
 
 	for k in ('win','linux'):
 		if sys.platform[:len(k)] == k:
@@ -81,18 +82,18 @@ class g(object):
 		m = ('$HOME is not set','Neither $HOME nor %HOMEPATH% are set')[platform=='win']
 		die(2,m + '\nUnable to determine home directory')
 
-	data_dir = (os.path.join(home_dir,'Application Data',proj_name),
-				os.path.join(home_dir,'.'+proj_name.lower()))[bool(os.getenv('HOME'))]
+	data_dir_root = None
+	data_dir = None
+	cfg_file = None
 	bitcoin_data_dir = (os.path.join(home_dir,'Application Data','Bitcoin'),
 				os.path.join(home_dir,'.bitcoin'))[bool(os.getenv('HOME'))]
-	cfg_file = os.path.join(data_dir,'{}.cfg'.format(proj_name.lower()))
 
-	common_opts = ['color','no_license','rpc_host','testnet']
-	required_opts = [
+	common_opts = ('color','no_license','rpc_host','testnet')
+	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset',
 		'brain_params','b16','usr_randchars'
-	]
+	)
 	incompatible_opts = (
 		('quiet','verbose'),
 		('label','keep_label'),
@@ -100,9 +101,14 @@ class g(object):
 		('tx_id','terse_info'),
 		('batch','rescan'),
 	)
+	cfg_file_opts = (
+		'color','debug','hash_preset','http_timeout','no_license','rpc_host',
+		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet'
+	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
 		'MMGEN_DEBUG',
+		'MMGEN_QUIET',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_DISABLE_HOLD_PROTECT',
 		'MMGEN_MIN_URANDCHARS',
@@ -116,7 +122,7 @@ class g(object):
 
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
-                       'tx_confs','tx_fee_adj','tx_fee','key_generator']
+						'quiet','tx_confs','tx_fee_adj','tx_fee','key_generator']
 
 	keyconv_exec = 'keyconv'
 
@@ -149,68 +155,3 @@ class g(object):
 		'6': [17, 8, 20],
 		'7': [18, 8, 24],
 	}
-
-def create_data_dir(g):
-	from mmgen.util import msg,die
-	try:
-		os.listdir(g.data_dir)
-	except:
-		try:
-			os.mkdir(g.data_dir,0700)
-		except:
-			die(2,"ERROR: unable to read or create '{}'".format(g.data_dir))
-
-def get_data_from_config_file(g):
-	from mmgen.util import msg,die
-	# https://wiki.debian.org/Python:
-	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
-	# TODO - test for Windows
-	# This must match the configuration in setup.py
-	data = u''
-	try:
-		with open(g.cfg_file,'rb') as f: data = f.read().decode('utf8')
-	except:
-		cfg_template = os.path.join(*([sys.prefix]
-					+ ([''],['local','share'])[bool(os.getenv('HOME'))]
-					+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
-		try:
-			with open(cfg_template,'rb') as f: template_data = f.read()
-		except:
-			msg("WARNING: configuration template not found at '{}'".format(cfg_template))
-		else:
-			try:
-				with open(g.cfg_file,'wb') as f: f.write(template_data)
-				os.chmod(g.cfg_file,0600)
-			except:
-				die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
-	return data
-
-def override_from_cfg_file(g,cfg_data):
-	from mmgen.util import die,strip_comments,set_for_type
-	cvars = ('color','debug','hash_preset','http_timeout','no_license','rpc_host',
-			'testnet','tx_fee','tx_fee_adj','usr_randchars')
-	import re
-	for n,l in enumerate(cfg_data.splitlines(),1): # DOS-safe
-		l = strip_comments(l)
-		if l == '': continue
-		m = re.match(r'(\w+)\s+(\S+)$',l)
-		if not m: die(2,"Parse error in file '{}', line {}".format(g.cfg_file,n))
-		name,val = m.groups()
-		if name in cvars:
-			setattr(g,name,set_for_type(val,getattr(g,name),name,src=g.cfg_file))
-		else:
-			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
-
-def override_from_env(g):
-	from mmgen.util import set_for_type
-	for name in g.env_opts:
-		idx,invert_bool = ((6,False),(14,True))[name[:14]=='MMGEN_DISABLE_']
-		val = os.getenv(name) # os.getenv() returns None if env var is unset
-		if val:
-			gname = name[idx:].lower()
-			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
-
-create_data_dir(g)
-cfg_data = get_data_from_config_file(g)
-override_from_cfg_file(g,cfg_data)
-override_from_env(g)

@@ -46,8 +46,8 @@ opts_data = {
 """.format(g=g),
 	'notes': """
 
-Transaction inputs are chosen from a list of the user's unpent outputs
-via an interactive menu.
+The transaction's outputs are specified on the command line, while its inputs
+are chosen from a list of the user's unpent outputs via an interactive menu.
 
 If the transaction fee is not specified by the user, it will be calculated
 using bitcoind's "estimatefee" function for the default (or user-specified)

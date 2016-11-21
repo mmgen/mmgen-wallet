@@ -44,7 +44,7 @@ opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'desc': """Generate a range or list of {what} from an {pnm} wallet,
                   mnemonic, seed or password""".format(what=gen_what,pnm=g.proj_name),
-	'usage':'[opts] [infile] <address range or list>',
+	'usage':'[opts] [infile] <range or list of address indexes>',
 	'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
@@ -80,8 +80,7 @@ opts_data = {
 ),
 	'notes': """
 
-Addresses are given in a comma-separated list.  Hyphen-separated ranges are
-also allowed.
+Address indexes are given in a comma-separated list and/or hyphen-separated ranges.
 
 {n}
 
@@ -100,18 +99,14 @@ FMT CODES:
 
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
-nargs = 2
-if len(cmd_args) < nargs and not (opt.hidden_incog_input_params or opt.in_fmt):
-	opts.usage()
-elif len(cmd_args) > nargs - int(bool(opt.hidden_incog_input_params)):
-	opts.usage()
+if len(cmd_args) < 1: opts.usage()
+idxs = AddrIdxList(fmt_str=cmd_args.pop())
 
-addridxlist_str = cmd_args.pop()
-idxs = AddrIdxList(fmt_str=addridxlist_str)
+sf = get_seed_file(cmd_args,1)
 
 do_license_msg()
 
-ss = SeedSource(*cmd_args) # *(cmd_args[0] if cmd_args else [])
+ss = SeedSource(sf)
 
 i = (gen_what=='addresses') or bool(opt.no_addresses)*2
 al = (KeyAddrList,AddrList,KeyList)[i](seed=ss.seed,addr_idxs=idxs)

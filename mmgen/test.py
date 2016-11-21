@@ -40,11 +40,11 @@ def getrandstr(num_chars,no_space=False):
 	if no_space: n,m = 94,33
 	return ''.join([chr(ord(i)%n+m) for i in list(os.urandom(num_chars))])
 
-def mk_tmpdir(cfg):
-	try: os.mkdir(cfg['tmpdir'],0755)
+def mk_tmpdir(d):
+	try: os.mkdir(d,0755)
 	except OSError as e:
 		if e.errno != 17: raise
-	else: msg("Created directory '%s'" % cfg['tmpdir'])
+	else: msg("Created directory '%s'" % d)
 
 def mk_tmpdir_path(path,cfg):
 	try:

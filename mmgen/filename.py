@@ -21,7 +21,8 @@ filename.py:  Filename class and methods for the MMGen suite
 """
 import sys,os
 from mmgen.obj import *
-from mmgen.util import die,get_extension,check_infile
+from mmgen.util import die,get_extension
+from mmgen.seed import *
 
 class Filename(MMGenObject):
 
@@ -63,3 +64,26 @@ class Filename(MMGenObject):
 				os.close(fd)
 		else:
 			self.size = os.stat(fn).st_size
+
+def find_files_in_dir(ftype,fdir,no_dups=False):
+	if type(ftype) != type:
+		die(3,"'{}': not a type".format(ftype))
+
+	from mmgen.seed import SeedSource
+	if not issubclass(ftype,SeedSource):
+		die(3,"'{}': not a recognized file type".format(ftype))
+
+	try: dirlist = os.listdir(fdir)
+	except: die(3,"ERROR: unable to read directory '{}'".format(fdir))
+
+	matches = [l for l in dirlist if l[-len(ftype.ext)-1:]=='.'+ftype.ext]
+
+	if no_dups:
+		if len(matches) > 1:
+			die(1,"ERROR: more than one {} file in directory '{}'".format(ftype.__name__,fdir))
+		return os.path.join(fdir,matches[0]) if len(matches) else None
+	else:
+		return [os.path.join(fdir,m) for m in matches]
+
+def find_file_in_dir(ftype,fdir,no_dups=True):
+	return find_files_in_dir(ftype,fdir,no_dups=no_dups)

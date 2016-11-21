@@ -124,6 +124,15 @@ def parse_nbytes(nbytes):
 
 	die(1,"'%s': invalid byte specifier" % nbytes)
 
+def check_or_create_dir(path):
+	try:
+		os.listdir(path)
+	except:
+		try:
+			os.makedirs(path,0700)
+		except:
+			die(2,"ERROR: unable to read or create path '{}'".format(path))
+
 from mmgen.opts import opt
 
 def qmsg(s,alt=False):
@@ -383,6 +392,26 @@ def check_outdir(f):
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
+def get_seed_file(cmd_args,nargs,invoked_as=None):
+	from mmgen.filename import find_file_in_dir
+	from mmgen.seed import Wallet
+	wf = find_file_in_dir(Wallet,g.data_dir)
+
+	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
+
+	import mmgen.opts as opts
+	if len(cmd_args) + (wd_from_opt or bool(wf)) < nargs:
+		opts.usage()
+	elif len(cmd_args) > nargs:
+		opts.usage()
+	elif len(cmd_args) == nargs and wf and invoked_as != 'gen':
+		msg('Warning: overriding wallet in data directory with user-supplied wallet')
+
+	if cmd_args or wf:
+		check_infile(cmd_args[0] if cmd_args else wf)
+
+	return cmd_args[0] if cmd_args else (wf,None)[wd_from_opt]
+
 def get_new_passphrase(desc,passchg=False):
 
 	w = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
@@ -405,18 +434,14 @@ def get_new_passphrase(desc,passchg=False):
 	if pw == '': qmsg('WARNING: Empty passphrase')
 	return pw
 
-
-def confirm_or_exit(message, question, expect='YES'):
-
+def confirm_or_exit(message,question,expect='YES',exit_msg='Exiting at user request'):
 	m = message.strip()
 	if m: msg(m)
-
 	a = question+'  ' if question[0].isupper() else \
 			'Are you sure you want to %s?\n' % question
 	b = "Type uppercase '%s' to confirm: " % expect
-
 	if my_raw_input(a+b).strip() != expect:
-		die(2,'Exiting at user request')
+		die(2,exit_msg)
 
 
 # New function
@@ -469,7 +494,8 @@ def write_data_to_file(
 
 		sys.stdout.write(data)
 	else:
-		if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
+		if opt.outdir and not os.path.isabs(outfile):
+			outfile = make_full_path(opt.outdir,outfile)
 
 		if ask_write:
 			if not ask_write_prompt: ask_write_prompt = 'Save %s?' % desc
@@ -620,6 +646,42 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 		if verbose: msg('\nInvalid reply')
 		else: msg_r('\r')
 
+def do_pager(text):
+
+	pagers = ['less','more']
+	shell = False
+
+# Hack for MS Windows command line (i.e. non CygWin) environment
+# When 'shell' is true, Windows aborts the calling program if executable
+# not found.
+# When 'shell' is false, an exception is raised, invoking the fallback
+# 'print' instead of the pager.
+# We risk assuming that 'more' will always be available on a stock
+# Windows installation.
+	if g.platform == 'win':
+		if 'HOME' not in os.environ: # native Windows terminal
+			shell = True
+			pagers = ['more']
+		else:                     # MSYS
+			os.environ['LESS'] = '-cR -#1' # disable buggy line chopping
+	else:
+		os.environ['LESS'] = '-RS -#1' # raw, chop, scroll right 1 char
+
+	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
+		pagers = [os.environ['PAGER']] + pagers
+
+	for pager in pagers:
+		end = ('\n(end of text)\n','')[pager=='less']
+		try:
+			from subprocess import Popen,PIPE,STDOUT
+			p = Popen([pager], stdin=PIPE, shell=shell)
+		except: pass
+		else:
+			p.communicate(text+end+'\n')
+			msg_r('\r')
+			break
+	else: Msg(text+end)
+
 def do_license_msg(immed=False):
 
 	if opt.quiet or g.no_license: return
@@ -630,7 +692,7 @@ def do_license_msg(immed=False):
 	msg(gpl.warning)
 	prompt = '%s ' % p.strip()
 
-	from mmgen.term import get_char,do_pager
+	from mmgen.term import get_char
 
 	while True:
 		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])

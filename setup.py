@@ -37,7 +37,7 @@ class my_build_ext(build_ext):
 class my_install_data(install_data):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
-			os.chmod('data_files/'+f,0644)
+			os.chmod(os.path.join('data_files',f),0644)
 		install_data.run(self)
 
 module1 = Extension(
@@ -48,6 +48,11 @@ module1 = Extension(
 	runtime_library_dirs = ['/usr/local/lib'],
 	include_dirs = ['/usr/local/include'],
 	)
+
+cmd_overrides = {
+	'linux': { 'build_ext': my_build_ext, 'install_data': my_install_data },
+	'win':   { 'install_data': my_install_data }
+}
 
 from mmgen.globalvars import g
 setup(
@@ -60,9 +65,9 @@ setup(
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows, Raspberry PI',
 		keywords     = 'Bitcoin, wallet, cold storage, offline storage, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous',
-		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
+		cmdclass     = cmd_overrides[g.platform],
 		# disable building of secp256k1 extension module on Windows
-		ext_modules = [module1] if sys.platform[:5] == 'linux' else [],
+		ext_modules = ([],[module1])[g.platform=='linux'],
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode
 				'data_files/mn_wordlist.c',

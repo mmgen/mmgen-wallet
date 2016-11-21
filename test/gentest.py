@@ -62,6 +62,9 @@ EXAMPLES:
     (compare addrs generated with secp256k1 library to bitcoind wallet dump)
 """.format(prog='gentest.py',pnm=g.proj_name,snum=rounds)
 }
+
+sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
+
 cmd_args = opts.init(opts_data,add_opts=['exact_output'])
 
 if not 1 <= len(cmd_args) <= 2: opts.usage()
@@ -167,6 +170,8 @@ elif a and dump:
 	for n,[wif,a_addr] in enumerate(dump,1):
 		msg_r('\rKey %s/%s ' % (n,len(dump)))
 		sec = wif2hex(wif)
+		if sec == False:
+			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
 		compressed = wif[0] != ('5','9')[g.testnet]
 		b_addr = gen_a(sec,compressed)
 		if a_addr != b_addr:
