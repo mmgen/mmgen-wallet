@@ -96,6 +96,12 @@ sample_text = \
 # under '/dev/shm' and put datadir and temp files here.
 if g.platform == 'win':
 	data_dir = os.path.join('test','data_dir')
+	try: os.listdir(data_dir)
+	except: pass
+	else:
+		import shutil
+		shutil.rmtree(data_dir)
+	os.mkdir(data_dir,0755)
 else:
 	d,pfx = '/dev/shm','mmgen-test-'
 	try:
@@ -109,8 +115,7 @@ else:
 	except Exception as e:
 		die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
 	data_dir = os.path.join(shm_dir,'data_dir')
-
-os.mkdir(data_dir,0755)
+	os.mkdir(data_dir,0755)
 
 opts_data = {
 #	'sets': [('non_interactive',bool,'verbose',None)],
@@ -120,6 +125,7 @@ opts_data = {
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -b, --buf-keypress  Use buffered keypresses as with real human input
+-c, --print-cmdline Print the command line of each spawned command
 -d, --debug-scripts Turn on debugging output in executed scripts
 -D, --direct-exec   Bypass pexpect and execute a command directly (for
                     debugging only)
@@ -136,9 +142,9 @@ opts_data = {
                     than those in the repo root
 -S, --skip-deps     Skip dependency checking for command
 -u, --usr-random    Get random data interactively from user
---, --testnet       Run on testnet rather than mainnet
 -t, --traceback     Run the command inside the '{tb_cmd}' script
 -v, --verbose       Produce more verbose output
+-W, --no-dw-delete  Don't remove default wallet from data dir after dw tests are done
 """.format(tb_cmd=tb_cmd,lf=log_file),
 	'notes': """
 
@@ -164,6 +170,7 @@ cfgs = {
 			'rawtx':       'txcreate_dfl_wallet',
 			'sigtx':       'txsign_dfl_wallet',
 			'mmseed':      'export_seed_dfl_wallet',
+			'del_dw_run':  'delete_dfl_wallet',
 		},
 	},
 	'16': {
@@ -369,16 +376,19 @@ cmd_group['help'] = OrderedDict([
 	['longhelpscreens', (1,'help screens (--longhelp)',[],1)],
 ])
 
+cmd_group['dfl_wallet'] = OrderedDict([
+	['walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]],1)],
+	['export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]],1)],
+	['addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]],1)],
+	['txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]],1)],
+	['txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]],1)],
+	['passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]],1)],
+	['walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]],1)],
+	['delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]],1)],
+])
+
 cmd_group['main'] = OrderedDict([
-	['walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]],15)],
-	['addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]],15)],
-	['txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]],15)],
-	['txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]],15)],
-	['export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]])],
-	['passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]],15)],
-	['walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]],15)],
-	['delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]],15)],
-	['walletgen',       (1,'wallet generation',        [[[],1]],1)],
+	['walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]],1)],
 #	['walletchk',       (1,'wallet check',             [[['mmdat'],1]])],
 	['passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]],1)],
 	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[['mmdat',pwfile],5]],1)],
@@ -403,21 +413,21 @@ cmd_group['main'] = OrderedDict([
 	['keyaddrgen',    (1,'key-address file generation', [[['mmdat',pwfile],1]])],
 	['txsign_keyaddr',(1,'transaction signing with key-address file', [[['akeys.mmenc','rawtx'],1]])],
 
-	['walletgen2',(2,'wallet generation (2), 128-bit seed',     [])],
+	['walletgen2',(2,'wallet generation (2), 128-bit seed',     [[['del_dw_run'],15]])],
 	['addrgen2',  (2,'address generation (2)',    [[['mmdat'],2]])],
 	['txcreate2', (2,'transaction creation (2)',  [[['addrs'],2]])],
 	['txsign2',   (2,'transaction signing, two transactions',[[['mmdat','rawtx'],1],[['mmdat','rawtx'],2]])],
 	['export_mnemonic2', (2,'seed export to mmwords format (2)',[[['mmdat'],2]])],
 
-	['walletgen3',(3,'wallet generation (3)',                  [])],
+	['walletgen3',(3,'wallet generation (3)',                  [[['del_dw_run'],15]])],
 	['addrgen3',  (3,'address generation (3)',                 [[['mmdat'],3]])],
 	['txcreate3', (3,'tx creation with inputs and outputs from two wallets', [[['addrs'],1],[['addrs'],3]])],
 	['txsign3',   (3,'tx signing with inputs and outputs from two wallets',[[['mmdat'],1],[['mmdat','rawtx'],3]])],
 
-	['walletgen14', (14,'wallet generation (14)',        [[[],14]],14)],
+	['walletgen14', (14,'wallet generation (14)',        [[['del_dw_run'],15]],14)],
 	['addrgen14',   (14,'address generation (14)',        [[['mmdat'],14]])],
 	['keyaddrgen14',(14,'key-address file generation (14)', [[['mmdat'],14]],14)],
-	['walletgen4',(4,'wallet generation (4) (brainwallet)',    [])],
+	['walletgen4',(4,'wallet generation (4) (brainwallet)',    [[['del_dw_run'],15]])],
 	['addrgen4',  (4,'address generation (4)',                 [[['mmdat'],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14]])],
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet, brainwallet, key-address file and non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])],
@@ -483,7 +493,8 @@ for k in cmd_group: cmd_list[k] = []
 cmd_data = OrderedDict()
 for k,v in (
 		('help', ('help screens',[])),
-		('main', ('basic operations',[1,2,3,4,5])),
+		('dfl_wallet', ('basic operations with default wallet',[15,16])),
+		('main', ('basic operations',[1,2,3,4,5,15,16])),
 		('tool', ('tools',[9]))
 	):
 	cmd_data['info_'+k] = v
@@ -649,15 +660,15 @@ import time,re
 try:
 	import pexpect
 except: # Windows
-	m1 = green('MS Windows detected (or missing pexpect module).  Skipping some tests.\n')
-	m2 = green('Interactive mode.  User prompts will be ')
+	m1 = green('MS Windows or missing pexpect module detected.  Skipping some tests and running in\n')
+	m2 = green('interactive mode.  User prompts and control values will be ')
 	m3 = grnbg('HIGHLIGHTED IN GREEN')
-	m4 = green('.\nContinue?')
+	m4 = green('.\nControl values should be checked against the output that precedes them.')
+	m5 = green('\nContinue?')
 	ni = True
-	if not keypress_confirm(m1+m2+m3+m4,default_yes=True):
+	if not keypress_confirm(m1+m2+m3+m4+m5,default_yes=True):
 		errmsg('Exiting at user request')
 		sys.exit()
-
 
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
@@ -739,9 +750,9 @@ def verify_checksum_or_exit(checksum,chk):
 
 class MMGenExpect(object):
 
-	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False):
+	def __init__(self,name,mmgen_cmd_arg,cmd_args=[],extra_desc='',no_output=False):
 		if not opt.system:
-			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd)
+			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd_arg)
 		desc = (cmd_data[name][1],name)[bool(opt.names)]
 		if extra_desc: desc += ' ' + extra_desc
 		for i in cmd_args:
@@ -752,11 +763,15 @@ class MMGenExpect(object):
 		cmd_str = '{} {}'.format(mmgen_cmd,' '.join(cmd_args))
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
-		if opt.verbose or opt.exact_output:
-			sys.stderr.write(green('Testing: %s\nExecuting %s\n' % (desc,cyan(cmd_str))))
+		if opt.verbose or opt.print_cmdline or opt.exact_output:
+			clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
+			sys.stderr.write(green('Testing: {}\n'.format(desc)))
+			sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
 		else:
 			m = 'Testing %s: ' % desc
 			msg_r((m,yellow(m))[ni])
+
+		if mmgen_cmd_arg == '': return
 
 		if opt.direct_exec or ni:
 			msg('')
@@ -764,8 +779,8 @@ class MMGenExpect(object):
 			f = (call,check_output)[bool(no_output)]
 			ret = f(['python', mmgen_cmd] + cmd_args)
 			if f == call and ret != 0:
-				m = 'Warning: process returned a non-zero exit status (%s)'
-				msg(red(m % ret))
+				m = 'ERROR: process returned a non-zero exit status (%s)'
+				die(1,red(m % ret))
 		else:
 			if opt.traceback:
 				cmd_args = [mmgen_cmd] + cmd_args
@@ -1056,7 +1071,7 @@ def check_deps(cmds):
 
 
 def clean(usr_dirs=[]):
-	if opt.skip_deps: return
+	if opt.skip_deps and not ni: return
 	all_dirs = MMGenTestSuite().list_tmp_dirs()
 	dirs = (usr_dirs or all_dirs)
 	for d in sorted(dirs):
@@ -1129,7 +1144,10 @@ class MMGenTestSuite(object):
 
 	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
 
-	def walletgen(self,name,seed_len=None,make_dfl_rsp='n'):
+	def walletgen(self,name,del_dw_run='dummy',seed_len=None,gen_dfl_wallet=False):
+		if ni:
+			m = "\nAnswer '{}' at the the interactive prompt".format(('n','y')[gen_dfl_wallet])
+			msg(grnbg(m))
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+'\n')
 		add_args = ([usr_rand_arg],
 			['-q','-r0','-L','NI Wallet','-P',get_tmpfile_fn(cfg,pwfile)])[bool(ni)]
@@ -1141,12 +1159,15 @@ class MMGenTestSuite(object):
 		t.usr_rand(usr_rand_chars)
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.label()
-		t.expect('move it to the data directory? (Y/n): ',make_dfl_rsp)
+		global have_dfl_wallet
+		if not have_dfl_wallet:
+			t.expect('move it to the data directory? (Y/n): ',('n','y')[gen_dfl_wallet])
+			if gen_dfl_wallet: have_dfl_wallet = True
 		t.written_to_file('MMGen wallet')
 		ok()
 
 	def walletgen_dfl_wallet(self,name,seed_len=None):
-		self.walletgen(name,seed_len=seed_len,make_dfl_rsp='y')
+		self.walletgen(name,seed_len=seed_len,gen_dfl_wallet=True)
 
 	def brainwalletgen_ref(self,name):
 		sl_arg = '-l%s' % cfg['seed_len']
@@ -1180,14 +1201,15 @@ class MMGenTestSuite(object):
 		end_silence()
 		add_args = ([usr_rand_arg],['-q','-r0','-P',pf])[bool(ni)]
 		t = MMGenExpect(name,'mmgen-passchg', add_args +
-				['-d',cfg['tmpdir'],'-p','2','-L','New Label'] + ([],[wf])[bool(wf)])
+				['-d',cfg['tmpdir'],'-p','2','-L','Changed label'] + ([],[wf])[bool(wf)])
 		if ni: return
 		t.license()
 		t.passphrase('MMGen wallet',cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
-		t.passphrase('MMGen wallet',cfg['wpasswd'],pwtype='new')
+		t.passphrase('MMGen wallet',cfg['wpasswd'],pwtype='new') # reuse passphrase?
 		t.expect('Repeat passphrase: ',cfg['wpasswd']+'\n')
 		t.usr_rand(usr_rand_chars)
+#		t.expect('Enter a wallet label.*: ','Changed Label\n',regex=True)
 		t.expect_getend('Label changed to ')
 #		t.expect_getend('Key ID changed: ')
 		if not wf:
@@ -1200,6 +1222,9 @@ class MMGenTestSuite(object):
 		ok()
 
 	def passchg_dfl_wallet(self,name,pf):
+		if ni:
+			m = "\nAnswer 'YES'<ENTER> at the the interactive prompt"
+			msg(grnbg(m))
 		return self.passchg(name=name,wf=None,pf=pf)
 
 	def walletchk(self,name,wf,pf,desc='MMGen wallet',
@@ -1235,10 +1260,14 @@ class MMGenTestSuite(object):
 		return self.walletchk_newpass(name,wf=None,pf=pf)
 
 	def delete_dfl_wallet(self,name,pf):
+		with open(os.path.join(cfg['tmpdir'],'del_dw_run'),'w') as f: pass
+		if opt.no_dw_delete: return True
 		for wf in [f for f in os.listdir(g.data_dir) if f[-6:]=='.mmdat']:
 			os.unlink(os.path.join(g.data_dir,wf))
-		MMGenExpect(name,'true')
-		ok()
+		MMGenExpect(name,'')
+		global have_dfl_wallet
+		have_dfl_wallet = False
+		if not ni: ok()
 
 	def addrgen(self,name,wf,pf=None,check_ref=False):
 		add_args = ([],['-q'] + ([],['-P',pf])[bool(pf)])[ni]
@@ -1255,7 +1284,7 @@ class MMGenTestSuite(object):
 		t.written_to_file('Addresses',oo=True)
 		ok()
 
-	def addrgen_dfl_wallet(self,name,wf,pf=None,check_ref=False):
+	def addrgen_dfl_wallet(self,name,pf=None,check_ref=False):
 		return self.addrgen(name,wf=None,pf=pf,check_ref=check_ref)
 
 	def refaddrgen(self,name,wf,pf):
@@ -1332,7 +1361,7 @@ class MMGenTestSuite(object):
 		add_args = ([],['-q'])[ni]
 		if ni:
 			m = '\nAnswer the interactive prompts as follows:\n' + \
-				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, 'y'"
+				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, ENTER, 'y'"
 			msg(grnbg(m))
 		t = MMGenExpect(name,'mmgen-txcreate',['-f','0.0001'] + add_args + cmd_args)
 		if ni: return
@@ -1411,14 +1440,18 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation; no transaction was sent')
 		ok()
 
-	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pw=False):
-		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + ([],[wf])[bool(wf)]
+	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
+		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + \
+			([],[wf])[bool(wf)] + ([],['-P',pf])[bool(pf)]
 		t = MMGenExpect(name,'mmgen-walletconv',opts)
+		if ni: return
 		t.license()
-		t.passphrase('MMGen wallet',cfg['wpasswd'])
-		if pw:
+		if not pf:
+			t.passphrase('MMGen wallet',cfg['wpasswd'])
+		if out_pw:
 			t.passphrase_new('new '+desc,cfg['wpasswd'])
 			t.usr_rand(usr_rand_chars)
+
 		if ' '.join(desc.split()[-2:]) == 'incognito data':
 			t.expect('Generating encryption key from OS random data ')
 			t.expect('Generating encryption key from OS random data ')
@@ -1435,22 +1468,23 @@ class MMGenTestSuite(object):
 		if out_fmt == 'w': t.label()
 		return t.written_to_file(capfirst(desc),oo=True)
 
-	def export_seed(self,name,wf,desc='seed data',out_fmt='seed'):
-		f = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt)
+	def export_seed(self,name,wf,desc='seed data',out_fmt='seed',pf=None):
+		f = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
+		if ni: return
 		silence()
 		msg('%s: %s' % (capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
 		ok()
 
-	def export_seed_dfl_wallet(self,name,pw,desc='seed data',out_fmt='seed'):
-		return self.export_seed(name,wf=None,desc=desc,out_fmt=out_fmt)
+	def export_seed_dfl_wallet(self,name,pf,desc='seed data',out_fmt='seed'):
+		self.export_seed(name,wf=None,desc=desc,out_fmt=out_fmt,pf=pf)
 
 	def export_mnemonic(self,name,wf):
 		self.export_seed(name,wf,desc='mnemonic data',out_fmt='words')
 
 	def export_incog(self,name,wf,desc='incognito data',out_fmt='i',add_args=[]):
 		uargs = ['-p1',usr_rand_arg] + add_args
-		self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,pw=True)
+		self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,out_pw=True)
 		ok()
 
 	def export_incog_hex(self,name,wf):
@@ -1537,7 +1571,7 @@ class MMGenTestSuite(object):
 		self.txsign_end(t)
 		ok()
 
-	def walletgen2(self,name):
+	def walletgen2(self,name,del_dw_run='dummy'):
 		self.walletgen(name,seed_len=128)
 
 	def addrgen2(self,name,wf):
@@ -1558,7 +1592,7 @@ class MMGenTestSuite(object):
 	def export_mnemonic2(self,name,wf):
 		self.export_mnemonic(name,wf)
 
-	def walletgen3(self,name):
+	def walletgen3(self,name,del_dw_run='dummy'):
 		self.walletgen(name)
 
 	def addrgen3(self,name,wf):
@@ -1577,7 +1611,7 @@ class MMGenTestSuite(object):
 		self.txsign_end(t)
 		ok()
 
-	def walletgen4(self,name):
+	def walletgen4(self,name,del_dw_run='dummy'):
 		bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
 		make_brainwallet_file(bwf)
 		seed_len = str(cfg['seed_len'])
@@ -1986,6 +2020,8 @@ else:
 		finally:
 			os.symlink(src,cfgs[cfg]['tmpdir'])
 
+have_dfl_wallet = False
+
 # main()
 if opt.pause:
 	import termios,atexit
@@ -1996,6 +2032,14 @@ if opt.pause:
 	atexit.register(at_exit)
 
 start_time = int(time.time())
+
+def end_msg():
+	t = int(time.time()) - start_time
+	m1 = 'All requested tests finished OK, elapsed time: {:02d}:{:02d}\n'
+	m2 = ('','Please re-check all {} control values against the output preceding them.\n'.format(grnbg('HIGHLIGHTED')))[ni]
+	sys.stderr.write(green(m1.format(t/60,t%60)))
+	sys.stderr.write(m2)
+
 ts = MMGenTestSuite()
 
 try:
@@ -2031,7 +2075,4 @@ except:
 	sys.stderr = stderr_save
 	raise
 
-t = int(time.time()) - start_time
-sys.stderr.write(green(
-	'All requested tests finished OK, elapsed time: %02i:%02i\n'
-	% (t/60,t%60)))
+end_msg()

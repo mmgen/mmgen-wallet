@@ -120,8 +120,8 @@ if a and b:
 	m = "Comparing address generators '{}' and '{}'"
 	msg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
 	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(selector=a)
-	gen_b = get_privhex2addr_f(selector=b)
+	gen_a = get_privhex2addr_f(generator=a)
+	gen_b = get_privhex2addr_f(generator=b)
 	compressed = False
 	for i in range(1,rounds+1):
 		msg_r('\rRound %s/%s ' % (i,rounds))
@@ -140,7 +140,7 @@ elif a and not fh:
 	m = "Testing speed of address generator '{}'"
 	msg(green(m.format(g.key_generators[a-1])))
 	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(selector=a)
+	gen_a = get_privhex2addr_f(generator=a)
 	import time
 	start = time.time()
 	from struct import pack,unpack
@@ -165,7 +165,7 @@ elif a and dump:
 	if a == 2:
 		msg("NOTE: for compressed addresses, 'python-ecdsa' generator will be used")
 	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(selector=a)
+	gen_a = get_privhex2addr_f(generator=a)
 	from mmgen.bitcoin import wif2hex
 	for n,[wif,a_addr] in enumerate(dump,1):
 		msg_r('\rKey %s/%s ' % (n,len(dump)))

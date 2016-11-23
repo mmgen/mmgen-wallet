@@ -212,7 +212,10 @@ class SeedSource(MMGenObject):
 			'no_tty':   self.no_tty,
 			'binary':   self.file_mode == 'binary'
 		}
-		write_data_to_file(os.path.join(outdir,self._filename()),self.fmt_data,**kwargs)
+		# write_data_to_file(): outfile with absolute path overrides opt.outdir
+		if outdir:
+			of = os.path.abspath(os.path.join(outdir,self._filename()))
+		write_data_to_file(of if outdir else self._filename(),self.fmt_data,**kwargs)
 
 class SeedSourceUnenc(SeedSource):
 

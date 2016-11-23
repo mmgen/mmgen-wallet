@@ -36,7 +36,7 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.8.7a'
+	version      = '0.8.8rc1'
 	release_date = 'November 2016'
 
 	proj_name = 'MMGen'
@@ -76,11 +76,10 @@ class g(object):
 
 	if os.getenv('HOME'):                             # Linux or MSYS
 		home_dir = os.getenv('HOME')
-	elif platform == 'win' and os.getenv('HOMEPATH'): # Windows:
-		home_dir = os.getenv('HOMEPATH')
+	elif platform == 'win' and os.getenv('HOMEPATH'): # Windows native:
+		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
 	else:
-		m = ('$HOME is not set','Neither $HOME nor %HOMEPATH% are set')[platform=='win']
-		die(2,m + '\nUnable to determine home directory')
+		die(2,'$HOME is not set!  Unable to determine home directory')
 
 	data_dir_root = None
 	data_dir = None

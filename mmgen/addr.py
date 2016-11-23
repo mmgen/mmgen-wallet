@@ -87,21 +87,23 @@ def _privhex2addr_secp256k1(privhex,compressed=False):
 	pubkey = priv2pub(unhexlify(privhex),int(compressed))
 	return hexaddr2addr(pubhex2hexaddr(hexlify(pubkey)))
 
-def _keygen_selector():
-	if opt.key_generator == 3 and _test_for_secp256k1():
-		return 2
-	elif opt.key_generator in (2,3) and _test_for_keyconv():
-		return 1
+def _keygen_selector(generator=None):
+	if generator:
+		if generator == 3 and _test_for_secp256k1():             return 2
+		elif generator in (2,3) and _test_for_keyconv():         return 1
 	else:
-		msg('Using (slow) internal ECDSA library for address generation')
-		return 0
+		if opt.key_generator == 3 and _test_for_secp256k1():     return 2
+		elif opt.key_generator in (2,3) and _test_for_keyconv(): return 1
+	msg('Using (slow) internal ECDSA library for address generation')
+	return 0
 
-def get_wif2addr_f():
-	return (_wif2addr_python,_wif2addr_keyconv,_wif2addr_secp256k1)[_keygen_selector()]
+def get_wif2addr_f(generator=None):
+	gen = _keygen_selector(generator=generator)
+	return (_wif2addr_python,_wif2addr_keyconv,_wif2addr_secp256k1)[gen]
 
-def get_privhex2addr_f(selector=None):
-	sel = selector-1 if selector else _keygen_selector()
-	return (_privhex2addr_python,_privhex2addr_keyconv,_privhex2addr_secp256k1)[sel]
+def get_privhex2addr_f(generator=None):
+	gen = _keygen_selector(generator=generator)
+	return (_privhex2addr_python,_privhex2addr_keyconv,_privhex2addr_secp256k1)[gen]
 
 class AddrListEntry(MMGenListItem):
 	attrs = 'idx','addr','label','wif','sec'

@@ -70,8 +70,8 @@ common_opts_data = """
 --, --data-dir=d    Specify the location of {pnm}'s data directory
 --, --no-license    Suppress the GPL license prompt
 --, --rpc-host=h    Communicate with bitcoind running on host 'h'
+--, --testnet=1     Set to '1' use testnet, '0' to force mainnet
 --, --skip-cfg-file Skip reading the configuration file
---, --testnet       Use testnet instead of mainnet
 --, --version       Print version information and exit
 """.format(pnm=g.proj_name)
 
@@ -131,7 +131,7 @@ def get_data_from_config_file():
 		with open(g.cfg_file,'rb') as f: data = f.read().decode('utf8')
 	except:
 		cfg_template = os.path.join(*([sys.prefix]
-					+ ([''],['local','share'])[bool(os.getenv('HOME'))]
+					+ (['share'],['local','share'])[g.platform=='linux']
 					+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
 		try:
 			with open(cfg_template,'rb') as f: template_data = f.read()

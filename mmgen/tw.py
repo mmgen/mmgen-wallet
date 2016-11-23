@@ -74,7 +74,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
 #		sys.exit()
 
-		if not us_rpc: die(2,self.wmsg['no_spendable_outputs'])
+		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
 		for o in us_rpc:
 			o['mmid'],o['label'] = parse_tw_acct_label(o['account']) if 'account' in o else ('','')
 			o['days'] = int(o['confirmations'] * g.mins_per_block / (60*24))
