@@ -2,7 +2,7 @@
 
 Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool
+		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe
 
 Install the Python Cryptography Toolkit:
 

@@ -320,20 +320,21 @@ def check_opts(usr_opts):       # Returns false if any check fails
 					die(1,'Output to brainwallet format unsupported')
 		elif key in ('hidden_incog_input_params','hidden_incog_output_params'):
 			a = val.split(',')
-			if len(a) != 2:
+			if len(a) < 2:
 				opt_display(key,val)
 				msg('Option requires two comma-separated arguments')
 				return False
-			if not opt_is_int(a[1],desc): return False
+			fn,ofs = ','.join(a[:-1]),a[-1] # permit comma in filename
+			if not opt_is_int(ofs,desc): return False
 			if key == 'hidden_incog_input_params':
-				check_infile(a[0],blkdev_ok=True)
+				check_infile(fn,blkdev_ok=True)
 				key2 = 'in_fmt'
 			else:
-				try: os.stat(a[0])
+				try: os.stat(fn)
 				except:
-					b = os.path.dirname(a[0])
+					b = os.path.dirname(fn)
 					if b: check_outdir(b)
-				else: check_outfile(a[0],blkdev_ok=True)
+				else: check_outfile(fn,blkdev_ok=True)
 				key2 = 'out_fmt'
 			if hasattr(opt,key2):
 				val2 = getattr(opt,key2)

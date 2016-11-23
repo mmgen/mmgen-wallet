@@ -273,8 +273,8 @@ cfgs = {
 		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
 		'ic_wallet_hex':   'FE3C6545-BC4BE3F2-32586837[128,1].mmincox',
 
-		'hic_wallet':       'FE3C6545-161E495F-BEB7548E[128:1].incog-offset123',
-		'hic_wallet_old':   'FE3C6545-161E495F-9860A85B[128:1].incog-old.offset123',
+		'hic_wallet':       'FE3C6545-161E495F-BEB7548E[128,1].incog-offset123',
+		'hic_wallet_old':   'FE3C6545-161E495F-9860A85B[128,1].incog-old.offset123',
 
 		'tmpdir':        os.path.join('test','tmp6'),
 		'kapasswd':      '',
@@ -299,8 +299,8 @@ cfgs = {
 		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
 		'ic_wallet_hex':   '1378FC64-4DCB5174-872806A7[192,1].mmincox',
 
-		'hic_wallet':       '1378FC64-B55E9958-77256FC1[192:1].incog.offset123',
-		'hic_wallet_old':   '1378FC64-B55E9958-D85FF20C[192:1].incog-old.offset123',
+		'hic_wallet':       '1378FC64-B55E9958-77256FC1[192,1].incog.offset123',
+		'hic_wallet_old':   '1378FC64-B55E9958-D85FF20C[192,1].incog-old.offset123',
 
 		'tmpdir':        os.path.join('test','tmp7'),
 		'kapasswd':      '',
@@ -332,8 +332,8 @@ cfgs = {
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 
-		'hic_wallet':       '98831F3A-F59B07A0-559CEF19[256:1].incog.offset123',
-		'hic_wallet_old':   '98831F3A-F59B07A0-848535F3[256:1].incog-old.offset123',
+		'hic_wallet':       '98831F3A-F59B07A0-559CEF19[256,1].incog.offset123',
+		'hic_wallet_old':   '98831F3A-F59B07A0-848535F3[256,1].incog-old.offset123',
 
 		'tmpdir':        os.path.join('test','tmp8'),
 		'kapasswd':      '',
@@ -663,7 +663,7 @@ except: # Windows
 	m1 = green('MS Windows or missing pexpect module detected.  Skipping some tests and running in\n')
 	m2 = green('interactive mode.  User prompts and control values will be ')
 	m3 = grnbg('HIGHLIGHTED IN GREEN')
-	m4 = green('.\nControl values should be checked against the output that precedes them.')
+	m4 = green('.\nControl values should be checked against the program output.')
 	m5 = green('\nContinue?')
 	ni = True
 	if not keypress_confirm(m1+m2+m3+m4+m5,default_yes=True):
@@ -751,8 +751,7 @@ def verify_checksum_or_exit(checksum,chk):
 class MMGenExpect(object):
 
 	def __init__(self,name,mmgen_cmd_arg,cmd_args=[],extra_desc='',no_output=False):
-		if not opt.system:
-			mmgen_cmd = os.path.join(os.curdir,mmgen_cmd_arg)
+		mmgen_cmd = (os.path.join(os.curdir,mmgen_cmd_arg),mmgen_cmd_arg)[bool(opt.system)]
 		desc = (cmd_data[name][1],name)[bool(opt.names)]
 		if extra_desc: desc += ' ' + extra_desc
 		for i in cmd_args:
@@ -2036,7 +2035,7 @@ start_time = int(time.time())
 def end_msg():
 	t = int(time.time()) - start_time
 	m1 = 'All requested tests finished OK, elapsed time: {:02d}:{:02d}\n'
-	m2 = ('','Please re-check all {} control values against the output preceding them.\n'.format(grnbg('HIGHLIGHTED')))[ni]
+	m2 = ('','Please re-check all {} control values against the program output.\n'.format(grnbg('HIGHLIGHTED')))[ni]
 	sys.stderr.write(green(m1.format(t/60,t%60)))
 	sys.stderr.write(m2)
 

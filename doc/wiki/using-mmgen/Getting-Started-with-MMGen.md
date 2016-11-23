@@ -24,20 +24,42 @@ format conversion, address and key generation, and address import operations can
 be performed on either an online or offline computer with an empty blockchain
 and no Bitcoin balance.
 
+*NOTE: Beginning with v0.8.7a, MMGen supports testnet, allowing you to perform
+the entire set of MMGen operations without risking real funds (free testnet
+coins may be obtained at [https://tpfaucet.appspot.com/][2]). To use this
+feature, start bitcoind with the -testnet option and sync the testnet blockchain
+(about 9GB at this time of writing).  To make MMGen use testnet instead of
+mainnet, supply the `--testnet=1` option as the first argument to all MMGen
+commands you run.  To save typing, the option may also be set in the MMGen
+configuration file.*
+
 Note that all the filenames, seed IDs, Bitcoin addresses and so forth used in
-this primer are fake.  Substitute real ones in their place as you go.  The up
-arrow (for repeating commands) and tab key (or Ctrl-I) (for completing commands
-and filenames) will speed up your work at the command line greatly.
+this primer are fake and for purposes of illustration only.  The up arrow (for
+repeating commands) and tab key (or Ctrl-I) (for completing commands and
+filenames) will speed up your work at the command line greatly.
 
 ### <a name=01>Basic Operations</a>
 
 #### <a name=02>Generate a wallet (offline computer):</a>
 
+*NOTE: Beginning with v0.8.8, MMGen supports a “default wallet” feature.  After
+creating your wallet, MMGen will prompt you to make it your default.  If you
+answer 'y', the wallet will be stored in your MMGen data directory and used for
+all future commands that require a wallet or other seed source.*
+
+*If you don't want your MMGen wallet stored in your MMGen data directory, then
+you may not to want to use this feature.  Otherwise, it's recommended, as it
+saves you from having to type your wallet on the command line.*
+
+*The following examples suppose that you've chosen to use a default wallet.
+Bear in mind that if you hadn't, the wallet would need to be specified as an
+argument to all commands where it's relevant.*
+
 On your offline computer, generate a wallet:
 
 		$ mmgen-walletgen
 		...
-		MMGen wallet written to file '89ABCDEF-76543210[256,3].mmdat'
+		MMGen wallet written to file '/home/username/.mmgen/89ABCDEF-76543210[256,3].mmdat'
 
 ‘89ABCDEF’ is the Seed ID; ‘76543210’ is the Key ID. These are randomly
 generated, so your IDs will of course be different than these.
@@ -65,7 +87,7 @@ written out by hand or memorized.
 
 Now generate ten addresses with your just-created wallet:
 
-		$ mmgen-addrgen 89ABCDEF-76543210[256,3].mmdat 1-10
+		$ mmgen-addrgen 1-10
 		...
 		Addresses written to file '89ABCDEF[1-10].addrs'
 
@@ -152,15 +174,16 @@ also).
 		...
 		TOTAL: 0 BTC
 
-Note that it’s also possible to [track ordinary Bitcoin addresses with your
-tracking wallet][1].  This is not recommended, however, as you must save their
-corresponding keys in a key list in order to spend them.  Avoiding the use of
-keys is precisely the reason MMGen was created!
+*While not covered in this introduction, note that it’s also possible to [import
+ordinary Bitcoin addresses into your tracking wallet][1].  This allows you to
+move funds from another wallet directly to MMGen without having to go through
+the network.  To use it, you must save the keys corresponding to the addresses
+where the funds are stored in a separate file for use during signing.*
 
 Now that your addresses are being tracked, you may go ahead and send some BTC to
-them.  If you send 0.1, 0.2, 0.3 and 0.4 BTC respectively, for example, your
-address listing will look something like this after the transactions have been
-confirmed:
+them over the Bitcoin network.  If you send 0.1, 0.2, 0.3 and 0.4 BTC
+respectively, for example, your address listing will look something like this
+after the transactions have been confirmed:
 
 		$ mmgen-tool listaddresses
 		MMGenID     COMMENT    BALANCE
@@ -175,7 +198,9 @@ confirmed:
 Now that you have some BTC under MMGen’s control, you’re ready to create a
 transaction.  Note that transactions are harmless until they’re signed and
 broadcast to the network, so feel free to experiment and create transactions
-with different combinations of inputs and outputs.
+with different combinations of inputs and outputs.  If you're using testnet,
+then even broadcast transactions are harmless, so it's highly recommended you
+do so if you want to practice sending transactions.
 
 To send 0.1 BTC to the a third-party address 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,
 for example, and send the change back to yourself at address 89ABCDEF:5, you’d
@@ -240,13 +265,13 @@ and change addresses.  This feature will be appreciated by privacy-conscious use
 #### <a name=06>Sign a transaction (offline computer):</a>
 
 Now transfer the the raw transaction file to your offline computer and sign it
-using your wallet:
+using your default wallet:
 
-		$ mmgen-txsign FEDCBA[0.1].rawtx 89ABCDEF-76543210[256,3].mmdat
+		$ mmgen-txsign FEDCBA[0.1].rawtx
 		...
 		Signed transaction written to file 'FEDCBA[0.1].sigtx'
 
-Note that the signed transaction file bears the extension '.sigtx'.
+Note that the signed transaction file has a new extension, '.sigtx'.
 
 #### <a name=07>Send a transaction (online computer):</a>
 
@@ -284,9 +309,9 @@ by invoking the desired command with the `-h` or `--help` switch.
 
 #### <a name=11>Using the mnemonic and seed features:</a>
 
-Continuing our example above, generate a mnemonic from the wallet:
+Continuing our example above, generate a mnemonic from the default wallet:
 
-		$ mmgen-walletconv -o words '89ABCDEF-76543210[256,3].mmdat'
+		$ mmgen-walletconv -o words
 		...
 		Mnemonic data written to file '89ABCDEF.mmwords'
 
@@ -329,7 +354,7 @@ Seed ID.
 Seed files bear the extension '.mmseed' and are generated and used exactly
 the same way as mnemonic files:
 
-		$ mmgen-walletconv -o seed '89ABCDEF-76543210[256,3].mmdat'
+		$ mmgen-walletconv -o seed
 		...
 		Seed data written to file '89ABCDEF.mmseed'
 
@@ -477,7 +502,7 @@ create a 1GB file 'random.dat' and hide a wallet in it at offset 123456789:
 		Data written to file 'random.dat' at offset 123456789
 
 Your ‘random’ file can now be uploaded to a cloud storage service, for example,
-or some other, preferably non-public, location on the Net (in a real-life
+or some other location on the Net, preferably non-public one (in a real-life
 situation you will choose a less obvious offset than '123456789' though, won’t
 you?).
 
@@ -506,3 +531,4 @@ Transaction signing uses the same syntax:
 		Signed transaction written to file 'ABCDEF[0.1].sigtx'
 
 [1]: https://github.com/mmgen/mmgen/wiki/Tracking-and-spending-ordinary-Bitcoin-addresses
+[2]: https://tpfaucet.appspot.com

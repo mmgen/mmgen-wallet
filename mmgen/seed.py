@@ -84,7 +84,8 @@ class SeedSource(MMGenObject):
 			if fn:
 				f = Filename(fn)
 			else:
-				fn = opt.hidden_incog_input_params.split(',')[0]
+				# permit comma in filename
+				fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1])
 				f = Filename(fn,ftype=IncogWalletHidden)
 			if opt.in_fmt and not ignore_in_fmt:
 				die_on_opt_mismatch(opt.in_fmt,f.ftype)
@@ -924,9 +925,8 @@ harder to find, you're advised to choose a much larger file size than this.
 	}
 
 	def _get_hincog_params(self,wtype):
-		p = getattr(opt,'hidden_incog_'+ wtype +'_params')
-		a,b = p.split(',')
-		return a,int(b)
+		a = getattr(opt,'hidden_incog_'+ wtype +'_params').split(',')
+		return ','.join(a[:-1]),int(a[-1]) # permit comma in filename
 
 	def _check_valid_offset(self,fn,action):
 		d = self.ssdata
