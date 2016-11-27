@@ -36,16 +36,20 @@ class BitcoinRPCConnection(object):
 				user=None,passwd=None,auth_cookie=None,
 			):
 
+		dmsg('=== BitcoinRPCConnection.__init__() debug ===')
+		dmsg('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
+			host,port,user,passwd,auth_cookie))
+
 		if user and passwd:
 			self.auth_str = '{}:{}'.format(user,passwd)
 		elif auth_cookie:
 			self.auth_str = auth_cookie
 		else:
 			msg('Error: no Bitcoin RPC authentication method found')
-			if passwd: die(1,"'rpcuser' entry missing in bitcoin.conf")
-			elif user: die(1,"'rpcpassword' entry missing in bitcoin.conf")
+			if passwd: die(1,"'rpcuser' entry not found in bitcoin.conf or mmgen.cfg")
+			elif user: die(1,"'rpcpassword' entry not found in bitcoin.conf or mmgen.cfg")
 			else:
-				m1 = 'Either provide rpcuser/rpcpassword in bitcoin.conf'
+				m1 = 'Either provide rpcuser/rpcpassword in bitcoin.conf or mmgen.cfg'
 				m2 = '(or, alternatively, copy the authentication cookie to Bitcoin data dir'
 				m3 = 'if {} and Bitcoin are running as different users)'.format(g.proj_name)
 				die(1,'\n'.join((m1,m2,m3)))
@@ -79,7 +83,7 @@ class BitcoinRPCConnection(object):
 			else:
 				die(*args[1:])
 
-		dmsg('=== rpc.py debug ===')
+		dmsg('=== request() debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):

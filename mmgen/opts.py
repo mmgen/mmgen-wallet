@@ -65,14 +65,18 @@ def _show_hash_presets():
 		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
+# most, but not all, of these set the corresponding global var
 common_opts_data = """
---, --color=c       Set to '0' to disable color output, '1' to enable
---, --data-dir=d    Specify the location of {pnm}'s data directory
---, --no-license    Suppress the GPL license prompt
---, --rpc-host=h    Communicate with bitcoind running on host 'h'
---, --testnet=1     Set to '1' use testnet, '0' to force mainnet
---, --skip-cfg-file Skip reading the configuration file
---, --version       Print version information and exit
+--, --color=c        Set to '0' to disable color output, '1' to enable
+--, --data-dir=d     Specify the location of {pnm}'s data directory
+--, --no-license     Suppress the GPL license prompt
+--, --rpc-host=h     Communicate with bitcoind running on host 'h'
+--, --rpc-port=p     Communicate with bitcoind listening on port 'p'
+--, --rpc-user=u     Override 'rpcuser' in bitcoin.conf
+--, --rpc-password=p Override 'rpcpassword' in bitcoin.conf
+--, --testnet=1      Set to '1' enable testnet, '0' to disable
+--, --skip-cfg-file  Skip reading the configuration file
+--, --version        Print version information and exit
 """.format(pnm=g.proj_name)
 
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
@@ -100,7 +104,7 @@ def opt_postproc_debug():
 	Msg('    Global vars:')
 	for e in [d for d in dir(g) if d[:2] != '__']:
 		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
-	Msg('\n=== end opts.py debug ===')
+	Msg('\n=== end opts.py debug ===\n')
 
 def opt_postproc_actions():
 	from mmgen.term import set_terminal_vars
@@ -110,10 +114,8 @@ def opt_postproc_actions():
 	check_or_create_dir(g.data_dir) # dies on error
 
 def	set_data_dir_root():
-
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
-		(os.path.join(g.home_dir,'Application Data',g.proj_name),
-			os.path.join(g.home_dir,'.'+g.proj_name.lower()))[bool(os.getenv('HOME'))]
+			os.path.join(g.home_dir,'.'+g.proj_name.lower())
 
 	# mainnet and testnet share cfg file, as with Core
 	g.cfg_file = os.path.join(g.data_dir_root,'{}.cfg'.format(g.proj_name.lower()))
@@ -194,6 +196,7 @@ def init(opts_data,add_opts=[],opt_filter=None):
 
 	# === Interaction with global vars begins here ===
 
+	# NB: user opt --data-dir is actually g.data_dir_root
 	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
 	# Must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
 	set_data_dir_root()

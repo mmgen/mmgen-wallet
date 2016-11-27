@@ -648,24 +648,10 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 def do_pager(text):
 
-	pagers = ['less','more']
-	shell = False
-
-# Hack for MS Windows command line (i.e. non CygWin) environment
-# When 'shell' is true, Windows aborts the calling program if executable
-# not found.
-# When 'shell' is false, an exception is raised, invoking the fallback
-# 'print' instead of the pager.
-# We risk assuming that 'more' will always be available on a stock
-# Windows installation.
-	if g.platform == 'win':
-		if 'HOME' not in os.environ: # native Windows terminal
-			shell = True
-			pagers = ['more']
-		else:                     # MSYS
-			os.environ['LESS'] = '-cR -#1' # disable buggy line chopping
-	else:
-		os.environ['LESS'] = '-RS -#1' # raw, chop, scroll right 1 char
+	pagers,shell = ['less','more'],False
+	# --- Non-MSYS Windows code deleted ---
+	# raw, chop, scroll right 1 char, disable buggy line chopping for Windows
+	os.environ['LESS'] = (('-RS -#1'),('-cR -#1'))[g.platform=='win']
 
 	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
 		pagers = [os.environ['PAGER']] + pagers
@@ -727,14 +713,14 @@ def get_bitcoind_auth_cookie():
 		return ''
 
 def bitcoin_connection():
-
-	port = (8332,18332)[g.testnet]
-	host,user,passwd = g.rpc_host,'rpcuser','rpcpassword'
-	cfg = get_bitcoind_cfg_options((user,passwd))
-	auth_cookie = get_bitcoind_auth_cookie()
-
+	cfg = get_bitcoind_cfg_options(('rpcuser','rpcpassword'))
 	import mmgen.rpc
 	c = mmgen.rpc.BitcoinRPCConnection(
-				host,port,cfg[user],cfg[passwd],auth_cookie=auth_cookie)
+				g.rpc_host or 'localhost',
+				g.rpc_port or (8332,18332)[g.testnet],
+				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
+				g.rpc_password or cfg['rpcpassword'],
+				auth_cookie=get_bitcoind_auth_cookie())
+	# do an RPC call to make the function fail if we can't connect
 	c.client_version = int(c.getinfo()['version'])
 	return c

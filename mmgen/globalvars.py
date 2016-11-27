@@ -54,6 +54,7 @@ class g(object):
 	tx_confs      = 3
 
 	seed_len     = 256
+
 	http_timeout = 60
 
 	# Constants - some of these might be overriden, but they don't change thereafter
@@ -64,7 +65,10 @@ class g(object):
 	hold_protect         = True
 	color                = (False,True)[sys.stdout.isatty()]
 	testnet              = False
-	rpc_host             = 'localhost'
+	rpc_host             = ''
+	rpc_port             = 0
+	rpc_user             = ''
+	rpc_password         = ''
 	testnet_name         = 'testnet3'
 	bogus_wallet_data    = '' # for debugging, used by test suite
 
@@ -76,18 +80,18 @@ class g(object):
 
 	if os.getenv('HOME'):                             # Linux or MSYS
 		home_dir = os.getenv('HOME')
-	elif platform == 'win' and os.getenv('HOMEPATH'): # Windows native:
+	elif platform == 'win': # Windows native:
 		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
-	data_dir_root = None
-	data_dir = None
-	cfg_file = None
-	bitcoin_data_dir = (os.path.join(home_dir,'Application Data','Bitcoin'),
-				os.path.join(home_dir,'.bitcoin'))[bool(os.getenv('HOME'))]
+	data_dir_root,data_dir,cfg_file = None,None,None
+	bitcoin_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin') if platform == 'win' \
+						else os.path.join(home_dir,'.bitcoin')
 
-	common_opts = ('color','no_license','rpc_host','testnet')
+	# User opt sets global var:
+	common_opts = ('color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password')
+
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset',
@@ -101,8 +105,8 @@ class g(object):
 		('batch','rescan'),
 	)
 	cfg_file_opts = (
-		'color','debug','hash_preset','http_timeout','no_license','rpc_host',
-		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet'
+		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
+		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
