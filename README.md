@@ -116,4 +116,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]: https://github.com/mmgen/MMGenLive
-[9]: https://cloud.githubusercontent.com/assets/6071028/17458981/e4da820e-5c16-11e6-8610-973305ff6bac.png
+[9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
