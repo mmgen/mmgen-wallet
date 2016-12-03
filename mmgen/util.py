@@ -704,8 +704,7 @@ def get_bitcoind_cfg_options(cfg_keys):
 
 def get_bitcoind_auth_cookie():
 
-	f = os.path.join(g.bitcoin_data_dir,('',g.testnet_name)[g.testnet],
-						('.','_')[g.platform=='win']+'cookie')
+	f = os.path.join(g.bitcoin_data_dir,('',g.testnet_name)[g.testnet],'.cookie')
 
 	if file_is_readable(f):
 		return get_lines_from_file(f,'')[0]

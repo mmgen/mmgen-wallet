@@ -67,16 +67,17 @@ def _show_hash_presets():
 
 # most, but not all, of these set the corresponding global var
 common_opts_data = """
---, --color=c        Set to '0' to disable color output, '1' to enable
---, --data-dir=d     Specify the location of {pnm}'s data directory
---, --no-license     Suppress the GPL license prompt
---, --rpc-host=h     Communicate with bitcoind running on host 'h'
---, --rpc-port=p     Communicate with bitcoind listening on port 'p'
---, --rpc-user=u     Override 'rpcuser' in bitcoin.conf
---, --rpc-password=p Override 'rpcpassword' in bitcoin.conf
---, --testnet=1      Set to '1' enable testnet, '0' to disable
---, --skip-cfg-file  Skip reading the configuration file
---, --version        Print version information and exit
+--, --color=0|1           Disable or enable color output
+--, --bitcoin-data-dir=d  Specify Bitcoin data directory location 'd'
+--, --data-dir=d          Specify {pnm} data directory location 'd'
+--, --no-license          Suppress the GPL license prompt
+--, --rpc-host=h          Communicate with bitcoind running on host 'h'
+--, --rpc-port=p          Communicate with bitcoind listening on port 'p'
+--, --rpc-user=user       Override 'rpcuser' in bitcoin.conf
+--, --rpc-password=pass   Override 'rpcpassword' in bitcoin.conf
+--, --testnet=0|1         Disable or enable testnet
+--, --skip-cfg-file       Skip reading the configuration file
+--, --version             Print version information and exit
 """.format(pnm=g.proj_name)
 
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):

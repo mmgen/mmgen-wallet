@@ -90,8 +90,10 @@ class g(object):
 						else os.path.join(home_dir,'.bitcoin')
 
 	# User opt sets global var:
-	common_opts = ('color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password')
-
+	common_opts = (
+		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
+		'bitcoin_data_dir'
+	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset',
@@ -102,11 +104,12 @@ class g(object):
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
-		('batch','rescan'),
+		('batch','rescan')
 	)
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
-		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password'
+		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
+		'bitcoin_data_dir'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
