@@ -24,33 +24,7 @@ import sys,os,time,stat,re
 from hashlib import sha256
 from binascii import hexlify,unhexlify
 from string import hexdigits
-
-# If 88- or 256-color support is compiled, the following apply.
-#    P s = 3 8 ; 5 ; P s -> Set foreground color to the second P s .
-#    P s = 4 8 ; 5 ; P s -> Set background color to the second P s .
-if os.environ['TERM'][-8:] == '256color':
-	_blk,_red,_grn,_yel,_blu,_mag,_cya,_bright,_dim,_ybright,_ydim,_pnk,_orng,_gry = [
-	'\033[38;5;%s;1m' % c for c in 232,210,121,229,75,90,122,231,245,187,243,218,215,246]
-	_redbg = '\033[38;5;232;48;5;210;1m'
-	_grnbg = '\033[38;5;232;48;5;121;1m'
-	_grybg = '\033[38;5;231;48;5;240;1m'
-	_reset = '\033[0m'
-else:
-	_blk,_red,_grn,_yel,_blu,_mag,_cya,_reset,_grnbg = \
-		['\033[%sm' % c for c in '30;1','31;1','32;1','33;1','34;1','35;1','36;1','0','30;102']
-	_gry = _orng = _pnk = _redbg = _ybright = _ydim = _bright = _dim = _grybg = _mag  # TODO
-
-def red(s):     return _red+s+_reset
-def green(s):   return _grn+s+_reset
-def grnbg(s):   return _grnbg+s+_reset
-def yellow(s):  return _yel+s+_reset
-def cyan(s):    return _cya+s+_reset
-def blue(s):    return _blu+s+_reset
-def pink(s):    return _pnk+s+_reset
-def orange(s):  return _orng+s+_reset
-def gray(s):    return _gry+s+_reset
-def magenta(s): return _mag+s+_reset
-def nocolor(s): return s
+from mmgen.color import *
 
 def msg(s):    sys.stderr.write(s+'\n')
 def msg_r(s):  sys.stderr.write(s)
@@ -309,17 +283,11 @@ def remove_comments(lines):
 from mmgen.globalvars import g
 
 def start_mscolor():
-	if g.platform == 'win':
-		global red,green,yellow,cyan,nocolor
-		import os
-		if 'MMGEN_NOMSCOLOR' in os.environ:
-			red = green = yellow = cyan = grnbg = nocolor
-		else:
-			try:
-				import colorama
-				colorama.init(strip=True,convert=True)
-			except:
-				red = green = yellow = cyan = grnbg = nocolor
+	try:
+		import colorama
+		colorama.init(strip=True,convert=True)
+	except:
+		msg('Import of colorama module failed')
 
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
@@ -465,7 +433,7 @@ def write_data_to_file(
 	if ask_write_default_yes == False or ask_write_prompt:
 		ask_write = True
 
-	if opt.stdout or not sys.stdout.isatty() or outfile in ('','-'):
+	def do_stdout():
 		qmsg('Output to STDOUT requested')
 		if sys.stdout.isatty():
 			if no_tty:
@@ -493,7 +461,8 @@ def write_data_to_file(
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 
 		sys.stdout.write(data)
-	else:
+
+	def do_file(outfile,ask_write_prompt):
 		if opt.outdir and not os.path.isabs(outfile):
 			outfile = make_full_path(opt.outdir,outfile)
 
@@ -521,6 +490,14 @@ def write_data_to_file(
 			msg("%s written to file '%s'" % (capfirst(desc),outfile))
 
 		return True
+
+	if opt.stdout or outfile in ('','-'):
+		do_stdout()
+	elif not sys.stdout.isatty() and not os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+		do_stdout()
+	else:
+		do_file(outfile,ask_write_prompt)
+
 
 def get_words_from_user(prompt):
 	# split() also strips
@@ -603,9 +580,8 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 		prompt = ''
 
 	from mmgen.term import kb_hold_protect
-
 	kb_hold_protect()
-	if echo:
+	if echo or os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
 		reply = raw_input(prompt)
 	else:
 		from getpass import getpass

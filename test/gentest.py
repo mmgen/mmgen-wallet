@@ -31,8 +31,6 @@ from binascii import hexlify
 from mmgen.common import *
 from mmgen.bitcoin import hex2wif,privnum2addr
 
-start_mscolor()
-
 rounds = 100
 opts_data = {
 	'desc': "Test address generation in various ways",

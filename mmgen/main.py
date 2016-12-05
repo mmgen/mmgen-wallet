@@ -28,16 +28,14 @@ def launch(what):
 
 	try: import termios
 	except: # Windows
-		from mmgen.util import start_mscolor
-		start_mscolor()
 		__import__('mmgen.main_' + what)
 	else:
-		import sys,atexit
-		fd = sys.stdin.fileno()
-		old = termios.tcgetattr(fd)
-		def at_exit():
-			termios.tcsetattr(fd, termios.TCSADRAIN, old)
-		atexit.register(at_exit)
+		import sys,os,atexit
+		if not os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+			fd = sys.stdin.fileno()
+			old = termios.tcgetattr(fd)
+			def at_exit(): termios.tcsetattr(fd, termios.TCSADRAIN, old)
+			atexit.register(at_exit)
 		try: __import__('mmgen.main_' + what)
 		except KeyboardInterrupt:
 			sys.stderr.write('\nUser interrupt\n')

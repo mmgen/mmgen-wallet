@@ -28,8 +28,6 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
 
-start_mscolor()
-
 from collections import OrderedDict
 cmd_data = OrderedDict([
 	('util', {

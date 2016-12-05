@@ -107,12 +107,18 @@ def opt_postproc_debug():
 		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
 	Msg('\n=== end opts.py debug ===\n')
 
-def opt_postproc_actions():
+def opt_postproc_initializations():
 	from mmgen.term import set_terminal_vars
 	set_terminal_vars()
+
 	# testnet data_dir differs from data_dir_root, so check or create
 	from mmgen.util import msg,die,check_or_create_dir
 	check_or_create_dir(g.data_dir) # dies on error
+
+	from mmgen.color import init_color
+	init_color(g.color)
+
+	if g.platform == 'win': start_mscolor()
 
 def	set_data_dir_root():
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
@@ -234,12 +240,11 @@ def init(opts_data,add_opts=[],opt_filter=None):
 		sys.exit()
 
 	if g.debug: opt_postproc_debug()
-
 	if opt.verbose: opt.quiet = None
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
-	opt_postproc_actions()
+	opt_postproc_initializations()
 
 	return args
 

@@ -263,10 +263,10 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 		self.fmt_data = mmgen_encrypt(self.fmt_data,'new key list','')
 		self.ext += '.'+g.mmenc_ext
 
-	def write_to_file(self,ask_tty=True,ask_write_default_yes=False):
+	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False):
 		fn = '{}.{}'.format(self.id_str,self.ext)
 		ask_tty = self.has_keys and not opt.quiet
-		write_data_to_file(fn,self.fmt_data,self.file_desc,ask_tty=ask_tty)
+		write_data_to_file(fn,self.fmt_data,self.file_desc,ask_tty=ask_tty,binary=binary)
 
 	def idxs(self):
 		return [e.idx for e in self.data]

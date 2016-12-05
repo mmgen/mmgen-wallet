@@ -150,12 +150,14 @@ m3 = 'Make this wallet your default and move it to the data directory?'
 if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	confirm_or_exit(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
-	msg('Deleting old wallet')
-	from subprocess import check_call
+	msg('Securely deleting old wallet')
+	from subprocess import check_output,CalledProcessError
+	sd_cmd = (['wipe','-sf'],['sdelete','-p','20'])[g.platform=='win']
 	try:
-		check_call(['wipe','-s',ss_in.infile.name])
+		check_output(sd_cmd + [ss_in.infile.name])
 	except:
-		msg('WARNING: wipe failed, using regular file delete instead')
+		msg(yellow("WARNING: '%s' command failed, using regular file delete instead" % sd_cmd[0]))
+#		msg('Command output: {}\nReturn value {}'.format(e.output,e.returncode))
 		os.unlink(ss_in.infile.name)
 elif invoked_as == 'gen' and not find_file_in_dir(Wallet,g.data_dir) \
 	and not opt.stdout and keypress_confirm(m3,default_yes=True):

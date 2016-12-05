@@ -33,6 +33,8 @@ except:
 		_platform = 'win'
 	except:
 		die(2,'Unable to set terminal mode')
+	if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+		msvcrt.setmode(sys.stdin.fileno(),os.O_BINARY)
 
 def _kb_hold_protect_unix():
 
@@ -75,6 +77,10 @@ def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	return ch
 
+def _get_keypress_unix_stub(prompt='',immed_chars='',prehold_protect=None):
+	msg_r(prompt)
+	return sys.stdin.read(1)
+
 def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 
 	msg_r(prompt)
@@ -88,8 +94,6 @@ def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
 
 	return ch
-
-
 
 def _kb_hold_protect_mswin():
 
@@ -136,6 +140,9 @@ def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None):
 	if ord(ch) == 3: raise KeyboardInterrupt
 	return ch
 
+def _get_keypress_mswin_emu(prompt='',immed_chars='',prehold_protect=None):
+	msg_r(prompt)
+	return sys.stdin.read(1)
 
 def _get_terminal_size_linux():
 
@@ -166,21 +173,26 @@ def _get_terminal_size_linux():
 	return int(cr[1]), int(cr[0])
 
 def _get_terminal_size_mswin():
+	import sys,os,struct
+	x,y = 0,0
 	try:
 		from ctypes import windll,create_string_buffer
-		# stdin handle is -10
-		# stdout handle is -11
-		# stderr handle is -12
-		h = windll.kernel32.GetStdHandle(-12)
+		# handles - stdin: -10, stdout: -11, stderr: -12
 		csbi = create_string_buffer(22)
+		h = windll.kernel32.GetStdHandle(-12)
 		res = windll.kernel32.GetConsoleScreenBufferInfo(h, csbi)
 		if res:
 			(bufx, bufy, curx, cury, wattr, left, top, right, bottom,
 			maxx, maxy) = struct.unpack('hhhhHhhhhhh', csbi.raw)
-			sizex = right - left + 1
-			sizey = bottom - top + 1
-			return sizex, sizey
+			x = right - left + 1
+			y = bottom - top + 1
 	except:
+		pass
+
+	if x and y:
+		return x, y
+	else:
+		msg(yellow('Warning: could not get terminal size. Using fallback dimensions.'))
 		return 80,25
 
 def mswin_dummy_flush(fd,termconst): pass
@@ -190,10 +202,14 @@ def set_terminal_vars():
 	if _platform == 'linux':
 		get_char = (_get_keypress_unix_raw,_get_keypress_unix)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
+		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
 		get_terminal_size = _get_terminal_size_linux
-		myflush = termios.tcflush   # call: myflush(sys.stdin, termios.TCIOFLUSH)
+#		myflush = termios.tcflush   # call: myflush(sys.stdin, termios.TCIOFLUSH)
 	else:
 		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
+		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+			get_char = _get_keypress_mswin_emu
 		get_terminal_size = _get_terminal_size_mswin
-		myflush = mswin_dummy_flush
+#		myflush = mswin_dummy_flush

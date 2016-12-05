@@ -21,6 +21,7 @@ obj.py:  The MMGenObject class and methods
 """
 
 from decimal import *
+from mmgen.color import *
 lvl = 0
 
 class MMGenObject(object):
@@ -270,10 +271,8 @@ class Hilite(object):
 
 	@classmethod
 	def colorize(cls,s,color=True):
-		from mmgen.globalvars import g
-		from mmgen.util import red,blue,green,yellow,pink,cyan,gray,orange,magenta
 		k = color if type(color) is str else cls.color # hack: override color with str value
-		return locals()[k](s) if (color or cls.color_always) and g.color else s
+		return globals()[k](s) if (color or cls.color_always) else s
 
 class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
