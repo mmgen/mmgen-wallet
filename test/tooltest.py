@@ -131,6 +131,7 @@ add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
 	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
+add_spawn_args += [ '--data-dir', cfg['tmpdir']] # ignore ~/.mmgen
 
 if opt.system: sys.path.pop(0)
 

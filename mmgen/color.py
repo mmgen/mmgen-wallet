@@ -54,7 +54,7 @@ def magenta(s): return clr_mag+s+clr_reset
 def init_color(enable_color=True):
 	global clr_red,clr_grn,clr_grnbg,clr_yel,clr_cya,clr_blu,clr_pnk,clr_orng,clr_gry,clr_mag,clr_reset
 	if enable_color:
-		clr_red = _red   
+		clr_red = _red
 		clr_grn = _grn
 		clr_grnbg = _grnbg
 		clr_yel = _yel

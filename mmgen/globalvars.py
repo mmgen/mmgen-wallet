@@ -36,13 +36,13 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.8.8'
-	release_date = 'November 2016'
+	version      = '0.8.9rc1'
+	release_date = 'December 2016'
 
 	proj_name = 'MMGen'
 	prog_name = os.path.basename(sys.argv[0])
 	author    = 'Philemon'
-	email     = '<mmgen-py@yandex.com>'
+	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2016'
 
 	user_entropy   = ''

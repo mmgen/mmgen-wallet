@@ -272,13 +272,14 @@ class MMGenTX(MMGenObject):
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
 
-	def write_to_file(self,add_desc='',ask_write=True,ask_write_default_yes=False):
+	def write_to_file(self,add_desc='',ask_write=True,ask_write_default_yes=False,ask_tty=True):
 		if ask_write == False:
 			ask_write_default_yes=True
 		self.format()
 		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.ext)
 		write_data_to_file(fn,self.fmt_data,self.desc+add_desc,
 			ask_write=ask_write,
+			ask_tty=ask_tty,
 			ask_write_default_yes=ask_write_default_yes)
 
 	def view_with_prompt(self,prompt=''):

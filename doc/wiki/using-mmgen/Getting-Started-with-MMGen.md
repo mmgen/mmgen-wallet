@@ -1,18 +1,18 @@
 ## Table of Contents
 
-#### <a href=#01>Basic Operations</a>
-* <a href=#02>Generate a wallet</a>
-* <a href=#03>Generate addresses</a>
-* <a href=#04>Import addresses</a>
-* <a href=#05>Create a transaction</a>
-* <a href=#06>Sign a transaction</a>
-* <a href=#07>Send a transaction</a>
+#### <a href='#a_bo'>Basic Operations</a>
+* <a href='#a_gw'>Generate a wallet</a>
+* <a href='#a_ga'>Generate addresses</a>
+* <a href='#a_ia'>Import addresses</a>
+* <a href='#a_ct'>Create a transaction</a>
+* <a href='#a_sg'>Sign a transaction</a>
+* <a href='#a_st'>Send a transaction</a>
 
-#### <a href=#10>Additional Features</a>
-* <a href=#11>Using the mnemonic and seed features</a>
-* <a href=#12>Mnemonics and seeds: additional information</a>
-* <a href=#13>Incognito wallets</a>
-	* <a href=#13a>Hidden incognito wallets</a>
+#### <a href='#a_af'>Additional Features</a>
+* <a href='#a_ms'>Using the mnemonic and seed features</a>
+* <a href='#a_ai'>Mnemonics and seeds: additional information</a>
+* <a href='#a_ic'>Incognito wallets</a>
+	* <a href='#a_hi'>Hidden incognito wallets</a>
 
 The following primer presupposes you have MMGen installed on two computers, one
 offline and one online.  However, if you have an online computer and a few
@@ -38,22 +38,23 @@ this primer are fake and for purposes of illustration only.  The up arrow (for
 repeating commands) and tab key (or Ctrl-I) (for completing commands and
 filenames) will speed up your work at the command line greatly.
 
-### <a name=01>Basic Operations</a>
+### <a name='a_bo'>Basic Operations</a>
 
-#### <a name=02>Generate a wallet (offline computer):</a>
+#### <a name='a_gw'>Generate a wallet (offline computer):</a>
 
 *NOTE: Beginning with v0.8.8, MMGen supports a “default wallet” feature.  After
 creating your wallet, MMGen will prompt you to make it your default.  If you
 answer 'y', the wallet will be stored in your MMGen data directory and used for
 all future commands that require a wallet or other seed source.*
 
-*If you don't want your MMGen wallet stored in your MMGen data directory, then
-you may not to want to use this feature.  Otherwise, it's recommended, as it
-saves you from having to type your wallet on the command line.*
+*You may not want this feature if you plan to store your MMGen wallet in another
+location than your MMGen data directory.  Otherwise, it's recommended, as it
+frees you from having to type your wallet on the command line.*
 
 *The following examples suppose that you've chosen to use a default wallet.
-Bear in mind that if you hadn't, the wallet would need to be specified as an
-argument to all commands where it's relevant.*
+Bear in mind that in the absence of a default wallet, the path to a wallet file
+or other seed source needs to be included in all commands where it's
+applicable.*
 
 On your offline computer, generate a wallet:
 
@@ -83,7 +84,7 @@ printed out on paper.  It can also be exported to more compact forms, the seed
 file and mnemonic (discussed below).  These formats are short enough to be
 written out by hand or memorized.
 
-#### <a name=03>Generate addresses (offline computer):</a>
+#### <a name='a_ga'>Generate addresses (offline computer):</a>
 
 Now generate ten addresses with your just-created wallet:
 
@@ -149,7 +150,7 @@ of lines as well.
 
 Save the file, copy it onto a USB stick and transfer it to your online computer.
 
-#### <a name=04>Import addresses (online computer):</a>
+#### <a name='a_ia'>Import addresses (online computer):</a>
 
 On your online computer, go to your bitcoind data directory and move any
 existing 'wallet.dat' file out of harm’s way.  Start bitcoind and let it
@@ -193,7 +194,7 @@ after the transactions have been confirmed:
 		89ABCDEF:4  Storage 3    0.4
 		TOTAL: 1 BTC
 
-#### <a name=05>Create a transaction (online computer):</a>
+#### <a name='a_ct'>Create a transaction (online computer):</a>
 
 Now that you have some BTC under MMGen’s control, you’re ready to create a
 transaction.  Note that transactions are harmless until they’re signed and
@@ -245,11 +246,11 @@ After quitting the menu with 'q', you’ll see the following prompt:
 
 		Enter a range or space-separated list of outputs to spend:
 
-Here you must choose outputs of sufficient value to cover the send amount of 0.1
-BTC, plus the transaction fee.  By the way, MMGen calculates fees automatically
-using bitcoind’s 'estimatefee' RPC call, which makes things very convenient.  If
-you want to increase the fee a bit for speedier confirmation, use the
-`--tx-fee-adj` option.  Type `mmgen-txcreate --help` for details.
+Here you must choose unspent outputs of sufficient value to cover the send
+amount of 0.1 BTC, plus the transaction fee.  By the way, MMGen calculates fees
+automatically using bitcoind’s 'estimatefee' RPC call, which makes things very
+convenient.  If you want to increase the fee a bit for speedier confirmation,
+use the `--tx-fee-adj` option.  Type `mmgen-txcreate --help` for details.
 
 Output #2 is worth 0.2 BTC, which is sufficient, so let’s choose it.  After
 several more prompts and confirmations, your transaction will be saved:
@@ -262,7 +263,7 @@ amount.
 As you can see, MMGen gives you complete control over your transaction inputs
 and change addresses.  This feature will be appreciated by privacy-conscious users.
 
-#### <a name=06>Sign a transaction (offline computer):</a>
+#### <a name='a_sg'>Sign a transaction (offline computer):</a>
 
 Now transfer the the raw transaction file to your offline computer and sign it
 using your default wallet:
@@ -273,7 +274,7 @@ using your default wallet:
 
 Note that the signed transaction file has a new extension, '.sigtx'.
 
-#### <a name=07>Send a transaction (online computer):</a>
+#### <a name='a_st'>Send a transaction (online computer):</a>
 
 Now you’re ready for the final step: broadcasting the transaction to the
 network.  Copy the signed transaction file to your online computer, start
@@ -305,9 +306,9 @@ Some of MMGen’s more advanced features are discussed below.  Others are
 documented in the help screens of the individual MMGen commands: display these
 by invoking the desired command with the `-h` or `--help` switch.
 
-### <a name=10>Additional Features</a>
+### <a name='a_af'>Additional Features</a>
 
-#### <a name=11>Using the mnemonic and seed features:</a>
+#### <a name='a_ms'>Using the mnemonic and seed features:</a>
 
 Continuing our example above, generate a mnemonic from the default wallet:
 
@@ -386,7 +387,7 @@ Or you can do the same thing with 'mmgen-tool':
 		$ mmgen-tool str2id6 'XnyC NfPH piuW dQ2d nM47 VU'
 		0fe02f
 
-#### <a name=12>Mnemonics and seeds: additional information</a>
+#### <a name='a_ai'>Mnemonics and seeds: additional information</a>
 
 MMGen commands that take mnemonic and seed data may receive the data from a
 prompt instead of a file.  Just omit the file name and specify the input format:
@@ -407,7 +408,7 @@ using the `-d` option.  For example, on a Linux system you can use
 ensuring that no trace of this sensitive data remains once your computer’s been
 powered down.
 
-#### <a name=13><a name=incog>Incognito wallets</a>
+#### <a name='a_ic'>Incognito wallets</a>
 
 An incognito format wallet is indistinguishable from random data, allowing you
 to hide your wallet at an offset within a random-data-filled file or partition.
@@ -485,7 +486,7 @@ MMGen wallet, mnemonic or seed file to generate addresses and sign transactions:
 		...
 		Signed transaction written to file FABCDE[0.3].sigtx
 
-##### <a name=13a><a name=incog>Hidden incognito wallets</a>
+##### <a name='a_hi'>Hidden incognito wallets</a>
 
 With the `-o hincog` option, incognito wallet data can be created and hidden at
 a specified offset in a file or partition in a single convenient operation, with

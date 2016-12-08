@@ -195,8 +195,6 @@ def _get_terminal_size_mswin():
 		msg(yellow('Warning: could not get terminal size. Using fallback dimensions.'))
 		return 80,25
 
-def mswin_dummy_flush(fd,termconst): pass
-
 def set_terminal_vars():
 	global get_char,kb_hold_protect,get_terminal_size
 	if _platform == 'linux':
@@ -205,11 +203,9 @@ def set_terminal_vars():
 		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
 			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
 		get_terminal_size = _get_terminal_size_linux
-#		myflush = termios.tcflush   # call: myflush(sys.stdin, termios.TCIOFLUSH)
 	else:
 		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
 		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
 			get_char = _get_keypress_mswin_emu
 		get_terminal_size = _get_terminal_size_mswin
-#		myflush = mswin_dummy_flush

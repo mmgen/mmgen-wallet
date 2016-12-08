@@ -18,6 +18,7 @@ help_data = {
 	'usage':   "<tx file>",
 	'options': """
 -h, --help    Print this help message
+-S, --stdout  Write data to STDOUT instead of file
 """
 }
 
@@ -97,6 +98,8 @@ tx = MMGenTX()
 [tx.txid,send_amt,tx.timestamp],tx.hex,inputs,b2m_map,tx.label = parse_tx_file(cmd_args[0])
 tx.send_amt = Decimal(send_amt)
 
+g.testnet = False
+g.rpc_host = 'localhost'
 c = bitcoin_connection()
 
 # attrs = 'txid','vout','amt','comment','mmid','addr','wif'
@@ -134,4 +137,4 @@ for e in tx.outputs:
 #die(1,'')
 tx.blockcount = find_block_by_time(c,tx.timestamp)
 
-tx.write_to_file(ask_write=False)
+tx.write_to_file(ask_tty=False)

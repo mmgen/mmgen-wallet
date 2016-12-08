@@ -26,12 +26,16 @@ from binascii import hexlify
 from mmgen.common import *
 
 def cleandir(d):
+	from shutil import rmtree
 	try:    files = os.listdir(d)
 	except: return
 
 	msg(green("Cleaning directory '%s'" % d))
 	for f in files:
-		os.unlink(os.path.join(d,f))
+		try:
+			os.unlink(os.path.join(d,f))
+		except:
+			rmtree(os.path.join(d,f))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
 def getrandhex(n): return hexlify(os.urandom(n))

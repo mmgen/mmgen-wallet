@@ -36,10 +36,10 @@ opts_data = {
 	'desc': "Test address generation in various ways",
 	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
--h, --help         Print this help message
--q, --quiet        Produce quieter output
---, --testnet      Run for testnet rather than mainnet
--v, --verbose      Produce more verbose output
+-h, --help       Print this help message
+--, --longhelp   Print help message for long options (common options)
+-q, --quiet      Produce quieter output
+-v, --verbose    Produce more verbose output
 """,
 	'notes': """
     Tests:
@@ -106,7 +106,7 @@ else:
 
 def match_error(sec,wif,a_addr,b_addr,a,b):
 	m = ['','py-ecdsa','keyconv','secp256k1','dump']
-	msg_r(red('\nERROR: Addresses do not match!'))
+	qmsg_r(red('\nERROR: Addresses do not match!'))
 	die(3,"""
   sec key   : {}
   WIF key   : {}
@@ -116,13 +116,13 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 
 if a and b:
 	m = "Comparing address generators '{}' and '{}'"
-	msg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
+	qmsg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
 	from mmgen.addr import get_privhex2addr_f
 	gen_a = get_privhex2addr_f(generator=a)
 	gen_b = get_privhex2addr_f(generator=b)
 	compressed = False
 	for i in range(1,rounds+1):
-		msg_r('\rRound %s/%s ' % (i,rounds))
+		qmsg_r('\rRound %s/%s ' % (i,rounds))
 		sec = hexlify(os.urandom(32))
 		wif = hex2wif(sec,compressed=compressed)
 		a_addr = gen_a(sec,compressed)
@@ -133,10 +133,10 @@ if a and b:
 		if a != 2 and b != 2:
 			compressed = not compressed
 
-	msg(green(('\n','')[bool(opt.verbose)] + 'OK'))
+	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 elif a and not fh:
 	m = "Testing speed of address generator '{}'"
-	msg(green(m.format(g.key_generators[a-1])))
+	qmsg(green(m.format(g.key_generators[a-1])))
 	from mmgen.addr import get_privhex2addr_f
 	gen_a = get_privhex2addr_f(generator=a)
 	import time
@@ -147,7 +147,7 @@ elif a and not fh:
 	print 'Starting key:', hexlify(seed+pack('I',0))
 	compressed = False
 	for i in range(rounds):
-		if not opt.quiet: msg_r('\rRound %s/%s ' % (i+1,rounds))
+		qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 		sec = hexlify(seed+pack('I',i))
 		wif = hex2wif(sec,compressed=compressed)
 		a_addr = gen_a(sec,compressed)
@@ -155,18 +155,18 @@ elif a and not fh:
 		if a != 2:
 			compressed = not compressed
 	elapsed = int(time.time() - start)
-	if not opt.quiet: msg('')
-	msg('%s addresses generated in %s second%s' % (rounds,elapsed,('s','')[elapsed==1]))
+	qmsg('')
+	qmsg('%s addresses generated in %s second%s' % (rounds,elapsed,('s','')[elapsed==1]))
 elif a and dump:
 	m = "Comparing output of address generator '{}' against wallet dump '{}'"
-	msg(green(m.format(g.key_generators[a-1],cmd_args[1])))
+	qmsg(green(m.format(g.key_generators[a-1],cmd_args[1])))
 	if a == 2:
-		msg("NOTE: for compressed addresses, 'python-ecdsa' generator will be used")
+		qmsg("NOTE: for compressed addresses, 'python-ecdsa' generator will be used")
 	from mmgen.addr import get_privhex2addr_f
 	gen_a = get_privhex2addr_f(generator=a)
 	from mmgen.bitcoin import wif2hex
 	for n,[wif,a_addr] in enumerate(dump,1):
-		msg_r('\rKey %s/%s ' % (n,len(dump)))
+		qmsg_r('\rKey %s/%s ' % (n,len(dump)))
 		sec = wif2hex(wif)
 		if sec == False:
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
@@ -174,4 +174,4 @@ elif a and dump:
 		b_addr = gen_a(sec,compressed)
 		if a_addr != b_addr:
 			match_error(sec,wif,a_addr,b_addr,1 if compressed and a==2 else a,4)
-	msg(green(('\n','')[bool(opt.verbose)] + 'OK'))
+	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
