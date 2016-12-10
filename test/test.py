@@ -769,16 +769,22 @@ def debug_pexpect_msg(p):
 
 class MMGenExpect(object):
 
-	def __init__(self,name,mmgen_cmd_arg,cmd_args=[],extra_desc='',no_output=False):
-		mmgen_cmd = (os.path.join(os.curdir,mmgen_cmd_arg),mmgen_cmd_arg)[bool(opt.system)]
-		desc = (cmd_data[name][1],name)[bool(opt.names)]
-		if extra_desc: desc += ' ' + extra_desc
-		for i in cmd_args:
-			if type(i) not in (str,unicode):
-				fs = 'Error: missing input files in cmd line?:\nName: {}\nCmd: {}\nCmd args: {}'
-				die(2,fs.format(name,mmgen_cmd,cmd_args))
+	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False):
+		cmd = (('./','')[bool(opt.system)]+mmgen_cmd,'python')[g.platform=='win']
 		cmd_args = add_spawn_args + cmd_args
-		cmd_str = '{} {}'.format(mmgen_cmd,' '.join(cmd_args))
+		args = (cmd_args,[mmgen_cmd]+cmd_args)[g.platform=='win']
+		desc = (cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc).strip()
+		for i in args:
+			if type(i) not in (str,unicode):
+				m1 = 'Error: missing input files in cmd line?:'
+				m2 = '\nName: {}\nCmd: {}\nCmd args: {}'
+				die(2,(m1+m2).format(name,cmd,args))
+		if use_popen_spawn:
+			args = [("'"+a+"'" if ' ' in a else a) for a in args]
+		cmd_str = '{} {}'.format(cmd,' '.join(args))
+		if use_popen_spawn:
+			cmd_str = cmd_str.replace('\\','/')
+
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
 		if opt.verbose or opt.print_cmdline or opt.exact_output:
@@ -789,26 +795,23 @@ class MMGenExpect(object):
 			m = 'Testing %s: ' % desc
 			msg_r((m,yellow(m))[ia])
 
-		if mmgen_cmd_arg == '': return
+		if mmgen_cmd == '': return
 
 		if opt.direct_exec or ia:
 			msg('')
 			from subprocess import call,check_output
 			f = (call,check_output)[bool(no_output)]
-			ret = f(['python', mmgen_cmd] + cmd_args)
+			ret = f([cmd] + args)
 			if f == call and ret != 0:
 				m = 'ERROR: process returned a non-zero exit status (%s)'
 				die(1,red(m % ret))
 		else:
 			if opt.traceback:
-				cmd_args = [mmgen_cmd] + cmd_args
-				mmgen_cmd = tb_cmd
+				cmd,args = tb_cmd,[cmd]+args
 			if use_popen_spawn:
-				ca = [("'"+a+"'" if ' ' in a else a) for a in cmd_args]
-				cmd = '{} {}'.format(mmgen_cmd,' '.join(ca))
-				self.p = PopenSpawn('python ' + cmd)
+				self.p = PopenSpawn(cmd_str)
 			else:
-				self.p = pexpect.spawn(mmgen_cmd,cmd_args)
+				self.p = pexpect.spawn(cmd,args)
 			if opt.exact_output: self.p.logfile = sys.stdout
 
 	def license(self):
@@ -1222,7 +1225,7 @@ class MMGenTestSuite(object):
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.usr_rand(usr_rand_chars)
-		sid = t.written_to_file('MMGen wallet').split('-')[0].split('/')[-1]
+		sid = os.path.basename(t.written_to_file('MMGen wallet').split('-')[0])
 		refcheck('Seed ID',sid,cfg['seed_id'])
 
 	def refwalletgen(self,name): self.brainwalletgen_ref(name)
