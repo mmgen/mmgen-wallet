@@ -406,6 +406,24 @@ class MMGenID(str,Hilite,InitErrors):
 		m = "'%s': value cannot be converted to MMGenID" % s
 		return cls.init_fail(m,on_fail)
 
+class MMGenTxID(str,Hilite,InitErrors):
+	color = 'red'
+	width = 6
+	trunc_ok = False
+	hexcase = 'upper'
+	def __new__(cls,s,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		from string import hexdigits
+		if len(s) == cls.width and set(s) <= set(getattr(hexdigits,cls.hexcase)()):
+			return str.__new__(cls,s)
+		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
+		return cls.init_fail(m,on_fail)
+
+class BitcoinTxID(MMGenTxID):
+	color = 'purple'
+	width = 64
+	hexcase = 'lower'
+
 class MMGenLabel(unicode,Hilite,InitErrors):
 
 	color = 'pink'

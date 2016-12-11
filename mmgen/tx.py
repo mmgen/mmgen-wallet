@@ -115,7 +115,7 @@ class MMGenTX(MMGenObject):
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		o = dict([(e.addr,e.amt) for e in self.outputs])
 		self.hex = c.createrawtransaction(i,o)
-		self.txid = make_chksum_6(unhexlify(self.hex)).upper()
+		self.txid = MMGenTxID(make_chksum_6(unhexlify(self.hex)).upper())
 
 	# returns true if comment added or changed
 	def add_comment(self,infile=None):
@@ -201,7 +201,7 @@ class MMGenTX(MMGenObject):
 
 	def format(self):
 		from mmgen.bitcoin import b58encode
-		lines = (
+		lines = [
 			'{} {} {} {}'.format(
 				self.txid,
 				self.send_amt,
@@ -211,10 +211,14 @@ class MMGenTX(MMGenObject):
 			self.hex,
 			repr([e.__dict__ for e in self.inputs]),
 			repr([e.__dict__ for e in self.outputs])
-		) + ((b58encode(self.label.encode('utf8')),) if self.label else ())
+		]
+		if self.label:
+			lines.append(b58encode(self.label.encode('utf8')))
+		if self.btc_txid:
+			if not self.label: lines.append('-') # keep old tx files backwards compatible
+			lines.append(self.btc_txid)
 		self.chksum = make_chksum_6(' '.join(lines))
-		self.fmt_data = '\n'.join((self.chksum,) + lines)+'\n'
-
+		self.fmt_data = '\n'.join([self.chksum] + lines)+'\n'
 
 	def get_non_mmaddrs(self,desc):
 		return list(set([i.addr for i in getattr(self,desc) if not i.mmid]))
@@ -257,14 +261,30 @@ class MMGenTX(MMGenObject):
 		if ret: self.mark_signed()
 		return ret
 
-	def send(self,c,bogus=False):
-		if bogus:
-			self.btc_txid = 'deadbeef' * 8
+	def send(self,opt,c,prompt_user=True):
+		if prompt_user:
+			m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
+			m2 = 'broadcast this transaction to the network'
+			m3 = ('YES, I REALLY WANT TO DO THIS','YES')[bool(opt.quiet)]
+			confirm_or_exit(m1,m2,m3)
+
+		msg('Sending transaction')
+		if os.getenv('MMGEN_BOGUS_SEND'):
+			ret = 'deadbeef' * 8
 			m = 'BOGUS transaction NOT sent: %s'
 		else:
-			self.btc_txid = c.sendrawtransaction(self.hex) # exits on failure?
+			ret = c.sendrawtransaction(self.hex) # exits on failure?
 			m = 'Transaction sent: %s'
-		msg(m % self.btc_txid)
+
+		if ret:
+			self.btc_txid = BitcoinTxID(ret,on_fail='return')
+			if self.btc_txid:
+				self.desc = 'sent transaction'
+				msg(m % self.btc_txid.hl())
+				return True
+
+		msg('Sending of transaction {} failed'.format(self.txid))
+		return False
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
 		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.txid_ext)
@@ -304,14 +324,17 @@ class MMGenTX(MMGenObject):
 		except:
 			blockcount = None
 
-		fs = (
-			'TRANSACTION DATA\n\nHeader: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n\n',
+		hdr_fs = (
+			'TRANSACTION DATA\n\nHeader: [Tx ID: {}] [Amount: {} BTC] [Time: {}]\n',
 			'Transaction {} - {} BTC - {} UTC\n'
 		)[bool(terse)]
 
-		out = fs.format(self.txid,self.send_amt.hl(),self.timestamp)
+		out = hdr_fs.format(self.txid.hl(),self.send_amt.hl(),self.timestamp)
 
 		enl = ('\n','')[bool(terse)]
+		if self.btc_txid: out += 'Bitcoin TxID: {}\n'.format(self.btc_txid.hl())
+		out += enl
+
 		if self.label:
 			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
 		out += 'Inputs:\n' + enl
@@ -373,44 +396,50 @@ class MMGenTX(MMGenObject):
 
 	def parse_tx_data(self,tx_data):
 
-		err_str,err_fmt = '','Invalid %s in transaction file'
+		def do_err(s): die(2,'Invalid %s in transaction file' % s)
+
+		if len(tx_data) < 5: do_err('number of lines')
+
+		self.chksum = tx_data.pop(0)
+		if self.chksum != make_chksum_6(' '.join(tx_data)):
+			do_err('checksum')
 
 		if len(tx_data) == 6:
-			self.chksum,metadata,self.hex,inputs_data,outputs_data,comment = tx_data
-		elif len(tx_data) == 5:
-			self.chksum,metadata,self.hex,inputs_data,outputs_data = tx_data
-			comment = ''
-		else:
-			err_str = 'number of lines'
+			self.btc_txid = BitcoinTxID(tx_data.pop(-1),on_fail='return')
+			if not self.btc_txid:
+				do_err('Bitcoin TxID')
 
-		if not err_str:
-			if self.chksum != make_chksum_6(' '.join(tx_data[1:])):
-				err_str = 'checksum'
-			elif len(metadata.split()) != 4:
-				err_str = 'metadata'
-			else:
-				self.txid,send_amt,self.timestamp,blockcount = metadata.split()
-				self.send_amt = BTCAmt(send_amt)
-				self.blockcount = int(blockcount)
-				try: unhexlify(self.hex)
-				except: err_str = 'hex data'
+		if len(tx_data) == 5:
+			c = tx_data.pop(-1)
+			if c != '-':
+				from mmgen.bitcoin import b58decode
+				comment = b58decode(c)
+				if comment == False:
+					do_err('encoded comment (not base58)')
 				else:
-					try: self.inputs = self.decode_io('inputs',eval(inputs_data))
-					except: err_str = 'inputs data'
-					else:
-						try: self.outputs = self.decode_io('outputs',eval(outputs_data))
-						except: err_str = 'btc-to-mmgen address map data'
-						else:
-							if comment:
-								from mmgen.bitcoin import b58decode
-								comment = b58decode(comment)
-								if comment == False:
-									err_str = 'encoded comment (not base58)'
-								else:
-									self.label = MMGenTXLabel(comment,on_fail='return')
-									if not self.label:
-										err_str = 'comment'
+					self.label = MMGenTXLabel(comment,on_fail='return')
+					if not self.label:
+						do_err('comment')
+		else:
+			comment = ''
 
-		if err_str:
-			msg(err_fmt % err_str)
-			sys.exit(2)
+		if len(tx_data) == 4:
+			metadata,self.hex,inputs_data,outputs_data = tx_data
+		else:
+			do_err('number of lines')
+
+		if len(metadata.split()) != 4: do_err('metadata')
+
+		self.txid,send_amt,self.timestamp,blockcount = metadata.split()
+		self.txid = MMGenTxID(self.txid)
+		self.send_amt = BTCAmt(send_amt)
+		self.blockcount = int(blockcount)
+
+		try: unhexlify(self.hex)
+		except: do_err('hex data')
+
+		try: self.inputs = self.decode_io('inputs',eval(inputs_data))
+		except: do_err('inputs data')
+
+		try: self.outputs = self.decode_io('outputs',eval(outputs_data))
+		except: do_err('btc-to-mmgen address map data')

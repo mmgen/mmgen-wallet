@@ -181,10 +181,10 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 			adata = self.generate(seed,addr_idxs)
 		elif addrlist:           # data from flat address list
 			sid = None
-			adata = [AddrListEntry(addr=a) for a in addrlist]
+			adata = [AddrListEntry(addr=a) for a in set(addrlist)]
 		elif keylist:            # data from flat key list
 			sid,do_chksum = None,False
-			adata = [AddrListEntry(wif=k) for k in keylist]
+			adata = [AddrListEntry(wif=k) for k in set(keylist)]
 		elif seed or addr_idxs:
 			die(3,'Must specify both seed and addr indexes')
 		elif sid or adata:
@@ -329,13 +329,14 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 			vmsg(self.msgs['removed_dups'] % (len(pop_list),suf(removed,'k')))
 
 	def add_wifs(self,al_key):
+		if not al_key: return
 		for d in self.data:
 			for e in al_key.data:
 				if e.addr and e.wif and e.addr == d.addr:
 					d.wif = e.wif
 
 	def list_missing(self,key):
-		return [d for d in self.data if not getattr(d,key)]
+		return [d.addr for d in self.data if not getattr(d,key)]
 
 	def get(self,key):
 		return [getattr(d,key) for d in self.data if getattr(d,key)]

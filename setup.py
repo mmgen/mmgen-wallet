@@ -59,12 +59,12 @@ setup(
 		name         = 'mmgen',
 		description  = 'A complete Bitcoin offline/online wallet solution for the command line',
 		version      = g.version,
-		author       = 'Philemon',
-		author_email = 'mmgen-py@yandex.com',
-		url          = 'https://github.com/mmgen/mmgen',
+		author       = g.author,
+		author_email = g.email,
+		url          = g.proj_url,
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows, Raspberry Pi',
-		keywords     = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy',
+		keywords     = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin',
 		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
 		ext_modules = [module1],
 		data_files = [('share/mmgen', [
@@ -96,13 +96,16 @@ setup(
 			'mmgen.util',
 
 			'mmgen.main',
+			'mmgen.main_wallet',
 			'mmgen.main_addrgen',
 			'mmgen.main_addrimport',
-			'mmgen.main_tool',
 			'mmgen.main_txcreate',
-			'mmgen.main_txsend',
 			'mmgen.main_txsign',
-			'mmgen.main_wallet',
+			'mmgen.main_txsend',
+			'mmgen.main_txdo',
+			'mmgen.txcreate',
+			'mmgen.txsign',
+			'mmgen.main_tool',
 
 			'mmgen.share.__init__',
 			'mmgen.share.Opts',
@@ -118,6 +121,7 @@ setup(
 			'mmgen-txcreate',
 			'mmgen-txsign',
 			'mmgen-txsend',
+			'mmgen-txdo',
 			'mmgen-tool'
 		]
 	)

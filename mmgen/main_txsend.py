@@ -41,34 +41,15 @@ if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
 else: opts.usage()
 
-# Begin execution
-
 do_license_msg()
-
 tx = MMGenTX(infile)
-
 c = bitcoin_connection()
-
 if not tx.check_signed(c):
 	die(1,'Transaction has no signature!')
-
 qmsg("Signed transaction file '%s' is valid" % infile)
-
 tx.view_with_prompt('View transaction data?')
-
 if tx.add_comment(): # edits an existing comment, returns true if changed
 	tx.write_to_file(ask_write_default_yes=True)
 
-warn   = "Once this transaction is sent, there's no taking it back!"
-action = 'broadcast this transaction to the network'
-expect = 'YES, I REALLY WANT TO DO THIS'
-
-if opt.quiet: warn,expect = '','YES'
-
-confirm_or_exit(warn,action,expect)
-
-msg('Sending transaction')
-
-tx.send(c,bogus=False)
-
-tx.write_txid_to_file()
+if tx.send(opt,c):
+	tx.write_to_file(ask_write=False)

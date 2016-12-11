@@ -95,28 +95,34 @@ sample_text = \
 
 # Laggy flash media cause pexpect to crash, so create a temporary directory
 # under '/dev/shm' and put datadir and temp files here.
-if g.platform == 'win':
-	data_dir = os.path.join('test','data_dir')
-	try: os.listdir(data_dir)
-	except: pass
+shortopts = ''.join([e[1:] for e in sys.argv if len(e) > 1 and e[0] == '-' and e[1] != '-'])
+shortopts = ['-'+e for e in list(shortopts)]
+data_dir = os.path.join('test','data_dir')
+if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts):
+	if g.platform == 'win':
+		try: os.listdir(data_dir)
+		except: pass
+		else:
+			import shutil
+			shutil.rmtree(data_dir)
+		os.mkdir(data_dir,0755)
 	else:
-		import shutil
-		shutil.rmtree(data_dir)
-	os.mkdir(data_dir,0755)
-else:
-	d,pfx = '/dev/shm','mmgen-test-'
-	try:
-		import subprocess
-		subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
-	except Exception as e:
-		die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
-	try:
-		import tempfile
-		shm_dir = tempfile.mkdtemp('',pfx,d)
-	except Exception as e:
-		die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
-	data_dir = os.path.join(shm_dir,'data_dir')
-	os.mkdir(data_dir,0755)
+		d,pfx = '/dev/shm','mmgen-test-'
+		try:
+			import subprocess
+			subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
+		except Exception as e:
+			die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
+		try:
+			import tempfile
+			shm_dir = tempfile.mkdtemp('',pfx,d)
+		except Exception as e:
+			die(2,'Unable to create temporary directory in %s (%s)'%(d,e))
+		dd = os.path.join(shm_dir,'data_dir')
+		os.mkdir(dd,0755)
+		try: os.unlink(data_dir)
+		except: pass
+		os.symlink(dd,data_dir)
 
 opts_data = {
 #	'sets': [('interactive',bool,'verbose',None)],
@@ -397,6 +403,8 @@ cmd_group['main'] = OrderedDict([
 	['txcreate',        (1,'transaction creation',     [[['addrs'],1]],1)],
 	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile],1]],1)],
 	['txsend',          (1,'transaction sending',      [[['sigtx'],1]])],
+	# txdo must go after txsign
+	['txdo',            (1,'online transaction',       [[['sigtx','mmdat'],1]])],
 
 	['export_seed',     (1,'seed export to mmseed format',   [[['mmdat'],1]])],
 	['export_mnemonic', (1,'seed export to mmwords format',  [[['mmdat'],1]])],
@@ -431,6 +439,7 @@ cmd_group['main'] = OrderedDict([
 	['addrgen4',  (4,'address generation (4)',                 [[['mmdat'],4]])],
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14]])],
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet, brainwallet, key-address file and non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])],
+	['txdo4', (4,'tx creation,signing and sending with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])], # must go after txsign4
 ])
 
 cmd_group['tool'] = OrderedDict([
@@ -594,6 +603,7 @@ ia = bool(opt.interactive)
 os.environ['MMGEN_DISABLE_COLOR'] = '1'
 os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
+os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 if opt.debug_scripts: os.environ['MMGEN_DEBUG'] = '1'
 
@@ -1341,13 +1351,7 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		ok()
 
-	def txcreate(self,name,addrfile):
-		self.txcreate_common(name,sources=['1'])
-
-	def txcreate_dfl_wallet(self,name,addrfile):
-		self.txcreate_common(name,sources=['15'])
-
-	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False):
+	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[]):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 		silence()
@@ -1396,14 +1400,23 @@ class MMGenTestSuite(object):
 		end_silence()
 		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 
-		add_args = ([],['-q'])[ia]
 		if ia:
+			add_args += ['-q']
 			m = '\nAnswer the interactive prompts as follows:\n' + \
 				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, ENTER, 'y'"
 			msg(grnbg(m))
-		t = MMGenExpect(name,'mmgen-txcreate',['-f','0.0001'] + add_args + cmd_args)
+		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA=%s' % unspent_data_file
+		if opt.print_cmdline: msg(bwd_msg)
+		if opt.log: log_fd.write(bwd_msg + ' ')
+		t = MMGenExpect(name,'mmgen-'+('txcreate','txdo')[bool(txdo_args)],['-f','0.0001'] + add_args + cmd_args + txdo_args)
 		if ia: return
 		t.license()
+
+		if txdo_args and add_args: # txdo4
+			t.hash_preset('key-address data','1')
+			t.passphrase('key-address data',cfgs['14']['kapasswd'])
+			t.expect('Check key-to-address validity? (y/N): ','y')
+
 		for num in tx_data:
 			t.expect_getend('Getting address data from file ')
 			chk=t.expect_getend(r'Checksum for address data .*?: ',regex=True)
@@ -1425,7 +1438,7 @@ class MMGenTestSuite(object):
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 		t.expect('Enter a range or space-separated list of outputs to spend: ',
 				' '.join([str(i) for i in outputs_list])+'\n')
-		if non_mmgen_input: t.expect('Accept? (y/N): ','y')
+		if non_mmgen_input and not txdo_args: t.expect('Accept? (y/N): ','y')
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
 		if do_label:
@@ -1434,9 +1447,21 @@ class MMGenTestSuite(object):
 		else:
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.tx_view()
+		if txdo_args: return t
 		t.expect('Save transaction? (y/N): ','y')
 		t.written_to_file('Transaction')
 		ok()
+
+	def txcreate(self,name,addrfile):
+		self.txcreate_common(name,sources=['1'])
+
+	def txdo(self,name,addrfile,wallet):
+		t = self.txcreate_common(name,sources=['1'],txdo_args=[wallet])
+		self.txsign(name,'','',pf='',save=True,has_label=False,txdo_handle=t)
+		self.txsend(name,'',txdo_handle=t)
+
+	def txcreate_dfl_wallet(self,name,addrfile):
+		self.txcreate_common(name,sources=['15'])
 
 	def txsign_end(self,t,tnum=None,has_label=False):
 		t.expect('Signing transaction')
@@ -1446,16 +1471,21 @@ class MMGenTestSuite(object):
 		add = ' #' + tnum if tnum else ''
 		t.written_to_file('Signed transaction' + add, oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',save=True,has_label=False):
+	def txsign(self,name,txfile,wf,pf='',save=True,has_label=False,txdo_handle=None):
 		add_args = ([],['-q','-P',pf])[ia]
 		if ia:
 			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
 			msg(grnbg(m))
-		t = MMGenExpect(name,'mmgen-txsign', add_args+['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
-		if ia: return
-		t.license()
-		t.tx_view()
+		if txdo_handle:
+			t = txdo_handle
+			if ia: return
+		else:
+			t = MMGenExpect(name,'mmgen-txsign', add_args+['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
+			if ia: return
+			t.license()
+			t.tx_view()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
+		if txdo_handle: return
 		if save:
 			self.txsign_end(t,has_label=has_label)
 		else:
@@ -1467,15 +1497,19 @@ class MMGenTestSuite(object):
 	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
 		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
 
-	def txsend(self,name,sigfile):
-		t = MMGenExpect(name,'mmgen-txsend', ['-d',cfg['tmpdir'],sigfile])
-		t.license()
-		t.tx_view()
-		t.expect('Add a comment to transaction? (y/N): ','\n')
+	def txsend(self,name,sigfile,txdo_handle=None):
+		if txdo_handle:
+			t = txdo_handle
+		else:
+			t = MMGenExpect(name,'mmgen-txsend', ['-d',cfg['tmpdir'],sigfile])
+			t.license()
+			t.tx_view()
+			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.expect('broadcast this transaction to the network?')
-		t.expect("'YES, I REALLY WANT TO DO THIS' to confirm: ",'\n')
-		t.expect('Exiting at user request')
-		vmsg('This is a simulation; no transaction was sent')
+		m = 'YES, I REALLY WANT TO DO THIS'
+		t.expect("'%s' to confirm: " % m,m+'\n')
+		t.expect('BOGUS transaction NOT sent')
+		t.written_to_file('Transaction ID')
 		ok()
 
 	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
@@ -1668,21 +1702,30 @@ class MMGenTestSuite(object):
 	def txcreate4(self,name,f1,f2,f3,f4,f5,f6):
 		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1)
 
-	def txsign4(self,name,f1,f2,f3,f4,f5,f6):
+	def txdo4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
-		a = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f6,f1,f2,f3,f4,f5]
-		t = MMGenExpect(name,'mmgen-txsign',a)
-		t.license()
+		add_args = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f12]
+		t = self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,txdo_args=[f7,f8,f9,f10],add_args=add_args)
+		self.txsign4(name,f7,f8,f9,f10,f11,f12,txdo_handle=t)
+		self.txsend(name,'',txdo_handle=t)
 
-		t.hash_preset('key-address data','1')
-		t.passphrase('key-address data',cfgs['14']['kapasswd'])
-		t.expect('Check key-to-address validity? (y/N): ','y')
-
-		t.tx_view()
+	def txsign4(self,name,f1,f2,f3,f4,f5,f6,txdo_handle=None):
+		if txdo_handle:
+			t = txdo_handle
+		else:
+			non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
+			a = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f6,f1,f2,f3,f4,f5]
+			t = MMGenExpect(name,'mmgen-txsign',a)
+			t.license()
+			t.hash_preset('key-address data','1')
+			t.passphrase('key-address data',cfgs['14']['kapasswd'])
+			t.expect('Check key-to-address validity? (y/N): ','y')
+			t.tx_view()
 
 		for cnum,desc in ('1','incognito data'),('3','MMGen wallet'):
 			t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
 
+		if txdo_handle: return
 		self.txsign_end(t,has_label=True)
 		ok()
 
@@ -2044,19 +2087,20 @@ class MMGenTestSuite(object):
 	for k in ('walletgen','addrgen','keyaddrgen'): locals()[k+'14'] = locals()[k]
 
 # create temporary dirs
-if g.platform == 'win':
-	for cfg in sorted(cfgs):
-		mk_tmpdir(cfgs[cfg]['tmpdir'])
-else:
-	for cfg in sorted(cfgs):
-		src = os.path.join(shm_dir,cfgs[cfg]['tmpdir'].split('/')[-1])
-		mk_tmpdir(src)
-		try:
-			os.unlink(cfgs[cfg]['tmpdir'])
-		except OSError as e:
-			if e.errno != 2: raise
-		finally:
-			os.symlink(src,cfgs[cfg]['tmpdir'])
+if not opt.resume and not opt.skip_deps:
+	if g.platform == 'win':
+		for cfg in sorted(cfgs):
+			mk_tmpdir(cfgs[cfg]['tmpdir'])
+	else:
+		for cfg in sorted(cfgs):
+			src = os.path.join(shm_dir,cfgs[cfg]['tmpdir'].split('/')[-1])
+			mk_tmpdir(src)
+			try:
+				os.unlink(cfgs[cfg]['tmpdir'])
+			except OSError as e:
+				if e.errno != 2: raise
+			finally:
+				os.symlink(src,cfgs[cfg]['tmpdir'])
 
 have_dfl_wallet = False
 

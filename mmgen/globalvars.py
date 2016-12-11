@@ -40,6 +40,7 @@ class g(object):
 	release_date = 'December 2016'
 
 	proj_name = 'MMGen'
+	proj_url  = 'https://github.com/mmgen/mmgen'
 	prog_name = os.path.basename(sys.argv[0])
 	author    = 'Philemon'
 	email     = '<mmgen@tuta.io>'

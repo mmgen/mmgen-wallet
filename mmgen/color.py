@@ -20,14 +20,13 @@
 color.py:  color routines for the MMGen suite
 """
 
-import os
-
 # If 88- or 256-color support is compiled, the following apply.
 #    P s = 3 8 ; 5 ; P s -> Set foreground color to the second P s .
 #    P s = 4 8 ; 5 ; P s -> Set background color to the second P s .
+import os
 if os.environ['TERM'][-8:] == '256color':
-	_blk,_red,_grn,_yel,_blu,_mag,_cya,_bright,_dim,_ybright,_ydim,_pnk,_orng,_gry = [
-	'\033[38;5;%s;1m' % c for c in 232,210,121,229,75,90,122,231,245,187,243,218,215,246]
+	_blk,_red,_grn,_yel,_blu,_mag,_cya,_bright,_dim,_ybright,_ydim,_pnk,_orng,_gry,_pur = [
+	'\033[38;5;%s;1m' % c for c in 232,210,121,229,75,90,122,231,245,187,243,218,215,246,147]
 	_redbg = '\033[38;5;232;48;5;210;1m'
 	_grnbg = '\033[38;5;232;48;5;121;1m'
 	_grybg = '\033[38;5;231;48;5;240;1m'
@@ -35,9 +34,10 @@ if os.environ['TERM'][-8:] == '256color':
 else:
 	_blk,_red,_grn,_yel,_blu,_mag,_cya,_reset,_grnbg = \
 		['\033[%sm' % c for c in '30;1','31;1','32;1','33;1','34;1','35;1','36;1','0','30;102']
-	_gry=_orng=_pnk=_redbg=_ybright=_ydim=_bright=_dim=_grybg=_mag  # TODO
+	_gry=_orng=_pnk=_redbg=_ybright=_ydim=_bright=_dim=_grybg=_mag=_pur  # TODO
 
-clr_red=clr_grn=clr_grnbg=clr_yel=clr_cya=clr_blu=clr_pnk=clr_orng=clr_gry=clr_mag=clr_reset=''
+_colors = 'red','grn','grnbg','yel','cya','blu','pnk','orng','gry','mag','pur','reset'
+for c in _colors: globals()['clr_'+c] = ''
 
 def nocolor(s): return s
 def red(s):     return clr_red+s+clr_reset
@@ -50,18 +50,9 @@ def pink(s):    return clr_pnk+s+clr_reset
 def orange(s):  return clr_orng+s+clr_reset
 def gray(s):    return clr_gry+s+clr_reset
 def magenta(s): return clr_mag+s+clr_reset
+def purple(s):  return clr_pur+s+clr_reset
 
 def init_color(enable_color=True):
-	global clr_red,clr_grn,clr_grnbg,clr_yel,clr_cya,clr_blu,clr_pnk,clr_orng,clr_gry,clr_mag,clr_reset
 	if enable_color:
-		clr_red = _red
-		clr_grn = _grn
-		clr_grnbg = _grnbg
-		clr_yel = _yel
-		clr_cya = _cya
-		clr_blu = _blu
-		clr_pnk = _pnk
-		clr_orng = _orng
-		clr_gry = _gry
-		clr_mag = _mag
-		clr_reset = _reset
+		for c in _colors:
+			globals()['clr_'+c] = globals()['_'+c]
