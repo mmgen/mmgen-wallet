@@ -68,6 +68,7 @@ def _show_hash_presets():
 # most, but not all, of these set the corresponding global var
 common_opts_data = """
 --, --color=0|1           Disable or enable color output
+--, --force-256-color     Force 256-color output when color is enabled
 --, --bitcoin-data-dir=d  Specify Bitcoin data directory location 'd'
 --, --data-dir=d          Specify {pnm} data directory location 'd'
 --, --no-license          Suppress the GPL license prompt
@@ -116,7 +117,7 @@ def opt_postproc_initializations():
 	check_or_create_dir(g.data_dir) # dies on error
 
 	from mmgen.color import init_color
-	init_color(g.color)
+	init_color(enable_color=g.color,num_colors=('auto',256)[bool(g.force_256_color)])
 
 	if g.platform == 'win': start_mscolor()
 

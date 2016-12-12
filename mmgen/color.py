@@ -17,42 +17,78 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-color.py:  color routines for the MMGen suite
+color.py:  color handling for the MMGen suite
 """
 
-# If 88- or 256-color support is compiled, the following apply.
-#    P s = 3 8 ; 5 ; P s -> Set foreground color to the second P s .
-#    P s = 4 8 ; 5 ; P s -> Set background color to the second P s .
-import os
-if os.environ['TERM'][-8:] == '256color':
-	_blk,_red,_grn,_yel,_blu,_mag,_cya,_bright,_dim,_ybright,_ydim,_pnk,_orng,_gry,_pur = [
-	'\033[38;5;%s;1m' % c for c in 232,210,121,229,75,90,122,231,245,187,243,218,215,246,147]
-	_redbg = '\033[38;5;232;48;5;210;1m'
-	_grnbg = '\033[38;5;232;48;5;121;1m'
-	_grybg = '\033[38;5;231;48;5;240;1m'
-	_reset = '\033[0m'
-else:
-	_blk,_red,_grn,_yel,_blu,_mag,_cya,_reset,_grnbg = \
-		['\033[%sm' % c for c in '30;1','31;1','32;1','33;1','34;1','35;1','36;1','0','30;102']
-	_gry=_orng=_pnk=_redbg=_ybright=_ydim=_bright=_dim=_grybg=_mag=_pur  # TODO
+_colors = {
+	'black':       (  232,      (30,0) ),
+	'red':         (  210,      (31,1) ),
+	'green':       (  121,      (32,1) ),
+	'yellow':      (  229,      (33,1) ),
+	'blue':        (  75,       (34,1) ),
+	'magenta':     (  213,      (35,1) ),
+	'cyan':        (  122,      (36,1) ),
+	'pink':        (  218,      (35,1) ),
+	'orange':      (  216,      (31,1) ),
+	'gray':        (  246,      (30,1) ),
+	'purple':      (  141,      (35,1) ),
 
-_colors = 'red','grn','grnbg','yel','cya','blu','pnk','orng','gry','mag','pur','reset'
-for c in _colors: globals()['clr_'+c] = ''
+	'brown':       (  208,      (33,0) ),
+	'grndim':      (  108,      (32,0) ),
+	'redbg':       ( (232,210), (30,101) ),
+	'grnbg':       ( (232,121), (30,102) ),
+	'blubg':       ( (232,75),  (30,104) ),
+	'yelbg':       ( (232,229), (30,103) ),
+}
+
+for c in _colors:
+	e = _colors[c]
+	if type(e[0]) == int:
+		globals()['_256_'+c] = '\033[38;5;{};1m'.format(e[0])
+	else:
+		globals()['_256_'+c] = '\033[38;5;{};48;5;{};1m'.format(*e[0])
+	if e[1][1] == 0:
+		globals()['_16_'+c] = '\033[{}m'.format(e[1][0])
+	else:
+		globals()['_16_'+c] = '\033[{};{}m'.format(*e[1])
+	globals()['_clr_'+c] = ''; _reset = ''
+	exec "def {c}(s): return _clr_{c}+s+_reset".format(c=c)
 
 def nocolor(s): return s
-def red(s):     return clr_red+s+clr_reset
-def green(s):   return clr_grn+s+clr_reset
-def grnbg(s):   return clr_grnbg+s+clr_reset
-def yellow(s):  return clr_yel+s+clr_reset
-def cyan(s):    return clr_cya+s+clr_reset
-def blue(s):    return clr_blu+s+clr_reset
-def pink(s):    return clr_pnk+s+clr_reset
-def orange(s):  return clr_orng+s+clr_reset
-def gray(s):    return clr_gry+s+clr_reset
-def magenta(s): return clr_mag+s+clr_reset
-def purple(s):  return clr_pur+s+clr_reset
 
-def init_color(enable_color=True):
+def init_color(enable_color=True,num_colors='auto'):
 	if enable_color:
+		assert num_colors in ['auto',8,16,256]
+		globals()['_reset'] = '\033[0m'
+		if num_colors in [8,16]:
+			pfx = '_16_'
+		elif num_colors in [256]:
+			pfx = '_256_'
+		else:
+			try:
+				import os
+				assert os.environ['TERM'][-8:] == '256color'
+				pfx = '_256_'
+			except:
+				try:
+					import subprocess
+					a = subprocess.check_output(['infocmp','-0'])
+					b = [e.split('#')[1] for e in a.split(',') if e[:6] == 'colors'][0]
+					pfx = ('_16_','_256_')[b=='256']
+				except:
+					pfx = '_16_'
+
 		for c in _colors:
-			globals()['clr_'+c] = globals()['_'+c]
+			globals()['_clr_'+c] = globals()[pfx+c]
+
+def test_color():
+	try:
+		import colorama
+		colorama.init(strip=True,convert=True)
+	except:
+		pass
+	for desc,n in ('auto','auto'),('8-color',8),('256-color',256):
+		if n != 'auto': init_color(num_colors=n)
+		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
+
+if __name__ == '__main__': test_color()
