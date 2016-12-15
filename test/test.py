@@ -203,6 +203,7 @@ cfgs = {
 			'sigtx':         'txsign',
 			'mmwords':     'export_mnemonic',
 			'mmseed':      'export_seed',
+			'mmhex':       'export_hex',
 			'mmincog':     'export_incog',
 			'mmincox':     'export_incog_hex',
 			hincog_fn:     'export_incog_hidden',
@@ -407,12 +408,14 @@ cmd_group['main'] = OrderedDict([
 	# txdo must go after txsign
 	['txdo',            (1,'online transaction',       [[['sigtx','mmdat'],1]])],
 
+	['export_hex',      (1,'seed export to hexadecimal format',  [[['mmdat'],1]])],
 	['export_seed',     (1,'seed export to mmseed format',   [[['mmdat'],1]])],
 	['export_mnemonic', (1,'seed export to mmwords format',  [[['mmdat'],1]])],
 	['export_incog',    (1,'seed export to mmincog format',  [[['mmdat'],1]])],
 	['export_incog_hex',(1,'seed export to mmincog hex format', [[['mmdat'],1]])],
 	['export_incog_hidden',(1,'seed export to hidden mmincog format', [[['mmdat'],1]])],
 
+	['addrgen_hex',     (1,'address generation from mmhex file', [[['mmhex','addrs'],1]])],
 	['addrgen_seed',    (1,'address generation from mmseed file', [[['mmseed','addrs'],1]])],
 	['addrgen_mnemonic',(1,'address generation from mmwords file',[[['mmwords','addrs'],1]])],
 	['addrgen_incog',   (1,'address generation from mmincog file',[[['mmincog','addrs'],1]])],
@@ -456,6 +459,7 @@ cmd_group['ref'] = (
 	# reading
 	('ref_wallet_chk', ([],'saved reference wallet')),
 	('ref_seed_chk',   ([],'saved seed file')),
+	('ref_hex_chk',    ([],'saved mmhex file')),
 	('ref_mn_chk',     ([],'saved mnemonic file')),
 	('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
 	('ref_brain_chk',  ([],'saved brainwallet')),
@@ -481,6 +485,7 @@ cmd_group['conv_in'] = ( # reading
 	('ref_wallet_conv',    'conversion of saved reference wallet'),
 	('ref_mn_conv',        'conversion of saved mnemonic'),
 	('ref_seed_conv',      'conversion of saved seed file'),
+	('ref_hex_conv',       'conversion of saved hexadecimal seed file'),
 	('ref_brain_conv',     'conversion of ref brainwallet'),
 	('ref_incog_conv',     'conversion of saved incog wallet'),
 	('ref_incox_conv',     'conversion of saved hex incog wallet'),
@@ -491,6 +496,7 @@ cmd_group['conv_in'] = ( # reading
 cmd_group['conv_out'] = ( # writing
 	('ref_wallet_conv_out', 'ref seed conversion to wallet'),
 	('ref_mn_conv_out',     'ref seed conversion to mnemonic'),
+	('ref_hex_conv_out',    'ref seed conversion to hex seed'),
 	('ref_seed_conv_out',   'ref seed conversion to seed'),
 	('ref_incog_conv_out',  'ref seed conversion to incog data'),
 	('ref_incox_conv_out',  'ref seed conversion to hex incog data'),
@@ -1547,6 +1553,9 @@ class MMGenTestSuite(object):
 		end_silence()
 		ok()
 
+	def export_hex(self,name,wf,desc='hexadecimal seed data',out_fmt='hex',pf=None):
+		self.export_seed(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
+
 	def export_seed_dfl_wallet(self,name,pf,desc='seed data',out_fmt='seed'):
 		self.export_seed(name,wf=None,desc=desc,out_fmt=out_fmt,pf=pf)
 
@@ -1581,6 +1590,9 @@ class MMGenTestSuite(object):
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
 #		t.no_overwrite()
 		ok()
+
+	def addrgen_hex(self,name,wf,foo,desc='hexadecimal seed data',in_fmt='hex'):
+		self.addrgen_seed(name,wf,foo,desc=desc,in_fmt=in_fmt)
 
 	def addrgen_mnemonic(self,name,wf,foo):
 		self.addrgen_seed(name,wf,foo,desc='mnemonic data',in_fmt='words')
@@ -1795,6 +1807,9 @@ class MMGenTestSuite(object):
 	def ref_seed_conv(self,name):
 		self.ref_mn_conv(name,ext='mmseed',desc='Seed data')
 
+	def ref_hex_conv(self,name):
+		self.ref_mn_conv(name,ext='mmhex',desc='Hexadecimal seed data')
+
 	def ref_brain_conv(self,name):
 		uopts = ['-i','b','-p','1','-l',str(cfg['seed_len'])]
 		self.walletconv_in(name,None,'brainwallet',uopts,oo=True)
@@ -1825,6 +1840,9 @@ class MMGenTestSuite(object):
 	def ref_seed_conv_out(self,name):
 		self.walletconv_out(name,'seed data','seed')
 
+	def ref_hex_conv_out(self,name):
+		self.walletconv_out(name,'hexadecimal seed data','hexseed')
+
 	def ref_incog_conv_out(self,name):
 		self.walletconv_out(name,'incognito data',out_fmt='i',pw=True)
 
@@ -1851,16 +1869,21 @@ class MMGenTestSuite(object):
 			pf = None
 		self.walletchk(name,wf,pf=pf,pw=True,sid=cfg['seed_id'])
 
-	from mmgen.seed import SeedFile
-	def ref_seed_chk(self,name,ext=SeedFile.ext):
-		wf = os.path.join(ref_dir,'%s.%s' % (cfg['seed_id'],ext))
+	def ref_ss_chk(self,name,ss=None):
+		wf = os.path.join(ref_dir,'%s.%s' % (cfg['seed_id'],ss.ext))
+		self.walletchk(name,wf,pf=None,desc=ss.desc,sid=cfg['seed_id'])
+
+	def ref_seed_chk(self,name):
 		from mmgen.seed import SeedFile
-		desc = ('mnemonic data','seed data')[ext==SeedFile.ext]
-		self.walletchk(name,wf,pf=None,desc=desc,sid=cfg['seed_id'])
+		self.ref_ss_chk(name,ss=SeedFile)
+
+	def ref_hex_chk(self,name):
+		from mmgen.seed import HexSeedFile
+		self.ref_ss_chk(name,ss=HexSeedFile)
 
 	def ref_mn_chk(self,name):
 		from mmgen.seed import Mnemonic
-		self.ref_seed_chk(name,ext=Mnemonic.ext)
+		self.ref_ss_chk(name,ss=Mnemonic)
 
 	def ref_brain_chk(self,name,bw_file=ref_bw_file):
 		wf = os.path.join(ref_dir,bw_file)
@@ -2060,6 +2083,7 @@ class MMGenTestSuite(object):
 			'ref_wallet_conv',
 			'ref_mn_conv',
 			'ref_seed_conv',
+			'ref_hex_conv',
 			'ref_brain_conv',
 			'ref_incog_conv',
 			'ref_incox_conv',
@@ -2068,6 +2092,7 @@ class MMGenTestSuite(object):
 			'ref_wallet_conv_out',
 			'ref_mn_conv_out',
 			'ref_seed_conv_out',
+			'ref_hex_conv_out',
 			'ref_incog_conv_out',
 			'ref_incox_conv_out',
 			'ref_hincog_conv_out',
@@ -2075,6 +2100,7 @@ class MMGenTestSuite(object):
 			'refwalletgen',
 			'refaddrgen',
 			'ref_seed_chk',
+			'ref_hex_chk',
 			'ref_mn_chk',
 			'ref_brain_chk',
 			'ref_hincog_chk',

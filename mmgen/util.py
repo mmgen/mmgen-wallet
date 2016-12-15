@@ -117,14 +117,14 @@ def qmsg_r(s,alt=False):
 	if opt.quiet:
 		if alt != False: sys.stderr.write(alt)
 	else: sys.stderr.write(s)
-def vmsg(s):
-	if opt.verbose: sys.stderr.write(s + '\n')
-def vmsg_r(s):
-	if opt.verbose: sys.stderr.write(s)
-def Vmsg(s):
-	if opt.verbose: sys.stdout.write(s + '\n')
-def Vmsg_r(s):
-	if opt.verbose: sys.stdout.write(s)
+def vmsg(s,force=False):
+	if opt.verbose or force: sys.stderr.write(s + '\n')
+def vmsg_r(s,force=False):
+	if opt.verbose or force: sys.stderr.write(s)
+def Vmsg(s,force=False):
+	if opt.verbose or force: sys.stdout.write(s + '\n')
+def Vmsg_r(s,force=False):
+	if opt.verbose or force: sys.stdout.write(s)
 def dmsg(s):
 	if opt.debug: sys.stdout.write(s + '\n')
 
@@ -295,7 +295,7 @@ def get_hash_params(hash_preset):
 	else: # Shouldn't be here
 		die(3,"%s: invalid 'hash_preset' value" % hash_preset)
 
-def compare_chksums(chk1, desc1, chk2, desc2, hdr='', die_on_fail=False):
+def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
 
 	if not chk1 == chk2:
 		m = "%s ERROR: %s checksum (%s) doesn't match %s checksum (%s)"\
@@ -303,7 +303,7 @@ def compare_chksums(chk1, desc1, chk2, desc2, hdr='', die_on_fail=False):
 		if die_on_fail:
 			die(3,m)
 		else:
-			vmsg(m)
+			vmsg(m,force=verbose)
 			return False
 
 	vmsg('%s checksum OK (%s)' % (capfirst(desc1),chk1))

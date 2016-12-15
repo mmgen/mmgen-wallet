@@ -223,6 +223,9 @@ class SeedSourceUnenc(SeedSource):
 	def _decrypt_retry(self): pass
 	def _encrypt(self): pass
 
+	def _filename(self):
+		return '%s[%s].%s' % (self.seed.sid,self.seed.length,self.ext)
+
 class SeedSourceEnc(SeedSource):
 
 	_msg = {
@@ -470,9 +473,6 @@ class Mnemonic (SeedSourceUnenc):
 
 		return True
 
-	def _filename(self):
-		return '%s[%s].%s' % (self.seed.sid,self.seed.length,self.ext)
-
 class SeedFile (SeedSourceUnenc):
 
 	stdin_ok = True
@@ -509,8 +509,7 @@ class SeedFile (SeedSourceUnenc):
 
 		vmsg_r('Validating %s checksum...' % desc)
 
-		if not compare_chksums(
-				a,'checksum',make_chksum_6(b),'base 58 data'):
+		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
 
 		ret = b58decode_pad(b)
@@ -527,8 +526,53 @@ class SeedFile (SeedSourceUnenc):
 
 		return True
 
-	def _filename(self):
-		return '%s[%s].%s' % (self.seed.sid,self.seed.length,self.ext)
+class HexSeedFile (SeedSourceUnenc):
+
+	stdin_ok = True
+	fmt_codes = 'seedhex','hexseed','hex','mmhex'
+	desc = 'hexadecimal seed data'
+	ext = 'mmhex'
+
+	def _format(self):
+		h = self.seed.hexdata
+		self.ssdata.chksum = make_chksum_6(h)
+		self.ssdata.hexseed = h
+		self.fmt_data = '%s %s\n' % (self.ssdata.chksum, split_into_cols(4,h))
+
+	def _deformat(self):
+		desc = self.desc
+		d = self.fmt_data.split()
+		try:
+			d[1]
+			chk,hstr = d[0],''.join(d[1:])
+		except:
+			msg("'%s': invalid %s" % (self.fmt_data.strip(),desc))
+			return False
+
+		if not len(hstr)*4 in g.seed_lens:
+			msg('Invalid data length (%s) in %s' % (len(hstr),desc))
+			return False
+
+		if not is_chksum_6(chk):
+			msg("'%s': invalid checksum format in %s" % (chk, desc))
+			return False
+
+		if not is_hexstring(hstr):
+			msg("'%s': not a hexadecimal string, in %s" % (hstr, desc))
+			return False
+
+		vmsg_r('Validating %s checksum...' % desc)
+
+		if not compare_chksums(chk,'file',make_chksum_6(hstr),'computed',verbose=True):
+			return False
+
+		self.seed = Seed(unhexlify(hstr))
+		self.ssdata.chksum = chk
+		self.ssdata.hexseed = hstr
+
+		check_usr_seed_len(self.seed.length)
+
+		return True
 
 class Wallet (SeedSourceEnc):
 
@@ -614,7 +658,7 @@ class Wallet (SeedSourceEnc):
 
 			chk = make_chksum_6(' '.join(lines[1:]))
 			if not compare_chksums(lines[0],'master',chk,'computed',
-						hdr='For wallet master checksum'):
+						hdr='For wallet master checksum',verbose=True):
 				return False
 
 			return True
@@ -658,7 +702,7 @@ class Wallet (SeedSourceEnc):
 				return False
 
 			if not compare_chksums(chk,key,
-					make_chksum_6(b58_val),'computed checksum'):
+					make_chksum_6(b58_val),'computed checksum',verbose=True):
 				return False
 
 			val = b58decode_pad(b58_val)

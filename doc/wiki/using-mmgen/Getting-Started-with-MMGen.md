@@ -9,8 +9,8 @@
 * <a href='#a_st'>Send a transaction</a>
 
 #### <a href='#a_af'>Additional Features</a>
-* <a href='#a_ms'>Using the mnemonic and seed features</a>
-* <a href='#a_ai'>Mnemonics and seeds: additional information</a>
+* <a href='#a_ms'>Using the mnemonic, seed and hexseed formats</a>
+* <a href='#a_ai'>Mnemonics, seeds and hexseeds: additional information</a>
 * <a href='#a_ic'>Incognito wallets</a>
 	* <a href='#a_hi'>Hidden incognito wallets</a>
 
@@ -308,7 +308,7 @@ by invoking the desired command with the `-h` or `--help` switch.
 
 ### <a name='a_af'>Additional Features</a>
 
-#### <a name='a_ms'>Using the mnemonic and seed features:</a>
+#### <a name='a_ms'>Using the mnemonic, seed and hexseed formats:</a>
 
 Continuing our example above, generate a mnemonic from the default wallet:
 
@@ -387,10 +387,25 @@ Or you can do the same thing with 'mmgen-tool':
 		$ mmgen-tool str2id6 'XnyC NfPH piuW dQ2d nM47 VU'
 		0fe02f
 
-#### <a name='a_ai'>Mnemonics and seeds: additional information</a>
+Beginning with version 0.9.0, export to and generation from hexadecimal
+(hexseed) format is also supported.  Hexseed files are identical to seed files
+but encoded in hexadecimal rather than base 58.  They bear the extension
+'.mmhex':
 
-MMGen commands that take mnemonic and seed data may receive the data from a
-prompt instead of a file.  Just omit the file name and specify the input format:
+		$ cat FE3C6545.mmhex
+		afc3fe 456d 7f5f 1c4b fe3b c916 b875 60ae 6a3e
+
+You can easily check that a hexseed is correct by generating its Seed ID with
+standard command-line tools:
+
+		$ echo 456d 7f5f 1c4b fe3b c916 b875 60ae 6a3e | tr -d ' ' | xxd -r -p | sha256sum -b | xxd -r -p | sha256sum -b | cut -c 1-8
+		fe3c6545
+
+#### <a name='a_ai'>Mnemonics, seeds and hexseeds: additional information</a>
+
+MMGen commands that take mnemonic, seed or hexseed data may receive the data
+from a prompt instead of a file.  Just omit the file name and specify the input
+format:
 
 		$ mmgen-walletconv -i words
 		...

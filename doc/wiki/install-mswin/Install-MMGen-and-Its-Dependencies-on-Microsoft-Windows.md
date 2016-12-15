@@ -165,8 +165,8 @@ Get the [zip archive][10] of the latest stable version from GitHub, unpack and i
 		$ python setup.py build --compiler=mingw32
 		$ sudo ./setup.py install
 
-If you wish, you may run the MMGen test suite to make sure your installation's
-working:
+After first installing and starting the [Bitcoin daemon][77], you may then run
+the MMGen test suite to make sure your installation's working:
 
 		$ test/test.py -s
 
@@ -184,3 +184,4 @@ working:
 [31]: https://sourceforge.net/projects/mingw/files/MinGW/Extension/autoconf/autoconf2.5/autoconf2.5-2.68-1/autoconf2.5-2.68-1-mingw32-bin.tar.lzma
 [32]: https://sourceforge.net/projects/mingw/files/MinGW/Extension/automake/automake1.11/automake1.11-1.11.1-1/automake1.11-1.11.1-1-mingw32-bin.tar.lzma
 [33]: https://sourceforge.net/projects/mingw/files/MinGW/Extension/libtool/libtool-2.4-1/libtool-2.4-1-mingw32-bin.tar.lzma
+[77]: Install-Bitcoind
