@@ -142,6 +142,7 @@ opts_data = {
 -L, --log           Log commands to file {lf}
 -n, --names         Display command names instead of descriptions
 -I, --interactive   Interactive mode (without pexpect)
+-O, --popen-spawn   Use pexpect's popen_spawn instead of popen
 -p, --pause         Pause between tests, resuming on keypress
 -P, --profile       Record the execution time of each script
 -q, --quiet         Produce minimal output.  Suppress dependency info
@@ -668,7 +669,7 @@ if opt.list_cmds:
 import time,re
 if g.platform == 'linux':
 	import pexpect
-	if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+	if opt.popen_spawn:
 		import termios,atexit
 		def at_exit(): os.system('stty sane')
 		atexit.register(at_exit)
@@ -690,8 +691,6 @@ else: # Windows
 		if not keypress_confirm(green(m1)+grnbg(m2)+green(m3),default_yes=True):
 			errmsg('Exiting at user request')
 			sys.exit()
-	else:
-		os.environ['MMGEN_PEXPECT_POPEN_SPAWN'] = '1'
 
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)

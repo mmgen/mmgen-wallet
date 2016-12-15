@@ -368,7 +368,12 @@ class Mnemonic (SeedSourceUnenc):
 	def _hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
 
 	@staticmethod
-	def baseNtohex(base,words,wl,pad=0):
+	def baseNtohex(base,words_arg,wl,pad=0): # accepts both string and list input
+		words = words_arg
+		if type(words) not in (list,tuple):
+			words = tuple(words.strip())
+		if not set(words).issubset(set(wl)):
+			die(2,'{} is not in base-{} format'.format(repr(words_arg),base))
 		deconv =  [wl.index(words[::-1][i])*(base**i)
 					for i in range(len(words))]
 		ret = ('{:0%sx}' % pad).format(sum(deconv))
@@ -376,6 +381,9 @@ class Mnemonic (SeedSourceUnenc):
 
 	@staticmethod
 	def hextobaseN(base,hexnum,wl,pad=0):
+		hexnum = hexnum.strip()
+		if not is_hexstring(hexnum):
+			die(2,"'%s': not a hexadecimal number" % hexnum)
 		num,ret = int(hexnum,16),[]
 		while num:
 			ret.append(num % base)

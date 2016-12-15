@@ -493,7 +493,7 @@ def write_data_to_file(
 
 	if opt.stdout or outfile in ('','-'):
 		do_stdout()
-	elif not sys.stdout.isatty() and not os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+	elif sys.stdin.isatty() and not sys.stdout.isatty():
 		do_stdout()
 	else:
 		do_file(outfile,ask_write_prompt)
@@ -581,7 +581,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	from mmgen.term import kb_hold_protect
 	kb_hold_protect()
-	if echo or os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+	if echo or not sys.stdin.isatty():
 		reply = raw_input(prompt)
 	else:
 		from getpass import getpass

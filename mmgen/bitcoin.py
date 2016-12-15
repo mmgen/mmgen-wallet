@@ -54,12 +54,12 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 from mmgen.globalvars import g
 
 def pubhex2hexaddr(pubhex):
-	step1 = sha256(unhexlify(pubhex)).digest()
+	step1 = sha256(unhexlify(pubhex.strip())).digest()
 	return hashlib_new('ripemd160',step1).hexdigest()
 
 def hexaddr2addr(hexaddr,p2sh=False):
 	# devdoc/ref_transactions.md:
-	hexaddr2 = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr
+	hexaddr2 = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr.strip()
 	step1 = sha256(unhexlify(hexaddr2)).digest()
 	step2 = sha256(step1).hexdigest()
 	pubkey = hexaddr2 + step2[:8]
@@ -67,6 +67,7 @@ def hexaddr2addr(hexaddr,p2sh=False):
 	return ('1' * lzeroes) + _numtob58(int(pubkey,16))
 
 def verify_addr(addr,verbose=False,return_hex=False):
+	addr = addr.strip()
 	for vers_num,ldigit in ('00','1'),('05','3'),('6f','mn'),('c4','2'):
 		if addr[0] not in ldigit: continue
 		num = _b58tonum(addr)
@@ -95,6 +96,7 @@ def _numtob58(num):
 	return ''.join(ret)[::-1]
 
 def _b58tonum(b58num):
+	b58num = b58num.strip()
 	for i in b58num:
 		if not i in b58a: return False
 	return sum([b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1]))])
@@ -110,6 +112,7 @@ def b58encode(s):
 	return _numtob58(num)
 
 def b58decode(b58num):
+	b58num = b58num.strip()
 	if b58num == '': return ''
 	# Zap all spaces:
 	# Use translate() only with str, not unicode
@@ -146,6 +149,7 @@ def b58decode_pad(s):
 # Compressed address support:
 
 def wif2hex(wif):
+	wif = wif.strip()
 	compressed = wif[0] != ('5','9')[g.testnet]
 	idx = (66,68)[bool(compressed)]
 	num = _b58tonum(wif)
@@ -157,7 +161,7 @@ def wif2hex(wif):
 	return key[2:66] if (key[:2] == ('80','ef')[g.testnet] and key[idx:] == round2[:8]) else False
 
 def hex2wif(hexpriv,compressed=False):
-	step1 = ('80','ef')[g.testnet] + hexpriv + ('','01')[bool(compressed)]
+	step1 = ('80','ef')[g.testnet] + hexpriv.strip() + ('','01')[bool(compressed)]
 	step2 = sha256(unhexlify(step1)).digest()
 	step3 = sha256(step2).hexdigest()
 	key = step1 + step3[:8]

@@ -33,38 +33,38 @@ from collections import OrderedDict
 cmd_data = OrderedDict([
 	('help',         ['<tool command> [str]']),
 	('usage',        ['<tool command> [str]']),
-	('strtob58',     ['<string> [str]']),
-	('b58tostr',     ['<b58 number> [str]']),
-	('hextob58',     ['<hex number> [str]']),
-	('b58tohex',     ['<b58 number> [str]']),
+	('strtob58',     ['<string> [str-]']),
+	('b58tostr',     ['<b58 number> [str-]']),
+	('hextob58',     ['<hex number> [str-]']),
+	('b58tohex',     ['<b58 number> [str-]']),
 	('b58randenc',   []),
-	('b32tohex',     ['<b32 num> [str]']),
-	('hextob32',     ['<hex num> [str]']),
+	('b32tohex',     ['<b32 num> [str-]']),
+	('hextob32',     ['<hex num> [str-]']),
 	('randhex',      ['nbytes [int=32]']),
 	('id8',          ['<infile> [str]']),
 	('id6',          ['<infile> [str]']),
-	('sha256x2',     ['<str, hexstr or filename> [str]',
+	('sha256x2',     ['<str, hexstr or filename> [str]', # TODO handle stdin
 							'hex_input [bool=False]','file_input [bool=False]']),
-	('str2id6',      ['<string (spaces are ignored)> [str]']),
+	('str2id6',      ['<string (spaces are ignored)> [str-]']),
 	('hexdump',      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]']),
 	('unhexdump',    ['<infile> [str]']),
-	('hexreverse',   ['<hexadecimal string> [str]']),
-	('hexlify',      ['<string> [str]']),
+	('hexreverse',   ['<hexadecimal string> [str-]']),
+	('hexlify',      ['<string> [str-]']),
 	('rand2file',    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False]']),
 
 	('randwif',    ['compressed [bool=False]']),
 	('randpair',   ['compressed [bool=False]']),
-	('hex2wif',    ['<private key in hex format> [str]', 'compressed [bool=False]']),
-	('wif2hex',    ['<wif> [str]', 'compressed [bool=False]']),
-	('wif2addr',   ['<wif> [str]', 'compressed [bool=False]']),
-	('hexaddr2addr', ['<btc address in hex format> [str]']),
-	('addr2hexaddr', ['<btc address> [str]']),
-	('pubkey2addr',  ['<public key in hex format> [str]']),
-	('pubkey2hexaddr', ['<public key in hex format> [str]']),
-	('privhex2addr', ['<private key in hex format> [str]','compressed [bool=False]']),
+	('hex2wif',    ['<private key in hex format> [str-]', 'compressed [bool=False]']),
+	('wif2hex',    ['<wif> [str-]', 'compressed [bool=False]']),
+	('wif2addr',   ['<wif> [str-]', 'compressed [bool=False]']),
+	('hexaddr2addr', ['<btc address in hex format> [str-]']),
+	('addr2hexaddr', ['<btc address> [str-]']),
+	('pubkey2addr',  ['<public key in hex format> [str-]']),
+	('pubkey2hexaddr', ['<public key in hex format> [str-]']),
+	('privhex2addr', ['<private key in hex format> [str-]','compressed [bool=False]']),
 
-	('hex2mn',       ['<hexadecimal string> [str]',"wordlist [str='electrum']"]),
-	('mn2hex',       ['<mnemonic> [str]', "wordlist [str='electrum']"]),
+	('hex2mn',       ['<hexadecimal string> [str-]',"wordlist [str='electrum']"]),
+	('mn2hex',       ['<mnemonic> [str-]', "wordlist [str='electrum']"]),
 	('mn_rand128',   ["wordlist [str='electrum']"]),
 	('mn_rand192',   ["wordlist [str='electrum']"]),
 	('mn_rand256',   ["wordlist [str='electrum']"]),
@@ -162,7 +162,10 @@ def tool_usage(prog_name, command):
 			if '  ' + command in line:
 				c,h = line.split('-',1)
 				Msg('MMGEN-TOOL {}: {}'.format(c.strip().upper(),h.strip()))
-		msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cmd_data[command])))
+		cd = cmd_data[command]
+		if cd and cd[0][-2:] == '-]':
+			cd[0] = cd[0][:-2] + ' or STDIN]'
+		msg('USAGE: %s %s %s' % (prog_name, command, ' '.join(cd)))
 	else:
 		msg("'%s': no such tool command" % command)
 	sys.exit(1)
@@ -176,10 +179,19 @@ def process_args(prog_name, command, cmd_args):
 		] for i in cmd_data[command] if '=' in i])
 	u_args   = [a for a in cmd_args[:len(c_args)]]
 
+	if c_args and c_args[0][1][-1] == '-':
+		c_args[0][1] = c_args[0][1][:-1] # [str-] -> [str]
+		# If we're reading from a pipe, make the input the first argument
+		if len(u_args) < len(c_kwargs) + len(c_args):
+			if not sys.stdin.isatty():
+				u_args = [sys.stdin.read()] + u_args
+
 	if len(u_args) < len(c_args):
-		msg('Command requires exactly %s non-keyword argument%s' % (len(c_args),suf(c_args,'k')))
+		m1 = 'Command requires exactly %s non-keyword argument%s'
+		msg(m1 % (len(c_args),suf(c_args,'k')))
 		tool_usage(prog_name,command)
 
+#	print u_args
 	extra_args = len(cmd_args) - len(c_args)
 	u_kwargs = {}
 	if extra_args > 0:
@@ -260,20 +272,23 @@ def strtob58(s):
 	print_convert_results(s,enc,dec,'str')
 
 def hextob58(s,f_enc=bitcoin.b58encode, f_dec=bitcoin.b58decode):
+	s = s.strip()
 	enc = f_enc(ba.unhexlify(s))
 	dec = ba.hexlify(f_dec(enc))
 	print_convert_results(s,enc,dec,'hex')
 
 def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
+	s = s.strip()
 	tmp = f_enc(s)
-	if tmp == False: sys.exit(1)
+	if tmp == False: die(1,"Unable to decode string '%s'" % s)
 	enc = ba.hexlify(tmp)
 	dec = f_dec(ba.unhexlify(enc))
 	print_convert_results(s,enc,dec,'b58')
 
 def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
+	s = s.strip()
 	enc = f_enc(s)
-	if enc == False: sys.exit(1)
+	if enc == False: die(1,"Unable to decode string '%s'" % s)
 	dec = f_dec(enc)
 	print_convert_results(s,enc,dec,'b58')
 
@@ -334,7 +349,7 @@ def mn2hex(s,wordlist=dfl_wordlist):
 
 def b32tohex(s):
 	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-	Msg(Mnemonic.baseNtohex(32,s,b32a))
+	Msg(Mnemonic.baseNtohex(32,s.upper(),b32a))
 
 def hextob32(s):
 	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
@@ -355,7 +370,8 @@ def id6(infile):
 	Msg(make_chksum_6(
 		get_data_from_file(infile,dash=True,silent=True,binary=True)
 	))
-def str2id6(s):  Msg(make_chksum_6(''.join(s.split())))
+def str2id6(s): # retain ignoring of space for backwards compat
+	Msg(make_chksum_6(''.join(s.split())))
 
 # List MMGen addresses and their balances:
 def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False):
@@ -487,8 +503,8 @@ def keyaddrfile_chksum(infile):
 	from mmgen.addr import KeyAddrList
 	KeyAddrList(infile,chksum_only=True)
 
-def hexreverse(hex_str):
-	Msg(ba.hexlify(decode_pretty_hexdump(hex_str)[::-1]))
+def hexreverse(s):
+	Msg(ba.hexlify(ba.unhexlify(s.strip())[::-1]))
 
 def hexlify(s):
 	Msg(ba.hexlify(s))

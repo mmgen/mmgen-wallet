@@ -33,7 +33,7 @@ except:
 		_platform = 'win'
 	except:
 		die(2,'Unable to set terminal mode')
-	if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+	if not sys.stdin.isatty():
 		msvcrt.setmode(sys.stdin.fileno(),os.O_BINARY)
 
 def _kb_hold_protect_unix():
@@ -140,7 +140,7 @@ def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None):
 	if ord(ch) == 3: raise KeyboardInterrupt
 	return ch
 
-def _get_keypress_mswin_emu(prompt='',immed_chars='',prehold_protect=None):
+def _get_keypress_mswin_stub(prompt='',immed_chars='',prehold_protect=None):
 	msg_r(prompt)
 	return sys.stdin.read(1)
 
@@ -200,12 +200,12 @@ def set_terminal_vars():
 	if _platform == 'linux':
 		get_char = (_get_keypress_unix_raw,_get_keypress_unix)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
-		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+		if not sys.stdin.isatty():
 			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
 		get_terminal_size = _get_terminal_size_linux
 	else:
 		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
-		if os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
-			get_char = _get_keypress_mswin_emu
+		if not sys.stdin.isatty():
+			get_char = _get_keypress_mswin_stub
 		get_terminal_size = _get_terminal_size_mswin

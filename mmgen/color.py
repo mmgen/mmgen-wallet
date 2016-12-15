@@ -52,7 +52,7 @@ for c in _colors:
 	else:
 		globals()['_16_'+c] = '\033[{};{}m'.format(*e[1])
 	globals()['_clr_'+c] = ''; _reset = ''
-	exec "def {c}(s): return _clr_{c}+s+_reset".format(c=c)
+	exec 'def {c}(s): return _clr_{c}+s+_reset'.format(c=c)
 
 def nocolor(s): return s
 

@@ -38,7 +38,7 @@ def cleandir(d):
 			rmtree(os.path.join(d,f))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
-def getrandhex(n): return hexlify(os.urandom(n))
+def getrandhex(n): return hexlify(os.urandom(n).lstrip('0'))
 def getrandstr(num_chars,no_space=False):
 	n,m = 95,32
 	if no_space: n,m = 94,33

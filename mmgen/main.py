@@ -31,7 +31,7 @@ def launch(what):
 		__import__('mmgen.main_' + what)
 	else:
 		import sys,os,atexit
-		if not os.getenv('MMGEN_PEXPECT_POPEN_SPAWN'):
+		if sys.stdin.isatty():
 			fd = sys.stdin.fileno()
 			old = termios.tcgetattr(fd)
 			def at_exit(): termios.tcsetattr(fd, termios.TCSADRAIN, old)
