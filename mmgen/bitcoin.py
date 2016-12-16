@@ -53,18 +53,19 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 from mmgen.globalvars import g
 
-def pubhex2hexaddr(pubhex):
-	step1 = sha256(unhexlify(pubhex.strip())).digest()
-	return hashlib_new('ripemd160',step1).hexdigest()
+def hash256(hexnum): # take hex, return hex - OP_HASH256
+	return sha256(sha256(unhexlify(hexnum)).digest()).hexdigest()
+
+def hash160(hexnum): # take hex, return hex - OP_HASH160
+	return hashlib_new('ripemd160',sha256(unhexlify(hexnum)).digest()).hexdigest()
+
+pubhex2hexaddr = hash160
 
 def hexaddr2addr(hexaddr,p2sh=False):
 	# devdoc/ref_transactions.md:
-	hexaddr2 = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr.strip()
-	step1 = sha256(unhexlify(hexaddr2)).digest()
-	step2 = sha256(step1).hexdigest()
-	pubkey = hexaddr2 + step2[:8]
-	lzeroes = (len(hexaddr2) - len(hexaddr2.lstrip('0'))) / 2
-	return ('1' * lzeroes) + _numtob58(int(pubkey,16))
+	s = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr.strip()
+	lzeroes = (len(s) - len(s.lstrip('0'))) / 2
+	return ('1' * lzeroes) + _numtob58(int(s+hash256(s)[:8],16))
 
 def verify_addr(addr,verbose=False,return_hex=False):
 	addr = addr.strip()
@@ -74,9 +75,7 @@ def verify_addr(addr,verbose=False,return_hex=False):
 		if num == False: break
 		addr_hex = '{:050x}'.format(num)
 		if addr_hex[:2] != vers_num: continue
-		step1 = sha256(unhexlify(addr_hex[:42])).digest()
-		step2 = sha256(step1).hexdigest()
-		if step2[:8] == addr_hex[42:]:
+		if hash256(addr_hex[:42])[:8] == addr_hex[42:]:
 			return addr_hex[2:42] if return_hex else True
 		else:
 			if verbose: Msg("Invalid checksum in address '%s'" % addr)
@@ -84,7 +83,6 @@ def verify_addr(addr,verbose=False,return_hex=False):
 
 	if verbose: Msg("Invalid address '%s'" % addr)
 	return False
-
 
 # Reworked code from here:
 
@@ -151,21 +149,19 @@ def b58decode_pad(s):
 def wif2hex(wif):
 	wif = wif.strip()
 	compressed = wif[0] != ('5','9')[g.testnet]
-	idx = (66,68)[bool(compressed)]
 	num = _b58tonum(wif)
 	if num == False: return False
 	key = '{:x}'.format(num)
+	klen = (66,68)[bool(compressed)]
 	if compressed and key[66:68] != '01': return False
-	round1 = sha256(unhexlify(key[:idx])).digest()
-	round2 = sha256(round1).hexdigest()
-	return key[2:66] if (key[:2] == ('80','ef')[g.testnet] and key[idx:] == round2[:8]) else False
+	if (key[:2] == ('80','ef')[g.testnet] and key[klen:] == hash256(key[:klen])[:8]):
+		return key[2:66]
+	else:
+		return False
 
 def hex2wif(hexpriv,compressed=False):
-	step1 = ('80','ef')[g.testnet] + hexpriv.strip() + ('','01')[bool(compressed)]
-	step2 = sha256(unhexlify(step1)).digest()
-	step3 = sha256(step2).hexdigest()
-	key = step1 + step3[:8]
-	return _numtob58(int(key,16))
+	s = ('80','ef')[g.testnet] + hexpriv.strip() + ('','01')[bool(compressed)]
+	return _numtob58(int(s+hash256(s)[:8],16))
 
 # devdoc/guide_wallets.md:
 # Uncompressed public keys start with 0x04; compressed public keys begin with
