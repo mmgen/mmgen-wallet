@@ -26,7 +26,7 @@ and no Bitcoin balance.
 
 *NOTE: Beginning with v0.8.7a, MMGen supports testnet, allowing you to perform
 the entire set of MMGen operations without risking real funds (free testnet
-coins may be obtained at [https://tpfaucet.appspot.com/][2]). To use this
+coins may be obtained at [https://tpfaucet.appspot.com/][02]). To use this
 feature, start bitcoind with the -testnet option and sync the testnet blockchain
 (about 9GB at this time of writing).  To make MMGen use testnet instead of
 mainnet, supply the `--testnet=1` option as the first argument to all MMGen
@@ -176,7 +176,7 @@ also).
 		TOTAL: 0 BTC
 
 *While not covered in this introduction, note that it’s also possible to [import
-ordinary Bitcoin addresses into your tracking wallet][1].  This allows you to
+ordinary Bitcoin addresses into your tracking wallet][01].  This allows you to
 move funds from another wallet directly to MMGen without having to go through
 the network.  To use it, you must save the keys corresponding to the addresses
 where the funds are stored in a separate file for use during signing.*
@@ -401,6 +401,9 @@ standard command-line tools:
 		$ echo 456d 7f5f 1c4b fe3b c916 b875 60ae 6a3e | tr -d ' ' | xxd -r -p | sha256sum -b | xxd -r -p | sha256sum -b | cut -c 1-8
 		fe3c6545
 
+A hexseed can be used to easily generate keys even without the MMGen software,
+as explained in [this tutorial][03].
+
 #### <a name='a_ai'>Mnemonics, seeds and hexseeds: additional information</a>
 
 MMGen commands that take mnemonic, seed or hexseed data may receive the data
@@ -546,5 +549,6 @@ Transaction signing uses the same syntax:
 		...
 		Signed transaction written to file 'ABCDEF[0.1].sigtx'
 
-[1]: https://github.com/mmgen/mmgen/wiki/Tracking-and-spending-ordinary-Bitcoin-addresses
-[2]: https://tpfaucet.appspot.com
+[01]: https://github.com/mmgen/mmgen/wiki/Tracking-and-spending-ordinary-Bitcoin-addresses
+[02]: https://tpfaucet.appspot.com
+[03]: Recovering-Keys-Without-MMGen
