@@ -1130,6 +1130,7 @@ def clean(usr_dirs=[]):
 			cleandir(all_dirs[str(d)])
 		else:
 			die(1,'%s: invalid directory number' % d)
+	cleandir(os.path.join('test','data_dir'))
 
 class MMGenTestSuite(object):
 
