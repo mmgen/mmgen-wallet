@@ -91,7 +91,7 @@ def parse_opts(argv,opts_data,opt_filter=None):
 	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
 	od_all = []
 
-	for k in ('options','long_options'):
+	for k in ['options'] + ([],['long_options'])['long_options' in opts_data]:
 		od,skip = [],True
 		for l in opts_data[k].strip().splitlines():
 			m = re.match(pat,l)

@@ -45,6 +45,7 @@ class g(object):
 	author    = 'Philemon'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2016'
+	keywords  = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin'
 
 	user_entropy   = ''
 	hash_preset    = '3'

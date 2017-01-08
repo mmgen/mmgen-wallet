@@ -64,7 +64,7 @@ setup(
 		url          = g.proj_url,
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows, Raspberry Pi',
-		keywords     = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin',
+		keywords     = g.keywords,
 		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
 		ext_modules = [module1],
 		data_files = [('share/mmgen', [

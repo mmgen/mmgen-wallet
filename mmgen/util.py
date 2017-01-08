@@ -39,6 +39,17 @@ def mdie(*args):
 		sys.stdout.write(repr(d)+'\n')
 	sys.exit()
 
+def die_wait(delay,ev=0,s=''):
+	assert type(delay) == int
+	assert type(ev) == int
+	if s: sys.stderr.write(s+'\n')
+	time.sleep(delay)
+	sys.exit(ev)
+def die_pause(ev=0,s=''):
+	assert type(ev) == int
+	if s: sys.stderr.write(s+'\n')
+	raw_input('Press ENTER to exit')
+	sys.exit(ev)
 def die(ev=0,s=''):
 	assert type(ev) == int
 	if s: sys.stderr.write(s+'\n')
