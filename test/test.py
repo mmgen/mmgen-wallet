@@ -652,7 +652,7 @@ if opt.list_cmds:
 	for cmd in cmd_data:
 		if cmd[:5] == 'info_':
 			m = capfirst(cmd_data[cmd][0])
-			msg(green('  %s:' % m))
+			Msg(green('  %s:' % m))
 			continue
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
