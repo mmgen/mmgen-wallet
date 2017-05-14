@@ -80,7 +80,7 @@ ref_tx_label = ''.join([unichr(i) for i in  range(65,91) +
 											range(1040,1072) + # cyrillic
 											range(913,939) +   # greek
 											range(97,123)])[:MMGenTXLabel.max_len]
-
+tx_fee             = '0.0001'
 ref_bw_hash_preset = '1'
 ref_bw_file        = 'wallet.mmbrain'
 ref_bw_file_spc    = 'wallet-spaced.mmbrain'
@@ -199,8 +199,8 @@ cfgs = {
 			pwfile:        'walletgen',
 			'mmdat':       'walletgen',
 			'addrs':       'addrgen',
-			'rawtx':         'txcreate',
-			'sigtx':         'txsign',
+			'rawtx':       'txcreate',
+			'sigtx':       'txsign',
 			'mmwords':     'export_mnemonic',
 			'mmseed':      'export_seed',
 			'mmhex':       'export_hex',
@@ -990,8 +990,9 @@ def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input='')
 		privnum = getrandnum(32)
 		btcaddr = privnum2addr(privnum,compressed=True)
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
-		write_data_to_file(of, hex2wif('{:064x}'.format(privnum),
-					compressed=True)+'\n','compressed bitcoin key',silent=True)
+		wif = hex2wif('{:064x}'.format(privnum),compressed=True)
+#		Msg(yellow(wif + ' ' + btcaddr))
+		write_data_to_file(of,wif+'\n','compressed bitcoin key',silent=True)
 
 		out.append(create_fake_unspent_entry(btcaddr,non_mmgen='Non-MMGen address'))
 

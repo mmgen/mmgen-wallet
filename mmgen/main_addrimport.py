@@ -83,14 +83,13 @@ if not opt.test:
 m = """
 WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
 necessary only if an address you're importing is already on the blockchain,
-has a balance and is not already in your tracking wallet.  Note that the
-rescanning process is very slow (>30 min. for each imported address on a
-low-powered computer).
+has a balance and is not in your tracking wallet.  Note that the rescanning
+process is very slow (>30 min. for each imported address on a low-powered
+computer).
 	""".strip() if opt.rescan else """
 WARNING: If any of the addresses you're importing is already on the blockchain,
-has a balance and is not already in your tracking wallet, you must exit the
-program now and rerun it using the '--rescan' option.  Otherwise you may ignore
-this message and continue.
+has a balance and is not in your tracking wallet, you must exit the program now
+and rerun it using the '--rescan' option.
 """.strip()
 
 if not opt.quiet: confirm_or_exit(m, 'continue', expect='YES')

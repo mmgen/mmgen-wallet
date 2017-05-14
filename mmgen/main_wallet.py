@@ -20,15 +20,11 @@
 mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 """
 
-import os,re
-
+import os
 from mmgen.common import *
 from mmgen.seed import SeedSource,Wallet
 from mmgen.filename import find_file_in_dir
 from mmgen.obj import MMGenWalletLabel
-
-bn = os.path.basename(sys.argv[0])
-invoked_as = re.sub(r'^wallet','',bn.split('-')[-1])
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -36,6 +32,8 @@ iaction = 'convert'
 oaction = 'convert'
 bw_note = opts.bw_note
 pw_note = opts.pw_note
+
+invoked_as = 'passchg' if g.prog_name == 'mmgen-passchg' else g.prog_name.partition('-wallet')[2]
 
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
@@ -57,7 +55,7 @@ elif invoked_as == 'passchg':
 	iaction = 'input'
 	bw_note = ''
 else:
-	die(1,"'%s': unrecognized invocation" % bn)
+	die(1,"'%s': unrecognized invocation" % g.prog_name)
 
 opts_data = {
 # Can't use: share/Opts doesn't know anything about fmt codes
@@ -74,9 +72,9 @@ opts_data = {
 -o, --out-fmt=     f  {oaction} to wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
--J, --hidden-incog-output-params=f,o  Write hidden incognito data to file 'f'
-                      at offset 'o' (comma-separated).  File 'f' will be cre-
-                      ated and filled with random data if it doesn't exist.
+-J, --hidden-incog-output-params=f,o  Write hidden incognito data to file
+                      'f' at offset 'o' (comma-separated). File 'f' will be
+                      created if necessary and filled with random data.
 -O, --old-incog-fmt   Specify old-format incognito input
 -k, --keep-passphrase Reuse passphrase of input wallet for output wallet
 -K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
@@ -128,7 +126,10 @@ if invoked_as in ('conv','passchg'):
 
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
 
-if invoked_as == 'chk': sys.exit()
+if invoked_as == 'chk':
+	vmsg('Wallet label: {}'.format(ss_in.ssdata.label.hl()))
+	# TODO: display creation date
+	sys.exit()
 
 if invoked_as in ('conv','passchg'):
 	msg(green('Processing output wallet'))

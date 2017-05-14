@@ -22,7 +22,7 @@ tool.py:  Routines and data for the 'mmgen-tool' utility
 
 import binascii as ba
 
-import mmgen.bitcoin as bitcoin
+import mmgen.bitcoin as mmb
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.tx import *
@@ -267,17 +267,17 @@ def unhexdump(infile):
 			get_data_from_file(infile,dash=True,silent=True)))
 
 def strtob58(s):
-	enc = bitcoin.b58encode(s)
-	dec = bitcoin.b58decode(enc)
+	enc = mmb.b58encode(s)
+	dec = mmb.b58decode(enc)
 	print_convert_results(s,enc,dec,'str')
 
-def hextob58(s,f_enc=bitcoin.b58encode, f_dec=bitcoin.b58decode):
+def hextob58(s,f_enc=mmb.b58encode, f_dec=mmb.b58decode):
 	s = s.strip()
 	enc = f_enc(ba.unhexlify(s))
 	dec = ba.hexlify(f_dec(enc))
 	print_convert_results(s,enc,dec,'hex')
 
-def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
+def b58tohex(s,f_enc=mmb.b58decode, f_dec=mmb.b58encode):
 	s = s.strip()
 	tmp = f_enc(s)
 	if tmp == False: die(1,"Unable to decode string '%s'" % s)
@@ -285,7 +285,7 @@ def b58tohex(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 	dec = f_dec(ba.unhexlify(enc))
 	print_convert_results(s,enc,dec,'b58')
 
-def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
+def b58tostr(s,f_enc=mmb.b58decode, f_dec=mmb.b58encode):
 	s = s.strip()
 	enc = f_enc(s)
 	if enc == False: die(1,"Unable to decode string '%s'" % s)
@@ -294,8 +294,8 @@ def b58tostr(s,f_enc=bitcoin.b58decode, f_dec=bitcoin.b58encode):
 
 def b58randenc():
 	r = get_random(32)
-	enc = bitcoin.b58encode(r)
-	dec = bitcoin.b58decode(enc)
+	enc = mmb.b58encode(r)
+	dec = mmb.b58decode(enc)
 	print_convert_results(r,enc,dec,'str')
 
 def randhex(nbytes='32'):
@@ -303,23 +303,23 @@ def randhex(nbytes='32'):
 
 def randwif(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
-	enc = bitcoin.hex2wif(r_hex,compressed)
-	dec = bitcoin.wif2hex(enc)
+	enc = mmb.hex2wif(r_hex,compressed)
+	dec = mmb.wif2hex(enc)
 	print_convert_results(r_hex,enc,dec,'hex')
 
 def randpair(compressed=False):
 	r_hex = ba.hexlify(get_random(32))
-	wif = bitcoin.hex2wif(r_hex,compressed)
-	addr = bitcoin.privnum2addr(int(r_hex,16),compressed)
+	wif = mmb.hex2wif(r_hex,compressed)
+	addr = mmb.privnum2addr(int(r_hex,16),compressed)
 	Vmsg('Key (hex):  %s' % r_hex)
 	Vmsg_r('Key (WIF):  '); Msg(wif)
 	Vmsg_r('Addr:       '); Msg(addr)
 
 def wif2addr(wif,compressed=False):
-	s_enc = bitcoin.wif2hex(wif)
+	s_enc = mmb.wif2hex(wif)
 	if s_enc == False:
 		die(1,'Invalid address')
-	addr = bitcoin.privnum2addr(int(s_enc,16),compressed)
+	addr = mmb.privnum2addr(int(s_enc,16),compressed)
 	Vmsg_r('Addr: '); Msg(addr)
 
 wordlists = 'electrum','tirosh'
@@ -433,7 +433,10 @@ def listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			)]
 
 	old_sid = ''
-	def s_mmgen(k): return '{:>0{w}}'.format(k,w=AddrIdx.max_digits+9) # TODO
+	def s_mmgen(k):
+		s = k.split('_')
+		a,b = s if len(s) == 2 else (k,'')
+		return '{}_{:>0{w}}'.format(a,b,w=AddrIdx.max_digits+9)
 	for k in sorted(addrs,key=s_mmgen):
 		if old_sid and old_sid != k.split('_')[0]: out.append('')
 		old_sid = k.split('_')[0]
@@ -517,25 +520,25 @@ def sha256x2(s, file_input=False, hex_input=False):
 	Msg(sha256(sha256(b).digest()).hexdigest())
 
 def hexaddr2addr(hexaddr):
-	Msg(bitcoin.hexaddr2addr(hexaddr))
+	Msg(mmb.hexaddr2addr(hexaddr))
 
 def addr2hexaddr(addr):
-	Msg(bitcoin.verify_addr(addr,return_hex=True))
+	Msg(mmb.verify_addr(addr,return_hex=True))
 
 def pubkey2hexaddr(pubkeyhex):
-	Msg(bitcoin.pubhex2hexaddr(pubkeyhex))
+	Msg(mmb.pubhex2hexaddr(pubkeyhex))
 
 def pubkey2addr(pubkeyhex):
-	Msg(bitcoin.hexaddr2addr(bitcoin.pubhex2hexaddr(pubkeyhex)))
+	Msg(mmb.hexaddr2addr(mmb.pubhex2hexaddr(pubkeyhex)))
 
 def privhex2addr(privkeyhex,compressed=False):
-	Msg(bitcoin.privnum2addr(int(privkeyhex,16),compressed))
+	Msg(mmb.privnum2addr(int(privkeyhex,16),compressed))
 
 def wif2hex(wif,compressed=False):
-	Msg(bitcoin.wif2hex(wif))
+	Msg(mmb.wif2hex(wif))
 
 def hex2wif(hexpriv,compressed=False):
-	Msg(bitcoin.hex2wif(hexpriv,compressed))
+	Msg(mmb.hex2wif(hexpriv,compressed))
 
 def encrypt(infile,outfile='',hash_preset=''):
 	data = get_data_from_file(infile,'data for encryption',binary=True)

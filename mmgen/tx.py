@@ -50,7 +50,7 @@ class MMGenTxInput(MMGenListItem):
 	label = MMGenListItemAttr('label','MMGenAddrLabel')
 
 class MMGenTxOutput(MMGenListItem):
-	attrs = 'txid','vout','amt','label','mmid','addr','have_wif'
+	attrs = 'txid','vout','amt','label','mmid','addr','have_wif','is_chg'
 	label = MMGenListItemAttr('label','MMGenAddrLabel')
 
 class MMGenTX(MMGenObject):
@@ -71,7 +71,7 @@ class MMGenTX(MMGenObject):
 		self.size        = 0             # size of raw serialized tx
 		self.fee         = BTCAmt('0')
 		self.send_amt    = BTCAmt('0')  # total amt minus change
-		self.hex         = ''            # raw serialized hex transaction
+		self.hex         = ''           # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
 		self.btc_txid    = ''
@@ -190,6 +190,9 @@ class MMGenTX(MMGenObject):
 	def get_input_sids(self):
 		return set([e.mmid[:8] for e in self.inputs if e.mmid])
 
+	def get_output_sids(self):
+		return set([e.mmid[:8] for e in self.outputs if e.mmid])
+
 	def sum_inputs(self):
 		return sum([e.amt for e in self.inputs])
 
@@ -281,6 +284,8 @@ class MMGenTX(MMGenObject):
 			if self.btc_txid:
 				self.desc = 'sent transaction'
 				msg(m % self.btc_txid.hl())
+				self.add_timestamp()
+				self.add_blockcount(c)
 				return True
 
 		msg('Sending of transaction {} failed'.format(self.txid))
@@ -339,7 +344,7 @@ class MMGenTX(MMGenObject):
 			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
 		out += 'Inputs:\n' + enl
 
-		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
+		nonmm_str = '(non-{pnm} address){s}'.format(pnm=g.proj_name,s=('',' ')[terse])
 #		for i in self.inputs: print i #DEBUG
 		for n,e in enumerate(self.inputs):
 			if blockcount:
@@ -362,15 +367,20 @@ class MMGenTX(MMGenObject):
 
 		out += 'Outputs:\n' + enl
 		for n,e in enumerate(self.outputs):
-			mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True) if e.mmid \
-						else MMGenID.hlc(nonmm_str)
+			if e.mmid:
+				app=('',' (chg)')[bool(e.is_chg and terse)]
+				mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True,
+										app=app,appcolor='green')
+			else:
+				mmid_fmt = MMGenID.hlc(nonmm_str)
 			if terse:
 				out += '%3s: %s %s %s BTC' % (n+1, e.addr.fmt(color=True),mmid_fmt, e.amt.hl())
 			else:
 				for d in (
 						(n+1, 'address:',  e.addr.fmt(color=True) + ' ' + mmid_fmt),
 						('',  'comment:',  e.label.hl() if e.label else ''),
-						('',  'amount:',   '%s BTC' % e.amt.hl())
+						('',  'amount:',   '%s BTC' % e.amt.hl()),
+						('',  'change:',   green('True') if e.is_chg else '')
 					):
 					if d[2]: out += ('%3s %-8s %s\n' % d)
 			out += '\n'

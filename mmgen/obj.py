@@ -243,7 +243,8 @@ class Hilite(object):
 	trunc_ok = True
 
 	@classmethod
-	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,center=False,nullrepl=''):
+	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
+				center=False,nullrepl='',app='',appcolor=False):
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
 		assert width > 0
@@ -253,7 +254,11 @@ class Hilite(object):
 		assert type(encl) is str and len(encl) in (0,2)
 		a,b = list(encl) if encl else ('','')
 		if trunc_ok and len(s) > width: s = s[:width]
-		return cls.colorize((a+s+b).ljust(width),color=color)
+		if app:
+			return cls.colorize(a+s+b,color=color) + \
+			       cls.colorize(app.ljust(width-len(a+s+b)),color=appcolor)
+		else:
+			return cls.colorize((a+s+b).ljust(width),color=color)
 
 	def fmt(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords

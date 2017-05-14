@@ -172,7 +172,7 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	tx.delete_attrs('inputs','have_wif')
 	tx.delete_attrs('outputs','have_wif')
 
-	extra_sids = set(saved_seeds) - tx.get_input_sids()
+	extra_sids = set(saved_seeds) - tx.get_input_sids() - tx.get_output_sids()
 	if extra_sids:
 		msg('Unused Seed ID%s: %s' %
 			(suf(extra_sids,'k'),' '.join(extra_sids)))

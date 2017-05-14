@@ -384,7 +384,7 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 	elif len(cmd_args) > nargs:
 		opts.usage()
 	elif len(cmd_args) == nargs and wf and invoked_as != 'gen':
-		msg('Warning: overriding wallet in data directory with user-supplied wallet')
+		msg('Warning: overriding default wallet with user-supplied wallet')
 
 	if cmd_args or wf:
 		check_infile(cmd_args[0] if cmd_args else wf)
@@ -707,6 +707,6 @@ def bitcoin_connection():
 				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
 				g.rpc_password or cfg['rpcpassword'],
 				auth_cookie=get_bitcoind_auth_cookie())
-	# do an RPC call to make the function fail if we can't connect
+	# do an RPC call so we exit immediately if we can't connect
 	c.client_version = int(c.getinfo()['version'])
 	return c

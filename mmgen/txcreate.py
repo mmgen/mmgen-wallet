@@ -109,7 +109,7 @@ def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 
 	return BTCAddr(btc_addr)
 
-def get_fee_estimate():
+def get_fee_estimate(c):
 	if 'tx_fee' in opt.set_by_user: # TODO
 		return None
 	else:
@@ -175,7 +175,7 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 		if opt.tx_fee > tx.max_fee:
 			die(2,'Transaction fee too large: %s > %s' % (opt.tx_fee,tx.max_fee))
 
-		fee_estimate = get_fee_estimate()
+		fee_estimate = get_fee_estimate(c)
 
 	tw = MMGenTrackingWallet(minconf=opt.minconf)
 	tw.view_and_sort()

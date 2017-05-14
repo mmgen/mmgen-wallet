@@ -35,8 +35,8 @@ opts_data = {
 -C, --tx-confs=     c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
--m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
 -i, --info            Display unspent outputs and exit
+-m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
 -q, --quiet           Suppress warnings; overwrite files without prompting
 -v, --verbose         Produce more verbose output
 """.format(g=g),

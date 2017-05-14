@@ -30,8 +30,8 @@ opts_data = {
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
 -a, --tx-fee-adj=    f Adjust transaction fee by factor 'f' (see below)
--b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for brainwallet
-                       input
+-b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
+                       brainwallet input
 -B, --no-blank         Don't blank screen before displaying unspent outputs
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -C, --tx-confs=      c Desired number of confirmations (default: {g.tx_confs})
@@ -46,8 +46,10 @@ opts_data = {
                        with non-standard (< {g.seed_len}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --key-generator= m Use method 'm' for public key generation
-                       Options: {kgs} (default: {kg})
--m, --minconf=n        Minimum number of confirmations required to spend outputs (default: 1)
+                       Options: {kgs}
+                       (default: {kg})
+-m, --minconf=n        Minimum number of confirmations required to spend
+                       outputs (default: 1)
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                        address file (output of '{pnl}-keygen'). Permits
                        online signing without an {pnm} seed source. The
@@ -56,7 +58,7 @@ opts_data = {
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{g.hash_preset}')
--P, --passwd-file=   f Get {pnm} wallet or bitcoind passphrase from file 'f'
+-P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -v, --verbose          Produce more verbose output
 -z, --show-hash-presets Show information on available hash presets
