@@ -111,10 +111,12 @@ class BitcoinRPCConnection(object):
 		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
-			msgred('RPC Error: {} {}'.format(r.status,r.reason))
+			msg_r(yellow('Bitcoind RPC Error: '))
+			msg(red('{} {}'.format(r.status,r.reason)))
 			e1 = r.read()
 			try:
-				e2 = json.loads(e1)['error']['message']
+				e3 = json.loads(e1)['error']
+				e2 = '{} (code {})'.format(e3['message'],e3['code'])
 			except:
 				e2 = str(e1)
 			return die_maybe(r,1,e2)

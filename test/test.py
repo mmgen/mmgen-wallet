@@ -200,6 +200,7 @@ cfgs = {
 			'mmdat':       'walletgen',
 			'addrs':       'addrgen',
 			'rawtx':       'txcreate',
+			'txbump':      'txbump',
 			'sigtx':       'txsign',
 			'mmwords':     'export_mnemonic',
 			'mmseed':      'export_seed',
@@ -246,6 +247,7 @@ cfgs = {
 			'addrs':       'addrgen4',
 			'rawtx':       'txcreate4',
 			'sigtx':       'txsign4',
+			'txdo':        'txdo4',
 		},
 		'bw_filename': 'brainwallet.mmbrain',
 		'bw_params':   '192,1',
@@ -403,7 +405,8 @@ cmd_group['main'] = OrderedDict([
 	['addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]],1)],
 	['addrimport',      (1,'address import',           [[['addrs'],1]],1)],
 	['txcreate',        (1,'transaction creation',     [[['addrs'],1]],1)],
-	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile],1]],1)],
+	['txbump',          (1,'transaction fee bumping (no send)',[[['rawtx'],1]],1)],
+	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile,'txbump'],1]],1)],
 	['txsend',          (1,'transaction sending',      [[['sigtx'],1]])],
 	# txdo must go after txsign
 	['txdo',            (1,'online transaction',       [[['sigtx','mmdat'],1]])],
@@ -444,6 +447,7 @@ cmd_group['main'] = OrderedDict([
 	['txcreate4', (4,'tx creation with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14]])],
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet, brainwallet, key-address file and non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])],
 	['txdo4', (4,'tx creation,signing and sending with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])], # must go after txsign4
+	['txbump4', (4,'tx fee bump + send with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['akeys.mmenc'],14],[['mmbrain','sigtx','mmdat','txdo'],4]])], # must go after txsign4
 ])
 
 cmd_group['tool'] = OrderedDict([
@@ -1415,7 +1419,7 @@ class MMGenTestSuite(object):
 		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA=%s' % unspent_data_file
 		if opt.print_cmdline: msg(bwd_msg)
 		if opt.log: log_fd.write(bwd_msg + ' ')
-		t = MMGenExpect(name,'mmgen-'+('txcreate','txdo')[bool(txdo_args)],['-f','0.0001'] + add_args + cmd_args + txdo_args)
+		t = MMGenExpect(name,'mmgen-'+('txcreate','txdo')[bool(txdo_args)],['--rbf','-f',tx_fee] + add_args + cmd_args + txdo_args)
 		if ia: return
 		t.license()
 
@@ -1462,6 +1466,31 @@ class MMGenTestSuite(object):
 	def txcreate(self,name,addrfile):
 		self.txcreate_common(name,sources=['1'])
 
+	def txbump(self,name,txfile,prepend_args=[],seed_args=[]):
+		args = prepend_args + ['-q','-d',cfg['tmpdir'],txfile] + seed_args
+		t = MMGenExpect(name,'mmgen-txbump',args)
+		if seed_args:
+			t.hash_preset('key-address data','1')
+			t.passphrase('key-address data',cfgs['14']['kapasswd'])
+			t.expect('Check key-to-address validity? (y/N): ','y')
+		t.expect('Which output do you wish to deduct the fee from? ','1\n')
+		# Fee must be > tx_fee + network relay fee (currently 0.00001)
+		t.expect('OK? (Y/n): ','\n')
+		t.expect('Enter transaction fee: ','124s\n')
+		t.expect('OK? (Y/n): ','\n')
+		if seed_args: # sign and send
+			t.expect('Edit transaction comment? (y/N): ','\n')
+			for cnum,desc in ('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet'):
+				t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
+			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
+		else:
+			t.expect('Add a comment to transaction? (y/N): ','\n')
+			t.expect('Save transaction? (y/N): ','y')
+			t.written_to_file('Transaction')
+		os.unlink(txfile) # our tx file replaces the original
+		os.system('touch ' + os.path.join(cfg['tmpdir'],'txbump'))
+		ok()
+
 	def txdo(self,name,addrfile,wallet):
 		t = self.txcreate_common(name,sources=['1'],txdo_args=[wallet])
 		self.txsign(name,'','',pf='',save=True,has_label=False,txdo_handle=t)
@@ -1478,7 +1507,7 @@ class MMGenTestSuite(object):
 		add = ' #' + tnum if tnum else ''
 		t.written_to_file('Signed transaction' + add, oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',save=True,has_label=False,txdo_handle=None):
+	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,txdo_handle=None):
 		add_args = ([],['-q','-P',pf])[ia]
 		if ia:
 			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
@@ -1516,7 +1545,7 @@ class MMGenTestSuite(object):
 		m = 'YES, I REALLY WANT TO DO THIS'
 		t.expect("'%s' to confirm: " % m,m+'\n')
 		t.expect('BOGUS transaction NOT sent')
-		t.written_to_file('Transaction ID')
+		t.written_to_file('Sent transaction')
 		ok()
 
 	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
@@ -1719,8 +1748,14 @@ class MMGenTestSuite(object):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		add_args = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f12]
 		t = self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,txdo_args=[f7,f8,f9,f10],add_args=add_args)
+		os.system('rm -f %s/*.sigtx' % cfg['tmpdir'])
 		self.txsign4(name,f7,f8,f9,f10,f11,f12,txdo_handle=t)
 		self.txsend(name,'',txdo_handle=t)
+		os.system('touch ' + os.path.join(cfg['tmpdir'],'txdo'))
+
+	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
+		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
+		self.txbump(name,f7,prepend_args=['-p1','-k',non_mm_fn,'-M',f1],seed_args=[f2,f3,f4,f5,f6,f8])
 
 	def txsign4(self,name,f1,f2,f3,f4,f5,f6,txdo_handle=None):
 		if txdo_handle:

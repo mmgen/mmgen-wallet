@@ -36,8 +36,8 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.0'
-	release_date = 'December 2016'
+	version      = '0.9.O+'
+	release_date = 'May 2017'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -51,13 +51,14 @@ class g(object):
 	hash_preset    = '3'
 	usr_randchars  = 30
 
-	tx_fee        = BTCAmt('0.0003')
-	tx_fee_adj    = 1.0
-	tx_confs      = 3
-
+	max_tx_fee   = BTCAmt('0.01')
+	tx_fee_adj   = 1.0
+	tx_confs     = 3
+	satoshi      = BTCAmt('0.00000001') # One bitcoin equals 100,000,000 satoshis
 	seed_len     = 256
 
 	http_timeout = 60
+	max_int      = 0xffffffff
 
 	# Constants - some of these might be overriden, but they don't change thereafter
 
@@ -111,8 +112,8 @@ class g(object):
 	)
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
-		'quiet','tx_fee','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color'
+		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
+		'bitcoin_data_dir','force_256_color','max_tx_fee'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
@@ -132,7 +133,7 @@ class g(object):
 
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
-						'quiet','tx_confs','tx_fee_adj','tx_fee','key_generator']
+						'quiet','tx_confs','tx_fee_adj','key_generator']
 
 	keyconv_exec = 'keyconv'
 

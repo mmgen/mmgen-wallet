@@ -26,24 +26,30 @@ from mmgen.txcreate import *
 opts_data = {
 	'desc': 'Create a transaction with outputs to specified Bitcoin or {g.proj_name} addresses'.format(g=g),
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
+	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
--h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
--a, --tx-fee-adj=   f Adjust transaction fee by factor 'f' (see below)
--B, --no-blank        Don't blank screen before displaying unspent outputs
--c, --comment-file= f Source the transaction's comment from file 'f'
--C, --tx-confs=     c Desired number of confirmations (default: {g.tx_confs})
--d, --outdir=       d Specify an alternate directory 'd' for output
--f, --tx-fee=       f Transaction fee (default: {g.tx_fee} BTC (but see below))
--i, --info            Display unspent outputs and exit
--m, --minconf=      n Minimum number of confirmations required to spend outputs (default: 1)
--q, --quiet           Suppress warnings; overwrite files without prompting
--v, --verbose         Produce more verbose output
+-h, --help           Print this help message
+--, --longhelp       Print help message for long options (common options)
+-a, --tx-fee-adj=  f Adjust transaction fee by factor 'f' (see below)
+-B, --no-blank       Don't blank screen before displaying unspent outputs
+-c, --comment-file=f Source the transaction's comment from file 'f'
+-C, --tx-confs=    c Desired number of confirmations (default: {g.tx_confs})
+-d, --outdir=      d Specify an alternate directory 'd' for output
+-f, --tx-fee=      f Transaction fee, as a decimal BTC amount or in satoshis
+                     per byte (an integer followed by 's').  If omitted, fee
+                     will be calculated using bitcoind's 'estimatefee' call
+-i, --info           Display unspent outputs and exit
+-m, --minconf=     n Minimum number of confirmations required to spend
+                     outputs (default: 1)
+-q, --quiet          Suppress warnings; overwrite files without prompting
+-r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
+-v, --verbose        Produce more verbose output
+-y, --yes            Answer 'yes' to prompts, suppress non-essential output
 """.format(g=g),
-	'notes': '\n' + txcreate_notes
+	'notes': '\n' + txcreate_notes + fee_notes
 }
 
 cmd_args = opts.init(opts_data)
 do_license_msg()
 tx = txcreate(opt,cmd_args,do_info=opt.info)
-tx.write_to_file(ask_write_default_yes=False)
+tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

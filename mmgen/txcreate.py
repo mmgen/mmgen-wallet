@@ -31,12 +31,13 @@ txcreate_notes = """
 The transaction's outputs are specified on the command line, while its inputs
 are chosen from a list of the user's unpent outputs via an interactive menu.
 
-If the transaction fee is not specified by the user, it will be calculated
-using bitcoind's "estimatefee" function for the default (or user-specified)
-number of confirmations.  If "estimatefee" fails, the global default fee of
-{g.tx_fee} BTC will be used.
+If the transaction fee is not specified on the command line (see FEE
+SPECIFICATION below), it will be calculated dynamically using bitcoind's
+"estimatefee" function for the default (or user-specified) number of
+confirmations.  If "estimatefee" fails, the user will be prompted for a fee.
 
-Dynamic fees will be multiplied by the value of '--tx-fee-adj', if specified.
+Dynamic ("estimatefee") fees will be multiplied by the value of '--tx-fee-adj',
+if specified.
 
 Ages of transactions are approximate based on an average block discovery
 interval of {g.mins_per_block} minutes.
@@ -47,6 +48,13 @@ addresses of the form <seed ID>:<index>.
 To send the value of all inputs (minus TX fee) to a single output, specify
 one address with no amount on the command line.
 """.format(g=g,pnm=pnm)
+
+fee_notes = """
+FEE SPECIFICATION: Transaction fees, both on the command line and at the
+interactive prompt, may be specified as either absolute BTC amounts, using a
+plain decimal number, or as satoshis per byte, using an integer followed by
+the letter 's'.
+"""
 
 wmsg = {
 	'addr_in_addrfile_only': """
@@ -72,11 +80,15 @@ option.
 Selected non-{pnm} inputs: %s
 """.strip().format(pnm=pnm,pnl=pnm.lower()),
 	'not_enough_btc': """
-Not enough BTC in the inputs for this transaction (%s BTC)
+Selected outputs insufficient to fund this transaction (%s BTC needed)
 """.strip(),
 	'throwaway_change': """
 ERROR: This transaction produces change (%s BTC); however, no change address
 was specified.
+""".strip(),
+	'no_change_output': """
+ERROR: No change address specified.  If you wish to create a transaction with
+only one output, specify a single output address with no BTC amount
 """.strip(),
 }
 
@@ -109,26 +121,25 @@ def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 
 	return BTCAddr(btc_addr)
 
-def get_fee_estimate(c):
-	if 'tx_fee' in opt.set_by_user: # TODO
-		return None
+def get_fee_from_estimate_or_usr(tx,c,estimate_fail_msg_shown=[]):
+	if opt.tx_fee:
+		desc = 'User-selected'
+		start_fee = opt.tx_fee
 	else:
+		desc = 'Network-estimated'
 		ret = c.estimatefee(opt.tx_confs)
-		if ret != -1:
-			return BTCAmt(ret)
+		if ret == -1:
+			if not estimate_fail_msg_shown:
+				msg('Network fee estimation for {} confirmations failed'.format(opt.tx_confs))
+				estimate_fail_msg_shown.append(True)
+			start_fee = None
 		else:
-			m = """
-Fee estimation failed!
-Your possible courses of action (from best to worst):
-    1) Re-run script with a different '--tx-confs' parameter (now '{c}')
-    2) Re-run script with the '--tx-fee' option (specify fee manually)
-    3) Accept the global default fee of {f} BTC
-Accept the global default fee of {f} BTC?
-""".format(c=opt.tx_confs,f=opt.tx_fee).strip()
-			if keypress_confirm(m):
-				return None
-			else:
-				die(1,'Exiting at user request')
+			start_fee = BTCAmt(ret) * opt.tx_fee_adj * tx.get_size() / 1024
+			if opt.verbose:
+				msg('{} fee ({} confs): {} BTC/kB'.format(desc,opt.tx_confs,ret))
+				msg('TX size (estimated): {}'.format(tx.get_size()))
+
+	return tx.get_usr_fee_interactive(start_fee,desc=desc)
 
 def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 
@@ -153,29 +164,25 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 		for a in cmd_args:
 			if ',' in a:
 				a1,a2 = a.split(',',1)
-				if is_btc_addr(a1):
-					btc_addr = BTCAddr(a1)
-				elif is_mmgen_id(a1):
-					btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f)
+				if is_mmgen_id(a1) or is_btc_addr(a1):
+					btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else BTCAddr(a1)
+					tx.add_output(btc_addr,BTCAmt(a2))
 				else:
 					die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
-				tx.add_output(btc_addr,BTCAmt(a2))
 			elif is_mmgen_id(a) or is_btc_addr(a):
-				if tx.change_addr:
-					die(2,'ERROR: More than one change address specified: %s, %s' %
-							(change_addr, a))
-				tx.change_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
-				tx.add_output(tx.change_addr,BTCAmt('0'))
+				if tx.get_chg_output_idx() != None:
+					die(2,'ERROR: More than one change address listed on command line')
+				btc_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
+				tx.add_output(btc_addr,BTCAmt('0'),is_chg=True)
 			else:
 				die(2,'%s: unrecognized argument' % a)
 
 		if not tx.outputs:
 			die(2,'At least one output must be specified on the command line')
 
-		if opt.tx_fee > tx.max_fee:
-			die(2,'Transaction fee too large: %s > %s' % (opt.tx_fee,tx.max_fee))
+		if tx.get_chg_output_idx() == None:
+			die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(tx.outputs) == 1])
 
-		fee_estimate = get_fee_estimate(c)
 
 	tw = MMGenTrackingWallet(minconf=opt.minconf)
 	tw.view_and_sort()
@@ -194,7 +201,13 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 				('s','')[len(sel_nums)==1],
 				' '.join(str(i) for i in sel_nums)
 			))
+
 		sel_unspent = [tw.unspent[i-1] for i in sel_nums]
+
+		t_inputs = sum(s.amt for s in sel_unspent)
+		if t_inputs < tx.send_amt:
+			msg(wmsg['not_enough_btc'] % (tx.send_amt - t_inputs))
+			continue
 
 		non_mmaddrs = [i for i in sel_unspent if i.mmid == None]
 		if non_mmaddrs and caller != 'txdo':
@@ -204,42 +217,44 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 
 		tx.copy_inputs_from_tw(sel_unspent)      # makes tx.inputs
 
-		tx.calculate_size_and_fee(fee_estimate)  # sets tx.size, tx.fee
+		if opt.rbf: tx.signal_for_rbf()          # only after we have inputs
 
-		change_amt = tx.sum_inputs() - tx.send_amt - tx.fee
+		change_amt = tx.sum_inputs() - tx.send_amt - get_fee_from_estimate_or_usr(tx,c)
 
 		if change_amt >= 0:
-			prompt = 'Transaction produces %s BTC in change.  OK?' % change_amt.hl()
-			if keypress_confirm(prompt,default_yes=True):
+			p = 'Transaction produces %s BTC in change' % change_amt.hl()
+			if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+				if opt.yes: msg(p)
 				break
 		else:
-			msg(wmsg['not_enough_btc'] % change_amt)
+			msg(wmsg['not_enough_btc'] % abs(change_amt))
 
+	chg_idx = tx.get_chg_output_idx()
 	if change_amt > 0:
-		change_amt = BTCAmt(change_amt)
-		if not tx.change_addr:
-			die(2,wmsg['throwaway_change'] % change_amt)
-		tx.del_output(tx.change_addr)
-		tx.add_output(BTCAddr(tx.change_addr),change_amt)
-	elif tx.change_addr:
-		msg('Warning: Change address will be unused as transaction produces no change')
-		tx.del_output(tx.change_addr)
+		tx.update_output_amt(chg_idx,BTCAmt(change_amt))
+	else:
+		msg('Warning: Change address will be deleted as transaction produces no change')
+		tx.del_output(chg_idx)
 
 	if not tx.send_amt:
 		tx.send_amt = change_amt
 
 	dmsg('tx: %s' % tx)
 
-	tx.add_comment()   # edits an existing comment
-	tx.create_raw(c)   # creates tx.hex, tx.txid
+	if not opt.yes:
+		tx.add_comment()   # edits an existing comment
+	tx.create_raw(c)       # creates tx.hex, tx.txid
 	tx.add_mmaddrs_to_outputs(ad_w,ad_f)
 	tx.add_timestamp()
 	tx.add_blockcount(c)
+
+	assert tx.get_fee() <= g.max_tx_fee
 
 	qmsg('Transaction successfully created')
 
 	dmsg('TX (final): %s' % tx)
 
-	tx.view_with_prompt('View decoded transaction?')
+	if not opt.yes:
+		tx.view_with_prompt('View decoded transaction?')
 
 	return tx

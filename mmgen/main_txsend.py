@@ -27,11 +27,13 @@ opts_data = {
 	'desc':    'Send a Bitcoin transaction signed by {pnm}-txsign'.format(
 					pnm=g.proj_name.lower()),
 	'usage':   '[opts] <signed transaction file>',
+	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
 -h, --help      Print this help message
 --, --longhelp  Print help message for long options (common options)
 -d, --outdir= d Specify an alternate directory 'd' for output
 -q, --quiet     Suppress warnings; overwrite files without prompting
+-y, --yes       Answer 'yes' to prompts, suppress non-essential output
 """
 }
 
@@ -44,12 +46,19 @@ else: opts.usage()
 do_license_msg()
 tx = MMGenTX(infile)
 c = bitcoin_connection()
-if not tx.check_signed(c):
-	die(1,'Transaction has no signature!')
-qmsg("Signed transaction file '%s' is valid" % infile)
-tx.view_with_prompt('View transaction data?')
-if tx.add_comment(): # edits an existing comment, returns true if changed
-	tx.write_to_file(ask_write_default_yes=True)
 
-if tx.send(opt,c):
-	tx.write_to_file(ask_write=False)
+if not tx.check_signed(c):
+	die(1,'Transaction is not signed!')
+
+if tx.btc_txid:
+	msg('Warning: transaction has already been sent!')
+
+qmsg("Signed transaction file '%s' is valid" % infile)
+
+if not opt.yes:
+	tx.view_with_prompt('View transaction data?')
+	if tx.add_comment(): # edits an existing comment, returns true if changed
+		tx.write_to_file(ask_write_default_yes=True)
+
+if tx.send(c):
+	tx.write_to_file(ask_overwrite=False,ask_write=False)

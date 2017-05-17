@@ -278,6 +278,18 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			return False
 		return True
 
+	def opt_is_tx_fee(val,desc):
+		from mmgen.tx import MMGenTX
+		ret = MMGenTX().convert_fee_spec(val,224,on_fail='return')
+		if ret == False:
+			msg("'{}': invalid {} (not a BTC amount or satoshis-per-byte specification)".format(
+					val,desc))
+		elif ret != None and ret > g.max_tx_fee:
+			msg("'{}': invalid {} (greater than max_tx_fee ({} BTC))".format(val,desc,g.max_tx_fee))
+		else:
+			return True
+		return False
+
 	def opt_is_in_list(val,lst,desc):
 		if val not in lst:
 			q,sep = (('',','),("'","','"))[type(lst[0]) == str]
@@ -375,6 +387,11 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_int(val,desc): return False
 			if not opt_compares(val,'>=',g.min_urandchars,desc): return False
 			if not opt_compares(val,'<=',g.max_urandchars,desc): return False
+		elif key == 'tx_fee':
+			if not opt_is_tx_fee(val,desc): return False
+		elif key == 'tx_confs':
+			if not opt_is_int(val,desc): return False
+			if not opt_compares(val,'>=',1,desc): return False
 		elif key == 'key_generator':
 			if not opt_compares(val,'<=',len(g.key_generators),desc): return False
 			if not opt_compares(val,'>',0,desc): return False

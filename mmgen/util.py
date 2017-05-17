@@ -657,7 +657,7 @@ def do_pager(text):
 
 def do_license_msg(immed=False):
 
-	if opt.quiet or g.no_license: return
+	if opt.quiet or g.no_license or opt.yes: return
 
 	import mmgen.license as gpl
 

@@ -256,7 +256,7 @@ class Hilite(object):
 		if trunc_ok and len(s) > width: s = s[:width]
 		if app:
 			return cls.colorize(a+s+b,color=color) + \
-			       cls.colorize(app.ljust(width-len(a+s+b)),color=appcolor)
+					cls.colorize(app.ljust(width-len(a+s+b)),color=appcolor)
 		else:
 			return cls.colorize((a+s+b).ljust(width),color=color)
 
