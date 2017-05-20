@@ -100,7 +100,7 @@ class g(object):
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
-		'show_hash_presets','label','keep_passphrase','keep_hash_preset',
+		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
 		'brain_params','b16','usr_randchars'
 	)
 	incompatible_opts = (

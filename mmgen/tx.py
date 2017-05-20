@@ -320,6 +320,10 @@ class MMGenTX(MMGenObject):
 		return ret
 
 	def send(self,c,prompt_user=True):
+
+		if self.get_fee() > g.max_tx_fee:
+			die(2,'Transaction fee ({}) greater than max_tx_fee ({})!'.format(self.get_fee(),g.max_tx_fee))
+
 		if prompt_user:
 			m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
 			m2 = 'broadcast this transaction to the network'
