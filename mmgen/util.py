@@ -420,7 +420,7 @@ def confirm_or_exit(message,question,expect='YES',exit_msg='Exiting at user requ
 			'Are you sure you want to %s?\n' % question
 	b = "Type uppercase '%s' to confirm: " % expect
 	if my_raw_input(a+b).strip() != expect:
-		die(2,exit_msg)
+		die(1,exit_msg)
 
 
 # New function

@@ -606,6 +606,7 @@ if opt.log:
 
 usr_rand_chars = (5,30)[bool(opt.usr_random)]
 usr_rand_arg = '-r%s' % usr_rand_chars
+cmd_total = 0
 
 if opt.system: sys.path.pop(0)
 ia = bool(opt.interactive)
@@ -832,6 +833,27 @@ class MMGenExpect(object):
 			else:
 				self.p = pexpect.spawn(cmd,args)
 			if opt.exact_output: self.p.logfile = sys.stdout
+
+	def ok(self,exit_val=0):
+		ret = self.p.wait()
+		if ret != exit_val:
+			die(1,red('Program exited with value {}'.format(ret)))
+		if opt.profile: return
+		if opt.verbose or opt.exact_output:
+			sys.stderr.write(green('OK\n'))
+		else: msg(' OK')
+
+	def cmp_or_die(self,s,t,skip_ok=False,exit_val=0):
+		ret = self.p.wait()
+		if ret != exit_val:
+			die(1,red('Program exited with value {}'.format(ret)))
+		if s == t:
+			if not skip_ok: ok()
+		else:
+			sys.stderr.write(red(
+				'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
+					(repr(t),repr(s))))
+			sys.exit(3)
 
 	def license(self):
 		if 'MMGEN_NO_LICENSE' in os.environ: return
@@ -1185,6 +1207,8 @@ class MMGenTestSuite(object):
 		self.__class__.__dict__[cmd](*([self,cmd] + al))
 		if opt.profile:
 			msg('\r\033[50C{:.4f}'.format(time.time() - start))
+		global cmd_total
+		cmd_total += 1
 
 	def generate_file_deps(self,cmd):
 		return [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
@@ -1194,10 +1218,9 @@ class MMGenTestSuite(object):
 
 	def helpscreens(self,name,arg='--help'):
 		for s in scripts:
-			t = MMGenExpect(name,('mmgen-'+s),[arg],
-				extra_desc='(mmgen-%s)'%s,no_output=True)
+			t = MMGenExpect(name,('mmgen-'+s),[arg],extra_desc='(mmgen-%s)'%s,no_output=True)
 			if not ia:
-				t.read(); ok()
+				t.read(); t.ok()
 
 	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
 
@@ -1221,7 +1244,7 @@ class MMGenTestSuite(object):
 			t.expect('move it to the data directory? (Y/n): ',('n','y')[gen_dfl_wallet])
 			if gen_dfl_wallet: have_dfl_wallet = True
 		t.written_to_file('MMGen wallet')
-		ok()
+		t.ok()
 
 	def walletgen_dfl_wallet(self,name,seed_len=None):
 		self.walletgen(name,seed_len=seed_len,gen_dfl_wallet=True)
@@ -1278,7 +1301,7 @@ class MMGenTestSuite(object):
 			t.expect_getend('has been changed to ')
 		else:
 			t.written_to_file('MMGen wallet')
-		ok()
+		t.ok()
 
 	def passchg_dfl_wallet(self,name,pf):
 		if ia:
@@ -1309,8 +1332,8 @@ class MMGenTestSuite(object):
 				regex=True
 				)
 		chk = t.expect_getend('Valid %s for Seed ID ' % desc)[:8]
-		if sid: cmp_or_die(chk,sid)
-		else: ok()
+		if sid: t.cmp_or_die(chk,sid)
+		else: t.ok()
 
 	def walletchk_newpass(self,name,wf,pf):
 		return self.walletchk(name,wf,pf,pw=True)
@@ -1341,7 +1364,7 @@ class MMGenTestSuite(object):
 			refcheck('address data checksum',chk,cfg['addrfile_chk'])
 			return
 		t.written_to_file('Addresses',oo=True)
-		ok()
+		t.ok()
 
 	def addrgen_dfl_wallet(self,name,pf=None,check_ref=False):
 		return self.addrgen(name,wf=None,pf=pf,check_ref=check_ref)
@@ -1360,7 +1383,7 @@ class MMGenTestSuite(object):
 		t.expect_getend('Validating addresses...OK. ')
 		t.expect("Type uppercase 'YES' to confirm: ",'\n')
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
-		ok()
+		t.ok(exit_val=1)
 
 	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[]):
 		if opt.verbose or opt.exact_output:
@@ -1461,7 +1484,7 @@ class MMGenTestSuite(object):
 		if txdo_args: return t
 		t.expect('Save transaction? (y/N): ','y')
 		t.written_to_file('Transaction')
-		ok()
+		t.ok()
 
 	def txcreate(self,name,addrfile):
 		self.txcreate_common(name,sources=['1'])
@@ -1489,7 +1512,7 @@ class MMGenTestSuite(object):
 			t.written_to_file('Transaction')
 		os.unlink(txfile) # our tx file replaces the original
 		os.system('touch ' + os.path.join(cfg['tmpdir'],'txbump'))
-		ok()
+		t.ok()
 
 	def txdo(self,name,addrfile,wallet):
 		t = self.txcreate_common(name,sources=['1'],txdo_args=[wallet])
@@ -1524,11 +1547,13 @@ class MMGenTestSuite(object):
 		if txdo_handle: return
 		if save:
 			self.txsign_end(t,has_label=has_label)
+			exit_val = 0
 		else:
 			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
 			t.expect('%s? (y/N): ' % cprompt,'\n')
-			t.close()
-		ok()
+			t.expect('Save signed transaction? (Y/n): ','n')
+			exit_val = 1
+		t.ok(exit_val=exit_val)
 
 	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
 		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
@@ -1546,7 +1571,7 @@ class MMGenTestSuite(object):
 		t.expect("'%s' to confirm: " % m,m+'\n')
 		t.expect('BOGUS transaction NOT sent')
 		t.written_to_file('Sent transaction')
-		ok()
+		t.ok()
 
 	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
 		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + \
@@ -1574,15 +1599,15 @@ class MMGenTestSuite(object):
 			else:
 				t.send('YES\n')
 		if out_fmt == 'w': t.label()
-		return t.written_to_file(capfirst(desc),oo=True)
+		return t.written_to_file(capfirst(desc),oo=True),t
 
 	def export_seed(self,name,wf,desc='seed data',out_fmt='seed',pf=None):
-		f = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
+		f,t = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
 		if ia: return
 		silence()
 		msg('%s: %s' % (capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
-		ok()
+		t.ok()
 
 	def export_hex(self,name,wf,desc='hexadecimal seed data',out_fmt='hex',pf=None):
 		self.export_seed(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
@@ -1595,8 +1620,8 @@ class MMGenTestSuite(object):
 
 	def export_incog(self,name,wf,desc='incognito data',out_fmt='i',add_args=[]):
 		uargs = ['-p1',usr_rand_arg] + add_args
-		self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,out_pw=True)
-		ok()
+		f,t = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,uargs=uargs,out_pw=True)
+		t.ok()
 
 	def export_incog_hex(self,name,wf):
 		self.export_incog(name,wf,desc='hex incognito data',out_fmt='xi')
@@ -1619,8 +1644,11 @@ class MMGenTestSuite(object):
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		if stdout: t.read()
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
-#		t.no_overwrite()
-		ok()
+		if in_fmt == 'seed':
+			t.ok()
+		else:
+			t.no_overwrite()
+			t.ok(exit_val=1)
 
 	def addrgen_hex(self,name,wf,foo,desc='hexadecimal seed data',in_fmt='hex'):
 		self.addrgen_seed(name,wf,foo,desc=desc,in_fmt=in_fmt)
@@ -1637,10 +1665,9 @@ class MMGenTestSuite(object):
 		t.passphrase('%s \w{8}' % desc, cfg['wpasswd'])
 		vmsg('Comparing generated checksum with checksum from address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
-		t.close()
 		verify_checksum_or_exit(get_addrfile_checksum(),chk)
-#		t.no_overwrite()
-		ok()
+		t.no_overwrite()
+		t.ok(exit_val=1)
 
 	def addrgen_incog_hex(self,name,wf,foo):
 		self.addrgen_incog(name,wf,'',in_fmt='xi',desc='hex incognito data')
@@ -1670,7 +1697,7 @@ class MMGenTestSuite(object):
 #		t.passphrase_new('new key list','kafile password')
 		t.passphrase_new('new key list',cfg['kapasswd'])
 		t.written_to_file('Secret keys',oo=True)
-		ok()
+		t.ok()
 
 	def refkeyaddrgen(self,name,wf,pf):
 		self.keyaddrgen(name,wf,pf,check_ref=True)
@@ -1683,7 +1710,7 @@ class MMGenTestSuite(object):
 		t.expect('Check key-to-address validity? (y/N): ','y')
 		t.tx_view()
 		self.txsign_end(t)
-		ok()
+		t.ok()
 
 	def walletgen2(self,name,del_dw_run='dummy'):
 		self.walletgen(name,seed_len=128)
@@ -1701,7 +1728,7 @@ class MMGenTestSuite(object):
 			t.tx_view()
 			t.passphrase('MMGen wallet',cfgs[cnum]['wpasswd'])
 			self.txsign_end(t,cnum)
-		ok()
+		t.ok()
 
 	def export_mnemonic2(self,name,wf):
 		self.export_mnemonic(name,wf)
@@ -1723,7 +1750,7 @@ class MMGenTestSuite(object):
 #			t.expect_getend('Getting MMGen wallet data from file ')
 			t.passphrase('MMGen wallet',cfgs[cnum]['wpasswd'])
 		self.txsign_end(t)
-		ok()
+		t.ok()
 
 	def walletgen4(self,name,del_dw_run='dummy'):
 		bwf = os.path.join(cfg['tmpdir'],cfg['bw_filename'])
@@ -1736,7 +1763,7 @@ class MMGenTestSuite(object):
 		t.usr_rand(usr_rand_chars)
 		t.label()
 		t.written_to_file('MMGen wallet')
-		ok()
+		t.ok()
 
 	def addrgen4(self,name,wf):
 		self.addrgen(name,wf,pf='')
@@ -1775,7 +1802,7 @@ class MMGenTestSuite(object):
 
 		if txdo_handle: return
 		self.txsign_end(t,has_label=True)
-		ok()
+		t.ok()
 
 	def tool_encrypt(self,name,infile=''):
 		if infile:
@@ -1798,7 +1825,7 @@ class MMGenTestSuite(object):
 		t.hash_preset('user data','1')
 		t.passphrase_new('user data',tool_enc_passwd)
 		t.written_to_file('Encrypted data')
-		ok()
+		t.ok()
 
 # Generate the reference mmenc file
 # 	def tool_encrypt_ref(self,name):
@@ -2052,7 +2079,7 @@ class MMGenTestSuite(object):
 		# Output
 		wf = t.written_to_file('Mnemonic data',oo=oo)
 		t.close()
-		ok()
+		t.ok()
 		# back check of result
 		if opt.profile: msg('')
 		self.walletchk(name,wf,pf=None,
@@ -2105,7 +2132,7 @@ class MMGenTestSuite(object):
 			if out_fmt == 'w': t.label()
 			wf = t.written_to_file(capfirst(desc),oo=True)
 			pf = None
-			ok()
+			t.ok()
 
 		if desc == 'hidden incognito data':
 			add_args += uopts_chk
@@ -2115,6 +2142,8 @@ class MMGenTestSuite(object):
 			desc=desc,sid=cfg['seed_id'],pw=pw,
 			add_args=add_args,
 			extra_desc='(check)')
+
+
 	# END methods
 	for k in (
 			'ref_wallet_conv',
@@ -2179,10 +2208,11 @@ start_time = int(time.time())
 
 def end_msg():
 	t = int(time.time()) - start_time
-	m1 = 'All requested tests finished OK, elapsed time: {:02d}:{:02d}\n'
-	m2 = ('','Please re-check all {} control values against the program output.\n'.format(grnbg('HIGHLIGHTED')))[ia]
-	sys.stderr.write(green(m1.format(t/60,t%60)))
-	sys.stderr.write(m2)
+	m = '{} tests performed.  Elapsed time: {:02d}:{:02d}\n'
+	sys.stderr.write(green(m.format(cmd_total,t/60,t%60)))
+	if ia:
+		m = 'Please re-check all {} control values against the program output\n'
+		sys.stderr.write(m.format(grnbg('HIGHLIGHTED')))
 
 ts = MMGenTestSuite()
 
