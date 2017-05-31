@@ -24,7 +24,8 @@ from shutil import copy2
 
 import subprocess as sp
 _gvi = sp.check_output(['gcc','--version']).splitlines()[0]
-have_mingw_64 = 'x86_64' in _gvi and 'MinGW' in _gvi
+have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
+have_arm     = sp.check_output(['uname','-m']).strip() == 'aarch64'
 
 # install extension module in repository after building
 class my_build_ext(build_ext):
@@ -50,9 +51,10 @@ module1 = Extension(
 	libraries    = ['secp256k1'],
 	library_dirs = ['/usr/local/lib',r'c:\msys\local\lib'],
 	# mingw32 needs this, Linux can use it, but it breaks mingw64
-	extra_link_args = (['-lgmp'],[])[have_mingw_64],
+	extra_link_args = (['-lgmp'],[])[have_mingw64 or have_arm],
 	include_dirs = ['/usr/local/include',r'c:\msys\local\include'],
 	)
+
 
 from mmgen.globalvars import g
 setup(
@@ -66,7 +68,7 @@ setup(
 		platforms    = 'Linux, MS Windows, Raspberry Pi',
 		keywords     = g.keywords,
 		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
-		ext_modules = [module1],
+		ext_modules  = [module1],
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode
 				'data_files/mn_wordlist.c',
