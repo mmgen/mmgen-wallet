@@ -280,6 +280,8 @@ cfgs = {
 		'ref_bw_seed_id':  '33F10310',
 		'addrfile_chk':    ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE')[g.testnet],
 		'keyaddrfile_chk': ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35')[g.testnet],
+		'passfile_chk':    '3EA0 A3C9 DA28 5126',
+		'passfile32_chk':  'EF67 D0BE 4B24 9B4F',
 		'wpasswd':         'reference password',
 		'ref_wallet':      'FE3C6545-D782B529[128,1].mmdat',
 		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
@@ -291,6 +293,7 @@ cfgs = {
 		'tmpdir':        os.path.join('test','tmp6'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
+		'pass_idx_list': '1,4,9-11,1100',
 		'dep_generators':  {
 			'mmdat':       'refwalletgen1',
 			pwfile:       'refwalletgen1',
@@ -306,6 +309,8 @@ cfgs = {
 		'ref_bw_seed_id':  'CE918388',
 		'addrfile_chk':    ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81')[g.testnet],
 		'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC')[g.testnet],
+		'passfile_chk':    '000C 7711 CD45 C5BE',
+		'passfile32_chk':  'AFEC 54A1 7D79 1866',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '1378FC64-6F0F9BB4[192,1].mmdat',
 		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
@@ -317,6 +322,7 @@ cfgs = {
 		'tmpdir':        os.path.join('test','tmp7'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
+		'pass_idx_list': '1,4,9-11,1100',
 		'dep_generators':  {
 			'mmdat':       'refwalletgen2',
 			pwfile:       'refwalletgen2',
@@ -332,13 +338,16 @@ cfgs = {
 		'ref_bw_seed_id':  'B48CD7FC',
 		'addrfile_chk':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
 		'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
+		'passfile_chk':    '54B1 A5BE 9F07 1FDD',
+		'passfile32_chk':  '072A 4A13 FB64 B64B',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
 		'ref_addrfile':    '98831F3A[1,31-33,500-501,1010-1011]{}.addrs'.format(tn_desc),
 		'ref_keyaddrfile': '98831F3A[1,31-33,500-501,1010-1011]{}.akeys.mmenc'.format(tn_desc),
+		'ref_passwdfile':  '98831F3A-фубар@crypto.org-base58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
 		'ref_keyaddrfile_chksum': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
-
+		'ref_passwdfile_chksum':  '7723 735B 2CBB 2571',
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
 		'ref_tx_file':     'FFB367[1.234]{}.rawtx'.format(tn_desc),
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
@@ -350,6 +359,8 @@ cfgs = {
 		'tmpdir':        os.path.join('test','tmp8'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
+		'pass_idx_list': '1,4,9-11,1100',
+
 		'dep_generators':  {
 			'mmdat':       'refwalletgen3',
 			pwfile:       'refwalletgen3',
@@ -470,13 +481,16 @@ cmd_group['ref'] = (
 	# generating new reference ('abc' brainwallet) files:
 	('refwalletgen',   ([],'gen new refwallet')),
 	('refaddrgen',     (['mmdat',pwfile],'new refwallet addr chksum')),
-	('refkeyaddrgen',  (['mmdat',pwfile],'new refwallet key-addr chksum'))
+	('refkeyaddrgen',  (['mmdat',pwfile],'new refwallet key-addr chksum')),
+	('refpasswdgen',   (['mmdat',pwfile],'new refwallet passwd file chksum')),
+	('ref_b32passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 )
 
 # misc. saved reference data
 cmd_group['ref_other'] = (
 	('ref_addrfile_chk',   'saved reference address file'),
 	('ref_keyaddrfile_chk','saved reference key-address file'),
+	('ref_passwdfile_chk', 'saved reference password file'),
 #	Create the fake inputs:
 #	('txcreate8',          'transaction creation (8)'),
 	('ref_tx_chk',         'saved reference tx file'),
@@ -1351,17 +1365,20 @@ class MMGenTestSuite(object):
 		have_dfl_wallet = False
 		if not ia: ok()
 
-	def addrgen(self,name,wf,pf=None,check_ref=False):
-		add_args = ([],['-q'] + ([],['-P',pf])[bool(pf)])[ia]
-		t = MMGenExpect(name,'mmgen-addrgen', add_args +
-				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + [cfg['addr_idx_list']])
+	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[]):
+		ftype,chkfile = ((ftype,'{}file_chk'.format(ftype)),('pass','passfile32_chk'))[ftype=='pass32']
+		add_args = extra_args + ([],['-q'] + ([],['-P',pf])[bool(pf)])[ia]
+		dlist = [id_str] if id_str else []
+		t = MMGenExpect(name,'mmgen-{}gen'.format(ftype), add_args +
+				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + dlist + [cfg['{}_idx_list'.format(ftype)]])
 		if ia: return
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		t.expect('Passphrase is OK')
-		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
+		desc = ('address','password')[ftype=='pass']
+		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
 		if check_ref:
-			refcheck('address data checksum',chk,cfg['addrfile_chk'])
+			refcheck('address data checksum',chk,cfg[chkfile])
 			return
 		t.written_to_file('Addresses',oo=True)
 		t.ok()
@@ -1702,6 +1719,13 @@ class MMGenTestSuite(object):
 	def refkeyaddrgen(self,name,wf,pf):
 		self.keyaddrgen(name,wf,pf,check_ref=True)
 
+	def refpasswdgen(self,name,wf,pf):
+		self.addrgen(name,wf,pf,check_ref=True,ftype='pass',id_str='alice@crypto.org')
+
+	def ref_b32passwdgen(self,name,wf,pf):
+		ea = ['--base32','--passwd-len','17']
+		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
+
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],'-M',keyaddr_file,txfile])
 		t.license()
@@ -2016,6 +2040,9 @@ class MMGenTestSuite(object):
 	def ref_keyaddrfile_chk(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr')
 
+	def ref_passwdfile_chk(self,name):
+		self.ref_addrfile_chk(name,ftype='passwd')
+
 #	def txcreate8(self,name,addrfile):
 #		self.txcreate_common(name,sources=['8'])
 
@@ -2171,6 +2198,8 @@ class MMGenTestSuite(object):
 			'ref_brain_chk',
 			'ref_hincog_chk',
 			'refkeyaddrgen',
+			'refpasswdgen',
+			'ref_b32passwdgen'
 		):
 		for i in ('1','2','3'):
 			locals()[k+i] = locals()[k]

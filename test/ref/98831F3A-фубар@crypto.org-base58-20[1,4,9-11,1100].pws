@@ -1,0 +1,17 @@
+# MMGen password file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# password.  The label may contain any printable ASCII symbol.
+#
+# Password data checksum for 98831F3A-фубар@crypto.org-base58-20[1,4,9-11,1100]: 7723 735B 2CBB 2571
+# Record this value to a secure location.
+98831F3A фубар@crypto.org base58:20 {
+  1     7ds9PiQt1poHpknpQyNg
+  4     Dp4s9nWuzCFsdy39p6tk
+  9     3pPEHJdeF4vid8D7vea4
+  10    iX5q85oD9hnNfg219ztp
+  11    vqgKETaoP8yxVUuHYgkf
+  1100  89i9jmt7s6Nh5PNLdRJH
+}

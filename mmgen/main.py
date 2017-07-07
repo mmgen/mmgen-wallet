@@ -22,6 +22,16 @@ main.py - Script launcher for the MMGen suite
 
 def launch(what):
 
+	def my_dec(a):
+		try:
+			return a.decode('utf8')
+		except:
+			sys.stderr.write("Argument '{}' is not a valid UTF-8 string".format(a))
+			sys.exit(2)
+
+	import sys
+	sys.argv = [my_dec(a) for a in sys.argv]
+
 	if what in ('walletgen','walletchk','walletconv','passchg'):
 		what = 'wallet'
 	if what == 'keygen': what = 'addrgen'
@@ -30,7 +40,7 @@ def launch(what):
 	except: # Windows
 		__import__('mmgen.main_' + what)
 	else:
-		import sys,os,atexit
+		import os,atexit
 		if sys.stdin.isatty():
 			fd = sys.stdin.fileno()
 			old = termios.tcgetattr(fd)

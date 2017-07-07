@@ -31,10 +31,6 @@ def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
 def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
 def is_btc_addr(s):      return BTCAddr(s,on_fail='silent')
 
-def is_b58_str(s):
-	from mmgen.bitcoin import b58a
-	return set(list(s)) <= set(b58a)
-
 def is_wif(s):
 	if s == '': return False
 	from mmgen.bitcoin import wif2hex
@@ -376,7 +372,7 @@ class MMGenTX(MMGenObject):
 			self.view(pager=reply in 'Vv',terse=reply in 'Tt')
 
 	def view(self,pager=False,pause=True,terse=False):
-		o = self.format_view(terse=terse)
+		o = self.format_view(terse=terse).encode('utf8')
 		if pager: do_pager(o)
 		else:
 			sys.stdout.write(o)
@@ -480,9 +476,8 @@ class MMGenTX(MMGenObject):
 			ts = len(self.hex)/2 if self.hex else 'unknown'
 			out += 'Transaction size: estimated - {}, actual - {}\n'.format(self.get_size(),ts)
 
-		# only tx label may contain non-ascii chars
-		# encode() is necessary for test suite with PopenSpawn
-		return out.encode('utf8')
+		# TX label might contain non-ascii chars
+		return out
 
 	def parse_tx_file(self,infile):
 

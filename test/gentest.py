@@ -121,8 +121,12 @@ if a and b:
 	gen_a = get_privhex2addr_f(generator=a)
 	gen_b = get_privhex2addr_f(generator=b)
 	compressed = False
-	for i in range(1,rounds+1):
-		qmsg_r('\rRound %s/%s ' % (i,rounds))
+	last_t = time.time()
+
+	for i in range(rounds):
+		if time.time() - last_t >= 0.1:
+			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+			last_t = time.time()
 		sec = hexlify(os.urandom(32))
 		wif = hex2wif(sec,compressed=compressed)
 		a_addr = gen_a(sec,compressed)
@@ -132,6 +136,7 @@ if a and b:
 			match_error(sec,wif,a_addr,b_addr,a,b)
 		if a != 2 and b != 2:
 			compressed = not compressed
+	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 elif a and not fh:
@@ -139,24 +144,27 @@ elif a and not fh:
 	qmsg(green(m.format(g.key_generators[a-1])))
 	from mmgen.addr import get_privhex2addr_f
 	gen_a = get_privhex2addr_f(generator=a)
-	import time
-	start = time.time()
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	print 'Incrementing key with each round'
 	print 'Starting key:', hexlify(seed+pack('I',0))
 	compressed = False
+	import time
+	start = last_t = time.time()
+
 	for i in range(rounds):
-		qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+		if time.time() - last_t >= 0.1:
+			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+			last_t = time.time()
 		sec = hexlify(seed+pack('I',i))
 		wif = hex2wif(sec,compressed=compressed)
 		a_addr = gen_a(sec,compressed)
 		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
 		if a != 2:
 			compressed = not compressed
-	elapsed = int(time.time() - start)
-	qmsg('')
-	qmsg('%s addresses generated in %s second%s' % (rounds,elapsed,('s','')[elapsed==1]))
+	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+
+	qmsg('\n{} addresses generated in {:.2f} seconds'.format(rounds,time.time()-start))
 elif a and dump:
 	m = "Comparing output of address generator '{}' against wallet dump '{}'"
 	qmsg(green(m.format(g.key_generators[a-1],cmd_args[1])))

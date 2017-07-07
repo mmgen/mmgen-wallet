@@ -104,7 +104,7 @@ class BitcoinRPCConnection(object):
 				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str))
 			})
 		except Exception as e:
-			return die_maybe(None,2,'%s\nUnable to connect to bitcoind' % e)
+			return die_maybe(None,2,'{}\nUnable to connect to bitcoind at {}:{}'.format(e,self.host,self.port))
 
 		r = hc.getresponse() # returns HTTPResponse instance
 

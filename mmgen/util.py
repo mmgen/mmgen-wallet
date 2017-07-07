@@ -26,50 +26,42 @@ from binascii import hexlify,unhexlify
 from string import hexdigits
 from mmgen.color import *
 
-def msg(s):    sys.stderr.write(s+'\n')
-def msg_r(s):  sys.stderr.write(s)
-def Msg(s):    sys.stdout.write(s + '\n')
-def Msg_r(s):  sys.stdout.write(s)
-def msgred(s): sys.stderr.write(red(s+'\n'))
+def msg(s):    sys.stderr.write(s.encode('utf8') + '\n')
+def msg_r(s):  sys.stderr.write(s.encode('utf8'))
+def Msg(s):    sys.stdout.write(s.encode('utf8') + '\n')
+def Msg_r(s):  sys.stdout.write(s.encode('utf8'))
+def msgred(s): msg(red(s))
+
 def mmsg(*args):
-	for d in args:
-		sys.stdout.write(repr(d)+'\n')
+	for d in args: Msg(repr(d))
 def mdie(*args):
-	for d in args:
-		sys.stdout.write(repr(d)+'\n')
-	sys.exit()
+	mmsg(*args); sys.exit()
 
 def die_wait(delay,ev=0,s=''):
 	assert type(delay) == int
 	assert type(ev) == int
-	if s: sys.stderr.write(s+'\n')
+	if s: msg(s)
 	time.sleep(delay)
 	sys.exit(ev)
 def die_pause(ev=0,s=''):
 	assert type(ev) == int
-	if s: sys.stderr.write(s+'\n')
+	if s: msg(s)
 	raw_input('Press ENTER to exit')
 	sys.exit(ev)
 def die(ev=0,s=''):
 	assert type(ev) == int
-	if s: sys.stderr.write(s+'\n')
+	if s: msg(s)
 	sys.exit(ev)
 def Die(ev=0,s=''):
 	assert type(ev) == int
-	if s: sys.stdout.write(s+'\n')
+	if s: Msg(s)
 	sys.exit(ev)
 
 def pp_format(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4).pformat(d)
-
-def pp_die(d):
-	import pprint
-	die(1,pprint.PrettyPrinter(indent=4).pformat(d))
-
-def pp_msg(d):
-	import pprint
-	msg(pprint.PrettyPrinter(indent=4).pformat(d))
+def pp_die(d): die(1,pp_format(d))
+def pp_msg(d): msg(pp_format(d))
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
@@ -120,24 +112,24 @@ def check_or_create_dir(path):
 
 from mmgen.opts import opt
 
-def qmsg(s,alt=False):
+def qmsg(s,alt=None):
 	if opt.quiet:
-		if alt != False: sys.stderr.write(alt + '\n')
-	else: sys.stderr.write(s + '\n')
-def qmsg_r(s,alt=False):
+		if alt != None: msg(alt)
+	else: msg(s)
+def qmsg_r(s,alt=None):
 	if opt.quiet:
-		if alt != False: sys.stderr.write(alt)
-	else: sys.stderr.write(s)
+		if alt != None: msg_r(alt)
+	else: msg_r(s)
 def vmsg(s,force=False):
-	if opt.verbose or force: sys.stderr.write(s + '\n')
+	if opt.verbose or force: msg(s)
 def vmsg_r(s,force=False):
-	if opt.verbose or force: sys.stderr.write(s)
+	if opt.verbose or force: msg_r(s)
 def Vmsg(s,force=False):
-	if opt.verbose or force: sys.stdout.write(s + '\n')
+	if opt.verbose or force: Msg(s)
 def Vmsg_r(s,force=False):
-	if opt.verbose or force: sys.stdout.write(s)
+	if opt.verbose or force: Msg_r(s)
 def dmsg(s):
-	if opt.debug: sys.stdout.write(s + '\n')
+	if opt.debug: msg(s)
 
 def suf(arg,suf_type):
 	t = type(arg)
@@ -170,7 +162,7 @@ def make_chksum_8(s,sep=False):
 	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s): return sha256(s).hexdigest()[:6]
-def is_chksum_6(s): return len(s) == 6 and is_hexstring_lc(s)
+def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
 def make_iv_chksum(s): return sha256(s).hexdigest()[:8].upper()
 
@@ -212,35 +204,55 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs/60, secs % 60)
 
-def _is_whatstring(s,chars):
-	return set(list(s)) <= set(chars)
-
 def is_int(s):
 	try:
-		int(s)
+		int(str(s))
 		return True
 	except:
 		return False
 
-def is_hexstring(s):
-	return _is_whatstring(s.lower(),hexdigits.lower())
-def is_hexstring_lc(s):
-	return _is_whatstring(s,hexdigits.lower())
-def is_hexstring_uc(s):
-	return _is_whatstring(s,hexdigits.upper())
-def is_b58string(s):
+# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
+# https://tools.ietf.org/html/rfc4648
+b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+def is_b32_str(s):    return set(list(s))         <= set(list(b32a))
+def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
+def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
+def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))
+def is_b58_str(s):
 	from mmgen.bitcoin import b58a
-	return _is_whatstring(s,b58a)
+	return set(list(s)) <= set(b58a)
 
-def is_utf8(s):
-	try: s.decode('utf8')
+def is_ascii(s,enc='ascii'):
+	try:    s.decode(enc)
 	except: return False
-	else: return True
+	else:   return True
 
-def is_ascii(s):
-	try: s.decode('ascii')
-	except: return False
-	else: return True
+def is_utf8(s): return is_ascii(s,enc='utf8')
+
+class baseconv(object):
+
+	@staticmethod
+	def tohex(base,words,wl,pad=None): # accepts both string and list input
+		if type(words) not in (list,tuple):
+			words = tuple(words.strip())
+		if not set(words).issubset(set(wl)):
+			die(2,'{} is not in base-{} format'.format(repr(words_arg),base))
+		deconv =  [wl.index(words[::-1][i])*(base**i)
+					for i in range(len(words))]
+		ret = ('{:0{w}x}'.format(sum(deconv),w=pad or 0))
+		return ('','0')[len(ret) % 2] + ret
+
+	@staticmethod
+	def fromhex(base,hexnum,wl,pad=None):
+		assert len(wl) == base
+		hexnum = hexnum.strip()
+		if not is_hex_str(hexnum):
+			die(2,"'%s': not a hexadecimal number" % hexnum)
+		num,ret = int(hexnum,16),[]
+		while num:
+			ret.append(num % base)
+			num /= base
+		return [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
@@ -444,6 +456,9 @@ def write_data_to_file(
 	if ask_write_default_yes == False or ask_write_prompt:
 		ask_write = True
 
+	if not binary and type(data) == unicode:
+		data = data.encode('utf8')
+
 	def do_stdout():
 		qmsg('Output to STDOUT requested')
 		if sys.stdout.isatty():
@@ -537,7 +552,7 @@ def get_words(infile,desc,prompt):
 def mmgen_decrypt_file_maybe(fn,desc=''):
 	d = get_data_from_file(fn,desc,binary=True)
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
-	if have_enc_ext or not is_ascii(d):
+	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
 		msg("%s %s '%s'" % (m,desc,fn))
 		from mmgen.crypto import mmgen_decrypt_retry
@@ -547,7 +562,9 @@ def mmgen_decrypt_file_maybe(fn,desc=''):
 def get_lines_from_file(fn,desc='',trim_comments=False):
 	dec = mmgen_decrypt_file_maybe(fn,desc)
 	ret = dec.decode('utf8').splitlines() # DOS-safe
-	return remove_comments(ret) if trim_comments else ret
+	if trim_comments: ret = remove_comments(ret)
+	vmsg(u"Got {} lines from file '{}'".format(len(ret),fn))
+	return ret
 
 def get_data_from_user(desc='data',silent=False):
 	data = my_raw_input('Enter %s: ' % desc, echo=opt.echo_passphrase)
@@ -593,7 +610,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 	from mmgen.term import kb_hold_protect
 	kb_hold_protect()
 	if echo or not sys.stdin.isatty():
-		reply = raw_input(prompt)
+		reply = raw_input(prompt.encode('utf8'))
 	else:
 		from getpass import getpass
 		reply = getpass(prompt)

@@ -53,6 +53,12 @@ keystrokes will also be used as a source of randomness.
 # """.strip(),
 }
 
+def sha256_rounds(s,n):
+	assert is_int(n) and n > 0
+	for i in range(n):
+		s = sha256(s).digest()
+	return s
+
 def encrypt_seed(seed, key):
 	return encrypt_data(seed, key, iv=1, desc='seed')
 
@@ -237,7 +243,7 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 	m = ('user-requested','default')[hp=='3']
 	qmsg("Using %s hash preset of '%s'" % (m,hp))
 	passwd = get_mmgen_passphrase(desc)
-	key = make_key(passwd, salt, hp)
+	key = make_key(passwd,salt,hp)
 	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), desc)
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
 		vmsg('OK')

@@ -33,13 +33,13 @@ from collections import OrderedDict
 cmd_data = OrderedDict([
 	('help',         ['<tool command> [str]']),
 	('usage',        ['<tool command> [str]']),
-	('strtob58',     ['<string> [str-]']),
+	('strtob58',     ['<string> [str-]','pad [int=0]']),
 	('b58tostr',     ['<b58 number> [str-]']),
-	('hextob58',     ['<hex number> [str-]']),
-	('b58tohex',     ['<b58 number> [str-]']),
+	('hextob58',     ['<hex number> [str-]','pad [int=0]']),
+	('b58tohex',     ['<b58 number> [str-]','pad [int=0]']),
 	('b58randenc',   []),
-	('b32tohex',     ['<b32 num> [str-]']),
-	('hextob32',     ['<hex num> [str-]']),
+	('b32tohex',     ['<b32 num> [str-]','pad [int=0]']),
+	('hextob32',     ['<hex num> [str-]','pad [int=0]']),
 	('randhex',      ['nbytes [int=32]']),
 	('id8',          ['<infile> [str]']),
 	('id6',          ['<infile> [str]']),
@@ -80,6 +80,7 @@ cmd_data = OrderedDict([
 	('remove_label',    ['<{} address> [str]'.format(pnm)]),
 	('addrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
 	('keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
+	('passwdfile_chksum', ['<{} password file> [str]'.format(pnm)]),
 	('find_incog_data', ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
 
 	('encrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
@@ -137,6 +138,7 @@ cmd_help = """
   remove_label - remove descriptive label for {pnm} address in tracking wallet
   addrfile_chksum    - compute checksum for {pnm} address file
   keyaddrfile_chksum - compute checksum for {pnm} key-address file
+  passwdfile_chksum  - compute checksum for {pnm} password file
   find_incog_data    - Use an Incog ID to find hidden incognito wallet data
   id6          - generate 6-character {pnm} ID for a file (or stdin)
   id8          - generate 8-character {pnm} ID for a file (or stdin)
@@ -213,6 +215,7 @@ def process_args(prog_name, command, cmd_args):
 			tool_usage(prog_name,command)
 
 	def conv_type(arg,arg_name,arg_type):
+		if arg_type == 'str': arg_type = 'unicode'
 		if arg_type == 'bool':
 			if arg.lower() in ('true','yes','1','on'): arg = True
 			elif arg.lower() in ('false','no','0','off'): arg = False
@@ -266,32 +269,6 @@ def unhexdump(infile):
 	sys.stdout.write(decode_pretty_hexdump(
 			get_data_from_file(infile,dash=True,silent=True)))
 
-def strtob58(s):
-	enc = mmb.b58encode(s)
-	dec = mmb.b58decode(enc)
-	print_convert_results(s,enc,dec,'str')
-
-def hextob58(s,f_enc=mmb.b58encode, f_dec=mmb.b58decode):
-	s = s.strip()
-	enc = f_enc(ba.unhexlify(s))
-	dec = ba.hexlify(f_dec(enc))
-	print_convert_results(s,enc,dec,'hex')
-
-def b58tohex(s,f_enc=mmb.b58decode, f_dec=mmb.b58encode):
-	s = s.strip()
-	tmp = f_enc(s)
-	if tmp == False: die(1,"Unable to decode string '%s'" % s)
-	enc = ba.hexlify(tmp)
-	dec = f_dec(ba.unhexlify(enc))
-	print_convert_results(s,enc,dec,'b58')
-
-def b58tostr(s,f_enc=mmb.b58decode, f_dec=mmb.b58encode):
-	s = s.strip()
-	enc = f_enc(s)
-	if enc == False: die(1,"Unable to decode string '%s'" % s)
-	dec = f_dec(enc)
-	print_convert_results(s,enc,dec,'b58')
-
 def b58randenc():
 	r = get_random(32)
 	enc = mmb.b58encode(r)
@@ -331,7 +308,7 @@ def do_random_mn(nbytes,wordlist):
 	Vmsg('Seed: %s' % hexrand)
 	for wlname in ([wordlist],wordlists)[wordlist=='all']:
 		if wordlist == 'all':
-			Msg('%s mnemonic:' % (wlname.capitalize()))
+			Msg('%s mnemonic:' % (capfirst(wlname)))
 		mn = Mnemonic.hex2mn(hexrand,wordlist=wlname)
 		Msg(' '.join(mn))
 
@@ -340,20 +317,28 @@ def mn_rand192(wordlist=dfl_wordlist): do_random_mn(24,wordlist)
 def mn_rand256(wordlist=dfl_wordlist): do_random_mn(32,wordlist)
 
 def hex2mn(s,wordlist=dfl_wordlist):
-	mn = Mnemonic.hex2mn(s,wordlist)
-	Msg(' '.join(mn))
+	Msg(' '.join(Mnemonic.hex2mn(s,wordlist)))
 
 def mn2hex(s,wordlist=dfl_wordlist):
-	hexnum = Mnemonic.mn2hex(s.split(),wordlist)
-	Msg(hexnum)
+	Msg(Mnemonic.mn2hex(s.split(),wordlist))
 
-def b32tohex(s):
-	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-	Msg(Mnemonic.baseNtohex(32,s.upper(),b32a))
+def strtob58(s,pad=None):
+	Msg(''.join(baseconv.fromhex(58,ba.hexlify(s),mmb.b58a,pad)))
 
-def hextob32(s):
-	b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-	Msg(''.join(Mnemonic.hextobaseN(32,s,b32a)))
+def b58tostr(s):
+	Msg(ba.unhexlify(baseconv.tohex(58,s,mmb.b58a)))
+
+def b58tohex(s,pad=None):
+	Msg(baseconv.tohex(58,s,mmb.b58a,pad))
+
+def hextob58(s,pad=None):
+	Msg(''.join(baseconv.fromhex(58,s,mmb.b58a,pad)))
+
+def b32tohex(s,pad=None):
+	Msg(baseconv.tohex(32,s.upper(),b32a,pad))
+
+def hextob32(s,pad=None):
+	Msg(''.join(baseconv.fromhex(32,s,b32a,pad)))
 
 def mn_stats(wordlist=dfl_wordlist):
 	Mnemonic.check_wordlist(wordlist)
@@ -505,6 +490,10 @@ def addrfile_chksum(infile):
 def keyaddrfile_chksum(infile):
 	from mmgen.addr import KeyAddrList
 	KeyAddrList(infile,chksum_only=True)
+
+def passwdfile_chksum(infile):
+	from mmgen.addr import PasswordList
+	PasswordList(infile=infile,chksum_only=True)
 
 def hexreverse(s):
 	Msg(ba.hexlify(ba.unhexlify(s.strip())[::-1]))

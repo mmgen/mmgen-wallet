@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-obj.py:  The MMGenObject class and methods
+obj.py:  MMGen native classes
 """
 
 from decimal import *
@@ -26,72 +26,39 @@ lvl = 0
 
 class MMGenObject(object):
 
-	# Pretty-print any object of type MMGenObject, recursing into sub-objects
-	def __str__(self):
-		global lvl
-		indent = lvl * '    '
-
-		def fix_linebreaks(v,fixed_indent=None):
-			if '\n' in v:
-				i = indent+'    ' if fixed_indent == None else fixed_indent*' '
-				return '\n'+i + v.replace('\n','\n'+i)
-			else: return repr(v)
-
-		def conv(v,col_w):
-			vret = ''
-			if type(v) in (str,unicode):
-				from string import printable
-				if not (set(list(v)) <= set(list(printable))):
-					vret = repr(v)
+	# Pretty-print any object of type MMGenObject, recursing into sub-objects - WIP
+	def pprint(self):  print self.pformat()
+	def pformat(self,lvl=0):
+		def do_list(out,e,lvl=0):
+			add_spc = False
+			if e and type(e[0]) not in (str,unicode):
+				out.append('\n')
+			for i in e:
+				if hasattr(i,'pformat'):
+					out.append('{:>{l}}{}'.format('',i.pformat(lvl=lvl+1),l=(lvl+1)*8))
+				elif type(i) in (str,unicode):
+					add_spc = True
+					out.append(u' {}'.format(repr(i)))
+				elif type(i) == list:
+					out.append(u'{:>{l}}{:16}'.format('','<'+type(i).__name__+'>',l=(lvl*8)+4))
+					do_list(out,i,lvl=lvl)
 				else:
-					vret = fix_linebreaks(v,fixed_indent=0)
-			elif type(v) in (int,long,BTCAmt):
-				vret = str(v)
-			elif type(v) == dict:
-				sep = '\n{}{}'.format(indent,' '*4)
-				cw = (max(len(k) for k in v) if v else 0) + 2
-				t = sep.join(['{:<{w}}: {}'.format(
-					repr(k),
-	(fix_linebreaks(v[k],fixed_indent=0) if type(v[k]) == str else v[k]),
-					w=cw)
-				for k in sorted(v)])
-				vret = '{' + sep + t + '\n' + indent + '}'
-			elif type(v) in (list,tuple):
-				sep = '\n{}{}'.format(indent,' '*4)
-				t = ' '.join([repr(e) for e in sorted(v)])
-				o,c = (('(',')'),('[',']'))[type(v)==list]
-				vret = o + sep + t + '\n' + indent + c
-			elif repr(v)[:14] == '<bound method ':
-				vret = ' '.join(repr(v).split()[0:3]) + '>'
-#				vret = repr(v)
-
-			return vret or type(v)
-
+					out.append(u'{:>{l}}{:16} {}\n'.format('','<'+type(i).__name__+'>',repr(i),l=(lvl*8)+8))
+			if not e: out.append('{}\n'.format(repr(e)))
+			if add_spc: out.append('\n')
 		out = []
-		def f(k): return k[:2] != '__'
-		keys = filter(f, self.__dict__.keys())
-		col_w = max(len(k) for k in keys) if keys else 1
-		fs = '{}%-{}s: %s'.format(indent,col_w)
-
-		methods = [k for k in keys if repr(getattr(self,k))[:14] == '<bound method ']
-
-		def f(k): return repr(getattr(self,k))[:14] == '<bound method '
-		methods = filter(f,keys)
-		def f(k): return repr(getattr(self,k))[:7] == '<mmgen.'
-		objects = filter(f,keys)
-		other = list(set(keys) - set(methods) - set(objects))
-
-		for k in sorted(methods) + sorted(other) + sorted(objects):
-			val = getattr(self,k)
-			if str(type(val))[:13] == "<class 'mmgen": # recurse into sub-objects
-				out.append('\n%s%s (%s):' % (indent,k,type(val)))
-				lvl += 1
-				out.append(unicode(getattr(self,k))+'\n')
-				lvl -= 1
+		out.append(u'<{}>\n'.format(type(self).__name__))
+		d = self.__dict__
+		for k in d:
+			e = getattr(self,k)
+			if type(e) == list:
+				out.append(u'{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))
+				do_list(out,e,lvl=lvl)
+			elif hasattr(e,'pformat') and type(e) != type:
+				out.append(u'{:>{l}}{:10} {}'.format('',k,e.pformat(lvl=lvl+1),l=(lvl*8)+4))
 			else:
-				out.append(fs % (k, conv(val,col_w)))
-
-		return repr(self) + '\n    ' + '\n    '.join(out)
+				out.append(u'{:>{l}}{:<10} {:16} {}\n'.format('',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))
+		return ''.join(out)
 
 # Descriptor: https://docs.python.org/2/howto/descriptor.html
 class MMGenListItemAttr(object):
@@ -124,7 +91,7 @@ class MMGenListItem(MMGenObject):
 			"'{}': attribute '{}' in instance of class '{}' cannot be reassigned".format(
 				val,attr,type(self).__name__)
 
-	attrs_base = ('attrs','attrs_priv','attrs_reassign','attrs_base','attr_error','set_error','__dict__')
+	attrs_base = ('attrs','attrs_priv','attrs_reassign','attrs_base','attr_error','set_error','__dict__','pformat')
 
 	def __init__(self,*args,**kwargs):
 		if args:
@@ -432,36 +399,55 @@ class BitcoinTxID(MMGenTxID):
 class MMGenLabel(unicode,Hilite,InitErrors):
 
 	color = 'pink'
-	allowed = u''
+	allowed = []
+	forbidden = []
 	max_len = 0
+	min_len = 0
 	desc = 'label'
 
 	def __new__(cls,s,on_fail='die',msg=None):
 		cls.arg_chk(cls,on_fail)
+		for k in cls.forbidden,cls.allowed:
+			assert type(k) == list
+			for ch in k: assert type(ch) == unicode and len(ch) == 1
 		try:
-			s = s.decode('utf8').strip()
+			s = s.strip()
+			if type(s) != unicode:
+				s = s.decode('utf8')
 		except:
-			m = "'%s: value is not a valid UTF-8 string" % s
+			m = "'%s': value is not a valid UTF-8 string" % s
 		else:
+			from mmgen.util import capfirst
 			if len(s) > cls.max_len:
-				m = '%s too long (>%s symbols)' % (cls.desc.capitalize(),cls.max_len)
-			elif cls.allowed and not set(list(s)).issubset(set(list(cls.allowed))):
-				m = '%s contains non-permitted symbols: %s' % (cls.desc.capitalize(),
-					' '.join(set(list(s)) - set(list(cls.allowed))))
+				m = u"'{}': {} too long (>{} symbols)".format(s,capfirst(cls.desc),cls.max_len)
+			elif len(s) < cls.min_len:
+				m = u"'{}': {} too short (<{} symbols)".format(s,capfirst(cls.desc),cls.min_len)
+			elif cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
+				m = u"{} '{}' contains non-allowed symbols: {}".format(capfirst(cls.desc),s,
+					' '.join(set(list(s)) - set(cls.allowed)))
+			elif cls.forbidden and any([ch in s for ch in cls.forbidden]):
+				m = u"{} '{}' contains one of these forbidden symbols: '{}'".format(capfirst(cls.desc),s,
+					"', '".join(cls.forbidden))
 			else:
 				return unicode.__new__(cls,s)
 		return cls.init_fail((msg+'\n' if msg else '') + m,on_fail)
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
-	allowed = [chr(i+32) for i in range(95)]
+	allowed = [unichr(i+32) for i in range(95)]
 	desc = 'wallet label'
 
 class MMGenAddrLabel(MMGenLabel):
 	max_len = 32
-	allowed = [chr(i+32) for i in range(95)]
+	allowed = [unichr(i+32) for i in range(95)]
 	desc = 'address label'
 
 class MMGenTXLabel(MMGenLabel):
 	max_len = 72
 	desc = 'transaction label'
+
+class MMGenPWIDString(MMGenLabel):
+	max_len = 256
+	min_len = 1
+	desc = 'password ID string'
+	forbidden = list(u' :/\\')

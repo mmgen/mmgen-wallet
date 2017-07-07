@@ -147,7 +147,7 @@ if opt.list_cmds:
 
 import binascii
 from mmgen.test import *
-from mmgen.tx import is_wif,is_btc_addr,is_b58_str
+from mmgen.tx import is_wif,is_btc_addr
 
 class MMGenToolTestSuite(object):
 

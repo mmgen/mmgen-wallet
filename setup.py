@@ -16,16 +16,48 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys,os,subprocess
+from shutil import copy2
+_gvi = subprocess.check_output(['gcc','--version']).splitlines()[0]
+have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
+have_arm     = subprocess.check_output(['uname','-m']).strip() == 'aarch64'
+
+# Zipfile module under Windows (MinGW) can't handle UTF-8 filenames.
+# Move it so that distutils will use the 'zip' utility instead.
+def divert_zipfile_module():
+	msg1 = 'Unable to divert zipfile module. UTF-8 filenames may be broken in the Python archive.'
+	def return_warn(m):
+		sys.stderr.write('WARNING: {}\n'.format(m))
+		return False
+
+	dirname = os.path.dirname(sys.modules['os'].__file__)
+	if not dirname: return return_warn(msg1)
+	stem = os.path.join(dirname,'zipfile')
+	a,b = stem+'.py',stem+'-is-broken.py'
+
+	try: os.stat(a)
+	except: return
+
+	try:
+		sys.stderr.write('moving {} -> {}\n'.format(a,b))
+		os.rename(a,b)
+	except:
+		return return_warn(msg1)
+	else:
+		try:
+			os.unlink(stem+'.pyc')
+			os.unlink(stem+'.pyo')
+		except:
+			pass
+
+if have_mingw64:
+# 	import zipfile
+# 	sys.exit()
+	divert_zipfile_module()
+
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.install_data import install_data
-import sys,os
-from shutil import copy2
-
-import subprocess as sp
-_gvi = sp.check_output(['gcc','--version']).splitlines()[0]
-have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
-have_arm     = sp.check_output(['uname','-m']).strip() == 'aarch64'
 
 # install extension module in repository after building
 class my_build_ext(build_ext):
@@ -100,6 +132,7 @@ setup(
 			'mmgen.main',
 			'mmgen.main_wallet',
 			'mmgen.main_addrgen',
+			'mmgen.main_passgen',
 			'mmgen.main_addrimport',
 			'mmgen.main_txcreate',
 			'mmgen.main_txbump',
@@ -116,6 +149,7 @@ setup(
 		scripts=[
 			'mmgen-addrgen',
 			'mmgen-keygen',
+			'mmgen-passgen',
 			'mmgen-addrimport',
 			'mmgen-passchg',
 			'mmgen-walletchk',

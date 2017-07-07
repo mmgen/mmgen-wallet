@@ -107,7 +107,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
-		ret.append(self.sort_key.capitalize().replace('Mmid','MMGenID'))
+		ret.append(capfirst(self.sort_key).replace('Mmid','MMGenID'))
 		if include_group and self.group and (self.sort_key in ('addr','txid','mmid')):
 			ret.append('Grouped')
 		return ret

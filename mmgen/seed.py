@@ -370,38 +370,15 @@ class Mnemonic (SeedSourceUnenc):
 	@staticmethod
 	def _hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
 
-	@staticmethod
-	def baseNtohex(base,words_arg,wl,pad=0): # accepts both string and list input
-		words = words_arg
-		if type(words) not in (list,tuple):
-			words = tuple(words.strip())
-		if not set(words).issubset(set(wl)):
-			die(2,'{} is not in base-{} format'.format(repr(words_arg),base))
-		deconv =  [wl.index(words[::-1][i])*(base**i)
-					for i in range(len(words))]
-		ret = ('{:0%sx}' % pad).format(sum(deconv))
-		return ('','0')[len(ret) % 2] + ret
-
-	@staticmethod
-	def hextobaseN(base,hexnum,wl,pad=0):
-		hexnum = hexnum.strip()
-		if not is_hexstring(hexnum):
-			die(2,"'%s': not a hexadecimal number" % hexnum)
-		num,ret = int(hexnum,16),[]
-		while num:
-			ret.append(num % base)
-			num /= base
-		return [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
-
 	@classmethod
 	def hex2mn(cls,hexnum,wordlist):
 		wl = cls.get_wordlist(wordlist)
-		return cls.hextobaseN(cls.mn_base,hexnum,wl,cls._hex2mn_pad(hexnum))
+		return baseconv.fromhex(cls.mn_base,hexnum,wl,cls._hex2mn_pad(hexnum))
 
 	@classmethod
 	def mn2hex(cls,mn,wordlist):
 		wl = cls.get_wordlist(wordlist)
-		return cls.baseNtohex(cls.mn_base,mn,wl,cls._mn2hex_pad(mn))
+		return baseconv.tohex(cls.mn_base,mn,wl,cls._mn2hex_pad(mn))
 
 	@classmethod
 	def get_wordlist(cls,wordlist=None):
@@ -433,9 +410,9 @@ class Mnemonic (SeedSourceUnenc):
 	def _format(self):
 		wl = self.get_wordlist()
 		seed_hex = self.seed.hexdata
-		mn = self.hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
+		mn = baseconv.fromhex(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
-		ret = self.baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		ret = baseconv.tohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
 		# Internal error, so just die on fail
 		compare_or_die(ret,'recomputed seed',
 						seed_hex,'original',e='Internal error')
@@ -458,9 +435,9 @@ class Mnemonic (SeedSourceUnenc):
 				msg('Invalid mnemonic: word #%s is not in the wordlist' % n)
 				return False
 
-		seed_hex = self.baseNtohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		seed_hex = baseconv.tohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
 
-		ret = self.hextobaseN(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
+		ret = baseconv.fromhex(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
 		# Internal error, so just die
 		compare_or_die(' '.join(ret),'recomputed mnemonic',
@@ -503,7 +480,7 @@ class SeedFile (SeedSourceUnenc):
 			msg("'%s': invalid checksum format in %s" % (a, desc))
 			return False
 
-		if not is_b58string(b):
+		if not is_b58_str(b):
 			msg("'%s': not a base 58 string, in %s" % (b, desc))
 			return False
 
@@ -557,7 +534,7 @@ class HexSeedFile (SeedSourceUnenc):
 			msg("'%s': invalid checksum format in %s" % (chk, desc))
 			return False
 
-		if not is_hexstring(hstr):
+		if not is_hex_str(hstr):
 			msg("'%s': not a hexadecimal string, in %s" % (hstr, desc))
 			return False
 
