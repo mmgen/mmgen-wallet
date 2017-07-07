@@ -2,11 +2,11 @@
 
 Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe
+		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools
 
 Install the Python Cryptography Toolkit:
 
-		$ sudo pip install pycrypto
+		$ sudo -H pip install pycrypto
 
 Install the secp256k1 library:
 
@@ -16,6 +16,8 @@ Install the secp256k1 library:
 		$ ./configure
 		$ make
 		$ sudo make install
+		$ sudo ldconfig
+		$ cd ..
 
 Install MMGen:
 
@@ -23,6 +25,7 @@ Install MMGen:
 		$ cd mmgen
 		$ git checkout -b stable stable_linux
 		$ sudo ./setup.py install
+		$ cd ..
 
 Install vanitygen (optional):
 
@@ -30,6 +33,7 @@ Install vanitygen (optional):
 		$ git clone https://github.com/samr7/vanitygen.git
 		$ cd vanitygen; make
 		(copy the "keyconv" executable to your execution path)
+		$ cd ..
 
 Install bitcoind:
 

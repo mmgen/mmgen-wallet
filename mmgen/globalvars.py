@@ -50,6 +50,7 @@ class g(object):
 	user_entropy   = ''
 	hash_preset    = '3'
 	usr_randchars  = 30
+	stdin_tty      = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE'))
 
 	max_tx_fee   = BTCAmt('0.01')
 	tx_fee_adj   = 1.0
@@ -144,7 +145,6 @@ class g(object):
 	min_urandchars = 10
 
 	seed_lens = 128,192,256
-	mn_lens = [i / 32 * 3 for i in seed_lens]
 
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16

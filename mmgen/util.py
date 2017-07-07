@@ -213,14 +213,11 @@ def is_int(s):
 
 # https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 # https://tools.ietf.org/html/rfc4648
-b32a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
-def is_b32_str(s):    return set(list(s))         <= set(list(b32a))
 def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
 def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
 def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))
-def is_b58_str(s):
-	from mmgen.bitcoin import b58a
-	return set(list(s)) <= set(b58a)
+def is_b58_str(s):    return set(list(s))         <= set(baseconv.digits['b58'])
+def is_b32_str(s):    return set(list(s))         <= set(baseconv.digits['b32'])
 
 def is_ascii(s,enc='ascii'):
 	try:    s.decode(enc)
@@ -231,28 +228,75 @@ def is_utf8(s): return is_ascii(s,enc='utf8')
 
 class baseconv(object):
 
-	@staticmethod
-	def tohex(base,words,wl,pad=None): # accepts both string and list input
-		if type(words) not in (list,tuple):
-			words = tuple(words.strip())
-		if not set(words).issubset(set(wl)):
-			die(2,'{} is not in base-{} format'.format(repr(words_arg),base))
-		deconv =  [wl.index(words[::-1][i])*(base**i)
-					for i in range(len(words))]
+	mn_base = 1626 # tirosh list is 1633 words long!
+	digits = {
+		'electrum': tuple(__import__('mmgen.mn_electrum',fromlist=['words']).words.split()),
+		'tirosh': tuple(__import__('mmgen.mn_tirosh',fromlist=['words']).words.split()[:mn_base]),
+		'b58': tuple('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'),
+		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
+		'b16': tuple('0123456789abcdef'),
+		'b10': tuple('0123456789'),
+		'b8':  tuple('01234567'),
+	}
+	wl_chksums = {
+		'electrum': '5ca31424',
+		'tirosh':   '48f05e1f', # tirosh truncated to mn_base (1626)
+		# 'tirosh1633': '1a5faeff'
+	}
+
+	@classmethod
+	def get_wordlist_chksum(cls,wl_id):
+		return sha256(' '.join(cls.digits[wl_id])).hexdigest()[:8]
+
+	@classmethod
+	def check_wordlists(cls):
+		for k,v in cls.wl_chksums.items(): assert cls.get_wordlist_chksum(k) == v
+
+	@classmethod
+	def check_wordlist(cls,wl_id):
+
+		wl = baseconv.digits[wl_id]
+		Msg('Wordlist: %s\nLength: %i words' % (capfirst(wl_id),len(wl)))
+		new_chksum = cls.get_wordlist_chksum(wl_id)
+
+		a,b = 'generated checksum','saved checksum'
+		compare_chksums(new_chksum,a,cls.wl_chksums[wl_id],b,die_on_fail=True)
+
+		Msg('Checksum %s matches' % new_chksum)
+		Msg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
+
+
+	@classmethod
+	def tohex(cls,words_arg,wl_id,pad=None):
+
+		words = words_arg if type(words_arg) in (list,tuple) else tuple(words_arg.strip())
+
+		wl = cls.digits[wl_id]
+		base = len(wl)
+
+		if not set(words) <= set(wl):
+			die(2,'{} is not in {} (base{}) format'.format(repr(words_arg),wl_id,base))
+
+		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
 		ret = ('{:0{w}x}'.format(sum(deconv),w=pad or 0))
 		return ('','0')[len(ret) % 2] + ret
 
-	@staticmethod
-	def fromhex(base,hexnum,wl,pad=None):
-		assert len(wl) == base
+	@classmethod
+	def fromhex(cls,hexnum,wl_id,pad=None):
+
 		hexnum = hexnum.strip()
 		if not is_hex_str(hexnum):
 			die(2,"'%s': not a hexadecimal number" % hexnum)
+
+		wl = cls.digits[wl_id]
+		base = len(wl)
 		num,ret = int(hexnum,16),[]
 		while num:
 			ret.append(num % base)
 			num /= base
 		return [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
+
+baseconv.check_wordlists()
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
@@ -464,7 +508,7 @@ def write_data_to_file(
 		if sys.stdout.isatty():
 			if no_tty:
 				die(2,'Printing %s to screen is not allowed' % desc)
-			if ask_tty and not opt.quiet:
+			if (ask_tty and not opt.quiet) or binary:
 				confirm_or_exit('','output %s to screen' % desc)
 		else:
 			try:    of = os.readlink('/proc/%d/fd/1' % os.getpid()) # Linux
@@ -567,7 +611,8 @@ def get_lines_from_file(fn,desc='',trim_comments=False):
 	return ret
 
 def get_data_from_user(desc='data',silent=False):
-	data = my_raw_input('Enter %s: ' % desc, echo=opt.echo_passphrase)
+	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
+	data = my_raw_input(p,echo=opt.echo_passphrase)
 	dmsg('User input: [%s]' % data)
 	return data
 
@@ -618,20 +663,21 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	return reply.strip()
 
-def keypress_confirm(prompt,default_yes=False,verbose=False):
+def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 
 	from mmgen.term import get_char
 
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
+	p = '{} {}: '.format(prompt,q)
+	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
 	while True:
-		reply = get_char('%s %s: ' % (prompt, q)).strip('\n\r')
-
+		reply = get_char(p).strip('\n\r')
 		if not reply:
-			if default_yes: msg(''); return True
-			else:           msg(''); return False
-		elif reply in 'yY': msg(''); return True
-		elif reply in 'nN': msg(''); return False
+			if default_yes: msg_r(nl); return True
+			else:           msg_r(nl); return False
+		elif reply in 'yY': msg_r(nl); return True
+		elif reply in 'nN': msg_r(nl); return False
 		else:
 			if verbose: msg('\nInvalid reply')
 			else: msg_r('\r')
@@ -674,7 +720,7 @@ def do_pager(text):
 
 def do_license_msg(immed=False):
 
-	if opt.quiet or g.no_license or opt.yes: return
+	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty: return
 
 	import mmgen.license as gpl
 

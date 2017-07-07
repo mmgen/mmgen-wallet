@@ -196,14 +196,16 @@ def _get_terminal_size_mswin():
 		return 80,25
 
 def set_terminal_vars():
-	global get_char,kb_hold_protect,get_terminal_size
+	global get_char,get_char_raw,kb_hold_protect,get_terminal_size
 	if _platform == 'linux':
+		get_char_raw = _get_keypress_unix_raw
 		get_char = (_get_keypress_unix_raw,_get_keypress_unix)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
 		if not sys.stdin.isatty():
 			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
 		get_terminal_size = _get_terminal_size_linux
 	else:
+		get_char_raw = _get_keypress_mswin_raw
 		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
 		if not sys.stdin.isatty():

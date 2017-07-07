@@ -125,6 +125,6 @@ if al.gen_addrs and opt.print_checksum:
 
 if al.gen_keys and keypress_confirm('Encrypt key list?'):
 	al.encrypt()
-	al.write_to_file(binary=True)
+	al.write_to_file(binary=True,desc='encrypted '+al.file_desc)
 else:
 	al.write_to_file()

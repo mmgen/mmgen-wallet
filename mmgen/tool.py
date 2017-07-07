@@ -300,52 +300,38 @@ def wif2addr(wif,compressed=False):
 	Vmsg_r('Addr: '); Msg(addr)
 
 wordlists = 'electrum','tirosh'
-dfl_wordlist = 'electrum'
+dfl_wl_id = 'electrum'
 
-from mmgen.seed import Mnemonic
 def do_random_mn(nbytes,wordlist):
 	hexrand = ba.hexlify(get_random(nbytes))
 	Vmsg('Seed: %s' % hexrand)
-	for wlname in ([wordlist],wordlists)[wordlist=='all']:
+	for wl_id in ([wordlist],wordlists)[wordlist=='all']:
 		if wordlist == 'all':
-			Msg('%s mnemonic:' % (capfirst(wlname)))
-		mn = Mnemonic.hex2mn(hexrand,wordlist=wlname)
+			Msg('%s mnemonic:' % (capfirst(wl_id)))
+		mn = baseconv.fromhex(hexrand,wl_id)
 		Msg(' '.join(mn))
 
-def mn_rand128(wordlist=dfl_wordlist): do_random_mn(16,wordlist)
-def mn_rand192(wordlist=dfl_wordlist): do_random_mn(24,wordlist)
-def mn_rand256(wordlist=dfl_wordlist): do_random_mn(32,wordlist)
+def mn_rand128(wordlist=dfl_wl_id): do_random_mn(16,wordlist)
+def mn_rand192(wordlist=dfl_wl_id): do_random_mn(24,wordlist)
+def mn_rand256(wordlist=dfl_wl_id): do_random_mn(32,wordlist)
 
-def hex2mn(s,wordlist=dfl_wordlist):
-	Msg(' '.join(Mnemonic.hex2mn(s,wordlist)))
+def hex2mn(s,wordlist=dfl_wl_id): Msg(' '.join(baseconv.fromhex(s,wordlist)))
+def mn2hex(s,wordlist=dfl_wl_id): Msg(baseconv.tohex(s.split(),wordlist))
 
-def mn2hex(s,wordlist=dfl_wordlist):
-	Msg(Mnemonic.mn2hex(s.split(),wordlist))
+def strtob58(s,pad=None): Msg(''.join(baseconv.fromhex(ba.hexlify(s),'b58',pad)))
+def hextob58(s,pad=None): Msg(''.join(baseconv.fromhex(s,'b58',pad)))
+def hextob32(s,pad=None): Msg(''.join(baseconv.fromhex(s,'b32',pad)))
+def b58tostr(s):          Msg(ba.unhexlify(baseconv.tohex(s,'b58')))
+def b58tohex(s,pad=None): Msg(baseconv.tohex(s,'b58',pad))
+def b32tohex(s,pad=None): Msg(baseconv.tohex(s.upper(),'b32',pad))
 
-def strtob58(s,pad=None):
-	Msg(''.join(baseconv.fromhex(58,ba.hexlify(s),mmb.b58a,pad)))
-
-def b58tostr(s):
-	Msg(ba.unhexlify(baseconv.tohex(58,s,mmb.b58a)))
-
-def b58tohex(s,pad=None):
-	Msg(baseconv.tohex(58,s,mmb.b58a,pad))
-
-def hextob58(s,pad=None):
-	Msg(''.join(baseconv.fromhex(58,s,mmb.b58a,pad)))
-
-def b32tohex(s,pad=None):
-	Msg(baseconv.tohex(32,s.upper(),b32a,pad))
-
-def hextob32(s,pad=None):
-	Msg(''.join(baseconv.fromhex(32,s,b32a,pad)))
-
-def mn_stats(wordlist=dfl_wordlist):
-	Mnemonic.check_wordlist(wordlist)
-
-def mn_printlist(wordlist=dfl_wordlist):
-	wl = Mnemonic.get_wordlist(wordlist)
-	Msg('\n'.join(wl))
+from mmgen.seed import Mnemonic
+def mn_stats(wordlist=dfl_wl_id):
+	wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
+	baseconv.check_wordlist(wordlist)
+def mn_printlist(wordlist=dfl_wl_id):
+	wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
+	Msg('\n'.join(baseconv.digits[wordlist]))
 
 def id8(infile):
 	Msg(make_chksum_8(

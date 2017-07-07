@@ -27,6 +27,11 @@ from mmgen.addr import PasswordList,AddrIdxList
 from mmgen.seed import SeedSource
 from mmgen.obj import MMGenPWIDString
 
+dfl_len = {
+	'b58': PasswordList.pw_info['b58']['dfl_len'],
+	'b32': PasswordList.pw_info['b32']['dfl_len']
+}
+
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'desc': """Generate a range or list of passwords from an {pnm} wallet,
@@ -43,7 +48,9 @@ opts_data = {
                       'f' at offset 'o' (comma-separated)
 -O, --old-incog-fmt   Specify old-format incognito input
 -L, --passwd-len=  l  Specify length of generated passwords
-                      (default: {p} chars [base58], {q} chars [base32])
+                      (default: {d58} chars [base58], {d32} chars [base32]).
+                      An argument of 'h' will generate passwords of half
+                      the default length.
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.seed_len}-bit) seed lengths
@@ -58,11 +65,8 @@ opts_data = {
 -v, --verbose         Produce more verbose output
 """.format(
 	seed_lens=', '.join([str(i) for i in g.seed_lens]),
-	pnm=g.proj_name,
-	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-	g=g,
-	p=PasswordList.pw_info['base58']['dfl_len'],
-	q=PasswordList.pw_info['base32']['dfl_len']
+	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],
+	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 ),
 	'notes': """
 
@@ -79,13 +83,13 @@ Changing either the password format (base32,base58) or length alters the seed
 and thus generates a completely new set of passwords.
 
 EXAMPLE:
-  Generate ten base58 passwords of length {dfl58} for Alice's email account:
+  Generate ten base58 passwords of length {d58} for Alice's email account:
   {g.prog_name} alice@nowhere.com 1-10
 
   Generate ten base58 passwords of length 16 for Alice's email account:
   {g.prog_name} -L16 alice@nowhere.com 1-10
 
-  Generate ten base32 passwords of length {dfl32} for Alice's email account:
+  Generate ten base32 passwords of length {d32} for Alice's email account:
   {g.prog_name} -b alice@nowhere.com 1-10
 
   The three sets of passwords are completely unrelated to each other, so
@@ -102,10 +106,8 @@ FMT CODES:
   {f}
 """.format(
 		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-		o=opts,g=g,
+		o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
 		ml=MMGenPWIDString.max_len,
-		dfl58=PasswordList.pw_info['base58']['dfl_len'],
-		dfl32=PasswordList.pw_info['base32']['dfl_len'],
 		fs="', '".join(MMGenPWIDString.forbidden)
 	)
 }
@@ -114,25 +116,27 @@ cmd_args = opts.init(opts_data,add_opts=['b16'])
 
 if len(cmd_args) < 2: opts.usage()
 
-idxs = AddrIdxList(fmt_str=cmd_args.pop())
+pw_idxs = AddrIdxList(fmt_str=cmd_args.pop())
 
 pw_id_str = cmd_args.pop()
 
 sf = get_seed_file(cmd_args,1)
 
-pw_fmt = ('base58','base32')[bool(opt.base32)]
+pw_fmt = ('b58','b32')[bool(opt.base32)]
 
-PasswordList(pw_id_str=pw_id_str,pw_len=opt.passwd_len,pw_fmt=pw_fmt,chk_params_only=True)
+pw_len = (opt.passwd_len,dfl_len[pw_fmt]/2)[opt.passwd_len in ('h','H')]
+
+PasswordList(pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt,chk_params_only=True)
 do_license_msg()
 
 ss = SeedSource(sf)
 
-al = PasswordList(seed=ss.seed,addr_idxs=idxs,pw_id_str=pw_id_str,pw_len=opt.passwd_len,pw_fmt=pw_fmt)
+al = PasswordList(seed=ss.seed,pw_idxs=pw_idxs,pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt)
 
 al.format()
 
 if keypress_confirm('Encrypt password list?'):
 	al.encrypt(desc='password list')
-	al.write_to_file(binary=True)
+	al.write_to_file(binary=True,desc='encrypted password list')
 else:
-	al.write_to_file()
+	al.write_to_file(desc='password list')

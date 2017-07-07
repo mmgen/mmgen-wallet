@@ -280,8 +280,8 @@ cfgs = {
 		'ref_bw_seed_id':  '33F10310',
 		'addrfile_chk':    ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE')[g.testnet],
 		'keyaddrfile_chk': ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35')[g.testnet],
-		'passfile_chk':    '3EA0 A3C9 DA28 5126',
-		'passfile32_chk':  'EF67 D0BE 4B24 9B4F',
+		'passfile_chk':    'EB29 DC4F 924B 289F',
+		'passfile32_chk':  '37B6 C218 2ABC 7508',
 		'wpasswd':         'reference password',
 		'ref_wallet':      'FE3C6545-D782B529[128,1].mmdat',
 		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
@@ -309,8 +309,8 @@ cfgs = {
 		'ref_bw_seed_id':  'CE918388',
 		'addrfile_chk':    ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81')[g.testnet],
 		'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC')[g.testnet],
-		'passfile_chk':    '000C 7711 CD45 C5BE',
-		'passfile32_chk':  'AFEC 54A1 7D79 1866',
+		'passfile_chk':    'ADEA 0083 094D 489A',
+		'passfile32_chk':  '2A28 C5C7 36EC 217A',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '1378FC64-6F0F9BB4[192,1].mmdat',
 		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
@@ -338,16 +338,16 @@ cfgs = {
 		'ref_bw_seed_id':  'B48CD7FC',
 		'addrfile_chk':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
 		'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
-		'passfile_chk':    '54B1 A5BE 9F07 1FDD',
-		'passfile32_chk':  '072A 4A13 FB64 B64B',
+		'passfile_chk':    '2D6D 8FBA 422E 1315',
+		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
 		'ref_addrfile':    '98831F3A[1,31-33,500-501,1010-1011]{}.addrs'.format(tn_desc),
 		'ref_keyaddrfile': '98831F3A[1,31-33,500-501,1010-1011]{}.akeys.mmenc'.format(tn_desc),
-		'ref_passwdfile':  '98831F3A-фубар@crypto.org-base58-20[1,4,9-11,1100].pws',
+		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
 		'ref_keyaddrfile_chksum': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
-		'ref_passwdfile_chksum':  '7723 735B 2CBB 2571',
+		'ref_passwdfile_chksum':  'A983 DAB9 5514 27FB',
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
 		'ref_tx_file':     'FFB367[1.234]{}.rawtx'.format(tn_desc),
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
@@ -630,6 +630,9 @@ os.environ['MMGEN_DISABLE_COLOR'] = '1'
 os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 os.environ['MMGEN_BOGUS_SEND'] = '1'
+
+# Tell spawned programs they're running in the test suite
+os.environ['MMGEN_TEST_SUITE'] = '1'
 
 if opt.debug_scripts: os.environ['MMGEN_DEBUG'] = '1'
 
@@ -1713,7 +1716,7 @@ class MMGenTestSuite(object):
 		t.hash_preset('new key list','1')
 #		t.passphrase_new('new key list','kafile password')
 		t.passphrase_new('new key list',cfg['kapasswd'])
-		t.written_to_file('Secret keys',oo=True)
+		t.written_to_file('Encrypted secret keys',oo=True)
 		t.ok()
 
 	def refkeyaddrgen(self,name,wf,pf):

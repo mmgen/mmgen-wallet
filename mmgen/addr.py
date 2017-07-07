@@ -20,7 +20,8 @@
 addr.py:  Address generation/display routines for the MMGen suite
 """
 
-from hashlib import sha256, sha512
+from hashlib import sha256,sha512
+from binascii import hexlify,unhexlify
 from mmgen.common import *
 from mmgen.bitcoin import privnum2addr,hex2wif,wif2hex
 from mmgen.obj import *
@@ -83,7 +84,6 @@ def _privhex2addr_keyconv(privhex,compressed=False):
 def _privhex2addr_secp256k1(privhex,compressed=False):
 	from mmgen.secp256k1 import priv2pub
 	from mmgen.bitcoin import hexaddr2addr,pubhex2hexaddr
-	from binascii import hexlify,unhexlify
 	pubkey = priv2pub(unhexlify(privhex),int(compressed))
 	return hexaddr2addr(pubhex2hexaddr(hexlify(pubkey)))
 
@@ -275,10 +275,10 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 		self.fmt_data = mmgen_encrypt(self.fmt_data.encode('utf8'),desc,'')
 		self.ext += '.'+g.mmenc_ext
 
-	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False):
+	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
 		fn = u'{}.{}'.format(self.id_str,self.ext)
 		ask_tty = self.has_keys and not opt.quiet
-		write_data_to_file(fn,self.fmt_data,self.file_desc,ask_tty=ask_tty,binary=binary)
+		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
 
 	def idxs(self):
 		return [e.idx for e in self.data]
@@ -543,35 +543,27 @@ Record this checksum: it will be used to verify the password file in the future
 	pw_len      = None
 	pw_fmt      = None
 	pw_info     = {
-		'base58': { 'min_len': 8 , 'max_len': 36 ,'dfl_len': 20, 'desc': 'base-58 password' },
-		'base32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' }
+		'b58': { 'min_len': 8 , 'max_len': 36 ,'dfl_len': 20, 'desc': 'base-58 password' },
+		'b32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' }
 		}
 	cook_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
 
-	def __init__(self,
-				seed=None,
-				addr_idxs=None,
-				pw_id_str=None,
-				pw_len=None,
-				infile=None,
-				chksum_only=False,
-				pw_fmt=None,
-				chk_params_only=False
-				):
+	def __init__(self,infile=None,seed=None,pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
+				chksum_only=False,chk_params_only=False):
 
 		self.update_msgs()
 
 		if infile:
 			(self.seed_id,self.data) = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
-			for k in seed,addr_idxs: assert chk_params_only or k
+			for k in seed,pw_idxs: assert chk_params_only or k
 			for k in pw_id_str,pw_fmt: assert k
 			self.pw_id_str = MMGenPWIDString(pw_id_str)
 			self.set_pw_fmt(pw_fmt)
 			self.set_pw_len(pw_len)
 			if chk_params_only: return
 			self.seed_id = seed.sid
-			self.data = self.generate(seed,addr_idxs)
+			self.data = self.generate(seed,pw_idxs)
 
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''
@@ -618,13 +610,11 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
-		from mmgen.bitcoin import b58a
-		alpha,base = ((b58a,58),(b32a,32))[self.pw_fmt=='base32']
 		# we take least significant part
-		return ''.join(baseconv.fromhex(base,hex_sec,alpha,pad=self.pw_len))[-self.pw_len:]
+		return ''.join(baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len))[-self.pw_len:]
 
 	def chk_addr_or_pw(self,pw):
-		if not (is_b58_str,is_b32_str)[self.pw_fmt=='base32'](pw):
+		if not (is_b58_str,is_b32_str)[self.pw_fmt=='b32'](pw):
 			msg('Password is not a valid {} string'.format(self.pw_fmt))
 			return False
 		if len(pw) != self.pw_len:
@@ -634,10 +624,14 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def cook_seed(self,seed):
 		from mmgen.crypto import sha256_rounds
-		# Changing either pw_fmt or pw_len will cause a different, unrelated set of passwords to
-		# be generated: this is what we want
-		cseed = '{}{}:{}:{}'.format(seed,self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
-		dmsg('Cooked seed: {}\nSeed len: {}'.format(repr(cseed),len(cseed)))
+		# Changing either pw_fmt, pw_len or id_str will cause a different, unrelated set of
+		# passwords to be generated: this is what we want
+		fid_str = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
+		dmsg(u'Full ID string: {}'.format(fid_str.decode('utf8')))
+		# Original implementation was 'cseed = seed + fid_str'; hmac was not used
+		import hmac
+		cseed = hmac.new(seed,fid_str,sha256).digest()
+		dmsg('Seed: {}\nCooked seed: {}\nCooked seed len: {}'.format(hexlify(seed),hexlify(cseed),len(cseed)))
 		return sha256_rounds(cseed,self.cook_hash_rounds)
 
 

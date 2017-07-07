@@ -3,6 +3,10 @@ it still requires patience, and the user experience is less than optimal.
 You're urged to use the prebuilt [MMGenLive][20] USB image instead.  It's now
 the preferred way for all non-Linux users to run MMGen.***
 
+***Windows XP warning: MMGen is no longer officially supported on Windows XP due
+to incompatibilities with the Crypto.Random module.  The scripts run, but the
+security of your random numbers cannot be guaranteed.  Use at your own risk.***
+
 Install MMGen on Windows by completing the following three steps:
 
 >> 1. Install MinGW and MSYS ([WinXP][03]|[>=Win7][01]), if you haven't already;

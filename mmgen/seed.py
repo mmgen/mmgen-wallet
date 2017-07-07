@@ -117,7 +117,7 @@ class SeedSource(MMGenObject):
 		if hasattr(self,'seed'):
 			self._encrypt()
 			return
-		elif hasattr(self,'infile'):
+		elif hasattr(self,'infile') or not g.stdin_tty:
 			self._deformat_once()
 			self._decrypt_retry()
 		else:
@@ -135,7 +135,10 @@ class SeedSource(MMGenObject):
 			self.fmt_data = get_data_from_file(self.infile.name,self.desc,
 								binary=self.file_mode=='binary')
 		else:
-			self.fmt_data = get_data_from_user(self.desc)
+			self.fmt_data = self._get_data_from_user(self.desc)
+
+	def _get_data_from_user(self,desc):
+		return get_data_from_user(desc)
 
 	def _deformat_once(self):
 		self._get_data()
@@ -355,14 +358,64 @@ class Mnemonic (SeedSourceUnenc):
 	fmt_codes = 'mmwords','words','mnemonic','mnem','mn','m'
 	desc = 'mnemonic data'
 	ext = 'mmwords'
-	wl_checksums = {
-		'electrum': '5ca31424',
-		'tirosh':   '1a5faeff'
-	}
-	mn_base = 1626
-	wordlists = sorted(wl_checksums)
-	dfl_wordlist = 'electrum'
-	# dfl_wordlist = 'tirosh'
+	mn_lens = [i / 32 * 3 for i in g.seed_lens]
+	wl_id = 'electrum' # or 'tirosh'
+
+	def _get_data_from_user(self,desc):
+
+		if not g.stdin_tty:
+			return get_data_from_user(desc)
+
+		from mmgen.term import get_char_raw,get_char
+
+		def choose_mn_len():
+			prompt = 'Choose a mnemonic length: 1) 12 words, 2) 18 words, 3) 24 words: '
+			urange = [str(i+1) for i in range(len(self.mn_lens))]
+			while True:
+				r = get_char('\r'+prompt)
+				if r in urange: break
+			msg_r('\r' + ' '*len(prompt) + '\r')
+			return self.mn_lens[int(r)-1]
+
+		while True:
+			mn_len = choose_mn_len()
+			prompt = 'Mnemonic length of {} words chosen. OK?'.format(mn_len)
+			if keypress_confirm(prompt,default_yes=True,no_nl=True): break
+
+		m = 'Enter your {}-word mnemonic, hitting RETURN or SPACE after each word:'
+		msg(m.format(mn_len))
+
+		def get_word():
+			s = ''
+			while True:
+				ch = get_char_raw('')
+				if ch in '\b\x7f':
+					if s: s = s[:-1]
+				elif ch in '\n ':
+					if s: break
+				else: s += ch
+			return s
+
+		wl = baseconv.digits[self.wl_id]
+
+		def in_list(w):
+			from bisect import bisect_left
+			idx = bisect_left(wl,w)
+			return(True,False)[idx == len(wl) or w != wl[idx]]
+
+		words,i,p = [],0,('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
+		while len(words) < mn_len:
+			msg_r('{r}{s}{r}'.format(r='\r',s=' '*40))
+			if i == 1: time.sleep(0.1)
+			msg_r(p[i].format(len(words)+1))
+			s = get_word()
+			if in_list(s):
+				words.append(s); i = 0
+			else:
+				i = 1
+		msg('')
+		qmsg('Mnemonic successfully entered')
+		return ' '.join(words)
 
 	@staticmethod
 	def _mn2hex_pad(mn): return len(mn) * 8 / 3
@@ -370,52 +423,15 @@ class Mnemonic (SeedSourceUnenc):
 	@staticmethod
 	def _hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
 
-	@classmethod
-	def hex2mn(cls,hexnum,wordlist):
-		wl = cls.get_wordlist(wordlist)
-		return baseconv.fromhex(cls.mn_base,hexnum,wl,cls._hex2mn_pad(hexnum))
-
-	@classmethod
-	def mn2hex(cls,mn,wordlist):
-		wl = cls.get_wordlist(wordlist)
-		return baseconv.tohex(cls.mn_base,mn,wl,cls._mn2hex_pad(mn))
-
-	@classmethod
-	def get_wordlist(cls,wordlist=None):
-		wordlist = wordlist or cls.dfl_wordlist
-		if wordlist not in cls.wordlists:
-			die(1,"'%s': invalid wordlist.  Valid choices: '%s'" %
-				(wordlist,"' '".join(cls.wordlists)))
-
-		return __import__('mmgen.mn_'+wordlist,fromlist=['words']).words.split()
-
-	@classmethod
-	def check_wordlist(cls,wlname):
-
-		wl = cls.get_wordlist(wlname)
-		Msg('Wordlist: %s\nLength: %i words' % (capfirst(wlname),len(wl)))
-		new_chksum = sha256(' '.join(wl)).hexdigest()[:8]
-
-		if (sorted(wl) == wl):
-			Msg('List is sorted')
-		else:
-			die(3,'ERROR: List is not sorted!')
-
-		compare_chksums(
-			new_chksum,'generated checksum',
-			cls.wl_checksums[wlname],'saved checksum',
-			die_on_fail=True)
-		Msg('Checksum %s matches' % new_chksum)
-
 	def _format(self):
-		wl = self.get_wordlist()
-		seed_hex = self.seed.hexdata
-		mn = baseconv.fromhex(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
 
-		ret = baseconv.tohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		hexseed = self.seed.hexdata
+
+		mn  = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
+		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+
 		# Internal error, so just die on fail
-		compare_or_die(ret,'recomputed seed',
-						seed_hex,'original',e='Internal error')
+		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
 
 		self.ssdata.mnemonic = mn
 		self.fmt_data = ' '.join(mn) + '\n'
@@ -423,27 +439,28 @@ class Mnemonic (SeedSourceUnenc):
 	def _deformat(self):
 
 		mn = self.fmt_data.split()
-		wl = self.get_wordlist()
 
-		if len(mn) not in g.mn_lens:
+		if len(mn) not in self.mn_lens:
 			msg('Invalid mnemonic (%i words).  Allowed numbers of words: %s' %
-					(len(mn),', '.join([str(i) for i in g.mn_lens])))
+					(len(mn),', '.join([str(i) for i in self.mn_lens])))
 			return False
 
 		for n,w in enumerate(mn,1):
-			if w not in wl:
+			if w not in baseconv.digits[self.wl_id]:
 				msg('Invalid mnemonic: word #%s is not in the wordlist' % n)
 				return False
 
-		seed_hex = baseconv.tohex(self.mn_base,mn,wl,self._mn2hex_pad(mn))
+		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		ret     = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
 
-		ret = baseconv.fromhex(self.mn_base,seed_hex,wl,self._hex2mn_pad(seed_hex))
+		if len(hexseed) * 4 not in g.seed_lens:
+			msg('Invalid mnemonic (produces too large a number)')
+			return False
 
 		# Internal error, so just die
-		compare_or_die(' '.join(ret),'recomputed mnemonic',
-						' '.join(mn),'original',e='Internal error')
+		compare_or_die(' '.join(ret),'recomputed mnemonic',' '.join(mn),'original',e='Internal error')
 
-		self.seed = Seed(unhexlify(seed_hex))
+		self.seed = Seed(unhexlify(hexseed))
 		self.ssdata.mnemonic = mn
 
 		check_usr_seed_len(self.seed.length)
