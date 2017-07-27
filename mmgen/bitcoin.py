@@ -53,33 +53,40 @@ b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 from mmgen.globalvars import g
 
-def hash256(hexnum): # take hex, return hex - OP_HASH256
-	return sha256(sha256(unhexlify(hexnum)).digest()).hexdigest()
-
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib_new('ripemd160',sha256(unhexlify(hexnum)).digest()).hexdigest()
 
-pubhex2hexaddr = hash160
+def hash256(hexnum): # take hex, return hex - OP_HASH256
+	return sha256(sha256(unhexlify(hexnum)).digest()).hexdigest()
+
+# devdoc/ref_transactions.md:
+btc_ver_nums = {
+	'p2pkh': (('00','1'),('6f','mn')),
+	'p2sh':  (('05','3'),('c4','2'))
+}
+addr_pfxs = { 'mainnet': '13', 'testnet': 'mn2', 'regtest': 'mn2' }
+vnum_all = tuple([k for k,v in btc_ver_nums['p2pkh'] + btc_ver_nums['p2sh']])
 
 def hexaddr2addr(hexaddr,p2sh=False):
-	# devdoc/ref_transactions.md:
-	s = ('00','6f','05','c4')[g.testnet+(2*p2sh)] + hexaddr.strip()
+	s = vnum_all[g.testnet+(2*p2sh)] + hexaddr.strip()
 	lzeroes = (len(s) - len(s.lstrip('0'))) / 2
 	return ('1' * lzeroes) + _numtob58(int(s+hash256(s)[:8],16))
 
-def verify_addr(addr,verbose=False,return_hex=False):
+def verify_addr(addr,verbose=False,return_hex=False,return_type=False):
 	addr = addr.strip()
-	for vers_num,ldigit in ('00','1'),('05','3'),('6f','mn'),('c4','2'):
-		if addr[0] not in ldigit: continue
-		num = _b58tonum(addr)
-		if num == False: break
-		addr_hex = '{:050x}'.format(num)
-		if addr_hex[:2] != vers_num: continue
-		if hash256(addr_hex[:42])[:8] == addr_hex[42:]:
-			return addr_hex[2:42] if return_hex else True
-		else:
-			if verbose: Msg("Invalid checksum in address '%s'" % addr)
-			break
+
+	for k in ('p2pkh','p2sh'):
+		for ver_num,ldigit in btc_ver_nums[k]:
+			if addr[0] not in ldigit: continue
+			num = _b58tonum(addr)
+			if num == False: break
+			addr_hex = '{:050x}'.format(num)
+			if addr_hex[:2] != ver_num: continue
+			if hash256(addr_hex[:42])[:8] == addr_hex[42:]:
+				return addr_hex[2:42] if return_hex else k if return_type else True
+			else:
+				if verbose: Msg("Invalid checksum in address '%s'" % addr)
+				break
 
 	if verbose: Msg("Invalid address '%s'" % addr)
 	return False
@@ -97,7 +104,7 @@ def _b58tonum(b58num):
 	b58num = b58num.strip()
 	for i in b58num:
 		if not i in b58a: return False
-	return sum([b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1]))])
+	return sum(b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
 
 # The following are MMGen internal (non-Bitcoin) b58 functions
 
@@ -146,9 +153,11 @@ def b58decode_pad(s):
 
 # Compressed address support:
 
+def wif_is_compressed(wif): return wif[0] != ('5','9')[g.testnet]
+
 def wif2hex(wif):
 	wif = wif.strip()
-	compressed = wif[0] != ('5','9')[g.testnet]
+	compressed = wif_is_compressed(wif)
 	num = _b58tonum(wif)
 	if num == False: return False
 	key = '{:x}'.format(num)
@@ -178,5 +187,16 @@ def privnum2pubhex(numpriv,compressed=False):
 	else:
 		return '04'+pubkey
 
-def privnum2addr(numpriv,compressed=False):
-	return hexaddr2addr(pubhex2hexaddr(privnum2pubhex(numpriv,compressed)))
+def privnum2addr(numpriv,compressed=False,segwit=False): # used only by tool and testsuite
+	pubhex = privnum2pubhex(numpriv,compressed)
+	return pubhex2segwitaddr(pubhex) if segwit else hexaddr2addr(hash160(pubhex))
+
+# Segwit:
+def pubhex2redeem_script(pubhex):
+	# https://bitcoincore.org/en/segwit_wallet_dev/
+	# The P2SH redeemScript is always 22 bytes. It starts with a OP_0, followed
+	# by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
+	return '0014' + hash160(pubhex)
+
+def pubhex2segwitaddr(pubhex):
+	return hexaddr2addr(hash160(pubhex2redeem_script(pubhex)),p2sh=True)

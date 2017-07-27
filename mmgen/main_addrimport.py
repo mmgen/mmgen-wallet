@@ -24,6 +24,7 @@ import time
 
 from mmgen.common import *
 from mmgen.addr import AddrList,KeyAddrList
+from mmgen.obj import TwLabel
 
 # In batch mode, bitcoind just rescans each address separately anyway, so make
 # --batch and --rescan incompatible.
@@ -35,6 +36,7 @@ opts_data = {
 	'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
+-a, --address=a    Import the single Bitcoin address 'a'
 -b, --batch        Import all addresses in one RPC call.
 -l, --addrlist     Address source is a flat list of (non-MMGen) Bitcoin addresses
 -k, --keyaddr-file Address source is a key-address file
@@ -53,29 +55,46 @@ The --batch and --rescan options cannot be used together.
 
 cmd_args = opts.init(opts_data)
 
+def import_mmgen_list(infile):
+	al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
+	if al.al_id.mmtype == 'S':
+		from mmgen.tx import segwit_is_active
+		if not segwit_is_active():
+			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
+	return al
+
+def import_flat_list(lines):
+	al = AddrList(addrlist=lines)
+	from mmgen.bitcoin import verify_addr
+	qmsg_r('Validating addresses...')
+	for e in al.data:
+		if not verify_addr(e.addr,verbose=True):
+			die(2,'\n%s: invalid address' % e.addr)
+		if e.addr.addr_fmt == 'p2sh':
+			fs = "\n'{}':\n  Non-{} P2SH addresses may not be imported into the tracking wallet"
+			rdie(2,fs.format(e.addr,g.proj_name))
+	return al
+
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
 	if opt.addrlist:
 		lines = get_lines_from_file(
 			infile,'non-{pnm} addresses'.format(pnm=g.proj_name),trim_comments=True)
-		ai = AddrList(addrlist=lines)
+		al = import_flat_list(lines)
 	else:
-		ai = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
+		al = import_mmgen_list(infile)
+elif len(cmd_args) == 0 and opt.address:
+	al = import_flat_list([opt.address])
+	infile = 'command line'
 else:
 	die(1,"""
-You must specify an {pnm} address file (or a list of non-{pnm} addresses
-with the '--addrlist' option)
+You must specify an {pnm} address file, a single address, or a list of
+non-{pnm} addresses with the '--addrlist' option)
 """.strip().format(pnm=g.proj_name))
 
-from mmgen.bitcoin import verify_addr
-qmsg_r('Validating addresses...')
-for e in ai.data:
-	if not verify_addr(e.addr,verbose=True):
-		die(2,'%s: invalid address' % e.addr)
-
-m = (' from Seed ID %s' % ai.seed_id) if ai.seed_id else ''
-qmsg('OK. %s addresses%s' % (ai.num_addrs,m))
+m = ' from Seed ID {}'.format(al.al_id.sid) if hasattr(al.al_id,'sid') else ''
+qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
 if not opt.test:
 	c = bitcoin_connection()
@@ -104,8 +123,8 @@ def import_address(addr,label,rescan):
 		global err_flag
 		err_flag = True
 
-w_n_of_m = len(str(ai.num_addrs)) * 2 + 2
-w_mmid   = '' if opt.addrlist else len(str(max(ai.idxs()))) + 12
+w_n_of_m = len(str(al.num_addrs)) * 2 + 2
+w_mmid   = '' if opt.addrlist else len(str(max(al.idxs()))) + 12
 
 if opt.rescan:
 	import threading
@@ -113,18 +132,25 @@ if opt.rescan:
 else:
 	msg_fmt = '\r%-{}s %-34s %s'.format(w_n_of_m, w_mmid)
 
-msg("Importing %s addresses from '%s'%s" %
-		(len(ai.data),infile,('',' (batch mode)')[bool(opt.batch)]))
+msg("Importing {} address{} from {}{}".format(
+		len(al.data), suf(al.data,'es'), infile,
+		('',' (batch mode)')[bool(opt.batch)]
+	))
+
+if not al.is_for_current_chain():
+	die(2,"Address{} not compatible with {} chain!".format((' list','')[bool(opt.address)],g.chain))
 
 arg_list = []
-for n,e in enumerate(ai.data):
+for n,e in enumerate(al.data):
 	if e.idx:
-		label = '%s:%s' % (ai.seed_id,e.idx)
+		label = '{}:{}'.format(al.al_id,e.idx)
 		if e.label: label += ' ' + e.label
 		m = label
 	else:
 		label = 'btc:{}'.format(e.addr)
 		m = 'non-'+g.proj_name
+
+	label = TwLabel(label)
 
 	if opt.batch:
 		arg_list.append((e.addr,label,False))
@@ -138,7 +164,7 @@ for n,e in enumerate(ai.data):
 		while True:
 			if t.is_alive():
 				elapsed = int(time.time() - start)
-				count = '%s/%s:' % (n+1, ai.num_addrs)
+				count = '%s/%s:' % (n+1, al.num_addrs)
 				msg_r(msg_fmt % (secs_to_hms(elapsed),count,e.addr,'(%s)' % m))
 				time.sleep(1)
 			else:
@@ -147,7 +173,7 @@ for n,e in enumerate(ai.data):
 				break
 	else:
 		import_address(e.addr,label,False)
-		count = '%s/%s:' % (n+1, ai.num_addrs)
+		count = '%s/%s:' % (n+1, al.num_addrs)
 		msg_r(msg_fmt % (count, e.addr, '(%s)' % m))
 		if err_flag: die(2,'\nImport failed')
 		msg(' - OK')

@@ -32,11 +32,15 @@ class Filename(MMGenObject):
 		self.basename = os.path.basename(fn)
 		self.ext      = get_extension(fn)
 		self.ftype    = None # the file's associated class
+		self.mtime    = None
+		self.ctime    = None
+		self.atime    = None
 
 		from mmgen.seed import SeedSource
+		from mmgen.tx import MMGenTX
 		if ftype:
 			if type(ftype) == type:
-				if issubclass(ftype,SeedSource):
+				if issubclass(ftype,SeedSource) or issubclass(ftype,MMGenTX):
 					self.ftype = ftype
 				# elif: # other MMGen file types
 				else:
@@ -44,6 +48,7 @@ class Filename(MMGenObject):
 			else:
 				die(3,"'%s': not a class" % ftype)
 		else:
+			# TODO: other file types
 			self.ftype = SeedSource.ext_to_type(self.ext)
 			if not self.ftype:
 				die(3,"'%s': not a recognized extension for SeedSource" % self.ext)
@@ -64,6 +69,23 @@ class Filename(MMGenObject):
 				os.close(fd)
 		else:
 			self.size = os.stat(fn).st_size
+			self.mtime = os.stat(fn).st_mtime
+			self.ctime = os.stat(fn).st_ctime
+			self.atime = os.stat(fn).st_atime
+
+class MMGenFileList(list,MMGenObject):
+
+	def __init__(self,fns,ftype):
+		flist = [Filename(fn,ftype) for fn in fns]
+		return list.__init__(self,flist)
+
+	def names(self):
+		return [f.name for f in self]
+
+	def sort_by_age(self,key='mtime',reverse=False):
+		if key not in ('atime','ctime','mtime'):
+			die(1,"'{}': illegal sort key".format(key))
+		self.sort(key=lambda a: getattr(a,key),reverse=reverse)
 
 def find_files_in_dir(ftype,fdir,no_dups=False):
 	if type(ftype) != type:

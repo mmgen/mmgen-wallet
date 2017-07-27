@@ -23,31 +23,17 @@ addr.py:  Address generation/display routines for the MMGen suite
 from hashlib import sha256,sha512
 from binascii import hexlify,unhexlify
 from mmgen.common import *
-from mmgen.bitcoin import privnum2addr,hex2wif,wif2hex
+from mmgen.bitcoin import hex2wif,wif2hex,wif_is_compressed
 from mmgen.obj import *
 from mmgen.tx import *
 from mmgen.tw import *
 
 pnm = g.proj_name
 
-def _test_for_keyconv(silent=False):
-	no_keyconv_errmsg = """
-Executable '{kconv}' unavailable.  Please install '{kconv}' from the {vgen}
-package on your system or specify the secp256k1 library.
-""".format(kconv=g.keyconv_exec, vgen='vanitygen')
-	from subprocess import check_output,STDOUT
-	try:
-		check_output([g.keyconv_exec, '-G'],stderr=STDOUT)
-	except:
-		if not silent: msg(no_keyconv_errmsg.strip())
-		return False
-	return True
-
 def _test_for_secp256k1(silent=False):
 	no_secp256k1_errmsg = """
-secp256k1 library unavailable.  Will use '{kconv}', or failing that, the (slow)
-native Python ECDSA library for address generation.
-""".format(kconv=g.keyconv_exec)
+secp256k1 library unavailable.  Using (slow) native Python ECDSA library for address generation.
+"""
 	try:
 		from mmgen.secp256k1 import priv2pub
 		assert priv2pub(os.urandom(32),1)
@@ -56,58 +42,68 @@ native Python ECDSA library for address generation.
 		return False
 	return True
 
-def _wif2addr_python(wif):
+def _pubhex2addr(pubhex,mmtype):
+	if mmtype == 'L':
+		from mmgen.bitcoin import hexaddr2addr,hash160
+		return hexaddr2addr(hash160(pubhex))
+	elif mmtype == 'S':
+		from mmgen.bitcoin import pubhex2segwitaddr
+		return pubhex2segwitaddr(pubhex)
+	else:
+		die(2,"'{}': mmtype unrecognized".format(mmtype))
+
+def _privhex2addr_python(privhex,compressed,mmtype):
+	assert compressed or mmtype != 'S'
+	from mmgen.bitcoin import privnum2pubhex
+	pubhex = privnum2pubhex(int(privhex,16),compressed=compressed)
+	return _pubhex2addr(pubhex,mmtype=mmtype)
+
+def _privhex2addr_secp256k1(privhex,compressed,mmtype):
+	assert compressed or mmtype != 'S'
+	from mmgen.secp256k1 import priv2pub
+	pubhex = hexlify(priv2pub(unhexlify(privhex),int(compressed)))
+	return _pubhex2addr(pubhex,mmtype=mmtype)
+
+def _wif2addr_python(wif,mmtype):
 	privhex = wif2hex(wif)
 	if not privhex: return False
-	return privnum2addr(int(privhex,16),wif[0] != ('5','9')[g.testnet])
+	return _privhex2addr_python(privhex,wif_is_compressed(wif),mmtype=mmtype)
 
-def _wif2addr_keyconv(wif):
-	if wif[0] == ('5','9')[g.testnet]:
-		from subprocess import check_output
-		return check_output(['keyconv', wif]).split()[1]
-	else:
-		return _wif2addr_python(wif)
+def _wif2addr_secp256k1(wif,mmtype):
+	privhex = wif2hex(wif)
+	if not privhex: return False
+	return _privhex2addr_secp256k1(privhex,wif_is_compressed(wif),mmtype=mmtype)
 
-def _wif2addr_secp256k1(wif):
-	return _privhex2addr_secp256k1(wif2hex(wif),wif[0] != ('5','9')[g.testnet])
+def keygen_wif2pubhex(wif,selector):
+	privhex = wif2hex(wif)
+	if not privhex: return False
+	if selector == 1:
+		from mmgen.secp256k1 import priv2pub
+		return hexlify(priv2pub(unhexlify(privhex),int(wif_is_compressed(wif))))
+	elif selector == 0:
+		from mmgen.bitcoin import privnum2pubhex
+		return privnum2pubhex(int(privhex,16),compressed=wif_is_compressed(wif))
 
-def _privhex2addr_python(privhex,compressed=False):
-	return privnum2addr(int(privhex,16),compressed)
-
-def _privhex2addr_keyconv(privhex,compressed=False):
-	if compressed:
-		return privnum2addr(int(privhex,16),compressed)
-	else:
-		from subprocess import check_output
-		return check_output(['keyconv', hex2wif(privhex,compressed=False)]).split()[1]
-
-def _privhex2addr_secp256k1(privhex,compressed=False):
-	from mmgen.secp256k1 import priv2pub
-	from mmgen.bitcoin import hexaddr2addr,pubhex2hexaddr
-	pubkey = priv2pub(unhexlify(privhex),int(compressed))
-	return hexaddr2addr(pubhex2hexaddr(hexlify(pubkey)))
-
-def _keygen_selector(generator=None):
-	if generator:
-		if generator == 3 and _test_for_secp256k1():             return 2
-		elif generator in (2,3) and _test_for_keyconv():         return 1
-	else:
-		if opt.key_generator == 3 and _test_for_secp256k1():     return 2
-		elif opt.key_generator in (2,3) and _test_for_keyconv(): return 1
+def keygen_selector(generator=None):
+	if _test_for_secp256k1() and generator != 1:
+		if opt.key_generator != 1:
+			return 1
 	msg('Using (slow) native Python ECDSA library for address generation')
 	return 0
 
 def get_wif2addr_f(generator=None):
-	gen = _keygen_selector(generator=generator)
-	return (_wif2addr_python,_wif2addr_keyconv,_wif2addr_secp256k1)[gen]
+	gen = keygen_selector(generator=generator)
+	return (_wif2addr_python,_wif2addr_secp256k1)[gen]
 
 def get_privhex2addr_f(generator=None):
-	gen = _keygen_selector(generator=generator)
-	return (_privhex2addr_python,_privhex2addr_keyconv,_privhex2addr_secp256k1)[gen]
+	gen = keygen_selector(generator=generator)
+	return (_privhex2addr_python,_privhex2addr_secp256k1)[gen]
+
 
 class AddrListEntry(MMGenListItem):
 	attrs = 'idx','addr','label','wif','sec'
 	idx   = MMGenListItemAttr('idx','AddrIdx')
+	wif   = MMGenListItemAttr('wif','WifKey')
 
 class AddrListChksum(str,Hilite):
 	color = 'pink'
@@ -119,7 +115,7 @@ class AddrListChksum(str,Hilite):
 #		print '[{}]'.format(' '.join(lines))
 		return str.__new__(cls,make_chksum_N(' '.join(lines), nchars=16, sep=True))
 
-class AddrListID(unicode,Hilite):
+class AddrListIDStr(unicode,Hilite):
 	color = 'green'
 	trunc_ok = False
 	def __new__(cls,addrlist,fmt_str=None):
@@ -138,7 +134,15 @@ class AddrListID(unicode,Hilite):
 					ret += ',', i
 				prev = i
 			s = ''.join([unicode(i) for i in ret])
-		return unicode.__new__(cls,fmt_str.format(s) if fmt_str else '{}[{}]'.format(addrlist.seed_id,s))
+
+		if fmt_str:
+			ret = fmt_str.format(s)
+		elif addrlist.al_id.mmtype == 'L':
+			ret = '{}[{}]'.format(addrlist.al_id.sid,s)
+		else:
+			ret = '{}-{}[{}]'.format(addrlist.al_id.sid,addrlist.al_id.mmtype,s)
+
+		return unicode.__new__(cls,ret)
 
 class AddrList(MMGenObject): # Address info for a single seed ID
 	msgs = {
@@ -150,7 +154,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 # A text label of {n} characters or less may be added to the right of each
 # address, and it will be appended to the bitcoind wallet label upon import.
 # The label may contain any printable ASCII symbol.
-""".strip().format(n=MMGenAddrLabel.max_len,pnm=pnm),
+""".strip().format(n=TwComment.max_len,pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the address file in the future
 """.strip(),
@@ -169,40 +173,46 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 	gen_keys = False
 	has_keys = False
 	ext      = 'addrs'
+	dfl_mmtype = MMGenAddrType('L')
+	cook_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
 
-	def __init__(self,addrfile='',sid='',adata=[],seed='',addr_idxs='',src='',
-					addrlist='',keylist='',do_chksum=True,chksum_only=False):
+	def __init__(self,addrfile='',al_id='',adata=[],seed='',addr_idxs='',src='',
+					addrlist='',keylist='',mmtype=None,do_chksum=True,chksum_only=False):
 
 		self.update_msgs()
+		mmtype = mmtype or self.dfl_mmtype
+		assert mmtype in MMGenAddrType.mmtypes
 
-		if addrfile:             # data from MMGen address file
-			(sid,adata) = self.parse_file(addrfile)
-		elif sid and adata:      # data from tracking wallet
+		if seed and addr_idxs:   # data from seed + idxs
+			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
+			adata = self.generate(seed,addr_idxs,compressed=(mmtype=='S'))
+		elif addrfile:           # data from MMGen address file
+			adata = self.parse_file(addrfile) # sets self.al_id
+		elif al_id and adata:    # data from tracking wallet
+			self.al_id = al_id
 			do_chksum = False
-		elif seed and addr_idxs: # data from seed + idxs
-			sid,src = seed.sid,'gen'
-			adata = self.generate(seed,addr_idxs)
 		elif addrlist:           # data from flat address list
-			sid = None
-			adata = [AddrListEntry(addr=a) for a in set(addrlist)]
+			self.al_id = None
+			adata = AddrListList([AddrListEntry(addr=a) for a in set(addrlist)])
 		elif keylist:            # data from flat key list
-			sid,do_chksum = None,False
-			adata = [AddrListEntry(wif=k) for k in set(keylist)]
+			self.al_id = None
+			adata = AddrListList([AddrListEntry(wif=k) for k in set(keylist)])
 		elif seed or addr_idxs:
 			die(3,'Must specify both seed and addr indexes')
-		elif sid or adata:
-			die(3,'Must specify both seed_id and adata')
+		elif al_id or adata:
+			die(3,'Must specify both al_id and adata')
 		else:
 			die(3,'Incorrect arguments for %s' % type(self).__name__)
 
-		# sid,adata now set
-		self.seed_id = sid
+		# al_id,adata now set
 		self.data = adata
 		self.num_addrs = len(adata)
 		self.fmt_data = ''
-		self.id_str = None
 		self.chksum = None
-		self.id_str = AddrListID(self)
+
+		if self.al_id == None: return
+
+		self.id_str = AddrListIDStr(self)
 
 		if type(self) == KeyList: return
 
@@ -221,17 +231,17 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 				if k not in self.msgs:
 					self.msgs[k] = AddrList.msgs[k]
 
-	def generate(self,seed,addrnums):
+	def generate(self,seed,addrnums,compressed):
 		assert type(addrnums) is AddrIdxList
-		self.seed_id = SeedID(seed=seed)
-		seed = seed.get_data()
+		assert compressed in (True,False,None)
 
+		seed = seed.get_data()
 		seed = self.cook_seed(seed)
 
 		if self.gen_addrs:
-			privhex2addr_f = get_privhex2addr_f()
+			privhex2addr_f = get_privhex2addr_f() # choose internal ECDSA or secp256k1 generator
 
-		t_addrs,num,pos,out = len(addrnums),0,0,[]
+		t_addrs,num,pos,out = len(addrnums),0,0,AddrListList()
 
 		while pos != t_addrs:
 			seed = sha512(seed).digest()
@@ -250,10 +260,10 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 			sec = sha256(sha256(seed).digest()).hexdigest()
 
 			if self.gen_addrs:
-				e.addr = privhex2addr_f(sec,compressed=False)
+				e.addr = privhex2addr_f(sec,compressed=compressed,mmtype=self.al_id.mmtype)
 
 			if self.gen_keys:
-				e.wif = hex2wif(sec,compressed=False)
+				e.wif = hex2wif(sec,compressed=compressed)
 				if opt.b16: e.sec = sec
 
 			if self.gen_passwds:
@@ -261,14 +271,31 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 				dmsg('Key {:>03}: {}'.format(pos,sec))
 
 			out.append(e)
+			if g.debug: print 'generate():\n', e.pformat()
 
 		qmsg('\r%s: %s %s%s generated%s' % (
-				self.seed_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
+				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
 		return out
 
-	def chk_addr_or_pw(self,addr): return is_btc_addr(addr)
+	def is_mainnet(self):
+		return self.data[0].addr.is_mainnet()
 
-	def cook_seed(self,seed): return seed
+	def is_for_current_chain(self):
+		return self.data[0].addr.is_for_current_chain()
+
+	def chk_addr_or_pw(self,addr):
+		return {'L':'p2pkh','S':'p2sh'}[self.al_id.mmtype] == is_btc_addr(addr).addr_fmt
+
+	def cook_seed(self,seed):
+		if self.al_id.mmtype == 'L':
+			return seed
+		else:
+			from mmgen.crypto import sha256_rounds
+			import hmac
+			key = self.al_id.mmtype.name
+			cseed = hmac.new(seed,key,sha256).digest()
+			dmsg('Seed:  {}\nKey: {}\nCseed: {}\nCseed len: {}'.format(hexlify(seed),key,hexlify(cseed),len(cseed)))
+			return sha256_rounds(cseed,self.cook_hash_rounds)
 
 	def encrypt(self,desc='new key list'):
 		from mmgen.crypto import mmgen_encrypt
@@ -284,7 +311,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 		return [e.idx for e in self.data]
 
 	def addrs(self):
-		return ['%s:%s'%(self.seed_id,e.idx) for e in self.data]
+		return ['%s:%s'%(self.al_id.sid,e.idx) for e in self.data]
 
 	def addrpairs(self):
 		return [(e.idx,e.addr) for e in self.data]
@@ -313,21 +340,18 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 				e.label = comment
 
 	def make_reverse_dict(self,btcaddrs):
-		d,b = {},btcaddrs
+		d,b = MMGenDict(),btcaddrs
 		for e in self.data:
 			try:
-				d[b[b.index(e.addr)]] = ('%s:%s'%(self.seed_id,e.idx),e.label)
+				d[b[b.index(e.addr)]] = MMGenID('{}:{}'.format(self.al_id,e.idx)),e.label
 			except: pass
 		return d
 
 	def flat_list(self):
 		class AddrListFlatEntry(AddrListEntry):
 			attrs = 'mmid','addr','wif'
-		return [AddrListFlatEntry(
-					mmid='{}:{}'.format(self.seed_id,e.idx),
-					addr=e.addr,
-					wif=e.wif)
-						for e in self.data]
+		return [AddrListFlatEntry(mmid='{}:{}'.format(self.al_id,e.idx),addr=e.addr,wif=e.wif)
+			for e in self.data]
 
 	def remove_dups(self,cmplist,key='wif'):
 		pop_list = []
@@ -338,7 +362,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 					pop_list.append(n)
 		for n in reversed(pop_list): self.data.pop(n)
 		if pop_list:
-			vmsg(self.msgs['removed_dups'] % (len(pop_list),suf(removed,'k')))
+			vmsg(self.msgs['removed_dups'] % (len(pop_list),suf(removed,'s')))
 
 	def add_wifs(self,al_key):
 		if not al_key: return
@@ -355,13 +379,15 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 
 	def get_addrs(self): return self.get('addr')
 	def get_wifs(self):  return self.get('wif')
+	def get_addr_wif_pairs(self):
+		return [(d.addr,d.wif) for d in self.data if hasattr(d,'wif')]
 
-	def generate_addrs(self):
+	def generate_addrs_from_keylist(self):
 		wif2addr_f = get_wif2addr_f()
 		d = self.data
 		for n,e in enumerate(d,1):
 			qmsg_r('\rGenerating addresses from keylist: %s/%s' % (n,len(d)))
-			e.addr = wif2addr_f(e.wif)
+			e.addr = wif2addr_f(e.wif,mmtype='L') # 'L' == p2pkh
 		qmsg('\rGenerated addresses from keylist: %s/%s ' % (n,len(d)))
 
 	def format(self,enable_comments=False):
@@ -385,9 +411,11 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 
 		if type(self) == PasswordList:
 			out.append(u'{} {} {}:{} {{'.format(
-				self.seed_id,self.pw_id_str,self.pw_fmt,self.pw_len))
+				self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len))
+		elif self.al_id.mmtype == 'L':
+			out.append('{} {{'.format(self.al_id.sid))
 		else:
-			out.append('{} {{'.format(self.seed_id))
+			out.append('{} {} {{'.format(self.al_id.sid,MMGenAddrType.mmtypes[self.al_id.mmtype].upper()))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
@@ -410,7 +438,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 		if self.has_keys and len(lines) % 2:
 			return 'Key-address file has odd number of lines'
 
-		ret = []
+		ret = AddrListList()
 
 		while lines:
 			l = lines.pop(0)
@@ -444,7 +472,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 			llen = len(ret)
 			for n,e in enumerate(ret):
 				msg_r('\rVerifying keys %s/%s' % (n+1,llen))
-				if e.addr != wif2addr_f(e.wif):
+				if e.addr != wif2addr_f(e.wif,mmtype=self.al_id.mmtype):
 					return "Key doesn't match address!\n  %s\n  %s" % (e.wif,e.addr)
 			msg(' - done')
 
@@ -463,29 +491,44 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 			return do_error("Too few lines in address file (%s)" % len(lines))
 
 		ls = lines[0].split()
-		ls_len = (2,4)[type(self)==PasswordList]
-		if len(ls) != ls_len:
+		if not 1 < len(ls) < 5:
 			return do_error("Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0]))
-		if ls[-1] != '{':
+		if ls.pop() != '{':
 			return do_error("'%s': invalid first line" % ls)
 		if lines[-1] != '}':
 			return do_error("'%s': invalid last line" % lines[-1])
-		if not is_mmgen_seed_id(ls[0]):
+
+		sid = ls.pop(0)
+		if not is_mmgen_seed_id(sid):
 			return do_error("'%s': invalid Seed ID" % ls[0])
 
-		if type(self) == PasswordList:
-			self.pw_id_str = MMGenPWIDString(ls[1])
-			ss = ls[2].split(':')
+		if type(self) == PasswordList and len(ls) == 2:
+			ss = ls.pop().split(':')
 			if len(ss) != 2:
 				return do_error("'%s': invalid password length specifier (must contain colon)" % ls[2])
 			self.set_pw_fmt(ss[0])
 			self.set_pw_len(ss[1])
+			self.pw_id_str = MMGenPWIDString(ls.pop())
+			mmtype = MMGenPasswordType('P')
+		elif len(ls) == 1:
+			mmtype = ls.pop().lower()
+			try:
+				mmtype = MMGenAddrType(mmtype)
+			except:
+				return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
+					mmtype,' '.join(MMGenAddrType.mmtypes.values()).upper()))
+		elif len(ls) == 0:
+			mmtype = MMGenAddrType('L')
+		else:
+			return do_error(u"Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0]))
 
-		ret = self.parse_file_body(lines[1:-1])
-		if type(ret) != list:
-			return do_error(ret)
+		self.al_id = AddrListID(SeedID(sid=sid),mmtype)
 
-		return ls[0],ret
+		data = self.parse_file_body(lines[1:-1])
+		if not issubclass(type(data),list):
+			return do_error(data)
+
+		return data
 
 class KeyAddrList(AddrList):
 	data_desc = 'key-address'
@@ -525,7 +568,7 @@ class PasswordList(AddrList):
 # A text label of {n} characters or less may be added to the right of each
 # password.  The label may contain any printable ASCII symbol.
 #
-""".strip().format(n=MMGenAddrLabel.max_len,pnm=pnm),
+""".strip().format(n=TwComment.max_len,pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the password file in the future
 """.strip()
@@ -546,7 +589,6 @@ Record this checksum: it will be used to verify the password file in the future
 		'b58': { 'min_len': 8 , 'max_len': 36 ,'dfl_len': 20, 'desc': 'base-58 password' },
 		'b32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' }
 		}
-	cook_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
 
 	def __init__(self,infile=None,seed=None,pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
 				chksum_only=False,chk_params_only=False):
@@ -554,7 +596,7 @@ Record this checksum: it will be used to verify the password file in the future
 		self.update_msgs()
 
 		if infile:
-			(self.seed_id,self.data) = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
+			self.data = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
 			for k in seed,pw_idxs: assert chk_params_only or k
 			for k in pw_id_str,pw_fmt: assert k
@@ -562,8 +604,8 @@ Record this checksum: it will be used to verify the password file in the future
 			self.set_pw_fmt(pw_fmt)
 			self.set_pw_len(pw_len)
 			if chk_params_only: return
-			self.seed_id = seed.sid
-			self.data = self.generate(seed,pw_idxs)
+			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
+			self.data = self.generate(seed,pw_idxs,compressed=None)
 
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''
@@ -572,8 +614,8 @@ Record this checksum: it will be used to verify the password file in the future
 		if chksum_only:
 			Msg(self.chksum)
 		else:
-			self.id_str = AddrListID(self,fmt_str=u'{}-{}-{}-{}[{{}}]'.format(
-				self.seed_id,self.pw_id_str,self.pw_fmt,self.pw_len))
+			fs = u'{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+			self.id_str = AddrListIDStr(self,fs)
 			qmsg(u'Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
 			qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
@@ -626,6 +668,7 @@ Record this checksum: it will be used to verify the password file in the future
 		from mmgen.crypto import sha256_rounds
 		# Changing either pw_fmt, pw_len or id_str will cause a different, unrelated set of
 		# passwords to be generated: this is what we want
+		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
 		fid_str = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
 		dmsg(u'Full ID string: {}'.format(fid_str.decode('utf8')))
 		# Original implementation was 'cseed = seed + fid_str'; hmac was not used
@@ -646,54 +689,58 @@ re-import your addresses.
 	}
 
 	def __init__(self,source=None):
-		self.sids = {}
+		self.al_ids = {}
 		if source == 'tw': self.add_tw_data()
 
 	def seed_ids(self):
-		return self.sids.keys()
+		return self.al_ids.keys()
 
-	def addrlist(self,sid):
-		# TODO: Validate sid
-		if sid in self.sids:
-			return self.sids[sid]
+	def addrlist(self,al_id):
+		# TODO: Validate al_id
+		if al_id in self.al_ids:
+			return self.al_ids[al_id]
 
 	def mmaddr2btcaddr(self,mmaddr):
+		al_id,idx = MMGenID(mmaddr).rsplit(':',1)
 		btcaddr = ''
-		sid,idx = mmaddr.split(':')
-		if sid in self.seed_ids():
-			btcaddr = self.addrlist(sid).btcaddr(int(idx))
-		return btcaddr
+		if al_id in self.al_ids:
+			btcaddr = self.addrlist(al_id).btcaddr(int(idx))
+		return btcaddr or None
+
+	def btcaddr2mmaddr(self,btcaddr):
+		d = self.make_reverse_dict([btcaddr])
+		return (d.values()[0][0]) if d else None
 
 	def add_tw_data(self):
-		vmsg_r('Getting address data from tracking wallet...')
+		vmsg('Getting address data from tracking wallet')
 		c = bitcoin_connection()
 		accts = c.listaccounts(0,True)
 		data,i = {},0
 		alists = c.getaddressesbyaccount([[k] for k in accts],batch=True)
 		for acct,addrlist in zip(accts,alists):
-			maddr,label = parse_tw_acct_label(acct)
-			if maddr:
+			l = TwLabel(acct,on_fail='silent')
+			if l and l.mmid.type == 'mmgen':
+				obj = l.mmid.obj
 				i += 1
 				if len(addrlist) != 1:
 					die(2,self.msgs['too_many_acct_addresses'] % acct)
-				seed_id,idx = maddr.split(':')
-				if seed_id not in data:
-					data[seed_id] = []
-				data[seed_id].append(AddrListEntry(idx=idx,addr=addrlist[0],label=label))
-		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(
-				n=i,pnm=pnm,m=len(accts)))
-		for sid in data:
-			self.add(AddrList(sid=sid,adata=data[sid]))
+				al_id = AddrListID(SeedID(sid=obj.sid),MMGenAddrType(obj.mmtype))
+				if al_id not in data:
+					data[al_id] = []
+				data[al_id].append(AddrListEntry(idx=obj.idx,addr=addrlist[0],label=l.comment))
+		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(accts)))
+		for al_id in data:
+			self.add(AddrList(al_id=al_id,adata=AddrListList(sorted(data[al_id],key=lambda a: a.idx))))
 
 	def add(self,addrlist):
 		if type(addrlist) == AddrList:
-			self.sids[addrlist.seed_id] = addrlist
+			self.al_ids[addrlist.al_id] = addrlist
 			return True
 		else:
 			raise TypeError, 'Error: object %s is not of type AddrList' % repr(addrlist)
 
 	def make_reverse_dict(self,btcaddrs):
-		d = {}
-		for sid in self.sids:
-			d.update(self.sids[sid].make_reverse_dict(btcaddrs))
+		d = MMGenDict()
+		for al_id in self.al_ids:
+			d.update(self.al_ids[al_id].make_reverse_dict(btcaddrs))
 		return d

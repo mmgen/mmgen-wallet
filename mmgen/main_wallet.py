@@ -30,8 +30,6 @@ usage = '[opts] [infile]'
 nargs = 1
 iaction = 'convert'
 oaction = 'convert'
-bw_note = opts.bw_note
-pw_note = opts.pw_note
 
 invoked_as = 'passchg' if g.prog_name == 'mmgen-passchg' else g.prog_name.partition('-wallet')[2]
 
@@ -99,14 +97,14 @@ opts_data = {
 	),
 	'notes': """
 
-{pw_note}{bw_note}
+{pwn}{bwn}
 
 FMT CODES:
   {f}
 """.format(
 	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-	pw_note=pw_note,
-	bw_note=('','\n\n' + bw_note)[bool(bw_note)]
+	pwn=pw_note,
+	bwn=('','\n\n' + bw_note)[bool(bw_note)]
 	)
 }
 
@@ -125,12 +123,11 @@ if invoked_as in ('conv','passchg'):
 	msg(green('Processing input wallet')+dw_msg)
 
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
-
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
 	vmsg('Wallet label: {}'.format(lbl))
 	# TODO: display creation date
-	sys.exit()
+	sys.exit(0)
 
 if invoked_as in ('conv','passchg'):
 	msg(green('Processing output wallet'))
@@ -141,7 +138,7 @@ if invoked_as == 'gen':
 	qmsg("This wallet's Seed ID: %s" % ss_out.seed.sid.hl())
 
 if invoked_as == 'passchg':
-	if not (opt.force_update or [k for k in 'passwd','hash_preset','label'
+	if not (opt.force_update or [k for k in ('passwd','hash_preset','label')
 		if getattr(ss_out.ssdata,k) != getattr(ss_in.ssdata,k)]):
 		die(1,'Password, hash preset and label are unchanged.  Taking no action')
 

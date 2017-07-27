@@ -29,7 +29,7 @@ from binascii import hexlify
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
-from mmgen.bitcoin import hex2wif,privnum2addr
+from mmgen.bitcoin import hex2wif
 
 rounds = 100
 opts_data = {
@@ -39,6 +39,7 @@ opts_data = {
 -h, --help       Print this help message
 --, --longhelp   Print help message for long options (common options)
 -q, --quiet      Produce quieter output
+-s, --segwit     Generate Segwit (P2SH-P2WPKH) addresses
 -v, --verbose    Produce more verbose output
 """,
 	'notes': """
@@ -48,15 +49,14 @@ opts_data = {
        Compare: {prog} a <dump file> (compare output of a key generator against wallet dump)
           where a and b are one of:
              '1' - native Python ecdsa library (very slow)
-             '2' - 'keyconv' utility from the 'vanitygen' package (old default)
-             '3' - bitcoincore.org's secp256k1 library (default from v0.8.6)
+             '2' - bitcoincore.org's secp256k1 library (default from v0.8.6)
 
 EXAMPLES:
-  {prog} 2:3 1000
-    (compare output of 'keyconv' with secp256k1 library, 1000 rounds)
-  {prog} 3 1000
+  {prog} 1:2 100
+    (compare output of native Python ECDSA with secp256k1 library, 100 rounds)
+  {prog} 2 1000
     (test speed of secp256k1 library address generation, 1000 rounds)
-  {prog} 3 my.dump
+  {prog} 2 my.dump
     (compare addrs generated with secp256k1 library to bitcoind wallet dump)
 """.format(prog='gentest.py',pnm=g.proj_name,snum=rounds)
 }
@@ -105,7 +105,7 @@ else:
 		die(1,"%s: invalid generator IDs" % cmd_args[0])
 
 def match_error(sec,wif,a_addr,b_addr,a,b):
-	m = ['','py-ecdsa','keyconv','secp256k1','dump']
+	m = ['','py-ecdsa','secp256k1','dump']
 	qmsg_r(red('\nERROR: Addresses do not match!'))
 	die(3,"""
   sec key   : {}
@@ -114,13 +114,16 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
   {b:10}: {}
 """.format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=m[a],b=m[b]).rstrip())
 
+# Begin execution
+mmtype = ('L','S')[bool(opt.segwit)]
+compressed = True
+
 if a and b:
 	m = "Comparing address generators '{}' and '{}'"
 	qmsg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
 	from mmgen.addr import get_privhex2addr_f
 	gen_a = get_privhex2addr_f(generator=a)
 	gen_b = get_privhex2addr_f(generator=b)
-	compressed = False
 	last_t = time.time()
 
 	for i in range(rounds):
@@ -129,12 +132,12 @@ if a and b:
 			last_t = time.time()
 		sec = hexlify(os.urandom(32))
 		wif = hex2wif(sec,compressed=compressed)
-		a_addr = gen_a(sec,compressed)
-		b_addr = gen_b(sec,compressed)
+		a_addr = gen_a(sec,compressed,mmtype=mmtype)
+		b_addr = gen_b(sec,compressed,mmtype=mmtype)
 		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
 		if a_addr != b_addr:
 			match_error(sec,wif,a_addr,b_addr,a,b)
-		if a != 2 and b != 2:
+		if not opt.segwit:
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 
@@ -143,12 +146,11 @@ elif a and not fh:
 	m = "Testing speed of address generator '{}'"
 	qmsg(green(m.format(g.key_generators[a-1])))
 	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(generator=a)
+	gen = get_privhex2addr_f(generator=a)
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	print 'Incrementing key with each round'
 	print 'Starting key:', hexlify(seed+pack('I',0))
-	compressed = False
 	import time
 	start = last_t = time.time()
 
@@ -158,9 +160,9 @@ elif a and not fh:
 			last_t = time.time()
 		sec = hexlify(seed+pack('I',i))
 		wif = hex2wif(sec,compressed=compressed)
-		a_addr = gen_a(sec,compressed)
+		a_addr = gen(sec,compressed,mmtype=mmtype)
 		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
-		if a != 2:
+		if not opt.segwit:
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 
@@ -179,7 +181,7 @@ elif a and dump:
 		if sec == False:
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
 		compressed = wif[0] != ('5','9')[g.testnet]
-		b_addr = gen_a(sec,compressed)
+		b_addr = gen_a(sec,compressed,'L')
 		if a_addr != b_addr:
 			match_error(sec,wif,a_addr,b_addr,1 if compressed and a==2 else a,4)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))

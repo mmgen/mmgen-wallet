@@ -90,7 +90,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		tx_num_str = ' #%s' % tx_num
 	tx = MMGenTX(tx_file)
 
-	if tx.check_signed(c):
+	if tx.marked_signed():
 		die(1,'Transaction is already signed!')
 	vmsg("Successfully opened transaction file '%s'" % tx_file)
 

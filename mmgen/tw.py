@@ -34,22 +34,25 @@ def parse_tw_acct_label(s):
 		a2 = ret[1] if len(ret) == 2 else None
 	return a1,a2
 
-class MMGenTWOutput(MMGenListItem):
-	attrs_reassign = 'label','skip'
-	attrs = 'txid','vout','amt','label','mmid','addr','confs','scriptPubKey','days','skip'
-	label = MMGenListItemAttr('label','MMGenAddrLabel')
-
 class MMGenTrackingWallet(MMGenObject):
+
+	class MMGenTwOutputList(list,MMGenObject): pass
+
+	class MMGenTwOutput(MMGenListItem):
+		twmmid = MMGenListItemAttr('twmmid','TwMMGenID')
+		txid   = MMGenListItemAttr('txid','BitcoinTxID')
+		attrs_reassign = 'label','skip'
+		attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
+
 	wmsg = {
 	'no_spendable_outputs': """
 No spendable outputs found!  Import addresses with balances into your
 watch-only wallet using '{}-addrimport' and then re-run this program.
-""".strip().format(g.proj_name)
+""".strip().format(g.proj_name.lower())
 	}
-	sort_keys = 'addr','age','amt','txid','mmid'
 
 	def __init__(self,minconf=1):
-		self.unspent      = []
+		self.unspent      = self.MMGenTwOutputList()
 		self.fmt_display  = ''
 		self.fmt_print    = ''
 		self.cols         = None
@@ -58,57 +61,62 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.show_days    = True
 		self.show_mmid    = True
 		self.minconf      = minconf
-		self.get_data()
+		self.get_unspent_data()
 		self.sort_key     = 'age'
 		self.do_sort()
 		self.total        = self.get_total_btc()
 
 	def get_total_btc(self):
-		return sum([i.amt for i in self.unspent])
+		return sum(i.amt for i in self.unspent)
 
-	def get_data(self):
+	def get_unspent_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data))
 		else:
 			us_rpc = bitcoin_connection().listunspent(self.minconf)
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
-#		sys.exit()
+#		sys.exit(0)
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
+		mm_rpc = self.MMGenTwOutputList()
 		for o in us_rpc:
-			o['mmid'],o['label'] = parse_tw_acct_label(o['account']) if 'account' in o else ('','')
-			o['days'] = int(o['confirmations'] * g.mins_per_block / (60*24))
-			o['amt'] = o['amount'] # TODO
-			o['addr'] = o['address']
-			o['confs'] = o['confirmations']
-		self.unspent = [MMGenTWOutput(**dict([(k,v) for k,v in o.items() if k in MMGenTWOutput.attrs and o[k] not in (None,'')])) for o in us_rpc]
-#		die(1,''.join([pp_format(i)+'\n' for i in us_rpc]))
-#		die(1,''.join([str(i)+'\n' for i in self.unspent]))
+			if not 'account' in o: continue          # coinbase outputs have no account field
+			l = TwLabel(o['account'],on_fail='silent')
+			if l:
+				o.update({
+					'twmmid': l.mmid,
+					'label':  l.comment,
+					'days':   int(o['confirmations'] * g.mins_per_block / (60*24)),
+					'amt':    o['amount'], # TODO
+					'addr':   o['address'],
+					'confs':  o['confirmations']
+				})
+				mm_rpc.append(o)
+		self.unspent = self.MMGenTwOutputList([self.MMGenTwOutput(**dict([(k,v) for k,v in o.items() if k in self.MMGenTwOutput.attrs])) for o in mm_rpc])
+		for u in self.unspent:
+			if u.label == None: u.label = ''
+		if not self.unspent:
+			die(1,'No tracked unspent outputs in tracking wallet!')
 
-	def s_addr(self,i):  return i.addr
-	def s_age(self,i):   return 0 - i.confs
-	def s_amt(self,i):   return i.amt
-	def s_txid(self,i):  return '%s %03s' % (i.txid,i.vout)
-	def s_mmid(self,i):
-		if i.mmid:
-			return '{}:{:>0{w}}'.format(
-				*i.mmid.split(':'), w=AddrIdx.max_digits)
-		else: return 'G' + (i.label or '')
-
-	def do_sort(self,key=None,reverse=None):
-		if not key: key = self.sort_key
-		assert key
+	def do_sort(self,key=None,reverse=False):
+		sort_funcs = {
+			'addr':  lambda i: i.addr,
+			'age':   lambda i: 0 - i.confs,
+			'amt':   lambda i: i.amt,
+			'txid':  lambda i: '%s %03s' % (i.txid,i.vout),
+			'mmid':  lambda i: i.twmmid.sort_key
+		}
+		key = key or self.sort_key
+		if key not in sort_funcs:
+			die(1,"'{}': invalid sort key.  Valid options: {}".format(key,' '.join(sort_funcs.keys())))
 		self.sort_key = key
-		if key not in self.sort_keys:
-			fs = "'{}': invalid sort key.  Valid keys: [{}]"
-			die(2,fs.format(key,' '.join(self.sort_keys)))
-		if reverse == None: reverse = self.reverse
-		self.unspent.sort(key=getattr(self,'s_'+key),reverse=reverse)
+		assert type(reverse) == bool
+		self.unspent.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
 
 	def sort_info(self,include_group=True):
 		ret = ([],['Reverse'])[self.reverse]
-		ret.append(capfirst(self.sort_key).replace('Mmid','MMGenID'))
-		if include_group and self.group and (self.sort_key in ('addr','txid','mmid')):
+		ret.append(capfirst(self.sort_key).replace('Twmmid','MMGenID'))
+		if include_group and self.group and (self.sort_key in ('addr','txid','twmmid')):
 			ret.append('Grouped')
 		return ret
 
@@ -126,42 +134,42 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		msg(self.format_for_display())
 
 	def format_for_display(self):
-		unsp = [MMGenTWOutput(**i.__dict__) for i in self.unspent]
+		unsp = self.unspent
+# 		unsp.pdie()
 		self.set_term_columns()
 
-		for i in unsp:
-			if i.label == None: i.label = ''
-			i.skip = ''
-
-		mmid_w = max(len(i.mmid or '') for i in unsp) or 10
-		max_acct_len = max([len((i.mmid or '')+i.label)+1 for i in unsp])
-		addr_w = min(34+((1+max_acct_len) if self.show_mmid else 0),self.cols-46) + 6
-		acct_w   = min(max_acct_len, max(24,int(addr_w-10)))
+		# Field widths
+		min_mmid_w = 12 # DEADBEEF:S:1
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or min_mmid_w
+		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
+		addr_w = min(35+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
+		acct_w = min(max_acct_w, max(24,int(addr_w-10)))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
 		tx_w = max(11,min(64, self.cols-addr_w-32))
 		txdots = ('','...')[tx_w < 64]
-		fs = ' %-4s %-' + str(tx_w) + 's %-2s %s %s %s'
-		table_hdr = fs % ('Num',
-			'TX id'.ljust(tx_w - 5) + ' Vout',
-			'',
-			BTCAddr.fmtc('Address',width=addr_w+1),
-			'Amt(BTC) ',
-			('Conf.','Age(d)')[self.show_days])
+		fs = ' %-4s %-{}s %-2s %s %s %s'.format(tx_w)
 
-		if self.group and (self.sort_key in ('addr','txid','mmid')):
+		for i in unsp: i.skip = None
+		if self.group and (self.sort_key in ('addr','txid','twmmid')):
 			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
-				for k in ('addr','txid','mmid'):
+				for k in ('addr','txid','twmmid'):
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
-						b.skip = (k,'addr')[k=='mmid']
+						b.skip = (k,'addr')[k=='twmmid']
 
 		hdr_fmt   = 'UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s'
-		out  = [hdr_fmt % (' '.join(self.sort_info()), self.total.hl()), table_hdr]
+		out  = [hdr_fmt % (' '.join(self.sort_info()), self.total.hl())]
+		if g.chain in ('testnet','regtest'):
+			out += [green('Chain: {}'.format(g.chain.upper()))]
+		af = BTCAddr.fmtc('Address',width=addr_w+1)
+		cf = ('Conf.','Age(d)')[self.show_days]
+		out += [fs % ('Num','TX id'.ljust(tx_w - 5) + ' Vout','',af,'Amt(BTC) ',cf)]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*33
 			mmid_disp = MMGenID.fmtc('.'*mmid_w if i.skip=='addr'
-				else i.mmid or 'Non-{}'.format(g.proj_name),width=mmid_w,color=True)
+				else i.twmmid if i.twmmid.type=='mmgen'
+					else 'Non-{}'.format(g.proj_name),width=mmid_w,color=True)
 			if self.show_mmid:
 				addr_out = '%s %s' % (
 					type(i.addr).fmtc(addr_dots,width=btaddr_w,color=True) if i.skip == 'addr' \
@@ -180,6 +188,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						i.days if self.show_days else i.confs))
 
 		self.fmt_display = '\n'.join(out) + '\n'
+#		unsp.pdie()
 		return self.fmt_display
 
 	def format_for_printing(self,color=False):
@@ -190,13 +199,14 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
-			addr = '=' if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
-			tx = ' ' * 63 + '=' if i.skip == 'txid' and self.group else str(i.txid)
+			addr = '|'+'.' * 34 if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
+			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
 			s = fs % (str(n+1)+')', tx+','+str(i.vout),addr,
-					MMGenID.fmtc(i.mmid or 'Non-{}'.format(g.proj_name),width=14,color=color),
+					MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
+						else 'Non-{}'.format(g.proj_name),width=14,color=color),
 					i.amt.fmt(color=color),i.confs,i.days,
 					i.label.hl(color=color) if i.label else
-						MMGenAddrLabel.fmtc('',color=color,nullrepl='-',width=max_lbl_len))
+						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len))
 			out.append(s.rstrip())
 
 		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n'
@@ -232,14 +242,15 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							"Removing label for address #%s.  Is this what you want?" % n):
 							return n,s
 					elif s:
-						if MMGenAddrLabel(s,on_fail='return'):
+						if TwComment(s,on_fail='return'):
 							return n,s
 
-	def view_and_sort(self):
+	def view_and_sort(self,tx):
+		txos = 'Total to spend, excluding fees: {} BTC\n\n'.format(tx.sum_outputs().hl()) if tx.outputs else ''
 		prompt = """
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
+{}Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
-	""".strip()
+	""".format(txos).strip()
 		self.display()
 		msg(prompt)
 
@@ -257,8 +268,8 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:
 					e = self.unspent[idx-1]
-					if type(self).add_label(e.mmid,lbl,addr=e.addr):
-						self.get_data()
+					if type(self).add_label(e.twmmid,lbl,addr=e.addr):
+						self.get_unspent_data()
 						self.do_sort()
 						msg('%s\n%s\n%s' % (self.fmt_display,prompt,p))
 					else:
@@ -291,36 +302,71 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 	# returns on failure
 	@classmethod
-	def add_label(cls,arg1,label='',addr=None):
+	def add_label(cls,arg1,label='',addr=None,silent=False):
 		from mmgen.tx import is_mmgen_id,is_btc_addr
+		mmaddr,btcaddr = None,None
+		if is_btc_addr(addr or arg1):
+			btcaddr = BTCAddr(addr or arg1,on_fail='return')
 		if is_mmgen_id(arg1):
-			mmaddr = MMGenID(arg1)
-		elif is_btc_addr(arg1):             # called from 'mmgen-tool add_label'
-			addr = arg1
-			mmaddr = 'btc:'+arg1
-		elif not arg1 and is_btc_addr(addr): # called from view_and_sort(), non-MMGen addr
-			mmaddr = 'btc:'+addr
-		else:
-			die(3,'{}: not a BTC address or {} ID'.format(arg1,g.proj_name))
+			mmaddr = TwMMGenID(arg1)
 
-		if addr:
-			if not BTCAddr(addr,on_fail='return'): return False
-		else:
+		if not btcaddr and not mmaddr:
+			msg("Address '{}' invalid or not found in tracking wallet".format(addr or arg1))
+			return False
+
+		if not btcaddr:
 			from mmgen.addr import AddrData
-			addr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
-			if not addr:
-				msg('{} address {} not found in tracking wallet'.format(g.proj_name,mmaddr))
-				return False
+			btcaddr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
 
-		label = MMGenAddrLabel(label,on_fail='return')
-		if not label and label != '': return False
+		if not btcaddr:
+			msg("{} address '{}' not found in tracking wallet".format(g.proj_name,mmaddr))
+			return False
 
-		acct = mmaddr + (' ' + label if label else '') # label is ASCII for now
-		# return on failure - args: addr,label,rescan,p2sh
-		ret = bitcoin_connection().importaddress(addr,acct,False,on_fail='return')
+		# Checked that the user isn't importing a random address
+		if not btcaddr.is_in_tracking_wallet():
+			msg("Address '{}' not in tracking wallet".format(btcaddr))
+			return False
+
+		c = bitcoin_connection()
+		if not btcaddr.is_for_current_chain():
+			msg("Address '{}' not valid for chain {}".format(btcaddr,g.chain.upper()))
+			return False
+
+		# Allow for the possibility that BTC addr of MMGen addr was entered.
+		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
+		if not mmaddr:
+			from mmgen.addr import AddrData
+			ad = AddrData(source='tw')
+			mmaddr = ad.btcaddr2mmaddr(btcaddr)
+
+		if not mmaddr: mmaddr = 'btc:'+btcaddr
+
+		mmaddr = TwMMGenID(mmaddr)
+
+		cmt = TwComment(label,on_fail='return')
+		if cmt in (False,None): return False
+
+		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)]) # label is ASCII for now
+
+		# NOTE: this works because importaddress() removes the old account before
+		# associating the new account with the address.
+		# Will be replaced by setlabel() with new RPC label API
+		# RPC args: addr,label,rescan[=true],p2sh[=none]
+		ret = c.importaddress(btcaddr,lbl,False,on_fail='return')
+
 		from mmgen.rpc import rpc_error,rpc_errmsg
-		if rpc_error(ret): msg('From bitcoind: ' + rpc_errmsg(ret))
-		return not rpc_error(ret)
+		if rpc_error(ret):
+			msg('From bitcoind: ' + rpc_errmsg(ret))
+			if not silent:
+				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
+			return False
+		else:
+			m = mmaddr.type.replace('mmg','MMG')
+			a = mmaddr.replace('btc:','')
+			s = '{} address {} in tracking wallet'.format(m,a)
+			if label: msg("Added label '{}' to {}".format(label,s))
+			else:     msg('Removed label from {}'.format(s))
+			return True
 
 	@classmethod
 	def remove_label(cls,mmaddr): cls.add_label(mmaddr,'')

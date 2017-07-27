@@ -44,16 +44,12 @@ if len(cmd_args) == 1:
 else: opts.usage()
 
 do_license_msg()
-tx = MMGenTX(infile)
 c = bitcoin_connection()
-
-if not tx.check_signed(c):
-	die(1,'Transaction is not signed!')
-
-if tx.btc_txid:
-	msg('Warning: transaction has already been sent!')
-
+tx = MMGenTX(infile) # sig check performed here
 qmsg("Signed transaction file '%s' is valid" % infile)
+
+if not tx.marked_signed(c):
+	die(1,'Transaction is not signed!')
 
 if not opt.yes:
 	tx.view_with_prompt('View transaction data?')

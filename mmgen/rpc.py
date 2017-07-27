@@ -28,8 +28,6 @@ from mmgen.obj import BTCAmt
 
 class BitcoinRPCConnection(object):
 
-	client_version = 0
-
 	def __init__(
 				self,
 				host=g.rpc_host,port=(8332,18332)[g.testnet],
@@ -78,7 +76,7 @@ class BitcoinRPCConnection(object):
 			p = {'method':cmd,'params':args,'id':1}
 
 		def die_maybe(*args):
-			if cf['on_fail'] == 'return':
+			if cf['on_fail'] in ('return','silent'):
 				return 'rpcfail',args
 			else:
 				die(*args[1:])
@@ -89,7 +87,7 @@ class BitcoinRPCConnection(object):
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
 				if isinstance(obj, BTCAmt):
-					return (float,str)[caller.client_version>=120000](obj)
+					return (float,str)[g.bitcoind_version>=120000](obj)
 				return json.JSONEncoder.default(self, obj)
 
 # Can't do UTF-8 labels yet: httplib only ascii?
@@ -111,8 +109,9 @@ class BitcoinRPCConnection(object):
 		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
-			msg_r(yellow('Bitcoind RPC Error: '))
-			msg(red('{} {}'.format(r.status,r.reason)))
+			if cf['on_fail'] != 'silent':
+				msg_r(yellow('Bitcoind RPC Error: '))
+				msg(red('{} {}'.format(r.status,r.reason)))
 			e1 = r.read()
 			try:
 				e3 = json.loads(e1)['error']
@@ -142,26 +141,30 @@ class BitcoinRPCConnection(object):
 
 		return ret if cf['batch'] else ret[0]
 
-
 	rpcmethods = (
-		'createrawtransaction',
 		'backupwallet',
+		'createrawtransaction',
 		'decoderawtransaction',
 		'disconnectnode',
 		'estimatefee',
 		'getaddressesbyaccount',
 		'getbalance',
 		'getblock',
+		'getblockchaininfo',
 		'getblockcount',
 		'getblockhash',
-		'getinfo',
+		'getmempoolentry',
+		'getnetworkinfo',
 		'getpeerinfo',
+		'getrawmempool',
+		'getrawtransaction',
+		'gettransaction',
 		'importaddress',
 		'listaccounts',
 		'listunspent',
 		'sendrawtransaction',
 		'signrawtransaction',
-		'getrawmempool',
+		'validateaddress',
 		'walletpassphrase',
 	)
 

@@ -21,7 +21,7 @@ Opts.py:  Generic options handling
 """
 
 import sys, getopt
-# from mmgen.util import mdie,die,pp_die,pp_msg # DEBUG
+# from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
 	print 'USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage'])
@@ -54,8 +54,8 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 	opts = {}
 
 	for opt, arg in cl_opts:
-		if   opt in ('-h','--help'): print_help(opts_data); sys.exit()
-		elif opt == '--longhelp':    print_help(opts_data,longhelp=True); sys.exit()
+		if   opt in ('-h','--help'): print_help(opts_data); sys.exit(0)
+		elif opt == '--longhelp':    print_help(opts_data,longhelp=True); sys.exit(0)
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:

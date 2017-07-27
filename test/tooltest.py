@@ -20,7 +20,7 @@
 test/tooltest.py:  Tests for the 'mmgen-tool' utility
 """
 
-import sys,os
+import sys,os,subprocess
 pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
@@ -33,52 +33,60 @@ cmd_data = OrderedDict([
 	('util', {
 			'desc': 'base conversion, hashing and file utilities',
 			'cmd_data': OrderedDict([
-				('strtob58',     ()),
-				('b58tostr',     ('strtob58','io')),
-				('hextob58',     ()),
-				('b58tohex',     ('hextob58','io')),
-				('b58randenc',   ()),
-				('hextob32',     ()),
-				('b32tohex',     ('hextob32','io')),
-				('randhex',      ()),
-				('id8',          ()),
-				('id6',          ()),
-				('str2id6',      ()),
-				('sha256x2',     ()),
-				('hexreverse',   ()),
-				('hexlify',      ()),
-				('hexdump',      ()),
-				('unhexdump',    ('hexdump','io')),
-				('rand2file',    ()),
+				('Strtob58',     ()),
+				('B58tostr',     ('Strtob58','io')),
+				('Hextob58',     ()),
+				('B58tohex',     ('Hextob58','io')),
+				('B58randenc',   ()),
+				('Hextob32',     ()),
+				('B32tohex',     ('Hextob32','io')),
+				('Randhex',      ()),
+				('Id6',          ()),
+				('Id8',          ()),
+				('Str2id6',      ()),
+				('Hash160',      ()),
+				('Hash256',      ()),
+				('Hexreverse',   ()),
+				('Hexlify',      ()),
+				('Hexdump',      ()),
+				('Unhexdump',    ('Hexdump','io')),
+				('Rand2file',    ()),
 			])
 		}
 	),
 	('bitcoin', {
 			'desc': 'Bitcoin address/key commands',
 			'cmd_data': OrderedDict([
-				('randwif',      ()),
-				('randpair',     ()),
-				('wif2addr',     ('randpair','o2')),
-				('wif2hex',      ('randpair','o2')),
-				('privhex2addr', ('wif2hex','o2')), # wif from randpair o2
-				('hex2wif',      ('wif2hex','io2')),
-				('addr2hexaddr', ('randpair','o2')),
-				('hexaddr2addr', ('addr2hexaddr','io2')),
-# ('pubkey2addr',  ['<public key in hex format> [str]']),
-# ('pubkey2hexaddr', ['<public key in hex format> [str]']),
+				('Randwif',        ()),
+				('Randpair',       ()), # create 3 pairs: uncomp,comp,segwit
+				('Wif2addr',       ('Randpair','o3')),
+				('Wif2hex',        ('Randpair','o3')),
+
+				('Privhex2pubhex', ('Wif2hex','o3')),
+				('Pubhex2addr',    ('Privhex2pubhex','o3')),
+				('Pubhex2redeem_script', ('Privhex2pubhex','o3')),
+				('Wif2redeem_script', ('Randpair','o3')),
+				('Wif2segwit_pair',   ('Randpair','o2')),
+
+				('Privhex2addr',   ('Wif2hex','o3')), # compare with output of Randpair
+				('Hex2wif',        ('Wif2hex','io2')),
+				('Addr2hexaddr',   ('Randpair','o2')),
+				('Hexaddr2addr',   ('Addr2hexaddr','io2')),
+
+				('Pipetest',       ('Randpair','o3')),
 			])
 		}
 	),
 	('mnemonic', {
 			'desc': 'mnemonic commands',
 			'cmd_data': OrderedDict([
-				('hex2mn',       ()),
-				('mn2hex',       ('hex2mn','io3')),
-				('mn_rand128',   ()),
-				('mn_rand192',   ()),
-				('mn_rand256',   ()),
-				('mn_stats',     ()),
-				('mn_printlist', ()),
+				('Hex2mn',       ()),
+				('Mn2hex',       ('Hex2mn','io3')),
+				('Mn_rand128',   ()),
+				('Mn_rand192',   ()),
+				('Mn_rand256',   ()),
+				('Mn_stats',     ()),
+				('Mn_printlist', ()),
 			])
 		}
 	),
@@ -86,11 +94,11 @@ cmd_data = OrderedDict([
 			'desc': 'Bitcoind RPC commands',
 			'cmd_data': OrderedDict([
 #				('keyaddrfile_chksum', ()), # interactive
-				('addrfile_chksum', ()),
-				('getbalance',      ()),
-				('listaddresses',   ()),
-				('twview',          ()),
-				('txview',          ()),
+				('Addrfile_chksum', ()),
+				('Getbalance',      ()),
+				('Listaddresses',   ()),
+				('Twview',          ()),
+				('Txview',          ()),
 			])
 		}
 	),
@@ -113,7 +121,8 @@ opts_data = {
 	'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
--l, --list-cmds     List and describe the tests and commands in the test suite
+-l, --list-cmds     List and describe the tests and commands in this test suite
+-L, --list-names    List the names of all tested 'mmgen-tool' commands
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root
 -v, --verbose       Produce more verbose output
@@ -127,10 +136,11 @@ If no command is given, the whole suite of tests is run.
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
+spawn_cmd = ['python',os.path.join(os.curdir,'mmgen-tool') if not opt.system else 'mmgen-tool']
 add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
+	) for k in 'testnet','rpc_host','regtest' if getattr(opt,k)]).split()
 add_spawn_args += [ '--data-dir', cfg['tmpdir']] # ignore ~/.mmgen
 
 if opt.system: sys.path.pop(0)
@@ -143,11 +153,28 @@ if opt.list_cmds:
 		Msg(fs.format(cmd,cmd_data[cmd]['desc'],w=w))
 	Msg('\nAvailable utilities:')
 	Msg(fs.format('clean','Clean the tmp directory',w=w))
-	sys.exit()
+	sys.exit(0)
+if opt.list_names:
+	acc = []
+	for v in cmd_data.values():
+		acc += v['cmd_data'].keys()
+	tc = sorted(c.lower() for c in acc)
+	msg('{}\n{}'.format(green('Tested commands:'),'\n'.join(tc)))
+	import mmgen.tool
+	tested_in_tool = ('Encrypt','Decrypt','Find_incog_data','Keyaddrfile_chksum','Passwdfile_chksum')
+	ignore = ('Help','Usage')
+	uc = sorted(c.lower() for c in set(mmgen.tool.cmd_data.keys()) - set(acc) - set(ignore) - set(tested_in_tool))
+	msg('\n{}\n{}'.format(yellow('Untested commands:'),'\n'.join(uc)))
+	die()
 
 import binascii
 from mmgen.test import *
 from mmgen.tx import is_wif,is_btc_addr
+
+msg_w = 35
+def test_msg(m):
+	m2 = 'Testing {}'.format(m)
+	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format(m2,w=msg_w+8))
 
 class MMGenToolTestSuite(object):
 
@@ -179,35 +206,28 @@ class MMGenToolTestSuite(object):
 		for cmd in cdata: self.do_cmd(cmd,cdata[cmd])
 
 	def do_cmd(self,cmd,cdata):
-
 		fns = self.gen_deps_for_cmd(cmd,cdata)
-
 		file_list = [os.path.join(cfg['tmpdir'],fn) for fn in fns]
-
 		self.__class__.__dict__[cmd](*([self,cmd] + file_list))
 
-
 	def run_cmd(self,name,tool_args,kwargs='',extra_msg='',silent=False,strip=True):
-		mmgen_tool = 'mmgen-tool'
-		if not opt.system:
-			mmgen_tool = os.path.join(os.curdir,mmgen_tool)
-
-		sys_cmd = ['python',mmgen_tool] + add_spawn_args + ['-r0','-d',cfg['tmpdir'],name] + tool_args + kwargs.split()
-		if extra_msg: extra_msg = '(%s)' % extra_msg
-		full_name = ' '.join([name]+kwargs.split()+extra_msg.split())
+		sys_cmd = (
+			spawn_cmd +
+			add_spawn_args +
+			['-r0','-d',cfg['tmpdir'],name.lower()] +
+			tool_args +
+			kwargs.split()
+		)
+		if extra_msg: extra_msg = '({})'.format(extra_msg)
+		full_name = ' '.join([name.lower()]+kwargs.split()+extra_msg.split())
 		if not silent:
 			if opt.verbose:
-				sys.stderr.write(green('Testing %s\nExecuting ' % full_name))
-				sys.stderr.write('%s\n' % cyan(repr(sys_cmd)))
+				sys.stderr.write(green('Testing {}\nExecuting '.format(full_name)))
+				sys.stderr.write(cyan(' '.join(sys_cmd)+'\n'))
 			else:
-				msg_r('Testing %-31s%s' % (full_name+':',''))
+				msg_r('Testing {:{w}}'.format(full_name+':',w=msg_w))
 
-		import subprocess
-		p = subprocess.Popen(
-			sys_cmd,
-			stdout=subprocess.PIPE,
-			stderr=subprocess.PIPE,
-			)
+		p = subprocess.Popen(sys_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		a,b = p.communicate()
 		retcode = p.wait()
 		if retcode != 0:
@@ -234,18 +254,19 @@ class MMGenToolTestSuite(object):
 		vmsg('Out:  ' + repr(ret))
 		return ret
 
-	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',literal=False,chkdata=''):
+	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',literal=False,chkdata='',hush=False):
 		if carg: write_to_tmpfile(cfg,'%s%s.in' % (name,fn_idx),carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,extra_msg=extra_msg)
 		if carg: vmsg('In:   ' + repr(carg))
-		vmsg('Out:  ' + (repr(ret),ret)[literal])
+		vmsg('Out:  ' + (repr(ret),ret.decode('utf8'))[literal])
 		if ret or ret == '':
 			write_to_tmpfile(cfg,'%s%s.out' % (name,fn_idx),ret+'\n')
 			if chkdata:
 				cmp_or_die(ret,chkdata)
 				return
 			if Return: return ret
-			else:   ok()
+			else:
+				if not hush: ok()
 		else:
 			die(3,red("Error for command '%s'" % name))
 
@@ -259,115 +280,141 @@ class MMGenToolTestSuite(object):
 		ok()
 		vmsg('Returned: %s' % ret)
 
-	def str2id6(self,name):
+	# Util
+	def Strtob58(self,name):       self.run_cmd_out(name,getrandstr(16))
+	def B58tostr(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
+	def Hextob58(self,name):       self.run_cmd_out(name,getrandhex(32))
+	def B58tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
+	def B58randenc(self,name):
+		ret = self.run_cmd_out(name,Return=True)
+		ok_or_die(ret,is_b58_str,'base 58 string')
+	def Hextob32(self,name):       self.run_cmd_out(name,getrandhex(24))
+	def B32tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
+	def Randhex(self,name):
+		ret = self.run_cmd_out(name,Return=True)
+		ok_or_die(ret,binascii.unhexlify,'hex string')
+	def Id6(self,name):     self.run_cmd_randinput(name)
+	def Id8(self,name):     self.run_cmd_randinput(name)
+	def Str2id6(self,name):
 		s = getrandstr(120,no_space=True)
 		s2 = ' %s %s %s %s %s ' % (s[:3],s[3:9],s[9:29],s[29:50],s[50:120])
 		ret1 = self.run_cmd(name,[s],extra_msg='unspaced input'); ok()
 		ret2 = self.run_cmd(name,[s2],extra_msg='spaced input')
 		cmp_or_die(ret1,ret2)
 		vmsg('Returned: %s' % ret1)
-
-	def mn_rand128(self,name):
-		self.run_cmd_out(name)
-
-	def mn_rand192(self,name):
-		self.run_cmd_out(name)
-
-	def mn_rand256(self,name):
-		self.run_cmd_out(name)
-
-	def mn_stats(self,name):
-		self.run_cmd_out(name)
-
-	def mn_printlist(self,name):
-		self.run_cmd(name,[])
-		ok()
-
-	def id6(self,name):     self.run_cmd_randinput(name)
-	def id8(self,name):     self.run_cmd_randinput(name)
-	def hexdump(self,name): self.run_cmd_randinput(name,strip=False)
-
-	def unhexdump(self,name,fn1,fn2):
+	def Hash160(self,name):        self.run_cmd_out(name,getrandhex(16))
+	def Hash256(self,name):        self.run_cmd_out(name,getrandstr(16))
+	def Hexreverse(self,name):     self.run_cmd_out(name,getrandhex(24))
+	def Hexlify(self,name):        self.run_cmd_out(name,getrandstr(24))
+	def Hexdump(self,name): self.run_cmd_randinput(name,strip=False)
+	def Unhexdump(self,name,fn1,fn2):
 		ret = self.run_cmd(name,[fn2],strip=False)
 		orig = read_from_file(fn1,binary=True)
 		cmp_or_die(orig,ret)
-
-	def rand2file(self,name):
+	def Rand2file(self,name):
 		of = name + '.out'
 		dlen = 1024
 		self.run_cmd(name,[of,str(1024),'threads=4','silent=1'],strip=False)
 		d = read_from_tmpfile(cfg,of,binary=True)
 		cmp_or_die(dlen,len(d))
 
-	def strtob58(self,name):       self.run_cmd_out(name,getrandstr(16))
-	def sha256x2(self,name):       self.run_cmd_out(name,getrandstr(16))
-	def hexreverse(self,name):     self.run_cmd_out(name,getrandhex(24))
-	def hexlify(self,name):        self.run_cmd_out(name,getrandstr(24))
-	def b58tostr(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
-	def hextob58(self,name):       self.run_cmd_out(name,getrandhex(32))
-	def b58tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
-	def hextob32(self,name):       self.run_cmd_out(name,getrandhex(24))
-	def b32tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
-	def b58randenc(self,name):
-		ret = self.run_cmd_out(name,Return=True)
-		ok_or_die(ret,is_b58_str,'base 58 string')
-	def randhex(self,name):
-		ret = self.run_cmd_out(name,Return=True)
-		ok_or_die(ret,binascii.unhexlify,'hex string')
-	def randwif(self,name):
+	# Bitcoin
+	def Randwif(self,name):
 		for n,k in enumerate(['','compressed=1']):
 			ret = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1)
 			ok_or_die(ret,is_wif,'WIF key')
-	def randpair(self,name):
-		for n,k in enumerate(['','compressed=1']):
+	def Randpair(self,name):
+		for n,k in enumerate(['','compressed=1','segwit=1 compressed=1']):
 			wif,addr = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1).split()
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
 			ok_or_die(addr,is_btc_addr,'Bitcoin address')
-	def hex2wif(self,name,f1,f2,f3,f4):
+	def Wif2addr(self,name,f1,f2,f3):
+		for n,f,k,m in (1,f1,'',''),(2,f2,'','compressed'),(3,f3,'segwit=1','compressed'):
+			wif = read_from_file(f).split()[0]
+			self.run_cmd_out(name,wif,kwargs=k,fn_idx=n,extra_msg=m)
+	def Wif2hex(self,name,f1,f2,f3):
+		for n,f,m in (1,f1,''),(2,f2,'compressed'),(3,f3,'compressed for segwit'):
+			wif = read_from_file(f).split()[0]
+			self.run_cmd_out(name,wif,fn_idx=n,extra_msg=m)
+	def Privhex2addr(self,name,f1,f2,f3):
+		keys = [read_from_file(f).rstrip() for f in f1,f2,f3]
+		for n,k in enumerate(('','compressed=1','compressed=1 segwit=1')):
+			ret = self.run_cmd(name,[keys[n]],kwargs=k).rstrip()
+			iaddr = read_from_tmpfile(cfg,'Randpair{}.out'.format(n+1)).split()[-1]
+			cmp_or_die(iaddr,ret)
+	def Hex2wif(self,name,f1,f2,f3,f4):
 		for n,fi,fo,k in (1,f1,f2,''),(2,f3,f4,'compressed=1'):
 			ret = self.run_cmd_chk(name,fi,fo,kwargs=k)
-	def wif2hex(self,name,f1,f2):
-		for n,f,k in (1,f1,''),(2,f2,'compressed=1'):
-			wif = read_from_file(f).split()[0]
-			self.run_cmd_out(name,wif,kwargs=k,fn_idx=n)
-	def wif2addr(self,name,f1,f2):
-		for n,f,k in (1,f1,''),(2,f2,'compressed=1'):
-			wif = read_from_file(f).split()[0]
-			self.run_cmd_out(name,wif,kwargs=k,fn_idx=n)
-	def addr2hexaddr(self,name,f1,f2):
+	def Addr2hexaddr(self,name,f1,f2):
 		for n,f,m in (1,f1,''),(2,f2,'from compressed'):
 			addr = read_from_file(f).split()[-1]
 			self.run_cmd_out(name,addr,fn_idx=n,extra_msg=m)
-	def hexaddr2addr(self,name,f1,f2,f3,f4):
+	def Hexaddr2addr(self,name,f1,f2,f3,f4):
 		for n,fi,fo,m in (1,f1,f2,''),(2,f3,f4,'from compressed'):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
-	def privhex2addr(self,name,f1,f2):
-		key1 = read_from_file(f1).rstrip()
-		key2 = read_from_file(f2).rstrip()
-		for n,args in enumerate([[key1],[key2,'compressed=1']]):
-			ret = self.run_cmd(name,args).rstrip()
-			iaddr = read_from_tmpfile(cfg,'randpair%s.out' % (n+1)).split()[-1]
-			cmp_or_die(iaddr,ret)
-	def hex2mn(self,name):
+	def Privhex2pubhex(self,name,f1,f2,f3): # from hex2wif
+		addr = read_from_file(f3).strip()
+		self.run_cmd_out(name,addr,kwargs='compressed=1',fn_idx=3)
+	def Pubhex2redeem_script(self,name,f1,f2,f3): # from above
+		addr = read_from_file(f3).strip()
+		self.run_cmd_out(name,addr,fn_idx=3)
+		rs = read_from_tmpfile(cfg,name+'3.out').strip()
+		self.run_cmd_out('pubhex2addr',rs,kwargs='p2sh=1',fn_idx=3,hush=True)
+		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
+		addr2 = read_from_tmpfile(cfg,'Randpair3.out').split()[1]
+		cmp_or_die(addr1,addr2)
+	def Wif2redeem_script(self,name,f1,f2,f3): # compare output with above
+		wif = read_from_file(f3).split()[0]
+		ret1 = self.run_cmd_out(name,wif,fn_idx=3,Return=True)
+		ret2 = read_from_tmpfile(cfg,'Pubhex2redeem_script3.out').strip()
+		cmp_or_die(ret1,ret2)
+	def Wif2segwit_pair(self,name,f1,f2): # does its own checking, so just run
+		wif = read_from_file(f2).split()[0]
+		self.run_cmd_out(name,wif,fn_idx=2)
+
+	def Pubhex2addr(self,name,f1,f2,f3):
+		addr = read_from_file(f3).strip()
+		self.run_cmd_out(name,addr,fn_idx=3)
+
+	def Pipetest(self,name,f1,f2,f3):
+		test_msg('command piping')
+		wif = read_from_file(f3).split()[0]
+		cmd = '{tc} {sa} wif2hex {wif} | {tc} privhex2pubhex - compressed=1 | {tc} pubhex2redeem_script - | {tc} {sa} pubhex2addr - p2sh=1'.format(wif=wif,sa=' '.join(add_spawn_args),tc=' '.join(spawn_cmd))
+		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+		res = p.stdout.read().strip()
+		addr = read_from_tmpfile(cfg,'Wif2addr3.out').strip()
+		cmp_or_die(res,addr)
+
+
+	# Mnemonic
+	def Hex2mn(self,name):
 		for n,size,m in(1,16,'128-bit'),(2,24,'192-bit'),(3,32,'256-bit'):
 			hexnum = getrandhex(size)
 			self.run_cmd_out(name,hexnum,fn_idx=n,extra_msg=m)
-	def mn2hex(self,name,f1,f2,f3,f4,f5,f6):
+	def Mn2hex(self,name,f1,f2,f3,f4,f5,f6):
 		for f_i,f_o,m in (f1,f2,'128-bit'),(f3,f4,'192-bit'),(f5,f6,'256-bit'):
 			self.run_cmd_chk(name,f_i,f_o,extra_msg=m)
+	def Mn_rand128(self,name): self.run_cmd_out(name)
+	def Mn_rand192(self,name): self.run_cmd_out(name)
+	def Mn_rand256(self,name): self.run_cmd_out(name)
+	def Mn_stats(self,name):   self.run_cmd_out(name)
+	def Mn_printlist(self,name):
+		self.run_cmd(name,[])
+		ok()
 
-	def getbalance(self,name):
-		self.run_cmd_out(name,literal=True)
-	def listaddresses(self,name):
-		self.run_cmd_out(name,literal=True)
-	def twview(self,name):
-		self.run_cmd_out(name,literal=True)
-	def txview(self,name):
-		fn = os.path.join(cfg['refdir'],cfg['txfile'])
-		self.run_cmd_out(name,fn,literal=True)
-	def addrfile_chksum(self,name):
+	# RPC
+	def Addrfile_chksum(self,name):
 		fn = os.path.join(cfg['refdir'],cfg['addrfile'])
 		self.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'])
+	def Getbalance(self,name):
+		self.run_cmd_out(name,literal=True)
+	def Listaddresses(self,name):
+		self.run_cmd_out(name,literal=True)
+	def Twview(self,name):
+		self.run_cmd_out(name,literal=True)
+	def Txview(self,name):
+		fn = os.path.join(cfg['refdir'],cfg['txfile'])
+		self.run_cmd_out(name,fn,literal=True)
 
 # main()
 import time
@@ -378,14 +425,13 @@ mk_tmpdir(cfg['tmpdir'])
 if cmd_args:
 	if len(cmd_args) != 1:
 		die(1,'Only one command may be specified')
-
 	cmd = cmd_args[0]
 	if cmd in cmd_data:
 		msg('Running tests for %s:' % cmd_data[cmd]['desc'])
 		ts.do_cmds(cmd)
 	elif cmd == 'clean':
 		cleandir(cfg['tmpdir'])
-		sys.exit()
+		sys.exit(0)
 	else:
 		die(1,"'%s': unrecognized command" % cmd)
 else:

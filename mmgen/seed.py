@@ -159,18 +159,21 @@ class SeedSource(MMGenObject):
 			msg('Trying again...')
 
 	@classmethod
-	def get_subclasses(cls):
-		if not hasattr(cls,'subclasses'):
-			gl = globals()
-			setattr(cls,'subclasses',
-				[gl[k] for k in gl if type(gl[k]) == type and issubclass(gl[k],cls)])
-		return cls.subclasses
+	def get_subclasses_str(cls): # returns name of calling class too
+		return cls.__name__ + ' ' + ''.join([c.get_subclasses_str() for c in cls.__subclasses__()])
 
 	@classmethod
-	def get_subclasses_str(cls):
-		def GetSubclassesTree(cls):
-			return ''.join([c.__name__ +' '+ GetSubclassesTree(c) for c in cls.__subclasses__()])
-		return GetSubclassesTree(cls)
+	def get_subclasses_easy(cls,acc=[]):
+		return [globals()[c] for c in cls.get_subclasses_str().split()]
+
+	@classmethod
+	def get_subclasses(cls): # returns calling class too
+		def GetSubclassesTree(cls,acc):
+			acc += [cls]
+			for c in cls.__subclasses__(): GetSubclassesTree(c,acc)
+		acc = []
+		GetSubclassesTree(cls,acc)
+		return acc
 
 	@classmethod
 	def get_extensions(cls):
@@ -1027,8 +1030,8 @@ harder to find, you're advised to choose a much larger file size than this.
 					msg('File size must be an integer no less than %s' %
 							min_fsize)
 
-				from mmgen.tool import rand2file
-				rand2file(fn, str(fsize))
+				from mmgen.tool import Rand2file # threaded routine
+				Rand2file(fn,str(fsize))
 				check_offset = False
 			else:
 				die(1,'Exiting at user request')

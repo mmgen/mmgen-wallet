@@ -25,3 +25,17 @@ from mmgen.globalvars import g
 import mmgen.opts as opts
 from mmgen.opts import opt
 from mmgen.util import *
+
+pw_note = """
+For passphrases all combinations of whitespace are equal and leading and
+trailing space is ignored.  This permits reading passphrase or brainwallet
+data from a multi-line file with free spacing and indentation.
+""".strip()
+
+bw_note = """
+BRAINWALLET NOTE:
+
+To thwart dictionary attacks, it's recommended to use a strong hash preset
+with brainwallets.  For a brainwallet passphrase to generate the correct
+seed, the same seed length and hash preset parameters must always be used.
+""".strip()

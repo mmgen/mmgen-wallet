@@ -20,6 +20,7 @@
 obj.py:  MMGen native classes
 """
 
+import sys
 from decimal import *
 from mmgen.color import *
 lvl = 0
@@ -27,38 +28,73 @@ lvl = 0
 class MMGenObject(object):
 
 	# Pretty-print any object of type MMGenObject, recursing into sub-objects - WIP
-	def pprint(self):  print self.pformat()
+# 	def pmsg(self):  sys.stderr.write(self.pformat()+'\n')
+# 	def pdie(self):  sys.stderr.write(self.pformat()+'\n'); sys.exit(0)
+	def pmsg(self):  print(self.pformat())
+	def pdie(self):  print(self.pformat()); sys.exit(0)
 	def pformat(self,lvl=0):
-		def do_list(out,e,lvl=0):
-			add_spc = False
-			if e and type(e[0]) not in (str,unicode):
-				out.append('\n')
+		from decimal import Decimal
+		scalars = (str,unicode,int,float,Decimal)
+		def do_list(out,e,lvl=0,is_dict=False):
+			out.append('\n')
 			for i in e:
-				if hasattr(i,'pformat'):
-					out.append('{:>{l}}{}'.format('',i.pformat(lvl=lvl+1),l=(lvl+1)*8))
-				elif type(i) in (str,unicode):
-					add_spc = True
-					out.append(u' {}'.format(repr(i)))
-				elif type(i) == list:
-					out.append(u'{:>{l}}{:16}'.format('','<'+type(i).__name__+'>',l=(lvl*8)+4))
-					do_list(out,i,lvl=lvl)
+				el = i if not is_dict else e[i]
+				if is_dict:
+					out.append('{s}{:<{l}}'.format(i,s=' '*(4*lvl+8),l=10,l2=8*(lvl+1)+8))
+				if hasattr(el,'pformat'):
+					out.append('{:>{l}}{}'.format('',el.pformat(lvl=lvl+1),l=(lvl+1)*8))
+				elif type(el) in scalars:
+					if isList(e):
+						out.append(u'{:>{l}}{:16}\n'.format('',repr(el),l=lvl*8))
+					else:
+						out.append(u' {}'.format(repr(el)))
+				elif isList(el) or isDict(el):
+					indent = 1 if is_dict else lvl*8+4
+					out.append(u'{:>{l}}{:16}'.format('','<'+type(el).__name__+'>',l=indent))
+					if isList(el) and type(el[0]) in scalars: out.append('\n')
+					do_list(out,el,lvl=lvl+1,is_dict=isDict(el))
 				else:
-					out.append(u'{:>{l}}{:16} {}\n'.format('','<'+type(i).__name__+'>',repr(i),l=(lvl*8)+8))
+					out.append(u'{:>{l}}{:16} {}\n'.format('','<'+type(el).__name__+'>',repr(el),l=(lvl*8)+8))
+				out.append('\n')
 			if not e: out.append('{}\n'.format(repr(e)))
-			if add_spc: out.append('\n')
-		out = []
-		out.append(u'<{}>\n'.format(type(self).__name__))
-		d = self.__dict__
-		for k in d:
+
+		from collections import OrderedDict
+		def isDict(obj):
+			return issubclass(type(obj),dict) or issubclass(type(obj),OrderedDict)
+		def isList(obj):
+			return issubclass(type(obj),list) and type(obj) != OrderedDict
+		def isScalar(obj):
+			return any(issubclass(type(obj),t) for t in scalars)
+
+# 		print type(self)
+# 		print dir(self)
+# 		print self.__dict__ # *attributes* of object
+# 		print self.__dict__.keys() # *attributes* of object
+# 		print self.keys()
+
+		out = [u'<{}>{}\n'.format(type(self).__name__,' '+repr(self) if isScalar(self) else '')]
+		if isList(self) or isDict(self):
+			do_list(out,self,lvl=lvl,is_dict=isDict(self))
+
+#		print repr(self.__dict__.keys())
+
+		for k in self.__dict__:
+			if k in ('_OrderedDict__root', '_OrderedDict__map'): continue # exclude these because of recursion
 			e = getattr(self,k)
-			if type(e) == list:
+			if isList(e) or isDict(e):
 				out.append(u'{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))
-				do_list(out,e,lvl=lvl)
+				do_list(out,e,lvl=lvl,is_dict=isDict(e))
 			elif hasattr(e,'pformat') and type(e) != type:
 				out.append(u'{:>{l}}{:10} {}'.format('',k,e.pformat(lvl=lvl+1),l=(lvl*8)+4))
 			else:
-				out.append(u'{:>{l}}{:<10} {:16} {}\n'.format('',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))
-		return ''.join(out)
+				out.append(u'{:>{l}}{:<10} {:16} {}\n'.format(
+					'',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))
+
+		import re
+		return re.sub('\n+','\n',''.join(out))
+
+class MMGenList(list,MMGenObject): pass
+class MMGenDict(dict,MMGenObject): pass
 
 # Descriptor: https://docs.python.org/2/howto/descriptor.html
 class MMGenListItemAttr(object):
@@ -75,10 +111,10 @@ class MMGenListItemAttr(object):
 
 class MMGenListItem(MMGenObject):
 
-	addr = MMGenListItemAttr('addr','BTCAddr')
-	amt  = MMGenListItemAttr('amt','BTCAmt')
-	mmid = MMGenListItemAttr('mmid','MMGenID')
-	label = MMGenListItemAttr('label','MMGenAddrLabel')
+	addr  = MMGenListItemAttr('addr','BTCAddr')
+	amt   = MMGenListItemAttr('amt','BTCAmt')
+	mmid  = MMGenListItemAttr('mmid','MMGenID')
+	label = MMGenListItemAttr('label','TwComment')
 
 	attrs = ()
 	attrs_priv = ()
@@ -91,7 +127,8 @@ class MMGenListItem(MMGenObject):
 			"'{}': attribute '{}' in instance of class '{}' cannot be reassigned".format(
 				val,attr,type(self).__name__)
 
-	attrs_base = ('attrs','attrs_priv','attrs_reassign','attrs_base','attr_error','set_error','__dict__','pformat')
+	attrs_base = ('attrs','attrs_priv','attrs_reassign','attrs_base','attr_error','set_error',
+				'__dict__','pformat','pmsg','pdie')
 
 	def __init__(self,*args,**kwargs):
 		if args:
@@ -133,7 +170,7 @@ class InitErrors(object):
 
 	@staticmethod
 	def arg_chk(cls,on_fail):
-		assert on_fail in ('die','return','silent','raise'),"'on_fail' in class %s" % cls.__name__
+		assert on_fail in ('die','return','silent','raise'),"arg_chk in class %s" % cls.__name__
 
 	@staticmethod
 	def init_fail(m,on_fail,silent=False):
@@ -142,8 +179,8 @@ class InitErrors(object):
 		if on_fail == 'die':      die(1,m)
 		elif on_fail == 'return':
 			if m: msg(m)
-			return None
-		elif on_fail == 'silent': return None
+			return None # TODO: change to False
+		elif on_fail == 'silent': return None # same here
 		elif on_fail == 'raise':  raise ValueError,m
 
 class AddrIdx(int,InitErrors):
@@ -167,7 +204,7 @@ class AddrIdx(int,InitErrors):
 
 		return cls.init_fail(m,on_fail)
 
-class AddrIdxList(list,InitErrors):
+class AddrIdxList(list,InitErrors,MMGenObject):
 
 	max_len = 1000000
 
@@ -176,7 +213,7 @@ class AddrIdxList(list,InitErrors):
 		assert fmt_str or idx_list
 		if idx_list:
 			# dies on failure
-			return list.__init__(self,sorted(set([AddrIdx(i) for i in idx_list])))
+			return list.__init__(self,sorted(set(AddrIdx(i) for i in idx_list)))
 		elif fmt_str:
 			desc = fmt_str
 			ret,fs = [],"'%s': value cannot be converted to address index"
@@ -315,17 +352,19 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other,context=None):
 		return type(self)(Decimal.__neg__(self,other,context))
 
-class BTCAddr(str,Hilite,InitErrors):
+class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
-	width = 34
+	width = 35 # max len of testnet p2sh addr
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
+		m = "'%s': value is not a Bitcoin address" % s
 		me = str.__new__(cls,s)
-		from mmgen.bitcoin import verify_addr
-		if type(s) in (str,unicode,BTCAddr) and verify_addr(s):
-			return me
-		else:
-			m = "'%s': value is not a Bitcoin address" % s
+		from mmgen.bitcoin import verify_addr,addr_pfxs
+		if type(s) in (str,unicode,BTCAddr):
+			me.addr_fmt = verify_addr(s,return_type=True)
+			me.testnet = s[0] in addr_pfxs['testnet']
+			if me.addr_fmt:
+				return me
 		return cls.init_fail(m,on_fail)
 
 	@classmethod
@@ -337,6 +376,21 @@ class BTCAddr(str,Hilite,InitErrors):
 		if kwargs['width'] < len(s):
 			s = s[:kwargs['width']-2] +  '..'
 		return Hilite.fmtc(s,**kwargs)
+
+	def is_for_current_chain(self):
+		from mmgen.globalvars import g
+		assert g.chain, 'global chain variable unset'
+		from bitcoin import addr_pfxs
+		return self[0] in addr_pfxs[g.chain]
+
+	def is_mainnet(self):
+		from bitcoin import addr_pfxs
+		return self[0] in addr_pfxs['mainnet']
+
+	def is_in_tracking_wallet(self):
+		from mmgen.rpc import bitcoin_connection
+		d = bitcoin_connection().validateaddress(self)
+		return d['iswatchonly'] and 'account' in d
 
 class SeedID(str,Hilite,InitErrors):
 	color = 'blue'
@@ -351,6 +405,7 @@ class SeedID(str,Hilite,InitErrors):
 			if type(seed) == Seed:
 				return str.__new__(cls,make_chksum_8(seed.get_data()))
 		elif sid:
+			sid = str(sid)
 			from string import hexdigits
 			if len(sid) == cls.width and set(sid) <= set(hexdigits.upper()):
 				return str.__new__(cls,sid)
@@ -358,7 +413,7 @@ class SeedID(str,Hilite,InitErrors):
 		m = "'%s': value cannot be converted to SeedID" % str(seed or sid)
 		return cls.init_fail(m,on_fail)
 
-class MMGenID(str,Hilite,InitErrors):
+class MMGenID(str,Hilite,InitErrors,MMGenObject):
 
 	color = 'orange'
 	width = 0
@@ -367,15 +422,83 @@ class MMGenID(str,Hilite,InitErrors):
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
 		s = str(s)
-		if ':' in s:
-			a,b = s.split(':',1)
-			sid = SeedID(sid=a,on_fail='silent')
-			if sid:
-				idx = AddrIdx(b,on_fail='silent')
-				if idx:
-					return str.__new__(cls,'%s:%s' % (sid,idx))
+		try:
+			ss = s.split(':')
+			assert len(ss) in (2,3)
+			sid = SeedID(sid=ss[0],on_fail='silent')
+			assert sid
+			idx = AddrIdx(ss[-1],on_fail='silent')
+			assert idx
+			t = MMGenAddrType((MMGenAddrType.dfl_mmtype,ss[1])[len(ss) != 2],on_fail='silent')
+			assert t
+			me = str.__new__(cls,'{}:{}:{}'.format(sid,t,idx))
+			me.sid = sid
+			me.mmtype = t
+			me.idx = idx
+			me.al_id = AddrListID(sid,me.mmtype) # key with colon!
+			assert me.al_id
+			me.sort_key = '{}:{}:{:0{w}}'.format(sid,t,idx,w=idx.max_digits)
+			return me
+		except:
+			m = "'%s': value cannot be converted to MMGenID" % s
+			return cls.init_fail(m,on_fail)
 
-		m = "'%s': value cannot be converted to MMGenID" % s
+class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
+
+	color = 'orange'
+	width = 0
+	trunc_ok = False
+
+	def __new__(cls,s,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		obj,sort_key = None,None
+		try:
+			obj = MMGenID(s,on_fail='silent')
+			sort_key,t = obj.sort_key,'mmgen'
+		except:
+			try:
+				assert len(s) > 4 and s[:4] == 'btc:'
+				obj,sort_key,t = str(s),'z_'+s,'non-mmgen'
+			except:
+				pass
+
+		if obj and sort_key:
+			me = str.__new__(cls,obj)
+			me.obj = obj
+			me.sort_key = sort_key
+			me.type = t
+			return me
+
+		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
+		return cls.init_fail(m,on_fail)
+
+# contains TwMMGenID,TwComment.  Not for display
+class TwLabel(str,InitErrors,MMGenObject):
+
+	def __new__(cls,s,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		try:
+			ss = s.split(None,1)
+			me = str.__new__(cls,s)
+			me.mmid = TwMMGenID(ss[0],on_fail='silent')
+			assert me.mmid
+			me.comment = TwComment(ss[1] if len(ss) == 2 else '',on_fail='silent')
+			assert me.comment != None
+			return me
+		except:
+			m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
+			return cls.init_fail(m,on_fail)
+
+class HexStr(str,Hilite,InitErrors):
+	color = 'red'
+	trunc_ok = False
+	def __new__(cls,s,on_fail='die',case='lower'):
+		assert case in ('upper','lower')
+		cls.arg_chk(cls,on_fail)
+		from string import hexdigits
+		if set(s) <= set(getattr(hexdigits,case)()) and not len(s) % 2:
+			return str.__new__(cls,s)
+		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
 		return cls.init_fail(m,on_fail)
 
 class MMGenTxID(str,Hilite,InitErrors):
@@ -395,6 +518,65 @@ class BitcoinTxID(MMGenTxID):
 	color = 'purple'
 	width = 64
 	hexcase = 'lower'
+
+class WifKey(str,Hilite,InitErrors):
+	width = 53
+	color = 'blue'
+	desc = 'WIF key'
+	def __new__(cls,s,on_fail='die',errmsg=None):
+		cls.arg_chk(cls,on_fail)
+		from mmgen.tx import is_wif
+		if is_wif(s):
+			me = str.__new__(cls,s)
+			return me
+		m = errmsg or "'{}': invalid value for {}".format(s,cls.desc)
+		return cls.init_fail(m,on_fail)
+
+class MMGenAddrType(str,Hilite,InitErrors):
+	width = 1
+	trunc_ok = False
+	color = 'blue'
+	mmtypes = {
+		# TODO 'L' is ambiguous: For user, it means MMGen legacy uncompressed address.
+		# For generator functions, 'L' means any p2pkh address, and 'S' any ps2h address
+		'L': 'legacy',
+		'S': 'segwit',
+# 		'l': 'litecoin',
+# 		'e': 'ethereum',
+# 		'E': 'ethereum_classic',
+# 		'm': 'monero',
+# 		'z': 'zcash',
+	}
+	dfl_mmtype = 'L'
+	def __new__(cls,s,on_fail='die',errmsg=None):
+		cls.arg_chk(cls,on_fail)
+		for k,v in cls.mmtypes.items():
+			if s in (k,v):
+				if s == v: s = k
+				me = str.__new__(cls,s)
+				me.name = cls.mmtypes[s]
+				return me
+		m = errmsg or "'{}': invalid value for {}".format(s,cls.__name__)
+		return cls.init_fail(m,on_fail)
+
+class MMGenPasswordType(MMGenAddrType):
+	mmtypes = { 'P': 'password' }
+
+class AddrListID(str,Hilite,InitErrors):
+	width = 10
+	trunc_ok = False
+	color = 'yellow'
+	def __new__(cls,sid,mmtype,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		m = "'{}': not a SeedID. Cannot create {}".format(sid,cls.__name__)
+		if type(sid) == SeedID:
+			m = "'{}': not an MMGenAddrType object. Cannot create {}".format(mmtype,cls.__name__)
+			if type(mmtype) in (MMGenAddrType,MMGenPasswordType):
+				me = str.__new__(cls,sid+':'+mmtype) # colon in key is OK
+				me.sid = sid
+				me.mmtype = mmtype
+				return me
+		return cls.init_fail(m,on_fail)
 
 class MMGenLabel(unicode,Hilite,InitErrors):
 
@@ -425,7 +607,7 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 			elif cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
 				m = u"{} '{}' contains non-allowed symbols: {}".format(capfirst(cls.desc),s,
 					' '.join(set(list(s)) - set(cls.allowed)))
-			elif cls.forbidden and any([ch in s for ch in cls.forbidden]):
+			elif cls.forbidden and any(ch in s for ch in cls.forbidden):
 				m = u"{} '{}' contains one of these forbidden symbols: '{}'".format(capfirst(cls.desc),s,
 					"', '".join(cls.forbidden))
 			else:
@@ -437,10 +619,10 @@ class MMGenWalletLabel(MMGenLabel):
 	allowed = [unichr(i+32) for i in range(95)]
 	desc = 'wallet label'
 
-class MMGenAddrLabel(MMGenLabel):
+class TwComment(MMGenLabel):
 	max_len = 32
 	allowed = [unichr(i+32) for i in range(95)]
-	desc = 'address label'
+	desc = 'tracking wallet comment'
 
 class MMGenTXLabel(MMGenLabel):
 	max_len = 72
@@ -451,3 +633,5 @@ class MMGenPWIDString(MMGenLabel):
 	min_len = 1
 	desc = 'password ID string'
 	forbidden = list(u' :/\\')
+
+class AddrListList(list,MMGenObject): pass

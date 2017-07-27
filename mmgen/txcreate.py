@@ -121,7 +121,10 @@ def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 
 	return BTCAddr(btc_addr)
 
-def get_fee_from_estimate_or_usr(tx,c,estimate_fail_msg_shown=[]):
+def get_fee_from_estimate_or_user(tx,estimate_fail_msg_shown=[]):
+
+	c = bitcoin_connection()
+
 	if opt.tx_fee:
 		desc = 'User-selected'
 		start_fee = opt.tx_fee
@@ -134,14 +137,86 @@ def get_fee_from_estimate_or_usr(tx,c,estimate_fail_msg_shown=[]):
 				estimate_fail_msg_shown.append(True)
 			start_fee = None
 		else:
-			start_fee = BTCAmt(ret) * opt.tx_fee_adj * tx.get_size() / 1024
+			start_fee = BTCAmt(ret) * opt.tx_fee_adj * tx.estimate_size() / 1024
 			if opt.verbose:
 				msg('{} fee ({} confs): {} BTC/kB'.format(desc,opt.tx_confs,ret))
-				msg('TX size (estimated): {}'.format(tx.get_size()))
+				msg('TX size (estimated): {}'.format(tx.estimate_size()))
 
 	return tx.get_usr_fee_interactive(start_fee,desc=desc)
 
-def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
+def get_outputs_from_cmdline(cmd_args,tx):
+	from mmgen.addr import AddrList,AddrData
+	addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
+	cmd_args = set(cmd_args) - set(addrfiles)
+
+	ad_f = AddrData()
+	for a in addrfiles:
+		check_infile(a)
+		ad_f.add(AddrList(a))
+
+	ad_w = AddrData(source='tw')
+
+	for a in cmd_args:
+		if ',' in a:
+			a1,a2 = a.split(',',1)
+			if is_mmgen_id(a1) or is_btc_addr(a1):
+				btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else BTCAddr(a1)
+				tx.add_output(btc_addr,BTCAmt(a2))
+			else:
+				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
+		elif is_mmgen_id(a) or is_btc_addr(a):
+			if tx.get_chg_output_idx() != None:
+				die(2,'ERROR: More than one change address listed on command line')
+			btc_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
+			tx.add_output(btc_addr,BTCAmt('0'),is_chg=True)
+		else:
+			die(2,'%s: unrecognized argument' % a)
+
+	if not tx.outputs:
+		die(2,'At least one output must be specified on the command line')
+
+	if tx.get_chg_output_idx() == None:
+		die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(tx.outputs) == 1])
+
+	tx.add_mmaddrs_to_outputs(ad_w,ad_f)
+
+	if not segwit_is_active() and tx.has_segwit_outputs():
+		fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
+		rdie(2,fs.format(g.proj_name))
+
+def get_inputs_from_user(tw,tx,caller):
+
+	while True:
+		m = 'Enter a range or space-separated list of outputs to spend: '
+		sel_nums = select_unspent(tw.unspent,m)
+		msg('Selected output%s: %s' % (suf(sel_nums,'s'),' '.join(str(i) for i in sel_nums)))
+
+		sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
+
+		t_inputs = sum(s.amt for s in sel_unspent)
+		if t_inputs < tx.send_amt:
+			msg(wmsg['not_enough_btc'] % (tx.send_amt - t_inputs))
+			continue
+
+		non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
+		if non_mmaddrs and caller != 'txdo':
+			msg(wmsg['non_mmgen_inputs'] % ', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs]))))
+			if not keypress_confirm('Accept?'):
+				continue
+
+		tx.copy_inputs_from_tw(sel_unspent)  # makes tx.inputs
+
+		change_amt = tx.sum_inputs() - tx.send_amt - get_fee_from_estimate_or_user(tx)
+
+		if change_amt >= 0:
+			p = 'Transaction produces %s BTC in change' % change_amt.hl()
+			if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+				if opt.yes: msg(p)
+				return change_amt
+		else:
+			msg(wmsg['not_enough_btc'] % abs(change_amt))
+
+def txcreate(cmd_args,do_info=False,caller='txcreate'):
 
 	tx = MMGenTX()
 
@@ -149,92 +224,29 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 
 	c = bitcoin_connection()
 
-	if not do_info:
-		from mmgen.addr import AddrList,AddrData
-		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
-		cmd_args = set(cmd_args) - set(addrfiles)
-
-		ad_f = AddrData()
-		for a in addrfiles:
-			check_infile(a)
-			ad_f.add(AddrList(a))
-
-		ad_w = AddrData(source='tw')
-
-		for a in cmd_args:
-			if ',' in a:
-				a1,a2 = a.split(',',1)
-				if is_mmgen_id(a1) or is_btc_addr(a1):
-					btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else BTCAddr(a1)
-					tx.add_output(btc_addr,BTCAmt(a2))
-				else:
-					die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
-			elif is_mmgen_id(a) or is_btc_addr(a):
-				if tx.get_chg_output_idx() != None:
-					die(2,'ERROR: More than one change address listed on command line')
-				btc_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
-				tx.add_output(btc_addr,BTCAmt('0'),is_chg=True)
-			else:
-				die(2,'%s: unrecognized argument' % a)
-
-		if not tx.outputs:
-			die(2,'At least one output must be specified on the command line')
-
-		if tx.get_chg_output_idx() == None:
-			die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(tx.outputs) == 1])
-
+	if not do_info: get_outputs_from_cmdline(cmd_args,tx)
 
 	tw = MMGenTrackingWallet(minconf=opt.minconf)
-	tw.view_and_sort()
+	tw.view_and_sort(tx)
 	tw.display_total()
 
-	if do_info: sys.exit()
+	if do_info: sys.exit(0)
 
 	tx.send_amt = tx.sum_outputs()
 
 	msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt.hl())[bool(tx.send_amt)])
 
-	while True:
-		sel_nums = select_unspent(tw.unspent,
-				'Enter a range or space-separated list of outputs to spend: ')
-		msg('Selected output%s: %s' % (
-				('s','')[len(sel_nums)==1],
-				' '.join(str(i) for i in sel_nums)
-			))
+	change_amt = get_inputs_from_user(tw,tx,caller)
 
-		sel_unspent = [tw.unspent[i-1] for i in sel_nums]
-
-		t_inputs = sum(s.amt for s in sel_unspent)
-		if t_inputs < tx.send_amt:
-			msg(wmsg['not_enough_btc'] % (tx.send_amt - t_inputs))
-			continue
-
-		non_mmaddrs = [i for i in sel_unspent if i.mmid == None]
-		if non_mmaddrs and caller != 'txdo':
-			msg(wmsg['non_mmgen_inputs'] % ', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs]))))
-			if not keypress_confirm('Accept?'):
-				continue
-
-		tx.copy_inputs_from_tw(sel_unspent)      # makes tx.inputs
-
-		if opt.rbf: tx.signal_for_rbf()          # only after we have inputs
-
-		change_amt = tx.sum_inputs() - tx.send_amt - get_fee_from_estimate_or_usr(tx,c)
-
-		if change_amt >= 0:
-			p = 'Transaction produces %s BTC in change' % change_amt.hl()
-			if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
-				if opt.yes: msg(p)
-				break
-		else:
-			msg(wmsg['not_enough_btc'] % abs(change_amt))
+	if opt.rbf: tx.signal_for_rbf() # only after we have inputs
 
 	chg_idx = tx.get_chg_output_idx()
-	if change_amt > 0:
-		tx.update_output_amt(chg_idx,BTCAmt(change_amt))
-	else:
+
+	if change_amt == 0:
 		msg('Warning: Change address will be deleted as transaction produces no change')
 		tx.del_output(chg_idx)
+	else:
+		tx.update_output_amt(chg_idx,BTCAmt(change_amt))
 
 	if not tx.send_amt:
 		tx.send_amt = change_amt
@@ -244,11 +256,12 @@ def txcreate(opt,cmd_args,do_info=False,caller='txcreate'):
 	if not opt.yes:
 		tx.add_comment()   # edits an existing comment
 	tx.create_raw(c)       # creates tx.hex, tx.txid
-	tx.add_mmaddrs_to_outputs(ad_w,ad_f)
+
 	tx.add_timestamp()
 	tx.add_blockcount(c)
+	tx.chain = g.chain
 
-	assert tx.get_fee() <= g.max_tx_fee
+	assert tx.sum_inputs() - tx.sum_outputs() <= g.max_tx_fee
 
 	qmsg('Transaction successfully created')
 

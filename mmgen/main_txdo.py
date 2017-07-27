@@ -83,7 +83,7 @@ kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
 if kl and kal: kl.remove_dups(kal,key='wif')
 
-tx = txcreate(opt,cmd_args,caller='txdo')
+tx = txcreate(cmd_args,caller='txdo')
 txsign(opt,c,tx,seed_files,kl,kal)
 tx.write_to_file(ask_write=False)
 

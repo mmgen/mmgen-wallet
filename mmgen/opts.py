@@ -27,26 +27,6 @@ from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
-pw_note = """
-For passphrases all combinations of whitespace are equal and leading and
-trailing space is ignored.  This permits reading passphrase or brainwallet
-data from a multi-line file with free spacing and indentation.
-""".strip()
-
-bw_note = """
-BRAINWALLET NOTE:
-
-To thwart dictionary attacks, it's recommended to use a strong hash preset
-with brainwallets.  For a brainwallet passphrase to generate the correct
-seed, the same seed length and hash preset parameters must always be used.
-""".strip()
-
-version_info = """
-{pgnm_uc} version {g.version}
-Part of the {pnm} suite, a Bitcoin cold-storage solution for the command line.
-Copyright (C) {g.Cdates} {g.author} {g.email}
-""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
-
 def usage(): Die(2,'USAGE: %s %s' % (g.prog_name, usage_txt))
 
 def die_on_incompatible_opts(incompat_list):
@@ -76,6 +56,7 @@ common_opts_data = """
 --, --rpc-port=p          Communicate with bitcoind listening on port 'p'
 --, --rpc-user=user       Override 'rpcuser' in bitcoin.conf
 --, --rpc-password=pass   Override 'rpcpassword' in bitcoin.conf
+--, --regtest=0|1         Disable or enable regtest mode
 --, --testnet=0|1         Disable or enable testnet
 --, --skip-cfg-file       Skip reading the configuration file
 --, --version             Print version information and exit
@@ -179,6 +160,13 @@ def override_from_env():
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
 
 def init(opts_data,add_opts=[],opt_filter=None):
+
+	version_info = """
+    {pgnm_uc} version {g.version}
+    Part of the {pnm} suite, a Bitcoin cold-storage solution for the command line.
+    Copyright (C) {g.Cdates} {g.author} {g.email}
+	""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
+
 	opts_data['long_options'] = common_opts_data
 
 	uopts,args,short_opts,long_opts,skipped_opts = \
@@ -218,6 +206,8 @@ def init(opts_data,add_opts=[],opt_filter=None):
 		val = getattr(opt,k)
 		if val != None: setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
+	if g.regtest: g.testnet = True # These are equivalent for now
+
 #	Global vars are now final, including g.testnet, so we can set g.data_dir
 	g.data_dir=os.path.normpath(os.path.join(g.data_dir_root,('',g.testnet_name)[g.testnet]))
 
@@ -238,14 +228,15 @@ def init(opts_data,add_opts=[],opt_filter=None):
 
 	if opt.show_hash_presets:
 		_show_hash_presets()
-		sys.exit()
+		sys.exit(0)
 
-	if g.debug: opt_postproc_debug()
 	if opt.verbose: opt.quiet = None
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
 	opt_postproc_initializations()
+
+	if g.debug: opt_postproc_debug()
 
 	return args
 

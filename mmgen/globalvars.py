@@ -31,13 +31,15 @@ from mmgen.obj import BTCAmt
 
 class g(object):
 
+	skip_segwit_active_check = bool(os.getenv('MMGEN_TEST_SUITE'))
+
 	def die(ev=0,s=''):
 		if s: sys.stderr.write(s+'\n')
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.1'
-	release_date = 'May 2017'
+	version      = '0.9.199'
+	release_date = 'July 2017'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -70,6 +72,10 @@ class g(object):
 	color                = (False,True)[sys.stdout.isatty()]
 	force_256_color      = False
 	testnet              = False
+	regtest              = False
+	chain                = None # set by first call to bitcoin_connection()
+	chains               = 'mainnet','testnet','regtest'
+	bitcoind_version     = None # set by first call to bitcoin_connection()
 	rpc_host             = ''
 	rpc_port             = 0
 	rpc_user             = ''
@@ -97,7 +103,7 @@ class g(object):
 	# User opt sets global var:
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color'
+		'bitcoin_data_dir','force_256_color','regtest'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
@@ -114,7 +120,7 @@ class g(object):
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color','max_tx_fee'
+		'bitcoin_data_dir','force_256_color','max_tx_fee','regtest'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
@@ -127,6 +133,7 @@ class g(object):
 		'MMGEN_NO_LICENSE',
 		'MMGEN_RPC_HOST',
 		'MMGEN_TESTNET'
+		'MMGEN_REGTEST'
 	)
 
 	min_screen_width = 80
@@ -135,8 +142,6 @@ class g(object):
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
 						'quiet','tx_confs','tx_fee_adj','key_generator']
-
-	keyconv_exec = 'keyconv'
 
 	mins_per_block   = 9
 	passwd_max_tries = 5
@@ -151,8 +156,8 @@ class g(object):
 	aesctr_iv_len  = 16
 	hincog_chk_len = 8
 
-	key_generators = 'python-ecdsa','keyconv','secp256k1' # 1,2,3
-	key_generator  = 3 # secp256k1 is default
+	key_generators = 'python-ecdsa','secp256k1' # '1','2'
+	key_generator  = 2 # secp256k1 is default
 
 	hash_presets = {
 #   Scrypt params:

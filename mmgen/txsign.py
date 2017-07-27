@@ -68,34 +68,37 @@ ERROR: a key file must be supplied for the following non-{pnm} address%s:\n    %
 
 saved_seeds = {}
 
-def get_seed_for_seed_id(seed_id,infiles,saved_seeds):
+def get_seed_for_seed_id(sid,infiles,saved_seeds):
 
-	if seed_id in saved_seeds:
-		return saved_seeds[seed_id]
+	if sid in saved_seeds:
+		return saved_seeds[sid]
 
 	while True:
 		if infiles:
 			ss = SeedSource(infiles.pop(0),ignore_in_fmt=True)
 		elif opt.in_fmt:
-			qmsg('Need seed data for Seed ID %s' % seed_id)
+			qmsg('Need seed data for Seed ID %s' % sid)
 			ss = SeedSource()
 			msg('User input produced Seed ID %s' % ss.seed.sid)
 		else:
-			die(2,'ERROR: No seed source found for Seed ID: %s' % seed_id)
+			die(2,'ERROR: No seed source found for Seed ID: %s' % sid)
 
 		saved_seeds[ss.seed.sid] = ss.seed
-		if ss.seed.sid == seed_id: return ss.seed
+		if ss.seed.sid == sid: return ss.seed
 
 def generate_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds):
-	seed_ids = set([i[:8] for i in mmgen_addrs])
-	vmsg('Need seed%s: %s' % (suf(seed_ids,'k'),' '.join(seed_ids)))
-	d = []
+	sids = set(i.sid for i in mmgen_addrs)
+	vmsg('Need seed%s: %s' % (suf(sids,'s'),' '.join(sids)))
+	d = AddrListList()
 	from mmgen.addr import KeyAddrList
-	for seed_id in seed_ids:
+	for sid in sids:
 		# Returns only if seed is found
-		seed = get_seed_for_seed_id(seed_id,infiles,saved_seeds)
-		addr_idxs = AddrIdxList(idx_list=[int(i[9:]) for i in mmgen_addrs if i[:8] == seed_id])
-		d += KeyAddrList(seed=seed,addr_idxs=addr_idxs,do_chksum=False).flat_list()
+		seed = get_seed_for_seed_id(sid,infiles,saved_seeds)
+		for t in MMGenAddrType.mmtypes:
+			idx_list = [i.idx for i in mmgen_addrs if i.sid == sid and i.mmtype == t]
+			if idx_list:
+				addr_idxs = AddrIdxList(idx_list=idx_list)
+				d += KeyAddrList(seed=seed,addr_idxs=addr_idxs,do_chksum=False,mmtype=MMGenAddrType(t)).flat_list()
 	return d
 
 def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
@@ -113,54 +116,57 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 				if f.addr == e.addr:
 					e.have_wif = True
 					if src == 'inputs':
-						new_keys.append(f.wif)
+						new_keys.append((f.addr,f.wif))
 				else:
 					die(3,wmsg['mapping_error'] % (m1,f.mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
-		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'k'),desc))
+		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'s'),desc))
 	return new_keys
 
-def get_tx_files(opt,args): # strips found args
-	def is_tx(i): return get_extension(i) == MMGenTX.raw_ext
-	ret = [args.pop(i) for i in range(len(args)-1,-1,-1) if is_tx(args[i])]
-	if not ret:
-		die(1,'You must specify a raw transaction file!')
-	return list(reversed(ret))
+def _pop_and_return(args,cmplist): # strips found args
+	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
-def get_seed_files(opt,args): # strips found args
-	def is_seed(i): return get_extension(i) in SeedSource.get_extensions()
-	ret = [args.pop(i) for i in range(len(args)-1,-1,-1) if is_seed(args[i])]
-	from mmgen.filename import find_file_in_dir
-	wf = find_file_in_dir(Wallet,g.data_dir)
-	if wf: ret.append(wf)
-	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat):
-		die(1,'You must specify a seed or key source!')
-	return list(reversed(ret))
-
-def get_keyaddrlist(opt):
-	ret = None
-	if opt.mmgen_keys_from_file:
-		ret = KeyAddrList(opt.mmgen_keys_from_file)
+def get_tx_files(opt,args):
+	ret = _pop_and_return(args,[MMGenTX.raw_ext])
+	if not ret: die(1,'You must specify a raw transaction file!')
 	return ret
 
+def get_seed_files(opt,args):
+	# favor unencrypted seed sources first, as they don't require passwords
+	u,e = SeedSourceUnenc,SeedSourceEnc
+	ret = _pop_and_return(args,u.get_extensions())
+	from mmgen.filename import find_file_in_dir
+	wf = find_file_in_dir(Wallet,g.data_dir) # Make this the first encrypted ss in the list
+	if wf: ret.append(wf)
+	ret += _pop_and_return(args,e.get_extensions())
+	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat
+		die(1,'You must specify a seed or key source!')
+	return ret
+
+def get_keyaddrlist(opt):
+	if opt.mmgen_keys_from_file:
+		return KeyAddrList(opt.mmgen_keys_from_file)
+	return None
+
 def get_keylist(opt):
-	ret = None
 	if opt.keys_from_file:
 		l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
 		ret = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept bitcoind wallet dumps
-		ret.generate_addrs()
-	return ret
+		ret.generate_addrs_from_keylist()
+		return ret
+	return None
 
 def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	# Start
 	keys = []
+#	tx.pmsg()
 	non_mm_addrs = tx.get_non_mmaddrs('inputs')
 	if non_mm_addrs:
 		tmp = KeyAddrList(addrlist=non_mm_addrs,do_chksum=False)
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('wif')
 		if m: die(2,wmsg['missing_keys_error'] % (suf(m,'es'),'\n    '.join(m)))
-		keys += tmp.get_wifs()
+		keys += tmp.get_addr_wif_pairs()
 
 	if opt.mmgen_keys_from_file:
 		keys += add_keys(tx,'inputs',keyaddr_list=kal)
@@ -174,10 +180,9 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 
 	extra_sids = set(saved_seeds) - tx.get_input_sids() - tx.get_output_sids()
 	if extra_sids:
-		msg('Unused Seed ID%s: %s' %
-			(suf(extra_sids,'k'),' '.join(extra_sids)))
+		msg('Unused Seed ID{}: {}'.format(suf(extra_sids,'s'),' '.join(extra_sids)))
 
-	if tx.sign(c,tx_num_str,keys):
+	if tx.sign(c,tx_num_str,dict(keys)):
 		return tx
 	else:
-		die(3,'failed\nSome keys were missing.  Transaction %scould not be signed.' % tx_num_str)
+		die(3,'failed\nSome keys were missing.  Transaction {}could not be signed.'.format(tx_num_str))

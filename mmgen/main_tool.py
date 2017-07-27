@@ -39,30 +39,23 @@ opts_data = {
 """.format(g=g),
 	'notes': """
 
-COMMANDS:{}
+                               COMMANDS
+{}
 Type '{} help <command> for help on a particular command
 """.format(tool.cmd_help,g.prog_name)
 }
 
-cmd_args = opts.init(opts_data,
-	add_opts=[
-		'hidden_incog_input_params',
-		'in_fmt'
-		])
+cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt'])
 
-if len(cmd_args) < 1:
-	opts.usage()
-	sys.exit(1)
+if len(cmd_args) < 1: opts.usage()
 
-command = cmd_args.pop(0)
+Command = cmd_args.pop(0).capitalize()
 
-if command not in tool.cmd_data:
-	die(1,"'%s': no such command" % command)
+if Command == 'Help' and not cmd_args: tool.usage(None)
 
-if cmd_args and cmd_args[0] == '--help':
-	tool.tool_usage(g.prog_name, command)
-	sys.exit()
+if Command not in tool.cmd_data:
+	die(1,"'%s': no such command" % Command.lower())
 
-args,kwargs = tool.process_args(g.prog_name, command, cmd_args)
-ret = tool.__dict__[command](*args,**kwargs)
+args,kwargs = tool.process_args(Command,cmd_args)
+ret = tool.__dict__[Command](*args,**kwargs)
 sys.exit(0 if ret in (None,True) else 1) # some commands die, some return False on failure

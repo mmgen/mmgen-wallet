@@ -20,24 +20,7 @@
 test/test.py:  Test suite for the MMGen suite
 """
 
-
 import sys,os
-
-def run_in_tb():
-	fn = sys.argv[0]
-	source = open(fn)
-	try:
-		exec source in {'inside_tb':1}
-	except SystemExit:
-		pass
-	except:
-		def color(s): return '\033[36;1m' + s + '\033[0m'
-		e = sys.exc_info()
-		sys.stdout.write(color('\nTest script returned: %s\n' % (e[0].__name__)))
-
-if not 'inside_tb' in globals() and 'MMGEN_TEST_TRACEBACK' in os.environ:
-	run_in_tb()
-	sys.exit()
 
 pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
@@ -138,6 +121,8 @@ opts_data = {
 -D, --direct-exec   Bypass pexpect and execute a command directly (for
                     debugging only)
 -e, --exact-output  Show the exact output of the MMGen script(s) being run
+-g, --segwit        Generate and use Segwit addresses
+-G, --segwit-random Generate and use a random mix of Segwit and Legacy addrs
 -l, --list-cmds     List and describe the commands in the test suite
 -L, --log           Log commands to file {lf}
 -n, --names         Display command names instead of descriptions
@@ -167,6 +152,11 @@ cmd_args = opts.init(opts_data)
 
 tn_desc = ('','.testnet')[g.testnet]
 
+def randbool():
+	return hexlify(os.urandom(1))[1] in '12345678'
+def get_segwit_val():
+	return randbool() if opt.segwit_random else True if opt.segwit else False
+
 cfgs = {
 	'15': {
 		'tmpdir':        os.path.join('test','tmp15'),
@@ -181,6 +171,7 @@ cfgs = {
 			'mmseed':      'export_seed_dfl_wallet',
 			'del_dw_run':  'delete_dfl_wallet',
 		},
+		'segwit': get_segwit_val()
 	},
 	'16': {
 		'tmpdir':        os.path.join('test','tmp16'),
@@ -189,6 +180,7 @@ cfgs = {
 		'dep_generators': {
 			pwfile:        'passchg_dfl_wallet',
 		},
+		'segwit': get_segwit_val()
 	},
 	'1': {
 		'tmpdir':        os.path.join('test','tmp1'),
@@ -211,6 +203,7 @@ cfgs = {
 			incog_id_fn:   'export_incog_hidden',
 			'akeys.mmenc': 'keyaddrgen'
 		},
+		'segwit': get_segwit_val()
 	},
 	'2': {
 		'tmpdir':        os.path.join('test','tmp2'),
@@ -224,6 +217,7 @@ cfgs = {
 			'sigtx':         'txsign2',
 			'mmwords':     'export_mnemonic2',
 		},
+		'segwit': get_segwit_val()
 	},
 	'3': {
 		'tmpdir':        os.path.join('test','tmp3'),
@@ -235,6 +229,7 @@ cfgs = {
 			'rawtx':         'txcreate3',
 			'sigtx':         'txsign3'
 		},
+		'segwit': get_segwit_val()
 	},
 	'4': {
 		'tmpdir':        os.path.join('test','tmp4'),
@@ -251,6 +246,7 @@ cfgs = {
 		},
 		'bw_filename': 'brainwallet.mmbrain',
 		'bw_params':   '192,1',
+		'segwit': get_segwit_val()
 	},
 	'14': {
 		'kapasswd':      'Maxwell',
@@ -263,6 +259,7 @@ cfgs = {
 			'addrs':       'addrgen14',
 			'akeys.mmenc': 'keyaddrgen14',
 		},
+		'segwit': get_segwit_val()
 	},
 	'5': {
 		'tmpdir':        os.path.join('test','tmp5'),
@@ -272,14 +269,15 @@ cfgs = {
 			'mmdat':       'passchg',
 			pwfile:        'passchg',
 		},
+		'segwit': get_segwit_val()
 	},
 	'6': {
 		'name':            'reference wallet check (128-bit)',
 		'seed_len':        128,
 		'seed_id':         'FE3C6545',
 		'ref_bw_seed_id':  '33F10310',
-		'addrfile_chk':    ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE')[g.testnet],
-		'keyaddrfile_chk': ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35')[g.testnet],
+'addrfile_chk': ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE','9914 6D10 2307 F348','7DBF 441F E188 8B37'),
+'keyaddrfile_chk':('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35','C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
 		'passfile_chk':    'EB29 DC4F 924B 289F',
 		'passfile32_chk':  '37B6 C218 2ABC 7508',
 		'wpasswd':         'reference password',
@@ -300,15 +298,15 @@ cfgs = {
 			'addrs':       'refaddrgen1',
 			'akeys.mmenc': 'refkeyaddrgen1'
 		},
-
+		'segwit': get_segwit_val()
 	},
 	'7': {
 		'name':            'reference wallet check (192-bit)',
 		'seed_len':        192,
 		'seed_id':         '1378FC64',
 		'ref_bw_seed_id':  'CE918388',
-		'addrfile_chk':    ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81')[g.testnet],
-		'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC')[g.testnet],
+'addrfile_chk': ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81','91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
+'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC','C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
 		'passfile_chk':    'ADEA 0083 094D 489A',
 		'passfile32_chk':  '2A28 C5C7 36EC 217A',
 		'wpasswd':         'reference password',
@@ -329,23 +327,25 @@ cfgs = {
 			'addrs':       'refaddrgen2',
 			'akeys.mmenc': 'refkeyaddrgen2'
 		},
-
+		'segwit': get_segwit_val()
 	},
 	'8': {
 		'name':            'reference wallet check (256-bit)',
 		'seed_len':        256,
 		'seed_id':         '98831F3A',
 		'ref_bw_seed_id':  'B48CD7FC',
-		'addrfile_chk':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
-		'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
+'addrfile_chk': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E','06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
+'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2','A447 12C2 DD14 5A9B','0690 460D A600 D315'),
 		'passfile_chk':    '2D6D 8FBA 422E 1315',
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
 		'ref_addrfile':    '98831F3A[1,31-33,500-501,1010-1011]{}.addrs'.format(tn_desc),
+		'ref_segwitaddrfile':'98831F3A-S[1,31-33,500-501,1010-1011]{}.addrs'.format(tn_desc),
 		'ref_keyaddrfile': '98831F3A[1,31-33,500-501,1010-1011]{}.akeys.mmenc'.format(tn_desc),
 		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum':    ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E')[g.testnet],
+		'ref_segwitaddrfile_chksum':('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14')[g.testnet],
 		'ref_keyaddrfile_chksum': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2')[g.testnet],
 		'ref_passwdfile_chksum':  'A983 DAB9 5514 27FB',
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
@@ -367,6 +367,7 @@ cfgs = {
 			'addrs':       'refaddrgen3',
 			'akeys.mmenc': 'refkeyaddrgen3'
 		},
+		'segwit': get_segwit_val()
 	},
 	'9': {
 		'tmpdir':        os.path.join('test','tmp9'),
@@ -489,6 +490,7 @@ cmd_group['ref'] = (
 # misc. saved reference data
 cmd_group['ref_other'] = (
 	('ref_addrfile_chk',   'saved reference address file'),
+	('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
 	('ref_keyaddrfile_chk','saved reference key-address file'),
 	('ref_passwdfile_chk', 'saved reference password file'),
 #	Create the fake inputs:
@@ -609,7 +611,7 @@ del cmd_group
 add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in 'testnet','rpc_host' if getattr(opt,k)]).split()
+	) for k in 'testnet','rpc_host','rpc_port','regtest' if getattr(opt,k)]).split()
 add_spawn_args += ['--data-dir',data_dir]
 
 if opt.profile: opt.names = True
@@ -630,6 +632,8 @@ os.environ['MMGEN_DISABLE_COLOR'] = '1'
 os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 os.environ['MMGEN_BOGUS_SEND'] = '1'
+
+def get_segwit_arg(cfg): return ([],['--type','segwit'])[cfg['segwit']]
 
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
@@ -692,7 +696,7 @@ if opt.list_cmds:
 	w = max([len(i) for i in utils])
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
-	sys.exit()
+	sys.exit(0)
 
 import time,re
 if g.platform == 'linux':
@@ -718,7 +722,7 @@ else: # Windows
 		m3 = '.\nControl values should be checked against the program output.\nContinue?'
 		if not keypress_confirm(green(m1)+grnbg(m2)+green(m3),default_yes=True):
 			errmsg('Exiting at user request')
-			sys.exit()
+			sys.exit(0)
 
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
@@ -770,8 +774,10 @@ def get_file_with_ext(ext,mydir,delete=True,no_dot=False):
 	if len(flist) > 1:
 		if delete:
 			if not opt.quiet:
-				msg("Multiple *.%s files in '%s' - deleting" % (ext,mydir))
-			for f in flist: os.unlink(f)
+				msg("Multiple *.{} files in '{}' - deleting".format(ext,mydir))
+			for f in flist:
+				msg(f)
+				os.unlink(f)
 		return False
 	else:
 		return flist[0]
@@ -845,6 +851,7 @@ class MMGenExpect(object):
 		else:
 			if opt.traceback:
 				cmd,args = tb_cmd,[cmd]+args
+				cmd_str = tb_cmd + ' ' + cmd_str
 			if use_popen_spawn:
 				self.p = PopenSpawn(cmd_str)
 			else:
@@ -854,7 +861,7 @@ class MMGenExpect(object):
 	def ok(self,exit_val=0):
 		ret = self.p.wait()
 		if ret != exit_val:
-			die(1,red('Program exited with value {}'.format(ret)))
+			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
 		if opt.profile: return
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('OK\n'))
@@ -863,7 +870,7 @@ class MMGenExpect(object):
 	def cmp_or_die(self,s,t,skip_ok=False,exit_val=0):
 		ret = self.p.wait()
 		if ret != exit_val:
-			die(1,red('Program exited with value {}'.format(ret)))
+			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
 		if s == t:
 			if not skip_ok: ok()
 		else:
@@ -977,16 +984,17 @@ class MMGenExpect(object):
 from mmgen.obj import BTCAmt
 from mmgen.bitcoin import verify_addr
 
-def create_fake_unspent_entry(address,sid=None,idx=None,lbl=None,non_mmgen=None):
+def create_fake_unspent_entry(btcaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if lbl: lbl = ' ' + lbl
+	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and btcaddr.addr_fmt=='p2sh']
 	return {
-		'account': (non_mmgen or ('%s:%s%s' % (sid,idx,lbl))).decode('utf8'),
+		'account': 'btc:{}'.format(btcaddr) if non_mmgen else (u'{}:{}{}'.format(al_id,idx,lbl.decode('utf8'))),
 		'vout': int(getrandnum(4) % 8),
 		'txid': hexlify(os.urandom(32)).decode('utf8'),
 		'amount': BTCAmt('%s.%s' % (10+(getrandnum(4) % 40), getrandnum(4) % 100000000)),
-		'address': address,
+		'address': btcaddr,
 		'spendable': False,
-		'scriptPubKey': ('76a914'+verify_addr(address,return_hex=True)+'88ac'),
+		'scriptPubKey': (spk1+verify_addr(btcaddr,return_hex=True)+spk2),
 		'confirmations': getrandnum(4) % 50000
 	}
 
@@ -1013,35 +1021,82 @@ labels = [
 	"Carl's capital",
 ]
 label_iter = None
-def create_fake_unspent_data(adata,unspent_data_file,tx_data,non_mmgen_input=''):
+
+def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 
 	out = []
-	for s in tx_data:
-		sid = tx_data[s]['sid']
-		a = adata.addrlist(sid)
-		for n,(idx,btcaddr) in enumerate(a.addrpairs(),1):
+	for d in tx_data.values():
+		al = adata.addrlist(d['al_id'])
+		for n,(idx,btcaddr) in enumerate(al.addrpairs()):
 			while True:
 				try: lbl = next(label_iter)
 				except: label_iter = iter(labels)
 				else: break
-			out.append(create_fake_unspent_entry(btcaddr,sid,idx,lbl))
-			if n == 1:  # create a duplicate address. This means addrs_per_wallet += 1
-				out.append(create_fake_unspent_entry(btcaddr,sid,idx,lbl))
+			out.append(create_fake_unspent_entry(btcaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
+			if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
+				out.append(create_fake_unspent_entry(btcaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 	if non_mmgen_input:
-		from mmgen.bitcoin import privnum2addr,hex2wif
 		privnum = getrandnum(32)
-		btcaddr = privnum2addr(privnum,compressed=True)
+		from mmgen.bitcoin import privnum2addr,hex2wif
+		from mmgen.obj import BTCAddr
+		btcaddr = BTCAddr(privnum2addr(privnum,compressed=True))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		wif = hex2wif('{:064x}'.format(privnum),compressed=True)
 #		Msg(yellow(wif + ' ' + btcaddr))
 		write_data_to_file(of,wif+'\n','compressed bitcoin key',silent=True)
+		out.append(create_fake_unspent_entry(btcaddr,non_mmgen=True,segwit=False))
 
-		out.append(create_fake_unspent_entry(btcaddr,non_mmgen='Non-MMGen address'))
+#	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
+	return out
 
-#	msg('\n'.join([repr(o) for o in out])); sys.exit()
-	write_data_to_file(unspent_data_file,repr(out),'Unspent outputs',silent=True)
+def	write_fake_data_to_file(d):
+	unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
+	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True)
+	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
+	bwd_msg = 'MMGEN_BOGUS_WALLET_DATA=%s' % unspent_data_file
+	if opt.print_cmdline: msg(bwd_msg)
+	if opt.log: log_fd.write(bwd_msg + ' ')
+	if opt.verbose or opt.exact_output:
+		sys.stderr.write("Fake transaction wallet data written to file '%s'\n" % unspent_data_file)
 
+def create_tx_data(sources):
+	from mmgen.addr import AddrList,AddrData,AddrIdxList
+	tx_data,ad = {},AddrData()
+	for s in sources:
+		afile = get_file_with_ext('addrs',cfgs[s]['tmpdir'])
+		al = AddrList(afile)
+		ad.add(al)
+		aix = AddrIdxList(fmt_str=cfgs[s]['addr_idx_list'])
+		if len(aix) != addrs_per_wallet:
+			errmsg(red('Address index list length != %s: %s' %
+						(addrs_per_wallet,repr(aix))))
+			sys.exit(0)
+		tx_data[s] = {
+			'addrfile': afile,
+			'chk': al.chksum,
+			'al_id': al.al_id,
+			'addr_idxs': aix[-2:],
+			'segwit': cfgs[s]['segwit']
+		}
+	return ad,tx_data
+
+def make_txcreate_cmdline(tx_data):
+	from mmgen.bitcoin import privnum2addr
+	btcaddr = privnum2addr(getrandnum(32),compressed=True)
+
+	cmd_args = ['-d',cfg['tmpdir']]
+	for num in tx_data:
+		s = tx_data[num]
+		cmd_args += [
+			'{}:{},{}'.format(s['al_id'],s['addr_idxs'][0],cfgs[num]['amts'][0]),
+		]
+		# + one change address and one BTC address
+		if num is tx_data.keys()[-1]:
+			cmd_args += ['{}:{}'.format(s['al_id'],s['addr_idxs'][1])]
+			cmd_args += ['{},{}'.format(btcaddr,cfgs[num]['amts'][1])]
+
+	return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
 def add_comments_to_addr_file(addrfile,outfile):
 	silence()
@@ -1073,7 +1128,7 @@ def do_between():
 			if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 		else:
 			errmsg('Exiting at user request')
-			sys.exit()
+			sys.exit(0)
 	elif opt.verbose or opt.exact_output:
 		sys.stderr.write('\n')
 
@@ -1370,7 +1425,7 @@ class MMGenTestSuite(object):
 
 	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[]):
 		ftype,chkfile = ((ftype,'{}file_chk'.format(ftype)),('pass','passfile32_chk'))[ftype=='pass32']
-		add_args = extra_args + ([],['-q'] + ([],['-P',pf])[bool(pf)])[ia]
+		add_args = extra_args + ([],['-q'] + ([],['-P',pf])[bool(pf)])[ia] + (get_segwit_arg(cfg),[])[ftype[:4]=='pass']
 		dlist = [id_str] if id_str else []
 		t = MMGenExpect(name,'mmgen-{}gen'.format(ftype), add_args +
 				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + dlist + [cfg['{}_idx_list'.format(ftype)]])
@@ -1381,7 +1436,8 @@ class MMGenTestSuite(object):
 		desc = ('address','password')[ftype=='pass']
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
 		if check_ref:
-			refcheck('address data checksum',chk,cfg[chkfile])
+			c = (cfg[chkfile][g.testnet + 2*cfg['segwit']],cfg[chkfile])[ftype=='pass']
+			refcheck('address data checksum',chk,c)
 			return
 		t.written_to_file('Addresses',oo=True)
 		t.ok()
@@ -1400,7 +1456,6 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-addrimport', add_args + [outfile])
 		if ia: return
 		t.expect_getend(r'Checksum for address data .*\[.*\]: ',regex=True)
-		t.expect_getend('Validating addresses...OK. ')
 		t.expect("Type uppercase 'YES' to confirm: ",'\n')
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
@@ -1408,50 +1463,14 @@ class MMGenTestSuite(object):
 	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[]):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
+
 		silence()
-		from mmgen.addr import AddrList,AddrData,AddrIdxList
-		tx_data,ad = {},AddrData()
-		for s in sources:
-			afile = get_file_with_ext('addrs',cfgs[s]['tmpdir'])
-			ai = AddrList(afile)
-			ad.add(ai)
-			aix = AddrIdxList(fmt_str=cfgs[s]['addr_idx_list'])
-			if len(aix) != addrs_per_wallet:
-				errmsg(red('Address index list length != %s: %s' %
-							(addrs_per_wallet,repr(aix))))
-				sys.exit()
-			tx_data[s] = {
-				'addrfile': afile,
-				'chk': ai.chksum,
-				'sid': ai.seed_id,
-				'addr_idxs': aix[-2:],
-			}
-
-		unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
-		create_fake_unspent_data(ad,unspent_data_file,tx_data,non_mmgen_input)
-		if opt.verbose or opt.exact_output:
-			sys.stderr.write("Fake transaction wallet data written to file '%s'\n" % unspent_data_file)
-
-		# make the command line
-		from mmgen.bitcoin import privnum2addr
-		btcaddr = privnum2addr(getrandnum(32),compressed=True)
-
-		cmd_args = ['-d',cfg['tmpdir']]
-		for num in tx_data:
-			s = tx_data[num]
-			cmd_args += [
-				'%s:%s,%s' % (s['sid'],s['addr_idxs'][0],cfgs[num]['amts'][0]),
-			]
-			# + one BTC address
-			# + one change address and one BTC address
-			if num is tx_data.keys()[-1]:
-				cmd_args += ['%s:%s' % (s['sid'],s['addr_idxs'][1])]
-				cmd_args += ['%s,%s' % (btcaddr,cfgs[num]['amts'][1])]
-
-		for num in tx_data: cmd_args += [tx_data[num]['addrfile']]
-
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
+		ad,tx_data = create_tx_data(sources)
+		dfake = create_fake_unspent_data(ad,tx_data,non_mmgen_input)
+		write_fake_data_to_file(repr(dfake))
+		cmd_args = make_txcreate_cmdline(tx_data)
 		end_silence()
+
 		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 
 		if ia:
@@ -1459,9 +1478,6 @@ class MMGenTestSuite(object):
 			m = '\nAnswer the interactive prompts as follows:\n' + \
 				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, ENTER, 'y'"
 			msg(grnbg(m))
-		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA=%s' % unspent_data_file
-		if opt.print_cmdline: msg(bwd_msg)
-		if opt.log: log_fd.write(bwd_msg + ' ')
 		t = MMGenExpect(name,'mmgen-'+('txcreate','txdo')[bool(txdo_args)],['--rbf','-f',tx_fee] + add_args + cmd_args + txdo_args)
 		if ia: return
 		t.license()
@@ -1516,7 +1532,7 @@ class MMGenTestSuite(object):
 			t.hash_preset('key-address data','1')
 			t.passphrase('key-address data',cfgs['14']['kapasswd'])
 			t.expect('Check key-to-address validity? (y/N): ','y')
-		t.expect('Which output do you wish to deduct the fee from? ','1\n')
+		t.expect('deduct the fee from (Hit ENTER for the change output): ','1\n')
 		# Fee must be > tx_fee + network relay fee (currently 0.00001)
 		t.expect('OK? (Y/n): ','\n')
 		t.expect('Enter transaction fee: ','124s\n')
@@ -1567,13 +1583,12 @@ class MMGenTestSuite(object):
 		if txdo_handle: return
 		if save:
 			self.txsign_end(t,has_label=has_label)
-			exit_val = 0
+			t.ok()
 		else:
 			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
 			t.expect('%s? (y/N): ' % cprompt,'\n')
 			t.expect('Save signed transaction? (Y/n): ','n')
-			exit_val = 1
-		t.ok(exit_val=exit_val)
+			t.ok(exit_val=1)
 
 	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
 		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
@@ -1586,7 +1601,7 @@ class MMGenTestSuite(object):
 			t.license()
 			t.tx_view()
 			t.expect('Add a comment to transaction? (y/N): ','\n')
-		t.expect('broadcast this transaction to the network?')
+		t.expect('Are you sure you want to broadcast this')
 		m = 'YES, I REALLY WANT TO DO THIS'
 		t.expect("'%s' to confirm: " % m,m+'\n')
 		t.expect('BOGUS transaction NOT sent')
@@ -1655,8 +1670,8 @@ class MMGenTestSuite(object):
 
 	def addrgen_seed(self,name,wf,foo,desc='seed data',in_fmt='seed'):
 		stdout = (False,True)[desc=='seed data'] #capture output to screen once
-		add_arg = ([],['-S'])[bool(stdout)]
-		t = MMGenExpect(name,'mmgen-addrgen', add_arg +
+		add_args = ([],['-S'])[bool(stdout)] + get_segwit_arg(cfg)
+		t = MMGenExpect(name,'mmgen-addrgen', add_args +
 				['-i'+in_fmt,'-d',cfg['tmpdir'],wf,cfg['addr_idx_list']])
 		t.license()
 		t.expect_getend('Valid %s for Seed ID ' % desc)
@@ -1677,7 +1692,7 @@ class MMGenTestSuite(object):
 		self.addrgen_seed(name,wf,foo,desc='mnemonic data',in_fmt='words')
 
 	def addrgen_incog(self,name,wf=[],foo='',in_fmt='i',desc='incognito data',args=[]):
-		t = MMGenExpect(name,'mmgen-addrgen', args+['-i'+in_fmt,'-d',cfg['tmpdir']]+
+		t = MMGenExpect(name,'mmgen-addrgen', args + get_segwit_arg(cfg) + ['-i'+in_fmt,'-d',cfg['tmpdir']]+
 				([],[wf])[bool(wf)] + [cfg['addr_idx_list']])
 		t.license()
 		t.expect_getend('Incog Wallet ID: ')
@@ -1698,7 +1713,7 @@ class MMGenTestSuite(object):
 			args=['-H','%s,%s'%(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False):
-		args = ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
+		args = get_segwit_arg(cfg) + ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
 		if ia:
 			m = "\nAnswer 'n' at the interactive prompt"
 			msg(grnbg(m))
@@ -1709,7 +1724,7 @@ class MMGenTestSuite(object):
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
-			refcheck('key-address data checksum',chk,cfg['keyaddrfile_chk'])
+			refcheck('key-address data checksum',chk,cfg['keyaddrfile_chk'][g.testnet + 2*cfg['segwit']])
 			return
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(usr_rand_chars)
@@ -2025,7 +2040,7 @@ class MMGenTestSuite(object):
 			aa = ['-P',get_tmpfile_fn(cfg,pfn)]
 		else:
 			aa = []
-		t = MMGenExpect(name,'mmgen-tool',aa+[ftype+'file_chksum',wf])
+		t = MMGenExpect(name,'mmgen-tool',aa+[ftype.replace('segwit','')+'file_chksum',wf])
 		if ia:
 			k = 'ref_%saddrfile_chksum' % ('','key')[ftype == 'keyaddr']
 			m = grnbg('Checksum should be:')
@@ -2045,6 +2060,9 @@ class MMGenTestSuite(object):
 
 	def ref_passwdfile_chk(self,name):
 		self.ref_addrfile_chk(name,ftype='passwd')
+
+	def ref_segwitaddrfile_chk(self,name):
+		self.ref_addrfile_chk(name,ftype='segwitaddr')
 
 #	def txcreate8(self,name,addrfile):
 #		self.txcreate_common(name,sources=['8'])
@@ -2253,7 +2271,7 @@ try:
 		for arg in cmd_args:
 			if arg in utils:
 				globals()[arg](cmd_args[cmd_args.index(arg)+1:])
-				sys.exit()
+				sys.exit(0)
 			elif 'info_'+arg in cmd_data:
 				dirs = cmd_data['info_'+arg][1]
 				if dirs: clean(dirs)
@@ -2276,7 +2294,11 @@ try:
 			if cmd is not cmd_data.keys()[-1]: do_between()
 except KeyboardInterrupt:
 	die(1,'\nExiting at user request')
-	raise
+except opt.traceback and Exception:
+	with open('my.err') as f:
+		t = f.readlines()
+		if t: msg_r('\n'+yellow(''.join(t[:-1]))+red(t[-1]))
+	die(1,blue('Test script exited with error'))
 except:
 	sys.stderr = stderr_save
 	raise

@@ -25,18 +25,19 @@ from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
 from mmgen.seed import SeedSource
+MAT = MMGenAddrType
 
 if sys.argv[0].split('-')[-1] == 'keygen':
 	gen_what = 'keys'
 	gen_desc = 'secret keys'
 	opt_filter = None
-	note2 = 'By default, both addresses and secret keys are generated.\n\n'
+	note_addrkey = 'By default, both addresses and secret keys are generated.\n\n'
 else:
 	gen_what = 'addresses'
 	gen_desc = 'addresses'
-	opt_filter = 'hbcdeiHOKlpzPqrSv-'
-	note2 = ''
-note1 = """
+	opt_filter = 'hbcdeiHOKlpzPqrStv-'
+	note_addrkey = ''
+note_secp256k1 = """
 If available, the secp256k1 library will be used for address generation.
 """.strip()
 
@@ -70,6 +71,8 @@ opts_data = {
 -r, --usr-randchars=n Get 'n' characters of additional randomness from user
                       (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
 -S, --stdout          Print {what} to stdout
+-t, --type=t          Choose address type. Options: see ADDRESS TYPES below
+                      (default: {dmat})
 -v, --verbose         Produce more verbose output
 -x, --b16             Print secret keys in hexadecimal too
 """.format(
@@ -77,7 +80,8 @@ opts_data = {
 	pnm=g.proj_name,
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 	kg=g.key_generator,
-	what=gen_what,g=g
+	what=gen_what,g=g,
+	dmat="'{}' or '{}'".format(MAT.dfl_mmtype,MAT.mmtypes[MAT.dfl_mmtype])
 ),
 	'notes': """
 
@@ -87,25 +91,31 @@ opts_data = {
 Address indexes are given as a comma-separated list and/or hyphen-separated
 range(s).
 
-{n2}{n1}
+{n_addrkey}{n_secp}
 
+ADDRESS TYPES:
+  {n_at}
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
-{o.pw_note}
+{pwn}
 
-{o.bw_note}
+{bwn}
 
 FMT CODES:
   {f}
 """.format(
-		n1=note1,n2=note2,
+		n_secp=note_secp256k1,n_addrkey=note_addrkey,pwn=pw_note,bwn=bw_note,
 		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+		n_at='\n  '.join(["'{}', '{}'".format(k,v) for k,v in MAT.mmtypes.items()]),
 		o=opts
 	)
 }
 
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
+
+errmsg = "'{}': invalid parameter for --type option".format(opt.type)
+addr_type = MAT(opt.type or MAT.dfl_mmtype,errmsg=errmsg)
 
 if len(cmd_args) < 1: opts.usage()
 idxs = AddrIdxList(fmt_str=cmd_args.pop())
@@ -117,7 +127,7 @@ do_license_msg()
 ss = SeedSource(sf)
 
 i = (gen_what=='addresses') or bool(opt.no_addresses)*2
-al = (KeyAddrList,AddrList,KeyList)[i](seed=ss.seed,addr_idxs=idxs)
+al = (KeyAddrList,AddrList,KeyList)[i](seed=ss.seed,addr_idxs=idxs,mmtype=addr_type)
 al.format()
 
 if al.gen_addrs and opt.print_checksum:

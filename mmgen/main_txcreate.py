@@ -51,5 +51,5 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 do_license_msg()
-tx = txcreate(opt,cmd_args,do_info=opt.info)
+tx = txcreate(cmd_args,do_info=opt.info)
 tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

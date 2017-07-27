@@ -98,9 +98,9 @@ EXAMPLE:
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
-{o.pw_note}
+{pwn}
 
-{o.bw_note}
+{bwn}
 
 FMT CODES:
   {f}
@@ -108,6 +108,7 @@ FMT CODES:
 		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 		o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
 		ml=MMGenPWIDString.max_len,
+		pwn=pw_note,bwn=bw_note,
 		fs="', '".join(MMGenPWIDString.forbidden)
 	)
 }

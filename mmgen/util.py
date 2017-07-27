@@ -35,7 +35,7 @@ def msgred(s): msg(red(s))
 def mmsg(*args):
 	for d in args: Msg(repr(d))
 def mdie(*args):
-	mmsg(*args); sys.exit()
+	mmsg(*args); sys.exit(0)
 
 def die_wait(delay,ev=0,s=''):
 	assert type(delay) == int
@@ -57,11 +57,18 @@ def Die(ev=0,s=''):
 	if s: Msg(s)
 	sys.exit(ev)
 
-def pp_format(d):
+def rdie(ev=0,s=''): die(ev,red(s))
+def ydie(ev=0,s=''): die(ev,yellow(s))
+
+def pformat(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4).pformat(d)
-def pp_die(d): die(1,pp_format(d))
-def pp_msg(d): msg(pp_format(d))
+def pmsg(*args):
+	if not args: return
+	Msg(pformat(args if len(args) > 1 else args[0]))
+def pdie(*args):
+	if not args: sys.exit(1)
+	Die(1,(pformat(args if len(args) > 1 else args[0])))
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
@@ -132,17 +139,16 @@ def dmsg(s):
 	if opt.debug: msg(s)
 
 def suf(arg,suf_type):
+	suf_types = { 's':  ('s',''), 'es': ('es','') }
+	assert suf_type in suf_types
 	t = type(arg)
 	if t == int:
 		n = arg
-	elif t in (list,tuple,set,dict):
+	elif any(issubclass(t,c) for c in (list,tuple,set,dict)):
 		n = len(arg)
 	else:
-		msg('%s: invalid parameter' % arg)
-		return ''
-
-	if suf_type in ('a','es'): return ('es','')[n == 1]
-	if suf_type in ('k','s'):  return ('s','')[n == 1]
+		die(2,'%s: invalid parameter for suf()' % arg)
+	return suf_types[suf_type][n==1]
 
 def get_extension(f):
 	a,b = os.path.splitext(f)
@@ -159,9 +165,12 @@ def make_chksum_N(s,nchars,sep=False):
 	return sep.join([s[i*4:i*4+4] for i in range(nchars/4)])
 
 def make_chksum_8(s,sep=False):
-	s = sha256(sha256(s).digest()).hexdigest()[:8].upper()
+	from mmgen.obj import HexStr
+	s = HexStr(sha256(sha256(s).digest()).hexdigest()[:8].upper(),case='upper')
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
-def make_chksum_6(s): return sha256(s).hexdigest()[:6]
+def make_chksum_6(s):
+	from mmgen.obj import HexStr
+	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
 def make_iv_chksum(s): return sha256(s).hexdigest()[:8].upper()
@@ -700,11 +709,13 @@ def do_pager(text):
 
 	pagers,shell = ['less','more'],False
 	# --- Non-MSYS Windows code deleted ---
-	# raw, chop, scroll right 1 char, disable buggy line chopping for Windows
-	os.environ['LESS'] = (('-RS -#1'),('-cR -#1'))[g.platform=='win']
+	# raw, chop, horiz scroll 8 chars, disable buggy line chopping in MSYS
+	os.environ['LESS'] = (('--shift 8 -RS'),('-cR -#1'))[g.platform=='win']
 
 	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
 		pagers = [os.environ['PAGER']] + pagers
+
+	text = text.encode('utf8')
 
 	for pager in pagers:
 		end = ('\n(end of text)\n','')[pager=='less']
@@ -771,5 +782,19 @@ def bitcoin_connection():
 				g.rpc_password or cfg['rpcpassword'],
 				auth_cookie=get_bitcoind_auth_cookie())
 	# do an RPC call so we exit immediately if we can't connect
-	c.client_version = int(c.getinfo()['version'])
+	if not g.bitcoind_version:
+		g.bitcoind_version = int(c.getnetworkinfo()['version'])
+		g.chain = c.getblockchaininfo()['chain']
+		if g.chain != 'regtest': g.chain += 'net'
+		assert g.chain in g.chains
+		err = None
+		if g.regtest and g.chain != 'regtest':
+			err = '--regtest option'
+		elif g.testnet and g.chain == 'mainnet':
+			err = '--testnet option'
+		# we won't actually get here, as connect will fail first
+		elif (not g.testnet) and g.chain != 'mainnet':
+			err = 'mainnet'
+		if err:
+			die(1,'{} selected but chain is {}'.format(err,g.chain))
 	return c
