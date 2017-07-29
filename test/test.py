@@ -384,7 +384,7 @@ cfgs = {
 }
 
 from copy import deepcopy
-for a,b in ('6','11'),('7','12'),('8','13'):
+for a,b in (('6','11'),('7','12'),('8','13')):
 	cfgs[b] = deepcopy(cfgs[a])
 	cfgs[b]['tmpdir'] = os.path.join('test','tmp'+b)
 
@@ -540,7 +540,7 @@ for k,v in (
 
 cmd_data['info_ref'] = 'reference data',[6,7,8]
 for a,b in cmd_group['ref']:
-	for i,j in (1,128),(2,192),(3,256):
+	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['ref'].append(k)
 		cmd_data[k] = (5+i,'%s (%s-bit)' % (b[1],j),[[b[0],5+i]],1)
@@ -552,14 +552,14 @@ for a,b in cmd_group['ref_other']:
 
 cmd_data['info_conv_in'] = 'wallet conversion from reference data',[11,12,13]
 for a,b in cmd_group['conv_in']:
-	for i,j in (1,128),(2,192),(3,256):
+	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['conv_in'].append(k)
 		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]],1)
 
 cmd_data['info_conv_out'] = 'wallet conversion to reference data',[11,12,13]
 for a,b in cmd_group['conv_out']:
-	for i,j in (1,128),(2,192),(3,256):
+	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['conv_out'].append(k)
 		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]],1)
@@ -574,7 +574,7 @@ addrs_per_wallet = 8
 # total of two outputs must be < 10 BTC
 for k in cfgs:
 	cfgs[k]['amts'] = [0,0]
-	for idx,mod in (0,6),(1,4):
+	for idx,mod in ((0,6),(1,4)):
 		cfgs[k]['amts'][idx] = '%s.%s' % ((getrandnum(2) % mod), str(getrandnum(4))[:5])
 
 meta_cmds = OrderedDict([
@@ -611,7 +611,7 @@ del cmd_group
 add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in 'testnet','rpc_host','rpc_port','regtest' if getattr(opt,k)]).split()
+	) for k in ('testnet','rpc_host','rpc_port','regtest') if getattr(opt,k)]).split()
 add_spawn_args += ['--data-dir',data_dir]
 
 if opt.profile: opt.names = True
@@ -1539,7 +1539,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','\n')
 		if seed_args: # sign and send
 			t.expect('Edit transaction comment? (y/N): ','\n')
-			for cnum,desc in ('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet'):
+			for cnum,desc in (('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet')):
 				t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		else:
@@ -1839,7 +1839,7 @@ class MMGenTestSuite(object):
 			t.expect('Check key-to-address validity? (y/N): ','y')
 			t.tx_view()
 
-		for cnum,desc in ('1','incognito data'),('3','MMGen wallet'):
+		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
 			t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
 
 		if txdo_handle: return

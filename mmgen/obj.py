@@ -79,7 +79,7 @@ class MMGenObject(object):
 #		print repr(self.__dict__.keys())
 
 		for k in self.__dict__:
-			if k in ('_OrderedDict__root', '_OrderedDict__map'): continue # exclude these because of recursion
+			if k in ('_OrderedDict__root','_OrderedDict__map'): continue # exclude these because of recursion
 			e = getattr(self,k)
 			if isList(e) or isDict(e):
 				out.append(u'{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))

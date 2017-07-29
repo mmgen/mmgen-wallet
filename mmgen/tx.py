@@ -449,7 +449,7 @@ class MMGenTX(MMGenObject):
 
 		sig_data = []
 		for d in self.inputs:
-			e = dict([(k,getattr(d,k)) for k in 'txid','vout','scriptPubKey','amt'])
+			e = dict([(k,getattr(d,k)) for k in ('txid','vout','scriptPubKey','amt')])
 			e['amount'] = e['amt']
 			del e['amt']
 			wif = keys[d.addr]
@@ -477,7 +477,7 @@ class MMGenTX(MMGenObject):
 			return True
 		else:
 			msg('failed\nBitcoind returned the following errors:')
-			pmsg(sig_tx['errors'])
+			msg(repr(sig_tx['errors']))
 			return False
 
 	def mark_raw(self):

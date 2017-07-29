@@ -38,7 +38,7 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.199'
+	version      = '0.9.2rc1'
 	release_date = 'July 2017'
 
 	proj_name = 'MMGen'

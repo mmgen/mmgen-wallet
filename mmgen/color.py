@@ -58,11 +58,11 @@ def nocolor(s): return s
 
 def init_color(enable_color=True,num_colors='auto'):
 	if enable_color:
-		assert num_colors in ['auto',8,16,256]
+		assert num_colors in ('auto',8,16,256)
 		globals()['_reset'] = '\033[0m'
-		if num_colors in [8,16]:
+		if num_colors in (8,16):
 			pfx = '_16_'
-		elif num_colors in [256]:
+		elif num_colors in (256,):
 			pfx = '_256_'
 		else:
 			try:
@@ -87,7 +87,7 @@ def test_color():
 		colorama.init(strip=True,convert=True)
 	except:
 		pass
-	for desc,n in ('auto','auto'),('8-color',8),('256-color',256):
+	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
 		if n != 'auto': init_color(num_colors=n)
 		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
 

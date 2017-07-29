@@ -1,13 +1,13 @@
 ## Table of Contents
 
 #### <a href='#a_i'>Preliminaries</a>
+* <a href='#a_bb'>Before you begin</a>
 * <a href='#a_iv'>Invocation</a>
 * <a href='#a_cf'>Configuration file</a>
-* <a href='#a_ts'>Test setup and testnet</a>
-* <a href='#a_bb'>Before you begin</a>
+* <a href='#a_ts'>Testnet and regtest mode</a>
 
 #### <a href='#a_bo'>Basic Operations</a>
-* <a href='#a_gw'>Generate a wallet</a>
+* <a href='#a_gw'>Generate an MMGen wallet</a>
 * <a href='#a_ga'>Generate addresses</a>
 * <a href='#a_ia'>Import addresses</a>
 * <a href='#a_ct'>Create a transaction</a>
@@ -28,6 +28,16 @@
 	* <a href='#a_rbf_onf'>With an offline (cold storage) wallet</a>
 
 ### <a name='a_i'>Preliminaries</a>
+
+#### <a name='a_bb'>Before you begin</a>
+
+Before you begin, note that the filenames, seed IDs and Bitcoin addresses used
+in this primer are intentionally invalid and are for purposes of illustration
+only.  As you perform the exercises, you'll naturally substitute real ones in
+their place.
+
+The up arrow (for repeating commands) and tab key (or Ctrl-I) (for completing
+commands and filenames) will speed up your work at the command line greatly.
 
 #### <a name='a_iv'>Invocation</a>
 
@@ -69,42 +79,81 @@ wish to edit at some point to customize MMGen to your needs.  These settings
 include the maximum transaction fee; the user name, password and hostname
 used for communicating with bitcoind; and a number of others.
 
-#### <a name='a_ts'>Test setup and testnet</a>
+#### <a name='a_ts'>Testnet and regtest mode</a>
 
 If you just want to quickly try out MMGen, it's possible to perform all wallet
 generation, wallet format conversion, address and key generation, and address
 import operations on an offline computer with no blockchain and no bitcoin
 balance.
 
-If you want to practice creating, signing and sending transactions, however,
-as well as tracking balances, you'll need a fully synced blockchain and some
-actual coins to play with.  To avoid risking real funds, it's *highly
-recommended* to practice transaction operations on testnet until you feel
-confident you know what you're doing.  Testnet is just like the real Bitcoin
-network, but testnet coins have no monetary value.  Free testnet coins may be
-obtained at [https://tpfaucet.appspot.com][02].
+If you want to practice creating, signing and sending transactions, however, as
+well as tracking balances, you'll need a fully synced blockchain and some actual
+coins to play with.  To avoid risking real funds, it's *highly recommended* to
+practice transaction operations on [testnet][04] or in [regtest mode][05] until
+you feel confident you know what you're doing.
+
+**Testnet** is just like the real Bitcoin network, but testnet coins have no
+monetary value.  Free testnet coins may be obtained at
+[https://tpfaucet.appspot.com][02].
 
 To use MMGen with testnet, you must first start bitcoind with the `-testnet`
 option and sync the testnet blockchain (about 12GB at the time of writing).  To
 force any MMGen command to use testnet just add the `--testnet=1` option after
 the command name.  Or just set the `testnet` option to `true` in 'mmgen.cfg' to
-make *all* commands use testnet.
-With testnet you can safely practice all the operations below,
-including the offline ones, on an online computer.
+make *all* commands use testnet.  With testnet you can safely practice all the
+operations below, including the offline ones, on an online computer.
 
-#### <a name='a_bb'>Before you begin</a>
+**Regtest mode** is a more convenient alternative to testnet that requires no
+Internet connection. In regtest mode, bitcoind creates a private blockchain on
+which you can mine, send and receive transactions.  MMGen commands support
+regtest mode with the `--regtest=1` option or the `regtest` option in
+`mmgen.cfg`.  The following is a brief guide to get you started with regtest
+mode:
 
-Before you begin, note that the filenames, seed IDs and Bitcoin addresses used
-in this primer are intentionally invalid and are for purposes of illustration
-only.  As you perform the exercises, you'll naturally substitute real ones in
-their place.
+Start the bitcoin daemon, generate 432 blocks to activate Segwit on the regtest
+chain and stop:
 
-The up arrow (for repeating commands) and tab key (or Ctrl-I) (for completing
-commands and filenames) will speed up your work at the command line greatly.
+		$ bitcoind -regtest -daemon
+		$ bitcoin-cli -regtest generate 432
+		$ bitcoin-cli -regtest stop
+
+Move 'wallet.dat' out of harm's way (**important:** it's the 'wallet.dat' in the
+'regtest' directory under your bitcoin data directory being referred to here,
+**not** the one in your bitcoin data directory).  Restart the daemon:
+
+		$ bitcoind -regtest -daemon
+
+A new ‘wallet.dat’ will be created.  This is your tracking wallet.  Create an
+MMGen wallet, generate some MMGen addresses and import them into the tracking
+wallet <a href='#a_bo'>as described below</a>. Stop the daemon again:
+
+		$ bitcoin-cli -regtest stop
+
+Move your tracking wallet (the new 'wallet.dat') out of harm's way and move the
+original 'wallet.dat' back.  Restart the daemon, send some funds to one of your
+tracked addresses, mine a block and stop the daemon:
+
+		$ bitcoind -regtest -daemon
+		$ bitcoin-cli -regtest sendtoaddress <a tracked address> 100.00
+		$ bitcoin-cli -regtest generate 1
+		$ bitcoin-cli -regtest stop
+
+Replace the original 'wallet.dat' with your tracking wallet again, restart
+bitcoind and list your tracked addresses:
+
+		$ bitcoind -regtest -daemon
+		$ mmgen-tool --regtest=1 listaddresses
+
+Your address should now have a balance of 100 BTC.  You may now practice creating
+and sending transactions to yourself <a href='#a_ct'>as described below</a>.
+After sending each transaction, you must mine a new block for the transaction to
+confirm:
+
+		$ bitcoin-cli -regtest generate 1
 
 ### <a name='a_bo'>Basic Operations</a>
 
-#### <a name='a_gw'>Generate a wallet (offline computer)</a>
+#### <a name='a_gw'>Generate an MMGen wallet (offline computer)</a>
 
 *NOTE: MMGen supports a “default wallet” feature.  After generating your wallet,
 you'll be prompted to make it your default.  If you answer 'y', the wallet will
@@ -119,7 +168,7 @@ as it frees you from having to type your wallet file on the command line.*
 If you haven't, then you must include the path to a wallet file or other seed
 source in all commands where a seed source is required.*
 
-On your offline computer, generate a wallet:
+On your offline computer, generate an MMGen wallet:
 
 		$ mmgen-walletgen
 		...
@@ -172,14 +221,23 @@ Now generate ten addresses with your just-created wallet:
 		  10   1H7vVTk4ejUbQXw45I6g5qvPBSe9bsjDqh
 		}
 
+NOTE: As of version 0.9.2, MMGen supports Segwit. To generate Segwit addresses,
+add `--type segwit` to the command line.  Segwit address files are distinguished
+from Legacy ones by the ‘-S’ in the filename:
+
+		$ mmgen-addrgen --type segwit 1-10
+		...
+		$ cat '89ABCDEF-S[1-10].addrs'
+		89ABCDEF SEGWIT {
+		  1   32GiSWo9zIQgkCmjAaLIrbPwXhKry2jHhj
+		...
+
 Note that the address range ‘1-10’ specified on the command line is included in
-the resulting filename.  MMGen addresses consist of the Seed ID followed by ‘:’
-and an index.  In this example, ‘89ABCDEF:1’ represents the Bitcoin address
-‘16bNmy...’, ‘89ABCDEF:2’ represents ‘1AmkUx...’ and so forth.
+the resulting filename.
 
 To fund your MMGen wallet, first import the addresses into your tracking wallet
-and then spend some bitcoin into any of them.  If you run out of addresses,
-generate more.  To generate a hundred addresses, for example, specify an address
+and then spend some BTC into any of them.  If you run out of addresses, generate
+more.  To generate a hundred addresses, for example, you’d specify an address
 range of ‘1-100’.
 
 Let’s say you’ve decided to spend some BTC into the first four addresses above.
@@ -233,12 +291,12 @@ empty balances, and `showbtcaddrs` causes Bitcoin addresses to be displayed
 also).
 
 		$ mmgen-tool listaddresses showempty=1 showbtcaddrs=1
-		MMGenID     ADDRESS                             COMMENT    BALANCE
-		89ABCDEF:1  16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations    0
-		89ABCDEF:2  1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1    0
-		89ABCDEF:3  1HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2    0
-		89ABCDEF:4  14Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3    0
-		89ABCDEF:5  1PeI55vtp2bX2uKDkAAR2c6ekHNYe4Hcq7               0
+		MMGenID       ADDRESS                             COMMENT    BALANCE
+		89ABCDEF:L:1  16bNmyYISiptuvJG3X7MPwiiS4HYvD7ksE  Donations    0
+		89ABCDEF:L:2  1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc  Storage 1    0
+		89ABCDEF:L:3  1HgYCsfqYzIg7LVVfDTp7gYJocJEiDAy6N  Storage 2    0
+		89ABCDEF:L:4  14Tu3z1tiexXDonNsFIkvzqutE5E3pTK8s  Storage 3    0
+		89ABCDEF:L:5  1PeI55vtp2bX2uKDkAAR2c6ekHNYe4Hcq7               0
 		...
 		TOTAL: 0 BTC
 
@@ -248,17 +306,23 @@ track and spend funds from another wallet using MMGen without having to go
 through the network.  To use it, you must save the keys corresponding to the
 addresses where the funds are stored in a separate file to use during signing.*
 
+Note that each address has a unique ID (the ‘MMGen ID’) consisting of its Seed
+ID, its address type (‘L’ for Legacy, ‘S’ for Segwit), and its number (index).
+Legacy and Segwit addresses may be imported into the same tracking wallet;
+they're generated from different sub-seeds, so you needn't worry about key
+reuse.
+
 Now that your addresses are being tracked, you may go ahead and send some BTC to
 them over the Bitcoin network.  If you send 0.1, 0.2, 0.3 and 0.4 BTC
-respectively, for example, your address listing will look something like this
-after the transactions have been confirmed:
+respectively, your address listing will look like this after the transactions
+have confirmed:
 
 		$ mmgen-tool listaddresses
-		MMGenID     COMMENT    BALANCE
-		89ABCDEF:1  Donations    0.1
-		89ABCDEF:2  Storage 1    0.2
-		89ABCDEF:3  Storage 2    0.3
-		89ABCDEF:4  Storage 3    0.4
+		MMGenID       COMMENT    BALANCE
+		89ABCDEF:L:1  Donations    0.1
+		89ABCDEF:L:2  Storage 1    0.2
+		89ABCDEF:L:3  Storage 2    0.3
+		89ABCDEF:L:4  Storage 3    0.4
 		TOTAL: 1 BTC
 
 #### <a name='a_ct'>Create a transaction (online computer)</a>
@@ -266,8 +330,9 @@ after the transactions have been confirmed:
 Now that you have some BTC under MMGen’s control, you’re ready to create a
 transaction.  Note that transactions are harmless until they’re signed and
 broadcast to the network, so feel free to experiment and create transactions
-with different combinations of inputs and outputs.  If you're using testnet,
-then you risk nothing even when broadcasting transactions, of course.
+with different combinations of inputs and outputs.  Of course, if you're using
+testnet or regtest mode, then you risk nothing even when broadcasting
+transactions.
 
 To send 0.1 BTC to the a third-party address 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,
 for example, and send the change back to yourself at address 89ABCDEF:5, you’d
@@ -277,6 +342,14 @@ issue the following command:
 
 Note that 'mmgen-txcreate' accepts either MMGen IDs or Bitcoin addresses as
 arguments.
+
+IMPORTANT NOTE: For the time being, Legacy addresses are the default, so
+address ‘89ABCDEF:5’ is equivalent to ‘89ABCDEF:L:5’.  In the future, users will
+have the option to make Segwit addresses the default, so that ‘89ABCDEF:5’ will
+be equivalent to ‘89ABCDEF:S:5’ and the ‘L’ will be required to specify a legacy
+address.  This may seem confusing, but it was the best possible way to make
+the MMGen ID backwards-compatible for now while allowing users the option of
+a non-compatible upgrade in the future.
 
 To send 0.1 BTC to each of your addresses 89ABCDEF:6 and 89ABCDEF:7 and return the
 change to 89ABCDEF:8, you’d do this:
@@ -299,10 +372,10 @@ will look something like this:
 
 		UNSPENT OUTPUTS (sort order: Age)  Total BTC: 1
 		 Num  TX id  Vout    Address                               Amt(BTC) Age(d)
-		 1)   e9742b16... 5  1L3kxmi.. 89ABCDEF:1    Donations       0.1    1
-		 2)   fa84d709... 6  1N4dSGj.. 89ABCDEF:2    Storage 1       0.2    1
-		 3)   8dde8ef5... 6  1M1fVDc.. 89ABCDEF:3    Storage 1       0.3    1
-		 4)   c76874c7... 0  1E8MFoC.. 89ABCDEF:4    Storage 3       0.4    1
+		 1)   e9742b16... 5  1L3kxmi.. 89ABCDEF:L:1    Donations       0.1    1
+		 2)   fa84d709... 6  1N4dSGj.. 89ABCDEF:L:2    Storage 1       0.2    1
+		 3)   8dde8ef5... 6  1M1fVDc.. 89ABCDEF:L:3    Storage 1       0.3    1
+		 4)   c76874c7... 0  1E8MFoC.. 89ABCDEF:L:4    Storage 3       0.4    1
 
 		Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 		Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -313,8 +386,8 @@ After quitting the menu with 'q', you’ll see the following prompt:
 		Enter a range or space-separated list of outputs to spend:
 
 Here you must choose unspent outputs of sufficient value to cover the send
-amount of 0.1 BTC, plus the transaction fee (for more on fees, see 'Transaction
-Fees' under 'Advanced Topics' below).  Output #2 is worth 0.2 BTC, which is
+amount of 0.1 BTC, plus the transaction fee (for more on fees, see ‘Transaction
+Fees’ under ‘Advanced Topics’ below).  Output #2 is worth 0.2 BTC, which is
 sufficient, so we’ll choose that.  After several more prompts and confirmations,
 your transaction will be saved:
 
@@ -357,11 +430,11 @@ Once the transaction is broadcast to the network and confirmed, your address
 listing should look something like this:
 
 		$ mmgen-tool listaddresses minconf=1
-		MMGenID     COMMENT    BALANCE
-		89ABCDEF:1  Donations    0.1
-		89ABCDEF:3  Storage 2    0.3
-		89ABCDEF:4  Storage 3    0.4
-		89ABCDEF:5  Storage 1    0.0999
+		MMGenID       COMMENT    BALANCE
+		89ABCDEF:L:1  Donations    0.1
+		89ABCDEF:L:3  Storage 2    0.3
+		89ABCDEF:L:4  Storage 3    0.4
+		89ABCDEF:L:5  Storage 1    0.0999
 		TOTAL: 0.8999 BTC
 
 Since you’ve sent 0.1 BTC to a third party, your balance has declined by 0.1 BTC
@@ -810,3 +883,5 @@ them in turn until you get a confirmation:
 [01]: https://github.com/mmgen/mmgen/wiki/Tracking-and-spending-ordinary-Bitcoin-addresses
 [02]: https://tpfaucet.appspot.com
 [03]: Recovering-Keys-Without-MMGen
+[04]: https://bitcoin.org/en/developer-examples#testnet
+[05]: https://bitcoin.org/en/developer-examples#regtest-mode

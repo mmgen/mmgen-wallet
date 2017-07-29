@@ -140,7 +140,7 @@ spawn_cmd = ['python',os.path.join(os.curdir,'mmgen-tool') if not opt.system els
 add_spawn_args = ' '.join(['{} {}'.format(
 	'--'+k.replace('_','-'),
 	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in 'testnet','rpc_host','regtest' if getattr(opt,k)]).split()
+	) for k in ('testnet','rpc_host','regtest') if getattr(opt,k)]).split()
 add_spawn_args += [ '--data-dir', cfg['tmpdir']] # ignore ~/.mmgen
 
 if opt.system: sys.path.pop(0)
@@ -329,28 +329,28 @@ class MMGenToolTestSuite(object):
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
 			ok_or_die(addr,is_btc_addr,'Bitcoin address')
 	def Wif2addr(self,name,f1,f2,f3):
-		for n,f,k,m in (1,f1,'',''),(2,f2,'','compressed'),(3,f3,'segwit=1','compressed'):
+		for n,f,k,m in ((1,f1,'',''),(2,f2,'','compressed'),(3,f3,'segwit=1','compressed')):
 			wif = read_from_file(f).split()[0]
 			self.run_cmd_out(name,wif,kwargs=k,fn_idx=n,extra_msg=m)
 	def Wif2hex(self,name,f1,f2,f3):
-		for n,f,m in (1,f1,''),(2,f2,'compressed'),(3,f3,'compressed for segwit'):
+		for n,f,m in ((1,f1,''),(2,f2,'compressed'),(3,f3,'compressed for segwit')):
 			wif = read_from_file(f).split()[0]
 			self.run_cmd_out(name,wif,fn_idx=n,extra_msg=m)
 	def Privhex2addr(self,name,f1,f2,f3):
-		keys = [read_from_file(f).rstrip() for f in f1,f2,f3]
+		keys = [read_from_file(f).rstrip() for f in (f1,f2,f3)]
 		for n,k in enumerate(('','compressed=1','compressed=1 segwit=1')):
 			ret = self.run_cmd(name,[keys[n]],kwargs=k).rstrip()
 			iaddr = read_from_tmpfile(cfg,'Randpair{}.out'.format(n+1)).split()[-1]
 			cmp_or_die(iaddr,ret)
 	def Hex2wif(self,name,f1,f2,f3,f4):
-		for n,fi,fo,k in (1,f1,f2,''),(2,f3,f4,'compressed=1'):
+		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,'compressed=1')):
 			ret = self.run_cmd_chk(name,fi,fo,kwargs=k)
 	def Addr2hexaddr(self,name,f1,f2):
-		for n,f,m in (1,f1,''),(2,f2,'from compressed'):
+		for n,f,m in ((1,f1,''),(2,f2,'from compressed')):
 			addr = read_from_file(f).split()[-1]
 			self.run_cmd_out(name,addr,fn_idx=n,extra_msg=m)
 	def Hexaddr2addr(self,name,f1,f2,f3,f4):
-		for n,fi,fo,m in (1,f1,f2,''),(2,f3,f4,'from compressed'):
+		for n,fi,fo,m in ((1,f1,f2,''),(2,f3,f4,'from compressed')):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
 	def Privhex2pubhex(self,name,f1,f2,f3): # from hex2wif
 		addr = read_from_file(f3).strip()
@@ -388,11 +388,11 @@ class MMGenToolTestSuite(object):
 
 	# Mnemonic
 	def Hex2mn(self,name):
-		for n,size,m in(1,16,'128-bit'),(2,24,'192-bit'),(3,32,'256-bit'):
+		for n,size,m in ((1,16,'128-bit'),(2,24,'192-bit'),(3,32,'256-bit')):
 			hexnum = getrandhex(size)
 			self.run_cmd_out(name,hexnum,fn_idx=n,extra_msg=m)
 	def Mn2hex(self,name,f1,f2,f3,f4,f5,f6):
-		for f_i,f_o,m in (f1,f2,'128-bit'),(f3,f4,'192-bit'),(f5,f6,'256-bit'):
+		for f_i,f_o,m in ((f1,f2,'128-bit'),(f3,f4,'192-bit'),(f5,f6,'256-bit')):
 			self.run_cmd_chk(name,f_i,f_o,extra_msg=m)
 	def Mn_rand128(self,name): self.run_cmd_out(name)
 	def Mn_rand192(self,name): self.run_cmd_out(name)

@@ -516,7 +516,7 @@ Removed %s duplicate wif key%s from keylist (also in {pnm} key-address file
 				mmtype = MMGenAddrType(mmtype)
 			except:
 				return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
-					mmtype,' '.join(MMGenAddrType.mmtypes.values()).upper()))
+					mmtype.upper(),' '.join(MMGenAddrType.mmtypes.values()).upper()))
 		elif len(ls) == 0:
 			mmtype = MMGenAddrType('L')
 		else:
@@ -599,7 +599,7 @@ Record this checksum: it will be used to verify the password file in the future
 			self.data = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
 			for k in seed,pw_idxs: assert chk_params_only or k
-			for k in pw_id_str,pw_fmt: assert k
+			for k in (pw_id_str,pw_fmt): assert k
 			self.pw_id_str = MMGenPWIDString(pw_id_str)
 			self.set_pw_fmt(pw_fmt)
 			self.set_pw_len(pw_len)

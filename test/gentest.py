@@ -99,7 +99,7 @@ except:
 else:
 	try:
 		a,b = int(a),int(b)
-		for i in a,b: assert 1 <= i <= len(g.key_generators)
+		for i in (a,b): assert 1 <= i <= len(g.key_generators)
 		assert a != b
 	except:
 		die(1,"%s: invalid generator IDs" % cmd_args[0])

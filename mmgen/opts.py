@@ -180,7 +180,7 @@ def init(opts_data,add_opts=[],opt_filter=None):
 
 	# We don't need this data anymore
 	del mmgen.share.Opts
-	for k in 'prog_name','desc','usage','options','notes':
+	for k in ('prog_name','desc','usage','options','notes'):
 		if k in opts_data: del opts_data[k]
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
