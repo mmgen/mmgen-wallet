@@ -16,5 +16,5 @@ except:
 	exc = l.pop()
 	def red(s):    return '{e}[31;1m{}{e}[0m'.format(s,e='\033')
 	def yellow(s): return '{e}[33;1m{}{e}[0m'.format(s,e='\033')
-	sys.stdout.write('{}{} {}'.format(yellow(''.join(l)),red(exc),str(e[1])))
+	sys.stdout.write('{}{}'.format(yellow(''.join(l)),red(exc)))
 	traceback.print_exc(file=f)
