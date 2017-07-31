@@ -185,4 +185,4 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	if tx.sign(c,tx_num_str,dict(keys)):
 		return tx
 	else:
-		die(3,'failed\nSome keys were missing.  Transaction {}could not be signed.'.format(tx_num_str))
+		die(3,red('Transaction {}could not be signed.'.format(tx_num_str)))

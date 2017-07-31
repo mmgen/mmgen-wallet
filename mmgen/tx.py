@@ -441,6 +441,9 @@ class MMGenTX(MMGenObject):
 
 		self.die_if_incorrect_chain()
 
+		if opt.aug1hf and self.has_segwit_inputs():
+			die(2,yellow("'--aug1hf' option is incompatible with Segwit transaction inputs!"))
+
 		if not keys:
 			msg('No keys. Cannot sign!')
 			return False
@@ -462,23 +465,34 @@ class MMGenTX(MMGenObject):
 
 		from mmgen.bitcoin import hash256
 		msg_r('Signing transaction{}...'.format(tx_num_str))
-		# sighashtype defaults to 'ALL'
-		sig_tx = c.signrawtransaction(self.hex,sig_data,keys.values())
+		ht = ('ALL','ALL|FORKID')[bool(opt.aug1hf)] # sighashtype defaults to 'ALL'
+		ret = c.signrawtransaction(self.hex,sig_data,keys.values(),ht,on_fail='return')
 
-		if sig_tx['complete']:
-			self.hex = sig_tx['hex']
-			vmsg('Signed transaction size: {}'.format(len(self.hex)/2))
-			dt = DeserializedTX(self.hex)
-			txid = dt['txid']
-			self.check_sigs(dt)
-			assert txid == c.decoderawtransaction(self.hex)['txid'], 'txid mismatch (after signing)'
-			self.btc_txid = BitcoinTxID(txid,on_fail='return')
-			msg('OK')
-			return True
-		else:
-			msg('failed\nBitcoind returned the following errors:')
-			msg(repr(sig_tx['errors']))
+		from mmgen.rpc import rpc_error,rpc_errmsg
+		if rpc_error(ret):
+			errmsg = rpc_errmsg(ret)
+			if 'Invalid sighash param' in errmsg:
+				m  = 'This chain does not support the Aug. 1 2017 UAHF.'
+				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' without the --aug1hf option."
+			else:
+				m = errmsg
+			msg(yellow(m))
 			return False
+		else:
+			if ret['complete']:
+				self.hex = ret['hex']
+				vmsg('Signed transaction size: {}'.format(len(self.hex)/2))
+				dt = DeserializedTX(self.hex)
+				txid = dt['txid']
+				self.check_sigs(dt)
+				assert txid == c.decoderawtransaction(self.hex)['txid'], 'txid mismatch (after signing)'
+				self.btc_txid = BitcoinTxID(txid,on_fail='return')
+				msg('OK')
+				return True
+			else:
+				msg('failed\nBitcoind returned the following errors:')
+				msg(repr(ret['errors']))
+				return False
 
 	def mark_raw(self):
 		self.desc = 'transaction'
@@ -567,10 +581,24 @@ class MMGenTX(MMGenObject):
 			ret = 'deadbeef' * 8
 			m = 'BOGUS transaction NOT sent: %s'
 		else:
-			ret = c.sendrawtransaction(self.hex) # exits on failure
+			ret = c.sendrawtransaction(self.hex,on_fail='return')
 			m = 'Transaction sent: %s'
 
-		if ret:
+		from mmgen.rpc import rpc_error,rpc_errmsg
+		if rpc_error(ret):
+			errmsg = rpc_errmsg(ret)
+			if 'Signature must use SIGHASH_FORKID' in errmsg:
+				m  = 'The Aug. 1 2017 UAHF has activated on this chain.'
+				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' with the --aug1hf option."
+			elif 'Illegal use of SIGHASH_FORKID' in errmsg:
+				m  = 'The Aug. 1 2017 UAHF is not yet active on this chain.'
+				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' without the --aug1hf option."
+			else:
+				m = errmsg
+			msg(yellow(m))
+			msg(red('Send of MMGen transaction {} failed'.format(self.txid)))
+			return False
+		else:
 			if not bogus_send:
 				assert ret == self.btc_txid, 'txid mismatch (after sending)'
 			self.desc = 'sent transaction'
@@ -578,10 +606,6 @@ class MMGenTX(MMGenObject):
 			self.add_timestamp()
 			self.add_blockcount(c)
 			return True
-
-		# rpc call exits on failure, so we won't get here
-		msg('Sending of transaction {} failed'.format(self.txid))
-		return False
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
 		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.txid_ext)

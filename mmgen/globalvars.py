@@ -38,7 +38,7 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.2'
+	version      = '0.9.299'
 	release_date = 'July 2017'
 
 	proj_name = 'MMGen'
@@ -115,6 +115,7 @@ class g(object):
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
+		('aug1hf','rbf'),
 		('batch','rescan')
 	)
 	cfg_file_opts = (

@@ -71,7 +71,7 @@ opts_data = {
 	'notes': '\n' + fee_notes + txsign_notes
 }
 
-cmd_args = opts.init(opts_data)
+cmd_args = opts.init(opts_data,add_opts=['aug1hf'])
 
 c = bitcoin_connection()
 

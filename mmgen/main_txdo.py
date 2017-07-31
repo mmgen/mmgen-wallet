@@ -30,6 +30,7 @@ opts_data = {
 	'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
+-A, --aug1hf           Sign transaction for the Aug. 1 2017 UAHF chain
 -a, --tx-fee-adj=    f Adjust transaction fee by factor 'f' (see below)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input
