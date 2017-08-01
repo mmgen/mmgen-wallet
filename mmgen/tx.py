@@ -40,9 +40,12 @@ def is_wif(s):
 
 def segwit_is_active(exit_on_error=False):
 	d = bitcoin_connection().getblockchaininfo()
-	if d['chain'] == 'regtest' or d['bip9_softforks']['segwit']['status'] == 'active':
+	if d['chain'] == 'regtest':
 		return True
-	if g.skip_segwit_active_check: return True
+	if 'segwit' in d['bip9_softforks'] and d['bip9_softforks']['segwit']['status'] == 'active':
+		return True
+	if g.skip_segwit_active_check:
+		return True
 	if exit_on_error:
 		die(2,'Segwit not active on this chain.  Exiting')
 	else:
