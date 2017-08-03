@@ -33,15 +33,7 @@ from mmgen.test import *
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # and for the spawned scripts
 
-tb_cmd = 'scripts/traceback.py'
 log_file = 'test.py_log'
-
-scripts = (
-	'addrgen', 'addrimport', 'keygen',
-	'passchg', 'tool',
-	'txcreate', 'txsend', 'txsign',
-	'walletchk', 'walletconv', 'walletgen'
-)
 
 hincog_fn      = 'rand_data'
 hincog_bytes   = 1024*1024
@@ -81,6 +73,7 @@ sample_text = \
 shortopts = ''.join([e[1:] for e in sys.argv if len(e) > 1 and e[0] == '-' and e[1] != '-'])
 shortopts = ['-'+e for e in list(shortopts)]
 data_dir = os.path.join('test','data_dir')
+
 if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts):
 	if g.platform == 'win':
 		try: os.listdir(data_dir)
@@ -108,7 +101,6 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 		os.symlink(dd,data_dir)
 
 opts_data = {
-#	'sets': [('interactive',bool,'verbose',None)],
 	'desc': 'Test suite for the MMGen suite',
 	'usage':'[options] [command(s) or metacommand(s)]',
 	'options': """
@@ -126,7 +118,6 @@ opts_data = {
 -l, --list-cmds     List and describe the commands in the test suite
 -L, --log           Log commands to file {lf}
 -n, --names         Display command names instead of descriptions
--I, --interactive   Interactive mode (without pexpect)
 -O, --popen-spawn   Use pexpect's popen_spawn instead of popen
 -p, --pause         Pause between tests, resuming on keypress
 -P, --profile       Record the execution time of each script
@@ -136,10 +127,10 @@ opts_data = {
                     than those in the repo root
 -S, --skip-deps     Skip dependency checking for command
 -u, --usr-random    Get random data interactively from user
--t, --traceback     Run the command inside the '{tb_cmd}' script
+-t, --traceback     Run the command inside the '{tbc}' script
 -v, --verbose       Produce more verbose output
 -W, --no-dw-delete  Don't remove default wallet from data dir after dw tests are done
-""".format(tb_cmd=tb_cmd,lf=log_file),
+""".format(tbc=g.traceback_cmd,lf=log_file),
 	'notes': """
 
 If no command is given, the whole suite of tests is run.
@@ -543,26 +534,26 @@ for a,b in cmd_group['ref']:
 	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['ref'].append(k)
-		cmd_data[k] = (5+i,'%s (%s-bit)' % (b[1],j),[[b[0],5+i]],1)
+		cmd_data[k] = (5+i,'%s (%s-bit)' % (b[1],j),[[b[0],5+i]])
 
 cmd_data['info_ref_other'] = 'other reference data',[8]
 for a,b in cmd_group['ref_other']:
 	cmd_list['ref_other'].append(a)
-	cmd_data[a] = (8,b,[[[],8]],1)
+	cmd_data[a] = (8,b,[[[],8]])
 
 cmd_data['info_conv_in'] = 'wallet conversion from reference data',[11,12,13]
 for a,b in cmd_group['conv_in']:
 	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['conv_in'].append(k)
-		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]],1)
+		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]])
 
 cmd_data['info_conv_out'] = 'wallet conversion to reference data',[11,12,13]
 for a,b in cmd_group['conv_out']:
 	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['conv_out'].append(k)
-		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]],1)
+		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]])
 
 utils = {
 	'check_deps': 'check dependencies for specified command',
@@ -608,12 +599,6 @@ meta_cmds = OrderedDict([
 
 del cmd_group
 
-add_spawn_args = ' '.join(['{} {}'.format(
-	'--'+k.replace('_','-'),
-	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in ('testnet','rpc_host','rpc_port','regtest') if getattr(opt,k)]).split()
-add_spawn_args += ['--data-dir',data_dir]
-
 if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True
 if opt.log:
@@ -625,7 +610,6 @@ usr_rand_arg = '-r%s' % usr_rand_chars
 cmd_total = 0
 
 if opt.system: sys.path.pop(0)
-ia = bool(opt.interactive)
 
 # Disable color in spawned scripts so we can parse their output
 os.environ['MMGEN_DISABLE_COLOR'] = '1'
@@ -639,12 +623,6 @@ def get_segwit_arg(cfg): return ([],['--type','segwit'])[cfg['segwit']]
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
 if opt.debug_scripts: os.environ['MMGEN_DEBUG'] = '1'
-
-if opt.buf_keypress:
-	send_delay = 0.3
-else:
-	send_delay = 0
-	os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
 
 if opt.exact_output:
 	def msg(s): pass
@@ -699,69 +677,7 @@ if opt.list_cmds:
 	sys.exit(0)
 
 import time,re
-if g.platform == 'linux':
-	import pexpect
-	if opt.popen_spawn:
-		import termios,atexit
-		def at_exit(): os.system('stty sane')
-		atexit.register(at_exit)
-		from pexpect.popen_spawn import PopenSpawn
-		use_popen_spawn,NL = True,'\n'
-	else:
-		use_popen_spawn,NL = False,'\r\n'
-else: # Windows
-	use_popen_spawn,NL = True,'\r\n'
-	try:
-		import pexpect
-		from pexpect.popen_spawn import PopenSpawn
-	except:
-		ia = True
-		m1 = ('Missing pexpect module detected.  Skipping some tests and running in'
-			'\ninteractive mode.  User prompts and control value checks will be ')
-		m2 = 'HIGHLIGHTED IN GREEN'
-		m3 = '.\nControl values should be checked against the program output.\nContinue?'
-		if not keypress_confirm(green(m1)+grnbg(m2)+green(m3),default_yes=True):
-			errmsg('Exiting at user request')
-			sys.exit(0)
-
-def my_send(p,t,delay=send_delay,s=False):
-	if delay: time.sleep(delay)
-	ret = p.send(t) # returns num bytes written
-	if delay: time.sleep(delay)
-	if opt.verbose:
-		ls = (' ','')[bool(opt.debug or not s)]
-		es = ('  ','')[bool(s)]
-		msg('%sSEND %s%s' % (ls,es,yellow("'%s'"%t.replace('\n',r'\n'))))
-	return ret
-
-def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
-	quo = ('',"'")[type(s) == str]
-
-	if opt.verbose: msg_r('EXPECT %s' % yellow(quo+str(s)+quo))
-	else:       msg_r('+')
-
-	try:
-		if s == '': ret = 0
-		else:
-			f = (p.expect_exact,p.expect)[bool(regex)]
-			ret = f(s,timeout=(60,5)[bool(opt.debug_pexpect)])
-	except pexpect.TIMEOUT:
-		if opt.debug_pexpect: raise
-		errmsg(red('\nERROR.  Expect %s%s%s timed out.  Exiting' % (quo,s,quo)))
-		sys.exit(1)
-	debug_pexpect_msg(p)
-
-	if opt.debug or (opt.verbose and type(s) != str): msg_r(' ==> %s ' % ret)
-
-	if ret == -1:
-		errmsg('Error.  Expect returned %s' % ret)
-		sys.exit(1)
-	else:
-		if t == '':
-			if not nonl: vmsg('')
-		else:
-			my_send(p,t,delay,s)
-		return ret
+NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]
 
 def get_file_with_ext(ext,mydir,delete=True,no_dot=False):
 
@@ -805,181 +721,12 @@ def verify_checksum_or_exit(checksum,chk):
 		sys.exit(1)
 	vmsg(green('Checksums match: %s') % (cyan(chk)))
 
-def debug_pexpect_msg(p):
-	if opt.debug_pexpect:
-		errmsg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
-		errmsg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
-
-class MMGenExpect(object):
+from test.mmgen_pexpect import MMGenPexpect
+class MMGenExpect(MMGenPexpect):
 
 	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False):
-		cmd = (('./','')[bool(opt.system)]+mmgen_cmd,'python')[g.platform=='win']
-		cmd_args = add_spawn_args + cmd_args
-		args = (cmd_args,[mmgen_cmd]+cmd_args)[g.platform=='win']
 		desc = (cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc).strip()
-		for i in args:
-			if type(i) not in (str,unicode):
-				m1 = 'Error: missing input files in cmd line?:'
-				m2 = '\nName: {}\nCmd: {}\nCmd args: {}'
-				die(2,(m1+m2).format(name,cmd,args))
-		if use_popen_spawn:
-			args = [("'"+a+"'" if ' ' in a else a) for a in args]
-		cmd_str = '{} {}'.format(cmd,' '.join(args))
-		if use_popen_spawn:
-			cmd_str = cmd_str.replace('\\','/')
-
-		if opt.log:
-			log_fd.write(cmd_str+'\n')
-		if opt.verbose or opt.print_cmdline or opt.exact_output:
-			clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
-			sys.stderr.write(green('Testing: {}\n'.format(desc)))
-			sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
-		else:
-			m = 'Testing %s: ' % desc
-			msg_r((m,yellow(m))[ia])
-
-		if mmgen_cmd == '': return
-
-		if opt.direct_exec or ia:
-			msg('')
-			from subprocess import call,check_output
-			f = (call,check_output)[bool(no_output)]
-			ret = f([cmd] + args)
-			if f == call and ret != 0:
-				m = 'ERROR: process returned a non-zero exit status (%s)'
-				die(1,red(m % ret))
-		else:
-			if opt.traceback:
-				cmd,args = tb_cmd,[cmd]+args
-				cmd_str = tb_cmd + ' ' + cmd_str
-			if use_popen_spawn:
-				self.p = PopenSpawn(cmd_str)
-			else:
-				self.p = pexpect.spawn(cmd,args)
-			if opt.exact_output: self.p.logfile = sys.stdout
-
-	def ok(self,exit_val=0):
-		ret = self.p.wait()
-		if ret != exit_val:
-			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
-		if opt.profile: return
-		if opt.verbose or opt.exact_output:
-			sys.stderr.write(green('OK\n'))
-		else: msg(' OK')
-
-	def cmp_or_die(self,s,t,skip_ok=False,exit_val=0):
-		ret = self.p.wait()
-		if ret != exit_val:
-			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
-		if s == t:
-			if not skip_ok: ok()
-		else:
-			sys.stderr.write(red(
-				'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
-					(repr(t),repr(s))))
-			sys.exit(3)
-
-	def license(self):
-		if 'MMGEN_NO_LICENSE' in os.environ: return
-		p = "'w' for conditions and warranty info, or 'c' to continue: "
-		my_expect(self.p,p,'c')
-
-	def label(self,label='Test Label'):
-		p = 'Enter a wallet label, or hit ENTER for no label: '
-		my_expect(self.p,p,label+'\n')
-
-	def usr_rand_out(self,saved=False):
-		m = '%suser-supplied entropy' % (('','saved ')[saved])
-		my_expect(self.p,'Generating encryption key from OS random data plus ' + m)
-
-	def usr_rand(self,num_chars):
-		if opt.usr_random:
-			self.interactive()
-			my_send(self.p,'\n')
-		else:
-			rand_chars = list(getrandstr(num_chars,no_space=True))
-			my_expect(self.p,'symbols left: ','x')
-			try:
-				vmsg_r('SEND ')
-				while self.p.expect('left: ',0.1) == 0:
-					ch = rand_chars.pop(0)
-					msg_r(yellow(ch)+' ' if opt.verbose else '+')
-					self.p.send(ch)
-			except:
-				vmsg('EOT')
-			my_expect(self.p,'ENTER to continue: ','\n')
-
-	def passphrase_new(self,desc,passphrase):
-		my_expect(self.p,('Enter passphrase for %s: ' % desc), passphrase+'\n')
-		my_expect(self.p,'Repeat passphrase: ', passphrase+'\n')
-
-	def passphrase(self,desc,passphrase,pwtype=''):
-		if pwtype: pwtype += ' '
-		my_expect(self.p,('Enter %spassphrase for %s.*?: ' % (pwtype,desc)),
-				passphrase+'\n',regex=True)
-
-	def hash_preset(self,desc,preset=''):
-		my_expect(self.p,('Enter hash preset for %s' % desc))
-		my_expect(self.p,('or hit ENTER .*?:'), str(preset)+'\n',regex=True)
-
-	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  ',oo=False):
-		s1 = '%s written to file ' % desc
-		s2 = query + "Type uppercase 'YES' to confirm: "
-		ret = my_expect(self.p,([s1,s2],s1)[overwrite_unlikely])
-		if ret == 1:
-			my_send(self.p,'YES\n')
-#			if oo:
-			outfile = self.expect_getend("Overwriting file '").rstrip("'")
-			return outfile
-# 			else:
-# 				ret = my_expect(self.p,s1)
-		self.expect(NL,nonl=True)
-		outfile = self.p.before.strip().strip("'")
-		if opt.debug_pexpect: msgred('Outfile [%s]' % outfile)
-		vmsg('%s file: %s' % (desc,cyan(outfile.replace("'",''))))
-		return outfile
-
-	def no_overwrite(self):
-		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ",'\n')
-		self.expect('Exiting at user request')
-
-	def tx_view(self):
-		my_expect(self.p,r'View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ','\n',regex=True)
-
-	def expect_getend(self,s,regex=False):
-		ret = self.expect(s,regex=regex,nonl=True)
-		debug_pexpect_msg(self.p)
-#		end = self.readline().strip()
-		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
-		self.expect(NL,nonl=True)
-		debug_pexpect_msg(self.p)
-		end = self.p.before
-		vmsg(' ==> %s' % cyan(end))
-		return end
-
-	def interactive(self):
-		return self.p.interact()
-
-	def logfile(self,arg):
-		self.p.logfile = arg
-
-	def expect(self,*args,**kwargs):
-		return my_expect(self.p,*args,**kwargs)
-
-	def send(self,*args,**kwargs):
-		return my_send(self.p,*args,**kwargs)
-
-# 	def readline(self):
-# 		return self.p.readline()
-# 	def readlines(self):
-# 		return [l.rstrip()+'\n' for l in self.p.readlines()]
-
-	def read(self,n=None):
-		return self.p.read(n)
-
-	def close(self):
-		if not use_popen_spawn:
-			self.p.close()
+		return MMGenPexpect.__init__(self,name,mmgen_cmd,cmd_args,desc,no_output=no_output)
 
 from mmgen.obj import BTCAmt
 from mmgen.bitcoin import verify_addr
@@ -1221,7 +968,7 @@ def check_deps(cmds):
 
 
 def clean(usr_dirs=[]):
-	if opt.skip_deps and not ia: return
+	if opt.skip_deps: return
 	all_dirs = MMGenTestSuite().list_tmp_dirs()
 	dirs = (usr_dirs or all_dirs)
 	for d in sorted(dirs):
@@ -1252,8 +999,6 @@ class MMGenTestSuite(object):
 			return None
 
 	def do_cmd(self,cmd):
-
-		if ia and (len(cmd_data[cmd]) < 4 or cmd_data[cmd][3] != 1): return
 
 		# delete files produced by this cmd
 # 		for ext,tmpdir in find_generated_exts(cmd):
@@ -1289,24 +1034,20 @@ class MMGenTestSuite(object):
 		return [cfgs[str(n)]['dep_generators'][ext] for n,ext in fdeps]
 
 	def helpscreens(self,name,arg='--help'):
+		scripts = (
+			'walletgen','walletconv','walletchk','txcreate','txsend','txsign',
+			'addrgen','addrimport','keygen','passchg','tool','passgen')
 		for s in scripts:
 			t = MMGenExpect(name,('mmgen-'+s),[arg],extra_desc='(mmgen-%s)'%s,no_output=True)
-			if not ia:
-				t.read(); t.ok()
+			t.read(); t.ok()
 
 	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
 
 	def walletgen(self,name,del_dw_run='dummy',seed_len=None,gen_dfl_wallet=False):
-		if ia:
-			m = "\nAnswer '{}' at the the interactive prompt".format(('n','y')[gen_dfl_wallet])
-			msg(grnbg(m))
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd']+'\n')
-		add_args = ([usr_rand_arg],
-			['-q','-r0','-L','Interactive Mode Wallet','-P',get_tmpfile_fn(cfg,pwfile)])[bool(ia)]
 		args = ['-d',cfg['tmpdir'],'-p1']
 		if seed_len: args += ['-l',str(seed_len)]
-		t = MMGenExpect(name,'mmgen-walletgen', args + add_args)
-		if ia: return
+		t = MMGenExpect(name,'mmgen-walletgen', args + [usr_rand_arg])
 		t.license()
 		t.usr_rand(usr_rand_chars)
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
@@ -1330,13 +1071,7 @@ class MMGenTestSuite(object):
 		args = ['-d',cfg['tmpdir'],hp_arg,sl_arg,'-ib','-L',label]
 		write_to_tmpfile(cfg,bf,ref_wallet_brainpass)
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
-		if ia:
-			add_args = ['-r0', '-q', '-P%s' % get_tmpfile_fn(cfg,pwfile),
-							get_tmpfile_fn(cfg,bf)]
-		else:
-			add_args = [usr_rand_arg]
-		t = MMGenExpect(name,'mmgen-walletconv', args + add_args)
-		if ia: return
+		t = MMGenExpect(name,'mmgen-walletconv', args + [usr_rand_arg])
 		t.license()
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
@@ -1347,14 +1082,11 @@ class MMGenTestSuite(object):
 	def refwalletgen(self,name): self.brainwalletgen_ref(name)
 
 	def passchg(self,name,wf,pf):
-		# ia: reuse password, since there's no way to change it non-interactively
 		silence()
 		write_to_tmpfile(cfg,pwfile,get_data_from_file(pf))
 		end_silence()
-		add_args = ([usr_rand_arg],['-q','-r0','-P',pf])[bool(ia)]
-		t = MMGenExpect(name,'mmgen-passchg', add_args +
+		t = MMGenExpect(name,'mmgen-passchg', [usr_rand_arg] +
 				['-d',cfg['tmpdir'],'-p','2','-L','Changed label'] + ([],[wf])[bool(wf)])
-		if ia: return
 		t.license()
 		t.passphrase('MMGen wallet',cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
@@ -1376,25 +1108,15 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def passchg_dfl_wallet(self,name,pf):
-		if ia:
-			m = "\nAnswer 'YES'<ENTER> at the the interactive prompt"
-			msg(grnbg(m))
 		return self.passchg(name=name,wf=None,pf=pf)
 
-	def walletchk(self,name,wf,pf,desc='MMGen wallet',
-			add_args=[],sid=None,pw=False,extra_desc=''):
-		args = ([],['-P',pf,'-q'])[bool(ia and pf)]
+	def walletchk(self,name,wf,pf,desc='MMGen wallet',add_args=[],sid=None,pw=False,extra_desc=''):
+		args = []
 		hp = cfg['hash_preset'] if 'hash_preset' in cfg else '1'
 		wf_arg = ([],[wf])[bool(wf)]
 		t = MMGenExpect(name,'mmgen-walletchk',
 				add_args+args+['-p',hp]+wf_arg,
 				extra_desc=extra_desc)
-		if ia:
-			if sid:
-				n = (' should be','')[desc=='MMGen wallet']
-				m = grnbg('Seed ID%s:' % n)
-				msg(grnbg('%s %s' % (m,cyan(sid))))
-			return
 		if desc != 'hidden incognito data':
 			t.expect("Getting %s from file '" % (desc))
 		if pw:
@@ -1421,15 +1143,14 @@ class MMGenTestSuite(object):
 		MMGenExpect(name,'')
 		global have_dfl_wallet
 		have_dfl_wallet = False
-		if not ia: ok()
+		ok()
 
 	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[]):
 		ftype,chkfile = ((ftype,'{}file_chk'.format(ftype)),('pass','passfile32_chk'))[ftype=='pass32']
-		add_args = extra_args + ([],['-q'] + ([],['-P',pf])[bool(pf)])[ia] + (get_segwit_arg(cfg),[])[ftype[:4]=='pass']
+		add_args = extra_args + (get_segwit_arg(cfg),[])[ftype[:4]=='pass']
 		dlist = [id_str] if id_str else []
 		t = MMGenExpect(name,'mmgen-{}gen'.format(ftype), add_args +
 				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + dlist + [cfg['{}_idx_list'.format(ftype)]])
-		if ia: return
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		t.expect('Passphrase is OK')
@@ -1450,11 +1171,9 @@ class MMGenTestSuite(object):
 		self.addrgen(name,wf,pf=pf,check_ref=True)
 
 	def addrimport(self,name,addrfile):
-		add_args = ([],['-q','-t'])[ia]
 		outfile = os.path.join(cfg['tmpdir'],'addrfile_w_comments')
 		add_comments_to_addr_file(addrfile,outfile)
-		t = MMGenExpect(name,'mmgen-addrimport', add_args + [outfile])
-		if ia: return
+		t = MMGenExpect(name,'mmgen-addrimport', [outfile])
 		t.expect_getend(r'Checksum for address data .*\[.*\]: ',regex=True)
 		t.expect("Type uppercase 'YES' to confirm: ",'\n')
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
@@ -1473,13 +1192,7 @@ class MMGenTestSuite(object):
 
 		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 
-		if ia:
-			add_args += ['-q']
-			m = '\nAnswer the interactive prompts as follows:\n' + \
-				" 'y', 'y', 'q', '1-9'<ENTER>, ENTER, ENTER, ENTER, ENTER, 'y'"
-			msg(grnbg(m))
 		t = MMGenExpect(name,'mmgen-'+('txcreate','txdo')[bool(txdo_args)],['--rbf','-f',tx_fee] + add_args + cmd_args + txdo_args)
-		if ia: return
 		t.license()
 
 		if txdo_args and add_args: # txdo4
@@ -1567,16 +1280,10 @@ class MMGenTestSuite(object):
 		t.written_to_file('Signed transaction' + add, oo=True)
 
 	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,txdo_handle=None):
-		add_args = ([],['-q','-P',pf])[ia]
-		if ia:
-			m = '\nAnswer the interactive prompts as follows:\n  ENTER, ENTER, ENTER'
-			msg(grnbg(m))
 		if txdo_handle:
 			t = txdo_handle
-			if ia: return
 		else:
-			t = MMGenExpect(name,'mmgen-txsign', add_args+['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
-			if ia: return
+			t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
 			t.license()
 			t.tx_view()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
@@ -1612,7 +1319,6 @@ class MMGenTestSuite(object):
 		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + \
 			([],[wf])[bool(wf)] + ([],['-P',pf])[bool(pf)]
 		t = MMGenExpect(name,'mmgen-walletconv',opts)
-		if ia: return
 		t.license()
 		if not pf:
 			t.passphrase('MMGen wallet',cfg['wpasswd'])
@@ -1638,7 +1344,6 @@ class MMGenTestSuite(object):
 
 	def export_seed(self,name,wf,desc='seed data',out_fmt='seed',pf=None):
 		f,t = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
-		if ia: return
 		silence()
 		msg('%s: %s' % (capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
@@ -1714,12 +1419,7 @@ class MMGenTestSuite(object):
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False):
 		args = get_segwit_arg(cfg) + ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
-		if ia:
-			m = "\nAnswer 'n' at the interactive prompt"
-			msg(grnbg(m))
-			args = ['-q'] + ([],['-P',pf])[bool(pf)] + args
 		t = MMGenExpect(name,'mmgen-keygen', args)
-		if ia: return
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
@@ -1854,15 +1554,7 @@ class MMGenTestSuite(object):
 			tmp_fn = cfg['tool_enc_infn']
 			write_to_tmpfile(cfg,tmp_fn,d,binary=True)
 			infn = get_tmpfile_fn(cfg,tmp_fn)
-		if ia:
-			pwfn = 'ni_pw'
-			write_to_tmpfile(cfg,pwfn,tool_enc_passwd+'\n')
-			pre = ['-P', get_tmpfile_fn(cfg,pwfn)]
-			app = ['hash_preset=1']
-		else:
-			pre,app = [],[]
-		t = MMGenExpect(name,'mmgen-tool',pre+['-d',cfg['tmpdir'],usr_rand_arg,'encrypt',infn]+app)
-		if ia: return
+		t = MMGenExpect(name,'mmgen-tool',['-d',cfg['tmpdir'],usr_rand_arg,'encrypt',infn])
 		t.usr_rand(usr_rand_chars)
 		t.hash_preset('user data','1')
 		t.passphrase_new('user data',tool_enc_passwd)
@@ -1877,26 +1569,20 @@ class MMGenTestSuite(object):
 
 	def tool_decrypt(self,name,f1,f2):
 		of = name + '.out'
-		if ia:
-			pwfn = 'ni_pw'
-			pre = ['-P', get_tmpfile_fn(cfg,pwfn)]
-		else:
-			pre = []
+		pre = []
 		t = MMGenExpect(name,'mmgen-tool',
 			pre+['-d',cfg['tmpdir'],'decrypt',f2,'outfile='+of,'hash_preset=1'])
-		if not ia:
-			t.passphrase('user data',tool_enc_passwd)
-			t.written_to_file('Decrypted data')
+		t.passphrase('user data',tool_enc_passwd)
+		t.written_to_file('Decrypted data')
 		d1 = read_from_file(f1,binary=True)
 		d2 = read_from_file(get_tmpfile_fn(cfg,of),binary=True)
-		cmp_or_die(d1,d2,skip_ok=ia)
+		cmp_or_die(d1,d2,skip_ok=False)
 
 	def tool_find_incog_data(self,name,f1,f2):
 		i_id = read_from_file(f2).rstrip()
 		vmsg('Incog ID: %s' % cyan(i_id))
 		t = MMGenExpect(name,'mmgen-tool',
 				['-d',cfg['tmpdir'],'find_incog_data',f1,i_id])
-		if ia: return
 		o = t.expect_getend('Incog data for ID %s found at offset ' % i_id)
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
@@ -1968,12 +1654,7 @@ class MMGenTestSuite(object):
 
 	def ref_wallet_chk(self,name):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
-		if ia:
-			write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
-			pf = get_tmpfile_fn(cfg,pwfile)
-		else:
-			pf = None
-		self.walletchk(name,wf,pf=pf,pw=True,sid=cfg['seed_id'])
+		self.walletchk(name,wf,pf=None,pw=True,sid=cfg['seed_id'])
 
 	def ref_ss_chk(self,name,ss=None):
 		wf = os.path.join(ref_dir,'%s.%s' % (cfg['seed_id'],ss.ext))
@@ -2009,20 +1690,10 @@ class MMGenTestSuite(object):
 					)]
 			slarg = ['-l%s ' % cfg['seed_len']]
 			hparg = ['-p1']
-			if ia:
-				write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
-				add_args = ['-q','-P%s' % get_tmpfile_fn(cfg,pwfile)]
-			else:
-				add_args = []
-			if ia and wtype == 'hic_wallet_old':
-				m = grnbg("Answer 'y' at the interactive prompt if Seed ID is")
-				n = cyan(cfg['seed_id'])
-				msg('\n%s %s' % (m,n))
 			if wtype == 'hic_wallet_old' and opt.profile: msg('')
 			t = MMGenExpect(name,'mmgen-walletchk',
-				add_args + slarg + hparg + of_arg + ic_arg,
+				slarg + hparg + of_arg + ic_arg,
 				extra_desc=edesc)
-			if ia: continue
 			t.passphrase(desc,cfg['wpasswd'])
 			if wtype == 'hic_wallet_old':
 				t.expect('Is the Seed ID correct? (Y/n): ','\n')
@@ -2032,21 +1703,7 @@ class MMGenTestSuite(object):
 
 	def ref_addrfile_chk(self,name,ftype='addr'):
 		wf = os.path.join(ref_dir,cfg['ref_'+ftype+'file'])
-		if ia:
-			m = "\nAnswer the interactive prompts as follows: '1'<ENTER>, ENTER"
-			msg(grnbg(m))
-			pfn = 'ref_kafile_passwd'
-			write_to_tmpfile(cfg,pfn,ref_kafile_pass)
-			aa = ['-P',get_tmpfile_fn(cfg,pfn)]
-		else:
-			aa = []
-		t = MMGenExpect(name,'mmgen-tool',aa+[ftype.replace('segwit','')+'file_chksum',wf])
-		if ia:
-			k = 'ref_%saddrfile_chksum' % ('','key')[ftype == 'keyaddr']
-			m = grnbg('Checksum should be:')
-			n = cyan(cfg[k])
-			msg(grnbg('%s %s' % (m,n)))
-			return
+		t = MMGenExpect(name,'mmgen-tool',[ftype.replace('segwit','')+'file_chksum',wf])
 		if ftype == 'keyaddr':
 			w = 'key-address data'
 			t.hash_preset(w,ref_kafile_hash_preset)
@@ -2077,13 +1734,8 @@ class MMGenTestSuite(object):
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
 		aa = []
-		if ia:
-			pfn = 'tool_enc_passwd'
-			write_to_tmpfile(cfg,pfn,tool_enc_passwd)
-			aa = ['-P',get_tmpfile_fn(cfg,pfn)]
 		t = MMGenExpect(name,'mmgen-tool',
 				aa + ['-q','decrypt',f,'outfile=-','hash_preset=1'])
-		if ia: return
 		t.passphrase('user data',tool_enc_passwd)
 		t.expect(NL,nonl=True)
 		import re
@@ -2095,26 +1747,7 @@ class MMGenTestSuite(object):
 		opts = ['-d',cfg['tmpdir'],'-o','words',usr_rand_arg]
 		if_arg = [infile] if infile else []
 		d = '(convert)'
-		if ia:
-			opts += ['-q']
-			msg('')
-			if pw:
-				pfn = 'ni_passwd'
-				write_to_tmpfile(cfg,pfn,cfg['wpasswd'])
-				opts += ['-P',get_tmpfile_fn(cfg,pfn)]
-			if desc == 'brainwallet':
-				m = "\nAnswer the interactive prompt as follows: '%s'<ENTER>"
-				msg(grnbg(m % ref_wallet_brainpass))
-			if '-O' in uopts:
-				m = grnbg("Answer 'y' at the interactive prompt if Seed ID is")
-				n = cyan(cfg['seed_id'])
-				msg('\n%s %s' % (m,n))
 		t = MMGenExpect(name,'mmgen-walletconv',opts+uopts+if_arg,extra_desc=d)
-		if ia:
-			m = grnbg('Seed ID should be:')
-			n = cyan(cfg['seed_id'])
-			msg(grnbg('%s %s' % (m,n)))
-			return
 		t.license()
 		if desc == 'brainwallet':
 			t.expect('Enter brainwallet: ',ref_wallet_brainpass+'\n')
@@ -2138,49 +1771,28 @@ class MMGenTestSuite(object):
 
 	def walletconv_out(self,name,desc,out_fmt='w',uopts=[],uopts_chk=[],pw=False):
 		opts = ['-d',cfg['tmpdir'],'-p1','-o',out_fmt] + uopts
-		if ia:
-			pfn = 'ni_passwd'
-			write_to_tmpfile(cfg,pfn,cfg['wpasswd'])
-			l = 'Non-Interactive Test Wallet'
-			aa = ['-q','-L',l,'-r0','-P',get_tmpfile_fn(cfg,pfn)]
-			if desc == 'hidden incognito data':
-				rd = os.urandom(ref_wallet_incog_offset+128)
-				write_to_tmpfile(cfg,hincog_fn,rd)
-		else:
-			aa = [usr_rand_arg]
 		infile = os.path.join(ref_dir,cfg['seed_id']+'.mmwords')
-		t = MMGenExpect(name,'mmgen-walletconv',aa+opts+[infile],extra_desc='(convert)')
+		t = MMGenExpect(name,'mmgen-walletconv',[usr_rand_arg]+opts+[infile],extra_desc='(convert)')
 
 		add_args = ['-l%s' % cfg['seed_len']]
-		if ia:
-			pfn = 'ni_passwd'
-			write_to_tmpfile(cfg,pfn,cfg['wpasswd'])
-			pf = get_tmpfile_fn(cfg,pfn)
-			if desc != 'hidden incognito data':
-				from mmgen.seed import SeedSource
-				ext = SeedSource.fmt_code_to_type(out_fmt).ext
-				hps = ('',',1')[bool(pw)]   # TODO real hp
-				pre_ext = '[%s%s].' % (cfg['seed_len'],hps)
-				wf = get_file_with_ext(pre_ext+ext,cfg['tmpdir'],no_dot=True)
-		else:
-			t.license()
-			if pw:
-				t.passphrase_new('new '+desc,cfg['wpasswd'])
-				t.usr_rand(usr_rand_chars)
-			if ' '.join(desc.split()[-2:]) == 'incognito data':
-				for i in (1,2,3):
-					t.expect('Generating encryption key from OS random data ')
-			if desc == 'hidden incognito data':
-				ret = t.expect(['Create? (Y/n): ',"'YES' to confirm: "])
-				if ret == 0:
-					t.send('\n')
-					t.expect('Enter file size: ',str(hincog_bytes)+'\n')
-				else:
-					t.send('YES\n')
-			if out_fmt == 'w': t.label()
-			wf = t.written_to_file(capfirst(desc),oo=True)
-			pf = None
-			t.ok()
+		t.license()
+		if pw:
+			t.passphrase_new('new '+desc,cfg['wpasswd'])
+			t.usr_rand(usr_rand_chars)
+		if ' '.join(desc.split()[-2:]) == 'incognito data':
+			for i in (1,2,3):
+				t.expect('Generating encryption key from OS random data ')
+		if desc == 'hidden incognito data':
+			ret = t.expect(['Create? (Y/n): ',"'YES' to confirm: "])
+			if ret == 0:
+				t.send('\n')
+				t.expect('Enter file size: ',str(hincog_bytes)+'\n')
+			else:
+				t.send('YES\n')
+		if out_fmt == 'w': t.label()
+		wf = t.written_to_file(capfirst(desc),oo=True)
+		pf = None
+		t.ok()
 
 		if desc == 'hidden incognito data':
 			add_args += uopts_chk
@@ -2260,9 +1872,6 @@ def end_msg():
 	t = int(time.time()) - start_time
 	m = '{} tests performed.  Elapsed time: {:02d}:{:02d}\n'
 	sys.stderr.write(green(m.format(cmd_total,t/60,t%60)))
-	if ia:
-		m = 'Please re-check all {} control values against the program output\n'
-		sys.stderr.write(m.format(grnbg('HIGHLIGHTED')))
 
 ts = MMGenTestSuite()
 

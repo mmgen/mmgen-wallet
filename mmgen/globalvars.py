@@ -81,7 +81,10 @@ class g(object):
 	rpc_user             = ''
 	rpc_password         = ''
 	testnet_name         = 'testnet3'
-	bogus_wallet_data    = '' # for debugging, used by test suite
+
+	# test suite:
+	bogus_wallet_data    = ''
+	traceback_cmd        = 'scripts/traceback.py'
 
 	for k in ('win','linux'):
 		if sys.platform[:len(k)] == k:

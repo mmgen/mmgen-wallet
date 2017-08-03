@@ -92,6 +92,7 @@ cmd_data = OrderedDict([
 	('Encrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
 	('Decrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
 	('Bytespec',     ['<bytespec> [str]']),
+	('Regtest_setup',[]),
 ])
 
 stdin_msg = """
@@ -174,6 +175,8 @@ Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
   IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
   computed using a different algorithm and are NOT Electrum-compatible!
 
+Miscellaneous
+  regtest_setup - setup a regtest environment for testing MMGen scripts
   {sm}
 """.format(pnm=pnm,sm='\n  '.join(stdin_msg.split('\n')))
 
@@ -726,3 +729,10 @@ def Rand2file(outfile, nbytes, threads=4, silent=False):
 	f.close()
 
 def Bytespec(s): Msg(str(parse_nbytes(s)))
+
+def Regtest_setup():
+	print 'ok'
+	return
+	import subprocess as sp
+	sp.check_output()
+	pass

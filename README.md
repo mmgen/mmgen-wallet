@@ -93,7 +93,7 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Install from source on Microsoft Windows][1]
 
-> #### [Install from source on Debian/Ubuntu Linux][2]
+> #### [Install from source on Debian, Ubuntu, Raspbian or Armbian Linux][2]
 
 
 ### Using MMGen
