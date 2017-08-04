@@ -49,6 +49,10 @@ class g(object):
 	Cdates    = '2013-2017'
 	keywords  = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin'
 
+	coin   = 'BTC'
+	coins  = 'BTC','BCH'
+	ports = { 'BTC': (8332,18332), 'BCH': (8442,18442) }
+
 	user_entropy   = ''
 	hash_preset    = '3'
 	usr_randchars  = 30
@@ -106,19 +110,19 @@ class g(object):
 	# User opt sets global var:
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color','regtest'
+		'bitcoin_data_dir','force_256_color','regtest','coin'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars'
+		'brain_params','b16','usr_randchars','coin'
 	)
 	incompatible_opts = (
 		('quiet','verbose'),
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
-		('aug1hf','rbf'),
+		('aug1hf','rbf'), # TODO: remove in 0.9.4
 		('batch','rescan')
 	)
 	cfg_file_opts = (

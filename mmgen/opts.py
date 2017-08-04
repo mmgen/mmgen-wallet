@@ -47,6 +47,7 @@ def _show_hash_presets():
 
 # most, but not all, of these set the corresponding global var
 common_opts_data = """
+--, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
 --, --color=0|1           Disable or enable color output
 --, --force-256-color     Force 256-color output when color is enabled
 --, --bitcoin-data-dir=d  Specify Bitcoin data directory location 'd'
@@ -60,7 +61,11 @@ common_opts_data = """
 --, --testnet=0|1         Disable or enable testnet
 --, --skip-cfg-file       Skip reading the configuration file
 --, --version             Print version information and exit
-""".format(pnm=g.proj_name)
+""".format(
+	pnm=g.proj_name,
+	cu_dfl=g.coin,
+	cu_all=' '.join(g.coins),
+	)
 
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
 	d = (
@@ -101,6 +106,8 @@ def opt_postproc_initializations():
 	init_color(enable_color=g.color,num_colors=('auto',256)[bool(g.force_256_color)])
 
 	if g.platform == 'win': start_mscolor()
+
+	g.coin = g.coin.upper() # allow user to use lowercase
 
 def	set_data_dir_root():
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
@@ -273,10 +280,10 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		from mmgen.tx import MMGenTX
 		ret = MMGenTX().convert_fee_spec(val,224,on_fail='return')
 		if ret == False:
-			msg("'{}': invalid {} (not a BTC amount or satoshis-per-byte specification)".format(
-					val,desc))
+			msg("'{}': invalid {} (not a {} amount or satoshis-per-byte specification)".format(
+					val,desc,g.coin.upper()))
 		elif ret != None and ret > g.max_tx_fee:
-			msg("'{}': invalid {} (greater than max_tx_fee ({} BTC))".format(val,desc,g.max_tx_fee))
+			msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(val,desc,g.max_tx_fee,g.coin.upper()))
 		else:
 			return True
 		return False
@@ -386,6 +393,8 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		elif key == 'key_generator':
 			if not opt_compares(val,'<=',len(g.key_generators),desc): return False
 			if not opt_compares(val,'>',0,desc): return False
+		elif key == 'coin':
+			if not opt_is_in_list(val.upper(),g.coins,'coin'): return False
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 

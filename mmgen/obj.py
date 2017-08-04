@@ -296,9 +296,11 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			m = "'%s': value cannot be converted to decimal" % num
 		else:
 			if me.normalize().as_tuple()[-1] < -cls.max_prec:
-				m = "'%s': too many decimal places in BTC amount" % num
+				from mmgen.globalvars import g
+				m = "'{}': too many decimal places in {} amount".format(num,g.coin)
 			elif me > cls.max_amt:
-				m = "'%s': BTC amount too large (>%s)" % (num,cls.max_amt)
+				from mmgen.globalvars import g
+				m = "'{}': {} amount too large (>{})".format(num,g.coin,cls.max_amt)
 #			elif me.as_tuple()[0]:
 #				m = "'%s': BTC amount cannot be negative" % num
 			else:

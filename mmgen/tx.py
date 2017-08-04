@@ -319,7 +319,7 @@ class MMGenTX(MMGenObject):
 	def get_relay_fee(self):
 		assert self.estimate_size()
 		kb_fee = BTCAmt(bitcoin_connection().getnetworkinfo()['relayfee'])
-		vmsg('Relay fee: {} BTC/kB'.format(kb_fee))
+		vmsg('Relay fee: {} {}/kB'.format(kb_fee,g.coin))
 		return kb_fee * self.estimate_size() / 1024
 
 	def convert_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
@@ -339,16 +339,20 @@ class MMGenTX(MMGenObject):
 	def get_usr_fee(self,tx_fee,desc='Missing description'):
 		btc_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
 		if btc_fee == None:
-			msg("'{}': cannot convert satoshis-per-byte to BTC because transaction size is unknown".format(tx_fee))
-			assert False  # because we shouldn't be calling this if tx size is unknown
+			# we shouldn't be calling this if tx size is unknown
+			m = "'{}': cannot convert satoshis-per-byte to {} because transaction size is unknown"
+			assert False, m.format(tx_fee,g.coin)
 		elif btc_fee == False:
-			msg("'{}': invalid TX fee (not a BTC amount or satoshis-per-byte specification)".format(tx_fee))
+			m = "'{}': invalid TX fee (not a {} amount or satoshis-per-byte specification)"
+			msg(m.format(tx_fee,g.coin))
 			return False
 		elif btc_fee > g.max_tx_fee:
-			msg('{} BTC: {} fee too large (maximum fee: {} BTC)'.format(btc_fee,desc,g.max_tx_fee))
+			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
+			msg(m.format(btc_fee,desc,g.max_tx_fee,c=g.coin))
 			return False
 		elif btc_fee < self.get_relay_fee():
-			msg('{} BTC: {} fee too small (below relay fee of {} BTC)'.format(str(btc_fee),desc,str(self.get_relay_fee())))
+			m = '{} {c}: {} fee too small (below relay fee of {} {c})'
+			msg(m.format(str(btc_fee),desc,str(self.get_relay_fee()),c=g.coin))
 			return False
 		else:
 			return btc_fee
@@ -360,8 +364,8 @@ class MMGenTX(MMGenObject):
 				btc_fee = self.get_usr_fee(tx_fee,desc)
 			if btc_fee:
 				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
-				p = '{} TX fee{}: {} BTC ({} satoshis per byte)'.format(desc,m,
-					btc_fee.hl(),pink(str(self.btc2spb(btc_fee))))
+				p = '{} TX fee{}: {} {} ({} satoshis per byte)'.format(desc,m,
+					btc_fee.hl(),g.coin,pink(str(self.btc2spb(btc_fee))))
 				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 					if opt.yes: msg(p)
 					return btc_fee
@@ -444,8 +448,8 @@ class MMGenTX(MMGenObject):
 
 		self.die_if_incorrect_chain()
 
-		if opt.aug1hf and self.has_segwit_inputs():
-			die(2,yellow("'--aug1hf' option is incompatible with Segwit transaction inputs!"))
+		if g.coin == 'BCH' and self.has_segwit_inputs():
+			die(2,yellow("Segwit inputs cannot be spent on BCH chain!"))
 
 		if not keys:
 			msg('No keys. Cannot sign!')
@@ -468,15 +472,15 @@ class MMGenTX(MMGenObject):
 
 		from mmgen.bitcoin import hash256
 		msg_r('Signing transaction{}...'.format(tx_num_str))
-		ht = ('ALL','ALL|FORKID')[bool(opt.aug1hf)] # sighashtype defaults to 'ALL'
+		ht = ('ALL','ALL|FORKID')[g.coin=='BCH'] # sighashtype defaults to 'ALL'
 		ret = c.signrawtransaction(self.hex,sig_data,keys.values(),ht,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
 			errmsg = rpc_errmsg(ret)
 			if 'Invalid sighash param' in errmsg:
-				m  = 'This chain does not support the Aug. 1 2017 UAHF.'
-				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' without the --aug1hf option."
+				m  = 'This is not the BCH chain.'
+				m += "\nRe-run the script without the --aug1hf or --coin=bch option."
 			else:
 				m = errmsg
 			msg(yellow(m))
@@ -549,6 +553,17 @@ class MMGenTX(MMGenObject):
 	def is_in_utxos(self,c):
 		return 'txid' in c.getrawtransaction(self.btc_txid,True,on_fail='silent')
 
+	def get_status(self,c,status=False):
+		if self.is_in_mempool(c):
+			msg(('Warning: transaction is in mempool!','Transaction is in mempool')[status])
+		elif self.is_in_wallet(c):
+			die(1,'Transaction has been confirmed{}'.format('' if status else '!'))
+		elif self.is_in_utxos(c):
+			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
+		ret = self.is_replaced(c) # 1: replacement in mempool, 2: replacement confirmed
+		if ret:
+			die(1,'Transaction has been replaced'+('',', and the replacement TX is confirmed')[ret==2]+'!')
+
 	def send(self,c,prompt_user=True):
 
 		self.die_if_incorrect_chain()
@@ -562,16 +577,7 @@ class MMGenTX(MMGenObject):
 		if self.get_fee() > g.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than max_tx_fee ({})!'.format(self.get_fee(),g.max_tx_fee))
 
-		if self.is_in_mempool(c):
-			msg('Warning: transaction is in mempool!')
-		elif self.is_in_wallet(c):
-			die(1,'Transaction has been confirmed!')
-		elif self.is_in_utxos(c):
-			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
-
-		ret = self.is_replaced(c) # 1: replacement in mempool, 2: replacement confirmed
-		if ret:
-			die(1,'Transaction has been replaced'+('',', and the replacement TX is confirmed')[ret==2]+'!')
+		self.get_status(c)
 
 		if prompt_user:
 			m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
@@ -592,10 +598,10 @@ class MMGenTX(MMGenObject):
 			errmsg = rpc_errmsg(ret)
 			if 'Signature must use SIGHASH_FORKID' in errmsg:
 				m  = 'The Aug. 1 2017 UAHF has activated on this chain.'
-				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' with the --aug1hf option."
+				m += "\nRe-run the script with the --coin=bch option."
 			elif 'Illegal use of SIGHASH_FORKID' in errmsg:
 				m  = 'The Aug. 1 2017 UAHF is not yet active on this chain.'
-				m += "\nRe-run 'mmgen-txsign' or 'mmgen-txdo' without the --aug1hf option."
+				m += "\nRe-run the script without the --aug1hf or --coin=bch option."
 			else:
 				m = errmsg
 			msg(yellow(m))
@@ -667,74 +673,77 @@ class MMGenTX(MMGenObject):
 			blockcount = None
 
 		hdr_fs = (
-			'TRANSACTION DATA\n\nHeader: [ID:{}] [{} BTC] [{} UTC] [RBF:{}] [Signed:{}]\n',
-			'Transaction {} {} BTC ({} UTC) RBF={} Signed={}\n'
+			'TRANSACTION DATA\n\n[ID:{}] [{} {}] [{} UTC] [RBF:{}] [Signed:{}]\n',
+			'Transaction {} {} {} ({} UTC) RBF={} Signed={}\n'
 		)[bool(terse)]
 
-		out = hdr_fs.format(self.txid.hl(),self.send_amt.hl(),self.timestamp,
+		out = hdr_fs.format(self.txid.hl(),self.send_amt.hl(),g.coin,self.timestamp,
 				self.is_rbf(color=True),self.marked_signed(color=True))
 
 		enl = ('\n','')[bool(terse)]
 		if self.chain in ('testnet','regtest'): out += green('Chain: {}\n'.format(self.chain.upper()))
-		if self.btc_txid: out += 'Bitcoin TxID: {}\n'.format(self.btc_txid.hl())
+		if self.btc_txid: out += '{} TxID: {}\n'.format(g.coin,self.btc_txid.hl())
 		out += enl
 
 		if self.label:
 			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
 		out += 'Inputs:\n' + enl
 
-		nonmm_str = '(non-{pnm} address){s}  '.format(pnm=g.proj_name,s=('',' ')[terse])
+		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
+		max_mmwid = max(max(len(i.mmid) for i in self.inputs if i.mmid)+len('()'),len(nonmm_str))
 		for n,e in enumerate(sorted(self.inputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 			if blockcount:
 				confs = e.confs + blockcount - self.blockcount
 				days = int(confs * g.mins_per_block / (60*24))
-			mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True) if e.mmid \
-						else MMGenID.hlc(nonmm_str)
+			mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True) if e.mmid else MMGenID.hlc(nonmm_str)
 			if terse:
-				out += '%3s: %s %s %s BTC' % (n+1, e.addr.fmt(color=True),mmid_fmt, e.amt.hl())
+				out += '{:3} {} {} {} {}'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
 			else:
 				for d in (
 	(n+1, 'tx,vout:',       '%s,%s' % (e.txid, e.vout)),
 	('',  'address:',       e.addr.fmt(color=True) + ' ' + mmid_fmt),
 	('',  'comment:',       e.label.hl() if e.label else ''),
-	('',  'amount:',        '%s BTC' % e.amt.hl()),
+	('',  'amount:',        '{} {}'.format(e.amt.hl(),g.coin)),
 	('',  'confirmations:', '%s (around %s days)' % (confs,days) if blockcount else '')
 				):
 					if d[2]: out += ('%3s %-8s %s\n' % d)
 			out += '\n'
 
 		out += 'Outputs:\n' + enl
+		max_mmwid = max((len(o.mmid),len(o.mmid)+len(' (chg)'))[bool(o.is_chg)] for o in self.outputs if o.mmid)
+		max_mmwid = max(max_mmwid+len('()'),len(nonmm_str))
 		for n,e in enumerate(sorted(self.outputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 			if e.mmid:
 				app=('',' (chg)')[bool(e.is_chg and terse)]
-				mmid_fmt = e.mmid.fmt(width=len(nonmm_str),encl='()',color=True,
+				mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True,
 										app=app,appcolor='green')
 			else:
 				mmid_fmt = MMGenID.hlc(nonmm_str)
 			if terse:
-				out += '%3s: %s %s %s BTC' % (n+1, e.addr.fmt(color=True),mmid_fmt, e.amt.hl())
+				out += '{:3} {} {} {} {}'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
 			else:
 				for d in (
 						(n+1, 'address:',  e.addr.fmt(color=True) + ' ' + mmid_fmt),
 						('',  'comment:',  e.label.hl() if e.label else ''),
-						('',  'amount:',   '%s BTC' % e.amt.hl()),
+						('',  'amount:',   '{} {}'.format(e.amt.hl(),g.coin)),
 						('',  'change:',   green('True') if e.is_chg else '')
 					):
 					if d[2]: out += ('%3s %-8s %s\n' % d)
 			out += '\n'
 
 		fs = (
-			'Total input:  %s BTC\nTotal output: %s BTC\nTX fee:       %s BTC (%s satoshis per byte)\n',
-			'In %s BTC - Out %s BTC - Fee %s BTC (%s satoshis/byte)\n'
+			'Total input:  {} {c}\nTotal output: {} {c}\nTX fee:       {} {c} ({} satoshis per byte)\n',
+			'In {} {c} - Out {} {c} - Fee {} {c} ({} satoshis/byte)\n'
 		)[bool(terse)]
 
 		total_in  = self.sum_inputs()
 		total_out = self.sum_outputs()
-		out += fs % (
+		out += fs.format(
 			total_in.hl(),
 			total_out.hl(),
 			(total_in-total_out).hl(),
 			pink(str(self.btc2spb(total_in-total_out))),
+			c=g.coin
 		)
 		if opt.verbose:
 			ts = len(self.hex)/2 if self.hex else 'unknown'
@@ -851,10 +860,10 @@ class MMGenBumpTX(MMGenTX):
 				else:
 					o_amt = self.outputs[idx].amt
 					cs = ('',' (change output)')[chg_idx == idx]
-					p = 'Fee will be deducted from output {}{} ({} BTC)'.format(idx+1,cs,o_amt)
+					p = 'Fee will be deducted from output {}{} ({} {})'.format(idx+1,cs,o_amt,g.coin)
 					if o_amt < self.min_fee:
-						msg('Minimum fee ({} BTC) is greater than output amount ({} BTC)'.format(
-							self.min_fee,o_amt))
+						msg('Minimum fee ({} {c}) is greater than output amount ({} {c})'.format(
+							self.min_fee,o_amt,c=g.coin))
 					elif opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 						if opt.yes: msg(p)
 						self.bump_output_idx = idx
@@ -866,11 +875,11 @@ class MMGenBumpTX(MMGenTX):
 	def get_usr_fee(self,tx_fee,desc):
 		ret = super(type(self),self).get_usr_fee(tx_fee,desc)
 		if ret < self.min_fee:
-			msg('{} BTC: {} fee too small. Minimum fee: {} BTC ({} satoshis per byte)'.format(
-				ret,desc,self.min_fee,self.btc2spb(self.min_fee)))
+			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} satoshis per byte)'.format(
+				ret,desc,self.min_fee,self.btc2spb(self.min_fee,c=g.coin)))
 			return False
 		output_amt = self.outputs[self.bump_output_idx].amt
 		if ret >= output_amt:
-			msg('{} BTC: {} fee too large. Maximum fee: <{} BTC'.format(ret,desc,output_amt))
+			msg('{} {c}: {} fee too large. Maximum fee: <{} {c}'.format(ret,desc,output_amt,c=g.coin))
 			return False
 		return ret

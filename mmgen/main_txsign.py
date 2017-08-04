@@ -52,7 +52,7 @@ opts_data = {
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                       address file (output of '{pnl}-keygen'). Permits
                       online signing without an {pnm} seed source. The
-                      key-address file is also used to verify {pnm}-to-BTC
+                      key-address file is also used to verify {pnm}-to-{cu}
                       mappings, so the user should record its checksum.
 -P, --passwd-file= f  Get {pnm} wallet or bitcoind passphrase from file 'f'
 -q, --quiet           Suppress warnings; overwrite files without prompting
@@ -63,11 +63,17 @@ opts_data = {
 """.format(
 		g=g,pnm=pnm,pnl=pnm.lower(),
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-		kg=g.key_generator),
+		kg=g.key_generator,
+		cu=g.coin
+		),
 	'notes': '\n' + txsign_notes
 }
 
 infiles = opts.init(opts_data,add_opts=['b16'])
+
+if opt.aug1hf: # TODO: remove in 0.9.4
+	msg(yellow('The --aug1hf option is deprecated. Please use --coin=bch instead'))
+	g.coin = 'BCH'
 
 if not infiles: opts.usage()
 for i in infiles: check_infile(i)

@@ -28,11 +28,7 @@ from mmgen.obj import BTCAmt
 
 class BitcoinRPCConnection(object):
 
-	def __init__(
-				self,
-				host=g.rpc_host,port=(8332,18332)[g.testnet],
-				user=None,passwd=None,auth_cookie=None,
-			):
+	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
 
 		dmsg('=== BitcoinRPCConnection.__init__() debug ===')
 		dmsg('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
@@ -154,6 +150,7 @@ class BitcoinRPCConnection(object):
 		'getblockcount',
 		'getblockhash',
 		'getmempoolentry',
+		'getnettotals',
 		'getnetworkinfo',
 		'getpeerinfo',
 		'getrawmempool',

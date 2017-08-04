@@ -33,6 +33,7 @@ opts_data = {
 --, --longhelp  Print help message for long options (common options)
 -d, --outdir= d Specify an alternate directory 'd' for output
 -q, --quiet     Suppress warnings; overwrite files without prompting
+-s, --status    Get status of a sent transaction
 -y, --yes       Answer 'yes' to prompts, suppress non-essential output
 """
 }
@@ -43,13 +44,19 @@ if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
 else: opts.usage()
 
-do_license_msg()
+if not opt.status: do_license_msg()
+
 c = bitcoin_connection()
 tx = MMGenTX(infile) # sig check performed here
 qmsg("Signed transaction file '%s' is valid" % infile)
 
 if not tx.marked_signed(c):
 	die(1,'Transaction is not signed!')
+
+if opt.status:
+	if tx.btc_txid: qmsg('{} txid: {}'.format(g.coin,tx.btc_txid.hl()))
+	tx.get_status(c,status=True)
+	sys.exit(0)
 
 if not opt.yes:
 	tx.view_with_prompt('View transaction data?')

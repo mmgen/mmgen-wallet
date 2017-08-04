@@ -485,8 +485,8 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
 			if label.mmid in addrs:
 				if addrs[label.mmid]['addr'] != d['address']:
-					die(2,'duplicate BTC address ({}) for this MMGen address! ({})'.format(
-							(d['address'], addrs[label.mmid]['addr'])))
+					die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
+							g.coin,d['address'],addrs[label.mmid]['addr']))
 			else:
 				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':BTCAddr(d['address']) }
 			addrs[label.mmid]['amt'] += d['amount']
@@ -501,7 +501,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		assert len(accts) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not of same length'
 		for a in acct_addrs:
 			if len(a) != 1:
-				die(2,"'{}': more than one BTC address in account!".format(a))
+				die(2,"'{}': more than one {} address in account!".format(a,g.coin))
 		for label,addr in zip(accts,[b[0] for b in acct_addrs]):
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
 			if label.mmid not in addrs:
@@ -543,7 +543,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			cmt=addrs[mmid]['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
 			amt=addrs[mmid]['amt'].fmt('3.0',color=True)))
 
-	out.append('\nTOTAL: %s BTC' % total.hl(color=True))
+	out.append('\nTOTAL: {} {}'.format(total.hl(color=True),g.coin))
 	o = '\n'.join(out)
 	return do_pager(o) if pager else Msg(o)
 
@@ -567,7 +567,7 @@ def Getbalance(minconf=1):
 	Msg(fs.format('Wallet',
 		*[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)]))
 	for key in sorted(accts.keys()):
-		Msg(fs.format(key+':', *[a.fmt(color=True,suf=' BTC') for a in accts[key]]))
+		Msg(fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]]))
 	if 'SPENDABLE' in accts:
 		Msg(red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!'))
 

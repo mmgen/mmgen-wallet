@@ -58,7 +58,8 @@ def Die(ev=0,s=''):
 	sys.exit(ev)
 
 def rdie(ev=0,s=''): die(ev,red(s))
-def ydie(ev=0,s=''): die(ev,yellow(s))
+def wdie(ev=0,s=''): die(ev,yellow(s))
+def hi(): sys.stdout.write(yellow('hi'))
 
 def pformat(d):
 	import pprint
@@ -773,20 +774,16 @@ def get_bitcoind_auth_cookie():
 		return ''
 
 def bitcoin_connection():
-	cfg = get_bitcoind_cfg_options(('rpcuser','rpcpassword'))
-	import mmgen.rpc
-	c = mmgen.rpc.BitcoinRPCConnection(
-				g.rpc_host or 'localhost',
-				g.rpc_port or (8332,18332)[g.testnet],
-				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
-				g.rpc_password or cfg['rpcpassword'],
-				auth_cookie=get_bitcoind_auth_cookie())
-	# do an RPC call so we exit immediately if we can't connect
-	if not g.bitcoind_version:
-		g.bitcoind_version = int(c.getnetworkinfo()['version'])
-		g.chain = c.getblockchaininfo()['chain']
-		if g.chain != 'regtest': g.chain += 'net'
-		assert g.chain in g.chains
+
+	def	check_coin_mismatch(c):
+		fb = '00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148'
+		err = []
+		if int(c.getblockchaininfo()['blocks']) <= 478558 or c.getblockhash(478559) == fb:
+			if g.coin == 'BCH': err = 'BCH','BTC'
+		elif g.coin == 'BTC': err = 'BTC','BCH'
+		if err: wdie(2,"'{}' requested, but this is the {} chain!".format(*err))
+
+	def	check_chain_mismatch():
 		err = None
 		if g.regtest and g.chain != 'regtest':
 			err = '--regtest option'
@@ -797,4 +794,22 @@ def bitcoin_connection():
 			err = 'mainnet'
 		if err:
 			die(1,'{} selected but chain is {}'.format(err,g.chain))
+
+	cfg = get_bitcoind_cfg_options(('rpcuser','rpcpassword'))
+	import mmgen.rpc
+	c = mmgen.rpc.BitcoinRPCConnection(
+				g.rpc_host or 'localhost',
+				g.rpc_port or g.ports[g.coin][g.testnet],
+				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
+				g.rpc_password or cfg['rpcpassword'],
+				auth_cookie=get_bitcoind_auth_cookie())
+
+	if not g.bitcoind_version: # First call
+		g.bitcoind_version = int(c.getnetworkinfo()['version'])
+		g.chain = c.getblockchaininfo()['chain']
+		if g.chain != 'regtest':
+			g.chain += 'net'
+		assert g.chain in g.chains
+		if g.chain == 'mainnet':
+			check_coin_mismatch(c)
 	return c

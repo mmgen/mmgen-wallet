@@ -51,10 +51,10 @@ one address with no amount on the command line.
 
 fee_notes = """
 FEE SPECIFICATION: Transaction fees, both on the command line and at the
-interactive prompt, may be specified as either absolute BTC amounts, using a
-plain decimal number, or as satoshis per byte, using an integer followed by
+interactive prompt, may be specified as either absolute {} amounts, using
+a plain decimal number, or as satoshis per byte, using an integer followed by
 the letter 's'.
-"""
+""".format(g.coin)
 
 wmsg = {
 	'addr_in_addrfile_only': """
@@ -77,19 +77,15 @@ NOTE: This transaction includes non-{pnm} inputs, which makes the signing
 process more complicated.  When signing the transaction, keys for non-{pnm}
 inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
-Selected non-{pnm} inputs: %s
+Selected non-{pnm} inputs: {{}}
 """.strip().format(pnm=pnm,pnl=pnm.lower()),
 	'not_enough_btc': """
-Selected outputs insufficient to fund this transaction (%s BTC needed)
-""".strip(),
-	'throwaway_change': """
-ERROR: This transaction produces change (%s BTC); however, no change address
-was specified.
-""".strip(),
+Selected outputs insufficient to fund this transaction ({{}} {} needed)
+""".strip().format(g.coin),
 	'no_change_output': """
 ERROR: No change address specified.  If you wish to create a transaction with
-only one output, specify a single output address with no BTC amount
-""".strip(),
+only one output, specify a single output address with no {} amount
+""".strip().format(g.coin),
 }
 
 def select_unspent(unspent,prompt):
@@ -139,7 +135,7 @@ def get_fee_from_estimate_or_user(tx,estimate_fail_msg_shown=[]):
 		else:
 			start_fee = BTCAmt(ret) * opt.tx_fee_adj * tx.estimate_size() / 1024
 			if opt.verbose:
-				msg('{} fee ({} confs): {} BTC/kB'.format(desc,opt.tx_confs,ret))
+				msg('{} fee ({} confs): {} {}/kB'.format(desc,opt.tx_confs,ret,g.coin))
 				msg('TX size (estimated): {}'.format(tx.estimate_size()))
 
 	return tx.get_usr_fee_interactive(start_fee,desc=desc)
@@ -195,12 +191,12 @@ def get_inputs_from_user(tw,tx,caller):
 
 		t_inputs = sum(s.amt for s in sel_unspent)
 		if t_inputs < tx.send_amt:
-			msg(wmsg['not_enough_btc'] % (tx.send_amt - t_inputs))
+			msg(wmsg['not_enough_btc'].format(tx.send_amt-t_inputs))
 			continue
 
 		non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
 		if non_mmaddrs and caller != 'txdo':
-			msg(wmsg['non_mmgen_inputs'] % ', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs]))))
+			msg(wmsg['non_mmgen_inputs'].format(', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
 			if not keypress_confirm('Accept?'):
 				continue
 
@@ -209,12 +205,12 @@ def get_inputs_from_user(tw,tx,caller):
 		change_amt = tx.sum_inputs() - tx.send_amt - get_fee_from_estimate_or_user(tx)
 
 		if change_amt >= 0:
-			p = 'Transaction produces %s BTC in change' % change_amt.hl()
+			p = 'Transaction produces {} {} in change'.format(change_amt.hl(),g.coin)
 			if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 				if opt.yes: msg(p)
 				return change_amt
 		else:
-			msg(wmsg['not_enough_btc'] % abs(change_amt))
+			msg(wmsg['not_enough_btc'].format(abs(change_amt)))
 
 def txcreate(cmd_args,do_info=False,caller='txcreate'):
 
@@ -234,7 +230,9 @@ def txcreate(cmd_args,do_info=False,caller='txcreate'):
 
 	tx.send_amt = tx.sum_outputs()
 
-	msg('Total amount to spend: %s' % ('Unknown','%s BTC'%tx.send_amt.hl())[bool(tx.send_amt)])
+	msg('Total amount to spend: {}'.format(
+		('Unknown','{} {}'.format(tx.send_amt.hl(),g.coin))[bool(tx.send_amt)]
+	))
 
 	change_amt = get_inputs_from_user(tw,tx,caller)
 

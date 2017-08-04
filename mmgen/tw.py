@@ -157,13 +157,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='twmmid']
 
-		hdr_fmt   = 'UNSPENT OUTPUTS (sort order: %s)  Total BTC: %s'
-		out  = [hdr_fmt % (' '.join(self.sort_info()), self.total.hl())]
+		hdr_fmt = 'UNSPENT OUTPUTS (sort order: {})  Total {}: {}'
+		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
 		af = BTCAddr.fmtc('Address',width=addr_w+1)
 		cf = ('Conf.','Age(d)')[self.show_days]
-		out += [fs % ('Num','TX id'.ljust(tx_w - 5) + ' Vout','',af,'Amt(BTC) ',cf)]
+		out += [fs % ('Num','TX id'.ljust(tx_w - 5) + ' Vout','',af,'Amt({}) '.format(g.coin),cf)]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*33
@@ -195,7 +195,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		fs  = ' %-4s %-67s %s %s %s %-8s %-6s %s'
 		out = [fs % ('Num','Tx ID,Vout','Address'.ljust(34),'MMGen ID'.ljust(15),
-			'Amount(BTC)','Conf.','Age(d)', 'Label')]
+			'Amount({})'.format(g.coin),'Conf.','Age(d)', 'Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
@@ -209,17 +209,18 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len))
 			out.append(s.rstrip())
 
-		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal BTC: {}\n'
+		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
 				make_timestr(),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
+				g.coin,
 				self.total.hl(color=color))
 		return self.fmt_print
 
 	def display_total(self):
-		fs = '\nTotal unspent: %s BTC (%s outputs)'
-		msg(fs % (self.total.hl(),len(self.unspent)))
+		fs = '\nTotal unspent: {} {} ({} outputs)'
+		msg(fs.format(self.total.hl(),g.coin,len(self.unspent)))
 
 	def get_idx_and_label_from_user(self):
 		msg('')
@@ -246,7 +247,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							return n,s
 
 	def view_and_sort(self,tx):
-		txos = 'Total to spend, excluding fees: {} BTC\n\n'.format(tx.sum_outputs().hl()) if tx.outputs else ''
+		fs = 'Total to spend, excluding fees: {} {}\n\n'
+		txos = fs.format(tx.sum_outputs().hl(),g.coin) if tx.outputs else ''
 		prompt = """
 {}Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen

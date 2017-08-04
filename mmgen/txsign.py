@@ -57,12 +57,12 @@ column below:
 
 wmsg = {
 	'mapping_error': """
-{pnm} -> BTC address mappings differ!
-%-23s %s -> %s
-%-23s %s -> %s
-""".strip().format(pnm=pnm),
+{pnm} -> {c} address mappings differ!
+{{:<23}} {{}} -> {{}}
+{{:<23}} {{}} -> {{}}
+""".strip().format(pnm=pnm,c=g.coin),
 	'missing_keys_error': """
-ERROR: a key file must be supplied for the following non-{pnm} address%s:\n    %s
+ERROR: a key file must be supplied for the following non-{pnm} address{{}}:\n    {{}}
 """.format(pnm=pnm).strip()
 }
 
@@ -106,7 +106,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 	if not need_keys: return []
 	desc,m1 = ('key-address file','From key-address file:') if keyaddr_list else \
 					('seed(s)','Generated from seed:')
-	qmsg('Checking {} -> BTC address mappings for {} (from {})'.format(pnm,src,desc))
+	qmsg('Checking {} -> {} address mappings for {} (from {})'.format(pnm,g.coin,src,desc))
 	d = keyaddr_list.flat_list() if keyaddr_list else \
 		generate_keys_for_mmgen_addrs([e.mmid for e in need_keys],infiles,saved_seeds)
 	new_keys = []
@@ -118,7 +118,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 					if src == 'inputs':
 						new_keys.append((f.addr,f.wif))
 				else:
-					die(3,wmsg['mapping_error'] % (m1,f.mmid,f.addr,'tx file:',e.mmid,e.addr))
+					die(3,wmsg['mapping_error'].format(m1,f.mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
 		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'s'),desc))
 	return new_keys
@@ -165,7 +165,7 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 		tmp = KeyAddrList(addrlist=non_mm_addrs,do_chksum=False)
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('wif')
-		if m: die(2,wmsg['missing_keys_error'] % (suf(m,'es'),'\n    '.join(m)))
+		if m: die(2,wmsg['missing_keys_error'].format(suf(m,'es'),'\n    '.join(m)))
 		keys += tmp.get_addr_wif_pairs()
 
 	if opt.mmgen_keys_from_file:

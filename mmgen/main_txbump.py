@@ -36,7 +36,7 @@ opts_data = {
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--f, --tx-fee=        f Transaction fee, as a decimal BTC amount or in
+-f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or in
                        satoshis per byte (an integer followed by 's')
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
@@ -51,7 +51,7 @@ opts_data = {
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                        address file (output of '{pnl}-keygen'). Permits
                        online signing without an {pnm} seed source. The
-                       key-address file is also used to verify {pnm}-to-BTC
+                       key-address file is also used to verify {pnm}-to-{cu}
                        mappings, so the user should record its checksum.
 -o, --output-to-reduce=o Deduct the fee from output 'o' (an integer, or 'c'
                        for the transaction's change output, if present)
@@ -67,11 +67,13 @@ opts_data = {
 -z, --show-hash-presets Show information on available hash presets
 """.format(g=g,pnm=pnm,pnl=pnm.lower(),
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-		kg=g.key_generator),
+		kg=g.key_generator,
+		cu=g.coin
+		),
 	'notes': '\n' + fee_notes + txsign_notes
 }
 
-cmd_args = opts.init(opts_data,add_opts=['aug1hf'])
+cmd_args = opts.init(opts_data)
 
 c = bitcoin_connection()
 
@@ -96,14 +98,14 @@ tx.set_min_fee()
 
 if not [o.amt for o in tx.outputs if o.amt >= tx.min_fee]:
 	die(1,'Transaction cannot be bumped.' +
-	'\nAll outputs have less than the minimum fee ({} BTC)'.format(tx.min_fee))
+	'\nAll outputs have less than the minimum fee ({} {})'.format(tx.min_fee,g.coin))
 
 msg('Creating new transaction')
 
 op_idx = tx.choose_output()
 
 if not silent:
-	msg('Minimum fee for new transaction: {} BTC'.format(tx.min_fee))
+	msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee,g.coin))
 
 fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 

@@ -39,7 +39,7 @@ opts_data = {
 -C, --tx-confs=      c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--f, --tx-fee=        f Transaction fee, as a decimal BTC amount or in
+-f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or in
                        satoshis per byte (an integer followed by 's').
                        If omitted, bitcoind's 'estimatefee' will be used
                        to calculate the fee.
@@ -58,7 +58,7 @@ opts_data = {
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                        address file (output of '{pnl}-keygen'). Permits
                        online signing without an {pnm} seed source. The
-                       key-address file is also used to verify {pnm}-to-BTC
+                       key-address file is also used to verify {pnm}-to-{cu}
                        mappings, so the user should record its checksum.
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
@@ -71,11 +71,18 @@ opts_data = {
 -z, --show-hash-presets Show information on available hash presets
 """.format(g=g,pnm=pnm,pnl=pnm.lower(),
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-		kg=g.key_generator),
+		kg=g.key_generator,
+		cu=g.coin
+		),
 	'notes': '\n' + txcreate_notes + fee_notes + txsign_notes
 }
 
 cmd_args = opts.init(opts_data)
+
+if opt.aug1hf: # TODO: remove in 0.9.4
+	msg(yellow('The --aug1hf option is deprecated. Please use --coin=bch instead'))
+	g.coin = 'BCH'
+
 seed_files = get_seed_files(opt,cmd_args)
 c = bitcoin_connection()
 do_license_msg()

@@ -35,7 +35,7 @@ opts_data = {
 -c, --comment-file=f Source the transaction's comment from file 'f'
 -C, --tx-confs=    c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=      d Specify an alternate directory 'd' for output
--f, --tx-fee=      f Transaction fee, as a decimal BTC amount or in satoshis
+-f, --tx-fee=      f Transaction fee, as a decimal {cu} amount or in satoshis
                      per byte (an integer followed by 's').  If omitted, fee
                      will be calculated using bitcoind's 'estimatefee' call
 -i, --info           Display unspent outputs and exit
@@ -45,7 +45,7 @@ opts_data = {
 -r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
 -v, --verbose        Produce more verbose output
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
-""".format(g=g),
+""".format(g=g,cu=g.coin),
 	'notes': '\n' + txcreate_notes + fee_notes
 }
 
