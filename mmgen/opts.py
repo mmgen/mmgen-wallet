@@ -166,7 +166,10 @@ def override_from_env():
 			gname = name[idx:].lower()
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
 
-def init(opts_data,add_opts=[],opt_filter=None):
+def init(opts_f,add_opts=[],opt_filter=None):
+
+	opts_data = opts_f()
+	opts_data['long_options'] = common_opts_data
 
 	version_info = """
     {pgnm_uc} version {g.version}
@@ -174,21 +177,14 @@ def init(opts_data,add_opts=[],opt_filter=None):
     Copyright (C) {g.Cdates} {g.author} {g.email}
 	""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
 
-	opts_data['long_options'] = common_opts_data
-
-	uopts,args,short_opts,long_opts,skipped_opts = \
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
+	uopts,args,short_opts,long_opts,skipped_opts,do_help = \
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,defer_help=True)
 
 	if g.debug: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
 	# Save this for usage()
 	global usage_txt
 	usage_txt = opts_data['usage']
-
-	# We don't need this data anymore
-	del mmgen.share.Opts
-	for k in ('prog_name','desc','usage','options','notes'):
-		if k in opts_data: del opts_data[k]
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
 	for o in tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts) + \
@@ -242,6 +238,17 @@ def init(opts_data,add_opts=[],opt_filter=None):
 	die_on_incompatible_opts(g.incompatible_opts)
 
 	opt_postproc_initializations()
+
+	if do_help: # print help screen only after global vars are initialized
+		opts_data = opts_f()
+		opts_data['long_options'] = common_opts_data
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
+
+	# We don't need this data anymore
+	del mmgen.share.Opts
+	del opts_f
+	for k in ('prog_name','desc','usage','options','notes'):
+		if k in opts_data: del opts_data[k]
 
 	if g.debug: opt_postproc_debug()
 

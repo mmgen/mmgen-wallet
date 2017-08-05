@@ -23,7 +23,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 from mmgen.txcreate import *
 from mmgen.txsign import *
 
-opts_data = {
+def opts_data(): return {
 	'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ... [seed source] ...',
 	'sets': ( ('yes', True, 'quiet', True), ),
@@ -74,7 +74,7 @@ opts_data = {
 		kg=g.key_generator,
 		cu=g.coin
 		),
-	'notes': '\n' + txcreate_notes + fee_notes + txsign_notes
+	'notes': '\n' + txcreate_notes + fee_notes.format(g.coin) + txsign_notes
 }
 
 cmd_args = opts.init(opts_data)

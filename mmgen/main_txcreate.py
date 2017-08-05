@@ -23,7 +23,7 @@ mmgen-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen
 
 from mmgen.txcreate import *
 
-opts_data = {
+def opts_data(): return {
 	'desc': 'Create a transaction with outputs to specified Bitcoin or {g.proj_name} addresses'.format(g=g),
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 	'sets': ( ('yes', True, 'quiet', True), ),
@@ -46,7 +46,7 @@ opts_data = {
 -v, --verbose        Produce more verbose output
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
 """.format(g=g,cu=g.coin),
-	'notes': '\n' + txcreate_notes + fee_notes
+	'notes': '\n' + txcreate_notes + fee_notes.format(g.coin)
 }
 
 cmd_args = opts.init(opts_data)

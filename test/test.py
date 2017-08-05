@@ -100,7 +100,7 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 		except: pass
 		os.symlink(dd,data_dir)
 
-opts_data = {
+def opts_data(): return {
 	'desc': 'Test suite for the MMGen suite',
 	'usage':'[options] [command(s) or metacommand(s)]',
 	'options': """
@@ -1035,7 +1035,7 @@ class MMGenTestSuite(object):
 
 	def helpscreens(self,name,arg='--help'):
 		scripts = (
-			'walletgen','walletconv','walletchk','txcreate','txsend','txsign',
+			'walletgen','walletconv','walletchk','txcreate','txsign','txsend','txdo','txbump',
 			'addrgen','addrimport','keygen','passchg','tool','passgen')
 		for s in scripts:
 			t = MMGenExpect(name,('mmgen-'+s),[arg],extra_desc='(mmgen-%s)'%s,no_output=True)

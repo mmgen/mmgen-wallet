@@ -24,7 +24,7 @@ mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
 from mmgen.common import *
 import mmgen.tool as tool
 
-opts_data = {
+def opts_data(): return {
 	'desc':    'Perform various {pnm}- and Bitcoin-related operations'.format(pnm=g.proj_name),
 	'usage':   '[opts] <command> <command args>',
 	'options': """

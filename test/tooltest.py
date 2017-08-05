@@ -115,7 +115,7 @@ cfg = {
 	'addrfile_chk':  '6FEF 6FB9 7B13 5D91',
 }
 
-opts_data = {
+def opts_data(): return {
 	'desc': "Test suite for the 'mmgen-tool' utility",
 	'usage':'[options] [command]',
 	'options': """

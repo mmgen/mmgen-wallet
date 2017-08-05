@@ -88,10 +88,9 @@ class MMGenPexpect(object):
 		NL = '\n'
 
 	data_dir = os.path.join('test','data_dir')
-	add_spawn_args = ' '.join(['{} {}'.format(
-		'--'+k.replace('_','-'),
+	add_spawn_args = ' '.join(['{} {}'.format('--'+k.replace('_','-'),
 		getattr(opt,k) if getattr(opt,k) != True else ''
-		) for k in ('testnet','rpc_host','rpc_port','regtest') if getattr(opt,k)]).split()
+		) for k in ('testnet','rpc_host','rpc_port','regtest','coin') if getattr(opt,k)]).split()
 	add_spawn_args += ['--data-dir',data_dir]
 
 	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False):

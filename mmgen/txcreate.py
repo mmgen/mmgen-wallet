@@ -54,7 +54,7 @@ FEE SPECIFICATION: Transaction fees, both on the command line and at the
 interactive prompt, may be specified as either absolute {} amounts, using
 a plain decimal number, or as satoshis per byte, using an integer followed by
 the letter 's'.
-""".format(g.coin)
+""" # formatted later, after g.coin is initialized
 
 wmsg = {
 	'addr_in_addrfile_only': """

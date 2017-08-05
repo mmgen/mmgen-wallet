@@ -75,7 +75,7 @@ class BitcoinRPCConnection(object):
 			if cf['on_fail'] in ('return','silent'):
 				return 'rpcfail',args
 			else:
-				die(*args[1:])
+				die(args[1],yellow(args[2]))
 
 		dmsg('=== request() debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
@@ -86,10 +86,10 @@ class BitcoinRPCConnection(object):
 					return (float,str)[g.bitcoind_version>=120000](obj)
 				return json.JSONEncoder.default(self, obj)
 
-# Can't do UTF-8 labels yet: httplib only ascii?
-# 		if type(p) != list and p['method'] == 'importaddress':
-# 			dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
-# 			print(dump)
+		# TODO: UTF-8 labels
+		# if type(p) != list and p['method'] == 'importaddress':
+		# 	dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
+		# 	print(dump)
 
 		dmsg('    RPC AUTHORIZATION data ==> [Basic {}]\n'.format(base64.b64encode(self.auth_str)))
 		try:
@@ -98,9 +98,14 @@ class BitcoinRPCConnection(object):
 				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str))
 			})
 		except Exception as e:
-			return die_maybe(None,2,'{}\nUnable to connect to bitcoind at {}:{}'.format(e,self.host,self.port))
+			m = '{}\nUnable to connect to bitcoind at {}:{}'
+			return die_maybe(None,2,m.format(e,self.host,self.port))
 
-		r = hc.getresponse() # returns HTTPResponse instance
+		try:
+			r = hc.getresponse() # returns HTTPResponse instance
+		except Exception:
+			m = 'Unable to connect to bitcoind at {}:{} (but port is bound?)'
+			return die_maybe(None,2,m.format(self.host,self.port))
 
 		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 

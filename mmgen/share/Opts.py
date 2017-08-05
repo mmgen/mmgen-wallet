@@ -27,19 +27,22 @@ def usage(opts_data):
 	print 'USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage'])
 	sys.exit(2)
 
-def print_help(opts_data,longhelp=False):
+def print_help_and_exit(opts_data,longhelp=False):
 	pn = opts_data['prog_name']
 	pn_len = str(len(pn)+2)
-	print ('  %-'+pn_len+'s %s') % (pn.upper()+':', opts_data['desc'].strip())
-	print ('  %-'+pn_len+'s %s %s')%('USAGE:', pn, opts_data['usage'].strip())
+	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
+	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
 	od_opts = opts_data[('options','long_options')[longhelp]].strip().splitlines()
-	sep,m,ls = (('\n    ','  OPTIONS:',''),('\n','  LONG OPTIONS:','    '))[longhelp]
-	print m + sep + ls + sep.join(od_opts)
+	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
+	ls = ('  ','')[longhelp]
+	es = ('','    ')[longhelp]
+	out += '{ls}{}\n{ls}{es}{}\n'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
-		print '  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
+		out += '  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
+	print(out)
+	sys.exit(0)
 
-
-def process_opts(argv,opts_data,short_opts,long_opts):
+def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 
 	import os
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
@@ -51,11 +54,15 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 		print str(err); sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
-	opts = {}
+	opts,do_help = {},False
 
-	for opt, arg in cl_opts:
-		if   opt in ('-h','--help'): print_help(opts_data); sys.exit(0)
-		elif opt == '--longhelp':    print_help(opts_data,longhelp=True); sys.exit(0)
+	for opt,arg in cl_opts:
+		if opt in ('-h','--help'):
+			if not defer_help: print_help_and_exit(opts_data)
+			do_help = True
+		elif opt == '--longhelp':
+			if not defer_help: print_help_and_exit(opts_data,longhelp=True)
+			do_help = True
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
@@ -82,10 +89,10 @@ def process_opts(argv,opts_data,short_opts,long_opts):
 					else:
 						opts[o_out] = v_out
 
-	return opts,args
+	return opts,args,do_help
 
 
-def parse_opts(argv,opts_data,opt_filter=None):
+def parse_opts(argv,opts_data,opt_filter=None,defer_help=False):
 
 	import re
 	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
@@ -111,6 +118,7 @@ def parse_opts(argv,opts_data,opt_filter=None):
 	long_opts     = [d[1].replace('-','_')+d[5] for d in od_all if d[6] == False]
 	skipped_opts  = [d[1].replace('-','_') for d in od_all if d[6] == True]
 
-	opts,args = process_opts(argv,opts_data,short_opts,long_opts)
+	opts,args,do_help = process_opts(argv,opts_data,short_opts,long_opts,defer_help=defer_help)
 
-	return opts,args,short_opts,long_opts,skipped_opts
+	ret = opts,args,short_opts,long_opts,skipped_opts
+	return ret + (do_help,) if defer_help else ret

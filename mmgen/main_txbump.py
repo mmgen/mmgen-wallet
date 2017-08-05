@@ -24,7 +24,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 from mmgen.txcreate import *
 from mmgen.txsign import *
 
-opts_data = {
+def opts_data(): return {
 	'desc': 'Increase the fee on a replaceable (RBF) {g.proj_name} transaction, creating a new transaction, and optionally sign and send the new transaction'.format(g=g),
 	'usage':   '[opts] <{g.proj_name} TX file> [seed source] ...'.format(g=g),
 	'sets': ( ('yes', True, 'quiet', True), ),
@@ -70,7 +70,7 @@ opts_data = {
 		kg=g.key_generator,
 		cu=g.coin
 		),
-	'notes': '\n' + fee_notes + txsign_notes
+	'notes': '\n' + fee_notes.format(g.coin) + txsign_notes
 }
 
 cmd_args = opts.init(opts_data)

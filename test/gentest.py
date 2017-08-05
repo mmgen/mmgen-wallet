@@ -32,7 +32,7 @@ from mmgen.common import *
 from mmgen.bitcoin import hex2wif
 
 rounds = 100
-opts_data = {
+def opts_data(): return {
 	'desc': "Test address generation in various ways",
 	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
