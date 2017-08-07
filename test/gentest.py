@@ -32,7 +32,7 @@ from mmgen.common import *
 from mmgen.bitcoin import hex2wif
 
 rounds = 100
-def opts_data(): return {
+opts_data = lambda: {
 	'desc': "Test address generation in various ways",
 	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
@@ -118,25 +118,27 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 mmtype = ('L','S')[bool(opt.segwit)]
 compressed = True
 
+from mmgen.addr import KeyGenerator,AddrGenerator
+from mmgen.obj import PrivKey
+ag = AddrGenerator(('p2pkh','segwit')[bool(opt.segwit)])
+
 if a and b:
 	m = "Comparing address generators '{}' and '{}'"
 	qmsg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
-	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(generator=a)
-	gen_b = get_privhex2addr_f(generator=b)
 	last_t = time.time()
+	kg_a = KeyGenerator(a)
+	kg_b = KeyGenerator(b)
 
 	for i in range(rounds):
 		if time.time() - last_t >= 0.1:
 			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 			last_t = time.time()
-		sec = hexlify(os.urandom(32))
-		wif = hex2wif(sec,compressed=compressed)
-		a_addr = gen_a(sec,compressed,mmtype=mmtype)
-		b_addr = gen_b(sec,compressed,mmtype=mmtype)
-		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
+		sec = PrivKey(os.urandom(32),compressed)
+		a_addr = ag.to_addr(kg_a.to_pubhex(sec))
+		b_addr = ag.to_addr(kg_b.to_pubhex(sec))
+		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
 		if a_addr != b_addr:
-			match_error(sec,wif,a_addr,b_addr,a,b)
+			match_error(sec,sec.wif,a_addr,b_addr,a,b)
 		if not opt.segwit:
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
@@ -145,23 +147,21 @@ if a and b:
 elif a and not fh:
 	m = "Testing speed of address generator '{}'"
 	qmsg(green(m.format(g.key_generators[a-1])))
-	from mmgen.addr import get_privhex2addr_f
-	gen = get_privhex2addr_f(generator=a)
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	print 'Incrementing key with each round'
 	print 'Starting key:', hexlify(seed+pack('I',0))
 	import time
 	start = last_t = time.time()
+	kg = KeyGenerator(a)
 
 	for i in range(rounds):
 		if time.time() - last_t >= 0.1:
 			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 			last_t = time.time()
-		sec = hexlify(seed+pack('I',i))
-		wif = hex2wif(sec,compressed=compressed)
-		a_addr = gen(sec,compressed,mmtype=mmtype)
-		vmsg('\nkey:  %s\naddr: %s\n' % (wif,a_addr))
+		sec = PrivKey(seed+pack('I',i),compressed)
+		a_addr = ag.to_addr(kg.to_pubhex(sec))
+		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
 		if not opt.segwit:
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
@@ -170,18 +170,15 @@ elif a and not fh:
 elif a and dump:
 	m = "Comparing output of address generator '{}' against wallet dump '{}'"
 	qmsg(green(m.format(g.key_generators[a-1],cmd_args[1])))
-	if a == 2:
-		qmsg("NOTE: for compressed addresses, 'python-ecdsa' generator will be used")
-	from mmgen.addr import get_privhex2addr_f
-	gen_a = get_privhex2addr_f(generator=a)
-	from mmgen.bitcoin import wif2hex
+	kg = KeyGenerator(a)
 	for n,[wif,a_addr] in enumerate(dump,1):
 		qmsg_r('\rKey %s/%s ' % (n,len(dump)))
-		sec = wif2hex(wif)
-		if sec == False:
+		try:
+			sec = PrivKey(wif=wif)
+		except:
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
 		compressed = wif[0] != ('5','9')[g.testnet]
-		b_addr = gen_a(sec,compressed,'L')
+		b_addr = ag.to_addr(kg.to_pubhex(sec))
 		if a_addr != b_addr:
-			match_error(sec,wif,a_addr,b_addr,1 if compressed and a==2 else a,4)
+			match_error(sec,wif,a_addr,b_addr,3,a)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))

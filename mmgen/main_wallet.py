@@ -55,7 +55,7 @@ elif invoked_as == 'passchg':
 else:
 	die(1,"'%s': unrecognized invocation" % g.prog_name)
 
-def opts_data(): return {
+opts_data = lambda: {
 # Can't use: share/Opts doesn't know anything about fmt codes
 #	'sets': [('hidden_incog_output_params',bool,'out_fmt','hi')],
 	'desc': desc.format(pnm=g.proj_name),

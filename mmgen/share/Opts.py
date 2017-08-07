@@ -24,7 +24,7 @@ import sys, getopt
 # from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
-	print 'USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage'])
+	print('USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
 def print_help_and_exit(opts_data,longhelp=False):
@@ -36,9 +36,9 @@ def print_help_and_exit(opts_data,longhelp=False):
 	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
 	ls = ('  ','')[longhelp]
 	es = ('','    ')[longhelp]
-	out += '{ls}{}\n{ls}{es}{}\n'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
+	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
-		out += '  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
+		out += '\n  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
 	print(out)
 	sys.exit(0)
 
@@ -51,7 +51,7 @@ def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 	so_str = short_opts.replace('-:','').replace('-','')
 	try: cl_opts,args = getopt.getopt(argv[1:], so_str, long_opts)
 	except getopt.GetoptError as err:
-		print str(err); sys.exit(2)
+		print(str(err)); sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
 	opts,do_help = {},False

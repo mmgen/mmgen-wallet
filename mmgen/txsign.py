@@ -86,19 +86,20 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 		saved_seeds[ss.seed.sid] = ss.seed
 		if ss.seed.sid == sid: return ss.seed
 
-def generate_keys_for_mmgen_addrs(mmgen_addrs,infiles,saved_seeds):
-	sids = set(i.sid for i in mmgen_addrs)
+def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
+	mmids = [e.mmid for e in need_keys]
+	sids = set(i.sid for i in mmids)
 	vmsg('Need seed%s: %s' % (suf(sids,'s'),' '.join(sids)))
-	d = AddrListList()
+	d = MMGenList()
 	from mmgen.addr import KeyAddrList
 	for sid in sids:
 		# Returns only if seed is found
 		seed = get_seed_for_seed_id(sid,infiles,saved_seeds)
 		for t in MMGenAddrType.mmtypes:
-			idx_list = [i.idx for i in mmgen_addrs if i.sid == sid and i.mmtype == t]
+			idx_list = [i.idx for i in mmids if i.sid == sid and i.mmtype == t]
 			if idx_list:
 				addr_idxs = AddrIdxList(idx_list=idx_list)
-				d += KeyAddrList(seed=seed,addr_idxs=addr_idxs,do_chksum=False,mmtype=MMGenAddrType(t)).flat_list()
+				d.append(KeyAddrList(seed=seed,addr_idxs=addr_idxs,do_chksum=False,mmtype=MMGenAddrType(t)))
 	return d
 
 def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
@@ -107,18 +108,20 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 	desc,m1 = ('key-address file','From key-address file:') if keyaddr_list else \
 					('seed(s)','Generated from seed:')
 	qmsg('Checking {} -> {} address mappings for {} (from {})'.format(pnm,g.coin,src,desc))
-	d = keyaddr_list.flat_list() if keyaddr_list else \
-		generate_keys_for_mmgen_addrs([e.mmid for e in need_keys],infiles,saved_seeds)
+	d = MMGenList([keyaddr_list]) if keyaddr_list else \
+		generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds)
 	new_keys = []
 	for e in need_keys:
-		for f in d:
-			if f.mmid == e.mmid:
-				if f.addr == e.addr:
-					e.have_wif = True
-					if src == 'inputs':
-						new_keys.append((f.addr,f.wif))
-				else:
-					die(3,wmsg['mapping_error'].format(m1,f.mmid,f.addr,'tx file:',e.mmid,e.addr))
+		for kal in d:
+			for f in kal.data:
+				mmid = '{}:{}'.format(kal.al_id,f.idx)
+				if mmid == e.mmid:
+					if f.addr == e.addr:
+						e.have_wif = True
+						if src == 'inputs':
+							new_keys.append(f)
+					else:
+						die(3,wmsg['mapping_error'].format(m1,mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
 		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'s'),desc))
 	return new_keys
@@ -151,22 +154,22 @@ def get_keyaddrlist(opt):
 def get_keylist(opt):
 	if opt.keys_from_file:
 		l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
-		ret = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept bitcoind wallet dumps
-		ret.generate_addrs_from_keylist()
-		return ret
+		kal = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept bitcoind wallet dumps
+		kal.generate_addrs_from_keys()
+		return kal
 	return None
 
 def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
-	# Start
-	keys = []
-#	tx.pmsg()
+
+	keys = MMGenList() # list of AddrListEntry objects
 	non_mm_addrs = tx.get_non_mmaddrs('inputs')
+
 	if non_mm_addrs:
 		tmp = KeyAddrList(addrlist=non_mm_addrs,do_chksum=False)
 		tmp.add_wifs(kl)
-		m = tmp.list_missing('wif')
+		m = tmp.list_missing('sec')
 		if m: die(2,wmsg['missing_keys_error'].format(suf(m,'es'),'\n    '.join(m)))
-		keys += tmp.get_addr_wif_pairs()
+		keys += tmp.data
 
 	if opt.mmgen_keys_from_file:
 		keys += add_keys(tx,'inputs',keyaddr_list=kal)
@@ -175,6 +178,7 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	keys += add_keys(tx,'inputs',seed_files,saved_seeds)
 	add_keys(tx,'outputs',seed_files,saved_seeds)
 
+	# this attr must not be written to file
 	tx.delete_attrs('inputs','have_wif')
 	tx.delete_attrs('outputs','have_wif')
 
@@ -182,7 +186,7 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	if extra_sids:
 		msg('Unused Seed ID{}: {}'.format(suf(extra_sids,'s'),' '.join(extra_sids)))
 
-	if tx.sign(c,tx_num_str,dict(keys)):
+	if tx.sign(c,tx_num_str,keys):
 		return tx
 	else:
 		die(3,red('Transaction {}could not be signed.'.format(tx_num_str)))

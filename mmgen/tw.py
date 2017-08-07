@@ -38,11 +38,19 @@ class MMGenTrackingWallet(MMGenObject):
 
 	class MMGenTwOutputList(list,MMGenObject): pass
 
-	class MMGenTwOutput(MMGenListItem):
+	class MMGenTwUnspentOutput(MMGenListItem):
+	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
+		reassign_ok = 'label','skip'
+		txid     = MMGenListItemAttr('txid','BitcoinTxID')
+		vout     = MMGenListItemAttr('vout',int,typeconv=False),
+		amt      = MMGenListItemAttr('amt','BTCAmt'),
+		label    = MMGenListItemAttr('label','TwComment'),
 		twmmid = MMGenListItemAttr('twmmid','TwMMGenID')
-		txid   = MMGenListItemAttr('txid','BitcoinTxID')
-		attrs_reassign = 'label','skip'
-		attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
+		addr     = MMGenListItemAttr('addr','BTCAddr'),
+		confs    = MMGenListItemAttr('confs',int,typeconv=False),
+		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
+		days    = MMGenListItemAttr('days',int,typeconv=False),
+		skip    = MMGenListItemAttr('skip',bool,typeconv=False),
 
 	wmsg = {
 	'no_spendable_outputs': """
@@ -87,12 +95,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					'twmmid': l.mmid,
 					'label':  l.comment,
 					'days':   int(o['confirmations'] * g.mins_per_block / (60*24)),
-					'amt':    o['amount'], # TODO
-					'addr':   o['address'],
+					'amt':    BTCAmt(o['amount']), # TODO
+					'addr':   BTCAddr(o['address']), # TODO
 					'confs':  o['confirmations']
 				})
 				mm_rpc.append(o)
-		self.unspent = self.MMGenTwOutputList([self.MMGenTwOutput(**dict([(k,v) for k,v in o.items() if k in self.MMGenTwOutput.attrs])) for o in mm_rpc])
+		self.unspent = self.MMGenTwOutputList([self.MMGenTwUnspentOutput(**dict([(k,v) for k,v in o.items() if k in self.MMGenTwUnspentOutput.__dict__])) for o in mm_rpc])
 		for u in self.unspent:
 			if u.label == None: u.label = ''
 		if not self.unspent:

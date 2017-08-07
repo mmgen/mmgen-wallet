@@ -29,7 +29,7 @@ from mmgen.obj import TwLabel
 # In batch mode, bitcoind just rescans each address separately anyway, so make
 # --batch and --rescan incompatible.
 
-def opts_data(): return {
+opts_data = lambda: {
 	'desc': """Import addresses (both {pnm} and non-{pnm}) into an {pnm}
                      tracking wallet""".format(pnm=g.proj_name),
 	'usage':'[opts] [mmgen address file]',

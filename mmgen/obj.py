@@ -17,21 +17,26 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-obj.py:  MMGen native classes
+obj.py: MMGen native classes
 """
 
 import sys
 from decimal import *
 from mmgen.color import *
-lvl = 0
+
+def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
+def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
+def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
+def is_btc_addr(s):      return BTCAddr(s,on_fail='silent')
+def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
+def is_tw_label(s):      return TwLabel(s,on_fail='silent')
+def is_wif(s):           return WifKey(s,on_fail='silent')
 
 class MMGenObject(object):
 
-	# Pretty-print any object of type MMGenObject, recursing into sub-objects - WIP
-# 	def pmsg(self):  sys.stderr.write(self.pformat()+'\n')
-# 	def pdie(self):  sys.stderr.write(self.pformat()+'\n'); sys.exit(0)
-	def pmsg(self):  print(self.pformat())
-	def pdie(self):  print(self.pformat()); sys.exit(0)
+	# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
+	def pmsg(self): print(self.pformat())
+	def pdie(self): print(self.pformat()); sys.exit(0)
 	def pformat(self,lvl=0):
 		from decimal import Decimal
 		scalars = (str,unicode,int,float,Decimal)
@@ -68,8 +73,8 @@ class MMGenObject(object):
 
 # 		print type(self)
 # 		print dir(self)
-# 		print self.__dict__ # *attributes* of object
-# 		print self.__dict__.keys() # *attributes* of object
+# 		print self.__dict__
+# 		print self.__dict__.keys()
 # 		print self.keys()
 
 		out = [u'<{}>{}\n'.format(type(self).__name__,' '+repr(self) if isScalar(self) else '')]
@@ -96,39 +101,73 @@ class MMGenObject(object):
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
 
-# Descriptor: https://docs.python.org/2/howto/descriptor.html
-class MMGenListItemAttr(object):
-	def __init__(self,name,dtype):
+class MMGenImmutableAttr(object): # Descriptor
+
+	typeconv = False
+	builtin_typeconv = False
+
+	def __init__(self,name,dtype,typeconv=None,builtin_typeconv=None):
+		if typeconv is not None:
+			assert typeconv in (True,False)
+			self.typeconv = typeconv
+		if builtin_typeconv is not None:
+			assert builtin_typeconv
+			self.builtin_typeconv = builtin_typeconv
+			self.typeconv = False # override
 		self.name = name
 		self.dtype = dtype
+
 	def __get__(self,instance,owner):
 		return instance.__dict__[self.name]
+
+	# forbid all reassignment
+	def chk_ok_set_attr(self,instance):
+		if hasattr(instance,self.name):
+			m = "Attribute '{}' of {} instance cannot be reassigned"
+			raise AttributeError(m.format(self.name,type(instance)))
+
 	def __set__(self,instance,value):
-#		if self.name == 'mmid': print repr(instance), repr(value) # DEBUG
-		instance.__dict__[self.name] = globals()[self.dtype](value)
+		self.chk_ok_set_attr(instance)
+		if self.typeconv:   # convert type
+			instance.__dict__[self.name] = globals()[self.dtype](value)
+		elif self.builtin_typeconv:
+			instance.__dict__[self.name] = self.dtype(value)
+		else:               # check type
+			if type(value) != self.dtype:
+				m = "Attribute '{}' of {} instance must of type {}"
+				raise TypeError(m.format(self.name,type(instance),self.dtype))
+			instance.__dict__[self.name] = value
+
 	def __delete__(self,instance):
-		del instance.__dict__[self.name]
+		if self.name in instance.delete_ok:
+			if self.name in instance.__dict__:
+				del instance.__dict__[self.name]
+		else:
+			m = "Atribute '{}' of {} instance cannot be deleted"
+			raise AttributeError(m.format(self.name,type(instance)))
+
+class MMGenListItemAttr(MMGenImmutableAttr):
+
+	typeconv = True
+	builtin_typeconv = False
+
+	# return None if attribute doesn't exist
+	def __get__(self,instance,owner):
+		try: return instance.__dict__[self.name]
+		except: return None
+
+	# allow reassignment if value is None or attr in reassign_ok list
+	def chk_ok_set_attr(self,instance):
+		if hasattr(instance,self.name) and not (
+			getattr(instance,self.name) == None or self.name in instance.reassign_ok
+		):
+			m = "Attribute '{}' of {} instance cannot be reassigned"
+			raise AttributeError(m.format(self.name,type(instance)))
 
 class MMGenListItem(MMGenObject):
 
-	addr  = MMGenListItemAttr('addr','BTCAddr')
-	amt   = MMGenListItemAttr('amt','BTCAmt')
-	mmid  = MMGenListItemAttr('mmid','MMGenID')
-	label = MMGenListItemAttr('label','TwComment')
-
-	attrs = ()
-	attrs_priv = ()
-	attrs_reassign = 'label',
-
-	def attr_error(self,arg):
-		raise AttributeError, "'{}': invalid attribute for {}".format(arg,type(self).__name__)
-	def set_error(self,attr,val):
-		raise ValueError, \
-			"'{}': attribute '{}' in instance of class '{}' cannot be reassigned".format(
-				val,attr,type(self).__name__)
-
-	attrs_base = ('attrs','attrs_priv','attrs_reassign','attrs_base','attr_error','set_error',
-				'__dict__','pformat','pmsg','pdie')
+	reassign_ok = ()
+	delete_ok = ()
 
 	def __init__(self,*args,**kwargs):
 		if args:
@@ -137,40 +176,18 @@ class MMGenListItem(MMGenObject):
 			if kwargs[k] != None:
 				setattr(self,k,kwargs[k])
 
-	def __getattribute__(self,name):
-		ga = object.__getattribute__
-		if name in ga(self,'attrs') + ga(self,'attrs_priv') + ga(self,'attrs_base'):
-			try:
-				return ga(self,name)
-			except:
-				return None
-		else:
-			self.attr_error(name)
-
-	def __setattr__(self,name,val):
-		if name in (self.attrs + self.attrs_priv + self.attrs_base):
-			if getattr(self,name) == None or name in self.attrs_reassign:
-				object.__setattr__(self,name,val)
-			else:
-#				object.__setattr__(self,name,val) # DEBUG
-				self.set_error(name,val)
-		else:
-			self.attr_error(name)
-
-	def __delattr__(self,name):
-		if name in (self.attrs + self.attrs_priv + self.attrs_base):
-			try: # don't know why this is necessary
-				object.__delattr__(self,name)
-			except:
-				pass
-		else:
-			self.attr_error(name)
+	# prevent setting random attributes
+	def __setattr__(self,name,value):
+		if name not in type(self).__dict__:
+			m = "'{}': no such attribute in class {}"
+			raise AttributeError(m.format(name,type(self)))
+		return object.__setattr__(self,name,value)
 
 class InitErrors(object):
 
 	@staticmethod
 	def arg_chk(cls,on_fail):
-		assert on_fail in ('die','return','silent','raise'),"arg_chk in class %s" % cls.__name__
+		assert on_fail in ('die','return','silent','raise'),'arg_chk in class {}'.format(cls.__name__)
 
 	@staticmethod
 	def init_fail(m,on_fail,silent=False):
@@ -527,12 +544,82 @@ class WifKey(str,Hilite,InitErrors):
 	desc = 'WIF key'
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		cls.arg_chk(cls,on_fail)
-		from mmgen.tx import is_wif
-		if is_wif(s):
+		from mmgen.bitcoin import wif2hex
+		if wif2hex(s):
 			me = str.__new__(cls,s)
 			return me
 		m = errmsg or "'{}': invalid value for {}".format(s,cls.desc)
 		return cls.init_fail(m,on_fail)
+
+class HexStr(str,Hilite,InitErrors):
+	color = 'red'
+	trunc_ok = False
+	def __new__(cls,s,on_fail='die',case='lower'):
+		assert case in ('upper','lower')
+		cls.arg_chk(cls,on_fail)
+		from string import hexdigits
+		if set(s) <= set(getattr(hexdigits,case)()) and not len(s) % 2:
+			return str.__new__(cls,s)
+		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
+		return cls.init_fail(m,on_fail)
+
+class PubKey(HexStr,MMGenObject):
+	def __new__(cls,s,compressed,on_fail='die'):
+		assert type(compressed) == bool
+		me = HexStr.__new__(cls,s,case='lower')
+		me.compressed = compressed
+		return me
+
+class PrivKey(str,Hilite,InitErrors,MMGenObject):
+
+	color = 'red'
+	width = 64
+	trunc_ok = False
+
+	compressed = MMGenImmutableAttr('compressed',bool)
+	wif        = MMGenImmutableAttr('wif',WifKey)
+
+	def __new__(*args,**kwargs): # initialize with (priv_bin,compressed), WIF or self
+		cls = args[0]
+		assert set(kwargs) <= set(['on_fail','wif'])
+		on_fail = kwargs['on_fail'] if 'on_fail' in kwargs else 'die'
+		cls.arg_chk(cls,on_fail)
+
+		if len(args) == 2:
+			assert type(args[1]) == cls
+			return args[1]
+
+		if 'wif' in kwargs:
+			assert len(args) == 1
+			try:
+				from mmgen.bitcoin import wif2hex,wif_is_compressed # TODO: move these here
+				wif = WifKey(kwargs['wif'])
+				me = str.__new__(cls,wif2hex(wif))
+				me.compressed = wif_is_compressed(wif)
+				me.wif = wif
+				return me
+			except:
+				fs = "Value '{}' cannot be converted to WIF key"
+				errmsg = fs.format(kwargs['wif'])
+				return cls.init_fail(errmsg,on_fail)
+
+		cls,s,compressed = args
+
+		try:
+			from binascii import hexlify
+			assert len(s) == cls.width / 2
+			me = str.__new__(cls,hexlify(s))
+			me.compressed = compressed
+			me.wif = me.towif()
+			return me
+		except:
+			fs = "Key={}\nCompressed={}\nValue pair cannot be converted to {}"
+			errmsg = fs.format(repr(s),compressed,cls.__name__)
+			return cls.init_fail(errmsg,on_fail)
+
+	def towif(self):
+		from mmgen.bitcoin import hex2wif
+		return WifKey(hex2wif(self,compressed=self.compressed))
 
 class MMGenAddrType(str,Hilite,InitErrors):
 	width = 1

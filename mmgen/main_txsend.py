@@ -23,7 +23,7 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 from mmgen.common import *
 from mmgen.tx import *
 
-def opts_data(): return {
+opts_data = lambda: {
 	'desc':    'Send a Bitcoin transaction signed by {pnm}-txsign'.format(
 					pnm=g.proj_name.lower()),
 	'usage':   '[opts] <signed transaction file>',

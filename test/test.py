@@ -100,7 +100,7 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 		except: pass
 		os.symlink(dd,data_dir)
 
-def opts_data(): return {
+opts_data = lambda: {
 	'desc': 'Test suite for the MMGen suite',
 	'usage':'[options] [command(s) or metacommand(s)]',
 	'options': """

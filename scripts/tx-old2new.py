@@ -5,15 +5,9 @@ repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]
 sys.path = [repo_root] + sys.path
 
 from mmgen.common import *
-
-from mmgen.tool import *
 from mmgen.tx import *
-from mmgen.bitcoin import *
-from mmgen.obj import MMGenTXLabel
-from mmgen.seed import *
-from mmgen.term import do_pager
 
-help_data = {
+opts_data = lambda: {
 	'desc':    "Convert MMGen transaction file from old format to new format",
 	'usage':   "<tx file>",
 	'options': """
@@ -22,52 +16,42 @@ help_data = {
 """
 }
 
-import mmgen.opts
-cmd_args = opts.init(help_data)
+cmd_args = opts.init(opts_data)
 
 if len(cmd_args) != 1: opts.usage()
 def parse_tx_file(infile):
 
-	err_str,err_fmt = '','Invalid %s in transaction file'
+	err_fmt = 'Invalid {} in transaction file'
 	tx_data = get_lines_from_file(infile)
 
-	if len(tx_data) == 5:
-		metadata,tx_hex,inputs_data,outputs_data,comment = tx_data
-	elif len(tx_data) == 4:
-		metadata,tx_hex,inputs_data,outputs_data = tx_data
-		comment = ''
-	else:
+	try:
 		err_str = 'number of lines'
-
-	if not err_str:
-		if len(metadata.split()) != 3:
-			err_str = 'metadata'
-		else:
-			try: unhexlify(tx_hex)
-			except: err_str = 'hex data'
+		assert len(tx_data) in (4,5)
+		if len(tx_data) == 5:
+			metadata,tx_hex,inputs,outputs,comment = tx_data
+		elif len(tx_data) == 4:
+			metadata,tx_hex,inputs,outputs = tx_data
+			comment = ''
+		err_str = 'metadata'
+		assert len(metadata.split()) == 3
+		err_str = 'hex data'
+		unhexlify(tx_hex)
+		err_str = 'inputs data'
+		inputs = eval(inputs)
+		err_str = 'btc-to-mmgen address map data'
+		outputs = eval(outputs)
+		if comment:
+			from mmgen.bitcoin import b58decode
+			comment = b58decode(comment)
+			if comment == False:
+				err_str = 'encoded comment (not base58)'
 			else:
-				try: inputs_data = eval(inputs_data)
-				except: err_str = 'inputs data'
-				else:
-					try: outputs_data = eval(outputs_data)
-					except: err_str = 'btc-to-mmgen address map data'
-					else:
-						if comment:
-							from mmgen.bitcoin import b58decode
-							comment = b58decode(comment)
-							if comment == False:
-								err_str = 'encoded comment (not base58)'
-							else:
-								try:
-									comment = MMGenTXLabel(comment)
-								except:
-									err_str = 'comment'
-
-	if err_str:
-		msg(err_fmt % err_str)
-		sys.exit(2)
+				err_str = 'comment'
+				comment = MMGenTXLabel(comment)
+	except:
+		die(2,err_fmt.format(err_str))
 	else:
-		return metadata.split(),tx_hex,inputs_data,outputs_data,comment
+		return metadata.split(),tx_hex,inputs,outputs,comment
 
 def find_block_by_time(c,timestamp):
 	secs = decode_timestamp(timestamp)
@@ -95,15 +79,14 @@ def find_block_by_time(c,timestamp):
 
 tx = MMGenTX()
 
-[tx.txid,send_amt,tx.timestamp],tx.hex,inputs,b2m_map,tx.label = parse_tx_file(cmd_args[0])
+metadata,tx.hex,inputs,b2m_map,tx.label = parse_tx_file(cmd_args[0])
+tx.txid,send_amt,tx.timestamp = metadata
 tx.send_amt = Decimal(send_amt)
 
 g.testnet = False
 g.rpc_host = 'localhost'
 c = bitcoin_connection()
 
-# attrs = 'txid','vout','amt','comment','mmid','addr','wif'
-#pp_msg(inputs)
 for i in inputs:
 	if not 'mmid' in i and 'account' in i:
 		from mmgen.tw import parse_tw_acct_label
@@ -112,16 +95,14 @@ for i in inputs:
 			i['mmid'] = a.decode('utf8')
 			if b: i['comment'] = b.decode('utf8')
 
-#pp_msg(inputs)
 tx.inputs = tx.decode_io_oldfmt(inputs)
 
-if tx.check_signed(c):
+if tx.marked_signed(c):
 	msg('Transaction is signed')
 
 dec_tx = c.decoderawtransaction(tx.hex)
-tx.outputs = [MMGenTxOutput(addr=i['scriptPubKey']['addresses'][0],amt=i['value'])
-				for i in dec_tx['vout']]
-
+tx.outputs = MMGenList(MMGenTX.MMGenTxOutput(addr=i['scriptPubKey']['addresses'][0],amt=i['value'])
+				for i in dec_tx['vout'])
 for e in tx.outputs:
 	if e.addr in b2m_map:
 		f = b2m_map[e.addr]
@@ -132,9 +113,6 @@ for e in tx.outputs:
 			if e.addr == f.addr and f.mmid:
 				e.mmid = f.mmid
 				if f.label: e.label = f.label.decode('utf8')
-#for i in tx.inputs: print i
-#for i in tx.outputs: print i
-#die(1,'')
-tx.blockcount = find_block_by_time(c,tx.timestamp)
 
+tx.blockcount = find_block_by_time(c,tx.timestamp)
 tx.write_to_file(ask_tty=False)

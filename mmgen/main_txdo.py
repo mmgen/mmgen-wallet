@@ -23,7 +23,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 from mmgen.txcreate import *
 from mmgen.txsign import *
 
-def opts_data(): return {
+opts_data = lambda: {
 	'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ... [seed source] ...',
 	'sets': ( ('yes', True, 'quiet', True), ),
@@ -89,7 +89,7 @@ do_license_msg()
 
 kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
-if kl and kal: kl.remove_dups(kal,key='wif')
+if kl and kal: kl.remove_dup_keys(kal)
 
 tx = txcreate(cmd_args,caller='txdo')
 txsign(opt,c,tx,seed_files,kl,kal)

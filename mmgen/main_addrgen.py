@@ -41,7 +41,7 @@ note_secp256k1 = """
 If available, the secp256k1 library will be used for address generation.
 """.strip()
 
-def opts_data(): return {
+opts_data = lambda: {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'desc': """Generate a range or list of {desc} from an {pnm} wallet,
                   mnemonic, seed or brainwallet""".format(desc=gen_desc,pnm=g.proj_name),

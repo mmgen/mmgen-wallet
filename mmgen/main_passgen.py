@@ -32,7 +32,7 @@ dfl_len = {
 	'b32': PasswordList.pw_info['b32']['dfl_len']
 }
 
-def opts_data(): return {
+opts_data = lambda: {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'desc': """Generate a range or list of passwords from an {pnm} wallet,
                   mnemonic, seed or brainwallet for the given ID string""".format(pnm=g.proj_name),

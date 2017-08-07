@@ -26,18 +26,6 @@ from binascii import unhexlify
 from mmgen.common import *
 from mmgen.obj import *
 
-def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
-def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
-def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
-def is_btc_addr(s):      return BTCAddr(s,on_fail='silent')
-def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
-def is_tw_label(s):      return TwLabel(s,on_fail='silent')
-
-def is_wif(s):
-	if s == '': return False
-	from mmgen.bitcoin import wif2hex
-	return bool(wif2hex(s))
-
 def segwit_is_active(exit_on_error=False):
 	d = bitcoin_connection().getblockchaininfo()
 	if d['chain'] == 'regtest':
@@ -125,6 +113,19 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts'
 		return OrderedDict.__init__(self, ((k,d[k]) for k in keys))
 
+txio_attrs = {
+	'reassign_ok': ('label',),
+	'delete_ok':   ('have_wif',),
+	'vout':  MMGenListItemAttr('vout',int,typeconv=False),
+	'amt':   MMGenListItemAttr('amt','BTCAmt'),
+	'label': MMGenListItemAttr('label','TwComment'),
+	'mmid':  MMGenListItemAttr('mmid','MMGenID'),
+	'addr':  MMGenListItemAttr('addr','BTCAddr'),
+	'confs': MMGenListItemAttr('confs',int,builtin_typeconv=True), # long confs found in the wild, so convert
+	'txid':  MMGenListItemAttr('txid','BitcoinTxID'),
+	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False)
+}
+
 class MMGenTX(MMGenObject):
 	ext      = 'rawtx'
 	raw_ext  = 'rawtx'
@@ -133,17 +134,13 @@ class MMGenTX(MMGenObject):
 	desc = 'transaction'
 
 	class MMGenTxInput(MMGenListItem):
-		attrs = 'txid','vout','amt','label','mmid','addr','confs','scriptPubKey','have_wif','sequence'
-		txid = MMGenListItemAttr('txid','BitcoinTxID')
+		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
 		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
+		sequence = MMGenListItemAttr('sequence',int,typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
-		attrs = 'txid','vout','amt','label','mmid','addr','have_wif','is_chg'
-
-	class MMGenTxInputOldFmt(MMGenListItem):  # for converting old tx files only
-		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
-		attrs = 'txid','vout','amt','label','mmid','addr','confs','scriptPubKey','wif'
-		attrs_priv = 'tr',
+		for k in txio_attrs: locals()[k] = txio_attrs[k]
+		is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
 
 	class MMGenTxInputList(list,MMGenObject): pass
 	class MMGenTxOutputList(list,MMGenObject): pass
@@ -204,12 +201,6 @@ class MMGenTX(MMGenObject):
 				e.mmid,f = d[e.addr]
 				if f: e.label = f
 
-#	def encode_io(self,desc):
-# 		tr = getattr((self.MMGenTxOutput,self.MMGenTxInput)[desc=='inputs'],'tr')
-# 		tr_rev = dict([(v,k) for k,v in tr.items()])
-# 		return [dict([(tr_rev[e] if e in tr_rev else e,getattr(d,e)) for e in d.__dict__])
-# 					for d in getattr(self,desc)]
-#
 	def create_raw(self,c):
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		if self.inputs[0].sequence:
@@ -372,11 +363,6 @@ class MMGenTX(MMGenObject):
 			tx_fee = my_raw_input('Enter transaction fee: ')
 			desc = 'User-selected'
 
-	# inputs methods
-	def list_wifs(self,desc,mmaddrs_only=False):
-		return [e.wif for e in getattr(self,desc) if e.mmid] if mmaddrs_only \
-			else [e.wif for e in getattr(self,desc)]
-
 	def delete_attrs(self,desc,attr):
 		for e in getattr(self,desc):
 			if hasattr(e,attr): delattr(e,attr)
@@ -386,20 +372,23 @@ class MMGenTX(MMGenObject):
 			(self.MMGenTxOutput,self.MMGenTxOutputList),
 			(self.MMGenTxInput,self.MMGenTxInputList)
 		)[desc=='inputs']
-		return il([io(**dict([(k,d[k]) for k in io.attrs
+		return il([io(**dict([(k,d[k]) for k in io.__dict__
 					if k in d and d[k] not in ('',None)])) for d in data])
 
 	def decode_io_oldfmt(self,data):
-		io = self.MMGenTxInputOldFmt
-		tr_rev = dict([(v,k) for k,v in io.tr.items()])
-		copy_keys = [tr_rev[k] if k in tr_rev else k for k in io.attrs]
-		return [io(**dict([(io.tr[k] if k in io.tr else k,d[k])
-					for k in copy_keys if k in d and d[k] != ''])) for d in data]
+		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
+		tr_rev = dict([(v,k) for k,v in tr.items()])
+		copy_keys = [tr_rev[k] if k in tr_rev else k for k in self.MMGenTxInput.__dict__]
+		ret = MMGenList(self.MMGenTxInput(**dict([(tr[k] if k in tr else k,d[k])
+					for k in copy_keys if k in d and d[k] != ''])) for d in data)
+		for i in ret: i.sequence = int('0xffffffff',16)
+		return ret
 
+	# inputs methods
 	def copy_inputs_from_tw(self,tw_unspent_data):
 		txi,self.inputs = self.MMGenTxInput,self.MMGenTxInputList()
 		for d in tw_unspent_data:
-			t = txi(**dict([(attr,getattr(d,attr)) for attr in d.__dict__ if attr in txi.attrs]))
+			t = txi(**dict([(attr,getattr(d,attr)) for attr in d.__dict__ if attr in txi.__dict__]))
 			if d.twmmid.type == 'mmgen': t.mmid = d.twmmid # twmmid -> mmid
 			self.inputs.append(t)
 
@@ -443,37 +432,35 @@ class MMGenTX(MMGenObject):
 	def get_non_mmaddrs(self,desc):
 		return list(set(i.addr for i in getattr(self,desc) if not i.mmid))
 
-	# return true or false, don't exit
+	# return true or false; don't exit
 	def sign(self,c,tx_num_str,keys):
 
 		self.die_if_incorrect_chain()
 
-		if g.coin == 'BCH' and self.has_segwit_inputs():
-			die(2,yellow("Segwit inputs cannot be spent on BCH chain!"))
+		if g.coin == 'BCH' and (self.has_segwit_inputs() or self.has_segwit_outputs()):
+			die(2,yellow("Segwit inputs cannot be spent or spent to on the BCH chain!"))
 
-		if not keys:
-			msg('No keys. Cannot sign!')
-			return False
+		qmsg('Passing {} key{} to bitcoind'.format(len(keys),suf(keys,'s')))
 
-		qmsg('Passing %s key%s to bitcoind' % (len(keys),suf(keys,'s')))
+		if self.has_segwit_inputs():
+			from mmgen.addr import KeyGenerator,AddrGenerator
+			kg = KeyGenerator()
+			ag = AddrGenerator('segwit')
+			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
 
 		sig_data = []
 		for d in self.inputs:
 			e = dict([(k,getattr(d,k)) for k in ('txid','vout','scriptPubKey','amt')])
 			e['amount'] = e['amt']
 			del e['amt']
-			wif = keys[d.addr]
 			if d.mmid and d.mmid.mmtype == 'S':
-				from mmgen.bitcoin import pubhex2redeem_script
-				from mmgen.addr import keygen_wif2pubhex,keygen_selector
-				pubhex = keygen_wif2pubhex(wif,keygen_selector())
-				e['redeemScript'] = pubhex2redeem_script(pubhex)
+				e['redeemScript'] = ag.to_segwit_redeem_script(kg.to_pubhex(keydict[d.addr]))
 			sig_data.append(e)
 
-		from mmgen.bitcoin import hash256
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 		ht = ('ALL','ALL|FORKID')[g.coin=='BCH'] # sighashtype defaults to 'ALL'
-		ret = c.signrawtransaction(self.hex,sig_data,keys.values(),ht,on_fail='return')
+		wifs = [d.sec.wif for d in keys]
+		ret = c.signrawtransaction(self.hex,sig_data,wifs,ht,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -586,12 +573,7 @@ class MMGenTX(MMGenObject):
 			confirm_or_exit(m1,m2,m3)
 
 		msg('Sending transaction')
-		if bogus_send:
-			ret = 'deadbeef' * 8
-			m = 'BOGUS transaction NOT sent: %s'
-		else:
-			ret = c.sendrawtransaction(self.hex,on_fail='return')
-			m = 'Transaction sent: %s'
+		ret = None if bogus_send else c.sendrawtransaction(self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -608,10 +590,13 @@ class MMGenTX(MMGenObject):
 			msg(red('Send of MMGen transaction {} failed'.format(self.txid)))
 			return False
 		else:
-			if not bogus_send:
+			if bogus_send:
+				m = 'BOGUS transaction NOT sent: {}'
+			else:
 				assert ret == self.btc_txid, 'txid mismatch (after sending)'
+				m = 'Transaction sent: {}'
 			self.desc = 'sent transaction'
-			msg(m % self.btc_txid.hl())
+			msg(m.format(self.btc_txid.hl()))
 			self.add_timestamp()
 			self.add_blockcount(c)
 			return True
@@ -666,7 +651,6 @@ class MMGenTX(MMGenObject):
 		self.inputs[0].sequence = g.max_int - 2
 
 	def format_view(self,terse=False):
-#		self.pdie()
 		try:
 			blockcount = bitcoin_connection().getblockcount()
 		except:
