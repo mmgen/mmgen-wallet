@@ -40,17 +40,16 @@ class MMGenTrackingWallet(MMGenObject):
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
-		reassign_ok = 'label','skip'
-		txid     = MMGenListItemAttr('txid','BitcoinTxID')
-		vout     = MMGenListItemAttr('vout',int,typeconv=False),
-		amt      = MMGenListItemAttr('amt','BTCAmt'),
-		label    = MMGenListItemAttr('label','TwComment'),
-		twmmid = MMGenListItemAttr('twmmid','TwMMGenID')
-		addr     = MMGenListItemAttr('addr','BTCAddr'),
-		confs    = MMGenListItemAttr('confs',int,typeconv=False),
-		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
+		txid     = MMGenImmutableAttr('txid','BitcoinTxID')
+		vout     = MMGenImmutableAttr('vout',int,typeconv=False),
+		amt      = MMGenImmutableAttr('amt','BTCAmt'),
+		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True),
+		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
+		addr     = MMGenImmutableAttr('addr','BTCAddr'),
+		confs    = MMGenImmutableAttr('confs',int,typeconv=False),
+		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
 		days    = MMGenListItemAttr('days',int,typeconv=False),
-		skip    = MMGenListItemAttr('skip',bool,typeconv=False),
+		skip    = MMGenListItemAttr('skip',bool,typeconv=False,reassign_ok=True),
 
 	wmsg = {
 	'no_spendable_outputs': """

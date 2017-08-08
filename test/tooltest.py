@@ -235,13 +235,15 @@ class MMGenToolTestSuite(object):
 			die(1,red('Called process returned with an error (retcode %s)' % retcode))
 		return (a,a.rstrip())[bool(strip)]
 
-	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg=''):
+	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg='',strip_hex=False):
 		idata = read_from_file(f1).rstrip()
 		odata = read_from_file(f2).rstrip()
 		ret = self.run_cmd(name,[odata],kwargs=kwargs,extra_msg=extra_msg)
 		vmsg('In:   ' + repr(odata))
 		vmsg('Out:  ' + repr(ret))
-		if ret == idata: ok()
+		def cmp_equal(a,b):
+			return (a.lstrip('0') == b.lstrip('0')) if strip_hex else (a == b)
+		if cmp_equal(ret,idata): ok()
 		else:
 			die(3,red(
 	"Error: values don't match:\nIn:  %s\nOut: %s" % (repr(idata),repr(ret))))
@@ -284,12 +286,12 @@ class MMGenToolTestSuite(object):
 	def Strtob58(self,name):       self.run_cmd_out(name,getrandstr(16))
 	def B58tostr(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
 	def Hextob58(self,name):       self.run_cmd_out(name,getrandhex(32))
-	def B58tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
+	def B58tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2,strip_hex=True)
 	def B58randenc(self,name):
 		ret = self.run_cmd_out(name,Return=True)
 		ok_or_die(ret,is_b58_str,'base 58 string')
 	def Hextob32(self,name):       self.run_cmd_out(name,getrandhex(24))
-	def B32tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2)
+	def B32tohex(self,name,f1,f2): self.run_cmd_chk(name,f1,f2,strip_hex=True)
 	def Randhex(self,name):
 		ret = self.run_cmd_out(name,Return=True)
 		ok_or_die(ret,binascii.unhexlify,'hex string')

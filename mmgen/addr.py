@@ -91,18 +91,16 @@ class KeyGeneratorSecp256k1(KeyGenerator):
 		return PubKey(hexlify(priv2pub(unhexlify(privhex),int(privhex.compressed))),compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
-	reassign_ok = 'label',
 	addr  = MMGenListItemAttr('addr','BTCAddr')
-	idx   = MMGenListItemAttr('idx','AddrIdx')
-	label = MMGenListItemAttr('label','TwComment')
-	sec   = MMGenImmutableAttr('sec',PrivKey)
+	idx   = MMGenImmutableAttr('idx','AddrIdx')
+	label = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+	sec   = MMGenListItemAttr('sec',PrivKey,typeconv=False)
 
 class PasswordListEntry(MMGenListItem):
-	reassign_ok = 'label',
-	passwd = MMGenImmutableAttr('passwd',unicode) # TODO: create Password type
-	idx    = MMGenListItemAttr('idx','AddrIdx')
-	label  = MMGenListItemAttr('label','TwComment')
-	sec    = MMGenImmutableAttr('sec',PrivKey)
+	passwd = MMGenImmutableAttr('passwd',unicode,typeconv=False) # TODO: create Password type
+	idx    = MMGenImmutableAttr('idx','AddrIdx')
+	label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+	sec    = MMGenListItemAttr('sec',PrivKey,typeconv=False)
 
 class AddrListChksum(str,Hilite):
 	color = 'pink'

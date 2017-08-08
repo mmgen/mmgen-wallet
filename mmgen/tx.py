@@ -114,16 +114,14 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		return OrderedDict.__init__(self, ((k,d[k]) for k in keys))
 
 txio_attrs = {
-	'reassign_ok': ('label',),
-	'delete_ok':   ('have_wif',),
 	'vout':  MMGenListItemAttr('vout',int,typeconv=False),
-	'amt':   MMGenListItemAttr('amt','BTCAmt'),
-	'label': MMGenListItemAttr('label','TwComment'),
+	'amt':   MMGenImmutableAttr('amt','BTCAmt'),
+	'label': MMGenListItemAttr('label','TwComment',reassign_ok=True),
 	'mmid':  MMGenListItemAttr('mmid','MMGenID'),
-	'addr':  MMGenListItemAttr('addr','BTCAddr'),
-	'confs': MMGenListItemAttr('confs',int,builtin_typeconv=True), # long confs found in the wild, so convert
+	'addr':  MMGenImmutableAttr('addr','BTCAddr'),
+	'confs': MMGenListItemAttr('confs',int,typeconv=True), # long confs exist in the wild, so convert
 	'txid':  MMGenListItemAttr('txid','BitcoinTxID'),
-	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False)
+	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
 }
 
 class MMGenTX(MMGenObject):

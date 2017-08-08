@@ -101,19 +101,13 @@ class MMGenObject(object):
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
 
+# for attrs that are always present in the data instance
+# reassignment and deletion forbidden
 class MMGenImmutableAttr(object): # Descriptor
 
-	typeconv = False
-	builtin_typeconv = False
-
-	def __init__(self,name,dtype,typeconv=None,builtin_typeconv=None):
-		if typeconv is not None:
-			assert typeconv in (True,False)
-			self.typeconv = typeconv
-		if builtin_typeconv is not None:
-			assert builtin_typeconv
-			self.builtin_typeconv = builtin_typeconv
-			self.typeconv = False # override
+	def __init__(self,name,dtype,typeconv=True):
+		self.typeconv = typeconv
+		assert type(dtype) in (str,type)
 		self.name = name
 		self.dtype = dtype
 
@@ -121,17 +115,16 @@ class MMGenImmutableAttr(object): # Descriptor
 		return instance.__dict__[self.name]
 
 	# forbid all reassignment
-	def chk_ok_set_attr(self,instance):
-		if hasattr(instance,self.name):
-			m = "Attribute '{}' of {} instance cannot be reassigned"
-			raise AttributeError(m.format(self.name,type(instance)))
+	def set_attr_ok(self,instance):
+		return not hasattr(instance,self.name)
 
 	def __set__(self,instance,value):
-		self.chk_ok_set_attr(instance)
+		if not self.set_attr_ok(instance):
+			m = "Attribute '{}' of {} instance cannot be reassigned"
+			raise AttributeError(m.format(self.name,type(instance)))
 		if self.typeconv:   # convert type
-			instance.__dict__[self.name] = globals()[self.dtype](value)
-		elif self.builtin_typeconv:
-			instance.__dict__[self.name] = self.dtype(value)
+			instance.__dict__[self.name] = \
+				globals()[self.dtype](value) if type(self.dtype) == str else self.dtype(value)
 		else:               # check type
 			if type(value) != self.dtype:
 				m = "Attribute '{}' of {} instance must of type {}"
@@ -139,35 +132,34 @@ class MMGenImmutableAttr(object): # Descriptor
 			instance.__dict__[self.name] = value
 
 	def __delete__(self,instance):
-		if self.name in instance.delete_ok:
-			if self.name in instance.__dict__:
-				del instance.__dict__[self.name]
-		else:
-			m = "Atribute '{}' of {} instance cannot be deleted"
-			raise AttributeError(m.format(self.name,type(instance)))
+		m = "Atribute '{}' of {} instance cannot be deleted"
+		raise AttributeError(m.format(self.name,type(instance)))
 
+# for attrs that might not be present in the data instance
+# reassignment or deletion allowed if specified
 class MMGenListItemAttr(MMGenImmutableAttr):
 
-	typeconv = True
-	builtin_typeconv = False
+	def __init__(self,name,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
+		self.reassign_ok = reassign_ok
+		self.delete_ok = delete_ok
+		MMGenImmutableAttr.__init__(self,name,dtype,typeconv=typeconv)
 
 	# return None if attribute doesn't exist
 	def __get__(self,instance,owner):
 		try: return instance.__dict__[self.name]
 		except: return None
 
-	# allow reassignment if value is None or attr in reassign_ok list
-	def chk_ok_set_attr(self,instance):
-		if hasattr(instance,self.name) and not (
-			getattr(instance,self.name) == None or self.name in instance.reassign_ok
-		):
-			m = "Attribute '{}' of {} instance cannot be reassigned"
-			raise AttributeError(m.format(self.name,type(instance)))
+	def set_attr_ok(self,instance):
+		return getattr(instance,self.name) == None or self.reassign_ok
+
+	def __delete__(self,instance):
+		if self.delete_ok:
+			if self.name in instance.__dict__:
+				del instance.__dict__[self.name]
+		else:
+			MMGenImmutableAttr.__delete__(self,instance)
 
 class MMGenListItem(MMGenObject):
-
-	reassign_ok = ()
-	delete_ok = ()
 
 	def __init__(self,*args,**kwargs):
 		if args:
@@ -576,8 +568,8 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	width = 64
 	trunc_ok = False
 
-	compressed = MMGenImmutableAttr('compressed',bool)
-	wif        = MMGenImmutableAttr('wif',WifKey)
+	compressed = MMGenImmutableAttr('compressed',bool,typeconv=False)
+	wif        = MMGenImmutableAttr('wif',WifKey,typeconv=False)
 
 	def __new__(*args,**kwargs): # initialize with (priv_bin,compressed), WIF or self
 		cls = args[0]
