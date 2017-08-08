@@ -672,7 +672,7 @@ class MMGenTX(MMGenObject):
 		out += 'Inputs:\n' + enl
 
 		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
-		max_mmwid = max(max(len(i.mmid) for i in self.inputs if i.mmid)+len('()'),len(nonmm_str))
+		max_mmwid = max(max([len(i.mmid) for i in self.inputs if i.mmid] or [0])+len('()'),len(nonmm_str))
 		for n,e in enumerate(sorted(self.inputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 			if blockcount:
 				confs = e.confs + blockcount - self.blockcount
@@ -692,7 +692,8 @@ class MMGenTX(MMGenObject):
 			out += '\n'
 
 		out += 'Outputs:\n' + enl
-		max_mmwid = max((len(o.mmid),len(o.mmid)+len(' (chg)'))[bool(o.is_chg)] for o in self.outputs if o.mmid)
+		sel_f = lambda o: (len(o.mmid),len(o.mmid)+len(' (chg)'))[bool(o.is_chg)]
+		max_mmwid = max([sel_f(o) for o in self.outputs if o.mmid] or [0])
 		max_mmwid = max(max_mmwid+len('()'),len(nonmm_str))
 		for n,e in enumerate(sorted(self.outputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 			if e.mmid:
