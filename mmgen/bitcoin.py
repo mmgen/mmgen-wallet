@@ -39,17 +39,26 @@ _generator_secp256k1 = ecdsa.ellipticcurve.Point(_curve_secp256k1,_Gx,_Gy,_r)
 _oid_secp256k1 = (1,3,132,0,10)
 _secp256k1 = ecdsa.curves.Curve('secp256k1',_curve_secp256k1,_generator_secp256k1,_oid_secp256k1)
 
-b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
 # From en.bitcoin.it:
-#   The Base58 encoding used is home made, and has some differences.
-#   Especially, leading zeroes are kept as single zeroes when conversion
-#   happens.
-#
+#  The Base58 encoding used is home made, and has some differences.
+#  Especially, leading zeroes are kept as single zeroes when conversion happens.
 # Test: 5JbQQTs3cnoYN9vDYaGY6nhQ1DggVsY4FJNBUfEfpSQqrEp3srk
-#
 # The 'zero address':
-# 1111111111111111111114oLvT2 (use step2 = ('0' * 40) to generate)
+# 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
+_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
+def _numtob58(num):
+	ret = []
+	while num:
+		ret.append(_b58a[num % 58])
+		num /= 58
+	return ''.join(ret)[::-1]
+
+def _b58tonum(b58num):
+	b58num = b58num.strip()
+	for i in b58num:
+		if not i in _b58a: return False
+	return sum(_b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
 
 from mmgen.globalvars import g
 
@@ -90,66 +99,6 @@ def verify_addr(addr,verbose=False,return_hex=False,return_type=False):
 
 	if verbose: Msg("Invalid address '%s'" % addr)
 	return False
-
-# Reworked code from here:
-
-def _numtob58(num):
-	ret = []
-	while num:
-		ret.append(b58a[num % 58])
-		num /= 58
-	return ''.join(ret)[::-1]
-
-def _b58tonum(b58num):
-	b58num = b58num.strip()
-	for i in b58num:
-		if not i in b58a: return False
-	return sum(b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
-
-# The following are MMGen internal (non-Bitcoin) b58 functions
-
-# Drop-in replacements for b64encode() and b64decode():
-# (well, not exactly: they yield numeric but not bytewise equivalence)
-
-def b58encode(s):
-	if s == '': return ''
-	num = int(hexlify(s),16)
-	return _numtob58(num)
-
-def b58decode(b58num):
-	b58num = b58num.strip()
-	if b58num == '': return ''
-	# Zap all spaces:
-	# Use translate() only with str, not unicode
-	num = _b58tonum(str(b58num).translate(None,' \t\n\r'))
-	if num == False: return False
-	out = u'{:x}'.format(num)
-	return unhexlify(u'0'*(len(out)%2) + out)
-
-# These yield bytewise equivalence in our special cases:
-
-bin_lens = 16,24,32
-b58_lens = 22,33,44
-
-def _b58_pad(s,a,b,pad,f,w):
-	try:
-		outlen = b[a.index(len(s))]
-	except:
-		Msg('_b58_pad() accepts only %s %s bytes long '\
-			'(input was %s bytes)' % (w,','.join([str(i) for i in a]),len(s)))
-		return False
-
-	out = f(s)
-	if out == False: return False
-	return '%s%s' % (pad * (outlen - len(out)), out)
-
-def b58encode_pad(s):
-	return _b58_pad(s,
-		a=bin_lens,b=b58_lens,pad='1',f=b58encode,w='binary strings')
-
-def b58decode_pad(s):
-	return _b58_pad(s,
-		a=b58_lens,b=bin_lens,pad='\0',f=b58decode,w='base 58 numbers')
 
 # Compressed address support:
 

@@ -253,6 +253,30 @@ class baseconv(object):
 		'tirosh':   '48f05e1f', # tirosh truncated to mn_base (1626)
 		# 'tirosh1633': '1a5faeff'
 	}
+	b58pad_lens =     [(16,22), (24,33), (32,44)]
+	b58pad_lens_rev = [(v,k) for k,v in b58pad_lens]
+
+	@classmethod
+	def b58encode(cls,s,pad=None):
+		pad = cls.get_pad(s,pad,'en',cls.b58pad_lens,[bytes])
+		return ''.join(cls.fromhex(hexlify(s),'b58',pad=pad))
+
+	@classmethod
+	def b58decode(cls,s,pad=None):
+		pad = cls.get_pad(s,pad,'de',cls.b58pad_lens_rev,[bytes,unicode])
+		return unhexlify(cls.tohex(s,'b58',pad=pad*2 if pad else None))
+
+	@staticmethod
+	def get_pad(s,pad,op,pad_map,ok_types):
+		m = "b58{}code() input must be one of {}, not '{}'"
+		assert type(s) in ok_types, m.format(op,repr([t.__name__ for t in ok_types]),type(s).__name__)
+		if pad:
+			assert type(pad) == bool, "'pad' must be boolean type"
+			d = dict(pad_map)
+			assert len(s) in d, 'Invalid data length for b58{}code(pad=True)'.format(op)
+			return d[len(s)]
+		else:
+			return None
 
 	@classmethod
 	def get_wordlist_chksum(cls,wl_id):

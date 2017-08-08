@@ -322,8 +322,8 @@ def Unhexdump(infile):
 
 def B58randenc():
 	r = get_random(32)
-	enc = mmb.b58encode(r)
-	dec = mmb.b58decode(enc)
+	enc = baseconv.b58encode(r,pad=True)
+	dec = baseconv.b58decode(enc,pad=True)
 	print_convert_results(r,enc,dec,'str')
 
 def Randhex(nbytes='32'):

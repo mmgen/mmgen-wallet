@@ -24,7 +24,6 @@ import os
 from binascii import hexlify,unhexlify
 
 from mmgen.common import *
-from mmgen.bitcoin import b58encode_pad,b58decode_pad,b58_lens
 from mmgen.obj import *
 from mmgen.filename import *
 from mmgen.crypto import *
@@ -478,7 +477,7 @@ class SeedFile (SeedSourceUnenc):
 	ext = 'mmseed'
 
 	def _format(self):
-		b58seed = b58encode_pad(self.seed.data)
+		b58seed = baseconv.b58encode(self.seed.data,pad=True)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
 		self.fmt_data = '%s %s\n' % (
@@ -509,7 +508,7 @@ class SeedFile (SeedSourceUnenc):
 		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
 
-		ret = b58decode_pad(b)
+		ret = baseconv.b58decode(b,pad=True)
 
 		if ret == False:
 			msg('Invalid base-58 encoded seed: %s' % val)
@@ -626,8 +625,8 @@ class Wallet (SeedSourceEnc):
 	def _format(self):
 		d = self.ssdata
 		s = self.seed
-		slt_fmt  = b58encode_pad(d.salt)
-		es_fmt = b58encode_pad(d.enc_seed)
+		slt_fmt  = baseconv.b58encode(d.salt,pad=True)
+		es_fmt = baseconv.b58encode(d.enc_seed,pad=True)
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format(s.sid.lower(), d.key_id.lower(),
@@ -688,7 +687,7 @@ class Wallet (SeedSourceEnc):
 					(' '.join(hash_params), d.hash_preset))
 			return False
 
-		lmin,lmax = b58_lens[0],b58_lens[-1] # 22,33,44
+		lmin,foo,lmax = [v for k,v in baseconv.b58pad_lens] # 22,33,44
 		for i,key in (4,'salt'),(5,'enc_seed'):
 			l = lines[i].split(' ')
 			chk = l.pop(0)
@@ -702,7 +701,7 @@ class Wallet (SeedSourceEnc):
 					make_chksum_6(b58_val),'computed checksum',verbose=True):
 				return False
 
-			val = b58decode_pad(b58_val)
+			val = baseconv.b58decode(b58_val,pad=True)
 			if val == False:
 				msg('Invalid base 58 number: %s' % b58_val)
 				return False

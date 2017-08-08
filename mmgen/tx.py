@@ -406,7 +406,6 @@ class MMGenTX(MMGenObject):
 		self.blockcount = int(c.getblockcount())
 
 	def format(self):
-		from mmgen.bitcoin import b58encode
 		lines = [
 			'{} {} {} {} {}'.format(
 				self.chain.upper() if self.chain else 'Unknown',
@@ -420,7 +419,7 @@ class MMGenTX(MMGenObject):
 			repr([e.__dict__ for e in self.outputs])
 		]
 		if self.label:
-			lines.append(b58encode(self.label.encode('utf8')))
+			lines.append(baseconv.b58encode(self.label.encode('utf8')))
 		if self.btc_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
 			lines.append(self.btc_txid)
@@ -761,8 +760,7 @@ class MMGenTX(MMGenObject):
 		if len(tx_data) == 5:
 			c = tx_data.pop(-1)
 			if c != '-':
-				from mmgen.bitcoin import b58decode
-				comment = b58decode(c)
+				comment = baseconv.b58decode(c).decode('utf8')
 				if comment == False:
 					do_err('encoded comment (not base58)')
 				else:
@@ -770,7 +768,7 @@ class MMGenTX(MMGenObject):
 					if not self.label:
 						do_err('comment')
 		else:
-			comment = ''
+			comment = u''
 
 		if len(tx_data) == 4:
 			metadata,self.hex,inputs_data,outputs_data = tx_data
