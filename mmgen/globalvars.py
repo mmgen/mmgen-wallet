@@ -86,6 +86,9 @@ class g(object):
 	rpc_password         = ''
 	testnet_name         = 'testnet3'
 
+	bob                  = False
+	alice                = False
+
 	# test suite:
 	bogus_wallet_data    = ''
 	traceback_cmd        = 'scripts/traceback.py'
@@ -110,14 +113,15 @@ class g(object):
 	# User opt sets global var:
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color','regtest','coin'
+		'bitcoin_data_dir','force_256_color','regtest','coin','bob','alice'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars','coin'
+		'brain_params','b16','usr_randchars','coin','bob','alice'
 	)
 	incompatible_opts = (
+		('bob','alice'),
 		('quiet','verbose'),
 		('label','keep_label'),
 		('tx_id','info'),

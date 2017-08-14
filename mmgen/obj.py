@@ -23,6 +23,7 @@ obj.py: MMGen native classes
 import sys
 from decimal import *
 from mmgen.color import *
+from string import hexdigits,ascii_letters,digits
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -38,7 +39,6 @@ class MMGenObject(object):
 	def pmsg(self): print(self.pformat())
 	def pdie(self): print(self.pformat()); sys.exit(0)
 	def pformat(self,lvl=0):
-		from decimal import Decimal
 		scalars = (str,unicode,int,float,Decimal)
 		def do_list(out,e,lvl=0,is_dict=False):
 			out.append('\n')
@@ -100,80 +100,7 @@ class MMGenObject(object):
 
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
-
-# for attrs that are always present in the data instance
-# reassignment and deletion forbidden
-class MMGenImmutableAttr(object): # Descriptor
-
-	def __init__(self,name,dtype,typeconv=True):
-		self.typeconv = typeconv
-		assert type(dtype) in (str,type)
-		self.name = name
-		self.dtype = dtype
-
-	def __get__(self,instance,owner):
-		return instance.__dict__[self.name]
-
-	# forbid all reassignment
-	def set_attr_ok(self,instance):
-		return not hasattr(instance,self.name)
-
-	def __set__(self,instance,value):
-		if not self.set_attr_ok(instance):
-			m = "Attribute '{}' of {} instance cannot be reassigned"
-			raise AttributeError(m.format(self.name,type(instance)))
-		if self.typeconv:   # convert type
-			instance.__dict__[self.name] = \
-				globals()[self.dtype](value) if type(self.dtype) == str else self.dtype(value)
-		else:               # check type
-			if type(value) != self.dtype:
-				m = "Attribute '{}' of {} instance must of type {}"
-				raise TypeError(m.format(self.name,type(instance),self.dtype))
-			instance.__dict__[self.name] = value
-
-	def __delete__(self,instance):
-		m = "Atribute '{}' of {} instance cannot be deleted"
-		raise AttributeError(m.format(self.name,type(instance)))
-
-# for attrs that might not be present in the data instance
-# reassignment or deletion allowed if specified
-class MMGenListItemAttr(MMGenImmutableAttr):
-
-	def __init__(self,name,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
-		self.reassign_ok = reassign_ok
-		self.delete_ok = delete_ok
-		MMGenImmutableAttr.__init__(self,name,dtype,typeconv=typeconv)
-
-	# return None if attribute doesn't exist
-	def __get__(self,instance,owner):
-		try: return instance.__dict__[self.name]
-		except: return None
-
-	def set_attr_ok(self,instance):
-		return getattr(instance,self.name) == None or self.reassign_ok
-
-	def __delete__(self,instance):
-		if self.delete_ok:
-			if self.name in instance.__dict__:
-				del instance.__dict__[self.name]
-		else:
-			MMGenImmutableAttr.__delete__(self,instance)
-
-class MMGenListItem(MMGenObject):
-
-	def __init__(self,*args,**kwargs):
-		if args:
-			raise ValueError, 'Non-keyword args not allowed'
-		for k in kwargs:
-			if kwargs[k] != None:
-				setattr(self,k,kwargs[k])
-
-	# prevent setting random attributes
-	def __setattr__(self,name,value):
-		if name not in type(self).__dict__:
-			m = "'{}': no such attribute in class {}"
-			raise AttributeError(m.format(name,type(self)))
-		return object.__setattr__(self,name,value)
+class AddrListList(list,MMGenObject): pass
 
 class InitErrors(object):
 
@@ -185,68 +112,12 @@ class InitErrors(object):
 	def init_fail(m,on_fail,silent=False):
 		if silent: m = ''
 		from mmgen.util import die,msg
-		if on_fail == 'die':      die(1,m)
+		if on_fail == 'die': die(1,m)
 		elif on_fail == 'return':
 			if m: msg(m)
 			return None # TODO: change to False
 		elif on_fail == 'silent': return None # same here
 		elif on_fail == 'raise':  raise ValueError,m
-
-class AddrIdx(int,InitErrors):
-
-	max_digits = 7
-
-	def __new__(cls,num,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
-		try:
-			assert type(num) is not float
-			me = int.__new__(cls,num)
-		except:
-			m = "'%s': value cannot be converted to address index" % num
-		else:
-			if len(str(me)) > cls.max_digits:
-				m = "'%s': too many digits in addr idx" % num
-			elif me < 1:
-				m = "'%s': addr idx cannot be less than one" % num
-			else:
-				return me
-
-		return cls.init_fail(m,on_fail)
-
-class AddrIdxList(list,InitErrors,MMGenObject):
-
-	max_len = 1000000
-
-	def __init__(self,fmt_str=None,idx_list=None,on_fail='die',sep=','):
-		self.arg_chk(type(self),on_fail)
-		assert fmt_str or idx_list
-		if idx_list:
-			# dies on failure
-			return list.__init__(self,sorted(set(AddrIdx(i) for i in idx_list)))
-		elif fmt_str:
-			desc = fmt_str
-			ret,fs = [],"'%s': value cannot be converted to address index"
-			from mmgen.util import msg
-			for i in (fmt_str.split(sep)):
-				j = i.split('-')
-				if len(j) == 1:
-					idx = AddrIdx(i,on_fail='return')
-					if not idx: break
-					ret.append(idx)
-				elif len(j) == 2:
-					beg = AddrIdx(j[0],on_fail='return')
-					if not beg: break
-					end = AddrIdx(j[1],on_fail='return')
-					if not beg: break
-					if end < beg:
-						msg(fs % "%s-%s (invalid range)" % (beg,end)); break
-					ret.extend([AddrIdx(x) for x in range(beg,end+1)])
-				else:
-					msg((fs % i) + ' list'); break
-			else:
-				return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
-
-			return self.init_fail((fs + ' list') % desc,on_fail)
 
 class Hilite(object):
 
@@ -292,29 +163,142 @@ class Hilite(object):
 		k = color if type(color) is str else cls.color # hack: override color with str value
 		return globals()[k](s) if (color or cls.color_always) else s
 
+# For attrs that are always present in the data instance
+# Reassignment and deletion forbidden
+class MMGenImmutableAttr(object): # Descriptor
+
+	def __init__(self,name,dtype,typeconv=True):
+		self.typeconv = typeconv
+		assert type(dtype) in (str,type)
+		self.name = name
+		self.dtype = dtype
+
+	def __get__(self,instance,owner):
+		return instance.__dict__[self.name]
+
+	# forbid all reassignment
+	def set_attr_ok(self,instance):
+		return not hasattr(instance,self.name)
+
+	def __set__(self,instance,value):
+		if not self.set_attr_ok(instance):
+			m = "Attribute '{}' of {} instance cannot be reassigned"
+			raise AttributeError(m.format(self.name,type(instance)))
+		if self.typeconv:   # convert type
+			instance.__dict__[self.name] = \
+				globals()[self.dtype](value,on_fail='raise') if type(self.dtype) == str else self.dtype(value)
+		else:               # check type
+			if type(value) != self.dtype:
+				m = "Attribute '{}' of {} instance must of type {}"
+				raise TypeError(m.format(self.name,type(instance),self.dtype))
+			instance.__dict__[self.name] = value
+
+	def __delete__(self,instance):
+		m = "Atribute '{}' of {} instance cannot be deleted"
+		raise AttributeError(m.format(self.name,type(instance)))
+
+# For attrs that might not be present in the data instance
+# Reassignment or deletion allowed if specified
+class MMGenListItemAttr(MMGenImmutableAttr): # Descriptor
+
+	def __init__(self,name,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
+		self.reassign_ok = reassign_ok
+		self.delete_ok = delete_ok
+		MMGenImmutableAttr.__init__(self,name,dtype,typeconv=typeconv)
+
+	# return None if attribute doesn't exist
+	def __get__(self,instance,owner):
+		try: return instance.__dict__[self.name]
+		except: return None
+
+	def set_attr_ok(self,instance):
+		return getattr(instance,self.name) == None or self.reassign_ok
+
+	def __delete__(self,instance):
+		if self.delete_ok:
+			if self.name in instance.__dict__:
+				del instance.__dict__[self.name]
+		else:
+			MMGenImmutableAttr.__delete__(self,instance)
+
+class MMGenListItem(MMGenObject):
+
+	def __init__(self,*args,**kwargs):
+		if args:
+			raise ValueError, 'Non-keyword args not allowed'
+		for k in kwargs:
+			if kwargs[k] != None:
+				setattr(self,k,kwargs[k])
+
+	# prevent setting random attributes
+	def __setattr__(self,name,value):
+		if name not in type(self).__dict__:
+			m = "'{}': no such attribute in class {}"
+			raise AttributeError(m.format(name,type(self)))
+		return object.__setattr__(self,name,value)
+
+class AddrIdx(int,InitErrors):
+	max_digits = 7
+	def __new__(cls,num,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		try:
+			assert type(num) is not float,'is float'
+			me = int.__new__(cls,num)
+			assert len(str(me)) <= cls.max_digits,'is more than {} digits'.format(cls.max_digits)
+			assert me > 0,'is less than one'
+			return me
+		except Exception as e:
+			m = "{!r}: value cannot be converted to address index ({})"
+			return cls.init_fail(m.format(num,e[0]),on_fail)
+
+class AddrIdxList(list,InitErrors,MMGenObject):
+	max_len = 1000000
+	def __init__(self,fmt_str=None,idx_list=None,on_fail='die',sep=','):
+		self.arg_chk(type(self),on_fail)
+		try:
+			if idx_list:
+				return list.__init__(self,sorted(set(AddrIdx(i,on_fail='raise') for i in idx_list)))
+			elif fmt_str:
+				ret = []
+				for i in (fmt_str.split(sep)):
+					j = i.split('-')
+					if len(j) == 1:
+						idx = AddrIdx(i,on_fail='raise')
+						if not idx: break
+						ret.append(idx)
+					elif len(j) == 2:
+						beg = AddrIdx(j[0],on_fail='raise')
+						if not beg: break
+						end = AddrIdx(j[1],on_fail='raise')
+						if not beg: break
+						if end < beg: break
+						ret.extend([AddrIdx(x,on_fail='raise') for x in range(beg,end+1)])
+					else: break
+				else:
+					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
+				raise ValueError,"{!r}: invalid range".format(i)
+		except Exception as e:
+			m = "{!r}: value cannot be converted to AddrIdxList ({})"
+			return type(self).init_fail(m.format(idx_list or fmt_str,e[0]),on_fail)
+
 class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
 	max_prec = 8
 	max_amt = 21000000
-
 	def __new__(cls,num,on_fail='die'):
+		if type(num) == cls: return num
 		cls.arg_chk(cls,on_fail)
 		try:
+			assert type(num) is not float,'number is floating-point'
+			assert type(num) is not long,'number is a long integer'
 			me = Decimal.__new__(cls,str(num))
-		except:
-			m = "'%s': value cannot be converted to decimal" % num
-		else:
-			if me.normalize().as_tuple()[-1] < -cls.max_prec:
-				from mmgen.globalvars import g
-				m = "'{}': too many decimal places in {} amount".format(num,g.coin)
-			elif me > cls.max_amt:
-				from mmgen.globalvars import g
-				m = "'{}': {} amount too large (>{})".format(num,g.coin,cls.max_amt)
-#			elif me.as_tuple()[0]:
-#				m = "'%s': BTC amount cannot be negative" % num
-			else:
-				return me
-		return cls.init_fail(m,on_fail)
+			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
+			assert me <= cls.max_amt,'coin amount too large (>{})'.format(cls.max_amt)
+			assert me >= 0,'coin amount cannot be negative'
+			return me
+		except Exception as e:
+			m = "{!r}: value cannot be converted to BTCAmt ({})"
+			return cls.init_fail(m.format(num,e[0]),on_fail)
 
 	@classmethod
 	def fmtc(cls):
@@ -367,16 +351,21 @@ class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
 	width = 35 # max len of testnet p2sh addr
 	def __new__(cls,s,on_fail='die'):
+		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
-		m = "'%s': value is not a Bitcoin address" % s
-		me = str.__new__(cls,s)
-		from mmgen.bitcoin import verify_addr,addr_pfxs
-		if type(s) in (str,unicode,BTCAddr):
-			me.addr_fmt = verify_addr(s,return_type=True)
-			me.testnet = s[0] in addr_pfxs['testnet']
-			if me.addr_fmt:
-				return me
-		return cls.init_fail(m,on_fail)
+		try:
+			assert set(s) <= set(ascii_letters+digits),'contains non-ascii characters'
+			me = str.__new__(cls,s)
+			from mmgen.bitcoin import verify_addr
+			va = verify_addr(s,return_dict=True)
+			assert va,'failed verification'
+			me.addr_fmt = va['format']
+			me.hex = va['hex']
+			me.testnet = va['net'] == 'testnet'
+			return me
+		except Exception as e:
+			m = "{!r}: value cannot be converted to Bitcoin address ({})"
+			return cls.init_fail(m.format(s,e[0]),on_fail)
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
@@ -390,13 +379,13 @@ class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 
 	def is_for_current_chain(self):
 		from mmgen.globalvars import g
-		assert g.chain, 'global chain variable unset'
-		from bitcoin import addr_pfxs
-		return self[0] in addr_pfxs[g.chain]
+		assert g.chain,'global chain variable unset'
+		from bitcoin import btc_addr_pfxs
+		return self[0] in btc_addr_pfxs[g.chain]
 
 	def is_mainnet(self):
-		from bitcoin import addr_pfxs
-		return self[0] in addr_pfxs['mainnet']
+		from bitcoin import btc_addr_pfxs
+		return self[0] in btc_addr_pfxs['mainnet']
 
 	def is_in_tracking_wallet(self):
 		from mmgen.rpc import bitcoin_connection
@@ -408,122 +397,118 @@ class SeedID(str,Hilite,InitErrors):
 	width = 8
 	trunc_ok = False
 	def __new__(cls,seed=None,sid=None,on_fail='die'):
+		if type(sid) == cls: return sid
 		cls.arg_chk(cls,on_fail)
-		assert seed or sid
-		if seed:
-			from mmgen.seed import Seed
-			from mmgen.util import make_chksum_8
-			if type(seed) == Seed:
+		try:
+			if seed:
+				from mmgen.seed import Seed
+				assert type(seed) == Seed,'not a Seed instance'
+				from mmgen.util import make_chksum_8
 				return str.__new__(cls,make_chksum_8(seed.get_data()))
-		elif sid:
-			sid = str(sid)
-			from string import hexdigits
-			if len(sid) == cls.width and set(sid) <= set(hexdigits.upper()):
+			elif sid:
+				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
+				assert len(sid) == cls.width,'not {} characters wide'.format(cls.width)
 				return str.__new__(cls,sid)
-
-		m = "'%s': value cannot be converted to SeedID" % str(seed or sid)
-		return cls.init_fail(m,on_fail)
+			raise ValueError,'no arguments provided'
+		except Exception as e:
+			m = "{!r}: value cannot be converted to SeedID ({})"
+			return cls.init_fail(m.format(seed or sid,e[0]),on_fail)
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
-
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
-		s = str(s)
 		try:
-			ss = s.split(':')
-			assert len(ss) in (2,3)
-			sid = SeedID(sid=ss[0],on_fail='silent')
-			assert sid
-			idx = AddrIdx(ss[-1],on_fail='silent')
-			assert idx
-			t = MMGenAddrType((MMGenAddrType.dfl_mmtype,ss[1])[len(ss) != 2],on_fail='silent')
-			assert t
-			me = str.__new__(cls,'{}:{}:{}'.format(sid,t,idx))
-			me.sid = sid
+			ss = str(s).split(':')
+			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
+			t = MMGenAddrType((ss[1],MMGenAddrType.dfl_mmtype)[len(ss)==2],on_fail='raise')
+			me = str.__new__(cls,'{}:{}:{}'.format(ss[0],t,ss[-1]))
+			me.sid = SeedID(sid=ss[0],on_fail='raise')
+			me.idx = AddrIdx(ss[-1],on_fail='raise')
 			me.mmtype = t
-			me.idx = idx
-			me.al_id = AddrListID(sid,me.mmtype) # key with colon!
-			assert me.al_id
-			me.sort_key = '{}:{}:{:0{w}}'.format(sid,t,idx,w=idx.max_digits)
+			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
+			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
 			return me
-		except:
-			m = "'%s': value cannot be converted to MMGenID" % s
-			return cls.init_fail(m,on_fail)
+		except Exception as e:
+			m = "{}\n{!r}: value cannot be converted to MMGenID"
+			return cls.init_fail(m.format(e[0],s),on_fail)
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
-
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-
 	def __new__(cls,s,on_fail='die'):
+		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
-		obj,sort_key = None,None
+		ret = None
 		try:
-			obj = MMGenID(s,on_fail='silent')
-			sort_key,t = obj.sort_key,'mmgen'
-		except:
+			ret = MMGenID(s,on_fail='raise')
+			sort_key,idtype = ret.sort_key,'mmgen'
+		except Exception as e:
 			try:
-				assert len(s) > 4 and s[:4] == 'btc:'
-				obj,sort_key,t = str(s),'z_'+s,'non-mmgen'
-			except:
-				pass
+				assert s[:4] == 'btc:',"not a string beginning with the prefix 'btc:'"
+				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-ascii characters'
+				assert len(s) > 4,'not more that four characters long'
+				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
+			except Exception as f:
+				m = "{}\nValue is {}\n{!r}: value cannot be converted to TwMMGenID"
+				return cls.init_fail(m.format(e[0],f[0],s),on_fail)
 
-		if obj and sort_key:
-			me = str.__new__(cls,obj)
-			me.obj = obj
-			me.sort_key = sort_key
-			me.type = t
-			return me
-
-		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
-		return cls.init_fail(m,on_fail)
+		me = str.__new__(cls,ret)
+		me.obj = ret
+		me.sort_key = sort_key
+		me.type = idtype
+		return me
 
 # contains TwMMGenID,TwComment.  Not for display
 class TwLabel(str,InitErrors,MMGenObject):
-
 	def __new__(cls,s,on_fail='die'):
+		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
 		try:
 			ss = s.split(None,1)
-			me = str.__new__(cls,s)
-			me.mmid = TwMMGenID(ss[0],on_fail='silent')
-			assert me.mmid
-			me.comment = TwComment(ss[1] if len(ss) == 2 else '',on_fail='silent')
-			assert me.comment != None
+			mmid = TwMMGenID(ss[0],on_fail='raise')
+			comment = TwComment(ss[1] if len(ss) == 2 else '',on_fail='raise')
+			me = str.__new__(cls,'{}{}'.format(mmid,' {}'.format(comment) if comment else ''))
+			me.mmid = mmid
+			me.comment = comment
 			return me
-		except:
-			m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
-			return cls.init_fail(m,on_fail)
+		except Exception as e:
+			m = u"{}\n{!r}: value cannot be converted to TwLabel"
+			return cls.init_fail(m.format(e[0],s),on_fail)
 
 class HexStr(str,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die',case='lower'):
+		if type(s) == cls: return s
 		assert case in ('upper','lower')
 		cls.arg_chk(cls,on_fail)
-		from string import hexdigits
-		if set(s) <= set(getattr(hexdigits,case)()) and not len(s) % 2:
+		try:
+			assert type(s) in (str,unicode,bytes),'not a string'
+			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
+			assert not len(s) % 2,'odd-length string'
 			return str.__new__(cls,s)
-		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
-		return cls.init_fail(m,on_fail)
+		except Exception as e:
+			m = "{!r}: value cannot be converted to {} (value is {})"
+			return cls.init_fail(m.format(s,cls.__name__,e[0]),on_fail)
 
-class MMGenTxID(str,Hilite,InitErrors):
+class MMGenTxID(HexStr,Hilite,InitErrors):
 	color = 'red'
 	width = 6
 	trunc_ok = False
 	hexcase = 'upper'
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
-		from string import hexdigits
-		if len(s) == cls.width and set(s) <= set(getattr(hexdigits,cls.hexcase)()):
-			return str.__new__(cls,s)
-		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
-		return cls.init_fail(m,on_fail)
+		try:
+			ret = HexStr.__new__(cls,s,case=cls.hexcase,on_fail='raise')
+			assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
+			return ret
+		except Exception as e:
+			m = "{}\n{!r}: value cannot be converted to {}"
+			return cls.init_fail(m.format(e[0],s,cls.__name__),on_fail)
 
 class BitcoinTxID(MMGenTxID):
 	color = 'purple'
@@ -533,34 +518,29 @@ class BitcoinTxID(MMGenTxID):
 class WifKey(str,Hilite,InitErrors):
 	width = 53
 	color = 'blue'
-	desc = 'WIF key'
-	def __new__(cls,s,on_fail='die',errmsg=None):
+	def __new__(cls,s,on_fail='die',testnet=None): # fall back to g.testnet
+		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
-		from mmgen.bitcoin import wif2hex
-		if wif2hex(s):
-			me = str.__new__(cls,s)
-			return me
-		m = errmsg or "'{}': invalid value for {}".format(s,cls.desc)
-		return cls.init_fail(m,on_fail)
+		try:
+			assert set(s) <= set(ascii_letters+digits),'not an ascii string'
+			from mmgen.bitcoin import wif2hex
+			if wif2hex(s,testnet=testnet):
+				return str.__new__(cls,s)
+			raise ValueError,'failed verification'
+		except Exception as e:
+			m = '{!r}: invalid value for WIF key ({})'.format(s,e[0])
+			return cls.init_fail(m,on_fail)
 
-class HexStr(str,Hilite,InitErrors):
-	color = 'red'
-	trunc_ok = False
-	def __new__(cls,s,on_fail='die',case='lower'):
-		assert case in ('upper','lower')
-		cls.arg_chk(cls,on_fail)
-		from string import hexdigits
-		if set(s) <= set(getattr(hexdigits,case)()) and not len(s) % 2:
-			return str.__new__(cls,s)
-		m = "'{}': value cannot be converted to {}".format(s,cls.__name__)
-		return cls.init_fail(m,on_fail)
-
-class PubKey(HexStr,MMGenObject):
+class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 	def __new__(cls,s,compressed,on_fail='die'):
-		assert type(compressed) == bool
-		me = HexStr.__new__(cls,s,case='lower')
-		me.compressed = compressed
-		return me
+		try:
+			assert type(compressed) == bool,"'compressed' must be of type bool"
+			me = HexStr.__new__(cls,s,case='lower',on_fail='raise')
+			me.compressed = compressed
+			return me
+		except Exception as e:
+			m = '{!r}: invalid value for pubkey ({})'.format(s,e[0])
+			return cls.init_fail(m,on_fail)
 
 class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
@@ -571,104 +551,71 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	compressed = MMGenImmutableAttr('compressed',bool,typeconv=False)
 	wif        = MMGenImmutableAttr('wif',WifKey,typeconv=False)
 
-	def __new__(*args,**kwargs): # initialize with (priv_bin,compressed), WIF or self
-		cls = args[0]
-		assert set(kwargs) <= set(['on_fail','wif'])
-		on_fail = kwargs['on_fail'] if 'on_fail' in kwargs else 'die'
+	# initialize with (priv_bin,compressed), WIF or self
+	def __new__(cls,s=None,compressed=None,wif=None,on_fail='die',testnet=None): # default to g.testnet
+
+		if type(s) == cls: return s
+		assert wif or (s and type(compressed) == bool),'Incorrect args for PrivKey()'
 		cls.arg_chk(cls,on_fail)
 
-		if len(args) == 2:
-			assert type(args[1]) == cls
-			return args[1]
-
-		if 'wif' in kwargs:
-			assert len(args) == 1
+		if wif:
 			try:
-				from mmgen.bitcoin import wif2hex,wif_is_compressed # TODO: move these here
-				wif = WifKey(kwargs['wif'])
-				me = str.__new__(cls,wif2hex(wif))
-				me.compressed = wif_is_compressed(wif)
-				me.wif = wif
+				assert set(wif) <= set(ascii_letters+digits),'not an ascii string'
+				from mmgen.bitcoin import wif2hex
+				w2h = wif2hex(wif,testnet=testnet)
+				assert w2h,"wif2hex() failed for wif key {!r}".format(wif)
+				me = str.__new__(cls,w2h['hex'])
+				me.compressed = w2h['compressed']
+				me.testnet = w2h['testnet']
+				me.wif = str.__new__(WifKey,wif) # check has been done
 				return me
-			except:
-				fs = "Value '{}' cannot be converted to WIF key"
-				errmsg = fs.format(kwargs['wif'])
-				return cls.init_fail(errmsg,on_fail)
-
-		cls,s,compressed = args
+			except Exception as e:
+				fs = "Value {!r} cannot be converted to WIF key ({})"
+				return cls.init_fail(fs.format(wif,e[0]),on_fail)
 
 		try:
 			from binascii import hexlify
-			assert len(s) == cls.width / 2
+			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
 			me = str.__new__(cls,hexlify(s))
 			me.compressed = compressed
-			me.wif = me.towif()
+			me.wif = me.towif(testnet=testnet)
+#			me.testnet = testnet # leave uninitialized for now
 			return me
-		except:
-			fs = "Key={}\nCompressed={}\nValue pair cannot be converted to {}"
-			errmsg = fs.format(repr(s),compressed,cls.__name__)
-			return cls.init_fail(errmsg,on_fail)
+		except Exception as e:
+			fs = "Key={}\nCompressed={}\nValue pair cannot be converted to PrivKey ({})"
+			return cls.init_fail(fs.format(repr(s),compressed,e[0]),on_fail)
 
-	def towif(self):
+	def towif(self,testnet=None):
 		from mmgen.bitcoin import hex2wif
-		return WifKey(hex2wif(self,compressed=self.compressed))
+		return WifKey(hex2wif(self,compressed=self.compressed),on_fail='raise',testnet=testnet)
 
-class MMGenAddrType(str,Hilite,InitErrors):
-	width = 1
-	trunc_ok = False
-	color = 'blue'
-	mmtypes = {
-		# TODO 'L' is ambiguous: For user, it means MMGen legacy uncompressed address.
-		# For generator functions, 'L' means any p2pkh address, and 'S' any ps2h address
-		'L': 'legacy',
-		'S': 'segwit',
-# 		'l': 'litecoin',
-# 		'e': 'ethereum',
-# 		'E': 'ethereum_classic',
-# 		'm': 'monero',
-# 		'z': 'zcash',
-	}
-	dfl_mmtype = 'L'
-	def __new__(cls,s,on_fail='die',errmsg=None):
-		cls.arg_chk(cls,on_fail)
-		for k,v in cls.mmtypes.items():
-			if s in (k,v):
-				if s == v: s = k
-				me = str.__new__(cls,s)
-				me.name = cls.mmtypes[s]
-				return me
-		m = errmsg or "'{}': invalid value for {}".format(s,cls.__name__)
-		return cls.init_fail(m,on_fail)
-
-class MMGenPasswordType(MMGenAddrType):
-	mmtypes = { 'P': 'password' }
-
-class AddrListID(str,Hilite,InitErrors):
+class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
 	trunc_ok = False
 	color = 'yellow'
 	def __new__(cls,sid,mmtype,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
-		m = "'{}': not a SeedID. Cannot create {}".format(sid,cls.__name__)
-		if type(sid) == SeedID:
-			m = "'{}': not an MMGenAddrType object. Cannot create {}".format(mmtype,cls.__name__)
-			if type(mmtype) in (MMGenAddrType,MMGenPasswordType):
-				me = str.__new__(cls,sid+':'+mmtype) # colon in key is OK
-				me.sid = sid
-				me.mmtype = mmtype
-				return me
-		return cls.init_fail(m,on_fail)
+		try:
+			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
+			t = MMGenAddrType,MMGenPasswordType
+			assert type(mmtype) in t,"{!r} not an instance of {}".format(mmtype,','.join([i.__name__ for i in t]))
+			me = str.__new__(cls,sid+':'+mmtype)
+			me.sid = sid
+			me.mmtype = mmtype
+			return me
+		except Exception as e:
+			m = "Cannot create AddrListID ({})".format(e[0])
+			return cls.init_fail(m,on_fail)
 
 class MMGenLabel(unicode,Hilite,InitErrors):
-
 	color = 'pink'
 	allowed = []
 	forbidden = []
 	max_len = 0
 	min_len = 0
 	desc = 'label'
-
 	def __new__(cls,s,on_fail='die',msg=None):
+		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
 		for k in cls.forbidden,cls.allowed:
 			assert type(k) == list
@@ -677,23 +624,17 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 			s = s.strip()
 			if type(s) != unicode:
 				s = s.decode('utf8')
-		except:
-			m = "'%s': value is not a valid UTF-8 string" % s
-		else:
 			from mmgen.util import capfirst
-			if len(s) > cls.max_len:
-				m = u"'{}': {} too long (>{} symbols)".format(s,capfirst(cls.desc),cls.max_len)
-			elif len(s) < cls.min_len:
-				m = u"'{}': {} too short (<{} symbols)".format(s,capfirst(cls.desc),cls.min_len)
-			elif cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
-				m = u"{} '{}' contains non-allowed symbols: {}".format(capfirst(cls.desc),s,
-					' '.join(set(list(s)) - set(cls.allowed)))
-			elif cls.forbidden and any(ch in s for ch in cls.forbidden):
-				m = u"{} '{}' contains one of these forbidden symbols: '{}'".format(capfirst(cls.desc),s,
-					"', '".join(cls.forbidden))
-			else:
-				return unicode.__new__(cls,s)
-		return cls.init_fail((msg+'\n' if msg else '') + m,on_fail)
+			assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
+			assert len(s) >= cls.min_len, 'too short (<{} symbols)'.format(cls.min_len)
+			assert not cls.allowed or set(list(s)).issubset(set(cls.allowed)),\
+				u'contains non-allowed symbols: {}'.format(' '.join(set(list(s)) - set(cls.allowed)))
+			assert not cls.forbidden or not any(ch in s for ch in cls.forbidden),\
+				u"contains one of these forbidden symbols: '{}'".format("', '".join(cls.forbidden))
+			return unicode.__new__(cls,s)
+		except Exception as e:
+			m = u"{!r}: value cannot be converted to {} ({})"
+			return cls.init_fail(m.format(s,cls.__name__,e),on_fail)
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
@@ -715,4 +656,41 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(u' :/\\')
 
-class AddrListList(list,MMGenObject): pass
+class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
+	width = 1
+	trunc_ok = False
+	color = 'blue'
+	mmtypes = { # since 'name' is used to cook the seed, it must never change!
+'L': {'name':'legacy','comp':False,'gen':'p2pkh', 'fmt':'p2pkh','desc':'Legacy uncompressed Bitcoin address'},
+'S': {'name':'segwit','comp':True, 'gen':'segwit','fmt':'p2sh', 'desc':'Bitcoin Segwit P2SH-P2WPK address' },
+'C': {'name':'compressed','comp':True,'gen':'p2pkh','fmt':'p2pkh','desc':'Compressed Bitcoin P2PKH address'}
+# 		'l': 'litecoin',
+# 		'e': 'ethereum',
+# 		'E': 'ethereum_classic',
+# 		'm': 'monero',
+# 		'z': 'zcash',
+	}
+	dfl_mmtype = 'L'
+	def __new__(cls,s,on_fail='die',errmsg=None):
+		if type(s) == cls: return s
+		cls.arg_chk(cls,on_fail)
+		try:
+			for k,v in cls.mmtypes.items():
+				if s in (k,v['name']):
+					if s == v['name']: s = k
+					me = str.__new__(cls,s)
+					me.name = v['name']
+					me.compressed = v['comp']
+					me.gen_method = v['gen']
+					me.desc = v['desc']
+					me.addr_fmt = v['fmt']
+					return me
+			raise ValueError,'not found'
+		except Exception as e:
+			m = errmsg or '{!r}: invalid value for {} ({})'.format(s,cls.__name__,e[0])
+			return cls.init_fail(m,on_fail)
+
+class MMGenPasswordType(MMGenAddrType):
+	mmtypes = {
+		'P': {'name':'password','comp':False,'gen':None,'fmt':None,'desc':'Password generated from MMGen seed'}
+	}

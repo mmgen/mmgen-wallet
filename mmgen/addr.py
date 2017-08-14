@@ -61,7 +61,7 @@ class AddrGeneratorSegwit(MMGenObject):
 class KeyGenerator(MMGenObject):
 	def __new__(cls,generator=None,silent=False):
 		if cls.test_for_secp256k1(silent=silent) and generator != 1:
-			if opt.key_generator != 1:
+			if (not hasattr(opt,'key_generator')) or opt.key_generator == 2 or generator == 2:
 				return super(cls,cls).__new__(KeyGeneratorSecp256k1)
 		else:
 			msg('Using (slow) native Python ECDSA library for address generation')
@@ -182,7 +182,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
-			adata = self.generate(seed,addr_idxs,compressed=(mmtype=='S'))
+			adata = self.generate(seed,addr_idxs)
 		elif addrfile:           # data from MMGen address file
 			adata = self.parse_file(addrfile) # sets self.al_id
 		elif al_id and adata:    # data from tracking wallet
@@ -210,7 +210,6 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		if self.al_id == None: return
 
 		self.id_str = AddrListIDStr(self)
-
 		if type(self) == KeyList: return
 
 		if do_chksum:
@@ -223,21 +222,18 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 				qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
 
 	def update_msgs(self):
-		if type(self).msgs and type(self) != AddrList:
-			for k in AddrList.msgs:
-				if k not in self.msgs:
-					self.msgs[k] = AddrList.msgs[k]
+		self.msgs = AddrList.msgs
+ 		self.msgs.update(type(self).msgs)
 
-	def generate(self,seed,addrnums,compressed):
+	def generate(self,seed,addrnums):
 		assert type(addrnums) is AddrIdxList
-		assert type(compressed) is bool
 
 		seed = seed.get_data()
 		seed = self.cook_seed(seed)
 
 		if self.gen_addrs:
 			kg = KeyGenerator()
-			ag = AddrGenerator(('p2pkh','segwit')[self.al_id.mmtype=='S'])
+			ag = AddrGenerator(self.al_id.mmtype.gen_method)
 
 		t_addrs,num,pos,out = len(addrnums),0,0,AddrListList()
 		le = self.entry_type
@@ -256,7 +252,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			e = le(idx=num)
 
 			# Secret key is double sha256 of seed hash round /num/
-			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),compressed)
+			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),self.al_id.mmtype.compressed)
 
 			if self.gen_addrs:
 				e.addr = ag.to_addr(kg.to_pubhex(e.sec))
@@ -278,8 +274,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 	def is_for_current_chain(self):
 		return self.data[0].addr.is_for_current_chain()
 
-	def chk_addr_or_pw(self,addr):
-		return {'L':'p2pkh','S':'p2sh'}[self.al_id.mmtype] == is_btc_addr(addr).addr_fmt
+	def check_format(self,addr): return True # format is checked when added to list entry object
 
 	def cook_seed(self,seed):
 		if self.al_id.mmtype == 'L':
@@ -386,7 +381,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		elif self.al_id.mmtype == 'L':
 			out.append('{} {{'.format(self.al_id.sid))
 		else:
-			out.append('{} {} {{'.format(self.al_id.sid,MMGenAddrType.mmtypes[self.al_id.mmtype].upper()))
+			out.append('{} {} {{'.format(self.al_id.sid,self.al_id.mmtype.name.upper()))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
@@ -419,7 +414,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			if not is_mmgen_idx(d[0]):
 				return "'%s': invalid address num. in line: '%s'" % (d[0],l)
 
-			if not self.chk_addr_or_pw(d[1]):
+			if not self.check_format(d[1]):
 				return "'{}': invalid {}".format(d[1],self.data_desc)
 
 			if len(d) != 3: d.append('')
@@ -441,7 +436,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		if self.has_keys and keypress_confirm('Check key-to-address validity?'):
 			kg = KeyGenerator()
-			ag = AddrGenerator(('p2pkh','segwit')[self.al_id.mmtype=='S'])
+			ag = AddrGenerator(self.al_id.mmtype.gen_method)
 			llen = len(ret)
 			for n,e in enumerate(ret):
 				msg_r('\rVerifying keys %s/%s' % (n+1,llen))
@@ -489,7 +484,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 				mmtype = MMGenAddrType(mmtype)
 			except:
 				return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
-					mmtype.upper(),' '.join(MMGenAddrType.mmtypes.values()).upper()))
+					mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
 		elif len(ls) == 0:
 			mmtype = MMGenAddrType('L')
 		else:
@@ -582,7 +577,7 @@ Record this checksum: it will be used to verify the password file in the future
 			self.set_pw_len(pw_len)
 			if chk_params_only: return
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
-			self.data = self.generate(seed,pw_idxs,compressed=False)
+			self.data = self.generate(seed,pw_idxs)
 
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''
@@ -632,7 +627,7 @@ Record this checksum: it will be used to verify the password file in the future
 		# we take least significant part
 		return ''.join(baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len))[-self.pw_len:]
 
-	def chk_addr_or_pw(self,pw):
+	def check_format(self,pw):
 		if not (is_b58_str,is_b32_str)[self.pw_fmt=='b32'](pw):
 			msg('Password is not a valid {} string'.format(self.pw_fmt))
 			return False

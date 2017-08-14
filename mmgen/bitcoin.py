@@ -60,8 +60,6 @@ def _b58tonum(b58num):
 		if not i in _b58a: return False
 	return sum(_b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
 
-from mmgen.globalvars import g
-
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib_new('ripemd160',sha256(unhexlify(hexnum)).digest()).hexdigest()
 
@@ -69,56 +67,57 @@ def hash256(hexnum): # take hex, return hex - OP_HASH256
 	return sha256(sha256(unhexlify(hexnum)).digest()).hexdigest()
 
 # devdoc/ref_transactions.md:
-btc_ver_nums = {
-	'p2pkh': (('00','1'),('6f','mn')),
-	'p2sh':  (('05','3'),('c4','2'))
+btc_addr_ver_nums = {
+	'p2pkh': { 'mainnet': ('00','1'), 'testnet': ('6f','mn') },
+	'p2sh':  { 'mainnet': ('05','3'), 'testnet': ('c4','2') }
 }
-addr_pfxs = { 'mainnet': '13', 'testnet': 'mn2', 'regtest': 'mn2' }
-vnum_all = tuple([k for k,v in btc_ver_nums['p2pkh'] + btc_ver_nums['p2sh']])
+btc_addr_pfxs             = { 'mainnet': '13', 'testnet': 'mn2', 'regtest': 'mn2' }
+btc_uncompressed_wif_pfxs = { 'mainnet':'5','testnet':'9' }
+btc_privkey_pfxs          = { 'mainnet':'80','testnet':'ef' }
 
-def hexaddr2addr(hexaddr,p2sh=False):
-	s = vnum_all[g.testnet+(2*p2sh)] + hexaddr.strip()
-	lzeroes = (len(s) - len(s.lstrip('0'))) / 2
-	return ('1' * lzeroes) + _numtob58(int(s+hash256(s)[:8],16))
+from mmgen.globalvars import g
 
-def verify_addr(addr,verbose=False,return_hex=False,return_type=False):
-	addr = addr.strip()
-
-	for k in ('p2pkh','p2sh'):
-		for ver_num,ldigit in btc_ver_nums[k]:
+def verify_addr(addr,verbose=False,return_dict=False,testnet=None):
+	testnet = testnet if testnet != None else g.testnet # allow override
+	for addr_fmt in ('p2pkh','p2sh'):
+		for net in ('mainnet','testnet'):
+			ver_num,ldigit = btc_addr_ver_nums[addr_fmt][net]
 			if addr[0] not in ldigit: continue
 			num = _b58tonum(addr)
 			if num == False: break
 			addr_hex = '{:050x}'.format(num)
 			if addr_hex[:2] != ver_num: continue
 			if hash256(addr_hex[:42])[:8] == addr_hex[42:]:
-				return addr_hex[2:42] if return_hex else k if return_type else True
+				return {'hex':addr_hex[2:42],'format':addr_fmt,'net':net} if return_dict else True
 			else:
-				if verbose: Msg("Invalid checksum in address '%s'" % addr)
+				if verbose: Msg("Invalid checksum in address '{}'".format(addr))
 				break
 
-	if verbose: Msg("Invalid address '%s'" % addr)
+	if verbose: Msg("Invalid address '{}'".format(addr))
 	return False
 
-# Compressed address support:
+def hexaddr2addr(hexaddr,p2sh=False,testnet=None):
+	testnet = testnet if testnet != None else g.testnet # allow override
+	s = btc_addr_ver_nums[('p2pkh','p2sh')[p2sh]][('mainnet','testnet')[testnet]][0] + hexaddr
+	lzeroes = (len(s) - len(s.lstrip('0'))) / 2
+	return ('1' * lzeroes) + _numtob58(int(s+hash256(s)[:8],16))
 
-def wif_is_compressed(wif): return wif[0] != ('5','9')[g.testnet]
-
-def wif2hex(wif):
-	wif = wif.strip()
-	compressed = wif_is_compressed(wif)
+def wif2hex(wif,testnet=None):
+	testnet = testnet if testnet != None else g.testnet # allow override
 	num = _b58tonum(wif)
 	if num == False: return False
 	key = '{:x}'.format(num)
+	compressed = wif[0] != btc_uncompressed_wif_pfxs[('mainnet','testnet')[testnet]]
 	klen = (66,68)[bool(compressed)]
 	if compressed and key[66:68] != '01': return False
-	if (key[:2] == ('80','ef')[g.testnet] and key[klen:] == hash256(key[:klen])[:8]):
-		return key[2:66]
+	if (key[:2] == btc_privkey_pfxs[('mainnet','testnet')[testnet]] and key[klen:] == hash256(key[:klen])[:8]):
+		return {'hex':key[2:66],'compressed':compressed,'testnet':testnet}
 	else:
 		return False
 
-def hex2wif(hexpriv,compressed=False):
-	s = ('80','ef')[g.testnet] + hexpriv.strip() + ('','01')[bool(compressed)]
+def hex2wif(hexpriv,compressed=False,testnet=None):
+	testnet = testnet if testnet != None else g.testnet # allow override
+	s = btc_privkey_pfxs[('mainnet','testnet')[testnet]] + hexpriv + ('','01')[bool(compressed)]
 	return _numtob58(int(s+hash256(s)[:8],16))
 
 # devdoc/guide_wallets.md:

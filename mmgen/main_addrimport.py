@@ -64,16 +64,7 @@ def import_mmgen_list(infile):
 	return al
 
 def import_flat_list(lines):
-	al = AddrList(addrlist=lines)
-	from mmgen.bitcoin import verify_addr
-	qmsg_r('Validating addresses...')
-	for e in al.data:
-		if not verify_addr(e.addr,verbose=True):
-			die(2,'\n%s: invalid address' % e.addr)
-		if e.addr.addr_fmt == 'p2sh':
-			fs = "\n'{}':\n  Non-{} P2SH addresses may not be imported into the tracking wallet"
-			rdie(2,fs.format(e.addr,g.proj_name))
-	return al
+	return AddrList(addrlist=lines)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]

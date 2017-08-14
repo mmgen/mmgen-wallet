@@ -61,6 +61,8 @@ common_opts_data = """
 --, --testnet=0|1         Disable or enable testnet
 --, --skip-cfg-file       Skip reading the configuration file
 --, --version             Print version information and exit
+--, --bob                 Switch to user "Bob" in MMGen regtest setup
+--, --alice               Switch to user "Alice" in MMGen regtest setup
 """.format(
 	pnm=g.proj_name,
 	cu_dfl=g.coin,
@@ -249,6 +251,16 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	del opts_f
 	for k in ('prog_name','desc','usage','options','notes'):
 		if k in opts_data: del opts_data[k]
+
+	if g.bob or g.alice:
+		import regtest as rt
+		rt.user(('alice','bob')[g.bob],quiet=True)
+		g.testnet = True
+		g.rpc_host = 'localhost'
+		g.rpc_port = rt.rpc_port
+		g.rpc_user = rt.rpc_user
+		g.rpc_password = rt.rpc_password
+		g.data_dir = os.path.join(g.home_dir,'.'+g.proj_name.lower(),'regtest')
 
 	if g.debug: opt_postproc_debug()
 

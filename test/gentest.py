@@ -29,7 +29,6 @@ from binascii import hexlify
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
-from mmgen.bitcoin import hex2wif
 
 rounds = 100
 opts_data = lambda: {
@@ -115,7 +114,6 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 """.format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=m[a],b=m[b]).rstrip())
 
 # Begin execution
-mmtype = ('L','S')[bool(opt.segwit)]
 compressed = True
 
 from mmgen.addr import KeyGenerator,AddrGenerator
@@ -177,7 +175,6 @@ elif a and dump:
 			sec = PrivKey(wif=wif)
 		except:
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
-		compressed = wif[0] != ('5','9')[g.testnet]
 		b_addr = ag.to_addr(kg.to_pubhex(sec))
 		if a_addr != b_addr:
 			match_error(sec,wif,a_addr,b_addr,3,a)

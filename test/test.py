@@ -50,7 +50,8 @@ ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'
 ref_wallet_incog_offset = 123
 
-from mmgen.obj import MMGenTXLabel
+from mmgen.obj import MMGenTXLabel,PrivKey,BTCAmt
+from mmgen.addr import AddrGenerator,KeyGenerator,AddrList,AddrData,AddrIdxList
 ref_tx_label = ''.join([unichr(i) for i in  range(65,91) +
 											range(1040,1072) + # cyrillic
 											range(913,939) +   # greek
@@ -709,7 +710,6 @@ def find_generated_exts(cmd):
 def get_addrfile_checksum(display=False):
 	addrfile = get_file_with_ext('addrs',cfg['tmpdir'])
 	silence()
-	from mmgen.addr import AddrList
 	chk = AddrList(addrfile).chksum
 	if opt.verbose and display: msg('Checksum: %s' % cyan(chk))
 	end_silence()
@@ -728,9 +728,6 @@ class MMGenExpect(MMGenPexpect):
 		desc = (cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc).strip()
 		return MMGenPexpect.__init__(self,name,mmgen_cmd,cmd_args,desc,no_output=no_output)
 
-from mmgen.obj import BTCAmt
-from mmgen.bitcoin import verify_addr
-
 def create_fake_unspent_entry(btcaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if lbl: lbl = ' ' + lbl
 	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and btcaddr.addr_fmt=='p2sh']
@@ -741,7 +738,7 @@ def create_fake_unspent_entry(btcaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fal
 		'amount': BTCAmt('%s.%s' % (10+(getrandnum(4) % 40), getrandnum(4) % 100000000)),
 		'address': btcaddr,
 		'spendable': False,
-		'scriptPubKey': (spk1+verify_addr(btcaddr,return_hex=True)+spk2),
+		'scriptPubKey': '{}{}{}'.format(spk1,btcaddr.hex,spk2),
 		'confirmations': getrandnum(4) % 50000
 	}
 
@@ -784,14 +781,10 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 				out.append(create_fake_unspent_entry(btcaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 	if non_mmgen_input:
-		privnum = getrandnum(32)
-		from mmgen.bitcoin import privnum2addr,hex2wif
-		from mmgen.obj import BTCAddr
-		btcaddr = BTCAddr(privnum2addr(privnum,compressed=True))
+		privkey = PrivKey(os.urandom(32),compressed=True)
+		btcaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator().to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
-		wif = hex2wif('{:064x}'.format(privnum),compressed=True)
-#		Msg(yellow(wif + ' ' + btcaddr))
-		write_data_to_file(of,wif+'\n','compressed bitcoin key',silent=True)
+		write_data_to_file(of,privkey.wif+'\n','compressed bitcoin key',silent=True)
 		out.append(create_fake_unspent_entry(btcaddr,non_mmgen=True,segwit=False))
 
 #	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
@@ -808,7 +801,6 @@ def	write_fake_data_to_file(d):
 		sys.stderr.write("Fake transaction wallet data written to file '%s'\n" % unspent_data_file)
 
 def create_tx_data(sources):
-	from mmgen.addr import AddrList,AddrData,AddrIdxList
 	tx_data,ad = {},AddrData()
 	for s in sources:
 		afile = get_file_with_ext('addrs',cfgs[s]['tmpdir'])
@@ -829,8 +821,8 @@ def create_tx_data(sources):
 	return ad,tx_data
 
 def make_txcreate_cmdline(tx_data):
-	from mmgen.bitcoin import privnum2addr
-	btcaddr = privnum2addr(getrandnum(32),compressed=True)
+	privkey = PrivKey(os.urandom(32),compressed=True)
+	btcaddr = AddrGenerator('segwit').to_addr(KeyGenerator().to_pubhex(privkey))
 
 	cmd_args = ['-d',cfg['tmpdir']]
 	for num in tx_data:
@@ -848,7 +840,6 @@ def make_txcreate_cmdline(tx_data):
 def add_comments_to_addr_file(addrfile,outfile):
 	silence()
 	msg(green("Adding comments to address file '%s'" % addrfile))
-	from mmgen.addr import AddrList
 	a = AddrList(addrfile)
 	for n,idx in enumerate(a.idxs(),1):
 		if n % 2: a.set_comment(idx,'Test address %s' % n)

@@ -457,6 +457,8 @@ class MMGenTX(MMGenObject):
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 		ht = ('ALL','ALL|FORKID')[g.coin=='BCH'] # sighashtype defaults to 'ALL'
 		wifs = [d.sec.wif for d in keys]
+#		keys.pmsg()
+#		pmsg(wifs)
 		ret = c.signrawtransaction(self.hex,sig_data,wifs,ht,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
@@ -525,7 +527,10 @@ class MMGenTX(MMGenObject):
 
 	def is_in_wallet(self,c):
 		ret = c.gettransaction(self.btc_txid,on_fail='silent')
-		return 'confirmations' in ret and ret['confirmations'] > 0
+		if 'confirmations' in ret and ret['confirmations'] > 0:
+			return ret['confirmations']
+		else:
+			return False
 
 	def is_replaced(self,c):
 		if self.is_in_mempool(c): return False
@@ -541,7 +546,8 @@ class MMGenTX(MMGenObject):
 		if self.is_in_mempool(c):
 			msg(('Warning: transaction is in mempool!','Transaction is in mempool')[status])
 		elif self.is_in_wallet(c):
-			die(1,'Transaction has been confirmed{}'.format('' if status else '!'))
+			confs = self.is_in_wallet(c)
+			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
 		elif self.is_in_utxos(c):
 			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
 		ret = self.is_replaced(c) # 1: replacement in mempool, 2: replacement confirmed

@@ -354,7 +354,7 @@ class MMGenToolTestSuite(object):
 	def Hexaddr2addr(self,name,f1,f2,f3,f4):
 		for n,fi,fo,m in ((1,f1,f2,''),(2,f3,f4,'from compressed')):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
-	def Privhex2pubhex(self,name,f1,f2,f3): # from hex2wif
+	def Privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif
 		addr = read_from_file(f3).strip()
 		self.run_cmd_out(name,addr,kwargs='compressed=1',fn_idx=3)
 	def Pubhex2redeem_script(self,name,f1,f2,f3): # from above

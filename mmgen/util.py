@@ -31,6 +31,10 @@ def msg_r(s):  sys.stderr.write(s.encode('utf8'))
 def Msg(s):    sys.stdout.write(s.encode('utf8') + '\n')
 def Msg_r(s):  sys.stdout.write(s.encode('utf8'))
 def msgred(s): msg(red(s))
+def ymsg(s):   msg(yellow(s))
+def ymsg_r(s): msg_r(yellow(s))
+def gmsg(s):   msg(green(s))
+def gmsg_r(s): msg_r(green(s))
 
 def mmsg(*args):
 	for d in args: Msg(repr(d))
@@ -464,7 +468,11 @@ def make_full_path(outdir,outfile):
 def get_seed_file(cmd_args,nargs,invoked_as=None):
 	from mmgen.filename import find_file_in_dir
 	from mmgen.seed import Wallet
-	wf = find_file_in_dir(Wallet,g.data_dir)
+	if g.bob or g.alice:
+		import regtest as rt
+		wf = rt.mmwords[('alice','bob')[g.bob]]
+	else:
+		wf = find_file_in_dir(Wallet,g.data_dir)
 
 	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
 
@@ -800,9 +808,12 @@ def get_bitcoind_auth_cookie():
 def bitcoin_connection():
 
 	def	check_coin_mismatch(c):
+		if c.getblockcount() == 0:
+			msg('Warning: no blockchain, so skipping block mismatch check')
+			return
 		fb = '00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148'
 		err = []
-		if int(c.getblockchaininfo()['blocks']) <= 478558 or c.getblockhash(478559) == fb:
+		if c.getblockchaininfo()['blocks'] <= 478558 or c.getblockhash(478559) == fb:
 			if g.coin == 'BCH': err = 'BCH','BTC'
 		elif g.coin == 'BTC': err = 'BTC','BCH'
 		if err: wdie(2,"'{}' requested, but this is the {} chain!".format(*err))

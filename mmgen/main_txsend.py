@@ -48,7 +48,7 @@ if not opt.status: do_license_msg()
 
 c = bitcoin_connection()
 tx = MMGenTX(infile) # sig check performed here
-qmsg("Signed transaction file '%s' is valid" % infile)
+vmsg("Signed transaction file '%s' is valid" % infile)
 
 if not tx.marked_signed(c):
 	die(1,'Transaction is not signed!')

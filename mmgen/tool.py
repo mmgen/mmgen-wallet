@@ -27,6 +27,7 @@ import mmgen.bitcoin as mmb
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.tx import *
+from mmgen.addr import *
 
 pnm = g.proj_name
 
@@ -78,7 +79,7 @@ cmd_data = OrderedDict([
 
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]''showbtcaddr [bool=True]']),
 	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
-	('Getbalance',   ['minconf [int=1]']),
+	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: 'ctime','atime')",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
 
@@ -308,6 +309,8 @@ def print_convert_results(indata,enc,dec,dtype):
 	if error:
 		die(3,"Error! Recoded data doesn't match input!")
 
+kg = KeyGenerator()
+
 def Hexdump(infile, cols=8, line_nums=True):
 	Msg(pretty_hexdump(
 			get_data_from_file(infile,dash=True,silent=True,binary=True),
@@ -330,41 +333,37 @@ def Randhex(nbytes='32'):
 	Msg(ba.hexlify(get_random(int(nbytes))))
 
 def Randwif(compressed=False):
-	r_hex = ba.hexlify(get_random(32))
-	enc = mmb.hex2wif(r_hex,compressed)
-	dec = wif2hex(enc)
-	print_convert_results(r_hex,enc,dec,'hex')
+	Msg(PrivKey(get_random(32),compressed).wif)
 
 def Randpair(compressed=False,segwit=False):
 	if segwit: compressed = True
-	r_hex = ba.hexlify(get_random(32))
-	wif = mmb.hex2wif(r_hex,compressed)
-	addr = mmb.privnum2addr(int(r_hex,16),compressed,segwit=segwit)
-	Vmsg('Key (hex):  %s' % r_hex)
-	Vmsg_r('Key (WIF):  '); Msg(wif)
+	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
+	privhex = PrivKey(get_random(32),compressed)
+	addr = ag.to_addr(kg.to_pubhex(privhex))
+	Vmsg('Key (hex):  %s' % privhex)
+	Vmsg_r('Key (WIF):  '); Msg(privhex.wif)
 	Vmsg_r('Addr:       '); Msg(addr)
 
 def Wif2addr(wif,segwit=False):
-	compressed = mmb.wif_is_compressed(wif)
-	if segwit and not compressed:
-		die(1,'Segwit address cannot be generated from uncompressed WIF')
-	privhex = wif2hex(wif)
-	addr = mmb.privnum2addr(int(privhex,16),compressed,segwit=segwit)
+	privhex = PrivKey(wif=wif)
+	if segwit and not privhex.compressed:
+		die(2,'Segwit addresses must use compressed public keys')
+	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
+	addr = ag.to_addr(kg.to_pubhex(privhex))
 	Vmsg_r('Addr: '); Msg(addr)
 
 def Wif2segwit_pair(wif):
-	if not mmb.wif_is_compressed(wif):
+	privhex = PrivKey(wif=wif)
+	if not privhex.compressed:
 		die(1,'Segwit address cannot be generated from uncompressed WIF')
-	privhex = wif2hex(wif)
-	pubhex = mmb.privnum2pubhex(int(privhex,16),compressed=True)
-	rs = mmb.pubhex2redeem_script(pubhex)
-	addr = mmb.hexaddr2addr(mmb.hash160(rs),p2sh=True)
-	addr_chk = mmb.privnum2addr(int(privhex,16),compressed=True,segwit=True)
-	assert addr == addr_chk
+	ag = AddrGenerator('segwit')
+	pubhex = kg.to_pubhex(privhex)
+	addr = ag.to_addr(pubhex)
+	rs = ag.to_segwit_redeem_script(pubhex)
 	Msg('{}\n{}'.format(rs,addr))
 
 def Hexaddr2addr(hexaddr):                     Msg(mmb.hexaddr2addr(hexaddr))
-def Addr2hexaddr(addr):                        Msg(mmb.verify_addr(addr,return_hex=True))
+def Addr2hexaddr(addr):                        Msg(mmb.verify_addr(addr,return_dict=True)['hex'])
 def Hash160(pubkeyhex):                        Msg(mmb.hash160(pubkeyhex))
 def Pubhex2addr(pubkeyhex,p2sh=False):         Msg(mmb.hexaddr2addr(mmb.hash160(pubkeyhex),p2sh=p2sh))
 def Wif2hex(wif):                              Msg(wif2hex(wif))
@@ -379,13 +378,14 @@ def Privhex2pubhex(privhex,compressed=False): # new
 def Pubhex2redeem_script(pubhex): # new
 	Msg(mmb.pubhex2redeem_script(pubhex))
 def Wif2redeem_script(wif): # new
-	if not mmb.wif_is_compressed(wif):
-		die(1,'Witness redeem script cannot be generated from uncompressed WIF')
-	pubhex = mmb.privnum2pubhex(int(wif2hex(wif),16),compressed=True)
-	Msg(mmb.pubhex2redeem_script(pubhex))
+	privhex = PrivKey(wif=wif)
+	if not privhex.compressed:
+		die(1,'Segwit redeem script cannot be generated from uncompressed WIF')
+	ag = AddrGenerator('segwit')
+	Msg(ag.to_segwit_redeem_script(kg.to_pubhex(privhex)))
 
 def wif2hex(wif): # wrapper
-	ret = mmb.wif2hex(wif)
+	ret = PrivKey(wif=wif)
 	return ret or die(1,'{}: Invalid WIF'.format(wif))
 
 wordlists = 'electrum','tirosh'
@@ -452,7 +452,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	"""
 		m_prev = None
 
-		for m in sorted([l.mmid for l in accts]):
+		for m in sorted(b.mmid for b in [a for a in accts if a]):
 			if m == m_prev:
 				msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(m))
 				bad_accts = MMGenList([l for l in accts if l.mmid == m])
@@ -463,6 +463,18 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 					msg(help_msg.format(mid=m,pnm=pnm))
 				die(3,red('Exiting on error'))
 			m_prev = m
+
+	def check_addr_array_lens(acct_pairs):
+		err = False
+		for label,addrs in acct_pairs:
+			if not label: continue
+			if len(addrs) != 1:
+				err = True
+				if len(addrs) == 0:
+					msg("Label '{}': has no associated address!".format(label))
+				else:
+					msg("'{}': more than one {} address in account!".format(addrs,g.coin))
+		if err: rdie(3,'Tracking wallet is corrupted!')
 
 	usr_addr_list = []
 	if addrs:
@@ -494,20 +506,22 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 
 	# We use listaccounts only for empty addresses, as it shows false positive balances
 	if showempty:
-		# args: minconf,watchonly
-		accts = MMGenList([b for b in [TwLabel(a,on_fail='silent') for a in c.listaccounts(0,True)] if b])
-		check_dup_mmid(accts)
-		acct_addrs = c.getaddressesbyaccount([[a] for a in accts],batch=True)
-		assert len(accts) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not of same length'
-		for a in acct_addrs:
-			if len(a) != 1:
-				die(2,"'{}': more than one {} address in account!".format(a,g.coin))
-		for label,addr in zip(accts,[b[0] for b in acct_addrs]):
+		# for compatibility with old mmids, must use raw RPC rather than native data for matching
+		# args: minconf,watchonly, MUST use keys() so we get list, not dict
+		acct_list = c.listaccounts(0,True).keys() # raw list, no 'L'
+		acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
+		check_dup_mmid(acct_labels)
+		acct_addrs = c.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
+		assert len(acct_list) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not equal in length'
+		addr_pairs = zip(acct_labels,acct_addrs)
+		check_addr_array_lens(addr_pairs)
+		for label,addr_arr in addr_pairs:
+			if not label: continue
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
 			if label.mmid not in addrs:
 				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':'' }
 				if showbtcaddrs:
-					addrs[label.mmid]['addr'] = BTCAddr(addr)
+					addrs[label.mmid]['addr'] = BTCAddr(addr_arr[0])
 
 	if not addrs:
 		die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
@@ -547,7 +561,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 	o = '\n'.join(out)
 	return do_pager(o) if pager else Msg(o)
 
-def Getbalance(minconf=1):
+def Getbalance(minconf=1,quiet=False):
 	accts = {}
 	for d in bitcoin_connection().listunspent(0):
 		ma = split2(d['account'] if 'account' in d else '')[0] # include coinbase outputs if spendable
@@ -562,12 +576,16 @@ def Getbalance(minconf=1):
 			for j in ([],[0])[confs==0] + [i]:
 				accts[key][j] += d['amount']
 
-	fs = '{:13} {} {} {}'
-	mc,lbl = str(minconf),'confirms'
-	Msg(fs.format('Wallet',
-		*[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)]))
-	for key in sorted(accts.keys()):
-		Msg(fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]]))
+	if quiet:
+		Msg('{}'.format(accts['TOTAL'][2]))
+	else:
+		fs = '{:13} {} {} {}'
+		mc,lbl = str(minconf),'confirms'
+		Msg(fs.format('Wallet',
+			*[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)]))
+		for key in sorted(accts.keys()):
+			Msg(fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]]))
+
 	if 'SPENDABLE' in accts:
 		Msg(red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!'))
 

@@ -80,7 +80,7 @@ opts_data = lambda: {
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 	kg=g.key_generator,
 	what=gen_what,g=g,
-	dmat="'{}' or '{}'".format(MAT.dfl_mmtype,MAT.mmtypes[MAT.dfl_mmtype])
+	dmat="'{}' or '{}'".format(MAT.dfl_mmtype,MAT.mmtypes[MAT.dfl_mmtype]['name'])
 ),
 	'notes': """
 
@@ -95,6 +95,7 @@ range(s).
 ADDRESS TYPES:
   {n_at}
 
+
                       NOTES FOR ALL GENERATOR COMMANDS
 
 {pwn}
@@ -106,7 +107,7 @@ FMT CODES:
 """.format(
 		n_secp=note_secp256k1,n_addrkey=note_addrkey,pwn=pw_note,bwn=bw_note,
 		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-		n_at='\n  '.join(["'{}', '{}'".format(k,v) for k,v in MAT.mmtypes.items()]),
+		n_at='\n  '.join(["'{}','{:<12} - {}".format(k,v['name']+"'",v['desc']) for k,v in MAT.mmtypes.items()]),
 		o=opts
 	)
 }
