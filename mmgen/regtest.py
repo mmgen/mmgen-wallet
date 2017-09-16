@@ -39,8 +39,8 @@ mmwords = {
 	'alice': os.path.join(data_dir,'9304C211[128].mmwords')
 }
 mmaddrs = {
-	'bob':   os.path.join('/tmp','1163DDF1{}[1-10].addrs'),
-	'alice': os.path.join('/tmp','9304C211{}[1-10].addrs')
+	'bob':   os.path.join(data_dir,'1163DDF1{}[1-10].addrs'),
+	'alice': os.path.join(data_dir,'9304C211{}[1-10].addrs')
 }
 mnemonic = {
 	'bob':   'ignore bubble ignore crash stay long stay patient await glorious destination moon',
@@ -51,25 +51,26 @@ send_addr = {
 	'alice': '2N3HhxasbRvrJyHg72JNVCCPi9EUGrEbFnu',
 }
 
-def run_cmd(*args,**kwargs):
+def start_cmd(*args,**kwargs):
 	common_args = ('-rpcuser={}'.format(rpc_user),'-rpcpassword={}'.format(rpc_password),
 					'-regtest','-datadir={}'.format(data_dir))
 	cmds = {'cli': ('bitcoin-cli','-rpcconnect=localhost','-rpcport={}'.format(rpc_port)),
-			'daemon': ('bitcoind','-rpcbind=localhost:{}'.format(rpc_port),'-rpcallowip=::1')}
+			'daemon': ('bitcoind','-keypool=1','-rpcbind=localhost:{}'.format(rpc_port),'-rpcallowip=::1')}
 	wallet_arg = ()
 	if args[0] == 'daemon':
 		assert 'user' in kwargs
 		wallet_arg = ('-wallet={}'.format(os.path.basename(tr_wallet[kwargs['user']])),)
 	cmd = cmds[args[0]] + common_args + wallet_arg + args[1:] if args[0] in cmds else args
-	if not 'quiet' in kwargs:
-		vmsg(' '.join(cmd))
-	return subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	p = subprocess.Popen(cmd,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	if not 'quiet' in kwargs or g.debug:
+		vmsg('{}'.format(' '.join(cmd)))
+	return p
 
 def test_daemon():
-	p = run_cmd('cli','getblockcount',quiet=True)
-	o = p.stderr.read()
+	p = start_cmd('cli','getblockcount',quiet=True)
+	err = process_output(p,silent=True)[1]
 	ret,state = p.wait(),None
-	if "error: couldn't connect" in o: state = 'stopped'
+	if "error: couldn't connect" in err: state = 'stopped'
 	if not state: state = ('busy','ready')[ret==0]
 	return state
 
@@ -91,16 +92,17 @@ def get_balances():
 	tbal = 0
 	from mmgen.obj import BTCAmt
 	for user in (user1,user2):
-		p = run_cmd('./mmgen-tool','--{}'.format(user),'getbalance','quiet=1')
+		p = start_cmd('./mmgen-tool','--{}'.format(user),'getbalance','quiet=1')
 		bal = BTCAmt(p.stdout.read())
 		ustr = "{}'s balance:".format(user.capitalize())
-		msg('{:<16} {}'.format(ustr,bal))
+		msg('{:<16} {:12}'.format(ustr,bal))
 		tbal += bal
-	msg('{:<16} {}'.format('Total balance:',tbal))
+	msg('{:<16} {:12}'.format('Total balance:',tbal))
+	msg('{:<16} {:12}'.format('Miner fees:',1000-tbal))
 
 def create_data_dir():
 #def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
-	try: os.stat(os.path.join(regtest_dir,'debug.log'))
+	try: os.stat(regtest_dir)
 	except: pass
 	else:
 		if keypress_confirm('Delete your existing MMGen regtest setup and create a new one?'):
@@ -111,59 +113,75 @@ def create_data_dir():
 	try: os.mkdir(data_dir)
 	except: pass
 
-def print_output(p):
-	qmsg('stdout: [{}]'.format(p.stdout.read().strip()))
-	qmsg('stderr: [{}]'.format(p.stderr.read().strip()))
+def process_output(p,silent=False):
+	out = p.stdout.read()
+	err = p.stderr.read()
+	if g.debug or not silent:
+		vmsg('stdout: [{}]'.format(out.strip()))
+		vmsg('stderr: [{}]'.format(err.strip()))
+	return out,err
 
-def	create_mmgen_wallet(user):
+def create_mmgen_wallet(user):
 	gmsg("Creating {}'s MMGen wallet".format(user.capitalize()))
-	p = run_cmd('mmgen-walletconv','-d',data_dir,'-i','words','-o','words')
+	p = start_cmd('mmgen-walletconv','-d',data_dir,'-i','words','-o','words')
 	p.stdin.write(mnemonic[user]+'\n')
 	p.stdin.close()
-	if opt.verbose: print_output(p)
+	err = process_output(p)[1]
+	if not 'written to file' in err:
+		rdie(1,'Error creating MMGen wallet')
 	p.wait()
 
-def	create_mmgen_addrs(user,addr_type):
+def create_mmgen_addrs(user,addr_type):
 	gmsg('Creating MMGen addresses for user {} (type: {})'.format(user.capitalize(),addr_type))
-	p = run_cmd('mmgen-addrgen','--{}'.format(user),'-d','/tmp','--type',addr_type,mmwords[user],'1-10')
+	suf = ('-'+addr_type,'')[addr_type=='L']
+	try: os.unlink(mmaddrs[user].format(suf))
+	except: pass
+	p = start_cmd('mmgen-addrgen','--{}'.format(user),'-d',data_dir,'--type',addr_type,mmwords[user],'1-10')
 	p.stdin.write(mnemonic[user]+'\n')
 	p.stdin.close()
-	if opt.verbose: print_output(p)
+	err = process_output(p)[1]
+	if not 'written to file' in err:
+		rdie(1,'Error creating MMGen addresses')
 	p.wait()
 
-def	import_mmgen_addrs(user,addr_mmtype):
-	gmsg_r('Importing MMGen addresses for user {} (type: {})'.format(user.capitalize(),addr_mmtype))
-	suf = '' if addr_mmtype=='L' else '-'+addr_mmtype
-	p = run_cmd('mmgen-addrimport','--{}'.format(user),'-q',mmaddrs[user].format(suf))
+def import_mmgen_addrs(user,addr_type):
+	gmsg_r('Importing MMGen addresses for user {} (type: {})'.format(user.capitalize(),addr_type))
+	suf = ('-'+addr_type,'')[addr_type=='L']
+	p = start_cmd('mmgen-addrimport','--{}'.format(user),'-q','--batch',mmaddrs[user].format(suf))
 	p.stdin.write(mnemonic[user]+'\n')
 	p.stdin.close()
-	if opt.verbose: print_output(p)
+	err = process_output(p)[1]
+	if not 'addresses imported' in err:
+		rdie(1,'Error importing MMGen addresses')
 	p.wait()
 
 def start_and_wait(user,silent=False,nonl=False):
 	if opt.verbose: msg('Starting bitcoin regtest daemon')
-	run_cmd('daemon','-daemon',user=user)
+	p = start_cmd('daemon','-daemon',user=user)
+	err = process_output(p)[1]
+	if err:
+		rdie(1,'Error starting the Bitcoin daemon:\n{}'.format(err))
 	wait_for_daemon('ready',silent=silent,nonl=nonl)
 
-def stop_and_wait(silent=False,nonl=False,stop_silent=False):
-	stop(silent=stop_silent)
+def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_error=False):
+	stop(silent=stop_silent,ignore_noconnect_error=ignore_noconnect_error)
 	wait_for_daemon('stopped',silent=silent,nonl=nonl)
 
-def	setup_wallet(user,addr_type,addr_code):
+def setup_wallet(user,addr_type):
 	gmsg_r("Setting up {}'s tracking wallet".format(user.capitalize()))
 	start_and_wait(user)
 	create_mmgen_wallet(user)
 	create_mmgen_addrs(user,addr_type)
-	import_mmgen_addrs(user,addr_code)
+	import_mmgen_addrs(user,addr_type)
 	stop_and_wait(stop_silent=True)
 
-def	setup_mixed_wallet(user):
+def setup_mixed_wallet(user):
 	gmsg_r("Setting up {}'s wallet (mixed address types)".format(user.capitalize()))
 	start_and_wait(user)
 	create_mmgen_wallet(user)
-	create_mmgen_addrs(user,'legacy')
-	create_mmgen_addrs(user,'compressed')
-	create_mmgen_addrs(user,'segwit')
+	create_mmgen_addrs(user,'L')
+	create_mmgen_addrs(user,'C')
+	create_mmgen_addrs(user,'S')
 	import_mmgen_addrs(user,'L'); msg('')
 	import_mmgen_addrs(user,'C'); msg('')
 	import_mmgen_addrs(user,'S'); msg('')
@@ -171,18 +189,19 @@ def	setup_mixed_wallet(user):
 
 def fund_wallet(user,amt):
 	gmsg('Sending {} BTC to {}'.format(amt,user.capitalize()))
-	p = run_cmd('cli','sendtoaddress',send_addr[user],str(amt))
-	if opt.verbose: print_output(p)
+	p = start_cmd('cli','sendtoaddress',send_addr[user],str(amt))
+	process_output(p)
 	p.wait()
 
 def setup():
-	if test_daemon(): stop_and_wait(silent=True,stop_silent=True)
+	if test_daemon() != 'stopped':
+		stop_and_wait(silent=True,stop_silent=True)
 	create_data_dir()
 	gmsg_r('Starting setup')
 
 	start_and_wait('orig')
 
-	generate(432)
+	generate(432,silent=True)
 
 	stop_and_wait(silent=True,stop_silent=True)
 
@@ -190,21 +209,22 @@ def setup():
 		setup_mixed_wallet('bob')
 		setup_mixed_wallet('alice')
 	else:
-		setup_wallet('bob','compressed','C')
-		setup_wallet('alice','segwit','S')
+		setup_wallet('bob','C')
+		setup_wallet('alice','S')
 
-	start_and_wait('orig',silent=True)
+	if opt.empty:
+		msg("'--empty' selected: skipping funding of wallets")
+	else:
+		start_and_wait('orig',silent=True)
+		fund_wallet('bob',init_amt)
+		fund_wallet('alice',init_amt)
+		generate(1)
+		stop_and_wait(silent=True,stop_silent=True)
 
-	fund_wallet('bob',init_amt)
-	fund_wallet('alice',init_amt)
-
-	generate(1)
-
-	stop_and_wait(silent=True,stop_silent=True)
 	gmsg('Setup complete')
 
 def get_current_user(quiet=False):
-	p = run_cmd('pgrep','-af', 'bitcoind.*-rpcuser={}.*'.format(rpc_user))
+	p = start_cmd('pgrep','-af', 'bitcoind.*-rpcuser={}.*'.format(rpc_user))
 	cmdline = p.stdout.read()
 	if not cmdline: return None
 	user = None
@@ -234,18 +254,24 @@ def user(user=None,quiet=False):
 		start_and_wait(user,silent=False,nonl=True)
 	gmsg('done')
 
-def stop(silent=False):
+def stop(silent=False,ignore_noconnect_error=True):
 	if test_daemon() != 'stopped' and not silent:
 		gmsg('Stopping bitcoin regtest daemon')
-	p = run_cmd('cli','stop')
-	ret = p.wait()
-	return ret
+	p = start_cmd('cli','stop')
+	err = process_output(p)[1]
+	if err:
+		if "couldn't connect to server" in err and not ignore_noconnect_error:
+			rdie(1,'Error stopping the Bitcoin daemon:\n{}'.format(err))
+		msg(err)
+	return p.wait()
 
-def generate(blocks=1):
+def generate(blocks=1,silent=False):
 	if test_daemon() == 'stopped':
 		die(1,'Regtest daemon is not running')
 	wait_for_daemon('ready',silent=True)
-	p = run_cmd('cli','generate',str(blocks))
-	if opt.verbose: print_output(p)
+	p = start_cmd('cli','generate',str(blocks))
+	out = process_output(p,silent=silent)[0]
+	if len(eval(out)) != blocks:
+		rdie(1,'Error generating blocks')
 	p.wait()
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))

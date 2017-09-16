@@ -22,7 +22,89 @@ mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
 """
 
 from mmgen.common import *
-import mmgen.tool as tool
+
+stdin_msg = """
+To force a command to read from STDIN in place of its first argument (for
+supported commands), use '-' as the first argument.
+""".strip()
+
+cmd_help = """
+Bitcoin address/key operations (compressed public keys supported):
+  addr2hexaddr   - convert Bitcoin address from base58 to hex format
+  hex2wif        - convert a private key from hex to WIF format
+  hexaddr2addr   - convert Bitcoin address from hex to base58 format
+  privhex2addr   - generate Bitcoin address from private key in hex format
+  privhex2pubhex - generate a hex public key from a hex private key
+  pubhex2addr    - convert a hex pubkey to an address
+  pubhex2redeem_script - convert a hex pubkey to a witness redeem script
+  wif2redeem_script - convert a WIF private key to a witness redeem script
+  wif2segwit_pair - generate both a Segwit redeem script and address from WIF
+  pubkey2addr    - convert Bitcoin public key to address
+  randpair       - generate a random private key/address pair
+  randwif        - generate a random private key in WIF format
+  wif2addr       - generate a Bitcoin address from a key in WIF format
+  wif2hex        - convert a private key from WIF to hex format
+
+Wallet/TX operations (bitcoind must be running):
+  getbalance    - like 'bitcoin-cli getbalance' but shows confirmed/unconfirmed,
+                  spendable/unspendable balances for individual {pnm} wallets
+  listaddress   - list the specified {pnm} address and its balance
+  listaddresses - list {pnm} addresses and their balances
+  txview        - show raw/signed {pnm} transaction in human-readable form
+  twview        - view tracking wallet
+
+General utilities:
+  hexdump      - encode data into formatted hexadecimal form (file or stdin)
+  unhexdump    - decode formatted hexadecimal data (file or stdin)
+  bytespec     - convert a byte specifier such as '1GB' into an integer
+  hexlify      - display string in hexadecimal format
+  hexreverse   - reverse bytes of a hexadecimal string
+  rand2file    - write 'n' bytes of random data to specified file
+  randhex      - print 'n' bytes (default 32) of random data in hex format
+  hash256      - compute sha256(sha256(data)) (double sha256)
+  hash160      - compute ripemd160(sha256(data)) (converts hexpubkey to hexaddr)
+  b58randenc   - generate a random 32-byte number and convert it to base 58
+  b58tostr     - convert a base 58 number to a string
+  strtob58     - convert a string to base 58
+  b58tohex     - convert a base 58 number to hexadecimal
+  hextob58     - convert a hexadecimal number to base 58
+  b32tohex     - convert a base 32 number to hexadecimal
+  hextob32     - convert a hexadecimal number to base 32
+
+File encryption:
+  encrypt      - encrypt a file
+  decrypt      - decrypt a file
+    {pnm} encryption suite:
+      * Key: Scrypt (user-configurable hash parameters, 32-byte salt)
+      * Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
+      * The encrypted file is indistinguishable from random data
+
+{pnm}-specific operations:
+  add_label    - add descriptive label for {pnm} address in tracking wallet
+  remove_label - remove descriptive label for {pnm} address in tracking wallet
+  addrfile_chksum    - compute checksum for {pnm} address file
+  keyaddrfile_chksum - compute checksum for {pnm} key-address file
+  passwdfile_chksum  - compute checksum for {pnm} password file
+  find_incog_data    - Use an Incog ID to find hidden incognito wallet data
+  id6          - generate 6-character {pnm} ID for a file (or stdin)
+  id8          - generate 8-character {pnm} ID for a file (or stdin)
+  str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
+
+Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
+  wordlists):
+  mn_rand128   - generate random 128-bit mnemonic
+  mn_rand192   - generate random 192-bit mnemonic
+  mn_rand256   - generate random 256-bit mnemonic
+  mn_stats     - show stats for mnemonic wordlist
+  mn_printlist - print mnemonic wordlist
+  hex2mn       - convert a 16, 24 or 32-byte number in hex format to a mnemonic
+  mn2hex       - convert a 12, 18 or 24-word mnemonic to a number in hex format
+
+  IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
+  computed using a different algorithm and are NOT Electrum-compatible!
+
+  {sm}
+""".format(pnm=g.proj_name,sm='\n  '.join(stdin_msg.split('\n')))
 
 opts_data = lambda: {
 	'desc':    'Perform various {pnm}- and Bitcoin-related operations'.format(pnm=g.proj_name),
@@ -42,7 +124,7 @@ opts_data = lambda: {
                                COMMANDS
 {}
 Type '{} help <command> for help on a particular command
-""".format(tool.cmd_help,g.prog_name)
+""".format(cmd_help,g.prog_name)
 }
 
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt'])
@@ -50,6 +132,8 @@ cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt'])
 if len(cmd_args) < 1: opts.usage()
 
 Command = cmd_args.pop(0).capitalize()
+
+import mmgen.tool as tool
 
 if Command == 'Help' and not cmd_args: tool.usage(None)
 

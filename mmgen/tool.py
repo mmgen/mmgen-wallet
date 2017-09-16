@@ -78,7 +78,7 @@ cmd_data = OrderedDict([
 	('Mn_printlist', ["wordlist [str='electrum']"]),
 
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]''showbtcaddr [bool=True]']),
-	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]']),
+	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]','all_labels [bool=False]']),
 	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: 'ctime','atime')",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
@@ -96,91 +96,6 @@ cmd_data = OrderedDict([
 	('Regtest_setup',[]),
 ])
 
-stdin_msg = """
-To force a command to read from STDIN in place of its first argument (for
-supported commands), use '-' as the first argument.
-""".strip()
-
-cmd_help = """
-Bitcoin address/key operations (compressed public keys supported):
-  addr2hexaddr   - convert Bitcoin address from base58 to hex format
-  hex2wif        - convert a private key from hex to WIF format
-  hexaddr2addr   - convert Bitcoin address from hex to base58 format
-  privhex2addr   - generate Bitcoin address from private key in hex format
-  privhex2pubhex - generate a hex public key from a hex private key
-  pubhex2addr    - convert a hex pubkey to an address
-  pubhex2redeem_script - convert a hex pubkey to a witness redeem script
-  wif2redeem_script - convert a WIF private key to a witness redeem script
-  wif2segwit_pair - generate both a Segwit redeem script and address from WIF
-  pubkey2addr    - convert Bitcoin public key to address
-  randpair       - generate a random private key/address pair
-  randwif        - generate a random private key in WIF format
-  wif2addr       - generate a Bitcoin address from a key in WIF format
-  wif2hex        - convert a private key from WIF to hex format
-
-Wallet/TX operations (bitcoind must be running):
-  getbalance    - like 'bitcoin-cli getbalance' but shows confirmed/unconfirmed,
-                  spendable/unspendable balances for individual {pnm} wallets
-  listaddress   - list the specified {pnm} address and its balance
-  listaddresses - list {pnm} addresses and their balances
-  txview        - show raw/signed {pnm} transaction in human-readable form
-  twview        - view tracking wallet
-
-General utilities:
-  hexdump      - encode data into formatted hexadecimal form (file or stdin)
-  unhexdump    - decode formatted hexadecimal data (file or stdin)
-  bytespec     - convert a byte specifier such as '1GB' into an integer
-  hexlify      - display string in hexadecimal format
-  hexreverse   - reverse bytes of a hexadecimal string
-  rand2file    - write 'n' bytes of random data to specified file
-  randhex      - print 'n' bytes (default 32) of random data in hex format
-  hash256      - compute sha256(sha256(data)) (double sha256)
-  hash160      - compute ripemd160(sha256(data)) (converts hexpubkey to hexaddr)
-  b58randenc   - generate a random 32-byte number and convert it to base 58
-  b58tostr     - convert a base 58 number to a string
-  strtob58     - convert a string to base 58
-  b58tohex     - convert a base 58 number to hexadecimal
-  hextob58     - convert a hexadecimal number to base 58
-  b32tohex     - convert a base 32 number to hexadecimal
-  hextob32     - convert a hexadecimal number to base 32
-
-File encryption:
-  encrypt      - encrypt a file
-  decrypt      - decrypt a file
-    {pnm} encryption suite:
-      * Key: Scrypt (user-configurable hash parameters, 32-byte salt)
-      * Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
-      * The encrypted file is indistinguishable from random data
-
-{pnm}-specific operations:
-  add_label    - add descriptive label for {pnm} address in tracking wallet
-  remove_label - remove descriptive label for {pnm} address in tracking wallet
-  addrfile_chksum    - compute checksum for {pnm} address file
-  keyaddrfile_chksum - compute checksum for {pnm} key-address file
-  passwdfile_chksum  - compute checksum for {pnm} password file
-  find_incog_data    - Use an Incog ID to find hidden incognito wallet data
-  id6          - generate 6-character {pnm} ID for a file (or stdin)
-  id8          - generate 8-character {pnm} ID for a file (or stdin)
-  str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
-
-Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
-  wordlists):
-  mn_rand128   - generate random 128-bit mnemonic
-  mn_rand192   - generate random 192-bit mnemonic
-  mn_rand256   - generate random 256-bit mnemonic
-  mn_stats     - show stats for mnemonic wordlist
-  mn_printlist - print mnemonic wordlist
-  hex2mn       - convert a 16, 24 or 32-byte number in hex format to a mnemonic
-  mn2hex       - convert a 12, 18 or 24-word mnemonic to a number in hex format
-
-  IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
-  computed using a different algorithm and are NOT Electrum-compatible!
-
-Miscellaneous
-  regtest_setup - setup a regtest environment for testing MMGen scripts
-  {sm}
-""".format(pnm=pnm,sm='\n  '.join(stdin_msg.split('\n')))
-
 def usage(command):
 
 	for v in cmd_data.values():
@@ -192,12 +107,14 @@ def usage(command):
 		Msg('Usage information for mmgen-tool commands:')
 		for k,v in cmd_data.items():
 			Msg('  {:18} {}'.format(k.lower(),' '.join(v)))
+		from mmgen.main_tool import stdin_msg
 		Msg('\n  '+'\n  '.join(stdin_msg.split('\n')))
 		sys.exit(0)
 
 	Command = command.capitalize()
 	if Command in cmd_data:
 		import re
+		from mmgen.main_tool import cmd_help
 		for line in cmd_help.split('\n'):
 			if re.match(r'\s+{}\s+'.format(command),line):
 				c,h = line.split('-',1)
@@ -437,32 +354,18 @@ def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True):
 	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,showempty=showempty,showbtcaddrs=showbtcaddr)
 
 # List MMGen addresses and their balances.  TODO: move this code to AddrList
-def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False):
+def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False,all_labels=False):
 
-	c = bitcoin_connection()
+	c = rpc_connection()
 
-	def check_dup_mmid(accts):
-		help_msg = """
-    Your tracking wallet is corrupted or has been altered by a non-{pnm} program.
-
-    You might be able to salvage your wallet by determining which of the offending
-    addresses doesn't belong to {pnm} ID {mid} and then typing:
-
-        bitcoin-cli importaddress <offending address> "" false
-	"""
-		m_prev = None
-
-		for m in sorted(b.mmid for b in [a for a in accts if a]):
-			if m == m_prev:
-				msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(m))
-				bad_accts = MMGenList([l for l in accts if l.mmid == m])
-				msg('  Affected Bitcoin RPC accounts:\n    {}\n'.format('\n    '.join(bad_accts)))
-				bad_addrs = [a[0] for a in c.getaddressesbyaccount([[a] for a in bad_accts],batch=True)]
-				if len(set(bad_addrs)) != 1:
-					msg('  Offending addresses:\n    {}'.format('\n    '.join(bad_addrs)))
-					msg(help_msg.format(mid=m,pnm=pnm))
-				die(3,red('Exiting on error'))
-			m_prev = m
+	def check_dup_mmid(acct_labels):
+		mmid_prev,err = None,False
+		for mmid in sorted(a.mmid for a in acct_labels if a):
+			if mmid == mmid_prev:
+				err = True
+				msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(mmid))
+			mmid_prev = mmid
+		if err: rdie(3,'Tracking wallet is corrupted!')
 
 	def check_addr_array_lens(acct_pairs):
 		err = False
@@ -505,7 +408,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			total += d['amount']
 
 	# We use listaccounts only for empty addresses, as it shows false positive balances
-	if showempty:
+	if showempty or all_labels:
 		# for compatibility with old mmids, must use raw RPC rather than native data for matching
 		# args: minconf,watchonly, MUST use keys() so we get list, not dict
 		acct_list = c.listaccounts(0,True).keys() # raw list, no 'L'
@@ -517,6 +420,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 		check_addr_array_lens(addr_pairs)
 		for label,addr_arr in addr_pairs:
 			if not label: continue
+			if all_labels and not showempty and not label.comment: continue
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
 			if label.mmid not in addrs:
 				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':'' }
@@ -550,7 +454,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 			if al_id_save:
 				out.append('')
 				al_id_save = None
-			mmid_disp = mmid.type
+			mmid_disp = 'Non-MMGen'
 		out.append(fs.format(
 			mid = MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
 			addr=(addrs[mmid]['addr'].fmt(color=True) if showbtcaddrs else None),
@@ -563,7 +467,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Fa
 
 def Getbalance(minconf=1,quiet=False):
 	accts = {}
-	for d in bitcoin_connection().listunspent(0):
+	for d in rpc_connection().listunspent(0):
 		ma = split2(d['account'] if 'account' in d else '')[0] # include coinbase outputs if spendable
 		keys = ['TOTAL']
 		if d['spendable']: keys += ['SPENDABLE']
@@ -577,7 +481,7 @@ def Getbalance(minconf=1,quiet=False):
 				accts[key][j] += d['amount']
 
 	if quiet:
-		Msg('{}'.format(accts['TOTAL'][2]))
+		Msg('{}'.format(accts['TOTAL'][2] if accts else BTCAmt('0')))
 	else:
 		fs = '{:13} {} {} {}'
 		mc,lbl = str(minconf),'confirms'
@@ -597,7 +501,7 @@ def Txview(*infiles,**kwargs):
 	flist = MMGenFileList(infiles,ftype=MMGenTX)
 	flist.sort_by_age(key=sort_key) # in-place sort
 	from mmgen.term import get_terminal_size
-	sep = u'—'*get_terminal_size()[0]+'\n'
+	sep = u'—'*77+'\n'
 	out = sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()])
 	(Msg,do_pager)[pager](out.rstrip())
 

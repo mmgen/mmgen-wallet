@@ -62,7 +62,7 @@ def Die(ev=0,s=''):
 	sys.exit(ev)
 
 def rdie(ev=0,s=''): die(ev,red(s))
-def wdie(ev=0,s=''): die(ev,yellow(s))
+def ydie(ev=0,s=''): die(ev,yellow(s))
 def hi(): sys.stdout.write(yellow('hi'))
 
 def pformat(d):
@@ -805,9 +805,9 @@ def get_bitcoind_auth_cookie():
 	else:
 		return ''
 
-def bitcoin_connection():
+def rpc_connection():
 
-	def	check_coin_mismatch(c):
+	def check_coin_mismatch(c):
 		if c.getblockcount() == 0:
 			msg('Warning: no blockchain, so skipping block mismatch check')
 			return
@@ -816,9 +816,9 @@ def bitcoin_connection():
 		if c.getblockchaininfo()['blocks'] <= 478558 or c.getblockhash(478559) == fb:
 			if g.coin == 'BCH': err = 'BCH','BTC'
 		elif g.coin == 'BTC': err = 'BTC','BCH'
-		if err: wdie(2,"'{}' requested, but this is the {} chain!".format(*err))
+		if err: ydie(2,"'{}' requested, but this is the {} chain!".format(*err))
 
-	def	check_chain_mismatch():
+	def check_chain_mismatch():
 		err = None
 		if g.regtest and g.chain != 'regtest':
 			err = '--regtest option'

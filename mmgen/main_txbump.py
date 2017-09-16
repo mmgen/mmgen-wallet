@@ -75,7 +75,7 @@ opts_data = lambda: {
 
 cmd_args = opts.init(opts_data)
 
-c = bitcoin_connection()
+c = rpc_connection()
 
 tx_file = cmd_args.pop(0)
 check_infile(tx_file)

@@ -790,7 +790,7 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 #	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
 	return out
 
-def	write_fake_data_to_file(d):
+def write_fake_data_to_file(d):
 	unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
 	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True)
 	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file

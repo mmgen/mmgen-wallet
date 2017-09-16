@@ -61,7 +61,7 @@ class AddrGeneratorSegwit(MMGenObject):
 class KeyGenerator(MMGenObject):
 	def __new__(cls,generator=None,silent=False):
 		if cls.test_for_secp256k1(silent=silent) and generator != 1:
-			if (not hasattr(opt,'key_generator')) or opt.key_generator == 2 or generator == 2:
+			if not opt.key_generator or opt.key_generator == 2 or generator == 2:
 				return super(cls,cls).__new__(KeyGeneratorSecp256k1)
 		else:
 			msg('Using (slow) native Python ECDSA library for address generation')
@@ -92,7 +92,7 @@ class KeyGeneratorSecp256k1(KeyGenerator):
 
 class AddrListEntry(MMGenListItem):
 	addr  = MMGenListItemAttr('addr','BTCAddr')
-	idx   = MMGenImmutableAttr('idx','AddrIdx')
+	idx   = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
 	label = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	sec   = MMGenListItemAttr('sec',PrivKey,typeconv=False)
 
@@ -223,7 +223,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 	def update_msgs(self):
 		self.msgs = AddrList.msgs
- 		self.msgs.update(type(self).msgs)
+		self.msgs.update(type(self).msgs)
 
 	def generate(self,seed,addrnums):
 		assert type(addrnums) is AddrIdxList
@@ -684,7 +684,7 @@ re-import your addresses.
 
 	def add_tw_data(self):
 		vmsg('Getting address data from tracking wallet')
-		c = bitcoin_connection()
+		c = rpc_connection()
 		accts = c.listaccounts(0,True)
 		data,i = {},0
 		alists = c.getaddressesbyaccount([[k] for k in accts],batch=True)

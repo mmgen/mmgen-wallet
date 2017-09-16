@@ -10,10 +10,7 @@ try:
 	sys.argv.pop(0)
 	execfile(sys.argv[0])
 except SystemExit:
-	try:
-		sys.exit(int(str(sys.exc_info()[1])))
-	except:
-		sys.exit(1)
+	sys.exit(int(str(sys.exc_info()[1])))
 except:
 	l = traceback.format_exception(*sys.exc_info())
 	exc = l.pop()

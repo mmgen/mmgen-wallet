@@ -388,8 +388,8 @@ class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 		return self[0] in btc_addr_pfxs['mainnet']
 
 	def is_in_tracking_wallet(self):
-		from mmgen.rpc import bitcoin_connection
-		d = bitcoin_connection().validateaddress(self)
+		from mmgen.rpc import rpc_connection
+		d = rpc_connection().validateaddress(self)
 		return d['iswatchonly'] and 'account' in d
 
 class SeedID(str,Hilite,InitErrors):

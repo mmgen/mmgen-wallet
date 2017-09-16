@@ -29,6 +29,7 @@ opts_data = lambda: {
 	'options': """
 -h, --help          Print this help message
 -m, --mixed         Create Bob and Alice's wallets with mixed address types
+-e, --empty         Don't fund Bob and Alice's wallets on setup
 --, --longhelp      Print help message for long options (common options)
 -q, --quiet         Produce quieter output
 -v, --verbose       Produce more verbose output

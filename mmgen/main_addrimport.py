@@ -63,20 +63,17 @@ def import_mmgen_list(infile):
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 	return al
 
-def import_flat_list(lines):
-	return AddrList(addrlist=lines)
-
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
 	if opt.addrlist:
 		lines = get_lines_from_file(
 			infile,'non-{pnm} addresses'.format(pnm=g.proj_name),trim_comments=True)
-		al = import_flat_list(lines)
+		al = AddrList(addrlist=lines)
 	else:
 		al = import_mmgen_list(infile)
 elif len(cmd_args) == 0 and opt.address:
-	al = import_flat_list([opt.address])
+	al = AddrList(addrlist=[opt.address])
 	infile = 'command line'
 else:
 	die(1,"""
@@ -88,7 +85,7 @@ m = ' from Seed ID {}'.format(al.al_id.sid) if hasattr(al.al_id,'sid') else ''
 qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
 if not opt.test:
-	c = bitcoin_connection()
+	c = rpc_connection()
 
 m = """
 WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
@@ -115,7 +112,7 @@ def import_address(addr,label,rescan):
 		err_flag = True
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
-w_mmid   = '' if opt.addrlist else len(str(max(al.idxs()))) + 12
+w_mmid   = '' if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 12
 
 if opt.rescan:
 	import threading

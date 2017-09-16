@@ -84,7 +84,7 @@ if opt.aug1hf: # TODO: remove in 0.9.4
 	g.coin = 'BCH'
 
 seed_files = get_seed_files(opt,cmd_args)
-c = bitcoin_connection()
+c = rpc_connection()
 do_license_msg()
 
 kal = get_keyaddrlist(opt)

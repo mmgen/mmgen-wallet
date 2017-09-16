@@ -39,7 +39,7 @@ class g(object):
 	# Variables - these might be altered at runtime:
 
 	version      = '0.9.299'
-	release_date = 'July 2017'
+	release_date = 'August 2017'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -77,9 +77,9 @@ class g(object):
 	force_256_color      = False
 	testnet              = False
 	regtest              = False
-	chain                = None # set by first call to bitcoin_connection()
+	chain                = None # set by first call to rpc_connection()
 	chains               = 'mainnet','testnet','regtest'
-	bitcoind_version     = None # set by first call to bitcoin_connection()
+	bitcoind_version     = None # set by first call to rpc_connection()
 	rpc_host             = ''
 	rpc_port             = 0
 	rpc_user             = ''
@@ -118,7 +118,7 @@ class g(object):
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars','coin','bob','alice'
+		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator'
 	)
 	incompatible_opts = (
 		('bob','alice'),

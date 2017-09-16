@@ -154,6 +154,7 @@ class BitcoinRPCConnection(object):
 		'getblockchaininfo',
 		'getblockcount',
 		'getblockhash',
+		'getmempoolinfo',
 		'getmempoolentry',
 		'getnettotals',
 		'getnetworkinfo',

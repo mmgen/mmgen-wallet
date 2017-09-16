@@ -80,7 +80,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data))
 		else:
-			us_rpc = bitcoin_connection().listunspent(self.minconf)
+			us_rpc = rpc_connection().listunspent(self.minconf)
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
 #		sys.exit(0)
 
@@ -336,7 +336,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			msg("Address '{}' not in tracking wallet".format(btcaddr))
 			return False
 
-		c = bitcoin_connection()
+		c = rpc_connection()
 		if not btcaddr.is_for_current_chain():
 			msg("Address '{}' not valid for chain {}".format(btcaddr,g.chain.upper()))
 			return False

@@ -27,7 +27,7 @@ from mmgen.common import *
 from mmgen.obj import *
 
 def segwit_is_active(exit_on_error=False):
-	d = bitcoin_connection().getblockchaininfo()
+	d = rpc_connection().getblockchaininfo()
 	if d['chain'] == 'regtest':
 		return True
 	if 'segwit' in d['bip9_softforks'] and d['bip9_softforks']['segwit']['status'] == 'active':
@@ -307,7 +307,7 @@ class MMGenTX(MMGenObject):
 
 	def get_relay_fee(self):
 		assert self.estimate_size()
-		kb_fee = BTCAmt(bitcoin_connection().getnetworkinfo()['relayfee'])
+		kb_fee = BTCAmt(rpc_connection().getnetworkinfo()['relayfee'])
 		vmsg('Relay fee: {} {}/kB'.format(kb_fee,g.coin))
 		return kb_fee * self.estimate_size() / 1024
 
@@ -640,7 +640,7 @@ class MMGenTX(MMGenObject):
 
 # 	def is_rbf_fromhex(self,color=False):
 # 		try:
-# 			dec_tx = bitcoin_connection().decoderawtransaction(self.hex)
+# 			dec_tx = rpc_connection().decoderawtransaction(self.hex)
 # 		except:
 # 			return yellow('Unknown') if color else None
 # 		rbf = bool(dec_tx['vin'][0]['sequence'] == g.max_int - 2)
@@ -655,7 +655,7 @@ class MMGenTX(MMGenObject):
 
 	def format_view(self,terse=False):
 		try:
-			blockcount = bitcoin_connection().getblockcount()
+			blockcount = rpc_connection().getblockcount()
 		except:
 			blockcount = None
 

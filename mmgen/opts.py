@@ -111,7 +111,7 @@ def opt_postproc_initializations():
 
 	g.coin = g.coin.upper() # allow user to use lowercase
 
-def	set_data_dir_root():
+def set_data_dir_root():
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
 			os.path.join(g.home_dir,'.'+g.proj_name.lower())
 

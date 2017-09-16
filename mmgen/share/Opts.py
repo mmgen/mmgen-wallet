@@ -20,7 +20,7 @@
 Opts.py:  Generic options handling
 """
 
-import sys, getopt
+import sys,getopt
 # from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
@@ -90,7 +90,6 @@ def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 						opts[o_out] = v_out
 
 	return opts,args,do_help
-
 
 def parse_opts(argv,opts_data,opt_filter=None,defer_help=False):
 

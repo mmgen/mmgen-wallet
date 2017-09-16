@@ -119,7 +119,7 @@ def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 
 def get_fee_from_estimate_or_user(tx,estimate_fail_msg_shown=[]):
 
-	c = bitcoin_connection()
+	c = rpc_connection()
 
 	if opt.tx_fee:
 		desc = 'User-selected'
@@ -218,7 +218,7 @@ def txcreate(cmd_args,do_info=False,caller='txcreate'):
 
 	if opt.comment_file: tx.add_comment(opt.comment_file)
 
-	c = bitcoin_connection()
+	c = rpc_connection()
 
 	if not do_info: get_outputs_from_cmdline(cmd_args,tx)
 

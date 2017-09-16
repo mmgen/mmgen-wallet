@@ -46,7 +46,7 @@ else: opts.usage()
 
 if not opt.status: do_license_msg()
 
-c = bitcoin_connection()
+c = rpc_connection()
 tx = MMGenTX(infile) # sig check performed here
 vmsg("Signed transaction file '%s' is valid" % infile)
 

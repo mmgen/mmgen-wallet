@@ -78,7 +78,7 @@ if opt.aug1hf: # TODO: remove in 0.9.4
 if not infiles: opts.usage()
 for i in infiles: check_infile(i)
 
-c = bitcoin_connection()
+c = rpc_connection()
 
 if not opt.info and not opt.terse_info:
 	do_license_msg(immed=True)
