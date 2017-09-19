@@ -227,10 +227,6 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		else:
 			setattr(opt,k,g.__dict__[k])
 
-	# Check user-set opts without modifying them
-	if not check_opts(uopts):
-		sys.exit(1)
-
 	if opt.show_hash_presets:
 		_show_hash_presets()
 		sys.exit(0)
@@ -246,23 +242,26 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		opts_data['long_options'] = common_opts_data
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
-	# We don't need this data anymore
-	del mmgen.share.Opts
-	del opts_f
-	for k in ('prog_name','desc','usage','options','notes'):
-		if k in opts_data: del opts_data[k]
-
 	if g.bob or g.alice:
+		g.data_dir = os.path.join(g.data_dir_root,'regtest')
 		import regtest as rt
-		rt.user(('alice','bob')[g.bob],quiet=True)
 		g.testnet = True
 		g.rpc_host = 'localhost'
 		g.rpc_port = rt.rpc_port
 		g.rpc_user = rt.rpc_user
 		g.rpc_password = rt.rpc_password
-		g.data_dir = os.path.join(g.home_dir,'.'+g.proj_name.lower(),'regtest')
+
+	# Check user-set opts without modifying them
+	if not check_opts(uopts):
+		sys.exit(1)
 
 	if g.debug: opt_postproc_debug()
+
+	# We don't need this data anymore
+	del mmgen.share.Opts
+	del opts_f
+	for k in ('prog_name','desc','usage','options','notes'):
+		if k in opts_data: del opts_data[k]
 
 	return args
 
@@ -414,6 +413,11 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_compares(val,'>',0,desc): return False
 		elif key == 'coin':
 			if not opt_is_in_list(val.upper(),g.coins,'coin'): return False
+		elif key in ('bob','alice'):
+			from mmgen.regtest import regtest_dir
+			m = "{}'s wallet doesn't exist yet.  Run '{}-regtest setup' to initialize."
+			try: os.stat(regtest_dir)
+			except: die(1,m.format(key.capitalize(),g.proj_name.lower()))
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 

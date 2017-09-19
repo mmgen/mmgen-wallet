@@ -35,6 +35,10 @@ else:
 	send_delay = 0
 	os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
 
+stderr_save = sys.stderr
+def errmsg(s): stderr_save.write(s+'\n')
+def errmsg_r(s): stderr_save.write(s)
+
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
 	ret = p.send(t) # returns num bytes written
@@ -45,11 +49,12 @@ def my_send(p,t,delay=send_delay,s=False):
 		msg('%sSEND %s%s' % (ls,es,yellow("'%s'"%t.replace('\n',r'\n'))))
 	return ret
 
-def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
+def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 	quo = ('',"'")[type(s) == str]
 
-	if opt.verbose: msg_r('EXPECT %s' % yellow(quo+str(s)+quo))
-	else:       msg_r('+')
+	if not silent:
+		if opt.verbose: msg_r('EXPECT %s' % yellow(quo+str(s)+quo))
+		elif not opt.exact_output: msg_r('+')
 
 	try:
 		if s == '': ret = 0
@@ -69,7 +74,7 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False):
 		sys.exit(1)
 	else:
 		if t == '':
-			if not nonl: vmsg('')
+			if not nonl and not silent: vmsg('')
 		else:
 			my_send(p,t,delay,s)
 		return ret
@@ -233,14 +238,14 @@ class MMGenPexpect(object):
 		debug_pexpect_msg(self.p)
 #		end = self.readline().strip()
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
-		self.expect(self.NL,nonl=True)
+		self.expect(self.NL,nonl=True,silent=True)
 		debug_pexpect_msg(self.p)
 		end = self.p.before
 		vmsg(' ==> %s' % cyan(end))
 		return end
 
 	def interactive(self):
-		return self.p.interact()
+		return self.p.interact() # interact() not available with popen_spawn
 
 	def logfile(self,arg):
 		self.p.logfile = arg

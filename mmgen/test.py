@@ -49,7 +49,7 @@ def mk_tmpdir(d):
 	except OSError as e:
 		if e.errno != 17: raise
 	else:
-		qmsg("Created directory '%s'" % d)
+		vmsg("Created directory '%s'" % d)
 
 def mk_tmpdir_path(path,cfg):
 	try:

@@ -78,7 +78,7 @@ cmd_data = OrderedDict([
 	('Mn_printlist', ["wordlist [str='electrum']"]),
 
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]''showbtcaddr [bool=True]']),
-	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=False]','all_labels [bool=False]']),
+	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]']),
 	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: 'ctime','atime')",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
@@ -354,7 +354,7 @@ def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True):
 	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,showempty=showempty,showbtcaddrs=showbtcaddr)
 
 # List MMGen addresses and their balances.  TODO: move this code to AddrList
-def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=False,all_labels=False):
+def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=True,all_labels=False):
 
 	c = rpc_connection()
 

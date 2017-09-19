@@ -141,7 +141,7 @@ def get_seed_files(opt,args):
 	from mmgen.filename import find_file_in_dir,find_files_in_dir
 	if g.bob or g.alice:
 		import regtest as rt
-		wf = rt.mmwords[('alice','bob')[g.bob]]
+		wf = rt.mmwallet(('alice','bob')[g.bob])
 	else:
 		wf = find_file_in_dir(Wallet,g.data_dir) # Make this the first encrypted ss in the list
 	if wf: ret.append(wf)

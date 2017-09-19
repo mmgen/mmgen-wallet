@@ -134,7 +134,7 @@ class MMGenTX(MMGenObject):
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
 		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
-		sequence = MMGenListItemAttr('sequence',int,typeconv=False)
+		sequence = MMGenListItemAttr('sequence',(int,long)[g.platform=='win'],typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k]
@@ -632,7 +632,7 @@ class MMGenTX(MMGenObject):
 		o = self.format_view(terse=terse).encode('utf8')
 		if pager: do_pager(o)
 		else:
-			Msg_r(o)
+			msg_r(o)
 			from mmgen.term import get_char
 			if pause:
 				get_char('Press any key to continue: ')
@@ -663,76 +663,65 @@ class MMGenTX(MMGenObject):
 			'TRANSACTION DATA\n\n[ID:{}] [{} {}] [{} UTC] [RBF:{}] [Signed:{}]\n',
 			'Transaction {} {} {} ({} UTC) RBF={} Signed={}\n'
 		)[bool(terse)]
+		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
+
+		def get_max_mmwid(io):
+			if io == self.inputs:
+				sel_f = lambda o: len(o.mmid) + 2 # len('()')
+			else:
+				sel_f = lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)] # + len(' (chg)')
+			return  max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
+
+		max_mmwid = max(get_max_mmwid(self.inputs),get_max_mmwid(self.outputs))
+
+		def format_io(io):
+			ip = io == self.inputs
+			io_out = ''
+			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
+				if ip and blockcount:
+					confs = e.confs + blockcount - self.blockcount
+					days = int(confs * g.mins_per_block / (60*24))
+				if e.mmid:
+					app=('',' (chg)')[bool(not ip and e.is_chg and terse)]
+					mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True,app=app,appcolor='green')
+				else:
+					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid)
+				if terse:
+					io_out += '{:3} {} {} {} {}\n'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
+				else:
+					icommon = [
+						((n+1,'')[ip],    'address:', e.addr.fmt(color=True) + ' ' + mmid_fmt),
+						('',  'comment:', e.label.hl() if e.label else ''),
+						('',  'amount:',  '{} {}'.format(e.amt.hl(),g.coin))]
+					items = [(n+1, 'tx,vout:', '%s,%s' % (e.txid, e.vout))] + icommon + [
+						('',  'confirmations:', '%s (around %s days)' % (confs,days) if blockcount else '')
+					] if ip else icommon + [
+						('',  'change:',        green('True') if e.is_chg else '')]
+					io_out += '\n'.join([('%3s %-8s %s' % d) for d in items if d[2]]) + '\n\n'
+			return io_out
 
 		out = hdr_fs.format(self.txid.hl(),self.send_amt.hl(),g.coin,self.timestamp,
 				self.is_rbf(color=True),self.marked_signed(color=True))
-
+		if self.chain in ('testnet','regtest'):
+			out += green('Chain: {}\n'.format(self.chain.upper()))
+		if self.btc_txid:
+			out += '{} TxID: {}\n'.format(g.coin,self.btc_txid.hl())
 		enl = ('\n','')[bool(terse)]
-		if self.chain in ('testnet','regtest'): out += green('Chain: {}\n'.format(self.chain.upper()))
-		if self.btc_txid: out += '{} TxID: {}\n'.format(g.coin,self.btc_txid.hl())
 		out += enl
-
 		if self.label:
 			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
-		out += 'Inputs:\n' + enl
-
-		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
-		max_mmwid = max(max([len(i.mmid) for i in self.inputs if i.mmid] or [0])+len('()'),len(nonmm_str))
-		for n,e in enumerate(sorted(self.inputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
-			if blockcount:
-				confs = e.confs + blockcount - self.blockcount
-				days = int(confs * g.mins_per_block / (60*24))
-			mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True) if e.mmid else MMGenID.hlc(nonmm_str)
-			if terse:
-				out += '{:3} {} {} {} {}'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
-			else:
-				for d in (
-	(n+1, 'tx,vout:',       '%s,%s' % (e.txid, e.vout)),
-	('',  'address:',       e.addr.fmt(color=True) + ' ' + mmid_fmt),
-	('',  'comment:',       e.label.hl() if e.label else ''),
-	('',  'amount:',        '{} {}'.format(e.amt.hl(),g.coin)),
-	('',  'confirmations:', '%s (around %s days)' % (confs,days) if blockcount else '')
-				):
-					if d[2]: out += ('%3s %-8s %s\n' % d)
-			out += '\n'
-
-		out += 'Outputs:\n' + enl
-		sel_f = lambda o: (len(o.mmid),len(o.mmid)+len(' (chg)'))[bool(o.is_chg)]
-		max_mmwid = max([sel_f(o) for o in self.outputs if o.mmid] or [0])
-		max_mmwid = max(max_mmwid+len('()'),len(nonmm_str))
-		for n,e in enumerate(sorted(self.outputs,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
-			if e.mmid:
-				app=('',' (chg)')[bool(e.is_chg and terse)]
-				mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True,
-										app=app,appcolor='green')
-			else:
-				mmid_fmt = MMGenID.hlc(nonmm_str)
-			if terse:
-				out += '{:3} {} {} {} {}'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
-			else:
-				for d in (
-						(n+1, 'address:',  e.addr.fmt(color=True) + ' ' + mmid_fmt),
-						('',  'comment:',  e.label.hl() if e.label else ''),
-						('',  'amount:',   '{} {}'.format(e.amt.hl(),g.coin)),
-						('',  'change:',   green('True') if e.is_chg else '')
-					):
-					if d[2]: out += ('%3s %-8s %s\n' % d)
-			out += '\n'
+		out += 'Inputs:\n' + enl + format_io(self.inputs)
+		out += 'Outputs:\n' + enl + format_io(self.outputs)
 
 		fs = (
 			'Total input:  {} {c}\nTotal output: {} {c}\nTX fee:       {} {c} ({} satoshis per byte)\n',
 			'In {} {c} - Out {} {c} - Fee {} {c} ({} satoshis/byte)\n'
 		)[bool(terse)]
 
-		total_in  = self.sum_inputs()
-		total_out = self.sum_outputs()
-		out += fs.format(
-			total_in.hl(),
-			total_out.hl(),
-			(total_in-total_out).hl(),
-			pink(str(self.btc2spb(total_in-total_out))),
-			c=g.coin
-		)
+		t_in,t_out = self.sum_inputs(),self.sum_outputs()
+		fee = t_in-t_out
+		out += fs.format(t_in.hl(),t_out.hl(),fee.hl(),pink(str(self.btc2spb(fee))),c=g.coin)
+
 		if opt.verbose:
 			ts = len(self.hex)/2 if self.hex else 'unknown'
 			out += 'Transaction size: Vsize={} Actual={}'.format(self.estimate_size(),ts)
@@ -741,8 +730,7 @@ class MMGenTX(MMGenObject):
 				out += ' Base={} Witness={}'.format(ts-ws,ws)
 			out += '\n'
 
-		# TX label might contain non-ascii chars
-		return out
+		return out # TX label might contain non-ascii chars
 
 	def parse_tx_file(self,infile):
 

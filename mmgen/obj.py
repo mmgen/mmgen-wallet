@@ -661,9 +661,21 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	color = 'blue'
 	mmtypes = { # since 'name' is used to cook the seed, it must never change!
-'L': {'name':'legacy','comp':False,'gen':'p2pkh', 'fmt':'p2pkh','desc':'Legacy uncompressed Bitcoin address'},
-'S': {'name':'segwit','comp':True, 'gen':'segwit','fmt':'p2sh', 'desc':'Bitcoin Segwit P2SH-P2WPK address' },
-'C': {'name':'compressed','comp':True,'gen':'p2pkh','fmt':'p2pkh','desc':'Compressed Bitcoin P2PKH address'}
+		'L': {  'name':'legacy',
+				'comp':False,
+				'gen':'p2pkh',
+				'fmt':'p2pkh',
+				'desc':'Legacy uncompressed Bitcoin address'},
+		'S': {  'name':'segwit',
+				'comp':True,
+				'gen':'segwit',
+				'fmt':'p2sh',
+				'desc':'Bitcoin Segwit P2SH-P2WPK address' },
+		'C': {  'name':'compressed',
+				'comp':True,
+				'gen':'p2pkh',
+				'fmt':'p2pkh',
+				'desc':'Compressed Bitcoin P2PKH address'}
 # 		'l': 'litecoin',
 # 		'e': 'ethereum',
 # 		'E': 'ethereum_classic',

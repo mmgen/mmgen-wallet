@@ -47,6 +47,7 @@ opts_data = lambda: {
     generate        - mine a block
     test_daemon     - test whether daemon is running
     get_balances    - get balances of Bob and Alice
+    show_mempool    - show transaction IDs in mempool
 	"""
 }
 
@@ -56,7 +57,7 @@ if len(cmd_args) != 1:
 	opts.usage()
 
 cmds = ('setup','stop','generate','test_daemon','create_data_dir','bob','alice','user',
-		'wait_for_daemon','wait_for_exit','get_current_user','get_balances')
+		'wait_for_daemon','wait_for_exit','get_current_user','get_balances','show_mempool')
 
 if cmd_args[0] not in cmds:
 	opts.usage()

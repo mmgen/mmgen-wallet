@@ -470,7 +470,7 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 	from mmgen.seed import Wallet
 	if g.bob or g.alice:
 		import regtest as rt
-		wf = rt.mmwords[('alice','bob')[g.bob]]
+		wf = rt.mmwallet(('alice','bob')[g.bob])
 	else:
 		wf = find_file_in_dir(Wallet,g.data_dir)
 
@@ -609,7 +609,6 @@ def write_data_to_file(
 		do_stdout()
 	else:
 		do_file(outfile,ask_write_prompt)
-
 
 def get_words_from_user(prompt):
 	# split() also strips
@@ -797,13 +796,8 @@ def get_bitcoind_cfg_options(cfg_keys):
 	return cfg
 
 def get_bitcoind_auth_cookie():
-
 	f = os.path.join(g.bitcoin_data_dir,('',g.testnet_name)[g.testnet],'.cookie')
-
-	if file_is_readable(f):
-		return get_lines_from_file(f,'')[0]
-	else:
-		return ''
+	return get_lines_from_file(f,'')[0] if file_is_readable(f) else ''
 
 def rpc_connection():
 
@@ -840,6 +834,9 @@ def rpc_connection():
 				auth_cookie=get_bitcoind_auth_cookie())
 
 	if not g.bitcoind_version: # First call
+		if g.bob or g.alice:
+			import regtest as rt
+			rt.user(('alice','bob')[g.bob],quiet=True)
 		g.bitcoind_version = int(c.getnetworkinfo()['version'])
 		g.chain = c.getblockchaininfo()['chain']
 		if g.chain != 'regtest':

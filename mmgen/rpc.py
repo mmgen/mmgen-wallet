@@ -75,7 +75,9 @@ class BitcoinRPCConnection(object):
 			if cf['on_fail'] in ('return','silent'):
 				return 'rpcfail',args
 			else:
-				die(args[1],yellow(args[2]))
+				try:    s = u'{}'.format(args[2])
+				except: s = repr(args[2])
+				die(args[1],yellow(s))
 
 		dmsg('=== request() debug ===')
 		dmsg('    RPC POST data ==> %s\n' % p)
@@ -91,7 +93,8 @@ class BitcoinRPCConnection(object):
 		# 	dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
 		# 	print(dump)
 
-		dmsg('    RPC AUTHORIZATION data ==> [Basic {}]\n'.format(base64.b64encode(self.auth_str)))
+		dmsg('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
+			self.auth_str,' '*31,base64.b64encode(self.auth_str)))
 		try:
 			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
 				'Host': self.host,

@@ -20,7 +20,7 @@
 test/test.py:  Test suite for the MMGen suite
 """
 
-import sys,os
+import sys,os,subprocess,shutil,time,re
 
 pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
@@ -80,13 +80,17 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 		try: os.listdir(data_dir)
 		except: pass
 		else:
-			import shutil
-			shutil.rmtree(data_dir)
+			try: shutil.rmtree(data_dir)
+			except: # we couldn't remove data dir - perhaps regtest daemon is running
+				try: subprocess.call(['python','mmgen-regtest','stop'])
+				except: rdie(1,'Unable to remove data dir!')
+				else:
+					time.sleep(2)
+					shutil.rmtree(data_dir)
 		os.mkdir(data_dir,0755)
 	else:
 		d,pfx = '/dev/shm','mmgen-test-'
 		try:
-			import subprocess
 			subprocess.call('rm -rf %s/%s*'%(d,pfx),shell=True)
 		except Exception as e:
 			die(2,'Unable to delete directory tree %s/%s* (%s)'%(d,pfx,e))
@@ -119,7 +123,7 @@ opts_data = lambda: {
 -l, --list-cmds     List and describe the commands in the test suite
 -L, --log           Log commands to file {lf}
 -n, --names         Display command names instead of descriptions
--O, --popen-spawn   Use pexpect's popen_spawn instead of popen
+-O, --popen-spawn   Use pexpect's popen_spawn instead of popen (always true, so ignored)
 -p, --pause         Pause between tests, resuming on keypress
 -P, --profile       Record the execution time of each script
 -q, --quiet         Produce minimal output.  Suppress dependency info
@@ -141,6 +145,7 @@ If no command is given, the whole suite of tests is run.
 sys.argv = [sys.argv[0]] + ['--data-dir',data_dir] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data)
+opt.popen_spawn = True # popen has issues, so use popen_spawn always
 
 tn_desc = ('','.testnet')[g.testnet]
 
@@ -173,6 +178,9 @@ cfgs = {
 			pwfile:        'passchg_dfl_wallet',
 		},
 		'segwit': get_segwit_val()
+	},
+	'17': {
+		'tmpdir':        os.path.join('test','tmp17'),
 	},
 	'1': {
 		'tmpdir':        os.path.join('test','tmp1'),
@@ -268,8 +276,12 @@ cfgs = {
 		'seed_len':        128,
 		'seed_id':         'FE3C6545',
 		'ref_bw_seed_id':  '33F10310',
-'addrfile_chk': ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE','9914 6D10 2307 F348','7DBF 441F E188 8B37'),
-'keyaddrfile_chk':('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35','C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
+		'addrfile_chk':            ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE'),
+		'addrfile_segwit_chk':     ('9914 6D10 2307 F348','7DBF 441F E188 8B37'),
+		'addrfile_compressed_chk': ('95EB 8CC0 7B3B 7856','629D FDE4 CDC0 F276'),
+		'keyaddrfile_chk':            ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35'),
+		'keyaddrfile_segwit_chk':     ('C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
+		'keyaddrfile_compressed_chk': ('E43A FA46 5751 720A','B995 A6CF D1CD FAD0'),
 		'passfile_chk':    'EB29 DC4F 924B 289F',
 		'passfile32_chk':  '37B6 C218 2ABC 7508',
 		'wpasswd':         'reference password',
@@ -297,8 +309,12 @@ cfgs = {
 		'seed_len':        192,
 		'seed_id':         '1378FC64',
 		'ref_bw_seed_id':  'CE918388',
-'addrfile_chk': ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81','91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
-'keyaddrfile_chk': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC','C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
+		'addrfile_chk':            ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81'),
+		'addrfile_segwit_chk':     ('91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
+		'addrfile_compressed_chk': ('2615 8401 2E98 7ECA','DF38 22AB AAB0 124E'),
+		'keyaddrfile_chk':            ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC'),
+		'keyaddrfile_segwit_chk':     ('C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
+		'keyaddrfile_compressed_chk': ('6D6D 3D35 04FD B9C3','B345 9CD8 9EAE 5489'),
 		'passfile_chk':    'ADEA 0083 094D 489A',
 		'passfile32_chk':  '2A28 C5C7 36EC 217A',
 		'wpasswd':         'reference password',
@@ -326,8 +342,12 @@ cfgs = {
 		'seed_len':        256,
 		'seed_id':         '98831F3A',
 		'ref_bw_seed_id':  'B48CD7FC',
-'addrfile_chk': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E','06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
-'keyaddrfile_chk': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2','A447 12C2 DD14 5A9B','0690 460D A600 D315'),
+		'addrfile_chk':            ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
+		'addrfile_segwit_chk':     ('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
+		'addrfile_compressed_chk': ('A33C 4FDE F515 F5BC','5186 02C2 535E B7D5'),
+		'keyaddrfile_chk':            ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
+		'keyaddrfile_segwit_chk':     ('A447 12C2 DD14 5A9B','0690 460D A600 D315'),
+		'keyaddrfile_compressed_chk': ('420A 8EB5 A9E2 7814','3243 DD92 809E FE8D'),
 		'passfile_chk':    '2D6D 8FBA 422E 1315',
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
 		'wpasswd':         'reference password',
@@ -475,6 +495,8 @@ cmd_group['ref'] = (
 	('refwalletgen',   ([],'gen new refwallet')),
 	('refaddrgen',     (['mmdat',pwfile],'new refwallet addr chksum')),
 	('refkeyaddrgen',  (['mmdat',pwfile],'new refwallet key-addr chksum')),
+	('refaddrgen_compressed',    (['mmdat',pwfile],'new refwallet addr chksum (compressed)')),
+	('refkeyaddrgen_compressed', (['mmdat',pwfile],'new refwallet key-addr chksum (compressed)')),
 	('refpasswdgen',   (['mmdat',pwfile],'new refwallet passwd file chksum')),
 	('ref_b32passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 )
@@ -513,6 +535,23 @@ cmd_group['conv_out'] = ( # writing
 	('ref_incog_conv_out',  'ref seed conversion to incog data'),
 	('ref_incox_conv_out',  'ref seed conversion to hex incog data'),
 	('ref_hincog_conv_out', 'ref seed conversion to hidden incog data')
+)
+
+cmd_group['regtest'] = (
+	('regtest_setup',       'regtest (Bob and Alice) mode setup'),
+	('regtest_alice_bal1',  "Alice's balance"),
+	('regtest_bob_bal1',    "Bob's balance"),
+	('regtest_bob_split',   "splitting Bob's funds"),
+	('regtest_generate',    'mining a block'),
+	('regtest_bob_bal2',    "Bob's balance"),
+	('regtest_bob_rbf_send','sending funds to Alice (RBF)'),
+	('regtest_get_mempool1','mempool (before RBF bump)'),
+	('regtest_bob_rbf_bump1','bumping RBF transaction'),
+	('regtest_get_mempool2','mempool (after RBF bump)'),
+	('regtest_generate',    'mining a block'),
+	('regtest_bob_bal3',    "Bob's balance"),
+	('regtest_alice_bal2',  "Alice's balance"),
+	('regtest_stop',        'stopping regtest daemon'),
 )
 
 cmd_list = OrderedDict()
@@ -556,6 +595,11 @@ for a,b in cmd_group['conv_out']:
 		cmd_list['conv_out'].append(k)
 		cmd_data[k] = (10+i,'%s (%s-bit)' % (b,j),[[[],10+i]])
 
+cmd_data['info_regtest'] = 'regtest mode',[17]
+for a,b in cmd_group['regtest']:
+	cmd_list['regtest'].append(a)
+	cmd_data[a] = (17,b,[[[],17]])
+
 utils = {
 	'check_deps': 'check dependencies for specified command',
 	'clean':      'clean specified tmp dir(s) 1,2,3,4,5 or 6 (no arg = all dirs)',
@@ -596,6 +640,8 @@ meta_cmds = OrderedDict([
 	['saved_ref_conv_out1', [c[0]+'1' for c in cmd_group['conv_out']]],
 	['saved_ref_conv_out2', [c[0]+'2' for c in cmd_group['conv_out']]],
 	['saved_ref_conv_out3', [c[0]+'3' for c in cmd_group['conv_out']]],
+
+	['regtest', dict(cmd_group['regtest']).keys()],
 ])
 
 del cmd_group
@@ -677,7 +723,6 @@ if opt.list_cmds:
 		Msg(fs.format(cmd,utils[cmd],w=w))
 	sys.exit(0)
 
-import time,re
 NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]
 
 def get_file_with_ext(ext,mydir,delete=True,no_dot=False):
@@ -1136,20 +1181,27 @@ class MMGenTestSuite(object):
 		have_dfl_wallet = False
 		ok()
 
-	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[]):
-		ftype,chkfile = ((ftype,'{}file_chk'.format(ftype)),('pass','passfile32_chk'))[ftype=='pass32']
-		add_args = extra_args + (get_segwit_arg(cfg),[])[ftype[:4]=='pass']
-		dlist = [id_str] if id_str else []
-		t = MMGenExpect(name,'mmgen-{}gen'.format(ftype), add_args +
-				['-d',cfg['tmpdir']] + ([],[wf])[bool(wf)] + dlist + [cfg['{}_idx_list'.format(ftype)]])
+	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None):
+		if cfg['segwit'] and ftype[:4] != 'pass' and not mmtype: mmtype = 'segwit'
+		cmd_pfx = (ftype,'pass')[ftype[:4]=='pass']
+		t = MMGenExpect(name,'mmgen-{}gen'.format(cmd_pfx),
+				['-d',cfg['tmpdir']] +
+				extra_args +
+				([],['--type='+str(mmtype)])[bool(mmtype)] +
+				([],[wf])[bool(wf)] +
+				([],[id_str])[bool(id_str)] +
+				[cfg['{}_idx_list'.format(cmd_pfx)]])
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		t.expect('Passphrase is OK')
-		desc = ('address','password')[ftype=='pass']
+		desc = ('address','password')[ftype[:4]=='pass']
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
 		if check_ref:
-			c = (cfg[chkfile][g.testnet + 2*cfg['segwit']],cfg[chkfile])[ftype=='pass']
-			refcheck('address data checksum',chk,c)
+			k = 'passfile32_chk' if ftype == 'pass32' \
+					else 'passfile_chk' if ftype == 'pass' \
+						else '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
+			chk_ref = cfg[k] if ftype[:4] == 'pass' else cfg[k][g.testnet]
+			refcheck('address data checksum',chk,chk_ref)
 			return
 		t.written_to_file('Addresses',oo=True)
 		t.ok()
@@ -1158,8 +1210,10 @@ class MMGenTestSuite(object):
 		return self.addrgen(name,wf=None,pf=pf,check_ref=check_ref)
 
 	def refaddrgen(self,name,wf,pf):
-		d = ' (%s-bit seed)' % cfg['seed_len']
 		self.addrgen(name,wf,pf=pf,check_ref=True)
+
+	def refaddrgen_compressed(self,name,wf,pf):
+		self.addrgen(name,wf,pf=pf,check_ref=True,mmtype='compressed')
 
 	def addrimport(self,name,addrfile):
 		outfile = os.path.join(cfg['tmpdir'],'addrfile_w_comments')
@@ -1210,8 +1264,7 @@ class MMGenTestSuite(object):
 		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
-		t.expect('Enter a range or space-separated list of outputs to spend: ',
-				' '.join([str(i) for i in outputs_list])+'\n')
+		t.expect('outputs to spend: ',' '.join([str(i) for i in outputs_list])+'\n')
 		if non_mmgen_input and not txdo_args: t.expect('Accept? (y/N): ','y')
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
@@ -1408,14 +1461,17 @@ class MMGenTestSuite(object):
 		self.addrgen_incog(name,[],'',in_fmt='hi',desc='hidden incognito data',
 			args=['-H','%s,%s'%(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
-	def keyaddrgen(self,name,wf,pf=None,check_ref=False):
-		args = get_segwit_arg(cfg) + ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
-		t = MMGenExpect(name,'mmgen-keygen', args)
+	def keyaddrgen(self,name,wf,pf=None,check_ref=False,mmtype=None):
+		if cfg['segwit'] and not mmtype: mmtype = 'segwit'
+		args = ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
+		t = MMGenExpect(name,'mmgen-keygen',
+				([],['--type='+str(mmtype)])[bool(mmtype)] + args)
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
-			refcheck('key-address data checksum',chk,cfg['keyaddrfile_chk'][g.testnet + 2*cfg['segwit']])
+			k = 'keyaddrfile{}_chk'.format('_'+mmtype if mmtype else '')
+			refcheck('key-address data checksum',chk,cfg[k][g.testnet])
 			return
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(usr_rand_chars)
@@ -1427,6 +1483,9 @@ class MMGenTestSuite(object):
 
 	def refkeyaddrgen(self,name,wf,pf):
 		self.keyaddrgen(name,wf,pf,check_ref=True)
+
+	def refkeyaddrgen_compressed(self,name,wf,pf):
+		self.keyaddrgen(name,wf,pf,check_ref=True,mmtype='compressed')
 
 	def refpasswdgen(self,name,wf,pf):
 		self.addrgen(name,wf,pf,check_ref=True,ftype='pass',id_str='alice@crypto.org')
@@ -1724,10 +1783,9 @@ class MMGenTestSuite(object):
 
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
-		aa = []
-		t = MMGenExpect(name,'mmgen-tool',
-				aa + ['-q','decrypt',f,'outfile=-','hash_preset=1'])
+		t = MMGenExpect(name,'mmgen-tool', ['-q','decrypt',f,'outfile=-','hash_preset=1'])
 		t.passphrase('user data',tool_enc_passwd)
+#		t.expect("Type uppercase 'YES' to confirm: ",'YES\n') # comment out with popen_spawn
 		t.expect(NL,nonl=True)
 		import re
 		o = re.sub('\r\n','\n',t.read())
@@ -1794,6 +1852,134 @@ class MMGenTestSuite(object):
 			add_args=add_args,
 			extra_desc='(check)')
 
+	def regtest_setup(self,name):
+		try: shutil.rmtree(os.path.join(data_dir,'regtest'))
+		except: pass
+		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
+		t = MMGenExpect(name,'mmgen-regtest',['-m','--data-dir='+data_dir,'setup'])
+		os.environ['MMGEN_TEST_SUITE'] = '1'
+		t.expect('Mined')
+		t.expect('Setting up')
+		t.expect('Creating')
+		t.expect('Creating')
+		t.expect('Importing')
+		t.expect('Importing')
+		t.expect('Importing')
+		t.expect('Setting up')
+		t.expect('Creating')
+		t.expect('Creating')
+		t.expect('Importing')
+		t.expect('Importing')
+		t.expect('Importing')
+		t.expect('Sending')
+		t.expect('Sending')
+		t.expect('Mined')
+		t.expect('Setup complete')
+		t.ok()
+
+	def regtest_user_bal(self,name,user,bal):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','showempty=1'])
+		total = t.expect_getend('TOTAL: ')
+		cmp_or_die(total,'{} BTC'.format(bal))
+
+	def regtest_alice_bal1(self,name):
+		return self.regtest_user_bal(name,'alice','500')
+
+	def regtest_alice_bal2(self,name):
+		return self.regtest_user_bal(name,'alice','600')
+
+	def regtest_bob_bal1(self,name):
+		return self.regtest_user_bal(name,'bob','500')
+
+	def regtest_bob_bal2(self,name):
+		return self.regtest_user_bal(name,'bob','499.999942')
+
+	def regtest_bob_bal3(self,name):
+		return self.regtest_user_bal(name,'bob','399.9998214')
+
+	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],no_send=False):
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+		t = MMGenExpect(name,'mmgen-txdo',
+			['-d',cfg['tmpdir'],'-B','--'+user,'--tx-fee='+fee] + extra_args + outputs_cl)
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+
+		t.expect(r"'q'=quit view, .*?:.",'M',regex=True) # sort by mmid
+		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
+		t.expect('outputs to spend: ',outputs_prompt+'\n')
+		t.expect('OK? (Y/n): ','y') # fee OK?
+		t.expect('OK? (Y/n): ','y') # change OK?
+		t.expect('Add a comment to transaction? (y/N): ','\n')
+		t.expect('View decoded transaction\? .*?: ','t',regex=True)
+		t.expect('to continue: ','\n')
+		t.written_to_file('Signed transaction')
+		if not no_send:
+			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
+			t.expect('Transaction sent')
+		t.read()
+		t.ok()
+
+	def regtest_bob_split(self,name):
+		from mmgen.regtest import sids
+		outputs_cl = [sids['bob']+':C:1,100', sids['bob']+':L:2,200',sids['bob']+':S:2']
+		return self.regtest_user_txdo(name,'bob','20s',outputs_cl,'1')
+
+	def regtest_bob_rbf_send(self,name):
+		from mmgen.regtest import sids
+		outputs_cl = [
+			'n2XovQAmdtRBS7H1PUnRFk1FR5n8wDAsXB,60', # sids['alice']:L:1
+			'mn67MDDa16eV2H6yDtPi3mKTAqqDxoWpJ3,40', # sids['alice']:C:1
+			sids['bob']+':S:2']
+		return self.regtest_user_txdo(name,'bob','10s',outputs_cl,'3',extra_args=['--rbf'])
+
+	def regtest_user_txbump(self,name,user,txfile,fee,red_op,no_send=False):
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+		t = MMGenExpect(name,'mmgen-txbump',
+			['-d',cfg['tmpdir'],'--send','--'+user,'--tx-fee='+fee,'--output-to-reduce='+red_op] + [txfile])
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+		t.expect('OK? (Y/n): ','y') # output OK?
+		t.expect('OK? (Y/n): ','y') # fee OK?
+		t.expect('Add a comment to transaction? (y/N): ','n')
+		t.written_to_file('Signed transaction')
+		if not no_send:
+			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
+			t.expect('Transaction sent')
+			t.written_to_file('Signed transaction')
+		t.read()
+		t.ok()
+
+	def regtest_bob_rbf_bump1(self,name):
+		txfile = get_file_with_ext(',10].sigtx',cfg['tmpdir'],delete=False,no_dot=True)
+		return self.regtest_user_txbump(name,'bob',txfile,'60s','c')
+
+	def regtest_generate(self,name):
+		t = MMGenExpect(name,'mmgen-regtest',['generate'])
+		t.expect('Mined 1 block')
+		t.ok()
+
+	def regtest_get_mempool(self,name):
+		t = MMGenExpect(name,'mmgen-regtest',['show_mempool'])
+		ret = eval(t.read())
+		return ret
+
+	def regtest_get_mempool1(self,name):
+		mp = self.regtest_get_mempool(name)
+		if len(mp) != 1:
+			rdie(2,'Mempool has more or less than one TX!')
+		write_to_tmpfile(cfg,'rbf_txid',mp[0]+'\n')
+		ok()
+
+	def regtest_get_mempool2(self,name):
+		mp = self.regtest_get_mempool(name)
+		if len(mp) != 1:
+			rdie(2,'Mempool has more or less than one TX!')
+		chk = read_from_tmpfile(cfg,'rbf_txid')
+		if chk.strip() == mp[0]:
+			rdie(2,'TX in mempool has not changed!  RBF bump failed')
+		ok()
+
+	def regtest_stop(self,name):
+		t = MMGenExpect(name,'mmgen-regtest',['stop'])
+		t.ok()
 
 	# END methods
 	for k in (
@@ -1815,13 +2001,15 @@ class MMGenTestSuite(object):
 			'ref_hincog_conv_out',
 			'ref_wallet_chk',
 			'refwalletgen',
-			'refaddrgen',
 			'ref_seed_chk',
 			'ref_hex_chk',
 			'ref_mn_chk',
 			'ref_brain_chk',
 			'ref_hincog_chk',
+			'refaddrgen',
 			'refkeyaddrgen',
+			'refaddrgen_compressed',
+			'refkeyaddrgen_compressed',
 			'refpasswdgen',
 			'ref_b32passwdgen'
 		):
@@ -1887,6 +2075,7 @@ try:
 	else:
 		clean()
 		for cmd in cmd_data:
+			if cmd == 'info_regtest': break # don't run these by default
 			if cmd[:5] == 'info_':
 				msg(green('%sTesting %s' % (('\n','')[bool(opt.resume)],cmd_data[cmd][0])))
 				continue
