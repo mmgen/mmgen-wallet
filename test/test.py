@@ -538,20 +538,38 @@ cmd_group['conv_out'] = ( # writing
 )
 
 cmd_group['regtest'] = (
-	('regtest_setup',       'regtest (Bob and Alice) mode setup'),
-	('regtest_alice_bal1',  "Alice's balance"),
-	('regtest_bob_bal1',    "Bob's balance"),
-	('regtest_bob_split',   "splitting Bob's funds"),
-	('regtest_generate',    'mining a block'),
-	('regtest_bob_bal2',    "Bob's balance"),
-	('regtest_bob_rbf_send','sending funds to Alice (RBF)'),
-	('regtest_get_mempool1','mempool (before RBF bump)'),
-	('regtest_bob_rbf_bump1','bumping RBF transaction'),
-	('regtest_get_mempool2','mempool (after RBF bump)'),
-	('regtest_generate',    'mining a block'),
-	('regtest_bob_bal3',    "Bob's balance"),
-	('regtest_alice_bal2',  "Alice's balance"),
-	('regtest_stop',        'stopping regtest daemon'),
+	('regtest_setup',              'regtest (Bob and Alice) mode setup'),
+	('regtest_bob_bal1',           "Bob's balance"),
+	('regtest_bob_split1',         "splitting Bob's funds"),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_bal2',           "Bob's balance"),
+	('regtest_bob_rbf_send',       'sending funds to Alice (RBF)'),
+	('regtest_get_mempool1',       'mempool (before RBF bump)'),
+	('regtest_bob_rbf_bump',       'bumping RBF transaction'),
+	('regtest_get_mempool2',       'mempool (after RBF bump)'),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_bal3',           "Bob's balance"),
+	('regtest_bob_pre_import',     'sending to non-imported address'),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_import_addr',    'importing non-MMGen address with --rescan'),
+	('regtest_bob_bal4',           "Bob's balance (after import with rescan)"),
+	('regtest_bob_import_list',    'importing flat address list'),
+	('regtest_bob_split2',         "splitting Bob's funds"),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_bal5',           "Bob's balance"),
+	('regtest_bob_send_non_mmgen', 'sending funds to Alice (from non-MMGen addrs)'),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_bal6',           "Bob's balance"),
+	('regtest_alice_bal2',         "Alice's balance"),
+	('regtest_alice_add_label1',   'adding a label'),
+	('regtest_alice_chk_label1',   'the label'),
+	('regtest_alice_add_label2',   'adding a label'),
+	('regtest_alice_chk_label2',   'the label'),
+	('regtest_alice_edit_label1',  'editing a label'),
+	('regtest_alice_chk_label3',   'the label'),
+	('regtest_alice_remove_label1','removing a label'),
+	('regtest_alice_chk_label4',   'the label'),
+	('regtest_stop',               'stopping regtest daemon'),
 )
 
 cmd_list = OrderedDict()
@@ -1858,23 +1876,16 @@ class MMGenTestSuite(object):
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
 		t = MMGenExpect(name,'mmgen-regtest',['-m','--data-dir='+data_dir,'setup'])
 		os.environ['MMGEN_TEST_SUITE'] = '1'
-		t.expect('Mined')
-		t.expect('Setting up')
-		t.expect('Creating')
-		t.expect('Creating')
-		t.expect('Importing')
-		t.expect('Importing')
-		t.expect('Importing')
-		t.expect('Setting up')
-		t.expect('Creating')
-		t.expect('Creating')
-		t.expect('Importing')
-		t.expect('Importing')
-		t.expect('Importing')
-		t.expect('Sending')
-		t.expect('Sending')
-		t.expect('Mined')
-		t.expect('Setup complete')
+		t.expect('Starting setup')
+
+		for user in ('alice','bob'):
+			t.expect('Setting up')
+			for i in range(4): t.expect('Creating')
+			for i in range(3): t.expect('Importing')
+
+		for s in ('Funding','Mined','Sending','Sending','Mined','Setup complete'):
+			t.expect(s)
+
 		t.ok()
 
 	def regtest_user_bal(self,name,user,bal):
@@ -1886,7 +1897,7 @@ class MMGenTestSuite(object):
 		return self.regtest_user_bal(name,'alice','500')
 
 	def regtest_alice_bal2(self,name):
-		return self.regtest_user_bal(name,'alice','600')
+		return self.regtest_user_bal(name,'alice','986.9995799')
 
 	def regtest_bob_bal1(self,name):
 		return self.regtest_user_bal(name,'bob','500')
@@ -1896,6 +1907,15 @@ class MMGenTestSuite(object):
 
 	def regtest_bob_bal3(self,name):
 		return self.regtest_user_bal(name,'bob','399.9998214')
+
+	def regtest_bob_bal4(self,name):
+		return self.regtest_user_bal(name,'bob','399.9998079')
+
+	def regtest_bob_bal5(self,name):
+		return self.regtest_user_bal(name,'bob','399.9996799')
+
+	def regtest_bob_bal6(self,name):
+		return self.regtest_user_bal(name,'bob','13')
 
 	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],no_send=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -1918,7 +1938,7 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def regtest_bob_split(self,name):
+	def regtest_bob_split1(self,name):
 		from mmgen.regtest import sids
 		outputs_cl = [sids['bob']+':C:1,100', sids['bob']+':L:2,200',sids['bob']+':S:2']
 		return self.regtest_user_txdo(name,'bob','20s',outputs_cl,'1')
@@ -1930,6 +1950,14 @@ class MMGenTestSuite(object):
 			'mn67MDDa16eV2H6yDtPi3mKTAqqDxoWpJ3,40', # sids['alice']:C:1
 			sids['bob']+':S:2']
 		return self.regtest_user_txdo(name,'bob','10s',outputs_cl,'3',extra_args=['--rbf'])
+
+	def regtest_bob_send_non_mmgen(self,name):
+		from mmgen.regtest import sids
+		fn = os.path.join(cfg['tmpdir'],'non-mmgen.keys')
+		outputs_cl = [
+			'2N8w8qTupvd9L9wLFbrn6UhdfF1gadDAmFD,10', # sids['alice']:S:2
+			'2NF4y3y4CEjQCcssjX2BDLHT88XHn8z53JS']    # sids['alice']:S:3
+		return self.regtest_user_txdo(name,'bob','0.0001',outputs_cl,'3-9',extra_args=['--keys-from-file='+fn])
 
 	def regtest_user_txbump(self,name,user,txfile,fee,red_op,no_send=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -1947,7 +1975,7 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def regtest_bob_rbf_bump1(self,name):
+	def regtest_bob_rbf_bump(self,name):
 		txfile = get_file_with_ext(',10].sigtx',cfg['tmpdir'],delete=False,no_dot=True)
 		return self.regtest_user_txbump(name,'bob',txfile,'60s','c')
 
@@ -1976,6 +2004,87 @@ class MMGenTestSuite(object):
 		if chk.strip() == mp[0]:
 			rdie(2,'TX in mempool has not changed!  RBF bump failed')
 		ok()
+
+	def regtest_user_import(self,name,user,args):
+		t = MMGenExpect(name,'mmgen-addrimport',['--quiet','--'+user]+args)
+		t.read()
+		t.ok()
+
+	@staticmethod
+	def gen_pairs(n):
+		return [subprocess.check_output(
+					['python','mmgen-tool','--testnet=1','-r0','randpair','compressed={}'.format((i+1)%2)]).split()
+						for i in range(n)]
+
+	def regtest_bob_pre_import(self,name):
+		pairs = self.gen_pairs(5)
+		write_to_tmpfile(cfg,'non-mmgen.keys','\n'.join([a[0] for a in pairs])+'\n')
+		write_to_tmpfile(cfg,'non-mmgen.addrs','\n'.join([a[1] for a in pairs])+'\n')
+		return self.regtest_user_txdo(name,'bob','10s',[pairs[0][1]],'3')
+
+	def regtest_bob_import_addr(self,name):
+		addr = read_from_tmpfile(cfg,'non-mmgen.addrs').split()[0]
+		return self.regtest_user_import(name,'bob',['--rescan','--address='+addr])
+
+	def regtest_bob_import_list(self,name):
+		fn = os.path.join(cfg['tmpdir'],'non-mmgen.addrs')
+		return self.regtest_user_import(name,'bob',['--addrlist',fn])
+
+	def regtest_bob_split2(self,name):
+		addrs = read_from_tmpfile(cfg,'non-mmgen.addrs').split()
+		amts = (a for a in (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321))
+		outputs1 = ['{},{}'.format(a,amts.next()) for a in addrs]
+		from mmgen.regtest import sids
+		outputs2 = [sids['bob']+':C:2,6', sids['bob']+':L:3,7',sids['bob']+':S:3']
+		return self.regtest_user_txdo(name,'bob','20s',outputs1+outputs2,'1-2')
+
+	def regtest_user_add_label(self,name,user,addr,label):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'add_label',addr,label])
+		t.expect('Added label.*in tracking wallet',regex=True)
+		t.ok()
+
+	def regtest_user_remove_label(self,name,user,addr):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'remove_label',addr])
+		t.expect('Removed label.*in tracking wallet',regex=True)
+		t.ok()
+
+	def regtest_alice_add_label1(self,name):
+		return self.regtest_user_add_label(name,'alice','9304C211:S:1','Original Label')
+
+	def regtest_alice_add_label2(self,name):
+		return self.regtest_user_add_label(name,'alice','9304C211:S:1','Replacement Label')
+
+	def regtest_alice_remove_label1(self,name):
+		return self.regtest_user_remove_label(name,'alice','9304C211:S:1')
+
+	def regtest_user_chk_label(self,name,user,addr,label):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
+		t.expect('{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label),regex=True)
+		t.ok()
+
+	def regtest_alice_chk_label1(self,name):
+		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Original Label')
+
+	def regtest_alice_chk_label2(self,name):
+		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Replacement Label')
+
+	def regtest_alice_chk_label3(self,name):
+		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Edited Label')
+
+	def regtest_alice_chk_label4(self,name):
+		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','-')
+
+	def regtest_user_edit_label(self,name,user,output,label):
+		t = MMGenExpect(name,'mmgen-txcreate',['-B','--'+user,'-i'])
+		t.expect(r"'q'=quit view, .*?:.",'M',regex=True)
+		t.expect(r"'q'=quit view, .*?:.",'l',regex=True)
+		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
+		t.expect(r"Enter label text.*return to main menu\):.",label+'\n',regex=True)
+		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
+		t.ok()
+
+	def regtest_alice_edit_label1(self,name):
+		return self.regtest_user_edit_label(name,'alice','3','Edited Label')
 
 	def regtest_stop(self,name):
 		t = MMGenExpect(name,'mmgen-regtest',['stop'])

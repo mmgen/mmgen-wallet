@@ -149,7 +149,7 @@ def create_mmgen_wallet(user):
 	p.wait()
 
 def create_mmgen_addrs(user,addr_type):
-	gmsg('Creating MMGen addresses for user {} (type: {})'.format(user.capitalize(),addr_type))
+	gmsg('Creating MMGen addresses for user {} (type {})'.format(user.capitalize(),addr_type))
 	suf = ('-'+addr_type,'')[addr_type=='L']
 	try: os.unlink(mmaddrs(user).format(suf))
 	except: pass
@@ -164,11 +164,10 @@ def create_mmgen_addrs(user,addr_type):
 	p.wait()
 
 def import_mmgen_addrs(user,addr_type):
-	gmsg_r('Importing MMGen addresses for user {} (type: {})'.format(user.capitalize(),addr_type))
+	gmsg_r('Importing MMGen addresses for user {} (type {})'.format(user.capitalize(),addr_type))
 	suf = ('-'+addr_type,'')[addr_type=='L']
-	p = start_cmd('python','mmgen-addrimport',
-			'--{}'.format(user),'--data-dir='+g.data_dir,
-				'-q','--batch',mmaddrs(user).format(suf))
+	p = start_cmd('python','mmgen-addrimport','-q','--batch',
+			'--{}'.format(user),'--data-dir='+g.data_dir,mmaddrs(user).format(suf))
 	err = process_output(p)[1]
 	if not 'addresses imported' in err:
 		rdie(1,'Error importing MMGen addresses')
@@ -183,25 +182,17 @@ def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_err
 	stop(silent=stop_silent,ignore_noconnect_error=ignore_noconnect_error)
 	wait_for_daemon('stopped',silent=silent,nonl=nonl)
 
-def setup_wallet(user,addr_type):
+def setup_wallet(user,funded,stop=True):
 	gmsg_r("Setting up {}'s tracking wallet".format(user.capitalize()))
 	start_and_wait(user)
 	create_mmgen_wallet(user)
-	create_mmgen_addrs(user,addr_type)
-	import_mmgen_addrs(user,addr_type)
-	stop_and_wait(stop_silent=True)
-
-def setup_mixed_wallet(user):
-	gmsg_r("Setting up {}'s wallet (mixed address types)".format(user.capitalize()))
-	start_and_wait(user)
-	create_mmgen_wallet(user)
-	create_mmgen_addrs(user,'L')
-	create_mmgen_addrs(user,'C')
-	create_mmgen_addrs(user,'S')
-	import_mmgen_addrs(user,'L'); msg('')
-	import_mmgen_addrs(user,'C'); msg('')
-	import_mmgen_addrs(user,'S'); msg('')
-	stop_and_wait(silent=True,stop_silent=True)
+	mmtypes = ([funded],['L','C','S'])[bool(opt.mixed)]
+	for mmtype in mmtypes:
+		create_mmgen_addrs(user,mmtype)
+	for mmtype in mmtypes:
+		import_mmgen_addrs(user,mmtype); msg('')
+	if stop:
+		stop_and_wait(silent=True,stop_silent=True)
 
 def fund_wallet(user,amt):
 	gmsg('Sending {} BTC to {}'.format(amt,user.capitalize()))
@@ -220,25 +211,18 @@ def setup():
 	if test_daemon() != 'stopped':
 		stop_and_wait(silent=True,stop_silent=True)
 	create_data_dir()
-	gmsg_r('Starting setup')
 
-	start_and_wait('orig')
+	gmsg('Starting setup')
 
-	generate(432,silent=True)
-
-	stop_and_wait(silent=True,stop_silent=True)
-
-	if opt.mixed:
-		setup_mixed_wallet('bob')
-		setup_mixed_wallet('alice')
-	else:
-		setup_wallet('bob','C')
-		setup_wallet('alice','S')
+	setup_wallet('alice','S')
+	setup_wallet('bob','C')
 
 	if opt.empty:
-		msg("'--empty' selected: skipping funding of wallets")
+		ymsg("'--empty' selected: skipping funding of wallets")
 	else:
-		start_and_wait('orig',silent=True)
+		gmsg_r('Funding wallets')
+		start_and_wait('orig')
+		generate(432,silent=True)
 		fund_wallet('bob',init_amt)
 		fund_wallet('alice',init_amt)
 		generate(1)
@@ -283,10 +267,10 @@ def user(user=None,quiet=False):
 			return True
 		gmsg_r('Switching to user {}'.format(user.capitalize()))
 		stop_and_wait(silent=False,nonl=True,stop_silent=True)
-		start_and_wait(user,silent=False,nonl=True)
+		start_and_wait(user,nonl=True)
 	else:
 		gmsg_r('Starting regtest daemon with current user {}'.format(user.capitalize()))
-		start_and_wait(user,silent=False,nonl=True)
+		start_and_wait(user,nonl=True)
 	gmsg('done')
 
 def stop(silent=False,ignore_noconnect_error=True):

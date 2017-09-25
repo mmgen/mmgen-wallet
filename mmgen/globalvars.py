@@ -127,7 +127,7 @@ class g(object):
 		('tx_id','info'),
 		('tx_id','terse_info'),
 		('aug1hf','rbf'), # TODO: remove in 0.9.4
-		('batch','rescan')
+		('batch','rescan') # still incompatible as of Core 0.15.0
 	)
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',

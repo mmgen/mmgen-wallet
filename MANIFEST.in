@@ -7,5 +7,6 @@ include scripts/bitcoind-walletunlock.py
 include scripts/compute-file-chksum.py
 include scripts/deinstall.sh
 include scripts/tx-old2new.py
+include scripts/test-release.sh
 
 prune test/ref/__db*

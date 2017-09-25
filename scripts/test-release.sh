@@ -32,37 +32,31 @@ function install {
 
 function do_test {
 	set +x
-	for i in "${CMDS[@]}"; do
+	for i in "$@"; do
 		echo -e "\n${GREEN}Running:$RESET $YELLOW$i$RESET"
 		eval "$i"
 	done
 }
 
-check
-(install)
-
-eval "cd .test-release/pydist/mmgen-*"
-
-CMDS=(
-	'test/test.py -On'
+T1=('test/test.py -On'
 	'test/test.py -On --segwit dfl_wallet main ref ref_other'
-	'test/test.py -On --segwit-random dfl_wallet main'
-)
-do_test
-
-CMDS=('test/test.py -On regtest')
-do_test
-
-# tooltest tests both segwit and non-segwit
-CMDS=(
-	'test/tooltest.py'
-	"test/gentest.py -q 2 $REFDIR/btcwallet.dump"
+	'test/test.py -On --segwit-random dfl_wallet main')
+T2=('test/test.py -On regtest')
+T3=('test/tooltest.py') # tooltest tests both segwit and non-segwit
+T4=("test/gentest.py -q 2 $REFDIR/btcwallet.dump"
 	"test/gentest.py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
 	'test/gentest.py -q 1:2 10'
 	'test/gentest.py -q --segwit 1:2 10'
 #	"scripts/tx-old2new.py -S $REFDIR/tx_*raw >/dev/null 2>&1"
-	"scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1"
-)
-do_test
+	"scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
+
+check
+(install)
+eval "cd .test-release/pydist/mmgen-*"
+
+do_test "${T1[@]}"
+do_test "${T2[@]}"
+do_test "${T3[@]}"
+do_test "${T4[@]}"
 
 echo -e "\n${GREEN}All OK$RESET"
