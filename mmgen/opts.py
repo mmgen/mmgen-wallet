@@ -243,7 +243,8 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.bob or g.alice:
-		g.data_dir = os.path.join(g.data_dir_root,'regtest')
+		g.data_dir = os.path.join(g.data_dir_root,'regtest',('alice','bob')[g.bob])
+		check_or_create_dir(g.data_dir)
 		import regtest as rt
 		g.testnet = True
 		g.rpc_host = 'localhost'
@@ -414,10 +415,10 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		elif key == 'coin':
 			if not opt_is_in_list(val.upper(),g.coins,'coin'): return False
 		elif key in ('bob','alice'):
-			from mmgen.regtest import regtest_dir
-			m = "{}'s wallet doesn't exist yet.  Run '{}-regtest setup' to initialize."
-			try: os.stat(regtest_dir)
-			except: die(1,m.format(key.capitalize(),g.proj_name.lower()))
+			from mmgen.regtest import daemon_dir
+			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
+			try: os.stat(daemon_dir)
+			except: die(1,m.format(g.proj_name.lower()))
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 

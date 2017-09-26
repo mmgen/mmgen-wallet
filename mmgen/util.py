@@ -468,11 +468,7 @@ def make_full_path(outdir,outfile):
 def get_seed_file(cmd_args,nargs,invoked_as=None):
 	from mmgen.filename import find_file_in_dir
 	from mmgen.seed import Wallet
-	if g.bob or g.alice:
-		import regtest as rt
-		wf = rt.mmwallet(('alice','bob')[g.bob])
-	else:
-		wf = find_file_in_dir(Wallet,g.data_dir)
+	wf = find_file_in_dir(Wallet,g.data_dir)
 
 	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
 

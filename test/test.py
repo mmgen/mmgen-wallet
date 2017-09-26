@@ -539,6 +539,14 @@ cmd_group['conv_out'] = ( # writing
 
 cmd_group['regtest'] = (
 	('regtest_setup',              'regtest (Bob and Alice) mode setup'),
+	('regtest_walletgen_bob',      'wallet generation (Bob)'),
+	('regtest_walletgen_alice',    'wallet generation (Alice)'),
+	('regtest_addrgen_bob',        'address generation (Bob)'),
+	('regtest_addrgen_alice',      'address generation (Alice)'),
+	('regtest_addrimport_bob',     "importing Bob's addresses"),
+	('regtest_addrimport_alice',   "importing Alice's addresses"),
+	('regtest_fund_bob',           "funding Bob's wallet"),
+	('regtest_fund_alice',         "funding Alice's wallet"),
 	('regtest_bob_bal1',           "Bob's balance"),
 	('regtest_bob_split1',         "splitting Bob's funds"),
 	('regtest_generate',           'mining a block'),
@@ -559,8 +567,7 @@ cmd_group['regtest'] = (
 	('regtest_bob_bal5',           "Bob's balance"),
 	('regtest_bob_send_non_mmgen', 'sending funds to Alice (from non-MMGen addrs)'),
 	('regtest_generate',           'mining a block'),
-	('regtest_bob_bal6',           "Bob's balance"),
-	('regtest_alice_bal2',         "Alice's balance"),
+	('regtest_bob_alice_bal',      "Bob and Alice's balances"),
 	('regtest_alice_add_label1',   'adding a label'),
 	('regtest_alice_chk_label1',   'the label'),
 	('regtest_alice_add_label2',   'adding a label'),
@@ -743,13 +750,14 @@ if opt.list_cmds:
 
 NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]
 
-def get_file_with_ext(ext,mydir,delete=True,no_dot=False):
+def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 
 	dot = ('.','')[bool(no_dot)]
 	flist = [os.path.join(mydir,f) for f in os.listdir(mydir)
 				if f == ext or f[-len(dot+ext):] == dot+ext]
 
 	if not flist: return False
+	if return_list: return flist
 
 	if len(flist) > 1:
 		if delete:
@@ -1874,19 +1882,68 @@ class MMGenTestSuite(object):
 		try: shutil.rmtree(os.path.join(data_dir,'regtest'))
 		except: pass
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
-		t = MMGenExpect(name,'mmgen-regtest',['-m','--data-dir='+data_dir,'setup'])
+		t = MMGenExpect(name,'mmgen-regtest',['-n','setup'])
 		os.environ['MMGEN_TEST_SUITE'] = '1'
-		t.expect('Starting setup')
-
-		for user in ('alice','bob'):
-			t.expect('Setting up')
-			for i in range(4): t.expect('Creating')
-			for i in range(3): t.expect('Importing')
-
-		for s in ('Funding','Mined','Sending','Sending','Mined','Setup complete'):
+		for s in 'Starting setup','Creating','Mined','Creating','Creating','Setup complete':
 			t.expect(s)
-
 		t.ok()
+
+	def regtest_walletgen(self,name,user):
+		t = MMGenExpect(name,'mmgen-walletgen',['-q','-r0','-p1','--'+user])
+		t.passphrase_new('new MMGen wallet','abc')
+		t.label()
+		t.expect('move it to the data directory? (Y/n): ','y')
+		t.written_to_file('MMGen wallet')
+		t.ok()
+
+	def regtest_walletgen_bob(self,name):   return self.regtest_walletgen(name,'bob')
+	def regtest_walletgen_alice(self,name): return self.regtest_walletgen(name,'alice')
+
+	@staticmethod
+	def regtest_user_dir(user):
+		return os.path.join(data_dir,'regtest',user)
+
+	def regtest_user_sid(self,user):
+		return os.path.basename(get_file_with_ext('mmdat',self.regtest_user_dir(user)))[:8]
+
+	def regtest_addrgen(self,name,user):
+		for mmtype in ('legacy','compressed','segwit'):
+			t = MMGenExpect(name,'mmgen-addrgen',
+				['--quiet','--'+user,'--type='+mmtype,
+				'--outdir={}'.format(self.regtest_user_dir(user)),
+				'1-5'],extra_desc='({})'.format(mmtype))
+			t.passphrase('MMGen wallet','abc')
+			t.written_to_file('Addresses')
+			t.ok()
+
+	def regtest_addrgen_bob(self,name):   self.regtest_addrgen(name,'bob')
+	def regtest_addrgen_alice(self,name): self.regtest_addrgen(name,'alice')
+
+	def regtest_addrimport(self,name,user):
+		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S' }
+		sid = self.regtest_user_sid(user)
+		for desc in ('legacy','compressed','segwit'):
+			fn = os.path.join(self.regtest_user_dir(user),'{}{}[1-5].addrs'.format(sid,id_strs[desc]))
+			t = MMGenExpect(name,'mmgen-addrimport', ['--quiet','--'+user,'--batch',fn],extra_desc='('+desc+')')
+			t.expect('Importing')
+			t.expect('5 addresses imported')
+			t.ok()
+
+	def regtest_addrimport_bob(self,name):   self.regtest_addrimport(name,'bob')
+	def regtest_addrimport_alice(self,name): self.regtest_addrimport(name,'alice')
+
+	def regtest_fund_wallet(self,name,user,mmtype,amt):
+		fn = get_file_with_ext('-{}[1-5].addrs'.format(mmtype),self.regtest_user_dir(user),no_dot=True)
+		silence()
+		addr = AddrList(fn).data[0].addr
+		end_silence()
+		t = MMGenExpect(name,'mmgen-regtest', ['send',str(addr),str(amt)])
+		t.expect('Sending {} BTC'.format(amt))
+		t.expect('Mined 1 block')
+		t.ok()
+
+	def regtest_fund_bob(self,name):   self.regtest_fund_wallet(name,'bob','C',500)
+	def regtest_fund_alice(self,name): self.regtest_fund_wallet(name,'alice','S',500)
 
 	def regtest_user_bal(self,name,user,bal):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','showempty=1'])
@@ -1895,9 +1952,6 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_bal1(self,name):
 		return self.regtest_user_bal(name,'alice','500')
-
-	def regtest_alice_bal2(self,name):
-		return self.regtest_user_bal(name,'alice','986.9995799')
 
 	def regtest_bob_bal1(self,name):
 		return self.regtest_user_bal(name,'bob','500')
@@ -1914,8 +1968,14 @@ class MMGenTestSuite(object):
 	def regtest_bob_bal5(self,name):
 		return self.regtest_user_bal(name,'bob','399.9996799')
 
-	def regtest_bob_bal6(self,name):
-		return self.regtest_user_bal(name,'bob','13')
+	def regtest_bob_alice_bal(self,name):
+		t = MMGenExpect(name,'mmgen-regtest',['get_balances'])
+		t.expect('Switching')
+		ret = t.expect_getend("Bob's balance:").strip()
+		cmp_or_die(ret,'13.00000000',skip_ok=True)
+		ret = t.expect_getend("Alice's balance:").strip()
+		cmp_or_die(ret,'986.99957990',skip_ok=True)
+		t.ok()
 
 	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],no_send=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -1931,6 +1991,7 @@ class MMGenTestSuite(object):
 		t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.expect('View decoded transaction\? .*?: ','t',regex=True)
 		t.expect('to continue: ','\n')
+		t.passphrase('MMGen wallet','abc')
 		t.written_to_file('Signed transaction')
 		if not no_send:
 			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
@@ -1939,24 +2000,28 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_bob_split1(self,name):
-		from mmgen.regtest import sids
-		outputs_cl = [sids['bob']+':C:1,100', sids['bob']+':L:2,200',sids['bob']+':S:2']
+		sid = self.regtest_user_sid('bob')
+		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':S:2']
 		return self.regtest_user_txdo(name,'bob','20s',outputs_cl,'1')
 
+	def create_tx_outputs(self,user,data):
+		o,sid = [],self.regtest_user_sid(user)
+		for id_str,idx,amt_str in data:
+			fn = get_file_with_ext('{}{}[1-5].addrs'.format(sid,id_str),self.regtest_user_dir(user),no_dot=True)
+			silence()
+			addr = AddrList(fn).data[idx-1].addr
+			end_silence()
+			o.append(addr+amt_str)
+		return o
+
 	def regtest_bob_rbf_send(self,name):
-		from mmgen.regtest import sids
-		outputs_cl = [
-			'n2XovQAmdtRBS7H1PUnRFk1FR5n8wDAsXB,60', # sids['alice']:L:1
-			'mn67MDDa16eV2H6yDtPi3mKTAqqDxoWpJ3,40', # sids['alice']:C:1
-			sids['bob']+':S:2']
+		outputs_cl = self.create_tx_outputs('alice',(('',1,',60'),('-C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
+		outputs_cl += [self.regtest_user_sid('bob')+':S:2']
 		return self.regtest_user_txdo(name,'bob','10s',outputs_cl,'3',extra_args=['--rbf'])
 
 	def regtest_bob_send_non_mmgen(self,name):
-		from mmgen.regtest import sids
+		outputs_cl = self.create_tx_outputs('alice',(('-S',2,',10'),('-S',3,''))) # alice_sid:S:2, alice_sid:S:3
 		fn = os.path.join(cfg['tmpdir'],'non-mmgen.keys')
-		outputs_cl = [
-			'2N8w8qTupvd9L9wLFbrn6UhdfF1gadDAmFD,10', # sids['alice']:S:2
-			'2NF4y3y4CEjQCcssjX2BDLHT88XHn8z53JS']    # sids['alice']:S:3
 		return self.regtest_user_txdo(name,'bob','0.0001',outputs_cl,'3-9',extra_args=['--keys-from-file='+fn])
 
 	def regtest_user_txbump(self,name,user,txfile,fee,red_op,no_send=False):
@@ -1967,6 +2032,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('Add a comment to transaction? (y/N): ','n')
+		t.passphrase('MMGen wallet','abc')
 		t.written_to_file('Signed transaction')
 		if not no_send:
 			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
@@ -1986,8 +2052,7 @@ class MMGenTestSuite(object):
 
 	def regtest_get_mempool(self,name):
 		t = MMGenExpect(name,'mmgen-regtest',['show_mempool'])
-		ret = eval(t.read())
-		return ret
+		return eval(t.read())
 
 	def regtest_get_mempool1(self,name):
 		mp = self.regtest_get_mempool(name)
@@ -2005,11 +2070,6 @@ class MMGenTestSuite(object):
 			rdie(2,'TX in mempool has not changed!  RBF bump failed')
 		ok()
 
-	def regtest_user_import(self,name,user,args):
-		t = MMGenExpect(name,'mmgen-addrimport',['--quiet','--'+user]+args)
-		t.read()
-		t.ok()
-
 	@staticmethod
 	def gen_pairs(n):
 		return [subprocess.check_output(
@@ -2021,6 +2081,12 @@ class MMGenTestSuite(object):
 		write_to_tmpfile(cfg,'non-mmgen.keys','\n'.join([a[0] for a in pairs])+'\n')
 		write_to_tmpfile(cfg,'non-mmgen.addrs','\n'.join([a[1] for a in pairs])+'\n')
 		return self.regtest_user_txdo(name,'bob','10s',[pairs[0][1]],'3')
+
+	def regtest_user_import(self,name,user,args):
+		t = MMGenExpect(name,'mmgen-addrimport',['--quiet','--'+user]+args)
+		t.expect('Importing')
+		t.expect('OK')
+		t.ok()
 
 	def regtest_bob_import_addr(self,name):
 		addr = read_from_tmpfile(cfg,'non-mmgen.addrs').split()[0]
@@ -2034,8 +2100,8 @@ class MMGenTestSuite(object):
 		addrs = read_from_tmpfile(cfg,'non-mmgen.addrs').split()
 		amts = (a for a in (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321))
 		outputs1 = ['{},{}'.format(a,amts.next()) for a in addrs]
-		from mmgen.regtest import sids
-		outputs2 = [sids['bob']+':C:2,6', sids['bob']+':L:3,7',sids['bob']+':S:3']
+		sid = self.regtest_user_sid('bob')
+		outputs2 = [sid+':C:2,6', sid+':L:3,7',sid+':S:3']
 		return self.regtest_user_txdo(name,'bob','20s',outputs1+outputs2,'1-2')
 
 	def regtest_user_add_label(self,name,user,addr,label):
@@ -2049,13 +2115,16 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_alice_add_label1(self,name):
-		return self.regtest_user_add_label(name,'alice','9304C211:S:1','Original Label')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_add_label(name,'alice',sid+':S:1','Original Label')
 
 	def regtest_alice_add_label2(self,name):
-		return self.regtest_user_add_label(name,'alice','9304C211:S:1','Replacement Label')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_add_label(name,'alice',sid+':S:1','Replacement Label')
 
 	def regtest_alice_remove_label1(self,name):
-		return self.regtest_user_remove_label(name,'alice','9304C211:S:1')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_remove_label(name,'alice',sid+':S:1')
 
 	def regtest_user_chk_label(self,name,user,addr,label):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
@@ -2063,16 +2132,20 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_alice_chk_label1(self,name):
-		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Original Label')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_chk_label(name,'alice',sid+':S:1','Original Label')
 
 	def regtest_alice_chk_label2(self,name):
-		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Replacement Label')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_chk_label(name,'alice',sid+':S:1','Replacement Label')
 
 	def regtest_alice_chk_label3(self,name):
-		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','Edited Label')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_chk_label(name,'alice',sid+':S:1','Edited Label')
 
 	def regtest_alice_chk_label4(self,name):
-		return self.regtest_user_chk_label(name,'alice','9304C211:S:1','-')
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_chk_label(name,'alice',sid+':S:1','-')
 
 	def regtest_user_edit_label(self,name,user,output,label):
 		t = MMGenExpect(name,'mmgen-txcreate',['-B','--'+user,'-i'])

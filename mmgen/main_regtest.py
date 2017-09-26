@@ -30,38 +30,41 @@ opts_data = lambda: {
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -e, --empty         Don't fund Bob and Alice's wallets on setup
--m, --mixed         Create Bob and Alice's wallets with mixed address types
+-n, --setup-no-stop-daemon  Don't stop daemon after setup is finished
 -q, --quiet         Produce quieter output
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
 
 
-                           AVAILABLE COMMANDS
+                         AVAILABLE COMMANDS
 
-    setup           - setup up system for regtest operation with MMGen
-    stop            - stop the regtest bitcoind
-    bob             - switch to Bob's wallet, starting daemon if necessary
-    alice           - switch to Alice's wallet, starting daemon if necessary
-    user            - show current user
-    generate        - mine a block
-    test_daemon     - test whether daemon is running
-    get_balances    - get balances of Bob and Alice
-    show_mempool    - show transaction IDs in mempool
+  setup          - setup up system for regtest operation with MMGen
+  stop           - stop the regtest bitcoind
+  bob            - switch to Bob's wallet, starting daemon if necessary
+  alice          - switch to Alice's wallet, starting daemon if necessary
+  user           - show current user
+  generate       - mine a block
+  send ADDR AMT  - send amount AMT to address ADDR
+  test_daemon    - test whether daemon is running
+  get_balances   - get balances of Bob and Alice
+  show_mempool   - show transaction IDs in mempool
 	"""
 }
 
 cmd_args = opts.init(opts_data)
 
-if len(cmd_args) != 1:
-	opts.usage()
-
-cmds = ('setup','stop','generate','test_daemon','create_data_dir','bob','alice','user',
+cmds = ('setup','stop','generate','test_daemon','create_data_dir','bob','alice','miner','user','send',
 		'wait_for_daemon','wait_for_exit','get_current_user','get_balances','show_mempool')
 
-if cmd_args[0] not in cmds:
+try:
+	if cmd_args[0] == 'send':
+		assert len(cmd_args) == 3
+	else:
+		assert cmd_args[0] in cmds and len(cmd_args) == 1
+except:
 	opts.usage()
-
-from mmgen.regtest import *
-
-globals()[cmd_args[0]]()
+else:
+	args = cmd_args[1:]
+	from mmgen.regtest import *
+	globals()[cmd_args[0]](*args)

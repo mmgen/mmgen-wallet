@@ -138,12 +138,8 @@ def get_seed_files(opt,args):
 	# favor unencrypted seed sources first, as they don't require passwords
 	u,e = SeedSourceUnenc,SeedSourceEnc
 	ret = _pop_and_return(args,u.get_extensions())
-	from mmgen.filename import find_file_in_dir,find_files_in_dir
-	if g.bob or g.alice:
-		import regtest as rt
-		wf = rt.mmwallet(('alice','bob')[g.bob])
-	else:
-		wf = find_file_in_dir(Wallet,g.data_dir) # Make this the first encrypted ss in the list
+	from mmgen.filename import find_file_in_dir
+	wf = find_file_in_dir(Wallet,g.data_dir) # Make this the first encrypted ss in the list
 	if wf: ret.append(wf)
 	ret += _pop_and_return(args,e.get_extensions())
 	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat
