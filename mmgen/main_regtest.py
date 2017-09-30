@@ -39,7 +39,7 @@ opts_data = lambda: {
 
                          AVAILABLE COMMANDS
 
-  setup          - setup up system for regtest operation with MMGen
+  setup          - set up system for regtest operation with MMGen
   stop           - stop the regtest bitcoind
   bob            - switch to Bob's wallet, starting daemon if necessary
   alice          - switch to Alice's wallet, starting daemon if necessary

@@ -100,6 +100,8 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Getting Started with MMGen][3]
 
+> #### [MMGen Quick Start with Regtest Mode][q]
+
 > #### [MMGen command help][6]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -116,6 +118,7 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [4]: https://bitcointalk.org/index.php?topic=567069.0
 [5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
+[q]: https://github.com/mmgen/mmgen/wiki/MMGen-Quick-Start-with-Regtest-Mode
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]: https://github.com/mmgen/MMGenLive
 [9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg

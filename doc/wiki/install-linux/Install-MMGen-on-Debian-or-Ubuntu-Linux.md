@@ -1,14 +1,14 @@
 #### Perform the following steps on both your online and offline computers:
 
-Install required Debian/Ubuntu packages:
+> Install required Debian/Ubuntu packages:
 
 		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools
 
-Install the Python Cryptography Toolkit:
+> Install the Python Cryptography Toolkit:
 
 		$ sudo -H pip install pycrypto
 
-Install the secp256k1 library:
+> Install the secp256k1 library:
 
 		$ git clone https://github.com/bitcoin-core/secp256k1.git
 		$ cd secp256k1
@@ -19,7 +19,7 @@ Install the secp256k1 library:
 		$ sudo ldconfig
 		$ cd ..
 
-Install MMGen:
+> Install MMGen:
 
 		$ git clone https://github.com/mmgen/mmgen.git
 		$ cd mmgen
@@ -27,32 +27,30 @@ Install MMGen:
 		$ sudo ./setup.py install
 		$ cd ..
 
-Install vanitygen (optional):
+> Install the bitcoind daemon(s):
 
-		$ sudo apt-get install libpcre3-dev
-		$ git clone https://github.com/samr7/vanitygen.git
-		$ cd vanitygen; make
-		(copy the "keyconv" executable to your execution path)
-		$ cd ..
+> To install prebuilt binaries, go [here][01].  To install from source, go
+> [here][02].
 
-Install bitcoind:
+#### Note for offline machines:
 
-> To install prebuilt binaries, click [here][01].  To install from source,
-> click [here][02].
+> Naturally, your offline machine must be connected to the Internet to retrieve
+> and install the above packages as described above.  This is normally not a
+> problem, as you can simply take the machine offline permanently after the
+> install is done, preferably removing or disabling its network interfaces.
 
-**NB:** Naturally, your offline machine must be connected to the Internet to
-retrieve and install the above packages as described above.  If your offline
-machine is already offline and you wish to leave it that way, then you'll be
-forced to take roughly the following steps:
+> However, if your machine is already offline and you wish to leave it that way,
+> or if it lacks a network interface entirely, then you'll need to take roughly
+> the following steps:
 
-> From your online machine, download the Debian/Ubuntu packages and their
-> dependencies manually from packages.debian.org or packages.ubuntu.com, and the
-> Python packages from pypi.python.org/pypi/&lt;packagename&gt;.  Transfer these
-> files and the git repositories you've cloned to your offline computer using a
-> USB stick or other means at your disposal.  Install the Debian/Ubuntu packages
-> with 'sudo dpkg -i', unpack each Python module and install it using 'sudo
-> ./setup.py install', and install MMGen and the secp256k1 library from the
-> copied git repositories as described above.
+>> From your online machine, download the Debian/Ubuntu packages and their
+>> dependencies manually from packages.debian.org or packages.ubuntu.com, and
+>> the Python packages from pypi.python.org/pypi/&lt;packagename&gt;.  Transfer
+>> these files and the cloned Git repositories to your offline computer using a
+>> USB stick or other storage medium.  Install the Debian/Ubuntu packages with
+>> 'sudo dpkg -i', unpack each Python module and install it using 'sudo
+>> ./setup.py install', and install MMGen and the secp256k1 library from the
+>> copied Git repositories as described above.
 
 Congratulations, your installation is now complete!  Now proceed to [**Getting
 Started with MMGen**][gs].

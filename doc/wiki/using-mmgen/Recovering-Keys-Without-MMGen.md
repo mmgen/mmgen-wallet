@@ -1,0 +1,361 @@
+## Table of Contents
+
+* <a href='#a_i'>Introduction</a>
+* <a href='#a_rs'>Obtaining the binary seed</a>
+	* <a href='#a_ss'>Convert the seed to binary (legacy addresses)</a>
+	* <a href='#a_cs'>Cook the seed and save to binary (Segwit and compressed addresses)</a>
+* <a href='#a_gk'>Generating the keys</a>
+* <a href='#a_hw'>Hex to WIF by hand</a>
+* <a href='#a_mh'>Converting an MMGen mnemonic to hexadecimal format</a>
+
+#### <a name='a_i'>Introduction</a>
+
+If you're considering using MMGen and are a Bitcoiner with a normal, healthy
+degree of paranoia, then the following question will probably come to mind:
+“What if I have funds in an MMGen wallet and I lose the software?  How do I
+recover my coins?”
+
+Let's take this scenario to its logical extreme and assume you've lost all
+backup copies of the software, MMGen's project page has disappeared from Github
+(or been hacked) and no other repositories or copies are available on the
+Internet.  The following tutorial will show you how to recover your keys in the
+event this unlikely combination of circumstances ever occurs.
+
+#### <a name='a_rs'>Obtaining the binary seed</a>
+
+To keep things simple, we'll assume you have a copy of your seed in hexadecimal
+(mmhex) format.  If your backup's in mnemonic format, skip to the section
+'Converting an MMGen mnemonic to hexadecimal format' below and return here when you've
+finished.  If your backup is an MMGen wallet, it will need to be decrypted.
+That case will be covered in a future tutorial.
+
+Okay, so let's say you have a 128-bit seed with Seed ID FE3C6545 and funds in
+the first three legacy uncompressed ('L') addresses of this seed.  Here are the
+addresses:
+
+		FE3C6545 {
+		  1   1JVi3qcNcjMM7cTR7y9ihKUG1yDLpKRJfL
+		  2   15EfKymfe3v7mqCaL174hTWSgBLFAHvtaR
+		  3   1CUDd6nPHdP5pT7nN8k2AA5WdKRaKPjmea
+		}
+
+Since you might have your funds in Segwit ('S') addresses, we'll consider that
+case too:
+
+		FE3C6545 SEGWIT {
+		  1  3LpkKqtGkcCukRrgEFWyCajSApioiEWeTw
+		  2  3FYZQyWqBJcCjaSjCV9ZVj3gKyB9u8AYCX
+		  3  37wM8hwt69qwH7hZHAMn6RVdc8vMuM1CwJ
+		}
+
+Keys for MMGen's compressed ('C') addresses are generated in a similar way as
+Segwit ones, as you'll see below, so we won't consider that case separately.
+
+Here's the seed itself in mmhex format, which you've stored in some safe place (on
+paper in a safe-deposit box, for example):
+
+		afc3fe 456d 7f5f 1c4b fe3b c916 b875 60ae 6a3e
+
+Now your task is to generate keys for the addresses so you can spend your coins.
+This task is divided into two parts:
+
+1. generating the keys and converting them to hexadecimal format; and
+2. converting the hex keys to wallet interchange (WIF) format for importation
+into Bitcoin Core or some other wallet.
+
+We'll solve this task using standard command-line utilities available on any
+Linux or other Unix-like system.
+
+> ####  <a name='a_ss'>Convert the seed to binary (legacy addresses)</a>
+
+> For the legacy addresses, we begin by converting the seed to binary form and
+> storing it in a file.  For that we use 'xxd', a handy tool for converting binary
+> to hex and vice versa.  Don't forget to omit the checksum from the seed and
+> remove the spaces:
+
+		$ echo 456d7f5f1c4bfe3bc916b87560ae6a3e | xxd -r -p > myseed.bin
+
+> ####  <a name='a_cs'>Cook the seed and save to binary (Segwit and compressed addresses)</a>
+
+> For the other address types, we first “cook” the seed with an identifier
+> string using the HMAC-SHA256 algorithm, add ten rounds of SHA256, and save the
+> result in binary form.  This can be done with the 'openssl' utility, also
+> included by default on Unix-based systems:
+
+		$ echo -n segwit | openssl dgst -r -sha256 -mac hmac -macopt hexkey:456d7f5f1c4bfe3bc916b87560ae6a3e | xxd -r -p > cooked-seed.bin
+
+> If your addresses are of the compressed ('C') type, just use the string
+> 'compressed' instead of 'segwit' as the 'echo' command's argument.
+
+> Now add the ten rounds of sha256:
+
+		$ openssl dgst -sha256 -binary cooked-seed.bin > cooked-round1.bin
+		$ openssl dgst -sha256 -binary cooked-round1.bin > cooked-round2.bin
+		$ openssl dgst -sha256 -binary cooked-round2.bin > cooked-round3.bin
+		$ openssl dgst -sha256 -binary cooked-round3.bin > cooked-round4.bin
+		$ openssl dgst -sha256 -binary cooked-round4.bin > cooked-round5.bin
+		$ openssl dgst -sha256 -binary cooked-round5.bin > cooked-round6.bin
+		$ openssl dgst -sha256 -binary cooked-round6.bin > cooked-round7.bin
+		$ openssl dgst -sha256 -binary cooked-round7.bin > cooked-round8.bin
+		$ openssl dgst -sha256 -binary cooked-round8.bin > cooked-round9.bin
+		$ openssl dgst -sha256 -binary cooked-round9.bin > myseed.bin
+
+####  <a name='a_gk'>Generating the keys</a>
+
+The MMGen key-generating algorithm uses a chain of SHA-512 hashes with double
+SHA-256 branches to generate the keys from which each address is derived.  To
+obtain the chain's first link, we make a single SHA-512 hash of the seed and
+save it in binary form:
+
+		$ sha512sum myseed.bin | xxd -r -p > link1.bin
+
+A double SHA-256 hash of the first link gives us the key of our first address:
+
+		$ sha256sum link1.bin | xxd -r -p | sha256sum
+		05d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e36 -
+
+Or, in the Segwit case:
+
+		b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a0 -
+
+With 'mmgen-tool', we can easily generate the WIF key and address from this
+hexadecimal key and see that it's correct:
+
+		$ mmgen-tool hex2wif 05d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e36
+		5HrrmMdQbELyW7iCns5kvSbN9GCPTqEfG7iP1PZiYk49yDDivTi
+
+		$ mmgen-tool wif2addr 5HrrmMdQbELyW7iCns5kvSbN9GCPTqEfG7iP1PZiYk49yDDivTi
+		1JVi3qcNcjMM7cTR7y9ihKUG1yDLpKRJfL # matches FE3C6545:L:1 above
+
+Or, in the Segwit case:
+
+		$ mmgen-tool hex2wif b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a0 compressed=1
+		L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F
+
+		# for a compressed ('C') address, leave out the 'segwit=1' argument
+		$ mmgen-tool wif2addr L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F segwit=1
+		3LpkKqtGkcCukRrgEFWyCajSApioiEWeTw # matches FE3C6545:S:1 above
+
+But since we're trying to do this without the MMGen software, we need to find
+some other way to do the hex-to-WIF conversion.  We could use one of many
+key-manipulation tools available on the Internet, such as [this one][01], or
+[this one][02]. Or we can do it ourselves: that will be covered in the next
+section.
+
+Meanwhile, let's finish generating hex keys for the rest of our addresses.  To
+get the next key, we generate the next link in the chain from the first link and
+take its double SHA-256 hash, just as we did for the first one:
+
+		$ sha512sum link1.bin | xxd -r -p > link2.bin
+		$ sha256sum link2.bin | xxd -r -p | sha256sum
+		5db8fe3c8b52ccc98deab5afae780b6fbe56629e7ee1c6ed826fc2d6a81fb144 - (uncompressed example)
+		42f1b998f0f9b7b27b5d0b92ffa8c1c6b96d7202789c41b6e6a6a402e318a04d - (Segwit example)
+
+And so on and so forth, until we've generated all the keys we need: three, in our case.
+
+####  <a name='a_hw'>Hex to WIF by hand</a>
+
+Since we've chosen to convert our hex keys to WIF format manually, we have a bit
+of work ahead of us.  Let's begin with our just-generated key #1 from seed
+FE3C6545:
+
+		05d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e36 (uncompressed example)
+		b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a0 (Segwit example)
+
+WIF format prepends hex '80' to the beginning of the key.  If the key is
+associated with a compressed public key, it also appends '01':
+
+		# uncompressed example:
+		8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e36
+
+		# Segwit example (Segwit uses compressed public keys):
+		80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a001
+
+The Base58Check format invented by Satoshi for Bitcoin addresses and keys
+contains a checksum, which we now generate by taking the first four bytes (eight
+characters) of the double SHA-256 of the above result:
+
+
+		# uncompressed example:
+		$ echo 8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e36 | xxd -r -p | sha256sum | xxd -r -p | sha256sum | cut -c 1-8
+		7b818629
+
+		# Segwit example:
+		$ echo 80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a001 | xxd -r -p | sha256sum | xxd -r -p | sha256sum | cut -c 1-8
+		89bba812
+
+The checksum gets appended to the end, giving us the following final result:
+
+		8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e367b818629 (uncompressed example)
+		80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a00189bba812 (Segwit example)
+
+The last step is to convert all this into Base 58.  Satoshi created Base-58
+encoding for convenient and error-free writing down and dictating of Bitcoin
+keys and addresses.  He began with a Base-62 alphabet consisting of the ten
+digits plus the upper and lower case Latin letters (10 + 26 + 26 = 62):
+
+		0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz
+
+Since '0' (zero) is easily confused with capital 'O' visually, and capital 'I'
+with lowercase 'l', he dropped those characters, leaving the following 58:
+
+		123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz
+
+With '0' gone, '1' now represents decimal zero, '2' represents decimal one, and
+so forth all the way up to 'z', representing decimal fifty-seven.
+
+Now all that remains is to convert our hexadecimal key to decimal and then Base
+58 using this alphabet. This can be done in just four lines of code you can try
+out at the Python prompt:
+
+		# uncompressed example:
+		$ python
+		>>> b58a = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+		>>> num = int('8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e367b818629',16)
+		>>> result = [b58a[num / 58**e % 58] for e in range(60)]
+		>>> print ''.join(reversed(result)).lstrip('1')
+		5HrrmMdQbELyW7iCns5kvSbN9GCPTqEfG7iP1PZiYk49yDDivTi # matches key for FE3C6545:L:1 above
+
+		# Segwit example has the following differences:
+		...
+		>>> num = int('80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a00189bba812',16)
+		...
+		L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F # matches key for FE3C6545:S:1 above
+
+Explanation: the variable 'b58a' holds the Base 58 alphabet; 'num' holds the key
+in decimal, converted from hexidecimal by Python's `int()` function; the third
+line does the base-58 conversion; and the last line formats the result by
+reversing the order of the digits, converting it to a string and stripping off
+the leading zeroes ('1's).
+
+Programmers unfamiliar with Python might find the following base conversion code
+clearer:
+
+		def numtob58(n):
+			result = []
+			while n:
+				result = result + [b58a[n % 58]] # divide 'n' by 58 and take the remainder
+				n = n / 58
+			return result
+
+		result = numtob58(num)
+
+Adapting our code a bit and putting it in a file gives us have a handy
+conversion utility we can use for any key:
+
+		$ cat hex2b58.py
+		#!/usr/bin/env python
+		import sys
+		b58a = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+		num = int(sys.argv[1],16)
+		result = [b58a[num / 58**e % 58] for e in range(60)]
+		print ''.join(reversed(result)).lstrip('1')
+
+		$ hex2b58.py 8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e367b818629
+		5HrrmMdQbELyW7iCns5kvSbN9GCPTqEfG7iP1PZiYk49yDDivTi
+
+		$ hex2b58.py 80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a00189bba812
+		L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F
+
+####  <a name='a_mh'>Converting an MMGen mnemonic to hexadecimal format</a>
+
+Our familiar base-10 system uses a series of ten symbols known as digits to
+represent numbers from zero to nine:
+
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+
+If a number has more than one digit, its value is the sum of its digits
+multiplied by increasing powers of ten, beginning with the rightmost, least
+significant digit (the “ones column”).
+
+Thus the number 1234, for example, can be represented as follows:
+
+		4 x 1 +
+		3 x 10 +
+		2 x 100 +
+		1 x 1000
+
+Or in exponential notation:
+
+		4 x 10^0 +
+		3 x 10^1 +
+		2 x 10^2 +
+		1 x 10^3
+
+An MMGen seed mnemonic is a number too, only the “digits” it's comprised of come
+from an alphabetically sorted series of 1626 words, the [Electrum wordlist][03],
+which begins like this:
+
+		able (0), about (1), above (2), abuse (3), accept (4) ...
+
+and ends like this:
+
+		yet (1621), young (1622), yours (1623), yourself (1624), youth (1625)
+
+(Type `mmgen-tool mn_printlist` to see the full list)
+
+The words of the Electrum wordlist thus make up a base-1626 numbering system,
+just like the ten digits that make up our familiar base-10 system.
+
+Here's the mnemonic of our seed (FE3C6545):
+
+		dude foot desperate tie stood themselves trip descend cease suicide apple busy
+
+To decode it, we begin by listing its words, from least to most significant,
+along with the value of each word corresponding to its position in the wordlist:
+
+		busy       - 200
+		apple      - 59
+		suicide    - 1384
+		cease      - 221
+		descend    - 379
+		trip       - 1493
+		themselves - 1433
+		stood      - 1348
+		tie        - 1459
+		desperate  - 386
+		foot       - 562
+		dude       - 439
+
+All that remains is to multiply the values by increasing powers of 1626 and sum
+the results:
+
+		200  x 1626^0 +
+		59   x 1626^1 +
+		1384 x 1626^2 +
+		221  x 1626^3 +
+		379  x 1626^4 +
+		1493 x 1626^5 +
+		1433 x 1626^6 +
+		1348 x 1626^7 +
+		1459 x 1626^8 +
+		386  x 1626^9 +
+		562  x 1626^10 +
+		439  x 1626^11
+
+While we could do this with pencil and paper, a few lines of Python code will
+make life much easier:
+
+		$ python
+		>>> sum = power = 0
+		>>> for word in 200,59,1384,221,379,1493,1433,1348,1459,386,562,439:
+		>>> 	sum += word * 1626 ** power
+		>>> 	power += 1
+		>>> print sum
+		92285275468192044354531703963345906238 # the result in decimal
+		>>> print '{:x}'.format(sum)
+		456d7f5f1c4bfe3bc916b87560ae6a3e # the result in hexadecimal: matches our original hex seed above
+
+In case you're wondering why 1626 was chosen as the base: 1626 is just large
+enough to allow a 128-bit seed to be represented by twelve words.  This can also
+be demonstrated at the Python prompt:
+
+		$ python
+		>>> 1626**12 >= 2**128
+		True
+		>>> 1625**12 >= 2**128
+		False
+
+[01]: https://github.com/casascius/Bitcoin-Address-Utility
+[02]: https://github.com/matja/bitcoin-tool
+[03]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py

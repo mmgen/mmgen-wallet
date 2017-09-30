@@ -18,8 +18,21 @@ low-powered netbook as your online machine.
 
 ### Download:
 
-> Go to the Bitcoin Core [main download page][01].  Choose the 32-bit or 64-bit
-> versions appropriate for your online and offline computers.
+> **Bitcoin Core:**
+
+>> Go to the Bitcoin Core [main download page][01].  Choose the 32-bit or 64-bit
+>> versions appropriate for your online and offline computers.
+
+> **Bitcoin ABC (optional):**
+
+>> If you wish to transact BCH, a.k.a "Bitcoin Cash” or “Bcash”, then download
+>> the appropriate [Bitcoin ABC binary][abc] for your system as well.  Windows
+>> users should download the zip file rather than the installer.  Both Windows
+>> and Linux users **must** rename the binary to 'bitcoind-abc' before
+>> installing it in their executable path.
+
+>> *Regard the Bitcoin ABC binaries as untrusted software.  The author of the
+>> MMGen project makes no guarantees regarding their safety or reliability.*
 
 ### Install (both online and offline computers):
 
@@ -66,3 +79,4 @@ low-powered netbook as your online machine.
 [01]: https://bitcoin.org/en/download
 [bd]: https://bitcoin.org/bin/blockchain/
 [05]: Editing-the-user-path-in-Windows
+[abc]: https://download.bitcoinabc.org/
