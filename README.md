@@ -11,16 +11,17 @@ easier way to install MMGen, check out the prebuilt bootable USB images on the
 MMGen is a Bitcoin cold-storage system implemented as a suite of Python
 command-line scripts requiring only a bare minimum of system resources.  The
 scripts work in tandem with a reference Bitcoin Core daemon (bitcoind) running
-on both an online and an offline computer to provide a robust solution for
-securely storing, tracking, sending and receiving Bitcoins.  To track address
-balances without exposing keys on the online computer, MMGen relies on Bitcoin
-Core’s watch-only address support.  Ordinary Bitcoin addresses can be tracked
-and spent too, creating an easy migration path from other wallets.
+on both an online and an offline air-gapped computer to provide a robust
+solution for securely storing, tracking, sending and receiving Bitcoins.  To
+track address balances without exposing keys on the online computer, MMGen
+relies on Bitcoin Core’s watch-only address support.  Ordinary Bitcoin addresses
+can be tracked and spent too, creating an easy migration path from other
+wallets.
 
-MMGen is designed for reliability by having the reference Bitcoin Core daemon,
-rather than less-tested third-party software, do all the “heavy lifting” of
-tracking and signing transactions.  It’s also designed for privacy: unlike some
-other online/offline wallet solutions, MMGen plus Bitcoin Core is a completely
+MMGen is designed for reliability by having the Bitcoin daemon itself, rather
+than less-tested third-party software, do all the “heavy lifting” of tracking
+and signing transactions.  It’s also designed for privacy: unlike some other
+online/offline wallet solutions, MMGen plus Bitcoin Core is a completely
 self-contained system that makes **no connections to the Internet** except for
 the Bitcoin network itself: no third parties are involved, and thus no
 information about which addresses you’re tracking is leaked to the outside
@@ -104,6 +105,8 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [MMGen command help][6]
 
+> #### [Recovering your keys without the MMGen software][r]
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 [**Forum**][4] |
@@ -122,3 +125,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
 [8]: https://github.com/mmgen/MMGenLive
 [9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
+[r]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software

@@ -1,17 +1,17 @@
-MMGen's regtest mode, also known as Bob and Alice mode, provides a convenient
-front-end for bitcoind's regression test mode.  It creates a private blockchain
-and a virtual network of two users who can perform all MMGen operations,
-including sending bitcoins to each other.
+MMGen's regtest mode, also known as Bob and Alice mode, uses the Bitcoin
+daemon's regression test feature to create a virtual network of two users who
+transact on a private blockchain.
 
-To transact as Bob or Alice, just add the '--bob' or '--alice' option to any
-MMGen command.  MMGen will start and stop the Bitcoin daemon automatically as
-required.  All of MMGen's functionality is available in this mode, making it an
-ideal, risk-free way to acquaint yourself with the MMGen wallet's features and
-transacting on the Bitcoin blockchain in general.
+All of MMGen's functionality is available in regtest mode, making it an ideal
+way to learn to use the MMGen wallet without risking real coins.
+
+To send a transaction or perform any other operation as Bob or Alice, just add
+the '--bob' or '--alice' option to the relevant MMGen command.  MMGen will start
+and stop the Bitcoin daemon automatically as needed.
 
 This tutorial provides a quick, hands-on introduction.
 
-1. Create the blockchain and Bob and Alice's tracking wallets:
+1. Create the regtest blockchain and Bob and Alice's tracking wallets:
 
 		$ mmgen-regtest setup
 
@@ -26,7 +26,7 @@ This tutorial provides a quick, hands-on introduction.
 		$ mmgen-addrgen --bob --type=compressed 1-3
 		...
 		Addresses written to file '1163DDF1-C[1-3].addrs'
-		# 1163DDF1 is Bob's Seed ID; since it's generated randomly, your Bob's will be different
+		# 1163DDF1 is Bob's Seed ID; since it's generated randomly, yours will be different
 
 4. Import the addresses into Bob's tracking wallet:
 
@@ -34,8 +34,8 @@ This tutorial provides a quick, hands-on introduction.
 		...
 		Type uppercase 'YES' to confirm: YES
 
-5. List the addresses in Bob's tracking wallet.  You should see the addresses
-you just imported:
+5. List the addresses in Bob's tracking wallet.  You'll see the addresses you
+just imported:
 
 		$ mmgen-tool --bob listaddresses showempty=1
 		MMGenID        ADDRESS                             COMMENT BALANCE
@@ -43,17 +43,21 @@ you just imported:
 		1163DDF1:C:2   n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf     -      0
 		1163DDF1:C:3   mhYYHM7renPpNi8SUj5yeEZ54eAUJ5HyQ1     -      0
 
+	Note that regtest mode uses testnet-format addresses, which differ from the
+	familiar mainnet addresses beginning with '1'.
+
 6. Fund one of the addresses (let's choose the first one) with some BTC:
 
 		$ mmgen-regtest send mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ 500
 
-7. Make sure the funds arrived:
+7. Make sure the funds reached their destination:
 
 		$ mmgen-tool --bob listaddresses showempty=1
 		MMGenID        ADDRESS                             COMMENT BALANCE
 		1163DDF1:C:1   mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ     -    500
 		1163DDF1:C:2   n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf     -      0
 		1163DDF1:C:3   mhYYHM7renPpNi8SUj5yeEZ54eAUJ5HyQ1     -      0
+		TOTAL: 500 BTC
 
 8. You can view Bob's total balance this way too:
 
@@ -72,8 +76,8 @@ you just imported:
 		Addresses written to file '9304C211-S[1-3].addrs'
 
 11. Repeat steps 4-7 for Alice by substituting '--bob' for '--alice'.  Don't
-forget to adjust the address filename and send address as well.  The result of
-step 7 should look something like this:
+forget to change the address filename and send address to suit.  The result of
+step 7 will look something like this:
 
 		MMGenID        ADDRESS                             COMMENT BALANCE
 		9304C211:S:1   2N3HhxasbRvrJyHg72JNVCCPi9EUGrEbFnu    -    500
@@ -82,14 +86,20 @@ step 7 should look something like this:
 		TOTAL: 500 BTC
 
 12. Split Alice's funds, sending 200 BTC to address S:2 and the change to S:3.
-Specify a fee of 20 satoshis/byte and '--quiet' for less noisy output:
+Specify a fee of 20 satoshis/byte and make output quieter:
 
 		$ mmgen-txdo --alice --tx-fee=20s --quiet 9304C211:S:2,300 9304C211:S:3
 		...
 		Type uppercase 'YES' to confirm: YES
 		Transaction sent: 78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b076
 
-13. Check the mempool for the transaction:
+	Note that for simplicity's sake this tutorial uses the `mmgen-txdo` command
+	to create, sign and send transactions in one operation.  In normal, cold
+	wallet mode, your seed will be held on a separate offline computer which
+	you'll use to sign transactions using the `mmgen-txsign` command.  This is
+	explained in detail in the Getting Started guide.
+
+13. View the transaction in the mempool:
 
 		$ mmgen-regtest show_mempool
 		['78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b076']
@@ -112,7 +122,7 @@ Specify a fee of 20 satoshis/byte and '--quiet' for less noisy output:
 		9304C211:S:3   2NF4y3y4CEjQCcssjX2BDLHT88XHn8z53JS    -    199.999967
 		TOTAL: 499.999967 BTC
 
-17. Have Alice send 10 BTC to Bob's C:2 address, with the change back to her S:1
+17. Have Alice send 10 BTC to Bob's C:2 address and the change back to her S:1
 address.  This time Alice specifies an absolute fee in BTC.
 
 		$ mmgen-txdo --alice --tx-fee=0.0001 --quiet 9304C211:S:1 n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf,10
@@ -120,7 +130,7 @@ address.  This time Alice specifies an absolute fee in BTC.
 		Enter a range or space-separated list of outputs to spend: 1
 		...
 
-    Note that Alice is reusing address S:1 here, and address reuse is generally a
+	Note that Alice is reusing address S:1 here, and address reuse is generally a
 	bad idea.  You'd be better off generating and importing some new addresses for
 	Alice by repeating steps 3 and 4 with a different address range.  I'll leave
 	that to you as an exercise.

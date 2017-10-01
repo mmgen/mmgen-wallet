@@ -38,8 +38,8 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.299'
-	release_date = 'August 2017'
+	version      = '0.9.3'
+	release_date = 'October 2017'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -47,7 +47,7 @@ class g(object):
 	author    = 'Philemon'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2017'
-	keywords  = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin'
+	keywords  = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi'
 
 	coin   = 'BTC'
 	coins  = 'BTC','BCH'
