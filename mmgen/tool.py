@@ -21,9 +21,9 @@
 tool.py:  Routines and data for the 'mmgen-tool' utility
 """
 
-import binascii as ba
+import binascii
 
-import mmgen.bitcoin as mmb
+from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.tx import *
@@ -61,8 +61,8 @@ cmd_data = OrderedDict([
 	('Wif2hex',    ['<wif> [str-]']),
 	('Wif2addr',   ['<wif> [str-]','segwit [bool=False]']),
 	('Wif2segwit_pair',['<wif> [str-]']),
-	('Hexaddr2addr', ['<btc address in hex format> [str-]']),
-	('Addr2hexaddr', ['<btc address> [str-]']),
+	('Hexaddr2addr', ['<coin address in hex format> [str-]']),
+	('Addr2hexaddr', ['<coin address> [str-]']),
 	('Privhex2addr', ['<private key in hex format> [str-]','compressed [bool=False]','segwit [bool=False]']),
 	('Privhex2pubhex',['<private key in hex format> [str-]','compressed [bool=False]']),
 	('Pubhex2addr',  ['<public key in hex format> [str-]','p2sh [bool=False]']), # new
@@ -247,7 +247,7 @@ def B58randenc():
 	print_convert_results(r,enc,dec,'str')
 
 def Randhex(nbytes='32'):
-	Msg(ba.hexlify(get_random(int(nbytes))))
+	Msg(binascii.hexlify(get_random(int(nbytes))))
 
 def Randwif(compressed=False):
 	Msg(PrivKey(get_random(32),compressed).wif)
@@ -279,21 +279,24 @@ def Wif2segwit_pair(wif):
 	rs = ag.to_segwit_redeem_script(pubhex)
 	Msg('{}\n{}'.format(rs,addr))
 
-def Hexaddr2addr(hexaddr):                     Msg(mmb.hexaddr2addr(hexaddr))
-def Addr2hexaddr(addr):                        Msg(mmb.verify_addr(addr,return_dict=True)['hex'])
-def Hash160(pubkeyhex):                        Msg(mmb.hash160(pubkeyhex))
-def Pubhex2addr(pubkeyhex,p2sh=False):         Msg(mmb.hexaddr2addr(mmb.hash160(pubkeyhex),p2sh=p2sh))
+def Hexaddr2addr(hexaddr):                     Msg(g.proto.hexaddr2addr(hexaddr))
+def Addr2hexaddr(addr):                        Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
+def Hash160(pubkeyhex):                        Msg(hash160(pubkeyhex))
+def Pubhex2addr(pubkeyhex,p2sh=False):         Msg(g.proto.hexaddr2addr(hash160(pubkeyhex),p2sh=p2sh))
 def Wif2hex(wif):                              Msg(wif2hex(wif))
 def Hex2wif(hexpriv,compressed=False):
-	Msg(mmb.hex2wif(hexpriv,compressed))
-def Privhex2addr(privhex,compressed=False,segwit=False):
+	Msg(g.proto.hex2wif(hexpriv,compressed))
+def Privhex2addr(privhex,compressed=False,segwit=False,output_pubhex=False):
 	if segwit and not compressed:
 		die(1,'Segwit address can be generated only from a compressed pubkey')
-	Msg(mmb.privnum2addr(int(privhex,16),compressed,segwit=segwit))
+	pk = PrivKey(binascii.unhexlify(privhex),compressed=compressed)
+	ph = kg.to_pubhex(pk)
+	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
+	Msg(ph if output_pubhex else ag.to_addr(ph))
 def Privhex2pubhex(privhex,compressed=False): # new
-	Msg(mmb.privnum2pubhex(int(privhex,16),compressed))
+	return Privhex2addr(privhex,compressed=compressed,output_pubhex=True)
 def Pubhex2redeem_script(pubhex): # new
-	Msg(mmb.pubhex2redeem_script(pubhex))
+	Msg(g.proto.pubhex2redeem_script(pubhex))
 def Wif2redeem_script(wif): # new
 	privhex = PrivKey(wif=wif)
 	if not privhex.compressed:
@@ -309,7 +312,7 @@ wordlists = 'electrum','tirosh'
 dfl_wl_id = 'electrum'
 
 def do_random_mn(nbytes,wordlist):
-	hexrand = ba.hexlify(get_random(nbytes))
+	hexrand = binascii.hexlify(get_random(nbytes))
 	Vmsg('Seed: %s' % hexrand)
 	for wl_id in ([wordlist],wordlists)[wordlist=='all']:
 		if wordlist == 'all':
@@ -324,10 +327,10 @@ def Mn_rand256(wordlist=dfl_wl_id): do_random_mn(32,wordlist)
 def Hex2mn(s,wordlist=dfl_wl_id): Msg(' '.join(baseconv.fromhex(s,wordlist)))
 def Mn2hex(s,wordlist=dfl_wl_id): Msg(baseconv.tohex(s.split(),wordlist))
 
-def Strtob58(s,pad=None): Msg(''.join(baseconv.fromhex(ba.hexlify(s),'b58',pad)))
+def Strtob58(s,pad=None): Msg(''.join(baseconv.fromhex(binascii.hexlify(s),'b58',pad)))
 def Hextob58(s,pad=None): Msg(''.join(baseconv.fromhex(s,'b58',pad)))
 def Hextob32(s,pad=None): Msg(''.join(baseconv.fromhex(s,'b32',pad)))
-def B58tostr(s):          Msg(ba.unhexlify(baseconv.tohex(s,'b58')))
+def B58tostr(s):          Msg(binascii.unhexlify(baseconv.tohex(s,'b58')))
 def B58tohex(s,pad=None): Msg(baseconv.tohex(s,'b58',pad))
 def B32tohex(s,pad=None): Msg(baseconv.tohex(s.upper(),'b32',pad))
 
@@ -403,7 +406,9 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 					die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
 							g.coin,d['address'],addrs[label.mmid]['addr']))
 			else:
-				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':BTCAddr(d['address']) }
+				addrs[label.mmid] = { 'amt':  BTCAmt('0'),
+									  'lbl':  label,
+									  'addr': CoinAddr(d['address'])}
 			addrs[label.mmid]['amt'] += d['amount']
 			total += d['amount']
 
@@ -425,7 +430,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 			if label.mmid not in addrs:
 				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':'' }
 				if showbtcaddrs:
-					addrs[label.mmid]['addr'] = BTCAddr(addr_arr[0])
+					addrs[label.mmid]['addr'] = CoinAddr(addr_arr[0])
 
 	if not addrs:
 		die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
@@ -438,7 +443,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 	max_cmt_len =  max(max(len(addrs[k]['lbl'].comment) for k in addrs),7)
 	out += [fs.format(
 			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
-			addr=BTCAddr.fmtc('ADDRESS'),
+			addr=CoinAddr.fmtc('ADDRESS'),
 			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len),
 			amt='BALANCE'
 			)]
@@ -533,10 +538,10 @@ def Passwdfile_chksum(infile):
 	PasswordList(infile=infile,chksum_only=True)
 
 def Hexreverse(s):
-	Msg(ba.hexlify(ba.unhexlify(s.strip())[::-1]))
+	Msg(binascii.hexlify(binascii.unhexlify(s.strip())[::-1]))
 
 def Hexlify(s):
-	Msg(ba.hexlify(s))
+	Msg(binascii.hexlify(s))
 
 def Hash256(s, file_input=False, hex_input=False):
 	from hashlib import sha256

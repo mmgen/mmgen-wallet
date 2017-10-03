@@ -163,6 +163,7 @@ class BitcoinRPCConnection(object):
 		'getnetworkinfo',
 		'getpeerinfo',
 		'getrawmempool',
+		'getmempoolentry',
 		'getrawtransaction',
 		'gettransaction',
 		'importaddress',

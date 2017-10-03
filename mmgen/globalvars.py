@@ -38,7 +38,7 @@ class g(object):
 		sys.exit(ev)
 	# Variables - these might be altered at runtime:
 
-	version      = '0.9.3'
+	version      = '0.9.399'
 	release_date = 'October 2017'
 
 	proj_name = 'MMGen'
@@ -51,7 +51,6 @@ class g(object):
 
 	coin   = 'BTC'
 	coins  = 'BTC','BCH'
-	ports = { 'BTC': (8332,18332), 'BCH': (8442,18442) }
 
 	user_entropy   = ''
 	hash_preset    = '3'
@@ -67,7 +66,7 @@ class g(object):
 	http_timeout = 60
 	max_int      = 0xffffffff
 
-	# Constants - some of these might be overriden, but they don't change thereafter
+	# Constants - some of these might be overriden in opts.py, but they don't change thereafter
 
 	debug                = False
 	quiet                = False
@@ -84,7 +83,6 @@ class g(object):
 	rpc_port             = 0
 	rpc_user             = ''
 	rpc_password         = ''
-	testnet_name         = 'testnet3'
 
 	bob                  = False
 	alice                = False
@@ -107,13 +105,12 @@ class g(object):
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
 	data_dir_root,data_dir,cfg_file = None,None,None
-	bitcoin_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin') if platform == 'win' \
-						else os.path.join(home_dir,'.bitcoin')
+	daemon_data_dir = '' # set by user or protocol
 
 	# User opt sets global var:
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color','regtest','coin','bob','alice'
+		'daemon_data_dir','force_256_color','regtest','coin','bob','alice'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
@@ -132,7 +129,7 @@ class g(object):
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'bitcoin_data_dir','force_256_color','max_tx_fee','regtest'
+		'daemon_data_dir','force_256_color','max_tx_fee','regtest'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',

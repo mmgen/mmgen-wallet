@@ -118,7 +118,7 @@ txio_attrs = {
 	'amt':   MMGenImmutableAttr('amt','BTCAmt'),
 	'label': MMGenListItemAttr('label','TwComment',reassign_ok=True),
 	'mmid':  MMGenListItemAttr('mmid','MMGenID'),
-	'addr':  MMGenImmutableAttr('addr','BTCAddr'),
+	'addr':  MMGenImmutableAttr('addr','CoinAddr'),
 	'confs': MMGenListItemAttr('confs',int,typeconv=True), # long confs exist in the wild, so convert
 	'txid':  MMGenListItemAttr('txid','BitcoinTxID'),
 	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
@@ -150,7 +150,7 @@ class MMGenTX(MMGenObject):
 		self.hex         = ''           # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
-		self.btc_txid    = ''
+		self.coin_txid    = ''
 		self.timestamp   = ''
 		self.chksum      = ''
 		self.fmt_data    = ''
@@ -168,8 +168,8 @@ class MMGenTX(MMGenObject):
 		if self.chain and g.chain and self.chain != g.chain:
 			die(2,'Transaction is for {}, but current chain is {}!'.format(self.chain,g.chain))
 
-	def add_output(self,btcaddr,amt,is_chg=None):
-		self.outputs.append(self.MMGenTxOutput(addr=btcaddr,amt=amt,is_chg=is_chg))
+	def add_output(self,coinaddr,amt,is_chg=None):
+		self.outputs.append(self.MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
 
 	def get_chg_output_idx(self):
 		for i in range(len(self.outputs)):
@@ -302,8 +302,8 @@ class MMGenTX(MMGenObject):
 	def get_fee(self):
 		return self.sum_inputs() - self.sum_outputs()
 
-	def btc2spb(self,btc_fee):
-		return int(btc_fee/g.satoshi/self.estimate_size())
+	def btc2spb(self,coin_fee):
+		return int(coin_fee/g.satoshi/self.estimate_size())
 
 	def get_relay_fee(self):
 		assert self.estimate_size()
@@ -326,38 +326,38 @@ class MMGenTX(MMGenObject):
 				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
 
 	def get_usr_fee(self,tx_fee,desc='Missing description'):
-		btc_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
-		if btc_fee == None:
+		coin_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
+		if coin_fee == None:
 			# we shouldn't be calling this if tx size is unknown
 			m = "'{}': cannot convert satoshis-per-byte to {} because transaction size is unknown"
 			assert False, m.format(tx_fee,g.coin)
-		elif btc_fee == False:
+		elif coin_fee == False:
 			m = "'{}': invalid TX fee (not a {} amount or satoshis-per-byte specification)"
 			msg(m.format(tx_fee,g.coin))
 			return False
-		elif btc_fee > g.max_tx_fee:
+		elif coin_fee > g.max_tx_fee:
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
-			msg(m.format(btc_fee,desc,g.max_tx_fee,c=g.coin))
+			msg(m.format(coin_fee,desc,g.max_tx_fee,c=g.coin))
 			return False
-		elif btc_fee < self.get_relay_fee():
+		elif coin_fee < self.get_relay_fee():
 			m = '{} {c}: {} fee too small (below relay fee of {} {c})'
-			msg(m.format(str(btc_fee),desc,str(self.get_relay_fee()),c=g.coin))
+			msg(m.format(str(coin_fee),desc,str(self.get_relay_fee()),c=g.coin))
 			return False
 		else:
-			return btc_fee
+			return coin_fee
 
 	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
-		btc_fee = None
+		coin_fee = None
 		while True:
 			if tx_fee:
-				btc_fee = self.get_usr_fee(tx_fee,desc)
-			if btc_fee:
+				coin_fee = self.get_usr_fee(tx_fee,desc)
+			if coin_fee:
 				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
 				p = '{} TX fee{}: {} {} ({} satoshis per byte)'.format(desc,m,
-					btc_fee.hl(),g.coin,pink(str(self.btc2spb(btc_fee))))
+					coin_fee.hl(),g.coin,pink(str(self.btc2spb(coin_fee))))
 				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 					if opt.yes: msg(p)
-					return btc_fee
+					return coin_fee
 			tx_fee = my_raw_input('Enter transaction fee: ')
 			desc = 'User-selected'
 
@@ -420,9 +420,9 @@ class MMGenTX(MMGenObject):
 		]
 		if self.label:
 			lines.append(baseconv.b58encode(self.label.encode('utf8')))
-		if self.btc_txid:
+		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
-			lines.append(self.btc_txid)
+			lines.append(self.coin_txid)
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join([self.chksum] + lines)+'\n'
 
@@ -455,11 +455,10 @@ class MMGenTX(MMGenObject):
 			sig_data.append(e)
 
 		msg_r('Signing transaction{}...'.format(tx_num_str))
-		ht = ('ALL','ALL|FORKID')[g.coin=='BCH'] # sighashtype defaults to 'ALL'
 		wifs = [d.sec.wif for d in keys]
 #		keys.pmsg()
 #		pmsg(wifs)
-		ret = c.signrawtransaction(self.hex,sig_data,wifs,ht,on_fail='return')
+		ret = c.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -479,7 +478,7 @@ class MMGenTX(MMGenObject):
 				txid = dt['txid']
 				self.check_sigs(dt)
 				assert txid == c.decoderawtransaction(self.hex)['txid'], 'txid mismatch (after signing)'
-				self.btc_txid = BitcoinTxID(txid,on_fail='return')
+				self.coin_txid = BitcoinTxID(txid,on_fail='return')
 				msg('OK')
 				return True
 			else:
@@ -523,10 +522,10 @@ class MMGenTX(MMGenObject):
 		return any(o.mmid and o.mmid.mmtype == 'S' for o in self.outputs)
 
 	def is_in_mempool(self,c):
-		return 'size' in c.getmempoolentry(self.btc_txid,on_fail='silent')
+		return 'size' in c.getmempoolentry(self.coin_txid,on_fail='silent')
 
 	def is_in_wallet(self,c):
-		ret = c.gettransaction(self.btc_txid,on_fail='silent')
+		ret = c.gettransaction(self.coin_txid,on_fail='silent')
 		if 'confirmations' in ret and ret['confirmations'] > 0:
 			return ret['confirmations']
 		else:
@@ -534,13 +533,13 @@ class MMGenTX(MMGenObject):
 
 	def is_replaced(self,c):
 		if self.is_in_mempool(c): return False
-		ret = c.gettransaction(self.btc_txid,on_fail='silent')
+		ret = c.gettransaction(self.coin_txid,on_fail='silent')
 		if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
 			return False
 		return -ret['confirmations'] + 1 # 1: replacement in mempool, 2: replacement confirmed
 
 	def is_in_utxos(self,c):
-		return 'txid' in c.getrawtransaction(self.btc_txid,True,on_fail='silent')
+		return 'txid' in c.getrawtransaction(self.coin_txid,True,on_fail='silent')
 
 	def get_status(self,c,status=False):
 		if self.is_in_mempool(c):
@@ -596,17 +595,17 @@ class MMGenTX(MMGenObject):
 			if bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
-				assert ret == self.btc_txid, 'txid mismatch (after sending)'
+				assert ret == self.coin_txid, 'txid mismatch (after sending)'
 				m = 'Transaction sent: {}'
 			self.desc = 'sent transaction'
-			msg(m.format(self.btc_txid.hl()))
+			msg(m.format(self.coin_txid.hl()))
 			self.add_timestamp()
 			self.add_blockcount(c)
 			return True
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
 		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.txid_ext)
-		write_data_to_file(fn,self.btc_txid+'\n','transaction ID',
+		write_data_to_file(fn,self.coin_txid+'\n','transaction ID',
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
 
@@ -704,8 +703,8 @@ class MMGenTX(MMGenObject):
 				self.is_rbf(color=True),self.marked_signed(color=True))
 		if self.chain in ('testnet','regtest'):
 			out += green('Chain: {}\n'.format(self.chain.upper()))
-		if self.btc_txid:
-			out += '{} TxID: {}\n'.format(g.coin,self.btc_txid.hl())
+		if self.coin_txid:
+			out += '{} TxID: {}\n'.format(g.coin,self.coin_txid.hl())
 		enl = ('\n','')[bool(terse)]
 		out += enl
 		if self.label:
@@ -747,8 +746,8 @@ class MMGenTX(MMGenObject):
 			do_err('checksum')
 
 		if len(tx_data) == 6:
-			self.btc_txid = BitcoinTxID(tx_data.pop(-1),on_fail='return')
-			if not self.btc_txid:
+			self.coin_txid = BitcoinTxID(tx_data.pop(-1),on_fail='return')
+			if not self.coin_txid:
 				do_err('Bitcoin TxID')
 
 		if len(tx_data) == 5:
@@ -787,7 +786,7 @@ class MMGenTX(MMGenObject):
 		try: self.inputs = self.decode_io('inputs',eval(inputs_data))
 		except: do_err('inputs data')
 
-		if not self.chain and not self.inputs[0].addr.testnet:
+		if not self.chain and not self.inputs[0].addr.is_testnet():
 			self.chain = 'mainnet'
 
 		try: self.outputs = self.decode_io('outputs',eval(outputs_data))
@@ -809,10 +808,10 @@ class MMGenBumpTX(MMGenTX):
 		if send:
 			if not self.marked_signed():
 				die(1,"File '{}' is not a signed {} transaction file".format(filename,g.proj_name))
-			if not self.btc_txid:
+			if not self.coin_txid:
 				die(1,"Transaction '{}' was not broadcast to the network".format(self.txid,g.proj_name))
 
-		self.btc_txid = ''
+		self.coin_txid = ''
 		self.mark_raw()
 
 	def choose_output(self):

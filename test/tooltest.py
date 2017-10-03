@@ -110,9 +110,9 @@ cfg = {
 	'tmpdir':        'test/tmp10',
 	'tmpdir_num':    10,
 	'refdir':        'test/ref',
-	'txfile':        'FFB367[1.234].rawtx',
-	'addrfile':      '98831F3A[1,31-33,500-501,1010-1011].addrs',
-	'addrfile_chk':  '6FEF 6FB9 7B13 5D91',
+	'txfile':        'FFB367[1.234]{}.rawtx',
+	'addrfile':      '98831F3A[1,31-33,500-501,1010-1011]{}.addrs',
+	'addrfile_chk':  ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
 }
 
 opts_data = lambda: {
@@ -169,7 +169,7 @@ if opt.list_names:
 
 import binascii
 from mmgen.test import *
-from mmgen.tx import is_wif,is_btc_addr
+from mmgen.tx import is_wif,is_coin_addr
 
 msg_w = 35
 def test_msg(m):
@@ -329,7 +329,7 @@ class MMGenToolTestSuite(object):
 		for n,k in enumerate(['','compressed=1','segwit=1 compressed=1']):
 			wif,addr = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1).split()
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
-			ok_or_die(addr,is_btc_addr,'Bitcoin address')
+			ok_or_die(addr,is_coin_addr,'Bitcoin address')
 	def Wif2addr(self,name,f1,f2,f3):
 		for n,f,k,m in ((1,f1,'',''),(2,f2,'','compressed'),(3,f3,'segwit=1','compressed')):
 			wif = read_from_file(f).split()[0]
@@ -356,7 +356,7 @@ class MMGenToolTestSuite(object):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
 	def Privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif
 		addr = read_from_file(f3).strip()
-		self.run_cmd_out(name,addr,kwargs='compressed=1',fn_idx=3)
+		self.run_cmd_out(name,addr,kwargs='compressed=1',fn_idx=3) # what about uncompressed?
 	def Pubhex2redeem_script(self,name,f1,f2,f3): # from above
 		addr = read_from_file(f3).strip()
 		self.run_cmd_out(name,addr,fn_idx=3)
@@ -406,8 +406,8 @@ class MMGenToolTestSuite(object):
 
 	# RPC
 	def Addrfile_chksum(self,name):
-		fn = os.path.join(cfg['refdir'],cfg['addrfile'])
-		self.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'])
+		fn = os.path.join(cfg['refdir'],cfg['addrfile'].format(('','.testnet')[g.testnet]))
+		self.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'][g.testnet])
 	def Getbalance(self,name):
 		self.run_cmd_out(name,literal=True)
 	def Listaddresses(self,name):
@@ -415,7 +415,7 @@ class MMGenToolTestSuite(object):
 	def Twview(self,name):
 		self.run_cmd_out(name,literal=True)
 	def Txview(self,name):
-		fn = os.path.join(cfg['refdir'],cfg['txfile'])
+		fn = os.path.join(cfg['refdir'],cfg['txfile'].format(('','.testnet')[g.testnet]))
 		self.run_cmd_out(name,fn,literal=True)
 
 # main()

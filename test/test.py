@@ -29,6 +29,7 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.test import *
+from mmgen.protocol import get_coin_protocol
 
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # and for the spawned scripts
@@ -41,7 +42,7 @@ hincog_offset  = 98765
 hincog_seedlen = 256
 
 incog_id_fn  = 'incog_id'
-non_mmgen_fn = 'btckey'
+non_mmgen_fn = 'coinkey'
 pwfile = 'passwd_file'
 
 ref_dir = os.path.join('test','ref')
@@ -146,6 +147,9 @@ sys.argv = [sys.argv[0]] + ['--data-dir',data_dir] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data)
 opt.popen_spawn = True # popen has issues, so use popen_spawn always
+
+if opt.segwit and 'S' not in g.proto.mmtypes:
+	die(1,'--segwit option incompatible with {}'.format(g.proto.__name__))
 
 tn_desc = ('','.testnet')[g.testnet]
 
@@ -794,22 +798,23 @@ def verify_checksum_or_exit(checksum,chk):
 
 from test.mmgen_pexpect import MMGenPexpect
 class MMGenExpect(MMGenPexpect):
-
 	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False):
 		desc = (cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc).strip()
-		return MMGenPexpect.__init__(self,name,mmgen_cmd,cmd_args,desc,no_output=no_output)
+		pa = ['testnet','rpc_host','rpc_port','regtest','coin']
+		return MMGenPexpect.__init__(self,name,mmgen_cmd,cmd_args,desc,no_output=no_output,passthru_args=pa)
 
-def create_fake_unspent_entry(btcaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
+def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
+	if 'S' not in g.proto.mmtypes: segwit = False
 	if lbl: lbl = ' ' + lbl
-	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and btcaddr.addr_fmt=='p2sh']
+	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and coinaddr.addr_fmt=='p2sh']
 	return {
-		'account': 'btc:{}'.format(btcaddr) if non_mmgen else (u'{}:{}{}'.format(al_id,idx,lbl.decode('utf8'))),
+		'account': 'btc:{}'.format(coinaddr) if non_mmgen else (u'{}:{}{}'.format(al_id,idx,lbl.decode('utf8'))),
 		'vout': int(getrandnum(4) % 8),
 		'txid': hexlify(os.urandom(32)).decode('utf8'),
 		'amount': BTCAmt('%s.%s' % (10+(getrandnum(4) % 40), getrandnum(4) % 100000000)),
-		'address': btcaddr,
+		'address': coinaddr,
 		'spendable': False,
-		'scriptPubKey': '{}{}{}'.format(spk1,btcaddr.hex,spk2),
+		'scriptPubKey': '{}{}{}'.format(spk1,coinaddr.hex,spk2),
 		'confirmations': getrandnum(4) % 50000
 	}
 
@@ -842,21 +847,21 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 	out = []
 	for d in tx_data.values():
 		al = adata.addrlist(d['al_id'])
-		for n,(idx,btcaddr) in enumerate(al.addrpairs()):
+		for n,(idx,coinaddr) in enumerate(al.addrpairs()):
 			while True:
 				try: lbl = next(label_iter)
 				except: label_iter = iter(labels)
 				else: break
-			out.append(create_fake_unspent_entry(btcaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
+			out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 			if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
-				out.append(create_fake_unspent_entry(btcaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
+				out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 	if non_mmgen_input:
 		privkey = PrivKey(os.urandom(32),compressed=True)
-		btcaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator().to_pubhex(privkey))
+		coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator().to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_data_to_file(of,privkey.wif+'\n','compressed bitcoin key',silent=True)
-		out.append(create_fake_unspent_entry(btcaddr,non_mmgen=True,segwit=False))
+		out.append(create_fake_unspent_entry(coinaddr,non_mmgen=True,segwit=False))
 
 #	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
 	return out
@@ -893,7 +898,8 @@ def create_tx_data(sources):
 
 def make_txcreate_cmdline(tx_data):
 	privkey = PrivKey(os.urandom(32),compressed=True)
-	btcaddr = AddrGenerator('segwit').to_addr(KeyGenerator().to_pubhex(privkey))
+	t = ('p2pkh','segwit')['S' in g.proto.mmtypes]
+	coinaddr = AddrGenerator(t).to_addr(KeyGenerator().to_pubhex(privkey))
 
 	cmd_args = ['-d',cfg['tmpdir']]
 	for num in tx_data:
@@ -904,7 +910,7 @@ def make_txcreate_cmdline(tx_data):
 		# + one change address and one BTC address
 		if num is tx_data.keys()[-1]:
 			cmd_args += ['{}:{}'.format(s['al_id'],s['addr_idxs'][1])]
-			cmd_args += ['{},{}'.format(btcaddr,cfgs[num]['amts'][1])]
+			cmd_args += ['{},{}'.format(coinaddr,cfgs[num]['amts'][1])]
 
 	return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
@@ -1933,10 +1939,8 @@ class MMGenTestSuite(object):
 	def regtest_addrimport_alice(self,name): self.regtest_addrimport(name,'alice')
 
 	def regtest_fund_wallet(self,name,user,mmtype,amt):
-		fn = get_file_with_ext('-{}[1-5].addrs'.format(mmtype),self.regtest_user_dir(user),no_dot=True)
-		silence()
-		addr = AddrList(fn).data[0].addr
-		end_silence()
+		sid = self.regtest_user_sid(user)
+		addr = self.get_addr_from_regtest_addrlist(user,sid,mmtype,0)
 		t = MMGenExpect(name,'mmgen-regtest', ['send',str(addr),str(amt)])
 		t.expect('Sending {} BTC'.format(amt))
 		t.expect('Mined 1 block')
@@ -2004,23 +2008,27 @@ class MMGenTestSuite(object):
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':S:2']
 		return self.regtest_user_txdo(name,'bob','20s',outputs_cl,'1')
 
+	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx):
+		id_str = { 'L':'', 'S':'-S', 'C':'-C' }[mmtype]
+		fn = get_file_with_ext('{}{}[1-5].addrs'.format(sid,id_str),self.regtest_user_dir(user),no_dot=True)
+		silence()
+		g.proto = get_coin_protocol(g.coin,True)
+		addr = AddrList(fn).data[idx].addr
+		g.proto = get_coin_protocol(g.coin,g.testnet)
+		end_silence()
+		return addr
+
 	def create_tx_outputs(self,user,data):
-		o,sid = [],self.regtest_user_sid(user)
-		for id_str,idx,amt_str in data:
-			fn = get_file_with_ext('{}{}[1-5].addrs'.format(sid,id_str),self.regtest_user_dir(user),no_dot=True)
-			silence()
-			addr = AddrList(fn).data[idx-1].addr
-			end_silence()
-			o.append(addr+amt_str)
-		return o
+		sid = self.regtest_user_sid(user)
+		return [self.get_addr_from_regtest_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
 	def regtest_bob_rbf_send(self,name):
-		outputs_cl = self.create_tx_outputs('alice',(('',1,',60'),('-C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
+		outputs_cl = self.create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self.regtest_user_sid('bob')+':S:2']
 		return self.regtest_user_txdo(name,'bob','10s',outputs_cl,'3',extra_args=['--rbf'])
 
 	def regtest_bob_send_non_mmgen(self,name):
-		outputs_cl = self.create_tx_outputs('alice',(('-S',2,',10'),('-S',3,''))) # alice_sid:S:2, alice_sid:S:3
+		outputs_cl = self.create_tx_outputs('alice',(('S',2,',10'),('S',3,''))) # alice_sid:S:2, alice_sid:S:3
 		fn = os.path.join(cfg['tmpdir'],'non-mmgen.keys')
 		return self.regtest_user_txdo(name,'bob','0.0001',outputs_cl,'3-9',extra_args=['--keys-from-file='+fn])
 

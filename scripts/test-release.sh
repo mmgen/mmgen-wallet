@@ -13,9 +13,9 @@ do
 		echo   "           '-t'  Print the tests without running them"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     1 - main"
-		echo   "     2 - regtest"
-		echo   "     3 - tool"
-		echo   "     4 - gen"
+		echo   "     2 - tooltest"
+		echo   "     3 - gentest"
+		echo   "     4 - regtest"
 		echo   "  By default, all tests are run"
 		exit ;;
 	i)  INSTALL_ONLY=1 ;;
@@ -67,15 +67,16 @@ function do_test {
 
 T1=('test/test.py -On'
 	'test/test.py -On --segwit dfl_wallet main ref ref_other'
+	'test/test.py -On --coin=bch dfl_wallet main ref ref_other'
 	'test/test.py -On --segwit-random dfl_wallet main')
-T2=('test/test.py -On regtest')
-T3=('test/tooltest.py') # tooltest tests both segwit and non-segwit
-T4=("test/gentest.py -q 2 $REFDIR/btcwallet.dump"
+T2=('test/tooltest.py' 'test/tooltest.py --testnet=1') # tooltest tests both segwit and non-segwit
+T3=("test/gentest.py -q 2 $REFDIR/btcwallet.dump"
 	"test/gentest.py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
 	'test/gentest.py -q 1:2 10'
 	'test/gentest.py -q --segwit 1:2 10'
 #	"scripts/tx-old2new.py -S $REFDIR/tx_*raw >/dev/null 2>&1"
 	"scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
+T4=('test/test.py -On regtest')
 
 [ -d .git -a -z "$NO_INSTALL"  -a -z "$TESTING" ] && {
 	check
@@ -84,9 +85,26 @@ T4=("test/gentest.py -q 2 $REFDIR/btcwallet.dump"
 }
 [ "$INSTALL_ONLY" ] && exit
 
-if [ "$*" ]; then TESTS=$@; else TESTS='1 2 3 4'; fi
-for t in $TESTS; do
-	[ $t == 4 ] && LS=''
-	eval "do_test \"\${T$t[@]}\""
-done
+function run_tests {
+	for t in $1; do
+		[ $t == 4 ] && LS=''
+		eval "do_test \"\${T$t[@]}\""
+	done
+}
+
+if [ "$*" ]; then
+	run_tests "$*"
+else
+	echo 'Bitcoin and Bitcoin ABC must both be running for the following tests'
+	echo 'The bitcoin-abc daemon must be listening on RPC port 8442 (-rpcport 8442)'
+	echo -n 'Hit ENTER to continue: '; read
+	run_tests '1'
+	echo 'The bitcoin (mainnet) and testnet daemons must both be running for the following tests'
+	echo -n 'Hit ENTER to continue: '; read
+	run_tests '2 3'
+	echo 'You may stop the mainnet and testnet daemons now'
+	echo -n 'Hit ENTER to continue: '; read
+	run_tests '4'
+fi
+
 echo -e "$LS${GREEN}All OK$RESET"

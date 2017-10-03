@@ -92,15 +92,11 @@ class MMGenPexpect(object):
 		atexit.register(lambda: os.system('stty sane'))
 		NL = '\n'
 
-	data_dir = os.path.join('test','data_dir')
-	add_spawn_args = ' '.join(['{} {}'.format('--'+k.replace('_','-'),
-		getattr(opt,k) if getattr(opt,k) != True else ''
-		) for k in ('testnet','rpc_host','rpc_port','regtest','coin') if getattr(opt,k)]).split()
-	add_spawn_args += ['--data-dir',data_dir]
-
-	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False):
-
-		cmd_args = self.add_spawn_args + cmd_args
+	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[]):
+		cmd_args = ['--{}{}'.format(k.replace('_','-'),
+			'='+getattr(opt,k) if getattr(opt,k) != True else ''
+			) for k in passthru_args if getattr(opt,k)] \
+			+ ['--data-dir='+os.path.join('test','data_dir')] + cmd_args
 		cmd = (('./','')[bool(opt.system)]+mmgen_cmd,'python')[g.platform=='win']
 		args = (cmd_args,[mmgen_cmd]+cmd_args)[g.platform=='win']
 

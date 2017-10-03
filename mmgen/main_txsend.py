@@ -54,7 +54,7 @@ if not tx.marked_signed(c):
 	die(1,'Transaction is not signed!')
 
 if opt.status:
-	if tx.btc_txid: qmsg('{} txid: {}'.format(g.coin,tx.btc_txid.hl()))
+	if tx.coin_txid: qmsg('{} txid: {}'.format(g.coin,tx.coin_txid.hl()))
 	tx.get_status(c,status=True)
 	sys.exit(0)
 

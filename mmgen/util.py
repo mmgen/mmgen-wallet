@@ -516,8 +516,6 @@ def confirm_or_exit(message,question,expect='YES',exit_msg='Exiting at user requ
 	if my_raw_input(a+b).strip() != expect:
 		die(1,exit_msg)
 
-
-# New function
 def write_data_to_file(
 		outfile,
 		data,
@@ -781,7 +779,7 @@ def do_license_msg(immed=False):
 
 def get_bitcoind_cfg_options(cfg_keys):
 
-	cfg_file = os.path.join(g.bitcoin_data_dir,'bitcoin.conf')
+	cfg_file = os.path.join(g.daemon_data_dir,'bitcoin.conf')
 
 	cfg = dict([(k,v) for k,v in [split2(str(line).translate(None,'\t '),'=')
 			for line in get_lines_from_file(cfg_file,'')] if k in cfg_keys]) \
@@ -792,39 +790,37 @@ def get_bitcoind_cfg_options(cfg_keys):
 	return cfg
 
 def get_bitcoind_auth_cookie():
-	f = os.path.join(g.bitcoin_data_dir,('',g.testnet_name)[g.testnet],'.cookie')
+	f = os.path.join(g.daemon_data_dir,g.proto.data_subdir,'.cookie')
 	return get_lines_from_file(f,'')[0] if file_is_readable(f) else ''
 
 def rpc_connection():
 
-	def check_coin_mismatch(c):
-		if c.getblockcount() == 0:
-			msg('Warning: no blockchain, so skipping block mismatch check')
-			return
-		fb = '00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148'
-		err = []
-		if c.getblockchaininfo()['blocks'] <= 478558 or c.getblockhash(478559) == fb:
-			if g.coin == 'BCH': err = 'BCH','BTC'
-		elif g.coin == 'BTC': err = 'BTC','BCH'
-		if err: ydie(2,"'{}' requested, but this is the {} chain!".format(*err))
+	def check_chainfork_mismatch(c):
+		block0 = c.getblockhash(0)
+		latest = c.getblockcount()
+		try:
+			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
+			for fork in g.proto.forks:
+				if latest < fork[0]: break
+				bhash = c.getblockhash(fork[0])
+				assert bhash == fork[1], (
+					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
+		except Exception as e:
+			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e,c=g.coin))
 
-	def check_chain_mismatch():
-		err = None
-		if g.regtest and g.chain != 'regtest':
-			err = '--regtest option'
-		elif g.testnet and g.chain == 'mainnet':
-			err = '--testnet option'
-		# we won't actually get here, as connect will fail first
-		elif (not g.testnet) and g.chain != 'mainnet':
-			err = 'mainnet'
-		if err:
-			die(1,'{} selected but chain is {}'.format(err,g.chain))
+	def check_chaintype_mismatch():
+		try:
+			if g.regtest: assert g.chain == 'regtest','--regtest option selected, but chain is not regtest'
+			if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
+			if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
+		except Exception as e:
+			die(1,'{}\nChain is {}!'.format(e,g.chain))
 
 	cfg = get_bitcoind_cfg_options(('rpcuser','rpcpassword'))
 	import mmgen.rpc
 	c = mmgen.rpc.BitcoinRPCConnection(
 				g.rpc_host or 'localhost',
-				g.rpc_port or g.ports[g.coin][g.testnet],
+				g.rpc_port or g.proto.rpc_port,
 				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
 				g.rpc_password or cfg['rpcpassword'],
 				auth_cookie=get_bitcoind_auth_cookie())
@@ -835,9 +831,9 @@ def rpc_connection():
 			rt.user(('alice','bob')[g.bob],quiet=True)
 		g.bitcoind_version = int(c.getnetworkinfo()['version'])
 		g.chain = c.getblockchaininfo()['chain']
-		if g.chain != 'regtest':
-			g.chain += 'net'
+		if g.chain != 'regtest': g.chain += 'net'
 		assert g.chain in g.chains
+		check_chaintype_mismatch()
 		if g.chain == 'mainnet':
-			check_coin_mismatch(c)
+			check_chainfork_mismatch(c)
 	return c

@@ -36,29 +36,28 @@ class AddrGenerator(MMGenObject):
 		assert atype in d
 		return super(cls,cls).__new__(d[atype])
 
-class AddrGeneratorP2PKH(MMGenObject):
+class AddrGeneratorP2PKH(AddrGenerator):
 	desc = 'p2pkh'
 	def to_addr(self,pubhex):
+		from mmgen.protocol import hash160
 		assert type(pubhex) == PubKey
-		from mmgen.bitcoin import hexaddr2addr,hash160
-		return BTCAddr(hexaddr2addr(hash160(pubhex)))
+		return CoinAddr(g.proto.hexaddr2addr(hash160(pubhex)))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplemented
+		raise NotImplementedError
 
-class AddrGeneratorSegwit(MMGenObject):
+class AddrGeneratorSegwit(AddrGenerator):
 	desc = 'segwit'
 	def to_addr(self,pubhex):
 		assert pubhex.compressed
-		from mmgen.bitcoin import pubhex2segwitaddr
-		return BTCAddr(pubhex2segwitaddr(pubhex))
+		return CoinAddr(g.proto.pubhex2segwitaddr(pubhex))
 
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed
-		from mmgen.bitcoin import pubhex2redeem_script
-		return HexStr(pubhex2redeem_script(pubhex))
+		return HexStr(g.proto.pubhex2redeem_script(pubhex))
 
 class KeyGenerator(MMGenObject):
+
 	def __new__(cls,generator=None,silent=False):
 		if cls.test_for_secp256k1(silent=silent) and generator != 1:
 			if not opt.key_generator or opt.key_generator == 2 or generator == 2:
@@ -76,12 +75,41 @@ class KeyGenerator(MMGenObject):
 		except:
 			return False
 
+import ecdsa
 class KeyGeneratorPython(KeyGenerator):
+	# From electrum:
+	# secp256k1, http://www.oid-info.com/get/1.3.132.0.10
+	_p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2FL
+	_r = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141L
+	_b = 0x0000000000000000000000000000000000000000000000000000000000000007L
+	_a = 0x0000000000000000000000000000000000000000000000000000000000000000L
+	_Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798L
+	_Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
+	_curve_secp256k1 = ecdsa.ellipticcurve.CurveFp(_p,_a,_b)
+	_generator_secp256k1 = ecdsa.ellipticcurve.Point(_curve_secp256k1,_Gx,_Gy,_r)
+	_oid_secp256k1 = (1,3,132,0,10)
+	_secp256k1 = ecdsa.curves.Curve('secp256k1',_curve_secp256k1,_generator_secp256k1,_oid_secp256k1)
+
+	# devdoc/guide_wallets.md:
+	# Uncompressed public keys start with 0x04; compressed public keys begin with
+	# 0x03 or 0x02 depending on whether they're greater or less than the midpoint
+	# of the curve.
+	def privnum2pubhex(self,numpriv,compressed=False):
+		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self._secp256k1)
+		# pubkey = 32-byte X coord + 32-byte Y coord (unsigned big-endian)
+		pubkey = hexlify(pko.get_verifying_key().to_string())
+		if compressed: # discard Y coord, replace with appropriate version byte
+			# even Y: <0, odd Y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
+			p = ('03','02')[pubkey[-1] in '02468ace']
+			return p+pubkey[:64]
+		else:
+			return '04'+pubkey
+
 	desc = 'python-ecdsa'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
-		from mmgen.bitcoin import privnum2pubhex
-		return PubKey(privnum2pubhex(int(privhex,16),compressed=privhex.compressed),compressed=privhex.compressed)
+		return PubKey(self.privnum2pubhex(
+			int(privhex,16),compressed=privhex.compressed),compressed=privhex.compressed)
 
 class KeyGeneratorSecp256k1(KeyGenerator):
 	desc = 'secp256k1'
@@ -91,7 +119,7 @@ class KeyGeneratorSecp256k1(KeyGenerator):
 		return PubKey(hexlify(priv2pub(unhexlify(privhex),int(privhex.compressed))),compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
-	addr  = MMGenListItemAttr('addr','BTCAddr')
+	addr  = MMGenListItemAttr('addr','CoinAddr')
 	idx   = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
 	label = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	sec   = MMGenListItemAttr('sec',PrivKey,typeconv=False)
@@ -306,7 +334,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 	def addrpairs(self):
 		return [(e.idx,e.addr) for e in self.data]
 
-	def btcaddrs(self):
+	def coinaddrs(self):
 		return [e.addr for e in self.data]
 
 	def comments(self):
@@ -316,7 +344,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		for e in self.data:
 			if idx == e.idx: return e
 
-	def btcaddr(self,idx):
+	def coinaddr(self,idx):
 		for e in self.data:
 			if idx == e.idx: return e.addr
 
@@ -329,8 +357,8 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			if idx == e.idx:
 				e.label = comment
 
-	def make_reverse_dict(self,btcaddrs):
-		d,b = MMGenDict(),btcaddrs
+	def make_reverse_dict(self,coinaddrs):
+		d,b = MMGenDict(),coinaddrs
 		for e in self.data:
 			try:
 				d[b[b.index(e.addr)]] = MMGenID('{}:{}'.format(self.al_id,e.idx)),e.label
@@ -671,15 +699,15 @@ re-import your addresses.
 		if al_id in self.al_ids:
 			return self.al_ids[al_id]
 
-	def mmaddr2btcaddr(self,mmaddr):
+	def mmaddr2coinaddr(self,mmaddr):
 		al_id,idx = MMGenID(mmaddr).rsplit(':',1)
-		btcaddr = ''
+		coinaddr = ''
 		if al_id in self.al_ids:
-			btcaddr = self.addrlist(al_id).btcaddr(int(idx))
-		return btcaddr or None
+			coinaddr = self.addrlist(al_id).coinaddr(int(idx))
+		return coinaddr or None
 
-	def btcaddr2mmaddr(self,btcaddr):
-		d = self.make_reverse_dict([btcaddr])
+	def coinaddr2mmaddr(self,coinaddr):
+		d = self.make_reverse_dict([coinaddr])
 		return (d.values()[0][0]) if d else None
 
 	def add_tw_data(self):
@@ -710,8 +738,8 @@ re-import your addresses.
 		else:
 			raise TypeError, 'Error: object %s is not of type AddrList' % repr(addrlist)
 
-	def make_reverse_dict(self,btcaddrs):
+	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()
 		for al_id in self.al_ids:
-			d.update(self.al_ids[al_id].make_reverse_dict(btcaddrs))
+			d.update(self.al_ids[al_id].make_reverse_dict(coinaddrs))
 		return d

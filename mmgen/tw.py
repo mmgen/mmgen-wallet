@@ -45,7 +45,7 @@ class MMGenTrackingWallet(MMGenObject):
 		amt      = MMGenImmutableAttr('amt','BTCAmt'),
 		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True),
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
-		addr     = MMGenImmutableAttr('addr','BTCAddr'),
+		addr     = MMGenImmutableAttr('addr','CoinAddr'),
 		confs    = MMGenImmutableAttr('confs',int,typeconv=False),
 		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
 		days    = MMGenListItemAttr('days',int,typeconv=False),
@@ -71,9 +71,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.get_unspent_data()
 		self.sort_key     = 'age'
 		self.do_sort()
-		self.total        = self.get_total_btc()
+		self.total        = self.get_total_coin()
 
-	def get_total_btc(self):
+	def get_total_coin(self):
 		return sum(i.amt for i in self.unspent)
 
 	def get_unspent_data(self):
@@ -95,7 +95,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					'label':  l.comment,
 					'days':   int(o['confirmations'] * g.mins_per_block / (60*24)),
 					'amt':    BTCAmt(o['amount']), # TODO
-					'addr':   BTCAddr(o['address']), # TODO
+					'addr':   CoinAddr(o['address']), # TODO
 					'confs':  o['confirmations']
 				})
 				mm_rpc.append(o)
@@ -168,7 +168,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
-		af = BTCAddr.fmtc('Address',width=addr_w+1)
+		af = CoinAddr.fmtc('Address',width=addr_w+1)
 		cf = ('Conf.','Age(d)')[self.show_days]
 		out += [fs % ('Num','TX id'.ljust(tx_w - 5) + ' Vout','',af,'Amt({}) '.format(g.coin),cf)]
 
@@ -312,33 +312,33 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	# returns on failure
 	@classmethod
 	def add_label(cls,arg1,label='',addr=None,silent=False):
-		from mmgen.tx import is_mmgen_id,is_btc_addr
-		mmaddr,btcaddr = None,None
-		if is_btc_addr(addr or arg1):
-			btcaddr = BTCAddr(addr or arg1,on_fail='return')
+		from mmgen.tx import is_mmgen_id,is_coin_addr
+		mmaddr,coinaddr = None,None
+		if is_coin_addr(addr or arg1):
+			coinaddr = CoinAddr(addr or arg1,on_fail='return')
 		if is_mmgen_id(arg1):
 			mmaddr = TwMMGenID(arg1)
 
-		if not btcaddr and not mmaddr:
+		if not coinaddr and not mmaddr:
 			msg("Address '{}' invalid or not found in tracking wallet".format(addr or arg1))
 			return False
 
-		if not btcaddr:
+		if not coinaddr:
 			from mmgen.addr import AddrData
-			btcaddr = AddrData(source='tw').mmaddr2btcaddr(mmaddr)
+			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
 
-		if not btcaddr:
+		if not coinaddr:
 			msg("{} address '{}' not found in tracking wallet".format(g.proj_name,mmaddr))
 			return False
 
 		# Checked that the user isn't importing a random address
-		if not btcaddr.is_in_tracking_wallet():
-			msg("Address '{}' not in tracking wallet".format(btcaddr))
+		if not coinaddr.is_in_tracking_wallet():
+			msg("Address '{}' not in tracking wallet".format(coinaddr))
 			return False
 
 		c = rpc_connection()
-		if not btcaddr.is_for_current_chain():
-			msg("Address '{}' not valid for chain {}".format(btcaddr,g.chain.upper()))
+		if not coinaddr.is_for_current_chain():
+			msg("Address '{}' not valid for chain {}".format(coinaddr,g.chain.upper()))
 			return False
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
@@ -346,9 +346,9 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		if not mmaddr:
 			from mmgen.addr import AddrData
 			ad = AddrData(source='tw')
-			mmaddr = ad.btcaddr2mmaddr(btcaddr)
+			mmaddr = ad.coinaddr2mmaddr(coinaddr)
 
-		if not mmaddr: mmaddr = 'btc:'+btcaddr
+		if not mmaddr: mmaddr = 'btc:'+coinaddr
 
 		mmaddr = TwMMGenID(mmaddr)
 
@@ -361,7 +361,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		# associating the new account with the address.
 		# Will be replaced by setlabel() with new RPC label API
 		# RPC args: addr,label,rescan[=true],p2sh[=none]
-		ret = c.importaddress(btcaddr,lbl,False,on_fail='return')
+		ret = c.importaddress(coinaddr,lbl,False,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):

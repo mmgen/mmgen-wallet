@@ -213,8 +213,14 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	if g.regtest: g.testnet = True # These are equivalent for now
 
-#	Global vars are now final, including g.testnet, so we can set g.data_dir
-	g.data_dir=os.path.normpath(os.path.join(g.data_dir_root,('',g.testnet_name)[g.testnet]))
+	# g.testnet is set, so we can set g.proto
+	from mmgen.protocol import get_coin_protocol
+	g.proto = get_coin_protocol(g.coin,g.testnet)
+
+	if not g.daemon_data_dir: g.daemon_data_dir = g.proto.daemon_data_dir
+
+#	g.proto is set, so we can set g.data_dir
+	g.data_dir = os.path.normpath(os.path.join(g.data_dir_root,g.proto.data_subdir))
 
 	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
 	# If unset, set it to default value in mmgen.globalvars (g)
@@ -243,10 +249,11 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.bob or g.alice:
+		g.testnet = True
+		g.proto = get_coin_protocol(g.coin,g.testnet)
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',('alice','bob')[g.bob])
 		check_or_create_dir(g.data_dir)
 		import regtest as rt
-		g.testnet = True
 		g.rpc_host = 'localhost'
 		g.rpc_port = rt.rpc_port
 		g.rpc_user = rt.rpc_user

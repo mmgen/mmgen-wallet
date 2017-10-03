@@ -54,7 +54,7 @@ FEE SPECIFICATION: Transaction fees, both on the command line and at the
 interactive prompt, may be specified as either absolute {} amounts, using
 a plain decimal number, or as satoshis per byte, using an integer followed by
 the letter 's'.
-""" # formatted later, after g.coin is initialized
+"""
 
 wmsg = {
 	'addr_in_addrfile_only': """
@@ -79,7 +79,7 @@ inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
 Selected non-{pnm} inputs: {{}}
 """.strip().format(pnm=pnm,pnl=pnm.lower()),
-	'not_enough_btc': """
+	'not_enough_coin': """
 Selected outputs insufficient to fund this transaction ({{}} {} needed)
 """.strip().format(g.coin),
 	'no_change_output': """
@@ -98,15 +98,15 @@ def select_unspent(unspent,prompt):
 					return selected
 				msg('Unspent output number must be <= %s' % len(unspent))
 
-def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
+def mmaddr2coinaddr(c,mmaddr,ad_w,ad_f):
 
 	# assume mmaddr has already been checked
-	btc_addr = ad_w.mmaddr2btcaddr(mmaddr)
+	coin_addr = ad_w.mmaddr2coinaddr(mmaddr)
 
-	if not btc_addr:
+	if not coin_addr:
 		if ad_f:
-			btc_addr = ad_f.mmaddr2btcaddr(mmaddr)
-			if btc_addr:
+			coin_addr = ad_f.mmaddr2coinaddr(mmaddr)
+			if coin_addr:
 				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
 				if not keypress_confirm('Continue anyway?'):
 					sys.exit(1)
@@ -115,7 +115,7 @@ def mmaddr2baddr(c,mmaddr,ad_w,ad_f):
 		else:
 			die(2,wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
 
-	return BTCAddr(btc_addr)
+	return CoinAddr(coin_addr)
 
 def get_fee_from_estimate_or_user(tx,estimate_fail_msg_shown=[]):
 
@@ -155,16 +155,16 @@ def get_outputs_from_cmdline(cmd_args,tx):
 	for a in cmd_args:
 		if ',' in a:
 			a1,a2 = a.split(',',1)
-			if is_mmgen_id(a1) or is_btc_addr(a1):
-				btc_addr = mmaddr2baddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else BTCAddr(a1)
-				tx.add_output(btc_addr,BTCAmt(a2))
+			if is_mmgen_id(a1) or is_coin_addr(a1):
+				coin_addr = mmaddr2coinaddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
+				tx.add_output(coin_addr,BTCAmt(a2))
 			else:
 				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
-		elif is_mmgen_id(a) or is_btc_addr(a):
+		elif is_mmgen_id(a) or is_coin_addr(a):
 			if tx.get_chg_output_idx() != None:
 				die(2,'ERROR: More than one change address listed on command line')
-			btc_addr = mmaddr2baddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else BTCAddr(a)
-			tx.add_output(btc_addr,BTCAmt('0'),is_chg=True)
+			coin_addr = mmaddr2coinaddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else CoinAddr(a)
+			tx.add_output(coin_addr,BTCAmt('0'),is_chg=True)
 		else:
 			die(2,'%s: unrecognized argument' % a)
 
@@ -191,7 +191,7 @@ def get_inputs_from_user(tw,tx,caller):
 
 		t_inputs = sum(s.amt for s in sel_unspent)
 		if t_inputs < tx.send_amt:
-			msg(wmsg['not_enough_btc'].format(tx.send_amt-t_inputs))
+			msg(wmsg['not_enough_coin'].format(tx.send_amt-t_inputs))
 			continue
 
 		non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
@@ -210,7 +210,7 @@ def get_inputs_from_user(tw,tx,caller):
 				if opt.yes: msg(p)
 				return change_amt
 		else:
-			msg(wmsg['not_enough_btc'].format(abs(change_amt)))
+			msg(wmsg['not_enough_coin'].format(abs(change_amt)))
 
 def txcreate(cmd_args,do_info=False,caller='txcreate'):
 

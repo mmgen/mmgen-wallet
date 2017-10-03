@@ -28,7 +28,7 @@ from string import hexdigits,ascii_letters,digits
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
 def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
-def is_btc_addr(s):      return BTCAddr(s,on_fail='silent')
+def is_coin_addr(s):     return CoinAddr(s,on_fail='silent')
 def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
 def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
@@ -302,7 +302,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 
 	@classmethod
 	def fmtc(cls):
-		raise NotImplemented
+		raise NotImplementedError
 
 	def fmt(self,fs='3.8',color=False,suf=''):
 		s = self.__str__(color=False)
@@ -347,7 +347,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other,context=None):
 		return type(self)(Decimal.__neg__(self,other,context))
 
-class BTCAddr(str,Hilite,InitErrors,MMGenObject):
+class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
 	width = 35 # max len of testnet p2sh addr
 	def __new__(cls,s,on_fail='die'):
@@ -356,12 +356,11 @@ class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-ascii characters'
 			me = str.__new__(cls,s)
-			from mmgen.bitcoin import verify_addr
-			va = verify_addr(s,return_dict=True)
+			from mmgen.globalvars import g
+			va = g.proto.verify_addr(s,return_dict=True)
 			assert va,'failed verification'
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
-			me.testnet = va['net'] == 'testnet'
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to Bitcoin address ({})"
@@ -380,12 +379,15 @@ class BTCAddr(str,Hilite,InitErrors,MMGenObject):
 	def is_for_current_chain(self):
 		from mmgen.globalvars import g
 		assert g.chain,'global chain variable unset'
-		from bitcoin import btc_addr_pfxs
-		return self[0] in btc_addr_pfxs[g.chain]
+		return self[0] in g.proto.get_chain_protocol(g.chain).addr_pfxs
 
 	def is_mainnet(self):
-		from bitcoin import btc_addr_pfxs
-		return self[0] in btc_addr_pfxs['mainnet']
+		from mmgen.globalvars import g
+		return self[0] in g.proto.get_chain_protocol('mainnet').addr_pfxs
+
+	def is_testnet(self):
+		from mmgen.globalvars import g
+		return self[0] in g.proto.get_chain_protocol('testnet').addr_pfxs
 
 	def is_in_tracking_wallet(self):
 		from mmgen.rpc import rpc_connection
@@ -420,6 +422,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
+		from mmgen.globalvars import g
 		try:
 			ss = str(s).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
@@ -428,6 +431,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 			me.sid = SeedID(sid=ss[0],on_fail='raise')
 			me.idx = AddrIdx(ss[-1],on_fail='raise')
 			me.mmtype = t
+			assert t in g.proto.mmtypes,'{}: invalid address type for {}'.format(t,g.proto.__name__)
 			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
 			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
 			return me
@@ -518,13 +522,13 @@ class BitcoinTxID(MMGenTxID):
 class WifKey(str,Hilite,InitErrors):
 	width = 53
 	color = 'blue'
-	def __new__(cls,s,on_fail='die',testnet=None): # fall back to g.testnet
+	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii string'
-			from mmgen.bitcoin import wif2hex
-			if wif2hex(s,testnet=testnet):
+			from mmgen.globalvars import g
+			if g.proto.wif2hex(s):
 				return str.__new__(cls,s)
 			raise ValueError,'failed verification'
 		except Exception as e:
@@ -552,7 +556,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	wif        = MMGenImmutableAttr('wif',WifKey,typeconv=False)
 
 	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,s=None,compressed=None,wif=None,on_fail='die',testnet=None): # default to g.testnet
+	def __new__(cls,s=None,compressed=None,wif=None,on_fail='die'):
 
 		if type(s) == cls: return s
 		assert wif or (s and type(compressed) == bool),'Incorrect args for PrivKey()'
@@ -561,12 +565,11 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		if wif:
 			try:
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii string'
-				from mmgen.bitcoin import wif2hex
-				w2h = wif2hex(wif,testnet=testnet)
+				from mmgen.globalvars import g
+				w2h = g.proto.wif2hex(wif)
 				assert w2h,"wif2hex() failed for wif key {!r}".format(wif)
 				me = str.__new__(cls,w2h['hex'])
 				me.compressed = w2h['compressed']
-				me.testnet = w2h['testnet']
 				me.wif = str.__new__(WifKey,wif) # check has been done
 				return me
 			except Exception as e:
@@ -578,16 +581,15 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
 			me = str.__new__(cls,hexlify(s))
 			me.compressed = compressed
-			me.wif = me.towif(testnet=testnet)
-#			me.testnet = testnet # leave uninitialized for now
+			me.wif = me.towif()
 			return me
 		except Exception as e:
-			fs = "Key={}\nCompressed={}\nValue pair cannot be converted to PrivKey ({})"
-			return cls.init_fail(fs.format(repr(s),compressed,e[0]),on_fail)
+			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey ({!r})"
+			return cls.init_fail(fs.format(s,compressed,e),on_fail)
 
-	def towif(self,testnet=None):
-		from mmgen.bitcoin import hex2wif
-		return WifKey(hex2wif(self,compressed=self.compressed),on_fail='raise',testnet=testnet)
+	def towif(self):
+		from mmgen.globalvars import g
+		return WifKey(g.proto.hex2wif(self,compressed=self.compressed),on_fail='raise')
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
@@ -660,7 +662,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	width = 1
 	trunc_ok = False
 	color = 'blue'
-	mmtypes = { # since 'name' is used to cook the seed, it must never change!
+	mmtypes = { # 'name' is used to cook the seed, so it must never change!
 		'L': {  'name':'legacy',
 				'comp':False,
 				'gen':'p2pkh',
@@ -704,5 +706,9 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
-		'P': {'name':'password','comp':False,'gen':None,'fmt':None,'desc':'Password generated from MMGen seed'}
+		'P': {  'name':'password',
+				'comp':False,
+				'gen':None,
+				'fmt':None,
+				'desc':'Password generated from MMGen seed'}
 	}
