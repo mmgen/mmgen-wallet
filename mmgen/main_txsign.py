@@ -30,7 +30,6 @@ opts_data = lambda: {
 	'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
--A, --aug1hf          Sign transaction for the Aug. 1 2017 UAHF chain
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                       brainwallet input
 -d, --outdir=      d  Specify an alternate directory 'd' for output
@@ -70,10 +69,6 @@ opts_data = lambda: {
 }
 
 infiles = opts.init(opts_data,add_opts=['b16'])
-
-if opt.aug1hf: # TODO: remove in 0.9.4
-	msg(yellow('The --aug1hf option is deprecated. Please use --coin=bch instead'))
-	g.coin = 'BCH'
 
 if not infiles: opts.usage()
 for i in infiles: check_infile(i)

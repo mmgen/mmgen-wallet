@@ -107,6 +107,8 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Recovering your keys without the MMGen software][r]
 
+> #### [Bitcoin Cash (BCH) support][x]
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 [**Forum**][4] |
@@ -126,3 +128,4 @@ Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [8]: https://github.com/mmgen/MMGenLive
 [9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
 [r]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software
+[x]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_bch

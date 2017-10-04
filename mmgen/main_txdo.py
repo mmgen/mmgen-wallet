@@ -30,7 +30,6 @@ opts_data = lambda: {
 	'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
--A, --aug1hf           Sign transaction for the Aug. 1 2017 UAHF chain
 -a, --tx-fee-adj=    f Adjust transaction fee by factor 'f' (see below)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
                        brainwallet input
@@ -78,10 +77,6 @@ opts_data = lambda: {
 }
 
 cmd_args = opts.init(opts_data)
-
-if opt.aug1hf: # TODO: remove in 0.9.4
-	msg(yellow('The --aug1hf option is deprecated. Please use --coin=bch instead'))
-	g.coin = 'BCH'
 
 seed_files = get_seed_files(opt,cmd_args)
 c = rpc_connection()

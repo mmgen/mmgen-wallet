@@ -465,7 +465,7 @@ class MMGenTX(MMGenObject):
 			errmsg = rpc_errmsg(ret)
 			if 'Invalid sighash param' in errmsg:
 				m  = 'This is not the BCH chain.'
-				m += "\nRe-run the script without the --aug1hf or --coin=bch option."
+				m += "\nRe-run the script without the --coin=bch option."
 			else:
 				m = errmsg
 			msg(yellow(m))
@@ -585,7 +585,7 @@ class MMGenTX(MMGenObject):
 				m += "\nRe-run the script with the --coin=bch option."
 			elif 'Illegal use of SIGHASH_FORKID' in errmsg:
 				m  = 'The Aug. 1 2017 UAHF is not yet active on this chain.'
-				m += "\nRe-run the script without the --aug1hf or --coin=bch option."
+				m += "\nRe-run the script without the --coin=bch option."
 			else:
 				m = errmsg
 			msg(yellow(m))

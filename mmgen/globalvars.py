@@ -123,7 +123,6 @@ class g(object):
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
-		('aug1hf','rbf'), # TODO: remove in 0.9.4
 		('batch','rescan') # still incompatible as of Core 0.15.0
 	)
 	cfg_file_opts = (
