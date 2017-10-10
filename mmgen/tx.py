@@ -48,6 +48,12 @@ def bytes2int(hex_bytes):
 def bytes2btc(hex_bytes):
 	return bytes2int(hex_bytes) * g.satoshi
 
+def scriptPubKey2addr(s):
+	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac': addr_hex,p2sh = s[6:-4],False
+	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':   addr_hex,p2sh = s[4:-2],True
+	else: raise NotImplementedError,'Unknown scriptPubKey'
+	return g.proto.hexaddr2addr(addr_hex,p2sh)
+
 from collections import OrderedDict
 class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 	def __init__(self,txhex):
@@ -90,6 +96,9 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			('amount',       bytes2btc(hshift(tx,8))),
 			('scriptPubKey', hshift(tx,readVInt(tx)))
 		)) for i in range(d['num_txouts'])])
+
+		for o in d['txouts']:
+			o['address'] = scriptPubKey2addr(o['scriptPubKey'])
 
 		d['witness_size'] = 0
 		if has_witness:
@@ -475,6 +484,7 @@ class MMGenTX(MMGenObject):
 				self.hex = ret['hex']
 				vmsg('Signed transaction size: {}'.format(len(self.hex)/2))
 				dt = DeserializedTX(self.hex)
+				self.check_hex_tx_matches_mmgen_tx(dt)
 				txid = dt['txid']
 				self.check_sigs(dt)
 				assert txid == c.decoderawtransaction(self.hex)['txid'], 'txid mismatch (after signing)'
@@ -497,6 +507,30 @@ class MMGenTX(MMGenObject):
 	def marked_signed(self,color=False):
 		ret = self.desc == 'signed transaction'
 		return (red,green)[ret](str(ret)) if color else ret
+
+	# protect against an attack where a malicious, compromised or malfunctioning daemon could switch
+	# hex transaction data.
+	def check_hex_tx_matches_mmgen_tx(self,deserial_tx):
+		m = 'Fatal error: a malicious or malfunctioning coin daemon or other program has altered your data!'
+
+		if deserial_tx['lock_time'] != 0:
+			rdie(3,'\nLock time is not zero!\n' + m)
+
+		def do_io_err(desc,mmio,hexio):
+			msg('\nMMGen {}:\n{}'.format(desc,pformat(mmio)))
+			msg('Hex {}:\n{}'.format(desc,pformat(hexio)))
+			m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n' + m
+			rdie(3,m2.format(desc.capitalize()))
+
+		i_hex   = sorted((i['txid'],i['vout']) for i in deserial_tx['txins'])
+		i_mmgen = sorted((i.txid,i.vout) for i in self.inputs)
+		if i_hex != i_mmgen:
+			do_io_err('inputs',i_hex,i_mmgen)
+
+		o_hex   = sorted((o['address'],BTCAmt(o['amount'])) for o in deserial_tx['txouts'])
+		o_mmgen = sorted((o.addr,o.amt) for o in self.outputs)
+		if o_hex != o_mmgen:
+			do_io_err('outputs',o_hex,o_mmgen)
 
 	def check_sigs(self,deserial_tx=None): # return False if no sigs, die on error
 		txins = (deserial_tx or DeserializedTX(self.hex))['txins']
@@ -556,6 +590,8 @@ class MMGenTX(MMGenObject):
 	def send(self,c,prompt_user=True):
 
 		self.die_if_incorrect_chain()
+
+		self.check_hex_tx_matches_mmgen_tx(DeserializedTX(self.hex))
 
 		bogus_send = os.getenv('MMGEN_BOGUS_SEND')
 
