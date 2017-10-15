@@ -83,7 +83,7 @@ module1 = Extension(
 	libraries    = ['secp256k1'],
 	library_dirs = ['/usr/local/lib',r'c:\msys\local\lib'],
 	# mingw32 needs this, Linux can use it, but it breaks mingw64
-	extra_link_args = (['-lgmp'],[])[have_mingw64 or have_arm],
+	extra_link_args = (['-lgmp'],[])[have_mingw64],
 	include_dirs = ['/usr/local/include',r'c:\msys\local\include'],
 	)
 
