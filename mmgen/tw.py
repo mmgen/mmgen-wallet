@@ -26,23 +26,15 @@ from mmgen.tx import is_mmgen_id
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 
-def parse_tw_acct_label(s):
-	ret = s.split(None,1)
-	a1,a2 = None,None
-	if ret:
-		a1 = ret[0] if is_mmgen_id(ret[0]) else '' if ret[0][:4] == 'btc:' else None
-		a2 = ret[1] if len(ret) == 2 else None
-	return a1,a2
-
 class MMGenTrackingWallet(MMGenObject):
 
 	class MMGenTwOutputList(list,MMGenObject): pass
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
-		txid     = MMGenImmutableAttr('txid','BitcoinTxID')
+		txid     = MMGenImmutableAttr('txid','CoinTxID')
 		vout     = MMGenImmutableAttr('vout',int,typeconv=False),
-		amt      = MMGenImmutableAttr('amt','BTCAmt'),
+		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__),
 		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True),
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr     = MMGenImmutableAttr('addr','CoinAddr'),
@@ -80,12 +72,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data))
 		else:
-			us_rpc = rpc_connection().listunspent(self.minconf)
+			us_rpc = g.rpch.listunspent(self.minconf)
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
 #		sys.exit(0)
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
 		mm_rpc = self.MMGenTwOutputList()
+		confs_per_day = 60*60*24 / g.proto.secs_per_block
 		for o in us_rpc:
 			if not 'account' in o: continue          # coinbase outputs have no account field
 			l = TwLabel(o['account'],on_fail='silent')
@@ -93,8 +86,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				o.update({
 					'twmmid': l.mmid,
 					'label':  l.comment,
-					'days':   int(o['confirmations'] * g.mins_per_block / (60*24)),
-					'amt':    BTCAmt(o['amount']), # TODO
+					'days':   int(o['confirmations'] / confs_per_day),
+					'amt':    g.proto.coin_amt(o['amount']), # TODO
 					'addr':   CoinAddr(o['address']), # TODO
 					'confs':  o['confirmations']
 				})
@@ -336,8 +329,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			msg("Address '{}' not in tracking wallet".format(coinaddr))
 			return False
 
-		c = rpc_connection()
-		if not coinaddr.is_for_current_chain():
+		if not coinaddr.is_for_chain(g.chain):
 			msg("Address '{}' not valid for chain {}".format(coinaddr,g.chain.upper()))
 			return False
 
@@ -348,7 +340,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			ad = AddrData(source='tw')
 			mmaddr = ad.coinaddr2mmaddr(coinaddr)
 
-		if not mmaddr: mmaddr = 'btc:'+coinaddr
+		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
 
 		mmaddr = TwMMGenID(mmaddr)
 
@@ -361,17 +353,17 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		# associating the new account with the address.
 		# Will be replaced by setlabel() with new RPC label API
 		# RPC args: addr,label,rescan[=true],p2sh[=none]
-		ret = c.importaddress(coinaddr,lbl,False,on_fail='return')
+		ret = g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
-			msg('From bitcoind: ' + rpc_errmsg(ret))
+			msg('From {}: {}'.format(g.proto.daemon_name,rpc_errmsg(ret)))
 			if not silent:
 				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
 			return False
 		else:
 			m = mmaddr.type.replace('mmg','MMG')
-			a = mmaddr.replace('btc:','')
+			a = mmaddr.replace(g.proto.base_coin.lower()+':','')
 			s = '{} address {} in tracking wallet'.format(m,a)
 			if label: msg("Added label '{}' to {}".format(label,s))
 			else:     msg('Removed label from {}'.format(s))

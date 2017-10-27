@@ -23,6 +23,12 @@ mmgen-autosign: Auto-sign MMGen transactions
 import sys,os,subprocess,time,signal
 from stat import *
 
+mountpoint   = '/mnt/tx'
+tx_dir       = os.path.join(mountpoint,'tx')
+part_label   = 'MMGEN_TX'
+shm_dir      = '/dev/shm'
+secret_fn    = 'txsign-secret'
+
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
 opts_data = lambda: {
@@ -30,10 +36,11 @@ opts_data = lambda: {
 	'usage':'[opts] [command]',
 	'options': """
 -h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
+-c, --coins=c        Coins to sign for (comma-separated list)
 -l, --led            Use status LED to signal standby, busy and error
 -s, --stealth-led    Stealth LED mode - signal busy and error only, and only
                      after successful authorization.
+-q, --quiet          Produce quieter output
 -v, --verbose        Produce more verbose output
 """,
 	'notes': """
@@ -50,13 +57,13 @@ wait       - start in loop mode: wait - mount - sign - unmount - wait
 If invoked with no command, the program mounts the USB stick, signs any
 unsigned transactions, unmounts the USB stick and exits.
 
-If invoked with 'wait', the program waits in a loop, mounting, signing
-and unmounting every time the USB stick is inserted.  The status LED
-indicates whether the program is busy or in standby mode, i.e. ready for
-USB stick insertion or removal.
+If invoked with 'wait', the program waits in a loop, mounting, signing and
+unmounting every time the USB stick is inserted.  On supported platforms,
+the status LED indicates whether the program is busy or in standby mode,
+i.e. ready for USB stick insertion or removal.
 
-The USB stick must have a partition with the label MMGEN_TX and a user-
-writable directory '/tx', where unsigned MMGen transactions are placed.
+The USB stick must have a partition labeled MMGEN_TX and a user-writable
+directory '/tx', where unsigned MMGen transactions are placed.
 
 On the signing machine the directory /mnt/tx must exist and /etc/fstab must
 contain the following entry:
@@ -83,22 +90,32 @@ in the scripts directory of the MMGen repository root where it resides.
 """.format(prog_name)
 }
 
-cmd_args = opts.init(opts_data)
+cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
+
+import mmgen.tx
+from mmgen.txsign import txsign
+from mmgen.protocol import CoinProtocol
+
 if opt.stealth_led: opt.led = True
+opt.outdir = tx_dir
 
-mountpoint   = '/mnt/tx'
-tx_dir       = os.path.join(mountpoint,'tx')
-part_label   = 'MMGEN_TX'
-shm_dir      = '/dev/shm'
-secret_fn    = 'txsign-secret'
-tn_arg       = ['--testnet={}'.format(opt.testnet or '0')]
-coin_arg     = ['--coin={}'.format(opt.coin or 'btc')]
+def check_daemons_running():
+	if opt.coin:
+		die(1,'--coin option not supported with this command.  Use --coins instead')
+	if opt.coins:
+		coins = opt.coins.split(',')
+	else:
+		ymsg('Warning: no coins specified, so defaulting to BTC only')
+		coins = ['btc']
 
-def check_daemon_running():
-	cmd = ['mmgen-tool'] + tn_arg + coin_arg + ['getbalance']
-	vmsg('Executing: {}'.format(' '.join(cmd)))
-	try: subprocess.check_output(cmd)
-	except: die(1,'Daemon not running')
+	for coin in coins:
+		cmd = [ 'mmgen-tool',
+				'--coin={}'.format(coin),
+				'--testnet={}'.format(opt.testnet or 0)
+				] + ([],['--quiet'])[bool(opt.quiet)] + ['getbalance']
+		vmsg('Executing: {}'.format(' '.join(cmd)))
+		try: subprocess.check_output(cmd)
+		except: die(1,'{} daemon not running'.format(coin.upper()))
 
 def get_wallet_files():
 	wfs = [f for f in os.listdir(shm_dir) if f[-8:] == '.mmwords']
@@ -134,6 +151,19 @@ def do_umount():
 		msg('Unmounting '+mountpoint)
 		subprocess.call(['umount',mountpoint])
 
+def sign_tx_file(txfile):
+	try:
+		g.coin = mmgen.tx.MMGenTX(txfile,md_only=True).coin
+		g.proto = CoinProtocol(g.coin,g.testnet)
+		reload(sys.modules['mmgen.tx'])
+		tx = mmgen.tx.MMGenTX(txfile)
+		rpc_init(reinit=True)
+		txsign(tx,wfs,None,None)
+		tx.write_to_file(ask_write=False)
+		return True
+	except:
+		return False
+
 def sign():
 	dirlist  = os.listdir(tx_dir)
 	raw      = [f      for f in dirlist if f[-6:] == '.rawtx']
@@ -141,16 +171,34 @@ def sign():
 	unsigned = [os.path.join(tx_dir,f) for f in raw if f[:-6] not in signed]
 
 	if unsigned:
-		cmd = ['mmgen-txsign','--yes','--outdir='+tx_dir] + tn_arg + coin_arg + unsigned + wfs
-		vmsg('Executing: {}'.format(' '.join(cmd)))
-		ret = subprocess.call(cmd)
-		msg('')
+		fails = 0
+		for txfile in unsigned:
+			ret = sign_tx_file(txfile)
+			if not ret:
+				fails += 1
+			qmsg('')
+		if fails: ymsg('{} failed signs'.format(fails))
 		time.sleep(0.3)
-		return (1,0)[ret==0]
+		return False if fails else True
 	else:
 		msg('No unsigned transactions')
 		time.sleep(1)
-		return 0
+		return True
+
+def do_sign():
+	if not opt.stealth_led: set_led('busy')
+	do_mount()
+	ret = get_secret_in_dir(tx_dir,on_fail='return')
+	if ret == secret:
+		if opt.stealth_led: set_led('busy')
+		ret = sign()
+		do_umount()
+		set_led(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
+	else:
+		if ret != None:
+			msg('Secret is incorrect!')
+		do_umount()
+		if not opt.stealth_led: set_led('error')
 
 def wipe_existing_secret_files():
 	for d in (tx_dir,shm_dir):
@@ -203,32 +251,17 @@ def do_led(on,off):
 
 def set_led(cmd):
 	if not opt.led: return
+	vmsg("Setting LED state to '{}'".format(cmd))
 	timings = {
 		'off':     ( 0, 0 ),
 		'standby': ( 2.2, 0.2 ),
 		'busy':    ( 0.06, 0.06 ),
 		'error':   ( 0.5, 0.5 )}[cmd]
-	vmsg("Executing command '{}'".format(cmd))
 	global led_thread
 	if led_thread:
 		ev.set(); led_thread.join(); ev.clear()
 	led_thread = threading.Thread(target=do_led,name='LED loop',args=timings)
 	led_thread.start()
-
-def do_sign():
-	if not opt.stealth_led: set_led('busy')
-	do_mount()
-	ret = get_secret_in_dir(tx_dir,on_fail='return')
-	if ret == secret:
-		if opt.stealth_led: set_led('busy')
-		exit_val = sign()
-		do_umount()
-		set_led(('standby','off','error')[bool(exit_val)*2 or bool(opt.stealth_led)])
-	else:
-		if ret != None:
-			msg('Secret is incorrect!')
-		do_umount()
-		if not opt.stealth_led: set_led('error')
 
 def get_insert_status():
 	try: os.stat(os.path.join('/dev/disk/by-label/',part_label))
@@ -317,8 +350,11 @@ if opt.led:
 
 check_wipe_present()
 wfs = get_wallet_files()
+
 secret = get_secret_in_dir(shm_dir,on_fail='die')
-check_daemon_running()
+
+check_daemons_running()
+#sign(); sys.exit()
 
 signal.signal(signal.SIGTERM,handler)
 signal.signal(signal.SIGINT,handler)

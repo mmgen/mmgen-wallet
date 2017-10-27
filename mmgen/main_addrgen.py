@@ -98,15 +98,18 @@ ADDRESS TYPES:
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
-{pwn}
+{n_pw}
 
-{bwn}
+{n_bw}
 
 FMT CODES:
-  {f}
+  {n_fmt}
 """.format(
-		n_secp=note_secp256k1,n_addrkey=note_addrkey,pwn=pw_note,bwn=bw_note,
-		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+		n_secp=note_secp256k1,
+		n_addrkey=note_addrkey,
+		n_pw=help_notes('passwd'),
+		n_bw=help_notes('brainwallet'),
+		n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 		n_at='\n  '.join(["'{}','{:<12} - {}".format(k,v['name']+"'",v['desc']) for k,v in MAT.mmtypes.items()]),
 		o=opts
 	)

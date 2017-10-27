@@ -17,8 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen inputs
-          and outputs
+txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen inputs and outputs
 """
 
 from mmgen.common import *
@@ -26,35 +25,6 @@ from mmgen.tx import *
 from mmgen.tw import *
 
 pnm = g.proj_name
-
-txcreate_notes = """
-The transaction's outputs are specified on the command line, while its inputs
-are chosen from a list of the user's unpent outputs via an interactive menu.
-
-If the transaction fee is not specified on the command line (see FEE
-SPECIFICATION below), it will be calculated dynamically using bitcoind's
-"estimatefee" function for the default (or user-specified) number of
-confirmations.  If "estimatefee" fails, the user will be prompted for a fee.
-
-Dynamic ("estimatefee") fees will be multiplied by the value of '--tx-fee-adj',
-if specified.
-
-Ages of transactions are approximate based on an average block discovery
-interval of {g.mins_per_block} minutes.
-
-All addresses on the command line can be either Bitcoin addresses or {pnm}
-addresses of the form <seed ID>:<index>.
-
-To send the value of all inputs (minus TX fee) to a single output, specify
-one address with no amount on the command line.
-""".format(g=g,pnm=pnm)
-
-fee_notes = """
-FEE SPECIFICATION: Transaction fees, both on the command line and at the
-interactive prompt, may be specified as either absolute {} amounts, using
-a plain decimal number, or as satoshis per byte, using an integer followed by
-the letter 's'.
-"""
 
 wmsg = {
 	'addr_in_addrfile_only': """
@@ -98,7 +68,7 @@ def select_unspent(unspent,prompt):
 					return selected
 				msg('Unspent output number must be <= %s' % len(unspent))
 
-def mmaddr2coinaddr(c,mmaddr,ad_w,ad_f):
+def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 
 	# assume mmaddr has already been checked
 	coin_addr = ad_w.mmaddr2coinaddr(mmaddr)
@@ -119,21 +89,19 @@ def mmaddr2coinaddr(c,mmaddr,ad_w,ad_f):
 
 def get_fee_from_estimate_or_user(tx,estimate_fail_msg_shown=[]):
 
-	c = rpc_connection()
-
 	if opt.tx_fee:
 		desc = 'User-selected'
 		start_fee = opt.tx_fee
 	else:
 		desc = 'Network-estimated'
-		ret = c.estimatefee(opt.tx_confs)
+		ret = g.rpch.estimatefee(opt.tx_confs)
 		if ret == -1:
 			if not estimate_fail_msg_shown:
 				msg('Network fee estimation for {} confirmations failed'.format(opt.tx_confs))
 				estimate_fail_msg_shown.append(True)
 			start_fee = None
 		else:
-			start_fee = BTCAmt(ret) * opt.tx_fee_adj * tx.estimate_size() / 1024
+			start_fee = g.proto.coin_amt(ret) * opt.tx_fee_adj * tx.estimate_size() / 1024
 			if opt.verbose:
 				msg('{} fee ({} confs): {} {}/kB'.format(desc,opt.tx_confs,ret,g.coin))
 				msg('TX size (estimated): {}'.format(tx.estimate_size()))
@@ -156,17 +124,17 @@ def get_outputs_from_cmdline(cmd_args,tx):
 		if ',' in a:
 			a1,a2 = a.split(',',1)
 			if is_mmgen_id(a1) or is_coin_addr(a1):
-				coin_addr = mmaddr2coinaddr(c,a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
-				tx.add_output(coin_addr,BTCAmt(a2))
+				coin_addr = mmaddr2coinaddr(a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
+				tx.add_output(coin_addr,g.proto.coin_amt(a2))
 			else:
-				die(2,"%s: unrecognized subargument in argument '%s'" % (a1,a))
+				die(2,"%s: invalid subargument in command-line argument '%s'" % (a1,a))
 		elif is_mmgen_id(a) or is_coin_addr(a):
 			if tx.get_chg_output_idx() != None:
 				die(2,'ERROR: More than one change address listed on command line')
-			coin_addr = mmaddr2coinaddr(c,a,ad_w,ad_f) if is_mmgen_id(a) else CoinAddr(a)
-			tx.add_output(coin_addr,BTCAmt('0'),is_chg=True)
+			coin_addr = mmaddr2coinaddr(a,ad_w,ad_f) if is_mmgen_id(a) else CoinAddr(a)
+			tx.add_output(coin_addr,g.proto.coin_amt('0'),is_chg=True)
 		else:
-			die(2,'%s: unrecognized argument' % a)
+			die(2,'{}: invalid command-line argument'.format(a))
 
 	if not tx.outputs:
 		die(2,'At least one output must be specified on the command line')
@@ -175,6 +143,7 @@ def get_outputs_from_cmdline(cmd_args,tx):
 		die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(tx.outputs) == 1])
 
 	tx.add_mmaddrs_to_outputs(ad_w,ad_f)
+	tx.check_dup_addrs('outputs')
 
 	if not segwit_is_active() and tx.has_segwit_outputs():
 		fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
@@ -214,13 +183,15 @@ def get_inputs_from_user(tw,tx,caller):
 
 def txcreate(cmd_args,do_info=False,caller='txcreate'):
 
+	rpc_init()
+
 	tx = MMGenTX()
 
 	if opt.comment_file: tx.add_comment(opt.comment_file)
 
-	c = rpc_connection()
-
 	if not do_info: get_outputs_from_cmdline(cmd_args,tx)
+
+	do_license_msg()
 
 	tw = MMGenTrackingWallet(minconf=opt.minconf)
 	tw.view_and_sort(tx)
@@ -244,7 +215,7 @@ def txcreate(cmd_args,do_info=False,caller='txcreate'):
 		msg('Warning: Change address will be deleted as transaction produces no change')
 		tx.del_output(chg_idx)
 	else:
-		tx.update_output_amt(chg_idx,BTCAmt(change_amt))
+		tx.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
 
 	if not tx.send_amt:
 		tx.send_amt = change_amt
@@ -252,14 +223,14 @@ def txcreate(cmd_args,do_info=False,caller='txcreate'):
 	dmsg('tx: %s' % tx)
 
 	if not opt.yes:
-		tx.add_comment()   # edits an existing comment
-	tx.create_raw(c)       # creates tx.hex, tx.txid
+		tx.add_comment()  # edits an existing comment
+	tx.create_raw()       # creates tx.hex, tx.txid
 
 	tx.add_timestamp()
-	tx.add_blockcount(c)
+	tx.add_blockcount()
 	tx.chain = g.chain
 
-	assert tx.sum_inputs() - tx.sum_outputs() <= g.max_tx_fee
+	assert tx.sum_inputs() - tx.sum_outputs() <= g.proto.max_tx_fee
 
 	qmsg('Transaction successfully created')
 

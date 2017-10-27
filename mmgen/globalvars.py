@@ -21,7 +21,6 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
 import sys,os
-from mmgen.obj import BTCAmt
 
 # Global vars are set to dfl values in class g.
 # They're overridden in this order:
@@ -36,7 +35,8 @@ class g(object):
 	def die(ev=0,s=''):
 		if s: sys.stderr.write(s+'\n')
 		sys.exit(ev)
-	# Variables - these might be altered at runtime:
+
+	# Constants:
 
 	version      = '0.9.499'
 	release_date = 'October 2017'
@@ -47,27 +47,24 @@ class g(object):
 	author    = 'Philemon'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2017'
-	keywords  = 'Bitcoin, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi'
+	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin'
+	max_int   = 0xffffffff
+	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE'))
+	http_timeout = 60
 
-	coin   = 'BTC'
-	coins  = 'BTC','BCH'
+	# Variables - these might be altered at runtime:
 
 	user_entropy   = ''
 	hash_preset    = '3'
 	usr_randchars  = 30
-	stdin_tty      = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE'))
 
-	max_tx_fee   = BTCAmt('0.01')
 	tx_fee_adj   = 1.0
 	tx_confs     = 3
-	satoshi      = BTCAmt('0.00000001') # One bitcoin equals 100,000,000 satoshis
 	seed_len     = 256
 
-	http_timeout = 60
-	max_int      = 0xffffffff
+	# Constant vars - some of these might be overriden in opts.py, but they don't change thereafter
 
-	# Constants - some of these might be overriden in opts.py, but they don't change thereafter
-
+	coin                 = 'BTC'
 	debug                = False
 	quiet                = False
 	no_license           = False
@@ -76,13 +73,14 @@ class g(object):
 	force_256_color      = False
 	testnet              = False
 	regtest              = False
-	chain                = None # set by first call to rpc_connection()
+	chain                = None # set by first call to rpc_init()
 	chains               = 'mainnet','testnet','regtest'
-	bitcoind_version     = None # set by first call to rpc_connection()
+	daemon_version       = None # set by first call to rpc_init()
 	rpc_host             = ''
 	rpc_port             = 0
 	rpc_user             = ''
 	rpc_password         = ''
+	rpch                 = None # global RPC handle
 
 	bob                  = False
 	alice                = False
@@ -128,7 +126,8 @@ class g(object):
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'daemon_data_dir','force_256_color','max_tx_fee','regtest'
+		'daemon_data_dir','force_256_color','regtest',
+		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
@@ -151,7 +150,6 @@ class g(object):
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
 						'quiet','tx_confs','tx_fee_adj','key_generator']
 
-	mins_per_block   = 9
 	passwd_max_tries = 5
 
 	max_urandchars = 80

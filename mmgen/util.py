@@ -421,12 +421,12 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 	dmsg('%s OK (%s)' % (capfirst(desc2),val2))
 	return True
 
-def open_file_or_exit(filename,mode):
+def open_file_or_exit(filename,mode,silent=False):
 	try:
 		f = open(filename, mode)
 	except:
 		op = ('writing','reading')['r' in mode]
-		die(2,"Unable to open file '%s' for %s" % (filename,op))
+		die(2,("Unable to open file '{}' for {}".format(filename,op),'')[silent])
 	return f
 
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
@@ -468,12 +468,15 @@ def make_full_path(outdir,outfile):
 def get_seed_file(cmd_args,nargs,invoked_as=None):
 	from mmgen.filename import find_file_in_dir
 	from mmgen.seed import Wallet
+
 	wf = find_file_in_dir(Wallet,g.data_dir)
 
 	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
 
 	import mmgen.opts as opts
 	if len(cmd_args) + (wd_from_opt or bool(wf)) < nargs:
+		if not wf:
+			msg('No default wallet found, and no other seed source was specified')
 		opts.usage()
 	elif len(cmd_args) > nargs:
 		opts.usage()
@@ -628,8 +631,8 @@ def get_words(infile,desc,prompt):
 	else:
 		return get_words_from_user(prompt)
 
-def mmgen_decrypt_file_maybe(fn,desc=''):
-	d = get_data_from_file(fn,desc,binary=True)
+def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
+	d = get_data_from_file(fn,desc,binary=True,silent=silent)
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
@@ -638,11 +641,11 @@ def mmgen_decrypt_file_maybe(fn,desc=''):
 		d = mmgen_decrypt_retry(d,desc)
 	return d
 
-def get_lines_from_file(fn,desc='',trim_comments=False):
-	dec = mmgen_decrypt_file_maybe(fn,desc)
+def get_lines_from_file(fn,desc='',trim_comments=False,silent=False):
+	dec = mmgen_decrypt_file_maybe(fn,desc,silent=silent)
 	ret = dec.decode('utf8').splitlines() # DOS-safe
 	if trim_comments: ret = remove_comments(ret)
-	vmsg(u"Got {} lines from file '{}'".format(len(ret),fn))
+	dmsg(u"Got {} lines from file '{}'".format(len(ret),fn))
 	return ret
 
 def get_data_from_user(desc='data',silent=False):
@@ -653,9 +656,9 @@ def get_data_from_user(desc='data',silent=False):
 
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
 	if dash and infile == '-': return sys.stdin.read()
-	if not silent and desc:
+	if not opt.quiet and not silent and desc:
 		qmsg("Getting %s from file '%s'" % (desc,infile))
-	f = open_file_or_exit(infile,('r','rb')[bool(binary)])
+	f = open_file_or_exit(infile,('r','rb')[bool(binary)],silent=silent)
 	data = f.read()
 	f.close()
 	return data
@@ -777,32 +780,35 @@ def do_license_msg(immed=False):
 			msg_r('\r')
 	msg('')
 
-def get_bitcoind_cfg_options(cfg_keys):
-
-	cfg_file = os.path.join(g.daemon_data_dir,'bitcoin.conf')
-
-	cfg = dict([(k,v) for k,v in [split2(str(line).translate(None,'\t '),'=')
-			for line in get_lines_from_file(cfg_file,'')] if k in cfg_keys]) \
-				if file_is_readable(cfg_file) else {}
-
+def get_daemon_cfg_options(cfg_keys):
+	cfg_file = os.path.join(g.proto.daemon_data_dir,g.proto.name+'.conf')
+	try:
+		cfg = dict([(k,v) for k,v in [
+			split2(str(line).translate(None,'\t '),'=')
+				for line in get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
+					] if k in cfg_keys])
+	except:
+		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))
+		cfg = {}
 	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
-
 	return cfg
 
-def get_bitcoind_auth_cookie():
-	f = os.path.join(g.daemon_data_dir,g.proto.data_subdir,'.cookie')
+def get_coin_daemon_auth_cookie():
+	f = os.path.join(g.proto.daemon_data_dir,g.proto.daemon_data_subdir,'.cookie')
 	return get_lines_from_file(f,'')[0] if file_is_readable(f) else ''
 
-def rpc_connection():
+def rpc_init(reinit=False):
 
-	def check_chainfork_mismatch(c):
-		block0 = c.getblockhash(0)
-		latest = c.getblockcount()
+	if g.rpch != None and not reinit: return g.rpch
+
+	def check_chainfork_mismatch(conn):
+		block0 = conn.getblockhash(0)
+		latest = conn.getblockcount()
 		try:
 			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
 			for fork in g.proto.forks:
 				if latest < fork[0]: break
-				bhash = c.getblockhash(fork[0])
+				bhash = conn.getblockhash(fork[0])
 				assert bhash == fork[1], (
 					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
 		except Exception as e:
@@ -816,24 +822,26 @@ def rpc_connection():
 		except Exception as e:
 			die(1,'{}\nChain is {}!'.format(e,g.chain))
 
-	cfg = get_bitcoind_cfg_options(('rpcuser','rpcpassword'))
+	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 	import mmgen.rpc
-	c = mmgen.rpc.BitcoinRPCConnection(
+	conn = mmgen.rpc.CoinDaemonRPCConnection(
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port,
-				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override bitcoind's
+				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
 				g.rpc_password or cfg['rpcpassword'],
-				auth_cookie=get_bitcoind_auth_cookie())
+				auth_cookie=get_coin_daemon_auth_cookie())
 
-	if not g.bitcoind_version: # First call
+	if not g.daemon_version: # First call
 		if g.bob or g.alice:
 			import regtest as rt
 			rt.user(('alice','bob')[g.bob],quiet=True)
-		g.bitcoind_version = int(c.getnetworkinfo()['version'])
-		g.chain = c.getblockchaininfo()['chain']
+		g.daemon_version = int(conn.getnetworkinfo()['version'])
+		g.chain = conn.getblockchaininfo()['chain']
 		if g.chain != 'regtest': g.chain += 'net'
 		assert g.chain in g.chains
 		check_chaintype_mismatch()
-		if g.chain == 'mainnet':
-			check_chainfork_mismatch(c)
-	return c
+	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+		check_chainfork_mismatch(conn)
+
+	g.rpch = conn
+	return conn

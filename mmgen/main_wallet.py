@@ -30,8 +30,8 @@ usage = '[opts] [infile]'
 nargs = 1
 iaction = 'convert'
 oaction = 'convert'
-
 invoked_as = 'passchg' if g.prog_name == 'mmgen-passchg' else g.prog_name.partition('-wallet')[2]
+bw_note = True
 
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
@@ -51,7 +51,7 @@ elif invoked_as == 'passchg':
 	desc = 'Change the passphrase, hash preset or label of an {pnm} wallet'
 	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
-	bw_note = ''
+	bw_note = False
 else:
 	die(1,"'%s': unrecognized invocation" % g.prog_name)
 
@@ -97,14 +97,14 @@ opts_data = lambda: {
 	),
 	'notes': """
 
-{pwn}{bwn}
+{n_pw}{n_bw}
 
 FMT CODES:
   {f}
 """.format(
 	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-	pwn=pw_note,
-	bwn=('','\n\n' + bw_note)[bool(bw_note)]
+	n_pw=help_notes('passwd'),
+	n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
 	)
 }
 

@@ -21,11 +21,9 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 """
 
 from mmgen.common import *
-from mmgen.tx import *
 
 opts_data = lambda: {
-	'desc':    'Send a Bitcoin transaction signed by {pnm}-txsign'.format(
-					pnm=g.proj_name.lower()),
+	'desc':    'Send a cryptocoin transaction signed by {pnm}-txsign'.format(pnm=g.proj_name.lower()),
 	'usage':   '[opts] <signed transaction file>',
 	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
@@ -40,22 +38,25 @@ opts_data = lambda: {
 
 cmd_args = opts.init(opts_data)
 
+rpc_init()
+
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
 else: opts.usage()
 
 if not opt.status: do_license_msg()
 
-c = rpc_connection()
+from mmgen.tx import *
+
 tx = MMGenTX(infile) # sig check performed here
 vmsg("Signed transaction file '%s' is valid" % infile)
 
-if not tx.marked_signed(c):
+if not tx.marked_signed():
 	die(1,'Transaction is not signed!')
 
 if opt.status:
 	if tx.coin_txid: qmsg('{} txid: {}'.format(g.coin,tx.coin_txid.hl()))
-	tx.get_status(c,status=True)
+	tx.get_status(status=True)
 	sys.exit(0)
 
 if not opt.yes:
@@ -63,5 +64,5 @@ if not opt.yes:
 	if tx.add_comment(): # edits an existing comment, returns true if changed
 		tx.write_to_file(ask_write_default_yes=True)
 
-if tx.send(c):
+if tx.send():
 	tx.write_to_file(ask_overwrite=False,ask_write=False)

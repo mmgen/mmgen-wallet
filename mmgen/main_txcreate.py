@@ -17,14 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-txcreate: Create a Bitcoin transaction to and from MMGen- or non-MMGen
+mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
                 inputs and outputs
 """
 
-from mmgen.txcreate import *
+from mmgen.common import *
 
 opts_data = lambda: {
-	'desc': 'Create a transaction with outputs to specified Bitcoin or {g.proj_name} addresses'.format(g=g),
+	'desc': 'Create a transaction with outputs to specified coin or {g.proj_name} addresses'.format(g=g),
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
@@ -37,7 +37,7 @@ opts_data = lambda: {
 -d, --outdir=      d Specify an alternate directory 'd' for output
 -f, --tx-fee=      f Transaction fee, as a decimal {cu} amount or in satoshis
                      per byte (an integer followed by 's').  If omitted, fee
-                     will be calculated using bitcoind's 'estimatefee' call
+                     will be calculated using {dn}'s 'estimatefee' call
 -i, --info           Display unspent outputs and exit
 -m, --minconf=     n Minimum number of confirmations required to spend
                      outputs (default: 1)
@@ -45,11 +45,12 @@ opts_data = lambda: {
 -r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
 -v, --verbose        Produce more verbose output
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
-""".format(g=g,cu=g.coin),
-	'notes': '\n' + txcreate_notes + fee_notes.format(g.coin)
+""".format(g=g,cu=g.coin,dn=g.proto.daemon_name),
+	'notes': '\n' + help_notes('txcreate') + help_notes('fee')
 }
 
 cmd_args = opts.init(opts_data)
-do_license_msg()
+
+from mmgen.txcreate import *
 tx = txcreate(cmd_args,do_info=opt.info)
 tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

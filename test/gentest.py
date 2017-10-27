@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/gentest.py:  Bitcoin key/address generation tests for the MMGen suite
+test/gentest.py:  Cryptocoin key/address generation tests for the MMGen suite
 """
 
 import sys,os
@@ -56,8 +56,8 @@ EXAMPLES:
   {prog} 2 1000
     (test speed of secp256k1 library address generation, 1000 rounds)
   {prog} 2 my.dump
-    (compare addrs generated with secp256k1 library to bitcoind wallet dump)
-""".format(prog='gentest.py',pnm=g.proj_name,snum=rounds)
+    (compare addrs generated with secp256k1 library to {dn} wallet dump)
+""".format(prog='gentest.py',pnm=g.proj_name,snum=rounds,dn=g.proto.daemon_name)
 }
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]

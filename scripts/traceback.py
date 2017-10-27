@@ -19,4 +19,4 @@ except:
 	def yellow(s): return '{e}[33;1m{}{e}[0m'.format(s,e='\033')
 	sys.stdout.write('{}{}'.format(yellow(''.join(l)),red(exc)))
 	traceback.print_exc(file=f)
-
+	sys.exit(1)

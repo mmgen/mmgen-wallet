@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-regtest: Bitcoind regression test mode setup and operations for the MMGen suite
+regtest: Coin daemon regression test mode setup and operations for the MMGen suite
 """
 
 import os,subprocess,time,shutil
@@ -42,7 +42,7 @@ common_args = (
 
 def start_daemon(user,quiet=False,daemon=True):
 	cmd = (
-		'bitcoind',
+		g.proto.daemon_name,
 		'-keypool=1',
 		'-wallet={}'.format(os.path.basename(tr_wallet(user)))
 	) + common_args
@@ -51,7 +51,7 @@ def start_daemon(user,quiet=False,daemon=True):
 	p = subprocess.Popen(cmd,stdout=PIPE,stderr=PIPE)
 	err = process_output(p,silent=False)[1]
 	if err:
-		rdie(1,'Error starting the Bitcoin daemon:\n{}'.format(err))
+		rdie(1,'Error starting the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
 
 def start_daemon_mswin(user,quiet=False):
 	import threading
@@ -63,7 +63,7 @@ def start_daemon_mswin(user,quiet=False):
 def start_cmd(*args,**kwargs):
 	cmd = args
 	if args[0] == 'cli':
-		cmd = ('bitcoin-cli',) + common_args + args[1:]
+		cmd = (g.proto.name+'-cli',) + common_args + args[1:]
 	if g.debug or not 'quiet' in kwargs:
 		vmsg('{}'.format(' '.join(cmd)))
 	ip = op = ep = (PIPE,None)['no_pipe' in kwargs and kwargs['no_pipe']]
@@ -93,19 +93,22 @@ def wait_for_daemon(state,silent=False,nonl=False):
 def get_balances():
 	user1 = get_current_user(quiet=True)
 	if user1 == None:
-		die(1,'Regtest daemon not running')
+		user('bob')
+		user1 = get_current_user(quiet=True)
+#		die(1,'Regtest daemon not running')
 	user2 = ('bob','alice')[user1=='bob']
 	tbal = 0
-	from mmgen.obj import BTCAmt
+	# don't need to save and restore these, as we exit immediately
+	g.rpc_host = 'localhost'
+	g.rpc_port = rpc_port
+	g.rpc_user = rpc_user
+	g.rpc_password = rpc_password
+	g.testnet = True
+	rpc_init()
 	for u in (user1,user2):
-		p = start_cmd('python','mmgen-tool',
-				'--{}'.format(u),'--data-dir='+g.data_dir,
-					'getbalance','quiet=1')
-		bal = p.stdout.read().replace(' \b','') # hack
+		bal = g.proto.coin_amt(g.rpch.getbalance('*',0,True))
 		if u == user1: user(user2)
-		bal = BTCAmt(bal)
-		ustr = "{}'s balance:".format(u.capitalize())
-		msg('{:<16} {:12}'.format(ustr,bal))
+		msg('{:<16} {:12}'.format(u.capitalize()+"'s balance:",bal))
 		tbal += bal
 	msg('{:<16} {:12}'.format('Total balance:',tbal))
 
@@ -131,7 +134,7 @@ def process_output(p,silent=False):
 	return out,err
 
 def start_and_wait(user,silent=False,nonl=False):
-	vmsg('Starting bitcoin regtest daemon')
+	vmsg('Starting {} regtest daemon'.format(g.proto.name))
 	(start_daemon_mswin,start_daemon)[g.platform=='linux'](user)
 	wait_for_daemon('ready',silent=silent,nonl=nonl)
 
@@ -141,7 +144,7 @@ def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_err
 
 def send(addr,amt):
 	user('miner')
-	gmsg('Sending {} BTC to address {}'.format(amt,addr))
+	gmsg('Sending {} {} to address {}'.format(amt,g.coin,addr))
 	p = start_cmd('cli','sendtoaddress',addr,str(amt))
 	process_output(p)
 	p.wait()
@@ -189,7 +192,7 @@ def get_current_user_win(quiet=False):
 	return None
 
 def get_current_user_unix(quiet=False):
-	p = start_cmd('pgrep','-af', 'bitcoind.*-rpcuser={}.*'.format(rpc_user))
+	p = start_cmd('pgrep','-af','{}.*-rpcuser={}.*'.format(g.proto.daemon_name,rpc_user))
 	cmdline = p.stdout.read()
 	if not cmdline: return None
 	for k in ('miner','bob','alice'):
@@ -215,6 +218,7 @@ def user(user=None,quiet=False):
 			return True
 		gmsg_r('Switching to user {}'.format(user.capitalize()))
 		stop_and_wait(silent=False,nonl=True,stop_silent=True)
+		time.sleep(0.1) # file lock has race condition - TODO: test for lock file
 		start_and_wait(user,nonl=True)
 	else:
 		gmsg_r('Starting regtest daemon with current user {}'.format(user.capitalize()))
@@ -223,12 +227,12 @@ def user(user=None,quiet=False):
 
 def stop(silent=False,ignore_noconnect_error=True):
 	if test_daemon() != 'stopped' and not silent:
-		gmsg('Stopping bitcoin regtest daemon')
+		gmsg('Stopping {} regtest daemon'.format(g.proto.name))
 	p = start_cmd('cli','stop')
 	err = process_output(p)[1]
 	if err:
 		if "couldn't connect to server" in err and not ignore_noconnect_error:
-			rdie(1,'Error stopping the Bitcoin daemon:\n{}'.format(err))
+			rdie(1,'Error stopping the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
 		msg(err)
 	return p.wait()
 

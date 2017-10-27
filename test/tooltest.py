@@ -21,9 +21,9 @@ test/tooltest.py:  Tests for the 'mmgen-tool' utility
 """
 
 import sys,os,subprocess
-pn = os.path.dirname(sys.argv[0])
-os.chdir(os.path.join(pn,os.pardir))
-sys.path.__setitem__(0,os.path.abspath(os.curdir))
+repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
+os.chdir(repo_root)
+sys.path.__setitem__(0,repo_root)
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
@@ -54,8 +54,8 @@ cmd_data = OrderedDict([
 			])
 		}
 	),
-	('bitcoin', {
-			'desc': 'Bitcoin address/key commands',
+	('cryptocoin', {
+			'desc': 'Cryptocoin address/key commands',
 			'cmd_data': OrderedDict([
 				('Randwif',        ()),
 				('Randpair',       ()), # create 3 pairs: uncomp,comp,segwit
@@ -91,7 +91,7 @@ cmd_data = OrderedDict([
 		}
 	),
 	('rpc', {
-			'desc': 'Bitcoind RPC commands',
+			'desc': 'Coin daemon RPC commands',
 			'cmd_data': OrderedDict([
 #				('keyaddrfile_chksum', ()), # interactive
 				('Addrfile_chksum', ()),
@@ -110,9 +110,16 @@ cfg = {
 	'tmpdir':        'test/tmp10',
 	'tmpdir_num':    10,
 	'refdir':        'test/ref',
-	'txfile':        'FFB367[1.234]{}.rawtx',
-	'addrfile':      '98831F3A[1,31-33,500-501,1010-1011]{}.addrs',
-	'addrfile_chk':  ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
+	'txfile': {
+		'btc': 'FFB367[1.234]{}.rawtx',
+		'bch': '99BE60-BCH[106.6789]{}.rawtx',
+		'ltc': '75F455-LTC[106.6789]{}.rawtx',
+	},
+	'addrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
+	'addrfile_chk':  {
+		'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
+		'ltc': ('AD52 C3FE 8924 AAF0','5738 5C4F 167C F9AE'),
+	}
 }
 
 opts_data = lambda: {
@@ -136,14 +143,22 @@ If no command is given, the whole suite of tests is run.
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
-spawn_cmd = ['python',os.path.join(os.curdir,'mmgen-tool') if not opt.system else 'mmgen-tool']
-add_spawn_args = ' '.join(['{} {}'.format(
-	'--'+k.replace('_','-'),
-	getattr(opt,k) if getattr(opt,k) != True else ''
-	) for k in ('testnet','rpc_host','regtest') if getattr(opt,k)]).split()
-add_spawn_args += [ '--data-dir', cfg['tmpdir']] # ignore ~/.mmgen
 
-if opt.system: sys.path.pop(0)
+ref_subdir  = '' if g.proto.base_coin == 'BTC' else g.proto.name
+altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
+tn_ext = ('','.testnet')[g.testnet]
+
+mmgen_cmd = 'mmgen-tool'
+
+if not opt.system:
+	os.environ['PYTHONPATH'] = repo_root
+	mmgen_cmd = os.path.relpath(os.path.join(repo_root,'cmds',mmgen_cmd))
+
+spawn_cmd = ([],['python'])[g.platform == 'win'] + [mmgen_cmd]
+
+add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
+		k.replace('_','-'),'='+getattr(opt,k) if getattr(opt,k) != True else '')
+			for k in ('testnet','rpc_host','regtest','coin') if getattr(opt,k)]
 
 if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
@@ -320,7 +335,7 @@ class MMGenToolTestSuite(object):
 		d = read_from_tmpfile(cfg,of,binary=True)
 		cmp_or_die(dlen,len(d))
 
-	# Bitcoin
+	# Cryptocoin
 	def Randwif(self,name):
 		for n,k in enumerate(['','compressed=1']):
 			ret = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1)
@@ -329,7 +344,7 @@ class MMGenToolTestSuite(object):
 		for n,k in enumerate(['','compressed=1','segwit=1 compressed=1']):
 			wif,addr = self.run_cmd_out(name,kwargs=k,Return=True,fn_idx=n+1).split()
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
-			ok_or_die(addr,is_coin_addr,'Bitcoin address')
+			ok_or_die(addr,is_coin_addr,'Coin address')
 	def Wif2addr(self,name,f1,f2,f3):
 		for n,f,k,m in ((1,f1,'',''),(2,f2,'','compressed'),(3,f3,'segwit=1','compressed')):
 			wif = read_from_file(f).split()[0]
@@ -379,14 +394,21 @@ class MMGenToolTestSuite(object):
 		self.run_cmd_out(name,addr,fn_idx=3)
 
 	def Pipetest(self,name,f1,f2,f3):
-		test_msg('command piping')
 		wif = read_from_file(f3).split()[0]
-		cmd = '{tc} {sa} wif2hex {wif} | {tc} privhex2pubhex - compressed=1 | {tc} pubhex2redeem_script - | {tc} {sa} pubhex2addr - p2sh=1'.format(wif=wif,sa=' '.join(add_spawn_args),tc=' '.join(spawn_cmd))
+		cmd = ( '{c} {a} wif2hex {wif} | ' +
+				'{c} {a} privhex2pubhex - compressed=1 | ' +
+				'{c} {a} pubhex2redeem_script - | ' +
+				'{c} {a} pubhex2addr - p2sh=1').format(
+					c=' '.join(spawn_cmd),
+					a=' '.join(add_spawn_args),
+					wif=wif)
+		test_msg('command piping')
+		if opt.verbose:
+			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
 		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
 		res = p.stdout.read().strip()
 		addr = read_from_tmpfile(cfg,'Wif2addr3.out').strip()
 		cmp_or_die(res,addr)
-
 
 	# Mnemonic
 	def Hex2mn(self,name):
@@ -395,7 +417,7 @@ class MMGenToolTestSuite(object):
 			self.run_cmd_out(name,hexnum,fn_idx=n,extra_msg=m)
 	def Mn2hex(self,name,f1,f2,f3,f4,f5,f6):
 		for f_i,f_o,m in ((f1,f2,'128-bit'),(f3,f4,'192-bit'),(f5,f6,'256-bit')):
-			self.run_cmd_chk(name,f_i,f_o,extra_msg=m)
+			self.run_cmd_chk(name,f_i,f_o,extra_msg=m,strip_hex=True)
 	def Mn_rand128(self,name): self.run_cmd_out(name)
 	def Mn_rand192(self,name): self.run_cmd_out(name)
 	def Mn_rand256(self,name): self.run_cmd_out(name)
@@ -406,8 +428,8 @@ class MMGenToolTestSuite(object):
 
 	# RPC
 	def Addrfile_chksum(self,name):
-		fn = os.path.join(cfg['refdir'],cfg['addrfile'].format(('','.testnet')[g.testnet]))
-		self.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'][g.testnet])
+		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['addrfile'].format(altcoin_pfx,tn_ext))
+		self.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'][g.coin.lower()][g.testnet])
 	def Getbalance(self,name):
 		self.run_cmd_out(name,literal=True)
 	def Listaddresses(self,name):
@@ -415,7 +437,7 @@ class MMGenToolTestSuite(object):
 	def Twview(self,name):
 		self.run_cmd_out(name,literal=True)
 	def Txview(self,name):
-		fn = os.path.join(cfg['refdir'],cfg['txfile'].format(('','.testnet')[g.testnet]))
+		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['txfile'][g.coin.lower()].format(tn_ext))
 		self.run_cmd_out(name,fn,literal=True)
 
 # main()

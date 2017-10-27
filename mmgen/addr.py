@@ -41,7 +41,7 @@ class AddrGeneratorP2PKH(AddrGenerator):
 	def to_addr(self,pubhex):
 		from mmgen.protocol import hash160
 		assert type(pubhex) == PubKey
-		return CoinAddr(g.proto.hexaddr2addr(hash160(pubhex)))
+		return CoinAddr(g.proto.hexaddr2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError
@@ -160,10 +160,9 @@ class AddrListIDStr(unicode,Hilite):
 
 		if fmt_str:
 			ret = fmt_str.format(s)
-		elif addrlist.al_id.mmtype == 'L':
-			ret = '{}[{}]'.format(addrlist.al_id.sid,s)
 		else:
-			ret = '{}-{}[{}]'.format(addrlist.al_id.sid,addrlist.al_id.mmtype,s)
+			bc,mt = g.proto.base_coin,addrlist.al_id.mmtype
+			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt=='L'],s)
 
 		return unicode.__new__(cls,ret)
 
@@ -175,7 +174,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
 # A text label of {n} characters or less may be added to the right of each
-# address, and it will be appended to the bitcoind wallet label upon import.
+# address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
 """.strip().format(n=TwComment.max_len,pnm=pnm),
 	'record_chksum': """
@@ -187,7 +186,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 """.strip().format(pnm=pnm)
 	}
 	entry_type = AddrListEntry
-	main_key  = 'addr'
+	main_attr = 'addr'
 	data_desc = 'address'
 	file_desc = 'addresses'
 	gen_desc  = 'address'
@@ -197,7 +196,6 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 	gen_keys = False
 	has_keys = False
 	ext      = 'addrs'
-	dfl_mmtype = MMGenAddrType('L')
 	cook_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
 
@@ -205,7 +203,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 					addrlist='',keylist='',mmtype=None,do_chksum=True,chksum_only=False):
 
 		self.update_msgs()
-		mmtype = mmtype or self.dfl_mmtype
+		mmtype = mmtype or MMGenAddrType.dfl_mmtype
 		assert mmtype in MMGenAddrType.mmtypes
 
 		if seed and addr_idxs:   # data from seed + idxs
@@ -296,21 +294,16 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
 		return out
 
-	def is_mainnet(self):
-		return self.data[0].addr.is_mainnet()
-
-	def is_for_current_chain(self):
-		return self.data[0].addr.is_for_current_chain()
-
 	def check_format(self,addr): return True # format is checked when added to list entry object
 
 	def cook_seed(self,seed):
-		if self.al_id.mmtype == 'L':
+		is_btcfork = g.proto.base_coin == 'BTC'
+		if is_btcfork and self.al_id.mmtype == 'L':
 			return seed
 		else:
 			from mmgen.crypto import sha256_rounds
 			import hmac
-			key = self.al_id.mmtype.name
+			key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
 			cseed = hmac.new(seed,key,sha256).digest()
 			dmsg('Seed:  {}\nKey: {}\nCseed: {}\nCseed len: {}'.format(hexlify(seed),key,hexlify(cseed),len(cseed)))
 			return sha256_rounds(cseed,self.cook_hash_rounds)
@@ -406,10 +399,10 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		if type(self) == PasswordList:
 			out.append(u'{} {} {}:{} {{'.format(
 				self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len))
-		elif self.al_id.mmtype == 'L':
-			out.append('{} {{'.format(self.al_id.sid))
 		else:
-			out.append('{} {} {{'.format(self.al_id.sid,self.al_id.mmtype.name.upper()))
+			bc,mt = g.proto.base_coin,self.al_id.mmtype
+			lbl = ':'.join(([bc],[])[bc=='BTC']+([mt.name.upper()],[])[mt=='L'])
+			out.append('{} {}{{'.format(self.al_id.sid,('',lbl+' ')[bool(lbl)]))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
@@ -447,16 +440,16 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 			if len(d) != 3: d.append('')
 
-			a = le(**{'idx':int(d[0]),self.main_key:d[1],'label':d[2]})
+			a = le(**{'idx':int(d[0]),self.main_attr:d[1],'label':d[2]})
 
 			if self.has_keys:
 				l = lines.pop(0)
 				d = l.split(None,2)
 
 				if d[0] != 'wif:':
-					return "Invalid key line in file: '%s'" % l
+					return "Invalid key line in file: '{}'".format(l)
 				if not is_wif(d[1]):
-					return "'%s': invalid Bitcoin key" % d[1]
+					return "'{}': invalid {} key".format(d[1],g.proto.name.capitalize())
 
 				a.sec = PrivKey(wif=d[1])
 
@@ -498,6 +491,38 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		if not is_mmgen_seed_id(sid):
 			return do_error("'%s': invalid Seed ID" % ls[0])
 
+		def parse_addrfile_label(lbl): # we must maintain backwards compat, so parse is tricky
+			al_base_coin,al_mmtype = None,None
+			lbl = lbl.split(':',1)
+			if len(lbl) == 2:
+				al_base_coin = lbl[0]
+				al_mmtype    = lbl[1].lower()
+			else:
+				if lbl[0].lower() in MMGenAddrType.get_names():
+					al_mmtype = lbl[0].lower()
+				else:
+					al_base_coin = lbl[0]
+
+			# this block fails if al_mmtype is invalid for g.coin
+			if not al_mmtype:
+				mmtype = MMGenAddrType('L')
+			else:
+				try:
+					mmtype = MMGenAddrType(al_mmtype)
+				except:
+					return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
+						mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
+
+			from mmgen.protocol import CoinProtocol
+			base_coin = CoinProtocol(al_base_coin or 'BTC',testnet=False).base_coin
+			if not base_coin:
+				die(2,"'{}': unknown base coin in address file label!".format(al_base_coin))
+			return base_coin,mmtype
+
+		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
+			if not base_coin == g.proto.base_coin:
+				die(2,'{} address file format, but base coin is {}!'.format(base_coin,g.proto.base_coin))
+
 		if type(self) == PasswordList and len(ls) == 2:
 			ss = ls.pop().split(':')
 			if len(ss) != 2:
@@ -507,14 +532,11 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			self.pw_id_str = MMGenPWIDString(ls.pop())
 			mmtype = MMGenPasswordType('P')
 		elif len(ls) == 1:
-			mmtype = ls.pop().lower()
-			try:
-				mmtype = MMGenAddrType(mmtype)
-			except:
-				return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
-					mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
+			base_coin,mmtype = parse_addrfile_label(ls[0])
+			check_coin_mismatch(base_coin)
 		elif len(ls) == 0:
-			mmtype = MMGenAddrType('L')
+			base_coin,mmtype = 'BTC',MMGenAddrType('L')
+			check_coin_mismatch(base_coin)
 		else:
 			return do_error(u"Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0]))
 
@@ -572,7 +594,7 @@ Record this checksum: it will be used to verify the password file in the future
 """.strip()
 	}
 	entry_type  = PasswordListEntry
-	main_key    = 'passwd'
+	main_attr   = 'passwd'
 	data_desc   = 'password'
 	file_desc   = 'passwords'
 	gen_desc    = 'password'
@@ -666,14 +688,14 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def cook_seed(self,seed):
 		from mmgen.crypto import sha256_rounds
-		# Changing either pw_fmt, pw_len or id_str will cause a different, unrelated set of
-		# passwords to be generated: this is what we want
+		# Changing either pw_fmt, pw_len or cook_str will cause a different,
+		# unrelated set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
-		fid_str = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
-		dmsg(u'Full ID string: {}'.format(fid_str.decode('utf8')))
-		# Original implementation was 'cseed = seed + fid_str'; hmac was not used
+		cook_str = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
+		dmsg(u'Full ID string: {}'.format(cook_str.decode('utf8')))
+		# Original implementation was 'cseed = seed + cook_str'; hmac was not used
 		import hmac
-		cseed = hmac.new(seed,fid_str,sha256).digest()
+		cseed = hmac.new(seed,cook_str,sha256).digest()
 		dmsg('Seed: {}\nCooked seed: {}\nCooked seed len: {}'.format(hexlify(seed),hexlify(cseed),len(cseed)))
 		return sha256_rounds(cseed,self.cook_hash_rounds)
 
@@ -712,10 +734,9 @@ re-import your addresses.
 
 	def add_tw_data(self):
 		vmsg('Getting address data from tracking wallet')
-		c = rpc_connection()
-		accts = c.listaccounts(0,True)
+		accts = g.rpch.listaccounts(0,True)
 		data,i = {},0
-		alists = c.getaddressesbyaccount([[k] for k in accts],batch=True)
+		alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
 		for acct,addrlist in zip(accts,alists):
 			l = TwLabel(acct,on_fail='silent')
 			if l and l.mmid.type == 'mmgen':

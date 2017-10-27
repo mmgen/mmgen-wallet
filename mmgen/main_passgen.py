@@ -98,18 +98,19 @@ EXAMPLE:
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
-{pwn}
+{n_pw}
 
-{bwn}
+{n_bw}
 
 FMT CODES:
-  {f}
+  {n_fmt}
 """.format(
-		f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 		o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
 		ml=MMGenPWIDString.max_len,
-		pwn=pw_note,bwn=bw_note,
-		fs="', '".join(MMGenPWIDString.forbidden)
+		fs="', '".join(MMGenPWIDString.forbidden),
+		n_pw=help_notes('passwd'),
+		n_bw=help_notes('brainwallet'),
+		n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines())
 	)
 }
 

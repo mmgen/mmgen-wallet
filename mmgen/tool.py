@@ -61,7 +61,7 @@ cmd_data = OrderedDict([
 	('Wif2hex',    ['<wif> [str-]']),
 	('Wif2addr',   ['<wif> [str-]','segwit [bool=False]']),
 	('Wif2segwit_pair',['<wif> [str-]']),
-	('Hexaddr2addr', ['<coin address in hex format> [str-]']),
+	('Hexaddr2addr', ['<coin address in hex format> [str-]','p2sh [bool=False]']),
 	('Addr2hexaddr', ['<coin address> [str-]']),
 	('Privhex2addr', ['<private key in hex format> [str-]','compressed [bool=False]','segwit [bool=False]']),
 	('Privhex2pubhex',['<private key in hex format> [str-]','compressed [bool=False]']),
@@ -78,9 +78,9 @@ cmd_data = OrderedDict([
 	('Mn_printlist', ["wordlist [str='electrum']"]),
 
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]''showbtcaddr [bool=True]']),
-	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]']),
+	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)"]),
 	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
-	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: 'ctime','atime')",'MARGS']),
+	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: ctime, atime)",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
 
 	('Add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
@@ -279,7 +279,7 @@ def Wif2segwit_pair(wif):
 	rs = ag.to_segwit_redeem_script(pubhex)
 	Msg('{}\n{}'.format(rs,addr))
 
-def Hexaddr2addr(hexaddr):                     Msg(g.proto.hexaddr2addr(hexaddr))
+def Hexaddr2addr(hexaddr,p2sh=False):          Msg(g.proto.hexaddr2addr(hexaddr,p2sh=p2sh))
 def Addr2hexaddr(addr):                        Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
 def Hash160(pubkeyhex):                        Msg(hash160(pubkeyhex))
 def Pubhex2addr(pubkeyhex,p2sh=False):         Msg(g.proto.hexaddr2addr(hash160(pubkeyhex),p2sh=p2sh))
@@ -352,178 +352,6 @@ def Id6(infile):
 	))
 def Str2id6(s): # retain ignoring of space for backwards compat
 	Msg(make_chksum_6(''.join(s.split())))
-
-def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True):
-	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,showempty=showempty,showbtcaddrs=showbtcaddr)
-
-# List MMGen addresses and their balances.  TODO: move this code to AddrList
-def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=True,all_labels=False):
-
-	c = rpc_connection()
-
-	def check_dup_mmid(acct_labels):
-		mmid_prev,err = None,False
-		for mmid in sorted(a.mmid for a in acct_labels if a):
-			if mmid == mmid_prev:
-				err = True
-				msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(mmid))
-			mmid_prev = mmid
-		if err: rdie(3,'Tracking wallet is corrupted!')
-
-	def check_addr_array_lens(acct_pairs):
-		err = False
-		for label,addrs in acct_pairs:
-			if not label: continue
-			if len(addrs) != 1:
-				err = True
-				if len(addrs) == 0:
-					msg("Label '{}': has no associated address!".format(label))
-				else:
-					msg("'{}': more than one {} address in account!".format(addrs,g.coin))
-		if err: rdie(3,'Tracking wallet is corrupted!')
-
-	usr_addr_list = []
-	if addrs:
-		a = addrs.rsplit(':',1)
-		if len(a) != 2:
-			m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
-			die(1,m.format(addrs))
-		usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
-
-	class TwAddrList(dict,MMGenObject): pass
-
-	addrs = TwAddrList() # reusing name!
-	total = BTCAmt('0')
-
-	for d in c.listunspent(0):
-		if not 'account' in d: continue  # skip coinbase outputs with missing account
-		if d['confirmations'] < minconf: continue
-		label = TwLabel(d['account'],on_fail='silent')
-		if label:
-			if usr_addr_list and (label.mmid not in usr_addr_list): continue
-			if label.mmid in addrs:
-				if addrs[label.mmid]['addr'] != d['address']:
-					die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
-							g.coin,d['address'],addrs[label.mmid]['addr']))
-			else:
-				addrs[label.mmid] = { 'amt':  BTCAmt('0'),
-									  'lbl':  label,
-									  'addr': CoinAddr(d['address'])}
-			addrs[label.mmid]['amt'] += d['amount']
-			total += d['amount']
-
-	# We use listaccounts only for empty addresses, as it shows false positive balances
-	if showempty or all_labels:
-		# for compatibility with old mmids, must use raw RPC rather than native data for matching
-		# args: minconf,watchonly, MUST use keys() so we get list, not dict
-		acct_list = c.listaccounts(0,True).keys() # raw list, no 'L'
-		acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
-		check_dup_mmid(acct_labels)
-		acct_addrs = c.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
-		assert len(acct_list) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not equal in length'
-		addr_pairs = zip(acct_labels,acct_addrs)
-		check_addr_array_lens(addr_pairs)
-		for label,addr_arr in addr_pairs:
-			if not label: continue
-			if all_labels and not showempty and not label.comment: continue
-			if usr_addr_list and (label.mmid not in usr_addr_list): continue
-			if label.mmid not in addrs:
-				addrs[label.mmid] = { 'amt':BTCAmt('0'), 'lbl':label, 'addr':'' }
-				if showbtcaddrs:
-					addrs[label.mmid]['addr'] = CoinAddr(addr_arr[0])
-
-	if not addrs:
-		die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-
-	out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
-
-	fs = ('{mid} {cmt} {amt}','{mid} {addr} {cmt} {amt}')[showbtcaddrs]
-	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
-	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
-	max_cmt_len =  max(max(len(addrs[k]['lbl'].comment) for k in addrs),7)
-	out += [fs.format(
-			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
-			addr=CoinAddr.fmtc('ADDRESS'),
-			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len),
-			amt='BALANCE'
-			)]
-
-	al_id_save = None
-	for mmid in sorted(addrs,key=lambda j: j.sort_key):
-		if mmid.type == 'mmgen':
-			if al_id_save and al_id_save != mmid.obj.al_id:
-				out.append('')
-			al_id_save = mmid.obj.al_id
-			mmid_disp = mmid
-		else:
-			if al_id_save:
-				out.append('')
-				al_id_save = None
-			mmid_disp = 'Non-MMGen'
-		out.append(fs.format(
-			mid = MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
-			addr=(addrs[mmid]['addr'].fmt(color=True) if showbtcaddrs else None),
-			cmt=addrs[mmid]['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
-			amt=addrs[mmid]['amt'].fmt('3.0',color=True)))
-
-	out.append('\nTOTAL: {} {}'.format(total.hl(color=True),g.coin))
-	o = '\n'.join(out)
-	return do_pager(o) if pager else Msg(o)
-
-def Getbalance(minconf=1,quiet=False):
-	accts = {}
-	for d in rpc_connection().listunspent(0):
-		ma = split2(d['account'] if 'account' in d else '')[0] # include coinbase outputs if spendable
-		keys = ['TOTAL']
-		if d['spendable']: keys += ['SPENDABLE']
-		if is_mmgen_id(ma): keys += [ma.split(':')[0]]
-		confs = d['confirmations']
-		i = (1,2)[confs >= minconf]
-
-		for key in keys:
-			if key not in accts: accts[key] = [BTCAmt('0')] * 3
-			for j in ([],[0])[confs==0] + [i]:
-				accts[key][j] += d['amount']
-
-	if quiet:
-		Msg('{}'.format(accts['TOTAL'][2] if accts else BTCAmt('0')))
-	else:
-		fs = '{:13} {} {} {}'
-		mc,lbl = str(minconf),'confirms'
-		Msg(fs.format('Wallet',
-			*[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)]))
-		for key in sorted(accts.keys()):
-			Msg(fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]]))
-
-	if 'SPENDABLE' in accts:
-		Msg(red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!'))
-
-def Txview(*infiles,**kwargs):
-	from mmgen.filename import MMGenFileList
-	pager = 'pager' in kwargs and kwargs['pager']
-	terse = 'terse' in kwargs and kwargs['terse']
-	sort_key = kwargs['sort'] if 'sort' in kwargs else 'mtime'
-	flist = MMGenFileList(infiles,ftype=MMGenTX)
-	flist.sort_by_age(key=sort_key) # in-place sort
-	from mmgen.term import get_terminal_size
-	sep = u'—'*77+'\n'
-	out = sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()])
-	(Msg,do_pager)[pager](out.rstrip())
-
-def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=True,show_mmid=True):
-	from mmgen.tw import MMGenTrackingWallet
-	tw = MMGenTrackingWallet(minconf=minconf)
-	tw.do_sort(sort,reverse=reverse)
-	tw.show_days = show_days
-	tw.show_mmid = show_mmid
-	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
-	(Msg_r,do_pager)[pager](out)
-
-def Add_label(mmaddr,label):
-	from mmgen.tw import MMGenTrackingWallet
-	MMGenTrackingWallet.add_label(mmaddr,label) # dies on failure
-
-def Remove_label(mmaddr): Add_label(mmaddr,'')
 
 def Addrfile_chksum(infile):
 	from mmgen.addr import AddrList
@@ -663,3 +491,198 @@ def Regtest_setup():
 	import subprocess as sp
 	sp.check_output()
 	pass
+
+# ================ RPC commands ================== #
+
+def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True):
+	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,showempty=showempty,showbtcaddrs=showbtcaddr)
+
+# List MMGen addresses and their balances.  TODO: move this code to AddrList
+def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=True,all_labels=False,sort=None):
+
+	if sort:
+		sort = set(sort.split(','))
+		sort_params = set(['reverse','age'])
+		if not sort.issubset(sort_params):
+			die(1,"The sort option takes the following parameters: '{}'".format("','".join(sort_params)))
+
+	rpc_init()
+
+	def check_dup_mmid(acct_labels):
+		mmid_prev,err = None,False
+		for mmid in sorted(a.mmid for a in acct_labels if a):
+			if mmid == mmid_prev:
+				err = True
+				msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(mmid))
+			mmid_prev = mmid
+		if err: rdie(3,'Tracking wallet is corrupted!')
+
+	def check_addr_array_lens(acct_pairs):
+		err = False
+		for label,addrs in acct_pairs:
+			if not label: continue
+			if len(addrs) != 1:
+				err = True
+				if len(addrs) == 0:
+					msg("Label '{}': has no associated address!".format(label))
+				else:
+					msg("'{}': more than one {} address in account!".format(addrs,g.coin))
+		if err: rdie(3,'Tracking wallet is corrupted!')
+
+	usr_addr_list = []
+	if addrs:
+		a = addrs.rsplit(':',1)
+		if len(a) != 2:
+			m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
+			die(1,m.format(addrs))
+		usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
+
+	class TwAddrList(dict,MMGenObject): pass
+
+	addrs = TwAddrList() # reusing name!
+	total = g.proto.coin_amt('0')
+
+	for d in g.rpch.listunspent(0):
+		if not 'account' in d: continue  # skip coinbase outputs with missing account
+		if d['confirmations'] < minconf: continue
+		label = TwLabel(d['account'],on_fail='silent')
+		if label:
+			if usr_addr_list and (label.mmid not in usr_addr_list): continue
+			if label.mmid in addrs:
+				if addrs[label.mmid]['addr'] != d['address']:
+					die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
+							g.coin,d['address'],addrs[label.mmid]['addr']))
+			else:
+				addrs[label.mmid] = {'amt': g.proto.coin_amt('0'),
+									'lbl':  label,
+									'addr': CoinAddr(d['address'])}
+				addrs[label.mmid]['lbl'].mmid.confs = d['confirmations']
+			addrs[label.mmid]['amt'] += d['amount']
+			total += d['amount']
+
+	# We use listaccounts only for empty addresses, as it shows false positive balances
+	if showempty or all_labels:
+		# for compatibility with old mmids, must use raw RPC rather than native data for matching
+		# args: minconf,watchonly, MUST use keys() so we get list, not dict
+		acct_list = g.rpch.listaccounts(0,True).keys() # raw list, no 'L'
+		acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
+		check_dup_mmid(acct_labels)
+		acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
+		assert len(acct_list) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not equal in length'
+		addr_pairs = zip(acct_labels,acct_addrs)
+		check_addr_array_lens(addr_pairs)
+		for label,addr_arr in addr_pairs:
+			if not label: continue
+			if all_labels and not showempty and not label.comment: continue
+			if usr_addr_list and (label.mmid not in usr_addr_list): continue
+			if label.mmid not in addrs:
+				addrs[label.mmid] = { 'amt':g.proto.coin_amt('0'), 'lbl':label, 'addr':'' }
+				if showbtcaddrs:
+					addrs[label.mmid]['addr'] = CoinAddr(addr_arr[0])
+
+	if not addrs:
+		die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
+
+	out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
+
+	fs = ('{mid} {cmt} {amt}','{mid} {addr} {cmt} {amt}')[showbtcaddrs]
+	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
+	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
+	max_cmt_len =  max(max(len(addrs[k]['lbl'].comment) for k in addrs),7)
+	out += [fs.format(
+			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
+			addr=CoinAddr.fmtc('ADDRESS'),
+			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len),
+			amt='BALANCE'
+			)]
+
+	def sort_algo(j):
+		if sort and 'age' in sort:
+			return '{}_{:>012}_{}'.format(
+				j.obj.rsplit(':',1)[0],
+				(1000000000-j.confs if hasattr(j,'confs') else 0), # Hack, but OK for the foreseeable future
+				j.sort_key)
+		else:
+			return j.sort_key
+
+	al_id_save = None
+	for mmid in sorted(addrs,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
+		if mmid.type == 'mmgen':
+			if al_id_save and al_id_save != mmid.obj.al_id:
+				out.append('')
+			al_id_save = mmid.obj.al_id
+			mmid_disp = mmid
+		else:
+			if al_id_save:
+				out.append('')
+				al_id_save = None
+			mmid_disp = 'Non-MMGen'
+		out.append(fs.format(
+			mid = MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
+			addr=(addrs[mmid]['addr'].fmt(color=True) if showbtcaddrs else None),
+			cmt=addrs[mmid]['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
+			amt=addrs[mmid]['amt'].fmt('3.0',color=True)))
+	out.append('\nTOTAL: {} {}'.format(total.hl(color=True),g.coin))
+	o = '\n'.join(out)
+	return do_pager(o) if pager else Msg(o)
+
+def Getbalance(minconf=1,quiet=False,return_val=False):
+	rpc_init()
+	accts = {}
+	for d in g.rpch.listunspent(0):
+		ma = split2(d['account'] if 'account' in d else '')[0] # include coinbase outputs if spendable
+		keys = ['TOTAL']
+		if d['spendable']: keys += ['SPENDABLE']
+		if is_mmgen_id(ma): keys += [ma.split(':')[0]]
+		confs = d['confirmations']
+		i = (1,2)[confs >= minconf]
+
+		for key in keys:
+			if key not in accts: accts[key] = [g.proto.coin_amt('0')] * 3
+			for j in ([],[0])[confs==0] + [i]:
+				accts[key][j] += d['amount']
+
+	if quiet:
+		o = ['{}'.format(accts['TOTAL'][2] if accts else g.proto.coin_amt('0'))]
+	else:
+		fs = '{:13} {} {} {}'
+		mc,lbl = str(minconf),'confirms'
+		o = [fs.format('Wallet', *[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)])]
+		for key in sorted(accts.keys()):
+			o += [fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]])]
+
+	if 'SPENDABLE' in accts:
+		Msg(red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!'))
+
+	o = '\n'.join(o)
+	if return_val: return o
+	else:          Msg(o)
+
+def Txview(*infiles,**kwargs):
+	from mmgen.filename import MMGenFileList
+	pager = 'pager' in kwargs and kwargs['pager']
+	terse = 'terse' in kwargs and kwargs['terse']
+	sort_key = kwargs['sort'] if 'sort' in kwargs else 'mtime'
+	flist = MMGenFileList(infiles,ftype=MMGenTX)
+	flist.sort_by_age(key=sort_key) # in-place sort
+	from mmgen.term import get_terminal_size
+	sep = u'—'*77+'\n'
+	out = sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()])
+	(Msg,do_pager)[pager](out.rstrip())
+
+def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=True,show_mmid=True):
+	rpc_init()
+	from mmgen.tw import MMGenTrackingWallet
+	tw = MMGenTrackingWallet(minconf=minconf)
+	tw.do_sort(sort,reverse=reverse)
+	tw.show_days = show_days
+	tw.show_mmid = show_mmid
+	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
+	(Msg_r,do_pager)[pager](out)
+
+def Add_label(mmaddr,label):
+	rpc_init()
+	from mmgen.tw import MMGenTrackingWallet
+	MMGenTrackingWallet.add_label(mmaddr,label) # dies on failure
+
+def Remove_label(mmaddr): Add_label(mmaddr,'')

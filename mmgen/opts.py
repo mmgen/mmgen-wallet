@@ -45,30 +45,6 @@ def _show_hash_presets():
 		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
-# most, but not all, of these set the corresponding global var
-common_opts_data = """
---, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
---, --color=0|1           Disable or enable color output
---, --force-256-color     Force 256-color output when color is enabled
---, --bitcoin-data-dir=d  Specify Bitcoin data directory location 'd'
---, --data-dir=d          Specify {pnm} data directory location 'd'
---, --no-license          Suppress the GPL license prompt
---, --rpc-host=h          Communicate with bitcoind running on host 'h'
---, --rpc-port=p          Communicate with bitcoind listening on port 'p'
---, --rpc-user=user       Override 'rpcuser' in bitcoin.conf
---, --rpc-password=pass   Override 'rpcpassword' in bitcoin.conf
---, --regtest=0|1         Disable or enable regtest mode
---, --testnet=0|1         Disable or enable testnet
---, --skip-cfg-file       Skip reading the configuration file
---, --version             Print version information and exit
---, --bob                 Switch to user "Bob" in MMGen regtest setup
---, --alice               Switch to user "Alice" in MMGen regtest setup
-""".format(
-	pnm=g.proj_name,
-	cu_dfl=g.coin,
-	cu_all=' '.join(g.coins),
-	)
-
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
 	d = (
 		('Cmdline',            ' '.join(sys.argv)),
@@ -118,36 +94,55 @@ def set_data_dir_root():
 	# mainnet and testnet share cfg file, as with Core
 	g.cfg_file = os.path.join(g.data_dir_root,'{}.cfg'.format(g.proj_name.lower()))
 
-def get_data_from_config_file():
-	from mmgen.util import msg,die,check_or_create_dir
-	check_or_create_dir(g.data_dir_root) # dies on error
-
+def get_cfg_template_data():
 	# https://wiki.debian.org/Python:
 	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
 	# TODO - test for Windows
 	# This must match the configuration in setup.py
-	data = u''
+	cfg_template = os.path.join(*([sys.prefix]
+				+ (['share'],['local','share'])[g.platform=='linux']
+				+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
 	try:
-		with open(g.cfg_file,'rb') as f: data = f.read().decode('utf8')
+		with open(cfg_template,'rb') as f:
+			return f.read()
 	except:
-		cfg_template = os.path.join(*([sys.prefix]
-					+ (['share'],['local','share'])[g.platform=='linux']
-					+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
+		msg("WARNING: configuration template not found at '{}'".format(cfg_template))
+		return u''
+
+def get_data_from_cfg_file():
+	from mmgen.util import msg,die,check_or_create_dir
+	check_or_create_dir(g.data_dir_root) # dies on error
+	template_data = get_cfg_template_data()
+	data = {}
+
+	def copy_template_data(fn):
 		try:
-			with open(cfg_template,'rb') as f: template_data = f.read()
+			with open(fn,'wb') as f: f.write(template_data)
+			os.chmod(fn,0600)
 		except:
-			msg("WARNING: configuration template not found at '{}'".format(cfg_template))
-		else:
-			try:
-				with open(g.cfg_file,'wb') as f: f.write(template_data)
-				os.chmod(g.cfg_file,0600)
-			except:
-				die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
-	return data
+			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
+
+	for k,suf in (('cfg',''),('sample','.sample')):
+		try:
+			with open(g.cfg_file+suf,'rb') as f:
+				data[k] = f.read().decode('utf8')
+		except:
+			if template_data:
+				copy_template_data(g.cfg_file+suf)
+				data[k] = template_data
+			else:
+				data[k] = u''
+
+	if template_data and data['sample'] != template_data:
+		g.cfg_options_changed = True
+		copy_template_data(g.cfg_file+'.sample')
+
+	return data['cfg']
 
 def override_from_cfg_file(cfg_data):
 	from mmgen.util import die,strip_comments,set_for_type
 	import re
+	from mmgen.protocol import CoinProtocol
 	for n,l in enumerate(cfg_data.splitlines(),1): # DOS-safe
 		l = strip_comments(l)
 		if l == '': continue
@@ -155,9 +150,16 @@ def override_from_cfg_file(cfg_data):
 		if not m: die(2,"Parse error in file '{}', line {}".format(g.cfg_file,n))
 		name,val = m.groups()
 		if name in g.cfg_file_opts:
-			setattr(g,name,set_for_type(val,getattr(g,name),name,src=g.cfg_file))
+			pfx,cfg_var = name.split('_',1)
+			if pfx in CoinProtocol.coins:
+				cls,attr = CoinProtocol(pfx,False),cfg_var
+			else:
+				cls,attr = g,name
+			setattr(cls,attr,set_for_type(val,getattr(cls,attr),attr,src=g.cfg_file))
+		#	pmsg(cls,attr,getattr(cls,attr))
 		else:
 			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
+#	pdie('xxx')
 
 def override_from_env():
 	from mmgen.util import set_for_type
@@ -170,12 +172,37 @@ def override_from_env():
 
 def init(opts_f,add_opts=[],opt_filter=None):
 
+	from mmgen.protocol import CoinProtocol,BitcoinProtocol
+	g.proto = BitcoinProtocol # this must be initialized to something before opts_f is called
+
+	# most, but not all, of these set the corresponding global var
+	common_opts_data = """
+--, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
+--, --color=0|1           Disable or enable color output
+--, --force-256-color     Force 256-color output when color is enabled
+--, --daemon-data-dir=d   Specify coin daemon data directory location 'd'
+--, --data-dir=d          Specify {pnm} data directory location 'd'
+--, --no-license          Suppress the GPL license prompt
+--, --rpc-host=h          Communicate with {dn} running on host 'h'
+--, --rpc-port=p          Communicate with {dn} listening on port 'p'
+--, --rpc-user=user       Override 'rpcuser' in {pn}.conf
+--, --rpc-password=pass   Override 'rpcpassword' in {pn}.conf
+--, --regtest=0|1         Disable or enable regtest mode
+--, --testnet=0|1         Disable or enable testnet
+--, --skip-cfg-file       Skip reading the configuration file
+--, --version             Print version information and exit
+--, --bob                 Switch to user "Bob" in MMGen regtest setup
+--, --alice               Switch to user "Alice" in MMGen regtest setup
+	""".format( pnm=g.proj_name,pn=g.proto.name,dn=g.proto.daemon_name,
+				cu_dfl=g.coin,
+				cu_all=' '.join(CoinProtocol.coins))
+
 	opts_data = opts_f()
 	opts_data['long_options'] = common_opts_data
 
 	version_info = """
     {pgnm_uc} version {g.version}
-    Part of the {pnm} suite, a Bitcoin cold-storage solution for the command line.
+    Part of the {pnm} suite, an online/offline cryptocoin wallet for the command line.
     Copyright (C) {g.Cdates} {g.author} {g.email}
 	""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
 
@@ -199,11 +226,10 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	# NB: user opt --data-dir is actually g.data_dir_root
 	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
-	# Must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
+	# We must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
 	set_data_dir_root()
 	if not opt.skip_cfg_file:
-		cfg_data = get_data_from_config_file()
-		override_from_cfg_file(cfg_data)
+		override_from_cfg_file(get_data_from_cfg_file())
 	override_from_env()
 
 	# User opt sets global var - do these here, before opt is set from g.global_sets_opt
@@ -214,10 +240,10 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	if g.regtest: g.testnet = True # These are equivalent for now
 
 	# g.testnet is set, so we can set g.proto
-	from mmgen.protocol import get_coin_protocol
-	g.proto = get_coin_protocol(g.coin,g.testnet)
+	g.proto = CoinProtocol(g.coin,g.testnet)
 
-	if not g.daemon_data_dir: g.daemon_data_dir = g.proto.daemon_data_dir
+	# global sets proto
+	if g.daemon_data_dir: g.proto.daemon_data_dir = g.daemon_data_dir
 
 #	g.proto is set, so we can set g.data_dir
 	g.data_dir = os.path.normpath(os.path.join(g.data_dir_root,g.proto.data_subdir))
@@ -250,7 +276,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	if g.bob or g.alice:
 		g.testnet = True
-		g.proto = get_coin_protocol(g.coin,g.testnet)
+		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',('alice','bob')[g.bob])
 		check_or_create_dir(g.data_dir)
 		import regtest as rt
@@ -262,6 +288,10 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	# Check user-set opts without modifying them
 	if not check_opts(uopts):
 		sys.exit(1)
+
+	if hasattr(g,'cfg_options_changed'):
+		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
+		my_raw_input('Hit ENTER to continue: ')
 
 	if g.debug: opt_postproc_debug()
 
@@ -308,8 +338,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		if ret == False:
 			msg("'{}': invalid {} (not a {} amount or satoshis-per-byte specification)".format(
 					val,desc,g.coin.upper()))
-		elif ret != None and ret > g.max_tx_fee:
-			msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(val,desc,g.max_tx_fee,g.coin.upper()))
+		elif ret != None and ret > g.proto.max_tx_fee:
+			msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(
+					val,desc,g.proto.max_tx_fee,g.coin.upper()))
 		else:
 			return True
 		return False
@@ -420,7 +451,11 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_compares(val,'<=',len(g.key_generators),desc): return False
 			if not opt_compares(val,'>',0,desc): return False
 		elif key == 'coin':
-			if not opt_is_in_list(val.upper(),g.coins,'coin'): return False
+			from mmgen.protocol import CoinProtocol
+			if not opt_is_in_list(val.lower(),CoinProtocol.coins.keys(),'coin'): return False
+		elif key == 'rbf':
+			if not g.proto.cap('rbf'):
+				die(1,'--rbf requested, but {} does not support replace-by-fee transactions'.format(g.coin))
 		elif key in ('bob','alice'):
 			from mmgen.regtest import daemon_dir
 			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."

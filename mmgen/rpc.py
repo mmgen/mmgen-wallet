@@ -17,20 +17,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-rpc.py:  Bitcoin RPC library for the MMGen suite
+rpc.py:  Cryptocoin RPC library for the MMGen suite
 """
 
 import httplib,base64,json
 
 from mmgen.common import *
 from decimal import Decimal
-from mmgen.obj import BTCAmt
 
-class BitcoinRPCConnection(object):
+class CoinDaemonRPCConnection(object):
 
 	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
 
-		dmsg('=== BitcoinRPCConnection.__init__() debug ===')
+		dmsg('=== CoinDaemonRPCConnection.__init__() debug ===')
 		dmsg('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
 			host,port,user,passwd,auth_cookie))
 
@@ -39,19 +38,23 @@ class BitcoinRPCConnection(object):
 		elif auth_cookie:
 			self.auth_str = auth_cookie
 		else:
-			msg('Error: no Bitcoin RPC authentication method found')
-			if passwd: die(1,"'rpcuser' entry not found in bitcoin.conf or mmgen.cfg")
-			elif user: die(1,"'rpcpassword' entry not found in bitcoin.conf or mmgen.cfg")
+			msg('Error: no {} RPC authentication method found'.format(g.proto.name.capitalize()))
+			if passwd: die(1,"'rpcuser' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
+			elif user: die(1,"'rpcpassword' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
 			else:
-				m1 = 'Either provide rpcuser/rpcpassword in bitcoin.conf or mmgen.cfg'
-				m2 = '(or, alternatively, copy the authentication cookie to Bitcoin data dir'
-				m3 = 'if {} and Bitcoin are running as different users)'.format(g.proj_name)
-				die(1,'\n'.join((m1,m2,m3)))
+				m1 = 'Either provide rpcuser/rpcpassword in {pn}.conf or mmgen.cfg\n'
+				m2 = '(or, alternatively, copy the authentication cookie to the {pnu}\n'
+				m3 = 'data dir if {pnm} and {dn} are running as different users)'
+				die(1,(m1+m2+m3).format(
+					pn=g.proto.name,
+					pnu=g.proto.name.capitalize(),
+					dn=g.proto.daemon_name,
+					pnm=g.proj_name))
 
 		self.host = host
 		self.port = port
 
-	# Normal mode: call with arg list unrolled, exactly as with 'bitcoin-cli'
+	# Normal mode: call with arg list unrolled, exactly as with cli
 	# Batch mode:  call with list of arg lists as first argument
 	# kwargs are for local use and are not passed to server
 
@@ -84,8 +87,8 @@ class BitcoinRPCConnection(object):
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
-				if isinstance(obj, BTCAmt):
-					return (float,str)[g.bitcoind_version>=120000](obj)
+				if isinstance(obj,g.proto.coin_amt):
+					return g.proto.get_rpc_coin_amt_type()(obj)
 				return json.JSONEncoder.default(self, obj)
 
 		# TODO: UTF-8 labels
@@ -101,20 +104,20 @@ class BitcoinRPCConnection(object):
 				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str))
 			})
 		except Exception as e:
-			m = '{}\nUnable to connect to bitcoind at {}:{}'
-			return die_maybe(None,2,m.format(e,self.host,self.port))
+			m = '{}\nUnable to connect to {} at {}:{}'
+			return die_maybe(None,2,m.format(e,g.proto.daemon_name,self.host,self.port))
 
 		try:
 			r = hc.getresponse() # returns HTTPResponse instance
 		except Exception:
-			m = 'Unable to connect to bitcoind at {}:{} (but port is bound?)'
-			return die_maybe(None,2,m.format(self.host,self.port))
+			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
+			return die_maybe(None,2,m.format(g.proto.daemon_name,self.host,self.port))
 
 		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
 			if cf['on_fail'] != 'silent':
-				msg_r(yellow('Bitcoind RPC Error: '))
+				msg_r(yellow('{} RPC Error: '.format(g.proto.daemon_name.capitalize())))
 				msg(red('{} {}'.format(r.status,r.reason)))
 			e1 = r.read()
 			try:
@@ -137,7 +140,8 @@ class BitcoinRPCConnection(object):
 
 		for resp in r3 if cf['batch'] else [r3]:
 			if 'error' in resp and resp['error'] != None:
-				return die_maybe(r,1,'Bitcoind returned an error: %s' % resp['error'])
+				return die_maybe(r,1,'{} returned an error: {}'.format(
+					g.proto.daemon_name.capitalize(),resp['error']))
 			elif 'result' not in resp:
 				return die_maybe(r,1, 'Missing JSON-RPC result\n' + repr(resps))
 			else:

@@ -285,6 +285,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
 	max_prec = 8
 	max_amt = 21000000
+	min_coin_unit = Decimal('0.00000001')
+
 	def __new__(cls,num,on_fail='die'):
 		if type(num) == cls: return num
 		cls.arg_chk(cls,on_fail)
@@ -297,8 +299,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			assert me >= 0,'coin amount cannot be negative'
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to BTCAmt ({})"
-			return cls.init_fail(m.format(num,e[0]),on_fail)
+			m = "{!r}: value cannot be converted to {} ({})"
+			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
 
 	@classmethod
 	def fmtc(cls):
@@ -347,24 +349,29 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other,context=None):
 		return type(self)(Decimal.__neg__(self,other,context))
 
+class BCHAmt(BTCAmt):
+	pass
+class LTCAmt(BTCAmt):
+	max_amt = 84000000
+
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
 	width = 35 # max len of testnet p2sh addr
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
+		from mmgen.globalvars import g
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-ascii characters'
 			me = str.__new__(cls,s)
-			from mmgen.globalvars import g
 			va = g.proto.verify_addr(s,return_dict=True)
 			assert va,'failed verification'
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to Bitcoin address ({})"
-			return cls.init_fail(m.format(s,e[0]),on_fail)
+			m = "{!r}: value cannot be converted to {} address ({})"
+			return cls.init_fail(m.format(s,g.proto.__name__,e[0]),on_fail)
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
@@ -376,22 +383,17 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			s = s[:kwargs['width']-2] +  '..'
 		return Hilite.fmtc(s,**kwargs)
 
-	def is_for_current_chain(self):
+	def is_for_chain(self,chain):
 		from mmgen.globalvars import g
-		assert g.chain,'global chain variable unset'
-		return self[0] in g.proto.get_chain_protocol(g.chain).addr_pfxs
-
-	def is_mainnet(self):
-		from mmgen.globalvars import g
-		return self[0] in g.proto.get_chain_protocol('mainnet').addr_pfxs
-
-	def is_testnet(self):
-		from mmgen.globalvars import g
-		return self[0] in g.proto.get_chain_protocol('testnet').addr_pfxs
+		vn = g.proto.get_protocol_by_chain(chain).addr_ver_num
+		if self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
+			return self[0] in vn['p2sh'][1] or self[0] in vn['p2sh2'][1]
+		else:
+			return self[0] in vn[self.addr_fmt][1]
 
 	def is_in_tracking_wallet(self):
-		from mmgen.rpc import rpc_connection
-		d = rpc_connection().validateaddress(self)
+		from mmgen.rpc import rpc_init
+		d = rpc_init().validateaddress(self)
 		return d['iswatchonly'] and 'account' in d
 
 class SeedID(str,Hilite,InitErrors):
@@ -452,7 +454,9 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
-				assert s[:4] == 'btc:',"not a string beginning with the prefix 'btc:'"
+				from mmgen.globalvars import g
+				assert s.split(':',1)[0] == g.proto.base_coin.lower(),(
+					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
 				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-ascii characters'
 				assert len(s) > 4,'not more that four characters long'
 				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
@@ -514,7 +518,7 @@ class MMGenTxID(HexStr,Hilite,InitErrors):
 			m = "{}\n{!r}: value cannot be converted to {}"
 			return cls.init_fail(m.format(e[0],s,cls.__name__),on_fail)
 
-class BitcoinTxID(MMGenTxID):
+class CoinTxID(MMGenTxID):
 	color = 'purple'
 	width = 64
 	hexcase = 'lower'
@@ -667,32 +671,30 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'comp':False,
 				'gen':'p2pkh',
 				'fmt':'p2pkh',
-				'desc':'Legacy uncompressed Bitcoin address'},
+				'desc':'Legacy uncompressed address'},
 		'S': {  'name':'segwit',
 				'comp':True,
 				'gen':'segwit',
 				'fmt':'p2sh',
-				'desc':'Bitcoin Segwit P2SH-P2WPK address' },
+				'desc':'Segwit P2SH-P2WPKH address' },
 		'C': {  'name':'compressed',
 				'comp':True,
 				'gen':'p2pkh',
 				'fmt':'p2pkh',
-				'desc':'Compressed Bitcoin P2PKH address'}
-# 		'l': 'litecoin',
-# 		'e': 'ethereum',
-# 		'E': 'ethereum_classic',
-# 		'm': 'monero',
-# 		'z': 'zcash',
+				'desc':'Compressed P2PKH address'}
 	}
 	dfl_mmtype = 'L'
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
+		from mmgen.globalvars import g
 		try:
 			for k,v in cls.mmtypes.items():
 				if s in (k,v['name']):
 					if s == v['name']: s = k
 					me = str.__new__(cls,s)
+					assert me in g.proto.mmtypes + ('P',), (
+						"'{}': invalid address type for {}".format(me,g.proto.__name__))
 					me.name = v['name']
 					me.compressed = v['comp']
 					me.gen_method = v['gen']
@@ -701,8 +703,13 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 					return me
 			raise ValueError,'not found'
 		except Exception as e:
-			m = errmsg or '{!r}: invalid value for {} ({})'.format(s,cls.__name__,e[0])
+			m = '{}{!r}: invalid value for {} ({})'.format(
+				('{!r}\n'.format(errmsg) if errmsg else ''),s,cls.__name__,e[0])
 			return cls.init_fail(m,on_fail)
+
+	@classmethod
+	def get_names(cls):
+		return [v['name'] for v in cls.mmtypes.values()]
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {

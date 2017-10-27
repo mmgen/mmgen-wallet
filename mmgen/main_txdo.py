@@ -20,8 +20,8 @@
 mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
-from mmgen.txcreate import *
-from mmgen.txsign import *
+from mmgen.common import *
+from mmgen.seed import SeedSource
 
 opts_data = lambda: {
 	'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
@@ -40,7 +40,7 @@ opts_data = lambda: {
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or in
                        satoshis per byte (an integer followed by 's').
-                       If omitted, bitcoind's 'estimatefee' will be used
+                       If omitted, {dn}'s 'estimatefee' will be used
                        to calculate the fee.
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
@@ -68,27 +68,29 @@ opts_data = lambda: {
 -v, --verbose          Produce more verbose output
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
-""".format(g=g,pnm=pnm,pnl=pnm.lower(),
+""".format(g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 		kg=g.key_generator,
-		cu=g.coin
-		),
-	'notes': '\n' + txcreate_notes + fee_notes.format(g.coin) + txsign_notes
+		cu=g.coin),
+	'notes': '\n' + help_notes('txcreate') + help_notes('fee') + help_notes('txsign')
 }
 
 cmd_args = opts.init(opts_data)
 
+rpc_init()
+
+from mmgen.txcreate import *
+from mmgen.txsign import *
+
 seed_files = get_seed_files(opt,cmd_args)
-c = rpc_connection()
-do_license_msg()
 
 kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
 if kl and kal: kl.remove_dup_keys(kal)
 
 tx = txcreate(cmd_args,caller='txdo')
-txsign(opt,c,tx,seed_files,kl,kal)
+txsign(tx,seed_files,kl,kal)
 tx.write_to_file(ask_write=False)
 
-if tx.send(c):
+if tx.send():
 	tx.write_to_file(ask_overwrite=False,ask_write=False)

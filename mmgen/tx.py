@@ -27,7 +27,7 @@ from mmgen.common import *
 from mmgen.obj import *
 
 def segwit_is_active(exit_on_error=False):
-	d = rpc_connection().getblockchaininfo()
+	d = g.rpch.getblockchaininfo()
 	if d['chain'] == 'regtest':
 		return True
 	if 'segwit' in d['bip9_softforks'] and d['bip9_softforks']['segwit']['status'] == 'active':
@@ -45,8 +45,8 @@ def bytes2int(hex_bytes):
 		die(3,"{}: Negative values not permitted in transaction!".format(hex_bytes))
 	return int(r,16)
 
-def bytes2btc(hex_bytes):
-	return bytes2int(hex_bytes) * g.satoshi
+def bytes2coin_amt(hex_bytes):
+	return g.proto.coin_amt(bytes2int(hex_bytes) * g.proto.coin_amt.min_coin_unit)
 
 def scriptPubKey2addr(s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac': addr_hex,p2sh = s[6:-4],False
@@ -59,26 +59,30 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 	def __init__(self,txhex):
 		tx = list(unhexlify(txhex))
 		tx_copy = tx[:]
+		d = { 'raw_tx':'' }
 
-		def hshift(l,n,reverse=False):
+		def hshift(l,n,reverse=False,skip=False):
 			ret = l[:n]
+			if not skip: d['raw_tx'] += ''.join(ret)
 			del l[:n]
 			return hexlify(''.join(ret[::-1] if reverse else ret))
 
 		# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 		# For example, the number 515 is encoded as 0xfd0302.
-		def readVInt(l):
+		def readVInt(l,skip=False,sub_null=False):
 			s = int(hexlify(l[0]),16)
 			bytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
 			if bytes_len != 1: del l[0]
 			ret = int(hexlify(''.join(l[:bytes_len][::-1])),16)
+			if sub_null: d['raw_tx'] += '\0'
+			elif not skip: d['raw_tx'] += ''.join(l[:bytes_len])
 			del l[:bytes_len]
 			return ret
 
-		d = { 'version': bytes2int(hshift(tx,4)) }
+		d['version'] = bytes2int(hshift(tx,4))
 		has_witness = (False,True)[hexlify(tx[0])=='00']
 		if has_witness:
-			u = hshift(tx,2)[2:]
+			u = hshift(tx,2,skip=True)[2:]
 			if u != '01':
 				die(2,"'{}': Illegal value for flag in transaction!".format(u))
 			del tx_copy[-len(tx)-2:-len(tx)]
@@ -87,13 +91,13 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		d['txins'] = MMGenList([OrderedDict((
 			('txid',      hshift(tx,32,reverse=True)),
 			('vout',      bytes2int(hshift(tx,4))),
-			('scriptSig', hshift(tx,readVInt(tx))),
+			('scriptSig', hshift(tx,readVInt(tx,sub_null=True),skip=True)),
 			('nSeq',      hshift(tx,4,reverse=True))
 		)) for i in range(d['num_txins'])])
 
 		d['num_txouts'] = readVInt(tx)
 		d['txouts'] = MMGenList([OrderedDict((
-			('amount',       bytes2btc(hshift(tx,8))),
+			('amount',       bytes2coin_amt(hshift(tx,8))),
 			('scriptPubKey', hshift(tx,readVInt(tx)))
 		)) for i in range(d['num_txouts'])])
 
@@ -110,26 +114,30 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			d['witness_size'] = len(wd) + 2 # add marker and flag
 			for i in range(len(d['txins'])):
 				if hexlify(wd[0]) == '00':
-					hshift(wd,1)
+					hshift(wd,1,skip=True)
 					continue
-				d['txins'][i]['witness'] = [hshift(wd,readVInt(wd)) for item in range(readVInt(wd))]
+				d['txins'][i]['witness'] = [
+					hshift(wd,readVInt(wd,skip=True),skip=True) for item in range(readVInt(wd,skip=True))
+				]
 			if wd:
 				die(3,'More witness data than inputs with witnesses!')
 
 		d['lock_time'] = bytes2int(hshift(tx,4))
 		d['txid'] = hexlify(sha256(sha256(''.join(tx_copy)).digest()).digest()[::-1])
+		d['unsigned_hex'] = hexlify(d['raw_tx'])
+		del d['raw_tx']
 
-		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts'
+		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts','unsigned_hex'
 		return OrderedDict.__init__(self, ((k,d[k]) for k in keys))
 
 txio_attrs = {
 	'vout':  MMGenListItemAttr('vout',int,typeconv=False),
-	'amt':   MMGenImmutableAttr('amt','BTCAmt'),
+	'amt':   MMGenImmutableAttr('amt',g.proto.coin_amt,typeconv=False), # require amt to be of proper type
 	'label': MMGenListItemAttr('label','TwComment',reassign_ok=True),
 	'mmid':  MMGenListItemAttr('mmid','MMGenID'),
 	'addr':  MMGenImmutableAttr('addr','CoinAddr'),
 	'confs': MMGenListItemAttr('confs',int,typeconv=True), # long confs exist in the wild, so convert
-	'txid':  MMGenListItemAttr('txid','BitcoinTxID'),
+	'txid':  MMGenListItemAttr('txid','CoinTxID'),
 	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
 }
 
@@ -138,7 +146,7 @@ class MMGenTX(MMGenObject):
 	raw_ext  = 'rawtx'
 	sig_ext  = 'sigtx'
 	txid_ext = 'txid'
-	desc = 'transaction'
+	desc     = 'transaction'
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
@@ -152,10 +160,10 @@ class MMGenTX(MMGenObject):
 	class MMGenTxInputList(list,MMGenObject): pass
 	class MMGenTxOutputList(list,MMGenObject): pass
 
-	def __init__(self,filename=None):
+	def __init__(self,filename=None,md_only=False):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
-		self.send_amt    = BTCAmt('0')  # total amt minus change
+		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.hex         = ''           # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
@@ -165,12 +173,14 @@ class MMGenTX(MMGenObject):
 		self.fmt_data    = ''
 		self.blockcount  = 0
 		self.chain       = None
+		self.coin        = None
 
 		if filename:
-			self.parse_tx_file(filename)
+			self.parse_tx_file(filename,md_only=md_only)
+			if md_only: return
 			self.check_sigs() # marks the tx as signed
 
-		# repeat with sign and send, because bitcoind could be restarted
+		# repeat with sign and send, because coin daemon could be restarted
 		self.die_if_incorrect_chain()
 
 	def die_if_incorrect_chain(self):
@@ -197,7 +207,7 @@ class MMGenTX(MMGenObject):
 	def sum_outputs(self,exclude=None):
 		olist = self.outputs if exclude == None else \
 			self.outputs[:exclude] + self.outputs[exclude+1:]
-		return BTCAmt(sum(e.amt for e in olist))
+		return g.proto.coin_amt(sum(e.amt for e in olist))
 
 	def add_mmaddrs_to_outputs(self,ad_w,ad_f):
 		a = [e.addr for e in self.outputs]
@@ -208,12 +218,22 @@ class MMGenTX(MMGenObject):
 				e.mmid,f = d[e.addr]
 				if f: e.label = f
 
-	def create_raw(self,c):
+	def check_dup_addrs(self,io_str):
+		assert io_str in ('inputs','outputs')
+		io = getattr(self,io_str)
+		for k in ('mmid','addr'):
+			old_attr = None
+			for attr in sorted(getattr(e,k) for e in io):
+				if attr != None and attr == old_attr:
+					die(2,'{}: duplicate address in transaction {}'.format(attr,io_str))
+				old_attr = attr
+
+	def create_raw(self):
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
 		o = dict([(e.addr,e.amt) for e in self.outputs])
-		self.hex = c.createrawtransaction(i,o)
+		self.hex = g.rpch.createrawtransaction(i,o)
 		self.txid = MMGenTxID(make_chksum_6(unhexlify(self.hex)).upper())
 
 	# returns true if comment added or changed
@@ -312,20 +332,20 @@ class MMGenTX(MMGenObject):
 		return self.sum_inputs() - self.sum_outputs()
 
 	def btc2spb(self,coin_fee):
-		return int(coin_fee/g.satoshi/self.estimate_size())
+		return int(coin_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
 
 	def get_relay_fee(self):
 		assert self.estimate_size()
-		kb_fee = BTCAmt(rpc_connection().getnetworkinfo()['relayfee'])
+		kb_fee = g.proto.coin_amt(g.rpch.getnetworkinfo()['relayfee'])
 		vmsg('Relay fee: {} {}/kB'.format(kb_fee,g.coin))
 		return kb_fee * self.estimate_size() / 1024
 
 	def convert_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
-		if BTCAmt(tx_fee,on_fail='silent'):
-			return BTCAmt(tx_fee)
+		if g.proto.coin_amt(tx_fee,on_fail='silent'):
+			return g.proto.coin_amt(tx_fee)
 		elif len(tx_fee) >= 2 and tx_fee[-1] == 's' and is_int(tx_fee[:-1]) and int(tx_fee[:-1]) >= 1:
 			if tx_size:
-				return BTCAmt(int(tx_fee[:-1]) * tx_size * g.satoshi)
+				return g.proto.coin_amt(int(tx_fee[:-1]) * tx_size * g.proto.coin_amt.min_coin_unit)
 			else:
 				return None
 		else:
@@ -344,9 +364,9 @@ class MMGenTX(MMGenObject):
 			m = "'{}': invalid TX fee (not a {} amount or satoshis-per-byte specification)"
 			msg(m.format(tx_fee,g.coin))
 			return False
-		elif coin_fee > g.max_tx_fee:
+		elif coin_fee > g.proto.max_tx_fee:
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
-			msg(m.format(coin_fee,desc,g.max_tx_fee,c=g.coin))
+			msg(m.format(coin_fee,desc,g.proto.max_tx_fee,c=g.coin))
 			return False
 		elif coin_fee < self.get_relay_fee():
 			m = '{} {c}: {} fee too small (below relay fee of {} {c})'
@@ -411,12 +431,13 @@ class MMGenTX(MMGenObject):
 	def add_timestamp(self):
 		self.timestamp = make_timestamp()
 
-	def add_blockcount(self,c):
-		self.blockcount = int(c.getblockcount())
+	def add_blockcount(self):
+		self.blockcount = int(g.rpch.getblockcount())
 
 	def format(self):
 		lines = [
-			'{} {} {} {} {}'.format(
+			'{}{} {} {} {} {}'.format(
+				(g.coin+' ','')[g.coin=='BTC'],
 				self.chain.upper() if self.chain else 'Unknown',
 				self.txid,
 				self.send_amt,
@@ -439,14 +460,17 @@ class MMGenTX(MMGenObject):
 		return list(set(i.addr for i in getattr(self,desc) if not i.mmid))
 
 	# return true or false; don't exit
-	def sign(self,c,tx_num_str,keys):
+	def sign(self,tx_num_str,keys):
+
+		if self.marked_signed():
+			die(1,'Transaction is already signed!')
 
 		self.die_if_incorrect_chain()
 
-		if g.coin == 'BCH' and (self.has_segwit_inputs() or self.has_segwit_outputs()):
-			die(2,yellow("Segwit inputs cannot be spent or spent to on the BCH chain!"))
+		if (self.has_segwit_inputs() or self.has_segwit_outputs()) and not g.proto.cap('segwit'):
+			die(2,yellow("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin)))
 
-		qmsg('Passing {} key{} to bitcoind'.format(len(keys),suf(keys,'s')))
+		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys,'s'),g.proto.daemon_name))
 
 		if self.has_segwit_inputs():
 			from mmgen.addr import KeyGenerator,AddrGenerator
@@ -467,7 +491,7 @@ class MMGenTX(MMGenObject):
 		wifs = [d.sec.wif for d in keys]
 #		keys.pmsg()
 #		pmsg(wifs)
-		ret = c.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type,on_fail='return')
+		ret = g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -481,18 +505,20 @@ class MMGenTX(MMGenObject):
 			return False
 		else:
 			if ret['complete']:
+#				Msg(pretty_hexdump(unhexlify(self.hex),cols=16)) # DEBUG
+#				pmsg(make_chksum_6(unhexlify(self.hex)).upper())
 				self.hex = ret['hex']
 				vmsg('Signed transaction size: {}'.format(len(self.hex)/2))
 				dt = DeserializedTX(self.hex)
 				self.check_hex_tx_matches_mmgen_tx(dt)
-				txid = dt['txid']
+				self.coin_txid = CoinTxID(dt['txid'],on_fail='return')
 				self.check_sigs(dt)
-				assert txid == c.decoderawtransaction(self.hex)['txid'], 'txid mismatch (after signing)'
-				self.coin_txid = BitcoinTxID(txid,on_fail='return')
+				assert self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid'],(
+											'txid mismatch (after signing)')
 				msg('OK')
 				return True
 			else:
-				msg('failed\nBitcoind returned the following errors:')
+				msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
 				msg(repr(ret['errors']))
 				return False
 
@@ -508,7 +534,7 @@ class MMGenTX(MMGenObject):
 		ret = self.desc == 'signed transaction'
 		return (red,green)[ret](str(ret)) if color else ret
 
-	# protect against an attack where a malicious, compromised or malfunctioning daemon could switch
+	# protect against an attack where a malicious, compromised or malfunctioning coin daemon could switch
 	# hex transaction data.
 	def check_hex_tx_matches_mmgen_tx(self,deserial_tx):
 		m = 'Fatal error: a malicious or malfunctioning coin daemon or other program has altered your data!'
@@ -516,21 +542,24 @@ class MMGenTX(MMGenObject):
 		if deserial_tx['lock_time'] != 0:
 			rdie(3,'\nLock time is not zero!\n' + m)
 
-		def do_io_err(desc,mmio,hexio):
-			msg('\nMMGen {}:\n{}'.format(desc,pformat(mmio)))
-			msg('Hex {}:\n{}'.format(desc,pformat(hexio)))
-			m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n' + m
-			rdie(3,m2.format(desc.capitalize()))
+		def check_equal(desc,mmio,hexio):
+			if mmio != hexio:
+				msg('\nMMGen {}:\n{}'.format(desc,pformat(mmio)))
+				msg('Hex {}:\n{}'.format(desc,pformat(hexio)))
+				m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n' + m
+				rdie(3,m2.format(desc.capitalize()))
 
-		i_hex   = sorted((i['txid'],i['vout']) for i in deserial_tx['txins'])
-		i_mmgen = sorted((i.txid,i.vout) for i in self.inputs)
-		if i_hex != i_mmgen:
-			do_io_err('inputs',i_hex,i_mmgen)
+		d_hex   = sorted((i['txid'],i['vout']) for i in deserial_tx['txins'])
+		d_mmgen = sorted((i.txid,i.vout) for i in self.inputs)
+		check_equal('inputs',d_hex,d_mmgen)
 
-		o_hex   = sorted((o['address'],BTCAmt(o['amount'])) for o in deserial_tx['txouts'])
-		o_mmgen = sorted((o.addr,o.amt) for o in self.outputs)
-		if o_hex != o_mmgen:
-			do_io_err('outputs',o_hex,o_mmgen)
+		d_hex   = sorted((o['address'],g.proto.coin_amt(o['amount'])) for o in deserial_tx['txouts'])
+		d_mmgen = sorted((o.addr,o.amt) for o in self.outputs)
+		check_equal('outputs',d_hex,d_mmgen)
+
+		uh = deserial_tx['unsigned_hex']
+		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
+			die(3,'MMGen TxID ({}) does not match hex transaction data!'.format(self.txid))
 
 	def check_sigs(self,deserial_tx=None): # return False if no sigs, die on error
 		txins = (deserial_tx or DeserializedTX(self.hex))['txins']
@@ -555,39 +584,42 @@ class MMGenTX(MMGenObject):
 	def has_segwit_outputs(self):
 		return any(o.mmid and o.mmid.mmtype == 'S' for o in self.outputs)
 
-	def is_in_mempool(self,c):
-		return 'size' in c.getmempoolentry(self.coin_txid,on_fail='silent')
+	def is_in_mempool(self):
+		return 'size' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
 
-	def is_in_wallet(self,c):
-		ret = c.gettransaction(self.coin_txid,on_fail='silent')
+	def is_in_wallet(self):
+		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
 		if 'confirmations' in ret and ret['confirmations'] > 0:
 			return ret['confirmations']
 		else:
 			return False
 
-	def is_replaced(self,c):
-		if self.is_in_mempool(c): return False
-		ret = c.gettransaction(self.coin_txid,on_fail='silent')
+	def is_replaced(self):
+		if self.is_in_mempool(): return False
+		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
 		if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
 			return False
 		return -ret['confirmations'] + 1 # 1: replacement in mempool, 2: replacement confirmed
 
-	def is_in_utxos(self,c):
-		return 'txid' in c.getrawtransaction(self.coin_txid,True,on_fail='silent')
+	def is_in_utxos(self):
+		return 'txid' in g.rpch.getrawtransaction(self.coin_txid,True,on_fail='silent')
 
-	def get_status(self,c,status=False):
-		if self.is_in_mempool(c):
+	def get_status(self,status=False):
+		if self.is_in_mempool():
 			msg(('Warning: transaction is in mempool!','Transaction is in mempool')[status])
-		elif self.is_in_wallet(c):
-			confs = self.is_in_wallet(c)
+		elif self.is_in_wallet():
+			confs = self.is_in_wallet()
 			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
-		elif self.is_in_utxos(c):
+		elif self.is_in_utxos():
 			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
-		ret = self.is_replaced(c) # 1: replacement in mempool, 2: replacement confirmed
+		ret = self.is_replaced() # 1: replacement in mempool, 2: replacement confirmed
 		if ret:
 			die(1,'Transaction has been replaced'+('',', and the replacement TX is confirmed')[ret==2]+'!')
 
-	def send(self,c,prompt_user=True):
+	def send(self,prompt_user=True):
+
+		if not self.marked_signed():
+			die(1,'Transaction is not signed!')
 
 		self.die_if_incorrect_chain()
 
@@ -599,10 +631,11 @@ class MMGenTX(MMGenObject):
 			m = 'Transaction has MMGen Segwit outputs, but this blockchain does not support Segwit'
 			die(2,m+' at the current height')
 
-		if self.get_fee() > g.max_tx_fee:
-			die(2,'Transaction fee ({}) greater than max_tx_fee ({})!'.format(self.get_fee(),g.max_tx_fee))
+		if self.get_fee() > g.proto.max_tx_fee:
+			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
+				self.get_fee(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin.upper()))
 
-		self.get_status(c)
+		self.get_status()
 
 		if prompt_user:
 			m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
@@ -611,7 +644,7 @@ class MMGenTX(MMGenObject):
 			confirm_or_exit(m1,m2,m3)
 
 		msg('Sending transaction')
-		ret = None if bogus_send else c.sendrawtransaction(self.hex,on_fail='return')
+		ret = None if bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -636,7 +669,7 @@ class MMGenTX(MMGenObject):
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))
 			self.add_timestamp()
-			self.add_blockcount(c)
+			self.add_blockcount()
 			return True
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
@@ -649,8 +682,12 @@ class MMGenTX(MMGenObject):
 		if ask_write == False:
 			ask_write_default_yes=True
 		self.format()
-		spbs = ('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()]
-		fn = '{}[{}{}].{}'.format(self.txid,self.send_amt,spbs,self.ext)
+		fn = '{}{}[{}{}].{}'.format(
+			self.txid,
+			('-'+g.coin,'')[g.coin=='BTC'],
+			self.send_amt,
+			('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()],
+			self.ext)
 		write_data_to_file(fn,self.fmt_data,self.desc+add_desc,
 			ask_overwrite=ask_overwrite,
 			ask_write=ask_write,
@@ -664,7 +701,7 @@ class MMGenTX(MMGenObject):
 			self.view(pager=reply in 'Vv',terse=reply in 'Tt')
 
 	def view(self,pager=False,pause=True,terse=False):
-		o = self.format_view(terse=terse).encode('utf8')
+		o = self.format_view(terse=terse)
 		if pager: do_pager(o)
 		else:
 			msg_r(o)
@@ -673,24 +710,20 @@ class MMGenTX(MMGenObject):
 				get_char('Press any key to continue: ')
 				msg('')
 
-# 	def is_rbf_fromhex(self,color=False):
-# 		try:
-# 			dec_tx = rpc_connection().decoderawtransaction(self.hex)
-# 		except:
-# 			return yellow('Unknown') if color else None
-# 		rbf = bool(dec_tx['vin'][0]['sequence'] == g.max_int - 2)
-# 		return (red,green)[rbf](str(rbf)) if color else rbf
+# 	def is_rbf_from_rpc(self):
+# 		dec_tx = g.rpch.decoderawtransaction(self.hex)
+# 		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
 
-	def is_rbf(self,color=False):
-		ret = None < self.inputs[0].sequence <= g.max_int - 2
-		return (red,green)[ret](str(ret)) if color else ret
+	def is_rbf(self):
+		return self.inputs[0].sequence == g.max_int - 2
 
 	def signal_for_rbf(self):
 		self.inputs[0].sequence = g.max_int - 2
 
 	def format_view(self,terse=False):
 		try:
-			blockcount = rpc_connection().getblockcount()
+			rpc_init()
+			blockcount = g.rpch.getblockcount()
 		except:
 			blockcount = None
 
@@ -712,10 +745,11 @@ class MMGenTX(MMGenObject):
 		def format_io(io):
 			ip = io == self.inputs
 			io_out = ''
+			confs_per_day = 60*60*24 / g.proto.secs_per_block
 			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
-				if ip and blockcount:
+				if ip and blockcount != None:
 					confs = e.confs + blockcount - self.blockcount
-					days = int(confs * g.mins_per_block / (60*24))
+					days = int(confs / confs_per_day)
 				if e.mmid:
 					app=('',' (chg)')[bool(not ip and e.is_chg and terse)]
 					mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True,app=app,appcolor='green')
@@ -725,18 +759,18 @@ class MMGenTX(MMGenObject):
 					io_out += '{:3} {} {} {} {}\n'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
 				else:
 					icommon = [
-						((n+1,'')[ip],    'address:', e.addr.fmt(color=True) + ' ' + mmid_fmt),
-						('',  'comment:', e.label.hl() if e.label else ''),
-						('',  'amount:',  '{} {}'.format(e.amt.hl(),g.coin))]
-					items = [(n+1, 'tx,vout:', '%s,%s' % (e.txid, e.vout))] + icommon + [
-						('',  'confirmations:', '%s (around %s days)' % (confs,days) if blockcount else '')
+						((n+1,'')[ip],'address:',e.addr.fmt(color=True) + ' '+mmid_fmt),
+						('','comment:',e.label.hl() if e.label else ''),
+						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
+					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
+						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount!=None else '')
 					] if ip else icommon + [
-						('',  'change:',        green('True') if e.is_chg else '')]
-					io_out += '\n'.join([('%3s %-8s %s' % d) for d in items if d[2]]) + '\n\n'
+						('','change:',green('True') if e.is_chg else '')]
+					io_out += '\n'.join([('{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
 			return io_out
 
 		out = hdr_fs.format(self.txid.hl(),self.send_amt.hl(),g.coin,self.timestamp,
-				self.is_rbf(color=True),self.marked_signed(color=True))
+				(red('False'),green('True'))[self.is_rbf()],self.marked_signed(color=True))
 		if self.chain in ('testnet','regtest'):
 			out += green('Chain: {}\n'.format(self.chain.upper()))
 		if self.coin_txid:
@@ -767,66 +801,62 @@ class MMGenTX(MMGenObject):
 
 		return out # TX label might contain non-ascii chars
 
-	def parse_tx_file(self,infile):
+	def parse_tx_file(self,infile,md_only=False):
 
-		self.parse_tx_data(get_lines_from_file(infile,self.desc+' data'))
+		tx_data = get_lines_from_file(infile,self.desc+' data')
 
-	def parse_tx_data(self,tx_data):
+		try:
+			desc = 'data'
+			assert len(tx_data) >= 5,'number of lines less than 5'
+			self.chksum = HexStr(tx_data.pop(0),on_fail='raise')
+			assert self.chksum == make_chksum_6(' '.join(tx_data)),'file data does not match checksum'
 
-		def do_err(s): die(2,'Invalid %s in transaction file' % s)
+			if len(tx_data) == 6:
+				desc = '{} TxID'.format(g.proto.name.capitalize())
+				self.coin_txid = CoinTxID(tx_data.pop(-1),on_fail='raise')
 
-		if len(tx_data) < 5: do_err('number of lines')
+			if len(tx_data) == 5:
+				c = tx_data.pop(-1)
+				if c != '-':
+					desc = 'encoded comment (not base58)'
+					comment = baseconv.b58decode(c).decode('utf8')
+					assert comment != False,'invalid comment'
+					desc = 'comment'
+					self.label = MMGenTXLabel(comment,on_fail='raise')
 
-		self.chksum = HexStr(tx_data.pop(0))
-		if self.chksum != make_chksum_6(' '.join(tx_data)):
-			do_err('checksum')
-
-		if len(tx_data) == 6:
-			self.coin_txid = BitcoinTxID(tx_data.pop(-1),on_fail='return')
-			if not self.coin_txid:
-				do_err('Bitcoin TxID')
-
-		if len(tx_data) == 5:
-			c = tx_data.pop(-1)
-			if c != '-':
-				comment = baseconv.b58decode(c).decode('utf8')
-				if comment == False:
-					do_err('encoded comment (not base58)')
-				else:
-					self.label = MMGenTXLabel(comment,on_fail='return')
-					if not self.label:
-						do_err('comment')
-		else:
-			comment = u''
-
-		if len(tx_data) == 4:
+			desc = 'number of lines' # four required lines
 			metadata,self.hex,inputs_data,outputs_data = tx_data
-		else:
-			do_err('number of lines')
+			metadata = metadata.split()
 
-		metadata = metadata.split()
-		if len(metadata) not in (4,5): do_err('metadata')
-		if len(metadata) == 5:
-			t = metadata.pop(0)
-			self.chain = (t.lower(),None)[t=='Unknown']
+			self.coin = metadata.pop(0) if len(metadata) == 6 else 'BTC'
 
-		self.txid,send_amt,self.timestamp,blockcount = metadata
-		self.txid = MMGenTxID(self.txid)
-		self.send_amt = BTCAmt(send_amt)
-		self.blockcount = int(blockcount)
-		self.hex = HexStr(self.hex)
+			if len(metadata) == 5:
+				t = metadata.pop(0)
+				self.chain = (t.lower(),None)[t=='Unknown']
 
-		try: unhexlify(self.hex)
-		except: do_err('hex data')
+			desc = 'metadata (4 items minimum required)'
+			self.txid,send_amt,self.timestamp,blockcount = metadata
+			desc = 'metadata'
+			self.txid = MMGenTxID(self.txid,on_fail='raise')
+			self.send_amt = g.proto.coin_amt(send_amt,on_fail='raise')
+			desc = 'block count in metadata'
+			self.blockcount = int(blockcount)
+			desc = 'transaction hex data'
+			self.hex = HexStr(self.hex,on_fail='raise')
+			if md_only: return # the following ops will all fail if g.coin doesn't match tx.coin
+			desc = 'coin type in metadata'
+			assert self.coin == g.coin,'invalid coin type'
+			desc = 'inputs data'
+			self.inputs = self.decode_io('inputs',eval(inputs_data))
+			assert len(self.inputs),'no inputs!'
+			desc = '{}-to-MMGen address map data'.format(g.coin)
+			self.outputs = self.decode_io('outputs',eval(outputs_data))
+			assert len(self.outputs),'no outputs!'
+		except Exception as e:
+			die(2,'Invalid {} in transaction file: {}'.format(desc,e[0]))
 
-		try: self.inputs = self.decode_io('inputs',eval(inputs_data))
-		except: do_err('inputs data')
-
-		if not self.chain and not self.inputs[0].addr.is_testnet():
+		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
-
-		try: self.outputs = self.decode_io('outputs',eval(outputs_data))
-		except: do_err('btc-to-mmgen address map data')
 
 class MMGenBumpTX(MMGenTX):
 
@@ -886,7 +916,7 @@ class MMGenBumpTX(MMGenTX):
 		ret = super(type(self),self).get_usr_fee(tx_fee,desc)
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} satoshis per byte)'.format(
-				ret,desc,self.min_fee,self.btc2spb(self.min_fee,c=g.coin)))
+				ret,desc,self.min_fee,self.btc2spb(self.min_fee),c=g.coin))
 			return False
 		output_amt = self.outputs[self.bump_output_idx].amt
 		if ret >= output_amt:

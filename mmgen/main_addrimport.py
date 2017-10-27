@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-addrimport: Import addresses into a MMGen bitcoind tracking wallet
+mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 """
 
 import time
@@ -26,7 +26,25 @@ from mmgen.common import *
 from mmgen.addr import AddrList,KeyAddrList
 from mmgen.obj import TwLabel
 
-# In batch mode, bitcoind just rescans each address separately anyway, so make
+ai_msgs = lambda k: {
+	'rescan': """
+WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
+necessary only if an address you're importing is already on the blockchain,
+has a balance and is not in your tracking wallet.  Note that the rescanning
+process is very slow (>30 min. for each imported address on a low-powered
+computer).
+	""".strip() if opt.rescan else """
+WARNING: If any of the addresses you're importing is already on the blockchain,
+has a balance and is not in your tracking wallet, you must exit the program now
+and rerun it using the '--rescan' option.
+""".strip(),
+	'bad_args': """
+You must specify an {pnm} address file, a single address with the '--address'
+option, or a list of non-{pnm} addresses with the '--addrlist' option
+""".strip().format(pnm=g.proj_name)
+}[k]
+
+# In batch mode, daemon just rescans each address separately anyway, so make
 # --batch and --rescan incompatible.
 
 opts_data = lambda: {
@@ -36,14 +54,13 @@ opts_data = lambda: {
 	'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
--a, --address=a    Import the single Bitcoin address 'a'
+-a, --address=a    Import the single coin address 'a'
 -b, --batch        Import all addresses in one RPC call.
--l, --addrlist     Address source is a flat list of (non-MMGen) Bitcoin addresses
+-l, --addrlist     Address source is a flat list of non-MMGen coin addresses
 -k, --keyaddr-file Address source is a key-address file
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
                    on the blockchain and has a balance.  Rescanning is slow.
--t, --test         Simulate operation; don't actually import addresses
 """,
 	'notes': """\n
 This command can also be used to update the comment fields of addresses already
@@ -63,109 +80,91 @@ def import_mmgen_list(infile):
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 	return al
 
+rpc_init()
+
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
 	if opt.addrlist:
-		lines = get_lines_from_file(
-			infile,'non-{pnm} addresses'.format(pnm=g.proj_name),trim_comments=True)
-		al = AddrList(addrlist=lines)
+		al = AddrList(addrlist=get_lines_from_file(
+			infile,
+			'non-{pnm} addresses'.format(pnm=g.proj_name),
+			trim_comments=True))
 	else:
 		al = import_mmgen_list(infile)
 elif len(cmd_args) == 0 and opt.address:
 	al = AddrList(addrlist=[opt.address])
 	infile = 'command line'
 else:
-	die(1,"""
-You must specify an {pnm} address file, a single address, or a list of
-non-{pnm} addresses with the '--addrlist' option)
-""".strip().format(pnm=g.proj_name))
+	die(1,ai_msgs('bad_args'))
 
 m = ' from Seed ID {}'.format(al.al_id.sid) if hasattr(al.al_id,'sid') else ''
 qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
-if not opt.test:
-	c = rpc_connection()
-
-m = """
-WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
-necessary only if an address you're importing is already on the blockchain,
-has a balance and is not in your tracking wallet.  Note that the rescanning
-process is very slow (>30 min. for each imported address on a low-powered
-computer).
-	""".strip() if opt.rescan else """
-WARNING: If any of the addresses you're importing is already on the blockchain,
-has a balance and is not in your tracking wallet, you must exit the program now
-and rerun it using the '--rescan' option.
-""".strip()
-
-if not opt.quiet: confirm_or_exit(m, 'continue', expect='YES')
+if not opt.quiet: confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
 
 err_flag = False
 
 def import_address(addr,label,rescan):
 	try:
-		if not opt.test:
-			c.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
+		g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
 	except:
 		global err_flag
 		err_flag = True
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
-w_mmid   = '' if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 12
+w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13
+msg_fmt = '{{:{}}} {{:34}} {{:{}}}'.format(w_n_of_m,w_mmid)
 
-if opt.rescan:
-	import threading
-	msg_fmt = '\r%s %-{}s %-34s %s'.format(w_n_of_m)
-else:
-	msg_fmt = '\r%-{}s %-34s %s'.format(w_n_of_m, w_mmid)
+if opt.rescan: import threading
 
-msg("Importing {} address{} from {}{}".format(
-		len(al.data), suf(al.data,'es'), infile,
-		('',' (batch mode)')[bool(opt.batch)]
-	))
+msg('Importing {} address{} from {}{}'.format(
+		len(al.data),
+		suf(al.data,'es'),
+		infile,
+		('',' (batch mode)')[bool(opt.batch)]))
 
-if not al.is_for_current_chain():
-	die(2,"Address{} not compatible with {} chain!".format((' list','')[bool(opt.address)],g.chain))
+if not al.data[0].addr.is_for_chain(g.chain):
+	die(2,'Address{} not compatible with {} chain!'.format((' list','')[bool(opt.address)],g.chain))
 
-arg_list = []
 for n,e in enumerate(al.data):
 	if e.idx:
 		label = '{}:{}'.format(al.al_id,e.idx)
 		if e.label: label += ' ' + e.label
 		m = label
 	else:
-		label = 'btc:{}'.format(e.addr)
+		label = '{}:{}'.format(g.proto.base_coin.lower(),e.addr)
 		m = 'non-'+g.proj_name
 
 	label = TwLabel(label)
 
 	if opt.batch:
+		if n == 0: arg_list = []
 		arg_list.append((e.addr,label,False))
-	elif opt.rescan:
+		continue
+
+	msg_data = ('{}/{}:'.format(n+1,al.num_addrs),e.addr,'({})'.format(m))
+
+	if opt.rescan:
 		t = threading.Thread(target=import_address,args=[e.addr,label,True])
 		t.daemon = True
 		t.start()
-
 		start = int(time.time())
-
 		while True:
 			if t.is_alive():
-				elapsed = int(time.time() - start)
-				count = '%s/%s:' % (n+1, al.num_addrs)
-				msg_r(msg_fmt % (secs_to_hms(elapsed),count,e.addr,'(%s)' % m))
-				time.sleep(1)
+				elapsed = int(time.time()-start)
+				msg_r(('\r{} '+msg_fmt).format(secs_to_hms(elapsed),*msg_data))
+				time.sleep(0.5)
 			else:
 				if err_flag: die(2,'\nImport failed')
 				msg('\nOK')
 				break
 	else:
 		import_address(e.addr,label,False)
-		count = '%s/%s:' % (n+1, al.num_addrs)
-		msg_r(msg_fmt % (count, e.addr, '(%s)' % m))
+		msg_r('\r'+msg_fmt.format(*msg_data))
 		if err_flag: die(2,'\nImport failed')
 		msg(' - OK')
 
 if opt.batch:
-	ret = c.importaddress(arg_list,batch=True)
-	msg('OK: %s addresses imported' % len(ret))
+	ret = g.rpch.importaddress(arg_list,batch=True)
+	msg('OK: {} addresses imported'.format(len(ret)))

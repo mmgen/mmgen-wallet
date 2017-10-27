@@ -21,8 +21,8 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
               transaction, and optionally sign and send it
 """
 
-from mmgen.txcreate import *
-from mmgen.txsign import *
+from mmgen.common import *
+from mmgen.seed import SeedSource
 
 opts_data = lambda: {
 	'desc': 'Increase the fee on a replaceable (RBF) {g.proj_name} transaction, creating a new transaction, and optionally sign and send the new transaction'.format(g=g),
@@ -58,29 +58,33 @@ opts_data = lambda: {
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{g.hash_preset}')
--P, --passwd-file=   f Get {pnm} wallet or bitcoind passphrase from file 'f'
+-P, --passwd-file=   f Get {pnm} wallet or {dn} passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -s, --send             Sign and send the transaction (the default if seed
                        data is provided)
 -v, --verbose          Produce more verbose output
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
-""".format(g=g,pnm=pnm,pnl=pnm.lower(),
+""".format(g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 		kg=g.key_generator,
 		cu=g.coin
 		),
-	'notes': '\n' + fee_notes.format(g.coin) + txsign_notes
+	'notes': '\n' + help_notes('fee') + help_notes('txsign')
 }
 
 cmd_args = opts.init(opts_data)
 
-c = rpc_connection()
+rpc_init()
 
 tx_file = cmd_args.pop(0)
 check_infile(tx_file)
 
+from mmgen.txcreate import *
+from mmgen.txsign import *
+
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
+
 kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
 
@@ -112,13 +116,13 @@ fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 tx.update_output_amt(op_idx,tx.sum_inputs()-tx.sum_outputs(exclude=op_idx)-fee)
 
 d = tx.get_fee()
-assert d == fee and d <= g.max_tx_fee
+assert d == fee and d <= g.proto.max_tx_fee
 
 if not opt.yes:
 	tx.add_comment()   # edits an existing comment
-tx.create_raw(c)       # creates tx.hex, tx.txid
+tx.create_raw()        # creates tx.hex, tx.txid
 tx.add_timestamp()
-tx.add_blockcount(c)
+tx.add_blockcount()
 
 qmsg('Fee successfully increased')
 
@@ -127,9 +131,9 @@ if not silent:
 	msg_r(tx.format_view(terse=True))
 
 if seed_files or kl or kal:
-	txsign(opt,c,tx,seed_files,kl,kal)
+	txsign(tx,seed_files,kl,kal)
 	tx.write_to_file(ask_write=False)
-	if tx.send(c):
+	if tx.send():
 		tx.write_to_file(ask_write=False)
 else:
 	tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)

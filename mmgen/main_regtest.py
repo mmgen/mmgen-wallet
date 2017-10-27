@@ -17,13 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-regtest: Bitcoind regression test mode setup and operations for the MMGen
+mmgen-regtest: Coin daemon regression test mode setup and operations for the MMGen
                suite
 """
 
 from mmgen.common import *
+
 opts_data = lambda: {
-	'desc': 'Bitcoind regression test mode setup and operations for the {} suite'.format(g.proj_name),
+	'desc': 'Coin daemon regression test mode setup and operations for the {} suite'.format(g.proj_name),
 	'usage':   '[opts] <command>',
 	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
@@ -40,7 +41,7 @@ opts_data = lambda: {
                          AVAILABLE COMMANDS
 
   setup          - set up system for regtest operation with MMGen
-  stop           - stop the regtest bitcoind
+  stop           - stop the regtest coin daemon
   bob            - switch to Bob's wallet, starting daemon if necessary
   alice          - switch to Alice's wallet, starting daemon if necessary
   user           - show current user

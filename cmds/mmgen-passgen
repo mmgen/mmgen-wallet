@@ -17,7 +17,7 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-passgen: Generate a series or range of passwords from an MMGen
+mmgen-passgen: Generate a range or series of passwords from an MMGen
                deterministic wallet
 """
 

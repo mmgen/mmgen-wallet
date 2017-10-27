@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-tool:  Perform various MMGen- and Bitcoin-related operations.
+mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
              Part of the MMGen suite
 """
 
@@ -29,24 +29,24 @@ supported commands), use '-' as the first argument.
 """.strip()
 
 cmd_help = """
-Bitcoin address/key operations (compressed public keys supported):
-  addr2hexaddr   - convert Bitcoin address from base58 to hex format
+Cryptocoin address/key operations (compressed public keys supported):
+  addr2hexaddr   - convert coin address from base58 to hex format
   hex2wif        - convert a private key from hex to WIF format
-  hexaddr2addr   - convert Bitcoin address from hex to base58 format
-  privhex2addr   - generate Bitcoin address from private key in hex format
+  hexaddr2addr   - convert coin address from hex to base58 format
+  privhex2addr   - generate coin address from private key in hex format
   privhex2pubhex - generate a hex public key from a hex private key
   pubhex2addr    - convert a hex pubkey to an address
   pubhex2redeem_script - convert a hex pubkey to a witness redeem script
   wif2redeem_script - convert a WIF private key to a witness redeem script
   wif2segwit_pair - generate both a Segwit redeem script and address from WIF
-  pubkey2addr    - convert Bitcoin public key to address
+  pubkey2addr    - convert coin public key to address
   randpair       - generate a random private key/address pair
   randwif        - generate a random private key in WIF format
-  wif2addr       - generate a Bitcoin address from a key in WIF format
+  wif2addr       - generate a coin address from a key in WIF format
   wif2hex        - convert a private key from WIF to hex format
 
-Wallet/TX operations (bitcoind must be running):
-  getbalance    - like 'bitcoin-cli getbalance' but shows confirmed/unconfirmed,
+Wallet/TX operations (coin daemon must be running):
+  getbalance    - like '{pn}-cli getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddress   - list the specified {pnm} address and its balance
   listaddresses - list {pnm} addresses and their balances
@@ -104,10 +104,10 @@ Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
   computed using a different algorithm and are NOT Electrum-compatible!
 
   {sm}
-""".format(pnm=g.proj_name,sm='\n  '.join(stdin_msg.split('\n')))
+"""
 
 opts_data = lambda: {
-	'desc':    'Perform various {pnm}- and Bitcoin-related operations'.format(pnm=g.proj_name),
+	'desc':    'Perform various {pnm}- and cryptocoin-related operations'.format(pnm=g.proj_name),
 	'usage':   '[opts] <command> <command args>',
 	'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
@@ -122,9 +122,14 @@ opts_data = lambda: {
 	'notes': """
 
                                COMMANDS
-{}
-Type '{} help <command> for help on a particular command
-""".format(cmd_help,g.prog_name)
+{ch}
+Type '{pn} help <command> for help on a particular command
+""".format( pn=g.prog_name,
+			ch=cmd_help.format(
+				pn=g.proto.name,
+				pnm=g.proj_name,
+				sm='\n  '.join(stdin_msg.split('\n')))
+	)
 }
 
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt'])

@@ -92,36 +92,39 @@ class MMGenPexpect(object):
 		atexit.register(lambda: os.system('stty sane'))
 		NL = '\n'
 
-	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[]):
+	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[],msg_only=False):
 		cmd_args = ['--{}{}'.format(k.replace('_','-'),
 			'='+getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in passthru_args if getattr(opt,k)] \
 			+ ['--data-dir='+os.path.join('test','data_dir')] + cmd_args
-		cmd = (('./','')[bool(opt.system)]+mmgen_cmd,'python')[g.platform=='win']
-		args = (cmd_args,[mmgen_cmd]+cmd_args)[g.platform=='win']
+
+		if g.platform == 'win': cmd,args = 'python',[mmgen_cmd]+cmd_args
+		else:                   cmd,args = mmgen_cmd,cmd_args
 
 		for i in args:
 			if type(i) not in (str,unicode):
 				m1 = 'Error: missing input files in cmd line?:'
 				m2 = '\nName: {}\nCmd: {}\nCmd args: {}'
 				die(2,(m1+m2).format(name,cmd,args))
+
 		if opt.popen_spawn:
-			args = [("'"+a+"'" if ' ' in a else a) for a in args]
-		cmd_str = '{} {}'.format(cmd,' '.join(args))
-		if opt.popen_spawn:
-			cmd_str = cmd_str.replace('\\','/')
+			args = [(a,"'{}'".format(a))[' ' in a] for a in args]
+
+		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
 
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
+
 		if opt.verbose or opt.print_cmdline or opt.exact_output:
 			clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
 			sys.stderr.write(green('Testing: {}\n'.format(desc)))
-			sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
+			if not msg_only:
+				sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
 		else:
 			m = 'Testing %s: ' % desc
 			msg_r(m)
 
-		if mmgen_cmd == '': return
+		if msg_only: return
 
 		if opt.direct_exec:
 			msg('')
@@ -135,6 +138,7 @@ class MMGenPexpect(object):
 			if opt.traceback:
 				cmd,args = g.traceback_cmd,[cmd]+args
 				cmd_str = g.traceback_cmd + ' ' + cmd_str
+#			Msg('\ncmd_str: {}'.format(cmd_str))
 			if opt.popen_spawn:
 				self.p = PopenSpawn(cmd_str)
 			else:
@@ -143,6 +147,7 @@ class MMGenPexpect(object):
 
 	def ok(self,exit_val=0):
 		ret = self.p.wait()
+#		Msg('expect: {} got: {}'.format(exit_val,ret))
 		if ret != exit_val:
 			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
 		if opt.profile: return

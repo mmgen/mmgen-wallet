@@ -27,34 +27,6 @@ from mmgen.addr import *
 
 pnm = g.proj_name
 
-txsign_notes = """
-Transactions may contain both {pnm} or non-{pnm} input addresses.
-
-To sign non-{pnm} inputs, a bitcoind wallet dump or flat key list is used
-as the key source ('--keys-from-file' option).
-
-To sign {pnm} inputs, key data is generated from a seed as with the
-{pnl}-addrgen and {pnl}-keygen commands.  Alternatively, a key-address file
-may be used (--mmgen-keys-from-file option).
-
-Multiple wallets or other seed files can be listed on the command line in
-any order.  If the seeds required to sign the transaction's inputs are not
-found in these files (or in the default wallet), the user will be prompted
-for seed data interactively.
-
-To prevent an attacker from crafting transactions with bogus {pnm}-to-Bitcoin
-address mappings, all outputs to {pnm} addresses are verified with a seed
-source.  Therefore, seed files or a key-address file for all {pnm} outputs
-must also be supplied on the command line if the data can't be found in the
-default wallet.
-
-Seed source files must have the canonical extensions listed in the 'FileExt'
-column below:
-
-  {f}
-""".format(f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-			pnm=pnm,pnl=pnm.lower())
-
 wmsg = {
 	'mapping_error': """
 {pnm} -> {c} address mappings differ!
@@ -154,17 +126,19 @@ def get_keyaddrlist(opt):
 def get_keylist(opt):
 	if opt.keys_from_file:
 		l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
-		kal = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept bitcoind wallet dumps
+		kal = KeyAddrList(keylist=[m.split()[0] for m in l]) # accept coin daemon wallet dumps
 		kal.generate_addrs_from_keys()
 		return kal
 	return None
 
-def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
+def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 
 	keys = MMGenList() # list of AddrListEntry objects
 	non_mm_addrs = tx.get_non_mmaddrs('inputs')
 
 	if non_mm_addrs:
+		if not kl:
+			die(2,'Transaction has non-{} inputs, but no flat key list is present'.format(g.proj_name))
 		tmp = KeyAddrList(addrlist=non_mm_addrs,do_chksum=False)
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
@@ -186,7 +160,7 @@ def txsign(opt,c,tx,seed_files,kl,kal,tx_num_str=''):
 	if extra_sids:
 		msg('Unused Seed ID{}: {}'.format(suf(extra_sids,'s'),' '.join(extra_sids)))
 
-	if tx.sign(c,tx_num_str,keys):
+	if tx.sign(tx_num_str,keys):
 		return tx
 	else:
 		die(3,red('Transaction {}could not be signed.'.format(tx_num_str)))

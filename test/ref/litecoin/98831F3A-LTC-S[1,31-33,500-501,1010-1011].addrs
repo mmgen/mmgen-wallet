@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# address, and it will be appended to the bitcoind wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-LTC-S[1,31-33,500-501,1010-1011]: 63DF E42A 0827 21C3
+# Record this value to a secure location.
+98831F3A LTC:SEGWIT {
+  1     MQrY3vEbqKMBgegXrSaR93R2HoTDE5bKrY
+  31    MAEgtjR8MLZpLMqPaBjjas1HM3Rri119Uq
+  32    MDdv4ofTTdTQXZLFkBkgt2aotrdytaChyK
+  33    MAbECS5tZdVMQ5Fc3U3zW1ZLLvY7bY3mJU
+  500   MH7eBQ6tSzMWL41m9T2h96H3RaVpXYRLDF
+  501   MG6NdJs9iQkV9TLWTy4wahNXK8pMSkpFve
+  1010  MEzfeSh1kBmSDKAKQZoEm6293RCdFunhP3
+  1011  MBVCP3kQEZr2NwBQWHY6dP72sYkh9rRmWt
+}
