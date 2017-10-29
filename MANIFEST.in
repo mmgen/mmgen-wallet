@@ -9,6 +9,5 @@ include scripts/compute-file-chksum.py
 include scripts/deinstall.sh
 include scripts/tx-old2new.py
 include scripts/test-release.sh
-include scripts/mmgen-autosign
 
 prune test/ref/__db*

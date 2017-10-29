@@ -143,7 +143,7 @@ def Vmsg_r(s,force=False):
 def dmsg(s):
 	if opt.debug: msg(s)
 
-def suf(arg,suf_type):
+def suf(arg,suf_type='s'):
 	suf_types = { 's':  ('s',''), 'es': ('es','') }
 	assert suf_type in suf_types
 	t = type(arg)

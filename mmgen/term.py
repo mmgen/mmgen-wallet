@@ -54,14 +54,11 @@ def _kb_hold_protect_unix():
 def _kb_hold_protect_unix_raw(): pass
 
 def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
-
 	msg_r(prompt)
 	timeout = float(0.3)
-
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
-
 	while True:
 		# Protect against held-down key before read()
 		key = select([sys.stdin], [], [], timeout)[0]
@@ -73,7 +70,6 @@ def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
 		# Protect against long keypress
 		key = select([sys.stdin], [], [], timeout)[0]
 		if not key: break
-
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	return ch
 
@@ -82,17 +78,12 @@ def _get_keypress_unix_stub(prompt='',immed_chars='',prehold_protect=None):
 	return sys.stdin.read(1)
 
 def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
-
 	msg_r(prompt)
-
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
-
 	ch = sys.stdin.read(1)
-
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
-
 	return ch
 
 def _kb_hold_protect_mswin():
@@ -203,11 +194,12 @@ def set_terminal_vars():
 		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
 		if not sys.stdin.isatty():
 			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
+			get_char_raw = get_char
 		get_terminal_size = _get_terminal_size_linux
 	else:
 		get_char_raw = _get_keypress_mswin_raw
 		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
 		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
 		if not sys.stdin.isatty():
-			get_char = _get_keypress_mswin_stub
+			get_char = get_char_raw = _get_keypress_mswin_stub
 		get_terminal_size = _get_terminal_size_mswin

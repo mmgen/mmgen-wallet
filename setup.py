@@ -148,7 +148,7 @@ setup(
 			'mmgen.share.__init__',
 			'mmgen.share.Opts',
 		],
-		scripts=[
+		scripts = [
 			'cmds/mmgen-addrgen',
 			'cmds/mmgen-keygen',
 			'cmds/mmgen-passgen',
@@ -163,6 +163,7 @@ setup(
 			'cmds/mmgen-txsign',
 			'cmds/mmgen-txsend',
 			'cmds/mmgen-txdo',
-			'cmds/mmgen-tool'
+			'cmds/mmgen-tool',
+			'cmds/mmgen-autosign'
 		]
 	)

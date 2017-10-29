@@ -248,6 +248,9 @@ class MMGenPexpect(object):
 	def interactive(self):
 		return self.p.interact() # interact() not available with popen_spawn
 
+	def kill(self,signal):
+		return self.p.kill(signal)
+
 	def logfile(self,arg):
 		self.p.logfile = arg
 

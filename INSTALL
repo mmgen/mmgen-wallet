@@ -1,12 +1,8 @@
-	MMGen is written in Pure Python and runs on MS Windows and Linux.
+	MMGen is written in Python and builds and runs on MS Windows/MinGW and Linux.
 
-	Instructions for installation and use reside on MMGen's Github wiki:
+	Consult the MMGen wiki on Github for instructions on installation and use:
 
-		To install MMGen:
 		https://github.com/mmgen/mmgen/wiki/
 
-		To use MMGen:
-		https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
-
-	The wiki pages are duplicated under this distribution's doc directory for
-	offline reading.
+	Selected wiki pages in Markdown format can be found under the doc directory
+	of this distribution.

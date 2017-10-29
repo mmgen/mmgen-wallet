@@ -204,6 +204,9 @@ cfgs = {
 	'17': {
 		'tmpdir':        os.path.join('test','tmp17'),
 	},
+	'18': {
+		'tmpdir':        os.path.join('test','tmp18'),
+	},
 	'1': {
 		'tmpdir':        os.path.join('test','tmp1'),
 		'wpasswd':       'Dorian',
@@ -668,6 +671,10 @@ cmd_group['regtest'] = (
 	('regtest_stop',               'stopping regtest daemon'),
 )
 
+cmd_group['misc'] = (
+	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
+)
+
 # undocumented admin cmds
 cmd_group_admin = OrderedDict()
 cmd_group_admin['create_ref_tx'] = (
@@ -735,6 +742,11 @@ cmd_data['info_regtest'] = 'regtest mode',[17]
 for a,b in cmd_group['regtest']:
 	cmd_list['regtest'].append(a)
 	cmd_data[a] = (17,b,[[[],17]])
+
+cmd_data['info_misc'] = 'miscellaneous operations',[18]
+for a,b in cmd_group['misc']:
+	cmd_list['misc'].append(a)
+	cmd_data[a] = (18,b,[[[],18]])
 
 utils = {
 	'check_deps': 'check dependencies for specified command',
@@ -900,7 +912,7 @@ class MMGenExpect(MMGenPexpect):
 
 	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False,msg_only=False):
 
-		desc = (cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc).strip()
+		desc = ((cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc)).strip()
 		passthru_args = ['testnet','rpc_host','rpc_port','regtest','coin']
 
 		if not opt.system:
@@ -1230,7 +1242,7 @@ class MMGenTestSuite(object):
 	def helpscreens(self,name,arg='--help'):
 		scripts = (
 			'walletgen','walletconv','walletchk','txcreate','txsign','txsend','txdo','txbump',
-			'addrgen','addrimport','keygen','passchg','tool','passgen','regtest')
+			'addrgen','addrimport','keygen','passchg','tool','passgen','regtest','autosign')
 		for s in scripts:
 			t = MMGenExpect(name,('mmgen-'+s),[arg],extra_desc='(mmgen-%s)'%s,no_output=True)
 			t.read()
@@ -1804,6 +1816,45 @@ class MMGenTestSuite(object):
 		o = t.expect_getend('Incog data for ID %s found at offset ' % i_id)
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
+
+	# Miscellaneous tests
+	def autosign(self,name):
+		if g.platform == 'win':
+			msg('Skipping {} (not supported)'.format(name)); return
+		fdata = (('btc',''),('bch',''),('ltc','litecoin'))
+		tfns = [cfgs['8']['ref_tx_file'][c].format('') for c,d in fdata]
+		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata,tfns)]
+		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
+		except: pass
+		for f,fn in zip(tfs,tfns):
+			shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
+		# make a bad tx file
+		with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
+			f.write('bad tx data')
+		ls = os.listdir(cfg['tmpdir'])
+		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc']
+#		opts += ['--quiet']
+		mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
+		mn = read_from_file(mn_fn).strip().split()
+
+		t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
+		t.expect_getend('Wrote key file ')
+		t.ok()
+
+		t = MMGenExpect(name,'mmgen-autosign',opts+['setup'],extra_desc='(setup)')
+		t.expect('words: ','3')
+		t.expect('OK? (Y/n): ','\n')
+		for i in range(24):
+			t.expect('word #{}: '.format(i+1),mn[i]+'\n')
+		wf = t.written_to_file('Autosign wallet')
+		t.ok()
+
+		t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
+		t.expect('3 transactions signed')
+		t.expect('1 transaction failed to sign')
+		t.expect('Waiting.')
+		t.kill(2)
+		t.ok(exit_val=1)
 
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
@@ -2493,8 +2544,8 @@ start_time = int(time.time())
 
 def end_msg():
 	t = int(time.time()) - start_time
-	m = '{} tests performed.  Elapsed time: {:02d}:{:02d}\n'
-	sys.stderr.write(green(m.format(cmd_total,t/60,t%60)))
+	m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
+	sys.stderr.write(green(m.format(cmd_total,suf(cmd_total),t/60,t%60)))
 
 ts = MMGenTestSuite()
 
@@ -2524,7 +2575,7 @@ try:
 	else:
 		clean()
 		for cmd in cmd_data:
-			if cmd == 'info_regtest': break # don't run these by default
+			if cmd == 'info_regtest': break # don't run everything after this by default
 			if cmd[:5] == 'info_':
 				msg(green('%sTesting %s' % (('\n','')[bool(opt.resume)],cmd_data[cmd][0])))
 				continue

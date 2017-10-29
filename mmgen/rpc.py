@@ -33,6 +33,12 @@ class CoinDaemonRPCConnection(object):
 		dmsg('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
 			host,port,user,passwd,auth_cookie))
 
+		import socket
+		try:
+			socket.create_connection((host,port)).close()
+		except:
+			die(1,'Unable to connect to {}:{}'.format(host,port))
+
 		if user and passwd:
 			self.auth_str = '{}:{}'.format(user,passwd)
 		elif auth_cookie:

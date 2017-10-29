@@ -2,7 +2,7 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
-dfl_tests='obj btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hinPt OPT
 do
@@ -16,6 +16,7 @@ do
 		echo   "           '-t'  Print the tests without running them"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj    - data objects"
+		echo   "     misc   - miscellaneous operations"
 		echo   "     btc    - bitcoin"
 		echo   "     btc_tn - bitcoin testnet"
 		echo   "     btc_rt - bitcoin regtest"
@@ -91,6 +92,12 @@ t_obj=(
     'test/objtest.py --coin=ltc -S'
     'test/objtest.py --coin=ltc --testnet=1 -S')
 f_obj='Data object test complete'
+
+i_misc='Miscellaneous operations'
+s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
+t_misc=(
+    'test/test.py -On misc')
+f_misc='Miscellaneous operations test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
