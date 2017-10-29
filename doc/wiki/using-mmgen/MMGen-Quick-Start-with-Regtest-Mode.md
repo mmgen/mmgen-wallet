@@ -34,6 +34,9 @@ This tutorial provides a quick, hands-on introduction.
 		...
 		Type uppercase 'YES' to confirm: YES
 
+	Since your Bob has a different Seed ID, your address filename will of course
+	be different than this one.
+
 5. List the addresses in Bob's tracking wallet.  You'll see the addresses you
 just imported:
 
@@ -49,6 +52,8 @@ just imported:
 6. Fund one of the addresses (let's choose the first one) with some BTC:
 
 		$ mmgen-regtest send mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ 500
+
+	Don't forget to substitute your C:1 address for the one above!
 
 7. Make sure the funds reached their destination:
 
@@ -92,6 +97,8 @@ Specify a fee of 20 satoshis/byte and make output quieter:
 		...
 		Type uppercase 'YES' to confirm: YES
 		Transaction sent: 78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b076
+
+	Don't forget to use your Alice's Seed ID here, instead of '9304C211'.
 
 	Note that for simplicity's sake this tutorial uses the `mmgen-txdo` command
 	to create, sign and send transactions in one operation.  In normal, cold

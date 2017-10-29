@@ -39,7 +39,7 @@ class g(object):
 	# Constants:
 
 	version      = '0.9.499'
-	release_date = 'October 2017'
+	release_date = 'November 2017'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
