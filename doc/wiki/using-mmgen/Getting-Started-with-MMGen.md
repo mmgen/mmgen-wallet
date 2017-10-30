@@ -745,7 +745,7 @@ This also works both on the command line and at the interactive prompt.  The
 satoshis-per-byte specification is an integer followed by the letter 's'.  A fee
 of 90 satoshis per byte is thus represented as '90s'.
 
-MMGen has a hard maximum fee (currently 0.01 BTC) which is alterable only in the
+MMGen has a hard maximum fee (currently 0.003 BTC) which is alterable only in the
 config file.  Thus MMGen will never create or broadcast any transaction with a
 mistakenly or dangerously high fee unless you expressly permit it to.
 
@@ -852,10 +852,10 @@ them in turn until you get a confirmation:
 
 To use MMGen with Bitcoin Cash (BCH) or Litecoin (LTC), first make sure the
 Bitcoin ABC or Litecoin daemon is properly installed
-([source][si])([binaries][bi]) and [running][p8].
+([source][si])([binaries][bi]), [running][p8] and synced.
 
 MMGen requires that the bitcoin-abc daemon be listening on non-standard
-[port 8442][p8].
+[RPC port 8442][p8].
 
 Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
 commands.  It's that simple!

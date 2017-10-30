@@ -63,7 +63,7 @@ class BitcoinProtocol(MMGenObject):
 	rpc_port        = 8332
 	secs_per_block  = 600
 	coin_amt        = BTCAmt
-	max_tx_fee      = BTCAmt('0.01')
+	max_tx_fee      = BTCAmt('0.003')
 	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin') if g.platform == 'win' \
 						else os.path.join(g.home_dir,'.bitcoin')
 	daemon_data_subdir = ''
