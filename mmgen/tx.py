@@ -157,8 +157,32 @@ class MMGenTX(MMGenObject):
 		for k in txio_attrs: locals()[k] = txio_attrs[k]
 		is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
 
-	class MMGenTxInputList(list,MMGenObject): pass
-	class MMGenTxOutputList(list,MMGenObject): pass
+	class MMGenTxInputList(list,MMGenObject):
+
+		desc = 'transaction inputs'
+		member_type = 'MMGenTxInput'
+
+		def convert_coin(self,verbose=False):
+			from mmgen.protocol import CoinProtocol
+			io = getattr(MMGenTX,self.member_type)
+			if verbose:
+				msg('{}:'.format(self.desc.capitalize()))
+			for i in self:
+				d = i.__dict__
+				d['amt'] = g.proto.coin_amt(d['amt'])
+				i = io(**d)
+				if verbose:
+					pmsg(i.__dict__)
+
+		def check_coin_mismatch(self):
+			for i in self:
+				if type(i.amt) != g.proto.coin_amt:
+					die(2,'Coin mismatch in transaction: amount {} not of type {}!'.format(i.amt,g.proto.coin_amt))
+
+	class MMGenTxOutputList(MMGenTxInputList):
+
+		desc = 'transaction outputs'
+		member_type = 'MMGenTxOutput'
 
 	def __init__(self,filename=None,md_only=False):
 		self.inputs      = self.MMGenTxInputList()
@@ -435,6 +459,8 @@ class MMGenTX(MMGenObject):
 		self.blockcount = int(g.rpch.getblockcount())
 
 	def format(self):
+		self.inputs.check_coin_mismatch()
+		self.outputs.check_coin_mismatch()
 		lines = [
 			'{}{} {} {} {} {}'.format(
 				(g.coin+' ','')[g.coin=='BTC'],
@@ -678,16 +704,23 @@ class MMGenTX(MMGenObject):
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
 
-	def write_to_file(self,add_desc='',ask_write=True,ask_write_default_yes=False,ask_tty=True,ask_overwrite=True):
+	def write_to_file(  self,
+						add_desc='',
+						ask_write=True,
+						ask_write_default_yes=False,
+						ask_tty=True,
+						ask_overwrite=True,
+						fn=None):
 		if ask_write == False:
 			ask_write_default_yes=True
 		self.format()
-		fn = '{}{}[{}{}].{}'.format(
-			self.txid,
-			('-'+g.coin,'')[g.coin=='BTC'],
-			self.send_amt,
-			('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()],
-			self.ext)
+		if not fn:
+			fn = '{}{}[{}{}].{}'.format(
+				self.txid,
+				('-'+g.coin,'')[g.coin=='BTC'],
+				self.send_amt,
+				('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()],
+				self.ext)
 		write_data_to_file(fn,self.fmt_data,self.desc+add_desc,
 			ask_overwrite=ask_overwrite,
 			ask_write=ask_write,
