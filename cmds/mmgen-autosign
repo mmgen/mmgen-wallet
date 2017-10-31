@@ -195,7 +195,7 @@ def decrypt_wallets():
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 #	opt.passwd_file = '/tmp/key'
 	from mmgen.seed import SeedSource
-	msg("Trying to unlock wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
+	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
 	fails = 0
 	for wf in wfs:
 		try:
@@ -244,6 +244,7 @@ def create_key():
 		die(2,'Unable to write ' + desc)
 
 def gen_key(no_unmount=False):
+	create_wallet_dir()
 	if not get_insert_status():
 		die(2,'Removable device not present!')
 	do_mount()
@@ -252,17 +253,19 @@ def gen_key(no_unmount=False):
 	if not no_unmount:
 		do_umount()
 
-def create_wallet_dir():
+def remove_wallet_dir():
 	msg("Deleting '{}'".format(wallet_dir))
 	try: shutil.rmtree(wallet_dir)
 	except: pass
+
+def create_wallet_dir():
 	try: os.mkdir(wallet_dir)
 	except: pass
 	try: os.stat(wallet_dir)
 	except: die(2,"Unable to create wallet directory '{}'".format(wallet_dir))
 
 def setup():
-	create_wallet_dir()
+	remove_wallet_dir()
 	gen_key(no_unmount=True)
 	from mmgen.seed import SeedSource
 	opt.hidden_incog_input_params = None
@@ -390,9 +393,14 @@ def at_exit(exit_val,nl=True):
 def handler(a,b): at_exit(1)
 
 # main()
-if len(cmd_args) == 1 and cmd_args[0] in ('gen_key','setup'):
-	globals()[cmd_args[0]]()
-	sys.exit(0)
+if len(cmd_args) == 1:
+	if cmd_args[0] in ('gen_key','setup'):
+		globals()[cmd_args[0]]()
+		sys.exit(0)
+	elif cmd_args[0] == 'wait':
+		pass
+	else:
+		die(2,"'{}': unrecognized command".format(cmd_args[0]))
 
 check_wipe_present()
 wfs = get_wallet_files()
