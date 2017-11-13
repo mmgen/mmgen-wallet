@@ -80,7 +80,7 @@ rpc_init()
 tx_file = cmd_args.pop(0)
 check_infile(tx_file)
 
-from mmgen.txcreate import *
+from mmgen.tx import *
 from mmgen.txsign import *
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None

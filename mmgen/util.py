@@ -807,7 +807,7 @@ def rpc_init(reinit=False):
 		try:
 			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
 			for fork in g.proto.forks:
-				if latest < fork[0]: break
+				if fork[0] == None or latest < fork[0]: break
 				bhash = conn.getblockhash(fork[0])
 				assert bhash == fork[1], (
 					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))

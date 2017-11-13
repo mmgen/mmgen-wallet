@@ -26,6 +26,69 @@ from binascii import unhexlify
 from mmgen.common import *
 from mmgen.obj import *
 
+pnm = g.proj_name
+
+wmsg = {
+	'addr_in_addrfile_only': """
+Warning: output address {mmgenaddr} is not in the tracking wallet, which means
+its balance will not be tracked.  You're strongly advised to import the address
+into your tracking wallet before broadcasting this transaction.
+""".strip(),
+	'addr_not_found': """
+No data for {pnm} address {mmgenaddr} could be found in either the tracking
+wallet or the supplied address file.  Please import this address into your
+tracking wallet, or supply an address file for it on the command line.
+""".strip(),
+	'addr_not_found_no_addrfile': """
+No data for {pnm} address {mmgenaddr} could be found in the tracking wallet.
+Please import this address into your tracking wallet or supply an address file
+for it on the command line.
+""".strip(),
+	'non_mmgen_inputs': """
+NOTE: This transaction includes non-{pnm} inputs, which makes the signing
+process more complicated.  When signing the transaction, keys for non-{pnm}
+inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
+option.
+Selected non-{pnm} inputs: {{}}
+""".strip().format(pnm=pnm,pnl=pnm.lower()),
+	'not_enough_coin': """
+Selected outputs insufficient to fund this transaction ({{}} {} needed)
+""".strip().format(g.coin),
+	'no_change_output': """
+ERROR: No change address specified.  If you wish to create a transaction with
+only one output, specify a single output address with no {} amount
+""".strip().format(g.coin),
+}
+
+def select_unspent(unspent,prompt):
+	while True:
+		reply = my_raw_input(prompt).strip()
+		if reply:
+			selected = AddrIdxList(fmt_str=','.join(reply.split()),on_fail='return')
+			if selected:
+				if selected[-1] <= len(unspent):
+					return selected
+				msg('Unspent output number must be <= %s' % len(unspent))
+
+def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
+
+	# assume mmaddr has already been checked
+	coin_addr = ad_w.mmaddr2coinaddr(mmaddr)
+
+	if not coin_addr:
+		if ad_f:
+			coin_addr = ad_f.mmaddr2coinaddr(mmaddr)
+			if coin_addr:
+				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
+				if not keypress_confirm('Continue anyway?'):
+					sys.exit(1)
+			else:
+				die(2,wmsg['addr_not_found'].format(pnm=pnm,mmgenaddr=mmaddr))
+		else:
+			die(2,wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
+
+	return CoinAddr(coin_addr)
+
 def segwit_is_active(exit_on_error=False):
 	d = g.rpch.getblockchaininfo()
 	if d['chain'] == 'regtest':
@@ -184,7 +247,7 @@ class MMGenTX(MMGenObject):
 		desc = 'transaction outputs'
 		member_type = 'MMGenTxOutput'
 
-	def __init__(self,filename=None,md_only=False):
+	def __init__(self,filename=None,md_only=False,caller=None):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -198,6 +261,7 @@ class MMGenTX(MMGenObject):
 		self.blockcount  = 0
 		self.chain       = None
 		self.coin        = None
+		self.caller      = caller
 
 		if filename:
 			self.parse_tx_file(filename,md_only=md_only)
@@ -876,7 +940,7 @@ class MMGenTX(MMGenObject):
 			self.blockcount = int(blockcount)
 			desc = 'transaction hex data'
 			self.hex = HexStr(self.hex,on_fail='raise')
-			if md_only: return # the following ops will all fail if g.coin doesn't match tx.coin
+			if md_only: return # the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,'invalid coin type'
 			desc = 'inputs data'
@@ -890,6 +954,151 @@ class MMGenTX(MMGenObject):
 
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
+
+	def get_fee_from_estimate_or_user(self,estimate_fail_msg_shown=[]):
+
+		if opt.tx_fee:
+			desc = 'User-selected'
+			start_fee = opt.tx_fee
+		else:
+			desc = 'Network-estimated'
+			ret = g.rpch.estimatefee(opt.tx_confs)
+			if ret == -1:
+				if not estimate_fail_msg_shown:
+					msg('Network fee estimation for {} confirmations failed'.format(opt.tx_confs))
+					estimate_fail_msg_shown.append(True)
+				start_fee = None
+			else:
+				start_fee = g.proto.coin_amt(ret) * opt.tx_fee_adj * self.estimate_size() / 1024
+				if opt.verbose:
+					msg('{} fee ({} confs): {} {}/kB'.format(desc,opt.tx_confs,ret,g.coin))
+					msg('TX size (estimated): {}'.format(self.estimate_size()))
+
+		return self.get_usr_fee_interactive(start_fee,desc=desc)
+
+	def get_outputs_from_cmdline(self,cmd_args):
+		from mmgen.addr import AddrList,AddrData
+		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
+		cmd_args = set(cmd_args) - set(addrfiles)
+
+		ad_f = AddrData()
+		for a in addrfiles:
+			check_infile(a)
+			ad_f.add(AddrList(a))
+
+		ad_w = AddrData(source='tw')
+
+		for a in cmd_args:
+			if ',' in a:
+				a1,a2 = a.split(',',1)
+				if is_mmgen_id(a1) or is_coin_addr(a1):
+					coin_addr = mmaddr2coinaddr(a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
+					self.add_output(coin_addr,g.proto.coin_amt(a2))
+				else:
+					die(2,"%s: invalid subargument in command-line argument '%s'" % (a1,a))
+			elif is_mmgen_id(a) or is_coin_addr(a):
+				if self.get_chg_output_idx() != None:
+					die(2,'ERROR: More than one change address listed on command line')
+				coin_addr = mmaddr2coinaddr(a,ad_w,ad_f) if is_mmgen_id(a) else CoinAddr(a)
+				self.add_output(coin_addr,g.proto.coin_amt('0'),is_chg=True)
+			else:
+				die(2,'{}: invalid command-line argument'.format(a))
+
+		if not self.outputs:
+			die(2,'At least one output must be specified on the command line')
+
+		if self.get_chg_output_idx() == None:
+			die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(self.outputs) == 1])
+
+		self.add_mmaddrs_to_outputs(ad_w,ad_f)
+		self.check_dup_addrs('outputs')
+
+		if not segwit_is_active() and self.has_segwit_outputs():
+			fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
+			rdie(2,fs.format(g.proj_name))
+
+	def get_inputs_from_user(self,tw):
+
+		while True:
+			m = 'Enter a range or space-separated list of outputs to spend: '
+			sel_nums = select_unspent(tw.unspent,m)
+			msg('Selected output%s: %s' % (suf(sel_nums,'s'),' '.join(str(i) for i in sel_nums)))
+
+			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
+
+			t_inputs = sum(s.amt for s in sel_unspent)
+			if t_inputs < self.send_amt:
+				msg(wmsg['not_enough_coin'].format(self.send_amt-t_inputs))
+				continue
+
+			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
+			if non_mmaddrs and self.caller != 'txdo':
+				msg(wmsg['non_mmgen_inputs'].format(', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
+				if not keypress_confirm('Accept?'):
+					continue
+
+			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
+
+			change_amt = self.sum_inputs() - self.send_amt - self.get_fee_from_estimate_or_user()
+
+			if change_amt >= 0:
+				p = 'Transaction produces {} {} in change'.format(change_amt.hl(),g.coin)
+				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+					if opt.yes: msg(p)
+					return change_amt
+			else:
+				msg(wmsg['not_enough_coin'].format(abs(change_amt)))
+
+	def create(self,cmd_args,do_info=False):
+
+		if opt.comment_file: self.add_comment(opt.comment_file)
+
+		if not do_info: self.get_outputs_from_cmdline(cmd_args)
+
+		do_license_msg()
+
+		from mmgen.tw import MMGenTrackingWallet
+		tw = MMGenTrackingWallet(minconf=opt.minconf)
+		tw.view_and_sort(self)
+		tw.display_total()
+
+		if do_info: sys.exit(0)
+
+		self.send_amt = self.sum_outputs()
+
+		msg('Total amount to spend: {}'.format(
+			('Unknown','{} {}'.format(self.send_amt.hl(),g.coin))[bool(self.send_amt)]
+		))
+
+		change_amt = self.get_inputs_from_user(tw)
+
+		if opt.rbf: self.signal_for_rbf() # only after we have inputs
+
+		chg_idx = self.get_chg_output_idx()
+
+		if change_amt == 0:
+			msg('Warning: Change address will be deleted as transaction produces no change')
+			self.del_output(chg_idx)
+		else:
+			self.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
+
+		if not self.send_amt:
+			self.send_amt = change_amt
+
+		if not opt.yes:
+			self.add_comment()  # edits an existing comment
+		self.create_raw()       # creates self.hex, self.txid
+
+		self.add_timestamp()
+		self.add_blockcount()
+		self.chain = g.chain
+
+		assert self.sum_inputs() - self.sum_outputs() <= g.proto.max_tx_fee
+
+		qmsg('Transaction successfully created')
+
+		if not opt.yes:
+			self.view_with_prompt('View decoded transaction?')
 
 class MMGenBumpTX(MMGenTX):
 

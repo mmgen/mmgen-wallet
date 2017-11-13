@@ -70,7 +70,8 @@ class BitcoinProtocol(MMGenObject):
 	sighash_type = 'ALL'
 	block0 = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 	forks = [
-		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch')
+		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch'),
+		(None,'','b2x')
 	]
 	caps = ('rbf','segwit')
 	base_coin = 'BTC'

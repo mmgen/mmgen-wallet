@@ -79,7 +79,7 @@ cmd_args = opts.init(opts_data)
 
 rpc_init()
 
-from mmgen.txcreate import *
+from mmgen.tx import *
 from mmgen.txsign import *
 
 seed_files = get_seed_files(opt,cmd_args)
@@ -88,7 +88,8 @@ kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
 if kl and kal: kl.remove_dup_keys(kal)
 
-tx = txcreate(cmd_args,caller='txdo')
+tx = MMGenTX(caller='txdo')
+tx.create(cmd_args)
 txsign(tx,seed_files,kl,kal)
 tx.write_to_file(ask_write=False)
 

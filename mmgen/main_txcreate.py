@@ -51,6 +51,9 @@ opts_data = lambda: {
 
 cmd_args = opts.init(opts_data)
 
-from mmgen.txcreate import *
-tx = txcreate(cmd_args,do_info=opt.info)
+rpc_init()
+
+from mmgen.tx import MMGenTX
+tx = MMGenTX()
+tx.create(cmd_args,do_info=opt.info)
 tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

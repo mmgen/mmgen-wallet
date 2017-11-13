@@ -349,10 +349,9 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other,context=None):
 		return type(self)(Decimal.__neg__(self,other,context))
 
-class BCHAmt(BTCAmt):
-	pass
-class LTCAmt(BTCAmt):
-	max_amt = 84000000
+class BCHAmt(BTCAmt): pass
+class B2XAmt(BTCAmt): pass
+class LTCAmt(BTCAmt): max_amt = 84000000
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
