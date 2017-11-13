@@ -133,7 +133,7 @@ if not silent:
 if seed_files or kl or kal:
 	txsign(tx,seed_files,kl,kal)
 	tx.write_to_file(ask_write=False)
-	if tx.send():
-		tx.write_to_file(ask_write=False)
+	tx.send(exit_on_fail=True)
+	tx.write_to_file(ask_write=False)
 else:
 	tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)

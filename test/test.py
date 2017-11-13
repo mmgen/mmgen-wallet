@@ -151,22 +151,25 @@ ref_subdir = '' if g.proto.base_coin == 'BTC' else g.proto.name
 altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
 tn_ext = ('','.testnet')[g.testnet]
 
-fork       = {'bch':'btc','btc':'btc','ltc':'ltc'}[g.coin.lower()]
-tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[g.coin.lower()]
-txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[g.coin.lower()]
+coin_sel = g.coin.lower()
+if g.coin == 'B2X': coin_sel = 'btc'
 
-rtFundAmt  = {'btc':'500','bch':'500','ltc':'5500'}[g.coin.lower()]
+fork       = {'bch':'btc','btc':'btc','ltc':'ltc'}[coin_sel]
+tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[coin_sel]
+txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[coin_sel]
+
+rtFundAmt  = {'btc':'500','bch':'500','ltc':'5500'}[coin_sel]
 rtFee = {
 	'btc': ('20s','10s','60s','0.0001','10s','20s'),
 	'bch': ('20s','10s','60s','0.0001','10s','20s'),
 	'ltc': ('1000s','500s','1500s','0.05','400s','1000s')
-}[g.coin.lower()]
+}[coin_sel]
 rtBals = {
 	'btc': ('499.999942','399.9998214','399.9998079','399.9996799','13.00000000','986.99957990','999.99957990'),
 	'bch': ('499.9999416','399.9999124','399.99989','399.9997616','276.22339397','723.77626763','999.99966160'),
 	'ltc': ('5499.9971','5399.994085','5399.993545','5399.987145','13.00000000','10986.93714500','10999.93714500'),
-}[g.coin.lower()]
-rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[g.coin.lower()]
+}[coin_sel]
+rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[coin_sel]
 
 if opt.segwit and 'S' not in g.proto.mmtypes:
 	die(1,'--segwit option incompatible with {}'.format(g.proto.__name__))
@@ -201,12 +204,9 @@ cfgs = {
 		},
 		'segwit': get_segwit_val()
 	},
-	'17': {
-		'tmpdir':        os.path.join('test','tmp17'),
-	},
-	'18': {
-		'tmpdir':        os.path.join('test','tmp18'),
-	},
+	'17': { 'tmpdir': os.path.join('test','tmp17') },
+	'18': { 'tmpdir': os.path.join('test','tmp18') },
+	'19': { 'tmpdir': os.path.join('test','tmp19'), 'wpasswd':'abc' },
 	'1': {
 		'tmpdir':        os.path.join('test','tmp1'),
 		'wpasswd':       'Dorian',
@@ -452,6 +452,7 @@ cfgs = {
 		'ref_tx_file': {
 			'btc': 'FFB367[1.234]{}.rawtx',
 			'bch': '99BE60-BCH[106.6789]{}.rawtx',
+			'b2x': '6A52BC-B2X[106.6789,tl=1320969600]{}.rawtx',
 			'ltc': '75F455-LTC[106.6789]{}.rawtx',
 		},
 		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
@@ -671,6 +672,30 @@ cmd_group['regtest'] = (
 	('regtest_stop',               'stopping regtest daemon'),
 )
 
+cmd_group['regtest_split'] = (
+	('regtest_split_setup',        'regtest forking scenario setup'),
+	('regtest_walletgen_bob',      "generating Bob's wallet"),
+	('regtest_addrgen_bob',        "generating Bob's addresses"),
+	('regtest_addrimport_bob',     "importing Bob's addresses"),
+	('regtest_fund_bob',           "funding Bob's wallet"),
+	('regtest_split_fork',         'regtest split fork'),
+	('regtest_split_start_btc',    'start regtest daemon (BTC)'),
+	('regtest_split_start_b2x',    'start regtest daemon (B2X)'),
+	('regtest_split_gen_btc',      'mining a block (BTC)'),
+	('regtest_split_gen_b2x',      'mining 100 blocks (B2X)'),
+	('regtest_split_do_split',     'creating coin splitting transactions'),
+	('regtest_split_sign_b2x',     'signing B2X split transaction'),
+	('regtest_split_sign_btc',     'signing BTC split transaction'),
+	('regtest_split_send_b2x',     'sending B2X split transaction'),
+	('regtest_split_send_btc',     'sending BTC split transaction'),
+	('regtest_split_gen_btc',      'mining a block (BTC)'),
+	('regtest_split_gen_b2x2',     'mining a block (B2X)'),
+	('regtest_split_txdo_timelock_bad_btc', 'sending transaction with bad locktime (BTC)'),
+	('regtest_split_txdo_timelock_good_btc','sending transaction with good locktime (BTC)'),
+	('regtest_split_txdo_timelock_bad_b2x', 'sending transaction with bad locktime (B2X)'),
+	('regtest_split_txdo_timelock_good_b2x','sending transaction with good locktime (B2X)'),
+)
+
 cmd_group['misc'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
 )
@@ -742,6 +767,11 @@ cmd_data['info_regtest'] = 'regtest mode',[17]
 for a,b in cmd_group['regtest']:
 	cmd_list['regtest'].append(a)
 	cmd_data[a] = (17,b,[[[],17]])
+
+cmd_data['info_regtest_split'] = 'regtest mode with fork and coin split',[17]
+for a,b in cmd_group['regtest_split']:
+	cmd_list['regtest_split'].append(a)
+	cmd_data[a] = (19,b,[[[],19]])
 
 cmd_data['info_misc'] = 'miscellaneous operations',[18]
 for a,b in cmd_group['misc']:
@@ -935,7 +965,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 	if 'S' not in g.proto.mmtypes: segwit = False
 	if lbl: lbl = ' ' + lbl
 	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and coinaddr.addr_fmt=='p2sh']
-	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[g.coin.lower()]
+	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	return {
 		'account': '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
 			else (u'{}:{}{}'.format(al_id,idx,lbl.decode('utf8'))),
@@ -1032,7 +1062,7 @@ def make_txcreate_cmdline(tx_data):
 	coinaddr = AddrGenerator(t).to_addr(KeyGenerator().to_pubhex(privkey))
 
 	# total of two outputs must be < 10 BTC (<1000 LTC)
-	mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[g.coin.lower()]
+	mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[coin_sel]
 	for k in cfgs:
 		cfgs[k]['amts'] = [None,None]
 		for idx,mod in enumerate(mods):
@@ -1501,11 +1531,11 @@ class MMGenTestSuite(object):
 		add = ' #' + tnum if tnum else ''
 		t.written_to_file('Signed transaction' + add, oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,txdo_handle=None):
+	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,txdo_handle=None,extra_opts=[]):
 		if txdo_handle:
 			t = txdo_handle
 		else:
-			t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
+			t = MMGenExpect(name,'mmgen-txsign', extra_opts + ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
 			t.license()
 			t.tx_view()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
@@ -1522,18 +1552,24 @@ class MMGenTestSuite(object):
 	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
 		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
 
-	def txsend(self,name,sigfile,txdo_handle=None):
+	def txsend(self,name,sigfile,txdo_handle=None,really_send=False,extra_opts=[]):
 		if txdo_handle:
 			t = txdo_handle
 		else:
-			t = MMGenExpect(name,'mmgen-txsend', ['-d',cfg['tmpdir'],sigfile])
+			if really_send: os.environ['MMGEN_BOGUS_SEND'] = ''
+			t = MMGenExpect(name,'mmgen-txsend', extra_opts + ['-d',cfg['tmpdir'],sigfile])
+			if really_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
 			t.license()
 			t.tx_view()
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.expect('Are you sure you want to broadcast this')
 		m = 'YES, I REALLY WANT TO DO THIS'
 		t.expect("'%s' to confirm: " % m,m+'\n')
-		t.expect('BOGUS transaction NOT sent')
+		if really_send:
+			txid = t.expect_getend('Transaction sent: ')
+			assert len(txid) == 64
+		else:
+			t.expect('BOGUS transaction NOT sent')
 		t.written_to_file('Sent transaction')
 		t.ok()
 
@@ -1818,7 +1854,7 @@ class MMGenTestSuite(object):
 		cmp_or_die(hincog_offset,int(o))
 
 	# Miscellaneous tests
-	def autosign(self,name):
+	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if g.platform == 'win':
 			msg('Skipping {} (not supported)'.format(name)); return
 		fdata = (('btc',''),('bch',''),('ltc','litecoin'))
@@ -2102,8 +2138,8 @@ class MMGenTestSuite(object):
 	def regtest_walletgen_alice(self,name): return self.regtest_walletgen(name,'alice')
 
 	@staticmethod
-	def regtest_user_dir(user):
-		return os.path.join(data_dir,'regtest',user)
+	def regtest_user_dir(user,coin=None):
+		return os.path.join(data_dir,'regtest',coin or g.coin.lower(),user)
 
 	def regtest_user_sid(self,user):
 		return os.path.basename(get_file_with_ext('mmdat',self.regtest_user_dir(user)))[:8]
@@ -2183,7 +2219,15 @@ class MMGenTestSuite(object):
 		cmp_or_die(ret,rtBals[6],skip_ok=True)
 		t.ok()
 
-	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw='abc',no_send=False,do_label=False):
+	def regtest_user_txdo(  self,name,user,fee,
+							outputs_cl,
+							outputs_prompt,
+							extra_args=[],
+							wf=None,
+							pw='abc',
+							no_send=False,
+							do_label=False,
+							bad_locktime=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txdo',
 			['-d',cfg['tmpdir'],'-B','--'+user,'--tx-fee='+fee]
@@ -2205,11 +2249,14 @@ class MMGenTestSuite(object):
 			t.expect('to continue: ','\n')
 		t.passphrase('MMGen wallet',pw)
 		t.written_to_file('Signed transaction')
-		if not no_send:
+		if no_send:
+			t.read()
+			exit_val = 0
+		else:
 			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
-			t.expect('Transaction sent')
-		t.read()
-		t.ok()
+			s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
+			t.expect(s)
+		t.ok(exit_val)
 
 	def regtest_bob_split1(self,name):
 		sid = self.regtest_user_sid('bob')
@@ -2269,9 +2316,11 @@ class MMGenTestSuite(object):
 		txfile = get_file_with_ext(',{}].sigtx'.format(rtFee[1][:-1]),cfg['tmpdir'],delete=False,no_dot=True)
 		return self.regtest_user_txbump(name,'bob',txfile,rtFee[2],'c')
 
-	def regtest_generate(self,name):
-		t = MMGenExpect(name,'mmgen-regtest',['generate'])
-		t.expect('Mined 1 block')
+	def regtest_generate(self,name,coin=None,num_blocks=1):
+		int(num_blocks)
+		if coin: opt.coin = coin
+		t = MMGenExpect(name,'mmgen-regtest',['generate',str(num_blocks)])
+		t.expect('Mined {} block'.format(num_blocks))
 		t.ok()
 
 	def regtest_get_mempool(self,name):
@@ -2389,7 +2438,95 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-regtest',['stop'])
 		t.ok()
 
-	# regtest undocumented admin commands
+	def regtest_split_setup(self,name):
+		if g.coin != 'BTC': die(1,'Test valid only for coin BTC')
+		opt.coin = 'BTC'
+		return self.regtest_setup(name)
+
+	def regtest_split_fork(self,name):
+		opt.coin = 'B2X'
+		t = MMGenExpect(name,'mmgen-regtest',['fork','btc'])
+		t.expect('Creating fork from coin')
+		t.expect('successfully created')
+		t.ok()
+
+	def regtest_split_start(self,name,coin):
+		opt.coin = coin
+		t = MMGenExpect(name,'mmgen-regtest',['bob'])
+		t.expect('Starting')
+		t.expect('done')
+		t.ok()
+
+	def regtest_split_start_btc(self,name): self.regtest_split_start(name,coin='BTC')
+	def regtest_split_start_b2x(self,name): self.regtest_split_start(name,coin='B2X')
+	def regtest_split_gen_btc(self,name):   self.regtest_generate(name,coin='BTC')
+	def regtest_split_gen_b2x(self,name):   self.regtest_generate(name,coin='B2X',num_blocks=100)
+	def regtest_split_gen_b2x2(self,name):  self.regtest_generate(name,coin='B2X')
+
+	def regtest_split_do_split(self,name):
+		opt.coin = 'B2X'
+		sid = self.regtest_user_sid('bob')
+		t = MMGenExpect(name,'mmgen-split',[
+			'--bob',
+			'--outdir='+cfg['tmpdir'],
+			'--tx-fees=0.0001,0.0003',
+			sid+':S:1',sid+':S:2'])
+		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
+		t.expect('outputs to spend: ','1\n')
+
+		for tx in ('timelocked','split'):
+			for q in ('fee','change'): t.expect('OK? (Y/n): ','y')
+			t.expect('Add a comment to transaction? (y/N): ','n')
+			t.expect('View decoded transaction\? .*?: ','t',regex=True)
+			t.expect('to continue: ','\n')
+
+		t.written_to_file('Long chain (timelocked) transaction')
+		t.written_to_file('Short chain transaction')
+		t.ok()
+
+	def regtest_split_sign(self,name,coin,ext):
+		wf = get_file_with_ext('mmdat',self.regtest_user_dir('bob',coin=coin.lower()))
+		txfile = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
+		opt.coin = coin
+		self.txsign(name,txfile,wf,extra_opts=['--bob'])
+
+	def regtest_split_sign_b2x(self,name):
+		return self.regtest_split_sign(name,coin='B2X',ext='533].rawtx')
+
+	def regtest_split_sign_btc(self,name):
+		return self.regtest_split_sign(name,coin='BTC',ext='9997].rawtx')
+
+	def regtest_split_send(self,name,coin,ext):
+		opt.coin = coin
+		txfile = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
+		self.txsend(name,txfile,really_send=True,extra_opts=['--bob'])
+
+	def regtest_split_send_b2x(self,name):
+		return self.regtest_split_send(name,coin='B2X',ext='533].sigtx')
+
+	def regtest_split_send_btc(self,name):
+		return self.regtest_split_send(name,coin='BTC',ext='9997].sigtx')
+
+	def regtest_split_txdo_timelock(self,name,coin,locktime,bad_locktime):
+		opt.coin = coin
+		sid = self.regtest_user_sid('bob')
+		self.regtest_user_txdo(
+			name,'bob','0.0001',[sid+':S:5'],'1',pw='abc',
+			extra_args=['--locktime='+str(locktime)],
+			bad_locktime=bad_locktime)
+
+	def regtest_split_txdo_timelock_bad_btc(self,name):
+		self.regtest_split_txdo_timelock(name,'BTC',locktime=8888,bad_locktime=True)
+	def regtest_split_txdo_timelock_good_btc(self,name):
+		self.regtest_split_txdo_timelock(name,'BTC',locktime=1321009871,bad_locktime=False)
+	def regtest_split_txdo_timelock_bad_b2x(self,name):
+		self.regtest_split_txdo_timelock(name,'B2X',locktime=8888,bad_locktime=True)
+	def regtest_split_txdo_timelock_good_b2x(self,name):
+		self.regtest_split_txdo_timelock(name,'B2X',locktime=1321009871,bad_locktime=False)
+
+#	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw='abc',no_send=False,do_label=False):
+
+	# undocumented admin commands
 	ref_tx_setup = regtest_setup
 	ref_tx_generate = regtest_generate
 
@@ -2420,7 +2557,12 @@ class MMGenTestSuite(object):
 		outputs_cl = [sid+':{}:3,1.1234'.format(g.proto.mmtypes[-1]), sid+':C:5,5.5555',sid+':L:4',addr+',100']
 		pw = cfg['wpasswd']
 		# create tx in cwd
-		t = MMGenExpect(name,'mmgen-txcreate',['-B','--bob','--tx-fee='+rtFee[0]] + outputs_cl)
+		t = MMGenExpect(name,'mmgen-txcreate',[
+									'-B',
+									'--bob',
+									'--tx-fee='+rtFee[0],
+									'--locktime=1320969600'
+								] + outputs_cl)
 #			[os.path.join(ref_dir,cfg['ref_wallet'])])
 		t.expect(r"'q'=quit view, .*?:.",'M',regex=True) # sort by mmid
 		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
@@ -2441,7 +2583,7 @@ class MMGenTestSuite(object):
 		with open(fn) as f:
 			lines = f.read().splitlines()
 
-		from mmgen.obj import BTCAmt,LTCAmt,BCHAmt
+		from mmgen.obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt
 		tx = {}
 		for k,i in (('in',3),('out',4)):
 			tx[k] = eval(lines[i])

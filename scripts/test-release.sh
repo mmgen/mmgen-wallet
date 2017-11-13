@@ -2,7 +2,7 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
-dfl_tests='obj misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj misc btc btc_tn btc_rt bch bch_rt b2x b2x_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hinPt OPT
 do
@@ -22,6 +22,8 @@ do
 		echo   "     btc_rt - bitcoin regtest"
 		echo   "     bch    - bitcoin cash (BCH)"
 		echo   "     bch_rt - bitcoin cash (BCH) regtest"
+		echo   "     b2x    - bitcoin 2x (B2X)"
+		echo   "     b2x_rt - bitcoin 2x (B2X) regtest"
 		echo   "     ltc    - litecoin"
 		echo   "     ltc_tn - litecoin testnet"
 		echo   "     ltc_rt - litecoin regtest"
@@ -51,7 +53,7 @@ set -e
 REFDIR=test/ref
 if uname -a | grep -qi mingw; then SUDO='' MINGW=1; else SUDO='sudo' MINGW=''; fi
 
-function check {
+check() {
 	[ "$BRANCH" ] || { echo 'No branch specified.  Exiting'; exit; }
 	[ "$(git diff $BRANCH)" == "" ] || {
 		echo "Unmerged changes from branch '$BRANCH'. Exiting"
@@ -60,7 +62,7 @@ function check {
 	git diff $BRANCH >/dev/null 2>&1 || exit
 }
 
-function install {
+install() {
 	set -x
 	eval "$SUDO rm -rf .test-release"
 	git clone --branch $BRANCH --single-branch . .test-release
@@ -74,7 +76,7 @@ function install {
 	[ "$MINGW" ] && ./setup.py build --compiler=mingw32
 	eval "$SUDO ./setup.py install"
 }
-function do_test {
+do_test() {
 	set +x
 	for i in "$@"; do
 		LS='\n'
@@ -93,7 +95,7 @@ t_obj=(
     'test/objtest.py --coin=ltc --testnet=1 -S')
 f_obj='Data object test complete'
 
-i_misc='Miscellaneous operations'
+i_misc='Miscellaneous operations' # includes autosign!
 s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
 t_misc=(
     'test/test.py -On misc')
@@ -120,7 +122,9 @@ f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
 i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_btc_rt=('test/test.py -On regtest')
+t_btc_rt=(
+	'test/test.py -On regtest'
+	'test/test.py -On regtest_split')
 f_btc_rt="Regtest (Bob and Alice) mode tests for BTC completed"
 
 i_bch='Bitcoin cash (BCH)'
@@ -132,6 +136,16 @@ i_bch_rt='Bitcoin cash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt=('test/test.py --coin=bch -On regtest')
 f_bch_rt="Regtest (Bob and Alice) mode tests for BCH completed"
+
+i_b2x='Bitcoin 2X (B2X)'
+s_b2x='The bitcoin 2X daemon (BTC1) must both be running for the following tests'
+t_b2x=('test/test.py -On --coin=b2x dfl_wallet main ref ref_other')
+f_b2x='You may stop the Bitcoin 2X daemon if you wish'
+
+i_b2x_rt='Bitcoin 2X (B2X) regtest'
+s_b2x_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
+t_b2x_rt=('test/test.py --coin=b2x -On regtest')
+f_b2x_rt="Regtest (Bob and Alice) mode tests for B2X completed"
 
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
@@ -194,12 +208,13 @@ f_gen="gentest tests completed"
 }
 [ "$INSTALL_ONLY" ] && exit
 
-function skip_maybe {
+skip_maybe() {
     echo -n "Enter 's' to skip, or ENTER to continue: "; read
     [ "$REPLY" == 's' ] && return 0
     return 1
 }
-function run_tests {
+
+run_tests() {
 	for t in $1; do
         eval echo -e \${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
         [ "$PAUSE" ] && { eval echo $(echo \$s_$t); skip_maybe && continue; }
@@ -209,9 +224,17 @@ function run_tests {
 	done
 }
 
+check_args() {
+	for i in $tests; do
+		echo "$dfl_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
+	done
+}
+
 tests=$dfl_tests
 [ "$*" ] && tests="$*"
 [ "$NO_PAUSE" ] || PAUSE=1
+
+check_args
 run_tests "$tests"
 
 echo -e "${GREEN}All OK$RESET"

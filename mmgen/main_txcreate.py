@@ -39,6 +39,7 @@ opts_data = lambda: {
                      per byte (an integer followed by 's').  If omitted, fee
                      will be calculated using {dn}'s 'estimatefee' call
 -i, --info           Display unspent outputs and exit
+-L, --locktime=    t Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=     n Minimum number of confirmations required to spend
                      outputs (default: 1)
 -q, --quiet          Suppress warnings; overwrite files without prompting
@@ -55,5 +56,5 @@ rpc_init()
 
 from mmgen.tx import MMGenTX
 tx = MMGenTX()
-tx.create(cmd_args,do_info=opt.info)
+tx.create(cmd_args,int(opt.locktime or 0),do_info=opt.info)
 tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

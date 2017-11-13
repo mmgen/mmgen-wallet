@@ -24,38 +24,40 @@ import os,subprocess,time,shutil
 from mmgen.common import *
 PIPE = subprocess.PIPE
 
-data_dir     = os.path.join(g.data_dir_root,'regtest')
+data_dir     = os.path.join(g.data_dir_root,'regtest',g.coin.lower())
 daemon_dir   = os.path.join(data_dir,'regtest')
-rpc_port     = 8552
+rpc_ports    = { 'btc':8552, 'bch':8553, 'b2x':8554, 'ltc':8555 }
+rpc_port     = rpc_ports[g.coin.lower()]
 rpc_user     = 'bobandalice'
 rpc_password = 'hodltothemoon'
-init_amt     = 500
 
 tr_wallet = lambda user: os.path.join(daemon_dir,'wallet.dat.'+user)
 
-common_args = (
+common_args = lambda: (
 	'-rpcuser={}'.format(rpc_user),
 	'-rpcpassword={}'.format(rpc_password),
 	'-rpcport={}'.format(rpc_port),
 	'-regtest',
 	'-datadir={}'.format(data_dir))
 
-def start_daemon(user,quiet=False,daemon=True):
+def start_daemon(user,quiet=False,daemon=True,reindex=False):
 	cmd = (
 		g.proto.daemon_name,
+		'-listen=0',
 		'-keypool=1',
 		'-wallet={}'.format(os.path.basename(tr_wallet(user)))
-	) + common_args
+	) + common_args()
 	if daemon: cmd += ('-daemon',)
+	if reindex: cmd += ('-reindex',)
 	if not g.debug or quiet: vmsg('{}'.format(' '.join(cmd)))
 	p = subprocess.Popen(cmd,stdout=PIPE,stderr=PIPE)
 	err = process_output(p,silent=False)[1]
 	if err:
 		rdie(1,'Error starting the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
 
-def start_daemon_mswin(user,quiet=False):
+def start_daemon_mswin(user,quiet=False,reindex=False):
 	import threading
-	t = threading.Thread(target=start_daemon,args=[user,quiet,False])
+	t = threading.Thread(target=start_daemon,args=[user,quiet,False,reindex])
 	t.daemon = True
 	t.start()
 	if not opt.verbose: Msg_r(' \b') # blocks w/o this...crazy
@@ -63,7 +65,7 @@ def start_daemon_mswin(user,quiet=False):
 def start_cmd(*args,**kwargs):
 	cmd = args
 	if args[0] == 'cli':
-		cmd = (g.proto.name+'-cli',) + common_args + args[1:]
+		cmd = (g.proto.name+'-cli',) + common_args() + args[1:]
 	if g.debug or not 'quiet' in kwargs:
 		vmsg('{}'.format(' '.join(cmd)))
 	ip = op = ep = (PIPE,None)['no_pipe' in kwargs and kwargs['no_pipe']]
@@ -113,15 +115,16 @@ def get_balances():
 	msg('{:<16} {:12}'.format('Total balance:',tbal))
 
 def create_data_dir():
-	try: os.stat(daemon_dir)
+	try: os.stat(os.path.join(data_dir,'regtest')) # don't use daemon_dir, as data_dir may change
 	except: pass
 	else:
-		if keypress_confirm('Delete your existing MMGen regtest setup and create a new one?'):
+		m = "Delete your existing MMGen regtest setup at '{}' and create a new one?"
+		if keypress_confirm(m.format(data_dir)):
 			shutil.rmtree(data_dir)
 		else:
 			die()
 
-	try: os.mkdir(data_dir)
+	try: os.makedirs(data_dir)
 	except: pass
 
 def process_output(p,silent=False):
@@ -133,9 +136,9 @@ def process_output(p,silent=False):
 		vmsg('stderr: [{}]'.format(err.strip()))
 	return out,err
 
-def start_and_wait(user,silent=False,nonl=False):
+def start_and_wait(user,silent=False,nonl=False,reindex=False):
 	vmsg('Starting {} regtest daemon'.format(g.proto.name))
-	(start_daemon_mswin,start_daemon)[g.platform=='linux'](user)
+	(start_daemon_mswin,start_daemon)[g.platform=='linux'](user,reindex=reindex)
 	wait_for_daemon('ready',silent=silent,nonl=nonl)
 
 def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_error=False):
@@ -156,9 +159,53 @@ def show_mempool():
 	msg(pformat(eval(p.stdout.read())))
 	p.wait()
 
-def setup():
-	try: os.mkdir(data_dir)
+def cli(*args):
+	p = start_cmd(*(('cli',) + args))
+	from pprint import pformat
+	Msg_r(p.stdout.read())
+	msg_r(p.stderr.read())
+	p.wait()
+
+def fork(coin):
+	coin = coin.upper()
+	from mmgen.protocol import CoinProtocol
+	forks = CoinProtocol(coin,False).forks
+	if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
+		die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
+
+	gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
+	source_data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
+
+	try: os.stat(source_data_dir)
+	except: die(1,"Source directory '{}' does not exist!".format(source_data_dir))
+
+	# stop the other daemon
+	global rpc_port,data_dir
+	rpc_port_save,data_dir_save = rpc_port,data_dir
+	rpc_port = rpc_ports[coin.lower()]
+	data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
+	if test_daemon() != 'stopped':
+		stop_and_wait(silent=True,stop_silent=True)
+	rpc_port,data_dir = rpc_port_save,data_dir_save
+
+	try: os.makedirs(data_dir)
 	except: pass
+
+	# stop our daemon
+	if test_daemon() != 'stopped':
+		stop_and_wait(silent=True,stop_silent=True)
+
+	create_data_dir()
+	os.rmdir(data_dir)
+	shutil.copytree(source_data_dir,data_dir,symlinks=True)
+	start_and_wait('miner',reindex=True,silent=True)
+	stop_and_wait(silent=True,stop_silent=True)
+	gmsg('Fork {} successfully created'.format(g.coin))
+
+def setup():
+	try: os.makedirs(data_dir)
+	except: pass
+
 	if test_daemon() != 'stopped':
 		stop_and_wait(silent=True,stop_silent=True)
 	create_data_dir()
@@ -192,7 +239,7 @@ def get_current_user_win(quiet=False):
 	return None
 
 def get_current_user_unix(quiet=False):
-	p = start_cmd('pgrep','-af','{}.*-rpcuser={}.*'.format(g.proto.daemon_name,rpc_user))
+	p = start_cmd('pgrep','-af','{}.*-rpcport={}.*'.format(g.proto.daemon_name,rpc_port))
 	cmdline = p.stdout.read()
 	if not cmdline: return None
 	for k in ('miner','bob','alice'):
@@ -214,20 +261,20 @@ def user(user=None,quiet=False):
 		wait_for_daemon('ready')
 	if test_daemon() == 'ready':
 		if user == get_current_user(quiet=True):
-			if not quiet: msg('{} is already the current user'.format(user.capitalize()))
+			if not quiet: msg('{} is already the current user for coin {}'.format(user.capitalize(),g.coin))
 			return True
-		gmsg_r('Switching to user {}'.format(user.capitalize()))
+		gmsg_r('Switching to user {} for coin {}'.format(user.capitalize(),g.coin))
 		stop_and_wait(silent=False,nonl=True,stop_silent=True)
 		time.sleep(0.1) # file lock has race condition - TODO: test for lock file
 		start_and_wait(user,nonl=True)
 	else:
-		gmsg_r('Starting regtest daemon with current user {}'.format(user.capitalize()))
+		gmsg_r('Starting regtest daemon for coin {} with current user {}'.format(g.coin,user.capitalize()))
 		start_and_wait(user,nonl=True)
 	gmsg('done')
 
 def stop(silent=False,ignore_noconnect_error=True):
 	if test_daemon() != 'stopped' and not silent:
-		gmsg('Stopping {} regtest daemon'.format(g.proto.name))
+		gmsg('Stopping {} regtest daemon for coin {}'.format(g.proto.name,g.coin))
 	p = start_cmd('cli','stop')
 	err = process_output(p)[1]
 	if err:

@@ -64,5 +64,5 @@ if not opt.yes:
 	if tx.add_comment(): # edits an existing comment, returns true if changed
 		tx.write_to_file(ask_write_default_yes=True)
 
-if tx.send():
-	tx.write_to_file(ask_overwrite=False,ask_write=False)
+tx.send(exit_on_fail=True)
+tx.write_to_file(ask_overwrite=False,ask_write=False)

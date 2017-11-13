@@ -253,7 +253,6 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	setattr(opt,'set_by_user',[])
 	for k in g.global_sets_opt:
 		if k in opt.__dict__ and getattr(opt,k) != None:
-#			_typeconvert_from_dfl(k)
 			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
 			opt.set_by_user.append(k)
 		else:
@@ -277,7 +276,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	if g.bob or g.alice:
 		g.testnet = True
 		g.proto = CoinProtocol(g.coin,g.testnet)
-		g.data_dir = os.path.join(g.data_dir_root,'regtest',('alice','bob')[g.bob])
+		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		check_or_create_dir(g.data_dir)
 		import regtest as rt
 		g.rpc_host = 'localhost'
@@ -302,6 +301,19 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		if k in opts_data: del opts_data[k]
 
 	return args
+
+def opt_is_tx_fee(val,desc):
+	from mmgen.tx import MMGenTX
+	ret = MMGenTX().convert_fee_spec(val,224,on_fail='return')
+	if ret == False:
+		msg("'{}': invalid {} (not a {} amount or satoshis-per-byte specification)".format(
+				val,desc,g.coin.upper()))
+	elif ret != None and ret > g.proto.max_tx_fee:
+		msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(
+				val,desc,g.proto.max_tx_fee,g.coin.upper()))
+	else:
+		return True
+	return False
 
 def check_opts(usr_opts):       # Returns false if any check fails
 
@@ -331,19 +343,6 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			msg("'%s': invalid %s (not an integer)" % (val,desc))
 			return False
 		return True
-
-	def opt_is_tx_fee(val,desc):
-		from mmgen.tx import MMGenTX
-		ret = MMGenTX().convert_fee_spec(val,224,on_fail='return')
-		if ret == False:
-			msg("'{}': invalid {} (not a {} amount or satoshis-per-byte specification)".format(
-					val,desc,g.coin.upper()))
-		elif ret != None and ret > g.proto.max_tx_fee:
-			msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(
-					val,desc,g.proto.max_tx_fee,g.coin.upper()))
-		else:
-			return True
-		return False
 
 	def opt_is_in_list(val,lst,desc):
 		if val not in lst:
@@ -461,6 +460,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
 			try: os.stat(daemon_dir)
 			except: die(1,m.format(g.proj_name.lower()))
+		elif key == 'locktime':
+			if not opt_is_int(val,desc): return False
+			if not opt_compares(val,'>',0,desc): return False
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
 

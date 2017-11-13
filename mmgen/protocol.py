@@ -23,7 +23,7 @@ protocol.py: Coin protocol functions, classes and methods
 import os,hashlib
 from binascii import unhexlify
 from mmgen.util import msg,pmsg
-from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt
+from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt
 from mmgen.globalvars import g
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
@@ -69,9 +69,9 @@ class BitcoinProtocol(MMGenObject):
 	daemon_data_subdir = ''
 	sighash_type = 'ALL'
 	block0 = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
-	forks = [
-		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch'),
-		(None,'','b2x')
+	forks = [ # height, hash, name, replayable
+		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch',False),
+		(None,'','b2x',True)
 	]
 	caps = ('rbf','segwit')
 	base_coin = 'BTC'
@@ -160,7 +160,7 @@ class BitcoinCashProtocol(BitcoinProtocol):
 	mmtypes        = ('L','C')
 	sighash_type   = 'ALL|FORKID'
 	forks = [
-		(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','btc')
+		(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','btc',False)
 	]
 	caps = ()
 	coin_amt        = BCHAmt
@@ -177,6 +177,24 @@ class BitcoinCashTestnetProtocol(BitcoinCashProtocol):
 	privkey_pfx   = 'ef'
 	data_subdir   = 'testnet'
 	daemon_data_subdir = 'testnet3'
+
+class B2XProtocol(BitcoinProtocol):
+	daemon_name    = 'bitcoind-2x'
+	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
+						else os.path.join(g.home_dir,'.bitcoin-2x')
+	rpc_port        = 8338
+	coin_amt        = B2XAmt
+	max_tx_fee      = B2XAmt('0.1')
+	forks = [
+		(None,'','btc',True)
+	]
+
+class B2XTestnetProtocol(B2XProtocol):
+	addr_ver_num         = { 'p2pkh': ('6f','mn'), 'p2sh':  ('c4','2') }
+	privkey_pfx          = 'ef'
+	data_subdir          = 'testnet'
+	daemon_data_subdir   = 'testnet5'
+	rpc_port             = 18338
 
 class LitecoinProtocol(BitcoinProtocol):
 	block0         = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
@@ -210,6 +228,7 @@ class CoinProtocol(MMGenObject):
 	coins = {
 		'btc': (BitcoinProtocol,BitcoinTestnetProtocol),
 		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol),
+		'b2x': (B2XProtocol,B2XTestnetProtocol),
 		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol),
 #		'eth': (EthereumProtocol,EthereumTestnetProtocol),
 	}

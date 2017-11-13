@@ -312,6 +312,7 @@ def set_led(cmd):
 	led_thread.start()
 
 def get_insert_status():
+	if os.getenv('MMGEN_TEST_SUITE'): return True
 	try: os.stat(os.path.join('/dev/disk/by-label/',part_label))
 	except: return False
 	else: return True

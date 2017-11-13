@@ -52,6 +52,7 @@ opts_data = lambda: {
 -K, --key-generator= m Use method 'm' for public key generation
                        Options: {kgs}
                        (default: {kg})
+-L, --locktime=      t Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=n        Minimum number of confirmations required to spend
                        outputs (default: 1)
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
@@ -89,9 +90,9 @@ kl = get_keylist(opt)
 if kl and kal: kl.remove_dup_keys(kal)
 
 tx = MMGenTX(caller='txdo')
-tx.create(cmd_args)
+tx.create(cmd_args,int(opt.locktime or 0))
 txsign(tx,seed_files,kl,kal)
 tx.write_to_file(ask_write=False)
 
-if tx.send():
-	tx.write_to_file(ask_overwrite=False,ask_write=False)
+tx.send(exit_on_fail=True)
+tx.write_to_file(ask_overwrite=False,ask_write=False)

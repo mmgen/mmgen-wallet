@@ -35,7 +35,7 @@ class CoinDaemonRPCConnection(object):
 
 		import socket
 		try:
-			socket.create_connection((host,port)).close()
+			socket.create_connection((host,port),timeout=3).close()
 		except:
 			die(1,'Unable to connect to {}:{}'.format(host,port))
 
