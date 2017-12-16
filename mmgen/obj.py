@@ -538,9 +538,8 @@ class WifKey(str,Hilite,InitErrors):
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii string'
 			from mmgen.globalvars import g
-			if g.proto.wif2hex(s):
-				return str.__new__(cls,s)
-			raise ValueError,'failed verification'
+			g.proto.wif2hex(s) # raises exception on error
+			return str.__new__(cls,s)
 		except Exception as e:
 			m = '{!r}: invalid value for WIF key ({})'.format(s,e[0])
 			return cls.init_fail(m,on_fail)
@@ -566,7 +565,8 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	wif        = MMGenImmutableAttr('wif',WifKey,typeconv=False)
 
 	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,s=None,compressed=None,wif=None,on_fail='die'):
+	def __new__(cls,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
+		from mmgen.globalvars import g
 
 		if type(s) == cls: return s
 		assert wif or (s and type(compressed) == bool),'Incorrect args for PrivKey()'
@@ -575,31 +575,28 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		if wif:
 			try:
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii string'
-				from mmgen.globalvars import g
-				w2h = g.proto.wif2hex(wif)
-				assert w2h,"wif2hex() failed for wif key {!r}".format(wif)
+				w2h = g.proto.wif2hex(wif) # raises exception on error
 				me = str.__new__(cls,w2h['hex'])
 				me.compressed = w2h['compressed']
-				me.wif = str.__new__(WifKey,wif) # check has been done
+				me.pubkey_type   = w2h['pubkey_type']
+				me.wif        = str.__new__(WifKey,wif) # check has been done
 				return me
 			except Exception as e:
 				fs = "Value {!r} cannot be converted to WIF key ({})"
 				return cls.init_fail(fs.format(wif,e[0]),on_fail)
 
 		try:
-			from binascii import hexlify
 			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
-			me = str.__new__(cls,hexlify(s))
+			me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
 			me.compressed = compressed
-			me.wif = me.towif()
+			me.pubkey_type = pubkey_type
+			if me.pubkey_type: # skip WIF creation for passwds
+				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			return me
 		except Exception as e:
 			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"
 			return cls.init_fail(fs.format(s,compressed,e),on_fail)
 
-	def towif(self):
-		from mmgen.globalvars import g
-		return WifKey(g.proto.hex2wif(self,compressed=self.compressed),on_fail='raise')
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
@@ -674,25 +671,35 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	color = 'blue'
 	mmtypes = { # 'name' is used to cook the seed, so it must never change!
 		'L': {  'name':'legacy',
-				'comp':False,
-				'gen':'p2pkh',
-				'fmt':'p2pkh',
+				'pubkey_type':'std',
+				'compressed':False,
+				'gen_method':'p2pkh',
+				'addr_fmt':'p2pkh',
 				'desc':'Legacy uncompressed address'},
 		'C': {  'name':'compressed',
-				'comp':True,
-				'gen':'p2pkh',
-				'fmt':'p2pkh',
+				'pubkey_type':'std',
+				'compressed':True,
+				'gen_method':'p2pkh',
+				'addr_fmt':'p2pkh',
 				'desc':'Compressed P2PKH address'},
 		'S': {  'name':'segwit',
-				'comp':True,
-				'gen':'segwit',
-				'fmt':'p2sh',
+				'pubkey_type':'std',
+				'compressed':True,
+				'gen_method':'segwit',
+				'addr_fmt':'p2sh',
 				'desc':'Segwit P2SH-P2WPKH address' },
 		'E': {  'name':'ethereum',
-				'comp':False,
-				'gen':'ethereum',
-				'fmt':'ethereum',
+				'pubkey_type':'std',
+				'compressed':False,
+				'gen_method':'ethereum',
+				'addr_fmt':'ethereum',
 				'desc':'Ethereum address' },
+		'Z': {  'name':'zcash_z',
+				'pubkey_type':'zcash_z',
+				'compressed':False,
+				'gen_method':'zcash_z',
+				'addr_fmt':'zcash_z',
+				'desc':'Zcash z-address' },
 	}
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
@@ -705,11 +712,8 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 					me = str.__new__(cls,s)
 					assert me in g.proto.mmtypes + ('P',), (
 						"'{}': invalid address type for {}".format(me,g.proto.__name__))
-					me.name = v['name']
-					me.compressed = v['comp']
-					me.gen_method = v['gen']
-					me.desc = v['desc']
-					me.addr_fmt = v['fmt']
+					for k in ('name','pubkey_type','compressed','gen_method','addr_fmt','desc'):
+						setattr(me,k,v[k])
 					return me
 			raise ValueError,'not found'
 		except Exception as e:
@@ -724,8 +728,9 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
 		'P': {  'name':'password',
-				'comp':False,
-				'gen':None,
-				'fmt':None,
+				'pubkey_type':None,
+				'compressed':False,
+				'gen_method':None,
+				'addr_fmt':None,
 				'desc':'Password generated from MMGen seed'}
 	}

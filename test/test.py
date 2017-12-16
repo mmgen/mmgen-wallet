@@ -448,10 +448,12 @@ cfgs = {
 			'ltc': ('B804 978A 8796 3ED4','93A6 844C 8ECC BEF4'),
 		},
 		'ref_addrfile_chksum_zec': '903E 7225 DD86 6E01',
+		'ref_addrfile_chksum_zec_z': '9C7A 72DC 3D4A B3AF',
 		'ref_addrfile_chksum_dash':'FBC1 6B6A 0988 4403',
 		'ref_addrfile_chksum_eth': 'E554 076E 7AF6 66A3',
 		'ref_addrfile_chksum_etc': 'E97A D796 B495 E8BC',
 		'ref_keyaddrfile_chksum_zec': 'F05A 5A5C 0C8E 2617',
+		'ref_keyaddrfile_chksum_zec_z': '220F 5F23 CC9B EC1F',
 		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
 		'ref_keyaddrfile_chksum_eth': '3635 4DCF B752 8772',
 		'ref_keyaddrfile_chksum_etc': '9BAC 38E7 5C8E 42E0',
@@ -709,14 +711,16 @@ cmd_group['misc'] = (
 )
 
 cmd_group['altcoin_ref'] = (
-	('ref_addrfile_chk_zec', 'reference address file (ZEC)'),
-	('ref_addrfile_chk_dash','reference address file (DASH)'),
 	('ref_addrfile_chk_eth', 'reference address file (ETH)'),
 	('ref_addrfile_chk_etc', 'reference address file (ETC)'),
-	('ref_keyaddrfile_chk_zec', 'reference key-address file (ZEC)'),
-	('ref_keyaddrfile_chk_dash','reference key-address file (DASH)'),
+	('ref_addrfile_chk_dash','reference address file (DASH)'),
+	('ref_addrfile_chk_zec', 'reference address file (ZEC-T)'),
+	('ref_addrfile_chk_zec_z','reference address file (ZEC-Z)'),
 	('ref_keyaddrfile_chk_eth', 'reference key-address file (ETH)'),
 	('ref_keyaddrfile_chk_etc', 'reference key-address file (ETC)'),
+	('ref_keyaddrfile_chk_dash','reference key-address file (DASH)'),
+	('ref_keyaddrfile_chk_zec', 'reference key-address file (ZEC-T)'),
+	('ref_keyaddrfile_chk_zec_z','reference key-address file (ZEC-Z)'),
 )
 
 # undocumented admin cmds
@@ -1041,8 +1045,8 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 				out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 	if non_mmgen_input:
-		privkey = PrivKey(os.urandom(32),compressed=True)
-		coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator().to_pubhex(privkey))
+		privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
+		coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_data_to_file(of,privkey.wif+'\n','compressed {} key'.format(g.proto.name),silent=True)
 		out.append(create_fake_unspent_entry(coinaddr,non_mmgen=True,segwit=False))
@@ -1083,7 +1087,7 @@ def create_tx_data(sources):
 def make_txcreate_cmdline(tx_data):
 	privkey = PrivKey(os.urandom(32),compressed=True)
 	t = ('p2pkh','segwit')['S' in g.proto.mmtypes]
-	coinaddr = AddrGenerator(t).to_addr(KeyGenerator().to_pubhex(privkey))
+	coinaddr = AddrGenerator(t).to_addr(KeyGenerator('std').to_pubhex(privkey))
 
 	# total of two outputs must be < 10 BTC (<1000 LTC)
 	mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[coin_sel]
@@ -2030,12 +2034,12 @@ class MMGenTestSuite(object):
 			t.close()
 			cmp_or_die(cfg['seed_id'],chk)
 
-	def ref_addrfile_chk(self,name,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None):
+	def ref_addrfile_chk(self,name,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None,add_args=[]):
 		af_key = 'ref_{}file'.format(ftype)
 		af_fn = cfg[af_key].format(pfx or altcoin_pfx,'' if coin else tn_ext)
 		af = os.path.join(ref_dir,(subdir or ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
-		t = MMGenExpect(name,'mmgen-tool',coin_arg+[ftype.replace('segwit','')+'file_chksum',af])
+		t = MMGenExpect(name,'mmgen-tool',coin_arg+[ftype.replace('segwit','')+'file_chksum',af]+add_args)
 		if ftype == 'keyaddr':
 			w = 'key-address data'
 			t.hash_preset(w,ref_kafile_hash_preset)
@@ -2051,6 +2055,10 @@ class MMGenTestSuite(object):
 	def ref_addrfile_chk_zec(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
+	def ref_addrfile_chk_zec_z(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
+								mmtype='z',add_args=['mmtype=zcash_z'])
+
 	def ref_addrfile_chk_dash(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
 
@@ -2062,6 +2070,10 @@ class MMGenTestSuite(object):
 
 	def ref_keyaddrfile_chk_zec(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
+
+	def ref_keyaddrfile_chk_zec_z(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
+								mmtype='z',add_args=['mmtype=zcash_z'])
 
 	def ref_keyaddrfile_chk_dash(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
@@ -2604,7 +2616,7 @@ class MMGenTestSuite(object):
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
 		privhex = PrivKey(os.urandom(32),compressed=True)
-		addr = AddrGenerator('p2pkh').to_addr(KeyGenerator().to_pubhex(privhex))
+		addr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privhex))
 		g.proto = psave
 		outputs_cl = [sid+':{}:3,1.1234'.format(g.proto.mmtypes[-1]), sid+':C:5,5.5555',sid+':L:4',addr+',100']
 		pw = cfg['wpasswd']

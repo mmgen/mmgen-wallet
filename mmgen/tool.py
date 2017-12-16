@@ -55,16 +55,16 @@ cmd_data = OrderedDict([
 	('Hexlify',      ['<string> [str-]']),
 	('Rand2file',    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False]']),
 
-	('Randwif',    ['compressed [bool=False]']),
-	('Randpair',   ['compressed [bool=False]','segwit [bool=False]']),
-	('Hex2wif',    ['<private key in hex format> [str-]','compressed [bool=False]']),
+	('Randwif',    ["pubkey_type [str='std']",'compressed [bool=False]']),
+	('Randpair',   ["pubkey_type [str='std']",'compressed [bool=False]','segwit [bool=False]']),
+	('Hex2wif',    ['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]']),
 	('Wif2hex',    ['<wif> [str-]']),
 	('Wif2addr',   ['<wif> [str-]','segwit [bool=False]']),
 	('Wif2segwit_pair',['<wif> [str-]']),
 	('Pubhash2addr', ['<coin address in hex format> [str-]','p2sh [bool=False]']),
 	('Addr2hexaddr', ['<coin address> [str-]']),
-	('Privhex2addr', ['<private key in hex format> [str-]','compressed [bool=False]','segwit [bool=False]']),
-	('Privhex2pubhex',['<private key in hex format> [str-]','compressed [bool=False]']),
+	('Privhex2addr', ['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]','segwit [bool=False]']),
+	('Privhex2pubhex',['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]']),
 	('Pubhex2addr',  ['<public key in hex format> [str-]','p2sh [bool=False]']), # new
 	('Pubhex2redeem_script',['<public key in hex format> [str-]']), # new
 	('Wif2redeem_script', ['<private key in WIF format> [str-]']), # new
@@ -85,8 +85,8 @@ cmd_data = OrderedDict([
 
 	('Add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
 	('Remove_label',    ['<{} address> [str]'.format(pnm)]),
-	('Addrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
-	('Keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm)]),
+	('Addrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
+	('Keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
 	('Passwdfile_chksum', ['<{} password file> [str]'.format(pnm)]),
 	('Find_incog_data', ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
 
@@ -226,7 +226,7 @@ def print_convert_results(indata,enc,dec,dtype):
 	if error:
 		die(3,"Error! Recoded data doesn't match input!")
 
-kg = KeyGenerator()
+kg = KeyGenerator('std')
 
 def Hexdump(infile, cols=8, line_nums=True):
 	Msg(pretty_hexdump(
@@ -249,13 +249,13 @@ def B58randenc():
 def Randhex(nbytes='32'):
 	Msg(binascii.hexlify(get_random(int(nbytes))))
 
-def Randwif(compressed=False):
-	Msg(PrivKey(get_random(32),compressed).wif)
+def Randwif(pubkey_type='std',compressed=False):
+	Msg(PrivKey(get_random(32),compressed=compressed,pubkey_type=pubkey_type).wif)
 
-def Randpair(compressed=False,segwit=False):
+def Randpair(pubkey_type='std',compressed=False,segwit=False):
 	if segwit: compressed = True
 	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
-	privhex = PrivKey(get_random(32),compressed)
+	privhex = PrivKey(get_random(32),compressed=compressed,pubkey_type=pubkey_type)
 	addr = ag.to_addr(kg.to_pubhex(privhex))
 	Vmsg('Key (hex):  %s' % privhex)
 	Vmsg_r('Key (WIF):  '); Msg(privhex.wif)
@@ -283,18 +283,19 @@ def Pubhash2addr(pubhash,p2sh=False):   Msg(g.proto.pubhash2addr(pubhash,p2sh=p2
 def Addr2hexaddr(addr):                 Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
 def Hash160(pubkeyhex):                 Msg(hash160(pubkeyhex))
 def Pubhex2addr(pubkeyhex,p2sh=False):  Msg(g.proto.pubhash2addr(hash160(pubkeyhex),p2sh=p2sh))
-def Wif2hex(wif):                       Msg(wif2hex(wif))
-def Hex2wif(hexpriv,compressed=False):
-	Msg(g.proto.hex2wif(hexpriv,compressed))
-def Privhex2addr(privhex,compressed=False,segwit=False,output_pubhex=False):
+def Wif2hex(wif):                       Msg(PrivKey(wif=wif))
+
+def Hex2wif(hexpriv,pubkey_type='std',compressed=False):
+	Msg(g.proto.hex2wif(hexpriv,pubkey_type=pubkey_type,compressed=compressed))
+def Privhex2addr(privhex,pubkey_type='std',compressed=False,segwit=False,output_pubhex=False):
 	if segwit and not compressed:
 		die(1,'Segwit address can be generated only from a compressed pubkey')
-	pk = PrivKey(binascii.unhexlify(privhex),compressed=compressed)
+	pk = PrivKey(binascii.unhexlify(privhex),compressed=compressed,pubkey_type=pubkey_type)
 	ph = kg.to_pubhex(pk)
 	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
 	Msg(ph if output_pubhex else ag.to_addr(ph))
-def Privhex2pubhex(privhex,compressed=False): # new
-	return Privhex2addr(privhex,compressed=compressed,output_pubhex=True)
+def Privhex2pubhex(privhex,pubkey_type='std',compressed=False): # new
+	return Privhex2addr(privhex,pubkey_type=pubkey_type,compressed=compressed,output_pubhex=True)
 def Pubhex2redeem_script(pubhex): # new
 	Msg(g.proto.pubhex2redeem_script(pubhex))
 def Wif2redeem_script(wif): # new
@@ -303,10 +304,6 @@ def Wif2redeem_script(wif): # new
 		die(1,'Segwit redeem script cannot be generated from uncompressed WIF')
 	ag = AddrGenerator('segwit')
 	Msg(ag.to_segwit_redeem_script(kg.to_pubhex(privhex)))
-
-def wif2hex(wif): # wrapper
-	ret = PrivKey(wif=wif)
-	return ret or die(1,'{}: Invalid WIF'.format(wif))
 
 wordlists = 'electrum','tirosh'
 dfl_wl_id = 'electrum'
@@ -353,13 +350,15 @@ def Id6(infile):
 def Str2id6(s): # retain ignoring of space for backwards compat
 	Msg(make_chksum_6(''.join(s.split())))
 
-def Addrfile_chksum(infile):
+def Addrfile_chksum(infile,mmtype=''):
 	from mmgen.addr import AddrList
-	AddrList(infile,chksum_only=True)
+	mmtype = None if not mmtype else MMGenAddrType(mmtype)
+	AddrList(infile,chksum_only=True,mmtype=mmtype)
 
-def Keyaddrfile_chksum(infile):
+def Keyaddrfile_chksum(infile,mmtype=''):
 	from mmgen.addr import KeyAddrList
-	KeyAddrList(infile,chksum_only=True)
+	mmtype = None if not mmtype else MMGenAddrType(mmtype)
+	KeyAddrList(infile,chksum_only=True,mmtype=mmtype)
 
 def Passwdfile_chksum(infile):
 	from mmgen.addr import PasswordList

@@ -32,14 +32,15 @@ def sc_dmsg(desc,data):
 		Msg('sc_debug_{}: {}'.format(desc,data))
 
 class AddrGenerator(MMGenObject):
-	def __new__(cls,atype):
+	def __new__(cls,gen_method):
 		d = {
 			'p2pkh':  AddrGeneratorP2PKH,
 			'segwit': AddrGeneratorSegwit,
-			'ethereum': AddrGeneratorEthereum
+			'ethereum': AddrGeneratorEthereum,
+			'zcash_z': AddrGeneratorZcashZ
 		}
-		assert atype in d
-		me = super(cls,cls).__new__(d[atype])
+		assert gen_method in d
+		me = super(cls,cls).__new__(d[gen_method])
 		me.desc = d
 		return me
 
@@ -70,15 +71,49 @@ class AddrGeneratorEthereum(AddrGenerator):
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError
 
+class AddrGeneratorZcashZ(AddrGenerator):
+
+	def zhash256(self,vhex,t):
+		byte0  = '{:02x}'.format(int(vhex[:2],16) | 0xc0)
+		byte32 = '{:02x}'.format(t)
+		vhex_fix = byte0 + vhex[2:64] + byte32 + '00' * 31
+		assert len(vhex_fix) == 128
+		from mmgen.sha256 import Sha256
+		return Sha256(unhexlify(vhex_fix),preprocess=False).hexdigest()
+
+	def to_addr(self,pubhex): # pubhex is really privhex
+		key = pubhex
+		assert len(key) == 64,'{}: incorrect privkey length'.format(len(key))
+		addr1 = self.zhash256(key,0)
+		addr2 = self.zhash256(key,1)
+		from nacl.bindings import crypto_scalarmult_base
+		addr2 = hexlify(crypto_scalarmult_base(unhexlify(addr2)))
+
+		from mmgen.protocol import _b58chk_encode
+		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + addr1 + addr2)
+		assert len(ret) == g.proto.addr_width,'Invalid zaddr length'
+		return CoinAddr(ret)
+
+	def to_segwit_redeem_script(self,pubhex):
+		raise NotImplementedError
+
 class KeyGenerator(MMGenObject):
 
-	def __new__(cls,generator=None,silent=False):
-		if cls.test_for_secp256k1(silent=silent) and generator != 1:
-			if not opt.key_generator or opt.key_generator == 2 or generator == 2:
-				return super(cls,cls).__new__(KeyGeneratorSecp256k1)
+	def __new__(cls,pubkey_type,generator=None,silent=False):
+		if pubkey_type == 'std':
+			if cls.test_for_secp256k1(silent=silent) and generator != 1:
+				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
+					return super(cls,cls).__new__(KeyGeneratorSecp256k1)
+			else:
+				msg('Using (slow) native Python ECDSA library for address generation')
+				return super(cls,cls).__new__(KeyGeneratorPython)
+		elif pubkey_type == 'zcash_z':
+			g.proto.addr_width = 95
+			me = super(cls,cls).__new__(KeyGeneratorDummy)
+			me.desc = 'mmgen-'+pubkey_type
+			return me
 		else:
-			msg('Using (slow) native Python ECDSA library for address generation')
-			return super(cls,cls).__new__(KeyGeneratorPython)
+			raise ValueError,'{}: invalid pubkey_type argument'.format(pubkey_type)
 
 	@classmethod
 	def test_for_secp256k1(self,silent=False):
@@ -91,6 +126,7 @@ class KeyGenerator(MMGenObject):
 
 import ecdsa
 class KeyGeneratorPython(KeyGenerator):
+	desc = 'mmgen-python-ecdsa'
 	# From electrum:
 	# secp256k1, http://www.oid-info.com/get/1.3.132.0.10
 	_p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2FL
@@ -119,18 +155,23 @@ class KeyGeneratorPython(KeyGenerator):
 		else:
 			return '04'+pubkey
 
-	desc = 'python-ecdsa'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
 		return PubKey(self.privnum2pubhex(
 			int(privhex,16),compressed=privhex.compressed),compressed=privhex.compressed)
 
 class KeyGeneratorSecp256k1(KeyGenerator):
-	desc = 'secp256k1'
+	desc = 'mmgen-secp256k1'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
 		from mmgen.secp256k1 import priv2pub
 		return PubKey(hexlify(priv2pub(unhexlify(privhex),int(privhex.compressed))),compressed=privhex.compressed)
+
+class KeyGeneratorDummy(KeyGenerator):
+	desc = 'mmgen-dummy'
+	def to_pubhex(self,privhex):
+		assert type(privhex) == PrivKey
+		return PubKey(str(privhex),compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
 	addr  = MMGenListItemAttr('addr','CoinAddr')
@@ -220,7 +261,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		self.update_msgs()
 		mmtype = mmtype or g.proto.dfl_mmtype
-		assert mmtype in MMGenAddrType.mmtypes
+		assert mmtype in MMGenAddrType.mmtypes,'{}: mmtype not in {}'.format(mmtype,repr(MMGenAddrType.mmtypes))
 
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
@@ -274,8 +315,11 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		seed = self.scramble_seed(seed)
 		sc_dmsg('seed',seed[:8].encode('hex'))
 
+		compressed = self.al_id.mmtype.compressed
+		pubkey_type = self.al_id.mmtype.pubkey_type
+
 		if self.gen_addrs:
-			kg = KeyGenerator()
+			kg = KeyGenerator(pubkey_type)
 			ag = AddrGenerator(self.al_id.mmtype.gen_method)
 
 		t_addrs,num,pos,out = len(addrnums),0,0,AddrListList()
@@ -295,7 +339,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			e = le(idx=num)
 
 			# Secret key is double sha256 of seed hash round /num/
-			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),self.al_id.mmtype.compressed)
+			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),compressed=compressed,pubkey_type=pubkey_type)
 
 			if self.gen_addrs:
 				e.addr = ag.to_addr(kg.to_pubhex(e.sec))
@@ -305,7 +349,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 				dmsg('Key {:>03}: {}'.format(pos,e.passwd))
 
 			out.append(e)
-			if g.debug: print 'generate():\n', e.pformat()
+			if g.debug: Msg('generate():\n', e.pformat())
 
 		qmsg('\r%s: %s %s%s generated%s' % (
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
@@ -398,7 +442,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		return [d.addr for d in self.data if not getattr(d,key)]
 
 	def generate_addrs_from_keys(self):
-		kg = KeyGenerator()
+		kg = KeyGenerator('std')
 		ag = AddrGenerator('p2pkh')
 		d = self.data
 		for n,e in enumerate(d,1):
@@ -478,7 +522,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			ret.append(a)
 
 		if self.has_keys and keypress_confirm('Check key-to-address validity?'):
-			kg = KeyGenerator()
+			kg = KeyGenerator(self.al_id.mmtype.pubkey_type)
 			ag = AddrGenerator(self.al_id.mmtype.gen_method)
 			llen = len(ret)
 			for n,e in enumerate(ret):

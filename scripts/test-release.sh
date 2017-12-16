@@ -99,15 +99,15 @@ f_obj='Data object test complete'
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts=(
+	'test/scrambletest.py'
 	'test/test.py -n altcoin_ref'
 	'test/gentest.py --coin=btc 2:ext 100'
 	'test/gentest.py --coin=ltc 2:ext 100'
-	'test/gentest.py --coin=zec 2:ext 100'
 	'test/gentest.py --coin=dash 2:ext 100'
+	'test/gentest.py --coin=zec 2:ext 100'
 	'test/gentest.py --coin=etc 2:ext 100'
 	'test/gentest.py --coin=eth 2:ext 100'
-	'test/scrambletest.py'
-	)
+	'test/gentest.py --coin=zec --type=zcash_z 2:ext 1000')
 f_alts='Gen-only altcoin tests completed'
 
 i_misc='Miscellaneous operations' # includes autosign!

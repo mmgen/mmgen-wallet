@@ -50,15 +50,25 @@ def _numtob58(num):
 def _b58tonum(b58num):
 	b58num = b58num.strip()
 	for i in b58num:
-		if not i in _b58a: return False
+		if not i in _b58a:
+			raise ValueError,'_b58tonum(): invalid b58 value'
 	return sum(_b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
+
+def _b58chk_encode(hexstr):
+	return _numtob58(int(hexstr+hash256(hexstr)[:8],16))
+
+def _b58chk_decode(s):
+	hexstr = '{:x}'.format(_b58tonum(s))
+	if hexstr[-8:] == hash256(hexstr[:-8])[:8]:
+		return hexstr[:-8]
+	raise ValueError,'_b58chk_decode(): checksum incorrect'
 
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
 	name            = 'bitcoin'
 	daemon_name     = 'bitcoind'
 	addr_ver_num    = { 'p2pkh': ('00','1'), 'p2sh':  ('05','3') }
-	wif_ver_num     = '80'
+	wif_ver_num     = { 'std': '80' }
 	mmtypes         = ('L','C','S')
 	dfl_mmtype      = 'L'
 	data_subdir     = ''
@@ -92,12 +102,31 @@ class BitcoinProtocol(MMGenObject):
 	def cap(cls,s): return s in cls.caps
 
 	@classmethod
-	def hex2wif(cls,hexpriv,compressed=False):
-		s = cls.wif_ver_num + hexpriv + ('','01')[bool(compressed)]
-		return _numtob58(int(s+hash256(s)[:8],16))
+	def preprocess_key(cls,hexpriv,pubkey_type): return hexpriv
+
+	@classmethod
+	def hex2wif(cls,hexpriv,pubkey_type,compressed):
+		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + ('','01')[bool(compressed)])
 
 	@classmethod
 	def wif2hex(cls,wif):
+		key = _b58chk_decode(wif)
+		pubkey_type = None
+		for k,v in cls.wif_ver_num.items():
+			if key[:len(v)] == v:
+				pubkey_type = k
+				key = key[len(v):]
+		assert pubkey_type,'invalid WIF version number'
+		if len(key) == 66:
+			assert key[-2:] == '01','invalid compressed key suffix'
+			compressed = True
+		else:
+			assert len(key) == 64,'invalid key length'
+			compressed = False
+		return { 'hex':key[:64], 'pubkey_type':pubkey_type, 'compressed':compressed }
+
+	@classmethod
+	def wif2hex_old(cls,wif):
 		num = _b58tonum(wif)
 		if num == False: return False
 		key = '{:x}'.format(num)
@@ -105,7 +134,7 @@ class BitcoinProtocol(MMGenObject):
 		compressed = len(key) == 76
 		if compressed and key[66:68] != '01': return False
 		klen = (66,68)[compressed]
-		if (key[:2] == cls.wif_ver_num and key[klen:] == hash256(key[:klen])[:8]):
+		if (key[:2] == cls.wif_ver_num['std'] and key[klen:] == hash256(key[:klen])[:8]):
 			return { 'hex':key[2:66], 'compressed':compressed }
 		else:
 			return False
@@ -126,7 +155,7 @@ class BitcoinProtocol(MMGenObject):
 			if hash256(addr_hex[:-8])[:8] == addr_hex[-8:]:
 				return {
 					'hex': addr_hex[len(ver_num):-8],
-					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh'}[addr_fmt],
+					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh','zcash_z':'zcash_z'}[addr_fmt],
 					'width': cls.addr_width
 				} if return_dict else True
 			else:
@@ -139,7 +168,7 @@ class BitcoinProtocol(MMGenObject):
 	def pubhash2addr(cls,pubkey_hash,p2sh):
 		s = cls.addr_ver_num[('p2pkh','p2sh')[p2sh]][0] + pubkey_hash
 		lzeroes = (len(s) - len(s.lstrip('0'))) / 2 # non-zero only for ver num '00' (BTC p2pkh)
-		return ('1' * lzeroes) + _numtob58(int(s+hash256(s)[:8],16))
+		return ('1' * lzeroes) + _b58chk_encode(s)
 
 	# Segwit:
 	@classmethod
@@ -155,7 +184,7 @@ class BitcoinProtocol(MMGenObject):
 
 class BitcoinTestnetProtocol(BitcoinProtocol):
 	addr_ver_num         = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
-	wif_ver_num          = 'ef'
+	wif_ver_num          = { 'std': 'ef' }
 	data_subdir          = 'testnet'
 	daemon_data_subdir   = 'testnet3'
 	rpc_port             = 18332
@@ -184,7 +213,7 @@ class BitcoinCashProtocol(BitcoinProtocol):
 class BitcoinCashTestnetProtocol(BitcoinCashProtocol):
 	rpc_port      = 18442
 	addr_ver_num  = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
-	wif_ver_num   = 'ef'
+	wif_ver_num   = { 'std': 'ef' }
 	data_subdir   = 'testnet'
 	daemon_data_subdir = 'testnet3'
 	addr_width     = 35
@@ -202,7 +231,7 @@ class B2XProtocol(BitcoinProtocol):
 
 class B2XTestnetProtocol(B2XProtocol):
 	addr_ver_num         = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
-	wif_ver_num          = 'ef'
+	wif_ver_num          = { 'std': 'ef' }
 	data_subdir          = 'testnet'
 	daemon_data_subdir   = 'testnet5'
 	rpc_port             = 18338
@@ -215,7 +244,7 @@ class LitecoinProtocol(BitcoinProtocol):
 	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' \
 						else os.path.join(g.home_dir,'.litecoin')
 	addr_ver_num   = { 'p2pkh': ('30','L'), 'p2sh':  ('32','M'), 'p2sh2':  ('05','3') } # 'p2sh' is new fmt
-	wif_ver_num    = 'b0'
+	wif_ver_num    = { 'std': 'b0' }
 	secs_per_block = 150
 	rpc_port       = 9332
 	coin_amt       = LTCAmt
@@ -226,7 +255,7 @@ class LitecoinProtocol(BitcoinProtocol):
 class LitecoinTestnetProtocol(LitecoinProtocol):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'
 	addr_ver_num   = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('3a','Q'), 'p2sh2':  ('c4','2') }
-	wif_ver_num    = 'ef' # same as Bitcoin testnet
+	wif_ver_num    = { 'std': 'ef' } # same as Bitcoin testnet
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'
 	rpc_port       = 19332
@@ -234,6 +263,8 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
 class BitcoinProtocolKeygen(BitcoinProtocol):  mmcaps = ('key',)
+class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')
+class BitcoinTestnetProtocolKeygen(BitcoinTestnetProtocol):  mmcaps = ('key',)
 
 class EthereumProtocol(BitcoinProtocolAddrgen):
 
@@ -244,13 +275,13 @@ class EthereumProtocol(BitcoinProtocolAddrgen):
 	base_coin = 'ETH'
 
 	@classmethod
-	def hex2wif(cls,hexpriv,compressed=False):
+	def hex2wif(cls,hexpriv,pubkey_type,compressed):
 		assert compressed == False,'Ethereum does not support compressed pubkeys!'
 		return str(hexpriv)
 
 	@classmethod
 	def wif2hex(cls,wif):
-		return { 'hex':str(wif), 'compressed':False }
+		return { 'hex':str(wif), 'pubkey_type':'std', 'compressed':False }
 
 	@classmethod
 	def verify_addr(cls,addr,return_dict=False):
@@ -268,25 +299,34 @@ class EthereumClassicTestnetProtocol(EthereumClassicProtocol): pass
 class ZcashProtocol(BitcoinProtocolAddrgen):
 	name         = 'zcash'
 	base_coin    = 'ZEC'
-	addr_ver_num = { 'p2pkh': ('1cb8','t1'), 'p2sh':  ('1cbd','t3') }
-	wif_ver_num  = '80'
-	mmtypes      = ('C',)
+	addr_ver_num = { 'p2pkh': ('1cb8','t1'), 'p2sh':  ('1cbd','t3'), 'zcash_z': ('169a','zc') }
+	wif_ver_num  = { 'std': '80', 'zcash_z': 'ab36' }
+	mmtypes      = ('C','Z')
 	dfl_mmtype   = 'C'
 
-class ZcashTestnetProtocol(object): pass
+	@classmethod
+	def preprocess_key(cls,hexpriv,pubkey_type): # zero the first four bits
+		if pubkey_type == 'zcash_z':
+			return '{:02x}'.format(int(hexpriv[:2],16) & 0x0f) + hexpriv[2:]
+		else:
+			return hexpriv
+
+class ZcashTestnetProtocol(ZcashProtocol):
+	wif_ver_num  = { 'std': '??', 'zcash_z': 'ac08' }
+	addr_ver_num = { 'p2pkh': ('??','t1'), 'p2sh':  ('??','t3'), 'zcash_z': ('16b6','??') }
 
 class DashProtocol(BitcoinProtocolAddrgen):
 	name         = 'dash'
 	base_coin    = 'DASH'
 	addr_ver_num = { 'p2pkh': ('4c','X'), 'p2sh':  ('10','7') }
-	wif_ver_num  = 'cc'
+	wif_ver_num  = { 'std': 'cc' }
 	mmtypes      = ('C',)
 	dfl_mmtype   = 'C'
 
 class DashTestnetProtocol(DashProtocol):
 	# "Dash", "testnet", "tDASH", b'\xef', b'\x8c', b'\x13'
 	addr_ver_num   = { 'p2pkh': ('8c','y'), 'p2sh':  ('13','?') }
-	wif_ver_num    = 'ef'
+	wif_ver_num    = { 'std': 'ef' }
 
 class CoinProtocol(MMGenObject):
 	coins = {

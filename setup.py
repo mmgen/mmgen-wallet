@@ -123,6 +123,7 @@ setup(
 			'mmgen.regtest',
 			'mmgen.rpc',
 			'mmgen.seed',
+			'mmgen.sha256',
 			'mmgen.term',
 			'mmgen.test',
 			'mmgen.tool',

@@ -597,7 +597,7 @@ class MMGenTX(MMGenObject):
 
 		if self.has_segwit_inputs():
 			from mmgen.addr import KeyGenerator,AddrGenerator
-			kg = KeyGenerator()
+			kg = KeyGenerator('std')
 			ag = AddrGenerator('segwit')
 			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
 
