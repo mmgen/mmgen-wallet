@@ -28,29 +28,12 @@ from mmgen.common import *
 crmsg = {
 	'usr_rand_notice': """
 Since we don't fully trust our OS's random number generator, we'll provide
-some additional entropy of our own.  Please type %s symbols on your keyboard.
+some additional entropy of our own.  Please type {} symbols on your keyboard.
 Type slowly and choose your symbols carefully for maximum randomness.  Try to
 use both upper and lowercase as well as punctuation and numerals.  What you
 type will not be displayed on the screen.  Note that the timings between your
 keystrokes will also be used as a source of randomness.
-""",
-# 	'incog_iv_id': """
-#    Check that the generated Incog ID above is correct.
-#    If it's not, then your incognito data is incorrect or corrupted.
-# """,
-# 	'incog_iv_id_hidden': """
-#    Check that the generated Incog ID above is correct.
-#    If it's not, then your incognito data is incorrect or corrupted,
-#    or you've supplied an incorrect offset.
-# """,
-# 	'incorrect_incog_passphrase_try_again': """
-# Incorrect passphrase, hash preset, or maybe old-format incog wallet.
-# Try again? (Y)es, (n)o, (m)ore information:
-# """.strip(),
-# 	'confirm_seed_id': """
-# If the Seed ID above is correct but you're seeing this message, then you need
-# to exit and re-run the program with the '--old-incog-fmt' option.
-# """.strip(),
+"""
 }
 
 def sha256_rounds(s,n):
@@ -59,11 +42,17 @@ def sha256_rounds(s,n):
 		s = sha256(s).digest()
 	return s
 
-def encrypt_seed(seed, key):
-	return encrypt_data(seed, key, iv=1, desc='seed')
+def scramble_seed(seed,scramble_key,hash_rounds):
+	import hmac
+	scr_seed = hmac.new(seed,scramble_key,sha256).digest()
+	fs = 'Seed:  {}\nScramble key: {}\nScrambled seed: {}\nScrambled seed len: {}'
+	dmsg(fs.format(hexlify(seed),scramble_key,hexlify(scr_seed),len(scr_seed)))
+	return sha256_rounds(scr_seed,hash_rounds)
 
-def decrypt_seed(enc_seed, key, seed_id, key_id):
+def encrypt_seed(seed,key):
+	return encrypt_data(seed,key,iv=1,desc='seed')
 
+def decrypt_seed(enc_seed,key,seed_id,key_id):
 	vmsg_r('Checking key...')
 	chk1 = make_chksum_8(key)
 	if key_id:
@@ -71,10 +60,8 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 			msg('Incorrect passphrase or hash preset')
 			return False
 
-	dec_seed = decrypt_data(enc_seed, key, iv=1, desc='seed')
-
-	chk2 = make_chksum_8(dec_seed)
-
+	dec_seed = decrypt_data(enc_seed,key,iv=1,desc='seed')
+	chk2     = make_chksum_8(dec_seed)
 	if seed_id:
 		if compare_chksums(seed_id,'Seed ID',chk2,'decrypted seed'):
 			qmsg('Passphrase is OK')
@@ -85,105 +72,81 @@ def decrypt_seed(enc_seed, key, seed_id, key_id):
 					msg('Key ID is correct but decryption of seed failed')
 				else:
 					msg('Incorrect passphrase or hash preset')
-
 			vmsg('')
 			return False
 #	else:
-#		qmsg('Generated IDs (Seed/Key): %s/%s' % (chk2,chk1))
+#		qmsg('Generated IDs (Seed/Key): {}/{}'.format(chk2,chk1))
 
-	dmsg('Decrypted seed: %s' % hexlify(dec_seed))
-
+	dmsg('Decrypted seed: {}'.format(hexlify(dec_seed)))
 	return dec_seed
 
-def encrypt_data(data, key, iv=1, desc='data', verify=True):
-
+def encrypt_data(data,key,iv=1,desc='data',verify=True):
 	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
-
-	vmsg('Encrypting %s' % desc)
-
-	c = AES.new(key, AES.MODE_CTR,
-			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
+	vmsg('Encrypting {}'.format(desc))
+	c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	enc_data = c.encrypt(data)
 
 	if verify:
-		vmsg_r('Performing a test decryption of the %s...' % desc)
-
-		c = AES.new(key, AES.MODE_CTR,
-				counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
+		vmsg_r('Performing a test decryption of the {}...'.format(desc))
+		c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 		dec_data = c.decrypt(enc_data)
 
 		if dec_data == data: vmsg('done')
 		else:
-			die(2,"ERROR.\nDecrypted %s doesn't match original %s" % (desc,desc))
+			die(2,"ERROR.\nDecrypted {s} doesn't match original {s}".format(s=desc))
 
 	return enc_data
 
-def decrypt_data(enc_data, key, iv=1, desc='data'):
-
-	vmsg_r('Decrypting %s with key...' % desc)
-
+def decrypt_data(enc_data,key,iv=1,desc='data'):
 	from Crypto.Cipher import AES
 	from Crypto.Util import Counter
-
-	c = AES.new(key, AES.MODE_CTR,
-			counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-
+	vmsg_r('Decrypting {} with key...'.format(desc))
+	c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
 	return c.decrypt(enc_data)
 
-def scrypt_hash_passphrase(passwd, salt, hash_preset, buflen=32):
-
+def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
+	import scrypt
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
-
 	N,r,p = get_hash_params(hash_preset)
+	return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
-	import scrypt
-	return scrypt.hash(passwd, salt, 2**N, r, p, buflen=buflen)
-
-def make_key(passwd,salt,hash_preset,
-		desc='encryption key',from_what='passphrase',verbose=False):
-
+def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
 	if from_what: desc += ' from '
 	if opt.verbose or verbose:
-		msg_r('Generating %s%s...' % (desc,from_what))
-	key = scrypt_hash_passphrase(passwd, salt, hash_preset)
+		msg_r('Generating {}{}...'.format(desc,from_what))
+	key = scrypt_hash_passphrase(passwd,salt,hash_preset)
 	if opt.verbose or verbose: msg('done')
-	dmsg('Key: %s' % hexlify(key))
+	dmsg('Key: {}'.format(hexlify(key)))
 	return key
 
 def _get_random_data_from_user(uchars):
-
-	if opt.quiet: msg('Enter %s random symbols' % uchars)
-	else:       msg(crmsg['usr_rand_notice'] % uchars)
-
-	prompt = 'You may begin typing.  %s symbols left: '
-	msg_r(prompt % uchars)
+	m = 'Enter {} random symbols' if opt.quiet else crmsg['usr_rand_notice']
+	msg(m.format(uchars))
+	prompt = 'You may begin typing.  {} symbols left: '
+	msg_r(prompt.format(uchars))
 
 	import time
 	from mmgen.term import get_char
 	# time.clock() always returns zero, so we'll use time.time()
 	saved_time = time.time()
-
 	key_data,time_data,pp = '',[],True
 
 	for i in range(uchars):
 		key_data += get_char(immed_chars='ALL',prehold_protect=pp)
 		pp = False
-		msg_r('\r' + prompt % (uchars - i - 1))
+		msg_r('\r'+prompt.format(uchars-i-1))
 		now = time.time()
 		time_data.append(now - saved_time)
 		saved_time = now
 
 	if opt.quiet: msg_r('\r')
-	else: msg_r("\rThank you.  That's enough.%s\n\n" % (' '*18))
+	else: msg_r("\rThank you.  That's enough.{}\n\n".format(' '*18))
 
 	fmt_time_data = ['{:.22f}'.format(i) for i in time_data]
-
-	dmsg('\nUser input:\n%s\nKeystroke time intervals:\n%s\n' %
-				(key_data,'\n'.join(fmt_time_data)))
-
+	dmsg('\nUser input:\n{}\nKeystroke time intervals:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
 
@@ -200,54 +163,55 @@ def get_random(length):
 			from_what += ' plus user-supplied entropy'
 		else:
 			from_what += ' plus saved user-supplied entropy'
-		key = make_key(g.user_entropy, '', '2', from_what=from_what, verbose=True)
+		key = make_key(g.user_entropy,'','2',from_what=from_what,verbose=True)
 		return encrypt_data(os_rand,key,desc='random data',verify=False)
 	else:
 		return os_rand
 
 def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
-	p = """Enter hash preset for %s,
- or hit ENTER to accept the default value ('%s'): """ % (desc,hp)
+	prompt = """Enter hash preset for {},
+ or hit ENTER to accept the default value ('{}'): """.format(desc,hp)
 	while True:
-		ret = my_raw_input(p)
+		ret = my_raw_input(prompt)
 		if ret:
-			if ret in g.hash_presets.keys(): return ret
+			if ret in g.hash_presets.keys():
+				return ret
 			else:
-				msg('Invalid input.  Valid choices are %s' %
-						', '.join(sorted(g.hash_presets.keys())))
+				m = 'Invalid input.  Valid choices are {}'
+				msg(m.format(', '.join(sorted(g.hash_presets.keys()))))
 				continue
 		else: return hp
 
-# Vars for mmgen_*crypt functions only
-salt_len,sha256_len,nonce_len = 32,32,32
+_salt_len,_sha256_len,_nonce_len = 32,32,32
 
 def mmgen_encrypt(data,desc='data',hash_preset=''):
-	salt,iv,nonce = get_random(salt_len),\
-					get_random(g.aesctr_iv_len), \
-					get_random(nonce_len)
-	hp = hash_preset or get_hash_preset_from_user('3',desc)
-	m = ('user-requested','default')[hp=='3']
-	vmsg('Encrypting %s' % desc)
-	qmsg("Using %s hash preset of '%s'" % (m,hp))
-	passwd = get_new_passphrase(desc, {})
-	key = make_key(passwd, salt, hp)
-	enc_d = encrypt_data(sha256(nonce+data).digest() + nonce + data, key,
-				int(hexlify(iv),16), desc=desc)
+	salt  = get_random(_salt_len)
+	iv    = get_random(g.aesctr_iv_len)
+	nonce = get_random(_nonce_len)
+	hp    = hash_preset or get_hash_preset_from_user('3',desc)
+	m     = ('user-requested','default')[hp=='3']
+	vmsg('Encrypting {}'.format(desc))
+	qmsg("Using {} hash preset of '{}'".format(m,hp))
+	passwd = get_new_passphrase(desc,{})
+	key    = make_key(passwd,salt,hp)
+	enc_d  = encrypt_data(sha256(nonce+data).digest()+nonce+data,key,int(hexlify(iv),16),desc=desc)
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
-	dstart = salt_len + g.aesctr_iv_len
-	salt,iv,enc_d = data[:salt_len],data[salt_len:dstart],data[dstart:]
-	vmsg('Preparing to decrypt %s' % desc)
+	dstart = _salt_len + g.aesctr_iv_len
+	salt   = data[:_salt_len]
+	iv     = data[_salt_len:dstart]
+	enc_d  = data[dstart:]
+	vmsg('Preparing to decrypt {}'.format(desc))
 	hp = hash_preset or get_hash_preset_from_user('3',desc)
-	m = ('user-requested','default')[hp=='3']
-	qmsg("Using %s hash preset of '%s'" % (m,hp))
+	m  = ('user-requested','default')[hp=='3']
+	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_mmgen_passphrase(desc)
-	key = make_key(passwd,salt,hp)
-	dec_d = decrypt_data(enc_d, key, int(hexlify(iv),16), desc)
-	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
+	key    = make_key(passwd,salt,hp)
+	dec_d  = decrypt_data(enc_d,key,int(hexlify(iv),16),desc)
+	if dec_d[:_sha256_len] == sha256(dec_d[_sha256_len:]).digest():
 		vmsg('OK')
-		return dec_d[sha256_len+nonce_len:]
+		return dec_d[_sha256_len+_nonce_len:]
 	else:
 		msg('Incorrect passphrase or hash preset')
 		return False
