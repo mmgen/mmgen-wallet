@@ -80,7 +80,7 @@ opts_data = lambda: {
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 	kg=g.key_generator,
 	what=gen_what,g=g,
-	dmat="'{}' or '{}'".format(MAT.dfl_mmtype,MAT.mmtypes[MAT.dfl_mmtype]['name'])
+	dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name'])
 ),
 	'notes': """
 
@@ -118,7 +118,7 @@ FMT CODES:
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
 errmsg = "'{}': invalid parameter for --type option".format(opt.type)
-addr_type = MAT(opt.type or MAT.dfl_mmtype,errmsg=errmsg)
+addr_type = MAT(opt.type or g.proto.dfl_mmtype,errmsg=errmsg)
 
 if len(cmd_args) < 1: opts.usage()
 idxs = AddrIdxList(fmt_str=cmd_args.pop())

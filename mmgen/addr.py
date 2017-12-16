@@ -27,27 +27,32 @@ from mmgen.obj import *
 
 pnm = g.proj_name
 
+def sc_dmsg(desc,data):
+	if os.getenv('MMGEN_DEBUG_ADDRLIST'):
+		Msg('sc_debug_{}: {}'.format(desc,data))
+
 class AddrGenerator(MMGenObject):
 	def __new__(cls,atype):
 		d = {
 			'p2pkh':  AddrGeneratorP2PKH,
-			'segwit': AddrGeneratorSegwit
+			'segwit': AddrGeneratorSegwit,
+			'ethereum': AddrGeneratorEthereum
 		}
 		assert atype in d
-		return super(cls,cls).__new__(d[atype])
+		me = super(cls,cls).__new__(d[atype])
+		me.desc = d
+		return me
 
 class AddrGeneratorP2PKH(AddrGenerator):
-	desc = 'p2pkh'
 	def to_addr(self,pubhex):
 		from mmgen.protocol import hash160
 		assert type(pubhex) == PubKey
-		return CoinAddr(g.proto.hexaddr2addr(hash160(pubhex),p2sh=False))
+		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError
 
 class AddrGeneratorSegwit(AddrGenerator):
-	desc = 'segwit'
 	def to_addr(self,pubhex):
 		assert pubhex.compressed
 		return CoinAddr(g.proto.pubhex2segwitaddr(pubhex))
@@ -55,6 +60,15 @@ class AddrGeneratorSegwit(AddrGenerator):
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed
 		return HexStr(g.proto.pubhex2redeem_script(pubhex))
+
+class AddrGeneratorEthereum(AddrGenerator):
+	def to_addr(self,pubhex):
+		assert type(pubhex) == PubKey
+		import sha3
+		return CoinAddr(sha3.keccak_256(pubhex[2:].decode('hex')).digest()[12:].encode('hex'))
+
+	def to_segwit_redeem_script(self,pubhex):
+		raise NotImplementedError
 
 class KeyGenerator(MMGenObject):
 
@@ -161,8 +175,10 @@ class AddrListIDStr(unicode,Hilite):
 		if fmt_str:
 			ret = fmt_str.format(s)
 		else:
-			bc,mt = g.proto.base_coin,addrlist.al_id.mmtype
-			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt=='L'],s)
+			bc = (g.proto.base_coin,g.coin)[g.proto.base_coin=='ETH']
+			mt = addrlist.al_id.mmtype
+			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
+			sc_dmsg('id_str',ret[8:].split('[')[0])
 
 		return unicode.__new__(cls,ret)
 
@@ -196,14 +212,14 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 	gen_keys = False
 	has_keys = False
 	ext      = 'addrs'
-	cook_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
+	scramble_hash_rounds = 10  # not too many rounds, so hand decoding can still be feasible
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
 
 	def __init__(self,addrfile='',al_id='',adata=[],seed='',addr_idxs='',src='',
 					addrlist='',keylist='',mmtype=None,do_chksum=True,chksum_only=False):
 
 		self.update_msgs()
-		mmtype = mmtype or MMGenAddrType.dfl_mmtype
+		mmtype = mmtype or g.proto.dfl_mmtype
 		assert mmtype in MMGenAddrType.mmtypes
 
 		if seed and addr_idxs:   # data from seed + idxs
@@ -255,7 +271,8 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		assert type(addrnums) is AddrIdxList
 
 		seed = seed.get_data()
-		seed = self.cook_seed(seed)
+		seed = self.scramble_seed(seed)
+		sc_dmsg('seed',seed[:8].encode('hex'))
 
 		if self.gen_addrs:
 			kg = KeyGenerator()
@@ -296,17 +313,18 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 	def check_format(self,addr): return True # format is checked when added to list entry object
 
-	def cook_seed(self,seed):
+	def scramble_seed(self,seed):
 		is_btcfork = g.proto.base_coin == 'BTC'
 		if is_btcfork and self.al_id.mmtype == 'L':
+			sc_dmsg('str','(none)')
 			return seed
+		if g.proto.base_coin == 'ETH':
+			scramble_key = g.coin.lower()
 		else:
-			from mmgen.crypto import sha256_rounds
-			import hmac
-			key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
-			cseed = hmac.new(seed,key,sha256).digest()
-			dmsg('Seed:  {}\nKey: {}\nCseed: {}\nCseed len: {}'.format(hexlify(seed),key,hexlify(cseed),len(cseed)))
-			return sha256_rounds(cseed,self.cook_hash_rounds)
+			scramble_key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
+		sc_dmsg('str',scramble_key)
+		from mmgen.crypto import scramble_seed
+		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
 
 	def encrypt(self,desc='new key list'):
 		from mmgen.crypto import mmgen_encrypt
@@ -397,12 +415,16 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			out.append('# Record this value to a secure location.\n')
 
 		if type(self) == PasswordList:
-			out.append(u'{} {} {}:{} {{'.format(
-				self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len))
+			lbl = u'{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
 		else:
 			bc,mt = g.proto.base_coin,self.al_id.mmtype
-			lbl = ':'.join(([bc],[])[bc=='BTC']+([mt.name.upper()],[])[mt=='L'])
-			out.append('{} {}{{'.format(self.al_id.sid,('',lbl+' ')[bool(lbl)]))
+			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
+			l_type = [] if mt in ('L','E') else [mt.name.upper()]
+			lbl_p2 = ':'.join(l_coin+l_type)
+			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
+
+		sc_dmsg('lbl',lbl[9:])
+		out.append(u'{} {{'.format(lbl))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
@@ -492,20 +514,19 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			return do_error("'%s': invalid Seed ID" % ls[0])
 
 		def parse_addrfile_label(lbl): # we must maintain backwards compat, so parse is tricky
-			al_base_coin,al_mmtype = None,None
+			al_coin,al_mmtype = None,None
 			lbl = lbl.split(':',1)
 			if len(lbl) == 2:
-				al_base_coin = lbl[0]
-				al_mmtype    = lbl[1].lower()
+				al_coin,al_mmtype = lbl[0],lbl[1].lower()
 			else:
 				if lbl[0].lower() in MMGenAddrType.get_names():
 					al_mmtype = lbl[0].lower()
 				else:
-					al_base_coin = lbl[0]
+					al_coin = lbl[0]
 
 			# this block fails if al_mmtype is invalid for g.coin
 			if not al_mmtype:
-				mmtype = MMGenAddrType('L')
+				mmtype = MMGenAddrType('E' if al_coin in ('ETH','ETC') else 'L')
 			else:
 				try:
 					mmtype = MMGenAddrType(al_mmtype)
@@ -514,9 +535,9 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 						mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
 
 			from mmgen.protocol import CoinProtocol
-			base_coin = CoinProtocol(al_base_coin or 'BTC',testnet=False).base_coin
+			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
 			if not base_coin:
-				die(2,"'{}': unknown base coin in address file label!".format(al_base_coin))
+				die(2,"'{}': unknown base coin in address file label!".format(al_coin))
 			return base_coin,mmtype
 
 		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
@@ -686,18 +707,13 @@ Record this checksum: it will be used to verify the password file in the future
 			return False
 		return True
 
-	def cook_seed(self,seed):
-		from mmgen.crypto import sha256_rounds
-		# Changing either pw_fmt, pw_len or cook_str will cause a different,
+	def scramble_seed(self,seed):
+		# Changing either pw_fmt, pw_len or scramble_key will cause a different,
 		# unrelated set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
-		cook_str = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
-		dmsg(u'Full ID string: {}'.format(cook_str.decode('utf8')))
-		# Original implementation was 'cseed = seed + cook_str'; hmac was not used
-		import hmac
-		cseed = hmac.new(seed,cook_str,sha256).digest()
-		dmsg('Seed: {}\nCooked seed: {}\nCooked seed len: {}'.format(hexlify(seed),hexlify(cseed),len(cseed)))
-		return sha256_rounds(cseed,self.cook_hash_rounds)
+		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
+		from mmgen.crypto import scramble_seed
+		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
 
 class AddrData(MMGenObject):
 	msgs = {

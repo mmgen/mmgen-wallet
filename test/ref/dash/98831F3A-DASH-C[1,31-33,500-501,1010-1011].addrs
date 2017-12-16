@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-DASH-C[1,31-33,500-501,1010-1011]: FBC1 6B6A 0988 4403
+# Record this value to a secure location.
+98831F3A DASH:COMPRESSED {
+  1     XsjAJvCxkxYh55ZvCZMFEv2eJUVo5xxbwi
+  31    XdxyGv5KDFCqQH8N82gyqQ6vGVu9M1eERy
+  32    XwQSEW9ut1c2itk9bFZCEFcQjMwczLaiJZ
+  33    XaqBXjNHm484ansvkbBzweDG79LNXY9qXT
+  500   Xne3CdDVaH5gyf751pWKpTq7kJR5zuvkYi
+  501   Xqjr9qPHBoUR3kY4D5ZF3RGyw7JMxBLD5Y
+  1010  XoQ5xaSPTKVENQ5adyDBuaf44ySYMfkWwk
+  1011  XhSrc1yoNLJvk9uvr2xZM8LUwwLyYTWrLo
+}

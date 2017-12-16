@@ -61,7 +61,7 @@ cmd_data = OrderedDict([
 	('Wif2hex',    ['<wif> [str-]']),
 	('Wif2addr',   ['<wif> [str-]','segwit [bool=False]']),
 	('Wif2segwit_pair',['<wif> [str-]']),
-	('Hexaddr2addr', ['<coin address in hex format> [str-]','p2sh [bool=False]']),
+	('Pubhash2addr', ['<coin address in hex format> [str-]','p2sh [bool=False]']),
 	('Addr2hexaddr', ['<coin address> [str-]']),
 	('Privhex2addr', ['<private key in hex format> [str-]','compressed [bool=False]','segwit [bool=False]']),
 	('Privhex2pubhex',['<private key in hex format> [str-]','compressed [bool=False]']),
@@ -279,11 +279,11 @@ def Wif2segwit_pair(wif):
 	rs = ag.to_segwit_redeem_script(pubhex)
 	Msg('{}\n{}'.format(rs,addr))
 
-def Hexaddr2addr(hexaddr,p2sh=False):          Msg(g.proto.hexaddr2addr(hexaddr,p2sh=p2sh))
-def Addr2hexaddr(addr):                        Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
-def Hash160(pubkeyhex):                        Msg(hash160(pubkeyhex))
-def Pubhex2addr(pubkeyhex,p2sh=False):         Msg(g.proto.hexaddr2addr(hash160(pubkeyhex),p2sh=p2sh))
-def Wif2hex(wif):                              Msg(wif2hex(wif))
+def Pubhash2addr(pubhash,p2sh=False):   Msg(g.proto.pubhash2addr(pubhash,p2sh=p2sh))
+def Addr2hexaddr(addr):                 Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
+def Hash160(pubkeyhex):                 Msg(hash160(pubkeyhex))
+def Pubhex2addr(pubkeyhex,p2sh=False):  Msg(g.proto.pubhash2addr(hash160(pubkeyhex),p2sh=p2sh))
+def Wif2hex(wif):                       Msg(wif2hex(wif))
 def Hex2wif(hexpriv,compressed=False):
 	Msg(g.proto.hex2wif(hexpriv,compressed))
 def Privhex2addr(privhex,compressed=False,segwit=False,output_pubhex=False):

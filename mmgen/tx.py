@@ -134,7 +134,7 @@ def scriptPubKey2addr(s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac': addr_hex,p2sh = s[6:-4],False
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':   addr_hex,p2sh = s[4:-2],True
 	else: raise NotImplementedError,'Unknown scriptPubKey'
-	return g.proto.hexaddr2addr(addr_hex,p2sh)
+	return g.proto.pubhash2addr(addr_hex,p2sh)
 
 from collections import OrderedDict
 class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types

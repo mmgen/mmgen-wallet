@@ -53,10 +53,16 @@ opts_data = lambda: {
 EXAMPLES:
   {prog} 1:2 100
     (compare output of native Python ECDSA with secp256k1 library, 100 rounds)
+  {prog} 2:ext 100
+    (compare output of secp256k1 library with external library (see below), 100 rounds)
   {prog} 2 1000
     (test speed of secp256k1 library address generation, 1000 rounds)
   {prog} 2 my.dump
     (compare addrs generated with secp256k1 library to {dn} wallet dump)
+
+  External libraries required for the 'ext' generator:
+    + pyethereum (for ETH,ETC)          https://github.com/ethereum/pyethereum
+    + pycoin     (for all other coins)  https://github.com/richardkiss/pycoin
 """.format(prog='gentest.py',pnm=g.proj_name,snum=rounds,dn=g.proto.daemon_name)
 }
 
@@ -65,6 +71,23 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 cmd_args = opts.init(opts_data,add_opts=['exact_output'])
 
 if not 1 <= len(cmd_args) <= 2: opts.usage()
+
+def pyethereum_sec2addr(sec):
+	return sec,eth.privtoaddr(sec).encode('hex')
+
+def pycoin_sec2addr(sec):
+	if g.testnet: # pycoin/networks/all.py pycoin/networks/legacy_networks.py
+		coin = { 'BTC':'XTN', 'LTC':'XLT', 'DASH':'tDASH' }[g.coin]
+	else:
+		coin = g.coin
+	key = pcku.parse_key(sec,PREFIX_TRANSFORMS,coin)
+	if key is None: die(1,"can't parse {}".format(sec))
+	o = pcku.create_output(sec,key)[0]
+#	pmsg(o)
+	suf = ('_uncompressed','')[compressed]
+	wif = o['wif{}'.format(suf)]
+	addr = o['{}_address{}'.format(coin,suf)]
+	return wif,addr
 
 urounds,fh = None,None
 dump = []
@@ -97,8 +120,27 @@ except:
 		die(1,"First argument must be one or two generator IDs, colon separated")
 else:
 	try:
-		a,b = int(a),int(b)
-		for i in (a,b): assert 1 <= i <= len(g.key_generators)
+		a = int(a)
+		assert 1 <= a <= len(g.key_generators)
+		if b == 'ext':
+			if g.coin in ('ETH','ETC'):
+				try:
+					import ethereum.utils as eth
+				except:
+					die(1,"Unable to import 'pyethereum' module. Is pyethereum installed?")
+				sec2addr = pyethereum_sec2addr
+				ext_lib = 'pyethereum'
+			else:
+				try:
+					import pycoin.cmds.ku as pcku
+				except:
+					die(1,"Unable to import module 'ku'. Is pycoin installed?")
+				PREFIX_TRANSFORMS = pcku.prefix_transforms_for_network(g.coin)
+				sec2addr = pycoin_sec2addr
+				ext_lib = 'pycoin'
+		else:
+			b = int(b)
+			assert 1 <= b <= len(g.key_generators)
 		assert a != b
 	except:
 		die(1,"%s: invalid generator IDs" % cmd_args[0])
@@ -111,40 +153,45 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
   WIF key   : {}
   {a:10}: {}
   {b:10}: {}
-""".format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=m[a],b=m[b]).rstrip())
+""".format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=m[a],b=m[b] if b in m else b).rstrip())
 
 # Begin execution
-compressed = True
+compressed = False if g.coin in ('ETH','ETC') else True
 
 from mmgen.addr import KeyGenerator,AddrGenerator
 from mmgen.obj import PrivKey
-ag = AddrGenerator(('p2pkh','segwit')[bool(opt.segwit)])
+ag = AddrGenerator('ethereum' if g.coin in ('ETH','ETC') else ('p2pkh','segwit')[bool(opt.segwit)])
 
 if a and b:
-	m = "Comparing address generators '{}' and '{}'"
-	qmsg(green(m.format(g.key_generators[a-1],g.key_generators[b-1])))
+	m = "Comparing address generators '{}' and '{}' for coin {}"
+	qmsg(green(m.format(g.key_generators[a-1],(ext_lib if b == 'ext' else g.key_generators[b-1]),g.coin)))
 	last_t = time.time()
 	kg_a = KeyGenerator(a)
-	kg_b = KeyGenerator(b)
+	if b != 'ext': kg_b = KeyGenerator(b)
 
 	for i in range(rounds):
-		if time.time() - last_t >= 0.1:
+		if opt.verbose or time.time() - last_t >= 0.1:
 			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 			last_t = time.time()
 		sec = PrivKey(os.urandom(32),compressed)
 		a_addr = ag.to_addr(kg_a.to_pubhex(sec))
-		b_addr = ag.to_addr(kg_b.to_pubhex(sec))
+		if b == 'ext':
+			b_wif,b_addr = sec2addr(sec)
+			if b_wif != sec.wif:
+				match_error(sec,sec.wif,sec.wif,b_wif,a,b)
+		else:
+			b_addr = ag.to_addr(kg_b.to_pubhex(sec))
 		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
 		if a_addr != b_addr:
-			match_error(sec,sec.wif,a_addr,b_addr,a,b)
-		if not opt.segwit:
+			match_error(sec,sec.wif,a_addr,b_addr,a,ext_lib if b == 'ext' else b)
+		if not opt.segwit and 'L' in g.proto.mmtypes:
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 elif a and not fh:
-	m = "Testing speed of address generator '{}'"
-	qmsg(green(m.format(g.key_generators[a-1])))
+	m = "Testing speed of address generator '{}' for coin {}"
+	qmsg(green(m.format(g.key_generators[a-1],g.coin)))
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	print 'Incrementing key with each round'
@@ -160,7 +207,7 @@ elif a and not fh:
 		sec = PrivKey(seed+pack('I',i),compressed)
 		a_addr = ag.to_addr(kg.to_pubhex(sec))
 		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
-		if not opt.segwit:
+		if not opt.segwit and g.coin not in ('ETC','ETC'):
 			compressed = not compressed
 	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
 

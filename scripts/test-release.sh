@@ -2,7 +2,7 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
-dfl_tests='obj misc btc btc_tn btc_rt bch bch_rt b2x b2x_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj alts misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hinPt OPT
 do
@@ -16,14 +16,15 @@ do
 		echo   "           '-t'  Print the tests without running them"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj    - data objects"
+		echo   "     alts   - operations for all supported gen-only altcoins"
 		echo   "     misc   - miscellaneous operations"
 		echo   "     btc    - bitcoin"
 		echo   "     btc_tn - bitcoin testnet"
 		echo   "     btc_rt - bitcoin regtest"
 		echo   "     bch    - bitcoin cash (BCH)"
 		echo   "     bch_rt - bitcoin cash (BCH) regtest"
-		echo   "     b2x    - bitcoin 2x (B2X)"
-		echo   "     b2x_rt - bitcoin 2x (B2X) regtest"
+# 		echo   "     b2x    - bitcoin 2x (B2X)"
+# 		echo   "     b2x_rt - bitcoin 2x (B2X) regtest"
 		echo   "     ltc    - litecoin"
 		echo   "     ltc_tn - litecoin testnet"
 		echo   "     ltc_rt - litecoin regtest"
@@ -86,7 +87,7 @@ do_test() {
 		[ "$TESTING" ] || eval "$i" || { echo -e $RED'Test failed!'$RESET; exit; }
 	done
 }
-i_obj='Data objects'
+i_obj='Data object'
 s_obj='Testing data objects'
 t_obj=(
     'test/objtest.py --coin=btc -S'
@@ -94,6 +95,20 @@ t_obj=(
     'test/objtest.py --coin=ltc -S'
     'test/objtest.py --coin=ltc --testnet=1 -S')
 f_obj='Data object test complete'
+
+i_alts='Gen-only altcoin'
+s_alts='The following tests will test generation operations for all supported altcoins'
+t_alts=(
+	'test/test.py -n altcoin_ref'
+	'test/gentest.py --coin=btc 2:ext 100'
+	'test/gentest.py --coin=ltc 2:ext 100'
+	'test/gentest.py --coin=zec 2:ext 100'
+	'test/gentest.py --coin=dash 2:ext 100'
+	'test/gentest.py --coin=etc 2:ext 100'
+	'test/gentest.py --coin=eth 2:ext 100'
+	'test/scrambletest.py'
+	)
+f_alts='Gen-only altcoin tests completed'
 
 i_misc='Miscellaneous operations' # includes autosign!
 s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
@@ -125,7 +140,7 @@ s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt=(
 	'test/test.py -On regtest'
 	'test/test.py -On regtest_split')
-f_btc_rt="Regtest (Bob and Alice) mode tests for BTC completed"
+f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='Bitcoin cash (BCH)'
 s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the following tests'
@@ -135,7 +150,7 @@ f_bch='You may stop the Bitcoin ABC daemon if you wish'
 i_bch_rt='Bitcoin cash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt=('test/test.py --coin=bch -On regtest')
-f_bch_rt="Regtest (Bob and Alice) mode tests for BCH completed"
+f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 
 i_b2x='Bitcoin 2X (B2X)'
 s_b2x='The bitcoin 2X daemon (BTC1) must both be running for the following tests'
@@ -145,7 +160,7 @@ f_b2x='You may stop the Bitcoin 2X daemon if you wish'
 i_b2x_rt='Bitcoin 2X (B2X) regtest'
 s_b2x_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_b2x_rt=('test/test.py --coin=b2x -On regtest')
-f_b2x_rt="Regtest (Bob and Alice) mode tests for B2X completed"
+f_b2x_rt='Regtest (Bob and Alice) mode tests for B2X completed'
 
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
@@ -169,8 +184,9 @@ f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 i_ltc_rt='Litecoin regtest'
 s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_ltc_rt=('test/test.py --coin=ltc -On regtest')
-f_ltc_rt="Regtest (Bob and Alice) mode tests for LTC completed"
+f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 
+# TODO: ethereum support for tooltest
 i_tool='Tooltest'
 s_tool='The following tests will run test/tooltest.py for all supported coins'
 t_tool=(
@@ -180,8 +196,14 @@ t_tool=(
 	'test/tooltest.py --coin=ltc util'
 	'test/tooltest.py --coin=ltc cryptocoin'
 	'test/tooltest.py --coin=ltc mnemonic'
+	'test/tooltest.py --coin=zec util'
+	'test/tooltest.py --coin=zec cryptocoin'
+	'test/tooltest.py --coin=zec mnemonic'
+	'test/tooltest.py --coin=dash util'
+	'test/tooltest.py --coin=dash cryptocoin'
+	'test/tooltest.py --coin=dash mnemonic'
 	)
-f_tool="tooltest tests completed"
+f_tool='tooltest tests completed'
 
 i_gen='Gentest'
 s_gen='The following tests will run test/gentest.py on mainnet and testnet for all supported coins'
@@ -199,7 +221,7 @@ t_gen=(
 	'test/gentest.py -q --coin=ltc --testnet=1 1:2 10'
 	'test/gentest.py -q --coin=ltc --testnet=1 --segwit 1:2 10'
 	)
-f_gen="gentest tests completed"
+f_gen='gentest tests completed'
 
 [ -d .git -a -z "$NO_INSTALL"  -a -z "$TESTING" ] && {
 	check

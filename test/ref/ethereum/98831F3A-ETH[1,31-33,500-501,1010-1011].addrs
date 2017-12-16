@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-ETH[1,31-33,500-501,1010-1011]: E554 076E 7AF6 66A3
+# Record this value to a secure location.
+98831F3A ETH {
+  1     e704b6cfd9f0edb2e6cfbd0c913438d37ede7b35
+  31    62ff8e4dbd251b98102e3fb5e4b14119e24cadde
+  32    5fb2f71cd3a2fadeb00e4ac5327cc48941655a74
+  33    130e4118ed2badb5938e55ab2ff0c1e05072cd6c
+  500   92594035614a1e10a2add25690a120d537f9ccbf
+  501   84d763e98a24063f92f004f242d7c9282a44f09b
+  1010  04125d2de2355b5b21980ca5c51c33caa4865d2a
+  1011  b01ea3045d4b2cbb3e801822d4173c772cfc48d9
+}

@@ -355,7 +355,6 @@ class LTCAmt(BTCAmt): max_amt = 84000000
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
-	width = 35 # max len of testnet p2sh addr
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
@@ -367,6 +366,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			assert va,'failed verification'
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
+			cls.width = va['width']
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} address ({})"
@@ -385,10 +385,17 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	def is_for_chain(self,chain):
 		from mmgen.globalvars import g
 		vn = g.proto.get_protocol_by_chain(chain).addr_ver_num
+
+		def pfx_ok(pfx):
+			if type(pfx) == tuple:
+				if self[0] in pfx: return True
+			elif self[:len(pfx)] == pfx: return True
+			return False
+
 		if self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
-			return self[0] in vn['p2sh'][1] or self[0] in vn['p2sh2'][1]
+			return pfx_ok(vn['p2sh'][1]) or pfx_ok(vn['p2sh2'][1])
 		else:
-			return self[0] in vn[self.addr_fmt][1]
+			return pfx_ok(vn[self.addr_fmt][1])
 
 	def is_in_tracking_wallet(self):
 		from mmgen.rpc import rpc_init
@@ -427,7 +434,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 		try:
 			ss = str(s).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
-			t = MMGenAddrType((ss[1],MMGenAddrType.dfl_mmtype)[len(ss)==2],on_fail='raise')
+			t = MMGenAddrType((ss[1],g.proto.dfl_mmtype)[len(ss)==2],on_fail='raise')
 			me = str.__new__(cls,'{}:{}:{}'.format(ss[0],t,ss[-1]))
 			me.sid = SeedID(sid=ss[0],on_fail='raise')
 			me.idx = AddrIdx(ss[-1],on_fail='raise')
@@ -587,7 +594,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			me.wif = me.towif()
 			return me
 		except Exception as e:
-			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey ({!r})"
+			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"
 			return cls.init_fail(fs.format(s,compressed,e),on_fail)
 
 	def towif(self):
@@ -671,18 +678,22 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'gen':'p2pkh',
 				'fmt':'p2pkh',
 				'desc':'Legacy uncompressed address'},
+		'C': {  'name':'compressed',
+				'comp':True,
+				'gen':'p2pkh',
+				'fmt':'p2pkh',
+				'desc':'Compressed P2PKH address'},
 		'S': {  'name':'segwit',
 				'comp':True,
 				'gen':'segwit',
 				'fmt':'p2sh',
 				'desc':'Segwit P2SH-P2WPKH address' },
-		'C': {  'name':'compressed',
-				'comp':True,
-				'gen':'p2pkh',
-				'fmt':'p2pkh',
-				'desc':'Compressed P2PKH address'}
+		'E': {  'name':'ethereum',
+				'comp':False,
+				'gen':'ethereum',
+				'fmt':'ethereum',
+				'desc':'Ethereum address' },
 	}
-	dfl_mmtype = 'L'
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)

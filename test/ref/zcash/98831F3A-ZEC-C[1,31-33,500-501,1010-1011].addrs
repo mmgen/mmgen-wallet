@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-ZEC-C[1,31-33,500-501,1010-1011]: 903E 7225 DD86 6E01
+# Record this value to a secure location.
+98831F3A ZEC:COMPRESSED {
+  1     t1d47QeTehQye4Mms1Lmx7dPjKVoTtHXKmu
+  31    t1ZVJyRRwKcpHn4s6ddqDMgXn9v81GddzFv
+  32    t1bgBCPE2qXtGNoBY9LZWs6JL16eJ5tKLhT
+  33    t1dzBjbV66hymb9KHUuax1FtMh9X8xaMhhf
+  500   t1KiqudpmQPhnKx33w5kLittD9PihAKe5hU
+  501   t1JEQh88x4TgqNqMkUmZbzJCh89KAuqPKGQ
+  1010  t1W5cD3RWq7BJQte5WAbhe67S8ogYbthCnv
+  1011  t1WKKvpybUSndW3KHuMcU5XRTK7XRmtpude
+}

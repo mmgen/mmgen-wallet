@@ -431,9 +431,9 @@ cfgs = {
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
-		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs'.format(altcoin_pfx,tn_ext),
-		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs'.format(altcoin_pfx,tn_ext),
-		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc'.format(altcoin_pfx,tn_ext),
+		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
 		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum': {
 			'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
@@ -447,7 +447,15 @@ cfgs = {
 			'btc': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
 			'ltc': ('B804 978A 8796 3ED4','93A6 844C 8ECC BEF4'),
 		},
-		'ref_passwdfile_chksum':  'A983 DAB9 5514 27FB',
+		'ref_addrfile_chksum_zec': '903E 7225 DD86 6E01',
+		'ref_addrfile_chksum_dash':'FBC1 6B6A 0988 4403',
+		'ref_addrfile_chksum_eth': 'E554 076E 7AF6 66A3',
+		'ref_addrfile_chksum_etc': 'E97A D796 B495 E8BC',
+		'ref_keyaddrfile_chksum_zec': 'F05A 5A5C 0C8E 2617',
+		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
+		'ref_keyaddrfile_chksum_eth': '3635 4DCF B752 8772',
+		'ref_keyaddrfile_chksum_etc': '9BAC 38E7 5C8E 42E0',
+		'ref_passwdfile_chksum':   'A983 DAB9 5514 27FB',
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
 		'ref_tx_file': {
 			'btc': 'FFB367[1.234]{}.rawtx',
@@ -700,6 +708,17 @@ cmd_group['misc'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
 )
 
+cmd_group['altcoin_ref'] = (
+	('ref_addrfile_chk_zec', 'reference address file (ZEC)'),
+	('ref_addrfile_chk_dash','reference address file (DASH)'),
+	('ref_addrfile_chk_eth', 'reference address file (ETH)'),
+	('ref_addrfile_chk_etc', 'reference address file (ETC)'),
+	('ref_keyaddrfile_chk_zec', 'reference key-address file (ZEC)'),
+	('ref_keyaddrfile_chk_dash','reference key-address file (DASH)'),
+	('ref_keyaddrfile_chk_eth', 'reference key-address file (ETH)'),
+	('ref_keyaddrfile_chk_etc', 'reference key-address file (ETC)'),
+)
+
 # undocumented admin cmds
 cmd_group_admin = OrderedDict()
 cmd_group_admin['create_ref_tx'] = (
@@ -777,6 +796,11 @@ cmd_data['info_misc'] = 'miscellaneous operations',[18]
 for a,b in cmd_group['misc']:
 	cmd_list['misc'].append(a)
 	cmd_data[a] = (18,b,[[[],18]])
+
+cmd_data['info_altcoin_ref'] = 'altcoin reference files',[8]
+for a,b in cmd_group['altcoin_ref']:
+	cmd_list['altcoin_ref'].append(a)
+	cmd_data[a] = (8,b,[[[],8]])
 
 utils = {
 	'check_deps': 'check dependencies for specified command',
@@ -2006,19 +2030,47 @@ class MMGenTestSuite(object):
 			t.close()
 			cmp_or_die(cfg['seed_id'],chk)
 
-	def ref_addrfile_chk(self,name,ftype='addr'):
+	def ref_addrfile_chk(self,name,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None):
 		af_key = 'ref_{}file'.format(ftype)
-		af = os.path.join(ref_dir,(ref_subdir,'')[ftype=='passwd'],cfg[af_key])
-		t = MMGenExpect(name,'mmgen-tool',[ftype.replace('segwit','')+'file_chksum',af])
+		af_fn = cfg[af_key].format(pfx or altcoin_pfx,'' if coin else tn_ext)
+		af = os.path.join(ref_dir,(subdir or ref_subdir,'')[ftype=='passwd'],af_fn)
+		coin_arg = [] if coin == None else ['--coin='+coin]
+		t = MMGenExpect(name,'mmgen-tool',coin_arg+[ftype.replace('segwit','')+'file_chksum',af])
 		if ftype == 'keyaddr':
 			w = 'key-address data'
 			t.hash_preset(w,ref_kafile_hash_preset)
 			t.passphrase(w,ref_kafile_pass)
 			t.expect('Check key-to-address validity? (y/N): ','y')
 		o = t.read().strip().split('\n')[-1]
-		rc = cfg['ref_'+ftype+'file_chksum']
-		ref_chksum = rc if ftype == 'passwd' else rc[g.proto.base_coin.lower()][g.testnet]
+		rc = cfg[ 'ref_' + ftype + 'file_chksum' +
+				  ('_'+coin.lower() if coin else '') +
+				  ('_'+mmtype if mmtype else '')]
+		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
 		cmp_or_die(ref_chksum,o)
+
+	def ref_addrfile_chk_zec(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
+
+	def ref_addrfile_chk_dash(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
+
+	def ref_addrfile_chk_eth(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH')
+
+	def ref_addrfile_chk_etc(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+
+	def ref_keyaddrfile_chk_zec(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
+
+	def ref_keyaddrfile_chk_dash(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
+
+	def ref_keyaddrfile_chk_eth(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETH',subdir='ethereum',pfx='-ETH')
+
+	def ref_keyaddrfile_chk_etc(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
 
 	def ref_keyaddrfile_chk(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr')
@@ -2597,7 +2649,7 @@ class MMGenTestSuite(object):
 		g.proto = psave
 
 		for k in ('in_addrs','out_addrs'):
-			tx[k+'_conv'] = [g.proto.hexaddr2addr(h,(False,True)[f=='p2sh']) for h,f in tx[k+'_hex']]
+			tx[k+'_conv'] = [g.proto.pubhash2addr(h,(False,True)[f=='p2sh']) for h,f in tx[k+'_hex']]
 
 		for k in ('in','out'):
 			for i in range(len(tx[k])):

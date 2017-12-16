@@ -71,7 +71,7 @@ cmd_data = OrderedDict([
 				('Privhex2addr',   ('Wif2hex','o3')), # compare with output of Randpair
 				('Hex2wif',        ('Wif2hex','io2')),
 				('Addr2hexaddr',   ('Randpair','o2')),
-				('Hexaddr2addr',   ('Addr2hexaddr','io2')),
+				('Pubhash2addr',   ('Addr2hexaddr','io2')),
 
 				('Pipetest',       ('Randpair','o3')),
 			])
@@ -366,7 +366,7 @@ class MMGenToolTestSuite(object):
 		for n,f,m in ((1,f1,''),(2,f2,'from compressed')):
 			addr = read_from_file(f).split()[-1]
 			self.run_cmd_out(name,addr,fn_idx=n,extra_msg=m)
-	def Hexaddr2addr(self,name,f1,f2,f3,f4):
+	def Pubhash2addr(self,name,f1,f2,f3,f4):
 		for n,fi,fo,m in ((1,f1,f2,''),(2,f3,f4,'from compressed')):
 			self.run_cmd_chk(name,fi,fo,extra_msg=m)
 	def Privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif

@@ -799,6 +799,9 @@ def get_coin_daemon_auth_cookie():
 
 def rpc_init(reinit=False):
 
+	if not 'rpc' in g.proto.mmcaps:
+		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
+
 	if g.rpch != None and not reinit: return g.rpch
 
 	def check_chainfork_mismatch(conn):
