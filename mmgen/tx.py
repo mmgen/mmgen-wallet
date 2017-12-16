@@ -1229,32 +1229,10 @@ class MMGenBumpTX(MMGenTX):
 
 class MMGenSplitTX(MMGenTX):
 
-	def __init__(self):
-		super(type(self),self).__init__()
-
-	def get_fee_from_user(self,have_estimate_fail=[],split_tx=False):
-
-		if split_tx:
-			try:
-				rpc_init(reinit=True)
-			except:
-				ymsg('Connect to {} daemon failed.  Network fee estimation unavailable'.format(g.coin))
-				desc = 'User-selected'
-				try:
-					# TODO: check in opts.py
-					start_fee = opt.tx_fees.split(',')[split_tx]
-				except:
-					start_fee = None
-				return self.get_usr_fee_interactive(start_fee,desc=desc)
-
-		return super(type(self),self).get_fee_from_user(have_estimate_fail=have_estimate_fail)
-
-	def get_outputs_from_cmdline(self,mmid):
+	def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty
 
 		from mmgen.addr import AddrData
 		ad_w = AddrData(source='tw')
-
-		# TODO: check that addr is empty
 
 		if is_mmgen_id(mmid):
 			coin_addr = mmaddr2coinaddr(mmid,ad_w,None) if is_mmgen_id(mmid) else CoinAddr(mmid)
@@ -1268,13 +1246,25 @@ class MMGenSplitTX(MMGenTX):
 			fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
 			rdie(2,fs.format(g.proj_name))
 
+	def get_split_fee_from_user(self):
+		if opt.rpc_host2:
+			g.rpc_host = opt.rpc_host2
+		if opt.tx_fees:
+			opt.tx_fee = opt.tx_fees.split(',')[1]
+		try:
+			rpc_init(reinit=True)
+		except:
+			ymsg('Connect to {} daemon failed.  Network fee estimation unavailable'.format(g.coin))
+			return self.get_usr_fee_interactive(opt.tx_fee,'User-selected')
+		return super(type(self),self).get_fee_from_user()
+
 	def create_split(self,mmid):
 
 		self.outputs = self.MMGenTxOutputList()
 		self.get_outputs_from_cmdline(mmid)
 
 		while True:
-			change_amt = self.sum_inputs() - self.get_fee_from_user(split_tx=True)
+			change_amt = self.sum_inputs() - self.get_split_fee_from_user()
 			if change_amt >= 0:
 				p = 'Transaction produces {} {} in change'.format(change_amt.hl(),g.coin)
 				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):

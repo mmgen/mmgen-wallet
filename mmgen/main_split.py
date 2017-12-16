@@ -99,8 +99,7 @@ from mmgen.tx import MMGenSplitTX
 from mmgen.protocol import CoinProtocol
 
 if opt.tx_fees:
-	g_coin_save = g.coin
-	for idx,g_coin in ((1,opt.other_coin),(0,g_coin_save)):
+	for idx,g_coin in ((1,opt.other_coin),(0,g.coin)):
 		g.coin = g_coin
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		opt.tx_fee = opt.tx_fees.split(',')[idx]
@@ -119,9 +118,6 @@ tx1.format()
 tx1.create_fn()
 
 gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
-
-if opt.rpc_host2: g.rpc_host = opt.rpc_host2
-if opt.tx_fees:   opt.tx_fee = opt.tx_fees.split(',')[1]
 
 from mmgen.protocol import CoinProtocol
 g.coin = opt.other_coin

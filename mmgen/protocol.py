@@ -186,7 +186,7 @@ class B2XProtocol(BitcoinProtocol):
 	coin_amt        = B2XAmt
 	max_tx_fee      = B2XAmt('0.1')
 	forks = [
-		(None,'','btc',True)
+		(None,'','btc',True) # activation: 494784
 	]
 
 class B2XTestnetProtocol(B2XProtocol):
