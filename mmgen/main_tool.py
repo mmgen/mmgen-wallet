@@ -117,6 +117,7 @@ opts_data = lambda: {
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
+-t, --type=t          Specify address type (valid options: 'compressed','segwit','zcash_z')
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """
@@ -146,5 +147,9 @@ if Command not in tool.cmd_data:
 	die(1,"'%s': no such command" % Command.lower())
 
 args,kwargs = tool.process_args(Command,cmd_args)
-ret = tool.__dict__[Command](*args,**kwargs)
+try:
+	ret = tool.__dict__[Command](*args,**kwargs)
+except Exception as e:
+	die(1,'{}'.format(e))
+
 sys.exit(0 if ret in (None,True) else 1) # some commands die, some return False on failure

@@ -41,15 +41,11 @@ class Sha256(object):
 		def getFractionalBits(n):
 			return int((n - int(n)) * 0x100000000)
 
-		def toSigned32(n): return ((n & 0xffffffff) ^ 0x80000000) - 0x80000000
-
 		k = [0] * 64
 		n,nPrime = 2,0
 		while nPrime < 64:
 			if isPrime(n):
 				k[nPrime] = getFractionalBits(math.pow(n, 1.0 / 3))
-				# for testing against signed implementations:
-#				k[nPrime] = toSigned32(getFractionalBits(math.pow(n, 1.0 / 3)))
 				nPrime += 1
 			n += 1
 
@@ -75,7 +71,7 @@ class Sha256(object):
 		return self.digest().encode('hex')
 
 	def bytesToWords(self):
-		assert type(self.M) == str
+		assert type(self.M) in (str,list)
 		words = [0] * (len(self.M) / 4 + len(self.M) % 4)
 		b = 0
 		for i in range(len(self.M)):
@@ -84,7 +80,7 @@ class Sha256(object):
 		self.M = words
 
 	def wordsToBytes(self):
-		assert type(self.M) == list
+		assert type(self.M) == list and len(self.M) == 8
 		self.M = ''.join([chr((self.M[b >> 5] >> (24 - b % 32)) & 0xff) for b in range(0,len(self.M)*32,8)])
 
 	def preprocessBlock(self):

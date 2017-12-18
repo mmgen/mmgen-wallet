@@ -51,15 +51,15 @@ class AddrGeneratorP2PKH(AddrGenerator):
 		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError
+		raise NotImplementedError,'Coin/type pair incompatible with Segwit'
 
 class AddrGeneratorSegwit(AddrGenerator):
 	def to_addr(self,pubhex):
-		assert pubhex.compressed
+		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
 		return CoinAddr(g.proto.pubhex2segwitaddr(pubhex))
 
 	def to_segwit_redeem_script(self,pubhex):
-		assert pubhex.compressed
+		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
 		return HexStr(g.proto.pubhex2redeem_script(pubhex))
 
 class AddrGeneratorEthereum(AddrGenerator):
@@ -69,33 +69,42 @@ class AddrGeneratorEthereum(AddrGenerator):
 		return CoinAddr(sha3.keccak_256(pubhex[2:].decode('hex')).digest()[12:].encode('hex'))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError
+		raise NotImplementedError,'Coin/type pair incompatible with Segwit'
 
+# github.com/FiloSottile/zcash-mini/zcash/address.go
 class AddrGeneratorZcashZ(AddrGenerator):
 
-	def zhash256(self,vhex,t):
-		byte0  = '{:02x}'.format(int(vhex[:2],16) | 0xc0)
-		byte32 = '{:02x}'.format(t)
-		vhex_fix = byte0 + vhex[2:64] + byte32 + '00' * 31
-		assert len(vhex_fix) == 128
+	def zhash256(self,s,t):
+		s = map(ord,s+'\0'*32)
+		s[0] |= 0xc0
+		s[32] = t
 		from mmgen.sha256 import Sha256
-		return Sha256(unhexlify(vhex_fix),preprocess=False).hexdigest()
+		return Sha256(map(chr,s),preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
-		key = pubhex
-		assert len(key) == 64,'{}: incorrect privkey length'.format(len(key))
-		addr1 = self.zhash256(key,0)
-		addr2 = self.zhash256(key,1)
+		key = pubhex.decode('hex')
+		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		from nacl.bindings import crypto_scalarmult_base
-		addr2 = hexlify(crypto_scalarmult_base(unhexlify(addr2)))
-
+		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + addr1 + addr2)
-		assert len(ret) == g.proto.addr_width,'Invalid zaddr length'
+		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + hexlify(self.zhash256(key,0)+p2))
+		assert len(ret) == g.proto.addr_width,'Invalid Zcash z-address length'
 		return CoinAddr(ret)
 
+	def to_viewkey(self,pubhex): # pubhex is really privhex
+		key = pubhex.decode('hex')
+		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
+		vk = map(ord,self.zhash256(key,0)+self.zhash256(key,1))
+		vk[32] &= 0xf8
+		vk[63] &= 0x7f
+		vk[63] |= 0x40
+		from mmgen.protocol import _b58chk_encode
+		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(''.join(map(chr,vk))))
+		assert len(ret) == g.proto.addr_width,'Invalid Zcash view key length'
+		return ZcashViewKey(ret)
+
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError
+		raise NotImplementedError,'Zcash z-addresses incompatible with Segwit'
 
 class KeyGenerator(MMGenObject):
 
@@ -174,10 +183,11 @@ class KeyGeneratorDummy(KeyGenerator):
 		return PubKey(str(privhex),compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
-	addr  = MMGenListItemAttr('addr','CoinAddr')
-	idx   = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
-	label = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-	sec   = MMGenListItemAttr('sec',PrivKey,typeconv=False)
+	addr    = MMGenListItemAttr('addr','CoinAddr')
+	viewkey = MMGenListItemAttr('viewkey','ZcashViewKey')
+	idx     = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
+	label   = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+	sec     = MMGenListItemAttr('sec',PrivKey,typeconv=False)
 
 class PasswordListEntry(MMGenListItem):
 	passwd = MMGenImmutableAttr('passwd',unicode,typeconv=False) # TODO: create Password type
@@ -317,6 +327,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		compressed = self.al_id.mmtype.compressed
 		pubkey_type = self.al_id.mmtype.pubkey_type
+		has_viewkey = self.al_id.mmtype.has_viewkey
 
 		if self.gen_addrs:
 			kg = KeyGenerator(pubkey_type)
@@ -342,7 +353,10 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),compressed=compressed,pubkey_type=pubkey_type)
 
 			if self.gen_addrs:
-				e.addr = ag.to_addr(kg.to_pubhex(e.sec))
+				ph = kg.to_pubhex(e.sec)
+				e.addr = ag.to_addr(ph)
+				if has_viewkey:
+					e.viewkey = ag.to_viewkey(ph)
 
 			if type(self) == PasswordList:
 				e.passwd = unicode(self.make_passwd(e.sec)) # TODO - own type
@@ -480,16 +494,15 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
 				if self.has_keys:
+					if self.al_id.mmtype.has_viewkey:
+						out.append(fs.format('','view: '+e.viewkey,c))
 					if opt.b16: out.append(fs.format('', 'hex: '+e.sec,c))
-					out.append(fs.format('', 'wif: '+e.sec.wif,c))
+					out.append(fs.format('','wif: '+e.sec.wif,c))
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
 
 	def parse_file_body(self,lines):
-
-		if self.has_keys and len(lines) % 2:
-			return 'Key-address file has odd number of lines'
 
 		ret = AddrListList()
 		le = self.entry_type
@@ -498,25 +511,19 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			l = lines.pop(0)
 			d = l.split(None,2)
 
-			if not is_mmgen_idx(d[0]):
-				return "'%s': invalid address num. in line: '%s'" % (d[0],l)
-
-			if not self.check_format(d[1]):
-				return "'{}': invalid {}".format(d[1],self.data_desc)
+			assert is_mmgen_idx(d[0]),"'%s': invalid address num. in line: '%s'" % (d[0],l)
+			assert self.check_format(d[1]),"'{}': invalid {}".format(d[1],self.data_desc)
 
 			if len(d) != 3: d.append('')
-
 			a = le(**{'idx':int(d[0]),self.main_attr:d[1],'label':d[2]})
 
 			if self.has_keys:
-				l = lines.pop(0)
-				d = l.split(None,2)
-
-				if d[0] != 'wif:':
-					return "Invalid key line in file: '{}'".format(l)
-				if not is_wif(d[1]):
-					return "'{}': invalid {} key".format(d[1],g.proto.name.capitalize())
-
+				if self.al_id.mmtype.has_viewkey:
+					d = lines.pop(0).split(None,2)
+					assert d[0] == 'view:',"Invalid line in file: '{}'".format(' '.join(d))
+					a.viewkey = ZcashViewKey(d[1])
+				d = lines.pop(0).split(None,2)
+				assert d[0] == 'wif:',"Invalid line in file: '{}'".format(' '.join(d))
 				a.sec = PrivKey(wif=d[1])
 
 			ret.append(a)
@@ -527,35 +534,13 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			llen = len(ret)
 			for n,e in enumerate(ret):
 				msg_r('\rVerifying keys %s/%s' % (n+1,llen))
-				if e.addr != ag.to_addr(kg.to_pubhex(e.sec)):
-					return "Key doesn't match address!\n  %s\n  %s" % (e.sec.wif,e.addr)
+				assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
+					"Key doesn't match address!\n  %s\n  %s" % (e.sec.wif,e.addr))
 			msg(' - done')
 
 		return ret
 
 	def parse_file(self,fn,buf=[],exit_on_error=True):
-
-		def do_error(msg):
-			if exit_on_error: die(3,msg)
-			msg(msg)
-			return False
-
-		lines = get_lines_from_file(fn,self.data_desc+' data',trim_comments=True)
-
-		if len(lines) < 3:
-			return do_error("Too few lines in address file (%s)" % len(lines))
-
-		ls = lines[0].split()
-		if not 1 < len(ls) < 5:
-			return do_error("Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0]))
-		if ls.pop() != '{':
-			return do_error("'%s': invalid first line" % ls)
-		if lines[-1] != '}':
-			return do_error("'%s': invalid last line" % lines[-1])
-
-		sid = ls.pop(0)
-		if not is_mmgen_seed_id(sid):
-			return do_error("'%s': invalid Seed ID" % ls[0])
 
 		def parse_addrfile_label(lbl): # we must maintain backwards compat, so parse is tricky
 			al_coin,al_mmtype = None,None
@@ -570,46 +555,59 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 			# this block fails if al_mmtype is invalid for g.coin
 			if not al_mmtype:
-				mmtype = MMGenAddrType('E' if al_coin in ('ETH','ETC') else 'L')
+				mmtype = MMGenAddrType('E' if al_coin in ('ETH','ETC') else 'L',on_fail='raise')
 			else:
 				try:
-					mmtype = MMGenAddrType(al_mmtype)
+					mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
 				except:
-					return do_error(u"'{}': invalid address type in address file. Must be one of: {}".format(
+					raise ValueError,(
+						u"'{}': invalid address type in address file. Must be one of: {}".format(
 						mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
 
 			from mmgen.protocol import CoinProtocol
 			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
-			if not base_coin:
-				die(2,"'{}': unknown base coin in address file label!".format(al_coin))
 			return base_coin,mmtype
 
 		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
-			if not base_coin == g.proto.base_coin:
-				die(2,'{} address file format, but base coin is {}!'.format(base_coin,g.proto.base_coin))
+			m = '{} address file format, but base coin is {}!'
+			assert base_coin == g.proto.base_coin, m.format(base_coin,g.proto.base_coin)
 
-		if type(self) == PasswordList and len(ls) == 2:
-			ss = ls.pop().split(':')
-			if len(ss) != 2:
-				return do_error("'%s': invalid password length specifier (must contain colon)" % ls[2])
-			self.set_pw_fmt(ss[0])
-			self.set_pw_len(ss[1])
-			self.pw_id_str = MMGenPWIDString(ls.pop())
-			mmtype = MMGenPasswordType('P')
-		elif len(ls) == 1:
-			base_coin,mmtype = parse_addrfile_label(ls[0])
-			check_coin_mismatch(base_coin)
-		elif len(ls) == 0:
-			base_coin,mmtype = 'BTC',MMGenAddrType('L')
-			check_coin_mismatch(base_coin)
-		else:
-			return do_error(u"Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0]))
+		lines = get_lines_from_file(fn,self.data_desc+' data',trim_comments=True)
 
-		self.al_id = AddrListID(SeedID(sid=sid),mmtype)
+		try:
+			assert len(lines) >= 3,  'Too few lines in address file ({})'.format(len(lines))
+			ls = lines[0].split()
+			assert 1 < len(ls) < 5,  "Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0])
+			assert ls.pop() == '{',  "'{}': invalid first line".format(ls)
+			assert lines[-1] == '}', "'{}': invalid last line".format(lines[-1])
+			sid = ls.pop(0)
+			assert is_mmgen_seed_id(sid),"'{}': invalid Seed ID".format(ls[0])
 
-		data = self.parse_file_body(lines[1:-1])
-		if not issubclass(type(data),list):
-			return do_error(data)
+			if type(self) == PasswordList and len(ls) == 2:
+				ss = ls.pop().split(':')
+				assert len(ss) == 2,"'{}': invalid password length specifier (must contain colon)".format(ls[2])
+				self.set_pw_fmt(ss[0])
+				self.set_pw_len(ss[1])
+				self.pw_id_str = MMGenPWIDString(ls.pop())
+				mmtype = MMGenPasswordType('P')
+			elif len(ls) == 1:
+				base_coin,mmtype = parse_addrfile_label(ls[0])
+				check_coin_mismatch(base_coin)
+			elif len(ls) == 0:
+				base_coin,mmtype = 'BTC',MMGenAddrType('L')
+				check_coin_mismatch(base_coin)
+			else:
+				raise ValueError,u"'{}': Invalid first line for {} file '{}'".format(lines[0],self.gen_desc,fn)
+
+			self.al_id = AddrListID(SeedID(sid=sid),mmtype)
+
+			data = self.parse_file_body(lines[1:-1])
+			assert issubclass(type(data),list),'Invalid file body data'
+		except Exception as e:
+			m = 'Invalid address list file ({})'.format(e[0])
+			if exit_on_error: die(3,m)
+			msg(msg)
+			return False
 
 		return data
 

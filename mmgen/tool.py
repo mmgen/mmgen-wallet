@@ -55,17 +55,17 @@ cmd_data = OrderedDict([
 	('Hexlify',      ['<string> [str-]']),
 	('Rand2file',    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False]']),
 
-	('Randwif',    ["pubkey_type [str='std']",'compressed [bool=False]']),
-	('Randpair',   ["pubkey_type [str='std']",'compressed [bool=False]','segwit [bool=False]']),
-	('Hex2wif',    ['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]']),
+	('Randwif',    []),
+	('Randpair',   []),
+	('Hex2wif',    ['<private key in hex format> [str-]']),
 	('Wif2hex',    ['<wif> [str-]']),
-	('Wif2addr',   ['<wif> [str-]','segwit [bool=False]']),
+	('Wif2addr',   ['<wif> [str-]']),
 	('Wif2segwit_pair',['<wif> [str-]']),
-	('Pubhash2addr', ['<coin address in hex format> [str-]','p2sh [bool=False]']),
+	('Pubhash2addr', ['<coin address in hex format> [str-]']),
 	('Addr2hexaddr', ['<coin address> [str-]']),
-	('Privhex2addr', ['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]','segwit [bool=False]']),
-	('Privhex2pubhex',['<private key in hex format> [str-]',"pubkey_type [str='std']",'compressed [bool=False]']),
-	('Pubhex2addr',  ['<public key in hex format> [str-]','p2sh [bool=False]']), # new
+	('Privhex2addr', ['<private key in hex format> [str-]']),
+	('Privhex2pubhex',['<private key in hex format> [str-]']),
+	('Pubhex2addr',  ['<public key in hex format> [str-]']), # new
 	('Pubhex2redeem_script',['<public key in hex format> [str-]']), # new
 	('Wif2redeem_script', ['<private key in WIF format> [str-]']), # new
 
@@ -120,9 +120,9 @@ def usage(command):
 				c,h = line.split('-',1)
 				Msg('MMGEN-TOOL {}: {}'.format(c.strip().upper(),h.strip()))
 		cd = cmd_data[Command]
-		msg('USAGE: %s %s %s' % (g.prog_name, command, ' '.join(cd)))
+		msg('USAGE: {} {} {}'.format(g.prog_name,command,' '.join(cd)))
 	else:
-		msg("'%s': no such tool command" % command)
+		msg("'{}': no such tool command".format(command))
 	sys.exit(1)
 
 Help = usage
@@ -138,7 +138,7 @@ def process_args(command,cmd_args):
 		for i in cmd_data[command] if '=' not in i]
 	c_kwargs = dict([[
 			i.split(' [')[0],
-			[i.split(' [')[1].split('=')[0], i.split(' [')[1].split('=')[1][:-1]]
+			[i.split(' [')[1].split('=')[0],i.split(' [')[1].split('=')[1][:-1]]
 		] for i in cmd_data[command] if '=' in i])
 
 	if not margs:
@@ -154,8 +154,8 @@ def process_args(command,cmd_args):
 						die(2,'{}: ERROR: no output from previous command in pipe'.format(command.lower()))
 
 		if not margs and len(u_args) < len(c_args):
-			m1 = 'Command requires exactly %s non-keyword argument%s'
-			msg(m1 % (len(c_args),suf(c_args,'s')))
+			m1 = 'Command requires exactly {} non-keyword argument{}'
+			msg(m1.format(len(c_args),suf(c_args,'s')))
 			usage(command)
 
 	extra_args = len(cmd_args) - len(c_args)
@@ -171,19 +171,17 @@ def process_args(command,cmd_args):
 	elif extra_args > 0:
 		u_kwargs = dict([a.split('=') for a in cmd_args[len(c_args):] if '=' in a])
 		if len(u_kwargs) != extra_args:
-			msg('Command requires exactly %s non-keyword argument%s'
-				% (len(c_args),suf(c_args,'s')))
+			msg('Command requires exactly {} non-keyword argument{}'.format(len(c_args),suf(c_args,'s')))
 			usage(command)
 		if len(u_kwargs) > len(c_kwargs):
-			msg('Command requires exactly %s keyword argument%s'
-				% (len(c_kwargs),suf(c_kwargs,'s')))
+			msg('Command requires exactly {} keyword argument{}'.format(len(c_kwargs),suf(c_kwargs,'s')))
 			usage(command)
 
 #	mdie(c_args,c_kwargs,u_args,u_kwargs)
 
 	for k in u_kwargs:
 		if k not in c_kwargs:
-			msg("'%s': invalid keyword argument" % k)
+			msg("'{}': invalid keyword argument".format(k))
 			usage(command)
 
 	def conv_type(arg,arg_name,arg_type):
@@ -192,13 +190,12 @@ def process_args(command,cmd_args):
 			if arg.lower() in ('true','yes','1','on'): arg = True
 			elif arg.lower() in ('false','no','0','off'): arg = False
 			else:
-				msg("'%s': invalid boolean value for keyword argument" % arg)
+				msg("'{}': invalid boolean value for keyword argument".format(arg))
 				usage(command)
 		try:
 			return __builtins__[arg_type](arg)
 		except:
-			die(1,"'%s': Invalid argument for argument %s ('%s' required)" % \
-				(arg, arg_name, arg_type))
+			die(1,"'{}': Invalid argument for argument {} ('{}' required)".format(arg,arg_name,arg_type))
 
 	if margs:
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
@@ -219,16 +216,19 @@ def are_equal(a,b,dtype=''):
 def print_convert_results(indata,enc,dec,dtype):
 	error = (True,False)[are_equal(indata,dec,dtype)]
 	if error or opt.verbose:
-		Msg('Input:         %s' % repr(indata))
-		Msg('Encoded data:  %s' % repr(enc))
-		Msg('Recoded data:  %s' % repr(dec))
+		Msg('Input:         {}'.format(repr(indata)))
+		Msg('Encoded data:  {}'.format(repr(enc)))
+		Msg('Recoded data:  {}'.format(repr(dec)))
 	else: Msg(enc)
 	if error:
 		die(3,"Error! Recoded data doesn't match input!")
 
-kg = KeyGenerator('std')
+from mmgen.obj import MMGenAddrType
+at = MMGenAddrType((hasattr(opt,'type') and opt.type) or g.proto.dfl_mmtype)
+kg = KeyGenerator(at.pubkey_type)
+ag = AddrGenerator(at.gen_method)
 
-def Hexdump(infile, cols=8, line_nums=True):
+def Hexdump(infile,cols=8,line_nums=True):
 	Msg(pretty_hexdump(
 			get_data_from_file(infile,dash=True,silent=True,binary=True),
 				cols=cols,line_nums=line_nums))
@@ -249,60 +249,51 @@ def B58randenc():
 def Randhex(nbytes='32'):
 	Msg(binascii.hexlify(get_random(int(nbytes))))
 
-def Randwif(pubkey_type='std',compressed=False):
-	Msg(PrivKey(get_random(32),compressed=compressed,pubkey_type=pubkey_type).wif)
+def Randwif():
+	Msg(PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed).wif)
 
-def Randpair(pubkey_type='std',compressed=False,segwit=False):
-	if segwit: compressed = True
-	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
-	privhex = PrivKey(get_random(32),compressed=compressed,pubkey_type=pubkey_type)
+def Randpair():
+	privhex = PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed)
 	addr = ag.to_addr(kg.to_pubhex(privhex))
-	Vmsg('Key (hex):  %s' % privhex)
+	Vmsg('Key (hex):  {}'.format(privhex))
 	Vmsg_r('Key (WIF):  '); Msg(privhex.wif)
 	Vmsg_r('Addr:       '); Msg(addr)
 
-def Wif2addr(wif,segwit=False):
+def Wif2addr(wif):
 	privhex = PrivKey(wif=wif)
-	if segwit and not privhex.compressed:
-		die(2,'Segwit addresses must use compressed public keys')
-	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
 	addr = ag.to_addr(kg.to_pubhex(privhex))
 	Vmsg_r('Addr: '); Msg(addr)
 
 def Wif2segwit_pair(wif):
-	privhex = PrivKey(wif=wif)
-	if not privhex.compressed:
-		die(1,'Segwit address cannot be generated from uncompressed WIF')
-	ag = AddrGenerator('segwit')
-	pubhex = kg.to_pubhex(privhex)
+	pubhex = kg.to_pubhex(PrivKey(wif=wif))
 	addr = ag.to_addr(pubhex)
 	rs = ag.to_segwit_redeem_script(pubhex)
 	Msg('{}\n{}'.format(rs,addr))
 
-def Pubhash2addr(pubhash,p2sh=False):   Msg(g.proto.pubhash2addr(pubhash,p2sh=p2sh))
-def Addr2hexaddr(addr):                 Msg(g.proto.verify_addr(addr,return_dict=True)['hex'])
-def Hash160(pubkeyhex):                 Msg(hash160(pubkeyhex))
-def Pubhex2addr(pubkeyhex,p2sh=False):  Msg(g.proto.pubhash2addr(hash160(pubkeyhex),p2sh=p2sh))
-def Wif2hex(wif):                       Msg(PrivKey(wif=wif))
+def Pubhash2addr(pubhash):
+	Msg(g.proto.pubhash2addr(pubhash,at.addr_fmt=='p2sh'))
 
-def Hex2wif(hexpriv,pubkey_type='std',compressed=False):
-	Msg(g.proto.hex2wif(hexpriv,pubkey_type=pubkey_type,compressed=compressed))
-def Privhex2addr(privhex,pubkey_type='std',compressed=False,segwit=False,output_pubhex=False):
-	if segwit and not compressed:
-		die(1,'Segwit address can be generated only from a compressed pubkey')
-	pk = PrivKey(binascii.unhexlify(privhex),compressed=compressed,pubkey_type=pubkey_type)
+def Addr2hexaddr(addr):     Msg(g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex'])
+def Hash160(pubkeyhex):     Msg(hash160(pubkeyhex))
+def Pubhex2addr(pubkeyhex): Pubhash2addr(hash160(pubkeyhex))
+def Wif2hex(wif):           Msg(PrivKey(wif=wif))
+
+def Hex2wif(hexpriv):
+	Msg(g.proto.hex2wif(hexpriv,pubkey_type=at.pubkey_type,compressed=at.compressed))
+
+def Privhex2addr(privhex,output_pubhex=False):
+	pk = PrivKey(binascii.unhexlify(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
 	ph = kg.to_pubhex(pk)
-	ag = AddrGenerator(('p2pkh','segwit')[bool(segwit)])
 	Msg(ph if output_pubhex else ag.to_addr(ph))
-def Privhex2pubhex(privhex,pubkey_type='std',compressed=False): # new
-	return Privhex2addr(privhex,pubkey_type=pubkey_type,compressed=compressed,output_pubhex=True)
+
+def Privhex2pubhex(privhex): # new
+	Privhex2addr(privhex,output_pubhex=True)
+
 def Pubhex2redeem_script(pubhex): # new
 	Msg(g.proto.pubhex2redeem_script(pubhex))
+
 def Wif2redeem_script(wif): # new
 	privhex = PrivKey(wif=wif)
-	if not privhex.compressed:
-		die(1,'Segwit redeem script cannot be generated from uncompressed WIF')
-	ag = AddrGenerator('segwit')
 	Msg(ag.to_segwit_redeem_script(kg.to_pubhex(privhex)))
 
 wordlists = 'electrum','tirosh'
@@ -310,10 +301,10 @@ dfl_wl_id = 'electrum'
 
 def do_random_mn(nbytes,wordlist):
 	hexrand = binascii.hexlify(get_random(nbytes))
-	Vmsg('Seed: %s' % hexrand)
+	Vmsg('Seed: {}'.format(hexrand))
 	for wl_id in ([wordlist],wordlists)[wordlist=='all']:
 		if wordlist == 'all':
-			Msg('%s mnemonic:' % (capfirst(wl_id)))
+			Msg('{} mnemonic:'.format(capfirst(wl_id)))
 		mn = baseconv.fromhex(hexrand,wl_id)
 		Msg(' '.join(mn))
 
@@ -370,7 +361,7 @@ def Hexreverse(s):
 def Hexlify(s):
 	Msg(binascii.hexlify(s))
 
-def Hash256(s, file_input=False, hex_input=False):
+def Hash256(s,file_input=False,hex_input=False):
 	from hashlib import sha256
 	if file_input:  b = get_data_from_file(s,binary=True)
 	elif hex_input: b = decode_pretty_hexdump(s)
@@ -381,7 +372,7 @@ def Encrypt(infile,outfile='',hash_preset=''):
 	data = get_data_from_file(infile,'data for encryption',binary=True)
 	enc_d = mmgen_encrypt(data,'user data',hash_preset)
 	if not outfile:
-		outfile = '%s.%s' % (os.path.basename(infile),g.mmenc_ext)
+		outfile = '{}.{}'.format(os.path.basename(infile),g.mmenc_ext)
 
 	write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
 
@@ -406,7 +397,7 @@ def Find_incog_data(filename,iv_id,keep_searching=False):
 	f = os.open(filename,flgs)
 	for ch in iv_id:
 		if ch not in '0123456789ABCDEF':
-			die(2,"'%s': invalid Incog ID" % iv_id)
+			die(2,"'{}': invalid Incog ID".format(iv_id))
 	while True:
 		d = os.read(f,bsize)
 		if not d: break
@@ -414,17 +405,17 @@ def Find_incog_data(filename,iv_id,keep_searching=False):
 		for i in range(bsize):
 			if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == iv_id:
 				if n+i < ivsize: continue
-				msg('\rIncog data for ID %s found at offset %s' %
-					(iv_id,n+i-ivsize))
+				msg('\rIncog data for ID {} found at offset {}'.format(iv_id,n+i-ivsize))
 				if not keep_searching: sys.exit(0)
 		carry = d[len(d)-ivsize:]
 		n += bsize
-		if not n % mod: msg_r('\rSearched: %s bytes' % n)
+		if not n % mod:
+			msg_r('\rSearched: {} bytes'.format(n))
 
 	msg('')
 	os.close(f)
 
-def Rand2file(outfile, nbytes, threads=4, silent=False):
+def Rand2file(outfile,nbytes,threads=4,silent=False):
 	nbytes = parse_nbytes(nbytes)
 	from Crypto import Random
 	rh = Random.new()
@@ -443,8 +434,7 @@ def Rand2file(outfile, nbytes, threads=4, silent=False):
 	def encrypt_worker(wid):
 		while True:
 			i,d = q1.get()
-			c = AES.new(key, AES.MODE_CTR,
-					counter=Counter.new(g.aesctr_iv_len*8,initial_value=i))
+			c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=i))
 			enc_data = c.encrypt(d)
 			q2.put(enc_data)
 			q1.task_done()
@@ -457,7 +447,7 @@ def Rand2file(outfile, nbytes, threads=4, silent=False):
 
 	q1 = Queue()
 	for i in range(max(1,threads-2)):
-		t = Thread(target=encrypt_worker, args=(i,))
+		t = Thread(target=encrypt_worker,args=(i,))
 		t.daemon = True
 		t.start()
 
@@ -473,11 +463,11 @@ def Rand2file(outfile, nbytes, threads=4, silent=False):
 		rbytes -= bsize
 		i += 1
 		if not (bsize*i) % roll:
-			msg_r('\rRead: %s bytes' % (bsize*i))
+			msg_r('\rRead: {} bytes'.format(bsize*i))
 
 	if not silent:
-		msg('\rRead: %s bytes' % nbytes)
-		qmsg("\r%s bytes of random data written to file '%s'" % (nbytes,outfile))
+		msg('\rRead: {} bytes'.format(nbytes))
+		qmsg("\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
 	q1.join()
 	q2.join()
 	f.close()
@@ -567,7 +557,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 		acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
 		check_dup_mmid(acct_labels)
 		acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
-		assert len(acct_list) == len(acct_addrs), 'listaccounts() and getaddressesbyaccount() not equal in length'
+		assert len(acct_list) == len(acct_addrs),'listaccounts() and getaddressesbyaccount() not equal in length'
 		addr_pairs = zip(acct_labels,acct_addrs)
 		check_addr_array_lens(addr_pairs)
 		for label,addr_arr in addr_pairs:
@@ -646,7 +636,9 @@ def Getbalance(minconf=1,quiet=False,return_val=False):
 	else:
 		fs = '{:13} {} {} {}'
 		mc,lbl = str(minconf),'confirms'
-		o = [fs.format('Wallet', *[s.ljust(16) for s in ' Unconfirmed',' <%s %s'%(mc,lbl),' >=%s %s'%(mc,lbl)])]
+		o = [fs.format(
+				'Wallet',
+				*[s.ljust(16) for s in ' Unconfirmed',' <{} {}'.format(mc,lbl),' >={} {}'.format(mc,lbl)])]
 		for key in sorted(accts.keys()):
 			o += [fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]])]
 

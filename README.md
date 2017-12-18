@@ -4,33 +4,35 @@ easier way to install MMGen, check out the prebuilt bootable USB images on the
 
 # MMGen = Multi-Mode GENerator
 
-##### a Bitcoin cold-storage solution for the command line
+##### a Bitcoin and altcoin online/offline software wallet for the command line
 
 ### Description
 
-MMGen is a Bitcoin cold-storage system implemented as a suite of Python
-command-line scripts requiring only a bare minimum of system resources.  The
-scripts work in tandem with a reference Bitcoin Core daemon (bitcoind) running
-on both an online and an offline air-gapped computer to provide a robust
-solution for securely storing, tracking, sending and receiving Bitcoins.  To
-track address balances without exposing keys on the online computer, MMGen
-relies on Bitcoin Core’s watch-only address support.  Ordinary Bitcoin addresses
-can be tracked and spent too, creating an easy migration path from other
-wallets.
+MMGen is a wallet and cold storage solution for Bitcoin (and selected altcoins)
+implemented as a suite of lightweight Python scripts.  The scripts work in
+tandem with a reference Bitcoin Core daemon (or altcoin daemon) running on both
+an online and offline computer to provide a robust solution for securely
+storing, tracking, sending and receiving Bitcoins.
+
+The online computer is used only for tracking balances and creating and sending
+transactions.  **Thus it holds no private keys that can be hacked or stolen.**
+All transactions are signed offline: **your seed and private keys never touch a
+network-connected device.**  The offline computer used for wallet creation,
+address generation and transaction signing is typically a low-powered device
+such as a Raspberry Pi.
 
 MMGen is designed for reliability by having the Bitcoin daemon itself, rather
 than less-tested third-party software, do all the “heavy lifting” of tracking
-and signing transactions.  It’s also designed for privacy: unlike some other
-online/offline wallet solutions, MMGen plus Bitcoin Core is a completely
+and signing transactions.  It’s also designed with privacy in mind: unlike some
+other online/offline wallet solutions, MMGen plus Bitcoin Core is a completely
 self-contained system that makes **no connections to the Internet** except for
 the Bitcoin network itself: no third parties are involved, and thus no
-information about which addresses you’re tracking is leaked to the outside
+information about the addresses you’re tracking is leaked to the outside
 world.
 
 Like all deterministic wallets, MMGen can generate a virtually unlimited number
 of address/key pairs from a single seed.  Your wallet never changes, so you need
-back it up only once.  Transactions are signed offline: your seed and private
-keys never touch an online computer.
+back it up only once.
 
 At the heart of the MMGen system is the seed, the “master key” providing access
 to all your Bitcoins.  The seed can be stored in five different ways:
@@ -107,7 +109,7 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Recovering your keys without the MMGen software][r]
 
-> #### [Forkcoin and Altcoin support (BCH,LTC)][x]
+> #### [Forkcoin and Altcoin support (BCH,LTC,ETH,ETC,DASH,ZEC)][x]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

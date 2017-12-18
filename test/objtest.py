@@ -85,7 +85,7 @@ def run_test(test,arg,input_data):
 		if not opt.super_silent:
 			msg(u'==> {}'.format(ret))
 		if opt.verbose and issubclass(cls,MMGenObject):
-			ret.pmsg()
+			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError,'Error on good input data'
@@ -209,8 +209,8 @@ tests = OrderedDict([
 					{'wif':'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
 					'ret':'94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c'})),
 				}[g.coin.lower()][bool(g.testnet)],
-			{'s':r32,'compressed':False,'ret':hexlify(r32)},
-			{'s':r32,'compressed':True,'ret':hexlify(r32)}
+			{'s':r32,'compressed':False,'pubkey_type':'std','ret':hexlify(r32)},
+			{'s':r32,'compressed':True,'pubkey_type':'std','ret':hexlify(r32)}
 		)
 	}),
 	('AddrListID', { # a rather pointless test, but do it anyway

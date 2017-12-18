@@ -32,6 +32,7 @@ def is_coin_addr(s):     return CoinAddr(s,on_fail='silent')
 def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
 def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
+def is_viewkey(s):       return ZcashViewKey(s,on_fail='silent')
 
 class MMGenObject(object):
 
@@ -355,6 +356,7 @@ class LTCAmt(BTCAmt): max_amt = 84000000
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
+	hex_width = 40
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
@@ -362,7 +364,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-ascii characters'
 			me = str.__new__(cls,s)
-			va = g.proto.verify_addr(s,return_dict=True)
+			va = g.proto.verify_addr(s,hex_width=cls.hex_width,return_dict=True)
 			assert va,'failed verification'
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
@@ -401,6 +403,8 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		from mmgen.rpc import rpc_init
 		d = rpc_init().validateaddress(self)
 		return d['iswatchonly'] and 'account' in d
+
+class ZcashViewKey(CoinAddr): hex_width = 128
 
 class SeedID(str,Hilite,InitErrors):
 	color = 'blue'
@@ -569,11 +573,11 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		from mmgen.globalvars import g
 
 		if type(s) == cls: return s
-		assert wif or (s and type(compressed) == bool),'Incorrect args for PrivKey()'
 		cls.arg_chk(cls,on_fail)
 
 		if wif:
 			try:
+				assert s == None
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii string'
 				w2h = g.proto.wif2hex(wif) # raises exception on error
 				me = str.__new__(cls,w2h['hex'])
@@ -582,15 +586,16 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				me.wif        = str.__new__(WifKey,wif) # check has been done
 				return me
 			except Exception as e:
-				fs = "Value {!r} cannot be converted to WIF key ({})"
-				return cls.init_fail(fs.format(wif,e[0]),on_fail)
+				fs = "Value {!r} cannot be converted to {} WIF key ({})"
+				return cls.init_fail(fs.format(wif,g.coin,e[0]),on_fail)
 
 		try:
+			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
 			me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
-			if me.pubkey_type: # skip WIF creation for passwds
+			if pubkey_type != 'password': # skip WIF creation for passwds
 				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			return me
 		except Exception as e:
@@ -710,10 +715,11 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				if s in (k,v['name']):
 					if s == v['name']: s = k
 					me = str.__new__(cls,s)
-					assert me in g.proto.mmtypes + ('P',), (
-						"'{}': invalid address type for {}".format(me,g.proto.__name__))
 					for k in ('name','pubkey_type','compressed','gen_method','addr_fmt','desc'):
 						setattr(me,k,v[k])
+					assert me in g.proto.mmtypes + ('P',), (
+						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
+					me.has_viewkey = me.name == 'zcash_z'
 					return me
 			raise ValueError,'not found'
 		except Exception as e:
@@ -728,7 +734,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
 		'P': {  'name':'password',
-				'pubkey_type':None,
+				'pubkey_type':'password',
 				'compressed':False,
 				'gen_method':None,
 				'addr_fmt':None,

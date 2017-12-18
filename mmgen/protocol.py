@@ -20,9 +20,9 @@
 protocol.py: Coin protocol functions, classes and methods
 """
 
-import os,hashlib
+import sys,os,hashlib
 from binascii import unhexlify
-from mmgen.util import msg,pmsg,Msg
+from mmgen.util import msg,pmsg,Msg,pdie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt
 from mmgen.globalvars import g
 
@@ -48,10 +48,8 @@ def _numtob58(num):
 	return ''.join(ret)[::-1]
 
 def _b58tonum(b58num):
-	b58num = b58num.strip()
-	for i in b58num:
-		if not i in _b58a:
-			raise ValueError,'_b58tonum(): invalid b58 value'
+	if [i for i in b58num if not i in _b58a]:
+		raise ValueError,'_b58tonum(): invalid b58 value'
 	return sum(_b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
 
 def _b58chk_encode(hexstr):
@@ -89,6 +87,7 @@ class BitcoinProtocol(MMGenObject):
 	mmcaps = ('key','addr','rpc')
 	base_coin = 'BTC'
 	addr_width = 34
+	addr_hex_width = 40
 
 	@staticmethod
 	def get_protocol_by_chain(chain):
@@ -126,21 +125,7 @@ class BitcoinProtocol(MMGenObject):
 		return { 'hex':key[:64], 'pubkey_type':pubkey_type, 'compressed':compressed }
 
 	@classmethod
-	def wif2hex_old(cls,wif):
-		num = _b58tonum(wif)
-		if num == False: return False
-		key = '{:x}'.format(num)
-		if len(key) not in (74,76): return False
-		compressed = len(key) == 76
-		if compressed and key[66:68] != '01': return False
-		klen = (66,68)[compressed]
-		if (key[:2] == cls.wif_ver_num['std'] and key[klen:] == hash256(key[:klen])[:8]):
-			return { 'hex':key[2:66], 'compressed':compressed }
-		else:
-			return False
-
-	@classmethod
-	def verify_addr(cls,addr,return_dict=False):
+	def verify_addr(cls,addr,hex_width,return_dict=False):
 		for addr_fmt in cls.addr_ver_num:
 			ver_num,pfx = cls.addr_ver_num[addr_fmt]
 			if type(pfx) == tuple:
@@ -150,12 +135,14 @@ class BitcoinProtocol(MMGenObject):
 			if num == False:
 				if g.debug: Msg('Address cannot be converted to base 58')
 				break
-			addr_hex = '{:0{}x}'.format(num,48+len(ver_num))
+			addr_hex = '{:0{}x}'.format(num,len(ver_num)+hex_width+8)
+#			pmsg(hex_width,len(addr_hex),addr_hex[:len(ver_num)],ver_num)
 			if addr_hex[:len(ver_num)] != ver_num: continue
 			if hash256(addr_hex[:-8])[:8] == addr_hex[-8:]:
 				return {
 					'hex': addr_hex[len(ver_num):-8],
-					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh','zcash_z':'zcash_z'}[addr_fmt],
+					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh',
+								'zcash_z':'zcash_z','viewkey':'viewkey'}[addr_fmt],
 					'width': cls.addr_width
 				} if return_dict else True
 			else:
@@ -166,6 +153,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def pubhash2addr(cls,pubkey_hash,p2sh):
+		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
 		s = cls.addr_ver_num[('p2pkh','p2sh')[p2sh]][0] + pubkey_hash
 		lzeroes = (len(s) - len(s.lstrip('0'))) / 2 # non-zero only for ver num '00' (BTC p2pkh)
 		return ('1' * lzeroes) + _b58chk_encode(s)
@@ -284,12 +272,18 @@ class EthereumProtocol(BitcoinProtocolAddrgen):
 		return { 'hex':str(wif), 'pubkey_type':'std', 'compressed':False }
 
 	@classmethod
-	def verify_addr(cls,addr,return_dict=False):
+	def verify_addr(cls,addr,hex_width,return_dict=False):
 		from mmgen.util import is_hex_str_lc
 		if is_hex_str_lc(addr) and len(addr) == 40:
 			return { 'hex': addr, 'format': 'ethereum', 'width': cls.addr_width } if return_dict else True
 		if g.debug: Msg("Invalid address '{}'".format(addr))
 		return False
+
+	@classmethod
+	def pubhash2addr(cls,pubkey_hash,p2sh):
+		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
+		assert not p2sh,'Ethereum has no P2SH address format'
+		return pubkey_hash
 
 class EthereumTestnetProtocol(EthereumProtocol): pass
 class EthereumClassicProtocol(EthereumProtocol):
@@ -299,10 +293,15 @@ class EthereumClassicTestnetProtocol(EthereumClassicProtocol): pass
 class ZcashProtocol(BitcoinProtocolAddrgen):
 	name         = 'zcash'
 	base_coin    = 'ZEC'
-	addr_ver_num = { 'p2pkh': ('1cb8','t1'), 'p2sh':  ('1cbd','t3'), 'zcash_z': ('169a','zc') }
+	addr_ver_num = {
+		'p2pkh':   ('1cb8','t1'),
+		'p2sh':    ('1cbd','t3'),
+		'zcash_z': ('169a','zc'),
+		'viewkey': ('0b1c','V') }
 	wif_ver_num  = { 'std': '80', 'zcash_z': 'ab36' }
 	mmtypes      = ('C','Z')
 	dfl_mmtype   = 'C'
+	addr_hex_width = 40
 
 	@classmethod
 	def preprocess_key(cls,hexpriv,pubkey_type): # zero the first four bits
@@ -311,9 +310,23 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 		else:
 			return hexpriv
 
+	@classmethod
+	def pubhash2addr(cls,pubkey_hash,p2sh):
+		hl = len(pubkey_hash)
+		if hl == 40:
+			return super(cls,cls).pubhash2addr(pubkey_hash,p2sh)
+		elif hl == 128:
+			raise NotImplementedError,'Zcash z-addresses have no pubkey hash'
+		else:
+			raise ValueError,'{}: incorrect pubkey_hash length'.format(hl)
+
 class ZcashTestnetProtocol(ZcashProtocol):
 	wif_ver_num  = { 'std': '??', 'zcash_z': 'ac08' }
-	addr_ver_num = { 'p2pkh': ('??','t1'), 'p2sh':  ('??','t3'), 'zcash_z': ('16b6','??') }
+	addr_ver_num = {
+		'p2pkh': ('??','t1'),
+		'p2sh':  ('??','t3'),
+		'zcash_z': ('16b6','??'),
+		'viewkey': ('0b2a','??') }
 
 class DashProtocol(BitcoinProtocolAddrgen):
 	name         = 'dash'
@@ -342,9 +355,8 @@ class CoinProtocol(MMGenObject):
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
 		assert type(testnet) == bool
-		if coin not in cls.coins:
-			from mmgen.util import die
-			die(1,"'{}': not a valid coin. Valid choices are '{}'".format(coin,"','".join(cls.coins)))
+		m = "'{}': not a valid coin. Valid choices are '{}'"
+		assert coin in cls.coins,m.format(coin,"','".join(cls.coins))
 		return cls.coins[coin][testnet]
 
 	@classmethod

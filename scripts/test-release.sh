@@ -2,7 +2,7 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
-dfl_tests='obj alts misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj misc_ni alts misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hinPt OPT
 do
@@ -15,21 +15,22 @@ do
 		echo   "           '-P'  Don't pause between tests"
 		echo   "           '-t'  Print the tests without running them"
 		echo   "  AVAILABLE TESTS:"
-		echo   "     obj    - data objects"
-		echo   "     alts   - operations for all supported gen-only altcoins"
-		echo   "     misc   - miscellaneous operations"
-		echo   "     btc    - bitcoin"
-		echo   "     btc_tn - bitcoin testnet"
-		echo   "     btc_rt - bitcoin regtest"
-		echo   "     bch    - bitcoin cash (BCH)"
-		echo   "     bch_rt - bitcoin cash (BCH) regtest"
-# 		echo   "     b2x    - bitcoin 2x (B2X)"
-# 		echo   "     b2x_rt - bitcoin 2x (B2X) regtest"
-		echo   "     ltc    - litecoin"
-		echo   "     ltc_tn - litecoin testnet"
-		echo   "     ltc_rt - litecoin regtest"
-		echo   "     tool   - tooltest (all supported coins)"
-		echo   "     gen    - gentest (all supported coins)"
+		echo   "     obj     - data objects"
+		echo   "     misc_ni - miscellaneous operations (non-interactive tests)"
+		echo   "     alts    - operations for all supported gen-only altcoins"
+		echo   "     misc    - miscellaneous operations (interactive tests)"
+		echo   "     btc     - bitcoin"
+		echo   "     btc_tn  - bitcoin testnet"
+		echo   "     btc_rt  - bitcoin regtest"
+		echo   "     bch     - bitcoin cash (BCH)"
+		echo   "     bch_rt  - bitcoin cash (BCH) regtest"
+# 		echo   "     b2x     - bitcoin 2x (B2X)"
+# 		echo   "     b2x_rt  - bitcoin 2x (B2X) regtest"
+		echo   "     ltc     - litecoin"
+		echo   "     ltc_tn  - litecoin testnet"
+		echo   "     ltc_rt  - litecoin regtest"
+		echo   "     tool    - tooltest (all supported coins)"
+		echo   "     gen     - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
 	i)  INSTALL_ONLY=1 ;;
@@ -98,23 +99,47 @@ f_obj='Data object test complete'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
+ROUNDS=100
+ROUNDS_SPEC=500
 t_alts=(
 	'test/scrambletest.py'
 	'test/test.py -n altcoin_ref'
-	'test/gentest.py --coin=btc 2:ext 100'
-	'test/gentest.py --coin=ltc 2:ext 100'
-	'test/gentest.py --coin=dash 2:ext 100'
-	'test/gentest.py --coin=zec 2:ext 100'
-	'test/gentest.py --coin=etc 2:ext 100'
-	'test/gentest.py --coin=eth 2:ext 100'
-	'test/gentest.py --coin=zec --type=zcash_z 2:ext 1000')
+	"test/gentest.py --coin=btc 2 $ROUNDS"
+	"test/gentest.py --coin=btc --type=compressed 2 $ROUNDS"
+	"test/gentest.py --coin=btc --type=segwit 2 $ROUNDS"
+	"test/gentest.py --coin=ltc 2 $ROUNDS"
+	"test/gentest.py --coin=ltc --type=compressed 2 $ROUNDS"
+	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
+	"test/gentest.py --coin=dash 2 $ROUNDS"
+	"test/gentest.py --coin=zec 2 $ROUNDS"
+	"test/gentest.py --coin=etc 2 $ROUNDS"
+	"test/gentest.py --coin=eth 2 $ROUNDS"
+	"test/gentest.py --coin=zec --type=zcash_z 2 $ROUNDS_SPEC"
+
+	"test/gentest.py --coin=btc 2:ext $ROUNDS"
+	"test/gentest.py --coin=btc --type=compressed 2:ext $ROUNDS"
+	"test/gentest.py --coin=btc --type=segwit 2:ext $ROUNDS"
+	"test/gentest.py --coin=ltc 2:ext $ROUNDS"
+	"test/gentest.py --coin=ltc --type=compressed 2:ext $ROUNDS"
+#	"test/gentest.py --coin=ltc --type=segwit 2:ext $ROUNDS" # pycoin generates old-style LTC Segwit addrs
+	"test/gentest.py --coin=dash 2:ext $ROUNDS"
+	"test/gentest.py --coin=zec 2:ext $ROUNDS"
+	"test/gentest.py --coin=etc 2:ext $ROUNDS"
+	"test/gentest.py --coin=eth 2:ext $ROUNDS"
+	"test/gentest.py --coin=zec --type=zcash_z 2:ext $ROUNDS_SPEC")
 f_alts='Gen-only altcoin tests completed'
 
-i_misc='Miscellaneous operations' # includes autosign!
+i_misc_ni='Miscellaneous operations (non-interactive)'
+s_misc_ni='Testing miscellaneous operations (non-interactive)'
+t_misc_ni=(
+    'test/sha256test.py')
+f_misc_ni='Miscellaneous non-interactive tests complete'
+
+i_misc='Miscellaneous operations (interactive)' # includes autosign!
 s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
 t_misc=(
     'test/test.py -On misc')
-f_misc='Miscellaneous operations test complete'
+f_misc='Miscellaneous interactive tests test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
@@ -193,16 +218,12 @@ t_tool=(
 	'test/tooltest.py --coin=btc util'
 	'test/tooltest.py --coin=btc cryptocoin'
 	'test/tooltest.py --coin=btc mnemonic'
-	'test/tooltest.py --coin=ltc util'
 	'test/tooltest.py --coin=ltc cryptocoin'
-	'test/tooltest.py --coin=ltc mnemonic'
-	'test/tooltest.py --coin=zec util'
-	'test/tooltest.py --coin=zec cryptocoin'
-	'test/tooltest.py --coin=zec mnemonic'
-	'test/tooltest.py --coin=dash util'
+	'test/tooltest.py --coin=eth cryptocoin'
+	'test/tooltest.py --coin=etc cryptocoin'
 	'test/tooltest.py --coin=dash cryptocoin'
-	'test/tooltest.py --coin=dash mnemonic'
-	)
+	'test/tooltest.py --coin=zec cryptocoin'
+	'test/tooltest.py --coin=zec --type=zcash_z cryptocoin')
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'
@@ -210,16 +231,16 @@ s_gen='The following tests will run test/gentest.py on mainnet and testnet for a
 t_gen=(
 	"test/gentest.py -q 2 $REFDIR/btcwallet.dump"
 	'test/gentest.py -q 1:2 10'
-	'test/gentest.py -q --segwit 1:2 10'
+	'test/gentest.py -q --type=segwit 1:2 10'
     "test/gentest.py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
 	'test/gentest.py -q --testnet=1 1:2 10'
-	'test/gentest.py -q --testnet=1 --segwit 1:2 10'
+	'test/gentest.py -q --testnet=1 --type=segwit 1:2 10'
     "test/gentest.py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump"
 	'test/gentest.py -q --coin=ltc 1:2 10'
-	'test/gentest.py -q --coin=ltc --segwit 1:2 10'
+	'test/gentest.py -q --coin=ltc --type=segwit 1:2 10'
     "test/gentest.py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump"
 	'test/gentest.py -q --coin=ltc --testnet=1 1:2 10'
-	'test/gentest.py -q --coin=ltc --testnet=1 --segwit 1:2 10'
+	'test/gentest.py -q --coin=ltc --testnet=1 --type=segwit 1:2 10'
 	)
 f_gen='gentest tests completed'
 

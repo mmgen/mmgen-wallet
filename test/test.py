@@ -1085,7 +1085,7 @@ def create_tx_data(sources):
 	return ad,tx_data
 
 def make_txcreate_cmdline(tx_data):
-	privkey = PrivKey(os.urandom(32),compressed=True)
+	privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
 	t = ('p2pkh','segwit')['S' in g.proto.mmtypes]
 	coinaddr = AddrGenerator(t).to_addr(KeyGenerator('std').to_pubhex(privkey))
 
@@ -2046,9 +2046,9 @@ class MMGenTestSuite(object):
 			t.passphrase(w,ref_kafile_pass)
 			t.expect('Check key-to-address validity? (y/N): ','y')
 		o = t.read().strip().split('\n')[-1]
-		rc = cfg[ 'ref_' + ftype + 'file_chksum' +
-				  ('_'+coin.lower() if coin else '') +
-				  ('_'+mmtype if mmtype else '')]
+		rc = cfg[   'ref_' + ftype + 'file_chksum' +
+					('_'+coin.lower() if coin else '') +
+					('_'+mmtype if mmtype else '')]
 		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
 		cmp_or_die(ref_chksum,o)
 
@@ -2412,8 +2412,10 @@ class MMGenTestSuite(object):
 	@staticmethod
 	def gen_pairs(n):
 		return [subprocess.check_output(
-					['python',os.path.join('cmds','mmgen-tool'),'--testnet=1','-r0','randpair','compressed={}'.format((i+1)%2)]).split()
-						for i in range(n)]
+						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
+						([],['--type=compressed'])[bool((i+1)%2)] +
+						['-r0','randpair']
+					).split() for i in range(n)]
 
 	def regtest_bob_pre_import(self,name):
 		pairs = self.gen_pairs(5)
@@ -2615,7 +2617,7 @@ class MMGenTestSuite(object):
 		sid = cfg['seed_id']
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
-		privhex = PrivKey(os.urandom(32),compressed=True)
+		privhex = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
 		addr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privhex))
 		g.proto = psave
 		outputs_cl = [sid+':{}:3,1.1234'.format(g.proto.mmtypes[-1]), sid+':C:5,5.5555',sid+':L:4',addr+',100']
