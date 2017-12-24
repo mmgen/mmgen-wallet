@@ -24,6 +24,7 @@ import sys,os
 pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
+os.environ['MMGEN_TEST_SUITE'] = '1'
 
 from binascii import hexlify
 
@@ -33,10 +34,11 @@ from mmgen.obj import MMGenAddrType
 
 rounds = 100
 opts_data = lambda: {
-	'desc': "Test address generation in various ways",
+	'desc': 'Test address generation in various ways',
 	'usage':'[options] [spec] [rounds | dump file]',
 	'options': """
 -h, --help       Print this help message
+-a, --all        Test all supported coins for external generator 'ext'
 --, --longhelp   Print help message for long options (common options)
 -q, --quiet      Produce quieter output
 -t, --type=t     Specify address type (valid options: 'compressed','segwit','zcash_z')
@@ -62,8 +64,11 @@ EXAMPLES:
     (compare addrs generated with secp256k1 library to {dn} wallet dump)
 
   External libraries required for the 'ext' generator:
-    + pyethereum (for ETH,ETC)          https://github.com/ethereum/pyethereum
-    + pycoin     (for all other coins)  https://github.com/richardkiss/pycoin
+    + pyethereum (for ETH,ETC)           https://github.com/ethereum/pyethereum
+    + zcash-mini (for zcash_z addresses) https://github.com/FiloSottile/zcash-mini
+    + pycoin     (for supported coins)   https://github.com/richardkiss/pycoin
+    + keyconv    (for all other coins)   https://github.com/exploitagency/vanitygen-plus
+                 ('keyconv' generates uncompressed addresses only)
 """.format(prog='gentest.py',pnm=g.proj_name,snum=rounds,dn=g.proto.daemon_name)
 }
 
@@ -78,6 +83,12 @@ addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 def pyethereum_sec2addr(sec):
 	return sec,eth.privtoaddr(sec).encode('hex')
 
+def keyconv_sec2addr(sec):
+	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
+	o = p.stdout.read().splitlines()
+#	print p.stderr.read()
+	return o[1].split()[1],o[0].split()[1]
+
 def zcash_mini_sec2addr(sec):
 	p = sp.Popen(['zcash-mini','-key','-simple'],stderr=sp.PIPE,stdin=sp.PIPE,stdout=sp.PIPE)
 	p.stdin.write(sec.wif+'\n')
@@ -85,41 +96,52 @@ def zcash_mini_sec2addr(sec):
 	return sec.wif,o[0],o[-1]
 
 def pycoin_sec2addr(sec):
-	if g.testnet: # pycoin/networks/all.py pycoin/networks/legacy_networks.py
-		coin = { 'BTC':'XTN', 'LTC':'XLT', 'DASH':'tDASH' }[g.coin]
-	else:
-		coin = g.coin
+	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
 	key = pcku.parse_key(sec,PREFIX_TRANSFORMS,coin)
 	if key is None: die(1,"can't parse {}".format(sec))
 	o = pcku.create_output(sec,key)[0]
-#	pmsg(o)
 	suf = ('_uncompressed','')[addr_type.compressed]
 	wif = o['wif{}'.format(suf)]
 	addr = o['p2sh_segwit' if addr_type.name == 'segwit' else '{}_address{}'.format(coin,suf)]
 	return wif,addr
 
+# pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
-	global b_desc,ext_lib,ext_sec2addr,sp,eth,pcku,PREFIX_TRANSFORMS
-	if addr_type.name == 'zcash_z':
+	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,pcku,PREFIX_TRANSFORMS
+	def test_support(k):
+		if b == k: return True
+		if b != 'ext' and b != k: return False
+		if g.coin in ci.external_tests['mainnet'][k] and not g.testnet: return True
+		if g.coin in ci.external_tests['testnet'][k]: return True
+		return False
+	if b == 'zcash_mini' or addr_type.name == 'zcash_z':
 		import subprocess as sp
 		ext_sec2addr = zcash_mini_sec2addr
 		ext_lib = 'zcash_mini'
-	elif addr_type.name == 'ethereum':
+	elif test_support('pyethereum'):
 		try:
 			import ethereum.utils as eth
 		except:
-			die(1,"Unable to import 'pyethereum' module. Is pyethereum installed?")
+			raise ImportError,"Unable to import 'pyethereum' module. Is pyethereum installed?"
 		ext_sec2addr = pyethereum_sec2addr
 		ext_lib = 'pyethereum'
-	else:
+	elif test_support('pycoin'):
 		try:
 			import pycoin.cmds.ku as pcku
 		except:
-			die(1,"Unable to import module 'ku'. Is pycoin installed?")
+			raise ImportError,"Unable to import module 'ku'. Is pycoin installed?"
 		PREFIX_TRANSFORMS = pcku.prefix_transforms_for_network(g.coin)
 		ext_sec2addr = pycoin_sec2addr
 		ext_lib = 'pycoin'
+	elif test_support('keyconv'):
+		import subprocess as sp
+		ext_sec2addr = keyconv_sec2addr
+		ext_lib = 'keyconv'
+	else:
+		m = '{}: coin supported by MMGen but unsupported by gentest.py for {}'
+		raise ValueError,m.format(g.coin,('mainnet','testnet')[g.testnet])
 	b_desc = ext_lib
+	b = 'ext'
 
 def match_error(sec,wif,a_addr,b_addr,a,b):
 	qmsg_r(red('\nERROR: Values do not match!'))
@@ -131,6 +153,14 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 """.format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=kg_a.desc,b=b_desc).rstrip())
 
 def compare_test():
+	for k in ('segwit','compressed'):
+		if addr_type.name == k and g.coin not in ci.external_tests_segwit_compressed[k]:
+			msg('{} testing not supported for coin {}'.format(addr_type.name.capitalize(),g.coin))
+			return
+	if 'ext_lib' in globals():
+		if g.coin not in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
+			msg("Coin '{}' incompatible with external generator '{}'".format(g.coin,ext_lib))
+			return
 	m = "Comparing address generators '{}' and '{}' for coin {}"
 	last_t = time.time()
 	qmsg(green(m.format(kg_a.desc,(ext_lib if b == 'ext' else kg_b.desc),g.coin)))
@@ -142,10 +172,10 @@ def compare_test():
 		sec = PrivKey(os.urandom(32),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		ph = kg_a.to_pubhex(sec)
 		a_addr = ag.to_addr(ph)
-		if opt.type == 'zcash_z':
+		if addr_type.name == 'zcash_z':
 			a_vk = ag.to_viewkey(ph)
 		if b == 'ext':
-			if opt.type == 'zcash_z':
+			if addr_type.name == 'zcash_z':
 				b_wif,b_addr,b_vk = ext_sec2addr(sec)
 				if b_vk != a_vk:
 					match_error(sec,sec.wif,a_vk,b_vk,a,b)
@@ -195,6 +225,7 @@ def dump_test():
 			match_error(sec,wif,a_addr,b_addr,3,a)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
+from mmgen.altcoin import CoinInfo as ci
 urounds,fh = None,None
 dump = []
 if len(cmd_args) == 2:
@@ -205,7 +236,7 @@ if len(cmd_args) == 2:
 		try:
 			fh = open(cmd_args[1])
 		except:
-			die(1,"Second argument must be filename or positive integer")
+			die(1,'Second argument must be filename or positive integer')
 		else:
 			for line in fh.readlines():
 				if 'addr=' in line:
@@ -224,31 +255,43 @@ except:
 		a = int(a)
 		assert 1 <= a <= len(g.key_generators)
 	except:
-		die(1,"First argument must be one or two generator IDs, colon separated")
+		die(1,'First argument must be one or two generator IDs, colon separated')
 else:
 	try:
 		a = int(a)
-		assert 1 <= a <= len(g.key_generators)
-		if b == 'ext':
+		assert 1 <= a <= len(g.key_generators),'{}: invalid key generator'.format(a)
+		if b in ('ext','pyethereum','pycoin','keyconv','zcash_mini'):
 			init_external_prog()
 		else:
 			b = int(b)
-			assert 1 <= b <= len(g.key_generators)
-		assert a != b
-	except:
-		die(1,"%s: invalid generator IDs" % cmd_args[0])
+			assert 1 <= b <= len(g.key_generators),'{}: invalid key generator'.format(b)
+		assert a != b,'Key generators are the same!'
+	except Exception as e:
+		die(1,'{}\n{}: invalid generator argument'.format(e[0],cmd_args[0]))
 
 from mmgen.addr import KeyGenerator,AddrGenerator
 from mmgen.obj import PrivKey
 
-kg_a = KeyGenerator(addr_type.pubkey_type,a)
-ag = AddrGenerator(addr_type.gen_method)
+kg_a = KeyGenerator(addr_type,a)
+ag = AddrGenerator(addr_type)
 
 if a and b:
-	if b != 'ext':
-		kg_b = KeyGenerator(addr_type.pubkey_type,b)
-		b_desc = kg_b.desc
-	compare_test()
+	if opt.all:
+		from mmgen.protocol import init_coin,init_genonly_altcoins
+		init_genonly_altcoins('btc',trust_level=0)
+		mmgen_supported = [e[1] for e in ci.coin_constants['mainnet']]
+		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
+			if coin not in mmgen_supported and ext_lib != 'pyethereum': continue
+			init_coin(coin)
+			tmp_addr_type = addr_type if addr_type in g.proto.mmtypes else MMGenAddrType(g.proto.dfl_mmtype)
+			kg_a = KeyGenerator(tmp_addr_type,a)
+			ag = AddrGenerator(tmp_addr_type)
+			compare_test()
+	else:
+		if b != 'ext':
+			kg_b = KeyGenerator(addr_type,b)
+			b_desc = kg_b.desc
+		compare_test()
 elif a and not fh:
 	speed_test()
 elif a and dump:

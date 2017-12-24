@@ -225,8 +225,8 @@ def print_convert_results(indata,enc,dec,dtype):
 
 from mmgen.obj import MMGenAddrType
 at = MMGenAddrType((hasattr(opt,'type') and opt.type) or g.proto.dfl_mmtype)
-kg = KeyGenerator(at.pubkey_type)
-ag = AddrGenerator(at.gen_method)
+kg = KeyGenerator(at)
+ag = AddrGenerator(at)
 
 def Hexdump(infile,cols=8,line_nums=True):
 	Msg(pretty_hexdump(

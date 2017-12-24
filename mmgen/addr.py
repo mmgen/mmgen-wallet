@@ -32,7 +32,14 @@ def sc_dmsg(desc,data):
 		Msg('sc_debug_{}: {}'.format(desc,data))
 
 class AddrGenerator(MMGenObject):
-	def __new__(cls,gen_method):
+	def __new__(cls,addr_type):
+		if type(addr_type) == str: # allow override w/o check
+			gen_method = addr_type
+		elif type(addr_type) == MMGenAddrType:
+			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
+			gen_method = addr_type.gen_method
+		else:
+			raise TypeError,'{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__)
 		d = {
 			'p2pkh':  AddrGeneratorP2PKH,
 			'segwit': AddrGeneratorSegwit,
@@ -108,7 +115,14 @@ class AddrGeneratorZcashZ(AddrGenerator):
 
 class KeyGenerator(MMGenObject):
 
-	def __new__(cls,pubkey_type,generator=None,silent=False):
+	def __new__(cls,addr_type,generator=None,silent=False):
+		if type(addr_type) == str: # allow override w/o check
+			pubkey_type = addr_type
+		elif type(addr_type) == MMGenAddrType:
+			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
+			pubkey_type = addr_type.pubkey_type
+		else:
+			raise TypeError,'{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__)
 		if pubkey_type == 'std':
 			if cls.test_for_secp256k1(silent=silent) and generator != 1:
 				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
@@ -330,8 +344,8 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		has_viewkey = self.al_id.mmtype.has_viewkey
 
 		if self.gen_addrs:
-			kg = KeyGenerator(pubkey_type)
-			ag = AddrGenerator(self.al_id.mmtype.gen_method)
+			kg = KeyGenerator(self.al_id.mmtype)
+			ag = AddrGenerator(self.al_id.mmtype)
 
 		t_addrs,num,pos,out = len(addrnums),0,0,AddrListList()
 		le = self.entry_type
@@ -529,8 +543,8 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			ret.append(a)
 
 		if self.has_keys and keypress_confirm('Check key-to-address validity?'):
-			kg = KeyGenerator(self.al_id.mmtype.pubkey_type)
-			ag = AddrGenerator(self.al_id.mmtype.gen_method)
+			kg = KeyGenerator(self.al_id.mmtype)
+			ag = AddrGenerator(self.al_id.mmtype)
 			llen = len(ret)
 			for n,e in enumerate(ret):
 				msg_r('\rVerifying keys %s/%s' % (n+1,llen))

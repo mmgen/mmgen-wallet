@@ -100,6 +100,7 @@ f_obj='Data object test complete'
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 ROUNDS=100
+ROUNDS_LOW=20
 ROUNDS_SPEC=500
 t_alts=(
 	'test/scrambletest.py'
@@ -110,7 +111,6 @@ t_alts=(
 	"test/gentest.py --coin=ltc 2 $ROUNDS"
 	"test/gentest.py --coin=ltc --type=compressed 2 $ROUNDS"
 	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
-	"test/gentest.py --coin=dash 2 $ROUNDS"
 	"test/gentest.py --coin=zec 2 $ROUNDS"
 	"test/gentest.py --coin=etc 2 $ROUNDS"
 	"test/gentest.py --coin=eth 2 $ROUNDS"
@@ -122,11 +122,15 @@ t_alts=(
 	"test/gentest.py --coin=ltc 2:ext $ROUNDS"
 	"test/gentest.py --coin=ltc --type=compressed 2:ext $ROUNDS"
 #	"test/gentest.py --coin=ltc --type=segwit 2:ext $ROUNDS" # pycoin generates old-style LTC Segwit addrs
-	"test/gentest.py --coin=dash 2:ext $ROUNDS"
-	"test/gentest.py --coin=zec 2:ext $ROUNDS"
 	"test/gentest.py --coin=etc 2:ext $ROUNDS"
 	"test/gentest.py --coin=eth 2:ext $ROUNDS"
-	"test/gentest.py --coin=zec --type=zcash_z 2:ext $ROUNDS_SPEC")
+	"test/gentest.py --coin=zec 2:ext $ROUNDS"
+	"test/gentest.py --coin=zec --type=zcash_z 2:ext $ROUNDS_SPEC"
+
+	"test/gentest.py --all 2:pycoin $ROUNDS_LOW"
+	"test/gentest.py --all 2:pyethereum $ROUNDS_LOW"
+	"test/gentest.py --all 2:keyconv $ROUNDS_LOW")
+
 f_alts='Gen-only altcoin tests completed'
 
 i_misc_ni='Miscellaneous operations (non-interactive)'
@@ -164,7 +168,8 @@ i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt=(
 	'test/test.py -On regtest'
-	'test/test.py -On regtest_split')
+#	'test/test.py -On regtest_split' # no official B2X support, so skip
+	)
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='Bitcoin cash (BCH)'
@@ -211,7 +216,6 @@ s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_ltc_rt=('test/test.py --coin=ltc -On regtest')
 f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 
-# TODO: ethereum support for tooltest
 i_tool='Tooltest'
 s_tool='The following tests will run test/tooltest.py for all supported coins'
 t_tool=(
@@ -222,6 +226,8 @@ t_tool=(
 	'test/tooltest.py --coin=eth cryptocoin'
 	'test/tooltest.py --coin=etc cryptocoin'
 	'test/tooltest.py --coin=dash cryptocoin'
+	'test/tooltest.py --coin=doge cryptocoin'
+	'test/tooltest.py --coin=emc cryptocoin'
 	'test/tooltest.py --coin=zec cryptocoin'
 	'test/tooltest.py --coin=zec --type=zcash_z cryptocoin')
 f_tool='tooltest tests completed'

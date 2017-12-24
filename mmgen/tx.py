@@ -266,7 +266,7 @@ class MMGenTX(MMGenObject):
 		desc = 'transaction outputs'
 		member_type = 'MMGenTxOutput'
 
-	def __init__(self,filename=None,md_only=False,caller=None):
+	def __init__(self,filename=None,md_only=False,caller=None,silent_open=False):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -285,7 +285,7 @@ class MMGenTX(MMGenObject):
 		self.locktime    = None
 
 		if filename:
-			self.parse_tx_file(filename,md_only=md_only)
+			self.parse_tx_file(filename,md_only=md_only,silent_open=silent_open)
 			if md_only: return
 			self.check_sigs() # marks the tx as signed
 
@@ -727,22 +727,42 @@ class MMGenTX(MMGenObject):
 		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
 		if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
 			return False
-		return -ret['confirmations'] + 1 # 1: replacement in mempool, 2: replacement confirmed
+		return -ret['confirmations'] + 1,ret # 1: replacement in mempool, 2: replacement confirmed
 
 	def is_in_utxos(self):
 		return 'txid' in g.rpch.getrawtransaction(self.coin_txid,True,on_fail='silent')
 
 	def get_status(self,status=False):
 		if self.is_in_mempool():
-			msg(('Warning: transaction is in mempool!','Transaction is in mempool')[status])
+			if status:
+				d = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+				r = '{}replaceable'.format(('NOT ','')[d['bip125-replaceable']=='yes'])
+				t = d['timereceived']
+				m = 'Sent {} ({} h/m/s ago)'
+				b = m.format(time.strftime('%c',time.gmtime(t)),secs_to_dhms(int(time.time()-t)))
+				if opt.quiet:
+					msg('Transaction is in mempool')
+				else:
+					msg('TX status: in mempool, {}\n{}'.format(r,b))
+			else:
+				msg('Warning: transaction is in mempool!')
 		elif self.is_in_wallet():
 			confs = self.is_in_wallet()
 			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
 		elif self.is_in_utxos():
 			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
-		ret = self.is_replaced() # 1: replacement in mempool, 2: replacement confirmed
-		if ret:
-			die(1,'Transaction has been replaced'+('',', and the replacement TX is confirmed')[ret==2]+'!')
+		else:
+			ret = self.is_replaced() # ret[0]==1: replacement in mempool, ret[0]==2: replacement confirmed
+			if ret and ret[0]:
+				m1 = 'Transaction has been replaced'
+				m2 = ('',', and the replacement TX is confirmed')[ret[0]==2]
+				msg('{}{}!'.format(m1,m2))
+				if not opt.quiet:
+					msg('Replacing transactions:')
+					rt = ret[1]['walletconflicts']
+					for t,s in [(tx,'size' in g.rpch.getmempoolentry(tx,on_fail='silent')) for tx in rt]:
+						msg('  {}{}'.format(t,('',' in mempool')[s]))
+				die(0,'')
 
 	def send(self,prompt_user=True,exit_on_fail=False):
 
@@ -946,9 +966,9 @@ class MMGenTX(MMGenObject):
 
 		return out # TX label might contain non-ascii chars
 
-	def parse_tx_file(self,infile,md_only=False):
+	def parse_tx_file(self,infile,md_only=False,silent_open=False):
 
-		tx_data = get_lines_from_file(infile,self.desc+' data')
+		tx_data = get_lines_from_file(infile,self.desc+' data',silent=silent_open)
 
 		try:
 			desc = 'data'

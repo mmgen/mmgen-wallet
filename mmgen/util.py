@@ -212,6 +212,12 @@ def make_timestr(secs=None):
 	tv = time.gmtime(t)[:6]
 	return '{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}'.format(*tv)
 
+def secs_to_dhms(secs):
+	dsecs = secs/3600
+	return '{}{:02d}:{:02d}:{:02d}'.format(
+		('','{} day{}, '.format(dsecs/24,suf(dsecs/24)))[dsecs > 24],
+		dsecs % 24, (secs/60) % 60, secs % 60)
+
 def secs_to_hms(secs):
 	return '{:02d}:{:02d}:{:02d}'.format(secs/3600, (secs/60) % 60, secs % 60)
 

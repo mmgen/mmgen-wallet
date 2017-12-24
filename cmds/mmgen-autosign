@@ -103,7 +103,7 @@ cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
 
 import mmgen.tx
 from mmgen.txsign import txsign
-from mmgen.protocol import CoinProtocol
+from mmgen.protocol import CoinProtocol,init_coin
 
 if opt.stealth_led: opt.led = True
 
@@ -154,8 +154,7 @@ def do_umount():
 
 def sign_tx_file(txfile):
 	try:
-		g.coin = mmgen.tx.MMGenTX(txfile,md_only=True).coin
-		g.proto = CoinProtocol(g.coin,g.testnet)
+		init_coin(mmgen.tx.MMGenTX(txfile,md_only=True).coin)
 		reload(sys.modules['mmgen.tx'])
 		tx = mmgen.tx.MMGenTX(txfile)
 		rpc_init(reinit=True)

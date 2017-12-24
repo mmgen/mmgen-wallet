@@ -109,6 +109,7 @@ setup(
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',
+			'mmgen.altcoin',
 			'mmgen.protocol',
 			'mmgen.color',
 			'mmgen.common',

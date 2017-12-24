@@ -15,7 +15,7 @@ an online and offline computer to provide a robust solution for securely
 storing, tracking, sending and receiving Bitcoins.
 
 The online computer is used only for tracking balances and creating and sending
-transactions.  **Thus it holds no private keys that can be hacked or stolen.**
+transactions.  Thus it holds no private keys that can be hacked or stolen.
 All transactions are signed offline: **your seed and private keys never touch a
 network-connected device.**  The offline computer used for wallet creation,
 address generation and transaction signing is typically a low-powered device

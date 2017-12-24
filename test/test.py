@@ -791,11 +791,12 @@ for a,b in cmd_group['regtest']:
 	cmd_list['regtest'].append(a)
 	cmd_data[a] = (17,b,[[[],17]])
 
-cmd_data['info_regtest_split'] = 'regtest mode with fork and coin split',[17]
-for a,b in cmd_group['regtest_split']:
-	cmd_list['regtest_split'].append(a)
-	cmd_data[a] = (19,b,[[[],19]])
-
+# disable until B2X officially supported
+# cmd_data['info_regtest_split'] = 'regtest mode with fork and coin split',[17]
+# for a,b in cmd_group['regtest_split']:
+# 	cmd_list['regtest_split'].append(a)
+# 	cmd_data[a] = (19,b,[[[],19]])
+#
 cmd_data['info_misc'] = 'miscellaneous operations',[18]
 for a,b in cmd_group['misc']:
 	cmd_list['misc'].append(a)

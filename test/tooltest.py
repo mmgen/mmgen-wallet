@@ -24,6 +24,7 @@ import sys,os,subprocess
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
+os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *

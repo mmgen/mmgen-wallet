@@ -84,10 +84,9 @@ class BitcoinProtocol(MMGenObject):
 		(None,'','b2x',True)
 	]
 	caps = ('rbf','segwit')
-	mmcaps = ('key','addr','rpc')
+	mmcaps = ('key','addr','rpc','tx')
 	base_coin = 'BTC'
 	addr_width = 34
-	addr_hex_width = 40
 
 	@staticmethod
 	def get_protocol_by_chain(chain):
@@ -207,7 +206,7 @@ class BitcoinCashTestnetProtocol(BitcoinCashProtocol):
 	addr_width     = 35
 
 class B2XProtocol(BitcoinProtocol):
-	daemon_name    = 'bitcoind-2x'
+	daemon_name     = 'bitcoind-2x'
 	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
 						else os.path.join(g.home_dir,'.bitcoin-2x')
 	rpc_port        = 8338
@@ -218,12 +217,12 @@ class B2XProtocol(BitcoinProtocol):
 	]
 
 class B2XTestnetProtocol(B2XProtocol):
-	addr_ver_num         = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
-	wif_ver_num          = { 'std': 'ef' }
-	data_subdir          = 'testnet'
-	daemon_data_subdir   = 'testnet5'
-	rpc_port             = 18338
-	addr_width     = 35
+	addr_ver_num       = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
+	wif_ver_num        = { 'std': 'ef' }
+	data_subdir        = 'testnet'
+	daemon_data_subdir = 'testnet5'
+	rpc_port           = 18338
+	addr_width         = 35
 
 class LitecoinProtocol(BitcoinProtocol):
 	block0         = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
@@ -250,9 +249,7 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 	addr_width     = 35
 
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
-class BitcoinProtocolKeygen(BitcoinProtocol):  mmcaps = ('key',)
 class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')
-class BitcoinTestnetProtocolKeygen(BitcoinTestnetProtocol):  mmcaps = ('key',)
 
 class EthereumProtocol(BitcoinProtocolAddrgen):
 
@@ -299,9 +296,8 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 		'zcash_z': ('169a','zc'),
 		'viewkey': ('0b1c','V') }
 	wif_ver_num  = { 'std': '80', 'zcash_z': 'ab36' }
-	mmtypes      = ('C','Z')
-	dfl_mmtype   = 'C'
-	addr_hex_width = 40
+	mmtypes      = ('L','C','Z')
+	dfl_mmtype   = 'L'
 
 	@classmethod
 	def preprocess_key(cls,hexpriv,pubkey_type): # zero the first four bits
@@ -328,35 +324,22 @@ class ZcashTestnetProtocol(ZcashProtocol):
 		'zcash_z': ('16b6','??'),
 		'viewkey': ('0b2a','??') }
 
-class DashProtocol(BitcoinProtocolAddrgen):
-	name         = 'dash'
-	base_coin    = 'DASH'
-	addr_ver_num = { 'p2pkh': ('4c','X'), 'p2sh':  ('10','7') }
-	wif_ver_num  = { 'std': 'cc' }
-	mmtypes      = ('C',)
-	dfl_mmtype   = 'C'
-
-class DashTestnetProtocol(DashProtocol):
-	# "Dash", "testnet", "tDASH", b'\xef', b'\x8c', b'\x13'
-	addr_ver_num   = { 'p2pkh': ('8c','y'), 'p2sh':  ('13','?') }
-	wif_ver_num    = { 'std': 'ef' }
-
 class CoinProtocol(MMGenObject):
 	coins = {
 		'btc': (BitcoinProtocol,BitcoinTestnetProtocol),
 		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol),
-		'b2x': (B2XProtocol,B2XTestnetProtocol),
 		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol),
-		'dash': (DashProtocol,DashTestnetProtocol),
-		'zec': (ZcashProtocol,ZcashTestnetProtocol),
 		'eth': (EthereumProtocol,EthereumTestnetProtocol),
 		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol),
+		'zec': (ZcashProtocol,ZcashTestnetProtocol),
 	}
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
 		assert type(testnet) == bool
-		m = "'{}': not a valid coin. Valid choices are '{}'"
-		assert coin in cls.coins,m.format(coin,"','".join(cls.coins))
+		from mmgen.altcoin import CoinInfo as ci
+		all_coins = sorted(set([e[1].lower() for e in ci.coin_constants['mainnet']] + cls.coins.keys()))
+		m = "'{}': not a valid coin. Valid choices are {}"
+		assert coin in cls.coins,m.format(coin,','.join(all_coins))
 		return cls.coins[coin][testnet]
 
 	@classmethod
@@ -365,3 +348,60 @@ class CoinProtocol(MMGenObject):
 			if name == proto.__name__[:-8].lower():
 				return proto.base_coin
 		return False
+
+def init_genonly_altcoins(usr_coin,trust_level=None):
+	from mmgen.altcoin import CoinInfo as ci
+	if trust_level is None:
+		if not usr_coin or usr_coin.lower() in CoinProtocol.coins: return None
+		usr_coin = usr_coin.upper()
+		mn_coins = [e[1] for e in ci.coin_constants['mainnet']]
+		if usr_coin not in mn_coins: return None
+		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)][6]
+	data = {}
+	for k in ('mainnet','testnet'):
+		data[k] = [e for e in ci.coin_constants[k] if e[6] >= trust_level]
+	exec(make_init_genonly_altcoins_str(data))
+	return trust_level
+
+def make_init_genonly_altcoins_str(data):
+
+	def make_proto(e,testnet=False):
+		tn_str = 'Testnet' if testnet else ''
+		proto,coin = '{}{}Protocol'.format(e[0],tn_str),e[1]
+		if proto[0] in '0123456789': proto = 'X_'+proto
+		if proto in globals(): return ''
+		if coin.lower() in CoinProtocol.coins: return ''
+		def num2hexstr(n):
+			return '{:0{}x}'.format(n,2 if n < 256 else 4)
+		o  = ['class {}(Bitcoin{}ProtocolAddrgen):'.format(proto,tn_str)]
+		o += ["base_coin = '{}'".format(coin)]
+		o += ["name = '{}'".format(e[0].lower())]
+		o += ["nameCaps = '{}'".format(e[0])]
+		a = "addr_ver_num = {{ 'p2pkh': ({!r},{!r})".format(num2hexstr(e[3][0]),e[3][1])
+		b = ", 'p2sh':  ({!r},{!r})".format(num2hexstr(e[4][0]),e[4][1]) if e[4] else ''
+		o += [a+b+' }']
+		o += ["wif_ver_num = {{ 'std': {!r} }}".format(num2hexstr(e[2]))]
+		o += ["mmtypes = ('L','C'{})".format(",'S'" if e[5] else '')]
+		o += ["dfl_mmtype = '{}'".format('L')]
+		return '\n\t'.join(o) + '\n'
+
+	out = ''
+	for e in data['mainnet']:
+		out += make_proto(e)
+	for e in data['testnet']:
+		out += make_proto(e,testnet=True)
+
+	tn_coins = [e[1] for e in data['testnet']]
+	fs = "CoinProtocol.coins['{}'] = ({}Protocol,{})\n"
+	for e in data['mainnet']:
+		proto,coin = e[0],e[1]
+		if proto[0] in '0123456789': proto = 'X_'+proto
+		if proto+'Protocol' in globals(): continue
+		if coin.lower() in CoinProtocol.coins: continue
+		out += fs.format(coin.lower(),proto,('None',proto+'TestnetProtocol')[coin in tn_coins])
+#	print out
+	return out
+
+def init_coin(coin):
+	g.coin = coin
+	g.proto = CoinProtocol(coin,g.testnet)

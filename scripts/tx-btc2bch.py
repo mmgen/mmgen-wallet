@@ -39,16 +39,14 @@ if g.coin != 'BTC':
 
 if len(cmd_args) != 1: opts.usage()
 
-from mmgen.protocol import CoinProtocol
-
 import mmgen.tx
 tx = mmgen.tx.MMGenTX(cmd_args[0])
 
 if opt.verbose:
 	gmsg('Original transaction is in {} format'.format(g.coin))
 
-g.coin = 'BCH'
-g.proto = CoinProtocol(g.coin,g.testnet)
+from mmgen.protocol import init_coin
+init_coin('BCH')
 
 reload(sys.modules['mmgen.tx'])
 

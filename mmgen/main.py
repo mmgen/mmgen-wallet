@@ -51,3 +51,9 @@ def launch(what):
 			sys.stderr.write('\nUser interrupt\n')
 		except EOFError:
 			sys.stderr.write('\nEnd of file\n')
+		except Exception as e:
+			if os.getenv('MMGEN_TRACEBACK'):
+				raise
+			else:
+				sys.stderr.write('{!r}\n'.format(e[0]))
+				sys.exit(2)

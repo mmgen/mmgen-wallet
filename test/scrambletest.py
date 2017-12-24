@@ -24,6 +24,7 @@ import sys,os,subprocess
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
+os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
@@ -60,13 +61,14 @@ test_data = OrderedDict([
 ('bch',           ('456d7f5f1c4bfe3b','(none)',         '',    '',          '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv')),
 ('bch_compressed',('bf98a4af5464a4ef','compressed',     '-C',  'COMPRESSED','1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP')),
 ('ltc',           ('b11f16632e63ba92','ltc:legacy',     '-LTC','LTC',       'LMxB474SVfxeYdqxNrM1WZDZMnifteSMv1')),
-('ltc_compressed',('7ccf465d466ee7d3','ltc:compressed', '-LTC-C', 'LTC:COMPRESSED', 'LdkebBKVXSs6NNoPJWGM8KciDnL8LhXXjb')),
-('ltc_segwit',    ('9460f5ba15e82768','ltc:segwit',     '-LTC-S', 'LTC:SEGWIT',     'MQrY3vEbqKMBgegXrSaR93R2HoTDE5bKrY')),
+('ltc_compressed',('7ccf465d466ee7d3','ltc:compressed', '-LTC-C','LTC:COMPRESSED', 'LdkebBKVXSs6NNoPJWGM8KciDnL8LhXXjb')),
+('ltc_segwit',    ('9460f5ba15e82768','ltc:segwit',     '-LTC-S','LTC:SEGWIT',     'MQrY3vEbqKMBgegXrSaR93R2HoTDE5bKrY')),
 ('eth',           ('213ed116869b19f2','eth',            '-ETH', 'ETH','e704b6cfd9f0edb2e6cfbd0c913438d37ede7b35')),
 ('etc',           ('909def37096f5ab8','etc',            '-ETC', 'ETC','1a6acbef8c38f52f20d04ecded2992b04d8608d7')),
-('dash',          ('bb21cf88c198ab8c','dash:compressed','-DASH-C','DASH:COMPRESSED','XsjAJvCxkxYh55ZvCZMFEv2eJUVo5xxbwi')),
-('zec',           ('637f7b8117b524ed','zec:compressed', '-ZEC-C', 'ZEC:COMPRESSED', 't1d47QeTehQye4Mms1Lmx7dPjKVoTtHXKmu')),
-('zec_zcash_z',   ('b15570d033df9b1a','zec:zcash_z',    '-ZEC-Z', 'ZEC:ZCASH_Z',    'zcLMMsnzfFYZWU4avRBnuc83yh4jTtJXbtP32uWrs3ickzu1krMU4ppZCQPTwwfE9hLnRuFDSYF8VFW13aT9eeQK8aov3Ge')),
+('dash',          ('1319d347b021f952','dash:legacy',    '-DASH','DASH','XoK491fppGNZQUUS9uEFkT6L9u8xxVFJNJ')),
+('zec',           ('0bf9b5b20af7b5a0','zec:legacy',     '-ZEC', 'ZEC', 't1URz8BHxV38v3gsaN6oHQNKC16s35R9WkY')),
+('zec_zcash_z',   ('b15570d033df9b1a','zec:zcash_z',    '-ZEC-Z','ZEC:ZCASH_Z','zcLMMsnzfFYZWU4avRBnuc83yh4jTtJXbtP32uWrs3ickzu1krMU4ppZCQPTwwfE9hLnRuFDSYF8VFW13aT9eeQK8aov3Ge')),
+('emc',           ('7e1a29853d2db875','emc:legacy',      '-EMC', 'EMC','EU4L6x2b5QUb2gRQsBAAuB8TuPEwUxCNZU')),
 ])
 
 def run_tests():

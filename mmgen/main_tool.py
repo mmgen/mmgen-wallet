@@ -31,7 +31,7 @@ supported commands), use '-' as the first argument.
 cmd_help = """
 Cryptocoin address/key operations (compressed public keys supported):
   addr2hexaddr   - convert coin address from base58 to hex format
-  hex2wif        - convert a private key from hex to WIF format (use 'pubkey_type=zcash_z' for zcash-z key)
+  hex2wif        - convert a private key from hex to WIF format (use '--type=zcash_z' for zcash-z key)
   pubhash2addr   - convert public key hash to address
   privhex2addr   - generate coin address from private key in hex format
   privhex2pubhex - generate a hex public key from a hex private key

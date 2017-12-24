@@ -170,9 +170,23 @@ def override_from_env():
 			gname = name[idx:].lower()
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
 
+def warn_altcoins(trust_level):
+	if trust_level == None: return
+	tl = (red('COMPLETELY UNTESTED'),red('LOW'),yellow('MEDIUM'),green('HIGH'))
+	m = """
+Support for coin '{}' is EXPERIMENTAL.  The {pn} project assumes no
+responsibility for any loss of funds you may incur.
+This coin's {pn} testing status: {}
+Are you sure you want to continue?
+""".strip().format(g.coin,tl[trust_level],pn=g.proj_name)
+	if os.getenv('MMGEN_TEST_SUITE'):
+		msg(m); return
+	if not keypress_confirm(m):
+		sys.exit(0)
+
 def init(opts_f,add_opts=[],opt_filter=None):
 
-	from mmgen.protocol import CoinProtocol,BitcoinProtocol
+	from mmgen.protocol import CoinProtocol,BitcoinProtocol,init_genonly_altcoins
 	g.proto = BitcoinProtocol # this must be initialized to something before opts_f is called
 
 	# most, but not all, of these set the corresponding global var
@@ -239,6 +253,8 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	if g.regtest: g.testnet = True # These are equivalent for now
 
+	altcoin_trust_level = init_genonly_altcoins(opt.coin)
+
 	# g.testnet is set, so we can set g.proto
 	g.proto = CoinProtocol(g.coin,g.testnet)
 
@@ -299,6 +315,8 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	del opts_f
 	for k in ('prog_name','desc','usage','options','notes'):
 		if k in opts_data: del opts_data[k]
+
+	warn_altcoins(altcoin_trust_level)
 
 	return args
 

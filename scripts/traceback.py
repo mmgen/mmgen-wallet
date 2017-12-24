@@ -3,6 +3,7 @@ import sys,traceback,os
 sys.path.insert(0,'.')
 
 if 'TMUX' in os.environ: del os.environ['TMUX']
+os.environ['MMGEN_TRACEBACK'] = '1'
 
 f = open('my.err','w')
 
