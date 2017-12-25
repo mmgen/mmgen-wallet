@@ -38,10 +38,12 @@ class CoinInfo(object):
 	coin_constants = {}
 	coin_constants['mainnet'] = (
 #    NAME                     SYM        WIF     P2PKH             P2SH              SEGWIT TRUST
-#                                                     trust levels: 0=untested 1=low 2=med 3=high
-	('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True,  3),
-	('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True,  2),
-	('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False, 3),
+#                                        trust levels: 0=untested 1=low 2=med 3=high -1=disable
+#   Fork coins must be disabled here to prevent generation from incorrect sub-seed
+	('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False,-1),
 	('2GiveCoin',             '2GIVE',   0xa7,   (0x27,('G','H')), None,             False, 0),
 	('42Coin',                '42',      0x88,   (0x08,'4'),       None,             False, 1),
 	('ACoin',                 'ACOIN',   0xe6,   (0x17,'A'),       None,             False, 0),
@@ -432,20 +434,21 @@ class CoinInfo(object):
 			from mmgen.util import pmsg,pdie
 #			pmsg(sym)
 #			pdie(tt)
-			if sym in tt:
-				src = tt[sym]
-				if src != trust:
-					msg("Updating trust for coin '{}': {} -> {}".format(sym,trust,src))
-					line[6] = src
-			else:
-				if trust != 0:
-					msg("Downgrading trust for coin '{}': {} -> {}".format(sym,trust,0))
-					line[6] = 0
+			if trust != -1:
+				if sym in tt:
+					src = tt[sym]
+					if src != trust:
+						msg("Updating trust for coin '{}': {} -> {}".format(sym,trust,src))
+						line[6] = src
+				else:
+					if trust != 0:
+						msg("Downgrading trust for coin '{}': {} -> {}".format(sym,trust,0))
+						line[6] = 0
 
-			if sym in cls.cross_checks:
-				if int(line[6]) == 0 and len(cls.cross_checks[sym]) > 1:
-					msg("Upgrading trust for coin '{}': {} -> {}".format(sym,line[6],1))
-					line[6] = 1
+				if sym in cls.cross_checks:
+					if int(line[6]) == 0 and len(cls.cross_checks[sym]) > 1:
+						msg("Upgrading trust for coin '{}': {} -> {}".format(sym,line[6],1))
+						line[6] = 1
 
 			print(fs.format(*line))
 		msg('Processed {} entries'.format(len(data)))
@@ -504,7 +507,7 @@ class CoinInfo(object):
 			'zcash_mini': ('ZEC',),
 			'keyconv': ( # all supported by vanitygen-plus 'keyconv' util
 				# broken: PIVX
-	 			'42','AC','AIB','ANC','ARS','ATMOS','AUR','BLK','BQC','BTC','TEST','BTCD','CCC','CCN','CDN',
+				'42','AC','AIB','ANC','ARS','ATMOS','AUR','BLK','BQC','BTC','TEST','BTCD','CCC','CCN','CDN',
 				'CLAM','CNC','CNOTE','CON','CRW','DEEPONION','DGB','DGC','DMD','DOGED','DOGE','DOPE',
 				'DVC','EFL','EMC','EXCL','FAIR','FLOZ','FTC','GAME','GAP','GCR','GRC','GRS','GUN','HAM','HODL',
 				'IXC','JBS','LBRY','LEAF','LTC','MMC','MONA','MUE','MYRIAD','MZC','NEOS','NLG','NMC','NVC',

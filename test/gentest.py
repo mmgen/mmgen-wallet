@@ -107,7 +107,7 @@ def pycoin_sec2addr(sec):
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
-	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,pcku,PREFIX_TRANSFORMS
+	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,pcku,PREFIX_TRANSFORMS,addr_type
 	def test_support(k):
 		if b == k: return True
 		if b != 'ext' and b != k: return False
@@ -116,8 +116,11 @@ def init_external_prog():
 		return False
 	if b == 'zcash_mini' or addr_type.name == 'zcash_z':
 		import subprocess as sp
+		from mmgen.protocol import init_coin
 		ext_sec2addr = zcash_mini_sec2addr
 		ext_lib = 'zcash_mini'
+		init_coin('zec')
+		addr_type = MMGenAddrType('Z')
 	elif test_support('pyethereum'):
 		try:
 			import ethereum.utils as eth
@@ -277,11 +280,11 @@ ag = AddrGenerator(addr_type)
 
 if a and b:
 	if opt.all:
-		from mmgen.protocol import init_coin,init_genonly_altcoins
+		from mmgen.protocol import init_coin,init_genonly_altcoins,CoinProtocol
 		init_genonly_altcoins('btc',trust_level=0)
-		mmgen_supported = [e[1] for e in ci.coin_constants['mainnet']]
+		mmgen_supported = CoinProtocol.get_valid_coins(upcase=True)
 		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
-			if coin not in mmgen_supported and ext_lib != 'pyethereum': continue
+			if coin not in mmgen_supported: continue
 			init_coin(coin)
 			tmp_addr_type = addr_type if addr_type in g.proto.mmtypes else MMGenAddrType(g.proto.dfl_mmtype)
 			kg_a = KeyGenerator(tmp_addr_type,a)

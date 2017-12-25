@@ -55,5 +55,7 @@ def launch(what):
 			if os.getenv('MMGEN_TRACEBACK'):
 				raise
 			else:
-				sys.stderr.write('{!r}\n'.format(e[0]))
+				try:    m = u'{}\n'.format(e[0])
+				except: m = u'{!r}\n'.format(e[0])
+				sys.stderr.write(m)
 				sys.exit(2)

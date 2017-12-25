@@ -129,7 +129,8 @@ t_alts=(
 
 	"test/gentest.py --all 2:pycoin $ROUNDS_LOW"
 	"test/gentest.py --all 2:pyethereum $ROUNDS_LOW"
-	"test/gentest.py --all 2:keyconv $ROUNDS_LOW")
+	"test/gentest.py --all 2:keyconv $ROUNDS_LOW"
+	"test/gentest.py --all 2:zcash_mini $ROUNDS_LOW")
 
 f_alts='Gen-only altcoin tests completed'
 

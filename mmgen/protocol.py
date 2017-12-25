@@ -326,21 +326,28 @@ class ZcashTestnetProtocol(ZcashProtocol):
 
 class CoinProtocol(MMGenObject):
 	coins = {
-		'btc': (BitcoinProtocol,BitcoinTestnetProtocol),
-		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol),
-		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol),
-		'eth': (EthereumProtocol,EthereumTestnetProtocol),
-		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol),
-		'zec': (ZcashProtocol,ZcashTestnetProtocol),
+		#      mainnet testnet trustlevel (None == skip)
+		'btc': (BitcoinProtocol,BitcoinTestnetProtocol,None),
+		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol,None),
+		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol,None),
+		'eth': (EthereumProtocol,EthereumTestnetProtocol,2),
+		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,2),
+		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
 	}
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
 		assert type(testnet) == bool
-		from mmgen.altcoin import CoinInfo as ci
-		all_coins = sorted(set([e[1].lower() for e in ci.coin_constants['mainnet']] + cls.coins.keys()))
 		m = "'{}': not a valid coin. Valid choices are {}"
-		assert coin in cls.coins,m.format(coin,','.join(all_coins))
+		assert coin in cls.coins,m.format(coin,','.join(cls.get_valid_coins()))
 		return cls.coins[coin][testnet]
+
+	@classmethod
+	def get_valid_coins(cls,upcase=False):
+		from mmgen.altcoin import CoinInfo as ci
+		ret = sorted(set(
+			[e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
+			+ cls.coins.keys()))
+		return [getattr(e,('lower','upper')[upcase])() for e in ret]
 
 	@classmethod
 	def get_base_coin_from_name(cls,name):
@@ -352,9 +359,11 @@ class CoinProtocol(MMGenObject):
 def init_genonly_altcoins(usr_coin,trust_level=None):
 	from mmgen.altcoin import CoinInfo as ci
 	if trust_level is None:
-		if not usr_coin or usr_coin.lower() in CoinProtocol.coins: return None
+		if not usr_coin: return None # BTC
+		if usr_coin.lower() in CoinProtocol.coins:
+			return CoinProtocol.coins[usr_coin.lower()][2]
 		usr_coin = usr_coin.upper()
-		mn_coins = [e[1] for e in ci.coin_constants['mainnet']]
+		mn_coins = [e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
 		if usr_coin not in mn_coins: return None
 		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)][6]
 	data = {}
