@@ -523,7 +523,9 @@ def Keyaddrlist2monerowallet(infile,blockheight=None):
 	def create():
 		gmsg('\nCreating {} wallet{}'.format(dl,suf(dl)))
 		for n,d in enumerate(al.data):
-			fn = '{}{}-{}-MoneroWallet'.format(('',opt.outdir+'/')[bool(opt.outdir)],sid,d.idx)
+			fn = '{}{}-{}-MoneroWallet'.format(
+				(opt.outdir+'/' if opt.outdir else ''),
+				sid,d.idx)
 			gmsg("\nGenerating wallet {}/{} ({})".format(n+1,dl,fn))
 			try: os.stat(fn)
 			except: pass

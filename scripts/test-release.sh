@@ -2,7 +2,11 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
-dfl_tests='obj misc_ni alts misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+export MMGEN_TEST_SUITE=1
+export MMGEN_NO_LICENSE=1
+export PYTHONPATH=.
+
+dfl_tests='obj misc_ni alts monero misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hinPt OPT
 do
@@ -18,6 +22,7 @@ do
 		echo   "     obj     - data objects"
 		echo   "     misc_ni - miscellaneous operations (non-interactive tests)"
 		echo   "     alts    - operations for all supported gen-only altcoins"
+		echo   "     monero  - operations for monero"
 		echo   "     misc    - miscellaneous operations (interactive tests)"
 		echo   "     btc     - bitcoin"
 		echo   "     btc_tn  - bitcoin testnet"
@@ -133,6 +138,15 @@ t_alts=(
 	"test/gentest.py --all 2:zcash_mini $ROUNDS_LOW")
 
 f_alts='Gen-only altcoin tests completed'
+
+i_monero='Monero'
+s_monero='Testing generation and wallet creation operations for Monero'
+s_monero='The monerod (mainnet) daemon must be running for the following tests'
+ROUNDS=1000
+t_monero=(
+'cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-29,101-109'
+'cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallet $TMPDIR/988*XMR*akeys')
+f_monero='Monero tests completed'
 
 i_misc_ni='Miscellaneous operations (non-interactive)'
 s_misc_ni='Testing miscellaneous operations (non-interactive)'
@@ -285,6 +299,10 @@ tests=$dfl_tests
 [ "$NO_PAUSE" ] || PAUSE=1
 
 check_args
+
+TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+mkdir -p $TMPDIR
 run_tests "$tests"
+rm -rf /tmp/mmgen-test-release-*
 
 echo -e "${GREEN}All OK$RESET"
