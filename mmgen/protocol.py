@@ -251,27 +251,32 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
 class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')
 
-class EthereumProtocol(BitcoinProtocolAddrgen):
+class DummyWIF(object):
+
+	@classmethod
+	def hex2wif(cls,hexpriv,pubkey_type,compressed):
+		n = cls.name.capitalize()
+		assert pubkey_type == cls.pubkey_type,'{}: invalid pubkey_type for {}!'.format(pubkey_type,n)
+		assert compressed == False,'{} does not support compressed pubkeys!'.format(n)
+		return str(hexpriv)
+
+	@classmethod
+	def wif2hex(cls,wif):
+		return { 'hex':str(wif), 'pubkey_type':cls.pubkey_type, 'compressed':False }
+
+class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 	addr_width = 40
 	mmtypes    = ('E',)
 	dfl_mmtype = 'E'
 	name = 'ethereum'
 	base_coin = 'ETH'
-
-	@classmethod
-	def hex2wif(cls,hexpriv,pubkey_type,compressed):
-		assert compressed == False,'Ethereum does not support compressed pubkeys!'
-		return str(hexpriv)
-
-	@classmethod
-	def wif2hex(cls,wif):
-		return { 'hex':str(wif), 'pubkey_type':'std', 'compressed':False }
+	pubkey_type = 'std' # required by DummyWIF
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
 		from mmgen.util import is_hex_str_lc
-		if is_hex_str_lc(addr) and len(addr) == 40:
+		if is_hex_str_lc(addr) and len(addr) == cls.addr_width:
 			return { 'hex': addr, 'format': 'ethereum', 'width': cls.addr_width } if return_dict else True
 		if g.debug: Msg("Invalid address '{}'".format(addr))
 		return False
@@ -324,6 +329,50 @@ class ZcashTestnetProtocol(ZcashProtocol):
 		'zcash_z': ('16b6','??'),
 		'viewkey': ('0b2a','??') }
 
+# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
+class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
+	name         = 'monero'
+	base_coin    = 'XMR'
+	addr_ver_num = { 'monero': ('12','4'), 'monero_sub': ('2a','8') } # 18,42
+	wif_ver_num  = {}
+	mmtypes      = ('M',)
+	dfl_mmtype   = 'M'
+	addr_width   = 95
+	pubkey_type = 'monero' # required by DummyWIF
+
+	@classmethod
+	def preprocess_key(cls,hexpriv,pubkey_type): # reduce key
+		try:
+			from ed25519ll.djbec import l
+		except:
+			from mmgen.ed25519 import l
+		n = int(hexpriv.decode('hex')[::-1].encode('hex'),16) % l
+		return '{:064x}'.format(n).decode('hex')[::-1].encode('hex')
+
+	@classmethod
+	def verify_addr(cls,addr,hex_width,return_dict=False):
+
+		def b58dec(addr_str):
+			from mmgen.util import baseconv
+			dec,l = baseconv.tohex,len(addr_str)
+			a = ''.join([dec(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l/11)])
+			b = dec(addr_str[-(l%11):],'b58',pad=10)
+			return a + b
+
+		from mmgen.util import is_b58_str
+		assert is_b58_str(addr),'Not valid base-58 string'
+		assert len(addr) == cls.addr_width,'Incorrect width'
+
+		ret = b58dec(addr)
+		import sha3
+		chk = sha3.keccak_256(ret.decode('hex')[:-4]).hexdigest()[:8]
+		assert chk == ret[-8:],'Incorrect checksum'
+
+		return { 'hex': ret, 'format': 'monero', 'width': cls.addr_width } if return_dict else True
+
+class MoneroTestnetProtocol(MoneroProtocol):
+	addr_ver_num = { 'monero': ('35','4'), 'monero_sub': ('3f','8') } # 53,63
+
 class CoinProtocol(MMGenObject):
 	coins = {
 		#      mainnet testnet trustlevel (None == skip)
@@ -333,6 +382,7 @@ class CoinProtocol(MMGenObject):
 		'eth': (EthereumProtocol,EthereumTestnetProtocol,2),
 		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,2),
 		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
+		'xmr': (MoneroProtocol,MoneroTestnetProtocol,2)
 	}
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
@@ -412,5 +462,6 @@ def make_init_genonly_altcoins_str(data):
 	return out
 
 def init_coin(coin):
+	coin = coin.upper()
 	g.coin = coin
 	g.proto = CoinProtocol(coin,g.testnet)

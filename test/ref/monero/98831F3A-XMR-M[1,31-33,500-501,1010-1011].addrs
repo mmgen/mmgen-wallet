@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 32 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-XMR-M[1,31-33,500-501,1010-1011]: 4369 0253 AC2C 0E38
+# Record this value to a secure location.
+98831F3A XMR:MONERO {
+  1     41tmwZd2CdXEGtWqGY9fH9FVtQM8VxZASYPQ3VJQhFjtGWYzQFuidD21vJYTi2yy3tXRYXTNXBTaYVLav62rwUUpFFyicZU
+  31    42R44dGVXu6gspyuWKNieJHmxzpnLxpkVbncKrFs5XniBEifRVYxPpeKJNgGPQkikX8AqjWL1Ysnf5Yc8DALiD6939PJAsb
+  32    44mhAiVtVuD5yGbT15BG3M1WmFD5R5dZfbwTfmfVDfneRT9keAcUwgGRvtx32WifQiECKVD1zESYaWqwJf5yh5w71WM6BEE
+  33    47UrLDNHrbiF5Ea6jvpPxcRYfW9ZkPRevPJXfWUmtEApb8p5xvp49d5iWQifspQzDzcBSbroBbbMFFJ6TYNcxmrtFviJ84L
+  500   428YDXihJ8d8AMSnqtiHbfGt7fA6FsMUEJUCidSB7wN4RjGsMGzC5dBgaKQojevhaxKTZacSmF3xe7wubu9zyZ5b8S79pHG
+  501   46nYucqe3BCMoASekNxvVT3BMnKuHsr9A8CwPZ6eAwVSJ9v8am5c6zR8St1Wcg2PPdJ6oL6zDM8zVChF15dZhGcgNEwLg2T
+  1010  43tWyaYaMAt5ZaK5n3SVbSJJigpBnWrVXV3iBPJ5PX7UgvPRnzMw6dLXnrogRu1LzAe1aZrYJFHPBWVw1c7CBYMvLMVHf99
+  1011  478e1Nnt14zYhinwFCrr9bFjTc7uLNfudCcvGHsYrBnN1Q4xuGUdwubCEScTYzRzs4113ndcFBJSK1xfkPvUNYFB55i5kqV
+}

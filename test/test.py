@@ -327,6 +327,7 @@ cfgs = {
 		},
 		'passfile_chk':    'EB29 DC4F 924B 289F',
 		'passfile32_chk':  '37B6 C218 2ABC 7508',
+		'passfilehex_chk': '523A F547 0E69 8323',
 		'wpasswd':         'reference password',
 		'ref_wallet':      'FE3C6545-D782B529[128,1].mmdat',
 		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
@@ -378,6 +379,7 @@ cfgs = {
 		},
 		'passfile_chk':    'ADEA 0083 094D 489A',
 		'passfile32_chk':  '2A28 C5C7 36EC 217A',
+		'passfilehex_chk': 'B11C AC6A 1464 608D',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '1378FC64-6F0F9BB4[192,1].mmdat',
 		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
@@ -429,6 +431,7 @@ cfgs = {
 		},
 		'passfile_chk':    '2D6D 8FBA 422E 1315',
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
+		'passfilehex_chk': 'BD4F A0AC 8628 4BE4',
 		'wpasswd':         'reference password',
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
 		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
@@ -449,11 +452,13 @@ cfgs = {
 		},
 		'ref_addrfile_chksum_zec': '903E 7225 DD86 6E01',
 		'ref_addrfile_chksum_zec_z': '9C7A 72DC 3D4A B3AF',
+		'ref_addrfile_chksum_xmr': '4369 0253 AC2C 0E38',
 		'ref_addrfile_chksum_dash':'FBC1 6B6A 0988 4403',
 		'ref_addrfile_chksum_eth': 'E554 076E 7AF6 66A3',
 		'ref_addrfile_chksum_etc': 'E97A D796 B495 E8BC',
 		'ref_keyaddrfile_chksum_zec': 'F05A 5A5C 0C8E 2617',
-		'ref_keyaddrfile_chksum_zec_z': '220F 5F23 CC9B EC1F',
+		'ref_keyaddrfile_chksum_zec_z': '4ADB 5AA4 4590 B60A',
+		'ref_keyaddrfile_chksum_xmr': 'E0D7 9612 3D67 404A',
 		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
 		'ref_keyaddrfile_chksum_eth': '3635 4DCF B752 8772',
 		'ref_keyaddrfile_chksum_etc': '9BAC 38E7 5C8E 42E0',
@@ -602,6 +607,7 @@ cmd_group['ref'] = (
 	('refkeyaddrgen_compressed', (['mmdat',pwfile],'new refwallet key-addr chksum (compressed)')),
 	('refpasswdgen',   (['mmdat',pwfile],'new refwallet passwd file chksum')),
 	('ref_b32passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
+	('ref_hexpasswdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 )
 
 # misc. saved reference data
@@ -715,15 +721,17 @@ cmd_group['altcoin_ref'] = (
 	('ref_addrfile_chk_etc', 'reference address file (ETC)'),
 	('ref_addrfile_chk_dash','reference address file (DASH)'),
 	('ref_addrfile_chk_zec', 'reference address file (ZEC-T)'),
+	('ref_addrfile_chk_xmr', 'reference address file (XMR)'),
 	('ref_addrfile_chk_zec_z','reference address file (ZEC-Z)'),
 	('ref_keyaddrfile_chk_eth', 'reference key-address file (ETH)'),
 	('ref_keyaddrfile_chk_etc', 'reference key-address file (ETC)'),
 	('ref_keyaddrfile_chk_dash','reference key-address file (DASH)'),
 	('ref_keyaddrfile_chk_zec', 'reference key-address file (ZEC-T)'),
 	('ref_keyaddrfile_chk_zec_z','reference key-address file (ZEC-Z)'),
+	('ref_keyaddrfile_chk_xmr', 'reference key-address file (XMR)'),
 )
 
-# undocumented admin cmds
+# undocumented admin cmds - precede with 'admin'
 cmd_group_admin = OrderedDict()
 cmd_group_admin['create_ref_tx'] = (
 	('ref_tx_setup',                     'regtest (Bob and Alice) mode setup'),
@@ -1428,8 +1436,9 @@ class MMGenTestSuite(object):
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
 		if check_ref:
 			k = 'passfile32_chk' if ftype == 'pass32' \
-					else 'passfile_chk' if ftype == 'pass' \
-						else '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
+					else 'passfilehex_chk' if ftype == 'passhex' \
+						else 'passfile_chk' if ftype == 'pass' \
+							else '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
 			chk_ref = cfg[k] if ftype[:4] == 'pass' else cfg[k][fork][g.testnet]
 			refcheck('address data checksum',chk,chk_ref)
 			return
@@ -1738,6 +1747,10 @@ class MMGenTestSuite(object):
 	def ref_b32passwdgen(self,name,wf,pf):
 		ea = ['--base32','--passwd-len','17']
 		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
+
+	def ref_hexpasswdgen(self,name,wf,pf):
+		ea = ['--hex']
+		self.addrgen(name,wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
 
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],'-M',keyaddr_file,txfile])
@@ -2060,6 +2073,9 @@ class MMGenTestSuite(object):
 		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
 								mmtype='z',add_args=['mmtype=zcash_z'])
 
+	def ref_addrfile_chk_xmr(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='XMR',subdir='monero',pfx='-XMR-M')
+
 	def ref_addrfile_chk_dash(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
 
@@ -2075,6 +2091,9 @@ class MMGenTestSuite(object):
 	def ref_keyaddrfile_chk_zec_z(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
 								mmtype='z',add_args=['mmtype=zcash_z'])
+
+	def ref_keyaddrfile_chk_xmr(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M')
 
 	def ref_keyaddrfile_chk_dash(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
@@ -2715,7 +2734,8 @@ class MMGenTestSuite(object):
 			'refaddrgen_compressed',
 			'refkeyaddrgen_compressed',
 			'refpasswdgen',
-			'ref_b32passwdgen'
+			'ref_b32passwdgen',
+			'ref_hexpasswdgen'
 		):
 		for i in ('1','2','3'):
 			locals()[k+i] = locals()[k]

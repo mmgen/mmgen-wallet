@@ -29,7 +29,8 @@ from mmgen.obj import MMGenPWIDString
 
 dfl_len = {
 	'b58': PasswordList.pw_info['b58']['dfl_len'],
-	'b32': PasswordList.pw_info['b32']['dfl_len']
+	'b32': PasswordList.pw_info['b32']['dfl_len'],
+	'hex': PasswordList.pw_info['hex']['dfl_len']
 }
 
 opts_data = lambda: {
@@ -41,6 +42,7 @@ opts_data = lambda: {
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -b, --base32          Generate passwords in Base32 format instead of Base58
+-x, --hex             Generate passwords in raw hex format instead of Base58
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
@@ -48,9 +50,9 @@ opts_data = lambda: {
                       'f' at offset 'o' (comma-separated)
 -O, --old-incog-fmt   Specify old-format incognito input
 -L, --passwd-len=  l  Specify length of generated passwords
-                      (default: {d58} chars [base58], {d32} chars [base32]).
-                      An argument of 'h' will generate passwords of half
-                      the default length.
+                      (default: {d58} chars [base58], {d32} chars [base32],
+                      {dhex} chars [hex]).  An argument of 'h' will generate
+                      passwords of half the default length.
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.seed_len}-bit) seed lengths
@@ -65,7 +67,7 @@ opts_data = lambda: {
 -v, --verbose         Produce more verbose output
 """.format(
 	seed_lens=', '.join([str(i) for i in g.seed_lens]),
-	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],
+	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 ),
 	'notes': """
@@ -124,7 +126,7 @@ pw_id_str = cmd_args.pop()
 
 sf = get_seed_file(cmd_args,1)
 
-pw_fmt = ('b58','b32')[bool(opt.base32)]
+pw_fmt = ('b58','b32','hex')[bool(opt.base32)+2*bool(opt.hex)]
 
 pw_len = (opt.passwd_len,dfl_len[pw_fmt]/2)[opt.passwd_len in ('h','H')]
 

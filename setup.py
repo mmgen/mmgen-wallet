@@ -114,6 +114,7 @@ setup(
 			'mmgen.color',
 			'mmgen.common',
 			'mmgen.crypto',
+			'mmgen.ed25519',
 			'mmgen.filename',
 			'mmgen.globalvars',
 			'mmgen.license',

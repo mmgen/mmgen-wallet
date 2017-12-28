@@ -40,15 +40,16 @@ class AddrGenerator(MMGenObject):
 			gen_method = addr_type.gen_method
 		else:
 			raise TypeError,'{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__)
-		d = {
-			'p2pkh':  AddrGeneratorP2PKH,
-			'segwit': AddrGeneratorSegwit,
+		gen_methods = {
+			'p2pkh':    AddrGeneratorP2PKH,
+			'segwit':   AddrGeneratorSegwit,
 			'ethereum': AddrGeneratorEthereum,
-			'zcash_z': AddrGeneratorZcashZ
+			'zcash_z':  AddrGeneratorZcashZ,
+			'monero':   AddrGeneratorMonero
 		}
-		assert gen_method in d
-		me = super(cls,cls).__new__(d[gen_method])
-		me.desc = d
+		assert gen_method in gen_methods
+		me = super(cls,cls).__new__(gen_methods[gen_method])
+		me.desc = gen_methods
 		return me
 
 class AddrGeneratorP2PKH(AddrGenerator):
@@ -113,6 +114,57 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError,'Zcash z-addresses incompatible with Segwit'
 
+class AddrGeneratorMonero(AddrGenerator):
+
+	def b58enc(self,addr_str):
+		enc,l = baseconv.fromhex,len(addr_str)
+		a = ''.join([enc(addr_str[i*8:i*8+8].encode('hex'),'b58',pad=11,tostr=True) for i in range(l/8)])
+		b = enc(addr_str[l-l%8:].encode('hex'),'b58',pad=7,tostr=True)
+		return a + b
+
+	def to_addr(self,sk_hex): # sk_hex instead of pubhex
+
+		# ed25519ll, a low-level ctypes wrapper for Ed25519 digital signatures by
+		# Daniel Holth <dholth@fastmail.fm> - http://bitbucket.org/dholth/ed25519ll/
+		try:
+			from ed25519ll.djbec import scalarmult,edwards,encodepoint,B
+		except:
+			from mmgen.ed25519 import scalarmult,edwards,encodepoint,B
+
+		# Source and license for scalarmultbase function:
+		#   https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py
+		# Copyright (c) 2014-2016, The Monero Project
+		# All rights reserved.
+		def scalarmultbase(e):
+			if e == 0: return [0, 1]
+			Q = scalarmult(B, e//2)
+			Q = edwards(Q, Q)
+			if e & 1: Q = edwards(Q, B)
+			return Q
+
+		def hex2int_le(hexstr):
+			return int(hexstr.decode('hex')[::-1].encode('hex'),16)
+
+		vk_hex = self.to_viewkey(sk_hex)
+		pk_str  = encodepoint(scalarmultbase(hex2int_le(sk_hex)))
+		pvk_str = encodepoint(scalarmultbase(hex2int_le(vk_hex)))
+		addr_p1 = g.proto.addr_ver_num['monero'][0].decode('hex') + pk_str + pvk_str
+
+		import sha3
+		return CoinAddr(self.b58enc(addr_p1 + sha3.keccak_256(addr_p1).digest()[:4]))
+
+	def to_wallet_passwd(self,sk_hex):
+		from mmgen.protocol import hash256
+		return WalletPassword(hash256(sk_hex)[:32])
+
+	def to_viewkey(self,sk_hex):
+		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
+		import sha3
+		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(sk_hex.decode('hex')).hexdigest(),None))
+
+	def to_segwit_redeem_script(self,sk_hex):
+		raise NotImplementedError,'Monero addresses incompatible with Segwit'
+
 class KeyGenerator(MMGenObject):
 
 	def __new__(cls,addr_type,generator=None,silent=False):
@@ -130,7 +182,7 @@ class KeyGenerator(MMGenObject):
 			else:
 				msg('Using (slow) native Python ECDSA library for address generation')
 				return super(cls,cls).__new__(KeyGeneratorPython)
-		elif pubkey_type == 'zcash_z':
+		elif pubkey_type in ('zcash_z','monero'):
 			g.proto.addr_width = 95
 			me = super(cls,cls).__new__(KeyGeneratorDummy)
 			me.desc = 'mmgen-'+pubkey_type
@@ -198,10 +250,11 @@ class KeyGeneratorDummy(KeyGenerator):
 
 class AddrListEntry(MMGenListItem):
 	addr    = MMGenListItemAttr('addr','CoinAddr')
-	viewkey = MMGenListItemAttr('viewkey','ZcashViewKey')
 	idx     = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
 	label   = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	sec     = MMGenListItemAttr('sec',PrivKey,typeconv=False)
+	viewkey = MMGenListItemAttr('viewkey','ViewKey')
+	wallet_passwd  = MMGenListItemAttr('wallet_passwd','WalletPassword')
 
 class PasswordListEntry(MMGenListItem):
 	passwd = MMGenImmutableAttr('passwd',unicode,typeconv=False) # TODO: create Password type
@@ -214,7 +267,11 @@ class AddrListChksum(str,Hilite):
 	trunc_ok = False
 
 	def __new__(cls,addrlist):
-		lines = [' '.join(addrlist.chksum_rec_f(e)) for e in addrlist.data]
+		ea = addrlist.al_id.mmtype.extra_attrs # add viewkey and passwd to the mix, if present
+		lines = [' '.join(
+					addrlist.chksum_rec_f(e) +
+					tuple(getattr(e,a) for a in ea if getattr(e,a))
+				) for e in addrlist.data]
 		return str.__new__(cls,make_chksum_N(' '.join(lines), nchars=16, sep=True))
 
 class AddrListIDStr(unicode,Hilite):
@@ -341,7 +398,9 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		compressed = self.al_id.mmtype.compressed
 		pubkey_type = self.al_id.mmtype.pubkey_type
-		has_viewkey = self.al_id.mmtype.has_viewkey
+
+		gen_wallet_passwd = type(self) == KeyAddrList and 'wallet_passwd' in self.al_id.mmtype.extra_attrs
+		gen_viewkey       = type(self) == KeyAddrList and 'viewkey' in self.al_id.mmtype.extra_attrs
 
 		if self.gen_addrs:
 			kg = KeyGenerator(self.al_id.mmtype)
@@ -369,8 +428,10 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			if self.gen_addrs:
 				ph = kg.to_pubhex(e.sec)
 				e.addr = ag.to_addr(ph)
-				if has_viewkey:
+				if gen_viewkey:
 					e.viewkey = ag.to_viewkey(ph)
+				if gen_wallet_passwd:
+					e.wallet_passwd = ag.to_wallet_passwd(ph)
 
 			if type(self) == PasswordList:
 				e.passwd = unicode(self.make_passwd(e.sec)) # TODO - own type
@@ -502,16 +563,17 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		for e in self.data:
 			c = ' '+e.label if enable_comments and e.label else ''
 			if type(self) == KeyList:
-				out.append(fs.format(e.idx,'wif: {}'.format(e.sec.wif),c))
+				out.append(fs.format(e.idx,'{} {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
 			elif type(self) == PasswordList:
 				out.append(fs.format(e.idx,e.passwd,c))
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
 				if self.has_keys:
-					if self.al_id.mmtype.has_viewkey:
-						out.append(fs.format('','view: '+e.viewkey,c))
-					if opt.b16: out.append(fs.format('', 'hex: '+e.sec,c))
-					out.append(fs.format('','wif: '+e.sec.wif,c))
+					if opt.b16: out.append(fs.format('', 'orig_hex: '+e.sec.orig_hex,c))
+					out.append(fs.format('','{} {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
+					for k in ('viewkey','wallet_passwd'):
+						v = getattr(e,k)
+						if v: out.append(fs.format('','{}: {}'.format(k,v),c))
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
@@ -521,24 +583,30 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		ret = AddrListList()
 		le = self.entry_type
 
-		while lines:
-			l = lines.pop(0)
-			d = l.split(None,2)
+		def get_line():
+			ret = lines.pop(0).split(None,2)
+			if ret[0] == 'orig_hex:': # hacky
+				return lines.pop(0).split(None,2)
+			return ret
 
-			assert is_mmgen_idx(d[0]),"'%s': invalid address num. in line: '%s'" % (d[0],l)
+		while lines:
+			d = get_line()
+
+			assert is_mmgen_idx(d[0]),"'%s': invalid address num. in line: '%s'" % (d[0],' '.join(d))
 			assert self.check_format(d[1]),"'{}': invalid {}".format(d[1],self.data_desc)
 
 			if len(d) != 3: d.append('')
 			a = le(**{'idx':int(d[0]),self.main_attr:d[1],'label':d[2]})
 
-			if self.has_keys:
-				if self.al_id.mmtype.has_viewkey:
-					d = lines.pop(0).split(None,2)
-					assert d[0] == 'view:',"Invalid line in file: '{}'".format(' '.join(d))
-					a.viewkey = ZcashViewKey(d[1])
-				d = lines.pop(0).split(None,2)
-				assert d[0] == 'wif:',"Invalid line in file: '{}'".format(' '.join(d))
+			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
+				d = get_line()
+				assert d[0] == self.al_id.mmtype.wif_label,"Invalid line in file: '{}'".format(' '.join(d))
 				a.sec = PrivKey(wif=d[1])
+				for k,dtype in (('viewkey',ViewKey),('wallet_passwd',WalletPassword)):
+					if k in self.al_id.mmtype.extra_attrs:
+						d = get_line()
+						assert d[0] == k+':',"Invalid line in file: '{}'".format(' '.join(d))
+						setattr(a,k,dtype(d[1]))
 
 			ret.append(a)
 
@@ -571,12 +639,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			if not al_mmtype:
 				mmtype = MMGenAddrType('E' if al_coin in ('ETH','ETC') else 'L',on_fail='raise')
 			else:
-				try:
-					mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
-				except:
-					raise ValueError,(
-						u"'{}': invalid address type in address file. Must be one of: {}".format(
-						mmtype.upper(),' '.join([i['name'].upper() for i in MMGenAddrType.mmtypes.values()])))
+				mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
 
 			from mmgen.protocol import CoinProtocol
 			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
@@ -685,7 +748,8 @@ Record this checksum: it will be used to verify the password file in the future
 	pw_fmt      = None
 	pw_info     = {
 		'b58': { 'min_len': 8 , 'max_len': 36 ,'dfl_len': 20, 'desc': 'base-58 password' },
-		'b32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' }
+		'b32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' },
+		'hex': { 'min_len': 64 ,'max_len': 64 ,'dfl_len': 64, 'desc': 'raw hex password' }
 		}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
@@ -751,11 +815,14 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
-		# we take least significant part
-		return ''.join(baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len))[-self.pw_len:]
+		if self.pw_fmt == 'hex':
+			return hex_sec
+		else:
+			# we take least significant part
+			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
 
 	def check_format(self,pw):
-		if not (is_b58_str,is_b32_str)[self.pw_fmt=='b32'](pw):
+		if not {'b58':is_b58_str,'b32':is_b32_str,'hex':is_hex_str}[self.pw_fmt](pw):
 			msg('Password is not a valid {} string'.format(self.pw_fmt))
 			return False
 		if len(pw) != self.pw_len:

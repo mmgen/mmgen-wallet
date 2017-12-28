@@ -181,7 +181,7 @@ Are you sure you want to continue?
 """.strip().format(g.coin,tl[trust_level],pn=g.proj_name)
 	if os.getenv('MMGEN_TEST_SUITE'):
 		msg(m); return
-	if not keypress_confirm(m):
+	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
 def init(opts_f,add_opts=[],opt_filter=None):
@@ -191,6 +191,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	# most, but not all, of these set the corresponding global var
 	common_opts_data = """
+--, --accept-defaults     Accept defaults at all prompts
 --, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
 --, --color=0|1           Disable or enable color output
 --, --force-256-color     Force 256-color output when color is enabled

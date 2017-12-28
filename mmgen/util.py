@@ -269,7 +269,7 @@ class baseconv(object):
 	@classmethod
 	def b58encode(cls,s,pad=None):
 		pad = cls.get_pad(s,pad,'en',cls.b58pad_lens,[bytes])
-		return ''.join(cls.fromhex(hexlify(s),'b58',pad=pad))
+		return cls.fromhex(hexlify(s),'b58',pad=pad,tostr=True)
 
 	@classmethod
 	def b58decode(cls,s,pad=None):
@@ -326,7 +326,7 @@ class baseconv(object):
 		return ('','0')[len(ret) % 2] + ret
 
 	@classmethod
-	def fromhex(cls,hexnum,wl_id,pad=None):
+	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
 
 		hexnum = hexnum.strip()
 		if not is_hex_str(hexnum):
@@ -338,7 +338,8 @@ class baseconv(object):
 		while num:
 			ret.append(num % base)
 			num /= base
-		return [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
+		o = [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
+		return ''.join(o) if tostr else o
 
 baseconv.check_wordlists()
 
@@ -714,6 +715,10 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
 	p = '{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
+
+	if opt.accept_defaults:
+		msg(p)
+		return (False,True)[default_yes]
 
 	while True:
 		reply = get_char(p).strip('\n\r')

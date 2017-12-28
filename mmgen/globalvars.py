@@ -44,7 +44,7 @@ class g(object):
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
 	prog_name = os.path.basename(sys.argv[0])
-	author    = 'Philemon'
+	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2017'
 	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, ETH, Ethereum, Classic, SHA256Compress'
@@ -73,6 +73,7 @@ class g(object):
 	force_256_color      = False
 	testnet              = False
 	regtest              = False
+	accept_defaults      = False
 	chain                = None # set by first call to rpc_init()
 	chains               = 'mainnet','testnet','regtest'
 	daemon_version       = None # set by first call to rpc_init()
@@ -108,7 +109,8 @@ class g(object):
 	# User opt sets global var:
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
-		'daemon_data_dir','force_256_color','regtest','coin','bob','alice'
+		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
+		'accept_defaults'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
@@ -116,6 +118,7 @@ class g(object):
 		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator'
 	)
 	incompatible_opts = (
+		('base32','hex'), # mmgen-passgen
 		('bob','alice'),
 		('quiet','verbose'),
 		('label','keep_label'),

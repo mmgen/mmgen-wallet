@@ -57,5 +57,5 @@ def launch(what):
 			else:
 				try:    m = u'{}\n'.format(e[0])
 				except: m = u'{!r}\n'.format(e[0])
-				sys.stderr.write(m)
+				sys.stderr.write(u'ERROR: ' + m)
 				sys.exit(2)

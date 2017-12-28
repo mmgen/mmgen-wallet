@@ -736,7 +736,8 @@ class MMGenTX(MMGenObject):
 		if self.is_in_mempool():
 			if status:
 				d = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
-				r = '{}replaceable'.format(('NOT ','')[d['bip125-replaceable']=='yes'])
+				brs = 'bip125-replaceable'
+				r = '{}replaceable'.format(('NOT ','')[brs in d and d[brs]=='yes'])
 				t = d['timereceived']
 				m = 'Sent {} ({} h/m/s ago)'
 				b = m.format(time.strftime('%c',time.gmtime(t)),secs_to_dhms(int(time.time()-t)))

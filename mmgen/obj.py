@@ -20,7 +20,7 @@
 obj.py: MMGen native classes
 """
 
-import sys
+import sys,os
 from decimal import *
 from mmgen.color import *
 from string import hexdigits,ascii_letters,digits
@@ -32,7 +32,7 @@ def is_coin_addr(s):     return CoinAddr(s,on_fail='silent')
 def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
 def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
-def is_viewkey(s):       return ZcashViewKey(s,on_fail='silent')
+def is_viewkey(s):       return ViewKey(s,on_fail='silent')
 
 class MMGenObject(object):
 
@@ -111,9 +111,11 @@ class InitErrors(object):
 
 	@staticmethod
 	def init_fail(m,on_fail,silent=False):
-		if silent: m = ''
 		from mmgen.util import die,msg
-		if on_fail == 'die': die(1,m)
+		if silent: m = ''
+		if os.getenv('MMGEN_TRACEBACK'):
+			raise ValueError,m
+		elif on_fail == 'die': die(1,m)
 		elif on_fail == 'return':
 			if m: msg(m)
 			return None # TODO: change to False
@@ -404,6 +406,16 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		d = rpc_init().validateaddress(self)
 		return d['iswatchonly'] and 'account' in d
 
+class ViewKey(object):
+	def __new__(cls,s,on_fail='die'):
+		from mmgen.globalvars import g
+		if g.proto.name == 'zcash':
+			return ZcashViewKey.__new__(ZcashViewKey,s,on_fail)
+		elif g.proto.name == 'monero':
+			return MoneroViewKey.__new__(MoneroViewKey,s,on_fail)
+		else:
+			raise ValueError,'{}: protocol does not support view keys'.format(g.proto.name.capitalize())
+
 class ZcashViewKey(CoinAddr): hex_width = 128
 
 class SeedID(str,Hilite,InitErrors):
@@ -513,11 +525,11 @@ class HexStr(str,Hilite,InitErrors):
 			m = "{!r}: value cannot be converted to {} (value is {})"
 			return cls.init_fail(m.format(s,cls.__name__,e[0]),on_fail)
 
-class MMGenTxID(HexStr,Hilite,InitErrors):
-	color = 'red'
-	width = 6
+class HexStrWithWidth(HexStr):
+	color = 'nocolor'
 	trunc_ok = False
-	hexcase = 'upper'
+	hexcase = 'lower'
+	width = None
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
 		try:
@@ -528,10 +540,10 @@ class MMGenTxID(HexStr,Hilite,InitErrors):
 			m = "{}\n{!r}: value cannot be converted to {}"
 			return cls.init_fail(m.format(e[0],s,cls.__name__),on_fail)
 
-class CoinTxID(MMGenTxID):
-	color = 'purple'
-	width = 64
-	hexcase = 'lower'
+class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
+class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
+class WalletPassword(HexStrWithWidth): color,width,hexcase = 'blue',32,'lower'
+class CoinTxID(HexStrWithWidth):       color,width,hexcase = 'purple',64,'lower'
 
 class WifKey(str,Hilite,InitErrors):
 	width = 53
@@ -582,8 +594,9 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				w2h = g.proto.wif2hex(wif) # raises exception on error
 				me = str.__new__(cls,w2h['hex'])
 				me.compressed = w2h['compressed']
-				me.pubkey_type   = w2h['pubkey_type']
-				me.wif        = str.__new__(WifKey,wif) # check has been done
+				me.pubkey_type = w2h['pubkey_type']
+				me.wif = str.__new__(WifKey,wif) # check has been done
+				me.orig_hex = None
 				return me
 			except Exception as e:
 				fs = "Value {!r} cannot be converted to {} WIF key ({})"
@@ -593,6 +606,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
 			me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
+			me.orig_hex = s.encode('hex') # save the non-preprocessed key
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
 			if pubkey_type != 'password': # skip WIF creation for passwds
@@ -705,6 +719,12 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'gen_method':'zcash_z',
 				'addr_fmt':'zcash_z',
 				'desc':'Zcash z-address' },
+		'M': {  'name':'monero',
+				'pubkey_type':'monero',
+				'compressed':False,
+				'gen_method':'monero',
+				'addr_fmt':'monero',
+				'desc':'Monero address'}
 	}
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
@@ -719,7 +739,10 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 						setattr(me,k,v[k])
 					assert me in g.proto.mmtypes + ('P',), (
 						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
-					me.has_viewkey = me.name == 'zcash_z'
+					me.extra_attrs = []
+					if me.name in ('monero','zcash_z'): me.extra_attrs += ['viewkey']
+					if me.name == 'monero': me.extra_attrs += ['wallet_passwd']
+					me.wif_label = ('wif:','spendkey:')[me.name=='monero']
 					return me
 			raise ValueError,'not found'
 		except Exception as e:

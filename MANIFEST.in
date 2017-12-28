@@ -3,10 +3,11 @@ include doc/wiki/using-mmgen/*
 include test/*.py
 include test/ref/*
 include test/ref/litecoin/*
-include test/ref/zcash/*
-include test/ref/dash/*
 include test/ref/ethereum/*
 include test/ref/ethereum_classic/*
+include test/ref/dash/*
+include test/ref/zcash/*
+include test/ref/monero/*
 
 include scripts/bitcoind-walletunlock.py
 include scripts/compute-file-chksum.py
