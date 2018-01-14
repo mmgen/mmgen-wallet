@@ -107,7 +107,8 @@ s_alts='The following tests will test generation operations for all supported al
 ROUNDS=100
 ROUNDS_LOW=20
 ROUNDS_SPEC=500
-t_alts=(
+if [ "$MINGW" ]; then
+	t_alts=(
 	'test/scrambletest.py'
 	'test/test.py -n altcoin_ref'
 	"test/gentest.py --coin=btc 2 $ROUNDS"
@@ -118,8 +119,21 @@ t_alts=(
 	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
 	"test/gentest.py --coin=zec 2 $ROUNDS"
 	"test/gentest.py --coin=etc 2 $ROUNDS"
-	"test/gentest.py --coin=eth 2 $ROUNDS"
+	"test/gentest.py --coin=eth 2 $ROUNDS")
+else
+	t_alts=(
+	'test/scrambletest.py'
+	'test/test.py -n altcoin_ref'
+	"test/gentest.py --coin=btc 2 $ROUNDS"
+	"test/gentest.py --coin=btc --type=compressed 2 $ROUNDS"
+	"test/gentest.py --coin=btc --type=segwit 2 $ROUNDS"
+	"test/gentest.py --coin=ltc 2 $ROUNDS"
+	"test/gentest.py --coin=ltc --type=compressed 2 $ROUNDS"
+	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
+	"test/gentest.py --coin=zec 2 $ROUNDS"
 	"test/gentest.py --coin=zec --type=zcash_z 2 $ROUNDS_SPEC"
+	"test/gentest.py --coin=etc 2 $ROUNDS"
+	"test/gentest.py --coin=eth 2 $ROUNDS"
 
 	"test/gentest.py --coin=btc 2:ext $ROUNDS"
 	"test/gentest.py --coin=btc --type=compressed 2:ext $ROUNDS"
@@ -136,7 +150,7 @@ t_alts=(
 	"test/gentest.py --all 2:pyethereum $ROUNDS_LOW"
 	"test/gentest.py --all 2:keyconv $ROUNDS_LOW"
 	"test/gentest.py --all 2:zcash_mini $ROUNDS_LOW")
-
+fi
 f_alts='Gen-only altcoin tests completed'
 
 i_monero='Monero'
@@ -144,8 +158,9 @@ s_monero='Testing generation and wallet creation operations for Monero'
 s_monero='The monerod (mainnet) daemon must be running for the following tests'
 ROUNDS=1000
 t_monero=(
-'cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-29,101-109'
-'cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallet $TMPDIR/988*XMR*akeys')
+'python cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-29,101-109'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallet $TMPDIR/988*XMR*akeys')
+[ "$MINGW" ] && t_monero=("$t_monero")
 f_monero='Monero tests completed'
 
 i_misc_ni='Miscellaneous operations (non-interactive)'
@@ -243,8 +258,12 @@ t_tool=(
 	'test/tooltest.py --coin=dash cryptocoin'
 	'test/tooltest.py --coin=doge cryptocoin'
 	'test/tooltest.py --coin=emc cryptocoin'
-	'test/tooltest.py --coin=zec cryptocoin'
-	'test/tooltest.py --coin=zec --type=zcash_z cryptocoin')
+	'test/tooltest.py --coin=zec cryptocoin')
+
+[ "$MINGW" ] || {
+	t_tool_len=${#t_tool[*]}
+	t_tool[$t_tool_len]='test/tooltest.py --coin=zec --type=zcash_z cryptocoin'
+}
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'

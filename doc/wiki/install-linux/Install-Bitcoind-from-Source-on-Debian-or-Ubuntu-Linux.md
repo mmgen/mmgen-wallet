@@ -73,14 +73,15 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 		$ cd src
 		$ sudo install -sv litecoind litecoin-cli /usr/local/bin
 
-> To simplify the starting and stopping of several daemons on the same machine,
-> download and use the node start and stop scripts from the MMGenLive project:
+Refer to [Run][02] on the binary installation page for instructions on running
+your coin daemon(s).
+
+Alternatively, you may download and use the node start and stop scripts from the
+MMGenLive project, which simplify starting and stopping multiple daemons on the
+same machine:
 
 		$ curl -O 'https://raw.githubusercontent.com/mmgen/MMGenLive/master/home.mmgen/bin/mmlive-node-{start,stop}'
 		$ sudo install -v mmlive-node-{start,stop} /usr/local/bin
-
-Refer to [Run][02] on the binary installation page for instructions on running
-your coin daemon(s).
 
 [01]: Install-Bitcoind
 [02]: Install-Bitcoind#a_r

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,16 +38,16 @@ class g(object):
 
 	# Constants:
 
-	version      = '0.9.599'
-	release_date = 'December 2017'
+	version      = '0.9.6'
+	release_date = 'January 2018'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
 	prog_name = os.path.basename(sys.argv[0])
 	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
-	Cdates    = '2013-2017'
-	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, ETH, Ethereum, Classic, SHA256Compress'
+	Cdates    = '2013-2018'
+	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, ETH, Ethereum, Classic, SHA256Compress, XMR, Monero, EMC, Emercoin'
 	max_int   = 0xffffffff
 	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE'))
 	http_timeout = 60
@@ -169,9 +169,8 @@ class g(object):
 	key_generator  = 2 # secp256k1 is default
 
 	hash_presets = {
-#   Scrypt params:
-#   ID    N   p  r
-# N is a power of two
+	#   Scrypt params:
+	#   ID    N   p  r (N is an exponent of two)
 		'1': [12, 8, 1],
 		'2': [13, 8, 4],
 		'3': [14, 8, 8],

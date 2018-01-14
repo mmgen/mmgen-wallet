@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -74,12 +74,15 @@ test_data = OrderedDict([
 
 def run_tests():
 	for test in test_data:
+		if test == 'zec_zcash_z' and g.platform == 'win':
+			msg("Skipping 'zec_zcash_z' test for Windows platform")
+			continue
 		try:    coin,mmtype = test.split('_',1)
 		except: coin,mmtype = test,None
 		cmd_name = 'cmds/mmgen-addrgen'
 		wf = 'test/ref/98831F3A.mmwords'
 		type_arg = ['--type='+mmtype] if mmtype else []
-		cmd = [cmd_name,'-qS','--coin='+coin] + type_arg + [wf,'1']
+		cmd = ['python',cmd_name,'-qS','--coin='+coin] + type_arg + [wf,'1']
 		vmsg(green('Executing: {}'.format(' '.join(cmd))))
 		msg_r('Testing: --coin {:4} {:22}'.format(coin.upper(),type_arg[0] if type_arg else ''))
 		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)

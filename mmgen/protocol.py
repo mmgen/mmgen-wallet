@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -382,7 +382,7 @@ class CoinProtocol(MMGenObject):
 		'eth': (EthereumProtocol,EthereumTestnetProtocol,2),
 		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,2),
 		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
-		'xmr': (MoneroProtocol,MoneroTestnetProtocol,2)
+		'xmr': (MoneroProtocol,MoneroTestnetProtocol,None)
 	}
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()

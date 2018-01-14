@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -92,6 +92,8 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	def to_addr(self,pubhex): # pubhex is really privhex
 		key = pubhex.decode('hex')
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
+		if g.platform == 'win':
+			ydie(1,'Zcash z-addresses not supported on Windows platform')
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode

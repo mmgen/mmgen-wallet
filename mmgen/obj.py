@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -364,7 +364,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		cls.arg_chk(cls,on_fail)
 		from mmgen.globalvars import g
 		try:
-			assert set(s) <= set(ascii_letters+digits),'contains non-ascii characters'
+			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,s)
 			va = g.proto.verify_addr(s,hex_width=cls.hex_width,return_dict=True)
 			assert va,'failed verification'
@@ -479,7 +479,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 				from mmgen.globalvars import g
 				assert s.split(':',1)[0] == g.proto.base_coin.lower(),(
 					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
-				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-ascii characters'
+				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 				assert len(s) > 4,'not more that four characters long'
 				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
 			except Exception as f:

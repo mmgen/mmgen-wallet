@@ -109,7 +109,7 @@ future use in an address file, which addresses may safely be made public.
 
 > #### [Recovering your keys without the MMGen software][r]
 
-> #### [Forkcoin and Altcoin support (BCH,LTC,ETH,ETC,DASH,ZEC)][x]
+> #### [Forkcoin and Altcoin support (BCH,LTC,ETH,ETC,ZEC,XMR and 144 Bitcoin-derived alts)][x]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

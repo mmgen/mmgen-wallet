@@ -2,11 +2,11 @@
 
 > Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-pip python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools libgmp-dev
+		$ sudo apt-get install python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools libgmp-dev python-crypto python-nacl python-pysha3 python-pip
 
-> Install the Python Cryptography Toolkit:
+> Install fast ed25519 Python package (optional, but recommended for Monero addresses):
 
-		$ sudo -H pip install pycrypto
+		$ sudo pip install ed25519ll
 
 > Install the secp256k1 library:
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,21 +34,23 @@ rpc_password = 'hodltothemoon'
 tr_wallet = lambda user: os.path.join(daemon_dir,'wallet.dat.'+user)
 
 common_args = lambda: (
-	'-rpcuser={}'.format(rpc_user),
-	'-rpcpassword={}'.format(rpc_password),
-	'-rpcport={}'.format(rpc_port),
-	'-regtest',
-	'-datadir={}'.format(data_dir))
+	'--rpcuser={}'.format(rpc_user),
+	'--rpcpassword={}'.format(rpc_password),
+	'--rpcport={}'.format(rpc_port),
+	'--regtest',
+	'--datadir={}'.format(data_dir))
 
 def start_daemon(user,quiet=False,daemon=True,reindex=False):
+	# requires Bitcoin ABC version >= 0.16.2
+	add_args = ((),('--usecashaddr=0',))[g.proto.daemon_name=='bitcoind-abc']
 	cmd = (
 		g.proto.daemon_name,
-		'-listen=0',
-		'-keypool=1',
-		'-wallet={}'.format(os.path.basename(tr_wallet(user)))
-	) + common_args()
-	if daemon: cmd += ('-daemon',)
-	if reindex: cmd += ('-reindex',)
+		'--listen=0',
+		'--keypool=1',
+		'--wallet={}'.format(os.path.basename(tr_wallet(user)))
+	) + add_args + common_args()
+	if daemon: cmd += ('--daemon',)
+	if reindex: cmd += ('--reindex',)
 	if not g.debug or quiet: vmsg('{}'.format(' '.join(cmd)))
 	p = subprocess.Popen(cmd,stdout=PIPE,stderr=PIPE)
 	err = process_output(p,silent=False)[1]
@@ -239,7 +241,7 @@ def get_current_user_win(quiet=False):
 	return None
 
 def get_current_user_unix(quiet=False):
-	p = start_cmd('pgrep','-af','{}.*-rpcport={}.*'.format(g.proto.daemon_name,rpc_port))
+	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port))
 	cmdline = p.stdout.read()
 	if not cmdline: return None
 	for k in ('miner','bob','alice'):

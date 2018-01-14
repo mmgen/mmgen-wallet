@@ -8,8 +8,8 @@ the preferred way for all non-Linux users to run MMGen.***
 Enter your MSYS environment, create the directory `/build` and move to it.
 This is where you'll be unpacking and building archives:
 
-		$ mkdir /build
-		$ cd /build
+	$ mkdir /build
+	$ cd /build
 
 If the machine you're installing on is online, you can download the various
 tarballs and zipped archives you need from the Internet exactly as described in
@@ -27,11 +27,11 @@ archive would thus look something like this:
 
 Grab the v1.0.x [tarball][06] from openssl.org, unpack and build:
 
-		$ tar -xzf <path to openssl archive>/openssl-1.0.2j.tar.gz
-		$ cd openssl-1.0.2j
-		$ ./Configure mingw64 --openssldir=/usr
-		$ make
-		$ make install
+	$ tar -xzf <path to openssl archive>/openssl-1.0.2j.tar.gz
+	$ cd openssl-1.0.2j
+	$ ./Configure mingw64 --openssldir=/usr
+	$ make
+	$ make install
 
 ### 3. Build the Scrypt Python module:
 
@@ -39,90 +39,119 @@ The latest scrypt tarball available from [Python][07] at this writing
 (scrypt-0.8.0.tar.gz) has missing files and doesn't build, so grab the latest
 [zipfile][07z] from the scrypt source repository, unzip and build:
 
-		$ cd /build
-		$ unzip <path to scrypt archive>/91d194b6a6bd.zip
-		$ cd mhallin-py-scrypt-91d194b6a6bd
+	$ cd /build
+	$ unzip <path to scrypt archive>/91d194b6a6bd.zip
+	$ cd mhallin-py-scrypt-91d194b6a6bd
 
 Open the file `setup.py` in your text editor. Change the line reading
 
-		from setuptools import setup, Extension
+	from setuptools import setup, Extension
 
 to read
 
-		from distutils.core import setup, Extension
+	from distutils.core import setup, Extension
 
 Right before the line beginning with
 
-		scrypt_module = Extension(
+	scrypt_module = Extension(
 
 add the following lines (with no indentation):
 
-		library_dirs = [r'c:\mingw64\x86_64-w4-mingw32\lib','/msys/lib']
-		includes = [r'c:\msys\include']
+	library_dirs = [r'c:\mingw64\x86_64-w4-mingw32\lib','/msys/lib']
+	includes = [r'c:\msys\include']
 
 Save `setup.py`, build and install:
 
-		$ python setup.py build --compiler=mingw32
-		$ python setup.py install
+	$ python setup.py build --compiler=mingw32
+	$ python setup.py install
 
 Now, to solve a problem with the interpreter not finding the scrypt extension
 module, we have to do this little fixup:
 
-		$ cd /mingw/opt/lib/python2.7/site-packages
-		$ unzip scrypt*.egg
+	$ cd /mingw/opt/lib/python2.7/site-packages
+	$ unzip scrypt*.egg
 
 ### 4. Build the pycrypto Python module:
 
 Download the latest pycrypto [tarball][02] from the Python website and unpack it:
 
-		$ cd /build
-		$ tar -xzf <path to pycrypto archive>/pycrypto-2.6.1.tar.gz
-		$ cd pycrypto-2.6.1
+	$ cd /build
+	$ tar -xzf <path to pycrypto archive>/pycrypto-2.6.1.tar.gz
+	$ cd pycrypto-2.6.1
 
 Open the file `setup.py` in your text editor. Remove *exactly* four spaces at
 the beginning of this line:
 
-		self.__remove_extensions(["CryptoPublicKey._fastmath"])
+	self.__remove_extensions(["CryptoPublicKey._fastmath"])
 
 to move it one level of indentation to the left.  Save the file and exit the
 editor.  Now build and install:
 
-		$ python setup.py build --compiler=mingw32
-		$ python setup.py install
+	$ python setup.py build --compiler=mingw32
+	$ python setup.py install
 
 ### 5. Install the ecdsa Python module:
 
 Grab the latest python-ecdsa [tarball][03], unpack and build:
 
-		$ cd /build
-		$ tar -xzf <path to ecdsa archive>/ecdsa-0.13.tar.gz
-		$ cd ecdsa-0.13
-		$ python setup.py install
+	$ cd /build
+	$ tar -xzf <path to ecdsa archive>/ecdsa-0.13.tar.gz
+	$ cd ecdsa-0.13
+	$ python setup.py install
 
-### 6. Install the colorama Python module:
+### 6. Install the ed25519ll Python module (required for Monero address generation):
+
+Grab the latest ed25519ll [tarball][43], unpack and build:
+
+	$ cd /build
+	$ tar -xzf <path to ed25519ll archive>/ed25519ll-0.6.tar.gz
+	$ cd ed25519ll-0.6
+
+Open the file `setup.py` in your text editor. Change the line reading
+
+	plat_name = get_platform().replace('-', '_')
+
+to read
+
+	plat_name = 'win64'
+
+Exit the editor and run:
+
+	$ python setup.py install
+
+### 7. Install the pysha3 Python module (required for Monero and Ethereum address generation):
+
+Grab the latest pysha3 [tarball][44], unpack and build:
+
+	$ cd /build
+	$ tar -xzf <path to pysha3 archive>/pysha3-1.0.2.tar.gz
+	$ cd pysha3-1.0.2
+	$ python setup.py install
+
+### 8. Install the colorama Python module:
 
 Grab the latest colorama [tarball][14], unpack and build:
 
-		$ cd /build
-		$ tar -xzf <path to colorama archive>/colorama-0.3.7.tar.gz
-		$ cd colorama-0.3.7
-		$ python setup.py install
+	$ cd /build
+	$ tar -xzf <path to colorama archive>/colorama-0.3.7.tar.gz
+	$ cd colorama-0.3.7
+	$ python setup.py install
 
-### 7. Install the pexpect Python module (needed for test suite):
+### 9. Install the pexpect Python module (needed for test suite):
 
 Grab the latest pexpect [tarball][15], unpack and build:
 
-		$ cd /build
-		$ tar -xzf <path to pexpect archive>/pexpect-4.2.1.tar.gz
-		$ cd pexpect-4.2.1
-		$ python setup.py install
+	$ cd /build
+	$ tar -xzf <path to pexpect archive>/pexpect-4.2.1.tar.gz
+	$ cd pexpect-4.2.1
+	$ python setup.py install
 
-### 8. Install sdelete utility (needed for secure wallet deletion):
+### 10. Install sdelete utility (needed for secure wallet deletion):
 
 Grab the latest SDelete [zip archive][16], unzip and copy `sdelete.exe` to
 your execution path (`c:\windows`, for example).
 
-### 9. Build libsecp256k1:
+### 11. Build libsecp256k1:
 
 Libsecp256k1 requires GNU autotools to build, and they're not included in the
 MinGW-64 distribution for some reason, so you'll have to retrieve and unpack
@@ -134,41 +163,41 @@ them yourself. You'll need these archives:
 
 Unpack them in your /mingw directory and fix up some filenames:
 
-		$ cd /mingw
-		$ tar -xzf <path to>/autoconf2.5-2.68-1-mingw32-bin.tar.lzma
-		$ tar -xzf <path to>/automake1.11-1.11.1-1-mingw32-bin.tar.lzma
-		$ tar -xzf <path to>/libtool-2.4-1-mingw32-bin.tar.lzma
-		$ cd bin
-		$ cp autoconf-* autoconf
-		$ cp automake-* automake
-		$ cp aclocal-* aclocal
-		$ cp autoreconf-* autoreconf
+	$ cd /mingw
+	$ tar -xzf <path to>/autoconf2.5-2.68-1-mingw32-bin.tar.lzma
+	$ tar -xzf <path to>/automake1.11-1.11.1-1-mingw32-bin.tar.lzma
+	$ tar -xzf <path to>/libtool-2.4-1-mingw32-bin.tar.lzma
+	$ cd bin
+	$ cp autoconf-* autoconf
+	$ cp automake-* automake
+	$ cp aclocal-* aclocal
+	$ cp autoreconf-* autoreconf
 
 Now get the latest libsecp256k1 [zip archive][11] from GitHub, unpack, build and
 install:
 
-		$ cd /build
-		$ unzip.exe <path to libsecp256k1 archive>/master.zip
-		$ cd secp256k1-master
-		$ ./autogen.sh
-		$ ./configure
-		$ make
-		$ make install
+	$ cd /build
+	$ unzip.exe <path to libsecp256k1 archive>/master.zip
+	$ cd secp256k1-master
+	$ ./autogen.sh
+	$ ./configure
+	$ make
+	$ make install
 
-### 10. Install MMGen:
+### 12. Install MMGen:
 
 Get the [zip archive][10] of the latest stable version from GitHub, unpack and install:
 
-		$ cd /build
-		$ unzip.exe <path to mmgen archive>/stable_mswin.zip
-		$ cd mmgen-stable_mswin
-		$ python setup.py build --compiler=mingw32
-		$ sudo ./setup.py install
+	$ cd /build
+	$ unzip.exe <path to mmgen archive>/stable_mswin.zip
+	$ cd mmgen-stable_mswin
+	$ python setup.py build --compiler=mingw32
+	$ sudo ./setup.py install
 
 After first installing and starting the [Bitcoin daemon][77], you may then run
 the MMGen test suite to make sure your installation's working:
 
-		$ test/test.py -s
+	$ test/test.py -s
 
 [02]: https://pypi.python.org/packages/60/db/645aa9af249f059cc3a368b118de33889219e0362141e75d4eaf6f80f163/pycrypto-2.6.1.tar.gz#md5=55a61a054aa66812daf5161a0d5d7eda
 [03]: https://pypi.python.org/packages/f9/e5/99ebb176e47f150ac115ffeda5fedb6a3dbb3c00c74a59fd84ddf12f5857/ecdsa-0.13.tar.gz#md5=1f60eda9cb5c46722856db41a3ae6670
@@ -185,3 +214,5 @@ the MMGen test suite to make sure your installation's working:
 [32]: https://sourceforge.net/projects/mingw/files/MinGW/Extension/automake/automake1.11/automake1.11-1.11.1-1/automake1.11-1.11.1-1-mingw32-bin.tar.lzma
 [33]: https://sourceforge.net/projects/mingw/files/MinGW/Extension/libtool/libtool-2.4-1/libtool-2.4-1-mingw32-bin.tar.lzma
 [77]: Install-Bitcoind
+[43]: https://pypi.python.org/packages/8a/34/b27ee501205893cf7cc537b4e6553a557eaaca14c4755aa1eaa500afac57/ed25519ll-0.6.tar.gz#md5=35b3190ffefb631e7c5a45d96d768f80
+[44]: https://pypi.python.org/packages/73/bf/978d424ac6c9076d73b8fdc8ab8ad46f98af0c34669d736b1d83c758afee/pysha3-1.0.2.tar.gz#md5=59cd2db7a9988c1f3f6aee40145e0c96

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2017 Philemon <mmgen-py@yandex.com>
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -1251,6 +1251,15 @@ def clean(usr_dirs=[]):
 			die(1,'%s: invalid directory number' % d)
 	cleandir(os.path.join('test','data_dir'))
 
+def skip_for_win():
+	if g.platform == 'win':
+		import traceback
+		f = traceback.extract_stack()[-2][-2]
+		msg("Skipping test '{}': not supported on Windows platform".format(f))
+		return True
+	else:
+		return False
+
 class MMGenTestSuite(object):
 
 	def __init__(self):
@@ -1897,8 +1906,7 @@ class MMGenTestSuite(object):
 
 	# Miscellaneous tests
 	def autosign(self,name): # tests everything except device detection, mount/unmount
-		if g.platform == 'win':
-			msg('Skipping {} (not supported)'.format(name)); return
+		if skip_for_win(): return
 		fdata = (('btc',''),('bch',''),('ltc','litecoin'))
 		tfns = [cfgs['8']['ref_tx_file'][c].format('') for c,d in fdata]
 		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata,tfns)]
@@ -2070,6 +2078,7 @@ class MMGenTestSuite(object):
 		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
 	def ref_addrfile_chk_zec_z(self,name):
+		if skip_for_win(): return
 		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
 								mmtype='z',add_args=['mmtype=zcash_z'])
 
@@ -2089,6 +2098,7 @@ class MMGenTestSuite(object):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
 	def ref_keyaddrfile_chk_zec_z(self,name):
+		if skip_for_win(): return
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
 								mmtype='z',add_args=['mmtype=zcash_z'])
 
