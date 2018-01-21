@@ -53,6 +53,9 @@ Wallet/TX operations (coin daemon must be running):
   txview        - show raw/signed {pnm} transaction in human-readable form
   twview        - view tracking wallet
 
+  keyaddrlist2monerowallets - create Monero wallets from key-address list
+  syncmonerowallets         - sync Monero wallets from key-address list
+
 General utilities:
   hexdump      - encode data into formatted hexadecimal form (file or stdin)
   unhexdump    - decode formatted hexadecimal data (file or stdin)

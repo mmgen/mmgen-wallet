@@ -12,7 +12,7 @@ while getopts hinPt OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
-		echo   "  USAGE:           $PROGNAME [options] branch [tests]"
+		echo   "  USAGE:           $PROGNAME [options] [branch] [tests]"
 		echo   "  OPTIONS: '-h'  Print this help message"
 		echo   "           '-i'  Install only; don't run tests"
 		echo   "           '-n'  Don't install; test in place"
@@ -50,10 +50,12 @@ shift $((OPTIND-1))
 
 RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
 
-BRANCH=$1; shift
-BRANCHES=$(git branch)
-FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
-[ "$FOUND_BRANCH" ] || { echo "Branch '$BRANCH' not found!"; exit; }
+[ "$NO_INSTALL" ] || {
+	BRANCH=$1; shift
+	BRANCHES=$(git branch)
+	FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
+	[ "$FOUND_BRANCH" ] || { echo "Branch '$BRANCH' not found!"; exit; }
+}
 
 set -e
 
@@ -158,8 +160,10 @@ s_monero='Testing generation and wallet creation operations for Monero'
 s_monero='The monerod (mainnet) daemon must be running for the following tests'
 ROUNDS=1000
 t_monero=(
-'python cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-29,101-109'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallet $TMPDIR/988*XMR*akeys')
+'python cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-24,101-104'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys'
+'python cmds/mmgen-tool -q --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys'
+)
 [ "$MINGW" ] && t_monero=("$t_monero")
 f_monero='Monero tests completed'
 

@@ -145,7 +145,6 @@ setup(
 			'mmgen.main_txsign',
 			'mmgen.main_txsend',
 			'mmgen.main_txdo',
-			'mmgen.txcreate',
 			'mmgen.txsign',
 			'mmgen.main_tool',
 
