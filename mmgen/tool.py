@@ -94,8 +94,8 @@ cmd_data = OrderedDict([
 	('Decrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
 	('Bytespec',     ['<bytespec> [str]']),
 
-	('Keyaddrlist2monerowallets',['<{} XMR key-address file> [str]'.format(pnm),'blockheight [int=(current height)]']),
-	('Syncmonerowallets',        ['<{} XMR key-address file> [str]'.format(pnm)]),
+	('Keyaddrlist2monerowallets',['<{} XMR key-address file> [str]'.format(pnm),'blockheight [int=(current height)]',"addrs [str=''] (addr idx list or range)"]),
+	('Syncmonerowallets',        ['<{} XMR key-address file> [str]'.format(pnm),"addrs [str=''] (addr idx list or range)"]),
 ])
 
 def usage(command):
@@ -476,12 +476,13 @@ def Rand2file(outfile,nbytes,threads=4,silent=False):
 
 def Bytespec(s): Msg(str(parse_nbytes(s)))
 
-def Syncmonerowallets(infile): monero_wallet_ops(infile=infile,op='sync')
+def Keyaddrlist2monerowallets(infile,blockheight=None,addrs=None):
+	monero_wallet_ops(infile=infile,op='create',blockheight=blockheight,addrs=addrs)
 
-def Keyaddrlist2monerowallets(infile,blockheight=None):
-	monero_wallet_ops(infile=infile,op='create',blockheight=blockheight)
+def Syncmonerowallets(infile,addrs=None):
+	monero_wallet_ops(infile=infile,op='sync',addrs=addrs)
 
-def monero_wallet_ops(infile,op,blockheight=None):
+def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 	def run_cmd(cmd):
 		import subprocess as sp
@@ -570,7 +571,10 @@ def monero_wallet_ops(infile,op,blockheight=None):
 					msg('\r  Block {h} / {h}'.format(h=height))
 				else:
 					msg('  Wallet in sync')
-				msg('  '+[l for l in p.before.splitlines() if l[:8] == 'Balance:'][0])
+				b = [l for l in p.before.splitlines() if l[:8] == 'Balance:'][0].split()
+				msg('  Balance: {} Unlocked balance: {}'.format(b[1],b[4]))
+				bals[0] += float(b[1][0:-1])
+				bals[1] += float(b[4])
 				my_sendline(p,'Exiting','exit',5)
 				p.read()
 				break
@@ -585,9 +589,11 @@ def monero_wallet_ops(infile,op,blockheight=None):
 		init_coin('xmr')
 		from mmgen.addr import AddrList
 		al = KeyAddrList(infile)
-		dl = len(al.data)
+		data = [d for d in al.data if addrs == None or d.idx in AddrIdxList(addrs)]
+		dl = len(data)
+		assert dl,"No addresses in addrfile within range '{}'".format(addrs)
 		gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
-		for n,d in enumerate(al.data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
+		for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
 			fn = '{}{}-{}-MoneroWallet'.format(
 				(opt.outdir+'/' if opt.outdir else ''),
 				al.al_id.sid,
@@ -595,11 +601,15 @@ def monero_wallet_ops(infile,op,blockheight=None):
 			gmsg('\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
 			m[op][2](n,d,fn)
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
+		if op == 'sync':
+			msg('Balance: {:.12f}, Unlocked balance: {:.12f}'.format(*bals))
 
 	os.environ['LANG'] = 'C'
 	import pexpect
-	if blockheight != None and int(blockheight) < 0: blockheight = 0 # TODO: non-zero coverage
+	if blockheight != None and int(blockheight) < 0:
+		blockheight = 0 # TODO: non-zero coverage
 	cur_height = test_rpc()
+	bals = [0.0,0.0] # locked,unlocked
 
 	try:
 		process_wallets()
@@ -608,7 +618,10 @@ def monero_wallet_ops(infile,op,blockheight=None):
 	except EOFError:
 		rdie(2,'\nEnd of file\n')
 	except Exception as e:
-		rdie(1,'Program died: {!r}'.format(e))
+		try:
+			die(1,'Error: {}'.format(e[0]))
+		except:
+			rdie(1,'Error: {!r}'.format(e))
 
 # ================ RPC commands ================== #
 

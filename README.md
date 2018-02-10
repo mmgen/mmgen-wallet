@@ -116,7 +116,7 @@ future use in an address file, which addresses may safely be made public.
 [**Forum**][4] |
 [Reddit][0] |
 [PGP Public Key][5] |
-Donate: 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
+Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 
 [0]: https://www.reddit.com/user/mmgen-py
 [1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows

@@ -859,3 +859,14 @@ def rpc_init(reinit=False):
 
 	g.rpch = conn
 	return conn
+
+def format_text(s,indent=0,width=80):
+	words,lines = s.split(),[]
+	assert width >= indent + 4,'width must be >= indent + 4'
+	while words:
+		line = ''
+		while len(line) <= (width-indent) and words:
+			if len(line) + len(words[0]) + 1 > width-indent: break
+			line += ('',' ')[bool(line)] + words.pop(0)
+		lines.append(' '*indent + line)
+	return '\n'.join(lines) + '\n'

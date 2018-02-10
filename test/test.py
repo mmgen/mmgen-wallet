@@ -904,6 +904,8 @@ def errmsg(s): stderr_save.write(s+'\n')
 def errmsg_r(s): stderr_save.write(s)
 
 if opt.list_cmds:
+	from mmgen.term import get_terminal_size
+	tw = get_terminal_size()[0]
 	fs = '  {:<{w}} - {}'
 	Msg(green('AVAILABLE COMMANDS:'))
 	w = max([len(i) for i in cmd_data])
@@ -915,16 +917,20 @@ if opt.list_cmds:
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
 	w = max([len(i) for i in meta_cmds])
-	Msg(green('\nAVAILABLE METACOMMANDS:'))
+	Msg('\n'+green('AVAILABLE METACOMMANDS:'))
 	for cmd in meta_cmds:
-		Msg(fs.format(cmd,' '.join(meta_cmds[cmd]),w=w))
+		ft = format_text(' '.join(meta_cmds[cmd]),width=tw,indent=4).lstrip()
+		sep = '\n' if not ft else ' ' if len(ft.splitlines()[0]) + len(cmd) < tw - 4 else '\n    '
+		Msg_r('  {}{}{}'.format(yellow(cmd+':'),sep,ft))
 
 	w = max([len(i) for i in cmd_list])
-	Msg(green('\nAVAILABLE COMMAND GROUPS:'))
-	for g in cmd_list:
-		Msg(fs.format(g,' '.join(cmd_list[g]),w=w))
+	Msg('\n'+green('AVAILABLE COMMAND GROUPS:'))
+	for cmd in cmd_list:
+		ft = format_text(' '.join(cmd_list[cmd]),width=tw,indent=4).lstrip()
+		sep = '\n' if not ft else ' ' if len(ft.splitlines()[0]) + len(cmd) < tw - 4 else '\n    '
+		Msg_r('  {}{}{}'.format(yellow(cmd+':'),sep,ft))
 
-	Msg(green('\nAVAILABLE UTILITIES:'))
+	Msg('\n'+green('AVAILABLE UTILITIES:'))
 	w = max([len(i) for i in utils])
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))

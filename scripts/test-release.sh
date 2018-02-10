@@ -161,8 +161,13 @@ s_monero='The monerod (mainnet) daemon must be running for the following tests'
 ROUNDS=1000
 t_monero=(
 'python cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-24,101-104'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=23'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=103-200'
+'rm $TMPDIR/*-MoneroWallet*'
 'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys'
-'python cmds/mmgen-tool -q --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=3'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=23-29'
+'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys'
 )
 [ "$MINGW" ] && t_monero=("$t_monero")
 f_monero='Monero tests completed'
