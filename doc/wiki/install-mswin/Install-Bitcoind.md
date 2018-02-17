@@ -72,15 +72,15 @@ more low-powered computer as your online machine.
 >> background, so to run multiple daemons simultaneously you must start each
 >> one in a separate terminal window.  Start your daemons like this:
 
-		# Bitcoin Core:
-		$ bitcoind
+	# Bitcoin Core:
+	$ bitcoind
 
-		# ABC:
-		$ mkdir $APPDATA/Bitcoin_ABC
-		$ bitcoind-abc --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin_ABC
+	# ABC:
+	$ mkdir $APPDATA/Bitcoin_ABC
+	$ bitcoind-abc --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin_ABC --usecashaddr=0
 
-		# Litecoin
-		$ litecoind
+	# Litecoin
+	$ litecoind
 
 >> Note that the `--listen=0` argument is required only when running Core and ABC simultaneously.
 
@@ -88,26 +88,26 @@ more low-powered computer as your online machine.
 
 >> Linux users start their daemons like this:
 
-		# Bitcoin Core:
-		$ bitcoind --daemon
+	# Bitcoin Core:
+	$ bitcoind --daemon
 
-		# ABC:
-		$ mkdir ~/.bitcoin-abc
-		$ bitcoind-abc --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-abc
+	# ABC:
+	$ mkdir ~/.bitcoin-abc
+	$ bitcoind-abc --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-abc --usecashaddr=0
 
-		# Litecoin:
-		$ litecoind --daemon
+	# Litecoin:
+	$ litecoind --daemon
 
 > Communicate with your daemons like this:
 
-		# Core:
-		$ bitcoin-cli help
+	# Core:
+	$ bitcoin-cli help
 
-		# ABC:
-		$ bitcoin-cli --rpcport=8442 help
+	# ABC:
+	$ bitcoin-cli --rpcport=8442 help
 
-		# Litecoin:
-		$ litecoin-cli help
+	# Litecoin:
+	$ litecoin-cli help
 
 > Warning: If you're using an existing Bitcoin or Litecoin installation, **move
 > your wallet.dat out of harm's way** before starting the daemon.  The new

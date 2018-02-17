@@ -864,7 +864,8 @@ and Litecoin daemons are properly installed ([source][si])([binaries][bi]),
 [running][p8] and synced.
 
 MMGen requires that the bitcoin-abc daemon be listening on non-standard
-[RPC port 8442][p8].
+[RPC port 8442][p8].  If your daemon version is >= 0.16.2, you must use the
+`--usecashaddr=0` option.
 
 Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
 commands.  It's that simple!
@@ -894,25 +895,34 @@ Generate ten Monero address pairs from your default wallet:
 	$ mmgen-keygen --coin=xmr 1-10
 
 In addition to spend and view keys, Monero key/address files also include a
-wallet password for each address (the password is the double Sha256 of the spend
-key, truncated to 16 bytes).  This allows you to easily generate wallets for
-each address by running the following command
+wallet password for each address (the password is the double SHA256 of the spend
+key, truncated to 16 bytes).  This allows you to generate a wallet from each
+key in the key/address file by running the following command:
 
 	$ monero-wallet-cli --generate-from-spend-key MyMoneroWallet
 
 and pasting in the key and password data when prompted.  Monerod must be
 running and `monero-wallet-cli` be located in your executable path.
 
-This process is completely automated by the `mmgen-tool` utility:
+To save your time and labor, the `mmgen-tool` utility includes a command that
+completely automates this process:
 
-	$ mmgen-tool keyaddrlist2monerowallet *XMR*.akeys.mmenc
+	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc
 
-This will generate Monero wallets for each key/address pair in the key/address
-file and encrypt them with their respective passwords.  No user interaction is
-required.  By default, wallets are synced to the current block height, as
-they're assumed to be empty.  This behavior can be overridden:
+This will generate a uniquely-named Monero wallet for each key/address pair in
+the key/address file and encrypt it with its respective password.  No user
+interaction is required.  By default, wallets are synced to the current block
+height, as they're assumed to be empty, but this behavior can be overridden:
 
-	$ mmgen-tool keyaddrlist2monerowallet *XMR*.akeys.mmenc blockheight=123456
+	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc blockheight=123456
+
+To keep your wallets in sync as the Monero blockchain grows, `mmgen-tool`
+includes another utility:
+
+	$ mmgen-tool syncmonerowallets *XMR*.akeys.mmenc
+
+This command also requires no user interaction, a very handy feature when you
+have a large batch of wallets requiring long sync times.
 
 #### <a name='a_kg'>Key/address generation support for ETH, ETC and 144 Bitcoin-derived altcoins</a>
 
@@ -923,6 +933,10 @@ with the `--coin` argument:
 	$ mmgen-keygen --coin=dash 1-10
 	# For Emercoin:
 	$ mmgen-keygen --coin=emc 1-10
+
+For compressed public keys, add the `--type=compressed` option:
+
+	$ mmgen-keygen --coin=dash --type=compressed 1-10
 
 If it's just the addresses you want, then use `mmgen-addrgen` instead:
 

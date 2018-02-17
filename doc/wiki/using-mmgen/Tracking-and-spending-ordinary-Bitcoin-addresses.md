@@ -9,7 +9,7 @@ been spent to your MMGen wallet.
 Make a plain list of the addresses, one address per line, and import the list
 into the tracking wallet:
 
-		$ mmgen-addrimport --rescan -l my_existing_addrs
+	$ mmgen-addrimport --rescan -l my_existing_addrs
 
 NOTE: The '--rescan' option forces a rescan of the entire block chain, which is
 required for all addresses with existing balances.  The rescanning process is
@@ -25,7 +25,7 @@ need their corresponding private keys.
 If the key or keys in question are in a bitcoind wallet ('wallet.dat'), you can
 extract them to a keylist file using the 'bitcoin-cli dumpwallet' command:
 
-		$ bitcoin-cli dumpwallet my_secret.keys
+	$ bitcoin-cli dumpwallet my_secret.keys
 
 This will write the keylist file 'my_secret.keys' to your home directory (or
 maybe to your Bitcoin data directory, results may vary).  If you want it written
@@ -46,13 +46,13 @@ After creating a transaction that spends from one of your ordinary Bitcoin
 addresses, transfer the raw transaction file to your offline computer and sign
 it with the keylist file:
 
-		$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx
-		...
-		Signed transaction written to file 'F9DCBA[6.6].sigtx'
+	$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx
+	...
+	Signed transaction written to file 'F9DCBA[6.6].sigtx'
 
 If your transaction also contains MMGen inputs, you'll need to provide a wallet
 for them too, listing it at the end of the command line, like this:
 
-		$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx 89ABCDEF-76543210[256,3].mmdat
+	$ mmgen-txsign -k my_secret.keys F9DCBA[6.6].rawtx 89ABCDEF-76543210[256,3].mmdat
 
 That's it!  Your signed transaction is ready to broadcast.

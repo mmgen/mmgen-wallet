@@ -2,30 +2,30 @@
 
 > Install required Debian/Ubuntu packages:
 
-		$ sudo apt-get install python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools libgmp-dev python-crypto python-nacl python-pysha3 python-pip
+	$ sudo apt-get install python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools libgmp-dev python-crypto python-nacl python-pysha3 python-pip
 
 > Install fast ed25519 Python package (optional, but recommended for Monero addresses):
 
-		$ sudo pip install ed25519ll
+	$ sudo -H pip install ed25519ll
 
 > Install the secp256k1 library:
 
-		$ git clone https://github.com/bitcoin-core/secp256k1.git
-		$ cd secp256k1
-		$ ./autogen.sh
-		$ ./configure
-		$ make
-		$ sudo make install
-		$ sudo ldconfig
-		$ cd ..
+	$ git clone https://github.com/bitcoin-core/secp256k1.git
+	$ cd secp256k1
+	$ ./autogen.sh
+	$ ./configure
+	$ make
+	$ sudo make install
+	$ sudo ldconfig
+	$ cd ..
 
 > Install MMGen:
 
-		$ git clone https://github.com/mmgen/mmgen.git
-		$ cd mmgen
-		$ git checkout -b stable stable_linux
-		$ sudo ./setup.py install
-		$ cd ..
+	$ git clone https://github.com/mmgen/mmgen.git
+	$ cd mmgen
+	$ git checkout -b stable stable_linux
+	$ sudo ./setup.py install
+	$ cd ..
 
 > Install the bitcoind daemon(s):
 
