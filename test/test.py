@@ -2421,7 +2421,8 @@ class MMGenTestSuite(object):
 
 	def regtest_get_mempool(self,name):
 		t = MMGenExpect(name,'mmgen-regtest',['show_mempool'])
-		return eval(t.read())
+		from ast import literal_eval
+		return literal_eval(t.read())
 
 	def regtest_get_mempool1(self,name):
 		mp = self.regtest_get_mempool(name)
@@ -2681,10 +2682,10 @@ class MMGenTestSuite(object):
 		with open(fn) as f:
 			lines = f.read().splitlines()
 
-		from mmgen.obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt
 		tx = {}
+		from ast import literal_eval
 		for k,i in (('in',3),('out',4)):
-			tx[k] = eval(lines[i])
+			tx[k] = literal_eval(lines[i])
 			tx[k+'_addrs'] = [i['addr'] for i in tx[k]]
 
 		psave = g.proto

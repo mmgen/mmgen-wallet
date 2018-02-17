@@ -70,7 +70,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def get_unspent_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
-			us_rpc = eval(get_data_from_file(g.bogus_wallet_data))
+			us_rpc = eval(get_data_from_file(g.bogus_wallet_data)) # testing, so ok
 		else:
 			us_rpc = g.rpch.listunspent(self.minconf)
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')

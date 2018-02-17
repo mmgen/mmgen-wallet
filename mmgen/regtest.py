@@ -158,7 +158,8 @@ def send(addr,amt):
 def show_mempool():
 	p = start_cmd('cli','getrawmempool')
 	from pprint import pformat
-	msg(pformat(eval(p.stdout.read())))
+	from ast import literal_eval
+	msg(pformat(literal_eval(p.stdout.read())))
 	p.wait()
 
 def cli(*args):
@@ -291,7 +292,8 @@ def generate(blocks=1,silent=False):
 	wait_for_daemon('ready',silent=True)
 	p = start_cmd('cli','generate',str(blocks))
 	out = process_output(p,silent=silent)[0]
-	if len(eval(out)) != blocks:
+	from ast import literal_eval
+	if len(literal_eval(out)) != blocks:
 		rdie(1,'Error generating blocks')
 	p.wait()
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))

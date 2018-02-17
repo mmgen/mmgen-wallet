@@ -349,10 +349,12 @@ def check_opts(usr_opts):       # Returns false if any check fails
 					(val,desc,n,sepword))
 			return False
 
-	def opt_compares(val,op,target,desc,what=''):
+	def opt_compares(val,op_str,target,desc,what=''):
+		import operator as o
+		op_f = { '<':o.lt, '<=':o.le, '>':o.gt, '>=':o.ge, '=':o.eq }[op_str]
 		if what: what += ' '
-		if not eval('%s %s %s' % (val, op, target)):
-			msg('%s: invalid %s (%snot %s %s)' % (val,desc,what,op,target))
+		if not op_f(val,target):
+			msg('{}: invalid {} ({}not {} {})'.format(val,desc,what,op_str,target))
 			return False
 		return True
 

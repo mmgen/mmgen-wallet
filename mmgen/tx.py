@@ -557,6 +557,8 @@ class MMGenTX(MMGenObject):
 	def format(self):
 		self.inputs.check_coin_mismatch()
 		self.outputs.check_coin_mismatch()
+		def amt_to_str(d):
+			return dict([(k,str(d[k]) if k == 'amt' else d[k]) for k in d])
 		lines = [
 			'{}{} {} {} {} {}{}'.format(
 				(g.coin+' ','')[g.coin=='BTC'],
@@ -568,8 +570,8 @@ class MMGenTX(MMGenObject):
 				('',' LT={}'.format(self.locktime))[bool(self.locktime)]
 			),
 			self.hex,
-			repr([e.__dict__ for e in self.inputs]),
-			repr([e.__dict__ for e in self.outputs])
+			repr([amt_to_str(e.__dict__) for e in self.inputs]),
+			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
 		if self.label:
 			lines.append(baseconv.b58encode(self.label.encode('utf8')))
@@ -971,6 +973,20 @@ class MMGenTX(MMGenObject):
 
 		tx_data = get_lines_from_file(infile,self.desc+' data',silent=silent_open)
 
+		def eval_io_data(raw_data,desc):
+			from ast import literal_eval
+			try:
+				d = literal_eval(raw_data)
+			except:
+				if desc == 'inputs' and not silent_open:
+					ymsg('Warning: transaction data appears to be in old format')
+				import re
+				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
+			assert type(d) == list,'{} data not a list!'.format(desc)
+			assert len(d),'no {}!'.format(desc)
+			for e in d: e['amt'] = g.proto.coin_amt(e['amt'])
+			return self.decode_io(desc,d)
+
 		try:
 			desc = 'data'
 			assert len(tx_data) >= 5,'number of lines less than 5'
@@ -1017,11 +1033,9 @@ class MMGenTX(MMGenObject):
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,'invalid coin type'
 			desc = 'inputs data'
-			self.inputs = self.decode_io('inputs',eval(inputs_data))
-			assert len(self.inputs),'no inputs!'
-			desc = '{}-to-MMGen address map data'.format(g.coin)
-			self.outputs = self.decode_io('outputs',eval(outputs_data))
-			assert len(self.outputs),'no outputs!'
+			self.inputs  = eval_io_data(inputs_data,'inputs')
+			desc = 'outputs data'
+			self.outputs = eval_io_data(outputs_data,'outputs')
 		except Exception as e:
 			die(2,'Invalid {} in transaction file: {}'.format(desc,e[0]))
 
