@@ -106,5 +106,5 @@ start_time = int(time.time())
 run_tests()
 
 t = int(time.time()) - start_time
-m =	'\nAll requested tests finished OK, elapsed time: {:02}:{:02}'
+m = '\nAll requested tests finished OK, elapsed time: {:02}:{:02}'
 msg(green(m.format(t/60,t%60)))

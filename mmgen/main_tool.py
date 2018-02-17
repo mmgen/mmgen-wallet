@@ -150,9 +150,7 @@ if Command not in tool.cmd_data:
 	die(1,"'%s': no such command" % Command.lower())
 
 args,kwargs = tool.process_args(Command,cmd_args)
-try:
-	ret = tool.__dict__[Command](*args,**kwargs)
-except Exception as e:
-	die(1,'{}'.format(e))
 
-sys.exit(0 if ret in (None,True) else 1) # some commands die, some return False on failure
+ret = tool.__dict__[Command](*args,**kwargs)
+
+sys.exit((1,0)[ret in (None,True)]) # some commands die, some return False on failure

@@ -77,8 +77,8 @@ cmd_data = OrderedDict([
 	('Mn_stats',     ["wordlist [str='electrum']"]),
 	('Mn_printlist', ["wordlist [str='electrum']"]),
 
-	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]''showbtcaddr [bool=True]']),
-	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)"]),
+	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]','showbtcaddr [bool=True]','show_age [bool=False]','show_days [bool=True]']),
+	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)",'show_age [bool=False]','show_days [bool=True]']),
 	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: ctime, atime)",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
@@ -625,11 +625,16 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 # ================ RPC commands ================== #
 
-def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True):
-	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,showempty=showempty,showbtcaddrs=showbtcaddr)
+def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True,show_age=False,show_days=None):
+	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,
+			showempty=showempty,showbtcaddrs=showbtcaddr,show_age=show_age,show_days=show_days)
 
 # List MMGen addresses and their balances.  TODO: move this code to AddrList
-def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=True,all_labels=False,sort=None):
+def Listaddresses(addrs='',minconf=1,
+	showempty=False,pager=False,showbtcaddrs=True,all_labels=False,sort=None,show_age=False,show_days=None):
+
+	if show_days == None: show_days = False # user-set show_days triggers show_age
+	else: show_age = True
 
 	if sort:
 		sort = set(sort.split(','))
@@ -716,15 +721,19 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 
 	out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
 
-	fs = ('{mid} {cmt} {amt}','{mid} {addr} {cmt} {amt}')[showbtcaddrs]
+	fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
 	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
-	max_cmt_len =  max(max(len(addrs[k]['lbl'].comment) for k in addrs),7)
+	max_cmt_len  = max(max(len(v['lbl'].comment) for v in addrs.values()),7)
+#	pmsg([a.split('.')[1] for a in [str(v['amt']) for v in addrs.values()] if '.' in a])
+	# fp: fractional part
+	max_fp_len = max([len(a.split('.')[1]) for a in [str(v['amt']) for v in addrs.values()] if '.' in a] or [1])
 	out += [fs.format(
 			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
 			addr=CoinAddr.fmtc('ADDRESS'),
 			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len),
-			amt='BALANCE'
+			amt='{:{w}}'.format('BALANCE',w=max_fp_len+4),
+			age=('CONFS','AGE')[show_days],
 			)]
 
 	def sort_algo(j):
@@ -737,6 +746,7 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 			return j.sort_key
 
 	al_id_save = None
+	confs_per_day = 60*60*24 / g.proto.secs_per_block
 	for mmid in sorted(addrs,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
 		if mmid.type == 'mmgen':
 			if al_id_save and al_id_save != mmid.obj.al_id:
@@ -748,11 +758,14 @@ def Listaddresses(addrs='',minconf=1,showempty=False,pager=False,showbtcaddrs=Tr
 				out.append('')
 				al_id_save = None
 			mmid_disp = 'Non-MMGen'
+		e = addrs[mmid]
 		out.append(fs.format(
-			mid = MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
-			addr=(addrs[mmid]['addr'].fmt(color=True) if showbtcaddrs else None),
-			cmt=addrs[mmid]['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
-			amt=addrs[mmid]['amt'].fmt('3.0',color=True)))
+			mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
+			addr=(e['addr'].fmt(color=True) if showbtcaddrs else None),
+			cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
+			amt=e['amt'].fmt('3.{}'.format(max_fp_len),color=True),
+			age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'
+			))
 	out.append('\nTOTAL: {} {}'.format(total.hl(color=True),g.coin))
 	o = '\n'.join(out)
 	return do_pager(o) if pager else Msg(o)

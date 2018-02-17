@@ -907,6 +907,7 @@ if opt.list_cmds:
 	from mmgen.term import get_terminal_size
 	tw = get_terminal_size()[0]
 	fs = '  {:<{w}} - {}'
+
 	Msg(green('AVAILABLE COMMANDS:'))
 	w = max([len(i) for i in cmd_data])
 	for cmd in cmd_data:
@@ -916,24 +917,19 @@ if opt.list_cmds:
 			continue
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
-	w = max([len(i) for i in meta_cmds])
-	Msg('\n'+green('AVAILABLE METACOMMANDS:'))
-	for cmd in meta_cmds:
-		ft = format_text(' '.join(meta_cmds[cmd]),width=tw,indent=4).lstrip()
-		sep = '\n' if not ft else ' ' if len(ft.splitlines()[0]) + len(cmd) < tw - 4 else '\n    '
-		Msg_r('  {}{}{}'.format(yellow(cmd+':'),sep,ft))
-
-	w = max([len(i) for i in cmd_list])
-	Msg('\n'+green('AVAILABLE COMMAND GROUPS:'))
-	for cmd in cmd_list:
-		ft = format_text(' '.join(cmd_list[cmd]),width=tw,indent=4).lstrip()
-		sep = '\n' if not ft else ' ' if len(ft.splitlines()[0]) + len(cmd) < tw - 4 else '\n    '
-		Msg_r('  {}{}{}'.format(yellow(cmd+':'),sep,ft))
+	for cl,lbl in ((meta_cmds,'METACOMMANDS'),(cmd_list,'COMMAND GROUPS')):
+		w = max([len(i) for i in cl])
+		Msg('\n'+green('AVAILABLE {}:'.format(lbl)))
+		for cmd in cl:
+			ft = format_par(' '.join(cl[cmd]),width=tw,indent=4,as_list=True)
+			sep = '' if not ft else ' ' if len(ft[0]) + len(cmd) < tw - 4 else '\n    '
+			Msg('  {}{}{}'.format(yellow(cmd+':'),sep,'\n'.join(ft).lstrip()))
 
 	Msg('\n'+green('AVAILABLE UTILITIES:'))
 	w = max([len(i) for i in utils])
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
+
 	sys.exit(0)
 
 NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]

@@ -110,17 +110,15 @@ class InitErrors(object):
 		assert on_fail in ('die','return','silent','raise'),'arg_chk in class {}'.format(cls.__name__)
 
 	@staticmethod
-	def init_fail(m,on_fail,silent=False):
+	def init_fail(m,on_fail):
+		if os.getenv('MMGEN_TRACEBACK'): on_fail == 'raise'
 		from mmgen.util import die,msg
-		if silent: m = ''
-		if os.getenv('MMGEN_TRACEBACK'):
-			raise ValueError,m
-		elif on_fail == 'die': die(1,m)
+		if   on_fail == 'silent': return None # TODO: return False instead?
+		elif on_fail == 'raise':  raise ValueError,m
+		elif on_fail == 'die':    die(1,m)
 		elif on_fail == 'return':
 			if m: msg(m)
-			return None # TODO: change to False
-		elif on_fail == 'silent': return None # same here
-		elif on_fail == 'raise':  raise ValueError,m
+			return None                       # TODO: here too?
 
 class Hilite(object):
 
@@ -134,11 +132,11 @@ class Hilite(object):
 				center=False,nullrepl='',app='',appcolor=False):
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
-		assert width > 0
+		assert width > 0,'Width must be > 0'
 		if s == '' and nullrepl:
 			s,center = nullrepl,True
 		if center: s = s.center(width)
-		assert type(encl) is str and len(encl) in (0,2)
+		assert type(encl) is str and len(encl) in (0,2),'type(encl) must be str and len(encl) be in (0,2)'
 		a,b = list(encl) if encl else ('','')
 		if trunc_ok and len(s) > width: s = s[:width]
 		if app:
@@ -310,9 +308,9 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 		raise NotImplementedError
 
 	def fmt(self,fs='3.8',color=False,suf=''):
-		s = self.__str__(color=False)
+		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
 		if '.' in fs:
-			p1,p2 = [int(i) for i in fs.split('.',1)]
+			p1,p2 = map(int,fs.split('.',1))
 			ss = s.split('.',1)
 			if len(ss) == 2:
 				a,b = ss
@@ -327,11 +325,9 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 		return self.__str__(color=color)
 
 	def __str__(self,color=False): # format simply, no exponential notation
-		if int(self) == self:
-			ret = str(int(self))
-		else:
-			ret = self.normalize().__format__('f')
-		return self.colorize(ret,color=color)
+		return self.colorize(
+			str(int(self)) if int(self) == self else self.normalize().__format__('f'),
+			color=color)
 
 	def __repr__(self):
 		return "{}('{}')".format(type(self).__name__,self.__str__())
