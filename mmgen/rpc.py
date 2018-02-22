@@ -25,6 +25,8 @@ import httplib,base64,json
 from mmgen.common import *
 from decimal import Decimal
 
+class RPCFailure(Exception): pass
+
 class CoinDaemonRPCConnection(object):
 
 	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
@@ -65,6 +67,7 @@ class CoinDaemonRPCConnection(object):
 	# kwargs are for local use and are not passed to server
 
 	# By default, dies with an error msg on all errors and exceptions
+	# on_fail is one of 'die' (default), 'return', 'silent', 'raise'
 	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
@@ -80,12 +83,16 @@ class CoinDaemonRPCConnection(object):
 		else:
 			p = {'method':cmd,'params':args,'id':1}
 
-		def die_maybe(*args):
+		def do_fail(*args):
 			if cf['on_fail'] in ('return','silent'):
 				return 'rpcfail',args
-			else:
-				try:    s = u'{}'.format(args[2])
-				except: s = repr(args[2])
+
+			try:    s = u'{}'.format(args[2])
+			except: s = repr(args[2])
+
+			if cf['on_fail'] == 'raise':
+				raise RPCFailure,s
+			elif cf['on_fail'] == 'die':
 				die(args[1],yellow(s))
 
 		dmsg('=== request() debug ===')
@@ -111,18 +118,18 @@ class CoinDaemonRPCConnection(object):
 			})
 		except Exception as e:
 			m = '{}\nUnable to connect to {} at {}:{}'
-			return die_maybe(None,2,m.format(e,g.proto.daemon_name,self.host,self.port))
+			return do_fail(None,2,m.format(e,g.proto.daemon_name,self.host,self.port))
 
 		try:
 			r = hc.getresponse() # returns HTTPResponse instance
 		except Exception:
 			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
-			return die_maybe(None,2,m.format(g.proto.daemon_name,self.host,self.port))
+			return do_fail(None,2,m.format(g.proto.daemon_name,self.host,self.port))
 
 		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
-			if cf['on_fail'] != 'silent':
+			if cf['on_fail'] not in ('silent','raise'):
 				msg_r(yellow('{} RPC Error: '.format(g.proto.daemon_name.capitalize())))
 				msg(red('{} {}'.format(r.status,r.reason)))
 			e1 = r.read()
@@ -131,14 +138,14 @@ class CoinDaemonRPCConnection(object):
 				e2 = '{} (code {})'.format(e3['message'],e3['code'])
 			except:
 				e2 = str(e1)
-			return die_maybe(r,1,e2)
+			return do_fail(r,1,e2)
 
 		r2 = r.read()
 
 		dmsg('    RPC REPLY data ==> %s\n' % r2)
 
 		if not r2:
-			return die_maybe(r,2,'Error: empty reply')
+			return do_fail(r,2,'Error: empty reply')
 
 #		from decimal import Decimal
 		r3 = json.loads(r2.decode('utf8'), parse_float=Decimal)
@@ -146,10 +153,10 @@ class CoinDaemonRPCConnection(object):
 
 		for resp in r3 if cf['batch'] else [r3]:
 			if 'error' in resp and resp['error'] != None:
-				return die_maybe(r,1,'{} returned an error: {}'.format(
+				return do_fail(r,1,'{} returned an error: {}'.format(
 					g.proto.daemon_name.capitalize(),resp['error']))
 			elif 'result' not in resp:
-				return die_maybe(r,1, 'Missing JSON-RPC result\n' + repr(resps))
+				return do_fail(r,1, 'Missing JSON-RPC result\n' + repr(resps))
 			else:
 				ret.append(resp['result'])
 
