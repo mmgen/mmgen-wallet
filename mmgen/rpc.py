@@ -168,6 +168,7 @@ class CoinDaemonRPCConnection(object):
 		'decoderawtransaction',
 		'disconnectnode',
 		'estimatefee',
+		'estimatesmartfee',
 		'getaddressesbyaccount',
 		'getbalance',
 		'getblock',

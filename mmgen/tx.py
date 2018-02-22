@@ -1049,16 +1049,25 @@ class MMGenTX(MMGenObject):
 			start_fee = opt.tx_fee
 		else:
 			desc = 'Network-estimated'
-			ret = g.rpch.estimatefee(opt.tx_confs)
-			if ret == -1:
+			try:
+				ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
+			except:
+				fetype = 'estimatefee'
+				fee_per_kb = g.rpch.estimatefee(opt.tx_confs)
+			else:
+				fetype = 'estimatesmartfee'
+				fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
+
+			if fee_per_kb < 0:
 				if not have_estimate_fail:
-					msg('Network fee estimation for {} confirmations failed'.format(opt.tx_confs))
+					msg('Network fee estimation for {} confirmations failed ({})'.format(opt.tx_confs,fetype))
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:
-				start_fee = g.proto.coin_amt(ret) * opt.tx_fee_adj * self.estimate_size() / 1024
+				start_fee = g.proto.coin_amt(fee_per_kb) * opt.tx_fee_adj * self.estimate_size() / 1024
 				if opt.verbose:
-					msg('{} fee ({} confs): {} {}/kB'.format(desc,opt.tx_confs,ret,g.coin))
+					msg('{} fee for {} confirmations: {} {}/kB'.format(
+						fetype.upper(),opt.tx_confs,fee_per_kb,g.coin))
 					msg('TX size (estimated): {}'.format(self.estimate_size()))
 
 		return self.get_usr_fee_interactive(start_fee,desc=desc)

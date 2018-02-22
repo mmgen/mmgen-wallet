@@ -685,6 +685,7 @@ cmd_group['regtest'] = (
 	('regtest_alice_chk_label3',   'the label'),
 	('regtest_alice_remove_label1','removing a label'),
 	('regtest_alice_chk_label4',   'the label'),
+	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
 	('regtest_stop',               'stopping regtest daemon'),
 )
 
@@ -2326,13 +2327,16 @@ class MMGenTestSuite(object):
 							bad_locktime=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txdo',
-			['-d',cfg['tmpdir'],'-B','--'+user,'--tx-fee='+fee]
-			+ extra_args + ([],[wf])[bool(wf)] + outputs_cl)
+			['-d',cfg['tmpdir'],'-B','--'+user] +
+			(['--tx-fee='+fee] if fee else []) +
+			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 		t.expect(r"'q'=quit view, .*?:.",'M',regex=True) # sort by mmid
 		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
 		t.expect('outputs to spend: ',outputs_prompt+'\n')
+		if not fee:
+			t.expect('Enter transaction fee: ','{}\n'.format(tx_fee))
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
 		if do_label:
@@ -2388,6 +2392,10 @@ class MMGenTestSuite(object):
 		)) # alice_sid:S:2, alice_sid:S:3
 		fn = os.path.join(cfg['tmpdir'],'non-mmgen.keys')
 		return self.regtest_user_txdo(name,'bob',rtFee[3],outputs_cl,'3-9',extra_args=['--keys-from-file='+fn])
+
+	def regtest_alice_send_estimatefee(self,name):
+		outputs_cl = self.create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
+		return self.regtest_user_txdo(name,'alice',None,outputs_cl,'1') # fee=None
 
 	def regtest_user_txbump(self,name,user,txfile,fee,red_op,no_send=False):
 		if not g.proto.cap('rbf'):
