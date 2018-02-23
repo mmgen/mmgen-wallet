@@ -138,17 +138,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 # 		unsp.pdie()
 		self.set_term_columns()
 
-		# Field widths
-		min_mmid_w = 12 # DEADBEEF:S:1
-		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or min_mmid_w
+		# allow for 7-digit confirmation nums
+		col1_w = max(3,len(str(len(unsp)))+1) # num + ')'
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
 		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
-		addr_w = min(35+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
+		addr_w = min(g.proto.addr_width+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
 		acct_w = min(max_acct_w, max(24,int(addr_w-10)))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
-		tx_w = max(11,min(64, self.cols-addr_w-32))
+		tx_w = max(11,min(64, self.cols-addr_w-28-col1_w))
 		txdots = ('','...')[tx_w < 64]
-		fs = ' %-4s %-{}s %-2s %s %s %s'.format(tx_w)
 
 		for i in unsp: i.skip = None
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
@@ -161,9 +160,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
-		af = CoinAddr.fmtc('Address',width=addr_w+1)
-		cf = ('Conf.','Age(d)')[self.show_days]
-		out += [fs % ('Num','TX id'.ljust(tx_w - 5) + ' Vout','',af,'Amt({}) '.format(g.coin),cf)]
+		fs = ' {:%s} {:%s} {:2} {} {} {:<}' % (col1_w,tx_w)
+		out += [fs.format('Num',
+				'TX id'.ljust(tx_w - 5) + ' Vout', '',
+				'Address'.ljust(addr_w+3),
+				'Amt({})'.format(g.coin).ljust(10),
+				('Confs','Age(d)')[self.show_days])]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*33
@@ -184,7 +186,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			tx = ' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
 					else i.txid[:tx_w-len(txdots)]+txdots
 
-			out.append(fs % (str(n+1)+')',tx,i.vout,addr_out,i.amt.fmt(color=True),
+			out.append(fs.format(str(n+1)+')',tx,i.vout,addr_out,i.amt.fmt(color=True),
 						i.days if self.show_days else i.confs))
 
 		self.fmt_display = '\n'.join(out) + '\n'
@@ -193,21 +195,28 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def format_for_printing(self,color=False):
 
-		fs  = ' %-4s %-67s %s %s %s %-8s %-6s %s'
-		out = [fs % ('Num','Tx ID,Vout','Address'.ljust(34),'MMGen ID'.ljust(15),
-			'Amount({})'.format(g.coin),'Conf.','Age(d)', 'Label')]
+		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
+		fs  = ' {:4} {:67} {} {} {:12} {:<8} {:<6} {}'
+		out = [fs.format('Num','Tx ID,Vout',
+				'Address'.ljust(g.proto.addr_width),
+				'MMGen ID'.ljust(mmid_w+1),
+				'Amount({})'.format(g.coin),
+				'Confs','Age(d)',
+				'Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
-			addr = '|'+'.' * 34 if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
+			addr = '|'+'.' * g.proto.addr_width if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
 			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
-			s = fs % (str(n+1)+')', tx+','+str(i.vout),addr,
+			out.append(
+				fs.format(str(n+1)+')', tx+','+str(i.vout),
+					addr,
 					MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
-						else 'Non-{}'.format(g.proj_name),width=14,color=color),
-					i.amt.fmt(color=color),i.confs,i.days,
+						else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
+					i.amt.fmt(color=color),
+					i.confs,i.days,
 					i.label.hl(color=color) if i.label else
-						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len))
-			out.append(s.rstrip())
+						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
 
 		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(

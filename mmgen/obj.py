@@ -307,7 +307,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def fmtc(cls):
 		raise NotImplementedError
 
-	def fmt(self,fs='3.8',color=False,suf=''):
+	def fmt(self,fs='4.8',color=False,suf=''):
 		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
 		if '.' in fs:
 			p1,p2 = map(int,fs.split('.',1))

@@ -731,9 +731,9 @@ def Listaddresses(addrs='',minconf=1,
 	out += [fs.format(
 			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
 			addr=CoinAddr.fmtc('ADDRESS'),
-			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len),
-			amt='{:{w}}'.format('BALANCE',w=max_fp_len+4),
-			age=('CONFS','AGE')[show_days],
+			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len+1),
+			amt='BALANCE'.ljust(max_fp_len+4),
+			age=('CONFS','DAYS')[show_days],
 			)]
 
 	def sort_algo(j):
@@ -763,7 +763,7 @@ def Listaddresses(addrs='',minconf=1,
 			mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
 			addr=(e['addr'].fmt(color=True) if showbtcaddrs else None),
 			cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
-			amt=e['amt'].fmt('3.{}'.format(max_fp_len),color=True),
+			amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
 			age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'
 			))
 	out.append('\nTOTAL: {} {}'.format(total.hl(color=True),g.coin))
