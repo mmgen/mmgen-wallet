@@ -129,6 +129,7 @@ class AddrGeneratorMonero(AddrGenerator):
 		# ed25519ll, a low-level ctypes wrapper for Ed25519 digital signatures by
 		# Daniel Holth <dholth@fastmail.fm> - http://bitbucket.org/dholth/ed25519ll/
 		try:
+			assert not opt.use_internal_ed25519_mod
 			from ed25519ll.djbec import scalarmult,edwards,encodepoint,B
 		except:
 			from mmgen.ed25519 import scalarmult,edwards,encodepoint,B

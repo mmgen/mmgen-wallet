@@ -188,14 +188,19 @@ i_monero='Monero'
 s_monero='Testing generation and wallet creation operations for Monero'
 s_monero='The monerod (mainnet) daemon must be running for the following tests'
 t_monero=(
-"$mmgen_keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords $monero_addrs"
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=23"
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=103-200"
+"mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words"
+"$mmgen_keygen -q --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs"
+'cs1=$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)'
+"$mmgen_keygen -q --use-internal-ed25519-mod --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs"
+'cs2=$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)'
+'[ "$cs1" == "$cs2" ] || false'
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200"
 'rm $TMPDIR/*-MoneroWallet*'
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys"
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=3"
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=23-29"
-"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys"
 )
 [ "$MINGW" ] && t_monero=("$t_monero")
 f_monero='Monero tests completed'
