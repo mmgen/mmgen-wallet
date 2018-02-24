@@ -5,15 +5,27 @@
 export MMGEN_TEST_SUITE=1
 export MMGEN_NO_LICENSE=1
 export PYTHONPATH=.
+test_py='test/test.py'
+objtest_py='test/objtest.py'
+tooltest_py='test/tooltest.py'
+gentest_py='test/gentest.py'
+scrambletest_py='test/scrambletest.py'
+mmgen_tool='cmds/mmgen-tool'
+mmgen_keygen='cmds/mmgen-keygen'
+python='python'
+rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
+monero_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='obj misc_ni alts monero misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
-while getopts hinPt OPT
+while getopts hCfinPt OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
 		echo   "  USAGE:           $PROGNAME [options] [branch] [tests]"
 		echo   "  OPTIONS: '-h'  Print this help message"
+		echo   "           '-C'  Run tests in coverage mode"
+		echo   "           '-f'  Speed up the tests by using fewer rounds"
 		echo   "           '-i'  Install only; don't run tests"
 		echo   "           '-n'  Don't install; test in place"
 		echo   "           '-P'  Don't pause between tests"
@@ -38,6 +50,17 @@ do
 		echo   "     gen     - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
+	C)  test_py='test/test.py --coverage'
+		tooltest_py='test/tooltest.py --coverage'
+		fcov='test/trace.acc' dcov='test/trace'
+		python="python -m trace --count --file=$fcov --coverdir=$dcov"
+		objtest_py="$python $objtest_py"
+		gentest_py="$python $gentest_py"
+		scrambletest_py="$python $scrambletest_py"
+		mmgen_tool="$python $mmgen_tool"
+		mmgen_keygen="$python $mmgen_keygen"
+		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
+	f)  rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	i)  INSTALL_ONLY=1 ;;
 	n)  NO_INSTALL=1 ;;
 	P)  NO_PAUSE=1 ;;
@@ -98,199 +121,197 @@ do_test() {
 i_obj='Data object'
 s_obj='Testing data objects'
 t_obj=(
-	'test/objtest.py --coin=btc -S'
-	'test/objtest.py --coin=btc --testnet=1 -S'
-	'test/objtest.py --coin=ltc -S'
-	'test/objtest.py --coin=ltc --testnet=1 -S')
+	"$objtest_py --coin=btc -S"
+	"$objtest_py --coin=btc --testnet=1 -S"
+	"$objtest_py --coin=ltc -S"
+	"$objtest_py --coin=ltc --testnet=1 -S")
 f_obj='Data object test complete'
-
-i_alts='Gen-only altcoin'
-s_alts='The following tests will test generation operations for all supported altcoins'
-ROUNDS=100
-ROUNDS_LOW=20
-ROUNDS_SPEC=500
-if [ "$MINGW" ]; then
-	t_alts=(
-	'test/scrambletest.py'
-	'test/test.py -n altcoin_ref'
-	"test/gentest.py --coin=btc 2 $ROUNDS"
-	"test/gentest.py --coin=btc --type=compressed 2 $ROUNDS"
-	"test/gentest.py --coin=btc --type=segwit 2 $ROUNDS"
-	"test/gentest.py --coin=ltc 2 $ROUNDS"
-	"test/gentest.py --coin=ltc --type=compressed 2 $ROUNDS"
-	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
-	"test/gentest.py --coin=zec 2 $ROUNDS"
-	"test/gentest.py --coin=etc 2 $ROUNDS"
-	"test/gentest.py --coin=eth 2 $ROUNDS")
-else
-	t_alts=(
-	'test/scrambletest.py'
-	'test/test.py -n altcoin_ref'
-	"test/gentest.py --coin=btc 2 $ROUNDS"
-	"test/gentest.py --coin=btc --type=compressed 2 $ROUNDS"
-	"test/gentest.py --coin=btc --type=segwit 2 $ROUNDS"
-	"test/gentest.py --coin=ltc 2 $ROUNDS"
-	"test/gentest.py --coin=ltc --type=compressed 2 $ROUNDS"
-	"test/gentest.py --coin=ltc --type=segwit 2 $ROUNDS"
-	"test/gentest.py --coin=zec 2 $ROUNDS"
-	"test/gentest.py --coin=zec --type=zcash_z 2 $ROUNDS_SPEC"
-	"test/gentest.py --coin=etc 2 $ROUNDS"
-	"test/gentest.py --coin=eth 2 $ROUNDS"
-
-	"test/gentest.py --coin=btc 2:ext $ROUNDS"
-	"test/gentest.py --coin=btc --type=compressed 2:ext $ROUNDS"
-	"test/gentest.py --coin=btc --type=segwit 2:ext $ROUNDS"
-	"test/gentest.py --coin=ltc 2:ext $ROUNDS"
-	"test/gentest.py --coin=ltc --type=compressed 2:ext $ROUNDS"
-#	"test/gentest.py --coin=ltc --type=segwit 2:ext $ROUNDS" # pycoin generates old-style LTC Segwit addrs
-	"test/gentest.py --coin=etc 2:ext $ROUNDS"
-	"test/gentest.py --coin=eth 2:ext $ROUNDS"
-	"test/gentest.py --coin=zec 2:ext $ROUNDS"
-	"test/gentest.py --coin=zec --type=zcash_z 2:ext $ROUNDS_SPEC"
-
-	"test/gentest.py --all 2:pycoin $ROUNDS_LOW"
-	"test/gentest.py --all 2:pyethereum $ROUNDS_LOW"
-	"test/gentest.py --all 2:keyconv $ROUNDS_LOW"
-	"test/gentest.py --all 2:zcash_mini $ROUNDS_LOW")
-fi
-f_alts='Gen-only altcoin tests completed'
-
-i_monero='Monero'
-s_monero='Testing generation and wallet creation operations for Monero'
-s_monero='The monerod (mainnet) daemon must be running for the following tests'
-ROUNDS=1000
-t_monero=(
-'python cmds/mmgen-keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords 3,99,2,22-24,101-104'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=23'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=103-200'
-'rm $TMPDIR/*-MoneroWallet*'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=3'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=23-29'
-'python cmds/mmgen-tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys'
-)
-[ "$MINGW" ] && t_monero=("$t_monero")
-f_monero='Monero tests completed'
 
 i_misc_ni='Miscellaneous operations (non-interactive)'
 s_misc_ni='Testing miscellaneous operations (non-interactive)'
 t_misc_ni=(
-	'test/sha256test.py')
+	"$python test/sha256test.py $rounds_spec")
 f_misc_ni='Miscellaneous non-interactive tests complete'
+
+i_alts='Gen-only altcoin'
+s_alts='The following tests will test generation operations for all supported altcoins'
+if [ "$MINGW" ]; then
+	t_alts=(
+	"$scrambletest_py"
+	"$test_py -n altcoin_ref"
+	"$gentest_py --coin=btc 2 $rounds"
+	"$gentest_py --coin=btc --type=compressed 2 $rounds"
+	"$gentest_py --coin=btc --type=segwit 2 $rounds"
+	"$gentest_py --coin=ltc 2 $rounds"
+	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
+	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
+	"$gentest_py --coin=zec 2 $rounds"
+	"$gentest_py --coin=etc 2 $rounds"
+	"$gentest_py --coin=eth 2 $rounds")
+else
+	t_alts=(
+	"$scrambletest_py"
+	"$test_py -n altcoin_ref"
+	"$gentest_py --coin=btc 2 $rounds"
+	"$gentest_py --coin=btc --type=compressed 2 $rounds"
+	"$gentest_py --coin=btc --type=segwit 2 $rounds"
+	"$gentest_py --coin=ltc 2 $rounds"
+	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
+	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
+	"$gentest_py --coin=zec 2 $rounds"
+	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_spec"
+	"$gentest_py --coin=etc 2 $rounds"
+	"$gentest_py --coin=eth 2 $rounds"
+
+	"$gentest_py --coin=btc 2:ext $rounds"
+	"$gentest_py --coin=btc --type=compressed 2:ext $rounds"
+	"$gentest_py --coin=btc --type=segwit 2:ext $rounds"
+	"$gentest_py --coin=ltc 2:ext $rounds"
+	"$gentest_py --coin=ltc --type=compressed 2:ext $rounds"
+#	"$gentest_py --coin=ltc --type=segwit 2:ext $rounds" # pycoin generates old-style LTC Segwit addrs
+	"$gentest_py --coin=etc 2:ext $rounds"
+	"$gentest_py --coin=eth 2:ext $rounds"
+	"$gentest_py --coin=zec 2:ext $rounds"
+	"$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_spec"
+
+	"$gentest_py --all 2:pycoin $rounds_low"
+	"$gentest_py --all 2:pyethereum $rounds_low"
+	"$gentest_py --all 2:keyconv $rounds_low"
+	"$gentest_py --all 2:zcash_mini $rounds_low")
+fi
+f_alts='Gen-only altcoin tests completed'
+
+TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+mkdir -p $TMPDIR
+
+i_monero='Monero'
+s_monero='Testing generation and wallet creation operations for Monero'
+s_monero='The monerod (mainnet) daemon must be running for the following tests'
+t_monero=(
+"$mmgen_keygen --accept-defaults --outdir $TMPDIR --coin=xmr test/ref/98831F3A.mmwords $monero_addrs"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=23"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys addrs=103-200"
+'rm $TMPDIR/*-MoneroWallet*'
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/988*XMR*akeys"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=3"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys addrs=23-29"
+"$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/988*XMR*akeys"
+)
+[ "$MINGW" ] && t_monero=("$t_monero")
+f_monero='Monero tests completed'
 
 i_misc='Miscellaneous operations (interactive)' # includes autosign!
 s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
 t_misc=(
-	'test/test.py -On misc')
+	"$test_py -On misc")
 f_misc='Miscellaneous interactive tests test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc=(
-	'test/test.py -On'
-	'test/test.py -On --segwit dfl_wallet main ref ref_other'
-	'test/test.py -On --segwit-random dfl_wallet main'
-	'test/tooltest.py rpc'
-	"scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
+	"$test_py -On"
+	"$test_py -On --segwit dfl_wallet main ref ref_other"
+	"$test_py -On --segwit-random dfl_wallet main"
+	"$tooltest_py rpc"
+	"$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
 f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
 
 i_btc_tn='Bitcoin testnet'
 s_btc_tn='The bitcoin testnet daemon must both be running for the following tests'
 t_btc_tn=(
-	'test/test.py -On --testnet=1'
-	'test/test.py -On --testnet=1 --segwit dfl_wallet main ref ref_other'
-	'test/test.py -On --testnet=1 --segwit-random dfl_wallet main'
-	'test/tooltest.py --testnet=1 rpc')
+	"$test_py -On --testnet=1"
+	"$test_py -On --testnet=1 --segwit dfl_wallet main ref ref_other"
+	"$test_py -On --testnet=1 --segwit-random dfl_wallet main"
+	"$tooltest_py --testnet=1 rpc")
 f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
 i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt=(
-	'test/test.py -On regtest'
-#	'test/test.py -On regtest_split' # no official B2X support, so skip
+	"$test_py -On regtest"
+#	"$test_py -On regtest_split" # no official B2X support, so skip
 	)
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='Bitcoin cash (BCH)'
 s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the following tests'
-t_bch=('test/test.py -On --coin=bch dfl_wallet main ref ref_other')
+t_bch=("$test_py -On --coin=bch dfl_wallet main ref ref_other")
 f_bch='You may stop the Bitcoin ABC daemon if you wish'
 
 i_bch_rt='Bitcoin cash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_bch_rt=('test/test.py --coin=bch -On regtest')
+t_bch_rt=("$test_py --coin=bch -On regtest")
 f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 
 i_b2x='Bitcoin 2X (B2X)'
 s_b2x='The bitcoin 2X daemon (BTC1) must both be running for the following tests'
-t_b2x=('test/test.py -On --coin=b2x dfl_wallet main ref ref_other')
+t_b2x=("$test_py -On --coin=b2x dfl_wallet main ref ref_other")
 f_b2x='You may stop the Bitcoin 2X daemon if you wish'
 
 i_b2x_rt='Bitcoin 2X (B2X) regtest'
 s_b2x_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_b2x_rt=('test/test.py --coin=b2x -On regtest')
+t_b2x_rt=("$test_py --coin=b2x -On regtest")
 f_b2x_rt='Regtest (Bob and Alice) mode tests for B2X completed'
 
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
 t_ltc=(
-	'test/test.py --coin=ltc -On dfl_wallet main'
-	'test/test.py --coin=ltc --segwit -On dfl_wallet main'
-	'test/test.py --coin=ltc --segwit-random -On dfl_wallet main'
-	'test/tooltest.py --coin=ltc rpc'
+	"$test_py --coin=ltc -On dfl_wallet main"
+	"$test_py --coin=ltc --segwit -On dfl_wallet main"
+	"$test_py --coin=ltc --segwit-random -On dfl_wallet main"
+	"$tooltest_py --coin=ltc rpc"
 )
 f_ltc='You may stop the litecoin daemon if you wish'
 
 i_ltc_tn='Litecoin testnet'
 s_ltc_tn='The litecoin testnet daemon must both be running for the following tests'
 t_ltc_tn=(
-	'test/test.py --coin=ltc -On --testnet=1'
-	'test/test.py --coin=ltc -On --testnet=1 --segwit dfl_wallet main ref ref_other'
-	'test/test.py --coin=ltc -On --testnet=1 --segwit-random dfl_wallet main'
-	'test/tooltest.py --coin=ltc --testnet=1 rpc')
+	"$test_py --coin=ltc -On --testnet=1"
+	"$test_py --coin=ltc -On --testnet=1 --segwit dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --testnet=1 --segwit-random dfl_wallet main"
+	"$tooltest_py --coin=ltc --testnet=1 rpc")
 f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 
 i_ltc_rt='Litecoin regtest'
 s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_ltc_rt=('test/test.py --coin=ltc -On regtest')
+t_ltc_rt=("$test_py --coin=ltc -On regtest")
 f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 
 i_tool='Tooltest'
-s_tool='The following tests will run test/tooltest.py for all supported coins'
+s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool=(
-	'test/tooltest.py --coin=btc util'
-	'test/tooltest.py --coin=btc cryptocoin'
-	'test/tooltest.py --coin=btc mnemonic'
-	'test/tooltest.py --coin=ltc cryptocoin'
-	'test/tooltest.py --coin=eth cryptocoin'
-	'test/tooltest.py --coin=etc cryptocoin'
-	'test/tooltest.py --coin=dash cryptocoin'
-	'test/tooltest.py --coin=doge cryptocoin'
-	'test/tooltest.py --coin=emc cryptocoin'
-	'test/tooltest.py --coin=zec cryptocoin')
+	"$tooltest_py --coin=btc util"
+	"$tooltest_py --coin=btc cryptocoin"
+	"$tooltest_py --coin=btc mnemonic"
+	"$tooltest_py --coin=ltc cryptocoin"
+	"$tooltest_py --coin=eth cryptocoin"
+	"$tooltest_py --coin=etc cryptocoin"
+	"$tooltest_py --coin=dash cryptocoin"
+	"$tooltest_py --coin=doge cryptocoin"
+	"$tooltest_py --coin=emc cryptocoin"
+	"$tooltest_py --coin=zec cryptocoin")
 
 [ "$MINGW" ] || {
 	t_tool_len=${#t_tool[*]}
-	t_tool[$t_tool_len]='test/tooltest.py --coin=zec --type=zcash_z cryptocoin'
+	t_tool[$t_tool_len]="$tooltest_py --coin=zec --type=zcash_z cryptocoin"
 }
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'
-s_gen='The following tests will run test/gentest.py on mainnet and testnet for all supported coins'
+s_gen="The following tests will run '$gentest_py' on mainnet and testnet for all supported coins"
 t_gen=(
-	"test/gentest.py -q 2 $REFDIR/btcwallet.dump"
-	'test/gentest.py -q 1:2 10'
-	'test/gentest.py -q --type=segwit 1:2 10'
-	"test/gentest.py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
-	'test/gentest.py -q --testnet=1 1:2 10'
-	'test/gentest.py -q --testnet=1 --type=segwit 1:2 10'
-	"test/gentest.py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump"
-	'test/gentest.py -q --coin=ltc 1:2 10'
-	'test/gentest.py -q --coin=ltc --type=segwit 1:2 10'
-	"test/gentest.py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump"
-	'test/gentest.py -q --coin=ltc --testnet=1 1:2 10'
-	'test/gentest.py -q --coin=ltc --testnet=1 --type=segwit 1:2 10'
-	)
+	"$gentest_py -q 2 $REFDIR/btcwallet.dump"
+	"$gentest_py -q 1:2 $gen_rounds"
+	"$gentest_py -q --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
+	"$gentest_py -q --testnet=1 1:2 $gen_rounds"
+	"$gentest_py -q --testnet=1 --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump"
+	"$gentest_py -q --coin=ltc 1:2 $gen_rounds"
+	"$gentest_py -q --coin=ltc --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump"
+	"$gentest_py -q --coin=ltc --testnet=1 1:2 $gen_rounds"
+	"$gentest_py -q --coin=ltc --testnet=1 --type=segwit 1:2 $gen_rounds")
 f_gen='gentest tests completed'
 
 [ -d .git -a -z "$NO_INSTALL"  -a -z "$TESTING" ] && {
@@ -328,8 +349,6 @@ tests=$dfl_tests
 
 check_args
 
-TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
-mkdir -p $TMPDIR
 run_tests "$tests"
 rm -rf /tmp/mmgen-test-release-*
 

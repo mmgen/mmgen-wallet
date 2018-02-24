@@ -113,6 +113,7 @@ opts_data = lambda: {
 --, --longhelp      Print help message for long options (common options)
 -b, --buf-keypress  Use buffered keypresses as with real human input
 -c, --print-cmdline Print the command line of each spawned command
+-C, --coverage      Produce code coverage info using trace module
 -d, --debug-scripts Turn on debugging output in executed scripts
 -x, --debug-pexpect Produce debugging output for pexpect calls
 -D, --direct-exec   Bypass pexpect and execute a command directly (for

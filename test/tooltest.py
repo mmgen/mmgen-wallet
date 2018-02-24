@@ -20,7 +20,7 @@
 test/tooltest.py:  Tests for the 'mmgen-tool' utility
 """
 
-import sys,os,subprocess
+import sys,os,subprocess,binascii
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
@@ -28,12 +28,14 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
+from mmgen.test import *
 
 opts_data = lambda: {
 	'desc': "Test suite for the 'mmgen-tool' utility",
 	'usage':'[options] [command]',
 	'options': """
 -h, --help          Print this help message
+-C, --coverage      Produce code coverage info using trace module
 --, --longhelp      Print help message for long options (common options)
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -L, --list-names    List the names of all tested 'mmgen-tool' commands
@@ -158,7 +160,12 @@ if not opt.system:
 	os.environ['PYTHONPATH'] = repo_root
 	mmgen_cmd = os.path.relpath(os.path.join(repo_root,'cmds',mmgen_cmd))
 
-spawn_cmd = ([],['python'])[g.platform == 'win'] + [mmgen_cmd]
+spawn_cmd = [mmgen_cmd]
+if opt.coverage:
+	d,f = init_coverage()
+	spawn_cmd = ['python','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
+elif g.platform == 'win':
+	spawn_cmd = ['python'] + spawn_cmd
 
 add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
 		k.replace('_','-'),'='+getattr(opt,k) if getattr(opt,k) != True else '')
@@ -186,8 +193,6 @@ if opt.list_names:
 	msg('\n{}\n{}'.format(yellow('Untested commands:'),'\n'.join(uc)))
 	die()
 
-import binascii
-from mmgen.test import *
 from mmgen.tx import is_wif,is_coin_addr
 
 msg_w = 35

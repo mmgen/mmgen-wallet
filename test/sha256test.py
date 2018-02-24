@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
+
 import sys,os,hashlib
 from mmgen.sha256 import Sha256
+
+random_rounds = int(sys.argv[1]) if len(sys.argv) == 2 else 500
 
 def msg(s): sys.stderr.write(s)
 def green(s): return '\033[32;1m' + s + '\033[0m'
@@ -34,7 +37,7 @@ def test_ref():
 
 def test_random(rounds):
 	for i in range(rounds):
-		if not (i+1) % 10:
+		if i+1 in (1,rounds) or not (i+1) % 10:
 			msg('\rTesting random input data:    {:4}/{} '.format(i+1,rounds))
 		dlen = int(os.urandom(4).encode('hex'),16) >> 18
 		compare_hashes(dlen,os.urandom(dlen))
@@ -43,4 +46,4 @@ def test_random(rounds):
 msg(green('Testing MMGen implementation of Sha256()\n'))
 test_K()
 test_ref()
-test_random(500)
+test_random(random_rounds)

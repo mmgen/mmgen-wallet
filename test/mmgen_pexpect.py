@@ -21,7 +21,7 @@ test/mmgen_pexpect.py: pexpect implementation for MMGen test suites
 """
 
 from mmgen.common import *
-from mmgen.test import getrandstr,ok
+from mmgen.test import getrandstr,ok,init_coverage
 
 try:
 	import pexpect
@@ -111,6 +111,9 @@ class MMGenPexpect(object):
 			args = [(a,"'{}'".format(a))[' ' in a] for a in args]
 
 		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
+		if opt.coverage:
+			fs = 'python -m trace --count --coverdir={} --file={} {c}'
+			cmd_str = fs.format(*init_coverage(),c=cmd_str)
 
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
@@ -148,7 +151,7 @@ class MMGenPexpect(object):
 	def ok(self,exit_val=0):
 		ret = self.p.wait()
 #		Msg('expect: {} got: {}'.format(exit_val,ret))
-		if ret != exit_val:
+		if ret != exit_val and not opt.coverage:
 			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
 		if opt.profile: return
 		if opt.verbose or opt.exact_output:

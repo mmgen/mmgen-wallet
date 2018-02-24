@@ -107,3 +107,10 @@ def cmp_or_die(s,t,skip_ok=False):
 			'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
 				(repr(t),repr(s))))
 		sys.exit(3)
+
+def init_coverage():
+	coverdir = os.path.join('test','trace')
+	acc_file = os.path.join('test','trace.acc')
+	try: os.mkdir(coverdir,0755)
+	except: pass
+	return coverdir,acc_file
