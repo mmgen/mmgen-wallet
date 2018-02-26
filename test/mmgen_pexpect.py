@@ -92,7 +92,7 @@ class MMGenPexpect(object):
 		atexit.register(lambda: os.system('stty sane'))
 		NL = '\n'
 
-	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[],msg_only=False):
+	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[],msg_only=False,no_msg=False):
 		cmd_args = ['--{}{}'.format(k.replace('_','-'),
 			'='+getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in passthru_args if getattr(opt,k)] \
@@ -118,14 +118,15 @@ class MMGenPexpect(object):
 		if opt.log:
 			log_fd.write(cmd_str+'\n')
 
-		if opt.verbose or opt.print_cmdline or opt.exact_output:
-			clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
-			sys.stderr.write(green('Testing: {}\n'.format(desc)))
-			if not msg_only:
-				sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
-		else:
-			m = 'Testing %s: ' % desc
-			msg_r(m)
+		if not no_msg:
+			if opt.verbose or opt.print_cmdline or opt.exact_output:
+				clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
+				sys.stderr.write(green('Testing: {}\n'.format(desc)))
+				if not msg_only:
+					sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
+			else:
+				m = 'Testing %s: ' % desc
+				msg_r(m)
 
 		if msg_only: return
 

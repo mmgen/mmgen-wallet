@@ -981,7 +981,7 @@ def verify_checksum_or_exit(checksum,chk):
 from test.mmgen_pexpect import MMGenPexpect
 class MMGenExpect(MMGenPexpect):
 
-	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False,msg_only=False):
+	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False,msg_only=False,no_msg=False):
 
 		desc = ((cmd_data[name][1],name)[bool(opt.names)] + (' ' + extra_desc)).strip()
 		passthru_args = ['testnet','rpc_host','rpc_port','regtest','coin']
@@ -1000,7 +1000,8 @@ class MMGenExpect(MMGenPexpect):
 			desc,
 			no_output=no_output,
 			passthru_args=passthru_args,
-			msg_only=msg_only)
+			msg_only=msg_only,
+			no_msg=no_msg)
 
 def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if 'S' not in g.proto.mmtypes: segwit = False
