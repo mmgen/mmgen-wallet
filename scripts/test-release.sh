@@ -50,13 +50,14 @@ do
 		echo   "     gen     - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
-	C)  test_py='test/test.py --coverage'
-		tooltest_py='test/tooltest.py --coverage'
-		fcov='test/trace.acc' dcov='test/trace'
-		python="python -m trace --count --file=$fcov --coverdir=$dcov"
+	C)  mkdir -p 'test/trace'
+		touch 'test/trace.acc'
+		test_py="$test_py --coverage"
+		tooltest_py="$tooltest_py --coverage"
+		scrambletest_py="$scrambletest_py --coverage"
+		python="python -m trace --count --file=test/trace.acc --coverdir=test/trace"
 		objtest_py="$python $objtest_py"
 		gentest_py="$python $gentest_py"
-		scrambletest_py="$python $scrambletest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen"
 		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;

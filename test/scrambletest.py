@@ -28,6 +28,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
+from mmgen.test import init_coverage
 
 opts_data = lambda: {
 	'desc': 'Test seed scrambling and addrlist data generation for all supported altcoins',
@@ -35,6 +36,7 @@ opts_data = lambda: {
 	'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
+-C, --coverage      Produce code coverage info using trace module
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -s, --system        Test scripts and modules installed on system rather than
                     those in the repo root
@@ -72,6 +74,9 @@ test_data = OrderedDict([
 ('xmr',           ('c76af3b088da3364','xmr:monero',   '-XMR-M','XMR:MONERO','41tmwZd2CdXEGtWqGY9fH9FVtQM8VxZASYPQ3VJQhFjtGWYzQFuidD21vJYTi2yy3tXRYXTNXBTaYVLav62rwUUpFFyicZU')),
 ])
 
+cmd_base = 'python{} cmds/mmgen-addrgen -qS'.format(
+	' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) if opt.coverage else '')
+
 def run_tests():
 	for test in test_data:
 		if test == 'zec_zcash_z' and g.platform == 'win':
@@ -79,13 +84,11 @@ def run_tests():
 			continue
 		try:    coin,mmtype = test.split('_',1)
 		except: coin,mmtype = test,None
-		cmd_name = 'cmds/mmgen-addrgen'
-		wf = 'test/ref/98831F3A.mmwords'
-		type_arg = ['--type='+mmtype] if mmtype else []
-		cmd = ['python',cmd_name,'-qS','--coin='+coin] + type_arg + [wf,'1']
-		vmsg(green('Executing: {}'.format(' '.join(cmd))))
-		msg_r('Testing: --coin {:4} {:22}'.format(coin.upper(),type_arg[0] if type_arg else ''))
-		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		type_arg = ' --type='+mmtype if mmtype else ''
+		cmd = '{} --coin={}{} test/ref/98831F3A.mmwords 1'.format(cmd_base,coin,type_arg)
+		vmsg(green('Executing: {}'.format(cmd)))
+		msg_r('Testing: --coin {:4} {:22}'.format(coin.upper(),type_arg))
+		p = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		o = p.stdout.read()
 		vmsg(o)
 		o = o.splitlines()
