@@ -687,6 +687,13 @@ cmd_group['regtest'] = (
 	('regtest_alice_remove_label1','removing a label'),
 	('regtest_alice_chk_label4',   'the label'),
 	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
+	('regtest_alice_add_label_coinaddr','adding a label using the coin address'),
+	('regtest_alice_chk_label_coinaddr','the label'),
+	('regtest_alice_add_label_badaddr1','adding a label with invalid address'),
+	('regtest_alice_add_label_badaddr2','adding a label with invalid address for this chain'),
+	('regtest_alice_add_label_badaddr3','adding a label with wrong MMGen address'),
+	('regtest_alice_add_label_badaddr4','adding a label with wrong coin address'),
+	('regtest_alice_add_label_rpcfail','RPC failure code'),
 	('regtest_stop',               'stopping regtest daemon'),
 )
 
@@ -2505,6 +2512,44 @@ class MMGenTestSuite(object):
 	def regtest_alice_add_label2(self,name):
 		sid = self.regtest_user_sid('alice')
 		return self.regtest_user_add_label(name,'alice',sid+':C:1','Replacement Label')
+
+	def regtest_alice_add_label_coinaddr(self,name):
+		mmaddr = self.regtest_user_sid('alice') + ':C:2'
+		t = MMGenExpect(name,'mmgen-tool',['--alice','listaddress',mmaddr],no_msg=True)
+		btcaddr = [i for i in t.read().splitlines() if i.lstrip()[0:len(mmaddr)] == mmaddr][0].split()[1]
+		return self.regtest_user_add_label(name,'alice',btcaddr,'Label added using coin address')
+
+	def regtest_alice_chk_label_coinaddr(self,name):
+		sid = self.regtest_user_sid('alice')
+		return self.regtest_user_chk_label(name,'alice',sid+':C:2','Label added using coin address')
+
+	def regtest_alice_add_label_badaddr(self,name,addr,reply):
+		t = MMGenExpect(name,'mmgen-tool',['--alice','add_label',addr,'(none)'])
+		t.expect(reply,regex=True)
+		t.ok()
+
+	def regtest_alice_add_label_badaddr1(self,name):
+		return self.regtest_alice_add_label_badaddr(name,'abc','Invalid coin address for this chain: abc')
+
+	def regtest_alice_add_label_badaddr2(self,name):
+		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
+		return self.regtest_alice_add_label_badaddr(name,addr,'Invalid coin address for this chain: '+addr)
+
+	def regtest_alice_add_label_badaddr3(self,name):
+		addr = self.regtest_user_sid('alice') + ':C:123'
+		return self.regtest_alice_add_label_badaddr(name,addr,
+			"MMGen address '{}' not found in tracking wallet".format(addr))
+
+	def regtest_alice_add_label_badaddr4(self,name):
+		addr = CoinProtocol(g.coin,True).pubhash2addr('00'*20,False) # testnet zero address
+		return self.regtest_alice_add_label_badaddr(name,addr,
+			"Address '{}' not found in tracking wallet".format(addr))
+
+	def regtest_alice_add_label_rpcfail(self,name):
+		addr = self.regtest_user_sid('alice') + ':C:2'
+		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = 'importaddress'
+		self.regtest_alice_add_label_badaddr(name,addr,'Label could not be added')
+		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = ''
 
 	def regtest_alice_remove_label1(self,name):
 		sid = self.regtest_user_sid('alice')

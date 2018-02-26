@@ -321,33 +321,24 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		if is_mmgen_id(arg1):
 			mmaddr = TwMMGenID(arg1)
 
-		if not coinaddr and not mmaddr:
-			msg("Address '{}' invalid or not found in tracking wallet".format(addr or arg1))
-			return False
-
-		if not coinaddr:
+		if mmaddr and not coinaddr:
 			from mmgen.addr import AddrData
 			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
 
-		if not coinaddr:
-			msg("{} address '{}' not found in tracking wallet".format(g.proj_name,mmaddr))
-			return False
-
-		# Checked that the user isn't importing a random address
-		if not coinaddr.is_in_tracking_wallet():
-			msg("Address '{}' not in tracking wallet".format(coinaddr))
-			return False
-
-		if not coinaddr.is_for_chain(g.chain):
-			msg("Address '{}' not valid for chain {}".format(coinaddr,g.chain.upper()))
+		try:
+			if not is_mmgen_id(arg1):
+				assert coinaddr,"Invalid coin address for this chain: {}".format(arg1)
+			assert coinaddr,"{pn} address '{ma}' not found in tracking wallet"
+			assert coinaddr.is_in_tracking_wallet(),"Address '{ca}' not found in tracking wallet"
+		except Exception as e:
+			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
 			return False
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
 		if not mmaddr:
 			from mmgen.addr import AddrData
-			ad = AddrData(source='tw')
-			mmaddr = ad.coinaddr2mmaddr(coinaddr)
+			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
 

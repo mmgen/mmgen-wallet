@@ -83,8 +83,8 @@ cmd_data = OrderedDict([
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: ctime, atime)",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
 
-	('Add_label',       ['<{} address> [str]'.format(pnm),'<label> [str]']),
-	('Remove_label',    ['<{} address> [str]'.format(pnm)]),
+	('Add_label',       ['<{} or coin address> [str]'.format(pnm),'<label> [str]']),
+	('Remove_label',    ['<{} or coin address> [str]'.format(pnm)]),
 	('Addrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
 	('Keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
 	('Passwdfile_chksum', ['<{} password file> [str]'.format(pnm)]),
@@ -826,9 +826,9 @@ def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=T
 	out = tw.format_for_printing(color=True) if wide else tw.format_for_display()
 	(Msg_r,do_pager)[pager](out)
 
-def Add_label(mmaddr,label):
+def Add_label(mmaddr_or_coin_addr,label):
 	rpc_init()
 	from mmgen.tw import MMGenTrackingWallet
-	MMGenTrackingWallet.add_label(mmaddr,label) # dies on failure
+	MMGenTrackingWallet.add_label(mmaddr_or_coin_addr,label) # dies on failure
 
-def Remove_label(mmaddr): Add_label(mmaddr,'')
+def Remove_label(mmaddr_or_coin_addr): Add_label(mmaddr_or_coin_addr,'')
