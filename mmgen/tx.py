@@ -507,14 +507,6 @@ class MMGenTX(MMGenObject):
 		for e in getattr(self,desc):
 			if hasattr(e,attr): delattr(e,attr)
 
-	def decode_io(self,desc,data):
-		io,il = (
-			(MMGenTX.MMGenTxOutput,MMGenTX.MMGenTxOutputList),
-			(MMGenTX.MMGenTxInput,MMGenTX.MMGenTxInputList)
-		)[desc=='inputs']
-		return il([io(**dict([(k,d[k]) for k in io.__dict__
-					if k in d and d[k] not in ('',None)])) for d in data])
-
 	def decode_io_oldfmt(self,data):
 		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
 		tr_rev = dict([(v,k) for k,v in tr.items()])
@@ -580,6 +572,9 @@ class MMGenTX(MMGenObject):
 			lines.append(self.coin_txid)
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join([self.chksum] + lines)+'\n'
+
+		assert len(self.fmt_data) <= g.max_tx_file_size,(
+			'Transaction file size exceeds limit ({} bytes)'.format(g.max_tx_file_size))
 
 	def get_non_mmaddrs(self,desc):
 		return list(set(i.addr for i in getattr(self,desc) if not i.mmid))
@@ -971,8 +966,6 @@ class MMGenTX(MMGenObject):
 
 	def parse_tx_file(self,infile,md_only=False,silent_open=False):
 
-		tx_data = get_lines_from_file(infile,self.desc+' data',silent=silent_open)
-
 		def eval_io_data(raw_data,desc):
 			from ast import literal_eval
 			try:
@@ -985,19 +978,32 @@ class MMGenTX(MMGenObject):
 			assert type(d) == list,'{} data not a list!'.format(desc)
 			assert len(d),'no {}!'.format(desc)
 			for e in d: e['amt'] = g.proto.coin_amt(e['amt'])
-			return self.decode_io(desc,d)
+			io,io_list = (
+				(MMGenTX.MMGenTxOutput,MMGenTX.MMGenTxOutputList),
+				(MMGenTX.MMGenTxInput,MMGenTX.MMGenTxInputList)
+			)[desc=='inputs']
+			return io_list([io(**e) for e in d])
+
+		tx_data = get_data_from_file(infile,self.desc+' data',silent=silent_open)
 
 		try:
 			desc = 'data'
+			assert len(tx_data) <= g.max_tx_file_size,(
+				'Transaction file size exceeds limit ({} bytes)'.format(g.max_tx_file_size))
+			tx_data = tx_data.decode('ascii').splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
+			assert len(tx_data[0]) == 6,'invalid length of first line'
 			self.chksum = HexStr(tx_data.pop(0),on_fail='raise')
 			assert self.chksum == make_chksum_6(' '.join(tx_data)),'file data does not match checksum'
 
 			if len(tx_data) == 6:
+				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
 				desc = '{} TxID'.format(g.proto.name.capitalize())
 				self.coin_txid = CoinTxID(tx_data.pop(-1),on_fail='raise')
 
 			if len(tx_data) == 5:
+				# rough check: allow for 4-byte utf8 characters + base58 (4 * 11 / 8 = 6 (rounded up))
+				assert len(tx_data[-1]) < MMGenTXLabel.max_len*6,'invalid comment length'
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
@@ -1008,6 +1014,7 @@ class MMGenTX(MMGenObject):
 
 			desc = 'number of lines' # four required lines
 			metadata,self.hex,inputs_data,outputs_data = tx_data
+			assert len(metadata) < 60,'invalid metadata length' # rough check
 			metadata = metadata.split()
 
 			if metadata[-1].find('LT=') == 0:

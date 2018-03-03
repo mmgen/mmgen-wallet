@@ -130,7 +130,8 @@ class g(object):
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
 		'daemon_data_dir','force_256_color','regtest',
-		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee'
+		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee',
+		'max_tx_file_size'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
@@ -148,6 +149,7 @@ class g(object):
 
 	min_screen_width = 80
 	minconf = 1
+	max_tx_file_size = 100000
 
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
