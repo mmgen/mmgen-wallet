@@ -235,8 +235,11 @@ class MMGenPexpect(object):
 		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ",'\n')
 		self.expect('Exiting at user request')
 
-	def tx_view(self):
-		my_expect(self.p,r'View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ','\n',regex=True)
+	def tx_view(self,view=None):
+		repl = { 'terse':'t', 'full':'v' }[view] if view else 'n'
+		my_expect(self.p,r'View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ',repl,regex=True)
+		if repl in ('t','v'):
+			my_expect(self.p,r'any key to continue: ','\n')
 
 	def expect_getend(self,s,regex=False):
 		ret = self.expect(s,regex=regex,nonl=True)

@@ -25,14 +25,17 @@ import httplib,base64,json
 from mmgen.common import *
 from decimal import Decimal
 
+def dmsg_rpc(s):
+	if g.debug_rpc: msg(s)
+
 class RPCFailure(Exception): pass
 
 class CoinDaemonRPCConnection(object):
 
 	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
 
-		dmsg('=== CoinDaemonRPCConnection.__init__() debug ===')
-		dmsg('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
+		dmsg_rpc('=== CoinDaemonRPCConnection.__init__() debug ===')
+		dmsg_rpc('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
 			host,port,user,passwd,auth_cookie))
 
 		import socket
@@ -98,8 +101,8 @@ class CoinDaemonRPCConnection(object):
 			elif cf['on_fail'] == 'die':
 				die(args[1],yellow(s))
 
-		dmsg('=== request() debug ===')
-		dmsg('    RPC POST data ==> %s\n' % p)
+		dmsg_rpc('=== request() debug ===')
+		dmsg_rpc('    RPC POST data ==> %s\n' % p)
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
@@ -112,7 +115,7 @@ class CoinDaemonRPCConnection(object):
 		# 	dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
 		# 	print(dump)
 
-		dmsg('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
+		dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
 			self.auth_str,' '*31,base64.b64encode(self.auth_str)))
 		try:
 			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
@@ -129,7 +132,7 @@ class CoinDaemonRPCConnection(object):
 			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
 			return do_fail(None,2,m.format(g.proto.daemon_name,self.host,self.port))
 
-		dmsg('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
+		dmsg_rpc('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
 
 		if r.status != 200:
 			if cf['on_fail'] not in ('silent','raise'):
@@ -145,7 +148,7 @@ class CoinDaemonRPCConnection(object):
 
 		r2 = r.read()
 
-		dmsg('    RPC REPLY data ==> %s\n' % r2)
+		dmsg_rpc('    RPC REPLY data ==> %s\n' % r2)
 
 		if not r2:
 			return do_fail(r,2,'Error: empty reply')

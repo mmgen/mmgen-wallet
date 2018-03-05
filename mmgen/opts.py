@@ -224,7 +224,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	uopts,args,short_opts,long_opts,skipped_opts,do_help = \
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,defer_help=True)
 
-	if g.debug: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
+	if g.debug_opts: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
 	# Save this for usage()
 	global usage_txt
@@ -292,6 +292,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	if g.bob or g.alice:
 		g.testnet = True
+		g.regtest = True
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		check_or_create_dir(g.data_dir)
@@ -309,7 +310,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
 		my_raw_input('Hit ENTER to continue: ')
 
-	if g.debug: opt_postproc_debug()
+	if g.debug_opts: opt_postproc_debug()
 
 	# We don't need this data anymore
 	del mmgen.share.Opts

@@ -27,9 +27,8 @@ from mmgen.obj import *
 
 pnm = g.proj_name
 
-def sc_dmsg(desc,data):
-	if os.getenv('MMGEN_DEBUG_ADDRLIST'):
-		Msg('sc_debug_{}: {}'.format(desc,data))
+def dmsg_sc(desc,data):
+	if g.debug_addrlist: Msg('sc_debug_{}: {}'.format(desc,data))
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,addr_type):
@@ -45,8 +44,7 @@ class AddrGenerator(MMGenObject):
 			'segwit':   AddrGeneratorSegwit,
 			'ethereum': AddrGeneratorEthereum,
 			'zcash_z':  AddrGeneratorZcashZ,
-			'monero':   AddrGeneratorMonero
-		}
+			'monero':   AddrGeneratorMonero}
 		assert gen_method in gen_methods
 		me = super(cls,cls).__new__(gen_methods[gen_method])
 		me.desc = gen_methods
@@ -59,7 +57,7 @@ class AddrGeneratorP2PKH(AddrGenerator):
 		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Coin/type pair incompatible with Segwit'
+		raise NotImplementedError,'Segwit redeem script not supported by this address type'
 
 class AddrGeneratorSegwit(AddrGenerator):
 	def to_addr(self,pubhex):
@@ -77,7 +75,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 		return CoinAddr(sha3.keccak_256(pubhex[2:].decode('hex')).digest()[12:].encode('hex'))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Coin/type pair incompatible with Segwit'
+		raise NotImplementedError,'Segwit redeem script not supported by this address type'
 
 # github.com/FiloSottile/zcash-mini/zcash/address.go
 class AddrGeneratorZcashZ(AddrGenerator):
@@ -197,7 +195,7 @@ class KeyGenerator(MMGenObject):
 	def test_for_secp256k1(self,silent=False):
 		try:
 			from mmgen.secp256k1 import priv2pub
-			assert priv2pub(os.urandom(32),1)
+			assert priv2pub(('deadbeef'*8).decode('hex'),1)
 			return True
 		except:
 			return False
@@ -303,7 +301,7 @@ class AddrListIDStr(unicode,Hilite):
 			bc = (g.proto.base_coin,g.coin)[g.proto.base_coin=='ETH']
 			mt = addrlist.al_id.mmtype
 			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
-			sc_dmsg('id_str',ret[8:].split('[')[0])
+			dmsg_sc('id_str',ret[8:].split('[')[0])
 
 		return unicode.__new__(cls,ret)
 
@@ -397,7 +395,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 
 		seed = seed.get_data()
 		seed = self.scramble_seed(seed)
-		sc_dmsg('seed',seed[:8].encode('hex'))
+		dmsg_sc('seed',seed[:8].encode('hex'))
 
 		compressed = self.al_id.mmtype.compressed
 		pubkey_type = self.al_id.mmtype.pubkey_type
@@ -441,7 +439,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 				dmsg('Key {:>03}: {}'.format(pos,e.passwd))
 
 			out.append(e)
-			if g.debug: Msg('generate():\n', e.pformat())
+			if g.debug: Msg('generate():\n{}'.format(e.pformat()))
 
 		qmsg('\r%s: %s %s%s generated%s' % (
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
@@ -452,13 +450,13 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 	def scramble_seed(self,seed):
 		is_btcfork = g.proto.base_coin == 'BTC'
 		if is_btcfork and self.al_id.mmtype == 'L':
-			sc_dmsg('str','(none)')
+			dmsg_sc('str','(none)')
 			return seed
 		if g.proto.base_coin == 'ETH':
 			scramble_key = g.coin.lower()
 		else:
 			scramble_key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
-		sc_dmsg('str',scramble_key)
+		dmsg_sc('str',scramble_key)
 		from mmgen.crypto import scramble_seed
 		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
 
@@ -559,7 +557,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			lbl_p2 = ':'.join(l_coin+l_type)
 			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
 
-		sc_dmsg('lbl',lbl[9:])
+		dmsg_sc('lbl',lbl[9:])
 		out.append(u'{} {{'.format(lbl))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))

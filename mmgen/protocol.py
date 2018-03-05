@@ -83,10 +83,14 @@ class BitcoinProtocol(MMGenObject):
 		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch',False),
 		(None,'','b2x',True)
 	]
-	caps = ('rbf','segwit')
-	mmcaps = ('key','addr','rpc','tx')
-	base_coin = 'BTC'
-	addr_width = 34
+	caps               = ('rbf','segwit')
+	mmcaps             = ('key','addr','rpc','tx')
+	base_coin          = 'BTC'
+	addr_width         = 34
+	# From BIP173: witness version 'n' is stored as 'OP_n'. OP_0 is encoded as 0x00,
+	# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
+	witness_vernum_hex = '00'
+	witness_vernum     = int(witness_vernum_hex,16)
 
 	@staticmethod
 	def get_protocol_by_chain(chain):
@@ -147,7 +151,7 @@ class BitcoinProtocol(MMGenObject):
 			else:
 				if g.debug: Msg('Invalid checksum in address')
 				break
-		if g.debug: Msg("Invalid address '{}'".format(addr))
+
 		return False
 
 	@classmethod
@@ -163,7 +167,7 @@ class BitcoinProtocol(MMGenObject):
 		# https://bitcoincore.org/en/segwit_wallet_dev/
 		# The P2SH redeemScript is always 22 bytes. It starts with a OP_0, followed
 		# by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
-		return '0014' + hash160(pubhex)
+		return cls.witness_vernum_hex + '14' + hash160(pubhex)
 
 	@classmethod
 	def pubhex2segwitaddr(cls,pubhex):

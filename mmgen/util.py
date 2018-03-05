@@ -70,10 +70,10 @@ def pformat(d):
 	return pprint.PrettyPrinter(indent=4).pformat(d)
 def pmsg(*args):
 	if not args: return
-	Msg(pformat(args if len(args) > 1 else args[0]))
+	msg(pformat(args if len(args) > 1 else args[0]))
 def pdie(*args):
 	if not args: sys.exit(1)
-	Die(1,(pformat(args if len(args) > 1 else args[0])))
+	die(1,(pformat(args if len(args) > 1 else args[0])))
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]

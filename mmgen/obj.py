@@ -383,14 +383,16 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		return Hilite.fmtc(s,**kwargs)
 
 	def is_for_chain(self,chain):
-		from mmgen.globalvars import g
-		vn = g.proto.get_protocol_by_chain(chain).addr_ver_num
 
 		def pfx_ok(pfx):
 			if type(pfx) == tuple:
 				if self[0] in pfx: return True
 			elif self[:len(pfx)] == pfx: return True
 			return False
+
+		from mmgen.globalvars import g
+		proto = g.proto.get_protocol_by_chain(chain)
+		vn = proto.addr_ver_num
 
 		if self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
 			return pfx_ok(vn['p2sh'][1]) or pfx_ok(vn['p2sh2'][1])

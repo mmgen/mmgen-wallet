@@ -66,6 +66,9 @@ class g(object):
 
 	coin                 = 'BTC'
 	debug                = False
+	debug_opts           = False
+	debug_rpc            = False
+	debug_addrlist       = False
 	quiet                = False
 	no_license           = False
 	hold_protect         = True
@@ -136,6 +139,9 @@ class g(object):
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
 		'MMGEN_DEBUG',
+		'MMGEN_DEBUG_OPTS',
+		'MMGEN_DEBUG_RPC',
+		'MMGEN_DEBUG_ADDRLIST',
 		'MMGEN_QUIET',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_FORCE_256_COLOR',

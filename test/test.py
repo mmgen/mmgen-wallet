@@ -177,8 +177,14 @@ if opt.segwit and 'S' not in g.proto.mmtypes:
 
 def randbool():
 	return hexlify(os.urandom(1))[1] in '12345678'
-def get_segwit_val():
+def get_segwit_bool():
 	return randbool() if opt.segwit_random else True if opt.segwit else False
+def disable_debug():
+	ds = os.getenv('MMGEN_DEBUG')
+	if ds is not None: os.environ['MMGEN_DEBUG'] = ''
+	return ds
+def restore_debug(ds):
+	if ds is not None: os.environ['MMGEN_DEBUG'] = ds
 
 cfgs = {
 	'15': {
@@ -194,7 +200,7 @@ cfgs = {
 			'mmseed':      'export_seed_dfl_wallet',
 			'del_dw_run':  'delete_dfl_wallet',
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'16': {
 		'tmpdir':        os.path.join('test','tmp16'),
@@ -203,7 +209,7 @@ cfgs = {
 		'dep_generators': {
 			pwfile:        'passchg_dfl_wallet',
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'17': { 'tmpdir': os.path.join('test','tmp17') },
 	'18': { 'tmpdir': os.path.join('test','tmp18') },
@@ -229,7 +235,7 @@ cfgs = {
 			incog_id_fn:   'export_incog_hidden',
 			'akeys.mmenc': 'keyaddrgen'
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'2': {
 		'tmpdir':        os.path.join('test','tmp2'),
@@ -243,7 +249,7 @@ cfgs = {
 			'sigtx':         'txsign2',
 			'mmwords':     'export_mnemonic2',
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'3': {
 		'tmpdir':        os.path.join('test','tmp3'),
@@ -255,7 +261,7 @@ cfgs = {
 			'rawtx':         'txcreate3',
 			'sigtx':         'txsign3'
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'4': {
 		'tmpdir':        os.path.join('test','tmp4'),
@@ -272,7 +278,7 @@ cfgs = {
 		},
 		'bw_filename': 'brainwallet.mmbrain',
 		'bw_params':   '192,1',
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'14': {
 		'kapasswd':      'Maxwell',
@@ -285,7 +291,7 @@ cfgs = {
 			'addrs':       'addrgen14',
 			'akeys.mmenc': 'keyaddrgen14',
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'5': {
 		'tmpdir':        os.path.join('test','tmp5'),
@@ -295,7 +301,7 @@ cfgs = {
 			'mmdat':       'passchg',
 			pwfile:        'passchg',
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'6': {
 		'name':            'reference wallet check (128-bit)',
@@ -347,7 +353,7 @@ cfgs = {
 			'addrs':       'refaddrgen1',
 			'akeys.mmenc': 'refkeyaddrgen1'
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'7': {
 		'name':            'reference wallet check (192-bit)',
@@ -399,7 +405,7 @@ cfgs = {
 			'addrs':       'refaddrgen2',
 			'akeys.mmenc': 'refkeyaddrgen2'
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'8': {
 		'name':            'reference wallet check (256-bit)',
@@ -488,7 +494,7 @@ cfgs = {
 			'addrs':       'refaddrgen3',
 			'akeys.mmenc': 'refkeyaddrgen3'
 		},
-		'segwit': get_segwit_val()
+		'segwit': get_segwit_bool()
 	},
 	'9': {
 		'tmpdir':        os.path.join('test','tmp9'),
@@ -1013,7 +1019,10 @@ class MMGenExpect(MMGenPexpect):
 def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if 'S' not in g.proto.mmtypes: segwit = False
 	if lbl: lbl = ' ' + lbl
-	spk1,spk2 = (('76a914','88ac'),('a914','87'))[segwit and coinaddr.addr_fmt=='p2sh']
+	spk_beg,spk_end = (
+		('76a914','88ac'),
+		('a914','87'),
+		)[segwit and coinaddr.addr_fmt=='p2sh']
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	return {
 		'account': '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
@@ -1023,7 +1032,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		'amount': g.proto.coin_amt('%s.%s' % (amt1+(getrandnum(4) % amt2), getrandnum(4) % 100000000)),
 		'address': coinaddr,
 		'spendable': False,
-		'scriptPubKey': '{}{}{}'.format(spk1,coinaddr.hex,spk2),
+		'scriptPubKey': '{}{}{}'.format(spk_beg,coinaddr.hex,spk_end),
 		'confirmations': getrandnum(4) % 50000
 	}
 
@@ -1067,10 +1076,10 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 
 	if non_mmgen_input:
 		privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
-		coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
+		rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_data_to_file(of,privkey.wif+'\n','compressed {} key'.format(g.proto.name),silent=True)
-		out.append(create_fake_unspent_entry(coinaddr,non_mmgen=True,segwit=False))
+		out.append(create_fake_unspent_entry(rand_coinaddr,non_mmgen=True,segwit=False))
 
 #	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
 	return out
@@ -1108,7 +1117,7 @@ def create_tx_data(sources):
 def make_txcreate_cmdline(tx_data):
 	privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
 	t = ('p2pkh','segwit')['S' in g.proto.mmtypes]
-	coinaddr = AddrGenerator(t).to_addr(KeyGenerator('std').to_pubhex(privkey))
+	rand_coinaddr = AddrGenerator(t).to_addr(KeyGenerator('std').to_pubhex(privkey))
 
 	# total of two outputs must be < 10 BTC (<1000 LTC)
 	mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[coin_sel]
@@ -1127,7 +1136,7 @@ def make_txcreate_cmdline(tx_data):
 		# + one change address and one BTC address
 		if num is tx_data.keys()[-1]:
 			cmd_args += ['{}:{}'.format(s['al_id'],s['addr_idxs'][1])]
-			cmd_args += ['{},{}'.format(coinaddr,cfgs[num]['amts'][1])]
+			cmd_args += ['{},{}'.format(rand_coinaddr,cfgs[num]['amts'][1])]
 
 	return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
@@ -1441,7 +1450,8 @@ class MMGenTestSuite(object):
 		ok()
 
 	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None):
-		if cfg['segwit'] and ftype[:4] != 'pass' and not mmtype: mmtype = 'segwit'
+		if ftype[:4] != 'pass' and not mmtype:
+			if cfg['segwit']: mmtype = 'segwit'
 		cmd_pfx = (ftype,'pass')[ftype[:4]=='pass']
 		t = MMGenExpect(name,'mmgen-{}gen'.format(cmd_pfx),
 				['-d',cfg['tmpdir']] +
@@ -1455,16 +1465,20 @@ class MMGenTestSuite(object):
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[ftype[:4]=='pass']
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
+		if ftype[:4] == 'pass':
+			t.expect('Encrypt password list? (y/N): ','\n')
+			t.written_to_file('Password list',oo=True)
+		else:
+			t.written_to_file('Addresses',oo=True)
 		if check_ref:
 			k = 'passfile32_chk' if ftype == 'pass32' \
 					else 'passfilehex_chk' if ftype == 'passhex' \
 						else 'passfile_chk' if ftype == 'pass' \
 							else '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
 			chk_ref = cfg[k] if ftype[:4] == 'pass' else cfg[k][fork][g.testnet]
-			refcheck('address data checksum',chk,chk_ref)
-			return
-		t.written_to_file('Addresses',oo=True)
-		t.ok()
+			refcheck('{}list data checksum'.format(ftype),chk,chk_ref)
+		else:
+			t.ok()
 
 	def addrgen_dfl_wallet(self,name,pf=None,check_ref=False):
 		return self.addrgen(name,wf=None,pf=pf,check_ref=check_ref)
@@ -1486,7 +1500,7 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
 
-	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[]):
+	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[],view=None):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
@@ -1538,7 +1552,7 @@ class MMGenTestSuite(object):
 			t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
 		else:
 			t.expect('Add a comment to transaction? (y/N): ','\n')
-		t.tx_view()
+		t.tx_view(view=view)
 		if txdo_args: return t
 		t.expect('Save transaction? (y/N): ','y')
 		t.written_to_file('Transaction')
@@ -1619,7 +1633,7 @@ class MMGenTestSuite(object):
 			t = MMGenExpect(name,'mmgen-txsend', extra_opts + ['-d',cfg['tmpdir'],sigfile])
 			if really_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
 			t.license()
-			t.tx_view()
+			t.tx_view(view='terse')
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.expect('Are you sure you want to broadcast this')
 		m = 'YES, I REALLY WANT TO DO THIS'
@@ -1735,7 +1749,8 @@ class MMGenTestSuite(object):
 			args=['-H','%s,%s'%(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False,mmtype=None):
-		if cfg['segwit'] and not mmtype: mmtype = 'segwit'
+		if cfg['segwit'] and not mmtype:
+			mmtype = 'segwit'
 		args = ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
 		t = MMGenExpect(name,'mmgen-keygen',
 				([],['--type='+str(mmtype)])[bool(mmtype)] + args,extra_desc=('','(segwit)')[mmtype=='segwit'])
@@ -1866,7 +1881,7 @@ class MMGenTestSuite(object):
 			t.hash_preset('key-address data','1')
 			t.passphrase('key-address data',cfgs['14']['kapasswd'])
 			t.expect('Check key-to-address validity? (y/N): ','y')
-			t.tx_view()
+			t.tx_view(view='terse')
 
 		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
 			t.passphrase(('%s' % desc),cfgs[cnum]['wpasswd'])
@@ -2134,8 +2149,7 @@ class MMGenTestSuite(object):
 
 	def ref_segwitaddrfile_chk(self,name):
 		if not 'S' in g.proto.mmtypes:
-			msg_r('Skipping {} (not supported)'.format(name))
-			ok()
+			msg_r('Skipping {} (not supported)'.format(name)); ok()
 		else:
 			self.ref_addrfile_chk(name,ftype='segwitaddr')
 
@@ -2294,7 +2308,7 @@ class MMGenTestSuite(object):
 	def regtest_user_bal(self,name,user,bal):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','showempty=1'])
 		total = t.expect_getend('TOTAL: ')
-		cmp_or_die(total,'{} {}'.format(bal,g.coin))
+		cmp_or_die('{} {}'.format(bal,g.coin),total)
 
 	def regtest_alice_bal1(self,name):
 		return self.regtest_user_bal(name,'alice',rtFundAmt)
@@ -2318,11 +2332,11 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-regtest',['get_balances'])
 		t.expect('Switching')
 		ret = t.expect_getend("Bob's balance:").strip()
-		cmp_or_die(ret,rtBals[4],skip_ok=True)
+		cmp_or_die(rtBals[4],ret,skip_ok=True)
 		ret = t.expect_getend("Alice's balance:").strip()
-		cmp_or_die(ret,rtBals[5],skip_ok=True)
+		cmp_or_die(rtBals[5],ret,skip_ok=True)
 		ret = t.expect_getend("Total balance:").strip()
-		cmp_or_die(ret,rtBals[6],skip_ok=True)
+		cmp_or_die(rtBals[6],ret,skip_ok=True)
 		t.ok()
 
 	def regtest_user_txdo(  self,name,user,fee,
@@ -2437,9 +2451,11 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_get_mempool(self,name):
-		t = MMGenExpect(name,'mmgen-regtest',['show_mempool'])
+		ds = disable_debug()
+		ret = MMGenExpect(name,'mmgen-regtest',['show_mempool']).read()
+		restore_debug(ds)
 		from ast import literal_eval
-		return literal_eval(t.read())
+		return literal_eval(ret)
 
 	def regtest_get_mempool1(self,name):
 		mp = self.regtest_get_mempool(name)
@@ -2461,11 +2477,14 @@ class MMGenTestSuite(object):
 
 	@staticmethod
 	def gen_pairs(n):
-		return [subprocess.check_output(
+		ds = disable_debug()
+		ret = [subprocess.check_output(
 						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
 						([],['--type=compressed'])[bool((i+1)%2)] +
 						['-r0','randpair']
 					).split() for i in range(n)]
+		restore_debug(ds)
+		return ret
 
 	def regtest_bob_pre_import(self,name):
 		pairs = self.gen_pairs(5)

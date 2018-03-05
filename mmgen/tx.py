@@ -131,10 +131,12 @@ def bytes2coin_amt(hex_bytes):
 	return g.proto.coin_amt(bytes2int(hex_bytes) * g.proto.coin_amt.min_coin_unit)
 
 def scriptPubKey2addr(s):
-	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac': addr_hex,p2sh = s[6:-4],False
-	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':   addr_hex,p2sh = s[4:-2],True
-	else: raise NotImplementedError,'Unknown scriptPubKey'
-	return g.proto.pubhash2addr(addr_hex,p2sh)
+	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
+		return g.proto.pubhash2addr(s[6:-4],p2sh=False)
+	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
+		return g.proto.pubhash2addr(s[4:-2],p2sh=True)
+	else:
+		raise NotImplementedError,'Unknown scriptPubKey ({})'.format(s)
 
 from collections import OrderedDict
 class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
@@ -162,7 +164,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			return ret
 
 		d['version'] = bytes2int(hshift(tx,4))
-		has_witness = (False,True)[hexlify(tx[0])=='00']
+		has_witness = tx[0] == '\x00'
 		if has_witness:
 			u = hshift(tx,2,skip=True)[2:]
 			if u != '01':
@@ -383,7 +385,7 @@ class MMGenTX(MMGenObject):
 	# serialization, divide the result by 4 and round up to the next integer.
 
 	# TODO: results differ slightly from actual transaction size
-	def estimate_vsize(self):
+	def estimate_size(self):
 		if not self.inputs or not self.outputs: return None
 
 		sig_size = 72 # sig in DER format
@@ -438,8 +440,6 @@ class MMGenTX(MMGenObject):
 # 		pmsg('ret',ret)
 # 		pmsg('estimate_size_old',self.estimate_size_old())
 		return ret
-
-	estimate_size = estimate_vsize
 
 	def get_fee(self):
 		return self.sum_inputs() - self.sum_outputs()
@@ -609,8 +609,6 @@ class MMGenTX(MMGenObject):
 
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 		wifs = [d.sec.wif for d in keys]
-#		keys.pmsg()
-#		pmsg(wifs)
 		ret = g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg

@@ -36,9 +36,9 @@ Cryptocoin address/key operations (compressed public keys supported):
   privhex2addr   - generate coin address from private key in hex format
   privhex2pubhex - generate a hex public key from a hex private key
   pubhex2addr    - convert a hex pubkey to an address
-  pubhex2redeem_script - convert a hex pubkey to a witness redeem script
-  wif2redeem_script - convert a WIF private key to a witness redeem script
-  wif2segwit_pair - generate both a Segwit redeem script and address from WIF
+  pubhex2redeem_script - convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script
+  wif2redeem_script - convert a WIF private key to a Segwit P2SH-P2WPKH redeem script
+  wif2segwit_pair - generate both a Segwit P2SH-P2WPKH redeem script and address from WIF
   pubkey2addr    - convert coin public key to address
   randpair       - generate a random private key/address pair
   randwif        - generate a random private key in WIF format
