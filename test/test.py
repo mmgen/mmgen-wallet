@@ -166,7 +166,7 @@ rtFee = {
 	'ltc': ('1000s','500s','1500s','0.05','400s','1000s')
 }[coin_sel]
 rtBals = {
-	'btc': ('499.999942','399.9998214','399.9998079','399.9996799','13.00000000','986.99957990','999.99957990'),
+	'btc': ('499.9999488','399.9998282','399.9998147','399.9996875','6.79000000','993.20958750','999.99958750'),
 	'bch': ('499.9999416','399.9999124','399.99989','399.9997616','276.22339397','723.77626763','999.99966160'),
 	'ltc': ('5499.9971','5399.994085','5399.993545','5399.987145','13.00000000','10986.93714500','10999.93714500'),
 }[coin_sel]
@@ -1516,7 +1516,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,
 			'mmgen-'+('txcreate','txdo')[bool(txdo_args)],
 			([],['--rbf'])[g.proto.cap('rbf')] +
-			['-f',tx_fee] + add_args + cmd_args + txdo_args)
+			['-f',tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 		t.license()
 
 		if txdo_args and add_args: # txdo4
@@ -1559,7 +1559,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def txcreate(self,name,addrfile):
-		self.txcreate_common(name,sources=['1'])
+		self.txcreate_common(name,sources=['1'],add_args=['--vsize-adj=1.01'])
 
 	def txbump(self,name,txfile,prepend_args=[],seed_args=[]):
 		if not g.proto.cap('rbf'):
@@ -2414,7 +2414,8 @@ class MMGenTestSuite(object):
 			(('L','S')[g.proto.cap('segwit')],3,'')
 		)) # alice_sid:S:2, alice_sid:S:3
 		fn = os.path.join(cfg['tmpdir'],'non-mmgen.keys')
-		return self.regtest_user_txdo(name,'bob',rtFee[3],outputs_cl,'3-9',extra_args=['--keys-from-file='+fn])
+		return self.regtest_user_txdo(name,'bob',rtFee[3],outputs_cl,'1,4-10',
+			extra_args=['--keys-from-file='+fn,'--vsize-adj=1.02'])
 
 	def regtest_alice_send_estimatefee(self,name):
 		outputs_cl = self.create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
@@ -2480,7 +2481,7 @@ class MMGenTestSuite(object):
 		ds = disable_debug()
 		ret = [subprocess.check_output(
 						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
-						([],['--type=compressed'])[bool((i+1)%2)] +
+						(['--type=compressed'],[])[i==0] +
 						['-r0','randpair']
 					).split() for i in range(n)]
 		restore_debug(ds)
@@ -2511,7 +2512,8 @@ class MMGenTestSuite(object):
 		amts = (a for a in (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321))
 		outputs1 = ['{},{}'.format(a,amts.next()) for a in addrs]
 		sid = self.regtest_user_sid('bob')
-		outputs2 = [sid+':C:2,6', sid+':L:3,7',sid+(':L:1',':S:3')[g.proto.cap('segwit')]]
+		l1,l2 = (':S',':S') if g.proto.cap('segwit') else (':L',':L')
+		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
 		return self.regtest_user_txdo(name,'bob',rtFee[5],outputs1+outputs2,'1-2')
 
 	def regtest_user_add_label(self,name,user,addr,label):

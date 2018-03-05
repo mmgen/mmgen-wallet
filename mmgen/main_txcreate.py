@@ -45,6 +45,7 @@ opts_data = lambda: {
 -q, --quiet          Suppress warnings; overwrite files without prompting
 -r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
 -v, --verbose        Produce more verbose output
+-V, --vsize-adj=   f Adjust transaction's estimated vsize by factor 'f'
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
 """.format(g=g,cu=g.coin,dn=g.proto.daemon_name),
 	'notes': '\n' + help_notes('txcreate') + help_notes('fee')

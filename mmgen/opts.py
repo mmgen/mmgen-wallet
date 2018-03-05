@@ -362,7 +362,14 @@ def check_opts(usr_opts):       # Returns false if any check fails
 	def opt_is_int(val,desc):
 		try: int(val)
 		except:
-			msg("'%s': invalid %s (not an integer)" % (val,desc))
+			msg("'{}': invalid {} (not an integer)".format(val,desc))
+			return False
+		return True
+
+	def opt_is_float(val,desc):
+		try: float(val)
+		except:
+			msg("'{}': invalid {} (not a floating-point number)".format(val,desc))
 			return False
 		return True
 
@@ -468,6 +475,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		elif key == 'tx_confs':
 			if not opt_is_int(val,desc): return False
 			if not opt_compares(val,'>=',1,desc): return False
+		elif key == 'vsize_adj':
+			if not opt_is_float(val,desc): return False
+			ymsg('Adjusting transaction vsize by a factor of {:1.2f}'.format(float(val)))
 		elif key == 'key_generator':
 			if not opt_compares(val,'<=',len(g.key_generators),desc): return False
 			if not opt_compares(val,'>',0,desc): return False

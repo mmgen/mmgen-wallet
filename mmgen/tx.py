@@ -374,6 +374,17 @@ class MMGenTX(MMGenObject):
 	def has_segwit_inputs(self):
 		return any(i.mmid and i.mmid.mmtype == 'S' for i in self.inputs)
 
+	def compare_size_and_estimated_size(self):
+		vsize = self.estimate_size()
+		d = g.rpch.decoderawtransaction(self.hex)
+		dmsg('\nSize: {}, Vsize: {} (from daemon)'.format(d['size'],d['vsize'] if 'vsize' in d else 'N/A'))
+		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
+		m2 = 'Your transaction fee estimates will be inaccurate\n'
+		m3 = 'Please re-create the transaction using the option --vsize-adj={:1.2f}'
+		# allow for 5% error
+		rel_vsize = float(vsize) / (d['vsize'] if 'vsize' in d else d['size'])
+		assert 0.95 < rel_vsize < 1.05, (m1+m2+m3).format(rel_vsize,1/rel_vsize)
+
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
 	def estimate_size_old(self):
@@ -389,21 +400,28 @@ class MMGenTX(MMGenObject):
 		if not self.inputs or not self.outputs: return None
 
 		sig_size = 72 # sig in DER format
-		pubkey_size = { 'compressed':33, 'uncompressed':65 }
-		outpoint_size = 36 # txid + vout
+		pubkey_size_uncompressed = 65
+		pubkey_size_compressed = 33
 
 		def get_inputs_size():
-			segwit_isize = outpoint_size + 1 + 23 + 4 # (txid,vout) [scriptSig size] scriptSig nSeq # = 64
-			# txid vout [scriptSig size] scriptSig (<sig> <pubkey>) nSeq
-			legacy_isize = outpoint_size + 1 + 2 + sig_size + pubkey_size['uncompressed'] + 4 # = 180
-			compressed_isize = outpoint_size + 1 + 2 + sig_size + pubkey_size['compressed'] + 4 # = 148
-			ret = sum((legacy_isize,segwit_isize)[i.mmid.mmtype=='S'] for i in self.inputs if i.mmid)
-			# assume all non-MMGen pubkeys are compressed (we have no way of knowing
-			# until we see the key).  TODO: add user option to specify this?
-			return ret + sum(compressed_isize for i in self.inputs if not i.mmid)
+			# txid vout [scriptSig size (vInt)] scriptSig (<sig> <pubkey>) nSeq
+			isize_common = 32 + 4 + 1 + 4 # txid vout [scriptSig size] nSeq = 41
+			input_size = {
+				'L': isize_common + sig_size + pubkey_size_uncompressed, # = 180
+				'C': isize_common + sig_size + pubkey_size_compressed,   # = 148
+				'S': isize_common + 23,                                  # = 64
+			}
+			ret = sum(input_size[i.mmid.mmtype] for i in self.inputs if i.mmid)
+
+			# We have no way of knowing whether a non-MMGen addr is compressed or uncompressed until
+			# we see the key, so assume compressed for fee-estimation purposes.  If fee estimate is
+			# off by more than 5%, sign() aborts and user is instructed to use --vsize-adj option
+			return ret + sum(input_size['C'] for i in self.inputs if not i.mmid)
 
 		def get_outputs_size():
-			return sum((34,32)[o.addr.addr_fmt=='p2sh'] for o in self.outputs)
+			# output bytes = amt: 8, byte_count: 1+, pk_script
+			# pk_script bytes: p2pkh: 25, p2sh: 23
+			return sum({'p2pkh':34,'p2sh':32}[o.addr.addr_fmt] for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
 		# The witness is a serialization of all witness data of the transaction. Each txin is
@@ -415,31 +433,28 @@ class MMGenTX(MMGenObject):
 		# by a 0x00. If all txins are not witness program, a transaction's wtxid is equal to its txid.
 		def get_witness_size():
 			if not self.has_segwit_inputs(): return 0
-			wf_size = 1 + 1 + sig_size + 1 + pubkey_size['compressed'] # vInt vInt sig vInt pubkey = 108
-			return sum((1,wf_size)[bool(i.mmid) and i.mmid.mmtype=='S'] for i in self.inputs)
+			wf_size = 1 + 1 + sig_size + 1 + pubkey_size_compressed # vInt vInt sig vInt pubkey = 108
+			return sum((1,wf_size)[bool(i.mmid) and i.mmid.mmtype == 'S'] for i in self.inputs)
 
 		isize = get_inputs_size()
 		osize = get_outputs_size()
 		wsize = get_witness_size()
-#  		pmsg([i.mmid and i.mmid.mmtype == 'S' for i in self.inputs])
-#  		pmsg([i.mmid for i in self.inputs])
-#  		pmsg([i.mmid for i in self.outputs])
-#  		pmsg('isize',isize)
-#  		pmsg('osize',osize)
-#  		pmsg('wsize',wsize)
 
 		# TODO: compute real varInt sizes instead of assuming 1 byte
 		# old serialization: [nVersion]              [vInt][txins][vInt][txouts]         [nLockTime]
 		old_size =           4                     + 1   + isize + 1  + osize          + 4
+		# marker = 0x00, flag = 0x01
 		# new serialization: [nVersion][marker][flag][vInt][txins][vInt][txouts][witness][nLockTime]
 		new_size =           4       + 1     + 1   + 1   + isize + 1  + osize + wsize  + 4 \
 				if wsize else old_size
 
 		ret = (old_size * 3 + new_size) / 4
-# 		pmsg('old_size',old_size) # This should be equal to the size of serialized signed tx
-# 		pmsg('ret',ret)
-# 		pmsg('estimate_size_old',self.estimate_size_old())
-		return ret
+
+		dmsg('\nData from estimate_size():')
+		dmsg('  inputs size: {}, outputs size: {}, witness size: {}'.format(isize,osize,wsize))
+		dmsg('  size: {}, vsize: {}, old_size: {}'.format(new_size,ret,old_size))
+
+		return int(ret * float(opt.vsize_adj)) if hasattr(opt,'vsize_adj') and opt.vsize_adj else ret
 
 	def get_fee(self):
 		return self.sum_inputs() - self.sum_outputs()
@@ -626,7 +641,7 @@ class MMGenTX(MMGenObject):
 #				Msg(pretty_hexdump(unhexlify(self.hex),cols=16)) # DEBUG
 #				pmsg(make_chksum_6(unhexlify(self.hex)).upper())
 				self.hex = ret['hex']
-				vmsg('Signed transaction size: {}'.format(len(self.hex)/2))
+				self.compare_size_and_estimated_size()
 				dt = DeserializedTX(self.hex)
 				self.check_hex_tx_matches_mmgen_tx(dt)
 				self.coin_txid = CoinTxID(dt['txid'],on_fail='return')
@@ -653,6 +668,7 @@ class MMGenTX(MMGenObject):
 		return (red,green)[ret](str(ret)) if color else ret
 
 	# check that a malicious, compromised or malfunctioning coin daemon hasn't altered hex tx data:
+	# does not check witness or signature data
 	def check_hex_tx_matches_mmgen_tx(self,deserial_tx):
 		m = 'Fatal error: a malicious or malfunctioning coin daemon or other program may have altered your data!'
 
@@ -684,20 +700,26 @@ class MMGenTX(MMGenObject):
 		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
 			rdie(3,'MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
 
+	# check signature and witness data
 	def check_sigs(self,deserial_tx=None): # return False if no sigs, die on error
 		txins = (deserial_tx or DeserializedTX(self.hex))['txins']
 		has_ss = any(ti['scriptSig'] for ti in txins)
 		has_witness = any('witness' in ti and ti['witness'] for ti in txins)
 		if not (has_ss or has_witness):
 			return False
-		for ti in txins:
-			if ti['scriptSig'][:6] == '160014' and len(ti['scriptSig']) == 46: # P2SH-P2WPKH
+		fs = "Hex TX has {} scriptSig but input is of type '{}'!"
+		for n in range(len(txins)):
+			ti,mmti = txins[n],self.inputs[n]
+			if ti['scriptSig'] == '' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
+					ti['scriptSig'][:6] == '16' + g.proto.witness_vernum_hex + '14' ):
 				assert 'witness' in ti, 'missing witness'
 				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
-			elif ti['scriptSig'] == '': # native P2WPKH
-				die(3,('TX has missing signature','Native P2WPKH not implemented')['witness' in ti])
+				assert mmti.mmid, fs.format('witness-type','non-MMGen')
+				assert mmti.mmid.mmtype == 'S', fs.format('witness-type',mmti.mmid.mmtype)
 			else: # non-witness
+				if mmti.mmid:
+					assert mmti.mmid.mmtype != 'S', fs.format('signature in',mmti.mmid.mmtype)
 				assert not 'witness' in ti, 'non-witness input has witness'
 				# sig_size 72 (DER format), pubkey_size 'compressed':33, 'uncompressed':65
 				assert (200 < len(ti['scriptSig']) < 300), 'malformed scriptSig' # VERY rough check
