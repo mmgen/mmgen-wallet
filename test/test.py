@@ -111,6 +111,7 @@ opts_data = lambda: {
 	'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
+-B, --bech32        Generate and use Bech32 addresses
 -b, --buf-keypress  Use buffered keypresses as with real human input
 -c, --print-cmdline Print the command line of each spawned command
 -C, --coverage      Produce code coverage info using trace module
@@ -161,12 +162,12 @@ txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[coin_sel]
 
 rtFundAmt  = {'btc':'500','bch':'500','ltc':'5500'}[coin_sel]
 rtFee = {
-	'btc': ('20s','10s','60s','0.0001','10s','20s'),
+	'btc': ('20s','10s','60s','31s','10s','20s'),
 	'bch': ('20s','10s','60s','0.0001','10s','20s'),
 	'ltc': ('1000s','500s','1500s','0.05','400s','1000s')
 }[coin_sel]
 rtBals = {
-	'btc': ('499.9999488','399.9998282','399.9998147','399.9996875','6.79000000','993.20958750','999.99958750'),
+	'btc': ('499.9999488','399.9998282','399.9998147','399.9996877','13.00000000','986.99933647','999.99933647'),
 	'bch': ('499.9999416','399.9999124','399.99989','399.9997616','276.22339397','723.77626763','999.99966160'),
 	'ltc': ('5499.9971','5399.994085','5399.993545','5399.987145','13.00000000','10986.93714500','10999.93714500'),
 }[coin_sel]
@@ -174,11 +175,13 @@ rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[coin_sel]
 
 if opt.segwit and 'S' not in g.proto.mmtypes:
 	die(1,'--segwit option incompatible with {}'.format(g.proto.__name__))
+if opt.bech32 and 'B' not in g.proto.mmtypes:
+	die(1,'--bech32 option incompatible with {}'.format(g.proto.__name__))
 
 def randbool():
 	return hexlify(os.urandom(1))[1] in '12345678'
 def get_segwit_bool():
-	return randbool() if opt.segwit_random else True if opt.segwit else False
+	return randbool() if opt.segwit_random else True if opt.segwit or opt.bech32 else False
 def disable_debug():
 	ds = os.getenv('MMGEN_DEBUG')
 	if ds is not None: os.environ['MMGEN_DEBUG'] = ''
@@ -316,6 +319,10 @@ cfgs = {
 			'btc': ('9914 6D10 2307 F348','7DBF 441F E188 8B37'),
 			'ltc': ('CC09 A190 B7DF B7CD','3676 4C49 14F8 1AD0'),
 		},
+		'addrfile_bech32_chk': {
+			'btc': ('C529 D686 31AA ACD4','13C5 493E 1CD7 2852'),
+			'ltc': ('CC09 A190 B7DF B7CD','3676 4C49 14F8 1AD0'),
+		},
 		'addrfile_compressed_chk': {
 			'btc': ('95EB 8CC0 7B3B 7856','629D FDE4 CDC0 F276'),
 			'ltc': ('35D5 8ECA 9A42 46C3','37E9 A36E 94A2 010F'),
@@ -326,6 +333,10 @@ cfgs = {
 		},
 		'keyaddrfile_segwit_chk': {
 			'btc': ('C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
+			'ltc': ('054B 9794 55B4 5D82','C373 0074 DEE6 B70A'),
+		},
+		'keyaddrfile_bech32_chk': {
+			'btc': ('934F 1C33 6C06 B18C','D994 DF67 6E53 6F5F'),
 			'ltc': ('054B 9794 55B4 5D82','C373 0074 DEE6 B70A'),
 		},
 		'keyaddrfile_compressed_chk': {
@@ -368,6 +379,9 @@ cfgs = {
 			'btc': ('91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
 			'ltc': ('8F12 FA7B 9F12 594C','E79E F55B 1536 56F2'),
 		},
+		'addrfile_bech32_chk': {
+			'btc': ('2AA3 78DF B965 82EB','5B6A 4D12 820D BC3C'),
+		},
 		'addrfile_compressed_chk': {
 			'btc': ('2615 8401 2E98 7ECA','DF38 22AB AAB0 124E'),
 			'ltc': ('197C C48C 3C37 AB0F','5072 15DA 1A90 5E99'),
@@ -379,6 +393,9 @@ cfgs = {
 		'keyaddrfile_segwit_chk': {
 			'btc': ('C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
 			'ltc': ('1829 7FE7 2567 CB91','1305 9007 E515 B66A'),
+		},
+		'keyaddrfile_bech32_chk': {
+			'btc': ('4A6B 3762 DF30 9368','A68A 53D4 874E 923C'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('6D6D 3D35 04FD B9C3','B345 9CD8 9EAE 5489'),
@@ -420,6 +437,9 @@ cfgs = {
 			'btc': ('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
 			'ltc': ('63DF E42A 0827 21C3','1A3F 3016 2E2B F33A'),
 		},
+		'addrfile_bech32_chk': {
+			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
+		},
 		'addrfile_compressed_chk': {
 			'btc': ('A33C 4FDE F515 F5BC','5186 02C2 535E B7D5'),
 			'ltc': ('3FC0 8F03 C2D6 BD19','535E 5CDC 1CA7 08D5'),
@@ -432,6 +452,9 @@ cfgs = {
 			'btc': ('A447 12C2 DD14 5A9B','0690 460D A600 D315'),
 			'ltc': ('E8A3 9F6E E164 A521','70ED 8557 5882 08A5'),
 		},
+		'keyaddrfile_bech32_chk': {
+			'btc': ('D0DD BDE3 87BE 15AE','2C7B 70E5 5F96 9B09'),
+		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('420A 8EB5 A9E2 7814','3243 DD92 809E FE8D'),
 			'ltc': ('8D1C 781F EB7F 44BC','678E 8EF9 1396 B140'),
@@ -443,6 +466,7 @@ cfgs = {
 		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
 		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_bech32addrfile':'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
 		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum': {
@@ -452,6 +476,9 @@ cfgs = {
 		'ref_segwitaddrfile_chksum': {
 			'btc': ('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
 			'ltc': ('63DF E42A 0827 21C3','1A3F 3016 2E2B F33A'),
+		},
+		'ref_bech32addrfile_chksum': {
+			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
 		},
 		'ref_keyaddrfile_chksum': {
 			'btc': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
@@ -621,6 +648,7 @@ cmd_group['ref'] = (
 cmd_group['ref_other'] = (
 	('ref_addrfile_chk',   'saved reference address file'),
 	('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
+	('ref_bech32addrfile_chk','saved reference address file (bech32)'),
 	('ref_keyaddrfile_chk','saved reference key-address file'),
 	('ref_passwdfile_chk', 'saved reference password file'),
 #	Create the fake inputs:
@@ -886,7 +914,8 @@ os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 os.environ['MMGEN_BOGUS_SEND'] = '1'
 
-def get_segwit_arg(cfg): return ([],['--type','segwit'])[cfg['segwit']]
+def get_segwit_arg(cfg):
+	return ['--type='+('segwit','bech32')[bool(opt.bech32)]] if cfg['segwit'] else []
 
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
@@ -1022,7 +1051,8 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 	spk_beg,spk_end = (
 		('76a914','88ac'),
 		('a914','87'),
-		)[segwit and coinaddr.addr_fmt=='p2sh']
+		(g.proto.witness_vernum_hex+'14','')
+		)[segwit and (coinaddr.addr_fmt=='p2sh') + 2*(coinaddr.addr_fmt=='bech32')]
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	return {
 		'account': '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
@@ -1451,7 +1481,7 @@ class MMGenTestSuite(object):
 
 	def addrgen(self,name,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None):
 		if ftype[:4] != 'pass' and not mmtype:
-			if cfg['segwit']: mmtype = 'segwit'
+			if cfg['segwit']: mmtype = ('segwit','bech32')[bool(opt.bech32)]
 		cmd_pfx = (ftype,'pass')[ftype[:4]=='pass']
 		t = MMGenExpect(name,'mmgen-{}gen'.format(cmd_pfx),
 				['-d',cfg['tmpdir']] +
@@ -1459,7 +1489,8 @@ class MMGenTestSuite(object):
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
 				([],[wf])[bool(wf)] +
 				([],[id_str])[bool(id_str)] +
-				[cfg['{}_idx_list'.format(cmd_pfx)]],extra_desc=('','(segwit)')[mmtype=='segwit'])
+				[cfg['{}_idx_list'.format(cmd_pfx)]],
+				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		t.expect('Passphrase is OK')
@@ -1487,7 +1518,7 @@ class MMGenTestSuite(object):
 		self.addrgen(name,wf,pf=pf,check_ref=True)
 
 	def refaddrgen_compressed(self,name,wf,pf):
-		if opt.segwit:
+		if opt.segwit or opt.bech32:
 			msg('Skipping non-Segwit address generation'); return True
 		self.addrgen(name,wf,pf=pf,check_ref=True,mmtype='compressed')
 
@@ -1750,10 +1781,11 @@ class MMGenTestSuite(object):
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False,mmtype=None):
 		if cfg['segwit'] and not mmtype:
-			mmtype = 'segwit'
+			mmtype = ('segwit','bech32')[bool(opt.bech32)]
 		args = ['-d',cfg['tmpdir'],usr_rand_arg,wf,cfg['addr_idx_list']]
 		t = MMGenExpect(name,'mmgen-keygen',
-				([],['--type='+str(mmtype)])[bool(mmtype)] + args,extra_desc=('','(segwit)')[mmtype=='segwit'])
+				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
+				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
@@ -1773,7 +1805,7 @@ class MMGenTestSuite(object):
 		self.keyaddrgen(name,wf,pf,check_ref=True)
 
 	def refkeyaddrgen_compressed(self,name,wf,pf):
-		if opt.segwit:
+		if opt.segwit or opt.bech32:
 			msg('Skipping non-Segwit key-address generation'); return True
 		self.keyaddrgen(name,wf,pf,check_ref=True,mmtype='compressed')
 
@@ -2088,7 +2120,8 @@ class MMGenTestSuite(object):
 		af_fn = cfg[af_key].format(pfx or altcoin_pfx,'' if coin else tn_ext)
 		af = os.path.join(ref_dir,(subdir or ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
-		t = MMGenExpect(name,'mmgen-tool',coin_arg+[ftype.replace('segwit','')+'file_chksum',af]+add_args)
+		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
+		t = MMGenExpect(name,'mmgen-tool',coin_arg+[tool_cmd,af]+add_args)
 		if ftype == 'keyaddr':
 			w = 'key-address data'
 			t.hash_preset(w,ref_kafile_hash_preset)
@@ -2152,6 +2185,12 @@ class MMGenTestSuite(object):
 			msg_r('Skipping {} (not supported)'.format(name)); ok()
 		else:
 			self.ref_addrfile_chk(name,ftype='segwitaddr')
+
+	def ref_bech32addrfile_chk(self,name):
+		if not 'B' in g.proto.mmtypes:
+			msg_r('Skipping {} (not supported)'.format(name)); ok()
+		else:
+			self.ref_addrfile_chk(name,ftype='bech32addr')
 
 #	def txcreate8(self,name,addrfile):
 #		self.txcreate_common(name,sources=['8'])
@@ -2279,7 +2318,7 @@ class MMGenTestSuite(object):
 	def regtest_addrgen_alice(self,name): self.regtest_addrgen(name,'alice')
 
 	def regtest_addrimport(self,name,user,sid=None,addr_range='1-5',num_addrs=5):
-		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S' }
+		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B' }
 		if not sid: sid = self.regtest_user_sid(user)
 		from mmgen.addr import MMGenAddrType
 		for mmtype in g.proto.mmtypes:
@@ -2512,7 +2551,7 @@ class MMGenTestSuite(object):
 		amts = (a for a in (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321))
 		outputs1 = ['{},{}'.format(a,amts.next()) for a in addrs]
 		sid = self.regtest_user_sid('bob')
-		l1,l2 = (':S',':S') if g.proto.cap('segwit') else (':L',':L')
+		l1,l2 = (':S',':B') if g.proto.cap('segwit') else (':L',':L')
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
 		return self.regtest_user_txdo(name,'bob',rtFee[5],outputs1+outputs2,'1-2')
 

@@ -60,6 +60,7 @@ test_data = OrderedDict([
 ('btc',           ('456d7f5f1c4bfe3b','(none)',         '',    '',          '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv')),
 ('btc_compressed',('bf98a4af5464a4ef','compressed',     '-C',  'COMPRESSED','1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP')),
 ('btc_segwit',    ('b56962d829ffc678','segwit',         '-S',  'SEGWIT',    '36TvVzU5mxSjJ3D9qKAmYzCV7iUqtTDezF')),
+('btc_bech32',    ('d09eea818f9ad17f','bech32',         '-B',  'BECH32',    'bc1q8snv94j6959y3gkqv4gku0cm5mersnpucsvw5z')),
 ('bch',           ('456d7f5f1c4bfe3b','(none)',         '',    '',          '1MU7EdgqYy9JX35L25hR6CmXXcSEBDAwyv')),
 ('bch_compressed',('bf98a4af5464a4ef','compressed',     '-C',  'COMPRESSED','1F97Jd89wwmu4ELadesAdGDzg3d8Y6j5iP')),
 ('ltc',           ('b11f16632e63ba92','ltc:legacy',     '-LTC','LTC',       'LMxB474SVfxeYdqxNrM1WZDZMnifteSMv1')),

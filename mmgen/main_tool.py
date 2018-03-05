@@ -120,7 +120,7 @@ opts_data = lambda: {
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
--t, --type=t          Specify address type (valid options: 'compressed','segwit','zcash_z')
+-t, --type=t          Specify address type (valid options: 'compressed','segwit','bech32','zcash_z')
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """

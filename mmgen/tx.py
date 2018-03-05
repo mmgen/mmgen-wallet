@@ -135,6 +135,8 @@ def scriptPubKey2addr(s):
 		return g.proto.pubhash2addr(s[6:-4],p2sh=False)
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
 		return g.proto.pubhash2addr(s[4:-2],p2sh=True)
+	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + '14':
+		return g.proto.pubhash2bech32addr(s[4:])
 	else:
 		raise NotImplementedError,'Unknown scriptPubKey ({})'.format(s)
 
@@ -372,7 +374,7 @@ class MMGenTX(MMGenObject):
 		return self.add_comment(self)
 
 	def has_segwit_inputs(self):
-		return any(i.mmid and i.mmid.mmtype == 'S' for i in self.inputs)
+		return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
 
 	def compare_size_and_estimated_size(self):
 		vsize = self.estimate_size()
@@ -410,6 +412,7 @@ class MMGenTX(MMGenObject):
 				'L': isize_common + sig_size + pubkey_size_uncompressed, # = 180
 				'C': isize_common + sig_size + pubkey_size_compressed,   # = 148
 				'S': isize_common + 23,                                  # = 64
+				'B': isize_common + 0                                    # = 41
 			}
 			ret = sum(input_size[i.mmid.mmtype] for i in self.inputs if i.mmid)
 
@@ -420,8 +423,8 @@ class MMGenTX(MMGenObject):
 
 		def get_outputs_size():
 			# output bytes = amt: 8, byte_count: 1+, pk_script
-			# pk_script bytes: p2pkh: 25, p2sh: 23
-			return sum({'p2pkh':34,'p2sh':32}[o.addr.addr_fmt] for o in self.outputs)
+			# pk_script bytes: p2pkh: 25, p2sh: 23, bech32: 22
+			return sum({'p2pkh':34,'p2sh':32,'bech32':31}[o.addr.addr_fmt] for o in self.outputs)
 
 		# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
 		# The witness is a serialization of all witness data of the transaction. Each txin is
@@ -434,7 +437,7 @@ class MMGenTX(MMGenObject):
 		def get_witness_size():
 			if not self.has_segwit_inputs(): return 0
 			wf_size = 1 + 1 + sig_size + 1 + pubkey_size_compressed # vInt vInt sig vInt pubkey = 108
-			return sum((1,wf_size)[bool(i.mmid) and i.mmid.mmtype == 'S'] for i in self.inputs)
+			return sum((1,wf_size)[bool(i.mmid) and i.mmid.mmtype in ('S','B')] for i in self.inputs)
 
 		isize = get_inputs_size()
 		osize = get_outputs_size()
@@ -716,10 +719,10 @@ class MMGenTX(MMGenObject):
 				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
 				assert mmti.mmid, fs.format('witness-type','non-MMGen')
-				assert mmti.mmid.mmtype == 'S', fs.format('witness-type',mmti.mmid.mmtype)
+				assert mmti.mmid.mmtype in ('S','B'), fs.format('witness-type',mmti.mmid.mmtype)
 			else: # non-witness
 				if mmti.mmid:
-					assert mmti.mmid.mmtype != 'S', fs.format('signature in',mmti.mmid.mmtype)
+					assert mmti.mmid.mmtype not in ('S','B'), fs.format('signature in',mmti.mmid.mmtype)
 				assert not 'witness' in ti, 'non-witness input has witness'
 				# sig_size 72 (DER format), pubkey_size 'compressed':33, 'uncompressed':65
 				assert (200 < len(ti['scriptSig']) < 300), 'malformed scriptSig' # VERY rough check
@@ -727,7 +730,7 @@ class MMGenTX(MMGenObject):
 		return True
 
 	def has_segwit_outputs(self):
-		return any(o.mmid and o.mmid.mmtype == 'S' for o in self.outputs)
+		return any(o.mmid and o.mmid.mmtype in ('S','B') for o in self.outputs)
 
 	def is_in_mempool(self):
 		return 'size' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')

@@ -110,6 +110,7 @@ setup(
 			'mmgen.__init__',
 			'mmgen.addr',
 			'mmgen.altcoin',
+			'mmgen.bech32',
 			'mmgen.protocol',
 			'mmgen.color',
 			'mmgen.common',

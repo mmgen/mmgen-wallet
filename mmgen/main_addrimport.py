@@ -74,7 +74,7 @@ cmd_args = opts.init(opts_data)
 
 def import_mmgen_list(infile):
 	al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
-	if al.al_id.mmtype == 'S':
+	if al.al_id.mmtype in ('S','B'):
 		from mmgen.tx import segwit_is_active
 		if not segwit_is_active():
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')

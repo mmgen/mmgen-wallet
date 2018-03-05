@@ -394,7 +394,9 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		proto = g.proto.get_protocol_by_chain(chain)
 		vn = proto.addr_ver_num
 
-		if self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
+		if self.addr_fmt == 'bech32':
+			return self[:len(proto.bech32_hrp)] == proto.bech32_hrp
+		elif self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
 			return pfx_ok(vn['p2sh'][1]) or pfx_ok(vn['p2sh2'][1])
 		else:
 			return pfx_ok(vn[self.addr_fmt][1])
@@ -705,6 +707,12 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'gen_method':'segwit',
 				'addr_fmt':'p2sh',
 				'desc':'Segwit P2SH-P2WPKH address' },
+		'B': {  'name':'bech32',
+				'pubkey_type':'std',
+				'compressed':True,
+				'gen_method':'bech32',
+				'addr_fmt':'bech32',
+				'desc':'Native Segwit (Bech32) address' },
 		'E': {  'name':'ethereum',
 				'pubkey_type':'std',
 				'compressed':False,

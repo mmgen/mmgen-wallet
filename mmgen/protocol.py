@@ -25,6 +25,7 @@ from binascii import unhexlify
 from mmgen.util import msg,pmsg,Msg,pdie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt
 from mmgen.globalvars import g
+import mmgen.bech32 as bech32
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib.new('ripemd160',hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest()
@@ -67,7 +68,7 @@ class BitcoinProtocol(MMGenObject):
 	daemon_name     = 'bitcoind'
 	addr_ver_num    = { 'p2pkh': ('00','1'), 'p2sh':  ('05','3') }
 	wif_ver_num     = { 'std': '80' }
-	mmtypes         = ('L','C','S')
+	mmtypes         = ('L','C','S','B')
 	dfl_mmtype      = 'L'
 	data_subdir     = ''
 	rpc_port        = 8332
@@ -91,6 +92,8 @@ class BitcoinProtocol(MMGenObject):
 	# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
 	witness_vernum_hex = '00'
 	witness_vernum     = int(witness_vernum_hex,16)
+	bech32_addr_width  = 40
+	bech32_hrp         = 'bc'
 
 	@staticmethod
 	def get_protocol_by_chain(chain):
@@ -129,6 +132,19 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
+
+		if 'B' in cls.mmtypes and addr[:len(cls.bech32_hrp)] == cls.bech32_hrp:
+			ret = bech32.decode(cls.bech32_hrp,addr)
+			if ret[0] != cls.witness_vernum:
+				msg('{}: Invalid witness version number'.format(ret[0]))
+			elif ret[1]:
+				return {
+					'hex': ''.join([chr(b) for b in ret[1]]).encode('hex'),
+					'format': 'bech32',
+					'width': cls.bech32_addr_width,
+				} if return_dict else True
+			return False
+
 		for addr_fmt in cls.addr_ver_num:
 			ver_num,pfx = cls.addr_ver_num[addr_fmt]
 			if type(pfx) == tuple:
@@ -173,6 +189,11 @@ class BitcoinProtocol(MMGenObject):
 	def pubhex2segwitaddr(cls,pubhex):
 		return cls.pubhash2addr(hash160(cls.pubhex2redeem_script(pubhex)),p2sh=True)
 
+	@classmethod
+	def pubhash2bech32addr(cls,pubhash):
+		d = [ord(b) for b in pubhash.decode('hex')]
+		return bech32.bech32_encode(cls.bech32_hrp,[cls.witness_vernum]+bech32.convertbits(d,8,5))
+
 class BitcoinTestnetProtocol(BitcoinProtocol):
 	addr_ver_num         = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
 	wif_ver_num          = { 'std': 'ef' }
@@ -180,6 +201,8 @@ class BitcoinTestnetProtocol(BitcoinProtocol):
 	daemon_data_subdir   = 'testnet3'
 	rpc_port             = 18332
 	addr_width           = 35
+	bech32_hrp           = 'tb'
+	bech32_hrp_rt        = 'bcrt'
 
 class BitcoinCashProtocol(BitcoinProtocol):
 	# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'

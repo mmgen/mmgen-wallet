@@ -42,6 +42,7 @@ class AddrGenerator(MMGenObject):
 		gen_methods = {
 			'p2pkh':    AddrGeneratorP2PKH,
 			'segwit':   AddrGeneratorSegwit,
+			'bech32':   AddrGeneratorBech32,
 			'ethereum': AddrGeneratorEthereum,
 			'zcash_z':  AddrGeneratorZcashZ,
 			'monero':   AddrGeneratorMonero}
@@ -67,6 +68,15 @@ class AddrGeneratorSegwit(AddrGenerator):
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
 		return HexStr(g.proto.pubhex2redeem_script(pubhex))
+
+class AddrGeneratorBech32(AddrGenerator):
+	def to_addr(self,pubhex):
+		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
+		from mmgen.protocol import hash160
+		return CoinAddr(g.proto.pubhash2bech32addr(hash160(pubhex)))
+
+	def to_segwit_redeem_script(self,pubhex):
+		raise NotImplementedError,'Segwit redeem script not supported by this address type'
 
 class AddrGeneratorEthereum(AddrGenerator):
 	def to_addr(self,pubhex):

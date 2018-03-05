@@ -143,6 +143,7 @@ if [ "$MINGW" ]; then
 	"$gentest_py --coin=btc 2 $rounds"
 	"$gentest_py --coin=btc --type=compressed 2 $rounds"
 	"$gentest_py --coin=btc --type=segwit 2 $rounds"
+	"$gentest_py --coin=btc --type=bech32 2 $rounds"
 	"$gentest_py --coin=ltc 2 $rounds"
 	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
@@ -156,6 +157,7 @@ else
 	"$gentest_py --coin=btc 2 $rounds"
 	"$gentest_py --coin=btc --type=compressed 2 $rounds"
 	"$gentest_py --coin=btc --type=segwit 2 $rounds"
+	"$gentest_py --coin=btc --type=bech32 2 $rounds"
 	"$gentest_py --coin=ltc 2 $rounds"
 	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
@@ -218,6 +220,7 @@ t_btc=(
 	"$test_py -On"
 	"$test_py -On --segwit dfl_wallet main ref ref_other"
 	"$test_py -On --segwit-random dfl_wallet main"
+	"$test_py -On --bech32 dfl_wallet main ref ref_other"
 	"$tooltest_py rpc"
 	"$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
 f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
@@ -228,6 +231,7 @@ t_btc_tn=(
 	"$test_py -On --testnet=1"
 	"$test_py -On --testnet=1 --segwit dfl_wallet main ref ref_other"
 	"$test_py -On --testnet=1 --segwit-random dfl_wallet main"
+	"$test_py -On --testnet=1 --bech32 dfl_wallet main ref ref_other"
 	"$tooltest_py --testnet=1 rpc")
 f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
@@ -309,6 +313,7 @@ t_gen=(
 	"$gentest_py -q 2 $REFDIR/btcwallet.dump"
 	"$gentest_py -q 1:2 $gen_rounds"
 	"$gentest_py -q --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --type=bech32 1:2 $gen_rounds"
 	"$gentest_py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
 	"$gentest_py -q --testnet=1 1:2 $gen_rounds"
 	"$gentest_py -q --testnet=1 --type=segwit 1:2 $gen_rounds"

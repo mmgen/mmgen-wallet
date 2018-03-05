@@ -302,6 +302,9 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		g.rpc_user = rt.rpc_user
 		g.rpc_password = rt.rpc_password
 
+	if g.regtest and hasattr(g.proto,'bech32_hrp_rt'):
+		g.proto.bech32_hrp = g.proto.bech32_hrp_rt
+
 	# Check user-set opts without modifying them
 	if not check_opts(uopts):
 		sys.exit(1)
