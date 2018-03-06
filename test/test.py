@@ -254,6 +254,32 @@ cfgs = {
 		},
 		'segwit': get_segwit_bool()
 	},
+	'20': {
+		'tmpdir':        os.path.join('test','tmp20'),
+		'wpasswd':       'Vsize it',
+		'addr_idx_list': '1-8',  # 8 addresses
+		'seed_len':      256,
+		'dep_generators': {
+			'mmdat':       'walletgen5',
+			'addrs':       'addrgen5',
+			'rawtx':       'txcreate5',
+			'sigtx':       'txsign5',
+		},
+		'segwit': get_segwit_bool()
+	},
+	'21': {
+		'tmpdir':        os.path.join('test','tmp21'),
+		'wpasswd':       'Vsize it',
+		'addr_idx_list': '1-8',  # 8 addresses
+		'seed_len':      256,
+		'dep_generators': {
+			'mmdat':       'walletgen6',
+			'addrs':       'addrgen6',
+			'rawtx':       'txcreate6',
+			'sigtx':       'txsign6',
+		},
+		'segwit': get_segwit_bool()
+	},
 	'3': {
 		'tmpdir':        os.path.join('test','tmp3'),
 		'wpasswd':       'Major miner',
@@ -614,6 +640,15 @@ cmd_group['main'] = OrderedDict([
 	['txsign4',   (4,'tx signing with inputs and outputs from incog file, mnemonic file, wallet, brainwallet, key-address file and non-MMGen inputs and outputs', [[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])],
 	['txdo4', (4,'tx creation,signing and sending with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['addrs'],1],[['addrs'],2],[['addrs'],3],[['addrs'],4],[['addrs','akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['mmbrain','rawtx'],4],[['akeys.mmenc'],14]])], # must go after txsign4
 	['txbump4', (4,'tx fee bump + send with inputs and outputs from four seed sources, key-address file and non-MMGen inputs and outputs', [[['akeys.mmenc'],14],[['mmincog'],1],[['mmwords'],2],[['mmdat'],3],[['akeys.mmenc'],14],[['mmbrain','sigtx','mmdat','txdo'],4]])], # must go after txsign4
+
+	['walletgen5',(20,'wallet generation (5)',                   [[['del_dw_run'],15]],20)],
+	['addrgen5',  (20,'address generation (5)',                  [[['mmdat'],20]])],
+	['txcreate5', (20,'transaction creation with bad vsize (5)', [[['addrs'],20]])],
+	['txsign5',   (20,'transaction signing with bad vsize',      [[['mmdat','rawtx'],20]])],
+	['walletgen6',(21,'wallet generation (6)',                   [[['del_dw_run'],15]],21)],
+	['addrgen6',  (21,'address generation (6)',                  [[['mmdat'],21]])],
+	['txcreate6', (21,'transaction creation with corrected vsize (6)', [[['addrs'],21]])],
+	['txsign6',   (21,'transaction signing with corrected vsize',      [[['mmdat','rawtx'],21]])],
 ])
 
 cmd_group['tool'] = OrderedDict([
@@ -878,6 +913,8 @@ meta_cmds = OrderedDict([
 	['2', [k for k in cmd_data if cmd_data[k][0] == 2]],
 	['3', [k for k in cmd_data if cmd_data[k][0] == 3]],
 	['4', [k for k in cmd_data if cmd_data[k][0] == 4]],
+	['5', [k for k in cmd_data if cmd_data[k][0] == 20]],
+	['6', [k for k in cmd_data if cmd_data[k][0] == 21]],
 
 	['saved_ref1', [c[0]+'1' for c in cmd_group['ref']]],
 	['saved_ref2', [c[0]+'2' for c in cmd_group['ref']]],
@@ -1090,7 +1127,7 @@ labels = [
 ]
 label_iter = None
 
-def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
+def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_compressed=True):
 
 	out = []
 	for d in tx_data.values():
@@ -1105,7 +1142,7 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input=''):
 				out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 	if non_mmgen_input:
-		privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
+		privkey = PrivKey(os.urandom(32),compressed=non_mmgen_input_compressed,pubkey_type='std')
 		rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 		write_data_to_file(of,privkey.wif+'\n','compressed {} key'.format(g.proto.name),silent=True)
@@ -1531,13 +1568,20 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
 
-	def txcreate_common(self,name,sources=['1'],non_mmgen_input='',do_label=False,txdo_args=[],add_args=[],view=None):
+	def txcreate_common(self, name,
+						sources=['1'],
+						non_mmgen_input='',
+						do_label=False,
+						txdo_args=[],
+						add_args=[],
+						view=None,
+						non_mmgen_input_compressed=True):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
 		silence()
 		ad,tx_data = create_tx_data(sources)
-		dfake = create_fake_unspent_data(ad,tx_data,non_mmgen_input)
+		dfake = create_fake_unspent_data(ad,tx_data,non_mmgen_input,non_mmgen_input_compressed)
 		write_fake_data_to_file(repr(dfake))
 		cmd_args = make_txcreate_cmdline(tx_data)
 		end_silence()
@@ -1921,6 +1965,43 @@ class MMGenTestSuite(object):
 		if txdo_handle: return
 		self.txsign_end(t,has_label=True)
 		t.ok()
+
+	def walletgen5(self,name,del_dw_run='dummy'):
+		self.walletgen(name)
+
+	def addrgen5(self,name,wf):
+		self.addrgen(name,wf,pf='')
+
+	def txcreate5(self,name,addrfile):
+		self.txcreate_common(name,sources=['20'],non_mmgen_input='20',non_mmgen_input_compressed=False)
+
+	def txsign5(self,name,txf,wf,bad_vsize=True,add_args=[]):
+		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
+		t = MMGenExpect(name,'mmgen-txsign', add_args + ['-d',cfg['tmpdir'],'-k',non_mm_fn,txf,wf])
+		t.license()
+		t.tx_view()
+		t.passphrase('MMGen wallet',cfgs['20']['wpasswd'])
+		if bad_vsize:
+			t.expect('ERROR: Estimated transaction vsize is')
+		else:
+			t.expect('Add a comment to transaction? (y/N): ','\n')
+			t.expect('Save signed transaction? (Y/n): ','y')
+		t.read()
+		t.ok(exit_val=(0,2)[bad_vsize])
+
+	def walletgen6(self,name,del_dw_run='dummy'):
+		self.walletgen(name)
+
+	def addrgen6(self,name,wf):
+		self.addrgen(name,wf,pf='')
+
+	def txcreate6(self,name,addrfile):
+		self.txcreate_common(
+			name,sources=['21'],non_mmgen_input='21',non_mmgen_input_compressed=False,add_args=['--vsize-adj=1.08'])
+
+	def txsign6(self,name,txf,wf):
+		return self.txsign5(name,txf,wf,bad_vsize=False,add_args=['--vsize-adj=1.08'])
+
 
 	def tool_encrypt(self,name,infile=''):
 		if infile:

@@ -377,15 +377,16 @@ class MMGenTX(MMGenObject):
 		return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
 
 	def compare_size_and_estimated_size(self):
-		vsize = self.estimate_size()
+		est_vsize = self.estimate_size()
 		d = g.rpch.decoderawtransaction(self.hex)
-		dmsg('\nSize: {}, Vsize: {} (from daemon)'.format(d['size'],d['vsize'] if 'vsize' in d else 'N/A'))
+		vsize = d['vsize'] if 'vsize' in d else d['size']
+		vmsg('\nSize: {}, Vsize: {} (true) {} (estimated)'.format(d['size'],vsize,est_vsize))
 		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
 		m2 = 'Your transaction fee estimates will be inaccurate\n'
-		m3 = 'Please re-create the transaction using the option --vsize-adj={:1.2f}'
+		m3 = 'Please re-create and re-sign the transaction using the option --vsize-adj={:1.2f}'
 		# allow for 5% error
-		rel_vsize = float(vsize) / (d['vsize'] if 'vsize' in d else d['size'])
-		assert 0.95 < rel_vsize < 1.05, (m1+m2+m3).format(rel_vsize,1/rel_vsize)
+		ratio = float(est_vsize) / vsize
+		assert 0.95 < ratio < 1.05, (m1+m2+m3).format(ratio,1/ratio)
 
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
@@ -466,10 +467,10 @@ class MMGenTX(MMGenObject):
 		return int(coin_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
 
 	def get_relay_fee(self):
-		assert self.estimate_size()
 		kb_fee = g.proto.coin_amt(g.rpch.getnetworkinfo()['relayfee'])
-		vmsg('Relay fee: {} {}/kB'.format(kb_fee,g.coin))
-		return kb_fee * self.estimate_size() / 1024
+		ret = kb_fee * self.estimate_size() / 1024
+		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
+		return ret
 
 	def convert_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
@@ -982,10 +983,10 @@ class MMGenTX(MMGenObject):
 
 		if opt.verbose:
 			ts = len(self.hex)/2 if self.hex else 'unknown'
-			out += 'Transaction size: Vsize={} Actual={}'.format(self.estimate_size(),ts)
+			out += 'Transaction size: Vsize {} (estimated), Total {}'.format(self.estimate_size(),ts)
 			if self.marked_signed():
 				ws = DeserializedTX(self.hex)['witness_size']
-				out += ' Base={} Witness={}'.format(ts-ws,ws)
+				out += ', Base {}, Witness {}'.format(ts-ws,ws)
 			out += '\n'
 
 		return out # TX label might contain non-ascii chars

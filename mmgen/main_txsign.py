@@ -59,6 +59,7 @@ opts_data = lambda: {
 -I, --info            Display information about the transaction and exit
 -t, --terse-info      Like '--info', but produce more concise output
 -v, --verbose         Produce more verbose output
+-V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """.format(
 		g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
