@@ -273,7 +273,11 @@ def Wif2segwit_pair(wif):
 	Msg('{}\n{}'.format(rs,addr))
 
 def Pubhash2addr(pubhash):
-	Msg(g.proto.pubhash2addr(pubhash,at.addr_fmt=='p2sh'))
+	if opt.type == 'bech32':
+		ret = g.proto.pubhash2bech32addr(pubhash)
+	else:
+		ret = g.proto.pubhash2addr(pubhash,at.addr_fmt=='p2sh')
+	Msg(ret)
 
 def Addr2hexaddr(addr):     Msg(g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex'])
 def Hash160(pubkeyhex):     Msg(hash160(pubkeyhex))

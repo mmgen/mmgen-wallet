@@ -84,24 +84,24 @@ cmd_data = OrderedDict([
 			'desc': 'Cryptocoin address/key commands',
 			'cmd_data': OrderedDict([
 				('Randwif',        ()),
-				('Randpair',       ()), # create 3 pairs: uncomp,comp,segwit
-				('Wif2addr',       ('Randpair','o3')),
-				('Wif2hex',        ('Randpair','o3')),
+				('Randpair',       ()), # create 4 pairs: uncomp,comp,segwit,bech32
+				('Wif2addr',       ('Randpair','o4')),
+				('Wif2hex',        ('Randpair','o4')),
 
-				('Privhex2pubhex', ('Wif2hex','o3')),
-				('Pubhex2addr',    ('Privhex2pubhex','o3')),
-				('Hex2wif',        ('Wif2hex','io2')),
-				('Addr2hexaddr',   ('Randpair','o2'))] + # TODO: Hexaddr2addr
-				([],[
-					('Pubhash2addr',   ('Addr2hexaddr','io2'))
-				])[opt.type != 'zcash_z'] +
-				([],[
-					('Pubhex2redeem_script', ('Privhex2pubhex','o3')),
-					('Wif2redeem_script', ('Randpair','o3')),
-					('Wif2segwit_pair',   ('Randpair','o2')),
-					('Privhex2addr',   ('Wif2hex','o3')), # compare with output of Randpair
-					('Pipetest',       ('Randpair','o3'))
-				])[g.coin in ('BTC','LTC')]
+				('Privhex2pubhex', ('Wif2hex','o3')),        # segwit only
+				('Pubhex2addr',    ('Privhex2pubhex','o3')), # segwit only
+				('Hex2wif',        ('Wif2hex','io2')),       # uncomp, comp
+				('Addr2hexaddr',   ('Randpair','o4'))] +     # uncomp, comp, bech32
+			([],[
+				('Pubhash2addr',   ('Addr2hexaddr','io4'))   # uncomp, comp, bech32
+			])[opt.type != 'zcash_z'] +
+			([],[
+				('Pubhex2redeem_script', ('Privhex2pubhex','o3')),
+				('Wif2redeem_script', ('Randpair','o3')),
+				('Wif2segwit_pair',   ('Randpair','o2')),
+				('Privhex2addr',   ('Wif2hex','o4')), # compare with output of Randpair
+				('Pipetest',       ('Randpair','o3'))
+			])[g.coin in ('BTC','LTC')]
 			)
 		}
 	),
@@ -196,15 +196,17 @@ if opt.list_names:
 
 from mmgen.tx import is_wif,is_coin_addr
 
-msg_w = 35
+msg_w = 33
 def test_msg(m):
 	m2 = 'Testing {}'.format(m)
 	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format(m2,w=msg_w+8))
 
 maybe_compressed = ('','compressed')['C' in g.proto.mmtypes]
 maybe_segwit     = ('','segwit')['S' in g.proto.mmtypes]
+maybe_bech32     = ('','bech32')['B' in g.proto.mmtypes]
 maybe_type_compressed = ([],['--type=compressed'])['C' in g.proto.mmtypes]
 maybe_type_segwit     = ([],['--type=segwit'])['S' in g.proto.mmtypes]
+maybe_type_bech32     = ([],['--type=bech32'])['B' in g.proto.mmtypes]
 
 class MMGenToolTestSuite(object):
 
@@ -354,38 +356,57 @@ class MMGenToolTestSuite(object):
 			ret = self.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1)
 			ok_or_die(ret,is_wif,'WIF key')
 	def Randpair(self,name):
-		for n,k in enumerate(['',maybe_compressed,maybe_segwit]):
+		for n,k in enumerate(['',maybe_compressed,maybe_segwit,maybe_bech32]):
 			ao = ['--type='+k] if k else []
 			wif,addr = self.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1).split()
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
 			ok_or_die(addr,is_coin_addr,'Coin address')
-	def Wif2addr(self,name,f1,f2,f3):
-		for n,f,k,m in ((1,f1,'',''),(2,f2,'',maybe_compressed),(3,f3,maybe_segwit,maybe_compressed)):
+	def Wif2addr(self,name,f1,f2,f3,f4):
+		for n,f,k,m in (
+			(1,f1,'',''),
+			(2,f2,'',maybe_compressed),
+			(3,f3,maybe_segwit,''),
+			(4,f4,maybe_bech32,'')
+			):
 			ao = ['--type='+k] if k else []
 			wif = read_from_file(f).split()[0]
 			self.run_cmd_out(name,wif,add_opts=ao,fn_idx=n,extra_msg=m)
-	def Wif2hex(self,name,f1,f2,f3):
-		for n,f,m in ((1,f1,''),(2,f2,maybe_compressed),(3,f3,'{} for {}'.format(maybe_compressed,maybe_segwit))):
+	def Wif2hex(self,name,f1,f2,f3,f4):
+		for n,f,m in (
+			(1,f1,''),
+			(2,f2,maybe_compressed),
+			(3,f3,'{} for {}'.format(maybe_compressed,maybe_segwit)),
+			(4,f4,'{} for {}'.format(maybe_compressed,maybe_bech32))
+			):
 			wif = read_from_file(f).split()[0]
 			self.run_cmd_out(name,wif,fn_idx=n,extra_msg=m)
-	def Privhex2addr(self,name,f1,f2,f3):
-		keys = [read_from_file(f).rstrip() for f in (f1,f2,f3)]
-		for n,k in enumerate(('',maybe_compressed,maybe_segwit)):
+	def Privhex2addr(self,name,f1,f2,f3,f4):
+		keys = [read_from_file(f).rstrip() for f in (f1,f2,f3,f4)]
+		for n,k in enumerate(('',maybe_compressed,maybe_segwit,maybe_bech32)):
 			ao = ['--type='+k] if k else []
 			ret = self.run_cmd(name,[keys[n]],add_opts=ao).rstrip()
 			iaddr = read_from_tmpfile(cfg,'Randpair{}.out'.format(n+1)).split()[-1]
+			vmsg('Out: {}'.format(ret))
 			cmp_or_die(iaddr,ret)
 	def Hex2wif(self,name,f1,f2,f3,f4):
 		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,maybe_compressed)):
 			ao = ['--type='+k] if k else []
 			ret = self.run_cmd_chk(name,fi,fo,add_opts=ao)
-	def Addr2hexaddr(self,name,f1,f2):
-		for n,f,m in ((1,f1,''),(2,f2,'from {}'.format(maybe_compressed))):
+	def Addr2hexaddr(self,name,f1,f2,f3,f4):
+		for n,f,m,ao in (
+			(1,f1,'',[]),
+			(2,f2,'from {}'.format(maybe_compressed),[]),
+			(4,f4,'',maybe_type_bech32),
+			):
 			addr = read_from_file(f).split()[-1]
-			self.run_cmd_out(name,addr,fn_idx=n,extra_msg=m)
-	def Pubhash2addr(self,name,f1,f2,f3,f4):
-		for n,fi,fo,m in ((1,f1,f2,''),(2,f3,f4,'from {}'.format(maybe_compressed))):
-			self.run_cmd_chk(name,fi,fo,extra_msg=m)
+			self.run_cmd_out(name,addr,fn_idx=n,add_opts=ao,extra_msg=m)
+	def Pubhash2addr(self,name,f1,f2,f3,f4,f5,f6,f7,f8):
+		for n,fi,fo,m,ao in (
+			(1,f1,f2,'',[]),
+			(2,f3,f4,'from {}'.format(maybe_compressed),[]),
+			(4,f7,f8,'',maybe_type_bech32)
+			):
+			self.run_cmd_chk(name,fi,fo,add_opts=ao,extra_msg=m)
 	def Privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif
 		addr = read_from_file(f3).strip()
 		self.run_cmd_out(name,addr,add_opts=maybe_type_compressed,fn_idx=3) # what about uncompressed?

@@ -224,6 +224,7 @@ def dump_test():
 		except:
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
 		b_addr = ag.to_addr(kg_a.to_pubhex(sec))
+		vmsg('\nwif: {}\naddr: {}\n'.format(wif,b_addr))
 		if a_addr != b_addr:
 			match_error(sec,wif,a_addr,b_addr,3,a)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))

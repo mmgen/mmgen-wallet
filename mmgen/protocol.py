@@ -252,6 +252,7 @@ class LitecoinProtocol(BitcoinProtocol):
 						else os.path.join(g.home_dir,'.litecoin')
 	addr_ver_num   = { 'p2pkh': ('30','L'), 'p2sh':  ('32','M'), 'p2sh2':  ('05','3') } # 'p2sh' is new fmt
 	wif_ver_num    = { 'std': 'b0' }
+	mmtypes         = ('L','C','S')
 	secs_per_block = 150
 	rpc_port       = 9332
 	coin_amt       = LTCAmt

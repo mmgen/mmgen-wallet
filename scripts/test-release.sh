@@ -311,6 +311,7 @@ i_gen='Gentest'
 s_gen="The following tests will run '$gentest_py' on mainnet and testnet for all supported coins"
 t_gen=(
 	"$gentest_py -q 2 $REFDIR/btcwallet.dump"
+	"$gentest_py -q --type=bech32 2 $REFDIR/btcwallet-bech32.dump"
 	"$gentest_py -q 1:2 $gen_rounds"
 	"$gentest_py -q --type=segwit 1:2 $gen_rounds"
 	"$gentest_py -q --type=bech32 1:2 $gen_rounds"
