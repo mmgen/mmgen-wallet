@@ -90,6 +90,8 @@ class AddrGeneratorEthereum(AddrGenerator):
 # github.com/FiloSottile/zcash-mini/zcash/address.go
 class AddrGeneratorZcashZ(AddrGenerator):
 
+	addr_width = 95
+
 	def zhash256(self,s,t):
 		s = map(ord,s+'\0'*32)
 		s[0] |= 0xc0
@@ -106,7 +108,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode
 		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + hexlify(self.zhash256(key,0)+p2))
-		assert len(ret) == g.proto.addr_width,'Invalid Zcash z-address length'
+		assert len(ret) == self.addr_width,'Invalid Zcash z-address length'
 		return CoinAddr(ret)
 
 	def to_viewkey(self,pubhex): # pubhex is really privhex
@@ -118,7 +120,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		vk[63] |= 0x40
 		from mmgen.protocol import _b58chk_encode
 		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(''.join(map(chr,vk))))
-		assert len(ret) == g.proto.addr_width,'Invalid Zcash view key length'
+		assert len(ret) == self.addr_width,'Invalid Zcash view key length'
 		return ZcashViewKey(ret)
 
 	def to_segwit_redeem_script(self,pubhex):
@@ -194,7 +196,6 @@ class KeyGenerator(MMGenObject):
 				msg('Using (slow) native Python ECDSA library for address generation')
 				return super(cls,cls).__new__(KeyGeneratorPython)
 		elif pubkey_type in ('zcash_z','monero'):
-			g.proto.addr_width = 95
 			me = super(cls,cls).__new__(KeyGeneratorDummy)
 			me.desc = 'mmgen-'+pubkey_type
 			return me

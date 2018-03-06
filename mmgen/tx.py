@@ -919,8 +919,9 @@ class MMGenTX(MMGenObject):
 		max_mmwid = max(get_max_mmwid(self.inputs),get_max_mmwid(self.outputs))
 
 		def format_io(io):
-			ip = io == self.inputs
+			ip = io is self.inputs
 			io_out = ''
+			addr_w = max(len(e.addr) for e in io)
 			confs_per_day = 60*60*24 / g.proto.secs_per_block
 			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 				if ip and blockcount != None:
@@ -932,10 +933,12 @@ class MMGenTX(MMGenObject):
 				else:
 					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid)
 				if terse:
-					io_out += '{:3} {} {} {} {}\n'.format(n+1,e.addr.fmt(color=True),mmid_fmt,e.amt.hl(),g.coin)
+					io_out += '{:3} {} {} {} {}\n'.format(n+1,
+						e.addr.fmt(color=True,width=addr_w),
+						mmid_fmt,e.amt.hl(),g.coin)
 				else:
 					icommon = [
-						((n+1,'')[ip],'address:',e.addr.fmt(color=True) + ' '+mmid_fmt),
+						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
 						('','comment:',e.label.hl() if e.label else ''),
 						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
 					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [

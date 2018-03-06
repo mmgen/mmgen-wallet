@@ -87,12 +87,10 @@ class BitcoinProtocol(MMGenObject):
 	caps               = ('rbf','segwit')
 	mmcaps             = ('key','addr','rpc','tx')
 	base_coin          = 'BTC'
-	addr_width         = 34
 	# From BIP173: witness version 'n' is stored as 'OP_n'. OP_0 is encoded as 0x00,
 	# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
 	witness_vernum_hex = '00'
 	witness_vernum     = int(witness_vernum_hex,16)
-	bech32_addr_width  = 40
 	bech32_hrp         = 'bc'
 
 	@staticmethod
@@ -140,8 +138,7 @@ class BitcoinProtocol(MMGenObject):
 			elif ret[1]:
 				return {
 					'hex': ''.join([chr(b) for b in ret[1]]).encode('hex'),
-					'format': 'bech32',
-					'width': cls.bech32_addr_width,
+					'format': 'bech32'
 				} if return_dict else True
 			return False
 
@@ -161,8 +158,7 @@ class BitcoinProtocol(MMGenObject):
 				return {
 					'hex': addr_hex[len(ver_num):-8],
 					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh',
-								'zcash_z':'zcash_z','viewkey':'viewkey'}[addr_fmt],
-					'width': cls.addr_width
+								'zcash_z':'zcash_z','viewkey':'viewkey'}[addr_fmt]
 				} if return_dict else True
 			else:
 				if g.debug: Msg('Invalid checksum in address')
@@ -200,7 +196,6 @@ class BitcoinTestnetProtocol(BitcoinProtocol):
 	data_subdir          = 'testnet'
 	daemon_data_subdir   = 'testnet3'
 	rpc_port             = 18332
-	addr_width           = 35
 	bech32_hrp           = 'tb'
 	bech32_hrp_rt        = 'bcrt'
 
@@ -230,7 +225,6 @@ class BitcoinCashTestnetProtocol(BitcoinCashProtocol):
 	wif_ver_num   = { 'std': 'ef' }
 	data_subdir   = 'testnet'
 	daemon_data_subdir = 'testnet3'
-	addr_width     = 35
 
 class B2XProtocol(BitcoinProtocol):
 	daemon_name     = 'bitcoind-2x'
@@ -249,7 +243,6 @@ class B2XTestnetProtocol(B2XProtocol):
 	data_subdir        = 'testnet'
 	daemon_data_subdir = 'testnet5'
 	rpc_port           = 18338
-	addr_width         = 35
 
 class LitecoinProtocol(BitcoinProtocol):
 	block0         = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
@@ -273,7 +266,6 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'
 	rpc_port       = 19332
-	addr_width     = 35
 
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
 class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')
@@ -304,7 +296,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	def verify_addr(cls,addr,hex_width,return_dict=False):
 		from mmgen.util import is_hex_str_lc
 		if is_hex_str_lc(addr) and len(addr) == cls.addr_width:
-			return { 'hex': addr, 'format': 'ethereum', 'width': cls.addr_width } if return_dict else True
+			return { 'hex': addr, 'format': 'ethereum' } if return_dict else True
 		if g.debug: Msg("Invalid address '{}'".format(addr))
 		return False
 
@@ -395,7 +387,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		chk = sha3.keccak_256(ret.decode('hex')[:-4]).hexdigest()[:8]
 		assert chk == ret[-8:],'Incorrect checksum'
 
-		return { 'hex': ret, 'format': 'monero', 'width': cls.addr_width } if return_dict else True
+		return { 'hex': ret, 'format': 'monero' } if return_dict else True
 
 class MoneroTestnetProtocol(MoneroProtocol):
 	addr_ver_num = { 'monero': ('35','4'), 'monero_sub': ('3f','8') } # 53,63

@@ -725,12 +725,14 @@ def Listaddresses(addrs='',minconf=1,
 	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
 	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
 	max_cmt_len  = max(max(len(v['lbl'].comment) for v in addrs.values()),7)
+	addr_width = max(len(addrs[mmid]['addr']) for mmid in addrs)
+
 #	pmsg([a.split('.')[1] for a in [str(v['amt']) for v in addrs.values()] if '.' in a])
 	# fp: fractional part
 	max_fp_len = max([len(a.split('.')[1]) for a in [str(v['amt']) for v in addrs.values()] if '.' in a] or [1])
 	out += [fs.format(
 			mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
-			addr=CoinAddr.fmtc('ADDRESS'),
+			addr=CoinAddr.fmtc('ADDRESS',width=addr_width),
 			cmt=TwComment.fmtc('COMMENT',width=max_cmt_len+1),
 			amt='BALANCE'.ljust(max_fp_len+4),
 			age=('CONFS','DAYS')[show_days],
@@ -761,7 +763,7 @@ def Listaddresses(addrs='',minconf=1,
 		e = addrs[mmid]
 		out.append(fs.format(
 			mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
-			addr=(e['addr'].fmt(color=True) if showbtcaddrs else None),
+			addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 			cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
 			amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
 			age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'

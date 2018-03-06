@@ -142,7 +142,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		col1_w = max(3,len(str(len(unsp)))+1) # num + ')'
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
 		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
-		addr_w = min(g.proto.addr_width+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
+		addr_w = min(max(len(i.addr) for i in unsp)+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
 		acct_w = min(max_acct_w, max(24,int(addr_w-10)))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
@@ -195,10 +195,11 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def format_for_printing(self,color=False):
 
+		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		fs  = ' {:4} {:67} {} {} {:12} {:<8} {:<6} {}'
 		out = [fs.format('Num','Tx ID,Vout',
-				'Address'.ljust(g.proto.addr_width),
+				'Address'.ljust(addr_w),
 				'MMGen ID'.ljust(mmid_w+1),
 				'Amount({})'.format(g.coin),
 				'Confs','Age(d)',
@@ -206,7 +207,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
-			addr = '|'+'.' * g.proto.addr_width if i.skip == 'addr' and self.group else i.addr.fmt(color=color)
+			addr = '|'+'.' * addr_w if i.skip == 'addr' and self.group else i.addr.fmt(color=color,width=addr_w)
 			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
 			out.append(
 				fs.format(str(n+1)+')', tx+','+str(i.vout),

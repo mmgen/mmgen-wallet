@@ -355,6 +355,8 @@ class LTCAmt(BTCAmt): max_amt = 84000000
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
 	hex_width = 40
+	width = 1
+	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
@@ -366,7 +368,6 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			assert va,'failed verification'
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
-			cls.width = va['width']
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} address ({})"
