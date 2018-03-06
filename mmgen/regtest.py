@@ -242,7 +242,7 @@ def get_current_user_win(quiet=False):
 	return None
 
 def get_current_user_unix(quiet=False):
-	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port))
+	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
 	cmdline = p.stdout.read()
 	if not cmdline: return None
 	for k in ('miner','bob','alice'):
