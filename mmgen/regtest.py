@@ -42,7 +42,9 @@ common_args = lambda: (
 
 def start_daemon(user,quiet=False,daemon=True,reindex=False):
 	# requires Bitcoin ABC version >= 0.16.2
-	add_args = ((),('--usecashaddr=0',))[g.proto.daemon_name=='bitcoind-abc']
+	add_args = ()
+	if g.proto.daemon_name == 'bitcoind-abc': add_args = ('--usecashaddr=0',)
+	elif g.proto.daemon_name == 'litecoind':  add_args = ('--mempoolreplacement=1',)
 	cmd = (
 		g.proto.daemon_name,
 		'--listen=0',

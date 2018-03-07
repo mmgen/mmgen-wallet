@@ -290,21 +290,17 @@ class AddrListIDStr(unicode,Hilite):
 	color = 'green'
 	trunc_ok = False
 	def __new__(cls,addrlist,fmt_str=None):
-		try: int(addrlist.data[0].idx)
-		except:
-			s = '(no idxs)'
-		else:
-			idxs = [e.idx for e in addrlist.data]
-			prev = idxs[0]
-			ret = prev,
-			for i in idxs[1:]:
-				if i == prev + 1:
-					if i == idxs[-1]: ret += '-', i
-				else:
-					if prev != ret[-1]: ret += '-', prev
-					ret += ',', i
-				prev = i
-			s = ''.join([unicode(i) for i in ret])
+		idxs = [e.idx for e in addrlist.data]
+		prev = idxs[0]
+		ret = prev,
+		for i in idxs[1:]:
+			if i == prev + 1:
+				if i == idxs[-1]: ret += '-', i
+			else:
+				if prev != ret[-1]: ret += '-', prev
+				ret += ',', i
+			prev = i
+		s = ''.join(map(unicode,ret))
 
 		if fmt_str:
 			ret = fmt_str.format(s)

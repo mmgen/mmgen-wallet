@@ -266,9 +266,9 @@ f_b2x_rt='Regtest (Bob and Alice) mode tests for B2X completed'
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
 t_ltc=(
-	"$test_py --coin=ltc -On dfl_wallet main"
-	"$test_py --coin=ltc --segwit -On dfl_wallet main"
-	"$test_py --coin=ltc --segwit-random -On dfl_wallet main"
+	"$test_py --coin=ltc -On dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --segwit dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --segwit-random dfl_wallet main"
 	"$tooltest_py --coin=ltc rpc"
 )
 f_ltc='You may stop the litecoin daemon if you wish'
@@ -362,6 +362,7 @@ tests=$dfl_tests
 
 check_args
 
+echo "Running tests: $tests"
 run_tests "$tests"
 rm -rf /tmp/mmgen-test-release-*
 

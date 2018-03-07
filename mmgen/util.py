@@ -794,10 +794,9 @@ def do_license_msg(immed=False):
 def get_daemon_cfg_options(cfg_keys):
 	cfg_file = os.path.join(g.proto.daemon_data_dir,g.proto.name+'.conf')
 	try:
-		cfg = dict([(k,v) for k,v in [
-			split2(str(line).translate(None,'\t '),'=')
-				for line in get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
-					] if k in cfg_keys])
+		lines = get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
+		kv_pairs = [split2(str(line).translate(None,'\t '),'=') for line in lines]
+		cfg = dict([(k,v) for k,v in kv_pairs if k in cfg_keys])
 	except:
 		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))
 		cfg = {}
