@@ -44,14 +44,14 @@ class Filename(MMGenObject):
 					self.ftype = ftype
 				# elif: # other MMGen file types
 				else:
-					die(3,"'%s': not a recognized file type for SeedSource" % ftype)
+					die(3,"'{}': not a recognized file type for SeedSource".format(ftype))
 			else:
-				die(3,"'%s': not a class" % ftype)
+				die(3,"'{}': not a class".format(ftype))
 		else:
 			# TODO: other file types
 			self.ftype = SeedSource.ext_to_type(self.ext)
 			if not self.ftype:
-				die(3,"'%s': not a recognized extension for SeedSource" % self.ext)
+				die(3,"'{}': not a recognized extension for SeedSource".format(self.ext))
 
 
 		import stat
@@ -62,7 +62,7 @@ class Filename(MMGenObject):
 				fd = os.open(fn, mode)
 			except OSError as e:
 				if e.errno == 13:
-					die(2,"'%s': permission denied" % fn)
+					die(2,"'{}': permission denied".format(fn))
 #				if e.errno != 17: raise
 			else:
 				self.size = os.lseek(fd, 0, os.SEEK_END)

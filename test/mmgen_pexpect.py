@@ -46,14 +46,14 @@ def my_send(p,t,delay=send_delay,s=False):
 	if opt.verbose:
 		ls = (' ','')[bool(opt.debug or not s)]
 		es = ('  ','')[bool(s)]
-		msg('%sSEND %s%s' % (ls,es,yellow("'%s'"%t.replace('\n',r'\n'))))
+		msg('{}SEND {}{}'.format(ls,es,yellow("'{}'"%t.replace('\n',r'\n'))))
 	return ret
 
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 	quo = ('',"'")[type(s) == str]
 
 	if not silent:
-		if opt.verbose: msg_r('EXPECT %s' % yellow(quo+str(s)+quo))
+		if opt.verbose: msg_r('EXPECT {}'.format(yellow(quo+str(s)+quo)))
 		elif not opt.exact_output: msg_r('+')
 
 	try:
@@ -63,14 +63,15 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 			ret = f(s,timeout=(60,5)[bool(opt.debug_pexpect)])
 	except pexpect.TIMEOUT:
 		if opt.debug_pexpect: raise
-		errmsg(red('\nERROR.  Expect %s%s%s timed out.  Exiting' % (quo,s,quo)))
+		errmsg(red('\nERROR.  Expect {}{}{} timed out.  Exiting'.format(quo,s,quo)))
 		sys.exit(1)
 	debug_pexpect_msg(p)
 
-	if opt.debug or (opt.verbose and type(s) != str): msg_r(' ==> %s ' % ret)
+	if opt.debug or (opt.verbose and type(s) != str):
+		msg_r(' ==> {} '.format(ret))
 
 	if ret == -1:
-		errmsg('Error.  Expect returned %s' % ret)
+		errmsg('Error.  Expect returned {}'.format(ret))
 		sys.exit(1)
 	else:
 		if t == '':
@@ -125,7 +126,7 @@ class MMGenPexpect(object):
 				if not msg_only:
 					sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
 			else:
-				m = 'Testing %s: ' % desc
+				m = 'Testing {}: '.format(desc)
 				msg_r(m)
 
 		if msg_only: return
@@ -136,8 +137,7 @@ class MMGenPexpect(object):
 			f = (call,check_output)[bool(no_output)]
 			ret = f([cmd] + args)
 			if f == call and ret != 0:
-				m = 'ERROR: process returned a non-zero exit status (%s)'
-				die(1,red(m % ret))
+				die(1,red('ERROR: process returned a non-zero exit status ({})'.format(ret)))
 		else:
 			if opt.traceback:
 				cmd,args = g.traceback_cmd,[cmd]+args
@@ -162,14 +162,12 @@ class MMGenPexpect(object):
 	def cmp_or_die(self,s,t,skip_ok=False,exit_val=0):
 		ret = self.p.wait()
 		if ret != exit_val:
-			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
+			rdie(1,'test.py: spawned program exited with value {}'.format(ret))
 		if s == t:
 			if not skip_ok: ok()
 		else:
-			sys.stderr.write(red(
-				'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
-					(repr(t),repr(s))))
-			sys.exit(3)
+			fs = 'ERROR: recoded data:\n{}\ndiffers from original data:\n{}'
+			rdie(3,fs.format(repr(t),repr(s)))
 
 	def license(self):
 		if 'MMGEN_NO_LICENSE' in os.environ: return
@@ -181,8 +179,8 @@ class MMGenPexpect(object):
 		my_expect(self.p,p,label+'\n')
 
 	def usr_rand_out(self,saved=False):
-		m = '%suser-supplied entropy' % (('','saved ')[saved])
-		my_expect(self.p,'Generating encryption key from OS random data plus ' + m)
+		fs = 'Generating encryption key from OS random data plus {}user-supplied entropy'
+		my_expect(self.p,fs.format(('','saved ')[saved]))
 
 	def usr_rand(self,num_chars):
 		if opt.usr_random:
@@ -202,20 +200,21 @@ class MMGenPexpect(object):
 			my_expect(self.p,'ENTER to continue: ','\n')
 
 	def passphrase_new(self,desc,passphrase):
-		my_expect(self.p,('Enter passphrase for %s: ' % desc), passphrase+'\n')
-		my_expect(self.p,'Repeat passphrase: ', passphrase+'\n')
+		my_expect(self.p,'Enter passphrase for {}: '.format(desc),passphrase+'\n')
+		my_expect(self.p,'Repeat passphrase: ',passphrase+'\n')
 
 	def passphrase(self,desc,passphrase,pwtype=''):
 		if pwtype: pwtype += ' '
-		my_expect(self.p,('Enter %spassphrase for %s.*?: ' % (pwtype,desc)),
+		my_expect(self.p,
+				'Enter {}passphrase for {}.*?: '.format(pwtype,desc),
 				passphrase+'\n',regex=True)
 
 	def hash_preset(self,desc,preset=''):
-		my_expect(self.p,('Enter hash preset for %s' % desc))
-		my_expect(self.p,('or hit ENTER .*?:'), str(preset)+'\n',regex=True)
+		my_expect(self.p,'Enter hash preset for {}'.format(desc))
+		my_expect(self.p,'or hit ENTER .*?:',str(preset)+'\n',regex=True)
 
 	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  ',oo=False):
-		s1 = '%s written to file ' % desc
+		s1 = '{} written to file '.format(desc)
 		s2 = query + "Type uppercase 'YES' to confirm: "
 		ret = my_expect(self.p,([s1,s2],s1)[overwrite_unlikely])
 		if ret == 1:
@@ -227,8 +226,8 @@ class MMGenPexpect(object):
 # 				ret = my_expect(self.p,s1)
 		self.expect(self.NL,nonl=True)
 		outfile = self.p.before.strip().strip("'")
-		if opt.debug_pexpect: msgred('Outfile [%s]' % outfile)
-		vmsg('%s file: %s' % (desc,cyan(outfile.replace("'",''))))
+		if opt.debug_pexpect: rmsg('Outfile [{}]'.format(outfile))
+		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
 		return outfile
 
 	def no_overwrite(self):
@@ -249,7 +248,7 @@ class MMGenPexpect(object):
 		self.expect(self.NL,nonl=True,silent=True)
 		debug_pexpect_msg(self.p)
 		end = self.p.before
-		vmsg(' ==> %s' % cyan(end))
+		vmsg(' ==> {}'.format(cyan(end)))
 		return end
 
 	def interactive(self):

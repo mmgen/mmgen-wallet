@@ -147,7 +147,7 @@ import mmgen.tool as tool
 if Command == 'Help' and not cmd_args: tool.usage(None)
 
 if Command not in tool.cmd_data:
-	die(1,"'%s': no such command" % Command.lower())
+	die(1,"'{}': no such command".format(Command.lower()))
 
 args,kwargs = tool.process_args(Command,cmd_args)
 

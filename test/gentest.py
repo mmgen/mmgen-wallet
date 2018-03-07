@@ -170,7 +170,7 @@ def compare_test():
 
 	for i in range(rounds):
 		if opt.verbose or time.time() - last_t >= 0.1:
-			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+			qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 			last_t = time.time()
 		sec = PrivKey(os.urandom(32),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		ph = kg_a.to_pubhex(sec)
@@ -188,10 +188,10 @@ def compare_test():
 				match_error(sec,sec.wif,sec.wif,b_wif,a,b)
 		else:
 			b_addr = ag.to_addr(kg_b.to_pubhex(sec))
-		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
+		vmsg('\nkey:  {}\naddr: {}\n'.format(sec.wif,a_addr))
 		if a_addr != b_addr:
 			match_error(sec,sec.wif,a_addr,b_addr,a,ext_lib if b == 'ext' else b)
-	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+	qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
 def speed_test():
@@ -206,19 +206,19 @@ def speed_test():
 
 	for i in range(rounds):
 		if time.time() - last_t >= 0.1:
-			qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+			qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 			last_t = time.time()
 		sec = PrivKey(seed+pack('I',i),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		a_addr = ag.to_addr(kg_a.to_pubhex(sec))
-		vmsg('\nkey:  %s\naddr: %s\n' % (sec.wif,a_addr))
-	qmsg_r('\rRound %s/%s ' % (i+1,rounds))
+		vmsg('\nkey:  {}\naddr: {}\n'.format(sec.wif,a_addr))
+	qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 	qmsg('\n{} addresses generated in {:.2f} seconds'.format(rounds,time.time()-start))
 
 def dump_test():
 	m = "Comparing output of address generator '{}' against wallet dump '{}'"
 	qmsg(green(m.format(kg_a.desc,cmd_args[1])))
 	for n,[wif,a_addr] in enumerate(dump,1):
-		qmsg_r('\rKey %s/%s ' % (n,len(dump)))
+		qmsg_r('\rKey {}/{} '.format(n,len(dump)))
 		try:
 			sec = PrivKey(wif=wif)
 		except:

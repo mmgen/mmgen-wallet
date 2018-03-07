@@ -27,13 +27,13 @@ from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
-def usage(): Die(2,'USAGE: %s %s' % (g.prog_name, usage_txt))
+def usage(): Die(2,'USAGE: {} {}'.format((g.prog_name,usage_txt)))
 
 def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:
 		bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in group]
 		if len(bad) > 1:
-			die(1,'Conflicting options: %s' % ', '.join([fmt_opt(b) for b in bad]))
+			die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
 
 def fmt_opt(o): return '--' + o.replace('_','-')
 
@@ -42,7 +42,7 @@ def _show_hash_presets():
 	msg('Available parameters for scrypt.hash():')
 	msg(fs.format('Preset','N','r','p'))
 	for i in sorted(g.hash_presets.keys()):
-		msg(fs.format("'%s'" % i, *g.hash_presets[i]))
+		msg(fs.format("'{}'".format(i,*g.hash_presets[i])))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
@@ -64,9 +64,9 @@ def opt_postproc_debug():
 	Msg('    Opts after processing:')
 	for k in a:
 		v = getattr(opt,k)
-		Msg('        %-18s: %-6s [%s]' % (k,v,type(v).__name__))
+		Msg('        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
 	Msg("    Opts set to 'None':")
-	Msg('        %s\n' % '\n        '.join(b))
+	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('    Global vars:')
 	for e in [d for d in dir(g) if d[:2] != '__']:
 		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
@@ -341,16 +341,15 @@ def opt_is_tx_fee(val,desc):
 def check_opts(usr_opts):       # Returns false if any check fails
 
 	def opt_splits(val,sep,n,desc):
-		sepword = 'comma' if sep == ',' else 'colon' if sep == ':' else "'%s'" % sep
+		sepword = 'comma' if sep == ',' else 'colon' if sep == ':' else "'{}'".format(sep)
 		try: l = val.split(sep)
 		except:
-			msg("'%s': invalid %s (not %s-separated list)" % (val,desc,sepword))
+			msg("'{}': invalid {} (not {}-separated list)".format(val,desc,sepword))
 			return False
 
 		if len(l) == n: return True
 		else:
-			msg("'%s': invalid %s (%s %s-separated items required)" %
-					(val,desc,n,sepword))
+			msg("'{}': invalid {} ({} {}-separated items required)".format(val,desc,n,sepword))
 			return False
 
 	def opt_compares(val,op_str,target,desc,what=''):
@@ -385,18 +384,17 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		return True
 
 	def opt_unrecognized(key,val,desc):
-		msg("'%s': unrecognized %s for option '%s'"
-				% (val,desc,fmt_opt(key)))
+		msg("'{}': unrecognized {} for option '{}'".format(val,desc,fmt_opt(key)))
 		return False
 
 	def opt_display(key,val='',beg='For selected',end=':\n'):
-		s = '%s=%s' % (fmt_opt(key),val) if val else fmt_opt(key)
-		msg_r("%s option '%s'%s" % (beg,s,end))
+		s = '{}={}'.format(fmt_opt(key),val) if val else fmt_opt(key)
+		msg_r("{} option '{}'{}".format(beg,s,end))
 
 	global opt
 	for key,val in [(k,getattr(opt,k)) for k in usr_opts]:
 
-		desc = "parameter for '%s' option" % fmt_opt(key)
+		desc = "parameter for '{}' option".format(fmt_opt(key))
 
 		from mmgen.util import check_infile,check_outfile,check_outdir
 		# Check for file existence and readability
@@ -416,8 +414,9 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if key == 'out_fmt':
 				p = 'hidden_incog_output_params'
 				if sstype == IncogWalletHidden and not getattr(opt,p):
-						die(1,'Hidden incog format output requested. You must supply'
-						+ " a file and offset with the '%s' option" % fmt_opt(p))
+					m1 = 'Hidden incog format output requested.  '
+					m2 = "You must supply a file and offset with the '{}' option"
+					die(1,m1+m2.format(fmt_opt(p)))
 				if issubclass(sstype,IncogWallet) and opt.old_incog_fmt:
 					opt_display(key,val,beg='Selected',end=' ')
 					opt_display('old_incog_fmt',beg='conflicts with',end=':\n')
@@ -446,10 +445,8 @@ def check_opts(usr_opts):       # Returns false if any check fails
 				val2 = getattr(opt,key2)
 				from mmgen.seed import IncogWalletHidden
 				if val2 and val2 not in IncogWalletHidden.fmt_codes:
-					die(1,
-						'Option conflict:\n  %s, with\n  %s=%s' % (
-						fmt_opt(key),fmt_opt(key2),val2
-					))
+					fs = 'Option conflict:\n  {}, with\n  {}={}'
+					die(1,fs.format(fmt_opt(key),fmt_opt(key2),val2))
 		elif key == 'seed_len':
 			if not opt_is_int(val,desc): return False
 			if not opt_is_in_list(int(val),g.seed_lens,desc): return False
@@ -497,6 +494,6 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_int(val,desc): return False
 			if not opt_compares(val,'>',0,desc): return False
 		else:
-			if g.debug: Msg("check_opts(): No test for opt '%s'" % key)
+			if g.debug: Msg("check_opts(): No test for opt '{}'".format(key))
 
 	return True

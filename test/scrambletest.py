@@ -111,4 +111,4 @@ run_tests()
 
 t = int(time.time()) - start_time
 m = '\nAll requested tests finished OK, elapsed time: {:02}:{:02}'
-msg(green(m.format(t/60,t%60)))
+gmsg(m.format(t/60,t%60))

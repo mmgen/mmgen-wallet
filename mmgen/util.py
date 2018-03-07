@@ -31,6 +31,8 @@ def msg_r(s):  sys.stderr.write(s.encode('utf8'))
 def Msg(s):    sys.stdout.write(s.encode('utf8') + '\n')
 def Msg_r(s):  sys.stdout.write(s.encode('utf8'))
 def msgred(s): msg(red(s))
+def rmsg(s):   msg(red(s))
+def rmsg_r(s): msg_r(red(s))
 def ymsg(s):   msg(yellow(s))
 def ymsg_r(s): msg_r(yellow(s))
 def gmsg(s):   msg(green(s))
@@ -107,11 +109,11 @@ def parse_nbytes(nbytes):
 				if k == m.group(2):
 					return int(m.group(1)) * v
 			else:
-				msg("Valid byte specifiers: '%s'" % "' '".join([i[0] for i in smap]))
+				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in smap])))
 		else:
 			return int(nbytes)
 
-	die(1,"'%s': invalid byte specifier" % nbytes)
+	die(1,"'{}': invalid byte specifier".format(nbytes))
 
 def check_or_create_dir(path):
 	try:
@@ -152,7 +154,7 @@ def suf(arg,suf_type='s'):
 	elif any(issubclass(t,c) for c in (list,tuple,set,dict)):
 		n = len(arg)
 	else:
-		die(2,'%s: invalid parameter for suf()' % arg)
+		die(2,'{}: invalid parameter for suf()'.format(arg))
 	return suf_types[suf_type][n==1]
 
 def get_extension(f):
@@ -300,13 +302,13 @@ class baseconv(object):
 	def check_wordlist(cls,wl_id):
 
 		wl = baseconv.digits[wl_id]
-		Msg('Wordlist: %s\nLength: %i words' % (capfirst(wl_id),len(wl)))
+		Msg('Wordlist: {}\nLength: {} words'.format(capfirst(wl_id),len(wl)))
 		new_chksum = cls.get_wordlist_chksum(wl_id)
 
 		a,b = 'generated checksum','saved checksum'
 		compare_chksums(new_chksum,a,cls.wl_chksums[wl_id],b,die_on_fail=True)
 
-		Msg('Checksum %s matches' % new_chksum)
+		Msg('Checksum {} matches'.format(new_chksum))
 		Msg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
 
 
@@ -330,7 +332,7 @@ class baseconv(object):
 
 		hexnum = hexnum.strip()
 		if not is_hex_str(hexnum):
-			die(2,"'%s': not a hexadecimal number" % hexnum)
+			die(2,"'{}': not a hexadecimal number".format(hexnum))
 
 		wl = cls.digits[wl_id]
 		base = len(wl)
@@ -378,7 +380,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 
 def decode_pretty_hexdump(data):
 	from string import hexdigits
-	pat = r'^[%s]+:\s+' % hexdigits
+	pat = r'^[{}]+:\s+'.format(hexdigits)
 	lines = [re.sub(pat,'',l) for l in data.splitlines()]
 	try:
 		return unhexlify(''.join((''.join(lines).split())))
@@ -405,27 +407,26 @@ def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
 		return g.hash_presets[hash_preset] # N,p,r,buflen
 	else: # Shouldn't be here
-		die(3,"%s: invalid 'hash_preset' value" % hash_preset)
+		die(3,"{}: invalid 'hash_preset' value".format(hash_preset))
 
 def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
 
 	if not chk1 == chk2:
-		m = "%s ERROR: %s checksum (%s) doesn't match %s checksum (%s)"\
-				% ((hdr+':\n   ' if hdr else 'CHECKSUM'),desc2,chk2,desc1,chk1)
+		fs = "{} ERROR: {} checksum ({}) doesn't match {} checksum ({})"
+		m = fs.format((hdr+':\n   ' if hdr else 'CHECKSUM'),desc2,chk2,desc1,chk1)
 		if die_on_fail:
 			die(3,m)
 		else:
 			vmsg(m,force=verbose)
 			return False
 
-	vmsg('%s checksum OK (%s)' % (capfirst(desc1),chk1))
+	vmsg('{} checksum OK ({})'.format(capfirst(desc1),chk1))
 	return True
 
 def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 	if cmp(val1,val2):
-		die(3,"%s: %s (%s) doesn't match %s (%s)"
-				% (e,desc2,val2,desc1,val1))
-	dmsg('%s OK (%s)' % (capfirst(desc2),val2))
+		die(3,"{}: {} ({}) doesn't match {} ({})".format(e,desc2,val2,desc1,val1))
+	dmsg('{} OK ({})'.format(capfirst(desc2),val2))
 	return True
 
 def open_file_or_exit(filename,mode,silent=False):
@@ -450,16 +451,15 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	try: mode = os.stat(fname).st_mode
 	except:
-		die(1,"Unable to stat requested %s '%s'" % (ftype,fname))
+		die(1,"Unable to stat requested {} '{}'".format(ftype,fname))
 
 	for t in ok_types:
 		if t[0](mode): break
 	else:
-		die(1,"Requested %s '%s' is not a %s" % (ftype,fname,
-				' or '.join([t[1] for t in ok_types])))
+		die(1,"Requested {} '{}' is not a {}".format(ftype,fname,' or '.join([t[1] for t in ok_types])))
 
 	if not os.access(fname, access):
-		die(1,"Requested %s '%s' is not %sable by you" % (ftype,fname,m))
+		die(1,"Requested {} '{}' is not {}able by you".format(ftype,fname,m))
 
 	return True
 
@@ -506,23 +506,21 @@ def get_new_passphrase(desc,passchg=False):
 		for i in range(g.passwd_max_tries):
 			pw = ' '.join(get_words_from_user('Enter {}: '.format(w)))
 			pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
-			dmsg('Passphrases: [%s] [%s]' % (pw,pw2))
+			dmsg('Passphrases: [{}] [{}]'.format(pw,pw2))
 			if pw == pw2:
 				vmsg('Passphrases match'); break
 			else: msg('Passphrases do not match.  Try again.')
 		else:
-			die(2,'User failed to duplicate passphrase in %s attempts' %
-					g.passwd_max_tries)
+			die(2,'User failed to duplicate passphrase in {} attempts'.format(g.passwd_max_tries))
 
 	if pw == '': qmsg('WARNING: Empty passphrase')
 	return pw
 
-def confirm_or_exit(message,question,expect='YES',exit_msg='Exiting at user request'):
+def confirm_or_exit(message,q,expect='YES',exit_msg='Exiting at user request'):
 	m = message.strip()
 	if m: msg(m)
-	a = question+'  ' if question[0].isupper() else \
-			'Are you sure you want to %s?\n' % question
-	b = "Type uppercase '%s' to confirm: " % expect
+	a = q+'  ' if q[0].isupper() else 'Are you sure you want to {}?\n'.format(q)
+	b = "Type uppercase '{}' to confirm: ".format(expect)
 	if my_raw_input(a+b).strip() != expect:
 		die(1,exit_msg)
 
@@ -553,22 +551,22 @@ def write_data_to_file(
 		qmsg('Output to STDOUT requested')
 		if sys.stdout.isatty():
 			if no_tty:
-				die(2,'Printing %s to screen is not allowed' % desc)
+				die(2,'Printing {} to screen is not allowed'.format(desc))
 			if (ask_tty and not opt.quiet) or binary:
-				confirm_or_exit('','output %s to screen' % desc)
+				confirm_or_exit('','output {} to screen'.format(desc))
 		else:
-			try:    of = os.readlink('/proc/%d/fd/1' % os.getpid()) # Linux
+			try:    of = os.readlink('/proc/{}/fd/1'.format(os.getpid())) # Linux
 			except: of = None # Windows
 
 			if of:
 				if of[:5] == 'pipe:':
 					if no_tty:
-						die(2,'Writing %s to pipe is not allowed' % desc)
+						die(2,'Writing {} to pipe is not allowed'.format(desc))
 					if ask_tty and not opt.quiet:
-						confirm_or_exit('','output %s to pipe' % desc)
+						confirm_or_exit('','output {} to pipe'.format(desc))
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
-				msg("Redirecting output to file '%s'" % (of2,of)[of2[:len(pd)] == pd])
+				msg("Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
 			else:
 				msg('Redirecting output to file')
 
@@ -583,27 +581,27 @@ def write_data_to_file(
 			outfile = make_full_path(opt.outdir,outfile)
 
 		if ask_write:
-			if not ask_write_prompt: ask_write_prompt = 'Save %s?' % desc
+			if not ask_write_prompt: ask_write_prompt = 'Save {}?'.format(desc)
 			if not keypress_confirm(ask_write_prompt,
 						default_yes=ask_write_default_yes):
-				die(1,'%s not saved' % capfirst(desc))
+				die(1,'{} not saved'.format(capfirst(desc)))
 
 		hush = False
 		if file_exists(outfile) and ask_overwrite:
-			q = "File '%s' already exists\nOverwrite?" % outfile
+			q = "File '{}' already exists\nOverwrite?".format(outfile)
 			confirm_or_exit('',q)
-			msg("Overwriting file '%s'" % outfile)
+			msg("Overwriting file '{}'".format(outfile))
 			hush = True
 
 		f = open_file_or_exit(outfile,('w','wb')[bool(binary)])
 		try:
 			f.write(data)
 		except:
-			die(2,"Failed to write %s to file '%s'" % (desc,outfile))
+			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
 		f.close
 
 		if not (hush or silent):
-			msg("%s written to file '%s'" % (capfirst(desc),outfile))
+			msg(u"{} written to file '{}'".format(capfirst(desc),outfile))
 
 		return True
 
@@ -617,20 +615,18 @@ def write_data_to_file(
 def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
-	dmsg('Sanitized input: [%s]' % ' '.join(words))
+	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
-
 
 def get_words_from_file(infile,desc,silent=False):
 	if not silent:
-		qmsg("Getting %s from file '%s'" % (desc,infile))
+		qmsg(u"Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile, 'r')
 	# split() also strips
 	words = f.read().split()
 	f.close()
-	dmsg('Sanitized input: [%s]' % ' '.join(words))
+	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
-
 
 def get_words(infile,desc,prompt):
 	if infile:
@@ -643,7 +639,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		msg("%s %s '%s'" % (m,desc,fn))
+		msg("{} {} '{}'".format(m,desc,fn))
 		from mmgen.crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
@@ -658,13 +654,13 @@ def get_lines_from_file(fn,desc='',trim_comments=False,silent=False):
 def get_data_from_user(desc='data',silent=False):
 	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
 	data = my_raw_input(p,echo=opt.echo_passphrase)
-	dmsg('User input: [%s]' % data)
+	dmsg('User input: [{}]'.format(data))
 	return data
 
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
 	if dash and infile == '-': return sys.stdin.read()
 	if not opt.quiet and not silent and desc:
-		qmsg("Getting %s from file '%s'" % (desc,infile))
+		qmsg(u"Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile,('r','rb')[bool(binary)],silent=silent)
 	data = f.read()
 	f.close()
@@ -672,7 +668,7 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
 
 def pwfile_reuse_warning():
 	if 'passwd_file_used' in globals():
-		qmsg("Reusing passphrase from file '%s' at user request" % opt.passwd_file)
+		qmsg(u"Reusing passphrase from file '{}' at user request".format(opt.passwd_file))
 		return True
 	globals()['passwd_file_used'] = True
 	return False
@@ -736,7 +732,7 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 	from mmgen.term import get_char
 
 	while True:
-		reply = get_char('%s: ' % prompt).strip('\n\r')
+		reply = get_char('{}: '.format(prompt)).strip('\n\r')
 
 		if reply in chars or (enter_ok and not reply):
 			msg('')
@@ -777,7 +773,7 @@ def do_license_msg(immed=False):
 
 	p = "Press 'w' for conditions and warranty info, or 'c' to continue:"
 	msg(gpl.warning)
-	prompt = '%s ' % p.strip()
+	prompt = '{} '.format(p.strip())
 
 	from mmgen.term import get_char
 

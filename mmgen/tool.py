@@ -122,7 +122,7 @@ def usage(command):
 				c,h = line.split('-',1)
 				Msg('MMGEN-TOOL {}: {}'.format(c.strip().upper(),h.strip()))
 		cd = cmd_data[Command]
-		msg('USAGE: {} {} {}'.format(g.prog_name,command,' '.join(cd)))
+		msg('USAGE: {} {} {}'.format(g.prog_name,command.lower(),' '.join(cd)))
 	else:
 		msg("'{}': no such tool command".format(command))
 	sys.exit(1)

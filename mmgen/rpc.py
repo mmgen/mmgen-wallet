@@ -102,7 +102,7 @@ class CoinDaemonRPCConnection(object):
 				die(args[1],yellow(s))
 
 		dmsg_rpc('=== request() debug ===')
-		dmsg_rpc('    RPC POST data ==> %s\n' % p)
+		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
 		caller = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
@@ -132,7 +132,7 @@ class CoinDaemonRPCConnection(object):
 			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
 			return do_fail(None,2,m.format(g.proto.daemon_name,self.host,self.port))
 
-		dmsg_rpc('    RPC GETRESPONSE data ==> %s\n' % r.__dict__)
+		dmsg_rpc('    RPC GETRESPONSE data ==> {}\n'.format(r.__dict__))
 
 		if r.status != 200:
 			if cf['on_fail'] not in ('silent','raise'):
@@ -148,7 +148,7 @@ class CoinDaemonRPCConnection(object):
 
 		r2 = r.read()
 
-		dmsg_rpc('    RPC REPLY data ==> %s\n' % r2)
+		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
 
 		if not r2:
 			return do_fail(r,2,'Error: empty reply')

@@ -49,11 +49,11 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 		if infiles:
 			ss = SeedSource(infiles.pop(0),ignore_in_fmt=True)
 		elif opt.in_fmt:
-			qmsg('Need seed data for Seed ID %s' % sid)
+			qmsg('Need seed data for Seed ID {}'.format(sid))
 			ss = SeedSource()
-			msg('User input produced Seed ID %s' % ss.seed.sid)
+			msg('User input produced Seed ID {}'.format(ss.seed.sid))
 		else:
-			die(2,'ERROR: No seed source found for Seed ID: %s' % sid)
+			die(2,'ERROR: No seed source found for Seed ID: {}'.format(sid))
 
 		saved_seeds[ss.seed.sid] = ss.seed
 		if ss.seed.sid == sid: return ss.seed
@@ -61,7 +61,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]
 	sids = set(i.sid for i in mmids)
-	vmsg('Need seed%s: %s' % (suf(sids,'s'),' '.join(sids)))
+	vmsg('Need seed{}: {}'.format(suf(sids,'s'),' '.join(sids)))
 	d = MMGenList()
 	from mmgen.addr import KeyAddrList
 	for sid in sids:
@@ -95,7 +95,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 					else:
 						die(3,wmsg['mapping_error'].format(m1,mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
-		vmsg('Added %s wif key%s from %s' % (len(new_keys),suf(new_keys,'s'),desc))
+		vmsg('Added {} wif key{} from {}'.format(len(new_keys),suf(new_keys,'s'),desc))
 	return new_keys
 
 def _pop_and_return(args,cmplist): # strips found args

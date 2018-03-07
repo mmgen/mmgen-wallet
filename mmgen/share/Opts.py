@@ -24,7 +24,7 @@ import sys,getopt
 # from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
-	print('USAGE: %s %s' % (opts_data['prog_name'], opts_data['usage']))
+	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
 def print_help_and_exit(opts_data,longhelp=False):
@@ -81,10 +81,9 @@ def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 				if (v and v_in == bool) or v == v_in:
 					if o_out in opts and opts[o_out] != v_out:
 						sys.stderr.write(
-				'Option conflict:\n  --%s=%s, with\n  --%s=%s\n' % (
-					o_out.replace('_','-'),opts[o_out],
-					o_in.replace('_','-'),opts[o_in]
-				))
+							'Option conflict:\n  --{}={}, with\n  --{}={}\n'.format(
+								o_out.replace('_','-'),opts[o_out],
+								o_in.replace('_','-'),opts[o_in]))
 						sys.exit(1)
 					else:
 						opts[o_out] = v_out

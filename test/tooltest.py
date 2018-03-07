@@ -260,8 +260,8 @@ class MMGenToolTestSuite(object):
 		a,b = p.communicate()
 		retcode = p.wait()
 		if retcode != 0:
-			msg('%s\n%s\n%s'%(red('FAILED'),yellow('Command stderr output:'),b))
-			die(1,red('Called process returned with an error (retcode %s)' % retcode))
+			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),b))
+			rdie(1,'Called process returned with an error (retcode {})'.format(retcode))
 		return (a,a.rstrip())[bool(strip)]
 
 	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg='',strip_hex=False,add_opts=[]):
@@ -274,8 +274,8 @@ class MMGenToolTestSuite(object):
 			return (a.lstrip('0') == b.lstrip('0')) if strip_hex else (a == b)
 		if cmp_equal(ret,idata): ok()
 		else:
-			die(3,red(
-	"Error: values don't match:\nIn:  %s\nOut: %s" % (repr(idata),repr(ret))))
+			fs = "Error: values don't match:\nIn:  {!r}\nOut: {!r}"
+			rdie(3,fs.format(idata,ret))
 		return ret
 
 	def run_cmd_nochk(self,name,f1,kwargs='',add_opts=[]):
@@ -286,12 +286,12 @@ class MMGenToolTestSuite(object):
 		return ret
 
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',literal=False,chkdata='',hush=False,add_opts=[]):
-		if carg: write_to_tmpfile(cfg,'%s%s.in' % (name,fn_idx),carg+'\n')
+		if carg: write_to_tmpfile(cfg,'{}{}.in'.format(name,fn_idx),carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,extra_msg=extra_msg,add_opts=add_opts)
 		if carg: vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret.decode('utf8'))[literal])
 		if ret or ret == '':
-			write_to_tmpfile(cfg,'%s%s.out' % (name,fn_idx),ret+'\n')
+			write_to_tmpfile(cfg,'{}{}.out'.format(name,fn_idx),ret+'\n')
 			if chkdata:
 				cmp_or_die(ret,chkdata)
 				return
@@ -299,7 +299,7 @@ class MMGenToolTestSuite(object):
 			else:
 				if not hush: ok()
 		else:
-			die(3,red("Error for command '%s'" % name))
+			rdie(3,"Error for command '{}'".format(name))
 
 	def run_cmd_randinput(self,name,strip=True,add_opts=[]):
 		s = os.urandom(128)
@@ -309,7 +309,7 @@ class MMGenToolTestSuite(object):
 		fn = name+'.out'
 		write_to_tmpfile(cfg,fn,ret+'\n')
 		ok()
-		vmsg('Returned: %s' % ret)
+		vmsg('Returned: {}'.format(ret))
 
 	# Util
 	def Strtob58(self,name):       self.run_cmd_out(name,getrandstr(16))
@@ -328,11 +328,11 @@ class MMGenToolTestSuite(object):
 	def Id8(self,name):     self.run_cmd_randinput(name)
 	def Str2id6(self,name):
 		s = getrandstr(120,no_space=True)
-		s2 = ' %s %s %s %s %s ' % (s[:3],s[3:9],s[9:29],s[29:50],s[50:120])
+		s2 = ' {} {} {} {} {} '.format(s[:3],s[3:9],s[9:29],s[29:50],s[50:120])
 		ret1 = self.run_cmd(name,[s],extra_msg='unspaced input'); ok()
 		ret2 = self.run_cmd(name,[s2],extra_msg='spaced input')
 		cmp_or_die(ret1,ret2)
-		vmsg('Returned: %s' % ret1)
+		vmsg('Returned: {}'.format(ret1))
 	def Hash160(self,name):        self.run_cmd_out(name,getrandhex(16))
 	def Hash256(self,name):        self.run_cmd_out(name,getrandstr(16))
 	def Hexreverse(self,name):     self.run_cmd_out(name,getrandhex(24))
@@ -488,20 +488,19 @@ if cmd_args:
 		die(1,'Only one command may be specified')
 	cmd = cmd_args[0]
 	if cmd in cmd_data:
-		msg('Running tests for %s:' % cmd_data[cmd]['desc'])
+		msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 		ts.do_cmds(cmd)
 	elif cmd == 'clean':
 		cleandir(cfg['tmpdir'])
 		sys.exit(0)
 	else:
-		die(1,"'%s': unrecognized command" % cmd)
+		die(1,"'{}': unrecognized command".format(cmd))
 else:
 	cleandir(cfg['tmpdir'])
 	for cmd in cmd_data:
-		msg('Running tests for %s:' % cmd_data[cmd]['desc'])
+		msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 		ts.do_cmds(cmd)
 		if cmd is not cmd_data.keys()[-1]: msg('')
 
 t = int(time.time()) - start_time
-msg(green(
-	'All requested tests finished OK, elapsed time: %02i:%02i' % (t/60,t%60)))
+gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t/60,t%60))

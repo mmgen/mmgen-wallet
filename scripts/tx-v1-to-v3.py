@@ -86,7 +86,7 @@ def find_block_by_time(timestamp):
 			bot = block_num
 		block_num = (top + bot) / 2
 		if top - bot < 2:
-			msg('\nFound: %s ' % block_num)
+			msg('\nFound: {} '.format(block_num))
 			break
 
 	return block_num

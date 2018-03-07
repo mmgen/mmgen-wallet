@@ -97,7 +97,7 @@ class g(object):
 		if sys.platform[:len(k)] == k:
 			platform = k; break
 	else:
-		die(1,"'%s': platform not supported by %s\n" % (sys.platform,proj_name))
+		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
 
 	if os.getenv('HOME'):                             # Linux or MSYS
 		home_dir = os.getenv('HOME')

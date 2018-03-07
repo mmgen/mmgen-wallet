@@ -49,7 +49,7 @@ if not opt.status: do_license_msg()
 from mmgen.tx import *
 
 tx = MMGenTX(infile,silent_open=True) # sig check performed here
-vmsg("Signed transaction file '%s' is valid" % infile)
+vmsg("Signed transaction file '{}' is valid".format(infile))
 
 if not tx.marked_signed():
 	die(1,'Transaction is not signed!')

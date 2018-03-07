@@ -328,7 +328,7 @@ Record this checksum: it will be used to verify the address file in the future
 """.strip(),
 	'check_chksum': 'Check this value against your records',
 	'removed_dup_keys': """
-Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
+Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 """.strip().format(pnm=pnm)
 	}
 	entry_type = AddrListEntry
@@ -371,7 +371,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		elif al_id or adata:
 			die(3,'Must specify both al_id and adata')
 		else:
-			die(3,'Incorrect arguments for %s' % type(self).__name__)
+			die(3,'Incorrect arguments for {}'.format(type(self).__name__))
 
 		# al_id,adata now set
 		self.data = adata
@@ -389,8 +389,8 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			if chksum_only:
 				Msg(self.chksum)
 			else:
-				qmsg('Checksum for %s data %s: %s' %
-						(self.data_desc,self.id_str.hl(),self.chksum.hl()))
+				qmsg('Checksum for {} data {}: {}'.format(
+						self.data_desc,self.id_str.hl(),self.chksum.hl()))
 				qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
 
 	def update_msgs(self):
@@ -426,7 +426,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			pos += 1
 
 			if not g.debug:
-				qmsg_r('\rGenerating %s #%s (%s of %s)' % (self.gen_desc,num,pos,t_addrs))
+				qmsg_r('\rGenerating {} #{} ({} of {})'.format(self.gen_desc,num,pos,t_addrs))
 
 			e = le(idx=num)
 
@@ -448,7 +448,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			out.append(e)
 			if g.debug: Msg('generate():\n{}'.format(e.pformat()))
 
-		qmsg('\r%s: %s %s%s generated%s' % (
+		qmsg('\r{}: {} {}{} generated{}'.format(
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
 		return out
 
@@ -481,7 +481,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		return [e.idx for e in self.data]
 
 	def addrs(self):
-		return ['%s:%s'%(self.al_id.sid,e.idx) for e in self.data]
+		return ['{}:{}'.format(self.al_id.sid,e.idx) for e in self.data]
 
 	def addrpairs(self):
 		return [(e.idx,e.addr) for e in self.data]
@@ -526,7 +526,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 					pop_list.append(n)
 		for n in reversed(pop_list): self.data.pop(n)
 		if pop_list:
-			vmsg(self.msgs['removed_dup_keys'] % (len(pop_list),suf(removed,'s')))
+			vmsg(self.msgs['removed_dup_keys'].format(len(pop_list),suf(removed,'s')))
 
 	def add_wifs(self,key_list):
 		if not key_list: return
@@ -543,9 +543,9 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		ag = AddrGenerator('p2pkh')
 		d = self.data
 		for n,e in enumerate(d,1):
-			qmsg_r('\rGenerating addresses from keylist: %s/%s' % (n,len(d)))
+			qmsg_r('\rGenerating addresses from keylist: {}/{}'.format(n,len(d)))
 			e.addr = ag.to_addr(kg.to_pubhex(e.sec))
-		qmsg('\rGenerated addresses from keylist: %s/%s ' % (n,len(d)))
+		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
 
 	def format(self,enable_comments=False):
 
@@ -600,7 +600,7 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 		while lines:
 			d = get_line()
 
-			assert is_mmgen_idx(d[0]),"'%s': invalid address num. in line: '%s'" % (d[0],' '.join(d))
+			assert is_mmgen_idx(d[0]),"'{}': invalid address num. in line: '{}'".format(d[0],' '.join(d))
 			assert self.check_format(d[1]),"'{}': invalid {}".format(d[1],self.data_desc)
 
 			if len(d) != 3: d.append('')
@@ -623,9 +623,9 @@ Removed %s duplicate WIF key%s from keylist (also in {pnm} key-address file
 			ag = AddrGenerator(self.al_id.mmtype)
 			llen = len(ret)
 			for n,e in enumerate(ret):
-				msg_r('\rVerifying keys %s/%s' % (n+1,llen))
+				msg_r('\rVerifying keys {}/{}'.format(n+1,llen))
 				assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
-					"Key doesn't match address!\n  %s\n  %s" % (e.sec.wif,e.addr))
+					"Key doesn't match address!\n  {}\n  {}".format(e.sec.wif,e.addr))
 			msg(' - done')
 
 		return ret
@@ -849,7 +849,7 @@ Record this checksum: it will be used to verify the password file in the future
 class AddrData(MMGenObject):
 	msgs = {
 	'too_many_acct_addresses': """
-ERROR: More than one address found for account: '%s'.
+ERROR: More than one address found for account: '{{}}'.
 Your 'wallet.dat' file appears to have been altered by a non-{pnm} program.
 Please restore your tracking wallet from a backup or create a new one and
 re-import your addresses.
@@ -890,7 +890,7 @@ re-import your addresses.
 				obj = l.mmid.obj
 				i += 1
 				if len(addrlist) != 1:
-					die(2,self.msgs['too_many_acct_addresses'] % acct)
+					die(2,self.msgs['too_many_acct_addresses'].format(acct))
 				al_id = AddrListID(SeedID(sid=obj.sid),MMGenAddrType(obj.mmtype))
 				if al_id not in data:
 					data[al_id] = []
@@ -904,7 +904,7 @@ re-import your addresses.
 			self.al_ids[addrlist.al_id] = addrlist
 			return True
 		else:
-			raise TypeError, 'Error: object %s is not of type AddrList' % repr(addrlist)
+			raise TypeError, 'Error: object {!r} is not of type AddrList'.format(addrlist)
 
 	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()

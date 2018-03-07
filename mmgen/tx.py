@@ -87,7 +87,7 @@ def select_unspent(unspent,prompt):
 			if selected:
 				if selected[-1] <= len(unspent):
 					return selected
-				msg('Unspent output number must be <= %s' % len(unspent))
+				msg('Unspent output number must be <= {}'.format(len(unspent)))
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 
@@ -381,12 +381,13 @@ class MMGenTX(MMGenObject):
 		d = g.rpch.decoderawtransaction(self.hex)
 		vsize = d['vsize'] if 'vsize' in d else d['size']
 		vmsg('\nSize: {}, Vsize: {} (true) {} (estimated)'.format(d['size'],vsize,est_vsize))
-		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
+		m1 = '\nERROR: Estimated transaction vsize is {:1.2f} times the true vsize\n'
 		m2 = 'Your transaction fee estimates will be inaccurate\n'
 		m3 = 'Please re-create and re-sign the transaction using the option --vsize-adj={:1.2f}'
 		# allow for 5% error
 		ratio = float(est_vsize) / vsize
-		assert 0.95 < ratio < 1.05, (m1+m2+m3).format(ratio,1/ratio)
+		if not (0.95 < ratio < 1.05):
+			die(2,(m1+m2+m3).format(ratio,1/ratio))
 
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
@@ -847,7 +848,7 @@ class MMGenTX(MMGenObject):
 			return True
 
 	def write_txid_to_file(self,ask_write=False,ask_write_default_yes=True):
-		fn = '%s[%s].%s' % (self.txid,self.send_amt,self.txid_ext)
+		fn = '{}[{}].{}'.format(self.txid,self.send_amt,self.txid_ext)
 		write_data_to_file(fn,self.coin_txid+'\n','transaction ID',
 			ask_write=ask_write,
 			ask_write_default_yes=ask_write_default_yes)
@@ -968,7 +969,7 @@ class MMGenTX(MMGenObject):
 		enl = ('\n','')[bool(terse)]
 		out += enl
 		if self.label:
-			out += 'Comment: %s\n%s' % (self.label.hl(),enl)
+			out += u'Comment: {}\n{}'.format(self.label.hl(),enl)
 		out += 'Inputs:\n' + enl + format_io(self.inputs)
 		out += 'Outputs:\n' + enl + format_io(self.outputs)
 
@@ -1125,7 +1126,7 @@ class MMGenTX(MMGenObject):
 					coin_addr = mmaddr2coinaddr(a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
 					self.add_output(coin_addr,g.proto.coin_amt(a2))
 				else:
-					die(2,"%s: invalid subargument in command-line argument '%s'" % (a1,a))
+					die(2,"{}: invalid subargument in command-line argument '{}'".format(a1,a))
 			elif is_mmgen_id(a) or is_coin_addr(a):
 				if self.get_chg_output_idx() != None:
 					die(2,'ERROR: More than one change address listed on command line')

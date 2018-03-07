@@ -30,7 +30,7 @@ def cleandir(d):
 	try:    files = os.listdir(d)
 	except: return
 
-	msg(green("Cleaning directory '%s'" % d))
+	gmsg("Cleaning directory '{}'".format(d))
 	for f in files:
 		try:
 			os.unlink(os.path.join(d,f))
@@ -49,7 +49,7 @@ def mk_tmpdir(d):
 	except OSError as e:
 		if e.errno != 17: raise
 	else:
-		vmsg("Created directory '%s'" % d)
+		vmsg("Created directory '{}'".format(d))
 
 def mk_tmpdir_path(path,cfg):
 	try:
@@ -64,7 +64,7 @@ def mk_tmpdir_path(path,cfg):
 			os.symlink(src,cfg['tmpdir'])
 	except OSError as e:
 		if e.errno != 17: raise
-	else: msg("Created directory '%s'" % cfg['tmpdir'])
+	else: msg("Created directory '{}'".format(cfg['tmpdir']))
 
 def get_tmpfile_fn(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
@@ -87,7 +87,7 @@ def read_from_tmpfile(cfg,fn,binary=False):
 def ok():
 	if opt.profile: return
 	if opt.verbose or opt.exact_output:
-		sys.stderr.write(green('OK\n'))
+		gmsg('OK')
 	else: msg(' OK')
 
 def ok_or_die(val,chk_func,s,skip_ok=False):
@@ -96,17 +96,14 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 	if ret:
 		if not skip_ok: ok()
 	else:
-		msg(red("Returned value '%s' is not a %s" % (val,s)))
-		sys.exit(3)
+		rdie(3,"Returned value '{}' is not a {}".format((val,s)))
 
 def cmp_or_die(s,t,skip_ok=False):
 	if s == t:
 		if not skip_ok: ok()
 	else:
-		sys.stderr.write(red(
-			'ERROR: recoded data:\n%s\ndiffers from original data:\n%s\n' %
-				(repr(t),repr(s))))
-		sys.exit(3)
+		m = 'ERROR: recoded data:\n{}\ndiffers from original data:\n{}'
+		rdie(3,m.format(repr(t),repr(s)))
 
 def init_coverage():
 	coverdir = os.path.join('test','trace')

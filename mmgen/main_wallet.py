@@ -53,7 +53,7 @@ elif invoked_as == 'passchg':
 	iaction = 'input'
 	bw_note = False
 else:
-	die(1,"'%s': unrecognized invocation" % g.prog_name)
+	die(1,"'{}': unrecognized invocation".format(g.prog_name))
 
 opts_data = lambda: {
 # Can't use: share/Opts doesn't know anything about fmt codes
@@ -117,10 +117,10 @@ sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
 
 if not invoked_as == 'chk': do_license_msg()
 
-dw_msg = ('',yellow(' (default wallet)'))[bool(sf and os.path.dirname(sf)==g.data_dir)]
-
 if invoked_as in ('conv','passchg'):
-	msg(green('Processing input wallet')+dw_msg)
+	m1 = green('Processing input wallet')
+	m2 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
+	msg(m1+m2)
 
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
 if invoked_as == 'chk':
@@ -130,12 +130,12 @@ if invoked_as == 'chk':
 	sys.exit(0)
 
 if invoked_as in ('conv','passchg'):
-	msg(green('Processing output wallet'))
+	gmsg('Processing output wallet')
 
 ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 
 if invoked_as == 'gen':
-	qmsg("This wallet's Seed ID: %s" % ss_out.seed.sid.hl())
+	qmsg("This wallet's Seed ID: {}".format(ss_out.seed.sid.hl()))
 
 if invoked_as == 'passchg':
 	if not (opt.force_update or [k for k in ('passwd','hash_preset','label')
@@ -155,7 +155,7 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	try:
 		check_output(sd_cmd + [ss_in.infile.name])
 	except:
-		msg(yellow("WARNING: '%s' command failed, using regular file delete instead" % sd_cmd[0]))
+		ymsg("WARNING: '{}' command failed, using regular file delete instead".format(sd_cmd[0]))
 #		msg('Command output: {}\nReturn value {}'.format(e.output,e.returncode))
 		os.unlink(ss_in.infile.name)
 elif invoked_as == 'gen' and not find_file_in_dir(Wallet,g.data_dir) \

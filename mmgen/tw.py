@@ -103,7 +103,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			'addr':  lambda i: i.addr,
 			'age':   lambda i: 0 - i.confs,
 			'amt':   lambda i: i.amt,
-			'txid':  lambda i: '%s %03s' % (i.txid,i.vout),
+			'txid':  lambda i: '{} {:04}'.format(i.txid,i.vout),
 			'mmid':  lambda i: i.twmmid.sort_key
 		}
 		key = key or self.sort_key
@@ -173,12 +173,11 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				else i.twmmid if i.twmmid.type=='mmgen'
 					else 'Non-{}'.format(g.proj_name),width=mmid_w,color=True)
 			if self.show_mmid:
-				addr_out = '%s %s' % (
+				addr_out = '{} {}'.format(
 					type(i.addr).fmtc(addr_dots,width=btaddr_w,color=True) if i.skip == 'addr' \
-						else i.addr.fmt(width=btaddr_w,color=True),
+							else i.addr.fmt(width=btaddr_w,color=True),
 					'{} {}'.format(mmid_disp,i.label.fmt(width=label_w,color=True) \
-							if label_w > 0 else '')
-				)
+							if label_w > 0 else ''))
 			else:
 				addr_out = type(i.addr).fmtc(addr_dots,width=addr_w,color=True) \
 					if i.skip=='addr' else i.addr.fmt(width=addr_w,color=True)
@@ -239,18 +238,17 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			if ret == 'q': return None,None
 			n = AddrIdx(ret,on_fail='silent') # hacky way to test and convert to integer
 			if not n or n < 1 or n > len(self.unspent):
-				msg('Choice must be a single number between 1 and %s' % len(self.unspent))
+				msg('Choice must be a single number between 1 and {}'.format(len(self.unspent)))
 # 			elif not self.unspent[n-1].mmid:
-# 				msg('Address #%s is not an %s address. No label can be added to it' %
-# 						(n,g.proj_name))
+# 				msg('Address #{} is not an {} address. No label can be added to it'.format(n,g.proj_name))
 			else:
 				while True:
 					s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
 					if s == 'q':
 						return None,None
 					elif s == '':
-						if keypress_confirm(
-							"Removing label for address #%s.  Is this what you want?" % n):
+						fs = "Removing label for address #{}.  Is this what you want?"
+						if keypress_confirm(fs.format(n)):
 							return n,s
 					elif s:
 						if TwComment(s,on_fail='return'):
@@ -274,7 +272,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			elif reply == 'A': self.do_sort('age')
 			elif reply == 'd': self.do_sort('addr')
 			elif reply == 'D': self.show_days = not self.show_days
-			elif reply == 'e': msg('\n%s\n%s\n%s' % (self.fmt_display,prompt,p))
+			elif reply == 'e': msg('\n{}\n{}\n{}'.format(self.fmt_display,prompt,p))
 			elif reply == 'g': self.group = not self.group
 			elif reply == 'l':
 				idx,lbl = self.get_idx_and_label_from_user()
@@ -283,17 +281,17 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 					if type(self).add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
-						msg('%s\n%s\n%s' % (self.fmt_display,prompt,p))
+						msg('{}\n{}\n{}'.format(self.fmt_display,prompt,p))
 					else:
-						msg('Label could not be added\n%s\n%s' % (prompt,p))
+						msg('Label could not be added\n{}\n{}'.format(prompt,p))
 			elif reply == 'M': self.do_sort('mmid'); self.show_mmid = True
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
 				msg('')
-				of = 'listunspent[%s].out' % ','.join(self.sort_info(include_group=False)).lower()
+				of = 'listunspent[{}].out'.format(','.join(self.sort_info(include_group=False))).lower()
 				write_data_to_file(of,self.format_for_printing(),'unspent outputs listing')
-				m = yellow("Data written to '%s'" % of)
-				msg('\n%s\n%s\n\n%s' % (self.fmt_display,m,prompt))
+				m = yellow("Data written to '{}'".format(of))
+				msg('\n{}\n{}\n\n{}'.format(self.fmt_display,m,prompt))
 				continue
 			elif reply == 'q': return self.unspent
 			elif reply == 'r': self.unspent.reverse(); self.reverse = not self.reverse

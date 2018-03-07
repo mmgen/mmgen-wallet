@@ -92,13 +92,13 @@ if kl and kal: kl.remove_dup_keys(kal)
 tx_num_str = ''
 for tx_num,tx_file in enumerate(tx_files,1):
 	if len(tx_files) > 1:
-		msg('\nTransaction #%s of %s:' % (tx_num,len(tx_files)))
-		tx_num_str = ' #%s' % tx_num
+		msg('\nTransaction #{} of {}:'.format(tx_num,len(tx_files)))
+		tx_num_str = ' #{}'.format(tx_num)
 	tx = MMGenTX(tx_file)
 
 	if tx.marked_signed():
 		die(1,'Transaction is already signed!')
-	vmsg("Successfully opened transaction file '%s'" % tx_file)
+	vmsg("Successfully opened transaction file '{}'".format(tx_file))
 
 	if opt.tx_id:
 		msg(tx.txid); continue
@@ -107,7 +107,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 		tx.view(pause=False,terse=opt.terse_info); continue
 
 	if not opt.yes:
-		tx.view_with_prompt('View data for transaction%s?' % tx_num_str)
+		tx.view_with_prompt('View data for transaction{}?'.format(tx_num_str))
 
 	txsign(tx,seed_files,kl,kal,tx_num_str)
 
