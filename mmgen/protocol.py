@@ -137,7 +137,7 @@ class BitcoinProtocol(MMGenObject):
 				msg('{}: Invalid witness version number'.format(ret[0]))
 			elif ret[1]:
 				return {
-					'hex': ''.join([chr(b) for b in ret[1]]).encode('hex'),
+					'hex': ''.join(map(chr,ret[1])).encode('hex'),
 					'format': 'bech32'
 				} if return_dict else True
 			return False
@@ -187,7 +187,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def pubhash2bech32addr(cls,pubhash):
-		d = [ord(b) for b in pubhash.decode('hex')]
+		d = map(ord,pubhash.decode('hex'))
 		return bech32.bech32_encode(cls.bech32_hrp,[cls.witness_vernum]+bech32.convertbits(d,8,5))
 
 class BitcoinTestnetProtocol(BitcoinProtocol):

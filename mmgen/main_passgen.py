@@ -66,7 +66,7 @@ opts_data = lambda: {
 -S, --stdout          Print passwords to stdout
 -v, --verbose         Produce more verbose output
 """.format(
-	seed_lens=', '.join([str(i) for i in g.seed_lens]),
+	seed_lens=', '.join(map(str,g.seed_lens)),
 	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 ),

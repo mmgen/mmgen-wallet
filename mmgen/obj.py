@@ -667,12 +667,12 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
-	allowed = [unichr(i+32) for i in range(95)]
+	allowed = map(unichr,range(32,127))
 	desc = 'wallet label'
 
 class TwComment(MMGenLabel):
 	max_len = 32
-	allowed = [unichr(i+32) for i in range(95)]
+	allowed = map(unichr,range(32,127))
 	desc = 'tracking wallet comment'
 
 class MMGenTXLabel(MMGenLabel):

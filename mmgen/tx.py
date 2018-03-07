@@ -528,7 +528,7 @@ class MMGenTX(MMGenObject):
 
 	def decode_io_oldfmt(self,data):
 		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
-		tr_rev = dict([(v,k) for k,v in tr.items()])
+		tr_rev = dict(map(reversed,tr.items()))
 		copy_keys = [tr_rev[k] if k in tr_rev else k for k in self.MMGenTxInput.__dict__]
 		ret = MMGenList(self.MMGenTxInput(**dict([(tr[k] if k in tr else k,d[k])
 					for k in copy_keys if k in d and d[k] != ''])) for d in data)
@@ -1152,7 +1152,7 @@ class MMGenTX(MMGenObject):
 		while True:
 			m = 'Enter a range or space-separated list of outputs to spend: '
 			sel_nums = select_unspent(tw.unspent,m)
-			msg('Selected output%s: %s' % (suf(sel_nums,'s'),' '.join(str(i) for i in sel_nums)))
+			msg('Selected output{}: {}'.format(suf(sel_nums,'s'),' '.join(map(str,sel_nums))))
 
 			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
 

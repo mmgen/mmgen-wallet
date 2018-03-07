@@ -53,10 +53,10 @@ ref_wallet_incog_offset = 123
 
 from mmgen.obj import MMGenTXLabel,PrivKey
 from mmgen.addr import AddrGenerator,KeyGenerator,AddrList,AddrData,AddrIdxList
-ref_tx_label = ''.join([unichr(i) for i in  range(65,91) +
-											range(1040,1072) + # cyrillic
-											range(913,939) +   # greek
-											range(97,123)])[:MMGenTXLabel.max_len]
+ref_tx_label = ''.join(map(unichr,  range(65,91) +
+									range(1040,1072) + # cyrillic
+									range(913,939) +   # greek
+									range(97,123)))[:MMGenTXLabel.max_len]
 ref_bw_hash_preset = '1'
 ref_bw_file        = 'wallet.mmbrain'
 ref_bw_file_spc    = 'wallet-spaced.mmbrain'
@@ -990,7 +990,7 @@ if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 
 	Msg(green('AVAILABLE COMMANDS:'))
-	w = max([len(i) for i in cmd_data])
+	w = max(map(len,cmd_data))
 	for cmd in cmd_data:
 		if cmd[:5] == 'info_':
 			m = capfirst(cmd_data[cmd][0])
@@ -999,7 +999,7 @@ if opt.list_cmds:
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
 	for cl,lbl in ((meta_cmds,'METACOMMANDS'),(cmd_list,'COMMAND GROUPS')):
-		w = max([len(i) for i in cl])
+		w = max(map(len,cl))
 		Msg('\n'+green('AVAILABLE {}:'.format(lbl)))
 		for cmd in cl:
 			ft = format_par(' '.join(cl[cmd]),width=tw,indent=4,as_list=True)
@@ -1007,7 +1007,7 @@ if opt.list_cmds:
 			Msg('  {}{}{}'.format(yellow(cmd+':'),sep,'\n'.join(ft).lstrip()))
 
 	Msg('\n'+green('AVAILABLE UTILITIES:'))
-	w = max([len(i) for i in utils])
+	w = max(map(len,utils))
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
 
@@ -1320,7 +1320,7 @@ def check_deps(cmds):
 
 	check_needs_rerun(ts,cmd,build=False)
 
-	w = max(len(i) for i in rebuild_list) + 1
+	w = max(map(len,rebuild_list)) + 1
 	for cmd in rebuild_list:
 		c = rebuild_list[cmd]
 		m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
@@ -2629,8 +2629,8 @@ class MMGenTestSuite(object):
 
 	def regtest_bob_split2(self,name):
 		addrs = read_from_tmpfile(cfg,'non-mmgen.addrs').split()
-		amts = (a for a in (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321))
-		outputs1 = ['{},{}'.format(a,amts.next()) for a in addrs]
+		amts = (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321)
+		outputs1 = map('{},{}'.format,addrs,amts)
 		sid = self.regtest_user_sid('bob')
 		l1,l2 = (':S',':B') if 'B' in g.proto.mmtypes else (':S',':S') if g.proto.cap('segwit') else (':L',':L')
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']

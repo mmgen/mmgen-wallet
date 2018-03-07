@@ -175,7 +175,7 @@ add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
 if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 	Msg('Available commands:')
-	w = max([len(i) for i in cmd_data])
+	w = max(map(len,cmd_data))
 	for cmd in cmd_data:
 		Msg(fs.format(cmd,cmd_data[cmd]['desc'],w=w))
 	Msg('\nAvailable utilities:')

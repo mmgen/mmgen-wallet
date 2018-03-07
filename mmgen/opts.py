@@ -379,10 +379,8 @@ def check_opts(usr_opts):       # Returns false if any check fails
 	def opt_is_in_list(val,lst,desc):
 		if val not in lst:
 			q,sep = (('',','),("'","','"))[type(lst[0]) == str]
-			msg('{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(
-					v=val,w=desc,q=q,
-					o=sep.join([str(i) for i in sorted(lst)])
-				))
+			fs = '{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'
+			msg(fs.format(v=val,w=desc,q=q,o=sep.join(map(str,sorted(lst)))))
 			return False
 		return True
 

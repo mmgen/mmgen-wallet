@@ -77,7 +77,7 @@ opts_data = lambda: {
 -v, --verbose         Produce more verbose output
 -x, --b16             Print secret keys in hexadecimal too
 """.format(
-	seed_lens=', '.join([str(i) for i in g.seed_lens]),
+	seed_lens=', '.join(map(str,g.seed_lens)),
 	pnm=g.proj_name,
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 	kg=g.key_generator,

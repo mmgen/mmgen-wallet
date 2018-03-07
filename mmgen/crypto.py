@@ -145,7 +145,7 @@ def _get_random_data_from_user(uchars):
 	if opt.quiet: msg_r('\r')
 	else: msg_r("\rThank you.  That's enough.{}\n\n".format(' '*18))
 
-	fmt_time_data = ['{:.22f}'.format(i) for i in time_data]
+	fmt_time_data = map('{:.22f}'.format,time_data)
 	dmsg('\nUser input:\n{}\nKeystroke time intervals:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)

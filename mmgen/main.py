@@ -30,7 +30,7 @@ def launch(what):
 			sys.exit(2)
 
 	import sys
-	sys.argv = [my_dec(a) for a in sys.argv]
+	sys.argv = map(my_dec,sys.argv)
 
 	if what in ('walletgen','walletchk','walletconv','passchg'):
 		what = 'wallet'

@@ -199,7 +199,7 @@ class SeedSource(MMGenObject):
 		d = [(c.__name__,('.'+c.ext if c.ext else c.ext),','.join(c.fmt_codes))
 					for c in cls.get_subclasses()
 				if hasattr(c,'fmt_codes')]
-		w = max([len(a) for a,b,c in d])
+		w = max(len(i[0]) for i in d)
 		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
 			('Format','FileExt','Valid codes'),
 			('------','-------','-----------')
@@ -443,8 +443,8 @@ class Mnemonic (SeedSourceUnenc):
 		mn = self.fmt_data.split()
 
 		if len(mn) not in self.mn_lens:
-			msg('Invalid mnemonic (%i words).  Allowed numbers of words: %s' %
-					(len(mn),', '.join([str(i) for i in self.mn_lens])))
+			msg('Invalid mnemonic ({} words).  Valid numbers of words: {}'.format(
+					(len(mn),', '.join(map(str,self.mn_lens)))))
 			return False
 
 		for n,w in enumerate(mn,1):
@@ -680,7 +680,7 @@ class Wallet (SeedSourceEnc):
 			if uhp != hp:
 				qmsg("Warning: ignoring user-requested hash preset '%s'" % uhp)
 
-		hash_params = [int(i) for i in hpdata[1:]]
+		hash_params = map(int,hpdata[1:])
 
 		if hash_params != get_hash_params(d.hash_preset):
 			msg("Hash parameters '%s' don't match hash preset '%s'" %

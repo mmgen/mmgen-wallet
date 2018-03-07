@@ -361,7 +361,6 @@ tests=$dfl_tests
 [ "$NO_PAUSE" ] || PAUSE=1
 
 check_args
-
 echo "Running tests: $tests"
 run_tests "$tests"
 rm -rf /tmp/mmgen-test-release-*
