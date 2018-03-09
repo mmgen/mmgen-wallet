@@ -67,7 +67,7 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 		sys.exit(1)
 	debug_pexpect_msg(p)
 
-	if opt.debug or (opt.verbose and type(s) != str):
+	if opt.verbose and type(s) != str:
 		msg_r(' ==> {} '.format(ret))
 
 	if ret == -1:

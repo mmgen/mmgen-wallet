@@ -142,11 +142,9 @@ if invoked_as == 'passchg':
 		if getattr(ss_out.ssdata,k) != getattr(ss_in.ssdata,k)]):
 		die(1,'Password, hash preset and label are unchanged.  Taking no action')
 
-m1 = yellow('Confirmation of default wallet update')
-m2 = 'update the default wallet'
-m3 = 'Make this wallet your default and move it to the data directory?'
-
 if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
+	m1 = yellow('Confirmation of default wallet update')
+	m2 = 'update the default wallet'
 	confirm_or_exit(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
 	msg('Securely deleting old wallet')
@@ -156,13 +154,19 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 		check_output(sd_cmd + [ss_in.infile.name])
 	except:
 		ymsg("WARNING: '{}' command failed, using regular file delete instead".format(sd_cmd[0]))
-#		msg('Command output: {}\nReturn value {}'.format(e.output,e.returncode))
 		os.unlink(ss_in.infile.name)
-elif invoked_as == 'gen' and not find_file_in_dir(Wallet,g.data_dir) \
-	and not opt.stdout and keypress_confirm(m3,default_yes=True):
-	ss_out.write_to_file(outdir=g.data_dir)
 else:
-	ss_out.write_to_file()
+	try:
+		assert invoked_as == 'gen','dw'
+		assert not opt.stdout,'dw'
+		assert not find_file_in_dir(Wallet,g.data_dir),'dw'
+		m = 'Make this wallet your default and move it to the data directory?'
+		assert keypress_confirm(m,default_yes=True),'dw'
+	except Exception as e:
+		if e[0] != 'dw': raise
+		ss_out.write_to_file()
+	else:
+		ss_out.write_to_file(outdir=g.data_dir)
 
 if invoked_as == 'passchg':
 	if ss_out.ssdata.passwd == ss_in.ssdata.passwd:

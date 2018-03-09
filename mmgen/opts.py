@@ -58,7 +58,6 @@ def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
 	for e in d: Msg('    {:<20}: {}'.format(*e))
 
 def opt_postproc_debug():
-	opt.verbose,opt.quiet = True,None
 	a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
 	b = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) == None]
 	Msg('    Opts after processing:')
@@ -164,6 +163,7 @@ def override_from_cfg_file(cfg_data):
 def override_from_env():
 	from mmgen.util import set_for_type
 	for name in g.env_opts:
+		if name == 'MMGEN_DEBUG_ALL': continue
 		idx,invert_bool = ((6,False),(14,True))[name[:14]=='MMGEN_DISABLE_']
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
 		if val: # exclude empty string values too
@@ -236,6 +236,9 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		setattr(opt,o,uopts[o] if o in uopts else None)
 
 	if opt.version: Die(0,version_info)
+
+	from mmgen.common import set_debug_all
+	set_debug_all()
 
 	# === Interaction with global vars begins here ===
 
@@ -313,6 +316,8 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
 		my_raw_input('Hit ENTER to continue: ')
 
+	if g.debug and g.prog_name != 'test.py':
+		opt.verbose,opt.quiet = True,None
 	if g.debug_opts: opt_postproc_debug()
 
 	# We don't need this data anymore

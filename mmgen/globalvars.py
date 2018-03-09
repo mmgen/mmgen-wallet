@@ -138,6 +138,7 @@ class g(object):
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
+		'MMGEN_DEBUG_ALL',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',

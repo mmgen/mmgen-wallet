@@ -20,11 +20,17 @@
 common.py:  Common imports for all MMGen scripts
 """
 
-import sys
+import sys,os
 from mmgen.globalvars import g
 import mmgen.opts as opts
 from mmgen.opts import opt
 from mmgen.util import *
+
+def set_debug_all():
+	if os.getenv('MMGEN_DEBUG_ALL'):
+		for name in g.env_opts:
+			if name[:11] == 'MMGEN_DEBUG':
+				os.environ[name] = '1'
 
 def help_notes(k):
 	from mmgen.seed import SeedSource

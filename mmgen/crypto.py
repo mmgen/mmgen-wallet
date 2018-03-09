@@ -45,8 +45,8 @@ def sha256_rounds(s,n):
 def scramble_seed(seed,scramble_key,hash_rounds):
 	import hmac
 	scr_seed = hmac.new(seed,scramble_key,sha256).digest()
-	fs = 'Seed:  {}\nScramble key: {}\nScrambled seed: {}'
-	dmsg(fs.format(hexlify(seed),scramble_key,hexlify(scr_seed)))
+	fs = u'Seed:  {}\nScramble key: {}\nScrambled seed: {}'
+	dmsg(fs.format(hexlify(seed),scramble_key.decode('utf8'),hexlify(scr_seed)))
 	return sha256_rounds(scr_seed,hash_rounds)
 
 def encrypt_seed(seed,key):

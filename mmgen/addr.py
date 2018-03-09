@@ -28,7 +28,7 @@ from mmgen.obj import *
 pnm = g.proj_name
 
 def dmsg_sc(desc,data):
-	if g.debug_addrlist: Msg('sc_debug_{}: {}'.format(desc,data))
+	if g.debug_addrlist: Msg(u'sc_debug_{}: {}'.format(desc,data))
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,addr_type):
@@ -446,7 +446,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				dmsg('Key {:>03}: {}'.format(pos,e.passwd))
 
 			out.append(e)
-			if g.debug: Msg('generate():\n{}'.format(e.pformat()))
+			if g.debug_addrlist: Msg('generate():\n{}'.format(e.pformat()))
 
 		qmsg('\r{}: {} {}{} generated{}'.format(
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))

@@ -104,7 +104,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			'age':   lambda i: 0 - i.confs,
 			'amt':   lambda i: i.amt,
 			'txid':  lambda i: '{} {:04}'.format(i.txid,i.vout),
-			'mmid':  lambda i: i.twmmid.sort_key
+			'twmmid':  lambda i: i.twmmid.sort_key
 		}
 		key = key or self.sort_key
 		if key not in sort_funcs:
@@ -142,12 +142,14 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		col1_w = max(3,len(str(len(unsp)))+1) # num + ')'
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
 		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
-		addr_w = min(max(len(i.addr) for i in unsp)+(0,1+max_acct_w)[self.show_mmid],self.cols-45)
-		acct_w = min(max_acct_w, max(24,int(addr_w-10)))
+		max_btcaddr_w = max(len(i.addr) for i in unsp)
+		min_addr_w = self.cols - 38
+		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
+		acct_w = min(max_acct_w, max(24,addr_w-10))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
-		tx_w = max(11,min(64, self.cols-addr_w-28-col1_w))
-		txdots = ('','...')[tx_w < 64]
+		tx_w = min(64,self.cols-addr_w-28-col1_w) # min=7
+		txdots = ('','..')[tx_w < 64]
 
 		for i in unsp: i.skip = None
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
@@ -162,13 +164,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			out += [green('Chain: {}'.format(g.chain.upper()))]
 		fs = ' {:%s} {:%s} {:2} {} {} {:<}' % (col1_w,tx_w)
 		out += [fs.format('Num',
-				'TX id'.ljust(tx_w - 5) + ' Vout', '',
-				'Address'.ljust(addr_w+3),
-				'Amt({})'.format(g.coin).ljust(10),
+				'TXid'.ljust(tx_w - 5) + ' Vout', '',
+				'Address'.ljust(addr_w),
+				'Amt({})'.format(g.coin).ljust(12),
 				('Confs','Age(d)')[self.show_days])]
 
 		for n,i in enumerate(unsp):
-			addr_dots = '|' + '.'*33
+			addr_dots = '|' + '.'*(addr_w-1)
 			mmid_disp = MMGenID.fmtc('.'*mmid_w if i.skip=='addr'
 				else i.twmmid if i.twmmid.type=='mmgen'
 					else 'Non-{}'.format(g.proj_name),width=mmid_w,color=True)
@@ -284,7 +286,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 						msg('{}\n{}\n{}'.format(self.fmt_display,prompt,p))
 					else:
 						msg('Label could not be added\n{}\n{}'.format(prompt,p))
-			elif reply == 'M': self.do_sort('mmid'); self.show_mmid = True
+			elif reply == 'M': self.do_sort('twmmid'); self.show_mmid = True
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
 				msg('')

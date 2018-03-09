@@ -31,6 +31,8 @@ from mmgen.common import *
 from mmgen.test import *
 from mmgen.protocol import CoinProtocol
 
+set_debug_all()
+
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # and for the spawned scripts
 
@@ -115,7 +117,6 @@ opts_data = lambda: {
 -b, --buf-keypress  Use buffered keypresses as with real human input
 -c, --print-cmdline Print the command line of each spawned command
 -C, --coverage      Produce code coverage info using trace module
--d, --debug-scripts Turn on debugging output in executed scripts
 -x, --debug-pexpect Produce debugging output for pexpect calls
 -D, --direct-exec   Bypass pexpect and execute a command directly (for
                     debugging only)
@@ -182,12 +183,17 @@ def randbool():
 	return hexlify(os.urandom(1))[1] in '12345678'
 def get_segwit_bool():
 	return randbool() if opt.segwit_random else True if opt.segwit or opt.bech32 else False
+
 def disable_debug():
-	ds = os.getenv('MMGEN_DEBUG')
-	if ds is not None: os.environ['MMGEN_DEBUG'] = ''
-	return ds
-def restore_debug(ds):
-	if ds is not None: os.environ['MMGEN_DEBUG'] = ds
+	global save_debug
+	save_debug = {}
+	for k in g.env_opts:
+		if k[:11] == 'MMGEN_DEBUG':
+			save_debug[k] = os.getenv(k)
+			os.environ[k] = ''
+def restore_debug():
+	for k in save_debug:
+		os.environ[k] = save_debug[k] or ''
 
 cfgs = {
 	'15': {
@@ -957,8 +963,6 @@ def get_segwit_arg(cfg):
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
-if opt.debug_scripts: os.environ['MMGEN_DEBUG'] = '1'
-
 if opt.exact_output:
 	def msg(s): pass
 	vmsg = vmsg_r = msg_r = msg
@@ -1099,7 +1103,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		'address': coinaddr,
 		'spendable': False,
 		'scriptPubKey': '{}{}{}'.format(spk_beg,coinaddr.hex,spk_end),
-		'confirmations': getrandnum(4) % 50000
+		'confirmations': getrandnum(3) / 2 # max: 8388608 (7 digits)
 	}
 
 labels = [
@@ -1479,7 +1483,7 @@ class MMGenTestSuite(object):
 	def walletchk(self,name,wf,pf,desc='MMGen wallet',add_args=[],sid=None,pw=False,extra_desc=''):
 		args = []
 		hp = cfg['hash_preset'] if 'hash_preset' in cfg else '1'
-		wf_arg = ([],[wf])[bool(wf)]
+		wf_arg = [wf] if wf else []
 		t = MMGenExpect(name,'mmgen-walletchk',
 				add_args+args+['-p',hp]+wf_arg,
 				extra_desc=extra_desc)
@@ -1520,7 +1524,7 @@ class MMGenTestSuite(object):
 				extra_args +
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
 				([],[wf])[bool(wf)] +
-				([],[id_str])[bool(id_str)] +
+				([id_str] if id_str else []) +
 				[cfg['{}_idx_list'.format(cmd_pfx)]],
 				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
@@ -1563,7 +1567,7 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
 
-	def txcreate_common(self, name,
+	def txcreate_common(self,name,
 						sources=['1'],
 						non_mmgen_input='',
 						do_label=False,
@@ -1610,6 +1614,10 @@ class MMGenTestSuite(object):
 		for num in tx_data:
 			t.expect('Continue anyway? (y/N): ','y')
 		t.expect(r"'q'=quit view, .*?:.",'M', regex=True)
+		if name == 'txcreate':
+			t.expect(r"'q'=quit view, .*?:.",'D', regex=True)
+			t.expect(r"'q'=quit view, .*?:.",'m', regex=True)
+			t.expect(r"'q'=quit view, .*?:.",'g', regex=True)
 		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
@@ -1649,7 +1657,10 @@ class MMGenTestSuite(object):
 			t.expect('Edit transaction comment? (y/N): ','\n')
 			for cnum,desc in (('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet')):
 				t.passphrase(desc,cfgs[cnum]['wpasswd'])
-			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
+			m = ('YES','YES, I REALLY WANT TO DO THIS')[g.debug]
+			t.expect("'{}' to confirm: ".format(m),m+'\n')
+			if g.debug:
+				t.written_to_file('Transaction')
 		else:
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 			t.expect('Save transaction? (y/N): ','y')
@@ -2277,9 +2288,10 @@ class MMGenTestSuite(object):
 
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
+		disable_debug()
 		t = MMGenExpect(name,'mmgen-tool', ['-q','decrypt',f,'outfile=-','hash_preset=1'])
+		restore_debug()
 		t.passphrase('user data',tool_enc_passwd)
-#		t.expect("Type uppercase 'YES' to confirm: ",'YES\n') # comment out with popen_spawn
 		t.expect(NL,nonl=True)
 		import re
 		o = re.sub('\r\n','\n',t.read())
@@ -2399,6 +2411,8 @@ class MMGenTestSuite(object):
 			fn = os.path.join(self.regtest_user_dir(user),
 				'{}{}{}[{}].addrs'.format(sid,altcoin_pfx,id_strs[desc],addr_range))
 			t = MMGenExpect(name,'mmgen-addrimport', ['--quiet','--'+user,'--batch',fn],extra_desc='('+desc+')')
+			if g.debug:
+				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 			t.expect('Importing')
 			t.expect('{} addresses imported'.format(num_addrs))
 			t.ok()
@@ -2564,9 +2578,9 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_get_mempool(self,name):
-		ds = disable_debug()
+		disable_debug()
 		ret = MMGenExpect(name,'mmgen-regtest',['show_mempool']).read()
-		restore_debug(ds)
+		restore_debug()
 		from ast import literal_eval
 		return literal_eval(ret)
 
@@ -2590,13 +2604,13 @@ class MMGenTestSuite(object):
 
 	@staticmethod
 	def gen_pairs(n):
-		ds = disable_debug()
+		disable_debug()
 		ret = [subprocess.check_output(
 						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
 						(['--type=compressed'],[])[i==0] +
 						['-r0','randpair']
 					).split() for i in range(n)]
-		restore_debug(ds)
+		restore_debug()
 		return ret
 
 	def regtest_bob_pre_import(self,name):
@@ -2607,6 +2621,8 @@ class MMGenTestSuite(object):
 
 	def regtest_user_import(self,name,user,args):
 		t = MMGenExpect(name,'mmgen-addrimport',['--quiet','--'+user]+args)
+		if g.debug:
+			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect('OK')
 		t.ok()
