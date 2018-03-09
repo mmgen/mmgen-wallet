@@ -949,7 +949,7 @@ class MMGenTX(MMGenObject):
 						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount!=None else '')
 					] if ip else icommon + [
 						('','change:',green('True') if e.is_chg else '')]
-					io_out += '\n'.join([('{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
+					io_out += '\n'.join([(u'{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
 			return io_out
 
 		hdr_fs = (

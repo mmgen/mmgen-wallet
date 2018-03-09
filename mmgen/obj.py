@@ -494,7 +494,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 		return me
 
 # contains TwMMGenID,TwComment.  Not for display
-class TwLabel(str,InitErrors,MMGenObject):
+class TwLabel(unicode,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
@@ -502,7 +502,7 @@ class TwLabel(str,InitErrors,MMGenObject):
 			ss = s.split(None,1)
 			mmid = TwMMGenID(ss[0],on_fail='raise')
 			comment = TwComment(ss[1] if len(ss) == 2 else '',on_fail='raise')
-			me = str.__new__(cls,'{}{}'.format(mmid,' {}'.format(comment) if comment else ''))
+			me = unicode.__new__(cls,u'{}{}'.format(mmid,u' {}'.format(comment) if comment else ''))
 			me.mmid = mmid
 			me.comment = comment
 			return me
@@ -671,8 +671,7 @@ class MMGenWalletLabel(MMGenLabel):
 	desc = 'wallet label'
 
 class TwComment(MMGenLabel):
-	max_len = 32
-	allowed = map(unichr,range(32,127))
+	max_len = 40
 	desc = 'tracking wallet comment'
 
 class MMGenTXLabel(MMGenLabel):

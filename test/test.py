@@ -2713,9 +2713,9 @@ class MMGenTestSuite(object):
 		sid = self.regtest_user_sid('alice')
 		return self.regtest_user_remove_label(name,'alice',sid+':C:1')
 
-	def regtest_user_chk_label(self,name,user,addr,label):
+	def regtest_user_chk_label(self,name,user,addr,label,label_pat=None):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		t.expect('{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label),regex=True)
+		t.expect(ur'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label_pat or label),regex=True)
 		t.ok()
 
 	def regtest_alice_chk_label1(self,name):
@@ -2726,9 +2726,16 @@ class MMGenTestSuite(object):
 		sid = self.regtest_user_sid('alice')
 		return self.regtest_user_chk_label(name,'alice',sid+':C:1','Replacement Label')
 
+	utf8_label     =  u'Edited label (40 characters, UTF8) α-β-γ'
+	utf8_label_pat = ur'Edited label \(40 characters, UTF8\) ..-..-..'
+
+	def regtest_alice_edit_label1(self,name):
+		return self.regtest_user_edit_label(name,'alice','1',self.utf8_label)
+
 	def regtest_alice_chk_label3(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_chk_label(name,'alice',sid+':C:1','Edited Label')
+		return self.regtest_user_chk_label(name,'alice',sid+':C:1',self.utf8_label,
+					label_pat=self.utf8_label_pat)
 
 	def regtest_alice_chk_label4(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -2742,9 +2749,6 @@ class MMGenTestSuite(object):
 		t.expect(r"Enter label text.*return to main menu\):.",label+'\n',regex=True)
 		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
 		t.ok()
-
-	def regtest_alice_edit_label1(self,name):
-		return self.regtest_user_edit_label(name,'alice','1','Edited Label')
 
 	def regtest_stop(self,name):
 		t = MMGenExpect(name,'mmgen-regtest',['stop'])

@@ -162,7 +162,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
-		fs = ' {:%s} {:%s} {:2} {} {} {:<}' % (col1_w,tx_w)
+		fs = u' {:%s} {:%s} {:2} {} {} {:<}' % (col1_w,tx_w)
 		out += [fs.format('Num',
 				'TXid'.ljust(tx_w - 5) + ' Vout', '',
 				'Address'.ljust(addr_w),
@@ -175,10 +175,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				else i.twmmid if i.twmmid.type=='mmgen'
 					else 'Non-{}'.format(g.proj_name),width=mmid_w,color=True)
 			if self.show_mmid:
-				addr_out = '{} {}'.format(
+				addr_out = u'{} {}'.format(
 					type(i.addr).fmtc(addr_dots,width=btaddr_w,color=True) if i.skip == 'addr' \
 							else i.addr.fmt(width=btaddr_w,color=True),
-					'{} {}'.format(mmid_disp,i.label.fmt(width=label_w,color=True) \
+					u'{} {}'.format(mmid_disp,i.label.fmt(width=label_w,color=True) \
 							if label_w > 0 else ''))
 			else:
 				addr_out = type(i.addr).fmtc(addr_dots,width=addr_w,color=True) \
@@ -280,10 +280,10 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:
 					e = self.unspent[idx-1]
-					if type(self).add_label(e.twmmid,lbl,addr=e.addr):
+					if type(self).add_label(e.twmmid,lbl.decode('utf8'),addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
-						msg('{}\n{}\n{}'.format(self.fmt_display,prompt,p))
+						msg(u'{}\n{}\n{}'.format(self.fmt_display,prompt,p))
 					else:
 						msg('Label could not be added\n{}\n{}'.format(prompt,p))
 			elif reply == 'M': self.do_sort('twmmid'); self.show_mmid = True
@@ -314,7 +314,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 	# returns on failure
 	@classmethod
-	def add_label(cls,arg1,label='',addr=None,silent=False):
+	def add_label(cls,arg1,label='',addr=None,silent=False,on_fail='return'):
 		from mmgen.tx import is_mmgen_id,is_coin_addr
 		mmaddr,coinaddr = None,None
 		if is_coin_addr(addr or arg1):
@@ -345,10 +345,10 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 		mmaddr = TwMMGenID(mmaddr)
 
-		cmt = TwComment(label,on_fail='return')
+		cmt = TwComment(label,on_fail=on_fail)
 		if cmt in (False,None): return False
 
-		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)]) # label is ASCII for now
+		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
 
 		# NOTE: this works because importaddress() removes the old account before
 		# associating the new account with the address.
@@ -366,8 +366,8 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			m = mmaddr.type.replace('mmg','MMG')
 			a = mmaddr.replace(g.proto.base_coin.lower()+':','')
 			s = '{} address {} in tracking wallet'.format(m,a)
-			if label: msg("Added label '{}' to {}".format(label,s))
-			else:     msg('Removed label from {}'.format(s))
+			if label: msg(u"Added label '{}' to {}".format(label,s))
+			else:     msg(u'Removed label from {}'.format(s))
 			return True
 
 	@classmethod

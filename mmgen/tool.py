@@ -725,7 +725,7 @@ def Listaddresses(addrs='',minconf=1,
 
 	out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
 
-	fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
+	fs = u'{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
 	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
 	max_cmt_len  = max(max(len(v['lbl'].comment) for v in addrs.values()),7)
@@ -835,6 +835,6 @@ def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=T
 def Add_label(mmaddr_or_coin_addr,label):
 	rpc_init()
 	from mmgen.tw import MMGenTrackingWallet
-	MMGenTrackingWallet.add_label(mmaddr_or_coin_addr,label) # dies on failure
+	MMGenTrackingWallet.add_label(mmaddr_or_coin_addr,label,on_fail='raise')
 
 def Remove_label(mmaddr_or_coin_addr): Add_label(mmaddr_or_coin_addr,'')

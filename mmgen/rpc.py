@@ -103,20 +103,16 @@ class CoinDaemonRPCConnection(object):
 
 		dmsg_rpc('=== request() debug ===')
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
-		caller = self
+
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self, obj):
 				if isinstance(obj,g.proto.coin_amt):
 					return g.proto.get_rpc_coin_amt_type()(obj)
 				return json.JSONEncoder.default(self, obj)
 
-		# TODO: UTF-8 labels
-		# if type(p) != list and p['method'] == 'importaddress':
-		# 	dump = json.dumps(p,cls=MyJSONEncoder,ensure_ascii=False)
-		# 	print(dump)
-
 		dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
 			self.auth_str,' '*31,base64.b64encode(self.auth_str)))
+
 		try:
 			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
 				'Host': self.host,
@@ -146,15 +142,14 @@ class CoinDaemonRPCConnection(object):
 				e2 = str(e1)
 			return do_fail(r,1,e2)
 
-		r2 = r.read()
+		r2 = r.read().decode('utf8')
 
-		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
+		dmsg_rpc(u'    RPC REPLY data ==> {}\n'.format(r2))
 
 		if not r2:
 			return do_fail(r,2,'Error: empty reply')
 
-#		from decimal import Decimal
-		r3 = json.loads(r2.decode('utf8'), parse_float=Decimal)
+		r3 = json.loads(r2,parse_float=Decimal)
 		ret = []
 
 		for resp in r3 if cf['batch'] else [r3]:
