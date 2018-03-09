@@ -98,7 +98,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 
 	if tx.marked_signed():
 		die(1,'Transaction is already signed!')
-	vmsg("Successfully opened transaction file '{}'".format(tx_file))
+	vmsg(u"Successfully opened transaction file '{}'".format(tx_file))
 
 	if opt.tx_id:
 		msg(tx.txid); continue

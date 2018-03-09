@@ -25,17 +25,24 @@ from binascii import hexlify
 
 from mmgen.common import *
 
+def path_join(*args,**kwargs):
+	if not 'decode' in kwargs: kwargs['decode'] = True
+	assert type(kwargs['decode']) == bool
+	assert kwargs.keys() == ['decode']
+	ret = os.path.join(*[a.encode('utf8') for a in args])
+	return ret.decode('utf8') if kwargs['decode'] else ret
+
 def cleandir(d):
 	from shutil import rmtree
-	try:    files = os.listdir(d)
+	try:    files = [f.decode('utf8') for f in os.listdir(d)]
 	except: return
 
-	gmsg("Cleaning directory '{}'".format(d))
+	gmsg(u"Cleaning directory '{}'".format(d))
 	for f in files:
 		try:
-			os.unlink(os.path.join(d,f))
+			os.unlink(path_join(d,f,decode=False))
 		except:
-			rmtree(os.path.join(d,f))
+			rmtree(path_join(d,f,decode=False))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
 def getrandhex(n): return hexlify(os.urandom(n))
@@ -49,7 +56,7 @@ def mk_tmpdir(d):
 	except OSError as e:
 		if e.errno != 17: raise
 	else:
-		vmsg("Created directory '{}'".format(d))
+		vmsg(u"Created directory '{}'".format(d))
 
 def mk_tmpdir_path(path,cfg):
 	try:

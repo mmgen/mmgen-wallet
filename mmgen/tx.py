@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -855,13 +856,14 @@ class MMGenTX(MMGenObject):
 
 	def create_fn(self):
 		tl = self.get_hex_locktime()
-		self.fn = '{}{}[{!s}{}{}].{}'.format(
+		self.fn = u'{}{}[{!s}{}{}]{x}.{}'.format(
 			self.txid,
 			('-'+g.coin,'')[g.coin=='BTC'],
 			self.send_amt,
 			('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()],
 			('',',tl={}'.format(tl))[bool(tl)],
-			self.ext)
+			self.ext,
+			x=u'-α' if g.debug_utf8 else '')
 
 	def write_to_file(  self,
 						add_desc='',

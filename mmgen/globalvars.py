@@ -90,8 +90,9 @@ class g(object):
 	alice                = False
 
 	# test suite:
-	bogus_wallet_data    = ''
+	bogus_wallet_data    = u''
 	traceback_cmd        = 'scripts/traceback.py'
+	debug_utf8           = False
 
 	for k in ('win','linux'):
 		if sys.platform[:len(k)] == k:
@@ -143,6 +144,7 @@ class g(object):
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_ADDRLIST',
+		'MMGEN_DEBUG_UTF8',
 		'MMGEN_QUIET',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_FORCE_256_COLOR',

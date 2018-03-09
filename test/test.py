@@ -75,21 +75,23 @@ sample_text = \
 # under '/dev/shm' and put datadir and temp files here.
 shortopts = ''.join([e[1:] for e in sys.argv if len(e) > 1 and e[0] == '-' and e[1] != '-'])
 shortopts = ['-'+e for e in list(shortopts)]
-data_dir = os.path.join('test','data_dir')
+data_dir_basename = 'data_dir' + ('',u'-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))]
+data_dir = path_join('test',data_dir_basename)
+data_dir_enc = data_dir.encode('utf8')
 
 if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts):
 	if g.platform == 'win':
-		try: os.listdir(data_dir)
+		try: os.listdir(data_dir_enc)
 		except: pass
 		else:
-			try: shutil.rmtree(data_dir)
+			try: shutil.rmtree(data_dir_enc)
 			except: # we couldn't remove data dir - perhaps regtest daemon is running
 				try: subprocess.call(['python',os.path.join('cmds','mmgen-regtest'),'stop'])
 				except: rdie(1,'Unable to remove data dir!')
 				else:
 					time.sleep(2)
-					shutil.rmtree(data_dir)
-		os.mkdir(data_dir,0755)
+					shutil.rmtree(data_dir_enc)
+		os.mkdir(data_dir_enc,0755)
 	else:
 		d,pfx = '/dev/shm','mmgen-test-'
 		try:
@@ -101,11 +103,11 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 			shm_dir = tempfile.mkdtemp('',pfx,d)
 		except Exception as e:
 			die(2,'Unable to create temporary directory in {} ({})'.format(d,e))
-		dd = os.path.join(shm_dir,'data_dir')
+		dd = path_join(shm_dir,data_dir_basename,decode=False)
 		os.mkdir(dd,0755)
-		try: os.unlink(data_dir)
+		try: os.unlink(data_dir_enc)
 		except: pass
-		os.symlink(dd,data_dir)
+		os.symlink(dd,data_dir_enc)
 
 opts_data = lambda: {
 	'desc': 'Test suite for the MMGen suite',
@@ -500,7 +502,7 @@ cfgs = {
 		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_bech32addrfile':'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
-		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
+		'ref_passwdfile':  u'98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum': {
 			'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
 			'ltc': ('AD52 C3FE 8924 AAF0','5738 5C4F 167C F9AE'),
@@ -573,6 +575,9 @@ from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
 	cfgs[b] = deepcopy(cfgs[a])
 	cfgs[b]['tmpdir'] = os.path.join('test','tmp'+b)
+
+if g.debug_utf8:
+	for k in cfgs: cfgs[k]['tmpdir'] += u'-α'
 
 from collections import OrderedDict
 
@@ -1020,9 +1025,10 @@ NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]
 
 def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 
+	ext_enc = ext.encode('utf8')
 	dot = ('.','')[bool(no_dot)]
-	flist = [os.path.join(mydir,f) for f in os.listdir(mydir)
-				if f == ext or f[-len(dot+ext):] == dot+ext]
+	flist = [os.path.join(mydir.encode('utf8'),f).decode('utf8') for f in os.listdir(mydir.encode('utf8'))
+				if f == ext_enc or f[-len(dot+ext_enc):] == dot+ext_enc]
 
 	if not flist: return False
 	if return_list: return flist
@@ -1030,7 +1036,7 @@ def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 	if len(flist) > 1:
 		if delete:
 			if not opt.quiet:
-				msg("Multiple *.{} files in '{}' - deleting".format(ext,mydir))
+				msg(u"Multiple *.{} files in '{}' - deleting".format(ext,mydir))
 			for f in flist:
 				msg(f)
 				os.unlink(f)
@@ -1155,14 +1161,14 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 	return out
 
 def write_fake_data_to_file(d):
-	unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
+	unspent_data_file = path_join(cfg['tmpdir'],'unspent.json')
 	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True)
-	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
-	bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
+	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file.encode('utf8')
+	bwd_msg = u'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
 	if opt.print_cmdline: msg(bwd_msg)
 	if opt.log: log_fd.write(bwd_msg + ' ')
 	if opt.verbose or opt.exact_output:
-		sys.stderr.write("Fake transaction wallet data written to file '{}'\n".format(unspent_data_file))
+		sys.stderr.write(u"Fake transaction wallet data written to file '{}'\n".format(unspent_data_file))
 
 def create_tx_data(sources):
 	tx_data,ad = {},AddrData()
@@ -1210,7 +1216,7 @@ def make_txcreate_cmdline(tx_data):
 
 def add_comments_to_addr_file(addrfile,outfile):
 	silence()
-	gmsg("Adding comments to address file '{}'".format(addrfile))
+	gmsg(u"Adding comments to address file '{}'".format(addrfile))
 	a = AddrList(addrfile)
 	for n,idx in enumerate(a.idxs(),1):
 		if n % 2: a.set_comment(idx,'Test address {}'.format(n))
@@ -1331,13 +1337,13 @@ def check_deps(cmds):
 def clean(usr_dirs=[]):
 	if opt.skip_deps: return
 	all_dirs = MMGenTestSuite().list_tmp_dirs()
-	dirs = (usr_dirs or all_dirs)
-	for d in sorted(dirs):
+	dirnums = (usr_dirs or all_dirs)
+	for d in sorted(dirnums):
 		if str(d) in all_dirs:
 			cleandir(all_dirs[str(d)])
 		else:
 			die(1,'{}: invalid directory number'.format(d))
-	cleandir(os.path.join('test','data_dir'))
+	cleandir(data_dir)
 
 def skip_for_win():
 	if g.platform == 'win':
@@ -1446,7 +1452,7 @@ class MMGenTestSuite(object):
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.usr_rand(usr_rand_chars)
-		sid = os.path.basename(t.written_to_file('MMGen wallet').split('-')[0])
+		sid = os.path.basename(t.written_to_file('MMGen wallet')).split('-')[0]
 		refcheck('Seed ID',sid,cfg['seed_id'])
 
 	def refwalletgen(self,name): self.brainwalletgen_ref(name)
@@ -1665,8 +1671,8 @@ class MMGenTestSuite(object):
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 			t.expect('Save transaction? (y/N): ','y')
 			t.written_to_file('Transaction')
-		os.unlink(txfile) # our tx file replaces the original
-		os.system('touch ' + os.path.join(cfg['tmpdir'],'txbump'))
+		os.unlink(txfile.encode('utf8')) # our tx file replaces the original
+		os.system('touch ' + path_join(cfg['tmpdir'],'txbump',decode=False))
 		t.ok()
 
 	def txdo(self,name,addrfile,wallet):
@@ -1757,7 +1763,7 @@ class MMGenTestSuite(object):
 	def export_seed(self,name,wf,desc='seed data',out_fmt='seed',pf=None):
 		f,t = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
 		silence()
-		msg('{}: {}'.format(capfirst(desc),cyan(get_data_from_file(f,desc))))
+		msg(u'{}: {}'.format(capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
 		t.ok()
 
@@ -1780,8 +1786,8 @@ class MMGenTestSuite(object):
 
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
 	def export_incog_hidden(self,name,wf):
-		rf = os.path.join(cfg['tmpdir'],hincog_fn)
-		add_args = ['-J','{},{}'.format(rf,hincog_offset)]
+		rf = path_join(cfg['tmpdir'],hincog_fn)
+		add_args = ['-J',u'{},{}'.format(rf,hincog_offset)]
 		self.export_incog(
 			name,wf,desc='hidden incognito data',out_fmt='hi',add_args=add_args)
 
@@ -1825,9 +1831,9 @@ class MMGenTestSuite(object):
 		self.addrgen_incog(name,wf,'',in_fmt='xi',desc='hex incognito data')
 
 	def addrgen_incog_hidden(self,name,wf,foo):
-		rf = os.path.join(cfg['tmpdir'],hincog_fn)
+		rf = path_join(cfg['tmpdir'],hincog_fn)
 		self.addrgen_incog(name,[],'',in_fmt='hi',desc='hidden incognito data',
-			args=['-H','{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
+			args=['-H',u'{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False,mmtype=None):
 		if cfg['segwit'] and not mmtype:
@@ -1864,11 +1870,11 @@ class MMGenTestSuite(object):
 
 	def ref_b32passwdgen(self,name,wf,pf):
 		ea = ['--base32','--passwd-len','17']
-		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
+		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str=u'фубар@crypto.org',extra_args=ea)
 
 	def ref_hexpasswdgen(self,name,wf,pf):
 		ea = ['--hex']
-		self.addrgen(name,wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
+		self.addrgen(name,wf,pf,check_ref=True,ftype='passhex',id_str=u'фубар@crypto.org',extra_args=ea)
 
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],'-M',keyaddr_file,txfile])
@@ -1943,10 +1949,10 @@ class MMGenTestSuite(object):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		add_args = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f12]
 		t = self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,txdo_args=[f7,f8,f9,f10],add_args=add_args)
-		os.system('rm -f {}/*.sigtx'.format(cfg['tmpdir']))
+		os.system('rm -f {}/*.sigtx'.format(cfg['tmpdir'].encode('utf8')))
 		self.txsign4(name,f7,f8,f9,f10,f11,f12,txdo_handle=t)
 		self.txsend(name,'',txdo_handle=t)
-		os.system('touch ' + os.path.join(cfg['tmpdir'],'txdo'))
+		os.system('touch ' + path_join(cfg['tmpdir'],'txdo',decode=False))
 
 	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
@@ -2090,11 +2096,11 @@ class MMGenTestSuite(object):
 
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
-		wf = os.path.join(ref_dir,cfg['ref_wallet'])
+		wf = path_join(ref_dir,cfg['ref_wallet'])
 		self.walletconv_in(name,wf,'MMGen wallet',pw=True,oo=True)
 
 	def ref_mn_conv(self,name,ext='mmwords',desc='Mnemonic data'):
-		wf = os.path.join(ref_dir,cfg['seed_id']+'.'+ext)
+		wf = path_join(ref_dir,cfg['seed_id']+'.'+ext)
 		self.walletconv_in(name,wf,desc,oo=True)
 
 	def ref_seed_conv(self,name):
@@ -2143,8 +2149,8 @@ class MMGenTestSuite(object):
 		self.walletconv_out(name,'hex incognito data',out_fmt='xi',pw=True)
 
 	def ref_hincog_conv_out(self,name,extra_uopts=[]):
-		ic_f = os.path.join(cfg['tmpdir'],hincog_fn)
-		hi_parms = '{},{}'.format(ic_f,ref_wallet_incog_offset)
+		ic_f = path_join(cfg['tmpdir'],hincog_fn)
+		hi_parms = u'{},{}'.format(ic_f,ref_wallet_incog_offset)
 		sl_parm = '-l' + str(cfg['seed_len'])
 		self.walletconv_out(name,
 			'hidden incognito data', 'hi',
@@ -2202,7 +2208,7 @@ class MMGenTestSuite(object):
 	def ref_addrfile_chk(self,name,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None,add_args=[]):
 		af_key = 'ref_{}file'.format(ftype)
 		af_fn = cfg[af_key].format(pfx or altcoin_pfx,'' if coin else tn_ext)
-		af = os.path.join(ref_dir,(subdir or ref_subdir,'')[ftype=='passwd'],af_fn)
+		af = path_join(ref_dir,(subdir or ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
 		t = MMGenExpect(name,'mmgen-tool',coin_arg+[tool_cmd,af]+add_args)
@@ -2326,7 +2332,7 @@ class MMGenTestSuite(object):
 
 	def walletconv_out(self,name,desc,out_fmt='w',uopts=[],uopts_chk=[],pw=False):
 		opts = ['-d',cfg['tmpdir'],'-p1','-o',out_fmt] + uopts
-		infile = os.path.join(ref_dir,cfg['seed_id']+'.mmwords')
+		infile = path_join(ref_dir,cfg['seed_id']+'.mmwords')
 		t = MMGenExpect(name,'mmgen-walletconv',[usr_rand_arg]+opts+[infile],extra_desc='(convert)')
 
 		add_args = ['-l{}'.format(cfg['seed_len'])]
@@ -2361,7 +2367,7 @@ class MMGenTestSuite(object):
 	def regtest_setup(self,name):
 		if g.testnet:
 			die(2,'--testnet option incompatible with regtest test suite')
-		try: shutil.rmtree(os.path.join(data_dir,'regtest'))
+		try: shutil.rmtree(os.path.join(data_dir_enc,'regtest'))
 		except: pass
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
 		t = MMGenExpect(name,'mmgen-regtest',['-n','setup'])
@@ -2383,7 +2389,7 @@ class MMGenTestSuite(object):
 
 	@staticmethod
 	def regtest_user_dir(user,coin=None):
-		return os.path.join(data_dir,'regtest',coin or g.coin.lower(),user)
+		return path_join(data_dir,'regtest',coin or g.coin.lower(),user)
 
 	def regtest_user_sid(self,user):
 		return os.path.basename(get_file_with_ext('mmdat',self.regtest_user_dir(user)))[:8]
@@ -2392,7 +2398,7 @@ class MMGenTestSuite(object):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in g.proto.mmtypes:
 			t = MMGenExpect(name,'mmgen-addrgen',
-				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self.regtest_user_dir(user))] +
+				['--quiet','--'+user,'--type='+mmtype,u'--outdir={}'.format(self.regtest_user_dir(user))] +
 				([],[wf])[bool(wf)] + [addr_range],
 				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype]['name']))
 			t.passphrase('MMGen wallet',passwd)
@@ -2409,7 +2415,8 @@ class MMGenTestSuite(object):
 		for mmtype in g.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype]['name']
 			fn = os.path.join(self.regtest_user_dir(user),
-				'{}{}{}[{}].addrs'.format(sid,altcoin_pfx,id_strs[desc],addr_range))
+				u'{}{}{}[{}]{x}.addrs'.format(sid,altcoin_pfx,id_strs[desc],addr_range,
+												x=u'-α' if g.debug_utf8 else ''))
 			t = MMGenExpect(name,'mmgen-addrimport', ['--quiet','--'+user,'--batch',fn],extra_desc='('+desc+')')
 			if g.debug:
 				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
@@ -2514,7 +2521,7 @@ class MMGenTestSuite(object):
 
 	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C' }[mmtype]
-		ext = '{}{}{}[{}].addrs'.format(sid,altcoin_pfx,id_str,addr_range)
+		ext = u'{}{}{}[{}]{x}.addrs'.format(sid,altcoin_pfx,id_str,addr_range,x=u'-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,self.regtest_user_dir(user),no_dot=True)
 		silence()
 		psave = g.proto
@@ -2567,7 +2574,9 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_bob_rbf_bump(self,name):
-		txfile = get_file_with_ext(',{}].sigtx'.format(rtFee[1][:-1]),cfg['tmpdir'],delete=False,no_dot=True)
+		txfile = get_file_with_ext(u',{}]{x}.sigtx'.format(
+					rtFee[1][:-1],x=u'-α' if g.debug_utf8 else ''),
+						cfg['tmpdir'],delete=False,no_dot=True)
 		return self.regtest_user_txbump(name,'bob',txfile,rtFee[2],'c')
 
 	def regtest_generate(self,name,coin=None,num_blocks=1):

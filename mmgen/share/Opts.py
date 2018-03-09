@@ -30,16 +30,16 @@ def usage(opts_data):
 def print_help_and_exit(opts_data,longhelp=False):
 	pn = opts_data['prog_name']
 	pn_len = str(len(pn)+2)
-	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
-	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
+	out  = u'  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
+	out += u'  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
 	od_opts = opts_data[('options','long_options')[longhelp]].strip().splitlines()
 	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
 	ls = ('  ','')[longhelp]
 	es = ('','    ')[longhelp]
-	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
+	out += u'{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
-		out += '\n  ' + '\n  '.join(opts_data['notes'][1:-1].splitlines())
-	print(out)
+		out += '\n  ' + '\n  '.join(opts_data['notes'].strip().splitlines())
+	print(out.encode('utf8'))
 	sys.exit(0)
 
 def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
@@ -108,7 +108,7 @@ def parse_opts(argv,opts_data,opt_filter=None,defer_help=False):
 				if not skip: od[-1][3] += '\n' + l
 
 		opts_data[k] = '\n'.join(
-			['{:<3} --{} {}'.format(
+			[u'{:<3} --{} {}'.format(
 				('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
 		)
 		od_all += od

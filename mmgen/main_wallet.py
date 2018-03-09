@@ -95,16 +95,16 @@ opts_data = lambda: {
 		iaction=capfirst(iaction),
 		oaction=capfirst(oaction),
 	),
-	'notes': """
+	'notes': u"""
 
 {n_pw}{n_bw}
 
 FMT CODES:
   {f}
 """.format(
-	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+	f=u'\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 	n_pw=help_notes('passwd'),
-	n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
+	n_bw=(u'','\n\n' + help_notes('brainwallet'))[bw_note]
 	)
 }
 

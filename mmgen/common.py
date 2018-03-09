@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -77,7 +78,7 @@ interactive prompt, may be specified as either absolute {} amounts, using
 a plain decimal number, or as satoshis per byte, using an integer followed by
 the letter 's'.
 """.format(g.coin),
-		'txsign': """
+		'txsign': u"""
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
 To sign non-{pnm} inputs, a {dn} wallet dump or flat key list is used
@@ -107,4 +108,4 @@ column below:
 			pnm=g.proj_name,
 			pnu=g.proto.name.capitalize(),
 			pnl=g.proj_name.lower())
-}[k]
+	}[k] + u'-α' if g.debug_utf8 else ''

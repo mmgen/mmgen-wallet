@@ -118,7 +118,7 @@ msg_fmt = '{{:{}}} {{:34}} {{:{}}}'.format(w_n_of_m,w_mmid)
 
 if opt.rescan: import threading
 
-msg('Importing {} address{} from {}{}'.format(
+msg(u'Importing {} address{} from {}{}'.format(
 		len(al.data),
 		suf(al.data,'es'),
 		infile,

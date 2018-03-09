@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -63,12 +64,12 @@ def opt_postproc_debug():
 	Msg('    Opts after processing:')
 	for k in a:
 		v = getattr(opt,k)
-		Msg('        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
+		Msg(u'        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
 	Msg("    Opts set to 'None':")
-	Msg('        {}\n'.format('\n        '.join(b)))
+	Msg(u'        {}\n'.format('\n        '.join(b)))
 	Msg('    Global vars:')
 	for e in [d for d in dir(g) if d[:2] != '__']:
-		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
+		Msg(u'        {:<20}: {}'.format(e, getattr(g,e)))
 	Msg('\n=== end opts.py debug ===\n')
 
 def opt_postproc_initializations():
@@ -168,7 +169,7 @@ def override_from_env():
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
 		if val: # exclude empty string values too
 			gname = name[idx:].lower()
-			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
+			setattr(g,gname,set_for_type(val.decode('utf8'),getattr(g,gname),name,invert_bool))
 
 def warn_altcoins(trust_level):
 	if trust_level == None: return
@@ -291,6 +292,10 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	if do_help: # print help screen only after global vars are initialized
 		opts_data = opts_f()
 		opts_data['long_options'] = common_opts_data
+		if g.debug_utf8:
+			for k in opts_data:
+				if type(opts_data[k]) in (str,unicode):
+					opts_data[k] += u'-α'
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.bob or g.alice:

@@ -70,7 +70,7 @@ opts_data = lambda: {
 	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
 	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 ),
-	'notes': """
+	'notes': u"""
 
 
                            NOTES FOR THIS COMMAND

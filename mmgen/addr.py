@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -473,7 +474,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		self.ext += '.'+g.mmenc_ext
 
 	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
-		fn = u'{}.{}'.format(self.id_str,self.ext)
+		fn = u'{}{x}.{}'.format(self.id_str,self.ext,x=u'-α' if g.debug_utf8 else '')
 		ask_tty = self.has_keys and not opt.quiet
 		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
 

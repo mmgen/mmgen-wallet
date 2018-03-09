@@ -38,7 +38,7 @@ common_args = lambda: (
 	'--rpcpassword={}'.format(rpc_password),
 	'--rpcport={}'.format(rpc_port),
 	'--regtest',
-	'--datadir={}'.format(data_dir))
+	u'--datadir={}'.format(data_dir))
 
 def start_daemon(user,quiet=False,daemon=True,reindex=False):
 	# requires Bitcoin ABC version >= 0.16.2
@@ -53,7 +53,7 @@ def start_daemon(user,quiet=False,daemon=True,reindex=False):
 	) + add_args + common_args()
 	if daemon: cmd += ('--daemon',)
 	if reindex: cmd += ('--reindex',)
-	if not g.debug or quiet: vmsg('{}'.format(' '.join(cmd)))
+	if not g.debug or quiet: vmsg(u'{}'.format(' '.join(cmd)))
 	p = subprocess.Popen(cmd,stdout=PIPE,stderr=PIPE)
 	err = process_output(p,silent=False)[1]
 	if err:
@@ -71,7 +71,7 @@ def start_cmd(*args,**kwargs):
 	if args[0] == 'cli':
 		cmd = (g.proto.name+'-cli',) + common_args() + args[1:]
 	if g.debug or not 'quiet' in kwargs:
-		vmsg('{}'.format(' '.join(cmd)))
+		vmsg(u'{}'.format(' '.join(cmd)))
 	ip = op = ep = (PIPE,None)['no_pipe' in kwargs and kwargs['no_pipe']]
 	if 'pipe_stdout_only' in kwargs and kwargs['pipe_stdout_only']: ip = ep = None
 	return subprocess.Popen(cmd,stdin=ip,stdout=op,stderr=ep)

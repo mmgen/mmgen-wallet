@@ -46,7 +46,7 @@ def my_send(p,t,delay=send_delay,s=False):
 	if opt.verbose:
 		ls = (' ','')[bool(opt.debug or not s)]
 		es = ('  ','')[bool(s)]
-		msg('{}SEND {}{}'.format(ls,es,yellow("'{}'"%t.replace('\n',r'\n'))))
+		msg(u'{}SEND {}{}'.format(ls,es,yellow(u"'{}'".format(t.decode('utf8').replace('\n',r'\n')))))
 	return ret
 
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
@@ -85,6 +85,8 @@ def debug_pexpect_msg(p):
 		errmsg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
 		errmsg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
 
+data_dir = os.path.join('test','data_dir'+('',u'-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
+
 class MMGenPexpect(object):
 
 	NL = '\r\n'
@@ -97,7 +99,7 @@ class MMGenPexpect(object):
 		cmd_args = ['--{}{}'.format(k.replace('_','-'),
 			'='+getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in passthru_args if getattr(opt,k)] \
-			+ ['--data-dir='+os.path.join('test','data_dir')] + cmd_args
+			+ ['--data-dir='+data_dir] + cmd_args
 
 		if g.platform == 'win': cmd,args = 'python',[mmgen_cmd]+cmd_args
 		else:                   cmd,args = mmgen_cmd,cmd_args
@@ -109,9 +111,9 @@ class MMGenPexpect(object):
 				die(2,(m1+m2).format(name,cmd,args))
 
 		if opt.popen_spawn:
-			args = [(a,"'{}'".format(a))[' ' in a] for a in args]
+			args = [u'{q}{}{q}'.format(a,q="'" if ' ' in a else '') for a in args]
 
-		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
+		cmd_str = u'{} {}'.format(cmd,u' '.join(args)).replace('\\','/')
 		if opt.coverage:
 			fs = 'python -m trace --count --coverdir={} --file={} {c}'
 			cmd_str = fs.format(*init_coverage(),c=cmd_str)
@@ -124,7 +126,7 @@ class MMGenPexpect(object):
 				clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
 				sys.stderr.write(green('Testing: {}\n'.format(desc)))
 				if not msg_only:
-					sys.stderr.write(clr1('Executing {}{}'.format(clr2(cmd_str),eol)))
+					sys.stderr.write(clr1(u'Executing {}{}'.format(clr2(cmd_str),eol)))
 			else:
 				m = 'Testing {}: '.format(desc)
 				msg_r(m)
@@ -144,7 +146,7 @@ class MMGenPexpect(object):
 				cmd_str = g.traceback_cmd + ' ' + cmd_str
 #			Msg('\ncmd_str: {}'.format(cmd_str))
 			if opt.popen_spawn:
-				self.p = PopenSpawn(cmd_str)
+				self.p = PopenSpawn(cmd_str.encode('utf8'))
 			else:
 				self.p = pexpect.spawn(cmd,args)
 			if opt.exact_output: self.p.logfile = sys.stdout
@@ -220,14 +222,14 @@ class MMGenPexpect(object):
 		if ret == 1:
 			my_send(self.p,'YES\n')
 #			if oo:
-			outfile = self.expect_getend("Overwriting file '").rstrip("'")
+			outfile = self.expect_getend("Overwriting file '").rstrip("'").decode('utf8')
 			return outfile
 # 			else:
 # 				ret = my_expect(self.p,s1)
 		self.expect(self.NL,nonl=True)
-		outfile = self.p.before.strip().strip("'")
+		outfile = self.p.before.strip().strip("'").decode('utf8')
 		if opt.debug_pexpect: rmsg('Outfile [{}]'.format(outfile))
-		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
+		vmsg(u'{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
 		return outfile
 
 	def no_overwrite(self):
@@ -248,7 +250,8 @@ class MMGenPexpect(object):
 		self.expect(self.NL,nonl=True,silent=True)
 		debug_pexpect_msg(self.p)
 		end = self.p.before
-		vmsg(' ==> {}'.format(cyan(end)))
+		if not g.debug:
+			vmsg(' ==> {}'.format(cyan(end)))
 		return end
 
 	def interactive(self):

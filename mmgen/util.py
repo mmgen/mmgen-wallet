@@ -80,7 +80,7 @@ def pdie(*args):
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
 	if type(refval) == bool:
-		v = str(val).lower()
+		v = unicode(val).lower()
 		if v in ('true','yes','1'):          ret = True
 		elif v in ('false','no','none','0'): ret = False
 		else: die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
@@ -90,7 +90,7 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		try:
 			ret = type(refval)((val,not val)[invert_bool])
 		except:
-			die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
+			die(1,u"'{}': invalid value for '{}'{} (must be of type '{}')".format(
 				val,desc,src_str,type(refval).__name__))
 	return ret
 
@@ -116,13 +116,14 @@ def parse_nbytes(nbytes):
 	die(1,"'{}': invalid byte specifier".format(nbytes))
 
 def check_or_create_dir(path):
+	path_enc = path.encode('utf8')
 	try:
-		os.listdir(path)
+		os.listdir(path_enc)
 	except:
 		try:
-			os.makedirs(path,0700)
+			os.makedirs(path_enc,0700)
 		except:
-			die(2,"ERROR: unable to read or create path '{}'".format(path))
+			die(2,u"ERROR: unable to read or create path '{}'".format(path))
 
 from mmgen.opts import opt
 
@@ -451,7 +452,7 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	try: mode = os.stat(fname).st_mode
 	except:
-		die(1,"Unable to stat requested {} '{}'".format(ftype,fname))
+		die(1,u"Unable to stat requested {} '{}'".format(ftype,fname))
 
 	for t in ok_types:
 		if t[0](mode): break
@@ -566,7 +567,7 @@ def write_data_to_file(
 						confirm_or_exit('','output {} to pipe'.format(desc))
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
-				msg("Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
+				msg(u"Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
 			else:
 				msg('Redirecting output to file')
 
@@ -588,16 +589,16 @@ def write_data_to_file(
 
 		hush = False
 		if file_exists(outfile) and ask_overwrite:
-			q = "File '{}' already exists\nOverwrite?".format(outfile)
+			q = u"File '{}' already exists\nOverwrite?".format(outfile)
 			confirm_or_exit('',q)
-			msg("Overwriting file '{}'".format(outfile))
+			msg(u"Overwriting file '{}'".format(outfile))
 			hush = True
 
 		f = open_file_or_exit(outfile,('w','wb')[bool(binary)])
 		try:
 			f.write(data)
 		except:
-			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
+			die(2,u"Failed to write {} to file '{}'".format(desc,outfile))
 		f.close
 
 		if not (hush or silent):
@@ -639,7 +640,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		msg("{} {} '{}'".format(m,desc,fn))
+		msg(u"{} {} '{}'".format(m,desc,fn))
 		from mmgen.crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
@@ -709,7 +710,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 	from mmgen.term import get_char
 
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
-	p = '{} {}: '.format(prompt,q)
+	p = u'{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
 	if opt.accept_defaults:

@@ -84,7 +84,7 @@ opts_data = lambda: {
 	what=gen_what,g=g,
 	dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name'])
 ),
-	'notes': """
+	'notes': u"""
 
 
                            NOTES FOR THIS COMMAND

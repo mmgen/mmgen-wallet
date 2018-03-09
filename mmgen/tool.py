@@ -473,7 +473,7 @@ def Rand2file(outfile,nbytes,threads=4,silent=False):
 
 	if not silent:
 		msg('\rRead: {} bytes'.format(nbytes))
-		qmsg("\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
+		qmsg(u"\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
 	q1.join()
 	q2.join()
 	f.close()

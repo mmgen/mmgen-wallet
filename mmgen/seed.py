@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -198,11 +199,11 @@ class SeedSource(MMGenObject):
 					for c in cls.get_subclasses()
 				if hasattr(c,'fmt_codes')]
 		w = max(len(i[0]) for i in d)
-		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
+		ret = [u'{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
 			('Format','FileExt','Valid codes'),
 			('------','-------','-----------')
 			] + sorted(d)]
-		return '\n'.join(ret) + '\n'
+		return u'\n'.join(ret) + ('',u'-α')[g.debug_utf8] + '\n'
 
 	def get_fmt_data(self):
 		self._format()
@@ -227,7 +228,7 @@ class SeedSourceUnenc(SeedSource):
 	def _encrypt(self): pass
 
 	def _filename(self):
-		return '{}[{}].{}'.format(self.seed.sid,self.seed.length,self.ext)
+		return u'{}[{}]{x}.{}'.format(self.seed.sid,self.seed.length,self.ext,x=u'-α' if g.debug_utf8 else '')
 
 class SeedSourceEnc(SeedSource):
 
@@ -314,7 +315,7 @@ an empty passphrase, just hit ENTER twice.
 		return pw
 
 	def _get_passphrase(self,desc_suf=''):
-		desc ='{}passphrase for {}{}'.format(
+		desc = u'{}passphrase for {}{}'.format(
 			('','old ')[self.op=='pwchg_old'],
 			self.desc,
 			('',' '+desc_suf)[bool(desc_suf)]
@@ -323,7 +324,7 @@ an empty passphrase, just hit ENTER twice.
 			w = pwfile_reuse_warning()
 			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,silent=w))
 		else:
-			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
+			ret = ' '.join(get_words_from_user(u'Enter {}: '.format(desc)))
 		self.ssdata.passwd = ret
 
 	def _get_first_pw_and_hp_and_encrypt_seed(self):
@@ -713,13 +714,13 @@ class Wallet (SeedSourceEnc):
 			return False
 
 	def _filename(self):
-		return '{}-{}[{},{}].{}'.format(
+		return u'{}-{}[{},{}]{x}.{}'.format(
 				self.seed.sid,
 				self.ssdata.key_id,
 				self.seed.length,
 				self.ssdata.hash_preset,
-				self.ext
-			)
+				self.ext,
+				x=u'-α' if g.debug_utf8 else '')
 
 class Brainwallet (SeedSourceEnc):
 
@@ -847,13 +848,14 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _filename(self):
 		s = self.seed
 		d = self.ssdata
-		return '{}-{}-{}[{},{}].{}'.format(
+		return u'{}-{}-{}[{},{}]{x}.{}'.format(
 				s.sid,
 				d.key_id,
 				d.iv_id,
 				s.length,
 				d.hash_preset,
-				self.ext)
+				self.ext,
+				x=u'-α' if g.debug_utf8 else '')
 
 	def _deformat(self):
 
@@ -974,7 +976,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		d = self.ssdata
 		d.hincog_offset = self._get_hincog_params('input')[1]
 
-		qmsg("Getting hidden incog data from file '{}'".format(self.infile.name))
+		qmsg(u"Getting hidden incog data from file '{}'".format(self.infile.name))
 
 		# Already sanity-checked:
 		d.target_data_len = self._get_incog_data_len(opt.seed_len)
@@ -985,7 +987,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
 		os.close(fh)
-		qmsg("Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
+		qmsg(u"Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
 
 	# overrides method in SeedSource
 	def write_to_file(self):
@@ -1004,7 +1006,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		try:
 			os.stat(fn)
 		except:
-			if keypress_confirm("Requested file '{}' does not exist.  Create?".format(fn),default_yes=True):
+			if keypress_confirm(u"Requested file '{}' does not exist.  Create?".format(fn),default_yes=True):
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
@@ -1032,4 +1034,4 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)
 		os.close(fh)
-		msg("{} written to file '{}' at offset {}".format(capfirst(self.desc),f.name,d.hincog_offset))
+		msg(u"{} written to file '{}' at offset {}".format(capfirst(self.desc),f.name,d.hincog_offset))
