@@ -1,4 +1,4 @@
-include README.md SIGNING_KEY.pub LICENSE INSTALL
+include README.md SIGNING_KEYS.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
 include test/*.py
 include test/ref/*

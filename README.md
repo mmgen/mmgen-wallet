@@ -115,7 +115,7 @@ future use in an address file, which addresses may safely be made public.
 
 [**Forum**][4] |
 [Reddit][0] |
-[PGP Public Key][5] |
+[PGP Public Keys][5] |
 Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 
 [0]: https://www.reddit.com/user/mmgen-py
@@ -123,7 +123,7 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Debian-or-Ubuntu-Linux
 [3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
 [4]: https://bitcointalk.org/index.php?topic=567069.0
-[5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Key
+[5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Keys
 [6]: https://github.com/mmgen/mmgen/wiki/MMGen-command-help
 [q]: https://github.com/mmgen/mmgen/wiki/MMGen-Quick-Start-with-Regtest-Mode
 [7]: http://bitcoinmagazine.com/8396/deterministic-wallets-advantages-flaw/
