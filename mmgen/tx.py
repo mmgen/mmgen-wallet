@@ -722,7 +722,7 @@ class MMGenTX(MMGenObject):
 				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
 				assert mmti.mmid, fs.format('witness-type','non-MMGen')
-				assert mmti.mmid.mmtype in ('S','B'), fs.format('witness-type',mmti.mmid.mmtype)
+				assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==''],fs.format('witness-type',mmti.mmid.mmtype)
 			else: # non-witness
 				if mmti.mmid:
 					assert mmti.mmid.mmtype not in ('S','B'), fs.format('signature in',mmti.mmid.mmtype)

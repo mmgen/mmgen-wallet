@@ -738,6 +738,7 @@ cmd_group['regtest'] = (
 	('regtest_fund_bob',           "funding Bob's wallet"),
 	('regtest_fund_alice',         "funding Alice's wallet"),
 	('regtest_bob_bal1',           "Bob's balance"),
+	('regtest_bob_add_label',      "adding a 40-character UTF-8 encoded label"),
 	('regtest_bob_split1',         "splitting Bob's funds"),
 	('regtest_generate',           'mining a block'),
 	('regtest_bob_bal2',           "Bob's balance"),
@@ -2480,7 +2481,8 @@ class MMGenTestSuite(object):
 							pw='abc',
 							no_send=False,
 							do_label=False,
-							bad_locktime=False):
+							bad_locktime=False,
+							full_tx_view=False):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txdo',
 			['-d',cfg['tmpdir'],'-B','--'+user] +
@@ -2495,14 +2497,10 @@ class MMGenTestSuite(object):
 			t.expect('Enter transaction fee: ','{}\n'.format(tx_fee))
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
-		if do_label:
-			t.expect('Add a comment to transaction? (y/N): ','y')
-			t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
-			t.expect('View decoded transaction\? .*?: ','n',regex=True)
-		else:
-			t.expect('Add a comment to transaction? (y/N): ','\n')
-			t.expect('View decoded transaction\? .*?: ','t',regex=True)
-			t.expect('to continue: ','\n')
+		t.expect('Add a comment to transaction? (y/N): ',('\n','y')[do_label])
+		if do_label: t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
+		t.expect('View decoded transaction\? .*?: ',('t','v')[full_tx_view],regex=True)
+		if not do_label: t.expect('to continue: ','\n')
 		t.passphrase('MMGen wallet',pw)
 		t.written_to_file('Signed transaction')
 		if no_send:
@@ -2517,7 +2515,7 @@ class MMGenTestSuite(object):
 	def regtest_bob_split1(self,name):
 		sid = self.regtest_user_sid('bob')
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':'+rtBobOp3]
-		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',do_label=True)
+		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',do_label=True,full_tx_view=True)
 
 	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C' }[mmtype]
@@ -2663,6 +2661,13 @@ class MMGenTestSuite(object):
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		t.ok()
 
+	utf8_label     =  u'Edited label (40 characters, UTF8) α-β-γ'
+	utf8_label_pat = ur'Edited label \(40 characters, UTF8\) ..-..-..'
+
+	def regtest_bob_add_label(self,name):
+		sid = self.regtest_user_sid('bob')
+		return self.regtest_user_add_label(name,'bob',sid+':C:1',self.utf8_label)
+
 	def regtest_alice_add_label1(self,name):
 		sid = self.regtest_user_sid('alice')
 		return self.regtest_user_add_label(name,'alice',sid+':C:1','Original Label')
@@ -2725,9 +2730,6 @@ class MMGenTestSuite(object):
 	def regtest_alice_chk_label2(self,name):
 		sid = self.regtest_user_sid('alice')
 		return self.regtest_user_chk_label(name,'alice',sid+':C:1','Replacement Label')
-
-	utf8_label     =  u'Edited label (40 characters, UTF8) α-β-γ'
-	utf8_label_pat = ur'Edited label \(40 characters, UTF8\) ..-..-..'
 
 	def regtest_alice_edit_label1(self,name):
 		return self.regtest_user_edit_label(name,'alice','1',self.utf8_label)

@@ -42,16 +42,14 @@ def hash256(hexnum): # take hex, return hex - OP_HASH256
 _b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 def _numtob58(num):
-	ret = []
-	while num:
-		ret.append(_b58a[num % 58])
-		num /= 58
-	return ''.join(ret)[::-1]
+	def b58enc(n):
+		while n:
+			yield _b58a[n % 58]
+			n /= 58
+	return ''.join(b58enc(num))[::-1]
 
-def _b58tonum(b58num):
-	if [i for i in b58num if not i in _b58a]:
-		raise ValueError,'_b58tonum(): invalid b58 value'
-	return sum(_b58a.index(n) * (58**i) for i,n in enumerate(list(b58num[::-1])))
+def _b58tonum(b58str):
+	return sum(_b58a.index(ch) * 58**n for n,ch in enumerate(b58str[::-1]))
 
 def _b58chk_encode(hexstr):
 	return _numtob58(int(hexstr+hash256(hexstr)[:8],16))
