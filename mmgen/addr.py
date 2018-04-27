@@ -568,7 +568,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		dmsg_sc('lbl',lbl[9:])
 		out.append(u'{} {{'.format(lbl))
 
-		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
+		fs = u'  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
 			c = ' '+e.label if enable_comments and e.label else ''
 			if type(self) == KeyList:

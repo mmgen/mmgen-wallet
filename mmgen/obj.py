@@ -129,7 +129,7 @@ class Hilite(object):
 
 	@classmethod
 	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
-				center=False,nullrepl='',app='',appcolor=False):
+				center=False,nullrepl='',append_chars='',append_color=False):
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
 		assert width > 0,'Width must be > 0'
@@ -139,9 +139,9 @@ class Hilite(object):
 		assert type(encl) is str and len(encl) in (0,2),'type(encl) must be str and len(encl) be in (0,2)'
 		a,b = list(encl) if encl else ('','')
 		if trunc_ok and len(s) > width: s = s[:width]
-		if app:
+		if append_chars:
 			return cls.colorize(a+s+b,color=color) + \
-					cls.colorize(app.ljust(width-len(a+s+b)),color=appcolor)
+					cls.colorize(append_chars.ljust(width-len(a+s+b)),color=append_color)
 		else:
 			return cls.colorize((a+s+b).ljust(width),color=color)
 

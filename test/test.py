@@ -140,6 +140,7 @@ opts_data = lambda: {
 -t, --traceback     Run the command inside the '{tbc}' script
 -v, --verbose       Produce more verbose output
 -W, --no-dw-delete  Don't remove default wallet from data dir after dw tests are done
+-X, --exit-after=C  Exit after command 'C'
 """.format(tbc=g.traceback_cmd,lf=log_file),
 	'notes': """
 
@@ -1135,7 +1136,16 @@ labels = [
 	"Job 2",
 	"Carl's capital",
 ]
-label_iter = None
+
+def get_label(do_shuffle=False):
+	from random import shuffle
+	global label_iter
+	try:
+		return next(label_iter)
+	except:
+		if do_shuffle: shuffle(labels)
+		label_iter = iter(labels)
+		return next(label_iter)
 
 def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_compressed=True):
 
@@ -1143,10 +1153,7 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 	for d in tx_data.values():
 		al = adata.addrlist(d['al_id'])
 		for n,(idx,coinaddr) in enumerate(al.addrpairs()):
-			while True:
-				try: lbl = next(label_iter)
-				except: label_iter = iter(labels)
-				else: break
+			lbl = get_label(do_shuffle=True)
 			out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 			if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
 				out.append(create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
@@ -1215,12 +1222,15 @@ def make_txcreate_cmdline(tx_data):
 
 	return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
-def add_comments_to_addr_file(addrfile,outfile):
+def add_comments_to_addr_file(addrfile,outfile,use_labels=False):
 	silence()
 	gmsg(u"Adding comments to address file '{}'".format(addrfile))
 	a = AddrList(addrfile)
 	for n,idx in enumerate(a.idxs(),1):
-		if n % 2: a.set_comment(idx,'Test address {}'.format(n))
+		if use_labels:
+			a.set_comment(idx,get_label())
+		else:
+			if n % 2: a.set_comment(idx,'Test address {}'.format(n))
 	a.format(enable_comments=True)
 	write_data_to_file(outfile,a.fmt_data,silent=True)
 	end_silence()
@@ -1403,6 +1413,9 @@ class MMGenTestSuite(object):
 			msg('\r\033[50C{:.4f}'.format(time.time() - start))
 		global cmd_total
 		cmd_total += 1
+
+		if cmd == opt.exit_after:
+			sys.exit(0)
 
 	def generate_file_deps(self,cmd):
 		return [(str(n),e) for exts,n in cmd_data[cmd][2] for e in exts]
@@ -1944,7 +1957,7 @@ class MMGenTestSuite(object):
 		self.addrgen(name,wf,pf='')
 
 	def txcreate4(self,name,f1,f2,f3,f4,f5,f6):
-		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1)
+		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,view='full')
 
 	def txdo4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
@@ -2418,6 +2431,11 @@ class MMGenTestSuite(object):
 			fn = os.path.join(self.regtest_user_dir(user),
 				u'{}{}{}[{}]{x}.addrs'.format(sid,altcoin_pfx,id_strs[desc],addr_range,
 												x=u'-α' if g.debug_utf8 else ''))
+			if mmtype == g.proto.mmtypes[0] and user == 'bob':
+				psave = g.proto
+				g.proto = CoinProtocol(g.coin,True)
+				add_comments_to_addr_file(fn,fn,use_labels=True)
+				g.proto = psave
 			t = MMGenExpect(name,'mmgen-addrimport', ['--quiet','--'+user,'--batch',fn],extra_desc='('+desc+')')
 			if g.debug:
 				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')

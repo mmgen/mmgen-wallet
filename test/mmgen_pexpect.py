@@ -239,7 +239,7 @@ class MMGenPexpect(object):
 	def tx_view(self,view=None):
 		repl = { 'terse':'t', 'full':'v' }[view] if view else 'n'
 		my_expect(self.p,r'View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ',repl,regex=True)
-		if repl in ('t','v'):
+		if repl == 't':
 			my_expect(self.p,r'any key to continue: ','\n')
 
 	def expect_getend(self,s,regex=False):

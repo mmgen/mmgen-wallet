@@ -932,8 +932,12 @@ class MMGenTX(MMGenObject):
 					confs = e.confs + blockcount - self.blockcount
 					days = int(confs / confs_per_day)
 				if e.mmid:
-					app=('',' (chg)')[bool(not ip and e.is_chg and terse)]
-					mmid_fmt = e.mmid.fmt(width=max_mmwid,encl='()',color=True,app=app,appcolor='green')
+					mmid_fmt = e.mmid.fmt(
+						width=max_mmwid,
+						encl='()',
+						color=True,
+						append_chars=('',' (chg)')[bool(not ip and e.is_chg and terse)],
+						append_color='green')
 				else:
 					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid)
 				if terse:
