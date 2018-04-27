@@ -55,10 +55,14 @@ ref_wallet_incog_offset = 123
 
 from mmgen.obj import MMGenTXLabel,PrivKey
 from mmgen.addr import AddrGenerator,KeyGenerator,AddrList,AddrData,AddrIdxList
-ref_tx_label = ''.join(map(unichr,  range(65,91) +
+
+ref_tx_label_jp = u'必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
+ref_tx_label_zh = u'所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
+ref_tx_label_lat_cyr_gr = ''.join(map(unichr,
+									range(65,91) +
 									range(1040,1072) + # cyrillic
 									range(913,939) +   # greek
-									range(97,123)))[:MMGenTXLabel.max_len]
+									range(97,123)))[:MMGenTXLabel.max_len] # 72 chars
 ref_bw_hash_preset = '1'
 ref_bw_file        = 'wallet.mmbrain'
 ref_bw_file_spc    = 'wallet-spaced.mmbrain'
@@ -1118,8 +1122,8 @@ labels = [
 	"Automotive",
 	"Travel expenses",
 	"Healthcare",
-	"Freelancing 1",
-	"Freelancing 2",
+	ref_tx_label_jp[:40].encode('utf8'),
+	ref_tx_label_zh[:40].encode('utf8'),
 	"Alice's allowance",
 	"Bob's bequest",
 	"House purchase",
@@ -1647,7 +1651,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # change OK?
 		if do_label:
 			t.expect('Add a comment to transaction? (y/N): ','y')
-			t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
+			t.expect('Comment: ',ref_tx_label_lat_cyr_gr.encode('utf8')+'\n')
 		else:
 			t.expect('Add a comment to transaction? (y/N): ','\n')
 		t.tx_view(view=view)
@@ -2516,7 +2520,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
 		t.expect('Add a comment to transaction? (y/N): ',('\n','y')[do_label])
-		if do_label: t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
+		if do_label: t.expect('Comment: ',ref_tx_label_jp.encode('utf8')+'\n')
 		t.expect('View decoded transaction\? .*?: ',('t','v')[full_tx_view],regex=True)
 		if not do_label: t.expect('to continue: ','\n')
 		t.passphrase('MMGen wallet',pw)
@@ -2679,8 +2683,10 @@ class MMGenTestSuite(object):
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		t.ok()
 
-	utf8_label     =  u'Edited label (40 characters, UTF8) α-β-γ'
-	utf8_label_pat = ur'Edited label \(40 characters, UTF8\) ..-..-..'
+# 	utf8_label     =  u'Edited label (40 characters, UTF8/JP) 月へ' # '\xe6\x9c\x88\xe3\x81\xb8' (Jp.)
+# 	utf8_label_pat = ur'Edited label \(40 characters, UTF8/JP\) ......'
+	utf8_label     = ref_tx_label_zh[:40]
+	utf8_label_pat = utf8_label
 
 	def regtest_bob_add_label(self,name):
 		sid = self.regtest_user_sid('bob')
@@ -2688,7 +2694,7 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_add_label1(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_add_label(name,'alice',sid+':C:1','Original Label')
+		return self.regtest_user_add_label(name,'alice',sid+':C:1',u'Original Label - 月へ')
 
 	def regtest_alice_add_label2(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -2738,12 +2744,12 @@ class MMGenTestSuite(object):
 
 	def regtest_user_chk_label(self,name,user,addr,label,label_pat=None):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		t.expect(ur'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label_pat or label),regex=True)
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label).encode('utf8')),regex=True)
 		t.ok()
 
 	def regtest_alice_chk_label1(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_chk_label(name,'alice',sid+':C:1','Original Label')
+		return self.regtest_user_chk_label(name,'alice',sid+':C:1',u'Original Label - 月へ')
 
 	def regtest_alice_chk_label2(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -2754,8 +2760,7 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_chk_label3(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_chk_label(name,'alice',sid+':C:1',self.utf8_label,
-					label_pat=self.utf8_label_pat)
+		return self.regtest_user_chk_label(name,'alice',sid+':C:1',self.utf8_label,label_pat=self.utf8_label_pat)
 
 	def regtest_alice_chk_label4(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -2906,7 +2911,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
 		t.expect('Add a comment to transaction? (y/N): ','y')
-		t.expect('Comment: ',ref_tx_label.encode('utf8')+'\n')
+		t.expect('Comment: ',ref_tx_label_zh.encode('utf8')+'\n')
 		t.expect('View decoded transaction\? .*?: ','n',regex=True)
 		t.expect('Save transaction? (y/N): ','y')
 		fn = t.written_to_file('Transaction')

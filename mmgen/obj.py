@@ -20,7 +20,7 @@
 obj.py: MMGen native classes
 """
 
-import sys,os
+import sys,os,unicodedata
 from decimal import *
 from mmgen.color import *
 from string import hexdigits,ascii_letters,digits
@@ -33,6 +33,14 @@ def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
 def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
 def is_viewkey(s):       return ViewKey(s,on_fail='silent')
+
+def truncate_str(s,w):
+	wide_count = 0
+	w -= 1
+	for i in range(len(s)):
+		wide_count += unicodedata.east_asian_width(s[i]) in ('F','W')
+		if wide_count + i > w:
+			return s[:i]
 
 class MMGenObject(object):
 
@@ -128,22 +136,31 @@ class Hilite(object):
 	trunc_ok = True
 
 	@classmethod
+	# 'width' is screen width (greater than len(s) for CJK strings)
+	# 'append_chars' and 'encl' must consist of single-width chars only
 	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
 				center=False,nullrepl='',append_chars='',append_color=False):
+		s = unicode(s)
+		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
+		assert type(encl) is str and len(encl) in (0,2),"'encl' must be 2-character str"
+		a,b = list(encl) if encl else ('','')
+		add_len = len(a) + len(b) + len(append_chars)
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
-		assert width > 0,'Width must be > 0'
+		assert width >= 2 + add_len,'Width must be at least 2' # 2 because CJK
+		if len(s) + s_wide_count + add_len > width:
+			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
+			s = truncate_str(s,width-add_len)
 		if s == '' and nullrepl:
-			s,center = nullrepl,True
-		if center: s = s.center(width)
-		assert type(encl) is str and len(encl) in (0,2),'type(encl) must be str and len(encl) be in (0,2)'
-		a,b = list(encl) if encl else ('','')
-		if trunc_ok and len(s) > width: s = s[:width]
-		if append_chars:
-			return cls.colorize(a+s+b,color=color) + \
-					cls.colorize(append_chars.ljust(width-len(a+s+b)),color=append_color)
+			s = nullrepl.center(width)
 		else:
-			return cls.colorize((a+s+b).ljust(width),color=color)
+			s = a+s+b
+			if center: s = s.center(width)
+		if append_chars:
+			return cls.colorize(s,color=color) + \
+					cls.colorize(append_chars.ljust(width-len(s)-s_wide_count),color=append_color)
+		else:
+			return cls.colorize(s.ljust(width-s_wide_count),color=color)
 
 	def fmt(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords

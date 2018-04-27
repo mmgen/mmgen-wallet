@@ -728,7 +728,7 @@ def Listaddresses(addrs='',minconf=1,
 	fs = u'{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 	mmaddrs = [k for k in addrs.keys() if k.type == 'mmgen']
 	max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
-	max_cmt_len  = max(max(len(v['lbl'].comment) for v in addrs.values()),7)
+	max_cmt_len  = max(max(screen_width(v['lbl'].comment) for v in addrs.values()),7)
 	addr_width = max(len(addrs[mmid]['addr']) for mmid in addrs)
 
 #	pmsg([a.split('.')[1] for a in [str(v['amt']) for v in addrs.values()] if '.' in a])
