@@ -11,9 +11,10 @@ and stop the Bitcoin daemon automatically as needed.
 
 This tutorial provides a quick, hands-on introduction.
 
-1. Create the regtest blockchain and Bob and Alice's tracking wallets:
+1. Initialize MMGen regtest mode and start the regtest daemon:
 
 		$ mmgen-regtest setup
+		$ mmgen-regtest bob
 
 2. Generate Bob's MMGen wallet:
 
