@@ -51,8 +51,6 @@ def _kb_hold_protect_unix():
 			termios.tcsetattr(fd, termios.TCSADRAIN, old)
 			break
 
-def _kb_hold_protect_unix_raw(): pass
-
 def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True):
 	msg_r(prompt)
 	timeout = float(0.3)
@@ -77,12 +75,14 @@ def _get_keypress_unix_stub(prompt='',immed_chars='',prehold_protect=None):
 	msg_r(prompt)
 	return sys.stdin.read(1)
 
+# Use os.read(), not file.read(), to get less than the requested number of characters without blocking.
 def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 	msg_r(prompt)
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
-	ch = sys.stdin.read(1)
+	# 5 because escape sequences (F1, F2, .. Fn) have 5 bytes max.  UTF8 chars have 4 bytes max
+	ch = os.read(fd,5)
 	termios.tcsetattr(fd, termios.TCSADRAIN, old)
 	return ch
 
@@ -98,8 +98,6 @@ def _kb_hold_protect_mswin():
 				break
 			if float(time.time() - hit_time) > timeout:
 				return
-
-def _kb_hold_protect_mswin_raw(): pass
 
 def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True):
 
@@ -189,17 +187,18 @@ def _get_terminal_size_mswin():
 def set_terminal_vars():
 	global get_char,get_char_raw,kb_hold_protect,get_terminal_size
 	if _platform == 'linux':
-		get_char_raw = _get_keypress_unix_raw
-		get_char = (_get_keypress_unix_raw,_get_keypress_unix)[g.hold_protect]
-		kb_hold_protect = (_kb_hold_protect_unix_raw,_kb_hold_protect_unix)[g.hold_protect]
+		get_char        = _get_keypress_unix
+		get_char_raw    = _get_keypress_unix_raw
+		kb_hold_protect = _kb_hold_protect_unix
 		if not sys.stdin.isatty():
-			get_char,kb_hold_protect = _get_keypress_unix_stub,_kb_hold_protect_unix_raw
-			get_char_raw = get_char
+			get_char = get_char_raw = _get_keypress_unix_stub
+			kb_hold_protect = lambda: None
 		get_terminal_size = _get_terminal_size_linux
 	else:
-		get_char_raw = _get_keypress_mswin_raw
-		get_char = (_get_keypress_mswin_raw,_get_keypress_mswin)[g.hold_protect]
-		kb_hold_protect = (_kb_hold_protect_mswin_raw,_kb_hold_protect_mswin)[g.hold_protect]
+		get_char        = _get_keypress_mswin
+		get_char_raw    = _get_keypress_mswin_raw
+		kb_hold_protect = _kb_hold_protect_mswin
 		if not sys.stdin.isatty():
 			get_char = get_char_raw = _get_keypress_mswin_stub
+			kb_hold_protect = lambda: None
 		get_terminal_size = _get_terminal_size_mswin

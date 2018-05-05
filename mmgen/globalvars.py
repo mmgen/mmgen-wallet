@@ -71,7 +71,6 @@ class g(object):
 	debug_addrlist       = False
 	quiet                = False
 	no_license           = False
-	hold_protect         = True
 	color                = (False,True)[sys.stdout.isatty()]
 	force_256_color      = False
 	testnet              = False
@@ -148,7 +147,6 @@ class g(object):
 		'MMGEN_QUIET',
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_FORCE_256_COLOR',
-		'MMGEN_DISABLE_HOLD_PROTECT',
 		'MMGEN_MIN_URANDCHARS',
 		'MMGEN_NO_LICENSE',
 		'MMGEN_RPC_HOST',
