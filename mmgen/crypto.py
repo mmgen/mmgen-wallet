@@ -129,24 +129,20 @@ def _get_random_data_from_user(uchars):
 	msg_r(prompt.format(uchars))
 
 	import time
-	from mmgen.term import get_char
-	# time.clock() always returns zero, so we'll use time.time()
-	saved_time = time.time()
-	key_data,time_data,pp = '',[],True
+	from mmgen.term import get_char_raw,kb_hold_protect
+	key_data,time_data = '',[]
 
 	for i in range(uchars):
-		key_data += get_char(immed_chars='ALL',prehold_protect=pp)
-		pp = False
+		kb_hold_protect()
+		key_data += get_char_raw()
 		msg_r('\r'+prompt.format(uchars-i-1))
-		now = time.time()
-		time_data.append(now - saved_time)
-		saved_time = now
+		time_data.append(time.time())
 
 	if opt.quiet: msg_r('\r')
 	else: msg_r("\rThank you.  That's enough.{}\n\n".format(' '*18))
 
 	fmt_time_data = map('{:.22f}'.format,time_data)
-	dmsg('\nUser input:\n{}\nKeystroke time intervals:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
+	dmsg('\nUser input:\n{!r}\nKeystroke time values:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
 
