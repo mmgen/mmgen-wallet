@@ -380,21 +380,33 @@ class Mnemonic (SeedSourceUnenc):
 			prompt = 'Mnemonic length of {} words chosen. OK?'.format(mn_len)
 			if keypress_confirm(prompt,default_yes=True,no_nl=True): break
 
-		m = 'Enter your {}-word mnemonic, hitting RETURN or SPACE after each word:'
-		msg(m.format(mn_len))
+		wl = baseconv.digits[self.wl_id]
+		longest_word = max(len(w) for w in wl)
+		from string import ascii_lowercase
+
+		m  = 'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
+		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
+		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
+		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
+		m += "of words.  For each word, once you've typed {} characters total (including\n"
+		m += 'pad characters) a pad character will enter the word.'
+		msg(m.decode('utf8').format(mn_len,longest_word))
 
 		def get_word():
-			s = ''
+			s,pad = '',0
 			while True:
 				ch = get_char_raw('')
 				if ch in '\b\x7f':
 					if s: s = s[:-1]
 				elif ch in '\n ':
 					if s: break
-				else: s += ch
+				elif ch not in ascii_lowercase:
+					pad += 1
+					if s and pad + len(s) > longest_word:
+						break
+				else:
+					s += ch
 			return s
-
-		wl = baseconv.digits[self.wl_id]
 
 		def in_list(w):
 			from bisect import bisect_left
