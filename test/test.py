@@ -82,20 +82,22 @@ shortopts = ['-'+e for e in list(shortopts)]
 data_dir_basename = 'data_dir' + ('',u'-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))]
 data_dir = path_join('test',data_dir_basename)
 data_dir_enc = data_dir.encode('utf8')
+trash_dir = path_join('test','trash')
 
 if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts):
 	if g.platform == 'win':
-		try: os.listdir(data_dir_enc)
-		except: pass
-		else:
-			try: shutil.rmtree(data_dir_enc)
-			except: # we couldn't remove data dir - perhaps regtest daemon is running
-				try: subprocess.call(['python',os.path.join('cmds','mmgen-regtest'),'stop'])
-				except: rdie(1,'Unable to remove data dir!')
-				else:
-					time.sleep(2)
-					shutil.rmtree(data_dir_enc)
-		os.mkdir(data_dir_enc,0755)
+		for tdir in (data_dir_enc,trash_dir):
+			try: os.listdir(tdir)
+			except: pass
+			else:
+				try: shutil.rmtree(tdir)
+				except: # we couldn't remove data dir - perhaps regtest daemon is running
+					try: subprocess.call(['python',os.path.join('cmds','mmgen-regtest'),'stop'])
+					except: rdie(1,"Unable to remove {!r}!".format(tdir))
+					else:
+						time.sleep(2)
+						shutil.rmtree(tdir)
+			os.mkdir(tdir,0755)
 	else:
 		d,pfx = '/dev/shm','mmgen-test-'
 		try:
@@ -107,11 +109,12 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 			shm_dir = tempfile.mkdtemp('',pfx,d)
 		except Exception as e:
 			die(2,'Unable to create temporary directory in {} ({})'.format(d,e))
-		dd = path_join(shm_dir,data_dir_basename,decode=False)
-		os.mkdir(dd,0755)
-		try: os.unlink(data_dir_enc)
-		except: pass
-		os.symlink(dd,data_dir_enc)
+		for tdir in (data_dir_enc,trash_dir):
+			dd = path_join(shm_dir,os.path.basename(tdir),decode=False)
+			os.mkdir(dd,0755)
+			try: os.unlink(tdir)
+			except: pass
+			os.symlink(dd,tdir)
 
 opts_data = lambda: {
 	'desc': 'Test suite for the MMGen suite',
@@ -1359,6 +1362,7 @@ def clean(usr_dirs=[]):
 		else:
 			die(1,'{}: invalid directory number'.format(d))
 	cleandir(data_dir)
+	cleandir(trash_dir)
 
 def skip_for_win():
 	if g.platform == 'win':
