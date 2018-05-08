@@ -19,7 +19,7 @@ cmd_args = opts.init(opts_data)
 
 lines = get_lines_from_file(cmd_args[0])
 start = (1,0)[bool(opt.include_first_line)]
-a = make_chksum_6(' '.join(lines[start:]))
+a = make_chksum_6(' '.join(lines[start:]).encode('utf8'))
 if start == 1:
 	b = lines[0]
 	msg(("Checksum in file ({}) doesn't match computed value!".format(b),'Checksum in file OK')[a==b])

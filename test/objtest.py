@@ -97,6 +97,9 @@ def run_test(test,arg,input_data):
 
 r32,r24,r16,r17,r18 = os.urandom(32),os.urandom(24),os.urandom(16),os.urandom(17),os.urandom(18)
 tw_pfx = g.proto.base_coin.lower()+':'
+utf8_text           = u'[α-$ample UTF-8 text-ω]' * 10   # 230 chars, unicode types L,N,P,S,Z
+utf8_text_combining = u'[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
+utf8_text_control   = u'[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
 
 from collections import OrderedDict
 tests = OrderedDict([
@@ -120,7 +123,7 @@ tests = OrderedDict([
 		'good': (('80999999.12345678',Decimal('80999999.12345678')),)
 		}),
 	('CoinAddr', {
-		'bad':  (1,'x','я'),
+		'bad':  (1,'x',u'я'),
 		'good': {
 			'btc': (('1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr','32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj'),
 					('n2FgXPKwuFkCXF946EnoxWJDWF2VwQ6q8J','2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN')),
@@ -130,13 +133,13 @@ tests = OrderedDict([
 	}),
 	('SeedID', {
 		'bad':  (
-			{'sid':'я'},
+			{'sid':u'я'},
 			{'sid':'F00F00'},
 			{'sid':'xF00F00x'},
 			{'sid':1},
 			{'sid':'F00BAA123'},
 			{'sid':'f00baa12'},
-			'я',r32,'abc'),
+			u'я',r32,'abc'),
 		'good': (({'sid':'F00BAA12'},'F00BAA12'),(Seed(r16),Seed(r16).sid))
 	}),
 	('MMGenID', {
@@ -144,36 +147,32 @@ tests = OrderedDict([
 		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:99')
 	}),
 	('TwMMGenID', {
-		'bad':  ('x','я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99',tw_pfx,tw_pfx+'я'),
+		'bad':  ('x',u'я',u'я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99',tw_pfx,tw_pfx+u'я'),
 		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:9999999',tw_pfx+'x')
 	}),
-	('TwComment', {
-		'bad':  ('я',"comment too long for tracking wallet",),
-		'good': ('OK comment',)
-	}),
 	('TwLabel', {
-		'bad':  ('x x','x я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
-				'F00BAA12:Z:99','F00BAA12:L:99 я',tw_pfx+' x',tw_pfx+'я x'),
+		'bad':  ('x x',u'x я',u'я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
+				'F00BAA12:Z:99',tw_pfx+' x',tw_pfx+u'я x'),
 		'good': (
 			('F00BAA12:99 a comment','F00BAA12:L:99 a comment'),
-			'F00BAA12:L:99 comment',
+			u'F00BAA12:L:99 comment (UTF-8) α',
 			'F00BAA12:S:9999999 comment',
 			tw_pfx+'x comment')
 	}),
 	('HexStr', {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00'),
+		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00'),
 		'good': ('deadbeef','f00baa12')
 	}),
 	('MMGenTxID', {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012'),
+		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00','F00F0012'),
 		'good': ('DEADBE','F00BAA')
 	}),
 	('CoinTxID',{
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+'ee'),
+		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+'ee'),
 		'good': (hexlify(r32),)
 	}),
 	('WifKey', {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',hexlify(r16),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00',hexlify(r16),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
 		'good': {
 			'btc': (('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
 					'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
@@ -223,16 +222,16 @@ tests = OrderedDict([
 		)
 	}),
 	('MMGenWalletLabel', {
-		'bad': ('яqwerty','This text is too long to fit in an MMGen wallet label'),
-		'good':  ('a good label',)
+		'bad': (utf8_text[:49],utf8_text_combining[:48],utf8_text_control[:48]),
+		'good':  (utf8_text[:48],)
 	}),
 	('TwComment', {
-		'bad': (u'яqwerty','This text is too long for a TW comment'),
-		'good':  ('a good comment',)
+		'bad': (utf8_text[:41],utf8_text_combining[:40],utf8_text_control[:40]),
+		'good':  (utf8_text[:40],)
 	}),
 	('MMGenTXLabel',{
-		'bad': ('This text is too long for a transaction comment. '*2,),
-		'good':  (u'UTF-8 is OK: я','a good comment',)
+		'bad': (utf8_text[:73],utf8_text_combining[:72],utf8_text_control[:72]),
+		'good':  (utf8_text[:72],)
 	}),
 	('MMGenPWIDString', { # forbidden = list(u' :/\\')
 		'bad': ('foo/','foo:','foo:\\'),
@@ -241,15 +240,17 @@ tests = OrderedDict([
 	('MMGenAddrType', {
 		'bad': ('U','z','xx',1,'dogecoin'),
 		'good':  (
-		{'s':'segwit','ret':'S'},
-		{'s':'S','ret':'S'},
 		{'s':'legacy','ret':'L'},
 		{'s':'L','ret':'L'},
 		{'s':'compressed','ret':'C'},
-		{'s':'C','ret':'C'}
+		{'s':'C','ret':'C'},
+		{'s':'segwit','ret':'S'},
+		{'s':'S','ret':'S'},
+		{'s':'bech32','ret':'B'},
+		{'s':'B','ret':'B'},
 	)}),
 	('MMGenPasswordType', {
-		'bad': ('U','z','я',1,'passw0rd'),
+		'bad': ('U','z',u'я',1,'passw0rd'),
 		'good':  (
 		{'s':'password','ret':'P'},
 		{'s':'P','ret':'P'},

@@ -582,8 +582,8 @@ class Wallet (SeedSourceEnc):
 	ext = 'mmdat'
 
 	def _get_label_from_user(self,old_lbl=''):
-		d = "to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
-		p = 'Enter a wallet label, or hit ENTER {}: '.format(d)
+		d = u"to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
+		p = u'Enter a wallet label, or hit ENTER {}: '.format(d)
 		while True:
 			msg_r(p)
 			ret = my_raw_input('')
@@ -603,19 +603,19 @@ class Wallet (SeedSourceEnc):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
-				qmsg("Reusing label '{}' at user request".format(old_lbl.hl()))
+				qmsg(u"Reusing label '{}' at user request".format(old_lbl.hl()))
 				self.ssdata.label = old_lbl
 			elif opt.label:
-				qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
+				qmsg(u"Using label '{}' requested on command line".format(opt.label.hl()))
 				lbl = self.ssdata.label = opt.label
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 
 			if (not opt.keep_label) and self.op == 'pwchg_new':
-				m = ("changed to '{}'".format(lbl),'unchanged')[lbl==old_lbl]
-				qmsg('Label {}'.format(m))
+				m = (u"changed to '{}'".format(lbl),'unchanged')[lbl==old_lbl]
+				qmsg(u'Label {}'.format(m))
 		elif opt.label:
-			qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
+			qmsg(u"Using label '{}' requested on command line".format(opt.label.hl()))
 			self.ssdata.label = opt.label
 		else:
 			self._get_label_from_user()
@@ -640,8 +640,8 @@ class Wallet (SeedSourceEnc):
 			'{} {}'.format(make_chksum_6(slt_fmt),split_into_cols(4,slt_fmt)),
 			'{} {}'.format(make_chksum_6(es_fmt), split_into_cols(4,es_fmt))
 		)
-		chksum = make_chksum_6(' '.join(lines))
-		self.fmt_data = '{}\n'.format('\n'.join((chksum,)+lines))
+		chksum = make_chksum_6(' '.join(lines).encode('utf8'))
+		self.fmt_data = '\n'.join((chksum,)+lines) + '\n'
 
 	def _deformat(self):
 

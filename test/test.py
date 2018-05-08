@@ -612,6 +612,8 @@ cmd_group['main'] = OrderedDict([
 	['walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]],1)],
 #	['walletchk',       (1,'wallet check',             [[['mmdat'],1]])],
 	['passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]],1)],
+	['passchg_keeplabel',(5,'password, label and hash preset change (keep label)',[[['mmdat',pwfile],1]],1)],
+	['passchg_usrlabel',(5,'password, label and hash preset change (interactive label)',[[['mmdat',pwfile],1]],1)],
 	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[['mmdat',pwfile],5]],1)],
 	['addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]],1)],
 	['addrimport',      (1,'address import',           [[['addrs'],1]],1)],
@@ -1464,7 +1466,7 @@ class MMGenTestSuite(object):
 	def brainwalletgen_ref(self,name):
 		sl_arg = '-l{}'.format(cfg['seed_len'])
 		hp_arg = '-p{}'.format(ref_wallet_hash_preset)
-		label = "test.py ref. wallet (pw '{}', seed len {})".format(ref_wallet_brainpass,cfg['seed_len'])
+		label = u"test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,cfg['seed_len'])
 		bf = 'ref.mmbrain'
 		args = ['-d',cfg['tmpdir'],hp_arg,sl_arg,'-ib','-L',label]
 		write_to_tmpfile(cfg,bf,ref_wallet_brainpass)
@@ -1479,20 +1481,24 @@ class MMGenTestSuite(object):
 
 	def refwalletgen(self,name): self.brainwalletgen_ref(name)
 
-	def passchg(self,name,wf,pf):
+	def passchg(self,name,wf,pf,label_action='cmdline'):
 		silence()
 		write_to_tmpfile(cfg,pwfile,get_data_from_file(pf))
 		end_silence()
-		t = MMGenExpect(name,'mmgen-passchg', [usr_rand_arg] +
-				['-d',cfg['tmpdir'],'-p','2','-L','Changed label'] + ([],[wf])[bool(wf)])
+		add_args = {'cmdline': ['-d',cfg['tmpdir'],'-L',u'Changed label (UTF-8) α'],
+					'keep':    ['-d',trash_dir,'--keep-label'],
+					'user':    ['-d',trash_dir]
+					}[label_action]
+		t = MMGenExpect(name,'mmgen-passchg', add_args + [usr_rand_arg, '-p2'] + ([],[wf])[bool(wf)])
 		t.license()
 		t.passphrase('MMGen wallet',cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
 		t.passphrase('MMGen wallet',cfg['wpasswd'],pwtype='new') # reuse passphrase?
 		t.expect('Repeat passphrase: ',cfg['wpasswd']+'\n')
 		t.usr_rand(usr_rand_chars)
-#		t.expect('Enter a wallet label.*: ','Changed Label\n',regex=True)
-		t.expect_getend('Label changed to ')
+		if label_action == 'user':
+			t.expect('Enter a wallet label.*: ',u'Interactive Label (UTF-8) α\n',regex=True)
+		t.expect_getend(('Label changed to ','Reusing label ')[label_action=='keep'])
 #		t.expect_getend('Key ID changed: ')
 		if not wf:
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
@@ -1504,6 +1510,12 @@ class MMGenTestSuite(object):
 		else:
 			t.written_to_file('MMGen wallet')
 		t.ok()
+
+	def passchg_keeplabel(self,name,wf,pf):
+		return self.passchg(name,wf,pf,label_action='keep')
+
+	def passchg_usrlabel(self,name,wf,pf):
+		return self.passchg(name,wf,pf,label_action='user')
 
 	def passchg_dfl_wallet(self,name,pf):
 		return self.passchg(name=name,wf=None,pf=pf)

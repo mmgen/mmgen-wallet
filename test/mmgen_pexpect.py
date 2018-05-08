@@ -176,7 +176,7 @@ class MMGenPexpect(object):
 		p = "'w' for conditions and warranty info, or 'c' to continue: "
 		my_expect(self.p,p,'c')
 
-	def label(self,label='Test Label'):
+	def label(self,label=u'Test Label (UTF-8) α'):
 		p = 'Enter a wallet label, or hit ENTER for no label: '
 		my_expect(self.p,p,label+'\n')
 

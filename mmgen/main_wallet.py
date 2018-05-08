@@ -125,7 +125,7 @@ if invoked_as in ('conv','passchg'):
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
-	vmsg('Wallet label: {}'.format(lbl))
+	vmsg(u'Wallet label: {}'.format(lbl))
 	# TODO: display creation date
 	sys.exit(0)
 

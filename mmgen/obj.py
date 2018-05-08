@@ -670,7 +670,12 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 			s = s.strip()
 			if type(s) != unicode:
 				s = s.decode('utf8')
-			from mmgen.util import capfirst
+			for ch in s:
+				# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
+				# Disallow: (C)ontrol,(M)combining
+				# Combining characters create width formatting issues, so disallow them for now
+				assert unicodedata.category(ch)[0] not in 'CM','{!r}: {} characters not allowed'.format(
+					ch,('control','combining')[unicodedata.category(ch)[0]=='M'])
 			assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
 			assert len(s) >= cls.min_len, 'too short (<{} symbols)'.format(cls.min_len)
 			assert not cls.allowed or set(list(s)).issubset(set(cls.allowed)),\
@@ -684,7 +689,6 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
-	allowed = map(unichr,range(32,127))
 	desc = 'wallet label'
 
 class TwComment(MMGenLabel):
