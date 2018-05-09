@@ -506,6 +506,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 	def my_expect(p,m,s,regex=False):
 		if m: msg_r('  {}...'.format(m))
 		ret = (p.expect_exact,p.expect)[regex](s)
+		vmsg("\nexpect: '{}' => {}".format(s,ret))
 		if not (ret == 0 or (type(s) == list and ret in (0,1))):
 			die(2,"Expect failed: '{}' (return value: {})".format(s,ret))
 		if m: msg('OK')
@@ -524,9 +525,10 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		except: pass
 		else: die(1,"Wallet '{}' already exists!".format(fn))
 		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
+		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting initial prompt','Secret spend key: ')
 		my_sendline(p,'',d.sec,65)
-		my_expect(p,'','Enter new wallet password: ')
+		my_expect(p,'','Enter.* new.* password.*: ',regex=True)
 		my_sendline(p,'Sending password',d.wallet_passwd,33)
 		my_expect(p,'','Confirm password: ')
 		my_sendline(p,'Sending password again',d.wallet_passwd,33)
@@ -559,6 +561,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		try: os.stat(fn)
 		except: die(1,"Wallet '{}' does not exist!".format(fn))
 		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn))
+		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting password prompt','Wallet password: ')
 		my_sendline(p,'Sending password',d.wallet_passwd,33)
 
