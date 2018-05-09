@@ -1,0 +1,19 @@
+# MMGen address file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by MMGen.
+# A text label of 40 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
+# The label may contain any printable ASCII symbol.
+# Address data checksum for 98831F3A-LTC-B[1,31-33,500-501,1010-1011]: FF1C 7939 5967 AB82
+# Record this value to a secure location.
+98831F3A LTC:BECH32 {
+  1     ltc1qdvgqsz94ht20lr8fyk5v7n884hu9p7d8k9easu
+  31    ltc1qklxjhya6l2crr23scuc3nkj75jgrzkvu6ny4xg
+  32    ltc1q7px9e3t7ea34v7kfkyydxw9tfz4cc8lt6vwhls
+  33    ltc1q05kdlzkhsd0pwhn95judzft47yh86pnn4wnlv3
+  500   ltc1q3tpnvrsxufy64gk4cawkv0pywsqdfe5n0u3jkv
+  501   ltc1qe4ld3cx7vedyncrjma4d4r2ghyqpskrl0k8va5
+  1010  ltc1qz735v90hegttpzp6zl4xzn63tyys9hlesfl6nm
+  1011  ltc1qkc69d3x2rne6lgyfzeg4afdpdgcgfrm9q4axul
+}

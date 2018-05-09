@@ -147,6 +147,7 @@ if [ "$MINGW" ]; then
 	"$gentest_py --coin=ltc 2 $rounds"
 	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
+	"$gentest_py --coin=ltc --type=bech32 2 $rounds"
 	"$gentest_py --coin=zec 2 $rounds"
 	"$gentest_py --coin=etc 2 $rounds"
 	"$gentest_py --coin=eth 2 $rounds")
@@ -161,6 +162,7 @@ else
 	"$gentest_py --coin=ltc 2 $rounds"
 	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
+	"$gentest_py --coin=ltc --type=bech32 2 $rounds"
 	"$gentest_py --coin=zec 2 $rounds"
 	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_spec"
 	"$gentest_py --coin=etc 2 $rounds"
@@ -269,6 +271,7 @@ t_ltc=(
 	"$test_py --coin=ltc -On dfl_wallet main ref ref_other"
 	"$test_py --coin=ltc -On --segwit dfl_wallet main ref ref_other"
 	"$test_py --coin=ltc -On --segwit-random dfl_wallet main"
+	"$test_py --coin=ltc -On --bech32 dfl_wallet main ref ref_other"
 	"$tooltest_py --coin=ltc rpc"
 )
 f_ltc='You may stop the litecoin daemon if you wish'
@@ -279,6 +282,7 @@ t_ltc_tn=(
 	"$test_py --coin=ltc -On --testnet=1"
 	"$test_py --coin=ltc -On --testnet=1 --segwit dfl_wallet main ref ref_other"
 	"$test_py --coin=ltc -On --testnet=1 --segwit-random dfl_wallet main"
+	"$test_py --coin=ltc -On --testnet=1 --bech32 dfl_wallet main ref ref_other"
 	"$tooltest_py --coin=ltc --testnet=1 rpc")
 f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 
@@ -320,6 +324,8 @@ t_gen=(
 	"$gentest_py -q --testnet=1 1:2 $gen_rounds"
 	"$gentest_py -q --testnet=1 --type=segwit 1:2 $gen_rounds"
 	"$gentest_py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump"
+	"$gentest_py -q --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump"
+	"$gentest_py -q --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump"
 	"$gentest_py -q --coin=ltc 1:2 $gen_rounds"
 	"$gentest_py -q --coin=ltc --type=segwit 1:2 $gen_rounds"
 	"$gentest_py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump"

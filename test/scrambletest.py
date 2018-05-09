@@ -66,6 +66,7 @@ test_data = OrderedDict([
 ('ltc',           ('b11f16632e63ba92','ltc:legacy',     '-LTC','LTC',       'LMxB474SVfxeYdqxNrM1WZDZMnifteSMv1')),
 ('ltc_compressed',('7ccf465d466ee7d3','ltc:compressed', '-LTC-C','LTC:COMPRESSED', 'LdkebBKVXSs6NNoPJWGM8KciDnL8LhXXjb')),
 ('ltc_segwit',    ('9460f5ba15e82768','ltc:segwit',     '-LTC-S','LTC:SEGWIT',     'MQrY3vEbqKMBgegXrSaR93R2HoTDE5bKrY')),
+('ltc_bech32',    ('dbdbff2e196e27d3','ltc:bech32',     '-LTC-B','LTC:BECH32',     'ltc1qdvgqsz94ht20lr8fyk5v7n884hu9p7d8k9easu')),
 ('eth',           ('213ed116869b19f2','eth',          '-ETH',  'ETH', 'e704b6cfd9f0edb2e6cfbd0c913438d37ede7b35')),
 ('etc',           ('909def37096f5ab8','etc',          '-ETC',  'ETC', '1a6acbef8c38f52f20d04ecded2992b04d8608d7')),
 ('dash',          ('1319d347b021f952','dash:legacy',  '-DASH', 'DASH','XoK491fppGNZQUUS9uEFkT6L9u8xxVFJNJ')),

@@ -250,13 +250,14 @@ class LitecoinProtocol(BitcoinProtocol):
 						else os.path.join(g.home_dir,'.litecoin')
 	addr_ver_num   = { 'p2pkh': ('30','L'), 'p2sh':  ('32','M'), 'p2sh2':  ('05','3') } # 'p2sh' is new fmt
 	wif_ver_num    = { 'std': 'b0' }
-	mmtypes         = ('L','C','S')
+	mmtypes         = ('L','C','S','B')
 	secs_per_block = 150
 	rpc_port       = 9332
 	coin_amt       = LTCAmt
 	max_tx_fee     = LTCAmt('0.3')
 	base_coin      = 'LTC'
 	forks          = []
+	bech32_hrp     = 'ltc'
 
 class LitecoinTestnetProtocol(LitecoinProtocol):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'
@@ -265,6 +266,8 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'
 	rpc_port       = 19332
+	bech32_hrp     = 'tltc'
+	bech32_hrp_rt  = 'rltc'
 
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
 class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')

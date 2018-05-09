@@ -180,7 +180,7 @@ rtFee = {
 rtBals = {
 	'btc': ('499.9999488','399.9998282','399.9998147','399.9996877','13.00000000','986.99933647','999.99933647'),
 	'bch': ('499.9999484','399.9999194','399.9998972','399.9997692','6.79000000','993.20966920','999.99966920'),
-	'ltc': ('5499.99744','5399.994425','5399.993885','5399.987525','6.79000000','10993.14752500','10999.93752500'),
+	'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535','13.00000000','10986.93753500','10999.93753500'),
 }[coin_sel]
 rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[coin_sel]
 
@@ -363,7 +363,7 @@ cfgs = {
 		},
 		'addrfile_bech32_chk': {
 			'btc': ('C529 D686 31AA ACD4','13C5 493E 1CD7 2852'),
-			'ltc': ('CC09 A190 B7DF B7CD','3676 4C49 14F8 1AD0'),
+			'ltc': ('3DFB CFCC E180 DC9D','3B65 90D1 2CFB 92CD'),
 		},
 		'addrfile_compressed_chk': {
 			'btc': ('95EB 8CC0 7B3B 7856','629D FDE4 CDC0 F276'),
@@ -379,7 +379,7 @@ cfgs = {
 		},
 		'keyaddrfile_bech32_chk': {
 			'btc': ('934F 1C33 6C06 B18C','D994 DF67 6E53 6F5F'),
-			'ltc': ('054B 9794 55B4 5D82','C373 0074 DEE6 B70A'),
+			'ltc': ('A6AD DF53 5968 7B6A','5A7C C45C 665C BB94'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('E43A FA46 5751 720A','B995 A6CF D1CD FAD0'),
@@ -423,6 +423,7 @@ cfgs = {
 		},
 		'addrfile_bech32_chk': {
 			'btc': ('2AA3 78DF B965 82EB','5B6A 4D12 820D BC3C'),
+			'ltc': ('951C 8FB2 FCA5 87D1','7E1C 8463 ECDC FBF9'),
 		},
 		'addrfile_compressed_chk': {
 			'btc': ('2615 8401 2E98 7ECA','DF38 22AB AAB0 124E'),
@@ -438,6 +439,7 @@ cfgs = {
 		},
 		'keyaddrfile_bech32_chk': {
 			'btc': ('4A6B 3762 DF30 9368','A68A 53D4 874E 923C'),
+			'ltc': ('5C12 FDD4 17AB F179','BD95 7E8A 66D8 747A'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('6D6D 3D35 04FD B9C3','B345 9CD8 9EAE 5489'),
@@ -481,6 +483,7 @@ cfgs = {
 		},
 		'addrfile_bech32_chk': {
 			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
+			'ltc': ('FF1C 7939 5967 AB82','D17F D553 DD24 8DE0'),
 		},
 		'addrfile_compressed_chk': {
 			'btc': ('A33C 4FDE F515 F5BC','5186 02C2 535E B7D5'),
@@ -496,6 +499,7 @@ cfgs = {
 		},
 		'keyaddrfile_bech32_chk': {
 			'btc': ('D0DD BDE3 87BE 15AE','2C7B 70E5 5F96 9B09'),
+			'ltc': ('74A0 7DD5 963B 6326','2006 9B85 E037 2908'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('420A 8EB5 A9E2 7814','3243 DD92 809E FE8D'),
@@ -521,6 +525,7 @@ cfgs = {
 		},
 		'ref_bech32addrfile_chksum': {
 			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
+			'ltc': ('FF1C 7939 5967 AB82','D17F D553 DD24 8DE0'),
 		},
 		'ref_keyaddrfile_chksum': {
 			'btc': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
