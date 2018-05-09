@@ -317,7 +317,7 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 		'p2pkh':   ('1cb8','t1'),
 		'p2sh':    ('1cbd','t3'),
 		'zcash_z': ('169a','zc'),
-		'viewkey': ('0b1c','V') }
+		'viewkey': ('a8abd3','ZiVK') }
 	wif_ver_num  = { 'std': '80', 'zcash_z': 'ab36' }
 	mmtypes      = ('L','C','Z')
 	dfl_mmtype   = 'L'
@@ -340,12 +340,12 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 			raise ValueError,'{}: incorrect pubkey_hash length'.format(hl)
 
 class ZcashTestnetProtocol(ZcashProtocol):
-	wif_ver_num  = { 'std': '??', 'zcash_z': 'ac08' }
+	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
 	addr_ver_num = {
-		'p2pkh': ('??','t1'),
-		'p2sh':  ('??','t3'),
-		'zcash_z': ('16b6','??'),
-		'viewkey': ('0b2a','??') }
+		'p2pkh':   ('1d25','tm'),
+		'p2sh':    ('1cba','t2'),
+		'zcash_z': ('16b6','zt'),
+		'viewkey': ('a8ac0c','ZiVt') }
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):

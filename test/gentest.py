@@ -180,6 +180,7 @@ def compare_test():
 		if b == 'ext':
 			if addr_type.name == 'zcash_z':
 				b_wif,b_addr,b_vk = ext_sec2addr(sec)
+				vmsg_r('\nvkey: {}'.format(b_vk))
 				if b_vk != a_vk:
 					match_error(sec,sec.wif,a_vk,b_vk,a,b)
 			else:

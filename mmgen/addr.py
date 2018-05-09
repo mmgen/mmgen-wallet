@@ -92,6 +92,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 class AddrGeneratorZcashZ(AddrGenerator):
 
 	addr_width = 95
+	vk_width = 97
 
 	def zhash256(self,s,t):
 		s = map(ord,s+'\0'*32)
@@ -121,7 +122,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		vk[63] |= 0x40
 		from mmgen.protocol import _b58chk_encode
 		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(''.join(map(chr,vk))))
-		assert len(ret) == self.addr_width,'Invalid Zcash view key length'
+		assert len(ret) == self.vk_width,'Invalid Zcash view key length'
 		return ZcashViewKey(ret)
 
 	def to_segwit_redeem_script(self,pubhex):
