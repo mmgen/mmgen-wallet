@@ -97,9 +97,9 @@ def zcash_mini_sec2addr(sec):
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-	key = pcku.parse_key(sec,PREFIX_TRANSFORMS,coin)
+	key = pcku.parse_key(sec,[network_for_netcode(coin)],secp256k1_generator)[1]
 	if key is None: die(1,"can't parse {}".format(sec))
-	o = pcku.create_output(sec,key)[0]
+	o = pcku.create_output(sec,key,network_for_netcode(coin))[0]
 	suf = ('_uncompressed','')[addr_type.compressed]
 	wif = o['wif{}'.format(suf)]
 	addr = o['p2sh_segwit' if addr_type.name == 'segwit' else '{}_address{}'.format(coin,suf)]
@@ -107,7 +107,7 @@ def pycoin_sec2addr(sec):
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
-	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,pcku,PREFIX_TRANSFORMS,addr_type
+	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,addr_type
 	def test_support(k):
 		if b == k: return True
 		if b != 'ext' and b != k: return False
@@ -130,10 +130,12 @@ def init_external_prog():
 		ext_lib = 'pyethereum'
 	elif test_support('pycoin'):
 		try:
+			global pcku,secp256k1_generator,network_for_netcode
 			import pycoin.cmds.ku as pcku
+			from pycoin.ecdsa.secp256k1 import secp256k1_generator
+			from pycoin.networks.registry import network_for_netcode
 		except:
-			raise ImportError,"Unable to import module 'ku'. Is pycoin installed?"
-		PREFIX_TRANSFORMS = pcku.prefix_transforms_for_network(g.coin)
+			raise ImportError,"Unable to import pycoin modules. Is pycoin installed and up-to-date?"
 		ext_sec2addr = pycoin_sec2addr
 		ext_lib = 'pycoin'
 	elif test_support('keyconv'):
