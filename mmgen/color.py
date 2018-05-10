@@ -43,14 +43,10 @@ _colors = {
 
 for c in _colors:
 	e = _colors[c]
-	if type(e[0]) == int:
-		globals()['_256_'+c] = '\033[38;5;{};1m'.format(e[0])
-	else:
-		globals()['_256_'+c] = '\033[38;5;{};48;5;{};1m'.format(*e[0])
-	if e[1][1] == 0:
-		globals()['_16_'+c] = '\033[{}m'.format(e[1][0])
-	else:
-		globals()['_16_'+c] = '\033[{};{}m'.format(*e[1])
+	globals()['_256_'+c]   = '\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int \
+						else '\033[38;5;{};48;5;{};1m'.format(*e[0])
+	globals()['_16_'+c]    = '\033[{}m'.format(e[1][0]) if e[1][1] == 0 \
+						else '\033[{};{}m'.format(*e[1])
 	globals()['_clr_'+c] = ''; _reset = ''
 	exec 'def {c}(s): return _clr_{c}+s+_reset'.format(c=c)
 

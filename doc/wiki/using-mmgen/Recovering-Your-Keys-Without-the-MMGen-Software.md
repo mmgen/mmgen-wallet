@@ -6,8 +6,8 @@
 	* <a href='#a_cs'>Scramble the seed and save to binary (non-legacy and altcoin addresses and passwords)</a>
 * <a href='#a_gk'>Generating the keys</a>
 	* <a href='#a_cr'>Checking the result (optional, address example)</a>
-	* <a href='#a_hpw'>Converting the hex value to a password (password example)</a>
-* <a href='#a_hw'>Hex to WIF by hand</a>
+* <a href='#a_hpw'>Converting the hex value to a password (password example)</a>
+* <a href='#a_hw'>Hex to WIF by hand (address example)</a>
 	* <a href='#a_bcu'>Base-conversion utility</a>
 * <a href='#a_mh'>Converting an MMGen mnemonic to hexadecimal format</a>
 
@@ -21,8 +21,12 @@ recover my coins?”
 Let's take this scenario to its logical extreme and assume you've lost all
 backup copies of the software, MMGen's project page has disappeared from Github
 (or been hacked) and no other repositories or copies are available on the
-Internet.  The following tutorial will show you how to recover your keys in the
-event this unlikely combination of circumstances ever occurs.
+Internet.  The following tutorial will show you how to recover the private keys
+for your coin addresses in the event this unlikely combination of circumstances
+ever occurs.
+
+In addition to private keys, this tutorial can also be used to recover passwords
+generated with the `mmgen-passgen` command.
 
 #### <a name='a_rs'>Obtaining the binary seed</a>
 
@@ -88,7 +92,7 @@ Linux or other Unix-like system.
 
 > Our first task then is to find out the correct scramble string for our coin
 > and address type (or password).  For BTC and BTC fork coins, the string will
-> be simply the address type: `compressed` or `segwit`.  For Bitcoin-derived
+> be simply the address type, e.g. `compressed` or `segwit`.  For Bitcoin-based
 > altcoins, the string is the coin symbol and address type separated by a colon,
 > e.g. `ltc:legacy`.  The strings for non-Bitcoin-derived altcoins are irregular
 > and are listed in the table below.  For passwords, the string is the password
@@ -103,6 +107,7 @@ Linux or other Unix-like system.
 > | LTC legacy                               | `ltc:legacy`             |
 > | LTC compressed                           | `ltc:compressed`         |
 > | LTC Segwit                               | `ltc:segwit`             |
+> | LTC Bech32                               | `ltc:bech32`             |
 > | DASH legacy                              | `dash:legacy`            |
 > | DASH compressed                          | `dash:compressed`        |
 > | ETH                                      | `eth`                    |
@@ -116,17 +121,19 @@ Linux or other Unix-like system.
 > | Base58 passwords for Alice's email acct. | `b58:20:alice@fubar.io`  |
 > | Same as above, half-length passwords     | `b58:10:alice@fubar.io`  |
 > | Same as above, default Base32 passwords  | `b32:24:alice@fubar.io`  |
-> | Hex seed for Alice's PGP key             | `hex:64:alice@gnupg`     |
+> | 32-byte hex seed for Alice's PGP key     | `hex:64:alice@gnupg`     |
 
 > Once we've determined the correct string, we scramble our seed with it as
 > follows using the `openssl` utility available by default on any Unix-based
 > system:
 
 	# E.g. for LTC Segwit addresses:
-	$ echo -n 'ltc:segwit' | openssl dgst -r -sha256 -mac hmac -macopt hexkey:456d7f5f1c4bfe3bc916b87560ae6a3e | xxd -r -p > scrambled-round0.bin
+	$ scramble_str='ltc:segwit'
 
-	# E.g. for default-format passwords for Alice's email account:
-	$ echo -n 'b58:20:alice@fubar.io' | openssl dgst -r -sha256 -mac hmac -macopt hexkey:456d7f5f1c4bfe3bc916b87560ae6a3e | xxd -r -p > scrambled-round0.bin
+	# E.g. for default-format passwords for Alice's email account at fubar.io:
+	$ scramble_str='b58:20:alice@fubar.io'
+
+	$ echo -n "$scramble_str" | openssl dgst -r -sha256 -mac hmac -macopt hexkey:456d7f5f1c4bfe3bc916b87560ae6a3e | xxd -r -p > scrambled-round0.bin
 
 > Now add the ten rounds of sha256:
 
@@ -188,28 +195,27 @@ one:
 
 	$ sha512sum link1.bin | xxd -r -p > link2.bin
 	$ sha256sum link2.bin | xxd -r -p | sha256sum
-	5db8fe3c8b52ccc98deab5afae780b6fbe56629e7ee1c6ed826fc2d6a81fb144 (uncompressed example)
-	42f1b998f0f9b7b27b5d0b92ffa8c1c6b96d7202789c41b6e6a6a402e318a04d (Segwit example)
-	9b59cec2e5d4f2a74f0d4eb2400efcf854f5a893bef0e9bf1ee83f72ca1118c3 (password example)
+	5db8fe3c8b52ccc98deab5afae780b6fbe56629e7ee1c6ed826fc2d6a81fb144 # uncompressed example
+	42f1b998f0f9b7b27b5d0b92ffa8c1c6b96d7202789c41b6e6a6a402e318a04d # Segwit example
+	9b59cec2e5d4f2a74f0d4eb2400efcf854f5a893bef0e9bf1ee83f72ca1118c3 # password example
 
 And so on and so forth, until we've generated all the keys we need: three, in our case.
 
-> #### <a name='a_hpw'>Converting the hex value to a password (password example)</a>
+#### <a name='a_hpw'>Converting the hex value to a password (password example)</a>
 
-> If it's passwords we're generating, we must now convert our hex key to the
-> desired password format.  This example uses the default base-58, 20-character
-> format and the key we generated above using the ID string `alice@fubar.io`.
-> We can convert the key to base 58 using our homemade `hex2b58.py` utility (see
-> <a href='#a_bcu'>Base-conversion utility</a> below):
+If it's passwords we're generating, we must now convert our hex key to the
+desired password format, base58 in our case.  For this we can use the homemade
+`hex2b58.py` <a href='#a_bcu'>Base-conversion utility</a> described below:
 
+	# bd60b8... is the double sha256 of our link1.bin from above
 	$ ./hex2b58.py bd60b8ba034bbb40498667ee600bc0cc0b99eb19164e8d412a48f16da4e00d6b
 	DkFbZk2fDKQ7C55ASHQjhwcCdTsCiRq4ZLMMD5WQVAvv
 
-> The password is just the last 20 characters of the output:
+The password is just the last 20 characters of the output:
 
 	dTsCiRq4ZLMMD5WQVAvv
 
-#### <a name='a_hw'>Hex to WIF by hand</a>
+#### <a name='a_hw'>Hex to WIF by hand (address example)</a>
 
 Since we've chosen to convert our hex keys to WIF format manually, we have a bit
 of work ahead of us.  Let's begin with our just-generated key #1 from seed
@@ -309,10 +315,10 @@ clearer:
 	result = [b58a[num / 58**e % 58] for e in range(60)]
 	print ''.join(reversed(result)).lstrip('1')
 
-	$ hex2b58.py 8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e367b818629
+	$ ./hex2b58.py 8005d7219524b983290138a60ada101370007f59a625c43a46f0f8d92950955e367b818629
 	5HrrmMdQbELyW7iCns5kvSbN9GCPTqEfG7iP1PZiYk49yDDivTi
 
-	$ hex2b58.py 80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a00189bba812
+	$ ./hex2b58.py 80b8e58ded53e9ba5a9f4e279a956c061a7da5487bde6a95f1ede0722d287881a00189bba812
 	L3R8Fn21PsY3PWgT8BMggFwXswA2EZntwEGFS5mfDJpSiLq29a9F
 
 #### <a name='a_mh'>Converting an MMGen mnemonic to hexadecimal format</a>

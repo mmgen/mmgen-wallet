@@ -38,7 +38,7 @@ def print_help_and_exit(opts_data,longhelp=False):
 	es = ('','    ')[longhelp]
 	out += u'{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
-		out += '\n  ' + '\n  '.join(opts_data['notes'].strip().splitlines())
+		out += '\n  ' + '\n  '.join(opts_data['notes'].rstrip().splitlines())
 	print(out.encode('utf8'))
 	sys.exit(0)
 

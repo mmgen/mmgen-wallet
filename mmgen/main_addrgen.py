@@ -86,7 +86,6 @@ opts_data = lambda: {
 ),
 	'notes': u"""
 
-
                            NOTES FOR THIS COMMAND
 
 Address indexes are given as a comma-separated list and/or hyphen-separated

@@ -108,4 +108,4 @@ column below:
 			pnm=g.proj_name,
 			pnu=g.proto.name.capitalize(),
 			pnl=g.proj_name.lower())
-	}[k] + u'-α' if g.debug_utf8 else ''
+	}[k] + (u'-α' if g.debug_utf8 else '')

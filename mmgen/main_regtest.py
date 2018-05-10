@@ -37,7 +37,6 @@ opts_data = lambda: {
 """,
 	'notes': """
 
-
                          AVAILABLE COMMANDS
 
   setup           - set up system for regtest operation with MMGen

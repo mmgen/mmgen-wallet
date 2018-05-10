@@ -47,7 +47,6 @@ opts_data = lambda: {
 """.format(mp=mountpoint),
 	'notes': """
 
-
                               COMMANDS
 
 gen_key - generate the wallet encryption key and copy it to '{td}'

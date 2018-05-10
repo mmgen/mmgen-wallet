@@ -72,7 +72,6 @@ opts_data = lambda: {
 ),
 	'notes': u"""
 
-
                            NOTES FOR THIS COMMAND
 
 ID string must be a valid UTF-8 string not longer than {ml} characters and
