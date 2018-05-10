@@ -538,7 +538,7 @@ cfgs = {
 		'ref_addrfile_chksum_eth': 'E554 076E 7AF6 66A3',
 		'ref_addrfile_chksum_etc': 'E97A D796 B495 E8BC',
 		'ref_keyaddrfile_chksum_zec': 'F05A 5A5C 0C8E 2617',
-		'ref_keyaddrfile_chksum_zec_z': '4ADB 5AA4 4590 B60A',
+		'ref_keyaddrfile_chksum_zec_z': '6B87 9B2D 0D8D 8D1E',
 		'ref_keyaddrfile_chksum_xmr': 'E0D7 9612 3D67 404A',
 		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
 		'ref_keyaddrfile_chksum_eth': '3635 4DCF B752 8772',
