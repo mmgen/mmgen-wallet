@@ -16,7 +16,7 @@ python='python'
 rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj misc_ni alts monero misc btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj sha256 alts monero autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
 while getopts hCfinPt OPT
 do
@@ -31,23 +31,23 @@ do
 		echo   "           '-P'  Don't pause between tests"
 		echo   "           '-t'  Print the tests without running them"
 		echo   "  AVAILABLE TESTS:"
-		echo   "     obj     - data objects"
-		echo   "     misc_ni - miscellaneous operations (non-interactive tests)"
-		echo   "     alts    - operations for all supported gen-only altcoins"
-		echo   "     monero  - operations for monero"
-		echo   "     misc    - miscellaneous operations (interactive tests)"
-		echo   "     btc     - bitcoin"
-		echo   "     btc_tn  - bitcoin testnet"
-		echo   "     btc_rt  - bitcoin regtest"
-		echo   "     bch     - bitcoin cash (BCH)"
-		echo   "     bch_rt  - bitcoin cash (BCH) regtest"
-# 		echo   "     b2x     - bitcoin 2x (B2X)"
-# 		echo   "     b2x_rt  - bitcoin 2x (B2X) regtest"
-		echo   "     ltc     - litecoin"
-		echo   "     ltc_tn  - litecoin testnet"
-		echo   "     ltc_rt  - litecoin regtest"
-		echo   "     tool    - tooltest (all supported coins)"
-		echo   "     gen     - gentest (all supported coins)"
+		echo   "     obj      - data objects"
+		echo   "     sha256   - MMGen sha256 implementation"
+		echo   "     alts     - operations for all supported gen-only altcoins"
+		echo   "     monero   - operations for monero"
+		echo   "     autosign - autosign"
+		echo   "     btc      - bitcoin"
+		echo   "     btc_tn   - bitcoin testnet"
+		echo   "     btc_rt   - bitcoin regtest"
+		echo   "     bch      - bitcoin cash (BCH)"
+		echo   "     bch_rt   - bitcoin cash (BCH) regtest"
+# 		echo   "     b2x      - bitcoin 2x (B2X)"
+# 		echo   "     b2x_rt   - bitcoin 2x (B2X) regtest"
+		echo   "     ltc      - litecoin"
+		echo   "     ltc_tn   - litecoin testnet"
+		echo   "     ltc_rt   - litecoin regtest"
+		echo   "     tool     - tooltest (all supported coins)"
+		echo   "     gen      - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
 	C)  mkdir -p 'test/trace'
@@ -128,17 +128,16 @@ t_obj=(
 	"$objtest_py --coin=ltc --testnet=1 -S")
 f_obj='Data object test complete'
 
-i_misc_ni='Miscellaneous operations (non-interactive)'
-s_misc_ni='Testing miscellaneous operations (non-interactive)'
-t_misc_ni=(
-	"$python test/sha256test.py $rounds_spec")
-f_misc_ni='Miscellaneous non-interactive tests complete'
+i_sha256='MMGen sha256 implementation'
+s_sha256='Testing sha256 implementation'
+t_sha256=("$python test/sha256test.py $rounds_spec")
+f_sha256='Sha256 test complete'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts=(
 	"$scrambletest_py"
-	"$test_py -n altcoin_ref"
+	"$test_py -n ref_files_alt"
 	"$gentest_py --coin=btc 2 $rounds"
 	"$gentest_py --coin=btc --type=compressed 2 $rounds"
 	"$gentest_py --coin=btc --type=segwit 2 $rounds"
@@ -206,19 +205,18 @@ t_monero=(
 }
 f_monero='Monero tests completed'
 
-i_misc='Miscellaneous operations (autosign)'
-s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
-t_misc=(
-	"$test_py -On misc")
-f_misc='Miscellaneous interactive tests test complete'
+i_autosign='Autosign'
+s_autosign='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following test'
+t_autosign=("$test_py -On autosign")
+f_autosign='Autosign test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc=(
 	"$test_py -On"
-	"$test_py -On --segwit dfl_wallet main ref ref_other"
+	"$test_py -On --segwit dfl_wallet main ref ref_files"
 	"$test_py -On --segwit-random dfl_wallet main"
-	"$test_py -On --bech32 dfl_wallet main ref ref_other"
+	"$test_py -On --bech32 dfl_wallet main ref ref_files"
 	"$tooltest_py rpc"
 	"$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
 f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
@@ -227,9 +225,9 @@ i_btc_tn='Bitcoin testnet'
 s_btc_tn='The bitcoin testnet daemon must both be running for the following tests'
 t_btc_tn=(
 	"$test_py -On --testnet=1"
-	"$test_py -On --testnet=1 --segwit dfl_wallet main ref ref_other"
+	"$test_py -On --testnet=1 --segwit dfl_wallet main ref ref_files"
 	"$test_py -On --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py -On --testnet=1 --bech32 dfl_wallet main ref ref_other"
+	"$test_py -On --testnet=1 --bech32 dfl_wallet main ref ref_files"
 	"$tooltest_py --testnet=1 rpc")
 f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
@@ -243,7 +241,7 @@ f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='Bitcoin cash (BCH)'
 s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the following tests'
-t_bch=("$test_py -On --coin=bch dfl_wallet main ref ref_other")
+t_bch=("$test_py -On --coin=bch dfl_wallet main ref ref_files")
 f_bch='You may stop the Bitcoin ABC daemon if you wish'
 
 i_bch_rt='Bitcoin cash (BCH) regtest'
@@ -253,7 +251,7 @@ f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 
 i_b2x='Bitcoin 2X (B2X)'
 s_b2x='The bitcoin 2X daemon (BTC1) must both be running for the following tests'
-t_b2x=("$test_py -On --coin=b2x dfl_wallet main ref ref_other")
+t_b2x=("$test_py -On --coin=b2x dfl_wallet main ref ref_files")
 f_b2x='You may stop the Bitcoin 2X daemon if you wish'
 
 i_b2x_rt='Bitcoin 2X (B2X) regtest'
@@ -264,10 +262,10 @@ f_b2x_rt='Regtest (Bob and Alice) mode tests for B2X completed'
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
 t_ltc=(
-	"$test_py --coin=ltc -On dfl_wallet main ref ref_other"
-	"$test_py --coin=ltc -On --segwit dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On dfl_wallet main ref ref_files"
+	"$test_py --coin=ltc -On --segwit dfl_wallet main ref ref_files"
 	"$test_py --coin=ltc -On --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc -On --bech32 dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --bech32 dfl_wallet main ref ref_files"
 	"$tooltest_py --coin=ltc rpc"
 )
 f_ltc='You may stop the litecoin daemon if you wish'
@@ -276,9 +274,9 @@ i_ltc_tn='Litecoin testnet'
 s_ltc_tn='The litecoin testnet daemon must both be running for the following tests'
 t_ltc_tn=(
 	"$test_py --coin=ltc -On --testnet=1"
-	"$test_py --coin=ltc -On --testnet=1 --segwit dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --testnet=1 --segwit dfl_wallet main ref ref_files"
 	"$test_py --coin=ltc -On --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc -On --testnet=1 --bech32 dfl_wallet main ref ref_other"
+	"$test_py --coin=ltc -On --testnet=1 --bech32 dfl_wallet main ref ref_files"
 	"$tooltest_py --coin=ltc --testnet=1 rpc")
 f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 

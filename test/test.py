@@ -684,7 +684,7 @@ cmd_group['tool'] = OrderedDict([
 #	['pywallet', (9,"'mmgen-pywallet'", [],1)],
 ])
 
-# saved reference data
+# generated reference data
 cmd_group['ref'] = (
 	# reading
 	('ref_wallet_chk', ([],'saved reference wallet')),
@@ -704,8 +704,8 @@ cmd_group['ref'] = (
 	('ref_hexpasswdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 )
 
-# misc. saved reference data
-cmd_group['ref_other'] = (
+# reference files
+cmd_group['ref_files'] = (
 	('ref_addrfile_chk',   'saved reference address file'),
 	('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
 	('ref_bech32addrfile_chk','saved reference address file (bech32)'),
@@ -816,11 +816,11 @@ cmd_group['regtest_split'] = (
 	('regtest_split_txdo_timelock_good_b2x','sending transaction with good locktime (B2X)'),
 )
 
-cmd_group['misc'] = (
+cmd_group['autosign'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
 )
 
-cmd_group['altcoin_ref'] = (
+cmd_group['ref_files_alt'] = (
 	('ref_addrfile_chk_eth', 'reference address file (ETH)'),
 	('ref_addrfile_chk_etc', 'reference address file (ETC)'),
 	('ref_addrfile_chk_dash','reference address file (DASH)'),
@@ -872,16 +872,16 @@ for k,v in (
 		cmd_list[k].append(i)
 		cmd_data[i] = cmd_group[k][i]
 
-cmd_data['info_ref'] = 'reference data',[6,7,8]
+cmd_data['info_ref'] = 'generated reference data',[6,7,8]
 for a,b in cmd_group['ref']:
 	for i,j in ((1,128),(2,192),(3,256)):
 		k = a+str(i)
 		cmd_list['ref'].append(k)
 		cmd_data[k] = (5+i,'{} ({}-bit)'.format(b[1],j),[[b[0],5+i]])
 
-cmd_data['info_ref_other'] = 'other reference data',[8]
-for a,b in cmd_group['ref_other']:
-	cmd_list['ref_other'].append(a)
+cmd_data['info_ref_files'] = 'reference files',[8]
+for a,b in cmd_group['ref_files']:
+	cmd_list['ref_files'].append(a)
 	cmd_data[a] = (8,b,[[[],8]])
 
 cmd_data['info_conv_in'] = 'wallet conversion from reference data',[11,12,13]
@@ -909,14 +909,14 @@ for a,b in cmd_group['regtest']:
 # 	cmd_list['regtest_split'].append(a)
 # 	cmd_data[a] = (19,b,[[[],19]])
 #
-cmd_data['info_misc'] = 'miscellaneous operations',[18]
-for a,b in cmd_group['misc']:
-	cmd_list['misc'].append(a)
+cmd_data['info_autosign'] = 'autosign',[18]
+for a,b in cmd_group['autosign']:
+	cmd_list['autosign'].append(a)
 	cmd_data[a] = (18,b,[[[],18]])
 
-cmd_data['info_altcoin_ref'] = 'altcoin reference files',[8]
-for a,b in cmd_group['altcoin_ref']:
-	cmd_list['altcoin_ref'].append(a)
+cmd_data['info_ref_files_alt'] = 'altcoin reference files',[8]
+for a,b in cmd_group['ref_files_alt']:
+	cmd_list['ref_files_alt'].append(a)
 	cmd_data[a] = (8,b,[[[],8]])
 
 utils = {
@@ -927,9 +927,6 @@ utils = {
 addrs_per_wallet = 8
 
 meta_cmds = OrderedDict([
-	['ref1', ('refwalletgen1','refaddrgen1','refkeyaddrgen1')],
-	['ref2', ('refwalletgen2','refaddrgen2','refkeyaddrgen2')],
-	['ref3', ('refwalletgen3','refaddrgen3','refkeyaddrgen3')],
 	['gen',  ('walletgen','addrgen')],
 	['pass', ('passchg','walletchk_newpass')],
 	['tx',   ('addrimport','txcreate','txsign','txsend')],
@@ -942,21 +939,17 @@ meta_cmds = OrderedDict([
 	['5', [k for k in cmd_data if cmd_data[k][0] == 20]],
 	['6', [k for k in cmd_data if cmd_data[k][0] == 21]],
 
-	['saved_ref1', [c[0]+'1' for c in cmd_group['ref']]],
-	['saved_ref2', [c[0]+'2' for c in cmd_group['ref']]],
-	['saved_ref3', [c[0]+'3' for c in cmd_group['ref']]],
+	['ref1', [c[0]+'1' for c in cmd_group['ref']]],
+	['ref2', [c[0]+'2' for c in cmd_group['ref']]],
+	['ref3', [c[0]+'3' for c in cmd_group['ref']]],
 
-	['saved_ref_other', [c[0] for c in cmd_group['ref_other']]],
+	['conv_in1', [c[0]+'1' for c in cmd_group['conv_in']]],
+	['conv_in2', [c[0]+'2' for c in cmd_group['conv_in']]],
+	['conv_in3', [c[0]+'3' for c in cmd_group['conv_in']]],
 
-	['saved_ref_conv_in1', [c[0]+'1' for c in cmd_group['conv_in']]],
-	['saved_ref_conv_in2', [c[0]+'2' for c in cmd_group['conv_in']]],
-	['saved_ref_conv_in3', [c[0]+'3' for c in cmd_group['conv_in']]],
-
-	['saved_ref_conv_out1', [c[0]+'1' for c in cmd_group['conv_out']]],
-	['saved_ref_conv_out2', [c[0]+'2' for c in cmd_group['conv_out']]],
-	['saved_ref_conv_out3', [c[0]+'3' for c in cmd_group['conv_out']]],
-
-	['regtest', dict(cmd_group['regtest']).keys()],
+	['conv_out1', [c[0]+'1' for c in cmd_group['conv_out']]],
+	['conv_out2', [c[0]+'2' for c in cmd_group['conv_out']]],
+	['conv_out3', [c[0]+'3' for c in cmd_group['conv_out']]],
 ])
 
 del cmd_group
