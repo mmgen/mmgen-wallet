@@ -116,12 +116,11 @@ def parse_nbytes(nbytes):
 	die(1,"'{}': invalid byte specifier".format(nbytes))
 
 def check_or_create_dir(path):
-	path_enc = path.encode('utf8')
 	try:
-		os.listdir(path_enc)
+		os.listdir(path)
 	except:
 		try:
-			os.makedirs(path_enc,0700)
+			os.makedirs(path,0700)
 		except:
 			die(2,u"ERROR: unable to read or create path '{}'".format(path))
 
@@ -178,6 +177,7 @@ def make_chksum_8(s,sep=False):
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
 	from mmgen.obj import HexStr
+	if type(s) == unicode: s = s.encode('utf8')
 	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
@@ -619,15 +619,15 @@ def write_data_to_file(
 def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
-	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
+	dmsg(u'Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
 def get_words_from_file(infile,desc,silent=False):
 	if not silent:
 		qmsg(u"Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile, 'r')
-	# split() also strips
-	words = f.read().split()
+	try: words = f.read().decode('utf8').split() # split() also strips
+	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	f.close()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
@@ -655,19 +655,22 @@ def get_lines_from_file(fn,desc='',trim_comments=False,silent=False):
 	dmsg(u"Got {} lines from file '{}'".format(len(ret),fn))
 	return ret
 
-def get_data_from_user(desc='data',silent=False):
-	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
+def get_data_from_user(desc='data',silent=False): # user input MUST be UTF-8
+	p = ('',u'Enter {}: '.format(desc))[g.stdin_tty]
 	data = my_raw_input(p,echo=opt.echo_passphrase)
-	dmsg('User input: [{}]'.format(data))
+	dmsg(u'User input: [{}]'.format(data))
 	return data
 
-def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
+def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,require_utf8=False):
 	if dash and infile == '-': return sys.stdin.read()
 	if not opt.quiet and not silent and desc:
 		qmsg(u"Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile,('r','rb')[bool(binary)],silent=silent)
 	data = f.read()
 	f.close()
+	if require_utf8:
+		try: data = data.decode('utf8')
+		except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	return data
 
 def pwfile_reuse_warning():
@@ -703,10 +706,13 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 		reply = raw_input(prompt.encode('utf8'))
 	else:
 		from getpass import getpass
-		reply = getpass(prompt)
+		reply = getpass(prompt.encode('utf8'))
 	kb_hold_protect()
 
-	return reply.strip()
+	try:
+		return reply.strip().decode('utf8')
+	except:
+		die(1,'User input must be UTF-8 encoded.')
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 
@@ -755,8 +761,6 @@ def do_pager(text):
 	if 'PAGER' in os.environ and os.environ['PAGER'] != pagers[0]:
 		pagers = [os.environ['PAGER']] + pagers
 
-	text = text.encode('utf8')
-
 	for pager in pagers:
 		end = ('\n(end of text)\n','')[pager=='less']
 		try:
@@ -764,7 +768,7 @@ def do_pager(text):
 			p = Popen([pager], stdin=PIPE, shell=shell)
 		except: pass
 		else:
-			p.communicate(text+end+'\n')
+			p.communicate(text.encode('utf8')+end+'\n')
 			msg_r('\r')
 			break
 	else: Msg(text+end)

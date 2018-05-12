@@ -26,7 +26,7 @@ def launch(what):
 		try:
 			return a.decode('utf8')
 		except:
-			sys.stderr.write("Argument '{}' is not a valid UTF-8 string".format(a))
+			sys.stderr.write("Argument {!r} is not a valid UTF-8 string".format(a))
 			sys.exit(2)
 
 	import sys

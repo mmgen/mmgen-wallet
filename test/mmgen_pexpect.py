@@ -126,7 +126,8 @@ class MMGenPexpect(object):
 				clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
 				sys.stderr.write(green('Testing: {}\n'.format(desc)))
 				if not msg_only:
-					sys.stderr.write(clr1(u'Executing {}{}'.format(clr2(cmd_str),eol)))
+					s = repr(cmd_str) if g.platform == 'win' else cmd_str
+					sys.stderr.write(clr1(u'Executing {}{}'.format(clr2(s),eol)))
 			else:
 				m = 'Testing {}: '.format(desc)
 				msg_r(m)

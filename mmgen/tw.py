@@ -125,9 +125,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		while True:
 			self.cols = get_terminal_size()[0]
 			if self.cols >= g.min_screen_width: break
-			m1 = 'Screen too narrow to display the tracking wallet'
+			m1 = 'Screen too narrow to display the tracking wallet\n'
 			m2 = 'Please resize your screen to at least {} characters and hit ENTER '
-			my_raw_input(m1+'\n'+m2.format(g.min_screen_width))
+			my_raw_input((m1+m2).format(g.min_screen_width))
 
 	def display(self):
 		if not opt.no_blank: msg(CUR_HOME+ERASE_ALL)
@@ -280,7 +280,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:
 					e = self.unspent[idx-1]
-					if type(self).add_label(e.twmmid,lbl.decode('utf8'),addr=e.addr):
+					if type(self).add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
 						msg(u'{}\n{}\n{}'.format(self.fmt_display,prompt,p))

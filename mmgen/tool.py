@@ -523,8 +523,8 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 	def create(n,d,fn):
 		try: os.stat(fn)
 		except: pass
-		else: die(1,"Wallet '{}' already exists!".format(fn))
-		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
+		else: die(1,u"Wallet '{}' already exists!".format(fn))
+		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn.encode('utf8')))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting initial prompt','Secret spend key: ')
 		my_sendline(p,'',d.sec,65)
@@ -559,8 +559,8 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 	def sync(n,d,fn):
 		try: os.stat(fn)
-		except: die(1,"Wallet '{}' does not exist!".format(fn))
-		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn))
+		except: die(1,u"Wallet '{}' does not exist!".format(fn))
+		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn.encode('utf8')))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting password prompt','Wallet password: ')
 		my_sendline(p,'Sending password',d.wallet_passwd,33)
@@ -601,11 +601,12 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		assert dl,"No addresses in addrfile within range '{}'".format(addrs)
 		gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
 		for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
-			fn = '{}{}-{}-MoneroWallet'.format(
-				(opt.outdir+'/' if opt.outdir else ''),
-				al.al_id.sid,
-				d.idx)
-			gmsg('\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
+			fn = os.path.join(
+				opt.outdir or u'',u'{}-{}-MoneroWallet{}'.format(
+					al.al_id.sid,
+					d.idx,
+					u'-α' if g.debug_utf8 else ''))
+			gmsg(u'\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
 			m[op][2](n,d,fn)
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
 		if op == 'sync':

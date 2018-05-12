@@ -21,7 +21,6 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.common import *
-from mmgen.seed import SeedSource
 
 opts_data = lambda: {
 	'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),

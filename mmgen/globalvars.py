@@ -100,14 +100,14 @@ class g(object):
 		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
 
 	if os.getenv('HOME'):                             # Linux or MSYS
-		home_dir = os.getenv('HOME')
+		home_dir = os.getenv('HOME').decode('utf8')
 	elif platform == 'win': # Windows native:
 		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
 	data_dir_root,data_dir,cfg_file = None,None,None
-	daemon_data_dir = '' # set by user or protocol
+	daemon_data_dir = u'' # set by user or protocol
 
 	# User opt sets global var:
 	common_opts = (

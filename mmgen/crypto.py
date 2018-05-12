@@ -111,6 +111,7 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
 	N,r,p = get_hash_params(hash_preset)
+	if type(passwd) == unicode: passwd = passwd.encode('utf8')
 	return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):

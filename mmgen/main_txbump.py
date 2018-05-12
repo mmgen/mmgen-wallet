@@ -22,7 +22,6 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 from mmgen.common import *
-from mmgen.seed import SeedSource
 
 opts_data = lambda: {
 	'desc': 'Increase the fee on a replaceable (RBF) {g.proj_name} transaction, creating a new transaction, and optionally sign and send the new transaction'.format(g=g),

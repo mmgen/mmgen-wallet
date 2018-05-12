@@ -25,24 +25,20 @@ from binascii import hexlify
 
 from mmgen.common import *
 
-def path_join(*args,**kwargs):
-	if not 'decode' in kwargs: kwargs['decode'] = True
-	assert type(kwargs['decode']) == bool
-	assert kwargs.keys() == ['decode']
-	ret = os.path.join(*[a.encode('utf8') for a in args])
-	return ret.decode('utf8') if kwargs['decode'] else ret
-
+# Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
 def cleandir(d):
-	from shutil import rmtree
-	try:    files = [f.decode('utf8') for f in os.listdir(d)]
+	d_enc = d.encode('utf8')
+
+	try:    files = os.listdir(d_enc)
 	except: return
 
+	from shutil import rmtree
 	gmsg(u"Cleaning directory '{}'".format(d))
 	for f in files:
 		try:
-			os.unlink(path_join(d,f,decode=False))
+			os.unlink(os.path.join(d_enc,f))
 		except:
-			rmtree(path_join(d,f,decode=False))
+			rmtree(os.path.join(d_enc,f))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
 def getrandhex(n): return hexlify(os.urandom(n))

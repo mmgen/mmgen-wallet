@@ -117,6 +117,7 @@ tx.outputs = tx.MMGenTxOutputList(
 				MMGenTX.MMGenTxOutput(addr=i['scriptPubKey']['addresses'][0],
 						amt=g.proto.coin_amt(i['value']))
 			for i in dec_tx['vout'])
+
 for e in tx.outputs:
 	if e.addr in outputs:
 		f = outputs[e.addr]

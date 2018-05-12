@@ -23,11 +23,11 @@ mmgen-autosign: Auto-sign MMGen transactions
 import sys,os,subprocess,time,signal,shutil
 from stat import *
 
-mountpoint   = '/mnt/tx'
-tx_dir       = '/mnt/tx/tx'
-part_label   = 'MMGEN_TX'
-wallet_dir   = '/dev/shm/autosign'
-key_fn       = 'autosign.key'
+mountpoint   = u'/mnt/tx'
+tx_dir       = u'/mnt/tx/tx'
+part_label   = u'MMGEN_TX'
+wallet_dir   = u'/dev/shm/autosign'
+key_fn       = u'autosign.key'
 
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
@@ -129,7 +129,7 @@ def check_daemons_running():
 				ydie(1,'{} daemon not running or not listening on port {}'.format(coin,g.proto.rpc_port))
 
 def get_wallet_files():
-	wfs = [f for f in os.listdir(wallet_dir) if f[-6:] == '.mmdat']
+	wfs = filter(lambda x: x[-6:] == '.mmdat',os.listdir(wallet_dir))
 	if not wfs:
 		die(1,'No wallet files present!')
 	return [os.path.join(wallet_dir,w) for w in wfs]
@@ -193,7 +193,7 @@ def decrypt_wallets():
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 #	opt.passwd_file = '/tmp/key'
 	from mmgen.seed import SeedSource
-	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
+	msg(u"Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
 	fails = 0
 	for wf in wfs:
 		try:
@@ -225,14 +225,14 @@ def wipe_existing_key():
 	try: os.stat(fn)
 	except: pass
 	else:
-		msg('\nWiping existing key {}'.format(fn))
+		msg(u'\nWiping existing key {}'.format(fn))
 		subprocess.call(['wipe','-cf',fn])
 
 def create_key():
 	from binascii import hexlify
 	kdata = hexlify(os.urandom(32))
 	fn = os.path.join(tx_dir,key_fn)
-	desc = 'key file {}'.format(fn)
+	desc = u'key file {}'.format(fn)
 	msg('Creating ' + desc)
 	try:
 		with open(fn,'w') as f: f.write(kdata+'\n')
@@ -311,7 +311,7 @@ def set_led(cmd):
 
 def get_insert_status():
 	if os.getenv('MMGEN_TEST_SUITE'): return True
-	try: os.stat(os.path.join('/dev/disk/by-label/',part_label))
+	try: os.stat(os.path.join(u'/dev/disk/by-label',part_label))
 	except: return False
 	else: return True
 

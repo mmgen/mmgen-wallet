@@ -136,8 +136,7 @@ f_misc_ni='Miscellaneous non-interactive tests complete'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
-if [ "$MINGW" ]; then
-	t_alts=(
+t_alts=(
 	"$scrambletest_py"
 	"$test_py -n altcoin_ref"
 	"$gentest_py --coin=btc 2 $rounds"
@@ -148,25 +147,10 @@ if [ "$MINGW" ]; then
 	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
 	"$gentest_py --coin=ltc --type=bech32 2 $rounds"
-	"$gentest_py --coin=zec 2 $rounds"
-	"$gentest_py --coin=etc 2 $rounds"
-	"$gentest_py --coin=eth 2 $rounds")
-else
-	t_alts=(
-	"$scrambletest_py"
-	"$test_py -n altcoin_ref"
-	"$gentest_py --coin=btc 2 $rounds"
-	"$gentest_py --coin=btc --type=compressed 2 $rounds"
-	"$gentest_py --coin=btc --type=segwit 2 $rounds"
-	"$gentest_py --coin=btc --type=bech32 2 $rounds"
-	"$gentest_py --coin=ltc 2 $rounds"
-	"$gentest_py --coin=ltc --type=compressed 2 $rounds"
-	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
-	"$gentest_py --coin=ltc --type=bech32 2 $rounds"
-	"$gentest_py --coin=zec 2 $rounds"
-	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_spec"
 	"$gentest_py --coin=etc 2 $rounds"
 	"$gentest_py --coin=eth 2 $rounds"
+	"$gentest_py --coin=zec 2 $rounds"
+	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_spec"
 
 	"$gentest_py --coin=btc 2:ext $rounds"
 	"$gentest_py --coin=btc --type=compressed 2:ext $rounds"
@@ -183,14 +167,22 @@ else
 	"$gentest_py --all 2:pyethereum $rounds_low"
 	"$gentest_py --all 2:keyconv $rounds_low"
 	"$gentest_py --all 2:zcash_mini $rounds_low")
+if [ "$MINGW" ]; then
+	t_alts[13]="# MSWin platform: skipping zcash z-addr generation and altcoin verification with third-party tools"
+	i=14 end=${#t_alts[*]}
+	while [ $i -lt $end ]; do unset t_alts[$i]; let i++; done
 fi
 f_alts='Gen-only altcoin tests completed'
 
-TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+if [ "$MINGW" ]; then
+	TMPDIR='/tmp/mmgen-test-release'
+else
+	TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+fi
 mkdir -p $TMPDIR
 
 i_monero='Monero'
-s_monero='Testing generation and wallet creation operations for Monero'
+s_monero='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_monero='The monerod (mainnet) daemon must be running for the following tests'
 t_monero=(
 "mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words"
@@ -207,10 +199,14 @@ t_monero=(
 "$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29"
 "$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys"
 )
-[ "$MINGW" ] && t_monero=("$t_monero")
+[ "$MINGW" ] && {
+	t_monero[2]="# MSWin platform: skipping Monero wallet creation and sync tests; NOT verifying key-addr list"
+	i=3 end=${#t_monero[*]}
+	while [ $i -lt $end ]; do unset t_monero[$i]; let i++; done
+}
 f_monero='Monero tests completed'
 
-i_misc='Miscellaneous operations (interactive)' # includes autosign!
+i_misc='Miscellaneous operations (autosign)'
 s_misc='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following tests'
 t_misc=(
 	"$test_py -On misc")

@@ -60,6 +60,7 @@ class SeedSource(MMGenObject):
 	ask_tty = True
 	no_tty  = False
 	op = None
+	require_utf8_input = False
 	_msg = {}
 
 	class SeedSourceData(MMGenObject): pass
@@ -131,7 +132,7 @@ class SeedSource(MMGenObject):
 	def _get_data(self):
 		if hasattr(self,'infile'):
 			self.fmt_data = get_data_from_file(self.infile.name,self.desc,
-								binary=self.file_mode=='binary')
+								binary=self.file_mode=='binary',require_utf8=self.require_utf8_input)
 		else:
 			self.fmt_data = self._get_data_from_user(self.desc)
 
@@ -384,13 +385,13 @@ class Mnemonic (SeedSourceUnenc):
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
 
-		m  = 'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
-		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
-		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
-		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
-		m += "of words.  For each word, once you've typed {} characters total (including\n"
-		m += 'pad characters) a pad character will enter the word.'
-		msg(m.decode('utf8').format(mn_len,longest_word))
+		m  = u'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
+		m += u"Optionally, you may use pad characters.  Anything you type that's not a\n"
+		m += u'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
+		m += u'be discarded.  Pad characters may be typed before, after, or in the middle\n'
+		m += u"of words.  For each word, once you've typed {} characters total (including\n"
+		m += u'pad characters) a pad character will enter the word.'
+		msg(m.format(mn_len,longest_word))
 
 		def get_word():
 			s,pad = '',0
@@ -580,6 +581,7 @@ class Wallet (SeedSourceEnc):
 	fmt_codes = 'wallet','w'
 	desc = g.proj_name + ' wallet'
 	ext = 'mmdat'
+	require_utf8_input = True # label is UTF-8
 
 	def _get_label_from_user(self,old_lbl=''):
 		d = u"to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
@@ -740,6 +742,7 @@ class Brainwallet (SeedSourceEnc):
 	fmt_codes = 'mmbrain','brainwallet','brain','bw','b'
 	desc = 'brainwallet'
 	ext = 'mmbrain'
+	require_utf8_input = True # brainwallet is user input, so require UTF-8
 	# brainwallet warning message? TODO
 
 	def get_bw_params(self):
@@ -765,8 +768,7 @@ class Brainwallet (SeedSourceEnc):
 			seed_len = opt.seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = scrypt_hash_passphrase(self.brainpasswd, '',
-					d.hash_preset, buflen=seed_len/8)
+		seed = scrypt_hash_passphrase(self.brainpasswd,'',d.hash_preset,buflen=seed_len/8)
 		qmsg('Done')
 		self.seed = Seed(seed)
 		msg('Seed ID: {}'.format(self.seed.sid))

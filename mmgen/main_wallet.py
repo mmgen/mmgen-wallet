@@ -158,6 +158,7 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 else:
 	try:
 		assert invoked_as == 'gen','dw'
+		assert not opt.outdir,'dw'
 		assert not opt.stdout,'dw'
 		assert not find_file_in_dir(Wallet,g.data_dir),'dw'
 		m = 'Make this wallet your default and move it to the data directory?'

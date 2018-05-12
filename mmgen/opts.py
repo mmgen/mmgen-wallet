@@ -28,7 +28,7 @@ from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
-def usage(): Die(2,'USAGE: {} {}'.format((g.prog_name,usage_txt)))
+def usage(): Die(2,'USAGE: {} {}'.format(g.prog_name,usage_txt))
 
 def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:
@@ -120,7 +120,7 @@ def get_data_from_cfg_file():
 			with open(fn,'wb') as f: f.write(template_data)
 			os.chmod(fn,0600)
 		except:
-			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
+			die(2,u"ERROR: unable to write to datadir '{}'".format(g.data_dir))
 
 	for k,suf in (('cfg',''),('sample','.sample')):
 		try:
