@@ -1,9 +1,9 @@
-MMGen version 0.8.5
+### MMGen version 0.8.5 Release Notes
 
-New features/improvements:
+#### New features/improvements:
 
-	* Colored output
-	* Label editing in mmgen-txcreate
+  - Colored output
+  - Label editing in mmgen-txcreate
 
 This release includes a major object-oriented rewrite of much of the code.
 

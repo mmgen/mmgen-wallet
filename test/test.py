@@ -1257,8 +1257,8 @@ def make_brainwallet_file(fn):
 	nwords,ws_list,max_spaces = 10,'    \n',5
 	def rand_ws_seq():
 		nchars = getrandnum(1) % max_spaces + 1
-		return ''.join([ws_list[getrandnum_range(1,200)%len(ws_list)] for i in range(nchars)])
-	rand_pairs = [wl[getrandnum(1) % len(wl)] + rand_ws_seq() for i in range(nwords)]
+		return ''.join([ws_list[getrandnum_range(1,200) % len(ws_list)] for i in range(nchars)])
+	rand_pairs = [wl[getrandnum_range(1,200) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
 	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
 	write_data_to_file(fn,d,'brainwallet password',silent=True)

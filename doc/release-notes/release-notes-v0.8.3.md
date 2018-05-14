@@ -1,12 +1,12 @@
-MMGen version 0.8.3
+### MMGen version 0.8.3 Release Notes
 
-New features/improvements:
+#### New features/improvements:
 
-	* New native Bitcoin RPC library.
-	* Support for cookie-based RPC authentication (new in Bitcoin Core v0.12.0).
-	* Batch mode available when listing and importing addresses.
-	* mmgen-tool listaddresses: 'addrs' argument allows you to specify an
-	  address or range of addresses.
+  - New native Bitcoin RPC library.
+  - Support for cookie-based RPC authentication (new in Bitcoin Core v0.12.0).
+  - Batch mode available when listing and importing addresses.
+  - mmgen-tool listaddresses: 'addrs' argument allows you to specify an
+    address or range of addresses.
 
 NOTE: if MMGen is already installed on your system, you must remove your
 existing installation by hand before installing this new version.  On Linux,

@@ -1,4 +1,6 @@
-**New features:**
+### MMGen version 0.9.6 Release Notes
+
+#### New features:
 
   - Key/address generation support for ETH, ETC, ZEC, XMR and 144 Bitcoin-derived altcoins
   - Zcash z-address support (Linux only)
