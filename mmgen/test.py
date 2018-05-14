@@ -42,6 +42,11 @@ def cleandir(d):
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
 def getrandhex(n): return hexlify(os.urandom(n))
+def getrandnum_range(nbytes,rn_max):
+	while True:
+		rn = int(hexlify(os.urandom(nbytes)),16)
+		if rn < rn_max: return rn
+
 def getrandstr(num_chars,no_space=False):
 	n,m = 95,32
 	if no_space: n,m = 94,33

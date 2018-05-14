@@ -629,7 +629,7 @@ def get_words_from_file(infile,desc,silent=False):
 	try: words = f.read().decode('utf8').split() # split() also strips
 	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	f.close()
-	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
+	dmsg(u'Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
 def get_words(infile,desc,prompt):

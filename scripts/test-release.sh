@@ -72,7 +72,11 @@ done
 
 shift $((OPTIND-1))
 
-RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
+REFDIR='test/ref'
+if uname -a | grep -qi mingw; then SUDO='' MINGW=1; else SUDO='sudo' MINGW=''; fi
+[ "$MINGW" ] || RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
+
+set -e
 
 [ "$NO_INSTALL" ] || {
 	BRANCH=$1; shift
@@ -80,11 +84,6 @@ RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
 	FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
 	[ "$FOUND_BRANCH" ] || { echo "Branch '$BRANCH' not found!"; exit; }
 }
-
-set -e
-
-REFDIR=test/ref
-if uname -a | grep -qi mingw; then SUDO='' MINGW=1; else SUDO='sudo' MINGW=''; fi
 
 check() {
 	[ "$BRANCH" ] || { echo 'No branch specified.  Exiting'; exit; }

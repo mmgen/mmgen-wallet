@@ -328,9 +328,9 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 		try:
 			if not is_mmgen_id(arg1):
-				assert coinaddr,"Invalid coin address for this chain: {}".format(arg1)
-			assert coinaddr,"{pn} address '{ma}' not found in tracking wallet"
-			assert coinaddr.is_in_tracking_wallet(),"Address '{ca}' not found in tracking wallet"
+				assert coinaddr,u"Invalid coin address for this chain: {}".format(arg1)
+			assert coinaddr,u"{pn} address '{ma}' not found in tracking wallet"
+			assert coinaddr.is_in_tracking_wallet(),u"Address '{ca}' not found in tracking wallet"
 		except Exception as e:
 			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
 			return False

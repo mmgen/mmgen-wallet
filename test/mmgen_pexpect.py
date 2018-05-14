@@ -147,6 +147,9 @@ class MMGenPexpect(object):
 				cmd_str = g.traceback_cmd + ' ' + cmd_str
 #			Msg('\ncmd_str: {}'.format(cmd_str))
 			if opt.popen_spawn:
+				# PopenSpawn() requires cmd string to be bytes.  However, it autoconverts unicode
+				# input to bytes, though this behavior seems to be undocumented.  Setting 'encoding'
+				# to 'UTF-8' will cause pexpect to reject non-unicode string input.
 				self.p = PopenSpawn(cmd_str.encode('utf8'))
 			else:
 				self.p = pexpect.spawn(cmd,args)

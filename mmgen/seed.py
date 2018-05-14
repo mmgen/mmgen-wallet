@@ -304,7 +304,7 @@ an empty passphrase, just hit ENTER twice.
 			for i in range(g.passwd_max_tries):
 				pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 				pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
-				dmsg('Passphrases: [{}] [{}]'.format(pw,pw2))
+				dmsg(u'Passphrases: [{}] [{}]'.format(pw,pw2))
 				if pw == pw2:
 					vmsg('Passphrases match'); break
 				else: msg('Passphrases do not match.  Try again.')

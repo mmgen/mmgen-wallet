@@ -49,6 +49,7 @@ pwfile = u'passwd_file'
 
 ref_dir = os.path.join(u'test',u'ref')
 
+rt_pw = u'abc-α'
 ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'
 ref_wallet_incog_offset = 123
@@ -164,7 +165,7 @@ altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
 tn_ext = ('','.testnet')[g.testnet]
 
 coin_sel = g.coin.lower()
-if g.coin == 'B2X': coin_sel = 'btc'
+# if g.coin == 'B2X': coin_sel = 'btc'
 
 fork       = {'bch':'btc','btc':'btc','ltc':'ltc'}[coin_sel]
 tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[coin_sel]
@@ -207,7 +208,7 @@ def restore_debug():
 cfgs = {
 	'15': {
 		'tmpdir':        os.path.join(u'test',u'tmp15'),
-		'wpasswd':       'Dorian',
+		'wpasswd':       'Dorian-α',
 		'kapasswd':      'Grok the blockchain',
 		'addr_idx_list': '12,99,5-10,5,12', # 8 addresses
 		'dep_generators':  {
@@ -231,10 +232,10 @@ cfgs = {
 	},
 	'17': { 'tmpdir': os.path.join(u'test',u'tmp17') },
 	'18': { 'tmpdir': os.path.join(u'test',u'tmp18') },
-	'19': { 'tmpdir': os.path.join(u'test',u'tmp19'), 'wpasswd':'abc' },
+#	'19': { 'tmpdir': os.path.join(u'test',u'tmp19'), 'wpasswd':'abc' }, B2X
 	'1': {
 		'tmpdir':        os.path.join(u'test',u'tmp1'),
-		'wpasswd':       'Dorian',
+		'wpasswd':       u'Dorian-α',
 		'kapasswd':      'Grok the blockchain',
 		'addr_idx_list': '12,99,5-10,5,12', # 8 addresses
 		'dep_generators':  {
@@ -339,7 +340,7 @@ cfgs = {
 	},
 	'5': {
 		'tmpdir':        os.path.join(u'test',u'tmp5'),
-		'wpasswd':       'My changed password',
+		'wpasswd':       'My changed password-α',
 		'hash_preset':   '2',
 		'dep_generators': {
 			'mmdat':       'passchg',
@@ -1180,7 +1181,7 @@ def write_fake_data_to_file(d):
 	if opt.print_cmdline: msg(bwd_msg)
 	if opt.log: log_fd.write(bwd_msg + ' ')
 	if opt.verbose or opt.exact_output:
-		sys.stderr.write(u"Fake transaction wallet data written to file '{}'\n".format(unspent_data_file))
+		sys.stderr.write(u"Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
 
 def create_tx_data(sources):
 	tx_data,ad = {},AddrData()
@@ -1241,24 +1242,23 @@ def add_comments_to_addr_file(addrfile,outfile,use_labels=False):
 
 # 100 words chosen randomly from here:
 #   https://github.com/bitcoin/bips/pull/432/files/6332230d63149a950d05db78964a03bfd344e6b0
-rwords = [
-	'ампула','арест','арка','архив','атлас','афера','багаж','башмак','бежать','бидон','брюки','вена',
-	'взвод','виски','волна','вспышка','встреча','гавань','гамма','гора','горшок','депутат','динамика',
-	'доверие','доза','документ','жених','жюри','зависть','заслуга','зато','зацепка','заявка','здание',
-	'зеркало','зефир','зрачок','изнутри','исход','кедр','киоск','кирпич','комната','концерт','косой',
-	'кубок','лачуга','лужа','мелодия','металл','механизм','механизм','механизм','мост','мощность','мыло',
-	'некий','нижний','новый','няня','овощ','ограда','опыт','орел','падение','петля','пила','поцелуй',
-	'пощечина','проект','путем','пыль','роман','рюкзак','сауна','сбыт','север','сейчас','сержант','след',
-	'слуга','снижение','сокол','соус','стакан','статус','сущность','табак','тело','тень','техника','ужин',
-	'упор','уровень','фирма','франция','фуражка','чучело','шрифт','элемент']
-
+rwords = """
+	алфавит алый амнезия амфора артист баян белый биатлон брат бульвар веревка вернуть весть возраст
+	восток горло горный десяток дятел ежевика жест жизнь жрать заговор здание зона изделие итог кабина
+	кавалер каждый канал керосин класс клятва князь кривой крыша крючок кузнец кукла ландшафт мальчик
+	масса масштаб матрос мрак муравей мычать негодяй носок ночной нрав оборот оружие открытие оттенок
+	палуба пароход период пехота печать письмо позор полтора понятие поцелуй почему приступ пруд пятно
+	ранее режим речь роса рынок рябой седой сердце сквозь смех снимок сойти соперник спичка стон
+	сувенир сугроб суть сцена театр тираж толк удивить улыбка фирма читатель эстония эстрада юность
+	"""
 def make_brainwallet_file(fn):
 	# Print random words with random whitespace in between
+	wl = rwords.split()
 	nwords,ws_list,max_spaces = 10,'    \n',5
 	def rand_ws_seq():
 		nchars = getrandnum(1) % max_spaces + 1
-		return ''.join([ws_list[getrandnum(1)%len(ws_list)] for i in range(nchars)])
-	rand_pairs = [rwords[getrandnum(4) % len(rwords)] + rand_ws_seq() for i in range(nwords)]
+		return ''.join([ws_list[getrandnum_range(1,200)%len(ws_list)] for i in range(nchars)])
+	rand_pairs = [wl[getrandnum(1) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
 	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
 	write_data_to_file(fn,d,'brainwallet password',silent=True)
@@ -2419,7 +2419,7 @@ class MMGenTestSuite(object):
 
 	def regtest_walletgen(self,name,user):
 		t = MMGenExpect(name,'mmgen-walletgen',['-q','-r0','-p1','--'+user])
-		t.passphrase_new('new MMGen wallet','abc')
+		t.passphrase_new('new MMGen wallet',rt_pw)
 		t.label()
 		t.expect('move it to the data directory? (Y/n): ','y')
 		t.written_to_file('MMGen wallet')
@@ -2435,7 +2435,7 @@ class MMGenTestSuite(object):
 	def regtest_user_sid(self,user):
 		return os.path.basename(get_file_with_ext('mmdat',self.regtest_user_dir(user)))[:8]
 
-	def regtest_addrgen(self,name,user,wf=None,passwd='abc',addr_range='1-5'):
+	def regtest_addrgen(self,name,user,wf=None,passwd=rt_pw,addr_range='1-5'):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in g.proto.mmtypes:
 			t = MMGenExpect(name,'mmgen-addrgen',
@@ -2523,7 +2523,7 @@ class MMGenTestSuite(object):
 							outputs_prompt,
 							extra_args=[],
 							wf=None,
-							pw='abc',
+							pw=rt_pw,
 							no_send=False,
 							do_label=False,
 							bad_locktime=False,
@@ -2544,7 +2544,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # change OK?
 		t.expect('Add a comment to transaction? (y/N): ',('\n','y')[do_label])
 		if do_label:
-			t.expect('Comment: ',ref_tx_label_jp.encode('utf8')+'\n')
+			t.expect('Comment: ',ref_tx_label_jp+'\n')
 		t.expect('View decoded transaction\? .*?: ',('t','v')[full_tx_view],regex=True)
 		if not do_label: t.expect('to continue: ','\n')
 		t.passphrase('MMGen wallet',pw)
@@ -2608,7 +2608,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('Add a comment to transaction? (y/N): ','n')
-		t.passphrase('MMGen wallet','abc')
+		t.passphrase('MMGen wallet',rt_pw)
 		t.written_to_file('Signed transaction')
 		if not no_send:
 			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
@@ -2736,11 +2736,11 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_add_label_badaddr(self,name,addr,reply):
 		t = MMGenExpect(name,'mmgen-tool',['--alice','add_label',addr,'(none)'])
-		t.expect(reply,regex=True)
+		t.expect(reply.encode('utf8'),regex=True)
 		t.ok()
 
 	def regtest_alice_add_label_badaddr1(self,name):
-		return self.regtest_alice_add_label_badaddr(name,'abc','Invalid coin address for this chain: abc')
+		return self.regtest_alice_add_label_badaddr(name,rt_pw,u'Invalid coin address for this chain: '+rt_pw)
 
 	def regtest_alice_add_label_badaddr2(self,name):
 		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
@@ -2876,7 +2876,7 @@ class MMGenTestSuite(object):
 		opt.coin = coin
 		sid = self.regtest_user_sid('bob')
 		self.regtest_user_txdo(
-			name,'bob','0.0001',[sid+':S:5'],'1',pw='abc',
+			name,'bob','0.0001',[sid+':S:5'],'1',pw=rt_pw,
 			extra_args=['--locktime='+str(locktime)],
 			bad_locktime=bad_locktime)
 
@@ -2889,7 +2889,7 @@ class MMGenTestSuite(object):
 	def regtest_split_txdo_timelock_good_b2x(self,name):
 		self.regtest_split_txdo_timelock(name,'B2X',locktime=1321009871,bad_locktime=False)
 
-#	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw='abc',no_send=False,do_label=False):
+#	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw=rt_pw,no_send=False,do_label=False):
 
 	# undocumented admin commands
 	ref_tx_setup = regtest_setup
@@ -2935,7 +2935,7 @@ class MMGenTestSuite(object):
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.expect('OK? (Y/n): ','y') # change OK?
 		t.expect('Add a comment to transaction? (y/N): ','y')
-		t.expect('Comment: ',ref_tx_label_zh.encode('utf8')+'\n')
+		t.expect('Comment: ',ref_tx_label_zh+'\n')
 		t.expect('View decoded transaction\? .*?: ','n',regex=True)
 		t.expect('Save transaction? (y/N): ','y')
 		fn = t.written_to_file('Transaction')
