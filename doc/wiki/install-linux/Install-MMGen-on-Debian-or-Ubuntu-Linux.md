@@ -23,7 +23,7 @@
 
 	$ git clone https://github.com/mmgen/mmgen.git
 	$ cd mmgen
-	$ git checkout -b stable stable_linux
+	$ git checkout stable_linux
 	$ sudo ./setup.py install
 	$ cd ..
 
