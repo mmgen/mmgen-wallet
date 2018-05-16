@@ -136,7 +136,7 @@ i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts=(
 	"$scrambletest_py"
-	"$test_py -n ref_files_alt"
+	"$test_py -n ref_alt"
 	"$gentest_py --coin=btc 2 $rounds"
 	"$gentest_py --coin=btc --type=compressed 2 $rounds"
 	"$gentest_py --coin=btc --type=segwit 2 $rounds"

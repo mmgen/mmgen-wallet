@@ -821,13 +821,28 @@ cmd_group['autosign'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
 )
 
-cmd_group['ref_files_alt'] = (
+cmd_group['ref_alt'] = (
+	('ref_addrfile_gen_eth',  'generate address file (ETH)'),
+	('ref_addrfile_gen_etc',  'generate address file (ETC)'),
+	('ref_addrfile_gen_dash', 'generate address file (DASH)'),
+	('ref_addrfile_gen_zec',  'generate address file (ZEC-T)'),
+	('ref_addrfile_gen_zec_z','generate address file (ZEC-Z)'),
+	('ref_addrfile_gen_xmr',  'generate address file (XMR)'),
+
+	('ref_keyaddrfile_gen_eth',  'generate key-address file (ETH)'),
+	('ref_keyaddrfile_gen_etc',  'generate key-address file (ETC)'),
+	('ref_keyaddrfile_gen_dash', 'generate key-address file (DASH)'),
+	('ref_keyaddrfile_gen_zec',  'generate key-address file (ZEC-T)'),
+	('ref_keyaddrfile_gen_zec_z','generate key-address file (ZEC-Z)'),
+	('ref_keyaddrfile_gen_xmr',  'generate key-address file (XMR)'),
+
 	('ref_addrfile_chk_eth', 'reference address file (ETH)'),
 	('ref_addrfile_chk_etc', 'reference address file (ETC)'),
 	('ref_addrfile_chk_dash','reference address file (DASH)'),
 	('ref_addrfile_chk_zec', 'reference address file (ZEC-T)'),
-	('ref_addrfile_chk_xmr', 'reference address file (XMR)'),
 	('ref_addrfile_chk_zec_z','reference address file (ZEC-Z)'),
+	('ref_addrfile_chk_xmr', 'reference address file (XMR)'),
+
 	('ref_keyaddrfile_chk_eth', 'reference key-address file (ETH)'),
 	('ref_keyaddrfile_chk_etc', 'reference key-address file (ETC)'),
 	('ref_keyaddrfile_chk_dash','reference key-address file (DASH)'),
@@ -915,9 +930,9 @@ for a,b in cmd_group['autosign']:
 	cmd_list['autosign'].append(a)
 	cmd_data[a] = (18,b,[[[],18]])
 
-cmd_data['info_ref_files_alt'] = 'altcoin reference files',[8]
-for a,b in cmd_group['ref_files_alt']:
-	cmd_list['ref_files_alt'].append(a)
+cmd_data['info_ref_alt'] = 'altcoin reference files',[8]
+for a,b in cmd_group['ref_alt']:
+	cmd_list['ref_alt'].append(a)
 	cmd_data[a] = (8,b,[[[],8]])
 
 utils = {
@@ -2265,6 +2280,67 @@ class MMGenTestSuite(object):
 		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
 		cmp_or_die(ref_chksum,o)
 
+	def ref_altcoin_addrgen(self,name,coin,mmtype,gen_what='addr',coin_suf=''):
+		wf = os.path.join(ref_dir,cfg['seed_id']+'.mmwords')
+		t = MMGenExpect(name,'mmgen-{}gen'.format(gen_what),
+				['-Sq','--coin='+coin] +
+				(['--type='+mmtype] if mmtype else []) +
+				[wf,cfg['addr_idx_list']])
+		if gen_what == 'key':
+			t.expect('Encrypt key list? (y/N): ','N')
+		chk = t.expect_getend(r'.* data checksum for \S*: ',regex=True)
+		chk_ref = cfg['ref_{}addrfile_chksum_{}{}'.format(('','key')[gen_what=='key'],coin.lower(),coin_suf)]
+		t.read()
+		refcheck('{}list data checksum'.format(gen_what),chk,chk_ref)
+
+
+	def ref_addrfile_gen_eth(self,name):
+		self.ref_altcoin_addrgen(name,coin='ETH',mmtype='ethereum')
+
+	def ref_addrfile_gen_etc(self,name):
+		self.ref_altcoin_addrgen(name,coin='ETC',mmtype='ethereum')
+
+	def ref_addrfile_gen_dash(self,name):
+		self.ref_altcoin_addrgen(name,coin='DASH',mmtype='compressed')
+
+	def ref_addrfile_gen_zec(self,name):
+		self.ref_altcoin_addrgen(name,coin='ZEC',mmtype='compressed')
+
+	def ref_addrfile_gen_zec_z(self,name):
+		self.ref_altcoin_addrgen(name,coin='ZEC',mmtype='zcash_z',coin_suf='_z')
+
+	def ref_addrfile_gen_xmr(self,name):
+		self.ref_altcoin_addrgen(name,coin='XMR',mmtype='monero')
+
+
+	def ref_keyaddrfile_gen_eth(self,name):
+		self.ref_altcoin_addrgen(name,coin='ETH',mmtype='ethereum',gen_what='key')
+
+	def ref_keyaddrfile_gen_etc(self,name):
+		self.ref_altcoin_addrgen(name,coin='ETC',mmtype='ethereum',gen_what='key')
+
+	def ref_keyaddrfile_gen_dash(self,name):
+		self.ref_altcoin_addrgen(name,coin='DASH',mmtype='compressed',gen_what='key')
+
+	def ref_keyaddrfile_gen_zec(self,name):
+		self.ref_altcoin_addrgen(name,coin='ZEC',mmtype='compressed',gen_what='key')
+
+	def ref_keyaddrfile_gen_zec_z(self,name):
+		self.ref_altcoin_addrgen(name,coin='ZEC',mmtype='zcash_z',coin_suf='_z',gen_what='key')
+
+	def ref_keyaddrfile_gen_xmr(self,name):
+		self.ref_altcoin_addrgen(name,coin='XMR',mmtype='monero',gen_what='key')
+
+
+	def ref_addrfile_chk_eth(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH')
+
+	def ref_addrfile_chk_etc(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+
+	def ref_addrfile_chk_dash(self,name):
+		self.ref_addrfile_chk(name,ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
+
 	def ref_addrfile_chk_zec(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
@@ -2276,14 +2352,15 @@ class MMGenTestSuite(object):
 	def ref_addrfile_chk_xmr(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='XMR',subdir='monero',pfx='-XMR-M')
 
-	def ref_addrfile_chk_dash(self,name):
-		self.ref_addrfile_chk(name,ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
 
-	def ref_addrfile_chk_eth(self,name):
-		self.ref_addrfile_chk(name,ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH')
+	def ref_keyaddrfile_chk_eth(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETH',subdir='ethereum',pfx='-ETH')
 
-	def ref_addrfile_chk_etc(self,name):
-		self.ref_addrfile_chk(name,ftype='addr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+	def ref_keyaddrfile_chk_etc(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+
+	def ref_keyaddrfile_chk_dash(self,name):
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
 
 	def ref_keyaddrfile_chk_zec(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
@@ -2296,14 +2373,6 @@ class MMGenTestSuite(object):
 	def ref_keyaddrfile_chk_xmr(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M')
 
-	def ref_keyaddrfile_chk_dash(self,name):
-		self.ref_addrfile_chk(name,ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
-
-	def ref_keyaddrfile_chk_eth(self,name):
-		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETH',subdir='ethereum',pfx='-ETH')
-
-	def ref_keyaddrfile_chk_etc(self,name):
-		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
 
 	def ref_keyaddrfile_chk(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr')
