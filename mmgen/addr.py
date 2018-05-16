@@ -85,6 +85,10 @@ class AddrGeneratorEthereum(AddrGenerator):
 		import sha3
 		return CoinAddr(sha3.keccak_256(pubhex[2:].decode('hex')).digest()[12:].encode('hex'))
 
+	def to_wallet_passwd(self,sk_hex):
+		from mmgen.protocol import hash256
+		return WalletPassword(hash256(sk_hex)[:32])
+
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError,'Segwit redeem script not supported by this address type'
 

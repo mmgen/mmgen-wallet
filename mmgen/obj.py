@@ -739,6 +739,8 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'compressed':False,
 				'gen_method':'ethereum',
 				'addr_fmt':'ethereum',
+				'wif_label':'privkey:',
+				'extra_attrs': ('wallet_passwd',),
 				'desc':'Ethereum address' },
 		'Z': {  'name':'zcash_z',
 				'pubkey_type':'zcash_z',

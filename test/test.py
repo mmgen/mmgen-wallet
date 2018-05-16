@@ -541,8 +541,8 @@ cfgs = {
 		'ref_keyaddrfile_chksum_zec_z': '6B87 9B2D 0D8D 8D1E',
 		'ref_keyaddrfile_chksum_xmr': 'E0D7 9612 3D67 404A',
 		'ref_keyaddrfile_chksum_dash': 'E83D 2C63 FEA2 4142',
-		'ref_keyaddrfile_chksum_eth': '3635 4DCF B752 8772',
-		'ref_keyaddrfile_chksum_etc': '9BAC 38E7 5C8E 42E0',
+		'ref_keyaddrfile_chksum_eth': 'E400 70D9 0AE3 C7C2',
+		'ref_keyaddrfile_chksum_etc': 'EF49 967D BD6C FE45',
 		'ref_passwdfile_chksum':   'A983 DAB9 5514 27FB',
 #		'ref_fake_unspent_data':'98831F3A_unspent.json',
 		'ref_tx_file': {
