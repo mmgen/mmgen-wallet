@@ -745,12 +745,15 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'compressed':False,
 				'gen_method':'zcash_z',
 				'addr_fmt':'zcash_z',
+				'extra_attrs': ('viewkey',),
 				'desc':'Zcash z-address' },
 		'M': {  'name':'monero',
 				'pubkey_type':'monero',
 				'compressed':False,
 				'gen_method':'monero',
 				'addr_fmt':'monero',
+				'wif_label':'spendkey:',
+				'extra_attrs': ('viewkey','wallet_passwd'),
 				'desc':'Monero address'}
 	}
 	def __new__(cls,s,on_fail='die',errmsg=None):
@@ -766,10 +769,8 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 						setattr(me,k,v[k])
 					assert me in g.proto.mmtypes + ('P',), (
 						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
-					me.extra_attrs = []
-					if me.name in ('monero','zcash_z'): me.extra_attrs += ['viewkey']
-					if me.name == 'monero': me.extra_attrs += ['wallet_passwd']
-					me.wif_label = ('wif:','spendkey:')[me.name=='monero']
+					me.extra_attrs = v['extra_attrs'] if 'extra_attrs' in v else ()
+					me.wif_label   = v['wif_label'] if 'wif_label' in v else 'wif:'
 					return me
 			raise ValueError,'not found'
 		except Exception as e:

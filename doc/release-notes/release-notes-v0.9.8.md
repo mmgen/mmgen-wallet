@@ -43,4 +43,4 @@ the case, you must change your wallet password to an ASCII one (or export your
 brainwallet to another MMGen wallet format) using an older version of MMGen
 before upgrading.
 
-[1]: ../../doc/README.mswin.md
+[1]: /doc/README.mswin.md

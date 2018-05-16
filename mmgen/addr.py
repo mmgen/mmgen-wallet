@@ -436,12 +436,12 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),compressed=compressed,pubkey_type=pubkey_type)
 
 			if self.gen_addrs:
-				ph = kg.to_pubhex(e.sec)
-				e.addr = ag.to_addr(ph)
+				pubhex = kg.to_pubhex(e.sec)
+				e.addr = ag.to_addr(pubhex)
 				if gen_viewkey:
-					e.viewkey = ag.to_viewkey(ph)
+					e.viewkey = ag.to_viewkey(pubhex)
 				if gen_wallet_passwd:
-					e.wallet_passwd = ag.to_wallet_passwd(ph)
+					e.wallet_passwd = ag.to_wallet_passwd(e.sec)
 
 			if type(self) == PasswordList:
 				e.passwd = unicode(self.make_passwd(e.sec)) # TODO - own type
