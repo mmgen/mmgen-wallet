@@ -294,6 +294,10 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	base_coin = 'ETH'
 	pubkey_type = 'std' # required by DummyWIF
 
+	daemon_name = 'parity'
+	rpc_port    = 8545
+	mmcaps      = ('key','addr','rpc')
+
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
 		from mmgen.util import is_hex_str_lc
@@ -310,7 +314,8 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 class EthereumTestnetProtocol(EthereumProtocol): pass
 class EthereumClassicProtocol(EthereumProtocol):
-	name = 'ethereum_classic'
+	name   = 'ethereum_classic'
+	mmcaps = ('key','addr')
 class EthereumClassicTestnetProtocol(EthereumClassicProtocol): pass
 
 class ZcashProtocol(BitcoinProtocolAddrgen):
@@ -400,7 +405,7 @@ class CoinProtocol(MMGenObject):
 		'btc': (BitcoinProtocol,BitcoinTestnetProtocol,None),
 		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol,None),
 		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol,None),
-		'eth': (EthereumProtocol,EthereumTestnetProtocol,2),
+		'eth': (EthereumProtocol,EthereumTestnetProtocol,None),
 		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,2),
 		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
 		'xmr': (MoneroProtocol,MoneroTestnetProtocol,None)

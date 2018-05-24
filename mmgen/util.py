@@ -825,8 +825,7 @@ def rpc_init(reinit=False):
 			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
 			for fork in g.proto.forks:
 				if fork[0] == None or latest < fork[0]: break
-				bhash = conn.getblockhash(fork[0])
-				assert bhash == fork[1], (
+				assert conn.getblockhash(fork[0]) == fork[1], (
 					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
 		except Exception as e:
 			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e,c=g.coin))
@@ -839,26 +838,34 @@ def rpc_init(reinit=False):
 		except Exception as e:
 			die(1,'{}\nChain is {}!'.format(e,g.chain))
 
-	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 	import mmgen.rpc
-	conn = mmgen.rpc.CoinDaemonRPCConnection(
-				g.rpc_host or 'localhost',
-				g.rpc_port or g.proto.rpc_port,
-				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
-				g.rpc_password or cfg['rpcpassword'],
-				auth_cookie=get_coin_daemon_auth_cookie())
+	if g.coin == 'ETH':
+		conn = mmgen.rpc.EthereumRPCConnection(
+					g.rpc_host or 'localhost',
+					g.rpc_port or g.proto.rpc_port,
+					auth=False)
+		if not g.daemon_version: # First call
+			g.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
+	else:
+		cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
+		conn = mmgen.rpc.CoinDaemonRPCConnection(
+					g.rpc_host or 'localhost',
+					g.rpc_port or g.proto.rpc_port,
+					g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
+					g.rpc_password or cfg['rpcpassword'],
+					auth_cookie=get_coin_daemon_auth_cookie())
 
-	if not g.daemon_version: # First call
-		if g.bob or g.alice:
-			import regtest as rt
-			rt.user(('alice','bob')[g.bob],quiet=True)
-		g.daemon_version = int(conn.getnetworkinfo()['version'])
-		g.chain = conn.getblockchaininfo()['chain']
-		if g.chain != 'regtest': g.chain += 'net'
-		assert g.chain in g.chains
-		check_chaintype_mismatch()
-	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
-		check_chainfork_mismatch(conn)
+		if not g.daemon_version: # First call
+			if g.bob or g.alice:
+				import regtest as rt
+				rt.user(('alice','bob')[g.bob],quiet=True)
+			g.daemon_version = int(conn.getnetworkinfo()['version'])
+			g.chain = conn.getblockchaininfo()['chain']
+			if g.chain != 'regtest': g.chain += 'net'
+			assert g.chain in g.chains
+			check_chaintype_mismatch()
+		if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+			check_chainfork_mismatch(conn)
 
 	g.rpch = conn
 	return conn

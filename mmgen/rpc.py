@@ -32,9 +32,9 @@ class RPCFailure(Exception): pass
 
 class CoinDaemonRPCConnection(object):
 
-	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
+	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None,auth=True):
 
-		dmsg_rpc('=== CoinDaemonRPCConnection.__init__() debug ===')
+		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
 		dmsg_rpc('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
 			host,port,user,passwd,auth_cookie))
 
@@ -44,7 +44,9 @@ class CoinDaemonRPCConnection(object):
 		except:
 			die(1,'Unable to connect to {}:{}'.format(host,port))
 
-		if user and passwd:
+		if not auth:
+			self.auth_str = ''
+		elif user and passwd:
 			self.auth_str = '{}:{}'.format(user,passwd)
 		elif auth_cookie:
 			self.auth_str = auth_cookie
@@ -85,9 +87,9 @@ class CoinDaemonRPCConnection(object):
 		hc = httplib.HTTPConnection(self.host, self.port, False, cf['timeout'])
 
 		if cf['batch']:
-			p = [{'method':cmd,'params':r,'id':n} for n,r in enumerate(args[0],1)]
+			p = [{'method':cmd,'params':r,'id':n,'jsonrpc':'2.0'} for n,r in enumerate(args[0],1)]
 		else:
-			p = {'method':cmd,'params':args,'id':1}
+			p = {'method':cmd,'params':args,'id':1,'jsonrpc':'2.0'}
 
 		def do_fail(*args):
 			if cf['on_fail'] in ('return','silent'):
@@ -110,14 +112,16 @@ class CoinDaemonRPCConnection(object):
 					return g.proto.get_rpc_coin_amt_type()(obj)
 				return json.JSONEncoder.default(self, obj)
 
-		dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
-			self.auth_str,' '*31,base64.b64encode(self.auth_str)))
+		http_hdr = { 'Content-Type': 'application/json' }
+		if self.auth_str:
+			dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
+				self.auth_str,' '*31,base64.b64encode(self.auth_str)))
+			http_hdr.update({
+				'Host': self.host,
+				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str)) })
 
 		try:
-			hc.request('POST', '/', json.dumps(p,cls=MyJSONEncoder), {
-				'Host': self.host,
-				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str))
-			})
+			hc.request('POST','/',json.dumps(p,cls=MyJSONEncoder),http_hdr)
 		except Exception as e:
 			m = '{}\nUnable to connect to {} at {}:{}'
 			return do_fail(None,2,m.format(e,g.proto.daemon_name,self.host,self.port))
@@ -196,6 +200,33 @@ class CoinDaemonRPCConnection(object):
 
 	for name in rpcmethods:
 		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
+
+class EthereumRPCConnection(CoinDaemonRPCConnection):
+
+	rpcmethods = (
+		'eth_accounts',
+		'eth_blockNumber',
+		'eth_gasPrice',
+		'eth_getBalance',
+		'eth_getBlockByHash',
+		'eth_getBlockByNumber',
+		'eth_getTransactionByHash',
+		'eth_protocolVersion',
+		'eth_sendRawTransaction',
+		'eth_signTransaction',
+		'eth_syncing',
+		'parity_accountsInfo',
+		'parity_chainStatus',
+		'parity_gasCeilTarget',
+		'parity_gasFloorTarget',
+		'parity_minGasPrice',
+		'parity_netPeers',
+		'parity_versionInfo',
+	)
+
+	for name in rpcmethods:
+		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
+
 
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
