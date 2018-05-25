@@ -885,25 +885,29 @@ re-import your addresses.
 		d = self.make_reverse_dict([coinaddr])
 		return (d.values()[0][0]) if d else None
 
-	def add_tw_data(self):
+	@classmethod
+	def get_tw_data(cls):
 		vmsg('Getting address data from tracking wallet')
 		accts = g.rpch.listaccounts(0,True)
-		data,i = {},0
 		alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
-		for acct,addrlist in zip(accts,alists):
+		return zip(accts,alists)
+
+	def add_tw_data(self):
+		d,out,i = self.get_tw_data(),{},0
+		for acct,addr_array in d:
 			l = TwLabel(acct,on_fail='silent')
 			if l and l.mmid.type == 'mmgen':
 				obj = l.mmid.obj
 				i += 1
-				if len(addrlist) != 1:
+				if len(addr_array) != 1:
 					die(2,self.msgs['too_many_acct_addresses'].format(acct))
 				al_id = AddrListID(SeedID(sid=obj.sid),MMGenAddrType(obj.mmtype))
-				if al_id not in data:
-					data[al_id] = []
-				data[al_id].append(AddrListEntry(idx=obj.idx,addr=addrlist[0],label=l.comment))
-		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(accts)))
-		for al_id in data:
-			self.add(AddrList(al_id=al_id,adata=AddrListList(sorted(data[al_id],key=lambda a: a.idx))))
+				if al_id not in out:
+					out[al_id] = []
+				out[al_id].append(AddrListEntry(idx=obj.idx,addr=addr_array[0],label=l.comment))
+		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(d)))
+		for al_id in out:
+			self.add(AddrList(al_id=al_id,adata=AddrListList(sorted(out[al_id],key=lambda a: a.idx))))
 
 	def add(self,addrlist):
 		if type(addrlist) == AddrList:
