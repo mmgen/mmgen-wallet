@@ -101,16 +101,25 @@ else:
 m = ' from Seed ID {}'.format(al.al_id.sid) if hasattr(al.al_id,'sid') else ''
 qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
-if not opt.quiet: confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
-
 err_flag = False
 
-def import_address(addr,label,rescan):
-	try:
-		g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
-	except:
-		global err_flag
-		err_flag = True
+if g.coin == 'ETH':
+	if opt.rescan:
+		die('--rescan option meaningless for coin {}'.format(g.coin))
+	from mmgen.altcoins.eth.tw import EthereumTrackingWallet
+	eth_tw = EthereumTrackingWallet()
+
+	def import_address(addr,label,rescan):
+		eth_tw.import_address(addr,label)
+else:
+	if not opt.quiet: confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
+
+	def import_address(addr,label,rescan):
+		try:
+			g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
+		except:
+			global err_flag
+			err_flag = True
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13
@@ -168,3 +177,6 @@ for n,e in enumerate(al.data):
 if opt.batch:
 	ret = g.rpch.importaddress(arg_list,batch=True)
 	msg('OK: {} addresses imported'.format(len(ret)))
+
+if g.coin == 'ETH':
+	eth_tw.write()

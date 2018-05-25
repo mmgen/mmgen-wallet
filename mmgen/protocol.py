@@ -23,7 +23,7 @@ protocol.py: Coin protocol functions, classes and methods
 import sys,os,hashlib
 from binascii import unhexlify
 from mmgen.util import msg,pmsg,Msg,pdie
-from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt
+from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
 
@@ -297,6 +297,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	daemon_name = 'parity'
 	rpc_port    = 8545
 	mmcaps      = ('key','addr','rpc')
+	coin_amt    = ETHAmt
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):

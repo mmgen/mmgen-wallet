@@ -846,6 +846,7 @@ def rpc_init(reinit=False):
 					auth=False)
 		if not g.daemon_version: # First call
 			g.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
+			g.chain = conn.parity_chain()
 	else:
 		cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 		conn = mmgen.rpc.CoinDaemonRPCConnection(

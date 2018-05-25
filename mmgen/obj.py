@@ -369,6 +369,25 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
+class ETHAmt(BTCAmt):
+	max_prec = 18
+	max_amt = 999999999 # TODO
+	min_coin_unit = Decimal('0.000000000000000001') # wei
+
+	def __new__(cls,num,on_fail='die',fromWei=False):
+		if type(num) == cls: return num
+		cls.arg_chk(cls,on_fail)
+		try:
+			if fromWei:
+				assert type(num) in (int,long),'value is not an integer or long integer'
+				return super(cls,cls).__new__(cls,num * cls.min_coin_unit)
+			return super(cls,cls).__new__(cls,num)
+		except Exception as e:
+			m = "{!r}: value cannot be converted to {} ({})"
+			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
+
+	def toWei(self):
+		return int(Decimal(self) / self.min_coin_unit)
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
@@ -403,13 +422,16 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 
 	def is_for_chain(self,chain):
 
+		from mmgen.globalvars import g
+		if g.coin in ('ETH','ETC'):
+			return True
+
 		def pfx_ok(pfx):
 			if type(pfx) == tuple:
 				if self[0] in pfx: return True
 			elif self[:len(pfx)] == pfx: return True
 			return False
 
-		from mmgen.globalvars import g
 		proto = g.proto.get_protocol_by_chain(chain)
 		vn = proto.addr_ver_num
 
@@ -421,6 +443,12 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			return pfx_ok(vn[self.addr_fmt][1])
 
 	def is_in_tracking_wallet(self):
+
+		from mmgen.globalvars import g
+		if g.coin in ('ETH','ETC'):
+			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
+			return self in EthereumTrackingWallet().data.keys()
+
 		from mmgen.rpc import rpc_init
 		d = rpc_init().validateaddress(self)
 		return d['iswatchonly'] and 'account' in d

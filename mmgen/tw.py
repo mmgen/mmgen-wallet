@@ -312,6 +312,14 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			self.display()
 			msg(prompt)
 
+	@classmethod
+	def import_label(cls,coinaddr,lbl):
+		# NOTE: this works because importaddress() removes the old account before
+		# associating the new account with the address.
+		# Will be replaced by setlabel() with new RPC label API
+		# RPC args: addr,label,rescan[=true],p2sh[=none]
+		return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
+
 	# returns on failure
 	@classmethod
 	def add_label(cls,arg1,label='',addr=None,silent=False,on_fail='return'):
@@ -350,11 +358,11 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
 
-		# NOTE: this works because importaddress() removes the old account before
-		# associating the new account with the address.
-		# Will be replaced by setlabel() with new RPC label API
-		# RPC args: addr,label,rescan[=true],p2sh[=none]
-		ret = g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
+			cls = EthereumTrackingWallet
+
+		ret = cls.import_label(coinaddr,lbl)
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -374,6 +382,12 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	def remove_label(cls,mmaddr): cls.add_label(mmaddr,'')
 
 class TwAddrList(MMGenDict):
+
+	def __new__(cls,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tw import EthereumTwAddrList
+			cls = EthereumTwAddrList
+		return MMGenDict.__new__(cls,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
 
