@@ -147,7 +147,8 @@ class Hilite(object):
 		add_len = len(a) + len(b) + len(append_chars)
 		if width == None: width = cls.width
 		if trunc_ok == None: trunc_ok = cls.trunc_ok
-		assert width >= 2 + add_len,'Width must be at least 2' # 2 because CJK
+		assert width >= 2 + add_len,( # 2 because CJK
+			"'{!r}': invalid width ({}) (width must be at least 2)".format(s,width))
 		if len(s) + s_wide_count + add_len > width:
 			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
 			s = truncate_str(s,width-add_len)
@@ -303,7 +304,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
 	max_prec = 8
 	max_amt = 21000000
-	min_coin_unit = Decimal('0.00000001')
+	min_coin_unit = Decimal('0.00000001') # satoshi
 
 	def __new__(cls,num,on_fail='die'):
 		if type(num) == cls: return num
