@@ -372,3 +372,121 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 	@classmethod
 	def remove_label(cls,mmaddr): cls.add_label(mmaddr,'')
+
+class TwAddrList(MMGenDict):
+
+	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
+
+		def check_dup_mmid(acct_labels):
+			mmid_prev,err = None,False
+			for mmid in sorted(a.mmid for a in acct_labels if a):
+				if mmid == mmid_prev:
+					err = True
+					msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(mmid))
+				mmid_prev = mmid
+			if err: rdie(3,'Tracking wallet is corrupted!')
+
+		def check_addr_array_lens(acct_pairs):
+			err = False
+			for label,addrs in acct_pairs:
+				if not label: continue
+				if len(addrs) != 1:
+					err = True
+					if len(addrs) == 0:
+						msg("Label '{}': has no associated address!".format(label))
+					else:
+						msg("'{}': more than one {} address in account!".format(addrs,g.coin))
+			if err: rdie(3,'Tracking wallet is corrupted!')
+
+		self.total = g.proto.coin_amt('0')
+		rpc_init()
+
+		for d in g.rpch.listunspent(0):
+			if not 'account' in d: continue  # skip coinbase outputs with missing account
+			if d['confirmations'] < minconf: continue
+			label = TwLabel(d['account'],on_fail='silent')
+			if label:
+				if usr_addr_list and (label.mmid not in usr_addr_list): continue
+				if label.mmid in self:
+					if self[label.mmid]['addr'] != d['address']:
+						die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
+								g.coin,d['address'],self[label.mmid]['addr']))
+				else:
+					self[label.mmid] = {'amt': g.proto.coin_amt('0'),
+										'lbl':  label,
+										'addr': CoinAddr(d['address'])}
+					self[label.mmid]['lbl'].mmid.confs = d['confirmations']
+				self[label.mmid]['amt'] += d['amount']
+				self.total += d['amount']
+
+		# We use listaccounts only for empty addresses, as it shows false positive balances
+		if showempty or all_labels:
+			# for compatibility with old mmids, must use raw RPC rather than native data for matching
+			# args: minconf,watchonly, MUST use keys() so we get list, not dict
+			acct_list = g.rpch.listaccounts(0,True).keys() # raw list, no 'L'
+			acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
+			check_dup_mmid(acct_labels)
+			acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
+			assert len(acct_list) == len(acct_addrs),(
+				'listaccounts() and getaddressesbyaccount() not equal in length')
+			addr_pairs = zip(acct_labels,acct_addrs)
+			check_addr_array_lens(addr_pairs)
+			for label,addr_arr in addr_pairs:
+				if not label: continue
+				if all_labels and not showempty and not label.comment: continue
+				if usr_addr_list and (label.mmid not in usr_addr_list): continue
+				if label.mmid not in self:
+					self[label.mmid] = { 'amt':g.proto.coin_amt('0'), 'lbl':label, 'addr':'' }
+					if showbtcaddrs:
+						self[label.mmid]['addr'] = CoinAddr(addr_arr[0])
+
+	def format(self,showbtcaddrs,sort,show_age,show_days):
+		out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
+		fs = u'{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
+		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
+		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
+		max_cmt_len  = max(max(screen_width(v['lbl'].comment) for v in self.values()),7)
+		addr_width = max(len(self[mmid]['addr']) for mmid in self)
+
+		# fp: fractional part
+		max_fp_len = max([len(a.split('.')[1]) for a in [str(v['amt']) for v in self.values()] if '.' in a] or [1])
+		out += [fs.format(
+				mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
+				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
+				cmt=TwComment.fmtc('COMMENT',width=max_cmt_len+1),
+				amt='BALANCE'.ljust(max_fp_len+4),
+				age=('CONFS','DAYS')[show_days],
+				)]
+
+		def sort_algo(j):
+			if sort and 'age' in sort:
+				return '{}_{:>012}_{}'.format(
+					j.obj.rsplit(':',1)[0],
+					(1000000000-j.confs if hasattr(j,'confs') else 0), # Hack, but OK for the foreseeable future
+					j.sort_key)
+			else:
+				return j.sort_key
+
+		al_id_save = None
+		confs_per_day = 60*60*24 / g.proto.secs_per_block
+		for mmid in sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
+			if mmid.type == 'mmgen':
+				if al_id_save and al_id_save != mmid.obj.al_id:
+					out.append('')
+				al_id_save = mmid.obj.al_id
+				mmid_disp = mmid
+			else:
+				if al_id_save:
+					out.append('')
+					al_id_save = None
+				mmid_disp = 'Non-MMGen'
+			e = self[mmid]
+			out.append(fs.format(
+				mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
+				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
+				cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
+				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
+				age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'
+				))
+
+		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.coin)])
