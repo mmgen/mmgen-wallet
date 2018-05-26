@@ -34,13 +34,16 @@ def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
 def is_viewkey(s):       return ViewKey(s,on_fail='silent')
 
-def truncate_str(s,w):
+def truncate_str(s,width): # width = screen width
 	wide_count = 0
-	w -= 1
 	for i in range(len(s)):
 		wide_count += unicodedata.east_asian_width(s[i]) in ('F','W')
-		if wide_count + i > w:
-			return s[:i]
+		if wide_count + i >= width:
+			return s[:i] + ('',' ')[
+				unicodedata.east_asian_width(s[i]) in ('F','W')
+				and wide_count + i == width]
+	else: # pad the string to width if necessary
+		return s + ' '*(width-len(s)-wide_count)
 
 class MMGenObject(object):
 
