@@ -20,12 +20,14 @@
 altcoins.eth.tw: ETH tracking wallet functions and methods for the MMGen suite
 """
 
+import json
 from mmgen.common import *
 from mmgen.obj import *
-import json
+from mmgen.tw import TrackingWallet,TwAddrList
+from mmgen.addr import AddrData
 
 # No file locking - 2 processes accessing the wallet at the same time will corrupt it
-class EthereumTrackingWallet(object):
+class EthereumTrackingWallet(TrackingWallet):
 
 	data_dir = os.path.join(g.altcoin_data_dir,'eth')
 	tw_file = os.path.join(data_dir,'tracking-wallet.json')
@@ -89,19 +91,16 @@ class EthereumTrackingWallet(object):
 		from collections import OrderedDict
 		return OrderedDict(map(lambda x: (x['mmid'],{'addr':x['addr'],'comment':x['comment']}), self.sorted_list()))
 
-	@classmethod
-	def import_label(cls,coinaddr,lbl):
-		tw = cls()
-		for addr,d in tw.data.items():
+	def import_label(self,coinaddr,lbl):
+		for addr,d in self.data.items():
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
-				tw.write()
+				self.write()
 				return None
 		else: # emulate RPC library
 			return ('rpcfail',(None,2,"Address '{}' not found in tracking wallet".format(coinaddr)))
 
 
-from mmgen.tw import TwAddrList
 class EthereumTwAddrList(TwAddrList):
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
@@ -126,7 +125,6 @@ class EthereumTwAddrList(TwAddrList):
 			self[label.mmid]['amt'] += bal
 			self.total += bal
 
-from mmgen.addr import AddrData
 class EthereumAddrData(AddrData):
 
 	@classmethod

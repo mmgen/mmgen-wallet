@@ -1195,8 +1195,8 @@ class MMGenTX(MMGenObject):
 
 		do_license_msg()
 
-		from mmgen.tw import MMGenTrackingWallet
-		tw = MMGenTrackingWallet(minconf=opt.minconf)
+		from mmgen.tw import TwUnspentOutputs
+		tw = TwUnspentOutputs(minconf=opt.minconf)
 		tw.view_and_sort(self)
 		tw.display_total()
 

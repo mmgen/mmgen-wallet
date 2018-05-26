@@ -713,8 +713,8 @@ def Txview(*infiles,**kwargs):
 
 def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=True,show_mmid=True):
 	rpc_init()
-	from mmgen.tw import MMGenTrackingWallet
-	tw = MMGenTrackingWallet(minconf=minconf)
+	from mmgen.tw import TwUnspentOutputs
+	tw = TwUnspentOutputs(minconf=minconf)
 	tw.do_sort(sort,reverse=reverse)
 	tw.show_days = show_days
 	tw.show_mmid = show_mmid
@@ -723,7 +723,8 @@ def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=T
 
 def Add_label(mmaddr_or_coin_addr,label):
 	rpc_init()
-	from mmgen.tw import MMGenTrackingWallet
-	MMGenTrackingWallet.add_label(mmaddr_or_coin_addr,label,on_fail='raise')
+	from mmgen.tw import TrackingWallet
+	TrackingWallet().add_label(mmaddr_or_coin_addr,label,on_fail='raise')
 
-def Remove_label(mmaddr_or_coin_addr): Add_label(mmaddr_or_coin_addr,'')
+def Remove_label(mmaddr_or_coin_addr):
+	Add_label(mmaddr_or_coin_addr,'')

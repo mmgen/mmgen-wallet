@@ -26,7 +26,7 @@ from mmgen.tx import is_mmgen_id
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 
-class MMGenTrackingWallet(MMGenObject):
+class TwUnspentOutputs(MMGenObject):
 
 	class MMGenTwOutputList(list,MMGenObject): pass
 
@@ -280,7 +280,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:
 					e = self.unspent[idx-1]
-					if type(self).add_label(e.twmmid,lbl,addr=e.addr):
+					if TrackingWallet().add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
 						msg(u'{}\n{}\n{}'.format(self.fmt_display,prompt,p))
@@ -311,75 +311,6 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 			msg('\n')
 			self.display()
 			msg(prompt)
-
-	@classmethod
-	def import_label(cls,coinaddr,lbl):
-		# NOTE: this works because importaddress() removes the old account before
-		# associating the new account with the address.
-		# Will be replaced by setlabel() with new RPC label API
-		# RPC args: addr,label,rescan[=true],p2sh[=none]
-		return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
-
-	# returns on failure
-	@classmethod
-	def add_label(cls,arg1,label='',addr=None,silent=False,on_fail='return'):
-		from mmgen.tx import is_mmgen_id,is_coin_addr
-		mmaddr,coinaddr = None,None
-		if is_coin_addr(addr or arg1):
-			coinaddr = CoinAddr(addr or arg1,on_fail='return')
-		if is_mmgen_id(arg1):
-			mmaddr = TwMMGenID(arg1)
-
-		if mmaddr and not coinaddr:
-			from mmgen.addr import AddrData
-			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
-
-		try:
-			if not is_mmgen_id(arg1):
-				assert coinaddr,u"Invalid coin address for this chain: {}".format(arg1)
-			assert coinaddr,u"{pn} address '{ma}' not found in tracking wallet"
-			assert coinaddr.is_in_tracking_wallet(),u"Address '{ca}' not found in tracking wallet"
-		except Exception as e:
-			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
-			return False
-
-		# Allow for the possibility that BTC addr of MMGen addr was entered.
-		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
-		if not mmaddr:
-			from mmgen.addr import AddrData
-			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
-
-		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
-
-		mmaddr = TwMMGenID(mmaddr)
-
-		cmt = TwComment(label,on_fail=on_fail)
-		if cmt in (False,None): return False
-
-		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
-
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-			cls = EthereumTrackingWallet
-
-		ret = cls.import_label(coinaddr,lbl)
-
-		from mmgen.rpc import rpc_error,rpc_errmsg
-		if rpc_error(ret):
-			msg('From {}: {}'.format(g.proto.daemon_name,rpc_errmsg(ret)))
-			if not silent:
-				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
-			return False
-		else:
-			m = mmaddr.type.replace('mmg','MMG')
-			a = mmaddr.replace(g.proto.base_coin.lower()+':','')
-			s = '{} address {} in tracking wallet'.format(m,a)
-			if label: msg(u"Added label '{}' to {}".format(label,s))
-			else:     msg(u'Removed label from {}'.format(s))
-			return True
-
-	@classmethod
-	def remove_label(cls,mmaddr): cls.add_label(mmaddr,'')
 
 class TwAddrList(MMGenDict):
 
@@ -504,3 +435,73 @@ class TwAddrList(MMGenDict):
 				))
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.coin)])
+
+class TrackingWallet(MMGenObject):
+
+	def __new__(cls,*args,**kwargs):
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
+			cls = EthereumTrackingWallet
+		return MMGenObject.__new__(cls,*args,**kwargs)
+
+	def import_label(self,coinaddr,lbl):
+		# NOTE: this works because importaddress() removes the old account before
+		# associating the new account with the address.
+		# Will be replaced by setlabel() with new RPC label API
+		# RPC args: addr,label,rescan[=true],p2sh[=none]
+		return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
+
+	# returns on failure
+	def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
+		from mmgen.tx import is_mmgen_id,is_coin_addr
+		mmaddr,coinaddr = None,None
+		if is_coin_addr(addr or arg1):
+			coinaddr = CoinAddr(addr or arg1,on_fail='return')
+		if is_mmgen_id(arg1):
+			mmaddr = TwMMGenID(arg1)
+
+		if mmaddr and not coinaddr:
+			from mmgen.addr import AddrData
+			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
+
+		try:
+			if not is_mmgen_id(arg1):
+				assert coinaddr,u"Invalid coin address for this chain: {}".format(arg1)
+			assert coinaddr,u"{pn} address '{ma}' not found in tracking wallet"
+			assert coinaddr.is_in_tracking_wallet(),u"Address '{ca}' not found in tracking wallet"
+		except Exception as e:
+			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
+			return False
+
+		# Allow for the possibility that BTC addr of MMGen addr was entered.
+		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
+		if not mmaddr:
+			from mmgen.addr import AddrData
+			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
+
+		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
+
+		mmaddr = TwMMGenID(mmaddr)
+
+		cmt = TwComment(label,on_fail=on_fail)
+		if cmt in (False,None): return False
+
+		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
+
+		ret = self.import_label(coinaddr,lbl)
+
+		from mmgen.rpc import rpc_error,rpc_errmsg
+		if rpc_error(ret):
+			msg('From {}: {}'.format(g.proto.daemon_name,rpc_errmsg(ret)))
+			if not silent:
+				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
+			return False
+		else:
+			m = mmaddr.type.replace('mmg','MMG')
+			a = mmaddr.replace(g.proto.base_coin.lower()+':','')
+			s = '{} address {} in tracking wallet'.format(m,a)
+			if label: msg(u"Added label '{}' to {}".format(label,s))
+			else:     msg(u'Removed label from {}'.format(s))
+			return True
+
+	def remove_label(self,mmaddr): self.add_label(mmaddr,'')
