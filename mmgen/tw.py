@@ -28,6 +28,14 @@ CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 
 class TwUnspentOutputs(MMGenObject):
 
+	txid_w = 64
+	show_tx = True
+	can_group = True
+	prompt = """
+Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
+Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
+"""
+
 	class MMGenTwOutputList(list,MMGenObject): pass
 
 	class MMGenTwUnspentOutput(MMGenListItem):
@@ -50,6 +58,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 """.strip().format(g.proj_name.lower())
 	}
 
+	def __new__(cls,*args,**kwargs):
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tw import EthereumTwUnspentOutputs
+			cls = EthereumTwUnspentOutputs
+		return MMGenObject.__new__(cls,*args,**kwargs)
+
 	def __init__(self,minconf=1):
 		self.unspent      = self.MMGenTwOutputList()
 		self.fmt_display  = ''
@@ -68,11 +82,14 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def get_total_coin(self):
 		return sum(i.amt for i in self.unspent)
 
+	def get_unspent_rpc(self):
+		return g.rpch.listunspent(self.minconf)
+
 	def get_unspent_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data)) # testing, so ok
 		else:
-			us_rpc = g.rpch.listunspent(self.minconf)
+			us_rpc = self.get_unspent_rpc()
 #		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
 #		sys.exit(0)
 
@@ -130,7 +147,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			my_raw_input((m1+m2).format(g.min_screen_width))
 
 	def display(self):
-		if not opt.no_blank: msg(CUR_HOME+ERASE_ALL)
+		if not opt.no_blank: msg_r(CUR_HOME+ERASE_ALL)
 		msg(self.format_for_display())
 
 	def format_for_display(self):
@@ -148,8 +165,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		acct_w = min(max_acct_w, max(24,addr_w-10))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
-		tx_w = min(64,self.cols-addr_w-28-col1_w) # min=7
-		txdots = ('','..')[tx_w < 64]
+		tx_w = min(self.txid_w,self.cols-addr_w-28-col1_w) # min=7
+		txdots = ('','..')[tx_w < self.txid_w]
 
 		for i in unsp: i.skip = ''
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
@@ -158,16 +175,21 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='twmmid']
 
-		hdr_fmt = 'UNSPENT OUTPUTS (sort order: {})  Total {}: {}'
+		hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
 		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
-		fs = u' {:%s} {:%s} {:2} {} {} {:<}' % (col1_w,tx_w)
-		out += [fs.format('Num',
-				'TXid'.ljust(tx_w - 5) + ' Vout', '',
-				'Address'.ljust(addr_w),
-				'Amt({})'.format(g.coin).ljust(12),
-				('Confs','Age(d)')[self.show_days])]
+		if self.show_tx:
+			fs = u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w)
+		else:
+			fs = u' {n:%s} {a} {A} {c:<}' % col1_w
+		out += [fs.format(
+				n='Num',
+				t='TXid'.ljust(tx_w - 5) + ' Vout',
+				v='',
+				a='Address'.ljust(addr_w),
+				A='Amt({})'.format(g.coin).ljust(g.proto.coin_amt.max_prec+4),
+				c=('Confs','Age(d)')[self.show_days])]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*(addr_w-1)
@@ -187,8 +209,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			tx = ' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
 					else i.txid[:tx_w-len(txdots)]+txdots
 
-			out.append(fs.format(str(n+1)+')',tx,i.vout,addr_out,i.amt.fmt(color=True),
-						i.days if self.show_days else i.confs))
+			out.append(fs.format(
+						n=str(n+1)+')',
+						t=tx,
+						v=i.vout,
+						a=addr_out,
+						A=i.amt.fmt(color=True),
+						c=i.days if self.show_days else i.confs))
 
 		self.fmt_display = '\n'.join(out) + '\n'
 #		unsp.pdie()
@@ -198,29 +225,38 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
-		fs  = ' {:4} {:67} {} {} {:12} {:<8} {:<6} {}'
-		out = [fs.format('Num','Tx ID,Vout',
-				'Address'.ljust(addr_w),
-				'MMGen ID'.ljust(mmid_w+1),
-				'Amount({})'.format(g.coin),
-				'Confs','Age(d)',
-				'Label')]
+		if self.show_tx:
+			fs  = ' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,g.proto.coin_amt.max_prec+4)
+		else:
+			fs  = ' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (g.proto.coin_amt.max_prec+4)
+		out = [fs.format(
+				n='Num',
+				t='Tx ID,Vout',
+				a='Address'.ljust(addr_w),
+				m='MMGen ID'.ljust(mmid_w+1),
+				A='Amount({})'.format(g.coin),
+				c='Confs',
+				g='Age(d)',
+				l='Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
 			addr = '|'+'.' * addr_w if i.skip == 'addr' and self.group else i.addr.fmt(color=color,width=addr_w)
 			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
 			out.append(
-				fs.format(str(n+1)+')', tx+','+str(i.vout),
-					addr,
-					MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
+				fs.format(
+					n=str(n+1)+')',
+					t=tx+','+str(i.vout),
+					a=addr,
+					m=MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
 						else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
-					i.amt.fmt(color=color),
-					i.confs,i.days,
-					i.label.hl(color=color) if i.label else
+					A=i.amt.fmt(color=color),
+					c=i.confs,
+					g=i.days,
+					l=i.label.hl(color=color) if i.label else
 						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
 
-		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n\n{}\n\nTotal {}: {}\n'
+		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
 				make_timestr(),
 				' '.join(self.sort_info(include_group=False)),
@@ -259,23 +295,22 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def view_and_sort(self,tx):
 		fs = 'Total to spend, excluding fees: {} {}\n\n'
 		txos = fs.format(tx.sum_outputs().hl(),g.coin) if tx.outputs else ''
-		prompt = """
-{}Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
-	""".format(txos).strip()
+		prompt = txos + self.prompt.strip()
 		self.display()
 		msg(prompt)
 
 		from mmgen.term import get_char
 		p = "'q'=quit view, 'p'=print to file, 'v'=pager view, 'w'=wide view, 'l'=add label:\b"
 		while True:
-			reply = get_char(p, immed_chars='atDdAMrgmeqpvw')
+			reply = get_char(p,immed_chars='atDdAMrgmeqpvw')
 			if   reply == 'a': self.do_sort('amt')
 			elif reply == 'A': self.do_sort('age')
 			elif reply == 'd': self.do_sort('addr')
 			elif reply == 'D': self.show_days = not self.show_days
 			elif reply == 'e': msg('\n{}\n{}\n{}'.format(self.fmt_display,prompt,p))
-			elif reply == 'g': self.group = not self.group
+			elif reply == 'g':
+				if self.can_group:
+					self.group = not self.group
 			elif reply == 'l':
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:

@@ -23,7 +23,7 @@ altcoins.eth.tw: ETH tracking wallet functions and methods for the MMGen suite
 import json
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.tw import TrackingWallet,TwAddrList
+from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
 
 # No file locking - 2 processes accessing the wallet at the same time will corrupt it
@@ -100,6 +100,42 @@ class EthereumTrackingWallet(TrackingWallet):
 		else: # emulate RPC library
 			return ('rpcfail',(None,2,"Address '{}' not found in tracking wallet".format(coinaddr)))
 
+# Use consistent naming, even though Ethereum doesn't have unspent outputs
+class EthereumTwUnspentOutputs(TwUnspentOutputs):
+
+	show_tx = False
+	can_group = False
+	prompt = """
+Sort options: [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
+Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
+"""
+
+	def do_sort(self,key=None,reverse=False):
+		if key == 'txid': return
+		super(type(self),self).do_sort(key=key,reverse=reverse)
+
+	class MMGenTwUnspentOutput(MMGenListItem):
+	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','days','skip'
+		txid   = MMGenImmutableAttr('txid',str,typeconv=False)
+		vout   = MMGenImmutableAttr('vout',str,typeconv=False)
+		amt    = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
+		label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
+		addr   = MMGenImmutableAttr('addr','CoinAddr')
+		confs  = MMGenImmutableAttr('confs',int,typeconv=False)
+		days   = MMGenListItemAttr('days',int,typeconv=False)
+		skip   = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
+
+	def get_unspent_rpc(self):
+		rpc_init()
+		return map(lambda d: {
+				'txid': 'N/A',
+				'vout': '',
+				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
+				'address': d['addr'],
+				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),fromWei=True),
+				'confirmations': 0, # TODO
+				}, EthereumTrackingWallet().sorted_list())
 
 class EthereumTwAddrList(TwAddrList):
 

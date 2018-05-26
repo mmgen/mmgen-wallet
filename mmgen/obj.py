@@ -308,6 +308,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	max_prec = 8
 	max_amt = 21000000
 	min_coin_unit = Decimal('0.00000001') # satoshi
+	amt_fs = '4.8'
 
 	def __new__(cls,num,on_fail='die'):
 		if type(num) == cls: return num
@@ -328,7 +329,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def fmtc(cls):
 		raise NotImplementedError
 
-	def fmt(self,fs='4.8',color=False,suf=''):
+	def fmt(self,fs=None,color=False,suf=''):
+		if fs == None: fs = self.amt_fs
 		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
 		if '.' in fs:
 			p1,p2 = map(int,fs.split('.',1))
@@ -376,6 +378,7 @@ class ETHAmt(BTCAmt):
 	max_prec = 18
 	max_amt = 999999999 # TODO
 	min_coin_unit = Decimal('0.000000000000000001') # wei
+	amt_fs = '4.18'
 
 	def __new__(cls,num,on_fail='die',fromWei=False):
 		if type(num) == cls: return num
