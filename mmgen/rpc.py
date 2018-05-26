@@ -32,11 +32,13 @@ class RPCFailure(Exception): pass
 
 class CoinDaemonRPCConnection(object):
 
-	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None,auth=True):
+	auth = True
+	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
+
+	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
 
 		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
-		dmsg_rpc('    host [{}] port [{}] user [{}] passwd [{}] auth_cookie [{}]\n'.format(
-			host,port,user,passwd,auth_cookie))
+		dmsg_rpc(self.db_fs.format(h=host,p=port,u=user,pw=passwd,c=auth_cookie))
 
 		import socket
 		try:
@@ -44,8 +46,8 @@ class CoinDaemonRPCConnection(object):
 		except:
 			die(1,'Unable to connect to {}:{}'.format(host,port))
 
-		if not auth:
-			self.auth_str = ''
+		if not self.auth:
+			pass
 		elif user and passwd:
 			self.auth_str = '{}:{}'.format(user,passwd)
 		elif auth_cookie:
@@ -66,6 +68,10 @@ class CoinDaemonRPCConnection(object):
 
 		self.host = host
 		self.port = port
+
+		for method in self.rpcmethods:
+			exec '{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
+						c=type(self).__name__,m=method)
 
 	# Normal mode: call with arg list unrolled, exactly as with cli
 	# Batch mode:  call with list of arg lists as first argument
@@ -113,12 +119,11 @@ class CoinDaemonRPCConnection(object):
 				return json.JSONEncoder.default(self,obj)
 
 		http_hdr = { 'Content-Type': 'application/json' }
-		if self.auth_str:
-			dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{}enc: [Basic {}]\n'.format(
-				self.auth_str,' '*31,base64.b64encode(self.auth_str)))
-			http_hdr.update({
-				'Host': self.host,
-				'Authorization': 'Basic {}'.format(base64.b64encode(self.auth_str)) })
+		if self.auth:
+			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [Basic {}]\n'
+			as_enc = base64.b64encode(self.auth_str)
+			dmsg_rpc(fs.format(self.auth_str,'',as_enc))
+			http_hdr.update({ 'Host':self.host, 'Authorization':'Basic {}'.format(as_enc) })
 
 		try:
 			hc.request('POST','/',json.dumps(p,cls=MyJSONEncoder),http_hdr)
@@ -198,10 +203,10 @@ class CoinDaemonRPCConnection(object):
 		'walletpassphrase',
 	)
 
-	for name in rpcmethods:
-		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
-
 class EthereumRPCConnection(CoinDaemonRPCConnection):
+
+	auth = False
+	db_fs = '    host [{h}] port [{p}]\n'
 
 	rpcmethods = (
 		'eth_accounts',
@@ -233,10 +238,6 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 		'parity_pendingTransactionsStats',
 		'parity_versionInfo',
 	)
-
-	for name in rpcmethods:
-		exec "def {n}(self,*a,**k):return self.request('{n}',*a,**k)\n".format(n=name)
-
 
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'

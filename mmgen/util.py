@@ -842,8 +842,7 @@ def rpc_init(reinit=False):
 	if g.coin == 'ETH':
 		conn = mmgen.rpc.EthereumRPCConnection(
 					g.rpc_host or 'localhost',
-					g.rpc_port or g.proto.rpc_port,
-					auth=False)
+					g.rpc_port or g.proto.rpc_port)
 		if not g.daemon_version: # First call
 			g.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
 			g.chain = conn.parity_chain()
