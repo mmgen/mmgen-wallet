@@ -753,7 +753,8 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 def do_pager(text):
 
-	pagers,shell = ['less','more'],False
+	pagers = ['less','more']
+	end_msg = '\n(end of text)\n\n'
 	# --- Non-MSYS Windows code deleted ---
 	# raw, chop, horiz scroll 8 chars, disable buggy line chopping in MSYS
 	os.environ['LESS'] = (('--shift 8 -RS'),('-cR -#1'))[g.platform=='win']
@@ -762,16 +763,15 @@ def do_pager(text):
 		pagers = [os.environ['PAGER']] + pagers
 
 	for pager in pagers:
-		end = ('\n(end of text)\n','')[pager=='less']
 		try:
-			from subprocess import Popen,PIPE,STDOUT
-			p = Popen([pager], stdin=PIPE, shell=shell)
+			from subprocess import Popen,PIPE
+			p = Popen([pager],stdin=PIPE,shell=False)
 		except: pass
 		else:
-			p.communicate(text.encode('utf8')+end+'\n')
+			p.communicate(text.encode('utf8')+(end_msg,'')[pager=='less'])
 			msg_r('\r')
 			break
-	else: Msg(text+end)
+	else: Msg(text+end_msg)
 
 def do_license_msg(immed=False):
 

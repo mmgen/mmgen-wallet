@@ -33,15 +33,15 @@ class TwUnspentOutputs(MMGenObject):
 	class MMGenTwUnspentOutput(MMGenListItem):
 	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
 		txid     = MMGenImmutableAttr('txid','CoinTxID')
-		vout     = MMGenImmutableAttr('vout',int,typeconv=False),
-		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__),
-		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True),
+		vout     = MMGenImmutableAttr('vout',int,typeconv=False)
+		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
+		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
-		addr     = MMGenImmutableAttr('addr','CoinAddr'),
-		confs    = MMGenImmutableAttr('confs',int,typeconv=False),
+		addr     = MMGenImmutableAttr('addr','CoinAddr')
+		confs    = MMGenImmutableAttr('confs',int,typeconv=False)
 		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
-		days    = MMGenListItemAttr('days',int,typeconv=False),
-		skip    = MMGenListItemAttr('skip',bool,typeconv=False,reassign_ok=True),
+		days    = MMGenListItemAttr('days',int,typeconv=False)
+		skip    = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
 
 	wmsg = {
 	'no_spendable_outputs': """
@@ -151,7 +151,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		tx_w = min(64,self.cols-addr_w-28-col1_w) # min=7
 		txdots = ('','..')[tx_w < 64]
 
-		for i in unsp: i.skip = None
+		for i in unsp: i.skip = ''
 		if self.group and (self.sort_key in ('addr','txid','twmmid')):
 			for a,b in [(unsp[i],unsp[i+1]) for i in range(len(unsp)-1)]:
 				for k in ('addr','txid','twmmid'):
