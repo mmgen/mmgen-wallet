@@ -107,10 +107,10 @@ class CoinDaemonRPCConnection(object):
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
 
 		class MyJSONEncoder(json.JSONEncoder):
-			def default(self, obj):
+			def default(self,obj):
 				if isinstance(obj,g.proto.coin_amt):
 					return g.proto.get_rpc_coin_amt_type()(obj)
-				return json.JSONEncoder.default(self, obj)
+				return json.JSONEncoder.default(self,obj)
 
 		http_hdr = { 'Content-Type': 'application/json' }
 		if self.auth_str:

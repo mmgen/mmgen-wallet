@@ -383,11 +383,11 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 class TwAddrList(MMGenDict):
 
-	def __new__(cls,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
+	def __new__(cls,*args,**kwargs):
 		if g.coin == 'ETH':
 			from mmgen.altcoins.eth.tw import EthereumTwAddrList
 			cls = EthereumTwAddrList
-		return MMGenDict.__new__(cls,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
+		return MMGenDict.__new__(cls,*args,**kwargs)
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
 

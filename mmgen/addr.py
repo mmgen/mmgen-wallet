@@ -862,11 +862,11 @@ re-import your addresses.
 """.strip().format(pnm=pnm)
 	}
 
-	def __new__(cls,source=None):
+	def __new__(cls,*args,**kwargs):
 		if g.coin == 'ETH':
 			from mmgen.altcoins.eth.tw import EthereumAddrData
 			cls = EthereumAddrData
-		return MMGenObject.__new__(cls,source)
+		return MMGenObject.__new__(cls,*args,**kwargs)
 
 	def __init__(self,source=None):
 		self.al_ids = {}
