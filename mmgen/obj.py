@@ -392,8 +392,8 @@ class ETHAmt(BTCAmt):
 			if from_unit:
 				assert from_unit in ('wei','szabo'),"'{}': unrecognized ETH denomination".format(from_unit)
 				assert type(num) in (int,long),'value is not an integer or long integer'
-				return super(cls,cls).__new__(cls,num * getattr(cls,from_unit))
-			return super(cls,cls).__new__(cls,num)
+				return super(cls,cls).__new__(cls,num * getattr(cls,from_unit),on_fail=on_fail)
+			return super(cls,cls).__new__(cls,num,on_fail=on_fail)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} ({})"
 			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)

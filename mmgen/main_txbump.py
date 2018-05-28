@@ -114,7 +114,7 @@ fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
 tx.update_output_amt(op_idx,tx.sum_inputs()-tx.sum_outputs(exclude=op_idx)-fee)
 
-d = tx.get_fee()
+d = tx.get_fee_from_tx()
 assert d == fee and d <= g.proto.max_tx_fee
 
 if not opt.yes:

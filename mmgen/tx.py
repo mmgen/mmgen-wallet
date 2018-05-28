@@ -225,7 +225,9 @@ class MMGenTX(MMGenObject):
 	txid_ext = 'txid'
 	desc     = 'transaction'
 	chg_fs   = 'Transaction produces {} {} in change'
+	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
+	rel_fee_desc = 'satoshis per byte'
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
@@ -371,6 +373,9 @@ class MMGenTX(MMGenObject):
 	def edit_comment(self):
 		return self.add_comment(self)
 
+	def get_fee_from_tx(self):
+		return self.sum_inputs() - self.sum_outputs()
+
 	def has_segwit_inputs(self):
 		return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
 
@@ -459,17 +464,27 @@ class MMGenTX(MMGenObject):
 
 		return int(ret * float(opt.vsize_adj)) if hasattr(opt,'vsize_adj') and opt.vsize_adj else ret
 
-	def get_fee(self):
-		return self.sum_inputs() - self.sum_outputs()
-
-	def btc2spb(self,coin_fee):
-		return int(coin_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
-
+	# coin-specific fee routines
 	def get_relay_fee(self):
 		kb_fee = g.proto.coin_amt(g.rpch.getnetworkinfo()['relayfee'])
 		ret = kb_fee * self.estimate_size() / 1024
 		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
 		return ret
+
+	# convert absolute BTC fee to satoshis-per-byte
+	def fee_abs2rel(self,abs_fee):
+		return int(abs_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
+
+	def get_rel_fee_from_network(self): # rel_fee is BTC/kB
+		try:
+			ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
+			rel_fee = ret['feerate'] if 'feerate' in ret else -2
+			fe_type = 'estimatesmartfee'
+		except:
+			rel_fee = g.rpch.estimatefee(opt.tx_confs)
+			fe_type = 'estimatefee'
+
+		return rel_fee,fe_type
 
 	def convert_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
@@ -485,41 +500,75 @@ class MMGenTX(MMGenObject):
 			elif on_fail == 'throw':
 				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
 
-	def get_usr_fee(self,tx_fee,desc='Missing description'):
-		coin_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
-		if coin_fee == None:
+	# given network fee estimate in BTC/kB and tx size, calculate absolute fee in coin units
+	def calculate_fee(self,rel_fee,fe_type=None):
+		tx_size = self.estimate_size()
+		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size / 1024
+		if opt.verbose:
+			msg('{} fee for {} confirmations: {} {}/kB'.format(fe_type.upper(),opt.tx_confs,rel_fee,g.coin))
+			msg('TX size (estimated): {}'.format(tx_size))
+		return ret
+
+	def convert_and_check_fee(self,tx_fee,desc='Missing description'):
+		abs_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
+		if abs_fee == None:
 			# we shouldn't be calling this if tx size is unknown
 			m = "'{}': cannot convert satoshis-per-byte to {} because transaction size is unknown"
 			assert False, m.format(tx_fee,g.coin)
-		elif coin_fee == False:
+		elif abs_fee == False:
 			m = "'{}': invalid TX fee (not a {} amount or satoshis-per-byte specification)"
 			msg(m.format(tx_fee,g.coin))
 			return False
-		elif coin_fee > g.proto.max_tx_fee:
+		elif abs_fee > g.proto.max_tx_fee:
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
-			msg(m.format(coin_fee,desc,g.proto.max_tx_fee,c=g.coin))
+			msg(m.format(abs_fee,desc,g.proto.max_tx_fee,c=g.coin))
 			return False
-		elif coin_fee < self.get_relay_fee():
+		elif abs_fee < self.get_relay_fee():
 			m = '{} {c}: {} fee too small (below relay fee of {} {c})'
-			msg(m.format(str(coin_fee),desc,str(self.get_relay_fee()),c=g.coin))
+			msg(m.format(str(abs_fee),desc,str(self.get_relay_fee()),c=g.coin))
 			return False
 		else:
-			return coin_fee
+			return abs_fee
 
+	# non-coin-specific fee routines
 	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
-		coin_fee = None
+		abs_fee = None
 		while True:
 			if tx_fee:
-				coin_fee = self.get_usr_fee(tx_fee,desc)
-			if coin_fee:
+				abs_fee = self.convert_and_check_fee(tx_fee,desc)
+			if abs_fee:
 				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
-				p = '{} TX fee{}: {} {} ({} satoshis per byte)'.format(desc,m,
-					coin_fee.hl(),g.coin,pink(str(self.btc2spb(coin_fee))))
-				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+				p = u'{} TX fee{}: {} {} ({} {})\n'.format(
+						desc,
+						m,
+						abs_fee.hl(),
+						g.coin,
+						pink(str(self.fee_abs2rel(abs_fee))),
+						self.rel_fee_desc)
+				if opt.yes or keypress_confirm(p+'OK?',default_yes=True):
 					if opt.yes: msg(p)
-					return coin_fee
+					return abs_fee
 			tx_fee = my_raw_input('Enter transaction fee: ')
 			desc = 'User-selected'
+
+	def get_fee_from_user(self,have_estimate_fail=[]):
+
+		if opt.tx_fee:
+			desc = 'User-selected'
+			start_fee = opt.tx_fee
+		else:
+			desc = 'Network-estimated'
+			rel_fee,fe_type = self.get_rel_fee_from_network()
+
+			if rel_fee < 0:
+				if not have_estimate_fail:
+					msg(self.fee_fail_fs.format(c=opt.tx_confs,t=fe_type))
+					have_estimate_fail.append(True)
+				start_fee = None
+			else:
+				start_fee = self.calculate_fee(rel_fee,fe_type)
+
+		return self.get_usr_fee_interactive(start_fee,desc=desc)
 
 	def delete_attrs(self,desc,attr):
 		for e in getattr(self,desc):
@@ -806,9 +855,9 @@ class MMGenTX(MMGenObject):
 			m = 'Transaction has MMGen Segwit outputs, but this blockchain does not support Segwit'
 			die(2,m+' at the current height')
 
-		if self.get_fee() > g.proto.max_tx_fee:
+		if self.get_fee_from_tx() > g.proto.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-				self.get_fee(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin.upper()))
+				self.get_fee_from_tx(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin.upper()))
 
 		self.get_status()
 
@@ -863,7 +912,7 @@ class MMGenTX(MMGenObject):
 			self.txid,
 			('-'+g.coin,'')[g.coin=='BTC'],
 			self.send_amt,
-			('',',{}'.format(self.btc2spb(self.get_fee())))[self.is_rbf()],
+			('',',{}'.format(self.fee_abs2rel(self.get_fee_from_tx())))[self.is_rbf()],
 			('',',tl={}'.format(tl))[bool(tl)],
 			self.ext,
 			x=u'-α' if g.debug_utf8 else '')
@@ -988,7 +1037,7 @@ class MMGenTX(MMGenObject):
 
 		t_in,t_out = self.sum_inputs(),self.sum_outputs()
 		fee = t_in-t_out
-		out += fs.format(t_in.hl(),t_out.hl(),fee.hl(),pink(str(self.btc2spb(fee))),c=g.coin)
+		out += fs.format(t_in.hl(),t_out.hl(),fee.hl(),pink(str(self.fee_abs2rel(fee))),c=g.coin)
 
 		if opt.verbose:
 			ts = len(self.hex)/2 if self.hex else 'unknown'
@@ -1087,36 +1136,6 @@ class MMGenTX(MMGenObject):
 
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
-
-	def get_fee_from_user(self,have_estimate_fail=[]):
-
-		if opt.tx_fee:
-			desc = 'User-selected'
-			start_fee = opt.tx_fee
-		else:
-			desc = 'Network-estimated'
-			try:
-				ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
-			except:
-				fe_type = 'estimatefee'
-				fee_per_kb = g.rpch.estimatefee(opt.tx_confs)
-			else:
-				fe_type = 'estimatesmartfee'
-				fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
-
-			if fee_per_kb < 0:
-				if not have_estimate_fail:
-					msg('Network fee estimation for {} confirmations failed ({})'.format(opt.tx_confs,fe_type))
-					have_estimate_fail.append(True)
-				start_fee = None
-			else:
-				start_fee = g.proto.coin_amt(fee_per_kb) * opt.tx_fee_adj * self.estimate_size() / 1024
-				if opt.verbose:
-					msg('{} fee for {} confirmations: {} {}/kB'.format(
-						fe_type.upper(),opt.tx_confs,fee_per_kb,g.coin))
-					msg('TX size (estimated): {}'.format(self.estimate_size()))
-
-		return self.get_usr_fee_interactive(start_fee,desc=desc)
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		for a in cmd_args:
@@ -1323,11 +1342,11 @@ class MMGenBumpTX(MMGenTX):
 	def set_min_fee(self):
 		self.min_fee = self.sum_inputs() - self.sum_outputs() + self.get_relay_fee()
 
-	def get_usr_fee(self,tx_fee,desc):
-		ret = super(type(self),self).get_usr_fee(tx_fee,desc)
+	def convert_and_check_fee(self,tx_fee,desc):
+		ret = super(type(self),self).convert_and_check_fee(tx_fee,desc)
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} satoshis per byte)'.format(
-				ret,desc,self.min_fee,self.btc2spb(self.min_fee),c=g.coin))
+				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee),c=g.coin))
 			return False
 		output_amt = self.outputs[self.bump_output_idx].amt
 		if ret >= output_amt:
