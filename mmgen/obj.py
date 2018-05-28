@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
@@ -374,26 +375,34 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
+
+# Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 class ETHAmt(BTCAmt):
 	max_prec = 18
 	max_amt = 999999999 # TODO
-	min_coin_unit = Decimal('0.000000000000000001') # wei
+	wei    = Decimal('0.000000000000000001')
+	szabo  = Decimal('0.000000000001')
+	min_coin_unit = wei
 	amt_fs = '4.18'
 
-	def __new__(cls,num,on_fail='die',fromWei=False):
+	def __new__(cls,num,from_unit=None,on_fail='die'):
 		if type(num) == cls: return num
 		cls.arg_chk(cls,on_fail)
 		try:
-			if fromWei:
+			if from_unit:
+				assert from_unit in ('wei','szabo'),"'{}': unrecognized ETH denomination".format(from_unit)
 				assert type(num) in (int,long),'value is not an integer or long integer'
-				return super(cls,cls).__new__(cls,num * cls.min_coin_unit)
+				return super(cls,cls).__new__(cls,num * getattr(cls,from_unit))
 			return super(cls,cls).__new__(cls,num)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} ({})"
 			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
 
 	def toWei(self):
-		return int(Decimal(self) / self.min_coin_unit)
+		return int(Decimal(self) / self.wei)
+
+	def toSzabo(self):
+		return int(Decimal(self) / self.szabo)
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'

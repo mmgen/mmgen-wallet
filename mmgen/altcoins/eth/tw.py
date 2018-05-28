@@ -103,8 +103,9 @@ class EthereumTrackingWallet(TrackingWallet):
 # Use consistent naming, even though Ethereum doesn't have unspent outputs
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
 
-	show_tx = False
+	show_txid = False
 	can_group = False
+	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
 	prompt = """
 Sort options: [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
@@ -114,26 +115,14 @@ Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
 		if key == 'txid': return
 		super(type(self),self).do_sort(key=key,reverse=reverse)
 
-	class MMGenTwUnspentOutput(MMGenListItem):
-	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','days','skip'
-		txid   = MMGenImmutableAttr('txid',str,typeconv=False)
-		vout   = MMGenImmutableAttr('vout',str,typeconv=False)
-		amt    = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
-		label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
-		addr   = MMGenImmutableAttr('addr','CoinAddr')
-		confs  = MMGenImmutableAttr('confs',int,typeconv=False)
-		days   = MMGenListItemAttr('days',int,typeconv=False)
-		skip   = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
-
 	def get_unspent_rpc(self):
 		rpc_init()
 		return map(lambda d: {
-				'txid': 'N/A',
-				'vout': '',
+				'txid': '0'*64, # bogus value, not displayed
+				'vout': 0,      # ""
 				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
 				'address': d['addr'],
-				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),fromWei=True),
+				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei'),
 				'confirmations': 0, # TODO
 				}, EthereumTrackingWallet().sorted_list())
 
@@ -150,7 +139,7 @@ class EthereumTwAddrList(TwAddrList):
 #			if d['confirmations'] < minconf: continue
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
-			bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),fromWei=True)
+			bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei')
 			if bal == 0 and not showempty:
 				if not label.comment: continue
 				if not all_labels: continue
