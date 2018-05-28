@@ -545,12 +545,15 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		return [d.addr for d in self.data if not getattr(d,key)]
 
 	def generate_addrs_from_keys(self):
-		kg = KeyGenerator('std')
-		ag = AddrGenerator('p2pkh')
+		# assume that the first listed mmtype is valid for flat key list
+		t = MMGenAddrType(g.proto.mmtypes[0])
+		kg = KeyGenerator(t.pubkey_type)
+		ag = AddrGenerator(t.gen_method)
 		d = self.data
 		for n,e in enumerate(d,1):
 			qmsg_r('\rGenerating addresses from keylist: {}/{}'.format(n,len(d)))
 			e.addr = ag.to_addr(kg.to_pubhex(e.sec))
+			if g.debug_addrlist: Msg('generate_addrs_from_keys():\n{}'.format(e.pformat()))
 		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
 
 	def format(self,enable_comments=False):

@@ -29,8 +29,9 @@ CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 class TwUnspentOutputs(MMGenObject):
 
 	txid_w = 64
-	show_tx = True
+	show_txid = True
 	can_group = True
+	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -175,21 +176,19 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='twmmid']
 
-		hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
-		out  = [hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
+		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
 		if g.chain in ('testnet','regtest'):
 			out += [green('Chain: {}'.format(g.chain.upper()))]
-		if self.show_tx:
+		if self.show_txid:
 			fs = u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w)
 		else:
 			fs = u' {n:%s} {a} {A} {c:<}' % col1_w
-		out += [fs.format(
-				n='Num',
-				t='TXid'.ljust(tx_w - 5) + ' Vout',
-				v='',
-				a='Address'.ljust(addr_w),
-				A='Amt({})'.format(g.coin).ljust(g.proto.coin_amt.max_prec+4),
-				c=('Confs','Age(d)')[self.show_days])]
+		out += [fs.format(  n='Num',
+							t='TXid'.ljust(tx_w - 5) + ' Vout',
+							v='',
+							a='Address'.ljust(addr_w),
+							A='Amt({})'.format(g.coin).ljust(g.proto.coin_amt.max_prec+4),
+							c=('Confs','Age(d)')[self.show_days])]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*(addr_w-1)
@@ -209,13 +208,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			tx = ' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
 					else i.txid[:tx_w-len(txdots)]+txdots
 
-			out.append(fs.format(
-						n=str(n+1)+')',
-						t=tx,
-						v=i.vout,
-						a=addr_out,
-						A=i.amt.fmt(color=True),
-						c=i.days if self.show_days else i.confs))
+			out.append(fs.format(   n=str(n+1)+')',
+									t=tx,
+									v=i.vout,
+									a=addr_out,
+									A=i.amt.fmt(color=True),
+									c=i.days if self.show_days else i.confs))
 
 		self.fmt_display = '\n'.join(out) + '\n'
 #		unsp.pdie()
@@ -225,36 +223,34 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
-		if self.show_tx:
+		if self.show_txid:
 			fs  = ' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,g.proto.coin_amt.max_prec+4)
 		else:
 			fs  = ' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (g.proto.coin_amt.max_prec+4)
-		out = [fs.format(
-				n='Num',
-				t='Tx ID,Vout',
-				a='Address'.ljust(addr_w),
-				m='MMGen ID'.ljust(mmid_w+1),
-				A='Amount({})'.format(g.coin),
-				c='Confs',
-				g='Age(d)',
-				l='Label')]
+		out = [fs.format(   n='Num',
+							t='Tx ID,Vout',
+							a='Address'.ljust(addr_w),
+							m='MMGen ID'.ljust(mmid_w+1),
+							A='Amount({})'.format(g.coin),
+							c='Confs',
+							g='Age(d)',
+							l='Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
 		for n,i in enumerate(self.unspent):
 			addr = '|'+'.' * addr_w if i.skip == 'addr' and self.group else i.addr.fmt(color=color,width=addr_w)
 			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
-			out.append(
-				fs.format(
-					n=str(n+1)+')',
-					t=tx+','+str(i.vout),
-					a=addr,
-					m=MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
-						else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
-					A=i.amt.fmt(color=color),
-					c=i.confs,
-					g=i.days,
-					l=i.label.hl(color=color) if i.label else
-						TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
+			out.append(fs.format(
+						n=str(n+1)+')',
+						t=tx+','+str(i.vout),
+						a=addr,
+						m=MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
+							else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
+						A=i.amt.fmt(color=color),
+						c=i.confs,
+						g=i.days,
+						l=i.label.hl(color=color) if i.label else
+							TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
 
 		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(

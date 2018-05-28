@@ -80,16 +80,6 @@ def strfmt_locktime(num,terse=False):
 	else:
 		die(2,"'{}': invalid locktime value!".format(num))
 
-def select_unspent(unspent,prompt):
-	while True:
-		reply = my_raw_input(prompt).strip()
-		if reply:
-			selected = AddrIdxList(fmt_str=','.join(reply.split()),on_fail='return')
-			if selected:
-				if selected[-1] <= len(unspent):
-					return selected
-				msg('Unspent output number must be <= {}'.format(len(unspent)))
-
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 
 	# assume mmaddr has already been checked
@@ -234,6 +224,8 @@ class MMGenTX(MMGenObject):
 	sig_ext  = 'sigtx'
 	txid_ext = 'txid'
 	desc     = 'transaction'
+	chg_fs   = 'Transaction produces {} {} in change'
+	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
@@ -275,6 +267,7 @@ class MMGenTX(MMGenObject):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
+		self.fee         = g.proto.coin_amt('0')
 		self.hex         = ''           # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
@@ -295,11 +288,15 @@ class MMGenTX(MMGenObject):
 			self.check_sigs() # marks the tx as signed
 
 		# repeat with sign and send, because coin daemon could be restarted
-		self.die_if_incorrect_chain()
+		self.check_correct_chain(on_fail='die')
 
-	def die_if_incorrect_chain(self):
-		if self.chain and g.chain and self.chain != g.chain:
-			die(2,'Transaction is for {}, but current chain is {}!'.format(self.chain,g.chain))
+	def check_correct_chain(self,on_fail='return'):
+		assert on_fail in ('return','die'),"'{}': invalid value for 'on_fail'".format(on_fail)
+		m = 'Transaction is for {}, but current chain is {}!'.format(self.chain,g.chain)
+		bad = self.chain and g.chain and self.chain != g.chain
+		if bad:
+			msg(m) if on_fail == 'return' else die(2,m)
+		return not bad
 
 	def add_output(self,coinaddr,amt,is_chg=None):
 		self.outputs.append(MMGenTX.MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
@@ -564,8 +561,11 @@ class MMGenTX(MMGenObject):
 		assert type(val) == int,'locktime value not an integer'
 		self.hex = self.hex[:-8] + hexlify(unhexlify('{:08x}'.format(val))[::-1])
 
+	def get_blockcount(self):
+		return int(g.rpch.getblockcount())
+
 	def add_blockcount(self):
-		self.blockcount = int(g.rpch.getblockcount())
+		self.blockcount = self.get_blockcount()
 
 	def format(self):
 		self.inputs.check_coin_mismatch()
@@ -604,12 +604,15 @@ class MMGenTX(MMGenObject):
 	def sign(self,tx_num_str,keys):
 
 		if self.marked_signed():
-			die(1,'Transaction is already signed!')
+			msg('Transaction is already signed!')
+			return False
 
-		self.die_if_incorrect_chain()
+		if not self.check_correct_chain(on_fail='return'):
+			return False
 
 		if (self.has_segwit_inputs() or self.has_segwit_outputs()) and not g.proto.cap('segwit'):
-			die(2,yellow("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin)))
+			ymsg("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin))
+			return False
 
 		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys,'s'),g.proto.daemon_name))
 
@@ -793,7 +796,7 @@ class MMGenTX(MMGenObject):
 		if not self.marked_signed():
 			die(1,'Transaction is not signed!')
 
-		self.die_if_incorrect_chain()
+		self.check_correct_chain(on_fail='die')
 
 		self.check_hex_tx_matches_mmgen_tx(DeserializedTX(self.hex))
 
@@ -908,7 +911,7 @@ class MMGenTX(MMGenObject):
 	def format_view(self,terse=False):
 		try:
 			rpc_init()
-			blockcount = g.rpch.getblockcount()
+			blockcount = self.get_blockcount()
 		except:
 			blockcount = None
 
@@ -928,7 +931,7 @@ class MMGenTX(MMGenObject):
 			addr_w = max(len(e.addr) for e in io)
 			confs_per_day = 60*60*24 / g.proto.secs_per_block
 			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
-				if ip and blockcount != None:
+				if ip and blockcount:
 					confs = e.confs + blockcount - self.blockcount
 					days = int(confs / confs_per_day)
 				if e.mmid:
@@ -950,7 +953,7 @@ class MMGenTX(MMGenObject):
 						('','comment:',e.label.hl() if e.label else ''),
 						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
 					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
-						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount!=None else '')
+						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
 					] if ip else icommon + [
 						('','change:',green('True') if e.is_chg else '')]
 					io_out += '\n'.join([(u'{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
@@ -964,8 +967,7 @@ class MMGenTX(MMGenObject):
 							self.send_amt.hl(),
 							g.coin,
 							self.timestamp,
-							(red('False'),
-							green('True'))[self.is_rbf()],
+							(red('False'),green('True'))[self.is_rbf()],
 							self.marked_signed(color=True),
 							(green('None'),orange(strfmt_locktime(self.locktime,terse=True)))[bool(self.locktime)])
 		if self.chain in ('testnet','regtest'):
@@ -997,6 +999,9 @@ class MMGenTX(MMGenObject):
 			out += '\n'
 
 		return out # TX label might contain non-ascii chars
+
+	def check_tx_hex_data(self):
+		self.hex = HexStr(self.hex,on_fail='raise')
 
 	def parse_tx_file(self,infile,md_only=False,silent_open=False):
 
@@ -1069,7 +1074,7 @@ class MMGenTX(MMGenObject):
 			desc = 'block count in metadata'
 			self.blockcount = int(blockcount)
 			desc = 'transaction hex data'
-			self.hex = HexStr(self.hex,on_fail='raise')
+			self.check_tx_hex_data()
 			if md_only: return # the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,'invalid coin type'
@@ -1093,38 +1098,27 @@ class MMGenTX(MMGenObject):
 			try:
 				ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
 			except:
-				fetype = 'estimatefee'
+				fe_type = 'estimatefee'
 				fee_per_kb = g.rpch.estimatefee(opt.tx_confs)
 			else:
-				fetype = 'estimatesmartfee'
+				fe_type = 'estimatesmartfee'
 				fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 
 			if fee_per_kb < 0:
 				if not have_estimate_fail:
-					msg('Network fee estimation for {} confirmations failed ({})'.format(opt.tx_confs,fetype))
+					msg('Network fee estimation for {} confirmations failed ({})'.format(opt.tx_confs,fe_type))
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:
 				start_fee = g.proto.coin_amt(fee_per_kb) * opt.tx_fee_adj * self.estimate_size() / 1024
 				if opt.verbose:
 					msg('{} fee for {} confirmations: {} {}/kB'.format(
-						fetype.upper(),opt.tx_confs,fee_per_kb,g.coin))
+						fe_type.upper(),opt.tx_confs,fee_per_kb,g.coin))
 					msg('TX size (estimated): {}'.format(self.estimate_size()))
 
 		return self.get_usr_fee_interactive(start_fee,desc=desc)
 
-	def get_outputs_from_cmdline(self,cmd_args):
-		from mmgen.addr import AddrList,AddrData
-		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
-		cmd_args = set(cmd_args) - set(addrfiles)
-
-		ad_f = AddrData()
-		for a in addrfiles:
-			check_infile(a)
-			ad_f.add(AddrList(a))
-
-		ad_w = AddrData(source='tw')
-
+	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		for a in cmd_args:
 			if ',' in a:
 				a1,a2 = a.split(',',1)
@@ -1141,24 +1135,48 @@ class MMGenTX(MMGenObject):
 			else:
 				die(2,'{}: invalid command-line argument'.format(a))
 
-		if not self.outputs:
-			die(2,'At least one output must be specified on the command line')
-
 		if self.get_chg_output_idx() == None:
 			die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(self.outputs) == 1])
-
-		self.add_mmaddrs_to_outputs(ad_w,ad_f)
-		self.check_dup_addrs('outputs')
 
 		if not segwit_is_active() and self.has_segwit_outputs():
 			fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
 			rdie(2,fs.format(g.proj_name))
 
+	def get_outputs_from_cmdline(self,cmd_args):
+		from mmgen.addr import AddrList,AddrData
+		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
+		cmd_args = set(cmd_args) - set(addrfiles)
+
+		ad_f = AddrData()
+		for a in addrfiles:
+			check_infile(a)
+			ad_f.add(AddrList(a))
+
+		ad_w = AddrData(source='tw')
+
+		self.process_cmd_args(cmd_args,ad_f,ad_w)
+
+		if not self.outputs:
+			die(2,'At least one output must be specified on the command line')
+
+		self.add_mmaddrs_to_outputs(ad_w,ad_f)
+		self.check_dup_addrs('outputs')
+
+	def select_unspent(self,unspent):
+		prompt = 'Enter a range or space-separated list of outputs to spend: '
+		while True:
+			reply = my_raw_input(prompt).strip()
+			if reply:
+				selected = AddrIdxList(fmt_str=','.join(reply.split()),on_fail='return')
+				if selected:
+					if selected[-1] <= len(unspent):
+						return selected
+					msg('Unspent output number must be <= {}'.format(len(unspent)))
+
 	def get_inputs_from_user(self,tw):
 
 		while True:
-			m = 'Enter a range or space-separated list of outputs to spend: '
-			sel_nums = select_unspent(tw.unspent,m)
+			sel_nums = self.select_unspent(tw.unspent)
 			msg('Selected output{}: {}'.format(suf(sel_nums,'s'),' '.join(map(str,sel_nums))))
 
 			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
@@ -1176,15 +1194,20 @@ class MMGenTX(MMGenObject):
 
 			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 
-			change_amt = self.sum_inputs() - self.send_amt - self.get_fee_from_user()
+			self.fee = self.get_fee_from_user()
+
+			change_amt = self.sum_inputs() - self.send_amt - self.fee
 
 			if change_amt >= 0:
-				p = 'Transaction produces {} {} in change'.format(change_amt.hl(),g.coin)
+				p = self.chg_fs.format(change_amt.hl(),g.coin)
 				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 					if opt.yes: msg(p)
 					return change_amt
 			else:
 				msg(wmsg['not_enough_coin'].format(abs(change_amt)))
+
+	def check_fee(self):
+		assert self.sum_inputs() - self.sum_outputs() <= g.proto.max_tx_fee
 
 	def create(self,cmd_args,locktime,do_info=False):
 		assert type(locktime) == int
@@ -1217,7 +1240,7 @@ class MMGenTX(MMGenObject):
 		chg_idx = self.get_chg_output_idx()
 
 		if change_amt == 0:
-			msg('Warning: Change address will be deleted as transaction produces no change')
+			msg(self.no_chg_msg)
 			self.del_output(chg_idx)
 		else:
 			self.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
@@ -1239,7 +1262,7 @@ class MMGenTX(MMGenObject):
 		self.add_blockcount()
 		self.chain = g.chain
 
-		assert self.sum_inputs() - self.sum_outputs() <= g.proto.max_tx_fee
+		self.check_fee()
 
 		qmsg('Transaction successfully created')
 
