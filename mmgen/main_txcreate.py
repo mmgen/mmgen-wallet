@@ -35,9 +35,10 @@ opts_data = lambda: {
 -c, --comment-file=f Source the transaction's comment from file 'f'
 -C, --tx-confs=    c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=      d Specify an alternate directory 'd' for output
--f, --tx-fee=      f Transaction fee, as a decimal {cu} amount or in satoshis
-                     per byte (an integer followed by 's').  If omitted, fee
-                     will be calculated using {dn}'s 'estimatefee' call
+-f, --tx-fee=      f Transaction fee, as a decimal {cu} amount or as
+                     {fu} (an integer followed by {fl}).
+                     See FEE SPECIFICATION below.  If omitted, fee will be
+                     calculated using network fee estimation.
 -i, --info           Display unspent outputs and exit
 -L, --locktime=    t Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=     n Minimum number of confirmations required to spend
@@ -47,8 +48,12 @@ opts_data = lambda: {
 -v, --verbose        Produce more verbose output
 -V, --vsize-adj=   f Adjust transaction's estimated vsize by factor 'f'
 -y, --yes            Answer 'yes' to prompts, suppress non-essential output
-""".format(g=g,cu=g.coin,dn=g.proto.daemon_name),
-	'notes': '\n' + help_notes('txcreate') + help_notes('fee')
+""",
+	'options_fmt_args': lambda: dict(
+							g=g,cu=g.coin,
+							fu=help_notes('rel_fee_desc'),
+							fl=help_notes('fee_spec_letters') ),
+	'notes': lambda: '\n' + help_notes('txcreate') + help_notes('fee')
 }
 
 cmd_args = opts.init(opts_data)

@@ -35,7 +35,17 @@ def set_debug_all():
 
 def help_notes(k):
 	from mmgen.seed import SeedSource
+	from mmgen.tx import MMGenTX
+	def fee_spec_letters(use_quotes=False):
+		cu = g.proto.coin_amt.units
+		sep,conj = ((',',' or '),("','","' or '"))[use_quotes]
+		return sep.join(u[0] for u in cu[:-1]) + ('',conj)[len(cu)>1] + cu[-1][0]
+	def fee_spec_names():
+		cu = g.proto.coin_amt.units
+		return ', '.join(cu[:-1]) + ('',' and ')[len(cu)>1] + cu[-1] + ('',',\nrespectively')[len(cu)>1]
 	return {
+		'rel_fee_desc': MMGenTX().rel_fee_desc,
+		'fee_spec_letters': fee_spec_letters(),
 		'passwd': """
 For passphrases all combinations of whitespace are equal and leading and
 trailing space is ignored.  This permits reading passphrase or brainwallet
@@ -53,11 +63,11 @@ The transaction's outputs are specified on the command line, while its inputs
 are chosen from a list of the user's unpent outputs via an interactive menu.
 
 If the transaction fee is not specified on the command line (see FEE
-SPECIFICATION below), it will be calculated dynamically using {dn}'s
-"estimatefee" function for the default (or user-specified) number of
-confirmations.  If "estimatefee" fails, the user will be prompted for a fee.
+SPECIFICATION below), it will be calculated dynamically using network fee
+estimation for the default (or user-specified) number of confirmations.
+If network fee estimation fails, the user will be prompted for a fee.
 
-Dynamic ("estimatefee") fees will be multiplied by the value of '--tx-fee-adj',
+Network-estimated fees will be multiplied by the value of '--tx-fee-adj',
 if specified.
 
 Ages of transactions are approximate based on an average block discovery
@@ -68,16 +78,16 @@ addresses of the form <seed ID>:<index>.
 
 To send the value of all inputs (minus TX fee) to a single output, specify
 one address with no amount on the command line.
-""".format( g=g,
-			pnm=g.proj_name,
-			dn=g.proto.daemon_name,
-			pnu=g.proto.name.capitalize()),
+""".format(g=g,pnm=g.proj_name,pnu=g.proto.name.capitalize()),
 		'fee': """
 FEE SPECIFICATION: Transaction fees, both on the command line and at the
-interactive prompt, may be specified as either absolute {} amounts, using
-a plain decimal number, or as satoshis per byte, using an integer followed by
-the letter 's'.
-""".format(g.coin),
+interactive prompt, may be specified as either absolute {c} amounts, using
+a plain decimal number, or as {r}, using an integer followed by
+'{l}', for {u}.
+""".format( c=g.coin,
+			r=MMGenTX().rel_fee_desc,
+			l=fee_spec_letters(use_quotes=True),
+			u=fee_spec_names() ),
 		'txsign': u"""
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 

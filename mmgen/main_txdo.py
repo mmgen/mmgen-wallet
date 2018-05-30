@@ -37,10 +37,10 @@ opts_data = lambda: {
 -C, --tx-confs=      c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
--f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or in
-                       satoshis per byte (an integer followed by 's').
-                       If omitted, {dn}'s 'estimatefee' will be used
-                       to calculate the fee.
+-f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or as
+                       {fu} (an integer followed by {fl}).
+                       See FEE SPECIFICATION below.  If omitted, fee will be
+                       calculated using network fee estimation.
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
@@ -67,13 +67,17 @@ opts_data = lambda: {
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -v, --verbose          Produce more verbose output
 -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
--y, --yes             Answer 'yes' to prompts, suppress non-essential output
+-y, --yes              Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
-""".format(g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
+""",
+	'options_fmt_args': lambda: dict(
+		g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+		fu=help_notes('rel_fee_desc'),
+		fl=help_notes('fee_spec_letters'),
 		kg=g.key_generator,
 		cu=g.coin),
-	'notes': '\n' + help_notes('txcreate') + help_notes('fee') + help_notes('txsign')
+	'notes': lambda: '\n' + help_notes('txcreate') + help_notes('fee') + help_notes('txsign')
 }
 
 cmd_args = opts.init(opts_data)
