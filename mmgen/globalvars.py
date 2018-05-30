@@ -38,7 +38,7 @@ class g(object):
 
 	# Constants:
 
-	version      = '0.9.8'
+	version      = '0.9.899'
 	release_date = 'May 2018'
 
 	proj_name = 'MMGen'
