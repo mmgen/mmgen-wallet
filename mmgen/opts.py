@@ -223,7 +223,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
 
 	uopts,args,short_opts,long_opts,skipped_opts,do_help = \
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,defer_help=True)
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,skip_help=True)
 
 	if g.debug_opts: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 

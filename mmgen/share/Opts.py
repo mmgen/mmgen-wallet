@@ -32,17 +32,21 @@ def print_help_and_exit(opts_data,longhelp=False):
 	pn_len = str(len(pn)+2)
 	out  = u'  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
 	out += u'  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
-	od_opts = opts_data[('options','long_options')[longhelp]].strip().splitlines()
+	o = opts_data[('options','long_options')[longhelp]].strip()
+	if 'options_fmt_args' in opts_data:
+		o = o.format(**opts_data['options_fmt_args']())
 	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
 	ls = ('  ','')[longhelp]
 	es = ('','    ')[longhelp]
-	out += u'{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(od_opts),ls=ls,es=es)
+	out += u'{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(o.splitlines()),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
-		out += '\n  ' + '\n  '.join(opts_data['notes'].rstrip().splitlines())
+		n = opts_data['notes']
+		if callable(n): n = n()
+		out += '\n  ' + '\n  '.join(n.rstrip().splitlines())
 	print(out.encode('utf8'))
 	sys.exit(0)
 
-def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
+def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
 
 	import os
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
@@ -54,15 +58,15 @@ def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 		print(str(err)); sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
-	opts,do_help = {},False
+	opts,skipped_help = {},False
 
 	for opt,arg in cl_opts:
 		if opt in ('-h','--help'):
-			if not defer_help: print_help_and_exit(opts_data)
-			do_help = True
+			if not skip_help: print_help_and_exit(opts_data)
+			skipped_help = True
 		elif opt == '--longhelp':
-			if not defer_help: print_help_and_exit(opts_data,longhelp=True)
-			do_help = True
+			if not skip_help: print_help_and_exit(opts_data,longhelp=True)
+			skipped_help = True
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
@@ -88,9 +92,9 @@ def process_opts(argv,opts_data,short_opts,long_opts,defer_help=False):
 					else:
 						opts[o_out] = v_out
 
-	return opts,args,do_help
+	return opts,args,skipped_help
 
-def parse_opts(argv,opts_data,opt_filter=None,defer_help=False):
+def parse_opts(argv,opts_data,opt_filter=None,skip_help=False):
 
 	import re
 	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
@@ -116,7 +120,6 @@ def parse_opts(argv,opts_data,opt_filter=None,defer_help=False):
 	long_opts     = [d[1].replace('-','_')+d[5] for d in od_all if d[6] == False]
 	skipped_opts  = [d[1].replace('-','_') for d in od_all if d[6] == True]
 
-	opts,args,do_help = process_opts(argv,opts_data,short_opts,long_opts,defer_help=defer_help)
+	opts,args,skipped_help = process_opts(argv,opts_data,short_opts,long_opts,skip_help=skip_help)
 
-	ret = opts,args,short_opts,long_opts,skipped_opts
-	return ret + (do_help,) if defer_help else ret
+	return opts,args,short_opts,long_opts,skipped_opts,skipped_help
