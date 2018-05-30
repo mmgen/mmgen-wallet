@@ -308,16 +308,25 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
 	max_prec = 8
 	max_amt = 21000000
-	min_coin_unit = Decimal('0.00000001') # satoshi
+	satoshi = Decimal('0.00000001')
+	min_coin_unit = satoshi
 	amt_fs = '4.8'
+	units = ('satoshi',)
+	forbidden_types = (float,long)
 
-	def __new__(cls,num,on_fail='die'):
+	def __new__(cls,num,from_unit=None,on_fail='die'):
 		if type(num) == cls: return num
 		cls.arg_chk(cls,on_fail)
 		try:
-			assert type(num) is not float,'number is floating-point'
-			assert type(num) is not long,'number is a long integer'
-			me = Decimal.__new__(cls,str(num))
+			if from_unit:
+				assert from_unit in cls.units,(
+					"'{}': unrecognized denomination for {}".format(from_unit,cls.__name__))
+				assert type(num) in (int,long),'value is not an integer or long integer'
+				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
+			else:
+				for t in cls.forbidden_types:
+					assert type(num) is not t,"number is of forbidden type '{}'".format(t.__name__)
+				me = Decimal.__new__(cls,str(num))
 			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
 			assert me <= cls.max_amt,'coin amount too large (>{})'.format(cls.max_amt)
 			assert me >= 0,'coin amount cannot be negative'
@@ -325,6 +334,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} ({})"
 			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
+
+	def toSatoshi(self): return int(Decimal(self) / self.satoshi)
 
 	@classmethod
 	def fmtc(cls):
@@ -380,29 +391,22 @@ class LTCAmt(BTCAmt): max_amt = 84000000
 class ETHAmt(BTCAmt):
 	max_prec = 18
 	max_amt = 999999999 # TODO
-	wei    = Decimal('0.000000000000000001')
-	szabo  = Decimal('0.000000000001')
+	wei     = Decimal('0.000000000000000001')
+	Kwei    = Decimal('0.000000000000001')
+	Mwei    = Decimal('0.000000000001')
+	Gwei    = Decimal('0.000000001')
+	szabo   = Decimal('0.000001')
+	finney  = Decimal('0.001')
 	min_coin_unit = wei
+	units = ('wei','Kwei','Mwei','Gwei','szabo','finney')
 	amt_fs = '4.18'
 
-	def __new__(cls,num,from_unit=None,on_fail='die'):
-		if type(num) == cls: return num
-		cls.arg_chk(cls,on_fail)
-		try:
-			if from_unit:
-				assert from_unit in ('wei','szabo'),"'{}': unrecognized ETH denomination".format(from_unit)
-				assert type(num) in (int,long),'value is not an integer or long integer'
-				return super(cls,cls).__new__(cls,num * getattr(cls,from_unit),on_fail=on_fail)
-			return super(cls,cls).__new__(cls,num,on_fail=on_fail)
-		except Exception as e:
-			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
-
-	def toWei(self):
-		return int(Decimal(self) / self.wei)
-
-	def toSzabo(self):
-		return int(Decimal(self) / self.szabo)
+	def toWei(self):    return int(Decimal(self) / self.wei)
+	def toKwei(self):   return int(Decimal(self) / self.Kwei)
+	def toMwei(self):   return int(Decimal(self) / self.Mwei)
+	def toGwei(self):   return int(Decimal(self) / self.Gwei)
+	def toSzabo(self):  return int(Decimal(self) / self.szabo)
+	def toFinney(self): return int(Decimal(self) / self.finney)
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
