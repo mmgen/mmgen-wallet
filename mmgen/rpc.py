@@ -235,6 +235,7 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 		'parity_minGasPrice',
 		'parity_mode',
 		'parity_netPeers',
+		'parity_nextNonce',
 		'parity_nodeKind',
 		'parity_nodeName',
 		'parity_pendingTransactions',

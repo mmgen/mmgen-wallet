@@ -479,7 +479,7 @@ class MMGenTX(MMGenObject):
 	def fee_abs2rel(self,abs_fee):
 		return int(abs_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
 
-	def get_rel_fee_from_network(self): # rel_fee is BTC/kB
+	def get_rel_fee_from_network(self): # rel_fee is in BTC/kB
 		try:
 			ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
 			rel_fee = ret['feerate'] if 'feerate' in ret else -2
@@ -496,24 +496,8 @@ class MMGenTX(MMGenObject):
 		return g.proto.coin_amt(int(amt)*tx_size*getattr(g.proto.coin_amt,units[unit])) \
 			if tx_size else None
 
-	# given tx size and absolute fee or fee spec, return absolute fee
-	# relative fee is N+<first letter of unit name>
-	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
-		import re
-		units = dict((u[0],u) for u in g.proto.coin_amt.units)
-		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
-		if g.proto.coin_amt(tx_fee,on_fail='silent'):
-			return g.proto.coin_amt(tx_fee)
-		elif re.match(pat,tx_fee):
-			return self.convert_fee_spec(tx_size,units,*re.match(pat,tx_fee).groups())
-		else:
-			if on_fail == 'return':
-				return False
-			elif on_fail == 'throw':
-				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
-
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
-	def calculate_fee(self,rel_fee,fe_type=None):
+	def fee_est2abs(self,rel_fee,fe_type=None):
 		tx_size = self.estimate_size()
 		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size / 1024
 		if opt.verbose:
@@ -543,6 +527,23 @@ class MMGenTX(MMGenObject):
 			return abs_fee
 
 	# non-coin-specific fee routines
+
+	# given tx size and absolute fee or fee spec, return absolute fee
+	# relative fee is N+<first letter of unit name>
+	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
+		import re
+		units = dict((u[0],u) for u in g.proto.coin_amt.units)
+		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
+		if g.proto.coin_amt(tx_fee,on_fail='silent'):
+			return g.proto.coin_amt(tx_fee)
+		elif re.match(pat,tx_fee):
+			return self.convert_fee_spec(tx_size,units,*re.match(pat,tx_fee).groups())
+		else:
+			if on_fail == 'return':
+				return False
+			elif on_fail == 'throw':
+				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
+
 	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
 		abs_fee = None
 		while True:
@@ -578,7 +579,7 @@ class MMGenTX(MMGenObject):
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:
-				start_fee = self.calculate_fee(rel_fee,fe_type)
+				start_fee = self.fee_est2abs(rel_fee,fe_type)
 
 		return self.get_usr_fee_interactive(start_fee,desc=desc)
 
@@ -852,6 +853,13 @@ class MMGenTX(MMGenObject):
 						msg('  {}{}'.format(t,('',' in mempool')[s]))
 				die(0,'')
 
+	def confirm_send(self):
+		m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
+		m2 = 'broadcast this transaction to the {} network'.format(g.chain.upper())
+		m3 = ('YES, I REALLY WANT TO DO THIS','YES')[bool(opt.quiet or opt.yes)]
+		confirm_or_exit(m1,m2,m3)
+		msg('Sending transaction')
+
 	def send(self,prompt_user=True,exit_on_fail=False):
 
 		if not self.marked_signed():
@@ -869,17 +877,12 @@ class MMGenTX(MMGenObject):
 
 		if self.get_fee_from_tx() > g.proto.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-				self.get_fee_from_tx(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin.upper()))
+				self.get_fee_from_tx(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
 
 		self.get_status()
 
-		if prompt_user:
-			m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
-			m2 = 'broadcast this transaction to the {} network'.format(g.chain.upper())
-			m3 = ('YES, I REALLY WANT TO DO THIS','YES')[bool(opt.quiet or opt.yes)]
-			confirm_or_exit(m1,m2,m3)
+		if prompt_user: self.confirm_send()
 
-		msg('Sending transaction')
 		ret = None if bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
@@ -1162,6 +1165,7 @@ class MMGenTX(MMGenObject):
 		except Exception as e:
 			die(2,'Invalid {} in transaction file: {}'.format(desc,e[0]))
 
+		# test doesn't work for Ethereum
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
 

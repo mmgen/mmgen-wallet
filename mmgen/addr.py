@@ -572,7 +572,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		else:
 			bc,mt = g.proto.base_coin,self.al_id.mmtype
 			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
-			l_type = [] if mt in ('L','E') else [mt.name.upper()]
+			l_type = [] if mt == 'E' or (mt == 'L' and not g.proto.is_testnet()) else [mt.name.upper()]
 			l_tn   = [] if not g.proto.is_testnet() else ['TESTNET']
 			lbl_p2 = ':'.join(l_coin+l_type+l_tn)
 			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2

@@ -2525,8 +2525,9 @@ class MMGenTestSuite(object):
 		for mmtype in g.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype]['name']
 			fn = os.path.join(self.regtest_user_dir(user),
-				u'{}{}{}[{}]{x}.addrs'.format(sid,altcoin_pfx,id_strs[desc],addr_range,
-												x=u'-α' if g.debug_utf8 else ''))
+				u'{}{}{}[{}]{x}.testnet.addrs'.format(
+					sid,altcoin_pfx,id_strs[desc],addr_range,
+					x=u'-α' if g.debug_utf8 else ''))
 			if mmtype == g.proto.mmtypes[0] and user == 'bob':
 				psave = g.proto
 				g.proto = CoinProtocol(g.coin,True)
@@ -2634,7 +2635,8 @@ class MMGenTestSuite(object):
 
 	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C' }[mmtype]
-		ext = u'{}{}{}[{}]{x}.addrs'.format(sid,altcoin_pfx,id_str,addr_range,x=u'-α' if g.debug_utf8 else '')
+		ext = u'{}{}{}[{}]{x}.testnet.addrs'.format(
+			sid,altcoin_pfx,id_str,addr_range,x=u'-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,self.regtest_user_dir(user),no_dot=True)
 		silence()
 		psave = g.proto

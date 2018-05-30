@@ -298,10 +298,12 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	base_coin = 'ETH'
 	pubkey_type = 'std' # required by DummyWIF
 
+	data_subdir = ''
 	daemon_name = 'parity'
 	rpc_port    = 8545
 	mmcaps      = ('key','addr','rpc')
 	coin_amt    = ETHAmt
+
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
@@ -317,7 +319,8 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		assert not p2sh,'Ethereum has no P2SH address format'
 		return pubkey_hash
 
-class EthereumTestnetProtocol(EthereumProtocol): pass
+class EthereumTestnetProtocol(EthereumProtocol):
+	data_subdir = 'testnet'
 class EthereumClassicProtocol(EthereumProtocol):
 	name   = 'ethereum_classic'
 	mmcaps = ('key','addr')

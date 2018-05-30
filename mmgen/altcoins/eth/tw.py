@@ -29,7 +29,7 @@ from mmgen.addr import AddrData
 # No file locking - 2 processes accessing the wallet at the same time will corrupt it
 class EthereumTrackingWallet(TrackingWallet):
 
-	data_dir = os.path.join(g.altcoin_data_dir,'eth')
+	data_dir = os.path.join(g.altcoin_data_dir,'eth',g.proto.data_subdir)
 	tw_file = os.path.join(data_dir,'tracking-wallet.json')
 
 	def __init__(self):

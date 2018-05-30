@@ -60,13 +60,14 @@ opts_data = lambda: {
 -v, --verbose         Produce more verbose output
 -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
-""".format(
+""",
+	'options_fmt_args': lambda: dict(
 		g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
 		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 		kg=g.key_generator,
 		cu=g.coin
 		),
-	'notes': '\n' + help_notes('txsign')
+	'notes': lambda: '\n' + help_notes('txsign')
 }
 
 infiles = opts.init(opts_data,add_opts=['b16'])
