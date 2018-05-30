@@ -91,6 +91,10 @@ class BitcoinProtocol(MMGenObject):
 	witness_vernum     = int(witness_vernum_hex,16)
 	bech32_hrp         = 'bc'
 
+	@classmethod
+	def is_testnet(cls):
+		return cls.__name__[-15:] == 'TestnetProtocol'
+
 	@staticmethod
 	def get_protocol_by_chain(chain):
 		return CoinProtocol(g.coin,{'mainnet':False,'testnet':True,'regtest':True}[chain])

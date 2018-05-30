@@ -177,8 +177,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						b.skip = (k,'addr')[k=='twmmid']
 
 		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
-		if g.chain in ('testnet','regtest'):
-			out += [green('Chain: {}'.format(g.chain.upper()))]
+		if g.chain != 'mainnet': out += ['Chain: '+green(g.chain.upper())]
 		if self.show_txid:
 			fs = u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w)
 		else:
@@ -417,7 +416,7 @@ class TwAddrList(MMGenDict):
 						self[label.mmid]['addr'] = CoinAddr(addr_arr[0])
 
 	def format(self,showbtcaddrs,sort,show_age,show_days):
-		out = ([],[green('Chain: {}'.format(g.chain.upper()))])[g.chain in ('testnet','regtest')]
+		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
 		fs = u'{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10

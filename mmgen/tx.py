@@ -1050,7 +1050,7 @@ class MMGenTX(MMGenObject):
 			s=self.marked_signed(color=True),
 			l=(green('None'),orange(strfmt_locktime(self.locktime,terse=True)))[bool(self.locktime)])
 
-		if self.chain in ('testnet','regtest'):
+		if self.chain != 'mainnet':
 			out += green('Chain: {}\n'.format(self.chain.upper()))
 		if self.coin_txid:
 			out += '{} TxID: {}\n'.format(g.coin,self.coin_txid.hl())

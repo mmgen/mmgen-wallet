@@ -462,15 +462,17 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def scramble_seed(self,seed):
 		is_btcfork = g.proto.base_coin == 'BTC'
-		if is_btcfork and self.al_id.mmtype == 'L':
+		if is_btcfork and self.al_id.mmtype == 'L' and not g.proto.is_testnet():
 			dmsg_sc('str','(none)')
 			return seed
 		if g.proto.base_coin == 'ETH':
 			scramble_key = g.coin.lower()
 		else:
 			scramble_key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
-		dmsg_sc('str',scramble_key)
 		from mmgen.crypto import scramble_seed
+		if g.proto.is_testnet():
+			scramble_key += ':testnet'
+		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
 
 	def encrypt(self,desc='new key list'):
@@ -479,7 +481,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		self.ext += '.'+g.mmenc_ext
 
 	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
-		fn = u'{}{x}.{}'.format(self.id_str,self.ext,x=u'-α' if g.debug_utf8 else '')
+		tn = ('','.testnet')[g.proto.is_testnet()]
+		fn = u'{}{x}{}.{}'.format(self.id_str,tn,self.ext,x=u'-α' if g.debug_utf8 else '')
 		ask_tty = self.has_keys and not opt.quiet
 		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
 
@@ -570,7 +573,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			bc,mt = g.proto.base_coin,self.al_id.mmtype
 			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
 			l_type = [] if mt in ('L','E') else [mt.name.upper()]
-			lbl_p2 = ':'.join(l_coin+l_type)
+			l_tn   = [] if not g.proto.is_testnet() else ['TESTNET']
+			lbl_p2 = ':'.join(l_coin+l_type+l_tn)
 			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
 
 		dmsg_sc('lbl',lbl[9:])
@@ -643,6 +647,12 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		def parse_addrfile_label(lbl): # we must maintain backwards compat, so parse is tricky
 			al_coin,al_mmtype = None,None
+			tn = lbl[-8:] == ':TESTNET'
+			if tn:
+				assert g.proto.is_testnet(),'{} file is testnet but protocol is mainnet!'.format(self.data_desc)
+				lbl = lbl[:-8]
+			else:
+				assert not g.proto.is_testnet(),'{} file is mainnet but protocol is testnet!'.format(self.data_desc)
 			lbl = lbl.split(':',1)
 			if len(lbl) == 2:
 				al_coin,al_mmtype = lbl[0],lbl[1].lower()
