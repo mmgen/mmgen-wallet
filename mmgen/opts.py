@@ -338,13 +338,13 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 def opt_is_tx_fee(val,desc):
 	from mmgen.tx import MMGenTX
-	ret = MMGenTX().convert_fee_spec(val,224,on_fail='return')
+	ret = MMGenTX().process_fee_spec(val,224,on_fail='return')
 	if ret == False:
-		msg("'{}': invalid {} (not a {} amount or satoshis-per-byte specification)".format(
-				val,desc,g.coin.upper()))
+		msg("'{}': invalid {}\n(not a {} amount or {} specification)".format(
+				val,desc,g.coin.upper(),MMGenTX().rel_fee_desc))
 	elif ret != None and ret > g.proto.max_tx_fee:
-		msg("'{}': invalid {} (> max_tx_fee ({} {}))".format(
-				val,desc,g.proto.max_tx_fee,g.coin.upper()))
+		msg("'{}': invalid {}\n({} > max_tx_fee ({} {}))".format(
+				val,desc,ret.fmt(fs='1.1'),g.proto.max_tx_fee,g.coin.upper()))
 	else:
 		return True
 	return False

@@ -224,10 +224,14 @@ class MMGenTX(MMGenObject):
 	sig_ext  = 'sigtx'
 	txid_ext = 'txid'
 	desc     = 'transaction'
-	chg_fs   = 'Transaction produces {} {} in change'
+	chg_msg_fs = 'Transaction produces {} {} in change'
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 	rel_fee_desc = 'satoshis per byte'
+	rel_fee_disp = 'satoshis per byte'
+	txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
+	txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
+	usr_fee_prompt = 'Enter transaction fee: '
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
@@ -471,7 +475,7 @@ class MMGenTX(MMGenObject):
 		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
 		return ret
 
-	# convert absolute BTC fee to satoshis-per-byte
+	# convert absolute BTC fee to satoshis-per-byte using estimated size
 	def fee_abs2rel(self,abs_fee):
 		return int(abs_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
 
@@ -486,21 +490,29 @@ class MMGenTX(MMGenObject):
 
 		return rel_fee,fe_type
 
-	def convert_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
+	# given tx size, rel fee and units, return absolute fee
+	def convert_fee_spec(self,tx_size,units,amt,unit):
+		self.usr_rel_fee = None # TODO
+		return g.proto.coin_amt(int(amt)*tx_size*getattr(g.proto.coin_amt,units[unit])) \
+			if tx_size else None
+
+	# given tx size and absolute fee or fee spec, return absolute fee
+	# relative fee is N+<first letter of unit name>
+	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
+		import re
+		units = dict((u[0],u) for u in g.proto.coin_amt.units)
+		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
 			return g.proto.coin_amt(tx_fee)
-		elif len(tx_fee) >= 2 and tx_fee[-1] == 's' and is_int(tx_fee[:-1]) and int(tx_fee[:-1]) >= 1:
-			if tx_size:
-				return g.proto.coin_amt(int(tx_fee[:-1]) * tx_size * g.proto.coin_amt.min_coin_unit)
-			else:
-				return None
+		elif re.match(pat,tx_fee):
+			return self.convert_fee_spec(tx_size,units,*re.match(pat,tx_fee).groups())
 		else:
 			if on_fail == 'return':
 				return False
 			elif on_fail == 'throw':
 				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
 
-	# given network fee estimate in BTC/kB and tx size, calculate absolute fee in coin units
+	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 	def calculate_fee(self,rel_fee,fe_type=None):
 		tx_size = self.estimate_size()
 		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size / 1024
@@ -510,14 +522,14 @@ class MMGenTX(MMGenObject):
 		return ret
 
 	def convert_and_check_fee(self,tx_fee,desc='Missing description'):
-		abs_fee = self.convert_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
+		abs_fee = self.process_fee_spec(tx_fee,self.estimate_size(),on_fail='return')
 		if abs_fee == None:
 			# we shouldn't be calling this if tx size is unknown
-			m = "'{}': cannot convert satoshis-per-byte to {} because transaction size is unknown"
-			assert False, m.format(tx_fee,g.coin)
+			m = "'{}': cannot convert {} to {} because transaction size is unknown"
+			assert False, m.format(tx_fee,self.rel_fee_desc,g.coin)
 		elif abs_fee == False:
-			m = "'{}': invalid TX fee (not a {} amount or satoshis-per-byte specification)"
-			msg(m.format(tx_fee,g.coin))
+			m = "'{}': invalid TX fee (not a {} amount or {} specification)"
+			msg(m.format(tx_fee,g.coin,self.rel_fee_desc))
 			return False
 		elif abs_fee > g.proto.max_tx_fee:
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
@@ -544,11 +556,11 @@ class MMGenTX(MMGenObject):
 						abs_fee.hl(),
 						g.coin,
 						pink(str(self.fee_abs2rel(abs_fee))),
-						self.rel_fee_desc)
+						self.rel_fee_disp)
 				if opt.yes or keypress_confirm(p+'OK?',default_yes=True):
 					if opt.yes: msg(p)
 					return abs_fee
-			tx_fee = my_raw_input('Enter transaction fee: ')
+			tx_fee = my_raw_input(self.usr_fee_prompt)
 			desc = 'User-selected'
 
 	def get_fee_from_user(self,have_estimate_fail=[]):
@@ -957,6 +969,61 @@ class MMGenTX(MMGenObject):
 	def is_rbf(self):
 		return self.inputs[0].sequence == g.max_int - 2
 
+	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
+
+		def format_io(desc):
+			io = getattr(self,desc)
+			ip = desc == 'inputs'
+			out = desc.capitalize() + ':\n' + enl
+			addr_w = max(len(e.addr) for e in io)
+			confs_per_day = 60*60*24 / g.proto.secs_per_block
+			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
+				if ip and blockcount:
+					confs = e.confs + blockcount - self.blockcount
+					days = int(confs / confs_per_day)
+				if e.mmid:
+					mmid_fmt = e.mmid.fmt(
+						width=max_mmwid,
+						encl='()',
+						color=True,
+						append_chars=('',' (chg)')[bool(not ip and e.is_chg and terse)],
+						append_color='green')
+				else:
+					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid,color=True)
+				if terse:
+					out += '{:3} {} {} {} {}\n'.format(n+1,
+						e.addr.fmt(color=True,width=addr_w),
+						mmid_fmt,e.amt.hl(),g.coin)
+				else:
+					icommon = [
+						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
+						('','comment:',e.label.hl() if e.label else ''),
+						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
+					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
+						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
+					] if ip else icommon + [
+						('','change:',green('True') if e.is_chg else '')]
+					out += '\n'.join([(u'{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
+			return out
+
+		return  format_io('inputs') + format_io('outputs')
+
+	def format_view_rel_fee(self,terse):
+		return ' ({} {})\n'.format(
+			pink(str(self.fee_abs2rel(self.get_fee_from_tx()))),
+			self.rel_fee_disp)
+
+	def format_view_abs_fee(self):
+		return g.proto.coin_amt(self.get_fee_from_tx()).hl()
+
+	def format_view_verbose_footer(self):
+		ts = len(self.hex)/2 if self.hex else 'unknown'
+		out = 'Transaction size: Vsize {} (estimated), Total {}'.format(self.estimate_size(),ts)
+		if self.marked_signed():
+			ws = DeserializedTX(self.hex)['witness_size']
+			out += ', Base {}, Witness {}'.format(ts-ws,ws)
+		return out + '\n'
+
 	def format_view(self,terse=False):
 		try:
 			rpc_init()
@@ -974,51 +1041,15 @@ class MMGenTX(MMGenObject):
 		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
 		max_mmwid = max(get_max_mmwid(self.inputs),get_max_mmwid(self.outputs))
 
-		def format_io(io):
-			ip = io is self.inputs
-			io_out = ''
-			addr_w = max(len(e.addr) for e in io)
-			confs_per_day = 60*60*24 / g.proto.secs_per_block
-			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
-				if ip and blockcount:
-					confs = e.confs + blockcount - self.blockcount
-					days = int(confs / confs_per_day)
-				if e.mmid:
-					mmid_fmt = e.mmid.fmt(
-						width=max_mmwid,
-						encl='()',
-						color=True,
-						append_chars=('',' (chg)')[bool(not ip and e.is_chg and terse)],
-						append_color='green')
-				else:
-					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid)
-				if terse:
-					io_out += '{:3} {} {} {} {}\n'.format(n+1,
-						e.addr.fmt(color=True,width=addr_w),
-						mmid_fmt,e.amt.hl(),g.coin)
-				else:
-					icommon = [
-						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
-						('','comment:',e.label.hl() if e.label else ''),
-						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
-					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
-						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
-					] if ip else icommon + [
-						('','change:',green('True') if e.is_chg else '')]
-					io_out += '\n'.join([(u'{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
-			return io_out
+		out = (self.txview_hdr_fs,self.txview_hdr_fs_short)[bool(terse)].format(
+			i=self.txid.hl(),
+			a=self.send_amt.hl(),
+			c=g.coin,
+			t=self.timestamp,
+			r=(red('False'),green('True'))[self.is_rbf()],
+			s=self.marked_signed(color=True),
+			l=(green('None'),orange(strfmt_locktime(self.locktime,terse=True)))[bool(self.locktime)])
 
-		hdr_fs = (
-			'TRANSACTION DATA\n\nID={} ({} {}) UTC={} RBF={} Sig={} Locktime={}\n',
-			'TX {} ({} {}) UTC={} RBF={} Sig={} Locktime={}\n'
-		)[bool(terse)]
-		out = hdr_fs.format(self.txid.hl(),
-							self.send_amt.hl(),
-							g.coin,
-							self.timestamp,
-							(red('False'),green('True'))[self.is_rbf()],
-							self.marked_signed(color=True),
-							(green('None'),orange(strfmt_locktime(self.locktime,terse=True)))[bool(self.locktime)])
 		if self.chain in ('testnet','regtest'):
 			out += green('Chain: {}\n'.format(self.chain.upper()))
 		if self.coin_txid:
@@ -1027,25 +1058,22 @@ class MMGenTX(MMGenObject):
 		out += enl
 		if self.label:
 			out += u'Comment: {}\n{}'.format(self.label.hl(),enl)
-		out += 'Inputs:\n' + enl + format_io(self.inputs)
-		out += 'Outputs:\n' + enl + format_io(self.outputs)
+
+		out += self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse)
 
 		fs = (
-			'Total input:  {} {c}\nTotal output: {} {c}\nTX fee:       {} {c} ({} satoshis per byte)\n',
-			'In {} {c} - Out {} {c} - Fee {} {c} ({} satoshis/byte)\n'
+			'Total input:  {i} {c}\nTotal output: {o} {c}\nTX fee:       {a} {c}{r}\n',
+			'In {i} {c} - Out {o} {c}\nFee {a} {c}{r}\n'
 		)[bool(terse)]
 
-		t_in,t_out = self.sum_inputs(),self.sum_outputs()
-		fee = t_in-t_out
-		out += fs.format(t_in.hl(),t_out.hl(),fee.hl(),pink(str(self.fee_abs2rel(fee))),c=g.coin)
+		out += fs.format(
+			i=self.sum_inputs().hl(),
+			o=self.sum_outputs().hl(),
+			a=self.format_view_abs_fee(),
+			r=self.format_view_rel_fee(terse),
+			c=g.coin)
 
-		if opt.verbose:
-			ts = len(self.hex)/2 if self.hex else 'unknown'
-			out += 'Transaction size: Vsize {} (estimated), Total {}'.format(self.estimate_size(),ts)
-			if self.marked_signed():
-				ws = DeserializedTX(self.hex)['witness_size']
-				out += ', Base {}, Witness {}'.format(ts-ws,ws)
-			out += '\n'
+		if opt.verbose: out += self.format_view_verbose_footer()
 
 		return out # TX label might contain non-ascii chars
 
@@ -1218,7 +1246,7 @@ class MMGenTX(MMGenObject):
 			change_amt = self.sum_inputs() - self.send_amt - self.fee
 
 			if change_amt >= 0:
-				p = self.chg_fs.format(change_amt.hl(),g.coin)
+				p = self.chg_msg_fs.format(change_amt.hl(),g.coin)
 				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 					if opt.yes: msg(p)
 					return change_amt
@@ -1345,8 +1373,8 @@ class MMGenBumpTX(MMGenTX):
 	def convert_and_check_fee(self,tx_fee,desc):
 		ret = super(type(self),self).convert_and_check_fee(tx_fee,desc)
 		if ret < self.min_fee:
-			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} satoshis per byte)'.format(
-				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee),c=g.coin))
+			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} {})'.format(
+				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee),self.rel_fee_desc,c=g.coin))
 			return False
 		output_amt = self.outputs[self.bump_output_idx].amt
 		if ret >= output_amt:
