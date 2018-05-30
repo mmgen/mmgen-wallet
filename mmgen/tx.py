@@ -269,6 +269,12 @@ class MMGenTX(MMGenObject):
 		desc = 'transaction outputs'
 		member_type = 'MMGenTxOutput'
 
+	def __new__(cls,*args,**kwargs):
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tx import EthereumMMGenTX
+			cls = EthereumMMGenTX
+		return MMGenObject.__new__(cls,*args,**kwargs)
+
 	def __init__(self,filename=None,md_only=False,caller=None,silent_open=False):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()

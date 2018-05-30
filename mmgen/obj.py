@@ -408,6 +408,24 @@ class ETHAmt(BTCAmt):
 	def toSzabo(self):  return int(Decimal(self) / self.szabo)
 	def toFinney(self): return int(Decimal(self) / self.finney)
 
+class ETHNonce(int,Hilite,InitErrors): # WIP
+	def __new__(cls,n,on_fail='die'):
+		if type(n) == cls: return n
+		cls.arg_chk(cls,on_fail)
+		from mmgen.util import is_int
+		try:
+			assert is_int(n),"'{}': value is not an integer".format(n)
+			me = int.__new__(cls,n)
+			return me
+		except Exception as e:
+			m = "{!r}: value cannot be converted to ETH nonce ({})"
+			return cls.init_fail(m.format(n,e[0]),on_fail)
+
+	@classmethod
+	def colorize(cls,s,color=True):
+		k = color if type(color) is str else cls.color # hack: override color with str value
+		return globals()[k](str(s)) if (color or cls.color_always) else str(s)
+
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
 	hex_width = 40
