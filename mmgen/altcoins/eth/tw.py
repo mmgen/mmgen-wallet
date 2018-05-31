@@ -22,7 +22,7 @@ altcoins.eth.tw: ETH tracking wallet functions and methods for the MMGen suite
 
 import json
 from mmgen.common import *
-from mmgen.obj import *
+from mmgen.obj import ETHAmt,TwMMGenID,TwComment,TwLabel
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
 
