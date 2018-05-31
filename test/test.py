@@ -166,6 +166,7 @@ tn_ext = ('','.testnet')[g.testnet]
 
 coin_sel = g.coin.lower()
 # if g.coin == 'B2X': coin_sel = 'btc'
+if g.coin == 'ETH': coin_sel = 'btc' # TODO
 
 fork       = {'bch':'btc','btc':'btc','ltc':'ltc'}[coin_sel]
 tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[coin_sel]
@@ -550,6 +551,7 @@ cfgs = {
 			'bch': '99BE60-BCH[106.6789]{}.rawtx',
 			'b2x': '6A52BC-B2X[106.6789,tl=1320969600]{}.rawtx',
 			'ltc': '75F455-LTC[106.6789]{}.rawtx',
+			'eth': 'BC79AB-ETH[0.123]{}.rawtx',
 		},
 		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
@@ -2117,7 +2119,7 @@ class MMGenTestSuite(object):
 	# Miscellaneous tests
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
-		fdata = (('btc',''),('bch',''),('ltc','litecoin'))
+		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'))
 		tfns = [cfgs['8']['ref_tx_file'][c].format('') for c,d in fdata]
 		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata,tfns)]
 		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
@@ -2127,7 +2129,7 @@ class MMGenTestSuite(object):
 		# make a bad tx file
 		with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
 			f.write('bad tx data')
-		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc']
+		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc,eth']
 		mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
 		mn = read_from_file(mn_fn).strip().split()
 
@@ -2144,7 +2146,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 		t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
-		t.expect('3 transactions signed')
+		t.expect('4 transactions signed')
 		t.expect('1 transaction failed to sign')
 		t.expect('Waiting.')
 		t.kill(2)

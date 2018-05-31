@@ -90,6 +90,7 @@ class BitcoinProtocol(MMGenObject):
 	witness_vernum_hex = '00'
 	witness_vernum     = int(witness_vernum_hex,16)
 	bech32_hrp         = 'bc'
+	chain_aliases      = {}
 
 	@classmethod
 	def is_testnet(cls):
@@ -303,6 +304,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	rpc_port    = 8545
 	mmcaps      = ('key','addr','rpc')
 	coin_amt    = ETHAmt
+	chain_aliases = {'mainnet':['foundation'],'testnet':['kovan']}
 
 
 	@classmethod

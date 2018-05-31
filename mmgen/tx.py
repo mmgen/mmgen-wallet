@@ -275,7 +275,7 @@ class MMGenTX(MMGenObject):
 			cls = EthereumMMGenTX
 		return MMGenObject.__new__(cls,*args,**kwargs)
 
-	def __init__(self,filename=None,md_only=False,caller=None,silent_open=False):
+	def __init__(self,filename=None,coin_sym_only=False,caller=None,silent_open=False):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -295,8 +295,8 @@ class MMGenTX(MMGenObject):
 		self.locktime    = None
 
 		if filename:
-			self.parse_tx_file(filename,md_only=md_only,silent_open=silent_open)
-			if md_only: return
+			self.parse_tx_file(filename,coin_sym_only=coin_sym_only,silent_open=silent_open)
+			if coin_sym_only: return
 			self.check_sigs() # marks the tx as signed
 
 		# repeat with sign and send, because coin daemon could be restarted
@@ -306,6 +306,8 @@ class MMGenTX(MMGenObject):
 		assert on_fail in ('return','die'),"'{}': invalid value for 'on_fail'".format(on_fail)
 		m = 'Transaction is for {}, but current chain is {}!'.format(self.chain,g.chain)
 		bad = self.chain and g.chain and self.chain != g.chain
+		if bad and g.chain in g.proto.chain_aliases:
+			bad = self.chain not in g.proto.chain_aliases[g.chain]
 		if bad:
 			msg(m) if on_fail == 'return' else die(2,m)
 		return not bad
@@ -1089,7 +1091,7 @@ class MMGenTX(MMGenObject):
 	def check_tx_hex_data(self):
 		self.hex = HexStr(self.hex,on_fail='raise')
 
-	def parse_tx_file(self,infile,md_only=False,silent_open=False):
+	def parse_tx_file(self,infile,coin_sym_only=False,silent_open=False):
 
 		def eval_io_data(raw_data,desc):
 			from ast import literal_eval
@@ -1147,6 +1149,7 @@ class MMGenTX(MMGenObject):
 				self.locktime = int(metadata.pop()[3:])
 
 			self.coin = metadata.pop(0) if len(metadata) == 6 else 'BTC'
+			if coin_sym_only: return
 
 			if len(metadata) == 5:
 				t = metadata.pop(0)
@@ -1161,7 +1164,7 @@ class MMGenTX(MMGenObject):
 			self.blockcount = int(blockcount)
 			desc = 'transaction hex data'
 			self.check_tx_hex_data()
-			if md_only: return # the following ops will all fail if g.coin doesn't match self.coin
+			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,'invalid coin type'
 			desc = 'inputs data'

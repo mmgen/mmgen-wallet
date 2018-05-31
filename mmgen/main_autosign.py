@@ -29,6 +29,8 @@ part_label   = u'MMGEN_TX'
 wallet_dir   = u'/dev/shm/autosign'
 key_fn       = u'autosign.key'
 
+no_daemon_coins = ('ETH',)
+
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
 opts_data = lambda: {
@@ -119,6 +121,7 @@ def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
+		if coin in no_daemon_coins: continue
 		g.proto = CoinProtocol(coin,g.testnet)
 		vmsg('Checking {} daemon'.format(coin))
 		try:
@@ -153,10 +156,11 @@ def do_umount():
 
 def sign_tx_file(txfile):
 	try:
-		init_coin(mmgen.tx.MMGenTX(txfile,md_only=True).coin)
+		init_coin(mmgen.tx.MMGenTX(txfile,coin_sym_only=True).coin)
 		reload(sys.modules['mmgen.tx'])
 		tx = mmgen.tx.MMGenTX(txfile)
-		rpc_init(reinit=True)
+		if tx.coin not in no_daemon_coins:
+			rpc_init(reinit=True)
 		txsign(tx,wfs,None,None)
 		tx.write_to_file(ask_write=False)
 		return True
