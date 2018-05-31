@@ -134,6 +134,13 @@ setup(
 			'mmgen.tx',
 			'mmgen.util',
 
+			'mmgen.altcoins.__init__',
+
+			'mmgen.altcoins.eth.__init__',
+			'mmgen.altcoins.eth.obj',
+			'mmgen.altcoins.eth.tx',
+			'mmgen.altcoins.eth.tw',
+
 			'mmgen.main',
 			'mmgen.main_addrgen',
 			'mmgen.main_addrimport',

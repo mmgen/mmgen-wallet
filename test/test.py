@@ -2634,13 +2634,14 @@ class MMGenTestSuite(object):
 		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',do_label=True,full_tx_view=True)
 
 	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
-		id_str = { 'L':'', 'S':'-S', 'C':'-C' }[mmtype]
+		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
 		ext = u'{}{}{}[{}]{x}.testnet.addrs'.format(
 			sid,altcoin_pfx,id_str,addr_range,x=u'-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,self.regtest_user_dir(user),no_dot=True)
 		silence()
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
+		g.proto.bech32_hrp = g.proto.bech32_hrp_rt
 		addr = AddrList(fn).data[idx].addr
 		g.proto = psave
 		end_silence()
@@ -2981,7 +2982,8 @@ class MMGenTestSuite(object):
 		sid = cfg['seed_id']
 		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':'+rtBobOp3]
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
-		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',do_label=True,wf=wf,pw=cfg['wpasswd'])
+		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',wf=wf,pw=cfg['wpasswd'],
+										do_label=True,full_tx_view=True)
 
 	def ref_tx_bob_create_tx(self,name):
 		sid = cfg['seed_id']
