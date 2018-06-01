@@ -32,8 +32,8 @@ class TwUnspentOutputs(MMGenObject):
 	show_txid = True
 	can_group = True
 	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
-	wide_hdr_title = 'Unspent outputs'
-	dump_fn = 'listunspent-' + g.coin
+	desc = 'unspent outputs'
+	dump_fn_pfx = 'listunspent'
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -256,7 +256,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		fs = '{} ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
-				self.wide_hdr_title,
+				capfirst(self.desc),
 				make_timestr(),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
@@ -324,8 +324,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
 				msg('')
-				of = '{}[{}].out'.format(self.dump_fn,','.join(self.sort_info(include_group=False)).lower())
-				write_data_to_file(of,self.format_for_printing(),'unspent outputs listing')
+				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,g.coin,
+										','.join(self.sort_info(include_group=False)).lower())
+				write_data_to_file(of,self.format_for_printing(),'{} listing'.format(self.desc))
 				m = yellow("Data written to '{}'".format(of))
 				msg('\n{}\n{}\n\n{}'.format(self.fmt_display,m,prompt))
 				continue

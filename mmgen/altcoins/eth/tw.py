@@ -106,8 +106,8 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 	show_txid = False
 	can_group = False
 	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
-	wide_hdr_title = 'Account balances'
-	dump_fn = 'balances-' + g.coin
+	desc    = 'account balances'
+	dump_fn_pfx = 'balances'
 	prompt = """
 Sort options: [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, show [m]mgen addr, r[e]draw screen

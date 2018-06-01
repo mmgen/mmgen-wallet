@@ -27,7 +27,7 @@ from mmgen.color import *
 from mmgen.obj import *
 class ETHAmt(BTCAmt):
 	max_prec = 18
-	max_amt = 999999999 # TODO
+	max_amt = None
 	wei     = Decimal('0.000000000000000001')
 	Kwei    = Decimal('0.000000000000001')
 	Mwei    = Decimal('0.000000000001')

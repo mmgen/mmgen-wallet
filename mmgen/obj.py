@@ -328,7 +328,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 					assert type(num) is not t,"number is of forbidden type '{}'".format(t.__name__)
 				me = Decimal.__new__(cls,str(num))
 			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
-			assert me <= cls.max_amt,'coin amount too large (>{})'.format(cls.max_amt)
+			if cls.max_amt:
+				assert me <= cls.max_amt,'{}: coin amount too large (>{})'.format(me,cls.max_amt)
 			assert me >= 0,'coin amount cannot be negative'
 			return me
 		except Exception as e:
