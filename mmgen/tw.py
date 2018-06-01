@@ -32,6 +32,8 @@ class TwUnspentOutputs(MMGenObject):
 	show_txid = True
 	can_group = True
 	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
+	wide_hdr_title = 'Unspent outputs'
+	dump_fn = 'listunspent-' + g.coin
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -41,8 +43,8 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 
 	class MMGenTwUnspentOutput(MMGenListItem):
 	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
-		txid     = MMGenImmutableAttr('txid','CoinTxID')
-		vout     = MMGenImmutableAttr('vout',int,typeconv=False)
+		txid     = MMGenListItemAttr('txid','CoinTxID')
+		vout     = MMGenListItemAttr('vout',int,typeconv=False)
 		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
 		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
@@ -95,8 +97,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 #		sys.exit(0)
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
-		mm_rpc = self.MMGenTwOutputList()
 		confs_per_day = 60*60*24 / g.proto.secs_per_block
+		tr_rpc = []
 		for o in us_rpc:
 			if not 'account' in o: continue          # coinbase outputs have no account field
 			l = TwLabel(o['account'],on_fail='silent')
@@ -105,12 +107,15 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					'twmmid': l.mmid,
 					'label':  l.comment,
 					'days':   int(o['confirmations'] / confs_per_day),
-					'amt':    g.proto.coin_amt(o['amount']), # TODO
-					'addr':   CoinAddr(o['address']), # TODO
+					'amt':    g.proto.coin_amt(o['amount']),
+					'addr':   CoinAddr(o['address']),
 					'confs':  o['confirmations']
 				})
-				mm_rpc.append(o)
-		self.unspent = self.MMGenTwOutputList([self.MMGenTwUnspentOutput(**dict([(k,v) for k,v in o.items() if k in self.MMGenTwUnspentOutput.__dict__])) for o in mm_rpc])
+				tr_rpc.append(o)
+		self.unspent = self.MMGenTwOutputList(
+						self.MMGenTwUnspentOutput(
+				**dict(i for i in o.items() if i[0] in dir(self.MMGenTwUnspentOutput))
+						) for o in tr_rpc)
 		for u in self.unspent:
 			if u.label == None: u.label = ''
 		if not self.unspent:
@@ -204,11 +209,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				addr_out = type(i.addr).fmtc(addr_dots,width=addr_w,color=True) \
 					if i.skip=='addr' else i.addr.fmt(width=addr_w,color=True)
 
-			tx = ' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
-					else i.txid[:tx_w-len(txdots)]+txdots
-
 			out.append(fs.format(   n=str(n+1)+')',
-									t=tx,
+									t='' if not i.txid else \
+										' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
+											else i.txid[:tx_w-len(txdots)]+txdots,
 									v=i.vout,
 									a=addr_out,
 									A=i.amt.fmt(color=True),
@@ -235,13 +239,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							g='Age(d)',
 							l='Label')]
 
-		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [1])
+		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [2])
 		for n,i in enumerate(self.unspent):
 			addr = '|'+'.' * addr_w if i.skip == 'addr' and self.group else i.addr.fmt(color=color,width=addr_w)
-			tx = '|'+'.' * 63 if i.skip == 'txid' and self.group else str(i.txid)
 			out.append(fs.format(
 						n=str(n+1)+')',
-						t=tx+','+str(i.vout),
+						t='{},{}'.format('|'+'.'*63 if i.skip == 'txid' and self.group else i.txid,i.vout),
 						a=addr,
 						m=MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
 							else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
@@ -251,8 +254,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						l=i.label.hl(color=color) if i.label else
 							TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
 
-		fs = 'Unspent outputs ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
+		fs = '{} ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
+				self.wide_hdr_title,
 				make_timestr(),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
@@ -320,7 +324,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
 				msg('')
-				of = 'listunspent[{}].out'.format(','.join(self.sort_info(include_group=False))).lower()
+				of = '{}[{}].out'.format(self.dump_fn,','.join(self.sort_info(include_group=False)).lower())
 				write_data_to_file(of,self.format_for_printing(),'unspent outputs listing')
 				m = yellow("Data written to '{}'".format(of))
 				msg('\n{}\n{}\n\n{}'.format(self.fmt_display,m,prompt))

@@ -106,6 +106,8 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 	show_txid = False
 	can_group = False
 	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
+	wide_hdr_title = 'Account balances'
+	dump_fn = 'balances-' + g.coin
 	prompt = """
 Sort options: [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
@@ -118,8 +120,6 @@ Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
 	def get_unspent_rpc(self):
 		rpc_init()
 		return map(lambda d: {
-				'txid': '0'*64, # bogus value, not displayed
-				'vout': 0,      # ""
 				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
 				'address': d['addr'],
 				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei'),
