@@ -528,19 +528,18 @@ def confirm_or_exit(message,q,expect='YES',exit_msg='Exiting at user request'):
 	if my_raw_input(a+b).strip() != expect:
 		die(1,exit_msg)
 
-def write_data_to_file(
-		outfile,
-		data,
-		desc='data',
-		ask_write=False,
-		ask_write_prompt='',
-		ask_write_default_yes=True,
-		ask_overwrite=True,
-		ask_tty=True,
-		no_tty=False,
-		silent=False,
-		binary=False
-	):
+def write_data_to_file( outfile,data,desc='data',
+						ask_write=False,
+						ask_write_prompt='',
+						ask_write_default_yes=True,
+						ask_overwrite=True,
+						ask_tty=True,
+						no_tty=False,
+						silent=False,
+						binary=False,
+						ignore_opt_outdir=False,
+						check_data=False,
+						cmp_data=None):
 
 	if silent: ask_tty = ask_overwrite = False
 	if opt.quiet: ask_overwrite = False
@@ -581,7 +580,7 @@ def write_data_to_file(
 		sys.stdout.write(data)
 
 	def do_file(outfile,ask_write_prompt):
-		if opt.outdir and not os.path.isabs(outfile):
+		if opt.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):
 			outfile = make_full_path(opt.outdir,outfile)
 
 		if ask_write:
@@ -596,6 +595,18 @@ def write_data_to_file(
 			confirm_or_exit('',q)
 			msg(u"Overwriting file '{}'".format(outfile))
 			hush = True
+
+		# not atomic, but better than nothing
+		# if cmp_data is empty, file can be either empty or non-existent
+		if check_data:
+			try:
+				d = open(outfile,('r','rb')[bool(binary)]).read()
+			except:
+				d = ''
+			finally:
+				if d != cmp_data:
+					m = u"{} in file '{}' has been altered by some other program!  Aborting file write"
+					die(3,m.format(desc,outfile))
 
 		f = open_file_or_exit(outfile,('w','wb')[bool(binary)])
 		try:

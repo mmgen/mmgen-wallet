@@ -1184,7 +1184,8 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 		privkey = PrivKey(os.urandom(32),compressed=non_mmgen_input_compressed,pubkey_type='std')
 		rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 		of = os.path.join(cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
-		write_data_to_file(of,privkey.wif+'\n','compressed {} key'.format(g.proto.name),silent=True)
+		write_data_to_file(of,  privkey.wif+'\n','compressed {} key'.format(g.proto.name),
+								silent=True,ignore_opt_outdir=True)
 		out.append(create_fake_unspent_entry(rand_coinaddr,non_mmgen=True,segwit=False))
 
 #	msg('\n'.join([repr(o) for o in out])); sys.exit(0)
@@ -1192,7 +1193,7 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 
 def write_fake_data_to_file(d):
 	unspent_data_file = os.path.join(cfg['tmpdir'],u'unspent.json')
-	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True)
+	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True,ignore_opt_outdir=True)
 	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file.encode('utf8')
 	bwd_msg = u'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
 	if opt.print_cmdline: msg(bwd_msg)
@@ -1254,7 +1255,7 @@ def add_comments_to_addr_file(addrfile,outfile,use_labels=False):
 		else:
 			if n % 2: a.set_comment(idx,'Test address {}'.format(n))
 	a.format(enable_comments=True)
-	write_data_to_file(outfile,a.fmt_data,silent=True)
+	write_data_to_file(outfile,a.fmt_data,silent=True,ignore_opt_outdir=True)
 	end_silence()
 
 # 100 words chosen randomly from here:
@@ -1278,7 +1279,7 @@ def make_brainwallet_file(fn):
 	rand_pairs = [wl[getrandnum_range(1,200) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
 	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
-	write_data_to_file(fn,d,'brainwallet password',silent=True)
+	write_data_to_file(fn,d,'brainwallet password',silent=True,ignore_opt_outdir=True)
 
 def do_between():
 	if opt.pause:
@@ -3055,8 +3056,8 @@ class MMGenTestSuite(object):
 		fn_mn = fn.replace('.rawtx','.mainnet.rawtx')
 		ok()
 
-		write_data_to_file(fn_tn,o_tn,'testnet TX data',ask_overwrite=False)
-		write_data_to_file(fn_mn,o_mn,'mainnet TX data',ask_overwrite=False)
+		write_data_to_file(fn_tn,o_tn,'testnet TX data',ask_overwrite=False,ignore_opt_outdir=True)
+		write_data_to_file(fn_mn,o_mn,'mainnet TX data',ask_overwrite=False,ignore_opt_outdir=True)
 
 	# END methods
 	for k in (

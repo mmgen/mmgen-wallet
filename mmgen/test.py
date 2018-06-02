@@ -82,8 +82,8 @@ def write_to_tmpfile(cfg,fn,data,binary=False):
 		os.path.join(cfg['tmpdir'],fn),
 		data,
 		silent=True,
-		binary=binary
-	)
+		binary=binary,
+		ignore_opt_outdir=True)
 
 def read_from_file(fn,binary=False):
 	from mmgen.util import get_data_from_file

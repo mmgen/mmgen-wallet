@@ -135,6 +135,7 @@ class EthereumTwAddrList(TwAddrList):
 		rpc_init()
 #		cur_blk = int(g.rpch.eth_blockNumber(),16)
 
+		from mmgen.obj import CoinAddr
 		for mmid,d in tw.items():
 #			if d['confirmations'] < minconf: continue
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
