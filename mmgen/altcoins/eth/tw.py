@@ -28,6 +28,8 @@ from mmgen.addr import AddrData
 
 class EthereumTrackingWallet(TrackingWallet):
 
+	desc = 'Ethereum tracking wallet'
+
 	data_dir = os.path.join(g.altcoin_data_dir,'eth',g.proto.data_subdir)
 	tw_file = os.path.join(data_dir,'tracking-wallet.json')
 
@@ -40,25 +42,37 @@ class EthereumTrackingWallet(TrackingWallet):
 			try: os.stat(self.tw_file)
 			except:
 				self.orig_data = ''
-				self.data = {}
+				self.data = {'accounts':{}}
 			else: die(2,"File '{}' exists but does not contain valid json data")
 		else:
-			for d in self.data:
-				self.data[d]['mmid'] = TwMMGenID(self.data[d]['mmid'],on_fail='raise')
-				self.data[d]['comment'] = TwComment(self.data[d]['comment'],on_fail='raise')
+			self.upgrade_wallet_maybe()
+			ad = self.data['accounts']
+			for v in ad.values():
+				v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
+				v['comment'] = TwComment(v['comment'],on_fail='raise')
+
+	def upgrade_wallet_maybe(self):
+		if not 'accounts' in self.data:
+			ymsg('Upgrading {}!'.format(self.desc))
+			self.data = {}
+			self.data['accounts'] = json.loads(self.orig_data)
+			self.write()
+			self.orig_data = json.dumps(self.data)
+			msg('{} upgraded successfully!'.format(self.desc))
 
 	def import_address(self,addr,label):
-		if addr in self.data:
-			if not self.data[addr]['mmid'] and label.mmid:
+		ad = self.data['accounts']
+		if addr in ad:
+			if not ad[addr]['mmid'] and label.mmid:
 				msg("Warning: MMGen ID '{}' was missing in tracking wallet!".format(label.mmid))
-			elif self.data[addr]['mmid'] != label.mmid:
+			elif ad[addr]['mmid'] != label.mmid:
 				die(3,"MMGen ID '{}' does not match tracking wallet!".format(label.mmid))
-		self.data[addr] = { 'mmid': label.mmid, 'comment': label.comment }
+		ad[addr] = { 'mmid': label.mmid, 'comment': label.comment }
 
 	# use 'check_data' to make sure wallet hasn't been altered by another program
 	def write(self):
 		write_data_to_file( self.tw_file,
-							json.dumps(self.data),'Ethereum address data',
+							json.dumps(self.data),'Ethereum tracking wallet data',
 							ask_overwrite=False,ignore_opt_outdir=True,silent=True,
 							check_data=True,cmp_data=self.orig_data)
 
@@ -70,21 +84,25 @@ class EthereumTrackingWallet(TrackingWallet):
 		if is_coin_addr(addr):
 			have_match = lambda k: k == addr
 		elif is_mmgen_id(addr):
-			have_match = lambda k: self.data[k]['mmid'] == addr
+			have_match = lambda k: self.data['accounts'][k]['mmid'] == addr
 		else:
 			die(1,"'{}' is not an Ethereum address or MMGen ID".format(addr))
 
-		for k in self.data:
+		for k in self.data['accounts']:
 			if have_match(k):
-				del self.data[k]
+				del self.data['accounts'][k]
 				break
 		else:
 			die(1,"Address '{}' not found in tracking wallet".format(addr))
 		self.write()
 
+	def is_in_wallet(self,addr):
+		return addr in self.data['accounts']
+
 	def sorted_list(self):
 		return sorted(
-			map(lambda x: {'addr':x[0], 'mmid':x[1]['mmid'], 'comment':x[1]['comment'] }, self.data.items()),
+			map(lambda x: {'addr':x[0], 'mmid':x[1]['mmid'], 'comment':x[1]['comment'] },
+								self.data['accounts'].items()),
 			key=lambda x: x['mmid'].sort_key+x['addr']
 			)
 
@@ -93,7 +111,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		return OrderedDict(map(lambda x: (x['mmid'],{'addr':x['addr'],'comment':x['comment']}), self.sorted_list()))
 
 	def import_label(self,coinaddr,lbl):
-		for addr,d in self.data.items():
+		for addr,d in self.data['accounts'].items():
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()

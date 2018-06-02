@@ -448,7 +448,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		from mmgen.globalvars import g
 		if g.coin in ('ETH','ETC'):
 			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-			return self in EthereumTrackingWallet().data.keys()
+			return EthereumTrackingWallet().is_in_wallet(self)
 
 		from mmgen.rpc import rpc_init
 		d = rpc_init().validateaddress(self)
