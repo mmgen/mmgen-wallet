@@ -297,6 +297,11 @@ cfgs = {
 		},
 		'segwit': get_segwit_bool()
 	},
+	'22': {
+		'tmpdir': os.path.join(u'test',u'tmp22'),
+		'parity_pidfile': 'parity.pid',
+		'parity_keyfile': 'parity.devkey',
+		},
 	'3': {
 		'tmpdir':        os.path.join(u'test',u'tmp3'),
 		'wpasswd':       'Major miner',
@@ -586,6 +591,12 @@ cfgs = {
 	},
 }
 
+# The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
+eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
+eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
+eth_wallet = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
+eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--quiet']
+
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
 	cfgs[b] = deepcopy(cfgs[a])
@@ -819,6 +830,26 @@ cmd_group['regtest_split'] = (
 	('regtest_split_txdo_timelock_good_b2x','sending transaction with good locktime (B2X)'),
 )
 
+cmd_group['ethdev'] = (
+	('ethdev_setup',               'Ethereum Parity dev mode tests (start parity)'),
+	('ethdev_addrgen',             'generating addresses'),
+	('ethdev_addrimport',          'importing addresses'),
+	('ethdev_addrimport_dev_addr', "importing Parity dev address 'Ox00a329c..'"),
+	('ethdev_txcreate',            'creating a transaction (spend from dev address)'),
+	('ethdev_txsign',              'signing the transaction'),
+	('ethdev_txsign_ni',           'signing the transaction (non-interactive)'),
+	('ethdev_txsend',              'sending the transaction'),
+	('ethdev_bal',                 'the balance'),
+	('ethdev_txcreate2',           'creating a transaction (spend from MMGen address)'),
+	('ethdev_txsign2',             'signing the transaction'),
+	('ethdev_txsend2',             'sending the transaction'),
+	('ethdev_bal2',                'the balance'),
+	('ethdev_add_label',           'adding a UTF-8 label'),
+	('ethdev_chk_label',           'the label'),
+	('ethdev_remove_label',        'removing the label'),
+	('ethdev_stop',                'stopping parity'),
+)
+
 cmd_group['autosign'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
 )
@@ -927,6 +958,11 @@ for a,b in cmd_group['regtest']:
 # 	cmd_list['regtest_split'].append(a)
 # 	cmd_data[a] = (19,b,[[[],19]])
 #
+cmd_data['info_ethdev'] = 'ethdev',[22]
+for a,b in cmd_group['ethdev']:
+	cmd_list['ethdev'].append(a)
+	cmd_data[a] = (22,b,[[[],22]])
+
 cmd_data['info_autosign'] = 'autosign',[18]
 for a,b in cmd_group['autosign']:
 	cmd_list['autosign'].append(a)
@@ -1631,6 +1667,48 @@ class MMGenTestSuite(object):
 		t.expect("Type uppercase 'YES' to confirm: ",'\n')
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
+
+	def txcreate_ui_common(self,t,  menu=[],inputs='1',
+									file_desc='Transaction',
+									bad_input_sels=False,non_mmgen_inputs=0,
+									fee_desc='transaction fee',fee='10s',fee_res=None,
+									add_comment='n',view='t',save='y'):
+		for choice in menu:
+			t.expect(r"'q'=quit view, .*?:.",choice, regex=True)
+		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
+		if bad_input_sels:
+			for r in ('x','3-1','9999'):
+				t.expect('to spend from: ',r+'\n')
+		t.expect('to spend from: ',inputs+'\n')
+		for i in range(non_mmgen_inputs):
+			t.expect('Accept? (y/N): ','y')
+		t.expect(fee_desc+': ','50G\n')
+		if fee_res: t.expect(fee_res)
+		t.expect('(Y/n): ','\n')        # fee OK?
+		t.expect('(Y/n): ','\n')        # chg amt OK?
+		t.expect('(y/N): ',add_comment) # add comment?
+		t.expect('View decoded transaction\? .*?: ',view,regex=True)
+		if view not in 'n\n': t.expect('to continue: ','\n')
+		t.expect('(y/N): ',save) # save
+		t.written_to_file(file_desc)
+		t.ok()
+
+	def txsign_ui_common(self,t,ni=False,view='t',add_comment='n',save='y',file_desc='Signed transaction'):
+		if not ni:
+			t.expect('View data.* transaction\? .*?: ',view,regex=True)
+			if view not in 'n\n': t.expect('to continue: ','\n')
+			t.expect('(y/N): ',add_comment)
+			t.expect('(Y/n): ',save)
+		t.written_to_file(file_desc)
+		t.ok()
+
+	def txsend_ui_common(self,t,view='n',add_comment='n',confirm_send='YES',file_desc='Sent transaction'):
+		t.expect('View .*\? .*: ',view,regex=True)
+		if view not in 'n\n': t.expect('to continue: ','\n')
+		t.expect('(y/N): ',add_comment)
+		t.expect("to confirm: ",confirm_send+'\n')
+		t.written_to_file(file_desc)
+		t.ok()
 
 	def txcreate_common(self,name,
 						sources=['1'],
@@ -2963,6 +3041,114 @@ class MMGenTestSuite(object):
 		self.regtest_split_txdo_timelock(name,'B2X',locktime=8888,bad_locktime=True)
 	def regtest_split_txdo_timelock_good_b2x(self,name):
 		self.regtest_split_txdo_timelock(name,'B2X',locktime=1321009871,bad_locktime=False)
+
+	def ethdev_setup(self,name):
+		lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
+		try:
+			pid = subprocess.check_output(['pgrep','-af','parity.*{}'.format(lf_arg)]).split()[0]
+			os.kill(int(pid),9)
+		except:
+			pass
+		# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
+		dc_dir = os.path.join(os.environ['HOME'],'.local/share/io.parity.ethereum/chains/DevelopmentChain')
+		shutil.rmtree(dc_dir,ignore_errors=True)
+		bdir = os.path.join(data_dir,'parity')
+		try: os.mkdir(bdir)
+		except: pass
+		pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
+		MMGenExpect(name,'',msg_only=True)
+		subprocess.check_call(['parity',lf_arg,'--config=dev','daemon',pid_fn])
+		time.sleep(1) # race condition
+		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
+		ok()
+
+	def ethdev_addrgen(self,name):
+		from mmgen.addr import MMGenAddrType
+		t = MMGenExpect(name,'mmgen-addrgen', eth_args + [eth_wallet,'1-10'])
+		t.written_to_file('Addresses')
+		t.ok()
+
+	def ethdev_addrimport(self,name):
+		fn = get_file_with_ext('addrs',cfg['tmpdir'])
+		t = MMGenExpect(name,'mmgen-addrimport', ['--coin=eth','--quiet',fn])
+		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
+		t.expect('Importing')
+		t.expect('10/10')
+		t.read()
+		t.ok()
+
+	def ethdev_addrimport_dev_addr(self,name):
+		t = MMGenExpect(name,'mmgen-addrimport', ['--coin=eth','--quiet','--address',eth_addr])
+		t.expect('OK')
+		t.ok()
+
+	def ethdev_txcreate(self,name,arg='98831F3A:E:1,123.456',acct='1',non_mmgen_inputs=1):
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['-B',arg])
+		t.expect(r"'q'=quit view, .*?:.",'p', regex=True)
+		t.written_to_file('Account balances listing')
+		self.txcreate_ui_common(t,menu=('a','d','A','r','M','D','e','m','m'),
+								inputs=acct,file_desc='Ethereum transaction',
+								bad_input_sels=True,non_mmgen_inputs=non_mmgen_inputs,
+								fee_desc='gas price',fee='50G',fee_res='0.00105 ETH (50 gas price in Gwei)')
+
+	def ethdev_txsign(self,name,ni=False,ext='.rawtx'):
+		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
+		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
+		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
+		t = MMGenExpect(name,'mmgen-txsign',eth_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,eth_wallet])
+		self.txsign_ui_common(t,ni=ni)
+
+	def ethdev_txsign_ni(self,name):
+		self.ethdev_txsign(name,ni=True)
+
+	def ethdev_txsend(self,name,ni=False,really_send=True,ext='.sigtx'):
+		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
+		if really_send: os.environ['MMGEN_BOGUS_SEND'] = ''
+		t = MMGenExpect(name,'mmgen-txsend', eth_args + [tx_fn])
+		if really_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
+		self.txsend_ui_common(t)
+
+	def ethdev_bal(self,name):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['twview'])
+		t.expect(r'98831F3A:E:1\s+123\.456\s+',regex=True)
+		t.ok()
+
+	def ethdev_txcreate2(self,name):
+		return self.ethdev_txcreate(name,arg='98831F3A:E:2,23.45495',acct='11',non_mmgen_inputs=0)
+
+	def ethdev_txsign2(self,name):
+		self.ethdev_txsign(name,ext='.45495].rawtx',ni=True)
+
+	def ethdev_txsend2(self,name):
+		self.ethdev_txsend(name,ni=True,ext='.45495].sigtx')
+
+	def ethdev_bal2(self,name):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['twview'])
+		t.expect(r'98831F3A:E:1\s+100\s+',regex=True)
+		t.expect(r'98831F3A:E:2\s+23\.45495\s+',regex=True)
+		t.ok()
+
+	def ethdev_add_label(self,name,addr='98831F3A:E:10',lbl=utf8_label):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['add_label',addr,lbl])
+		t.expect('Added label.*in tracking wallet',regex=True)
+		t.ok()
+
+	def ethdev_chk_label(self,name,addr='98831F3A:E:10',label_pat=utf8_label_pat):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['listaddresses','all_labels=1'])
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label).encode('utf8')),regex=True)
+		t.ok()
+
+	def ethdev_remove_label(self,name,addr='98831F3A:E:10'):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['remove_label',addr])
+		t.expect('Removed label.*in tracking wallet',regex=True)
+		t.ok()
+
+	def ethdev_stop(self,name):
+		MMGenExpect(name,'',msg_only=True)
+		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
+		assert pid,'No parity pid file!'
+		subprocess.check_call(['kill',pid])
+		ok()
 
 #	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw=rt_pw,no_send=False,do_label=False):
 
