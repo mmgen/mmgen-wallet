@@ -26,7 +26,6 @@ from mmgen.obj import ETHAmt,TwMMGenID,TwComment,TwLabel
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
 
-# No file locking - 2 processes accessing the wallet at the same time will corrupt it
 class EthereumTrackingWallet(TrackingWallet):
 
 	data_dir = os.path.join(g.altcoin_data_dir,'eth',g.proto.data_subdir)
@@ -35,10 +34,13 @@ class EthereumTrackingWallet(TrackingWallet):
 	def __init__(self):
 		check_or_create_dir(self.data_dir)
 		try:
-			self.data = json.loads(get_data_from_file(self.tw_file,silent=True))
+			self.orig_data = get_data_from_file(self.tw_file,silent=True)
+			self.data = json.loads(self.orig_data)
 		except:
 			try: os.stat(self.tw_file)
-			except: self.data = {}
+			except:
+				self.orig_data = ''
+				self.data = {}
 			else: die(2,"File '{}' exists but does not contain valid json data")
 		else:
 			for d in self.data:
@@ -53,13 +55,12 @@ class EthereumTrackingWallet(TrackingWallet):
 				die(3,"MMGen ID '{}' does not match tracking wallet!".format(label.mmid))
 		self.data[addr] = { 'mmid': label.mmid, 'comment': label.comment }
 
+	# use 'check_data' to make sure wallet hasn't been altered by another program
 	def write(self):
-		write_data_to_file(
-			self.tw_file,
-			json.dumps(self.data),
-			'Ethereum address data',
-			ask_overwrite=False,
-			silent=True)
+		write_data_to_file( self.tw_file,
+							json.dumps(self.data),'Ethereum address data',
+							ask_overwrite=False,ignore_opt_outdir=True,silent=True,
+							check_data=True,cmp_data=self.orig_data)
 
 	def delete_all(self):
 		self.data = {}
