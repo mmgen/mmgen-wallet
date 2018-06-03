@@ -155,6 +155,22 @@ class MMGenPexpect(object):
 				self.p = pexpect.spawn(cmd,args)
 			if opt.exact_output: self.p.logfile = sys.stdout
 
+	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True):
+		self.hash_preset(desc,hp)
+		self.passphrase(desc,pw)
+		self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
+
+	def view_tx(self,view):
+		self.expect('View.* transaction.*\? .*: ',view,regex=True)
+		if view not in 'n\n':
+			self.expect('to continue: ','\n')
+
+	def do_comment(self,add_comment,has_label=False):
+		p = ('Add a comment to transaction','Edit transaction comment')[has_label]
+		self.expect('{}? (y/N): '.format(p),('n','y')[bool(add_comment)])
+		if add_comment:
+			self.expect('Comment: ',add_comment+'\n')
+
 	def ok(self,exit_val=0):
 		ret = self.p.wait()
 #		Msg('expect: {} got: {}'.format(exit_val,ret))
@@ -239,12 +255,6 @@ class MMGenPexpect(object):
 	def no_overwrite(self):
 		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ",'\n')
 		self.expect('Exiting at user request')
-
-	def tx_view(self,view=None):
-		repl = { 'terse':'t', 'full':'v' }[view] if view else 'n'
-		my_expect(self.p,r'View .*?transaction.*? \(y\)es, \(N\)o, pager \(v\)iew.*?: ',repl,regex=True)
-		if repl == 't':
-			my_expect(self.p,r'any key to continue: ','\n')
 
 	def expect_getend(self,s,regex=False):
 		ret = self.expect(s,regex=regex,nonl=True)

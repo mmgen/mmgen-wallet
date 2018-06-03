@@ -59,7 +59,7 @@ from mmgen.addr import AddrGenerator,KeyGenerator,AddrList,AddrData,AddrIdxList
 
 ref_tx_label_jp = u'必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
 ref_tx_label_zh = u'所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
-ref_tx_label_lat_cyr_gr = ''.join(map(unichr,
+ref_tx_label_lat_cyr_gr = u''.join(map(unichr,
 									range(65,91) +
 									range(1040,1072) + # cyrillic
 									range(913,939) +   # greek
@@ -550,7 +550,6 @@ cfgs = {
 		'ref_keyaddrfile_chksum_eth': 'E400 70D9 0AE3 C7C2',
 		'ref_keyaddrfile_chksum_etc': 'EF49 967D BD6C FE45',
 		'ref_passwdfile_chksum':   'A983 DAB9 5514 27FB',
-#		'ref_fake_unspent_data':'98831F3A_unspent.json',
 		'ref_tx_file': {
 			'btc': 'FFB367[1.234]{}.rawtx',
 			'bch': '99BE60-BCH[106.6789]{}.rawtx',
@@ -595,7 +594,7 @@ cfgs = {
 eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 eth_wallet = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
-eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--quiet']
+eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--rpc-port=8547','--quiet']
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -952,13 +951,7 @@ for a,b in cmd_group['regtest']:
 	cmd_list['regtest'].append(a)
 	cmd_data[a] = (17,b,[[[],17]])
 
-# disable until B2X officially supported
-# cmd_data['info_regtest_split'] = 'regtest mode with fork and coin split',[17]
-# for a,b in cmd_group['regtest_split']:
-# 	cmd_list['regtest_split'].append(a)
-# 	cmd_data[a] = (19,b,[[[],19]])
-#
-cmd_data['info_ethdev'] = 'ethdev',[22]
+cmd_data['info_ethdev'] = 'Ethereum tracking wallet and transaction ops',[22]
 for a,b in cmd_group['ethdev']:
 	cmd_list['ethdev'].append(a)
 	cmd_data[a] = (22,b,[[[],22]])
@@ -1592,10 +1585,7 @@ class MMGenTestSuite(object):
 			t.expect("Getting {} from file '".format(desc))
 		if pw:
 			t.passphrase(desc,cfg['wpasswd'])
-			t.expect(
-				['Passphrase is OK', 'Passphrase.* are correct'],
-				regex=True
-				)
+			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
 		chk = t.expect_getend('Valid {} for Seed ID '.format(desc))[:8]
 		if sid: t.cmp_or_die(chk,sid)
 		else: t.ok()
@@ -1639,10 +1629,10 @@ class MMGenTestSuite(object):
 		else:
 			t.written_to_file('Addresses',oo=True)
 		if check_ref:
-			k = 'passfile32_chk' if ftype == 'pass32' \
-					else 'passfilehex_chk' if ftype == 'passhex' \
-						else 'passfile_chk' if ftype == 'pass' \
-							else '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
+			try:    k =   { 'pass32':  'passfile32_chk',
+							'passhex': 'passfilehex_chk',
+							'pass':    'passfile_chk'}[ftype]
+			except: k = '{}file{}_chk'.format(ftype,'_'+mmtype if mmtype else '')
 			chk_ref = cfg[k] if ftype[:4] == 'pass' else cfg[k][fork][g.testnet]
 			refcheck('{}list data checksum'.format(ftype),chk,chk_ref)
 		else:
@@ -1668,47 +1658,76 @@ class MMGenTestSuite(object):
 		vmsg('This is a simulation, so no addresses were actually imported into the tracking\nwallet')
 		t.ok(exit_val=1)
 
-	def txcreate_ui_common(self,t,  menu=[],inputs='1',
-									file_desc='Transaction',
-									bad_input_sels=False,non_mmgen_inputs=0,
-									fee_desc='transaction fee',fee='10s',fee_res=None,
-									add_comment='n',view='t',save='y'):
-		for choice in menu:
-			t.expect(r"'q'=quit view, .*?:.",choice, regex=True)
-		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
+	def txcreate_ui_common(self,t,name,
+							menu=[],inputs='1',
+							file_desc='Transaction',
+							input_sels_prompt='to spend',
+							bad_input_sels=False,non_mmgen_inputs=0,
+							fee_desc='transaction fee',fee='',fee_res=None,
+							add_comment='',view='t',save=True):
+		for choice in menu + ['q']:
+			t.expect(r"'q'=quit view, .*?:.",choice,regex=True)
 		if bad_input_sels:
 			for r in ('x','3-1','9999'):
-				t.expect('to spend from: ',r+'\n')
-		t.expect('to spend from: ',inputs+'\n')
+				t.expect(input_sels_prompt+': ',r+'\n')
+		t.expect(input_sels_prompt+': ',inputs+'\n')
 		for i in range(non_mmgen_inputs):
 			t.expect('Accept? (y/N): ','y')
-		t.expect(fee_desc+': ','50G\n')
-		if fee_res: t.expect(fee_res)
-		t.expect('(Y/n): ','\n')        # fee OK?
-		t.expect('(Y/n): ','\n')        # chg amt OK?
-		t.expect('(y/N): ',add_comment) # add comment?
-		t.expect('View decoded transaction\? .*?: ',view,regex=True)
-		if view not in 'n\n': t.expect('to continue: ','\n')
-		t.expect('(y/N): ',save) # save
-		t.written_to_file(file_desc)
-		t.ok()
 
-	def txsign_ui_common(self,t,ni=False,view='t',add_comment='n',save='y',file_desc='Signed transaction'):
-		if not ni:
-			t.expect('View data.* transaction\? .*?: ',view,regex=True)
-			if view not in 'n\n': t.expect('to continue: ','\n')
-			t.expect('(y/N): ',add_comment)
-			t.expect('(Y/n): ',save)
-		t.written_to_file(file_desc)
-		t.ok()
+		if fee:
+			t.expect(fee_desc+': ',fee+'\n')
+			if fee_res: t.expect(fee_res)
+		t.expect('OK? (Y/n): ','y')  # fee OK?
+		t.expect('(Y/n): ','\n')     # chg amt OK?
+		t.do_comment(add_comment)
+		t.view_tx(view)
+		if not name[:4] == 'txdo':
+			t.expect('(y/N): ',('n','y')[save])
+			t.written_to_file(file_desc)
+			t.ok()
 
-	def txsend_ui_common(self,t,view='n',add_comment='n',confirm_send='YES',file_desc='Sent transaction'):
-		t.expect('View .*\? .*: ',view,regex=True)
-		if view not in 'n\n': t.expect('to continue: ','\n')
-		t.expect('(y/N): ',add_comment)
-		t.expect("to confirm: ",confirm_send+'\n')
+	def txsign_ui_common(self,t,name,   view='t',add_comment='',
+										ni=False,save=True,do_passwd=False,
+										file_desc='Signed transaction'):
+		txdo = name[:4] == 'txdo'
+
+		if do_passwd:
+			t.passphrase('MMGen wallet',cfg['wpasswd'])
+
+		if not ni and not txdo:
+			t.view_tx(view)
+			t.do_comment(add_comment)
+			t.expect('(Y/n): ',('n','y')[save])
+
 		t.written_to_file(file_desc)
-		t.ok()
+
+		if not txdo: t.ok()
+
+	def do_confirm_send(self,t,quiet=False,confirm_send=True):
+		t.expect('Are you sure you want to broadcast this')
+		m = ('YES, I REALLY WANT TO DO THIS','YES')[quiet]
+		t.expect("'{}' to confirm: ".format(m),('',m)[confirm_send]+'\n')
+
+	def txsend_ui_common(self,t,name,   view='n',add_comment='',
+										confirm_send=True,bogus_send=True,quiet=False,
+										file_desc='Sent transaction'):
+
+		txdo = name[:4] == 'txdo'
+		if not txdo:
+			t.license() # MMGEN_NO_LICENSE is set, so does nothing
+			t.view_tx(view)
+			t.do_comment(add_comment)
+
+		self.do_confirm_send(t,quiet=quiet,confirm_send=confirm_send)
+
+		if bogus_send:
+			t.expect('BOGUS transaction NOT sent')
+		else:
+			txid = t.expect_getend('Transaction sent: ')
+			assert len(txid) == 64,"'{}': Incorrect txid length!".format(txid)
+
+		t.written_to_file(file_desc)
+		if not txdo: t.ok()
 
 	def txcreate_common(self,name,
 						sources=['1'],
@@ -1716,7 +1735,7 @@ class MMGenTestSuite(object):
 						do_label=False,
 						txdo_args=[],
 						add_args=[],
-						view=None,
+						view='n',
 						non_mmgen_input_compressed=True):
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
@@ -1737,9 +1756,7 @@ class MMGenTestSuite(object):
 		t.license()
 
 		if txdo_args and add_args: # txdo4
-			t.hash_preset('key-address data','1')
-			t.passphrase('key-address data',cfgs['14']['kapasswd'])
-			t.expect('Check key-to-address validity? (y/N): ','y')
+			t.do_decrypt_ka_data(hp='1',pw=cfgs['14']['kapasswd'])
 
 		for num in tx_data:
 			t.expect_getend('Getting address data from file ')
@@ -1756,28 +1773,18 @@ class MMGenTestSuite(object):
 
 		for num in tx_data:
 			t.expect('Continue anyway? (y/N): ','y')
-		t.expect(r"'q'=quit view, .*?:.",'M', regex=True)
-		if name == 'txcreate':
-			t.expect(r"'q'=quit view, .*?:.",'D', regex=True)
-			t.expect(r"'q'=quit view, .*?:.",'m', regex=True)
-			t.expect(r"'q'=quit view, .*?:.",'g', regex=True)
-		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
+
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
-		t.expect('outputs to spend: ',' '.join([str(i) for i in outputs_list])+'\n')
-		if non_mmgen_input and not txdo_args: t.expect('Accept? (y/N): ','y')
-		t.expect('OK? (Y/n): ','y') # fee OK?
-		t.expect('OK? (Y/n): ','y') # change OK?
-		if do_label:
-			t.expect('Add a comment to transaction? (y/N): ','y')
-			t.expect('Comment: ',ref_tx_label_lat_cyr_gr.encode('utf8')+'\n')
-		else:
-			t.expect('Add a comment to transaction? (y/N): ','\n')
-		t.tx_view(view=view)
-		if txdo_args: return t
-		t.expect('Save transaction? (y/N): ','y')
-		t.written_to_file('Transaction')
-		t.ok()
+
+		self.txcreate_ui_common(t,name,
+					menu=(['M'],['M','D','m','g'])[name=='txcreate'],
+					inputs=' '.join(map(str,outputs_list)),
+					add_comment=('',ref_tx_label_lat_cyr_gr)[do_label],
+					non_mmgen_inputs=(0,1)[bool(non_mmgen_input and not txdo_args)],
+					view=view)
+
+		return t
 
 	def txcreate(self,name,addrfile):
 		self.txcreate_common(name,sources=['1'],add_args=['--vsize-adj=1.01'])
@@ -1785,27 +1792,24 @@ class MMGenTestSuite(object):
 	def txbump(self,name,txfile,prepend_args=[],seed_args=[]):
 		if not g.proto.cap('rbf'):
 			msg('Skipping RBF'); return True
-		args = prepend_args + ['-q','-d',cfg['tmpdir'],txfile] + seed_args
+		args = prepend_args + ['--quiet','--outdir='+cfg['tmpdir'],txfile] + seed_args
 		t = MMGenExpect(name,'mmgen-txbump',args)
 		if seed_args:
-			t.hash_preset('key-address data','1')
-			t.passphrase('key-address data',cfgs['14']['kapasswd'])
-			t.expect('Check key-to-address validity? (y/N): ','y')
+			t.do_decrypt_ka_data(hp='1',pw=cfgs['14']['kapasswd'])
 		t.expect('deduct the fee from (Hit ENTER for the change output): ','1\n')
 		# Fee must be > tx_fee + network relay fee (currently 0.00001)
 		t.expect('OK? (Y/n): ','\n')
 		t.expect('Enter transaction fee: ',txbump_fee+'\n')
 		t.expect('OK? (Y/n): ','\n')
 		if seed_args: # sign and send
-			t.expect('Edit transaction comment? (y/N): ','\n')
+			t.do_comment(False,has_label=True)
 			for cnum,desc in (('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet')):
 				t.passphrase(desc,cfgs[cnum]['wpasswd'])
-			m = ('YES','YES, I REALLY WANT TO DO THIS')[g.debug]
-			t.expect("'{}' to confirm: ".format(m),m+'\n')
+			self.do_confirm_send(t,quiet=not g.debug,confirm_send=True)
 			if g.debug:
 				t.written_to_file('Transaction')
 		else:
-			t.expect('Add a comment to transaction? (y/N): ','\n')
+			t.do_comment(False)
 			t.expect('Save transaction? (y/N): ','y')
 			t.written_to_file('Transaction')
 		os.unlink(txfile) # our tx file replaces the original
@@ -1815,61 +1819,40 @@ class MMGenTestSuite(object):
 
 	def txdo(self,name,addrfile,wallet):
 		t = self.txcreate_common(name,sources=['1'],txdo_args=[wallet])
-		self.txsign(name,'','',pf='',save=True,has_label=False,txdo_handle=t)
-		self.txsend(name,'',txdo_handle=t)
+		self.txsign_ui_common(t,name,view='n',do_passwd=True)
+		self.txsend_ui_common(t,name)
+		t.ok()
 
 	def txcreate_dfl_wallet(self,name,addrfile):
 		self.txcreate_common(name,sources=['15'])
 
 	def txsign_end(self,t,tnum=None,has_label=False):
 		t.expect('Signing transaction')
-		cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
-		t.expect('{}? (y/N): '.format(cprompt),'\n')
+		t.do_comment(False,has_label=has_label)
 		t.expect('Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
-		add = ' #' + tnum if tnum else ''
-		t.written_to_file('Signed transaction' + add, oo=True)
+		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,txdo_handle=None,extra_opts=[]):
-		if txdo_handle:
-			t = txdo_handle
-		else:
-			t = MMGenExpect(name,'mmgen-txsign', extra_opts + ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
-			t.license()
-			t.tx_view()
+	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,extra_opts=[]):
+		t = MMGenExpect(name,'mmgen-txsign', extra_opts + ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
+		t.license()
+		t.view_tx('n')
 		t.passphrase('MMGen wallet',cfg['wpasswd'])
-		if txdo_handle: return
 		if save:
 			self.txsign_end(t,has_label=has_label)
 			t.ok()
 		else:
-			cprompt = ('Add a comment to transaction','Edit transaction comment')[has_label]
-			t.expect('{}? (y/N): '.format(cprompt),'\n')
+			t.do_comment(False,has_label=has_label)
 			t.expect('Save signed transaction? (Y/n): ','n')
 			t.ok(exit_val=1)
 
 	def txsign_dfl_wallet(self,name,txfile,pf='',save=True,has_label=False):
 		return self.txsign(name,txfile,wf=None,pf=pf,save=save,has_label=has_label)
 
-	def txsend(self,name,sigfile,txdo_handle=None,really_send=False,extra_opts=[]):
-		if txdo_handle:
-			t = txdo_handle
-		else:
-			if really_send: os.environ['MMGEN_BOGUS_SEND'] = ''
-			t = MMGenExpect(name,'mmgen-txsend', extra_opts + ['-d',cfg['tmpdir'],sigfile])
-			if really_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-			t.license()
-			t.tx_view(view='terse')
-			t.expect('Add a comment to transaction? (y/N): ','\n')
-		t.expect('Are you sure you want to broadcast this')
-		m = 'YES, I REALLY WANT TO DO THIS'
-		t.expect("'{}' to confirm: ".format(m),m+'\n')
-		if really_send:
-			txid = t.expect_getend('Transaction sent: ')
-			assert len(txid) == 64
-		else:
-			t.expect('BOGUS transaction NOT sent')
-		t.written_to_file('Sent transaction')
-		t.ok()
+	def txsend(self,name,sigfile,bogus_send=True,extra_opts=[]):
+		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
+		t = MMGenExpect(name,'mmgen-txsend', extra_opts + ['-d',cfg['tmpdir'],sigfile])
+		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
+		self.txsend_ui_common(t,name,view='t',add_comment='')
 
 	def walletconv_export(self,name,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
 		opts = ['-d',cfg['tmpdir'],'-o',out_fmt] + uargs + \
@@ -1883,10 +1866,10 @@ class MMGenTestSuite(object):
 			t.usr_rand(usr_rand_chars)
 
 		if ' '.join(desc.split()[-2:]) == 'incognito data':
-			t.expect('Generating encryption key from OS random data ')
-			t.expect('Generating encryption key from OS random data ')
+			m = 'Generating encryption key from OS random data '
+			t.expect(m); t.expect(m)
 			ic_id = t.expect_getend('New Incog Wallet ID: ')
-			t.expect('Generating encryption key from OS random data ')
+			t.expect(m)
 		if desc == 'hidden incognito data':
 			write_to_tmpfile(cfg,incog_id_fn,ic_id)
 			ret = t.expect(['Create? (Y/n): ',"'YES' to confirm: "])
@@ -1990,7 +1973,6 @@ class MMGenTestSuite(object):
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(usr_rand_chars)
 		t.hash_preset('new key list','1')
-#		t.passphrase_new('new key list','kafile password')
 		t.passphrase_new('new key list',cfg['kapasswd'])
 		t.written_to_file('Encrypted secret keys',oo=True)
 		t.ok()
@@ -2017,10 +1999,8 @@ class MMGenTestSuite(object):
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],'-M',keyaddr_file,txfile])
 		t.license()
-		t.hash_preset('key-address data','1')
-		t.passphrase('key-address data',cfg['kapasswd'])
-		t.expect('Check key-to-address validity? (y/N): ','y')
-		t.tx_view()
+		t.do_decrypt_ka_data(hp='1',pw=cfg['kapasswd'])
+		t.view_tx('n')
 		self.txsign_end(t)
 		t.ok()
 
@@ -2037,7 +2017,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],txf1,wf1,txf2,wf2])
 		t.license()
 		for cnum in ('1','2'):
-			t.tx_view()
+			t.view_tx('n')
 			t.passphrase('MMGen wallet',cfgs[cnum]['wpasswd'])
 			self.txsign_end(t,cnum)
 		t.ok()
@@ -2057,9 +2037,8 @@ class MMGenTestSuite(object):
 	def txsign3(self,name,wf1,wf2,txf2):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],wf1,wf2,txf2])
 		t.license()
-		t.tx_view()
+		t.view_tx('n')
 		for cnum in ('1','3'):
-#			t.expect_getend('Getting MMGen wallet data from file ')
 			t.passphrase('MMGen wallet',cfgs[cnum]['wpasswd'])
 		self.txsign_end(t)
 		t.ok()
@@ -2081,39 +2060,40 @@ class MMGenTestSuite(object):
 		self.addrgen(name,wf,pf='')
 
 	def txcreate4(self,name,f1,f2,f3,f4,f5,f6):
-		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,view='full')
+		self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=True,view='y')
 
 	def txdo4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		add_args = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f12]
-		t = self.txcreate_common(name,sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=1,txdo_args=[f7,f8,f9,f10],add_args=add_args)
+		t = self.txcreate_common(name,sources=['1','2','3','4','14'],
+					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
 		os.system('rm -f {}/*.sigtx'.format(cfg['tmpdir'].encode('utf8')))
-		self.txsign4(name,f7,f8,f9,f10,f11,f12,txdo_handle=t)
-		self.txsend(name,'',txdo_handle=t)
+
+		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
+			t.passphrase('{}'.format(desc),cfgs[cnum]['wpasswd'])
+
+		self.txsign_ui_common(t,name)
+		self.txsend_ui_common(t,name)
+
 		cmd = 'touch ' + os.path.join(cfg['tmpdir'],u'txdo')
 		os.system(cmd.encode('utf8'))
+		t.ok()
 
 	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		self.txbump(name,f7,prepend_args=['-p1','-k',non_mm_fn,'-M',f1],seed_args=[f2,f3,f4,f5,f6,f8])
 
-	def txsign4(self,name,f1,f2,f3,f4,f5,f6,txdo_handle=None):
-		if txdo_handle:
-			t = txdo_handle
-		else:
-			non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
-			a = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f6,f1,f2,f3,f4,f5]
-			t = MMGenExpect(name,'mmgen-txsign',a)
-			t.license()
-			t.hash_preset('key-address data','1')
-			t.passphrase('key-address data',cfgs['14']['kapasswd'])
-			t.expect('Check key-to-address validity? (y/N): ','y')
-			t.tx_view(view='terse')
+	def txsign4(self,name,f1,f2,f3,f4,f5,f6):
+		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
+		a = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f6,f1,f2,f3,f4,f5]
+		t = MMGenExpect(name,'mmgen-txsign',a)
+		t.license()
+		t.do_decrypt_ka_data(hp='1',pw=cfgs['14']['kapasswd'])
+		t.view_tx('t')
 
 		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
 			t.passphrase('{}'.format(desc),cfgs[cnum]['wpasswd'])
 
-		if txdo_handle: return
 		self.txsign_end(t,has_label=True)
 		t.ok()
 
@@ -2130,12 +2110,12 @@ class MMGenTestSuite(object):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		t = MMGenExpect(name,'mmgen-txsign', add_args + ['-d',cfg['tmpdir'],'-k',non_mm_fn,txf,wf])
 		t.license()
-		t.tx_view()
+		t.view_tx('n')
 		t.passphrase('MMGen wallet',cfgs['20']['wpasswd'])
 		if bad_vsize:
 			t.expect('ERROR: Estimated transaction vsize is')
 		else:
-			t.expect('Add a comment to transaction? (y/N): ','\n')
+			t.do_comment(False)
 			t.expect('Save signed transaction? (Y/n): ','y')
 		t.read()
 		t.ok(exit_val=(0,2)[bad_vsize])
@@ -2350,10 +2330,7 @@ class MMGenTestSuite(object):
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
 		t = MMGenExpect(name,'mmgen-tool',coin_arg+[tool_cmd,af]+add_args)
 		if ftype == 'keyaddr':
-			w = 'key-address data'
-			t.hash_preset(w,ref_kafile_hash_preset)
-			t.passphrase(w,ref_kafile_pass)
-			t.expect('Check key-to-address validity? (y/N): ','y')
+			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass)
 		o = t.read().strip().split('\n')[-1]
 		rc = cfg[   'ref_' + ftype + 'file_chksum' +
 					('_'+coin.lower() if coin else '') +
@@ -2556,6 +2533,7 @@ class MMGenTestSuite(object):
 			extra_desc='(check)')
 
 	def regtest_setup(self,name):
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		if g.testnet:
 			die(2,'--testnet option incompatible with regtest test suite')
 		try: shutil.rmtree(os.path.join(data_dir,'regtest'))
@@ -2671,11 +2649,10 @@ class MMGenTestSuite(object):
 
 	def regtest_user_txdo(  self,name,user,fee,
 							outputs_cl,
-							outputs_prompt,
+							outputs_list,
 							extra_args=[],
 							wf=None,
 							pw=rt_pw,
-							no_send=False,
 							do_label=False,
 							bad_locktime=False,
 							full_tx_view=False):
@@ -2686,27 +2663,18 @@ class MMGenTestSuite(object):
 			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
-		t.expect(r"'q'=quit view, .*?:.",'M',regex=True) # sort by mmid
-		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
-		t.expect('outputs to spend: ',outputs_prompt+'\n')
-		if not fee:
-			t.expect('Enter transaction fee: ','{}\n'.format(tx_fee))
-		t.expect('OK? (Y/n): ','y') # fee OK?
-		t.expect('OK? (Y/n): ','y') # change OK?
-		t.expect('Add a comment to transaction? (y/N): ',('\n','y')[do_label])
-		if do_label:
-			t.expect('Comment: ',ref_tx_label_jp+'\n')
-		t.expect('View decoded transaction\? .*?: ',('t','v')[full_tx_view],regex=True)
-		if not do_label: t.expect('to continue: ','\n')
+		self.txcreate_ui_common(t,'txdo',
+								menu=['M'],inputs=outputs_list,
+								file_desc='Signed transaction',
+								fee=(tx_fee,'')[bool(fee)],
+								add_comment=ref_tx_label_jp,
+								view='t',save=True)
+
 		t.passphrase('MMGen wallet',pw)
 		t.written_to_file('Signed transaction')
-		if no_send:
-			t.read()
-			exit_val = 0
-		else:
-			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
-			s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
-			t.expect(s)
+		self.do_confirm_send(t)
+		s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
+		t.expect(s)
 		t.ok(exit_val)
 
 	def regtest_bob_split1(self,name):
@@ -2751,7 +2719,7 @@ class MMGenTestSuite(object):
 		outputs_cl = self.create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
 		return self.regtest_user_txdo(name,'alice',None,outputs_cl,'1') # fee=None
 
-	def regtest_user_txbump(self,name,user,txfile,fee,red_op,no_send=False):
+	def regtest_user_txbump(self,name,user,txfile,fee,red_op):
 		if not g.proto.cap('rbf'):
 			msg('Skipping RBF'); return True
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -2760,13 +2728,10 @@ class MMGenTestSuite(object):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?
-		t.expect('Add a comment to transaction? (y/N): ','n')
+		t.do_comment(False,has_label=True)
 		t.passphrase('MMGen wallet',rt_pw)
 		t.written_to_file('Signed transaction')
-		if not no_send:
-			t.expect('to confirm: ','YES, I REALLY WANT TO DO THIS\n')
-			t.expect('Transaction sent')
-			t.written_to_file('Signed transaction')
+		self.txsend_ui_common(t,'txdo',bogus_send=False,file_desc='Signed transaction')
 		t.read()
 		t.ok()
 
@@ -2994,9 +2959,8 @@ class MMGenTestSuite(object):
 
 		for tx in ('timelocked','split'):
 			for q in ('fee','change'): t.expect('OK? (Y/n): ','y')
-			t.expect('Add a comment to transaction? (y/N): ','n')
-			t.expect('View decoded transaction\? .*?: ','t',regex=True)
-			t.expect('to continue: ','\n')
+			t.do_comment(False)
+			t.view_tx('t')
 
 		t.written_to_file('Long chain (timelocked) transaction')
 		t.written_to_file('Short chain transaction')
@@ -3017,7 +2981,7 @@ class MMGenTestSuite(object):
 	def regtest_split_send(self,name,coin,ext):
 		opt.coin = coin
 		txfile = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		self.txsend(name,txfile,really_send=True,extra_opts=['--bob'])
+		self.txsend(name,txfile,bogus_send=False,extra_opts=['--bob'])
 
 	def regtest_split_send_b2x(self,name):
 		return self.regtest_split_send(name,coin='B2X',ext='533].sigtx')
@@ -3043,12 +3007,12 @@ class MMGenTestSuite(object):
 		self.regtest_split_txdo_timelock(name,'B2X',locktime=1321009871,bad_locktime=False)
 
 	def ethdev_setup(self,name):
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
 		try:
 			pid = subprocess.check_output(['pgrep','-af','parity.*{}'.format(lf_arg)]).split()[0]
 			os.kill(int(pid),9)
-		except:
-			pass
+		except: pass
 		# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
 		dc_dir = os.path.join(os.environ['HOME'],'.local/share/io.parity.ethereum/chains/DevelopmentChain')
 		shutil.rmtree(dc_dir,ignore_errors=True)
@@ -3057,7 +3021,7 @@ class MMGenTestSuite(object):
 		except: pass
 		pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
 		MMGenExpect(name,'',msg_only=True)
-		subprocess.check_call(['parity',lf_arg,'--config=dev','daemon',pid_fn])
+		subprocess.check_call(['parity',lf_arg,'--jsonrpc-port=8547','--config=dev','daemon',pid_fn])
 		time.sleep(1) # race condition
 		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 		ok()
@@ -3070,7 +3034,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_addrimport(self,name):
 		fn = get_file_with_ext('addrs',cfg['tmpdir'])
-		t = MMGenExpect(name,'mmgen-addrimport', ['--coin=eth','--quiet',fn])
+		t = MMGenExpect(name,'mmgen-addrimport', eth_args[1:] + [fn])
 		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect('10/10')
@@ -3078,7 +3042,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def ethdev_addrimport_dev_addr(self,name):
-		t = MMGenExpect(name,'mmgen-addrimport', ['--coin=eth','--quiet','--address',eth_addr])
+		t = MMGenExpect(name,'mmgen-addrimport', eth_args[1:] + ['--address='+eth_addr])
 		t.expect('OK')
 		t.ok()
 
@@ -3086,7 +3050,9 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['-B',arg])
 		t.expect(r"'q'=quit view, .*?:.",'p', regex=True)
 		t.written_to_file('Account balances listing')
-		self.txcreate_ui_common(t,menu=('a','d','A','r','M','D','e','m','m'),
+		self.txcreate_ui_common(t,name,
+								menu=['a','d','A','r','M','D','e','m','m'],
+								input_sels_prompt='to spend from',
 								inputs=acct,file_desc='Ethereum transaction',
 								bad_input_sels=True,non_mmgen_inputs=non_mmgen_inputs,
 								fee_desc='gas price',fee='50G',fee_res='0.00105 ETH (50 gas price in Gwei)')
@@ -3096,17 +3062,17 @@ class MMGenTestSuite(object):
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsign',eth_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,eth_wallet])
-		self.txsign_ui_common(t,ni=ni)
+		self.txsign_ui_common(t,name,ni=ni)
 
 	def ethdev_txsign_ni(self,name):
 		self.ethdev_txsign(name,ni=True)
 
-	def ethdev_txsend(self,name,ni=False,really_send=True,ext='.sigtx'):
+	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext='.sigtx'):
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		if really_send: os.environ['MMGEN_BOGUS_SEND'] = ''
+		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txsend', eth_args + [tx_fn])
-		if really_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		self.txsend_ui_common(t)
+		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
+		self.txsend_ui_common(t,name,quiet=True,bogus_send=bogus_send)
 
 	def ethdev_bal(self,name):
 		t = MMGenExpect(name,'mmgen-tool', eth_args + ['twview'])
@@ -3150,8 +3116,6 @@ class MMGenTestSuite(object):
 		subprocess.check_call(['kill',pid])
 		ok()
 
-#	def regtest_user_txdo(self,name,user,fee,outputs_cl,outputs_prompt,extra_args=[],wf=None,pw=rt_pw,no_send=False,do_label=False):
-
 	# undocumented admin commands
 	ref_tx_setup = regtest_setup
 	ref_tx_generate = regtest_generate
@@ -3184,21 +3148,9 @@ class MMGenTestSuite(object):
 		outputs_cl = [sid+':{}:3,1.1234'.format(g.proto.mmtypes[-1]), sid+':C:5,5.5555',sid+':L:4',addr+',100']
 		pw = cfg['wpasswd']
 		# create tx in cwd
-		t = MMGenExpect(name,'mmgen-txcreate',[
-									'-B',
-									'--bob',
-									'--tx-fee='+rtFee[0],
-									'--locktime=1320969600'
-								] + outputs_cl)
-#			[os.path.join(ref_dir,cfg['ref_wallet'])])
-		t.expect(r"'q'=quit view, .*?:.",'M',regex=True) # sort by mmid
-		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
-		t.expect('outputs to spend: ','1 2 3\n')
-		t.expect('OK? (Y/n): ','y') # fee OK?
-		t.expect('OK? (Y/n): ','y') # change OK?
-		t.expect('Add a comment to transaction? (y/N): ','y')
-		t.expect('Comment: ',ref_tx_label_zh+'\n')
-		t.expect('View decoded transaction\? .*?: ','n',regex=True)
+		t = MMGenExpect(name,'mmgen-txcreate',
+				['-B','--bob','--tx-fee='+rtFee[0],'--locktime=1320969600'] + outputs_cl)
+		self.txcreate_ui_common(t,'txdo',menu=['M'],inputs='1 2 3',add_comment=ref_tx_label_zh,view='n')
 		t.expect('Save transaction? (y/N): ','y')
 		fn = t.written_to_file('Transaction')
 		write_to_tmpfile(cfg,'ref_tx_fn',fn)
