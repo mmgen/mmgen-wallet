@@ -170,6 +170,24 @@ class EthereumTwAddrList(TwAddrList):
 			self[label.mmid]['amt'] += bal
 			self.total += bal
 
+from mmgen.tw import TwGetBalance
+class EthereumTwGetBalance(TwGetBalance):
+
+	fs = '{w:13} {c}\n' # TODO - for now, just suppress display of meaningless data
+
+	def create_data(self):
+		data = EthereumTrackingWallet().mmid_ordered_dict()
+		for d in data:
+			keys = ['TOTAL']
+			keys += [str(d.obj.sid)] if d.type == 'mmgen' else ['Non-MMGen']
+			confs = 9999 # TODO
+			i = (1,2)[confs >= self.minconf]
+
+			for key in keys:
+				if key not in self.data: self.data[key] = [g.proto.coin_amt('0')] * 3
+				for j in ([],[0])[confs==0] + [i]:
+					self.data[key][j] += ETHAmt(int(g.rpch.eth_getBalance('0x'+data[d]['addr']),16),'wei')
+
 class EthereumAddrData(AddrData):
 
 	@classmethod

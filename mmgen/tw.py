@@ -540,3 +540,55 @@ class TrackingWallet(MMGenObject):
 			return True
 
 	def remove_label(self,mmaddr): self.add_label(mmaddr,'')
+
+class TwGetBalance(MMGenObject):
+
+	fs = '{w:13} {u:<16} {p:<16} {c}\n'
+
+	def __new__(cls,*args,**kwargs):
+		if g.coin == 'ETH':
+			from mmgen.altcoins.eth.tw import EthereumTwGetBalance
+			cls = EthereumTwGetBalance
+		return MMGenObject.__new__(cls,*args,**kwargs)
+
+	def __init__(self,minconf,quiet):
+
+		rpc_init()
+		self.minconf = minconf
+		self.quiet = quiet
+		self.data = {}
+		self.create_data()
+
+	def create_data(self):
+		for d in g.rpch.listunspent(0):
+			try:    lbl = TwLabel(d['account'],on_fail='silent')
+			except: lbl = None
+			keys = ['TOTAL']
+			if lbl and lbl.mmid.type == 'mmgen':
+				keys += [lbl.mmid.obj.sid]
+			if d['spendable']: keys += ['SPENDABLE']
+			confs = d['confirmations']
+			i = (1,2)[confs >= self.minconf]
+
+			for key in keys:
+				if key not in self.data: self.data[key] = [g.proto.coin_amt('0')] * 3
+				for j in ([],[0])[confs==0] + [i]:
+					self.data[key][j] += d['amount']
+
+	def format(self):
+		if self.quiet:
+			o = str(self.data['TOTAL'][2] if self.data else 0) + '\n'
+		else:
+			o = self.fs.format( w='Wallet',
+								u=' Unconfirmed',
+								p=' <{} confirms'.format(self.minconf),
+								c=' >={} confirms'.format(self.minconf))
+			for key in sorted(self.data):
+				o += self.fs.format(**dict(zip(
+							('w','u','p','c'),
+							[key+':'] + [a.fmt(color=True,suf=' '+g.coin) for a in self.data[key]]
+							)))
+
+		if 'SPENDABLE' in self.data:
+			o += red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!\n')
+		return o

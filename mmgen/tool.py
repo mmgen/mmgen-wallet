@@ -79,7 +79,7 @@ cmd_data = OrderedDict([
 
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]','showbtcaddr [bool=True]','show_age [bool=False]','show_days [bool=True]']),
 	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)",'show_age [bool=False]','show_days [bool=True]']),
-	('Getbalance',   ['minconf [int=1]','quiet [bool=False]']),
+	('Getbalance',   ['minconf [int=1]','quiet [bool=False]','pager [bool=False]']),
 	('Txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: ctime, atime)",'MARGS']),
 	('Twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
 
@@ -665,39 +665,10 @@ def Listaddresses(addrs='',minconf=1,
 	o = al.format(showbtcaddrs,sort,show_age,show_days)
 	return do_pager(o) if pager else Msg(o)
 
-def Getbalance(minconf=1,quiet=False,return_val=False):
-	rpc_init()
-	accts = {}
-	for d in g.rpch.listunspent(0):
-		ma = split2(d['account'] if 'account' in d else '')[0] # include coinbase outputs if spendable
-		keys = ['TOTAL']
-		if d['spendable']: keys += ['SPENDABLE']
-		if is_mmgen_id(ma): keys += [ma.split(':')[0]]
-		confs = d['confirmations']
-		i = (1,2)[confs >= minconf]
-
-		for key in keys:
-			if key not in accts: accts[key] = [g.proto.coin_amt('0')] * 3
-			for j in ([],[0])[confs==0] + [i]:
-				accts[key][j] += d['amount']
-
-	if quiet:
-		o = ['{}'.format(accts['TOTAL'][2] if accts else g.proto.coin_amt('0'))]
-	else:
-		fs = '{:13} {} {} {}'
-		mc,lbl = str(minconf),'confirms'
-		o = [fs.format(
-				'Wallet',
-				*[s.ljust(16) for s in ' Unconfirmed',' <{} {}'.format(mc,lbl),' >={} {}'.format(mc,lbl)])]
-		for key in sorted(accts.keys()):
-			o += [fs.format(key+':', *[a.fmt(color=True,suf=' '+g.coin) for a in accts[key]])]
-
-	if 'SPENDABLE' in accts:
-		Msg(red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!'))
-
-	o = '\n'.join(o)
-	if return_val: return o
-	else:          Msg(o)
+def Getbalance(minconf=1,quiet=False,return_val=False,pager=False):
+	from mmgen.tw import TwGetBalance
+	o = TwGetBalance(minconf,quiet).format()
+	return o if return_val else do_pager(o) if pager else Msg_r(o)
 
 def Txview(*infiles,**kwargs):
 	from mmgen.filename import MMGenFileList
