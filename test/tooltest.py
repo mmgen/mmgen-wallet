@@ -145,9 +145,9 @@ cfg = {
 	},
 	'addrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
 	'addrfile_chk':  {
-		'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
-		'bch': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
-		'ltc': ('AD52 C3FE 8924 AAF0','5738 5C4F 167C F9AE'),
+		'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
+		'bch': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
+		'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
 	}
 }
 

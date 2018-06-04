@@ -364,12 +364,12 @@ cfgs = {
 			'ltc': ('2B23 5E97 848A B961','AEC3 E774 0B21 0202'),
 		},
 		'addrfile_segwit_chk': {
-			'btc': ('9914 6D10 2307 F348','7DBF 441F E188 8B37'),
-			'ltc': ('CC09 A190 B7DF B7CD','3676 4C49 14F8 1AD0'),
+			'btc': ('9914 6D10 2307 F348','83C8 A6B6 ADA8 25B2'),
+			'ltc': ('CC09 A190 B7DF B7CD','0425 7893 C6F1 ECA3'),
 		},
 		'addrfile_bech32_chk': {
-			'btc': ('C529 D686 31AA ACD4','13C5 493E 1CD7 2852'),
-			'ltc': ('3DFB CFCC E180 DC9D','3B65 90D1 2CFB 92CD'),
+			'btc': ('C529 D686 31AA ACD4','21D0 26AD 3A22 5465'),
+			'ltc': ('3DFB CFCC E180 DC9D','8C72 D5C2 07E0 5F7B'),
 		},
 		'addrfile_compressed_chk': {
 			'btc': ('95EB 8CC0 7B3B 7856','16E6 6170 154D 2202'),
@@ -380,12 +380,12 @@ cfgs = {
 			'ltc': ('1896 A26C 7F14 2D01','FA0E CD4E ADAF DBF4'),
 		},
 		'keyaddrfile_segwit_chk': {
-			'btc': ('C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
-			'ltc': ('054B 9794 55B4 5D82','C373 0074 DEE6 B70A'),
+			'btc': ('C13B F717 D4E8 CF59','BB71 175C 5416 19D8'),
+			'ltc': ('054B 9794 55B4 5D82','DE85 3CF3 9636 FE2E'),
 		},
 		'keyaddrfile_bech32_chk': {
-			'btc': ('934F 1C33 6C06 B18C','D994 DF67 6E53 6F5F'),
-			'ltc': ('A6AD DF53 5968 7B6A','5A7C C45C 665C BB94'),
+			'btc': ('934F 1C33 6C06 B18C','A283 5BAB 7AF3 3EA4'),
+			'ltc': ('A6AD DF53 5968 7B6A','9572 43E0 A4DC 0B2E'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('E43A FA46 5751 720A','FDEE 8E45 1C0A 02AD'),
@@ -424,12 +424,12 @@ cfgs = {
 			'ltc': ('2B77 A009 D5D0 22AD','51D1 979D 0A35 F24B'),
 		},
 		'addrfile_segwit_chk': {
-			'btc': ('91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
-			'ltc': ('8F12 FA7B 9F12 594C','E79E F55B 1536 56F2'),
+			'btc': ('91C4 0414 89E4 2089','BF9F C67F ED22 A47B'),
+			'ltc': ('8F12 FA7B 9F12 594C','2609 8494 A23C F836'),
 		},
 		'addrfile_bech32_chk': {
-			'btc': ('2AA3 78DF B965 82EB','5B6A 4D12 820D BC3C'),
-			'ltc': ('951C 8FB2 FCA5 87D1','7E1C 8463 ECDC FBF9'),
+			'btc': ('2AA3 78DF B965 82EB','027B 1C1F 7FB2 D859'),
+			'ltc': ('951C 8FB2 FCA5 87D1','4A5D 67E0 8210 FEF2'),
 		},
 		'addrfile_compressed_chk': {
 			'btc': ('2615 8401 2E98 7ECA','A386 EE07 A356 906D'),
@@ -440,12 +440,12 @@ cfgs = {
 			'ltc': ('DBD4 FAB6 7E46 CD07','8822 3FDF FEC0 6A8C'),
 		},
 		'keyaddrfile_segwit_chk': {
-			'btc': ('C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
-			'ltc': ('1829 7FE7 2567 CB91','1305 9007 E515 B66A'),
+			'btc': ('C98B DF08 A3D5 204B','7E7F DF50 FE04 6F68'),
+			'ltc': ('1829 7FE7 2567 CB91','BE92 D19C 7589 EF30'),
 		},
 		'keyaddrfile_bech32_chk': {
-			'btc': ('4A6B 3762 DF30 9368','A68A 53D4 874E 923C'),
-			'ltc': ('5C12 FDD4 17AB F179','BD95 7E8A 66D8 747A'),
+			'btc': ('4A6B 3762 DF30 9368','12DD 1888 36BA 85F7'),
+			'ltc': ('5C12 FDD4 17AB F179','E195 B28C 59C4 C5EC'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('6D6D 3D35 04FD B9C3','94BF 4BCF 10B2 394B'),
@@ -500,12 +500,12 @@ cfgs = {
 			'ltc': ('B804 978A 8796 3ED4','98B5 AC35 F334 0398'),
 		},
 		'keyaddrfile_segwit_chk': {
-			'btc': ('A447 12C2 DD14 5A9B','0690 460D A600 D315'),
-			'ltc': ('E8A3 9F6E E164 A521','70ED 8557 5882 08A5'),
+			'btc': ('A447 12C2 DD14 5A9B','C770 7391 C415 21F9'),
+			'ltc': ('E8A3 9F6E E164 A521','D3D5 BFDD F5D5 20BD'),
 		},
 		'keyaddrfile_bech32_chk': {
-			'btc': ('D0DD BDE3 87BE 15AE','2C7B 70E5 5F96 9B09'),
-			'ltc': ('74A0 7DD5 963B 6326','2006 9B85 E037 2908'),
+			'btc': ('D0DD BDE3 87BE 15AE','7552 D70C AAB8 DEAA'),
+			'ltc': ('74A0 7DD5 963B 6326','2CDA A007 4B9F E9A5'),
 		},
 		'keyaddrfile_compressed_chk': {
 			'btc': ('420A 8EB5 A9E2 7814','F43A CB4A 81F3 F735'),
