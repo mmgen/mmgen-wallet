@@ -2,18 +2,18 @@
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by MMGen.
-# A text label of 32 characters or less may be added to the right of each
-# address, and it will be appended to the bitcoind wallet label upon import.
+# A text label of 40 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
-# Address data checksum for 98831F3A-LTC[1,31-33,500-501,1010-1011]: 5738 5C4F 167C F9AE
+# Address data checksum for 98831F3A-LTC[1,31-33,500-501,1010-1011]: 4EBE 2E85 E969 1B30
 # Record this value to a secure location.
-98831F3A LTC {
-  1     miFB5wqbE39r4wdQvHL64TN81Zx6kRnocA
-  31    n47YhNGsivT7JTCtQGSiKcKHHodWFSFtnK
-  32    muDg43zUhJkHmVNZ53owzD9dXiPn2FEJN9
-  33    mo3Sjio6JEELD2QALEysKRivaqpF53jWfu
-  500   mrfJJFGsmiNiTo2m2XsM7Nr8UAguLqz6Rk
-  501   miPqibf62oBnqJPXWR4JsGcr9mvgSoF8hc
-  1010  mfhhiVD4SMKfrqEFEWbyJkwsTPVegXra11
-  1011  n1VFSBrz1oEDaxZud5XcUJ1UnFYkMScbVj
+98831F3A LTC:LEGACY:TESTNET {
+  1     ms3Mq5yzTXPqZQPY3pde39G1nkH5nsgomA
+  31    mpraEW6FJEzNpcZzdXvyhrRKKLNManGr6K
+  32    mjcgHA9yVXM6FjE4NakbX2BvqxinZqEvBU
+  33    mvTMWS8n7qy2doEMLmyjpPcx8FX1zvnEvh
+  500   myZ9hdqqFkL8Lc2ds8ozztDiUWpiNvcTTc
+  501   mjymidyaRLnkYuCJ4DAxG1pE6sx4fYK2vT
+  1010  n1GHH7KCc7XskMX3tJfeZNAJgp75kQyjy4
+  1011  mjLR9x8hJsfsZ7gDejJyVrNJh1e9RHAYqS
 }

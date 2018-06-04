@@ -2,18 +2,18 @@
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by MMGen.
-# A text label of 32 characters or less may be added to the right of each
-# address, and it will be appended to the bitcoind wallet label upon import.
+# A text label of 40 characters or less may be added to the right of each
+# address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
-# Address data checksum for 98831F3A-LTC-S[1,31-33,500-501,1010-1011]: 1A3F 3016 2E2B F33A
+# Address data checksum for 98831F3A-LTC-S[1,31-33,500-501,1010-1011]: 5DD1 D186 DBE1 59F2
 # Record this value to a secure location.
-98831F3A LTC:SEGWIT {
-  1     QdZMvncuWm4CE7oE3oEy23bKKqWktQ4ySr
-  31    QNwWmboS2nGpspx5mYQHTsBaP5VQPqGVP5
-  32    QSLjwg3m95AR52SwwYREm2m6vthXbvMewN
-  33    QPJ45JUCF5CMwYNJEpiYP1jdNxbfFNXQ2Z
-  500   QVpU4GVC8S4WsX8TLohF26TLTcZNB5qxLw
-  501   QUoCWBFTPrTVgvTCfKjVThYpMAsuDqcQ4m
-  1010  QThVXK5KRdUSknH1bvTne6CS5TGAqpTbR2
-  1011  QQC2Fv8hv1Z2vQJ6heCeWPHKuapErrdaQs
+98831F3A LTC:SEGWIT:TESTNET {
+  1     QSJ65iUid3zCQ7G13oAiQjHjEho7KCBv4x
+  31    QZxHGUbWTa5GrtdnQHn9Prtx3wHUS1EmD6
+  32    QLwGtLSamHP8MzBiQ5R7FV7Y4xUcSrcNo6
+  33    QU52wpm7EGW8rdjLRAxJpVrm9VtqeQARfF
+  500   QPSokSz5DNBY929X8XHAZTv95i6aXi3Fvn
+  501   Qgi8kavyofAJBapZnTYksBhkgoG4uewmHT
+  1010  QgGiK9vfYAu8tuw5CLz6b7zWzVvtxVegT1
+  1011  QZ7QBNiUHcq6WR1v7ZXCcAo66hFbtngVhY
 }

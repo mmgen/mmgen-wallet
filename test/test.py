@@ -360,8 +360,8 @@ cfgs = {
 		'seed_id':         'FE3C6545',
 		'ref_bw_seed_id':  '33F10310',
 		'addrfile_chk': {
-			'btc': ('B230 7526 638F 38CB','B64D 7327 EF2A 60FE'),
-			'ltc': ('2B23 5E97 848A B961','928D 3CB6 78FF 9829'),
+			'btc': ('B230 7526 638F 38CB','A9DC 5A13 12CB 1317'),
+			'ltc': ('2B23 5E97 848A B961','AEC3 E774 0B21 0202'),
 		},
 		'addrfile_segwit_chk': {
 			'btc': ('9914 6D10 2307 F348','7DBF 441F E188 8B37'),
@@ -372,12 +372,12 @@ cfgs = {
 			'ltc': ('3DFB CFCC E180 DC9D','3B65 90D1 2CFB 92CD'),
 		},
 		'addrfile_compressed_chk': {
-			'btc': ('95EB 8CC0 7B3B 7856','629D FDE4 CDC0 F276'),
-			'ltc': ('35D5 8ECA 9A42 46C3','37E9 A36E 94A2 010F'),
+			'btc': ('95EB 8CC0 7B3B 7856','16E6 6170 154D 2202'),
+			'ltc': ('35D5 8ECA 9A42 46C3','15B3 5492 D3D3 6854'),
 		},
 		'keyaddrfile_chk': {
-			'btc': ('CF83 32FB 8A8B 08E2','FEBF 7878 97BB CC35'),
-			'ltc': ('1896 A26C 7F14 2D01','B41D BA63 0605 DD66'),
+			'btc': ('CF83 32FB 8A8B 08E2','1F67 B73A FF8C 5D15'),
+			'ltc': ('1896 A26C 7F14 2D01','FA0E CD4E ADAF DBF4'),
 		},
 		'keyaddrfile_segwit_chk': {
 			'btc': ('C13B F717 D4E8 CF59','4DB5 BAF0 45B7 6E81'),
@@ -388,8 +388,8 @@ cfgs = {
 			'ltc': ('A6AD DF53 5968 7B6A','5A7C C45C 665C BB94'),
 		},
 		'keyaddrfile_compressed_chk': {
-			'btc': ('E43A FA46 5751 720A','B995 A6CF D1CD FAD0'),
-			'ltc': ('7603 2FE3 2145 FFAD','3248 356A C707 4A41'),
+			'btc': ('E43A FA46 5751 720A','FDEE 8E45 1C0A 02AD'),
+			'ltc': ('7603 2FE3 2145 FFAD','3FE0 5A8E 5FBE FF3E'),
 		},
 		'passfile_chk':    'EB29 DC4F 924B 289F',
 		'passfile32_chk':  '37B6 C218 2ABC 7508',
@@ -420,8 +420,8 @@ cfgs = {
 		'seed_id':         '1378FC64',
 		'ref_bw_seed_id':  'CE918388',
 		'addrfile_chk': {
-			'btc': ('8C17 A5FA 0470 6E89','0A59 C8CD 9439 8B81'),
-			'ltc': ('2B77 A009 D5D0 22AD','FCEC 0032 9EF9 B201'),
+			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
+			'ltc': ('2B77 A009 D5D0 22AD','51D1 979D 0A35 F24B'),
 		},
 		'addrfile_segwit_chk': {
 			'btc': ('91C4 0414 89E4 2089','3BA6 7494 8E2B 858D'),
@@ -432,12 +432,12 @@ cfgs = {
 			'ltc': ('951C 8FB2 FCA5 87D1','7E1C 8463 ECDC FBF9'),
 		},
 		'addrfile_compressed_chk': {
-			'btc': ('2615 8401 2E98 7ECA','DF38 22AB AAB0 124E'),
-			'ltc': ('197C C48C 3C37 AB0F','5072 15DA 1A90 5E99'),
+			'btc': ('2615 8401 2E98 7ECA','A386 EE07 A356 906D'),
+			'ltc': ('197C C48C 3C37 AB0F','8DDC 5FE3 BFF9 1226'),
 		},
 		'keyaddrfile_chk': {
-			'btc': ('9648 5132 B98E 3AD9','2F72 C83F 44C5 0FAC'),
-			'ltc': ('DBD4 FAB6 7E46 CD07','1DA9 C245 F669 670C'),
+			'btc': ('9648 5132 B98E 3AD9','1BD3 5A36 D51C 256D'),
+			'ltc': ('DBD4 FAB6 7E46 CD07','8822 3FDF FEC0 6A8C'),
 		},
 		'keyaddrfile_segwit_chk': {
 			'btc': ('C98B DF08 A3D5 204B','25F2 AEB6 AAAC 8BBE'),
@@ -448,8 +448,8 @@ cfgs = {
 			'ltc': ('5C12 FDD4 17AB F179','BD95 7E8A 66D8 747A'),
 		},
 		'keyaddrfile_compressed_chk': {
-			'btc': ('6D6D 3D35 04FD B9C3','B345 9CD8 9EAE 5489'),
-			'ltc': ('F5DA 9D60 6798 C4E9','F928 113B C9D7 9DF5'),
+			'btc': ('6D6D 3D35 04FD B9C3','94BF 4BCF 10B2 394B'),
+			'ltc': ('F5DA 9D60 6798 C4E9','7918 88DE 9096 DD7A'),
 		},
 		'passfile_chk':    'ADEA 0083 094D 489A',
 		'passfile32_chk':  '2A28 C5C7 36EC 217A',
@@ -480,24 +480,24 @@ cfgs = {
 		'seed_id':         '98831F3A',
 		'ref_bw_seed_id':  'B48CD7FC',
 		'addrfile_chk': {
-			'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
-			'ltc': ('AD52 C3FE 8924 AAF0','5738 5C4F 167C F9AE'),
+			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
+			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
 		},
 		'addrfile_segwit_chk': {
-			'btc': ('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
-			'ltc': ('63DF E42A 0827 21C3','1A3F 3016 2E2B F33A'),
+			'btc': ('06C1 9C87 F25C 4EE6','072C 8B07 2730 CB7A'),
+			'ltc': ('63DF E42A 0827 21C3','5DD1 D186 DBE1 59F2'),
 		},
 		'addrfile_bech32_chk': {
-			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
-			'ltc': ('FF1C 7939 5967 AB82','D17F D553 DD24 8DE0'),
+			'btc': ('9D2A D4B6 5117 F02E','0527 9C39 6C1B E39A'),
+			'ltc': ('FF1C 7939 5967 AB82','ED3D 8AA4 BED4 0B40'),
 		},
 		'addrfile_compressed_chk': {
-			'btc': ('A33C 4FDE F515 F5BC','5186 02C2 535E B7D5'),
-			'ltc': ('3FC0 8F03 C2D6 BD19','535E 5CDC 1CA7 08D5'),
+			'btc': ('A33C 4FDE F515 F5BC','6C48 AA57 2056 C8C8'),
+			'ltc': ('3FC0 8F03 C2D6 BD19','4C0A 49B6 2DD1 1BE0'),
 		},
 		'keyaddrfile_chk': {
-			'btc': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
-			'ltc': ('B804 978A 8796 3ED4','93A6 844C 8ECC BEF4'),
+			'btc': ('9F2D D781 1812 8BAD','88CC 5120 9A91 22C2'),
+			'ltc': ('B804 978A 8796 3ED4','98B5 AC35 F334 0398'),
 		},
 		'keyaddrfile_segwit_chk': {
 			'btc': ('A447 12C2 DD14 5A9B','0690 460D A600 D315'),
@@ -508,8 +508,8 @@ cfgs = {
 			'ltc': ('74A0 7DD5 963B 6326','2006 9B85 E037 2908'),
 		},
 		'keyaddrfile_compressed_chk': {
-			'btc': ('420A 8EB5 A9E2 7814','3243 DD92 809E FE8D'),
-			'ltc': ('8D1C 781F EB7F 44BC','678E 8EF9 1396 B140'),
+			'btc': ('420A 8EB5 A9E2 7814','F43A CB4A 81F3 F735'),
+			'ltc': ('8D1C 781F EB7F 44BC','05F3 5C68 FD31 FCEF'),
 		},
 		'passfile_chk':    '2D6D 8FBA 422E 1315',
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
@@ -522,20 +522,20 @@ cfgs = {
 		'ref_keyaddrfile': u'98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
 		'ref_passwdfile':  u'98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum': {
-			'btc': ('6FEF 6FB9 7B13 5D91','3C2C 8558 BB54 079E'),
-			'ltc': ('AD52 C3FE 8924 AAF0','5738 5C4F 167C F9AE'),
+			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
+			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
 		},
 		'ref_segwitaddrfile_chksum': {
-			'btc': ('06C1 9C87 F25C 4EE6','58D1 7B6C E9F9 9C14'),
-			'ltc': ('63DF E42A 0827 21C3','1A3F 3016 2E2B F33A'),
+			'btc': ('06C1 9C87 F25C 4EE6','072C 8B07 2730 CB7A'),
+			'ltc': ('63DF E42A 0827 21C3','5DD1 D186 DBE1 59F2'),
 		},
 		'ref_bech32addrfile_chksum': {
-			'btc': ('9D2A D4B6 5117 F02E','BA07 0DD8 E2A6 2C5A'),
-			'ltc': ('FF1C 7939 5967 AB82','D17F D553 DD24 8DE0'),
+			'btc': ('9D2A D4B6 5117 F02E','0527 9C39 6C1B E39A'),
+			'ltc': ('FF1C 7939 5967 AB82','ED3D 8AA4 BED4 0B40'),
 		},
 		'ref_keyaddrfile_chksum': {
-			'btc': ('9F2D D781 1812 8BAD','7410 8F95 4B33 B4B2'),
-			'ltc': ('B804 978A 8796 3ED4','93A6 844C 8ECC BEF4'),
+			'btc': ('9F2D D781 1812 8BAD','88CC 5120 9A91 22C2'),
+			'ltc': ('B804 978A 8796 3ED4','98B5 AC35 F334 0398'),
 		},
 		'ref_addrfile_chksum_zec': '903E 7225 DD86 6E01',
 		'ref_addrfile_chksum_zec_z': '9C7A 72DC 3D4A B3AF',

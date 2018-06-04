@@ -5,15 +5,15 @@
 # A text label of 40 characters or less may be added to the right of each
 # address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
-# Address data checksum for 98831F3A-LTC-B[1,31-33,500-501,1010-1011]: D17F D553 DD24 8DE0
+# Address data checksum for 98831F3A-LTC-B[1,31-33,500-501,1010-1011]: ED3D 8AA4 BED4 0B40
 # Record this value to a secure location.
-98831F3A LTC:BECH32 {
-  1     tltc1qdvgqsz94ht20lr8fyk5v7n884hu9p7d8ph65rk
-  31    tltc1qklxjhya6l2crr23scuc3nkj75jgrzkvudp8u4z
-  32    tltc1q7px9e3t7ea34v7kfkyydxw9tfz4cc8ltd7d7v6
-  33    tltc1q05kdlzkhsd0pwhn95judzft47yh86pnnzusklm
-  500   tltc1q3tpnvrsxufy64gk4cawkv0pywsqdfe5ncwjm9x
-  501   tltc1qe4ld3cx7vedyncrjma4d4r2ghyqpskrlcyy9w7
-  1010  tltc1qz735v90hegttpzp6zl4xzn63tyys9hle8munq3
-  1011  tltc1qkc69d3x2rne6lgyfzeg4afdpdgcgfrm9h87004
+98831F3A LTC:BECH32:TESTNET {
+  1     tltc1q2g95rfhqxc29amt0mnrkd4rgn72laqu83yq2ee
+  31    tltc1q0xneavq3h9sa7zhr72wwtl3rn2x0t6mlhz25kl
+  32    tltc1q5fzn5desdaxmhuhezx5t6096d8u44hy5vyn068
+  33    tltc1ql4aux9htsje3mlkq0rhjlp63jz2u8vncle0nc7
+  500   tltc1qmsxp7kzqas50pesc7muv5ega4va0emceckmhg5
+  501   tltc1qrhfdxhj9kq3skt43w2y586zr4v0hf3afj99ank
+  1010  tltc1q0hrjsxv3027hrn976wf5rajrx4dt3ej0n739rp
+  1011  tltc1qpft6tglwxuykdm4tynwczlklfgxe6htela9de5
 }
