@@ -594,7 +594,7 @@ cfgs = {
 eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 eth_wallet = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
-eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--rpc-port=8547','--quiet']
+eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--rpc-port=8549','--quiet']
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -3021,7 +3021,7 @@ class MMGenTestSuite(object):
 		except: pass
 		pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
 		MMGenExpect(name,'',msg_only=True)
-		subprocess.check_call(['parity',lf_arg,'--jsonrpc-port=8547','--config=dev','daemon',pid_fn])
+		subprocess.check_call(['parity',lf_arg,'--ports-shift=4','--config=dev','daemon',pid_fn]) # port 8549
 		time.sleep(1) # race condition
 		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 		ok()

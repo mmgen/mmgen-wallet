@@ -323,9 +323,12 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 class EthereumTestnetProtocol(EthereumProtocol):
 	data_subdir = 'testnet'
+	rpc_port    = 8547 # start Parity with --ports-shift=2
+
 class EthereumClassicProtocol(EthereumProtocol):
 	name   = 'ethereum_classic'
 	mmcaps = ('key','addr')
+
 class EthereumClassicTestnetProtocol(EthereumClassicProtocol): pass
 
 class ZcashProtocol(BitcoinProtocolAddrgen):
