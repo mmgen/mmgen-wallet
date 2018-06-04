@@ -1311,8 +1311,8 @@ class MMGenTX(MMGenObject):
 		change_amt = self.get_inputs_from_user(tw)
 
 		# only after we have inputs
-		if locktime: self.inputs[0].sequence = g.max_int - 1
-		if opt.rbf:  self.inputs[0].sequence = g.max_int - 2
+		if opt.rbf:  self.inputs[0].sequence = g.max_int - 2 # handles the locktime case too
+		elif locktime: self.inputs[0].sequence = g.max_int - 1
 
 		chg_idx = self.get_chg_output_idx()
 
