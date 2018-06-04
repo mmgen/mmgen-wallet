@@ -16,9 +16,9 @@ python='python'
 rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj sha256 alts monero autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
-while getopts hCfinPt OPT
+while getopts hCfilnPt OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -27,6 +27,7 @@ do
 		echo   "           '-C'  Run tests in coverage mode"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
 		echo   "           '-i'  Install only; don't run tests"
+		echo   "           '-l'  List the test name symbols"
 		echo   "           '-n'  Don't install; test in place"
 		echo   "           '-P'  Don't pause between tests"
 		echo   "           '-t'  Print the tests without running them"
@@ -34,7 +35,8 @@ do
 		echo   "     obj      - data objects"
 		echo   "     sha256   - MMGen sha256 implementation"
 		echo   "     alts     - operations for all supported gen-only altcoins"
-		echo   "     monero   - operations for monero"
+		echo   "     monero   - operations for Monero"
+		echo   "     eth      - operations for Ethereum"
 		echo   "     autosign - autosign"
 		echo   "     btc      - bitcoin"
 		echo   "     btc_tn   - bitcoin testnet"
@@ -63,6 +65,7 @@ do
 		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	f)  rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	i)  INSTALL_ONLY=1 ;;
+	l)  echo $dfl_tests; exit ;;
 	n)  NO_INSTALL=1 ;;
 	P)  NO_PAUSE=1 ;;
 	t)  TESTING=1 ;;
@@ -115,7 +118,7 @@ do_test() {
 		[ "$TESTING" ] && LS=''
 		echo $i | grep -q 'gentest' && LS=''
 		echo -e "$LS${GREEN}Running:$RESET $YELLOW$i$RESET"
-		[ "$TESTING" ] || eval "$i" || { echo -e $RED'Test failed!'$RESET; exit; }
+		[ "$TESTING" ] || eval "$i" || { echo -e $RED"Test $CUR_TEST failed at command '$i'"$RESET; exit; }
 	done
 }
 i_obj='Data object'
@@ -203,6 +206,11 @@ t_monero=(
 	while [ $i -lt $end ]; do unset t_monero[$i]; let i++; done
 }
 f_monero='Monero tests completed'
+
+i_eth='Ethereum'
+s_eth='Testing transaction and tracking wallet operations for Ethereum'
+t_eth=("$test_py -On ethdev")
+f_eth='Ethereum tests completed'
 
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following test'
@@ -344,6 +352,7 @@ run_tests() {
 		eval echo -e \${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
 		[ "$PAUSE" ] && { eval echo $(echo \$s_$t); skip_maybe && continue; }
 #		echo RUNNING
+		CUR_TEST=$t
 		eval "do_test \"\${t_$t[@]}\""
 		eval echo -e \$GREEN$(echo \$f_$t)\$RESET
 	done
