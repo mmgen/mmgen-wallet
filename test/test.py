@@ -610,33 +610,33 @@ cmd_group = OrderedDict()
 
 cmd_group['help'] = OrderedDict([
 #     test               description                  depends
-	['helpscreens',     (1,'help screens',             [],1)],
-	['longhelpscreens', (1,'help screens (--longhelp)',[],1)],
+	['helpscreens',     (1,'help screens',             [])],
+	['longhelpscreens', (1,'help screens (--longhelp)',[])],
 ])
 
 cmd_group['dfl_wallet'] = OrderedDict([
-	['walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]],1)],
-	['export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]],1)],
-	['addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]],1)],
-	['txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]],1)],
-	['txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]],1)],
-	['passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]],1)],
-	['walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]],1)],
-	['delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]],1)],
+	['walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]])],
+	['export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]])],
+	['addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]])],
+	['txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]])],
+	['txsign_dfl_wallet',(15,'transaction signing (default wallet)',[[['rawtx',pwfile],15]])],
+	['passchg_dfl_wallet',(16,'password, label and hash preset change (default wallet)',[[[pwfile],15]])],
+	['walletchk_newpass_dfl_wallet',(16,'wallet check with new pw, label and hash preset',[[[pwfile],16]])],
+	['delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]])],
 ])
 
 cmd_group['main'] = OrderedDict([
-	['walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]],1)],
+	['walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]])],
 #	['walletchk',       (1,'wallet check',             [[['mmdat'],1]])],
-	['passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]],1)],
-	['passchg_keeplabel',(5,'password, label and hash preset change (keep label)',[[['mmdat',pwfile],1]],1)],
-	['passchg_usrlabel',(5,'password, label and hash preset change (interactive label)',[[['mmdat',pwfile],1]],1)],
-	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[['mmdat',pwfile],5]],1)],
-	['addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]],1)],
-	['addrimport',      (1,'address import',           [[['addrs'],1]],1)],
-	['txcreate',        (1,'transaction creation',     [[['addrs'],1]],1)],
-	['txbump',          (1,'transaction fee bumping (no send)',[[['rawtx'],1]],1)],
-	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile,'txbump'],1]],1)],
+	['passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]])],
+	['passchg_keeplabel',(5,'password, label and hash preset change (keep label)',[[['mmdat',pwfile],1]])],
+	['passchg_usrlabel',(5,'password, label and hash preset change (interactive label)',[[['mmdat',pwfile],1]])],
+	['walletchk_newpass',(5,'wallet check with new pw, label and hash preset',[[['mmdat',pwfile],5]])],
+	['addrgen',         (1,'address generation',       [[['mmdat',pwfile],1]])],
+	['addrimport',      (1,'address import',           [[['addrs'],1]])],
+	['txcreate',        (1,'transaction creation',     [[['addrs'],1]])],
+	['txbump',          (1,'transaction fee bumping (no send)',[[['rawtx'],1]])],
+	['txsign',          (1,'transaction signing',      [[['mmdat','rawtx',pwfile,'txbump'],1]])],
 	['txsend',          (1,'transaction sending',      [[['sigtx'],1]])],
 	# txdo must go after txsign
 	['txdo',            (1,'online transaction',       [[['sigtx','mmdat'],1]])],
@@ -690,11 +690,11 @@ cmd_group['main'] = OrderedDict([
 ])
 
 cmd_group['tool'] = OrderedDict([
-	['tool_encrypt',     (9,"'mmgen-tool encrypt' (random data)",     [],1)],
-	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)", [[[cfgs['9']['tool_enc_infn'],cfgs['9']['tool_enc_infn']+'.mmenc'],9]],1)],
+	['tool_encrypt',     (9,"'mmgen-tool encrypt' (random data)",     [])],
+	['tool_decrypt',     (9,"'mmgen-tool decrypt' (random data)", [[[cfgs['9']['tool_enc_infn'],cfgs['9']['tool_enc_infn']+'.mmenc'],9]])],
 #	['tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])],
 	['tool_find_incog_data', (9,"'mmgen-tool find_incog_data'", [[[hincog_fn],1],[[incog_id_fn],1]])],
-#	['pywallet', (9,"'mmgen-pywallet'", [],1)],
+#	['pywallet', (9,"'mmgen-pywallet'", [])],
 ])
 
 # generated reference data
