@@ -46,6 +46,8 @@ class EthereumMMGenTX(MMGenTX):
 
 	def get_hex_locktime(self): return None # TODO
 
+	def check_pubkey_scripts(self): pass
+
 	def check_sigs(self,deserial_tx=None):
 		if is_hex_str(self.hex):
 			self.mark_signed()

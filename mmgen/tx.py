@@ -123,11 +123,11 @@ def bytes2coin_amt(hex_bytes):
 
 def scriptPubKey2addr(s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
-		return g.proto.pubhash2addr(s[6:-4],p2sh=False)
+		return g.proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
-		return g.proto.pubhash2addr(s[4:-2],p2sh=True)
+		return g.proto.pubhash2addr(s[4:-2],p2sh=True),'p2sh'
 	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + '14':
-		return g.proto.pubhash2bech32addr(s[4:])
+		return g.proto.pubhash2bech32addr(s[4:]),'bech32'
 	else:
 		raise NotImplementedError,'Unknown scriptPubKey ({})'.format(s)
 
@@ -179,7 +179,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		)) for i in range(d['num_txouts'])])
 
 		for o in d['txouts']:
-			o['address'] = scriptPubKey2addr(o['scriptPubKey'])
+			o['address'] = scriptPubKey2addr(o['scriptPubKey'])[0]
 
 		d['witness_size'] = 0
 		if has_witness:
@@ -297,6 +297,7 @@ class MMGenTX(MMGenObject):
 		if filename:
 			self.parse_tx_file(filename,coin_sym_only=coin_sym_only,silent_open=silent_open)
 			if coin_sym_only: return
+			self.check_pubkey_scripts()
 			self.check_sigs() # marks the tx as signed
 
 		# repeat with sign and send, because coin daemon could be restarted
@@ -684,6 +685,8 @@ class MMGenTX(MMGenObject):
 			ymsg("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin))
 			return False
 
+		self.check_pubkey_scripts()
+
 		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys,'s'),g.proto.daemon_name))
 
 		if self.has_segwit_inputs():
@@ -778,6 +781,18 @@ class MMGenTX(MMGenObject):
 		uh = deserial_tx['unsigned_hex']
 		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
 			rdie(3,'MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
+
+	def check_pubkey_scripts(self):
+		for n,i in enumerate(self.inputs,1):
+			addr,fmt = scriptPubKey2addr(i.scriptPubKey)
+			if i.addr != addr:
+				if fmt != i.addr.addr_fmt:
+					m = 'Address format of scriptPubKey ({}) does not match that of address ({}) in input #{}'
+					msg(m.format(fmt,i.addr.addr_fmt,n))
+				m = 'ERROR: Address and scriptPubKey of transaction input #{} do not match!'
+				die(3,(m+'\n  {:23}{}'*3).format(n, 'address:',i.addr,
+													'scriptPubKey:',i.scriptPubKey,
+													'scriptPubKey->address:',addr ))
 
 	# check signature and witness data
 	def check_sigs(self,deserial_tx=None): # return False if no sigs, die on error
@@ -874,6 +889,8 @@ class MMGenTX(MMGenObject):
 			die(1,'Transaction is not signed!')
 
 		self.check_correct_chain(on_fail='die')
+
+		self.check_pubkey_scripts()
 
 		self.check_hex_tx_matches_mmgen_tx(DeserializedTX(self.hex))
 
