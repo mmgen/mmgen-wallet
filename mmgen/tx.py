@@ -948,13 +948,14 @@ class MMGenTX(MMGenObject):
 
 	def create_fn(self):
 		tl = self.get_hex_locktime()
-		self.fn = u'{}{}[{!s}{}{}]{x}.{}'.format(
+		tn = ('','.testnet')[g.proto.is_testnet()]
+		self.fn = u'{}{}[{!s}{}{}]{x}{}.{}'.format(
 			self.txid,
 			('-'+g.coin,'')[g.coin=='BTC'],
 			self.send_amt,
 			('',',{}'.format(self.fee_abs2rel(self.get_fee_from_tx())))[self.is_rbf()],
 			('',',tl={}'.format(tl))[bool(tl)],
-			self.ext,
+			tn,self.ext,
 			x=u'-α' if g.debug_utf8 else '')
 
 	def write_to_file(  self,
@@ -1158,7 +1159,7 @@ class MMGenTX(MMGenObject):
 
 			desc = 'number of lines' # four required lines
 			metadata,self.hex,inputs_data,outputs_data = tx_data
-			assert len(metadata) < 60,'invalid metadata length' # rough check
+			assert len(metadata) < 100,'invalid metadata length' # rough check
 			metadata = metadata.split()
 
 			if metadata[-1].find('LT=') == 0:
@@ -1183,7 +1184,7 @@ class MMGenTX(MMGenObject):
 			self.check_tx_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
-			assert self.coin == g.coin,'invalid coin type'
+			assert self.coin == g.coin,'invalid coin type: {}'.format(self.coin)
 			desc = 'inputs data'
 			self.inputs  = eval_io_data(inputs_data,'inputs')
 			desc = 'outputs data'

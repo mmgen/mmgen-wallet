@@ -209,7 +209,10 @@ f_monero='Monero tests completed'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
-t_eth=("$test_py -On ethdev")
+t_eth=(
+	"$test_py -On --coin=eth ref_tx_chk"
+	"$test_py -On ethdev"
+)
 f_eth='Ethereum tests completed'
 
 i_autosign='Autosign'

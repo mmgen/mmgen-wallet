@@ -139,9 +139,12 @@ cfg = {
 	'tmpdir_num':    10,
 	'refdir':        'test/ref',
 	'txfile': {
-		'btc': 'FFB367[1.234]{}.rawtx',
-		'bch': '99BE60-BCH[106.6789]{}.rawtx',
-		'ltc': '75F455-LTC[106.6789]{}.rawtx',
+		'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
+				'0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
+		'bch': ('460D4D-BCH[10.19764,tl=1320969600].rawtx',
+				'359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'),
+		'ltc': ('AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
+				'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'),
 	},
 	'addrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
 	'addrfile_chk':  {
@@ -474,7 +477,7 @@ class MMGenToolTestSuite(object):
 	def Twview(self,name):
 		self.run_cmd_out(name,literal=True)
 	def Txview(self,name):
-		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['txfile'][g.coin.lower()].format(tn_ext))
+		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['txfile'][g.coin.lower()][bool(tn_ext)])
 		self.run_cmd_out(name,fn,literal=True)
 
 # main()

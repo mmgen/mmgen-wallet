@@ -234,6 +234,20 @@ cfgs = {
 	'17': { 'tmpdir': os.path.join(u'test',u'tmp17') },
 	'18': { 'tmpdir': os.path.join(u'test',u'tmp18') },
 #	'19': { 'tmpdir': os.path.join(u'test',u'tmp19'), 'wpasswd':'abc' }, B2X
+
+	'31': { 'tmpdir': os.path.join(u'test',u'tmp31'), # L
+			'addr_idx_list':'1-2', 'segwit': False,
+			'dep_generators': {'addrs':'ref_tx_addrgen1'} },
+	'32': { 'tmpdir': os.path.join(u'test',u'tmp32'), # C
+			'addr_idx_list':'1-2', 'segwit': False,
+			'dep_generators': {'addrs':'ref_tx_addrgen2'} },
+	'33': { 'tmpdir': os.path.join(u'test',u'tmp33'), # S
+			'addr_idx_list':'1-2', 'segwit': True,
+			'dep_generators': {'addrs':'ref_tx_addrgen3'} },
+	'34': { 'tmpdir': os.path.join(u'test',u'tmp34'), # B
+			'addr_idx_list':'1-2', 'segwit': True,
+			'dep_generators': {'addrs':'ref_tx_addrgen4'} },
+
 	'1': {
 		'tmpdir':        os.path.join(u'test',u'tmp1'),
 		'wpasswd':       u'Dorian-α',
@@ -551,11 +565,14 @@ cfgs = {
 		'ref_keyaddrfile_chksum_etc': 'EF49 967D BD6C FE45',
 		'ref_passwdfile_chksum':   'A983 DAB9 5514 27FB',
 		'ref_tx_file': {
-			'btc': 'FFB367[1.234]{}.rawtx',
-			'bch': '99BE60-BCH[106.6789]{}.rawtx',
-			'b2x': '6A52BC-B2X[106.6789,tl=1320969600]{}.rawtx',
-			'ltc': '75F455-LTC[106.6789]{}.rawtx',
-			'eth': 'BC79AB-ETH[0.123]{}.rawtx',
+			'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
+					'0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
+			'bch': ('460D4D-BCH[10.19764,tl=1320969600].rawtx',
+					'359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'),
+			'ltc': ('AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
+					'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'),
+			'eth': ('BC79AB-ETH[0.123].rawtx',
+					'F04889-ETH[0.123].testnet.rawtx'),
 		},
 		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
@@ -590,10 +607,11 @@ cfgs = {
 	},
 }
 
+dfl_words = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
+
 # The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
 eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
-eth_wallet = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
 eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--rpc-port=8549','--quiet']
 
 from copy import deepcopy
@@ -885,25 +903,24 @@ cmd_group['ref_alt'] = (
 
 # undocumented admin cmds - precede with 'admin'
 cmd_group_admin = OrderedDict()
-cmd_group_admin['create_ref_tx'] = (
-	('ref_tx_setup',                     'regtest (Bob and Alice) mode setup'),
-	('ref_tx_addrgen_bob_ref_wallet',    'address generation (Bob - reference wallet)'),
-	('ref_tx_addrimport_bob_ref_wallet', "importing Bob's addresses (reference wallet)"),
-	('ref_tx_fund_bob',                  "funding Bob's wallet (reference wallet)"),
-	('ref_tx_bob_split',                 "splitting Bob's funds (reference wallet)"),
-	('ref_tx_generate',                  'mining a block'),
-	('ref_tx_bob_create_tx',             "creating reference transaction"),
-	('ref_tx_bob_modify_tx',             "modifying reference transaction (testnet+mainnet)"),
-)
+cmd_group_admin['create_ref_tx'] = OrderedDict([
+	['ref_tx_addrgen1', (31,'address generation (legacy)', [[[],1]])],
+	['ref_tx_addrgen2', (32,'address generation (compressed)', [[[],1]])],
+	['ref_tx_addrgen3', (33,'address generation (segwit)', [[[],1]])],
+	['ref_tx_addrgen4', (34,'address generation (bech32)', [[[],1]])],
+	['ref_tx_txcreate', (31,'transaction creation', [[['addrs'],31],[['addrs'],32],[['addrs'],33],[['addrs'],34]])],
+])
 cmd_list_admin = OrderedDict()
-cmd_data_admin = OrderedDict()
 for k in cmd_group_admin: cmd_list_admin[k] = []
 
+cmd_data_admin = OrderedDict()
+for k,v in [('create_ref_tx',('reference transaction creation',[31,32,33,34]))]:
+	cmd_data_admin['info_'+k] = v
+	for i in cmd_group_admin[k]:
+		cmd_list_admin[k].append(i)
+		cmd_data_admin[i] = cmd_group_admin[k][i]
+
 cmd_data_admin['info_create_ref_tx'] = 'create reference tx',[8]
-for a,b in cmd_group_admin['create_ref_tx']:
-	cmd_list_admin['create_ref_tx'].append(a)
-	cmd_data_admin[a] = (8,b,[[[],8]])
-# end undocumented admin commands
 
 cmd_list = OrderedDict()
 for k in cmd_group: cmd_list[k] = []
@@ -912,7 +929,7 @@ cmd_data = OrderedDict()
 for k,v in (
 		('help', ('help screens',[])),
 		('dfl_wallet', ('basic operations with default wallet',[15,16])),
-		('main', ('basic operations',[1,2,3,4,5,15,16])),
+		('main', ('basic operations',[1,2,3,4,5,6,15,16])),
 		('tool', ('tools',[9]))
 	):
 	cmd_data['info_'+k] = v
@@ -1147,13 +1164,13 @@ class MMGenExpect(MMGenPexpect):
 def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if 'S' not in g.proto.mmtypes: segwit = False
 	if lbl: lbl = ' ' + lbl
-	spk_beg,spk_end = (
-		('76a914','88ac'),
-		('a914','87'),
-		(g.proto.witness_vernum_hex+'14','')
-		)[segwit and (coinaddr.addr_fmt=='p2sh') + 2*(coinaddr.addr_fmt=='bech32')]
+	k = coinaddr.addr_fmt
+	if not segwit and k == 'p2sh': k = 'p2pkh'
+	s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
+					'p2sh':   ('a914','87'),
+					'bech32': (g.proto.witness_vernum_hex+'14','') }[k]
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
-	return {
+	ret = {
 		'account': '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
 			else (u'{}:{}{}'.format(al_id,idx,lbl)),
 		'vout': int(getrandnum(4) % 8),
@@ -1161,9 +1178,10 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 		'address': coinaddr,
 		'spendable': False,
-		'scriptPubKey': '{}{}{}'.format(spk_beg,coinaddr.hex,spk_end),
+		'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
 		'confirmations': getrandnum(3) / 2 # max: 8388608 (7 digits)
 	}
+	return ret
 
 labels = [
 	"Automotive",
@@ -1230,7 +1248,7 @@ def write_fake_data_to_file(d):
 	if opt.verbose or opt.exact_output:
 		sys.stderr.write(u"Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
 
-def create_tx_data(sources):
+def create_tx_data(sources,addrs_per_wallet=addrs_per_wallet):
 	tx_data,ad = {},AddrData()
 	for s in sources:
 		afile = get_file_with_ext('addrs',cfgs[s]['tmpdir'])
@@ -1736,12 +1754,14 @@ class MMGenTestSuite(object):
 						txdo_args=[],
 						add_args=[],
 						view='n',
+						addrs_per_wallet=addrs_per_wallet,
 						non_mmgen_input_compressed=True):
+
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
 
 		silence()
-		ad,tx_data = create_tx_data(sources)
+		ad,tx_data = create_tx_data(sources,addrs_per_wallet)
 		dfake = create_fake_unspent_data(ad,tx_data,non_mmgen_input,non_mmgen_input_compressed)
 		write_fake_data_to_file(repr(dfake))
 		cmd_args = make_txcreate_cmdline(tx_data)
@@ -1832,11 +1852,11 @@ class MMGenTestSuite(object):
 		t.expect('Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
 		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 
-	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,extra_opts=[]):
+	def txsign(self,name,txfile,wf,pf='',bumpf='',save=True,has_label=False,do_passwd=True,extra_opts=[]):
 		t = MMGenExpect(name,'mmgen-txsign', extra_opts + ['-d',cfg['tmpdir'],txfile]+([],[wf])[bool(wf)])
 		t.license()
 		t.view_tx('n')
-		t.passphrase('MMGen wallet',cfg['wpasswd'])
+		if do_passwd: t.passphrase('MMGen wallet',cfg['wpasswd'])
 		if save:
 			self.txsign_end(t,has_label=has_label)
 			t.ok()
@@ -2179,7 +2199,7 @@ class MMGenTestSuite(object):
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
 		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'))
-		tfns = [cfgs['8']['ref_tx_file'][c].format('') for c,d in fdata]
+		tfns = [cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
 		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata,tfns)]
 		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
 		except: pass
@@ -2454,11 +2474,11 @@ class MMGenTestSuite(object):
 #		self.txcreate_common(name,sources=['8'])
 
 	def ref_tx_chk(self,name):
-		tf = os.path.join(ref_dir,ref_subdir,cfg['ref_tx_file'][g.coin.lower()].format(tn_ext))
-		wf = os.path.join(ref_dir,cfg['ref_wallet'])
+		tf = os.path.join(ref_dir,ref_subdir,cfg['ref_tx_file'][g.coin.lower()][bool(tn_ext)])
+		wf = dfl_words
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
 		pf = get_tmpfile_fn(cfg,pwfile)
-		self.txsign(name,tf,wf,pf,save=False,has_label=True)
+		self.txsign(name,tf,wf,pf,save=False,has_label=True,do_passwd=False)
 
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
@@ -2690,7 +2710,8 @@ class MMGenTestSuite(object):
 		silence()
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
-		g.proto.bech32_hrp = g.proto.bech32_hrp_rt
+		if hasattr(g.proto,'bech32_hrp_rt'):
+			g.proto.bech32_hrp = g.proto.bech32_hrp_rt
 		addr = AddrList(fn).data[idx].addr
 		g.proto = psave
 		end_silence()
@@ -2736,9 +2757,8 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_bob_rbf_bump(self,name):
-		txfile = get_file_with_ext(u',{}]{x}.sigtx'.format(
-					rtFee[1][:-1],x=u'-α' if g.debug_utf8 else ''),
-						cfg['tmpdir'],delete=False,no_dot=True)
+		ext = u',{}]{x}.testnet.sigtx'.format(rtFee[1][:-1],x=u'-α' if g.debug_utf8 else '')
+		txfile = get_file_with_ext(ext,cfg['tmpdir'],delete=False,no_dot=True)
 		return self.regtest_user_txbump(name,'bob',txfile,rtFee[2],'c')
 
 	def regtest_generate(self,name,coin=None,num_blocks=1):
@@ -3028,7 +3048,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_addrgen(self,name):
 		from mmgen.addr import MMGenAddrType
-		t = MMGenExpect(name,'mmgen-addrgen', eth_args + [eth_wallet,'1-10'])
+		t = MMGenExpect(name,'mmgen-addrgen', eth_args + [dfl_words,'1-10'])
 		t.written_to_file('Addresses')
 		t.ok()
 
@@ -3061,7 +3081,7 @@ class MMGenTestSuite(object):
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		t = MMGenExpect(name,'mmgen-txsign',eth_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,eth_wallet])
+		t = MMGenExpect(name,'mmgen-txsign',eth_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
 		self.txsign_ui_common(t,name,ni=ni)
 
 	def ethdev_txsign_ni(self,name):
@@ -3117,85 +3137,24 @@ class MMGenTestSuite(object):
 		ok()
 
 	# undocumented admin commands
-	ref_tx_setup = regtest_setup
-	ref_tx_generate = regtest_generate
+	def ref_tx_addrgen(self,name,atype='L'):
+		if atype not in g.proto.mmtypes: return
+		t = MMGenExpect(name,'mmgen-addrgen',['--outdir='+cfg['tmpdir'],'--type='+atype,dfl_words,'1-2'])
+		t.read()
 
-	def ref_tx_addrgen_bob_ref_wallet(self,name):
-		wf = os.path.join(ref_dir,cfg['ref_wallet'])
-		self.regtest_addrgen(name,'bob',wf=wf,passwd=cfg['wpasswd'],addr_range='1-100')
+	def ref_tx_addrgen1(self,name): self.ref_tx_addrgen(name,atype='L')
+	def ref_tx_addrgen2(self,name): self.ref_tx_addrgen(name,atype='C')
+	def ref_tx_addrgen3(self,name): self.ref_tx_addrgen(name,atype='S')
+	def ref_tx_addrgen4(self,name): self.ref_tx_addrgen(name,atype='B')
 
-	def ref_tx_addrimport_bob_ref_wallet(self,name):
-		self.regtest_addrimport(name,'bob',sid=cfg['seed_id'],addr_range='1-100',num_addrs=100)
-
-	def ref_tx_fund_bob(self,name):
-		mmtype = g.proto.mmtypes[-1]
-		self.regtest_fund_wallet(name,'bob',mmtype,rtFundAmt,sid=cfg['seed_id'],addr_range='1-100')
-
-	def ref_tx_bob_split(self,name):
-		sid = cfg['seed_id']
-		outputs_cl = [sid+':C:1,100', sid+':L:2,200',sid+':'+rtBobOp3]
-		wf = os.path.join(ref_dir,cfg['ref_wallet'])
-		return self.regtest_user_txdo(name,'bob',rtFee[0],outputs_cl,'1',wf=wf,pw=cfg['wpasswd'],
-										do_label=True,full_tx_view=True)
-
-	def ref_tx_bob_create_tx(self,name):
-		sid = cfg['seed_id']
-		psave = g.proto
-		g.proto = CoinProtocol(g.coin,True)
-		privhex = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
-		addr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privhex))
-		g.proto = psave
-		outputs_cl = [sid+':{}:3,1.1234'.format(g.proto.mmtypes[-1]), sid+':C:5,5.5555',sid+':L:4',addr+',100']
-		pw = cfg['wpasswd']
-		# create tx in cwd
-		t = MMGenExpect(name,'mmgen-txcreate',
-				['-B','--bob','--tx-fee='+rtFee[0],'--locktime=1320969600'] + outputs_cl)
-		self.txcreate_ui_common(t,'txdo',menu=['M'],inputs='1 2 3',add_comment=ref_tx_label_zh,view='n')
-		t.expect('Save transaction? (y/N): ','y')
-		fn = t.written_to_file('Transaction')
-		write_to_tmpfile(cfg,'ref_tx_fn',fn)
-		t.ok()
-
-	def ref_tx_bob_modify_tx(self,name):
-		MMGenExpect(name,'',msg_only=True)
-		fn = read_from_tmpfile(cfg,'ref_tx_fn')
-		with open(fn) as f:
-			lines = f.read().splitlines()
-
-		tx = {}
-		from ast import literal_eval
-		for k,i in (('in',3),('out',4)):
-			tx[k] = literal_eval(lines[i])
-			tx[k+'_addrs'] = [i['addr'] for i in tx[k]]
-
-		psave = g.proto
-		g.proto = CoinProtocol(g.coin,True)
-		from mmgen.obj import CoinAddr
-		for k in ('in_addrs','out_addrs'):
-			tx[k+'_hex'] = [(CoinAddr(a).hex,CoinAddr(a).addr_fmt) for a in tx[k]]
-		g.proto = psave
-
-		for k in ('in_addrs','out_addrs'):
-			tx[k+'_conv'] = [g.proto.pubhash2addr(h,(False,True)[f=='p2sh']) for h,f in tx[k+'_hex']]
-
-		for k in ('in','out'):
-			for i in range(len(tx[k])):
-				tx[k][i]['addr'] = tx[k+'_addrs_conv'][i]
-
-		lines_tn = [lines[1].replace('REGTEST','TESTNET')] + lines[2:]
-		o_tn = '\n'.join([make_chksum_6(' '.join(lines_tn))] + lines_tn)+'\n'
-		fn_tn = fn.replace('.rawtx','.testnet.rawtx')
-
-		lines_mn = [lines[1].replace('REGTEST','MAINNET'),
-					lines[2],
-					repr(tx['in']),
-					repr(tx['out'])] + lines[5:]
-		o_mn = '\n'.join([make_chksum_6(' '.join(lines_mn))] + lines_mn)+'\n'
-		fn_mn = fn.replace('.rawtx','.mainnet.rawtx')
-		ok()
-
-		write_data_to_file(fn_tn,o_tn,'testnet TX data',ask_overwrite=False,ignore_opt_outdir=True)
-		write_data_to_file(fn_mn,o_mn,'mainnet TX data',ask_overwrite=False,ignore_opt_outdir=True)
+	def ref_tx_txcreate(self,name,f1,f2,f3,f4):
+		sources = ['31','32']
+		if 'S' in g.proto.mmtypes: sources += ['33']
+		if 'B' in g.proto.mmtypes: sources += ['34']
+		self.txcreate_common(name,  sources=sources,
+									addrs_per_wallet=2,
+									add_args=['--locktime=1320969600'],
+									do_label=True)
 
 	# END methods
 	for k in (
