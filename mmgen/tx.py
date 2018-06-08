@@ -21,45 +21,29 @@
 tx.py:  Transaction routines for the MMGen suite
 """
 
-import sys,os
+import sys,os,json
 from stat import *
 from binascii import unhexlify
 from mmgen.common import *
 from mmgen.obj import *
 
-pnm = g.proj_name
-
-wmsg = {
+wmsg = lambda k: {
 	'addr_in_addrfile_only': """
-Warning: output address {mmgenaddr} is not in the tracking wallet, which means
+Warning: output address {} is not in the tracking wallet, which means
 its balance will not be tracked.  You're strongly advised to import the address
 into your tracking wallet before broadcasting this transaction.
 """.strip(),
 	'addr_not_found': """
-No data for {pnm} address {mmgenaddr} could be found in either the tracking
+No data for {pnm} address {{}} could be found in either the tracking
 wallet or the supplied address file.  Please import this address into your
 tracking wallet, or supply an address file for it on the command line.
-""".strip(),
+""".strip().format(pnm=g.proj_name),
 	'addr_not_found_no_addrfile': """
-No data for {pnm} address {mmgenaddr} could be found in the tracking wallet.
+No data for {pnm} address {{}} could be found in the tracking wallet.
 Please import this address into your tracking wallet or supply an address file
 for it on the command line.
-""".strip(),
-	'non_mmgen_inputs': """
-NOTE: This transaction includes non-{pnm} inputs, which makes the signing
-process more complicated.  When signing the transaction, keys for non-{pnm}
-inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
-option.
-Selected non-{pnm} inputs: {{}}
-""".strip().format(pnm=pnm,pnl=pnm.lower()),
-	'not_enough_coin': """
-Selected outputs insufficient to fund this transaction ({{}} {} needed)
-""".strip().format(g.coin),
-	'no_change_output': """
-ERROR: No change address specified.  If you wish to create a transaction with
-only one output, specify a single output address with no {} amount
-""".strip().format(g.coin),
-}
+""".strip().format(pnm=g.proj_name),
+}[k]
 
 def strfmt_locktime(num,terse=False):
 	# Locktime itself is an unsigned 4-byte integer which can be parsed two ways:
@@ -89,13 +73,13 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 		if ad_f:
 			coin_addr = ad_f.mmaddr2coinaddr(mmaddr)
 			if coin_addr:
-				msg(wmsg['addr_in_addrfile_only'].format(mmgenaddr=mmaddr))
+				msg(wmsg('addr_in_addrfile_only').format(mmaddr))
 				if not keypress_confirm('Continue anyway?'):
 					sys.exit(1)
 			else:
-				die(2,wmsg['addr_not_found'].format(pnm=pnm,mmgenaddr=mmaddr))
+				die(2,wmsg('addr_not_found').format(mmaddr))
 		else:
-			die(2,wmsg['addr_not_found_no_addrfile'].format(pnm=pnm,mmgenaddr=mmaddr))
+			die(2,wmsg('addr_not_found_no_addrfile').format(mmaddr))
 
 	return CoinAddr(coin_addr)
 
@@ -235,7 +219,21 @@ class MMGenTX(MMGenObject):
 	rel_fee_disp = 'satoshis per byte'
 	txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
 	txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
+	txview_ftr_fs = 'Total input:  {i} {d}\nTotal output: {o} {d}\nTX fee:       {a} {c}{r}\n'
+	txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
 	usr_fee_prompt = 'Enter transaction fee: '
+
+	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
+	msg_no_change_output = """
+ERROR: No change address specified.  If you wish to create a transaction with
+only one output, specify a single output address with no {} amount
+""".strip()
+	msg_non_mmgen_inputs = """
+NOTE: This transaction includes non-{pnm} inputs, which makes the signing
+process more complicated.  When signing the transaction, keys for non-{pnm}
+inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
+option.
+Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower())
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
@@ -1065,7 +1063,7 @@ class MMGenTX(MMGenObject):
 				sel_f = lambda o: len(o.mmid) + (2,8)[bool(o.is_chg)] # + len(' (chg)')
 			return  max(max([sel_f(o) for o in io if o.mmid] or [0]),len(nonmm_str))
 
-		nonmm_str = '(non-{pnm} address)'.format(pnm=g.proj_name)
+		nonmm_str = '(non-{} address)'.format(g.proj_name)
 		max_mmwid = max(get_max_mmwid(self.inputs),get_max_mmwid(self.outputs))
 
 		out = (self.txview_hdr_fs,self.txview_hdr_fs_short)[bool(terse)].format(
@@ -1088,17 +1086,12 @@ class MMGenTX(MMGenObject):
 
 		out += self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse)
 
-		fs = (
-			'Total input:  {i} {c}\nTotal output: {o} {c}\nTX fee:       {a} {c}{r}\n',
-			'In {i} {c} - Out {o} {c}\nFee {a} {c}{r}\n'
-		)[bool(terse)]
-
-		out += fs.format(
+		out += (self.txview_ftr_fs,self.txview_ftr_fs_short)[bool(terse)].format(
 			i=self.sum_inputs().hl(),
 			o=self.sum_outputs().hl(),
 			a=self.format_view_abs_fee(),
 			r=self.format_view_rel_fee(terse),
-			c=g.coin)
+			d='WIP',c=g.coin)
 
 		if opt.verbose: out += self.format_view_verbose_footer()
 
@@ -1182,7 +1175,7 @@ class MMGenTX(MMGenObject):
 			self.check_tx_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
-			assert self.coin == g.coin,'invalid coin type: {}'.format(self.coin)
+			assert self.coin == g.coin,self.coin
 			desc = 'inputs data'
 			self.inputs  = eval_io_data(inputs_data,'inputs')
 			desc = 'outputs data'
@@ -1190,7 +1183,7 @@ class MMGenTX(MMGenObject):
 		except Exception as e:
 			die(2,'Invalid {} in transaction file: {}'.format(desc,e[0]))
 
-		# test doesn't work for Ethereum
+		# test doesn't work for Ethereum: test and mainnet addrs have same format
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
 
@@ -1212,7 +1205,8 @@ class MMGenTX(MMGenObject):
 				die(2,'{}: invalid command-line argument'.format(a))
 
 		if self.get_chg_output_idx() == None:
-			die(2,('ERROR: No change output specified',wmsg['no_change_output'])[len(self.outputs) == 1])
+			die(2,( 'ERROR: No change output specified',
+					self.msg_no_change_output.format(g.dcoin))[len(self.outputs) == 1])
 
 		if not segwit_is_active() and self.has_segwit_outputs():
 			fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
@@ -1249,6 +1243,18 @@ class MMGenTX(MMGenObject):
 						return selected
 					msg('Unspent output number must be <= {}'.format(len(unspent)))
 
+	def check_sufficient_funds(self,inputs,foo):
+		if self.send_amt > inputs:
+			msg(self.msg_low_coin.format(self.send_amt-inputs,g.coin))
+			return False
+		return True
+
+	def get_change_amt(self):
+		return self.sum_inputs() - self.send_amt - self.fee
+
+	def warn_insufficient_chg(self,change_amt):
+		msg(self.msg_low_coin.format(g.proto.coin_amt(-change_amt).hl(),g.coin))
+
 	def get_inputs_from_user(self,tw):
 
 		while True:
@@ -1258,13 +1264,13 @@ class MMGenTX(MMGenObject):
 			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
 
 			t_inputs = sum(s.amt for s in sel_unspent)
-			if t_inputs < self.send_amt:
-				msg(wmsg['not_enough_coin'].format(self.send_amt-t_inputs))
+			if not self.check_sufficient_funds(t_inputs,sel_unspent):
 				continue
 
 			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
 			if non_mmaddrs and self.caller != 'txdo':
-				msg(wmsg['non_mmgen_inputs'].format(', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
+				msg(self.msg_non_mmgen_inputs.format(
+					', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
 				if not keypress_confirm('Accept?'):
 					continue
 
@@ -1272,7 +1278,7 @@ class MMGenTX(MMGenObject):
 
 			self.fee = self.get_fee_from_user()
 
-			change_amt = self.sum_inputs() - self.send_amt - self.fee
+			change_amt = self.get_change_amt()
 
 			if change_amt >= 0:
 				p = self.chg_msg_fs.format(change_amt.hl(),g.coin)
@@ -1280,7 +1286,7 @@ class MMGenTX(MMGenObject):
 					if opt.yes: msg(p)
 					return change_amt
 			else:
-				msg(wmsg['not_enough_coin'].format(abs(change_amt)))
+				self.warn_insufficient_chg(change_amt)
 
 	def check_fee(self):
 		assert self.sum_inputs() - self.sum_outputs() <= g.proto.max_tx_fee
@@ -1362,7 +1368,7 @@ class MMGenBumpTX(MMGenTX):
 			if not self.marked_signed():
 				die(1,"File '{}' is not a signed {} transaction file".format(filename,g.proj_name))
 			if not self.coin_txid:
-				die(1,"Transaction '{}' was not broadcast to the network".format(self.txid,g.proj_name))
+				die(1,"Transaction '{}' was not broadcast to the network".format(self.txid))
 
 		self.coin_txid = ''
 		self.mark_raw()
@@ -1455,7 +1461,7 @@ class MMGenSplitTX(MMGenTX):
 					if opt.yes: msg(p)
 					break
 			else:
-				msg(wmsg['not_enough_coin'].format(abs(change_amt)))
+				self.warn_insufficient_chg(change_amt)
 
 		self.update_output_amt(0,change_amt)
 		self.send_amt = change_amt
