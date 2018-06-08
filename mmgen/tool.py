@@ -77,6 +77,9 @@ cmd_data = OrderedDict([
 	('Mn_stats',     ["wordlist [str='electrum']"]),
 	('Mn_printlist', ["wordlist [str='electrum']"]),
 
+	('Gen_addr',     ['<{} ID> [str]'.format(pnm),"wallet [str='']"]),
+	('Gen_key',      ['<{} ID> [str]'.format(pnm),"wallet [str='']"]),
+
 	('Listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]','showbtcaddr [bool=True]','show_age [bool=False]','show_days [bool=True]']),
 	('Listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)",'show_age [bool=False]','show_days [bool=True]']),
 	('Getbalance',   ['minconf [int=1]','quiet [bool=False]','pager [bool=False]']),
@@ -632,6 +635,22 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 			rdie(1,'Error: {!r}'.format(e))
 
 # ================ RPC commands ================== #
+
+def Gen_addr(addr,wallet='',target='addr'):
+	addr = MMGenID(addr)
+	sf = get_seed_file([wallet] if wallet else [],1)
+	opt.quiet = True
+	from mmgen.seed import SeedSource
+	ss = SeedSource(sf)
+	if ss.seed.sid != addr.sid:
+		m = 'Seed ID of requested address ({}) does not match wallet ({})'
+		die(1,m.format(addr.sid,ss.seed.sid))
+	al = AddrList(seed=ss.seed,addr_idxs=AddrIdxList(str(addr.idx)),mmtype=addr.mmtype,do_chksum=False)
+	d = al.data[0]
+	Msg(d.sec.wif if target=='wif' else d.addr)
+
+def Gen_key(addr,wallet=''):
+	return Gen_addr(addr,wallet,target='wif')
 
 def Listaddress(addr,minconf=1,pager=False,showempty=True,showbtcaddr=True,show_age=False,show_days=None):
 	return Listaddresses(addrs=addr,minconf=minconf,pager=pager,

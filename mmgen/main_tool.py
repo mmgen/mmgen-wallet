@@ -46,6 +46,8 @@ Cryptocoin address/key operations (compressed public keys supported):
   wif2hex        - convert a private key from WIF to hex format
 
 Wallet/TX operations (coin daemon must be running):
+  gen_addr      - generate a single MMGen address from default or specified wallet
+  gen_key       - generate a single MMGen WIF key from default or specified wallet
   getbalance    - like '{pn}-cli getbalance' but shows confirmed/unconfirmed,
                   spendable/unspendable balances for individual {pnm} wallets
   listaddress   - list the specified {pnm} address and its balance
