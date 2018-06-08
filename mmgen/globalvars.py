@@ -65,6 +65,7 @@ class g(object):
 	# Constant vars - some of these might be overriden in opts.py, but they don't change thereafter
 
 	coin                 = 'BTC'
+	dcoin                = None # the display coin unit
 	token                = ''
 	debug                = False
 	debug_opts           = False
@@ -114,7 +115,7 @@ class g(object):
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
-		'accept_defaults'
+		'accept_defaults','token'
 	)
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',

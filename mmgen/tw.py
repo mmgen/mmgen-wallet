@@ -79,6 +79,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.do_sort()
 		self.total        = self.get_total_coin()
 
+		g.dcoin = g.dcoin or g.coin
+
 	def get_total_coin(self):
 		return sum(i.amt for i in self.unspent)
 
@@ -178,7 +180,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if self.sort_key == k and getattr(a,k) == getattr(b,k):
 						b.skip = (k,'addr')[k=='twmmid']
 
-		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.coin,self.total.hl())]
+		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.dcoin,self.total.hl())]
 		if g.chain != 'mainnet': out += ['Chain: '+green(g.chain.upper())]
 		if self.show_txid:
 			fs = u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w)
@@ -188,7 +190,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							t='TXid'.ljust(tx_w - 5) + ' Vout',
 							v='',
 							a='Address'.ljust(addr_w),
-							A='Amt({})'.format(g.coin).ljust(g.proto.coin_amt.max_prec+4),
+							A='Amt({})'.format(g.dcoin).ljust(g.proto.coin_amt.max_prec+4),
 							c=('Confs','Age(d)')[self.show_days])]
 
 		for n,i in enumerate(unsp):
@@ -231,7 +233,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							t='Tx ID,Vout',
 							a='Address'.ljust(addr_w),
 							m='MMGen ID'.ljust(mmid_w+1),
-							A='Amount({})'.format(g.coin),
+							A='Amount({})'.format(g.dcoin),
 							c='Confs',
 							g='Age(d)',
 							l='Label')]
@@ -257,13 +259,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				make_timestr(),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
-				g.coin,
+				g.dcoin,
 				self.total.hl(color=color))
 		return self.fmt_print
 
 	def display_total(self):
 		fs = '\nTotal unspent: {} {} ({} outputs)'
-		msg(fs.format(self.total.hl(),g.coin,len(self.unspent)))
+		msg(fs.format(self.total.hl(),g.dcoin,len(self.unspent)))
 
 	def get_idx_and_label_from_user(self):
 		msg('')
@@ -290,7 +292,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def view_and_sort(self,tx):
 		fs = 'Total to spend, excluding fees: {} {}\n\n'
-		txos = fs.format(tx.sum_outputs().hl(),g.coin) if tx.outputs else ''
+		txos = fs.format(tx.sum_outputs().hl(),g.dcoin) if tx.outputs else ''
 		prompt = txos + self.prompt.strip()
 		self.display()
 		msg(prompt)
@@ -321,7 +323,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
 				msg('')
-				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,g.coin,
+				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,g.dcoin,
 										','.join(self.sort_info(include_group=False)).lower())
 				write_data_to_file(of,self.format_for_printing(),'{} listing'.format(self.desc))
 				m = yellow("Data written to '{}'".format(of))

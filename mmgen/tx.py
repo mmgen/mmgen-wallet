@@ -287,8 +287,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.blockcount  = 0
 		self.chain       = None
 		self.coin        = None
+		self.dcoin       = None
 		self.caller      = caller
 		self.locktime    = None
+
+		g.dcoin = g.dcoin or g.coin
 
 		if filename:
 			self.parse_tx_file(filename,coin_sym_only=coin_sym_only,silent_open=silent_open)
@@ -639,9 +642,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.check_coin_mismatch()
 		def amt_to_str(d):
 			return dict([(k,str(d[k]) if k == 'amt' else d[k]) for k in d])
+		coin_id = '' if g.coin == 'BTC' else g.coin + ('' if g.coin == g.dcoin else ':'+g.dcoin)
 		lines = [
 			'{}{} {} {} {} {}{}'.format(
-				(g.coin+' ','')[g.coin=='BTC'],
+				(coin_id+' ' if coin_id else ''),
 				self.chain.upper() if self.chain else 'Unknown',
 				self.txid,
 				self.send_amt,
@@ -947,7 +951,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		tn = ('','.testnet')[g.proto.is_testnet()]
 		self.fn = u'{}{}[{!s}{}{}]{x}{}.{}'.format(
 			self.txid,
-			('-'+g.coin,'')[g.coin=='BTC'],
+			('-'+g.dcoin,'')[g.coin=='BTC'],
 			self.send_amt,
 			('',',{}'.format(self.fee_abs2rel(self.get_fee_from_tx())))[self.is_rbf()],
 			('',',tl={}'.format(tl))[bool(tl)],
@@ -1018,12 +1022,12 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				if terse:
 					out += '{:3} {} {} {} {}\n'.format(n+1,
 						e.addr.fmt(color=True,width=addr_w),
-						mmid_fmt,e.amt.hl(),g.coin)
+						mmid_fmt,e.amt.hl(),g.dcoin)
 				else:
 					icommon = [
 						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
 						('','comment:',e.label.hl() if e.label else ''),
-						('','amount:','{} {}'.format(e.amt.hl(),g.coin))]
+						('','amount:','{} {}'.format(e.amt.hl(),g.dcoin))]
 					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
 						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
 					] if ip else icommon + [
@@ -1069,7 +1073,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		out = (self.txview_hdr_fs,self.txview_hdr_fs_short)[bool(terse)].format(
 			i=self.txid.hl(),
 			a=self.send_amt.hl(),
-			c=g.coin,
+			c=g.dcoin,
 			t=self.timestamp,
 			r=(red('False'),green('True'))[self.is_rbf()],
 			s=self.marked_signed(color=True),
@@ -1078,7 +1082,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if self.chain != 'mainnet':
 			out += green('Chain: {}\n'.format(self.chain.upper()))
 		if self.coin_txid:
-			out += '{} TxID: {}\n'.format(g.coin,self.coin_txid.hl())
+			out += '{} TxID: {}\n'.format(g.dcoin,self.coin_txid.hl())
 		enl = ('\n','')[bool(terse)]
 		out += enl
 		if self.label:
@@ -1091,7 +1095,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			o=self.sum_outputs().hl(),
 			a=self.format_view_abs_fee(),
 			r=self.format_view_rel_fee(terse),
-			d='WIP',c=g.coin)
+			d=g.dcoin,c=g.coin)
 
 		if opt.verbose: out += self.format_view_verbose_footer()
 
@@ -1158,6 +1162,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				self.locktime = int(metadata.pop()[3:])
 
 			self.coin = metadata.pop(0) if len(metadata) == 6 else 'BTC'
+			if ':' in self.coin:
+				self.coin,self.dcoin = self.coin.split(':')
+
 			if coin_sym_only: return
 
 			if len(metadata) == 5:
@@ -1310,7 +1317,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.send_amt = self.sum_outputs()
 
 		msg('Total amount to spend: {}'.format(
-			('Unknown','{} {}'.format(self.send_amt.hl(),g.coin))[bool(self.send_amt)]
+			('Unknown','{} {}'.format(self.send_amt.hl(),g.dcoin))[bool(self.send_amt)]
 		))
 
 		change_amt = self.get_inputs_from_user(tw)
