@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.tx: Ethereum transaction routines for the MMGen suite
+altcoins.eth.tx: Ethereum transaction classes for the MMGen suite
 """
 
 import json

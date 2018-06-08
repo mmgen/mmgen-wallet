@@ -18,7 +18,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-obj.py: MMGen native classes for Ethereum
+altcoins.eth.obj: Ethereum data type classes for the MMGen suite
 """
 
 # Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
