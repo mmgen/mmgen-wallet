@@ -65,6 +65,7 @@ class g(object):
 	# Constant vars - some of these might be overriden in opts.py, but they don't change thereafter
 
 	coin                 = 'BTC'
+	token                = ''
 	debug                = False
 	debug_opts           = False
 	debug_rpc            = False

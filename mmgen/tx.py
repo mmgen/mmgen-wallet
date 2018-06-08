@@ -219,6 +219,10 @@ txio_attrs = {
 }
 
 class MMGenTX(MMGenObject):
+
+	def __new__(cls,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,'tx','MMGenTX'),*args,**kwargs)
+
 	ext      = 'rawtx'
 	raw_ext  = 'rawtx'
 	sig_ext  = 'sigtx'
@@ -268,12 +272,6 @@ class MMGenTX(MMGenObject):
 
 		desc = 'transaction outputs'
 		member_type = 'MMGenTxOutput'
-
-	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tx import EthereumMMGenTX
-			cls = EthereumMMGenTX
-		return MMGenObject.__new__(cls,*args,**kwargs)
 
 	def __init__(self,filename=None,coin_sym_only=False,caller=None,silent_open=False):
 		self.inputs      = self.MMGenTxInputList()

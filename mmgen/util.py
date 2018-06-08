@@ -891,3 +891,12 @@ def format_par(s,indent=0,width=80,as_list=False):
 			line += ('',' ')[bool(line)] + words.pop(0)
 		lines.append(' '*indent + line)
 	return lines if as_list else '\n'.join(lines) + '\n'
+
+def altcoin_subclass(cls,mod_id,cls_name):
+	if cls.__name__ != cls_name: return cls
+	pn = capfirst(g.proto.name)
+	tn = 'Token' if g.token else ''
+	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(g.coin.lower(),mod_id,pn,tn,cls_name)
+	e2 = 'cls = {}{}{}'.format(pn,tn,cls_name)
+	try: exec e1; exec e2; return cls
+	except ImportError: return cls

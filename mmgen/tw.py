@@ -28,6 +28,9 @@ CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 
 class TwUnspentOutputs(MMGenObject):
 
+	def __new__(cls,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwUnspentOutputs'),*args,**kwargs)
+
 	txid_w = 64
 	show_txid = True
 	can_group = True
@@ -60,12 +63,6 @@ No spendable outputs found!  Import addresses with balances into your
 watch-only wallet using '{}-addrimport' and then re-run this program.
 """.strip().format(g.proj_name.lower())
 	}
-
-	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumTwUnspentOutputs
-			cls = EthereumTwUnspentOutputs
-		return MMGenObject.__new__(cls,*args,**kwargs)
 
 	def __init__(self,minconf=1):
 		self.unspent      = self.MMGenTwOutputList()
@@ -350,10 +347,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 class TwAddrList(MMGenDict):
 
 	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumTwAddrList
-			cls = EthereumTwAddrList
-		return MMGenDict.__new__(cls,*args,**kwargs)
+		return MMGenDict.__new__(altcoin_subclass(cls,'tw','TwAddrList'),*args,**kwargs)
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
 
@@ -474,10 +468,7 @@ class TwAddrList(MMGenDict):
 class TrackingWallet(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-			cls = EthereumTrackingWallet
-		return MMGenObject.__new__(cls,*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'),*args,**kwargs)
 
 	def import_label(self,coinaddr,lbl):
 		# NOTE: this works because importaddress() removes the old account before
@@ -546,10 +537,7 @@ class TwGetBalance(MMGenObject):
 	fs = '{w:13} {u:<16} {p:<16} {c}\n'
 
 	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumTwGetBalance
-			cls = EthereumTwGetBalance
-		return MMGenObject.__new__(cls,*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwGetBalance'),*args,**kwargs)
 
 	def __init__(self,minconf,quiet):
 
