@@ -876,10 +876,7 @@ re-import your addresses.
 	}
 
 	def __new__(cls,*args,**kwargs):
-		if g.coin == 'ETH':
-			from mmgen.altcoins.eth.tw import EthereumAddrData
-			cls = EthereumAddrData
-		return MMGenObject.__new__(cls,*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'),*args,**kwargs)
 
 	def __init__(self,source=None):
 		self.al_ids = {}
