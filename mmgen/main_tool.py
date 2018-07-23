@@ -85,8 +85,9 @@ File encryption:
       * The encrypted file is indistinguishable from random data
 
 {pnm}-specific operations:
-  add_label    - add descriptive label for {pnm} address in tracking wallet
-  remove_label - remove descriptive label for {pnm} address in tracking wallet
+  remove_address - remove an address from tracking wallet
+  add_label      - add descriptive label for {pnm} address in tracking wallet
+  remove_label   - remove descriptive label for {pnm} address in tracking wallet
   addrfile_chksum    - compute checksum for {pnm} address file
   keyaddrfile_chksum - compute checksum for {pnm} key-address file
   passwdfile_chksum  - compute checksum for {pnm} password file

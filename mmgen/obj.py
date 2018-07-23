@@ -443,17 +443,6 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		else:
 			return pfx_ok(vn[self.addr_fmt][1])
 
-	def is_in_tracking_wallet(self):
-
-		from mmgen.globalvars import g
-		if g.coin in ('ETH','ETC'):
-			from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-			return EthereumTrackingWallet().is_in_wallet(self)
-
-		from mmgen.rpc import rpc_init
-		d = rpc_init().validateaddress(self)
-		return d['iswatchonly'] and 'account' in d
-
 class ViewKey(object):
 	def __new__(cls,s,on_fail='die'):
 		from mmgen.globalvars import g

@@ -30,11 +30,13 @@ from mmgen.addr import AddrData
 class EthereumTrackingWallet(TrackingWallet):
 
 	desc = 'Ethereum tracking wallet'
+	caps = ()
 
 	data_dir = os.path.join(g.altcoin_data_dir,'eth',g.proto.data_subdir)
 	tw_file = os.path.join(data_dir,'tracking-wallet.json')
 
-	def __init__(self):
+	def __init__(self,mode='r'):
+		TrackingWallet.__init__(self,mode=mode)
 		check_or_create_dir(self.data_dir)
 		try:
 			self.orig_data = get_data_from_file(self.tw_file,silent=True)
@@ -43,14 +45,19 @@ class EthereumTrackingWallet(TrackingWallet):
 			try: os.stat(self.tw_file)
 			except:
 				self.orig_data = ''
-				self.data = {'accounts':{}}
+				self.data = {'accounts':{},'tokens':{}}
 			else: die(2,"File '{}' exists but does not contain valid json data")
 		else:
 			self.upgrade_wallet_maybe()
-			ad = self.data['accounts']
-			for v in ad.values():
-				v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
-				v['comment'] = TwComment(v['comment'],on_fail='raise')
+			if not 'tokens' in self.data:
+				self.data['tokens'] = {}
+			def conv_types(ad):
+				for v in ad.values():
+					v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
+					v['comment'] = TwComment(v['comment'],on_fail='raise')
+			conv_types(self.data['accounts'])
+			for v in self.data['tokens'].values():
+				conv_types(v)
 
 	def upgrade_wallet_maybe(self):
 		if not 'accounts' in self.data:
@@ -61,8 +68,12 @@ class EthereumTrackingWallet(TrackingWallet):
 			self.orig_data = json.dumps(self.data)
 			msg('{} upgraded successfully!'.format(self.desc))
 
-	def import_address(self,addr,label):
-		ad = self.data['accounts']
+	def data_root(self): return self.data['accounts']
+	def data_root_desc(self): return 'accounts'
+
+	@write_mode
+	def import_address(self,addr,label,foo):
+		ad = self.data_root()
 		if addr in ad:
 			if not ad[addr]['mmid'] and label.mmid:
 				msg("Warning: MMGen ID '{}' was missing in tracking wallet!".format(label.mmid))
@@ -70,55 +81,64 @@ class EthereumTrackingWallet(TrackingWallet):
 				die(3,"MMGen ID '{}' does not match tracking wallet!".format(label.mmid))
 		ad[addr] = { 'mmid': label.mmid, 'comment': label.comment }
 
-	# use 'check_data' to make sure wallet hasn't been altered by another program
-	def write(self):
+	@write_mode
+	def write(self): # use 'check_data' to check wallet hasn't been altered by another program
 		write_data_to_file( self.tw_file,
 							json.dumps(self.data),'Ethereum tracking wallet data',
 							ask_overwrite=False,ignore_opt_outdir=True,silent=True,
 							check_data=True,cmp_data=self.orig_data)
 
+	@write_mode
 	def delete_all(self):
 		self.data = {}
 		self.write()
 
-	def delete(self,addr):
+	@write_mode
+	def remove_address(self,addr):
+		root = self.data_root()
+
+		from mmgen.obj import is_coin_addr,is_mmgen_id
 		if is_coin_addr(addr):
 			have_match = lambda k: k == addr
 		elif is_mmgen_id(addr):
-			have_match = lambda k: self.data['accounts'][k]['mmid'] == addr
+			have_match = lambda k: root[k]['mmid'] == addr
 		else:
 			die(1,"'{}' is not an Ethereum address or MMGen ID".format(addr))
 
-		for k in self.data['accounts']:
+		for k in root:
 			if have_match(k):
-				del self.data['accounts'][k]
-				break
+				# return the addr resolved to mmid if possible
+				ret = root[k]['mmid'] if is_mmgen_id(root[k]['mmid']) else addr
+				del root[k]
+				self.write()
+				return ret
 		else:
-			die(1,"Address '{}' not found in tracking wallet".format(addr))
-		self.write()
+			m = "Address '{}' not found in '{}' section of tracking wallet"
+			msg(m.format(addr,self.data_root_desc()))
+			return None
 
 	def is_in_wallet(self,addr):
-		return addr in self.data['accounts']
+		return addr in self.data_root()
 
 	def sorted_list(self):
 		return sorted(
-			map(lambda x: {'addr':x[0], 'mmid':x[1]['mmid'], 'comment':x[1]['comment'] },
-								self.data['accounts'].items()),
-			key=lambda x: x['mmid'].sort_key+x['addr']
-			)
+			map(lambda x: {'addr':x[0],'mmid':x[1]['mmid'],'comment':x[1]['comment']},self.data_root().items()),
+			key=lambda x: x['mmid'].sort_key+x['addr'] )
 
 	def mmid_ordered_dict(self):
 		from collections import OrderedDict
 		return OrderedDict(map(lambda x: (x['mmid'],{'addr':x['addr'],'comment':x['comment']}), self.sorted_list()))
 
+	@write_mode
 	def import_label(self,coinaddr,lbl):
-		for addr,d in self.data['accounts'].items():
+		for addr,d in self.data_root().items():
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()
 				return None
 		else: # emulate RPC library
-			return ('rpcfail',(None,2,"Address '{}' not found in tracking wallet".format(coinaddr)))
+			m = "Address '{}' not found in '{}' section of tracking wallet"
+			return ('rpcfail',(None,2,m.format(coinaddr,self.data_root_desc())))
 
 # Use consistent naming, even though Ethereum doesn't have unspent outputs
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
@@ -144,12 +164,12 @@ Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
 				'address': d['addr'],
 				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei'),
 				'confirmations': 0, # TODO
-				}, EthereumTrackingWallet().sorted_list())
+				}, TrackingWallet().sorted_list())
 
 class EthereumTwAddrList(TwAddrList):
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
-		tw = EthereumTrackingWallet().mmid_ordered_dict()
+		tw = TrackingWallet().mmid_ordered_dict()
 		self.total = g.proto.coin_amt('0')
 
 		rpc_init()
@@ -177,7 +197,7 @@ class EthereumTwGetBalance(TwGetBalance):
 	fs = '{w:13} {c}\n' # TODO - for now, just suppress display of meaningless data
 
 	def create_data(self):
-		data = EthereumTrackingWallet().mmid_ordered_dict()
+		data = TrackingWallet().mmid_ordered_dict()
 		for d in data:
 			keys = ['TOTAL']
 			keys += [str(d.obj.sid)] if d.type == 'mmgen' else ['Non-MMGen']
@@ -194,6 +214,6 @@ class EthereumAddrData(AddrData):
 	@classmethod
 	def get_tw_data(cls):
 		vmsg('Getting address data from tracking wallet')
-		tw = EthereumTrackingWallet().mmid_ordered_dict()
+		tw = TrackingWallet().mmid_ordered_dict()
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
 		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in tw.items()]

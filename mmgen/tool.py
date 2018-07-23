@@ -88,6 +88,7 @@ cmd_data = OrderedDict([
 
 	('Add_label',       ['<{} or coin address> [str]'.format(pnm),'<label> [str]']),
 	('Remove_label',    ['<{} or coin address> [str]'.format(pnm)]),
+	('Remove_address',  ['<{} or coin address> [str]'.format(pnm)]),
 	('Addrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
 	('Keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
 	('Passwdfile_chksum', ['<{} password file> [str]'.format(pnm)]),
@@ -714,7 +715,14 @@ def Twview(pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=T
 def Add_label(mmaddr_or_coin_addr,label):
 	rpc_init()
 	from mmgen.tw import TrackingWallet
-	TrackingWallet().add_label(mmaddr_or_coin_addr,label,on_fail='raise')
+	TrackingWallet(mode='w').add_label(mmaddr_or_coin_addr,label,on_fail='raise')
 
 def Remove_label(mmaddr_or_coin_addr):
 	Add_label(mmaddr_or_coin_addr,'')
+
+def Remove_address(mmaddr_or_coin_addr):
+	from mmgen.tw import TrackingWallet
+	tw = TrackingWallet(mode='w')
+	ret = tw.remove_address(mmaddr_or_coin_addr)
+	if ret:
+		msg("Address '{}' deleted from tracking wallet".format(ret))

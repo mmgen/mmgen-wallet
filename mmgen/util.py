@@ -892,6 +892,7 @@ def format_par(s,indent=0,width=80,as_list=False):
 		lines.append(' '*indent + line)
 	return lines if as_list else '\n'.join(lines) + '\n'
 
+# module loading magic for tx.py and tw.py
 def altcoin_subclass(cls,mod_id,cls_name):
 	if cls.__name__ != cls_name: return cls
 	pn = capfirst(g.proto.name)
@@ -900,3 +901,12 @@ def altcoin_subclass(cls,mod_id,cls_name):
 	e2 = 'cls = {}{}{}'.format(pn,tn,cls_name)
 	try: exec e1; exec e2; return cls
 	except ImportError: return cls
+
+# decorator for TrackingWallet
+def write_mode(orig_func):
+	def f(self,*args,**kwargs):
+		if self.mode != 'w':
+			m = '{} opened in read-only mode: cannot execute method {}()'
+			die(1,m.format(type(self).__name__,locals()['orig_func'].__name__))
+		return orig_func(self,*args,**kwargs)
+	return f

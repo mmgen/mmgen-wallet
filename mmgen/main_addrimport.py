@@ -103,23 +103,30 @@ qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
 err_flag = False
 
-if g.coin == 'ETH':
-	if opt.rescan:
-		die('--rescan option meaningless for coin {}'.format(g.coin))
-	from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-	eth_tw = EthereumTrackingWallet()
+from mmgen.tw import TrackingWallet
+try:
+	tw = TrackingWallet(mode='w')
+except UnrecognizedTokenSymbolError as e:
+	m1 = "Note: when importing addresses for a new token, the token must be specified"
+	m2 = "by address, not symbol."
+	die(1,'{}\n{}\n{}'.format(e[0],m1,m2))
 
-	def import_address(addr,label,rescan):
-		eth_tw.import_address(addr,label)
-else:
-	if not opt.quiet: confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
+if opt.rescan and not 'rescan' in tw.caps:
+	msg("'--rescan' ignored: not supported by {}".format(type(tw).__name__))
+	opt.rescan = False
 
-	def import_address(addr,label,rescan):
-		try:
-			g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
-		except:
-			global err_flag
-			err_flag = True
+if opt.rescan and not opt.quiet:
+	confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
+
+if opt.batch and not 'batch' in tw.caps:
+	msg("'--batch' ignored: not supported by {}".format(type(tw).__name__))
+	opt.batch = False
+
+def import_address(addr,label,rescan):
+	try: tw.import_address(addr,label,rescan)
+	except:
+		global err_flag
+		err_flag = True
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13
@@ -127,11 +134,9 @@ msg_fmt = '{{:{}}} {{:34}} {{:{}}}'.format(w_n_of_m,w_mmid)
 
 if opt.rescan: import threading
 
-msg(u'Importing {} address{} from {}{}'.format(
-		len(al.data),
-		suf(al.data,'es'),
-		infile,
-		('',' (batch mode)')[bool(opt.batch)]))
+fs = u'Importing {} address{} from {}{}'
+bm =' (batch mode)' if opt.batch else ''
+msg(fs.format(len(al.data),suf(al.data,'es'),infile,bm))
 
 if not al.data[0].addr.is_for_chain(g.chain):
 	die(2,'Address{} not compatible with {} chain!'.format((' list','')[bool(opt.address)],g.chain))
@@ -175,8 +180,7 @@ for n,e in enumerate(al.data):
 		msg(' - OK')
 
 if opt.batch:
-	ret = g.rpch.importaddress(arg_list,batch=True)
+	ret = tw.batch_import_address(arg_list)
 	msg('OK: {} addresses imported'.format(len(ret)))
 
-if g.coin == 'ETH':
-	eth_tw.write()
+tw.write()

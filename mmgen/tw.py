@@ -313,7 +313,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				idx,lbl = self.get_idx_and_label_from_user()
 				if idx:
 					e = self.unspent[idx-1]
-					if TrackingWallet().add_label(e.twmmid,lbl,addr=e.addr):
+					if TrackingWallet(mode='w').add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
 						msg(u'{}\n{}\n{}'.format(self.fmt_display,prompt,p))
@@ -472,6 +472,30 @@ class TrackingWallet(MMGenObject):
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'),*args,**kwargs)
 
+	mode = 'r'
+	caps = ('rescan','batch')
+
+	def __init__(self,mode='r'):
+		m = "'{}': invalid 'mode' parameter for {} constructor"
+		assert mode in ('r','w'),m.format(mode,type(self).__name__)
+		self.mode = mode
+
+	@write_mode
+	def import_address(self,addr,label,rescan):
+		return g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
+
+	@write_mode
+	def batch_import_address(self,arg_list):
+		return g.rpch.importaddress(arg_list,batch=True)
+
+	@write_mode
+	def write(self): pass
+
+	def is_in_wallet(self,addr):
+		d = g.rpch.validateaddress(addr)
+		return d['iswatchonly'] and 'account' in d
+
+	@write_mode
 	def import_label(self,coinaddr,lbl):
 		# NOTE: this works because importaddress() removes the old account before
 		# associating the new account with the address.
@@ -480,6 +504,7 @@ class TrackingWallet(MMGenObject):
 		return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
 
 	# returns on failure
+	@write_mode
 	def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
 		from mmgen.tx import is_mmgen_id,is_coin_addr
 		mmaddr,coinaddr = None,None
@@ -496,7 +521,7 @@ class TrackingWallet(MMGenObject):
 			if not is_mmgen_id(arg1):
 				assert coinaddr,u"Invalid coin address for this chain: {}".format(arg1)
 			assert coinaddr,u"{pn} address '{ma}' not found in tracking wallet"
-			assert coinaddr.is_in_tracking_wallet(),u"Address '{ca}' not found in tracking wallet"
+			assert self.is_in_wallet(coinaddr),u"Address '{ca}' not found in tracking wallet"
 		except Exception as e:
 			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
 			return False
@@ -532,7 +557,13 @@ class TrackingWallet(MMGenObject):
 			else:     msg(u'Removed label from {}'.format(s))
 			return True
 
-	def remove_label(self,mmaddr): self.add_label(mmaddr,'')
+	@write_mode
+	def remove_label(self,mmaddr):
+		self.add_label(mmaddr,'')
+
+	@write_mode
+	def remove_address(self,addr):
+		raise NotImplementedError,'address removal not implemented for coin {}'.format(g.coin)
 
 class TwGetBalance(MMGenObject):
 
