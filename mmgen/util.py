@@ -822,12 +822,20 @@ def get_coin_daemon_auth_cookie():
 	f = os.path.join(g.proto.daemon_data_dir,g.proto.daemon_data_subdir,'.cookie')
 	return get_lines_from_file(f,'')[0] if file_is_readable(f) else ''
 
-def rpc_init(reinit=False):
+def rpc_init_parity():
 
-	if not 'rpc' in g.proto.mmcaps:
-		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
+	from mmgen.rpc import EthereumRPCConnection
+	g.rpch = EthereumRPCConnection(
+				g.rpc_host or 'localhost',
+				g.rpc_port or g.proto.rpc_port)
 
-	if g.rpch != None and not reinit: return g.rpch
+	if not g.daemon_version: # First call
+		g.daemon_version = g.rpch.parity_versionInfo()['version'] # fail immediately if daemon is geth
+		g.chain = g.rpch.parity_chain()
+
+	return g.rpch
+
+def rpc_init_bitcoind():
 
 	def check_chainfork_mismatch(conn):
 		block0 = conn.getblockhash(0)
@@ -849,37 +857,37 @@ def rpc_init(reinit=False):
 		except Exception as e:
 			die(1,'{}\nChain is {}!'.format(e,g.chain))
 
-	import mmgen.rpc
-	if g.coin == 'ETH':
-		conn = mmgen.rpc.EthereumRPCConnection(
-					g.rpc_host or 'localhost',
-					g.rpc_port or g.proto.rpc_port)
-		if not g.daemon_version: # First call
-			g.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
-			g.chain = conn.parity_chain()
-	else:
-		cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
-		conn = mmgen.rpc.CoinDaemonRPCConnection(
-					g.rpc_host or 'localhost',
-					g.rpc_port or g.proto.rpc_port,
-					g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
-					g.rpc_password or cfg['rpcpassword'],
-					auth_cookie=get_coin_daemon_auth_cookie())
+	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 
-		if not g.daemon_version: # First call
-			if g.bob or g.alice:
-				import regtest as rt
-				rt.user(('alice','bob')[g.bob],quiet=True)
-			g.daemon_version = int(conn.getnetworkinfo()['version'])
-			g.chain = conn.getblockchaininfo()['chain']
-			if g.chain != 'regtest': g.chain += 'net'
-			assert g.chain in g.chains
-			check_chaintype_mismatch()
-		if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
-			check_chainfork_mismatch(conn)
+	from mmgen.rpc import CoinDaemonRPCConnection
+	conn = CoinDaemonRPCConnection(
+				g.rpc_host or 'localhost',
+				g.rpc_port or g.proto.rpc_port,
+				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
+				g.rpc_password or cfg['rpcpassword'],
+				auth_cookie=get_coin_daemon_auth_cookie())
 
-	g.rpch = conn
+	if not g.daemon_version: # First call
+		if g.bob or g.alice:
+			import regtest as rt
+			rt.user(('alice','bob')[g.bob],quiet=True)
+		g.daemon_version = int(conn.getnetworkinfo()['version'])
+		g.chain = conn.getblockchaininfo()['chain']
+		if g.chain != 'regtest': g.chain += 'net'
+		assert g.chain in g.chains
+		check_chaintype_mismatch()
+
+	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+		check_chainfork_mismatch(conn)
+
 	return conn
+
+def rpc_init(reinit=False):
+	if not 'rpc' in g.proto.mmcaps:
+		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
+	if g.rpch != None and not reinit: return g.rpch
+	g.rpch = globals()['rpc_init_'+g.proto.daemon_family]()
+	return g.rpch
 
 def format_par(s,indent=0,width=80,as_list=False):
 	words,lines = s.split(),[]
