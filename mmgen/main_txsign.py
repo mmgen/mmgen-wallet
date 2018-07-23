@@ -75,7 +75,8 @@ infiles = opts.init(opts_data,add_opts=['b16'])
 if not infiles: opts.usage()
 for i in infiles: check_infile(i)
 
-rpc_init()
+if g.proto.sign_mode == 'daemon':
+	rpc_init()
 
 if not opt.info and not opt.terse_info:
 	do_license_msg(immed=True)

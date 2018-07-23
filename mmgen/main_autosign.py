@@ -29,8 +29,6 @@ part_label   = u'MMGEN_TX'
 wallet_dir   = u'/dev/shm/autosign'
 key_fn       = u'autosign.key'
 
-no_daemon_coins = ('ETH',)
-
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
 opts_data = lambda: {
@@ -121,15 +119,16 @@ def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
-		if coin in no_daemon_coins: continue
 		g.proto = CoinProtocol(coin,g.testnet)
+		if g.proto.sign_mode != 'daemon': continue
 		vmsg('Checking {} daemon'.format(coin))
 		try:
 			rpc_init(reinit=True)
 			g.rpch.getbalance()
 		except SystemExit as e:
 			if e[0] != 0:
-				ydie(1,'{} daemon not running or not listening on port {}'.format(coin,g.proto.rpc_port))
+				fs = '{} daemon not running or not listening on port {}'
+				ydie(1,fs.format(coin,g.proto.rpc_port))
 
 def get_wallet_files():
 	wfs = filter(lambda x: x[-6:] == '.mmdat',os.listdir(wallet_dir))
@@ -159,7 +158,7 @@ def sign_tx_file(txfile):
 		init_coin(mmgen.tx.MMGenTX(txfile,coin_sym_only=True).coin)
 		reload(sys.modules['mmgen.tx'])
 		tx = mmgen.tx.MMGenTX(txfile)
-		if tx.coin not in no_daemon_coins:
+		if g.proto.sign_mode == 'daemon':
 			rpc_init(reinit=True)
 		txsign(tx,wfs,None,None)
 		tx.write_to_file(ask_write=False)

@@ -90,6 +90,7 @@ class BitcoinProtocol(MMGenObject):
 	witness_vernum_hex = '00'
 	witness_vernum     = int(witness_vernum_hex,16)
 	bech32_hrp         = 'bc'
+	sign_mode          = 'daemon'
 
 	@classmethod
 	def is_testnet(cls):
@@ -305,6 +306,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	coin_amt    = ETHAmt
 	max_tx_fee  = ETHAmt('0.005')
 	chain_name  = 'foundation'
+	sign_mode   = 'standalone'
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
