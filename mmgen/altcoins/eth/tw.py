@@ -199,15 +199,21 @@ class EthereumTwGetBalance(TwGetBalance):
 	def create_data(self):
 		data = TrackingWallet().mmid_ordered_dict()
 		for d in data:
-			keys = ['TOTAL']
-			keys += [str(d.obj.sid)] if d.type == 'mmgen' else ['Non-MMGen']
-			confs = 9999 # TODO
-			i = (1,2)[confs >= self.minconf]
+			if d.type == 'mmgen':
+				key = d.obj.sid
+				if key not in self.data:
+					self.data[key] = [g.proto.coin_amt('0')] * 4
+			else:
+				key = 'Non-MMGen'
 
-			for key in keys:
-				if key not in self.data: self.data[key] = [g.proto.coin_amt('0')] * 3
-				for j in ([],[0])[confs==0] + [i]:
-					self.data[key][j] += ETHAmt(int(g.rpch.eth_getBalance('0x'+data[d]['addr']),16),'wei')
+			conf_level = 2 # TODO
+			amt = self.get_addr_balance(data[d]['addr'])
+
+			self.data['TOTAL'][conf_level] += amt
+			self.data[key][conf_level] += amt
+
+	def get_addr_balance(self,addr):
+		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
 
 class EthereumAddrData(AddrData):
 

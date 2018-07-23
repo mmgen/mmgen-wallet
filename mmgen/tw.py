@@ -577,24 +577,28 @@ class TwGetBalance(MMGenObject):
 		rpc_init()
 		self.minconf = minconf
 		self.quiet = quiet
-		self.data = {}
+		self.data = dict([(k,[g.proto.coin_amt('0')] * 4) for k in 'TOTAL','Non-MMGen','Non-wallet'])
 		self.create_data()
 
 	def create_data(self):
+		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable
 		for d in g.rpch.listunspent(0):
 			try:    lbl = TwLabel(d['account'],on_fail='silent')
 			except: lbl = None
-			keys = ['TOTAL']
-			if lbl and lbl.mmid.type == 'mmgen':
-				keys += [lbl.mmid.obj.sid]
-			if d['spendable']: keys += ['SPENDABLE']
-			confs = d['confirmations']
-			i = (1,2)[confs >= self.minconf]
+			if lbl:
+				if lbl.mmid.type == 'mmgen':
+					key = lbl.mmid.obj.sid
+					if key not in self.data:
+						self.data[key] = [g.proto.coin_amt('0')] * 4
+				else: key = 'Non-MMGen'
+			else: key = 'Non-wallet'
 
-			for key in keys:
-				if key not in self.data: self.data[key] = [g.proto.coin_amt('0')] * 3
-				for j in ([],[0])[confs==0] + [i]:
-					self.data[key][j] += d['amount']
+			conf_level = 0 if not d['confirmations'] else 1 if d['confirmations'] < self.minconf else 2
+
+			self.data['TOTAL'][conf_level] += d['amount']
+			self.data[key][conf_level] += d['amount']
+			if d['spendable']:
+				self.data[key][3] += d['amount']
 
 	def format(self):
 		if self.quiet:
@@ -605,11 +609,14 @@ class TwGetBalance(MMGenObject):
 								p=' <{} confirms'.format(self.minconf),
 								c=' >={} confirms'.format(self.minconf))
 			for key in sorted(self.data):
+				if not any(self.data[key]): continue
 				o += self.fs.format(**dict(zip(
 							('w','u','p','c'),
-							[key+':'] + [a.fmt(color=True,suf=' '+g.coin) for a in self.data[key]]
+							[key+':'] + [a.fmt(color=True,suf=' '+g.dcoin) for a in self.data[key]]
 							)))
 
-		if 'SPENDABLE' in self.data:
-			o += red('Warning: this wallet contains PRIVATE KEYS for the SPENDABLE balance!\n')
+		for key,vals in self.data.items():
+			if key == 'TOTAL': continue
+			if vals[3]:
+				o += red('Warning: this wallet contains PRIVATE KEYS for {} outputs!\n'.format(key))
 		return o
