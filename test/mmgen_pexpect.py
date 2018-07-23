@@ -50,6 +50,7 @@ def my_send(p,t,delay=send_delay,s=False):
 	return ret
 
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
+
 	quo = ('',"'")[type(s) == str]
 
 	if not silent:

@@ -41,9 +41,13 @@ opts_data = lambda: {
                        {fu} (an integer followed by {fl}).
                        See FEE SPECIFICATION below.  If omitted, fee will be
                        calculated using network fee estimation.
+-g, --tx-gas=        g Specify start gas amount in Wei (ETH only)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
+-I, --inputs=        i Specify transaction inputs (comma-separated list of
+                       MMGen IDs or coin addresses).  Note that ALL unspent
+                       outputs associated with each address will be included.
 -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
                        is required only for brainwallet and incognito inputs
                        with non-standard (< {g.seed_len}-bit) seed lengths.
@@ -94,9 +98,13 @@ kl = get_keylist(opt)
 if kl and kal: kl.remove_dup_keys(kal)
 
 tx = MMGenTX(caller='txdo')
+
 tx.create(cmd_args,int(opt.locktime or 0))
+
 txsign(tx,seed_files,kl,kal)
+
 tx.write_to_file(ask_write=False)
 
 tx.send(exit_on_fail=True)
+
 tx.write_to_file(ask_overwrite=False,ask_write=False)

@@ -1,6 +1,6 @@
-8f7b85
-ETH KOVAN F04889 0.123 20180530_125230 7513928
-{"nonce": "0", "chainId": "0x2a", "from": "97ccc3a117b3696340c42561361054b1c9c793d5", "to": "07f575951e67f855ceffe512ee33a362e177924f", "amt": "0.123", "gasPrice": "0.000000008"}
+bc835b
+ETH KOVAN 7EE763 0.123 20180530_125230 7513928
+{"nonce": "0", "chainId": "42", "from": "97ccc3a117b3696340c42561361054b1c9c793d5", "to": "07f575951e67f855ceffe512ee33a362e177924f", "amt": "0.123", "gasPrice": "0.000000008"}
 [{'confs': 0, 'addr': '97ccc3a117b3696340c42561361054b1c9c793d5', 'label': u'', 'amt': '1.234567', 'mmid': '98831F3A:E:1'}]
 [{'mmid': '98831F3A:E:31', 'amt': '0.123', 'addr': '07f575951e67f855ceffe512ee33a362e177924f'}]
 qRHzrPVpZFYxnQvk3atLzUtp41bZupJ2UQNnKe3ZnmqFsEngS6vaCCvesKKy9khzVq6y2RqarVBcZLnjtXxMpbAcdEtyBWiBYmZdoU8SN4uAbroHT1c7gEbmUNVKKdqHD86ZRRqDNpdh1ztmLiMAy3ibM83puwJHNpGGHgUGjZ1RSEgyVKCs2rZ9wXN8rBMibDDPYo1LgtAst2FkB36Mgf4Vf7ekoRAdiRNGd5YZ3RXAVsSdnZcyn4rdeQDMDkCq7JJDoB25eNEuXQutZFUcf2fEfxkMbW1sXJDNFQq

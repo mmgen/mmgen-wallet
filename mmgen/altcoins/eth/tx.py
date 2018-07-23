@@ -28,20 +28,47 @@ from mmgen.obj import *
 from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX,DeserializedTX,mmaddr2coinaddr
 class EthereumMMGenTX(MMGenTX):
 	desc   = 'Ethereum transaction'
-	tx_gas = ETHAmt(21000,'wei') # tx_gas 21000 * gasPrice 50 Gwei = fee 0.00105
-	chg_msg_fs = 'Transaction leaves {} {} in the account'
+	tx_gas = ETHAmt(21000,'wei')    # an approximate number, used for fee estimation purposes
+	start_gas = ETHAmt(21000,'wei') # the actual startgas amt used in the transaction
+									# for simple sends with no data, tx_gas = start_gas = 21000
 	fee_fail_fs = 'Network fee estimation failed'
 	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 	rel_fee_desc = 'gas price'
 	rel_fee_disp = 'gas price in Gwei'
 	txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
 	txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
+	txview_ftr_fs = 'Total in account: {i} {d}\nTotal to spend:   {o} {d}\nTX fee:           {a} {c}{r}\n'
+	txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
-
+	fn_fee_unit = 'Mwei'
 	usr_rel_fee = None # not in MMGenTX
-	txobj_data  = None # ""
+	disable_fee_check = False
+	txobj  = None # ""
+	data = HexStr('')
+
+	def __init__(self,*args,**kwargs):
+		super(EthereumMMGenTX,self).__init__(*args,**kwargs)
+		if hasattr(opt,'tx_gas') and opt.tx_gas:
+			self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
+		if hasattr(opt,'contract_data') and opt.contract_data:
+			self.data = HexStr(open(opt.contract_data).read().strip())
+			self.disable_fee_check = True
+
+	@classmethod
+	def get_receipt(cls,txid):
+		return g.rpch.eth_getTransactionReceipt('0x'+txid)
+
+	@classmethod
+	def get_exec_status(cls,txid):
+		return int(g.rpch.eth_getTransactionReceipt('0x'+txid)['status'],16)
+
+	def is_replaceable(self): return True
+
+	def get_fee_from_tx(self):
+		return self.fee
 
 	def check_fee(self):
+		if self.disable_fee_check: return
 		assert self.fee <= g.proto.max_tx_fee
 
 	def get_hex_locktime(self): return None # TODO
@@ -54,46 +81,65 @@ class EthereumMMGenTX(MMGenTX):
 			return True
 		return False
 
-	# hex data if signed, json if unsigned
-	def check_tx_hex_data(self):
+	# hex data if signed, json if unsigned: see create_raw()
+	def check_txfile_hex_data(self):
 		if self.check_sigs():
 			from ethereum.transactions import Transaction
 			import rlp
 			etx = rlp.decode(self.hex.decode('hex'),Transaction)
-			d = etx.to_dict()
-			self.txobj_data = {
-				'from':     CoinAddr(d['sender'][2:]),
-				'to':       CoinAddr(d['to'][2:]),
-				'amt':      ETHAmt(d['value'],'wei'),
-				'gasPrice': ETHAmt(d['gasprice'],'wei'),
-				'nonce':    ETHNonce(d['nonce'])
-			}
+			d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'
+			for k in ('sender','to','data'):
+				if k in d: d[k] = d[k].replace('0x','',1)
+			o = {   'from':     CoinAddr(d['sender']),
+					'to':       CoinAddr(d['to']) if d['to'] else Str(''),
+					'amt':      ETHAmt(d['value'],'wei'),
+					'gasPrice': ETHAmt(d['gasprice'],'wei'),
+					'startGas': ETHAmt(d['startgas'],'wei'),
+					'nonce':    ETHNonce(d['nonce']),
+					'data':     HexStr(d['data']) }
+			if o['data'] and not o['to']:
+				self.token_addr = TokenAddr(etx.creates.encode('hex'))
 			txid = CoinTxID(etx.hash.encode('hex'))
-			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen tx file"
+			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 		else:
 			d = json.loads(self.hex)
-			self.txobj_data = {
-				'from':     CoinAddr(d['from']),
-				'to':       CoinAddr(d['to']),
-				'amt':      ETHAmt(d['amt']),
-				'gasPrice': ETHAmt(d['gasPrice']),
-				'nonce':    ETHNonce(d['nonce']),
-				'chainId':  d['chainId']
-			}
-		self.gasPrice = self.txobj_data['gasPrice']
+			o = {   'from':     CoinAddr(d['from']),
+					'to':       CoinAddr(d['to']) if d['to'] else Str(''),
+					'amt':      ETHAmt(d['amt']),
+					'gasPrice': ETHAmt(d['gasPrice']),
+					'startGas': ETHAmt(d['startGas']),
+					'nonce':    ETHNonce(d['nonce']),
+					'chainId':  Int(d['chainId']),
+					'data':     HexStr(d['data']) }
+		self.tx_gas = o['startGas'] # approximate, but better than nothing
+		self.data = o['data']
+		if o['data'] and not o['to']: self.disable_fee_check = True
+		self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
+		self.txobj = o
+		return d # 'token_addr','decimals' required by subclass
 
-	def create_raw(self):
-		for k in 'input','output':
-			assert len(getattr(self,k+'s')) == 1,'Transaction has more than one {}!'.format(k)
-		self.txobj_data = {
+	def make_txobj(self): # create_raw
+		self.txobj = {
 			'from': self.inputs[0].addr,
-			'to':   self.outputs[0].addr,
-			'amt':  self.outputs[0].amt,
-			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,in_eth=True),
+			'to':   self.outputs[0].addr if self.outputs else Str(''),
+			'amt':  self.outputs[0].amt if self.outputs else ETHAmt(0),
+			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
+			'startGas': self.start_gas,
 			'nonce': ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16)),
-			'chainId': g.rpch.parity_chainId()
+			'chainId': Int(g.rpch.parity_chainId(),16),
+			'data':  self.data,
 		}
-		self.hex = json.dumps(dict([(k,str(v))for k,v in self.txobj_data.items()]))
+
+	# Instead of serializing tx data as with BTC, just create a JSON dump.
+	# This complicates things but means we avoid using the rlp library to deserialize the data,
+	# thus removing an attack vector
+	def create_raw(self):
+		assert len(self.inputs) == 1,'Transaction has more than one input!'
+		o_ok = (0,1) if self.data else (1,)
+		o_num = len(self.outputs)
+		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
+		self.make_txobj()
+		self.hex = json.dumps(dict([(k,str(v))for k,v in self.txobj.items()]))
 		self.update_txid()
 
 	def del_output(self,idx): pass
@@ -105,12 +151,15 @@ class EthereumMMGenTX(MMGenTX):
 		self.txid = MMGenTxID(make_chksum_6(self.hex).upper())
 
 	def get_blockcount(self):
-		return int(g.rpch.eth_blockNumber(),16)
+		return Int(g.rpch.eth_blockNumber(),16)
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
-		if lc != 1:
-			fs = '{} output{} specified, but Ethereum transactions must have only one'
+
+		if lc == 0 and self.data:
+			return
+		elif lc != 1:
+			fs = '{} output{} specified, but Ethereum transactions must have exactly one'
 			die(1,fs.format(lc,suf(lc)))
 
 		a = list(cmd_args)[0]
@@ -123,6 +172,9 @@ class EthereumMMGenTX(MMGenTX):
 				die(2,"{}: invalid subargument in command-line argument '{}'".format(a1,a))
 		else:
 			die(2,'{}: invalid command-line argument'.format(a))
+
+		if not self.outputs:
+			die(2,'At least one output must be specified on the command line')
 
 	def select_unspent(self,unspent):
 		prompt = 'Enter an account to spend from: '
@@ -142,13 +194,13 @@ class EthereumMMGenTX(MMGenTX):
 	def get_relay_fee(self): return ETHAmt(0) # TODO
 
 	# given absolute fee in ETH, return gas price in Gwei using tx_gas
-	def fee_abs2rel(self,abs_fee,in_eth=False): # in_eth not in MMGenTX
+	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
 		ret = ETHAmt(int(abs_fee.toWei() / self.tx_gas.toWei()),'wei')
-		return ret if in_eth else ret.toGwei()
+		return ret if to_unit == 'eth' else ret.to_unit(to_unit)
 
 	# get rel_fee (gas price) from network, return in native wei
 	def get_rel_fee_from_network(self):
-		return int(g.rpch.eth_gasPrice(),16),'eth_gasPrice' # ==> rel_fee,fe_type
+		return Int(g.rpch.eth_gasPrice(),16),'eth_gasPrice' # ==> rel_fee,fe_type
 
 	# given rel fee and units, return absolute fee using tx_gas
 	def convert_fee_spec(self,foo,units,amt,unit):
@@ -157,7 +209,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	# given rel fee in wei, return absolute fee using tx_gas (not in MMGenTX)
 	def fee_rel2abs(self,rel_fee):
-		assert type(rel_fee) is int,"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
+		assert type(rel_fee) in (int,Int),"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
 		return ETHAmt(rel_fee * self.tx_gas.toWei(),'wei')
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.tx_fee_adj
@@ -171,6 +223,8 @@ class EthereumMMGenTX(MMGenTX):
 		abs_fee = self.process_fee_spec(tx_fee,None,on_fail='return')
 		if abs_fee == False:
 			return False
+		elif self.disable_fee_check:
+			return abs_fee
 		elif abs_fee > g.proto.max_tx_fee:
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
 			msg(m.format(abs_fee.hl(),desc,g.proto.max_tx_fee.hl(),c=g.coin))
@@ -181,24 +235,66 @@ class EthereumMMGenTX(MMGenTX):
 	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
 		m = {}
 		for k in ('in','out'):
-			m[k] = getattr(self,k+'puts')[0].mmid
-			m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
+			if len(getattr(self,k+'puts')):
+				m[k] = getattr(self,k+'puts')[0].mmid if len(getattr(self,k+'puts')) else ''
+				m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
 		fs = """From:      {}{f_mmid}
 				To:        {}{t_mmid}
-				Amount:    {} ETH
+				Amount:    {} {c}
 				Gas price: {g} Gwei
-				Nonce:     {}\n\n""".replace('\t','')
+				Start gas: {G} Kwei
+				Nonce:     {}
+				Data:      {d}
+				\n""".replace('\t','')
 		keys = ('from','to','amt','nonce')
-		return fs.format(   *(self.txobj_data[k].hl() for k in keys),
-							g=yellow(str(self.txobj_data['gasPrice'].toGwei())),
-							t_mmid=m['out'],
+		ld = len(self.txobj['data'])
+		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in keys),
+							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld/2) if ld else Str('None'),
+							c=g.dcoin if len(self.outputs) else '',
+							g=yellow(str(self.txobj['gasPrice'].toGwei())),
+							G=yellow(str(self.txobj['startGas'].toKwei())),
+							t_mmid=m['out'] if len(self.outputs) else '',
 							f_mmid=m['in'])
 
 	def format_view_abs_fee(self):
-		return self.fee_rel2abs(self.txobj_data['gasPrice'].toWei()).hl()
+		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
+		note = ' (max)' if self.data else ''
+		return fee.hl() + note
 
 	def format_view_rel_fee(self,terse): return ''
 	def format_view_verbose_footer(self): return '' # TODO
+
+	def final_inputs_ok_msg(self,change_amt):
+		m = "Transaction leaves {} {} in the sender's account"
+		return m.format(g.proto.coin_amt(change_amt).hl(),g.coin)
+
+	def do_sign(self,d,wif,tx_num_str):
+
+		d_in = {'to':       d['to'].decode('hex'),
+				'startgas': d['startGas'].toWei(),
+				'gasprice': d['gasPrice'].toWei(),
+				'value':    d['amt'].toWei() if d['amt'] else 0,
+				'nonce':    d['nonce'],
+				'data':     d['data'].decode('hex')}
+
+		msg_r('Signing transaction{}...'.format(tx_num_str))
+
+		try:
+			from ethereum.transactions import Transaction
+			etx = Transaction(**d_in)
+			etx.sign(wif,d['chainId'])
+			import rlp
+			self.hex = rlp.encode(etx).encode('hex')
+			self.coin_txid = CoinTxID(etx.hash.encode('hex'))
+			msg('OK')
+			if d['data']:
+				self.token_addr = TokenAddr(etx.creates.encode('hex'))
+		except Exception as e:
+			m = "{!r}: transaction signing failed!"
+			msg(m.format(e[0]))
+			return False
+
+		return self.check_sigs()
 
 	def sign(self,tx_num_str,keys): # return true or false; don't exit
 
@@ -209,32 +305,7 @@ class EthereumMMGenTX(MMGenTX):
 		if not self.check_correct_chain(on_fail='return'):
 			return False
 
-		wif = keys[0].sec.wif
-		d = self.txobj_data
-
-		out = { 'to':       '0x'+d['to'],
-				'startgas': self.tx_gas.toWei(),
-				'gasprice': d['gasPrice'].toWei(),
-				'value':    d['amt'].toWei(),
-				'nonce':    d['nonce'],
-				'data':     ''}
-
-		msg_r('Signing transaction{}...'.format(tx_num_str))
-
-		try:
-			from ethereum.transactions import Transaction
-			etx = Transaction(**out)
-			etx.sign(wif,int(d['chainId'],16))
-			import rlp
-			self.hex = rlp.encode(etx).encode('hex')
-			self.coin_txid = CoinTxID(etx.hash.encode('hex'))
-			msg('OK')
-		except Exception as e:
-			m = "{!r}: transaction signing failed!"
-			msg(m.format(e[0]))
-			return False
-
-		return self.check_sigs()
+		return self.do_sign(self.txobj,keys[0].sec.wif,tx_num_str)
 
 	def get_status(self,status=False): pass # TODO
 
@@ -247,9 +318,9 @@ class EthereumMMGenTX(MMGenTX):
 
 		bogus_send = os.getenv('MMGEN_BOGUS_SEND')
 
-		fee = self.fee_rel2abs(self.txobj_data['gasPrice'].toWei())
+		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
 
-		if fee > g.proto.max_tx_fee:
+		if not self.disable_fee_check and fee > g.proto.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				fee,g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
 
@@ -275,6 +346,15 @@ class EthereumMMGenTX(MMGenTX):
 			self.add_blockcount()
 			return True
 
-class EthereumMMGenBumpTX(MMGenBumpTX): pass
+class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
+
+	def choose_output(self): pass
+
+	def set_min_fee(self):
+		self.min_fee = ETHAmt(self.fee * Decimal('1.101'))
+
+	def update_fee(self,foo,fee):
+		self.fee = fee
+
 class EthereumMMGenSplitTX(MMGenSplitTX): pass
 class EthereumDeserializedTX(DeserializedTX): pass

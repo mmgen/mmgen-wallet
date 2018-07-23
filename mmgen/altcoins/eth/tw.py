@@ -140,10 +140,9 @@ class EthereumTrackingWallet(TrackingWallet):
 			m = "Address '{}' not found in '{}' section of tracking wallet"
 			return ('rpcfail',(None,2,m.format(coinaddr,self.data_root_desc())))
 
-# Use consistent naming, even though Ethereum doesn't have unspent outputs
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
 
-	show_txid = False
+	disp_type = 'eth'
 	can_group = False
 	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
 	desc    = 'account balances'
@@ -155,32 +154,36 @@ Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
-		super(type(self),self).do_sort(key=key,reverse=reverse)
+		super(EthereumTwUnspentOutputs,self).do_sort(key=key,reverse=reverse)
+
+	def get_addr_bal(self,addr):
+		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
 
 	def get_unspent_rpc(self):
 		rpc_init()
 		return map(lambda d: {
 				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
 				'address': d['addr'],
-				'amount': ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei'),
+				'amount': self.get_addr_bal(d['addr']),
 				'confirmations': 0, # TODO
 				}, TrackingWallet().sorted_list())
 
 class EthereumTwAddrList(TwAddrList):
 
 	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
-		tw = TrackingWallet().mmid_ordered_dict()
-		self.total = g.proto.coin_amt('0')
 
 		rpc_init()
-#		cur_blk = int(g.rpch.eth_blockNumber(),16)
+		if g.token: self.token = Token(g.token)
+
+		tw = TrackingWallet().mmid_ordered_dict()
+		self.total = g.proto.coin_amt('0')
 
 		from mmgen.obj import CoinAddr
 		for mmid,d in tw.items():
 #			if d['confirmations'] < minconf: continue
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
-			bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+d['addr']),16),'wei')
+			bal = self.get_addr_balance(d['addr'])
 			if bal == 0 and not showempty:
 				if not label.comment: continue
 				if not all_labels: continue
@@ -190,6 +193,9 @@ class EthereumTwAddrList(TwAddrList):
 			self[label.mmid]['lbl'].mmid.confs = 9999 # TODO
 			self[label.mmid]['amt'] += bal
 			self.total += bal
+
+	def get_addr_balance(self,addr):
+		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
 
 from mmgen.tw import TwGetBalance
 class EthereumTwGetBalance(TwGetBalance):

@@ -336,13 +336,14 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			m = "{!r}: value cannot be converted to {} ({})"
 			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
 
-	def toSatoshi(self): return int(Decimal(self) / self.satoshi)
+	def toSatoshi(self):    return int(Decimal(self) / self.satoshi)
+	def to_unit(self,unit): return int(Decimal(self) / getattr(self,unit))
 
 	@classmethod
 	def fmtc(cls):
 		raise NotImplementedError
 
-	def fmt(self,fs=None,color=False,suf=''):
+	def fmt(self,fs=None,color=False,suf='',prec=1000):
 		if fs == None: fs = self.amt_fs
 		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
 		if '.' in fs:
@@ -350,9 +351,9 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			ss = s.split('.',1)
 			if len(ss) == 2:
 				a,b = ss
-				ret = a.rjust(p1) + '.' + (b+suf).ljust(p2+len(suf))
+				ret = a.rjust(p1) + '.' + ((b+suf).ljust(p2+len(suf)))[:prec]
 			else:
-				ret = s.rjust(p1) + suf + ' ' * (p2+1)
+				ret = s.rjust(p1) + suf + (' ' * (p2+1))[:prec+1-len(suf)]
 		else:
 			ret = s.ljust(int(fs))
 		return self.colorize(ret,color=color)
@@ -424,7 +425,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	def is_for_chain(self,chain):
 
 		from mmgen.globalvars import g
-		if g.coin in ('ETH','ETC'):
+		if g.proto.__name__[:8] == 'Ethereum':
 			return True
 
 		def pfx_ok(pfx):
@@ -561,6 +562,9 @@ class HexStr(str,Hilite,InitErrors):
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} (value is {})"
 			return cls.init_fail(m.format(s,cls.__name__,e[0]),on_fail)
+
+class Str(str,Hilite): pass
+class Int(int,Hilite): pass
 
 class HexStrWithWidth(HexStr):
 	color = 'nocolor'

@@ -74,7 +74,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 			coin_addr = ad_f.mmaddr2coinaddr(mmaddr)
 			if coin_addr:
 				msg(wmsg('addr_in_addrfile_only').format(mmaddr))
-				if not keypress_confirm('Continue anyway?'):
+				if not (opt.yes or keypress_confirm('Continue anyway?')):
 					sys.exit(1)
 			else:
 				die(2,wmsg('addr_not_found').format(mmaddr))
@@ -212,7 +212,6 @@ class MMGenTX(MMGenObject):
 	sig_ext  = 'sigtx'
 	txid_ext = 'txid'
 	desc     = 'transaction'
-	chg_msg_fs = 'Transaction produces {} {} in change'
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 	rel_fee_desc = 'satoshis per byte'
@@ -222,6 +221,8 @@ class MMGenTX(MMGenObject):
 	txview_ftr_fs = 'Total input:  {i} {d}\nTotal output: {o} {d}\nTX fee:       {a} {c}{r}\n'
 	txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
 	usr_fee_prompt = 'Enter transaction fee: '
+	fee_is_approximate = False
+	fn_fee_unit = 'satoshi'
 
 	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	msg_no_change_output = """
@@ -291,8 +292,6 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.caller      = caller
 		self.locktime    = None
 
-		g.dcoin = g.dcoin or g.coin
-
 		if filename:
 			self.parse_tx_file(filename,coin_sym_only=coin_sym_only,silent_open=silent_open)
 			if coin_sym_only: return
@@ -330,6 +329,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.pop(idx)
 
 	def sum_outputs(self,exclude=None):
+		if not len(self.outputs): return g.proto.coin_amt(0)
 		olist = self.outputs if exclude == None else \
 			self.outputs[:exclude] + self.outputs[exclude+1:]
 		return g.proto.coin_amt(sum(e.amt for e in olist))
@@ -484,8 +484,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return ret
 
 	# convert absolute BTC fee to satoshis-per-byte using estimated size
-	def fee_abs2rel(self,abs_fee):
-		return int(abs_fee/g.proto.coin_amt.min_coin_unit/self.estimate_size())
+	def fee_abs2rel(self,abs_fee,to_unit=None):
+		unit = getattr(g.proto.coin_amt,to_unit or 'min_coin_unit')
+		return int(abs_fee / unit / self.estimate_size())
 
 	def get_rel_fee_from_network(self): # rel_fee is in BTC/kB
 		try:
@@ -559,9 +560,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				abs_fee = self.convert_and_check_fee(tx_fee,desc)
 			if abs_fee:
 				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
-				p = u'{} TX fee{}: {} {} ({} {})\n'.format(
+				p = u'{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
 						m,
+						('',u'≈')[self.fee_is_approximate],
 						abs_fee.hl(),
 						g.coin,
 						pink(str(self.fee_abs2rel(abs_fee))),
@@ -953,7 +955,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.txid,
 			('-'+g.dcoin,'')[g.coin=='BTC'],
 			self.send_amt,
-			('',',{}'.format(self.fee_abs2rel(self.get_fee_from_tx())))[self.is_rbf()],
+			('',',{}'.format(self.fee_abs2rel(
+								self.get_fee_from_tx(),to_unit=self.fn_fee_unit))
+							)[self.is_replaceable()],
 			('',',tl={}'.format(tl))[bool(tl)],
 			tn,self.ext,
 			x=u'-α' if g.debug_utf8 else '')
@@ -991,11 +995,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				get_char('Press any key to continue: ')
 				msg('')
 
-# 	def is_rbf_from_rpc(self):
+# 	def is_replaceable_from_rpc(self):
 # 		dec_tx = g.rpch.decoderawtransaction(self.hex)
 # 		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
 
-	def is_rbf(self):
+	def is_replaceable(self):
 		return self.inputs[0].sequence == g.max_int - 2
 
 	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
@@ -1075,14 +1079,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			a=self.send_amt.hl(),
 			c=g.dcoin,
 			t=self.timestamp,
-			r=(red('False'),green('True'))[self.is_rbf()],
+			r=(red('False'),green('True'))[self.is_replaceable()],
 			s=self.marked_signed(color=True),
 			l=(green('None'),orange(strfmt_locktime(self.locktime,terse=True)))[bool(self.locktime)])
 
 		if self.chain != 'mainnet':
 			out += green('Chain: {}\n'.format(self.chain.upper()))
 		if self.coin_txid:
-			out += '{} TxID: {}\n'.format(g.dcoin,self.coin_txid.hl())
+			out += '{} TxID: {}\n'.format(g.coin,self.coin_txid.hl())
 		enl = ('\n','')[bool(terse)]
 		out += enl
 		if self.label:
@@ -1101,7 +1105,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		return out # TX label might contain non-ascii chars
 
-	def check_tx_hex_data(self):
+	def check_txfile_hex_data(self):
 		self.hex = HexStr(self.hex,on_fail='raise')
 
 	def parse_tx_file(self,infile,coin_sym_only=False,silent_open=False):
@@ -1116,7 +1120,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
 			assert type(d) == list,'{} data not a list!'.format(desc)
-			assert len(d),'no {}!'.format(desc)
+			if not (desc == 'outputs' and g.coin == 'ETH'): # ETH txs can have no outputs
+				assert len(d),'no {}!'.format(desc)
 			for e in d: e['amt'] = g.proto.coin_amt(e['amt'])
 			io,io_list = (
 				(MMGenTX.MMGenTxOutput,MMGenTX.MMGenTxOutputList),
@@ -1179,7 +1184,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'block count in metadata'
 			self.blockcount = int(blockcount)
 			desc = 'transaction hex data'
-			self.check_tx_hex_data()
+			self.check_txfile_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,self.coin
@@ -1193,6 +1198,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		# test doesn't work for Ethereum: test and mainnet addrs have same format
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
+
+		if self.dcoin: self.set_g_token()
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		for a in cmd_args:
@@ -1219,6 +1226,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			fs = '{} Segwit address requested on the command line, but Segwit is not active on this chain'
 			rdie(2,fs.format(g.proj_name))
 
+		if not self.outputs:
+			die(2,'At least one output must be specified on the command line')
+
 	def get_outputs_from_cmdline(self,cmd_args):
 		from mmgen.addr import AddrList,AddrData
 		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
@@ -1232,9 +1242,6 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		ad_w = AddrData(source='tw')
 
 		self.process_cmd_args(cmd_args,ad_f,ad_w)
-
-		if not self.outputs:
-			die(2,'At least one output must be specified on the command line')
 
 		self.add_mmaddrs_to_outputs(ad_w,ad_f)
 		self.check_dup_addrs('outputs')
@@ -1250,9 +1257,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						return selected
 					msg('Unspent output number must be <= {}'.format(len(unspent)))
 
-	def check_sufficient_funds(self,inputs,foo):
-		if self.send_amt > inputs:
-			msg(self.msg_low_coin.format(self.send_amt-inputs,g.coin))
+	def check_sufficient_funds(self,inputs_sum,foo):
+		if self.send_amt > inputs_sum:
+			msg(self.msg_low_coin.format(self.send_amt-inputs_sum,g.coin))
 			return False
 		return True
 
@@ -1262,23 +1269,55 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def warn_insufficient_chg(self,change_amt):
 		msg(self.msg_low_coin.format(g.proto.coin_amt(-change_amt).hl(),g.coin))
 
+	def final_inputs_ok_msg(self,change_amt):
+		m = 'Transaction produces {} {} in change'
+		return m.format(g.proto.coin_amt(change_amt).hl(),g.coin)
+
+	def select_unspent_cmdline(self,unspent):
+		sel_nums = []
+		for i in opt.inputs.split(','):
+			ls = len(sel_nums)
+			if is_mmgen_id(i):
+				for j in range(len(unspent)):
+					if unspent[j].twmmid == i:
+						sel_nums.append(j+1)
+			elif is_coin_addr(i):
+				for j in range(len(unspent)):
+					if unspent[j].addr == i:
+						sel_nums.append(j+1)
+			else:
+				die(1,"'{}': not an MMGen ID or coin address".format(i))
+
+			ldiff = len(sel_nums) - ls
+			if ldiff:
+				sel_inputs = ','.join([str(i) for i in sel_nums[-ldiff:]])
+				ul = unspent[sel_nums[-1]-1]
+				mmid_disp = ' (' + ul.twmmid + ')' if ul.twmmid.type == 'mmgen' else ''
+				msg('Adding input{}: {} {}{}'.format(suf(ldiff),sel_inputs,ul.addr,mmid_disp))
+			else:
+				die(1,"'{}': address not found in tracking wallet".format(i))
+
+		return set(sel_nums) # silently discard duplicates
+
 	def get_inputs_from_user(self,tw):
 
 		while True:
-			sel_nums = self.select_unspent(tw.unspent)
+			us_f = ('select_unspent','select_unspent_cmdline')[bool(opt.inputs)]
+			sel_nums = getattr(self,us_f)(tw.unspent)
+
 			msg('Selected output{}: {}'.format(suf(sel_nums,'s'),' '.join(map(str,sel_nums))))
 
 			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
 
-			t_inputs = sum(s.amt for s in sel_unspent)
-			if not self.check_sufficient_funds(t_inputs,sel_unspent):
+			inputs_sum = sum(s.amt for s in sel_unspent)
+			if not self.check_sufficient_funds(inputs_sum,sel_unspent):
 				continue
 
 			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
 			if non_mmaddrs and self.caller != 'txdo':
 				msg(self.msg_non_mmgen_inputs.format(
 					', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
-				if not keypress_confirm('Accept?'):
+				if not (opt.yes or keypress_confirm('Accept?')):
 					continue
 
 			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
@@ -1287,9 +1326,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 			change_amt = self.get_change_amt()
 
-			if change_amt >= 0:
-				p = self.chg_msg_fs.format(change_amt.hl(),g.coin)
-				if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+			if change_amt >= 0: # TODO: show both ETH and token amts remaining
+				p = self.final_inputs_ok_msg(change_amt)
+				if opt.yes or keypress_confirm(p+'. OK?',default_yes=True):
 					if opt.yes: msg(p)
 					return change_amt
 			else:
@@ -1309,7 +1348,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		from mmgen.tw import TwUnspentOutputs
 		tw = TwUnspentOutputs(minconf=opt.minconf)
-		tw.view_and_sort(self)
+
+		if not opt.inputs:
+			tw.view_and_sort(self)
+
 		tw.display_total()
 
 		if do_info: sys.exit(0)
@@ -1334,7 +1376,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		else:
 			self.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
 
-		if not self.send_amt:
+		if not self.send_amt and len(self.outputs):
 			self.send_amt = change_amt
 
 		if not opt.yes:
@@ -1360,15 +1402,18 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 class MMGenBumpTX(MMGenTX):
 
+	def __new__(cls,*args,**kwargs):
+		return MMGenTX.__new__(altcoin_subclass(cls,'tx','MMGenBumpTX'),*args,**kwargs)
+
 	min_fee = None
 	bump_output_idx = None
 
 	def __init__(self,filename,send=False):
 
-		super(type(self),self).__init__(filename)
+		super(MMGenBumpTX,self).__init__(filename)
 
-		if not self.is_rbf():
-			die(1,"Transaction '{}' is not replaceable (RBF)".format(self.txid))
+		if not self.is_replaceable():
+			die(1,"Transaction '{}' is not replaceable".format(self.txid))
 
 		# If sending, require tx to have been signed
 		if send:
@@ -1379,6 +1424,11 @@ class MMGenBumpTX(MMGenTX):
 
 		self.coin_txid = ''
 		self.mark_raw()
+
+	def check_bumpable(self):
+		if not [o.amt for o in self.outputs if o.amt >= self.min_fee]:
+			die(1,'Transaction cannot be bumped.' +
+			'\nAll outputs have less than the minimum fee ({} {})'.format(self.min_fee,g.coin))
 
 	def choose_output(self):
 		chg_idx = self.get_chg_output_idx()
@@ -1412,15 +1462,18 @@ class MMGenBumpTX(MMGenTX):
 	def set_min_fee(self):
 		self.min_fee = self.sum_inputs() - self.sum_outputs() + self.get_relay_fee()
 
+	def update_fee(self,op_idx,fee):
+		self.update_output_amt(op_idx,self.sum_inputs()-self.sum_outputs(exclude=op_idx)-fee)
+
 	def convert_and_check_fee(self,tx_fee,desc):
-		ret = super(type(self),self).convert_and_check_fee(tx_fee,desc)
+		ret = super(MMGenBumpTX,self).convert_and_check_fee(tx_fee,desc)
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} {})'.format(
-				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee),self.rel_fee_desc,c=g.coin))
+				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee.hl()),self.rel_fee_desc,c=g.coin))
 			return False
 		output_amt = self.outputs[self.bump_output_idx].amt
 		if ret >= output_amt:
-			msg('{} {c}: {} fee too large. Maximum fee: <{} {c}'.format(ret,desc,output_amt,c=g.coin))
+			msg('{} {c}: {} fee too large. Maximum fee: <{} {c}'.format(ret.hl(),desc,output_amt.hl(),c=g.coin))
 			return False
 		return ret
 

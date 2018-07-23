@@ -102,20 +102,18 @@ if not silent:
 
 tx.set_min_fee()
 
-if not [o.amt for o in tx.outputs if o.amt >= tx.min_fee]:
-	die(1,'Transaction cannot be bumped.' +
-	'\nAll outputs have less than the minimum fee ({} {})'.format(tx.min_fee,g.coin))
+tx.check_bumpable()
 
 msg('Creating new transaction')
 
 op_idx = tx.choose_output()
 
 if not silent:
-	msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee,g.coin))
+	msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),g.coin))
 
 fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
-tx.update_output_amt(op_idx,tx.sum_inputs()-tx.sum_outputs(exclude=op_idx)-fee)
+tx.update_fee(op_idx,fee)
 
 d = tx.get_fee_from_tx()
 assert d == fee and d <= g.proto.max_tx_fee

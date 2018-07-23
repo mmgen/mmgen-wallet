@@ -64,6 +64,7 @@ def _b58chk_decode(s):
 class BitcoinProtocol(MMGenObject):
 	name            = 'bitcoin'
 	daemon_name     = 'bitcoind'
+	daemon_family   = 'bitcoind'
 	addr_ver_num    = { 'p2pkh': ('00','1'), 'p2sh':  ('05','3') }
 	wif_ver_num     = { 'std': '80' }
 	mmtypes         = ('L','C','S','B')
@@ -301,6 +302,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 	data_subdir = ''
 	daemon_name = 'parity'
+	daemon_family = 'parity'
 	rpc_port    = 8545
 	mmcaps      = ('key','addr','rpc')
 	coin_amt    = ETHAmt

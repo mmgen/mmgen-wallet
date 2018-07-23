@@ -86,6 +86,7 @@ def opt_postproc_initializations():
 	if g.platform == 'win': start_mscolor()
 
 	g.coin = g.coin.upper() # allow user to use lowercase
+	g.dcoin = g.coin
 
 def set_data_dir_root():
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
@@ -152,7 +153,11 @@ def override_from_cfg_file(cfg_data):
 		if name in g.cfg_file_opts:
 			pfx,cfg_var = name.split('_',1)
 			if pfx in CoinProtocol.coins:
-				cls,attr = CoinProtocol(pfx,False),cfg_var
+				tn = False
+				cv1,cv2 = cfg_var.split('_',1)
+				if cv1 in ('mainnet','testnet'):
+					tn,cfg_var = (cv1 == 'testnet'),cv2
+				cls,attr = CoinProtocol(pfx,tn),cfg_var
 			else:
 				cls,attr = g,name
 			setattr(cls,attr,set_for_type(val,getattr(cls,attr),attr,src=g.cfg_file))
@@ -339,6 +344,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 def opt_is_tx_fee(val,desc):
 	from mmgen.tx import MMGenTX
 	ret = MMGenTX().process_fee_spec(val,224,on_fail='return')
+	if opt.contract_data or opt.tx_gas: ret = None # Non-standard startgas: disable fee checking
 	if ret == False:
 		msg("'{}': invalid {}\n(not a {} amount or {} specification)".format(
 				val,desc,g.coin.upper(),MMGenTX().rel_fee_desc))
@@ -495,7 +501,8 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_in_list(val.lower(),CoinProtocol.coins.keys(),'coin'): return False
 		elif key == 'rbf':
 			if not g.proto.cap('rbf'):
-				die(1,'--rbf requested, but {} does not support replace-by-fee transactions'.format(g.coin))
+				msg('--rbf requested, but {} does not support replace-by-fee transactions'.format(g.coin))
+				return False
 		elif key in ('bob','alice'):
 			from mmgen.regtest import daemon_dir
 			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."

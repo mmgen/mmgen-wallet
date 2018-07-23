@@ -28,26 +28,30 @@ opts_data = lambda: {
 	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 	'sets': ( ('yes', True, 'quiet', True), ),
 	'options': """
--h, --help           Print this help message
---, --longhelp       Print help message for long options (common options)
--a, --tx-fee-adj=  f Adjust transaction fee by factor 'f' (see below)
--B, --no-blank       Don't blank screen before displaying unspent outputs
--c, --comment-file=f Source the transaction's comment from file 'f'
--C, --tx-confs=    c Desired number of confirmations (default: {g.tx_confs})
--d, --outdir=      d Specify an alternate directory 'd' for output
--f, --tx-fee=      f Transaction fee, as a decimal {cu} amount or as
-                     {fu} (an integer followed by {fl}).
-                     See FEE SPECIFICATION below.  If omitted, fee will be
-                     calculated using network fee estimation.
--i, --info           Display unspent outputs and exit
--L, --locktime=    t Lock time (block height or unix seconds) (default: 0)
--m, --minconf=     n Minimum number of confirmations required to spend
-                     outputs (default: 1)
--q, --quiet          Suppress warnings; overwrite files without prompting
--r, --rbf            Make transaction BIP 125 replaceable (replace-by-fee)
--v, --verbose        Produce more verbose output
--V, --vsize-adj=   f Adjust transaction's estimated vsize by factor 'f'
--y, --yes            Answer 'yes' to prompts, suppress non-essential output
+-h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
+-a, --tx-fee-adj=  f  Adjust transaction fee by factor 'f' (see below)
+-B, --no-blank        Don't blank screen before displaying unspent outputs
+-c, --comment-file=f  Source the transaction's comment from file 'f'
+-C, --tx-confs=    c  Desired number of confirmations (default: {g.tx_confs})
+-d, --outdir=      d  Specify an alternate directory 'd' for output
+-f, --tx-fee=      f  Transaction fee, as a decimal {cu} amount or as
+                      {fu} (an integer followed by {fl}).
+                      See FEE SPECIFICATION below.  If omitted, fee will be
+                      calculated using network fee estimation.
+-g, --tx-gas=      g  Specify start gas amount in Wei (ETH only)
+-i, --info            Display unspent outputs and exit
+-I, --inputs=      i  Specify transaction inputs (comma-separated list of
+                      MMGen IDs or coin addresses).  Note that ALL unspent
+                      outputs associated with each address will be included.
+-L, --locktime=    t  Lock time (block height or unix seconds) (default: 0)
+-m, --minconf=     n  Minimum number of confirmations required to spend
+                      outputs (default: 1)
+-q, --quiet           Suppress warnings; overwrite files without prompting
+-r, --rbf             Make transaction BIP 125 replaceable (replace-by-fee)
+-v, --verbose         Produce more verbose output
+-V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
+-y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """,
 	'options_fmt_args': lambda: dict(
 							g=g,cu=g.coin,

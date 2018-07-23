@@ -32,11 +32,12 @@ class TwUnspentOutputs(MMGenObject):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwUnspentOutputs'),*args,**kwargs)
 
 	txid_w = 64
-	show_txid = True
+	disp_type = 'btc'
 	can_group = True
 	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
 	desc = 'unspent outputs'
 	dump_fn_pfx = 'listunspent'
+	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
@@ -49,6 +50,7 @@ Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 		txid     = MMGenListItemAttr('txid','CoinTxID')
 		vout     = MMGenListItemAttr('vout',int,typeconv=False)
 		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
+		amt2     = MMGenListItemAttr('amt2',g.proto.coin_amt.__name__)
 		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr     = MMGenImmutableAttr('addr','CoinAddr')
@@ -78,8 +80,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.sort_key     = 'age'
 		self.do_sort()
 		self.total        = self.get_total_coin()
+		self.disp_prec    = self.get_display_precision()
 
-		g.dcoin = g.dcoin or g.coin
+	def get_display_precision(self):
+		return g.proto.coin_amt.max_prec
 
 	def get_total_coin(self):
 		return sum(i.amt for i in self.unspent)
@@ -157,7 +161,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def format_for_display(self):
 		unsp = self.unspent
-# 		unsp.pdie()
 		self.set_term_columns()
 
 		# allow for 7-digit confirmation nums
@@ -182,16 +185,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.dcoin,self.total.hl())]
 		if g.chain != 'mainnet': out += ['Chain: '+green(g.chain.upper())]
-		if self.show_txid:
-			fs = u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w)
-		else:
-			fs = u' {n:%s} {a} {A} {c:<}' % col1_w
+		fs = {  'btc':   u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w),
+				'eth':   u' {n:%s} {a} {A}' % col1_w }[self.disp_type]
 		out += [fs.format(  n='Num',
 							t='TXid'.ljust(tx_w - 5) + ' Vout',
 							v='',
 							a='Address'.ljust(addr_w),
-							A='Amt({})'.format(g.dcoin).ljust(g.proto.coin_amt.max_prec+4),
-							c=('Confs','Age(d)')[self.show_days])]
+							A='Amt({})'.format(g.dcoin).ljust(self.disp_prec+3),
+							A2=' Amt({})'.format(g.coin).ljust(self.disp_prec+4),
+							c=('Confs','Age(d)')[self.show_days]
+							).rstrip()]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*(addr_w-1)
@@ -214,26 +217,28 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 											else i.txid[:tx_w-len(txdots)]+txdots,
 									v=i.vout,
 									a=addr_out,
-									A=i.amt.fmt(color=True),
-									c=i.days if self.show_days else i.confs))
+									A=i.amt.fmt(color=True,prec=self.disp_prec),
+									A2=(i.amt2.fmt(color=True,prec=self.disp_prec) if i.amt2 is not None else ''),
+									c=i.days if self.show_days else i.confs
+									).rstrip())
 
 		self.fmt_display = '\n'.join(out) + '\n'
-#		unsp.pdie()
 		return self.fmt_display
 
 	def format_for_printing(self,color=False):
 
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
-		if self.show_txid:
-			fs  = ' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,g.proto.coin_amt.max_prec+4)
-		else:
-			fs  = ' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (g.proto.coin_amt.max_prec+4)
+		amt_w = g.proto.coin_amt.max_prec + 4
+		fs = {  'btc':   u' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,amt_w),
+				'eth':   u' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % amt_w
+				}[self.disp_type]
 		out = [fs.format(   n='Num',
 							t='Tx ID,Vout',
 							a='Address'.ljust(addr_w),
 							m='MMGen ID'.ljust(mmid_w+1),
-							A='Amount({})'.format(g.dcoin),
+							A='Amount({})'.format(g.dcoin).ljust(amt_w+1),
+							A2='Amount({})'.format(g.coin),
 							c='Confs',
 							g='Age(d)',
 							l='Label')]
@@ -248,6 +253,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						m=MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen'
 							else 'Non-{}'.format(g.proj_name),width=mmid_w,color=color),
 						A=i.amt.fmt(color=color),
+						A2=(i.amt2.fmt(color=color) if i.amt2 is not None else ''),
 						c=i.confs,
 						g=i.days,
 						l=i.label.hl(color=color) if i.label else
@@ -291,8 +297,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							return n,s
 
 	def view_and_sort(self,tx):
-		fs = 'Total to spend, excluding fees: {} {}\n\n'
-		txos = fs.format(tx.sum_outputs().hl(),g.dcoin) if tx.outputs else ''
+		txos = self.prompt_fs.format(tx.sum_outputs().hl(),g.dcoin) if tx.outputs else ''
 		prompt = txos + self.prompt.strip()
 		self.display()
 		msg(prompt)
@@ -465,7 +470,7 @@ class TwAddrList(MMGenDict):
 				age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'
 				))
 
-		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.coin)])
+		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
 
 class TrackingWallet(MMGenObject):
 
