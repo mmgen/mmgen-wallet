@@ -306,8 +306,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		assert on_fail in ('return','die'),"'{}': invalid value for 'on_fail'".format(on_fail)
 		m = 'Transaction is for {}, but current chain is {}!'.format(self.chain,g.chain)
 		bad = self.chain and g.chain and self.chain != g.chain
-		if bad and g.chain in g.proto.chain_aliases:
-			bad = self.chain not in g.proto.chain_aliases[g.chain]
+		if bad and hasattr(g.proto,'chain_name'):
+			bad = self.chain != g.proto.chain_name
 		if bad:
 			msg(m) if on_fail == 'return' else die(2,m)
 		return not bad

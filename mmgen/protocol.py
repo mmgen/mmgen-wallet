@@ -90,7 +90,6 @@ class BitcoinProtocol(MMGenObject):
 	witness_vernum_hex = '00'
 	witness_vernum     = int(witness_vernum_hex,16)
 	bech32_hrp         = 'bc'
-	chain_aliases      = {}
 
 	@classmethod
 	def is_testnet(cls):
@@ -304,8 +303,8 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	rpc_port    = 8545
 	mmcaps      = ('key','addr','rpc')
 	coin_amt    = ETHAmt
-	chain_aliases = {'mainnet':['foundation'],'testnet':['kovan']}
-
+	max_tx_fee  = ETHAmt('0.005')
+	chain_name  = 'foundation'
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
@@ -324,6 +323,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 class EthereumTestnetProtocol(EthereumProtocol):
 	data_subdir = 'testnet'
 	rpc_port    = 8547 # start Parity with --ports-shift=2
+	chain_name  = 'kovan'
 
 class EthereumClassicProtocol(EthereumProtocol):
 	name   = 'ethereum_classic'
