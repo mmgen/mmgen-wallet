@@ -579,8 +579,8 @@ cfgs = {
 					'359FD5-BCH[6.68868,tl=1320969600].testnet.rawtx'),
 			'ltc': ('AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
 					'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'),
-			'eth': ('4ED554-ETH[0.123].rawtx',
-					'7EE763-ETH[0.123].testnet.rawtx'),
+			'eth': ('88FEFD-ETH[23.45495,40000].rawtx',
+					'B472BD-ETH[23.45495,40000].testnet.rawtx')
 		},
 		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
