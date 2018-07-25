@@ -199,6 +199,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	common_opts_data = """
 --, --accept-defaults     Accept defaults at all prompts
 --, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
+--, --token=t             Specify an ERC20 token by address or symbol
 --, --color=0|1           Disable or enable color output
 --, --force-256-color     Force 256-color output when color is enabled
 --, --daemon-data-dir=d   Specify coin daemon data directory location 'd'
@@ -344,7 +345,9 @@ def init(opts_f,add_opts=[],opt_filter=None):
 def opt_is_tx_fee(val,desc):
 	from mmgen.tx import MMGenTX
 	ret = MMGenTX().process_fee_spec(val,224,on_fail='return')
-	if opt.contract_data or opt.tx_gas: ret = None # Non-standard startgas: disable fee checking
+	# Non-standard startgas: disable fee checking
+	if hasattr(opt,'contract_data') and opt.contract_data: ret = None
+	if hasattr(opt,'tx_gas') and opt.tx_gas:               ret = None
 	if ret == False:
 		msg("'{}': invalid {}\n(not a {} amount or {} specification)".format(
 				val,desc,g.coin.upper(),MMGenTX().rel_fee_desc))
@@ -511,6 +514,17 @@ def check_opts(usr_opts):       # Returns false if any check fails
 		elif key == 'locktime':
 			if not opt_is_int(val,desc): return False
 			if not opt_compares(val,'>',0,desc): return False
+		elif key == 'token':
+			if not 'token' in g.proto.caps:
+				msg("Coin '{}' does not support the --token option".format(g.coin))
+				return False
+			elif len(val) == 40 and is_hex_str(val):
+				pass
+			elif len(val) > 20 or not all(s.isalnum() for s in val):
+				msg("u'{}: invalid parameter for --token option".format(val))
+				return False
+		elif key == 'contract_data':
+			check_infile(val)
 		else:
 			if g.debug: Msg("check_opts(): No test for opt '{}'".format(key))
 

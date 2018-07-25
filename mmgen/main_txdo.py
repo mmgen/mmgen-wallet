@@ -36,6 +36,7 @@ opts_data = lambda: {
 -c, --comment-file=  f Source the transaction's comment from file 'f'
 -C, --tx-confs=      c Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=        d Specify an alternate directory 'd' for output
+-D, --contract-data= D Path to hex-encoded contract data (ETH only)
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or as
                        {fu} (an integer followed by {fl}).
@@ -108,3 +109,6 @@ tx.write_to_file(ask_write=False)
 tx.send(exit_on_fail=True)
 
 tx.write_to_file(ask_overwrite=False,ask_write=False)
+
+if hasattr(tx,'token_addr'):
+	msg('Token address: {}'.format(tx.token_addr.hl()))

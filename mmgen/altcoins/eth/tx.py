@@ -26,6 +26,8 @@ from mmgen.common import *
 from mmgen.obj import *
 
 from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX,DeserializedTX,mmaddr2coinaddr
+from mmgen.altcoins.eth.contract import Token
+
 class EthereumMMGenTX(MMGenTX):
 	desc   = 'Ethereum transaction'
 	tx_gas = ETHAmt(21000,'wei')    # an approximate number, used for fee estimation purposes
@@ -346,6 +348,88 @@ class EthereumMMGenTX(MMGenTX):
 			self.add_blockcount()
 			return True
 
+class EthereumTokenMMGenTX(EthereumMMGenTX):
+	desc   = 'Ethereum token transaction'
+	tx_gas = ETHAmt(52000,'wei')
+	start_gas = ETHAmt(60000,'wei')
+	fee_is_approximate = True
+
+	def check_sufficient_funds(self,inputs_sum,sel_unspent):
+		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+sel_unspent[0].addr),16),'wei')
+		if eth_bal == 0: # we don't know the fee yet
+			msg('This account has no ether to pay for the transaction fee!')
+			return False
+		if self.send_amt > inputs_sum:
+			msg(self.msg_low_coin.format(self.send_amt-inputs_sum,g.dcoin))
+			return False
+		return True
+
+	def final_inputs_ok_msg(self,change_amt):
+		m = u"Transaction leaves ≈{} {} and {} {} in the sender's account"
+		tbal = g.proto.coin_amt(Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt)
+		chg = g.proto.coin_amt(change_amt)
+		return m.format(chg.hl(),g.coin,tbal.hl(),g.dcoin)
+
+	def get_change_amt(self): # here we know the fee
+		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+self.inputs[0].addr),16),'wei')
+		return Decimal(eth_bal) - self.fee
+
+	def set_g_token(self):
+		g.dcoin = self.dcoin
+		if is_hex_str(self.hex): return # for txsend we can leave g.token uninitialized
+		d = json.loads(self.hex)
+		if g.token.upper() == self.dcoin:
+			g.token = d['token_addr']
+		elif g.token != d['token_addr']:
+			m1 = "'{p}': invalid --token parameter for {t} Ethereum token transaction file\n"
+			m2 = "Please use '--token={t}'"
+			die(1,(m1+m2).format(p=g.token,t=self.dcoin))
+
+	def make_txobj(self):
+		super(EthereumTokenMMGenTX,self).make_txobj()
+		t = Token(g.token)
+		o = t.txcreate( self.inputs[0].addr,
+						self.outputs[0].addr,
+						self.outputs[0].amt,
+						self.start_gas,
+						self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'))
+		self.txobj['token_addr'] = self.token_addr = t.addr
+		self.txobj['decimals']   = t.decimals()
+
+	def check_txfile_hex_data(self):
+		d = super(EthereumTokenMMGenTX,self).check_txfile_hex_data()
+		o = self.txobj
+		if self.check_sigs(): # online, from rlp
+			rpc_init()
+			o['token_addr'] = TokenAddr(o['to'])
+			o['amt']        = Token(o['token_addr']).transferdata2amt(o['data'])
+		else:                # offline, from json
+			o['token_addr'] = TokenAddr(d['token_addr'])
+			o['decimals']   = Int(d['decimals'])
+			t = Token(o['token_addr'],o['decimals'])
+			self.data = o['data'] = t.create_data(o['to'],o['amt'])
+
+	def format_view_body(self,*args,**kwargs):
+		return 'Token:     {d} {c}\n{r}'.format(
+			d=self.txobj['token_addr'].hl(),
+			c=blue('(' + g.dcoin + ')'),
+			r=super(EthereumTokenMMGenTX,self).format_view_body(*args,**kwargs))
+
+	def do_sign(self,d,wif,tx_num_str):
+		d = self.txobj
+		msg_r('Signing transaction{}...'.format(tx_num_str))
+		try:
+			t = Token(d['token_addr'],decimals=d['decimals'])
+			tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
+			(self.hex,self.coin_txid) = t.txsign(tx_in,wif,d['from'],chain_id=d['chainId'])
+			msg('OK')
+		except Exception as e:
+			m = "{!r}: transaction signing failed!"
+			msg(m.format(e[0]))
+			return False
+
+		return self.check_sigs()
+
 class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
 
 	def choose_output(self): pass
@@ -355,6 +439,8 @@ class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
 
 	def update_fee(self,foo,fee):
 		self.fee = fee
+
+class EthereumTokenMMGenBumpTX(EthereumTokenMMGenTX,EthereumMMGenBumpTX): pass
 
 class EthereumMMGenSplitTX(MMGenSplitTX): pass
 class EthereumDeserializedTX(DeserializedTX): pass

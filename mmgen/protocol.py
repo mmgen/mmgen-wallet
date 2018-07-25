@@ -309,6 +309,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	max_tx_fee  = ETHAmt('0.005')
 	chain_name  = 'foundation'
 	sign_mode   = 'standalone'
+	caps        = ('token',)
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):

@@ -186,7 +186,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		out  = [self.hdr_fmt.format(' '.join(self.sort_info()),g.dcoin,self.total.hl())]
 		if g.chain != 'mainnet': out += ['Chain: '+green(g.chain.upper())]
 		fs = {  'btc':   u' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w),
-				'eth':   u' {n:%s} {a} {A}' % col1_w }[self.disp_type]
+				'eth':   u' {n:%s} {a} {A}' % col1_w,
+				'token': u' {n:%s} {a} {A} {A2}' % col1_w }[self.disp_type]
 		out += [fs.format(  n='Num',
 							t='TXid'.ljust(tx_w - 5) + ' Vout',
 							v='',
@@ -231,7 +232,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = g.proto.coin_amt.max_prec + 4
 		fs = {  'btc':   u' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,amt_w),
-				'eth':   u' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % amt_w
+				'eth':   u' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % amt_w,
+				'token': u' {n:4} {a} {m} {A:%s} {A2:%s} {c:<8} {g:<6} {l}' % (amt_w,amt_w)
 				}[self.disp_type]
 		out = [fs.format(   n='Num',
 							t='Tx ID,Vout',

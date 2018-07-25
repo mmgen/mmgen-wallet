@@ -1306,7 +1306,6 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			sel_nums = getattr(self,us_f)(tw.unspent)
 
 			msg('Selected output{}: {}'.format(suf(sel_nums,'s'),' '.join(map(str,sel_nums))))
-
 			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
 
 			inputs_sum = sum(s.amt for s in sel_unspent)

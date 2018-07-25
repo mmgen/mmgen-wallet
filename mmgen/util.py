@@ -25,6 +25,7 @@ from hashlib import sha256
 from binascii import hexlify,unhexlify
 from string import hexdigits
 from mmgen.color import *
+from mmgen.exception import *
 
 def msg(s):    sys.stderr.write(s.encode('utf8') + '\n')
 def msg_r(s):  sys.stderr.write(s.encode('utf8'))
@@ -824,6 +825,23 @@ def get_coin_daemon_auth_cookie():
 
 def rpc_init_parity():
 
+	def resolve_token_arg(token_arg):
+		from mmgen.tw import TrackingWallet
+		from mmgen.obj import CoinAddr
+		from mmgen.altcoins.eth.contract import Token
+
+		try:    addr = CoinAddr(token_arg,on_fail='raise')
+		except: addr = TrackingWallet().sym2addr(token_arg)
+		else:   Token(addr) # test for presence in blockchain
+
+		if not addr:
+			m = "'{}': unrecognized token symbol"
+			raise UnrecognizedTokenSymbol,m.format(token_arg)
+
+		sym = Token(addr).symbol().upper()
+		vmsg('ERC20 token resolved: {} ({})'.format(addr,sym))
+		return addr,sym
+
 	from mmgen.rpc import EthereumRPCConnection
 	g.rpch = EthereumRPCConnection(
 				g.rpc_host or 'localhost',
@@ -832,6 +850,8 @@ def rpc_init_parity():
 	if not g.daemon_version: # First call
 		g.daemon_version = g.rpch.parity_versionInfo()['version'] # fail immediately if daemon is geth
 		g.chain = g.rpch.parity_chain()
+		if g.token:
+			(g.token,g.dcoin) = resolve_token_arg(g.token)
 
 	return g.rpch
 

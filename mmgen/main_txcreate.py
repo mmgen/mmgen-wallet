@@ -35,6 +35,7 @@ opts_data = lambda: {
 -c, --comment-file=f  Source the transaction's comment from file 'f'
 -C, --tx-confs=    c  Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=      d  Specify an alternate directory 'd' for output
+-D, --contract-data=D Path to hex-encoded contract data (ETH only)
 -f, --tx-fee=      f  Transaction fee, as a decimal {cu} amount or as
                       {fu} (an integer followed by {fl}).
                       See FEE SPECIFICATION below.  If omitted, fee will be

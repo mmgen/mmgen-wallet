@@ -444,6 +444,9 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		else:
 			return pfx_ok(vn[self.addr_fmt][1])
 
+class TokenAddr(CoinAddr):
+	color = 'blue'
+
 class ViewKey(object):
 	def __new__(cls,s,on_fail='die'):
 		from mmgen.globalvars import g

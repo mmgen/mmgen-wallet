@@ -897,6 +897,44 @@ cmd_group['ethdev'] = (
 	('ethdev_chk_label',           'the label'),
 	('ethdev_remove_label',        'removing the label'),
 
+	('ethdev_token_compile1',       'compiling ERC20 token #1'),
+
+	('ethdev_token_deploy1a',       'deploying ERC20 token #1 (SafeMath)'),
+	('ethdev_token_deploy1b',       'deploying ERC20 token #1 (Owned)'),
+	('ethdev_token_deploy1c',       'deploying ERC20 token #1 (Token)'),
+
+	('ethdev_token_compile2',       'compiling ERC20 token #2'),
+
+	('ethdev_token_deploy2a',       'deploying ERC20 token #2 (SafeMath)'),
+	('ethdev_token_deploy2b',       'deploying ERC20 token #2 (Owned)'),
+	('ethdev_token_deploy2c',       'deploying ERC20 token #2 (Token)'),
+
+	('ethdev_contract_deploy',      'deploying contract (create,sign,send)'),
+
+	('ethdev_token_transfer_funds','transferring token funds from dev to user'),
+	('ethdev_token_addrgen',       'generating token addresses'),
+	('ethdev_token_addrimport',    'importing token addresses'),
+
+	('ethdev_token_txcreate1',     'creating a token transaction'),
+	('ethdev_token_txsign1',       'signing the transaction'),
+	('ethdev_token_txsend1',       'sending the transaction'),
+
+	('ethdev_token_txcreate2',     'creating a token transaction (to burn address)'),
+	('ethdev_token_txbump',        'bumping the transaction fee'),
+
+	('ethdev_token_txsign2',       'signing the transaction'),
+	('ethdev_token_txsend2',       'sending the transaction'),
+
+	('ethdev_del_dev_addr',        "deleting the dev address"),
+
+	('ethdev_bal2',                'the ETH balance'),
+	('ethdev_bal2_getbalance',     'the ETH balance (getbalance)'),
+
+	('ethdev_addrimport_token_burn_addr',"importing the token burn address"),
+
+	('ethdev_token_bal',           'the token balance'),
+	('ethdev_token_bal_getbalance','the token balance (getbalance)'),
+
 	('ethdev_stop',                'stopping parity'),
 )
 
@@ -3250,6 +3288,147 @@ class MMGenTestSuite(object):
 		init_coin('eth')
 		g.proto.rpc_port = 8549
 		rpc_init()
+
+	def ethdev_token_compile(self,name,token_data={}):
+		MMGenExpect(name,'',msg_only=True)
+		cmd_args = ['--{}={}'.format(k,v) for k,v in token_data.items()]
+		silence()
+		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
+		cmd = ['scripts/create-token.py','--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
+		imsg("Executing: {}".format(' '.join(cmd)))
+		subprocess.check_output(cmd)
+		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
+		end_silence()
+		ok()
+
+	def ethdev_token_compile1(self,name):
+		token_data = { 'name':'MMGen Token 1', 'symbol':'MM1', 'supply':10**26, 'decimals':18 }
+		self.ethdev_token_compile(name,token_data)
+
+	def ethdev_token_compile2(self,name):
+		token_data = { 'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10 }
+		self.ethdev_token_compile(name,token_data)
+
+	def ethdev_token_deploy(self,name,num,key,gas,mmgen_cmd='txdo'):
+		self.init_ethdev_common()
+		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
+		fn = os.path.join(cfg['tmpdir'],key+'.bin')
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+		args = ['-B','--tx-fee=8G','--tx-gas={}'.format(gas),'--contract-data='+fn,'--inputs='+eth_addr,'--yes']
+		if mmgen_cmd == 'txdo': args += ['-k',key_fn]
+		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args + args)
+		if mmgen_cmd == 'txcreate':
+			t.written_to_file('Ethereum transaction')
+			tx_fn = get_file_with_ext('[0,8000].rawtx',cfg['tmpdir'],no_dot=True)
+			t = MMGenExpect(name,'mmgen-txsign', eth_args + ['--yes','-k',key_fn,tx_fn],no_msg=True)
+			self.txsign_ui_common(t,name,ni=True,no_ok=True)
+			tx_fn = tx_fn.replace('.rawtx','.sigtx')
+			t = MMGenExpect(name,'mmgen-txsend', eth_args + [tx_fn],no_msg=True)
+
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False,no_ok=True)
+		addr = t.expect_getend('Token address: ')
+		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
+		assert etx.get_exec_status(txid) != 0,"Contract '{}:{}' failed to execute. Aborting".format(num,key)
+		if key == 'Token':
+			write_to_tmpfile(cfg,'token_addr{}'.format(num),addr+'\n')
+			silence()
+			imsg('\nToken #{} ({}) deployed!'.format(num,addr))
+			end_silence()
+		t.ok()
+
+	def ethdev_token_deploy1a(self,name): self.ethdev_token_deploy(name,num=1,key='SafeMath',gas=200000)
+	def ethdev_token_deploy1b(self,name): self.ethdev_token_deploy(name,num=1,key='Owned',gas=250000)
+	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000)
+	def ethdev_token_deploy2a(self,name): self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=200000)
+	def ethdev_token_deploy2b(self,name): self.ethdev_token_deploy(name,num=2,key='Owned',gas=250000)
+	def ethdev_token_deploy2c(self,name): self.ethdev_token_deploy(name,num=2,key='Token',gas=1100000)
+
+	def ethdev_contract_deploy(self,name): # test create,sign,send
+		self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=1100000,mmgen_cmd='txcreate')
+
+	def ethdev_token_transfer_funds(self,name):
+		MMGenExpect(name,'',msg_only=True)
+		sid = cfgs['8']['seed_id']
+		cmd = lambda i: ['mmgen-tool','--coin=eth','gen_addr','{}:E:{}'.format(sid,i),'wallet='+dfl_words]
+		silence()
+		usr_addrs = [subprocess.check_output(cmd(i),stderr=sys.stderr).strip() for i in 11,21]
+		self.init_ethdev_common()
+		from mmgen.altcoins.eth.contract import Token
+		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
+		for i in range(2):
+			tk = Token(read_from_tmpfile(cfg,'token_addr{}'.format(i+1)).strip())
+			imsg('\n'+tk.info())
+			txid = tk.transfer(eth_addr,usr_addrs[i],1000,eth_key,
+								start_gas=ETHAmt(60000,'wei'),gasPrice=ETHAmt(8,'Gwei'))
+			assert etx.get_exec_status(txid) != 0,'Transfer of token funds failed. Aborting'
+			imsg('dev token balance: {}'.format(tk.balance(eth_addr)))
+			imsg('usr{} token balance: {}'.format(i+1,tk.balance(usr_addrs[i])))
+		end_silence()
+		ok()
+
+	def ethdev_token_addrgen(self,name):
+		self.ethdev_addrgen(name,addrs='11-13')
+		self.ethdev_addrgen(name,addrs='21-23')
+
+	def ethdev_token_addrimport(self,name):
+		for n,r in ('1','11-13'),('2','21-23'):
+			tk_addr = read_from_tmpfile(cfg,'token_addr'+n).strip()
+			self.ethdev_addrimport(name,ext='['+r+'].addrs',expect='3/3',add_args=['--token='+tk_addr])
+
+	def ethdev_token_txcreate(self,name,args=[],token='',inputs='1'):
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['--token='+token,'-B','--tx-fee=50G'] + args)
+		self.txcreate_ui_common(t,name,menu=[],
+								input_sels_prompt='to spend from',
+								inputs=inputs,file_desc='Ethereum token transaction',
+								add_comment=ref_tx_label_lat_cyr_gr)
+		return t
+	def ethdev_token_txsign(self,name,ext='',token=''):
+		self.ethdev_txsign(name,ni=True,ext=ext,add_args=['--token='+token])
+	def ethdev_token_txsend(self,name,ext='',token=''):
+		self.ethdev_txsend(name,ext=ext,add_args=['--token=mm1'])
+
+	def ethdev_token_txcreate1(self,name):
+		return self.ethdev_token_txcreate(name,args=['98831F3A:E:12,1.23456'],token='mm1')
+	def ethdev_token_txsign1(self,name):
+		self.ethdev_token_txsign(name,ext='1.23456,50000].rawtx',token='mm1')
+	def ethdev_token_txsend1(self,name):
+		self.ethdev_token_txsend(name,ext='1.23456,50000].sigtx',token='mm1')
+
+	def ethdev_token_txcreate2(self,name):
+		return self.ethdev_token_txcreate(name,args=[eth_burn_addr+','+eth_amt2],token='mm1')
+
+	def ethdev_token_txbump(self,name):
+		self.ethdev_txbump(name,ext=eth_amt2+',50000].rawtx',fee='56G',add_args=['--token=mm1'])
+
+	def ethdev_token_txsign2(self,name):
+		self.ethdev_token_txsign(name,ext=eth_amt2+',50000].rawtx',token='mm1')
+	def ethdev_token_txsend2(self,name):
+		self.ethdev_token_txsend(name,ext=eth_amt2+',50000].sigtx',token='mm1')
+
+	def ethdev_del_dev_addr(self,name):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['remove_address',eth_addr])
+		t.read() # TODO
+		t.ok()
+
+	def ethdev_addrimport_token_burn_addr(self,name):
+		self.ethdev_addrimport_one_addr(name,addr=eth_burn_addr,extra_args=['--token=mm1'])
+
+	def ethdev_bal2(self,name,expect_str=''):
+		self.ethdev_bal(name,expect_str=r'deadbeef.* 999999.12345689012345678')
+
+	def ethdev_bal2_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
+		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen='127.0287876')
+
+	def ethdev_token_bal(self,name):
+		t = MMGenExpect(name,'mmgen-tool', eth_args + ['--token=mm1','twview','wide=1'])
+		t.expect(r'deadbeef.* '+eth_amt2,regex=True)
+		t.read()
+		t.ok()
+
+	def ethdev_token_bal_getbalance(self,name):
+		self.ethdev_bal_getbalance(name,
+			t_non_mmgen='888.111122223333444455',t_mmgen='111.888877776666555545',extra_args=['--token=mm1'])
 
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)

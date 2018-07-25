@@ -26,6 +26,7 @@ from mmgen.common import *
 from mmgen.obj import ETHAmt,TwMMGenID,TwComment,TwLabel
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
+from mmgen.altcoins.eth.contract import Token
 
 class EthereumTrackingWallet(TrackingWallet):
 
@@ -140,6 +141,31 @@ class EthereumTrackingWallet(TrackingWallet):
 			m = "Address '{}' not found in '{}' section of tracking wallet"
 			return ('rpcfail',(None,2,m.format(coinaddr,self.data_root_desc())))
 
+class EthereumTokenTrackingWallet(EthereumTrackingWallet):
+
+	def token_is_in_wallet(self,addr):
+		return addr in self.data['tokens']
+
+	def data_root_desc(self):
+		return 'token ' + Token(g.token).symbol()
+
+	@write_mode
+	def add_token(self,token):
+		msg("Adding token '{}' to tracking wallet.".format(token))
+		self.data['tokens'][token] = {}
+
+	def data_root(self): # create the token data root if necessary
+		if g.token not in self.data['tokens']:
+			self.add_token(g.token)
+		return self.data['tokens'][g.token]
+
+	def sym2addr(self,sym): # online
+		for addr in self.data['tokens']:
+			if Token(addr).symbol().upper() == sym.upper():
+				return addr
+		return None
+
+# No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
 
 	disp_type = 'eth'
@@ -167,6 +193,21 @@ Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
 				'amount': self.get_addr_bal(d['addr']),
 				'confirmations': 0, # TODO
 				}, TrackingWallet().sorted_list())
+
+class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
+
+	disp_type = 'token'
+	prompt_fs = 'Total to spend: {} {}\n\n'
+
+	def get_display_precision(self): return 10
+
+	def get_addr_bal(self,addr):
+		return Token(g.token).balance(addr)
+
+	def get_unspent_data(self):
+		super(type(self),self).get_unspent_data()
+		for e in self.unspent:
+			e.amt2 = ETHAmt(int(g.rpch.eth_getBalance('0x'+e.addr),16),'wei')
 
 class EthereumTwAddrList(TwAddrList):
 
@@ -197,6 +238,11 @@ class EthereumTwAddrList(TwAddrList):
 	def get_addr_balance(self,addr):
 		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
 
+class EthereumTokenTwAddrList(EthereumTwAddrList):
+
+	def get_addr_balance(self,addr):
+		return self.token.balance(addr)
+
 from mmgen.tw import TwGetBalance
 class EthereumTwGetBalance(TwGetBalance):
 
@@ -221,6 +267,11 @@ class EthereumTwGetBalance(TwGetBalance):
 	def get_addr_balance(self,addr):
 		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
 
+class EthereumTokenTwGetBalance(EthereumTwGetBalance):
+
+	def get_addr_balance(self,addr):
+		return Token(g.token).balance(addr)
+
 class EthereumAddrData(AddrData):
 
 	@classmethod
@@ -229,3 +280,5 @@ class EthereumAddrData(AddrData):
 		tw = TrackingWallet().mmid_ordered_dict()
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
 		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in tw.items()]
+
+class EthereumTokenAddrData(EthereumAddrData): pass

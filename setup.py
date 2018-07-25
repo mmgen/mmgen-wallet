@@ -115,6 +115,7 @@ setup(
 			'mmgen.common',
 			'mmgen.crypto',
 			'mmgen.ed25519',
+			'mmgen.exception',
 			'mmgen.filename',
 			'mmgen.globalvars',
 			'mmgen.license',
@@ -137,6 +138,7 @@ setup(
 			'mmgen.altcoins.__init__',
 
 			'mmgen.altcoins.eth.__init__',
+			'mmgen.altcoins.eth.contract',
 			'mmgen.altcoins.eth.obj',
 			'mmgen.altcoins.eth.tx',
 			'mmgen.altcoins.eth.tw',
