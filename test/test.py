@@ -1053,6 +1053,8 @@ del cmd_group
 
 if opt.profile: opt.names = True
 if opt.resume: opt.skip_deps = True
+
+log_fd = None
 if opt.log:
 	log_fd = open(log_file,'a')
 	log_fd.write('\nLog started: {}\n'.format(make_timestr()))
@@ -1193,7 +1195,8 @@ class MMGenExpect(MMGenPexpect):
 			no_output=no_output,
 			passthru_args=passthru_args,
 			msg_only=msg_only,
-			no_msg=no_msg)
+			no_msg=no_msg,
+			log_fd=log_fd)
 
 def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 	if 'S' not in g.proto.mmtypes: segwit = False
@@ -1739,7 +1742,7 @@ class MMGenTestSuite(object):
 
 	def txsign_ui_common(self,t,name,   view='t',add_comment='',
 										ni=False,save=True,do_passwd=False,
-										file_desc='Signed transaction',no_ok=False):
+										file_desc='Signed transaction',no_ok=False,has_label=False):
 		txdo = name[:4] == 'txdo'
 
 		if do_passwd:
@@ -1747,7 +1750,7 @@ class MMGenTestSuite(object):
 
 		if not ni and not txdo:
 			t.view_tx(view)
-			t.do_comment(add_comment)
+			t.do_comment(add_comment,has_label=has_label)
 			t.expect('(Y/n): ',('n','y')[save])
 
 		t.written_to_file(file_desc)
@@ -1761,13 +1764,13 @@ class MMGenTestSuite(object):
 
 	def txsend_ui_common(self,t,name,   view='n',add_comment='',
 										confirm_send=True,bogus_send=True,quiet=False,
-										file_desc='Sent transaction',no_ok=False):
+										file_desc='Sent transaction',no_ok=False,has_label=False):
 
 		txdo = name[:4] == 'txdo'
 		if not txdo:
 			t.license() # MMGEN_NO_LICENSE is set, so does nothing
 			t.view_tx(view)
-			t.do_comment(add_comment)
+			t.do_comment(add_comment,has_label=has_label)
 
 		self.do_confirm_send(t,quiet=quiet,confirm_send=confirm_send)
 
@@ -3148,21 +3151,22 @@ class MMGenTestSuite(object):
 								input_sels_prompt='to spend from',
 								inputs=acct,file_desc='Ethereum transaction',
 								bad_input_sels=True,non_mmgen_inputs=non_mmgen_inputs,
-								interactive_fee=interactive_fee,fee_res=fee_res,fee_desc=fee_desc)
+								interactive_fee=interactive_fee,fee_res=fee_res,fee_desc=fee_desc,
+								add_comment=ref_tx_label_jp)
 
 	def ethdev_txsign(self,name,ni=False,ext='.rawtx',add_args=[]):
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsign',eth_args+add_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
-		self.txsign_ui_common(t,name,ni=ni)
+		self.txsign_ui_common(t,name,ni=ni,has_label=True)
 
 	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext='.sigtx',add_args=[]):
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txsend', eth_args+add_args + [tx_fn])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		self.txsend_ui_common(t,name,quiet=True,bogus_send=bogus_send)
+		self.txsend_ui_common(t,name,quiet=True,bogus_send=bogus_send,has_label=True)
 
 	def ethdev_txcreate1(self,name):
 		menu = ['a','d','A','r','M','D','e','m','m']

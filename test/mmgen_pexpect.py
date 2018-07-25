@@ -96,7 +96,8 @@ class MMGenPexpect(object):
 		atexit.register(lambda: os.system('stty sane'))
 		NL = '\n'
 
-	def __init__(self,name,mmgen_cmd,cmd_args,desc,no_output=False,passthru_args=[],msg_only=False,no_msg=False):
+	def __init__(self,name,mmgen_cmd,cmd_args,desc,
+				no_output=False,passthru_args=[],msg_only=False,no_msg=False,log_fd=None):
 		cmd_args = ['--{}{}'.format(k.replace('_','-'),
 			'='+getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in passthru_args if getattr(opt,k)] \
@@ -120,7 +121,7 @@ class MMGenPexpect(object):
 			cmd_str = fs.format(*init_coverage(),c=cmd_str)
 
 		if opt.log:
-			log_fd.write(cmd_str+'\n')
+			log_fd.write(cmd_str.encode('utf8')+'\n')
 
 		if not no_msg:
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
