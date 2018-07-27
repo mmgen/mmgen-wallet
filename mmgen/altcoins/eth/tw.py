@@ -65,7 +65,10 @@ class EthereumTrackingWallet(TrackingWallet):
 			ymsg('Upgrading {}!'.format(self.desc))
 			self.data = {}
 			self.data['accounts'] = json.loads(self.orig_data)
+			mode_save = self.mode
+			self.mode = 'w'
 			self.write()
+			self.mode = mode_save
 			self.orig_data = json.dumps(self.data)
 			msg('{} upgraded successfully!'.format(self.desc))
 
