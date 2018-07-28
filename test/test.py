@@ -182,14 +182,17 @@ rtFee = {
 	'ltc': ('1000s','500s','1500s','0.05','400s','1000s')
 }[coin_sel]
 rtBals = {
-	'btc': ('499.9999488','399.9998282','399.9998147','399.9996877','13.00000000','986.99933647','999.99933647'),
-	'bch': ('499.9999484','399.9999194','399.9998972','399.9997692','6.79000000','993.20966920','999.99966920'),
-	'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535','13.00000000','10986.93753500','10999.93753500'),
+	'btc': ('499.9999488','399.9998282','399.9998147','399.9996877',
+			'52.99990000','946.99933647','999.99923647','52.9999','946.99933647'),
+	'bch': ('499.9999484','399.9999194','399.9998972','399.9997692',
+			'46.78900000','953.20966920','999.99866920','46.789','953.2096692'),
+	'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535',
+			'52.99000000','10946.93753500','10999.92753500','52.99','10946.937535'),
 }[coin_sel]
 rtBals_gb = {
 	'btc': ('116.77629233','283.22339537'),
-	'bch': ('WIP'),
-	'ltc': ('WIP'),
+	'bch': ('116.77637483','283.22339437'),
+	'ltc': ('5116.77036263','283.21717237')
 }[coin_sel]
 rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[coin_sel]
 
@@ -816,7 +819,6 @@ cmd_group['regtest'] = (
 	('regtest_bob_bal5_getbalance',"Bob's balance"),
 	('regtest_bob_send_non_mmgen', 'sending funds to Alice (from non-MMGen addrs)'),
 	('regtest_generate',           'mining a block'),
-	('regtest_bob_alice_bal',      "Bob and Alice's balances"),
 	('regtest_alice_add_label1',   'adding a label'),
 	('regtest_alice_chk_label1',   'the label'),
 	('regtest_alice_add_label2',   'adding a label'),
@@ -825,7 +827,6 @@ cmd_group['regtest'] = (
 	('regtest_alice_chk_label3',   'the label'),
 	('regtest_alice_remove_label1','removing a label'),
 	('regtest_alice_chk_label4',   'the label'),
-	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
 	('regtest_alice_add_label_coinaddr','adding a label using the coin address'),
 	('regtest_alice_chk_label_coinaddr','the label'),
 	('regtest_alice_add_label_badaddr1','adding a label with invalid address'),
@@ -833,6 +834,11 @@ cmd_group['regtest'] = (
 	('regtest_alice_add_label_badaddr3','adding a label with wrong MMGen address'),
 	('regtest_alice_add_label_badaddr4','adding a label with wrong coin address'),
 	('regtest_alice_add_label_rpcfail','RPC failure code'),
+	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
+	('regtest_generate',           'mining a block'),
+	('regtest_bob_bal6',            "Bob's balance"),
+	('regtest_bob_alice_bal',      "Bob and Alice's balances"),
+	('regtest_alice_bal2',         "Alice's balance"),
 	('regtest_stop',               'stopping regtest daemon'),
 )
 
@@ -2735,6 +2741,9 @@ class MMGenTestSuite(object):
 	def regtest_alice_bal1(self,name):
 		return self.regtest_user_bal(name,'alice',rtFundAmt)
 
+	def regtest_alice_bal2(self,name):
+		return self.regtest_user_bal(name,'alice',rtBals[8])
+
 	def regtest_bob_bal1(self,name):
 		return self.regtest_user_bal(name,'bob',rtFundAmt)
 
@@ -2749,6 +2758,9 @@ class MMGenTestSuite(object):
 
 	def regtest_bob_bal5(self,name):
 		return self.regtest_user_bal(name,'bob',rtBals[3])
+
+	def regtest_bob_bal6(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[7])
 
 	def regtest_bob_bal5_getbalance(self,name):
 		t_ext,t_mmgen = rtBals_gb[0],rtBals_gb[1]
