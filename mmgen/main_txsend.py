@@ -68,4 +68,4 @@ tx.send(exit_on_fail=True)
 tx.write_to_file(ask_overwrite=False,ask_write=False)
 
 if hasattr(tx,'token_addr'):
-	msg('Token address: {}'.format(tx.token_addr.hl()))
+	msg('Contract address: {}'.format(tx.token_addr.hl()))

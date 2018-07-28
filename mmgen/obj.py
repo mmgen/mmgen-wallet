@@ -336,8 +336,14 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			m = "{!r}: value cannot be converted to {} ({})"
 			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
 
-	def toSatoshi(self):    return int(Decimal(self) / self.satoshi)
-	def to_unit(self,unit): return int(Decimal(self) / getattr(self,unit))
+	def toSatoshi(self):
+		return int(Decimal(self) / self.satoshi)
+
+	def to_unit(self,unit,show_decimal=False):
+		ret = Decimal(self) / getattr(self,unit)
+		if show_decimal and ret < 1:
+			return '{:.4f}'.format(ret)
+		return int(ret)
 
 	@classmethod
 	def fmtc(cls):

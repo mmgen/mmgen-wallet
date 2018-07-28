@@ -53,6 +53,8 @@ class EthereumMMGenTX(MMGenTX):
 		if hasattr(opt,'tx_gas') and opt.tx_gas:
 			self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
 		if hasattr(opt,'contract_data') and opt.contract_data:
+			m = "'--contract-data' option may not be used with token transaction"
+			assert not 'Token' in type(self).__name__, m
 			self.data = HexStr(open(opt.contract_data).read().strip())
 			self.disable_fee_check = True
 
@@ -62,7 +64,10 @@ class EthereumMMGenTX(MMGenTX):
 
 	@classmethod
 	def get_exec_status(cls,txid):
-		return int(g.rpch.eth_getTransactionReceipt('0x'+txid)['status'],16)
+		d = g.rpch.eth_getTransactionReceipt('0x'+txid)
+		if 'contractAddress' in d and d['contractAddress']:
+			msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
+		return int(d['status'],16)
 
 	def is_replaceable(self): return True
 
@@ -120,6 +125,9 @@ class EthereumMMGenTX(MMGenTX):
 		self.txobj = o
 		return d # 'token_addr','decimals' required by subclass
 
+	def get_nonce(self):
+		return ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16))
+
 	def make_txobj(self): # create_raw
 		self.txobj = {
 			'from': self.inputs[0].addr,
@@ -127,7 +135,7 @@ class EthereumMMGenTX(MMGenTX):
 			'amt':  self.outputs[0].amt if self.outputs else ETHAmt(0),
 			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
 			'startGas': self.start_gas,
-			'nonce': ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16)),
+			'nonce': self.get_nonce(),
 			'chainId': Int(g.rpch.parity_chainId(),16),
 			'data':  self.data,
 		}
@@ -145,8 +153,6 @@ class EthereumMMGenTX(MMGenTX):
 		self.update_txid()
 
 	def del_output(self,idx): pass
-	def update_output_amt(self,idx,amt): pass
-	def get_chg_output_idx(self): return None
 
 	def update_txid(self):
 		assert not is_hex_str(self.hex),'update_txid() must be called only when self.hex is not hex data'
@@ -157,26 +163,12 @@ class EthereumMMGenTX(MMGenTX):
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
-
-		if lc == 0 and self.data:
-			return
-		elif lc != 1:
+		if lc == 0 and self.data and not 'Token' in type(self).__name__: return
+		if lc != 1:
 			fs = '{} output{} specified, but Ethereum transactions must have exactly one'
 			die(1,fs.format(lc,suf(lc)))
 
-		a = list(cmd_args)[0]
-		if ',' in a:
-			a1,a2 = a.split(',',1)
-			if is_mmgen_id(a1) or is_coin_addr(a1):
-				coin_addr = mmaddr2coinaddr(a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
-				self.add_output(coin_addr,ETHAmt(a2))
-			else:
-				die(2,"{}: invalid subargument in command-line argument '{}'".format(a1,a))
-		else:
-			die(2,'{}: invalid command-line argument'.format(a))
-
-		if not self.outputs:
-			die(2,'At least one output must be specified on the command line')
+		for a in cmd_args: self.process_cmd_arg(a,ad_f,ad_w)
 
 	def select_unspent(self,unspent):
 		prompt = 'Enter an account to spend from: '
@@ -198,7 +190,8 @@ class EthereumMMGenTX(MMGenTX):
 	# given absolute fee in ETH, return gas price in Gwei using tx_gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
 		ret = ETHAmt(int(abs_fee.toWei() / self.tx_gas.toWei()),'wei')
-		return ret if to_unit == 'eth' else ret.to_unit(to_unit)
+		dmsg('fee_abs2rel() ==> {} ETH'.format(ret))
+		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
 	# get rel_fee (gas price) from network, return in native wei
 	def get_rel_fee_from_network(self):
@@ -234,6 +227,14 @@ class EthereumMMGenTX(MMGenTX):
 		else:
 			return abs_fee
 
+	def update_change_output(self,change_amt):
+		if self.outputs and self.outputs[0].is_chg:
+			self.update_output_amt(0,ETHAmt(change_amt))
+
+	def update_send_amt(self,foo):
+		if self.outputs:
+			self.send_amt = self.outputs[0].amt
+
 	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
 		m = {}
 		for k in ('in','out'):
@@ -253,7 +254,7 @@ class EthereumMMGenTX(MMGenTX):
 		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in keys),
 							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld/2) if ld else Str('None'),
 							c=g.dcoin if len(self.outputs) else '',
-							g=yellow(str(self.txobj['gasPrice'].toGwei())),
+							g=yellow(str(self.txobj['gasPrice'].to_unit('Gwei',show_decimal=True))),
 							G=yellow(str(self.txobj['startGas'].toKwei())),
 							t_mmid=m['out'] if len(self.outputs) else '',
 							f_mmid=m['in'])
@@ -266,9 +267,13 @@ class EthereumMMGenTX(MMGenTX):
 	def format_view_rel_fee(self,terse): return ''
 	def format_view_verbose_footer(self): return '' # TODO
 
+	def set_g_token(self):
+		die(2,"Not a Token transaction object.  Have you omitted the '--token' option?")
+
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves {} {} in the sender's account"
-		return m.format(g.proto.coin_amt(change_amt).hl(),g.coin)
+		chg = 0 if (self.outputs and self.outputs[0].is_chg) else change_amt
+		return m.format(ETHAmt(chg).hl(),g.coin)
 
 	def do_sign(self,d,wif,tx_num_str):
 
@@ -309,7 +314,33 @@ class EthereumMMGenTX(MMGenTX):
 
 		return self.do_sign(self.txobj,keys[0].sec.wif,tx_num_str)
 
-	def get_status(self,status=False): pass # TODO
+	def is_in_mempool(self):
+#		pmsg(g.rpch.parity_pendingTransactions())
+		return '0x'+self.coin_txid in map(lambda x: x['hash'],g.rpch.parity_pendingTransactions())
+
+	def is_in_wallet(self):
+		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
+		if d and 'blockNumber' in d:
+			return 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
+		return False
+
+	def get_status(self,status=False):
+		if self.is_in_mempool():
+			msg('Transaction is in mempool' if status else 'Warning: transaction is in mempool!')
+			return
+
+		confs = self.is_in_wallet()
+		if confs is not False:
+			if self.data:
+				exec_status = type(self).get_exec_status(self.coin_txid)
+				if exec_status == 0:
+					msg('Contract failed to execute!')
+				else:
+					msg('Contract successfully executed with status {}'.format(exec_status))
+			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
+
+		if status:
+			die(1,'Transaction is neither in mempool nor blockchain!')
 
 	def send(self,prompt_user=True,exit_on_fail=False):
 
@@ -354,6 +385,10 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 	start_gas = ETHAmt(60000,'wei')
 	fee_is_approximate = True
 
+	def update_change_output(self,change_amt):
+		if self.outputs[0].is_chg:
+			self.update_output_amt(0,self.inputs[0].amt)
+
 	def check_sufficient_funds(self,inputs_sum,sel_unspent):
 		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+sel_unspent[0].addr),16),'wei')
 		if eth_bal == 0: # we don't know the fee yet
@@ -366,13 +401,13 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = u"Transaction leaves ≈{} {} and {} {} in the sender's account"
-		tbal = g.proto.coin_amt(Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt)
-		chg = g.proto.coin_amt(change_amt)
-		return m.format(chg.hl(),g.coin,tbal.hl(),g.dcoin)
+		send_acct_tbal = 0 if self.outputs[0].is_chg else \
+				Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
+		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)
 
 	def get_change_amt(self): # here we know the fee
 		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+self.inputs[0].addr),16),'wei')
-		return Decimal(eth_bal) - self.fee
+		return eth_bal - self.fee
 
 	def set_g_token(self):
 		g.dcoin = self.dcoin
@@ -390,7 +425,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 		t = Token(g.token)
 		o = t.txcreate( self.inputs[0].addr,
 						self.outputs[0].addr,
-						self.outputs[0].amt,
+						(self.inputs[0].amt if self.outputs[0].is_chg else self.outputs[0].amt),
 						self.start_gas,
 						self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'))
 		self.txobj['token_addr'] = self.token_addr = t.addr
@@ -439,6 +474,9 @@ class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
 
 	def update_fee(self,foo,fee):
 		self.fee = fee
+
+	def get_nonce(self):
+		return self.txobj['nonce']
 
 class EthereumTokenMMGenBumpTX(EthereumTokenMMGenTX,EthereumMMGenBumpTX): pass
 

@@ -315,15 +315,21 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.append(MMGenTX.MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
 
 	def get_chg_output_idx(self):
-		for i in range(len(self.outputs)):
-			if self.outputs[i].is_chg == True:
-				return i
-		return None
+		try: return map(lambda x: x.is_chg,self.outputs).index(True)
+		except ValueError: return None
 
 	def update_output_amt(self,idx,amt):
 		o = self.outputs[idx].__dict__
 		o['amt'] = amt
 		self.outputs[idx] = MMGenTX.MMGenTxOutput(**o)
+
+	def update_change_output(self,change_amt):
+		chg_idx = self.get_chg_output_idx()
+		if change_amt == 0:
+			msg(self.no_chg_msg)
+			self.del_output(chg_idx)
+		else:
+			self.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
 
 	def del_output(self,idx):
 		self.outputs.pop(idx)
@@ -1201,22 +1207,26 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if self.dcoin: self.set_g_token()
 
-	def process_cmd_args(self,cmd_args,ad_f,ad_w):
-		for a in cmd_args:
-			if ',' in a:
-				a1,a2 = a.split(',',1)
-				if is_mmgen_id(a1) or is_coin_addr(a1):
-					coin_addr = mmaddr2coinaddr(a1,ad_w,ad_f) if is_mmgen_id(a1) else CoinAddr(a1)
-					self.add_output(coin_addr,g.proto.coin_amt(a2))
-				else:
-					die(2,"{}: invalid subargument in command-line argument '{}'".format(a1,a))
-			elif is_mmgen_id(a) or is_coin_addr(a):
-				if self.get_chg_output_idx() != None:
-					die(2,'ERROR: More than one change address listed on command line')
-				coin_addr = mmaddr2coinaddr(a,ad_w,ad_f) if is_mmgen_id(a) else CoinAddr(a)
-				self.add_output(coin_addr,g.proto.coin_amt('0'),is_chg=True)
+	def process_cmd_arg(self,arg,ad_f,ad_w):
+
+		def add_output_chk(addr,amt,err_desc):
+			if not amt and self.get_chg_output_idx() != None:
+				die(2,'ERROR: More than one change address listed on command line')
+			if is_mmgen_id(addr) or is_coin_addr(addr):
+				coin_addr = mmaddr2coinaddr(addr,ad_w,ad_f) if is_mmgen_id(addr) else CoinAddr(addr)
+				self.add_output(coin_addr,g.proto.coin_amt(amt or '0'),is_chg=not amt)
 			else:
-				die(2,'{}: invalid command-line argument'.format(a))
+				die(2,"{}: invalid {} '{}'".format(addr,err_desc,','.join((addr,amt)) if amt else addr))
+
+		if ',' in arg:
+			addr,amt = arg.split(',',1)
+			add_output_chk(addr,amt,'coin argument in command-line argument')
+		else:
+			add_output_chk(arg,None,'command-line argument')
+
+	def process_cmd_args(self,cmd_args,ad_f,ad_w):
+
+		for a in cmd_args: self.process_cmd_arg(a,ad_f,ad_w)
 
 		if self.get_chg_output_idx() == None:
 			die(2,( 'ERROR: No change output specified',
@@ -1336,6 +1346,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def check_fee(self):
 		assert self.sum_inputs() - self.sum_outputs() <= g.proto.max_tx_fee
 
+	def update_send_amt(self,change_amt):
+		if not self.send_amt:
+			self.send_amt = change_amt
+
 	def create(self,cmd_args,locktime,do_info=False):
 		assert type(locktime) == int
 
@@ -1367,16 +1381,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if opt.rbf:  self.inputs[0].sequence = g.max_int - 2 # handles the locktime case too
 		elif locktime: self.inputs[0].sequence = g.max_int - 1
 
-		chg_idx = self.get_chg_output_idx()
-
-		if change_amt == 0:
-			msg(self.no_chg_msg)
-			self.del_output(chg_idx)
-		else:
-			self.update_output_amt(chg_idx,g.proto.coin_amt(change_amt))
-
-		if not self.send_amt and len(self.outputs):
-			self.send_amt = change_amt
+		self.update_change_output(change_amt)
+		self.update_send_amt(change_amt)
 
 		if not opt.yes:
 			self.add_comment()  # edits an existing comment

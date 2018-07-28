@@ -885,6 +885,8 @@ cmd_group['ethdev'] = (
 	('ethdev_txsign3',             'signing the transaction'),
 	('ethdev_txsend3',             'sending the transaction'),
 
+	('ethdev_tx_status1',          'getting the transaction status'),
+
 	('ethdev_txcreate4',           'creating a transaction (spend from MMGen address, low TX fee)'),
 	('ethdev_txbump',              'bumping the transaction fee'),
 
@@ -908,6 +910,8 @@ cmd_group['ethdev'] = (
 	('ethdev_token_deploy1a',       'deploying ERC20 token #1 (SafeMath)'),
 	('ethdev_token_deploy1b',       'deploying ERC20 token #1 (Owned)'),
 	('ethdev_token_deploy1c',       'deploying ERC20 token #1 (Token)'),
+
+	('ethdev_tx_status2',           'getting the transaction status'),
 
 	('ethdev_token_compile2',       'compiling ERC20 token #2'),
 
@@ -938,10 +942,23 @@ cmd_group['ethdev'] = (
 
 	('ethdev_addrimport_token_burn_addr',"importing the token burn address"),
 
-	('ethdev_token_bal',           'the token balance'),
+	('ethdev_token_bal1',          'the token balance'),
 	('ethdev_token_bal_getbalance','the token balance (getbalance)'),
 
-	('ethdev_stop',                'stopping parity'),
+	('ethdev_txcreate_noamt',     'creating a transaction (full amount send)'),
+	('ethdev_txsign_noamt',       'signing the transaction'),
+	('ethdev_txsend_noamt',       'sending the transaction'),
+
+	('ethdev_token_bal2',          'the token balance'),
+	('ethdev_bal3',                'the ETH balance'),
+
+	('ethdev_token_txcreate_noamt', 'creating a token transaction (full amount send)'),
+	('ethdev_token_txsign_noamt',   'signing the transaction'),
+	('ethdev_token_txsend_noamt',   'sending the transaction'),
+
+	('ethdev_token_bal3',          'the token balance'),
+
+#	('ethdev_stop',                'stopping parity'),
 )
 
 cmd_group['autosign'] = (
@@ -3239,6 +3256,16 @@ class MMGenTestSuite(object):
 	def ethdev_txsign3(self,name): self.ethdev_txsign(name,ni=True,ext='2.345,50000].rawtx')
 	def ethdev_txsend3(self,name): self.ethdev_txsend(name,ext='2.345,50000].sigtx')
 
+	def ethdev_tx_status(self,name,ext,expect_str):
+		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
+		t = MMGenExpect(name,'mmgen-txsend', eth_args + ['--status',tx_fn])
+		t.expect(expect_str)
+		t.read()
+		t.ok()
+
+	def ethdev_tx_status1(self,name):
+		self.ethdev_tx_status(name,ext='2.345,50000].sigtx',expect_str='has 1 confirmation')
+
 	def ethdev_txcreate4(self,name):
 		args = ['98831F3A:E:2,23.45495']
 		interactive_fee='40G'
@@ -3321,12 +3348,12 @@ class MMGenTestSuite(object):
 		token_data = { 'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10 }
 		self.ethdev_token_compile(name,token_data)
 
-	def ethdev_token_deploy(self,name,num,key,gas,mmgen_cmd='txdo'):
+	def ethdev_token_deploy(self,name,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		self.init_ethdev_common()
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		fn = os.path.join(cfg['tmpdir'],key+'.bin')
 		os.environ['MMGEN_BOGUS_SEND'] = ''
-		args = ['-B','--tx-fee=8G','--tx-gas={}'.format(gas),'--contract-data='+fn,'--inputs='+eth_addr,'--yes']
+		args = ['-B','--tx-fee='+tx_fee,'--tx-gas={}'.format(gas),'--contract-data='+fn,'--inputs='+eth_addr,'--yes']
 		if mmgen_cmd == 'txdo': args += ['-k',key_fn]
 		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args + args)
 		if mmgen_cmd == 'txcreate':
@@ -3339,7 +3366,7 @@ class MMGenTestSuite(object):
 
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False,no_ok=True)
-		addr = t.expect_getend('Token address: ')
+		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
 		assert etx.get_exec_status(txid) != 0,"Contract '{}:{}' failed to execute. Aborting".format(num,key)
 		if key == 'Token':
@@ -3351,7 +3378,11 @@ class MMGenTestSuite(object):
 
 	def ethdev_token_deploy1a(self,name): self.ethdev_token_deploy(name,num=1,key='SafeMath',gas=200000)
 	def ethdev_token_deploy1b(self,name): self.ethdev_token_deploy(name,num=1,key='Owned',gas=250000)
-	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000)
+	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000,tx_fee='7G')
+
+	def ethdev_tx_status2(self,name):
+		self.ethdev_tx_status(name,ext='ETH[0,7000].sigtx',expect_str='successfully executed')
+
 	def ethdev_token_deploy2a(self,name): self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=200000)
 	def ethdev_token_deploy2b(self,name): self.ethdev_token_deploy(name,num=2,key='Owned',gas=250000)
 	def ethdev_token_deploy2c(self,name): self.ethdev_token_deploy(name,num=2,key='Token',gas=1100000)
@@ -3388,8 +3419,8 @@ class MMGenTestSuite(object):
 			tk_addr = read_from_tmpfile(cfg,'token_addr'+n).strip()
 			self.ethdev_addrimport(name,ext='['+r+'].addrs',expect='3/3',add_args=['--token='+tk_addr])
 
-	def ethdev_token_txcreate(self,name,args=[],token='',inputs='1'):
-		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['--token='+token,'-B','--tx-fee=50G'] + args)
+	def ethdev_token_txcreate(self,name,args=[],token='',inputs='1',fee='50G'):
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
 		self.txcreate_ui_common(t,name,menu=[],
 								input_sels_prompt='to spend from',
 								inputs=inputs,file_desc='Ethereum token transaction',
@@ -3432,15 +3463,41 @@ class MMGenTestSuite(object):
 	def ethdev_bal2_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
 		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen='127.0287876')
 
-	def ethdev_token_bal(self,name):
+	def ethdev_token_bal(self,name,expect_str):
 		t = MMGenExpect(name,'mmgen-tool', eth_args + ['--token=mm1','twview','wide=1'])
-		t.expect(r'deadbeef.* '+eth_amt2,regex=True)
+		t.expect(expect_str,regex=True)
 		t.read()
 		t.ok()
+
+	def ethdev_token_bal1(self,name):
+		self.ethdev_token_bal(name,expect_str=r'deadbeef.* '+eth_amt2)
 
 	def ethdev_token_bal_getbalance(self,name):
 		self.ethdev_bal_getbalance(name,
 			t_non_mmgen='888.111122223333444455',t_mmgen='111.888877776666555545',extra_args=['--token=mm1'])
+
+	def ethdev_txcreate_noamt(self,name):
+		return self.ethdev_txcreate(name,args=['98831F3A:E:12'])
+	def ethdev_txsign_noamt(self,name):
+		self.ethdev_txsign(name,ext='99.99895,50000].rawtx')
+	def ethdev_txsend_noamt(self,name):
+		self.ethdev_txsend(name,ext='99.99895,50000].sigtx')
+
+	def ethdev_token_bal2(self,name):
+		self.ethdev_token_bal(name,expect_str=r'98831F3A:E:12\s+1.23456\s+99.99895\s')
+
+	def ethdev_bal3(self,name,expect_str=''):
+		self.ethdev_bal(name,expect_str=r'98831F3A:E:1\s+0\n')
+
+	def ethdev_token_txcreate_noamt(self,name):
+		return self.ethdev_token_txcreate(name,args=['98831F3A:E:13'],token='mm1',inputs='2',fee='51G')
+	def ethdev_token_txsign_noamt(self,name):
+		self.ethdev_token_txsign(name,ext='1.23456,51000].rawtx',token='mm1')
+	def ethdev_token_txsend_noamt(self,name):
+		self.ethdev_token_txsend(name,ext='1.23456,51000].sigtx',token='mm1')
+
+	def ethdev_token_bal3(self,name):
+		self.ethdev_token_bal(name,expect_str=r'98831F3A:E:13\s+1.23456\s')
 
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)
