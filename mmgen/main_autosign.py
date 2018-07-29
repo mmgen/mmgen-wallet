@@ -101,6 +101,7 @@ This command is currently available only on Linux-based platforms.
 cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
 
 import mmgen.tx
+import mmgen.altcoins.eth.tx
 from mmgen.txsign import txsign
 from mmgen.protocol import CoinProtocol,init_coin
 
@@ -155,14 +156,40 @@ def do_umount():
 
 def sign_tx_file(txfile):
 	try:
-		init_coin(mmgen.tx.MMGenTX(txfile,coin_sym_only=True).coin)
+		g.testnet = False
+		g.coin = 'BTC'
+		tmp_tx = mmgen.tx.MMGenTX(txfile,metadata_only=True)
+		init_coin(tmp_tx.coin)
+
+		if tmp_tx.chain != 'mainnet':
+			if tmp_tx.chain == 'testnet' or (
+				hasattr(g.proto,'chain_name') and tmp_tx.chain != g.proto.chain_name):
+				g.testnet = True
+				init_coin(tmp_tx.coin)
+
+		if hasattr(g.proto,'chain_name'):
+			m = 'Protocol chain name ({}) does not match chain name from TX file ({})'
+			assert tmp_tx.chain == g.proto.chain_name, m.format(tmp_tx.chain,g.proto.chain_name)
+
+		g.chain = tmp_tx.chain
+		g.token = tmp_tx.dcoin
+		g.dcoin = tmp_tx.dcoin or g.coin
+
 		reload(sys.modules['mmgen.tx'])
+		if g.coin == 'ETH':
+			reload(sys.modules['mmgen.altcoins.eth.tx'])
+
 		tx = mmgen.tx.MMGenTX(txfile)
+
 		if g.proto.sign_mode == 'daemon':
 			rpc_init(reinit=True)
+
 		txsign(tx,wfs,None,None)
 		tx.write_to_file(ask_write=False)
 		return True
+	except Exception as e:
+		msg('An error occurred: {}'.format(e))
+		return False
 	except:
 		return False
 

@@ -217,7 +217,7 @@ t_eth=(
 f_eth='Ethereum tests completed'
 
 i_autosign='Autosign'
-s_autosign='The bitcoin, bitcoin-abc and litecoin (mainnet) daemons must be running for the following test'
+s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'
 t_autosign=("$test_py -On autosign")
 f_autosign='Autosign test complete'
 

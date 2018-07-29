@@ -583,7 +583,9 @@ cfgs = {
 			'ltc': ('AF3CDF-LTC[620.76194,1453,tl=1320969600].rawtx',
 					'A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'),
 			'eth': ('88FEFD-ETH[23.45495,40000].rawtx',
-					'B472BD-ETH[23.45495,40000].testnet.rawtx')
+					'B472BD-ETH[23.45495,40000].testnet.rawtx'),
+			'erc20': ('5881D2-MM1[1.23456,50000].rawtx',
+					'6BDB25-MM1[1.23456,50000].testnet.rawtx')
 		},
 		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
@@ -2314,9 +2316,10 @@ class MMGenTestSuite(object):
 
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
-		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'))
-		tfns = [cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
-		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata,tfns)]
+		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'),('erc20','ethereum'))
+		tfns  = [cfgs['8']['ref_tx_file'][c][1] for c,d in fdata] + \
+				[cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
+		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
 		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
 		except: pass
 		for f,fn in zip(tfs,tfns):
@@ -2341,7 +2344,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 		t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
-		t.expect('4 transactions signed')
+		t.expect('10 transactions signed')
 		t.expect('1 transaction failed to sign')
 		t.expect('Waiting.')
 		t.kill(2)

@@ -304,6 +304,8 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 			m = "{!r}: value cannot be converted to AddrIdxList ({})"
 			return type(self).init_fail(m.format(idx_list or fmt_str,e[0]),on_fail)
 
+class UnknownCoinAmt(Decimal): pass
+
 class BTCAmt(Decimal,Hilite,InitErrors):
 	color = 'yellow'
 	max_prec = 8

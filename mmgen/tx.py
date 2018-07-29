@@ -272,7 +272,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		desc = 'transaction outputs'
 		member_type = 'MMGenTxOutput'
 
-	def __init__(self,filename=None,coin_sym_only=False,caller=None,silent_open=False):
+	def __init__(self,filename=None,metadata_only=False,caller=None,silent_open=False):
 		self.inputs      = self.MMGenTxInputList()
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -293,8 +293,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.locktime    = None
 
 		if filename:
-			self.parse_tx_file(filename,coin_sym_only=coin_sym_only,silent_open=silent_open)
-			if coin_sym_only: return
+			self.parse_tx_file(filename,metadata_only=metadata_only,silent_open=silent_open)
+			if metadata_only: return
 			self.check_pubkey_scripts()
 			self.check_sigs() # marks the tx as signed
 
@@ -1114,7 +1114,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def check_txfile_hex_data(self):
 		self.hex = HexStr(self.hex,on_fail='raise')
 
-	def parse_tx_file(self,infile,coin_sym_only=False,silent_open=False):
+	def parse_tx_file(self,infile,metadata_only=False,silent_open=False):
 
 		def eval_io_data(raw_data,desc):
 			from ast import literal_eval
@@ -1176,19 +1176,25 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if ':' in self.coin:
 				self.coin,self.dcoin = self.coin.split(':')
 
-			if coin_sym_only: return
-
 			if len(metadata) == 5:
 				t = metadata.pop(0)
 				self.chain = (t.lower(),None)[t=='Unknown']
 
 			desc = 'metadata (4 items minimum required)'
-			self.txid,send_amt,self.timestamp,blockcount = metadata
-			desc = 'metadata'
-			self.txid = MMGenTxID(self.txid,on_fail='raise')
-			self.send_amt = g.proto.coin_amt(send_amt,on_fail='raise')
+			txid,send_amt,self.timestamp,blockcount = metadata
+
+			desc = 'txid in metadata'
+			self.txid = MMGenTxID(txid,on_fail='raise')
+			desc = 'send amount in metadata'
+			self.send_amt = UnknownCoinAmt(send_amt) # temporary, for 'metadata_only'
 			desc = 'block count in metadata'
 			self.blockcount = int(blockcount)
+
+			if metadata_only: return
+
+			desc = 'send amount in metadata'
+			self.send_amt = g.proto.coin_amt(send_amt,on_fail='raise')
+
 			desc = 'transaction hex data'
 			self.check_txfile_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
