@@ -2312,7 +2312,6 @@ class MMGenTestSuite(object):
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
-	# Miscellaneous tests
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
 		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'))
@@ -3368,7 +3367,7 @@ class MMGenTestSuite(object):
 		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False,no_ok=True)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		assert etx.get_exec_status(txid) != 0,"Contract '{}:{}' failed to execute. Aborting".format(num,key)
+		assert etx.get_exec_status(txid,True) != 0,"Contract '{}:{}' failed to execute. Aborting".format(num,key)
 		if key == 'Token':
 			write_to_tmpfile(cfg,'token_addr{}'.format(num),addr+'\n')
 			silence()
@@ -3404,7 +3403,7 @@ class MMGenTestSuite(object):
 			imsg('\n'+tk.info())
 			txid = tk.transfer(eth_addr,usr_addrs[i],1000,eth_key,
 								start_gas=ETHAmt(60000,'wei'),gasPrice=ETHAmt(8,'Gwei'))
-			assert etx.get_exec_status(txid) != 0,'Transfer of token funds failed. Aborting'
+			assert etx.get_exec_status(txid,True) != 0,'Transfer of token funds failed. Aborting'
 			imsg('dev token balance: {}'.format(tk.balance(eth_addr)))
 			imsg('usr{} token balance: {}'.format(i+1,tk.balance(usr_addrs[i])))
 		end_silence()

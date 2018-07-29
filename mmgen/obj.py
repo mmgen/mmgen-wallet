@@ -342,7 +342,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def to_unit(self,unit,show_decimal=False):
 		ret = Decimal(self) / getattr(self,unit)
 		if show_decimal and ret < 1:
-			return '{:.4f}'.format(ret)
+			return '{:.8f}'.format(ret).rstrip('0')
 		return int(ret)
 
 	@classmethod

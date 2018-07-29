@@ -63,10 +63,11 @@ class EthereumMMGenTX(MMGenTX):
 		return g.rpch.eth_getTransactionReceipt('0x'+txid)
 
 	@classmethod
-	def get_exec_status(cls,txid):
+	def get_exec_status(cls,txid,silent=False):
 		d = g.rpch.eth_getTransactionReceipt('0x'+txid)
-		if 'contractAddress' in d and d['contractAddress']:
-			msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
+		if not silent:
+			if 'contractAddress' in d and d['contractAddress']:
+				msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
 		return int(d['status'],16)
 
 	def is_replaceable(self): return True
@@ -268,7 +269,7 @@ class EthereumMMGenTX(MMGenTX):
 	def format_view_verbose_footer(self): return '' # TODO
 
 	def set_g_token(self):
-		die(2,"Not a Token transaction object.  Have you omitted the '--token' option?")
+		die(2,"Transaction object mismatch.  Have you forgotten to include the '--token' option?")
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves {} {} in the sender's account"
