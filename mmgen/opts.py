@@ -337,7 +337,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 	for k in ('prog_name','desc','usage','options','notes'):
 		if k in opts_data: del opts_data[k]
 
-	g.altcoin_data_dir = os.path.join(g.data_dir,'altcoins')
+	g.altcoin_data_dir = os.path.join(g.data_dir_root,'altcoins')
 	warn_altcoins(altcoin_trust_level)
 
 	return args

@@ -29,12 +29,12 @@ from mmgen.obj import TwLabel
 ai_msgs = lambda k: {
 	'rescan': """
 WARNING: You've chosen the '--rescan' option.  Rescanning the blockchain is
-necessary only if an address you're importing is already on the blockchain,
+necessary only if an address you're importing is already in the blockchain,
 has a balance and is not in your tracking wallet.  Note that the rescanning
 process is very slow (>30 min. for each imported address on a low-powered
 computer).
 	""".strip() if opt.rescan else """
-WARNING: If any of the addresses you're importing is already on the blockchain,
+WARNING: If any of the addresses you're importing is already in the blockchain,
 has a balance and is not in your tracking wallet, you must exit the program now
 and rerun it using the '--rescan' option.
 """.strip(),
@@ -48,23 +48,22 @@ option, or a list of non-{pnm} addresses with the '--addrlist' option
 # --batch and --rescan incompatible.
 
 opts_data = lambda: {
-	'desc': """Import addresses (both {pnm} and non-{pnm}) into an {pnm}
-                     tracking wallet""".format(pnm=g.proj_name),
+	'desc': """Import addresses into an {} tracking wallet""".format(g.proj_name),
 	'usage':'[opts] [mmgen address file]',
 	'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
 -a, --address=a    Import the single coin address 'a'
--b, --batch        Import all addresses in one RPC call.
+-b, --batch        Import all addresses in one RPC call
 -l, --addrlist     Address source is a flat list of non-MMGen coin addresses
 -k, --keyaddr-file Address source is a key-address file
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
-                   on the blockchain and has a balance.  Rescanning is slow.
+                   in the blockchain and has a balance.  Rescanning is slow.
 """,
 	'notes': """\n
-This command can also be used to update the comment fields of addresses already
-in the tracking wallet.
+This command can also be used to update the comment fields of addresses
+already in the tracking wallet.
 
 The --batch and --rescan options cannot be used together.
 """
