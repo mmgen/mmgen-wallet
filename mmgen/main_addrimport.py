@@ -100,7 +100,7 @@ else:
 m = ' from Seed ID {}'.format(al.al_id.sid) if hasattr(al.al_id,'sid') else ''
 qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
-err_flag = False
+err_msg = None
 
 from mmgen.tw import TrackingWallet
 try:
@@ -123,9 +123,9 @@ if opt.batch and not 'batch' in tw.caps:
 
 def import_address(addr,label,rescan):
 	try: tw.import_address(addr,label,rescan)
-	except:
-		global err_flag
-		err_flag = True
+	except Exception as e:
+		global err_msg
+		err_msg = e
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13
@@ -169,13 +169,13 @@ for n,e in enumerate(al.data):
 				msg_r(('\r{} '+msg_fmt).format(secs_to_hms(elapsed),*msg_data))
 				time.sleep(0.5)
 			else:
-				if err_flag: die(2,'\nImport failed')
+				if err_msg: die(2,'\nImport failed: {!r}'.format(err_msg))
 				msg('\nOK')
 				break
 	else:
 		import_address(e.addr,label,False)
 		msg_r('\r'+msg_fmt.format(*msg_data))
-		if err_flag: die(2,'\nImport failed')
+		if err_msg: die(2,'\nImport failed: {!r}'.format(err_msg))
 		msg(' - OK')
 
 if opt.batch:
