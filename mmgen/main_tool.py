@@ -72,7 +72,9 @@ General utilities:
   b58tostr     - convert a base 58 number to a string
   strtob58     - convert a string to base 58
   b58tohex     - convert a base 58 number to hexadecimal
+  b58chktohex  - convert a base58-check encoded number to hexadecimal
   hextob58     - convert a hexadecimal number to base 58
+  hextob58chk  - convert a hexadecimal number to base58-check encoding
   b32tohex     - convert a base 32 number to hexadecimal
   hextob32     - convert a hexadecimal number to base 32
 

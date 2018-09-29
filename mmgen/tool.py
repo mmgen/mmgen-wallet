@@ -38,7 +38,9 @@ cmd_data = OrderedDict([
 	('Strtob58',     ['<string> [str-]','pad [int=0]']),
 	('B58tostr',     ['<b58 number> [str-]']),
 	('Hextob58',     ['<hex number> [str-]','pad [int=0]']),
+	('Hextob58chk',  ['<hex number> [str-]']),
 	('B58tohex',     ['<b58 number> [str-]','pad [int=0]']),
+	('B58chktohex',  ['<b58 number> [str-]']),
 	('B58randenc',   []),
 	('B32tohex',     ['<b32 num> [str-]','pad [int=0]']),
 	('Hextob32',     ['<hex num> [str-]','pad [int=0]']),
@@ -327,9 +329,15 @@ def Mn2hex(s,wordlist=dfl_wl_id): Msg(baseconv.tohex(s.split(),wordlist))
 
 def Strtob58(s,pad=None): Msg(baseconv.fromhex(binascii.hexlify(s),'b58',pad,tostr=True))
 def Hextob58(s,pad=None): Msg(baseconv.fromhex(s,'b58',pad,tostr=True))
+def Hextob58chk(s):
+	from mmgen.protocol import _b58chk_encode
+	Msg(_b58chk_encode(s))
 def Hextob32(s,pad=None): Msg(baseconv.fromhex(s,'b32',pad,tostr=True))
 def B58tostr(s):          Msg(binascii.unhexlify(baseconv.tohex(s,'b58')))
 def B58tohex(s,pad=None): Msg(baseconv.tohex(s,'b58',pad))
+def B58chktohex(s):
+	from mmgen.protocol import _b58chk_decode
+	Msg(_b58chk_decode(s))
 def B32tohex(s,pad=None): Msg(baseconv.tohex(s.upper(),'b32',pad))
 
 from mmgen.seed import Mnemonic

@@ -56,6 +56,7 @@ def _b58chk_encode(hexstr):
 
 def _b58chk_decode(s):
 	hexstr = '{:x}'.format(_b58tonum(s))
+	if len(hexstr) % 2: hexstr = '0' + hexstr
 	if hexstr[-8:] == hash256(hexstr[:-8])[:8]:
 		return hexstr[:-8]
 	raise ValueError,'_b58chk_decode(): checksum incorrect'
