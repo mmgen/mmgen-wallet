@@ -657,12 +657,14 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
-			me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
-			me.orig_hex = s.encode('hex') # save the non-preprocessed key
+			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
+				me = str.__new__(cls,s.encode('hex'))
+			else:
+				me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
+				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
-			if pubkey_type != 'password': # skip WIF creation for passwds
-				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
+			me.orig_hex = s.encode('hex') # save the non-preprocessed key
 			return me
 		except Exception as e:
 			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"

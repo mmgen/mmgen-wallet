@@ -22,7 +22,7 @@ protocol.py: Coin protocol functions, classes and methods
 
 import sys,os,hashlib
 from binascii import unhexlify
-from mmgen.util import msg,pmsg,Msg,pdie
+from mmgen.util import msg,pmsg,ymsg,Msg,pdie,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
@@ -93,6 +93,7 @@ class BitcoinProtocol(MMGenObject):
 	witness_vernum     = int(witness_vernum_hex,16)
 	bech32_hrp         = 'bc'
 	sign_mode          = 'daemon'
+	secp256k1_ge       = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 	@classmethod
 	def is_testnet(cls):
@@ -110,7 +111,19 @@ class BitcoinProtocol(MMGenObject):
 	def cap(cls,s): return s in cls.caps
 
 	@classmethod
-	def preprocess_key(cls,hexpriv,pubkey_type): return hexpriv
+	def preprocess_key(cls,hexpriv,pubkey_type):
+		# Key must be non-zero and less than group order of secp256k1 curve
+		if 0 < int(hexpriv,16) < cls.secp256k1_ge:
+			return hexpriv
+		else: # chance of this is less than 1 in 2^127
+			pk = int(hexpriv,16)
+			if pk == 0: # chance of this is 1 in 2^256
+				ydie(3,'Private key is zero!')
+			elif pk == cls.secp256k1_ge: # ditto
+				ydie(3,'Private key == secp256k1_ge!')
+			else:
+				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(hexpriv))
+				return '{:064x}'.format(pk % cls.secp256k1_ge)
 
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed):
@@ -131,6 +144,8 @@ class BitcoinProtocol(MMGenObject):
 		else:
 			assert len(key) == 64,'invalid key length'
 			compressed = False
+		assert 0 < int(key[:64],16) < cls.secp256k1_ge,(
+			"'{}': invalid WIF (produces key outside allowable range)".format(wif))
 		return { 'hex':key[:64], 'pubkey_type':pubkey_type, 'compressed':compressed }
 
 	@classmethod
@@ -292,7 +307,7 @@ class DummyWIF(object):
 	def wif2hex(cls,wif):
 		return { 'hex':str(wif), 'pubkey_type':cls.pubkey_type, 'compressed':False }
 
-class EthereumProtocol(DummyWIF,BitcoinProtocolAddrgen):
+class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
 	addr_width = 40
 	mmtypes    = ('E',)
