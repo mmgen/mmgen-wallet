@@ -74,21 +74,36 @@ wallet file.
 
 #### Why MMGen is not a BIP32 wallet
 
-Most popular deterministic wallets use the elliptic-curve-based BIP32 or
-Electrum protocols to generate their key/address pairs.  MMGen, on the other
-hand, uses a much simpler system: a SHA-512 hash chain with double SHA-256
-branches.  One advantage of this system is that you can recover your keys from
-an MMGen seed without the MMGen program itself using standard command-line
-utilities.  But the most important advantage is security: elliptic-curve wallets
-are not only cryptographically weaker than hash-bashed ones but have a dangerous
-flaw -- their “master public key” feature allows an attacker to recover any key
-in the wallet from a single compromised key (for a detailed discussion of this
-problem, see Vitalik Buterin’s article [Deterministic Wallets, Their Advantages
-and Their Understated Flaws][7]).  Though the master public key feature of BIP32
-and Electrum wallets is undeniably convenient, MMGen makes up for its absence by
-allowing you to save a virtually unlimited number of Bitcoin addresses for
-future use in an address file, which addresses may safely be made public.
+Most popular wallets today are based on the [BIP32][w] protocol.  But while
+BIP32 is undeniably powerful and flexible, it has two significant weaknesses, in
+our view.  First of all, it relies on elliptic-curve cryptography, which means
+that with the advent of quantum computing, or perhaps the discovery of a
+weakness in the secp256k1 curve, not only will your individual keys be at risk
+but the entire system used to derive them.  Thus an attacker could conceivably
+gain access to all your crypto assets in one fell swoop.  With MMGen you're
+protected against this danger, as its key derivation scheme relies entirely on
+the SHA256 and SHA512 cryptographic hash algorithms, which use no complex math
+and are generally considered quantum-safe.  Incidentally, a nice side-effect of
+MMGen's hash-based KD scheme is that you can [recover your keys from an MMGen
+seed without the MMGen program itself][r] using standard command-line utilities.
 
+A second critical weakness of BIP32 is mentioned in the [text of the BIP][w]:
+
+> *One weakness that may not be immediately obvious, is that knowledge of a
+> parent extended public key plus any non-hardened private key descending from
+> it is equivalent to knowing the parent extended private key (and thus every
+> private and public key descending from it).*
+
+This means that the compromise of a single key could lead to the theft of
+other, **or even all,** of your keys, something that MMGen's hash-based
+derivation scheme once again protects you against.  True, BIP32 does implement
+“hardened” keys to counter this vulnerability, but with their use you lose the
+ability to generate addresses from a master public key, which is the only
+functionality an EC-based wallet provides over a hash-based one in the first
+place.  In which case you might as well be using a hash-based wallet like MMGen
+for the additional security it provides.  As to the master public key feature,
+MMGen makes up for its absence by allowing you to easily generate address lists
+for distribution to potential payers.
 
 ### Download/Install
 
@@ -132,3 +147,4 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [r]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software
 [x]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_alt
 [z]: https://user-images.githubusercontent.com/6071028/31656274-a35a1252-b31a-11e7-93b7-3d666f50f70f.png
+[w]: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
