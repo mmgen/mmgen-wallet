@@ -219,34 +219,34 @@ class KeyGenerator(MMGenObject):
 
 import ecdsa
 class KeyGeneratorPython(KeyGenerator):
+
 	desc = 'mmgen-python-ecdsa'
-	# From electrum:
-	# secp256k1, http://www.oid-info.com/get/1.3.132.0.10
-	_p = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2FL
-	_r = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141L
-	_b = 0x0000000000000000000000000000000000000000000000000000000000000007L
-	_a = 0x0000000000000000000000000000000000000000000000000000000000000000L
-	_Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798L
-	_Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8L
-	_curve_secp256k1 = ecdsa.ellipticcurve.CurveFp(_p,_a,_b)
-	_generator_secp256k1 = ecdsa.ellipticcurve.Point(_curve_secp256k1,_Gx,_Gy,_r)
-	_oid_secp256k1 = (1,3,132,0,10)
-	_secp256k1 = ecdsa.curves.Curve('secp256k1',_curve_secp256k1,_generator_secp256k1,_oid_secp256k1)
+
+	def __init__(self,*args,**kwargs):
+		# secp256k1: http://www.oid-info.com/get/1.3.132.0.10
+		p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
+		r = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+		b = 0x0000000000000000000000000000000000000000000000000000000000000007
+		a = 0x0000000000000000000000000000000000000000000000000000000000000000
+		Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
+		Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
+		curve_fp = ecdsa.ellipticcurve.CurveFp(p,a,b)
+		G = ecdsa.ellipticcurve.Point(curve_fp,Gx,Gy,r)
+		oid = (1,3,132,0,10)
+		self.secp256k1 = ecdsa.curves.Curve('secp256k1',curve_fp,G,oid)
 
 	# devdoc/guide_wallets.md:
-	# Uncompressed public keys start with 0x04; compressed public keys begin with
-	# 0x03 or 0x02 depending on whether they're greater or less than the midpoint
-	# of the curve.
+	# Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
+	# 0x02 depending on whether they're greater or less than the midpoint of the curve.
 	def privnum2pubhex(self,numpriv,compressed=False):
-		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self._secp256k1)
-		# pubkey = 32-byte X coord + 32-byte Y coord (unsigned big-endian)
+		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self.secp256k1)
+		# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
 		pubkey = hexlify(pko.get_verifying_key().to_string())
 		if compressed: # discard Y coord, replace with appropriate version byte
-			# even Y: <0, odd Y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-			p = ('03','02')[pubkey[-1] in '02468ace']
-			return p+pubkey[:64]
+			# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
+			return ('03','02')[pubkey[-1] in '02468ace'] + pubkey[:64]
 		else:
-			return '04'+pubkey
+			return '04' + pubkey
 
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
