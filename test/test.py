@@ -625,10 +625,13 @@ dfl_words = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
 # The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
 eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
-eth_args = [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--coin=eth','--rpc-port=8549','--quiet']
 eth_burn_addr = 'deadbeef'*5
 eth_amt1 = '999999.12345689012345678'
 eth_amt2 = '888.111122223333444455'
+
+def eth_args():
+	assert g.coin in ('ETH','ETC'),'for ethdev tests, --coin must be set to either ETH or ETC'
+	return [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -3183,14 +3186,14 @@ class MMGenTestSuite(object):
 
 	def ethdev_addrgen(self,name,addrs='1-3,11-13,21-23'):
 		from mmgen.addr import MMGenAddrType
-		t = MMGenExpect(name,'mmgen-addrgen', eth_args + [dfl_words,addrs])
+		t = MMGenExpect(name,'mmgen-addrgen', eth_args() + [dfl_words,addrs])
 		t.written_to_file('Addresses')
 		t.read()
 		t.ok()
 
 	def ethdev_addrimport(self,name,ext='21-23].addrs',expect='9/9',add_args=[]):
 		fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True,delete=False)
-		t = MMGenExpect(name,'mmgen-addrimport', eth_args[1:] + add_args + [fn])
+		t = MMGenExpect(name,'mmgen-addrimport', eth_args()[1:] + add_args + [fn])
 		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect(expect)
@@ -3198,7 +3201,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def ethdev_addrimport_one_addr(self,name,addr=None,extra_args=[]):
-		t = MMGenExpect(name,'mmgen-addrimport', eth_args[1:] + extra_args + ['--address='+addr])
+		t = MMGenExpect(name,'mmgen-addrimport', eth_args()[1:] + extra_args + ['--address='+addr])
 		t.expect('OK')
 		t.ok()
 
@@ -3212,7 +3215,7 @@ class MMGenTestSuite(object):
 						interactive_fee='50G',
 						fee_res='0.00105 ETH (50 gas price in Gwei)',
 						fee_desc = 'gas price'):
-		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['-B'] + args)
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['-B'] + args)
 		t.expect(r"'q'=quit view, .*?:.",'p', regex=True)
 		t.written_to_file('Account balances listing')
 		self.txcreate_ui_common(t,name,
@@ -3227,13 +3230,13 @@ class MMGenTestSuite(object):
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		t = MMGenExpect(name,'mmgen-txsign',eth_args+add_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
+		t = MMGenExpect(name,'mmgen-txsign',eth_args()+add_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
 		self.txsign_ui_common(t,name,ni=ni,has_label=True)
 
 	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext='.sigtx',add_args=[]):
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
-		t = MMGenExpect(name,'mmgen-txsend', eth_args+add_args + [tx_fn])
+		t = MMGenExpect(name,'mmgen-txsend', eth_args()+add_args + [tx_fn])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
 		self.txsend_ui_common(t,name,quiet=True,bogus_send=bogus_send,has_label=True)
 
@@ -3260,7 +3263,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_tx_status(self,name,ext,expect_str):
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		t = MMGenExpect(name,'mmgen-txsend', eth_args + ['--status',tx_fn])
+		t = MMGenExpect(name,'mmgen-txsend', eth_args() + ['--status',tx_fn])
 		t.expect(expect_str)
 		t.read()
 		t.ok()
@@ -3277,7 +3280,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_txbump(self,name,ext=',40000].rawtx',fee='50G',add_args=[]):
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
-		t = MMGenExpect(name,'mmgen-txbump', eth_args + add_args + ['--yes',tx_fn])
+		t = MMGenExpect(name,'mmgen-txbump', eth_args() + add_args + ['--yes',tx_fn])
 		t.expect('or gas price: ',fee+'\n')
 		t.read()
 		t.ok()
@@ -3292,13 +3295,13 @@ class MMGenTestSuite(object):
 	def ethdev_txsend5(self,name): self.ethdev_txsend(name,ext=eth_amt1+',50000].sigtx')
 
 	def ethdev_bal(self,name,expect_str=''):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['twview'])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['twview'])
 		t.expect(expect_str,regex=True)
 		t.read()
 		t.ok()
 
 	def ethdev_bal_getbalance(self,name,t_non_mmgen='',t_mmgen='',extra_args=[]):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + extra_args + ['getbalance'])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + extra_args + ['getbalance'])
 		t.expect(r'\n[0-9A-F]{8}: .* '+t_mmgen,regex=True)
 		t.expect(r'\nNon-MMGen: .* '+t_non_mmgen,regex=True)
 		total = t.expect_getend(r'\nTOTAL:\s+',regex=True).split()[0]
@@ -3310,17 +3313,17 @@ class MMGenTestSuite(object):
 		self.ethdev_bal(name,expect_str=r'98831F3A:E:2\s+23\.45495\s+')
 
 	def ethdev_add_label(self,name,addr='98831F3A:E:3',lbl=utf8_label):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['add_label',addr,lbl])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['add_label',addr,lbl])
 		t.expect('Added label.*in tracking wallet',regex=True)
 		t.ok()
 
 	def ethdev_chk_label(self,name,addr='98831F3A:E:3',label_pat=utf8_label_pat):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['listaddresses','all_labels=1'])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['listaddresses','all_labels=1'])
 		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label).encode('utf8')),regex=True)
 		t.ok()
 
 	def ethdev_remove_label(self,name,addr='98831F3A:E:3'):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['remove_label',addr])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['remove_label',addr])
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		t.ok()
 
@@ -3357,14 +3360,14 @@ class MMGenTestSuite(object):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		args = ['-B','--tx-fee='+tx_fee,'--tx-gas={}'.format(gas),'--contract-data='+fn,'--inputs='+eth_addr,'--yes']
 		if mmgen_cmd == 'txdo': args += ['-k',key_fn]
-		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args + args)
+		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args() + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('Ethereum transaction')
 			tx_fn = get_file_with_ext('[0,8000].rawtx',cfg['tmpdir'],no_dot=True)
-			t = MMGenExpect(name,'mmgen-txsign', eth_args + ['--yes','-k',key_fn,tx_fn],no_msg=True)
+			t = MMGenExpect(name,'mmgen-txsign', eth_args() + ['--yes','-k',key_fn,tx_fn],no_msg=True)
 			self.txsign_ui_common(t,name,ni=True,no_ok=True)
 			tx_fn = tx_fn.replace('.rawtx','.sigtx')
-			t = MMGenExpect(name,'mmgen-txsend', eth_args + [tx_fn],no_msg=True)
+			t = MMGenExpect(name,'mmgen-txsend', eth_args() + [tx_fn],no_msg=True)
 
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False,no_ok=True)
@@ -3422,7 +3425,7 @@ class MMGenTestSuite(object):
 			self.ethdev_addrimport(name,ext='['+r+'].addrs',expect='3/3',add_args=['--token='+tk_addr])
 
 	def ethdev_token_txcreate(self,name,args=[],token='',inputs='1',fee='50G'):
-		t = MMGenExpect(name,'mmgen-txcreate', eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['--token='+token,'-B','--tx-fee='+fee] + args)
 		self.txcreate_ui_common(t,name,menu=[],
 								input_sels_prompt='to spend from',
 								inputs=inputs,file_desc='Ethereum token transaction',
@@ -3452,7 +3455,7 @@ class MMGenTestSuite(object):
 		self.ethdev_token_txsend(name,ext=eth_amt2+',50000].sigtx',token='mm1')
 
 	def ethdev_del_dev_addr(self,name):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['remove_address',eth_addr])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['remove_address',eth_addr])
 		t.read() # TODO
 		t.ok()
 
@@ -3466,7 +3469,7 @@ class MMGenTestSuite(object):
 		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen='127.0287876')
 
 	def ethdev_token_bal(self,name,expect_str):
-		t = MMGenExpect(name,'mmgen-tool', eth_args + ['--token=mm1','twview','wide=1'])
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['--token=mm1','twview','wide=1'])
 		t.expect(expect_str,regex=True)
 		t.read()
 		t.ok()
