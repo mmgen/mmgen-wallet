@@ -132,7 +132,11 @@ def check_daemons_running():
 				ydie(1,fs.format(coin,g.proto.rpc_port))
 
 def get_wallet_files():
-	wfs = filter(lambda x: x[-6:] == '.mmdat',os.listdir(wallet_dir))
+	m = "Cannot open wallet directory '{}'. Did you run 'mmgen-autosign setup'?"
+	try: dlist = os.listdir(wallet_dir)
+	except: die(1,m.format(wallet_dir))
+
+	wfs = filter(lambda x: x[-6:] == '.mmdat',dlist)
 	if not wfs:
 		die(1,'No wallet files present!')
 	return [os.path.join(wallet_dir,w) for w in wfs]
@@ -143,8 +147,10 @@ def do_mount():
 			msg('Mounting '+mountpoint)
 	try:
 		ds = os.stat(tx_dir)
-		assert S_ISDIR(ds.st_mode)
-		assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR
+		m1 = "'{}' is not a directory!"
+		m2 = "'{}' is not read/write for this user!"
+		assert S_ISDIR(ds.st_mode),m1.format(tx_dir)
+		assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR,m2.format(tx_dir)
 	except:
 		die(1,'{} missing, or not read/writable by user!'.format(tx_dir))
 
@@ -168,15 +174,15 @@ def sign_tx_file(txfile):
 				init_coin(tmp_tx.coin)
 
 		if hasattr(g.proto,'chain_name'):
-			m = 'Protocol chain name ({}) does not match chain name from TX file ({})'
-			assert tmp_tx.chain == g.proto.chain_name, m.format(tmp_tx.chain,g.proto.chain_name)
+			m = 'Chains do not match! tx file: {}, proto: {}'
+			assert tmp_tx.chain == g.proto.chain_name,m.format(tmp_tx.chain,g.proto.chain_name)
 
 		g.chain = tmp_tx.chain
 		g.token = tmp_tx.dcoin
 		g.dcoin = tmp_tx.dcoin or g.coin
 
 		reload(sys.modules['mmgen.tx'])
-		if g.coin == 'ETH':
+		if g.proto.base_coin == 'ETH':
 			reload(sys.modules['mmgen.altcoins.eth.tx'])
 
 		tx = mmgen.tx.MMGenTX(txfile)

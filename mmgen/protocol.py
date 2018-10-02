@@ -343,14 +343,18 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
 class EthereumTestnetProtocol(EthereumProtocol):
 	data_subdir = 'testnet'
-	rpc_port    = 8547 # start Parity with --ports-shift=2
+	rpc_port    = 8547 # start Parity with --jsonrpc-port=8547 or --ports-shift=2
 	chain_name  = 'kovan'
 
 class EthereumClassicProtocol(EthereumProtocol):
-	name   = 'ethereum_classic'
-	mmcaps = ('key','addr')
+	name       = 'ethereumClassic'
+	class_pfx  = 'Ethereum'
+	rpc_port   = 8555 # start Parity with --jsonrpc-port=8555 or --ports-shift=10
+	chain_name = 'ethereum_classic' # chain_id 0x3d (61)
 
-class EthereumClassicTestnetProtocol(EthereumClassicProtocol): pass
+class EthereumClassicTestnetProtocol(EthereumClassicProtocol):
+	rpc_port   = 8557 # start Parity with --jsonrpc-port=8557 or --ports-shift=12
+	chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
 
 class ZcashProtocol(BitcoinProtocolAddrgen):
 	name         = 'zcash'
@@ -440,7 +444,7 @@ class CoinProtocol(MMGenObject):
 		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol,None),
 		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol,None),
 		'eth': (EthereumProtocol,EthereumTestnetProtocol,None),
-		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,2),
+		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,None),
 		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
 		'xmr': (MoneroProtocol,MoneroTestnetProtocol,None)
 	}

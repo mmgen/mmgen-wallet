@@ -208,11 +208,13 @@ t_monero=(
 f_monero='Monero tests completed'
 
 i_eth='Ethereum'
-s_eth='Testing transaction and tracking wallet operations for Ethereum'
+s_eth='Testing transaction and tracking wallet operations for Ethereum and Ethereum Classic'
 t_eth=(
 	"$test_py -On --coin=eth ref_tx_chk"
 	"$test_py -On --coin=eth --testnet=1 ref_tx_chk"
-	"$test_py -On ethdev"
+	"$test_py -On --coin=etc ref_tx_chk"
+	"$test_py -On --coin=eth ethdev"
+	"$test_py -On --coin=etc ethdev"
 )
 f_eth='Ethereum tests completed'
 

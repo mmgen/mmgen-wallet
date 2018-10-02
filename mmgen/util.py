@@ -849,7 +849,7 @@ def rpc_init_parity():
 
 	if not g.daemon_version: # First call
 		g.daemon_version = g.rpch.parity_versionInfo()['version'] # fail immediately if daemon is geth
-		g.chain = g.rpch.parity_chain()
+		g.chain = g.rpch.parity_chain().replace(' ','_')
 		if g.token:
 			(g.token,g.dcoin) = resolve_token_arg(g.token)
 
@@ -923,10 +923,11 @@ def format_par(s,indent=0,width=80,as_list=False):
 # module loading magic for tx.py and tw.py
 def altcoin_subclass(cls,mod_id,cls_name):
 	if cls.__name__ != cls_name: return cls
-	pn = capfirst(g.proto.name)
-	tn = 'Token' if g.token else ''
-	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(g.coin.lower(),mod_id,pn,tn,cls_name)
-	e2 = 'cls = {}{}{}'.format(pn,tn,cls_name)
+	mod_dir = g.proto.base_coin.lower()
+	pname = g.proto.class_pfx if hasattr(g.proto,'class_pfx') else capfirst(g.proto.name)
+	tname = 'Token' if g.token else ''
+	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(mod_dir,mod_id,pname,tname,cls_name)
+	e2 = 'cls = {}{}{}'.format(pname,tname,cls_name)
 	try: exec e1; exec e2; return cls
 	except ImportError: return cls
 

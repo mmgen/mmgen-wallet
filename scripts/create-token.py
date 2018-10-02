@@ -24,8 +24,8 @@ opts_data = lambda: {
 """.format(d=decimals,n=name,s=symbol,t=supply)
 }
 
-g.coin = 'ETH'
 cmd_args = opts.init(opts_data)
+assert g.coin in ('ETH','ETC'),'--coin option must be set to ETH or ETC'
 
 if not len(cmd_args) == 1 or not is_coin_addr(cmd_args[0]):
 	opts.usage()

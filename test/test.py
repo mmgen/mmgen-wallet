@@ -163,13 +163,12 @@ opt.popen_spawn = True # popen has issues, so use popen_spawn always
 
 if not opt.system: os.environ['PYTHONPATH'] = repo_root
 
-ref_subdir = '' if g.proto.base_coin == 'BTC' else g.proto.name
+ref_subdir = '' if g.proto.base_coin == 'BTC' else 'ethereum_classic' if g.coin == 'ETC' else g.proto.name
 altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
 tn_ext = ('','.testnet')[g.testnet]
 
 coin_sel = g.coin.lower()
-# if g.coin == 'B2X': coin_sel = 'btc'
-if g.coin == 'ETH': coin_sel = 'btc' # TODO
+if g.coin.lower() in ('eth','etc'): coin_sel = 'btc'
 
 fork       = {'bch':'btc','btc':'btc','ltc':'ltc'}[coin_sel]
 tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[coin_sel]
@@ -585,7 +584,8 @@ cfgs = {
 			'eth': ('88FEFD-ETH[23.45495,40000].rawtx',
 					'B472BD-ETH[23.45495,40000].testnet.rawtx'),
 			'erc20': ('5881D2-MM1[1.23456,50000].rawtx',
-					'6BDB25-MM1[1.23456,50000].testnet.rawtx')
+					'6BDB25-MM1[1.23456,50000].testnet.rawtx'),
+			'etc': ('ED3848-ETC[1.2345,40000].rawtx','')
 		},
 		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
 		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
@@ -872,7 +872,7 @@ cmd_group['regtest_split'] = (
 )
 
 cmd_group['ethdev'] = (
-	('ethdev_setup',               'Ethereum Parity dev mode tests (start parity)'),
+	('ethdev_setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(g.coin)),
 	('ethdev_addrgen',             'generating addresses'),
 	('ethdev_addrimport',          'importing addresses'),
 	('ethdev_addrimport_dev_addr', "importing Parity dev address 'Ox00a329c..'"),
@@ -934,6 +934,8 @@ cmd_group['ethdev'] = (
 	('ethdev_token_txsign1',       'signing the transaction'),
 	('ethdev_token_txsend1',       'sending the transaction'),
 
+	('ethdev_token_twview1',       'viewing token tracking wallet'),
+
 	('ethdev_token_txcreate2',     'creating a token transaction (to burn address)'),
 	('ethdev_token_txbump',        'bumping the transaction fee'),
 
@@ -942,8 +944,8 @@ cmd_group['ethdev'] = (
 
 	('ethdev_del_dev_addr',        "deleting the dev address"),
 
-	('ethdev_bal2',                'the ETH balance'),
-	('ethdev_bal2_getbalance',     'the ETH balance (getbalance)'),
+	('ethdev_bal2',                'the {} balance'.format(g.coin)),
+	('ethdev_bal2_getbalance',     'the {} balance (getbalance)'.format(g.coin)),
 
 	('ethdev_addrimport_token_burn_addr',"importing the token burn address"),
 
@@ -955,7 +957,7 @@ cmd_group['ethdev'] = (
 	('ethdev_txsend_noamt',       'sending the transaction'),
 
 	('ethdev_token_bal2',          'the token balance'),
-	('ethdev_bal3',                'the ETH balance'),
+	('ethdev_bal3',                'the {} balance'.format(g.coin)),
 
 	('ethdev_token_txcreate_noamt', 'creating a token transaction (full amount send)'),
 	('ethdev_token_txsign_noamt',   'signing the transaction'),
@@ -967,7 +969,7 @@ cmd_group['ethdev'] = (
 )
 
 cmd_group['autosign'] = (
-	('autosign', 'transaction autosigning (BTC,BCH,LTC)'),
+	('autosign', 'transaction autosigning (BTC,BCH,LTC,ETH,ETC)'),
 )
 
 cmd_group['ref_alt'] = (
@@ -2319,14 +2321,20 @@ class MMGenTestSuite(object):
 
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
-		fdata = (('btc',''),('bch',''),('ltc','litecoin'),('eth','ethereum'),('erc20','ethereum'))
+		fdata = (	('btc',''),
+					('bch',''),
+					('ltc','litecoin'),
+					('eth','ethereum'),
+					('erc20','ethereum'),
+					('etc','ethereum_classic'))
 		tfns  = [cfgs['8']['ref_tx_file'][c][1] for c,d in fdata] + \
 				[cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
 		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
 		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
 		except: pass
 		for f,fn in zip(tfs,tfns):
-			shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
+			if fn: # use empty fn to skip file
+				shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
 		# make a bad tx file
 		with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
 			f.write('bad tx data')
@@ -2347,7 +2355,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 		t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
-		t.expect('10 transactions signed')
+		t.expect('11 transactions signed')
 		t.expect('1 transaction failed to sign')
 		t.expect('Waiting.')
 		t.kill(2)
@@ -2596,7 +2604,9 @@ class MMGenTestSuite(object):
 #		self.txcreate_common(name,sources=['8'])
 
 	def ref_tx_chk(self,name):
-		tf = os.path.join(ref_dir,ref_subdir,cfg['ref_tx_file'][g.coin.lower()][bool(tn_ext)])
+		fn = cfg['ref_tx_file'][g.coin.lower()][bool(tn_ext)]
+		if not fn: return
+		tf = os.path.join(ref_dir,ref_subdir,fn)
 		wf = dfl_words
 		write_to_tmpfile(cfg,pwfile,cfg['wpasswd'])
 		pf = get_tmpfile_fn(cfg,pwfile)
@@ -3213,7 +3223,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_txcreate(self,name,args=[],menu=[],acct='1',non_mmgen_inputs=0,
 						interactive_fee='50G',
-						fee_res='0.00105 ETH (50 gas price in Gwei)',
+						fee_res='0.00105 {} (50 gas price in Gwei)'.format(g.coin),
 						fee_desc = 'gas price'):
 		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['-B'] + args)
 		t.expect(r"'q'=quit view, .*?:.",'p', regex=True)
@@ -3274,7 +3284,7 @@ class MMGenTestSuite(object):
 	def ethdev_txcreate4(self,name):
 		args = ['98831F3A:E:2,23.45495']
 		interactive_fee='40G'
-		fee_res='0.00084 ETH (40 gas price in Gwei)'
+		fee_res='0.00084 {} (40 gas price in Gwei)'.format(g.coin)
 		return self.ethdev_txcreate(name,args=args,acct='1',non_mmgen_inputs=0,
 					interactive_fee=interactive_fee,fee_res=fee_res)
 
@@ -3329,7 +3339,7 @@ class MMGenTestSuite(object):
 
 	def init_ethdev_common(self):
 		g.testnet = True
-		init_coin('eth')
+		init_coin(g.coin)
 		g.proto.rpc_port = 8549
 		rpc_init()
 
@@ -3338,7 +3348,7 @@ class MMGenTestSuite(object):
 		cmd_args = ['--{}={}'.format(k,v) for k,v in token_data.items()]
 		silence()
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
-		cmd = ['scripts/create-token.py','--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
+		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
 		imsg("Executing: {}".format(' '.join(cmd)))
 		subprocess.check_output(cmd)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
@@ -3386,7 +3396,7 @@ class MMGenTestSuite(object):
 	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000,tx_fee='7G')
 
 	def ethdev_tx_status2(self,name):
-		self.ethdev_tx_status(name,ext='ETH[0,7000].sigtx',expect_str='successfully executed')
+		self.ethdev_tx_status(name,ext=g.coin+'[0,7000].sigtx',expect_str='successfully executed')
 
 	def ethdev_token_deploy2a(self,name): self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=200000)
 	def ethdev_token_deploy2b(self,name): self.ethdev_token_deploy(name,num=2,key='Owned',gas=250000)
@@ -3398,7 +3408,7 @@ class MMGenTestSuite(object):
 	def ethdev_token_transfer_funds(self,name):
 		MMGenExpect(name,'',msg_only=True)
 		sid = cfgs['8']['seed_id']
-		cmd = lambda i: ['mmgen-tool','--coin=eth','gen_addr','{}:E:{}'.format(sid,i),'wallet='+dfl_words]
+		cmd = lambda i: ['mmgen-tool','--coin='+g.coin,'gen_addr','{}:E:{}'.format(sid,i),'wallet='+dfl_words]
 		silence()
 		usr_addrs = [subprocess.check_output(cmd(i),stderr=sys.stderr).strip() for i in 11,21]
 		self.init_ethdev_common()
@@ -3443,6 +3453,19 @@ class MMGenTestSuite(object):
 	def ethdev_token_txsend1(self,name):
 		self.ethdev_token_txsend(name,ext='1.23456,50000].sigtx',token='mm1')
 
+	def ethdev_twview(self,name,args,expect_str):
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['twview'])
+		t.expect(expect_str,regex=True)
+		t.read()
+		t.ok()
+
+	bal_corr = Decimal('0.0000032') # gas use varies for token sends!
+	def ethdev_token_twview1(self,name):
+		ebal = Decimal('1.2314236')
+		if g.coin == 'ETC': ebal += self.bal_corr
+		s = '98831F3A:E:11\s+998.76544\s+' + str(ebal)
+		return self.ethdev_twview(name,args=['--token=mm1'],expect_str=s)
+
 	def ethdev_token_txcreate2(self,name):
 		return self.ethdev_token_txcreate(name,args=[eth_burn_addr+','+eth_amt2],token='mm1')
 
@@ -3466,7 +3489,9 @@ class MMGenTestSuite(object):
 		self.ethdev_bal(name,expect_str=r'deadbeef.* 999999.12345689012345678')
 
 	def ethdev_bal2_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
-		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen='127.0287876')
+		ebal = Decimal('127.0287876')
+		if g.coin == 'ETC': ebal += self.bal_corr
+		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen=str(ebal))
 
 	def ethdev_token_bal(self,name,expect_str):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['--token=mm1','twview','wide=1'])

@@ -33,7 +33,7 @@ class EthereumTrackingWallet(TrackingWallet):
 	desc = 'Ethereum tracking wallet'
 	caps = ()
 
-	data_dir = os.path.join(g.altcoin_data_dir,'eth',g.proto.data_subdir)
+	data_dir = os.path.join(g.altcoin_data_dir,g.coin.lower(),g.proto.data_subdir)
 	tw_file = os.path.join(data_dir,'tracking-wallet.json')
 
 	def __init__(self,mode='r'):

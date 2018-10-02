@@ -321,7 +321,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def is_in_wallet(self):
 		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
-		if d and 'blockNumber' in d:
+		if d and 'blockNumber' in d and d['blockNumber'] is not None:
 			return 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
 		return False
 

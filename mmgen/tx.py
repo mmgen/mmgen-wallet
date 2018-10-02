@@ -1126,7 +1126,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
 			assert type(d) == list,'{} data not a list!'.format(desc)
-			if not (desc == 'outputs' and g.coin == 'ETH'): # ETH txs can have no outputs
+			if not (desc == 'outputs' and g.proto.base_coin == 'ETH'): # ETH txs can have no outputs
 				assert len(d),'no {}!'.format(desc)
 			for e in d: e['amt'] = g.proto.coin_amt(e['amt'])
 			io,io_list = (
