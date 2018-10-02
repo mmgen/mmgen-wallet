@@ -124,7 +124,7 @@ for distribution to potential payers.
 
 > #### [Recovering your keys without the MMGen software][r]
 
-> #### [Forkcoin and Altcoin support (BCH,LTC,ETH,ETC,ZEC,XMR and 144 Bitcoin-derived alts)][x]
+> #### [Altcoin and Forkcoin support (ETH,ETC,XMR,ZEC,LTC,BCH and 144 Bitcoin-derived alts)][f]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -145,6 +145,6 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [8]: https://github.com/mmgen/MMGenLive
 [9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
 [r]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software
-[x]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_alt
+[f]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support
 [z]: https://user-images.githubusercontent.com/6071028/31656274-a35a1252-b31a-11e7-93b7-3d666f50f70f.png
 [w]: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
