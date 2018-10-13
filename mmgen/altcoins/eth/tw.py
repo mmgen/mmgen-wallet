@@ -224,7 +224,7 @@ class EthereumTwAddrList(TwAddrList):
 
 		from mmgen.obj import CoinAddr
 		for mmid,d in tw.items():
-#			if d['confirmations'] < minconf: continue
+#			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
 			bal = self.get_addr_balance(d['addr'])
@@ -234,7 +234,7 @@ class EthereumTwAddrList(TwAddrList):
 			self[label.mmid] = {'amt': g.proto.coin_amt('0'), 'lbl':  label }
 			if showbtcaddrs:
 				self[label.mmid]['addr'] = CoinAddr(d['addr'])
-			self[label.mmid]['lbl'].mmid.confs = 9999 # TODO
+			self[label.mmid]['lbl'].mmid.confs = None
 			self[label.mmid]['amt'] += bal
 			self.total += bal
 

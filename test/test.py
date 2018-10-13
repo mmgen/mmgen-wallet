@@ -121,34 +121,35 @@ opts_data = lambda: {
 	'desc': 'Test suite for the MMGen suite',
 	'usage':'[options] [command(s) or metacommand(s)]',
 	'options': """
--h, --help          Print this help message
---, --longhelp      Print help message for long options (common options)
--B, --bech32        Generate and use Bech32 addresses
--b, --buf-keypress  Use buffered keypresses as with real human input
--c, --print-cmdline Print the command line of each spawned command
--C, --coverage      Produce code coverage info using trace module
--x, --debug-pexpect Produce debugging output for pexpect calls
--D, --direct-exec   Bypass pexpect and execute a command directly (for
-                    debugging only)
--e, --exact-output  Show the exact output of the MMGen script(s) being run
--g, --segwit        Generate and use Segwit addresses
--G, --segwit-random Generate and use a random mix of Segwit and Legacy addrs
--l, --list-cmds     List and describe the commands in the test suite
--L, --log           Log commands to file {lf}
--n, --names         Display command names instead of descriptions
--O, --popen-spawn   Use pexpect's popen_spawn instead of popen (always true, so ignored)
--p, --pause         Pause between tests, resuming on keypress
--P, --profile       Record the execution time of each script
--q, --quiet         Produce minimal output.  Suppress dependency info
--r, --resume=c      Resume at command 'c' after interrupted run
--s, --system        Test scripts and modules installed on system rather
-                    than those in the repo root
--S, --skip-deps     Skip dependency checking for command
--u, --usr-random    Get random data interactively from user
--t, --traceback     Run the command inside the '{tbc}' script
--v, --verbose       Produce more verbose output
--W, --no-dw-delete  Don't remove default wallet from data dir after dw tests are done
--X, --exit-after=C  Exit after command 'C'
+-h, --help           Print this help message
+--, --longhelp       Print help message for long options (common options)
+-B, --bech32         Generate and use Bech32 addresses
+-b, --buf-keypress   Use buffered keypresses as with real human input
+-c, --print-cmdline  Print the command line of each spawned command
+-C, --coverage       Produce code coverage info using trace module
+-x, --debug-pexpect  Produce debugging output for pexpect calls
+-D, --no-daemon-stop Don't stop auto-started daemons after running tests
+-E, --direct-exec    Bypass pexpect and execute a command directly (for
+                     debugging only)
+-e, --exact-output   Show the exact output of the MMGen script(s) being run
+-g, --segwit         Generate and use Segwit addresses
+-G, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
+-l, --list-cmds      List and describe the commands in the test suite
+-L, --log            Log commands to file {lf}
+-n, --names          Display command names instead of descriptions
+-O, --popen-spawn    Use pexpect's popen_spawn instead of popen (always true, so ignored)
+-p, --pause          Pause between tests, resuming on keypress
+-P, --profile        Record the execution time of each script
+-q, --quiet          Produce minimal output.  Suppress dependency info
+-r, --resume=c       Resume at command 'c' after interrupted run
+-s, --system         Test scripts and modules installed on system rather
+                     than those in the repo root
+-S, --skip-deps      Skip dependency checking for command
+-u, --usr-random     Get random data interactively from user
+-t, --traceback      Run the command inside the '{tbc}' script
+-v, --verbose        Produce more verbose output
+-W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
+-X, --exit-after=C   Exit after command 'C'
 """.format(tbc=g.traceback_cmd,lf=log_file),
 	'notes': """
 
@@ -807,6 +808,12 @@ cmd_group['regtest'] = (
 	('regtest_bob_split1',         "splitting Bob's funds"),
 	('regtest_generate',           'mining a block'),
 	('regtest_bob_bal2',           "Bob's balance"),
+	('regtest_bob_bal2a',          "Bob's balance (show_days=1)"),
+	('regtest_bob_bal2b',          "Bob's balance (show_age=1)"),
+	('regtest_bob_bal2c',          "Bob's balance (showempty=1 show_age=1 minconf=2)"),
+	('regtest_bob_bal2d',          "Bob's balance (show_age=1 minconf=2)"),
+	('regtest_bob_bal2e',          "Bob's balance (showempty=1 show_age=1 sort=age)"),
+	('regtest_bob_bal2f',          "Bob's balance (showempty=1 show_age=1 sort=age,reverse)"),
 	('regtest_bob_rbf_send',       'sending funds to Alice (RBF)'),
 	('regtest_get_mempool1',       'mempool (before RBF bump)'),
 	('regtest_bob_rbf_bump',       'bumping RBF transaction'),
@@ -841,7 +848,7 @@ cmd_group['regtest'] = (
 	('regtest_alice_add_label_rpcfail','RPC failure code'),
 	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
 	('regtest_generate',           'mining a block'),
-	('regtest_bob_bal6',            "Bob's balance"),
+	('regtest_bob_bal6',           "Bob's balance"),
 	('regtest_bob_alice_bal',      "Bob and Alice's balances"),
 	('regtest_alice_bal2',         "Alice's balance"),
 	('regtest_stop',               'stopping regtest daemon'),
@@ -934,7 +941,7 @@ cmd_group['ethdev'] = (
 	('ethdev_token_txsign1',       'signing the transaction'),
 	('ethdev_token_txsend1',       'sending the transaction'),
 
-	('ethdev_token_twview1',       'viewing token tracking wallet'),
+	('ethdev_token_twview1_chk',   'viewing token tracking wallet'),
 
 	('ethdev_token_txcreate2',     'creating a token transaction (to burn address)'),
 	('ethdev_token_txbump',        'bumping the transaction fee'),
@@ -965,7 +972,26 @@ cmd_group['ethdev'] = (
 
 	('ethdev_token_bal3',          'the token balance'),
 
-#	('ethdev_stop',                'stopping parity'),
+	('ethdev_listaddresses1',      'listaddresses'),
+	('ethdev_listaddresses2',      'listaddresses minconf=999999999 (ignored)'),
+	('ethdev_listaddresses3',      'listaddresses sort=age (ignored)'),
+	('ethdev_listaddresses4',      'listaddresses showempty=1 sort=age (ignored)'),
+
+	('ethdev_token_listaddresses1','listaddresses --token=mm1'),
+	('ethdev_token_listaddresses2','listaddresses --token=mm1 showempty=1'),
+
+	('ethdev_twview1','twview'),
+	('ethdev_twview2','twview wide=1'),
+	('ethdev_twview3','twview wide=1 sort=age (ignored)'),
+	('ethdev_twview4','twview wide=1 minconf=999999999 (ignored)'),
+	('ethdev_twview5','twview wide=1 minconf=0 (ignored)'),
+	('ethdev_twview6','twview show_days=0 (ignored)'),
+
+	('ethdev_token_twview1','twview --token=mm1'),
+	('ethdev_token_twview2','twview --token=mm1 wide=1'),
+	('ethdev_token_twview3','twview --token=mm1 wide=1 sort=age (ignored)'),
+
+	('ethdev_stop',                'stopping parity'),
 )
 
 cmd_group['autosign'] = (
@@ -2765,10 +2791,14 @@ class MMGenTestSuite(object):
 	def regtest_fund_bob(self,name):   self.regtest_fund_wallet(name,'bob','C',rtFundAmt)
 	def regtest_fund_alice(self,name): self.regtest_fund_wallet(name,'alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
 
-	def regtest_user_bal(self,name,user,bal):
-		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','showempty=1'])
-		total = t.expect_getend('TOTAL: ')
-		cmp_or_die('{} {}'.format(bal,g.coin),total)
+	def regtest_user_bal(self,name,user,bal,args=['showempty=1'],skip_check=False,exit_val=0):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses'] + args)
+		if skip_check:
+			t.read()
+			t.ok(exit_val=exit_val)
+		else:
+			total = t.expect_getend('TOTAL: ')
+			cmp_or_die('{} {}'.format(bal,g.coin),total)
 
 	def regtest_alice_bal1(self,name):
 		return self.regtest_user_bal(name,'alice',rtFundAmt)
@@ -2781,6 +2811,24 @@ class MMGenTestSuite(object):
 
 	def regtest_bob_bal2(self,name):
 		return self.regtest_user_bal(name,'bob',rtBals[0])
+
+	def regtest_bob_bal2a(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_days=1'])
+
+	def regtest_bob_bal2b(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1'])
+
+	def regtest_bob_bal2c(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','minconf=2'],skip_check=True)
+
+	def regtest_bob_bal2d(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['show_age=1','minconf=2'],skip_check=True)
+
+	def regtest_bob_bal2e(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','sort=age'])
+
+	def regtest_bob_bal2f(self,name):
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','sort=age,reverse'])
 
 	def regtest_bob_bal3(self,name):
 		return self.regtest_user_bal(name,'bob',rtBals[1])
@@ -3086,8 +3134,13 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_stop(self,name):
-		t = MMGenExpect(name,'mmgen-regtest',['stop'])
-		t.ok()
+		if opt.no_daemon_stop:
+			MMGenExpect(name,'',msg_only=True)
+			msg_r('(leaving daemon running by user request)')
+			ok()
+		else:
+			t = MMGenExpect(name,'mmgen-regtest',['stop'])
+			t.ok()
 
 	def regtest_split_setup(self,name):
 		if g.coin != 'BTC': die(1,'Test valid only for coin BTC')
@@ -3453,14 +3506,15 @@ class MMGenTestSuite(object):
 	def ethdev_token_txsend1(self,name):
 		self.ethdev_token_txsend(name,ext='1.23456,50000].sigtx',token='mm1')
 
-	def ethdev_twview(self,name,args,expect_str):
-		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['twview'])
-		t.expect(expect_str,regex=True)
+	def ethdev_twview(self,name,args=[],expect_str='',tool_args=[],exit_val=0):
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['twview'] + tool_args)
+		if expect_str:
+			t.expect(expect_str,regex=True)
 		t.read()
-		t.ok()
+		t.ok(exit_val=exit_val)
 
-	bal_corr = Decimal('0.0000032') # gas use varies for token sends!
-	def ethdev_token_twview1(self,name):
+	bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
+	def ethdev_token_twview1_chk(self,name):
 		ebal = Decimal('1.2314236')
 		if g.coin == 'ETC': ebal += self.bal_corr
 		s = '98831F3A:E:11\s+998.76544\s+' + str(ebal)
@@ -3529,11 +3583,52 @@ class MMGenTestSuite(object):
 	def ethdev_token_bal3(self,name):
 		self.ethdev_token_bal(name,expect_str=r'98831F3A:E:13\s+1.23456\s')
 
+	def ethdev_listaddresses(self,name,args=[],tool_args=['all_labels=1'],exit_val=0):
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['listaddresses'] + tool_args)
+		t.read()
+		t.ok(exit_val=exit_val)
+
+	def ethdev_listaddresses1(self,name):
+		return self.ethdev_listaddresses(name)
+	def ethdev_listaddresses2(self,name):
+		return self.ethdev_listaddresses(name,tool_args=['minconf=999999999'])
+	def ethdev_listaddresses3(self,name):
+		return self.ethdev_listaddresses(name,tool_args=['sort=age'])
+	def ethdev_listaddresses4(self,name):
+		return self.ethdev_listaddresses(name,tool_args=['sort=age','showempty=1'])
+
+	def ethdev_token_listaddresses1(self,name):
+		return self.ethdev_listaddresses(name,args=['--token=mm1'])
+	def ethdev_token_listaddresses2(self,name):
+		return self.ethdev_listaddresses(name,args=['--token=mm1'],tool_args=['showempty=1'])
+
+	def ethdev_twview1(self,name):
+		return self.ethdev_twview(name)
+	def ethdev_twview2(self,name):
+		return self.ethdev_twview(name,tool_args=['wide=1'])
+	def ethdev_twview3(self,name):
+		return self.ethdev_twview(name,tool_args=['wide=1','sort=age'])
+	def ethdev_twview4(self,name):
+		return self.ethdev_twview(name,tool_args=['wide=1','minconf=999999999'])
+	def ethdev_twview5(self,name):
+		return self.ethdev_twview(name,tool_args=['wide=1','minconf=0'])
+	def ethdev_twview6(self,name):
+		return self.ethdev_twview(name,tool_args=['show_days=0'])
+
+	def ethdev_token_twview1(self,name):
+		return self.ethdev_twview(name,args=['--token=mm1'])
+	def ethdev_token_twview2(self,name):
+		return self.ethdev_twview(name,args=['--token=mm1'],tool_args=['wide=1'])
+	def ethdev_token_twview3(self,name):
+		return self.ethdev_twview(name,args=['--token=mm1'],tool_args=['wide=1','sort=age'])
+
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)
-		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
-		assert pid,'No parity pid file!'
-		subprocess.check_call(['kill',pid])
+		pid = read_from_tmpfile(cfg,cfg['parity_pidfile']) # exits if file not found
+		if opt.no_daemon_stop:
+			msg_r('(leaving daemon running by user request)')
+		else:
+			subprocess.check_call(['kill',pid])
 		ok()
 
 	# undocumented admin commands

@@ -232,8 +232,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = g.proto.coin_amt.max_prec + 4
 		fs = {  'btc':   u' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,amt_w),
-				'eth':   u' {n:4} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % amt_w,
-				'token': u' {n:4} {a} {m} {A:%s} {A2:%s} {c:<8} {g:<6} {l}' % (amt_w,amt_w)
+				'eth':   u' {n:4} {a} {m} {A:%s} {l}' % amt_w,
+				'token': u' {n:4} {a} {m} {A:%s} {A2:%s} {l}' % (amt_w,amt_w)
 				}[self.disp_type]
 		out = [fs.format(   n='Num',
 							t='Tx ID,Vout',
@@ -241,8 +241,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							m='MMGen ID'.ljust(mmid_w+1),
 							A='Amount({})'.format(g.dcoin).ljust(amt_w+1),
 							A2='Amount({})'.format(g.coin),
-							c='Confs',
-							g='Age(d)',
+							c='Confs',  # skipped for eth
+							g='Age(d)', # skipped for eth
 							l='Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [2])
@@ -445,7 +445,8 @@ class TwAddrList(MMGenDict):
 			if sort and 'age' in sort:
 				return '{}_{:>012}_{}'.format(
 					j.obj.rsplit(':',1)[0],
-					(1000000000-j.confs if hasattr(j,'confs') else 0), # Hack, but OK for the foreseeable future
+					# Hack, but OK for the foreseeable future:
+					(1000000000-j.confs if hasattr(j,'confs') and j.confs != None else 0),
 					j.sort_key)
 			else:
 				return j.sort_key
@@ -469,7 +470,7 @@ class TwAddrList(MMGenDict):
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 				cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
-				age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') else '-'
+				age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') and mmid.confs != None else '-'
 				))
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
