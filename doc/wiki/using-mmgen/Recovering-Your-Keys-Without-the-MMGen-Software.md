@@ -1,15 +1,14 @@
 ## Table of Contents
-
-* <a href='#a_i'>Introduction</a>
-* <a href='#a_rs'>Obtaining the binary seed</a>
-	* <a href='#a_ss'>Convert the seed to binary (legacy uncompressed addresses)</a>
-	* <a href='#a_cs'>Scramble the seed and save to binary (non-legacy and altcoin addresses and passwords)</a>
-* <a href='#a_gk'>Generating the keys</a>
-	* <a href='#a_cr'>Checking the result (optional, address example)</a>
-* <a href='#a_hpw'>Converting the hex value to a password (password example)</a>
-* <a href='#a_hw'>Hex to WIF by hand (address example)</a>
-	* <a href='#a_bcu'>Base-conversion utility</a>
-* <a href='#a_mh'>Converting an MMGen mnemonic to hexadecimal format</a>
+* [Introduction](#a_i)
+* [Obtaining the binary seed](#a_rs)
+	* [Convert the seed to binary (legacy uncompressed addresses)](#a_ss)
+	* [Scramble the seed and save to binary (non-legacy and altcoin addresses and passwords)](#a_cs)
+* [Generating the keys](#a_gk)
+	* [Checking the result (optional, address example)](#a_cr)
+* [Converting the hex value to a password (password example)](#a_hpw)
+* [Hex to WIF by hand (address example)](#a_hw)
+	* [Base-conversion utility](#a_bcu)
+* [Converting an MMGen mnemonic to hexadecimal format](#a_mh)
 
 #### <a name='a_i'>Introduction</a>
 
@@ -201,11 +200,14 @@ one:
 
 And so on and so forth, until we've generated all the keys we need: three, in our case.
 
+If we're generating keys for Ethereum and Monero, our work is done: the raw
+hexadecimal keys are all we need.  Otherwise, read on.
+
 #### <a name='a_hpw'>Converting the hex value to a password (password example)</a>
 
 If it's passwords we're generating, we must now convert our hex key to the
 desired password format, base58 in our case.  For this we can use the homemade
-`hex2b58.py` <a href='#a_bcu'>Base-conversion utility</a> described below:
+`hex2b58.py` [Base-conversion utility](#a_bcu) described below:
 
 	# bd60b8... is the double sha256 of our link1.bin from above
 	$ ./hex2b58.py bd60b8ba034bbb40498667ee600bc0cc0b99eb19164e8d412a48f16da4e00d6b

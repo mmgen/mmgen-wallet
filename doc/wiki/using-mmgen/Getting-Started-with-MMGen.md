@@ -1,36 +1,31 @@
 ## Table of Contents
 
-#### <a href='#a_i'>Preliminaries</a>
-* <a href='#a_bb'>Before you begin</a>
-* <a href='#a_iv'>Invocation</a>
-* <a href='#a_cf'>Configuration file</a>
-* <a href='#a_ts'>Bob and Alice regtest mode</a>
+#### [Preliminaries](#a_i)
+* [Before you begin](#a_bb)
+* [Invocation](#a_iv)
+* [Configuration file](#a_cf)
+* [Bob and Alice regtest mode](#a_ts)
 
-#### <a href='#a_bo'>Basic Operations</a>
-* <a href='#a_gw'>Generate an MMGen wallet</a>
-* <a href='#a_ga'>Generate addresses</a>
-* <a href='#a_ia'>Import addresses</a>
-* <a href='#a_ct'>Create a transaction</a>
-* <a href='#a_sg'>Sign a transaction</a>
-* <a href='#a_st'>Send a transaction</a>
+#### [Basic Operations](#a_bo)
+* [Generate an MMGen wallet](#a_gw)
+* [Generate addresses](#a_ga)
+* [Import addresses](#a_ia)
+* [Create a transaction](#a_ct)
+* [Sign a transaction](#a_sg)
+* [Send a transaction](#a_st)
 
-#### <a href='#a_af'>Additional Features</a>
-* <a href='#a_ms'>Using the mnemonic, seed and hexseed formats</a>
-* <a href='#a_ai'>Mnemonics, seeds and hexseeds: additional information</a>
-* <a href='#a_ic'>Incognito wallets</a>
-	* <a href='#a_hi'>Hidden incognito wallets</a>
+#### [Additional Features](#a_af)
+* [Using the mnemonic, seed and hexseed formats](#a_ms)
+* [Mnemonics, seeds and hexseeds: additional information](#a_ai)
+* [Incognito wallets](#a_ic)
+	* [Hidden incognito wallets](#a_hi)
 
-#### <a href='#a_at'>Advanced Topics</a>
-* <a href='#a_hw'>Hot wallets and key-address files</a>
-* <a href='#a_fee'>Transaction Fees</a>
-* <a href='#a_rbf'>BIP 125 replace-by-fee (RBF) transactions</a>
-	* <a href='#a_rbf_onl'>With an online (hot) wallet</a>
-	* <a href='#a_rbf_onf'>With an offline (cold storage) wallet</a>
-
-#### <a href='#a_alt'>Forkcoin and Altcoin support</a>
-* <a href='#a_bch'>Full support for Bcash (BCH) and Litecoin</a>
-* <a href='#a_es'>Enhanced key/address generation support for Zcash (ZEC) and Monero (XMR)</a>
-* <a href='#a_kg'>Key/address generation support for ETH, ETC and 144 Bitcoin-derived altcoins</a>
+#### [Advanced Topics](#a_at)
+* [Hot wallets and key-address files](#a_hw)
+* [Transaction Fees](#a_fee)
+* [BIP 125 replace-by-fee (RBF) transactions](#a_rbf)
+	* [With an online (hot) wallet](#a_rbf_onl)
+	* [With an offline (cold storage) wallet](#a_rbf_onf)
 
 ### <a name='a_i'>Preliminaries</a>
 
@@ -147,8 +142,8 @@ Since the wallet is a small, humanly readable ASCII file, it can easily be
 printed out on paper.
 
 Another highly recommended way to back up your wallet is to generate a mnemonic
-or seed file <a href='#a_ms'>as described below </a> and memorize it.  If you
-have an average or better memory, you'll find memorizing your mnemonic to be
+or seed file [as described below](#a_ms) and memorize it.  If you have an
+average or better memory, you'll find memorizing your mnemonic to be
 surprisingly easy. And the peace of mind that comes with knowing that your coins
 are recoverable **even if you lose all your physical backups** can't be
 overestimated.
@@ -868,120 +863,7 @@ them in turn until you get a confirmation:
 	$ mmgen-txsend 124FFF[0.1,150].sigtx  # ...if this doesn't confirm, then
 	$ mmgen-txsend 73DABB[0.1,200].sigtx
 
-### <a name='a_alt'>Forkcoin and Altcoin support</a>
-
-#### <a name='a_bch'>Full support for Bcash (BCH) and Litecoin</a>
-
-Bcash and Litecoin are fully supported by MMGen, on the same level as Bitcoin.
-
-To use MMGen with Bcash or Litecoin, first make sure the respective Bitcoin ABC
-and Litecoin daemons are properly installed ([source][si])([binaries][bi]),
-[running][p8] and synced.
-
-MMGen requires that the bitcoin-abc daemon be listening on non-standard
-[RPC port 8442][p8].  If your daemon version is >= 0.16.2, you must use the
-`--usecashaddr=0` option.
-
-Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
-commands.  It's that simple!
-
-#### <a name='a_es'>Enhanced key/address generation support for Zcash (ZEC) and Monero (XMR)</a>
-
-MMGen's enhanced key/address generation support for Zcash and Monero includes
-**Zcash z-addresses** and automated Monero wallet creation.
-
-Generate ten Zcash z-address key/address pairs from your default wallet:
-
-	$ mmgen-keygen --coin=zec --type=zcash_z 1-10
-
-The addresses' view keys are included in the file as well.
-
-NOTE: Since your key/address file will probably be used on an online computer,
-you should encrypt it with a good password when prompted to do so. The file can
-decrypted as required using the `mmgen-tool decrypt` command.  If you choose a
-non-standard Scrypt hash preset, take care to remember it.
-
-To generate Zcash t-addresses, just omit the `--type` argument:
-
-	$ mmgen-keygen --coin=zec 1-10
-
-Generate ten Monero address pairs from your default wallet:
-
-	$ mmgen-keygen --coin=xmr 1-10
-
-In addition to spend and view keys, Monero key/address files also include a
-wallet password for each address (the password is the double SHA256 of the spend
-key, truncated to 16 bytes).  This allows you to generate a wallet from each
-key in the key/address file by running the following command:
-
-	$ monero-wallet-cli --generate-from-spend-key MyMoneroWallet
-
-and pasting in the key and password data when prompted.  Monerod must be
-running and `monero-wallet-cli` be located in your executable path.
-
-To save your time and labor, the `mmgen-tool` utility includes a command that
-completely automates this process:
-
-	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc
-
-This will generate a uniquely-named Monero wallet for each key/address pair in
-the key/address file and encrypt it with its respective password.  No user
-interaction is required.  By default, wallets are synced to the current block
-height, as they're assumed to be empty, but this behavior can be overridden:
-
-	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc blockheight=123456
-
-To keep your wallets in sync as the Monero blockchain grows, `mmgen-tool`
-includes another utility:
-
-	$ mmgen-tool syncmonerowallets *XMR*.akeys.mmenc
-
-This command also requires no user interaction, a very handy feature when you
-have a large batch of wallets requiring long sync times.
-
-#### <a name='a_kg'>Key/address generation support for ETH, ETC and 144 Bitcoin-derived altcoins</a>
-
-To generate key/address pairs for these coins, just specify the coin's symbol
-with the `--coin` argument:
-
-	# For DASH:
-	$ mmgen-keygen --coin=dash 1-10
-	# For Emercoin:
-	$ mmgen-keygen --coin=emc 1-10
-
-For compressed public keys, add the `--type=compressed` option:
-
-	$ mmgen-keygen --coin=dash --type=compressed 1-10
-
-If it's just the addresses you want, then use `mmgen-addrgen` instead:
-
-	$ mmgen-addrgen --coin=dash 1-10
-
-Regarding encryption of key/address files, see the note for Zcash above.
-
-Here's a complete list of supported altcoins as of this writing:
-
-	2give,42,611,ac,acoin,alf,anc,apex,arco,arg,aur,bcf,blk,bmc,bqc,bsty,btcd,
-	btq,bucks,cann,cash,cat,cbx,ccn,cdn,chc,clam,con,cpc,crps,csh,dash,dcr,dfc,
-	dgb,dgc,doge,doged,dope,dvc,efl,emc,emd,enrg,esp,fai,fc2,fibre,fjc,flo,flt,
-	fst,ftc,gcr,good,grc,gun,ham,html5,hyp,icash,infx,inpay,ipc,jbs,judge,lana,
-	lat,ldoge,lmc,ltc,mars,mcar,mec,mint,mobi,mona,moon,mrs,mue,mxt,myr,myriad,
-	mzc,neos,neva,nka,nlg,nmc,nto,nvc,ok,omc,omni,onion,onx,part,pink,pivx,pkb,
-	pnd,pot,ppc,ptc,pxc,qrk,rain,rbt,rby,rdd,ric,sdc,sib,smly,song,spr,start,
-	sys,taj,tit,tpc,trc,ttc,tx,uno,via,vpn,vtc,wash,wdc,wisc,wkc,wsx,xcn,xgb,
-	xmg,xpm,xpoke,xred,xst,xvc,zet,zlq,zoom,zrc,bch,etc,eth,ltc,xmr,zec
-
-Note that support for these coins is EXPERIMENTAL.  Many of them have received
-only minimal testing, or no testing at all.  At startup you'll be informed of
-the level of your selected coin's support reliability as deemed by the MMGen
-Project.
-
-[01]: https://github.com/mmgen/mmgen/wiki/Tracking-and-spending-ordinary-Bitcoin-addresses
+[01]: Tracking-and-spending-ordinary-Bitcoin-addresses
 [02]: https://tpfaucet.appspot.com
 [03]: Recovering-Your-Keys-Without-the-MMGen-Software
-[04]: https://bitcoin.org/en/developer-examples#testnet
-[05]: https://bitcoin.org/en/developer-examples#regtest-mode
-[06]: https://github.com/mmgen/mmgen/wiki/MMGen-Quick-Start-with-Regtest-Mode
-[si]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
-[bi]: Install-Bitcoind#a_d
-[p8]: Install-Bitcoind#a_r
+[06]: MMGen-Quick-Start-with-Regtest-Mode
