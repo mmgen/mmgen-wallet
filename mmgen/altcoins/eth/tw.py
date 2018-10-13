@@ -46,10 +46,12 @@ class EthereumTrackingWallet(TrackingWallet):
 			try: os.stat(self.tw_file)
 			except:
 				self.orig_data = ''
-				self.data = {'accounts':{},'tokens':{}}
+				self.data = {'coin':g.coin,'accounts':{},'tokens':{}}
 			else: die(2,"File '{}' exists but does not contain valid json data")
 		else:
 			self.upgrade_wallet_maybe()
+			m = 'Tracking wallet coin ({}) does not match current coin ({})!'
+			assert self.data['coin'] == g.coin,m.format(self.data['coin'],g.coin)
 			if not 'tokens' in self.data:
 				self.data['tokens'] = {}
 			def conv_types(ad):
@@ -61,10 +63,13 @@ class EthereumTrackingWallet(TrackingWallet):
 				conv_types(v)
 
 	def upgrade_wallet_maybe(self):
-		if not 'accounts' in self.data:
+		if not 'accounts' in self.data or not 'coin' in self.data:
 			ymsg('Upgrading {}!'.format(self.desc))
-			self.data = {}
-			self.data['accounts'] = json.loads(self.orig_data)
+			if not 'accounts' in self.data:
+				self.data = {}
+				self.data['accounts'] = json.loads(self.orig_data)
+			if not 'coin' in self.data:
+				self.data['coin'] = g.coin
 			mode_save = self.mode
 			self.mode = 'w'
 			self.write()
