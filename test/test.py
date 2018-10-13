@@ -2347,7 +2347,7 @@ class MMGenTestSuite(object):
 
 	def autosign(self,name): # tests everything except device detection, mount/unmount
 		if skip_for_win(): return
-		fdata = (	('btc',''),
+		fdata = (   ('btc',''),
 					('bch',''),
 					('ltc','litecoin'),
 					('eth','ethereum'),
