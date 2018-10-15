@@ -178,13 +178,18 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 
 	disp_type = 'eth'
 	can_group = False
+	col_adj = 29
 	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
 	desc    = 'account balances'
+	item_desc = 'account'
 	dump_fn_pfx = 'balances'
 	prompt = """
-Sort options: [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: show [D]ays, show [m]mgen addr, r[e]draw screen
+Sort options:    [a]mount, a[d]dress, [r]everse, [M]mgen addr
+Display options: show [m]mgen addr, r[e]draw screen
+Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
+                 add [l]abel, [R]emove address:
 """
+	valid_keypresses = 'adrMmeqpvwlR'
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
@@ -206,8 +211,9 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	disp_type = 'token'
 	prompt_fs = 'Total to spend: {} {}\n\n'
+	col_adj = 37
 
-	def get_display_precision(self): return 10
+	def get_display_precision(self): return 10 # truncate precision for narrow display
 
 	def get_addr_bal(self,addr):
 		return Token(g.token).balance(addr)

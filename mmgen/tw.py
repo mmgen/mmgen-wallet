@@ -25,6 +25,7 @@ from mmgen.obj import *
 from mmgen.tx import is_mmgen_id
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
+def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
 class TwUnspentOutputs(MMGenObject):
 
@@ -36,12 +37,16 @@ class TwUnspentOutputs(MMGenObject):
 	can_group = True
 	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
 	desc = 'unspent outputs'
+	item_desc = 'unspent output'
 	dump_fn_pfx = 'listunspent'
 	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
 Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
+Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 """
+	valid_keypresses = 'tadArMDgmeqpvwl'
+	col_adj = 38
 
 	class MMGenTwOutputList(list,MMGenObject): pass
 
@@ -122,7 +127,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		for u in self.unspent:
 			if u.label == None: u.label = ''
 		if not self.unspent:
-			die(1,'No tracked unspent outputs in tracking wallet!')
+			die(1,'No tracked {}s in tracking wallet!'.format(self.item_desc))
 
 	def do_sort(self,key=None,reverse=False):
 		sort_funcs = {
@@ -168,7 +173,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
 		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
 		max_btcaddr_w = max(len(i.addr) for i in unsp)
-		min_addr_w = self.cols - 38
+		min_addr_w = self.cols - self.col_adj
 		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
 		acct_w = min(max_acct_w, max(24,addr_w-10))
 		btaddr_w = addr_w - acct_w - 1
@@ -275,83 +280,96 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		fs = '\nTotal unspent: {} {} ({} outputs)'
 		msg(fs.format(self.total.hl(),g.dcoin,len(self.unspent)))
 
-	def get_idx_and_label_from_user(self):
+	def get_idx_from_user(self,get_label=False):
 		msg('')
 		while True:
-			ret = my_raw_input("Enter unspent output number (or 'q' to return to main menu): ")
-			if ret == 'q': return None,None
+			ret = my_raw_input('Enter {} number (or RETURN to return to main menu): '.format(self.item_desc))
+			if ret == '': return (None,None) if get_label else None
 			n = AddrIdx(ret,on_fail='silent') # hacky way to test and convert to integer
 			if not n or n < 1 or n > len(self.unspent):
 				msg('Choice must be a single number between 1 and {}'.format(len(self.unspent)))
 # 			elif not self.unspent[n-1].mmid:
 # 				msg('Address #{} is not an {} address. No label can be added to it'.format(n,g.proj_name))
 			else:
-				while True:
-					s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
-					if s == 'q':
-						return None,None
-					elif s == '':
-						fs = "Removing label for address #{}.  Is this what you want?"
-						if keypress_confirm(fs.format(n)):
-							return n,s
-					elif s:
-						if TwComment(s,on_fail='return'):
-							return n,s
+				if get_label:
+					while True:
+						s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
+						if s == 'q':
+							return None,None
+						elif s == '':
+							fs = "Removing label for {} #{}.  Is this what you want?"
+							if keypress_confirm(fs.format(self.item_desc,n)):
+								return n,s
+						elif s:
+							if TwComment(s,on_fail='return'):
+								return n,s
+				else:
+					fs = "Removing {} #{} from tracking wallet.  Is this what you want?"
+					if keypress_confirm(fs.format(self.item_desc,n)):
+						return n
 
 	def view_and_sort(self,tx):
-		txos = self.prompt_fs.format(tx.sum_outputs().hl(),g.dcoin) if tx.outputs else ''
-		prompt = txos + self.prompt.strip()
 		self.display()
-		msg(prompt)
-
 		from mmgen.term import get_char
-		p = "'q'=quit view, 'p'=print to file, 'v'=pager view, 'w'=wide view, 'l'=add label:\b"
+		prompt = self.prompt.strip() + '\b'
+		skip_prompt,oneshot_msg = False,None
 		while True:
-			reply = get_char(p,immed_chars='atDdAMrgmeqpvw')
-			if   reply == 'a': self.do_sort('amt')
+			reply = get_char('' if skip_prompt else (oneshot_msg or '')+prompt,immed_chars=self.valid_keypresses)
+			skip_prompt = False
+			oneshot_msg = '' if oneshot_msg else None # tristate, saves previous state
+			if reply not in self.valid_keypresses:
+				msg_r('\ninvalid keypress ')
+				time.sleep(0.5)
+			elif reply == 'a': self.do_sort('amt')
 			elif reply == 'A': self.do_sort('age')
 			elif reply == 'd': self.do_sort('addr')
 			elif reply == 'D': self.show_days = not self.show_days
-			elif reply == 'e': msg('\n{}\n{}\n{}'.format(self.fmt_display,prompt,p))
+			elif reply == 'e': pass
 			elif reply == 'g':
 				if self.can_group:
 					self.group = not self.group
 			elif reply == 'l':
-				idx,lbl = self.get_idx_and_label_from_user()
+				idx,lbl = self.get_idx_from_user(get_label=True)
 				if idx:
 					e = self.unspent[idx-1]
 					if TrackingWallet(mode='w').add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
-						msg(u'{}\n{}\n{}'.format(self.fmt_display,prompt,p))
+						action = 'added to' if lbl else 'removed from'
+						oneshot_msg = yellow("Label {} {} #{}\n\n".format(action,self.item_desc,idx))
 					else:
-						msg('Label could not be added\n{}\n{}'.format(prompt,p))
+						msg('Label could not be added\n{}'.format(prompt))
 			elif reply == 'M': self.do_sort('twmmid'); self.show_mmid = True
 			elif reply == 'm': self.show_mmid = not self.show_mmid
 			elif reply == 'p':
-				msg('')
 				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,g.dcoin,
 										','.join(self.sort_info(include_group=False)).lower())
-				write_data_to_file(of,self.format_for_printing(),'{} listing'.format(self.desc))
-				m = yellow("Data written to '{}'".format(of))
-				msg('\n{}\n{}\n\n{}'.format(self.fmt_display,m,prompt))
-				continue
-			elif reply == 'q': return self.unspent
+				msg('')
+				write_data_to_file(of,self.format_for_printing(),desc='{} listing'.format(self.desc))
+				oneshot_msg = yellow("Data written to '{}'\n\n".format(of))
+			elif reply == 'q': msg(''); return self.unspent
 			elif reply == 'r': self.unspent.reverse(); self.reverse = not self.reverse
+			elif reply == 'R':
+				idx = self.get_idx_from_user()
+				if idx:
+					e = self.unspent[idx-1]
+					if TrackingWallet(mode='w').remove_address(e.addr):
+						self.get_unspent_data()
+						self.do_sort()
+						self.total = self.get_total_coin()
+						oneshot_msg = yellow("{} #{} removed\n\n".format(capfirst(self.item_desc),idx))
+					else:
+						msg('Address could not be removed\n{}'.format(prompt))
 			elif reply == 't': self.do_sort('txid')
-			elif reply == 'v':
-				do_pager(self.fmt_display)
-				continue
-			elif reply == 'w':
-				do_pager(self.format_for_printing(color=True))
-				continue
-			else:
-				msg('\nInvalid input')
-				continue
+			elif reply in ('v','w'):
+				do_pager(self.fmt_display if reply == 'v' else self.format_for_printing(color=True))
+				if g.platform == 'linux' and oneshot_msg == None:
+					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
+					skip_prompt = True
+					continue
 
 			msg('\n')
-			self.display()
-			msg(prompt)
+			self.display() # creates self.fmt_display
 
 class TwAddrList(MMGenDict):
 

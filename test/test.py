@@ -629,10 +629,12 @@ eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 eth_burn_addr = 'deadbeef'*5
 eth_amt1 = '999999.12345689012345678'
 eth_amt2 = '888.111122223333444455'
+eth_rem_addrs = ('4','1')
 
 def eth_args():
 	assert g.coin in ('ETH','ETC'),'for ethdev tests, --coin must be set to either ETH or ETC'
 	return [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
+
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -990,6 +992,15 @@ cmd_group['ethdev'] = (
 	('ethdev_token_twview1','twview --token=mm1'),
 	('ethdev_token_twview2','twview --token=mm1 wide=1'),
 	('ethdev_token_twview3','twview --token=mm1 wide=1 sort=age (ignored)'),
+
+	('ethdev_edit_label1','adding label to addr #{} in {} tracking wallet'.format(eth_rem_addrs[0],g.coin)),
+	('ethdev_edit_label2','adding label to addr #{} in {} tracking wallet'.format(eth_rem_addrs[1],g.coin)),
+	('ethdev_edit_label3','removing label from addr #{} in {} tracking wallet'.format(eth_rem_addrs[0],g.coin)),
+
+	('ethdev_remove_addr1','removing addr #{} from {} tracking wallet'.format(eth_rem_addrs[0],g.coin)),
+	('ethdev_remove_addr2','removing addr #{} from {} tracking wallet'.format(eth_rem_addrs[1],g.coin)),
+	('ethdev_remove_token_addr1','removing addr #{} from {} token tracking wallet'.format(eth_rem_addrs[0],g.coin)),
+	('ethdev_remove_token_addr2','removing addr #{} from {} token tracking wallet'.format(eth_rem_addrs[1],g.coin)),
 
 	('ethdev_stop',                'stopping parity'),
 )
@@ -1807,7 +1818,7 @@ class MMGenTestSuite(object):
 							fee_desc='transaction fee',fee_res=None,
 							add_comment='',view='t',save=True,no_ok=False):
 		for choice in menu + ['q']:
-			t.expect(r"'q'=quit view, .*?:.",choice,regex=True)
+			t.expect(r'\[q\]uit view, .*?:.',choice,regex=True)
 		if bad_input_sels:
 			for r in ('x','3-1','9999'):
 				t.expect(input_sels_prompt+': ',r+'\n')
@@ -3126,11 +3137,11 @@ class MMGenTestSuite(object):
 
 	def regtest_user_edit_label(self,name,user,output,label):
 		t = MMGenExpect(name,'mmgen-txcreate',['-B','--'+user,'-i'])
-		t.expect(r"'q'=quit view, .*?:.",'M',regex=True)
-		t.expect(r"'q'=quit view, .*?:.",'l',regex=True)
+		t.expect(r'add \[l\]abel:.','M',regex=True)
+		t.expect(r'add \[l\]abel:.','l',regex=True)
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
 		t.expect(r"Enter label text.*return to main menu\):.",label+'\n',regex=True)
-		t.expect(r"'q'=quit view, .*?:.",'q',regex=True)
+		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		t.ok()
 
 	def regtest_stop(self,name):
@@ -3175,7 +3186,7 @@ class MMGenTestSuite(object):
 			'--outdir='+cfg['tmpdir'],
 			'--tx-fees=0.0001,0.0003',
 			sid+':S:1',sid+':S:2'])
-		t.expect(r"'q'=quit view, .*?:.",'q', regex=True)
+		t.expect(r'\[q\]uit view, .*?:.','q', regex=True)
 		t.expect('outputs to spend: ','1\n')
 
 		for tx in ('timelocked','split'):
@@ -3279,7 +3290,7 @@ class MMGenTestSuite(object):
 						fee_res='0.00105 {} (50 gas price in Gwei)'.format(g.coin),
 						fee_desc = 'gas price'):
 		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['-B'] + args)
-		t.expect(r"'q'=quit view, .*?:.",'p', regex=True)
+		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
 		self.txcreate_ui_common(t,name,
 								menu=menu,
@@ -3304,7 +3315,8 @@ class MMGenTestSuite(object):
 		self.txsend_ui_common(t,name,quiet=True,bogus_send=bogus_send,has_label=True)
 
 	def ethdev_txcreate1(self,name):
-		menu = ['a','d','A','r','M','D','e','m','m']
+		# valid_keypresses = 'adrMmeqpvwl'
+		menu = ['a','d','r','M','D','e','m','m'] # include one invalid keypress, 'D'
 		args = ['98831F3A:E:1,123.456']
 		return self.ethdev_txcreate(name,args=args,menu=menu,acct='1',non_mmgen_inputs=1)
 
@@ -3389,6 +3401,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['remove_label',addr])
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		t.ok()
+
 
 	def init_ethdev_common(self):
 		g.testnet = True
@@ -3621,6 +3634,31 @@ class MMGenTestSuite(object):
 		return self.ethdev_twview(name,args=['--token=mm1'],tool_args=['wide=1'])
 	def ethdev_token_twview3(self,name):
 		return self.ethdev_twview(name,args=['--token=mm1'],tool_args=['wide=1','sort=age'])
+
+	def ethdev_edit_label(self,name,out_num,args=[],action='l',label_text=None):
+		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + args + ['-B','-i'])
+		p1,p2 = ('emove address:\b','return to main menu): ')
+		p3,r3 = (p2,label_text+'\n') if label_text is not None else ('(y/N): ','y')
+		p4,r4 = (('(y/N): ',),('y',)) if label_text == '' else ((),())
+		for p,r in zip((p1,p1,p2,p3)+p4+(p1,p1),('M',action,out_num+'\n',r3)+r4+('M','q')):
+			t.expect(p,r)
+		t.ok()
+
+	def ethdev_edit_label1(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[0],label_text='First added label-α')
+	def ethdev_edit_label2(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[1],label_text='Second added label')
+	def ethdev_edit_label3(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[0],label_text='')
+
+	def ethdev_remove_addr1(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[0],action='R')
+	def ethdev_remove_addr2(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[1],action='R')
+	def ethdev_remove_token_addr1(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[0],args=['--token=mm1'],action='R')
+	def ethdev_remove_token_addr2(self,name):
+		self.ethdev_edit_label(name,out_num=eth_rem_addrs[1],args=['--token=mm1'],action='R')
 
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)
