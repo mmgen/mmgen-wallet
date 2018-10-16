@@ -115,7 +115,7 @@ if opt.rescan and not 'rescan' in tw.caps:
 	opt.rescan = False
 
 if opt.rescan and not opt.quiet:
-	confirm_or_exit(ai_msgs('rescan'),'continue',expect='YES')
+	confirm_or_raise(ai_msgs('rescan'),'continue',expect='YES')
 
 if opt.batch and not 'batch' in tw.caps:
 	msg("'--batch' ignored: not supported by {}".format(type(tw).__name__))

@@ -23,3 +23,4 @@ mmgen.exception: Exception classes for the MMGen suite
 
 class UnrecognizedTokenSymbol(Exception): pass
 class TokenNotInBlockchain(Exception): pass
+class UserNonConfirmation(Exception): pass

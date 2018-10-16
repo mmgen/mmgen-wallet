@@ -1041,7 +1041,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		if check_offset:
 			self._check_valid_offset(f,'write')
 			if not opt.quiet:
-				confirm_or_exit('',"alter file '{}'".format(f.name))
+				confirm_or_raise('',"alter file '{}'".format(f.name))
 
 		flgs = os.O_RDWR|os.O_BINARY if g.platform == 'win' else os.O_RDWR
 		fh = os.open(f.name,flgs)

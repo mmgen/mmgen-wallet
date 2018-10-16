@@ -360,8 +360,12 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,g.dcoin,
 										','.join(self.sort_info(include_group=False)).lower())
 				msg('')
-				write_data_to_file(of,self.format_for_printing(),desc='{} listing'.format(self.desc))
-				oneshot_msg = yellow("Data written to '{}'\n\n".format(of))
+				try:
+					write_data_to_file(of,self.format_for_printing(),desc='{} listing'.format(self.desc))
+				except UserNonConfirmation as e:
+					oneshot_msg = red("File '{}' not overwritten by user request\n\n".format(of))
+				else:
+					oneshot_msg = yellow("Data written to '{}'\n\n".format(of))
 			elif action in ('a_view','a_view_wide'):
 				do_pager(self.fmt_display if action == 'a_view' else self.format_for_printing(color=True))
 				if g.platform == 'linux' and oneshot_msg == None:

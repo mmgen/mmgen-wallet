@@ -145,7 +145,7 @@ if invoked_as == 'passchg':
 if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	m1 = yellow('Confirmation of default wallet update')
 	m2 = 'update the default wallet'
-	confirm_or_exit(m1,m2,exit_msg='Password not changed')
+	confirm_or_raise(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
 	msg('Securely deleting old wallet')
 	from subprocess import check_output,CalledProcessError

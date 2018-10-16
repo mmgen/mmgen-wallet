@@ -888,7 +888,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]
 		m2 = 'broadcast this transaction to the {} network'.format(g.chain.upper())
 		m3 = ('YES, I REALLY WANT TO DO THIS','YES')[bool(opt.quiet or opt.yes)]
-		confirm_or_exit(m1,m2,m3)
+		confirm_or_raise(m1,m2,m3)
 		msg('Sending transaction')
 
 	def send(self,prompt_user=True,exit_on_fail=False):

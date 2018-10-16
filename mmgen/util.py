@@ -521,13 +521,13 @@ def get_new_passphrase(desc,passchg=False):
 	if pw == '': qmsg('WARNING: Empty passphrase')
 	return pw
 
-def confirm_or_exit(message,q,expect='YES',exit_msg='Exiting at user request'):
+def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 	m = message.strip()
 	if m: msg(m)
 	a = q+'  ' if q[0].isupper() else 'Are you sure you want to {}?\n'.format(q)
 	b = "Type uppercase '{}' to confirm: ".format(expect)
 	if my_raw_input(a+b).strip() != expect:
-		die(1,exit_msg)
+		raise UserNonConfirmation,exit_msg
 
 def write_data_to_file( outfile,data,desc='data',
 						ask_write=False,
@@ -557,7 +557,7 @@ def write_data_to_file( outfile,data,desc='data',
 			if no_tty:
 				die(2,'Printing {} to screen is not allowed'.format(desc))
 			if (ask_tty and not opt.quiet) or binary:
-				confirm_or_exit('','output {} to screen'.format(desc))
+				confirm_or_raise('','output {} to screen'.format(desc))
 		else:
 			try:    of = os.readlink('/proc/{}/fd/1'.format(os.getpid())) # Linux
 			except: of = None # Windows
@@ -567,7 +567,7 @@ def write_data_to_file( outfile,data,desc='data',
 					if no_tty:
 						die(2,'Writing {} to pipe is not allowed'.format(desc))
 					if ask_tty and not opt.quiet:
-						confirm_or_exit('','output {} to pipe'.format(desc))
+						confirm_or_raise('','output {} to pipe'.format(desc))
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
 				msg(u"Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
@@ -593,7 +593,7 @@ def write_data_to_file( outfile,data,desc='data',
 		hush = False
 		if file_exists(outfile) and ask_overwrite:
 			q = u"File '{}' already exists\nOverwrite?".format(outfile)
-			confirm_or_exit('',q)
+			confirm_or_raise('',q)
 			msg(u"Overwriting file '{}'".format(outfile))
 			hush = True
 

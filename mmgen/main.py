@@ -59,5 +59,7 @@ def launch(what):
 				except:
 					try: m = e.message.decode('utf8')
 					except: m = repr(e.message)
-				from mmgen.util import ydie
-				ydie(2,u'\nERROR: ' + m)
+
+				from mmgen.util import die,ydie
+				if type(e).__name__ == 'UserNonConfirmation': die(1,m)
+				else: ydie(2,u'\nERROR: ' + m)
