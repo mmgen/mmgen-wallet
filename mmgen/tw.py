@@ -546,7 +546,7 @@ class TrackingWallet(MMGenObject):
 			assert coinaddr,u"{pn} address '{ma}' not found in tracking wallet"
 			assert self.is_in_wallet(coinaddr),u"Address '{ca}' not found in tracking wallet"
 		except Exception as e:
-			msg(e[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
+			msg(e.message.format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
 			return False
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.

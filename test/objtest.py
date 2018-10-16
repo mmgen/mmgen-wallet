@@ -90,10 +90,10 @@ def run_test(test,arg,input_data):
 		if input_data == 'good':
 			raise ValueError,'Error on good input data'
 		if opt.verbose:
-			msg('exitval: {}'.format(e[0]))
+			msg('exitval: {}'.format(e.code))
 	except UserWarning as e:
 		msg('==> {!r}'.format(ret))
-		die(2,red('{}'.format(e[0])))
+		die(2,red('{}'.format(e.message)))
 
 r32,r24,r16,r17,r18 = os.urandom(32),os.urandom(24),os.urandom(16),os.urandom(17),os.urandom(18)
 tw_pfx = g.proto.base_coin.lower()+':'

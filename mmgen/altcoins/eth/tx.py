@@ -299,7 +299,7 @@ class EthereumMMGenTX(MMGenTX):
 				self.token_addr = TokenAddr(etx.creates.encode('hex'))
 		except Exception as e:
 			m = "{!r}: transaction signing failed!"
-			msg(m.format(e[0]))
+			msg(m.format(e.message))
 			return False
 
 		return self.check_sigs()
@@ -461,7 +461,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			msg('OK')
 		except Exception as e:
 			m = "{!r}: transaction signing failed!"
-			msg(m.format(e[0]))
+			msg(m.format(e.message))
 			return False
 
 		return self.check_sigs()

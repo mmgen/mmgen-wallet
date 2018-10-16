@@ -867,7 +867,7 @@ def rpc_init_bitcoind():
 				assert conn.getblockhash(fork[0]) == fork[1], (
 					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
 		except Exception as e:
-			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e,c=g.coin))
+			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e.message,c=g.coin))
 
 	def check_chaintype_mismatch():
 		try:
@@ -875,7 +875,7 @@ def rpc_init_bitcoind():
 			if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
 			if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
 		except Exception as e:
-			die(1,'{}\nChain is {}!'.format(e,g.chain))
+			die(1,'{}\nChain is {}!'.format(e.message,g.chain))
 
 	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 

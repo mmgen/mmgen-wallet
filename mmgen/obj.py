@@ -272,7 +272,7 @@ class AddrIdx(int,InitErrors):
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to address index ({})"
-			return cls.init_fail(m.format(num,e[0]),on_fail)
+			return cls.init_fail(m.format(num,e.message),on_fail)
 
 class AddrIdxList(list,InitErrors,MMGenObject):
 	max_len = 1000000
@@ -302,7 +302,7 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 				raise ValueError,"{!r}: invalid range".format(i)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to AddrIdxList ({})"
-			return type(self).init_fail(m.format(idx_list or fmt_str,e[0]),on_fail)
+			return type(self).init_fail(m.format(idx_list or fmt_str,e.message),on_fail)
 
 class UnknownCoinAmt(Decimal): pass
 
@@ -336,7 +336,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(num,cls.__name__,e[0]),on_fail)
+			return cls.init_fail(m.format(num,cls.__name__,e.message),on_fail)
 
 	def toSatoshi(self):
 		return int(Decimal(self) / self.satoshi)
@@ -418,7 +418,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} address ({})"
-			return cls.init_fail(m.format(s,g.proto.__name__,e[0]),on_fail)
+			return cls.init_fail(m.format(s,g.proto.__name__,e.message),on_fail)
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
@@ -487,7 +487,7 @@ class SeedID(str,Hilite,InitErrors):
 			raise ValueError,'no arguments provided'
 		except Exception as e:
 			m = "{!r}: value cannot be converted to SeedID ({})"
-			return cls.init_fail(m.format(seed or sid,e[0]),on_fail)
+			return cls.init_fail(m.format(seed or sid,e.message),on_fail)
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
@@ -510,7 +510,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 			return me
 		except Exception as e:
 			m = "{}\n{!r}: value cannot be converted to MMGenID"
-			return cls.init_fail(m.format(e[0],s),on_fail)
+			return cls.init_fail(m.format(e.message,s),on_fail)
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
@@ -533,7 +533,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
 			except Exception as f:
 				m = "{}\nValue is {}\n{!r}: value cannot be converted to TwMMGenID"
-				return cls.init_fail(m.format(e[0],f[0],s),on_fail)
+				return cls.init_fail(m.format(e.message,f.message,s),on_fail)
 
 		me = str.__new__(cls,ret)
 		me.obj = ret
@@ -556,7 +556,7 @@ class TwLabel(unicode,InitErrors,MMGenObject):
 			return me
 		except Exception as e:
 			m = u"{}\n{!r}: value cannot be converted to TwLabel"
-			return cls.init_fail(m.format(e[0],s),on_fail)
+			return cls.init_fail(m.format(e.message,s),on_fail)
 
 class HexStr(str,Hilite,InitErrors):
 	color = 'red'
@@ -572,7 +572,7 @@ class HexStr(str,Hilite,InitErrors):
 			return str.__new__(cls,s)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} (value is {})"
-			return cls.init_fail(m.format(s,cls.__name__,e[0]),on_fail)
+			return cls.init_fail(m.format(s,cls.__name__,e.message),on_fail)
 
 class Str(str,Hilite): pass
 class Int(int,Hilite): pass
@@ -590,7 +590,7 @@ class HexStrWithWidth(HexStr):
 			return ret
 		except Exception as e:
 			m = "{}\n{!r}: value cannot be converted to {}"
-			return cls.init_fail(m.format(e[0],s,cls.__name__),on_fail)
+			return cls.init_fail(m.format(e.message,s,cls.__name__),on_fail)
 
 class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
 class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
@@ -609,7 +609,7 @@ class WifKey(str,Hilite,InitErrors):
 			g.proto.wif2hex(s) # raises exception on error
 			return str.__new__(cls,s)
 		except Exception as e:
-			m = '{!r}: invalid value for WIF key ({})'.format(s,e[0])
+			m = '{!r}: invalid value for WIF key ({})'.format(s,e.message)
 			return cls.init_fail(m,on_fail)
 
 class PubKey(HexStr,MMGenObject): # TODO: add some real checks
@@ -620,7 +620,7 @@ class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 			me.compressed = compressed
 			return me
 		except Exception as e:
-			m = '{!r}: invalid value for pubkey ({})'.format(s,e[0])
+			m = '{!r}: invalid value for pubkey ({})'.format(s,e.message)
 			return cls.init_fail(m,on_fail)
 
 class PrivKey(str,Hilite,InitErrors,MMGenObject):
@@ -652,7 +652,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				return me
 			except Exception as e:
 				fs = "Value {!r} cannot be converted to {} WIF key ({})"
-				return cls.init_fail(fs.format(wif,g.coin,e[0]),on_fail)
+				return cls.init_fail(fs.format(wif,g.coin,e.message),on_fail)
 
 		try:
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
@@ -668,7 +668,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			return me
 		except Exception as e:
 			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"
-			return cls.init_fail(fs.format(s,compressed,e),on_fail)
+			return cls.init_fail(fs.format(s,compressed,e.message),on_fail)
 
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
@@ -686,7 +686,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 			me.mmtype = mmtype
 			return me
 		except Exception as e:
-			m = "Cannot create AddrListID ({})".format(e[0])
+			m = "Cannot create AddrListID ({})".format(e.message)
 			return cls.init_fail(m,on_fail)
 
 class MMGenLabel(unicode,Hilite,InitErrors):
@@ -721,7 +721,7 @@ class MMGenLabel(unicode,Hilite,InitErrors):
 			return unicode.__new__(cls,s)
 		except Exception as e:
 			m = u"{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(s,cls.__name__,e),on_fail)
+			return cls.init_fail(m.format(s,cls.__name__,e.message),on_fail)
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
@@ -813,7 +813,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 			raise ValueError,'not found'
 		except Exception as e:
 			m = '{}{!r}: invalid value for {} ({})'.format(
-				('{!r}\n'.format(errmsg) if errmsg else ''),s,cls.__name__,e[0])
+				('{!r}\n'.format(errmsg) if errmsg else ''),s,cls.__name__,e.message)
 			return cls.init_fail(m,on_fail)
 
 	@classmethod

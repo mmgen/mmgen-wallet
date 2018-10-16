@@ -708,7 +708,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			data = self.parse_file_body(lines[1:-1])
 			assert issubclass(type(data),list),'Invalid file body data'
 		except Exception as e:
-			m = 'Invalid address list file ({})'.format(e[0])
+			m = u'Invalid address list file ({})'.format(e.message)
 			if exit_on_error: die(3,m)
 			msg(msg)
 			return False

@@ -127,7 +127,7 @@ def check_daemons_running():
 			rpc_init(reinit=True)
 			g.rpch.getbalance()
 		except SystemExit as e:
-			if e[0] != 0:
+			if e.code != 0:
 				fs = '{} daemon not running or not listening on port {}'
 				ydie(1,fs.format(coin,g.proto.rpc_port))
 
@@ -194,7 +194,7 @@ def sign_tx_file(txfile):
 		tx.write_to_file(ask_write=False)
 		return True
 	except Exception as e:
-		msg('An error occurred: {}'.format(e))
+		msg(u'An error occurred: {}'.format(e.message))
 		return False
 	except:
 		return False
@@ -235,7 +235,7 @@ def decrypt_wallets():
 		try:
 			SeedSource(wf)
 		except SystemExit as e:
-			if e[0] != 0:
+			if e.code != 0:
 				fails += 1
 
 	return False if fails else True

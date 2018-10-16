@@ -274,7 +274,7 @@ else:
 			assert 1 <= b <= len(g.key_generators),'{}: invalid key generator'.format(b)
 		assert a != b,'Key generators are the same!'
 	except Exception as e:
-		die(1,'{}\n{}: invalid generator argument'.format(e[0],cmd_args[0]))
+		die(1,'{}\n{}: invalid generator argument'.format(e.message,cmd_args[0]))
 
 from mmgen.addr import KeyGenerator,AddrGenerator
 from mmgen.obj import PrivKey

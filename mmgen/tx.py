@@ -1205,7 +1205,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'outputs data'
 			self.outputs = eval_io_data(outputs_data,'outputs')
 		except Exception as e:
-			die(2,'Invalid {} in transaction file: {}'.format(desc,e[0]))
+			die(2,'Invalid {} in transaction file: {}'.format(desc,e.message))
 
 		# test doesn't work for Ethereum: test and mainnet addrs have same format
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):

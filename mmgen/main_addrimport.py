@@ -108,7 +108,7 @@ try:
 except UnrecognizedTokenSymbolError as e:
 	m1 = "Note: when importing addresses for a new token, the token must be specified"
 	m2 = "by address, not symbol."
-	die(1,'{}\n{}\n{}'.format(e[0],m1,m2))
+	die(1,'{}\n{}\n{}'.format(e.message,m1,m2))
 
 if opt.rescan and not 'rescan' in tw.caps:
 	msg("'--rescan' ignored: not supported by {}".format(type(tw).__name__))
@@ -125,7 +125,7 @@ def import_address(addr,label,rescan):
 	try: tw.import_address(addr,label,rescan)
 	except Exception as e:
 		global err_msg
-		err_msg = e
+		err_msg = e.message
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13

@@ -164,7 +164,7 @@ else:
 		m = 'Make this wallet your default and move it to the data directory?'
 		assert keypress_confirm(m,default_yes=True),'dw'
 	except Exception as e:
-		if e[0] != 'dw': raise
+		if e.message != 'dw': raise
 		ss_out.write_to_file()
 	else:
 		ss_out.write_to_file(outdir=g.data_dir)

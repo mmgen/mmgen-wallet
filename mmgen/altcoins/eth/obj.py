@@ -56,7 +56,7 @@ class ETHNonce(int,Hilite,InitErrors): # WIP
 			return me
 		except Exception as e:
 			m = "{!r}: value cannot be converted to ETH nonce ({})"
-			return cls.init_fail(m.format(n,e[0]),on_fail)
+			return cls.init_fail(m.format(n,e.message),on_fail)
 
 	@classmethod
 	def colorize(cls,s,color=True):

@@ -8,8 +8,8 @@ os.environ['MMGEN_TRACEBACK'] = '1'
 tb_source = open(sys.argv[1])
 tb_file = os.path.join(os.environ['PWD'],'my.err')
 
-def process_exception(es):
-	l = traceback.format_exception(*es)
+def process_exception():
+	l = traceback.format_exception(*sys.exc_info())
 	l_save = l[:]
 	exc = l.pop()
 	if exc[:11] == 'SystemExit:': l.pop()
@@ -22,13 +22,10 @@ def process_exception(es):
 try:
 	sys.argv.pop(0)
 	exec tb_source
-except SystemExit:
-#	pass
-	e = sys.exc_info()
-	if int(str(e[1])) != 0:
-		process_exception(e)
-	sys.exit(int(str(e[1])))
+except SystemExit as e:
+	if e.code != 0:
+		process_exception()
+	sys.exit(e.code)
 except:
-	e = sys.exc_info()
-	process_exception(e)
+	process_exception()
 	sys.exit(1)

@@ -104,12 +104,12 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 		try:
 			subprocess.call('rm -rf {}/{}*'.format(d,pfx),shell=True)
 		except Exception as e:
-			die(2,'Unable to delete directory tree {}/{}* ({})'.format(d,pfx,e))
+			die(2,'Unable to delete directory tree {}/{}* ({})'.format(d,pfx,e.message))
 		try:
 			import tempfile
 			shm_dir = unicode(tempfile.mkdtemp('',pfx,d))
 		except Exception as e:
-			die(2,'Unable to create temporary directory in {} ({})'.format(d,e))
+			die(2,'Unable to create temporary directory in {} ({})'.format(d,e.message))
 		for tdir in (data_dir,trash_dir):
 			dd = os.path.join(shm_dir,os.path.basename(tdir))
 			os.mkdir(dd,0755)

@@ -55,9 +55,9 @@ def launch(what):
 			if os.getenv('MMGEN_TRACEBACK'):
 				raise
 			else:
-				try: m = u'{}'.format(e[0])
+				try: m = u'{}'.format(e.message)
 				except:
-					try: m = u'{!r}'.format(e[0])
-					except: m = u'{!r}'.format(e)
+					try: m = e.message.decode('utf8')
+					except: m = repr(e.message)
 				from mmgen.util import ydie
 				ydie(2,u'\nERROR: ' + m)
