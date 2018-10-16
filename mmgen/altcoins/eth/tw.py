@@ -189,7 +189,11 @@ Display options: show [m]mgen addr, r[e]draw screen
 Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
                  add [l]abel, [R]emove address:
 """
-	valid_keypresses = 'adrMmeqpvwlR'
+	key_mappings = {
+		'a':'s_amt','d':'s_addr','r':'d_reverse','M':'s_twmmid',
+		'm':'d_mmid','e':'d_redraw',
+		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add',
+		'R':'a_addr_remove' }
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
