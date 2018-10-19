@@ -904,8 +904,12 @@ re-import your addresses.
 	@classmethod
 	def get_tw_data(cls):
 		vmsg('Getting address data from tracking wallet')
-		accts = g.rpch.listaccounts(0,True)
-		alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
+		if 'label_api' in g.rpch.caps:
+			accts = g.rpch.listlabels()
+			alists = [a.keys() for a in g.rpch.getaddressesbylabel([[k] for k in accts],batch=True)]
+		else:
+			accts = g.rpch.listaccounts(0,True)
+			alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
 		return zip(accts,alists)
 
 	def add_tw_data(self):

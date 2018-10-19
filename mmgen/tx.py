@@ -496,7 +496,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def get_rel_fee_from_network(self): # rel_fee is in BTC/kB
 		try:
-			ret = g.rpch.estimatesmartfee(opt.tx_confs,on_fail='raise')
+			ret = g.rpch.estimatesmartfee(opt.tx_confs)
 			rel_fee = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -714,36 +714,35 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 		wifs = [d.sec.wif for d in keys]
-		ret = g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type,on_fail='return')
 
-		from mmgen.rpc import rpc_error,rpc_errmsg
-		if rpc_error(ret):
-			errmsg = rpc_errmsg(ret)
-			if 'Invalid sighash param' in errmsg:
+		try:
+			ret = g.rpch.signrawtransactionwithkey(self.hex,wifs,sig_data,g.proto.sighash_type) \
+				if 'sign_with_key' in g.rpch.caps else \
+					g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
+		except Exception as e:
+			if 'Invalid sighash param' in e.message:
 				m  = 'This is not the BCH chain.'
 				m += "\nRe-run the script without the --coin=bch option."
 			else:
-				m = errmsg
+				m = e.message
 			msg(yellow(m))
 			return False
+
+		if ret['complete']:
+			self.hex = ret['hex']
+			self.compare_size_and_estimated_size()
+			dt = DeserializedTX(self.hex)
+			self.check_hex_tx_matches_mmgen_tx(dt)
+			self.coin_txid = CoinTxID(dt['txid'],on_fail='return')
+			self.check_sigs(dt)
+			assert self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid'],(
+										'txid mismatch (after signing)')
+			msg('OK')
+			return True
 		else:
-			if ret['complete']:
-#				Msg(pretty_hexdump(unhexlify(self.hex),cols=16)) # DEBUG
-#				pmsg(make_chksum_6(unhexlify(self.hex)).upper())
-				self.hex = ret['hex']
-				self.compare_size_and_estimated_size()
-				dt = DeserializedTX(self.hex)
-				self.check_hex_tx_matches_mmgen_tx(dt)
-				self.coin_txid = CoinTxID(dt['txid'],on_fail='return')
-				self.check_sigs(dt)
-				assert self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid'],(
-											'txid mismatch (after signing)')
-				msg('OK')
-				return True
-			else:
-				msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
-				msg(repr(ret['errors']))
-				return False
+			msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
+			msg(repr(ret['errors']))
+			return False
 
 	def mark_raw(self):
 		self.desc = 'transaction'

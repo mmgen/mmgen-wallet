@@ -164,6 +164,7 @@ opt.popen_spawn = True # popen has issues, so use popen_spawn always
 
 if not opt.system: os.environ['PYTHONPATH'] = repo_root
 
+lbl_id = ('account','label')[g.coin=='BTC'] # update as other coins adopt Core's label API
 ref_subdir = '' if g.proto.base_coin == 'BTC' else 'ethereum_classic' if g.coin == 'ETC' else g.proto.name
 altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
 tn_ext = ('','.testnet')[g.testnet]
@@ -847,7 +848,7 @@ cmd_group['regtest'] = (
 	('regtest_alice_add_label_badaddr2','adding a label with invalid address for this chain'),
 	('regtest_alice_add_label_badaddr3','adding a label with wrong MMGen address'),
 	('regtest_alice_add_label_badaddr4','adding a label with wrong coin address'),
-	('regtest_alice_add_label_rpcfail','RPC failure code'),
+	('regtest_alice_bal_rpcfail','RPC failure code'),
 	('regtest_alice_send_estimatefee','tx creation with no fee on command line'),
 	('regtest_generate',           'mining a block'),
 	('regtest_bob_bal6',           "Bob's balance"),
@@ -1313,7 +1314,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 					'bech32': (g.proto.witness_vernum_hex+'14','') }[k]
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	ret = {
-		'account': '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
+		lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
 			else (u'{}:{}{}'.format(al_id,idx,lbl)),
 		'vout': int(getrandnum(4) % 8),
 		'txid': unicode(hexlify(os.urandom(32))),
@@ -1913,9 +1914,9 @@ class MMGenTestSuite(object):
 		if cmdline_inputs:
 			from mmgen.tx import TwLabel
 			cmd_args = ['--inputs={},{},{},{},{},{}'.format(
-				TwLabel(dfake[0]['account']).mmid,dfake[1]['address'],
-				TwLabel(dfake[2]['account']).mmid,dfake[3]['address'],
-				TwLabel(dfake[4]['account']).mmid,dfake[5]['address']
+				TwLabel(dfake[0][lbl_id]).mmid,dfake[1]['address'],
+				TwLabel(dfake[2][lbl_id]).mmid,dfake[3]['address'],
+				TwLabel(dfake[4][lbl_id]).mmid,dfake[5]['address']
 				),'--outdir='+trash_dir] + cmd_args[1:]
 		end_silence()
 
@@ -3101,11 +3102,14 @@ class MMGenTestSuite(object):
 		return self.regtest_alice_add_label_badaddr(name,addr,
 			"Address '{}' not found in tracking wallet".format(addr))
 
-	def regtest_alice_add_label_rpcfail(self,name):
+	def regtest_alice_bal_rpcfail(self,name):
 		addr = self.regtest_user_sid('alice') + ':C:2'
-		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = 'importaddress'
-		self.regtest_alice_add_label_badaddr(name,addr,'Label could not be added')
+		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = 'listunspent'
+		t = MMGenExpect(name,'mmgen-tool',['--alice','getbalance'])
 		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = ''
+		t.expect('Method not found')
+		t.read()
+		ok()
 
 	def regtest_alice_remove_label1(self,name):
 		sid = self.regtest_user_sid('alice')

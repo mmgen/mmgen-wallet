@@ -62,4 +62,5 @@ def launch(what):
 
 				from mmgen.util import die,ydie
 				if type(e).__name__ == 'UserNonConfirmation': die(1,m)
-				else: ydie(2,u'\nERROR: ' + m)
+				if type(e).__name__ == 'RPCFailure': ydie(2,m)
+				ydie(2,u'\nERROR: ' + m)

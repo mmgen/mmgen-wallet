@@ -80,7 +80,8 @@ def test_daemon():
 	p = start_cmd('cli','getblockcount',quiet=True)
 	err = process_output(p,silent=True)[1]
 	ret,state = p.wait(),None
-	if "error: couldn't connect" in err: state = 'stopped'
+	if "error: couldn't connect" in err or "error: Could not connect" in err:
+		state = 'stopped'
 	if not state: state = ('busy','ready')[ret==0]
 	return state
 

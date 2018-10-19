@@ -110,9 +110,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
 		confs_per_day = 60*60*24 / g.proto.secs_per_block
 		tr_rpc = []
+		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for o in us_rpc:
-			if not 'account' in o: continue          # coinbase outputs have no account field
-			l = TwLabel(o['account'],on_fail='silent')
+			if not lbl_id in o: continue          # coinbase outputs have no account field
+			l = TwLabel(o[lbl_id],on_fail='silent')
 			if l:
 				o.update({
 					'twmmid': l.mmid,
@@ -403,10 +404,11 @@ class TwAddrList(MMGenDict):
 		self.total = g.proto.coin_amt('0')
 		rpc_init()
 
+		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for d in g.rpch.listunspent(0):
-			if not 'account' in d: continue  # skip coinbase outputs with missing account
+			if not lbl_id in d: continue  # skip coinbase outputs with missing account
 			if d['confirmations'] < minconf: continue
-			label = TwLabel(d['account'],on_fail='silent')
+			label = TwLabel(d[lbl_id],on_fail='silent')
 			if label:
 				if usr_addr_list and (label.mmid not in usr_addr_list): continue
 				if label.mmid in self:
@@ -425,10 +427,14 @@ class TwAddrList(MMGenDict):
 		if showempty or all_labels:
 			# for compatibility with old mmids, must use raw RPC rather than native data for matching
 			# args: minconf,watchonly, MUST use keys() so we get list, not dict
-			acct_list = g.rpch.listaccounts(0,True).keys() # raw list, no 'L'
+			if 'label_api' in g.rpch.caps:
+				acct_list = g.rpch.listlabels()
+				acct_addrs = [a.keys() for a in g.rpch.getaddressesbylabel([[k] for k in acct_list],batch=True)]
+			else:
+				acct_list = g.rpch.listaccounts(0,True).keys() # raw list, no 'L'
+				acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
 			acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
 			check_dup_mmid(acct_labels)
-			acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
 			assert len(acct_list) == len(acct_addrs),(
 				'listaccounts() and getaddressesbyaccount() not equal in length')
 			addr_pairs = zip(acct_labels,acct_addrs)
@@ -441,6 +447,11 @@ class TwAddrList(MMGenDict):
 					self[label.mmid] = { 'amt':g.proto.coin_amt('0'), 'lbl':label, 'addr':'' }
 					if showbtcaddrs:
 						self[label.mmid]['addr'] = CoinAddr(addr_arr[0])
+
+	def raw_list(self):
+		return [((k if k.type == 'mmgen' else 'Non-MMGen'),self[k]['addr'],self[k]['amt']) for k in self]
+
+	def coinaddr_list(self): return [self[k]['addr'] for k in self]
 
 	def format(self,showbtcaddrs,sort,show_age,show_days):
 		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
@@ -519,16 +530,17 @@ class TrackingWallet(MMGenObject):
 	def write(self): pass
 
 	def is_in_wallet(self,addr):
-		d = g.rpch.validateaddress(addr)
-		return d['iswatchonly'] and 'account' in d
+		return addr in TwAddrList([],0,True,True,True).coinaddr_list()
 
 	@write_mode
-	def import_label(self,coinaddr,lbl):
-		# NOTE: this works because importaddress() removes the old account before
-		# associating the new account with the address.
-		# Will be replaced by setlabel() with new RPC label API
-		# RPC args: addr,label,rescan[=true],p2sh[=none]
-		return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
+	def set_label(self,coinaddr,lbl):
+		if 'label_api' in g.rpch.caps:
+			return g.rpch.setlabel(coinaddr,lbl,on_fail='return')
+		else:
+			# NOTE: this works because importaddress() removes the old account before
+			# associating the new account with the address.
+			# RPC args: addr,label,rescan[=true],p2sh[=none]
+			return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
 
 	# returns on failure
 	@write_mode
@@ -568,7 +580,7 @@ class TrackingWallet(MMGenObject):
 
 		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
 
-		ret = self.import_label(coinaddr,lbl)
+		ret = self.set_label(coinaddr,lbl)
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -609,8 +621,9 @@ class TwGetBalance(MMGenObject):
 
 	def create_data(self):
 		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable
+		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for d in g.rpch.listunspent(0):
-			try:    lbl = TwLabel(d['account'],on_fail='silent')
+			try: lbl = TwLabel(d[lbl_id],on_fail='silent')
 			except: lbl = None
 			if lbl:
 				if lbl.mmid.type == 'mmgen':

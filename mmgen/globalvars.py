@@ -80,7 +80,6 @@ class g(object):
 	accept_defaults      = False
 	chain                = None # set by first call to rpc_init()
 	chains               = 'mainnet','testnet','regtest'
-	daemon_version       = None # set by first call to rpc_init()
 	rpc_host             = ''
 	rpc_port             = 0
 	rpc_user             = ''

@@ -103,10 +103,6 @@ class BitcoinProtocol(MMGenObject):
 	def get_protocol_by_chain(chain):
 		return CoinProtocol(g.coin,{'mainnet':False,'testnet':True,'regtest':True}[chain])
 
-	@staticmethod
-	def get_rpc_coin_amt_type():
-		return (float,str)[g.daemon_version>=120000]
-
 	@classmethod
 	def cap(cls,s): return s in cls.caps
 

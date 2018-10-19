@@ -139,7 +139,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		return OrderedDict(map(lambda x: (x['mmid'],{'addr':x['addr'],'comment':x['comment']}), self.sorted_list()))
 
 	@write_mode
-	def import_label(self,coinaddr,lbl):
+	def set_label(self,coinaddr,lbl):
 		for addr,d in self.data_root().items():
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
@@ -192,8 +192,8 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	key_mappings = {
 		'a':'s_amt','d':'s_addr','r':'d_reverse','M':'s_twmmid',
 		'm':'d_mmid','e':'d_redraw',
-		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add',
-		'R':'a_addr_remove' }
+		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide',
+		'l':'a_lbl_add','R':'a_addr_remove' }
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return

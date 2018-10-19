@@ -28,8 +28,6 @@ from decimal import Decimal
 def dmsg_rpc(s):
 	if g.debug_rpc: msg(s)
 
-class RPCFailure(Exception): pass
-
 class CoinDaemonRPCConnection(object):
 
 	auth = True
@@ -77,15 +75,15 @@ class CoinDaemonRPCConnection(object):
 	# Batch mode:  call with list of arg lists as first argument
 	# kwargs are for local use and are not passed to server
 
-	# By default, dies with an error msg on all errors and exceptions
-	# on_fail is one of 'die' (default), 'return', 'silent', 'raise'
+	# By default, raises RPCFailure exception with an error msg on all errors and exceptions
+	# on_fail is one of 'raise' (default), 'return', 'silent' or 'die'
 	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
 		if os.getenv('MMGEN_RPC_FAIL_ON_COMMAND') == cmd:
 			cmd = 'badcommand_' + cmd
 
-		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'die' }
+		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'raise' }
 
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
@@ -112,10 +110,11 @@ class CoinDaemonRPCConnection(object):
 		dmsg_rpc('=== request() debug ===')
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
 
+		parent = self
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self,obj):
 				if isinstance(obj,g.proto.coin_amt):
-					return g.proto.get_rpc_coin_amt_type()(obj)
+					return parent.coin_amt_type(obj)
 				return json.JSONEncoder.default(self,obj)
 
 		http_hdr = { 'Content-Type': 'application/json' }
@@ -180,6 +179,7 @@ class CoinDaemonRPCConnection(object):
 		'estimatefee',
 		'estimatesmartfee',
 		'getaddressesbyaccount',
+		'getaddressesbylabel',
 		'getbalance',
 		'getblock',
 		'getblockchaininfo',
@@ -196,9 +196,12 @@ class CoinDaemonRPCConnection(object):
 		'gettransaction',
 		'importaddress',
 		'listaccounts',
+		'listlabels',
 		'listunspent',
+		'setlabel',
 		'sendrawtransaction',
 		'signrawtransaction',
+		'signrawtransactionwithkey', # method new to Core v0.17.0
 		'validateaddress',
 		'walletpassphrase',
 	)

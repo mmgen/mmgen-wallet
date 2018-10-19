@@ -847,12 +847,13 @@ def rpc_init_parity():
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port)
 
-	if not g.daemon_version: # First call
-		g.daemon_version = g.rpch.parity_versionInfo()['version'] # fail immediately if daemon is geth
-		g.chain = g.rpch.parity_chain().replace(' ','_')
-		if g.token:
-			(g.token,g.dcoin) = resolve_token_arg(g.token)
+	g.rpch.daemon_version = g.rpch.parity_versionInfo()['version'] # fail immediately if daemon is geth
+	g.rpch.coin_amt_type = str
+	g.chain = g.rpch.parity_chain().replace(' ','_')
+	if g.token:
+		(g.token,g.dcoin) = resolve_token_arg(g.token)
 
+	g.rpch.caps = ()
 	return g.rpch
 
 def rpc_init_bitcoind():
@@ -887,19 +888,25 @@ def rpc_init_bitcoind():
 				g.rpc_password or cfg['rpcpassword'],
 				auth_cookie=get_coin_daemon_auth_cookie())
 
-	if not g.daemon_version: # First call
-		if g.bob or g.alice:
-			import regtest as rt
-			rt.user(('alice','bob')[g.bob],quiet=True)
-		g.daemon_version = int(conn.getnetworkinfo()['version'])
-		g.chain = conn.getblockchaininfo()['chain']
-		if g.chain != 'regtest': g.chain += 'net'
-		assert g.chain in g.chains
-		check_chaintype_mismatch()
+	if g.bob or g.alice:
+		import regtest as rt
+		rt.user(('alice','bob')[g.bob],quiet=True)
+	conn.daemon_version = int(conn.getnetworkinfo()['version'])
+	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
+	g.chain = conn.getblockchaininfo()['chain']
+	if g.chain != 'regtest': g.chain += 'net'
+	assert g.chain in g.chains
+	check_chaintype_mismatch()
 
 	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
 		check_chainfork_mismatch(conn)
 
+	conn.caps = ()
+	for func,cap in (
+		('setlabel','label_api'),
+		('signrawtransactionwithkey','sign_with_key') ):
+		if len(conn.request('help',func).split('\n')) > 3:
+			conn.caps += (cap,)
 	return conn
 
 def rpc_init(reinit=False):
