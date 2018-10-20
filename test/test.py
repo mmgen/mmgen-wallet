@@ -631,6 +631,49 @@ eth_burn_addr = 'deadbeef'*5
 eth_amt1 = '999999.12345689012345678'
 eth_amt2 = '888.111122223333444455'
 eth_rem_addrs = ('4','1')
+eth_bals = {
+	'1': [  ('98831F3A:E:1','123.456')],
+	'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
+	'3': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234'),('98831F3A:E:21','2.345')],
+	'4': [  ('98831F3A:E:1','100'),
+			('98831F3A:E:2','23.45495'),
+			('98831F3A:E:11','1.234'),
+			('98831F3A:E:21','2.345')],
+	'5': [  ('98831F3A:E:1','100'),
+			('98831F3A:E:2','23.45495'),
+			('98831F3A:E:11','1.234'),
+			('98831F3A:E:21','2.345'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
+	'8': [  ('98831F3A:E:1','0'),
+			('98831F3A:E:2','23.45495'),
+			('98831F3A:E:11','1.2288376','a'),
+			('98831F3A:E:12','99.99895'),
+			('98831F3A:E:21','2.345'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
+	'9': [  ('98831F3A:E:1','0'),
+			('98831F3A:E:2','23.45495'),
+			('98831F3A:E:11','1.2288376','a'),
+			('98831F3A:E:12','99.997087072'),
+			('98831F3A:E:21','2.345'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)]
+}
+eth_token_bals = {
+	'1': [  ('98831F3A:E:11','1000','1.234')],
+	'2': [  ('98831F3A:E:11','998.76544','1.2314236','a'),
+			('98831F3A:E:12','1.23456','0')],
+	'3': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+			('98831F3A:E:12','1.23456','0')],
+	'4': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+			('98831F3A:E:12','1.23456','0'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
+	'5': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+			('98831F3A:E:12','1.23456','99.99895'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
+	'6': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+			('98831F3A:E:12','0','99.997087072'),
+			('98831F3A:E:13','1.23456','0'),
+			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)]
+}
 
 def eth_args():
 	assert g.coin in ('ETH','ETC'),'for ethdev tests, --coin must be set to either ETH or ETC'
@@ -887,18 +930,21 @@ cmd_group['ethdev'] = (
 	('ethdev_addrimport',          'importing addresses'),
 	('ethdev_addrimport_dev_addr', "importing Parity dev address 'Ox00a329c..'"),
 
-	('ethdev_txcreate1',           'creating a transaction (spend from dev address)'),
+	('ethdev_txcreate1',           'creating a transaction (spend from dev address to address :1)'),
 	('ethdev_txsign1',             'signing the transaction'),
 	('ethdev_txsign1_ni',          'signing the transaction (non-interactive)'),
 	('ethdev_txsend1',             'sending the transaction'),
+	('ethdev_bal1',                'the {} balance'.format(g.coin)),
 
-	('ethdev_txcreate2',           'creating a transaction (spend to address 11)'),
+	('ethdev_txcreate2',           'creating a transaction (spend from dev address to address :11)'),
 	('ethdev_txsign2',             'signing the transaction'),
 	('ethdev_txsend2',             'sending the transaction'),
+	('ethdev_bal2',                'the {} balance'.format(g.coin)),
 
-	('ethdev_txcreate3',           'creating a transaction (spend to address 21)'),
+	('ethdev_txcreate3',           'creating a transaction (spend from dev address to address :21)'),
 	('ethdev_txsign3',             'signing the transaction'),
 	('ethdev_txsend3',             'sending the transaction'),
+	('ethdev_bal3',                'the {} balance'.format(g.coin)),
 
 	('ethdev_tx_status1',          'getting the transaction status'),
 
@@ -907,14 +953,14 @@ cmd_group['ethdev'] = (
 
 	('ethdev_txsign4',             'signing the transaction'),
 	('ethdev_txsend4',             'sending the transaction'),
+	('ethdev_bal4',                'the {} balance'.format(g.coin)),
 
 	('ethdev_txcreate5',           'creating a transaction (fund burn address)'),
 	('ethdev_txsign5',             'signing the transaction'),
 	('ethdev_txsend5',             'sending the transaction'),
 
 	('ethdev_addrimport_burn_addr',"importing burn address"),
-
-	('ethdev_bal1',                'the balance'),
+	('ethdev_bal5',                'the {} balance'.format(g.coin)),
 
 	('ethdev_add_label',           'adding a UTF-8 label'),
 	('ethdev_chk_label',           'the label'),
@@ -927,6 +973,7 @@ cmd_group['ethdev'] = (
 	('ethdev_token_deploy1c',       'deploying ERC20 token #1 (Token)'),
 
 	('ethdev_tx_status2',           'getting the transaction status'),
+	('ethdev_bal6',                 'the {} balance'.format(g.coin)),
 
 	('ethdev_token_compile2',       'compiling ERC20 token #2'),
 
@@ -940,40 +987,43 @@ cmd_group['ethdev'] = (
 	('ethdev_token_addrgen',       'generating token addresses'),
 	('ethdev_token_addrimport',    'importing token addresses'),
 
+	('ethdev_bal7',                'the {} balance'.format(g.coin)),
+	('ethdev_token_bal1',          'the {} balance and token balance'.format(g.coin)),
+
 	('ethdev_token_txcreate1',     'creating a token transaction'),
 	('ethdev_token_txsign1',       'signing the transaction'),
 	('ethdev_token_txsend1',       'sending the transaction'),
-
-	('ethdev_token_twview1_chk',   'viewing token tracking wallet'),
+	('ethdev_token_bal2',          'the {} balance and token balance'.format(g.coin)),
 
 	('ethdev_token_txcreate2',     'creating a token transaction (to burn address)'),
 	('ethdev_token_txbump',        'bumping the transaction fee'),
 
 	('ethdev_token_txsign2',       'signing the transaction'),
 	('ethdev_token_txsend2',       'sending the transaction'),
+	('ethdev_token_bal3',          'the {} balance and token balance'.format(g.coin)),
 
 	('ethdev_del_dev_addr',        "deleting the dev address"),
 
-	('ethdev_bal2',                'the {} balance'.format(g.coin)),
-	('ethdev_bal2_getbalance',     'the {} balance (getbalance)'.format(g.coin)),
+	('ethdev_bal1_getbalance',     'the {} balance (getbalance)'.format(g.coin)),
 
 	('ethdev_addrimport_token_burn_addr',"importing the token burn address"),
 
-	('ethdev_token_bal1',          'the token balance'),
+	('ethdev_token_bal4',          'the {} balance and token balance'.format(g.coin)),
 	('ethdev_token_bal_getbalance','the token balance (getbalance)'),
 
 	('ethdev_txcreate_noamt',     'creating a transaction (full amount send)'),
 	('ethdev_txsign_noamt',       'signing the transaction'),
 	('ethdev_txsend_noamt',       'sending the transaction'),
 
-	('ethdev_token_bal2',          'the token balance'),
-	('ethdev_bal3',                'the {} balance'.format(g.coin)),
+	('ethdev_bal8',                'the {} balance'.format(g.coin)),
+	('ethdev_token_bal5',          'the token balance'),
 
 	('ethdev_token_txcreate_noamt', 'creating a token transaction (full amount send)'),
 	('ethdev_token_txsign_noamt',   'signing the transaction'),
 	('ethdev_token_txsend_noamt',   'sending the transaction'),
 
-	('ethdev_token_bal3',          'the token balance'),
+	('ethdev_bal9',                'the {} balance'.format(g.coin)),
+	('ethdev_token_bal6',          'the token balance'),
 
 	('ethdev_listaddresses1',      'listaddresses'),
 	('ethdev_listaddresses2',      'listaddresses minconf=999999999 (ignored)'),
@@ -1181,7 +1231,7 @@ def get_segwit_arg(cfg):
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
-def imsg(s): sys.stderr.write(s+'\n') # never gets redefined
+def imsg(s): sys.stderr.write(s.encode('utf8') + '\n') # never gets redefined
 
 if opt.exact_output:
 	def msg(s): pass
@@ -3245,8 +3295,9 @@ class MMGenTestSuite(object):
 	def ethdev_setup(self,name):
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
+		ss = u'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 		try:
-			pid = subprocess.check_output(['pgrep','-af','parity.*{}'.format(lf_arg)]).split()[0]
+			pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
 			os.kill(int(pid),9)
 		except: pass
 		# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
@@ -3257,7 +3308,8 @@ class MMGenTestSuite(object):
 		except: pass
 		pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
 		MMGenExpect(name,'',msg_only=True)
-		subprocess.check_call(['parity',lf_arg,'--ports-shift=4','--config=dev','daemon',pid_fn]) # port 8549
+		opts = ['--ports-shift=4','--config=dev']
+		subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pid_fn]) # port 8549
 		time.sleep(1) # race condition
 		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 		ok()
@@ -3269,7 +3321,8 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def ethdev_addrimport(self,name,ext='21-23].addrs',expect='9/9',add_args=[]):
+	def ethdev_addrimport(self,name,ext=u'21-23]{}.addrs',expect='9/9',add_args=[]):
+		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True,delete=False)
 		t = MMGenExpect(name,'mmgen-addrimport', eth_args()[1:] + add_args + [fn])
 		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
@@ -3304,14 +3357,16 @@ class MMGenTestSuite(object):
 								interactive_fee=interactive_fee,fee_res=fee_res,fee_desc=fee_desc,
 								add_comment=ref_tx_label_jp)
 
-	def ethdev_txsign(self,name,ni=False,ext='.rawtx',add_args=[]):
+	def ethdev_txsign(self,name,ni=False,ext=u'{}.rawtx',add_args=[]):
+		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsign',eth_args()+add_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
 		self.txsign_ui_common(t,name,ni=ni,has_label=True)
 
-	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext='.sigtx',add_args=[]):
+	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext=u'{}.sigtx',add_args=[]):
+		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txsend', eth_args()+add_args + [tx_fn])
@@ -3327,20 +3382,24 @@ class MMGenTestSuite(object):
 	def ethdev_txsign1(self,name): self.ethdev_txsign(name)
 	def ethdev_txsign1_ni(self,name): self.ethdev_txsign(name,ni=True)
 	def ethdev_txsend1(self,name): self.ethdev_txsend(name)
+	def ethdev_bal1(self,name): self.ethdev_bal(name,n='1')
 
 	def ethdev_txcreate2(self,name):
 		args = ['98831F3A:E:11,1.234']
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign2(self,name): self.ethdev_txsign(name,ni=True,ext='1.234,50000].rawtx')
-	def ethdev_txsend2(self,name): self.ethdev_txsend(name,ext='1.234,50000].sigtx')
+	def ethdev_txsign2(self,name): self.ethdev_txsign(name,ni=True,ext=u'1.234,50000]{}.rawtx')
+	def ethdev_txsend2(self,name): self.ethdev_txsend(name,ext=u'1.234,50000]{}.sigtx')
+	def ethdev_bal2(self,name): self.ethdev_bal(name,n='2')
 
 	def ethdev_txcreate3(self,name):
 		args = ['98831F3A:E:21,2.345']
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign3(self,name): self.ethdev_txsign(name,ni=True,ext='2.345,50000].rawtx')
-	def ethdev_txsend3(self,name): self.ethdev_txsend(name,ext='2.345,50000].sigtx')
+	def ethdev_txsign3(self,name): self.ethdev_txsign(name,ni=True,ext=u'2.345,50000]{}.rawtx')
+	def ethdev_txsend3(self,name): self.ethdev_txsend(name,ext=u'2.345,50000]{}.sigtx')
+	def ethdev_bal3(self,name): self.ethdev_bal(name,n='3')
 
 	def ethdev_tx_status(self,name,ext,expect_str):
+		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsend', eth_args() + ['--status',tx_fn])
 		t.expect(expect_str)
@@ -3348,7 +3407,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def ethdev_tx_status1(self,name):
-		self.ethdev_tx_status(name,ext='2.345,50000].sigtx',expect_str='has 1 confirmation')
+		self.ethdev_tx_status(name,ext=u'2.345,50000]{}.sigtx',expect_str='has 1 confirmation')
 
 	def ethdev_txcreate4(self,name):
 		args = ['98831F3A:E:2,23.45495']
@@ -3357,25 +3416,43 @@ class MMGenTestSuite(object):
 		return self.ethdev_txcreate(name,args=args,acct='1',non_mmgen_inputs=0,
 					interactive_fee=interactive_fee,fee_res=fee_res)
 
-	def ethdev_txbump(self,name,ext=',40000].rawtx',fee='50G',add_args=[]):
+	def ethdev_txbump(self,name,ext=u',40000]{}.rawtx',fee='50G',add_args=[]):
+		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txbump', eth_args() + add_args + ['--yes',tx_fn])
 		t.expect('or gas price: ',fee+'\n')
 		t.read()
 		t.ok()
 
-	def ethdev_txsign4(self,name): self.ethdev_txsign(name,ni=True,ext='.45495,50000].rawtx')
-	def ethdev_txsend4(self,name): self.ethdev_txsend(name,ext='.45495,50000].sigtx')
+	def ethdev_txsign4(self,name): self.ethdev_txsign(name,ni=True,ext=u'.45495,50000]{}.rawtx')
+	def ethdev_txsend4(self,name): self.ethdev_txsend(name,ext=u'.45495,50000]{}.sigtx')
+	def ethdev_bal4(self,name): self.ethdev_bal(name,n='4')
 
 	def ethdev_txcreate5(self,name):
 		args = [eth_burn_addr + ','+eth_amt1]
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign5(self,name): self.ethdev_txsign(name,ni=True,ext=eth_amt1+',50000].rawtx')
-	def ethdev_txsend5(self,name): self.ethdev_txsend(name,ext=eth_amt1+',50000].sigtx')
+	def ethdev_txsign5(self,name): self.ethdev_txsign(name,ni=True,ext=eth_amt1+u',50000]{}.rawtx')
+	def ethdev_txsend5(self,name): self.ethdev_txsend(name,ext=eth_amt1+u',50000]{}.sigtx')
+	def ethdev_bal5(self,name): self.ethdev_bal(name,n='5')
 
-	def ethdev_bal(self,name,expect_str=''):
-		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['twview'])
-		t.expect(expect_str,regex=True)
+	bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
+	def ethdev_bal(self,name,n=None):
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['twview','wide=1'])
+		for b in eth_bals[n]:
+			addr,amt,adj = b if len(b) == 3 else b + (False,)
+			if adj and g.coin == 'ETC': amt = str(Decimal(amt) + self.bal_corr)
+			pat = r'{}\s+{}\s'.format(addr,amt.replace('.',r'\.'))
+			t.expect(pat,regex=True)
+		t.read()
+		t.ok()
+
+	def ethdev_token_bal(self,name,n=None):
+		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['--token=mm1','twview','wide=1'])
+		for b in eth_token_bals[n]:
+			addr,amt1,amt2,adj = b if len(b) == 4 else b + (False,)
+			if adj and g.coin == 'ETC': amt2 = str(Decimal(amt2) + self.bal_corr)
+			pat = r'{}\s+{}\s+{}\s'.format(addr,amt1.replace('.',r'\.'),amt2.replace('.',r'\.'))
+			t.expect(pat,regex=True)
 		t.read()
 		t.ok()
 
@@ -3387,9 +3464,6 @@ class MMGenTestSuite(object):
 		t.read()
 		assert Decimal(t_non_mmgen) + Decimal(t_mmgen) == Decimal(total)
 		t.ok()
-
-	def ethdev_bal1(self,name,expect_str=''):
-		self.ethdev_bal(name,expect_str=r'98831F3A:E:2\s+23\.45495\s+')
 
 	def ethdev_add_label(self,name,addr='98831F3A:E:3',lbl=utf8_label):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['add_label',addr,lbl])
@@ -3419,7 +3493,7 @@ class MMGenTestSuite(object):
 		silence()
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
-		imsg("Executing: {}".format(' '.join(cmd)))
+		imsg(u"Executing: {}".format(u' '.join(cmd)))
 		subprocess.check_output(cmd)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
 		end_silence()
@@ -3443,7 +3517,8 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args() + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('Ethereum transaction')
-			tx_fn = get_file_with_ext('[0,8000].rawtx',cfg['tmpdir'],no_dot=True)
+			ext = u'[0,8000]{}.rawtx'.format(u'-α' if g.debug_utf8 else '')
+			tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 			t = MMGenExpect(name,'mmgen-txsign', eth_args() + ['--yes','-k',key_fn,tx_fn],no_msg=True)
 			self.txsign_ui_common(t,name,ni=True,no_ok=True)
 			tx_fn = tx_fn.replace('.rawtx','.sigtx')
@@ -3466,7 +3541,9 @@ class MMGenTestSuite(object):
 	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000,tx_fee='7G')
 
 	def ethdev_tx_status2(self,name):
-		self.ethdev_tx_status(name,ext=g.coin+'[0,7000].sigtx',expect_str='successfully executed')
+		self.ethdev_tx_status(name,ext=g.coin+u'[0,7000]{}.sigtx',expect_str='successfully executed')
+
+	def ethdev_bal6(self,name): return self.ethdev_bal5(name)
 
 	def ethdev_token_deploy2a(self,name): self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=200000)
 	def ethdev_token_deploy2b(self,name): self.ethdev_token_deploy(name,num=2,key='Owned',gas=250000)
@@ -3502,7 +3579,10 @@ class MMGenTestSuite(object):
 	def ethdev_token_addrimport(self,name):
 		for n,r in ('1','11-13'),('2','21-23'):
 			tk_addr = read_from_tmpfile(cfg,'token_addr'+n).strip()
-			self.ethdev_addrimport(name,ext='['+r+'].addrs',expect='3/3',add_args=['--token='+tk_addr])
+			self.ethdev_addrimport(name,ext=u'['+r+']{}.addrs',expect='3/3',add_args=['--token='+tk_addr])
+
+	def ethdev_bal7(self,name): return self.ethdev_bal5(name)
+	def ethdev_token_bal1(self,name): self.ethdev_token_bal(name,n='1')
 
 	def ethdev_token_txcreate(self,name,args=[],token='',inputs='1',fee='50G'):
 		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['--token='+token,'-B','--tx-fee='+fee] + args)
@@ -3519,9 +3599,10 @@ class MMGenTestSuite(object):
 	def ethdev_token_txcreate1(self,name):
 		return self.ethdev_token_txcreate(name,args=['98831F3A:E:12,1.23456'],token='mm1')
 	def ethdev_token_txsign1(self,name):
-		self.ethdev_token_txsign(name,ext='1.23456,50000].rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext=u'1.23456,50000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend1(self,name):
-		self.ethdev_token_txsend(name,ext='1.23456,50000].sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext=u'1.23456,50000]{}.sigtx',token='mm1')
+	def ethdev_token_bal2(self,name): self.ethdev_token_bal(name,n='2')
 
 	def ethdev_twview(self,name,args=[],expect_str='',tool_args=[],exit_val=0):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['twview'] + tool_args)
@@ -3530,48 +3611,33 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok(exit_val=exit_val)
 
-	bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
-	def ethdev_token_twview1_chk(self,name):
-		ebal = Decimal('1.2314236')
-		if g.coin == 'ETC': ebal += self.bal_corr
-		s = '98831F3A:E:11\s+998.76544\s+' + str(ebal)
-		return self.ethdev_twview(name,args=['--token=mm1'],expect_str=s)
-
 	def ethdev_token_txcreate2(self,name):
 		return self.ethdev_token_txcreate(name,args=[eth_burn_addr+','+eth_amt2],token='mm1')
 
 	def ethdev_token_txbump(self,name):
-		self.ethdev_txbump(name,ext=eth_amt2+',50000].rawtx',fee='56G',add_args=['--token=mm1'])
+		self.ethdev_txbump(name,ext=eth_amt2+u',50000]{}.rawtx',fee='56G',add_args=['--token=mm1'])
 
 	def ethdev_token_txsign2(self,name):
-		self.ethdev_token_txsign(name,ext=eth_amt2+',50000].rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext=eth_amt2+u',50000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend2(self,name):
-		self.ethdev_token_txsend(name,ext=eth_amt2+',50000].sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext=eth_amt2+u',50000]{}.sigtx',token='mm1')
+
+	def ethdev_token_bal3(self,name): self.ethdev_token_bal(name,n='3')
 
 	def ethdev_del_dev_addr(self,name):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['remove_address',eth_addr])
 		t.read() # TODO
 		t.ok()
 
-	def ethdev_addrimport_token_burn_addr(self,name):
-		self.ethdev_addrimport_one_addr(name,addr=eth_burn_addr,extra_args=['--token=mm1'])
-
-	def ethdev_bal2(self,name,expect_str=''):
-		self.ethdev_bal(name,expect_str=r'deadbeef.* 999999.12345689012345678')
-
-	def ethdev_bal2_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
+	def ethdev_bal1_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
 		ebal = Decimal('127.0287876')
 		if g.coin == 'ETC': ebal += self.bal_corr
 		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen=str(ebal))
 
-	def ethdev_token_bal(self,name,expect_str):
-		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['--token=mm1','twview','wide=1'])
-		t.expect(expect_str,regex=True)
-		t.read()
-		t.ok()
+	def ethdev_addrimport_token_burn_addr(self,name):
+		self.ethdev_addrimport_one_addr(name,addr=eth_burn_addr,extra_args=['--token=mm1'])
 
-	def ethdev_token_bal1(self,name):
-		self.ethdev_token_bal(name,expect_str=r'deadbeef.* '+eth_amt2)
+	def ethdev_token_bal4(self,name): self.ethdev_token_bal(name,n='4')
 
 	def ethdev_token_bal_getbalance(self,name):
 		self.ethdev_bal_getbalance(name,
@@ -3580,25 +3646,22 @@ class MMGenTestSuite(object):
 	def ethdev_txcreate_noamt(self,name):
 		return self.ethdev_txcreate(name,args=['98831F3A:E:12'])
 	def ethdev_txsign_noamt(self,name):
-		self.ethdev_txsign(name,ext='99.99895,50000].rawtx')
+		self.ethdev_txsign(name,ext=u'99.99895,50000]{}.rawtx')
 	def ethdev_txsend_noamt(self,name):
-		self.ethdev_txsend(name,ext='99.99895,50000].sigtx')
+		self.ethdev_txsend(name,ext=u'99.99895,50000]{}.sigtx')
 
-	def ethdev_token_bal2(self,name):
-		self.ethdev_token_bal(name,expect_str=r'98831F3A:E:12\s+1.23456\s+99.99895\s')
-
-	def ethdev_bal3(self,name,expect_str=''):
-		self.ethdev_bal(name,expect_str=r'98831F3A:E:1\s+0\n')
+	def ethdev_bal8(self,name):       self.ethdev_bal(name,n='8')
+	def ethdev_token_bal5(self,name): self.ethdev_token_bal(name,n='5')
 
 	def ethdev_token_txcreate_noamt(self,name):
 		return self.ethdev_token_txcreate(name,args=['98831F3A:E:13'],token='mm1',inputs='2',fee='51G')
 	def ethdev_token_txsign_noamt(self,name):
-		self.ethdev_token_txsign(name,ext='1.23456,51000].rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext=u'1.23456,51000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend_noamt(self,name):
-		self.ethdev_token_txsend(name,ext='1.23456,51000].sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext=u'1.23456,51000]{}.sigtx',token='mm1')
 
-	def ethdev_token_bal3(self,name):
-		self.ethdev_token_bal(name,expect_str=r'98831F3A:E:13\s+1.23456\s')
+	def ethdev_bal9(self,name):       self.ethdev_bal(name,n='9')
+	def ethdev_token_bal6(self,name): self.ethdev_token_bal(name,n='6')
 
 	def ethdev_listaddresses(self,name,args=[],tool_args=['all_labels=1'],exit_val=0):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + args + ['listaddresses'] + tool_args)
