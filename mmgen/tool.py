@@ -28,6 +28,7 @@ from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.tx import *
 from mmgen.addr import *
+from decimal import Decimal
 
 pnm = g.proj_name
 
@@ -507,13 +508,14 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 	def test_rpc():
 		p = run_cmd(['monero-wallet-cli','--version'])
-		if p.stdout.read()[:6] != 'Monero':
+		if not 'Monero' in p.stdout.read():
 			die(1,"Unable to run 'monero-wallet-cli'!")
 		p = run_cmd(['monerod','status'])
-		ret = p.stdout.read()
-		if ret[:7] != 'Height:':
+		import re
+		m = re.search(r'Height: (\d+)/\d+ ',p.stdout.read())
+		if not m:
 			die(1,'Unable to connect to monerod!')
-		return int(ret[8:].split('/')[0])
+		return int(m.group(1))
 
 	def my_expect(p,m,s,regex=False):
 		if m: msg_r('  {}...'.format(m))
@@ -592,8 +594,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 					msg('  Wallet in sync')
 				b = [l for l in p.before.splitlines() if l[:8] == 'Balance:'][0].split()
 				msg('  Balance: {} Unlocked balance: {}'.format(b[1],b[4]))
-				bals[0] += float(b[1][0:-1])
-				bals[1] += float(b[4])
+				bals[fn] = ( Decimal(b[1][:-1]), Decimal(b[4]) )
 				my_sendline(p,'Exiting','exit',5)
 				p.read()
 				break
@@ -622,14 +623,22 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 			m[op][2](n,d,fn)
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
 		if op == 'sync':
-			msg('Balance: {:.12f}, Unlocked balance: {:.12f}'.format(*bals))
+			col1_w = max(map(len,bals)) + 1
+			fs = u'{:%s} {:18} {:18}' % col1_w
+			msg('\n'+fs.format('Wallet','  Balance','  Unlocked Balance'))
+			tbals = [Decimal('0'),Decimal('0')]
+			for bal in bals:
+				for i in (0,1): tbals[i] += bals[bal][i]
+				msg(fs.format(bal+':',*bals[bal]))
+			msg(fs.format('-'*col1_w,'-'*18,'-'*18))
+			msg(fs.format('TOTAL:',*tbals))
 
 	os.environ['LANG'] = 'C'
 	import pexpect
 	if blockheight != None and int(blockheight) < 0:
 		blockheight = 0 # TODO: non-zero coverage
 	cur_height = test_rpc()
-	bals = [0.0,0.0] # locked,unlocked
+	bals = OrderedDict() # locked,unlocked
 
 	try:
 		process_wallets()
