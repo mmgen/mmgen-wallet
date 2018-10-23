@@ -145,7 +145,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		if has_witness:
 			u = hshift(tx,2,skip=True)[2:]
 			if u != '01':
-				die(2,"'{}': Illegal value for flag in transaction!".format(u))
+				raise IllegalWitnessFlagValue,"'{}': Illegal value for flag in transaction!".format(u)
 			del tx_copy[-len(tx)-2:-len(tx)]
 
 		d['num_txins'] = readVInt(tx)
@@ -181,7 +181,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 					hshift(wd,readVInt(wd,skip=True),skip=True) for item in range(readVInt(wd,skip=True))
 				]
 			if wd:
-				die(3,'More witness data than inputs with witnesses!')
+				raise WitnessSizeMismatch,'More witness data than inputs with witnesses!'
 
 		d['lock_time'] = bytes2int(hshift(tx,4))
 		d['txid'] = hexlify(sha256(sha256(''.join(tx_copy)).digest()).digest()[::-1])
@@ -408,7 +408,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		# allow for 5% error
 		ratio = float(est_vsize) / vsize
 		if not (0.95 < ratio < 1.05):
-			die(2,(m1+m2+m3).format(ratio,1/ratio))
+			raise BadTxSizeEstimate,(m1+m2+m3).format(ratio,1/ratio)
 
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
@@ -679,8 +679,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def get_non_mmaddrs(self,desc):
 		return list(set(i.addr for i in getattr(self,desc) if not i.mmid))
 
-	# return true or false; don't exit
-	def sign(self,tx_num_str,keys):
+	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
 
 		if self.marked_signed():
 			msg('Transaction is already signed!')
@@ -720,28 +719,28 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				if 'sign_with_key' in g.rpch.caps else \
 					g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
 		except Exception as e:
-			if 'Invalid sighash param' in e.message:
-				m  = 'This is not the BCH chain.'
-				m += "\nRe-run the script without the --coin=bch option."
-			else:
-				m = e.message
-			msg(yellow(m))
+			msg(yellow('This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
+				if 'Invalid sighash param' in e.message else e.message))
 			return False
 
-		if ret['complete']:
+		if not ret['complete']:
+			msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
+			msg(repr(ret['errors']))
+			return False
+
+		try:
 			self.hex = ret['hex']
 			self.compare_size_and_estimated_size()
 			dt = DeserializedTX(self.hex)
 			self.check_hex_tx_matches_mmgen_tx(dt)
-			self.coin_txid = CoinTxID(dt['txid'],on_fail='return')
+			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
 			self.check_sigs(dt)
-			assert self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid'],(
-										'txid mismatch (after signing)')
+			if not self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid']:
+				raise BadMMGenTxID,'txid mismatch (after signing)'
 			msg('OK')
 			return True
-		else:
-			msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
-			msg(repr(ret['errors']))
+		except Exception as e:
+			msg(yellow(repr(e.message)))
 			return False
 
 	def mark_raw(self):
@@ -764,14 +763,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		lt = deserial_tx['lock_time']
 		if lt != int(self.locktime or 0):
 			m2 = '\nTransaction hex locktime ({}) does not match MMGen transaction locktime ({})\n{}'
-			rdie(3,m2.format(lt,self.locktime,m))
+			raise TxHexMismatch,m2.format(lt,self.locktime,m)
 
 		def check_equal(desc,hexio,mmio):
 			if mmio != hexio:
 				msg('\nMMGen {}:\n{}'.format(desc,pformat(mmio)))
 				msg('Hex {}:\n{}'.format(desc,pformat(hexio)))
 				m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n'
-				rdie(3,(m2+m).format(desc.capitalize()))
+				raise TxHexMismatch,(m2+m).format(desc.capitalize())
 
 		seq_hex   = map(lambda i: int(i['nSeq'],16),deserial_tx['txins'])
 		seq_mmgen = map(lambda i: i.sequence or g.max_int,self.inputs)
@@ -787,7 +786,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		uh = deserial_tx['unsigned_hex']
 		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
-			rdie(3,'MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
+			raise TxHexMismatch,'MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m)
 
 	def check_pubkey_scripts(self):
 		for n,i in enumerate(self.inputs,1):
@@ -802,7 +801,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 													'scriptPubKey->address:',addr ))
 
 	# check signature and witness data
-	def check_sigs(self,deserial_tx=None): # return False if no sigs, die on error
+	def check_sigs(self,deserial_tx=None): # return False if no sigs, raise exception on error
 		txins = (deserial_tx or DeserializedTX(self.hex))['txins']
 		has_ss = any(ti['scriptSig'] for ti in txins)
 		has_witness = any('witness' in ti and ti['witness'] for ti in txins)

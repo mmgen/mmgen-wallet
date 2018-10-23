@@ -102,13 +102,11 @@ tx = MMGenTX(caller='txdo')
 
 tx.create(cmd_args,int(opt.locktime or 0))
 
-txsign(tx,seed_files,kl,kal)
-
-tx.write_to_file(ask_write=False)
-
-tx.send(exit_on_fail=True)
-
-tx.write_to_file(ask_overwrite=False,ask_write=False)
-
-if hasattr(tx,'token_addr'):
-	msg('Contract address: {}'.format(tx.token_addr.hl()))
+if txsign(tx,seed_files,kl,kal):
+	tx.write_to_file(ask_write=False)
+	tx.send(exit_on_fail=True)
+	tx.write_to_file(ask_overwrite=False,ask_write=False)
+	if hasattr(tx,'token_addr'):
+		msg('Contract address: {}'.format(tx.token_addr.hl()))
+else:
+	die(2,'Transaction could not be signed')

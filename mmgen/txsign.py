@@ -160,7 +160,4 @@ def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 	if extra_sids:
 		msg('Unused Seed ID{}: {}'.format(suf(extra_sids,'s'),' '.join(extra_sids)))
 
-	if tx.sign(tx_num_str,keys):
-		return tx
-	else:
-		die(3,red('Transaction {}could not be signed.'.format(tx_num_str)))
+	return tx.sign(tx_num_str,keys) # returns True or False

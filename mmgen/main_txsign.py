@@ -90,7 +90,7 @@ kal        = get_keyaddrlist(opt)
 kl         = get_keylist(opt)
 if kl and kal: kl.remove_dup_keys(kal)
 
-tx_num_str = ''
+tx_num_str,bad_tx_count = '',0
 for tx_num,tx_file in enumerate(tx_files,1):
 	if len(tx_files) > 1:
 		msg('\nTransaction #{} of {}:'.format(tx_num,len(tx_files)))
@@ -98,7 +98,8 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	tx = MMGenTX(tx_file)
 
 	if tx.marked_signed():
-		die(1,'Transaction is already signed!')
+		msg('Transaction is already signed!'); continue
+
 	vmsg(u"Successfully opened transaction file '{}'".format(tx_file))
 
 	if opt.tx_id:
@@ -110,9 +111,13 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	if not opt.yes:
 		tx.view_with_prompt('View data for transaction{}?'.format(tx_num_str))
 
-	txsign(tx,seed_files,kl,kal,tx_num_str)
+	if txsign(tx,seed_files,kl,kal,tx_num_str):
+		if not opt.yes:
+			tx.add_comment() # edits an existing comment
+		tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_str)
+	else:
+		ymsg('Transaction could not be signed')
+		bad_tx_count += 1
 
-	if not opt.yes:
-		tx.add_comment()   # edits an existing comment
-
-	tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_str)
+if bad_tx_count:
+	ydie(2,'{} transaction{} could not be signed'.format(bad_tx_count,suf(bad_tx_count)))

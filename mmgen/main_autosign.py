@@ -190,9 +190,11 @@ def sign_tx_file(txfile):
 		if g.proto.sign_mode == 'daemon':
 			rpc_init(reinit=True)
 
-		txsign(tx,wfs,None,None)
-		tx.write_to_file(ask_write=False)
-		return True
+		if txsign(tx,wfs,None,None):
+			tx.write_to_file(ask_write=False)
+			return True
+		else:
+			return False
 	except Exception as e:
 		msg(u'An error occurred: {}'.format(e.message))
 		return False

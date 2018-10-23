@@ -304,7 +304,7 @@ class EthereumMMGenTX(MMGenTX):
 
 		return self.check_sigs()
 
-	def sign(self,tx_num_str,keys): # return true or false; don't exit
+	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
 
 		if self.marked_signed():
 			msg('Transaction is already signed!')

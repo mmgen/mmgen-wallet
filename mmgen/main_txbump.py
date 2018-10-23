@@ -131,9 +131,11 @@ if not silent:
 	msg_r(tx.format_view(terse=True))
 
 if seed_files or kl or kal:
-	txsign(tx,seed_files,kl,kal)
-	tx.write_to_file(ask_write=False)
-	tx.send(exit_on_fail=True)
-	tx.write_to_file(ask_write=False)
+	if txsign(tx,seed_files,kl,kal):
+		tx.write_to_file(ask_write=False)
+		tx.send(exit_on_fail=True)
+		tx.write_to_file(ask_write=False)
+	else:
+		die(2,'Transaction could not be signed')
 else:
 	tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
