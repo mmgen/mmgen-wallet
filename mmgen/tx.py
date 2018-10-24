@@ -402,7 +402,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		d = g.rpch.decoderawtransaction(self.hex)
 		vsize = d['vsize'] if 'vsize' in d else d['size']
 		vmsg('\nSize: {}, Vsize: {} (true) {} (estimated)'.format(d['size'],vsize,est_vsize))
-		m1 = '\nERROR: Estimated transaction vsize is {:1.2f} times the true vsize\n'
+		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
 		m2 = 'Your transaction fee estimates will be inaccurate\n'
 		m3 = 'Please re-create and re-sign the transaction using the option --vsize-adj={:1.2f}'
 		# allow for 5% error
@@ -740,7 +740,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('OK')
 			return True
 		except Exception as e:
-			msg(yellow(repr(e.message)))
+			try: m = u'{}'.format(e.message)
+			except: m = repr(e.message)
+			msg('\n'+yellow(m))
 			return False
 
 	def mark_raw(self):
@@ -758,11 +760,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# check that a malicious, compromised or malfunctioning coin daemon hasn't altered hex tx data:
 	# does not check witness or signature data
 	def check_hex_tx_matches_mmgen_tx(self,deserial_tx):
-		m = 'Fatal error: a malicious or malfunctioning coin daemon or other program may have altered your data!'
+		m = 'A malicious or malfunctioning coin daemon or other program may have altered your data!'
 
 		lt = deserial_tx['lock_time']
 		if lt != int(self.locktime or 0):
-			m2 = '\nTransaction hex locktime ({}) does not match MMGen transaction locktime ({})\n{}'
+			m2 = 'Transaction hex locktime ({}) does not match MMGen transaction locktime ({})\n{}'
 			raise TxHexMismatch,m2.format(lt,self.locktime,m)
 
 		def check_equal(desc,hexio,mmio):

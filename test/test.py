@@ -985,6 +985,8 @@ cmd_group['ethdev'] = (
 
 	('ethdev_token_transfer_funds','transferring token funds from dev to user'),
 	('ethdev_token_addrgen',       'generating token addresses'),
+	('ethdev_token_addrimport_badaddr1','importing token addresses (no token address)'),
+	('ethdev_token_addrimport_badaddr2','importing token addresses (bad token address)'),
 	('ethdev_token_addrimport',    'importing token addresses'),
 
 	('ethdev_bal7',                'the {} balance'.format(g.coin)),
@@ -2345,12 +2347,15 @@ class MMGenTestSuite(object):
 		t.view_tx('n')
 		t.passphrase('MMGen wallet',cfgs['20']['wpasswd'])
 		if bad_vsize:
-			t.expect('ERROR: Estimated transaction vsize is')
+			t.expect('Estimated transaction vsize')
+			t.expect('1 transaction could not be signed')
+			exit_val = 2
 		else:
 			t.do_comment(False)
 			t.expect('Save signed transaction? (Y/n): ','y')
+			exit_val = 0
 		t.read()
-		t.ok(exit_val=(0,2)[bad_vsize])
+		t.ok(exit_val=exit_val)
 
 	def walletgen6(self,name,del_dw_run='dummy'):
 		self.walletgen(name)
@@ -3321,10 +3326,12 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def ethdev_addrimport(self,name,ext=u'21-23]{}.addrs',expect='9/9',add_args=[]):
+	def ethdev_addrimport(self,name,ext=u'21-23]{}.addrs',expect='9/9',add_args=[],bad_input=False):
 		ext = ext.format(u'-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True,delete=False)
 		t = MMGenExpect(name,'mmgen-addrimport', eth_args()[1:] + add_args + [fn])
+		if bad_input:
+			t.read(); t.ok(2); return
 		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect(expect)
@@ -3575,6 +3582,12 @@ class MMGenTestSuite(object):
 	def ethdev_token_addrgen(self,name):
 		self.ethdev_addrgen(name,addrs='11-13')
 		self.ethdev_addrgen(name,addrs='21-23')
+
+	def ethdev_token_addrimport_badaddr1(self,name):
+		self.ethdev_addrimport(name,ext=u'[11-13]{}.addrs',add_args=['--token=abc'],bad_input=True)
+
+	def ethdev_token_addrimport_badaddr2(self,name):
+		self.ethdev_addrimport(name,ext=u'[11-13]{}.addrs',add_args=['--token='+'00deadbeef'*4],bad_input=True)
 
 	def ethdev_token_addrimport(self,name):
 		for n,r in ('1','11-13'),('2','21-23'):

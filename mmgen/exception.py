@@ -21,12 +21,19 @@
 mmgen.exception: Exception classes for the MMGen suite
 """
 
-class UnrecognizedTokenSymbol(Exception): pass
-class TokenNotInBlockchain(Exception): pass
-class UserNonConfirmation(Exception): pass
-class BadMMGenTxID(Exception): pass
-class BadTxSizeEstimate(Exception): pass
-class IllegalWitnessFlagValue(Exception): pass
-class WitnessSizeMismatch(Exception): pass
-class TxHexMismatch(Exception): pass
-class RPCFailure(Exception): pass
+# 1: no hl, message only
+class UserNonConfirmation(Exception):     mmcode = 1
+
+# 2: yellow hl, message only
+class UnrecognizedTokenSymbol(Exception): mmcode = 2
+class TokenNotInBlockchain(Exception):    mmcode = 2
+
+# 3: yellow hl, 'MMGen Error' + exception + message
+class RPCFailure(Exception):              mmcode = 3
+class BadTxSizeEstimate(Exception):       mmcode = 3
+
+# 4: red hl, 'MMGen Fatal Error' + exception + message
+class BadMMGenTxID(Exception):            mmcode = 4
+class IllegalWitnessFlagValue(Exception): mmcode = 4
+class WitnessSizeMismatch(Exception):     mmcode = 4
+class TxHexMismatch(Exception):           mmcode = 4

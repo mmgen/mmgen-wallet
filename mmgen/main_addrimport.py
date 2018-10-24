@@ -79,7 +79,11 @@ def import_mmgen_list(infile):
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 	return al
 
-rpc_init()
+try:
+	rpc_init()
+except UnrecognizedTokenSymbol as e:
+	m = "When importing addresses for a new token, the token must be specified by address, not symbol."
+	raise type(e),'{}\n{}'.format(e.message,m)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
@@ -103,12 +107,7 @@ qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 err_msg = None
 
 from mmgen.tw import TrackingWallet
-try:
-	tw = TrackingWallet(mode='w')
-except UnrecognizedTokenSymbolError as e:
-	m1 = "Note: when importing addresses for a new token, the token must be specified"
-	m2 = "by address, not symbol."
-	die(1,'{}\n{}\n{}'.format(e.message,m1,m2))
+tw = TrackingWallet(mode='w')
 
 if opt.rescan and not 'rescan' in tw.caps:
 	msg("'--rescan' ignored: not supported by {}".format(type(tw).__name__))

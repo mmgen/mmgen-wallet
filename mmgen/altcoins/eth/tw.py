@@ -145,7 +145,7 @@ class EthereumTrackingWallet(TrackingWallet):
 				d['comment'] = lbl.comment
 				self.write()
 				return None
-		else: # emulate RPC library
+		else: # emulate on_fail='return' of RPC library
 			m = "Address '{}' not found in '{}' section of tracking wallet"
 			return ('rpcfail',(None,2,m.format(coinaddr,self.data_root_desc())))
 

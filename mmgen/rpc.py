@@ -76,7 +76,7 @@ class CoinDaemonRPCConnection(object):
 	# kwargs are for local use and are not passed to server
 
 	# By default, raises RPCFailure exception with an error msg on all errors and exceptions
-	# on_fail is one of 'raise' (default), 'return', 'silent' or 'die'
+	# on_fail is one of 'raise' (default), 'return' or 'silent'
 	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
@@ -84,6 +84,9 @@ class CoinDaemonRPCConnection(object):
 			cmd = 'badcommand_' + cmd
 
 		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'raise' }
+
+		if cf['on_fail'] not in ('raise','return','silent'):
+			raise ValueError, "request(): {}: illegal value for 'on_fail'".format(cf['on_fail'])
 
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
@@ -96,16 +99,12 @@ class CoinDaemonRPCConnection(object):
 			p = {'method':cmd,'params':args,'id':1,'jsonrpc':'2.0'}
 
 		def do_fail(*args):
-			if cf['on_fail'] in ('return','silent'):
-				return 'rpcfail',args
+			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
 
 			try:    s = u'{}'.format(args[2])
 			except: s = repr(args[2])
 
-			if cf['on_fail'] == 'raise':
-				raise RPCFailure,s
-			elif cf['on_fail'] == 'die':
-				die(args[1],yellow(s))
+			raise RPCFailure,s
 
 		dmsg_rpc('=== request() debug ===')
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
@@ -155,7 +154,7 @@ class CoinDaemonRPCConnection(object):
 		dmsg_rpc(u'    RPC REPLY data ==> {}\n'.format(r2))
 
 		if not r2:
-			return do_fail(r,2,'Error: empty reply')
+			return do_fail(r,2,'Empty reply')
 
 		r3 = json.loads(r2,parse_float=Decimal)
 		ret = []

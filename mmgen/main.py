@@ -56,11 +56,14 @@ def launch(what):
 				raise
 			else:
 				try: m = u'{}'.format(e.message)
-				except:
-					try: m = e.message.decode('utf8')
-					except: m = repr(e.message)
+				except: m = repr(e.message)
 
-				from mmgen.util import die,ydie
-				if type(e).__name__ == 'UserNonConfirmation': die(1,m)
-				if type(e).__name__ == 'RPCFailure': ydie(2,m)
-				ydie(2,u'\nERROR: ' + m)
+				from mmgen.util import die,ydie,rdie
+				d = [   (ydie,2,u'\nMMGen Unhandled Exception ({n}): {m}'),
+						(die, 1,u'{m}'),
+						(ydie,2,u'{m}'),
+						(ydie,3,u'\nMMGen Error ({n}): {m}'),
+						(rdie,4,u'\nMMGen Fatal Error ({n}): {m}')
+					][e.mmcode if hasattr(e,'mmcode') else 0]
+
+				d[0](d[1],d[2].format(n=type(e).__name__,m=m))

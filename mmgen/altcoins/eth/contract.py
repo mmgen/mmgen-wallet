@@ -44,7 +44,7 @@ class Token(MMGenObject): # ERC20
 		if decimals is None:
 			ret_hex = self.do_call('decimals()')
 			try: decimals = int(ret_hex,16)
-			except: raise TokenNotInBlockchain,"token '{}' not in blockchain".format(addr)
+			except: raise TokenNotInBlockchain,"Token '{}' not in blockchain".format(addr)
 		self.base_unit = Decimal(10) ** -decimals
 
 	def transferdata2amt(self,data): # online
