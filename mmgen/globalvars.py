@@ -38,7 +38,7 @@ class g(object):
 
 	# Constants:
 
-	version      = '0.9.9a'
+	version      = '0.9.999'
 	release_date = 'October 2018'
 
 	proj_name = 'MMGen'
@@ -91,7 +91,6 @@ class g(object):
 
 	# test suite:
 	bogus_wallet_data    = u''
-	traceback_cmd        = 'scripts/traceback.py'
 	debug_utf8           = False
 
 	for k in ('win','linux'):

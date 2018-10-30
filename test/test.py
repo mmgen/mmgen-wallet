@@ -150,7 +150,7 @@ opts_data = lambda: {
 -v, --verbose        Produce more verbose output
 -W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
 -X, --exit-after=C   Exit after command 'C'
-""".format(tbc=g.traceback_cmd,lf=log_file),
+""".format(tbc='scripts/traceback_run.py',lf=log_file),
 	'notes': """
 
 If no command is given, the whole suite of tests is run.

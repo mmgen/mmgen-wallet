@@ -145,9 +145,10 @@ class MMGenPexpect(object):
 				die(1,red('ERROR: process returned a non-zero exit status ({})'.format(ret)))
 		else:
 			if opt.traceback:
-				cmd,args = g.traceback_cmd,[cmd]+args
-				cmd_str = g.traceback_cmd + ' ' + cmd_str
-#			Msg('\ncmd_str: {}'.format(cmd_str))
+				tc = 'scripts/traceback_run.py'
+				cmd,args = tc,[cmd]+args
+				cmd_str = tc + ' ' + cmd_str
+			# Msg('\ncmd_str: {}'.format(cmd_str))
 			if opt.popen_spawn:
 				# PopenSpawn() requires cmd string to be bytes.  However, it autoconverts unicode
 				# input to bytes, though this behavior seems to be undocumented.  Setting 'encoding'
