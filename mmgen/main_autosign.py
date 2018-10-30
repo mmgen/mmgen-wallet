@@ -23,11 +23,11 @@ mmgen-autosign: Auto-sign MMGen transactions
 import sys,os,subprocess,time,signal,shutil
 from stat import *
 
-mountpoint   = u'/mnt/tx'
-tx_dir       = u'/mnt/tx/tx'
-part_label   = u'MMGEN_TX'
-wallet_dir   = u'/dev/shm/autosign'
-key_fn       = u'autosign.key'
+mountpoint   = '/mnt/tx'
+tx_dir       = '/mnt/tx/tx'
+part_label   = 'MMGEN_TX'
+wallet_dir   = '/dev/shm/autosign'
+key_fn       = 'autosign.key'
 
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
@@ -136,7 +136,7 @@ def get_wallet_files():
 	try: dlist = os.listdir(wallet_dir)
 	except: die(1,m.format(wallet_dir))
 
-	wfs = filter(lambda x: x[-6:] == '.mmdat',dlist)
+	wfs = [x for x in dlist if x[-6:] == '.mmdat']
 	if not wfs:
 		die(1,'No wallet files present!')
 	return [os.path.join(wallet_dir,w) for w in wfs]
@@ -196,7 +196,7 @@ def sign_tx_file(txfile):
 		else:
 			return False
 	except Exception as e:
-		msg(u'An error occurred: {}'.format(e.message))
+		msg('An error occurred: {}'.format(e.message))
 		return False
 	except:
 		return False
@@ -231,7 +231,7 @@ def decrypt_wallets():
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 #	opt.passwd_file = '/tmp/key'
 	from mmgen.seed import SeedSource
-	msg(u"Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
+	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
 	fails = 0
 	for wf in wfs:
 		try:
@@ -263,18 +263,18 @@ def wipe_existing_key():
 	try: os.stat(fn)
 	except: pass
 	else:
-		msg(u'\nWiping existing key {}'.format(fn))
+		msg('\nWiping existing key {}'.format(fn))
 		subprocess.call(['wipe','-cf',fn])
 
 def create_key():
 	from binascii import hexlify
 	kdata = hexlify(os.urandom(32))
 	fn = os.path.join(tx_dir,key_fn)
-	desc = u'key file {}'.format(fn)
+	desc = 'key file {}'.format(fn)
 	msg('Creating ' + desc)
 	try:
 		with open(fn,'w') as f: f.write(kdata+'\n')
-		os.chmod(fn,0400)
+		os.chmod(fn,0o400)
 		msg('Wrote ' + desc)
 	except:
 		die(2,'Unable to write ' + desc)
@@ -349,7 +349,7 @@ def set_led(cmd):
 
 def get_insert_status():
 	if os.getenv('MMGEN_TEST_SUITE'): return True
-	try: os.stat(os.path.join(u'/dev/disk/by-label',part_label))
+	try: os.stat(os.path.join('/dev/disk/by-label',part_label))
 	except: return False
 	else: return True
 

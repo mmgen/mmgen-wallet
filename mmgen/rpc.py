@@ -20,7 +20,7 @@
 rpc.py:  Cryptocoin RPC library for the MMGen suite
 """
 
-import httplib,base64,json
+import http.client,base64,json
 
 from mmgen.common import *
 from decimal import Decimal
@@ -68,8 +68,8 @@ class CoinDaemonRPCConnection(object):
 		self.port = port
 
 		for method in self.rpcmethods:
-			exec '{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
-						c=type(self).__name__,m=method)
+			exec('{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
+						c=type(self).__name__,m=method))
 
 	# Normal mode: call with arg list unrolled, exactly as with cli
 	# Batch mode:  call with list of arg lists as first argument
@@ -86,12 +86,12 @@ class CoinDaemonRPCConnection(object):
 		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'raise' }
 
 		if cf['on_fail'] not in ('raise','return','silent'):
-			raise ValueError, "request(): {}: illegal value for 'on_fail'".format(cf['on_fail'])
+			raise ValueError("request(): {}: illegal value for 'on_fail'".format(cf['on_fail']))
 
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
 
-		hc = httplib.HTTPConnection(self.host, self.port, False, cf['timeout'])
+		hc = http.client.HTTPConnection(self.host, self.port, False, cf['timeout'])
 
 		if cf['batch']:
 			p = [{'method':cmd,'params':r,'id':n,'jsonrpc':'2.0'} for n,r in enumerate(args[0],1)]
@@ -101,10 +101,10 @@ class CoinDaemonRPCConnection(object):
 		def do_fail(*args):
 			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
 
-			try:    s = u'{}'.format(args[2])
+			try:    s = '{}'.format(args[2])
 			except: s = repr(args[2])
 
-			raise RPCFailure,s
+			raise RPCFailure(s)
 
 		dmsg_rpc('=== request() debug ===')
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
@@ -151,7 +151,7 @@ class CoinDaemonRPCConnection(object):
 
 		r2 = r.read().decode('utf8')
 
-		dmsg_rpc(u'    RPC REPLY data ==> {}\n'.format(r2))
+		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
 
 		if not r2:
 			return do_fail(r,2,'Empty reply')

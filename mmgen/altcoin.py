@@ -450,7 +450,7 @@ class CoinInfo(object):
 						msg("Upgrading trust for coin '{}': {} -> {}".format(sym,line[6],1))
 						line[6] = 1
 
-			print(fs.format(*line))
+			print((fs.format(*line)))
 		msg('Processed {} entries'.format(len(data)))
 
 	@classmethod
@@ -466,8 +466,8 @@ class CoinInfo(object):
 		high = phash2addr(ver_num,'ff'*20)
 
 		if verbose:
-			print('low address:  ' + low)
-			print('high address: ' + high)
+			print(('low address:  ' + low))
+			print(('high address: ' + high))
 
 		l1,h1 = low[0],high[0]
 		return (l1,h1) if l1 != h1 else l1
@@ -477,9 +477,9 @@ class CoinInfo(object):
 		w = max(len(e[0]) for e in cls.coin_constants['mainnet'])
 		for line in cls.coin_constants['mainnet']:
 			if reverse:
-				print('{:6} {}'.format(line[1],line[0]))
+				print(('{:6} {}'.format(line[1],line[0])))
 			else:
-				print(('','{:{}} '.format(line[0],w))[include_names] + line[1])
+				print((('','{:{}} '.format(line[0],w))[include_names] + line[1]))
 
 	@classmethod
 	def create_trust_table(cls):

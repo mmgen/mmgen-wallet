@@ -53,7 +53,7 @@ def die_wait(delay,ev=0,s=''):
 def die_pause(ev=0,s=''):
 	assert type(ev) == int
 	if s: msg(s)
-	raw_input('Press ENTER to exit')
+	input('Press ENTER to exit')
 	sys.exit(ev)
 def die(ev=0,s=''):
 	assert type(ev) == int
@@ -81,7 +81,7 @@ def pdie(*args):
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
 	if type(refval) == bool:
-		v = unicode(val).lower()
+		v = str(val).lower()
 		if v in ('true','yes','1'):          ret = True
 		elif v in ('false','no','none','0'): ret = False
 		else: die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
@@ -91,7 +91,7 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		try:
 			ret = type(refval)((val,not val)[invert_bool])
 		except:
-			die(1,u"'{}': invalid value for '{}'{} (must be of type '{}')".format(
+			die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
 				val,desc,src_str,type(refval).__name__))
 	return ret
 
@@ -121,9 +121,9 @@ def check_or_create_dir(path):
 		os.listdir(path)
 	except:
 		try:
-			os.makedirs(path,0700)
+			os.makedirs(path,0o700)
 		except:
-			die(2,u"ERROR: unable to read or create path '{}'".format(path))
+			die(2,"ERROR: unable to read or create path '{}'".format(path))
 
 from mmgen.opts import opt
 
@@ -178,7 +178,7 @@ def make_chksum_8(s,sep=False):
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
 	from mmgen.obj import HexStr
-	if type(s) == unicode: s = s.encode('utf8')
+	if type(s) == str: s = s.encode('utf8')
 	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
@@ -280,7 +280,7 @@ class baseconv(object):
 
 	@classmethod
 	def b58decode(cls,s,pad=None):
-		pad = cls.get_pad(s,pad,'de',cls.b58pad_lens_rev,[bytes,unicode])
+		pad = cls.get_pad(s,pad,'de',cls.b58pad_lens_rev,[bytes,str])
 		return unhexlify(cls.tohex(s,'b58',pad=pad*2 if pad else None))
 
 	@staticmethod
@@ -301,7 +301,7 @@ class baseconv(object):
 
 	@classmethod
 	def check_wordlists(cls):
-		for k,v in cls.wl_chksums.items(): assert cls.get_wordlist_chksum(k) == v
+		for k,v in list(cls.wl_chksums.items()): assert cls.get_wordlist_chksum(k) == v
 
 	@classmethod
 	def check_wordlist(cls,wl_id):
@@ -394,7 +394,7 @@ def decode_pretty_hexdump(data):
 		return False
 
 def strip_comments(line):
-	return re.sub(ur'\s+$',u'',re.sub(ur'#.*',u'',line,1))
+	return re.sub(r'\s+$','',re.sub(r'#.*','',line,1))
 
 def remove_comments(lines):
 	return [m for m in [strip_comments(l) for l in lines] if m != '']
@@ -456,7 +456,7 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	try: mode = os.stat(fname).st_mode
 	except:
-		die(1,u"Unable to stat requested {} '{}'".format(ftype,fname))
+		die(1,"Unable to stat requested {} '{}'".format(ftype,fname))
 
 	for t in ok_types:
 		if t[0](mode): break
@@ -527,7 +527,7 @@ def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 	a = q+'  ' if q[0].isupper() else 'Are you sure you want to {}?\n'.format(q)
 	b = "Type uppercase '{}' to confirm: ".format(expect)
 	if my_raw_input(a+b).strip() != expect:
-		raise UserNonConfirmation,exit_msg
+		raise UserNonConfirmation(exit_msg)
 
 def write_data_to_file( outfile,data,desc='data',
 						ask_write=False,
@@ -548,7 +548,7 @@ def write_data_to_file( outfile,data,desc='data',
 	if ask_write_default_yes == False or ask_write_prompt:
 		ask_write = True
 
-	if not binary and type(data) == unicode:
+	if not binary and type(data) == str:
 		data = data.encode('utf8')
 
 	def do_stdout():
@@ -570,7 +570,7 @@ def write_data_to_file( outfile,data,desc='data',
 						confirm_or_raise('','output {} to pipe'.format(desc))
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
-				msg(u"Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
+				msg("Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
 			else:
 				msg('Redirecting output to file')
 
@@ -592,9 +592,9 @@ def write_data_to_file( outfile,data,desc='data',
 
 		hush = False
 		if file_exists(outfile) and ask_overwrite:
-			q = u"File '{}' already exists\nOverwrite?".format(outfile)
+			q = "File '{}' already exists\nOverwrite?".format(outfile)
 			confirm_or_raise('',q)
-			msg(u"Overwriting file '{}'".format(outfile))
+			msg("Overwriting file '{}'".format(outfile))
 			hush = True
 
 		# not atomic, but better than nothing
@@ -606,18 +606,18 @@ def write_data_to_file( outfile,data,desc='data',
 				d = ''
 			finally:
 				if d != cmp_data:
-					m = u"{} in file '{}' has been altered by some other program!  Aborting file write"
+					m = "{} in file '{}' has been altered by some other program!  Aborting file write"
 					die(3,m.format(desc,outfile))
 
 		f = open_file_or_exit(outfile,('w','wb')[bool(binary)])
 		try:
 			f.write(data)
 		except:
-			die(2,u"Failed to write {} to file '{}'".format(desc,outfile))
+			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
 		f.close
 
 		if not (hush or silent):
-			msg(u"{} written to file '{}'".format(capfirst(desc),outfile))
+			msg("{} written to file '{}'".format(capfirst(desc),outfile))
 
 		return True
 
@@ -631,17 +631,17 @@ def write_data_to_file( outfile,data,desc='data',
 def get_words_from_user(prompt):
 	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
-	dmsg(u'Sanitized input: [{}]'.format(' '.join(words)))
+	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
 def get_words_from_file(infile,desc,silent=False):
 	if not silent:
-		qmsg(u"Getting {} from file '{}'".format(desc,infile))
+		qmsg("Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile, 'r')
 	try: words = f.read().decode('utf8').split() # split() also strips
 	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	f.close()
-	dmsg(u'Sanitized input: [{}]'.format(' '.join(words)))
+	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
 def get_words(infile,desc,prompt):
@@ -655,7 +655,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		msg(u"{} {} '{}'".format(m,desc,fn))
+		msg("{} {} '{}'".format(m,desc,fn))
 		from mmgen.crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
@@ -664,19 +664,19 @@ def get_lines_from_file(fn,desc='',trim_comments=False,silent=False):
 	dec = mmgen_decrypt_file_maybe(fn,desc,silent=silent)
 	ret = dec.decode('utf8').splitlines() # DOS-safe
 	if trim_comments: ret = remove_comments(ret)
-	dmsg(u"Got {} lines from file '{}'".format(len(ret),fn))
+	dmsg("Got {} lines from file '{}'".format(len(ret),fn))
 	return ret
 
 def get_data_from_user(desc='data',silent=False): # user input MUST be UTF-8
-	p = ('',u'Enter {}: '.format(desc))[g.stdin_tty]
+	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
 	data = my_raw_input(p,echo=opt.echo_passphrase)
-	dmsg(u'User input: [{}]'.format(data))
+	dmsg('User input: [{}]'.format(data))
 	return data
 
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,require_utf8=False):
 	if dash and infile == '-': return sys.stdin.read()
 	if not opt.quiet and not silent and desc:
-		qmsg(u"Getting {} from file '{}'".format(desc,infile))
+		qmsg("Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile,('r','rb')[bool(binary)],silent=silent)
 	data = f.read()
 	f.close()
@@ -687,7 +687,7 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,r
 
 def pwfile_reuse_warning():
 	if 'passwd_file_used' in globals():
-		qmsg(u"Reusing passphrase from file '{}' at user request".format(opt.passwd_file))
+		qmsg("Reusing passphrase from file '{}' at user request".format(opt.passwd_file))
 		return True
 	globals()['passwd_file_used'] = True
 	return False
@@ -715,7 +715,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 	from mmgen.term import kb_hold_protect
 	kb_hold_protect()
 	if echo or not sys.stdin.isatty():
-		reply = raw_input(prompt.encode('utf8'))
+		reply = input(prompt.encode('utf8'))
 	else:
 		from getpass import getpass
 		reply = getpass(prompt.encode('utf8'))
@@ -731,7 +731,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 	from mmgen.term import get_char
 
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
-	p = u'{} {}: '.format(prompt,q)
+	p = '{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
 	if opt.accept_defaults:
@@ -836,7 +836,7 @@ def rpc_init_parity():
 
 		if not addr:
 			m = "'{}': unrecognized token symbol"
-			raise UnrecognizedTokenSymbol,m.format(token_arg)
+			raise UnrecognizedTokenSymbol(m.format(token_arg))
 
 		sym = Token(addr).symbol().upper()
 		vmsg('ERC20 token resolved: {} ({})'.format(addr,sym))
@@ -889,7 +889,7 @@ def rpc_init_bitcoind():
 				auth_cookie=get_coin_daemon_auth_cookie())
 
 	if g.bob or g.alice:
-		import regtest as rt
+		from . import regtest as rt
 		rt.user(('alice','bob')[g.bob],quiet=True)
 	conn.daemon_version = int(conn.getnetworkinfo()['version'])
 	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
@@ -935,7 +935,7 @@ def altcoin_subclass(cls,mod_id,cls_name):
 	tname = 'Token' if g.token else ''
 	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(mod_dir,mod_id,pname,tname,cls_name)
 	e2 = 'cls = {}{}{}'.format(pname,tname,cls_name)
-	try: exec e1; exec e2; return cls
+	try: exec(e1); exec(e2); return cls
 	except ImportError: return cls
 
 # decorator for TrackingWallet

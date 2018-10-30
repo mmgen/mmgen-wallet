@@ -55,11 +55,11 @@ class EthereumTrackingWallet(TrackingWallet):
 			if not 'tokens' in self.data:
 				self.data['tokens'] = {}
 			def conv_types(ad):
-				for v in ad.values():
+				for v in list(ad.values()):
 					v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
 					v['comment'] = TwComment(v['comment'],on_fail='raise')
 			conv_types(self.data['accounts'])
-			for v in self.data['tokens'].values():
+			for v in list(self.data['tokens'].values()):
 				conv_types(v)
 
 	def upgrade_wallet_maybe(self):
@@ -131,16 +131,16 @@ class EthereumTrackingWallet(TrackingWallet):
 
 	def sorted_list(self):
 		return sorted(
-			map(lambda x: {'addr':x[0],'mmid':x[1]['mmid'],'comment':x[1]['comment']},self.data_root().items()),
+			[{'addr':x[0],'mmid':x[1]['mmid'],'comment':x[1]['comment']} for x in list(self.data_root().items())],
 			key=lambda x: x['mmid'].sort_key+x['addr'] )
 
 	def mmid_ordered_dict(self):
 		from collections import OrderedDict
-		return OrderedDict(map(lambda x: (x['mmid'],{'addr':x['addr'],'comment':x['comment']}), self.sorted_list()))
+		return OrderedDict([(x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list()])
 
 	@write_mode
 	def set_label(self,coinaddr,lbl):
-		for addr,d in self.data_root().items():
+		for addr,d in list(self.data_root().items()):
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()
@@ -204,12 +204,12 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 
 	def get_unspent_rpc(self):
 		rpc_init()
-		return map(lambda d: {
+		return [{
 				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
 				'address': d['addr'],
 				'amount': self.get_addr_bal(d['addr']),
 				'confirmations': 0, # TODO
-				}, TrackingWallet().sorted_list())
+				} for d in TrackingWallet().sorted_list()]
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
@@ -238,7 +238,7 @@ class EthereumTwAddrList(TwAddrList):
 		self.total = g.proto.coin_amt('0')
 
 		from mmgen.obj import CoinAddr
-		for mmid,d in tw.items():
+		for mmid,d in list(tw.items()):
 #			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue
@@ -297,6 +297,6 @@ class EthereumAddrData(AddrData):
 		vmsg('Getting address data from tracking wallet')
 		tw = TrackingWallet().mmid_ordered_dict()
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
-		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in tw.items()]
+		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in list(tw.items())]
 
 class EthereumTokenAddrData(EthereumAddrData): pass

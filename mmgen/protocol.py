@@ -59,7 +59,7 @@ def _b58chk_decode(s):
 	if len(hexstr) % 2: hexstr = '0' + hexstr
 	if hexstr[-8:] == hash256(hexstr[:-8])[:8]:
 		return hexstr[:-8]
-	raise ValueError,'_b58chk_decode(): checksum incorrect'
+	raise ValueError('_b58chk_decode(): checksum incorrect')
 
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
@@ -129,7 +129,7 @@ class BitcoinProtocol(MMGenObject):
 	def wif2hex(cls,wif):
 		key = _b58chk_decode(wif)
 		pubkey_type = None
-		for k,v in cls.wif_ver_num.items():
+		for k,v in list(cls.wif_ver_num.items()):
 			if key[:len(v)] == v:
 				pubkey_type = k
 				key = key[len(v):]
@@ -203,7 +203,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def pubhash2bech32addr(cls,pubhash):
-		d = map(ord,pubhash.decode('hex'))
+		d = list(map(ord,pubhash.decode('hex')))
 		return bech32.bech32_encode(cls.bech32_hrp,[cls.witness_vernum]+bech32.convertbits(d,8,5))
 
 class BitcoinTestnetProtocol(BitcoinProtocol):
@@ -377,9 +377,9 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 		if hl == 40:
 			return super(cls,cls).pubhash2addr(pubkey_hash,p2sh)
 		elif hl == 128:
-			raise NotImplementedError,'Zcash z-addresses have no pubkey hash'
+			raise NotImplementedError('Zcash z-addresses have no pubkey hash')
 		else:
-			raise ValueError,'{}: incorrect pubkey_hash length'.format(hl)
+			raise ValueError('{}: incorrect pubkey_hash length'.format(hl))
 
 class ZcashTestnetProtocol(ZcashProtocol):
 	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
@@ -456,12 +456,12 @@ class CoinProtocol(MMGenObject):
 		from mmgen.altcoin import CoinInfo as ci
 		ret = sorted(set(
 			[e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
-			+ cls.coins.keys()))
+			+ list(cls.coins.keys())))
 		return [getattr(e,('lower','upper')[upcase])() for e in ret]
 
 	@classmethod
 	def get_base_coin_from_name(cls,name):
-		for proto,foo in cls.coins.values():
+		for proto,foo in list(cls.coins.values()):
 			if name == proto.__name__[:-8].lower():
 				return proto.base_coin
 		return False

@@ -21,7 +21,7 @@ def process_exception():
 
 try:
 	sys.argv.pop(0)
-	exec tb_source
+	exec(tb_source)
 except SystemExit as e:
 	if e.code != 0:
 		process_exception()

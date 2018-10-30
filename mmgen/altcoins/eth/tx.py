@@ -150,7 +150,7 @@ class EthereumMMGenTX(MMGenTX):
 		o_num = len(self.outputs)
 		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
 		self.make_txobj()
-		self.hex = json.dumps(dict([(k,str(v))for k,v in self.txobj.items()]))
+		self.hex = json.dumps(dict([(k,str(v))for k,v in list(self.txobj.items())]))
 		self.update_txid()
 
 	def del_output(self,idx): pass
@@ -317,7 +317,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def is_in_mempool(self):
 #		pmsg(g.rpch.parity_pendingTransactions())
-		return '0x'+self.coin_txid in map(lambda x: x['hash'],g.rpch.parity_pendingTransactions())
+		return '0x'+self.coin_txid in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
 
 	def is_in_wallet(self):
 		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
@@ -401,7 +401,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 		return True
 
 	def final_inputs_ok_msg(self,change_amt):
-		m = u"Transaction leaves ≈{} {} and {} {} in the sender's account"
+		m = "Transaction leaves ≈{} {} and {} {} in the sender's account"
 		send_acct_tbal = 0 if self.outputs[0].is_chg else \
 				Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
 		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)

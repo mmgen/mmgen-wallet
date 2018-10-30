@@ -45,7 +45,7 @@ def sha256_rounds(s,n):
 def scramble_seed(seed,scramble_key,hash_rounds):
 	import hmac
 	scr_seed = hmac.new(seed,scramble_key,sha256).digest()
-	fs = u'Seed:  {}\nScramble key: {}\nScrambled seed: {}'
+	fs = 'Seed:  {}\nScramble key: {}\nScrambled seed: {}'
 	dmsg(fs.format(hexlify(seed),scramble_key.decode('utf8'),hexlify(scr_seed)))
 	return sha256_rounds(scr_seed,hash_rounds)
 
@@ -111,7 +111,7 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
 	N,r,p = get_hash_params(hash_preset)
-	if type(passwd) == unicode: passwd = passwd.encode('utf8')
+	if type(passwd) == str: passwd = passwd.encode('utf8')
 	return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
@@ -142,7 +142,7 @@ def _get_random_data_from_user(uchars):
 	if opt.quiet: msg_r('\r')
 	else: msg_r("\rThank you.  That's enough.{}\n\n".format(' '*18))
 
-	fmt_time_data = map('{:.22f}'.format,time_data)
+	fmt_time_data = list(map('{:.22f}'.format,time_data))
 	dmsg('\nUser input:\n{!r}\nKeystroke time values:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
@@ -171,7 +171,7 @@ def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
 	while True:
 		ret = my_raw_input(prompt)
 		if ret:
-			if ret in g.hash_presets.keys():
+			if ret in list(g.hash_presets.keys()):
 				return ret
 			else:
 				m = 'Invalid input.  Valid choices are {}'

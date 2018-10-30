@@ -37,20 +37,20 @@ set_debug_all()
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # and for the spawned scripts
 
-log_file = u'test.py_log'
+log_file = 'test.py_log'
 
 hincog_fn      = 'rand_data'
 hincog_bytes   = 1024*1024
 hincog_offset  = 98765
 hincog_seedlen = 256
 
-incog_id_fn  = u'incog_id'
-non_mmgen_fn = u'coinkey'
-pwfile = u'passwd_file'
+incog_id_fn  = 'incog_id'
+non_mmgen_fn = 'coinkey'
+pwfile = 'passwd_file'
 
-ref_dir = os.path.join(u'test',u'ref')
+ref_dir = os.path.join('test','ref')
 
-rt_pw = u'abc-α'
+rt_pw = 'abc-α'
 ref_wallet_brainpass = 'abc'
 ref_wallet_hash_preset = '1'
 ref_wallet_incog_offset = 123
@@ -58,21 +58,21 @@ ref_wallet_incog_offset = 123
 from mmgen.obj import MMGenTXLabel,PrivKey,ETHAmt
 from mmgen.addr import AddrGenerator,KeyGenerator,AddrList,AddrData,AddrIdxList
 
-ref_tx_label_jp = u'必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
-ref_tx_label_zh = u'所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
-ref_tx_label_lat_cyr_gr = u''.join(map(unichr,
-									range(65,91) +
-									range(1040,1072) + # cyrillic
-									range(913,939) +   # greek
-									range(97,123)))[:MMGenTXLabel.max_len] # 72 chars
+ref_tx_label_jp = '必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
+ref_tx_label_zh = '所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
+ref_tx_label_lat_cyr_gr = ''.join(map(chr,
+									list(range(65,91)) +
+									list(range(1040,1072)) + # cyrillic
+									list(range(913,939)) +   # greek
+									list(range(97,123))))[:MMGenTXLabel.max_len] # 72 chars
 ref_bw_hash_preset = '1'
-ref_bw_file        = u'wallet.mmbrain'
-ref_bw_file_spc    = u'wallet-spaced.mmbrain'
+ref_bw_file        = 'wallet.mmbrain'
+ref_bw_file_spc    = 'wallet-spaced.mmbrain'
 
 ref_kafile_pass        = 'kafile password'
 ref_kafile_hash_preset = '1'
 
-ref_enc_fn = u'sample-text.mmenc'
+ref_enc_fn = 'sample-text.mmenc'
 tool_enc_passwd = "Scrypt it, don't hash it!"
 sample_text = \
 	'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n'
@@ -81,9 +81,9 @@ sample_text = \
 # under '/dev/shm' and put datadir and temp files here.
 shortopts = ''.join([e[1:] for e in sys.argv if len(e) > 1 and e[0] == '-' and e[1] != '-'])
 shortopts = ['-'+e for e in list(shortopts)]
-data_dir_basename = u'data_dir' + ('',u'-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))]
-data_dir = os.path.join(u'test',data_dir_basename)
-trash_dir = os.path.join(u'test',u'trash')
+data_dir_basename = 'data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))]
+data_dir = os.path.join('test',data_dir_basename)
+trash_dir = os.path.join('test','trash')
 
 if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts):
 	if g.platform == 'win':
@@ -98,7 +98,7 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 					else:
 						time.sleep(2)
 						shutil.rmtree(tdir)
-			os.mkdir(tdir,0755)
+			os.mkdir(tdir,0o755)
 	else:
 		d,pfx = '/dev/shm','mmgen-test-'
 		try:
@@ -107,12 +107,12 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 			die(2,'Unable to delete directory tree {}/{}* ({})'.format(d,pfx,e.message))
 		try:
 			import tempfile
-			shm_dir = unicode(tempfile.mkdtemp('',pfx,d))
+			shm_dir = str(tempfile.mkdtemp('',pfx,d))
 		except Exception as e:
 			die(2,'Unable to create temporary directory in {} ({})'.format(d,e.message))
 		for tdir in (data_dir,trash_dir):
 			dd = os.path.join(shm_dir,os.path.basename(tdir))
-			os.mkdir(dd,0755)
+			os.mkdir(dd,0o755)
 			try: os.unlink(tdir)
 			except: pass
 			os.symlink(dd,tdir)
@@ -220,7 +220,7 @@ def restore_debug():
 
 cfgs = {
 	'15': {
-		'tmpdir':        os.path.join(u'test',u'tmp15'),
+		'tmpdir':        os.path.join('test','tmp15'),
 		'wpasswd':       'Dorian-α',
 		'kapasswd':      'Grok the blockchain',
 		'addr_idx_list': '12,99,5-10,5,12', # 8 addresses
@@ -235,7 +235,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'16': {
-		'tmpdir':        os.path.join(u'test',u'tmp16'),
+		'tmpdir':        os.path.join('test','tmp16'),
 		'wpasswd':       'My changed password',
 		'hash_preset':   '2',
 		'dep_generators': {
@@ -243,26 +243,26 @@ cfgs = {
 		},
 		'segwit': get_segwit_bool()
 	},
-	'17': { 'tmpdir': os.path.join(u'test',u'tmp17') },
-	'18': { 'tmpdir': os.path.join(u'test',u'tmp18') },
+	'17': { 'tmpdir': os.path.join('test','tmp17') },
+	'18': { 'tmpdir': os.path.join('test','tmp18') },
 #	'19': { 'tmpdir': os.path.join(u'test',u'tmp19'), 'wpasswd':'abc' }, B2X
 
-	'31': { 'tmpdir': os.path.join(u'test',u'tmp31'), # L
+	'31': { 'tmpdir': os.path.join('test','tmp31'), # L
 			'addr_idx_list':'1-2', 'segwit': False,
 			'dep_generators': {'addrs':'ref_tx_addrgen1'} },
-	'32': { 'tmpdir': os.path.join(u'test',u'tmp32'), # C
+	'32': { 'tmpdir': os.path.join('test','tmp32'), # C
 			'addr_idx_list':'1-2', 'segwit': False,
 			'dep_generators': {'addrs':'ref_tx_addrgen2'} },
-	'33': { 'tmpdir': os.path.join(u'test',u'tmp33'), # S
+	'33': { 'tmpdir': os.path.join('test','tmp33'), # S
 			'addr_idx_list':'1-2', 'segwit': True,
 			'dep_generators': {'addrs':'ref_tx_addrgen3'} },
-	'34': { 'tmpdir': os.path.join(u'test',u'tmp34'), # B
+	'34': { 'tmpdir': os.path.join('test','tmp34'), # B
 			'addr_idx_list':'1-2', 'segwit': True,
 			'dep_generators': {'addrs':'ref_tx_addrgen4'} },
 
 	'1': {
-		'tmpdir':        os.path.join(u'test',u'tmp1'),
-		'wpasswd':       u'Dorian-α',
+		'tmpdir':        os.path.join('test','tmp1'),
+		'wpasswd':       'Dorian-α',
 		'kapasswd':      'Grok the blockchain',
 		'addr_idx_list': '12,99,5-10,5,12', # 8 addresses
 		'dep_generators':  {
@@ -277,14 +277,14 @@ cfgs = {
 			'mmhex':       'export_hex',
 			'mmincog':     'export_incog',
 			'mmincox':     'export_incog_hex',
-			hincog_fn:     u'export_incog_hidden',
-			incog_id_fn:   u'export_incog_hidden',
+			hincog_fn:     'export_incog_hidden',
+			incog_id_fn:   'export_incog_hidden',
 			'akeys.mmenc': 'keyaddrgen'
 		},
 		'segwit': get_segwit_bool()
 	},
 	'2': {
-		'tmpdir':        os.path.join(u'test',u'tmp2'),
+		'tmpdir':        os.path.join('test','tmp2'),
 		'wpasswd':       'Hodling away',
 		'addr_idx_list': '37,45,3-6,22-23',  # 8 addresses
 		'seed_len':      128,
@@ -298,7 +298,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'20': {
-		'tmpdir':        os.path.join(u'test',u'tmp20'),
+		'tmpdir':        os.path.join('test','tmp20'),
 		'wpasswd':       'Vsize it',
 		'addr_idx_list': '1-8',  # 8 addresses
 		'seed_len':      256,
@@ -311,7 +311,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'21': {
-		'tmpdir':        os.path.join(u'test',u'tmp21'),
+		'tmpdir':        os.path.join('test','tmp21'),
 		'wpasswd':       'Vsize it',
 		'addr_idx_list': '1-8',  # 8 addresses
 		'seed_len':      256,
@@ -324,12 +324,12 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'22': {
-		'tmpdir': os.path.join(u'test',u'tmp22'),
+		'tmpdir': os.path.join('test','tmp22'),
 		'parity_pidfile': 'parity.pid',
 		'parity_keyfile': 'parity.devkey',
 		},
 	'3': {
-		'tmpdir':        os.path.join(u'test',u'tmp3'),
+		'tmpdir':        os.path.join('test','tmp3'),
 		'wpasswd':       'Major miner',
 		'addr_idx_list': '73,54,1022-1023,2-5', # 8 addresses
 		'dep_generators': {
@@ -341,7 +341,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'4': {
-		'tmpdir':        os.path.join(u'test',u'tmp4'),
+		'tmpdir':        os.path.join('test','tmp4'),
 		'wpasswd':       'Hashrate good',
 		'addr_idx_list': '63,1004,542-544,7-9', # 8 addresses
 		'seed_len':      192,
@@ -353,13 +353,13 @@ cfgs = {
 			'sigtx':       'txsign4',
 			'txdo':        'txdo4',
 		},
-		'bw_filename': u'brainwallet.mmbrain',
+		'bw_filename': 'brainwallet.mmbrain',
 		'bw_params':   '192,1',
 		'segwit': get_segwit_bool()
 	},
 	'14': {
 		'kapasswd':      'Maxwell',
-		'tmpdir':        os.path.join(u'test',u'tmp14'),
+		'tmpdir':        os.path.join('test','tmp14'),
 		'wpasswd':       'The Halving',
 		'addr_idx_list': '61,998,502-504,7-9', # 8 addresses
 		'seed_len':      256,
@@ -371,7 +371,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'5': {
-		'tmpdir':        os.path.join(u'test',u'tmp5'),
+		'tmpdir':        os.path.join('test','tmp5'),
 		'wpasswd':       'My changed password-α',
 		'hash_preset':   '2',
 		'dep_generators': {
@@ -421,14 +421,14 @@ cfgs = {
 		'passfile32_chk':  '37B6 C218 2ABC 7508',
 		'passfilehex_chk': '523A F547 0E69 8323',
 		'wpasswd':         'reference password',
-		'ref_wallet':      u'FE3C6545-D782B529[128,1].mmdat',
-		'ic_wallet':       u'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
-		'ic_wallet_hex':   u'FE3C6545-BC4BE3F2-32586837[128,1].mmincox',
+		'ref_wallet':      'FE3C6545-D782B529[128,1].mmdat',
+		'ic_wallet':       'FE3C6545-E29303EA-5E229E30[128,1].mmincog',
+		'ic_wallet_hex':   'FE3C6545-BC4BE3F2-32586837[128,1].mmincox',
 
 		'hic_wallet':       'FE3C6545-161E495F-BEB7548E[128,1].incog-offset123',
 		'hic_wallet_old':   'FE3C6545-161E495F-9860A85B[128,1].incog-old.offset123',
 
-		'tmpdir':        os.path.join(u'test',u'tmp6'),
+		'tmpdir':        os.path.join('test','tmp6'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
 		'pass_idx_list': '1,4,9-11,1100',
@@ -481,14 +481,14 @@ cfgs = {
 		'passfile32_chk':  '2A28 C5C7 36EC 217A',
 		'passfilehex_chk': 'B11C AC6A 1464 608D',
 		'wpasswd':         'reference password',
-		'ref_wallet':      u'1378FC64-6F0F9BB4[192,1].mmdat',
-		'ic_wallet':       u'1378FC64-2907DE97-F980D21F[192,1].mmincog',
-		'ic_wallet_hex':   u'1378FC64-4DCB5174-872806A7[192,1].mmincox',
+		'ref_wallet':      '1378FC64-6F0F9BB4[192,1].mmdat',
+		'ic_wallet':       '1378FC64-2907DE97-F980D21F[192,1].mmincog',
+		'ic_wallet_hex':   '1378FC64-4DCB5174-872806A7[192,1].mmincox',
 
-		'hic_wallet':      u'1378FC64-B55E9958-77256FC1[192,1].incog.offset123',
-		'hic_wallet_old':  u'1378FC64-B55E9958-D85FF20C[192,1].incog-old.offset123',
+		'hic_wallet':      '1378FC64-B55E9958-77256FC1[192,1].incog.offset123',
+		'hic_wallet_old':  '1378FC64-B55E9958-D85FF20C[192,1].incog-old.offset123',
 
-		'tmpdir':        os.path.join(u'test',u'tmp7'),
+		'tmpdir':        os.path.join('test','tmp7'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
 		'pass_idx_list': '1,4,9-11,1100',
@@ -541,12 +541,12 @@ cfgs = {
 		'passfile32_chk':  'F6C1 CDFB 97D9 FCAE',
 		'passfilehex_chk': 'BD4F A0AC 8628 4BE4',
 		'wpasswd':         'reference password',
-		'ref_wallet':      u'98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
-		'ref_addrfile':    u'98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
-		'ref_segwitaddrfile':u'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
-		'ref_bech32addrfile':u'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
-		'ref_keyaddrfile': u'98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
-		'ref_passwdfile':  u'98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
+		'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.testnet]),
+		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_bech32addrfile':'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
+		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
+		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
 		'ref_addrfile_chksum': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
 			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
@@ -589,13 +589,13 @@ cfgs = {
 					'6BDB25-MM1[1.23456,50000].testnet.rawtx'),
 			'etc': ('ED3848-ETC[1.2345,40000].rawtx','')
 		},
-		'ic_wallet':       u'98831F3A-5482381C-18460FB1[256,1].mmincog',
-		'ic_wallet_hex':   u'98831F3A-1630A9F2-870376A9[256,1].mmincox',
+		'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
+		'ic_wallet_hex':   '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 
-		'hic_wallet':       u'98831F3A-F59B07A0-559CEF19[256,1].incog.offset123',
-		'hic_wallet_old':   u'98831F3A-F59B07A0-848535F3[256,1].incog-old.offset123',
+		'hic_wallet':       '98831F3A-F59B07A0-559CEF19[256,1].incog.offset123',
+		'hic_wallet_old':   '98831F3A-F59B07A0-848535F3[256,1].incog-old.offset123',
 
-		'tmpdir':        os.path.join(u'test',u'tmp8'),
+		'tmpdir':        os.path.join('test','tmp8'),
 		'kapasswd':      '',
 		'addr_idx_list': '1010,500-501,31-33,1,33,500,1011', # 8 addresses
 		'pass_idx_list': '1,4,9-11,1100',
@@ -609,7 +609,7 @@ cfgs = {
 		'segwit': get_segwit_bool()
 	},
 	'9': {
-		'tmpdir':        os.path.join(u'test',u'tmp9'),
+		'tmpdir':        os.path.join('test','tmp9'),
 		'tool_enc_infn':      'tool_encrypt.in',
 #		'tool_enc_ref_infn':  'tool_encrypt_ref.in',
 		'wpasswd':         'reference password',
@@ -677,16 +677,16 @@ eth_token_bals = {
 
 def eth_args():
 	assert g.coin in ('ETH','ETC'),'for ethdev tests, --coin must be set to either ETH or ETC'
-	return [u'--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
+	return ['--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
 
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
 	cfgs[b] = deepcopy(cfgs[a])
-	cfgs[b]['tmpdir'] = os.path.join(u'test',u'tmp'+b)
+	cfgs[b]['tmpdir'] = os.path.join('test','tmp'+b)
 
 if g.debug_utf8:
-	for k in cfgs: cfgs[k]['tmpdir'] += u'-α'
+	for k in cfgs: cfgs[k]['tmpdir'] += '-α'
 
 from collections import OrderedDict
 
@@ -1266,7 +1266,7 @@ if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 
 	Msg(green('AVAILABLE COMMANDS:'))
-	w = max(map(len,cmd_data))
+	w = max(list(map(len,cmd_data)))
 	for cmd in cmd_data:
 		if cmd[:5] == 'info_':
 			Msg(green('  {}:'.format(capfirst(cmd_data[cmd][0]))))
@@ -1274,7 +1274,7 @@ if opt.list_cmds:
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
 	for cl,lbl in ((meta_cmds,'METACOMMANDS'),(cmd_list,'COMMAND GROUPS')):
-		w = max(map(len,cl))
+		w = max(list(map(len,cl)))
 		Msg('\n'+green('AVAILABLE {}:'.format(lbl)))
 		for cmd in cl:
 			ft = format_par(' '.join(cl[cmd]),width=tw,indent=4,as_list=True)
@@ -1282,7 +1282,7 @@ if opt.list_cmds:
 			Msg('  {}{}{}'.format(yellow(cmd+':'),sep,'\n'.join(ft).lstrip()))
 
 	Msg('\n'+green('AVAILABLE UTILITIES:'))
-	w = max(map(len,utils))
+	w = max(list(map(len,utils)))
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
 
@@ -1301,7 +1301,7 @@ def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 	if len(flist) > 1:
 		if delete:
 			if not opt.quiet:
-				msg(u"Multiple *.{} files in '{}' - deleting".format(ext,mydir))
+				msg("Multiple *.{} files in '{}' - deleting".format(ext,mydir))
 			for f in flist:
 				msg(f)
 				os.unlink(f)
@@ -1312,7 +1312,7 @@ def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 def find_generated_exts(cmd):
 	out = []
 	for k in cfgs:
-		for ext,prog in cfgs[k]['dep_generators'].items():
+		for ext,prog in list(cfgs[k]['dep_generators'].items()):
 			if prog == cmd:
 				out.append((ext,cfgs[k]['tmpdir']))
 	return out
@@ -1331,7 +1331,7 @@ def verify_checksum_or_exit(checksum,chk):
 		sys.exit(1)
 	vmsg(green('Checksums match: ') + cyan(chk))
 
-from test.mmgen_pexpect import MMGenPexpect
+from .test.mmgen_pexpect import MMGenPexpect
 class MMGenExpect(MMGenPexpect):
 
 	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False,msg_only=False,no_msg=False):
@@ -1367,9 +1367,9 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	ret = {
 		lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
-			else (u'{}:{}{}'.format(al_id,idx,lbl)),
+			else ('{}:{}{}'.format(al_id,idx,lbl)),
 		'vout': int(getrandnum(4) % 8),
-		'txid': unicode(hexlify(os.urandom(32))),
+		'txid': str(hexlify(os.urandom(32))),
 		'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 		'address': coinaddr,
 		'spendable': False,
@@ -1405,16 +1405,16 @@ def get_label(do_shuffle=False):
 	from random import shuffle
 	global label_iter
 	try:
-		return unicode(next(label_iter))
+		return str(next(label_iter))
 	except:
 		if do_shuffle: shuffle(labels)
 		label_iter = iter(labels)
-		return unicode(next(label_iter))
+		return str(next(label_iter))
 
 def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_compressed=True):
 
 	out = []
-	for d in tx_data.values():
+	for d in list(tx_data.values()):
 		al = adata.addrlist(d['al_id'])
 		for n,(idx,coinaddr) in enumerate(al.addrpairs()):
 			lbl = get_label(do_shuffle=True)
@@ -1434,14 +1434,14 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 	return out
 
 def write_fake_data_to_file(d):
-	unspent_data_file = os.path.join(cfg['tmpdir'],u'unspent.json')
+	unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
 	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True,ignore_opt_outdir=True)
 	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file.encode('utf8')
-	bwd_msg = u'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
+	bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
 	if opt.print_cmdline: msg(bwd_msg)
 	if opt.log: log_fd.write(bwd_msg + ' ')
 	if opt.verbose or opt.exact_output:
-		sys.stderr.write(u"Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
+		sys.stderr.write("Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
 
 def create_tx_data(sources,addrs_per_wallet=addrs_per_wallet):
 	tx_data,ad = {},AddrData()
@@ -1481,7 +1481,7 @@ def make_txcreate_cmdline(tx_data):
 			'{}:{},{}'.format(s['al_id'],s['addr_idxs'][0],cfgs[num]['amts'][0]),
 		]
 		# + one change address and one BTC address
-		if num is tx_data.keys()[-1]:
+		if num is list(tx_data.keys())[-1]:
 			cmd_args += ['{}:{}'.format(s['al_id'],s['addr_idxs'][1])]
 			cmd_args += ['{},{}'.format(rand_coinaddr,cfgs[num]['amts'][1])]
 
@@ -1489,7 +1489,7 @@ def make_txcreate_cmdline(tx_data):
 
 def add_comments_to_addr_file(addrfile,outfile,use_labels=False):
 	silence()
-	gmsg(u"Adding comments to address file '{}'".format(addrfile))
+	gmsg("Adding comments to address file '{}'".format(addrfile))
 	a = AddrList(addrfile)
 	for n,idx in enumerate(a.idxs(),1):
 		if use_labels:
@@ -1612,7 +1612,7 @@ def check_deps(cmds):
 
 	check_needs_rerun(ts,cmd,build=False)
 
-	w = max(map(len,rebuild_list)) + 1
+	w = max(list(map(len,rebuild_list))) + 1
 	for cmd in rebuild_list:
 		c = rebuild_list[cmd]
 		m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
@@ -1655,7 +1655,7 @@ class MMGenTestSuite(object):
 		num = str(cmd_data[cmd][0])
 		dgl = cfgs[num]['dep_generators']
 #	mmsg(num,cmd,dgl)
-		if cmd in dgl.values():
+		if cmd in list(dgl.values()):
 			exts = [k for k in dgl if dgl[k] == cmd]
 			return (num,exts)
 		else:
@@ -1733,7 +1733,7 @@ class MMGenTestSuite(object):
 	def brainwalletgen_ref(self,name):
 		sl_arg = '-l{}'.format(cfg['seed_len'])
 		hp_arg = '-p{}'.format(ref_wallet_hash_preset)
-		label = u"test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,cfg['seed_len'])
+		label = "test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,cfg['seed_len'])
 		bf = 'ref.mmbrain'
 		args = ['-d',cfg['tmpdir'],hp_arg,sl_arg,'-ib','-L',label]
 		write_to_tmpfile(cfg,bf,ref_wallet_brainpass)
@@ -1752,7 +1752,7 @@ class MMGenTestSuite(object):
 		silence()
 		write_to_tmpfile(cfg,pwfile,get_data_from_file(pf))
 		end_silence()
-		add_args = {'cmdline': ['-d',cfg['tmpdir'],'-L',u'Changed label (UTF-8) α'],
+		add_args = {'cmdline': ['-d',cfg['tmpdir'],'-L','Changed label (UTF-8) α'],
 					'keep':    ['-d',trash_dir,'--keep-label'],
 					'user':    ['-d',trash_dir]
 					}[label_action]
@@ -1764,7 +1764,7 @@ class MMGenTestSuite(object):
 		t.expect('Repeat passphrase: ',cfg['wpasswd']+'\n')
 		t.usr_rand(usr_rand_chars)
 		if label_action == 'user':
-			t.expect('Enter a wallet label.*: ',u'Interactive Label (UTF-8) α\n',regex=True)
+			t.expect('Enter a wallet label.*: ','Interactive Label (UTF-8) α\n',regex=True)
 		t.expect_getend(('Label changed to ','Reusing label ')[label_action=='keep'])
 #		t.expect_getend('Key ID changed: ')
 		if not wf:
@@ -2047,7 +2047,7 @@ class MMGenTestSuite(object):
 			t.expect('Save transaction? (y/N): ','y')
 			t.written_to_file('Transaction')
 		os.unlink(txfile) # our tx file replaces the original
-		cmd = 'touch ' + os.path.join(cfg['tmpdir'],u'txbump')
+		cmd = 'touch ' + os.path.join(cfg['tmpdir'],'txbump')
 		os.system(cmd.encode('utf8'))
 		t.ok()
 
@@ -2118,7 +2118,7 @@ class MMGenTestSuite(object):
 	def export_seed(self,name,wf,desc='seed data',out_fmt='seed',pf=None):
 		f,t = self.walletconv_export(name,wf,desc=desc,out_fmt=out_fmt,pf=pf)
 		silence()
-		msg(u'{}: {}'.format(capfirst(desc),cyan(get_data_from_file(f,desc))))
+		msg('{}: {}'.format(capfirst(desc),cyan(get_data_from_file(f,desc))))
 		end_silence()
 		t.ok()
 
@@ -2142,7 +2142,7 @@ class MMGenTestSuite(object):
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
 	def export_incog_hidden(self,name,wf):
 		rf = os.path.join(cfg['tmpdir'],hincog_fn)
-		add_args = ['-J',u'{},{}'.format(rf,hincog_offset)]
+		add_args = ['-J','{},{}'.format(rf,hincog_offset)]
 		self.export_incog(
 			name,wf,desc='hidden incognito data',out_fmt='hi',add_args=add_args)
 
@@ -2188,7 +2188,7 @@ class MMGenTestSuite(object):
 	def addrgen_incog_hidden(self,name,wf,foo):
 		rf = os.path.join(cfg['tmpdir'],hincog_fn)
 		self.addrgen_incog(name,[],'',in_fmt='hi',desc='hidden incognito data',
-			args=['-H',u'{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
+			args=['-H','{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def keyaddrgen(self,name,wf,pf=None,check_ref=False,mmtype=None):
 		if cfg['segwit'] and not mmtype:
@@ -2224,11 +2224,11 @@ class MMGenTestSuite(object):
 
 	def ref_b32passwdgen(self,name,wf,pf):
 		ea = ['--base32','--passwd-len','17']
-		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str=u'фубар@crypto.org',extra_args=ea)
+		self.addrgen(name,wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
 
 	def ref_hexpasswdgen(self,name,wf,pf):
 		ea = ['--hex']
-		self.addrgen(name,wf,pf,check_ref=True,ftype='passhex',id_str=u'фубар@crypto.org',extra_args=ea)
+		self.addrgen(name,wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
 
 	def txsign_keyaddr(self,name,keyaddr_file,txfile):
 		t = MMGenExpect(name,'mmgen-txsign', ['-d',cfg['tmpdir'],'-M',keyaddr_file,txfile])
@@ -2309,7 +2309,7 @@ class MMGenTestSuite(object):
 		self.txsign_ui_common(t,name)
 		self.txsend_ui_common(t,name)
 
-		cmd = 'touch ' + os.path.join(cfg['tmpdir'],u'txdo')
+		cmd = 'touch ' + os.path.join(cfg['tmpdir'],'txdo')
 		os.system(cmd.encode('utf8'))
 		t.ok()
 
@@ -2510,7 +2510,7 @@ class MMGenTestSuite(object):
 
 	def ref_hincog_conv_out(self,name,extra_uopts=[]):
 		ic_f = os.path.join(cfg['tmpdir'],hincog_fn)
-		hi_parms = u'{},{}'.format(ic_f,ref_wallet_incog_offset)
+		hi_parms = '{},{}'.format(ic_f,ref_wallet_incog_offset)
 		sl_parm = '-l' + str(cfg['seed_len'])
 		self.walletconv_out(name,
 			'hidden incognito data', 'hi',
@@ -2803,7 +2803,7 @@ class MMGenTestSuite(object):
 
 	@staticmethod
 	def regtest_user_dir(user,coin=None):
-		return os.path.join(data_dir,u'regtest',coin or g.coin.lower(),user)
+		return os.path.join(data_dir,'regtest',coin or g.coin.lower(),user)
 
 	def regtest_user_sid(self,user):
 		return os.path.basename(get_file_with_ext('mmdat',self.regtest_user_dir(user)))[:8]
@@ -2812,7 +2812,7 @@ class MMGenTestSuite(object):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in g.proto.mmtypes:
 			t = MMGenExpect(name,'mmgen-addrgen',
-				['--quiet','--'+user,'--type='+mmtype,u'--outdir={}'.format(self.regtest_user_dir(user))] +
+				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self.regtest_user_dir(user))] +
 				([],[wf])[bool(wf)] + [addr_range],
 				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype]['name']))
 			t.passphrase('MMGen wallet',passwd)
@@ -2829,9 +2829,9 @@ class MMGenTestSuite(object):
 		for mmtype in g.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype]['name']
 			fn = os.path.join(self.regtest_user_dir(user),
-				u'{}{}{}[{}]{x}.testnet.addrs'.format(
+				'{}{}{}[{}]{x}.testnet.addrs'.format(
 					sid,altcoin_pfx,id_strs[desc],addr_range,
-					x=u'-α' if g.debug_utf8 else ''))
+					x='-α' if g.debug_utf8 else ''))
 			if mmtype == g.proto.mmtypes[0] and user == 'bob':
 				psave = g.proto
 				g.proto = CoinProtocol(g.coin,True)
@@ -2967,8 +2967,8 @@ class MMGenTestSuite(object):
 
 	def get_addr_from_regtest_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
-		ext = u'{}{}{}[{}]{x}.testnet.addrs'.format(
-			sid,altcoin_pfx,id_str,addr_range,x=u'-α' if g.debug_utf8 else '')
+		ext = '{}{}{}[{}]{x}.testnet.addrs'.format(
+			sid,altcoin_pfx,id_str,addr_range,x='-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,self.regtest_user_dir(user),no_dot=True)
 		silence()
 		psave = g.proto
@@ -3020,7 +3020,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_bob_rbf_bump(self,name):
-		ext = u',{}]{x}.testnet.sigtx'.format(rtFee[1][:-1],x=u'-α' if g.debug_utf8 else '')
+		ext = ',{}]{x}.testnet.sigtx'.format(rtFee[1][:-1],x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(ext,cfg['tmpdir'],delete=False,no_dot=True)
 		return self.regtest_user_txbump(name,'bob',txfile,rtFee[2],'c')
 
@@ -3069,8 +3069,8 @@ class MMGenTestSuite(object):
 
 	def regtest_bob_pre_import(self,name):
 		pairs = self.gen_pairs(5)
-		write_to_tmpfile(cfg,u'non-mmgen.keys','\n'.join([a[0] for a in pairs])+'\n')
-		write_to_tmpfile(cfg,u'non-mmgen.addrs','\n'.join([a[1] for a in pairs])+'\n')
+		write_to_tmpfile(cfg,'non-mmgen.keys','\n'.join([a[0] for a in pairs])+'\n')
+		write_to_tmpfile(cfg,'non-mmgen.addrs','\n'.join([a[1] for a in pairs])+'\n')
 		return self.regtest_user_txdo(name,'bob',rtFee[4],[pairs[0][1]],'3')
 
 	def regtest_user_import(self,name,user,args):
@@ -3082,17 +3082,17 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_bob_import_addr(self,name):
-		addr = read_from_tmpfile(cfg,u'non-mmgen.addrs').split()[0]
+		addr = read_from_tmpfile(cfg,'non-mmgen.addrs').split()[0]
 		return self.regtest_user_import(name,'bob',['--rescan','--address='+addr])
 
 	def regtest_bob_import_list(self,name):
-		fn = os.path.join(cfg['tmpdir'],u'non-mmgen.addrs')
+		fn = os.path.join(cfg['tmpdir'],'non-mmgen.addrs')
 		return self.regtest_user_import(name,'bob',['--addrlist',fn])
 
 	def regtest_bob_split2(self,name):
-		addrs = read_from_tmpfile(cfg,u'non-mmgen.addrs').split()
+		addrs = read_from_tmpfile(cfg,'non-mmgen.addrs').split()
 		amts = (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321)
-		outputs1 = map('{},{}'.format,addrs,amts)
+		outputs1 = list(map('{},{}'.format,addrs,amts))
 		sid = self.regtest_user_sid('bob')
 		l1,l2 = (':S',':B') if 'B' in g.proto.mmtypes else (':S',':S') if g.proto.cap('segwit') else (':L',':L')
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
@@ -3119,7 +3119,7 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_add_label1(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_add_label(name,'alice',sid+':C:1',u'Original Label - 月へ')
+		return self.regtest_user_add_label(name,'alice',sid+':C:1','Original Label - 月へ')
 
 	def regtest_alice_add_label2(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -3141,7 +3141,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def regtest_alice_add_label_badaddr1(self,name):
-		return self.regtest_alice_add_label_badaddr(name,rt_pw,u'Invalid coin address for this chain: '+rt_pw)
+		return self.regtest_alice_add_label_badaddr(name,rt_pw,'Invalid coin address for this chain: '+rt_pw)
 
 	def regtest_alice_add_label_badaddr2(self,name):
 		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
@@ -3177,7 +3177,7 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_chk_label1(self,name):
 		sid = self.regtest_user_sid('alice')
-		return self.regtest_user_chk_label(name,'alice',sid+':C:1',u'Original Label - 月へ')
+		return self.regtest_user_chk_label(name,'alice',sid+':C:1','Original Label - 月へ')
 
 	def regtest_alice_chk_label2(self,name):
 		sid = self.regtest_user_sid('alice')
@@ -3300,7 +3300,7 @@ class MMGenTestSuite(object):
 	def ethdev_setup(self,name):
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
-		ss = u'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
+		ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 		try:
 			pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
 			os.kill(int(pid),9)
@@ -3326,8 +3326,8 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def ethdev_addrimport(self,name,ext=u'21-23]{}.addrs',expect='9/9',add_args=[],bad_input=False):
-		ext = ext.format(u'-α' if g.debug_utf8 else '')
+	def ethdev_addrimport(self,name,ext='21-23]{}.addrs',expect='9/9',add_args=[],bad_input=False):
+		ext = ext.format('-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True,delete=False)
 		t = MMGenExpect(name,'mmgen-addrimport', eth_args()[1:] + add_args + [fn])
 		if bad_input:
@@ -3364,16 +3364,16 @@ class MMGenTestSuite(object):
 								interactive_fee=interactive_fee,fee_res=fee_res,fee_desc=fee_desc,
 								add_comment=ref_tx_label_jp)
 
-	def ethdev_txsign(self,name,ni=False,ext=u'{}.rawtx',add_args=[]):
-		ext = ext.format(u'-α' if g.debug_utf8 else '')
+	def ethdev_txsign(self,name,ni=False,ext='{}.rawtx',add_args=[]):
+		ext = ext.format('-α' if g.debug_utf8 else '')
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		write_to_tmpfile(cfg,cfg['parity_keyfile'],eth_key+'\n')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsign',eth_args()+add_args + ([],['--yes'])[ni] + ['-k',key_fn,tx_fn,dfl_words])
 		self.txsign_ui_common(t,name,ni=ni,has_label=True)
 
-	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext=u'{}.sigtx',add_args=[]):
-		ext = ext.format(u'-α' if g.debug_utf8 else '')
+	def ethdev_txsend(self,name,ni=False,bogus_send=False,ext='{}.sigtx',add_args=[]):
+		ext = ext.format('-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = MMGenExpect(name,'mmgen-txsend', eth_args()+add_args + [tx_fn])
@@ -3394,19 +3394,19 @@ class MMGenTestSuite(object):
 	def ethdev_txcreate2(self,name):
 		args = ['98831F3A:E:11,1.234']
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign2(self,name): self.ethdev_txsign(name,ni=True,ext=u'1.234,50000]{}.rawtx')
-	def ethdev_txsend2(self,name): self.ethdev_txsend(name,ext=u'1.234,50000]{}.sigtx')
+	def ethdev_txsign2(self,name): self.ethdev_txsign(name,ni=True,ext='1.234,50000]{}.rawtx')
+	def ethdev_txsend2(self,name): self.ethdev_txsend(name,ext='1.234,50000]{}.sigtx')
 	def ethdev_bal2(self,name): self.ethdev_bal(name,n='2')
 
 	def ethdev_txcreate3(self,name):
 		args = ['98831F3A:E:21,2.345']
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign3(self,name): self.ethdev_txsign(name,ni=True,ext=u'2.345,50000]{}.rawtx')
-	def ethdev_txsend3(self,name): self.ethdev_txsend(name,ext=u'2.345,50000]{}.sigtx')
+	def ethdev_txsign3(self,name): self.ethdev_txsign(name,ni=True,ext='2.345,50000]{}.rawtx')
+	def ethdev_txsend3(self,name): self.ethdev_txsend(name,ext='2.345,50000]{}.sigtx')
 	def ethdev_bal3(self,name): self.ethdev_bal(name,n='3')
 
 	def ethdev_tx_status(self,name,ext,expect_str):
-		ext = ext.format(u'-α' if g.debug_utf8 else '')
+		ext = ext.format('-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txsend', eth_args() + ['--status',tx_fn])
 		t.expect(expect_str)
@@ -3414,7 +3414,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def ethdev_tx_status1(self,name):
-		self.ethdev_tx_status(name,ext=u'2.345,50000]{}.sigtx',expect_str='has 1 confirmation')
+		self.ethdev_tx_status(name,ext='2.345,50000]{}.sigtx',expect_str='has 1 confirmation')
 
 	def ethdev_txcreate4(self,name):
 		args = ['98831F3A:E:2,23.45495']
@@ -3423,23 +3423,23 @@ class MMGenTestSuite(object):
 		return self.ethdev_txcreate(name,args=args,acct='1',non_mmgen_inputs=0,
 					interactive_fee=interactive_fee,fee_res=fee_res)
 
-	def ethdev_txbump(self,name,ext=u',40000]{}.rawtx',fee='50G',add_args=[]):
-		ext = ext.format(u'-α' if g.debug_utf8 else '')
+	def ethdev_txbump(self,name,ext=',40000]{}.rawtx',fee='50G',add_args=[]):
+		ext = ext.format('-α' if g.debug_utf8 else '')
 		tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 		t = MMGenExpect(name,'mmgen-txbump', eth_args() + add_args + ['--yes',tx_fn])
 		t.expect('or gas price: ',fee+'\n')
 		t.read()
 		t.ok()
 
-	def ethdev_txsign4(self,name): self.ethdev_txsign(name,ni=True,ext=u'.45495,50000]{}.rawtx')
-	def ethdev_txsend4(self,name): self.ethdev_txsend(name,ext=u'.45495,50000]{}.sigtx')
+	def ethdev_txsign4(self,name): self.ethdev_txsign(name,ni=True,ext='.45495,50000]{}.rawtx')
+	def ethdev_txsend4(self,name): self.ethdev_txsend(name,ext='.45495,50000]{}.sigtx')
 	def ethdev_bal4(self,name): self.ethdev_bal(name,n='4')
 
 	def ethdev_txcreate5(self,name):
 		args = [eth_burn_addr + ','+eth_amt1]
 		return self.ethdev_txcreate(name,args=args,acct='10',non_mmgen_inputs=1)
-	def ethdev_txsign5(self,name): self.ethdev_txsign(name,ni=True,ext=eth_amt1+u',50000]{}.rawtx')
-	def ethdev_txsend5(self,name): self.ethdev_txsend(name,ext=eth_amt1+u',50000]{}.sigtx')
+	def ethdev_txsign5(self,name): self.ethdev_txsign(name,ni=True,ext=eth_amt1+',50000]{}.rawtx')
+	def ethdev_txsend5(self,name): self.ethdev_txsend(name,ext=eth_amt1+',50000]{}.sigtx')
 	def ethdev_bal5(self,name): self.ethdev_bal(name,n='5')
 
 	bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
@@ -3496,11 +3496,11 @@ class MMGenTestSuite(object):
 
 	def ethdev_token_compile(self,name,token_data={}):
 		MMGenExpect(name,'',msg_only=True)
-		cmd_args = ['--{}={}'.format(k,v) for k,v in token_data.items()]
+		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
 		silence()
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
-		imsg(u"Executing: {}".format(u' '.join(cmd)))
+		imsg("Executing: {}".format(' '.join(cmd)))
 		subprocess.check_output(cmd)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
 		end_silence()
@@ -3524,7 +3524,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-'+mmgen_cmd, eth_args() + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('Ethereum transaction')
-			ext = u'[0,8000]{}.rawtx'.format(u'-α' if g.debug_utf8 else '')
+			ext = '[0,8000]{}.rawtx'.format('-α' if g.debug_utf8 else '')
 			tx_fn = get_file_with_ext(ext,cfg['tmpdir'],no_dot=True)
 			t = MMGenExpect(name,'mmgen-txsign', eth_args() + ['--yes','-k',key_fn,tx_fn],no_msg=True)
 			self.txsign_ui_common(t,name,ni=True,no_ok=True)
@@ -3548,7 +3548,7 @@ class MMGenTestSuite(object):
 	def ethdev_token_deploy1c(self,name): self.ethdev_token_deploy(name,num=1,key='Token',gas=1100000,tx_fee='7G')
 
 	def ethdev_tx_status2(self,name):
-		self.ethdev_tx_status(name,ext=g.coin+u'[0,7000]{}.sigtx',expect_str='successfully executed')
+		self.ethdev_tx_status(name,ext=g.coin+'[0,7000]{}.sigtx',expect_str='successfully executed')
 
 	def ethdev_bal6(self,name): return self.ethdev_bal5(name)
 
@@ -3564,7 +3564,7 @@ class MMGenTestSuite(object):
 		sid = cfgs['8']['seed_id']
 		cmd = lambda i: ['mmgen-tool','--coin='+g.coin,'gen_addr','{}:E:{}'.format(sid,i),'wallet='+dfl_words]
 		silence()
-		usr_addrs = [subprocess.check_output(cmd(i),stderr=sys.stderr).strip() for i in 11,21]
+		usr_addrs = [subprocess.check_output(cmd(i),stderr=sys.stderr).strip() for i in (11,21)]
 		self.init_ethdev_common()
 		from mmgen.altcoins.eth.contract import Token
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
@@ -3584,15 +3584,15 @@ class MMGenTestSuite(object):
 		self.ethdev_addrgen(name,addrs='21-23')
 
 	def ethdev_token_addrimport_badaddr1(self,name):
-		self.ethdev_addrimport(name,ext=u'[11-13]{}.addrs',add_args=['--token=abc'],bad_input=True)
+		self.ethdev_addrimport(name,ext='[11-13]{}.addrs',add_args=['--token=abc'],bad_input=True)
 
 	def ethdev_token_addrimport_badaddr2(self,name):
-		self.ethdev_addrimport(name,ext=u'[11-13]{}.addrs',add_args=['--token='+'00deadbeef'*4],bad_input=True)
+		self.ethdev_addrimport(name,ext='[11-13]{}.addrs',add_args=['--token='+'00deadbeef'*4],bad_input=True)
 
 	def ethdev_token_addrimport(self,name):
 		for n,r in ('1','11-13'),('2','21-23'):
 			tk_addr = read_from_tmpfile(cfg,'token_addr'+n).strip()
-			self.ethdev_addrimport(name,ext=u'['+r+']{}.addrs',expect='3/3',add_args=['--token='+tk_addr])
+			self.ethdev_addrimport(name,ext='['+r+']{}.addrs',expect='3/3',add_args=['--token='+tk_addr])
 
 	def ethdev_bal7(self,name): return self.ethdev_bal5(name)
 	def ethdev_token_bal1(self,name): self.ethdev_token_bal(name,n='1')
@@ -3612,9 +3612,9 @@ class MMGenTestSuite(object):
 	def ethdev_token_txcreate1(self,name):
 		return self.ethdev_token_txcreate(name,args=['98831F3A:E:12,1.23456'],token='mm1')
 	def ethdev_token_txsign1(self,name):
-		self.ethdev_token_txsign(name,ext=u'1.23456,50000]{}.rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext='1.23456,50000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend1(self,name):
-		self.ethdev_token_txsend(name,ext=u'1.23456,50000]{}.sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext='1.23456,50000]{}.sigtx',token='mm1')
 	def ethdev_token_bal2(self,name): self.ethdev_token_bal(name,n='2')
 
 	def ethdev_twview(self,name,args=[],expect_str='',tool_args=[],exit_val=0):
@@ -3628,12 +3628,12 @@ class MMGenTestSuite(object):
 		return self.ethdev_token_txcreate(name,args=[eth_burn_addr+','+eth_amt2],token='mm1')
 
 	def ethdev_token_txbump(self,name):
-		self.ethdev_txbump(name,ext=eth_amt2+u',50000]{}.rawtx',fee='56G',add_args=['--token=mm1'])
+		self.ethdev_txbump(name,ext=eth_amt2+',50000]{}.rawtx',fee='56G',add_args=['--token=mm1'])
 
 	def ethdev_token_txsign2(self,name):
-		self.ethdev_token_txsign(name,ext=eth_amt2+u',50000]{}.rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext=eth_amt2+',50000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend2(self,name):
-		self.ethdev_token_txsend(name,ext=eth_amt2+u',50000]{}.sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext=eth_amt2+',50000]{}.sigtx',token='mm1')
 
 	def ethdev_token_bal3(self,name): self.ethdev_token_bal(name,n='3')
 
@@ -3659,9 +3659,9 @@ class MMGenTestSuite(object):
 	def ethdev_txcreate_noamt(self,name):
 		return self.ethdev_txcreate(name,args=['98831F3A:E:12'])
 	def ethdev_txsign_noamt(self,name):
-		self.ethdev_txsign(name,ext=u'99.99895,50000]{}.rawtx')
+		self.ethdev_txsign(name,ext='99.99895,50000]{}.rawtx')
 	def ethdev_txsend_noamt(self,name):
-		self.ethdev_txsend(name,ext=u'99.99895,50000]{}.sigtx')
+		self.ethdev_txsend(name,ext='99.99895,50000]{}.sigtx')
 
 	def ethdev_bal8(self,name):       self.ethdev_bal(name,n='8')
 	def ethdev_token_bal5(self,name): self.ethdev_token_bal(name,n='5')
@@ -3669,9 +3669,9 @@ class MMGenTestSuite(object):
 	def ethdev_token_txcreate_noamt(self,name):
 		return self.ethdev_token_txcreate(name,args=['98831F3A:E:13'],token='mm1',inputs='2',fee='51G')
 	def ethdev_token_txsign_noamt(self,name):
-		self.ethdev_token_txsign(name,ext=u'1.23456,51000]{}.rawtx',token='mm1')
+		self.ethdev_token_txsign(name,ext='1.23456,51000]{}.rawtx',token='mm1')
 	def ethdev_token_txsend_noamt(self,name):
-		self.ethdev_token_txsend(name,ext=u'1.23456,51000]{}.sigtx',token='mm1')
+		self.ethdev_token_txsend(name,ext='1.23456,51000]{}.sigtx',token='mm1')
 
 	def ethdev_bal9(self,name):       self.ethdev_bal(name,n='9')
 	def ethdev_token_bal6(self,name): self.ethdev_token_bal(name,n='6')
@@ -3874,7 +3874,7 @@ try:
 				gmsg('{}Testing {}'.format(('\n','')[bool(opt.resume)],cmd_data[cmd][0]))
 				continue
 			ts.do_cmd(cmd)
-			if cmd is not cmd_data.keys()[-1]: do_between()
+			if cmd is not list(cmd_data.keys())[-1]: do_between()
 except KeyboardInterrupt:
 	die(1,'\nExiting at user request')
 except opt.traceback and Exception:

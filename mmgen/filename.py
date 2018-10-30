@@ -96,13 +96,13 @@ def find_files_in_dir(ftype,fdir,no_dups=False):
 		die(3,"'{}': not a recognized file type".format(ftype))
 
 	try: dirlist = os.listdir(fdir)
-	except: die(3,u"ERROR: unable to read directory '{}'".format(fdir))
+	except: die(3,"ERROR: unable to read directory '{}'".format(fdir))
 
 	matches = [l for l in dirlist if l[-len(ftype.ext)-1:]=='.'+ftype.ext]
 
 	if no_dups:
 		if len(matches) > 1:
-			die(1,u"ERROR: more than one {} file in directory '{}'".format(ftype.__name__,fdir))
+			die(1,"ERROR: more than one {} file in directory '{}'".format(ftype.__name__,fdir))
 		return os.path.join(fdir,matches[0]) if len(matches) else None
 	else:
 		return [os.path.join(fdir,m) for m in matches]

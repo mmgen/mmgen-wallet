@@ -84,7 +84,7 @@ opts_data = lambda: {
 	what=gen_what,g=g,
 	dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name'])
 ),
-	'notes': u"""
+	'notes': """
 
                            NOTES FOR THIS COMMAND
 
@@ -111,7 +111,7 @@ FMT CODES:
 		n_pw=help_notes('passwd'),
 		n_bw=help_notes('brainwallet'),
 		n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-		n_at='\n  '.join(["'{}','{:<12} - {}".format(k,v['name']+"'",v['desc']) for k,v in MAT.mmtypes.items()]),
+		n_at='\n  '.join(["'{}','{:<12} - {}".format(k,v['name']+"'",v['desc']) for k,v in list(MAT.mmtypes.items())]),
 		o=opts
 	)
 }

@@ -44,7 +44,7 @@ class Token(MMGenObject): # ERC20
 		if decimals is None:
 			ret_hex = self.do_call('decimals()')
 			try: decimals = int(ret_hex,16)
-			except: raise TokenNotInBlockchain,"Token '{}' not in blockchain".format(addr)
+			except: raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
 		self.base_unit = Decimal(10) ** -decimals
 
 	def transferdata2amt(self,data): # online
@@ -80,7 +80,7 @@ class Token(MMGenObject): # ERC20
 		return g.rpch.eth_getCode('0x'+self.addr)[2:]
 
 	def transfer_from(self,from_addr,to_addr,amt,key,start_gas,gasPrice):
-		raise NotImplementedError,'method not implemented'
+		raise NotImplementedError('method not implemented')
 		return self.transfer(   from_addr,to_addr,amt,key,start_gas,gasPrice,
 								method_sig='transferFrom(address,address,uint256)',
 								from_addr2=from_addr)

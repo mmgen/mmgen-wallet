@@ -95,16 +95,16 @@ opts_data = lambda: {
 		iaction=capfirst(iaction),
 		oaction=capfirst(oaction),
 	),
-	'notes': u"""
+	'notes': """
 
 {n_pw}{n_bw}
 
 FMT CODES:
   {f}
 """.format(
-	f=u'\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 	n_pw=help_notes('passwd'),
-	n_bw=(u'','\n\n' + help_notes('brainwallet'))[bw_note]
+	n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
 	)
 }
 
@@ -125,7 +125,7 @@ if invoked_as in ('conv','passchg'):
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
-	vmsg(u'Wallet label: {}'.format(lbl))
+	vmsg('Wallet label: {}'.format(lbl))
 	# TODO: display creation date
 	sys.exit(0)
 

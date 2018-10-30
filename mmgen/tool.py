@@ -107,14 +107,14 @@ cmd_data = OrderedDict([
 
 def usage(command):
 
-	for v in cmd_data.values():
+	for v in list(cmd_data.values()):
 		if v and v[0][-2:] == '-]':
 			v[0] = v[0][:-2] + ' or STDIN]'
 		if 'MARGS' in v: v.remove('MARGS')
 
 	if not command:
 		Msg('Usage information for mmgen-tool commands:')
-		for k,v in cmd_data.items():
+		for k,v in list(cmd_data.items()):
 			Msg('  {:18} {}'.format(k.lower(),' '.join(v)))
 		from mmgen.main_tool import stdin_msg
 		Msg('\n  '+'\n  '.join(stdin_msg.split('\n')))
@@ -438,7 +438,7 @@ def Rand2file(outfile,nbytes,threads=4,silent=False):
 	nbytes = parse_nbytes(nbytes)
 	from Crypto import Random
 	rh = Random.new()
-	from Queue import Queue
+	from queue import Queue
 	from threading import Thread
 	bsize = 2**20
 	roll = bsize * 4
@@ -486,7 +486,7 @@ def Rand2file(outfile,nbytes,threads=4,silent=False):
 
 	if not silent:
 		msg('\rRead: {} bytes'.format(nbytes))
-		qmsg(u"\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
+		qmsg("\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
 	q1.join()
 	q2.join()
 	f.close()
@@ -537,7 +537,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 	def create(n,d,fn):
 		try: os.stat(fn)
 		except: pass
-		else: die(1,u"Wallet '{}' already exists!".format(fn))
+		else: die(1,"Wallet '{}' already exists!".format(fn))
 		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn.encode('utf8')))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting initial prompt','Secret spend key: ')
@@ -573,7 +573,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 	def sync(n,d,fn):
 		try: os.stat(fn)
-		except: die(1,u"Wallet '{}' does not exist!".format(fn))
+		except: die(1,"Wallet '{}' does not exist!".format(fn))
 		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn.encode('utf8')))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting password prompt','Wallet password: ')
@@ -615,16 +615,16 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
 		for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
 			fn = os.path.join(
-				opt.outdir or u'',u'{}-{}-MoneroWallet{}'.format(
+				opt.outdir or '','{}-{}-MoneroWallet{}'.format(
 					al.al_id.sid,
 					d.idx,
-					u'-α' if g.debug_utf8 else ''))
-			gmsg(u'\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
+					'-α' if g.debug_utf8 else ''))
+			gmsg('\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
 			m[op][2](n,d,fn)
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
 		if op == 'sync':
-			col1_w = max(map(len,bals)) + 1
-			fs = u'{:%s} {:18} {:18}' % col1_w
+			col1_w = max(list(map(len,bals))) + 1
+			fs = '{:%s} {:18} {:18}' % col1_w
 			msg('\n'+fs.format('Wallet','  Balance','  Unlocked Balance'))
 			tbals = [Decimal('0'),Decimal('0')]
 			for bal in bals:
@@ -715,7 +715,7 @@ def Txview(*infiles,**kwargs):
 	flist = MMGenFileList(infiles,ftype=MMGenTX)
 	flist.sort_by_age(key=sort_key) # in-place sort
 	from mmgen.term import get_terminal_size
-	sep = u'—'*77+'\n'
+	sep = '—'*77+'\n'
 	out = sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()])
 	(Msg,do_pager)[pager](out.rstrip())
 

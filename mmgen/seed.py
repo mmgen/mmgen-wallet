@@ -200,11 +200,11 @@ class SeedSource(MMGenObject):
 					for c in cls.get_subclasses()
 				if hasattr(c,'fmt_codes')]
 		w = max(len(i[0]) for i in d)
-		ret = [u'{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
+		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
 			('Format','FileExt','Valid codes'),
 			('------','-------','-----------')
 			] + sorted(d)]
-		return u'\n'.join(ret) + ('',u'-α')[g.debug_utf8] + '\n'
+		return '\n'.join(ret) + ('','-α')[g.debug_utf8] + '\n'
 
 	def get_fmt_data(self):
 		self._format()
@@ -229,7 +229,7 @@ class SeedSourceUnenc(SeedSource):
 	def _encrypt(self): pass
 
 	def _filename(self):
-		return u'{}[{}]{x}.{}'.format(self.seed.sid,self.seed.length,self.ext,x=u'-α' if g.debug_utf8 else '')
+		return '{}[{}]{x}.{}'.format(self.seed.sid,self.seed.length,self.ext,x='-α' if g.debug_utf8 else '')
 
 class SeedSourceEnc(SeedSource):
 
@@ -259,7 +259,7 @@ an empty passphrase, just hit ENTER twice.
 		while True:
 			ret = my_raw_input(p)
 			if ret:
-				if ret in g.hash_presets.keys():
+				if ret in list(g.hash_presets.keys()):
 					self.ssdata.hash_preset = ret
 					return ret
 				else:
@@ -304,7 +304,7 @@ an empty passphrase, just hit ENTER twice.
 			for i in range(g.passwd_max_tries):
 				pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 				pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
-				dmsg(u'Passphrases: [{}] [{}]'.format(pw,pw2))
+				dmsg('Passphrases: [{}] [{}]'.format(pw,pw2))
 				if pw == pw2:
 					vmsg('Passphrases match'); break
 				else: msg('Passphrases do not match.  Try again.')
@@ -316,7 +316,7 @@ an empty passphrase, just hit ENTER twice.
 		return pw
 
 	def _get_passphrase(self,desc_suf=''):
-		desc = u'{}passphrase for {}{}'.format(
+		desc = '{}passphrase for {}{}'.format(
 			('','old ')[self.op=='pwchg_old'],
 			self.desc,
 			('',' '+desc_suf)[bool(desc_suf)]
@@ -325,7 +325,7 @@ an empty passphrase, just hit ENTER twice.
 			w = pwfile_reuse_warning()
 			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,silent=w))
 		else:
-			ret = ' '.join(get_words_from_user(u'Enter {}: '.format(desc)))
+			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		self.ssdata.passwd = ret
 
 	def _get_first_pw_and_hp_and_encrypt_seed(self):
@@ -385,12 +385,12 @@ class Mnemonic (SeedSourceUnenc):
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
 
-		m  = u'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
-		m += u"Optionally, you may use pad characters.  Anything you type that's not a\n"
-		m += u'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
-		m += u'be discarded.  Pad characters may be typed before, after, or in the middle\n'
-		m += u"of words.  For each word, once you've typed {} characters total (including\n"
-		m += u'pad characters) a pad character will enter the word.'
+		m  = 'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
+		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
+		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
+		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
+		m += "of words.  For each word, once you've typed {} characters total (including\n"
+		m += 'pad characters) a pad character will enter the word.'
 		msg(m.format(mn_len,longest_word))
 
 		def get_word():
@@ -584,8 +584,8 @@ class Wallet (SeedSourceEnc):
 	require_utf8_input = True # label is UTF-8
 
 	def _get_label_from_user(self,old_lbl=''):
-		d = u"to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
-		p = u'Enter a wallet label, or hit ENTER {}: '.format(d)
+		d = "to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
+		p = 'Enter a wallet label, or hit ENTER {}: '.format(d)
 		while True:
 			msg_r(p)
 			ret = my_raw_input('')
@@ -605,19 +605,19 @@ class Wallet (SeedSourceEnc):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
-				qmsg(u"Reusing label '{}' at user request".format(old_lbl.hl()))
+				qmsg("Reusing label '{}' at user request".format(old_lbl.hl()))
 				self.ssdata.label = old_lbl
 			elif opt.label:
-				qmsg(u"Using label '{}' requested on command line".format(opt.label.hl()))
+				qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
 				lbl = self.ssdata.label = opt.label
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 
 			if (not opt.keep_label) and self.op == 'pwchg_new':
-				m = (u"changed to '{}'".format(lbl),'unchanged')[lbl==old_lbl]
-				qmsg(u'Label {}'.format(m))
+				m = ("changed to '{}'".format(lbl),'unchanged')[lbl==old_lbl]
+				qmsg('Label {}'.format(m))
 		elif opt.label:
-			qmsg(u"Using label '{}' requested on command line".format(opt.label.hl()))
+			qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
 			self.ssdata.label = opt.label
 		else:
 			self._get_label_from_user()
@@ -685,7 +685,7 @@ class Wallet (SeedSourceEnc):
 			if uhp != hp:
 				qmsg("Warning: ignoring user-requested hash preset '{}'".format(uhp))
 
-		hash_params = map(int,hpdata[1:])
+		hash_params = list(map(int,hpdata[1:]))
 
 		if hash_params != get_hash_params(d.hash_preset):
 			msg("Hash parameters '{}' don't match hash preset '{}'".format(' '.join(hash_params),d.hash_preset))
@@ -728,13 +728,13 @@ class Wallet (SeedSourceEnc):
 			return False
 
 	def _filename(self):
-		return u'{}-{}[{},{}]{x}.{}'.format(
+		return '{}-{}[{},{}]{x}.{}'.format(
 				self.seed.sid,
 				self.ssdata.key_id,
 				self.seed.length,
 				self.ssdata.hash_preset,
 				self.ext,
-				x=u'-α' if g.debug_utf8 else '')
+				x='-α' if g.debug_utf8 else '')
 
 class Brainwallet (SeedSourceEnc):
 
@@ -862,14 +862,14 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _filename(self):
 		s = self.seed
 		d = self.ssdata
-		return u'{}-{}-{}[{},{}]{x}.{}'.format(
+		return '{}-{}-{}[{},{}]{x}.{}'.format(
 				s.sid,
 				d.key_id,
 				d.iv_id,
 				s.length,
 				d.hash_preset,
 				self.ext,
-				x=u'-α' if g.debug_utf8 else '')
+				x='-α' if g.debug_utf8 else '')
 
 	def _deformat(self):
 
@@ -990,7 +990,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		d = self.ssdata
 		d.hincog_offset = self._get_hincog_params('input')[1]
 
-		qmsg(u"Getting hidden incog data from file '{}'".format(self.infile.name))
+		qmsg("Getting hidden incog data from file '{}'".format(self.infile.name))
 
 		# Already sanity-checked:
 		d.target_data_len = self._get_incog_data_len(opt.seed_len)
@@ -1001,7 +1001,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
 		os.close(fh)
-		qmsg(u"Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
+		qmsg("Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
 
 	# overrides method in SeedSource
 	def write_to_file(self):
@@ -1020,7 +1020,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		try:
 			os.stat(fn)
 		except:
-			if keypress_confirm(u"Requested file '{}' does not exist.  Create?".format(fn),default_yes=True):
+			if keypress_confirm("Requested file '{}' does not exist.  Create?".format(fn),default_yes=True):
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
@@ -1048,4 +1048,4 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)
 		os.close(fh)
-		msg(u"{} written to file '{}' at offset {}".format(capfirst(self.desc),f.name,d.hincog_offset))
+		msg("{} written to file '{}' at offset {}".format(capfirst(self.desc),f.name,d.hincog_offset))

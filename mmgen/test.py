@@ -33,7 +33,7 @@ def cleandir(d):
 	except: return
 
 	from shutil import rmtree
-	gmsg(u"Cleaning directory '{}'".format(d))
+	gmsg("Cleaning directory '{}'".format(d))
 	for f in files:
 		try:
 			os.unlink(os.path.join(d_enc,f))
@@ -53,11 +53,11 @@ def getrandstr(num_chars,no_space=False):
 	return ''.join([chr(ord(i)%n+m) for i in list(os.urandom(num_chars))])
 
 def mk_tmpdir(d):
-	try: os.mkdir(d,0755)
+	try: os.mkdir(d,0o755)
 	except OSError as e:
 		if e.errno != 17: raise
 	else:
-		vmsg(u"Created directory '{}'".format(d))
+		vmsg("Created directory '{}'".format(d))
 
 def mk_tmpdir_path(path,cfg):
 	try:
@@ -116,6 +116,6 @@ def cmp_or_die(s,t,skip_ok=False):
 def init_coverage():
 	coverdir = os.path.join('test','trace')
 	acc_file = os.path.join('test','trace.acc')
-	try: os.mkdir(coverdir,0755)
+	try: os.mkdir(coverdir,0o755)
 	except: pass
 	return coverdir,acc_file

@@ -178,7 +178,7 @@ add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
 if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 	Msg('Available commands:')
-	w = max(map(len,cmd_data))
+	w = max(list(map(len,cmd_data)))
 	for cmd in cmd_data:
 		Msg(fs.format(cmd,cmd_data[cmd]['desc'],w=w))
 	Msg('\nAvailable utilities:')
@@ -186,8 +186,8 @@ if opt.list_cmds:
 	sys.exit(0)
 if opt.list_names:
 	acc = []
-	for v in cmd_data.values():
-		acc += v['cmd_data'].keys()
+	for v in list(cmd_data.values()):
+		acc += list(v['cmd_data'].keys())
 	tc = sorted(c.lower() for c in acc)
 	msg('{}\n{}'.format(green('Tested commands:'),'\n'.join(tc)))
 	import mmgen.tool
@@ -503,7 +503,7 @@ else:
 	for cmd in cmd_data:
 		msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 		ts.do_cmds(cmd)
-		if cmd is not cmd_data.keys()[-1]: msg('')
+		if cmd is not list(cmd_data.keys())[-1]: msg('')
 
 t = int(time.time()) - start_time
 gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t/60,t%60))

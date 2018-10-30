@@ -113,7 +113,7 @@ def scriptPubKey2addr(s):
 	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + '14':
 		return g.proto.pubhash2bech32addr(s[4:]),'bech32'
 	else:
-		raise NotImplementedError,'Unknown scriptPubKey ({})'.format(s)
+		raise NotImplementedError('Unknown scriptPubKey ({})'.format(s))
 
 from collections import OrderedDict
 class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
@@ -145,7 +145,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		if has_witness:
 			u = hshift(tx,2,skip=True)[2:]
 			if u != '01':
-				raise IllegalWitnessFlagValue,"'{}': Illegal value for flag in transaction!".format(u)
+				raise IllegalWitnessFlagValue("'{}': Illegal value for flag in transaction!".format(u))
 			del tx_copy[-len(tx)-2:-len(tx)]
 
 		d['num_txins'] = readVInt(tx)
@@ -181,7 +181,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 					hshift(wd,readVInt(wd,skip=True),skip=True) for item in range(readVInt(wd,skip=True))
 				]
 			if wd:
-				raise WitnessSizeMismatch,'More witness data than inputs with witnesses!'
+				raise WitnessSizeMismatch('More witness data than inputs with witnesses!')
 
 		d['lock_time'] = bytes2int(hshift(tx,4))
 		d['txid'] = hexlify(sha256(sha256(''.join(tx_copy)).digest()).digest()[::-1])
@@ -239,7 +239,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
 		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
-		sequence = MMGenListItemAttr('sequence',(int,long)[g.platform=='win'],typeconv=False)
+		sequence = MMGenListItemAttr('sequence',(int,int)[g.platform=='win'],typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k]
@@ -408,7 +408,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		# allow for 5% error
 		ratio = float(est_vsize) / vsize
 		if not (0.95 < ratio < 1.05):
-			raise BadTxSizeEstimate,(m1+m2+m3).format(ratio,1/ratio)
+			raise BadTxSizeEstimate((m1+m2+m3).format(ratio,1/ratio))
 
 	# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 	# 180: uncompressed, 148: compressed
@@ -548,7 +548,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
 		import re
 		units = dict((u[0],u) for u in g.proto.coin_amt.units)
-		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
+		pat = r'([1-9][0-9]*)({})'.format('|'.join(list(units.keys())))
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
 			return g.proto.coin_amt(tx_fee)
 		elif re.match(pat,tx_fee):
@@ -566,10 +566,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				abs_fee = self.convert_and_check_fee(tx_fee,desc)
 			if abs_fee:
 				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
-				p = u'{} TX fee{}: {}{} {} ({} {})\n'.format(
+				p = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
 						m,
-						('',u'≈')[self.fee_is_approximate],
+						('','≈')[self.fee_is_approximate],
 						abs_fee.hl(),
 						g.coin,
 						pink(str(self.fee_abs2rel(abs_fee))),
@@ -605,7 +605,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def decode_io_oldfmt(self,data):
 		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
-		tr_rev = dict(map(reversed,tr.items()))
+		tr_rev = dict(list(map(reversed,list(tr.items()))))
 		copy_keys = [tr_rev[k] if k in tr_rev else k for k in self.MMGenTxInput.__dict__]
 		ret = MMGenList(self.MMGenTxInput(**dict([(tr[k] if k in tr else k,d[k])
 					for k in copy_keys if k in d and d[k] != ''])) for d in data)
@@ -736,11 +736,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
 			self.check_sigs(dt)
 			if not self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid']:
-				raise BadMMGenTxID,'txid mismatch (after signing)'
+				raise BadMMGenTxID('txid mismatch (after signing)')
 			msg('OK')
 			return True
 		except Exception as e:
-			try: m = u'{}'.format(e.message)
+			try: m = '{}'.format(e.message)
 			except: m = repr(e.message)
 			msg('\n'+yellow(m))
 			return False
@@ -765,17 +765,17 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		lt = deserial_tx['lock_time']
 		if lt != int(self.locktime or 0):
 			m2 = 'Transaction hex locktime ({}) does not match MMGen transaction locktime ({})\n{}'
-			raise TxHexMismatch,m2.format(lt,self.locktime,m)
+			raise TxHexMismatch(m2.format(lt,self.locktime,m))
 
 		def check_equal(desc,hexio,mmio):
 			if mmio != hexio:
 				msg('\nMMGen {}:\n{}'.format(desc,pformat(mmio)))
 				msg('Hex {}:\n{}'.format(desc,pformat(hexio)))
 				m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n'
-				raise TxHexMismatch,(m2+m).format(desc.capitalize())
+				raise TxHexMismatch((m2+m).format(desc.capitalize()))
 
-		seq_hex   = map(lambda i: int(i['nSeq'],16),deserial_tx['txins'])
-		seq_mmgen = map(lambda i: i.sequence or g.max_int,self.inputs)
+		seq_hex   = [int(i['nSeq'],16) for i in deserial_tx['txins']]
+		seq_mmgen = [i.sequence or g.max_int for i in self.inputs]
 		check_equal('sequence numbers',seq_hex,seq_mmgen)
 
 		d_hex   = sorted((i['txid'],i['vout']) for i in deserial_tx['txins'])
@@ -788,7 +788,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		uh = deserial_tx['unsigned_hex']
 		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
-			raise TxHexMismatch,'MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m)
+			raise TxHexMismatch('MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
 
 	def check_pubkey_scripts(self):
 		for n,i in enumerate(self.inputs,1):
@@ -957,7 +957,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def create_fn(self):
 		tl = self.get_hex_locktime()
 		tn = ('','.testnet')[g.proto.is_testnet()]
-		self.fn = u'{}{}[{!s}{}{}]{x}{}.{}'.format(
+		self.fn = '{}{}[{!s}{}{}]{x}{}.{}'.format(
 			self.txid,
 			('-'+g.dcoin,'')[g.coin=='BTC'],
 			self.send_amt,
@@ -966,7 +966,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 							)[self.is_replaceable()],
 			('',',tl={}'.format(tl))[bool(tl)],
 			tn,self.ext,
-			x=u'-α' if g.debug_utf8 else '')
+			x='-α' if g.debug_utf8 else '')
 
 	def write_to_file(  self,
 						add_desc='',
@@ -1042,7 +1042,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
 					] if ip else icommon + [
 						('','change:',green('True') if e.is_chg else '')]
-					out += '\n'.join([(u'{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
+					out += '\n'.join([('{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
 			return out
 
 		return  format_io('inputs') + format_io('outputs')
@@ -1096,7 +1096,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		enl = ('\n','')[bool(terse)]
 		out += enl
 		if self.label:
-			out += u'Comment: {}\n{}'.format(self.label.hl(),enl)
+			out += 'Comment: {}\n{}'.format(self.label.hl(),enl)
 
 		out += self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse)
 

@@ -89,7 +89,7 @@ a plain decimal number, or as {r}, using an integer followed by
 			r=MMGenTX().rel_fee_desc,
 			l=fee_spec_letters(use_quotes=True),
 			u=fee_spec_names() ),
-		'txsign': u"""
+		'txsign': """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
 To sign non-{pnm} inputs, a {dn} wallet dump or flat key list is used
@@ -119,4 +119,4 @@ column below:
 			pnm=g.proj_name,
 			pnu=g.proto.name.capitalize(),
 			pnl=g.proj_name.lower())
-	}[k] + (u'-α' if g.debug_utf8 else '')
+	}[k] + ('-α' if g.debug_utf8 else '')

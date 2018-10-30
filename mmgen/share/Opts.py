@@ -21,29 +21,30 @@ Opts.py:  Generic options handling
 """
 
 import sys,getopt
+import collections
 # from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
-	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
+	print(('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage'])))
 	sys.exit(2)
 
 def print_help_and_exit(opts_data,longhelp=False):
 	pn = opts_data['prog_name']
 	pn_len = str(len(pn)+2)
-	out  = u'  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
-	out += u'  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
+	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
+	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
 	o = opts_data[('options','long_options')[longhelp]].strip()
 	if 'options_fmt_args' in opts_data:
 		o = o.format(**opts_data['options_fmt_args']())
 	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
 	ls = ('  ','')[longhelp]
 	es = ('','    ')[longhelp]
-	out += u'{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(o.splitlines()),ls=ls,es=es)
+	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(o.splitlines()),ls=ls,es=es)
 	if 'notes' in opts_data and not longhelp:
 		n = opts_data['notes']
-		if callable(n): n = n()
+		if isinstance(n, collections.Callable): n = n()
 		out += '\n  ' + '\n  '.join(n.rstrip().splitlines())
-	print(out.encode('utf8'))
+	print((out.encode('utf8')))
 	sys.exit(0)
 
 def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
@@ -55,7 +56,7 @@ def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
 	so_str = short_opts.replace('-:','').replace('-','')
 	try: cl_opts,args = getopt.getopt(argv[1:], so_str, long_opts)
 	except getopt.GetoptError as err:
-		print(str(err)); sys.exit(2)
+		print((str(err))); sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
 	opts,skipped_help = {},False
@@ -112,7 +113,7 @@ def parse_opts(argv,opts_data,opt_filter=None,skip_help=False):
 				if not skip: od[-1][3] += '\n' + l
 
 		opts_data[k] = '\n'.join(
-			[u'{:<3} --{} {}'.format(
+			['{:<3} --{} {}'.format(
 				('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
 		)
 		od_all += od

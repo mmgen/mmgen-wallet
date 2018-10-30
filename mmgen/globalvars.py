@@ -90,7 +90,7 @@ class g(object):
 	alice                = False
 
 	# test suite:
-	bogus_wallet_data    = u''
+	bogus_wallet_data    = ''
 	debug_utf8           = False
 
 	for k in ('win','linux'):
@@ -107,7 +107,7 @@ class g(object):
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
 	data_dir_root,data_dir,cfg_file = None,None,None
-	daemon_data_dir = u'' # set by user or protocol
+	daemon_data_dir = '' # set by user or protocol
 
 	# User opt sets global var:
 	common_opts = (

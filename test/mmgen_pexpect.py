@@ -46,7 +46,7 @@ def my_send(p,t,delay=send_delay,s=False):
 	if opt.verbose:
 		ls = (' ','')[bool(opt.debug or not s)]
 		es = ('  ','')[bool(s)]
-		msg(u'{}SEND {}{}'.format(ls,es,yellow(u"'{}'".format(t.decode('utf8').replace('\n',r'\n')))))
+		msg('{}SEND {}{}'.format(ls,es,yellow("'{}'".format(t.decode('utf8').replace('\n',r'\n')))))
 	return ret
 
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
@@ -86,7 +86,7 @@ def debug_pexpect_msg(p):
 		errmsg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
 		errmsg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
 
-data_dir = os.path.join('test','data_dir'+('',u'-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
+data_dir = os.path.join('test','data_dir'+('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
 class MMGenPexpect(object):
 
@@ -107,15 +107,15 @@ class MMGenPexpect(object):
 		else:                   cmd,args = mmgen_cmd,cmd_args
 
 		for i in args:
-			if type(i) not in (str,unicode):
+			if type(i) not in (str,str):
 				m1 = 'Error: missing input files in cmd line?:'
 				m2 = '\nName: {}\nCmd: {}\nCmd args: {}'
 				die(2,(m1+m2).format(name,cmd,args))
 
 		if opt.popen_spawn:
-			args = [u'{q}{}{q}'.format(a,q="'" if ' ' in a else '') for a in args]
+			args = ['{q}{}{q}'.format(a,q="'" if ' ' in a else '') for a in args]
 
-		cmd_str = u'{} {}'.format(cmd,u' '.join(args)).replace('\\','/')
+		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
 		if opt.coverage:
 			fs = 'python -m trace --count --coverdir={} --file={} {c}'
 			cmd_str = fs.format(*init_coverage(),c=cmd_str)
@@ -129,7 +129,7 @@ class MMGenPexpect(object):
 				sys.stderr.write(green('Testing: {}\n'.format(desc)))
 				if not msg_only:
 					s = repr(cmd_str) if g.platform == 'win' else cmd_str
-					sys.stderr.write(clr1(u'Executing {}{}'.format(clr2(s),eol)))
+					sys.stderr.write(clr1('Executing {}{}'.format(clr2(s),eol)))
 			else:
 				m = 'Testing {}: '.format(desc)
 				msg_r(m)
@@ -199,7 +199,7 @@ class MMGenPexpect(object):
 		p = "'w' for conditions and warranty info, or 'c' to continue: "
 		my_expect(self.p,p,'c')
 
-	def label(self,label=u'Test Label (UTF-8) α'):
+	def label(self,label='Test Label (UTF-8) α'):
 		p = 'Enter a wallet label, or hit ENTER for no label: '
 		my_expect(self.p,p,label+'\n')
 
@@ -252,7 +252,7 @@ class MMGenPexpect(object):
 		self.expect(self.NL,nonl=True)
 		outfile = self.p.before.strip().strip("'").decode('utf8')
 		if opt.debug_pexpect: rmsg('Outfile [{}]'.format(outfile))
-		vmsg(u'{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
+		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
 		return outfile
 
 	def no_overwrite(self):

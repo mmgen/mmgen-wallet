@@ -30,7 +30,7 @@ def launch(what):
 			sys.exit(2)
 
 	import sys
-	sys.argv = map(my_dec,sys.argv)
+	sys.argv = list(map(my_dec,sys.argv))
 
 	if what in ('walletgen','walletchk','walletconv','passchg'):
 		what = 'wallet'
@@ -55,15 +55,15 @@ def launch(what):
 			if os.getenv('MMGEN_TRACEBACK'):
 				raise
 			else:
-				try: m = u'{}'.format(e.message)
+				try: m = '{}'.format(e.message)
 				except: m = repr(e.message)
 
 				from mmgen.util import die,ydie,rdie
-				d = [   (ydie,2,u'\nMMGen Unhandled Exception ({n}): {m}'),
-						(die, 1,u'{m}'),
-						(ydie,2,u'{m}'),
-						(ydie,3,u'\nMMGen Error ({n}): {m}'),
-						(rdie,4,u'\nMMGen Fatal Error ({n}): {m}')
+				d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
+						(die, 1,'{m}'),
+						(ydie,2,'{m}'),
+						(ydie,3,'\nMMGen Error ({n}): {m}'),
+						(rdie,4,'\nMMGen Fatal Error ({n}): {m}')
 					][e.mmcode if hasattr(e,'mmcode') else 0]
 
 				d[0](d[1],d[2].format(n=type(e).__name__,m=m))

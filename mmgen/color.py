@@ -48,7 +48,7 @@ for c in _colors:
 	globals()['_16_'+c]    = '\033[{}m'.format(e[1][0]) if e[1][1] == 0 \
 						else '\033[{};{}m'.format(*e[1])
 	globals()['_clr_'+c] = ''; _reset = ''
-	exec 'def {c}(s): return _clr_{c}+s+_reset'.format(c=c)
+	exec('def {c}(s): return _clr_{c}+s+_reset'.format(c=c))
 
 def nocolor(s): return s
 
@@ -85,6 +85,6 @@ def test_color():
 		pass
 	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
 		if n != 'auto': init_color(num_colors=n)
-		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
+		print(('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)]))))
 
 if __name__ == '__main__': test_color()

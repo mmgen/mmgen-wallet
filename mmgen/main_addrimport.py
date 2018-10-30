@@ -83,7 +83,7 @@ try:
 	rpc_init()
 except UnrecognizedTokenSymbol as e:
 	m = "When importing addresses for a new token, the token must be specified by address, not symbol."
-	raise type(e),'{}\n{}'.format(e.message,m)
+	raise type(e)('{}\n{}'.format(e.message,m))
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
@@ -132,7 +132,7 @@ msg_fmt = '{{:{}}} {{:34}} {{:{}}}'.format(w_n_of_m,w_mmid)
 
 if opt.rescan: import threading
 
-fs = u'Importing {} address{} from {}{}'
+fs = 'Importing {} address{} from {}{}'
 bm =' (batch mode)' if opt.batch else ''
 msg(fs.format(len(al.data),suf(al.data,'es'),infile,bm))
 

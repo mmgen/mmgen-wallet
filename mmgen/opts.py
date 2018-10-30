@@ -64,12 +64,12 @@ def opt_postproc_debug():
 	Msg('    Opts after processing:')
 	for k in a:
 		v = getattr(opt,k)
-		Msg(u'        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
+		Msg('        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
 	Msg("    Opts set to 'None':")
-	Msg(u'        {}\n'.format('\n        '.join(b)))
+	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('    Global vars:')
 	for e in [d for d in dir(g) if d[:2] != '__']:
-		Msg(u'        {:<20}: {}'.format(e, getattr(g,e)))
+		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
 	Msg('\n=== end opts.py debug ===\n')
 
 def opt_postproc_initializations():
@@ -108,7 +108,7 @@ def get_cfg_template_data():
 			return f.read()
 	except:
 		msg("WARNING: configuration template not found at '{}'".format(cfg_template))
-		return u''
+		return ''
 
 def get_data_from_cfg_file():
 	from mmgen.util import msg,die,check_or_create_dir
@@ -119,9 +119,9 @@ def get_data_from_cfg_file():
 	def copy_template_data(fn):
 		try:
 			with open(fn,'wb') as f: f.write(template_data)
-			os.chmod(fn,0600)
+			os.chmod(fn,0o600)
 		except:
-			die(2,u"ERROR: unable to write to datadir '{}'".format(g.data_dir))
+			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
 
 	for k,suf in (('cfg',''),('sample','.sample')):
 		try:
@@ -132,7 +132,7 @@ def get_data_from_cfg_file():
 				copy_template_data(g.cfg_file+suf)
 				data[k] = template_data
 			else:
-				data[k] = u''
+				data[k] = ''
 
 	if template_data and data['sample'] != template_data:
 		g.cfg_options_changed = True
@@ -300,8 +300,8 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		opts_data['long_options'] = common_opts_data
 		if g.debug_utf8:
 			for k in opts_data:
-				if type(opts_data[k]) in (str,unicode):
-					opts_data[k] += u'-α'
+				if type(opts_data[k]) in (str,str):
+					opts_data[k] += '-α'
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 
 	if g.bob or g.alice:
@@ -310,7 +310,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		check_or_create_dir(g.data_dir)
-		import regtest as rt
+		from . import regtest as rt
 		g.rpc_host = 'localhost'
 		g.rpc_port = rt.rpc_port
 		g.rpc_user = rt.rpc_user
@@ -471,7 +471,7 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_int(val,desc): return False
 			if not opt_is_in_list(int(val),g.seed_lens,desc): return False
 		elif key == 'hash_preset':
-			if not opt_is_in_list(val,g.hash_presets.keys(),desc): return False
+			if not opt_is_in_list(val,list(g.hash_presets.keys()),desc): return False
 		elif key == 'brain_params':
 			a = val.split(',')
 			if len(a) != 2:
@@ -482,7 +482,7 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_is_int(a[0],d): return False
 			if not opt_is_in_list(int(a[0]),g.seed_lens,d): return False
 			d = 'hash preset ' + desc
-			if not opt_is_in_list(a[1],g.hash_presets.keys(),d): return False
+			if not opt_is_in_list(a[1],list(g.hash_presets.keys()),d): return False
 		elif key == 'usr_randchars':
 			if val == 0: continue
 			if not opt_is_int(val,desc): return False
@@ -501,7 +501,7 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			if not opt_compares(val,'>',0,desc): return False
 		elif key == 'coin':
 			from mmgen.protocol import CoinProtocol
-			if not opt_is_in_list(val.lower(),CoinProtocol.coins.keys(),'coin'): return False
+			if not opt_is_in_list(val.lower(),list(CoinProtocol.coins.keys()),'coin'): return False
 		elif key == 'rbf':
 			if not g.proto.cap('rbf'):
 				msg('--rbf requested, but {} does not support replace-by-fee transactions'.format(g.coin))

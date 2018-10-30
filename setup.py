@@ -67,14 +67,14 @@ class my_build_ext(build_ext):
 		ext_dest = self.get_ext_filename(ext.name)
 		try: os.unlink(ext_dest)
 		except: pass
-		os.chmod(ext_src,0755)
-		print 'copying %s to %s' % (ext_src,ext_dest)
+		os.chmod(ext_src,0o755)
+		print('copying %s to %s' % (ext_src,ext_dest))
 		copy2(ext_src,ext_dest)
 
 class my_install_data(install_data):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
-			os.chmod(os.path.join('data_files',f),0644)
+			os.chmod(os.path.join('data_files',f),0o644)
 		install_data.run(self)
 
 module1 = Extension(

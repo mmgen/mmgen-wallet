@@ -62,7 +62,7 @@ def run_test(test,arg,input_data):
 			del arg['arg']
 		else:
 			args = []
-			ret_chk = arg.values()[0] # assume only one key present
+			ret_chk = list(arg.values())[0] # assume only one key present
 		if 'ret' in arg:
 			ret_chk = arg['ret']
 			del arg['ret']
@@ -77,18 +77,18 @@ def run_test(test,arg,input_data):
 		ret = cls(*args,**kwargs)
 		bad_ret = list() if issubclass(cls,list) else None
 		if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
-			raise UserWarning,"Non-'None' return value {} with bad input data".format(repr(ret))
+			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
 		if opt.silent and input_data=='good' and ret==bad_ret:
-			raise UserWarning,"'None' returned with good input data"
+			raise UserWarning("'None' returned with good input data")
 		if input_data=='good' and ret != ret_chk and repr(ret) != repr(ret_chk):
-			raise UserWarning,"Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk)
+			raise UserWarning("Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk))
 		if not opt.super_silent:
-			msg(u'==> {}'.format(ret))
+			msg('==> {}'.format(ret))
 		if opt.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 	except SystemExit as e:
 		if input_data == 'good':
-			raise ValueError,'Error on good input data'
+			raise ValueError('Error on good input data')
 		if opt.verbose:
 			msg('exitval: {}'.format(e.code))
 	except UserWarning as e:
@@ -97,9 +97,9 @@ def run_test(test,arg,input_data):
 
 r32,r24,r16,r17,r18 = os.urandom(32),os.urandom(24),os.urandom(16),os.urandom(17),os.urandom(18)
 tw_pfx = g.proto.base_coin.lower()+':'
-utf8_text           = u'[α-$ample UTF-8 text-ω]' * 10   # 230 chars, unicode types L,N,P,S,Z
-utf8_text_combining = u'[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
-utf8_text_control   = u'[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
+utf8_text           = '[α-$ample UTF-8 text-ω]' * 10   # 230 chars, unicode types L,N,P,S,Z
+utf8_text_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
+utf8_text_control   = '[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
 
 from collections import OrderedDict
 tests = OrderedDict([
@@ -115,15 +115,15 @@ tests = OrderedDict([
 			({'idx_list':AddrIdxList('1-5')},[1,2,3,4,5])
 		)}),
 	('BTCAmt', {
-		'bad':  ('-3.2','0.123456789',123L,'123L','22000000',20999999.12345678),
+		'bad':  ('-3.2','0.123456789',123,'123L','22000000',20999999.12345678),
 		'good': (('20999999.12345678',Decimal('20999999.12345678')),)
 		}),
 	('LTCAmt', {
-		'bad':  ('-3.2','0.123456789',123L,'123L','88000000',80999999.12345678),
+		'bad':  ('-3.2','0.123456789',123,'123L','88000000',80999999.12345678),
 		'good': (('80999999.12345678',Decimal('80999999.12345678')),)
 		}),
 	('CoinAddr', {
-		'bad':  (1,'x',u'я'),
+		'bad':  (1,'x','я'),
 		'good': {
 			'btc': (('1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr','32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj'),
 					('n2FgXPKwuFkCXF946EnoxWJDWF2VwQ6q8J','2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN')),
@@ -133,13 +133,13 @@ tests = OrderedDict([
 	}),
 	('SeedID', {
 		'bad':  (
-			{'sid':u'я'},
+			{'sid':'я'},
 			{'sid':'F00F00'},
 			{'sid':'xF00F00x'},
 			{'sid':1},
 			{'sid':'F00BAA123'},
 			{'sid':'f00baa12'},
-			u'я',r32,'abc'),
+			'я',r32,'abc'),
 		'good': (({'sid':'F00BAA12'},'F00BAA12'),(Seed(r16),Seed(r16).sid))
 	}),
 	('MMGenID', {
@@ -147,32 +147,32 @@ tests = OrderedDict([
 		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:99')
 	}),
 	('TwMMGenID', {
-		'bad':  ('x',u'я',u'я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99',tw_pfx,tw_pfx+u'я'),
+		'bad':  ('x','я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99',tw_pfx,tw_pfx+'я'),
 		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:9999999',tw_pfx+'x')
 	}),
 	('TwLabel', {
-		'bad':  ('x x',u'x я',u'я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
-				'F00BAA12:Z:99',tw_pfx+' x',tw_pfx+u'я x'),
+		'bad':  ('x x','x я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
+				'F00BAA12:Z:99',tw_pfx+' x',tw_pfx+'я x'),
 		'good': (
 			('F00BAA12:99 a comment','F00BAA12:L:99 a comment'),
-			u'F00BAA12:L:99 comment (UTF-8) α',
+			'F00BAA12:L:99 comment (UTF-8) α',
 			'F00BAA12:S:9999999 comment',
 			tw_pfx+'x comment')
 	}),
 	('HexStr', {
-		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00'),
 		'good': ('deadbeef','f00baa12')
 	}),
 	('MMGenTxID', {
-		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00','F00F0012'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012'),
 		'good': ('DEADBE','F00BAA')
 	}),
 	('CoinTxID',{
-		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+'ee'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+'ee'),
 		'good': (hexlify(r32),)
 	}),
 	('WifKey', {
-		'bad':  (1,[],'\0','\1',u'я','g','gg','FF','f00',hexlify(r16),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',hexlify(r16),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
 		'good': {
 			'btc': (('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
 					'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
@@ -235,7 +235,7 @@ tests = OrderedDict([
 	}),
 	('MMGenPWIDString', { # forbidden = list(u' :/\\')
 		'bad': ('foo/','foo:','foo:\\'),
-		'good':  (u'qwerty@яяя',)
+		'good':  ('qwerty@яяя',)
 	}),
 	('MMGenAddrType', {
 		'bad': ('U','z','xx',1,'dogecoin'),
@@ -250,7 +250,7 @@ tests = OrderedDict([
 		{'s':'B','ret':'B'},
 	)}),
 	('MMGenPasswordType', {
-		'bad': ('U','z',u'я',1,'passw0rd'),
+		'bad': ('U','z','я',1,'passw0rd'),
 		'good':  (
 		{'s':'password','ret':'P'},
 		{'s':'P','ret':'P'},

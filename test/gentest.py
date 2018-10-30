@@ -125,7 +125,7 @@ def init_external_prog():
 		try:
 			import ethereum.utils as eth
 		except:
-			raise ImportError,"Unable to import 'pyethereum' module. Is pyethereum installed?"
+			raise ImportError("Unable to import 'pyethereum' module. Is pyethereum installed?")
 		ext_sec2addr = pyethereum_sec2addr
 		ext_lib = 'pyethereum'
 	elif test_support('pycoin'):
@@ -135,7 +135,7 @@ def init_external_prog():
 			from pycoin.ecdsa.secp256k1 import secp256k1_generator
 			from pycoin.networks.registry import network_for_netcode
 		except:
-			raise ImportError,"Unable to import pycoin modules. Is pycoin installed and up-to-date?"
+			raise ImportError("Unable to import pycoin modules. Is pycoin installed and up-to-date?")
 		ext_sec2addr = pycoin_sec2addr
 		ext_lib = 'pycoin'
 	elif test_support('keyconv'):
@@ -144,7 +144,7 @@ def init_external_prog():
 		ext_lib = 'keyconv'
 	else:
 		m = '{}: coin supported by MMGen but unsupported by gentest.py for {}'
-		raise ValueError,m.format(g.coin,('mainnet','testnet')[g.testnet])
+		raise ValueError(m.format(g.coin,('mainnet','testnet')[g.testnet]))
 	b_desc = ext_lib
 	b = 'ext'
 
@@ -202,8 +202,8 @@ def speed_test():
 	qmsg(green(m.format(kg_a.desc,g.coin)))
 	from struct import pack,unpack
 	seed = os.urandom(28)
-	print 'Incrementing key with each round'
-	print 'Starting key:', hexlify(seed+pack('I',0))
+	print('Incrementing key with each round')
+	print('Starting key:', hexlify(seed+pack('I',0)))
 	import time
 	start = last_t = time.time()
 

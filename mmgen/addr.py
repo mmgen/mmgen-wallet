@@ -29,7 +29,7 @@ from mmgen.obj import *
 pnm = g.proj_name
 
 def dmsg_sc(desc,data):
-	if g.debug_addrlist: Msg(u'sc_debug_{}: {}'.format(desc,data))
+	if g.debug_addrlist: Msg('sc_debug_{}: {}'.format(desc,data))
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,addr_type):
@@ -39,7 +39,7 @@ class AddrGenerator(MMGenObject):
 			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
 			gen_method = addr_type.gen_method
 		else:
-			raise TypeError,'{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__)
+			raise TypeError('{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__))
 		gen_methods = {
 			'p2pkh':    AddrGeneratorP2PKH,
 			'segwit':   AddrGeneratorSegwit,
@@ -59,7 +59,7 @@ class AddrGeneratorP2PKH(AddrGenerator):
 		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Segwit redeem script not supported by this address type'
+		raise NotImplementedError('Segwit redeem script not supported by this address type')
 
 class AddrGeneratorSegwit(AddrGenerator):
 	def to_addr(self,pubhex):
@@ -77,7 +77,7 @@ class AddrGeneratorBech32(AddrGenerator):
 		return CoinAddr(g.proto.pubhash2bech32addr(hash160(pubhex)))
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Segwit redeem script not supported by this address type'
+		raise NotImplementedError('Segwit redeem script not supported by this address type')
 
 class AddrGeneratorEthereum(AddrGenerator):
 	def to_addr(self,pubhex):
@@ -90,7 +90,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 		return WalletPassword(hash256(sk_hex)[:32])
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Segwit redeem script not supported by this address type'
+		raise NotImplementedError('Segwit redeem script not supported by this address type')
 
 # github.com/FiloSottile/zcash-mini/zcash/address.go
 class AddrGeneratorZcashZ(AddrGenerator):
@@ -99,11 +99,11 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	vk_width = 97
 
 	def zhash256(self,s,t):
-		s = map(ord,s+'\0'*32)
+		s = list(map(ord,s+'\0'*32))
 		s[0] |= 0xc0
 		s[32] = t
 		from mmgen.sha256 import Sha256
-		return Sha256(map(chr,s),preprocess=False).digest()
+		return Sha256(list(map(chr,s)),preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
 		key = pubhex.decode('hex')
@@ -120,7 +120,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	def to_viewkey(self,pubhex): # pubhex is really privhex
 		key = pubhex.decode('hex')
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
-		vk = map(ord,self.zhash256(key,0)+self.zhash256(key,1))
+		vk = list(map(ord,self.zhash256(key,0)+self.zhash256(key,1)))
 		vk[32] &= 0xf8
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
@@ -130,7 +130,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		return ZcashViewKey(ret)
 
 	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError,'Zcash z-addresses incompatible with Segwit'
+		raise NotImplementedError('Zcash z-addresses incompatible with Segwit')
 
 class AddrGeneratorMonero(AddrGenerator):
 
@@ -182,7 +182,7 @@ class AddrGeneratorMonero(AddrGenerator):
 		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(sk_hex.decode('hex')).hexdigest(),None))
 
 	def to_segwit_redeem_script(self,sk_hex):
-		raise NotImplementedError,'Monero addresses incompatible with Segwit'
+		raise NotImplementedError('Monero addresses incompatible with Segwit')
 
 class KeyGenerator(MMGenObject):
 
@@ -193,7 +193,7 @@ class KeyGenerator(MMGenObject):
 			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
 			pubkey_type = addr_type.pubkey_type
 		else:
-			raise TypeError,'{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__)
+			raise TypeError('{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__))
 		if pubkey_type == 'std':
 			if cls.test_for_secp256k1(silent=silent) and generator != 1:
 				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
@@ -206,7 +206,7 @@ class KeyGenerator(MMGenObject):
 			me.desc = 'mmgen-'+pubkey_type
 			return me
 		else:
-			raise ValueError,'{}: invalid pubkey_type argument'.format(pubkey_type)
+			raise ValueError('{}: invalid pubkey_type argument'.format(pubkey_type))
 
 	@classmethod
 	def test_for_secp256k1(self,silent=False):
@@ -275,7 +275,7 @@ class AddrListEntry(MMGenListItem):
 	wallet_passwd  = MMGenListItemAttr('wallet_passwd','WalletPassword')
 
 class PasswordListEntry(MMGenListItem):
-	passwd = MMGenImmutableAttr('passwd',unicode,typeconv=False) # TODO: create Password type
+	passwd = MMGenImmutableAttr('passwd',str,typeconv=False) # TODO: create Password type
 	idx    = MMGenImmutableAttr('idx','AddrIdx')
 	label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	sec    = MMGenListItemAttr('sec',PrivKey,typeconv=False)
@@ -292,7 +292,7 @@ class AddrListChksum(str,Hilite):
 				) for e in addrlist.data]
 		return str.__new__(cls,make_chksum_N(' '.join(lines), nchars=16, sep=True))
 
-class AddrListIDStr(unicode,Hilite):
+class AddrListIDStr(str,Hilite):
 	color = 'green'
 	trunc_ok = False
 	def __new__(cls,addrlist,fmt_str=None):
@@ -306,7 +306,7 @@ class AddrListIDStr(unicode,Hilite):
 				if prev != ret[-1]: ret += '-', prev
 				ret += ',', i
 			prev = i
-		s = ''.join(map(unicode,ret))
+		s = ''.join(map(str,ret))
 
 		if fmt_str:
 			ret = fmt_str.format(s)
@@ -316,7 +316,7 @@ class AddrListIDStr(unicode,Hilite):
 			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
 			dmsg_sc('id_str',ret[8:].split('[')[0])
 
-		return unicode.__new__(cls,ret)
+		return str.__new__(cls,ret)
 
 class AddrList(MMGenObject): # Address info for a single seed ID
 	msgs = {
@@ -448,7 +448,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 					e.wallet_passwd = ag.to_wallet_passwd(e.sec)
 
 			if type(self) == PasswordList:
-				e.passwd = unicode(self.make_passwd(e.sec)) # TODO - own type
+				e.passwd = str(self.make_passwd(e.sec)) # TODO - own type
 				dmsg('Key {:>03}: {}'.format(pos,e.passwd))
 
 			out.append(e)
@@ -482,7 +482,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
 		tn = ('','.testnet')[g.proto.is_testnet()]
-		fn = u'{}{x}{}.{}'.format(self.id_str,tn,self.ext,x=u'-α' if g.debug_utf8 else '')
+		fn = '{}{x}{}.{}'.format(self.id_str,tn,self.ext,x='-α' if g.debug_utf8 else '')
 		ask_tty = self.has_keys and not opt.quiet
 		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
 
@@ -563,12 +563,12 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		out = [self.msgs['file_header']+'\n']
 		if self.chksum:
-			out.append(u'# {} data checksum for {}: {}'.format(
+			out.append('# {} data checksum for {}: {}'.format(
 						capfirst(self.data_desc),self.id_str,self.chksum))
 			out.append('# Record this value to a secure location.\n')
 
 		if type(self) == PasswordList:
-			lbl = u'{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+			lbl = '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
 		else:
 			bc,mt = g.proto.base_coin,self.al_id.mmtype
 			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
@@ -578,9 +578,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
 
 		dmsg_sc('lbl',lbl[9:])
-		out.append(u'{} {{'.format(lbl))
+		out.append('{} {{'.format(lbl))
 
-		fs = u'  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
+		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
 			c = ' '+e.label if enable_comments and e.label else ''
 			if type(self) == KeyList:
@@ -701,14 +701,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				base_coin,mmtype = 'BTC',MMGenAddrType('L')
 				check_coin_mismatch(base_coin)
 			else:
-				raise ValueError,u"'{}': Invalid first line for {} file '{}'".format(lines[0],self.gen_desc,fn)
+				raise ValueError("'{}': Invalid first line for {} file '{}'".format(lines[0],self.gen_desc,fn))
 
 			self.al_id = AddrListID(SeedID(sid=sid),mmtype)
 
 			data = self.parse_file_body(lines[1:-1])
 			assert issubclass(type(data),list),'Invalid file body data'
 		except Exception as e:
-			m = u'Invalid address list file ({})'.format(e.message)
+			m = 'Invalid address list file ({})'.format(e.message)
 			if exit_on_error: die(3,m)
 			msg(msg)
 			return False
@@ -804,9 +804,9 @@ Record this checksum: it will be used to verify the password file in the future
 		if chksum_only:
 			Msg(self.chksum)
 		else:
-			fs = u'{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+			fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
 			self.id_str = AddrListIDStr(self,fs)
-			qmsg(u'Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
+			qmsg('Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
 			qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
 	def set_pw_fmt(self,pw_fmt):
@@ -883,7 +883,7 @@ re-import your addresses.
 		if source == 'tw': self.add_tw_data()
 
 	def seed_ids(self):
-		return self.al_ids.keys()
+		return list(self.al_ids.keys())
 
 	def addrlist(self,al_id):
 		# TODO: Validate al_id
@@ -899,18 +899,18 @@ re-import your addresses.
 
 	def coinaddr2mmaddr(self,coinaddr):
 		d = self.make_reverse_dict([coinaddr])
-		return (d.values()[0][0]) if d else None
+		return (list(d.values())[0][0]) if d else None
 
 	@classmethod
 	def get_tw_data(cls):
 		vmsg('Getting address data from tracking wallet')
 		if 'label_api' in g.rpch.caps:
 			accts = g.rpch.listlabels()
-			alists = [a.keys() for a in g.rpch.getaddressesbylabel([[k] for k in accts],batch=True)]
+			alists = [list(a.keys()) for a in g.rpch.getaddressesbylabel([[k] for k in accts],batch=True)]
 		else:
 			accts = g.rpch.listaccounts(0,True)
 			alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
-		return zip(accts,alists)
+		return list(zip(accts,alists))
 
 	def add_tw_data(self):
 		d,out,i = self.get_tw_data(),{},0
@@ -934,7 +934,7 @@ re-import your addresses.
 			self.al_ids[addrlist.al_id] = addrlist
 			return True
 		else:
-			raise TypeError, 'Error: object {!r} is not of type AddrList'.format(addrlist)
+			raise TypeError('Error: object {!r} is not of type AddrList'.format(addrlist))
 
 	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()
