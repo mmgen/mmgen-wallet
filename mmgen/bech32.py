@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Source URL:
 # https://github.com/bitcoin/bitcoin/blob/v0.16.0/test/functional/test_framework/segwit_addr.py

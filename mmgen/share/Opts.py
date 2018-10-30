@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # Opts.py, an options parsing library for Python.  Copyright (C) 2014-2016
 # Philemon <mmgen-py@yandex.com>.

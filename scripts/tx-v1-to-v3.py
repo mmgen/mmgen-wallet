@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Convert MMGen 'v1' transaction file (extension '.raw' or '.sig')
 # to MMGen 'v3' ('.rawtx' or '.sigtx' + amounts as strings)
 

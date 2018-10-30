@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # MMGen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys,os
 repo_root = os.path.split(os.path.abspath(os.path.dirname(sys.argv[0])))[0]

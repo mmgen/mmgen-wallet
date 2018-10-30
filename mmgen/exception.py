@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution

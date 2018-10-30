@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
 # Copyright (C) 2013 by philemon <mmgen-py@yandex.com>

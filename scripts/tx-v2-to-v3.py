@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # Convert MMGen 'v2' transaction file (amounts as BTCAmt())
 # to MMGen 'v3' (amounts as strings)
 # v3 tx files were introduced with MMGen version 0.9.7
