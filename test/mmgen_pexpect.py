@@ -35,10 +35,6 @@ else:
 	send_delay = 0
 	os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
 
-stderr_save = sys.stderr
-def errmsg(s): stderr_save.write(s+'\n')
-def errmsg_r(s): stderr_save.write(s)
-
 def my_send(p,t,delay=send_delay,s=False):
 	if delay: time.sleep(delay)
 	ret = p.send(t) # returns num bytes written
@@ -126,10 +122,10 @@ class MMGenPexpect(object):
 		if not no_msg:
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
 				clr1,clr2,eol = ((green,cyan,'\n'),(nocolor,nocolor,' '))[bool(opt.print_cmdline)]
-				sys.stderr.write(green('Testing: {}\n'.format(desc)))
+				msg_r(green('Testing: {}\n'.format(desc)))
 				if not msg_only:
 					s = repr(cmd_str) if g.platform == 'win' else cmd_str
-					sys.stderr.write(clr1('Executing {}{}'.format(clr2(s),eol)))
+					msg_r(clr1('Executing {}{}'.format(clr2(s),eol)))
 			else:
 				m = 'Testing {}: '.format(desc)
 				msg_r(m)

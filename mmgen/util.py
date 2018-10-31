@@ -27,10 +27,11 @@ from string import hexdigits
 from mmgen.color import *
 from mmgen.exception import *
 
-def msg(s):    sys.stderr.write(s.encode() + b'\n')
-def msg_r(s):  sys.stderr.write(s.encode())
-def Msg(s):    sys.stdout.write(s.encode() + b'\n')
-def Msg_r(s):  sys.stdout.write(s.encode())
+def msg(s):   os.write(g.stderr_fileno,s.encode() + b'\n')
+def msg_r(s): os.write(g.stderr_fileno,s.encode())
+def Msg(s):   os.write(g.stdout_fileno,s.encode() + b'\n')
+def Msg_r(s): os.write(g.stdout_fileno,s.encode())
+
 def msgred(s): msg(red(s))
 def rmsg(s):   msg(red(s))
 def rmsg_r(s): msg_r(red(s))

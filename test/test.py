@@ -1233,32 +1233,28 @@ def get_segwit_arg(cfg):
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
-def imsg(s): sys.stderr.write(s.encode('utf8') + '\n') # never gets redefined
+def get_segwit_arg(cfg):
+	return ['--type='+('segwit','bech32')[bool(opt.bech32)]] if cfg['segwit'] else []
 
 if opt.exact_output:
+	def imsg(s):   os.write(2,s.encode() + b'\n')
+	def imsg_r(s): os.write(2,s.encode())
 	def msg(s): pass
-	vmsg = vmsg_r = msg_r = msg
+	qmsg = qmsg_r = vmsg = vmsg_r = msg_r = msg
 else:
-	def msg(s): sys.stderr.write(s+'\n')
-	def vmsg(s):
-		if opt.verbose: sys.stderr.write(s+'\n')
-	def msg_r(s): sys.stderr.write(s)
-	def vmsg_r(s):
-		if opt.verbose: sys.stderr.write(s)
+	def imsg(s): pass
+	def imsg_r(s): pass
 
-stderr_save = sys.stderr
+devnull_fh = open('/dev/null','w')
 
 def silence():
 	if not (opt.verbose or opt.exact_output):
-		f = ('/dev/null','stderr.out')[g.platform=='win']
-		sys.stderr = open(f,'a')
+		g.stderr_fileno = g.stdout_fileno = devnull_fh.fileno()
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):
-		sys.stderr = stderr_save
-
-def errmsg(s): stderr_save.write(s+'\n')
-def errmsg_r(s): stderr_save.write(s)
+		g.stderr_fileno = 2
+		g.stdout_fileno = 1
 
 if opt.list_cmds:
 	from mmgen.term import get_terminal_size
@@ -3887,7 +3883,6 @@ except opt.traceback and Exception:
 	except: pass
 	die(1,blue('Test script exited with error'))
 except:
-	sys.stderr = stderr_save
 	raise
 
 end_msg()
