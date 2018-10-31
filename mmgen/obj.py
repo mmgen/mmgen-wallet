@@ -378,21 +378,21 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __repr__(self):
 		return "{}('{}')".format(type(self).__name__,self.__str__())
 
-	def __add__(self,other,context=None):
-		return type(self)(Decimal.__add__(self,other,context))
+	def __add__(self,other):
+		return type(self)(Decimal.__add__(self,other))
 	__radd__ = __add__
 
-	def __sub__(self,other,context=None):
-		return type(self)(Decimal.__sub__(self,other,context))
+	def __sub__(self,other):
+		return type(self)(Decimal.__sub__(self,other))
 
-	def __mul__(self,other,context=None):
-		return type(self)('{:0.8f}'.format(Decimal.__mul__(self,Decimal(other),context)))
+	def __mul__(self,other):
+		return type(self)('{:0.8f}'.format(Decimal.__mul__(self,Decimal(other))))
 
-	def __div__(self,other,context=None):
-		return type(self)('{:0.8f}'.format(Decimal.__div__(self,Decimal(other),context)))
+	def __div__(self,other):
+		return type(self)('{:0.8f}'.format(Decimal.__div__(self,Decimal(other))))
 
-	def __neg__(self,other,context=None):
-		return type(self)(Decimal.__neg__(self,other,context))
+	def __neg__(self,other):
+		return type(self)(Decimal.__neg__(self,other))
 
 class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
