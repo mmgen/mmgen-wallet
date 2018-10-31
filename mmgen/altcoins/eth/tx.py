@@ -134,7 +134,7 @@ class EthereumMMGenTX(MMGenTX):
 		self.txobj = {
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else Str(''),
-			'amt':  self.outputs[0].amt if self.outputs else ETHAmt(0),
+			'amt':  self.outputs[0].amt if self.outputs else ETHAmt('0'),
 			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
 			'startGas': self.start_gas,
 			'nonce': self.get_nonce(),
@@ -187,7 +187,7 @@ class EthereumMMGenTX(MMGenTX):
 					return [int(reply)]
 
 	# coin-specific fee routines:
-	def get_relay_fee(self): return ETHAmt(0) # TODO
+	def get_relay_fee(self): return ETHAmt('0') # TODO
 
 	# given absolute fee in ETH, return gas price in Gwei using tx_gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
@@ -274,7 +274,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves {} {} in the sender's account"
-		chg = 0 if (self.outputs and self.outputs[0].is_chg) else change_amt
+		chg = '0' if (self.outputs and self.outputs[0].is_chg) else change_amt
 		return m.format(ETHAmt(chg).hl(),g.coin)
 
 	def do_sign(self,d,wif,tx_num_str):
@@ -403,7 +403,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves ≈{} {} and {} {} in the sender's account"
-		send_acct_tbal = 0 if self.outputs[0].is_chg else \
+		send_acct_tbal = '0' if self.outputs[0].is_chg else \
 				Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
 		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)
 

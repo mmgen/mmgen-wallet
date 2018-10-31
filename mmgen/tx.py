@@ -335,7 +335,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.pop(idx)
 
 	def sum_outputs(self,exclude=None):
-		if not len(self.outputs): return g.proto.coin_amt(0)
+		if not len(self.outputs): return g.proto.coin_amt('0')
 		olist = self.outputs if exclude == None else \
 			self.outputs[:exclude] + self.outputs[exclude+1:]
 		return g.proto.coin_amt(sum(e.amt for e in olist))
