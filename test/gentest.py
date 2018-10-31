@@ -81,7 +81,7 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
 def pyethereum_sec2addr(sec):
-	return sec.decode(),eth.privtoaddr(sec).encode('hex')
+	return sec.decode(),hexlify(eth.privtoaddr(sec)).decode()
 
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)

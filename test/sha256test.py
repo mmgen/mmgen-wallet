@@ -2,6 +2,7 @@
 
 
 import sys,os,hashlib
+from binascii import hexlify
 from mmgen.sha256 import Sha256
 
 random_rounds = int(sys.argv[1]) if len(sys.argv) == 2 else 500
@@ -39,7 +40,7 @@ def test_random(rounds):
 	for i in range(rounds):
 		if i+1 in (1,rounds) or not (i+1) % 10:
 			msg('\rTesting random input data:    {:4}/{} '.format(i+1,rounds))
-		dlen = int(os.urandom(4).encode('hex'),16) >> 18
+		dlen = int(hexlify(os.urandom(4)),16) >> 18
 		compare_hashes(dlen,os.urandom(dlen))
 	msg('OK\n')
 

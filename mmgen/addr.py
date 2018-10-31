@@ -83,7 +83,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 	def to_addr(self,pubhex):
 		assert type(pubhex) == PubKey
 		import sha3
-		return CoinAddr(sha3.keccak_256(pubhex[2:].decode('hex')).digest()[12:].encode('hex'))
+		return CoinAddr(hexlify(sha3.keccak_256(unhexlify(pubhex[2:])).digest()[12:]).decode())
 
 	def to_wallet_passwd(self,sk_hex):
 		from mmgen.protocol import hash256
@@ -106,7 +106,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		return Sha256(list(map(chr,s)),preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
-		key = pubhex.decode('hex')
+		key = unhexlify(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		if g.platform == 'win':
 			ydie(1,'Zcash z-addresses not supported on Windows platform')
@@ -118,7 +118,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		return CoinAddr(ret)
 
 	def to_viewkey(self,pubhex): # pubhex is really privhex
-		key = pubhex.decode('hex')
+		key = unhexlify(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		vk = list(map(ord,self.zhash256(key,0)+self.zhash256(key,1)))
 		vk[32] &= 0xf8
@@ -136,8 +136,8 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def b58enc(self,addr_str):
 		enc,l = baseconv.fromhex,len(addr_str)
-		a = ''.join([enc(addr_str[i*8:i*8+8].encode('hex'),'b58',pad=11,tostr=True) for i in range(l//8)])
-		b = enc(addr_str[l-l%8:].encode('hex'),'b58',pad=7,tostr=True)
+		a = ''.join([enc(hexlify(addr_str[i*8:i*8+8]),'b58',pad=11,tostr=True) for i in range(l//8)])
+		b = enc(hexlify(addr_str[l-l%8:]),'b58',pad=7,tostr=True)
 		return a + b
 
 	def to_addr(self,sk_hex): # sk_hex instead of pubhex
@@ -162,12 +162,12 @@ class AddrGeneratorMonero(AddrGenerator):
 			return Q
 
 		def hex2int_le(hexstr):
-			return int(hexstr.decode('hex')[::-1].encode('hex'),16)
+			return int(hexlify(unhexlify(hexstr)[::-1]),16)
 
 		vk_hex = self.to_viewkey(sk_hex)
 		pk_str  = encodepoint(scalarmultbase(hex2int_le(sk_hex)))
 		pvk_str = encodepoint(scalarmultbase(hex2int_le(vk_hex)))
-		addr_p1 = g.proto.addr_ver_num['monero'][0].decode('hex') + pk_str + pvk_str
+		addr_p1 = unhexlify(g.proto.addr_ver_num['monero'][0]) + pk_str + pvk_str
 
 		import sha3
 		return CoinAddr(self.b58enc(addr_p1 + sha3.keccak_256(addr_p1).digest()[:4]))
@@ -179,7 +179,7 @@ class AddrGeneratorMonero(AddrGenerator):
 	def to_viewkey(self,sk_hex):
 		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
 		import sha3
-		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(sk_hex.decode('hex')).hexdigest(),None))
+		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(unhexlify(sk_hex)).hexdigest(),None))
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')
@@ -212,7 +212,8 @@ class KeyGenerator(MMGenObject):
 	def test_for_secp256k1(self,silent=False):
 		try:
 			from mmgen.secp256k1 import priv2pub
-			assert priv2pub(('deadbeef'*8).decode('hex'),1)
+			m = 'Unable to execute priv2pub() from secp256k1 extension module'
+			assert priv2pub(unhexlify('deadbeef'*8),1),m
 			return True
 		except:
 			return False
@@ -408,7 +409,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		seed = seed.get_data()
 		seed = self.scramble_seed(seed)
-		dmsg_sc('seed',seed[:8].encode('hex'))
+		dmsg_sc('seed',hexlify(seed[:8]).decode())
 
 		compressed = self.al_id.mmtype.compressed
 		pubkey_type = self.al_id.mmtype.pubkey_type

@@ -25,6 +25,7 @@ import sys,os,unicodedata
 from decimal import *
 from mmgen.color import *
 from string import hexdigits,ascii_letters,digits
+from binascii import hexlify
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -658,13 +659,13 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width/2)
 			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-				me = str.__new__(cls,s.encode('hex'))
+				me = str.__new__(cls,hexlify(s))
 			else:
-				me = str.__new__(cls,g.proto.preprocess_key(s.encode('hex'),pubkey_type))
+				me = str.__new__(cls,g.proto.preprocess_key(hexlify(s),pubkey_type))
 				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
-			me.orig_hex = s.encode('hex') # save the non-preprocessed key
+			me.orig_hex = hexlify(s) # save the non-preprocessed key
 			return me
 		except Exception as e:
 			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"

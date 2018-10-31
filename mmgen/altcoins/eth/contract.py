@@ -65,8 +65,8 @@ class Token(MMGenObject): # ERC20
 
 	def total_supply(self): return self.do_call('totalSupply()',toUnit=True)
 	def decimals(self):     return int(self.do_call('decimals()'),16)
-	def name(self):         return self.strip(self.do_call('name()')[2:].decode('hex'))
-	def symbol(self):       return self.strip(self.do_call('symbol()')[2:].decode('hex'))
+	def name(self):         return self.strip(unhexlify(self.do_call('name()')[2:]))
+	def symbol(self):       return self.strip(unhexlify(self.do_call('symbol()')[2:]))
 
 	def info(self):
 		fs = '{:15}{}\n' * 5
@@ -96,23 +96,23 @@ class Token(MMGenObject): # ERC20
 		if nonce is None:
 			nonce = int(g.rpch.parity_nextNonce('0x'+from_addr),16)
 		data = self.create_data(to_addr,amt,method_sig=method_sig,from_addr=from_addr2)
-		return {'to':       self.addr.decode('hex'),
+		return {'to':       unhexlify(self.addr),
 				'startgas': start_gas.toWei(),
 				'gasprice': gasPrice.toWei(),
 				'value':    0,
 				'nonce':   nonce,
-				'data':    data.decode('hex') }
+				'data':    unhexlify(data) }
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
 		tx = Transaction(**tx_in)
 		if chain_id is None:
 			chain_id = int(g.rpch.parity_chainId(),16)
 		tx.sign(key,chain_id)
-		hex_tx = rlp.encode(tx).encode('hex')
-		coin_txid = CoinTxID(tx.hash.encode('hex'))
-		if tx.sender.encode('hex') != from_addr:
+		hex_tx = hexlify(rlp.encode(tx))
+		coin_txid = CoinTxID(hexlify(tx.hash))
+		if hexlify(tx.sender).decode() != from_addr:
 			m = "Sender address '{}' does not match address of key '{}'!"
-			die(3,m.format(from_addr,tx.sender.encode('hex')))
+			die(3,m.format(from_addr,hexlify(tx.sender).decode()))
 		if g.debug:
 			msg('{}'.format('\n  '.join(parse_abi(data))))
 			pmsg(tx.to_dict())

@@ -21,7 +21,7 @@ protocol.py: Coin protocol functions, classes and methods
 """
 
 import sys,os,hashlib
-from binascii import unhexlify
+from binascii import hexlify,unhexlify
 from mmgen.util import msg,pmsg,ymsg,Msg,pdie,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
@@ -153,7 +153,7 @@ class BitcoinProtocol(MMGenObject):
 				msg('{}: Invalid witness version number'.format(ret[0]))
 			elif ret[1]:
 				return {
-					'hex': ''.join(map(chr,ret[1])).encode('hex'),
+					'hex': hexlify(''.join(map(chr,ret[1]))),
 					'format': 'bech32'
 				} if return_dict else True
 			return False
@@ -203,7 +203,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def pubhash2bech32addr(cls,pubhash):
-		d = list(map(ord,pubhash.decode('hex')))
+		d = list(unhexlify(pubhash))
 		return bech32.bech32_encode(cls.bech32_hrp,[cls.witness_vernum]+bech32.convertbits(d,8,5))
 
 class BitcoinTestnetProtocol(BitcoinProtocol):
@@ -406,8 +406,8 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 			from ed25519ll.djbec import l
 		except:
 			from mmgen.ed25519 import l
-		n = int(hexpriv.decode('hex')[::-1].encode('hex'),16) % l
-		return '{:064x}'.format(n).decode('hex')[::-1].encode('hex')
+		n = int(hexlify(unhexlify(hexpriv)[::-1]),16) % l
+		return hexlify(unhexlify('{:064x}'.format(n))[::-1])
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
@@ -425,7 +425,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 		ret = b58dec(addr)
 		import sha3
-		chk = sha3.keccak_256(ret.decode('hex')[:-4]).hexdigest()[:8]
+		chk = sha3.keccak_256(unhexlify(ret)[:-4]).hexdigest()[:8]
 		assert chk == ret[-8:],'Incorrect checksum'
 
 		return { 'hex': ret.encode(), 'format': 'monero' } if return_dict else True

@@ -1369,7 +1369,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
 			else ('{}:{}{}'.format(al_id,idx,lbl)),
 		'vout': int(getrandnum(4) % 8),
-		'txid': str(hexlify(os.urandom(32))),
+		'txid': hexlify(os.urandom(32)),
 		'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 		'address': coinaddr,
 		'spendable': False,

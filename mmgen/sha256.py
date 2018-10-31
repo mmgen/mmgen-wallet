@@ -29,6 +29,8 @@ sha256.py: custom sha256 implementation for Zcash
 # and here:
 #   https://github.com/howardwu/zaddr
 
+from binascii import hexlify
+
 class Sha256(object):
 
 	def initConstants():
@@ -68,7 +70,7 @@ class Sha256(object):
 		return self.M
 
 	def hexdigest(self):
-		return self.digest().encode('hex')
+		return hexlify(self.digest())
 
 	def bytesToWords(self):
 		assert type(self.M) in (str,list)

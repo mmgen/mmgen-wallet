@@ -95,7 +95,7 @@ class EthereumMMGenTX(MMGenTX):
 		if self.check_sigs():
 			from ethereum.transactions import Transaction
 			import rlp
-			etx = rlp.decode(self.hex.decode('hex'),Transaction)
+			etx = rlp.decode(unhexlify(self.hex),Transaction)
 			d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'
 			for k in ('sender','to','data'):
 				if k in d: d[k] = d[k].replace('0x','',1)
@@ -107,8 +107,8 @@ class EthereumMMGenTX(MMGenTX):
 					'nonce':    ETHNonce(d['nonce']),
 					'data':     HexStr(d['data']) }
 			if o['data'] and not o['to']:
-				self.token_addr = TokenAddr(etx.creates.encode('hex')).decode()
-			txid = CoinTxID(etx.hash.encode('hex'))
+				self.token_addr = TokenAddr(hexlify(etx.creates).decode())
+			txid = CoinTxID(hexlify(etx.hash))
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 		else:
 			d = json.loads(self.hex)
@@ -279,12 +279,12 @@ class EthereumMMGenTX(MMGenTX):
 
 	def do_sign(self,d,wif,tx_num_str):
 
-		d_in = {'to':       d['to'].decode('hex'),
+		d_in = {'to':       unhexlify(d['to']),
 				'startgas': d['startGas'].toWei(),
 				'gasprice': d['gasPrice'].toWei(),
 				'value':    d['amt'].toWei() if d['amt'] else 0,
 				'nonce':    d['nonce'],
-				'data':     d['data'].decode('hex')}
+				'data':     unhexlify(d['data'])}
 
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 
@@ -293,11 +293,11 @@ class EthereumMMGenTX(MMGenTX):
 			etx = Transaction(**d_in)
 			etx.sign(wif,d['chainId'])
 			import rlp
-			self.hex = rlp.encode(etx).encode('hex')
-			self.coin_txid = CoinTxID(etx.hash.encode('hex'))
+			self.hex = hexlify(rlp.encode(etx))
+			self.coin_txid = CoinTxID(hexlify(etx.hash))
 			msg('OK')
 			if d['data']:
-				self.token_addr = TokenAddr(etx.creates.encode('hex'))
+				self.token_addr = TokenAddr(hexlify(etx.creates))
 		except Exception as e:
 			m = "{!r}: transaction signing failed!"
 			msg(m.format(e.message))
