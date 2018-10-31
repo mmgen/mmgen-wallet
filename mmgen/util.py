@@ -678,7 +678,9 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,r
 	data = f.read()
 	f.close()
 	if require_utf8:
-		try: data = data.decode()
+		try:
+			if binary: data = data.decode()
+			else: data.encode()
 		except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	return data
 

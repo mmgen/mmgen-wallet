@@ -104,7 +104,7 @@ def get_cfg_template_data():
 				+ (['share'],['local','share'])[g.platform=='linux']
 				+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
 	try:
-		with open(cfg_template,'rb') as f:
+		with open(cfg_template,'r') as f:
 			return f.read()
 	except:
 		msg("WARNING: configuration template not found at '{}'".format(cfg_template))
