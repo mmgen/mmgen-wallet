@@ -648,9 +648,9 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		rdie(2,'\nEnd of file\n')
 	except Exception as e:
 		try:
-			die(1,'Error: {}'.format(e.message))
+			die(1,'Error: {}'.format(e.args[0]))
 		except:
-			rdie(1,'Error: {!r}'.format(e.message))
+			rdie(1,'Error: {!r}'.format(e.args[0]))
 
 # ================ RPC commands ================== #
 

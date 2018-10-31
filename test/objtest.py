@@ -93,7 +93,7 @@ def run_test(test,arg,input_data):
 			msg('exitval: {}'.format(e.code))
 	except UserWarning as e:
 		msg('==> {!r}'.format(ret))
-		die(2,red('{}'.format(e.message)))
+		die(2,red('{}'.format(e.args[0])))
 
 r32,r24,r16,r17,r18 = os.urandom(32),os.urandom(24),os.urandom(16),os.urandom(17),os.urandom(18)
 tw_pfx = g.proto.base_coin.lower()+':'

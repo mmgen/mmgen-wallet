@@ -127,7 +127,7 @@ class CoinDaemonRPCConnection(object):
 			hc.request('POST','/',json.dumps(p,cls=MyJSONEncoder),http_hdr)
 		except Exception as e:
 			m = '{}\nUnable to connect to {} at {}:{}'
-			return do_fail(None,2,m.format(e.message,g.proto.daemon_name,self.host,self.port))
+			return do_fail(None,2,m.format(e.args[0],g.proto.daemon_name,self.host,self.port))
 
 		try:
 			r = hc.getresponse() # returns HTTPResponse instance

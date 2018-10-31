@@ -196,7 +196,7 @@ def sign_tx_file(txfile):
 		else:
 			return False
 	except Exception as e:
-		msg('An error occurred: {}'.format(e.message))
+		msg('An error occurred: {}'.format(e.args[0]))
 		return False
 	except:
 		return False

@@ -720,7 +720,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 					g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
 		except Exception as e:
 			msg(yellow('This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
-				if 'Invalid sighash param' in e.message else e.message))
+				if 'Invalid sighash param' in e.args[0] else e.args[0]))
 			return False
 
 		if not ret['complete']:
@@ -740,8 +740,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('OK')
 			return True
 		except Exception as e:
-			try: m = '{}'.format(e.message)
-			except: m = repr(e.message)
+			try: m = '{}'.format(e.args[0])
+			except: m = repr(e.args[0])
 			msg('\n'+yellow(m))
 			return False
 
@@ -1206,7 +1206,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'outputs data'
 			self.outputs = eval_io_data(outputs_data,'outputs')
 		except Exception as e:
-			die(2,'Invalid {} in transaction file: {}'.format(desc,e.message))
+			die(2,'Invalid {} in transaction file: {}'.format(desc,e.args[0]))
 
 		# test doesn't work for Ethereum: test and mainnet addrs have same format
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):

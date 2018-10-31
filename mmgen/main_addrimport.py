@@ -83,7 +83,7 @@ try:
 	rpc_init()
 except UnrecognizedTokenSymbol as e:
 	m = "When importing addresses for a new token, the token must be specified by address, not symbol."
-	raise type(e)('{}\n{}'.format(e.message,m))
+	raise type(e)('{}\n{}'.format(e.args[0],m))
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
@@ -124,7 +124,7 @@ def import_address(addr,label,rescan):
 	try: tw.import_address(addr,label,rescan)
 	except Exception as e:
 		global err_msg
-		err_msg = e.message
+		err_msg = e.args[0]
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13

@@ -45,8 +45,8 @@ def launch(what):
 			if os.getenv('MMGEN_TRACEBACK'):
 				raise
 			else:
-				try: m = '{}'.format(e.message)
-				except: m = repr(e.message)
+				try: m = '{}'.format(e.args[0])
+				except: m = repr(e.args[0])
 
 				from mmgen.util import die,ydie,rdie
 				d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
