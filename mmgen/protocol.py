@@ -479,7 +479,7 @@ def init_genonly_altcoins(usr_coin,trust_level=None):
 	data = {}
 	for k in ('mainnet','testnet'):
 		data[k] = [e for e in ci.coin_constants[k] if e[6] >= trust_level]
-	exec(make_init_genonly_altcoins_str(data))
+	exec(make_init_genonly_altcoins_str(data),globals(),globals())
 	return trust_level
 
 def make_init_genonly_altcoins_str(data):
@@ -490,16 +490,18 @@ def make_init_genonly_altcoins_str(data):
 		if proto[0] in '0123456789': proto = 'X_'+proto
 		if proto in globals(): return ''
 		if coin.lower() in CoinProtocol.coins: return ''
-		def num2hexstr(n):
-			return '{:0{}x}'.format(n,2 if n < 256 else 4)
+
+		def num2hexbytes(n):
+			return "b'{:0{}x}'".format(n,(4,2)[n < 256])
+
 		o  = ['class {}(Bitcoin{}ProtocolAddrgen):'.format(proto,tn_str)]
 		o += ["base_coin = '{}'".format(coin)]
 		o += ["name = '{}'".format(e[0].lower())]
 		o += ["nameCaps = '{}'".format(e[0])]
-		a = "addr_ver_num = {{ 'p2pkh': ({!r},{!r})".format(num2hexstr(e[3][0]),e[3][1])
-		b = ", 'p2sh':  ({!r},{!r})".format(num2hexstr(e[4][0]),e[4][1]) if e[4] else ''
+		a = "addr_ver_num = {{ 'p2pkh': ({},{!r})".format(num2hexbytes(e[3][0]),e[3][1])
+		b = ", 'p2sh':  ({},{!r})".format(num2hexbytes(e[4][0]),e[4][1]) if e[4] else ''
 		o += [a+b+' }']
-		o += ["wif_ver_num = {{ 'std': {!r} }}".format(num2hexstr(e[2]))]
+		o += ["wif_ver_num = {{ 'std': {} }}".format(num2hexbytes(e[2]))]
 		o += ["mmtypes = ('L','C'{})".format(",'S'" if e[5] else '')]
 		o += ["dfl_mmtype = '{}'".format('L')]
 		return '\n\t'.join(o) + '\n'

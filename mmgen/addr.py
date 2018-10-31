@@ -877,7 +877,7 @@ re-import your addresses.
 	}
 
 	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'),*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'))
 
 	def __init__(self,source=None):
 		self.al_ids = {}

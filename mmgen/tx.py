@@ -205,7 +205,7 @@ txio_attrs = {
 class MMGenTX(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tx','MMGenTX'),*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tx','MMGenTX'))
 
 	ext      = 'rawtx'
 	raw_ext  = 'rawtx'

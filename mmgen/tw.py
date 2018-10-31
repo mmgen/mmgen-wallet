@@ -30,7 +30,7 @@ def CUR_RIGHT(n): return '\033[{}C'.format(n)
 class TwUnspentOutputs(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwUnspentOutputs'),*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwUnspentOutputs'))
 
 	txid_w = 64
 	disp_type = 'btc'
@@ -508,7 +508,7 @@ class TwAddrList(MMGenDict):
 class TrackingWallet(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'),*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'))
 
 	mode = 'r'
 	caps = ('rescan','batch')
@@ -609,7 +609,7 @@ class TwGetBalance(MMGenObject):
 	fs = '{w:13} {u:<16} {p:<16} {c}\n'
 
 	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwGetBalance'),*args,**kwargs)
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwGetBalance'))
 
 	def __init__(self,minconf,quiet):
 

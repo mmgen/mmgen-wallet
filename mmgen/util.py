@@ -930,9 +930,14 @@ def altcoin_subclass(cls,mod_id,cls_name):
 	pname = g.proto.class_pfx if hasattr(g.proto,'class_pfx') else capfirst(g.proto.name)
 	tname = 'Token' if g.token else ''
 	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(mod_dir,mod_id,pname,tname,cls_name)
-	e2 = 'cls = {}{}{}'.format(pname,tname,cls_name)
-	try: exec(e1); exec(e2); return cls
-	except ImportError: return cls
+	e2 = 'alt_cls = {}{}{}'.format(pname,tname,cls_name)
+	gl = globals()
+	try:
+		exec(e1,gl,gl)
+		exec(e2,gl,gl)
+		return alt_cls
+	except ImportError:
+		return cls
 
 # decorator for TrackingWallet
 def write_mode(orig_func):
