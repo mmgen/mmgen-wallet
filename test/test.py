@@ -93,7 +93,7 @@ if not any(e in ('--skip-deps','--resume','-S','-r') for e in sys.argv+shortopts
 			else:
 				try: shutil.rmtree(tdir)
 				except: # we couldn't remove data dir - perhaps regtest daemon is running
-					try: subprocess.call(['python',os.path.join('cmds','mmgen-regtest'),'stop'])
+					try: subprocess.call(['python3',os.path.join('cmds','mmgen-regtest'),'stop'])
 					except: rdie(1,"Unable to remove {!r}!".format(tdir))
 					else:
 						time.sleep(2)
@@ -3056,7 +3056,7 @@ class MMGenTestSuite(object):
 	def gen_pairs(n):
 		disable_debug()
 		ret = [subprocess.check_output(
-						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
+						['python3',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
 						(['--type=compressed'],[])[i==0] +
 						['-r0','randpair']
 					).decode().split() for i in range(n)]

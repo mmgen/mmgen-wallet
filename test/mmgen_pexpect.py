@@ -99,7 +99,7 @@ class MMGenPexpect(object):
 			) for k in passthru_args if getattr(opt,k)] \
 			+ ['--data-dir='+data_dir] + cmd_args
 
-		if g.platform == 'win': cmd,args = 'python',[mmgen_cmd]+cmd_args
+		if g.platform == 'win': cmd,args = 'python3',[mmgen_cmd]+cmd_args
 		else:                   cmd,args = mmgen_cmd,cmd_args
 
 		for i in args:
@@ -113,7 +113,7 @@ class MMGenPexpect(object):
 
 		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
 		if opt.coverage:
-			fs = 'python -m trace --count --coverdir={} --file={} {c}'
+			fs = 'python3 -m trace --count --coverdir={} --file={} {c}'
 			cmd_str = fs.format(*init_coverage(),c=cmd_str)
 
 		if opt.log:

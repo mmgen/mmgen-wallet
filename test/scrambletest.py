@@ -76,7 +76,7 @@ test_data = OrderedDict([
 ('xmr',           ('c76af3b088da3364','xmr:monero',   '-XMR-M','XMR:MONERO','41tmwZd2CdXEGtWqGY9fH9FVtQM8VxZASYPQ3VJQhFjtGWYzQFuidD21vJYTi2yy3tXRYXTNXBTaYVLav62rwUUpFFyicZU')),
 ])
 
-cmd_base = 'python{} cmds/mmgen-addrgen -qS'.format(
+cmd_base = 'python3{} cmds/mmgen-addrgen -qS'.format(
 	' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) if opt.coverage else '')
 
 def run_tests():

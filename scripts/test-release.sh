@@ -12,7 +12,7 @@ gentest_py='test/gentest.py'
 scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
-python='python'
+python='python3'
 rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
@@ -59,7 +59,7 @@ do
 		test_py="$test_py --coverage"
 		tooltest_py="$tooltest_py --coverage"
 		scrambletest_py="$scrambletest_py --coverage"
-		python="python -m trace --count --file=test/trace.acc --coverdir=test/trace"
+		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
 		objtest_py="$python $objtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
