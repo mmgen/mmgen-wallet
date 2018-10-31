@@ -127,16 +127,13 @@ def _get_random_data_from_user(uchars):
 	m = 'Enter {} random symbols' if opt.quiet else crmsg['usr_rand_notice']
 	msg(m.format(uchars))
 	prompt = 'You may begin typing.  {} symbols left: '
-	msg_r(prompt.format(uchars))
 
 	import time
 	from mmgen.term import get_char_raw,kb_hold_protect
-	key_data,time_data = '',[]
+	key_data,time_data = bytes(),[]
 
 	for i in range(uchars):
-		kb_hold_protect()
-		key_data += get_char_raw()
-		msg_r('\r'+prompt.format(uchars-i-1))
+		key_data += get_char_raw('\r'+prompt.format(uchars-i))
 		time_data.append(time.time())
 
 	if opt.quiet: msg_r('\r')

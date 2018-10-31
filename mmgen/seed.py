@@ -396,7 +396,7 @@ class Mnemonic (SeedSourceUnenc):
 		def get_word():
 			s,pad = '',0
 			while True:
-				ch = get_char_raw('').decode()
+				ch = get_char_raw('',num_chars=1).decode()
 				if ch in '\b\x7f':
 					if s: s = s[:-1]
 				elif ch in '\n ':
