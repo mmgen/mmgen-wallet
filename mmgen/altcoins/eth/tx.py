@@ -151,7 +151,8 @@ class EthereumMMGenTX(MMGenTX):
 		o_num = len(self.outputs)
 		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
 		self.make_txobj()
-		self.hex = json.dumps(dict([(k,str(v))for k,v in list(self.txobj.items())]))
+		ol = [(k,v.decode() if issubclass(type(v),bytes) else str(v)) for k,v in self.txobj.items()]
+		self.hex = json.dumps(dict(ol)).encode()
 		self.update_txid()
 
 	def del_output(self,idx): pass
@@ -278,7 +279,6 @@ class EthereumMMGenTX(MMGenTX):
 		return m.format(ETHAmt(chg).hl(),g.coin)
 
 	def do_sign(self,d,wif,tx_num_str):
-
 		d_in = {'to':       unhexlify(d['to']),
 				'startgas': d['startGas'].toWei(),
 				'gasprice': d['gasPrice'].toWei(),
@@ -286,24 +286,15 @@ class EthereumMMGenTX(MMGenTX):
 				'nonce':    d['nonce'],
 				'data':     unhexlify(d['data'])}
 
-		msg_r('Signing transaction{}...'.format(tx_num_str))
-
-		try:
-			from ethereum.transactions import Transaction
-			etx = Transaction(**d_in)
-			etx.sign(wif,d['chainId'])
-			import rlp
-			self.hex = hexlify(rlp.encode(etx))
-			self.coin_txid = CoinTxID(hexlify(etx.hash))
-			msg('OK')
-			if d['data']:
-				self.token_addr = TokenAddr(hexlify(etx.creates))
-		except Exception as e:
-			m = "{!r}: transaction signing failed!"
-			msg(m.format(e.args[0]))
-			return False
-
-		return self.check_sigs()
+		from ethereum.transactions import Transaction
+		etx = Transaction(**d_in)
+		etx.sign(wif,d['chainId'])
+		import rlp
+		self.hex = hexlify(rlp.encode(etx))
+		self.coin_txid = CoinTxID(hexlify(etx.hash))
+		if d['data']:
+			self.token_addr = TokenAddr(hexlify(etx.creates).decode())
+		assert self.check_sigs(),'Signature check failed'
 
 	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
 
@@ -314,10 +305,21 @@ class EthereumMMGenTX(MMGenTX):
 		if not self.check_correct_chain(on_fail='return'):
 			return False
 
-		return self.do_sign(self.txobj,keys[0].sec.wif,tx_num_str)
+		msg_r('Signing transaction{}...'.format(tx_num_str))
+
+		try:
+			self.do_sign(self.txobj,keys[0].sec.wif,tx_num_str)
+			msg('OK')
+			return True
+		except Exception as e:
+			if os.getenv('MMGEN_TRACEBACK'):
+				import traceback
+				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
+			m = "{!r}: transaction signing failed!"
+			msg(m.format(e.args[0]))
+			return False
 
 	def is_in_mempool(self):
-#		pmsg(g.rpch.parity_pendingTransactions())
 		return '0x'+self.coin_txid.decode() in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
 
 	def is_in_wallet(self):
@@ -454,18 +456,10 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def do_sign(self,d,wif,tx_num_str):
 		d = self.txobj
-		msg_r('Signing transaction{}...'.format(tx_num_str))
-		try:
-			t = Token(d['token_addr'],decimals=d['decimals'])
-			tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
-			(self.hex,self.coin_txid) = t.txsign(tx_in,wif,d['from'],chain_id=d['chainId'])
-			msg('OK')
-		except Exception as e:
-			m = "{!r}: transaction signing failed!"
-			msg(m.format(e.args[0]))
-			return False
-
-		return self.check_sigs()
+		t = Token(d['token_addr'],decimals=d['decimals'])
+		tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
+		(self.hex,self.coin_txid) = t.txsign(tx_in,wif,d['from'],chain_id=d['chainId'])
+		assert self.check_sigs(),'Signature check failed'
 
 class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
 

@@ -42,10 +42,10 @@ class Token(MMGenObject): # ERC20
 	def __init__(self,addr,decimals=None):
 		self.addr = TokenAddr(addr)
 		if decimals is None:
-			ret_hex = self.do_call('decimals()')
-			try: decimals = int(ret_hex,16)
-			except: raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
-		self.base_unit = Decimal(10) ** -decimals
+			decimals = self.decimals()
+			if not decimals:
+				raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
+		self.base_unit = Decimal('10') ** -decimals
 
 	def transferdata2amt(self,data): # online
 		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
@@ -61,10 +61,17 @@ class Token(MMGenObject): # ERC20
 		return self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True)
 
 	def strip(self,s):
-		return ''.join(ch for ch in s if 32 <= ord(ch) <= 127).strip()
+		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
 	def total_supply(self): return self.do_call('totalSupply()',toUnit=True)
-	def decimals(self):     return int(self.do_call('decimals()'),16)
+	def decimals(self):
+			ret = self.do_call('decimals()')
+			try:
+				a,b = ret[:2],ret[2:]
+				assert a == '0x' and is_hex_str_lc(b)
+			except:
+				"RPC call to decimals() failed (returned '{}')".format(ret)
+			return int(b,16) if b else None
 	def name(self):         return self.strip(unhexlify(self.do_call('name()')[2:]))
 	def symbol(self):       return self.strip(unhexlify(self.do_call('symbol()')[2:]))
 
@@ -78,12 +85,6 @@ class Token(MMGenObject): # ERC20
 
 	def code(self):
 		return g.rpch.eth_getCode('0x'+self.addr)[2:]
-
-	def transfer_from(self,from_addr,to_addr,amt,key,start_gas,gasPrice):
-		raise NotImplementedError('method not implemented')
-		return self.transfer(   from_addr,to_addr,amt,key,start_gas,gasPrice,
-								method_sig='transferFrom(address,address,uint256)',
-								from_addr2=from_addr)
 
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
@@ -118,6 +119,8 @@ class Token(MMGenObject): # ERC20
 			pmsg(tx.to_dict())
 		return hex_tx,coin_txid
 
+# The following are used for token deployment only:
+
 	def txsend(self,hex_tx):
 		return g.rpch.eth_sendRawTransaction('0x'+hex_tx.decode()).replace('0x','',1).encode()
 
@@ -132,3 +135,9 @@ class Token(MMGenObject): # ERC20
 								from_addr2=from_addr2)
 		(hex_tx,coin_txid) = self.txsign(tx_in,key,from_addr)
 		return self.txsend(hex_tx)
+
+	def transfer_from(self,from_addr,to_addr,amt,key,start_gas,gasPrice):
+		raise NotImplementedError('method not implemented')
+		return self.transfer(   from_addr,to_addr,amt,key,start_gas,gasPrice,
+								method_sig='transferFrom(address,address,uint256)',
+								from_addr2=from_addr)
