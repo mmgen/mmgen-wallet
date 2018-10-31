@@ -68,7 +68,7 @@ class AddrGeneratorSegwit(AddrGenerator):
 
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return HexStr(g.proto.pubhex2redeem_script(pubhex))
+		return HexBytes(g.proto.pubhex2redeem_script(pubhex))
 
 class AddrGeneratorBech32(AddrGenerator):
 	def to_addr(self,pubhex):

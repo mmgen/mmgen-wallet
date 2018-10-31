@@ -159,7 +159,7 @@ tests = OrderedDict([
 			'F00BAA12:S:9999999 comment',
 			tw_pfx+'x comment')
 	}),
-	('HexStr', {
+	('HexBytes', {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00'),
 		'good': ('deadbeef','f00baa12')
 	}),

@@ -241,6 +241,8 @@ def is_int(s):
 
 # https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 # https://tools.ietf.org/html/rfc4648
+def is_hex_bytes(s):  return set(list(s.lower())) <= set(list(hexdigits.lower().encode()))
+
 def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
 def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
 def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))

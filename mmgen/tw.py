@@ -63,7 +63,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr     = MMGenImmutableAttr('addr','CoinAddr')
 		confs    = MMGenImmutableAttr('confs',int,typeconv=False)
-		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
+		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexBytes')
 		days    = MMGenListItemAttr('days',int,typeconv=False)
 		skip    = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
 

@@ -559,18 +559,20 @@ class TwLabel(str,InitErrors,MMGenObject):
 			m = "{}\n{!r}: value cannot be converted to TwLabel"
 			return cls.init_fail(m.format(e.args[0],s),on_fail)
 
-class HexStr(str,Hilite,InitErrors):
+class HexBytes(bytes,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
+	dtype = bytes
 	def __new__(cls,s,on_fail='die',case='lower'):
 		if type(s) == cls: return s
 		assert case in ('upper','lower')
 		cls.arg_chk(cls,on_fail)
+		if issubclass(type(s),bytes): s = s.decode()
 		try:
-			assert type(s) in (str,str,bytes),'not a string'
+			assert type(s) == str,'not a string'
 			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
 			assert not len(s) % 2,'odd-length string'
-			return str.__new__(cls,s)
+			return cls.dtype.__new__(cls,s.encode() if cls.dtype == bytes else s)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} (value is {})"
 			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
@@ -578,25 +580,41 @@ class HexStr(str,Hilite,InitErrors):
 class Str(str,Hilite): pass
 class Int(int,Hilite): pass
 
-class HexStrWithWidth(HexStr):
+class HexBytesWithWidth(HexBytes):
 	color = 'nocolor'
-	trunc_ok = False
 	hexcase = 'lower'
 	width = None
+	parent_cls = HexBytes
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
 		try:
-			ret = HexStr.__new__(cls,s,case=cls.hexcase,on_fail='raise')
+			ret = cls.parent_cls.__new__(cls,s,case=cls.hexcase,on_fail='raise')
 			assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
 			return ret
 		except Exception as e:
 			m = "{}\n{!r}: value cannot be converted to {}"
 			return cls.init_fail(m.format(e.args[0],s,cls.__name__),on_fail)
 
-class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
-class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
+class CoinTxID(HexBytesWithWidth):       color,width,hexcase = 'purple',64,'lower'
+
+class HexStr(str,Hilite,InitErrors):
+	color = 'red'
+	trunc_ok = False
+	dtype = str
+	def __new__(cls,s,on_fail='die',case='lower'):
+		return HexBytes.__new__(cls,s,on_fail=on_fail,case=case)
+
+class HexStrWithWidth(HexStr):
+	color = 'nocolor'
+	hexcase = 'lower'
+	width = None
+	parent_cls = HexStr
+	def __new__(cls,s,on_fail='die'):
+		return HexBytesWithWidth.__new__(cls,s,on_fail=on_fail)
+
 class WalletPassword(HexStrWithWidth): color,width,hexcase = 'blue',32,'lower'
-class CoinTxID(HexStrWithWidth):       color,width,hexcase = 'purple',64,'lower'
+class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
+class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
 
 class WifKey(str,Hilite,InitErrors):
 	width = 53
@@ -613,11 +631,11 @@ class WifKey(str,Hilite,InitErrors):
 			m = '{!r}: invalid value for WIF key ({})'.format(s,e.args[0])
 			return cls.init_fail(m,on_fail)
 
-class PubKey(HexStr,MMGenObject): # TODO: add some real checks
+class PubKey(HexBytes,MMGenObject): # TODO: add some real checks
 	def __new__(cls,s,compressed,on_fail='die'):
 		try:
 			assert type(compressed) == bool,"'compressed' must be of type bool"
-			me = HexStr.__new__(cls,s,case='lower',on_fail='raise')
+			me = HexBytes.__new__(cls,s,case='lower',on_fail='raise')
 			me.compressed = compressed
 			return me
 		except Exception as e:

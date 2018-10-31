@@ -238,7 +238,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
-		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
+		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexBytes')
 		sequence = MMGenListItemAttr('sequence',(int,int)[g.platform=='win'],typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
@@ -368,7 +368,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
 		o = dict([(e.addr,e.amt) for e in self.outputs])
-		self.hex = g.rpch.createrawtransaction(i,o)
+		self.hex = HexBytes(g.rpch.createrawtransaction(i,o))
 		self.update_txid()
 
 	# returns true if comment added or changed
@@ -729,7 +729,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			return False
 
 		try:
-			self.hex = ret['hex']
+			self.hex = HexBytes(ret['hex'])
 			self.compare_size_and_estimated_size()
 			dt = DeserializedTX(self.hex)
 			self.check_hex_tx_matches_mmgen_tx(dt)
@@ -1113,7 +1113,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return out # TX label might contain non-ascii chars
 
 	def check_txfile_hex_data(self):
-		self.hex = HexStr(self.hex,on_fail='raise')
+		self.hex = HexBytes(self.hex,on_fail='raise')
 
 	def parse_tx_file(self,infile,metadata_only=False,silent_open=False):
 

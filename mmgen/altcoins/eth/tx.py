@@ -46,7 +46,7 @@ class EthereumMMGenTX(MMGenTX):
 	usr_rel_fee = None # not in MMGenTX
 	disable_fee_check = False
 	txobj  = None # ""
-	data = HexStr('')
+	data = HexBytes('')
 
 	def __init__(self,*args,**kwargs):
 		super(EthereumMMGenTX,self).__init__(*args,**kwargs)
@@ -55,7 +55,7 @@ class EthereumMMGenTX(MMGenTX):
 		if hasattr(opt,'contract_data') and opt.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert not 'Token' in type(self).__name__, m
-			self.data = HexStr(open(opt.contract_data).read().strip())
+			self.data = HexBytes(open(opt.contract_data).read().strip())
 			self.disable_fee_check = True
 
 	@classmethod
@@ -84,7 +84,7 @@ class EthereumMMGenTX(MMGenTX):
 	def check_pubkey_scripts(self): pass
 
 	def check_sigs(self,deserial_tx=None):
-		if is_hex_str(self.hex):
+		if is_hex_bytes(self.hex):
 			self.mark_signed()
 			return True
 		return False
@@ -105,7 +105,7 @@ class EthereumMMGenTX(MMGenTX):
 					'gasPrice': ETHAmt(d['gasprice'],'wei'),
 					'startGas': ETHAmt(d['startgas'],'wei'),
 					'nonce':    ETHNonce(d['nonce']),
-					'data':     HexStr(d['data']) }
+					'data':     HexBytes(d['data']) }
 			if o['data'] and not o['to']:
 				self.token_addr = TokenAddr(hexlify(etx.creates).decode())
 			txid = CoinTxID(hexlify(etx.hash))
@@ -119,7 +119,7 @@ class EthereumMMGenTX(MMGenTX):
 					'startGas': ETHAmt(d['startGas']),
 					'nonce':    ETHNonce(d['nonce']),
 					'chainId':  Int(d['chainId']),
-					'data':     HexStr(d['data']) }
+					'data':     HexBytes(d['data']) }
 		self.tx_gas = o['startGas'] # approximate, but better than nothing
 		self.data = o['data']
 		if o['data'] and not o['to']: self.disable_fee_check = True
@@ -413,7 +413,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def set_g_token(self):
 		g.dcoin = self.dcoin
-		if is_hex_str(self.hex): return # for txsend we can leave g.token uninitialized
+		if is_hex_bytes(self.hex): return # for txsend we can leave g.token uninitialized
 		d = json.loads(self.hex)
 		if g.token.upper() == self.dcoin:
 			g.token = d['token_addr']
