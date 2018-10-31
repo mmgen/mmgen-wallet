@@ -196,7 +196,7 @@ class SeedSource(MMGenObject):
 
 	@classmethod
 	def format_fmt_codes(cls):
-		d = [(c.__name__,('.'+c.ext if c.ext else c.ext),','.join(c.fmt_codes))
+		d = [(c.__name__,('.'+c.ext if c.ext else str(c.ext)),','.join(c.fmt_codes))
 					for c in cls.get_subclasses()
 				if hasattr(c,'fmt_codes')]
 		w = max(len(i[0]) for i in d)
@@ -414,16 +414,15 @@ class Mnemonic (SeedSourceUnenc):
 			idx = bisect_left(wl,w)
 			return(True,False)[idx == len(wl) or w != wl[idx]]
 
-		words,i,p = [],0,('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
+		p = ('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
+		words,err = [],0
 		while len(words) < mn_len:
 			msg_r('{r}{s}{r}'.format(r='\r',s=' '*40))
-			if i == 1: time.sleep(0.1)
-			msg_r(p[i].format(len(words)+1))
+			if err == 1: time.sleep(0.1)
+			msg_r(p[err].format(len(words)+1))
 			s = get_word()
-			if in_list(s):
-				words.append(s); i = 0
-			else:
-				i = 1
+			if in_list(s): words.append(s)
+			err = (1,0)[in_list(s)]
 		msg('')
 		qmsg('Mnemonic successfully entered')
 		return ' '.join(words)

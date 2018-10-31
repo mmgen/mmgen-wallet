@@ -26,6 +26,8 @@ def launch(what):
 		what = 'wallet'
 	if what == 'keygen': what = 'addrgen'
 
+	import sys
+
 	try: import termios
 	except: # Windows
 		__import__('mmgen.main_' + what)

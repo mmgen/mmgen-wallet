@@ -91,7 +91,7 @@ class CoinDaemonRPCConnection(object):
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
 
-		hc = http.client.HTTPConnection(self.host, self.port, False, cf['timeout'])
+		hc = http.client.HTTPConnection(self.host,self.port,cf['timeout'])
 
 		if cf['batch']:
 			p = [{'method':cmd,'params':r,'id':n,'jsonrpc':'2.0'} for n,r in enumerate(args[0],1)]

@@ -857,8 +857,8 @@ Record this checksum: it will be used to verify the password file in the future
 		return True
 
 	def scramble_seed(self,seed):
-		# Changing either pw_fmt, pw_len or scramble_key will cause a different,
-		# unrelated set of passwords to be generated: this is what we want.
+		# Changing either pw_fmt or pw_len will cause a different, unrelated
+		# set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
 		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
 		from mmgen.crypto import scramble_seed

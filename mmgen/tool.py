@@ -22,17 +22,16 @@ tool.py:  Routines and data for the 'mmgen-tool' utility
 """
 
 import binascii
+from collections import OrderedDict
 
 from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.tx import *
 from mmgen.addr import *
-from decimal import Decimal
 
 pnm = g.proj_name
 
-from collections import OrderedDict
 cmd_data = OrderedDict([
 	('Help',         ['<tool command> [str]']),
 	('Usage',        ['<tool command> [str]']),
@@ -194,7 +193,7 @@ def process_args(command,cmd_args):
 			usage(command)
 
 	def conv_type(arg,arg_name,arg_type):
-		if arg_type == 'str': arg_type = 'unicode'
+		if arg_type == 'bytes': pdie(arg,arg_name,arg_type)
 		if arg_type == 'bool':
 			if arg.lower() in ('true','yes','1','on'): arg = True
 			elif arg.lower() in ('false','no','0','off'): arg = False
@@ -246,8 +245,9 @@ def Unhexdump(infile):
 	if g.platform == 'win':
 		import msvcrt
 		msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
-	sys.stdout.write(decode_pretty_hexdump(
-			get_data_from_file(infile,dash=True,silent=True)))
+	hexdata = get_data_from_file(infile,dash=True,silent=True)
+	ret = decode_pretty_hexdump(hexdata)
+	os.write(g.stdout_fileno,ret)
 
 def B58randenc():
 	r = get_random(32)
@@ -594,7 +594,8 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 					msg('  Wallet in sync')
 				b = [l for l in p.before.decode().splitlines() if len(l) > 7 and l[:8] == 'Balance:'][0].split()
 				msg('  Balance: {} Unlocked balance: {}'.format(b[1],b[4]))
-				bals[fn] = ( Decimal(b[1][:-1]), Decimal(b[4]) )
+				from mmgen.obj import XMRAmt
+				bals[fn] = ( XMRAmt(b[1][:-1]), XMRAmt(b[4]) )
 				my_sendline(p,'Exiting','exit',5)
 				p.read()
 				break
@@ -626,8 +627,8 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 			col1_w = max(list(map(len,bals))) + 1
 			fs = '{:%s} {} {}' % col1_w
 			msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
-			tbals = [Decimal('0'),Decimal('0')]
 			from mmgen.obj import XMRAmt
+			tbals = [XMRAmt('0'),XMRAmt('0')]
 			for bal in bals:
 				for i in (0,1): tbals[i] += bals[bal][i]
 				msg(fs.format(bal+':',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in bals[bal]]))
@@ -655,7 +656,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 # ================ RPC commands ================== #
 
-def Gen_addr(addr,wallet='',target='addr'):
+def Gen_addr(addr,wallet='',target='addr',return_result=False):
 	addr = MMGenID(addr)
 	sf = get_seed_file([wallet] if wallet else [],1)
 	opt.quiet = True
@@ -666,7 +667,9 @@ def Gen_addr(addr,wallet='',target='addr'):
 		die(1,m.format(addr.sid,ss.seed.sid))
 	al = AddrList(seed=ss.seed,addr_idxs=AddrIdxList(str(addr.idx)),mmtype=addr.mmtype,do_chksum=False)
 	d = al.data[0]
-	Msg(d.sec.wif if target=='wif' else d.addr)
+	ret = d.sec.wif if target=='wif' else d.addr
+	if return_result: return ret
+	else: Msg(ret)
 
 def Gen_key(addr,wallet=''):
 	return Gen_addr(addr,wallet,target='wif')

@@ -20,7 +20,7 @@
 """
 opts.py:  MMGen-specific options processing after generic processing by share.Opts
 """
-import sys,os
+import sys,os,stat
 
 class opt(object): pass
 
@@ -161,10 +161,8 @@ def override_from_cfg_file(cfg_data):
 			else:
 				cls,attr = g,name
 			setattr(cls,attr,set_for_type(val,getattr(cls,attr),attr,src=g.cfg_file))
-		#	pmsg(cls,attr,getattr(cls,attr))
 		else:
 			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
-#	pdie('xxx')
 
 def override_from_env():
 	from mmgen.util import set_for_type

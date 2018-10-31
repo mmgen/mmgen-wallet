@@ -55,12 +55,12 @@ def strfmt_locktime(num,terse=False):
 	# If greater than or equal to 500 million, locktime is parsed using the Unix epoch time
 	# format (the number of seconds elapsed since 1970-01-01T00:00 UTC). The transaction can be
 	# added to any block whose block time is greater than the locktime.
-	if num >= 5 * 10**6:
+	if num == None:
+		return '(None)'
+	elif num >= 5 * 10**6:
 		return ' '.join(time.strftime('%c',time.gmtime(num)).split()[1:])
 	elif num > 0:
 		return '{}{}'.format(('block height ','')[terse],num)
-	elif num == None:
-		return '(None)'
 	else:
 		die(2,"'{}': invalid locktime value!".format(num))
 
@@ -98,7 +98,7 @@ def segwit_is_active(exit_on_error=False):
 
 def bytes2int(hex_bytes):
 	r = hexlify(unhexlify(hex_bytes)[::-1])
-	if r[0] in b'89abcdef':
+	if hexlify(bytes([r[0]])) in b'89abcdef':
 		die(3,"{}: Negative values not permitted in transaction!".format(hex_bytes))
 	return int(r,16)
 
@@ -120,35 +120,36 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 	def __init__(self,txhex):
 		tx = list(unhexlify(txhex))
 		tx_copy = tx[:]
-		d = { 'raw_tx':'' }
+		d = { 'raw_tx': [] }
 
 		def hshift(l,n,reverse=False,skip=False):
 			ret = l[:n]
-			if not skip: d['raw_tx'] += ''.join(ret)
+			if not skip: d['raw_tx'] += ret
 			del l[:n]
-			return hexlify(''.join(ret[::-1] if reverse else ret))
+			return hexlify(bytes(ret[::-1] if reverse else ret))
 
 		# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 		# For example, the number 515 is encoded as 0xfd0302.
 		def readVInt(l,skip=False,sub_null=False):
-			s = int(hexlify(l[0]),16)
+			s = l[0]
 			bytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
 			if bytes_len != 1: del l[0]
-			ret = int(hexlify(''.join(l[:bytes_len][::-1])),16)
+			ret = int(hexlify(bytes(l[:bytes_len][::-1])),16)
 			if sub_null: d['raw_tx'] += b'\0'
-			elif not skip: d['raw_tx'] += ''.join(l[:bytes_len])
+			elif not skip: d['raw_tx'] += l[:bytes_len]
 			del l[:bytes_len]
 			return ret
 
 		d['version'] = bytes2int(hshift(tx,4))
-		has_witness = tx[0] == '\x00'
+		has_witness = tx[0] == 0
 		if has_witness:
-			u = hshift(tx,2,skip=True)[2:]
-			if u != '01':
+			u = hshift(tx,2,skip=True)
+			if u != b'0001':
 				raise IllegalWitnessFlagValue("'{}': Illegal value for flag in transaction!".format(u))
 			del tx_copy[-len(tx)-2:-len(tx)]
 
 		d['num_txins'] = readVInt(tx)
+
 		d['txins'] = MMGenList([OrderedDict((
 			('txid',      hshift(tx,32,reverse=True)),
 			('vout',      bytes2int(hshift(tx,4))),
@@ -174,7 +175,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			wd,tx = tx[:-4],tx[-4:]
 			d['witness_size'] = len(wd) + 2 # add marker and flag
 			for i in range(len(d['txins'])):
-				if hexlify(wd[0]) == '00':
+				if wd[0] == 0:
 					hshift(wd,1,skip=True)
 					continue
 				d['txins'][i]['witness'] = [
@@ -184,12 +185,12 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 				raise WitnessSizeMismatch('More witness data than inputs with witnesses!')
 
 		d['lock_time'] = bytes2int(hshift(tx,4))
-		d['txid'] = hexlify(sha256(sha256(''.join(tx_copy)).digest()).digest()[::-1])
-		d['unsigned_hex'] = hexlify(d['raw_tx'])
+		d['txid'] = hexlify(sha256(sha256(bytes(tx_copy)).digest()).digest()[::-1])
+		d['unsigned_hex'] = hexlify(bytes(d['raw_tx']))
 		del d['raw_tx']
 
 		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts','unsigned_hex'
-		return OrderedDict.__init__(self, ((k,d[k]) for k in keys))
+		OrderedDict.__init__(self, ((k,d[k]) for k in keys))
 
 txio_attrs = {
 	'vout':  MMGenListItemAttr('vout',int,typeconv=False),
@@ -315,8 +316,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.append(MMGenTX.MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
 
 	def get_chg_output_idx(self):
-		try: return map(lambda x: x.is_chg,self.outputs).index(True)
-		except ValueError: return None
+		ch_ops = [x.is_chg for x in self.outputs]
+		try:
+			return ch_ops.index(True)
+		except ValueError:
+			return None
 
 	def update_output_amt(self,idx,amt):
 		o = self.outputs[idx].__dict__
@@ -352,13 +356,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def check_dup_addrs(self,io_str):
 		assert io_str in ('inputs','outputs')
-		io = getattr(self,io_str)
-		for k in ('mmid','addr'):
-			old_attr = None
-			for attr in sorted(getattr(e,k) for e in io):
-				if attr != None and attr == old_attr:
-					die(2,'{}: duplicate address in transaction {}'.format(attr,io_str))
-				old_attr = attr
+		addrs = [e.addr for e in getattr(self,io_str)]
+		if len(addrs) != len(set(addrs)):
+			die(2,'{}: duplicate address in transaction {}'.format(attr,io_str))
 
 	def update_txid(self):
 		self.txid = MMGenTxID(make_chksum_6(unhexlify(self.hex)).upper())
@@ -740,6 +740,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('OK')
 			return True
 		except Exception as e:
+			if os.getenv('MMGEN_TRACEBACK'):
+				import traceback
+				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
 			try: m = '{}'.format(e.args[0])
 			except: m = repr(e.args[0])
 			msg('\n'+yellow(m))

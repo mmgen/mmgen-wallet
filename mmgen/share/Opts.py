@@ -22,7 +22,6 @@ Opts.py:  Generic options handling
 
 import sys,getopt
 import collections
-# from mmgen.util import mdie,die,pdie,pmsg # DEBUG
 
 def usage(opts_data):
 	print(('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage'])))
@@ -56,7 +55,8 @@ def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
 	so_str = short_opts.replace('-:','').replace('-','')
 	try: cl_opts,args = getopt.getopt(argv[1:], so_str, long_opts)
 	except getopt.GetoptError as err:
-		print((str(err))); sys.exit(2)
+		print(str(err))
+		sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
 	opts,skipped_help = {},False

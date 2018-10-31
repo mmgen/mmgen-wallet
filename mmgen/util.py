@@ -23,7 +23,7 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 import sys,os,time,stat,re,unicodedata
 from hashlib import sha256
 from binascii import hexlify,unhexlify
-from string import hexdigits
+from string import hexdigits,digits
 from mmgen.color import *
 from mmgen.exception import *
 
@@ -67,7 +67,7 @@ def Die(ev=0,s=''):
 
 def rdie(ev=0,s=''): die(ev,red(s))
 def ydie(ev=0,s=''): die(ev,yellow(s))
-def hi(): sys.stdout.write(yellow('hi'))
+def hi(): ymsg('hi')
 
 def pformat(d):
 	import pprint
@@ -122,7 +122,7 @@ def check_or_create_dir(path):
 		os.listdir(path)
 	except:
 		try:
-			os.makedirs(path,0o700)
+			os.makedirs(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
 		except:
 			die(2,"ERROR: unable to read or create path '{}'".format(path))
 
@@ -232,6 +232,7 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
+def is_digits(s): return set(list(s)) <= set(list(digits))
 def is_int(s):
 	try:
 		int(str(s))
@@ -431,7 +432,7 @@ def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False
 	return True
 
 def compare_or_die(val1, desc1, val2, desc2, e='Error'):
-	if cmp(val1,val2):
+	if val1 != val2:
 		die(3,"{}: {} ({}) doesn't match {} ({})".format(e,desc2,val2,desc1,val1))
 	dmsg('{} OK ({})'.format(capfirst(desc2),val2))
 	return True
@@ -740,8 +741,8 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 		return (False,True)[default_yes]
 
 	while True:
-		reply = get_char(p).strip(b'\n\r')
-		if not reply:
+		r = get_char(p).strip(b'\n\r')
+		if not r:
 			if default_yes: msg_r(nl); return True
 			else:           msg_r(nl); return False
 		elif r in b'yY': msg_r(nl); return True
@@ -812,7 +813,7 @@ def get_daemon_cfg_options(cfg_keys):
 	cfg_file = os.path.join(g.proto.daemon_data_dir,g.proto.name+'.conf')
 	try:
 		lines = get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
-		kv_pairs = [split2(str(line).translate(None,'\t '),'=') for line in lines]
+		kv_pairs = [l.split('=') for l in lines]
 		cfg = dict([(k,v) for k,v in kv_pairs if k in cfg_keys])
 	except:
 		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))

@@ -432,8 +432,6 @@ class CoinInfo(object):
 				line[n] = re.sub(r' ',r'',line[n]) + ('',',')[n != len(line)-1]
 
 			from mmgen.util import pmsg,pdie
-#			pmsg(sym)
-#			pdie(tt)
 			if trust != -1:
 				if sym in tt:
 					src = tt[sym]
@@ -501,7 +499,7 @@ class CoinInfo(object):
 		'mainnet': {
 			'pycoin': (
 				# broken: DASH - only compressed, LTC segwit old fmt
-				'BTC','LTC','VIA','FTC','DOGE','MEC','MYR','UNO',
+				'BTC','LTC','VIA','FTC','DOGE','MEC',
 				'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR'),
 			'pyethereum': ('ETH','ETC'),
 			'zcash_mini': ('ZEC',),

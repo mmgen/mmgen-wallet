@@ -122,7 +122,8 @@ class g(object):
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator'
+		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator',
+		'hidden_incog_input_params','in_fmt'
 	)
 	incompatible_opts = (
 		('base32','hex'), # mmgen-passgen

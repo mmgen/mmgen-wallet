@@ -161,6 +161,7 @@ def do_umount():
 		subprocess.call(['umount',mountpoint])
 
 def sign_tx_file(txfile):
+	from importlib import reload
 	try:
 		g.testnet = False
 		g.coin = 'BTC'
@@ -360,7 +361,7 @@ def do_loop():
 	while True:
 		status = get_insert_status()
 		if status and not prev_status:
-			msg('Device insert detected')
+			msg('Device insertion detected')
 			do_sign()
 		prev_status = status
 		if not n % 10:

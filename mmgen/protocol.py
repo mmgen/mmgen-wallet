@@ -122,7 +122,7 @@ class BitcoinProtocol(MMGenObject):
 				return '{:064x}'.format(pk % cls.secp256k1_ge).encode()
 
 	@classmethod
-	def hex2wif(cls,hexpriv,pubkey_type,compressed):
+	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
 		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + (b'',b'01')[bool(compressed)])
 
 	@classmethod
@@ -153,7 +153,7 @@ class BitcoinProtocol(MMGenObject):
 				msg('{}: Invalid witness version number'.format(ret[0]))
 			elif ret[1]:
 				return {
-					'hex': hexlify(''.join(map(chr,ret[1]))),
+					'hex': hexlify(bytes(ret[1])),
 					'format': 'bech32'
 				} if return_dict else True
 			return False
@@ -168,7 +168,6 @@ class BitcoinProtocol(MMGenObject):
 				if g.debug: Msg('Address cannot be converted to base 58')
 				break
 			addr_hex = '{:0{}x}'.format(num,len(ver_num)+hex_width+8).encode()
-#			pmsg(hex_width,len(addr_hex),addr_hex[:len(ver_num)],ver_num)
 			if addr_hex[:len(ver_num)] != ver_num: continue
 			if hash256(addr_hex[:-8])[:8] == addr_hex[-8:]:
 				return {

@@ -139,13 +139,14 @@ class Hilite(object):
 	color_always = False
 	width = 0
 	trunc_ok = True
+	dtype = str
 
 	@classmethod
 	# 'width' is screen width (greater than len(s) for CJK strings)
 	# 'append_chars' and 'encl' must consist of single-width chars only
 	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
 				center=False,nullrepl='',append_chars='',append_color=False):
-		s = str(s)
+		if cls.dtype == bytes: s = s.decode()
 		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
 		assert type(encl) is str and len(encl) in (0,2),"'encl' must be 2-character str"
 		a,b = list(encl) if encl else ('','')
@@ -168,6 +169,12 @@ class Hilite(object):
 		else:
 			return cls.colorize(s.ljust(width-s_wide_count),color=color)
 
+	@classmethod
+	def colorize(cls,s,color=True):
+		if cls.dtype == bytes: s = s.decode()
+		k = color if type(color) is str else cls.color # hack: override color with str value
+		return globals()[k](s) if (color or cls.color_always) else s
+
 	def fmt(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords
 		return self.fmtc(self,*args,**kwargs)
@@ -181,11 +188,6 @@ class Hilite(object):
 
 	def __str__(self):
 		return self.colorize(self,color=False)
-
-	@classmethod
-	def colorize(cls,s,color=True):
-		k = color if type(color) is str else cls.color # hack: override color with str value
-		return globals()[k](s) if (color or cls.color_always) else s
 
 # For attrs that are always present in the data instance
 # Reassignment and deletion forbidden
@@ -202,7 +204,8 @@ class MMGenImmutableAttr(object): # Descriptor
 
 	# forbid all reassignment
 	def set_attr_ok(self,instance):
-		return not hasattr(instance,self.name)
+		return not self.name in instance.__dict__
+#		return not hasattr(instance,self.name)
 
 	def __set__(self,instance,value):
 		if not self.set_attr_ok(instance):
@@ -624,7 +627,7 @@ class WifKey(str,Hilite,InitErrors):
 		if type(s) == cls: return s
 		cls.arg_chk(cls,on_fail)
 		try:
-			assert set(s) <= set(ascii_letters+digits),'not an ascii string'
+			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 			from mmgen.globalvars import g
 			g.proto.wif2hex(s) # raises exception on error
 			return str.__new__(cls,s)
@@ -643,7 +646,7 @@ class PubKey(HexBytes,MMGenObject): # TODO: add some real checks
 			m = '{!r}: invalid value for pubkey ({})'.format(s,e.args[0])
 			return cls.init_fail(m,on_fail)
 
-class PrivKey(str,Hilite,InitErrors,MMGenObject):
+class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 
 	color = 'red'
 	width = 64
@@ -662,9 +665,9 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		if wif:
 			try:
 				assert s == None
-				assert set(wif) <= set(ascii_letters+digits),'not an ascii string'
+				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 				w2h = g.proto.wif2hex(wif) # raises exception on error
-				me = str.__new__(cls,w2h['hex'])
+				me = bytes.__new__(cls,w2h['hex'])
 				me.compressed = w2h['compressed']
 				me.pubkey_type = w2h['pubkey_type']
 				me.wif = str.__new__(WifKey,wif) # check has been done
@@ -678,9 +681,9 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width/2)
 			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-				me = str.__new__(cls,hexlify(s))
+				me = bytes.__new__(cls,hexlify(s))
 			else:
-				me = str.__new__(cls,g.proto.preprocess_key(hexlify(s),pubkey_type))
+				me = bytes.__new__(cls,g.proto.preprocess_key(hexlify(s),pubkey_type))
 				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
