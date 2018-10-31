@@ -277,7 +277,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.fee         = g.proto.coin_amt('0')
-		self.hex         = ''           # raw serialized hex transaction
+		self.hex         = b''          # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
 		self.coin_txid    = ''
@@ -812,13 +812,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		fs = "Hex TX has {} scriptSig but input is of type '{}'!"
 		for n in range(len(txins)):
 			ti,mmti = txins[n],self.inputs[n]
-			if ti['scriptSig'] == '' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
-					ti['scriptSig'][:6] == '16' + g.proto.witness_vernum_hex + '14' ):
+			if ti['scriptSig'] == b'' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
+					ti['scriptSig'][:6] == b'16' + g.proto.witness_vernum_hex + b'14' ):
 				assert 'witness' in ti, 'missing witness'
 				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
 				assert mmti.mmid, fs.format('witness-type','non-MMGen')
-				assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==''],fs.format('witness-type',mmti.mmid.mmtype)
+				assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==b''],(
+							fs.format('witness-type',mmti.mmid.mmtype))
 			else: # non-witness
 				if mmti.mmid:
 					assert mmti.mmid.mmtype not in ('S','B'), fs.format('signature in',mmti.mmid.mmtype)

@@ -168,7 +168,7 @@ tests = OrderedDict([
 		'good': ('DEADBE','F00BAA')
 	}),
 	('CoinTxID',{
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+'ee'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+b'ee'),
 		'good': (hexlify(r32),)
 	}),
 	('WifKey', {

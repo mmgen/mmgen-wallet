@@ -203,7 +203,7 @@ if opt.bech32 and 'B' not in g.proto.mmtypes:
 	die(1,'--bech32 option incompatible with {}'.format(g.proto.__name__))
 
 def randbool():
-	return hexlify(os.urandom(1))[1] in '12345678'
+	return hexlify(os.urandom(1))[1] in b'12345678'
 def get_segwit_bool():
 	return randbool() if opt.segwit_random else True if opt.segwit or opt.bech32 else False
 
@@ -3144,7 +3144,7 @@ class MMGenTestSuite(object):
 		return self.regtest_alice_add_label_badaddr(name,rt_pw,'Invalid coin address for this chain: '+rt_pw)
 
 	def regtest_alice_add_label_badaddr2(self,name):
-		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
+		addr = g.proto.pubhash2addr(b'00'*20,False) # mainnet zero address
 		return self.regtest_alice_add_label_badaddr(name,addr,'Invalid coin address for this chain: '+addr)
 
 	def regtest_alice_add_label_badaddr3(self,name):
@@ -3153,7 +3153,7 @@ class MMGenTestSuite(object):
 			"MMGen address '{}' not found in tracking wallet".format(addr))
 
 	def regtest_alice_add_label_badaddr4(self,name):
-		addr = CoinProtocol(g.coin,True).pubhash2addr('00'*20,False) # testnet zero address
+		addr = CoinProtocol(g.coin,True).pubhash2addr(b'00'*20,False) # testnet zero address
 		return self.regtest_alice_add_label_badaddr(name,addr,
 			"Address '{}' not found in tracking wallet".format(addr))
 

@@ -244,9 +244,9 @@ class KeyGeneratorPython(KeyGenerator):
 		pubkey = hexlify(pko.get_verifying_key().to_string())
 		if compressed: # discard Y coord, replace with appropriate version byte
 			# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-			return ('03','02')[pubkey[-1] in '02468ace'] + pubkey[:64]
+			return (b'03',b'02')[pubkey[-1] in b'02468ace'] + pubkey[:64]
 		else:
-			return '04' + pubkey
+			return b'04' + pubkey
 
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey

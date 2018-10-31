@@ -411,7 +411,7 @@ def Decrypt(infile,outfile='',hash_preset=''):
 
 def Find_incog_data(filename,iv_id,keep_searching=False):
 	ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
-	n,carry = 0,' '*ivsize
+	n,carry = 0,b' '*ivsize
 	flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 	f = os.open(filename,flgs)
 	for ch in iv_id:
@@ -508,7 +508,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 
 	def test_rpc():
 		p = run_cmd(['monero-wallet-cli','--version'])
-		if not 'Monero' in p.stdout.read():
+		if not b'Monero' in p.stdout.read():
 			die(1,"Unable to run 'monero-wallet-cli'!")
 		p = run_cmd(['monerod','status'])
 		import re

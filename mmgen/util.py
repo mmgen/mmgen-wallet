@@ -743,8 +743,8 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 		if not reply:
 			if default_yes: msg_r(nl); return True
 			else:           msg_r(nl); return False
-		elif reply in 'yY': msg_r(nl); return True
-		elif reply in 'nN': msg_r(nl); return False
+		elif r in b'yY': msg_r(nl); return True
+		elif r in b'nN': msg_r(nl); return False
 		else:
 			if verbose: msg('\nInvalid reply')
 			else: msg_r('\r')
@@ -754,7 +754,7 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 	from mmgen.term import get_char
 
 	while True:
-		reply = get_char('{}: '.format(prompt)).strip('\n\r')
+		reply = get_char('{}: '.format(prompt)).strip(b'\n\r')
 
 		if reply in chars or (enter_ok and not reply):
 			msg('')
@@ -799,9 +799,9 @@ def do_license_msg(immed=False):
 
 	while True:
 		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])
-		if reply == 'w':
+		if reply == b'w':
 			do_pager(gpl.conditions)
-		elif reply == 'c':
+		elif reply == b'c':
 			msg(''); break
 		else:
 			msg_r('\r')
