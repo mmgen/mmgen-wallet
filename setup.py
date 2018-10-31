@@ -64,11 +64,11 @@ class my_build_ext(build_ext):
 	def build_extension(self,ext):
 		build_ext.build_extension(self,ext)
 		ext_src = self.get_ext_fullpath(ext.name)
-		ext_dest = self.get_ext_filename(ext.name)
+		ext_dest = os.path.join('mmgen','secp256k1.so')
 		try: os.unlink(ext_dest)
 		except: pass
 		os.chmod(ext_src,0o755)
-		print('copying %s to %s' % (ext_src,ext_dest))
+		print('copying {} to {}'.format(ext_src,ext_dest))
 		copy2(ext_src,ext_dest)
 
 class my_install_data(install_data):
