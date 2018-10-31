@@ -99,11 +99,11 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	vk_width = 97
 
 	def zhash256(self,s,t):
-		s = list(map(ord,s+'\0'*32))
+		s = bytearray(s + bytes(32))
 		s[0] |= 0xc0
 		s[32] = t
 		from mmgen.sha256 import Sha256
-		return Sha256(list(map(chr,s)),preprocess=False).digest()
+		return Sha256(s,preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
 		key = unhexlify(pubhex)
@@ -120,12 +120,12 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	def to_viewkey(self,pubhex): # pubhex is really privhex
 		key = unhexlify(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
-		vk = list(map(ord,self.zhash256(key,0)+self.zhash256(key,1)))
+		vk = bytearray(self.zhash256(key,0)+self.zhash256(key,1))
 		vk[32] &= 0xf8
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(''.join(map(chr,vk))))
+		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(vk))
 		assert len(ret) == self.vk_width,'Invalid Zcash view key length'
 		return ZcashViewKey(ret)
 
@@ -142,13 +142,11 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def to_addr(self,sk_hex): # sk_hex instead of pubhex
 
-		# ed25519ll, a low-level ctypes wrapper for Ed25519 digital signatures by
-		# Daniel Holth <dholth@fastmail.fm> - http://bitbucket.org/dholth/ed25519ll/
-		try:
-			assert not opt.use_internal_ed25519_mod
-			from ed25519ll.djbec import scalarmult,edwards,encodepoint,B
-		except:
-			from mmgen.ed25519 import scalarmult,edwards,encodepoint,B
+		if opt.use_old_ed25519:
+			from mmgen.ed25519 import edwards,encodepoint,B,scalarmult
+		else:
+			from mmgen.ed25519ll_djbec import scalarmult
+			from mmgen.ed25519 import edwards,encodepoint,B
 
 		# Source and license for scalarmultbase function:
 		#   https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py

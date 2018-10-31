@@ -1069,6 +1069,8 @@ cmd_group['ref_alt'] = (
 	('ref_addrfile_gen_zec',  'generate address file (ZEC-T)'),
 	('ref_addrfile_gen_zec_z','generate address file (ZEC-Z)'),
 	('ref_addrfile_gen_xmr',  'generate address file (XMR)'),
+	# we test the old ed25519 library in test-release.sh, so skip this
+#	('ref_addrfile_gen_xmr_old','generate address file (XMR - old (slow) ed25519 library)'),
 
 	('ref_keyaddrfile_gen_eth',  'generate key-address file (ETH)'),
 	('ref_keyaddrfile_gen_etc',  'generate key-address file (ETC)'),
@@ -2609,6 +2611,8 @@ class MMGenTestSuite(object):
 	def ref_addrfile_gen_xmr(self,name):
 		self.ref_altcoin_addrgen(name,coin='XMR',mmtype='monero')
 
+	def ref_addrfile_gen_xmr_old(self,name):
+		self.ref_altcoin_addrgen(name,coin='XMR',mmtype='monero',add_args=['--use-old-ed25519'])
 
 	def ref_keyaddrfile_gen_eth(self,name):
 		self.ref_altcoin_addrgen(name,coin='ETH',mmtype='ethereum',gen_what='key')

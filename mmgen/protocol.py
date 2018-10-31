@@ -402,10 +402,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 	@classmethod
 	def preprocess_key(cls,hexpriv,pubkey_type): # reduce key
-		try:
-			from ed25519ll.djbec import l
-		except:
-			from mmgen.ed25519 import l
+		from mmgen.ed25519 import l
 		n = int(hexlify(unhexlify(hexpriv)[::-1]),16) % l
 		return hexlify(unhexlify('{:064x}'.format(n))[::-1])
 

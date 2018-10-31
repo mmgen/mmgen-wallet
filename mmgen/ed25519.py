@@ -2,14 +2,9 @@
 #     Source: https://ed25519.cr.yp.to/python/ed25519.py
 #     Date accessed: 2 Nov. 2016
 
-import hashlib
-
 b = 256
 q = 2**255 - 19
 l = 2**252 + 27742317777372353535851937790883648493
-
-def H(m):
-	return hashlib.sha512(m).digest()
 
 def expmod(b, e, m):
 	if e == 0: return 1
@@ -54,4 +49,4 @@ def encodepoint(P):
 	x = P[0]
 	y = P[1]
 	bits = [(y >> i) & 1 for i in range(b-1)] + [x & 1]
-	return b''.join([chr(sum([bits[i * 8 + j] << j for j in range(8)])) for i in range(b//8)])
+	return bytes([sum([bits[i * 8 + j] << j for j in range(8)]) for i in range(b//8)])

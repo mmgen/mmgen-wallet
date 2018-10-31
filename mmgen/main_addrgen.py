@@ -53,8 +53,8 @@ opts_data = lambda: {
 -c, --print-checksum  Print address list checksum and exit
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
--E, --use-internal-ed25519-mod  Use (slow) internal ed25519 module for Monero
-                      address generation, even if ed25519ll is installed
+-E, --use-old-ed25519 Use original (and slow) ed25519 module for Monero
+                      address generation instead of ed25519ll_djbec
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
@@ -123,8 +123,8 @@ addr_type = MAT(opt.type or g.proto.dfl_mmtype,errmsg=errmsg)
 
 if len(cmd_args) < 1: opts.usage()
 
-if opt.use_internal_ed25519_mod:
-	msg('Using (slow) internal ed25519 module by user request')
+if opt.use_old_ed25519:
+	msg('Using old (slow) ed25519 module by user request')
 
 idxs = AddrIdxList(fmt_str=cmd_args.pop())
 

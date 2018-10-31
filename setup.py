@@ -115,6 +115,7 @@ setup(
 			'mmgen.common',
 			'mmgen.crypto',
 			'mmgen.ed25519',
+			'mmgen.ed25519ll_djbec',
 			'mmgen.exception',
 			'mmgen.filename',
 			'mmgen.globalvars',

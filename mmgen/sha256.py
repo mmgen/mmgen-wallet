@@ -47,7 +47,7 @@ class Sha256(object):
 		n,nPrime = 2,0
 		while nPrime < 64:
 			if isPrime(n):
-				k[nPrime] = getFractionalBits(math.pow(n, 1.0 / 3))
+				k[nPrime] = getFractionalBits(math.pow(n, 1 / 3))
 				nPrime += 1
 			n += 1
 
@@ -73,21 +73,21 @@ class Sha256(object):
 		return hexlify(self.digest())
 
 	def bytesToWords(self):
-		assert type(self.M) in (str,list)
+		assert type(self.M) in (bytes,bytearray,list)
 		words = [0] * (len(self.M) // 4 + len(self.M) % 4)
 		b = 0
 		for i in range(len(self.M)):
-			words[b >> 5] |= ord(self.M[i]) << (24 - b % 32)
+			words[b >> 5] |= self.M[i] << (24 - b % 32)
 			b += 8
 		self.M = words
 
 	def wordsToBytes(self):
 		assert type(self.M) == list and len(self.M) == 8
-		self.M = ''.join([chr((self.M[b >> 5] >> (24 - b % 32)) & 0xff) for b in range(0,len(self.M)*32,8)])
+		self.M = bytes([(self.M[b >> 5] >> (24 - b % 32) & 0xff) for b in range(0,len(self.M)*32,8)])
 
 	def preprocessBlock(self):
 		def lshift(a,b): return (a << b) & 0xffffffff
-		assert type(self.M) == str
+		assert type(self.M) in (bytes,bytearray)
 		l = len(self.M) * 8
 		self.bytesToWords()
 		last_idx = lshift((l + 64 >> 9),4) + 15

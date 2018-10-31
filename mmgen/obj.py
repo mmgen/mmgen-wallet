@@ -397,6 +397,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
+class XMRAmt(BTCAmt): min_coin_unit = Decimal('0.000000000001')
 
 from mmgen.altcoins.eth.obj import ETHAmt,ETHNonce
 

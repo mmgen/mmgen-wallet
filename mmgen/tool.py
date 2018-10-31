@@ -624,14 +624,15 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
 		if op == 'sync':
 			col1_w = max(list(map(len,bals))) + 1
-			fs = '{:%s} {:18} {:18}' % col1_w
-			msg('\n'+fs.format('Wallet','  Balance','  Unlocked Balance'))
+			fs = '{:%s} {} {}' % col1_w
+			msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
 			tbals = [Decimal('0'),Decimal('0')]
+			from mmgen.obj import XMRAmt
 			for bal in bals:
 				for i in (0,1): tbals[i] += bals[bal][i]
-				msg(fs.format(bal+':',*bals[bal]))
+				msg(fs.format(bal+':',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in bals[bal]]))
 			msg(fs.format('-'*col1_w,'-'*18,'-'*18))
-			msg(fs.format('TOTAL:',*tbals))
+			msg(fs.format('TOTAL:',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in tbals]))
 
 	os.environ['LANG'] = 'C'
 	import pexpect
