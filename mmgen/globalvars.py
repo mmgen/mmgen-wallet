@@ -100,7 +100,7 @@ class g(object):
 		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
 
 	if os.getenv('HOME'):                             # Linux or MSYS
-		home_dir = os.getenv('HOME').decode('utf8')
+		home_dir = os.getenv('HOME')
 	elif platform == 'win': # Windows native:
 		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
 	else:

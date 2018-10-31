@@ -225,10 +225,10 @@ def are_equal(a,b,dtype=''):
 def print_convert_results(indata,enc,dec,dtype):
 	error = (True,False)[are_equal(indata,dec,dtype)]
 	if error or opt.verbose:
-		Msg('Input:         {}'.format(repr(indata)))
-		Msg('Encoded data:  {}'.format(repr(enc)))
-		Msg('Recoded data:  {}'.format(repr(dec)))
-	else: Msg(enc)
+		Msg('Input:         {}'.format(indata))
+		Msg('Encoded data:  {}'.format(enc))
+		Msg('Recoded data:  {}'.format(dec))
+	else: Msg(enc.decode())
 	if error:
 		die(3,"Error! Recoded data doesn't match input!")
 
@@ -253,10 +253,10 @@ def B58randenc():
 	r = get_random(32)
 	enc = baseconv.b58encode(r,pad=True)
 	dec = baseconv.b58decode(enc,pad=True)
-	print_convert_results(r,enc,dec,'str')
+	print_convert_results(r,enc.encode(),dec,'bytes')
 
 def Randhex(nbytes='32'):
-	Msg(binascii.hexlify(get_random(int(nbytes))))
+	Msg(binascii.hexlify(get_random(int(nbytes))).decode())
 
 def Randwif():
 	Msg(PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed).wif)
@@ -277,37 +277,37 @@ def Wif2segwit_pair(wif):
 	pubhex = kg.to_pubhex(PrivKey(wif=wif))
 	addr = ag.to_addr(pubhex)
 	rs = ag.to_segwit_redeem_script(pubhex)
-	Msg('{}\n{}'.format(rs,addr))
+	Msg('{}\n{}'.format(rs.decode(),addr))
 
 def Pubhash2addr(pubhash):
 	if opt.type == 'bech32':
-		ret = g.proto.pubhash2bech32addr(pubhash)
+		ret = g.proto.pubhash2bech32addr(pubhash.encode())
 	else:
-		ret = g.proto.pubhash2addr(pubhash,at.addr_fmt=='p2sh')
+		ret = g.proto.pubhash2addr(pubhash.encode(),at.addr_fmt=='p2sh')
 	Msg(ret)
 
-def Addr2hexaddr(addr):     Msg(g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex'])
-def Hash160(pubkeyhex):     Msg(hash160(pubkeyhex))
-def Pubhex2addr(pubkeyhex): Pubhash2addr(hash160(pubkeyhex))
-def Wif2hex(wif):           Msg(PrivKey(wif=wif))
+def Addr2hexaddr(addr): Msg(g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex'].decode())
+def Hash160(pubkeyhex):     Msg(hash160(pubkeyhex).decode())
+def Pubhex2addr(pubkeyhex): Pubhash2addr(hash160(pubkeyhex.encode()).decode())
+def Wif2hex(wif):           Msg(PrivKey(wif=wif).decode())
 
 def Hex2wif(hexpriv):
-	Msg(g.proto.hex2wif(hexpriv,pubkey_type=at.pubkey_type,compressed=at.compressed))
+	Msg(g.proto.hex2wif(hexpriv.encode(),pubkey_type=at.pubkey_type,compressed=at.compressed))
 
 def Privhex2addr(privhex,output_pubhex=False):
 	pk = PrivKey(binascii.unhexlify(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
 	ph = kg.to_pubhex(pk)
-	Msg(ph if output_pubhex else ag.to_addr(ph))
+	Msg(ph.decode() if output_pubhex else ag.to_addr(ph))
 
 def Privhex2pubhex(privhex): # new
 	Privhex2addr(privhex,output_pubhex=True)
 
 def Pubhex2redeem_script(pubhex): # new
-	Msg(g.proto.pubhex2redeem_script(pubhex))
+	Msg(g.proto.pubhex2redeem_script(pubhex).decode())
 
 def Wif2redeem_script(wif): # new
 	privhex = PrivKey(wif=wif)
-	Msg(ag.to_segwit_redeem_script(kg.to_pubhex(privhex)))
+	Msg(ag.to_segwit_redeem_script(kg.to_pubhex(privhex)).decode())
 
 wordlists = 'electrum','tirosh'
 dfl_wl_id = 'electrum'
@@ -325,16 +325,16 @@ def Mn_rand128(wordlist=dfl_wl_id): do_random_mn(16,wordlist)
 def Mn_rand192(wordlist=dfl_wl_id): do_random_mn(24,wordlist)
 def Mn_rand256(wordlist=dfl_wl_id): do_random_mn(32,wordlist)
 
-def Hex2mn(s,wordlist=dfl_wl_id): Msg(' '.join(baseconv.fromhex(s,wordlist)))
+def Hex2mn(s,wordlist=dfl_wl_id): Msg(' '.join(baseconv.fromhex(s.encode(),wordlist)))
 def Mn2hex(s,wordlist=dfl_wl_id): Msg(baseconv.tohex(s.split(),wordlist))
 
-def Strtob58(s,pad=None): Msg(baseconv.fromhex(binascii.hexlify(s),'b58',pad,tostr=True))
-def Hextob58(s,pad=None): Msg(baseconv.fromhex(s,'b58',pad,tostr=True))
+def Strtob58(s,pad=None): Msg(baseconv.fromhex(binascii.hexlify(s.encode()),'b58',pad,tostr=True))
+def Hextob58(s,pad=None): Msg(baseconv.fromhex(s.encode(),'b58',pad,tostr=True))
 def Hextob58chk(s):
 	from mmgen.protocol import _b58chk_encode
 	Msg(_b58chk_encode(s))
-def Hextob32(s,pad=None): Msg(baseconv.fromhex(s,'b32',pad,tostr=True))
-def B58tostr(s):          Msg(binascii.unhexlify(baseconv.tohex(s,'b58')))
+def Hextob32(s,pad=None): Msg(baseconv.fromhex(s.encode(),'b32',pad,tostr=True))
+def B58tostr(s):          Msg(binascii.unhexlify(baseconv.tohex(s,'b58')).decode())
 def B58tohex(s,pad=None): Msg(baseconv.tohex(s,'b58',pad))
 def B58chktohex(s):
 	from mmgen.protocol import _b58chk_decode
@@ -375,17 +375,17 @@ def Passwdfile_chksum(infile):
 	PasswordList(infile=infile,chksum_only=True)
 
 def Hexreverse(s):
-	Msg(binascii.hexlify(binascii.unhexlify(s.strip())[::-1]))
+	Msg(binascii.hexlify(binascii.unhexlify(s.strip())[::-1]).decode())
 
 def Hexlify(s):
-	Msg(binascii.hexlify(s))
+	Msg(binascii.hexlify(s.encode()).decode())
 
 def Hash256(s,file_input=False,hex_input=False):
 	from hashlib import sha256
 	if file_input:  b = get_data_from_file(s,binary=True)
 	elif hex_input: b = decode_pretty_hexdump(s)
 	else:           b = s
-	Msg(sha256(sha256(b).digest()).hexdigest())
+	Msg(sha256(sha256(b.encode()).digest()).hexdigest())
 
 def Encrypt(infile,outfile='',hash_preset=''):
 	data = get_data_from_file(infile,'data for encryption',binary=True)
@@ -512,7 +512,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 			die(1,"Unable to run 'monero-wallet-cli'!")
 		p = run_cmd(['monerod','status'])
 		import re
-		m = re.search(r'Height: (\d+)/\d+ ',p.stdout.read())
+		m = re.search(r'Height: (\d+)/\d+ ',p.stdout.read().decode())
 		if not m:
 			die(1,'Unable to connect to monerod!')
 		return int(m.group(1))
@@ -538,10 +538,10 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		try: os.stat(fn)
 		except: pass
 		else: die(1,"Wallet '{}' already exists!".format(fn))
-		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn.encode('utf8')))
+		p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting initial prompt','Secret spend key: ')
-		my_sendline(p,'',d.sec,65)
+		my_sendline(p,'',d.sec.decode(),65)
 		my_expect(p,'','Enter.* new.* password.*: ',regex=True)
 		my_sendline(p,'Sending password',d.wallet_passwd,33)
 		my_expect(p,'','Confirm password: ')
@@ -550,12 +550,12 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 		my_sendline(p,'','1',2)
 		my_expect(p,'monerod generating wallet','Generated new wallet: ')
 		my_expect(p,'','\n')
-		if d.addr not in p.before:
-			die(3,'Addresses do not match!\n  MMGen: {}\n Monero: {}'.format(d.addr,p.before))
+		if d.addr not in p.before.decode():
+			die(3,'Addresses do not match!\n  MMGen: {}\n Monero: {}'.format(d.addr,p.before.decode()))
 		my_expect(p,'','View key: ')
 		my_expect(p,'','\n')
-		if d.viewkey not in p.before:
-			die(3,'View keys do not match!\n  MMGen: {}\n Monero: {}'.format(d.viewkey,p.before))
+		if d.viewkey not in p.before.decode():
+			die(3,'View keys do not match!\n  MMGen: {}\n Monero: {}'.format(d.viewkey,p.before.decode()))
 		my_expect(p,'','(YYYY-MM-DD): ')
 		h = str(blockheight or cur_height-1)
 		my_sendline(p,'',h,len(h)+1)
@@ -574,7 +574,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 	def sync(n,d,fn):
 		try: os.stat(fn)
 		except: die(1,"Wallet '{}' does not exist!".format(fn))
-		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn.encode('utf8')))
+		p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn))
 		if g.debug: p.logfile = sys.stdout
 		my_expect(p,'Awaiting password prompt','Wallet password: ')
 		my_sendline(p,'Sending password',d.wallet_passwd,33)
@@ -592,7 +592,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 					msg('\r  Block {h} / {h}'.format(h=height))
 				else:
 					msg('  Wallet in sync')
-				b = [l for l in p.before.splitlines() if l[:8] == 'Balance:'][0].split()
+				b = [l for l in p.before.decode().splitlines() if len(l) > 7 and l[:8] == 'Balance:'][0].split()
 				msg('  Balance: {} Unlocked balance: {}'.format(b[1],b[4]))
 				bals[fn] = ( Decimal(b[1][:-1]), Decimal(b[4]) )
 				my_sendline(p,'Exiting','exit',5)

@@ -1363,7 +1363,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 	if not segwit and k == 'p2sh': k = 'p2pkh'
 	s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
 					'p2sh':   ('a914','87'),
-					'bech32': (g.proto.witness_vernum_hex+'14','') }[k]
+					'bech32': (g.proto.witness_vernum_hex.decode()+'14','') }[k]
 	amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[coin_sel]
 	ret = {
 		lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
@@ -1373,7 +1373,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 		'address': coinaddr,
 		'spendable': False,
-		'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
+		'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex.decode(),s_end).encode(),
 		'confirmations': getrandnum(3) // 2 # max: 8388608 (7 digits)
 	}
 	return ret
@@ -1436,7 +1436,7 @@ def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_co
 def write_fake_data_to_file(d):
 	unspent_data_file = os.path.join(cfg['tmpdir'],'unspent.json')
 	write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True,ignore_opt_outdir=True)
-	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file.encode('utf8')
+	os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
 	bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
 	if opt.print_cmdline: msg(bwd_msg)
 	if opt.log: log_fd.write(bwd_msg + ' ')
@@ -2048,7 +2048,7 @@ class MMGenTestSuite(object):
 			t.written_to_file('Transaction')
 		os.unlink(txfile) # our tx file replaces the original
 		cmd = 'touch ' + os.path.join(cfg['tmpdir'],'txbump')
-		os.system(cmd.encode('utf8'))
+		os.system(cmd.encode())
 		t.ok()
 
 	def txdo(self,name,addrfile,wallet):
@@ -2310,7 +2310,7 @@ class MMGenTestSuite(object):
 		self.txsend_ui_common(t,name)
 
 		cmd = 'touch ' + os.path.join(cfg['tmpdir'],'txdo')
-		os.system(cmd.encode('utf8'))
+		os.system(cmd.encode())
 		t.ok()
 
 	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
@@ -3063,7 +3063,7 @@ class MMGenTestSuite(object):
 						['python',os.path.join('cmds','mmgen-tool'),'--testnet=1'] +
 						(['--type=compressed'],[])[i==0] +
 						['-r0','randpair']
-					).split() for i in range(n)]
+					).decode().split() for i in range(n)]
 		restore_debug()
 		return ret
 
@@ -3137,7 +3137,7 @@ class MMGenTestSuite(object):
 
 	def regtest_alice_add_label_badaddr(self,name,addr,reply):
 		t = MMGenExpect(name,'mmgen-tool',['--alice','add_label',addr,'(none)'])
-		t.expect(reply.encode('utf8'),regex=True)
+		t.expect(reply,regex=True)
 		t.ok()
 
 	def regtest_alice_add_label_badaddr1(self,name):
@@ -3172,7 +3172,7 @@ class MMGenTestSuite(object):
 
 	def regtest_user_chk_label(self,name,user,addr,label,label_pat=None):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label).encode('utf8')),regex=True)
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label)),regex=True)
 		t.ok()
 
 	def regtest_alice_chk_label1(self,name):
@@ -3479,7 +3479,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_chk_label(self,name,addr='98831F3A:E:3',label_pat=utf8_label_pat):
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + ['listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label).encode('utf8')),regex=True)
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label)),regex=True)
 		t.ok()
 
 	def ethdev_remove_label(self,name,addr='98831F3A:E:3'):
@@ -3535,7 +3535,8 @@ class MMGenTestSuite(object):
 		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False,no_ok=True)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		assert etx.get_exec_status(txid,True) != 0,"Contract '{}:{}' failed to execute. Aborting".format(num,key)
+		assert etx.get_exec_status(txid.encode(),True) != 0,(
+			"Contract '{}:{}' failed to execute. Aborting".format(num,key))
 		if key == 'Token':
 			write_to_tmpfile(cfg,'token_addr{}'.format(num),addr+'\n')
 			silence()

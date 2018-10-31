@@ -27,7 +27,7 @@ from mmgen.common import *
 
 # Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
 def cleandir(d):
-	d_enc = d.encode('utf8')
+	d_enc = d.encode()
 
 	try:    files = os.listdir(d_enc)
 	except: return
@@ -41,7 +41,7 @@ def cleandir(d):
 			rmtree(os.path.join(d_enc,f))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
-def getrandhex(n): return hexlify(os.urandom(n))
+def getrandhex(n): return hexlify(os.urandom(n)).decode()
 def getrandnum_range(nbytes,rn_max):
 	while True:
 		rn = int(hexlify(os.urandom(nbytes)),16)

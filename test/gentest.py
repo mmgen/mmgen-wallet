@@ -81,12 +81,11 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
 def pyethereum_sec2addr(sec):
-	return sec,eth.privtoaddr(sec).encode('hex')
+	return sec.decode(),eth.privtoaddr(sec).encode('hex')
 
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
-	o = p.stdout.read().splitlines()
-#	print p.stderr.read()
+	o = p.stdout.read().decode().splitlines()
 	return o[1].split()[1],o[0].split()[1]
 
 def zcash_mini_sec2addr(sec):
@@ -97,7 +96,7 @@ def zcash_mini_sec2addr(sec):
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-	key = pcku.parse_key(sec,[network_for_netcode(coin)],secp256k1_generator)[1]
+	key = pcku.parse_key(sec.decode(),[network_for_netcode(coin)],secp256k1_generator)[1]
 	if key is None: die(1,"can't parse {}".format(sec))
 	o = pcku.create_output(sec,key,network_for_netcode(coin))[0]
 	suf = ('_uncompressed','')[addr_type.compressed]

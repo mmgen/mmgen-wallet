@@ -261,9 +261,10 @@ class MMGenToolTestSuite(object):
 
 		p = subprocess.Popen(sys_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		a,b = p.communicate()
+		if not binary: a = a.decode()
 		retcode = p.wait()
 		if retcode != 0:
-			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),b))
+			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),b.decode()))
 			rdie(1,'Called process returned with an error (retcode {})'.format(retcode))
 		return (a,a.rstrip())[bool(strip)]
 
@@ -292,7 +293,7 @@ class MMGenToolTestSuite(object):
 		if carg: write_to_tmpfile(cfg,'{}{}.in'.format(name,fn_idx),carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,extra_msg=extra_msg,add_opts=add_opts)
 		if carg: vmsg('In:   ' + repr(carg))
-		vmsg('Out:  ' + (repr(ret),ret.decode('utf8'))[literal])
+		vmsg('Out:  ' + (repr(ret),ret)[literal])
 		if ret or ret == '':
 			write_to_tmpfile(cfg,'{}{}.out'.format(name,fn_idx),ret+'\n')
 			if chkdata:
@@ -446,7 +447,7 @@ class MMGenToolTestSuite(object):
 		if opt.verbose:
 			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
 		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
-		res = p.stdout.read().strip()
+		res = p.stdout.read().decode().strip()
 		addr = read_from_tmpfile(cfg,'Wif2addr3.out').strip()
 		cmp_or_die(res,addr)
 

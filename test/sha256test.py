@@ -10,7 +10,7 @@ def msg(s): sys.stderr.write(s)
 def green(s): return '\033[32;1m' + s + '\033[0m'
 
 def compare_hashes(dlen,data):
-	sha2 = hashlib.sha256(data).hexdigest()
+	sha2 = hashlib.sha256(data).hexdigest().encode()
 #		msg('Dlen {:<5} {}\r'.format(dlen,sha2))
 	my_sha2 = Sha256(data).hexdigest()
 	assert my_sha2 == sha2,'Hashes do not match!'
@@ -32,7 +32,7 @@ def test_ref():
 	)
 	for i,data in enumerate(inputs):
 		msg('\rTesting reference input data: {:4}/{} '.format(i+1,len(inputs)))
-		compare_hashes(len(data),data)
+		compare_hashes(len(data),data.encode())
 	msg('OK\n')
 
 def test_random(rounds):

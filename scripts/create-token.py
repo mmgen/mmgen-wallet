@@ -174,8 +174,8 @@ def compile_code(code):
 	cmd = ['solc','--optimize','--bin','--overwrite']
 	if not opt.stdout: cmd += ['--output-dir', opt.outdir or '.']
 	p = Popen(cmd,stdin=PIPE,stdout=PIPE,stderr=PIPE)
-	res = p.communicate(code)
-	o = res[0].replace('\r','').split('\n')
+	res = p.communicate(code.encode())
+	o = res[0].decode().replace('\r','').split('\n')
 	dmsg(res[1])
 	if opt.stdout:
 		return dict((k,o[i+2]) for k in ('SafeMath','Owned','Token') for i in range(len(o)) if k in o[i])

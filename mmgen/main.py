@@ -22,16 +22,6 @@ main.py - Script launcher for the MMGen suite
 
 def launch(what):
 
-	def my_dec(a):
-		try:
-			return a.decode('utf8')
-		except:
-			sys.stderr.write("Argument {!r} is not a valid UTF-8 string".format(a))
-			sys.exit(2)
-
-	import sys
-	sys.argv = list(map(my_dec,sys.argv))
-
 	if what in ('walletgen','walletchk','walletconv','passchg'):
 		what = 'wallet'
 	if what == 'keygen': what = 'addrgen'

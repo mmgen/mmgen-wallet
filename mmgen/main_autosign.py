@@ -268,7 +268,7 @@ def wipe_existing_key():
 
 def create_key():
 	from binascii import hexlify
-	kdata = hexlify(os.urandom(32))
+	kdata = hexlify(os.urandom(32)).decode()
 	fn = os.path.join(tx_dir,key_fn)
 	desc = 'key file {}'.format(fn)
 	msg('Creating ' + desc)

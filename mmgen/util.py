@@ -27,10 +27,10 @@ from string import hexdigits
 from mmgen.color import *
 from mmgen.exception import *
 
-def msg(s):    sys.stderr.write(s.encode('utf8') + '\n')
-def msg_r(s):  sys.stderr.write(s.encode('utf8'))
-def Msg(s):    sys.stdout.write(s.encode('utf8') + '\n')
-def Msg_r(s):  sys.stdout.write(s.encode('utf8'))
+def msg(s):    sys.stderr.write(s.encode() + b'\n')
+def msg_r(s):  sys.stderr.write(s.encode())
+def Msg(s):    sys.stdout.write(s.encode() + b'\n')
+def Msg_r(s):  sys.stdout.write(s.encode())
 def msgred(s): msg(red(s))
 def rmsg(s):   msg(red(s))
 def rmsg_r(s): msg_r(red(s))
@@ -167,6 +167,7 @@ def remove_extension(f,e):
 	return (f,a)[len(b)>1 and b[1:]==e]
 
 def make_chksum_N(s,nchars,sep=False):
+	if type(s) == str: s = s.encode()
 	if nchars%4 or not (4 <= nchars <= 64): return False
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = ('',' ')[bool(sep)]
@@ -178,7 +179,7 @@ def make_chksum_8(s,sep=False):
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
 	from mmgen.obj import HexStr
-	if type(s) == str: s = s.encode('utf8')
+	if type(s) == str: s = s.encode()
 	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
@@ -296,7 +297,7 @@ class baseconv(object):
 
 	@classmethod
 	def get_wordlist_chksum(cls,wl_id):
-		return sha256(' '.join(cls.digits[wl_id])).hexdigest()[:8]
+		return sha256(' '.join(cls.digits[wl_id]).encode()).hexdigest()[:8]
 
 	@classmethod
 	def check_wordlists(cls):
@@ -334,9 +335,8 @@ class baseconv(object):
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
 
-		hexnum = hexnum.strip()
-		if not is_hex_str(hexnum):
-			die(2,"'{}': not a hexadecimal number".format(hexnum))
+		if not is_hex_str(hexnum.decode()):
+			die(2,"'{}': not a hexadecimal number".format(hexnum.decode()))
 
 		wl = cls.digits[wl_id]
 		base = len(wl)
@@ -377,7 +377,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	return ''.join(
 		[
 			('' if (line_nums == False or i % cols) else '{:06x}: '.format(i*gw)) +
-				hexlify(data[i*gw:i*gw+gw]) + ('\n',' ')[bool((i+1) % cols)]
+				hexlify(data[i*gw:i*gw+gw]).decode() + ('\n',' ')[bool((i+1) % cols)]
 					for i in range(len(data)//gw + r)
 		]
 	).rstrip() + '\n'
@@ -547,9 +547,6 @@ def write_data_to_file( outfile,data,desc='data',
 	if ask_write_default_yes == False or ask_write_prompt:
 		ask_write = True
 
-	if not binary and type(data) == str:
-		data = data.encode('utf8')
-
 	def do_stdout():
 		qmsg('Output to STDOUT requested')
 		if sys.stdout.isatty():
@@ -577,7 +574,7 @@ def write_data_to_file( outfile,data,desc='data',
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 
-		sys.stdout.write(data)
+		sys.stdout.write(data.decode() if issubclass(type(data),bytes) else data)
 
 	def do_file(outfile,ask_write_prompt):
 		if opt.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):
@@ -637,7 +634,7 @@ def get_words_from_file(infile,desc,silent=False):
 	if not silent:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile, 'r')
-	try: words = f.read().decode('utf8').split() # split() also strips
+	try: words = f.read().split() # split() also strips
 	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	f.close()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
@@ -680,7 +677,7 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,r
 	data = f.read()
 	f.close()
 	if require_utf8:
-		try: data = data.decode('utf8')
+		try: data = data.decode()
 		except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	return data
 
@@ -714,14 +711,14 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 	from mmgen.term import kb_hold_protect
 	kb_hold_protect()
 	if echo or not sys.stdin.isatty():
-		reply = input(prompt.encode('utf8'))
+		reply = input(prompt)
 	else:
 		from getpass import getpass
-		reply = getpass(prompt.encode('utf8'))
+		reply = getpass(prompt)
 	kb_hold_protect()
 
 	try:
-		return reply.strip().decode('utf8')
+		return reply.strip()
 	except:
 		die(1,'User input must be UTF-8 encoded.')
 
@@ -755,9 +752,9 @@ def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 	while True:
 		reply = get_char('{}: '.format(prompt)).strip(b'\n\r')
 
-		if reply in chars or (enter_ok and not reply):
+		if reply in chars.encode() or (enter_ok and not reply):
 			msg('')
-			return reply
+			return reply.decode()
 
 		if verbose: msg('\nInvalid reply')
 		else: msg_r('\r')
@@ -779,7 +776,7 @@ def do_pager(text):
 			p = Popen([pager],stdin=PIPE,shell=False)
 		except: pass
 		else:
-			p.communicate(text.encode('utf8')+(end_msg,'')[pager=='less'])
+			p.communicate((text+(end_msg,'')[pager=='less']).encode())
 			msg_r('\r')
 			break
 	else: Msg(text+end_msg)

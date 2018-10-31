@@ -44,7 +44,7 @@ def print_help_and_exit(opts_data,longhelp=False):
 		n = opts_data['notes']
 		if isinstance(n, collections.Callable): n = n()
 		out += '\n  ' + '\n  '.join(n.rstrip().splitlines())
-	print((out.encode('utf8')))
+	print(out)
 	sys.exit(0)
 
 def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):

@@ -119,9 +119,9 @@ class CoinDaemonRPCConnection(object):
 		http_hdr = { 'Content-Type': 'application/json' }
 		if self.auth:
 			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [Basic {}]\n'
-			as_enc = base64.b64encode(self.auth_str)
+			as_enc = base64.b64encode(self.auth_str.encode())
 			dmsg_rpc(fs.format(self.auth_str,'',as_enc))
-			http_hdr.update({ 'Host':self.host, 'Authorization':'Basic {}'.format(as_enc) })
+			http_hdr.update({ 'Host':self.host, 'Authorization':'Basic {}'.format(as_enc.decode()) })
 
 		try:
 			hc.request('POST','/',json.dumps(p,cls=MyJSONEncoder),http_hdr)
@@ -149,7 +149,7 @@ class CoinDaemonRPCConnection(object):
 				e2 = str(e1)
 			return do_fail(r,1,e2)
 
-		r2 = r.read().decode('utf8')
+		r2 = r.read()
 
 		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
 

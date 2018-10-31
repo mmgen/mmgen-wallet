@@ -46,7 +46,7 @@ def my_send(p,t,delay=send_delay,s=False):
 	if opt.verbose:
 		ls = (' ','')[bool(opt.debug or not s)]
 		es = ('  ','')[bool(s)]
-		msg('{}SEND {}{}'.format(ls,es,yellow("'{}'".format(t.decode('utf8').replace('\n',r'\n')))))
+		msg('{}SEND {}{}'.format(ls,es,yellow("'{}'".format(t.replace('\n',r'\n')))))
 	return ret
 
 def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
@@ -121,7 +121,7 @@ class MMGenPexpect(object):
 			cmd_str = fs.format(*init_coverage(),c=cmd_str)
 
 		if opt.log:
-			log_fd.write(cmd_str.encode('utf8')+'\n')
+			log_fd.write(cmd_str.encode()+'\n')
 
 		if not no_msg:
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
@@ -153,7 +153,7 @@ class MMGenPexpect(object):
 				# PopenSpawn() requires cmd string to be bytes.  However, it autoconverts unicode
 				# input to bytes, though this behavior seems to be undocumented.  Setting 'encoding'
 				# to 'UTF-8' will cause pexpect to reject non-unicode string input.
-				self.p = PopenSpawn(cmd_str.encode('utf8'))
+				self.p = PopenSpawn(cmd_str,encoding='utf8')
 			else:
 				self.p = pexpect.spawn(cmd,args)
 			if opt.exact_output: self.p.logfile = sys.stdout
@@ -245,12 +245,12 @@ class MMGenPexpect(object):
 		if ret == 1:
 			my_send(self.p,'YES\n')
 #			if oo:
-			outfile = self.expect_getend("Overwriting file '").rstrip("'").decode('utf8')
+			outfile = self.expect_getend("Overwriting file '").rstrip("'")
 			return outfile
 # 			else:
 # 				ret = my_expect(self.p,s1)
 		self.expect(self.NL,nonl=True)
-		outfile = self.p.before.strip().strip("'").decode('utf8')
+		outfile = self.p.before.strip().strip("'")
 		if opt.debug_pexpect: rmsg('Outfile [{}]'.format(outfile))
 		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
 		return outfile

@@ -264,7 +264,7 @@ class KeyGeneratorDummy(KeyGenerator):
 	desc = 'mmgen-dummy'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
-		return PubKey(str(privhex),compressed=privhex.compressed)
+		return PubKey(privhex.decode(),compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
 	addr    = MMGenListItemAttr('addr','CoinAddr')
@@ -473,11 +473,11 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		if g.proto.is_testnet():
 			scramble_key += ':testnet'
 		dmsg_sc('str',scramble_key)
-		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
+		return scramble_seed(seed,scramble_key.encode(),self.scramble_hash_rounds)
 
 	def encrypt(self,desc='new key list'):
 		from mmgen.crypto import mmgen_encrypt
-		self.fmt_data = mmgen_encrypt(self.fmt_data.encode('utf8'),desc,'')
+		self.fmt_data = mmgen_encrypt(self.fmt_data.encode(),desc,'')
 		self.ext += '.'+g.mmenc_ext
 
 	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
@@ -843,7 +843,7 @@ Record this checksum: it will be used to verify the password file in the future
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
 		if self.pw_fmt == 'hex':
-			return hex_sec
+			return hex_sec.decode()
 		else:
 			# we take least significant part
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
@@ -861,9 +861,9 @@ Record this checksum: it will be used to verify the password file in the future
 		# Changing either pw_fmt, pw_len or scramble_key will cause a different,
 		# unrelated set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
-		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str.encode('utf8'))
+		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
 		from mmgen.crypto import scramble_seed
-		return scramble_seed(seed,scramble_key,self.scramble_hash_rounds)
+		return scramble_seed(seed,scramble_key.encode(),self.scramble_hash_rounds)
 
 class AddrData(MMGenObject):
 	msgs = {

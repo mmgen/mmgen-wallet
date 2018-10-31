@@ -371,7 +371,7 @@ class Mnemonic (SeedSourceUnenc):
 			prompt = 'Choose a mnemonic length: 1) 12 words, 2) 18 words, 3) 24 words: '
 			urange = [str(i+1) for i in range(len(self.mn_lens))]
 			while True:
-				r = get_char('\r'+prompt)
+				r = get_char('\r'+prompt).decode()
 				if r in urange: break
 			msg_r('\r' + ' '*len(prompt) + '\r')
 			return self.mn_lens[int(r)-1]
@@ -396,7 +396,7 @@ class Mnemonic (SeedSourceUnenc):
 		def get_word():
 			s,pad = '',0
 			while True:
-				ch = get_char_raw('')
+				ch = get_char_raw('').decode()
 				if ch in '\b\x7f':
 					if s: s = s[:-1]
 				elif ch in '\n ':
@@ -439,7 +439,7 @@ class Mnemonic (SeedSourceUnenc):
 		hexseed = self.seed.hexdata
 
 		mn  = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
-		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn)).encode()
 
 		# Internal error, so just die on fail
 		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
@@ -461,7 +461,7 @@ class Mnemonic (SeedSourceUnenc):
 				msg('Invalid mnemonic: word #{} is not in the wordlist'.format(n))
 				return False
 
-		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn)).encode()
 		ret     = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
 
 		if len(hexseed) * 4 not in g.seed_lens:
@@ -539,7 +539,7 @@ class HexSeedFile (SeedSourceUnenc):
 		h = self.seed.hexdata
 		self.ssdata.chksum = make_chksum_6(h)
 		self.ssdata.hexseed = h
-		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum, split_into_cols(4,h))
+		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum, split_into_cols(4,h.decode()))
 
 	def _deformat(self):
 		desc = self.desc
@@ -642,7 +642,7 @@ class Wallet (SeedSourceEnc):
 			'{} {}'.format(make_chksum_6(slt_fmt),split_into_cols(4,slt_fmt)),
 			'{} {}'.format(make_chksum_6(es_fmt), split_into_cols(4,es_fmt))
 		)
-		chksum = make_chksum_6(' '.join(lines).encode('utf8'))
+		chksum = make_chksum_6(' '.join(lines).encode())
 		self.fmt_data = '\n'.join((chksum,)+lines) + '\n'
 
 	def _deformat(self):

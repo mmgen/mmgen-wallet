@@ -111,7 +111,7 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
 	N,r,p = get_hash_params(hash_preset)
-	if type(passwd) == str: passwd = passwd.encode('utf8')
+	if type(passwd) == str: passwd = passwd.encode()
 	return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
@@ -147,7 +147,7 @@ def _get_random_data_from_user(uchars):
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
 
-	return key_data+''.join(fmt_time_data)
+	return key_data+''.join(fmt_time_data).encode()
 
 def get_random(length):
 	from Crypto import Random

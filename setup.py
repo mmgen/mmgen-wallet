@@ -18,7 +18,7 @@
 
 import sys,os,subprocess
 from shutil import copy2
-_gvi = subprocess.check_output(['gcc','--version']).splitlines()[0]
+_gvi = subprocess.check_output(['gcc','--version']).decode().splitlines()[0]
 have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
 have_arm     = subprocess.check_output(['uname','-m']).strip() == 'aarch64'
 

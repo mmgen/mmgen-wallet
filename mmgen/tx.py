@@ -661,15 +661,15 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				self.blockcount,
 				('',' LT={}'.format(self.locktime))[bool(self.locktime)]
 			),
-			self.hex,
+			self.hex.decode(),
 			repr([amt_to_str(e.__dict__) for e in self.inputs]),
 			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
 		if self.label:
-			lines.append(baseconv.b58encode(self.label.encode('utf8')))
+			lines.append(baseconv.b58encode(self.label.encode()))
 		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
-			lines.append(self.coin_txid)
+			lines.append(self.coin_txid.decode())
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join([self.chksum] + lines)+'\n'
 
@@ -735,7 +735,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.check_hex_tx_matches_mmgen_tx(dt)
 			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
 			self.check_sigs(dt)
-			if not self.coin_txid == g.rpch.decoderawtransaction(self.hex)['txid']:
+			if not self.coin_txid.decode() == g.rpch.decoderawtransaction(ret['hex'])['txid']:
 				raise BadMMGenTxID('txid mismatch (after signing)')
 			msg('OK')
 			return True
@@ -941,7 +941,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
-				assert ret == self.coin_txid, 'txid mismatch (after sending)'
+				assert ret.encode() == self.coin_txid, 'txid mismatch (after sending)'
 				m = 'Transaction sent: {}'
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))
@@ -1039,7 +1039,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
 						('','comment:',e.label.hl() if e.label else ''),
 						('','amount:','{} {}'.format(e.amt.hl(),g.dcoin))]
-					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
+					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid.decode(),e.vout))] + icommon + [
 						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
 					] if ip else icommon + [
 						('','change:',green('True') if e.is_chg else '')]
@@ -1142,7 +1142,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'data'
 			assert len(tx_data) <= g.max_tx_file_size,(
 				'Transaction file size exceeds limit ({} bytes)'.format(g.max_tx_file_size))
-			tx_data = tx_data.decode('ascii').splitlines()
+			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
 			assert len(tx_data[0]) == 6,'invalid length of first line'
 			self.chksum = HexStr(tx_data.pop(0),on_fail='raise')

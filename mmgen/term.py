@@ -85,7 +85,9 @@ def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None):
 
 def _get_keypress_unix_stub(prompt='',immed_chars='',prehold_protect=None):
 	msg_r(prompt)
-	return sys.stdin.read(1)
+	return sys.stdin.read(1).encode()
+
+#_get_keypress_unix_stub = _get_keypress_unix
 
 def _kb_hold_protect_mswin():
 

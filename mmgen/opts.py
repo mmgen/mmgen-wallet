@@ -118,7 +118,7 @@ def get_data_from_cfg_file():
 
 	def copy_template_data(fn):
 		try:
-			with open(fn,'wb') as f: f.write(template_data)
+			with open(fn,'wb') as f: f.write(template_data.encode())
 			os.chmod(fn,0o600)
 		except:
 			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
@@ -174,7 +174,7 @@ def override_from_env():
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
 		if val: # exclude empty string values too
 			gname = name[idx:].lower()
-			setattr(g,gname,set_for_type(val.decode('utf8'),getattr(g,gname),name,invert_bool))
+			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
 
 def warn_altcoins(trust_level):
 	if trust_level == None: return

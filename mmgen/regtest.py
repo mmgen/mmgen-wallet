@@ -162,7 +162,7 @@ def show_mempool():
 	p = start_cmd('cli','getrawmempool')
 	from pprint import pformat
 	from ast import literal_eval
-	msg(pformat(literal_eval(p.stdout.read())))
+	msg(pformat(literal_eval(p.stdout.read().decode())))
 	p.wait()
 
 def cli(*args):
@@ -246,7 +246,7 @@ def get_current_user_win(quiet=False):
 
 def get_current_user_unix(quiet=False):
 	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
-	cmdline = p.stdout.read()
+	cmdline = p.stdout.read().decode()
 	if not cmdline: return None
 	for k in ('miner','bob','alice'):
 		if 'wallet.dat.'+k in cmdline:
@@ -296,7 +296,7 @@ def generate(blocks=1,silent=False):
 	p = start_cmd('cli','generate',str(blocks))
 	out = process_output(p,silent=silent)[0]
 	from ast import literal_eval
-	if len(literal_eval(out)) != blocks:
+	if len(literal_eval(out.decode())) != blocks:
 		rdie(1,'Error generating blocks')
 	p.wait()
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))

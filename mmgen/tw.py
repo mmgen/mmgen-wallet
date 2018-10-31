@@ -220,7 +220,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			out.append(fs.format(   n=str(n+1)+')',
 									t='' if not i.txid else \
 										' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
-											else i.txid[:tx_w-len(txdots)]+txdots,
+											else i.txid.decode()[:tx_w-len(txdots)]+txdots,
 									v=i.vout,
 									a=addr_out,
 									A=i.amt.fmt(color=True,prec=self.disp_prec),
@@ -315,7 +315,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char('' if no_output else self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
-								immed_chars=self.key_mappings)
+								immed_chars=''.join(self.key_mappings.keys())).decode()
 			no_output = False
 			oneshot_msg = '' if oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:

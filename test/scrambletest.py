@@ -91,7 +91,7 @@ def run_tests():
 		vmsg(green('Executing: {}'.format(cmd)))
 		msg_r('Testing: --coin {:4} {:22}'.format(coin.upper(),type_arg))
 		p = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		o = p.stdout.read()
+		o = p.stdout.read().decode()
 		vmsg(o)
 		o = o.splitlines()
 		d = [e for e in o if len(e) > 4 and e[:9] == 'sc_debug_']

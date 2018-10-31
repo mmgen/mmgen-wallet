@@ -60,11 +60,11 @@ class EthereumMMGenTX(MMGenTX):
 
 	@classmethod
 	def get_receipt(cls,txid):
-		return g.rpch.eth_getTransactionReceipt('0x'+txid)
+		return g.rpch.eth_getTransactionReceipt('0x'+txid.decode())
 
 	@classmethod
 	def get_exec_status(cls,txid,silent=False):
-		d = g.rpch.eth_getTransactionReceipt('0x'+txid)
+		d = g.rpch.eth_getTransactionReceipt('0x'+txid.decode())
 		if not silent:
 			if 'contractAddress' in d and d['contractAddress']:
 				msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
@@ -91,6 +91,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	# hex data if signed, json if unsigned: see create_raw()
 	def check_txfile_hex_data(self):
+		if type(self.hex) == str: self.hex = self.hex.encode()
 		if self.check_sigs():
 			from ethereum.transactions import Transaction
 			import rlp
@@ -106,7 +107,7 @@ class EthereumMMGenTX(MMGenTX):
 					'nonce':    ETHNonce(d['nonce']),
 					'data':     HexStr(d['data']) }
 			if o['data'] and not o['to']:
-				self.token_addr = TokenAddr(etx.creates.encode('hex'))
+				self.token_addr = TokenAddr(etx.creates.encode('hex')).decode()
 			txid = CoinTxID(etx.hash.encode('hex'))
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 		else:
@@ -317,10 +318,10 @@ class EthereumMMGenTX(MMGenTX):
 
 	def is_in_mempool(self):
 #		pmsg(g.rpch.parity_pendingTransactions())
-		return '0x'+self.coin_txid in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
+		return '0x'+self.coin_txid.decode() in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
 
 	def is_in_wallet(self):
-		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
+		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid.decode())
 		if d and 'blockNumber' in d and d['blockNumber'] is not None:
 			return 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
 		return False
@@ -362,7 +363,7 @@ class EthereumMMGenTX(MMGenTX):
 
 		if prompt_user: self.confirm_send()
 
-		ret = None if bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
+		ret = None if bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex.decode(),on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -373,7 +374,7 @@ class EthereumMMGenTX(MMGenTX):
 		else:
 			m = 'BOGUS transaction NOT sent: {}' if bogus_send else 'Transaction sent: {}'
 			if not bogus_send:
-				assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
+				assert ret == '0x'+self.coin_txid.decode(),'txid mismatch (after sending)'
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))
 			self.add_timestamp()

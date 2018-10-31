@@ -28,10 +28,10 @@ from mmgen.globalvars import g
 import mmgen.bech32 as bech32
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
-	return hashlib.new('ripemd160',hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest()
+	return hashlib.new('ripemd160',hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest().encode()
 
 def hash256(hexnum): # take hex, return hex - OP_HASH256
-	return hashlib.sha256(hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest()
+	return hashlib.sha256(hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest().encode()
 
 # From en.bitcoin.it:
 #  The Base58 encoding used is home made, and has some differences.
@@ -55,7 +55,7 @@ def _b58chk_encode(hexstr):
 	return _numtob58(int(hexstr+hash256(hexstr)[:8],16))
 
 def _b58chk_decode(s):
-	hexstr = '{:x}'.format(_b58tonum(s))
+	hexstr = '{:x}'.format(_b58tonum(s)).encode()
 	if len(hexstr) % 2: hexstr = '0' + hexstr
 	if hexstr[-8:] == hash256(hexstr[:-8])[:8]:
 		return hexstr[:-8]
@@ -119,7 +119,7 @@ class BitcoinProtocol(MMGenObject):
 				ydie(3,'Private key == secp256k1_ge!')
 			else:
 				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(hexpriv))
-				return '{:064x}'.format(pk % cls.secp256k1_ge)
+				return '{:064x}'.format(pk % cls.secp256k1_ge).encode()
 
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed):
@@ -167,7 +167,7 @@ class BitcoinProtocol(MMGenObject):
 			if num == False:
 				if g.debug: Msg('Address cannot be converted to base 58')
 				break
-			addr_hex = '{:0{}x}'.format(num,len(ver_num)+hex_width+8)
+			addr_hex = '{:0{}x}'.format(num,len(ver_num)+hex_width+8).encode()
 #			pmsg(hex_width,len(addr_hex),addr_hex[:len(ver_num)],ver_num)
 			if addr_hex[:len(ver_num)] != ver_num: continue
 			if hash256(addr_hex[:-8])[:8] == addr_hex[-8:]:
@@ -297,11 +297,11 @@ class DummyWIF(object):
 		n = cls.name.capitalize()
 		assert pubkey_type == cls.pubkey_type,'{}: invalid pubkey_type for {}!'.format(pubkey_type,n)
 		assert compressed == False,'{} does not support compressed pubkeys!'.format(n)
-		return str(hexpriv)
+		return hexpriv.decode()
 
 	@classmethod
 	def wif2hex(cls,wif):
-		return { 'hex':str(wif), 'pubkey_type':cls.pubkey_type, 'compressed':False }
+		return { 'hex':wif.encode(), 'pubkey_type':cls.pubkey_type, 'compressed':False }
 
 class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
@@ -327,7 +327,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 	def verify_addr(cls,addr,hex_width,return_dict=False):
 		from mmgen.util import is_hex_str_lc
 		if is_hex_str_lc(addr) and len(addr) == cls.addr_width:
-			return { 'hex': addr, 'format': 'ethereum' } if return_dict else True
+			return { 'hex': addr.encode(), 'format': 'ethereum' } if return_dict else True
 		if g.debug: Msg("Invalid address '{}'".format(addr))
 		return False
 
@@ -335,7 +335,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 	def pubhash2addr(cls,pubkey_hash,p2sh):
 		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
 		assert not p2sh,'Ethereum has no P2SH address format'
-		return pubkey_hash
+		return pubkey_hash.decode()
 
 class EthereumTestnetProtocol(EthereumProtocol):
 	data_subdir = 'testnet'
@@ -367,7 +367,7 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 	@classmethod
 	def preprocess_key(cls,hexpriv,pubkey_type): # zero the first four bits
 		if pubkey_type == 'zcash_z':
-			return '{:02x}'.format(int(hexpriv[:2],16) & 0x0f) + hexpriv[2:]
+			return '{:02x}'.format(int(hexpriv[:2],16) & 0x0f).encode() + hexpriv[2:]
 		else:
 			return hexpriv
 
@@ -428,7 +428,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		chk = sha3.keccak_256(ret.decode('hex')[:-4]).hexdigest()[:8]
 		assert chk == ret[-8:],'Incorrect checksum'
 
-		return { 'hex': ret, 'format': 'monero' } if return_dict else True
+		return { 'hex': ret.encode(), 'format': 'monero' } if return_dict else True
 
 class MoneroTestnetProtocol(MoneroProtocol):
 	addr_ver_num = { 'monero': (b'35','4'), 'monero_sub': (b'3f','8') } # 53,63

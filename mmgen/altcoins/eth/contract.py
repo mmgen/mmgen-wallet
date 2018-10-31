@@ -34,7 +34,7 @@ from mmgen.util import msg,msg_r,pmsg,pdie
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
-def create_method_id(sig): return keccak_256(sig).hexdigest()[:8]
+def create_method_id(sig): return keccak_256(sig.encode()).hexdigest()[:8]
 
 class Token(MMGenObject): # ERC20
 
@@ -119,7 +119,7 @@ class Token(MMGenObject): # ERC20
 		return hex_tx,coin_txid
 
 	def txsend(self,hex_tx):
-		return g.rpch.eth_sendRawTransaction('0x'+hex_tx).replace('0x','',1)
+		return g.rpch.eth_sendRawTransaction('0x'+hex_tx.decode()).replace('0x','',1).encode()
 
 	def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
