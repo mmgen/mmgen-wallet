@@ -127,7 +127,7 @@ sf = get_seed_file(cmd_args,1)
 
 pw_fmt = ('b58','b32','hex')[bool(opt.base32)+2*bool(opt.hex)]
 
-pw_len = (opt.passwd_len,dfl_len[pw_fmt]/2)[opt.passwd_len in ('h','H')]
+pw_len = (opt.passwd_len,dfl_len[pw_fmt]//2)[opt.passwd_len in ('h','H')]
 
 PasswordList(pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt,chk_params_only=True)
 do_license_msg()

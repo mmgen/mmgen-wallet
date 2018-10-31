@@ -474,7 +474,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		new_size =           4       + 1     + 1   + 1   + isize + 1  + osize + wsize  + 4 \
 				if wsize else old_size
 
-		ret = (old_size * 3 + new_size) / 4
+		ret = (old_size * 3 + new_size) // 4
 
 		dmsg('\nData from estimate_size():')
 		dmsg('  inputs size: {}, outputs size: {}, witness size: {}'.format(isize,osize,wsize))
@@ -485,14 +485,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# coin-specific fee routines
 	def get_relay_fee(self):
 		kb_fee = g.proto.coin_amt(g.rpch.getnetworkinfo()['relayfee'])
-		ret = kb_fee * self.estimate_size() / 1024
+		ret = kb_fee * self.estimate_size() // 1024
 		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
 		return ret
 
 	# convert absolute BTC fee to satoshis-per-byte using estimated size
 	def fee_abs2rel(self,abs_fee,to_unit=None):
 		unit = getattr(g.proto.coin_amt,to_unit or 'min_coin_unit')
-		return int(abs_fee / unit / self.estimate_size())
+		return int(abs_fee // unit // self.estimate_size())
 
 	def get_rel_fee_from_network(self): # rel_fee is in BTC/kB
 		try:
@@ -514,7 +514,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 	def fee_est2abs(self,rel_fee,fe_type=None):
 		tx_size = self.estimate_size()
-		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size / 1024
+		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size // 1024
 		if opt.verbose:
 			msg('{} fee for {} confirmations: {} {}/kB'.format(fe_type.upper(),opt.tx_confs,rel_fee,g.coin))
 			msg('TX size (estimated): {}'.format(tx_size))
@@ -1016,11 +1016,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			ip = desc == 'inputs'
 			out = desc.capitalize() + ':\n' + enl
 			addr_w = max(len(e.addr) for e in io)
-			confs_per_day = 60*60*24 / g.proto.secs_per_block
+			confs_per_day = 60*60*24 // g.proto.secs_per_block
 			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
 				if ip and blockcount:
 					confs = e.confs + blockcount - self.blockcount
-					days = int(confs / confs_per_day)
+					days = int(confs // confs_per_day)
 				if e.mmid:
 					mmid_fmt = e.mmid.fmt(
 						width=max_mmwid,
@@ -1057,7 +1057,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return g.proto.coin_amt(self.get_fee_from_tx()).hl()
 
 	def format_view_verbose_footer(self):
-		ts = len(self.hex)/2 if self.hex else 'unknown'
+		ts = len(self.hex)//2 if self.hex else 'unknown'
 		out = 'Transaction size: Vsize {} (estimated), Total {}'.format(self.estimate_size(),ts)
 		if self.marked_signed():
 			ws = DeserializedTX(self.hex)['witness_size']

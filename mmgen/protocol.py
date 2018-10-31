@@ -45,7 +45,7 @@ def _numtob58(num):
 	def b58enc(n):
 		while n:
 			yield _b58a[n % 58]
-			n /= 58
+			n //= 58
 	return ''.join(b58enc(num))[::-1]
 
 def _b58tonum(b58str):
@@ -415,7 +415,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		def b58dec(addr_str):
 			from mmgen.util import baseconv
 			dec,l = baseconv.tohex,len(addr_str)
-			a = ''.join([dec(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l/11)])
+			a = ''.join([dec(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l//11)])
 			b = dec(addr_str[-(l%11):],'b58',pad=10)
 			return a + b
 

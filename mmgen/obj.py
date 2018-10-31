@@ -339,10 +339,10 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			return cls.init_fail(m.format(num,cls.__name__,e.message),on_fail)
 
 	def toSatoshi(self):
-		return int(Decimal(self) / self.satoshi)
+		return int(Decimal(self) // self.satoshi)
 
 	def to_unit(self,unit,show_decimal=False):
-		ret = Decimal(self) / getattr(self,unit)
+		ret = Decimal(self) // getattr(self,unit)
 		if show_decimal and ret < 1:
 			return '{:.8f}'.format(ret).rstrip('0')
 		return int(ret)
@@ -656,7 +656,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
 		try:
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
-			assert len(s) == cls.width / 2,'Key length must be {}'.format(cls.width/2)
+			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width/2)
 			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
 				me = str.__new__(cls,s.encode('hex'))
 			else:

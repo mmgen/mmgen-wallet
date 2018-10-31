@@ -32,7 +32,7 @@ from mmgen.obj import MMGenObject,TokenAddr,CoinTxID,ETHAmt
 from mmgen.util import msg,msg_r,pmsg,pdie
 
 def parse_abi(s):
-	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])/64)]
+	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
 def create_method_id(sig): return keccak_256(sig).hexdigest()[:8]
 
@@ -88,7 +88,7 @@ class Token(MMGenObject): # ERC20
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
 		to_arg = to_addr.rjust(64,'0')
-		amt_arg = '{:064x}'.format(int(amt/self.base_unit))
+		amt_arg = '{:064x}'.format(int(amt//self.base_unit))
 		return create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
 	def txcreate(   self,from_addr,to_addr,amt,start_gas,gasPrice,nonce=None,

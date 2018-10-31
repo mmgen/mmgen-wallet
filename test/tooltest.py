@@ -506,4 +506,4 @@ else:
 		if cmd is not list(cmd_data.keys())[-1]: msg('')
 
 t = int(time.time()) - start_time
-gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t/60,t%60))
+gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))

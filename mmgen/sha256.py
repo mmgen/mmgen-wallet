@@ -72,7 +72,7 @@ class Sha256(object):
 
 	def bytesToWords(self):
 		assert type(self.M) in (str,list)
-		words = [0] * (len(self.M) / 4 + len(self.M) % 4)
+		words = [0] * (len(self.M) // 4 + len(self.M) % 4)
 		b = 0
 		for i in range(len(self.M)):
 			words[b >> 5] |= ord(self.M[i]) << (24 - b % 32)

@@ -1374,7 +1374,7 @@ def create_fake_unspent_entry(coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=Fa
 		'address': coinaddr,
 		'spendable': False,
 		'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
-		'confirmations': getrandnum(3) / 2 # max: 8388608 (7 digits)
+		'confirmations': getrandnum(3) // 2 # max: 8388608 (7 digits)
 	}
 	return ret
 
@@ -3839,7 +3839,7 @@ start_time = int(time.time())
 def end_msg():
 	t = int(time.time()) - start_time
 	m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
-	sys.stderr.write(green(m.format(cmd_total,suf(cmd_total),t/60,t%60)))
+	sys.stderr.write(green(m.format(cmd_total,suf(cmd_total),t//60,t%60)))
 
 ts = MMGenTestSuite()
 

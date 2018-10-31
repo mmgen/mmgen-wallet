@@ -459,7 +459,7 @@ class CoinInfo(object):
 		def phash2addr(ver_num,pk_hash):
 			from mmgen.protocol import _b58chk_encode
 			s = '{:0{}x}'.format(ver_num,2 if ver_num < 256 else 4) + pk_hash
-			lzeroes = (len(s) - len(s.lstrip('0'))) / 2 # non-zero only for ver num '00' (BTC p2pkh)
+			lzeroes = (len(s) - len(s.lstrip('0'))) // 2 # non-zero only for ver num '00' (BTC p2pkh)
 			return ('1' * lzeroes) + _b58chk_encode(s)
 
 		low = phash2addr(ver_num,'00'*20)

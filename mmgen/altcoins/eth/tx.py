@@ -190,7 +190,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	# given absolute fee in ETH, return gas price in Gwei using tx_gas
 	def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
-		ret = ETHAmt(int(abs_fee.toWei() / self.tx_gas.toWei()),'wei')
+		ret = ETHAmt(int(abs_fee.toWei() // self.tx_gas.toWei()),'wei')
 		dmsg('fee_abs2rel() ==> {} ETH'.format(ret))
 		return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
@@ -253,7 +253,7 @@ class EthereumMMGenTX(MMGenTX):
 		keys = ('from','to','amt','nonce')
 		ld = len(self.txobj['data'])
 		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in keys),
-							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld/2) if ld else Str('None'),
+							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld//2) if ld else Str('None'),
 							c=g.dcoin if len(self.outputs) else '',
 							g=yellow(str(self.txobj['gasPrice'].to_unit('Gwei',show_decimal=True))),
 							G=yellow(str(self.txobj['startGas'].toKwei())),

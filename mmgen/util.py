@@ -170,7 +170,7 @@ def make_chksum_N(s,nchars,sep=False):
 	if nchars%4 or not (4 <= nchars <= 64): return False
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = ('',' ')[bool(sep)]
-	return sep.join([s[i*4:i*4+4] for i in range(nchars/4)])
+	return sep.join([s[i*4:i*4+4] for i in range(nchars//4)])
 
 def make_chksum_8(s,sep=False):
 	from mmgen.obj import HexStr
@@ -191,8 +191,7 @@ def split2(s,sep=None): return splitN(s,2,sep) # always return a 2-element list
 def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
 
 def split_into_cols(col_wid,s):
-	return ' '.join([s[col_wid*i:col_wid*(i+1)]
-					for i in range(len(s)/col_wid+1)]).rstrip()
+	return ' '.join([s[col_wid*i:col_wid*(i+1)] for i in range(len(s)//col_wid+1)]).rstrip()
 
 def screen_width(s):
 	return len(s) + len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
@@ -220,16 +219,16 @@ def make_timestr(secs=None):
 	return '{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}'.format(*tv)
 
 def secs_to_dhms(secs):
-	dsecs = secs/3600
+	dsecs = secs//3600
 	return '{}{:02d}:{:02d}:{:02d}'.format(
-		('','{} day{}, '.format(dsecs/24,suf(dsecs/24)))[dsecs > 24],
-		dsecs % 24, (secs/60) % 60, secs % 60)
+		('','{} day{}, '.format(dsecs//24,suf(dsecs//24)))[dsecs > 24],
+		dsecs % 24, (secs//60) % 60, secs % 60)
 
 def secs_to_hms(secs):
-	return '{:02d}:{:02d}:{:02d}'.format(secs/3600, (secs/60) % 60, secs % 60)
+	return '{:02d}:{:02d}:{:02d}'.format(secs//3600, (secs//60) % 60, secs % 60)
 
 def secs_to_ms(secs):
-	return '{:02d}:{:02d}'.format(secs/60, secs % 60)
+	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
 def is_int(s):
 	try:
@@ -344,7 +343,7 @@ class baseconv(object):
 		num,ret = int(hexnum,16),[]
 		while num:
 			ret.append(num % base)
-			num /= base
+			num //= base
 		o = [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
 		return ''.join(o) if tostr else o
 
@@ -379,7 +378,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 		[
 			('' if (line_nums == False or i % cols) else '{:06x}: '.format(i*gw)) +
 				hexlify(data[i*gw:i*gw+gw]) + ('\n',' ')[bool((i+1) % cols)]
-					for i in range(len(data)/gw + r)
+					for i in range(len(data)//gw + r)
 		]
 	).rstrip() + '\n'
 

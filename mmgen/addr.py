@@ -136,7 +136,7 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def b58enc(self,addr_str):
 		enc,l = baseconv.fromhex,len(addr_str)
-		a = ''.join([enc(addr_str[i*8:i*8+8].encode('hex'),'b58',pad=11,tostr=True) for i in range(l/8)])
+		a = ''.join([enc(addr_str[i*8:i*8+8].encode('hex'),'b58',pad=11,tostr=True) for i in range(l//8)])
 		b = enc(addr_str[l-l%8:].encode('hex'),'b58',pad=7,tostr=True)
 		return a + b
 

@@ -108,7 +108,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 #		sys.exit(0)
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
-		confs_per_day = 60*60*24 / g.proto.secs_per_block
+		confs_per_day = 60*60*24 // g.proto.secs_per_block
 		tr_rpc = []
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for o in us_rpc:
@@ -118,7 +118,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				o.update({
 					'twmmid': l.mmid,
 					'label':  l.comment,
-					'days':   int(o['confirmations'] / confs_per_day),
+					'days':   int(o['confirmations'] // confs_per_day),
 					'amt':    g.proto.coin_amt(o['amount']),
 					'addr':   CoinAddr(o['address']),
 					'confs':  o['confirmations']
@@ -482,7 +482,7 @@ class TwAddrList(MMGenDict):
 				return j.sort_key
 
 		al_id_save = None
-		confs_per_day = 60*60*24 / g.proto.secs_per_block
+		confs_per_day = 60*60*24 // g.proto.secs_per_block
 		for mmid in sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
 			if mmid.type == 'mmgen':
 				if al_id_save and al_id_save != mmid.obj.al_id:
@@ -500,7 +500,7 @@ class TwAddrList(MMGenDict):
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 				cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
-				age=mmid.confs / (1,confs_per_day)[show_days] if hasattr(mmid,'confs') and mmid.confs != None else '-'
+				age=mmid.confs // (1,confs_per_day)[show_days] if hasattr(mmid,'confs') and mmid.confs != None else '-'
 				))
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])

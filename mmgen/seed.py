@@ -40,7 +40,7 @@ class Seed(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
 			# Truncate random data for smaller seed lengths
-			seed_bin = sha256(get_random(1033)).digest()[:opt.seed_len/8]
+			seed_bin = sha256(get_random(1033)).digest()[:opt.seed_len//8]
 		elif len(seed_bin)*8 not in g.seed_lens:
 			die(3,'{}: invalid seed length'.format(len(seed_bin)))
 
@@ -357,7 +357,7 @@ class Mnemonic (SeedSourceUnenc):
 	fmt_codes = 'mmwords','words','mnemonic','mnem','mn','m'
 	desc = 'mnemonic data'
 	ext = 'mmwords'
-	mn_lens = [i / 32 * 3 for i in g.seed_lens]
+	mn_lens = [i // 32 * 3 for i in g.seed_lens]
 	wl_id = 'electrum' # or 'tirosh'
 
 	def _get_data_from_user(self,desc):
@@ -429,10 +429,10 @@ class Mnemonic (SeedSourceUnenc):
 		return ' '.join(words)
 
 	@staticmethod
-	def _mn2hex_pad(mn): return len(mn) * 8 / 3
+	def _mn2hex_pad(mn): return len(mn) * 8 // 3
 
 	@staticmethod
-	def _hex2mn_pad(hexnum): return len(hexnum) * 3 / 8
+	def _hex2mn_pad(hexnum): return len(hexnum) * 3 // 8
 
 	def _format(self):
 
@@ -768,7 +768,7 @@ class Brainwallet (SeedSourceEnc):
 			seed_len = opt.seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = scrypt_hash_passphrase(self.brainpasswd,'',d.hash_preset,buflen=seed_len/8)
+		seed = scrypt_hash_passphrase(self.brainpasswd,'',d.hash_preset,buflen=seed_len//8)
 		qmsg('Done')
 		self.seed = Seed(seed)
 		msg('Seed ID: {}'.format(self.seed.sid))
@@ -807,7 +807,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _get_incog_data_len(self,seed_len):
 		e = (g.hincog_chk_len,0)[bool(opt.old_incog_fmt)]
-		return g.aesctr_iv_len + g.salt_len + e + seed_len/8
+		return g.aesctr_iv_len + g.salt_len + e + seed_len//8
 
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
