@@ -50,7 +50,7 @@ def getrandnum_range(nbytes,rn_max):
 def getrandstr(num_chars,no_space=False):
 	n,m = 95,32
 	if no_space: n,m = 94,33
-	return ''.join([chr(ord(i)%n+m) for i in list(os.urandom(num_chars))])
+	return ''.join([chr(i%n+m) for i in list(os.urandom(num_chars))])
 
 def mk_tmpdir(d):
 	try: os.mkdir(d,0o755)

@@ -76,6 +76,10 @@ def run_test(test,arg,input_data):
 		cls = globals()[test]
 		ret = cls(*args,**kwargs)
 		bad_ret = list() if issubclass(cls,list) else None
+
+		if issubclass(type(ret_chk),str): ret_chk = ret_chk.encode()
+		if issubclass(type(ret),str): ret = ret.encode()
+
 		if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
 			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
 		if opt.silent and input_data=='good' and ret==bad_ret:

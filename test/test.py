@@ -27,10 +27,16 @@ repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.ar
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
 
+try: os.unlink(os.path.join(repo_root,'my.err'))
+except: pass
+
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.test import *
 from mmgen.protocol import CoinProtocol,init_coin
+
+class TestSuiteException(Exception): pass
+class TestSuiteFatalException(Exception): pass
 
 set_debug_all()
 
@@ -76,6 +82,8 @@ ref_enc_fn = 'sample-text.mmenc'
 tool_enc_passwd = "Scrypt it, don't hash it!"
 sample_text = \
 	'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n'
+
+chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 
 # Laggy flash media cause pexpect to crash, so create a temporary directory
 # under '/dev/shm' and put datadir and temp files here.
@@ -137,7 +145,7 @@ opts_data = lambda: {
 -l, --list-cmds      List and describe the commands in the test suite
 -L, --log            Log commands to file {lf}
 -n, --names          Display command names instead of descriptions
--O, --popen-spawn    Use pexpect's popen_spawn instead of popen (always true, so ignored)
+-O, --popen-spawn    Use pexpect's popen_spawn instead of popen
 -p, --pause          Pause between tests, resuming on keypress
 -P, --profile        Record the execution time of each script
 -q, --quiet          Produce minimal output.  Suppress dependency info
@@ -160,7 +168,8 @@ If no command is given, the whole suite of tests is run.
 sys.argv = [sys.argv[0]] + ['--data-dir',data_dir] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data)
-opt.popen_spawn = True # popen has issues, so use popen_spawn always
+# Under python3, with PopenSpawn we can no longer imitate cbreak mode with sys.stdin.read(1)
+# opt.popen_spawn = True # popen has issues, so use popen_spawn always
 
 if not opt.system: os.environ['PYTHONPATH'] = repo_root
 
@@ -676,9 +685,9 @@ eth_token_bals = {
 }
 
 def eth_args():
-	assert g.coin in ('ETH','ETC'),'for ethdev tests, --coin must be set to either ETH or ETC'
+	if g.coin not in ('ETH','ETC'):
+		raise TestSuiteException('for ethdev tests, --coin must be set to either ETH or ETC')
 	return ['--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
-
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -983,7 +992,8 @@ cmd_group['ethdev'] = (
 
 	('ethdev_contract_deploy',      'deploying contract (create,sign,send)'),
 
-	('ethdev_token_transfer_funds','transferring token funds from dev to user'),
+	('ethdev_token_fund_users',     'transferring token funds from dev to user'),
+	('ethdev_token_user_bals',      'show balances after transfer'),
 	('ethdev_token_addrgen',       'generating token addresses'),
 	('ethdev_token_addrimport_badaddr1','importing token addresses (no token address)'),
 	('ethdev_token_addrimport_badaddr2','importing token addresses (bad token address)'),
@@ -1223,15 +1233,11 @@ usr_rand_chars = (5,30)[bool(opt.usr_random)]
 usr_rand_arg = '-r{}'.format(usr_rand_chars)
 cmd_total = 0
 
-# Disable color in spawned scripts so we can parse their output
+# Disable color in spawned scripts so pexpect can parse their output
 os.environ['MMGEN_DISABLE_COLOR'] = '1'
 os.environ['MMGEN_NO_LICENSE'] = '1'
 os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 os.environ['MMGEN_BOGUS_SEND'] = '1'
-
-def get_segwit_arg(cfg):
-	return ['--type='+('segwit','bech32')[bool(opt.bech32)]] if cfg['segwit'] else []
-
 # Tell spawned programs they're running in the test suite
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
@@ -1288,7 +1294,7 @@ if opt.list_cmds:
 
 NL = ('\r\n','\n')[g.platform=='linux' and bool(opt.popen_spawn)]
 
-def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
+def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False,delete_all=False):
 
 	dot = ('.','')[bool(no_dot)]
 	flist = [os.path.join(mydir,f) for f in os.listdir(mydir) if f == ext or f[-len(dot+ext):] == dot+ext]
@@ -1296,12 +1302,11 @@ def get_file_with_ext(ext,mydir,delete=True,no_dot=False,return_list=False):
 	if not flist: return False
 	if return_list: return flist
 
-	if len(flist) > 1:
-		if delete:
+	if len(flist) > 1 or delete_all:
+		if delete or delete_all:
 			if not opt.quiet:
 				msg("Multiple *.{} files in '{}' - deleting".format(ext,mydir))
 			for f in flist:
-				msg(f)
 				os.unlink(f)
 		return False
 	else:
@@ -1325,11 +1330,10 @@ def get_addrfile_checksum(display=False):
 
 def verify_checksum_or_exit(checksum,chk):
 	if checksum != chk:
-		errmsg(red('Checksum error: {}'.format(chk)))
-		sys.exit(1)
+		raise TestSuiteFatalException('Checksum error: {}'.format(chk))
 	vmsg(green('Checksums match: ') + cyan(chk))
 
-from .test.mmgen_pexpect import MMGenPexpect
+from test.mmgen_pexpect import MMGenPexpect
 class MMGenExpect(MMGenPexpect):
 
 	def __init__(self,name,mmgen_cmd,cmd_args=[],extra_desc='',no_output=False,msg_only=False,no_msg=False):
@@ -1449,8 +1453,8 @@ def create_tx_data(sources,addrs_per_wallet=addrs_per_wallet):
 		ad.add(al)
 		aix = AddrIdxList(fmt_str=cfgs[s]['addr_idx_list'])
 		if len(aix) != addrs_per_wallet:
-			errmsg(red('Address index list length != {}: {}'.format(addrs_per_wallet,repr(aix))))
-			sys.exit(0)
+			raise TestSuiteFatalException(
+				'Address index list length != {}: {}'.format(addrs_per_wallet,repr(aix)))
 		tx_data[s] = {
 			'addrfile': afile,
 			'chk': al.chksum,
@@ -1526,11 +1530,9 @@ def do_between():
 		if keypress_confirm(green('Continue?'),default_yes=True):
 			if opt.verbose or opt.exact_output: sys.stderr.write('\n')
 		else:
-			errmsg('Exiting at user request')
-			sys.exit(0)
+			raise KeyboardInterrupt('Exiting at user request')
 	elif opt.verbose or opt.exact_output:
 		sys.stderr.write('\n')
-
 
 rebuild_list = OrderedDict()
 
@@ -1591,10 +1593,8 @@ def refcheck(desc,chk,refchk):
 	if chk == refchk:
 		ok()
 	else:
-		if not opt.verbose: errmsg('')
-		m = "Fatal error - {} '{}' does not match reference value '{}'.  Aborting test"
-		errmsg(red(m.format(desc,chk,refchk)))
-		sys.exit(3)
+		m = "\nFatal error - {} '{}' does not match reference value '{}'.  Aborting test"
+		raise TestSuiteFatalException(m.format(desc,chk,refchk))
 
 def check_deps(cmds):
 	if len(cmds) != 1:
@@ -1703,7 +1703,6 @@ class MMGenTestSuite(object):
 			'addrgen','addrimport','keygen','passchg','tool','passgen','regtest','autosign')
 		for s in scripts:
 			t = MMGenExpect(name,('mmgen-'+s),[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
-			t.read()
 			t.ok()
 
 	def longhelpscreens(self,name): self.helpscreens(name,arg='--longhelp')
@@ -1716,6 +1715,7 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-walletgen', args + [usr_rand_arg])
 		t.license()
 		t.usr_rand(usr_rand_chars)
+		t.expect('Generating')
 		t.passphrase_new('new MMGen wallet',cfg['wpasswd'])
 		t.label()
 		global have_dfl_wallet
@@ -1866,7 +1866,7 @@ class MMGenTestSuite(object):
 							input_sels_prompt='to spend',
 							bad_input_sels=False,non_mmgen_inputs=0,
 							interactive_fee='',
-							fee_desc='transaction fee',fee_res=None,
+							fee_desc='transaction fee',fee_res=None,eth_fee_res=None,
 							add_comment='',view='t',save=True,no_ok=False):
 		for choice in menu + ['q']:
 			t.expect(r'\[q\]uit view, .*?:.',choice,regex=True)
@@ -1884,7 +1884,10 @@ class MMGenTestSuite(object):
 			t.send('y')
 		else:
 			if have_est_fee: t.send('n')
-			t.send(interactive_fee+'\n')
+			if eth_fee_res:
+				t.expect('or gas price: ',interactive_fee+'\n')
+			else:
+				t.send(interactive_fee+'\n')
 			if fee_res: t.expect(fee_res)
 			t.expect('OK? (Y/n): ','y')
 
@@ -1977,8 +1980,11 @@ class MMGenTestSuite(object):
 			([],['--rbf'])[g.proto.cap('rbf')] +
 			['-f',tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 
+		if t.expect([('Get','Transac')[cmdline_inputs],'Unable to connect to \S+'],regex=True) == 1:
+			raise TestSuiteException('\n'+t.p.after)
+
 		if cmdline_inputs:
-			t.written_to_file('Transaction')
+			t.written_to_file('tion')
 			t.ok()
 			return
 
@@ -1988,19 +1994,12 @@ class MMGenTestSuite(object):
 			t.do_decrypt_ka_data(hp='1',pw=cfgs['14']['kapasswd'])
 
 		for num in tx_data:
-			t.expect_getend('Getting address data from file ')
+			t.expect_getend('ting address data from file ')
 			chk=t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 			verify_checksum_or_exit(tx_data[num]['chk'],chk)
 
 		# not in tracking wallet warning, (1 + num sources) times
-		if t.expect(['Continue anyway? (y/N): ',
-				'Unable to connect to {}'.format(g.proto.daemon_name)]) == 0:
-			t.send('y')
-		else:
-			errmsg(red('Error: unable to connect to {}.  Exiting'.format(g.proto.daemon_name)))
-			sys.exit(1)
-
-		for num in tx_data:
+		for num in range(len(tx_data) + 1):
 			t.expect('Continue anyway? (y/N): ','y')
 
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
@@ -2297,9 +2296,9 @@ class MMGenTestSuite(object):
 	def txdo4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
 		add_args = ['-d',cfg['tmpdir'],'-i','brain','-b'+cfg['bw_params'],'-p1','-k',non_mm_fn,'-M',f12]
+		get_file_with_ext('sigtx',cfg['tmpdir'],delete_all=True) # delete tx signed by txsign4
 		t = self.txcreate_common(name,sources=['1','2','3','4','14'],
 					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
-		os.system('rm -f {}/*.sigtx'.format(cfg['tmpdir'].encode('utf8')))
 
 		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
 			t.passphrase('{}'.format(desc),cfgs[cnum]['wpasswd'])
@@ -2310,10 +2309,6 @@ class MMGenTestSuite(object):
 		cmd = 'touch ' + os.path.join(cfg['tmpdir'],'txdo')
 		os.system(cmd.encode())
 		t.ok()
-
-	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
-		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
-		self.txbump(name,f7,prepend_args=['-p1','-k',non_mm_fn,'-M',f1],seed_args=[f2,f3,f4,f5,f6,f8])
 
 	def txsign4(self,name,f1,f2,f3,f4,f5,f6):
 		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
@@ -2328,6 +2323,10 @@ class MMGenTestSuite(object):
 
 		self.txsign_end(t,has_label=True)
 		t.ok()
+
+	def txbump4(self,name,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'
+		non_mm_fn = os.path.join(cfg['tmpdir'],non_mmgen_fn)
+		self.txbump(name,f7,prepend_args=['-p1','-k',non_mm_fn,'-M',f1],seed_args=[f2,f3,f4,f5,f6,f8])
 
 	def walletgen5(self,name,del_dw_run='dummy'):
 		self.walletgen(name)
@@ -2411,46 +2410,67 @@ class MMGenTestSuite(object):
 		cmp_or_die(hincog_offset,int(o))
 
 	def autosign(self,name): # tests everything except device detection, mount/unmount
+
 		if skip_for_win(): return
-		fdata = (   ('btc',''),
-					('bch',''),
-					('ltc','litecoin'),
-					('eth','ethereum'),
-					('erc20','ethereum'),
-					('etc','ethereum_classic'))
-		tfns  = [cfgs['8']['ref_tx_file'][c][1] for c,d in fdata] + \
-				[cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
-		tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
-		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
-		except: pass
-		for f,fn in zip(tfs,tfns):
-			if fn: # use empty fn to skip file
-				shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
-		# make a bad tx file
-		with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
-			f.write('bad tx data')
+
 		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc,eth']
-		mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
-		mn = read_from_file(mn_fn).strip().split()
 
-		t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
-		t.expect_getend('Wrote key file ')
-		t.ok()
+		def copy_files_and_make_key():
+			fdata = (   ('btc',''),
+						('bch',''),
+						('ltc','litecoin'),
+						('eth','ethereum'),
+						('erc20','ethereum'),
+						('etc','ethereum_classic'))
+			tfns  = [cfgs['8']['ref_tx_file'][c][1] for c,d in fdata] + \
+					[cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
+			tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
 
-		t = MMGenExpect(name,'mmgen-autosign',opts+['setup'],extra_desc='(setup)')
-		t.expect('words: ','3')
-		t.expect('OK? (Y/n): ','\n')
-		for i in range(24):
-			t.expect('word #{}: '.format(i+1),mn[i]+'\n')
-		wf = t.written_to_file('Autosign wallet')
-		t.ok()
+			try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
+			except: pass
 
-		t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
-		t.expect('11 transactions signed')
-		t.expect('1 transaction failed to sign')
-		t.expect('Waiting.')
-		t.kill(2)
-		t.ok(exit_val=1)
+			for f,fn in zip(tfs,tfns):
+				if fn: # use empty fn to skip file
+					shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
+
+			# make a bad tx file
+			with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
+				f.write('bad tx data')
+
+			t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
+			t.expect_getend('Wrote key file ')
+			t.ok()
+
+		def get_mnemonic():
+			t = MMGenExpect(name,'mmgen-autosign',opts+['setup'],extra_desc='(setup)')
+			t.expect('words: ','3')
+			t.expect('OK? (Y/n): ','\n')
+			mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
+			mn = read_from_file(mn_fn).strip().split()
+			mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
+			wnum = 1
+			for i in range(len(mn)):
+				em,rm = 'Enter word #{}: ','Repeat word #{}: '
+				ret = t.expect((em.format(wnum),rm.format(wnum-1)))
+				if ret == 0: wnum += 1
+				for j in range(len(mn[i])):
+					t.send(mn[i][j])
+					time.sleep(0.005)
+				t.send('\n')
+			wf = t.written_to_file('Autosign wallet')
+			t.ok()
+
+		def run_autosign():
+			t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
+			t.expect('11 transactions signed')
+			t.expect('1 transaction failed to sign')
+			t.expect('Waiting')
+			t.kill(2)
+			t.ok(exit_val=1)
+
+		copy_files_and_make_key()
+		get_mnemonic()
+		run_autosign()
 
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
@@ -2572,18 +2592,21 @@ class MMGenTestSuite(object):
 		t = MMGenExpect(name,'mmgen-tool',coin_arg+[tool_cmd,af]+add_args)
 		if ftype == 'keyaddr':
 			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass)
-		o = t.read().strip().split('\n')[-1]
 		rc = cfg[   'ref_' + ftype + 'file_chksum' +
 					('_'+coin.lower() if coin else '') +
 					('_'+mmtype if mmtype else '')]
 		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
-		cmp_or_die(ref_chksum,o)
+		t.expect(chksum_pat,regex=True)
+		m = t.p.match.group(0)
+		t.read()
+		cmp_or_die(ref_chksum,m)
 
-	def ref_altcoin_addrgen(self,name,coin,mmtype,gen_what='addr',coin_suf=''):
+	def ref_altcoin_addrgen(self,name,coin,mmtype,gen_what='addr',coin_suf='',add_args=[]):
 		wf = os.path.join(ref_dir,cfg['seed_id']+'.mmwords')
 		t = MMGenExpect(name,'mmgen-{}gen'.format(gen_what),
 				['-Sq','--coin='+coin] +
 				(['--type='+mmtype] if mmtype else []) +
+				add_args +
 				[wf,cfg['addr_idx_list']])
 		if gen_what == 'key':
 			t.expect('Encrypt key list? (y/N): ','N')
@@ -2591,7 +2614,6 @@ class MMGenTestSuite(object):
 		chk_ref = cfg['ref_{}addrfile_chksum_{}{}'.format(('','key')[gen_what=='key'],coin.lower(),coin_suf)]
 		t.read()
 		refcheck('{}list data checksum'.format(gen_what),chk,chk_ref)
-
 
 	def ref_addrfile_gen_eth(self,name):
 		self.ref_altcoin_addrgen(name,coin='ETH',mmtype='ethereum')
@@ -2712,8 +2734,11 @@ class MMGenTestSuite(object):
 		restore_debug()
 		t.passphrase('user data',tool_enc_passwd)
 		t.expect(NL,nonl=True)
+		t.expect('to confirm: ','YES\n')
 		import re
-		o = re.sub('\r\n','\n',t.read())
+		o = t.read()
+		o = re.sub('YES\r\n','',o).split('\n')[0]
+		o = re.sub('\r','\n',o)
 		cmp_or_die(sample_text,o)
 
 	# wallet conversion tests
@@ -2970,14 +2995,14 @@ class MMGenTestSuite(object):
 		ext = '{}{}{}[{}]{x}.testnet.addrs'.format(
 			sid,altcoin_pfx,id_str,addr_range,x='-α' if g.debug_utf8 else '')
 		fn = get_file_with_ext(ext,self.regtest_user_dir(user),no_dot=True)
-		silence()
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
 		if hasattr(g.proto,'bech32_hrp_rt'):
 			g.proto.bech32_hrp = g.proto.bech32_hrp_rt
+		silence()
 		addr = AddrList(fn).data[idx].addr
-		g.proto = psave
 		end_silence()
+		g.proto = psave
 		return addr
 
 	def create_tx_outputs(self,user,data):
@@ -3036,7 +3061,7 @@ class MMGenTestSuite(object):
 		ret = MMGenExpect(name,'mmgen-regtest',['show_mempool']).read()
 		restore_debug()
 		from ast import literal_eval
-		return literal_eval(ret)
+		return literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
 
 	def regtest_get_mempool1(self,name):
 		mp = self.regtest_get_mempool(name)
@@ -3352,6 +3377,7 @@ class MMGenTestSuite(object):
 	def ethdev_txcreate(self,name,args=[],menu=[],acct='1',non_mmgen_inputs=0,
 						interactive_fee='50G',
 						fee_res='0.00105 {} (50 gas price in Gwei)'.format(g.coin),
+						eth_fee_res=None,
 						fee_desc = 'gas price'):
 		t = MMGenExpect(name,'mmgen-txcreate', eth_args() + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
@@ -3361,7 +3387,8 @@ class MMGenTestSuite(object):
 								input_sels_prompt='to spend from',
 								inputs=acct,file_desc='Ethereum transaction',
 								bad_input_sels=True,non_mmgen_inputs=non_mmgen_inputs,
-								interactive_fee=interactive_fee,fee_res=fee_res,fee_desc=fee_desc,
+								interactive_fee=interactive_fee,fee_res=fee_res,
+								fee_desc=fee_desc,eth_fee_res=eth_fee_res,
 								add_comment=ref_tx_label_jp)
 
 	def ethdev_txsign(self,name,ni=False,ext='{}.rawtx',add_args=[]):
@@ -3421,7 +3448,7 @@ class MMGenTestSuite(object):
 		interactive_fee='40G'
 		fee_res='0.00084 {} (40 gas price in Gwei)'.format(g.coin)
 		return self.ethdev_txcreate(name,args=args,acct='1',non_mmgen_inputs=0,
-					interactive_fee=interactive_fee,fee_res=fee_res)
+					interactive_fee=interactive_fee,fee_res=fee_res,eth_fee_res=True)
 
 	def ethdev_txbump(self,name,ext=',40000]{}.rawtx',fee='50G',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -3487,9 +3514,7 @@ class MMGenTestSuite(object):
 		t.expect('Removed label.*in tracking wallet',regex=True)
 		t.ok()
 
-
-	def init_ethdev_common(self):
-		g.testnet = True
+	def ethdev_rpc_init(self):
 		init_coin(g.coin)
 		g.proto.rpc_port = 8549
 		rpc_init()
@@ -3497,13 +3522,11 @@ class MMGenTestSuite(object):
 	def ethdev_token_compile(self,name,token_data={}):
 		MMGenExpect(name,'',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
-		silence()
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
 		imsg("Executing: {}".format(' '.join(cmd)))
-		subprocess.check_output(cmd)
+		subprocess.check_output(cmd,stderr=subprocess.STDOUT)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
-		end_silence()
 		ok()
 
 	def ethdev_token_compile1(self,name):
@@ -3515,7 +3538,7 @@ class MMGenTestSuite(object):
 		self.ethdev_token_compile(name,token_data)
 
 	def ethdev_token_deploy(self,name,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
-		self.init_ethdev_common()
+		self.ethdev_rpc_init()
 		key_fn = get_tmpfile_fn(cfg,cfg['parity_keyfile'])
 		fn = os.path.join(cfg['tmpdir'],key+'.bin')
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -3539,9 +3562,7 @@ class MMGenTestSuite(object):
 			"Contract '{}:{}' failed to execute. Aborting".format(num,key))
 		if key == 'Token':
 			write_to_tmpfile(cfg,'token_addr{}'.format(num),addr+'\n')
-			silence()
 			imsg('\nToken #{} ({}) deployed!'.format(num,addr))
-			end_silence()
 		t.ok()
 
 	def ethdev_token_deploy1a(self,name): self.ethdev_token_deploy(name,num=1,key='SafeMath',gas=200000)
@@ -3560,25 +3581,45 @@ class MMGenTestSuite(object):
 	def ethdev_contract_deploy(self,name): # test create,sign,send
 		self.ethdev_token_deploy(name,num=2,key='SafeMath',gas=1100000,mmgen_cmd='txcreate')
 
-	def ethdev_token_transfer_funds(self,name):
+	def ethdev_token_transfer_ops(self,name,op,amt=1000):
 		MMGenExpect(name,'',msg_only=True)
 		sid = cfgs['8']['seed_id']
-		cmd = lambda i: ['mmgen-tool','--coin='+g.coin,'gen_addr','{}:E:{}'.format(sid,i),'wallet='+dfl_words]
-		silence()
-		usr_addrs = [subprocess.check_output(cmd(i),stderr=sys.stderr).strip() for i in (11,21)]
-		self.init_ethdev_common()
+		from mmgen.tool import Gen_addr
+		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
+		usr_addrs = [Gen_addr(addr,dfl_words,return_result=True) for addr in usr_mmaddrs]
+		self.ethdev_rpc_init()
+
 		from mmgen.altcoins.eth.contract import Token
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		for i in range(2):
-			tk = Token(read_from_tmpfile(cfg,'token_addr{}'.format(i+1)).strip())
-			imsg('\n'+tk.info())
-			txid = tk.transfer(eth_addr,usr_addrs[i],1000,eth_key,
-								start_gas=ETHAmt(60000,'wei'),gasPrice=ETHAmt(8,'Gwei'))
-			assert etx.get_exec_status(txid,True) != 0,'Transfer of token funds failed. Aborting'
-			imsg('dev token balance: {}'.format(tk.balance(eth_addr)))
-			imsg('usr{} token balance: {}'.format(i+1,tk.balance(usr_addrs[i])))
+		def do_transfer():
+			for i in range(2):
+				tk = Token(read_from_tmpfile(cfg,'token_addr{}'.format(i+1)).strip())
+				imsg_r('\n'+tk.info())
+				imsg('dev token balance (pre-send): {}'.format(tk.balance(eth_addr)))
+				imsg('Sending {} {} to address {} ({})'.format(amt,g.coin,usr_addrs[i],usr_mmaddrs[i]))
+				txid = tk.transfer(eth_addr,usr_addrs[i],amt,eth_key,
+									start_gas=ETHAmt(60000,'wei'),gasPrice=ETHAmt(8,'Gwei'))
+				assert etx.get_exec_status(txid,True) != 0,'Transfer of token funds failed. Aborting'
+
+		def show_bals():
+			for i in range(2):
+				tk = Token(read_from_tmpfile(cfg,'token_addr{}'.format(i+1)).strip())
+				imsg('Token: {}'.format(tk.symbol()))
+				imsg('dev token balance: {}'.format(tk.balance(eth_addr)))
+				imsg('usr token balance: {} ({} {})'.format(
+						tk.balance(usr_addrs[i]),usr_mmaddrs[i],usr_addrs[i]))
+
+		silence()
+		if op == 'show_bals': show_bals()
+		elif op == 'do_transfer': do_transfer()
 		end_silence()
 		ok()
+
+	def ethdev_token_fund_users(self,name):
+		return self.ethdev_token_transfer_ops(name,op='do_transfer')
+
+	def ethdev_token_user_bals(self,name):
+		return self.ethdev_token_transfer_ops(name,op='show_bals')
 
 	def ethdev_token_addrgen(self,name):
 		self.ethdev_addrgen(name,addrs='11-13')
@@ -3658,7 +3699,7 @@ class MMGenTestSuite(object):
 			t_non_mmgen='888.111122223333444455',t_mmgen='111.888877776666555545',extra_args=['--token=mm1'])
 
 	def ethdev_txcreate_noamt(self,name):
-		return self.ethdev_txcreate(name,args=['98831F3A:E:12'])
+		return self.ethdev_txcreate(name,args=['98831F3A:E:12'],eth_fee_res=True)
 	def ethdev_txsign_noamt(self,name):
 		self.ethdev_txsign(name,ext='99.99895,50000]{}.rawtx')
 	def ethdev_txsend_noamt(self,name):
@@ -3849,6 +3890,10 @@ if cmd_args and cmd_args[0] == 'admin':
 	cmd_data = cmd_data_admin
 	cmd_list = cmd_list_admin
 
+if opt.exit_after:
+	if opt.exit_after not in cmd_data.keys():
+		die(1,"'{}': command not recognized".format(opt.exit_after))
+
 try:
 	if cmd_args:
 		for arg in cmd_args:
@@ -3878,7 +3923,13 @@ try:
 			if cmd is not list(cmd_data.keys())[-1]: do_between()
 except KeyboardInterrupt:
 	die(1,'\nExiting at user request')
+except TestSuiteException as e:
+	ydie(1,e.args[0])
+except TestSuiteFatalException as e:
+	rdie(1,e.args[0])
 except opt.traceback and Exception:
+	import traceback
+	print(''.join(traceback.format_exception(*sys.exc_info())))
 	try:
 		os.stat('my.err')
 		with open('my.err') as f:

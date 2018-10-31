@@ -5,8 +5,11 @@ sys.path.insert(0,'.')
 if 'TMUX' in os.environ: del os.environ['TMUX']
 os.environ['MMGEN_TRACEBACK'] = '1'
 
-tb_source = open(sys.argv[1])
+tb_source = open(sys.argv[1]).read()
 tb_file = os.path.join(os.environ['PWD'],'my.err')
+
+try: os.unlink(os.path.join(repo_root,tb_file))
+except: pass
 
 def process_exception():
 	l = traceback.format_exception(*sys.exc_info())
@@ -26,6 +29,10 @@ except SystemExit as e:
 	if e.code != 0:
 		process_exception()
 	sys.exit(e.code)
-except:
+except Exception as e:
 	process_exception()
-	sys.exit(1)
+	sys.exit(e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1)
+else:
+	print('else: '+repr(sys.exc_info()))
+finally:
+	print('finally: '+repr(sys.exc_info()))

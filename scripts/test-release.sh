@@ -18,21 +18,22 @@ monero_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
 PROGNAME=$(basename $0)
-while getopts hCefilnPtv OPT
+while getopts hCfilnPRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
 		echo   "  USAGE:           $PROGNAME [options] [branch] [tests]"
 		echo   "  OPTIONS: '-h'  Print this help message"
 		echo   "           '-C'  Run tests in coverage mode"
-		echo   "           '-e'  Run test/test.py with '--exact-output' argument"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
 		echo   "           '-i'  Install only; don't run tests"
 		echo   "           '-l'  List the test name symbols"
 		echo   "           '-n'  Don't install; test in place"
 		echo   "           '-P'  Don't pause between tests"
+		echo   "           '-R'  Don't remove temporary files after program has exited"
 		echo   "           '-t'  Print the tests without running them"
-		echo   "           '-e'  Run test/test.py with '--verbose' argument"
+		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with '--verbose' switch"
+		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
 		echo   "     sha256   - MMGen sha256 implementation"
@@ -45,8 +46,6 @@ do
 		echo   "     btc_rt   - bitcoin regtest"
 		echo   "     bch      - bitcoin cash (BCH)"
 		echo   "     bch_rt   - bitcoin cash (BCH) regtest"
-# 		echo   "     b2x      - bitcoin 2x (B2X)"
-# 		echo   "     b2x_rt   - bitcoin 2x (B2X) regtest"
 		echo   "     ltc      - litecoin"
 		echo   "     ltc_tn   - litecoin testnet"
 		echo   "     ltc_rt   - litecoin regtest"
@@ -56,26 +55,31 @@ do
 		exit ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
-		test_py="$test_py --coverage"
-		tooltest_py="$tooltest_py --coverage"
-		scrambletest_py="$scrambletest_py --coverage"
+		test_py+=" --coverage"
+		tooltest_py+=" --coverage"
+		scrambletest_py+=" --coverage"
 		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
 		objtest_py="$python $objtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen"
 		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
-	e)  test_py="$test_py --exact-output" ;;
 	f)  rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	i)  INSTALL_ONLY=1 ;;
 	l)  echo $dfl_tests; exit ;;
 	n)  NO_INSTALL=1 ;;
 	P)  NO_PAUSE=1 ;;
+	R)  NO_TMPFILE_REMOVAL=1 ;;
 	t)  TESTING=1 ;;
-	v)  test_py="$test_py --verbose" ;;
+	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
+	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
+		tooltest_py+=" --verbose" gentest_py+=" --verbose" mmgen_tool+=" --verbose"
+		scrambletest_py+=" --verbose" ;;
 	*)  exit ;;
 	esac
 done
+
+[ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
 
 shift $((OPTIND-1))
 
@@ -128,10 +132,10 @@ do_test() {
 i_obj='Data object'
 s_obj='Testing data objects'
 t_obj=(
-	"$objtest_py --coin=btc -S"
-	"$objtest_py --coin=btc --testnet=1 -S"
-	"$objtest_py --coin=ltc -S"
-	"$objtest_py --coin=ltc --testnet=1 -S")
+	"$objtest_py --coin=btc"
+	"$objtest_py --coin=btc --testnet=1"
+	"$objtest_py --coin=ltc"
+	"$objtest_py --coin=ltc --testnet=1")
 f_obj='Data object test complete'
 
 i_sha256='MMGen sha256 implementation'
@@ -381,6 +385,7 @@ tests=$dfl_tests
 check_args
 echo "Running tests: $tests"
 run_tests "$tests"
-rm -rf /tmp/mmgen-test-release-*
+
+[ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release-*
 
 echo -e "${GREEN}All OK$RESET"

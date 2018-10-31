@@ -60,16 +60,14 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 			ret = f(s,timeout=(60,5)[bool(opt.debug_pexpect)])
 	except pexpect.TIMEOUT:
 		if opt.debug_pexpect: raise
-		errmsg(red('\nERROR.  Expect {}{}{} timed out.  Exiting'.format(quo,s,quo)))
-		sys.exit(1)
+		rdie(1,red('\nERROR.  Expect {}{}{} timed out.  Exiting'.format(quo,s,quo)))
 	debug_pexpect_msg(p)
 
 	if opt.verbose and type(s) != str:
 		msg_r(' ==> {} '.format(ret))
 
 	if ret == -1:
-		errmsg('Error.  Expect returned {}'.format(ret))
-		sys.exit(1)
+		rdie(1,'Error.  Expect returned {}'.format(ret))
 	else:
 		if t == '':
 			if not nonl and not silent: vmsg('')
@@ -79,8 +77,8 @@ def my_expect(p,s,t='',delay=send_delay,regex=False,nonl=False,silent=False):
 
 def debug_pexpect_msg(p):
 	if opt.debug_pexpect:
-		errmsg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
-		errmsg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
+		msg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
+		msg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
 
 data_dir = os.path.join('test','data_dir'+('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
@@ -103,12 +101,13 @@ class MMGenPexpect(object):
 		else:                   cmd,args = mmgen_cmd,cmd_args
 
 		for i in args:
-			if type(i) not in (str,str):
+			if type(i) is not str:
 				m1 = 'Error: missing input files in cmd line?:'
 				m2 = '\nName: {}\nCmd: {}\nCmd args: {}'
 				die(2,(m1+m2).format(name,cmd,args))
 
-		if opt.popen_spawn:
+#		if opt.popen_spawn:
+		if True:
 			args = ['{q}{}{q}'.format(a,q="'" if ' ' in a else '') for a in args]
 
 		cmd_str = '{} {}'.format(cmd,' '.join(args)).replace('\\','/')
@@ -146,12 +145,14 @@ class MMGenPexpect(object):
 				cmd_str = tc + ' ' + cmd_str
 			# Msg('\ncmd_str: {}'.format(cmd_str))
 			if opt.popen_spawn:
+				# NOTE: the following is outdated for Python 3
 				# PopenSpawn() requires cmd string to be bytes.  However, it autoconverts unicode
 				# input to bytes, though this behavior seems to be undocumented.  Setting 'encoding'
 				# to 'UTF-8' will cause pexpect to reject non-unicode string input.
 				self.p = PopenSpawn(cmd_str,encoding='utf8')
 			else:
-				self.p = pexpect.spawn(cmd,args)
+				self.p = pexpect.spawn(cmd_str,encoding='utf8')
+				self.p.delaybeforesend = 0
 			if opt.exact_output: self.p.logfile = sys.stdout
 
 	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True):
@@ -172,8 +173,7 @@ class MMGenPexpect(object):
 
 	def ok(self,exit_val=0):
 		ret = self.p.wait()
-#		Msg('expect: {} got: {}'.format(exit_val,ret))
-		if ret != exit_val and not opt.coverage:
+		if ret not in (exit_val,None) and not opt.coverage: # Some cmds exit with None
 			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
 		if opt.profile: return
 		if opt.verbose or opt.exact_output:
@@ -209,15 +209,11 @@ class MMGenPexpect(object):
 			my_send(self.p,'\n')
 		else:
 			rand_chars = list(getrandstr(num_chars,no_space=True))
-			my_expect(self.p,'symbols left: ','x')
-			try:
-				vmsg_r('SEND ')
-				while self.p.expect('left: ',0.1) == 0:
-					ch = rand_chars.pop(0)
-					msg_r(yellow(ch)+' ' if opt.verbose else '+')
-					self.p.send(ch)
-			except:
-				vmsg('EOT')
+			vmsg_r('SEND ')
+			while rand_chars:
+				ch = rand_chars.pop(0)
+				msg_r(yellow(ch)+' ' if opt.verbose else '+')
+				ret = my_expect(self.p,'left: ',ch,delay=0.005)
 			my_expect(self.p,'ENTER to continue: ','\n')
 
 	def passphrase_new(self,desc,passphrase):
@@ -288,7 +284,8 @@ class MMGenPexpect(object):
 # 		return [l.rstrip()+'\n' for l in self.p.readlines()]
 
 	def read(self,n=None):
-		return self.p.read(n)
+		if n: return self.p.read(n)
+		else: return self.p.read()
 
 	def close(self):
 		if not opt.popen_spawn:

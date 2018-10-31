@@ -240,7 +240,7 @@ class MMGenToolTestSuite(object):
 		file_list = [os.path.join(cfg['tmpdir'],fn) for fn in fns]
 		self.__class__.__dict__[cmd](*([self,cmd] + file_list))
 
-	def run_cmd(self,name,tool_args,kwargs='',extra_msg='',silent=False,strip=True,add_opts=[]):
+	def run_cmd(self,name,tool_args,kwargs='',extra_msg='',silent=False,strip=True,add_opts=[],binary=False):
 		sys_cmd = (
 			spawn_cmd +
 			add_spawn_args +
@@ -289,9 +289,11 @@ class MMGenToolTestSuite(object):
 		vmsg('Out:  ' + repr(ret))
 		return ret
 
-	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',literal=False,chkdata='',hush=False,add_opts=[]):
+	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',
+						literal=False,chkdata='',hush=False,add_opts=[]):
 		if carg: write_to_tmpfile(cfg,'{}{}.in'.format(name,fn_idx),carg+'\n')
-		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,extra_msg=extra_msg,add_opts=add_opts)
+		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,
+								extra_msg=extra_msg,add_opts=add_opts)
 		if carg: vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret)[literal])
 		if ret or ret == '':
@@ -343,7 +345,7 @@ class MMGenToolTestSuite(object):
 	def Hexlify(self,name):        self.run_cmd_out(name,getrandstr(24))
 	def Hexdump(self,name): self.run_cmd_randinput(name,strip=False)
 	def Unhexdump(self,name,fn1,fn2):
-		ret = self.run_cmd(name,[fn2],strip=False)
+		ret = self.run_cmd(name,[fn2],strip=False,binary=True)
 		orig = read_from_file(fn1,binary=True)
 		cmp_or_die(orig,ret)
 	def Rand2file(self,name):

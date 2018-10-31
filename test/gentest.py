@@ -90,29 +90,31 @@ def keyconv_sec2addr(sec):
 
 def zcash_mini_sec2addr(sec):
 	p = sp.Popen(['zcash-mini','-key','-simple'],stderr=sp.PIPE,stdin=sp.PIPE,stdout=sp.PIPE)
-	p.stdin.write(sec.wif+'\n')
-	o = p.stdout.read().split()
-	return sec.wif,o[0],o[-1]
+	ret = p.communicate(sec.wif.encode()+b'\n')[0].decode().strip().split('\n')
+	return (sec.wif,ret[0],ret[-1])
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-	key = pcku.parse_key(sec.decode(),[network_for_netcode(coin)],secp256k1_generator)[1]
+	key = pcku.parse_key(sec.decode(),[network_for_netcode(coin)])[1]
 	if key is None: die(1,"can't parse {}".format(sec))
-	o = pcku.create_output(sec,key,network_for_netcode(coin))[0]
-	suf = ('_uncompressed','')[addr_type.compressed]
-	wif = o['wif{}'.format(suf)]
-	addr = o['p2sh_segwit' if addr_type.name == 'segwit' else '{}_address{}'.format(coin,suf)]
-	return wif,addr
+	d = {
+		'legacy':     ('wif_uncompressed','address_uncompressed'),
+		'compressed': ('wif','address'),
+		'segwit':     ('wif','p2sh_segwit'),
+	}[addr_type.name]
+	return [pcku.create_output(sec,key,network_for_netcode(coin),d[i])[0][d[i]] for i in (0,1)]
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
 	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,addr_type
+
 	def test_support(k):
 		if b == k: return True
 		if b != 'ext' and b != k: return False
 		if g.coin in ci.external_tests['mainnet'][k] and not g.testnet: return True
 		if g.coin in ci.external_tests['testnet'][k]: return True
 		return False
+
 	if b == 'zcash_mini' or addr_type.name == 'zcash_z':
 		import subprocess as sp
 		from mmgen.protocol import init_coin
