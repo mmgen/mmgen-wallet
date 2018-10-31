@@ -98,7 +98,7 @@ def segwit_is_active(exit_on_error=False):
 
 def bytes2int(hex_bytes):
 	r = hexlify(unhexlify(hex_bytes)[::-1])
-	if r[0] in '89abcdef':
+	if r[0] in b'89abcdef':
 		die(3,"{}: Negative values not permitted in transaction!".format(hex_bytes))
 	return int(r,16)
 
@@ -106,11 +106,11 @@ def bytes2coin_amt(hex_bytes):
 	return g.proto.coin_amt(bytes2int(hex_bytes) * g.proto.coin_amt.min_coin_unit)
 
 def scriptPubKey2addr(s):
-	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
+	if len(s) == 50 and s[:6] == b'76a914' and s[-4:] == b'88ac':
 		return g.proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'
-	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
+	elif len(s) == 46 and s[:4] == b'a914' and s[-2:] == b'87':
 		return g.proto.pubhash2addr(s[4:-2],p2sh=True),'p2sh'
-	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + '14':
+	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + b'14':
 		return g.proto.pubhash2bech32addr(s[4:]),'bech32'
 	else:
 		raise NotImplementedError('Unknown scriptPubKey ({})'.format(s))
@@ -135,7 +135,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			bytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
 			if bytes_len != 1: del l[0]
 			ret = int(hexlify(''.join(l[:bytes_len][::-1])),16)
-			if sub_null: d['raw_tx'] += '\0'
+			if sub_null: d['raw_tx'] += b'\0'
 			elif not skip: d['raw_tx'] += ''.join(l[:bytes_len])
 			del l[:bytes_len]
 			return ret

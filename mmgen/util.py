@@ -735,7 +735,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
 		return (False,True)[default_yes]
 
 	while True:
-		reply = get_char(p).strip('\n\r')
+		reply = get_char(p).strip(b'\n\r')
 		if not reply:
 			if default_yes: msg_r(nl); return True
 			else:           msg_r(nl); return False
