@@ -259,7 +259,7 @@ an empty passphrase, just hit ENTER twice.
 		while True:
 			ret = my_raw_input(p)
 			if ret:
-				if ret in list(g.hash_presets.keys()):
+				if ret in g.hash_presets.keys():
 					self.ssdata.hash_preset = ret
 					return ret
 				else:

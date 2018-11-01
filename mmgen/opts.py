@@ -298,7 +298,7 @@ def init(opts_f,add_opts=[],opt_filter=None):
 		opts_data['long_options'] = common_opts_data
 		if g.debug_utf8:
 			for k in opts_data:
-				if type(opts_data[k]) in (str,str):
+				if type(opts_data[k]) == str:
 					opts_data[k] += '-α'
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
 

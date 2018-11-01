@@ -168,7 +168,7 @@ def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
 	while True:
 		ret = my_raw_input(prompt)
 		if ret:
-			if ret in list(g.hash_presets.keys()):
+			if ret in g.hash_presets.keys():
 				return ret
 			else:
 				m = 'Invalid input.  Valid choices are {}'

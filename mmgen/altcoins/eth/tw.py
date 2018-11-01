@@ -55,11 +55,11 @@ class EthereumTrackingWallet(TrackingWallet):
 			if not 'tokens' in self.data:
 				self.data['tokens'] = {}
 			def conv_types(ad):
-				for v in list(ad.values()):
+				for v in ad.values():
 					v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
 					v['comment'] = TwComment(v['comment'],on_fail='raise')
 			conv_types(self.data['accounts'])
-			for v in list(self.data['tokens'].values()):
+			for v in self.data['tokens'].values():
 				conv_types(v)
 
 	def upgrade_wallet_maybe(self):

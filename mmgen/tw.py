@@ -143,7 +143,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		}
 		key = key or self.sort_key
 		if key not in sort_funcs:
-			die(1,"'{}': invalid sort key.  Valid options: {}".format(key,' '.join(list(sort_funcs.keys()))))
+			die(1,"'{}': invalid sort key.  Valid options: {}".format(key,' '.join(sort_funcs.keys())))
 		self.sort_key = key
 		assert type(reverse) == bool
 		self.unspent.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
@@ -456,13 +456,13 @@ class TwAddrList(MMGenDict):
 	def format(self,showbtcaddrs,sort,show_age,show_days):
 		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
 		fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
-		mmaddrs = [k for k in list(self.keys()) if k.type == 'mmgen']
+		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
-		max_cmt_len  = max(max(screen_width(v['lbl'].comment) for v in list(self.values())),7)
+		max_cmt_len  = max(max(screen_width(v['lbl'].comment) for v in self.values()),7)
 		addr_width = max(len(self[mmid]['addr']) for mmid in self)
 
 		# fp: fractional part
-		max_fp_len = max([len(a.split('.')[1]) for a in [str(v['amt']) for v in list(self.values())] if '.' in a] or [1])
+		max_fp_len = max([len(a.split('.')[1]) for a in [str(v['amt']) for v in self.values()] if '.' in a] or [1])
 		out += [fs.format(
 				mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
 				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),

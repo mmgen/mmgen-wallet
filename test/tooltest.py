@@ -178,7 +178,7 @@ add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
 if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 	Msg('Available commands:')
-	w = max(list(map(len,cmd_data)))
+	w = max(map(len,cmd_data))
 	for cmd in cmd_data:
 		Msg(fs.format(cmd,cmd_data[cmd]['desc'],w=w))
 	Msg('\nAvailable utilities:')
@@ -186,7 +186,7 @@ if opt.list_cmds:
 	sys.exit(0)
 if opt.list_names:
 	acc = []
-	for v in list(cmd_data.values()):
+	for v in cmd_data.values():
 		acc += list(v['cmd_data'].keys())
 	tc = sorted(c.lower() for c in acc)
 	msg('{}\n{}'.format(green('Tested commands:'),'\n'.join(tc)))

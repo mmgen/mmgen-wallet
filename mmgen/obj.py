@@ -50,10 +50,10 @@ def truncate_str(s,width): # width = screen width
 class MMGenObject(object):
 
 	# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
-	def pmsg(self): print((self.pformat()))
-	def pdie(self): print((self.pformat())); sys.exit(0)
+	def pmsg(self): print(self.pformat())
+	def pdie(self): print(self.pformat()); sys.exit(0)
 	def pformat(self,lvl=0):
-		scalars = (str,str,int,float,Decimal)
+		scalars = (str,int,float,Decimal)
 		def do_list(out,e,lvl=0,is_dict=False):
 			out.append('\n')
 			for i in e:
@@ -327,7 +327,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			if from_unit:
 				assert from_unit in cls.units,(
 					"'{}': unrecognized denomination for {}".format(from_unit,cls.__name__))
-				assert type(num) in (int,int),'value is not an integer or long integer'
+				assert type(num) == int,'value is not an integer or long integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			else:
 				for t in cls.forbidden_types:
@@ -841,7 +841,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 
 	@classmethod
 	def get_names(cls):
-		return [v['name'] for v in list(cls.mmtypes.values())]
+		return [v['name'] for v in cls.mmtypes.values()]
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {

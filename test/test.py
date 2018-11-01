@@ -1270,7 +1270,7 @@ if opt.list_cmds:
 	fs = '  {:<{w}} - {}'
 
 	Msg(green('AVAILABLE COMMANDS:'))
-	w = max(list(map(len,cmd_data)))
+	w = max(map(len,cmd_data))
 	for cmd in cmd_data:
 		if cmd[:5] == 'info_':
 			Msg(green('  {}:'.format(capfirst(cmd_data[cmd][0]))))
@@ -1278,7 +1278,7 @@ if opt.list_cmds:
 		Msg('  '+fs.format(cmd,cmd_data[cmd][1],w=w))
 
 	for cl,lbl in ((meta_cmds,'METACOMMANDS'),(cmd_list,'COMMAND GROUPS')):
-		w = max(list(map(len,cl)))
+		w = max(map(len,cl))
 		Msg('\n'+green('AVAILABLE {}:'.format(lbl)))
 		for cmd in cl:
 			ft = format_par(' '.join(cl[cmd]),width=tw,indent=4,as_list=True)
@@ -1286,7 +1286,7 @@ if opt.list_cmds:
 			Msg('  {}{}{}'.format(yellow(cmd+':'),sep,'\n'.join(ft).lstrip()))
 
 	Msg('\n'+green('AVAILABLE UTILITIES:'))
-	w = max(list(map(len,utils)))
+	w = max(map(len,utils))
 	for cmd in sorted(utils):
 		Msg(fs.format(cmd,utils[cmd],w=w))
 
@@ -1416,7 +1416,7 @@ def get_label(do_shuffle=False):
 def create_fake_unspent_data(adata,tx_data,non_mmgen_input='',non_mmgen_input_compressed=True):
 
 	out = []
-	for d in list(tx_data.values()):
+	for d in tx_data.values():
 		al = adata.addrlist(d['al_id'])
 		for n,(idx,coinaddr) in enumerate(al.addrpairs()):
 			lbl = get_label(do_shuffle=True)
@@ -1610,7 +1610,7 @@ def check_deps(cmds):
 
 	check_needs_rerun(ts,cmd,build=False)
 
-	w = max(list(map(len,rebuild_list))) + 1
+	w = max(map(len,rebuild_list)) + 1
 	for cmd in rebuild_list:
 		c = rebuild_list[cmd]
 		m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
@@ -1653,7 +1653,7 @@ class MMGenTestSuite(object):
 		num = str(cmd_data[cmd][0])
 		dgl = cfgs[num]['dep_generators']
 #	mmsg(num,cmd,dgl)
-		if cmd in list(dgl.values()):
+		if cmd in dgl.values():
 			exts = [k for k in dgl if dgl[k] == cmd]
 			return (num,exts)
 		else:

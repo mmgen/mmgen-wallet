@@ -457,7 +457,7 @@ class CoinProtocol(MMGenObject):
 
 	@classmethod
 	def get_base_coin_from_name(cls,name):
-		for proto,foo in list(cls.coins.values()):
+		for (proto,foo) in cls.coins.values():
 			if name == proto.__name__[:-8].lower():
 				return proto.base_coin
 		return False

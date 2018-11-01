@@ -24,7 +24,7 @@ import sys,getopt
 import collections
 
 def usage(opts_data):
-	print(('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage'])))
+	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
 def print_help_and_exit(opts_data,longhelp=False):

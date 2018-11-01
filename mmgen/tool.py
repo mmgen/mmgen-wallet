@@ -106,7 +106,7 @@ cmd_data = OrderedDict([
 
 def usage(command):
 
-	for v in list(cmd_data.values()):
+	for v in cmd_data.values():
 		if v and v[0][-2:] == '-]':
 			v[0] = v[0][:-2] + ' or STDIN]'
 		if 'MARGS' in v: v.remove('MARGS')
@@ -624,7 +624,7 @@ def monero_wallet_ops(infile,op,blockheight=None,addrs=None):
 			m[op][2](n,d,fn)
 		gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
 		if op == 'sync':
-			col1_w = max(list(map(len,bals))) + 1
+			col1_w = max(map(len,bals)) + 1
 			fs = '{:%s} {} {}' % col1_w
 			msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
 			from mmgen.obj import XMRAmt

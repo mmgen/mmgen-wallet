@@ -240,7 +240,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
 		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexBytes')
-		sequence = MMGenListItemAttr('sequence',(int,int)[g.platform=='win'],typeconv=False)
+		sequence = MMGenListItemAttr('sequence',int,typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k]
@@ -548,7 +548,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
 		import re
 		units = dict((u[0],u) for u in g.proto.coin_amt.units)
-		pat = r'([1-9][0-9]*)({})'.format('|'.join(list(units.keys())))
+		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
 			return g.proto.coin_amt(tx_fee)
 		elif re.match(pat,tx_fee):
@@ -605,7 +605,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def decode_io_oldfmt(self,data):
 		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
-		tr_rev = dict(list(map(reversed,list(tr.items()))))
+		tr_rev = dict(map(reversed,list(tr.items())))
 		copy_keys = [tr_rev[k] if k in tr_rev else k for k in self.MMGenTxInput.__dict__]
 		ret = MMGenList(self.MMGenTxInput(**dict([(tr[k] if k in tr else k,d[k])
 					for k in copy_keys if k in d and d[k] != ''])) for d in data)

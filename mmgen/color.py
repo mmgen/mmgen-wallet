@@ -85,6 +85,6 @@ def test_color():
 		pass
 	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
 		if n != 'auto': init_color(num_colors=n)
-		print(('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)]))))
+		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
 
 if __name__ == '__main__': test_color()

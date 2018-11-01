@@ -122,7 +122,7 @@ def check_or_create_dir(path):
 		os.listdir(path)
 	except:
 		try:
-			os.makedirs(path,stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR)
+			os.makedirs(path,0o700)
 		except:
 			die(2,"ERROR: unable to read or create path '{}'".format(path))
 

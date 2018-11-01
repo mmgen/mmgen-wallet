@@ -183,4 +183,4 @@ def compile_code(code):
 src = create_src(code_in)
 out = compile_code(src)
 if opt.stdout:
-	print((json.dumps(out)))
+	print(json.dumps(out))
