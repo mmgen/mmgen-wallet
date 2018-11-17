@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+#
 # Ported to Python 3 (added floor division) from ed25519ll package:
 #   https://pypi.org/project/ed25519ll/
 # This module is adapted from that package's pure-Python fallback

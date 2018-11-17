@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
-# Opts.py, an options parsing library for Python.  Copyright (C) 2014-2016
-# Philemon <mmgen-py@yandex.com>.
+# Opts.py, an options parsing library for Python.
+# Copyright (C)2013-2018 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Opts.py:  Generic options handling
+Opts.py:  Generic options parsing
 """
 
 import sys,getopt
