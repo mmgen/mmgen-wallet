@@ -286,8 +286,9 @@ class EthereumMMGenTX(MMGenTX):
 				'data':     unhexlify(d['data'])}
 
 		from ethereum.transactions import Transaction
-		etx = Transaction(**d_in)
-		etx.sign(wif,d['chainId'])
+		etx = Transaction(**d_in).sign(wif,d['chainId'])
+		assert hexlify(etx.sender).decode() == d['from'],(
+			'Sender address recovered from signature does not match true sender')
 		import rlp
 		self.hex = hexlify(rlp.encode(etx))
 		self.coin_txid = CoinTxID(hexlify(etx.hash))

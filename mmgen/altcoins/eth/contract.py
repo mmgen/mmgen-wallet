@@ -104,10 +104,9 @@ class Token(MMGenObject): # ERC20
 				'data':    unhexlify(data) }
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
-		tx = Transaction(**tx_in)
 		if chain_id is None:
 			chain_id = int(g.rpch.parity_chainId(),16)
-		tx.sign(key,chain_id)
+		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = hexlify(rlp.encode(tx))
 		coin_txid = CoinTxID(hexlify(tx.hash))
 		if hexlify(tx.sender).decode() != from_addr:
