@@ -80,7 +80,7 @@ def test_daemon():
 	p = start_cmd('cli','getblockcount',quiet=True)
 	err = process_output(p,silent=True)[1]
 	ret,state = p.wait(),None
-	if b"error: couldn't connect" in err or b"error: Could not connect" in err:
+	if "error: couldn't connect" in err or "error: Could not connect" in err:
 		state = 'stopped'
 	if not state: state = ('busy','ready')[ret==0]
 	return state
@@ -133,9 +133,9 @@ def create_data_dir():
 	except: pass
 
 def process_output(p,silent=False):
-	out = p.stdout.read()
+	out = p.stdout.read().decode()
 	if g.platform == 'win' and not opt.verbose: Msg_r(' \b')
-	err = p.stderr.read()
+	err = p.stderr.read().decode()
 	if g.debug or not silent:
 		vmsg('stdout: [{}]'.format(out.strip()))
 		vmsg('stderr: [{}]'.format(err.strip()))
@@ -168,8 +168,8 @@ def show_mempool():
 def cli(*args):
 	p = start_cmd(*(('cli',) + args))
 	from pprint import pformat
-	Msg_r(p.stdout.read())
-	msg_r(p.stderr.read())
+	Msg_r(p.stdout.read().decode())
+	msg_r(p.stderr.read().decode())
 	p.wait()
 
 def fork(coin):
@@ -236,7 +236,7 @@ def setup():
 def get_current_user_win(quiet=False):
 	if test_daemon() == 'stopped': return None
 	p = start_cmd('grep','Using wallet',os.path.join(daemon_dir,'debug.log'),quiet=True)
-	try: wallet_fn = p.stdout.readlines()[-1].split()[-1]
+	try: wallet_fn = p.stdout.readlines()[-1].split()[-1].decode()
 	except: return None
 	for k in ('miner','bob','alice'):
 		if wallet_fn == 'wallet.dat.'+k:
@@ -296,7 +296,7 @@ def generate(blocks=1,silent=False):
 	p = start_cmd('cli','generate',str(blocks))
 	out = process_output(p,silent=silent)[0]
 	from ast import literal_eval
-	if len(literal_eval(out.decode())) != blocks:
+	if len(literal_eval(out)) != blocks:
 		rdie(1,'Error generating blocks')
 	p.wait()
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))
