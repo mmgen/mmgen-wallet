@@ -18,6 +18,14 @@
 
 import sys,os,subprocess
 from shutil import copy2
+
+ver = sys.version_info[:2]
+min_ver = (3,5)
+if ver[0] < min_ver[0] or ver[1] < min_ver[1]:
+	m = '{}.{}: wrong Python version.  MMGen requires Python {M}.{m} or greater\n'
+	sys.stderr.write(m.format(*ver,M=min_ver[0],m=min_ver[1]))
+	sys.exit(1)
+
 _gvi = subprocess.check_output(['gcc','--version']).decode().splitlines()[0]
 have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
 have_arm     = subprocess.check_output(['uname','-m']).strip() == 'aarch64'
