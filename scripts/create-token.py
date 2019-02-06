@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys,os,json
+import sys,os,json,re
 from subprocess import Popen,PIPE
 from mmgen.common import *
 from mmgen.obj import CoinAddr,is_coin_addr
@@ -25,6 +25,7 @@ decimals = 18
 supply   = 10**26
 name   = 'MMGen Token'
 symbol = 'MMT'
+solc_version = '0.5.3'
 
 opts_data = lambda: {
 	'desc': 'Create an ERC20 token contract',
@@ -37,21 +38,24 @@ opts_data = lambda: {
 -t, --supply=  t Total supply of the token (default: {t})
 -s, --symbol=  s Token symbol (default: {s})
 -S, --stdout     Output data in JSON format to stdout instead of files
+-v, --verbose    Produce more verbose output
 """.format(d=decimals,n=name,s=symbol,t=supply)
 }
 
 cmd_args = opts.init(opts_data)
 assert g.coin in ('ETH','ETC'),'--coin option must be set to ETH or ETC'
 
-if not len(cmd_args) == 1 or not is_coin_addr(cmd_args[0]):
+if not len(cmd_args) == 1 or not is_coin_addr(cmd_args[0].lower()):
 	opts.usage()
 
-owner_addr = '0x' + CoinAddr(cmd_args[0])
+owner_addr = '0x' + cmd_args[0]
 
 # ERC Token Standard #20 Interface
 # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
+
 code_in = """
-pragma solidity ^0.4.18;
+
+pragma solidity >0.5.2 <0.5.4;
 
 contract SafeMath {
     function safeAdd(uint a, uint b) public pure returns (uint c) {
@@ -73,20 +77,15 @@ contract SafeMath {
 }
 
 contract ERC20Interface {
-    function totalSupply() public constant returns (uint);
-    function balanceOf(address tokenOwner) public constant returns (uint balance);
-    function allowance(address tokenOwner, address spender) public constant returns (uint remaining);
+    function totalSupply() public returns (uint);
+    function balanceOf(address tokenOwner) public returns (uint balance);
+    function allowance(address tokenOwner, address spender) public returns (uint remaining);
     function transfer(address to, uint tokens) public returns (bool success);
     function approve(address spender, uint tokens) public returns (bool success);
     function transferFrom(address from, address to, uint tokens) public returns (bool success);
 
     event Transfer(address indexed from, address indexed to, uint tokens);
     event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
-}
-
-// Contract function to receive approval and execute function in one call
-contract ApproveAndCallFallBack {
-    function receiveApproval(address from, uint256 tokens, address token, bytes data) public;
 }
 
 contract Owned {
@@ -136,10 +135,10 @@ contract Token is ERC20Interface, Owned, SafeMath {
         balances[<OWNER_ADDR>] = _totalSupply;
         emit Transfer(address(0), <OWNER_ADDR>, _totalSupply);
     }
-    function totalSupply() public constant returns (uint) {
+    function totalSupply() public returns (uint) {
         return _totalSupply  - balances[address(0)];
     }
-    function balanceOf(address tokenOwner) public constant returns (uint balance) {
+    function balanceOf(address tokenOwner) public returns (uint balance) {
         return balances[tokenOwner];
     }
     function transfer(address to, uint tokens) public returns (bool success) {
@@ -160,18 +159,8 @@ contract Token is ERC20Interface, Owned, SafeMath {
         emit Transfer(from, to, tokens);
         return true;
     }
-    function allowance(address tokenOwner, address spender) public constant returns (uint remaining) {
+    function allowance(address tokenOwner, address spender) public returns (uint remaining) {
         return allowed[tokenOwner][spender];
-    }
-    function approveAndCall(address spender, uint tokens, bytes data) public returns (bool success) {
-        allowed[msg.sender][spender] = tokens;
-        emit Approval(msg.sender, spender, tokens);
-        ApproveAndCallFallBack(spender).receiveApproval(msg.sender, tokens, this, data);
-        return true;
-    }
-    // Don't accept ETH
-    function () public payable {
-        revert();
     }
     // Owner can transfer out any accidentally sent ERC20 tokens
     function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
@@ -181,20 +170,42 @@ contract Token is ERC20Interface, Owned, SafeMath {
 """
 
 def create_src(code):
-	for k in ('decimals','supply','name','symbol','owner_addr'):
+	for k in ('decimals','supply','name','symbol','owner_addr','solc_version'):
 		if hasattr(opt,k) and getattr(opt,k): globals()[k] = getattr(opt,k)
 		code = code.replace('<{}>'.format(k.upper()),str(globals()[k]))
 	return code
 
+def check_version():
+	p = Popen(['solc','--version'],stdout=PIPE)
+	res = p.stdout.read().decode()
+	ver = re.search(r'Version:\s*(.*)',res).group(1)
+	msg("Installed solc version: {}".format(ver))
+	if not re.search(r'{}\b'.format(solc_version),ver):
+		ydie(1,'Incorrect Solidity compiler version (need version {})'.format(solc_version))
+
 def compile_code(code):
+	check_version()
 	cmd = ['solc','--optimize','--bin','--overwrite']
 	if not opt.stdout: cmd += ['--output-dir', opt.outdir or '.']
+	cmd += ['-']
+	msg('Executing: {}'.format(' '.join(cmd)))
 	p = Popen(cmd,stdin=PIPE,stdout=PIPE,stderr=PIPE)
 	res = p.communicate(code.encode())
-	o = res[0].decode().replace('\r','').split('\n')
-	dmsg(res[1])
+	out = res[0].decode().replace('\r','')
+	err = res[1].decode().replace('\r','').strip()
+	rc = p.wait()
+	if rc != 0:
+		rmsg('Solidity compiler produced the following error:')
+		msg(err)
+		rdie(2,'Solidity compiler exited with error (return val: {})'.format(rc))
+	if err:
+		ymsg('Solidity compiler produced the following warning:')
+		msg(err)
 	if opt.stdout:
+		o = out.split('\n')
 		return dict((k,o[i+2]) for k in ('SafeMath','Owned','Token') for i in range(len(o)) if k in o[i])
+	else:
+		vmsg(out)
 
 src = create_src(code_in)
 out = compile_code(src)

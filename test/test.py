@@ -133,6 +133,7 @@ opts_data = lambda: {
 --, --longhelp       Print help message for long options (common options)
 -B, --bech32         Generate and use Bech32 addresses
 -b, --buf-keypress   Use buffered keypresses as with real human input
+                     (often required on slow systems, or under emulation)
 -c, --print-cmdline  Print the command line of each spawned command
 -C, --coverage       Produce code coverage info using trace module
 -x, --debug-pexpect  Produce debugging output for pexpect calls
@@ -635,6 +636,7 @@ dfl_words = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
 
 # The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
 eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
+eth_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
 eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 eth_burn_addr = 'deadbeef'*5
 eth_amt1 = '999999.12345689012345678'
@@ -655,31 +657,31 @@ eth_bals = {
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.2288376','a'),
+			('98831F3A:E:11','1.2288487','a'),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.2288376','a'),
-			('98831F3A:E:12','99.997087072'),
+			('98831F3A:E:11','1.2288487','a'),
+			('98831F3A:E:12','99.997092733'),
 			('98831F3A:E:21','2.345'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)]
 }
 eth_token_bals = {
 	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544','1.2314236','a'),
+	'2': [  ('98831F3A:E:11','998.76544','1.23142915','a'),
 			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+	'3': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
 			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+	'4': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
 			('98831F3A:E:12','1.23456','0'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
+	'5': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
 			('98831F3A:E:12','1.23456','99.99895'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545','1.2288376','a'),
-			('98831F3A:E:12','0','99.997087072'),
+	'6': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
+			('98831F3A:E:12','0','99.997092733'),
 			('98831F3A:E:13','1.23456','0'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)]
 }
@@ -3523,7 +3525,7 @@ class MMGenTestSuite(object):
 		MMGenExpect(name,'',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
-		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr]
+		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+cfg['tmpdir']] + cmd_args + [eth_addr_chk]
 		imsg("Executing: {}".format(' '.join(cmd)))
 		subprocess.check_output(cmd,stderr=subprocess.STDOUT)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
@@ -3685,7 +3687,7 @@ class MMGenTestSuite(object):
 		t.ok()
 
 	def ethdev_bal1_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
-		ebal = Decimal('127.0287876')
+		ebal = Decimal('127.0287987')
 		if g.coin == 'ETC': ebal += self.bal_corr
 		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen=str(ebal))
 
