@@ -2411,25 +2411,69 @@ class MMGenTestSuite(object):
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
-	def autosign(self,name): # tests everything except device detection, mount/unmount
+	# tests everything except device detection, mount/unmount
+	def autosign(self,name):
+
+		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc,eth']
+		txfiles = ('btc','bch','ltc','eth','erc20','etc')
+		txcount = 11
+# 		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,eth']
+# 		txfiles = ('btc','eth','erc20','etc')
+# 		txcount = 7
 
 		if skip_for_win(): return
 
-		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc,eth']
+		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
+		except: pass
 
-		def copy_files_and_make_key():
-			fdata = (   ('btc',''),
+		def make_wallet():
+			t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
+			t.expect_getend('Wrote key file ')
+			t.ok()
+
+			t = MMGenExpect(name,'mmgen-autosign',opts+['setup'],extra_desc='(setup)')
+			t.expect('words: ','3')
+			t.expect('OK? (Y/n): ','\n')
+			mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords') # 98831F3A
+			mn = read_from_file(mn_fn).strip().split()
+			mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
+			wnum = 1
+			max_wordlen = 12
+
+			def get_pad_chars(n):
+				ret = ''
+				for i in range(n):
+					m = int(hexlify(os.urandom(1)),16) % 32
+					ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
+				return ret
+
+			for i in range(len(mn)):
+				w = mn[i]
+				if len(w) > 5:
+					w = w + '\n'
+				else:
+					w = get_pad_chars(3 if randbool() else 0) + w[0] + get_pad_chars(3) + w[1:] + get_pad_chars(7)
+					w = w[:max_wordlen+1]
+				em,rm = 'Enter word #{}: ','Repeat word #{}: '
+				ret = t.expect((em.format(wnum),rm.format(wnum-1)))
+				if ret == 0: wnum += 1
+				for j in range(len(w)):
+					t.send(w[j])
+					time.sleep(0.005)
+			wf = t.written_to_file('Autosign wallet')
+			t.ok()
+
+		def copy_files():
+			fdata_in = (('btc',''),
 						('bch',''),
 						('ltc','litecoin'),
 						('eth','ethereum'),
 						('erc20','ethereum'),
 						('etc','ethereum_classic'))
+			fdata = [e for e in fdata_in if e[0] in txfiles]
 			tfns  = [cfgs['8']['ref_tx_file'][c][1] for c,d in fdata] + \
 					[cfgs['8']['ref_tx_file'][c][0] for c,d in fdata]
 			tfs = [os.path.join(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
-
-			try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
-			except: pass
 
 			for f,fn in zip(tfs,tfns):
 				if fn: # use empty fn to skip file
@@ -2439,40 +2483,17 @@ class MMGenTestSuite(object):
 			with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
 				f.write('bad tx data')
 
-			t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
-			t.expect_getend('Wrote key file ')
-			t.ok()
-
-		def get_mnemonic():
-			t = MMGenExpect(name,'mmgen-autosign',opts+['setup'],extra_desc='(setup)')
-			t.expect('words: ','3')
-			t.expect('OK? (Y/n): ','\n')
-			mn_fn = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
-			mn = read_from_file(mn_fn).strip().split()
-			mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
-			wnum = 1
-			for i in range(len(mn)):
-				em,rm = 'Enter word #{}: ','Repeat word #{}: '
-				ret = t.expect((em.format(wnum),rm.format(wnum-1)))
-				if ret == 0: wnum += 1
-				for j in range(len(mn[i])):
-					t.send(mn[i][j])
-					time.sleep(0.005)
-				t.send('\n')
-			wf = t.written_to_file('Autosign wallet')
-			t.ok()
-
-		def run_autosign():
+		def do_autosign():
 			t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
-			t.expect('11 transactions signed')
+			t.expect('{} transactions signed'.format(txcount))
 			t.expect('1 transaction failed to sign')
 			t.expect('Waiting')
 			t.kill(2)
 			t.ok(exit_val=1)
 
-		copy_files_and_make_key()
-		get_mnemonic()
-		run_autosign()
+		make_wallet()
+		copy_files()
+		do_autosign()
 
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
