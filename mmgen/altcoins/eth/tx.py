@@ -130,6 +130,7 @@ class EthereumMMGenTX(MMGenTX):
 		return ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16))
 
 	def make_txobj(self): # create_raw
+		chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
 		self.txobj = {
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else Str(''),
@@ -137,7 +138,7 @@ class EthereumMMGenTX(MMGenTX):
 			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
 			'startGas': self.start_gas,
 			'nonce': self.get_nonce(),
-			'chainId': Int(g.rpch.parity_chainId(),16),
+			'chainId': Int(g.rpch.request(chain_id_method),16),
 			'data':  self.data,
 		}
 

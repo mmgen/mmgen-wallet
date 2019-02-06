@@ -105,7 +105,8 @@ class Token(MMGenObject): # ERC20
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
 		if chain_id is None:
-			chain_id = int(g.rpch.parity_chainId(),16)
+			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
+			chain_id = int(g.rpch.request(chain_id_method),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = hexlify(rlp.encode(tx))
 		coin_txid = CoinTxID(hexlify(tx.hash))

@@ -218,6 +218,9 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 		'eth_accounts',
 		'eth_blockNumber',
 		'eth_call',
+		# Returns the EIP155 chain ID used for transaction signing at the current best block.
+		# Null is returned if not available.
+		'eth_chainId',
 		'eth_gasPrice',
 		'eth_getBalance',
 		'eth_getBlockByHash',
@@ -233,9 +236,7 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 		'net_peerCount',
 		'net_version',
 		'parity_chain',
-		# Returns the EIP155 chain ID used for transaction signing at the current best block.
-		# Null is returned if not available.
-		'parity_chainId',
+		'parity_chainId', # superseded by eth_chainId
 		'parity_chainStatus',
 		'parity_composeTransaction',
 		'parity_gasCeilTarget',

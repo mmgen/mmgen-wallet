@@ -857,6 +857,12 @@ def rpc_init_parity():
 		(g.token,g.dcoin) = resolve_token_arg(g.token)
 
 	g.rpch.caps = ()
+	try:
+		g.rpch.request('eth_chainId')
+		g.rpch.caps += ('eth_chainId',)
+	except RPCFailure:
+		pass
+
 	return g.rpch
 
 def rpc_init_bitcoind():
