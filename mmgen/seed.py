@@ -450,8 +450,8 @@ class Mnemonic (SeedSourceUnenc):
 		mn = self.fmt_data.split()
 
 		if len(mn) not in self.mn_lens:
-			msg('Invalid mnemonic ({} words).  Valid numbers of words: {}'.format(
-					(len(mn),', '.join(map(str,self.mn_lens)))))
+			m = 'Invalid mnemonic ({} words).  Valid numbers of words: {}'
+			msg(m.format(len(mn),', '.join(map(str,self.mn_lens))))
 			return False
 
 		for n,w in enumerate(mn,1):

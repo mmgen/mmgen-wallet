@@ -46,7 +46,7 @@ class EthereumTrackingWallet(TrackingWallet):
 			except:
 				self.orig_data = ''
 				self.data = {'coin':g.coin,'accounts':{},'tokens':{}}
-			else: die(2,"File '{}' exists but does not contain valid json data")
+			else: die(2,"File '{}' exists but does not contain valid json data".format(self.tw_file))
 		else:
 			self.upgrade_wallet_maybe()
 			m = 'Tracking wallet coin ({}) does not match current coin ({})!'

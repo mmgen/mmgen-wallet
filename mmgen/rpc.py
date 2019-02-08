@@ -145,7 +145,7 @@ class CoinDaemonRPCConnection(object):
 			if cf['on_fail'] not in ('silent','raise'):
 				msg_r(yellow('{} RPC Error: '.format(g.proto.daemon_name.capitalize())))
 				msg(red('{} {}'.format(r.status,r.reason)))
-			e1 = r.read()
+			e1 = r.read().decode()
 			try:
 				e3 = json.loads(e1)['error']
 				e2 = '{} (code {})'.format(e3['message'],e3['code'])
@@ -153,7 +153,7 @@ class CoinDaemonRPCConnection(object):
 				e2 = str(e1)
 			return do_fail(r,1,e2)
 
-		r2 = r.read()
+		r2 = r.read().decode()
 
 		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
 

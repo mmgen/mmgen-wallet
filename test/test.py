@@ -2781,7 +2781,7 @@ class MMGenTestSuite(object):
 				t.expect(['Passphrase is OK',' are correct'])
 		# Output
 		wf = t.written_to_file('Mnemonic data',oo=oo)
-		t.close()
+		t.p.wait()
 		t.ok()
 		# back check of result
 		if opt.profile: msg('')
