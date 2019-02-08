@@ -3358,25 +3358,30 @@ class MMGenTestSuite(object):
 		self.regtest_split_txdo_timelock(name,'B2X',locktime=1321009871,bad_locktime=False)
 
 	def ethdev_setup(self,name):
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
-		ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
-		try:
-			pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
-			os.kill(int(pid),9)
-		except: pass
-		# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
-		dc_dir = os.path.join(os.environ['HOME'],'.local/share/io.parity.ethereum/chains/DevelopmentChain')
-		shutil.rmtree(dc_dir,ignore_errors=True)
-		bdir = os.path.join(data_dir,'parity')
-		try: os.mkdir(bdir)
-		except: pass
-		pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
 		MMGenExpect(name,'',msg_only=True)
-		opts = ['--ports-shift=4','--config=dev']
-		subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pid_fn]) # port 8549
-		time.sleep(1) # race condition
-		pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
+		if subprocess.call(['which','parity']) == 0:
+			lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
+			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
+			try:
+				pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
+				os.kill(int(pid),9)
+			except: pass
+			# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
+			dc_dir = os.path.join(os.environ['HOME'],'.local/share/io.parity.ethereum/chains/DevelopmentChain')
+			shutil.rmtree(dc_dir,ignore_errors=True)
+			bdir = os.path.join(data_dir,'parity')
+			try: os.mkdir(bdir)
+			except: pass
+			pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
+			opts = ['--ports-shift=4','--config=dev']
+			subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pid_fn])
+			time.sleep(3) # race condition
+			pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
+		elif subprocess.call('netstat -tnl | grep -q 127.0.0.1:8549',shell=True) == 0:
+			imsg('No parity executable found on system, but port 8549 is active!  Proceeding')
+		else:
+			die(1,'No parity executable found!')
 		ok()
 
 	def ethdev_addrgen(self,name,addrs='1-3,11-13,21-23'):
@@ -3819,11 +3824,14 @@ class MMGenTestSuite(object):
 
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)
-		pid = read_from_tmpfile(cfg,cfg['parity_pidfile']) # exits if file not found
-		if opt.no_daemon_stop:
-			msg_r('(leaving daemon running by user request)')
+		if subprocess.call(['which','parity']) == 0:
+			pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
+			if opt.no_daemon_stop:
+				msg_r('(leaving daemon running by user request)')
+			else:
+				subprocess.check_call(['kill',pid])
 		else:
-			subprocess.check_call(['kill',pid])
+			imsg('No parity executable found on system. Ignoring')
 		ok()
 
 	# undocumented admin commands
