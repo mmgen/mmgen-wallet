@@ -1073,6 +1073,9 @@ cmd_group['ethdev'] = (
 cmd_group['autosign'] = (
 	('autosign', 'transaction autosigning (BTC,BCH,LTC,ETH,ETC)'),
 )
+cmd_group['autosign_minimal'] = (
+	('autosign_minimal', 'transaction autosigning (BTC,ETH,ETC)'),
+)
 
 cmd_group['ref_alt'] = (
 	('ref_addrfile_gen_eth',  'generate address file (ETH)'),
@@ -1181,6 +1184,11 @@ for a,b in cmd_group['ethdev']:
 cmd_data['info_autosign'] = 'autosign',[18]
 for a,b in cmd_group['autosign']:
 	cmd_list['autosign'].append(a)
+	cmd_data[a] = (18,b,[[[],18]])
+
+cmd_data['info_autosign_minimal'] = 'autosign_minimal',[18]
+for a,b in cmd_group['autosign_minimal']:
+	cmd_list['autosign_minimal'].append(a)
 	cmd_data[a] = (18,b,[[[],18]])
 
 cmd_data['info_ref_alt'] = 'altcoin reference files',[8]
@@ -2411,15 +2419,19 @@ class MMGenTestSuite(object):
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
-	# tests everything except device detection, mount/unmount
-	def autosign(self,name):
+	def autosign_minimal(self,name):
+		return self.autosign(name,
+					coins=['btc','eth'],
+					txfiles=['btc','eth','erc20','etc'],
+					txcount=7)
 
-		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,bch,ltc,eth']
-		txfiles = ('btc','bch','ltc','eth','erc20','etc')
-		txcount = 11
-# 		opts = ['--mountpoint='+cfg['tmpdir'],'--coins=btc,eth']
-# 		txfiles = ('btc','eth','erc20','etc')
-# 		txcount = 7
+	# tests everything except device detection, mount/unmount
+	def autosign(   self,name,
+					coins=['btc','bch','ltc','eth'],
+					txfiles=['btc','bch','ltc','eth','erc20','etc'],
+					txcount=11):
+
+		opts = ['--mountpoint='+cfg['tmpdir'],'--coins='+','.join(coins)]
 
 		if skip_for_win(): return
 
