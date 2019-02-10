@@ -2,6 +2,8 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
+umask 0022
+
 export MMGEN_TEST_SUITE=1
 export MMGEN_NO_LICENSE=1
 export PYTHONPATH=.
@@ -17,13 +19,16 @@ rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+add_tests='autosign_minimal'
+
 PROGNAME=$(basename $0)
-while getopts hCfilnPRtvV OPT
+while getopts hbCfilnPRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
 		echo   "  USAGE:           $PROGNAME [options] [branch] [tests]"
 		echo   "  OPTIONS: '-h'  Print this help message"
+		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           '-C'  Run tests in coverage mode"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
 		echo   "           '-i'  Install only; don't run tests"
@@ -53,6 +58,7 @@ do
 		echo   "     gen      - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
+	b)  test_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
 		test_py+=" --coverage"
@@ -66,7 +72,9 @@ do
 		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	f)  rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
 	i)  INSTALL_ONLY=1 ;;
-	l)  echo $dfl_tests; exit ;;
+	l)  echo -e "Default tests:\n  $dfl_tests"
+		echo -e "Additional tests:\n  $add_tests"
+		exit ;;
 	n)  NO_INSTALL=1 ;;
 	P)  NO_PAUSE=1 ;;
 	R)  NO_TMPFILE_REMOVAL=1 ;;
@@ -231,6 +239,11 @@ s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons mu
 t_autosign=("$test_py autosign")
 f_autosign='Autosign test complete'
 
+i_autosign_minimal='Autosign'
+s_autosign_minimal='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'
+t_autosign_minimal=("$test_py autosign_minimal")
+f_autosign_minimal='Autosign test complete'
+
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc=(
@@ -374,7 +387,7 @@ run_tests() {
 
 check_args() {
 	for i in $tests; do
-		echo "$dfl_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
+		echo "$dfl_tests $add_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
 	done
 }
 
