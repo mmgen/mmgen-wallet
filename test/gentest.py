@@ -81,7 +81,7 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
 def pyethereum_sec2addr(sec):
-	return sec.decode(),hexlify(eth.privtoaddr(sec)).decode()
+	return sec.decode(),hexlify(eth.privtoaddr(sec.decode())).decode()
 
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
@@ -126,7 +126,7 @@ def init_external_prog():
 		try:
 			import ethereum.utils as eth
 		except:
-			raise ImportError("Unable to import 'pyethereum' module. Is pyethereum installed?")
+			raise ImportError("Unable to import 'ethereum' module. Is pyethereum installed?")
 		ext_sec2addr = pyethereum_sec2addr
 		ext_lib = 'pyethereum'
 	elif test_support('pycoin'):

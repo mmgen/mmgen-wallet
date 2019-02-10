@@ -110,7 +110,7 @@ class EthereumMMGenTX(MMGenTX):
 			txid = CoinTxID(hexlify(etx.hash))
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 		else:
-			d = json.loads(self.hex)
+			d = json.loads(self.hex.decode())
 			o = {   'from':     CoinAddr(d['from']),
 					'to':       CoinAddr(d['to']) if d['to'] else Str(''),
 					'amt':      ETHAmt(d['amt']),
@@ -417,7 +417,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 	def set_g_token(self):
 		g.dcoin = self.dcoin
 		if is_hex_bytes(self.hex): return # for txsend we can leave g.token uninitialized
-		d = json.loads(self.hex)
+		d = json.loads(self.hex.decode())
 		if g.token.upper() == self.dcoin:
 			g.token = d['token_addr']
 		elif g.token != d['token_addr']:
