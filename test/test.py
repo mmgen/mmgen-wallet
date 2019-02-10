@@ -642,6 +642,19 @@ eth_burn_addr = 'deadbeef'*5
 eth_amt1 = '999999.12345689012345678'
 eth_amt2 = '888.111122223333444455'
 eth_rem_addrs = ('4','1')
+
+# Token sends require varying amounts of gas, depending on compiler version
+if os.uname().machine == 'armv7l': # RPi Stretch, Solidity 0.5.1
+	vbal1 = '1.2288337'
+	vbal2 = '99.997085083'
+	vbal3 = '1.23142165'
+	vbal4 = '127.0287837'
+else: # Ubuntu Bionic, Solidity 0.5.3
+	vbal1 = '1.2288487'
+	vbal2 = '99.997092733'
+	vbal3 = '1.23142915'
+	vbal4 = '127.0287987'
+
 eth_bals = {
 	'1': [  ('98831F3A:E:1','123.456')],
 	'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
@@ -657,33 +670,37 @@ eth_bals = {
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.2288487','a'),
+			('98831F3A:E:11',vbal1,'a'),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.2288487','a'),
-			('98831F3A:E:12','99.997092733'),
+			('98831F3A:E:11',vbal1,'a'),
+			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)]
 }
 eth_token_bals = {
 	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544','1.23142915','a'),
+	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a'),
 			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
+	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
 			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
+	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
 			('98831F3A:E:12','1.23456','0'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
+	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
 			('98831F3A:E:12','1.23456','99.99895'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545','1.2288487','a'),
-			('98831F3A:E:12','0','99.997092733'),
+	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+			('98831F3A:E:12','0',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)]
+}
+eth_token_bals_getbalance = {
+	'1': (vbal4,'999999.12345689012345678'),
+	'2': ('111.888877776666555545','888.111122223333444455')
 }
 
 def eth_args():
@@ -1535,12 +1552,15 @@ def make_brainwallet_file(fn):
 	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
 	write_data_to_file(fn,d,'brainwallet password',silent=True,ignore_opt_outdir=True)
 
+def confirm_continue():
+	if keypress_confirm(blue('Continue?'),default_yes=True):
+		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
+	else:
+		raise KeyboardInterrupt('Exiting at user request')
+
 def do_between():
 	if opt.pause:
-		if keypress_confirm(green('Continue?'),default_yes=True):
-			if opt.verbose or opt.exact_output: sys.stderr.write('\n')
-		else:
-			raise KeyboardInterrupt('Exiting at user request')
+		confirm_continue()
 	elif opt.verbose or opt.exact_output:
 		sys.stderr.write('\n')
 
@@ -3360,7 +3380,7 @@ class MMGenTestSuite(object):
 	def ethdev_setup(self,name):
 		MMGenExpect(name,'',msg_only=True)
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		if subprocess.call(['which','parity']) == 0:
+		if subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
 			lf_arg = '--log-file=' + os.path.join(data_dir,'parity.log')
 			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 			try:
@@ -3379,7 +3399,12 @@ class MMGenTestSuite(object):
 			time.sleep(3) # race condition
 			pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 		elif subprocess.call('netstat -tnl | grep -q 127.0.0.1:8549',shell=True) == 0:
-			imsg('No parity executable found on system, but port 8549 is active!  Proceeding')
+			m1 = 'No parity executable found on system, but port 8549 is active!'
+			m2 = 'Before continuing, you should probably run the command'
+			m3 = 'test/test.py ethdev_setup'
+			m4 = 'on the remote host.'
+			sys.stderr.write('{}\n{}\n{} {}\n'.format(m1,m2,cyan(m3),m4))
+			confirm_continue()
 		else:
 			die(1,'No parity executable found!')
 		ok()
@@ -3530,13 +3555,17 @@ class MMGenTestSuite(object):
 		t.read()
 		t.ok()
 
-	def ethdev_bal_getbalance(self,name,t_non_mmgen='',t_mmgen='',extra_args=[]):
+	def ethdev_bal_getbalance(self,name,idx,etc_adj=False,extra_args=[]):
+		bal1 = eth_token_bals_getbalance[idx][0]
+		bal2 = eth_token_bals_getbalance[idx][1]
+		bal1 = Decimal(bal1)
+		if etc_adj and g.coin == 'ETC': bal1 += self.bal_corr
 		t = MMGenExpect(name,'mmgen-tool', eth_args() + extra_args + ['getbalance'])
-		t.expect(r'\n[0-9A-F]{8}: .* '+t_mmgen,regex=True)
-		t.expect(r'\nNon-MMGen: .* '+t_non_mmgen,regex=True)
+		t.expect(r'\n[0-9A-F]{8}: .* '+str(bal1),regex=True)
+		t.expect(r'\nNon-MMGen: .* '+bal2,regex=True)
 		total = t.expect_getend(r'\nTOTAL:\s+',regex=True).split()[0]
 		t.read()
-		assert Decimal(t_non_mmgen) + Decimal(t_mmgen) == Decimal(total)
+		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		t.ok()
 
 	def ethdev_add_label(self,name,addr='98831F3A:E:3',lbl=utf8_label):
@@ -3724,10 +3753,8 @@ class MMGenTestSuite(object):
 		t.read() # TODO
 		t.ok()
 
-	def ethdev_bal1_getbalance(self,name,t_non_mmgen='',t_mmgen=''):
-		ebal = Decimal('127.0287987')
-		if g.coin == 'ETC': ebal += self.bal_corr
-		self.ethdev_bal_getbalance(name,t_non_mmgen='999999.12345689012345678',t_mmgen=str(ebal))
+	def ethdev_bal1_getbalance(self,name):
+		self.ethdev_bal_getbalance(name,'1',etc_adj=True)
 
 	def ethdev_addrimport_token_burn_addr(self,name):
 		self.ethdev_addrimport_one_addr(name,addr=eth_burn_addr,extra_args=['--token=mm1'])
@@ -3735,8 +3762,7 @@ class MMGenTestSuite(object):
 	def ethdev_token_bal4(self,name): self.ethdev_token_bal(name,n='4')
 
 	def ethdev_token_bal_getbalance(self,name):
-		self.ethdev_bal_getbalance(name,
-			t_non_mmgen='888.111122223333444455',t_mmgen='111.888877776666555545',extra_args=['--token=mm1'])
+		self.ethdev_bal_getbalance(name,'2',extra_args=['--token=mm1'])
 
 	def ethdev_txcreate_noamt(self,name):
 		return self.ethdev_txcreate(name,args=['98831F3A:E:12'],eth_fee_res=True)
@@ -3824,7 +3850,7 @@ class MMGenTestSuite(object):
 
 	def ethdev_stop(self,name):
 		MMGenExpect(name,'',msg_only=True)
-		if subprocess.call(['which','parity']) == 0:
+		if subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
 			pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 			if opt.no_daemon_stop:
 				msg_r('(leaving daemon running by user request)')

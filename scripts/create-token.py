@@ -25,7 +25,7 @@ decimals = 18
 supply   = 10**26
 name   = 'MMGen Token'
 symbol = 'MMT'
-solc_version = '0.5.3'
+solc_version_pat = r'0.5.[123]'
 
 opts_data = lambda: {
 	'desc': 'Create an ERC20 token contract',
@@ -55,7 +55,7 @@ owner_addr = '0x' + cmd_args[0]
 
 code_in = """
 
-pragma solidity >0.5.2 <0.5.4;
+pragma solidity >0.5.0 <0.5.4;
 
 contract SafeMath {
     function safeAdd(uint a, uint b) public pure returns (uint c) {
@@ -170,7 +170,7 @@ contract Token is ERC20Interface, Owned, SafeMath {
 """
 
 def create_src(code):
-	for k in ('decimals','supply','name','symbol','owner_addr','solc_version'):
+	for k in ('decimals','supply','name','symbol','owner_addr'):
 		if hasattr(opt,k) and getattr(opt,k): globals()[k] = getattr(opt,k)
 		code = code.replace('<{}>'.format(k.upper()),str(globals()[k]))
 	return code
@@ -180,8 +180,8 @@ def check_version():
 	res = p.stdout.read().decode()
 	ver = re.search(r'Version:\s*(.*)',res).group(1)
 	msg("Installed solc version: {}".format(ver))
-	if not re.search(r'{}\b'.format(solc_version),ver):
-		ydie(1,'Incorrect Solidity compiler version (need version {})'.format(solc_version))
+	if not re.search(r'{}\b'.format(solc_version_pat),ver):
+		ydie(1,'Incorrect Solidity compiler version (need version {})'.format(solc_version_pat))
 
 def compile_code(code):
 	check_version()
@@ -211,3 +211,5 @@ src = create_src(code_in)
 out = compile_code(src)
 if opt.stdout:
 	print(json.dumps(out))
+
+msg('Contract successfully compiled')
