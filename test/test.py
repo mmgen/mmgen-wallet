@@ -35,6 +35,9 @@ from mmgen.common import *
 from mmgen.test import *
 from mmgen.protocol import CoinProtocol,init_coin
 
+def omsg(s): sys.stderr.write(s+'\n')
+def omsg_r(s): sys.stderr.write(s)
+
 class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
@@ -634,79 +637,84 @@ cfgs = {
 
 dfl_words = os.path.join(ref_dir,cfgs['8']['seed_id']+'.mmwords')
 
-# The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
-eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
-eth_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
-eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
-eth_burn_addr = 'deadbeef'*5
-eth_amt1 = '999999.12345689012345678'
-eth_amt2 = '888.111122223333444455'
 eth_rem_addrs = ('4','1')
+if g.coin in ('ETH','ETC'):
+	# The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
+	eth_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
+	eth_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
+	eth_key = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
+	eth_burn_addr = 'deadbeef'*5
+	eth_amt1 = '999999.12345689012345678'
+	eth_amt2 = '888.111122223333444455'
 
-# Token sends require varying amounts of gas, depending on compiler version
-if os.uname().machine == 'armv7l': # RPi Stretch, Solidity 0.5.1
-	vbal1 = '1.2288337'
-	vbal2 = '99.997085083'
-	vbal3 = '1.23142165'
-	vbal4 = '127.0287837'
-else: # Ubuntu Bionic, Solidity 0.5.3
-	vbal1 = '1.2288487'
-	vbal2 = '99.997092733'
-	vbal3 = '1.23142915'
-	vbal4 = '127.0287987'
+	# Token sends require varying amounts of gas, depending on compiler version
+	solc_ver = re.search(r'Version:\s*(.*)',
+					subprocess.Popen(['solc','--version'],stdout=subprocess.PIPE
+						).stdout.read().decode()).group(1)
 
-eth_bals = {
-	'1': [  ('98831F3A:E:1','123.456')],
-	'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
-	'3': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234'),('98831F3A:E:21','2.345')],
-	'4': [  ('98831F3A:E:1','100'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.234'),
-			('98831F3A:E:21','2.345')],
-	'5': [  ('98831F3A:E:1','100'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11','1.234'),
-			('98831F3A:E:21','2.345'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
-	'8': [  ('98831F3A:E:1','0'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a'),
-			('98831F3A:E:12','99.99895'),
-			('98831F3A:E:21','2.345'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
-	'9': [  ('98831F3A:E:1','0'),
-			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a'),
-			('98831F3A:E:12',vbal2),
-			('98831F3A:E:21','2.345'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt1)]
-}
-eth_token_bals = {
-	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a'),
-			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
-			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
-			('98831F3A:E:12','1.23456','0'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
-			('98831F3A:E:12','1.23456','99.99895'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
-			('98831F3A:E:12','0',vbal2),
-			('98831F3A:E:13','1.23456','0'),
-			(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)]
-}
-eth_token_bals_getbalance = {
-	'1': (vbal4,'999999.12345689012345678'),
-	'2': ('111.888877776666555545','888.111122223333444455')
-}
+	if re.match(r'\b0.5.1\b',solc_ver): # Raspbian Stretch
+		vbal1 = '1.2288337'
+		vbal2 = '99.997085083'
+		vbal3 = '1.23142165'
+		vbal4 = '127.0287837'
+	elif re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
+		vbal1 = '1.2288487'
+		vbal2 = '99.997092733'
+		vbal3 = '1.23142915'
+		vbal4 = '127.0287987'
 
-def eth_args():
-	if g.coin not in ('ETH','ETC'):
-		raise TestSuiteException('for ethdev tests, --coin must be set to either ETH or ETC')
-	return ['--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
+	eth_bals = {
+		'1': [  ('98831F3A:E:1','123.456')],
+		'2': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234')],
+		'3': [  ('98831F3A:E:1','123.456'),('98831F3A:E:11','1.234'),('98831F3A:E:21','2.345')],
+		'4': [  ('98831F3A:E:1','100'),
+				('98831F3A:E:2','23.45495'),
+				('98831F3A:E:11','1.234'),
+				('98831F3A:E:21','2.345')],
+		'5': [  ('98831F3A:E:1','100'),
+				('98831F3A:E:2','23.45495'),
+				('98831F3A:E:11','1.234'),
+				('98831F3A:E:21','2.345'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
+		'8': [  ('98831F3A:E:1','0'),
+				('98831F3A:E:2','23.45495'),
+				('98831F3A:E:11',vbal1,'a'),
+				('98831F3A:E:12','99.99895'),
+				('98831F3A:E:21','2.345'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt1)],
+		'9': [  ('98831F3A:E:1','0'),
+				('98831F3A:E:2','23.45495'),
+				('98831F3A:E:11',vbal1,'a'),
+				('98831F3A:E:12',vbal2),
+				('98831F3A:E:21','2.345'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt1)]
+	}
+	eth_token_bals = {
+		'1': [  ('98831F3A:E:11','1000','1.234')],
+		'2': [  ('98831F3A:E:11','998.76544',vbal3,'a'),
+				('98831F3A:E:12','1.23456','0')],
+		'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+				('98831F3A:E:12','1.23456','0')],
+		'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+				('98831F3A:E:12','1.23456','0'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
+		'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+				('98831F3A:E:12','1.23456','99.99895'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)],
+		'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+				('98831F3A:E:12','0',vbal2),
+				('98831F3A:E:13','1.23456','0'),
+				(eth_burn_addr + '\s+Non-MMGen',eth_amt2,eth_amt1)]
+	}
+	eth_token_bals_getbalance = {
+		'1': (vbal4,'999999.12345689012345678'),
+		'2': ('111.888877776666555545','888.111122223333444455')
+	}
+
+	def eth_args():
+		if g.coin not in ('ETH','ETC'):
+			raise TestSuiteException('for ethdev tests, --coin must be set to either ETH or ETC')
+		return ['--outdir={}'.format(cfgs['22']['tmpdir']),'--rpc-port=8549','--quiet']
 
 from copy import deepcopy
 for a,b in (('6','11'),('7','12'),('8','13')):
@@ -1278,9 +1286,6 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 def get_segwit_arg(cfg):
 	return ['--type='+('segwit','bech32')[bool(opt.bech32)]] if cfg['segwit'] else []
-
-def omsg(s): sys.stderr.write(s+'\n')
-def omsg_r(s): sys.stderr.write(s)
 
 if opt.exact_output:
 	def imsg(s):   os.write(2,s.encode() + b'\n')
@@ -3504,7 +3509,8 @@ class MMGenTestSuite(object):
 			except: pass
 			pid_fn = get_tmpfile_fn(cfg,cfg['parity_pidfile'])
 			opts = ['--ports-shift=4','--config=dev']
-			subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pid_fn])
+			redir = None if opt.exact_output else subprocess.PIPE
+			subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pid_fn],stderr=redir,stdout=redir)
 			time.sleep(3) # race condition
 			pid = read_from_tmpfile(cfg,cfg['parity_pidfile'])
 		elif subprocess.call('netstat -tnl | grep -q 127.0.0.1:8549',shell=True) == 0:
