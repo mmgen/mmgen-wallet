@@ -239,10 +239,10 @@ s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons mu
 t_autosign=("$test_py autosign")
 f_autosign='Autosign test complete'
 
-i_autosign_minimal='Autosign'
-s_autosign_minimal='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'
+i_autosign_minimal='Autosign Minimal'
+s_autosign_minimal='The bitcoin mainnet and testnet daemons must be running for the following test'
 t_autosign_minimal=("$test_py autosign_minimal")
-f_autosign_minimal='Autosign test complete'
+f_autosign_minimal='Autosign Minimal test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
@@ -369,7 +369,7 @@ f_gen='gentest tests completed'
 [ "$INSTALL_ONLY" ] && exit
 
 skip_maybe() {
-	echo -n "Enter 's' to skip, or ENTER to continue: "; read
+	echo -n "Enter 's' to skip, or ENTER to continue: "; read -n1; echo
 	[ "$REPLY" == 's' ] && return 0
 	return 1
 }
@@ -377,8 +377,8 @@ skip_maybe() {
 run_tests() {
 	for t in $1; do
 		eval echo -e \${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
-		[ "$PAUSE" ] && { eval echo $(echo \$s_$t); skip_maybe && continue; }
-#		echo RUNNING
+		eval echo -e $(echo \$s_$t)
+		[ "$PAUSE" ] && skip_maybe && continue
 		CUR_TEST=$t
 		eval "do_test \"\${t_$t[@]}\""
 		eval echo -e \$GREEN$(echo \$f_$t)\$RESET
