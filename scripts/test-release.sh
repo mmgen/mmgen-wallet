@@ -19,7 +19,7 @@ rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
-add_tests='autosign_minimal'
+add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
 while getopts hbCfilnPRtvV OPT
@@ -243,6 +243,13 @@ i_autosign_minimal='Autosign Minimal'
 s_autosign_minimal='The bitcoin mainnet and testnet daemons must be running for the following test'
 t_autosign_minimal=("$test_py autosign_minimal")
 f_autosign_minimal='Autosign Minimal test complete'
+
+i_autosign_live='Autosign Live'
+s_autosign_live="The bitcoin mainnet and testnet daemons must be running for the following test\n"
+s_autosign_live+="${YELLOW}Mountpoint, '/etc/fstab' and removable device must be configured "
+s_autosign_live+="as described in 'mmgen-autosign --help'${RESET}"
+t_autosign_live=("$test_py autosign_live")
+f_autosign_live='Autosign Live test complete'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'

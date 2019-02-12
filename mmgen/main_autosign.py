@@ -38,6 +38,7 @@ opts_data = lambda: {
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -c, --coins=c       Coins to sign for (comma-separated list)
+-I, --no-insert-check Don't check for device insertion
 -l, --led           Use status LED to signal standby, busy and error
 -m, --mountpoint=m  Specify an alternate mountpoint (default: '{mp}')
 -s, --stealth-led   Stealth LED mode - signal busy and error only, and only
@@ -349,7 +350,7 @@ def set_led(cmd):
 	led_thread.start()
 
 def get_insert_status():
-	if os.getenv('MMGEN_TEST_SUITE'): return True
+	if opt.no_insert_check: return True
 	try: os.stat(os.path.join('/dev/disk/by-label',part_label))
 	except: return False
 	else: return True

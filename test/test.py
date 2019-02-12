@@ -1093,6 +1093,9 @@ cmd_group['autosign'] = (
 cmd_group['autosign_minimal'] = (
 	('autosign_minimal', 'transaction autosigning (BTC,ETH,ETC)'),
 )
+cmd_group['autosign_live'] = (
+	('autosign_live', 'transaction autosigning (BTC,ETH,ETC - test device insertion/removal + LED)'),
+)
 
 cmd_group['ref_alt'] = (
 	('ref_addrfile_gen_eth',  'generate address file (ETH)'),
@@ -1208,6 +1211,11 @@ for a,b in cmd_group['autosign_minimal']:
 	cmd_list['autosign_minimal'].append(a)
 	cmd_data[a] = (18,b,[[[],18]])
 
+cmd_data['info_autosign_live'] = 'autosign_live',[18]
+for a,b in cmd_group['autosign_live']:
+	cmd_list['autosign_live'].append(a)
+	cmd_data[a] = (18,b,[[[],18]])
+
 cmd_data['info_ref_alt'] = 'altcoin reference files',[8]
 for a,b in cmd_group['ref_alt']:
 	cmd_list['ref_alt'].append(a)
@@ -1270,6 +1278,9 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 def get_segwit_arg(cfg):
 	return ['--type='+('segwit','bech32')[bool(opt.bech32)]] if cfg['segwit'] else []
+
+def omsg(s): sys.stderr.write(s+'\n')
+def omsg_r(s): sys.stderr.write(s)
 
 if opt.exact_output:
 	def imsg(s):   os.write(2,s.encode() + b'\n')
@@ -2439,26 +2450,26 @@ class MMGenTestSuite(object):
 		os.unlink(f1)
 		cmp_or_die(hincog_offset,int(o))
 
-	def autosign_minimal(self,name):
+	def autosign_live(self,name):
+		return self.autosign_minimal(name,live=True)
+
+	def autosign_minimal(self,name,live=False):
 		return self.autosign(name,
 					coins=['btc','eth'],
 					txfiles=['btc','eth','erc20','etc'],
-					txcount=7)
+					txcount=7,
+					live=live)
 
 	# tests everything except device detection, mount/unmount
 	def autosign(   self,name,
 					coins=['btc','bch','ltc','eth'],
 					txfiles=['btc','bch','ltc','eth','erc20','etc'],
-					txcount=11):
-
-		opts = ['--mountpoint='+cfg['tmpdir'],'--coins='+','.join(coins)]
+					txcount=11,
+					live=False):
 
 		if skip_for_win(): return
 
-		try: os.mkdir(os.path.join(cfg['tmpdir'],'tx'))
-		except: pass
-
-		def make_wallet():
+		def make_wallet(opts):
 			t = MMGenExpect(name,'mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
 			t.expect_getend('Wrote key file ')
 			t.ok()
@@ -2495,7 +2506,7 @@ class MMGenTestSuite(object):
 			wf = t.written_to_file('Autosign wallet')
 			t.ok()
 
-		def copy_files():
+		def copy_files(mountpoint,remove_signed_only=False,include_bad_tx=True):
 			fdata_in = (('btc',''),
 						('bch',''),
 						('ltc','litecoin'),
@@ -2509,13 +2520,71 @@ class MMGenTestSuite(object):
 
 			for f,fn in zip(tfs,tfns):
 				if fn: # use empty fn to skip file
-					shutil.copyfile(f,os.path.join(cfg['tmpdir'],'tx',fn))
+					target = os.path.join(mountpoint,'tx',fn)
+					remove_signed_only or shutil.copyfile(f,target)
+					try: os.unlink(target.replace('.rawtx','.sigtx'))
+					except: pass
 
 			# make a bad tx file
-			with open(os.path.join(cfg['tmpdir'],'tx','bad.rawtx'),'w') as f:
-				f.write('bad tx data')
+			bad_tx = os.path.join(mountpoint,'tx','bad.rawtx')
+			if include_bad_tx and not remove_signed_only:
+				with open(bad_tx,'w') as f:
+					f.write('bad tx data')
+			if not include_bad_tx:
+				try: os.unlink(bad_tx)
+				except: pass
 
-		def do_autosign():
+		def do_autosign_live(opts,mountpoint,led_opts=[],gen_wallet=True):
+
+			def do_mount():
+				try: subprocess.check_call(['mount',mountpoint])
+				except: pass
+
+			def do_unmount():
+				try: subprocess.check_call(['umount',mountpoint])
+				except: pass
+				omsg_r(blue('\nRemove removable device and then hit ENTER '))
+				input()
+
+			if gen_wallet: make_wallet(opts)
+			else: do_mount()
+
+			copy_files(mountpoint,include_bad_tx=not led_opts)
+
+			desc = '(sign)'
+			m1 = "Running 'mmgen-autosign wait'"
+			m2 = 'Insert removable device '
+
+			if led_opts:
+				if led_opts == ['--led']:
+					m1 = "Running 'mmgen-autosign wait' with --led. The LED should start blinking slowly now"
+				elif led_opts == ['--stealth-led']:
+					m1 = "Running 'mmgen-autosign wait' with --stealth-led. You should see no LED activity now"
+				m2 = 'Insert removable device and watch for fast LED activity during signing'
+				desc = '(sign - {})'.format(led_opts[0])
+
+			def do_loop():
+				omsg(blue(m2))
+				t.expect('{} transactions signed'.format(txcount))
+				if not led_opts:
+					t.expect('1 transaction failed to sign')
+				t.expect('Waiting')
+
+			do_unmount()
+			omsg(green(m1))
+			t = MMGenExpect(name,'mmgen-autosign',opts+led_opts+['wait'],extra_desc=desc)
+			if not opt.exact_output: omsg('')
+			do_loop()
+			do_mount() # race condition due to device insertion detection
+			copy_files(mountpoint,remove_signed_only=True,include_bad_tx=not led_opts)
+			do_unmount()
+			do_loop()
+			t.kill(2)
+			t.ok(exit_val=1)
+
+		def do_autosign(opts,mountpoint):
+			make_wallet(opts)
+			copy_files(mountpoint,include_bad_tx=True)
 			t = MMGenExpect(name,'mmgen-autosign',opts+['wait'],extra_desc='(sign)')
 			t.expect('{} transactions signed'.format(txcount))
 			t.expect('1 transaction failed to sign')
@@ -2523,9 +2592,49 @@ class MMGenTestSuite(object):
 			t.kill(2)
 			t.ok(exit_val=1)
 
-		make_wallet()
-		copy_files()
-		do_autosign()
+		if live:
+			mountpoint = '/mnt/tx'
+			if not os.path.ismount(mountpoint):
+				try:
+					subprocess.check_call(['mount',mountpoint])
+					imsg("Mounted '{}'".format(mountpoint))
+				except:
+					imsg("Could not mount '{}'!  Exiting".format(mountpoint))
+					return
+
+			txdir = os.path.join(mountpoint,'tx')
+			if not os.path.isdir(txdir):
+				imsg("Directory '{}' does not exist!  Exiting".format(mountpoint))
+				return
+
+			opts = ['--coins='+','.join(coins)]
+			led_files = {   'opi': ('/sys/class/leds/orangepi:red:status/brightness',),
+							'rpi': ('/sys/class/leds/led0/brightness','/sys/class/leds/led0/trigger') }
+			for k in ('opi','rpi'):
+				if os.path.exists(led_files[k][0]):
+					led_support = k
+					break
+			else:
+				led_support = None
+
+			if led_support:
+				for fn in (led_files[led_support]):
+					subprocess.check_call(['sudo','chmod','0666',fn])
+				omsg(purple('Running autosign test with no LED'))
+				do_autosign_live(opts,mountpoint)
+				omsg(purple("Running autosign test with '--led'"))
+				do_autosign_live(opts,mountpoint,led_opts=['--led'],gen_wallet=False)
+				omsg(purple("Running autosign test with '--stealth-led'"))
+				do_autosign_live(opts,mountpoint,led_opts=['--stealth-led'],gen_wallet=False)
+			else:
+				do_autosign_live(opts,mountpoint)
+		else:
+			mountpoint = cfg['tmpdir']
+			opts = ['--no-insert-check','--mountpoint='+mountpoint,'--coins='+','.join(coins)]
+			try: os.mkdir(os.path.join(mountpoint,'tx'))
+			except: pass
+			do_autosign(opts,mountpoint)
+
 
 	# Saved reference file tests
 	def ref_wallet_conv(self,name):
