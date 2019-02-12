@@ -86,7 +86,9 @@ def segwit_is_active(exit_on_error=False):
 	d = g.rpch.getblockchaininfo()
 	if d['chain'] == 'regtest':
 		return True
-	if 'segwit' in d['bip9_softforks'] and d['bip9_softforks']['segwit']['status'] == 'active':
+	if (	'bip9_softforks' in d
+			and 'segwit' in d['bip9_softforks']
+			and d['bip9_softforks']['segwit']['status'] == 'active'):
 		return True
 	if g.skip_segwit_active_check:
 		return True
