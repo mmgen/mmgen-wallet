@@ -872,7 +872,8 @@ cmd_group['conv_out'] = ( # writing
 	('ref_seed_conv_out',   'ref seed conversion to seed'),
 	('ref_incog_conv_out',  'ref seed conversion to incog data'),
 	('ref_incox_conv_out',  'ref seed conversion to hex incog data'),
-	('ref_hincog_conv_out', 'ref seed conversion to hidden incog data')
+	('ref_hincog_conv_out', 'ref seed conversion to hidden incog data'),
+	('ref_hincog_blkdev_conv_out', 'ref seed conversion to hidden incog data on block device')
 )
 
 cmd_group['regtest'] = (
@@ -2695,16 +2696,33 @@ class MMGenTestSuite(object):
 	def ref_incox_conv_out(self,name):
 		self.walletconv_out(name,'hex incognito data',out_fmt='xi',pw=True)
 
-	def ref_hincog_conv_out(self,name,extra_uopts=[]):
-		ic_f = os.path.join(cfg['tmpdir'],hincog_fn)
+	def ref_hincog_conv_out(self,name,ic_f=None):
+		if not ic_f: ic_f = os.path.join(cfg['tmpdir'],hincog_fn)
 		hi_parms = '{},{}'.format(ic_f,ref_wallet_incog_offset)
 		sl_parm = '-l' + str(cfg['seed_len'])
 		self.walletconv_out(name,
 			'hidden incognito data', 'hi',
-			uopts=['-J',hi_parms,sl_parm] + extra_uopts,
+			uopts=['-J',hi_parms,sl_parm],
 			uopts_chk=['-H',hi_parms,sl_parm],
 			pw=True
 		)
+
+	def ref_hincog_blkdev_conv_out(self,name):
+		imsg('Creating block device image file')
+		ic_img = os.path.join(cfg['tmpdir'],'hincog_blkdev_img')
+		subprocess.check_output(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'],stderr=subprocess.PIPE)
+		ic_dev = subprocess.check_output(['losetup','-f']).strip().decode()
+		ic_dev_mode_orig = '{:o}'.format(os.stat(ic_dev).st_mode & 0xfff)
+		ic_dev_mode = '0666'
+		imsg("Changing permissions on loop device to '{}'".format(ic_dev_mode))
+		subprocess.check_output(['sudo','chmod',ic_dev_mode,ic_dev],stderr=subprocess.PIPE)
+		imsg("Attaching loop device '{}'".format(ic_dev))
+		subprocess.check_output(['losetup',ic_dev,ic_img])
+		self.ref_hincog_conv_out(name,ic_f=ic_dev)
+		imsg("Detaching loop device '{}'".format(ic_dev))
+		subprocess.check_output(['losetup','-d',ic_dev])
+		imsg("Resetting permissions on loop device to '{}'".format(ic_dev_mode_orig))
+		subprocess.check_output(['sudo','chmod',ic_dev_mode_orig,ic_dev],stderr=subprocess.PIPE)
 
 	def ref_wallet_chk(self,name):
 		wf = os.path.join(ref_dir,cfg['ref_wallet'])
@@ -4013,6 +4031,7 @@ class MMGenTestSuite(object):
 			'ref_incog_conv_out',
 			'ref_incox_conv_out',
 			'ref_hincog_conv_out',
+			'ref_hincog_blkdev_conv_out',
 			'ref_wallet_chk',
 			'refwalletgen',
 			'ref_seed_chk',
