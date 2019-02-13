@@ -2,11 +2,12 @@
 
 > Install required Debian/Ubuntu packages:
 
-	$ sudo apt-get install python-dev python-pexpect python-ecdsa python-scrypt libssl-dev git autoconf libtool wipe python-setuptools libgmp-dev python-crypto python-nacl python-pysha3 python-pip
+	$ sudo apt-get install autoconf git libgmp-dev libssl-dev libtool wipe
+	$ sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-crypto python3-nacl python3-pip
 
-> Install fast ed25519 Python package (optional, but recommended for Monero addresses):
+> Using the [pip3][P] installer, install the Python scrypt library:
 
-	$ sudo -H pip install ed25519ll
+	$ sudo -H pip3 install scrypt
 
 > Install the secp256k1 library:
 
@@ -32,7 +33,7 @@
 > To install prebuilt binaries, go [here][01].  To install from source, go
 > [here][02].
 
-#### Note for offline machines:
+#### *Note for offline machines:*
 
 > Naturally, your offline machine must be connected to the Internet to retrieve
 > and install the above packages as described above.  This is normally not a
@@ -59,3 +60,4 @@ Started with MMGen**][gs].
 [02]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
 [gs]: Getting-Started-with-MMGen
 [03]: https://pypi.python.org/packages/source/p/pexpect/pexpect-3.1.tar.gz
+[P]: https://pypi.org/project/pip

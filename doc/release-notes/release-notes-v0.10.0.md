@@ -9,9 +9,9 @@
 		sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-crypto python3-nacl python3-pip
 		sudo -H pip3 install scrypt
 
- - Ethereum, ERC20 and Monero dependencies must be upgraded as well, if
-   support for these coins is desired.  See the [Altcoin and Forkcoin
-   Support][f] wiki page for details.
+ - If support for Ethereum, ERC20 or Monero is required, their respective
+   dependencies must be upgraded as well.  See the [Altcoin and Forkcoin
+   Support][f] wiki page for information.
 
    This is a Linux-only release.  It has been tested on the following platforms:
 
@@ -20,15 +20,16 @@
 	   Armbian Bionic / Orange Pi PC2
 	   Raspbian Stretch / Raspberry Pi B 
 
-	with the following coin daemons:
+	and with the following coin daemon versions:
 
 		Bitcoin Core v0.17.1
-		Bitcoin ABC v0.18.8
+		Bitcoin-ABC v0.18.8
 		Litecoin Core v0.16.3
 		Monerod v0.13.0.4
 		Parity Ethereum v1.11.1 & v2.3.2
 
-	and the following altcoin libraries / address generation tools: 
+	In addition, altcoin address generation has been tested using the following
+	altcoin libraries / address generation tools as references:
 
 		pyethereum b704a5c (https://github.com/ethereum/pyethereum)
 		zcash-mini a2b3504 (https://github.com/FiloSottile/zcash-mini)

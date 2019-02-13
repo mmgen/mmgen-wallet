@@ -8,7 +8,9 @@
 
 #### [Full support for Bcash (BCH) and Litecoin](#a_bch)
 
-#### [Enhanced key/address generation support for Monero (XMR) and Zcash (ZEC)](#a_es)
+#### [Key/address generation for Zcash (ZEC)](#a_zec)
+
+#### [Key/address generation and wallet creation/syncing for Monero (XMR)](#a_xmr)
 
 #### [Key/address generation support for 144 Bitcoin-derived altcoins](#a_kg)
 
@@ -42,42 +44,38 @@ list.
 #### <a name='a_pe'>Install the Pyethereum library</a>
 
 Signing of ETH and ETC transactions is handled by the [pyethereum][y] library.
-Unfortunately, Python 2 is not reliably supported by recent versions of
-pyethereum and some of its dependencies, so older versions must be installed.
-This can be done easily with the [pip][P] Python package installer.
 
-First install the following dependencies:
+First, using the [pip3][P] Python package installer, install the following
+dependencies:
 
-	$ pip install rlp==0.6.0 # the version is important here!
-	$ pip install future pysha3 PyYAML py_ecc
+*Note: Ubuntu Xenial users will have to upgrade the Python interpreter and
+Python dependencies listed in the [Install wiki][iw] from version 3.5 to 3.6
+before proceeding.  This can be done by adding the Bionic repository to
+'sources.list' and installing the relevant packages with '-t bionic'*
 
-Now install the library itself.  You could try doing this the usual way:
+	$ sudo -H pip3 install wheel future pysha3 PyYAML py_ecc rlp
 
-	$ pip install ethereum==2.1.2 # the version is important here!
+As of this writing, the current “stable” version of pyethereum (2.3.2) is
+broken, so we must check out a more recent version from Github:
 
-However, pyethereum pulls in a whole bunch of silly dependencies, some of which
-may fail to install, and we need only a subset of the library anyway, so it's
-better to do the following instead:
+	$ git clone https://github.com/ethereum/pyethereum
+	$ cd pyethereum
+	$ git checkout b704a5c
 
-	$ pip download ethereum==2.1.2
+To prevent the library from auto-installing a lot of unneeded dependencies
+(Pycryptodome in particular, which would stomp on our existing Pycrypto
+installation) we need to edit the file 'requirements.txt' and remove the
+following unneeded packages:
 
-This will download the package archive and dependencies.  When pip starts
-downloading the dependency archives, just bail out with Ctrl-C, since you don't
-need them.
+	coincurve
+	pbkdf2
+	pyethash
+	pycryptodome
+	repoze.lru
 
-Now unpack the ethereum-2.1.2.tar.gz archive and remove unneeded deps from
-'requirements.txt', making the file look exactly like this:
+Now we can proceed with the install:
 
-	pysha3>=1.0.1
-	PyYAML
-	scrypt
-	py_ecc
-	rlp>=0.4.7
-	future
-
-Now install:
-
-	$ sudo python ./setup.py install
+	$ sudo python3 ./setup.py install
 
 #### <a name='a_tx'>Transacting and other basic operations</a>
 
@@ -136,11 +134,47 @@ To transact ETH instead of EOS, omit the `--token` arguments.
 
 #### <a name='a_dt'>Creating and deploying ERC20 tokens</a>
 
-Install the Solidity compiler (`solc`) on your system:
+##### Install the Solidity compiler
 
+To deploy Ethereum contracts with MMGen, you need between **v0.5.1** and
+**v0.5.3** of the the Solidity compiler (`solc`) installed on your system.  The
+best way to ensure you have the correct version is to compile it from source.
+Alternatively, on Ubuntu 18.04 systems a binary distribution is also available.
+Instructions for installing it are provided below.
+
+##### *To compile solc from source:*
+
+Clone the repository and build:
+
+	$ git clone --recursive https://github.com/ethereum/solidity.git
+	$ cd solidity
+	$ git checkout v0.5.1 # v0.5.3 doesn't build on Raspbian Stretch
+	$ ./scripts/install_deps.sh # Raspbian Stretch: add `DISTRO='Debian'` after line 55
+	$ mkdir build
+	$ cd build
+	$ cmake -DUSE_CVC4=OFF -DUSE_Z3=OFF ..
+	$ make solc
+	$ sudo install -v --strip solc/solc /usr/local/bin
+
+##### *To install solc from binary distribution (Ubuntu 18.04):*
+
+First add the following line to your /etc/apt/sources.list:
+
+	deb http://ppa.launchpad.net/ethereum/ethereum/ubuntu bionic main
+
+Now obtain the Ethereum PPA key `2A518C819BE37D2C2031944D1C52189C923F6CA9`
+from a PGP keyserver using your method of choice.  Save the key to file, and
+then add it to your APT keyring as follows:
+
+	$ sudo apt-key add <key file>
+
+Now you can proceed with the install:
+
+	$ sudo apt-get update
 	$ sudo apt-get install solc
+	$ solc --version # make sure the version is correct!
 
-##### Token creation/deployment example:
+##### Create and deploy a token
 
 *Note: All addresses and filenames in the examples to follow are bogus.  You
 must replace them with real ones.*
@@ -148,7 +182,7 @@ must replace them with real ones.*
 Create a token 'MFT' with default parameters, owned by `ddeeff...` (`ABCDABCD:E:1`):
 
 	# Do this in the MMGen repository root:
-	$ scripts/create-token.py --symbol=MFT --name='My First Token' ddeeffddeeffddeeffddeeffddeeffddeeffddee
+	$ scripts/create-token.py --coin=ETH --symbol=MFT --name='My First Token' ddEEFFDdEEFfddEeffDDEefFdDeeFFDDEeFFddEe
 
 Deploy the token on the ETH blockchain:
 
@@ -188,16 +222,15 @@ MMGen requires that the bitcoin-abc daemon be listening on non-standard
 Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
 commands.  It's that simple!
 
-### <a name='a_es'>Enhanced key/address generation support for Monero (XMR) and Zcash (ZEC)</a>
+### <a name='a_zec'>Key/address generation for Zcash (ZEC)</a>
 
-MMGen's enhanced key/address generation support for Zcash and Monero includes
-**Zcash z-addresses** and automated Monero wallet creation.
+MMGen's enhanced support for Zcash includes generation of **z-addresses.**
 
 Generate ten Zcash z-address key/address pairs from your default wallet:
 
 	$ mmgen-keygen --coin=zec --type=zcash_z 1-10
 
-The addresses' view keys are included in the file as well.
+The addresses' view keys are included in the output file as well.
 
 NOTE: Since your key/address file will probably be used on an online computer,
 you should encrypt it with a good password when prompted to do so. The file can
@@ -207,6 +240,16 @@ non-standard Scrypt hash preset, take care to remember it.
 To generate Zcash t-addresses, just omit the `--type` argument:
 
 	$ mmgen-keygen --coin=zec 1-10
+
+### <a name='a_xmr'>Key/address generation and wallet creation/syncing for Monero (XMR)</a>
+
+MMGen's enhanced support for Monero includes automated Monero wallet creation
+and syncing.
+
+Install the following dependencies:
+
+	$ sudo -H pip3 install pysha3
+	$ sudo -H pip3 install ed25519ll # optional, but greatly speeds up address generation
 
 Generate ten Monero address pairs from your default wallet:
 
@@ -219,8 +262,9 @@ key in the key/address file by running the following command:
 
 	$ monero-wallet-cli --generate-from-spend-key MyMoneroWallet
 
-and pasting in the key and password data when prompted.  Monerod must be
-running and `monero-wallet-cli` be located in your executable path.
+and pasting in the key and password data when prompted.  [Monerod][M] must be
+installed and running and `monero-wallet-cli` be located in your executable
+path.
 
 To save your time and labor, the `mmgen-tool` utility includes a command that
 completely automates this process:
@@ -284,9 +328,11 @@ Project.
 [l]: https://github.com/mmgen/MMGenLive
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
+[M]: https://getmonero.org/downloads/#linux
 [U]: https://github.com/mmgen/MMGenLive/blob/master/home.mmgen/bin/mmlive-daemon-upgrade
 [X]: autosign-[MMGen-command-help]
 [bo]: Getting-Started-with-MMGen#a_bo
 [si]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
 [bi]: Install-Bitcoind#a_d
 [p8]: Install-Bitcoind#a_r
+[iw]: Install-MMGen-on-Debian-or-Ubuntu-Linux
