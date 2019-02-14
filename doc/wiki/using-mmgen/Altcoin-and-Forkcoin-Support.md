@@ -51,7 +51,7 @@ dependencies:
 *Note: Ubuntu Xenial users will have to upgrade the Python interpreter and
 Python dependencies listed in the [Install wiki][iw] from version 3.5 to 3.6
 before proceeding.  This can be done by adding the Bionic repository to
-'sources.list' and installing the relevant packages with '-t bionic'*
+'sources.list' and reinstalling the relevant packages with '-t bionic'*
 
 	$ sudo -H pip3 install wheel future pysha3 PyYAML py_ecc rlp
 
@@ -148,7 +148,7 @@ Clone the repository and build:
 
 	$ git clone --recursive https://github.com/ethereum/solidity.git
 	$ cd solidity
-	$ git checkout v0.5.1 # v0.5.3 doesn't build on Raspbian Stretch
+	$ git checkout v0.5.1 # or v0.5.3, if not Raspbian Stretch
 	$ ./scripts/install_deps.sh # Raspbian Stretch: add `DISTRO='Debian'` after line 55
 	$ mkdir build
 	$ cd build

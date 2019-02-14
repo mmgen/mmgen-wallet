@@ -161,7 +161,8 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 def compare_test():
 	for k in ('segwit','compressed'):
 		if addr_type.name == k and g.coin not in ci.external_tests_segwit_compressed[k]:
-			msg('{} testing not supported for coin {}'.format(addr_type.name.capitalize(),g.coin))
+			m = 'skipping - external program does not support {} for coin {}'
+			msg(m.format(addr_type.name.capitalize(),g.coin))
 			return
 	if 'ext_lib' in globals():
 		if g.coin not in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
