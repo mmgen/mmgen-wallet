@@ -331,13 +331,13 @@ def Strtob58(s,pad=None): Msg(baseconv.fromhex(binascii.hexlify(s.encode()),'b58
 def Hextob58(s,pad=None): Msg(baseconv.fromhex(s.encode(),'b58',pad,tostr=True))
 def Hextob58chk(s):
 	from mmgen.protocol import _b58chk_encode
-	Msg(_b58chk_encode(s))
+	Msg(_b58chk_encode(s.encode()))
 def Hextob32(s,pad=None): Msg(baseconv.fromhex(s.encode(),'b32',pad,tostr=True))
 def B58tostr(s):          Msg(binascii.unhexlify(baseconv.tohex(s,'b58')).decode())
 def B58tohex(s,pad=None): Msg(baseconv.tohex(s,'b58',pad))
 def B58chktohex(s):
 	from mmgen.protocol import _b58chk_decode
-	Msg(_b58chk_decode(s))
+	Msg(_b58chk_decode(s).decode())
 def B32tohex(s,pad=None): Msg(baseconv.tohex(s.upper(),'b32',pad))
 
 from mmgen.seed import Mnemonic
