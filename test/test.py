@@ -3786,9 +3786,9 @@ class MMGenTestSuite(object):
 	def ethdev_token_transfer_ops(self,name,op,amt=1000):
 		MMGenExpect(name,'',msg_only=True)
 		sid = cfgs['8']['seed_id']
-		from mmgen.tool import Gen_addr
+		from mmgen.tool import MMGenToolCmd
 		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
-		usr_addrs = [Gen_addr(addr,dfl_words,return_result=True) for addr in usr_mmaddrs]
+		usr_addrs = [MMGenToolCmd().gen_addr(addr,dfl_words,return_result=True) for addr in usr_mmaddrs]
 		self.ethdev_rpc_init()
 
 		from mmgen.altcoins.eth.contract import Token

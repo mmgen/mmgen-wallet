@@ -144,18 +144,16 @@ Type '{pn} help <command> for help on a particular command
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt','use_old_ed25519'])
 
 if len(cmd_args) < 1: opts.usage()
-
-Command = cmd_args.pop(0).capitalize()
+cmd = cmd_args.pop(0)
 
 import mmgen.tool as tool
+tc = tool.MMGenToolCmd()
 
-if Command == 'Help' and not cmd_args: tool.usage(None)
+if cmd == 'help' and not cmd_args:
+	tool._usage(exit_val=0)
+if cmd not in dir(tc):
+	die(1,"'{}': no such command".format(cmd))
 
-if Command not in tool.cmd_data:
-	die(1,"'{}': no such command".format(Command.lower()))
-
-args,kwargs = tool.process_args(Command,cmd_args)
-
-ret = tool.__dict__[Command](*args,**kwargs)
-
+args,kwargs = tool._process_args(cmd,cmd_args)
+ret = getattr(tc,cmd)(*args,**kwargs)
 sys.exit((1,0)[ret in (None,True)]) # some commands die, some return False on failure

@@ -25,7 +25,6 @@ from binascii import hexlify,unhexlify
 
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.filename import *
 from mmgen.crypto import *
 
 pnm = g.proj_name
@@ -80,6 +79,7 @@ class SeedSource(MMGenObject):
 			me.ss_in = ss
 			me.op = ('conv','pwchg_new')[bool(passchg)]
 		elif fn or opt.hidden_incog_input_params:
+			from mmgen.filename import Filename
 			if fn:
 				f = Filename(fn)
 			else:
@@ -1026,12 +1026,13 @@ harder to find, you're advised to choose a much larger file size than this.
 					if fsize >= min_fsize: break
 					msg('File size must be an integer no less than {}'.format(min_fsize))
 
-				from mmgen.tool import Rand2file # threaded routine
-				Rand2file(fn,str(fsize))
+				from mmgen.tool import MMGenToolCmd
+				MMGenToolCmd().rand2file(fn,str(fsize)) # threaded routine TODO: check safe
 				check_offset = False
 			else:
 				die(1,'Exiting at user request')
 
+		from mmgen.filename import Filename
 		f = Filename(fn,ftype=type(self),write=True)
 
 		dmsg('{} data len {}, offset {}'.format(capfirst(self.desc),d.target_data_len,d.hincog_offset))
