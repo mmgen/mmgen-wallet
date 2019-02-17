@@ -33,33 +33,34 @@ def hash160(hexnum): # take hex, return hex - OP_HASH160
 def hash256(hexnum): # take hex, return hex - OP_HASH256
 	return hashlib.sha256(hashlib.sha256(unhexlify(hexnum)).digest()).hexdigest().encode()
 
+_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+
 # From en.bitcoin.it:
 #  The Base58 encoding used is home made, and has some differences.
 #  Especially, leading zeroes are kept as single zeroes when conversion happens.
 # Test: 5JbQQTs3cnoYN9vDYaGY6nhQ1DggVsY4FJNBUfEfpSQqrEp3srk
 # The 'zero address':
 # 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
-_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
-def _numtob58(num):
+def _b58chk_encode(hexstr):
+	lzeroes = (len(hexstr) - len(hexstr.lstrip(b'0'))) // 2
 	def b58enc(n):
 		while n:
 			yield _b58a[n % 58]
 			n //= 58
-	return ''.join(b58enc(num))[::-1]
-
-def _b58tonum(b58str):
-	return sum(_b58a.index(ch) * 58**n for n,ch in enumerate(b58str[::-1]))
-
-def _b58chk_encode(hexstr):
-	return _numtob58(int(hexstr+hash256(hexstr)[:8],16))
+	return ('1' * lzeroes) + ''.join(b58enc(int(hexstr+hash256(hexstr)[:8],16)))[::-1]
 
 def _b58chk_decode(s):
-	hexstr = '{:x}'.format(_b58tonum(s)).encode()
-	if len(hexstr) % 2: hexstr = '0' + hexstr
-	if hexstr[-8:] == hash256(hexstr[:-8])[:8]:
-		return hexstr[:-8]
-	raise ValueError('_b58chk_decode(): checksum incorrect')
+	lzeroes = len(s) - len(s.lstrip('1'))
+	hexstr = '{}{:x}'.format(
+			'00' * lzeroes,
+			sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1]))
+		).encode()
+	if len(hexstr) % 2: hexstr = b'0' + hexstr
+	if hexstr[-8:] != hash256(hexstr[:-8])[:8]:
+		raise ValueError('_b58chk_decode(): {}: incorrect checksum for {}, expected {}'.format(
+							hexstr[-8:],hexstr[:-8],hash256(hexstr[:-8])[:8]))
+	return hexstr[:-8]
 
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
@@ -163,21 +164,16 @@ class BitcoinProtocol(MMGenObject):
 			if type(pfx) == tuple:
 				if addr[0] not in pfx: continue
 			elif addr[:len(pfx)] != pfx: continue
-			num = _b58tonum(addr)
-			if num == False:
-				if g.debug: Msg('Address cannot be converted to base 58')
-				break
-			addr_hex = '{:0{}x}'.format(num,len(ver_num)+hex_width+8).encode()
+			addr_hex = _b58chk_decode(addr)
 			if addr_hex[:len(ver_num)] != ver_num: continue
-			if hash256(addr_hex[:-8])[:8] == addr_hex[-8:]:
-				return {
-					'hex': addr_hex[len(ver_num):-8],
-					'format': {'p2pkh':'p2pkh','p2sh':'p2sh','p2sh2':'p2sh',
-								'zcash_z':'zcash_z','viewkey':'viewkey'}[addr_fmt]
-				} if return_dict else True
-			else:
-				if g.debug: Msg('Invalid checksum in address')
-				break
+			return {
+				'hex': addr_hex[len(ver_num):],
+				'format': { 'p2pkh':'p2pkh',
+							'p2sh':'p2sh',
+							'p2sh2':'p2sh',
+							'zcash_z':'zcash_z',
+							'viewkey':'viewkey'}[addr_fmt]
+			} if return_dict else True
 
 		return False
 
@@ -185,8 +181,7 @@ class BitcoinProtocol(MMGenObject):
 	def pubhash2addr(cls,pubkey_hash,p2sh):
 		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
 		s = cls.addr_ver_num[('p2pkh','p2sh')[p2sh]][0] + pubkey_hash
-		lzeroes = (len(s) - len(s.lstrip(b'0'))) // 2 # non-zero only for ver num '00' (BTC p2pkh)
-		return ('1' * lzeroes) + _b58chk_encode(s)
+		return _b58chk_encode(s)
 
 	# Segwit:
 	@classmethod
