@@ -71,7 +71,7 @@ def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 			idx_list = [i.idx for i in mmids if i.sid == sid and i.mmtype == t]
 			if idx_list:
 				addr_idxs = AddrIdxList(idx_list=idx_list)
-				d.append(KeyAddrList(seed=seed,addr_idxs=addr_idxs,do_chksum=False,mmtype=MMGenAddrType(t)))
+				d.append(KeyAddrList(seed=seed,addr_idxs=addr_idxs,mmtype=MMGenAddrType(t)))
 	return d
 
 def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
@@ -139,7 +139,7 @@ def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 	if non_mm_addrs:
 		if not kl:
 			die(2,'Transaction has non-{} inputs, but no flat key list is present'.format(g.proj_name))
-		tmp = KeyAddrList(addrlist=non_mm_addrs,do_chksum=False)
+		tmp = KeyAddrList(addrlist=non_mm_addrs)
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
 		if m: die(2,wmsg['missing_keys_error'].format(suf(m,'es'),'\n    '.join(m)))

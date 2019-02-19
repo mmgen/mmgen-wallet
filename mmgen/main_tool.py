@@ -155,5 +155,7 @@ if cmd not in dir(tc):
 	die(1,"'{}': no such command".format(cmd))
 
 args,kwargs = tool._process_args(cmd,cmd_args)
+
 ret = getattr(tc,cmd)(*args,**kwargs)
-sys.exit((1,0)[ret in (None,True)]) # some commands die, some return False on failure
+
+tool._print_result(ret,'pager' in kwargs and kwargs['pager'])

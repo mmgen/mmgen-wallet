@@ -497,7 +497,7 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 	elif len(cmd_args) > nargs:
 		opts.usage()
 	elif len(cmd_args) == nargs and wf and invoked_as != 'gen':
-		msg('Warning: overriding default wallet with user-supplied wallet')
+		qmsg('Warning: overriding default wallet with user-supplied wallet')
 
 	if cmd_args or wf:
 		check_infile(cmd_args[0] if cmd_args else wf)

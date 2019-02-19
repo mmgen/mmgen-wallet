@@ -350,8 +350,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
 
 	def __init__(self,addrfile='',al_id='',adata=[],seed='',addr_idxs='',src='',
-					addrlist='',keylist='',mmtype=None,do_chksum=True,chksum_only=False):
+					addrlist='',keylist='',mmtype=None):
 
+		do_chksum = True
 		self.update_msgs()
 		mmtype = mmtype or g.proto.dfl_mmtype
 		assert mmtype in MMGenAddrType.mmtypes,'{}: mmtype not in {}'.format(mmtype,repr(MMGenAddrType.mmtypes))
@@ -390,12 +391,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		if do_chksum:
 			self.chksum = AddrListChksum(self)
-			if chksum_only:
-				Msg(self.chksum)
-			else:
-				qmsg('Checksum for {} data {}: {}'.format(
-						self.data_desc,self.id_str.hl(),self.chksum.hl()))
-				qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
+			qmsg('Checksum for {} data {}: {}'.format(
+					self.data_desc,self.id_str.hl(),self.chksum.hl()))
+			qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
 
 	def update_msgs(self):
 		self.msgs = AddrList.msgs
@@ -778,8 +776,9 @@ Record this checksum: it will be used to verify the password file in the future
 		}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
-	def __init__(self,infile=None,seed=None,pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
-				chksum_only=False,chk_params_only=False):
+	def __init__(   self,infile=None,seed=None,
+					pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
+					chk_params_only=False):
 
 		self.update_msgs()
 
@@ -799,13 +798,10 @@ Record this checksum: it will be used to verify the password file in the future
 		self.fmt_data = ''
 		self.chksum = AddrListChksum(self)
 
-		if chksum_only:
-			Msg(self.chksum)
-		else:
-			fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
-			self.id_str = AddrListIDStr(self,fs)
-			qmsg('Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
-			qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
+		fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+		self.id_str = AddrListIDStr(self,fs)
+		qmsg('Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
+		qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
 	def set_pw_fmt(self,pw_fmt):
 		assert pw_fmt in self.pw_info
