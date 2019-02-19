@@ -476,7 +476,7 @@ class MMGenToolCmd(object):
 		return True
 
 	def rand2file(self,outfile,nbytes,threads=4,silent=False):
-		nbytes = parse_nbytes(nbytes)
+		nbytes = parse_bytespec(nbytes)
 		from Crypto import Random
 		rh = Random.new()
 		from queue import Queue
@@ -534,7 +534,7 @@ class MMGenToolCmd(object):
 		return True
 
 	def bytespec(self,s):
-		return str(parse_nbytes(s))
+		return str(parse_bytespec(s))
 
 	def keyaddrlist2monerowallets(self,infile,blockheight=None,addrs=None):
 		return self.monero_wallet_ops(infile=infile,op='create',blockheight=blockheight,addrs=addrs)

@@ -101,18 +101,30 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
 # GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
 
-def parse_nbytes(nbytes):
+def parse_bytespec(nbytes):
+	smap = (('c',   1),
+			('w',   2),
+			('b',   512),
+			('kB',  1000),
+			('K',   1024),
+			('MB',  1000*1000),
+			('M',   1024*1024),
+			('GB',  1000*1000*1000),
+			('G',   1024*1024*1024),
+			('TB',  1000*1000*1000*1000),
+			('T',   1024*1024*1024*1024))
 	import re
-	m = re.match(r'([0123456789]+)(.*)',nbytes)
-	smap = ('c',1),('w',2),('b',512),('kB',1000),('K',1024),('MB',1000*1000),\
-			('M',1024*1024),('GB',1000*1000*1000),('G',1024*1024*1024)
+	m = re.match(r'([0123456789.]+)(.*)',nbytes)
 	if m:
 		if m.group(2):
 			for k,v in smap:
 				if k == m.group(2):
-					return int(m.group(1)) * v
+					from decimal import Decimal
+					return int(Decimal(m.group(1)) * v)
 			else:
 				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in smap])))
+		elif '.' in nbytes:
+			raise ValueError('fractional bytes not allowed')
 		else:
 			return int(nbytes)
 

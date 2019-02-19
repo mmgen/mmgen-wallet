@@ -1022,7 +1022,7 @@ harder to find, you're advised to choose a much larger file size than this.
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
-					fsize = parse_nbytes(my_raw_input('Enter file size: '))
+					fsize = parse_bytespec(my_raw_input('Enter file size: '))
 					if fsize >= min_fsize: break
 					msg('File size must be an integer no less than {}'.format(min_fsize))
 
