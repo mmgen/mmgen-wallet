@@ -144,11 +144,10 @@ opts_data = lambda: {
 -E, --direct-exec    Bypass pexpect and execute a command directly (for
                      debugging only)
 -e, --exact-output   Show the exact output of the MMGen script(s) being run
--g, --segwit         Generate and use Segwit addresses
--G, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
 -l, --list-cmds      List and describe the commands in the test suite
--L, --log            Log commands to file {lf}
+-L, --list-cmd-groups Output a list of command groups, with no descriptions
 -n, --names          Display command names instead of descriptions
+-o, --log            Log commands to file {lf}
 -O, --popen-spawn    Use pexpect's popen_spawn instead of popen
 -p, --pause          Pause between tests, resuming on keypress
 -P, --profile        Record the execution time of each script
@@ -162,6 +161,8 @@ opts_data = lambda: {
 -v, --verbose        Produce more verbose output
 -W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
 -X, --exit-after=C   Exit after command 'C'
+-y, --segwit         Generate and use Segwit addresses
+-Y, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
 """.format(tbc='scripts/traceback_run.py',lf=log_file),
 	'notes': """
 
@@ -1307,6 +1308,10 @@ def end_silence():
 	if not (opt.verbose or opt.exact_output):
 		g.stderr_fileno = 2
 		g.stdout_fileno = 1
+
+if opt.list_cmd_groups:
+	Msg(' '.join(cmd_list))
+	sys.exit(0)
 
 if opt.list_cmds:
 	from mmgen.term import get_terminal_size
@@ -3788,7 +3793,7 @@ class MMGenTestSuite(object):
 		sid = cfgs['8']['seed_id']
 		from mmgen.tool import MMGenToolCmd
 		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
-		usr_addrs = [MMGenToolCmd().gen_addr(addr,dfl_words,return_result=True) for addr in usr_mmaddrs]
+		usr_addrs = [MMGenToolCmd().gen_addr(addr,dfl_words) for addr in usr_mmaddrs]
 		self.ethdev_rpc_init()
 
 		from mmgen.altcoins.eth.contract import Token
