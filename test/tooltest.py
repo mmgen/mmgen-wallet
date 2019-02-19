@@ -496,24 +496,27 @@ def do_cmds(cmd_group):
 		cmdline = [cmd] + [os.path.join(cfg['tmpdir'],fn) for fn in fns]
 		getattr(tc,cmd)(*cmdline)
 
-if cmd_args:
-	if len(cmd_args) != 1:
-		die(1,'Only one command may be specified')
-	cmd = cmd_args[0]
-	if cmd in cmd_data:
-		msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
-		do_cmds(cmd)
-	elif cmd == 'clean':
-		cleandir(cfg['tmpdir'])
-		sys.exit(0)
+try:
+	if cmd_args:
+		if len(cmd_args) != 1:
+			die(1,'Only one command may be specified')
+		cmd = cmd_args[0]
+		if cmd in cmd_data:
+			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
+			do_cmds(cmd)
+		elif cmd == 'clean':
+			cleandir(cfg['tmpdir'])
+			sys.exit(0)
+		else:
+			die(1,"'{}': unrecognized command".format(cmd))
 	else:
-		die(1,"'{}': unrecognized command".format(cmd))
-else:
-	cleandir(cfg['tmpdir'])
-	for cmd in cmd_data:
-		msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
-		do_cmds(cmd)
-		if cmd is not list(cmd_data.keys())[-1]: msg('')
+		cleandir(cfg['tmpdir'])
+		for cmd in cmd_data:
+			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
+			do_cmds(cmd)
+			if cmd is not list(cmd_data.keys())[-1]: msg('')
+except KeyboardInterrupt:
+	die(1,green('\nExiting at user request'))
 
 t = int(time.time()) - start_time
 gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))

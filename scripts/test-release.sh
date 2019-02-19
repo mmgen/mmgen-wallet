@@ -2,6 +2,8 @@
 # Tested on Linux, MinGW-64
 # MinGW's bash 3.1.17 doesn't do ${var^^}
 
+trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
+
 umask 0022
 
 export MMGEN_TEST_SUITE=1
@@ -10,6 +12,7 @@ export PYTHONPATH=.
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
 tooltest_py='test/tooltest.py'
+tooltest2_py='test/tooltest2.py --names'
 gentest_py='test/gentest.py'
 scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
@@ -63,6 +66,7 @@ do
 		touch 'test/trace.acc'
 		test_py+=" --coverage"
 		tooltest_py+=" --coverage"
+		tooltest2_py+=" --fork --coverage"
 		scrambletest_py+=" --coverage"
 		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
 		objtest_py="$python $objtest_py"
@@ -81,7 +85,7 @@ do
 	t)  TESTING=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
-		tooltest_py+=" --verbose" gentest_py+=" --verbose" mmgen_tool+=" --verbose"
+		tooltest_py+=" --verbose" tooltest2_py+=" --verbose" gentest_py+=" --verbose" mmgen_tool+=" --verbose"
 		scrambletest_py+=" --verbose" ;;
 	*)  exit ;;
 	esac
@@ -134,7 +138,10 @@ do_test() {
 		[ "$TESTING" ] && LS=''
 		echo $i | grep -q 'gentest' && LS=''
 		echo -e "$LS${GREEN}Running:$RESET $YELLOW$i$RESET"
-		[ "$TESTING" ] || eval "$i" || { echo -e $RED"Test $CUR_TEST failed at command '$i'"$RESET; exit; }
+		[ "$TESTING" ] || eval "$i" || {
+			echo -e $RED"Test '$CUR_TEST' failed at command '$i'"$RESET
+			exit
+		}
 	done
 }
 i_obj='Data object'
@@ -329,6 +336,7 @@ f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool=(
+	"$tooltest2_py"
 	"$tooltest_py --coin=btc util"
 	"$tooltest_py --coin=btc cryptocoin"
 	"$tooltest_py --coin=btc mnemonic"

@@ -122,12 +122,12 @@ tests = (
 
 def do_cmd(cdata):
 	cmd_name,desc,data = cdata
-	m = cmd_name if opt.names else desc
-	msg_r(blue(m)+'\n' if opt.verbose else m)
+	m = 'Testing {}'.format(cmd_name if opt.names else desc)
+	msg_r(green(m)+'\n' if opt.verbose else m)
 	for args,out in data:
 		if opt.fork:
 			cmd = list(tool_cmd) + [cmd_name] + args
-			vmsg('{}: {}'.format(purple('Running'),' '.join(cmd)))
+			vmsg('{} {}'.format(green('Executing'),cyan(' '.join(cmd))))
 			p = Popen(cmd,stdout=PIPE,stderr=PIPE)
 			cmd_out = p.stdout.read()
 			cmd_err = p.stderr.read()
@@ -152,7 +152,7 @@ def do_cmd(cdata):
 
 def do_group(garg):
 	gid,gdesc,gdata = garg
-	gmsg('Testing {}'.format(gid if opt.names else gdesc))
+	msg(blue("Testing {}".format("command group '{}'".format(gid) if opt.names else gdesc)))
 	for cdata in gdata:
 		do_cmd(cdata)
 
@@ -208,19 +208,22 @@ else:
 
 start_time = int(time.time())
 
-if cmd_args:
-	if len(cmd_args) != 1:
-		die(1,'Only one command may be specified')
-	cmd = cmd_args[0]
-	group = [e for e in tests if e[0] == cmd]
-	if group:
-		do_group(group[0])
+try:
+	if cmd_args:
+		if len(cmd_args) != 1:
+			die(1,'Only one command may be specified')
+		cmd = cmd_args[0]
+		group = [e for e in tests if e[0] == cmd]
+		if group:
+			do_group(group[0])
+		else:
+			if not do_cmd_in_group(cmd):
+				die(1,"'{}': not a recognized test or test group".format(cmd))
 	else:
-		if not do_cmd_in_group(cmd):
-			die(1,"'{}': not a recognized test or test group".format(cmd))
-else:
-	for garg in tests:
-		do_group(garg)
+		for garg in tests:
+			do_group(garg)
+except KeyboardInterrupt:
+	die(1,green('\nExiting at user request'))
 
 t = int(time.time()) - start_time
 gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
