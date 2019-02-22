@@ -1069,11 +1069,13 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return out + '\n'
 
 	def format_view(self,terse=False):
-		try:
-			rpc_init()
-			blockcount = self.get_blockcount()
-		except:
-			blockcount = None
+		blockcount = None
+		if g.proto.base_coin != 'ETH':
+			try:
+				rpc_init()
+				blockcount = self.get_blockcount()
+			except:
+				pass
 
 		def get_max_mmwid(io):
 			if io == self.inputs:

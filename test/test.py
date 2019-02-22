@@ -148,7 +148,8 @@ opts_data = lambda: {
 -L, --list-cmd-groups Output a list of command groups, with no descriptions
 -n, --names          Display command names instead of descriptions
 -o, --log            Log commands to file {lf}
--O, --popen-spawn    Use pexpect's popen_spawn instead of popen
+-O, --popen-spawn    Use pexpect's popen_spawn instead of popen (much faster,
+                     but doesn't emulate terminal)
 -p, --pause          Pause between tests, resuming on keypress
 -P, --profile        Record the execution time of each script
 -q, --quiet          Produce minimal output.  Suppress dependency info
@@ -173,9 +174,8 @@ If no command is given, the whole suite of tests is run.
 sys.argv = [sys.argv[0]] + ['--data-dir',data_dir] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data)
-# Under python3, with PopenSpawn we can no longer imitate cbreak mode with sys.stdin.read(1)
-# opt.popen_spawn = True # popen has issues, so use popen_spawn always
 
+if opt.popen_spawn: os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '1'
 if not opt.system: os.environ['PYTHONPATH'] = repo_root
 
 lbl_id = ('account','label')[g.coin=='BTC'] # update as other coins adopt Core's label API
@@ -198,11 +198,14 @@ rtFee = {
 }[coin_sel]
 rtBals = {
 	'btc': ('499.9999488','399.9998282','399.9998147','399.9996877',
-			'52.99990000','946.99933647','999.99923647','52.9999','946.99933647'),
+			'52.99990000','946.99933647','999.99923647','52.9999',
+			'946.99933647'),
 	'bch': ('499.9999484','399.9999194','399.9998972','399.9997692',
-			'46.78900000','953.20966920','999.99866920','46.789','953.2096692'),
+			'46.78900000','953.20966920','999.99866920','46.789',
+			'953.2096692'),
 	'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535',
-			'52.99000000','10946.93753500','10999.92753500','52.99','10946.937535'),
+			'52.99000000','10946.93753500','10999.92753500','52.99',
+			'10946.937535'),
 }[coin_sel]
 rtBals_gb = {
 	'btc': ('116.77629233','283.22339537'),
@@ -210,6 +213,11 @@ rtBals_gb = {
 	'ltc': ('5116.77036263','283.21717237')
 }[coin_sel]
 rtBobOp3 = {'btc':'S:2','bch':'L:3','ltc':'S:2'}[coin_sel]
+rtAmts = {
+	'btc': ('500',),
+	'bch': ('500',),
+	'ltc': ('5500',)
+}[coin_sel]
 
 if opt.segwit and 'S' not in g.proto.mmtypes:
 	die(1,'--segwit option incompatible with {}'.format(g.proto.__name__))
@@ -841,14 +849,14 @@ cmd_group['ref'] = (
 
 # reference files
 cmd_group['ref_files'] = (
-	('ref_addrfile_chk',   'saved reference address file'),
-	('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
-	('ref_bech32addrfile_chk','saved reference address file (bech32)'),
+	('ref_addrfile_chk',   'saved reference address file'), # TODO: move to tooltest2
+	('ref_segwitaddrfile_chk','saved reference address file (segwit)'), # TODO: move to tooltest2
+	('ref_bech32addrfile_chk','saved reference address file (bech32)'), # TODO: move to tooltest2
 	('ref_keyaddrfile_chk','saved reference key-address file'),
 	('ref_passwdfile_chk', 'saved reference password file'),
 #	Create the fake inputs:
 #	('txcreate8',          'transaction creation (8)'),
-	('ref_tx_chk',         'saved reference tx file'),
+	('ref_tx_chk',         'saved reference tx file'), # TODO: move to tooltest2
 	('ref_brain_chk_spc3', 'saved brainwallet (non-standard spacing)'),
 	('ref_tool_decrypt',   'decryption of saved MMGen-encrypted file'),
 )
@@ -889,15 +897,16 @@ cmd_group['regtest'] = (
 	('regtest_fund_alice',         "funding Alice's wallet"),
 	('regtest_bob_bal1',           "Bob's balance"),
 	('regtest_bob_add_label',      "adding a 40-character UTF-8 encoded label"),
+	('regtest_bob_twview',         "viewing Bob's tracking wallet"),
 	('regtest_bob_split1',         "splitting Bob's funds"),
 	('regtest_generate',           'mining a block'),
 	('regtest_bob_bal2',           "Bob's balance"),
-	('regtest_bob_bal2a',          "Bob's balance (show_days=1)"),
-	('regtest_bob_bal2b',          "Bob's balance (show_age=1)"),
-	('regtest_bob_bal2c',          "Bob's balance (showempty=1 show_age=1 minconf=2)"),
-	('regtest_bob_bal2d',          "Bob's balance (show_age=1 minconf=2)"),
-	('regtest_bob_bal2e',          "Bob's balance (showempty=1 show_age=1 sort=age)"),
-	('regtest_bob_bal2f',          "Bob's balance (showempty=1 show_age=1 sort=age,reverse)"),
+	('regtest_bob_bal2a',          "Bob's balance (age_fmt=confs)"),
+	('regtest_bob_bal2b',          "Bob's balance (showempty=1)"),
+	('regtest_bob_bal2c',          "Bob's balance (showempty=1 minconf=2 age_fmt=days)"),
+	('regtest_bob_bal2d',          "Bob's balance (minconf=2)"),
+	('regtest_bob_bal2e',          "Bob's balance (showempty=1 sort=age)"),
+	('regtest_bob_bal2f',          "Bob's balance (showempty=1 sort=age,reverse)"),
 	('regtest_bob_rbf_send',       'sending funds to Alice (RBF)'),
 	('regtest_get_mempool1',       'mempool (before RBF bump)'),
 	('regtest_bob_rbf_bump',       'bumping RBF transaction'),
@@ -1079,7 +1088,7 @@ cmd_group['ethdev'] = (
 	('ethdev_twview3','twview wide=1 sort=age (ignored)'),
 	('ethdev_twview4','twview wide=1 minconf=999999999 (ignored)'),
 	('ethdev_twview5','twview wide=1 minconf=0 (ignored)'),
-	('ethdev_twview6','twview show_days=0 (ignored)'),
+	('ethdev_twview6','twview age_fmt=days (ignored)'),
 
 	('ethdev_token_twview1','twview --token=mm1'),
 	('ethdev_token_twview2','twview --token=mm1 wide=1'),
@@ -2861,8 +2870,7 @@ class MMGenTestSuite(object):
 
 	def ref_addrfile_chk_zec_z(self,name):
 		if skip_for_win(): return
-		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
-								mmtype='z',add_args=['mmtype=zcash_z'])
+		self.ref_addrfile_chk(name,ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
 
 	def ref_addrfile_chk_xmr(self,name):
 		self.ref_addrfile_chk(name,ftype='addr',coin='XMR',subdir='monero',pfx='-XMR-M')
@@ -2882,8 +2890,7 @@ class MMGenTestSuite(object):
 
 	def ref_keyaddrfile_chk_zec_z(self,name):
 		if skip_for_win(): return
-		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',
-								mmtype='z',add_args=['mmtype=zcash_z'])
+		self.ref_addrfile_chk(name,ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
 
 	def ref_keyaddrfile_chk_xmr(self,name):
 		self.ref_addrfile_chk(name,ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M')
@@ -2922,16 +2929,14 @@ class MMGenTestSuite(object):
 	def ref_tool_decrypt(self,name):
 		f = os.path.join(ref_dir,ref_enc_fn)
 		disable_debug()
-		t = MMGenExpect(name,'mmgen-tool', ['-q','decrypt',f,'outfile=-','hash_preset=1'])
+		dec_fn = get_tmpfile_fn(cfg,'famous.txt')
+		t = MMGenExpect(name,'mmgen-tool', ['-q','decrypt',f,'outfile='+dec_fn,'hash_preset=1'])
 		restore_debug()
 		t.passphrase('user data',tool_enc_passwd)
-		t.expect(NL,nonl=True)
-		t.expect('to confirm: ','YES\n')
-		import re
-		o = t.read()
-		o = re.sub('YES\r\n','',o).split('\n')[0]
-		o = re.sub('\r','\n',o)
-		cmp_or_die(sample_text,o)
+		t.written_to_file('Decrypted data')
+		dec_txt = read_from_file(dec_fn)
+		imsg_r(dec_txt)
+		cmp_or_die(sample_text,dec_txt)
 
 	# wallet conversion tests
 	def walletconv_in(self,name,infile,desc,uopts=[],pw=False,oo=False):
@@ -3075,6 +3080,15 @@ class MMGenTestSuite(object):
 	def regtest_fund_bob(self,name):   self.regtest_fund_wallet(name,'bob','C',rtFundAmt)
 	def regtest_fund_alice(self,name): self.regtest_fund_wallet(name,'alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
 
+	def regtest_user_twview(self,name,user):
+		t = MMGenExpect(name,'mmgen-tool',['--'+user,'twview'])
+		t.expect(r'1\).*\b{}\b'.format(rtAmts[0]),regex=True)
+		t.read()
+		t.ok()
+
+	def regtest_bob_twview(self,name):
+		return self.regtest_user_twview(name,'bob')
+
 	def regtest_user_bal(self,name,user,bal,args=['showempty=1'],skip_check=False,exit_val=0):
 		t = MMGenExpect(name,'mmgen-tool',['--'+user,'listaddresses'] + args)
 		if skip_check:
@@ -3097,22 +3111,22 @@ class MMGenTestSuite(object):
 		return self.regtest_user_bal(name,'bob',rtBals[0])
 
 	def regtest_bob_bal2a(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_days=1'])
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','age_fmt="confs"'])
 
 	def regtest_bob_bal2b(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1'])
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1'])
 
 	def regtest_bob_bal2c(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','minconf=2'],skip_check=True)
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','minconf=2','age_fmt="days"'],skip_check=True)
 
 	def regtest_bob_bal2d(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['show_age=1','minconf=2'],skip_check=True)
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['minconf=2'],skip_check=True)
 
 	def regtest_bob_bal2e(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','sort=age'])
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','sort=age'])
 
 	def regtest_bob_bal2f(self,name):
-		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','show_age=1','sort=age,reverse'])
+		return self.regtest_user_bal(name,'bob',rtBals[0],args=['showempty=1','sort=age,reverse'])
 
 	def regtest_bob_bal3(self,name):
 		return self.regtest_user_bal(name,'bob',rtBals[1])
@@ -3952,7 +3966,7 @@ class MMGenTestSuite(object):
 	def ethdev_twview5(self,name):
 		return self.ethdev_twview(name,tool_args=['wide=1','minconf=0'])
 	def ethdev_twview6(self,name):
-		return self.ethdev_twview(name,tool_args=['show_days=0'])
+		return self.ethdev_twview(name,tool_args=['age_fmt=days'])
 
 	def ethdev_token_twview1(self,name):
 		return self.ethdev_twview(name,args=['--token=mm1'])

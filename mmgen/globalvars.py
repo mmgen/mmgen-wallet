@@ -50,7 +50,7 @@ class g(object):
 	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, ETH, Ethereum, Classic, SHA256Compress, XMR, Monero, monerod, EMC, Emercoin, ERC20, token, deploy, contract, gas, fee, smart contract, solidity, Parity, testnet, devmode, Kovan'
 	max_int   = 0xffffffff
 
-	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE'))
+	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'))
 	stdout_fileno = sys.stdout.fileno()
 	stderr_fileno = sys.stderr.fileno()
 

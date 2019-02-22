@@ -23,96 +23,35 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
 
 from mmgen.common import *
 
-stdin_msg = """
-To force a command to read from STDIN in place of its first argument (for
-supported commands), use '-' as the first argument.
-""".strip()
+def make_cmd_help():
+	import mmgen.tool
+	out = []
+	for bc in mmgen.tool.MMGenToolCmd.__bases__:
+		cls_doc = bc.__doc__.strip().split('\n')
+		for l in cls_doc:
+			if l is cls_doc[0]: l += ':'
+			l = l.replace('\t','',1)
+			if l:
+				l = l.replace('\t','  ')
+				out.append(l[0].upper() + l[1:])
+			else:
+				out.append('')
+		out.append('')
 
-cmd_help = """
-Cryptocoin address/key operations (compressed public keys supported):
-  addr2hexaddr   - convert coin address from base58 to hex format
-  hex2wif        - convert a private key from hex to WIF format (use '--type=zcash_z' for zcash-z key)
-  pubhash2addr   - convert public key hash to address
-  privhex2addr   - generate coin address from private key in hex format
-  privhex2pubhex - generate a hex public key from a hex private key
-  pubhex2addr    - convert a hex pubkey to an address
-  pubhex2redeem_script - convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script
-  wif2redeem_script - convert a WIF private key to a Segwit P2SH-P2WPKH redeem script
-  wif2segwit_pair - generate both a Segwit P2SH-P2WPKH redeem script and address from WIF
-  pubkey2addr    - convert coin public key to address
-  randpair       - generate a random private key/address pair
-  randwif        - generate a random private key in WIF format
-  wif2addr       - generate a coin address from a key in WIF format
-  wif2hex        - convert a private key from WIF to hex format
+		cls_funcs = bc.user_commands()
+		max_w = max(map(len,cls_funcs))
+		fs = '  {{:{}}} - {{}}'.format(max_w)
+		for func in cls_funcs:
+			m = getattr(bc,func)
+			if m.__doc__:
+				out.append(fs.format(func,
+					pretty_format(  m.__doc__.strip().replace('\n\t\t',' '),
+									width=79-(max_w+7),
+									pfx=' '*(max_w+5)).lstrip()
+				))
+		out.append('')
 
-Wallet/TX operations (coin daemon must be running):
-  gen_addr      - generate a single MMGen address from default or specified wallet
-  gen_key       - generate a single MMGen WIF key from default or specified wallet
-  getbalance    - like '{pn}-cli getbalance' but shows confirmed/unconfirmed,
-                  spendable/unspendable balances for individual {pnm} wallets
-  listaddress   - list the specified {pnm} address and its balance
-  listaddresses - list {pnm} addresses and their balances
-  txview        - show raw/signed {pnm} transaction in human-readable form
-  twview        - view tracking wallet
-
-  keyaddrlist2monerowallets - create Monero wallets from key-address list
-  syncmonerowallets         - sync Monero wallets from key-address list
-
-General utilities:
-  hexdump      - encode data into formatted hexadecimal form (file or stdin)
-  unhexdump    - decode formatted hexadecimal data (file or stdin)
-  bytespec     - convert a byte specifier such as '1GB' into an integer
-  hexlify      - display string in hexadecimal format
-  hexreverse   - reverse bytes of a hexadecimal string
-  rand2file    - write 'n' bytes of random data to specified file
-  randhex      - print 'n' bytes (default 32) of random data in hex format
-  hash256      - compute sha256(sha256(data)) (double sha256)
-  hash160      - compute ripemd160(sha256(data)) (converts hexpubkey to hexaddr)
-  b58randenc   - generate a random 32-byte number and convert it to base 58
-  b58tostr     - convert a base 58 number to a string
-  strtob58     - convert a string to base 58
-  b58tohex     - convert a base 58 number to hexadecimal
-  b58chktohex  - convert a base58-check encoded number to hexadecimal
-  hextob58     - convert a hexadecimal number to base 58
-  hextob58chk  - convert a hexadecimal number to base58-check encoding
-  b32tohex     - convert a base 32 number to hexadecimal
-  hextob32     - convert a hexadecimal number to base 32
-
-File encryption:
-  encrypt      - encrypt a file
-  decrypt      - decrypt a file
-    {pnm} encryption suite:
-      * Key: Scrypt (user-configurable hash parameters, 32-byte salt)
-      * Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
-      * The encrypted file is indistinguishable from random data
-
-{pnm}-specific operations:
-  remove_address - remove an address from tracking wallet
-  add_label      - add descriptive label for {pnm} address in tracking wallet
-  remove_label   - remove descriptive label for {pnm} address in tracking wallet
-  addrfile_chksum    - compute checksum for {pnm} address file
-  keyaddrfile_chksum - compute checksum for {pnm} key-address file
-  passwdfile_chksum  - compute checksum for {pnm} password file
-  find_incog_data    - Use an Incog ID to find hidden incognito wallet data
-  id6          - generate 6-character {pnm} ID for a file (or stdin)
-  id8          - generate 8-character {pnm} ID for a file (or stdin)
-  str2id6      - generate 6-character {pnm} ID for a string, ignoring spaces
-
-Mnemonic operations (choose 'electrum' (default), 'tirosh' or 'all'
-  wordlists):
-  mn_rand128   - generate random 128-bit mnemonic
-  mn_rand192   - generate random 192-bit mnemonic
-  mn_rand256   - generate random 256-bit mnemonic
-  mn_stats     - show stats for mnemonic wordlist
-  mn_printlist - print mnemonic wordlist
-  hex2mn       - convert a 16, 24 or 32-byte number in hex format to a mnemonic
-  mn2hex       - convert a 12, 18 or 24-word mnemonic to a number in hex format
-
-  IMPORTANT NOTE: Though {pnm} mnemonics use the Electrum wordlist, they're
-  computed using a different algorithm and are NOT Electrum-compatible!
-
-  {sm}
-"""
+	return '\n'.join(out)
 
 opts_data = lambda: {
 	'desc':    'Perform various {pnm}- and cryptocoin-related operations'.format(pnm=g.proj_name),
@@ -125,20 +64,17 @@ opts_data = lambda: {
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
                       user (min={g.min_urandchars}, max={g.max_urandchars})
--t, --type=t          Specify address type (valid options: 'compressed','segwit','bech32','zcash_z')
+-t, --type=t          Specify address type (valid options: 'legacy',
+                      'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose         Produce more verbose output
 """.format(g=g),
 	'notes': """
 
                                COMMANDS
+
 {ch}
-Type '{pn} help <command> for help on a particular command
-""".format( pn=g.prog_name,
-			ch=cmd_help.format(
-				pn=g.proto.name,
-				pnm=g.proj_name,
-				sm='\n  '.join(stdin_msg.split('\n')))
-	)
+Type '{pn} help <command>' for help on a particular command
+""".format(pn=g.prog_name,ch=make_cmd_help())
 }
 
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt','use_old_ed25519'])
@@ -149,8 +85,9 @@ cmd = cmd_args.pop(0)
 import mmgen.tool as tool
 tc = tool.MMGenToolCmd()
 
-if cmd == 'help' and not cmd_args:
-	tool._usage(exit_val=0)
+if cmd in ('help','usage') and cmd_args:
+	cmd_args[0] = 'command_name=' + cmd_args[0]
+
 if cmd not in dir(tc):
 	die(1,"'{}': no such command".format(cmd))
 
@@ -158,4 +95,4 @@ args,kwargs = tool._process_args(cmd,cmd_args)
 
 ret = getattr(tc,cmd)(*args,**kwargs)
 
-tool._print_result(ret,'pager' in kwargs and kwargs['pager'])
+tool._process_result(ret,to_screen=True,pager='pager' in kwargs and kwargs['pager'])

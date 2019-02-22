@@ -22,6 +22,8 @@ mmgen.exception: Exception classes for the MMGen suite
 
 # 1: no hl, message only
 class UserNonConfirmation(Exception):     mmcode = 1
+class BadAgeFormat(Exception):            mmcode = 1
+class BadFilename(Exception):             mmcode = 1
 
 # 2: yellow hl, message only
 class UnrecognizedTokenSymbol(Exception): mmcode = 2

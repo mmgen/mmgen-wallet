@@ -389,6 +389,17 @@ def get_from_brain_opt_params():
 	l,p = opt.from_brain.split(',')
 	return(int(l),p)
 
+def pretty_format(s,width=80,pfx=''):
+	out = []
+	while(s):
+		if len(s) <= width:
+			out.append(s)
+			break
+		i = s[:width].rfind(' ')
+		out.append(s[:i])
+		s = s[i+1:]
+	return pfx + ('\n'+pfx).join(out)
+
 def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	r = (0,1)[bool(len(data) % gw)]
 	return ''.join(
@@ -566,7 +577,7 @@ def write_data_to_file( outfile,data,desc='data',
 
 	def do_stdout():
 		qmsg('Output to STDOUT requested')
-		if sys.stdout.isatty():
+		if g.stdin_tty:
 			if no_tty:
 				die(2,'Printing {} to screen is not allowed'.format(desc))
 			if (ask_tty and not opt.quiet) or binary:

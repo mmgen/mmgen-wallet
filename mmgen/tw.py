@@ -81,14 +81,25 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.cols         = None
 		self.reverse      = False
 		self.group        = False
-		self.show_days    = True
 		self.show_mmid    = True
 		self.minconf      = minconf
 		self.get_unspent_data()
+		self.age_fmt      = 'days'
 		self.sort_key     = 'age'
 		self.do_sort()
 		self.total        = self.get_total_coin()
 		self.disp_prec    = self.get_display_precision()
+
+	@property
+	def age_fmt(self):
+		return self._age_fmt
+
+	@age_fmt.setter
+	def age_fmt(self,val):
+		age_fmts = ('days','confs')
+		if val not in age_fmts:
+			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(val,age_fmts))
+		self._age_fmt = val
 
 	def get_display_precision(self):
 		return g.proto.coin_amt.max_prec
@@ -199,7 +210,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							a='Address'.ljust(addr_w),
 							A='Amt({})'.format(g.dcoin).ljust(self.disp_prec+3),
 							A2=' Amt({})'.format(g.coin).ljust(self.disp_prec+4),
-							c=('Confs','Age(d)')[self.show_days]
+							c=('Confs','Age(d)')[self.age_fmt=='days']
 							).rstrip()]
 
 		for n,i in enumerate(unsp):
@@ -225,7 +236,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 									a=addr_out,
 									A=i.amt.fmt(color=True,prec=self.disp_prec),
 									A2=(i.amt2.fmt(color=True,prec=self.disp_prec) if i.amt2 is not None else ''),
-									c=i.days if self.show_days else i.confs
+									c=i.days if self.age_fmt == 'days' else i.confs
 									).rstrip())
 
 		self.fmt_display = '\n'.join(out) + '\n'
@@ -327,7 +338,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			if action[:2] == 's_':
 				self.do_sort(action[2:])
 				if action == 's_twmmid': self.show_mmid = True
-			elif action == 'd_days': self.show_days = not self.show_days
+			elif action == 'd_days': self.age_fmt = ('days','confs')[self.age_fmt=='days']
 			elif action == 'd_mmid': self.show_mmid = not self.show_mmid
 			elif action == 'd_group':
 				if self.can_group:
@@ -453,7 +464,10 @@ class TwAddrList(MMGenDict):
 
 	def coinaddr_list(self): return [self[k]['addr'] for k in self]
 
-	def format(self,showbtcaddrs,sort,show_age,show_days):
+	def format(self,showbtcaddrs,sort,show_age,age_fmt):
+		age_fmts = ('days','confs')
+		if age_fmt not in age_fmts:
+			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(age_fmt,age_fmts))
 		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
 		fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
@@ -468,7 +482,7 @@ class TwAddrList(MMGenDict):
 				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
 				cmt=TwComment.fmtc('COMMENT',width=max_cmt_len+1),
 				amt='BALANCE'.ljust(max_fp_len+4),
-				age=('CONFS','DAYS')[show_days],
+				age=('CONFS','DAYS')[age_fmt=='days'],
 				)]
 
 		def sort_algo(j):
@@ -500,7 +514,7 @@ class TwAddrList(MMGenDict):
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 				cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
-				age=mmid.confs // (1,confs_per_day)[show_days] if hasattr(mmid,'confs') and mmid.confs != None else '-'
+				age=mmid.confs // (1,confs_per_day)[age_fmt=='days'] if hasattr(mmid,'confs') and mmid.confs != None else '-'
 				))
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])

@@ -17,171 +17,126 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tool.py:  Routines and data for the 'mmgen-tool' utility
+tool.py:  Routines for the 'mmgen-tool' utility
 """
 
-import binascii
-from collections import OrderedDict
+from binascii import hexlify,unhexlify
 
 from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
-from mmgen.tx import *
 from mmgen.addr import *
 
-pnm = g.proj_name
-cmd_data = OrderedDict([
-	('help',         ['<tool command> [str]']),
-	('usage',        ['<tool command> [str]']),
-	('strtob58',     ['<string> [str-]','pad [int=0]']),
-	('b58tostr',     ['<b58 number> [str-]']),
-	('hextob58',     ['<hex number> [str-]','pad [int=0]']),
-	('hextob58chk',  ['<hex number> [str-]']),
-	('b58tohex',     ['<b58 number> [str-]','pad [int=0]']),
-	('b58chktohex',  ['<b58 number> [str-]']),
-	('b58randenc',   []),
-	('b32tohex',     ['<b32 num> [str-]','pad [int=0]']),
-	('hextob32',     ['<hex num> [str-]','pad [int=0]']),
-	('randhex',      ['nbytes [int=32]']),
-	('id8',          ['<infile> [str]']),
-	('id6',          ['<infile> [str]']),
-	('hash160',      ['<hexadecimal string> [str-]']),
-	('hash256',      ['<str, hexstr or filename> [str]', # TODO handle stdin
-							'hex_input [bool=False]','file_input [bool=False]']),
-	('str2id6',      ['<string (spaces are ignored)> [str-]']),
-	('hexdump',      ['<infile> [str]', 'cols [int=8]', 'line_nums [bool=True]']),
-	('unhexdump',    ['<infile> [str]']),
-	('hexreverse',   ['<hexadecimal string> [str-]']),
-	('hexlify',      ['<string> [str-]']),
-	('rand2file',    ['<outfile> [str]','<nbytes> [str]','threads [int=4]','silent [bool=False]']),
+def _create_call_sig(cmd,parsed=False):
 
-	('randwif',    []),
-	('randpair',   []),
-	('hex2wif',    ['<private key in hex format> [str-]']),
-	('wif2hex',    ['<wif> [str-]']),
-	('wif2addr',   ['<wif> [str-]']),
-	('wif2segwit_pair',['<wif> [str-]']),
-	('pubhash2addr', ['<coin address in hex format> [str-]']),
-	('addr2hexaddr', ['<coin address> [str-]']),
-	('privhex2addr', ['<private key in hex format> [str-]']),
-	('privhex2pubhex',['<private key in hex format> [str-]']),
-	('pubhex2addr',  ['<public key in hex format> [str-]']), # new
-	('pubhex2redeem_script',['<public key in hex format> [str-]']), # new
-	('wif2redeem_script', ['<private key in WIF format> [str-]']), # new
+	m = getattr(MMGenToolCmd,cmd)
 
-	('hex2mn',       ['<hexadecimal string> [str-]',"wordlist [str='electrum']"]),
-	('mn2hex',       ['<mnemonic> [str-]', "wordlist [str='electrum']"]),
-	('mn_rand128',   ["wordlist [str='electrum']"]),
-	('mn_rand192',   ["wordlist [str='electrum']"]),
-	('mn_rand256',   ["wordlist [str='electrum']"]),
-	('mn_stats',     ["wordlist [str='electrum']"]),
-	('mn_printlist', ["wordlist [str='electrum']"]),
+	if 'varargs_call_sig' in m.__code__.co_varnames: # hack
+		flag = 'VAR_ARGS'
+		va = m.__defaults__[0]
+		args,dfls,ann = va['args'],va['dfls'],va['annots']
+	else:
+		flag = None
+		args = m.__code__.co_varnames[1:m.__code__.co_argcount]
+		dfls = m.__defaults__ or ()
+		ann  = m.__annotations__
 
-	('gen_addr',     ['<{} ID> [str]'.format(pnm),"wallet [str='']"]),
-	('gen_key',      ['<{} ID> [str]'.format(pnm),"wallet [str='']"]),
+	nargs = len(args) - len(dfls)
 
-	('listaddress',['<{} address> [str]'.format(pnm),'minconf [int=1]','pager [bool=False]','showempty [bool=True]','showbtcaddr [bool=True]','show_age [bool=False]','show_days [bool=True]']),
-	('listaddresses',["addrs [str='']",'minconf [int=1]','showempty [bool=False]','pager [bool=False]','showbtcaddrs [bool=True]','all_labels [bool=False]',"sort [str=''] (options: reverse, age)",'show_age [bool=False]','show_days [bool=True]']),
-	('getbalance',   ['minconf [int=1]','quiet [bool=False]','pager [bool=False]']),
-	('txview',       ['<{} TX file(s)> [str]'.format(pnm),'pager [bool=False]','terse [bool=False]',"sort [str='mtime'] (options: ctime, atime)",'MARGS']),
-	('twview',       ["sort [str='age']",'reverse [bool=False]','show_days [bool=True]','show_mmid [bool=True]','minconf [int=1]','wide [bool=False]','pager [bool=False]']),
-
-	('add_label',       ['<{} or coin address> [str]'.format(pnm),'<label> [str]']),
-	('remove_label',    ['<{} or coin address> [str]'.format(pnm)]),
-	('remove_address',  ['<{} or coin address> [str]'.format(pnm)]),
-	('addrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
-	('keyaddrfile_chksum', ['<{} addr file> [str]'.format(pnm),"mmtype [str='']"]),
-	('passwdfile_chksum', ['<{} password file> [str]'.format(pnm)]),
-	('find_incog_data', ['<file or device name> [str]','<Incog ID> [str]','keep_searching [bool=False]']),
-
-	('encrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
-	('decrypt',      ['<infile> [str]',"outfile [str='']","hash_preset [str='']"]),
-	('bytespec',     ['<bytespec> [str]']),
-
-	('keyaddrlist2monerowallets',['<{} XMR key-address file> [str]'.format(pnm),'blockheight [int=(current height)]',"addrs [str=''] (addr idx list or range)"]),
-	('syncmonerowallets',        ['<{} XMR key-address file> [str]'.format(pnm),"addrs [str=''] (addr idx list or range)"]),
-])
+	if parsed:
+		c_args = [(a,'str' if ann[a] == 'sstr' else ann[a].__name__) for a in args[:nargs]]
+		c_kwargs = [(a,dfls[n]) for n,a in enumerate(args[nargs:])]
+		return c_args,dict(c_kwargs),'STDIN_OK' if c_args and ann[args[0]] == 'sstr' else flag
+	else:
+		c_args = ['{} [{}]'.format(a,'str or STDIN' if ann[a] == 'sstr' else ann[a].__name__) for a in args[:nargs]]
+		c_kwargs = ['"{}" [{}={!r}{}]'.format(
+					a, type(dfls[n]).__name__, dfls[n],
+					(' ' + ann[a] if a in ann else ''))
+						for n,a in enumerate(args[nargs:])]
+		return ' '.join(c_args + c_kwargs)
 
 def _usage(cmd=None,exit_val=1):
 
-	for v in cmd_data.values():
-		if v and v[0][-2:] == '-]':
-			v[0] = v[0][:-2] + ' or STDIN]'
-		if 'MARGS' in v: v.remove('MARGS')
+	m1=('USAGE INFORMATION FOR MMGEN-TOOL COMMANDS:\n\n'
+		'  Unquoted arguments are mandatory\n'
+		'  Quoted arguments are optional, default values will be used\n'
+		'  Argument types and default values are shown in square brackets\n')
+
+	m2=('  To force a command to read from STDIN instead of file (for commands taking\n'
+		'  a filename as their first argument), substitute "-" for the filename.\n\n'
+		'EXAMPLES:\n\n'
+		'  Generate a random Bech32 public/private keypair for LTC:\n'
+		'  $ mmgen-tool -r0 --coin=ltc --type=bech32 randpair\n\n'
+		'  Generate a well-known burn address:\n'
+		'  $ mmgen-tool hextob58chk 000000000000000000000000000000000000000000\n\n'
+		'  Generate a random 12-word seed phrase:\n'
+		'  $ mmgen-tool -r0 mn_rand128\n\n'
+		'  Same as above, but get additional entropy from user:\n'
+		'  $ mmgen-tool mn_rand128\n\n'
+		'  Convert a string to base 58:\n'
+		'  $ mmgen-tool strtob58 "foobarbaz" pad=20\n\n'
+		'  Reverse a hex string:\n'
+		'  $ mmgen-tool hexreverse "deadbeefcafe"\n\n'
+		'  Same as above, but use a pipe:\n'
+		'  $ echo "deadbeefcafe" | mmgen-tool hexreverse -')
 
 	if not cmd:
-		Msg('Usage information for mmgen-tool commands:')
-		for k,v in list(cmd_data.items()):
-			Msg('  {:18} {}'.format(k,' '.join(v)))
-		from mmgen.main_tool import stdin_msg
-		Msg('\n  '+'\n  '.join(stdin_msg.split('\n')))
-		sys.exit(0)
-
-	if cmd in cmd_data:
-		import re
-		from mmgen.main_tool import cmd_help
-		for line in cmd_help.split('\n'):
-			if re.match(r'\s+{}\s+'.format(cmd),line):
-				c,h = line.split('-',1)
-				Msg('MMGEN-TOOL {}: {}'.format(c.strip().upper(),h.strip()))
-		cd = cmd_data[cmd]
-		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,' '.join(cd)))
+		Msg(m1)
+		for bc in MMGenToolCmd.__bases__:
+			cls_info = bc.__doc__.strip().split('\n')[0]
+			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
+			ucmds = bc.user_commands()
+			max_w = max(map(len,ucmds))
+			for cmd in ucmds:
+				if getattr(MMGenToolCmd,cmd).__doc__:
+					Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
+			Msg('')
+		Msg(m2)
+	elif cmd in MMGenToolCmd.user_commands():
+		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
 
 	sys.exit(exit_val)
 
 def _process_args(cmd,cmd_args):
-	if 'MARGS' in cmd_data[cmd]:
-		cmd_data[cmd].remove('MARGS')
-		margs = True
-	else:
-		margs = False
+	c_args,c_kwargs,flag = _create_call_sig(cmd,parsed=True)
 
-	c_args = [[i.split(' [')[0],i.split(' [')[1][:-1]]
-		for i in cmd_data[cmd] if '=' not in i]
-	c_kwargs = dict([[
-			i.split(' [')[0],
-			[i.split(' [')[1].split('=')[0],i.split(' [')[1].split('=')[1][:-1]]
-		] for i in cmd_data[cmd] if '=' in i])
-
-	if not margs:
-		u_args = [a for a in cmd_args[:len(c_args)]]
-
-		if c_args and c_args[0][1][-1] == '-':
-			c_args[0][1] = c_args[0][1][:-1] # [str-] -> [str]
-			# If we're reading from a pipe, replace '-' with output of previous command
-			if u_args and u_args[0] == '-':
-				if not sys.stdin.isatty():
-					u_args[0] = sys.stdin.read().strip()
-					if not u_args[0]:
-						die(2,'{}: ERROR: no output from previous command in pipe'.format(cmd))
-
-		if not margs and len(u_args) < len(c_args):
+	if flag != 'VAR_ARGS':
+		if len(cmd_args) < len(c_args):
 			m1 = 'Command requires exactly {} non-keyword argument{}'
 			msg(m1.format(len(c_args),suf(c_args,'s')))
 			_usage(cmd)
 
-	extra_args = len(cmd_args) - len(c_args)
+		u_args = cmd_args[:len(c_args)]
+
+		# If we're reading from a pipe, replace '-' with output of previous command
+		if flag == 'STDIN_OK' and u_args and u_args[0] == '-':
+			if sys.stdin.isatty():
+				raise BadFilename("Standard input is a TTY.  Can't use '-' as a filename")
+			else:
+				u_args[0] = sys.stdin.read().strip()
+				if not u_args[0]:
+					die(2,'{}: ERROR: no output from previous command in pipe'.format(cmd))
+
+	u_nkwargs = len(cmd_args) - len(c_args)
 	u_kwargs = {}
-	if margs:
-		t = [a.split('=') for a in cmd_args if '=' in a]
+	if flag == 'VAR_ARGS':
+		t = [a.split('=',1) for a in cmd_args if '=' in a]
 		tk = [a[0] for a in t]
 		tk_bad = [a for a in tk if a not in c_kwargs]
-		if set(tk_bad) != set(tk[:len(tk_bad)]):
+		if set(tk_bad) != set(tk[:len(tk_bad)]): # permit non-kw args to contain '='
 			die(1,"'{}': illegal keyword argument".format(tk_bad[-1]))
 		u_kwargs = dict(t[len(tk_bad):])
 		u_args = cmd_args[:-len(u_kwargs) or None]
-	elif extra_args > 0:
-		u_kwargs = dict([a.split('=') for a in cmd_args[len(c_args):] if '=' in a])
-		if len(u_kwargs) != extra_args:
-			msg('Command requires exactly {} non-keyword argument{}'.format(len(c_args),suf(c_args,'s')))
+	elif u_nkwargs > 0:
+		u_kwargs = dict([a.split('=',1) for a in cmd_args[len(c_args):] if '=' in a])
+		if len(u_kwargs) != u_nkwargs:
+			msg('Command requires exactly {} non-keyword argument{}'.format(len(c_args),suf(c_args)))
 			_usage(cmd)
 		if len(u_kwargs) > len(c_kwargs):
-			msg('Command requires exactly {} keyword argument{}'.format(len(c_kwargs),suf(c_kwargs,'s')))
+			msg('Command accepts no more than {} keyword argument{}'.format(len(c_kwargs),suf(c_kwargs)))
 			_usage(cmd)
-
-	# mdie(c_args,c_kwargs,u_args,u_kwargs)
 
 	for k in u_kwargs:
 		if k not in c_kwargs:
@@ -201,138 +156,255 @@ def _process_args(cmd,cmd_args):
 		except:
 			die(1,"'{}': Invalid argument for argument {} ('{}' required)".format(arg,arg_name,arg_type))
 
-	if margs:
+	if flag == 'VAR_ARGS':
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
 	else:
 		args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
-	kwargs = dict([(k,conv_type(u_kwargs[k],k,c_kwargs[k][0])) for k in u_kwargs])
+	kwargs = dict([(k,conv_type(u_kwargs[k],k,type(c_kwargs[k]).__name__)) for k in u_kwargs])
 
 	return args,kwargs
 
-def _get_result(ret): # returns a string or string subclass
+def _process_result(ret,to_screen=False,pager=False): # returns a string or string subclass
+	do_ret = not to_screen
 	if issubclass(type(ret),str):
-		return ret
-	elif type(ret) == tuple:
-		return '\n'.join([r.decode() if issubclass(type(r),bytes) else r for r in ret])
-	elif issubclass(type(ret),bytes):
-		try: return ret.decode()
-		except: return repr(ret)
-	elif ret == True:
-		return ''
-	elif ret in (False,None):
-		ydie(1,"tool command returned '{}'".format(ret))
-	else:
-		ydie(1,"tool.py: can't handle return value of type '{}'".format(type(ret).__name__))
-
-def _print_result(ret,pager):
-	if issubclass(type(ret),str):
-		do_pager(ret) if pager else Msg(ret)
+		return ret if do_ret else do_pager(ret) if pager else Msg(ret)
 	elif type(ret) == tuple:
 		o = '\n'.join([r.decode() if issubclass(type(r),bytes) else r for r in ret])
-		do_pager(o) if pager else Msg(o)
+		return o if do_ret else do_pager(o) if pager else Msg(o)
 	elif issubclass(type(ret),bytes):
-		try:
-			o = ret.decode()
-			do_pager(o) if pager else Msg(o)
-		except: os.write(1,ret)
+		if do_ret:
+			try: return ret.decode()
+			except: return repr(ret)
+		else:
+			try:
+				o = ret.decode()
+				do_pager(o) if pager else Msg(o)
+			except: os.write(1,ret)
 	elif ret == True:
-		pass
+		if do_ret: return ''
 	elif ret in (False,None):
 		ydie(1,"tool command returned '{}'".format(ret))
 	else:
 		ydie(1,"tool.py: can't handle return value of type '{}'".format(type(ret).__name__))
 
 from mmgen.obj import MMGenAddrType
-at = MMGenAddrType((hasattr(opt,'type') and opt.type) or g.proto.dfl_mmtype)
-kg = KeyGenerator(at)
-ag = AddrGenerator(at)
+
+def init_generators(arg=None):
+	global at,kg,ag
+	at = MMGenAddrType((hasattr(opt,'type') and opt.type) or g.proto.dfl_mmtype)
+	if arg != 'at':
+		kg = KeyGenerator(at)
+		ag = AddrGenerator(at)
+
 wordlists = 'electrum','tirosh'
 dfl_wl_id = 'electrum'
 
-class MMGenToolCmd(object):
+class MMGenToolCmdBase(object):
 
-	def help(self,cmd=None):
-		_usage(cmd,exit_val=0)
+	@classmethod
+	def user_commands(cls):
+		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__]
 
-	def usage(self,cmd=None):
-		_usage(cmd,exit_val=0)
 
-	def hexdump(self,infile,cols=8,line_nums=True):
+class MMGenToolCmdMisc(MMGenToolCmdBase):
+	"miscellaneous commands"
+
+	def help(self,command_name=''):
+		"display usage information for a single command or all commands"
+		_usage(command_name,exit_val=0)
+
+	usage = help
+
+class MMGenToolCmdUtil(MMGenToolCmdBase):
+	"general string conversion and hashing utilities"
+
+	def bytespec(self,dd_style_byte_specifier:str):
+		"convert a byte specifier such as '1GB' into an integer"
+		return str(parse_bytespec(dd_style_byte_specifier))
+
+	def randhex(self,nbytes='32'):
+		"print 'n' bytes (default 32) of random data in hex format"
+		return hexlify(get_random(int(nbytes)))
+
+	def hexreverse(self,hexstr:'sstr'):
+		"reverse bytes of a hexadecimal string"
+		return hexlify(unhexlify(hexstr.strip())[::-1])
+
+	def hexlify(self,hexstr:'sstr'):
+		"display string in hexadecimal format"
+		return hexlify(hexstr.encode())
+
+	def hexdump(self,infile:str,cols=8,line_nums=True):
+		"encode data into formatted hexadecimal form (file or stdin)"
 		return pretty_hexdump(
 				get_data_from_file(infile,dash=True,silent=True,binary=True),
 					cols=cols,line_nums=line_nums)
 
-	def unhexdump(self,infile):
+	def unhexdump(self,infile:str):
+		"decode formatted hexadecimal data (file or stdin)"
 		if g.platform == 'win':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 		hexdata = get_data_from_file(infile,dash=True,silent=True)
 		return decode_pretty_hexdump(hexdata)
 
+	def hash160(self,hexstr:'sstr'):
+		"compute ripemd160(sha256(data)) (convert hex pubkey to hex addr)"
+		return hash160(hexstr)
+
+	def hash256(self,string_or_bytes:str,file_input=False,hex_input=False): # TODO: handle stdin
+		"compute sha256(sha256(data)) (double sha256)"
+		from hashlib import sha256
+		if file_input:  b = get_data_from_file(string_or_bytes,binary=True)
+		elif hex_input: b = decode_pretty_hexdump(string_or_bytes)
+		else:           b = string_or_bytes
+		return sha256(sha256(b.encode()).digest()).hexdigest()
+
+	def id6(self,infile:str):
+		"generate 6-character MMGen ID for a file (or stdin)"
+		return make_chksum_6(
+			get_data_from_file(infile,dash=True,silent=True,binary=True))
+
+	def str2id6(self,string:'sstr'): # retain ignoring of space for backwards compat
+		"generate 6-character MMGen ID for a string, ignoring spaces"
+		return make_chksum_6(''.join(string.split()))
+
+	def id8(self,infile:str):
+		"generate 8-character MMGen ID for a file (or stdin)"
+		return make_chksum_8(
+			get_data_from_file(infile,dash=True,silent=True,binary=True))
+
 	def b58randenc(self):
+		"generate a random 32-byte number and convert it to base 58"
 		r = get_random(32)
 		return baseconv.b58encode(r,pad=True)
 
-	def randhex(self,nbytes='32'):
-		return binascii.hexlify(get_random(int(nbytes)))
+	def strtob58(self,string:'sstr',pad=0):
+		"convert a string to base 58"
+		return baseconv.fromhex(hexlify(string.encode()),'b58',pad,tostr=True)
 
+	def b58tostr(self,b58num:'sstr'):
+		"convert a base 58 number to a string"
+		return unhexlify(baseconv.tohex(b58num,'b58'))
+
+	def hextob58(self,hexstr:'sstr',pad=0):
+		"convert a hexadecimal number to base 58"
+		return baseconv.fromhex(hexstr.encode(),'b58',pad,tostr=True)
+
+	def b58tohex(self,b58num:'sstr',pad=0):
+		"convert a base 58 number to hexadecimal"
+		return baseconv.tohex(b58num,'b58',pad)
+
+	def hextob58chk(self,hexstr:'sstr'):
+		"convert a hexadecimal number to base58-check encoding"
+		from mmgen.protocol import _b58chk_encode
+		return _b58chk_encode(hexstr.encode())
+
+	def b58chktohex(self,b58chk_num:'sstr'):
+		"convert a base58-check encoded number to hexadecimal"
+		from mmgen.protocol import _b58chk_decode
+		return _b58chk_decode(b58chk_num)
+
+	def hextob32(self,hexstr:'sstr',pad=0):
+		"convert a hexadecimal number to base 32"
+		return baseconv.fromhex(hexstr.encode(),'b32',pad,tostr=True)
+
+	def b32tohex(self,b32num:'sstr',pad=0):
+		"convert a base 32 number to hexadecimal"
+		return baseconv.tohex(b32num.upper(),'b32',pad)
+
+class MMGenToolCmdCoin(MMGenToolCmdBase):
+	"""
+	cryptocoin key/address utilities
+
+		May require use of the '--coin' and '--type' options
+
+		Examples:
+			mmgen-tool --coin=ltc --type=bech32 wif2addr <wif key>
+			mmgen-tool --coin=zec --type=zcash_z randpair
+	"""
 	def randwif(self):
+		"generate a random private key in WIF format"
+		init_generators('at')
 		return PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed).wif
 
 	def randpair(self):
+		"generate a random private key/address pair"
+		init_generators()
 		privhex = PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed)
 		addr = ag.to_addr(kg.to_pubhex(privhex))
 		return (privhex.wif,addr)
 
-	def wif2addr(self,wif):
-		privhex = PrivKey(wif=wif)
+	def wif2hex(self,wifkey:'sstr'):
+		"convert a private key from WIF to hex format"
+		return PrivKey(wif=wifkey)
+
+	def hex2wif(self,privhex:'sstr'):
+		"convert a private key from hex to WIF format"
+		init_generators('at')
+		return g.proto.hex2wif(privhex.encode(),pubkey_type=at.pubkey_type,compressed=at.compressed)
+
+	def wif2addr(self,wifkey:'sstr'):
+		"generate a coin address from a key in WIF format"
+		init_generators()
+		privhex = PrivKey(wif=wifkey)
 		addr = ag.to_addr(kg.to_pubhex(privhex))
 		return addr
 
-	def wif2segwit_pair(self,wif):
-		pubhex = kg.to_pubhex(PrivKey(wif=wif))
+	def wif2redeem_script(self,wifkey:'sstr'): # new
+		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
+		init_generators()
+		privhex = PrivKey(wif=wifkey)
+		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
+
+	def wif2segwit_pair(self,wifkey:'sstr'):
+		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
+		init_generators()
+		pubhex = kg.to_pubhex(PrivKey(wif=wifkey))
 		addr = ag.to_addr(pubhex)
 		rs = ag.to_segwit_redeem_script(pubhex)
 		return (rs,addr)
 
-	def pubhash2addr(self,pubhash):
-		if opt.type == 'bech32':
-			return g.proto.pubhash2bech32addr(pubhash.encode())
-		else:
-			return g.proto.pubhash2addr(pubhash.encode(),at.addr_fmt=='p2sh')
-
-	def addr2hexaddr(self,addr):
-		return g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex']
-
-	def hash160(self,pubkeyhex):
-		return hash160(pubkeyhex)
-
-	def pubhex2addr(self,pubkeyhex):
-		return self.pubhash2addr(hash160(pubkeyhex.encode()).decode())
-
-	def wif2hex(self,wif):
-		return PrivKey(wif=wif)
-
-	def hex2wif(self,hexpriv):
-		return g.proto.hex2wif(hexpriv.encode(),pubkey_type=at.pubkey_type,compressed=at.compressed)
-
-	def privhex2addr(self,privhex,output_pubhex=False):
-		pk = PrivKey(binascii.unhexlify(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
+	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
+		"generate coin address from private key in hex format"
+		init_generators()
+		pk = PrivKey(unhexlify(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
 		ph = kg.to_pubhex(pk)
 		return ph if output_pubhex else ag.to_addr(ph)
 
-	def privhex2pubhex(self,privhex): # new
+	def privhex2pubhex(self,privhex:'sstr'): # new
+		"generate a hex public key from a hex private key"
 		return self.privhex2addr(privhex,output_pubhex=True)
 
-	def pubhex2redeem_script(self,pubhex): # new
-		return g.proto.pubhex2redeem_script(pubhex)
+	def pubhex2addr(self,pubkeyhex:'sstr'):
+		"convert a hex pubkey to an address"
+		return self.pubhash2addr(hash160(pubkeyhex.encode()).decode())
 
-	def wif2redeem_script(self,wif): # new
-		privhex = PrivKey(wif=wif)
-		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
+	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
+		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
+		return g.proto.pubhex2redeem_script(pubkeyhex)
 
-	def do_random_mn(self,nbytes,wordlist):
-		hexrand = binascii.hexlify(get_random(nbytes))
+	def pubhash2addr(self,pubhashhex:'sstr'):
+		"convert public key hash to address"
+		if opt.type == 'bech32':
+			return g.proto.pubhash2bech32addr(pubhashhex.encode())
+		else:
+			init_generators('at')
+			return g.proto.pubhash2addr(pubhashhex.encode(),at.addr_fmt=='p2sh')
+
+	def addr2hexaddr(self,addr:'sstr'):
+		"convert coin address from base58 to hex format"
+		return g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex']
+
+class MMGenToolCmdMnemonic(MMGenToolCmdBase):
+	"""
+	seed mnemonic utilities (wordlist: choose 'electrum' (default) or 'tirosh')
+
+		IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
+		computed using a different algorithm and are NOT Electrum-compatible!
+	"""
+	def _do_random_mn(self,nbytes:int,wordlist:str):
+		hexrand = hexlify(get_random(nbytes))
 		Vmsg('Seed: {}'.format(hexrand))
 		for wl_id in ([wordlist],wordlists)[wordlist=='all']:
 			if wordlist == 'all': # TODO
@@ -341,94 +413,82 @@ class MMGenToolCmd(object):
 			return ' '.join(mn)
 
 	def mn_rand128(self,wordlist=dfl_wl_id):
-		return self.do_random_mn(16,wordlist)
+		"generate random 128-bit mnemonic"
+		return self._do_random_mn(16,wordlist)
 
 	def mn_rand192(self,wordlist=dfl_wl_id):
-		return self.do_random_mn(24,wordlist)
+		"generate random 192-bit mnemonic"
+		return self._do_random_mn(24,wordlist)
 
 	def mn_rand256(self,wordlist=dfl_wl_id):
-		return self.do_random_mn(32,wordlist)
+		"generate random 256-bit mnemonic"
+		return self._do_random_mn(32,wordlist)
 
-	def hex2mn(self,s,wordlist=dfl_wl_id):
-		return ' '.join(baseconv.fromhex(s.encode(),wordlist))
+	def hex2mn(self,hexstr:'sstr',wordlist=dfl_wl_id):
+		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
+		return ' '.join(baseconv.fromhex(hexstr.encode(),wordlist))
 
-	def mn2hex(self,s,wordlist=dfl_wl_id):
-		return baseconv.tohex(s.split(),wordlist)
-
-	def strtob58(self,s,pad=None):
-		return baseconv.fromhex(binascii.hexlify(s.encode()),'b58',pad,tostr=True)
-
-	def hextob58(self,s,pad=None):
-		return baseconv.fromhex(s.encode(),'b58',pad,tostr=True)
-
-	def hextob58chk(self,s):
-		from mmgen.protocol import _b58chk_encode
-		return _b58chk_encode(s.encode())
-
-	def hextob32(self,s,pad=None):
-		return baseconv.fromhex(s.encode(),'b32',pad,tostr=True)
-
-	def b58tostr(self,s):
-		return binascii.unhexlify(baseconv.tohex(s,'b58'))
-
-	def b58tohex(self,s,pad=None):
-		return baseconv.tohex(s,'b58',pad)
-
-	def b58chktohex(self,s):
-		from mmgen.protocol import _b58chk_decode
-		return _b58chk_decode(s)
-
-	def b32tohex(self,s,pad=None):
-		return baseconv.tohex(s.upper(),'b32',pad)
+	def mn2hex(self,seed_mnemonic:'sstr',wordlist=dfl_wl_id):
+		"convert a 12, 18 or 24-word mnemonic to a hexadecimal number"
+		return baseconv.tohex(seed_mnemonic.split(),wordlist)
 
 	def mn_stats(self,wordlist=dfl_wl_id):
+		"show stats for mnemonic wordlist"
 		wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
 		baseconv.check_wordlist(wordlist)
 		return True
 
 	def mn_printlist(self,wordlist=dfl_wl_id):
+		"print mnemonic wordlist"
 		wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
 		return '\n'.join(baseconv.digits[wordlist])
 
-	def id8(self,infile):
-		return make_chksum_8(
-			get_data_from_file(infile,dash=True,silent=True,binary=True))
+class MMGenToolCmdFile(MMGenToolCmdBase):
+	"utilities for viewing/checking MMGen address and transaction files"
 
-	def id6(self,infile):
-		return make_chksum_6(
-			get_data_from_file(infile,dash=True,silent=True,binary=True))
-
-	def str2id6(self,s): # retain ignoring of space for backwards compat
-		return make_chksum_6(''.join(s.split()))
-
-	def addrfile_chksum(self,infile,mmtype=''):
+	def addrfile_chksum(self,mmgen_addrfile:str):
+		"compute checksum for MMGen address file"
 		from mmgen.addr import AddrList
-		mmtype = None if not mmtype else MMGenAddrType(mmtype)
-		return AddrList(infile,mmtype=mmtype).chksum
+		return AddrList(mmgen_addrfile).chksum
 
-	def keyaddrfile_chksum(self,infile,mmtype=''):
+	def keyaddrfile_chksum(self,mmgen_keyaddrfile:str):
+		"compute checksum for MMGen key-address file"
 		from mmgen.addr import KeyAddrList
-		mmtype = None if not mmtype else MMGenAddrType(mmtype)
-		return KeyAddrList(infile,mmtype=mmtype).chksum
+		return KeyAddrList(mmgen_keyaddrfile).chksum
 
-	def passwdfile_chksum(self,infile):
+	def passwdfile_chksum(self,mmgen_passwdfile:str):
+		"compute checksum for MMGen password file"
 		from mmgen.addr import PasswordList
-		return PasswordList(infile=infile).chksum
+		return PasswordList(infile=mmgen_passwdfile).chksum
 
-	def hexreverse(self,s):
-		return binascii.hexlify(binascii.unhexlify(s.strip())[::-1])
+	def txview( varargs_call_sig = { # hack to allow for multiple filenames
+					'args':   ( 'mmgen_tx_file(s)', 'pager', 'terse', 'sort' ),
+					'dfls':   ( False, False, 'mtime' ),
+					'annots': { 'mmgen_tx_file(s)': str, 'sort': '(valid options: mtime,ctime,atime)' } },
+				*infiles,**kwargs):
+		"show raw/signed MMGen transaction in human-readable form"
+		self = varargs_call_sig
+		from mmgen.filename import MMGenFileList
+		terse = 'terse' in kwargs and kwargs['terse']
+		sort_key = kwargs['sort'] if 'sort' in kwargs else 'mtime'
+		from mmgen.tx import MMGenTX
+		flist = MMGenFileList(infiles,ftype=MMGenTX)
+		flist.sort_by_age(key=sort_key) # in-place sort
+		from mmgen.term import get_terminal_size
+		sep = '—'*77+'\n'
+		return sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()]).rstrip()
 
-	def hexlify(self,s):
-		return binascii.hexlify(s.encode())
+class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
+	"""
+	file encryption and decryption
 
-	def hash256(self,s,file_input=False,hex_input=False):
-		from hashlib import sha256
-		if file_input:  b = get_data_from_file(s,binary=True)
-		elif hex_input: b = decode_pretty_hexdump(s)
-		else:           b = s
-		return sha256(sha256(b.encode()).digest()).hexdigest()
-
-	def encrypt(self,infile,outfile='',hash_preset=''):
+		MMGen encryption suite:
+		* Key: Scrypt (user-configurable hash parameters, 32-byte salt)
+		* Enc: AES256_CTR, 16-byte rand IV, sha256 hash + 32-byte nonce + data
+		* The encrypted file is indistinguishable from random data
+	"""
+	def encrypt(self,infile:str,outfile='',hash_preset=''):
+		"encrypt a file"
 		data = get_data_from_file(infile,'data for encryption',binary=True)
 		enc_d = mmgen_encrypt(data,'user data',hash_preset)
 		if not outfile:
@@ -436,7 +496,8 @@ class MMGenToolCmd(object):
 		write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
 		return True
 
-	def decrypt(self,infile,outfile='',hash_preset=''):
+	def decrypt(self,infile:str,outfile='',hash_preset=''):
+		"decrypt a file"
 		enc_d = get_data_from_file(infile,'encrypted data',binary=True)
 		while True:
 			dec_d = mmgen_decrypt(enc_d,'user data',hash_preset)
@@ -449,22 +510,26 @@ class MMGenToolCmd(object):
 		write_data_to_file(outfile,dec_d,'decrypted data',binary=True)
 		return True
 
-	def find_incog_data(self,filename,iv_id,keep_searching=False):
+class MMGenToolCmdFileUtil(MMGenToolCmdBase):
+	"file utilities"
+
+	def find_incog_data(self,filename:str,incog_id:str,keep_searching=False):
+		"Use an Incog ID to find hidden incognito wallet data"
 		ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
 		n,carry = 0,b' '*ivsize
 		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 		f = os.open(filename,flgs)
-		for ch in iv_id:
+		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':
-				die(2,"'{}': invalid Incog ID".format(iv_id))
+				die(2,"'{}': invalid Incog ID".format(incog_id))
 		while True:
 			d = os.read(f,bsize)
 			if not d: break
 			d = carry + d
 			for i in range(bsize):
-				if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == iv_id:
+				if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == incog_id:
 					if n+i < ivsize: continue
-					msg('\rIncog data for ID {} found at offset {}'.format(iv_id,n+i-ivsize))
+					msg('\rIncog data for ID {} found at offset {}'.format(incog_id,n+i-ivsize))
 					if not keep_searching: sys.exit(0)
 			carry = d[len(d)-ivsize:]
 			n += bsize
@@ -475,7 +540,8 @@ class MMGenToolCmd(object):
 		os.close(f)
 		return True
 
-	def rand2file(self,outfile,nbytes,threads=4,silent=False):
+	def rand2file(self,outfile:str,nbytes:str,threads=4,silent=False):
+		"write 'n' bytes of random data to specified file"
 		nbytes = parse_bytespec(nbytes)
 		from Crypto import Random
 		rh = Random.new()
@@ -533,16 +599,139 @@ class MMGenToolCmd(object):
 		f.close()
 		return True
 
-	def bytespec(self,s):
-		return str(parse_bytespec(s))
+class MMGenToolCmdWallet(MMGenToolCmdBase):
+	"key or address generation from an MMGen wallet"
 
-	def keyaddrlist2monerowallets(self,infile,blockheight=None,addrs=None):
-		return self.monero_wallet_ops(infile=infile,op='create',blockheight=blockheight,addrs=addrs)
+	def gen_key(self,mmgen_addr:str,wallet=''):
+		"generate a single MMGen WIF key from default or specified wallet"
+		return self.gen_addr(mmgen_addr,wallet,target='wif')
 
-	def syncmonerowallets(self,infile,addrs=None):
-		return self.monero_wallet_ops(infile=infile,op='sync',addrs=addrs)
+	def gen_addr(self,mmgen_addr:str,wallet='',target='addr'):
+		"generate a single MMGen address from default or specified wallet"
+		addr = MMGenID(mmgen_addr)
+		sf = get_seed_file([wallet] if wallet else [],1)
+		opt.quiet = True
+		from mmgen.seed import SeedSource
+		ss = SeedSource(sf)
+		if ss.seed.sid != addr.sid:
+			m = 'Seed ID of requested address ({}) does not match wallet ({})'
+			die(1,m.format(addr.sid,ss.seed.sid))
+		al = AddrList(seed=ss.seed,addr_idxs=AddrIdxList(str(addr.idx)),mmtype=addr.mmtype)
+		d = al.data[0]
+		ret = d.sec.wif if target=='wif' else d.addr
+		return ret
 
-	def monero_wallet_ops(self,infile,op,blockheight=None,addrs=None):
+class MMGenToolCmdRPC(MMGenToolCmdBase):
+	"tracking wallet commands using the JSON-RPC interface"
+
+	def getbalance(self,minconf=1,quiet=False,pager=False):
+		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
+		from mmgen.tw import TwGetBalance
+		return TwGetBalance(minconf,quiet).format()
+
+	def listaddress(self,
+					mmgen_addr:str,
+					minconf = 1,
+					pager = False,
+					showempty = True,
+					showbtcaddr = True,
+					age_fmt:'(valid options: days,confs)' = ''):
+		"list the specified MMGen address and its balance"
+		return self.listaddresses(  mmgen_addrs = mmgen_addr,
+									minconf = minconf,
+									pager = pager,
+									showempty = showempty,
+									showbtcaddrs = showbtcaddr,
+									age_fmt = age_fmt)
+
+	def listaddresses(  self,
+						mmgen_addrs:'(range or list)' = '',
+						minconf = 1,
+						showempty = False,
+						pager = False,
+						showbtcaddrs = True,
+						all_labels = False,
+						sort:'(valid options: reverse,age)' = '',
+						age_fmt:'(valid options: days,confs)' = ''):
+		"list MMGen addresses and their balances"
+		show_age = bool(age_fmt)
+
+		if sort:
+			sort = set(sort.split(','))
+			sort_params = set(['reverse','age'])
+			if not sort.issubset(sort_params):
+				die(1,"The sort option takes the following parameters: '{}'".format("','".join(sort_params)))
+
+		usr_addr_list = []
+		if mmgen_addrs:
+			a = mmgen_addrs.rsplit(':',1)
+			if len(a) != 2:
+				m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
+				die(1,m.format(mmgen_addrs))
+			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
+
+		from mmgen.tw import TwAddrList
+		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
+		if not al:
+			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
+		return al.format(showbtcaddrs,sort,show_age,age_fmt or 'days')
+
+	def twview( self,
+				pager = False,
+				reverse = False,
+				wide = False,
+				minconf = 1,
+				sort = 'age',
+				age_fmt:'(valid options: days,confs)' = 'days',
+				show_mmid = True):
+		"view tracking wallet"
+		rpc_init()
+		from mmgen.tw import TwUnspentOutputs
+		tw = TwUnspentOutputs(minconf=minconf)
+		tw.do_sort(sort,reverse=reverse)
+		tw.age_fmt = age_fmt
+		tw.show_mmid = show_mmid
+		return tw.format_for_printing(color=True) if wide else tw.format_for_display()
+
+	def add_label(self,mmgen_or_coin_addr:str,label:str):
+		"add descriptive label for address in tracking wallet"
+		rpc_init()
+		from mmgen.tw import TrackingWallet
+		TrackingWallet(mode='w').add_label(mmgen_or_coin_addr,label,on_fail='raise')
+		return True
+
+	def remove_label(self,mmgen_or_coin_addr:str):
+		"remove descriptive label for address in tracking wallet"
+		self.add_label(mmgen_or_coin_addr,'')
+		return True
+
+	def remove_address(self,mmgen_or_coin_addr:str):
+		"remove an address from tracking wallet"
+		from mmgen.tw import TrackingWallet
+		tw = TrackingWallet(mode='w')
+		ret = tw.remove_address(mmgen_or_coin_addr) # returns None on failure
+		if ret:
+			msg("Address '{}' deleted from tracking wallet".format(ret))
+		return ret
+
+class MMGenToolCmdMonero(MMGenToolCmdBase):
+	"Monero wallet utilities"
+
+	def keyaddrlist2monerowallets(  self,
+									xmr_keyaddrfile:str,
+									blockheight:'(default: current height)' = 0,
+									addrs:'(integer range or list)' = ''):
+		"create Monero wallets from key-address list"
+		return self.monero_wallet_ops(  infile = xmr_keyaddrfile,
+										op = 'create',
+										blockheight = blockheight,
+										addrs = addrs)
+
+	def syncmonerowallets(self,xmr_keyaddrfile:str,addrs:'(integer range or list)'=''):
+		"sync Monero wallets from key-address list"
+		return self.monero_wallet_ops(infile=xmr_keyaddrfile,op='sync',addrs=addrs)
+
+	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs=''):
 
 		def run_cmd(cmd):
 			import subprocess as sp
@@ -607,7 +796,7 @@ class MMGenToolCmd(object):
 				my_sendline(p,'','Y',2)
 				m = '  Warning: {}: blockheight argument is higher than current blockheight'
 				ymsg(m.format(blockheight))
-			elif blockheight != None:
+			elif blockheight:
 				p.logfile = sys.stderr
 			my_expect(p,'Syncing wallet','\[wallet.*$',regex=True)
 			p.logfile = None
@@ -653,7 +842,7 @@ class MMGenToolCmd(object):
 			init_coin('xmr')
 			from mmgen.addr import AddrList
 			al = KeyAddrList(infile)
-			data = [d for d in al.data if addrs == None or d.idx in AddrIdxList(addrs)]
+			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
 			dl = len(data)
 			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
 			gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
@@ -680,9 +869,10 @@ class MMGenToolCmd(object):
 
 		os.environ['LANG'] = 'C'
 		import pexpect
-		if blockheight != None and int(blockheight) < 0:
-			blockheight = 0 # TODO: non-zero coverage
-		cur_height = test_rpc()
+		if blockheight < 0:
+			blockheight = 0 # TODO: handle the non-zero case
+		cur_height = test_rpc() # empty blockchain returns 1
+		from collections import OrderedDict
 		bals = OrderedDict() # locked,unlocked
 
 		try:
@@ -699,92 +889,15 @@ class MMGenToolCmd(object):
 
 		return True
 
-	# ================ RPC commands ================== #
-
-	def gen_addr(self,addr,wallet='',target='addr'):
-		addr = MMGenID(addr)
-		sf = get_seed_file([wallet] if wallet else [],1)
-		opt.quiet = True
-		from mmgen.seed import SeedSource
-		ss = SeedSource(sf)
-		if ss.seed.sid != addr.sid:
-			m = 'Seed ID of requested address ({}) does not match wallet ({})'
-			die(1,m.format(addr.sid,ss.seed.sid))
-		al = AddrList(seed=ss.seed,addr_idxs=AddrIdxList(str(addr.idx)),mmtype=addr.mmtype)
-		d = al.data[0]
-		ret = d.sec.wif if target=='wif' else d.addr
-		return ret
-
-	def gen_key(self,addr,wallet=''):
-		return self.gen_addr(addr,wallet,target='wif')
-
-	def listaddress(self,addr,minconf=1,pager=False,showempty=True,showbtcaddr=True,show_age=False,show_days=None):
-		return self.listaddresses(addrs=addr,minconf=minconf,pager=pager,
-				showempty=showempty,showbtcaddrs=showbtcaddr,show_age=show_age,show_days=show_days)
-
-	def listaddresses(self,addrs='',minconf=1,
-		showempty=False,pager=False,showbtcaddrs=True,all_labels=False,sort=None,show_age=False,show_days=None):
-
-		if show_days == None: show_days = False # user-set show_days triggers show_age
-		else: show_age = True
-
-		if sort:
-			sort = set(sort.split(','))
-			sort_params = set(['reverse','age'])
-			if not sort.issubset(sort_params):
-				die(1,"The sort option takes the following parameters: '{}'".format("','".join(sort_params)))
-
-		usr_addr_list = []
-		if addrs:
-			a = addrs.rsplit(':',1)
-			if len(a) != 2:
-				m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
-				die(1,m.format(addrs))
-			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
-
-		from mmgen.tw import TwAddrList
-		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
-		if not al:
-			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-		return al.format(showbtcaddrs,sort,show_age,show_days)
-
-	def getbalance(self,minconf=1,quiet=False,pager=False):
-		from mmgen.tw import TwGetBalance
-		return TwGetBalance(minconf,quiet).format()
-
-	def txview(self,*infiles,**kwargs):
-		from mmgen.filename import MMGenFileList
-		terse = 'terse' in kwargs and kwargs['terse']
-		sort_key = kwargs['sort'] if 'sort' in kwargs else 'mtime'
-		flist = MMGenFileList(infiles,ftype=MMGenTX)
-		flist.sort_by_age(key=sort_key) # in-place sort
-		from mmgen.term import get_terminal_size
-		sep = '—'*77+'\n'
-		return sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()]).rstrip()
-
-	def twview(self,pager=False,reverse=False,wide=False,minconf=1,sort='age',show_days=True,show_mmid=True):
-		rpc_init()
-		from mmgen.tw import TwUnspentOutputs
-		tw = TwUnspentOutputs(minconf=minconf)
-		tw.do_sort(sort,reverse=reverse)
-		tw.show_days = show_days
-		tw.show_mmid = show_mmid
-		return tw.format_for_printing(color=True) if wide else tw.format_for_display()
-
-	def add_label(self,mmaddr_or_coin_addr,label):
-		rpc_init()
-		from mmgen.tw import TrackingWallet
-		TrackingWallet(mode='w').add_label(mmaddr_or_coin_addr,label,on_fail='raise')
-		return True
-
-	def remove_label(self,mmaddr_or_coin_addr):
-		self.add_label(mmaddr_or_coin_addr,'')
-		return True
-
-	def remove_address(self,mmaddr_or_coin_addr):
-		from mmgen.tw import TrackingWallet
-		tw = TrackingWallet(mode='w')
-		ret = tw.remove_address(mmaddr_or_coin_addr) # returns None on failure
-		if ret:
-			msg("Address '{}' deleted from tracking wallet".format(ret))
-		return ret
+class MMGenToolCmd(
+		MMGenToolCmdMisc,
+		MMGenToolCmdUtil,
+		MMGenToolCmdCoin,
+		MMGenToolCmdMnemonic,
+		MMGenToolCmdFile,
+		MMGenToolCmdFileCrypt,
+		MMGenToolCmdFileUtil,
+		MMGenToolCmdWallet,
+		MMGenToolCmdRPC,
+		MMGenToolCmdMonero,
+	): pass

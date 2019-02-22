@@ -37,6 +37,7 @@ opts_data = lambda: {
 	'options': """
 -h, --help          Print this help message
 -C, --coverage      Produce code coverage info using trace module
+-d, --debug         Produce debugging output (stderr from spawned script)
 --, --longhelp      Print help message for long options (common options)
 -l, --list-cmds     List and describe the tests and commands in this test suite
 -L, --list-names    List the names of all tested 'mmgen-tool' commands
@@ -119,18 +120,6 @@ cmd_data = OrderedDict([
 			])
 		}
 	),
-	('rpc', {
-			'desc': 'Coin daemon RPC commands',
-			'cmd_data': OrderedDict([
-#				('keyaddrfile_chksum', ()), # interactive
-				('addrfile_chksum', ()),
-				('getbalance',      ()),
-				('listaddresses',   ()),
-				('twview',          ()),
-				('txview',          ()),
-			])
-		}
-	),
 ])
 
 cfg = {
@@ -186,30 +175,35 @@ if opt.list_cmds:
 	Msg(fs.format('clean','Clean the tmp directory',w=w))
 	sys.exit(0)
 if opt.list_names:
-	tested_here = []
+	tested_in = {
+		'tooltest.py': [],
+		'test.py': (
+			'encrypt','decrypt','find_incog_data',
+			'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
+			'add_label','remove_label','remove_address','twview',
+			'getbalance','listaddresses','listaddress'),
+		'test-release.sh': ('keyaddrlist2monerowallets','syncmonerowallets'),
+		'tooltest2.py': subprocess.check_output(['test/tooltest2.py','--list-tested-cmds']).decode().split()
+	}
 	for v in cmd_data.values():
-		tested_here += list(v['cmd_data'].keys())
-	msg('{}\n{}'.format(green("Tested 'mmgen-tool' commands:"),'\n'.join(sorted(c.lower() for c in tested_here))))
-	import mmgen.tool
-	tested_in_test_py = (
-		'encrypt','decrypt','find_incog_data',
-		'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
-		'add_label','remove_label','remove_address',
-		'getbalance','listaddresses','listaddress','twview')
-	tested_in_test_release = ('keyaddrlist2monerowallets','syncmonerowallets')
-	tested_in_tooltest2 = subprocess.check_output(['test/tooltest2.py','--list-tested-cmds']).decode().split()
+		tested_in['tooltest.py'] += list(v['cmd_data'].keys())
 
-	ignore = ('help','usage')
-	uc = sorted(c.lower() for c in (
-		set(mmgen.tool.cmd_data.keys()) -
+	msg(green("TESTED 'MMGEN-TOOL' COMMANDS"))
+	for l in ('tooltest.py','tooltest2.py','test.py','test-release.sh'):
+		msg(blue(l+':'))
+		msg('  '+'\n  '.join(sorted(tested_in[l])))
+
+	ignore = ()
+	from mmgen.tool import MMGenToolCmd
+	uc = sorted(
+		set(MMGenToolCmd.user_commands()) -
 		set(ignore) -
-		set(tested_here) -
-		set(tested_in_tooltest2) -
-		set(tested_in_test_py) -
-		set(tested_in_test_release)
-	))
-	msg('\n{}\n{}'.format(yellow('Untested commands:'),'\n'.join(uc)))
-	die()
+		set(tested_in['tooltest.py']) -
+		set(tested_in['tooltest2.py']) -
+		set(tested_in['test.py']) -
+		set(tested_in['test-release.sh'])
+	)
+	die(0,'\n{}\n  {}'.format(yellow('Untested commands:'),'\n  '.join(uc)))
 
 from mmgen.tx import is_wif,is_coin_addr
 
@@ -248,6 +242,9 @@ class MMGenToolTestUtils(object):
 
 		p = subprocess.Popen(sys_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		a,b = p.communicate()
+		if opt.debug:
+			try: dmsg(b.decode())
+			except: dmsg(repr(b))
 		if not binary: a = a.decode()
 		retcode = p.wait()
 		if retcode != 0:
@@ -459,20 +456,6 @@ class MMGenToolTestCmds(object):
 	def mn_printlist(self,name):
 		tu.run_cmd(name,[])
 		ok()
-
-	# RPC
-	def addrfile_chksum(self,name):
-		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['addrfile'].format(altcoin_pfx,tn_ext))
-		tu.run_cmd_out(name,fn,literal=True,chkdata=cfg['addrfile_chk'][g.coin.lower()][g.testnet])
-	def getbalance(self,name):
-		tu.run_cmd_out(name,literal=True)
-	def listaddresses(self,name):
-		tu.run_cmd_out(name,literal=True)
-	def twview(self,name):
-		tu.run_cmd_out(name,literal=True)
-	def txview(self,name):
-		fn = os.path.join(cfg['refdir'],ref_subdir,cfg['txfile'][g.coin.lower()][bool(tn_ext)])
-		tu.run_cmd_out(name,fn,literal=True)
 
 # main()
 import time

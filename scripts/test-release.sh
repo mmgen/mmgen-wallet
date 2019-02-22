@@ -21,11 +21,11 @@ python='python3'
 rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool gen'
+dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
-while getopts hbCfilnPRtvV OPT
+while getopts hbCfilnOPRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -37,6 +37,7 @@ do
 		echo   "           '-i'  Install only; don't run tests"
 		echo   "           '-l'  List the test name symbols"
 		echo   "           '-n'  Don't install; test in place"
+		echo   "           '-O'  Use popen_spawn rather than popen for applicable tests"
 		echo   "           '-P'  Don't pause between tests"
 		echo   "           '-R'  Don't remove temporary files after program has exited"
 		echo   "           '-t'  Print the tests without running them"
@@ -58,6 +59,7 @@ do
 		echo   "     ltc_tn   - litecoin testnet"
 		echo   "     ltc_rt   - litecoin regtest"
 		echo   "     tool     - tooltest (all supported coins)"
+		echo   "     tool2    - tooltest2 (all supported coins)"
 		echo   "     gen      - gentest (all supported coins)"
 		echo   "  By default, all tests are run"
 		exit ;;
@@ -80,6 +82,7 @@ do
 		echo -e "Additional tests:\n  $add_tests"
 		exit ;;
 	n)  NO_INSTALL=1 ;;
+	O)  test_py+=" --popen-spawn" ;;
 	P)  NO_PAUSE=1 ;;
 	R)  NO_TMPFILE_REMOVAL=1 ;;
 	t)  TESTING=1 ;;
@@ -265,7 +268,6 @@ t_btc=(
 	"$test_py --segwit dfl_wallet main ref ref_files"
 	"$test_py --segwit-random dfl_wallet main"
 	"$test_py --bech32 dfl_wallet main ref ref_files"
-	"$tooltest_py rpc"
 	"$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
 f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
 
@@ -275,8 +277,7 @@ t_btc_tn=(
 	"$test_py --testnet=1"
 	"$test_py --testnet=1 --segwit dfl_wallet main ref ref_files"
 	"$test_py --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py --testnet=1 --bech32 dfl_wallet main ref ref_files"
-	"$tooltest_py --testnet=1 rpc")
+	"$test_py --testnet=1 --bech32 dfl_wallet main ref ref_files")
 f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
 i_btc_rt='Bitcoin regtest'
@@ -313,9 +314,7 @@ t_ltc=(
 	"$test_py --coin=ltc dfl_wallet main ref ref_files"
 	"$test_py --coin=ltc --segwit dfl_wallet main ref ref_files"
 	"$test_py --coin=ltc --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc --bech32 dfl_wallet main ref ref_files"
-	"$tooltest_py --coin=ltc rpc"
-)
+	"$test_py --coin=ltc --bech32 dfl_wallet main ref ref_files")
 f_ltc='You may stop the litecoin daemon if you wish'
 
 i_ltc_tn='Litecoin testnet'
@@ -324,8 +323,7 @@ t_ltc_tn=(
 	"$test_py --coin=ltc --testnet=1"
 	"$test_py --coin=ltc --testnet=1 --segwit dfl_wallet main ref ref_files"
 	"$test_py --coin=ltc --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc --testnet=1 --bech32 dfl_wallet main ref ref_files"
-	"$tooltest_py --coin=ltc --testnet=1 rpc")
+	"$test_py --coin=ltc --testnet=1 --bech32 dfl_wallet main ref ref_files")
 f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 
 i_ltc_rt='Litecoin regtest'
@@ -333,10 +331,30 @@ s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_ltc_rt=("$test_py --coin=ltc regtest")
 f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 
+i_tool2='Tooltest2'
+s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
+t_tool2=(
+	"$tooltest2_py --quiet --non-coin-dependent"
+	"$tooltest2_py --quiet --coin=btc --coin-dependent"
+	"$tooltest2_py --quiet --coin=btc --testnet=1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=ltc --coin-dependent"
+	"$tooltest2_py --quiet --coin=ltc --testnet=1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=bch --coin-dependent"
+	"$tooltest2_py --quiet --coin=bch --testnet=1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=zec --coin-dependent"
+	"$tooltest2_py --quiet --coin=zec --type=zcash_z --coin-dependent"
+	"$tooltest2_py --quiet --coin=xmr --coin-dependent"
+	"$tooltest2_py --quiet --coin=dash --coin-dependent"
+	"$tooltest2_py --quiet --coin=eth --coin-dependent"
+	"$tooltest2_py --quiet --coin=eth --testnet=1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=eth --token=mm1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=eth --token=mm1 --testnet=1 --coin-dependent"
+	"$tooltest2_py --quiet --coin=etc --coin-dependent")
+f_tool2='tooltest2 tests completed'
+
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool=(
-	"$tooltest2_py"
 	"$tooltest_py --coin=btc util"
 	"$tooltest_py --coin=btc cryptocoin"
 	"$tooltest_py --coin=btc mnemonic"
