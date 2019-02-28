@@ -75,10 +75,6 @@ def opt_postproc_initializations():
 	from mmgen.term import set_terminal_vars
 	set_terminal_vars()
 
-	# testnet data_dir differs from data_dir_root, so check or create
-	from mmgen.util import msg,die,check_or_create_dir
-	check_or_create_dir(g.data_dir) # dies on error
-
 	from mmgen.color import init_color
 	init_color(enable_color=g.color,num_colors=('auto',256)[bool(g.force_256_color)])
 
@@ -187,13 +183,10 @@ Are you sure you want to continue?
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
-def init(opts_f,add_opts=[],opt_filter=None):
-
-	from mmgen.protocol import CoinProtocol,BitcoinProtocol,init_genonly_altcoins
-	g.proto = BitcoinProtocol # this must be initialized to something before opts_f is called
-
+def get_common_opts_data():
 	# most, but not all, of these set the corresponding global var
-	common_opts_data = """
+	from mmgen.protocol import CoinProtocol
+	return """
 --, --accept-defaults     Accept defaults at all prompts
 --, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
 --, --token=t             Specify an ERC20 token by address or symbol
@@ -216,17 +209,19 @@ def init(opts_f,add_opts=[],opt_filter=None):
 				cu_dfl=g.coin,
 				cu_all=' '.join(CoinProtocol.coins))
 
-	opts_data = opts_f()
-	opts_data['long_options'] = common_opts_data
+def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 
-	version_info = """
-    {pgnm_uc} version {g.version}
-    Part of the {pnm} suite, an online/offline cryptocoin wallet for the command line.
-    Copyright (C) {g.Cdates} {g.author} {g.email}
-	""".format(pnm=g.proj_name, g=g, pgnm_uc=g.prog_name.upper()).strip()
+	from mmgen.protocol import CoinProtocol,BitcoinProtocol,init_genonly_altcoins
+	g.proto = BitcoinProtocol # this must be initialized to something before opts_f is called
+
+	opts_data = opts_f()
+	opts_data['long_options'] = get_common_opts_data()
 
 	uopts,args,short_opts,long_opts,skipped_opts,do_help = \
 		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,skip_help=True)
+
+	if parse_only:
+		return uopts,args,short_opts,long_opts,skipped_opts,do_help
 
 	if g.debug_opts: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
@@ -239,10 +234,17 @@ def init(opts_f,add_opts=[],opt_filter=None):
 				g.required_opts + g.common_opts:
 		setattr(opt,o,uopts[o] if o in uopts else None)
 
-	if opt.version: Die(0,version_info)
+	if opt.version: Die(0,"""
+    {pn} version {g.version}
+    Part of the {g.proj_name} suite, an online/offline cryptocoin wallet for the command line.
+    Copyright (C) {g.Cdates} {g.author} {g.email}
+	""".format(g=g,pn=g.prog_name.upper()).lstrip('\n').rstrip())
 
-	from mmgen.common import set_debug_all
-	set_debug_all()
+
+	if os.getenv('MMGEN_DEBUG_ALL'):
+		for name in g.env_opts:
+			if name[:11] == 'MMGEN_DEBUG':
+				os.environ[name] = '1'
 
 	# === Interaction with global vars begins here ===
 
@@ -294,31 +296,32 @@ def init(opts_f,add_opts=[],opt_filter=None):
 
 	if do_help: # print help screen only after global vars are initialized
 		opts_data = opts_f()
-		opts_data['long_options'] = common_opts_data
+		opts_data['long_options'] = get_common_opts_data()
 		if g.debug_utf8:
 			for k in opts_data:
 				if type(opts_data[k]) == str:
 					opts_data[k] += '-α'
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter)
+		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter) # exits
 
 	if g.bob or g.alice:
 		g.testnet = True
 		g.regtest = True
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
-		check_or_create_dir(g.data_dir)
 		from . import regtest as rt
 		g.rpc_host = 'localhost'
 		g.rpc_port = rt.rpc_port
 		g.rpc_user = rt.rpc_user
 		g.rpc_password = rt.rpc_password
 
+	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so now we can do this
+
 	if g.regtest and hasattr(g.proto,'bech32_hrp_rt'):
 		g.proto.bech32_hrp = g.proto.bech32_hrp_rt
 
 	# Check user-set opts without modifying them
 	if not check_opts(uopts):
-		sys.exit(1)
+		die(1,'Options checking failed')
 
 	if hasattr(g,'cfg_options_changed'):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
@@ -510,7 +513,7 @@ def check_opts(usr_opts):       # Returns false if any check fails
 			except: die(1,m.format(g.proj_name.lower()))
 		elif key == 'locktime':
 			if not opt_is_int(val,desc): return False
-			if not opt_compares(val,'>',0,desc): return False
+			if not opt_compares(int(val),'>',0,desc): return False
 		elif key == 'token':
 			if not 'token' in g.proto.caps:
 				msg("Coin '{}' does not support the --token option".format(g.coin))
