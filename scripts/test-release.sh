@@ -119,20 +119,27 @@ check() {
 	}
 	git diff $BRANCH >/dev/null 2>&1 || exit
 }
-
+uninstall() {
+	set +e
+	eval "$SUDO ./scripts/uninstall-mmgen.py"
+	[ "$?" -ne 0 ] && { echo 'Uninstall failed, but proceeding anyway'; sleep 1; }
+	set -e
+}
 install() {
 	set -x
 	eval "$SUDO rm -rf .test-release"
 	git clone --branch $BRANCH --single-branch . .test-release
-	cd .test-release
-	./setup.py sdist
-	mkdir pydist && cd pydist
-	if [ "$MINGW" ]; then unzip ../dist/mmgen-*.zip; else tar zxvf ../dist/mmgen-*gz; fi
-	cd mmgen-*
-	scripts/deinstall.sh
-
-	[ "$MINGW" ] && ./setup.py build --compiler=mingw32
-	eval "$SUDO ./setup.py install"
+	(
+		cd .test-release
+		./setup.py sdist
+		mkdir pydist && cd pydist
+		if [ "$MINGW" ]; then unzip ../dist/mmgen-*.zip; else tar zxvf ../dist/mmgen-*gz; fi
+		cd mmgen-*
+		eval "$SUDO ./setup.py clean --all"
+		[ "$MINGW" ] && ./setup.py build --compiler=mingw32
+		eval "$SUDO ./setup.py install --force"
+	)
+	set +x
 }
 do_test() {
 	set +x
@@ -396,8 +403,9 @@ f_gen='gentest tests completed'
 
 [ -d .git -a -z "$NO_INSTALL"  -a -z "$TESTING" ] && {
 	check
-	(install)
-	eval "cd .test-release/pydist/mmgen-*"
+	uninstall
+	install
+	cd .test-release/pydist/mmgen-*
 }
 [ "$INSTALL_ONLY" ] && exit
 

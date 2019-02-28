@@ -9,11 +9,9 @@ include test/ref/dash/*
 include test/ref/zcash/*
 include test/ref/monero/*
 
-include scripts/bitcoind-walletunlock.py
 include scripts/compute-file-chksum.py
 include scripts/create-token.py
-include scripts/deinstall.sh
-include scripts/tx-old2new.py
 include scripts/test-release.sh
+include scripts/uninstall-mmgen.py
 
 prune test/ref/__db*
