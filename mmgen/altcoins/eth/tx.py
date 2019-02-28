@@ -25,7 +25,6 @@ from mmgen.common import *
 from mmgen.obj import *
 
 from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX,DeserializedTX,mmaddr2coinaddr
-from mmgen.altcoins.eth.contract import Token
 
 class EthereumMMGenTX(MMGenTX):
 	desc   = 'Ethereum transaction'
@@ -406,8 +405,11 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves ≈{} {} and {} {} in the sender's account"
-		send_acct_tbal = '0' if self.outputs[0].is_chg else \
-				Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
+		if self.outputs[0].is_chg:
+			send_acct_tbal = '0'
+		else:
+			from mmgen.altcoins.eth.contract import Token
+			send_acct_tbal = Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
 		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)
 
 	def get_change_amt(self): # here we know the fee
@@ -427,6 +429,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def make_txobj(self):
 		super(EthereumTokenMMGenTX,self).make_txobj()
+		from mmgen.altcoins.eth.contract import Token
 		t = Token(g.token)
 		o = t.txcreate( self.inputs[0].addr,
 						self.outputs[0].addr,
@@ -439,6 +442,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 	def check_txfile_hex_data(self):
 		d = super(EthereumTokenMMGenTX,self).check_txfile_hex_data()
 		o = self.txobj
+		from mmgen.altcoins.eth.contract import Token
 		if self.check_sigs(): # online, from rlp
 			rpc_init()
 			o['token_addr'] = TokenAddr(o['to'])
@@ -456,6 +460,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			r=super(EthereumTokenMMGenTX,self).format_view_body(*args,**kwargs))
 
 	def do_sign(self,d,wif,tx_num_str):
+		from mmgen.altcoins.eth.contract import Token
 		d = self.txobj
 		t = Token(d['token_addr'],decimals=d['decimals'])
 		tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
