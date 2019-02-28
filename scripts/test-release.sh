@@ -18,14 +18,14 @@ scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
-rounds=100 rounds_low=20 rounds_spec=500 gen_rounds=10
+rounds=100 rounds_low=20 rounds_spec=500 sha_rounds=500 gen_rounds=10
 monero_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
-while getopts hbCfilnOPRtvV OPT
+while getopts hbCfiIlOpRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -34,11 +34,11 @@ do
 		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           '-C'  Run tests in coverage mode"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
-		echo   "           '-i'  Install only; don't run tests"
+		echo   "           '-i'  Create and install Python package, then run tests"
+		echo   "           '-I'  Install the package only; don't run tests"
 		echo   "           '-l'  List the test name symbols"
-		echo   "           '-n'  Don't install; test in place"
-		echo   "           '-O'  Use popen_spawn rather than popen for applicable tests"
-		echo   "           '-P'  Don't pause between tests"
+		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
+		echo   "           '-p'  Pause between tests"
 		echo   "           '-R'  Don't remove temporary files after program has exited"
 		echo   "           '-t'  Print the tests without running them"
 		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with '--verbose' switch"
@@ -74,16 +74,15 @@ do
 		objtest_py="$python $objtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
-		mmgen_keygen="$python $mmgen_keygen"
-		rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
-	f)  rounds=2 rounds_low=2 rounds_spec=2 gen_rounds=2 monero_addrs='3,23,105' ;;
-	i)  INSTALL_ONLY=1 ;;
+		mmgen_keygen="$python $mmgen_keygen" ;&
+	f)  rounds=2 rounds_low=2 rounds_spec=10 sha_rounds=40 gen_rounds=2 monero_addrs='3,23' ;;
+	i)  INSTALL=1 ;;
+	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
 		echo -e "Additional tests:\n  $add_tests"
 		exit ;;
-	n)  NO_INSTALL=1 ;;
-	O)  test_py+=" --popen-spawn" ;;
-	P)  NO_PAUSE=1 ;;
+	O)  test_py+=" --pexpect-spawn" ;;
+	p)  PAUSE=1 ;;
 	R)  NO_TMPFILE_REMOVAL=1 ;;
 	t)  TESTING=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
@@ -102,7 +101,7 @@ REFDIR='test/ref'
 if uname -a | grep -qi mingw; then SUDO='' MINGW=1; else SUDO='sudo' MINGW=''; fi
 [ "$MINGW" ] || RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
 
-[ "$NO_INSTALL" ] || {
+[ "$INSTALL" ] && {
 	BRANCH=$1; shift
 	BRANCHES=$(git branch)
 	FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
@@ -165,7 +164,7 @@ f_obj='Data object test complete'
 
 i_sha256='MMGen sha256 implementation'
 s_sha256='Testing sha256 implementation'
-t_sha256=("$python test/sha256test.py $rounds_spec")
+t_sha256=("$python test/sha256test.py $sha_rounds")
 f_sha256='Sha256 test complete'
 
 i_alts='Gen-only altcoin'
@@ -238,6 +237,11 @@ t_monero=(
 	i=3 end=${#t_monero[*]}
 	while [ $i -lt $end ]; do unset t_monero[$i]; let i++; done
 }
+[ "$monero_addrs" == '3,23' ] && {
+	unset t_monero[12]
+	unset t_monero[7]
+	unset t_monero[3]
+}
 f_monero='Monero tests completed'
 
 i_eth='Ethereum'
@@ -291,7 +295,6 @@ i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt=(
 	"$test_py regtest"
-#	"$test_py regtest_split" # no official B2X support, so skip
 	)
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
@@ -304,16 +307,6 @@ i_bch_rt='Bitcoin cash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt=("$test_py --coin=bch regtest")
 f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
-
-i_b2x='Bitcoin 2X (B2X)'
-s_b2x='The bitcoin 2X daemon (BTC1) must both be running for the following tests'
-t_b2x=("$test_py --coin=b2x dfl_wallet main ref ref_files")
-f_b2x='You may stop the Bitcoin 2X daemon if you wish'
-
-i_b2x_rt='Bitcoin 2X (B2X) regtest'
-s_b2x_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_b2x_rt=("$test_py --coin=b2x regtest")
-f_b2x_rt='Regtest (Bob and Alice) mode tests for B2X completed'
 
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
@@ -401,7 +394,7 @@ t_gen=(
 	"$gentest_py -q --coin=ltc --testnet=1 --type=segwit 1:2 $gen_rounds")
 f_gen='gentest tests completed'
 
-[ -d .git -a -z "$NO_INSTALL"  -a -z "$TESTING" ] && {
+[ -d .git -a -n "$INSTALL"  -a -z "$TESTING" ] && {
 	check
 	uninstall
 	install
@@ -409,7 +402,7 @@ f_gen='gentest tests completed'
 }
 [ "$INSTALL_ONLY" ] && exit
 
-skip_maybe() {
+prompt_skip() {
 	echo -n "Enter 's' to skip, or ENTER to continue: "; read -n1; echo
 	[ "$REPLY" == 's' ] && return 0
 	return 1
@@ -419,7 +412,7 @@ run_tests() {
 	for t in $1; do
 		eval echo -e \${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
 		eval echo -e $(echo \$s_$t)
-		[ "$PAUSE" ] && skip_maybe && continue
+		[ "$PAUSE" ] && prompt_skip && continue
 		CUR_TEST=$t
 		eval "do_test \"\${t_$t[@]}\""
 		eval echo -e \$GREEN$(echo \$f_$t)\$RESET
@@ -434,12 +427,14 @@ check_args() {
 
 tests=$dfl_tests
 [ "$*" ] && tests="$*"
-[ "$NO_PAUSE" ] || PAUSE=1
 
 check_args
 echo "Running tests: $tests"
+START=$(date +%s)
 run_tests "$tests"
+TIME=$(($(date +%s)-START))
+MS=$(printf %02d:%02d $((TIME/60)) $((TIME%60)))
 
 [ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release-*
 
-echo -e "${GREEN}All OK$RESET"
+echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"
