@@ -39,6 +39,8 @@ def ymsg(s):   msg(yellow(s))
 def ymsg_r(s): msg_r(yellow(s))
 def gmsg(s):   msg(green(s))
 def gmsg_r(s): msg_r(green(s))
+def bmsg(s):   msg(blue(s))
+def bmsg_r(s): msg_r(blue(s))
 
 def mmsg(*args):
 	for d in args: Msg(repr(d))
@@ -161,7 +163,7 @@ def dmsg(s):
 	if opt.debug: msg(s)
 
 def suf(arg,suf_type='s'):
-	suf_types = { 's':  ('s',''), 'es': ('es','') }
+	suf_types = { 's':  ('s',''), 'es': ('es',''), 'y': ('ies','y') }
 	assert suf_type in suf_types
 	t = type(arg)
 	if t == int:
@@ -752,12 +754,12 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 	except:
 		die(1,'User input must be UTF-8 encoded.')
 
-def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False):
+def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 
 	from mmgen.term import get_char
 
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
-	p = '{} {}: '.format(prompt,q)
+	p = prompt if complete_prompt else '{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
 	if opt.accept_defaults:
