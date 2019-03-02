@@ -29,7 +29,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
-from mmgen.test import *
+from test.common import *
 
 opts_data = lambda: {
 	'desc': "Test suite for the 'mmgen-tool' utility",
@@ -295,13 +295,21 @@ class MMGenToolTestUtils(object):
 		s = os.urandom(128)
 		fn = name+'.in'
 		write_to_tmpfile(cfg,fn,s,binary=True)
-		ret = self.run_cmd(name,[get_tmpfile_fn(cfg,fn)],strip=strip,add_opts=add_opts)
+		ret = self.run_cmd(name,[get_tmpfile(cfg,fn)],strip=strip,add_opts=add_opts)
 		fn = name+'.out'
 		write_to_tmpfile(cfg,fn,ret+'\n')
 		ok()
 		vmsg('Returned: {}'.format(ret))
 
 tu = MMGenToolTestUtils()
+
+def ok_or_die(val,chk_func,s,skip_ok=False):
+	try: ret = chk_func(val)
+	except: ret = False
+	if ret:
+		if not skip_ok: ok()
+	else:
+		rdie(3,"Returned value '{}' is not a {}".format((val,s)))
 
 class MMGenToolTestCmds(object):
 
@@ -327,6 +335,7 @@ class MMGenToolTestCmds(object):
 		ret2 = tu.run_cmd(name,[s2],extra_msg='spaced input')
 		cmp_or_die(ret1,ret2)
 		vmsg('Returned: {}'.format(ret1))
+		ok()
 	def hash160(self,name):        tu.run_cmd_out(name,getrandhex(16))
 	def hash256(self,name):        tu.run_cmd_out(name,getrandstr(16))
 	def hexreverse(self,name):     tu.run_cmd_out(name,getrandhex(24))
@@ -336,12 +345,14 @@ class MMGenToolTestCmds(object):
 		ret = tu.run_cmd(name,[fn2],strip=False,binary=True)
 		orig = read_from_file(fn1,binary=True)
 		cmp_or_die(orig,ret)
+		ok()
 	def rand2file(self,name):
 		of = name + '.out'
 		dlen = 1024
 		tu.run_cmd(name,[of,str(1024),'threads=4','silent=1'],strip=False)
 		d = read_from_tmpfile(cfg,of,binary=True)
 		cmp_or_die(dlen,len(d))
+		ok()
 
 	# Cryptocoin
 	def randwif(self,name):
@@ -382,6 +393,7 @@ class MMGenToolTestCmds(object):
 			iaddr = read_from_tmpfile(cfg,'randpair{}.out'.format(n+1)).split()[-1]
 			vmsg('Out: {}'.format(ret))
 			cmp_or_die(iaddr,ret)
+			ok()
 	def hex2wif(self,name,f1,f2,f3,f4):
 		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,maybe_compressed)):
 			ao = ['--type='+k] if k else []
@@ -412,11 +424,13 @@ class MMGenToolTestCmds(object):
 		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
 		addr2 = read_from_tmpfile(cfg,'randpair3.out').split()[1]
 		cmp_or_die(addr1,addr2)
+		ok()
 	def wif2redeem_script(self,name,f1,f2,f3): # compare output with above
 		wif = read_from_file(f3).split()[0]
 		ret1 = tu.run_cmd_out(name,wif,add_opts=maybe_type_segwit,fn_idx=3,Return=True)
 		ret2 = read_from_tmpfile(cfg,'pubhex2redeem_script3.out').strip()
 		cmp_or_die(ret1,ret2)
+		ok()
 	def wif2segwit_pair(self,name,f1,f2): # does its own checking, so just run
 		wif = read_from_file(f2).split()[0]
 		tu.run_cmd_out(name,wif,add_opts=maybe_type_segwit,fn_idx=2)
@@ -440,6 +454,7 @@ class MMGenToolTestCmds(object):
 		res = p.stdout.read().decode().strip()
 		addr = read_from_tmpfile(cfg,'wif2addr3.out').strip()
 		cmp_or_die(res,addr)
+		ok()
 
 	# Mnemonic
 	def hex2mn(self,name):
@@ -488,12 +503,12 @@ try:
 			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 			do_cmds(cmd)
 		elif cmd == 'clean':
-			cleandir(cfg['tmpdir'])
+			cleandir(cfg['tmpdir'],do_msg=True)
 			sys.exit(0)
 		else:
 			die(1,"'{}': unrecognized command".format(cmd))
 	else:
-		cleandir(cfg['tmpdir'])
+		cleandir(cfg['tmpdir'],do_msg=True)
 		for cmd in cmd_data:
 			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 			do_cmds(cmd)

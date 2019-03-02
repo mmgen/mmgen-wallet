@@ -17,28 +17,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test.py:  Shared routines for the test suites
+common.py: Shared routines for the test suites
 """
+
+class TestSuiteException(Exception): pass
+class TestSuiteFatalException(Exception): pass
 
 import os
 from binascii import hexlify
-
 from mmgen.common import *
-
-# Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
-def cleandir(d):
-	d_enc = d.encode()
-
-	try:    files = os.listdir(d_enc)
-	except: return
-
-	from shutil import rmtree
-	gmsg("Cleaning directory '{}'".format(d))
-	for f in files:
-		try:
-			os.unlink(os.path.join(d_enc,f))
-		except:
-			rmtree(os.path.join(d_enc,f))
 
 def getrandnum(n): return int(hexlify(os.urandom(n)),16)
 def getrandhex(n): return hexlify(os.urandom(n)).decode()
@@ -52,6 +39,21 @@ def getrandstr(num_chars,no_space=False):
 	if no_space: n,m = 94,33
 	return ''.join([chr(i%n+m) for i in list(os.urandom(num_chars))])
 
+# Windows uses non-UTF8 encodings in filesystem, so use raw bytes here
+def cleandir(d,do_msg=False):
+	d_enc = d.encode()
+
+	try:    files = os.listdir(d_enc)
+	except: return
+
+	from shutil import rmtree
+	if do_msg: gmsg("Cleaning directory '{}'".format(d))
+	for f in files:
+		try:
+			os.unlink(os.path.join(d_enc,f))
+		except:
+			rmtree(os.path.join(d_enc,f))
+
 def mk_tmpdir(d):
 	try: os.mkdir(d,0o755)
 	except OSError as e:
@@ -59,31 +61,33 @@ def mk_tmpdir(d):
 	else:
 		vmsg("Created directory '{}'".format(d))
 
-def mk_tmpdir_path(path,cfg):
-	try:
-		name = os.path.split(cfg['tmpdir'])[-1]
-		src = os.path.join(path,name)
-		try:
-			os.unlink(cfg['tmpdir'])
-		except OSError as e:
-			if e.errno != 2: raise
-		finally:
-			os.mkdir(src)
-			os.symlink(src,cfg['tmpdir'])
-	except OSError as e:
-		if e.errno != 17: raise
-	else: msg("Created directory '{}'".format(cfg['tmpdir']))
+# def mk_tmpdir_path(path,cfg):
+# 	try:
+# 		name = os.path.split(cfg['tmpdir'])[-1]
+# 		src = os.path.join(path,name)
+# 		try:
+# 			os.unlink(cfg['tmpdir'])
+# 		except OSError as e:
+# 			if e.errno != 2: raise
+# 		finally:
+# 			os.mkdir(src)
+# 			os.symlink(src,cfg['tmpdir'])
+# 	except OSError as e:
+# 		if e.errno != 17: raise
+# 	else: msg("Created directory '{}'".format(cfg['tmpdir']))
 
-def get_tmpfile_fn(cfg,fn):
+def get_tmpfile(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 
+def write_to_file(fn,data,binary=False):
+	write_data_to_file( fn,
+						data,
+						silent = True,
+						binary = binary,
+						ignore_opt_outdir = True )
+
 def write_to_tmpfile(cfg,fn,data,binary=False):
-	write_data_to_file(
-		os.path.join(cfg['tmpdir'],fn),
-		data,
-		silent=True,
-		binary=binary,
-		ignore_opt_outdir=True)
+	write_to_file(  os.path.join(cfg['tmpdir'],fn), data=data, binary=binary )
 
 def read_from_file(fn,binary=False):
 	from mmgen.util import get_data_from_file
@@ -92,26 +96,20 @@ def read_from_file(fn,binary=False):
 def read_from_tmpfile(cfg,fn,binary=False):
 	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
 
+def joinpath(*args,**kwargs):
+	return os.path.join(*args,**kwargs)
+
 def ok():
 	if opt.profile: return
 	if opt.verbose or opt.exact_output:
 		gmsg('OK')
 	else: msg(' OK')
 
-def ok_or_die(val,chk_func,s,skip_ok=False):
-	try: ret = chk_func(val)
-	except: ret = False
-	if ret:
-		if not skip_ok: ok()
-	else:
-		rdie(3,"Returned value '{}' is not a {}".format((val,s)))
-
-def cmp_or_die(s,t,skip_ok=False):
-	if s == t:
-		if not skip_ok: ok()
-	else:
-		m = 'ERROR: recoded data:\n{}\ndiffers from original data:\n{}'
-		rdie(3,m.format(repr(t),repr(s)))
+def cmp_or_die(s,t,desc=None):
+	if s != t:
+		m = 'ERROR: recoded data:\n{!r}\ndiffers from original data:\n{!r}'
+		if desc: m = 'For {}:\n{}'.format(desc,m)
+		raise TestSuiteFatalException(m.format(t,s))
 
 def init_coverage():
 	coverdir = os.path.join('test','trace')

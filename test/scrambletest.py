@@ -28,7 +28,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import this _after_ local path's been added to sys.path
 from mmgen.common import *
-from mmgen.test import init_coverage
+from test.common import init_coverage
 
 opts_data = lambda: {
 	'desc': 'Test seed scrambling and addrlist data generation for all supported altcoins',

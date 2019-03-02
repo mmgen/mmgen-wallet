@@ -1,6 +1,7 @@
 include README.md SIGNING_KEYS.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
 include test/*.py
+include test/test_py_d/*.py
 include test/ref/*
 include test/ref/litecoin/*
 include test/ref/ethereum/*

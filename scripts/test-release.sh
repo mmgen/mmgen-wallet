@@ -171,7 +171,7 @@ i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts=(
 	"$scrambletest_py"
-	"$test_py ref_alt"
+	"$test_py ref_altcoin"
 	"$gentest_py --coin=btc 2 $rounds"
 	"$gentest_py --coin=btc --type=compressed 2 $rounds"
 	"$gentest_py --coin=btc --type=segwit 2 $rounds"
@@ -247,9 +247,6 @@ f_monero='Monero tests completed'
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum and Ethereum Classic'
 t_eth=(
-	"$test_py --coin=eth ref_tx_chk"
-	"$test_py --coin=eth --testnet=1 ref_tx_chk"
-	"$test_py --coin=etc ref_tx_chk"
 	"$test_py --coin=eth ethdev"
 	"$test_py --coin=etc ethdev"
 )
@@ -275,10 +272,10 @@ f_autosign_live='Autosign Live test complete'
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc=(
-	"$test_py"
-	"$test_py --segwit dfl_wallet main ref ref_files"
-	"$test_py --segwit-random dfl_wallet main"
-	"$test_py --bech32 dfl_wallet main ref ref_files"
+	"$test_py --exclude regtest"
+	"$test_py --segwit"
+	"$test_py --segwit-random"
+	"$test_py --bech32"
 	"$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1")
 f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
 
@@ -286,9 +283,9 @@ i_btc_tn='Bitcoin testnet'
 s_btc_tn='The bitcoin testnet daemon must both be running for the following tests'
 t_btc_tn=(
 	"$test_py --testnet=1"
-	"$test_py --testnet=1 --segwit dfl_wallet main ref ref_files"
-	"$test_py --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py --testnet=1 --bech32 dfl_wallet main ref ref_files")
+	"$test_py --testnet=1 --segwit"
+	"$test_py --testnet=1 --segwit-random"
+	"$test_py --testnet=1 --bech32")
 f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
 
 i_btc_rt='Bitcoin regtest'
@@ -300,7 +297,7 @@ f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='Bitcoin cash (BCH)'
 s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the following tests'
-t_bch=("$test_py --coin=bch dfl_wallet main ref ref_files")
+t_bch=("$test_py --coin=bch --exclude regtest")
 f_bch='You may stop the Bitcoin ABC daemon if you wish'
 
 i_bch_rt='Bitcoin cash (BCH) regtest'
@@ -311,19 +308,19 @@ f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 i_ltc='Litecoin'
 s_ltc='The litecoin daemon must both be running for the following tests'
 t_ltc=(
-	"$test_py --coin=ltc dfl_wallet main ref ref_files"
-	"$test_py --coin=ltc --segwit dfl_wallet main ref ref_files"
-	"$test_py --coin=ltc --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc --bech32 dfl_wallet main ref ref_files")
+	"$test_py --coin=ltc --exclude regtest"
+	"$test_py --coin=ltc --segwit"
+	"$test_py --coin=ltc --segwit-random"
+	"$test_py --coin=ltc --bech32")
 f_ltc='You may stop the litecoin daemon if you wish'
 
 i_ltc_tn='Litecoin testnet'
 s_ltc_tn='The litecoin testnet daemon must both be running for the following tests'
 t_ltc_tn=(
-	"$test_py --coin=ltc --testnet=1"
-	"$test_py --coin=ltc --testnet=1 --segwit dfl_wallet main ref ref_files"
-	"$test_py --coin=ltc --testnet=1 --segwit-random dfl_wallet main"
-	"$test_py --coin=ltc --testnet=1 --bech32 dfl_wallet main ref ref_files")
+	"$test_py --coin=ltc --testnet=1 --exclude regtest"
+	"$test_py --coin=ltc --testnet=1 --segwit"
+	"$test_py --coin=ltc --testnet=1 --segwit-random"
+	"$test_py --coin=ltc --testnet=1 --bech32")
 f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
 
 i_ltc_rt='Litecoin regtest'

@@ -34,7 +34,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import these _after_ prepending repo_root to sys.path
 from mmgen.common import *
-from mmgen.test import *
+from test.common import *
 from mmgen.obj import is_wif,is_coin_addr
 
 opts_data = lambda: {

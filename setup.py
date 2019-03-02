@@ -138,7 +138,6 @@ setup(
 			'mmgen.seed',
 			'mmgen.sha256',
 			'mmgen.term',
-			'mmgen.test',
 			'mmgen.tool',
 			'mmgen.tw',
 			'mmgen.tx',
