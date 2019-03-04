@@ -403,7 +403,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
 		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 
-		self.txcreate_ui_common(t,self.test_name,
+		self.txcreate_ui_common(t,
 					menu=(['M'],['M','D','m','g'])[self.test_name=='txcreate'],
 					inputs=' '.join(map(str,outputs_list)),
 					add_comment=('',ref_tx_label_lat_cyr_gr)[do_label],
@@ -447,13 +447,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txsend', extra_opts + ['-d',self.tmpdir,sigfile])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		self.txsend_ui_common(t,self.test_name,view='t',add_comment='')
+		self.txsend_ui_common(t,view='t',add_comment='')
 		return t
 
 	def txdo(self,addrfile,wallet):
 		t = self.txcreate_common(sources=['1'],txdo_args=[wallet])
-		self.txsign_ui_common(t,self.test_name,view='n',do_passwd=True)
-		self.txsend_ui_common(t,self.test_name)
+		self.txsign_ui_common(t,view='n',do_passwd=True)
+		self.txsend_ui_common(t)
 		return t
 
 	def _walletconv_export(self,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
@@ -652,8 +652,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
 			t.passphrase('{}'.format(desc),self.cfgs[cnum]['wpasswd'])
 
-		self.txsign_ui_common(t,self.test_name)
-		self.txsend_ui_common(t,self.test_name)
+		self.txsign_ui_common(t)
+		self.txsend_ui_common(t)
 
 		cmd = 'touch ' + joinpath(self.tmpdir,'txdo')
 		os.system(cmd.encode())

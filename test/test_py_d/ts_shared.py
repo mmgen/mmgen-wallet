@@ -30,14 +30,24 @@ from test.common import *
 class TestSuiteShared(object):
 	'shared methods for the test.py test suite'
 
-	def txcreate_ui_common(self,t,caller,
-							menu=[],inputs='1',
-							file_desc='Transaction',
-							input_sels_prompt='to spend',
-							bad_input_sels=False,non_mmgen_inputs=0,
-							interactive_fee='',
-							fee_desc='transaction fee',fee_res=None,eth_fee_res=None,
-							add_comment='',view='t',save=True):
+	def txcreate_ui_common( self,t,
+							caller            = None,
+							menu              = [],
+							inputs            = '1',
+							file_desc         = 'Transaction',
+							input_sels_prompt = 'to spend',
+							bad_input_sels    = False,
+							non_mmgen_inputs  = 0,
+							interactive_fee   = '',
+							fee_desc          = 'transaction fee',
+							fee_res           = None,
+							eth_fee_res       = None,
+							add_comment       = '',
+							view              = 't',
+							save              = True ):
+
+		txdo = (caller or self.test_name)[:4] == 'txdo'
+
 		for choice in menu + ['q']:
 			t.expect(r'\[q\]uit view, .*?:.',choice,regex=True)
 		if bad_input_sels:
@@ -45,7 +55,7 @@ class TestSuiteShared(object):
 				t.expect(input_sels_prompt+': ',r+'\n')
 		t.expect(input_sels_prompt+': ',inputs+'\n')
 
-		if not caller[:4] == 'txdo':
+		if not txdo:
 			for i in range(non_mmgen_inputs):
 				t.expect('Accept? (y/N): ','y')
 
@@ -64,13 +74,14 @@ class TestSuiteShared(object):
 		t.expect('(Y/n): ','\n')     # chg amt OK?
 		t.do_comment(add_comment)
 		t.view_tx(view)
-		if not caller[:4] == 'txdo':
+		if not txdo:
 			t.expect('(y/N): ',('n','y')[save])
 			t.written_to_file(file_desc)
 
 		return t
 
-	def txsign_ui_common(   self,t,caller,
+	def txsign_ui_common(   self,t,
+							caller      = None,
 							view        = 't',
 							add_comment = '',
 							file_desc   = 'Signed transaction',
@@ -78,7 +89,8 @@ class TestSuiteShared(object):
 							save        = True,
 							do_passwd   = False,
 							has_label   = False ):
-		txdo = caller[:4] == 'txdo'
+
+		txdo = (caller or self.test_name)[:4] == 'txdo'
 
 		if do_passwd:
 			t.passphrase('MMGen wallet',self.wpasswd)
@@ -92,7 +104,8 @@ class TestSuiteShared(object):
 
 		return t
 
-	def txsend_ui_common(   self,t,caller,
+	def txsend_ui_common(   self,t,
+							caller       = None,
 							view         = 'n',
 							add_comment  = '',
 							file_desc    = 'Sent transaction',
@@ -101,7 +114,8 @@ class TestSuiteShared(object):
 							quiet        = False,
 							has_label    = False ):
 
-		txdo = caller[:4] == 'txdo'
+		txdo = (caller or self.test_name)[:4] == 'txdo'
+
 		if not txdo:
 			t.license() # MMGEN_NO_LICENSE is set, so does nothing
 			t.view_tx(view)

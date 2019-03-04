@@ -334,7 +334,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
-		self.txcreate_ui_common(t,'txdo',
+		self.txcreate_ui_common(t,
+								caller          = 'txdo',
 								menu            = ['M'],
 								inputs          = outputs_list,
 								file_desc       = 'Signed transaction',
@@ -405,7 +406,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.do_comment(False,has_label=True)
 		t.passphrase('MMGen wallet',rt_pw)
 		t.written_to_file('Signed transaction')
-		self.txsend_ui_common(t,'txdo',bogus_send=False,file_desc='Signed transaction')
+		self.txsend_ui_common(t,caller='txdo',bogus_send=False,file_desc='Signed transaction')
 		t.read()
 		return t
 

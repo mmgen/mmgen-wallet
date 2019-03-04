@@ -328,7 +328,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txcreate', self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
-		return self.txcreate_ui_common( t,self.test_name,menu=menu,
+		return self.txcreate_ui_common( t, menu=menu,
 										input_sels_prompt = 'to spend from',
 										inputs            = acct,
 										file_desc         = 'Ethereum transaction',
@@ -350,7 +350,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 						+ add_args
 						+ ([],['--yes'])[ni]
 						+ ['-k', keyfile, txfile, dfl_words_file] )
-		return self.txsign_ui_common(t,self.test_name,ni=ni,has_label=True)
+		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
 	def txsend(self,ni=False,bogus_send=False,ext='{}.sigtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -358,7 +358,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,self.test_name,quiet=True,bogus_send=bogus_send,has_label=True)
+		txid = self.txsend_ui_common(t,quiet=True,bogus_send=bogus_send,has_label=True)
 		return t
 
 	def txcreate1(self):
@@ -516,12 +516,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			ext = '[0,8000]{}.rawtx'.format('-α' if g.debug_utf8 else '')
 			txfile = self.get_file_with_ext(ext,no_dot=True)
 			t = self.spawn('mmgen-txsign', self.eth_args + ['--yes','-k',keyfile,txfile],no_msg=True)
-			self.txsign_ui_common(t,self.test_name,ni=True)
+			self.txsign_ui_common(t,ni=True)
 			txfile = txfile.replace('.rawtx','.sigtx')
 			t = self.spawn('mmgen-txsend', self.eth_args + [txfile],no_msg=True)
 
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,mmgen_cmd,quiet=True,bogus_send=False)
+		txid = self.txsend_ui_common(t,caller=mmgen_cmd,quiet=True,bogus_send=False)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
 		assert etx.get_exec_status(txid.encode(),True) != 0,(
@@ -618,7 +618,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
 		t = self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
-		return self.txcreate_ui_common( t,self.test_name,
+		return self.txcreate_ui_common( t,
 										menu              = [],
 										inputs            = inputs,
 										input_sels_prompt = 'to spend from',
