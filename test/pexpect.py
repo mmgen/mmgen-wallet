@@ -68,10 +68,11 @@ class MMGenPexpect(object):
 		self.req_exit_val = 0
 		self.skip_ok = False
 
-	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True):
-		self.hash_preset(desc,hp)
+	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
+#		self.hash_preset(desc,hp)
 		self.passphrase(desc,pw)
-		self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
+		if not have_yes_opt:
+			self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
 
 	def view_tx(self,view):
 		self.expect('View.* transaction.*\? .*: ',view,regex=True)

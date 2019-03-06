@@ -95,6 +95,7 @@ class BitcoinProtocol(MMGenObject):
 	bech32_hrp         = 'bc'
 	sign_mode          = 'daemon'
 	secp256k1_ge       = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+	privkey_len        = 32
 
 	@classmethod
 	def is_testnet(cls):
@@ -124,6 +125,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
+		assert len(hexpriv) == cls.privkey_len*2, '{} bytes: incorrect private key length!'.format(len(hexpriv)//2)
 		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + (b'',b'01')[bool(compressed)])
 
 	@classmethod
@@ -405,9 +407,9 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 		def b58dec(addr_str):
 			from mmgen.util import baseconv
-			dec,l = baseconv.tohex,len(addr_str)
-			a = ''.join([dec(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l//11)])
-			b = dec(addr_str[-(l%11):],'b58',pad=10)
+			l = len(addr_str)
+			a = b''.join([baseconv.tohex(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l//11)])
+			b = baseconv.tohex(addr_str[-(l%11):],'b58',pad=10)
 			return a + b
 
 		from mmgen.util import is_b58_str
@@ -417,9 +419,9 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		ret = b58dec(addr)
 		import sha3
 		chk = sha3.keccak_256(unhexlify(ret)[:-4]).hexdigest()[:8]
-		assert chk == ret[-8:],'Incorrect checksum'
+		assert chk.encode() == ret[-8:],'Incorrect checksum'
 
-		return { 'hex': ret.encode(), 'format': 'monero' } if return_dict else True
+		return { 'hex': ret, 'format': 'monero' } if return_dict else True
 
 class MoneroTestnetProtocol(MoneroProtocol):
 	addr_ver_num = { 'monero': (b'35','4'), 'monero_sub': (b'3f','8') } # 53,63

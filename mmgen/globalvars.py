@@ -140,7 +140,7 @@ class g(object):
 		'daemon_data_dir','force_256_color','regtest',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
-		'max_tx_file_size'
+		'max_tx_file_size','max_input_size'
 	)
 	env_opts = (
 		'MMGEN_BOGUS_WALLET_DATA',
@@ -163,6 +163,7 @@ class g(object):
 	min_screen_width = 80
 	minconf = 1
 	max_tx_file_size = 100000
+	max_input_size   = 1024 * 1024
 
 	# Global var sets user opt:
 	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',

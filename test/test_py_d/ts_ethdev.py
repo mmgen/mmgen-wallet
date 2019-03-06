@@ -362,7 +362,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def txcreate1(self):
-		# valid_keypresses = 'adrMmeqpvwl'
+		# valid_keypresses = EthereumTwUnspentOutputs.key_mappings.keys()
 		menu = ['a','d','r','M','D','e','m','m'] # include one invalid keypress, 'D'
 		args = ['98831F3A:E:1,123.456']
 		return self.txcreate(args=args,menu=menu,acct='1',non_mmgen_inputs=1)

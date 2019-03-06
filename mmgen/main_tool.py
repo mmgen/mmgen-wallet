@@ -38,7 +38,7 @@ def make_cmd_help():
 				out.append('')
 		out.append('')
 
-		cls_funcs = bc.user_commands()
+		cls_funcs = bc._user_commands()
 		max_w = max(map(len,cls_funcs))
 		fs = '  {{:{}}} - {{}}'.format(max_w)
 		for func in cls_funcs:
@@ -60,6 +60,8 @@ opts_data = lambda: {
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
+-p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
+                      for password hashing (default: '{g.hash_preset}')
 -P, --passwd-file= f  Get passphrase from file 'f'.
 -q, --quiet           Produce quieter output
 -r, --usr-randchars=n Get 'n' characters of additional randomness from
@@ -95,4 +97,4 @@ args,kwargs = tool._process_args(cmd,cmd_args)
 
 ret = getattr(tc,cmd)(*args,**kwargs)
 
-tool._process_result(ret,to_screen=True,pager='pager' in kwargs and kwargs['pager'])
+tool._process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)

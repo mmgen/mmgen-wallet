@@ -17,8 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-common.py: Shared routines for the test suites
+common.py: Shared routines and data for the MMGen test suites
 """
+
+sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+
+ref_kafile_pass = 'kafile password'
+ref_kafile_hash_preset = '1'
 
 class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass

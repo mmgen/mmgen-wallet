@@ -43,12 +43,15 @@ def _create_call_sig(cmd,parsed=False):
 
 	nargs = len(args) - len(dfls)
 
+	def get_type_from_ann(arg):
+		return ann[arg][1:] + (' or STDIN','')[parsed] if ann[arg] == 'sstr' else ann[arg].__name__
+
 	if parsed:
-		c_args = [(a,'str' if ann[a] == 'sstr' else ann[a].__name__) for a in args[:nargs]]
+		c_args = [(a,get_type_from_ann(a)) for a in args[:nargs]]
 		c_kwargs = [(a,dfls[n]) for n,a in enumerate(args[nargs:])]
 		return c_args,dict(c_kwargs),'STDIN_OK' if c_args and ann[args[0]] == 'sstr' else flag
 	else:
-		c_args = ['{} [{}]'.format(a,'str or STDIN' if ann[a] == 'sstr' else ann[a].__name__) for a in args[:nargs]]
+		c_args = ['{} [{}]'.format(a,get_type_from_ann(a)) for a in args[:nargs]]
 		c_kwargs = ['"{}" [{}={!r}{}]'.format(
 					a, type(dfls[n]).__name__, dfls[n],
 					(' ' + ann[a] if a in ann else ''))
@@ -85,14 +88,14 @@ def _usage(cmd=None,exit_val=1):
 		for bc in MMGenToolCmd.__bases__:
 			cls_info = bc.__doc__.strip().split('\n')[0]
 			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
-			ucmds = bc.user_commands()
+			ucmds = bc._user_commands()
 			max_w = max(map(len,ucmds))
 			for cmd in ucmds:
 				if getattr(MMGenToolCmd,cmd).__doc__:
 					Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
 			Msg('')
 		Msg(m2)
-	elif cmd in MMGenToolCmd.user_commands():
+	elif cmd in MMGenToolCmd._user_commands():
 		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
@@ -101,6 +104,7 @@ def _usage(cmd=None,exit_val=1):
 
 def _process_args(cmd,cmd_args):
 	c_args,c_kwargs,flag = _create_call_sig(cmd,parsed=True)
+	have_stdin_input = False
 
 	if flag != 'VAR_ARGS':
 		if len(cmd_args) < len(c_args):
@@ -115,7 +119,14 @@ def _process_args(cmd,cmd_args):
 			if sys.stdin.isatty():
 				raise BadFilename("Standard input is a TTY.  Can't use '-' as a filename")
 			else:
-				u_args[0] = sys.stdin.read().strip()
+				max_dlen_spec = '10kB' # limit input to 10KB for now
+				max_dlen = MMGenToolCmdUtil().bytespec(max_dlen_spec)
+				u_args[0] = os.read(0,max_dlen)
+# 				try: u_args[0] = u_args[0].decode()
+# 				except: pass
+				have_stdin_input = True
+				if len(u_args[0]) >= max_dlen:
+					die(2,'Maximum data input for this command is {}'.format(max_dlen_spec))
 				if not u_args[0]:
 					die(2,'{}: ERROR: no output from previous command in pipe'.format(cmd))
 
@@ -144,13 +155,19 @@ def _process_args(cmd,cmd_args):
 			_usage(cmd)
 
 	def conv_type(arg,arg_name,arg_type):
-		if arg_type == 'bytes': pdie(arg,arg_name,arg_type)
+		if arg_type == 'bytes' and type(arg) != bytes:
+			die(1,"'Binary input data must be supplied via STDIN")
+
+		if have_stdin_input and arg_type == 'str' and type(arg) == bytes:
+			arg = arg.decode().rstrip('\n')
+
 		if arg_type == 'bool':
 			if arg.lower() in ('true','yes','1','on'): arg = True
 			elif arg.lower() in ('false','no','0','off'): arg = False
 			else:
 				msg("'{}': invalid boolean value for keyword argument".format(arg))
 				_usage(cmd)
+
 		try:
 			return __builtins__[arg_type](arg)
 		except:
@@ -164,24 +181,31 @@ def _process_args(cmd,cmd_args):
 
 	return args,kwargs
 
-def _process_result(ret,to_screen=False,pager=False): # returns a string or string subclass
-	do_ret = not to_screen
+def _process_result(ret,pager=False,print_result=False):
+	"""
+	Convert result to something suitable for output to screen and return it.
+	If result is bytes and not convertible to utf8, output as binary using os.write().
+	If 'print_result' is True, send the converted result directly to screen or
+	pager instead of returning it.
+	"""
+	def triage_result(o):
+		return o if not print_result else do_pager(o) if pager else Msg(o)
+
 	if issubclass(type(ret),str):
-		return ret if do_ret else do_pager(ret) if pager else Msg(ret)
+		return triage_result(ret)
+	elif issubclass(type(ret),int):
+		return triage_result(str(ret))
 	elif type(ret) == tuple:
-		o = '\n'.join([r.decode() if issubclass(type(r),bytes) else r for r in ret])
-		return o if do_ret else do_pager(o) if pager else Msg(o)
+		return triage_result('\n'.join([r.decode() if issubclass(type(r),bytes) else r for r in ret]))
 	elif issubclass(type(ret),bytes):
-		if do_ret:
-			try: return ret.decode()
-			except: return repr(ret)
-		else:
-			try:
-				o = ret.decode()
-				do_pager(o) if pager else Msg(o)
-			except: os.write(1,ret)
+		try:
+			o = ret.decode()
+			return o if not print_result else do_pager(o) if pager else Msg(o)
+		except:
+			# don't add NL to binary data if it can't be converted to utf8
+			return ret if not print_result else os.write(1,ret)
 	elif ret == True:
-		if do_ret: return ''
+		return True
 	elif ret in (False,None):
 		ydie(1,"tool command returned '{}'".format(ret))
 	else:
@@ -202,7 +226,7 @@ dfl_wl_id = 'electrum'
 class MMGenToolCmdBase(object):
 
 	@classmethod
-	def user_commands(cls):
+	def _user_commands(cls):
 		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__]
 
 
@@ -220,7 +244,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def bytespec(self,dd_style_byte_specifier:str):
 		"convert a byte specifier such as '1GB' into an integer"
-		return str(parse_bytespec(dd_style_byte_specifier))
+		return parse_bytespec(dd_style_byte_specifier)
 
 	def randhex(self,nbytes='32'):
 		"print 'n' bytes (default 32) of random data in hex format"
@@ -230,18 +254,22 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		"reverse bytes of a hexadecimal string"
 		return hexlify(unhexlify(hexstr.strip())[::-1])
 
-	def hexlify(self,hexstr:'sstr'):
-		"display string in hexadecimal format"
-		return hexlify(hexstr.encode())
+	def hexlify(self,infile:str):
+		"convert bytes in file to hexadecimal (use '-' for stdin)"
+		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		return hexlify(data)
+
+	def unhexlify(self,hexstr:'sstr'):
+		"convert hexadecimal value to bytes (warning: outputs binary data)"
+		return unhexlify(hexstr.encode())
 
 	def hexdump(self,infile:str,cols=8,line_nums=True):
-		"encode data into formatted hexadecimal form (file or stdin)"
-		return pretty_hexdump(
-				get_data_from_file(infile,dash=True,silent=True,binary=True),
-					cols=cols,line_nums=line_nums)
+		"create hexdump of data from file (use '-' for stdin)"
+		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		return pretty_hexdump(data,cols=cols,line_nums=line_nums).rstrip()
 
 	def unhexdump(self,infile:str):
-		"decode formatted hexadecimal data (file or stdin)"
+		"decode hexdump from file (use '-' for stdin) (warning: outputs binary data)"
 		if g.platform == 'win':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
@@ -258,10 +286,10 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		if file_input:  b = get_data_from_file(string_or_bytes,binary=True)
 		elif hex_input: b = decode_pretty_hexdump(string_or_bytes)
 		else:           b = string_or_bytes
-		return sha256(sha256(b.encode()).digest()).hexdigest()
+		return sha256(sha256(b.encode()).digest()).hexdigest().encode()
 
 	def id6(self,infile:str):
-		"generate 6-character MMGen ID for a file (or stdin)"
+		"generate 6-character MMGen ID for a file (use '-' for stdin)"
 		return make_chksum_6(
 			get_data_from_file(infile,dash=True,silent=True,binary=True))
 
@@ -270,30 +298,30 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		return make_chksum_6(''.join(string.split()))
 
 	def id8(self,infile:str):
-		"generate 8-character MMGen ID for a file (or stdin)"
+		"generate 8-character MMGen ID for a file (use '-' for stdin)"
 		return make_chksum_8(
 			get_data_from_file(infile,dash=True,silent=True,binary=True))
 
-	def b58randenc(self):
-		"generate a random 32-byte number and convert it to base 58"
-		r = get_random(32)
-		return baseconv.b58encode(r,pad=True)
+	def randb58(self,nbytes=32,pad=True):
+		"generate random data (default: 32 bytes) and convert it to base 58"
+		return baseconv.b58encode(get_random(nbytes),pad=pad)
 
-	def strtob58(self,string:'sstr',pad=0):
-		"convert a string to base 58"
-		return baseconv.fromhex(hexlify(string.encode()),'b58',pad,tostr=True)
+	def bytestob58(self,infile:str,pad=0):
+		"convert bytes to base 58 (supply data via STDIN)"
+		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		return baseconv.fromhex(hexlify(data),'b58',pad=pad,tostr=True)
 
-	def b58tostr(self,b58num:'sstr'):
-		"convert a base 58 number to a string"
-		return unhexlify(baseconv.tohex(b58num,'b58'))
+	def b58tobytes(self,b58num:'sstr',pad=0):
+		"convert a base 58 number to bytes (warning: outputs binary data)"
+		return unhexlify(baseconv.tohex(b58num,'b58',pad=pad))
 
 	def hextob58(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to base 58"
-		return baseconv.fromhex(hexstr.encode(),'b58',pad,tostr=True)
+		return baseconv.fromhex(hexstr.encode(),'b58',pad=pad,tostr=True)
 
 	def b58tohex(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to hexadecimal"
-		return baseconv.tohex(b58num,'b58',pad)
+		return baseconv.tohex(b58num,'b58',pad=pad)
 
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal number to base58-check encoding"
@@ -306,11 +334,11 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		return _b58chk_decode(b58chk_num)
 
 	def hextob32(self,hexstr:'sstr',pad=0):
-		"convert a hexadecimal number to base 32"
+		"convert a hexadecimal number to MMGen's flavor of base 32"
 		return baseconv.fromhex(hexstr.encode(),'b32',pad,tostr=True)
 
 	def b32tohex(self,b32num:'sstr',pad=0):
-		"convert a base 32 number to hexadecimal"
+		"convert an MMGen-flavor base 32 number to hexadecimal"
 		return baseconv.tohex(b32num.upper(),'b32',pad)
 
 class MMGenToolCmdCoin(MMGenToolCmdBase):
@@ -353,12 +381,14 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
+		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		init_generators()
 		privhex = PrivKey(wif=wifkey)
 		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
+		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		init_generators()
 		pubhex = kg.to_pubhex(PrivKey(wif=wifkey))
 		addr = ag.to_addr(pubhex)
@@ -378,10 +408,14 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
-		return self.pubhash2addr(hash160(pubkeyhex.encode()).decode())
+		if opt.type == 'segwit':
+			return g.proto.pubhex2segwitaddr(pubkeyhex.encode())
+		else:
+			return self.pubhash2addr(hash160(pubkeyhex.encode()).decode())
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
+		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		return g.proto.pubhex2redeem_script(pubkeyhex)
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
@@ -392,8 +426,8 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 			init_generators('at')
 			return g.proto.pubhash2addr(pubhashhex.encode(),at.addr_fmt=='p2sh')
 
-	def addr2hexaddr(self,addr:'sstr'):
-		"convert coin address from base58 to hex format"
+	def addr2pubhash(self,addr:'sstr'):
+		"convert coin address to public key hash"
 		return g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex']
 
 class MMGenToolCmdMnemonic(MMGenToolCmdBase):
@@ -403,14 +437,11 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
 		computed using a different algorithm and are NOT Electrum-compatible!
 	"""
-	def _do_random_mn(self,nbytes:int,wordlist:str):
+	def _do_random_mn(self,nbytes:int,wordlist_id:str):
+		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
 		hexrand = hexlify(get_random(nbytes))
 		Vmsg('Seed: {}'.format(hexrand))
-		for wl_id in ([wordlist],wordlists)[wordlist=='all']:
-			if wordlist == 'all': # TODO
-				Msg('{} mnemonic:'.format(capfirst(wl_id)))
-			mn = baseconv.fromhex(hexrand,wl_id)
-			return ' '.join(mn)
+		return self.hex2mn(hexrand,wordlist_id=wordlist_id)
 
 	def mn_rand128(self,wordlist=dfl_wl_id):
 		"generate random 128-bit mnemonic"
@@ -424,13 +455,19 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		"generate random 256-bit mnemonic"
 		return self._do_random_mn(32,wordlist)
 
-	def hex2mn(self,hexstr:'sstr',wordlist=dfl_wl_id):
+	def hex2mn(self,hexstr:'sstr',wordlist_id=dfl_wl_id):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
-		return ' '.join(baseconv.fromhex(hexstr.encode(),wordlist))
+		opt.out_fmt = 'words'
+		from mmgen.seed import SeedSource
+		s = SeedSource(seed=unhexlify(hexstr))
+		s._format()
+		return ' '.join(s.ssdata.mnemonic)
 
 	def mn2hex(self,seed_mnemonic:'sstr',wordlist=dfl_wl_id):
 		"convert a 12, 18 or 24-word mnemonic to a hexadecimal number"
-		return baseconv.tohex(seed_mnemonic.split(),wordlist)
+		opt.quiet = True
+		from mmgen.seed import SeedSource
+		return SeedSource(in_data=seed_mnemonic,in_fmt='words').seed.hexdata
 
 	def mn_stats(self,wordlist=dfl_wl_id):
 		"show stats for mnemonic wordlist"
@@ -448,11 +485,15 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 
 	def addrfile_chksum(self,mmgen_addrfile:str):
 		"compute checksum for MMGen address file"
+		opt.yes = True
+		opt.quiet = True
 		from mmgen.addr import AddrList
 		return AddrList(mmgen_addrfile).chksum
 
 	def keyaddrfile_chksum(self,mmgen_keyaddrfile:str):
 		"compute checksum for MMGen key-address file"
+		opt.yes = True
+		opt.quiet = True
 		from mmgen.addr import KeyAddrList
 		return KeyAddrList(mmgen_keyaddrfile).chksum
 

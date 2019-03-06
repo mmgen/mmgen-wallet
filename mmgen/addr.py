@@ -627,15 +627,16 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			ret.append(a)
 
-		if self.has_keys and keypress_confirm('Check key-to-address validity?'):
-			kg = KeyGenerator(self.al_id.mmtype)
-			ag = AddrGenerator(self.al_id.mmtype)
-			llen = len(ret)
-			for n,e in enumerate(ret):
-				msg_r('\rVerifying keys {}/{}'.format(n+1,llen))
-				assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
-					"Key doesn't match address!\n  {}\n  {}".format(e.sec.wif,e.addr))
-			msg(' - done')
+		if self.has_keys:
+			if (hasattr(opt,'yes') and opt.yes) or keypress_confirm('Check key-to-address validity?'):
+				kg = KeyGenerator(self.al_id.mmtype)
+				ag = AddrGenerator(self.al_id.mmtype)
+				llen = len(ret)
+				for n,e in enumerate(ret):
+					qmsg_r('\rVerifying keys {}/{}'.format(n+1,llen))
+					assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
+						"Key doesn't match address!\n  {}\n  {}".format(e.sec.wif,e.addr))
+				qmsg(' - done')
 
 		return ret
 

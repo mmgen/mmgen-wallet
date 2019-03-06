@@ -62,12 +62,8 @@ ref_bw_hash_preset = '1'
 ref_bw_file = 'wallet.mmbrain'
 ref_bw_file_spc = 'wallet-spaced.mmbrain'
 
-ref_kafile_pass = 'kafile password'
-ref_kafile_hash_preset = '1'
-
 ref_enc_fn = 'sample-text.mmenc'
 tool_enc_passwd = "Scrypt it, don't hash it!"
-sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks\n'
 chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 
 def ok_msg():

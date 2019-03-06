@@ -309,7 +309,8 @@ class baseconv(object):
 		if pad:
 			assert type(pad) == bool, "'pad' must be boolean type"
 			d = dict(pad_map)
-			assert len(s) in d, 'Invalid data length for b58{}code(pad=True)'.format(op)
+			m = 'Invalid data length for b58{}code(pad=True) (must be one of {})'
+			assert len(s) in d, m.format(op,repr([e[0] for e in pad_map]))
 			return d[len(s)]
 		else:
 			return None
@@ -349,7 +350,7 @@ class baseconv(object):
 
 		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
 		ret = ('{:0{w}x}'.format(sum(deconv),w=pad or 0))
-		return ('','0')[len(ret) % 2] + ret
+		return (('','0')[len(ret) % 2] + ret).encode() # return bytes, for consistency with hexlify()
 
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
@@ -465,11 +466,10 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 
 def open_file_or_exit(filename,mode,silent=False):
 	try:
-		f = open(filename, mode)
+		return open(filename, mode)
 	except:
 		op = ('writing','reading')['r' in mode]
 		die(2,("Unable to open file '{}' for {}".format(filename,op),'')[silent])
-	return f
 
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
@@ -681,7 +681,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		msg("{} {} '{}'".format(m,desc,fn))
+		qmsg("{} {} '{}'".format(m,desc,fn))
 		from mmgen.crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
@@ -699,18 +699,21 @@ def get_data_from_user(desc='data',silent=False): # user input MUST be UTF-8
 	dmsg('User input: [{}]'.format(data))
 	return data
 
-def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,require_utf8=False):
-	if dash and infile == '-': return sys.stdin.read()
+def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
+
 	if not opt.quiet and not silent and desc:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
-	f = open_file_or_exit(infile,('r','rb')[bool(binary)],silent=silent)
-	data = f.read()
-	f.close()
-	if require_utf8:
-		try:
-			if binary: data = data.decode()
-			else: data.encode()
-		except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
+
+	mode = ('r','rb')[bool(binary)]
+
+	if dash and infile == '-':
+		data = os.fdopen(0,mode).read(g.max_input_size+1)
+	else:
+		data = open_file_or_exit(infile,mode,silent=silent).read(g.max_input_size+1)
+
+	if len(data) == g.max_input_size + 1:
+		raise MaxInputSizeExceeded('Too much input data!  Max input data size: {} bytes'.format(g.max_input_size))
+
 	return data
 
 def pwfile_reuse_warning():

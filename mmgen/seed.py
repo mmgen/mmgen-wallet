@@ -34,6 +34,18 @@ def check_usr_seed_len(seed_len):
 		m = "ERROR: requested seed length ({}) doesn't match seed length of source ({})"
 		die(1,m.format((opt.seed_len,seed_len)))
 
+def is_mnemonic(s):
+	oq_save = opt.quiet
+	opt.quiet = True
+	try:
+		SeedSource(in_data=s,in_fmt='words')
+		ret = True
+	except:
+		ret = False
+	finally:
+		opt.quiet = oq_save
+	return ret
+
 class Seed(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -63,7 +75,9 @@ class SeedSource(MMGenObject):
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False):
+	def __new__(cls,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False,in_data=None,in_fmt=None):
+
+		in_fmt = in_fmt or opt.in_fmt
 
 		def die_on_opt_mismatch(opt,sstype):
 			opt_sstype = cls.fmt_code_to_type(opt)
@@ -86,13 +100,13 @@ class SeedSource(MMGenObject):
 				# permit comma in filename
 				fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1])
 				f = Filename(fn,ftype=IncogWalletHidden)
-			if opt.in_fmt and not ignore_in_fmt:
-				die_on_opt_mismatch(opt.in_fmt,f.ftype)
+			if in_fmt and not ignore_in_fmt:
+				die_on_opt_mismatch(in_fmt,f.ftype)
 			me = super(cls,cls).__new__(f.ftype)
 			me.infile = f
 			me.op = ('old','pwchg_old')[bool(passchg)]
-		elif opt.in_fmt:  # Input format
-			sstype = cls.fmt_code_to_type(opt.in_fmt)
+		elif in_fmt:  # Input format
+			sstype = cls.fmt_code_to_type(in_fmt)
 			me = super(cls,cls).__new__(sstype)
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		else: # Called with no inputs - initialize with random seed
@@ -104,10 +118,11 @@ class SeedSource(MMGenObject):
 
 		return me
 
-	def __init__(self,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False):
+	def __init__(self,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False,in_data=None,in_fmt=None):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
+		self.in_data = in_data
 
 		for c in reversed(self.__class__.__mro__):
 			if hasattr(c,'_msg'):
@@ -116,7 +131,7 @@ class SeedSource(MMGenObject):
 		if hasattr(self,'seed'):
 			self._encrypt()
 			return
-		elif hasattr(self,'infile') or not g.stdin_tty:
+		elif hasattr(self,'infile') or self.in_data or not g.stdin_tty:
 			self._deformat_once()
 			self._decrypt_retry()
 		else:
@@ -130,8 +145,9 @@ class SeedSource(MMGenObject):
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
-			self.fmt_data = get_data_from_file(self.infile.name,self.desc,
-								binary=self.file_mode=='binary',require_utf8=self.require_utf8_input)
+			self.fmt_data = get_data_from_file(self.infile.name,self.desc,binary=self.file_mode=='binary')
+		elif self.in_data:
+			self.fmt_data = self.in_data
 		else:
 			self.fmt_data = self._get_data_from_user(self.desc)
 
@@ -437,7 +453,7 @@ class Mnemonic (SeedSourceUnenc):
 		hexseed = self.seed.hexdata
 
 		mn  = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
-		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn)).encode()
+		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
 
 		# Internal error, so just die on fail
 		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
@@ -459,7 +475,7 @@ class Mnemonic (SeedSourceUnenc):
 				msg('Invalid mnemonic: word #{} is not in the wordlist'.format(n))
 				return False
 
-		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn)).encode()
+		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
 		ret     = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
 
 		if len(hexseed) * 4 not in g.seed_lens:

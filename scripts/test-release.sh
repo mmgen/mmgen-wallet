@@ -331,28 +331,27 @@ f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 i_tool2='Tooltest2'
 s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2=(
-	"$tooltest2_py --quiet --non-coin-dependent"
-	"$tooltest2_py --quiet --coin=btc --coin-dependent"
-	"$tooltest2_py --quiet --coin=btc --testnet=1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=ltc --coin-dependent"
-	"$tooltest2_py --quiet --coin=ltc --testnet=1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=bch --coin-dependent"
-	"$tooltest2_py --quiet --coin=bch --testnet=1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=zec --coin-dependent"
-	"$tooltest2_py --quiet --coin=zec --type=zcash_z --coin-dependent"
-	"$tooltest2_py --quiet --coin=xmr --coin-dependent"
-	"$tooltest2_py --quiet --coin=dash --coin-dependent"
-	"$tooltest2_py --quiet --coin=eth --coin-dependent"
-	"$tooltest2_py --quiet --coin=eth --testnet=1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=eth --token=mm1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=eth --token=mm1 --testnet=1 --coin-dependent"
-	"$tooltest2_py --quiet --coin=etc --coin-dependent")
+	"$tooltest2_py --quiet"
+	"$tooltest2_py --quiet --coin=btc"
+	"$tooltest2_py --quiet --coin=btc --testnet=1"
+	"$tooltest2_py --quiet --coin=ltc"
+	"$tooltest2_py --quiet --coin=ltc --testnet=1"
+	"$tooltest2_py --quiet --coin=bch"
+	"$tooltest2_py --quiet --coin=bch --testnet=1"
+	"$tooltest2_py --quiet --coin=zec"
+	"$tooltest2_py --quiet --coin=zec --type=zcash_z"
+	"$tooltest2_py --quiet --coin=xmr"
+	"$tooltest2_py --quiet --coin=dash"
+	"$tooltest2_py --quiet --coin=eth"
+	"$tooltest2_py --quiet --coin=eth --testnet=1"
+	"$tooltest2_py --quiet --coin=eth --token=mm1"
+	"$tooltest2_py --quiet --coin=eth --token=mm1 --testnet=1"
+	"$tooltest2_py --quiet --coin=etc")
 f_tool2='tooltest2 tests completed'
 
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool=(
-	"$tooltest_py --coin=btc util"
 	"$tooltest_py --coin=btc cryptocoin"
 	"$tooltest_py --coin=btc mnemonic"
 	"$tooltest_py --coin=ltc cryptocoin"

@@ -58,30 +58,6 @@ cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
 
 from collections import OrderedDict
 cmd_data = OrderedDict([
-	('util', {
-			'desc': 'base conversion, hashing and file utilities',
-			'cmd_data': OrderedDict([
-				('strtob58',     ()),
-				('b58tostr',     ('strtob58','io')),
-				('hextob58',     ()),
-				('b58tohex',     ('hextob58','io')),
-				('b58randenc',   ()),
-				('hextob32',     ()),
-				('b32tohex',     ('hextob32','io')),
-				('randhex',      ()),
-				('id6',          ()),
-				('id8',          ()),
-				('str2id6',      ()),
-				('hash160',      ()),
-				('hash256',      ()),
-				('hexreverse',   ()),
-				('hexlify',      ()),
-				('hexdump',      ()),
-				('unhexdump',    ('hexdump','io')),
-				('rand2file',    ()),
-			])
-		}
-	),
 	('cryptocoin', {
 			'desc': 'Cryptocoin address/key commands',
 			'cmd_data': OrderedDict([
@@ -93,9 +69,9 @@ cmd_data = OrderedDict([
 				('privhex2pubhex', ('wif2hex','o3')),        # segwit only
 				('pubhex2addr',    ('privhex2pubhex','o3')), # segwit only
 				('hex2wif',        ('wif2hex','io2')),       # uncomp, comp
-				('addr2hexaddr',   ('randpair','o4'))] +     # uncomp, comp, bech32
+				('addr2pubhash',   ('randpair','o4'))] +     # uncomp, comp, bech32
 			([],[
-				('pubhash2addr',   ('addr2hexaddr','io4'))   # uncomp, comp, bech32
+				('pubhash2addr',   ('addr2pubhash','io4'))   # uncomp, comp, bech32
 			])[opt.type != 'zcash_z'] +
 			([],[
 				('pubhex2redeem_script', ('privhex2pubhex','o3')),
@@ -196,7 +172,7 @@ if opt.list_names:
 	ignore = ()
 	from mmgen.tool import MMGenToolCmd
 	uc = sorted(
-		set(MMGenToolCmd.user_commands()) -
+		set(MMGenToolCmd._user_commands()) -
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
@@ -313,47 +289,6 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 
 class MMGenToolTestCmds(object):
 
-	# Util
-	def strtob58(self,name):       tu.run_cmd_out(name,getrandstr(16))
-	def b58tostr(self,name,f1,f2): tu.run_cmd_chk(name,f1,f2)
-	def hextob58(self,name):       tu.run_cmd_out(name,getrandhex(32))
-	def b58tohex(self,name,f1,f2): tu.run_cmd_chk(name,f1,f2,strip_hex=True)
-	def b58randenc(self,name):
-		ret = tu.run_cmd_out(name,Return=True)
-		ok_or_die(ret,is_b58_str,'base 58 string')
-	def hextob32(self,name):       tu.run_cmd_out(name,getrandhex(24))
-	def b32tohex(self,name,f1,f2): tu.run_cmd_chk(name,f1,f2,strip_hex=True)
-	def randhex(self,name):
-		ret = tu.run_cmd_out(name,Return=True)
-		ok_or_die(ret,binascii.unhexlify,'hex string')
-	def id6(self,name):     tu.run_cmd_randinput(name)
-	def id8(self,name):     tu.run_cmd_randinput(name)
-	def str2id6(self,name):
-		s = getrandstr(120,no_space=True)
-		s2 = ' {} {} {} {} {} '.format(s[:3],s[3:9],s[9:29],s[29:50],s[50:120])
-		ret1 = tu.run_cmd(name,[s],extra_msg='unspaced input'); ok()
-		ret2 = tu.run_cmd(name,[s2],extra_msg='spaced input')
-		cmp_or_die(ret1,ret2)
-		vmsg('Returned: {}'.format(ret1))
-		ok()
-	def hash160(self,name):        tu.run_cmd_out(name,getrandhex(16))
-	def hash256(self,name):        tu.run_cmd_out(name,getrandstr(16))
-	def hexreverse(self,name):     tu.run_cmd_out(name,getrandhex(24))
-	def hexlify(self,name):        tu.run_cmd_out(name,getrandstr(24))
-	def hexdump(self,name): tu.run_cmd_randinput(name,strip=False)
-	def unhexdump(self,name,fn1,fn2):
-		ret = tu.run_cmd(name,[fn2],strip=False,binary=True)
-		orig = read_from_file(fn1,binary=True)
-		cmp_or_die(orig,ret)
-		ok()
-	def rand2file(self,name):
-		of = name + '.out'
-		dlen = 1024
-		tu.run_cmd(name,[of,str(1024),'threads=4','silent=1'],strip=False)
-		d = read_from_tmpfile(cfg,of,binary=True)
-		cmp_or_die(dlen,len(d))
-		ok()
-
 	# Cryptocoin
 	def randwif(self,name):
 		for n,k in enumerate(['',maybe_compressed]):
@@ -398,7 +333,7 @@ class MMGenToolTestCmds(object):
 		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,maybe_compressed)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd_chk(name,fi,fo,add_opts=ao)
-	def addr2hexaddr(self,name,f1,f2,f3,f4):
+	def addr2pubhash(self,name,f1,f2,f3,f4):
 		for n,f,m,ao in (
 			(1,f1,'',[]),
 			(2,f2,'from {}'.format(maybe_compressed),[]),
@@ -418,9 +353,12 @@ class MMGenToolTestCmds(object):
 		tu.run_cmd_out(name,addr,add_opts=maybe_type_compressed,fn_idx=3) # what about uncompressed?
 	def pubhex2redeem_script(self,name,f1,f2,f3): # from above
 		addr = read_from_file(f3).strip()
-		tu.run_cmd_out(name,addr,fn_idx=3)
-		rs = read_from_tmpfile(cfg,name+'3.out').strip()
+		tu.run_cmd_out(name,addr,add_opts=maybe_type_segwit,fn_idx=3)
+		type_save = opt.type
+		opt.type = 'segwit'
+		rs = read_from_tmpfile(cfg,'privhex2pubhex3.out').strip()
 		tu.run_cmd_out('pubhex2addr',rs,add_opts=maybe_type_segwit,fn_idx=3,hush=True)
+		opt.type = type_save
 		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
 		addr2 = read_from_tmpfile(cfg,'randpair3.out').split()[1]
 		cmp_or_die(addr1,addr2)
@@ -440,20 +378,22 @@ class MMGenToolTestCmds(object):
 
 	def pipetest(self,name,f1,f2,f3):
 		wif = read_from_file(f3).split()[0]
-		cmd = ( '{c} {a} wif2hex {wif} | ' +
-				'{c} {a} --type=compressed privhex2pubhex - | ' +
-				'{c} {a} pubhex2redeem_script - | ' +
-				'{c} {a} --type=segwit pubhex2addr -').format(
+		cmd = ( '{c} {a} wif2hex {wif}' +
+				' | {c} {a} --type=compressed privhex2pubhex -' +
+				' | {c} {a} --type=segwit pubhex2redeem_script -' +
+				' | {c} {a} hash160 -' +
+				' | {c} {a} --type=segwit pubhash2addr -').format(
 					c=' '.join(spawn_cmd),
 					a=' '.join(add_spawn_args),
 					wif=wif)
 		test_msg('command piping')
 		if opt.verbose:
 			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
-		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,shell=True)
+		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
 		res = p.stdout.read().decode().strip()
+		p.wait()
 		addr = read_from_tmpfile(cfg,'wif2addr3.out').strip()
-		cmp_or_die(res,addr)
+		cmp_or_die(addr,res)
 		ok()
 
 	# Mnemonic

@@ -32,6 +32,7 @@ class TokenNotInBlockchain(Exception):    mmcode = 2
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3
 class BadTxSizeEstimate(Exception):       mmcode = 3
+class MaxInputSizeExceeded(Exception):    mmcode = 3
 
 # 4: red hl, 'MMGen Fatal Error' + exception + message
 class BadMMGenTxID(Exception):            mmcode = 4

@@ -182,7 +182,8 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	salt  = get_random(_salt_len)
 	iv    = get_random(g.aesctr_iv_len)
 	nonce = get_random(_nonce_len)
-	hp    = hash_preset or get_hash_preset_from_user('3',desc)
+	hp    = hash_preset or (
+		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
 	m     = ('user-requested','default')[hp=='3']
 	vmsg('Encrypting {}'.format(desc))
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
@@ -192,12 +193,13 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
+	vmsg('Preparing to decrypt {}'.format(desc))
 	dstart = _salt_len + g.aesctr_iv_len
 	salt   = data[:_salt_len]
 	iv     = data[_salt_len:dstart]
 	enc_d  = data[dstart:]
-	vmsg('Preparing to decrypt {}'.format(desc))
-	hp = hash_preset or get_hash_preset_from_user('3',desc)
+	hp     = hash_preset or (
+		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
 	m  = ('user-requested','default')[hp=='3']
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_mmgen_passphrase(desc)

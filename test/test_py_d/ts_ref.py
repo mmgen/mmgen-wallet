@@ -108,9 +108,9 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
-		t = self.spawn('mmgen-tool',coin_arg+[tool_cmd,af]+add_args)
+		t = self.spawn('mmgen-tool',coin_arg+['-p1',tool_cmd,af]+add_args)
 		if ftype == 'keyaddr':
-			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass)
+			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
 		rc = self.chk_data[   'ref_' + ftype + 'file_chksum' +
 					('_'+coin.lower() if coin else '') +
 					('_'+mmtype if mmtype else '')]
@@ -161,5 +161,5 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		t.written_to_file('Decrypted data')
 		dec_txt = read_from_file(dec_file)
 		imsg_r(dec_txt)
-		cmp_or_die(sample_text,dec_txt)
+		cmp_or_die(sample_text+'\n',dec_txt) # file adds a newline to sample_text
 		return t

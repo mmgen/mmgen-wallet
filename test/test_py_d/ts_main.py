@@ -277,7 +277,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		out = []
 		for d in tx_data.values():
-			al = adata.addrlist(d['al_id'])
+			al = adata.addrlist(al_id=d['al_id'])
 			for n,(idx,coinaddr) in enumerate(al.addrpairs()):
 				lbl = get_label(do_shuffle=True)
 				out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
@@ -556,7 +556,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			args=['-H','{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def txsign_keyaddr(self,keyaddr_file,txfile):
-		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,'-M',keyaddr_file,txfile])
+		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,'-p1','-M',keyaddr_file,txfile])
 		t.license()
 		t.do_decrypt_ka_data(hp='1',pw=self.kapasswd)
 		t.view_tx('n')
