@@ -69,41 +69,28 @@ mnemonic or seed or a lost seed from the wallet or mnemonic.  Keys from a
 forgotten brainwallet can be recovered from the brainwallet’s corresponding
 wallet file.
 
-***mmgen-txcreate running in an Rxvt terminal window***
-![mmgen-txcreate running in an Rxvt terminal window][9]
+***mmgen-txcreate running in a terminal window***
+![mmgen-txcreate running in a terminal window][9]
 
-#### Why MMGen is not a BIP32 wallet
+#### Simplified key derivation and seed-phrase generation
 
-Most popular wallets today are based on the [BIP32][w] protocol.  But while
-BIP32 is undeniably powerful and flexible, it has two significant weaknesses, in
-our view.  First of all, it relies on elliptic-curve cryptography, which means
-that with the advent of quantum computing, or perhaps the discovery of a
-weakness in the secp256k1 curve, not only will your individual keys be at risk
-but the entire system used to derive them.  Thus an attacker could conceivably
-gain access to all your crypto assets in one fell swoop.  With MMGen you're
-protected against this danger, as its key derivation scheme relies entirely on
-the SHA256 and SHA512 cryptographic hash algorithms, which use no complex math
-and are generally considered quantum-safe.  Incidentally, a nice side-effect of
-MMGen's hash-based KD scheme is that you can [recover your keys from an MMGen
-seed without the MMGen program itself][r] using standard command-line utilities.
+To deterministically derive its keys, MMGen uses a non-hierarchical scheme
+differing from the one used by most of today's popular wallets based on the
+BIP32 protocol.  One advantage of this simple, hash-based scheme is that users
+can easily [recover their private keys from their seed without the MMGen program
+itself][r] using standard command-line utilities.
 
-A second critical weakness of BIP32 is mentioned in the [text of the BIP][w]:
+MMGen also differs from most cryptocurrency wallets today in its use of the
+original 1626-word [Electrum wordlist][ew] for mnemonic seed phrases.  Seed
+phrases are derived using ordinary base conversion, allowing users to recover
+their seeds from them in the absence of the MMGen program itself, should the
+need arise.  An example of how to do this at the Python prompt is provided
+[here.][S]
 
-> *One weakness that may not be immediately obvious, is that knowledge of a
-> parent extended public key plus any non-hardened private key descending from
-> it is equivalent to knowing the parent extended private key (and thus every
-> private and public key descending from it).*
-
-This means that the compromise of a single key could lead to the theft of
-other, **or even all,** of your keys, something that MMGen's hash-based
-derivation scheme once again protects you against.  True, BIP32 does implement
-“hardened” keys to counter this vulnerability, but with their use you lose the
-ability to generate addresses from a master public key, which is the only
-functionality an EC-based wallet provides over a hash-based one in the first
-place.  In which case you might as well be using a hash-based wallet like MMGen
-for the additional security it provides.  As to the master public key feature,
-MMGen makes up for its absence by allowing you to easily generate address lists
-for distribution to potential payers.
+The original Electrum wordlist was derived from a [frequency list][fl] of words
+found in contemporary English poetry.  The high emotional impact of these words
+makes seed phrases easy to memorize.  Curiously, only 861 of them are shared by
+the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 
 ### Download/Install
 
@@ -145,6 +132,10 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [8]: https://github.com/mmgen/MMGenLive
 [9]: https://cloud.githubusercontent.com/assets/6071028/20677261/6ccab1bc-b58a-11e6-8ab6-094f88befef2.jpg
 [r]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software
+[S]: https://github.com/mmgen/mmgen/wiki/Recovering-Your-Keys-Without-the-MMGen-Software#a_mh
 [f]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support
 [z]: https://user-images.githubusercontent.com/6071028/31656274-a35a1252-b31a-11e7-93b7-3d666f50f70f.png
 [w]: https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki
+[ew]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
+[bw]: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
+[fl]: https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
