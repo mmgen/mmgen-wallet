@@ -678,7 +678,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 
 		try:
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
-			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width/2)
+			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width//2)
 			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
 				me = bytes.__new__(cls,hexlify(s))
 			else:

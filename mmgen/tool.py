@@ -418,6 +418,13 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		return g.proto.pubhex2redeem_script(pubkeyhex)
 
+	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
+		"convert a Segwit P2SH-P2WPKH redeem script to an address"
+		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
+		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
+		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
+		return self.pubhash2addr(self.hash160(redeem_scripthex).decode())
+
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
 		if opt.type == 'bech32':

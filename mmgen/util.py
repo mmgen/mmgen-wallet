@@ -77,6 +77,9 @@ def pformat(d):
 def pmsg(*args):
 	if not args: return
 	msg(pformat(args if len(args) > 1 else args[0]))
+def Pmsg(*args):
+	if not args: return
+	Msg(pformat(args if len(args) > 1 else args[0]))
 def pdie(*args,exit_val=1):
 	if not args: sys.exit(1)
 	die(exit_val,(pformat(args if len(args) > 1 else args[0])))

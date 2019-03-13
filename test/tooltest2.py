@@ -372,6 +372,13 @@ tests = {
 					['--type=segwit'], 'opt.type="segwit"' ),
 			],
 		},
+		'redeem_script2addr': {
+			'btc_mainnet': [
+				( ['0014d04134b9ddb7399907657514d846aa495b4e474c'],
+					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
+					['--type=segwit'], 'opt.type="segwit"' ),
+			],
+		},
 		'randpair': {
 			'btc_mainnet': [ ( [], [is_wif,is_coin_addr], ['-r0'] ) ],
 			'btc_testnet': [ ( [], [is_wif,is_coin_addr], ['-r0'] ) ],
