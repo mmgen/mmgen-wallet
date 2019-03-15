@@ -18,10 +18,10 @@ scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
-rounds=100 rounds_low=20 rounds_spec=500 sha_rounds=500 gen_rounds=10
+rounds=100 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj sha256 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='obj sha2 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -45,7 +45,7 @@ do
 		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
-		echo   "     sha256   - MMGen sha256 implementation"
+		echo   "     sha2     - MMGen sha2 implementation"
 		echo   "     alts     - operations for all supported gen-only altcoins"
 		echo   "     monero   - operations for Monero"
 		echo   "     eth      - operations for Ethereum"
@@ -75,7 +75,7 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  rounds=2 rounds_low=2 rounds_spec=10 sha_rounds=40 gen_rounds=2 monero_addrs='3,23' ;;
+	f)  rounds=10 rounds_mid=25 rounds_max=50 monero_addrs='3,23' ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -162,10 +162,12 @@ t_obj=(
 	"$objtest_py --coin=ltc --testnet=1")
 f_obj='Data object test complete'
 
-i_sha256='MMGen sha256 implementation'
-s_sha256='Testing sha256 implementation'
-t_sha256=("$python test/sha256test.py $sha_rounds")
-f_sha256='Sha256 test complete'
+i_sha2='MMGen SHA2 implementation'
+s_sha2='Testing SHA2 implementation'
+t_sha2=(
+	"$python test/sha2test.py sha256 $rounds_max"
+	"$python test/sha2test.py sha512 $rounds_max")
+f_sha2='SHA2 test complete'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
@@ -183,7 +185,7 @@ t_alts=(
 	"$gentest_py --coin=etc 2 $rounds"
 	"$gentest_py --coin=eth 2 $rounds"
 	"$gentest_py --coin=zec 2 $rounds"
-	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_spec"
+	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid"
 
 	"$gentest_py --coin=btc 2:ext $rounds"
 	"$gentest_py --coin=btc --type=compressed 2:ext $rounds"
@@ -194,12 +196,12 @@ t_alts=(
 	"$gentest_py --coin=etc 2:ext $rounds"
 	"$gentest_py --coin=eth 2:ext $rounds"
 	"$gentest_py --coin=zec 2:ext $rounds"
-	"$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_spec"
+	"$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid"
 
-	"$gentest_py --all 2:pycoin $rounds_low"
-	"$gentest_py --all 2:pyethereum $rounds_low"
-	"$gentest_py --all 2:keyconv $rounds_low"
-	"$gentest_py --all 2:zcash_mini $rounds_low")
+	"$gentest_py --all 2:pycoin $rounds"
+	"$gentest_py --all 2:pyethereum $rounds"
+	"$gentest_py --all 2:keyconv $rounds_mid"
+	"$gentest_py --all 2:zcash_mini $rounds_mid")
 if [ "$MINGW" ]; then
 	t_alts[13]="# MSWin platform: skipping zcash z-addr generation and altcoin verification with third-party tools"
 	i=14 end=${#t_alts[*]}
@@ -374,20 +376,20 @@ t_gen=(
 	"$gentest_py -q 2 $REFDIR/btcwallet.dump"
 	"$gentest_py -q --type=segwit 2 $REFDIR/btcwallet-segwit.dump"
 	"$gentest_py -q --type=bech32 2 $REFDIR/btcwallet-bech32.dump"
-	"$gentest_py -q 1:2 $gen_rounds"
-	"$gentest_py -q --type=segwit 1:2 $gen_rounds"
-	"$gentest_py -q --type=bech32 1:2 $gen_rounds"
+	"$gentest_py -q 1:2 $rounds"
+	"$gentest_py -q --type=segwit 1:2 $rounds"
+	"$gentest_py -q --type=bech32 1:2 $rounds"
 	"$gentest_py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump"
-	"$gentest_py -q --testnet=1 1:2 $gen_rounds"
-	"$gentest_py -q --testnet=1 --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --testnet=1 1:2 $rounds"
+	"$gentest_py -q --testnet=1 --type=segwit 1:2 $rounds"
 	"$gentest_py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump"
 	"$gentest_py -q --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump"
 	"$gentest_py -q --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump"
-	"$gentest_py -q --coin=ltc 1:2 $gen_rounds"
-	"$gentest_py -q --coin=ltc --type=segwit 1:2 $gen_rounds"
+	"$gentest_py -q --coin=ltc 1:2 $rounds"
+	"$gentest_py -q --coin=ltc --type=segwit 1:2 $rounds"
 	"$gentest_py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump"
-	"$gentest_py -q --coin=ltc --testnet=1 1:2 $gen_rounds"
-	"$gentest_py -q --coin=ltc --testnet=1 --type=segwit 1:2 $gen_rounds")
+	"$gentest_py -q --coin=ltc --testnet=1 1:2 $rounds"
+	"$gentest_py -q --coin=ltc --testnet=1 --type=segwit 1:2 $rounds")
 f_gen='gentest tests completed'
 
 [ -d .git -a -n "$INSTALL"  -a -z "$TESTING" ] && {

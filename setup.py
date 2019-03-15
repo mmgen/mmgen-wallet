@@ -136,7 +136,7 @@ setup(
 			'mmgen.regtest',
 			'mmgen.rpc',
 			'mmgen.seed',
-			'mmgen.sha256',
+			'mmgen.sha2',
 			'mmgen.term',
 			'mmgen.tool',
 			'mmgen.tw',

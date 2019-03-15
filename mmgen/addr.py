@@ -101,7 +101,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		s = bytearray(s + bytes(32))
 		s[0] |= 0xc0
 		s[32] = t
-		from mmgen.sha256 import Sha256
+		from mmgen.sha2 import Sha256
 		return Sha256(s,preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
