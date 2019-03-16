@@ -522,7 +522,6 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 		from mmgen.tx import MMGenTX
 		flist = MMGenFileList(infiles,ftype=MMGenTX)
 		flist.sort_by_age(key=sort_key) # in-place sort
-		from mmgen.term import get_terminal_size
 		sep = '—'*77+'\n'
 		return sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()]).rstrip()
 

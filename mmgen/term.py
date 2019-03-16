@@ -131,7 +131,6 @@ def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=
 					return ch
 
 def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
-
 	msg_r(prompt)
 	ch = msvcrt.getch()
 	if ord(ch) == 3: raise KeyboardInterrupt
@@ -142,32 +141,13 @@ def _get_keypress_mswin_stub(prompt='',immed_chars='',prehold_protect=None,num_c
 	return sys.stdin.read(1)
 
 def _get_terminal_size_linux():
-
-	def ioctl_GWINSZ(fd):
+	try:
+		return tuple(os.get_terminal_size())
+	except:
 		try:
-			import fcntl
-			cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
-			return cr
+			return (os.environ['LINES'],os.environ['COLUMNS'])
 		except:
-			pass
-
-	cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
-
-	if not cr:
-		try:
-			fd = os.open(os.ctermid(), os.O_RDONLY)
-			cr = ioctl_GWINSZ(fd)
-			os.close(fd)
-		except:
-			pass
-
-	if not cr:
-		try:
-			cr = (os.environ['LINES'], os.environ['COLUMNS'])
-		except:
-			return 80,25
-
-	return int(cr[1]), int(cr[0])
+			return (80,25)
 
 def _get_terminal_size_mswin():
 	import sys,os,struct
