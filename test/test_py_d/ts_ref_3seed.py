@@ -171,9 +171,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		for k,j in self.cmd_group:
 			for n in (1,2,3): # 128,192,256 bits
 				setattr(self,'{}_{}'.format(k,n),getattr(self,k))
-		for n in self.tmpdir_nums:
-			cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
-			cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
+		if cfgs:
+			for n in self.tmpdir_nums:
+				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
+				cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
 		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
 	def ref_wallet_chk(self):

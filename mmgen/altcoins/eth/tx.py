@@ -150,8 +150,8 @@ class EthereumMMGenTX(MMGenTX):
 		o_num = len(self.outputs)
 		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
 		self.make_txobj()
-		ol = [(k,v.decode() if issubclass(type(v),bytes) else str(v)) for k,v in self.txobj.items()]
-		self.hex = json.dumps(dict(ol)).encode()
+		ol = {k: (v.decode() if issubclass(type(v),bytes) else str(v)) for k,v in self.txobj.items()}
+		self.hex = json.dumps(ol).encode()
 		self.update_txid()
 
 	def del_output(self,idx): pass

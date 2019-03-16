@@ -846,7 +846,7 @@ def get_daemon_cfg_options(cfg_keys):
 	try:
 		lines = get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
 		kv_pairs = [l.split('=') for l in lines]
-		cfg = dict([(k,v) for k,v in kv_pairs if k in cfg_keys])
+		cfg = {k:v for k,v in kv_pairs if k in cfg_keys}
 	except:
 		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))
 		cfg = {}

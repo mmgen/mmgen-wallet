@@ -368,7 +368,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
-		o = dict([(e.addr,e.amt) for e in self.outputs])
+		o = {e.addr:e.amt for e in self.outputs}
 		self.hex = HexBytes(g.rpch.createrawtransaction(i,o))
 		self.update_txid()
 
@@ -548,7 +548,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# relative fee is N+<first letter of unit name>
 	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
 		import re
-		units = dict((u[0],u) for u in g.proto.coin_amt.units)
+		units = {u[0]:u for u in g.proto.coin_amt.units}
 		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
 			return g.proto.coin_amt(tx_fee)
@@ -608,7 +608,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def copy_inputs_from_tw(self,tw_unspent_data):
 		txi,self.inputs = self.MMGenTxInput,self.MMGenTxInputList()
 		for d in tw_unspent_data:
-			t = txi(**dict([(attr,getattr(d,attr)) for attr in d.__dict__ if attr in txi.__dict__]))
+			t = txi(**{attr:getattr(d,attr) for attr in d.__dict__ if attr in txi.__dict__})
 			if d.twmmid.type == 'mmgen': t.mmid = d.twmmid # twmmid -> mmid
 			self.inputs.append(t)
 
@@ -641,7 +641,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.inputs.check_coin_mismatch()
 		self.outputs.check_coin_mismatch()
 		def amt_to_str(d):
-			return dict([(k,str(d[k]) if k == 'amt' else d[k]) for k in d])
+			return {k: (str(d[k]) if k == 'amt' else d[k]) for k in d}
 		coin_id = '' if g.coin == 'BTC' else g.coin + ('' if g.coin == g.dcoin else ':'+g.dcoin)
 		lines = [
 			'{}{} {} {} {} {}{}'.format(
@@ -696,7 +696,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		sig_data = []
 		for d in self.inputs:
-			e = dict([(k,getattr(d,k)) for k in ('txid','vout','scriptPubKey','amt')])
+			e = {k:getattr(d,k) for k in ('txid','vout','scriptPubKey','amt')}
 			e['amount'] = e['amt']
 			del e['amt']
 			if d.mmid and d.mmid.mmtype == 'S':

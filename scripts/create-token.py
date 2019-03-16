@@ -203,7 +203,7 @@ def compile_code(code):
 		msg(err)
 	if opt.stdout:
 		o = out.split('\n')
-		return dict((k,o[i+2]) for k in ('SafeMath','Owned','Token') for i in range(len(o)) if k in o[i])
+		return {k:o[i+2] for k in ('SafeMath','Owned','Token') for i in range(len(o)) if k in o[i]}
 	else:
 		vmsg(out)
 

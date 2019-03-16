@@ -177,7 +177,7 @@ def _process_args(cmd,cmd_args):
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
 	else:
 		args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
-	kwargs = dict([(k,conv_type(u_kwargs[k],k,type(c_kwargs[k]).__name__)) for k in u_kwargs])
+	kwargs = {k:conv_type(u_kwargs[k],k,type(c_kwargs[k]).__name__) for k in u_kwargs}
 
 	return args,kwargs
 

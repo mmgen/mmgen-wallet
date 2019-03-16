@@ -364,7 +364,7 @@ def do_between():
 		sys.stderr.write('\n')
 
 def list_tmpdirs():
-	return dict(((k,cfgs[k]['tmpdir']) for k in cfgs))
+	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
 def clean(usr_dirs=None):
 	if opt.skip_deps: return

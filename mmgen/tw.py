@@ -137,7 +137,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				tr_rpc.append(o)
 		self.unspent = self.MMGenTwOutputList(
 						self.MMGenTwUnspentOutput(
-				**dict(i for i in list(o.items()) if i[0] in dir(self.MMGenTwUnspentOutput))
+							**{k:v for k,v in o.items() if k in dir(self.MMGenTwUnspentOutput)}
 						) for o in tr_rpc)
 		for u in self.unspent:
 			if u.label == None: u.label = ''
@@ -630,7 +630,7 @@ class TwGetBalance(MMGenObject):
 		rpc_init()
 		self.minconf = minconf
 		self.quiet = quiet
-		self.data = dict([(k,[g.proto.coin_amt('0')] * 4) for k in ('TOTAL','Non-MMGen','Non-wallet')])
+		self.data = {k:[g.proto.coin_amt('0')] * 4 for k in ('TOTAL','Non-MMGen','Non-wallet')}
 		self.create_data()
 
 	def create_data(self):
@@ -664,10 +664,10 @@ class TwGetBalance(MMGenObject):
 								c=' >={} confirms'.format(self.minconf))
 			for key in sorted(self.data):
 				if not any(self.data[key]): continue
-				o += self.fs.format(**dict(list(zip(
+				o += self.fs.format(**dict(zip(
 							('w','u','p','c'),
 							[key+':'] + [a.fmt(color=True,suf=' '+g.dcoin) for a in self.data[key]]
-							))))
+							)))
 
 		for key,vals in list(self.data.items()):
 			if key == 'TOTAL': continue
