@@ -283,7 +283,7 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 		self.arg_chk(type(self),on_fail)
 		try:
 			if idx_list:
-				return list.__init__(self,sorted(set(AddrIdx(i,on_fail='raise') for i in idx_list)))
+				return list.__init__(self,sorted({AddrIdx(i,on_fail='raise') for i in idx_list}))
 			elif fmt_str:
 				ret = []
 				for i in (fmt_str.split(sep)):

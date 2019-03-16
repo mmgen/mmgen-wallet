@@ -706,7 +706,7 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 
 		if sort:
 			sort = set(sort.split(','))
-			sort_params = set(['reverse','age'])
+			sort_params = {'reverse','age'}
 			if not sort.issubset(sort_params):
 				die(1,"The sort option takes the following parameters: '{}'".format("','".join(sort_params)))
 

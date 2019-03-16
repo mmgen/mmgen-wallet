@@ -60,7 +60,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]
-	sids = set(i.sid for i in mmids)
+	sids = {i.sid for i in mmids}
 	vmsg('Need seed{}: {}'.format(suf(sids,'s'),' '.join(sids)))
 	d = MMGenList()
 	from mmgen.addr import KeyAddrList

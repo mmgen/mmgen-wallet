@@ -669,7 +669,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			'Transaction file size exceeds limit ({} bytes)'.format(g.max_tx_file_size))
 
 	def get_non_mmaddrs(self,desc):
-		return list(set(i.addr for i in getattr(self,desc) if not i.mmid))
+		return {i.addr for i in getattr(self,desc) if not i.mmid}
 
 	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
 
@@ -1329,7 +1329,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
 			if non_mmaddrs and self.caller != 'txdo':
 				msg(self.msg_non_mmgen_inputs.format(
-					', '.join(set(sorted([a.addr.hl() for a in non_mmaddrs])))))
+					', '.join(sorted({a.addr.hl() for a in non_mmaddrs}))))
 				if not (opt.yes or keypress_confirm('Accept?')):
 					continue
 
