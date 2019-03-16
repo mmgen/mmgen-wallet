@@ -73,7 +73,7 @@ def hi(): ymsg('hi')
 
 def pformat(d):
 	import pprint
-	return pprint.PrettyPrinter(indent=4).pformat(d)
+	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
 def pmsg(*args):
 	if not args: return
 	msg(pformat(args if len(args) > 1 else args[0]))

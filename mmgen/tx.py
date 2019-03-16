@@ -604,15 +604,6 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		for e in getattr(self,desc):
 			if hasattr(e,attr): delattr(e,attr)
 
-	def decode_io_oldfmt(self,data):
-		tr = {'amount':'amt', 'address':'addr', 'confirmations':'confs','comment':'label'}
-		tr_rev = dict(map(reversed,list(tr.items())))
-		copy_keys = [tr_rev[k] if k in tr_rev else k for k in self.MMGenTxInput.__dict__]
-		ret = MMGenList(self.MMGenTxInput(**dict([(tr[k] if k in tr else k,d[k])
-					for k in copy_keys if k in d and d[k] != ''])) for d in data)
-		for i in ret: i.sequence = int('0xffffffff',16)
-		return ret
-
 	# inputs methods
 	def copy_inputs_from_tw(self,tw_unspent_data):
 		txi,self.inputs = self.MMGenTxInput,self.MMGenTxInputList()
