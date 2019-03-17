@@ -99,8 +99,7 @@ def get_cfg_template_data():
 				+ (['share'],['local','share'])[g.platform=='linux']
 				+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
 	try:
-		with open(cfg_template,'r') as f:
-			return f.read()
+		return open(cfg_template).read()
 	except:
 		msg("WARNING: configuration template not found at '{}'".format(cfg_template))
 		return ''
@@ -113,15 +112,14 @@ def get_data_from_cfg_file():
 
 	def copy_template_data(fn):
 		try:
-			with open(fn,'wb') as f: f.write(template_data.encode())
+			open(fn,'wb').write(template_data.encode())
 			os.chmod(fn,0o600)
 		except:
 			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
 
 	for k,suf in (('cfg',''),('sample','.sample')):
 		try:
-			with open(g.cfg_file+suf,'rb') as f:
-				data[k] = f.read().decode('utf8')
+			data[k] = open(g.cfg_file+suf,'rb').read().decode()
 		except:
 			if template_data:
 				copy_template_data(g.cfg_file+suf)

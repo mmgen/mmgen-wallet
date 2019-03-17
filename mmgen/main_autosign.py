@@ -325,13 +325,13 @@ def ev_sleep(secs):
 
 def do_led(on,off):
 	if not on:
-		with open(status_ctl,'w') as f: f.write('0\n')
+		open(status_ctl,'w').write('0\n')
 		while True:
 			if ev_sleep(3600): return
 
 	while True:
 		for s_time,val in ((on,255),(off,0)):
-			with open(status_ctl,'w') as f: f.write('{}\n'.format(val))
+			open(status_ctl,'w').write('{}\n'.format(val))
 			if ev_sleep(s_time): return
 
 def set_led(cmd):
@@ -372,9 +372,8 @@ def do_loop():
 
 def check_access(fn,desc='status LED control',init_val=None):
 	try:
-		with open(fn) as f: b = f.read().strip()
-		with open(fn,'w') as f:
-			f.write('{}\n'.format(init_val or b))
+		b = open(fn).read().strip()
+		open(fn,'w').write('{}\n'.format(init_val or b))
 		return True
 	except:
 		m1 = "You do not have access to the {} file\n".format(desc)
@@ -414,7 +413,7 @@ def init_led():
 		sys.exit(1)
 
 	if trigger_ctl:
-		with open(trigger_ctl,'w') as f: f.write('none\n')
+		open(trigger_ctl,'w').write('none\n')
 
 	return status_ctl,trigger_ctl
 
@@ -442,7 +441,7 @@ def at_exit(exit_val,nl=False):
 		ev.set()
 		led_thread.join()
 		if trigger_ctl:
-			with open(trigger_ctl,'w') as f: f.write('mmc0\n')
+			open(trigger_ctl,'w').write('mmc0\n')
 	sys.exit(exit_val)
 
 def handler(a,b): at_exit(1,nl=True)

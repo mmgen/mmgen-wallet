@@ -116,8 +116,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			# make a bad tx file
 			bad_tx = joinpath(mountpoint,'tx','bad.rawtx')
 			if include_bad_tx and not remove_signed_only:
-				with open(bad_tx,'w') as f:
-					f.write('bad tx data')
+				open(bad_tx,'w').write('bad tx data')
 			if not include_bad_tx:
 				try: os.unlink(bad_tx)
 				except: pass

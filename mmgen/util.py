@@ -219,12 +219,11 @@ def capfirst(s): # different from str.capitalize() - doesn't downcase any uc in 
 	return s if len(s) == 0 else s[0].upper() + s[1:]
 
 def decode_timestamp(s):
-# 	with open('/etc/timezone') as f:
-# 		tz_save = f.read().rstrip()
+#	tz_save = open('/etc/timezone').read().rstrip()
 	os.environ['TZ'] = 'UTC'
 	ts = time.strptime(s,'%Y%m%d_%H%M%S')
 	t = time.mktime(ts)
-# 	os.environ['TZ'] = tz_save
+#	os.environ['TZ'] = tz_save
 	return int(t)
 
 def make_timestamp(secs=None):

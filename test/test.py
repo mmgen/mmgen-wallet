@@ -869,9 +869,9 @@ except Exception:
 		print(''.join(traceback.format_exception(*sys.exc_info())))
 		try:
 			os.stat('my.err')
-			with open('my.err') as f:
-				t = f.readlines()
-				if t: msg_r('\n'+yellow(''.join(t[:-1]))+red(t[-1]))
+			t = open('my.err').readlines()
+			if t:
+				msg_r('\n'+yellow(''.join(t[:-1]))+red(t[-1]))
 		except: pass
 		die(1,blue('Test script exited with error'))
 	else:
