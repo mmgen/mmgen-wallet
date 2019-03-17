@@ -30,8 +30,6 @@ import sys,os
 
 class g(object):
 
-	skip_segwit_active_check = bool(os.getenv('MMGEN_TEST_SUITE'))
-
 	def die(ev=0,s=''):
 		if s: sys.stderr.write(s+'\n')
 		sys.exit(ev)
@@ -88,6 +86,7 @@ class g(object):
 	rpc_port             = 0
 	rpc_user             = ''
 	rpc_password         = ''
+	rpc_fail_on_command  = ''
 	rpch                 = None # global RPC handle
 
 	bob                  = False
@@ -95,7 +94,10 @@ class g(object):
 
 	# test suite:
 	bogus_wallet_data    = ''
+	bogus_send           = False
 	debug_utf8           = False
+	traceback            = False
+	test_suite           = False
 
 	for k in ('win','linux'):
 		if sys.platform[:len(k)] == k:
@@ -142,22 +144,31 @@ class g(object):
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
 		'max_tx_file_size','max_input_size'
 	)
+	# Supported environmental vars
+	# The corresponding vars (lowercase, minus 'mmgen_') must be initialized in g
+	# 'DISABLE_' env vars disable the corresponding var in g
 	env_opts = (
+		'MMGEN_DEBUG_ALL', # special: there is no g.debug_all var
+
+		'MMGEN_TEST_SUITE',
 		'MMGEN_BOGUS_WALLET_DATA',
-		'MMGEN_DEBUG_ALL',
+		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_ADDRLIST',
 		'MMGEN_DEBUG_UTF8',
 		'MMGEN_QUIET',
-		'MMGEN_DISABLE_COLOR',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_MIN_URANDCHARS',
 		'MMGEN_NO_LICENSE',
 		'MMGEN_RPC_HOST',
+		'MMGEN_RPC_FAIL_ON_COMMAND',
 		'MMGEN_TESTNET',
-		'MMGEN_REGTEST'
+		'MMGEN_REGTEST',
+		'MMGEN_TRACEBACK',
+
+		'MMGEN_DISABLE_COLOR',
 	)
 
 	min_screen_width = 80

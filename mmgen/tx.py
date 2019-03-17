@@ -89,7 +89,7 @@ def segwit_is_active(exit_on_error=False):
 			and 'segwit' in d['bip9_softforks']
 			and d['bip9_softforks']['segwit']['status'] == 'active'):
 		return True
-	if g.skip_segwit_active_check:
+	if g.test_suite:
 		return True
 	if exit_on_error:
 		die(2,'Segwit not active on this chain.  Exiting')
@@ -731,7 +731,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('OK')
 			return True
 		except Exception as e:
-			if os.getenv('MMGEN_TRACEBACK'):
+			if g.traceback:
 				import traceback
 				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
 			try: m = '{}'.format(e.args[0])
@@ -897,9 +897,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		self.check_hex_tx_matches_mmgen_tx(DeserializedTX(self.hex))
 
-		bogus_send = os.getenv('MMGEN_BOGUS_SEND')
-
-		if self.has_segwit_outputs() and not segwit_is_active() and not bogus_send:
+		if self.has_segwit_outputs() and not segwit_is_active() and not g.bogus_send:
 			m = 'Transaction has MMGen Segwit outputs, but this blockchain does not support Segwit'
 			die(2,m+' at the current height')
 
@@ -911,7 +909,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if prompt_user: self.confirm_send()
 
-		ret = None if bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
+		ret = None if g.bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -932,7 +930,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if exit_on_fail: sys.exit(1)
 			return False
 		else:
-			if bogus_send:
+			if g.bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
 				assert ret == self.coin_txid, 'txid mismatch (after sending)'

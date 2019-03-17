@@ -38,7 +38,7 @@ except:
 
 def _kb_hold_protect_unix():
 
-	if os.getenv('MMGEN_TEST_SUITE'): return
+	if g.test_suite: return
 
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
@@ -64,7 +64,7 @@ def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True,num_chars=5
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
 	immed_chars = immed_chars.encode()
-	if os.getenv('MMGEN_TEST_SUITE'): prehold_protect = False
+	if g.test_suite: prehold_protect = False
 	while True:
 		# Protect against held-down key before read()
 		key = select([sys.stdin], [], [], timeout)[0]

@@ -122,7 +122,8 @@ class InitErrors(object):
 
 	@staticmethod
 	def init_fail(m,on_fail):
-		if os.getenv('MMGEN_TRACEBACK'): on_fail == 'raise'
+		from mmgen.globalvars import g
+		if g.traceback: on_fail == 'raise'
 		from mmgen.util import die,msg
 		if   on_fail == 'silent': return None # TODO: return False instead?
 		elif on_fail == 'raise':  raise ValueError(m)

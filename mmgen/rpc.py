@@ -80,7 +80,7 @@ class CoinDaemonRPCConnection(object):
 	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
 
-		if os.getenv('MMGEN_RPC_FAIL_ON_COMMAND') == cmd:
+		if g.rpc_fail_on_command == cmd:
 			cmd = 'badcommand_' + cmd
 
 		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'raise' }

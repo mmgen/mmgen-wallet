@@ -311,7 +311,7 @@ class EthereumMMGenTX(MMGenTX):
 			msg('OK')
 			return True
 		except Exception as e:
-			if os.getenv('MMGEN_TRACEBACK'):
+			if g.traceback:
 				import traceback
 				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
 			m = "{!r}: transaction signing failed!"
@@ -352,8 +352,6 @@ class EthereumMMGenTX(MMGenTX):
 
 		self.check_correct_chain(on_fail='die')
 
-		bogus_send = os.getenv('MMGEN_BOGUS_SEND')
-
 		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
 
 		if not self.disable_fee_check and fee > g.proto.max_tx_fee:
@@ -364,7 +362,7 @@ class EthereumMMGenTX(MMGenTX):
 
 		if prompt_user: self.confirm_send()
 
-		ret = None if bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
+		ret = None if g.bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -373,8 +371,8 @@ class EthereumMMGenTX(MMGenTX):
 			if exit_on_fail: sys.exit(1)
 			return False
 		else:
-			m = 'BOGUS transaction NOT sent: {}' if bogus_send else 'Transaction sent: {}'
-			if not bogus_send:
+			m = 'BOGUS transaction NOT sent: {}' if g.bogus_send else 'Transaction sent: {}'
+			if not g.bogus_send:
 				assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))

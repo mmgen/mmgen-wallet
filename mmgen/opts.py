@@ -161,11 +161,11 @@ def override_from_env():
 	from mmgen.util import set_for_type
 	for name in g.env_opts:
 		if name == 'MMGEN_DEBUG_ALL': continue
-		idx,invert_bool = ((6,False),(14,True))[name[:14]=='MMGEN_DISABLE_']
+		disable = name[:14] == 'MMGEN_DISABLE_'
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
-		if val: # exclude empty string values too
-			gname = name[idx:].lower()
-			setattr(g,gname,set_for_type(val,getattr(g,gname),name,invert_bool))
+		if val: # exclude empty string values; string value of '0' or 'false' sets variable to False
+			gname = name[(6,14)[disable]:].lower()
+			setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
 
 def warn_altcoins(trust_level):
 	if trust_level == None: return
@@ -176,7 +176,7 @@ responsibility for any loss of funds you may incur.
 This coin's {pn} testing status: {}
 Are you sure you want to continue?
 """.strip().format(g.coin,tl[trust_level],pn=g.proj_name)
-	if os.getenv('MMGEN_TEST_SUITE'):
+	if g.test_suite:
 		msg(m); return
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
