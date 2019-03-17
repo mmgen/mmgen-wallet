@@ -110,13 +110,13 @@ class CoinDaemonRPCConnection(object):
 		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
 
 		ca_type = self.coin_amt_type if hasattr(self,'coin_amt_type') else str
-		from mmgen.obj import CoinTxID,HexBytes
+		from mmgen.obj import HexStr
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self,obj):
 				if isinstance(obj,g.proto.coin_amt):
 					return ca_type(obj)
-				elif isinstance(obj,CoinTxID) or isinstance(obj,HexBytes):
-					return obj.decode()
+				elif isinstance(obj,HexStr):
+					return obj
 				else:
 					return json.JSONEncoder.default(self,obj)
 

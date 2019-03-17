@@ -530,7 +530,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.alice_add_label_badaddr(rt_pw,'Invalid coin address for this chain: '+rt_pw)
 
 	def alice_add_label_badaddr2(self):
-		addr = g.proto.pubhash2addr(b'00'*20,False) # mainnet zero address
+		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
 		return self.alice_add_label_badaddr(addr,'Invalid coin address for this chain: '+addr)
 
 	def alice_add_label_badaddr3(self):
@@ -539,7 +539,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			"MMGen address '{}' not found in tracking wallet".format(addr))
 
 	def alice_add_label_badaddr4(self):
-		addr = CoinProtocol(g.coin,True).pubhash2addr(b'00'*20,False) # testnet zero address
+		addr = CoinProtocol(g.coin,True).pubhash2addr('00'*20,False) # testnet zero address
 		return self.alice_add_label_badaddr(addr,
 			"Address '{}' not found in tracking wallet".format(addr))
 

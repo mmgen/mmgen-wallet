@@ -21,7 +21,6 @@ seed.py:  Seed-related classes and methods for the MMGen suite
 """
 
 import os
-from binascii import hexlify,unhexlify
 
 from mmgen.common import *
 from mmgen.obj import *
@@ -55,7 +54,7 @@ class Seed(MMGenObject):
 			die(3,'{}: invalid seed length'.format(len(seed_bin)))
 
 		self.data      = seed_bin
-		self.hexdata   = hexlify(seed_bin)
+		self.hexdata   = seed_bin.hex()
 		self.sid       = SeedID(seed=self)
 		self.length    = len(seed_bin) * 8
 
@@ -485,7 +484,7 @@ class Mnemonic (SeedSourceUnenc):
 		# Internal error, so just die
 		compare_or_die(' '.join(ret),'recomputed mnemonic',' '.join(mn),'original',e='Internal error')
 
-		self.seed = Seed(unhexlify(hexseed))
+		self.seed = Seed(bytes.fromhex(hexseed))
 		self.ssdata.mnemonic = mn
 
 		check_usr_seed_len(self.seed.length)
@@ -542,7 +541,7 @@ class SeedFile (SeedSourceUnenc):
 
 		return True
 
-class HexSeedFile (SeedSourceUnenc):
+class HexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
 	fmt_codes = 'seedhex','hexseed','hex','mmhex'
@@ -553,7 +552,7 @@ class HexSeedFile (SeedSourceUnenc):
 		h = self.seed.hexdata
 		self.ssdata.chksum = make_chksum_6(h)
 		self.ssdata.hexseed = h
-		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum, split_into_cols(4,h.decode()))
+		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum, split_into_cols(4,h))
 
 	def _deformat(self):
 		desc = self.desc
@@ -582,7 +581,7 @@ class HexSeedFile (SeedSourceUnenc):
 		if not compare_chksums(chk,'file',make_chksum_6(hstr),'computed',verbose=True):
 			return False
 
-		self.seed = Seed(unhexlify(hstr))
+		self.seed = Seed(bytes.fromhex(hstr))
 		self.ssdata.chksum = chk
 		self.ssdata.hexseed = hstr
 
@@ -869,7 +868,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		self.fmt_data = d.iv + encrypt_data(
 							d.salt + d.enc_seed,
 							d.wrapper_key,
-							int(hexlify(d.iv),16),
+							int(d.iv.hex(),16),
 							self.desc)
 #		print len(self.fmt_data)
 
@@ -923,7 +922,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		# IV is used BOTH to initialize counter and to salt password!
 		key = make_key(d.passwd, d.iv, d.hash_preset, 'wrapper key')
 		dd = decrypt_data(d.enc_incog_data, key,
-				int(hexlify(d.iv),16), 'incog data')
+				int(d.iv.hex(),16), 'incog data')
 
 		d.salt     = dd[0:g.salt_len]
 		d.enc_seed = dd[g.salt_len:]

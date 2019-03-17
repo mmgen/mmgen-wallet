@@ -22,7 +22,6 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 
 import sys,os,time,stat,re,unicodedata
 from hashlib import sha256
-from binascii import hexlify,unhexlify
 from string import hexdigits,digits
 from mmgen.color import *
 from mmgen.exception import *
@@ -260,8 +259,6 @@ def is_int(s):
 
 # https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 # https://tools.ietf.org/html/rfc4648
-def is_hex_bytes(s):  return set(list(s.lower())) <= set(list(hexdigits.lower().encode()))
-
 def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
 def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
 def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))
@@ -298,12 +295,12 @@ class baseconv(object):
 	@classmethod
 	def b58encode(cls,s,pad=None):
 		pad = cls.get_pad(s,pad,'en',cls.b58pad_lens,[bytes])
-		return cls.fromhex(hexlify(s),'b58',pad=pad,tostr=True)
+		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
 
 	@classmethod
 	def b58decode(cls,s,pad=None):
 		pad = cls.get_pad(s,pad,'de',cls.b58pad_lens_rev,[bytes,str])
-		return unhexlify(cls.tohex(s,'b58',pad=pad*2 if pad else None))
+		return bytes.fromhex(cls.tohex(s,'b58',pad=pad*2 if pad else None))
 
 	@staticmethod
 	def get_pad(s,pad,op,pad_map,ok_types):
@@ -353,13 +350,13 @@ class baseconv(object):
 
 		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
 		ret = ('{:0{w}x}'.format(sum(deconv),w=pad or 0))
-		return (('','0')[len(ret) % 2] + ret).encode() # return bytes, for consistency with hexlify()
+		return (('','0')[len(ret) % 2] + ret)
 
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
 
-		if not is_hex_str(hexnum.decode()):
-			die(2,"'{}': not a hexadecimal number".format(hexnum.decode()))
+		if not is_hex_str(hexnum):
+			die(2,"{!r}: not a hexadecimal number".format(hexnum))
 
 		wl = cls.digits[wl_id]
 		base = len(wl)
@@ -411,7 +408,7 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
 	return ''.join(
 		[
 			('' if (line_nums == False or i % cols) else '{:06x}: '.format(i*gw)) +
-				hexlify(data[i*gw:i*gw+gw]).decode() + ('\n',' ')[bool((i+1) % cols)]
+				data[i*gw:i*gw+gw].hex() + ('\n',' ')[bool((i+1) % cols)]
 					for i in range(len(data)//gw + r)
 		]
 	).rstrip() + '\n'
@@ -421,7 +418,7 @@ def decode_pretty_hexdump(data):
 	pat = r'^[{}]+:\s+'.format(hexdigits)
 	lines = [re.sub(pat,'',l) for l in data.splitlines()]
 	try:
-		return unhexlify(''.join((''.join(lines).split())))
+		return bytes.fromhex(''.join((''.join(lines).split())))
 	except:
 		msg('Data not in hexdump format')
 		return False

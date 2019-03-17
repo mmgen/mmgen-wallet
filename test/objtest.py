@@ -25,8 +25,6 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
-from binascii import hexlify
-
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import *
@@ -162,20 +160,16 @@ tests = OrderedDict([
 			'F00BAA12:S:9999999 comment',
 			tw_pfx+'x comment')
 	}),
-	('HexBytes', {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00'),
-		'good': ('deadbeef','f00baa12')
-	}),
 	('MMGenTxID', {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012'),
 		'good': ('DEADBE','F00BAA')
 	}),
 	('CoinTxID',{
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',hexlify(r16),hexlify(r32)+b'ee'),
-		'good': (hexlify(r32),)
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',r16.hex(),r32.hex()+'ee'),
+		'good': (r32.hex(),)
 	}),
 	('WifKey', {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',hexlify(r16),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
 		'good': {
 			'btc': (('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
 					'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
@@ -211,8 +205,8 @@ tests = OrderedDict([
 					{'wif':'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
 					'ret':'94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c'})),
 				}[g.coin.lower()][bool(g.testnet)],
-			{'s':r32,'compressed':False,'pubkey_type':'std','ret':hexlify(r32)},
-			{'s':r32,'compressed':True,'pubkey_type':'std','ret':hexlify(r32)}
+			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
+			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
 		)
 	}),
 	('AddrListID', { # a rather pointless test, but do it anyway

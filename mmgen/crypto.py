@@ -20,7 +20,6 @@
 crypto.py:  Cryptographic and related routines for the MMGen suite
 """
 
-from binascii import hexlify
 from hashlib import sha256
 
 from mmgen.common import *
@@ -46,7 +45,7 @@ def scramble_seed(seed,scramble_key,hash_rounds):
 	import hmac
 	scr_seed = hmac.new(seed,scramble_key,sha256).digest()
 	fs = 'Seed:  {}\nScramble key: {}\nScrambled seed: {}'
-	dmsg(fs.format(hexlify(seed),scramble_key.decode('utf8'),hexlify(scr_seed)))
+	dmsg(fs.format(seed.hex(),scramble_key.decode(),scr_seed.hex()))
 	return sha256_rounds(scr_seed,hash_rounds)
 
 def encrypt_seed(seed,key):
@@ -77,7 +76,7 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 #	else:
 #		qmsg('Generated IDs (Seed/Key): {}/{}'.format(chk2,chk1))
 
-	dmsg('Decrypted seed: {}'.format(hexlify(dec_seed)))
+	dmsg('Decrypted seed: {}'.format(dec_seed.hex()))
 	return dec_seed
 
 def encrypt_data(data,key,iv=1,desc='data',verify=True):
@@ -120,7 +119,7 @@ def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase
 		msg_r('Generating {}{}...'.format(desc,from_what))
 	key = scrypt_hash_passphrase(passwd,salt,hash_preset)
 	if opt.verbose or verbose: msg('done')
-	dmsg('Key: {}'.format(hexlify(key)))
+	dmsg('Key: {}'.format(key.hex()))
 	return key
 
 def _get_random_data_from_user(uchars):
@@ -189,7 +188,7 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_new_passphrase(desc,{})
 	key    = make_key(passwd,salt,hp)
-	enc_d  = encrypt_data(sha256(nonce+data).digest()+nonce+data,key,int(hexlify(iv),16),desc=desc)
+	enc_d  = encrypt_data(sha256(nonce+data).digest()+nonce+data,key,int(iv.hex(),16),desc=desc)
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
@@ -204,7 +203,7 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_mmgen_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
-	dec_d  = decrypt_data(enc_d,key,int(hexlify(iv),16),desc)
+	dec_d  = decrypt_data(enc_d,key,int(iv.hex(),16),desc)
 	if dec_d[:_sha256_len] == sha256(dec_d[_sha256_len:]).digest():
 		vmsg('OK')
 		return dec_d[_sha256_len+_nonce_len:]

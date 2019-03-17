@@ -20,7 +20,6 @@ test/sha2test.py: Test MMGen's SHA256 and SHA512 implementations
 """
 
 import sys,os
-from binascii import hexlify
 from mmgen.sha2 import Sha256,Sha512
 from mmgen.util import die
 
@@ -47,10 +46,11 @@ class TestSha2(object):
 
 	def compare_hashes(self,dlen,data):
 		import hashlib
-		sha2 = getattr(hashlib,self.desc)(data).hexdigest().encode()
-		my_sha2 = self.t_cls(data).hexdigest()
-		if my_sha2 != sha2:
-			die(3,'Hashes do not match!\nmy_sha2: {}\nsha2: {}\n'.format(my_sha2,sha2))
+		sha2_ref = getattr(hashlib,self.desc)(data).hexdigest()
+		ret = self.t_cls(data).hexdigest()
+		if ret != sha2_ref:
+			m ='\nHashes do not match!\nReference {d}: {}\nMMGen {d}:     {}'
+			die(3,m.format(sha2_ref,ret,d=self.desc.upper()))
 
 	def test_ref(self,input_n=None):
 
@@ -77,7 +77,7 @@ class TestSha2(object):
 		for i in range(rounds):
 			if i+1 in (1,rounds) or not (i+1) % 10:
 				msg('\rTesting random input data:    {:4}/{} '.format(i+1,rounds))
-			dlen = int(hexlify(os.urandom(4)),16) >> 18
+			dlen = int(os.urandom(4).hex(),16) >> 18
 			self.compare_hashes(dlen,os.urandom(dlen))
 		msg('OK\n')
 

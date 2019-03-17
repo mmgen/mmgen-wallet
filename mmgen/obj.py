@@ -24,7 +24,6 @@ import sys,os,unicodedata
 from decimal import *
 from mmgen.color import *
 from string import hexdigits,ascii_letters,digits
-from binascii import hexlify
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -562,20 +561,19 @@ class TwLabel(str,InitErrors,MMGenObject):
 			m = "{}\n{!r}: value cannot be converted to TwLabel"
 			return cls.init_fail(m.format(e.args[0],s),on_fail)
 
-class HexBytes(bytes,Hilite,InitErrors):
+class HexStr(str,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
-	dtype = bytes
+	dtype = str
 	def __new__(cls,s,on_fail='die',case='lower'):
 		if type(s) == cls: return s
 		assert case in ('upper','lower')
 		cls.arg_chk(cls,on_fail)
-		if issubclass(type(s),bytes): s = s.decode()
 		try:
-			assert type(s) == str,'not a string'
+			assert issubclass(type(s),str),'not a string or string subclass'
 			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
 			assert not len(s) % 2,'odd-length string'
-			return cls.dtype.__new__(cls,s.encode() if cls.dtype == bytes else s)
+			return cls.dtype.__new__(cls,s)
 		except Exception as e:
 			m = "{!r}: value cannot be converted to {} (value is {})"
 			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
@@ -583,11 +581,11 @@ class HexBytes(bytes,Hilite,InitErrors):
 class Str(str,Hilite): pass
 class Int(int,Hilite): pass
 
-class HexBytesWithWidth(HexBytes):
+class HexStrWithWidth(HexStr):
 	color = 'nocolor'
 	hexcase = 'lower'
 	width = None
-	parent_cls = HexBytes
+	parent_cls = HexStr
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(cls,on_fail)
 		try:
@@ -598,23 +596,7 @@ class HexBytesWithWidth(HexBytes):
 			m = "{}\n{!r}: value cannot be converted to {}"
 			return cls.init_fail(m.format(e.args[0],s,cls.__name__),on_fail)
 
-class CoinTxID(HexBytesWithWidth):       color,width,hexcase = 'purple',64,'lower'
-
-class HexStr(str,Hilite,InitErrors):
-	color = 'red'
-	trunc_ok = False
-	dtype = str
-	def __new__(cls,s,on_fail='die',case='lower'):
-		return HexBytes.__new__(cls,s,on_fail=on_fail,case=case)
-
-class HexStrWithWidth(HexStr):
-	color = 'nocolor'
-	hexcase = 'lower'
-	width = None
-	parent_cls = HexStr
-	def __new__(cls,s,on_fail='die'):
-		return HexBytesWithWidth.__new__(cls,s,on_fail=on_fail)
-
+class CoinTxID(HexStrWithWidth):       color,width,hexcase = 'purple',64,'lower'
 class WalletPassword(HexStrWithWidth): color,width,hexcase = 'blue',32,'lower'
 class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
 class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
@@ -634,18 +616,18 @@ class WifKey(str,Hilite,InitErrors):
 			m = '{!r}: invalid value for WIF key ({})'.format(s,e.args[0])
 			return cls.init_fail(m,on_fail)
 
-class PubKey(HexBytes,MMGenObject): # TODO: add some real checks
+class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 	def __new__(cls,s,compressed,on_fail='die'):
 		try:
 			assert type(compressed) == bool,"'compressed' must be of type bool"
-			me = HexBytes.__new__(cls,s,case='lower',on_fail='raise')
+			me = HexStr.__new__(cls,s,case='lower',on_fail='raise')
 			me.compressed = compressed
 			return me
 		except Exception as e:
 			m = '{!r}: invalid value for pubkey ({})'.format(s,e.args[0])
 			return cls.init_fail(m,on_fail)
 
-class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
+class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
 	color = 'red'
 	width = 64
@@ -666,7 +648,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 				assert s == None
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 				w2h = g.proto.wif2hex(wif) # raises exception on error
-				me = bytes.__new__(cls,w2h['hex'])
+				me = str.__new__(cls,w2h['hex'])
 				me.compressed = w2h['compressed']
 				me.pubkey_type = w2h['pubkey_type']
 				me.wif = str.__new__(WifKey,wif) # check has been done
@@ -680,13 +662,13 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
 			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width//2)
 			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-				me = bytes.__new__(cls,hexlify(s))
+				me = str.__new__(cls,s.hex())
 			else:
-				me = bytes.__new__(cls,g.proto.preprocess_key(hexlify(s),pubkey_type))
+				me = str.__new__(cls,g.proto.preprocess_key(s.hex(),pubkey_type))
 				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 			me.compressed = compressed
 			me.pubkey_type = pubkey_type
-			me.orig_hex = hexlify(s) # save the non-preprocessed key
+			me.orig_hex = s.hex() # save the non-preprocessed key
 			return me
 		except Exception as e:
 			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"

@@ -29,14 +29,13 @@ class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
 import os
-from binascii import hexlify
 from mmgen.common import *
 
-def getrandnum(n): return int(hexlify(os.urandom(n)),16)
-def getrandhex(n): return hexlify(os.urandom(n)).decode()
+def getrandnum(n): return int(os.urandom(n).hex(),16)
+def getrandhex(n): return os.urandom(n).hex()
 def getrandnum_range(nbytes,rn_max):
 	while True:
-		rn = int(hexlify(os.urandom(nbytes)),16)
+		rn = int(os.urandom(nbytes).hex(),16)
 		if rn < rn_max: return rn
 
 def getrandstr(num_chars,no_space=False):

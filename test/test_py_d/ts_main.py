@@ -258,17 +258,17 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if not segwit and k == 'p2sh': k = 'p2pkh'
 		s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
 						'p2sh':   ('a914','87'),
-						'bech32': (g.proto.witness_vernum_hex.decode()+'14','') }[k]
+						'bech32': (g.proto.witness_vernum_hex + '14','') }[k]
 		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[g.coin.lower()]
 		ret = {
 			self.lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
 				else ('{}:{}{}'.format(al_id,idx,lbl)),
 			'vout': int(getrandnum(4) % 8),
-			'txid': hexlify(os.urandom(32)),
+			'txid': os.urandom(32).hex(),
 			'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 			'address': coinaddr,
 			'spendable': False,
-			'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex.decode(),s_end).encode(),
+			'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
 			'confirmations': getrandnum(3) // 2 # max: 8388608 (7 digits)
 		}
 		return ret

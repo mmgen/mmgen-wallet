@@ -20,8 +20,6 @@
 tool.py:  Routines for the 'mmgen-tool' utility
 """
 
-from binascii import hexlify,unhexlify
-
 from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
@@ -248,20 +246,20 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def randhex(self,nbytes='32'):
 		"print 'n' bytes (default 32) of random data in hex format"
-		return hexlify(get_random(int(nbytes)))
+		return get_random(int(nbytes)).hex()
 
 	def hexreverse(self,hexstr:'sstr'):
 		"reverse bytes of a hexadecimal string"
-		return hexlify(unhexlify(hexstr.strip())[::-1])
+		return bytes.fromhex(hexstr.strip())[::-1].hex()
 
 	def hexlify(self,infile:str):
 		"convert bytes in file to hexadecimal (use '-' for stdin)"
 		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
-		return hexlify(data)
+		return data.hex()
 
 	def unhexlify(self,hexstr:'sstr'):
 		"convert hexadecimal value to bytes (warning: outputs binary data)"
-		return unhexlify(hexstr.encode())
+		return bytes.fromhex(hexstr)
 
 	def hexdump(self,infile:str,cols=8,line_nums=True):
 		"create hexdump of data from file (use '-' for stdin)"
@@ -286,7 +284,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		if file_input:  b = get_data_from_file(string_or_bytes,binary=True)
 		elif hex_input: b = decode_pretty_hexdump(string_or_bytes)
 		else:           b = string_or_bytes
-		return sha256(sha256(b.encode()).digest()).hexdigest().encode()
+		return sha256(sha256(b.encode()).digest()).hexdigest()
 
 	def id6(self,infile:str):
 		"generate 6-character MMGen ID for a file (use '-' for stdin)"
@@ -309,15 +307,15 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def bytestob58(self,infile:str,pad=0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
-		return baseconv.fromhex(hexlify(data),'b58',pad=pad,tostr=True)
+		return baseconv.fromhex(data.hex(),'b58',pad=pad,tostr=True)
 
 	def b58tobytes(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to bytes (warning: outputs binary data)"
-		return unhexlify(baseconv.tohex(b58num,'b58',pad=pad))
+		return bytes.fromhex(baseconv.tohex(b58num,'b58',pad=pad))
 
 	def hextob58(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to base 58"
-		return baseconv.fromhex(hexstr.encode(),'b58',pad=pad,tostr=True)
+		return baseconv.fromhex(hexstr,'b58',pad=pad,tostr=True)
 
 	def b58tohex(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to hexadecimal"
@@ -326,7 +324,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal number to base58-check encoding"
 		from mmgen.protocol import _b58chk_encode
-		return _b58chk_encode(hexstr.encode())
+		return _b58chk_encode(hexstr)
 
 	def b58chktohex(self,b58chk_num:'sstr'):
 		"convert a base58-check encoded number to hexadecimal"
@@ -335,7 +333,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def hextob32(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to MMGen's flavor of base 32"
-		return baseconv.fromhex(hexstr.encode(),'b32',pad,tostr=True)
+		return baseconv.fromhex(hexstr,'b32',pad,tostr=True)
 
 	def b32tohex(self,b32num:'sstr',pad=0):
 		"convert an MMGen-flavor base 32 number to hexadecimal"
@@ -370,7 +368,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
 		init_generators('at')
-		return g.proto.hex2wif(privhex.encode(),pubkey_type=at.pubkey_type,compressed=at.compressed)
+		return g.proto.hex2wif(privhex,pubkey_type=at.pubkey_type,compressed=at.compressed)
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
@@ -398,7 +396,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from private key in hex format"
 		init_generators()
-		pk = PrivKey(unhexlify(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
+		pk = PrivKey(bytes.fromhex(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
 		ph = kg.to_pubhex(pk)
 		return ph if output_pubhex else ag.to_addr(ph)
 
@@ -409,9 +407,9 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
 		if opt.type == 'segwit':
-			return g.proto.pubhex2segwitaddr(pubkeyhex.encode())
+			return g.proto.pubhex2segwitaddr(pubkeyhex)
 		else:
-			return self.pubhash2addr(hash160(pubkeyhex.encode()).decode())
+			return self.pubhash2addr(hash160(pubkeyhex))
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
@@ -423,15 +421,15 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
 		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
-		return self.pubhash2addr(self.hash160(redeem_scripthex).decode())
+		return self.pubhash2addr(self.hash160(redeem_scripthex))
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
 		if opt.type == 'bech32':
-			return g.proto.pubhash2bech32addr(pubhashhex.encode())
+			return g.proto.pubhash2bech32addr(pubhashhex)
 		else:
 			init_generators('at')
-			return g.proto.pubhash2addr(pubhashhex.encode(),at.addr_fmt=='p2sh')
+			return g.proto.pubhash2addr(pubhashhex,at.addr_fmt=='p2sh')
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
@@ -446,7 +444,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	"""
 	def _do_random_mn(self,nbytes:int,wordlist_id:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
-		hexrand = hexlify(get_random(nbytes))
+		hexrand = get_random(nbytes).hex()
 		Vmsg('Seed: {}'.format(hexrand))
 		return self.hex2mn(hexrand,wordlist_id=wordlist_id)
 
@@ -466,7 +464,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
 		opt.out_fmt = 'words'
 		from mmgen.seed import SeedSource
-		s = SeedSource(seed=unhexlify(hexstr))
+		s = SeedSource(seed=bytes.fromhex(hexstr))
 		s._format()
 		return ' '.join(s.ssdata.mnemonic)
 
@@ -820,7 +818,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
 			if g.debug: p.logfile = sys.stdout
 			my_expect(p,'Awaiting initial prompt','Secret spend key: ')
-			my_sendline(p,'',d.sec.decode(),65)
+			my_sendline(p,'',d.sec,65)
 			my_expect(p,'','Enter.* new.* password.*: ',regex=True)
 			my_sendline(p,'Sending password',d.wallet_passwd,33)
 			my_expect(p,'','Confirm password: ')

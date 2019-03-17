@@ -26,8 +26,6 @@ os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 os.environ['MMGEN_TEST_SUITE'] = '1'
 
-from binascii import hexlify
-
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import MMGenAddrType
@@ -81,7 +79,7 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
 def pyethereum_sec2addr(sec):
-	return sec.decode(),hexlify(eth.privtoaddr(sec.decode())).decode()
+	return sec,eth.privtoaddr(sec).hex()
 
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
@@ -95,7 +93,7 @@ def zcash_mini_sec2addr(sec):
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-	key = pcku.parse_key(sec.decode(),[network_for_netcode(coin)])[1]
+	key = pcku.parse_key(sec,[network_for_netcode(coin)])[1]
 	if key is None: die(1,"can't parse {}".format(sec))
 	d = {
 		'legacy':     ('wif_uncompressed','address_uncompressed'),
@@ -205,7 +203,7 @@ def speed_test():
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	print('Incrementing key with each round')
-	print('Starting key:', hexlify(seed+pack('I',0)))
+	print('Starting key:', (seed + pack('I',0)).hex())
 	import time
 	start = last_t = time.time()
 

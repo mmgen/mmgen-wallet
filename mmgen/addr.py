@@ -21,7 +21,6 @@ addr.py:  Address generation/display routines for the MMGen suite
 """
 
 from hashlib import sha256,sha512
-from binascii import hexlify,unhexlify
 from mmgen.common import *
 from mmgen.obj import *
 
@@ -67,7 +66,7 @@ class AddrGeneratorSegwit(AddrGenerator):
 
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return HexBytes(g.proto.pubhex2redeem_script(pubhex))
+		return HexStr(g.proto.pubhex2redeem_script(pubhex))
 
 class AddrGeneratorBech32(AddrGenerator):
 	def to_addr(self,pubhex):
@@ -82,7 +81,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 	def to_addr(self,pubhex):
 		assert type(pubhex) == PubKey
 		import sha3
-		return CoinAddr(hexlify(sha3.keccak_256(unhexlify(pubhex[2:])).digest()[12:]).decode())
+		return CoinAddr(sha3.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
 
 	def to_wallet_passwd(self,sk_hex):
 		from mmgen.protocol import hash256
@@ -105,26 +104,26 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		return Sha256(s,preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
-		key = unhexlify(pubhex)
+		key = bytes.fromhex(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		if g.platform == 'win':
 			ydie(1,'Zcash z-addresses not supported on Windows platform')
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + hexlify(self.zhash256(key,0)+p2))
+		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + (self.zhash256(key,0)+p2).hex())
 		assert len(ret) == self.addr_width,'Invalid Zcash z-address length'
 		return CoinAddr(ret)
 
 	def to_viewkey(self,pubhex): # pubhex is really privhex
-		key = unhexlify(pubhex)
+		key = bytes.fromhex(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		vk = bytearray(self.zhash256(key,0)+self.zhash256(key,1))
 		vk[32] &= 0xf8
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + hexlify(vk))
+		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + vk.hex())
 		assert len(ret) == self.vk_width,'Invalid Zcash view key length'
 		return ZcashViewKey(ret)
 
@@ -133,10 +132,11 @@ class AddrGeneratorZcashZ(AddrGenerator):
 
 class AddrGeneratorMonero(AddrGenerator):
 
-	def b58enc(self,addr_str):
-		enc,l = baseconv.fromhex,len(addr_str)
-		a = ''.join([enc(hexlify(addr_str[i*8:i*8+8]),'b58',pad=11,tostr=True) for i in range(l//8)])
-		b = enc(hexlify(addr_str[l-l%8:]),'b58',pad=7,tostr=True)
+	def b58enc(self,addr_bytes):
+		enc = baseconv.fromhex
+		l = len(addr_bytes)
+		a = ''.join([enc((addr_bytes[i*8:i*8+8]).hex(),'b58',pad=11,tostr=True) for i in range(l//8)])
+		b = enc((addr_bytes[l-l%8:]).hex(),'b58',pad=7,tostr=True)
 		return a + b
 
 	def to_addr(self,sk_hex): # sk_hex instead of pubhex
@@ -159,12 +159,12 @@ class AddrGeneratorMonero(AddrGenerator):
 			return Q
 
 		def hex2int_le(hexstr):
-			return int(hexlify(unhexlify(hexstr)[::-1]),16)
+			return int((bytes.fromhex(hexstr)[::-1]).hex(),16)
 
 		vk_hex = self.to_viewkey(sk_hex)
 		pk_str  = encodepoint(scalarmultbase(hex2int_le(sk_hex)))
 		pvk_str = encodepoint(scalarmultbase(hex2int_le(vk_hex)))
-		addr_p1 = unhexlify(g.proto.addr_ver_num['monero'][0]) + pk_str + pvk_str
+		addr_p1 = bytes.fromhex(g.proto.addr_ver_num['monero'][0]) + pk_str + pvk_str
 
 		import sha3
 		return CoinAddr(self.b58enc(addr_p1 + sha3.keccak_256(addr_p1).digest()[:4]))
@@ -176,7 +176,7 @@ class AddrGeneratorMonero(AddrGenerator):
 	def to_viewkey(self,sk_hex):
 		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
 		import sha3
-		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(unhexlify(sk_hex)).hexdigest(),None))
+		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(bytes.fromhex(sk_hex)).hexdigest(),None))
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')
@@ -210,7 +210,7 @@ class KeyGenerator(MMGenObject):
 		try:
 			from mmgen.secp256k1 import priv2pub
 			m = 'Unable to execute priv2pub() from secp256k1 extension module'
-			assert priv2pub(unhexlify('deadbeef'*8),1),m
+			assert priv2pub(bytes.fromhex('deadbeef'*8),1),m
 			return True
 		except:
 			return False
@@ -239,12 +239,12 @@ class KeyGeneratorPython(KeyGenerator):
 	def privnum2pubhex(self,numpriv,compressed=False):
 		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self.secp256k1)
 		# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-		pubkey = hexlify(pko.get_verifying_key().to_string())
+		pubkey = (pko.get_verifying_key().to_string()).hex()
 		if compressed: # discard Y coord, replace with appropriate version byte
 			# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-			return (b'03',b'02')[pubkey[-1] in b'02468ace'] + pubkey[:64]
+			return ('03','02')[pubkey[-1] in '02468ace'] + pubkey[:64]
 		else:
-			return b'04' + pubkey
+			return '04' + pubkey
 
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
@@ -256,13 +256,13 @@ class KeyGeneratorSecp256k1(KeyGenerator):
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
 		from mmgen.secp256k1 import priv2pub
-		return PubKey(hexlify(priv2pub(unhexlify(privhex),int(privhex.compressed))),compressed=privhex.compressed)
+		return PubKey(priv2pub(bytes.fromhex(privhex),int(privhex.compressed)).hex(),compressed=privhex.compressed)
 
 class KeyGeneratorDummy(KeyGenerator):
 	desc = 'mmgen-dummy'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
-		return PubKey(privhex.decode(),compressed=privhex.compressed)
+		return PubKey(privhex,compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
 	addr    = MMGenListItemAttr('addr','CoinAddr')
@@ -404,7 +404,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		seed = seed.get_data()
 		seed = self.scramble_seed(seed)
-		dmsg_sc('seed',hexlify(seed[:8]).decode())
+		dmsg_sc('seed',seed[:8].hex())
 
 		compressed = self.al_id.mmtype.compressed
 		pubkey_type = self.al_id.mmtype.pubkey_type
@@ -838,7 +838,7 @@ Record this checksum: it will be used to verify the password file in the future
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
 		if self.pw_fmt == 'hex':
-			return hex_sec.decode()
+			return hex_sec
 		else:
 			# we take least significant part
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]

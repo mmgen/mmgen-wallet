@@ -22,7 +22,6 @@ tx.py:  Transaction routines for the MMGen suite
 
 import sys,os,json
 from stat import *
-from binascii import unhexlify
 from mmgen.common import *
 from mmgen.obj import *
 
@@ -98,8 +97,8 @@ def segwit_is_active(exit_on_error=False):
 		return False
 
 def bytes2int(hex_bytes):
-	r = hexlify(unhexlify(hex_bytes)[::-1])
-	if hexlify(bytes([r[0]])) in b'89abcdef':
+	r = bytes.fromhex(hex_bytes)[::-1].hex()
+	if r[0] in '89abcdef': # sign bit is set
 		die(3,"{}: Negative values not permitted in transaction!".format(hex_bytes))
 	return int(r,16)
 
@@ -107,11 +106,11 @@ def bytes2coin_amt(hex_bytes):
 	return g.proto.coin_amt(bytes2int(hex_bytes) * g.proto.coin_amt.min_coin_unit)
 
 def scriptPubKey2addr(s):
-	if len(s) == 50 and s[:6] == b'76a914' and s[-4:] == b'88ac':
+	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
 		return g.proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'
-	elif len(s) == 46 and s[:4] == b'a914' and s[-2:] == b'87':
+	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
 		return g.proto.pubhash2addr(s[4:-2],p2sh=True),'p2sh'
-	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + b'14':
+	elif len(s) == 44 and s[:4] == g.proto.witness_vernum_hex + '14':
 		return g.proto.pubhash2bech32addr(s[4:]),'bech32'
 	else:
 		raise NotImplementedError('Unknown scriptPubKey ({})'.format(s))
@@ -119,7 +118,7 @@ def scriptPubKey2addr(s):
 from collections import OrderedDict
 class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 	def __init__(self,txhex):
-		tx = list(unhexlify(txhex))
+		tx = list(bytes.fromhex(txhex))
 		tx_copy = tx[:]
 		d = { 'raw_tx': [] }
 
@@ -127,7 +126,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			ret = l[:n]
 			if not skip: d['raw_tx'] += ret
 			del l[:n]
-			return hexlify(bytes(ret[::-1] if reverse else ret))
+			return bytes(ret[::-1] if reverse else ret).hex()
 
 		# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 		# For example, the number 515 is encoded as 0xfd0302.
@@ -135,8 +134,8 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 			s = l[0]
 			bytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
 			if bytes_len != 1: del l[0]
-			ret = int(hexlify(bytes(l[:bytes_len][::-1])),16)
-			if sub_null: d['raw_tx'] += b'\0'
+			ret = int(bytes(l[:bytes_len][::-1]).hex(),16)
+			if sub_null: d['raw_tx'] += b'\x00'
 			elif not skip: d['raw_tx'] += l[:bytes_len]
 			del l[:bytes_len]
 			return ret
@@ -145,7 +144,7 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 		has_witness = tx[0] == 0
 		if has_witness:
 			u = hshift(tx,2,skip=True)
-			if u != b'0001':
+			if u != '0001':
 				raise IllegalWitnessFlagValue("'{}': Illegal value for flag in transaction!".format(u))
 			del tx_copy[-len(tx)-2:-len(tx)]
 
@@ -186,8 +185,8 @@ class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
 				raise WitnessSizeMismatch('More witness data than inputs with witnesses!')
 
 		d['lock_time'] = bytes2int(hshift(tx,4))
-		d['txid'] = hexlify(sha256(sha256(bytes(tx_copy)).digest()).digest()[::-1])
-		d['unsigned_hex'] = hexlify(bytes(d['raw_tx']))
+		d['txid'] = sha256(sha256(bytes(tx_copy)).digest()).digest()[::-1].hex()
+		d['unsigned_hex'] = bytes(d['raw_tx']).hex()
 		del d['raw_tx']
 
 		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts','unsigned_hex'
@@ -240,7 +239,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	class MMGenTxInput(MMGenListItem):
 		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
-		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexBytes')
+		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
 		sequence = MMGenListItemAttr('sequence',int,typeconv=False)
 
 	class MMGenTxOutput(MMGenListItem):
@@ -279,7 +278,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs     = self.MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.fee         = g.proto.coin_amt('0')
-		self.hex         = b''          # raw serialized hex transaction
+		self.hex         = ''          # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
 		self.coin_txid    = ''
@@ -362,14 +361,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			die(2,'{}: duplicate address in transaction {}'.format(attr,io_str))
 
 	def update_txid(self):
-		self.txid = MMGenTxID(make_chksum_6(unhexlify(self.hex)).upper())
+		self.txid = MMGenTxID(make_chksum_6(bytes.fromhex(self.hex)).upper())
 
 	def create_raw(self):
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
 		o = {e.addr:e.amt for e in self.outputs}
-		self.hex = HexBytes(g.rpch.createrawtransaction(i,o))
+		self.hex = HexStr(g.rpch.createrawtransaction(i,o))
 		self.update_txid()
 
 	# returns true if comment added or changed
@@ -625,11 +624,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.timestamp = make_timestamp()
 
 	def get_hex_locktime(self):
-		return int(hexlify(unhexlify(self.hex[-8:])[::-1]),16)
+		return int(bytes.fromhex(self.hex[-8:])[::-1].hex(),16)
 
 	def set_hex_locktime(self,val):
 		assert type(val) == int,'locktime value not an integer'
-		self.hex = self.hex[:-8] + hexlify(unhexlify('{:08x}'.format(val))[::-1])
+		self.hex = self.hex[:-8] + bytes.fromhex('{:08x}'.format(val))[::-1].hex()
 
 	def get_blockcount(self):
 		return int(g.rpch.getblockcount())
@@ -653,7 +652,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				self.blockcount,
 				('',' LT={}'.format(self.locktime))[bool(self.locktime)]
 			),
-			self.hex.decode(),
+			self.hex,
 			repr([amt_to_str(e.__dict__) for e in self.inputs]),
 			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
@@ -661,7 +660,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			lines.append(baseconv.b58encode(self.label.encode()))
 		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
-			lines.append(self.coin_txid.decode())
+			lines.append(self.coin_txid)
 		self.chksum = make_chksum_6(' '.join(lines))
 		self.fmt_data = '\n'.join([self.chksum] + lines)+'\n'
 
@@ -721,13 +720,13 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			return False
 
 		try:
-			self.hex = HexBytes(ret['hex'])
+			self.hex = HexStr(ret['hex'])
 			self.compare_size_and_estimated_size()
 			dt = DeserializedTX(self.hex)
 			self.check_hex_tx_matches_mmgen_tx(dt)
 			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
 			self.check_sigs(dt)
-			if not self.coin_txid.decode() == g.rpch.decoderawtransaction(ret['hex'])['txid']:
+			if not self.coin_txid == g.rpch.decoderawtransaction(ret['hex'])['txid']:
 				raise BadMMGenTxID('txid mismatch (after signing)')
 			msg('OK')
 			return True
@@ -782,7 +781,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		check_equal('outputs',d_hex,d_mmgen)
 
 		uh = deserial_tx['unsigned_hex']
-		if str(self.txid) != make_chksum_6(unhexlify(uh)).upper():
+		if str(self.txid) != make_chksum_6(bytes.fromhex(uh)).upper():
 			raise TxHexMismatch('MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
 
 	def check_pubkey_scripts(self):
@@ -807,13 +806,13 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		fs = "Hex TX has {} scriptSig but input is of type '{}'!"
 		for n in range(len(txins)):
 			ti,mmti = txins[n],self.inputs[n]
-			if ti['scriptSig'] == b'' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
-					ti['scriptSig'][:6] == b'16' + g.proto.witness_vernum_hex + b'14' ):
+			if ti['scriptSig'] == '' or ( len(ti['scriptSig']) == 46 and # native P2WPKH or P2SH-P2WPKH
+					ti['scriptSig'][:6] == '16' + g.proto.witness_vernum_hex + '14' ):
 				assert 'witness' in ti, 'missing witness'
 				assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 				assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
 				assert mmti.mmid, fs.format('witness-type','non-MMGen')
-				assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==b''],(
+				assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==''],(
 							fs.format('witness-type',mmti.mmid.mmtype))
 			else: # non-witness
 				if mmti.mmid:
@@ -936,7 +935,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if bogus_send:
 				m = 'BOGUS transaction NOT sent: {}'
 			else:
-				assert ret.encode() == self.coin_txid, 'txid mismatch (after sending)'
+				assert ret == self.coin_txid, 'txid mismatch (after sending)'
 				m = 'Transaction sent: {}'
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))
@@ -1034,7 +1033,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
 						('','comment:',e.label.hl() if e.label else ''),
 						('','amount:','{} {}'.format(e.amt.hl(),g.dcoin))]
-					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid.decode(),e.vout))] + icommon + [
+					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
 						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
 					] if ip else icommon + [
 						('','change:',green('True') if e.is_chg else '')]
@@ -1110,7 +1109,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return out # TX label might contain non-ascii chars
 
 	def check_txfile_hex_data(self):
-		self.hex = HexBytes(self.hex,on_fail='raise')
+		self.hex = HexStr(self.hex,on_fail='raise')
 
 	def parse_tx_file(self,infile,metadata_only=False,silent_open=False):
 

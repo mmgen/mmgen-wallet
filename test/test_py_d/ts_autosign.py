@@ -73,7 +73,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			def get_pad_chars(n):
 				ret = ''
 				for i in range(n):
-					m = int(hexlify(os.urandom(1)),16) % 32
+					m = int(os.urandom(1).hex(),16) % 32
 					ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
 				return ret
 

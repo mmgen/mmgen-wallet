@@ -63,7 +63,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr     = MMGenImmutableAttr('addr','CoinAddr')
 		confs    = MMGenImmutableAttr('confs',int,typeconv=False)
-		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexBytes')
+		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
 		days    = MMGenListItemAttr('days',int,typeconv=False)
 		skip    = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
 
@@ -231,7 +231,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			out.append(fs.format(   n=str(n+1)+')',
 									t='' if not i.txid else \
 										' ' * (tx_w-4) + '|...' if i.skip == 'txid' \
-											else i.txid.decode()[:tx_w-len(txdots)]+txdots,
+											else i.txid[:tx_w-len(txdots)] + txdots,
 									v=i.vout,
 									a=addr_out,
 									A=i.amt.fmt(color=True,prec=self.disp_prec),

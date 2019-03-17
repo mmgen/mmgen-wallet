@@ -269,13 +269,12 @@ def wipe_existing_key():
 		subprocess.call(['wipe','-cf',fn])
 
 def create_key():
-	from binascii import hexlify
-	kdata = hexlify(os.urandom(32)).decode()
+	kdata = os.urandom(32).hex()
 	fn = os.path.join(tx_dir,key_fn)
 	desc = 'key file {}'.format(fn)
 	msg('Creating ' + desc)
 	try:
-		with open(fn,'w') as f: f.write(kdata+'\n')
+		open(fn,'w').write(kdata+'\n')
 		os.chmod(fn,0o400)
 		msg('Wrote ' + desc)
 	except:

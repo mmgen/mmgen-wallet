@@ -524,7 +524,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		txid = self.txsend_ui_common(t,caller=mmgen_cmd,quiet=True,bogus_send=False)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		assert etx.get_exec_status(txid.encode(),True) != 0,(
+		assert etx.get_exec_status(txid,True) != 0,(
 			"Contract '{}:{}' failed to execute. Aborting".format(num,key))
 		if key == 'Token':
 			self.write_to_tmpfile('token_addr{}'.format(num),addr+'\n')

@@ -22,7 +22,6 @@ sha2.py: A non-optimized but very compact implementation of the SHA2 hash
          SHA256Compress (unpadded SHA256, required for Zcash addresses)
 """
 
-from binascii import hexlify
 from struct import pack,unpack
 
 class Sha2(object):
@@ -103,7 +102,7 @@ class Sha2(object):
 		return b''.join((pack(self.word_fmt,w) for w in self.H))
 
 	def hexdigest(self):
-		return hexlify(self.digest())
+		return self.digest().hex()
 
 	def compute(self):
 		for i in range(0,len(self.M),16):

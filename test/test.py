@@ -360,7 +360,7 @@ def list_cmds():
 def do_between():
 	if opt.pause:
 		confirm_continue()
-	elif opt.verbose or opt.exact_output:
+	elif (opt.verbose or opt.exact_output) and not opt.skip_deps:
 		sys.stderr.write('\n')
 
 def list_tmpdirs():
@@ -746,7 +746,6 @@ class TestSuiteRunner(object):
 
 		# delete files depended on by this cmd
 		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'],ext) for num,ext in d]
-
 
 		if opt.resume:
 			if cmd == opt.resume:

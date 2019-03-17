@@ -70,8 +70,8 @@ class Token(MMGenObject): # ERC20
 			except:
 				"RPC call to decimals() failed (returned '{}')".format(ret)
 			return int(b,16) if b else None
-	def name(self):         return self.strip(unhexlify(self.do_call('name()')[2:]))
-	def symbol(self):       return self.strip(unhexlify(self.do_call('symbol()')[2:]))
+	def name(self):         return self.strip(bytes.fromhex(self.do_call('name()')[2:]))
+	def symbol(self):       return self.strip(bytes.fromhex(self.do_call('symbol()')[2:]))
 
 	def info(self):
 		fs = '{:15}{}\n' * 5
@@ -95,12 +95,12 @@ class Token(MMGenObject): # ERC20
 		if nonce is None:
 			nonce = int(g.rpch.parity_nextNonce('0x'+from_addr),16)
 		data = self.create_data(to_addr,amt,method_sig=method_sig,from_addr=from_addr2)
-		return {'to':       unhexlify(self.addr),
+		return {'to':       bytes.fromhex(self.addr),
 				'startgas': start_gas.toWei(),
 				'gasprice': gasPrice.toWei(),
 				'value':    0,
 				'nonce':   nonce,
-				'data':    unhexlify(data) }
+				'data':    bytes.fromhex(data) }
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
 		from ethereum.transactions import Transaction
@@ -108,11 +108,11 @@ class Token(MMGenObject): # ERC20
 			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
 			chain_id = int(g.rpch.request(chain_id_method),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
-		hex_tx = hexlify(rlp.encode(tx))
-		coin_txid = CoinTxID(hexlify(tx.hash))
-		if hexlify(tx.sender).decode() != from_addr:
+		hex_tx = rlp.encode(tx).hex()
+		coin_txid = CoinTxID(tx.hash.hex())
+		if tx.sender.hex() != from_addr:
 			m = "Sender address '{}' does not match address of key '{}'!"
-			die(3,m.format(from_addr,hexlify(tx.sender).decode()))
+			die(3,m.format(from_addr,tx.sender.hex()))
 		if g.debug:
 			msg('{}'.format('\n  '.join(parse_abi(data))))
 			pmsg(tx.to_dict())
@@ -121,7 +121,7 @@ class Token(MMGenObject): # ERC20
 # The following are used for token deployment only:
 
 	def txsend(self,hex_tx):
-		return g.rpch.eth_sendRawTransaction('0x'+hex_tx.decode()).replace('0x','',1).encode()
+		return g.rpch.eth_sendRawTransaction('0x'+hex_tx).replace('0x','',1)
 
 	def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
