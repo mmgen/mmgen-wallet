@@ -106,12 +106,19 @@ def decrypt_data(enc_data,key,iv=1,desc='data'):
 	return c.decrypt(enc_data)
 
 def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
-	import scrypt
+
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
 	N,r,p = get_hash_params(hash_preset)
 	if type(passwd) == str: passwd = passwd.encode()
-	return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
+
+	try:
+		assert not g.use_standalone_scrypt_module
+		from hashlib import scrypt # Python >= v3.6
+		return scrypt(passwd,salt=salt,n=2**N,r=r,p=p,maxmem=0,dklen=buflen)
+	except:
+		import scrypt
+		return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
 	if from_what: desc += ' from '

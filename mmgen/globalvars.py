@@ -167,6 +167,7 @@ class g(object):
 		'MMGEN_TESTNET',
 		'MMGEN_REGTEST',
 		'MMGEN_TRACEBACK',
+		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 
 		'MMGEN_DISABLE_COLOR',
 	)
@@ -195,6 +196,7 @@ class g(object):
 	key_generators = 'python-ecdsa','secp256k1' # '1','2'
 	key_generator  = 2 # secp256k1 is default
 
+	use_standalone_scrypt_module = False
 	hash_presets = {
 	#   Scrypt params:
 	#   ID    N   p  r (N is an exponent of two)
