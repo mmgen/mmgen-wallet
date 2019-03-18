@@ -37,5 +37,5 @@ class MaxInputSizeExceeded(Exception):    mmcode = 3
 # 4: red hl, 'MMGen Fatal Error' + exception + message
 class BadMMGenTxID(Exception):            mmcode = 4
 class IllegalWitnessFlagValue(Exception): mmcode = 4
-class WitnessSizeMismatch(Exception):     mmcode = 4
+class TxHexParseError(Exception):         mmcode = 4
 class TxHexMismatch(Exception):           mmcode = 4

@@ -96,15 +96,6 @@ def segwit_is_active(exit_on_error=False):
 	else:
 		return False
 
-def bytes2int(hex_bytes):
-	r = bytes.fromhex(hex_bytes)[::-1].hex()
-	if r[0] in '89abcdef': # sign bit is set
-		die(3,"{}: Negative values not permitted in transaction!".format(hex_bytes))
-	return int(r,16)
-
-def bytes2coin_amt(hex_bytes):
-	return g.proto.coin_amt(bytes2int(hex_bytes) * g.proto.coin_amt.min_coin_unit)
-
 def scriptPubKey2addr(s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
 		return g.proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'
@@ -115,82 +106,106 @@ def scriptPubKey2addr(s):
 	else:
 		raise NotImplementedError('Unknown scriptPubKey ({})'.format(s))
 
-from collections import OrderedDict
-class DeserializedTX(OrderedDict,MMGenObject): # need to add MMGen types
+class DeserializedTX(dict,MMGenObject):
+	"""
+	Parse a serialized Bitcoin transaction
+	For checking purposes, additionally reconstructs the raw (unsigned) tx hex from signed tx hex
+	"""
 	def __init__(self,txhex):
-		tx = list(bytes.fromhex(txhex))
-		tx_copy = tx[:]
-		d = { 'raw_tx': [] }
 
-		def hshift(l,n,reverse=False,skip=False):
-			ret = l[:n]
-			if not skip: d['raw_tx'] += ret
-			del l[:n]
-			return bytes(ret[::-1] if reverse else ret).hex()
+		def bytes2int(bytes_le):
+			if bytes_le[-1] & 0x80: # sign bit is set
+				die(3,"{}: Negative values not permitted in transaction!".format(bytes_le[::-1].hex()))
+			return int(bytes_le[::-1].hex(),16)
+
+		def bytes2coin_amt(bytes_le):
+			return g.proto.coin_amt(bytes2int(bytes_le) * g.proto.coin_amt.min_coin_unit)
+
+		def bshift(n,skip=False,sub_null=False):
+			ret = tx[self.idx:self.idx+n]
+			self.idx += n
+			if sub_null:
+				self.raw_tx += b'\x00'
+			elif not skip:
+				self.raw_tx += ret
+			return ret
 
 		# https://bitcoin.org/en/developer-reference#compactsize-unsigned-integers
 		# For example, the number 515 is encoded as 0xfd0302.
-		def readVInt(l,skip=False,sub_null=False):
-			s = l[0]
-			bytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
-			if bytes_len != 1: del l[0]
-			ret = int(bytes(l[:bytes_len][::-1]).hex(),16)
-			if sub_null: d['raw_tx'] += b'\x00'
-			elif not skip: d['raw_tx'] += l[:bytes_len]
-			del l[:bytes_len]
-			return ret
+		def readVInt(skip=False):
+			s = tx[self.idx]
+			self.idx += 1
+			if not skip: self.raw_tx.append(s)
 
-		d['version'] = bytes2int(hshift(tx,4))
-		has_witness = tx[0] == 0
+			vbytes_len = 1 if s < 0xfd else 2 if s == 0xfd else 4 if s == 0xfe else 8
+
+			if vbytes_len == 1:
+				return s
+			else:
+				vbytes = tx[self.idx:self.idx+vbytes_len]
+				self.idx += vbytes_len
+				if not skip: self.raw_tx += vbytes
+				return int(vbytes[::-1].hex(),16)
+
+		def make_txid(tx_bytes):
+			return sha256(sha256(tx_bytes).digest()).digest()[::-1].hex()
+
+		self.idx = 0
+		self.raw_tx = bytearray()
+
+		tx = bytes.fromhex(txhex)
+		d = { 'version': bytes2int(bshift(4)) }
+
+		has_witness = tx[self.idx] == 0
 		if has_witness:
-			u = hshift(tx,2,skip=True)
+			u = bshift(2,skip=True).hex()
 			if u != '0001':
 				raise IllegalWitnessFlagValue("'{}': Illegal value for flag in transaction!".format(u))
-			del tx_copy[-len(tx)-2:-len(tx)]
 
-		d['num_txins'] = readVInt(tx)
+		d['num_txins'] = readVInt()
 
-		d['txins'] = MMGenList([OrderedDict((
-			('txid',      hshift(tx,32,reverse=True)),
-			('vout',      bytes2int(hshift(tx,4))),
-			('scriptSig', hshift(tx,readVInt(tx,sub_null=True),skip=True)),
-			('nSeq',      hshift(tx,4,reverse=True))
-		)) for i in range(d['num_txins'])])
+		d['txins'] = MMGenList([{
+			'txid':      bshift(32)[::-1].hex(),
+			'vout':      bytes2int(bshift(4)),
+			'scriptSig': bshift(readVInt(skip=True),sub_null=True).hex(),
+			'nSeq':      bshift(4)[::-1].hex()
+		} for i in range(d['num_txins'])])
 
-		d['num_txouts'] = readVInt(tx)
-		d['txouts'] = MMGenList([OrderedDict((
-			('amount',       bytes2coin_amt(hshift(tx,8))),
-			('scriptPubKey', hshift(tx,readVInt(tx)))
-		)) for i in range(d['num_txouts'])])
+		d['num_txouts'] = readVInt()
+
+		d['txouts'] = MMGenList([{
+			'amount':       bytes2coin_amt(bshift(8)),
+			'scriptPubKey': bshift(readVInt()).hex()
+		} for i in range(d['num_txouts'])])
 
 		for o in d['txouts']:
 			o['address'] = scriptPubKey2addr(o['scriptPubKey'])[0]
 
-		d['witness_size'] = 0
 		if has_witness:
 			# https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki
 			# A non-witness program (defined hereinafter) txin MUST be associated with an empty
 			# witness field, represented by a 0x00.
-			del tx_copy[-len(tx):-4]
-			wd,tx = tx[:-4],tx[-4:]
-			d['witness_size'] = len(wd) + 2 # add marker and flag
-			for i in range(len(d['txins'])):
-				if wd[0] == 0:
-					hshift(wd,1,skip=True)
+
+			d['txid'] = make_txid(tx[:4] + tx[6:self.idx] + tx[-4:])
+			d['witness_size'] = len(tx) - self.idx + 2 - 4 # add len(marker+flag), subtract len(locktime)
+
+			for txin in d['txins']:
+				if tx[self.idx] == 0:
+					bshift(1,skip=True)
 					continue
-				d['txins'][i]['witness'] = [
-					hshift(wd,readVInt(wd,skip=True),skip=True) for item in range(readVInt(wd,skip=True))
-				]
-			if wd:
-				raise WitnessSizeMismatch('More witness data than inputs with witnesses!')
+				txin['witness'] = [
+					bshift(readVInt(skip=True),skip=True).hex() for item in range(readVInt(skip=True)) ]
+		else:
+			d['txid'] = make_txid(tx)
+			d['witness_size'] = 0
 
-		d['lock_time'] = bytes2int(hshift(tx,4))
-		d['txid'] = sha256(sha256(bytes(tx_copy)).digest()).digest()[::-1].hex()
-		d['unsigned_hex'] = bytes(d['raw_tx']).hex()
-		del d['raw_tx']
+		if len(tx) - self.idx != 4:
+			raise TxHexParseError('TX hex has invalid length: {} extra bytes'.format(len(tx)-self.idx-4))
 
-		keys = 'txid','version','lock_time','witness_size','num_txins','txins','num_txouts','txouts','unsigned_hex'
-		OrderedDict.__init__(self, ((k,d[k]) for k in keys))
+		d['lock_time'] = bytes2int(bshift(4))
+		d['unsigned_hex'] = self.raw_tx.hex()
+
+		dict.__init__(self,d)
 
 txio_attrs = {
 	'vout':  MMGenListItemAttr('vout',int,typeconv=False),

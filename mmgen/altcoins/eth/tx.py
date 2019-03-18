@@ -24,7 +24,7 @@ import json
 from mmgen.common import *
 from mmgen.obj import *
 
-from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX,DeserializedTX,mmaddr2coinaddr
+from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX
 
 class EthereumMMGenTX(MMGenTX):
 	desc   = 'Ethereum transaction'
@@ -478,6 +478,4 @@ class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):
 		return self.txobj['nonce']
 
 class EthereumTokenMMGenBumpTX(EthereumTokenMMGenTX,EthereumMMGenBumpTX): pass
-
 class EthereumMMGenSplitTX(MMGenSplitTX): pass
-class EthereumDeserializedTX(DeserializedTX): pass
