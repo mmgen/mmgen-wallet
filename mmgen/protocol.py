@@ -514,7 +514,9 @@ def make_init_genonly_altcoins_str(data):
 #	print out
 	return out
 
-def init_coin(coin):
+def init_coin(coin,testnet=None):
+	if testnet is not None:
+		g.testnet = testnet
 	coin = coin.upper()
 	g.coin = coin
 	g.proto = CoinProtocol(coin,g.testnet)

@@ -104,7 +104,7 @@ def end_silence():
 		g.stdout_fileno = 1
 
 def randbool():
-	return os.urandom(1).hex()[0] in '13579ace'
+	return os.urandom(1).hex()[0] in '02468ace'
 
 def disable_debug():
 	global save_debug
