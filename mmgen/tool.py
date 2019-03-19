@@ -189,7 +189,11 @@ def _process_result(ret,pager=False,print_result=False):
 	def triage_result(o):
 		return o if not print_result else do_pager(o) if pager else Msg(o)
 
-	if issubclass(type(ret),str):
+	if ret == True:
+		return True
+	elif ret in (False,None):
+		ydie(1,"tool command returned '{}'".format(ret))
+	elif issubclass(type(ret),str):
 		return triage_result(ret)
 	elif issubclass(type(ret),int):
 		return triage_result(str(ret))
@@ -202,10 +206,6 @@ def _process_result(ret,pager=False,print_result=False):
 		except:
 			# don't add NL to binary data if it can't be converted to utf8
 			return ret if not print_result else os.write(1,ret)
-	elif ret == True:
-		return True
-	elif ret in (False,None):
-		ydie(1,"tool command returned '{}'".format(ret))
 	else:
 		ydie(1,"tool.py: can't handle return value of type '{}'".format(type(ret).__name__))
 

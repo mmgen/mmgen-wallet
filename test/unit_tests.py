@@ -21,8 +21,6 @@ test/unit_tests.py:  Unit tests for the MMGen suite
 """
 
 import sys,os,time
-from decimal import Decimal
-from pprint import pprint,pformat
 
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)

@@ -11,6 +11,7 @@ export MMGEN_NO_LICENSE=1
 export PYTHONPATH=.
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
+unit_tests_py='test/unit_tests.py --names --quiet'
 tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names'
 gentest_py='test/gentest.py'
@@ -21,7 +22,7 @@ python='python3'
 rounds=100 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj sha2 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='obj unit sha2 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -45,6 +46,7 @@ do
 		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
+		echo   "     unit     - unit tests"
 		echo   "     sha2     - MMGen sha2 implementation"
 		echo   "     alts     - operations for all supported gen-only altcoins"
 		echo   "     monero   - operations for Monero"
@@ -71,6 +73,7 @@ do
 		tooltest2_py+=" --fork --coverage"
 		scrambletest_py+=" --coverage"
 		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
+		unit_tests_py="$python $unit_tests_py"
 		objtest_py="$python $objtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
@@ -87,7 +90,9 @@ do
 	t)  TESTING=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
-		tooltest_py+=" --verbose" tooltest2_py+=" --verbose" gentest_py+=" --verbose" mmgen_tool+=" --verbose"
+		tooltest_py+=" --verbose" tooltest2_py+=" --verbose"
+		gentest_py+=" --verbose" mmgen_tool+=" --verbose"
+		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
 		scrambletest_py+=" --verbose" ;;
 	*)  exit ;;
 	esac
@@ -143,10 +148,7 @@ install() {
 do_test() {
 	set +x
 	for i in "$@"; do
-		LS='\n'
-		[ "$TESTING" ] && LS=''
-		echo $i | grep -q 'gentest' && LS=''
-		echo -e "$LS${GREEN}Running:$RESET $YELLOW$i$RESET"
+		echo -e "${GREEN}Running:$RESET $YELLOW$i$RESET"
 		[ "$TESTING" ] || eval "$i" || {
 			echo -e $RED"Test '$CUR_TEST' failed at command '$i'"$RESET
 			exit
@@ -161,6 +163,11 @@ t_obj=(
 	"$objtest_py --coin=ltc"
 	"$objtest_py --coin=ltc --testnet=1")
 f_obj='Data object test complete'
+
+i_unit='Unit tests'
+s_unit='Running unit'
+t_unit=("$unit_tests_py")
+f_unit='Unit tests run complete'
 
 i_sha2='MMGen SHA2 implementation'
 s_sha2='Testing SHA2 implementation'
@@ -408,7 +415,7 @@ prompt_skip() {
 
 run_tests() {
 	for t in $1; do
-		eval echo -e \${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
+		eval echo -e "'\n'"\${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
 		eval echo -e $(echo \$s_$t)
 		[ "$PAUSE" ] && prompt_skip && continue
 		CUR_TEST=$t
