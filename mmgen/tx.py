@@ -207,16 +207,44 @@ class DeserializedTX(dict,MMGenObject):
 
 		dict.__init__(self,d)
 
-txio_attrs = {
-	'vout':  MMGenListItemAttr('vout',int,typeconv=False),
-	'amt':   MMGenImmutableAttr('amt',g.proto.coin_amt,typeconv=False), # require amt to be of proper type
-	'label': MMGenListItemAttr('label','TwComment',reassign_ok=True),
-	'mmid':  MMGenListItemAttr('mmid','MMGenID'),
-	'addr':  MMGenImmutableAttr('addr','CoinAddr'),
-	'confs': MMGenListItemAttr('confs',int,typeconv=True), # long confs exist in the wild, so convert
-	'txid':  MMGenListItemAttr('txid','CoinTxID'),
-	'have_wif': MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
-}
+class MMGenTxIO(MMGenListItem):
+	vout     = MMGenListItemAttr('vout',int,typeconv=False)
+	amt      = MMGenImmutableAttr('amt',g.proto.coin_amt,typeconv=False) # require amt to be of proper type
+	label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+	mmid     = MMGenListItemAttr('mmid','MMGenID')
+	addr     = MMGenImmutableAttr('addr','CoinAddr')
+	confs    = MMGenListItemAttr('confs',int,typeconv=True) # confs of type long exist in the wild, so convert
+	txid     = MMGenListItemAttr('txid','CoinTxID')
+	have_wif = MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
+
+class MMGenTxInput(MMGenTxIO):
+	scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
+	sequence     = MMGenListItemAttr('sequence',int,typeconv=False)
+
+class MMGenTxOutput(MMGenTxIO):
+	is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
+
+class MMGenTxInputList(list,MMGenObject):
+
+	desc = 'transaction inputs'
+	member_type = 'MMGenTxInput'
+
+	def convert_coin(self,verbose=False):
+		if verbose:
+			msg('{}:'.format(self.desc.capitalize()))
+		for i in self:
+			d = i.__dict__
+			d['amt'] = g.proto.coin_amt(d['amt'])
+
+	def check_coin_mismatch(self):
+		for i in self:
+			if type(i.amt) != g.proto.coin_amt:
+				die(2,'Coin mismatch in transaction: amount {} not of type {}!'.format(i.amt,g.proto.coin_amt))
+
+class MMGenTxOutputList(MMGenTxInputList):
+
+	desc = 'transaction outputs'
+	member_type = 'MMGenTxOutput'
 
 class MMGenTX(MMGenObject):
 
@@ -252,45 +280,9 @@ inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
 Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower())
 
-	class MMGenTxInput(MMGenListItem):
-		for k in txio_attrs: locals()[k] = txio_attrs[k] # in lieu of inheritance
-		scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
-		sequence = MMGenListItemAttr('sequence',int,typeconv=False)
-
-	class MMGenTxOutput(MMGenListItem):
-		for k in txio_attrs: locals()[k] = txio_attrs[k]
-		is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
-
-	class MMGenTxInputList(list,MMGenObject):
-
-		desc = 'transaction inputs'
-		member_type = 'MMGenTxInput'
-
-		def convert_coin(self,verbose=False):
-			from mmgen.protocol import CoinProtocol
-			io = getattr(MMGenTX,self.member_type)
-			if verbose:
-				msg('{}:'.format(self.desc.capitalize()))
-			for i in self:
-				d = i.__dict__
-				d['amt'] = g.proto.coin_amt(d['amt'])
-				i = io(**d)
-				if verbose:
-					pmsg(i.__dict__)
-
-		def check_coin_mismatch(self):
-			for i in self:
-				if type(i.amt) != g.proto.coin_amt:
-					die(2,'Coin mismatch in transaction: amount {} not of type {}!'.format(i.amt,g.proto.coin_amt))
-
-	class MMGenTxOutputList(MMGenTxInputList):
-
-		desc = 'transaction outputs'
-		member_type = 'MMGenTxOutput'
-
 	def __init__(self,filename=None,metadata_only=False,caller=None,silent_open=False):
-		self.inputs      = self.MMGenTxInputList()
-		self.outputs     = self.MMGenTxOutputList()
+		self.inputs      = MMGenTxInputList()
+		self.outputs     = MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.fee         = g.proto.coin_amt('0')
 		self.hex         = ''          # raw serialized hex transaction
@@ -328,7 +320,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return not bad
 
 	def add_output(self,coinaddr,amt,is_chg=None):
-		self.outputs.append(MMGenTX.MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
+		self.outputs.append(MMGenTxOutput(addr=coinaddr,amt=amt,is_chg=is_chg))
 
 	def get_chg_output_idx(self):
 		ch_ops = [x.is_chg for x in self.outputs]
@@ -340,7 +332,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def update_output_amt(self,idx,amt):
 		o = self.outputs[idx].__dict__
 		o['amt'] = amt
-		self.outputs[idx] = MMGenTX.MMGenTxOutput(**o)
+		self.outputs[idx] = MMGenTxOutput(**o)
 
 	def update_change_output(self,change_amt):
 		chg_idx = self.get_chg_output_idx()
@@ -620,9 +612,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	# inputs methods
 	def copy_inputs_from_tw(self,tw_unspent_data):
-		txi,self.inputs = self.MMGenTxInput,self.MMGenTxInputList()
+		self.inputs = MMGenTxInputList()
+		MMGenTxInput() # throwaway instance to initialize cls.valid_attrs
 		for d in tw_unspent_data:
-			t = txi(**{attr:getattr(d,attr) for attr in d.__dict__ if attr in txi.__dict__})
+			t = MMGenTxInput(**{attr:getattr(d,attr) for attr in d.__dict__ if attr in MMGenTxInput.valid_attrs})
 			if d.twmmid.type == 'mmgen': t.mmid = d.twmmid # twmmid -> mmid
 			self.inputs.append(t)
 
@@ -1140,8 +1133,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				assert len(d),'no {}!'.format(desc)
 			for e in d: e['amt'] = g.proto.coin_amt(e['amt'])
 			io,io_list = (
-				(MMGenTX.MMGenTxOutput,MMGenTX.MMGenTxOutputList),
-				(MMGenTX.MMGenTxInput,MMGenTX.MMGenTxInputList)
+				(MMGenTxOutput,MMGenTxOutputList),
+				(MMGenTxInput,MMGenTxInputList)
 			)[desc=='inputs']
 			return io_list([io(**e) for e in d])
 

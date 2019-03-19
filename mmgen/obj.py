@@ -249,16 +249,21 @@ class MMGenListItemAttr(MMGenImmutableAttr): # Descriptor
 
 class MMGenListItem(MMGenObject):
 
+	valid_attrs = None
+
 	def __init__(self,*args,**kwargs):
+		if self.valid_attrs == None:
+			type(self).valid_attrs = (
+				{e for e in dir(self) if e[:2] != '__'} - {'pformat','pmsg','pdie','valid_attrs'} )
 		if args:
 			raise ValueError('Non-keyword args not allowed')
 		for k in kwargs:
 			if kwargs[k] != None:
 				setattr(self,k,kwargs[k])
 
-	# prevent setting random attributes
+	# allow only valid attributes to be set
 	def __setattr__(self,name,value):
-		if name not in type(self).__dict__:
+		if name not in self.valid_attrs:
 			m = "'{}': no such attribute in class {}"
 			raise AttributeError(m.format(name,type(self)))
 		return object.__setattr__(self,name,value)
