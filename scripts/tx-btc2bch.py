@@ -48,8 +48,6 @@ if opt.verbose:
 from mmgen.protocol import init_coin
 init_coin('BCH')
 
-reload(sys.modules['mmgen.tx'])
-
 if opt.verbose:
 	gmsg('Converting transaction to {} format'.format(g.coin))
 

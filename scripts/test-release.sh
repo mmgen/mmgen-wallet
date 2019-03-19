@@ -164,7 +164,7 @@ t_obj=(
 	"$objtest_py --coin=ltc --testnet=1")
 f_obj='Data object test complete'
 
-i_unit='Unit tests'
+i_unit='Unit'
 s_unit='Running unit'
 t_unit=("$unit_tests_py")
 f_unit='Unit tests run complete'

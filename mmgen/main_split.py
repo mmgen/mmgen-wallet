@@ -119,7 +119,6 @@ tx1.create_fn()
 gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
 
 init_coin(opt.other_coin)
-reload(sys.modules['mmgen.tx'])
 
 tx2 = MMGenSplitTX()
 tx2.inputs = tx1.inputs

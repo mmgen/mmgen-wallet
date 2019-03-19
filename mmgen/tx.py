@@ -209,13 +209,29 @@ class DeserializedTX(dict,MMGenObject):
 
 class MMGenTxIO(MMGenListItem):
 	vout     = MMGenListItemAttr('vout',int,typeconv=False)
-	amt      = MMGenImmutableAttr('amt',g.proto.coin_amt,typeconv=False) # require amt to be of proper type
+	_amt     = MMGenImmutableAttr('amt',None,no_type_check=True,typeconv=False)
 	label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	mmid     = MMGenListItemAttr('mmid','MMGenID')
 	addr     = MMGenImmutableAttr('addr','CoinAddr')
 	confs    = MMGenListItemAttr('confs',int,typeconv=True) # confs of type long exist in the wild, so convert
 	txid     = MMGenListItemAttr('txid','CoinTxID')
 	have_wif = MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
+
+	valid_attrs_extra = {'amt'}
+
+	# Setting self.amt is runtime-dependent, so make it a property
+	# Make underlying self._amt an MMGenImmutableAttr so that reassignment is prevented
+	@property
+	def amt(self):
+		if type(self._amt) != g.proto.coin_amt:
+			raise ValueError('{}: invalid coin_amt type (must be {})'.format(type(self._amt),g.proto.coin_amt))
+		return self._amt
+
+	@amt.setter
+	def amt(self,val):
+		if type(val) != g.proto.coin_amt:
+			raise ValueError('{}: invalid coin_amt type (must be {})'.format(type(val),g.proto.coin_amt))
+		self._amt = val
 
 class MMGenTxInput(MMGenTxIO):
 	scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')

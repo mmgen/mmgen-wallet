@@ -162,7 +162,6 @@ def do_umount():
 		subprocess.call(['umount',mountpoint])
 
 def sign_tx_file(txfile):
-	from importlib import reload
 	try:
 		g.testnet = False
 		g.coin = 'BTC'
@@ -182,10 +181,6 @@ def sign_tx_file(txfile):
 		g.chain = tmp_tx.chain
 		g.token = tmp_tx.dcoin
 		g.dcoin = tmp_tx.dcoin or g.coin
-
-		reload(sys.modules['mmgen.tx'])
-		if g.proto.base_coin == 'ETH':
-			reload(sys.modules['mmgen.altcoins.eth.tx'])
 
 		tx = mmgen.tx.MMGenTX(txfile)
 

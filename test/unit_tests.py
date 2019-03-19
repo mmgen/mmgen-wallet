@@ -137,16 +137,13 @@ class UnitTests(object):
 					('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx') )
 			from mmgen.protocol import init_coin
 			from mmgen.tx import MMGenTX
-			from importlib import reload
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)
 				rpc_init(reinit=True)
-				reload(sys.modules['mmgen.tx'])
 				test_tx(MMGenTX(fn).hex,fn,n+1)
 			init_coin('btc',False)
 			rpc_init(reinit=True)
-			reload(sys.modules['mmgen.tx'])
 			Msg('OK')
 
 		from mmgen.tx import DeserializedTX

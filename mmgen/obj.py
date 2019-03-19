@@ -192,9 +192,10 @@ class Hilite(object):
 # Reassignment and deletion forbidden
 class MMGenImmutableAttr(object): # Descriptor
 
-	def __init__(self,name,dtype,typeconv=True):
+	def __init__(self,name,dtype,typeconv=True,no_type_check=False):
 		self.typeconv = typeconv
-		assert type(dtype) in (str,type)
+		self.no_type_check = no_type_check
+		assert type(dtype) in (str,type) or dtype is None
 		self.name = name
 		self.dtype = dtype
 
@@ -214,10 +215,11 @@ class MMGenImmutableAttr(object): # Descriptor
 			instance.__dict__[self.name] = \
 				globals()[self.dtype](value,on_fail='raise') if type(self.dtype) == str else self.dtype(value)
 		else:               # check type
-			if type(value) != self.dtype:
+			if type(value) == self.dtype or self.no_type_check:
+				instance.__dict__[self.name] = value
+			else:
 				m = "Attribute '{}' of {} instance must of type {}"
 				raise TypeError(m.format(self.name,type(instance),self.dtype))
-			instance.__dict__[self.name] = value
 
 	def __delete__(self,instance):
 		m = "Atribute '{}' of {} instance cannot be deleted"
@@ -250,11 +252,13 @@ class MMGenListItemAttr(MMGenImmutableAttr): # Descriptor
 class MMGenListItem(MMGenObject):
 
 	valid_attrs = None
+	valid_attrs_extra = set()
 
 	def __init__(self,*args,**kwargs):
 		if self.valid_attrs == None:
 			type(self).valid_attrs = (
-				{e for e in dir(self) if e[:2] != '__'} - {'pformat','pmsg','pdie','valid_attrs'} )
+				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra ) -
+				{'pformat','pmsg','pdie','valid_attrs','valid_attrs_extra'} )
 		if args:
 			raise ValueError('Non-keyword args not allowed')
 		for k in kwargs:
