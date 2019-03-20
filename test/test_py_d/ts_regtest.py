@@ -149,7 +149,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			else:
 				if n % 2: a.set_comment(idx,'Test address {}'.format(n))
 		a.format(enable_comments=True)
-		write_data_to_file(outfile,a.fmt_data,silent=True,ignore_opt_outdir=True)
+		write_data_to_file(outfile,a.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
 
 	def setup(self):

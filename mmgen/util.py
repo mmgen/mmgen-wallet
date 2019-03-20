@@ -564,13 +564,13 @@ def write_data_to_file( outfile,data,desc='data',
 						ask_overwrite=True,
 						ask_tty=True,
 						no_tty=False,
-						silent=False,
+						quiet=False,
 						binary=False,
 						ignore_opt_outdir=False,
 						check_data=False,
 						cmp_data=None):
 
-	if silent: ask_tty = ask_overwrite = False
+	if quiet: ask_tty = ask_overwrite = False
 	if opt.quiet: ask_overwrite = False
 
 	if ask_write_default_yes == False or ask_write_prompt:
@@ -641,7 +641,7 @@ def write_data_to_file( outfile,data,desc='data',
 			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
 		f.close
 
-		if not (hush or silent):
+		if not (hush or quiet):
 			msg("{} written to file '{}'".format(capfirst(desc),outfile))
 
 		return True
@@ -659,8 +659,8 @@ def get_words_from_user(prompt):
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
-def get_words_from_file(infile,desc,silent=False):
-	if not silent:
+def get_words_from_file(infile,desc,quiet=False):
+	if not quiet:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
 	f = open_file_or_exit(infile, 'r')
 	try: words = f.read().split() # split() also strips
@@ -675,8 +675,8 @@ def get_words(infile,desc,prompt):
 	else:
 		return get_words_from_user(prompt)
 
-def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
-	d = get_data_from_file(fn,desc,binary=True,silent=silent)
+def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
+	d = get_data_from_file(fn,desc,binary=True,quiet=quiet,silent=silent)
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
@@ -685,22 +685,22 @@ def mmgen_decrypt_file_maybe(fn,desc='',silent=False):
 		d = mmgen_decrypt_retry(d,desc)
 	return d
 
-def get_lines_from_file(fn,desc='',trim_comments=False,silent=False):
-	dec = mmgen_decrypt_file_maybe(fn,desc,silent=silent)
+def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False):
+	dec = mmgen_decrypt_file_maybe(fn,desc,quiet=quiet,silent=silent)
 	ret = dec.decode('utf8').splitlines() # DOS-safe
 	if trim_comments: ret = remove_comments(ret)
 	dmsg("Got {} lines from file '{}'".format(len(ret),fn))
 	return ret
 
-def get_data_from_user(desc='data',silent=False): # user input MUST be UTF-8
+def get_data_from_user(desc='data'): # user input MUST be UTF-8
 	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
 	data = my_raw_input(p,echo=opt.echo_passphrase)
 	dmsg('User input: [{}]'.format(data))
 	return data
 
-def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False):
+def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,quiet=False):
 
-	if not opt.quiet and not silent and desc:
+	if not opt.quiet and not silent and not quiet and desc:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
 
 	mode = ('r','rb')[bool(binary)]

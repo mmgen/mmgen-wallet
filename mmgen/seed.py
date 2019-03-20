@@ -311,7 +311,7 @@ an empty passphrase, just hit ENTER twice.
 			)
 		if opt.passwd_file:
 			w = pwfile_reuse_warning()
-			pw = ' '.join(get_words_from_file(opt.passwd_file,desc,silent=w))
+			pw = ' '.join(get_words_from_file(opt.passwd_file,desc,quiet=w))
 		elif opt.echo_passphrase:
 			pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		else:
@@ -337,7 +337,7 @@ an empty passphrase, just hit ENTER twice.
 		)
 		if opt.passwd_file:
 			w = pwfile_reuse_warning()
-			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,silent=w))
+			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,quiet=w))
 		else:
 			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		self.ssdata.passwd = ret

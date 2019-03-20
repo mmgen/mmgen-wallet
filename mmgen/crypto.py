@@ -135,7 +135,7 @@ def _get_random_data_from_user(uchars):
 	prompt = 'You may begin typing.  {} symbols left: '
 
 	import time
-	from mmgen.term import get_char_raw,kb_hold_protect
+	from mmgen.term import get_char_raw
 	key_data,time_data = bytes(),[]
 
 	for i in range(uchars):

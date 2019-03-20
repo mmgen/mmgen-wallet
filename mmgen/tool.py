@@ -75,7 +75,7 @@ def _usage(cmd=None,exit_val=1):
 		'  Same as above, but get additional entropy from user:\n'
 		'  $ mmgen-tool mn_rand128\n\n'
 		'  Convert a string to base 58:\n'
-		'  $ mmgen-tool strtob58 "foobarbaz" pad=20\n\n'
+		'  $ mmgen-tool bytestob58 /etc/timezone pad=20\n\n'
 		'  Reverse a hex string:\n'
 		'  $ mmgen-tool hexreverse "deadbeefcafe"\n\n'
 		'  Same as above, but use a pipe:\n'
@@ -254,7 +254,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def hexlify(self,infile:str):
 		"convert bytes in file to hexadecimal (use '-' for stdin)"
-		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
 		return data.hex()
 
 	def unhexlify(self,hexstr:'sstr'):
@@ -263,7 +263,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def hexdump(self,infile:str,cols=8,line_nums=True):
 		"create hexdump of data from file (use '-' for stdin)"
-		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
 		return pretty_hexdump(data,cols=cols,line_nums=line_nums).rstrip()
 
 	def unhexdump(self,infile:str):
@@ -271,7 +271,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		if g.platform == 'win':
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
-		hexdata = get_data_from_file(infile,dash=True,silent=True)
+		hexdata = get_data_from_file(infile,dash=True,quiet=True)
 		return decode_pretty_hexdump(hexdata)
 
 	def hash160(self,hexstr:'sstr'):
@@ -289,7 +289,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def id6(self,infile:str):
 		"generate 6-character MMGen ID for a file (use '-' for stdin)"
 		return make_chksum_6(
-			get_data_from_file(infile,dash=True,silent=True,binary=True))
+			get_data_from_file(infile,dash=True,quiet=True,binary=True))
 
 	def str2id6(self,string:'sstr'): # retain ignoring of space for backwards compat
 		"generate 6-character MMGen ID for a string, ignoring spaces"
@@ -298,7 +298,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def id8(self,infile:str):
 		"generate 8-character MMGen ID for a file (use '-' for stdin)"
 		return make_chksum_8(
-			get_data_from_file(infile,dash=True,silent=True,binary=True))
+			get_data_from_file(infile,dash=True,quiet=True,binary=True))
 
 	def randb58(self,nbytes=32,pad=True):
 		"generate random data (default: 32 bytes) and convert it to base 58"
@@ -306,7 +306,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def bytestob58(self,infile:str,pad=0):
 		"convert bytes to base 58 (supply data via STDIN)"
-		data = get_data_from_file(infile,dash=True,silent=True,binary=True)
+		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
 		return baseconv.fromhex(data.hex(),'b58',pad=pad,tostr=True)
 
 	def b58tobytes(self,b58num:'sstr',pad=0):

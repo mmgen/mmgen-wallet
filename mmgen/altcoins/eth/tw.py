@@ -39,7 +39,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		TrackingWallet.__init__(self,mode=mode)
 		check_or_create_dir(self.data_dir)
 		try:
-			self.orig_data = get_data_from_file(self.tw_file,silent=True)
+			self.orig_data = get_data_from_file(self.tw_file,quiet=True)
 			self.data = json.loads(self.orig_data)
 		except:
 			try: os.stat(self.tw_file)
@@ -93,7 +93,7 @@ class EthereumTrackingWallet(TrackingWallet):
 	def write(self): # use 'check_data' to check wallet hasn't been altered by another program
 		write_data_to_file( self.tw_file,
 							json.dumps(self.data),'Ethereum tracking wallet data',
-							ask_overwrite=False,ignore_opt_outdir=True,silent=True,
+							ask_overwrite=False,ignore_opt_outdir=True,quiet=True,
 							check_data=True,cmp_data=self.orig_data)
 
 	@write_mode

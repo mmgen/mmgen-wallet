@@ -296,7 +296,7 @@ inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
 Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower())
 
-	def __init__(self,filename=None,metadata_only=False,caller=None,silent_open=False):
+	def __init__(self,filename=None,metadata_only=False,caller=None,quiet_open=False):
 		self.inputs      = MMGenTxInputList()
 		self.outputs     = MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -317,7 +317,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.locktime    = None
 
 		if filename:
-			self.parse_tx_file(filename,metadata_only=metadata_only,silent_open=silent_open)
+			self.parse_tx_file(filename,metadata_only=metadata_only,quiet_open=quiet_open)
 			if metadata_only: return
 			self.check_pubkey_scripts()
 			self.check_sigs() # marks the tx as signed
@@ -1133,14 +1133,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def check_txfile_hex_data(self):
 		self.hex = HexStr(self.hex,on_fail='raise')
 
-	def parse_tx_file(self,infile,metadata_only=False,silent_open=False):
+	def parse_tx_file(self,infile,metadata_only=False,quiet_open=False):
 
 		def eval_io_data(raw_data,desc):
 			from ast import literal_eval
 			try:
 				d = literal_eval(raw_data)
 			except:
-				if desc == 'inputs' and not silent_open:
+				if desc == 'inputs' and not quiet_open:
 					ymsg('Warning: transaction data appears to be in old format')
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
@@ -1154,7 +1154,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			)[desc=='inputs']
 			return io_list([io(**e) for e in d])
 
-		tx_data = get_data_from_file(infile,self.desc+' data',silent=silent_open)
+		tx_data = get_data_from_file(infile,self.desc+' data',quiet=quiet_open)
 
 		try:
 			desc = 'data'

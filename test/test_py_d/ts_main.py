@@ -37,7 +37,7 @@ def make_brainwallet_file(fn):
 	rand_pairs = [wl[getrandnum_range(1,200) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
 	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
-	write_data_to_file(fn,d,'brainwallet password',silent=True,ignore_opt_outdir=True)
+	write_data_to_file(fn,d,'brainwallet password',quiet=True,ignore_opt_outdir=True)
 
 def verify_checksum_or_exit(checksum,chk):
 	if checksum != chk:
@@ -243,7 +243,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def _write_fake_data_to_file(self,d):
 		unspent_data_file = joinpath(self.tmpdir,'unspent.json')
-		write_data_to_file(unspent_data_file,d,'Unspent outputs',silent=True,ignore_opt_outdir=True)
+		write_data_to_file(unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
 		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
 		if opt.print_cmdline: msg(bwd_msg)
@@ -291,7 +291,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(of,  privkey.wif+'\n','compressed {} key'.format(g.proto.name),
-									silent=True,ignore_opt_outdir=True)
+									quiet=True,ignore_opt_outdir=True)
 			out.append(self._create_fake_unspent_entry(rand_coinaddr,non_mmgen=True,segwit=False))
 
 		return out

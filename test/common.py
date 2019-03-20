@@ -86,7 +86,7 @@ def get_tmpfile(cfg,fn):
 def write_to_file(fn,data,binary=False):
 	write_data_to_file( fn,
 						data,
-						silent = True,
+						quiet = True,
 						binary = binary,
 						ignore_opt_outdir = True )
 
@@ -95,7 +95,7 @@ def write_to_tmpfile(cfg,fn,data,binary=False):
 
 def read_from_file(fn,binary=False):
 	from mmgen.util import get_data_from_file
-	return get_data_from_file(fn,silent=True,binary=binary)
+	return get_data_from_file(fn,quiet=True,binary=binary)
 
 def read_from_tmpfile(cfg,fn,binary=False):
 	return read_from_file(os.path.join(cfg['tmpdir'],fn),binary=binary)
