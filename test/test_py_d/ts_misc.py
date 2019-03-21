@@ -85,10 +85,27 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	enc_infn = 'tool_encrypt.in'
 	cmd_group = (
 		('tool_find_incog_data', (9,"'mmgen-tool find_incog_data'", [[[hincog_fn],1],[[incog_id_fn],1]])),
+		('tool_rand2file',       (9,"'mmgen-tool rand2file'", [])),
 		('tool_encrypt',         (9,"'mmgen-tool encrypt' (random data)",     [])),
 		('tool_decrypt',         (9,"'mmgen-tool decrypt' (random data)", [[[enc_infn+'.mmenc'],9]])),
 		# ('tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])),
 	)
+
+	def tool_rand2file(self):
+		outfile = os.path.join(self.tmpdir,'rand2file.out')
+		from mmgen.tool import MMGenToolCmd
+		tu = MMGenToolCmd()
+		for nbytes in ('1','1023','1K','1048575','1M','1048577','123M'):
+			t = self.spawn( 'mmgen-tool',
+							['-d',self.tmpdir,'-r0','rand2file','rand2file.out',nbytes],
+							extra_desc='({} byte{})'.format(nbytes,suf(tu.bytespec(nbytes)))
+							)
+			t.expect('random data written to file')
+			t.read()
+			t.p.wait()
+			t.ok()
+		t.skip_ok = True
+		return t
 
 	def tool_encrypt(self):
 		infile = joinpath(self.tmpdir,self.enc_infn)

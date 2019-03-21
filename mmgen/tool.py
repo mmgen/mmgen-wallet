@@ -587,61 +587,62 @@ class MMGenToolCmdFileUtil(MMGenToolCmdBase):
 
 	def rand2file(self,outfile:str,nbytes:str,threads=4,silent=False):
 		"write 'n' bytes of random data to specified file"
-		nbytes = parse_bytespec(nbytes)
-		from Crypto import Random
-		rh = Random.new()
-		from queue import Queue
 		from threading import Thread
-		bsize = 2**20
-		roll = bsize * 4
-		if opt.outdir: outfile = make_full_path(opt.outdir,outfile)
-		f = open(outfile,'wb')
-
-		from Crypto.Cipher import AES
-		from Crypto.Util import Counter
-
-		key = get_random(32)
+		from queue import Queue
+		from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
+		from cryptography.hazmat.backends import default_backend
 
 		def encrypt_worker(wid):
+			ctr_init_val = os.urandom(g.aesctr_iv_len)
+			c = Cipher(algorithms.AES(key),modes.CTR(ctr_init_val),backend=default_backend())
+			encryptor = c.encryptor()
 			while True:
-				i,d = q1.get()
-				c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=i))
-				enc_data = c.encrypt(d)
-				q2.put(enc_data)
+				q2.put(encryptor.update(q1.get()))
 				q1.task_done()
 
 		def output_worker():
 			while True:
-				data = q2.get()
-				f.write(data)
+				f.write(q2.get())
 				q2.task_done()
 
-		q1 = Queue()
+		nbytes = parse_bytespec(nbytes)
+		if opt.outdir:
+			outfile = make_full_path(opt.outdir,outfile)
+		f = open(outfile,'wb')
+
+		key = get_random(32)
+		q1,q2 = Queue(),Queue()
+
 		for i in range(max(1,threads-2)):
-			t = Thread(target=encrypt_worker,args=(i,))
+			t = Thread(target=encrypt_worker,args=[i])
 			t.daemon = True
 			t.start()
 
-		q2 = Queue()
 		t = Thread(target=output_worker)
 		t.daemon = True
 		t.start()
 
-		i = 1; rbytes = nbytes
-		while rbytes > 0:
-			d = rh.read(min(bsize,rbytes))
-			q1.put((i,d))
-			rbytes -= bsize
-			i += 1
-			if not (bsize*i) % roll:
-				msg_r('\rRead: {} bytes'.format(bsize*i))
+		blk_size = 1024 * 1024
+		for i in range(nbytes // blk_size):
+			if not i % 4:
+				msg_r('\rRead: {} bytes'.format(i * blk_size))
+			q1.put(os.urandom(blk_size))
 
-		if not silent:
-			msg('\rRead: {} bytes'.format(nbytes))
-			qmsg("\r{} bytes of random data written to file '{}'".format(nbytes,outfile))
+		if nbytes % blk_size:
+			q1.put(os.urandom(nbytes % blk_size))
+
 		q1.join()
 		q2.join()
 		f.close()
+
+		fsize = os.stat(outfile).st_size
+		if fsize != nbytes:
+			die(3,'{}: incorrect random file size (should be {})'.format(fsize,nbytes))
+
+		if not silent:
+			msg('\rRead: {} bytes'.format(nbytes))
+			qmsg("\r{} byte{} of random data written to file '{}'".format(nbytes,suf(nbytes),outfile))
+
 		return True
 
 class MMGenToolCmdWallet(MMGenToolCmdBase):
