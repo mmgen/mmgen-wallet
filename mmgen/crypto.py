@@ -20,8 +20,9 @@
 crypto.py:  Cryptographic and related routines for the MMGen suite
 """
 
+from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
+from cryptography.hazmat.backends import default_backend
 from hashlib import sha256
-
 from mmgen.common import *
 
 crmsg = {
@@ -49,7 +50,7 @@ def scramble_seed(seed,scramble_key,hash_rounds):
 	return sha256_rounds(scr_seed,hash_rounds)
 
 def encrypt_seed(seed,key):
-	return encrypt_data(seed,key,iv=1,desc='seed')
+	return encrypt_data(seed,key,desc='seed')
 
 def decrypt_seed(enc_seed,key,seed_id,key_id):
 	vmsg_r('Checking key...')
@@ -59,7 +60,7 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 			msg('Incorrect passphrase or hash preset')
 			return False
 
-	dec_seed = decrypt_data(enc_seed,key,iv=1,desc='seed')
+	dec_seed = decrypt_data(enc_seed,key,desc='seed')
 	chk2     = make_chksum_8(dec_seed)
 	if seed_id:
 		if compare_chksums(seed_id,'Seed ID',chk2,'decrypted seed'):
@@ -79,31 +80,28 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 	dmsg('Decrypted seed: {}'.format(dec_seed.hex()))
 	return dec_seed
 
-def encrypt_data(data,key,iv=1,desc='data',verify=True):
-	# 192-bit seed is 24 bytes -> not multiple of 16.  Must use MODE_CTR
-	from Crypto.Cipher import AES
-	from Crypto.Util import Counter
+def encrypt_data(data,key,iv=g.aesctr_dfl_iv,desc='data',verify=True):
 	vmsg('Encrypting {}'.format(desc))
-	c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	enc_data = c.encrypt(data)
+	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
+	encryptor = c.encryptor()
+	enc_data = encryptor.update(data) + encryptor.finalize()
 
 	if verify:
 		vmsg_r('Performing a test decryption of the {}...'.format(desc))
-		c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-		dec_data = c.decrypt(enc_data)
-
-		if dec_data == data: vmsg('done')
-		else:
+		c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
+		encryptor = c.encryptor()
+		dec_data = encryptor.update(enc_data) + encryptor.finalize()
+		if dec_data != data:
 			die(2,"ERROR.\nDecrypted {s} doesn't match original {s}".format(s=desc))
+		vmsg('done')
 
 	return enc_data
 
-def decrypt_data(enc_data,key,iv=1,desc='data'):
-	from Crypto.Cipher import AES
-	from Crypto.Util import Counter
+def decrypt_data(enc_data,key,iv=g.aesctr_dfl_iv,desc='data'):
 	vmsg_r('Decrypting {} with key...'.format(desc))
-	c = AES.new(key,AES.MODE_CTR,counter=Counter.new(g.aesctr_iv_len*8,initial_value=iv))
-	return c.decrypt(enc_data)
+	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
+	encryptor = c.encryptor()
+	return encryptor.update(enc_data) + encryptor.finalize()
 
 def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 
@@ -153,8 +151,7 @@ def _get_random_data_from_user(uchars):
 	return key_data+''.join(fmt_time_data).encode()
 
 def get_random(length):
-	from Crypto import Random
-	os_rand = Random.new().read(length)
+	os_rand = os.urandom(length)
 	if opt.usr_randchars:
 		from_what = 'OS random data'
 		if not g.user_entropy:
@@ -163,7 +160,7 @@ def get_random(length):
 			from_what += ' plus user-supplied entropy'
 		else:
 			from_what += ' plus saved user-supplied entropy'
-		key = make_key(g.user_entropy,'','2',from_what=from_what,verbose=True)
+		key = make_key(g.user_entropy,b'','2',from_what=from_what,verbose=True)
 		return encrypt_data(os_rand,key,desc='random data',verify=False)
 	else:
 		return os_rand
@@ -195,7 +192,7 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_new_passphrase(desc,{})
 	key    = make_key(passwd,salt,hp)
-	enc_d  = encrypt_data(sha256(nonce+data).digest()+nonce+data,key,int(iv.hex(),16),desc=desc)
+	enc_d  = encrypt_data(sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc)
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
@@ -210,7 +207,7 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 	qmsg("Using {} hash preset of '{}'".format(m,hp))
 	passwd = get_mmgen_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
-	dec_d  = decrypt_data(enc_d,key,int(iv.hex(),16),desc)
+	dec_d  = decrypt_data(enc_d,key,iv,desc)
 	if dec_d[:_sha256_len] == sha256(dec_d[_sha256_len:]).digest():
 		vmsg('OK')
 		return dec_d[_sha256_len+_nonce_len:]

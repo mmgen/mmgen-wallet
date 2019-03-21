@@ -855,7 +855,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.salt = get_random(g.salt_len)
 		key = make_key(d.passwd, d.salt, d.hash_preset, 'incog wallet key')
 		chk = sha256(self.seed.data).digest()[:8]
-		d.enc_seed = encrypt_data(chk + self.seed.data, key, 1, 'seed')
+		d.enc_seed = encrypt_data(chk+self.seed.data, key, g.aesctr_dfl_iv, 'seed')
 
 		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, 'incog wrapper key')
 		d.key_id = make_chksum_8(d.wrapper_key)
@@ -864,13 +864,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _format(self):
 		d = self.ssdata
-#		print len(d.iv), len(d.salt), len(d.enc_seed), len(d.wrapper_key)
-		self.fmt_data = d.iv + encrypt_data(
-							d.salt + d.enc_seed,
-							d.wrapper_key,
-							int(d.iv.hex(),16),
-							self.desc)
-#		print len(self.fmt_data)
+		self.fmt_data = d.iv + encrypt_data(d.salt+d.enc_seed, d.wrapper_key, d.iv, self.desc)
 
 	def _filename(self):
 		s = self.seed
@@ -921,8 +915,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		# IV is used BOTH to initialize counter and to salt password!
 		key = make_key(d.passwd, d.iv, d.hash_preset, 'wrapper key')
-		dd = decrypt_data(d.enc_incog_data, key,
-				int(d.iv.hex(),16), 'incog data')
+		dd = decrypt_data(d.enc_incog_data, key, d.iv, 'incog data')
 
 		d.salt     = dd[0:g.salt_len]
 		d.enc_seed = dd[g.salt_len:]

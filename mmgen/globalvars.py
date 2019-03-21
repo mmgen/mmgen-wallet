@@ -191,6 +191,7 @@ class g(object):
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16
 	aesctr_iv_len  = 16
+	aesctr_dfl_iv  = b'\x00' * (aesctr_iv_len-1) + b'\x01'
 	hincog_chk_len = 8
 
 	key_generators = 'python-ecdsa','secp256k1' # '1','2'
