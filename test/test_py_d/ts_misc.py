@@ -151,10 +151,11 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		for n in self.tmpdir_nums:
-			cfgs[str(n)].update({   'addr_idx_list': '1-2',
-									'segwit': n in (33,34),
-									'dep_generators': { 'addrs':'ref_tx_addrgen'+str(n)[-1] }})
+		if cfgs:
+			for n in self.tmpdir_nums:
+				cfgs[str(n)].update({   'addr_idx_list': '1-2',
+										'segwit': n in (33,34),
+										'dep_generators': { 'addrs':'ref_tx_addrgen'+str(n)[-1] }})
 		return TestSuiteMain.__init__(self,trunner,cfgs,spawn)
 
 	def ref_tx_addrgen(self,atype):

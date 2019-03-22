@@ -75,7 +75,6 @@ class g(object):
 	debug_addrlist       = False
 	quiet                = False
 	no_license           = False
-	color                = (False,True)[sys.stdout.isatty()]
 	force_256_color      = False
 	testnet              = False
 	regtest              = False
@@ -99,11 +98,14 @@ class g(object):
 	traceback            = False
 	test_suite           = False
 
-	for k in ('win','linux'):
+	for k in ('linux','win','msys'):
 		if sys.platform[:len(k)] == k:
-			platform = k; break
+			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
+			break
 	else:
 		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
+
+	color = sys.stdout.isatty() and platform != 'win'
 
 	if os.getenv('HOME'):                             # Linux or MSYS
 		home_dir = os.getenv('HOME')

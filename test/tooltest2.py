@@ -718,7 +718,7 @@ if opt.fork:
 		d,f = init_coverage()
 		tool_cmd = ('python3','-m','trace','--count','--coverdir='+d,'--file='+f) + tool_cmd
 	elif g.platform == 'win':
-		tool_cmd = ('python3') + tool_cmd
+		tool_cmd = ('python3',) + tool_cmd
 else:
 	opt.usr_randchars = 0
 	tc = tool.MMGenToolCmd()

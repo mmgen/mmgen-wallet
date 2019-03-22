@@ -766,7 +766,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete
 
 	if opt.accept_defaults:
 		msg(p)
-		return (False,True)[default_yes]
+		return default_yes
 
 	while True:
 		r = get_char(p).strip(b'\n\r')

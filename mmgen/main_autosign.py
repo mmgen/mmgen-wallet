@@ -316,7 +316,7 @@ def setup():
 
 def ev_sleep(secs):
 	ev.wait(secs)
-	return (False,True)[ev.isSet()]
+	return ev.isSet()
 
 def do_led(on,off):
 	if not on:

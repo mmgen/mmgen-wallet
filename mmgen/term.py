@@ -118,7 +118,7 @@ def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=
 
 			if ord(ch) == 3: raise KeyboardInterrupt
 
-			if immed_chars == 'ALL' or ch in immed_chars:
+			if immed_chars == 'ALL' or ch.decode() in immed_chars:
 				return ch
 			if immed_chars == 'ALL_EXCEPT_ENTER' and not ch in '\n\r':
 				return ch

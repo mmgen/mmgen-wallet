@@ -512,7 +512,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			wf,desc='hidden incognito data',out_fmt='hi',add_args=add_args)
 
 	def addrgen_seed(self,wf,foo,desc='seed data',in_fmt='seed'):
-		stdout = (False,True)[desc=='seed data'] #capture output to screen once
+		stdout = desc == 'seed data' # capture output to screen once
 		add_args = ([],['-S'])[bool(stdout)] + self.segwit_arg
 		t = self.spawn('mmgen-addrgen', add_args +
 				['-i'+in_fmt,'-d',self.tmpdir,wf,self.addr_idx_list])

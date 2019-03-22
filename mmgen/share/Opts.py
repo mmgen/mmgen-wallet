@@ -106,7 +106,7 @@ def parse_opts(argv,opts_data,opt_filter=None,skip_help=False):
 		for l in opts_data[k].strip().splitlines():
 			m = re.match(pat,l)
 			if m:
-				skip = (False,True)[bool(opt_filter) and m.group(1) not in opt_filter]
+				skip = bool(opt_filter) and m.group(1) not in opt_filter
 				app = (['',''],[':','='])[m.group(3) == '=']
 				od.append(list(m.groups()) + app + [skip])
 			else:

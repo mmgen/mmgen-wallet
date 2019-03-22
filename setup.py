@@ -29,6 +29,7 @@ if ver[0] < min_ver[0] or ver[1] < min_ver[1]:
 _gvi = subprocess.check_output(['gcc','--version']).decode().splitlines()[0]
 have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
 have_arm     = subprocess.check_output(['uname','-m']).strip() == 'aarch64'
+have_msys2   = not have_mingw64 and os.getenv('MSYSTEM') == 'MINGW64'
 
 # Zipfile module under Windows (MinGW) can't handle UTF-8 filenames.
 # Move it so that distutils will use the 'zip' utility instead.
@@ -108,7 +109,7 @@ setup(
 		platforms    = 'Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian',
 		keywords     = g.keywords,
 		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
-		ext_modules  = [module1],
+		ext_modules  = [] if have_msys2 else [module1],
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode
 				'data_files/mn_wordlist.c',

@@ -78,7 +78,7 @@ def opt_postproc_initializations():
 	from mmgen.color import init_color
 	init_color(enable_color=g.color,num_colors=('auto',256)[bool(g.force_256_color)])
 
-	if g.platform == 'win': start_mscolor()
+	if g.color and g.platform == 'win': start_mscolor()
 
 	g.coin = g.coin.upper() # allow user to use lowercase
 	g.dcoin = g.coin
