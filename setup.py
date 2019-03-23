@@ -128,6 +128,7 @@ setup(
 			'mmgen.exception',
 			'mmgen.filename',
 			'mmgen.globalvars',
+			'mmgen.keccak',
 			'mmgen.license',
 			'mmgen.mn_electrum',
 			'mmgen.mn_tirosh',
@@ -151,6 +152,9 @@ setup(
 			'mmgen.altcoins.eth.obj',
 			'mmgen.altcoins.eth.tx',
 			'mmgen.altcoins.eth.tw',
+			'mmgen.altcoins.eth.pyethereum.__init__',
+			'mmgen.altcoins.eth.pyethereum.transactions',
+			'mmgen.altcoins.eth.pyethereum.utils',
 
 			'mmgen.main',
 			'mmgen.main_addrgen',

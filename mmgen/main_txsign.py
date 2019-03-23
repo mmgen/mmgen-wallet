@@ -35,6 +35,7 @@ opts_data = lambda: {
 -d, --outdir=      d  Specify an alternate directory 'd' for output
 -D, --tx-id           Display transaction ID and exit
 -e, --echo-passphrase Print passphrase to screen when typing it
+-E, --use-internal-keccak-module Force use of the internal keccak module
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)

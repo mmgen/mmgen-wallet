@@ -90,7 +90,10 @@ class EthereumMMGenTX(MMGenTX):
 	# hex data if signed, json if unsigned: see create_raw()
 	def check_txfile_hex_data(self):
 		if self.check_sigs():
-			from ethereum.transactions import Transaction
+
+			try: from ethereum.transactions import Transaction
+			except: from mmgen.altcoins.eth.pyethereum.transactions import Transaction
+
 			import rlp
 			etx = rlp.decode(bytes.fromhex(self.hex),Transaction)
 			d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'
@@ -284,7 +287,9 @@ class EthereumMMGenTX(MMGenTX):
 				'nonce':    d['nonce'],
 				'data':     bytes.fromhex(d['data'])}
 
-		from ethereum.transactions import Transaction
+		try: from ethereum.transactions import Transaction
+		except: from mmgen.altcoins.eth.pyethereum.transactions import Transaction
+
 		etx = Transaction(**d_in).sign(wif,d['chainId'])
 		assert etx.sender.hex() == d['from'],(
 			'Sender address recovered from signature does not match true sender')

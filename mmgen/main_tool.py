@@ -60,6 +60,7 @@ opts_data = lambda: {
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
+-k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
                       for password hashing (default: '{g.hash_preset}')
 -P, --passwd-file= f  Get passphrase from file 'f'.

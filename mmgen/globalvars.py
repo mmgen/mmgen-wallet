@@ -79,8 +79,12 @@ class g(object):
 	testnet              = False
 	regtest              = False
 	accept_defaults      = False
+	use_internal_keccak_module = False
+
 	chain                = None # set by first call to rpc_init()
 	chains               = 'mainnet','testnet','regtest'
+
+	# rpc:
 	rpc_host             = ''
 	rpc_port             = 0
 	rpc_user             = ''
@@ -88,6 +92,7 @@ class g(object):
 	rpc_fail_on_command  = ''
 	rpch                 = None # global RPC handle
 
+	# regtest:
 	bob                  = False
 	alice                = False
 
@@ -117,12 +122,20 @@ class g(object):
 	data_dir_root,data_dir,cfg_file = None,None,None
 	daemon_data_dir = '' # set by user or protocol
 
-	# User opt sets global var:
+	# global var sets user opt:
+	global_sets_opt = ( 'minconf','seed_len','hash_preset','usr_randchars','debug',
+						'quiet','tx_confs','tx_fee_adj','key_generator' )
+
+	# user opt sets global var:
+	opt_sets_global = ( 'use_internal_keccak_module', )
+
+	# 'long' opts - opt sets global var
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
 		'accept_defaults','token'
 	)
+	# opts initialized to None by opts.init() if not set by user
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
@@ -178,10 +191,6 @@ class g(object):
 	minconf = 1
 	max_tx_file_size = 100000
 	max_input_size   = 1024 * 1024
-
-	# Global var sets user opt:
-	global_sets_opt = ['minconf','seed_len','hash_preset','usr_randchars','debug',
-						'quiet','tx_confs','tx_fee_adj','key_generator']
 
 	passwd_max_tries = 5
 

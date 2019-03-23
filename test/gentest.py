@@ -37,6 +37,7 @@ opts_data = lambda: {
 	'options': """
 -h, --help       Print this help message
 -a, --all        Test all supported coins for external generator 'ext'
+-k, --use-internal-keccak-module Force use of the internal keccak module
 --, --longhelp   Print help message for long options (common options)
 -q, --quiet      Produce quieter output
 -t, --type=t     Specify address type (valid options: 'compressed','segwit','zcash_z')
@@ -122,7 +123,7 @@ def init_external_prog():
 		addr_type = MMGenAddrType('Z')
 	elif test_support('pyethereum'):
 		try:
-			import ethereum.utils as eth
+			import mmgen.altcoins.eth.pyethereum.utils as eth
 		except:
 			raise ImportError("Unable to import 'ethereum' module. Is pyethereum installed?")
 		ext_sec2addr = pyethereum_sec2addr

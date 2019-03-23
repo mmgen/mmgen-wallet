@@ -78,14 +78,27 @@ class AddrGeneratorBech32(AddrGenerator):
 		raise NotImplementedError('Segwit redeem script not supported by this address type')
 
 class AddrGeneratorEthereum(AddrGenerator):
+
+	def __init__(self,addr_type):
+
+		try:
+			assert not g.use_internal_keccak_module
+			from sha3 import keccak_256
+		except:
+			from mmgen.keccak import keccak_256
+		self.keccak_256 = keccak_256
+
+		from mmgen.protocol import hash256
+		self.hash256 = hash256
+
+		return AddrGenerator.__init__(addr_type)
+
 	def to_addr(self,pubhex):
 		assert type(pubhex) == PubKey
-		import sha3
-		return CoinAddr(sha3.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
+		return CoinAddr(self.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
 
 	def to_wallet_passwd(self,sk_hex):
-		from mmgen.protocol import hash256
-		return WalletPassword(hash256(sk_hex)[:32])
+		return WalletPassword(self.hash256(sk_hex)[:32])
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError('Segwit redeem script not supported by this address type')
@@ -132,6 +145,31 @@ class AddrGeneratorZcashZ(AddrGenerator):
 
 class AddrGeneratorMonero(AddrGenerator):
 
+	def __init__(self,addr_type):
+
+		try:
+			assert not g.use_internal_keccak_module
+			from sha3 import keccak_256
+		except:
+			from mmgen.keccak import keccak_256
+		self.keccak_256 = keccak_256
+
+		from mmgen.protocol import hash256
+		self.hash256 = hash256
+
+		if opt.use_old_ed25519:
+			from mmgen.ed25519 import edwards,encodepoint,B,scalarmult
+		else:
+			from mmgen.ed25519ll_djbec import scalarmult
+			from mmgen.ed25519 import edwards,encodepoint,B
+
+		self.edwards     = edwards
+		self.encodepoint = encodepoint
+		self.scalarmult  = scalarmult
+		self.B           = B
+
+		return AddrGenerator.__init__(addr_type)
+
 	def b58enc(self,addr_bytes):
 		enc = baseconv.fromhex
 		l = len(addr_bytes)
@@ -141,42 +179,33 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def to_addr(self,sk_hex): # sk_hex instead of pubhex
 
-		if opt.use_old_ed25519:
-			from mmgen.ed25519 import edwards,encodepoint,B,scalarmult
-		else:
-			from mmgen.ed25519ll_djbec import scalarmult
-			from mmgen.ed25519 import edwards,encodepoint,B
-
 		# Source and license for scalarmultbase function:
 		#   https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py
 		# Copyright (c) 2014-2016, The Monero Project
 		# All rights reserved.
 		def scalarmultbase(e):
 			if e == 0: return [0, 1]
-			Q = scalarmult(B, e//2)
-			Q = edwards(Q, Q)
-			if e & 1: Q = edwards(Q, B)
+			Q = self.scalarmult(self.B, e//2)
+			Q = self.edwards(Q, Q)
+			if e & 1: Q = self.edwards(Q, self.B)
 			return Q
 
 		def hex2int_le(hexstr):
 			return int((bytes.fromhex(hexstr)[::-1]).hex(),16)
 
 		vk_hex = self.to_viewkey(sk_hex)
-		pk_str  = encodepoint(scalarmultbase(hex2int_le(sk_hex)))
-		pvk_str = encodepoint(scalarmultbase(hex2int_le(vk_hex)))
+		pk_str  = self.encodepoint(scalarmultbase(hex2int_le(sk_hex)))
+		pvk_str = self.encodepoint(scalarmultbase(hex2int_le(vk_hex)))
 		addr_p1 = bytes.fromhex(g.proto.addr_ver_num['monero'][0]) + pk_str + pvk_str
 
-		import sha3
-		return CoinAddr(self.b58enc(addr_p1 + sha3.keccak_256(addr_p1).digest()[:4]))
+		return CoinAddr(self.b58enc(addr_p1 + self.keccak_256(addr_p1).digest()[:4]))
 
 	def to_wallet_passwd(self,sk_hex):
-		from mmgen.protocol import hash256
-		return WalletPassword(hash256(sk_hex)[:32])
+		return WalletPassword(self.hash256(sk_hex)[:32])
 
 	def to_viewkey(self,sk_hex):
 		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
-		import sha3
-		return MoneroViewKey(g.proto.preprocess_key(sha3.keccak_256(bytes.fromhex(sk_hex)).hexdigest(),None))
+		return MoneroViewKey(g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).hexdigest(),None))
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')

@@ -20,14 +20,19 @@
 altcoins.eth.contract: Ethereum contract and token classes for the MMGen suite
 """
 
-from sha3 import keccak_256
 from decimal import Decimal
 import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
 from mmgen.obj import MMGenObject,TokenAddr,CoinTxID,ETHAmt
-from mmgen.util import msg,msg_r,pmsg,pdie
+from mmgen.util import msg,pmsg
+
+try:
+	assert not g.use_internal_keccak_module
+	from sha3 import keccak_256
+except:
+	from mmgen.keccak import keccak_256
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
@@ -103,7 +108,10 @@ class Token(MMGenObject): # ERC20
 				'data':    bytes.fromhex(data) }
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
-		from ethereum.transactions import Transaction
+
+		try: from ethereum.transactions import Transaction
+		except: from mmgen.altcoins.eth.pyethereum.transactions import Transaction
+
 		if chain_id is None:
 			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
 			chain_id = int(g.rpch.request(chain_id_method),16)

@@ -35,7 +35,7 @@ if sys.argv[0].split('-')[-1] == 'keygen':
 else:
 	gen_what = 'addresses'
 	gen_desc = 'addresses'
-	opt_filter = 'hbcdeEiHOKlpzPqrStv-'
+	opt_filter = 'hbcdeEiHOkKlpzPqrStv-'
 	note_addrkey = ''
 note_secp256k1 = """
 If available, the secp256k1 library will be used for address generation.
@@ -59,6 +59,7 @@ opts_data = lambda: {
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -O, --old-incog-fmt   Specify old-format incognito input
+-k, --use-internal-keccak-module Force use of the internal keccak module
 -K, --key-generator=m Use method 'm' for public key generation
                       Options: {kgs} (default: {kg})
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option

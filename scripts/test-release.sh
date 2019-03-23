@@ -19,10 +19,10 @@ scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
-rounds=100 rounds_mid=250 rounds_max=500
+rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj unit sha2 alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='obj unit hash alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -47,7 +47,7 @@ do
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
 		echo   "     unit     - unit tests"
-		echo   "     sha2     - MMGen sha2 implementation"
+		echo   "     hash     - internal hash function implementations"
 		echo   "     alts     - operations for all supported gen-only altcoins"
 		echo   "     monero   - operations for Monero"
 		echo   "     eth      - operations for Ethereum"
@@ -78,7 +78,7 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  rounds=10 rounds_mid=25 rounds_max=50 monero_addrs='3,23' ;;
+	f)  rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -169,12 +169,13 @@ s_unit='Running unit'
 t_unit=("$unit_tests_py")
 f_unit='Unit tests run complete'
 
-i_sha2='MMGen SHA2 implementation'
-s_sha2='Testing SHA2 implementation'
-t_sha2=(
-	"$python test/sha2test.py sha256 $rounds_max"
-	"$python test/sha2test.py sha512 $rounds_max")
-f_sha2='SHA2 test complete'
+i_hash='Internal hash function implementations'
+s_hash='Testing internal hash function implementations'
+t_hash=(
+	"$python test/hashfunc.py sha256 $rounds_max"
+	"$python test/hashfunc.py sha512 $rounds_max"
+	"$python test/hashfunc.py keccak $rounds_max")
+f_hash='Hash function tests complete'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
@@ -190,7 +191,11 @@ t_alts=(
 	"$gentest_py --coin=ltc --type=segwit 2 $rounds"
 	"$gentest_py --coin=ltc --type=bech32 2 $rounds"
 	"$gentest_py --coin=etc 2 $rounds"
+	"$gentest_py --coin=etc --use-internal-keccak-module 2 $rounds_min"
 	"$gentest_py --coin=eth 2 $rounds"
+	"$gentest_py --coin=eth --use-internal-keccak-module 2 $rounds_min"
+	"$gentest_py --coin=xmr 2 $rounds"
+	"$gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min"
 	"$gentest_py --coin=zec 2 $rounds"
 	"$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid"
 
@@ -228,7 +233,7 @@ s_monero='Testing key-address file generation and wallet creation and sync opera
 s_monero='The monerod (mainnet) daemon must be running for the following tests'
 t_monero=(
 "mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words"
-"$mmgen_keygen -q --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs"
+"$mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs"
 'cs1=$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)'
 "$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs"
 'cs2=$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)'

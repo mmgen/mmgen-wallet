@@ -228,8 +228,9 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 	usage_txt = opts_data['usage']
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
-	for o in tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts) + \
-				g.required_opts + g.common_opts:
+	for o in  ( tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts)
+				+ g.required_opts
+				+ g.common_opts ):
 		setattr(opt,o,uopts[o] if o in uopts else None)
 
 	if opt.version: Die(0,"""
@@ -255,9 +256,11 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 	override_from_env()
 
 	# User opt sets global var - do these here, before opt is set from g.global_sets_opt
-	for k in g.common_opts:
-		val = getattr(opt,k)
-		if val != None: setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
+	for k in (g.common_opts + g.opt_sets_global):
+		if hasattr(opt,k):
+			val = getattr(opt,k)
+			if val != None:
+				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
 	if g.regtest: g.testnet = True # These are equivalent for now
 

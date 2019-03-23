@@ -16,22 +16,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-test/sha2test.py: Test MMGen's SHA256 and SHA512 implementations
+test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 """
 
 import sys,os
-from mmgen.sha2 import Sha256,Sha512
 from mmgen.util import die
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
 test = sys.argv[1].capitalize()
-assert test in ('Sha256','Sha512'), "Valid choices for test are 'sha256' or 'sha512'"
+assert test in ('Sha256','Sha512','Keccak'), "Valid choices for test are 'sha256','sha512' or 'keccak'"
 random_rounds = int(sys.argv[2]) if len(sys.argv) == 3 else 500
 
 def msg(s): sys.stderr.write(s)
 def green(s): return '\033[32;1m' + s + '\033[0m'
 
-class TestSha2(object):
+class TestHashFunc(object):
 
 	def test_constants(self):
 		msg('Testing generated constants: ')
@@ -45,8 +44,7 @@ class TestSha2(object):
 		msg('OK\n')
 
 	def compare_hashes(self,dlen,data):
-		import hashlib
-		sha2_ref = getattr(hashlib,self.desc)(data).hexdigest()
+		sha2_ref = getattr(self.hashlib,self.desc)(data).hexdigest()
 		ret = self.t_cls(data).hexdigest()
 		if ret != sha2_ref:
 			m ='\nHashes do not match!\nReference {d}: {}\nMMGen {d}:     {}'
@@ -81,9 +79,40 @@ class TestSha2(object):
 			self.compare_hashes(dlen,os.urandom(dlen))
 		msg('OK\n')
 
+class TestKeccak(TestHashFunc):
+	desc = 'keccak_256'
+	def __init__(self):
+		from mmgen.keccak import keccak_256
+		import sha3
+		self.t_cls = keccak_256
+		self.hashlib = sha3
+
+	def test_constants(self): pass
+
+class TestSha2(TestHashFunc):
+
+	def __init__(self):
+		from mmgen.sha2 import Sha256,Sha512
+		import hashlib
+		self.t_cls = { 'sha256':Sha256, 'sha512':Sha512 }[self.desc]
+		self.hashlib = hashlib
+
+class TestSha256(TestSha2):
+	desc = 'sha256'
+	H_ref = (
+		0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 )
+	K_ref = (
+		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+		0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 )
+
 class TestSha512(TestSha2):
 	desc = 'sha512'
-	t_cls = Sha512
 	H_ref = (
 		0x6a09e667f3bcc908, 0xbb67ae8584caa73b, 0x3c6ef372fe94f82b, 0xa54ff53a5f1d36f1,
 		0x510e527fade682d1, 0x9b05688c2b3e6c1f, 0x1f83d9abfb41bd6b, 0x5be0cd19137e2179 )
@@ -105,23 +134,8 @@ class TestSha512(TestSha2):
 		0x113f9804bef90dae, 0x1b710b35131c471b, 0x28db77f523047d84, 0x32caab7b40c72493, 0x3c9ebe0a15c9bebc,
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
 
-class TestSha256(TestSha2):
-	desc = 'sha256'
-	t_cls = Sha256
-	H_ref = (
-		0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 )
-	K_ref = (
-		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-		0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-		0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-		0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-		0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-		0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-		0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 )
-
-msg(green('Testing MMGen implementation of {}\n'.format(test)))
 t = globals()['Test'+test]()
+msg(green('Testing internal implementation of {}\n'.format(t.desc)))
 t.test_constants()
 t.test_ref()
 t.test_random(random_rounds)

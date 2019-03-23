@@ -415,8 +415,14 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		assert len(addr) == cls.addr_width,'Incorrect width'
 
 		ret = b58dec(addr)
-		import sha3
-		chk = sha3.keccak_256(bytes.fromhex(ret)[:-4]).hexdigest()[:8]
+
+		try:
+			assert not g.use_internal_keccak_module
+			from sha3 import keccak_256
+		except:
+			from mmgen.keccak import keccak_256
+
+		chk = keccak_256(bytes.fromhex(ret)[:-4]).hexdigest()[:8]
 		assert chk == ret[-8:],'{}: incorrect checksum.  Correct value: {}'.format(ret[-8:],chk)
 
 		return { 'hex': ret, 'format': 'monero' } if return_dict else True
