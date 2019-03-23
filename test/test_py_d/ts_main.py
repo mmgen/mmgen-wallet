@@ -440,7 +440,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.written_to_file('Transaction')
 		os.unlink(txfile) # our tx file replaces the original
 		cmd = 'touch ' + joinpath(self.tmpdir,'txbump')
-		os.system(cmd.encode())
+		os.system(cmd)
 		return t
 
 	def txsend(self,sigfile,bogus_send=True,extra_opts=[]):
@@ -656,7 +656,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		self.txsend_ui_common(t)
 
 		cmd = 'touch ' + joinpath(self.tmpdir,'txdo')
-		os.system(cmd.encode())
+		os.system(cmd)
 		return t
 
 	def txbump4(self,f1,f2,f3,f4,f5,f6,f7,f8,f9): # f7:txfile,f9:'txdo'

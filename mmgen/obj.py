@@ -724,8 +724,9 @@ class MMGenLabel(str,Hilite,InitErrors):
 				# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
 				# Disallow: (C)ontrol,(M)combining
 				# Combining characters create width formatting issues, so disallow them for now
-				assert unicodedata.category(ch)[0] not in 'CM','{!r}: {} characters not allowed'.format(
-					ch,('control','combining')[unicodedata.category(ch)[0]=='M'])
+				if unicodedata.category(ch)[0] in 'CM':
+					t = { 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]]
+					raise ValueError('{}: {} characters not allowed'.format(ascii(ch),t))
 			assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
 			assert len(s) >= cls.min_len, 'too short (<{} symbols)'.format(cls.min_len)
 			assert not cls.allowed or set(list(s)).issubset(set(cls.allowed)),\

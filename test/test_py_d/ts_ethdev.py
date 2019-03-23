@@ -44,9 +44,13 @@ parity_pid_fn = 'parity.pid'
 parity_key_fn = 'parity.devkey'
 
 # Token sends require varying amounts of gas, depending on compiler version
-solc_ver = re.search(r'Version:\s*(.*)',
-				subprocess.Popen(['solc','--version'],stdout=subprocess.PIPE
-					).stdout.read().decode()).group(1)
+try:
+	solc_ver = re.search(r'Version:\s*(.*)',
+					subprocess.Popen(['solc','--version'],stdout=subprocess.PIPE
+						).stdout.read().decode()).group(1)
+except:
+	solc_ver = ''
+
 
 if re.match(r'\b0.5.1\b',solc_ver): # Raspbian Stretch
 	vbal1 = '1.2288337'
@@ -58,6 +62,8 @@ elif re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
 	vbal2 = '99.997092733'
 	vbal3 = '1.23142915'
 	vbal4 = '127.0287987'
+else:
+	vbal1 = vbal2 = vbal3 = vbal4 = None
 
 bals = {
 	'1': [  ('98831F3A:E:1','123.456')],

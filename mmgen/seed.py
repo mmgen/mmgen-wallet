@@ -781,7 +781,7 @@ class Brainwallet (SeedSourceEnc):
 			seed_len = opt.seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = scrypt_hash_passphrase(self.brainpasswd,'',d.hash_preset,buflen=seed_len//8)
+		seed = scrypt_hash_passphrase(self.brainpasswd.encode(),b'',d.hash_preset,buflen=seed_len//8)
 		qmsg('Done')
 		self.seed = Seed(seed)
 		msg('Seed ID: {}'.format(self.seed.sid))

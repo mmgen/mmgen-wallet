@@ -115,6 +115,7 @@ opts_data = lambda: {
 -S, --skip-deps      Skip dependency checking for command
 -u, --usr-random     Get random data interactively from user
 -t, --traceback      Run the command inside the '{tbc}' script
+-T, --pexpect-timeout=T Set the timeout for pexpect
 -v, --verbose        Produce more verbose output
 -W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
 -X, --exit-after=C   Exit after command 'C'

@@ -67,6 +67,8 @@ class MMGenPexpect(object):
 
 		self.req_exit_val = 0
 		self.skip_ok = False
+		self.timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
+		self.sent_value = None
 
 	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
 #		self.hash_preset(desc,hp)
@@ -170,8 +172,7 @@ class MMGenPexpect(object):
 
 		if not silent:
 			if opt.verbose:
-				quo = ('',"'")[type(s) == str]
-				msg_r('EXPECT {}'.format(yellow(quo+str(s)+quo)))
+				msg_r('EXPECT ' + yellow(str(s)))
 			elif not opt.exact_output: msg_r('+')
 
 		try:
@@ -179,11 +180,13 @@ class MMGenPexpect(object):
 				ret = 0
 			else:
 				f = (self.p.expect_exact,self.p.expect)[bool(regex)]
-				ret = f(s,timeout=(60,5)[bool(opt.debug_pexpect)])
+				ret = f(s,self.timeout)
 		except pexpect.TIMEOUT:
 			if opt.debug_pexpect: raise
-			quo = ('',"'")[type(s) == str]
-			rdie(1,red('\nERROR.  Expect {}{}{} timed out.  Exiting'.format(quo,s,quo)))
+			m1 = red('\nERROR.  Expect {!r} timed out.  Exiting\n'.format(s))
+			m2 = 'before: [{}]\n'.format(self.p.before)
+			m3 = 'sent value: [{}]'.format(self.sent_value) if self.sent_value != None else ''
+			rdie(1,m1+m2+m3)
 
 		debug_pexpect_msg(self.p)
 
@@ -200,9 +203,12 @@ class MMGenPexpect(object):
 			return ret
 
 	def send(self,t,delay=None,s=False):
+		self.sent_value = None
 		delay = delay or (0,0.3)[bool(opt.buf_keypress)]
 		if delay: time.sleep(delay)
 		ret = self.p.send(t) # returns num bytes written
+		if ret:
+			self.sent_value = t
 		if delay: time.sleep(delay)
 		if opt.verbose:
 			ls = (' ','')[bool(opt.debug or not s)]
