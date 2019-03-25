@@ -373,7 +373,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		args = ['98831F3A:E:1,123.456']
 		return self.txcreate(args=args,menu=menu,acct='1',non_mmgen_inputs=1)
 
-	def txsign1(self):    return self.txsign()
+	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'])
 	def txsign1_ni(self): return self.txsign(ni=True)
 	def txsend1(self):    return self.txsend()
 	def bal1(self):       return self.bal(n='1')

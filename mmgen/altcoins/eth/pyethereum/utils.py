@@ -2,12 +2,9 @@
 # Adapted from: https://github.com/ethereum/pyethereum/blob/master/ethereum/utils.py
 #
 
-from py_ecc.secp256k1 import privtopub, ecdsa_raw_sign, ecdsa_raw_recover
-import rlp
-from rlp.sedes import big_endian_int, BigEndianInt, Binary
-from eth_utils import encode_hex as encode_hex_0x
-from eth_utils import decode_hex, int_to_big_endian, big_endian_to_int
-from rlp.utils import ALL_BYTES
+from py_ecc.secp256k1 import privtopub,ecdsa_raw_sign,ecdsa_raw_recover
+from .. import rlp
+from ..rlp.sedes import Binary
 
 from mmgen.globalvars import g
 try:
@@ -19,6 +16,60 @@ except:
 	def sha3_256(x):
 		return keccak_256(x).digest()
 
+import struct
+ALL_BYTES = tuple( struct.pack('B', i) for i in range(256) )
+
+# from eth_utils:
+
+# Type ignored for `codecs.decode()` due to lack of mypy support for 'hex' encoding
+# https://github.com/python/typeshed/issues/300
+from typing import AnyStr,Any,Callable,TypeVar
+import codecs
+import functools
+
+T = TypeVar("T")
+TVal = TypeVar("TVal")
+TKey = TypeVar("TKey")
+
+def apply_to_return_value(callback: Callable[..., T]) -> Callable[..., Callable[..., T]]:
+
+    def outer(fn):
+        # We would need to type annotate *args and **kwargs but doing so segfaults
+        # the PyPy builds. We ignore instead.
+        @functools.wraps(fn)
+        def inner(*args, **kwargs) -> T:  # type: ignore
+            return callback(fn(*args, **kwargs))
+
+        return inner
+
+    return outer
+
+to_list = apply_to_return_value(list)
+to_set = apply_to_return_value(set)
+to_dict = apply_to_return_value(dict)
+to_tuple = apply_to_return_value(tuple)
+to_list = apply_to_return_value(list)
+
+def encode_hex_0x(value: AnyStr) -> str:
+    if not is_string(value):
+        raise TypeError("Value must be an instance of str or unicode")
+    binary_hex = codecs.encode(value, "hex")  # type: ignore
+    return '0x' + binary_hex.decode("ascii")
+
+def decode_hex(value: str) -> bytes:
+    if not isinstance(value,str):
+        raise TypeError("Value must be an instance of str")
+    return codecs.decode(remove_0x_prefix(value), "hex")  # type: ignore
+
+def is_bytes(value: Any) -> bool:
+    return isinstance(value, (bytes,bytearray))
+
+def int_to_big_endian(value: int) -> bytes:
+    return value.to_bytes((value.bit_length() + 7) // 8 or 1, "big")
+
+def big_endian_to_int(value: bytes) -> int:
+    return int.from_bytes(value, "big")
+# end from eth_utils
 
 class Memoize:
 	def __init__(self, fn):
@@ -30,9 +81,6 @@ class Memoize:
 		return self.memo[args]
 
 TT256 = 2 ** 256
-TT256M1 = 2 ** 256 - 1
-TT255 = 2 ** 255
-SECP256K1P = 2**256 - 4294968273
 
 def is_numeric(x): return isinstance(x, int)
 
@@ -46,23 +94,10 @@ def to_string(value):
 	if isinstance(value, int):
 		return bytes(str(value), 'utf-8')
 
-def int_to_bytes(value):
-	if isinstance(value, bytes):
-		return value
-	return int_to_big_endian(value)
-
-def to_string_for_regexp(value):
-	return str(to_string(value), 'utf-8')
 unicode = str
-
-def bytearray_to_bytestr(value):
-	return bytes(value)
 
 def encode_int32(v):
 	return v.to_bytes(32, byteorder='big')
-
-def bytes_to_int(value):
-	return int.from_bytes(value, byteorder='big')
 
 def str_to_bytes(value):
 	if isinstance(value, bytearray):
@@ -100,39 +135,6 @@ def mk_contract_address(sender, nonce):
 
 def mk_metropolis_contract_address(sender, initcode):
 	return sha3(normalize_address(sender) + initcode)[12:]
-
-
-def safe_ord(value):
-	if isinstance(value, int):
-		return value
-	else:
-		return ord(value)
-
-# decorator
-
-
-def flatten(li):
-	o = []
-	for l in li:
-		o.extend(l)
-	return o
-
-
-def bytearray_to_int(arr):
-	o = 0
-	for a in arr:
-		o = (o << 8) + a
-	return o
-
-
-def int_to_32bytearray(i):
-	o = [0] * 32
-	for x in range(32):
-		o[31 - x] = i & 0xff
-		i >>= 8
-	return o
-
-# sha3_count = [0]
 
 
 def sha3(seed):
@@ -183,36 +185,6 @@ def normalize_key(key):
 	return o
 
 
-def zpad(x, l):
-	""" Left zero pad value `x` at least to length `l`.
-
-	>>> zpad('', 1)
-	'\x00'
-	>>> zpad('\xca\xfe', 4)
-	'\x00\x00\xca\xfe'
-	>>> zpad('\xff', 1)
-	'\xff'
-	>>> zpad('\xca\xfe', 2)
-	'\xca\xfe'
-	"""
-	return b'\x00' * max(0, l - len(x)) + x
-
-
-def rzpad(value, total_length):
-	""" Right zero pad value `x` at least to length `l`.
-
-	>>> zpad('', 1)
-	'\x00'
-	>>> zpad('\xca\xfe', 4)
-	'\xca\xfe\x00\x00'
-	>>> zpad('\xff', 1)
-	'\xff'
-	>>> zpad('\xca\xfe', 2)
-	'\xca\xfe'
-	"""
-	return value + b'\x00' * max(0, total_length - len(value))
-
-
 def int_to_addr(x):
 	o = [b''] * 20
 	for i in range(20):
@@ -221,151 +193,8 @@ def int_to_addr(x):
 	return b''.join(o)
 
 
-def coerce_addr_to_bin(x):
-	if is_numeric(x):
-		return encode_hex(zpad(big_endian_int.serialize(x), 20))
-	elif len(x) == 40 or len(x) == 0:
-		return decode_hex(x)
-	else:
-		return zpad(x, 20)[-20:]
-
-
-def coerce_addr_to_hex(x):
-	if is_numeric(x):
-		return encode_hex(zpad(big_endian_int.serialize(x), 20))
-	elif len(x) == 40 or len(x) == 0:
-		return x
-	else:
-		return encode_hex(zpad(x, 20)[-20:])
-
-
-def coerce_to_int(x):
-	if is_numeric(x):
-		return x
-	elif len(x) == 40:
-		return big_endian_to_int(decode_hex(x))
-	else:
-		return big_endian_to_int(x)
-
-
-def coerce_to_bytes(x):
-	if is_numeric(x):
-		return big_endian_int.serialize(x)
-	elif len(x) == 40:
-		return decode_hex(x)
-	else:
-		return x
-
-
-def parse_int_or_hex(s):
-	if is_numeric(s):
-		return s
-	elif s[:2] in (b'0x', '0x'):
-		s = to_string(s)
-		tail = (b'0' if len(s) % 2 else b'') + s[2:]
-		return big_endian_to_int(decode_hex(tail))
-	else:
-		return int(s)
-
-
-def ceil32(x):
-	return x if x % 32 == 0 else x + 32 - (x % 32)
-
-
-def to_signed(i):
-	return i if i < TT255 else i - TT256
-
-
-def sha3rlp(x):
-	return sha3(rlp.encode(x))
-
-
-# Format encoders/decoders for bin, addr, int
-
-
-def decode_bin(v):
-	"""decodes a bytearray from serialization"""
-	if not is_string(v):
-		raise Exception("Value must be binary, not RLP array")
-	return v
-
-
-def decode_addr(v):
-	"""decodes an address from serialization"""
-	if len(v) not in [0, 20]:
-		raise Exception("Serialized addresses must be empty or 20 bytes long!")
-	return encode_hex(v)
-
-
-def decode_int(v):
-	"""decodes and integer from serialization"""
-	if len(v) > 0 and (v[0] == b'\x00' or v[0] == 0):
-		raise Exception("No leading zero bytes allowed for integers")
-	return big_endian_to_int(v)
-
-
-def decode_int256(v):
-	return big_endian_to_int(v)
-
-
-def encode_bin(v):
-	"""encodes a bytearray into serialization"""
-	return v
-
-
-def encode_root(v):
-	"""encodes a trie root into serialization"""
-	return v
-
-
-def encode_int(v):
-	"""encodes an integer into serialization"""
-	if not is_numeric(v) or v < 0 or v >= TT256:
-		raise Exception("Integer invalid or out of range: %r" % v)
-	return int_to_big_endian(v)
-
-
-def encode_int256(v):
-	return zpad(int_to_big_endian(v), 256)
-
-
-def scan_bin(v):
-	if v[:2] in ('0x', b'0x'):
-		return decode_hex(v[2:])
-	else:
-		return decode_hex(v)
-
-
-def scan_int(v):
-	if v[:2] in ('0x', b'0x'):
-		return big_endian_to_int(decode_hex(v[2:]))
-	else:
-		return int(v)
-
-
-def int_to_hex(x):
-	o = encode_hex(encode_int(x))
-	return '0x' + (o[1:] if (len(o) > 0 and o[0] == b'0') else o)
-
-
-def remove_0x_head(s):
+def remove_0x_prefix(s):
 	return s[2:] if s[:2] in (b'0x', '0x') else s
-
-
-def parse_as_bin(s):
-	return decode_hex(s[2:] if s[:2] == '0x' else s)
-
-
-def parse_as_int(s):
-	return s if is_numeric(s) else int(
-		'0' + s[2:], 16) if s[:2] == '0x' else int(s)
-
-
-def dump_state(trie):
-	res = ''
-	for k, v in list(trie.to_dict().items()):
-		res += '%r:%r\n' % (encode_hex(k), encode_hex(v))
-	return res
 
 
 class Denoms():
@@ -385,13 +214,4 @@ class Denoms():
 		self.ether = 10 ** 18
 		self.turing = 2 ** 256 - 1
 
-
-denoms = Denoms()
-
-
 address = Binary.fixed_length(20, allow_empty=True)
-int20 = BigEndianInt(20)
-int32 = BigEndianInt(32)
-int256 = BigEndianInt(256)
-hash32 = Binary.fixed_length(32)
-trie_root = Binary.fixed_length(32, allow_empty=True)

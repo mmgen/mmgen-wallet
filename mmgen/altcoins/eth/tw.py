@@ -25,7 +25,7 @@ from mmgen.common import *
 from mmgen.obj import ETHAmt,TwMMGenID,TwComment,TwLabel
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
-from mmgen.altcoins.eth.contract import Token
+from .contract import Token
 
 class EthereumTrackingWallet(TrackingWallet):
 

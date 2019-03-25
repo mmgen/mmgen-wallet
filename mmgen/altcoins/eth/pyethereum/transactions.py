@@ -1,12 +1,13 @@
 #
 # Adapted from: # https://github.com/ethereum/pyethereum/blob/master/ethereum/transactions.py
 #
-import rlp
-from rlp.sedes import big_endian_int,binary
-from mmgen.altcoins.eth.pyethereum.utils import (
-		str_to_bytes,encode_hex,ascii_chr,big_endian_to_int,TT256,mk_contract_address,
+from .. import rlp
+from ..rlp.sedes import big_endian_int,binary
+from .utils import (
+		str_to_bytes,encode_hex,ascii_chr,big_endian_to_int,
+		TT256,mk_contract_address,
 		ecsign,ecrecover_to_pub,normalize_key )
-import mmgen.altcoins.eth.pyethereum.utils as utils
+from . import utils
 
 class InvalidTransaction(Exception): pass
 class opcodes(object):

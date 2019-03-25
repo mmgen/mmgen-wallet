@@ -92,9 +92,9 @@ class EthereumMMGenTX(MMGenTX):
 		if self.check_sigs():
 
 			try: from ethereum.transactions import Transaction
-			except: from mmgen.altcoins.eth.pyethereum.transactions import Transaction
+			except: from .pyethereum.transactions import Transaction
 
-			import rlp
+			from . import rlp
 			etx = rlp.decode(bytes.fromhex(self.hex),Transaction)
 			d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'
 			for k in ('sender','to','data'):
@@ -288,12 +288,12 @@ class EthereumMMGenTX(MMGenTX):
 				'data':     bytes.fromhex(d['data'])}
 
 		try: from ethereum.transactions import Transaction
-		except: from mmgen.altcoins.eth.pyethereum.transactions import Transaction
+		except: from .pyethereum.transactions import Transaction
 
 		etx = Transaction(**d_in).sign(wif,d['chainId'])
 		assert etx.sender.hex() == d['from'],(
 			'Sender address recovered from signature does not match true sender')
-		import rlp
+		from . import rlp
 		self.hex = rlp.encode(etx).hex()
 		self.coin_txid = CoinTxID(etx.hash.hex())
 		if d['data']:
@@ -410,7 +410,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 		if self.outputs[0].is_chg:
 			send_acct_tbal = '0'
 		else:
-			from mmgen.altcoins.eth.contract import Token
+			from .contract import Token
 			send_acct_tbal = Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
 		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)
 
@@ -431,7 +431,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 
 	def make_txobj(self):
 		super(EthereumTokenMMGenTX,self).make_txobj()
-		from mmgen.altcoins.eth.contract import Token
+		from .contract import Token
 		t = Token(g.token)
 		o = t.txcreate( self.inputs[0].addr,
 						self.outputs[0].addr,
@@ -444,7 +444,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 	def check_txfile_hex_data(self):
 		d = super(EthereumTokenMMGenTX,self).check_txfile_hex_data()
 		o = self.txobj
-		from mmgen.altcoins.eth.contract import Token
+		from .contract import Token
 		if self.check_sigs(): # online, from rlp
 			rpc_init()
 			o['token_addr'] = TokenAddr(o['to'])
@@ -462,7 +462,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			r=super(EthereumTokenMMGenTX,self).format_view_body(*args,**kwargs))
 
 	def do_sign(self,d,wif,tx_num_str):
-		from mmgen.altcoins.eth.contract import Token
+		from .contract import Token
 		d = self.txobj
 		t = Token(d['token_addr'],decimals=d['decimals'])
 		tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
