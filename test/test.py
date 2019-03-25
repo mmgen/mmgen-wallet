@@ -42,6 +42,7 @@ def create_shm_dir(data_dir,trash_dir):
 						time.sleep(2)
 						shutil.rmtree(tdir)
 			os.mkdir(tdir,0o755)
+		shm_dir = 'test'
 	else:
 		tdir,pfx = '/dev/shm','mmgen-test-'
 		try:
@@ -566,6 +567,9 @@ class TestSuiteRunner(object):
 
 		args = [cmd] + passthru_opts + ['--data-dir='+self.data_dir] + args
 
+		if opt.traceback:
+			args = ['scripts/traceback_run.py'] + args
+
 		if g.platform == 'win':
 			args = ['python3'] + args
 
@@ -576,8 +580,6 @@ class TestSuiteRunner(object):
 
 		if opt.coverage:
 			args = ['python3','-m','trace','--count','--coverdir='+self.coverdir,'--file='+self.accfile] + args
-		elif opt.traceback:
-			args = ['scripts/traceback_run.py'] + args
 
 		qargs = ['{q}{}{q}'.format(a,q=('',"'")[' ' in a]) for a in args]
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
@@ -594,7 +596,11 @@ class TestSuiteRunner(object):
 
 		if msg_only: return
 
-		if opt.log: self.log_fd.write(cmd_disp+'\n')
+		if opt.log:
+			try:
+				self.log_fd.write(cmd_disp+'\n')
+			except:
+				self.log_fd.write(ascii(cmd_disp)+'\n')
 
 		from test.pexpect import MMGenPexpect
 		return MMGenPexpect(args,no_output=no_output)

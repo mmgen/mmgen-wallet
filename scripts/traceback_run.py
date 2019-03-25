@@ -4,7 +4,7 @@
 # file, as all names will be seen by the exec'ed file.  To prevent name collisions, all names
 # defined here should begin with 'traceback_run_'
 
-import sys,time
+import sys,os,time
 
 def traceback_run_init():
 	import os
@@ -13,7 +13,7 @@ def traceback_run_init():
 	if 'TMUX' in os.environ: del os.environ['TMUX']
 	os.environ['MMGEN_TRACEBACK'] = '1'
 
-	of = os.path.join(os.environ['PWD'],'my.err')
+	of = 'my.err'
 	try: os.unlink(of)
 	except: pass
 
@@ -28,10 +28,12 @@ def traceback_run_process_exception():
 
 	exc = l.pop()
 	if exc[:11] == 'SystemExit:': l.pop()
-
-	red    = lambda s: '\033[31;1m{}\033[0m'.format(s)
-	yellow = lambda s: '\033[33;1m{}\033[0m'.format(s)
-	sys.stdout.write('{}{}'.format(yellow(''.join(l)),red(exc)))
+	if os.getenv('MMGEN_DISABLE_COLOR'):
+		sys.stdout.write('{}{}'.format(''.join(l),exc))
+	else:
+		red    = lambda s: '\033[31;1m{}\033[0m'.format(s)
+		yellow = lambda s: '\033[33;1m{}\033[0m'.format(s)
+		sys.stdout.write('{}{}'.format(yellow(''.join(l)),red(exc)))
 
 	open(traceback_run_outfile,'w').write(''.join(l+[exc]))
 
@@ -50,10 +52,5 @@ except Exception as e:
 	traceback_run_process_exception()
 	sys.exit(e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1)
 
-blue = lambda s: '\033[34;1m{}\033[0m'.format(s)
+blue = lambda s: s if os.getenv('MMGEN_DISABLE_COLOR') else '\033[34;1m{}\033[0m'.format(s)
 sys.stdout.write(blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))
-
-# else:
-# 	print('else: '+repr(sys.exc_info()))
-# finally:
-# 	print('finally: '+repr(sys.exc_info()))

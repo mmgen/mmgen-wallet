@@ -26,43 +26,8 @@ if ver[0] < min_ver[0] or ver[1] < min_ver[1]:
 	sys.stderr.write(m.format(*ver,M=min_ver[0],m=min_ver[1]))
 	sys.exit(1)
 
-_gvi = subprocess.check_output(['gcc','--version']).decode().splitlines()[0]
-have_mingw64 = 'x86_64' in _gvi and 'MinGW' in _gvi
-have_arm     = subprocess.check_output(['uname','-m']).strip() == 'aarch64'
-have_msys2   = not have_mingw64 and os.getenv('MSYSTEM') == 'MINGW64'
-
-# Zipfile module under Windows (MinGW) can't handle UTF-8 filenames.
-# Move it so that distutils will use the 'zip' utility instead.
-def divert_zipfile_module():
-	msg1 = 'Unable to divert zipfile module. UTF-8 filenames may be broken in the Python archive.'
-	def return_warn(m):
-		sys.stderr.write('WARNING: {}\n'.format(m))
-		return False
-
-	dirname = os.path.dirname(sys.modules['os'].__file__)
-	if not dirname: return return_warn(msg1)
-	stem = os.path.join(dirname,'zipfile')
-	a,b = stem+'.py',stem+'-is-broken.py'
-
-	try: os.stat(a)
-	except: return
-
-	try:
-		sys.stderr.write('moving {} -> {}\n'.format(a,b))
-		os.rename(a,b)
-	except:
-		return return_warn(msg1)
-	else:
-		try:
-			os.unlink(stem+'.pyc')
-			os.unlink(stem+'.pyo')
-		except:
-			pass
-
-if have_mingw64:
-# 	import zipfile
-# 	sys.exit()
-	divert_zipfile_module()
+have_arm   = subprocess.check_output(['uname','-m']).strip() == b'aarch64'
+have_msys2 = subprocess.check_output(['uname','-s']).strip()[:7] == b'MSYS_NT'
 
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
@@ -92,7 +57,6 @@ module1 = Extension(
 	libraries    = ['secp256k1'],
 	library_dirs = ['/usr/local/lib',r'c:\msys\local\lib'],
 	# mingw32 needs this, Linux can use it, but it breaks mingw64
-	extra_link_args = (['-lgmp'],[])[have_mingw64],
 	include_dirs = ['/usr/local/include',r'c:\msys\local\include'],
 	)
 

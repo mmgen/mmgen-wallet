@@ -49,21 +49,18 @@ try:
 					subprocess.Popen(['solc','--version'],stdout=subprocess.PIPE
 						).stdout.read().decode()).group(1)
 except:
-	solc_ver = ''
-
+	solc_ver = '' # no solc on system - prompt for precompiled v0.5.3 contract files
 
 if re.match(r'\b0.5.1\b',solc_ver): # Raspbian Stretch
 	vbal1 = '1.2288337'
 	vbal2 = '99.997085083'
 	vbal3 = '1.23142165'
 	vbal4 = '127.0287837'
-elif re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
+elif solc_ver == '' or re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
 	vbal1 = '1.2288487'
 	vbal2 = '99.997092733'
 	vbal3 = '1.23142915'
 	vbal4 = '127.0287987'
-else:
-	vbal1 = vbal2 = vbal3 = vbal4 = None
 
 bals = {
 	'1': [  ('98831F3A:E:1','123.456')],
@@ -263,8 +260,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def setup(self):
 		self.spawn('',msg_only=True)
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		if subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
-			lf_arg = '--log-file=' + joinpath(self.tr.data_dir,'parity.log')
+		opts = ['--ports-shift=4','--config=dev']
+		lf_arg = '--log-file=' + joinpath(self.tr.data_dir,'parity.log')
+		if g.platform == 'win':
+			dc_dir = joinpath(os.environ['LOCALAPPDATA'],'Parity','Ethereum','chains','DevelopmentChain')
+			shutil.rmtree(dc_dir,ignore_errors=True)
+			m1 = 'Please start parity on another terminal as follows:\n'
+			m2 = ['parity',lf_arg] + opts
+			m3 = '\nPress ENTER to continue: '
+			my_raw_input(m1 + ' '.join(m2) + m3)
+		elif subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
 			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 			try:
 				pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
@@ -276,7 +281,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			bdir = joinpath(self.tr.data_dir,'parity')
 			try: os.mkdir(bdir)
 			except: pass
-			opts = ['--ports-shift=4','--config=dev']
 			redir = None if opt.exact_output else subprocess.PIPE
 			pidfile = joinpath(self.tmpdir,parity_pid_fn)
 			subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pidfile],stderr=redir,stdout=redir)
@@ -483,10 +487,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def token_compile(self,token_data={}):
+		odir = joinpath(self.tmpdir,token_data['symbol'].lower())
+		if self.skip_for_win():
+			m ='Copy solc v0.5.3 contract data for token {} to directory {} and hit ENTER: '
+			input(m.format(token_data['symbol'],odir))
+			return 'skip'
 		self.spawn('',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
-		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+self.tmpdir] + cmd_args + [dfl_addr_chk]
+		try: os.mkdir(odir)
+		except: pass
+		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+odir] + cmd_args + [dfl_addr_chk]
 		imsg("Executing: {}".format(' '.join(cmd)))
 		subprocess.check_output(cmd,stderr=subprocess.STDOUT)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
@@ -507,7 +518,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		self._rpc_init()
 		keyfile = joinpath(self.tmpdir,parity_key_fn)
-		fn = joinpath(self.tmpdir,key+'.bin')
+		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		args = ['-B',
 				'--tx-fee='+tx_fee,
@@ -534,7 +545,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			"Contract '{}:{}' failed to execute. Aborting".format(num,key))
 		if key == 'Token':
 			self.write_to_tmpfile('token_addr{}'.format(num),addr+'\n')
-			imsg('\nToken #{} ({}) deployed!'.format(num,addr))
+			imsg('\nToken MM{} deployed!'.format(num))
 		return t
 
 	def token_deploy1a(self): return self.token_deploy(num=1,key='SafeMath',gas=200000)

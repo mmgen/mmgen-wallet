@@ -37,12 +37,7 @@ def debug_pexpect_msg(p):
 		msg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
 		msg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
 
-if g.platform == 'linux' and not opt.pexpect_spawn:
-	import atexit
-	atexit.register(lambda: os.system('stty sane'))
-	NL = '\n'
-else:
-	NL = '\r\n'
+NL = '\n'
 
 class MMGenPexpect(object):
 

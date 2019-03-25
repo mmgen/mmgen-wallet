@@ -102,6 +102,7 @@ class g(object):
 	debug_utf8           = False
 	traceback            = False
 	test_suite           = False
+	test_suite_popen_spawn = False
 
 	for k in ('linux','win','msys'):
 		if sys.platform[:len(k)] == k:
@@ -166,6 +167,7 @@ class g(object):
 		'MMGEN_DEBUG_ALL', # special: there is no g.debug_all var
 
 		'MMGEN_TEST_SUITE',
+		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_BOGUS_WALLET_DATA',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',

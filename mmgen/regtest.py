@@ -235,14 +235,22 @@ def setup():
 
 def get_current_user_win(quiet=False):
 	if test_daemon() == 'stopped': return None
-	p = start_cmd('grep','Using wallet',os.path.join(daemon_dir,'debug.log'),quiet=True)
-	try: wallet_fn = p.stdout.readlines()[-1].split()[-1].decode()
-	except: return None
-	for k in ('miner','bob','alice'):
-		if wallet_fn == 'wallet.dat.'+k:
-			if not quiet: msg('Current user is {}'.format(k.capitalize()))
-			return k
-	return None
+	logfile = os.path.join(daemon_dir,'debug.log')
+	p = start_cmd('grep','Wallet completed loading in',logfile,quiet=True)
+	last_line = p.stdout.readlines()[-1].decode()
+
+	import re
+	m = re.search(r'\[wallet.dat.([a-z]+)\]',last_line)
+	if not m:
+		return None
+
+	user = m.group(1)
+	if user in ('miner','bob','alice'):
+		if not quiet:
+			msg('Current user is {}'.format(user.capitalize()))
+		return user
+	else:
+		return None
 
 def get_current_user_unix(quiet=False):
 	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
@@ -254,7 +262,7 @@ def get_current_user_unix(quiet=False):
 			return k
 	return None
 
-get_current_user = (get_current_user_win,get_current_user_unix)[g.platform=='linux']
+get_current_user = { 'win':get_current_user_win, 'linux':get_current_user_unix }[g.platform]
 
 def bob():   return user('bob',quiet=False)
 def alice(): return user('alice',quiet=False)

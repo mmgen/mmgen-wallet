@@ -93,10 +93,13 @@ def iqmsg(s):
 def iqmsg_r(s):
 	if not opt.quiet: omsg_r(s)
 
-devnull_fh = open('/dev/null','w')
-def silence():
-	if not (opt.verbose or opt.exact_output):
-		g.stderr_fileno = g.stdout_fileno = devnull_fh.fileno()
+if g.platform == 'win':
+	def silence(): pass
+else:
+	devnull_fh = open('/dev/null','w')
+	def silence():
+		if not (opt.verbose or opt.exact_output):
+			g.stderr_fileno = g.stdout_fileno = devnull_fh.fileno()
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):

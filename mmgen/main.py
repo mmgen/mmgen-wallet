@@ -28,8 +28,13 @@ def launch(what):
 
 	import sys
 
-	try: import termios
-	except: # Windows
+	try:
+		import termios
+		platform = 'linux'
+	except:
+		platform = 'win'
+
+	if platform == 'win':
 		__import__('mmgen.main_' + what)
 	else:
 		import os,atexit

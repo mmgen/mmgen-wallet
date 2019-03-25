@@ -634,9 +634,12 @@ def write_data_to_file( outfile,data,desc='data',
 					m = "{} in file '{}' has been altered by some other program!  Aborting file write"
 					die(3,m.format(desc,outfile))
 
-		f = open_file_or_exit(outfile,('w','wb')[bool(binary)])
+		# To maintain portability, always open files in binary mode
+		# If 'binary' option not set, encode/decode data before writing and after reading
+		f = open_file_or_exit(outfile,'wb')
+
 		try:
-			f.write(data)
+			f.write(data if binary else data.encode())
 		except:
 			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
 		f.close
@@ -654,7 +657,6 @@ def write_data_to_file( outfile,data,desc='data',
 		do_file(outfile,ask_write_prompt)
 
 def get_words_from_user(prompt):
-	# split() also strips
 	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
@@ -662,8 +664,8 @@ def get_words_from_user(prompt):
 def get_words_from_file(infile,desc,quiet=False):
 	if not quiet:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
-	f = open_file_or_exit(infile, 'r')
-	try: words = f.read().split() # split() also strips
+	f = open_file_or_exit(infile, 'rb')
+	try: words = f.read().decode().split()
 	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
 	f.close()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
@@ -687,7 +689,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 
 def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False):
 	dec = mmgen_decrypt_file_maybe(fn,desc,quiet=quiet,silent=silent)
-	ret = dec.decode('utf8').splitlines() # DOS-safe
+	ret = dec.decode().splitlines()
 	if trim_comments: ret = remove_comments(ret)
 	dmsg("Got {} lines from file '{}'".format(len(ret),fn))
 	return ret
@@ -703,12 +705,13 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 	if not opt.quiet and not silent and not quiet and desc:
 		qmsg("Getting {} from file '{}'".format(desc,infile))
 
-	mode = ('r','rb')[bool(binary)]
-
 	if dash and infile == '-':
-		data = os.fdopen(0,mode).read(g.max_input_size+1)
+		data = os.fdopen(0,'rb').read(g.max_input_size+1)
 	else:
-		data = open_file_or_exit(infile,mode,silent=silent).read(g.max_input_size+1)
+		data = open_file_or_exit(infile,'rb',silent=silent).read(g.max_input_size+1)
+
+	if not binary:
+		data = data.decode()
 
 	if len(data) == g.max_input_size + 1:
 		raise MaxInputSizeExceeded('Too much input data!  Max input data size: {} bytes'.format(g.max_input_size))
@@ -744,11 +747,16 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	from mmgen.term import kb_hold_protect
 	kb_hold_protect()
-	if echo or not sys.stdin.isatty():
+
+	if g.test_suite_popen_spawn:
+		msg(prompt)
+		reply = os.read(0,4096).decode()
+	elif echo or not sys.stdin.isatty():
 		reply = input(prompt)
 	else:
 		from getpass import getpass
 		reply = getpass(prompt)
+
 	kb_hold_protect()
 
 	try:
