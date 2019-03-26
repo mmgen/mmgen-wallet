@@ -30,10 +30,11 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 from mmgen.common import *
 from test.common import init_coverage
 
-opts_data = lambda: {
-	'desc': 'Test seed scrambling and addrlist data generation for all supported altcoins',
-	'usage':'[options] [command]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Test seed scrambling and addrlist data generation for all supported altcoins',
+		'usage':'[options] [command]',
+		'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -C, --coverage      Produce code coverage info using trace module
@@ -46,6 +47,7 @@ opts_data = lambda: {
 
 If no command is given, the whole suite of tests is run.
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

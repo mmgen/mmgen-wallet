@@ -31,10 +31,11 @@ from mmgen.common import *
 from mmgen.obj import MMGenAddrType
 
 rounds = 100
-opts_data = lambda: {
-	'desc': 'Test address generation in various ways',
-	'usage':'[options] [spec] [rounds | dump file]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Test address generation in various ways',
+		'usage':'[options] [spec] [rounds | dump file]',
+		'options': """
 -h, --help       Print this help message
 -a, --all        Test all supported coins for external generator 'ext'
 -k, --use-internal-keccak-module Force use of the internal keccak module
@@ -68,7 +69,15 @@ EXAMPLES:
     + pycoin     (for supported coins)   https://github.com/richardkiss/pycoin
     + keyconv    (for all other coins)   https://github.com/exploitagency/vanitygen-plus
                  ('keyconv' generates uncompressed addresses only)
-""".format(prog='gentest.py',pnm=g.proj_name,snum=rounds,dn=g.proto.daemon_name)
+"""
+	},
+	'code': {
+		'notes': lambda s: s.format(
+			prog='gentest.py',
+			pnm=g.proj_name,
+			snum=rounds,
+			dn=g.proto.daemon_name)
+	}
 }
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]

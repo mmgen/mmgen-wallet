@@ -181,10 +181,16 @@ Are you sure you want to continue?
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
-def get_common_opts_data():
-	# most, but not all, of these set the corresponding global var
+def common_opts_code(s):
 	from mmgen.protocol import CoinProtocol
-	return """
+	return s.format(
+		pnm=g.proj_name,pn=g.proto.name,dn=g.proto.daemon_name,
+		cu_dfl=g.coin,
+		cu_all=' '.join(CoinProtocol.coins) )
+
+common_opts_data = {
+	# most, but not all, of these set the corresponding global var
+	'text': """
 --, --accept-defaults     Accept defaults at all prompts
 --, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
 --, --token=t             Specify an ERC20 token by address or symbol
@@ -203,29 +209,25 @@ def get_common_opts_data():
 --, --version             Print version information and exit
 --, --bob                 Switch to user "Bob" in MMGen regtest setup
 --, --alice               Switch to user "Alice" in MMGen regtest setup
-	""".format( pnm=g.proj_name,pn=g.proto.name,dn=g.proto.daemon_name,
-				cu_dfl=g.coin,
-				cu_all=' '.join(CoinProtocol.coins))
+	""",
+	'code': common_opts_code
+}
 
-def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
+def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
-	from mmgen.protocol import CoinProtocol,BitcoinProtocol,init_genonly_altcoins
-	g.proto = BitcoinProtocol # this must be initialized to something before opts_f is called
+	opts_data['text']['long_options'] = common_opts_data['text']
 
-	opts_data = opts_f()
-	opts_data['long_options'] = get_common_opts_data()
-
-	uopts,args,short_opts,long_opts,skipped_opts,do_help = \
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter,skip_help=True)
+	uopts,args,short_opts,long_opts,skipped_opts = \
+		mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
 
 	if parse_only:
-		return uopts,args,short_opts,long_opts,skipped_opts,do_help
+		return uopts,args,short_opts,long_opts,skipped_opts
 
 	if g.debug_opts: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
 	# Save this for usage()
 	global usage_txt
-	usage_txt = opts_data['usage']
+	usage_txt = opts_data['text']['usage']
 
 	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
 	for o in  ( tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts)
@@ -264,6 +266,7 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 
 	if g.regtest: g.testnet = True # These are equivalent for now
 
+	from mmgen.protocol import init_genonly_altcoins,CoinProtocol
 	altcoin_trust_level = init_genonly_altcoins(opt.coin)
 
 	# g.testnet is set, so we can set g.proto
@@ -272,7 +275,7 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 	# global sets proto
 	if g.daemon_data_dir: g.proto.daemon_data_dir = g.daemon_data_dir
 
-#	g.proto is set, so we can set g.data_dir
+	# g.proto is set, so we can set g.data_dir
 	g.data_dir = os.path.normpath(os.path.join(g.data_dir_root,g.proto.data_subdir))
 
 	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
@@ -295,14 +298,15 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 
 	opt_postproc_initializations()
 
-	if do_help: # print help screen only after global vars are initialized
-		opts_data = opts_f()
-		opts_data['long_options'] = get_common_opts_data()
+	if opts_data['do_help']: # print help screen only after global vars are initialized
+		if not 'code' in opts_data:
+			opts_data['code'] = {}
+		opts_data['code']['long_options'] = common_opts_data['code']
 		if g.debug_utf8:
 			for k in opts_data:
 				if type(opts_data[k]) == str:
 					opts_data[k] += '-α'
-		mmgen.share.Opts.parse_opts(sys.argv,opts_data,opt_filter=opt_filter) # exits
+		mmgen.share.Opts.print_help(opts_data,opt_filter) # exits
 
 	if g.bob or g.alice:
 		g.testnet = True
@@ -329,17 +333,14 @@ def init(opts_f,add_opts=[],opt_filter=None,parse_only=False):
 		my_raw_input('Hit ENTER to continue: ')
 
 	if g.debug and g.prog_name != 'test.py':
-		opt.verbose,opt.quiet = True,None
+		opt.verbose,opt.quiet = (True,None)
 	if g.debug_opts: opt_postproc_debug()
-
-	# We don't need this data anymore
-	del mmgen.share.Opts
-	del opts_f
-	for k in ('prog_name','desc','usage','options','notes'):
-		if k in opts_data: del opts_data[k]
 
 	g.altcoin_data_dir = os.path.join(g.data_dir_root,'altcoins')
 	warn_altcoins(altcoin_trust_level)
+
+	# We don't need this data anymore
+	del mmgen.share.Opts, opts_data
 
 	return args
 

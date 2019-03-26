@@ -55,12 +55,11 @@ elif invoked_as == 'passchg':
 else:
 	die(1,"'{}': unrecognized invocation".format(g.prog_name))
 
-opts_data = lambda: {
-# Can't use: share/Opts doesn't know anything about fmt codes
-#	'sets': [('hidden_incog_output_params',bool,'out_fmt','hi')],
-	'desc': desc.format(pnm=g.proj_name),
-	'usage': usage,
-	'options': """
+opts_data = {
+	'text': {
+		'desc': desc.format(pnm=g.proj_name),
+		'usage': usage,
+		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
@@ -90,22 +89,28 @@ opts_data = lambda: {
                       (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
 -S, --stdout          Write wallet data to stdout instead of file
 -v, --verbose         Produce more verbose output
-""".format(
-		g=g,
-		iaction=capfirst(iaction),
-		oaction=capfirst(oaction),
-	),
+""",
 	'notes': """
 
 {n_pw}{n_bw}
 
 FMT CODES:
+
   {f}
-""".format(
-	f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-	n_pw=help_notes('passwd'),
-	n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
-	)
+"""
+	},
+	'code': {
+		'options': lambda s: s.format(
+			iaction=capfirst(iaction),
+			oaction=capfirst(oaction),
+			g=g,
+		),
+		'notes': lambda s: s.format(
+			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			n_pw=help_notes('passwd'),
+			n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
+		)
+	}
 }
 
 cmd_args = opts.init(opts_data,opt_filter=opt_filter)

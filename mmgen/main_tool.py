@@ -53,10 +53,11 @@ def make_cmd_help():
 
 	return '\n'.join(out)
 
-opts_data = lambda: {
-	'desc':    'Perform various {pnm}- and cryptocoin-related operations'.format(pnm=g.proj_name),
-	'usage':   '[opts] <command> <command args>',
-	'options': """
+opts_data = {
+	'text': {
+		'desc':    'Perform various {pnm}- and cryptocoin-related operations'.format(pnm=g.proj_name),
+		'usage':   '[opts] <command> <command args>',
+		'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
@@ -70,14 +71,21 @@ opts_data = lambda: {
 -t, --type=t          Specify address type (valid options: 'legacy',
                       'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose         Produce more verbose output
-""".format(g=g),
+""",
 	'notes': """
 
                                COMMANDS
 
 {ch}
 Type '{pn} help <command>' for help on a particular command
-""".format(pn=g.prog_name,ch=make_cmd_help())
+"""
+	},
+	'code': {
+		'options': lambda s: s.format(g=g),
+		'notes': lambda s: s.format(
+			ch=make_cmd_help(),
+			pn=g.prog_name)
+	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt','use_old_ed25519'])

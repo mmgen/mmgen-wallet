@@ -84,10 +84,11 @@ from test.test_py_d.common import *
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
-opts_data = lambda: {
-	'desc': 'Test suite for the MMGen suite',
-	'usage':'[options] [command(s) or metacommand(s)]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Test suite for the MMGen suite',
+		'usage':'[options] [command(s) or metacommand(s)]',
+		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -B, --bech32         Generate and use Bech32 addresses
@@ -122,11 +123,17 @@ opts_data = lambda: {
 -X, --exit-after=C   Exit after command 'C'
 -y, --segwit         Generate and use Segwit addresses
 -Y, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
-""".format(tbc='scripts/traceback_run.py',lf=log_file),
-	'notes': """
+""",
+		'notes': """
 
 If no command is given, the whole test suite is run.
 """
+	},
+	'code': {
+		'options': lambda s: s.format(
+			tbc='scripts/traceback_run.py',
+			lf=log_file),
+	}
 }
 
 data_dir = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])

@@ -22,11 +22,12 @@ mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc':    'Send a cryptocoin transaction signed by {pnm}-txsign'.format(pnm=g.proj_name.lower()),
-	'usage':   '[opts] <signed transaction file>',
-	'sets': ( ('yes', True, 'quiet', True), ),
-	'options': """
+opts_data = {
+	'sets': [('yes', True, 'quiet', True)],
+	'text': {
+		'desc':    'Send a signed {pnm} cryptocoin transaction'.format(pnm=g.proj_name),
+		'usage':   '[opts] <signed transaction file>',
+		'options': """
 -h, --help      Print this help message
 --, --longhelp  Print help message for long options (common options)
 -d, --outdir= d Specify an alternate directory 'd' for output
@@ -34,6 +35,7 @@ opts_data = lambda: {
 -s, --status    Get status of a sent transaction
 -y, --yes       Answer 'yes' to prompts, suppress non-essential output
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

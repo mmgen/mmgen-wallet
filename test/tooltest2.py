@@ -40,10 +40,11 @@ from mmgen.seed import is_mnemonic
 
 def is_str(s): return type(s) == str
 
-opts_data = lambda: {
-	'desc': "Simple test suite for the 'mmgen-tool' utility",
-	'usage':'[options] [command]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': "Simple test suite for the 'mmgen-tool' utility",
+		'usage':'[options] [command]',
+		'options': """
 -h, --help           Print this help message
 -C, --coverage       Produce code coverage info using trace module
 -d, --die-on-missing Abort if no test data found for given command
@@ -63,6 +64,7 @@ opts_data = lambda: {
 
 If no command is given, the whole suite of tests is run.
 """
+	}
 }
 
 sample_text_hexdump = (

@@ -31,10 +31,11 @@ key_fn       = 'autosign.key'
 
 from mmgen.common import *
 prog_name = os.path.basename(sys.argv[0])
-opts_data = lambda: {
-	'desc': 'Auto-sign MMGen transactions',
-	'usage':'[opts] [command]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Auto-sign MMGen transactions',
+		'usage':'[opts] [command]',
+		'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -c, --coins=c       Coins to sign for (comma-separated list)
@@ -97,6 +98,7 @@ each signing session.
 
 This command is currently available only on Linux-based platforms.
 """.format(pnm=prog_name,wd=wallet_dir,td=tx_dir,kf=key_fn,mp=mountpoint)
+	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])

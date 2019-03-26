@@ -33,12 +33,15 @@ dfl_len = {
 	'hex': PasswordList.pw_info['hex']['dfl_len']
 }
 
-opts_data = lambda: {
+opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
-	'desc': """Generate a range or list of passwords from an {pnm} wallet,
-                  mnemonic, seed or brainwallet for the given ID string""".format(pnm=g.proj_name),
-	'usage':'[opts] [seed source] <ID string> <index list or range(s)>',
-	'options': """
+	'text': {
+		'desc': """
+                 Generate a range or list of passwords from an {pnm} wallet,
+                 mnemonic, seed or brainwallet for the given ID string
+		 """.format(pnm=g.proj_name),
+		'usage':'[opts] [seed source] <ID string> <index list or range(s)>',
+		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -b, --base32          Generate passwords in Base32 format instead of Base58
@@ -65,11 +68,7 @@ opts_data = lambda: {
                       (min={g.min_urandchars}, max={g.max_urandchars}, default={g.usr_randchars})
 -S, --stdout          Print passwords to stdout
 -v, --verbose         Produce more verbose output
-""".format(
-	seed_lens=', '.join(map(str,g.seed_lens)),
-	g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
-	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
-),
+""",
 	'notes': """
 
                            NOTES FOR THIS COMMAND
@@ -84,6 +83,7 @@ Changing either the password format (base32,base58) or length alters the seed
 and thus generates a completely new set of passwords.
 
 EXAMPLE:
+
   Generate ten base58 passwords of length {d58} for Alice's email account:
   {g.prog_name} alice@nowhere.com 1-10
 
@@ -104,15 +104,25 @@ EXAMPLE:
 {n_bw}
 
 FMT CODES:
+
   {n_fmt}
-""".format(
-		o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
-		ml=MMGenPWIDString.max_len,
-		fs="', '".join(MMGenPWIDString.forbidden),
-		n_pw=help_notes('passwd'),
-		n_bw=help_notes('brainwallet'),
-		n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines())
-	)
+"""
+	},
+	'code': {
+		'options': lambda s: s.format(
+			seed_lens=', '.join(map(str,g.seed_lens)),
+			g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
+			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
+		),
+		'notes': lambda s: s.format(
+				o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
+				ml=MMGenPWIDString.max_len,
+				fs="', '".join(MMGenPWIDString.forbidden),
+				n_pw=help_notes('passwd'),
+				n_bw=help_notes('brainwallet'),
+				n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines())
+		)
+	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['b16'])

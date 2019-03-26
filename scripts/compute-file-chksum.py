@@ -6,13 +6,15 @@ sys.path = [repo_root] + sys.path
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': 'Compute checksum for a MMGen data file',
-	'usage':'[opts] infile',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Compute checksum for a MMGen data file',
+		'usage':'[opts] infile',
+		'options': """
 -h, --help               Print this help message.
 -i, --include-first-line Include the first line of the file (you probably don't want this)
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

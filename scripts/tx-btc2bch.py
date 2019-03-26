@@ -22,14 +22,16 @@ tx-btc2bch: Convert MMGen transaction files from BTC to BCH format
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': """Convert {pnm} transaction files from BTC to BCH format""".format(pnm=g.proj_name),
-	'usage':'[opts] [mmgen transaction file]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': """Convert {pnm} transaction files from BTC to BCH format""".format(pnm=g.proj_name),
+		'usage':'[opts] [mmgen transaction file]',
+		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
 -v, --verbose      Produce more verbose output
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

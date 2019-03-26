@@ -22,11 +22,12 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
-	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ... [seed source] ...',
-	'sets': ( ('yes', True, 'quiet', True), ),
-	'options': """
+opts_data = {
+	'sets': [('yes', True, 'quiet', True)],
+	'text': {
+		'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
+		'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ... [seed source] ...',
+		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
 -a, --tx-fee-adj=    f Adjust transaction fee by factor 'f' (see below)
@@ -75,14 +76,21 @@ opts_data = lambda: {
 -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
 """,
-	'options_fmt_args': lambda: dict(
-		g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
-		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-		fu=help_notes('rel_fee_desc'),
-		fl=help_notes('fee_spec_letters'),
-		kg=g.key_generator,
-		cu=g.coin),
-	'notes': lambda: '\n' + help_notes('txcreate') + help_notes('fee') + help_notes('txsign')
+		'notes': '\n{}{}{}',
+	},
+	'code': {
+		'options': lambda s: s.format(
+			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
+			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			fu=help_notes('rel_fee_desc'),
+			fl=help_notes('fee_spec_letters'),
+			kg=g.key_generator,
+			cu=g.coin),
+		'notes': lambda s: s.format(
+			help_notes('txcreate'),
+			help_notes('fee'),
+			help_notes('txsign'))
+	}
 }
 
 cmd_args = opts.init(opts_data)

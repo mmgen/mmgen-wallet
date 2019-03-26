@@ -26,11 +26,14 @@ import time
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': """Split funds in a {pnm} wallet after a chain fork using a
-                timelocked transaction""".format(pnm=g.proj_name),
-	'usage':'[opts] [output addr1] [output addr2]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': """
+               Split funds in a {pnm} wallet after a chain fork using a
+               timelocked transaction
+		 """.format(pnm=g.proj_name),
+		'usage':'[opts] [output addr1] [output addr2]',
+		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -f, --tx-fees=     f The transaction fees for each chain (comma-separated)
@@ -46,7 +49,7 @@ opts_data = lambda: {
 -R, --rpc-host2=   h Host the other coin daemon is running on (default: none)
 -L, --locktime=    t Lock time (block height or unix seconds)
                      (default: {bh})
-""".format(oc=g.proto.forks[-1][2].upper(),bh='current block height'),
+""",
 	'notes': """\n
 This command creates two transactions: one (with the timelock) to be broadcast
 on the long chain and one on the short chain after a replayable chain fork.
@@ -74,6 +77,12 @@ minority chain is ahead of the timelock.  If the reorg'd minority chain is
 behind the timelock, protection is contingent on getting the non-timelocked
 transaction reconfirmed before the timelock expires. Use at your own risk.
 """.format(pnm=g.proj_name)
+	},
+	'code': {
+		'options': lambda s: s.format(
+			oc=g.proto.forks[-1][2].upper(),
+			bh='current block height'),
+	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['tx_fee','tx_fee_adj','comment_file'])

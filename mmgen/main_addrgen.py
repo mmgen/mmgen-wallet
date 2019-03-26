@@ -41,12 +41,15 @@ note_secp256k1 = """
 If available, the secp256k1 library will be used for address generation.
 """.strip()
 
-opts_data = lambda: {
+opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
-	'desc': """Generate a range or list of {desc} from an {pnm} wallet,
-                  mnemonic, seed or brainwallet""".format(desc=gen_desc,pnm=g.proj_name),
-	'usage':'[opts] [seed source] <index list or range(s)>',
-	'options': """
+	'text': {
+		'desc': """
+                 Generate a range or list of {desc} from an {pnm} wallet,
+                 mnemonic, seed or brainwallet
+			  """.format(desc=gen_desc,pnm=g.proj_name),
+		'usage':'[opts] [seed source] <index list or range(s)>',
+		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -A, --no-addresses    Print only secret keys, no addresses
@@ -77,14 +80,7 @@ opts_data = lambda: {
                       (default: {dmat})
 -v, --verbose         Produce more verbose output
 -x, --b16             Print secret keys in hexadecimal too
-""".format(
-	seed_lens=', '.join(map(str,g.seed_lens)),
-	pnm=g.proj_name,
-	kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-	kg=g.key_generator,
-	what=gen_what,g=g,
-	dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name'])
-),
+""",
 	'notes': """
 
                            NOTES FOR THIS COMMAND
@@ -105,16 +101,30 @@ ADDRESS TYPES:
 {n_bw}
 
 FMT CODES:
+
   {n_fmt}
-""".format(
-		n_secp=note_secp256k1,
-		n_addrkey=note_addrkey,
-		n_pw=help_notes('passwd'),
-		n_bw=help_notes('brainwallet'),
-		n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
-		n_at='\n  '.join(["'{}','{:<12} - {}".format(k,v['name']+"'",v['desc']) for k,v in list(MAT.mmtypes.items())]),
-		o=opts
-	)
+"""
+	},
+	'code': {
+		'options': lambda s: s.format(
+			seed_lens=', '.join(map(str,g.seed_lens)),
+			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name']),
+			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			kg=g.key_generator,
+			pnm=g.proj_name,
+			what=gen_what,
+			g=g,
+		),
+		'notes': lambda s: s.format(
+			n_secp=note_secp256k1,
+			n_addrkey=note_addrkey,
+			n_pw=help_notes('passwd'),
+			n_bw=help_notes('brainwallet'),
+			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			n_at='\n  '.join(["'{}','{:<12} - {}".format(
+				k,v['name']+"'",v['desc']) for k,v in list(MAT.mmtypes.items())])
+		)
+	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)

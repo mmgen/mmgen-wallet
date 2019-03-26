@@ -40,15 +40,16 @@ modpath_save = sys.modules['mmgen.main'].__spec__.origin
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'prog_name': sys.argv[0].split('/')[-1],
-	'desc': 'Remove MMGen from your system',
-	'usage': '[opts]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Remove MMGen from your system',
+		'usage': '[opts]',
+		'options': """
 -h, --help        Print this help message
 -l, --list-paths  List the directories and files that would be deleted
 -n, --no-prompt   Don't prompt before deleting
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

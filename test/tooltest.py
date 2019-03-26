@@ -31,10 +31,11 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 from mmgen.common import *
 from test.common import *
 
-opts_data = lambda: {
-	'desc': "Test suite for the 'mmgen-tool' utility",
-	'usage':'[options] [command]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': "Test suite for the 'mmgen-tool' utility",
+		'usage':'[options] [command]',
+		'options': """
 -h, --help          Print this help message
 -C, --coverage      Produce code coverage info using trace module
 -d, --debug         Produce debugging output (stderr from spawned script)
@@ -50,6 +51,7 @@ opts_data = lambda: {
 
 If no command is given, the whole suite of tests is run.
 """
+	}
 }
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]

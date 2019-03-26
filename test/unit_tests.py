@@ -30,10 +30,11 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 # Import these _after_ prepending repo_root to sys.path
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': "Unit tests for the MMGen suite",
-	'usage':'[options] [tests]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': "Unit tests for the MMGen suite",
+		'usage':'[options] [tests]',
+		'options': """
 -h, --help       Print this help message
 -l, --list       List available tests
 -n, --names      Print command names instead of descriptions
@@ -43,6 +44,7 @@ opts_data = lambda: {
 	'notes': """
 If no test is specified, all available tests are run
 	"""
+	}
 }
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]

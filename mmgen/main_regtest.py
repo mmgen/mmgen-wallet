@@ -23,11 +23,12 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': 'Coin daemon regression test mode setup and operations for the {} suite'.format(g.proj_name),
-	'usage':   '[opts] <command>',
-	'sets': ( ('yes', True, 'quiet', True), ),
-	'options': """
+opts_data = {
+	'sets': [('yes', True, 'quiet', True)],
+	'text': {
+		'desc': 'Coin daemon regression test mode setup and operations for the {} suite'.format(g.proj_name),
+		'usage':   '[opts] <command>',
+		'options': """
 -h, --help          Print this help message
 --, --longhelp      Print help message for long options (common options)
 -e, --empty         Don't fund Bob and Alice's wallets on setup
@@ -52,6 +53,7 @@ opts_data = lambda: {
   show_mempool    - show transaction IDs in mempool
   cli [arguments] - execute an RPC call with arguments
 	"""
+	}
 }
 
 cmd_args = opts.init(opts_data)

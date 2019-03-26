@@ -9,15 +9,17 @@ sys.path = [repo_root] + sys.path
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc':    "Convert MMGen transaction file from v2 format to v3 format",
-	'usage':   "<tx file>",
-	'options': """
+opts_data = {
+	'text': {
+		'desc':    "Convert MMGen transaction file from v2 format to v3 format",
+		'usage':   "<tx file>",
+		'options': """
 -h, --help     Print this help message
 -d, --outdir=d Output files to directory 'd' instead of working dir
 -q, --quiet    Write (and overwrite) files without prompting
 -S, --stdout   Write data to STDOUT instead of file
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

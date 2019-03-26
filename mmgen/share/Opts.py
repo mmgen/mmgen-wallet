@@ -27,47 +27,57 @@ def usage(opts_data):
 	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
-def print_help_and_exit(opts_data,longhelp=False):
+def print_help(opts_data,opt_filter):
+	t = opts_data['text']
+	c = opts_data['code']
+
+	# header
 	pn = opts_data['prog_name']
-	pn_len = str(len(pn)+2)
-	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',opts_data['desc'].strip(),p=pn_len)
-	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,opts_data['usage'].strip(),p=pn_len)
-	o = opts_data[('options','long_options')[longhelp]].strip()
-	if 'options_fmt_args' in opts_data:
-		o = o.format(**opts_data['options_fmt_args']())
-	hdr = ('OPTIONS:','  LONG OPTIONS:')[longhelp]
-	ls = ('  ','')[longhelp]
-	es = ('','    ')[longhelp]
-	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(o.splitlines()),ls=ls,es=es)
-	if 'notes' in opts_data and not longhelp:
-		n = opts_data['notes']
-		if isinstance(n, collections.Callable): n = n()
-		out += '\n  ' + '\n  '.join(n.rstrip().splitlines())
+	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
+	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
+
+	# options
+	if opts_data['do_help'] == 'longhelp':
+		hdr,ls,es = ('  LONG OPTIONS:','','    ')
+		text = t['long_options'].strip()
+		code = c['long_options'] if 'long_options' in c else None
+	else:
+		hdr,ls,es = ('OPTIONS:','  ','')
+		text = t['options']
+		code = c['options'] if 'options' in c else None
+
+	ftext = code(text) if code else text
+	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(ftext.splitlines()),ls=ls,es=es)
+
+	# notes
+	if opts_data['do_help'] == 'help' and 'notes' in t:
+		ftext = c['notes'](t['notes']) if 'notes' in c else t['notes']
+		out += '\n  ' + '\n  '.join(ftext.rstrip().splitlines())
+
 	print(out)
 	sys.exit(0)
 
-def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
+def process_opts(opts_data,short_opts,long_opts):
 
 	import os
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
 	long_opts  = [i.replace('_','-') for i in long_opts]
 
 	so_str = short_opts.replace('-:','').replace('-','')
-	try: cl_opts,args = getopt.getopt(argv[1:], so_str, long_opts)
+	try: cl_opts,args = getopt.getopt(sys.argv[1:], so_str, long_opts)
 	except getopt.GetoptError as err:
 		print(str(err))
 		sys.exit(2)
 
 	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
-	opts,skipped_help = {},False
+	opts = {}
+	opts_data['do_help'] = False
 
 	for opt,arg in cl_opts:
 		if opt in ('-h','--help'):
-			if not skip_help: print_help_and_exit(opts_data)
-			skipped_help = True
+			opts_data['do_help'] = 'help'
 		elif opt == '--longhelp':
-			if not skip_help: print_help_and_exit(opts_data,longhelp=True)
-			skipped_help = True
+			opts_data['do_help'] = 'longhelp'
 		elif opt[:2] == '--' and opt[2:] in long_opts:
 			opts[opt[2:].replace('-','_')] = True
 		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
@@ -93,17 +103,18 @@ def process_opts(argv,opts_data,short_opts,long_opts,skip_help=False):
 					else:
 						opts[o_out] = v_out
 
-	return opts,args,skipped_help
+	return opts,args
 
-def parse_opts(argv,opts_data,opt_filter=None,skip_help=False):
+def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
 	import re
 	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
 	od_all = []
 
-	for k in ['options'] + ([],['long_options'])['long_options' in opts_data]:
+	for k in ('options','long_options'):
+		if k not in opts_data['text']: continue
 		od,skip = [],True
-		for l in opts_data[k].strip().splitlines():
+		for l in opts_data['text'][k].strip().splitlines():
 			m = re.match(pat,l)
 			if m:
 				skip = bool(opt_filter) and m.group(1) not in opt_filter
@@ -112,15 +123,17 @@ def parse_opts(argv,opts_data,opt_filter=None,skip_help=False):
 			else:
 				if not skip: od[-1][3] += '\n' + l
 
-		opts_data[k] = '\n'.join(
-			['{:<3} --{} {}'.format(
-				('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
-		)
+		if not parse_only:
+			opts_data['text'][k] = '\n'.join(
+				['{:<3} --{} {}'.format(
+					('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
+			)
 		od_all += od
+
 	short_opts    = ''.join([d[0]+d[4] for d in od_all if d[6] == False])
 	long_opts     = [d[1].replace('-','_')+d[5] for d in od_all if d[6] == False]
 	skipped_opts  = [d[1].replace('-','_') for d in od_all if d[6] == True]
 
-	opts,args,skipped_help = process_opts(argv,opts_data,short_opts,long_opts,skip_help=skip_help)
+	opts,args = process_opts(opts_data,short_opts,long_opts)
 
-	return opts,args,short_opts,long_opts,skipped_opts,skipped_help
+	return opts,args,short_opts,long_opts,skipped_opts

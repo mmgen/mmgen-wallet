@@ -47,10 +47,11 @@ option, or a list of non-{pnm} addresses with the '--addrlist' option
 # In batch mode, daemon just rescans each address separately anyway, so make
 # --batch and --rescan incompatible.
 
-opts_data = lambda: {
-	'desc': """Import addresses into an {} tracking wallet""".format(g.proj_name),
-	'usage':'[opts] [mmgen address file]',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': """Import addresses into an {} tracking wallet""".format(g.proj_name),
+		'usage':'[opts] [mmgen address file]',
+		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
 -a, --address=a    Import the single coin address 'a'
@@ -67,6 +68,7 @@ already in the tracking wallet.
 
 The --batch and --rescan options cannot be used together.
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)

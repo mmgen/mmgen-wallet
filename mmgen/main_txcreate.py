@@ -23,11 +23,12 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': 'Create a transaction with outputs to specified coin or {g.proj_name} addresses'.format(g=g),
-	'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
-	'sets': ( ('yes', True, 'quiet', True), ),
-	'options': """
+opts_data = {
+	'sets': [('yes', True, 'quiet', True)],
+	'text': {
+		'desc': 'Create a transaction with outputs to specified coin or {g.proj_name} addresses'.format(g=g),
+		'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
+		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -a, --tx-fee-adj=  f  Adjust transaction fee by factor 'f' (see below)
@@ -54,11 +55,18 @@ opts_data = lambda: {
 -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """,
-	'options_fmt_args': lambda: dict(
-							g=g,cu=g.coin,
-							fu=help_notes('rel_fee_desc'),
-							fl=help_notes('fee_spec_letters') ),
-	'notes': lambda: '\n' + help_notes('txcreate') + help_notes('fee')
+		'notes': '\n{}{}',
+	},
+	'code': {
+		'options': lambda s: s.format(
+			fu=help_notes('rel_fee_desc'),
+			fl=help_notes('fee_spec_letters'),
+			cu=g.coin,
+			g=g),
+		'notes': lambda s: s.format(
+			help_notes('txcreate'),
+			help_notes('fee'))
+	}
 }
 
 cmd_args = opts.init(opts_data)

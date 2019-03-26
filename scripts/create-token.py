@@ -27,10 +27,11 @@ name   = 'MMGen Token'
 symbol = 'MMT'
 solc_version_pat = r'0.5.[123]'
 
-opts_data = lambda: {
-	'desc': 'Create an ERC20 token contract',
-	'usage':'[opts] <owner address>',
-	'options': """
+opts_data = {
+	'text': {
+		'desc': 'Create an ERC20 token contract',
+		'usage':'[opts] <owner address>',
+		'options': """
 -h, --help       Print this help message
 -o, --outdir=  d Specify output directory for *.bin files
 -d, --decimals=d Number of decimals for the token (default: {d})
@@ -39,7 +40,15 @@ opts_data = lambda: {
 -s, --symbol=  s Token symbol (default: {s})
 -S, --stdout     Output data in JSON format to stdout instead of files
 -v, --verbose    Produce more verbose output
-""".format(d=decimals,n=name,s=symbol,t=supply)
+"""
+	},
+	'code': {
+		'options': lambda s: s.format(
+			d=decimals,
+			n=name,
+			s=symbol,
+			t=supply)
+	}
 }
 
 cmd_args = opts.init(opts_data)

@@ -23,11 +23,16 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 
 from mmgen.common import *
 
-opts_data = lambda: {
-	'desc': 'Increase the fee on a replaceable (RBF) {g.proj_name} transaction, creating a new transaction, and optionally sign and send the new transaction'.format(g=g),
-	'usage':   '[opts] <{g.proj_name} TX file> [seed source] ...'.format(g=g),
-	'sets': ( ('yes', True, 'quiet', True), ),
-	'options': """
+opts_data = {
+	'sets': [('yes', True, 'quiet', True)],
+	'text': {
+		'desc': """
+                Increase the fee on a replaceable (RBF) {g.proj_name} transaction,
+                creating a new transaction, and optionally sign and send the
+                new transaction
+		 """.format(g=g),
+		'usage':   '[opts] <{g.proj_name} TX file> [seed source] ...'.format(g=g),
+		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
 -b, --brain-params=l,p Use seed length 'l' and hash preset 'p' for
@@ -66,13 +71,19 @@ opts_data = lambda: {
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
 """,
-	'options_fmt_args': lambda: dict(
-		g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
-		fu=help_notes('rel_fee_desc'),fl=help_notes('fee_spec_letters'),
-		kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-		kg=g.key_generator,
-		cu=g.coin),
-	'notes': lambda: '\n' + help_notes('fee') + help_notes('txsign')
+	'notes': '\n{}{}'
+	},
+	'code': {
+		'options': lambda s: s.format(
+			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
+			fu=help_notes('rel_fee_desc'),fl=help_notes('fee_spec_letters'),
+			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			kg=g.key_generator,
+			cu=g.coin),
+		'notes': lambda s: s.format(
+			help_notes('fee'),
+			help_notes('txsign'))
+	}
 }
 
 cmd_args = opts.init(opts_data)

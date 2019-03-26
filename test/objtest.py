@@ -30,11 +30,12 @@ from mmgen.common import *
 from mmgen.obj import *
 from mmgen.seed import *
 
-opts_data = lambda: {
-	'desc': 'Test MMGen data objects',
-	'sets': ( ('super_silent', True, 'silent', True), ),
-	'usage':'[options] [object]',
-	'options': """
+opts_data = {
+	'sets': [('super_silent', True, 'silent', True)],
+	'text': {
+		'desc': 'Test MMGen data objects',
+		'usage':'[options] [object]',
+		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
 -q, --quiet        Produce quieter output
@@ -42,6 +43,7 @@ opts_data = lambda: {
 -S, --super-silent Silence all output except for errors
 -v, --verbose      Produce more verbose output
 """
+	}
 }
 
 cmd_args = opts.init(opts_data)
