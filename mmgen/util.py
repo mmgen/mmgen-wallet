@@ -26,10 +26,10 @@ from string import hexdigits,digits
 from mmgen.color import *
 from mmgen.exception import *
 
-def msg(s):   os.write(g.stderr_fileno,s.encode() + b'\n')
-def msg_r(s): os.write(g.stderr_fileno,s.encode())
-def Msg(s):   os.write(g.stdout_fileno,s.encode() + b'\n')
-def Msg_r(s): os.write(g.stdout_fileno,s.encode())
+def msg(s):   g.stderr.write(s + '\n')
+def msg_r(s): g.stderr.write(s)
+def Msg(s):   g.stdout.write(s + '\n')
+def Msg_r(s): g.stdout.write(s)
 
 def msgred(s): msg(red(s))
 def rmsg(s):   msg(red(s))
@@ -750,6 +750,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	if g.test_suite_popen_spawn:
 		msg(prompt)
+		sys.stderr.flush()
 		reply = os.read(0,4096).decode()
 	elif echo or not sys.stdin.isatty():
 		reply = input(prompt)

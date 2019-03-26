@@ -99,12 +99,12 @@ else:
 	devnull_fh = open('/dev/null','w')
 	def silence():
 		if not (opt.verbose or opt.exact_output):
-			g.stderr_fileno = g.stdout_fileno = devnull_fh.fileno()
+			g.stdout = g.stderr = devnull_fh
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):
-		g.stderr_fileno = 2
-		g.stdout_fileno = 1
+		g.stdout = sys.stdout
+		g.stderr = sys.stderr
 
 def randbool():
 	return os.urandom(1).hex()[0] in '02468ace'

@@ -363,6 +363,7 @@ def do_loop():
 		prev_status = status
 		if not n % 10:
 			msg_r('\r{}\rWaiting'.format(' '*17))
+			sys.stderr.flush()
 		time.sleep(1)
 		msg_r('.')
 		n += 1

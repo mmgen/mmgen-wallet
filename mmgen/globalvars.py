@@ -49,8 +49,8 @@ class g(object):
 	max_int   = 0xffffffff
 
 	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'))
-	stdout_fileno = sys.stdout.fileno()
-	stderr_fileno = sys.stderr.fileno()
+	stdout = sys.stdout
+	stderr = sys.stderr
 
 	http_timeout = 60
 
