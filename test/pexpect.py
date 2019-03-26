@@ -151,7 +151,7 @@ class MMGenPexpect(object):
 		# readline() of partial lines doesn't work with PopenSpawn, so do this instead:
 		self.expect(NL,nonl=True,silent=True)
 		debug_pexpect_msg(self.p)
-		end = self.p.before
+		end = self.p.before.rstrip()
 		if not g.debug:
 			vmsg(' ==> {}'.format(cyan(end)))
 		return end

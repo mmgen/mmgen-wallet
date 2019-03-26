@@ -63,7 +63,7 @@ def opt_postproc_debug():
 	Msg('    Opts after processing:')
 	for k in a:
 		v = getattr(opt,k)
-		Msg('        {:18}: {:<6} [{}]'.format(k,v,type(v).__name__))
+		Msg('        {:18}: {!r:<6} [{}]'.format(k,v,type(v).__name__))
 	Msg("    Opts set to 'None':")
 	Msg('        {}\n'.format('\n        '.join(b)))
 	Msg('    Global vars:')
