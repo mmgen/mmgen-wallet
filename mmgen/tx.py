@@ -96,6 +96,16 @@ def segwit_is_active(exit_on_error=False):
 	else:
 		return False
 
+def addr2pubhash(addr):
+	return g.proto.verify_addr(addr,addr.hex_width,return_dict=True)['hex']
+
+def addr2scriptPubKey(addr):
+	return {
+		'p2pkh': '76a914' + addr2pubhash(addr) + '88ac',
+		'p2sh':  'a914' + addr2pubhash(addr) + '87',
+		'bech32': g.proto.witness_vernum_hex + '14' + addr2pubhash(addr)
+	}[addr.addr_fmt]
+
 def scriptPubKey2addr(s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
 		return g.proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'

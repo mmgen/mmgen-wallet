@@ -303,6 +303,20 @@ tests = {
 					['--type=bech32'], 'opt.type="bech32"' ),
 			],
 		},
+		'addr2scriptpubkey': {
+			'btc_mainnet': [
+				( ['12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm'], '76a914118089d66b4a5853765e94923abdd5de4616c6e588ac' ),
+				( ['3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'], 'a9148e34586186551f6320fa3eb2d238a9c61ab8264b87' ),
+				( ['bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms'], '00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178' ),
+			],
+		},
+		'scriptpubkey2addr': {
+			'btc_mainnet': [
+				( ['76a914118089d66b4a5853765e94923abdd5de4616c6e588ac'], '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm' ),
+				( ['a9148e34586186551f6320fa3eb2d238a9c61ab8264b87'], '3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn' ),
+				( ['00143057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms' ),
+			],
+		},
 		'hex2wif': {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],

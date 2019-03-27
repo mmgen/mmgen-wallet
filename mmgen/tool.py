@@ -433,7 +433,18 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
-		return g.proto.verify_addr(addr,CoinAddr.hex_width,return_dict=True)['hex']
+		from mmgen.tx import addr2pubhash
+		return addr2pubhash(CoinAddr(addr))
+
+	def addr2scriptpubkey(self,addr:'sstr'):
+		"convert coin address to scriptPubKey"
+		from mmgen.tx import addr2scriptPubKey
+		return addr2scriptPubKey(CoinAddr(addr))
+
+	def scriptpubkey2addr(self,hexstr:'sstr'):
+		"convert scriptPubKey to coin address"
+		from mmgen.tx import scriptPubKey2addr
+		return scriptPubKey2addr(hexstr)[0]
 
 class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	"""
