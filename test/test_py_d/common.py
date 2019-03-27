@@ -68,7 +68,7 @@ chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 
 def ok_msg():
 	if opt.profile: return
-	os.write(2,green('\nOK\n').encode() if opt.exact_output or opt.verbose else b' OK\n')
+	sys.stderr.write(green('\nOK\n') if opt.exact_output or opt.verbose else ' OK\n')
 
 def skip(name,reason=None):
 	msg('Skipping {}{}'.format(name,' ({})'.format(reason) if reason else ''))
@@ -81,9 +81,9 @@ def confirm_continue():
 		raise KeyboardInterrupt('Exiting at user request')
 
 def omsg(s):
-	os.write(2,s.encode() + b'\n')
+	sys.stderr.write(s + '\n')
 def omsg_r(s):
-	os.write(2,s.encode())
+	sys.stderr.write(s)
 def imsg(s):
 	if opt.exact_output or opt.verbose: omsg(s)
 def imsg_r(s):
@@ -93,13 +93,10 @@ def iqmsg(s):
 def iqmsg_r(s):
 	if not opt.quiet: omsg_r(s)
 
-if g.platform == 'win':
-	def silence(): pass
-else:
-	devnull_fh = open('/dev/null','w')
-	def silence():
-		if not (opt.verbose or opt.exact_output):
-			g.stdout = g.stderr = devnull_fh
+devnull_fh = open(('/dev/null','null.out')[g.platform == 'win'],'w')
+def silence():
+	if not (opt.verbose or opt.exact_output):
+		g.stdout = g.stderr = devnull_fh
 
 def end_silence():
 	if not (opt.verbose or opt.exact_output):

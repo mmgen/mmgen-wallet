@@ -67,7 +67,7 @@ class TestSuiteBase(object):
 
 	def skip_for_win(self):
 		if g.platform == 'win':
-			msg("Skipping test '{}': not supported on MinGW platform".format(self.test_name))
+			msg("Skipping test '{}': not supported on MSys2 platform".format(self.test_name))
 			return True
 		else:
 			return False

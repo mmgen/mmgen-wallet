@@ -1,6 +1,5 @@
 #!/bin/bash
-# Tested on Linux, MinGW-64
-# MinGW's bash 3.1.17 doesn't do ${var^^}
+# Tested on Linux, MSys2
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 

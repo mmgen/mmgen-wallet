@@ -25,11 +25,26 @@ from hashlib import sha256
 from string import hexdigits,digits
 from mmgen.color import *
 from mmgen.exception import *
+from mmgen.globalvars import g
 
-def msg(s):   g.stderr.write(s + '\n')
-def msg_r(s): g.stderr.write(s)
-def Msg(s):   g.stdout.write(s + '\n')
-def Msg_r(s): g.stdout.write(s)
+if g.platform == 'win':
+	def msg_r(s):
+		try:
+			g.stderr.write(s)
+		except:
+			os.write(2,s.encode())
+	def Msg_r(s):
+		try:
+			g.stdout.write(s)
+		except:
+			os.write(1,s.encode())
+	def msg(s): msg_r(s + '\n')
+	def Msg(s): Msg_r(s + '\n')
+else:
+	def msg_r(s): g.stderr.write(s)
+	def Msg_r(s): g.stdout.write(s)
+	def msg(s):   g.stderr.write(s + '\n')
+	def Msg(s):   g.stdout.write(s + '\n')
 
 def msgred(s): msg(red(s))
 def rmsg(s):   msg(red(s))
@@ -428,15 +443,6 @@ def strip_comments(line):
 def remove_comments(lines):
 	return [m for m in [strip_comments(l) for l in lines] if m != '']
 
-from mmgen.globalvars import g
-
-def start_mscolor():
-	try:
-		import colorama
-		colorama.init(strip=True,convert=True)
-	except:
-		msg('Import of colorama module failed')
-
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
 		return g.hash_presets[hash_preset] # N,p,r,buflen
@@ -756,7 +762,13 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 		reply = input(prompt)
 	else:
 		from getpass import getpass
-		reply = getpass(prompt)
+		if g.platform == 'win':
+			# MSWin hack - getpass('foo') doesn't flush stderr
+			msg_r(prompt.strip()) # getpass('') adds a space
+			sys.stderr.flush()
+			reply = getpass('')
+		else:
+			reply = getpass(prompt)
 
 	kb_hold_protect()
 

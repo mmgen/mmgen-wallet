@@ -45,7 +45,7 @@ class g(object):
 	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2019'
-	keywords  = 'Bitcoin, BTC, cryptocurrency, wallet, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MinGW, mswin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, ETH, Ethereum, Classic, SHA256Compress, XMR, Monero, monerod, EMC, Emercoin, ERC20, token, deploy, contract, gas, fee, smart contract, solidity, Parity, testnet, devmode, Kovan'
+	keywords  = 'Bitcoin, BTC, Ethereum, ETH, Monero, XMR, ERC20, cryptocurrency, wallet, BIP32, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MSYS2, MinGW, MinGW64, MSWin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, SHA256Compress, monerod, EMC, Emercoin, token, deploy, contract, gas, fee, smart contract, solidity, Parity, testnet, devmode, Kovan'
 	max_int   = 0xffffffff
 
 	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'))
@@ -111,7 +111,7 @@ class g(object):
 	else:
 		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
 
-	color = sys.stdout.isatty() and platform != 'win'
+	color = sys.stdout.isatty()
 
 	if os.getenv('HOME'):                             # Linux or MSYS
 		home_dir = os.getenv('HOME')

@@ -52,30 +52,42 @@ for c in _colors:
 
 def nocolor(s): return s
 
-def init_color(enable_color=True,num_colors='auto'):
-	if enable_color:
-		assert num_colors in ('auto',8,16,256)
-		globals()['_reset'] = '\033[0m'
-		if num_colors in (8,16):
-			pfx = '_16_'
-		elif num_colors in (256,):
+def init_color(num_colors='auto'):
+	assert num_colors in ('auto',8,16,256)
+	globals()['_reset'] = '\033[0m'
+	if num_colors in (8,16):
+		pfx = '_16_'
+	elif num_colors in (256,):
+		pfx = '_256_'
+	else:
+		try:
+			import os
+			assert os.environ['TERM'][-8:] == '256color'
 			pfx = '_256_'
-		else:
+		except:
 			try:
-				import os
-				assert os.environ['TERM'][-8:] == '256color'
-				pfx = '_256_'
+				import subprocess
+				a = subprocess.check_output(['infocmp','-0']).decode()
+				b = [e.split('#')[1] for e in a.split(',') if e[:6] == 'colors'][0]
+				pfx = ('_16_','_256_')[b=='256']
 			except:
-				try:
-					import subprocess
-					a = subprocess.check_output(['infocmp','-0'])
-					b = [e.split('#')[1] for e in a.split(',') if e[:6] == 'colors'][0]
-					pfx = ('_16_','_256_')[b=='256']
-				except:
-					pfx = '_16_'
+				pfx = '_16_'
 
-		for c in _colors:
-			globals()['_clr_'+c] = globals()[pfx+c]
+	for c in _colors:
+		globals()['_clr_'+c] = globals()[pfx+c]
+
+def start_mscolor():
+	import sys
+	from mmgen.globalvars import g
+	try:
+		import colorama
+		colorama.init(strip=True,convert=True)
+	except:
+		from mmgen.util import msg
+		msg('Import of colorama module failed')
+	else:
+		g.stdout = sys.stdout
+		g.stderr = sys.stderr
 
 def test_color():
 	try:
@@ -83,8 +95,9 @@ def test_color():
 		colorama.init(strip=True,convert=True)
 	except:
 		pass
+
 	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
-		if n != 'auto': init_color(num_colors=n)
+		init_color(num_colors=n)
 		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
 
 if __name__ == '__main__': test_color()

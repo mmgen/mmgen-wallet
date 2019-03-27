@@ -147,6 +147,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 									pw        = True )
 
 	def ref_hincog_blkdev_conv_out(self):
+		if self.skip_for_win(): return 'skip'
 		imsg('Creating block device image file')
 		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
 		subprocess.check_output(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'],stderr=subprocess.PIPE)

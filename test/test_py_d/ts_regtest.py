@@ -527,7 +527,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def alice_add_label_badaddr1(self):
-		return self.alice_add_label_badaddr(rt_pw,'Invalid coin address for this chain: '+rt_pw)
+		return self.alice_add_label_badaddr(rt_pw,'Invalid coin address for this chain: ')
 
 	def alice_add_label_badaddr2(self):
 		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address

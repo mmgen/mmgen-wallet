@@ -112,6 +112,7 @@ def _kb_hold_protect_mswin():
 def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=None):
 
 	msg_r(prompt)
+	sys.stderr.flush()
 	timeout = float(0.5)
 
 	while True:
@@ -134,12 +135,14 @@ def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=
 
 def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
 	msg_r(prompt)
+	sys.stderr.flush()
 	ch = msvcrt.getch()
 	if ch == 3: raise KeyboardInterrupt
 	return ch
 
 def _get_keypress_mswin_stub(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
 	msg_r(prompt)
+	sys.stderr.flush()
 	return os.read(0,1)
 
 def _get_terminal_size_linux():

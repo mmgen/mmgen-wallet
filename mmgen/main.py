@@ -26,41 +26,34 @@ def launch(what):
 		what = 'wallet'
 	if what == 'keygen': what = 'addrgen'
 
-	import sys
+	import sys,os
+	from mmgen.globalvars import g
+
+	if g.platform == 'linux' and sys.stdin.isatty():
+		import termios,atexit
+		fd = sys.stdin.fileno()
+		old = termios.tcgetattr(fd)
+		atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
 
 	try:
-		import termios
-		platform = 'linux'
-	except:
-		platform = 'win'
-
-	if platform == 'win':
 		__import__('mmgen.main_' + what)
-	else:
-		import os,atexit
-		if sys.stdin.isatty():
-			fd = sys.stdin.fileno()
-			old = termios.tcgetattr(fd)
-			def at_exit(): termios.tcsetattr(fd, termios.TCSADRAIN, old)
-			atexit.register(at_exit)
-		try: __import__('mmgen.main_' + what)
-		except KeyboardInterrupt:
-			sys.stderr.write('\nUser interrupt\n')
-		except EOFError:
-			sys.stderr.write('\nEnd of file\n')
-		except Exception as e:
-			if os.getenv('MMGEN_TRACEBACK'):
-				raise
-			else:
-				try: m = '{}'.format(e.args[0])
-				except: m = repr(e.args[0])
+	except KeyboardInterrupt:
+		sys.stderr.write('\nUser interrupt\n')
+	except EOFError:
+		sys.stderr.write('\nEnd of file\n')
+	except Exception as e:
+		if os.getenv('MMGEN_TRACEBACK'):
+			raise
+		else:
+			try: m = '{}'.format(e.args[0])
+			except: m = repr(e.args[0])
 
-				from mmgen.util import die,ydie,rdie
-				d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
-						(die, 1,'{m}'),
-						(ydie,2,'{m}'),
-						(ydie,3,'\nMMGen Error ({n}): {m}'),
-						(rdie,4,'\nMMGen Fatal Error ({n}): {m}')
-					][e.mmcode if hasattr(e,'mmcode') else 0]
+			from mmgen.util import die,ydie,rdie
+			d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
+					(die, 1,'{m}'),
+					(ydie,2,'{m}'),
+					(ydie,3,'\nMMGen Error ({n}): {m}'),
+					(rdie,4,'\nMMGen Fatal Error ({n}): {m}')
+				][e.mmcode if hasattr(e,'mmcode') else 0]
 
-				d[0](d[1],d[2].format(n=type(e).__name__,m=m))
+			d[0](d[1],d[2].format(n=type(e).__name__,m=m))

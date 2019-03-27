@@ -75,10 +75,11 @@ def opt_postproc_initializations():
 	from mmgen.term import set_terminal_vars
 	set_terminal_vars()
 
-	from mmgen.color import init_color
-	init_color(enable_color=g.color,num_colors=('auto',256)[bool(g.force_256_color)])
-
-	if g.color and g.platform == 'win': start_mscolor()
+	if g.color: # MMGEN_DISABLE_COLOR sets this to False
+		from mmgen.color import start_mscolor,init_color
+		if g.platform == 'win':
+			start_mscolor()
+		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 	g.coin = g.coin.upper() # allow user to use lowercase
 	g.dcoin = g.coin
