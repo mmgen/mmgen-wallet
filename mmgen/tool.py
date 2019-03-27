@@ -343,7 +343,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 	"""
 	cryptocoin key/address utilities
 
-		May require use of the '--coin' and '--type' options
+		May require use of the '--coin', '--type' and/or '--testnet' options
 
 		Examples:
 			mmgen-tool --coin=ltc --type=bech32 wif2addr <wif key>

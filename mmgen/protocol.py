@@ -86,6 +86,7 @@ class BitcoinProtocol(MMGenObject):
 	caps               = ('rbf','segwit')
 	mmcaps             = ('key','addr','rpc','tx')
 	base_coin          = 'BTC'
+	base_proto         = 'Bitcoin'
 	# From BIP173: witness version 'n' is stored as 'OP_n'. OP_0 is encoded as 0x00,
 	# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
 	witness_vernum_hex = '00'
@@ -316,6 +317,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 	chain_name  = 'foundation'
 	sign_mode   = 'standalone'
 	caps        = ('token',)
+	base_proto  = 'Ethereum'
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):

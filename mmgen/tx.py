@@ -230,7 +230,7 @@ class MMGenTxIO(MMGenListItem):
 	valid_attrs_extra = {'amt'}
 
 	# Setting self.amt is runtime-dependent, so make it a property
-	# Make underlying self._amt an MMGenImmutableAttr so that reassignment is prevented
+	# Make underlying self._amt an MMGenImmutableAttr to prevent reassignment
 	@property
 	def amt(self):
 		if type(self._amt) != g.proto.coin_amt:
@@ -1426,18 +1426,18 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		change_amt = self.get_inputs_from_user(tw)
 
-		# only after we have inputs
-		if opt.rbf:  self.inputs[0].sequence = g.max_int - 2 # handles the locktime case too
-		elif locktime: self.inputs[0].sequence = g.max_int - 1
-
 		self.update_change_output(change_amt)
 		self.update_send_amt(change_amt)
+
+		if g.proto.base_proto == 'Bitcoin':
+			if opt.rbf:  self.inputs[0].sequence = g.max_int - 2 # handles the locktime case too
+			elif locktime: self.inputs[0].sequence = g.max_int - 1
 
 		if not opt.yes:
 			self.add_comment()  # edits an existing comment
 		self.create_raw()       # creates self.hex, self.txid
 
-		if locktime:
+		if g.proto.base_proto == 'Bitcoin' and locktime:
 			msg('Setting nlocktime to {}!'.format(strfmt_locktime(locktime)))
 			self.set_hex_locktime(locktime)
 			self.update_txid()
