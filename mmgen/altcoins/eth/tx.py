@@ -239,7 +239,7 @@ class EthereumMMGenTX(MMGenTX):
 		if self.outputs:
 			self.send_amt = self.outputs[0].amt
 
-	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
+	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
 		m = {}
 		for k in ('in','out'):
 			if len(getattr(self,k+'puts')):

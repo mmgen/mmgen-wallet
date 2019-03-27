@@ -293,6 +293,8 @@ class MMGenTX(MMGenObject):
 	usr_fee_prompt = 'Enter transaction fee: '
 	fee_is_approximate = False
 	fn_fee_unit = 'satoshi'
+	view_sort_orders = ('addr','raw')
+	dfl_view_sort_order = 'addr'
 
 	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	msg_no_change_output = """
@@ -1035,7 +1037,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def is_replaceable(self):
 		return self.inputs[0].sequence == g.max_int - 2
 
-	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse):
+	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
+
+		if sort not in self.view_sort_orders:
+			m = '{!r}: invalid transaction view sort order.  Valid options: {}'
+			die(1,m.format(sort,','.join(self.view_sort_orders)))
 
 		def format_io(desc):
 			io = getattr(self,desc)
@@ -1043,7 +1049,12 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			out = desc.capitalize() + ':\n' + enl
 			addr_w = max(len(e.addr) for e in io)
 			confs_per_day = 60*60*24 // g.proto.secs_per_block
-			for n,e in enumerate(sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else o.addr)):
+			io_sorted = {
+				# prepend '/' (sorts before '0') to ensure non-MMGen addrs are displayed first
+				'addr': lambda: sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else '/'+o.addr),
+				'raw':  lambda: io
+			}[sort]
+			for n,e in enumerate(io_sorted()):
 				if ip and blockcount:
 					confs = e.confs + blockcount - self.blockcount
 					days = int(confs // confs_per_day)
@@ -1072,7 +1083,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 					out += '\n'.join([('{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
 			return out
 
-		return  format_io('inputs') + format_io('outputs')
+		md = {'raw':'raw','addr':'address'}
+		m = 'Displaying inputs and outputs in {} sort order'.format(md[sort])
+
+		return m + ('\n\n','\n')[terse] + format_io('inputs') + format_io('outputs')
 
 	def format_view_rel_fee(self,terse):
 		return ' ({} {})\n'.format(
@@ -1090,7 +1104,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			out += ', Base {}, Witness {}'.format(ts-ws,ws)
 		return out + '\n'
 
-	def format_view(self,terse=False):
+	def format_view(self,terse=False,sort=dfl_view_sort_order):
 		blockcount = None
 		if g.proto.base_coin != 'ETH':
 			try:
@@ -1127,7 +1141,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if self.label:
 			out += 'Comment: {}\n{}'.format(self.label.hl(),enl)
 
-		out += self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse)
+		out += self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse,sort=sort)
 
 		out += (self.txview_ftr_fs,self.txview_ftr_fs_short)[bool(terse)].format(
 			i=self.sum_inputs().hl(),

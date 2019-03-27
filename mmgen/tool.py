@@ -519,20 +519,32 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 		return PasswordList(infile=mmgen_passwdfile).chksum
 
 	def txview( varargs_call_sig = { # hack to allow for multiple filenames
-					'args':   ( 'mmgen_tx_file(s)', 'pager', 'terse', 'sort' ),
-					'dfls':   ( False, False, 'mtime' ),
-					'annots': { 'mmgen_tx_file(s)': str, 'sort': '(valid options: mtime,ctime,atime)' } },
+					'args': (
+						'mmgen_tx_file(s)',
+						'pager',
+						'terse',
+						'sort',
+						'filesort' ),
+					'dfls': ( False, False, 'addr', 'mtime' ),
+					'annots': {
+						'mmgen_tx_file(s)': str,
+						'sort': '(valid options: addr,raw)',
+						'filesort': '(valid options: mtime,ctime,atime)'
+						} },
 				*infiles,**kwargs):
 		"show raw/signed MMGen transaction in human-readable form"
-		self = varargs_call_sig
+
+		terse = bool(kwargs.get('terse'))
+		tx_sort = kwargs.get('sort') or 'addr'
+		file_sort = kwargs.get('filesort') or 'mtime'
+
 		from mmgen.filename import MMGenFileList
-		terse = 'terse' in kwargs and kwargs['terse']
-		sort_key = kwargs['sort'] if 'sort' in kwargs else 'mtime'
 		from mmgen.tx import MMGenTX
 		flist = MMGenFileList(infiles,ftype=MMGenTX)
-		flist.sort_by_age(key=sort_key) # in-place sort
+		flist.sort_by_age(key=file_sort) # in-place sort
+
 		sep = '—'*77+'\n'
-		return sep.join([MMGenTX(fn).format_view(terse=terse) for fn in flist.names()]).rstrip()
+		return sep.join([MMGenTX(fn).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]).rstrip()
 
 class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
 	"""
