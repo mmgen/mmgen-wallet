@@ -267,10 +267,20 @@ class MMGenTxInputList(list,MMGenObject):
 			if type(i.amt) != g.proto.coin_amt:
 				die(2,'Coin mismatch in transaction: amount {} not of type {}!'.format(i.amt,g.proto.coin_amt))
 
+	# Lexicographical Indexing of Transaction Inputs and Outputs
+	# https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
+	def sort_bip69(self):
+		from struct import pack
+		self.sort(key=lambda a: bytes.fromhex(a.txid) + pack('>i',a.vout))
+
 class MMGenTxOutputList(MMGenTxInputList):
 
 	desc = 'transaction outputs'
 	member_type = 'MMGenTxOutput'
+
+	def sort_bip69(self):
+		from struct import pack
+		self.sort(key=lambda a: pack('>q',a.amt.toSatoshi()) + bytes.fromhex(addr2scriptPubKey(a.addr)))
 
 class MMGenTX(MMGenObject):
 
@@ -1430,6 +1440,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.update_send_amt(change_amt)
 
 		if g.proto.base_proto == 'Bitcoin':
+			self.inputs.sort_bip69()
+			self.outputs.sort_bip69()
+			# do this only after inputs are sorted
 			if opt.rbf:  self.inputs[0].sequence = g.max_int - 2 # handles the locktime case too
 			elif locktime: self.inputs[0].sequence = g.max_int - 1
 

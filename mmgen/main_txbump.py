@@ -129,6 +129,9 @@ tx.update_fee(op_idx,fee)
 d = tx.get_fee_from_tx()
 assert d == fee and d <= g.proto.max_tx_fee
 
+if g.proto.base_proto == 'Bitcoin':
+	tx.outputs.sort_bip69() # output amts have changed, so re-sort
+
 if not opt.yes:
 	tx.add_comment()   # edits an existing comment
 tx.create_raw()        # creates tx.hex, tx.txid
