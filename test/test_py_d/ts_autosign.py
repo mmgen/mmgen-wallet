@@ -44,14 +44,14 @@ class TestSuiteAutosign(TestSuiteBase):
 		return self.autosign(
 					coins=['btc','eth'],
 					txfiles=['btc','eth','mm1','etc'],
-					txcount=7,
+					txcount=8,
 					live=live)
 
 	# tests everything except device detection, mount/unmount
 	def autosign(   self,
 					coins=['btc','bch','ltc','eth'],
 					txfiles=['btc','bch','ltc','eth','mm1','etc'],
-					txcount=11,
+					txcount=12,
 					live=False):
 
 		if self.skip_for_win(): return
@@ -103,8 +103,9 @@ class TestSuiteAutosign(TestSuiteBase):
 			fdata = [e for e in fdata_in if e[0] in txfiles]
 			from test.test_py_d.ts_ref import TestSuiteRef
 			tfns  = [TestSuiteRef.sources['ref_tx_file'][c][1] for c,d in fdata] + \
-					[TestSuiteRef.sources['ref_tx_file'][c][0] for c,d in fdata]
-			tfs = [joinpath(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata,tfns)]
+					[TestSuiteRef.sources['ref_tx_file'][c][0] for c,d in fdata] + \
+					['25EFA3[2.34].testnet.rawtx'] # TX with 2 non-MMGen outputs
+			tfs = [joinpath(ref_dir,d[1],fn) for d,fn in zip(fdata+fdata+[('btc','')],tfns)]
 
 			for f,fn in zip(tfs,tfns):
 				if fn: # use empty fn to skip file
@@ -172,13 +173,25 @@ class TestSuiteAutosign(TestSuiteBase):
 
 		def do_autosign(opts,mountpoint):
 			make_wallet(opts)
+
 			copy_files(mountpoint,include_bad_tx=True)
+			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
+			t.expect('{} transactions signed'.format(txcount))
+			t.expect('1 transaction failed to sign')
+			t.expect('Waiting')
+			t.kill(2)
+			t.req_exit_val = 1
+			imsg('')
+			t.ok()
+
+			copy_files(mountpoint,remove_signed_only=True)
 			t = self.spawn('mmgen-autosign',opts+['wait'],extra_desc='(sign)')
 			t.expect('{} transactions signed'.format(txcount))
 			t.expect('1 transaction failed to sign')
 			t.expect('Waiting')
 			t.kill(2)
 			t.req_exit_val = 1
+			imsg('')
 			return t
 
 		if live:

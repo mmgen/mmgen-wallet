@@ -44,6 +44,9 @@ opts_data = {
 -m, --mountpoint=m  Specify an alternate mountpoint (default: '{mp}')
 -s, --stealth-led   Stealth LED mode - signal busy and error only, and only
                     after successful authorization.
+-S, --full-summary  Print a full summary of each signed transaction after
+                    each autosign run. The default list of non-MMGen outputs
+                    will not be printed.
 -q, --quiet         Produce quieter output
 -v, --verbose       Produce more verbose output
 """.format(mp=mountpoint),
@@ -191,6 +194,7 @@ def sign_tx_file(txfile):
 
 		if txsign(tx,wfs,None,None):
 			tx.write_to_file(ask_write=False)
+			txlist.append(tx)
 			return True
 		else:
 			return False
@@ -241,13 +245,48 @@ def decrypt_wallets():
 
 	return False if fails else True
 
+
+def print_summary():
+
+	if opt.full_summary:
+		bmsg('\nAutosign summary:')
+		for tx in txlist:
+			init_coin(tx.coin,tx.chain == 'testnet')
+			msg_r(tx.format_view(terse=True))
+		return
+
+	body = []
+	for tx in txlist:
+		non_mmgen = [o for o in tx.outputs if not o.mmid]
+		if non_mmgen:
+			body.append((tx,non_mmgen))
+
+	if body:
+		bmsg('\nAutosign summary:')
+		fs = '{}  {} {}'
+		t_wid,a_wid = 6,44
+		msg(fs.format('TX ID ','Non-MMGen outputs'+' '*(a_wid-17),'Amount'))
+		msg(fs.format('-'*t_wid, '-'*a_wid, '-'*7))
+		for tx,non_mmgen in body:
+			for nm in non_mmgen:
+				msg(fs.format(
+					tx.txid.fmt(width=t_wid,color=True) if nm is non_mmgen[0] else ' '*t_wid,
+					nm.addr.fmt(width=a_wid,color=True),
+					nm._amt.hl() + ' ' + yellow(tx.coin)))
+	else:
+		msg('No non-MMGen outputs')
+
 def do_sign():
 	if not opt.stealth_led: set_led('busy')
 	do_mount()
 	key_ok = decrypt_wallets()
 	if key_ok:
 		if opt.stealth_led: set_led('busy')
+		global txlist
+		txlist = []
 		ret = sign()
+		print_summary()
+		txlist = []
 		do_umount()
 		set_led(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
 		return ret

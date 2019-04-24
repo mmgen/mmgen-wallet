@@ -1,0 +1,5 @@
+3df942
+TESTNET 25EFA3 2.34 20190424_101833 433
+0200000001db9d489e2b43e30b96931364d1a4ba97bd2f5515790c82703e7b7f11e549f51a0100000000ffffffff03c0b99d06000000001976a91496235113a5c6608bdb9bc5f5e08c69458a6b17dd88acc0d45407000000001976a9148970c0a71207de041f707febfcbdac46cbd7aaf588ac702e19460200000017a914daaf772bc9d05b41f6811fa200a34fcd4d58ed2c8700000000
+[{'txid': '1af549e5117f7b3e70820c7915552fbd97baa4d1641393960be3432b9e489ddb', 'vout': 1, 'label': '', 'scriptPubKey': 'a914f199a1b4f46bd0f659287517435f4d84fda854c887', 'amt': '100', 'addr': '2NFGgt2iky94KDocUV6nE2GsGg6uvetUWzH', 'confs': 1, 'mmid': '98831F3A:S:31'}]
+[{'addr': 'muCoxgBTXA1CFb9phJqMZgqP2rm1mPrbKE', 'amt': '1.11', 'is_chg': False}, {'addr': 'mt3fwX52huqVB1aU6Y2cLts3WVG4bBeqS1', 'amt': '1.23', 'is_chg': False}, {'addr': '2NDBXVfG7uUDwrZPyEZPc8vRMyZN4dfPoY7', 'amt': '97.6599', 'is_chg': True, 'mmid': '98831F3A:S:1'}]
