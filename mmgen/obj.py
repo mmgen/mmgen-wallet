@@ -492,7 +492,7 @@ class SeedID(str,Hilite,InitErrors):
 				from mmgen.seed import Seed
 				assert type(seed) == Seed,'not a Seed instance'
 				from mmgen.util import make_chksum_8
-				return str.__new__(cls,make_chksum_8(seed.get_data()))
+				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
 				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
 				assert len(sid) == cls.width,'not {} characters wide'.format(cls.width)

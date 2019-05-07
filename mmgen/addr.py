@@ -431,8 +431,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	def generate(self,seed,addrnums):
 		assert type(addrnums) is AddrIdxList
 
-		seed = seed.get_data()
-		seed = self.scramble_seed(seed)
+		seed = self.scramble_seed(seed.data)
 		dmsg_sc('seed',seed[:8].hex())
 
 		compressed = self.al_id.mmtype.compressed

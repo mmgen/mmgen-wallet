@@ -46,6 +46,12 @@ def is_mnemonic(s):
 	return ret
 
 class Seed(MMGenObject):
+
+	data    = MMGenImmutableAttr('data',bytes,typeconv=False)
+	hexdata = MMGenImmutableAttr('hexdata',str,typeconv=False)
+	sid     = MMGenImmutableAttr('sid',SeedID,typeconv=False)
+	length  = MMGenImmutableAttr('length',int,typeconv=False)
+
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
 			# Truncate random data for smaller seed lengths
@@ -57,9 +63,6 @@ class Seed(MMGenObject):
 		self.hexdata   = seed_bin.hex()
 		self.sid       = SeedID(seed=self)
 		self.length    = len(seed_bin) * 8
-
-	def get_data(self):
-		return self.data
 
 class SeedSource(MMGenObject):
 
