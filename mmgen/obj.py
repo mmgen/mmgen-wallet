@@ -361,6 +361,10 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 	def items(self):
 		return list(self.iterate())
 
+class SubSeedIdxRange(MMGenRange):
+	min_idx = 1
+	max_idx = 1000000
+
 class UnknownCoinAmt(Decimal): pass
 
 class BTCAmt(Decimal,Hilite,InitErrors):
@@ -534,8 +538,8 @@ class SeedID(str,Hilite,InitErrors):
 		cls.arg_chk(cls,on_fail)
 		try:
 			if seed:
-				from mmgen.seed import Seed
-				assert type(seed) == Seed,'not a Seed instance'
+				from mmgen.seed import Seed,SubSeed
+				assert type(seed) in (Seed,SubSeed),'not a Seed or SubSeed instance'
 				from mmgen.util import make_chksum_8
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
@@ -546,6 +550,30 @@ class SeedID(str,Hilite,InitErrors):
 		except Exception as e:
 			m = "{!r}: value cannot be converted to SeedID ({})"
 			return cls.init_fail(m.format(seed or sid,e.args[0]),on_fail)
+
+class SubSeedIdx(str,Hilite,InitErrors):
+	color = 'red'
+	trunc_ok = False
+	def __new__(cls,s,on_fail='die'):
+		if type(s) == cls: return s
+		cls.arg_chk(cls,on_fail)
+		try:
+			assert issubclass(type(s),str),'not a string or string subclass'
+			idx = s[:-1] if s[-1] in 'SsLl' else s
+			from mmgen.util import is_int
+			assert is_int(idx),"valid format: an integer, plus optional letter 'S','s','L' or 'l'"
+			idx = int(idx)
+			assert idx >= SubSeedIdxRange.min_idx, 'subseed index < {:,}'.format(SubSeedIdxRange.min_idx)
+			assert idx <= SubSeedIdxRange.max_idx, 'subseed index > {:,}'.format(SubSeedIdxRange.max_idx)
+
+			sstype,ltr = ('short','S') if s[-1] in 'Ss' else ('long','L')
+			me = str.__new__(cls,str(idx)+ltr)
+			me.idx = idx
+			me.type = sstype
+			return me
+		except Exception as e:
+			m = "{!r}: value cannot be converted to {} ({})"
+			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'

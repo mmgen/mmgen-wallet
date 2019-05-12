@@ -671,7 +671,29 @@ class MMGenToolCmdFileUtil(MMGenToolCmdBase):
 		return True
 
 class MMGenToolCmdWallet(MMGenToolCmdBase):
-	"key or address generation from an MMGen wallet"
+	"key, address or subseed generation from an MMGen wallet"
+
+	def get_subseed(self,subseed_idx:str,wallet=''):
+		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"
+		opt.quiet = True
+		sf = get_seed_file([wallet] if wallet else [],1)
+		from mmgen.seed import SeedSource
+		return SeedSource(sf).seed.subseed(subseed_idx).sid
+
+	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=g.subseeds):
+		"get the Subseed Index of a single subseed by Seed ID for default or specified wallet"
+		opt.quiet = True
+		sf = get_seed_file([wallet] if wallet else [],1)
+		from mmgen.seed import SeedSource
+		ret = SeedSource(sf).seed.subseed_by_seed_id(seed_id,last_idx)
+		return ret.ss_idx if ret else None
+
+	def list_subseeds(self,subseed_idx_range:str,wallet=''):
+		"list a range of subseed Seed IDs for default or specified wallet"
+		opt.quiet = True
+		sf = get_seed_file([wallet] if wallet else [],1)
+		from mmgen.seed import SeedSource
+		return SeedSource(sf).seed.fmt_subseeds(*SubSeedIdxRange(subseed_idx_range))
 
 	def gen_key(self,mmgen_addr:str,wallet=''):
 		"generate a single MMGen WIF key from default or specified wallet"

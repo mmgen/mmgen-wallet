@@ -66,6 +66,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	segwit_opts_ok = True
 	cmd_group = (
 		('walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]])),
+		('subwalletgen_dfl_wallet', (15,'subwallet generation (default wallet)',[[[pwfile],15]])),
 		('export_seed_dfl_wallet',(15,'seed export to mmseed format (default wallet)',[[[pwfile],15]])),
 		('addrgen_dfl_wallet',(15,'address generation (default wallet)',[[[pwfile],15]])),
 		('txcreate_dfl_wallet',(15,'transaction creation (default wallet)',[[['addrs'],15]])),
@@ -75,6 +76,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		('delete_dfl_wallet',(15,'delete default wallet',[[[pwfile],15]])),
 
 		('walletgen',       (1,'wallet generation',        [[['del_dw_run'],15]])),
+		('subwalletgen',    (1,'subwallet generation',     [[['mmdat'],1]])),
+		('subwalletgen_mnemonic',(1,'subwallet generation (to mnemonic format)',[[['mmdat'],1]])),
 #		('walletchk',       (1,'wallet check',             [[['mmdat'],1]])),
 		('passchg',         (5,'password, label and hash preset change',[[['mmdat',pwfile],1]])),
 		('passchg_keeplabel',(5,'password, label and hash preset change (keep label)',[[['mmdat',pwfile],1]])),
@@ -157,6 +160,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def walletgen_dfl_wallet(self,seed_len=None):
 		return self.walletgen(seed_len=seed_len,gen_dfl_wallet=True)
 
+	def subwalletgen_dfl_wallet(self,pf):
+		return self.subwalletgen(wf='default')
+
 	def export_seed_dfl_wallet(self,pf,desc='seed data',out_fmt='seed'):
 		return self.export_seed(wf=None,desc=desc,out_fmt=out_fmt,pf=pf)
 
@@ -199,6 +205,29 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect('move it to the data directory? (Y/n): ','y')
 			self.have_dfl_wallet = True
 		t.written_to_file('MMGen wallet')
+		return t
+
+	def subwalletgen(self,wf):
+		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-L','Label']
+		if wf != 'default': args += [wf]
+		t = self.spawn('mmgen-subwalletgen', args + ['10s'])
+		t.license()
+		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'])
+		t.expect('Generating subseed 10S')
+		t.passphrase_new('new MMGen wallet','foo')
+		t.usr_rand(self.usr_rand_chars)
+		fn = t.written_to_file('MMGen wallet')
+		assert fn[-6:] == '.mmdat','incorrect file extension: {}'.format(fn[-6:])
+		return t
+
+	def subwalletgen_mnemonic(self,wf):
+		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-o','words',wf,'3L']
+		t = self.spawn('mmgen-subwalletgen', args)
+		t.license()
+		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'])
+		t.expect('Generating subseed 3L')
+		fn = t.written_to_file('Mnemonic data')
+		assert fn[-8:] == '.mmwords','incorrect file extension: {}'.format(fn[-8:])
 		return t
 
 	def passchg(self,wf,pf,label_action='cmdline'):

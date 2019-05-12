@@ -73,6 +73,7 @@ class g(object):
 	debug_opts           = False
 	debug_rpc            = False
 	debug_addrlist       = False
+	debug_subseed        = False
 	quiet                = False
 	no_license           = False
 	force_256_color      = False
@@ -128,7 +129,7 @@ class g(object):
 						'quiet','tx_confs','tx_fee_adj','key_generator' )
 
 	# user opt sets global var:
-	opt_sets_global = ( 'use_internal_keccak_module', )
+	opt_sets_global = ( 'use_internal_keccak_module','subseeds' )
 
 	# 'long' opts - opt sets global var
 	common_opts = (
@@ -155,7 +156,7 @@ class g(object):
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'daemon_data_dir','force_256_color','regtest',
+		'daemon_data_dir','force_256_color','regtest','subseeds',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
 		'max_tx_file_size','max_input_size'
@@ -175,6 +176,7 @@ class g(object):
 		'MMGEN_DEBUG_RPC',
 		'MMGEN_DEBUG_ADDRLIST',
 		'MMGEN_DEBUG_UTF8',
+		'MMGEN_DEBUG_SUBSEED',
 		'MMGEN_QUIET',
 		'MMGEN_FORCE_256_COLOR',
 		'MMGEN_MIN_URANDCHARS',
@@ -201,6 +203,7 @@ class g(object):
 
 	seed_lens = 128,192,256
 	scramble_hash_rounds = 10
+	subseeds = 100
 
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16

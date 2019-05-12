@@ -45,7 +45,7 @@ def is_mnemonic(s):
 		opt.quiet = oq_save
 	return ret
 
-class Seed(MMGenObject):
+class SeedBase(MMGenObject):
 
 	data    = MMGenImmutableAttr('data',bytes,typeconv=False)
 	hexdata = MMGenImmutableAttr('hexdata',str,typeconv=False)
@@ -63,6 +63,114 @@ class Seed(MMGenObject):
 		self.hexdata   = seed_bin.hex()
 		self.sid       = SeedID(seed=self)
 		self.length    = len(seed_bin) * 8
+
+class Seed(SeedBase):
+
+	def __init__(self,seed_bin=None):
+		from collections import OrderedDict
+		self.subseeds = { 'long': OrderedDict(), 'short': OrderedDict() }
+		SeedBase.__init__(self,seed_bin=seed_bin)
+
+	def subseed(self,ss_idx_in):
+		ss_idx = SubSeedIdx(ss_idx_in)
+		if ss_idx.idx > len(self.subseeds['long']):
+			self.gen_subseeds(ss_idx.idx)
+		sid = list(self.subseeds[ss_idx.type].keys())[ss_idx.idx-1]
+		idx,nonce = self.subseeds[ss_idx.type][sid]
+		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
+		return SubSeed(self,idx,nonce,length=ss_idx.type)
+
+	def existing_subseed_by_seed_id(self,sid):
+		for k in ('long','short'):
+			if sid in self.subseeds[k]:
+				idx,nonce = self.subseeds[k][sid]
+				return SubSeed(self,idx,nonce,length=k)
+
+	def subseed_by_seed_id(self,sid,last_idx=g.subseeds):
+
+		seed = self.existing_subseed_by_seed_id(sid)
+		if seed: return seed
+
+		if len(self.subseeds['long']) >= last_idx:
+			return None
+
+		self.gen_subseeds(last_idx,last_sid=sid)
+
+		return self.existing_subseed_by_seed_id(sid)
+
+	def gen_subseeds(self,last_idx=g.subseeds,last_sid=None):
+
+		first_idx = len(self.subseeds['long']) + 1
+
+		if first_idx > last_idx:
+			return None
+
+		if last_sid != None:
+			last_sid = SeedID(sid=last_sid)
+
+		def add_subseed(idx,length):
+			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
+				sid = make_chksum_8(SubSeedBase.make_subseed_bin(self,idx,nonce,length))
+				if not (sid in self.subseeds['long'] or sid in self.subseeds['short']):
+					self.subseeds[length][sid] = (idx,nonce)
+					return last_sid == sid
+				elif g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
+					k = ('long','short')[sid in self.subseeds['short']]
+					m1 = 'add_subseed(idx={},{}):'.format(idx,length)
+					m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.subseeds[k][sid][0],k)
+					msg('{:30} {:46} incrementing nonce to {}'.format(m1,m2,nonce+1))
+			else: # must exit here, as this could leave self.subseeds in inconsistent state
+				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
+
+		for idx in SubSeedIdxRange(first_idx,last_idx).iterate():
+			if add_subseed(idx,'long') + add_subseed(idx,'short'):
+				break
+
+	def fmt_subseeds(self,first_idx=1,last_idx=g.subseeds):
+
+		r = SubSeedIdxRange(first_idx,last_idx)
+
+		if len(self.subseeds['long']) < last_idx:
+			self.gen_subseeds(last_idx)
+
+		fs1 = '{:>18} {:>18}\n'
+		fs2 = '{i:>7}L: {:8} {i:>7}S: {:8}\n'
+
+		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.sid.hl(),self.length)
+		hdr += fs1.format('Long Subseeds','Short Subseeds')
+		hdr += fs1.format('-------------','--------------')
+
+		sl = tuple(self.subseeds['long'])
+		ss = tuple(self.subseeds['short'])
+		body = (fs2.format(sl[n-1],ss[n-1],i=n) for n in r.iterate())
+
+		return hdr + ''.join(body)
+
+class SubSeedBase(MMGenObject):
+
+	max_nonce = 1000
+
+	@staticmethod
+	def make_subseed_bin(parent,idx:int,nonce:int,length:str):
+		short = { 'short': True, 'long': False }[length]
+		# field maximums: idx: 4294967295, nonce: 65535, short (bool): 255
+		scramble_key  = idx.to_bytes(4,'big',signed=False) + \
+						nonce.to_bytes(2,'big',signed=False) + \
+						short.to_bytes(1,'big',signed=False)
+		byte_len = 16 if short else parent.length // 8
+		return scramble_seed(parent.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+
+class SubSeed(SeedBase,SubSeedBase):
+
+	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
+	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
+	ss_idx = MMGenImmutableAttr('ss_idx',str,typeconv=False)
+
+	def __init__(self,parent,idx,nonce,length):
+		self.idx = idx
+		self.nonce = nonce
+		self.ss_idx = str(idx) + { 'long': 'L', 'short': 'S' }[length]
+		SeedBase.__init__(self,seed_bin=SubSeedBase.make_subseed_bin(parent,idx,nonce,length))
 
 class SeedSource(MMGenObject):
 

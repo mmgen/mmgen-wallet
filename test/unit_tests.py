@@ -157,6 +157,188 @@ class UnitTests(object):
 
 		return True
 
+	def subseed(self,name):
+		from mmgen.seed import Seed
+		from mmgen.obj import SubSeedIdxRange
+
+		def basic_ops():
+			msg_r('Testing basic ops...')
+			for a,b,c,d,e,f,h in (
+					(8,'4710FBF0','0C1B0615','803B165C','2669AC64',256,'10L'),
+					(6,'9D07ABBD','EBA9C33F','20787E6A','192E2AA2',192,'10L'),
+					(4,'43670520','04A4CCB3','B5F21D7B','C1934CFF',128,'10L'),
+				):
+
+				seed_bin = bytes.fromhex('deadbeef' * a)
+				seed = Seed(seed_bin)
+				assert seed.sid == b, seed.sid
+
+				subseed = seed.subseed('2s')
+				assert subseed.sid == c, subseed.sid
+
+				subseed = seed.subseed('3')
+				assert subseed.sid == d, subseed.sid
+
+				subseed = seed.subseed_by_seed_id(e)
+				assert subseed.length == f, subseed.length
+				assert subseed.sid == e, subseed.sid
+				assert subseed.idx == 10, subseed.idx
+				assert subseed.ss_idx == h, subseed.ss_idx
+
+				seed2 = Seed(seed_bin)
+				s2s = seed2.subseeds['short']
+				s2l = seed2.subseeds['long']
+
+				seed2.gen_subseeds(1)
+				assert len(s2s) == 1, len(s2s)
+
+				seed2.gen_subseeds(1) # do nothing
+				seed2.gen_subseeds(2) # append one item
+
+				seed2.gen_subseeds(5)
+				assert len(s2s) == 5, len(s2s)
+
+				seed2.gen_subseeds(3) # do nothing
+				assert len(s2l) == 5, len(s2l)
+
+				seed2.gen_subseeds(10)
+				assert len(s2s) == 10, len(s2s)
+
+				assert seed.pformat() == seed2.pformat()
+
+				s = seed.fmt_subseeds()
+				s_lines = s.strip().split('\n')
+				assert len(s_lines) == g.subseeds + 4, s
+
+				a = seed.subseed('2L').sid
+				b = [e for e in s_lines if ' 2L:' in e][0].strip().split()[1]
+				assert a == b, b
+
+				c = seed.subseed('2').sid
+				assert c == a, c
+
+				a = seed.subseed('5S').sid
+				b = [e for e in s_lines if ' 5S:' in e][0].strip().split()[3]
+				assert a == b, b
+
+				s = seed.fmt_subseeds(g.subseeds+1,g.subseeds+2)
+				s_lines = s.strip().split('\n')
+				assert len(s_lines) == 6, s
+
+				ss_idx = str(g.subseeds+2) + 'S'
+				a = seed.subseed(ss_idx).sid
+				b = [e for e in s_lines if ' {}:'.format(ss_idx) in e][0].strip().split()[3]
+				assert a == b, b
+
+				s = seed.fmt_subseeds(1,2)
+				s_lines = s.strip().split('\n')
+				assert len(s_lines) == 6, s
+
+			msg('OK')
+
+		def defaults_and_limits():
+			msg_r('Testing defaults and limits...')
+
+			seed_bin = bytes.fromhex('deadbeef' * 8)
+			seed = Seed(seed_bin)
+			seed.gen_subseeds()
+			ss = seed.subseeds
+			assert len(ss['short']) == g.subseeds, ss['short']
+			assert len(ss['long']) == g.subseeds, ss['long']
+
+			seed = Seed(seed_bin)
+			seed.subseed_by_seed_id('EEEEEEEE')
+			ss = seed.subseeds
+			assert len(ss['short']) == g.subseeds, ss['short']
+			assert len(ss['long']) == g.subseeds, ss['long']
+
+			seed = Seed(seed_bin)
+			subseed = seed.subseed_by_seed_id('803B165C')
+			assert subseed.sid == '803B165C', subseed.sid
+			assert subseed.idx == 3, subseed.idx
+
+			seed = Seed(seed_bin)
+			subseed = seed.subseed_by_seed_id('803B165C',last_idx=1)
+			assert subseed == None, subseed
+
+			r = SubSeedIdxRange('1-5')
+			r2 = SubSeedIdxRange(1,5)
+			assert r2 == r, r2
+			assert r == (r.first,r.last), r
+			assert r.first == 1, r.first
+			assert r.last == 5, r.last
+			assert r.items == [1,2,3,4,5], r.items
+			assert list(r.iterate()) == r.items, list(r.iterate())
+
+			r = SubSeedIdxRange('22')
+			r2 = SubSeedIdxRange(22,22)
+			assert r2 == r, r2
+			assert r == (r.first,r.last), r
+			assert r.first == 22, r.first
+			assert r.last == 22, r.last
+			assert r.items == [22], r
+			assert list(r.iterate()) == r.items, list(r.iterate())
+
+			r = SubSeedIdxRange('3-3')
+			assert r.items == [3], r.items
+
+			r = SubSeedIdxRange('{}-{}'.format(g.subseeds-1,g.subseeds))
+			assert r.items == [g.subseeds-1,g.subseeds], r.items
+
+			for n,e in enumerate(SubSeedIdxRange('1-5').iterate(),1):
+				assert n == e, e
+
+			assert n == 5, n
+
+			msg('OK')
+
+		def collisions():
+			msg_r('Testing Seed ID collisions ({} subseed pairs)...'.format(59344))
+			seed_bin = bytes.fromhex('deadbeef' * 8)
+			seed = Seed(seed_bin)
+
+			subseed = seed.subseed('29429s')
+			assert subseed.sid == 'AE4C5E39', subseed.sid
+			assert subseed.nonce == 1, subseed.nonce
+
+			subseed = seed.subseed('59344')
+			assert subseed.sid == 'FC4AD16F', subseed.sid
+			assert subseed.nonce == 1, subseed.nonce
+
+			subseed2 = seed.subseed_by_seed_id('FC4AD16F')
+			assert subseed.pformat() == subseed2.pformat()
+
+			msg('OK')
+
+		def count_collisions():
+			msg_r('Counting Seed ID collisions ({} subseed pairs)...'.format(SubSeedIdxRange.max_idx))
+
+			seed_bin = bytes.fromhex('12abcdef' * 8)
+			seed = Seed(seed_bin)
+
+			seed.gen_subseeds(SubSeedIdxRange.max_idx)
+			ss = seed.subseeds
+
+			for sid in ss['long']:
+				# msg(sid)
+				assert sid not in ss['short']
+
+			collisions = 0
+			for k in ('short','long'):
+				for sid in ss[k]:
+					collisions += ss[k][sid][1]
+
+			assert collisions == 470, collisions
+			msg_r('({} collisions) '.format(collisions))
+			msg('OK')
+
+		basic_ops()
+		defaults_and_limits()
+		collisions()
+		count_collisions()
+
+		return True
+
 def exit_msg():
 	t = int(time.time()) - start_time
 	gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))

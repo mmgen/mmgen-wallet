@@ -22,7 +22,7 @@ main.py - Script launcher for the MMGen suite
 
 def launch(mod):
 
-	if mod in ('walletgen','walletchk','walletconv','passchg'):
+	if mod in ('walletgen','walletchk','walletconv','passchg','subwalletgen'):
 		mod = 'wallet'
 	if mod == 'keygen': mod = 'addrgen'
 

@@ -160,6 +160,7 @@ setup(
 			'cmds/mmgen-addrimport',
 			'cmds/mmgen-passchg',
 			'cmds/mmgen-regtest',
+			'cmds/mmgen-subwalletgen',
 			'cmds/mmgen-walletchk',
 			'cmds/mmgen-walletconv',
 			'cmds/mmgen-walletgen',

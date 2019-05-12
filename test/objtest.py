@@ -119,6 +119,15 @@ tests = OrderedDict([
 			('101,1,3,5,2-7,99',[1,2,3,4,5,6,7,99,101]),
 			({'idx_list':AddrIdxList('1-5')},[1,2,3,4,5])
 		)}),
+	('SubSeedIdxRange', {
+		'bad':  (33,'x','-11','66,3','0','3-2','8000000','100000000',(1,2,3)),
+		'good': (
+			('3',(3,3)),
+			((3,5),(3,5)),
+			('1-2',(1,2)),
+			(str(g.subseeds),(g.subseeds,g.subseeds)),
+			(str(SubSeedIdxRange.max_idx),(SubSeedIdxRange.max_idx,SubSeedIdxRange.max_idx)),
+		)}),
 	('BTCAmt', {
 		'bad':  ('-3.2','0.123456789',123,'123L','22000000',20999999.12345678),
 		'good': (('20999999.12345678',Decimal('20999999.12345678')),)
@@ -146,6 +155,10 @@ tests = OrderedDict([
 			{'sid':'f00baa12'},
 			'я',r32,'abc'),
 		'good': (({'sid':'F00BAA12'},'F00BAA12'),(Seed(r16),Seed(r16).sid))
+	}),
+	('SubSeedIdx', {
+		'bad':  (33,'x','я','1x',200,'1ss','L','s','200LS','30ll','s100',str(SubSeedIdxRange.max_idx+1),'0'),
+		'good': (('1','1L'),('1s','1S'),'20S','30L',('300l','300L'),('200','200L'),str(SubSeedIdxRange.max_idx)+'S')
 	}),
 	('MMGenID', {
 		'bad':  ('x',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99'),

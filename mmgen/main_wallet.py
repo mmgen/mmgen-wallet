@@ -31,12 +31,14 @@ nargs = 1
 iaction = 'convert'
 oaction = 'convert'
 do_bw_note = True
+do_sw_note = False
 
 invoked_as = {
 	'mmgen-walletgen':    'gen',
 	'mmgen-walletconv':   'conv',
 	'mmgen-walletchk':    'chk',
 	'mmgen-passchg':      'passchg',
+	'mmgen-subwalletgen': 'subgen',
 }[g.prog_name]
 
 # full: defhHiJkKlLmoOpPqrSvz-
@@ -58,6 +60,11 @@ elif invoked_as == 'passchg':
 	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
 	do_bw_note = False
+elif invoked_as == 'subgen':
+	desc = 'Generate a subwallet from an {pnm} wallet'
+	opt_filter = 'dehHiJkKlLmoOpPqrSvz-' # omitted: f
+	usage = '[opts] [infile] <Subseed Index>'
+	do_sw_note = True
 
 opts_data = {
 	'text': {
@@ -96,7 +103,7 @@ opts_data = {
 """,
 	'notes': """
 
-{n_pw}{n_bw}
+{n_sw}{n_pw}{n_bw}
 
 FMT CODES:
 
@@ -111,6 +118,7 @@ FMT CODES:
 		),
 		'notes': lambda s: s.format(
 			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
 			n_pw=help_notes('passwd'),
 			n_bw=('','\n\n'+help_notes('brainwallet'))[do_bw_note]
 		)
@@ -122,11 +130,15 @@ cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 if opt.label:
 	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
 
+if invoked_as == 'subgen':
+	from mmgen.obj import SubSeedIdx
+	ss_idx = SubSeedIdx(cmd_args.pop())
+
 sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
 
 if not invoked_as == 'chk': do_license_msg()
 
-if invoked_as in ('conv','passchg'):
+if invoked_as in ('conv','passchg','subgen'):
 	m1 = green('Processing input wallet')
 	m2 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
 	msg(m1+m2)
@@ -139,10 +151,19 @@ if invoked_as == 'chk':
 	# TODO: display creation date
 	sys.exit(0)
 
-if invoked_as in ('conv','passchg'):
+if invoked_as in ('conv','passchg','subgen'):
 	gmsg('Processing output wallet')
 
-ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
+if invoked_as == 'subgen':
+	msg_r('{} {} of {}...'.format(
+		green('Generating subseed'),
+		ss_idx.hl(),
+		ss_in.seed.sid.hl(),
+	))
+	msg('\b\b\b => {}'.format(ss_in.seed.subseed(ss_idx).sid.hl()))
+	ss_out = SeedSource(seed=ss_in.seed.subseed(ss_idx).data)
+else:
+	ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 
 if invoked_as == 'gen':
 	qmsg("This wallet's Seed ID: {}".format(ss_out.seed.sid.hl()))

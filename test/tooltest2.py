@@ -293,6 +293,20 @@ tests = {
 				'3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn'
 			),
 		],
+		'get_subseed': [
+			(   ['3s','wallet=test/ref/98831F3A.mmwords'], '4018EB17' ),
+			(   ['200','wallet=test/ref/98831F3A.mmwords'], '2B05AE73' ),
+		],
+		'get_subseed_by_seed_id': [
+			(   ['4018EB17','wallet=test/ref/98831F3A.mmwords'], '3S' ),
+			(   ['2B05AE73','wallet=test/ref/98831F3A.mmwords'], None ),
+			(   ['2B05AE73','wallet=test/ref/98831F3A.mmwords','last_idx=200'], '200L' ),
+		],
+		'list_subseeds': [
+			(   ['1-5','wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip,'996c047e8543d5dde6f82efc3214a6a1')
+			),
+		],
 	},
 	'Coin': {
 		'addr2pubhash': {
