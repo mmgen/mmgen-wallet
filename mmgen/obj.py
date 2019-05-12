@@ -317,6 +317,50 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 			m = "{!r}: value cannot be converted to AddrIdxList ({})"
 			return type(self).init_fail(m.format(idx_list or fmt_str,e.args[0]),on_fail)
 
+class MMGenRange(tuple,InitErrors,MMGenObject):
+
+	min_idx = None
+	max_idx = None
+
+	def __new__(cls,*args,on_fail='die'):
+		cls.arg_chk(cls,on_fail)
+		try:
+			if len(args) == 1:
+				s = args[0]
+				if type(s) == cls: return s
+				assert issubclass(type(s),str),'not a string or string subclass'
+				ss = s.split('-',1)
+				first = int(ss[0])
+				last = int(ss.pop())
+			else:
+				s = repr(args) # needed if exception occurs
+				assert len(args) == 2,'one format string arg or two start,stop args required'
+				first,last = args
+			assert first <= last, 'start of range greater than end of range'
+			if cls.min_idx is not None:
+				assert first >= cls.min_idx, 'start of range < {:,}'.format(cls.min_idx)
+			if cls.max_idx is not None:
+				assert last <= cls.max_idx, 'end of range > {:,}'.format(cls.max_idx)
+			return tuple.__new__(cls,(first,last))
+		except Exception as e:
+			m = "{!r}: value cannot be converted to {} ({})"
+			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
+
+	@property
+	def first(self):
+		return self[0]
+
+	@property
+	def last(self):
+		return self[1]
+
+	def iterate(self):
+		return range(self[0],self[1]+1)
+
+	@property
+	def items(self):
+		return list(self.iterate())
+
 class UnknownCoinAmt(Decimal): pass
 
 class BTCAmt(Decimal,Hilite,InitErrors):
