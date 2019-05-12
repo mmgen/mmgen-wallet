@@ -30,8 +30,14 @@ usage = '[opts] [infile]'
 nargs = 1
 iaction = 'convert'
 oaction = 'convert'
-invoked_as = 'passchg' if g.prog_name == 'mmgen-passchg' else g.prog_name.partition('-wallet')[2]
-bw_note = True
+do_bw_note = True
+
+invoked_as = {
+	'mmgen-walletgen':    'gen',
+	'mmgen-walletconv':   'conv',
+	'mmgen-walletchk':    'chk',
+	'mmgen-passchg':      'passchg',
+}[g.prog_name]
 
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
@@ -51,9 +57,7 @@ elif invoked_as == 'passchg':
 	desc = 'Change the passphrase, hash preset or label of an {pnm} wallet'
 	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
-	bw_note = False
-else:
-	die(1,"'{}': unrecognized invocation".format(g.prog_name))
+	do_bw_note = False
 
 opts_data = {
 	'text': {
@@ -108,7 +112,7 @@ FMT CODES:
 		'notes': lambda s: s.format(
 			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 			n_pw=help_notes('passwd'),
-			n_bw=('','\n\n' + help_notes('brainwallet'))[bw_note]
+			n_bw=('','\n\n'+help_notes('brainwallet'))[do_bw_note]
 		)
 	}
 }
@@ -128,6 +132,7 @@ if invoked_as in ('conv','passchg'):
 	msg(m1+m2)
 
 ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
+
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
 	vmsg('Wallet label: {}'.format(lbl))

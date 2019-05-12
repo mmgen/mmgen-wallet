@@ -94,6 +94,8 @@ def _usage(cmd=None,exit_val=1):
 			Msg('')
 		Msg(m2)
 	elif cmd in MMGenToolCmd._user_commands():
+		docstr = getattr(MMGenToolCmd,cmd).__doc__.strip()
+		msg('{}\n'.format(capfirst(docstr)))
 		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
@@ -678,8 +680,8 @@ class MMGenToolCmdWallet(MMGenToolCmdBase):
 	def gen_addr(self,mmgen_addr:str,wallet='',target='addr'):
 		"generate a single MMGen address from default or specified wallet"
 		addr = MMGenID(mmgen_addr)
-		sf = get_seed_file([wallet] if wallet else [],1)
 		opt.quiet = True
+		sf = get_seed_file([wallet] if wallet else [],1)
 		from mmgen.seed import SeedSource
 		ss = SeedSource(sf)
 		if ss.seed.sid != addr.sid:
@@ -885,8 +887,9 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			while True:
 				ret = p.expect([r' / .*',r'\[wallet.*:.*'])
 				if ret == 0: # TODO: coverage
-					height = p.after
-					msg_r('\r  Block {}{}'.format(p.before.split()[-1],height))
+					cur_block = p.before.decode().split()[-1]
+					height = p.after.decode()
+					msg_r('\r  Block {}{}'.format(cur_block,height))
 				elif ret == 1:
 					if height:
 						height = height.split()[-1]

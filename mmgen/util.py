@@ -41,8 +41,12 @@ if g.platform == 'win':
 	def msg(s): msg_r(s + '\n')
 	def Msg(s): Msg_r(s + '\n')
 else:
-	def msg_r(s): g.stderr.write(s)
-	def Msg_r(s): g.stdout.write(s)
+	def msg_r(s):
+		g.stderr.write(s)
+		g.stderr.flush()
+	def Msg_r(s):
+		g.stdout.write(s)
+		g.stdout.flush()
 	def msg(s):   g.stderr.write(s + '\n')
 	def Msg(s):   g.stdout.write(s + '\n')
 

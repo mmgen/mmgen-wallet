@@ -117,7 +117,8 @@ class UnitTests(object):
 					extra_desc,
 					'' if opt.quiet else '\n'))
 			else:
-				Msg('Testing transactions from {!r}'.format(fn))
+				Msg_r('Testing transactions from {!r}'.format(fn))
+				if not opt.quiet: Msg('')
 
 		def test_core_vectors():
 			self._get_core_repo_root()

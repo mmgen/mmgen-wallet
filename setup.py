@@ -117,12 +117,10 @@ setup(
 			'mmgen.altcoins.eth.tx',
 			'mmgen.altcoins.eth.tw',
 
-			'mmgen/altcoins/eth/pyethereum/LICENSE',
 			'mmgen.altcoins.eth.pyethereum.__init__',
 			'mmgen.altcoins.eth.pyethereum.transactions',
 			'mmgen.altcoins.eth.pyethereum.utils',
 
-			'mmgen/altcoins/eth/rlp/LICENSE',
 			'mmgen/altcoins/eth/rlp/__init__',
 			'mmgen/altcoins/eth/rlp/atomic',
 			'mmgen/altcoins/eth/rlp/codec',

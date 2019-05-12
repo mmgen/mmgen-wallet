@@ -1,5 +1,6 @@
 include README.md SIGNING_KEYS.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
+
 include test/*.py
 include test/test_py_d/*.py
 include test/ref/*
@@ -9,6 +10,9 @@ include test/ref/ethereum_classic/*
 include test/ref/dash/*
 include test/ref/zcash/*
 include test/ref/monero/*
+
+include mmgen/altcoins/eth/rlp/LICENSE
+include mmgen/altcoins/eth/pyethereum/LICENSE
 
 include scripts/compute-file-chksum.py
 include scripts/create-token.py

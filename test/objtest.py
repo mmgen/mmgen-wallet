@@ -67,6 +67,8 @@ def run_test(test,arg,input_data):
 			del arg['ret']
 			del arg_copy['ret']
 		kwargs.update(arg)
+	elif type(arg) == tuple:
+		args = arg
 	else:
 		args = [arg]
 	try:

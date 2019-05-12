@@ -199,7 +199,6 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect('move it to the data directory? (Y/n): ','y')
 			self.have_dfl_wallet = True
 		t.written_to_file('MMGen wallet')
-		t.req_exit_val = 0
 		return t
 
 	def passchg(self,wf,pf,label_action='cmdline'):

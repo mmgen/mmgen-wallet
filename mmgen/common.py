@@ -41,6 +41,8 @@ def help_notes(k):
 		'rel_fee_desc': MMGenTX().rel_fee_desc,
 		'fee_spec_letters': fee_spec_letters(),
 		'passwd': """
+PASSPHRASE NOTE:
+
 For passphrases all combinations of whitespace are equal, and leading and
 trailing space are ignored.  This permits reading passphrase or brainwallet
 data from a multi-line file with free spacing and indentation.

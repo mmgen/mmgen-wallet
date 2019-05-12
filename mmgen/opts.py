@@ -331,6 +331,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	if hasattr(g,'cfg_options_changed'):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
+		from mmgen.util import my_raw_input
 		my_raw_input('Hit ENTER to continue: ')
 
 	if g.debug and g.prog_name != 'test.py':

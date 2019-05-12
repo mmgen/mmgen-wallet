@@ -40,6 +40,15 @@ from mmgen.seed import is_mnemonic
 
 def is_str(s): return type(s) == str
 
+def md5_hash(s):
+	from hashlib import md5
+	return md5(s.encode()).hexdigest()
+
+def md5_hash_strip(s):
+	import re
+	s = re.sub('\x1b\[[;0-9]+?m','',s) # strip ANSI color sequences
+	return md5_hash(s.strip())
+
 opts_data = {
 	'text': {
 		'desc': "Simple test suite for the 'mmgen-tool' utility",
@@ -592,7 +601,12 @@ def run_test(gid,cmd_name):
 		cmd_err = p.stderr.read()
 		if cmd_err: vmsg(cmd_err.strip().decode())
 		if p.wait() != 0:
-			die(1,'Spawned program exited with error')
+			import re
+			m = re.match(b"tool command returned '(None|False)'\n",cmd_err)
+			if m:
+				return { b'None': None, b'False': False }[m.group(1)]
+			else:
+				ydie(1,'Spawned program exited with error: {}'.format(cmd_err))
 
 		return cmd_out
 
@@ -655,7 +669,11 @@ def run_test(gid,cmd_name):
 			elif out is not None:
 				assert cmd_out == out,"Output ({!r}) doesn't match expected output ({!r})".format(cmd_out,out)
 
-		if type(out) in (list,tuple):
+		if type(out) == tuple and type(out[0]).__name__ == 'function':
+			func_out = out[0](cmd_out)
+			assert func_out == out[1],(
+				"{}({}) == {} failed!\nOutput: {}".format(out[0].__name__,cmd_out,out[1],func_out))
+		elif type(out) in (list,tuple):
 			for co,o in zip(cmd_out.split('\n') if opt.fork else cmd_out,out):
 				check_output(co,o)
 		else:

@@ -200,6 +200,7 @@ class g(object):
 	min_urandchars = 10
 
 	seed_lens = 128,192,256
+	scramble_hash_rounds = 10
 
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16

@@ -118,7 +118,8 @@ class InitErrors(object):
 
 	@staticmethod
 	def arg_chk(cls,on_fail):
-		assert on_fail in ('die','return','silent','raise'),'arg_chk in class {}'.format(cls.__name__)
+		assert on_fail in ('die','return','silent','raise'),(
+			"'{}': invalid value for 'on_fail' in class {}".format(on_fail,cls.__name__) )
 
 	@staticmethod
 	def init_fail(m,on_fail):

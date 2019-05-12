@@ -20,11 +20,11 @@
 main.py - Script launcher for the MMGen suite
 """
 
-def launch(what):
+def launch(mod):
 
-	if what in ('walletgen','walletchk','walletconv','passchg'):
-		what = 'wallet'
-	if what == 'keygen': what = 'addrgen'
+	if mod in ('walletgen','walletchk','walletconv','passchg'):
+		mod = 'wallet'
+	if mod == 'keygen': mod = 'addrgen'
 
 	import sys,os
 	from mmgen.globalvars import g
@@ -36,7 +36,7 @@ def launch(what):
 		atexit.register(lambda: termios.tcsetattr(fd,termios.TCSADRAIN,old))
 
 	try:
-		__import__('mmgen.main_' + what)
+		__import__('mmgen.main_' + mod)
 	except KeyboardInterrupt:
 		sys.stderr.write('\nUser interrupt\n')
 	except EOFError:
