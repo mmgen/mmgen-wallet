@@ -56,8 +56,8 @@ def _b58chk_decode(s):
 				sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1])) )
 	if len(hexstr) % 2: hexstr = '0' + hexstr
 	if hexstr[-8:] != hash256(hexstr[:-8])[:8]:
-		raise ValueError('_b58chk_decode(): {}: incorrect checksum for {}, expected {}'.format(
-							hexstr[-8:],hexstr[:-8],hash256(hexstr[:-8])[:8]))
+		fs = '_b58chk_decode(): {}: incorrect checksum for {!r}, expected {}'
+		raise ValueError(fs.format(hexstr[-8:],hexstr[:-8],hash256(hexstr[:-8])[:8]))
 	return hexstr[:-8]
 
 # chainparams.cpp
@@ -125,6 +125,7 @@ class BitcoinProtocol(MMGenObject):
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
 		assert len(hexpriv) == cls.privkey_len*2, '{} bytes: incorrect private key length!'.format(len(hexpriv)//2)
+		assert pubkey_type in cls.wif_ver_num, '{!r}: invalid pubkey_type'.format(pubkey_type)
 		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + ('','01')[bool(compressed)])
 
 	@classmethod

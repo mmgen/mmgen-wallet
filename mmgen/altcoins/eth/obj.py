@@ -51,11 +51,11 @@ class ETHNonce(int,Hilite,InitErrors): # WIP
 		from mmgen.util import is_int
 		try:
 			assert is_int(n),"'{}': value is not an integer".format(n)
-			me = int.__new__(cls,n)
-			return me
+			n = int(n)
+			assert n >= 0,"'{}': value is negative".format(n)
+			return int.__new__(cls,n)
 		except Exception as e:
-			m = "{!r}: value cannot be converted to ETH nonce ({})"
-			return cls.init_fail(m.format(n,e.args[0]),on_fail)
+			return cls.init_fail(e,n)
 
 	@classmethod
 	def colorize(cls,s,color=True):

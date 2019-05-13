@@ -116,21 +116,34 @@ class AddrListList(list,MMGenObject): pass
 
 class InitErrors(object):
 
+	on_fail='die'
+
 	@classmethod
 	def arg_chk(cls,on_fail):
+		cls.on_fail = on_fail
 		assert on_fail in ('die','return','silent','raise'),(
 			"'{}': invalid value for 'on_fail' in class {}".format(on_fail,cls.__name__) )
 
-	@staticmethod
-	def init_fail(m,on_fail):
+	@classmethod
+	def init_fail(cls,e,m,e2=None,m2=None,objname=None,preformat=False):
+
+		if preformat:
+			errmsg = m
+		else:
+			fs = "{!r}: value cannot be converted to {} {}({})"
+			e2_fmt = '({}) '.format(e2.args[0]) if e2 else ''
+			errmsg = fs.format(m,objname or cls.__name__,e2_fmt,e.args[0])
+
+		if m2: errmsg = '{!r}\n{}'.format(m2,errmsg)
+
 		from mmgen.globalvars import g
-		if g.traceback: on_fail == 'raise'
+		if g.traceback: cls.on_fail == 'raise'
 		from mmgen.util import die,msg
-		if   on_fail == 'silent': return None # TODO: return False instead?
-		elif on_fail == 'raise':  raise ValueError(m)
-		elif on_fail == 'die':    die(1,m)
-		elif on_fail == 'return':
-			if m: msg(m)
+		if   cls.on_fail == 'silent': return None # TODO: return False instead?
+		elif cls.on_fail == 'raise':  raise ValueError(errmsg)
+		elif cls.on_fail == 'die':    die(1,errmsg)
+		elif cls.on_fail == 'return':
+			if errmsg: msg(errmsg)
 			return None                       # TODO: here too?
 
 class Hilite(object):
@@ -188,6 +201,9 @@ class Hilite(object):
 
 	def __str__(self):
 		return self.colorize(self,color=False)
+
+class Str(str,Hilite): pass
+class Int(int,Hilite): pass
 
 # For attrs that are always present in the data instance
 # Reassignment and deletion forbidden
@@ -284,8 +300,7 @@ class AddrIdx(int,InitErrors):
 			assert me > 0,'is less than one'
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to address index ({})"
-			return cls.init_fail(m.format(num,e.args[0]),on_fail)
+			return cls.init_fail(e,num)
 
 class AddrIdxList(list,InitErrors,MMGenObject):
 	max_len = 1000000
@@ -314,8 +329,7 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
 				raise ValueError("{!r}: invalid range".format(i))
 		except Exception as e:
-			m = "{!r}: value cannot be converted to AddrIdxList ({})"
-			return type(self).init_fail(m.format(idx_list or fmt_str,e.args[0]),on_fail)
+			return type(self).init_fail(e,idx_list or fmt_str)
 
 class MMGenRange(tuple,InitErrors,MMGenObject):
 
@@ -343,8 +357,7 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 				assert last <= cls.max_idx, 'end of range > {:,}'.format(cls.max_idx)
 			return tuple.__new__(cls,(first,last))
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,s)
 
 	@property
 	def first(self):
@@ -396,8 +409,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			assert me >= 0,'coin amount cannot be negative'
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(num,cls.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,num)
 
 	def toSatoshi(self):
 		return int(Decimal(self) // self.satoshi)
@@ -479,8 +491,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			me.hex = va['hex']
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} address ({})"
-			return cls.init_fail(m.format(s,g.proto.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,s,objname='{} address'.format(g.proto.__name__))
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
@@ -548,8 +559,7 @@ class SeedID(str,Hilite,InitErrors):
 				return str.__new__(cls,sid)
 			raise ValueError('no arguments provided')
 		except Exception as e:
-			m = "{!r}: value cannot be converted to SeedID ({})"
-			return cls.init_fail(m.format(seed or sid,e.args[0]),on_fail)
+			return cls.init_fail(e,seed or sid)
 
 class SubSeedIdx(str,Hilite,InitErrors):
 	color = 'red'
@@ -572,8 +582,7 @@ class SubSeedIdx(str,Hilite,InitErrors):
 			me.type = sstype
 			return me
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,s)
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
@@ -595,8 +604,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
 			return me
 		except Exception as e:
-			m = "{}\n{!r}: value cannot be converted to MMGenID"
-			return cls.init_fail(m.format(e.args[0],s),on_fail)
+			return cls.init_fail(e,s)
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
@@ -617,9 +625,8 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 				assert len(s) > 4,'not more that four characters long'
 				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
-			except Exception as f:
-				m = "{}\nValue is {}\n{!r}: value cannot be converted to TwMMGenID"
-				return cls.init_fail(m.format(e.args[0],f.args[0],s),on_fail)
+			except Exception as e2:
+				return cls.init_fail(e,s,e2=e2)
 
 		me = str.__new__(cls,ret)
 		me.obj = ret
@@ -641,48 +648,33 @@ class TwLabel(str,InitErrors,MMGenObject):
 			me.comment = comment
 			return me
 		except Exception as e:
-			m = "{}\n{!r}: value cannot be converted to TwLabel"
-			return cls.init_fail(m.format(e.args[0],s),on_fail)
+			return cls.init_fail(e,s)
 
 class HexStr(str,Hilite,InitErrors):
 	color = 'red'
+	width = None
+	hexcase = 'lower'
 	trunc_ok = False
 	dtype = str
-	def __new__(cls,s,on_fail='die',case='lower'):
+	def __new__(cls,s,on_fail='die',case=None):
 		if type(s) == cls: return s
-		assert case in ('upper','lower')
 		cls.arg_chk(on_fail)
+		if case == None: case = cls.hexcase
 		try:
 			assert issubclass(type(s),str),'not a string or string subclass'
+			assert case in ('upper','lower'),"'{}' incorrect case specifier".format(case)
 			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
 			assert not len(s) % 2,'odd-length string'
+			if cls.width:
+				assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
 			return cls.dtype.__new__(cls,s)
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} (value is {})"
-			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,s)
 
-class Str(str,Hilite): pass
-class Int(int,Hilite): pass
-
-class HexStrWithWidth(HexStr):
-	color = 'nocolor'
-	hexcase = 'lower'
-	width = None
-	parent_cls = HexStr
-	def __new__(cls,s,on_fail='die'):
-		cls.arg_chk(on_fail)
-		try:
-			ret = cls.parent_cls.__new__(cls,s,case=cls.hexcase,on_fail='raise')
-			assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
-			return ret
-		except Exception as e:
-			m = "{}\n{!r}: value cannot be converted to {}"
-			return cls.init_fail(m.format(e.args[0],s,cls.__name__),on_fail)
-
-class CoinTxID(HexStrWithWidth):       color,width,hexcase = 'purple',64,'lower'
-class WalletPassword(HexStrWithWidth): color,width,hexcase = 'blue',32,'lower'
-class MoneroViewKey(HexStrWithWidth):  color,width,hexcase = 'cyan',64,'lower'
-class MMGenTxID(HexStrWithWidth):      color,width,hexcase = 'red',6,'upper'
+class CoinTxID(HexStr):       color,width,hexcase = 'purple',64,'lower'
+class WalletPassword(HexStr): color,width,hexcase = 'blue',32,'lower'
+class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower'
+class MMGenTxID(HexStr):      color,width,hexcase = 'red',6,'upper'
 
 class WifKey(str,Hilite,InitErrors):
 	width = 53
@@ -696,19 +688,18 @@ class WifKey(str,Hilite,InitErrors):
 			g.proto.wif2hex(s) # raises exception on error
 			return str.__new__(cls,s)
 		except Exception as e:
-			m = '{!r}: invalid value for WIF key ({})'.format(s,e.args[0])
-			return cls.init_fail(m,on_fail)
+			return cls.init_fail(e,s)
 
 class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 	def __new__(cls,s,compressed,on_fail='die'):
 		try:
 			assert type(compressed) == bool,"'compressed' must be of type bool"
-			me = HexStr.__new__(cls,s,case='lower',on_fail='raise')
+		except Exception as e:
+			return cls.init_fail(e,s)
+		me = HexStr.__new__(cls,s,case='lower',on_fail=on_fail)
+		if me:
 			me.compressed = compressed
 			return me
-		except Exception as e:
-			m = '{!r}: invalid value for pubkey ({})'.format(s,e.args[0])
-			return cls.init_fail(m,on_fail)
 
 class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
@@ -728,7 +719,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
 		if wif:
 			try:
-				assert s == None
+				assert s == None,"'wif' and key hex args are mutually exclusive"
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 				w2h = g.proto.wif2hex(wif) # raises exception on error
 				me = str.__new__(cls,w2h['hex'])
@@ -738,25 +729,25 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				me.orig_hex = None
 				return me
 			except Exception as e:
-				fs = "Value {!r} cannot be converted to {} WIF key ({})"
-				return cls.init_fail(fs.format(wif,g.coin,e.args[0]),on_fail)
-
-		try:
-			assert s and type(compressed) == bool and pubkey_type,'Incorrect args for PrivKey()'
-			assert len(s) == cls.width // 2,'Key length must be {}'.format(cls.width//2)
-			if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-				me = str.__new__(cls,s.hex())
-			else:
-				me = str.__new__(cls,g.proto.preprocess_key(s.hex(),pubkey_type))
-				me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
-			me.compressed = compressed
-			me.pubkey_type = pubkey_type
-			me.orig_hex = s.hex() # save the non-preprocessed key
-			return me
-		except Exception as e:
-			fs = "Key={!r}\nCompressed={}\nValue pair cannot be converted to PrivKey\n({})"
-			return cls.init_fail(fs.format(s,compressed,e.args[0]),on_fail)
-
+				return cls.init_fail(e,s,objname='{} WIF key'.format(g.coin))
+		else:
+			try:
+				assert s,'private key hex data missing'
+				assert compressed is not None, "'compressed' arg missing"
+				assert pubkey_type is not None,"'pubkey_type' arg missing"
+				assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
+				assert len(s) == cls.width // 2,'key length must be {}'.format(cls.width // 2)
+				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
+					me = str.__new__(cls,s.hex())
+				else:
+					me = str.__new__(cls,g.proto.preprocess_key(s.hex(),pubkey_type))
+					me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
+				me.compressed = compressed
+				me.pubkey_type = pubkey_type
+				me.orig_hex = s.hex() # save the non-preprocessed key
+				return me
+			except Exception as e:
+				return cls.init_fail(e,s)
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
@@ -773,8 +764,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 			me.mmtype = mmtype
 			return me
 		except Exception as e:
-			m = "Cannot create AddrListID ({})".format(e.args[0])
-			return cls.init_fail(m,on_fail)
+			return cls.init_fail(e,'sid={}, mmtype={}'.format(sid,mmtype))
 
 class MMGenLabel(str,Hilite,InitErrors):
 	color = 'pink'
@@ -808,8 +798,7 @@ class MMGenLabel(str,Hilite,InitErrors):
 				"contains one of these forbidden symbols: '{}'".format("', '".join(cls.forbidden))
 			return str.__new__(cls,s)
 		except Exception as e:
-			m = "{!r}: value cannot be converted to {} ({})"
-			return cls.init_fail(m.format(s,cls.__name__,e.args[0]),on_fail)
+			return cls.init_fail(e,s)
 
 class MMGenWalletLabel(MMGenLabel):
 	max_len = 48
@@ -902,7 +891,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		except Exception as e:
 			m = '{}{!r}: invalid value for {} ({})'.format(
 				('{!r}\n'.format(errmsg) if errmsg else ''),s,cls.__name__,e.args[0])
-			return cls.init_fail(m,on_fail)
+			return cls.init_fail(e,m,preformat=True)
 
 	@classmethod
 	def get_names(cls):

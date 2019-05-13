@@ -28,6 +28,7 @@ sys.path.__setitem__(0,os.path.abspath(os.curdir))
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import *
+from mmgen.altcoins.eth.obj import *
 from mmgen.seed import *
 
 opts_data = {
@@ -203,7 +204,18 @@ tests = OrderedDict([
 		'good': ({'arg':'deadbeef','compressed':True},) # TODO: add real pubkeys
 	}),
 	('PrivKey', {
-		'bad':  ({'wif':1},),
+		'bad': ( # TODO: add LTC, testnet
+			{'wif':1},
+			{'wif':'1'},
+			{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'},
+			{'s':r32,'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'pubkey_type':'std'},
+			{'s':r32},
+			{'s':r32,'compressed':'yes'},
+			{'s':r32,'compressed':'yes','pubkey_type':'std'},
+			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
+			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
+		),
 		'good': ({
 			'btc': (({'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
 					'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
@@ -269,6 +281,10 @@ tests = OrderedDict([
 		{'s':'password','ret':'P'},
 		{'s':'P','ret':'P'},
 	)}),
+	('ETHNonce', {
+		'bad': ('U','z','я',-1),
+		'good':  (('0',0),('1',1),('100',100),1,100)
+	}),
 ])
 
 def do_loop():
