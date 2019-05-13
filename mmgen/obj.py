@@ -116,7 +116,7 @@ class AddrListList(list,MMGenObject): pass
 
 class InitErrors(object):
 
-	@staticmethod
+	@classmethod
 	def arg_chk(cls,on_fail):
 		assert on_fail in ('die','return','silent','raise'),(
 			"'{}': invalid value for 'on_fail' in class {}".format(on_fail,cls.__name__) )
@@ -276,7 +276,7 @@ class MMGenListItem(MMGenObject):
 class AddrIdx(int,InitErrors):
 	max_digits = 7
 	def __new__(cls,num,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			assert type(num) is not float,'is float'
 			me = int.__new__(cls,num)
@@ -290,7 +290,7 @@ class AddrIdx(int,InitErrors):
 class AddrIdxList(list,InitErrors,MMGenObject):
 	max_len = 1000000
 	def __init__(self,fmt_str=None,idx_list=None,on_fail='die',sep=','):
-		self.arg_chk(type(self),on_fail)
+		type(self).arg_chk(on_fail)
 		try:
 			if idx_list:
 				return list.__init__(self,sorted({AddrIdx(i,on_fail='raise') for i in idx_list}))
@@ -323,7 +323,7 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 	max_idx = None
 
 	def __new__(cls,*args,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			if len(args) == 1:
 				s = args[0]
@@ -379,7 +379,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 
 	def __new__(cls,num,from_unit=None,on_fail='die'):
 		if type(num) == cls: return num
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			if from_unit:
 				assert from_unit in cls.units,(
@@ -468,7 +468,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		from mmgen.globalvars import g
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
@@ -535,7 +535,7 @@ class SeedID(str,Hilite,InitErrors):
 	trunc_ok = False
 	def __new__(cls,seed=None,sid=None,on_fail='die'):
 		if type(sid) == cls: return sid
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			if seed:
 				from mmgen.seed import Seed,SubSeed
@@ -556,7 +556,7 @@ class SubSeedIdx(str,Hilite,InitErrors):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			assert issubclass(type(s),str),'not a string or string subclass'
 			idx = s[:-1] if s[-1] in 'SsLl' else s
@@ -580,7 +580,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	width = 0
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		from mmgen.globalvars import g
 		try:
 			ss = str(s).split(':')
@@ -604,7 +604,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		ret = None
 		try:
 			ret = MMGenID(s,on_fail='raise')
@@ -631,7 +631,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 class TwLabel(str,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			ss = s.split(None,1)
 			mmid = TwMMGenID(ss[0],on_fail='raise')
@@ -651,7 +651,7 @@ class HexStr(str,Hilite,InitErrors):
 	def __new__(cls,s,on_fail='die',case='lower'):
 		if type(s) == cls: return s
 		assert case in ('upper','lower')
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			assert issubclass(type(s),str),'not a string or string subclass'
 			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
@@ -670,7 +670,7 @@ class HexStrWithWidth(HexStr):
 	width = None
 	parent_cls = HexStr
 	def __new__(cls,s,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			ret = cls.parent_cls.__new__(cls,s,case=cls.hexcase,on_fail='raise')
 			assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
@@ -689,7 +689,7 @@ class WifKey(str,Hilite,InitErrors):
 	color = 'blue'
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 			from mmgen.globalvars import g
@@ -724,7 +724,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 		from mmgen.globalvars import g
 
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 
 		if wif:
 			try:
@@ -763,7 +763,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	color = 'yellow'
 	def __new__(cls,sid,mmtype,on_fail='die'):
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		try:
 			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
 			t = MMGenAddrType,MMGenPasswordType
@@ -785,7 +785,7 @@ class MMGenLabel(str,Hilite,InitErrors):
 	desc = 'label'
 	def __new__(cls,s,on_fail='die',msg=None):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		for k in cls.forbidden,cls.allowed:
 			assert type(k) == list
 			for ch in k: assert type(ch) == str and len(ch) == 1
@@ -884,7 +884,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	}
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		from mmgen.globalvars import g
 		try:
 			for k,v in list(cls.mmtypes.items()):

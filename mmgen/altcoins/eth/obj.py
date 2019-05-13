@@ -47,7 +47,7 @@ class ETHAmt(BTCAmt):
 class ETHNonce(int,Hilite,InitErrors): # WIP
 	def __new__(cls,n,on_fail='die'):
 		if type(n) == cls: return n
-		cls.arg_chk(cls,on_fail)
+		cls.arg_chk(on_fail)
 		from mmgen.util import is_int
 		try:
 			assert is_int(n),"'{}': value is not an integer".format(n)
