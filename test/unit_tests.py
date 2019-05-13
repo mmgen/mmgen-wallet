@@ -36,6 +36,7 @@ opts_data = {
 		'usage':'[options] [tests]',
 		'options': """
 -h, --help       Print this help message
+-f, --fast       Speed up execution by reducing rounds on some tests
 -l, --list       List available tests
 -n, --names      Print command names instead of descriptions
 -q, --quiet      Produce quieter output
@@ -293,31 +294,22 @@ class UnitTests(object):
 			msg('OK')
 
 		def collisions():
-			msg_r('Testing Seed ID collisions ({} subseed pairs)...'.format(59344))
-			seed_bin = bytes.fromhex('deadbeef' * 8)
-			seed = Seed(seed_bin)
+			ss_count,ltr,last_sid,collisions_chk = (
+				(SubSeedIdxRange.max_idx,'S','2788F26B',470),
+				(49509,'L','8D1FE500',2)
+			)[bool(opt.fast)]
 
-			subseed = seed.subseed('29429s')
-			assert subseed.sid == 'AE4C5E39', subseed.sid
-			assert subseed.nonce == 1, subseed.nonce
+			last_idx = str(ss_count) + ltr
 
-			subseed = seed.subseed('59344')
-			assert subseed.sid == 'FC4AD16F', subseed.sid
-			assert subseed.nonce == 1, subseed.nonce
-
-			subseed2 = seed.subseed_by_seed_id('FC4AD16F')
-			assert subseed.pformat() == subseed2.pformat()
-
-			msg('OK')
-
-		def count_collisions():
-			msg_r('Counting Seed ID collisions ({} subseed pairs)...'.format(SubSeedIdxRange.max_idx))
+			msg_r('Testing Seed ID collisions ({} subseed pairs)...'.format(ss_count))
 
 			seed_bin = bytes.fromhex('12abcdef' * 8)
 			seed = Seed(seed_bin)
 
-			seed.gen_subseeds(SubSeedIdxRange.max_idx)
+			seed.gen_subseeds(ss_count)
 			ss = seed.subseeds
+
+			assert seed.subseed(last_idx).sid == last_sid, seed.subseed(last_idx).sid
 
 			for sid in ss['long']:
 				# msg(sid)
@@ -328,14 +320,13 @@ class UnitTests(object):
 				for sid in ss[k]:
 					collisions += ss[k][sid][1]
 
-			assert collisions == 470, collisions
+			assert collisions == collisions_chk, collisions
 			msg_r('({} collisions) '.format(collisions))
 			msg('OK')
 
 		basic_ops()
 		defaults_and_limits()
 		collisions()
-		count_collisions()
 
 		return True
 

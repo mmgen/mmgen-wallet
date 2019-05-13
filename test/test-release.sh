@@ -79,7 +79,7 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' ;;
+	f)  rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
