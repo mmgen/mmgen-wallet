@@ -82,6 +82,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	cmd_group = ( # TODO: move to tooltest2
 		('ref_words_to_subwallet_chk1','subwallet generation from reference words file (long subseed)'),
 		('ref_words_to_subwallet_chk2','subwallet generation from reference words file (short subseed)'),
+		('ref_subwallet_addrgen1','subwallet address file generation (long subseed)'),
+		('ref_subwallet_addrgen2','subwallet address file generation (short subseed)'),
+		('ref_subwallet_keygen1','subwallet key-address file generation (long subseed)'),
+		('ref_subwallet_keygen2','subwallet key-address file generation (short subseed)'),
 		('ref_addrfile_chk',   'saved reference address file'),
 		('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
 		('ref_bech32addrfile_chk','saved reference address file (bech32)'),
@@ -131,6 +135,31 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		assert sid == chk_sid,'subseed ID {} does not match expected value {}'.format(sid,chk_sid)
 		t.read()
 		return t
+
+	def ref_subwallet_addrgen(self,ss_idx,target='addr'):
+		wf = dfl_words_file
+		args = ['-d',self.tr.trash_dir,'--subwallet='+ss_idx,wf,'1-10']
+		t = self.spawn('mmgen-{}gen'.format(target),args)
+		t.expect('Generating subseed {}'.format(ss_idx))
+		chk_sid = self.chk_data['ref_subwallet_sid']['98831F3A:{}'.format(ss_idx)]
+		assert chk_sid == t.expect_getend('Checksum for .* data ',regex=True)[:8]
+		if target == 'key':
+			t.expect('Encrypt key list? (y/N): ','n')
+		fn = t.written_to_file(('Addresses','Secret keys')[target=='key'])
+		assert chk_sid in fn,'incorrect filename: {} (does not contain {})'.format(fn,chk_sid)
+		return t
+
+	def ref_subwallet_addrgen1(self):
+		return self.ref_subwallet_addrgen('32L')
+
+	def ref_subwallet_addrgen2(self):
+		return self.ref_subwallet_addrgen('1S')
+
+	def ref_subwallet_keygen1(self):
+		return self.ref_subwallet_addrgen('32L',target='key')
+
+	def ref_subwallet_keygen2(self):
+		return self.ref_subwallet_addrgen('1S',target='key')
 
 	def ref_addrfile_chk(self,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None,add_args=[]):
 		af_key = 'ref_{}file'.format(ftype)

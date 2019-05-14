@@ -71,12 +71,20 @@ class Seed(SeedBase):
 		self.subseeds = { 'long': OrderedDict(), 'short': OrderedDict() }
 		SeedBase.__init__(self,seed_bin=seed_bin)
 
-	def subseed(self,ss_idx_in):
+	def subseed(self,ss_idx_in,print_msg=False):
 		ss_idx = SubSeedIdx(ss_idx_in)
+		if print_msg:
+			msg_r('{} {} of {}...'.format(
+				green('Generating subseed'),
+				ss_idx.hl(),
+				self.sid.hl(),
+			))
 		if ss_idx.idx > len(self.subseeds['long']):
 			self.gen_subseeds(ss_idx.idx)
 		sid = list(self.subseeds[ss_idx.type].keys())[ss_idx.idx-1]
 		idx,nonce = self.subseeds[ss_idx.type][sid]
+		if print_msg:
+			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
 		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
 		return SubSeed(self,idx,nonce,length=ss_idx.type)
 

@@ -35,7 +35,7 @@ if sys.argv[0].split('-')[-1] == 'keygen':
 else:
 	gen_what = 'addresses'
 	gen_desc = 'addresses'
-	opt_filter = 'hbcdeEiHOkKlpzPqrStv-'
+	opt_filter = 'hbcdeEiHOkKlpzPqrStUv-'
 	note_addrkey = ''
 note_secp256k1 = """
 If available, the secp256k1 library will be used for address generation.
@@ -78,6 +78,8 @@ opts_data = {
 -S, --stdout          Print {what} to stdout
 -t, --type=t          Choose address type. Options: see ADDRESS TYPES below
                       (default: {dmat})
+-U, --subwallet=   U  Generate {what} for subwallet 'U' (see SUBWALLETS
+                      below)
 -v, --verbose         Produce more verbose output
 -x, --b16             Print secret keys in hexadecimal too
 """,
@@ -96,9 +98,7 @@ ADDRESS TYPES:
 
                       NOTES FOR ALL GENERATOR COMMANDS
 
-{n_pw}
-
-{n_bw}
+{n_sw}{n_pw}{n_bw}
 
 FMT CODES:
 
@@ -118,7 +118,8 @@ FMT CODES:
 		'notes': lambda s: s.format(
 			n_secp=note_secp256k1,
 			n_addrkey=note_addrkey,
-			n_pw=help_notes('passwd'),
+			n_sw=help_notes('subwallet')+'\n\n',
+			n_pw=help_notes('passwd')+'\n\n',
 			n_bw=help_notes('brainwallet'),
 			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 			n_at='\n  '.join(["'{}','{:<12} - {}".format(
@@ -145,8 +146,10 @@ do_license_msg()
 
 ss = SeedSource(sf)
 
+ss_seed = ss.seed if opt.subwallet is None else ss.seed.subseed(opt.subwallet,print_msg=True)
+
 i = (gen_what=='addresses') or bool(opt.no_addresses)*2
-al = (KeyAddrList,AddrList,KeyList)[i](seed=ss.seed,addr_idxs=idxs,mmtype=addr_type)
+al = (KeyAddrList,AddrList,KeyList)[i](seed=ss_seed,addr_idxs=idxs,mmtype=addr_type)
 al.format()
 
 if al.gen_addrs and opt.print_checksum:
