@@ -98,11 +98,16 @@ class CoinDaemonRPCConnection(object):
 		else:
 			p = {'method':cmd,'params':args,'id':1,'jsonrpc':'2.0'}
 
-		def do_fail(*args):
+		def do_fail(*args): # args[0] is either None or HTTPResponse object
 			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
 
 			try:    s = '{}'.format(args[2])
 			except: s = repr(args[2])
+
+			if s == '' and args[0] != None:
+				from http import HTTPStatus
+				hs = HTTPStatus(args[0].code)
+				s = '{} {}'.format(hs.value,hs.name)
 
 			raise RPCFailure(s)
 

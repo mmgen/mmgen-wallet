@@ -83,7 +83,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('fund_alice',               "funding Alice's wallet"),
 		('bob_bal1',                 "Bob's balance"),
 		('bob_add_label',            "adding a 40-character UTF-8 encoded label"),
-		('bob_twview',               "viewing Bob's tracking wallet"),
+		('bob_twview1',              "viewing Bob's tracking wallet"),
 		('bob_split1',               "splitting Bob's funds"),
 		('generate',                 'mining a block'),
 		('bob_bal2',                 "Bob's balance"),
@@ -110,6 +110,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal5_getbalance',      "Bob's balance"),
 		('bob_send_non_mmgen',       'sending funds to Alice (from non-MMGen addrs)'),
 		('generate',                 'mining a block'),
+		('alice_bal_rpcfail',        'RPC failure code'),
+		('alice_send_estimatefee',   'tx creation with no fee on command line'),
+		('generate',                 'mining a block'),
+		('bob_bal6',                 "Bob's balance"),
+		('bob_alice_bal',            "Bob and Alice's balances"),
+		('alice_bal2',               "Alice's balance"),
+
 		('alice_add_label1',         'adding a label'),
 		('alice_chk_label1',         'the label'),
 		('alice_add_label2',         'adding a label'),
@@ -124,12 +131,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_add_label_badaddr2', 'adding a label with invalid address for this chain'),
 		('alice_add_label_badaddr3', 'adding a label with wrong MMGen address'),
 		('alice_add_label_badaddr4', 'adding a label with wrong coin address'),
-		('alice_bal_rpcfail',        'RPC failure code'),
-		('alice_send_estimatefee',   'tx creation with no fee on command line'),
-		('generate',                 'mining a block'),
-		('bob_bal6',                 "Bob's balance"),
-		('bob_alice_bal',            "Bob and Alice's balances"),
-		('alice_bal2',               "Alice's balance"),
+
 		('stop',                     'stopping regtest daemon'),
 	)
 
@@ -182,12 +184,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def _user_sid(self,user):
 		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
 
-	def addrgen(self,user,wf=None,addr_range='1-5'):
+	def addrgen(self,user,wf=None,addr_range='1-5',mmtypes=[]):
 		from mmgen.addr import MMGenAddrType
-		for mmtype in g.proto.mmtypes:
+		for mmtype in mmtypes or g.proto.mmtypes:
 			t = self.spawn('mmgen-addrgen',
 				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self._user_dir(user))] +
-				([],[wf])[bool(wf)] + [addr_range],
+				([wf] if wf else []) +
+				[addr_range],
 				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype]['name']))
 			t.passphrase('MMGen wallet',rt_pw)
 			t.written_to_file('Addresses')
@@ -198,11 +201,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def addrgen_bob(self):   return self.addrgen('bob')
 	def addrgen_alice(self): return self.addrgen('alice')
 
-	def addrimport(self,user,sid=None,addr_range='1-5',num_addrs=5):
+	def addrimport(self,user,sid=None,addr_range='1-5',num_addrs=5,mmtypes=[]):
 		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B' }
 		if not sid: sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
-		for mmtype in g.proto.mmtypes:
+		for mmtype in mmtypes or g.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype]['name']
 			addrfile = joinpath(self._user_dir(user),
 				'{}{}{}[{}]{x}.testnet.addrs'.format(
@@ -239,14 +242,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def fund_bob(self):   return self.fund_wallet('bob','C',rtFundAmt)
 	def fund_alice(self): return self.fund_wallet('alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
 
-	def user_twview(self,user):
-		t = self.spawn('mmgen-tool',['--'+user,'twview'])
-		t.expect(r'1\).*\b{}\b'.format(rtAmts[0]),regex=True)
+	def user_twview(self,user,chk=None,sort='age'):
+		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
+		if chk: t.expect(chk,regex=True)
 		t.read()
 		return t
 
-	def bob_twview(self):
-		return self.user_twview('bob')
+	def bob_twview1(self): return self.user_twview('bob',chk=r'1\).*\b{}\b'.format(rtAmts[0]))
 
 	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False,exit_val=0):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
@@ -326,8 +328,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 					wf           = None,
 					do_label     = False,
 					bad_locktime = False,
-					full_tx_view = False ):
-		os.environ['MMGEN_BOGUS_SEND'] = ''
+					full_tx_view = False,
+					menu         = ['M'],
+					bogus_send   = False):
+		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
 			(['--tx-fee='+fee] if fee else []) +
@@ -336,7 +340,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		self.txcreate_ui_common(t,
 								caller          = 'txdo',
-								menu            = ['M'],
+								menu            = menu,
 								inputs          = outputs_list,
 								file_desc       = 'Signed transaction',
 								interactive_fee = (tx_fee,'')[bool(fee)],
@@ -512,14 +516,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_add_label('alice',sid+':C:1','Replacement Label')
 
 	def alice_add_label_coinaddr(self):
-		mmaddr = self._user_sid('alice') + ':C:2'
-		t = self.spawn('mmgen-tool',['--alice','listaddress',mmaddr],no_msg=True)
-		btcaddr = [i for i in t.read().splitlines() if i.lstrip()[0:len(mmaddr)] == mmaddr][0].split()[1]
+		mmid = self._user_sid('alice') + (':S:1',':L:1')[g.coin=='BCH']
+		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
+		btcaddr = [i for i in t.read().splitlines() if i.lstrip()[0:len(mmid)] == mmid][0].split()[1]
 		return self.user_add_label('alice',btcaddr,'Label added using coin address')
 
 	def alice_chk_label_coinaddr(self):
-		sid = self._user_sid('alice')
-		return self.user_chk_label('alice',sid+':C:2','Label added using coin address')
+		mmid = self._user_sid('alice') + (':S:1',':L:1')[g.coin=='BCH']
+		return self.user_chk_label('alice',mmid,'Label added using coin address')
 
 	def alice_add_label_badaddr(self,addr,reply):
 		t = self.spawn('mmgen-tool',['--alice','add_label',addr,'(none)'])
@@ -555,7 +559,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_remove_label1(self):
 		sid = self._user_sid('alice')
-		return self.user_remove_label('alice',sid+':C:1')
+		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
+		return self.user_remove_label('alice',mmid)
 
 	def user_chk_label(self,user,addr,label,label_pat=None):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
@@ -571,15 +576,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_chk_label('alice',sid+':C:1','Replacement Label')
 
 	def alice_edit_label1(self):
-		return self.user_edit_label('alice','1',utf8_label)
+		return self.user_edit_label('alice','4',utf8_label)
 
 	def alice_chk_label3(self):
 		sid = self._user_sid('alice')
-		return self.user_chk_label('alice',sid+':C:1',utf8_label,label_pat=utf8_label_pat)
+		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
+		return self.user_chk_label('alice',mmid,utf8_label,label_pat=utf8_label_pat)
 
 	def alice_chk_label4(self):
 		sid = self._user_sid('alice')
-		return self.user_chk_label('alice',sid+':C:1','-')
+		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
+		return self.user_chk_label('alice',mmid,'-')
 
 	def user_edit_label(self,user,output,label):
 		t = self.spawn('mmgen-txcreate',['-B','--'+user,'-i'])

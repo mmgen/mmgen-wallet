@@ -47,16 +47,16 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 
 	while True:
 		if infiles:
-			ss = SeedSource(infiles.pop(0),ignore_in_fmt=True)
+			seed = SeedSource(infiles.pop(0),ignore_in_fmt=True).seed
 		elif opt.in_fmt:
 			qmsg('Need seed data for Seed ID {}'.format(sid))
-			ss = SeedSource()
-			msg('User input produced Seed ID {}'.format(ss.seed.sid))
+			seed = SeedSource().seed
+			msg('User input produced Seed ID {}'.format(seed.sid))
 		else:
 			die(2,'ERROR: No seed source found for Seed ID: {}'.format(sid))
 
-		saved_seeds[ss.seed.sid] = ss.seed
-		if ss.seed.sid == sid: return ss.seed
+		saved_seeds[seed.sid] = seed
+		if seed.sid == sid: return seed
 
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]

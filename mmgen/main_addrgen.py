@@ -25,9 +25,8 @@ from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
 from mmgen.seed import SeedSource
-MAT = MMGenAddrType
 
-if sys.argv[0].split('-')[-1] == 'keygen':
+if g.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
 	gen_desc = 'secret keys'
 	opt_filter = None
@@ -37,9 +36,6 @@ else:
 	gen_desc = 'addresses'
 	opt_filter = 'hbcdeEiHOkKlpzPqrStUv-'
 	note_addrkey = ''
-note_secp256k1 = """
-If available, the secp256k1 library will be used for address generation.
-""".strip()
 
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
@@ -90,7 +86,7 @@ opts_data = {
 Address indexes are given as a comma-separated list and/or hyphen-separated
 range(s).
 
-{n_addrkey}{n_secp}
+{n_addrkey}If available, the secp256k1 library will be used for address generation.
 
 ADDRESS TYPES:
   {n_at}
@@ -108,7 +104,7 @@ FMT CODES:
 	'code': {
 		'options': lambda s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
-			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MAT.mmtypes[g.proto.dfl_mmtype]['name']),
+			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MMGenAddrType.mmtypes[g.proto.dfl_mmtype]['name']),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			pnm=g.proj_name,
@@ -116,14 +112,13 @@ FMT CODES:
 			g=g,
 		),
 		'notes': lambda s: s.format(
-			n_secp=note_secp256k1,
 			n_addrkey=note_addrkey,
 			n_sw=help_notes('subwallet')+'\n\n',
 			n_pw=help_notes('passwd')+'\n\n',
 			n_bw=help_notes('brainwallet'),
 			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 			n_at='\n  '.join(["'{}','{:<12} - {}".format(
-				k,v['name']+"'",v['desc']) for k,v in list(MAT.mmtypes.items())])
+				k,v['name']+"'",v['desc']) for k,v in list(MMGenAddrType.mmtypes.items())])
 		)
 	}
 }
@@ -131,7 +126,7 @@ FMT CODES:
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
 errmsg = "'{}': invalid parameter for --type option".format(opt.type)
-addr_type = MAT(opt.type or g.proto.dfl_mmtype,errmsg=errmsg)
+addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype,errmsg=errmsg)
 
 if len(cmd_args) < 1: opts.usage()
 

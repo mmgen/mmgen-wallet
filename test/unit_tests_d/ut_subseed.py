@@ -56,7 +56,7 @@ class subseed(object):
 
 				assert seed.pformat() == seed2.pformat()
 
-				s = seed.fmt_subseeds()
+				s = seed.fmt_subseeds(1,g.subseeds)
 				s_lines = s.strip().split('\n')
 				assert len(s_lines) == g.subseeds + 4, s
 

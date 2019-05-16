@@ -94,19 +94,39 @@ class Seed(SeedBase):
 				idx,nonce = self.subseeds[k][sid]
 				return SubSeed(self,idx,nonce,length=k)
 
-	def subseed_by_seed_id(self,sid,last_idx=g.subseeds):
+	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
+
+		def do_msg(seed):
+			if print_msg:
+				qmsg('{} {} ({}:{})'.format(
+					green('Found subseed'),
+					seed.sid.hl(),
+					self.sid.hl(),
+					seed.ss_idx.hl(),
+				))
+
+		if last_idx == None:
+			last_idx = g.subseeds
 
 		seed = self.existing_subseed_by_seed_id(sid)
-		if seed: return seed
+		if seed:
+			do_msg(seed)
+			return seed
 
 		if len(self.subseeds['long']) >= last_idx:
 			return None
 
 		self.gen_subseeds(last_idx,last_sid=sid)
 
-		return self.existing_subseed_by_seed_id(sid)
+		seed = self.existing_subseed_by_seed_id(sid)
+		if seed:
+			do_msg(seed)
+			return seed
 
-	def gen_subseeds(self,last_idx=g.subseeds,last_sid=None):
+	def gen_subseeds(self,last_idx=None,last_sid=None):
+
+		if last_idx == None:
+			last_idx = g.subseeds
 
 		first_idx = len(self.subseeds['long']) + 1
 
@@ -134,7 +154,7 @@ class Seed(SeedBase):
 			if add_subseed(idx,'long') + add_subseed(idx,'short'):
 				break
 
-	def fmt_subseeds(self,first_idx=1,last_idx=g.subseeds):
+	def fmt_subseeds(self,first_idx,last_idx):
 
 		r = SubSeedIdxRange(first_idx,last_idx)
 
@@ -172,12 +192,12 @@ class SubSeed(SeedBase,SubSeedBase):
 
 	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
 	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
-	ss_idx = MMGenImmutableAttr('ss_idx',str,typeconv=False)
+	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx,typeconv=False)
 
 	def __init__(self,parent,idx,nonce,length):
 		self.idx = idx
 		self.nonce = nonce
-		self.ss_idx = str(idx) + { 'long': 'L', 'short': 'S' }[length]
+		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
 		SeedBase.__init__(self,seed_bin=SubSeedBase.make_subseed_bin(parent,idx,nonce,length))
 
 class SeedSource(MMGenObject):

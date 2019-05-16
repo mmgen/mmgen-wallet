@@ -141,13 +141,7 @@ address mappings, all outputs to {pnm} addresses are verified with a seed
 source.  Therefore, seed files or a key-address file for all {pnm} outputs
 must also be supplied on the command line if the data can't be found in the
 default wallet.
-
-Seed source files must have the canonical extensions listed in the 'FileExt'
-column below:
-
-  {n_fmt}
 """.format( dn=g.proto.daemon_name,
-			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 			pnm=g.proj_name,
 			pnu=g.proto.name.capitalize(),
 			pnl=g.proj_name.lower())
