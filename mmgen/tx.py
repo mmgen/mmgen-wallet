@@ -545,7 +545,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			rel_fee = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
-			rel_fee = g.rpch.estimatefee(opt.tx_confs)
+			rel_fee    = g.rpch.estimatefee() if g.coin=='BCH' and g.rpch.daemon_version >= 190100 \
+					else g.rpch.estimatefee(opt.tx_confs)
 			fe_type = 'estimatefee'
 
 		return rel_fee,fe_type
