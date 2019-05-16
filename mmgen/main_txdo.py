@@ -21,6 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.common import *
+from mmgen.obj import SubSeedIdxRange
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -71,6 +72,9 @@ opts_data = {
 -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -r, --rbf              Make transaction BIP 125 (replace-by-fee) replaceable
 -q, --quiet            Suppress warnings; overwrite files without prompting
+-u, --subseeds=      n The number of subseed pairs to scan for (default: {ss},
+                       maximum: {ss_max}). Only the default or first supplied
+                       wallet is scanned for subseeds.
 -v, --verbose          Produce more verbose output
 -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
 -y, --yes              Answer 'yes' to prompts, suppress non-essential output
@@ -84,6 +88,7 @@ opts_data = {
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
+			ss=g.subseeds,ss_max=SubSeedIdxRange.max_idx,
 			kg=g.key_generator,
 			cu=g.coin),
 		'notes': lambda s: s.format(

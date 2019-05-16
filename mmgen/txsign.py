@@ -38,25 +38,34 @@ ERROR: a key file must be supplied for the following non-{pnm} address{{}}:\n   
 """.format(pnm=pnm).strip()
 }
 
-saved_seeds = {}
+from collections import OrderedDict
+saved_seeds = OrderedDict()
 
 def get_seed_for_seed_id(sid,infiles,saved_seeds):
 
 	if sid in saved_seeds:
 		return saved_seeds[sid]
 
+	subseeds_checked = False
 	while True:
 		if infiles:
 			seed = SeedSource(infiles.pop(0),ignore_in_fmt=True).seed
+		elif subseeds_checked == False:
+			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid,print_msg=True)
+			subseeds_checked = True
+			if not seed: continue
 		elif opt.in_fmt:
 			qmsg('Need seed data for Seed ID {}'.format(sid))
 			seed = SeedSource().seed
 			msg('User input produced Seed ID {}'.format(seed.sid))
+			if not seed.sid == sid: # TODO: add test
+				seed = seed.subseed_by_seed_id(sid,print_msg=True)
+
+		if seed:
+			saved_seeds[seed.sid] = seed
+			if seed.sid == sid: return seed
 		else:
 			die(2,'ERROR: No seed source found for Seed ID: {}'.format(sid))
-
-		saved_seeds[seed.sid] = seed
-		if seed.sid == sid: return seed
 
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]

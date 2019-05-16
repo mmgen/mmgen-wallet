@@ -41,13 +41,13 @@ rt_data = {
 	},
 	'rtBals': {
 		'btc': ('499.9999488','399.9998282','399.9998147','399.9996877',
-				'52.99990000','946.99933647','999.99923647','52.9999',
+				'52.99980410','946.99933647','999.99914057','52.9999',
 				'946.99933647'),
 		'bch': ('499.9999484','399.9999194','399.9998972','399.9997692',
-				'46.78900000','953.20966920','999.99866920','46.789',
+				'46.78890380','953.20966920','999.99857300','46.789',
 				'953.2096692'),
 		'ltc': ('5499.99744','5399.994425','5399.993885','5399.987535',
-				'52.99000000','10946.93753500','10999.92753500','52.99',
+				'52.98520500','10946.93753500','10999.92274000','52.99',
 				'10946.937535'),
 	},
 	'rtBals_gb': {
@@ -114,6 +114,21 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_send_estimatefee',   'tx creation with no fee on command line'),
 		('generate',                 'mining a block'),
 		('bob_bal6',                 "Bob's balance"),
+
+		('bob_subwallet_addrgen1',     "generating Bob's addrs from subwallet 29L"),
+		('bob_subwallet_addrgen2',     "generating Bob's addrs from subwallet 127S"),
+		('bob_subwallet_addrimport1',  "importing Bob's addrs from subwallet 29L"),
+		('bob_subwallet_addrimport2',  "importing Bob's addrs from subwallet 127S"),
+		('bob_subwallet_fund',         "funding Bob's subwallet addrs"),
+		('generate',                   'mining a block'),
+		('bob_twview2',                "viewing Bob's tracking wallet"),
+		('bob_twview3',                "viewing Bob's tracking wallet"),
+		('bob_subwallet_txcreate',     'creating a transaction with subwallet inputs'),
+		('bob_subwallet_txsign',       'signing a transaction with subwallet inputs'),
+		('bob_subwallet_txdo',         "sending from Bob's subwallet addrs"),
+		('generate',                   'mining a block'),
+		('bob_twview4',                "viewing Bob's tracking wallet"),
+
 		('bob_alice_bal',            "Bob and Alice's balances"),
 		('alice_bal2',               "Alice's balance"),
 
@@ -134,6 +149,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		('stop',                     'stopping regtest daemon'),
 	)
+	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
 		coin = g.coin.lower()
@@ -184,12 +200,25 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def _user_sid(self,user):
 		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
 
-	def addrgen(self,user,wf=None,addr_range='1-5',mmtypes=[]):
+	def _get_user_subsid(self,user,subseed_idx):
+
+		if subseed_idx in self.usr_subsids[user]:
+			return self.usr_subsids[user][subseed_idx]
+
+		fn = get_file_with_ext(self._user_dir(user),'mmdat')
+		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True)
+		t.passphrase('MMGen wallet',rt_pw)
+		sid = t.read().strip()[:8]
+		self.usr_subsids[user][subseed_idx] = sid
+		return sid
+
+	def addrgen(self,user,wf=None,addr_range='1-5',subseed_idx=None,mmtypes=[]):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in mmtypes or g.proto.mmtypes:
 			t = self.spawn('mmgen-addrgen',
 				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self._user_dir(user))] +
 				([wf] if wf else []) +
+				(['--subwallet='+subseed_idx] if subseed_idx else []) +
 				[addr_range],
 				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype]['name']))
 			t.passphrase('MMGen wallet',rt_pw)
@@ -301,6 +330,65 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_bal6(self):
 		return self.user_bal('bob',rtBals[7])
+
+	def bob_subwallet_addrgen1(self):
+		return self.addrgen('bob',subseed_idx='29L',mmtypes=['C'])  # 29L: 2FA7BBA8
+
+	def bob_subwallet_addrgen2(self):
+		return self.addrgen('bob',subseed_idx='127S',mmtypes=['C']) # 127S: '09E8E286'
+
+	def subwallet_addrimport(self,user,subseed_idx):
+		sid = self._get_user_subsid(user,subseed_idx)
+		return self.addrimport(user,sid=sid,mmtypes=['C'])
+
+	def bob_subwallet_addrimport1(self): return self.subwallet_addrimport('bob','29L')
+	def bob_subwallet_addrimport2(self): return self.subwallet_addrimport('bob','127S')
+
+	def bob_subwallet_fund(self):
+		sid1 = self._get_user_subsid('bob','29L')
+		sid2 = self._get_user_subsid('bob','127S')
+		chg_addr = self._user_sid('bob') + (':B:1',':L:1')[g.coin=='BCH']
+		outputs_cl = [sid1+':C:2,0.29',sid2+':C:3,0.127',chg_addr]
+		inputs = ('3','1')[g.coin=='BCH']
+		return self.user_txdo('bob',rtFee[1],outputs_cl,inputs,extra_args=['--subseeds=127'])
+
+	def bob_twview2(self):
+		sid1 = self._get_user_subsid('bob','29L')
+		return self.user_twview('bob',chk=r'\b{}:C:2\b\s+{}'.format(sid1,'0.29'),sort='twmmid')
+
+	def bob_twview3(self):
+		sid2 = self._get_user_subsid('bob','127S')
+		return self.user_twview('bob',chk=r'\b{}:C:3\b\s+{}'.format(sid2,'0.127'),sort='amt')
+
+	def bob_subwallet_txcreate(self):
+		sid1 = self._get_user_subsid('bob','29L')
+		sid2 = self._get_user_subsid('bob','127S')
+		outputs_cl = [sid1+':C:5,0.0159',sid2+':C:5']
+		t = self.spawn('mmgen-txcreate',['-d',self.tmpdir,'-B','--bob'] + outputs_cl)
+		return self.txcreate_ui_common(t,
+								menu            = ['a'],
+								inputs          = ('1,2','2,3')[g.coin=='BCH'],
+								interactive_fee = '0.00001')
+
+	def bob_subwallet_txsign(self):
+		fn = get_file_with_ext(self.tmpdir,'rawtx')
+		t = self.spawn('mmgen-txsign',['-d',self.tmpdir,'--bob','--subseeds=127',fn])
+		t.view_tx('t')
+		t.passphrase('MMGen wallet',rt_pw)
+		t.do_comment(None)
+		t.expect('(Y/n): ','y')
+		t.written_to_file('Signed transaction')
+		return t
+
+	def bob_subwallet_txdo(self):
+		outputs_cl = [self._user_sid('bob')+':L:5']
+		inputs = ('1,2','2,3')[g.coin=='BCH']
+		return self.user_txdo('bob',rtFee[5],outputs_cl,inputs,menu=['a'],extra_args=['--subseeds=127']) # sort: amt
+
+	def bob_twview4(self):
+		sid = self._user_sid('bob')
+		amt = ('0.4169328','0.41364')[g.coin=='LTC']
+		return self.user_twview('bob',chk=r'\b{}:L:5\b\s+.*\s+\b{}\b'.format(sid,amt),sort='twmmid')
 
 	def bob_bal5_getbalance(self):
 		t_ext,t_mmgen = rtBals_gb[0],rtBals_gb[1]
