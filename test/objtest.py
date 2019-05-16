@@ -108,18 +108,22 @@ utf8_text_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
 utf8_text_control   = '[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
 
 from collections import OrderedDict
-tests = OrderedDict([
+
+tests = { 'BTC': {}, 'LTC': {} }
+
+tests['BTC']['mainnet'] = OrderedDict([
 	('AddrIdx', {
 		'bad':  ('s',1.1,12345678,-1),
 		'good': (('7',7),)
-		}),
+	}),
 	('AddrIdxList', {
 		'bad':  ('x','5,9,1-2-3','8,-11','66,3-2'),
 		'good': (
 			('3,2,2',[2,3]),
 			('101,1,3,5,2-7,99',[1,2,3,4,5,6,7,99,101]),
 			({'idx_list':AddrIdxList('1-5')},[1,2,3,4,5])
-		)}),
+		)
+	}),
 	('SubSeedIdxRange', {
 		'bad':  (33,'x','-11','66,3','0','3-2','8000000','100000000',(1,2,3)),
 		'good': (
@@ -128,23 +132,15 @@ tests = OrderedDict([
 			('1-2',(1,2)),
 			(str(g.subseeds),(g.subseeds,g.subseeds)),
 			(str(SubSeedIdxRange.max_idx),(SubSeedIdxRange.max_idx,SubSeedIdxRange.max_idx)),
-		)}),
+		)
+	}),
 	('BTCAmt', {
 		'bad':  ('-3.2','0.123456789',123,'123L','22000000',20999999.12345678),
 		'good': (('20999999.12345678',Decimal('20999999.12345678')),)
-		}),
-	('LTCAmt', {
-		'bad':  ('-3.2','0.123456789',123,'123L','88000000',80999999.12345678),
-		'good': (('80999999.12345678',Decimal('80999999.12345678')),)
-		}),
+	}),
 	('CoinAddr', {
 		'bad':  (1,'x','я'),
-		'good': {
-			'btc': (('1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr','32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj'),
-					('n2FgXPKwuFkCXF946EnoxWJDWF2VwQ6q8J','2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN')),
-			'ltc': (('LXYx4j8PDGE8GEwDFnEQhcLyHFGsRxSJwt','MEnuCzUGHaQx9fK5WYvLwR1NK4SAo8HmSr'),
-					('n2D3joAy3yE5fqxUeCp38X6uPUcVn7EFw9','QN59YbnHsPQcbKWSq9PmTpjrhBnHGQqRmf'))
-		}[g.coin.lower()][bool(g.testnet)]
+		'good': ('1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr','32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj'),
 	}),
 	('SeedID', {
 		'bad':  (
@@ -188,23 +184,15 @@ tests = OrderedDict([
 	}),
 	('WifKey', {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
-		'good': {
-			'btc': (('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
-					'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
-					('93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',
-					'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR')),
-			'ltc': (('6udBAGS6B9RfGyvEQDkVDsWy3Kqv9eTULqtEfVkJtTJyHdLvojw',
-					'T7kCSp5E71jzV2zEJW4q5qU1SMB5CSz8D9VByxMBkamv1uM3Jjca'),
-					('936Fd4qs3Zy2ZiYHH7vZ3UpT23KtCAiGiG2xBTkjHo7jE9aWA2f',
-					'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66'))
-		}[g.coin.lower()][bool(g.testnet)]
+		'good': ('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
+				'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
 	}),
 	('PubKey', {
 		'bad':  ({'arg':1,'compressed':False},{'arg':'F00BAA12','compressed':False},),
 		'good': ({'arg':'deadbeef','compressed':True},) # TODO: add real pubkeys
 	}),
 	('PrivKey', {
-		'bad': ( # TODO: add LTC, testnet
+		'bad': (
 			{'wif':1},
 			{'wif':'1'},
 			{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'},
@@ -216,24 +204,11 @@ tests = OrderedDict([
 			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
 			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
 		),
-		'good': ({
-			'btc': (({'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
-					'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
-					{'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
-					'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'}),
-					({'wif':'93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',
-					'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
-					{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR',
-					'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'})),
-			'ltc': (({'wif':'6ufJhtQQiRYA3w2QvDuXNXuLgPFp15i3HR1Wp8An2mx1JnhhJAh',
-					'ret':'470a974ffca9fca1299b706b09142077bea3acbab6d6480b87dbba79d5fd279b'},
-					{'wif':'T41Fm7J3mtZLKYPMCLVSFARz4QF8nvSDhLAfW97Ds56Zm9hRJgn8',
-					'ret':'1c6feab55a4c3b4ad1823d4ecacd1565c64228c01828cf44fb4db1e2d82c3d56'}),
-					({'wif':'92iqzh6NqiKawyB1ronw66YtEHrU4rxRJ5T4aHniZqvuSVZS21f',
-					'ret':'95b2aa7912550eacdd3844dcc14bee08ce7bc2434ad4858beb136021e945afeb'},
-					{'wif':'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
-					'ret':'94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c'})),
-				}[g.coin.lower()][bool(g.testnet)],
+		'good': (
+			{'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
+			'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
+			{'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
+			'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'},
 			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
 			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
 		)
@@ -261,39 +236,149 @@ tests = OrderedDict([
 	}),
 	('MMGenPWIDString', { # forbidden = list(u' :/\\')
 		'bad': ('foo/','foo:','foo:\\'),
-		'good':  ('qwerty@яяя',)
+		'good': ('qwerty@яяя',)
 	}),
 	('MMGenAddrType', {
 		'bad': ('U','z','xx',1,'dogecoin'),
 		'good':  (
-		{'s':'legacy','ret':'L'},
-		{'s':'L','ret':'L'},
-		{'s':'compressed','ret':'C'},
-		{'s':'C','ret':'C'},
-		{'s':'segwit','ret':'S'},
-		{'s':'S','ret':'S'},
-		{'s':'bech32','ret':'B'},
-		{'s':'B','ret':'B'},
-	)}),
+			{'s':'legacy','ret':'L'},
+			{'s':'L','ret':'L'},
+			{'s':'compressed','ret':'C'},
+			{'s':'C','ret':'C'},
+			{'s':'segwit','ret':'S'},
+			{'s':'S','ret':'S'},
+			{'s':'bech32','ret':'B'},
+			{'s':'B','ret':'B'}
+		)
+	}),
 	('MMGenPasswordType', {
 		'bad': ('U','z','я',1,'passw0rd'),
-		'good':  (
-		{'s':'password','ret':'P'},
-		{'s':'P','ret':'P'},
-	)}),
+		'good': (
+			{'s':'password','ret':'P'},
+			{'s':'P','ret':'P'},
+		)
+	}),
 	('ETHNonce', {
 		'bad': ('U','z','я',-1),
 		'good':  (('0',0),('1',1),('100',100),1,100)
 	}),
 ])
 
+tests['BTC']['testnet'] = OrderedDict([
+	('CoinAddr', {
+		'bad':  (1,'x','я'),
+		'good': ('n2FgXPKwuFkCXF946EnoxWJDWF2VwQ6q8J','2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+	}),
+	('WifKey', {
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'good': ('93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',
+				'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'),
+	}),
+	('PrivKey', {
+		'bad': (
+			{'wif':1},
+			{'wif':'1'},
+			{'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'s':r32,'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'pubkey_type':'std'},
+			{'s':r32},
+			{'s':r32,'compressed':'yes'},
+			{'s':r32,'compressed':'yes','pubkey_type':'std'},
+			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
+			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
+		),
+		'good': (
+			{'wif':'93HsQEpH75ibaUJYi3QwwiQxnkW4dUuYFPXZxcbcKds7XrqHkY6',
+			'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
+			{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR',
+			'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'},
+			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
+			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+		)
+	})
+])
+
+tests['LTC']['mainnet'] = OrderedDict([
+	('LTCAmt', {
+		'bad':  ('-3.2','0.123456789',123,'123L','88000000',80999999.12345678),
+		'good': (('80999999.12345678',Decimal('80999999.12345678')),)
+	}),
+	('CoinAddr', {
+		'bad':  (1,'x','я'),
+		'good': ('LXYx4j8PDGE8GEwDFnEQhcLyHFGsRxSJwt','MEnuCzUGHaQx9fK5WYvLwR1NK4SAo8HmSr'),
+	}),
+	('WifKey', {
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'good': ('6udBAGS6B9RfGyvEQDkVDsWy3Kqv9eTULqtEfVkJtTJyHdLvojw',
+				'T7kCSp5E71jzV2zEJW4q5qU1SMB5CSz8D9VByxMBkamv1uM3Jjca'),
+	}),
+	('PrivKey', {
+		'bad': (
+			{'wif':1},
+			{'wif':'1'},
+			{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'},
+			{'s':r32,'wif':'6ufJhtQQiRYA3w2QvDuXNXuLgPFp15i3HR1Wp8An2mx1JnhhJAh'},
+			{'pubkey_type':'std'},
+			{'s':r32},
+			{'s':r32,'compressed':'yes'},
+			{'s':r32,'compressed':'yes','pubkey_type':'std'},
+			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
+			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
+		),
+		'good': (
+			{'wif':'6ufJhtQQiRYA3w2QvDuXNXuLgPFp15i3HR1Wp8An2mx1JnhhJAh',
+			'ret':'470a974ffca9fca1299b706b09142077bea3acbab6d6480b87dbba79d5fd279b'},
+			{'wif':'T41Fm7J3mtZLKYPMCLVSFARz4QF8nvSDhLAfW97Ds56Zm9hRJgn8',
+			'ret':'1c6feab55a4c3b4ad1823d4ecacd1565c64228c01828cf44fb4db1e2d82c3d56'},
+			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
+			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+		)
+	}),
+])
+
+tests['LTC']['testnet'] = OrderedDict([
+	('CoinAddr', {
+		'bad':  (1,'x','я'),
+		'good': ('n2D3joAy3yE5fqxUeCp38X6uPUcVn7EFw9','QN59YbnHsPQcbKWSq9PmTpjrhBnHGQqRmf')
+	}),
+	('WifKey', {
+		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
+		'good': ('936Fd4qs3Zy2ZiYHH7vZ3UpT23KtCAiGiG2xBTkjHo7jE9aWA2f',
+				'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66')
+	}),
+	('PrivKey', {
+		'bad': (
+			{'wif':1},
+			{'wif':'1'},
+			{'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'s':r32,'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'pubkey_type':'std'},
+			{'s':r32},
+			{'s':r32,'compressed':'yes'},
+			{'s':r32,'compressed':'yes','pubkey_type':'std'},
+			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
+			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
+		),
+		'good': (
+			{'wif':'92iqzh6NqiKawyB1ronw66YtEHrU4rxRJ5T4aHniZqvuSVZS21f',
+			'ret':'95b2aa7912550eacdd3844dcc14bee08ce7bc2434ad4858beb136021e945afeb'},
+			{'wif':'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
+			'ret':'94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c'},
+			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
+			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+		)
+	}),
+])
+
 def do_loop():
 	utests = cmd_args
-	for test in tests:
+	network = ('mainnet','testnet')[bool(g.testnet)]
+	all_tests = tests[g.coin][network]
+	for test in all_tests:
 		if utests and test not in utests: continue
 		msg((blue,nocolor)[bool(opt.super_silent)]('Testing {}'.format(test)))
 		for k in ('bad','good'):
-			for arg in tests[test][k]:
+			for arg in all_tests[test][k]:
 				run_test(test,arg,input_data=k)
 
 do_loop()
