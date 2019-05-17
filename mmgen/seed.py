@@ -139,13 +139,16 @@ class Seed(SeedBase):
 		def add_subseed(idx,length):
 			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
 				sid = make_chksum_8(SubSeedBase.make_subseed_bin(self,idx,nonce,length))
-				if not (sid in self.subseeds['long'] or sid in self.subseeds['short']):
+				if not (sid in self.subseeds['long'] or sid in self.subseeds['short'] or sid == self.sid):
 					self.subseeds[length][sid] = (idx,nonce)
 					return last_sid == sid
 				elif g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
 					k = ('long','short')[sid in self.subseeds['short']]
 					m1 = 'add_subseed(idx={},{}):'.format(idx,length)
-					m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.subseeds[k][sid][0],k)
+					if sid == self.sid:
+						m2 = 'collision with parent Seed ID {},'.format(sid)
+					else:
+						m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.subseeds[k][sid][0],k)
 					msg('{:30} {:46} incrementing nonce to {}'.format(m1,m2,nonce+1))
 			else: # must exit here, as this could leave self.subseeds in inconsistent state
 				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
