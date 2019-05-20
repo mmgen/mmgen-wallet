@@ -22,6 +22,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 from mmgen.common import *
+from mmgen.seed import SeedSource
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -71,7 +72,13 @@ opts_data = {
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
 """,
-	'notes': '\n{}{}'
+	'notes': """
+{}{}
+Seed source files must have the canonical extensions listed in the 'FileExt'
+column below:
+
+  {f}
+"""
 	},
 	'code': {
 		'options': lambda s: s.format(
@@ -82,7 +89,8 @@ opts_data = {
 			cu=g.coin),
 		'notes': lambda s: s.format(
 			help_notes('fee'),
-			help_notes('txsign'))
+			help_notes('txsign'),
+			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()))
 	}
 }
 

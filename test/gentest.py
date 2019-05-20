@@ -168,7 +168,7 @@ def match_error(sec,wif,a_addr,b_addr,a,b):
 
 def compare_test():
 	for k in ('segwit','compressed'):
-		if addr_type.name == k and g.coin not in ci.external_tests_segwit_compressed[k]:
+		if b == 'ext' and addr_type.name == k and g.coin not in ci.external_tests_segwit_compressed[k]:
 			m = 'skipping - external program does not support {} for coin {}'
 			msg(m.format(addr_type.name.capitalize(),g.coin))
 			return
@@ -178,7 +178,12 @@ def compare_test():
 			return
 	m = "Comparing address generators '{}' and '{}' for coin {}"
 	last_t = time.time()
-	qmsg(green(m.format(kg_a.desc,(ext_lib if b == 'ext' else kg_b.desc),g.coin)))
+	A = kg_a.desc
+	B = ext_lib if b == 'ext' else kg_b.desc
+	if A == B:
+		msg('skipping - generation methods A and B are the same ({})'.format(A))
+		return
+	qmsg(green(m.format(A,B,g.coin)))
 
 	for i in range(rounds):
 		if opt.verbose or time.time() - last_t >= 0.1:

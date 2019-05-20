@@ -57,11 +57,20 @@ class tx_deserialize(object):
 			# outputs
 			a,b = d['vout'],dt['txouts']
 			for i in range(len(a)):
-				assert a[i]['scriptPubKey']['addresses'][0] == b[i]['address'],(
-					'address of ouput {} does not match'.format(i))
-				assert a[i]['value'] == b[i]['amount'],'value of ouput {} does not match'.format(i)
-				assert a[i]['scriptPubKey']['hex'] == b[i]['scriptPubKey'],(
-					'scriptPubKey of ouput {} does not match'.format(i))
+				A = a[i]['scriptPubKey']['addresses'][0]
+				B = b[i]['address']
+				fs = 'address of output {} does not match\nA: {}\nB: {}'
+				assert A == B, fs.format(i,A,B)
+
+				A = a[i]['value']
+				B = b[i]['amount']
+				fs = 'value of output {} does not match\nA: {}\nB: {}'
+				assert A == B, fs.format(i,A,B)
+
+				A = a[i]['scriptPubKey']['hex']
+				B = b[i]['scriptPubKey']
+				fs = 'scriptPubKey of output {} does not match\nA: {}\nB: {}'
+				assert A == B, fs.format(i,A,B)
 
 			return True
 

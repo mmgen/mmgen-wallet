@@ -21,6 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.common import *
+from mmgen.seed import SeedSource
 from mmgen.obj import SubSeedIdxRange
 
 opts_data = {
@@ -80,7 +81,13 @@ opts_data = {
 -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
 """,
-		'notes': '\n{}{}{}',
+	'notes': """
+{}{}{}
+Seed source files must have the canonical extensions listed in the 'FileExt'
+column below:
+
+  {f}
+"""
 	},
 	'code': {
 		'options': lambda s: s.format(
@@ -94,7 +101,8 @@ opts_data = {
 		'notes': lambda s: s.format(
 			help_notes('txcreate'),
 			help_notes('fee'),
-			help_notes('txsign'))
+			help_notes('txsign'),
+			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()))
 	}
 }
 

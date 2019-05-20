@@ -142,7 +142,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		self.lbl_id = ('account','label')[g.coin=='BTC'] # update as other coins adopt Core's label API
+		rpc_init()
+		self.lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		if g.coin in ('BTC','BCH','LTC'):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[g.coin.lower()]
 			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[g.coin.lower()]
