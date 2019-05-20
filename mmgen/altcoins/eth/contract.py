@@ -109,8 +109,7 @@ class Token(MMGenObject): # ERC20
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
 
-		try: from ethereum.transactions import Transaction
-		except: from .pyethereum.transactions import Transaction
+		from .pyethereum.transactions import Transaction
 
 		if chain_id is None:
 			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]

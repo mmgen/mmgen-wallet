@@ -91,8 +91,7 @@ class EthereumMMGenTX(MMGenTX):
 	def check_txfile_hex_data(self):
 		if self.check_sigs():
 
-			try: from ethereum.transactions import Transaction
-			except: from .pyethereum.transactions import Transaction
+			from .pyethereum.transactions import Transaction
 
 			from . import rlp
 			etx = rlp.decode(bytes.fromhex(self.hex),Transaction)
@@ -287,8 +286,7 @@ class EthereumMMGenTX(MMGenTX):
 				'nonce':    d['nonce'],
 				'data':     bytes.fromhex(d['data'])}
 
-		try: from ethereum.transactions import Transaction
-		except: from .pyethereum.transactions import Transaction
+		from .pyethereum.transactions import Transaction
 
 		etx = Transaction(**d_in).sign(wif,d['chainId'])
 		assert etx.sender.hex() == d['from'],(
