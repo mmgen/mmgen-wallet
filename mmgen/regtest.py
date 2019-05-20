@@ -298,13 +298,34 @@ def stop(silent=False,ignore_noconnect_error=True):
 	return p.wait()
 
 def generate(blocks=1,silent=False):
+
+	def have_generatetoaddress():
+		p = start_cmd('cli','help','generatetoaddress')
+		out,err = process_output(p,silent=True)
+		return not 'unknown command' in out
+
+	def get_miner_address():
+		p = start_cmd('cli','getnewaddress')
+		out,err = process_output(p,silent=True)
+		if not err:
+			return out.strip()
+		else:
+			rdie(1,'Error getting new address:\n{}'.format(err))
+
 	if test_daemon() == 'stopped':
 		die(1,'Regtest daemon is not running')
+
 	wait_for_daemon('ready',silent=True)
-	p = start_cmd('cli','generate',str(blocks))
-	out = process_output(p,silent=silent)[0]
+
+	if have_generatetoaddress():
+		p = start_cmd('cli','generatetoaddress',str(blocks),get_miner_address())
+	else:
+		p = start_cmd('cli','generate',str(blocks))
+
+	out,err = process_output(p,silent=silent)
+
 	from ast import literal_eval
-	if len(literal_eval(out)) != blocks:
+	if not out or len(literal_eval(out)) != blocks:
 		rdie(1,'Error generating blocks')
 	p.wait()
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))
