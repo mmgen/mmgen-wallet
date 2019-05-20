@@ -25,6 +25,8 @@ from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
 
+NL = ('\n','\r\n')[g.platform=='win']
+
 def _create_call_sig(cmd,parsed=False):
 
 	m = getattr(MMGenToolCmd,cmd)
@@ -159,7 +161,9 @@ def _process_args(cmd,cmd_args):
 			die(1,"'Binary input data must be supplied via STDIN")
 
 		if have_stdin_input and arg_type == 'str' and type(arg) == bytes:
-			arg = arg.decode().rstrip('\n')
+			arg = arg.decode()
+			if arg[-len(NL):] == NL: # rstrip one newline
+				arg = arg[:-len(NL)]
 
 		if arg_type == 'bool':
 			if arg.lower() in ('true','yes','1','on'): arg = True

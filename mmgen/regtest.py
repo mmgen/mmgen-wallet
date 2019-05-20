@@ -236,11 +236,16 @@ def setup():
 def get_current_user_win(quiet=False):
 	if test_daemon() == 'stopped': return None
 	logfile = os.path.join(daemon_dir,'debug.log')
-	p = start_cmd('grep','Wallet completed loading in',logfile,quiet=True)
-	last_line = p.stdout.readlines()[-1].decode()
+	for ss in ('Wallet completed loading in','Using wallet wallet'):
+		o = start_cmd('grep',ss,logfile,quiet=True).stdout.readlines()
+		if o:
+			last_line = o[-1].decode()
+			break
+	else:
+		rdie(2,"Unable to find user info in 'debug.log'")
 
 	import re
-	m = re.search(r'\[wallet.dat.([a-z]+)\]',last_line)
+	m = re.search(r'\bwallet\.dat\.([a-z]+)',last_line)
 	if not m:
 		return None
 

@@ -38,6 +38,8 @@ from test.common import *
 from mmgen.obj import is_wif,is_coin_addr
 from mmgen.seed import is_mnemonic
 
+NL = ('\n','\r\n')[g.platform=='win']
+
 def is_str(s): return type(s) == str
 
 def md5_hash(s):
@@ -47,6 +49,7 @@ def md5_hash(s):
 def md5_hash_strip(s):
 	import re
 	s = re.sub('\x1b\[[;0-9]+?m','',s) # strip ANSI color sequences
+	s = s.replace(NL,'\n')             # fix DOS newlines
 	return md5_hash(s.strip())
 
 opts_data = {
@@ -76,12 +79,13 @@ If no command is given, the whole suite of tests is run.
 	}
 }
 
+
 sample_text_hexdump = (
-	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e\n' +
-	'000010: 2f32 3030 3920 4368 616e 6365 6c6c 6f72\n' +
-	'000020: 206f 6e20 6272 696e 6b20 6f66 2073 6563\n' +
-	'000030: 6f6e 6420 6261 696c 6f75 7420 666f 7220\n' +
-	'000040: 6261 6e6b 73' )
+	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e{n}' +
+	'000010: 2f32 3030 3920 4368 616e 6365 6c6c 6f72{n}' +
+	'000020: 206f 6e20 6272 696e 6b20 6f66 2073 6563{n}' +
+	'000030: 6f6e 6420 6261 696c 6f75 7420 666f 7220{n}' +
+	'000040: 6261 6e6b 73').format(n=NL)
 
 kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
 kafile_code = (
@@ -616,7 +620,7 @@ def run_test(gid,cmd_name):
 		if cmd_err: vmsg(cmd_err.strip().decode())
 		if p.wait() != 0:
 			import re
-			m = re.match(b"tool command returned '(None|False)'\n",cmd_err)
+			m = re.match(b"tool command returned '(None|False)'"+NL.encode(),cmd_err)
 			if m:
 				return { b'None': None, b'False': False }[m.group(1)]
 			else:
@@ -662,6 +666,9 @@ def run_test(gid,cmd_name):
 		if opt.fork:
 			cmd_out = fork_cmd(cmd_name,args,out,opts,exec_code)
 		else:
+			if stdin_input and g.platform == 'win':
+				msg('Skipping for MSWin - no os.fork()')
+				continue
 			cmd_out = run_func(cmd_name,args,out,opts,exec_code)
 
 		vmsg('Output: {}\n'.format(cmd_out if issubclass(type(out),str) else repr(cmd_out)))
@@ -688,7 +695,7 @@ def run_test(gid,cmd_name):
 			assert func_out == out[1],(
 				"{}({}) == {} failed!\nOutput: {}".format(out[0].__name__,cmd_out,out[1],func_out))
 		elif type(out) in (list,tuple):
-			for co,o in zip(cmd_out.split('\n') if opt.fork else cmd_out,out):
+			for co,o in zip(cmd_out.split(NL) if opt.fork else cmd_out,out):
 				check_output(co,o)
 		else:
 			check_output(cmd_out,out)

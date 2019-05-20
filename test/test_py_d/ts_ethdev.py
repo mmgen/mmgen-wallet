@@ -779,7 +779,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def stop(self):
 		self.spawn('',msg_only=True)
-		if subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
+		if g.platform == 'win':
+			my_raw_input('Please stop parity and Press ENTER to continue: ')
+		elif subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
 			pid = self.read_from_tmpfile(parity_pid_fn)
 			if opt.no_daemon_stop:
 				msg_r('(leaving daemon running by user request)')

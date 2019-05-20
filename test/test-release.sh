@@ -1,6 +1,14 @@
 #!/bin/bash
 # Tested on Linux, MSys2
 
+REFDIR='test/ref'
+if uname -a | grep -q MSYS; then
+	SUDO='' MSYS2=1;
+else
+	SUDO='sudo' MSYS2=''
+fi
+RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
+
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022
@@ -25,7 +33,7 @@ dfl_tests='obj unit hash alts monero eth autosign btc btc_tn btc_rt bch bch_rt l
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
-while getopts hbCfiIlOpRtvV OPT
+while getopts hbCfFiIlOpRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -34,6 +42,7 @@ do
 		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           '-C'  Run tests in coverage mode"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
+		echo   "           '-F'  Reduce rounds even further"
 		echo   "           '-i'  Create and install Python package, then run tests.  A branch"
 		echo   "                 must be supplied as the first argument"
 		echo   "           '-I'  Install the package only; don't run tests"
@@ -79,7 +88,8 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
+	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
+	F)  FAST=1 rounds=2 rounds_min=1 rounds_mid=3 rounds_max=5 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -99,13 +109,10 @@ do
 	esac
 done
 
+[ "$MSYS2" -a ! "$FAST" ] && tooltest2_py+=' --fork'
 [ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
 
 shift $((OPTIND-1))
-
-REFDIR='test/ref'
-if uname -a | grep -qi mingw; then SUDO='' MINGW=1; else SUDO='sudo' MINGW=''; fi
-[ "$MINGW" ] || RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
 
 [ "$INSTALL" ] && {
 	BRANCH=$1; shift
@@ -138,10 +145,10 @@ install() {
 		cd .test-release
 		./setup.py sdist
 		mkdir pydist && cd pydist
-		if [ "$MINGW" ]; then unzip ../dist/mmgen-*.zip; else tar zxvf ../dist/mmgen-*gz; fi
+		if [ "$MSYS2" ]; then unzip ../dist/mmgen-*.zip; else tar zxvf ../dist/mmgen-*gz; fi
 		cd mmgen-*
 		eval "$SUDO ./setup.py clean --all"
-		[ "$MINGW" ] && ./setup.py build --compiler=mingw32
+		[ "$MSYS2" ] && ./setup.py build --compiler=mingw32
 		eval "$SUDO ./setup.py install --force"
 	)
 	set +x
@@ -200,6 +207,8 @@ t_hash="
 "
 f_hash='Hash function tests complete'
 
+[ "$MSYS2" ] && t_hash_skip='2' # gmp issues
+
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
@@ -223,6 +232,7 @@ t_alts="
 	$gentest_py --coin=xmr 2 $rounds
 	$gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
 	$gentest_py --coin=zec 2 $rounds
+	$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
 "
 
 # disabled, pycoin generates old-style LTC Segwit addrs:
@@ -233,9 +243,8 @@ t_alts="
 #	$gentest_py --coin=eth 2:ext $rounds
 #	$gentest_py --all 2:pyethereum $rounds
 
-[ "$MINGW" ] || {
+[ "$MSYS2" ] || { # no pycoin, zcash-mini
 	t_alts="$t_alts
-		$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
 		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
 		$gentest_py --all 2:zcash_mini $rounds_mid
 		$gentest_py --all 2:pycoin $rounds
@@ -252,7 +261,7 @@ f_alts='Gen-only altcoin tests completed'
 
 [ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release*
 
-if [ "$MINGW" ]; then
+if [ "$MSYS2" ]; then
 	TMPDIR='/tmp/mmgen-test-release'
 else
 	TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
@@ -272,7 +281,7 @@ t_monero="
 "
 f_monero='Monero tests completed'
 
-[ "$MINGW" ] || {
+[ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
 	t_monero="$t_monero
 $mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
 $mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
@@ -408,7 +417,7 @@ t_tool="
 	$tooltest_py --coin=zec cryptocoin
 	$tooltest_py --coin=zec --type=zcash_z cryptocoin
 "
-[ "$MINGW" ] && t_tool_skip='10'
+[ "$MSYS2" ] && t_tool_skip='10'
 
 f_tool='tooltest tests completed'
 

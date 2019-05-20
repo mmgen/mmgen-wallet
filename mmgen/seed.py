@@ -555,7 +555,7 @@ class Mnemonic (SeedSourceUnenc):
 				ch = get_char_raw('',num_chars=1).decode()
 				if ch in '\b\x7f':
 					if s: s = s[:-1]
-				elif ch in '\n ':
+				elif ch in '\n\r ':
 					if s: break
 				elif ch not in ascii_lowercase:
 					pad += 1

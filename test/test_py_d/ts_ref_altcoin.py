@@ -176,7 +176,6 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
 	def ref_addrfile_chk_zec_z(self):
-		if self.skip_for_win(): return 'skip'
 		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
 
 	def ref_addrfile_chk_xmr(self):
@@ -196,10 +195,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
 
 	def ref_keyaddrfile_chk_zec_z(self):
-		if self.skip_for_win(): return 'skip'
 		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
 
 	def ref_keyaddrfile_chk_xmr(self):
 		return self.ref_addrfile_chk(ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M')
-
-

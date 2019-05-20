@@ -119,8 +119,6 @@ class AddrGeneratorZcashZ(AddrGenerator):
 	def to_addr(self,pubhex): # pubhex is really privhex
 		key = bytes.fromhex(pubhex)
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
-		if g.platform == 'win':
-			ydie(1,'Zcash z-addresses not supported on Windows platform')
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode
@@ -225,7 +223,7 @@ class KeyGenerator(MMGenObject):
 				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
 					return super(cls,cls).__new__(KeyGeneratorSecp256k1)
 			else:
-				msg('Using (slow) native Python ECDSA library for address generation')
+				qmsg('Using (slow) native Python ECDSA library for address generation')
 				return super(cls,cls).__new__(KeyGeneratorPython)
 		elif pubkey_type in ('zcash_z','monero'):
 			me = super(cls,cls).__new__(KeyGeneratorDummy)

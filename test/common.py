@@ -56,7 +56,7 @@ def cleandir(d,do_msg=False):
 		try:
 			os.unlink(os.path.join(d_enc,f))
 		except:
-			rmtree(os.path.join(d_enc,f))
+			rmtree(os.path.join(d_enc,f),ignore_errors=True)
 
 def mk_tmpdir(d):
 	try: os.mkdir(d,0o755)

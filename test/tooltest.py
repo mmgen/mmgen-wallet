@@ -135,9 +135,9 @@ if not opt.system:
 spawn_cmd = [mmgen_cmd]
 if opt.coverage:
 	d,f = init_coverage()
-	spawn_cmd = ['python','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
+	spawn_cmd = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd
 elif g.platform == 'win':
-	spawn_cmd = ['python'] + spawn_cmd
+	spawn_cmd = ['python3'] + spawn_cmd
 
 add_spawn_args = ['--data-dir='+cfg['tmpdir']] + ['--{}{}'.format(
 		k.replace('_','-'),'='+getattr(opt,k) if getattr(opt,k) != True else '')
