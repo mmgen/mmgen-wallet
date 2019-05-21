@@ -20,7 +20,7 @@
 common.py: Shared routines and data for the test.py test suite
 """
 
-import os,subprocess
+import os,time,subprocess
 from mmgen.common import *
 
 log_file = 'test.py.log'
@@ -168,3 +168,28 @@ def get_label(do_shuffle=False):
 		if do_shuffle: shuffle(labels)
 		label_iter = iter(labels)
 		return next(label_iter)
+
+def stealth_mnemonic_entry(t,mn):
+	wnum = 1
+	max_wordlen = 12
+
+	def get_pad_chars(n):
+		ret = ''
+		for i in range(n):
+			m = int(os.urandom(1).hex(),16) % 32
+			ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
+		return ret
+
+	for i in range(len(mn)):
+		w = mn[i]
+		if len(w) > 5:
+			w = w + '\n'
+		else:
+			w = get_pad_chars(3 if randbool() else 0) + w[0] + get_pad_chars(3) + w[1:] + get_pad_chars(7)
+			w = w[:max_wordlen+1]
+		em,rm = 'Enter word #{}: ','Repeat word #{}: '
+		ret = t.expect((em.format(wnum),rm.format(wnum-1)))
+		if ret == 0: wnum += 1
+		for j in range(len(w)):
+			t.send(w[j])
+			time.sleep(0.005)

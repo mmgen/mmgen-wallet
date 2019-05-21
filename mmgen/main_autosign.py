@@ -166,7 +166,7 @@ def do_umount():
 		msg('Unmounting '+mountpoint)
 		subprocess.call(['umount',mountpoint])
 
-def sign_tx_file(txfile):
+def sign_tx_file(txfile,signed_txs):
 	try:
 		g.testnet = False
 		g.coin = 'BTC'
@@ -194,7 +194,7 @@ def sign_tx_file(txfile):
 
 		if txsign(tx,wfs,None,None):
 			tx.write_to_file(ask_write=False)
-			txlist.append(tx)
+			signed_txs.append(tx)
 			return True
 		else:
 			return False
@@ -211,17 +211,21 @@ def sign():
 	unsigned = [os.path.join(tx_dir,f) for f in raw if f[:-6] not in signed]
 
 	if unsigned:
-		fails = 0
+		signed_txs,fails = [],[]
 		for txfile in unsigned:
-			ret = sign_tx_file(txfile)
+			ret = sign_tx_file(txfile,signed_txs)
 			if not ret:
-				fails += 1
+				fails.append(txfile)
 			qmsg('')
 		time.sleep(0.3)
-		n_ok = len(unsigned) - fails
-		msg('{} transaction{} signed'.format(n_ok,suf(n_ok)))
+		msg('{} transaction{} signed'.format(len(signed_txs),suf(signed_txs)))
 		if fails:
-			ymsg('{} transaction{} failed to sign'.format(fails,suf(fails)))
+			rmsg('{} transaction{} failed to sign'.format(len(fails),suf(fails)))
+		if signed_txs:
+			print_summary(signed_txs)
+		if fails:
+			rmsg('{}Failed transactions:'.format('' if opt.full_summary else '\n'))
+			rmsg('  ' + '\n  '.join(sorted(fails)) + '\n')
 		return False if fails else True
 	else:
 		msg('No unsigned transactions')
@@ -246,17 +250,17 @@ def decrypt_wallets():
 	return False if fails else True
 
 
-def print_summary():
+def print_summary(signed_txs):
 
 	if opt.full_summary:
-		bmsg('\nAutosign summary:')
-		for tx in txlist:
+		bmsg('\nAutosign summary:\n')
+		for tx in signed_txs:
 			init_coin(tx.coin,tx.chain == 'testnet')
 			msg_r(tx.format_view(terse=True))
 		return
 
 	body = []
-	for tx in txlist:
+	for tx in signed_txs:
 		non_mmgen = [o for o in tx.outputs if not o.mmid]
 		if non_mmgen:
 			body.append((tx,non_mmgen))
@@ -282,11 +286,7 @@ def do_sign():
 	key_ok = decrypt_wallets()
 	if key_ok:
 		if opt.stealth_led: set_led('busy')
-		global txlist
-		txlist = []
 		ret = sign()
-		print_summary()
-		txlist = []
 		do_umount()
 		set_led(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
 		return ret

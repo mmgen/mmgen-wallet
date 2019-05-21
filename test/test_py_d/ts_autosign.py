@@ -67,29 +67,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			mn_file = dfl_words_file
 			mn = read_from_file(mn_file).strip().split()
 			mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
-			wnum = 1
-			max_wordlen = 12
-
-			def get_pad_chars(n):
-				ret = ''
-				for i in range(n):
-					m = int(os.urandom(1).hex(),16) % 32
-					ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
-				return ret
-
-			for i in range(len(mn)):
-				w = mn[i]
-				if len(w) > 5:
-					w = w + '\n'
-				else:
-					w = get_pad_chars(3 if randbool() else 0) + w[0] + get_pad_chars(3) + w[1:] + get_pad_chars(7)
-					w = w[:max_wordlen+1]
-				em,rm = 'Enter word #{}: ','Repeat word #{}: '
-				ret = t.expect((em.format(wnum),rm.format(wnum-1)))
-				if ret == 0: wnum += 1
-				for j in range(len(w)):
-					t.send(w[j])
-					time.sleep(0.005)
+			stealth_mnemonic_entry(t,mn)
 			wf = t.written_to_file('Autosign wallet')
 			t.ok()
 
@@ -114,13 +92,14 @@ class TestSuiteAutosign(TestSuiteBase):
 					try: os.unlink(target.replace('.rawtx','.sigtx'))
 					except: pass
 
-			# make a bad tx file
-			bad_tx = joinpath(mountpoint,'tx','bad.rawtx')
-			if include_bad_tx and not remove_signed_only:
-				open(bad_tx,'w').write('bad tx data')
-			if not include_bad_tx:
-				try: os.unlink(bad_tx)
-				except: pass
+			# make 2 bad tx files
+			for n in (1,2):
+				bad_tx = joinpath(mountpoint,'tx','bad{}.rawtx'.format(n))
+				if include_bad_tx and not remove_signed_only:
+					open(bad_tx,'w').write('bad tx data')
+				if not include_bad_tx:
+					try: os.unlink(bad_tx)
+					except: pass
 
 		def do_autosign_live(opts,mountpoint,led_opts=[],gen_wallet=True):
 
@@ -155,7 +134,7 @@ class TestSuiteAutosign(TestSuiteBase):
 				omsg(blue(m2))
 				t.expect('{} transactions signed'.format(txcount))
 				if not led_opts:
-					t.expect('1 transaction failed to sign')
+					t.expect('2 transactions failed to sign')
 				t.expect('Waiting')
 
 			do_unmount()
@@ -177,7 +156,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			copy_files(mountpoint,include_bad_tx=True)
 			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
 			t.expect('{} transactions signed'.format(txcount))
-			t.expect('1 transaction failed to sign')
+			t.expect('2 transactions failed to sign')
 			t.expect('Waiting')
 			t.kill(2)
 			t.req_exit_val = 1
@@ -187,7 +166,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			copy_files(mountpoint,remove_signed_only=True)
 			t = self.spawn('mmgen-autosign',opts+['wait'],extra_desc='(sign)')
 			t.expect('{} transactions signed'.format(txcount))
-			t.expect('1 transaction failed to sign')
+			t.expect('2 transactions failed to sign')
 			t.expect('Waiting')
 			t.kill(2)
 			t.req_exit_val = 1
