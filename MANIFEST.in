@@ -11,6 +11,7 @@ include test/ref/ethereum_classic/*
 include test/ref/dash/*
 include test/ref/zcash/*
 include test/ref/monero/*
+include test/misc/*.py
 
 include mmgen/altcoins/eth/rlp/LICENSE
 include mmgen/altcoins/eth/pyethereum/LICENSE

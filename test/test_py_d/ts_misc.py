@@ -77,6 +77,52 @@ class TestSuiteHelp(TestSuiteBase):
 		self._run_cmd('test.py',['-L'],cmd_dir='test',extra_desc='(cmd group list)')
 		return self._run_cmd('test.py',['-l'],cmd_dir='test',extra_desc='(cmd list)')
 
+class TestSuiteInput(TestSuiteBase):
+	'user input tests'
+	networks = ('btc',)
+	tmpdir_nums = []
+	cmd_group = (
+		('password_entry_noecho', (1,"utf8 password entry", [])),
+		('password_entry_echo',   (1,"utf8 password entry (echoed)", [])),
+		('mnemonic_entry',        (1,"stealth mnemonic entry", [])),
+	)
+
+	def password_entry(self,prompt,cmd_args):
+		t = self.spawn('test/misc/password_entry.py',cmd_args,cmd_dir='.')
+		pw = 'abc-α'
+		t.expect(prompt,pw)
+		ret = t.expect_getend('Entered: ')
+		assert ret == pw,'Password mismatch! {} != {}'.format(ret,pw)
+		return t
+
+	def password_entry_noecho(self):
+		if self.skip_for_win():
+			msg('Perform this test by hand on MSWin (it will fail with utf8 password):')
+			msg('  test/misc/password_entry.py')
+			return 'skip' # getpass() can't handle utf8, and pexpect double-escapes utf8, so skip
+		return self.password_entry('Enter passphrase: ',[])
+
+	def password_entry_echo(self):
+		if self.skip_for_win():
+			msg('Perform this test by hand on MSWin with utf8 password:')
+			msg('  test/misc/password_entry.py --echo-passphrase')
+			return 'skip' # pexpect double-escapes utf8, so skip
+		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
+
+	def mnemonic_entry(self):
+		mn = read_from_file(dfl_words_file).strip().split()[:12]
+		mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
+		t = self.spawn('mmgen-walletconv',['-S','-i','words','-o','words'])
+		t.expect('words: ','1')
+		t.expect('(Y/n): ','y')
+		stealth_mnemonic_entry(t,mn)
+		sid_chk = '5F9BC42F'
+		sid = t.expect_getend('Valid mnemonic data for Seed ID ')[:8]
+		assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
+		t.expect('to confirm: ','YES\n')
+		t.read()
+		return t
+
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"tests for interactive 'mmgen-tool' commands"
 	networks = ('btc',)

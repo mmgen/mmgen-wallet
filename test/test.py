@@ -446,6 +446,7 @@ class CmdGroupMgr(object):
 		'ref':              ('TestSuiteRef',{}),
 		'ref_altcoin':      ('TestSuiteRefAltcoin',{}),
 		'tool':             ('TestSuiteTool',{'modname':'misc','full_data':True}),
+		'input':            ('TestSuiteInput',{'modname':'misc','full_data':True}),
 		'regtest':          ('TestSuiteRegtest',{}),
 #		'chainsplit':       ('TestSuiteChainsplit',{}),
 		'ethdev':           ('TestSuiteEthdev',{}),
@@ -462,6 +463,7 @@ class CmdGroupMgr(object):
 					'ref3',
 					'ref_altcoin',
 					'tool',
+					'input',
 					'autosign_minimal',
 					'regtest',
 					'ethdev')

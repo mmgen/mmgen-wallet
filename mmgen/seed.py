@@ -541,13 +541,17 @@ class Mnemonic (SeedSourceUnenc):
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
 
-		m  = 'Enter your {}-word mnemonic, hitting ENTER or SPACE after each word.\n'
+		m  = 'Enter your {ml}-word mnemonic, hitting ENTER or SPACE after each word.\n'
 		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
-		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
+		m += 'lowercase letter will be treated as a {lq}pad character{rq}, i.e. it will simply\n'
 		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
-		m += "of words.  For each word, once you've typed {} characters total (including\n"
+		m += "of words.  For each word, once you've typed {lw} characters total (including\n"
 		m += 'pad characters) a pad character will enter the word.'
-		msg(m.format(mn_len,longest_word))
+
+		# pexpect chokes on these utf8 chars under MSYS2
+		lq,rq = (('“','”'),('"','"'))[g.test_suite and g.platform=='win']
+
+		msg(m.format(ml=mn_len,lw=longest_word,lq=lq,rq=rq))
 
 		def get_word():
 			s,pad = '',0

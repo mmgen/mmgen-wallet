@@ -137,7 +137,7 @@ def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None,num_ch
 	msg_r(prompt)
 	sys.stderr.flush()
 	ch = msvcrt.getch()
-	if ch == 3: raise KeyboardInterrupt
+	if ch == b'\x03': raise KeyboardInterrupt
 	return ch
 
 def _get_keypress_mswin_stub(prompt='',immed_chars='',prehold_protect=None,num_chars=None):

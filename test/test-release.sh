@@ -323,7 +323,7 @@ f_autosign_live='Autosign Live test complete'
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc="
-	$test_py --exclude regtest
+	$test_py --exclude regtest,autosign_minimal
 	$test_py --segwit
 	$test_py --segwit-random
 	$test_py --bech32
