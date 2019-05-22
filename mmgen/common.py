@@ -146,3 +146,16 @@ default wallet.
 			pnu=g.proto.name.capitalize(),
 			pnl=g.proj_name.lower())
 	}[k] + ('-α' if g.debug_utf8 else '')
+
+def exit_if_mswin(feature):
+	if g.platform == 'win':
+		m = capfirst(feature) + ' not supported on the MSWin / MSYS2 platform'
+		ydie(1,m)
+
+def mswin_pw_warning():
+	if g.platform == 'win' and not opt.echo_passphrase and g.mswin_pw_warning:
+		m  = 'due to a bug in the MSYS2 Python implementation, if your passphrase\n'
+		m += 'contains non-ASCII characters, you must turn on passphrase echoing with the\n'
+		m += '--echo-passphrase option or use a password file.  Otherwise, the non-ASCII\n'
+		m += 'characters in your passphrase will be silently ignored!'
+		msg(red('WARNING: ') + yellow(m))

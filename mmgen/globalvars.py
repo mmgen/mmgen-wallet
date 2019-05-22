@@ -105,6 +105,9 @@ class g(object):
 	test_suite           = False
 	test_suite_popen_spawn = False
 
+	# warnings
+	mswin_pw_warning     = True
+
 	for k in ('linux','win','msys'):
 		if sys.platform[:len(k)] == k:
 			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
@@ -159,7 +162,7 @@ class g(object):
 		'daemon_data_dir','force_256_color','regtest','subseeds',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
-		'max_tx_file_size','max_input_size'
+		'max_tx_file_size','max_input_size','mswin_pw_warning'
 	)
 	# Supported environmental vars
 	# The corresponding vars (lowercase, minus 'mmgen_') must be initialized in g
@@ -189,6 +192,7 @@ class g(object):
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 
 		'MMGEN_DISABLE_COLOR',
+		'MMGEN_DISABLE_MSWIN_PW_WARNING',
 	)
 
 	min_screen_width = 80

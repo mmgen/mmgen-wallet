@@ -546,6 +546,8 @@ def get_new_passphrase(desc,passchg=False):
 	elif opt.echo_passphrase:
 		pw = ' '.join(get_words_from_user('Enter {}: '.format(w)))
 	else:
+		from mmgen.common import mswin_pw_warning
+		mswin_pw_warning()
 		for i in range(g.passwd_max_tries):
 			pw = ' '.join(get_words_from_user('Enter {}: '.format(w)))
 			pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
@@ -741,6 +743,8 @@ def get_mmgen_passphrase(desc,passchg=False):
 		pwfile_reuse_warning()
 		return ' '.join(get_words_from_file(opt.passwd_file,'passphrase'))
 	else:
+		from mmgen.common import mswin_pw_warning
+		mswin_pw_warning()
 		return ' '.join(get_words_from_user(prompt))
 
 def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):

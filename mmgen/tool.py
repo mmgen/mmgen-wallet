@@ -830,6 +830,8 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 
 	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs=''):
 
+		exit_if_mswin('Monero wallet operations')
+
 		def run_cmd(cmd):
 			import subprocess as sp
 			p = sp.Popen(cmd,stdin=sp.PIPE,stdout=sp.PIPE,stderr=sp.PIPE)

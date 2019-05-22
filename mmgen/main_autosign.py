@@ -106,6 +106,8 @@ This command is currently available only on Linux-based platforms.
 
 cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
 
+exit_if_mswin('autosigning')
+
 import mmgen.tx
 import mmgen.altcoins.eth.tx
 from mmgen.txsign import txsign

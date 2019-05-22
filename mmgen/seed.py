@@ -457,6 +457,7 @@ an empty passphrase, just hit ENTER twice.
 		elif opt.echo_passphrase:
 			pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		else:
+			mswin_pw_warning()
 			for i in range(g.passwd_max_tries):
 				pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 				pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
@@ -481,6 +482,7 @@ an empty passphrase, just hit ENTER twice.
 			w = pwfile_reuse_warning()
 			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,quiet=w))
 		else:
+			mswin_pw_warning()
 			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		self.ssdata.passwd = ret
 
