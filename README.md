@@ -113,6 +113,8 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 
 > #### [Altcoin and Forkcoin support (ETH,ETC,XMR,ZEC,LTC,BCH and 144 Bitcoin-derived alts)][f]
 
+> #### [Subwallets][U]
+
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 [**Forum**][4] |
@@ -139,3 +141,4 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [ew]: https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
 [bw]: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
 [fl]: https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
+[U]: https://github.com/mmgen/mmgen/wiki/Subwallets

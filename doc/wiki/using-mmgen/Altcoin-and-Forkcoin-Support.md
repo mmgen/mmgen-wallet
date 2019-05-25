@@ -2,7 +2,7 @@
 
 #### [Full support for Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
 * [Install and run Parity Ethereum](#a_par)
-* [Install the Pyethereum library](#a_pe)
+* [Install Ethereum dependencies](#a_ed)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
@@ -41,41 +41,21 @@ To run the daemon offline, use `--mode=offline`, otherwise `--mode=active`.
 You may require other options as well.  Consult `parity --help` for the full
 list.
 
-#### <a name='a_pe'>Install the Pyethereum library</a>
+#### <a name='a_ed'>Install Ethereum dependencies</a>
 
-Signing of ETH and ETC transactions is handled by the [pyethereum][y] library.
+Ensure that Python version 3.6 or above is installed on your system:
 
-First, using the [pip3][P] Python package installer, install the following
-dependencies:
+	$ python3 --version
 
-*Note: Ubuntu Xenial users will have to upgrade the Python interpreter and
-Python dependencies listed in the [Install wiki][iw] from version 3.5 to 3.6
-before proceeding.  This can be done by adding the Bionic repository to
-'sources.list' and reinstalling the relevant packages with '-t bionic'*
+If the version is below 3.6.0, then you must upgrade the Python interpreter and
+Python dependencies listed in the [Install wiki][iw] before proceeding.  Ubuntu
+users can do this by adding the Bionic repository to 'sources.list' and
+reinstalling the relevant packages with '-t bionic'
 
-	$ sudo -H pip3 install wheel future pysha3 PyYAML py_ecc rlp
+Install the Ethereum-specific Python dependencies.  The `--no-deps` option
+will prevent pip from installing a lot of unneeded stuff:
 
-As of this writing, the current “stable” version of pyethereum (2.3.2) is
-broken, so we must check out a more recent version from Github:
-
-	$ git clone https://github.com/ethereum/pyethereum
-	$ cd pyethereum
-	$ git checkout b704a5c
-
-To prevent the library from auto-installing a lot of unneeded dependencies
-(Pycryptodome in particular, which would stomp on our existing Pycrypto
-installation) we need to edit the file 'requirements.txt' and remove the
-following unneeded packages:
-
-	coincurve
-	pbkdf2
-	pyethash
-	pycryptodome
-	repoze.lru
-
-Now we can proceed with the install:
-
-	$ sudo python3 ./setup.py install
+	$ sudo -H pip3 install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1
 
 #### <a name='a_tx'>Transacting and other basic operations</a>
 

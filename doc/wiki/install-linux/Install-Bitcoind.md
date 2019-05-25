@@ -8,7 +8,7 @@ machine.
 The bitcoin daemon on the **online computer** requires a complete and
 up-to-date blockchain for tracking addresses.  Since its work is more CPU and
 disk intensive, a more powerful computer is required here.  You'll also need
-plenty of free disk space for the growing blockchain (~160GB at the time of
+plenty of free disk space for the growing blockchain (~220GB at the time of
 writing).
 
 Two blockchain operations are especially resource-intensive: **synchronizing
@@ -21,15 +21,15 @@ more low-powered computer as your online machine.
 
 > **Bitcoin Core:**
 
->> Go to the Bitcoin Core [download page][01].  Choose the 32-bit or 64-bit
->> versions appropriate for your online and offline computers.  Windows users
->> should choose the executable installer.
+>> Go to the Bitcoin Core download page ([here][00] or [here][01]).  Choose the
+>> 32-bit or 64-bit versions appropriate for your online and offline computers.
+>> Windows users should choose the executable installer.
 
 > **Bitcoin ABC (optional):**
 
 >> If you wish to transact BCH (Bcash), then download the appropriate [Bitcoin
 >> ABC binary][abc] for your system as well.  Windows users should choose the
->> executable installer.  
+>> executable installer.
 >> *Consider the Bitcoin ABC binaries untrusted software.  The author of the
 >> MMGen project makes no guarantees regarding their safety or reliability.*
 
@@ -43,26 +43,32 @@ more low-powered computer as your online machine.
 
 > **Bitcoin Core:**
 
->> **Windows:** Run the Windows installer with the default settings.  Add
->> 'C:\Program Files\Bitcoin\daemon' to your [path][05].  
->> **Linux:** Unpack the archive and copy the 'bitcoind' and 'bitcoin-cli'
->> binaries to /usr/local/bin.
+>> **Windows:** Run the Windows installer with the default settings.
+>> At the end of the installation process, uncheck the Run box to prevent the
+>> client from starting.
+>> Add `C:\Program Files\Bitcoin\daemon` to your [path][05].  
+>> **Linux:** Unpack the archive and copy the `bitcoind` and `bitcoin-cli`
+>> binaries to `/usr/local/bin`.
 
 > **Bitcoin ABC (optional):**
 
->> **Windows:** Run the Windows installer, installing into the alternate
->> folder 'C:\Program Files\Bitcoin_ABC'. Add 'C:\Program Files\Bitcoin_ABC\daemon'
->> to your [path][05]. Rename the file 'bitcoind' in that folder to
->> 'bitcoind-abc'.  
->> **Linux:** Unpack the archive, rename 'bitcoind' to 'bitcoind-abc' and
->> copy it to /usr/local/bin.
+>> **Windows:** Run the Windows installer with the default settings.
+>> At the end of the installation process, uncheck the Run box to prevent the
+>> client from starting.
+>> Add `C:\Program Files\Bitcoin-abc\daemon` to your [path][05].
+>> Rename the file `bitcoind` in that folder to `bitcoind-abc` and
+>> `bitcoin-cli` to `bitcoin-cli-abc`.  
+>> **Linux:** Unpack the archive, rename `bitcoind` to `bitcoind-abc` and
+>> copy it to `/usr/local/bin`.
 
 > **Litecoin (optional):**
 
->> **Windows:** Run the Windows installer with the default settings.  Add
->> 'C:\Program Files\Litecoin\daemon' to your [path][05].  
->> **Linux:** Unpack the archive and copy the 'litecoind' and
->> 'litecoin-cli' binaries to /usr/local/bin.
+>> **Windows:** Run the Windows installer with the default settings.
+>> At the end of the installation process, uncheck the Run box to prevent the
+>> client from starting.
+>> Add `C:\Program Files\Litecoin\daemon` to your [path][05].  
+>> **Linux:** Unpack the archive and copy the `litecoind` and
+>> `litecoin-cli` binaries to `/usr/local/bin`.
 
 ### <a name='a_r'>Run (both online and offline computers):</a>
 
@@ -104,7 +110,7 @@ more low-powered computer as your online machine.
 	$ bitcoin-cli help
 
 	# ABC:
-	$ bitcoin-cli --rpcport=8442 help
+	$ bitcoin-cli-abc --rpcport=8442 help
 
 	# Litecoin:
 	$ litecoin-cli help
@@ -113,18 +119,21 @@ more low-powered computer as your online machine.
 > your wallet.dat out of harm's way** before starting the daemon.  The new
 > wallet now created will be used as your **tracking wallet**.
 
-> If you're connected to the Internet, bitcoind will begin downloading and
+> If you're connected to the Internet, the daemon(s) will begin downloading and
 > verifying the blockchain.  This can take from several hours to several days
-> depending on the speed of your computer and Internet connection.  You can
-> speed up your initial block download enormously by adding the `-assumevalid`
-> option, followed by a recent block hash, to the command line.  Recent block
-> hashes can be found on any blockchain explorer site.
+> depending on the speed of your computer, the size of the blockchain(s) in
+> question and your Internet connection.  You can speed up your initial block
+> download enormously by adding the `-assumevalid` option, followed by a recent
+> block hash, to the command line.  Recent block hashes can be found on any
+> blockchain explorer site.
 
 > For the offline daemons you may add the options `-maxconnections=0 -listen=0`
 > to the command line.  Note that offline daemons start very quickly, since they
-> have no blockchains, and use practically no CPU once running.
+> have a blockchain consisting of one block, and use practically no CPU power
+> once running.
 
-[01]: https://bitcoin.org/en/download
+[00]: https://bitcoin.org/bin/
+[01]: https://bitcoincore.org/bin/
 [bd]: https://bitcoin.org/bin/blockchain/
 [05]: Editing-the-user-path-in-Windows
 [abc]: https://download.bitcoinabc.org/

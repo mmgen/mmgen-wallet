@@ -3,9 +3,9 @@
 > Install required Debian/Ubuntu packages:
 
 	$ sudo apt-get install autoconf git libgmp-dev libssl-dev libtool wipe
-	$ sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-crypto python3-nacl python3-pip
+	$ sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-cryptography python3-nacl python3-pip python3-gmpy2
 
-> Using the [pip3][P] installer, install the Python scrypt library:
+> Using the [pip3][P] installer, install the Python scrypt library (optional for Python >= v3.6):
 
 	$ sudo -H pip3 install scrypt
 
