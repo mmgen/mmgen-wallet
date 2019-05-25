@@ -77,6 +77,27 @@ class TestSuiteHelp(TestSuiteBase):
 		self._run_cmd('test.py',['-L'],cmd_dir='test',extra_desc='(cmd group list)')
 		return self._run_cmd('test.py',['-l'],cmd_dir='test',extra_desc='(cmd list)')
 
+class TestSuiteOutput(TestSuiteBase):
+	'screen output tests'
+	networks = ('btc',)
+	tmpdir_nums = []
+	cmd_group = (
+		('output_gr', (1,"Greek text", [])),
+		('output_ru', (1,"Russian text", [])),
+		('output_zh', (1,"Chinese text", [])),
+		('output_jp', (1,"Japanese text", []))
+	)
+
+	def screen_output(self,lang):
+		t = self.spawn('test/misc/utf8_output.py',[lang],cmd_dir='.')
+		t.read()
+		return t
+
+	def output_gr(self): return self.screen_output('gr')
+	def output_ru(self): return self.screen_output('ru')
+	def output_zh(self): return self.screen_output('zh')
+	def output_jp(self): return self.screen_output('jp')
+
 class TestSuiteInput(TestSuiteBase):
 	'user input tests'
 	networks = ('btc',)
