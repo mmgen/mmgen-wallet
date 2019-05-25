@@ -1,12 +1,15 @@
 #!/bin/bash
-# Tested on Linux, MSys2
+# Tested on Linux, Armbian, Raspbian, MSYS2
 
 REFDIR='test/ref'
-if uname -a | grep -q MSYS; then
+SUDO='sudo'
+
+if [ "$(uname -m)" == 'armv7l' ]; then
+	ARM32=1
+elif uname -a | grep -q 'MSYS'; then
 	SUDO='' MSYS2=1;
-else
-	SUDO='sudo' MSYS2=''
 fi
+
 RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
@@ -202,12 +205,13 @@ i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
 t_hash="
 	$python test/hashfunc.py sha256 $rounds_max
-	$python test/hashfunc.py sha512 $rounds_max
+	$python test/hashfunc.py sha512 $rounds_max # native sha512 not used by MMGen
 	$python test/hashfunc.py keccak $rounds_max
 "
 f_hash='Hash function tests complete'
 
-[ "$MSYS2" ] && t_hash_skip='2' # gmp issues
+[ "$ARM32" ] && t_hash_skip='2' # gmpy produces invalid init constants
+[ "$MSYS2" ] && t_hash_skip='2 3' # 2:py_long_long issues, 3:no pysha3 for keccak reference
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'

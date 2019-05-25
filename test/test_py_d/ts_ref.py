@@ -205,7 +205,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		wf = dfl_words_file
 		self.write_to_tmpfile(pwfile,wpasswd)
 		pf = joinpath(self.tmpdir,pwfile)
-		return self.txsign(tf,wf,pf,save=False,has_label=True,do_passwd=False)
+		return self.txsign(tf,wf,pf,save=False,has_label=True,do_passwd=False,view='y')
 
 	def ref_brain_chk_spc3(self):
 		return self.ref_brain_chk(bw_file=ref_bw_file_spc)

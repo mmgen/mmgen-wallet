@@ -151,11 +151,12 @@ class TestSuiteShared(object):
 				has_label  = False,
 				do_passwd  = True,
 				extra_opts = [],
-				extra_desc = '' ):
+				extra_desc = '',
+				view       = 'n'):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
-		t.view_tx('n')
+		t.view_tx(view)
 		if do_passwd: t.passphrase('MMGen wallet',self.wpasswd)
 		if save:
 			self.txsign_end(t,has_label=has_label)

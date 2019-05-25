@@ -118,14 +118,14 @@ class TestSuiteInput(TestSuiteBase):
 
 	def password_entry_noecho(self):
 		if self.skip_for_win():
-			msg('Perform this test by hand on MSWin (it will fail with utf8 password):')
+			msg('Perform this test by hand on MSWin with non-ASCII password abc-α:')
 			msg('  test/misc/password_entry.py')
 			return 'skip' # getpass() can't handle utf8, and pexpect double-escapes utf8, so skip
 		return self.password_entry('Enter passphrase: ',[])
 
 	def password_entry_echo(self):
 		if self.skip_for_win():
-			msg('Perform this test by hand on MSWin with utf8 password:')
+			msg('Perform this test by hand on MSWin with non-ASCII password abc-α:')
 			msg('  test/misc/password_entry.py --echo-passphrase')
 			return 'skip' # pexpect double-escapes utf8, so skip
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
@@ -199,7 +199,8 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		vmsg('Incog ID: {}'.format(cyan(i_id)))
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'find_incog_data',f1,i_id])
 		o = t.expect_getend('Incog data for ID {} found at offset '.format(i_id))
-		os.unlink(f1)
+		if not g.platform == 'win':
+			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset,int(o))
 		return t
 

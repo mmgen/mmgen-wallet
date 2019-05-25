@@ -87,6 +87,9 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			for f,fn in zip(tfs,tfns):
 				if fn: # use empty fn to skip file
+					if g.debug_utf8:
+						ext = '.testnet.rawtx' if fn.endswith('.testnet.rawtx') else '.rawtx'
+						fn = fn[:-len(ext)] + '-α' + ext
 					target = joinpath(mountpoint,'tx',fn)
 					remove_signed_only or shutil.copyfile(f,target)
 					try: os.unlink(target.replace('.rawtx','.sigtx'))

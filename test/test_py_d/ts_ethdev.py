@@ -265,10 +265,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if g.platform == 'win':
 			dc_dir = joinpath(os.environ['LOCALAPPDATA'],'Parity','Ethereum','chains','DevelopmentChain')
 			shutil.rmtree(dc_dir,ignore_errors=True)
-			m1 = 'Please start parity on another terminal as follows:\n'
-			m2 = ['parity',lf_arg] + opts
-			m3 = '\nPress ENTER to continue: '
-			my_raw_input(m1 + ' '.join(m2) + m3)
+			m1 = 'Please copy precompiled contract data to {d}/mm1 and {d}/mm2\n'.format(d=self.tmpdir)
+			m2 = 'Then start parity on another terminal as follows:\n'
+			m3 = ['parity',lf_arg] + opts
+			m4 = '\nPress ENTER to continue: '
+			my_raw_input(m1 + m2 + ' '.join(m3) + m4)
 		elif subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
 			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 			try:
@@ -489,8 +490,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_compile(self,token_data={}):
 		odir = joinpath(self.tmpdir,token_data['symbol'].lower())
 		if self.skip_for_win():
-			m ='Copy solc v0.5.3 contract data for token {} to directory {} and hit ENTER: '
-			input(m.format(token_data['symbol'],odir))
+			try:
+				os.stat(os.path.join(odir,'Token.bin'))
+			except:
+				m ='Copy solc v0.5.3 contract data for token {} to directory {} and hit ENTER: '
+				input(m.format(token_data['symbol'],odir))
+			else:
+				msg('Using precompiled contract data in {}'.format(odir))
 			return 'skip'
 		self.spawn('',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
