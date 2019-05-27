@@ -3,6 +3,7 @@ include doc/wiki/using-mmgen/*
 
 include test/*.py
 include test/test_py_d/*.py
+include test/objtest_py_d/*.py
 include test/unit_tests_d/*.py
 include test/ref/*
 include test/ref/litecoin/*
