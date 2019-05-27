@@ -539,17 +539,17 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		unit = getattr(g.proto.coin_amt,to_unit or 'min_coin_unit')
 		return int(abs_fee // unit // self.estimate_size())
 
-	def get_rel_fee_from_network(self): # rel_fee is in BTC/kB
+	def get_rel_fee_from_network(self):
 		try:
 			ret = g.rpch.estimatesmartfee(opt.tx_confs)
-			rel_fee = ret['feerate'] if 'feerate' in ret else -2
+			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
-			rel_fee    = g.rpch.estimatefee() if g.coin=='BCH' and g.rpch.daemon_version >= 190100 \
+			fee_per_kb = g.rpch.estimatefee() if g.coin=='BCH' and g.rpch.daemon_version >= 190100 \
 					else g.rpch.estimatefee(opt.tx_confs)
 			fe_type = 'estimatefee'
 
-		return rel_fee,fe_type
+		return fee_per_kb,fe_type
 
 	# given tx size, rel fee and units, return absolute fee
 	def convert_fee_spec(self,tx_size,units,amt,unit):
@@ -558,11 +558,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if tx_size else None
 
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
-	def fee_est2abs(self,rel_fee,fe_type=None):
+	def fee_est2abs(self,fee_per_kb,fe_type=None):
 		tx_size = self.estimate_size()
-		ret = g.proto.coin_amt(rel_fee) * opt.tx_fee_adj * tx_size // 1024
+		ret = g.proto.coin_amt(fee_per_kb) * opt.tx_fee_adj * tx_size // 1024
 		if opt.verbose:
-			msg('{} fee for {} confirmations: {} {}/kB'.format(fe_type.upper(),opt.tx_confs,rel_fee,g.coin))
+			msg('{} fee for {} confirmations: {} {}/kB'.format(fe_type.upper(),opt.tx_confs,fee_per_kb,g.coin))
 			msg('TX size (estimated): {}'.format(tx_size))
 		return ret
 
@@ -633,15 +633,15 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			start_fee = opt.tx_fee
 		else:
 			desc = 'Network-estimated'
-			rel_fee,fe_type = self.get_rel_fee_from_network()
+			fee_per_kb,fe_type = self.get_rel_fee_from_network()
 
-			if rel_fee < 0:
+			if fee_per_kb < 0:
 				if not have_estimate_fail:
 					msg(self.fee_fail_fs.format(c=opt.tx_confs,t=fe_type))
 					have_estimate_fail.append(True)
 				start_fee = None
 			else:
-				start_fee = self.fee_est2abs(rel_fee,fe_type)
+				start_fee = self.fee_est2abs(fee_per_kb,fe_type)
 
 		return self.get_usr_fee_interactive(start_fee,desc=desc)
 
