@@ -390,7 +390,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	units = ('satoshi',)
 	forbidden_types = (float,int)
 
-	def __new__(cls,num,from_unit=None,on_fail='die'):
+	# NB: 'from_decimal' rounds down to precision of 'min_coin_unit'
+	def __new__(cls,num,from_unit=None,from_decimal=False,on_fail='die'):
 		if type(num) == cls: return num
 		cls.arg_chk(on_fail)
 		try:
@@ -399,6 +400,10 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 					"'{}': unrecognized denomination for {}".format(from_unit,cls.__name__))
 				assert type(num) == int,'value is not an integer or long integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
+			elif from_decimal:
+				assert type(num) == Decimal,(
+					"number is not of type Decimal (type is {!r})".format(type(num).__name__))
+				me = Decimal.__new__(cls,num).quantize(cls.min_coin_unit)
 			else:
 				for t in cls.forbidden_types:
 					assert type(num) is not t,"number is of forbidden type '{}'".format(t.__name__)
