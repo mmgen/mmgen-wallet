@@ -169,7 +169,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def set_term_columns(self):
 		from mmgen.term import get_terminal_size
 		while True:
-			self.cols = get_terminal_size()[0]
+			self.cols = g.terminal_width or get_terminal_size()[0]
 			if self.cols >= g.min_screen_width: break
 			m1 = 'Screen too narrow to display the tracking wallet\n'
 			m2 = 'Please resize your screen to at least {} characters and hit ENTER '

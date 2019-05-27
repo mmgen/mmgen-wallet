@@ -105,6 +105,7 @@ class g(object):
 	traceback            = False
 	test_suite           = False
 	test_suite_popen_spawn = False
+	terminal_width       = 0
 
 	# warnings
 	mswin_pw_warning     = True
@@ -173,6 +174,7 @@ class g(object):
 
 		'MMGEN_TEST_SUITE',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
+		'MMGEN_TERMINAL_WIDTH',
 		'MMGEN_BOGUS_WALLET_DATA',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',

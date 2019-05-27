@@ -407,6 +407,10 @@ def create_tmp_dirs(shm_dir):
 				os.symlink(src,cfgs[cfg]['tmpdir'])
 
 def set_environ_for_spawned_scripts():
+
+	from mmgen.term import get_terminal_size
+	os.environ['MMGEN_TERMINAL_WIDTH'] = str(get_terminal_size()[0])
+
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in g.env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
