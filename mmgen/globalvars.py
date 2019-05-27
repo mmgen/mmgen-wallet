@@ -21,6 +21,7 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
 import sys,os
+from decimal import Decimal
 
 # Global vars are set to dfl values in class g.
 # They're overridden in this order:
@@ -60,7 +61,7 @@ class g(object):
 	hash_preset    = '3'
 	usr_randchars  = 30
 
-	tx_fee_adj   = 1.0
+	tx_fee_adj   = Decimal('1.0')
 	tx_confs     = 3
 	seed_len     = 256
 

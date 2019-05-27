@@ -560,10 +560,13 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 	def fee_est2abs(self,fee_per_kb,fe_type=None):
 		tx_size = self.estimate_size()
-		ret = g.proto.coin_amt(fee_per_kb) * opt.tx_fee_adj * tx_size // 1024
+		f = fee_per_kb * opt.tx_fee_adj * tx_size / 1024
+		ret = g.proto.coin_amt(f,from_decimal=True)
 		if opt.verbose:
 			msg('{} fee for {} confirmations: {} {}/kB'.format(fe_type.upper(),opt.tx_confs,fee_per_kb,g.coin))
-			msg('TX size (estimated): {}'.format(tx_size))
+			msg('TX size (estimated): {} bytes'.format(tx_size))
+			msg('Fee adjustment factor: {}'.format(opt.tx_fee_adj))
+			msg('Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {} {}'.format(ret,g.coin))
 		return ret
 
 	def convert_and_check_fee(self,tx_fee,desc='Missing description'):
@@ -611,10 +614,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if tx_fee:
 				abs_fee = self.convert_and_check_fee(tx_fee,desc)
 			if abs_fee:
-				m = ('',' (after {}x adjustment)'.format(opt.tx_fee_adj))[opt.tx_fee_adj != 1]
+				adj_disp = ' (after {}X adjustment)'.format(opt.tx_fee_adj)
 				p = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
-						m,
+						adj_disp if opt.tx_fee_adj != 1 and desc == 'Network-estimated' else '',
 						('','≈')[self.fee_is_approximate],
 						abs_fee.hl(),
 						g.coin,
