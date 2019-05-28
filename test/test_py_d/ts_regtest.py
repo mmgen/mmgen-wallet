@@ -82,7 +82,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('fund_bob',                 "funding Bob's wallet"),
 		('fund_alice',               "funding Alice's wallet"),
 		('bob_bal1',                 "Bob's balance"),
-		('bob_add_label',            "adding a 40-character UTF-8 encoded label"),
+		('bob_add_label',            "adding an 80-screen-width label (lat+cyr+gr)"),
 		('bob_twview1',              "viewing Bob's tracking wallet"),
 		('bob_split1',               "splitting Bob's funds"),
 		('generate',                 'mining a block'),
@@ -136,7 +136,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_chk_label1',         'the label'),
 		('alice_add_label2',         'adding a label'),
 		('alice_chk_label2',         'the label'),
-		('alice_edit_label1',        'editing a label'),
+		('alice_edit_label1',        'editing a label (zh)'),
+		('alice_edit_label2',        'editing a label (lat+cyr+gr)'),
 		('alice_chk_label3',         'the label'),
 		('alice_remove_label1',      'removing a label'),
 		('alice_chk_label4',         'the label'),
@@ -432,7 +433,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 								inputs          = outputs_list,
 								file_desc       = 'Signed transaction',
 								interactive_fee = (tx_fee,'')[bool(fee)],
-								add_comment     = ref_tx_label_jp,
+								add_comment     = tx_label_jp,
 								view            = 't',save=True)
 
 		t.passphrase('MMGen wallet',rt_pw)
@@ -593,7 +594,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_add_label(self):
 		sid = self._user_sid('bob')
-		return self.user_add_label('bob',sid+':C:1',utf8_label)
+		return self.user_add_label('bob',sid+':C:1',tw_label_lat_cyr_gr)
 
 	def alice_add_label1(self):
 		sid = self._user_sid('alice')
@@ -663,13 +664,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('alice')
 		return self.user_chk_label('alice',sid+':C:1','Replacement Label')
 
-	def alice_edit_label1(self):
-		return self.user_edit_label('alice','4',utf8_label)
+	def alice_edit_label1(self): return self.user_edit_label('alice','4',tw_label_lat_cyr_gr)
+	def alice_edit_label2(self): return self.user_edit_label('alice','3',tw_label_zh)
 
 	def alice_chk_label3(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
-		return self.user_chk_label('alice',mmid,utf8_label,label_pat=utf8_label_pat)
+		return self.user_chk_label('alice',mmid,tw_label_zh,label_pat=tw_label_lat_cyr_gr)
 
 	def alice_chk_label4(self):
 		sid = self._user_sid('alice')

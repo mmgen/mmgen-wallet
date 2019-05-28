@@ -144,15 +144,22 @@ tests = OrderedDict([
 		)
 	}),
 	('MMGenWalletLabel', {
-		'bad': (utf8_text[:49],utf8_text_combining[:48],utf8_text_control[:48]),
+		'bad': (utf8_text[:49],utf8_combining[:48],utf8_ctrl[:48]),
 		'good':  (utf8_text[:48],)
 	}),
 	('TwComment', {
-		'bad': (utf8_text[:41],utf8_text_combining[:40],utf8_text_control[:40]),
-		'good':  (utf8_text[:40],)
+		'bad': (    utf8_combining[:40],
+					utf8_ctrl[:40],
+					text_jp[:41],
+					text_zh[:41],
+					utf8_text[:81] ),
+		'good': (   utf8_text[:80],
+					(ru_uc + gr_uc + utf8_text)[:80],
+					text_jp[:40],
+					text_zh[:40] )
 	}),
 	('MMGenTXLabel',{
-		'bad': (utf8_text[:73],utf8_text_combining[:72],utf8_text_control[:72]),
+		'bad': (utf8_text[:73],utf8_combining[:72],utf8_ctrl[:72]),
 		'good':  (utf8_text[:72],)
 	}),
 	('MMGenPWIDString', { # forbidden = list(u' :/\\')

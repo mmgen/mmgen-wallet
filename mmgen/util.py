@@ -20,7 +20,7 @@
 util.py:  Low-level routines imported by other modules in the MMGen suite
 """
 
-import sys,os,time,stat,re,unicodedata
+import sys,os,time,stat,re
 from hashlib import sha256
 from string import hexdigits,digits
 from mmgen.color import *
@@ -230,9 +230,6 @@ def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
 
 def split_into_cols(col_wid,s):
 	return ' '.join([s[col_wid*i:col_wid*(i+1)] for i in range(len(s)//col_wid+1)]).rstrip()
-
-def screen_width(s):
-	return len(s) + len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
 
 def capfirst(s): # different from str.capitalize() - doesn't downcase any uc in string
 	return s if len(s) == 0 else s[0].upper() + s[1:]

@@ -182,7 +182,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		# allow for 7-digit confirmation nums
 		col1_w = max(3,len(str(len(unsp)))+1) # num + ')'
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in unsp) or 12 # DEADBEEF:S:1
-		max_acct_w = max(len(i.label) for i in unsp) + mmid_w + 1
+		max_acct_w = max(i.label.screen_width for i in unsp) + mmid_w + 1
 		max_btcaddr_w = max(len(i.addr) for i in unsp)
 		min_addr_w = self.cols - self.col_adj
 		addr_w = min(max_btcaddr_w + (0,1+max_acct_w)[self.show_mmid],min_addr_w)
@@ -472,7 +472,7 @@ class TwAddrList(MMGenDict):
 		fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
-		max_cmt_len  = max(max(screen_width(v['lbl'].comment) for v in self.values()),7)
+		max_cmt_width = max(max(v['lbl'].comment.screen_width for v in self.values()),7)
 		addr_width = max(len(self[mmid]['addr']) for mmid in self)
 
 		# fp: fractional part
@@ -480,7 +480,7 @@ class TwAddrList(MMGenDict):
 		out += [fs.format(
 				mid=MMGenID.fmtc('MMGenID',width=max_mmid_len),
 				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
-				cmt=TwComment.fmtc('COMMENT',width=max_cmt_len+1),
+				cmt=TwComment.fmtc('COMMENT',width=max_cmt_width+1),
 				amt='BALANCE'.ljust(max_fp_len+4),
 				age=('CONFS','DAYS')[age_fmt=='days'],
 				)]
@@ -512,7 +512,7 @@ class TwAddrList(MMGenDict):
 			out.append(fs.format(
 				mid=MMGenID.fmtc(mmid_disp,width=max_mmid_len,color=True),
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
-				cmt=e['lbl'].comment.fmt(width=max_cmt_len,color=True,nullrepl='-'),
+				cmt=e['lbl'].comment.fmt(width=max_cmt_width,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
 				age=mmid.confs // (1,confs_per_day)[age_fmt=='days'] if hasattr(mmid,'confs') and mmid.confs != None else '-'
 				))

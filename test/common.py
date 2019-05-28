@@ -20,16 +20,30 @@
 common.py: Shared routines and data for the MMGen test suites
 """
 
-sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
-
-ref_kafile_pass = 'kafile password'
-ref_kafile_hash_preset = '1'
-
 class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
 import os
 from mmgen.common import *
+
+ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
+ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars
+lat_accent = ''.join(map(chr,list(range(192,383)))) # 191 chars
+ru_uc = ''.join(map(chr,list(range(1040,1072)))) # 32 chars
+gr_uc = ''.join(map(chr,list(range(913,930)) + list(range(931,940)))) # 26 chars (930 is ctrl char)
+lat_cyr_gr = lat_accent[:130:5] + ru_uc + gr_uc # 84 chars
+
+utf8_text      = '[α-$ample UTF-8 text-ω]' * 10   # 230 chars, unicode types L,N,P,S,Z
+utf8_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M
+utf8_ctrl      = '[α-$ample\nUTF-8\ntext-ω]' * 10 # L,N,P,S,Z,C
+
+text_jp = '必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
+text_zh = '所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
+
+sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+
+ref_kafile_pass = 'kafile password'
+ref_kafile_hash_preset = '1'
 
 def getrandnum(n): return int(os.urandom(n).hex(),16)
 def getrandhex(n): return os.urandom(n).hex()

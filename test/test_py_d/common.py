@@ -22,6 +22,7 @@ common.py: Shared routines and data for the test.py test suite
 
 import os,time,subprocess
 from mmgen.common import *
+from ..common import *
 
 log_file = 'test.py.log'
 
@@ -46,17 +47,15 @@ non_mmgen_fn = 'coinkey'
 ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
 
-from mmgen.obj import MMGenTXLabel
+from mmgen.obj import MMGenTXLabel,TwComment
 
-ref_tx_label_jp = '必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、これにより希望する二者が信用できる第三者機関を介さずに直接取引できるよう' # 72 chars ('W'ide)
-ref_tx_label_zh = '所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
-ref_tx_label_lat_cyr_gr = ''.join(map(chr,
-									list(range(65,91)) +
-									list(range(1040,1072)) + # cyrillic
-									list(range(913,939)) +   # greek
-									list(range(97,123))))[:MMGenTXLabel.max_len] # 72 chars
-utf8_label = ref_tx_label_zh[:40]
-utf8_label_pat = utf8_label
+tx_label_jp = text_jp
+tx_label_zh = text_zh
+
+tx_label_lat_cyr_gr = lat_cyr_gr[:MMGenTXLabel.max_len] # 72 chars
+
+tw_label_zh         = text_zh[:TwComment.max_screen_width // 2]
+tw_label_lat_cyr_gr = lat_cyr_gr[:TwComment.max_screen_width] # 80 chars
 
 ref_bw_hash_preset = '1'
 ref_bw_file = 'wallet.mmbrain'
@@ -140,8 +139,8 @@ labels = [
 	"Automotive",
 	"Travel expenses",
 	"Healthcare",
-	ref_tx_label_jp[:40],
-	ref_tx_label_zh[:40],
+	tx_label_jp[:40],
+	tx_label_zh[:40],
 	"Alice's allowance",
 	"Bob's bequest",
 	"House purchase",

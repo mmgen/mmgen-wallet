@@ -435,7 +435,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		self.txcreate_ui_common(t,
 					menu=(['M'],['M','D','m','g'])[self.test_name=='txcreate'],
 					inputs=' '.join(map(str,outputs_list)),
-					add_comment=('',ref_tx_label_lat_cyr_gr)[do_label],
+					add_comment=('',tx_label_lat_cyr_gr)[do_label],
 					non_mmgen_inputs=(0,1)[bool(non_mmgen_input and not txdo_args)],
 					view=view)
 

@@ -156,8 +156,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('addrimport_burn_addr',"importing burn address"),
 		('bal5',                'the {} balance'.format(g.coin)),
 
-		('add_label',           'adding a UTF-8 label'),
-		('chk_label',           'the label'),
+		('add_label1',          'adding a UTF-8 label (zh)'),
+		('chk_label1',          'the label'),
+		('add_label2',          'adding a UTF-8 label (lat+cyr+gr)'),
+		('chk_label2',          'the label'),
 		('remove_label',        'removing the label'),
 
 		('token_compile1',       'compiling ERC20 token #1'),
@@ -241,8 +243,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_twview2','twview --token=mm1 wide=1'),
 		('token_twview3','twview --token=mm1 wide=1 sort=age (ignored)'),
 
-		('edit_label1','adding label to addr #{} in {} tracking wallet'.format(del_addrs[0],g.coin)),
-		('edit_label2','adding label to addr #{} in {} tracking wallet'.format(del_addrs[1],g.coin)),
+		('edit_label1','adding label to addr #{} in {} tracking wallet (zh)'.format(del_addrs[0],g.coin)),
+		('edit_label2','adding label to addr #{} in {} tracking wallet (lat+cyr+gr)'.format(del_addrs[1],g.coin)),
 		('edit_label3','removing label from addr #{} in {} tracking wallet'.format(del_addrs[0],g.coin)),
 
 		('remove_addr1','removing addr #{} from {} tracking wallet'.format(del_addrs[0],g.coin)),
@@ -349,7 +351,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 										fee_res           = fee_res,
 										fee_desc          = fee_desc,
 										eth_fee_res       = eth_fee_res,
-										add_comment       = ref_tx_label_jp )
+										add_comment       = tx_label_jp )
 
 	def txsign(self,ni=False,ext='{}.rawtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -472,15 +474,20 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
 
-	def add_label(self,addr='98831F3A:E:3',lbl=utf8_label):
+	def add_label(self,lbl,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['add_label',addr,lbl])
 		t.expect('Added label.*in tracking wallet',regex=True)
 		return t
 
-	def chk_label(self,addr='98831F3A:E:3',label_pat=utf8_label_pat):
+	def chk_label(self,lbl_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label)),regex=True)
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,lbl_pat),regex=True)
 		return t
+
+	def add_label1(self): return self.add_label(lbl=tw_label_zh)
+	def chk_label1(self): return self.chk_label(lbl_pat=tw_label_zh)
+	def add_label2(self): return self.add_label(lbl=tw_label_lat_cyr_gr)
+	def chk_label2(self): return self.chk_label(lbl_pat=tw_label_lat_cyr_gr)
 
 	def remove_label(self,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['remove_label',addr])
@@ -646,7 +653,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 										inputs            = inputs,
 										input_sels_prompt = 'to spend from',
 										file_desc         = 'Ethereum token transaction',
-										add_comment       = ref_tx_label_lat_cyr_gr)
+										add_comment       = tx_label_lat_cyr_gr)
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):
@@ -768,9 +775,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def edit_label1(self):
-		return self.edit_label(out_num=del_addrs[0],label_text='First added label-α')
+		return self.edit_label(out_num=del_addrs[0],label_text=tw_label_zh)
 	def edit_label2(self):
-		return self.edit_label(out_num=del_addrs[1],label_text='Second added label')
+		return self.edit_label(out_num=del_addrs[1],label_text=tw_label_lat_cyr_gr)
 	def edit_label3(self):
 		return self.edit_label(out_num=del_addrs[0],label_text='')
 

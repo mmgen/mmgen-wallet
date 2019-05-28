@@ -777,6 +777,7 @@ class MMGenLabel(str,Hilite,InitErrors):
 	forbidden = []
 	max_len = 0
 	min_len = 0
+	max_screen_width = 0 # if != 0, overrides max_len
 	desc = 'label'
 	def __new__(cls,s,on_fail='die',msg=None):
 		if type(s) == cls: return s
@@ -795,13 +796,19 @@ class MMGenLabel(str,Hilite,InitErrors):
 				if unicodedata.category(ch)[0] in 'CM':
 					t = { 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]]
 					raise ValueError('{}: {} characters not allowed'.format(ascii(ch),t))
-			assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
+			me = str.__new__(cls,s)
+			if cls.max_screen_width:
+				me.screen_width = len(s) + len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
+				assert me.screen_width <= cls.max_screen_width,(
+					'too wide (>{} screen width)'.format(cls.max_screen_width))
+			else:
+				assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
 			assert len(s) >= cls.min_len, 'too short (<{} symbols)'.format(cls.min_len)
 			assert not cls.allowed or set(list(s)).issubset(set(cls.allowed)),\
 				'contains non-allowed symbols: {}'.format(' '.join(set(list(s)) - set(cls.allowed)))
 			assert not cls.forbidden or not any(ch in s for ch in cls.forbidden),\
 				"contains one of these forbidden symbols: '{}'".format("', '".join(cls.forbidden))
-			return str.__new__(cls,s)
+			return me
 		except Exception as e:
 			return cls.init_fail(e,s)
 
@@ -810,7 +817,7 @@ class MMGenWalletLabel(MMGenLabel):
 	desc = 'wallet label'
 
 class TwComment(MMGenLabel):
-	max_len = 40
+	max_screen_width = 80
 	desc = 'tracking wallet comment'
 
 class MMGenTXLabel(MMGenLabel):
