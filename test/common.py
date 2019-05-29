@@ -32,6 +32,7 @@ lat_accent = ''.join(map(chr,list(range(192,383)))) # 191 chars
 ru_uc = ''.join(map(chr,list(range(1040,1072)))) # 32 chars
 gr_uc = ''.join(map(chr,list(range(913,930)) + list(range(931,940)))) # 26 chars (930 is ctrl char)
 lat_cyr_gr = lat_accent[:130:5] + ru_uc + gr_uc # 84 chars
+ascii_cyr_gr = ascii_uc + ru_uc + gr_uc # 84 chars
 
 utf8_text      = '[α-$ample UTF-8 text-ω]' * 10   # 230 chars, unicode types L,N,P,S,Z
 utf8_combining = '[α-$ámple UTF-8 téxt-ω]' * 10   # L,N,P,S,Z,M

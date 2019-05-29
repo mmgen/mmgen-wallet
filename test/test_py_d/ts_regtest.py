@@ -51,9 +51,72 @@ rt_data = {
 				'10946.937535'),
 	},
 	'rtBals_gb': {
-		'btc': ('116.77629233','283.22339537'),
-		'bch': ('116.77637483','283.22339437'),
-		'ltc': ('5116.77036263','283.21717237')
+		'btc': {
+			'0conf0': {
+				'mmgen': ('283.22339537','0','283.22339537'),
+				'nonmm': ('16.77647763','0','116.77629233'),
+				'total': ('299.999873','0','399.9996877'),
+			},
+			'0conf1': {
+				'mmgen': ('283.22339537','283.22339537','0'),
+				'nonmm': ('16.77647763','16.77647763','99.9998147'),
+				'total': ('299.999873','299.999873','99.9998147'),
+			},
+			'1conf1': {
+				'mmgen': ('0','0','283.22339537'),
+				'nonmm': ('0','0','116.77629233'),
+				'total': ('0','0','399.9996877'),
+			},
+			'1conf2': {
+				'mmgen': ('0','283.22339537','0'),
+				'nonmm': ('0','16.77647763','99.9998147'),
+				'total': ('0','299.999873','99.9998147'),
+			},
+		},
+		'bch': {
+			'0conf0': {
+				'mmgen': ('283.22339437','0','283.22339437'),
+				'nonmm': ('16.77647763','0','116.77637483'),
+				'total': ('299.999872','0','399.9997692'),
+			},
+			'0conf1': {
+				'mmgen': ('283.22339437','283.22339437','0'),
+				'nonmm': ('16.77647763','16.77647763','99.9998972'),
+				'total': ('299.999872','299.999872','99.9998972'),
+			},
+			'1conf1': {
+				'mmgen': ('0','0','283.22339437'),
+				'nonmm': ('0','0','116.77637483'),
+				'total': ('0','0','399.9997692'),
+			},
+			'1conf2': {
+				'mmgen': ('0','283.22339437','0'),
+				'nonmm': ('0','16.77647763','99.9998972'),
+				'total': ('0','299.999872','99.9998972'),
+			},
+		},
+		'ltc': {
+			'0conf0': {
+				'mmgen': ('283.21717237','0','283.21717237'),
+				'nonmm': ('16.77647763','0','5116.77036263'),
+				'total': ('299.99365','0','5399.987535'),
+			},
+			'0conf1': {
+				'mmgen': ('283.21717237','283.21717237','0'),
+				'nonmm': ('16.77647763','16.77647763','5099.993885'),
+				'total': ('299.99365','299.99365','5099.993885'),
+			},
+			'1conf1': {
+				'mmgen': ('0','0','283.21717237'),
+				'nonmm': ('0','0','5116.77036263'),
+				'total': ('0','0','5399.987535'),
+			},
+			'1conf2': {
+				'mmgen': ('0','283.21717237','0'),
+				'nonmm': ('0','16.77647763','5099.993885'),
+				'total': ('0','299.99365','5099.993885'),
+			},
+		}
 	},
 	'rtBobOp3': {'btc':'S:2','bch':'L:3','ltc':'S:2'},
 	'rtAmts': {
@@ -105,9 +168,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal4',                 "Bob's balance (after import with rescan)"),
 		('bob_import_list',          'importing flat address list'),
 		('bob_split2',               "splitting Bob's funds"),
+		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
+		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
 		('generate',                 'mining a block'),
+		('bob_1conf1_getbalance',    "Bob's balance (confirmed, minconf=1)"),
+		('bob_1conf2_getbalance',    "Bob's balance (confirmed, minconf=2)"),
 		('bob_bal5',                 "Bob's balance"),
-		('bob_bal5_getbalance',      "Bob's balance"),
 		('bob_send_non_mmgen',       'sending funds to Alice (from non-MMGen addrs)'),
 		('generate',                 'mining a block'),
 		('alice_bal_rpcfail',        'RPC failure code'),
@@ -391,15 +457,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		amt = ('0.4169328','0.41364')[g.coin=='LTC']
 		return self.user_twview('bob',chk=r'\b{}:L:5\b\s+.*\s+\b{}\b'.format(sid,amt),sort='twmmid')
 
-	def bob_bal5_getbalance(self):
-		t_ext,t_mmgen = rtBals_gb[0],rtBals_gb[1]
-		assert Decimal(t_ext) + Decimal(t_mmgen) == Decimal(rtBals[3])
-		t = self.spawn('mmgen-tool',['--bob','getbalance'])
-		t.expect(r'\n[0-9A-F]{8}: .* '+t_mmgen,regex=True)
-		t.expect(r'\nNon-MMGen: .* '+t_ext,regex=True)
-		t.expect(r'\nTOTAL: .* '+rtBals[3],regex=True)
+	def bob_getbalance(self,bals,confs=1):
+		for i in (0,1,2):
+			assert Decimal(bals['mmgen'][i]) + Decimal(bals['nonmm'][i]) == Decimal(bals['total'][i])
+		t = self.spawn('mmgen-tool',['--bob','getbalance','minconf={}'.format(confs)])
+		for k in ('mmgen','nonmm','total'):
+			t.expect(r'\n\S+:\s+{} {c}\s+{} {c}\s+{} {c}'.format(*bals[k],c=g.coin),regex=True)
 		t.read()
 		return t
+
+	def bob_0conf0_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf0'],confs=0)
+	def bob_0conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf1'],confs=1)
+	def bob_1conf1_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf1'],confs=1)
+	def bob_1conf2_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf2'],confs=2)
 
 	def bob_alice_bal(self):
 		t = self.spawn('mmgen-regtest',['get_balances'])
@@ -610,6 +680,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		btcaddr = [i for i in t.read().splitlines() if i.lstrip()[0:len(mmid)] == mmid][0].split()[1]
 		return self.user_add_label('alice',btcaddr,'Label added using coin address')
 
+	def user_chk_label(self,user,addr,label):
+		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
+		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label),regex=True)
+		return t
+
 	def alice_chk_label_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[g.coin=='BCH']
 		return self.user_chk_label('alice',mmid,'Label added using coin address')
@@ -651,11 +726,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
 		return self.user_remove_label('alice',mmid)
 
-	def user_chk_label(self,user,addr,label,label_pat=None):
-		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,(label_pat or label)),regex=True)
-		return t
-
 	def alice_chk_label1(self):
 		sid = self._user_sid('alice')
 		return self.user_chk_label('alice',sid+':C:1','Original Label - 月へ')
@@ -670,7 +740,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_chk_label3(self):
 		sid = self._user_sid('alice')
 		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
-		return self.user_chk_label('alice',mmid,tw_label_zh,label_pat=tw_label_lat_cyr_gr)
+		return self.user_chk_label('alice',mmid,tw_label_lat_cyr_gr)
 
 	def alice_chk_label4(self):
 		sid = self._user_sid('alice')
