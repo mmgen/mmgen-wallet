@@ -27,25 +27,36 @@ from test.test_py_d.ts_base import *
 from test.test_py_d.ts_main import TestSuiteMain
 
 class TestSuiteHelp(TestSuiteBase):
-	'help and usage screens'
+	'help, info and usage screens'
 	tmpdir_nums = []
 	passthru_opts = ('coin','testnet')
 	cmd_group = (
 		('helpscreens',     (1,'help screens',             [])),
 		('longhelpscreens', (1,'help screens (--longhelp)',[])),
+		('opt_show_hash_presets', (1,'info screen (--show-hash-presets)',[])),
 		('tool_help',       (1,"'mmgen-tool' usage screen",[])),
 		('test_help',       (1,"'test.py' help screens",[])),
 	)
-	def helpscreens(self,arg='--help'):
-		scripts = (
-			'walletgen','walletconv','walletchk','txcreate','txsign','txsend','txdo','txbump',
-			'addrgen','addrimport','keygen','passchg','tool','passgen','regtest','autosign')
+	def helpscreens(self,
+		arg = '--help',
+		scripts = ( 'walletgen','walletconv','walletchk','passchg','subwalletgen',
+					'addrgen','keygen','passgen',
+					'txcreate','txsign','txsend','txdo','txbump',
+					'addrimport','tool','regtest','autosign')):
 		for s in scripts:
 			t = self._run_cmd('mmgen-'+s,[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
 		return t
 
 	def longhelpscreens(self):
 		return self.helpscreens(arg='--longhelp')
+
+	def opt_show_hash_presets(self):
+		return self.helpscreens(
+			arg = '--show-hash-presets',
+			scripts = (
+					'walletgen','walletconv','walletchk','passchg','subwalletgen',
+					'addrgen','keygen','passgen',
+					'txsign','txdo','txbump'))
 
 	def _run_cmd(   self, cmd_name,
 					cmd_args = [],
