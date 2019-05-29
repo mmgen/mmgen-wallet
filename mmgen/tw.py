@@ -634,23 +634,30 @@ class TwGetBalance(MMGenObject):
 		self.create_data()
 
 	def create_data(self):
-		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable
+		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for d in g.rpch.listunspent(0):
-			try: lbl = TwLabel(d[lbl_id],on_fail='silent')
-			except: lbl = None
-			if lbl:
+			try:
+				lbl = TwLabel(d[lbl_id],on_fail='silent')
+			except:
+				lbl,key = None,'Non-wallet'
+			else:
 				if lbl.mmid.type == 'mmgen':
 					key = lbl.mmid.obj.sid
 					if key not in self.data:
 						self.data[key] = [g.proto.coin_amt('0')] * 4
-				else: key = 'Non-MMGen'
-			else: key = 'Non-wallet'
+				else:
+					key = 'Non-MMGen'
 
-			conf_level = 0 if not d['confirmations'] else 1 if d['confirmations'] < self.minconf else 2
+			if not d['confirmations']:
+				self.data['TOTAL'][0] += d['amount']
+				self.data[key][0] += d['amount']
+
+			conf_level = (1,2)[d['confirmations'] >= self.minconf]
 
 			self.data['TOTAL'][conf_level] += d['amount']
 			self.data[key][conf_level] += d['amount']
+
 			if d['spendable']:
 				self.data[key][3] += d['amount']
 
