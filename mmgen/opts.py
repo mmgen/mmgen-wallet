@@ -42,7 +42,7 @@ def _show_hash_presets():
 	msg('Available parameters for scrypt.hash():')
 	msg(fs.format('Preset','N','r','p'))
 	for i in sorted(g.hash_presets.keys()):
-		msg(fs.format("'{}'".format(i,*g.hash_presets[i])))
+		msg(fs.format(i,*g.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
 
 def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
