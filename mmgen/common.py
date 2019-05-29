@@ -93,7 +93,7 @@ seed, the same seed length and hash preset parameters must always be used.
 """.strip(),
 		'txcreate': """
 The transaction's outputs are specified on the command line, while its inputs
-are chosen from a list of the user's unpent outputs via an interactive menu.
+are chosen from a list of the user's unspent outputs via an interactive menu.
 
 If the transaction fee is not specified on the command line (see FEE
 SPECIFICATION below), it will be calculated dynamically using network fee
