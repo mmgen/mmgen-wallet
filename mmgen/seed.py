@@ -65,10 +65,11 @@ class SeedBase(MMGenObject):
 		self.length    = len(seed_bin) * 8
 
 class SubSeedList(MMGenObject):
+	have_short = True
 
-	def __init__(self,parent_seed,have_short=False):
+	def __init__(self,parent_seed):
+		self.member_type = SubSeed
 		self.parent_seed = parent_seed
-		self.have_short = have_short
 		from collections import OrderedDict
 		self.data = { 'long': OrderedDict(), 'short': OrderedDict() }
 
@@ -97,13 +98,13 @@ class SubSeedList(MMGenObject):
 		if print_msg:
 			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
 		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
-		return SubSeed(self,idx,nonce,length=ss_idx.type)
+		return self.member_type(self,idx,nonce,length=ss_idx.type)
 
 	def get_existing_subseed_by_seed_id(self,sid):
 		for k in ('long','short') if self.have_short else ('long',):
 			if sid in self.data[k]:
 				idx,nonce = self.data[k][sid]
-				return SubSeed(self,idx,nonce,length=k)
+				return self.member_type(self,idx,nonce,length=k)
 
 	def get_subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 
@@ -148,8 +149,8 @@ class SubSeedList(MMGenObject):
 			last_sid = SeedID(sid=last_sid)
 
 		def add_subseed(idx,length):
-			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
-				sid = make_chksum_8(SubSeed.make_subseed_bin(self,idx,nonce,length))
+			for nonce in range(self.member_type.max_nonce): # use nonce to handle Seed ID collisions
+				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
 				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
@@ -192,7 +193,7 @@ class SubSeedList(MMGenObject):
 class Seed(SeedBase):
 
 	def __init__(self,seed_bin=None):
-		self.subseeds = SubSeedList(self,have_short=True)
+		self.subseeds = SubSeedList(self)
 		SeedBase.__init__(self,seed_bin=seed_bin)
 
 	def subseed(self,ss_idx_in,print_msg=False):
