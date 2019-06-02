@@ -53,7 +53,7 @@ class subseed(object):
 				seed2.subseeds.generate(10)
 				assert len(ss2_list) == 10, len(ss2_list)
 
-# 				assert seed.pformat() == seed2.pformat() # TODO: deal with recursion in pformat()
+				assert seed.pformat() == seed2.pformat()
 
 				s = seed.subseeds.format(1,g.subseeds)
 				s_lines = s.strip().split('\n')

@@ -50,7 +50,7 @@ class MMGenObject(object):
 	# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
 	def pmsg(self): print(self.pformat())
 	def pdie(self): print(self.pformat()); sys.exit(0)
-	def pformat(self,lvl=0):
+	def pformat(self,lvl=0,id_list=[]):
 		scalars = (str,int,float,Decimal)
 		def do_list(out,e,lvl=0,is_dict=False):
 			out.append('\n')
@@ -59,7 +59,7 @@ class MMGenObject(object):
 				if is_dict:
 					out.append('{s}{:<{l}}'.format(i,s=' '*(4*lvl+8),l=10,l2=8*(lvl+1)+8))
 				if hasattr(el,'pformat'):
-					out.append('{:>{l}}{}'.format('',el.pformat(lvl=lvl+1),l=(lvl+1)*8))
+					out.append('{:>{l}}{}'.format('',el.pformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl+1)*8))
 				elif type(el) in scalars:
 					if isList(e):
 						out.append('{:>{l}}{:16}\n'.format('',repr(el),l=lvl*8))
@@ -90,6 +90,8 @@ class MMGenObject(object):
 # 		print self.keys()
 
 		out = ['<{}>{}\n'.format(type(self).__name__,' '+repr(self) if isScalar(self) else '')]
+		if id(self) in id_list:
+			return out[-1].rstrip() + ' [RECURSION]\n'
 		if isList(self) or isDict(self):
 			do_list(out,self,lvl=lvl,is_dict=isDict(self))
 
@@ -102,7 +104,7 @@ class MMGenObject(object):
 				out.append('{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))
 				do_list(out,e,lvl=lvl,is_dict=isDict(e))
 			elif hasattr(e,'pformat') and type(e) != type:
-				out.append('{:>{l}}{:10} {}'.format('',k,e.pformat(lvl=lvl+1),l=(lvl*8)+4))
+				out.append('{:>{l}}{:10} {}'.format('',k,e.pformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl*8)+4))
 			else:
 				out.append('{:>{l}}{:<10} {:16} {}\n'.format(
 					'',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))
