@@ -697,7 +697,7 @@ class MMGenToolCmdWallet(MMGenToolCmdBase):
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
 		from mmgen.seed import SeedSource
-		return SeedSource(sf).seed.fmt_subseeds(*SubSeedIdxRange(subseed_idx_range))
+		return SeedSource(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
 
 	def gen_key(self,mmgen_addr:str,wallet=''):
 		"generate a single MMGen WIF key from default or specified wallet"

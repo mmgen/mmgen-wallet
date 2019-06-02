@@ -64,71 +64,82 @@ class SeedBase(MMGenObject):
 		self.sid       = SeedID(seed=self)
 		self.length    = len(seed_bin) * 8
 
-class Seed(SeedBase):
+class SubSeedList(MMGenObject):
 
-	def __init__(self,seed_bin=None):
+	def __init__(self,parent_seed,have_short=False):
+		self.parent_seed = parent_seed
+		self.have_short = have_short
 		from collections import OrderedDict
-		self.subseeds = { 'long': OrderedDict(), 'short': OrderedDict() }
-		SeedBase.__init__(self,seed_bin=seed_bin)
+		self.data = { 'long': OrderedDict(), 'short': OrderedDict() }
 
-	def subseed(self,ss_idx_in,print_msg=False):
+	def __len__(self):
+		return len(self.data['long'])
+
+	def get_params_by_ss_idx(self,ss_idx):
+		sid = list(self.data[ss_idx.type].keys())[ss_idx.idx-1]
+		idx,nonce = self.data[ss_idx.type][sid]
+		return (sid,idx,nonce)
+
+	def get_subseed_by_ss_idx(self,ss_idx_in,print_msg=False):
 		ss_idx = SubSeedIdx(ss_idx_in)
 		if print_msg:
 			msg_r('{} {} of {}...'.format(
 				green('Generating subseed'),
 				ss_idx.hl(),
-				self.sid.hl(),
+				self.parent_seed.sid.hl(),
 			))
-		if ss_idx.idx > len(self.subseeds['long']):
-			self.gen_subseeds(ss_idx.idx)
-		sid = list(self.subseeds[ss_idx.type].keys())[ss_idx.idx-1]
-		idx,nonce = self.subseeds[ss_idx.type][sid]
+
+		if ss_idx.idx > len(self):
+			self.generate(ss_idx.idx)
+
+		sid,idx,nonce = self.get_params_by_ss_idx(ss_idx)
+
 		if print_msg:
 			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
 		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
-		return SubSeed(self,idx,nonce,length=ss_idx.type)
+		return SubSeed(self.parent_seed,idx,nonce,length=ss_idx.type)
 
-	def existing_subseed_by_seed_id(self,sid):
-		for k in ('long','short'):
-			if sid in self.subseeds[k]:
-				idx,nonce = self.subseeds[k][sid]
-				return SubSeed(self,idx,nonce,length=k)
+	def get_existing_subseed_by_seed_id(self,sid):
+		for k in ('long','short') if self.have_short else ('long',):
+			if sid in self.data[k]:
+				idx,nonce = self.data[k][sid]
+				return SubSeed(self.parent_seed,idx,nonce,length=k)
 
-	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
+	def get_subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 
-		def do_msg(seed):
+		def do_msg(subseed):
 			if print_msg:
 				qmsg('{} {} ({}:{})'.format(
 					green('Found subseed'),
-					seed.sid.hl(),
-					self.sid.hl(),
-					seed.ss_idx.hl(),
+					subseed.sid.hl(),
+					self.parent_seed.sid.hl(),
+					subseed.ss_idx.hl(),
 				))
 
 		if last_idx == None:
 			last_idx = g.subseeds
 
-		seed = self.existing_subseed_by_seed_id(sid)
-		if seed:
-			do_msg(seed)
-			return seed
+		subseed = self.get_existing_subseed_by_seed_id(sid)
+		if subseed:
+			do_msg(subseed)
+			return subseed
 
-		if len(self.subseeds['long']) >= last_idx:
+		if len(self) >= last_idx:
 			return None
 
-		self.gen_subseeds(last_idx,last_sid=sid)
+		self.generate(last_idx,last_sid=sid)
 
-		seed = self.existing_subseed_by_seed_id(sid)
-		if seed:
-			do_msg(seed)
-			return seed
+		subseed = self.get_existing_subseed_by_seed_id(sid)
+		if subseed:
+			do_msg(subseed)
+			return subseed
 
-	def gen_subseeds(self,last_idx=None,last_sid=None):
+	def generate(self,last_idx=None,last_sid=None):
 
 		if last_idx == None:
 			last_idx = g.subseeds
 
-		first_idx = len(self.subseeds['long']) + 1
+		first_idx = len(self) + 1
 
 		if first_idx > last_idx:
 			return None
@@ -138,44 +149,58 @@ class Seed(SeedBase):
 
 		def add_subseed(idx,length):
 			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
-				sid = make_chksum_8(SubSeedBase.make_subseed_bin(self,idx,nonce,length))
-				if not (sid in self.subseeds['long'] or sid in self.subseeds['short'] or sid == self.sid):
-					self.subseeds[length][sid] = (idx,nonce)
+				sid = make_chksum_8(SubSeedBase.make_subseed_bin(self.parent_seed,idx,nonce,length))
+				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
+					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
 				elif g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
-					k = ('long','short')[sid in self.subseeds['short']]
+					k = ('long','short')[sid in self.data['short']]
 					m1 = 'add_subseed(idx={},{}):'.format(idx,length)
-					if sid == self.sid:
+					if sid == self.parent_seed.sid:
 						m2 = 'collision with parent Seed ID {},'.format(sid)
 					else:
-						m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.subseeds[k][sid][0],k)
+						m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.data[k][sid][0],k)
 					msg('{:30} {:46} incrementing nonce to {}'.format(m1,m2,nonce+1))
-			else: # must exit here, as this could leave self.subseeds in inconsistent state
+			else: # must exit here, as this could leave self.data in inconsistent state
 				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
 
 		for idx in SubSeedIdxRange(first_idx,last_idx).iterate():
-			if add_subseed(idx,'long') + add_subseed(idx,'short'):
-				break
+			match1 = add_subseed(idx,'long')
+			match2 = add_subseed(idx,'short') if self.have_short else False
+			if match1 or match2: break
 
-	def fmt_subseeds(self,first_idx,last_idx):
+	def format(self,first_idx,last_idx):
 
 		r = SubSeedIdxRange(first_idx,last_idx)
 
-		if len(self.subseeds['long']) < last_idx:
-			self.gen_subseeds(last_idx)
+		if len(self) < last_idx:
+			self.generate(last_idx)
 
 		fs1 = '{:>18} {:>18}\n'
 		fs2 = '{i:>7}L: {:8} {i:>7}S: {:8}\n'
 
-		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.sid.hl(),self.length)
+		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
 		hdr += fs1.format('Long Subseeds','Short Subseeds')
 		hdr += fs1.format('-------------','--------------')
 
-		sl = tuple(self.subseeds['long'])
-		ss = tuple(self.subseeds['short'])
+		sl = tuple(self.data['long'])
+		ss = tuple(self.data['short'])
 		body = (fs2.format(sl[n-1],ss[n-1],i=n) for n in r.iterate())
 
 		return hdr + ''.join(body)
+
+class Seed(SeedBase):
+
+	def __init__(self,seed_bin=None):
+		self.subseeds = SubSeedList(self,have_short=True)
+		SeedBase.__init__(self,seed_bin=seed_bin)
+
+	def subseed(self,ss_idx_in,print_msg=False):
+		return self.subseeds.get_subseed_by_ss_idx(ss_idx_in,print_msg=print_msg)
+
+	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
+		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
+
 
 class SubSeedBase(MMGenObject):
 
