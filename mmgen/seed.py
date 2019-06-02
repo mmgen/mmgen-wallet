@@ -97,13 +97,13 @@ class SubSeedList(MMGenObject):
 		if print_msg:
 			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
 		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
-		return SubSeed(self.parent_seed,idx,nonce,length=ss_idx.type)
+		return SubSeed(self,idx,nonce,length=ss_idx.type)
 
 	def get_existing_subseed_by_seed_id(self,sid):
 		for k in ('long','short') if self.have_short else ('long',):
 			if sid in self.data[k]:
 				idx,nonce = self.data[k][sid]
-				return SubSeed(self.parent_seed,idx,nonce,length=k)
+				return SubSeed(self,idx,nonce,length=k)
 
 	def get_subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 
@@ -149,7 +149,7 @@ class SubSeedList(MMGenObject):
 
 		def add_subseed(idx,length):
 			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
-				sid = make_chksum_8(SubSeed.make_subseed_bin(self.parent_seed,idx,nonce,length))
+				sid = make_chksum_8(SubSeed.make_subseed_bin(self,idx,nonce,length))
 				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
@@ -209,21 +209,22 @@ class SubSeed(SeedBase):
 	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx,typeconv=False)
 	max_nonce = 1000
 
-	def __init__(self,parent,idx,nonce,length):
+	def __init__(self,parent_list,idx,nonce,length):
 		self.idx = idx
 		self.nonce = nonce
 		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
-		SeedBase.__init__(self,seed_bin=SubSeed.make_subseed_bin(parent,idx,nonce,length))
+		SeedBase.__init__(self,seed_bin=SubSeed.make_subseed_bin(parent_list,idx,nonce,length))
 
 	@staticmethod
-	def make_subseed_bin(parent,idx:int,nonce:int,length:str):
+	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
+		seed = parent_list.parent_seed
 		short = { 'short': True, 'long': False }[length]
 		# field maximums: idx: 4294967295, nonce: 65535, short (bool): 255
 		scramble_key  = idx.to_bytes(4,'big',signed=False) + \
 						nonce.to_bytes(2,'big',signed=False) + \
 						short.to_bytes(1,'big',signed=False)
-		byte_len = 16 if short else parent.length // 8
-		return scramble_seed(parent.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+		byte_len = 16 if short else seed.length // 8
+		return scramble_seed(seed.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
 
 class SeedSource(MMGenObject):
 
