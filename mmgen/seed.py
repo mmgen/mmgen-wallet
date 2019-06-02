@@ -149,7 +149,7 @@ class SubSeedList(MMGenObject):
 
 		def add_subseed(idx,length):
 			for nonce in range(SubSeed.max_nonce): # use nonce to handle Seed ID collisions
-				sid = make_chksum_8(SubSeedBase.make_subseed_bin(self.parent_seed,idx,nonce,length))
+				sid = make_chksum_8(SubSeed.make_subseed_bin(self.parent_seed,idx,nonce,length))
 				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
@@ -202,9 +202,18 @@ class Seed(SeedBase):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
 
-class SubSeedBase(MMGenObject):
+class SubSeed(SeedBase):
 
+	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
+	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
+	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx,typeconv=False)
 	max_nonce = 1000
+
+	def __init__(self,parent,idx,nonce,length):
+		self.idx = idx
+		self.nonce = nonce
+		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
+		SeedBase.__init__(self,seed_bin=SubSeed.make_subseed_bin(parent,idx,nonce,length))
 
 	@staticmethod
 	def make_subseed_bin(parent,idx:int,nonce:int,length:str):
@@ -215,18 +224,6 @@ class SubSeedBase(MMGenObject):
 						short.to_bytes(1,'big',signed=False)
 		byte_len = 16 if short else parent.length // 8
 		return scramble_seed(parent.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
-
-class SubSeed(SeedBase,SubSeedBase):
-
-	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
-	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
-	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx,typeconv=False)
-
-	def __init__(self,parent,idx,nonce,length):
-		self.idx = idx
-		self.nonce = nonce
-		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
-		SeedBase.__init__(self,seed_bin=SubSeedBase.make_subseed_bin(parent,idx,nonce,length))
 
 class SeedSource(MMGenObject):
 
