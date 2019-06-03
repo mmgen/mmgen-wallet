@@ -38,19 +38,19 @@ class subseed(object):
 				seed2 = Seed(seed_bin)
 				ss2_list = seed2.subseeds
 
-				seed2.subseeds.generate(1)
+				seed2.subseeds._generate(1)
 				assert len(ss2_list) == 1, len(ss2_list)
 
-				seed2.subseeds.generate(1) # do nothing
-				seed2.subseeds.generate(2) # append one item
+				seed2.subseeds._generate(1) # do nothing
+				seed2.subseeds._generate(2) # append one item
 
-				seed2.subseeds.generate(5)
+				seed2.subseeds._generate(5)
 				assert len(ss2_list) == 5, len(ss2_list)
 
-				seed2.subseeds.generate(3) # do nothing
+				seed2.subseeds._generate(3) # do nothing
 				assert len(ss2_list) == 5, len(ss2_list)
 
-				seed2.subseeds.generate(10)
+				seed2.subseeds._generate(10)
 				assert len(ss2_list) == 10, len(ss2_list)
 
 				assert seed.pformat() == seed2.pformat()
@@ -92,7 +92,7 @@ class subseed(object):
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
 			seed = Seed(seed_bin)
-			seed.subseeds.generate()
+			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
 			assert len(ss) == g.subseeds, len(ss)
@@ -158,7 +158,7 @@ class subseed(object):
 			seed_bin = bytes.fromhex('12abcdef' * 8)
 			seed = Seed(seed_bin)
 
-			seed.subseeds.generate(ss_count)
+			seed.subseeds._generate(ss_count)
 			ss = seed.subseeds
 
 			assert seed.subseed(last_idx).sid == last_sid, seed.subseed(last_idx).sid
