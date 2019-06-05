@@ -206,6 +206,18 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
+	def splitlist(self,count,id_str=None):
+		return SeedSplitList(self,count,id_str)
+
+	@staticmethod
+	def join_splits(seed_list): # seed_list must be a generator
+		seed1 = next(seed_list)
+		length = seed1.length
+		ret = int(seed1.data.hex(),16)
+		for ss in seed_list:
+			assert ss.length == length,'Seed length mismatch! {} != {}'.format(ss.length,length)
+			ret ^= int(ss.data.hex(),16)
+		return Seed(seed_bin=ret.to_bytes(length // 8,'big'))
 
 class SubSeed(SeedBase):
 
@@ -230,6 +242,109 @@ class SubSeed(SeedBase):
 						short.to_bytes(1,'big',signed=False)
 		byte_len = 16 if short else seed.length // 8
 		return scramble_seed(seed.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+
+class SeedSplitList(SubSeedList):
+	have_short = False
+	split_type = 'N-of-N'
+	id_str = 'default'
+
+	count = MMGenImmutableAttr('count',int,typeconv=False)
+
+	def __init__(self,parent_seed,count,id_str=None):
+		self.member_type = SeedSplit
+		self.parent_seed = parent_seed
+		self.id_str = MMGenSeedSplitIDString(id_str if id_str is not None else type(self).id_str)
+
+		assert issubclass(type(count),int) and count > 1,(
+			"{!r}: illegal value for 'count' (not a positive integer greater than one)".format(count))
+		assert count <= g.max_seed_splits,(
+			"{!r}: illegal value for 'count' (> {})".format(count,g.max_seed_splits))
+		self.count = count
+
+		while True:
+			self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
+			self._generate(count-1)
+			self.last_seed = SeedSplitLast(self)
+			sid = self.last_seed.sid
+			if sid in self.data['long'] or sid == parent_seed.sid:
+				# collision: throw out entire split list and redo with new start nonce
+				if g.debug_subseed:
+					self._collision_debug_msg(sid,count,self.nonce_start,nonce_desc='nonce_start')
+				self.nonce_start += 1
+			else:
+				self.data['long'][sid] = (self.count,self.nonce_start)
+				break
+
+		if g.debug_subseed:
+			A = parent_seed.data
+			B = self.join().data
+			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
+
+	def get_split_by_idx(self,idx,print_msg=False):
+		if idx == self.count:
+			return self.last_seed # TODO: msg?
+		else:
+			ss_idx = SubSeedIdx(str(idx) + 'L')
+			return self.get_subseed_by_ss_idx(ss_idx,print_msg=print_msg)
+
+	def get_split_by_seed_id(self,sid,last_idx=None,print_msg=False):
+		if sid == self.data['long'].key(self.count-1):
+			return self.last_seed # TODO: msg?
+		else:
+			return self.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
+
+	def join(self):
+		return Seed.join_splits(self.get_split_by_idx(i+1) for i in range(len(self)))
+
+	def format(self):
+		fs1 = '    {}\n'
+		fs2 = '{i:>5}: {}\n'
+
+		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
+		assert self.split_type == 'N-of-N'
+		hdr += '    {} {c}-of-{c} (XOR)\n'.format('Split Type:',c=self.count)
+		hdr += '    {} {}\n\n'.format('ID String:',self.id_str.hl())
+		hdr += fs1.format('Splits')
+		hdr += fs1.format('------')
+
+		sl = self.data['long'].keys
+		body = (fs2.format(sl[n],i=n+1) for n in range(len(self)))
+
+		return hdr + ''.join(body)
+
+class SeedSplit(SubSeed):
+
+	@staticmethod
+	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
+		seed = parent_list.parent_seed
+		assert parent_list.have_short == False
+		assert length == 'long'
+		# field maximums: id_str: none (256 chars), count: 65535 (1024), idx: 65535 (1024), nonce: 65535 (1000)
+		scramble_key = '{}:{}:'.format(parent_list.split_type,parent_list.id_str).encode() + \
+						parent_list.count.to_bytes(2,'big',signed=False) + \
+						idx.to_bytes(2,'big',signed=False) + \
+						nonce.to_bytes(2,'big',signed=False)
+		byte_len = seed.length // 8
+		return scramble_seed(seed.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+
+class SeedSplitLast(SubSeed):
+
+	def __init__(self,parent_list):
+		self.idx = parent_list.count
+		self.nonce = 0
+		self.ss_idx = SubSeedIdx(str(self.idx) + 'L')
+		SeedBase.__init__(self,seed_bin=self.make_subseed_bin(parent_list))
+
+	@staticmethod
+	def make_subseed_bin(parent_list):
+		seed_list = (parent_list.get_subseed_by_ss_idx(str(i+1)+'L') for i in range(len(parent_list)))
+		seed = parent_list.parent_seed
+
+		ret = int(seed.data.hex(),16)
+		for ss in seed_list:
+			ret ^= int(ss.data.hex(),16)
+
+		return ret.to_bytes(seed.length // 8,'big')
 
 class SeedSource(MMGenObject):
 

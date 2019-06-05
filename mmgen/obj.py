@@ -862,6 +862,9 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
 
+class MMGenSeedSplitIDString(MMGenPWIDString):
+	desc = 'seed split ID string'
+
 class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	width = 1
 	trunc_ok = False
