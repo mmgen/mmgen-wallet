@@ -6,7 +6,7 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit test for the MMGen 
 import os
 from mmgen.common import *
 
-class tx_deserialize(object):
+class unit_test(object):
 
 	def _get_core_repo_root(self):
 		self.core_repo_root = os.getenv('CORE_REPO_ROOT')
@@ -87,9 +87,10 @@ class tx_deserialize(object):
 
 		def test_core_vectors():
 			self._get_core_repo_root()
-			fn = os.path.join(self.core_repo_root,'src/test/data/tx_valid.json')
+			fn_b = 'src/test/data/tx_valid.json'
+			fn = os.path.join(self.core_repo_root,fn_b)
 			data = json.loads(open(fn).read())
-			print_info(fn,'Core test vectors')
+			print_info(fn_b,'Core test vectors')
 			n = 1
 			for e in data:
 				if type(e[0]) == list:

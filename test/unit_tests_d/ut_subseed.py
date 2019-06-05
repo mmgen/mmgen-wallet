@@ -5,7 +5,7 @@ test/unit_tests_d/ut_subseed: subseed unit test for the MMGen suite
 
 from mmgen.common import *
 
-class subseed(object):
+class unit_test(object):
 
 	def run_test(self,name):
 		from mmgen.seed import Seed
@@ -173,7 +173,7 @@ class subseed(object):
 					collisions += ss.data[k][sid][1]
 
 			assert collisions == collisions_chk, collisions
-			msg_r('({} collisions, last_sid {}) '.format(collisions,last_sid))
+			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))
 			msg('OK')
 
 		basic_ops()

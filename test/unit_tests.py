@@ -68,12 +68,11 @@ try:
 			die(1,"'{}': test not recognized".format(test))
 
 	for test in (cmd_args or all_tests):
-		exec('from test.unit_tests_d.ut_{m} import {m}'.format(m=test))
+		exec('from test.unit_tests_d.ut_{m} import unit_test'.format(m=test))
 		gmsg('Running unit test {}'.format(test))
-		t = globals()[test]()
-		if not t.run_test(test):
+		if not unit_test().run_test(test):
 			rdie(1,'Unit test {!r} failed'.format(test))
-		exec('del {}'.format(test))
+		exec('del unit_test'.format(test))
 
 	exit_msg()
 except KeyboardInterrupt:
