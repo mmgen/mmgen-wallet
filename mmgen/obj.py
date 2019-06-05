@@ -112,6 +112,36 @@ class MMGenObject(object):
 		import re
 		return re.sub('\n+','\n',''.join(out))
 
+# dict that keeps a list of keys for efficient lookup by index
+class IndexedDict(dict):
+
+	def __init__(self,*args,**kwargs):
+		if args or kwargs:
+			self.die('initializing values via constructor')
+		self.__keylist = []
+		return dict.__init__(self,*args,**kwargs)
+
+	def __setitem__(self,key,value):
+		if key in self:
+			self.die('reassignment to existing key')
+		self.__keylist.append(key)
+		return dict.__setitem__(self,key,value)
+
+	@property
+	def keys(self):
+		return self.__keylist
+
+	def key(self,idx):
+		return self.__keylist[idx]
+
+	def __delitem__(self,*args): self.die('item deletion')
+	def move_to_end(self,*args): self.die('item moving')
+	def clear(self,*args):       self.die('clearing')
+	def update(self,*args):      self.die('updating')
+
+	def die(self,desc):
+		raise NotImplementedError('{} not implemented for type {}'.format(desc,type(self).__name__))
+
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
 class AddrListList(list,MMGenObject): pass

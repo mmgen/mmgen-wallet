@@ -70,14 +70,13 @@ class SubSeedList(MMGenObject):
 	def __init__(self,parent_seed):
 		self.member_type = SubSeed
 		self.parent_seed = parent_seed
-		from collections import OrderedDict
-		self.data = { 'long': OrderedDict(), 'short': OrderedDict() }
+		self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
 
 	def __len__(self):
 		return len(self.data['long'])
 
 	def get_params_by_ss_idx(self,ss_idx):
-		sid = list(self.data[ss_idx.type].keys())[ss_idx.idx-1]
+		sid = self.data[ss_idx.type].key(ss_idx.idx-1)
 		idx,nonce = self.data[ss_idx.type][sid]
 		return (sid,idx,nonce)
 
@@ -184,8 +183,8 @@ class SubSeedList(MMGenObject):
 		hdr += fs1.format('Long Subseeds','Short Subseeds')
 		hdr += fs1.format('-------------','--------------')
 
-		sl = tuple(self.data['long'])
-		ss = tuple(self.data['short'])
+		sl = self.data['long'].keys
+		ss = self.data['short'].keys
 		body = (fs2.format(sl[n-1],ss[n-1],i=n) for n in r.iterate())
 
 		return hdr + ''.join(body)
