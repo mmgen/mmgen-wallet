@@ -66,6 +66,7 @@ class SeedBase(MMGenObject):
 
 class SubSeedList(MMGenObject):
 	have_short = True
+	nonce_start = 0
 
 	def __init__(self,parent_seed):
 		self.member_type = SubSeed
@@ -74,11 +75,6 @@ class SubSeedList(MMGenObject):
 
 	def __len__(self):
 		return len(self.data['long'])
-
-	def get_params_by_ss_idx(self,ss_idx):
-		sid = self.data[ss_idx.type].key(ss_idx.idx-1)
-		idx,nonce = self.data[ss_idx.type][sid]
-		return (sid,idx,nonce)
 
 	def get_subseed_by_ss_idx(self,ss_idx_in,print_msg=False):
 		ss_idx = SubSeedIdx(ss_idx_in)
@@ -92,20 +88,26 @@ class SubSeedList(MMGenObject):
 		if ss_idx.idx > len(self):
 			self._generate(ss_idx.idx)
 
-		sid,idx,nonce = self.get_params_by_ss_idx(ss_idx)
+		sid = self.data[ss_idx.type].key(ss_idx.idx-1)
+		idx,nonce = self.data[ss_idx.type][sid]
+		if idx != ss_idx.idx:
+			m = "{} != {}: self.data[{t!r}].key(i) does not match self.data[{t!r}][i]!"
+			die(3,m.format(idx,ss_idx.idx,t=ss_idx.type))
 
 		if print_msg:
 			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
-		assert idx == ss_idx.idx, "{} != {}: subseed list idx does not match subseed idx!".format(idx,ss_idx.idx)
-		return self.member_type(self,idx,nonce,length=ss_idx.type)
 
-	def get_existing_subseed_by_seed_id(self,sid):
-		for k in ('long','short') if self.have_short else ('long',):
-			if sid in self.data[k]:
-				idx,nonce = self.data[k][sid]
-				return self.member_type(self,idx,nonce,length=k)
+		seed = self.member_type(self,idx,nonce,length=ss_idx.type)
+		assert seed.sid == sid,'{} != {}: Seed ID mismatch!'.format(seed.sid,sid)
+		return seed
 
 	def get_subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
+
+		def get_existing_subseed_by_seed_id(sid):
+			for k in ('long','short') if self.have_short else ('long',):
+				if sid in self.data[k]:
+					idx,nonce = self.data[k][sid]
+					return self.member_type(self,idx,nonce,length=k)
 
 		def do_msg(subseed):
 			if print_msg:
@@ -119,7 +121,7 @@ class SubSeedList(MMGenObject):
 		if last_idx == None:
 			last_idx = g.subseeds
 
-		subseed = self.get_existing_subseed_by_seed_id(sid)
+		subseed = get_existing_subseed_by_seed_id(sid)
 		if subseed:
 			do_msg(subseed)
 			return subseed
@@ -129,10 +131,19 @@ class SubSeedList(MMGenObject):
 
 		self._generate(last_idx,last_sid=sid)
 
-		subseed = self.get_existing_subseed_by_seed_id(sid)
+		subseed = get_existing_subseed_by_seed_id(sid)
 		if subseed:
 			do_msg(subseed)
 			return subseed
+
+	def _collision_debug_msg(self,sid,idx,nonce,nonce_desc='nonce'):
+		slen = 'short' if sid in self.data['short'] else 'long'
+		m1 = 'add_subseed(idx={},{}):'.format(idx,slen)
+		if sid == self.parent_seed.sid:
+			m2 = 'collision with parent Seed ID {},'.format(sid)
+		else:
+			m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.data[slen][sid][0],slen)
+		msg('{:30} {:46} incrementing {} to {}'.format(m1,m2,nonce_desc,nonce+1))
 
 	def _generate(self,last_idx=None,last_sid=None):
 
@@ -148,19 +159,13 @@ class SubSeedList(MMGenObject):
 			last_sid = SeedID(sid=last_sid)
 
 		def add_subseed(idx,length):
-			for nonce in range(self.member_type.max_nonce): # use nonce to handle Seed ID collisions
+			for nonce in range(self.nonce_start,self.member_type.max_nonce): # use nonce to handle SeedID collisions
 				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
 				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
 				elif g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
-					k = ('long','short')[sid in self.data['short']]
-					m1 = 'add_subseed(idx={},{}):'.format(idx,length)
-					if sid == self.parent_seed.sid:
-						m2 = 'collision with parent Seed ID {},'.format(sid)
-					else:
-						m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.data[k][sid][0],k)
-					msg('{:30} {:46} incrementing nonce to {}'.format(m1,m2,nonce+1))
+					self._collision_debug_msg(sid,idx,nonce)
 			else: # must exit here, as this could leave self.data in inconsistent state
 				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
 
@@ -213,13 +218,13 @@ class SubSeed(SeedBase):
 		self.idx = idx
 		self.nonce = nonce
 		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
-		SeedBase.__init__(self,seed_bin=SubSeed.make_subseed_bin(parent_list,idx,nonce,length))
+		SeedBase.__init__(self,seed_bin=type(self).make_subseed_bin(parent_list,idx,nonce,length))
 
 	@staticmethod
 	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
 		seed = parent_list.parent_seed
 		short = { 'short': True, 'long': False }[length]
-		# field maximums: idx: 4294967295, nonce: 65535, short (bool): 255
+		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)
 		scramble_key  = idx.to_bytes(4,'big',signed=False) + \
 						nonce.to_bytes(2,'big',signed=False) + \
 						short.to_bytes(1,'big',signed=False)
@@ -438,11 +443,11 @@ an empty passphrase, just hit ENTER twice.
 		while True:
 			ret = my_raw_input(p)
 			if ret:
-				if ret in g.hash_presets.keys():
+				if ret in g.hash_presets:
 					self.ssdata.hash_preset = ret
 					return ret
 				else:
-					msg('Invalid input.  Valid choices are {}'.format(', '.join(sorted(g.hash_presets.keys()))))
+					msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
 			else:
 				self.ssdata.hash_preset = hp
 				return hp

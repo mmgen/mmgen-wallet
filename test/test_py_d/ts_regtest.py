@@ -275,6 +275,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn = get_file_with_ext(self._user_dir(user),'mmdat')
 		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True)
 		t.passphrase('MMGen wallet',rt_pw)
+		t.expect('Hashing passphrase...done')
 		sid = t.read().strip()[:8]
 		self.usr_subsids[user][subseed_idx] = sid
 		return sid

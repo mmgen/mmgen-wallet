@@ -586,8 +586,8 @@ class SeedID(str,Hilite,InitErrors):
 		cls.arg_chk(on_fail)
 		try:
 			if seed:
-				from mmgen.seed import Seed,SubSeed
-				assert type(seed) in (Seed,SubSeed),'not a Seed or SubSeed instance'
+				from mmgen.seed import SeedBase
+				assert issubclass(type(seed),SeedBase),'not a subclass of SeedBase'
 				from mmgen.util import make_chksum_8
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
