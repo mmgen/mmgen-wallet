@@ -221,10 +221,11 @@ class g(object):
 	key_generators = 'python-ecdsa','secp256k1' # '1','2'
 	key_generator  = 2 # secp256k1 is default
 
-	use_standalone_scrypt_module = False
+	force_standalone_scrypt_module = False
+	# Scrypt params: 'id_num': [N, p, r] (N is an exponent of two)
+	# NB: hashlib.scrypt in Python (>=v3.6) supports max N value of 14.  This means that
+	# for hash presets > 3 the standalone scrypt library must be used!
 	hash_presets = {
-	#   Scrypt params:
-	#   ID    N   p  r (N is an exponent of two)
 		'1': [12, 8, 1],
 		'2': [13, 8, 4],
 		'3': [14, 8, 8],

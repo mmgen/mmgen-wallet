@@ -111,13 +111,24 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	N,r,p = get_hash_params(hash_preset)
 	if type(passwd) == str: passwd = passwd.encode()
 
-	try:
-		assert not g.use_standalone_scrypt_module
+	def do_hashlib_scrypt():
 		from hashlib import scrypt # Python >= v3.6
 		return scrypt(passwd,salt=salt,n=2**N,r=r,p=p,maxmem=0,dklen=buflen)
-	except:
+
+	def do_standalone_scrypt():
 		import scrypt
 		return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
+
+	msg_r('Hashing passphrase...')
+	# hashlib.scrypt doesn't support N > 14 (hash preset 3)
+	if N > 14 or g.force_standalone_scrypt_module:
+		ret = do_standalone_scrypt()
+	else:
+		try: ret = do_hashlib_scrypt()
+		except: ret = do_standalone_scrypt()
+	msg('done')
+
+	return ret
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
 	if from_what: desc += ' from '
