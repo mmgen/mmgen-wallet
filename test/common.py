@@ -136,3 +136,29 @@ def init_coverage():
 	try: os.mkdir(coverdir,0o755)
 	except: pass
 	return coverdir,acc_file
+
+devnull_fh = open(('/dev/null','null.out')[g.platform == 'win'],'w')
+def silence():
+	if not (opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output)):
+		g.stdout = g.stderr = devnull_fh
+
+def end_silence():
+	if not (opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output)):
+		g.stdout = sys.stdout
+		g.stderr = sys.stderr
+
+def omsg(s):
+	sys.stderr.write(s + '\n')
+def omsg_r(s):
+	sys.stderr.write(s)
+	sys.stderr.flush()
+def imsg(s):
+	if opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output):
+		omsg(s)
+def imsg_r(s):
+	if opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output):
+		omsg_r(s)
+def iqmsg(s):
+	if not opt.quiet: omsg(s)
+def iqmsg_r(s):
+	if not opt.quiet: omsg_r(s)

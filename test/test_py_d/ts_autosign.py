@@ -23,7 +23,7 @@ ts_autosign.py: Autosign tests for the test.py test suite
 import os,shutil
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from test.common import read_from_file
+from test.common import *
 from test.test_py_d.common import *
 
 from test.test_py_d.ts_base import *

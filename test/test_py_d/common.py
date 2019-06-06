@@ -80,29 +80,6 @@ def confirm_continue():
 	else:
 		raise KeyboardInterrupt('Exiting at user request')
 
-def omsg(s):
-	sys.stderr.write(s + '\n')
-def omsg_r(s):
-	sys.stderr.write(s)
-def imsg(s):
-	if opt.exact_output or opt.verbose: omsg(s)
-def imsg_r(s):
-	if opt.exact_output or opt.verbose: omsg_r(s)
-def iqmsg(s):
-	if not opt.quiet: omsg(s)
-def iqmsg_r(s):
-	if not opt.quiet: omsg_r(s)
-
-devnull_fh = open(('/dev/null','null.out')[g.platform == 'win'],'w')
-def silence():
-	if not (opt.verbose or opt.exact_output):
-		g.stdout = g.stderr = devnull_fh
-
-def end_silence():
-	if not (opt.verbose or opt.exact_output):
-		g.stdout = sys.stdout
-		g.stderr = sys.stderr
-
 def randbool():
 	return os.urandom(1).hex()[0] in '02468ace'
 
