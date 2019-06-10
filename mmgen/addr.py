@@ -494,7 +494,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		if g.proto.is_testnet():
 			scramble_key += ':testnet'
 		dmsg_sc('str',scramble_key)
-		return scramble_seed(seed,scramble_key.encode(),g.scramble_hash_rounds)
+		return scramble_seed(seed,scramble_key.encode())
 
 	def encrypt(self,desc='new key list'):
 		from mmgen.crypto import mmgen_encrypt
@@ -883,7 +883,7 @@ Record this checksum: it will be used to verify the password file in the future
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
 		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
 		from mmgen.crypto import scramble_seed
-		return scramble_seed(seed,scramble_key.encode(),g.scramble_hash_rounds)
+		return scramble_seed(seed,scramble_key.encode())
 
 class AddrData(MMGenObject):
 	msgs = {

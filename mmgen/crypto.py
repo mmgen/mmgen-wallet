@@ -37,18 +37,17 @@ keystrokes will also be used as a source of randomness.
 }
 
 def sha256_rounds(s,n):
-	assert is_int(n) and n > 0
 	for i in range(n):
 		s = sha256(s).digest()
 	return s
 
-def scramble_seed(seed,scramble_key,hash_rounds):
+def scramble_seed(seed,scramble_key):
 	import hmac
-	scr_seed = hmac.new(seed,scramble_key,sha256).digest()
+	step1 = hmac.new(seed,scramble_key,sha256).digest()
 	if g.debug:
 		fs = 'Seed:  {!r}\nScramble key: {}\nScrambled seed: {}\n'
-		msg(fs.format(seed.hex(),scramble_key,scr_seed.hex()))
-	return sha256_rounds(scr_seed,hash_rounds)
+		msg(fs.format(seed.hex(),scramble_key,step1.hex()))
+	return sha256_rounds(step1,g.scramble_hash_rounds)
 
 def encrypt_seed(seed,key):
 	return encrypt_data(seed,key,desc='seed')

@@ -241,7 +241,7 @@ class SubSeed(SeedBase):
 						nonce.to_bytes(2,'big',signed=False) + \
 						short.to_bytes(1,'big',signed=False)
 		byte_len = 16 if short else seed.length // 8
-		return scramble_seed(seed.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
 class SeedSplitList(SubSeedList):
 	have_short = False
@@ -325,7 +325,7 @@ class SeedSplit(SubSeed):
 						idx.to_bytes(2,'big',signed=False) + \
 						nonce.to_bytes(2,'big',signed=False)
 		byte_len = seed.length // 8
-		return scramble_seed(seed.data,scramble_key,g.scramble_hash_rounds)[:byte_len]
+		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
 class SeedSplitLast(SubSeed):
 
