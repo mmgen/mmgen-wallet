@@ -211,7 +211,6 @@ class g(object):
 	seed_lens = 128,192,256
 	scramble_hash_rounds = 10
 	subseeds = 100
-	max_seed_splits = 1024
 
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16

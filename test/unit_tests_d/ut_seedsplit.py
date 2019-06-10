@@ -9,6 +9,7 @@ class unit_test(object):
 
 	def run_test(self,name):
 		from mmgen.seed import Seed
+		from mmgen.obj import SeedSplitIdx
 
 		def basic_ops():
 			test_data = {
@@ -33,44 +34,30 @@ class unit_test(object):
 					seed = Seed(seed_bin)
 					assert seed.sid == b, seed.sid
 
-					splitlist = seed.splitlist(2,id_str)
-					A = len(splitlist)
-					assert A == 2, A
+					for split_count,j,k,l in ((2,c,c,d),(5,e,f,h)):
 
-					s = splitlist.format()
-					vmsg_r('\n{}'.format(s))
-					assert len(s.strip().split('\n')) == 8, s
+						splitlist = seed.splitlist(split_count,id_str)
+						A = len(splitlist)
+						assert A == split_count, A
 
-					A = splitlist.get_split_by_idx(1).sid
-					B = splitlist.get_split_by_seed_id(c).sid
-					assert A == B == c, A
+						s = splitlist.format()
+						vmsg_r('\n{}'.format(s))
+						assert len(s.strip().split('\n')) == split_count+6, s
 
-					A = splitlist.get_split_by_idx(2).sid
-					B = splitlist.get_split_by_seed_id(d).sid
-					assert A == B == d, A
+						A = splitlist.get_split_by_idx(1).sid
+						B = splitlist.get_split_by_seed_id(j).sid
+						assert A == B == j, A
 
-					splitlist = seed.splitlist(5,id_str)
-					A = len(splitlist)
-					assert A == 5, A
+						A = splitlist.get_split_by_idx(split_count-1).sid
+						B = splitlist.get_split_by_seed_id(k).sid
+						assert A == B == k, A
 
-					s = splitlist.format()
-					vmsg_r('\n{}'.format(s))
-					assert len(s.strip().split('\n')) == 11, s
+						A = splitlist.get_split_by_idx(split_count).sid
+						B = splitlist.get_split_by_seed_id(l).sid
+						assert A == B == l, A
 
-					A = splitlist.get_split_by_idx(1).sid
-					B = splitlist.get_split_by_seed_id(e).sid
-					assert A == B == e, A
-
-					A = splitlist.get_split_by_idx(4).sid
-					B = splitlist.get_split_by_seed_id(f).sid
-					assert A == B == f, A
-
-					A = splitlist.get_split_by_idx(5).sid
-					B = splitlist.get_split_by_seed_id(h).sid
-					assert A == B == h, A
-
-					A = splitlist.join().sid
-					assert A == b, A
+						A = splitlist.join().sid
+						assert A == b, A
 
 				msg('OK')
 
@@ -80,7 +67,7 @@ class unit_test(object):
 			seed_bin = bytes.fromhex('deadbeef' * 8)
 			seed = Seed(seed_bin)
 
-			splitlist = seed.splitlist(g.max_seed_splits)
+			splitlist = seed.splitlist(SeedSplitIdx.max_val)
 			s = splitlist.format()
 #			vmsg_r('\n{}'.format(s))
 			assert len(s.strip().split('\n')) == 1030, s
@@ -105,8 +92,8 @@ class unit_test(object):
 			seed_bin = bytes.fromhex('1dabcdef' * 4)
 			seed = Seed(seed_bin)
 
-			g.max_seed_splits = ss_count
-			splitlist = seed.splitlist(g.max_seed_splits)
+			SeedSplitIdx.max_val = ss_count
+			splitlist = seed.splitlist(ss_count)
 			A = splitlist.get_split_by_idx(ss_count).sid
 			B = splitlist.get_split_by_seed_id(last_sid).sid
 			assert A == last_sid, A

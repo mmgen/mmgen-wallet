@@ -321,18 +321,28 @@ class MMGenListItem(MMGenObject):
 			raise AttributeError(m.format(name,type(self)))
 		return object.__setattr__(self,name,value)
 
-class AddrIdx(int,InitErrors):
-	max_digits = 7
+class MMGenIdx(int,InitErrors):
+	min_val = 1
+	max_val = None
+	max_digits = None
 	def __new__(cls,num,on_fail='die'):
 		cls.arg_chk(on_fail)
 		try:
 			assert type(num) is not float,'is float'
 			me = int.__new__(cls,num)
-			assert len(str(me)) <= cls.max_digits,'is more than {} digits'.format(cls.max_digits)
-			assert me > 0,'is less than one'
+			if cls.max_digits:
+				assert len(str(me)) <= cls.max_digits,'has more than {} digits'.format(cls.max_digits)
+			if cls.max_val:
+				assert me <= cls.max_val,'is greater than {}'.format(cls.max_val)
+			assert me >= cls.min_val,'is less than {}'.format(cls.min_val)
 			return me
 		except Exception as e:
 			return cls.init_fail(e,num)
+
+class SeedSplitIdx(MMGenIdx): max_val = 1024
+class SeedSplitCount(SeedSplitIdx): min_val = 2
+class MasterSplitIdx(MMGenIdx): max_val = 1024
+class AddrIdx(MMGenIdx): max_digits = 7
 
 class AddrIdxList(list,InitErrors,MMGenObject):
 	max_len = 1000000
@@ -862,7 +872,7 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
 
-class MMGenSeedSplitIDString(MMGenPWIDString):
+class SeedSplitIDString(MMGenPWIDString):
 	desc = 'seed split ID string'
 
 class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):

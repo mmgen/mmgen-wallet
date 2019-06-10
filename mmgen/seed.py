@@ -210,26 +210,40 @@ class Seed(SeedBase):
 		return SeedSplitList(self,count,id_str)
 
 	@staticmethod
-	def join_splits(seed_list): # seed_list must be a generator
-		seed1 = next(seed_list)
-		length = seed1.length
-		ret = int(seed1.data.hex(),16)
+	def join_splits(seed_list):
+		if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
+			seed_list = iter(seed_list)
+
+		class d(object):
+			slen = None
+			ret = 0
+			count = 0
+
+		def add_split(ss):
+			if d.slen:
+				assert ss.length == d.slen,'Seed length mismatch! {} != {}'.format(ss.length,d.slen)
+			else:
+				d.slen = ss.length
+			d.ret ^= int(ss.data.hex(),16)
+			d.count += 1
+
 		for ss in seed_list:
-			assert ss.length == length,'Seed length mismatch! {} != {}'.format(ss.length,length)
-			ret ^= int(ss.data.hex(),16)
-		return Seed(seed_bin=ret.to_bytes(length // 8,'big'))
+			add_split(ss)
+
+		SeedSplitCount(d.count)
+		return Seed(seed_bin=d.ret.to_bytes(d.slen // 8,'big'))
 
 class SubSeed(SeedBase):
 
 	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
 	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
-	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx,typeconv=False)
+	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx)
 	max_nonce = 1000
 
 	def __init__(self,parent_list,idx,nonce,length):
 		self.idx = idx
 		self.nonce = nonce
-		self.ss_idx = SubSeedIdx(str(idx) + { 'long': 'L', 'short': 'S' }[length])
+		self.ss_idx = str(idx) + { 'long': 'L', 'short': 'S' }[length]
 		SeedBase.__init__(self,seed_bin=type(self).make_subseed_bin(parent_list,idx,nonce,length))
 
 	@staticmethod
@@ -246,26 +260,21 @@ class SubSeed(SeedBase):
 class SeedSplitList(SubSeedList):
 	have_short = False
 	split_type = 'N-of-N'
-	id_str = 'default'
 
-	count = MMGenImmutableAttr('count',int,typeconv=False)
+	count = MMGenImmutableAttr('count',SeedSplitCount)
+	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
 
 	def __init__(self,parent_seed,count,id_str=None):
 		self.member_type = SeedSplit
 		self.parent_seed = parent_seed
-		self.id_str = MMGenSeedSplitIDString(id_str if id_str is not None else type(self).id_str)
-
-		assert issubclass(type(count),int) and count > 1,(
-			"{!r}: illegal value for 'count' (not a positive integer greater than one)".format(count))
-		assert count <= g.max_seed_splits,(
-			"{!r}: illegal value for 'count' (> {})".format(count,g.max_seed_splits))
+		self.id_str = id_str or 'default'
 		self.count = count
 
 		while True:
 			self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
 			self._generate(count-1)
-			self.last_seed = SeedSplitLast(self)
-			sid = self.last_seed.sid
+			self.last_split = SeedSplitLast(self)
+			sid = self.last_split.sid
 			if sid in self.data['long'] or sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
 				if g.debug_subseed:
@@ -280,28 +289,28 @@ class SeedSplitList(SubSeedList):
 			B = self.join().data
 			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
 
-	def get_split_by_idx(self,idx,print_msg=False):
+	def get_split_by_idx(self,idx):
 		if idx == self.count:
-			return self.last_seed # TODO: msg?
+			return self.last_split
 		else:
 			ss_idx = SubSeedIdx(str(idx) + 'L')
-			return self.get_subseed_by_ss_idx(ss_idx,print_msg=print_msg)
+			return self.get_subseed_by_ss_idx(ss_idx)
 
-	def get_split_by_seed_id(self,sid,last_idx=None,print_msg=False):
+	def get_split_by_seed_id(self,sid,last_idx=None):
 		if sid == self.data['long'].key(self.count-1):
-			return self.last_seed # TODO: msg?
+			return self.last_split
 		else:
-			return self.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
+			return self.get_subseed_by_seed_id(sid,last_idx=last_idx)
 
 	def join(self):
 		return Seed.join_splits(self.get_split_by_idx(i+1) for i in range(len(self)))
 
 	def format(self):
+		assert self.split_type == 'N-of-N'
 		fs1 = '    {}\n'
 		fs2 = '{i:>5}: {}\n'
 
 		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
-		assert self.split_type == 'N-of-N'
 		hdr += '    {} {c}-of-{c} (XOR)\n'.format('Split Type:',c=self.count)
 		hdr += '    {} {}\n\n'.format('ID String:',self.id_str.hl())
 		hdr += fs1.format('Splits')
@@ -329,15 +338,16 @@ class SeedSplit(SubSeed):
 
 class SeedSplitLast(SubSeed):
 
+	idx = MMGenImmutableAttr('idx',SeedSplitIdx)
+	nonce = 0
+
 	def __init__(self,parent_list):
 		self.idx = parent_list.count
-		self.nonce = 0
-		self.ss_idx = SubSeedIdx(str(self.idx) + 'L')
 		SeedBase.__init__(self,seed_bin=self.make_subseed_bin(parent_list))
 
 	@staticmethod
 	def make_subseed_bin(parent_list):
-		seed_list = (parent_list.get_subseed_by_ss_idx(str(i+1)+'L') for i in range(len(parent_list)))
+		seed_list = (parent_list.get_split_by_idx(i+1) for i in range(len(parent_list)))
 		seed = parent_list.parent_seed
 
 		ret = int(seed.data.hex(),16)
