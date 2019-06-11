@@ -11,7 +11,7 @@ class unit_test(object):
 		from mmgen.seed import Seed
 		from mmgen.obj import SeedShareIdx
 
-		def basic_ops():
+		def basic_ops(master_idx):
 			test_data = {
 				'default': (
 					(8,'4710FBF0','B3D9411B','2670E83D','D1FC57ED','AE49CABE','63FFBA62',256),
@@ -24,9 +24,32 @@ class unit_test(object):
 					(4,'43670520','77140076','EA82CB30','80F7AEDE','D168D768','77BE57AA',128),
 				)
 			}
+			test_data_master = {
+				'1': {
+					'default': (
+						(8,'4710FBF0','B512A312','3588E156','9374255D','3E87A907','752A2E4E',256),
+						(4,'43670520','05880E2B','C6B438D4','5FF9B5DF','778E9C60','2C01F046',128) ),
+					'φυβαρ': (
+						(8,'4710FBF0','5FA963B0','69A1F56A','25789CC4','9777A750','E17B9B8B',256),
+						(4,'43670520','AF8BFDF8','66F319BE','A5E40978','927549D2','93B2418B',128),
+					)
+				},
+				'5': {
+					'default': (
+						(8,'4710FBF0','A8A34BC0','F69B6CF8','234B5DCD','BB004DC5','08DC9776',256),
+						(4,'43670520','C887A2D6','86AE9445','3188AD3D','07339882','BE3FE72A',128) ),
+
+					'φυβαρ': (
+						(8,'4710FBF0','89C35D99','B1CD5854','8414652C','32C24668','17CA1E19',256),
+						(4,'43670520','06929789','32E8E375','C6AC3C9D','4BEA2AB2','15AFC7F2',128)
+					)
+				}
+			}
+			if master_idx:
+				test_data = test_data_master[str(master_idx)]
 
 			for id_str in (None,'default','φυβαρ'):
-				msg_r('Testing basic ops (id_str={!r})...'.format(id_str))
+				msg_r('Testing basic ops (id_str={!r}, master_idx={})...'.format(id_str,master_idx))
 				vmsg('')
 
 				for a,b,c,d,e,f,h,i in test_data[id_str if id_str is not None else 'default']:
@@ -36,7 +59,7 @@ class unit_test(object):
 
 					for share_count,j,k,l in ((2,c,c,d),(5,e,f,h)):
 
-						shares = seed.split(share_count,id_str)
+						shares = seed.split(share_count,id_str,master_idx)
 						A = len(shares)
 						assert A == share_count, A
 
@@ -58,6 +81,11 @@ class unit_test(object):
 
 						A = shares.join().sid
 						assert A == b, A
+
+						if master_idx:
+							slist = [shares.get_share_by_idx(i+1) for i in range(1,len(shares))]
+							A = Seed.join_shares([shares.master_share]+slist,True,master_idx,id_str).sid
+							assert A == b, A
 
 				msg('OK')
 
@@ -109,7 +137,9 @@ class unit_test(object):
 			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))
 			msg('OK')
 
-		basic_ops()
+		basic_ops(master_idx=None)
+		basic_ops(master_idx=1)
+		basic_ops(master_idx=5)
 		defaults_and_limits()
 		collisions()
 

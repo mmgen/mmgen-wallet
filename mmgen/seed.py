@@ -206,11 +206,11 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
-	def split(self,count,id_str=None):
-		return SeedShareList(self,count,id_str)
+	def split(self,count,id_str=None,master_idx=None):
+		return SeedShareList(self,count,id_str,master_idx)
 
 	@staticmethod
-	def join_shares(seed_list):
+	def join_shares(seed_list,use_master=False,master_idx=1,id_str=None):
 		if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 			seed_list = iter(seed_list)
 
@@ -227,8 +227,14 @@ class Seed(SeedBase):
 			d.ret ^= int(ss.data.hex(),16)
 			d.count += 1
 
+		if use_master:
+			master_share = next(seed_list)
+
 		for ss in seed_list:
 			add_share(ss)
+
+		if use_master:
+			add_share(SeedShareMasterJoining(master_idx,master_share,id_str,d.count+1).derived_seed)
 
 		SeedShareCount(d.count)
 		return Seed(seed_bin=d.ret.to_bytes(d.slen // 8,'big'))
@@ -258,20 +264,26 @@ class SubSeed(SeedBase):
 		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
 class SeedShareList(SubSeedList):
+	master_share = None
 	have_short = False
 	split_type = 'N-of-N'
 
 	count = MMGenImmutableAttr('count',SeedShareCount)
 	id_str = MMGenImmutableAttr('id_str',SeedShareIDString)
 
-	def __init__(self,parent_seed,count,id_str=None):
+	def __init__(self,parent_seed,count,id_str=None,master_idx=None):
 		self.member_type = SeedShare
 		self.parent_seed = parent_seed
 		self.id_str = id_str or 'default'
 		self.count = count
 
+		if master_idx:
+			self.master_share = SeedShareMaster(self,master_idx)
+
 		while True:
 			self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
+			if master_idx:
+				self.data['long'][self.master_share.derived_seed.sid] = (1,master_idx)
 			self._generate(count-1)
 			self.last_share = SeedShareLast(self)
 			sid = self.last_share.sid
@@ -292,6 +304,8 @@ class SeedShareList(SubSeedList):
 	def get_share_by_idx(self,idx):
 		if idx == self.count:
 			return self.last_share
+		elif self.master_share and idx == 1:
+			return self.master_share.derived_seed
 		else:
 			ss_idx = SubSeedIdx(str(idx) + 'L')
 			return self.get_subseed_by_ss_idx(ss_idx)
@@ -299,6 +313,8 @@ class SeedShareList(SubSeedList):
 	def get_share_by_seed_id(self,sid,last_idx=None):
 		if sid == self.data['long'].key(self.count-1):
 			return self.last_share
+		elif self.master_share and sid == self.data['long'].key(0):
+			return self.master_share.derived_seed
 		else:
 			return self.get_subseed_by_seed_id(sid,last_idx=last_idx)
 
@@ -309,17 +325,22 @@ class SeedShareList(SubSeedList):
 		assert self.split_type == 'N-of-N'
 		fs1 = '    {}\n'
 		fs2 = '{i:>5}: {}\n'
+		mfs1,mfs2,midx,msid = ('','','','')
+		if self.master_share:
+			mfs1,mfs2 = (' with master share #{} ({})',' master #{} ({})')
+			midx,msid = (self.master_share.idx,self.master_share.sid)
 
 		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
-		hdr += '    {} {c}-of-{c} (XOR)\n'.format('Split Type:',c=self.count)
+		hdr += '    {} {c}-of-{c} (XOR){m}\n'.format('Split Type:',c=self.count,m=mfs1.format(midx,msid))
 		hdr += '    {} {}\n\n'.format('ID String:',self.id_str.hl())
 		hdr += fs1.format('Shares')
 		hdr += fs1.format('------')
 
 		sl = self.data['long'].keys
-		body = (fs2.format(sl[n],i=n+1) for n in range(len(self)))
+		body1 = fs2.format(sl[0]+mfs2.format(midx,msid),i=1)
+		body = (fs2.format(sl[n],i=n+1) for n in range(1,len(self)))
 
-		return hdr + ''.join(body)
+		return hdr + body1 + ''.join(body)
 
 class SeedShare(SubSeed):
 
@@ -333,6 +354,8 @@ class SeedShare(SubSeed):
 						parent_list.count.to_bytes(2,'big',signed=False) + \
 						idx.to_bytes(2,'big',signed=False) + \
 						nonce.to_bytes(2,'big',signed=False)
+		if parent_list.master_share:
+			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big',signed=False)
 		byte_len = seed.length // 8
 		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
@@ -355,6 +378,46 @@ class SeedShareLast(SubSeed):
 			ret ^= int(ss.data.hex(),16)
 
 		return ret.to_bytes(seed.length // 8,'big')
+
+class SeedShareMaster(SubSeed):
+
+	idx = MMGenImmutableAttr('idx',MasterShareIdx)
+	nonce = 0
+
+	def __init__(self,parent_list,idx):
+		self.idx = idx
+		self.parent_seed = parent_list.parent_seed
+		SeedBase.__init__(self,self.make_base_seed_bin())
+
+		self.derived_seed = SeedBase(self.make_derived_seed_bin(parent_list.id_str,parent_list.count))
+
+	@property
+	def fn_stem(self):
+		return '{}-master_share{}[{}]'.format(self.parent_seed.sid,self.idx,self.sid)
+
+	def make_base_seed_bin(self):
+		# field maximums: idx: 65535 (1024)
+		scramble_key = b'master:' + self.idx.to_bytes(2,'big',signed=False)
+		byte_len = self.parent_seed.length // 8
+		return scramble_seed(self.parent_seed.data,scramble_key)[:byte_len]
+
+	def make_derived_seed_bin(self,id_str,count):
+		# field maximums: id_str: none (256 chars), count: 65535 (1024)
+		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big',signed=False)
+		byte_len = self.length // 8
+		return scramble_seed(self.data,scramble_key)[:byte_len]
+
+class SeedShareMasterJoining(SeedShareMaster):
+
+	id_str = MMGenImmutableAttr('id_str',SeedShareIDString)
+	count = MMGenImmutableAttr('count',SeedShareCount)
+
+	def __init__(self,idx,base_seed,id_str,count):
+		SeedBase.__init__(self,seed_bin=base_seed.data)
+
+		self.id_str = id_str or 'default'
+		self.count = count
+		self.derived_seed = SeedBase(self.make_derived_seed_bin(self.id_str,self.count))
 
 class SeedSource(MMGenObject):
 
