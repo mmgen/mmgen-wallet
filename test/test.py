@@ -233,8 +233,8 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 			'wpasswd':        'reference password',
 			'kapasswd':      '',
 			'dep_generators':  {
-				'mmdat':       'refwalletgen_1',
-				pwfile:        'refwalletgen_1',
+				'mmdat':       'ref_walletgen_brain_1',
+				pwfile:        'ref_walletgen_brain_1',
 				'addrs':       'refaddrgen_1',
 				'akeys.mmenc': 'refkeyaddrgen_1'
 			},
@@ -245,8 +245,8 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 			'wpasswd':        'reference password',
 			'kapasswd':      '',
 			'dep_generators':  {
-				'mmdat':       'refwalletgen_2',
-				pwfile:        'refwalletgen_2',
+				'mmdat':       'ref_walletgen_brain_2',
+				pwfile:        'ref_walletgen_brain_2',
 				'addrs':       'refaddrgen_2',
 				'akeys.mmenc': 'refkeyaddrgen_2'
 			},
@@ -257,8 +257,8 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 			'wpasswd':        'reference password',
 			'kapasswd':      '',
 			'dep_generators':  {
-				'mmdat':       'refwalletgen_3',
-				pwfile:        'refwalletgen_3',
+				'mmdat':       'ref_walletgen_brain_3',
+				pwfile:        'ref_walletgen_brain_3',
 				'addrs':       'refaddrgen_3',
 				'akeys.mmenc': 'refkeyaddrgen_3'
 			},
