@@ -339,9 +339,9 @@ class MMGenIdx(int,InitErrors):
 		except Exception as e:
 			return cls.init_fail(e,num)
 
-class SeedSplitIdx(MMGenIdx): max_val = 1024
-class SeedSplitCount(SeedSplitIdx): min_val = 2
-class MasterSplitIdx(MMGenIdx): max_val = 1024
+class SeedShareIdx(MMGenIdx): max_val = 1024
+class SeedShareCount(SeedShareIdx): min_val = 2
+class MasterShareIdx(MMGenIdx): max_val = 1024
 class AddrIdx(MMGenIdx): max_digits = 7
 
 class AddrIdxList(list,InitErrors,MMGenObject):
@@ -872,8 +872,8 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
 
-class SeedSplitIDString(MMGenPWIDString):
-	desc = 'seed split ID string'
+class SeedShareIDString(MMGenPWIDString):
+	desc = 'seed share ID string'
 
 class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	width = 1

@@ -9,7 +9,7 @@ class unit_test(object):
 
 	def run_test(self,name):
 		from mmgen.seed import Seed
-		from mmgen.obj import SeedSplitIdx
+		from mmgen.obj import SeedShareIdx
 
 		def basic_ops():
 			test_data = {
@@ -34,29 +34,29 @@ class unit_test(object):
 					seed = Seed(seed_bin)
 					assert seed.sid == b, seed.sid
 
-					for split_count,j,k,l in ((2,c,c,d),(5,e,f,h)):
+					for share_count,j,k,l in ((2,c,c,d),(5,e,f,h)):
 
-						splitlist = seed.splitlist(split_count,id_str)
-						A = len(splitlist)
-						assert A == split_count, A
+						shares = seed.split(share_count,id_str)
+						A = len(shares)
+						assert A == share_count, A
 
-						s = splitlist.format()
+						s = shares.format()
 						vmsg_r('\n{}'.format(s))
-						assert len(s.strip().split('\n')) == split_count+6, s
+						assert len(s.strip().split('\n')) == share_count+6, s
 
-						A = splitlist.get_split_by_idx(1).sid
-						B = splitlist.get_split_by_seed_id(j).sid
+						A = shares.get_share_by_idx(1).sid
+						B = shares.get_share_by_seed_id(j).sid
 						assert A == B == j, A
 
-						A = splitlist.get_split_by_idx(split_count-1).sid
-						B = splitlist.get_split_by_seed_id(k).sid
+						A = shares.get_share_by_idx(share_count-1).sid
+						B = shares.get_share_by_seed_id(k).sid
 						assert A == B == k, A
 
-						A = splitlist.get_split_by_idx(split_count).sid
-						B = splitlist.get_split_by_seed_id(l).sid
+						A = shares.get_share_by_idx(share_count).sid
+						B = shares.get_share_by_seed_id(l).sid
 						assert A == B == l, A
 
-						A = splitlist.join().sid
+						A = shares.join().sid
 						assert A == b, A
 
 				msg('OK')
@@ -67,17 +67,17 @@ class unit_test(object):
 			seed_bin = bytes.fromhex('deadbeef' * 8)
 			seed = Seed(seed_bin)
 
-			splitlist = seed.splitlist(SeedSplitIdx.max_val)
-			s = splitlist.format()
+			shares = seed.split(SeedShareIdx.max_val)
+			s = shares.format()
 #			vmsg_r('\n{}'.format(s))
 			assert len(s.strip().split('\n')) == 1030, s
 
-			A = splitlist.get_split_by_idx(1024).sid
-			B = splitlist.get_split_by_seed_id('4BA23728').sid
+			A = shares.get_share_by_idx(1024).sid
+			B = shares.get_share_by_seed_id('4BA23728').sid
 			assert A == '4BA23728', A
 			assert B == '4BA23728', B
 
-			A = splitlist.join().sid
+			A = shares.join().sid
 			B = seed.sid
 			assert A == B, A
 
@@ -86,24 +86,24 @@ class unit_test(object):
 		def collisions():
 			ss_count,last_sid,collisions_chk = (65535,'B5CBCE0A',3)
 
-			msg_r('Testing Seed ID collisions ({} seed splits)...'.format(ss_count))
+			msg_r('Testing Seed ID collisions ({} seed shares)...'.format(ss_count))
 			vmsg('')
 
 			seed_bin = bytes.fromhex('1dabcdef' * 4)
 			seed = Seed(seed_bin)
 
-			SeedSplitIdx.max_val = ss_count
-			splitlist = seed.splitlist(ss_count)
-			A = splitlist.get_split_by_idx(ss_count).sid
-			B = splitlist.get_split_by_seed_id(last_sid).sid
+			SeedShareIdx.max_val = ss_count
+			shares = seed.split(ss_count)
+			A = shares.get_share_by_idx(ss_count).sid
+			B = shares.get_share_by_seed_id(last_sid).sid
 			assert A == last_sid, A
 			assert B == last_sid, B
 
-			assert splitlist.nonce_start == 0, splitlist.nonce_start
+			assert shares.nonce_start == 0, shares.nonce_start
 
 			collisions = 0
-			for sid in splitlist.data['long']:
-				collisions += splitlist.data['long'][sid][1]
+			for sid in shares.data['long']:
+				collisions += shares.data['long'][sid][1]
 
 			assert collisions == collisions_chk, collisions
 			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))

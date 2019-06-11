@@ -206,11 +206,11 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
-	def splitlist(self,count,id_str=None):
-		return SeedSplitList(self,count,id_str)
+	def split(self,count,id_str=None):
+		return SeedShareList(self,count,id_str)
 
 	@staticmethod
-	def join_splits(seed_list):
+	def join_shares(seed_list):
 		if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 			seed_list = iter(seed_list)
 
@@ -219,7 +219,7 @@ class Seed(SeedBase):
 			ret = 0
 			count = 0
 
-		def add_split(ss):
+		def add_share(ss):
 			if d.slen:
 				assert ss.length == d.slen,'Seed length mismatch! {} != {}'.format(ss.length,d.slen)
 			else:
@@ -228,9 +228,9 @@ class Seed(SeedBase):
 			d.count += 1
 
 		for ss in seed_list:
-			add_split(ss)
+			add_share(ss)
 
-		SeedSplitCount(d.count)
+		SeedShareCount(d.count)
 		return Seed(seed_bin=d.ret.to_bytes(d.slen // 8,'big'))
 
 class SubSeed(SeedBase):
@@ -257,15 +257,15 @@ class SubSeed(SeedBase):
 		byte_len = 16 if short else seed.length // 8
 		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
-class SeedSplitList(SubSeedList):
+class SeedShareList(SubSeedList):
 	have_short = False
 	split_type = 'N-of-N'
 
-	count = MMGenImmutableAttr('count',SeedSplitCount)
-	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
+	count = MMGenImmutableAttr('count',SeedShareCount)
+	id_str = MMGenImmutableAttr('id_str',SeedShareIDString)
 
 	def __init__(self,parent_seed,count,id_str=None):
-		self.member_type = SeedSplit
+		self.member_type = SeedShare
 		self.parent_seed = parent_seed
 		self.id_str = id_str or 'default'
 		self.count = count
@@ -273,8 +273,8 @@ class SeedSplitList(SubSeedList):
 		while True:
 			self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
 			self._generate(count-1)
-			self.last_split = SeedSplitLast(self)
-			sid = self.last_split.sid
+			self.last_share = SeedShareLast(self)
+			sid = self.last_share.sid
 			if sid in self.data['long'] or sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
 				if g.debug_subseed:
@@ -289,21 +289,21 @@ class SeedSplitList(SubSeedList):
 			B = self.join().data
 			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
 
-	def get_split_by_idx(self,idx):
+	def get_share_by_idx(self,idx):
 		if idx == self.count:
-			return self.last_split
+			return self.last_share
 		else:
 			ss_idx = SubSeedIdx(str(idx) + 'L')
 			return self.get_subseed_by_ss_idx(ss_idx)
 
-	def get_split_by_seed_id(self,sid,last_idx=None):
+	def get_share_by_seed_id(self,sid,last_idx=None):
 		if sid == self.data['long'].key(self.count-1):
-			return self.last_split
+			return self.last_share
 		else:
 			return self.get_subseed_by_seed_id(sid,last_idx=last_idx)
 
 	def join(self):
-		return Seed.join_splits(self.get_split_by_idx(i+1) for i in range(len(self)))
+		return Seed.join_shares(self.get_share_by_idx(i+1) for i in range(len(self)))
 
 	def format(self):
 		assert self.split_type == 'N-of-N'
@@ -313,7 +313,7 @@ class SeedSplitList(SubSeedList):
 		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
 		hdr += '    {} {c}-of-{c} (XOR)\n'.format('Split Type:',c=self.count)
 		hdr += '    {} {}\n\n'.format('ID String:',self.id_str.hl())
-		hdr += fs1.format('Splits')
+		hdr += fs1.format('Shares')
 		hdr += fs1.format('------')
 
 		sl = self.data['long'].keys
@@ -321,7 +321,7 @@ class SeedSplitList(SubSeedList):
 
 		return hdr + ''.join(body)
 
-class SeedSplit(SubSeed):
+class SeedShare(SubSeed):
 
 	@staticmethod
 	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
@@ -336,9 +336,9 @@ class SeedSplit(SubSeed):
 		byte_len = seed.length // 8
 		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
-class SeedSplitLast(SubSeed):
+class SeedShareLast(SubSeed):
 
-	idx = MMGenImmutableAttr('idx',SeedSplitIdx)
+	idx = MMGenImmutableAttr('idx',SeedShareIdx)
 	nonce = 0
 
 	def __init__(self,parent_list):
@@ -347,7 +347,7 @@ class SeedSplitLast(SubSeed):
 
 	@staticmethod
 	def make_subseed_bin(parent_list):
-		seed_list = (parent_list.get_split_by_idx(i+1) for i in range(len(parent_list)))
+		seed_list = (parent_list.get_share_by_idx(i+1) for i in range(len(parent_list)))
 		seed = parent_list.parent_seed
 
 		ret = int(seed.data.hex(),16)
