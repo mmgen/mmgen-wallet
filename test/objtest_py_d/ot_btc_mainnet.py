@@ -26,6 +26,10 @@ tests = OrderedDict([
 		'bad':  ('s',2.1,1025,-1,0,1),
 		'good': (('7',7),(2,2),(1024,1024))
 	}),
+	('MasterShareIdx', {
+		'bad':  ('s',1.1,1025,-1,0),
+		'good': (('7',7),(1,1),(1024,1024))
+	}),
 	('AddrIdxList', {
 		'bad':  ('x','5,9,1-2-3','8,-11','66,3-2'),
 		'good': (
@@ -152,7 +156,7 @@ tests = OrderedDict([
 		)
 	}),
 	('MMGenWalletLabel', {
-		'bad': (utf8_text[:49],utf8_combining[:48],utf8_ctrl[:48]),
+		'bad': (utf8_text[:49],utf8_combining[:48],utf8_ctrl[:48],gr_uc_w_ctrl),
 		'good':  (utf8_text[:48],)
 	}),
 	('TwComment', {
@@ -160,6 +164,7 @@ tests = OrderedDict([
 					utf8_ctrl[:40],
 					text_jp[:41],
 					text_zh[:41],
+					gr_uc_w_ctrl,
 					utf8_text[:81] ),
 		'good': (   utf8_text[:80],
 					(ru_uc + gr_uc + utf8_text)[:80],
@@ -167,7 +172,7 @@ tests = OrderedDict([
 					text_zh[:40] )
 	}),
 	('MMGenTXLabel',{
-		'bad': (utf8_text[:73],utf8_combining[:72],utf8_ctrl[:72]),
+		'bad': (utf8_text[:73],utf8_combining[:72],utf8_ctrl[:72],gr_uc_w_ctrl),
 		'good':  (utf8_text[:72],)
 	}),
 	('MMGenPWIDString', { # forbidden = list(u' :/\\')

@@ -481,7 +481,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
 		opt.out_fmt = 'words'
 		from mmgen.seed import SeedSource
-		s = SeedSource(seed=bytes.fromhex(hexstr))
+		s = SeedSource(seed_bin=bytes.fromhex(hexstr))
 		s._format()
 		return ' '.join(s.ssdata.mnemonic)
 
@@ -497,10 +497,13 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		baseconv.check_wordlist(wordlist)
 		return True
 
-	def mn_printlist(self,wordlist=dfl_wl_id):
+	def mn_printlist(self,wordlist=dfl_wl_id,enum=False,pager=False):
 		"print mnemonic wordlist"
 		wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
-		return '\n'.join(baseconv.digits[wordlist])
+		ret = baseconv.digits[wordlist]
+		if enum:
+			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
+		return '\n'.join(ret)
 
 class MMGenToolCmdFile(MMGenToolCmdBase):
 	"utilities for viewing/checking MMGen address and transaction files"

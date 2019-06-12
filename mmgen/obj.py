@@ -681,7 +681,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 		me.type = idtype
 		return me
 
-# contains TwMMGenID,TwComment.  Not for display
+# non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
@@ -829,8 +829,6 @@ class MMGenLabel(str,Hilite,InitErrors):
 			for ch in k: assert type(ch) == str and len(ch) == 1
 		try:
 			s = s.strip()
-			if type(s) != str:
-				s = s.decode('utf8')
 			for ch in s:
 				# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
 				# Disallow: (C)ontrol,(M)combining

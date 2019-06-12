@@ -48,9 +48,7 @@ def is_mnemonic(s):
 class SeedBase(MMGenObject):
 
 	data    = MMGenImmutableAttr('data',bytes,typeconv=False)
-	hexdata = MMGenImmutableAttr('hexdata',str,typeconv=False)
 	sid     = MMGenImmutableAttr('sid',SeedID,typeconv=False)
-	length  = MMGenImmutableAttr('length',int,typeconv=False)
 
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -60,9 +58,15 @@ class SeedBase(MMGenObject):
 			die(3,'{}: invalid seed length'.format(len(seed_bin)))
 
 		self.data      = seed_bin
-		self.hexdata   = seed_bin.hex()
 		self.sid       = SeedID(seed=self)
-		self.length    = len(seed_bin) * 8
+
+	@property
+	def length(self):
+		return len(self.data) * 8
+
+	@property
+	def hexdata(self):
+		return self.data.hex()
 
 class SubSeedList(MMGenObject):
 	have_short = True
@@ -206,8 +210,8 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
-	def split(self,count,id_str=None,master_idx=None):
-		return SeedShareList(self,count,id_str,master_idx)
+	def split(self,count,id_str=None,use_master=False,master_idx=1):
+		return SeedShareList(self,count,id_str,master_idx if use_master else None)
 
 	@staticmethod
 	def join_shares(seed_list,use_master=False,master_idx=1,id_str=None):
@@ -250,6 +254,7 @@ class SubSeed(SeedBase):
 		self.idx = idx
 		self.nonce = nonce
 		self.ss_idx = str(idx) + { 'long': 'L', 'short': 'S' }[length]
+		self.parent_list = parent_list
 		SeedBase.__init__(self,seed_bin=type(self).make_subseed_bin(parent_list,idx,nonce,length))
 
 	@staticmethod
@@ -301,22 +306,22 @@ class SeedShareList(SubSeedList):
 			B = self.join().data
 			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
 
-	def get_share_by_idx(self,idx):
+	def get_share_by_idx(self,idx,base_seed=False):
 		if idx == self.count:
 			return self.last_share
 		elif self.master_share and idx == 1:
-			return self.master_share.derived_seed
+			return self.master_share if base_seed else self.master_share.derived_seed
 		else:
 			ss_idx = SubSeedIdx(str(idx) + 'L')
 			return self.get_subseed_by_ss_idx(ss_idx)
 
-	def get_share_by_seed_id(self,sid,last_idx=None):
+	def get_share_by_seed_id(self,sid,base_seed=False):
 		if sid == self.data['long'].key(self.count-1):
 			return self.last_share
 		elif self.master_share and sid == self.data['long'].key(0):
-			return self.master_share.derived_seed
+			return self.master_share if base_seed else self.master_share.derived_seed
 		else:
-			return self.get_subseed_by_seed_id(sid,last_idx=last_idx)
+			return self.get_subseed_by_seed_id(sid)
 
 	def join(self):
 		return Seed.join_shares(self.get_share_by_idx(i+1) for i in range(len(self)))
@@ -359,13 +364,14 @@ class SeedShare(SubSeed):
 		byte_len = seed.length // 8
 		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
-class SeedShareLast(SubSeed):
+class SeedShareLast(SeedBase):
 
 	idx = MMGenImmutableAttr('idx',SeedShareIdx)
 	nonce = 0
 
 	def __init__(self,parent_list):
 		self.idx = parent_list.count
+		self.parent_list = parent_list
 		SeedBase.__init__(self,seed_bin=self.make_subseed_bin(parent_list))
 
 	@staticmethod
@@ -379,27 +385,24 @@ class SeedShareLast(SubSeed):
 
 		return ret.to_bytes(seed.length // 8,'big')
 
-class SeedShareMaster(SubSeed):
+class SeedShareMaster(SeedBase):
 
 	idx = MMGenImmutableAttr('idx',MasterShareIdx)
 	nonce = 0
 
 	def __init__(self,parent_list,idx):
 		self.idx = idx
-		self.parent_seed = parent_list.parent_seed
+		self.parent_list = parent_list
 		SeedBase.__init__(self,self.make_base_seed_bin())
 
 		self.derived_seed = SeedBase(self.make_derived_seed_bin(parent_list.id_str,parent_list.count))
 
-	@property
-	def fn_stem(self):
-		return '{}-master_share{}[{}]'.format(self.parent_seed.sid,self.idx,self.sid)
-
 	def make_base_seed_bin(self):
+		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
 		scramble_key = b'master:' + self.idx.to_bytes(2,'big',signed=False)
-		byte_len = self.parent_seed.length // 8
-		return scramble_seed(self.parent_seed.data,scramble_key)[:byte_len]
+		byte_len = seed.length // 8
+		return scramble_seed(seed.data,scramble_key)[:byte_len]
 
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
@@ -427,12 +430,12 @@ class SeedSource(MMGenObject):
 	ask_tty = True
 	no_tty  = False
 	op = None
-	require_utf8_input = False
 	_msg = {}
 
 	class SeedSourceData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False,in_data=None,in_fmt=None):
+	def __new__(cls,fn=None,ss=None,seed_bin=None,seed=None,
+				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
 
 		in_fmt = in_fmt or opt.in_fmt
 
@@ -466,16 +469,17 @@ class SeedSource(MMGenObject):
 			sstype = cls.fmt_code_to_type(in_fmt)
 			me = super(cls,cls).__new__(sstype)
 			me.op = ('old','pwchg_old')[bool(passchg)]
-		else: # Called with no inputs - initialize with random seed
+		else: # Called with no args, 'seed' or 'seed_bin' - initialize with random or supplied seed
 			sstype = cls.fmt_code_to_type(opt.out_fmt)
 			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
-			me.seed = Seed(seed_bin=seed or None)
+			me.seed = seed or Seed(seed_bin=seed_bin or None)
 			me.op = 'new'
 #			die(1,me.seed.sid.hl()) # DEBUG
 
 		return me
 
-	def __init__(self,fn=None,ss=None,seed=None,ignore_in_fmt=False,passchg=False,in_data=None,in_fmt=None):
+	def __init__(self,fn=None,ss=None,seed_bin=None,seed=None,
+				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
 
 		self.ssdata = self.SeedSourceData()
 		self.msg = {}
@@ -601,7 +605,12 @@ class SeedSourceUnenc(SeedSource):
 	def _encrypt(self): pass
 
 	def _filename(self):
-		return '{}[{}]{x}.{}'.format(self.seed.sid,self.seed.length,self.ext,x='-α' if g.debug_utf8 else '')
+		s = self.seed
+		return '{}[{}]{x}.{}'.format(
+			s.sid,
+			s.length,
+			self.ext,
+			x='-α' if g.debug_utf8 else '')
 
 class SeedSourceEnc(SeedSource):
 
@@ -958,7 +967,6 @@ class Wallet (SeedSourceEnc):
 	fmt_codes = 'wallet','w'
 	desc = g.proj_name + ' wallet'
 	ext = 'mmdat'
-	require_utf8_input = True # label is UTF-8
 
 	def _get_label_from_user(self,old_lbl=''):
 		d = "to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
@@ -1105,11 +1113,13 @@ class Wallet (SeedSourceEnc):
 			return False
 
 	def _filename(self):
+		s = self.seed
+		d = self.ssdata
 		return '{}-{}[{},{}]{x}.{}'.format(
-				self.seed.sid,
-				self.ssdata.key_id,
-				self.seed.length,
-				self.ssdata.hash_preset,
+				s.sid,
+				d.key_id,
+				s.length,
+				d.hash_preset,
 				self.ext,
 				x='-α' if g.debug_utf8 else '')
 
@@ -1119,7 +1129,6 @@ class Brainwallet (SeedSourceEnc):
 	fmt_codes = 'mmbrain','brainwallet','brain','bw','b'
 	desc = 'brainwallet'
 	ext = 'mmbrain'
-	require_utf8_input = True # brainwallet is user input, so require UTF-8
 	# brainwallet warning message? TODO
 
 	def get_bw_params(self):

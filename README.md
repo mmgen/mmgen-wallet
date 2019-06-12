@@ -111,11 +111,11 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
   brainwallet, incognito wallet) and three unencrypted (mnemonic, mmseed,
   hexseed).
 - **[Subwallets][U]:** Subwallets have many applications, the most notable being
-  online hot wallets and travel wallets.  MMGen subwallets are functionally and
-  externally identical to ordinary wallets, which provides a key security
-  benefit: only the user who generated the subwallet knows that it is indeed a
-  subwallet.  Subwallets don’t need to be backed up, as they can always be
-  regenerated from their parent.
+  online hot wallets, decoy wallets and travel wallets.  MMGen subwallets are
+  functionally and externally identical to ordinary wallets, which provides a
+  key security benefit: only the user who generated the subwallet knows that it
+  is indeed a subwallet.  Subwallets don’t need to be backed up, as they can
+  always be regenerated from their parent.
 - **[Transaction autosigning][X]:** This feature puts your offline signing
   machine into “hands-off” mode, allowing you to transact directly from cold
   storage securely and conveniently.  Additional LED signaling support is

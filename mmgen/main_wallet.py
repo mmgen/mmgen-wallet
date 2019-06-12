@@ -41,6 +41,8 @@ invoked_as = {
 	'mmgen-subwalletgen': 'subgen',
 }[g.prog_name]
 
+dsw = 'the default or specified {pnm} wallet'
+
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
 	desc = 'Generate an {pnm} wallet from a random seed'
@@ -49,19 +51,19 @@ if invoked_as == 'gen':
 	oaction = 'output'
 	nargs = 0
 elif invoked_as == 'conv':
-	desc = 'Convert an {pnm} wallet from one format to another'
+	desc = 'Convert ' + dsw + ' from one format to another'
 	opt_filter = 'dehHiJkKlLmoOpPqrSvz-'
 elif invoked_as == 'chk':
-	desc = 'Check validity of an {pnm} wallet'
+	desc = 'Check validity of ' + dsw
 	opt_filter = 'ehiHOlpPqrvz-'
 	iaction = 'input'
 elif invoked_as == 'passchg':
-	desc = 'Change the passphrase, hash preset or label of an {pnm} wallet'
+	desc = 'Change the passphrase, hash preset or label of ' + dsw
 	opt_filter = 'efhdiHkKOlLmpPqrSvz-'
 	iaction = 'input'
 	do_bw_note = False
 elif invoked_as == 'subgen':
-	desc = 'Generate a subwallet from an {pnm} wallet'
+	desc = 'Generate a subwallet from ' + dsw
 	opt_filter = 'dehHiJkKlLmoOpPqrSvz-' # omitted: f
 	usage = '[opts] [infile] <Subseed Index>'
 	do_sw_note = True
