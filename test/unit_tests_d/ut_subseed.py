@@ -30,7 +30,7 @@ class unit_test(object):
 				assert subseed.sid == d, subseed.sid
 
 				subseed = seed.subseed_by_seed_id(e)
-				assert subseed.length == f, subseed.length
+				assert subseed.bitlen == f, subseed.bitlen
 				assert subseed.sid == e, subseed.sid
 				assert subseed.idx == 10, subseed.idx
 				assert subseed.ss_idx == h, subseed.ss_idx

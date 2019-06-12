@@ -61,8 +61,12 @@ class SeedBase(MMGenObject):
 		self.sid       = SeedID(seed=self)
 
 	@property
-	def length(self):
+	def bitlen(self):
 		return len(self.data) * 8
+
+	@property
+	def byte_len(self):
+		return len(self.data)
 
 	@property
 	def hexdata(self):
@@ -188,7 +192,7 @@ class SubSeedList(MMGenObject):
 		fs1 = '{:>18} {:>18}\n'
 		fs2 = '{i:>7}L: {:8} {i:>7}S: {:8}\n'
 
-		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
+		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.parent_seed.sid.hl(),self.parent_seed.bitlen)
 		hdr += fs1.format('Long Subseeds','Short Subseeds')
 		hdr += fs1.format('-------------','--------------')
 
@@ -225,9 +229,9 @@ class Seed(SeedBase):
 
 		def add_share(ss):
 			if d.slen:
-				assert ss.length == d.slen,'Seed length mismatch! {} != {}'.format(ss.length,d.slen)
+				assert ss.bitlen == d.slen,'Seed length mismatch! {} != {}'.format(ss.bitlen,d.slen)
 			else:
-				d.slen = ss.length
+				d.slen = ss.bitlen
 			d.ret ^= int(ss.data.hex(),16)
 			d.count += 1
 
@@ -265,8 +269,7 @@ class SubSeed(SeedBase):
 		scramble_key  = idx.to_bytes(4,'big',signed=False) + \
 						nonce.to_bytes(2,'big',signed=False) + \
 						short.to_bytes(1,'big',signed=False)
-		byte_len = 16 if short else seed.length // 8
-		return scramble_seed(seed.data,scramble_key)[:byte_len]
+		return scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SeedShareList(SubSeedList):
 	master_share = None
@@ -335,7 +338,7 @@ class SeedShareList(SubSeedList):
 			mfs1,mfs2 = (' with master share #{} ({})',' master #{} ({})')
 			midx,msid = (self.master_share.idx,self.master_share.sid)
 
-		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.length)
+		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.bitlen)
 		hdr += '    {} {c}-of-{c} (XOR){m}\n'.format('Split Type:',c=self.count,m=mfs1.format(midx,msid))
 		hdr += '    {} {}\n\n'.format('ID String:',self.id_str.hl())
 		hdr += fs1.format('Shares')
@@ -361,8 +364,7 @@ class SeedShare(SubSeed):
 						nonce.to_bytes(2,'big',signed=False)
 		if parent_list.master_share:
 			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big',signed=False)
-		byte_len = seed.length // 8
-		return scramble_seed(seed.data,scramble_key)[:byte_len]
+		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedBase):
 
@@ -383,7 +385,7 @@ class SeedShareLast(SeedBase):
 		for ss in seed_list:
 			ret ^= int(ss.data.hex(),16)
 
-		return ret.to_bytes(seed.length // 8,'big')
+		return ret.to_bytes(seed.byte_len,'big')
 
 class SeedShareMaster(SeedBase):
 
@@ -401,14 +403,12 @@ class SeedShareMaster(SeedBase):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
 		scramble_key = b'master:' + self.idx.to_bytes(2,'big',signed=False)
-		byte_len = seed.length // 8
-		return scramble_seed(seed.data,scramble_key)[:byte_len]
+		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big',signed=False)
-		byte_len = self.length // 8
-		return scramble_seed(self.data,scramble_key)[:byte_len]
+		return scramble_seed(self.data,scramble_key)[:self.byte_len]
 
 class SeedShareMasterJoining(SeedShareMaster):
 
@@ -501,7 +501,7 @@ class SeedSource(MMGenObject):
 			self._deformat_retry()
 			self._decrypt_retry()
 
-		m = ('',', seed length {}'.format(self.seed.length))[self.seed.length!=256]
+		m = ('',', seed length {}'.format(self.seed.bitlen))[self.seed.bitlen!=256]
 		qmsg('Valid {} for Seed ID {}{}'.format(self.desc,self.seed.sid.hl(),m))
 
 	def _get_data(self):
@@ -608,7 +608,7 @@ class SeedSourceUnenc(SeedSource):
 		s = self.seed
 		return '{}[{}]{x}.{}'.format(
 			s.sid,
-			s.length,
+			s.bitlen,
 			self.ext,
 			x='-α' if g.debug_utf8 else '')
 
@@ -860,7 +860,7 @@ class Mnemonic (SeedSourceUnenc):
 		self.seed = Seed(bytes.fromhex(hexseed))
 		self.ssdata.mnemonic = mn
 
-		check_usr_seed_len(self.seed.length)
+		check_usr_seed_len(self.seed.bitlen)
 
 		return True
 
@@ -910,7 +910,7 @@ class SeedFile (SeedSourceUnenc):
 		self.ssdata.chksum = a
 		self.ssdata.b58seed = b
 
-		check_usr_seed_len(self.seed.length)
+		check_usr_seed_len(self.seed.bitlen)
 
 		return True
 
@@ -958,7 +958,7 @@ class HexSeedFile(SeedSourceUnenc):
 		self.ssdata.chksum = chk
 		self.ssdata.hexseed = hstr
 
-		check_usr_seed_len(self.seed.length)
+		check_usr_seed_len(self.seed.bitlen)
 
 		return True
 
@@ -1022,7 +1022,7 @@ class Wallet (SeedSourceEnc):
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format(s.sid.lower(), d.key_id.lower(),
-										s.length, d.pw_status, d.timestamp),
+										s.bitlen, d.pw_status, d.timestamp),
 			'{}: {} {} {}'.format(d.hash_preset,*get_hash_params(d.hash_preset)),
 			'{} {}'.format(make_chksum_6(slt_fmt),split_into_cols(4,slt_fmt)),
 			'{} {}'.format(make_chksum_6(es_fmt), split_into_cols(4,es_fmt))
@@ -1118,7 +1118,7 @@ class Wallet (SeedSourceEnc):
 		return '{}-{}[{},{}]{x}.{}'.format(
 				s.sid,
 				d.key_id,
-				s.length,
+				s.bitlen,
 				d.hash_preset,
 				self.ext,
 				x='-α' if g.debug_utf8 else '')
@@ -1233,7 +1233,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, 'incog wrapper key')
 		d.key_id = make_chksum_8(d.wrapper_key)
 		vmsg('Key ID: {}'.format(d.key_id))
-		d.target_data_len = self._get_incog_data_len(self.seed.length)
+		d.target_data_len = self._get_incog_data_len(self.seed.bitlen)
 
 	def _format(self):
 		d = self.ssdata
@@ -1246,7 +1246,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 				s.sid,
 				d.key_id,
 				d.iv_id,
-				s.length,
+				s.bitlen,
 				d.hash_preset,
 				self.ext,
 				x='-α' if g.debug_utf8 else '')
