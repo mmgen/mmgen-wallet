@@ -14,34 +14,34 @@ class unit_test(object):
 		def basic_ops(master_idx):
 			test_data = {
 				'default': (
-					(8,'4710FBF0','B3D9411B','2670E83D','D1FC57ED','AE49CABE','63FFBA62',256),
-					(6,'9D07ABBD','AF5DC2F6','1A3BBDAC','2548AEE9','B94F7450','1F4E5A12',192),
-					(4,'43670520','1F72C066','E5AA8DA1','A33966A0','D2BCE0A5','A568C315',128),
+					(8,'4710FBF0','B3D9411B','2670E83D','D1FC57ED','AE49CABE','63FFBA62',0,0),
+					(6,'9D07ABBD','AF5DC2F6','1A3BBDAC','2548AEE9','B94F7450','1F4E5A12',0,0),
+					(4,'43670520','1F72C066','E5AA8DA1','A33966A0','D2BCE0A5','A568C315',0,0),
 				),
 				'φυβαρ': (
-					(8,'4710FBF0','269D658C','9D25889E','6D730ECB','C61A963F','9FE99C05',256),
-					(6,'9D07ABBD','4998B33E','F00CE041','C612BEE5','35CD3675','41B3BE61',192),
-					(4,'43670520','77140076','EA82CB30','80F7AEDE','D168D768','77BE57AA',128),
+					(8,'4710FBF0','269D658C','9D25889E','6D730ECB','C61A963F','9FE99C05',0,0),
+					(6,'9D07ABBD','4998B33E','F00CE041','C612BEE5','35CD3675','41B3BE61',0,0),
+					(4,'43670520','77140076','EA82CB30','80F7AEDE','D168D768','77BE57AA',0,0),
 				)
 			}
 			test_data_master = {
 				'1': {
 					'default': (
-						(8,'4710FBF0','B512A312','3588E156','9374255D','3E87A907','752A2E4E',256),
-						(4,'43670520','05880E2B','C6B438D4','5FF9B5DF','778E9C60','2C01F046',128) ),
+						(8,'4710FBF0','B512A312','3588E156','9374255D','3E87A907','752A2E4E',0,0),
+						(4,'43670520','05880E2B','C6B438D4','5FF9B5DF','778E9C60','2C01F046',0,0) ),
 					'φυβαρ': (
-						(8,'4710FBF0','5FA963B0','69A1F56A','25789CC4','9777A750','E17B9B8B',256),
-						(4,'43670520','AF8BFDF8','66F319BE','A5E40978','927549D2','93B2418B',128),
+						(8,'4710FBF0','5FA963B0','69A1F56A','25789CC4','9777A750','E17B9B8B',0,0),
+						(4,'43670520','AF8BFDF8','66F319BE','A5E40978','927549D2','93B2418B',0,0),
 					)
 				},
 				'5': {
 					'default': (
-						(8,'4710FBF0','A8A34BC0','F69B6CF8','234B5DCD','BB004DC5','08DC9776',256),
-						(4,'43670520','C887A2D6','86AE9445','3188AD3D','07339882','BE3FE72A',128) ),
+						(8,'4710FBF0','A8A34BC0','F69B6CF8','234B5DCD','BB004DC5','08DC9776',0,0),
+						(4,'43670520','C887A2D6','86AE9445','3188AD3D','07339882','BE3FE72A',0,0) ),
 
 					'φυβαρ': (
-						(8,'4710FBF0','89C35D99','B1CD5854','8414652C','32C24668','17CA1E19',256),
-						(4,'43670520','06929789','32E8E375','C6AC3C9D','4BEA2AB2','15AFC7F2',128)
+						(8,'4710FBF0','89C35D99','B1CD5854','8414652C','32C24668','17CA1E19',0,0),
+						(4,'43670520','06929789','32E8E375','C6AC3C9D','4BEA2AB2','15AFC7F2',0,0)
 					)
 				}
 			}
@@ -52,12 +52,12 @@ class unit_test(object):
 				msg_r('Testing basic ops (id_str={!r}, master_idx={})...'.format(id_str,master_idx))
 				vmsg('')
 
-				for a,b,c,d,e,f,h,i in test_data[id_str if id_str is not None else 'default']:
+				for a,b,c,d,e,f,h,i,p in test_data[id_str if id_str is not None else 'default']:
 					seed_bin = bytes.fromhex('deadbeef' * a)
 					seed = Seed(seed_bin)
 					assert seed.sid == b, seed.sid
 
-					for share_count,j,k,l in ((2,c,c,d),(5,e,f,h)):
+					for share_count,j,k,l,m in ((2,c,c,d,i),(5,e,f,h,p)):
 
 						shares = seed.split(share_count,id_str,bool(master_idx),master_idx)
 						A = len(shares)

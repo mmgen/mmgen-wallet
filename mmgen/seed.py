@@ -167,7 +167,7 @@ class SubSeedList(MMGenObject):
 			last_sid = SeedID(sid=last_sid)
 
 		def add_subseed(idx,length):
-			for nonce in range(self.nonce_start,self.member_type.max_nonce): # use nonce to handle SeedID collisions
+			for nonce in range(self.nonce_start,self.member_type.max_nonce+1): # handle SeedID collisions
 				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
 				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
 					self.data[length][sid] = (idx,nonce)
@@ -214,24 +214,22 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
-	def split(self,count,id_str=None,use_master=False,master_idx=1):
+	def split(self,count,id_str=None,use_master=False,master_idx=MasterShareIdx.min_val):
 		return SeedShareList(self,count,id_str,master_idx if use_master else None)
 
 	@staticmethod
-	def join_shares(seed_list,use_master=False,master_idx=1,id_str=None):
+	def join_shares(seed_list,use_master=False,master_idx=MasterShareIdx.min_val,id_str=None):
 		if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 			seed_list = iter(seed_list)
 
 		class d(object):
-			slen = None
-			ret = 0
-			count = 0
+			byte_len,ret,count = None,0,0
 
 		def add_share(ss):
-			if d.slen:
-				assert ss.bitlen == d.slen,'Seed length mismatch! {} != {}'.format(ss.bitlen,d.slen)
+			if d.byte_len:
+				assert ss.byte_len == d.byte_len,'Seed length mismatch! {} != {}'.format(ss.byte_len,d.byte_len)
 			else:
-				d.slen = ss.bitlen
+				d.byte_len = ss.byte_len
 			d.ret ^= int(ss.data.hex(),16)
 			d.count += 1
 
@@ -245,7 +243,7 @@ class Seed(SeedBase):
 			add_share(SeedShareMasterJoining(master_idx,master_share,id_str,d.count+1).derived_seed)
 
 		SeedShareCount(d.count)
-		return Seed(seed_bin=d.ret.to_bytes(d.slen // 8,'big'))
+		return Seed(seed_bin=d.ret.to_bytes(d.byte_len,'big'))
 
 class SubSeed(SeedBase):
 
@@ -266,9 +264,7 @@ class SubSeed(SeedBase):
 		seed = parent_list.parent_seed
 		short = { 'short': True, 'long': False }[length]
 		# field maximums: idx: 4294967295 (1000000), nonce: 65535 (1000), short: 255 (1)
-		scramble_key  = idx.to_bytes(4,'big',signed=False) + \
-						nonce.to_bytes(2,'big',signed=False) + \
-						short.to_bytes(1,'big',signed=False)
+		scramble_key  = idx.to_bytes(4,'big') + nonce.to_bytes(2,'big') + short.to_bytes(1,'big')
 		return scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SeedShareList(SubSeedList):
@@ -359,11 +355,9 @@ class SeedShare(SubSeed):
 		assert length == 'long'
 		# field maximums: id_str: none (256 chars), count: 65535 (1024), idx: 65535 (1024), nonce: 65535 (1000)
 		scramble_key = '{}:{}:'.format(parent_list.split_type,parent_list.id_str).encode() + \
-						parent_list.count.to_bytes(2,'big',signed=False) + \
-						idx.to_bytes(2,'big',signed=False) + \
-						nonce.to_bytes(2,'big',signed=False)
+						parent_list.count.to_bytes(2,'big') + idx.to_bytes(2,'big') + nonce.to_bytes(2,'big')
 		if parent_list.master_share:
-			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big',signed=False)
+			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedBase):
@@ -402,12 +396,12 @@ class SeedShareMaster(SeedBase):
 	def make_base_seed_bin(self):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
-		scramble_key = b'master:' + self.idx.to_bytes(2,'big',signed=False)
+		scramble_key = b'master:' + self.idx.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
-		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big',signed=False)
+		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big')
 		return scramble_seed(self.data,scramble_key)[:self.byte_len]
 
 class SeedShareMasterJoining(SeedShareMaster):

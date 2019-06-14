@@ -680,4 +680,4 @@ class TwGetBalance(MMGenObject):
 			if key == 'TOTAL': continue
 			if vals[3]:
 				o += red('Warning: this wallet contains PRIVATE KEYS for {} outputs!\n'.format(key))
-		return o
+		return o.rstrip()
