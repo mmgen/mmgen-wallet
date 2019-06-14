@@ -27,22 +27,21 @@ class unit_test(object):
 			test_data_master = {
 				'1': {
 					'default': (
-						(8,'4710FBF0','B512A312','3588E156','9374255D','3E87A907','752A2E4E',0,0),
-						(4,'43670520','05880E2B','C6B438D4','5FF9B5DF','778E9C60','2C01F046',0,0) ),
+						(8,'4710FBF0','6AE6177F','AC12090C','6AE6177F','3E87A907','7D1FEA56','BFEBFFFF','629A9808'),
+						(4,'43670520','6739535C','ABF4DD38','6739535C','778E9C60','89CBCFD2','689FABF5','70BED76B'),
+					),
 					'φυβαρ': (
-						(8,'4710FBF0','5FA963B0','69A1F56A','25789CC4','9777A750','E17B9B8B',0,0),
-						(4,'43670520','AF8BFDF8','66F319BE','A5E40978','927549D2','93B2418B',0,0),
-					)
+						(8,'4710FBF0','6AE6177F','AC5FA32E','6AE6177F','9777A750','C7CF2AFC','035AAACB','C777FBE4'),
+						(4,'43670520','6739535C','37EBA2F5','6739535C','927549D2','29BADEE7','9CA73A03','313F5528'))
 				},
 				'5': {
 					'default': (
-						(8,'4710FBF0','A8A34BC0','F69B6CF8','234B5DCD','BB004DC5','08DC9776',0,0),
-						(4,'43670520','C887A2D6','86AE9445','3188AD3D','07339882','BE3FE72A',0,0) ),
-
+						(8,'4710FBF0','5EFAC3D6','B489167D','5EFAC3D6','BB004DC5','1A0381C0','4EA182E3','547FB2DC'),
+						(4,'43670520','EE93DB0E','44962A7D','EE93DB0E','07339882','376A05B1','CE51D022','00149CA3'),
+					),
 					'φυβαρ': (
-						(8,'4710FBF0','89C35D99','B1CD5854','8414652C','32C24668','17CA1E19',0,0),
-						(4,'43670520','06929789','32E8E375','C6AC3C9D','4BEA2AB2','15AFC7F2',0,0)
-					)
+						(8,'4710FBF0','5EFAC3D6','A6E27EE3','5EFAC3D6','32C24668','B4C54297','1EC9B71B','8C5C6B1C'),
+						(4,'43670520','EE93DB0E','B584E963','EE93DB0E','4BEA2AB2','4BEA65C7','140FC43F','BBD19461'))
 				}
 			}
 			if master_idx:
@@ -67,12 +66,17 @@ class unit_test(object):
 						vmsg_r('\n{}'.format(s))
 						assert len(s.strip().split('\n')) == share_count+6, s
 
-						A = shares.get_share_by_idx(1).sid
-						B = shares.get_share_by_seed_id(j).sid
+						if master_idx:
+							A = shares.get_share_by_idx(1,base_seed=False).sid
+							B = shares.get_share_by_seed_id(j,base_seed=False).sid
+							assert A == B == m, A
+
+						A = shares.get_share_by_idx(1,base_seed=True).sid
+						B = shares.get_share_by_seed_id(j,base_seed=True).sid
 						assert A == B == j, A
 
-						A = shares.get_share_by_idx(share_count-1).sid
-						B = shares.get_share_by_seed_id(k).sid
+						A = shares.get_share_by_idx(share_count-1,base_seed=True).sid
+						B = shares.get_share_by_seed_id(k,base_seed=True).sid
 						assert A == B == k, A
 
 						A = shares.get_share_by_idx(share_count).sid
@@ -111,17 +115,16 @@ class unit_test(object):
 
 			msg('OK')
 
-		def collisions():
-			ss_count,last_sid,collisions_chk = (65535,'B5CBCE0A',3)
+		def collisions(seed_hex,ss_count,last_sid,collisions_chk,master_idx):
 
-			msg_r('Testing Seed ID collisions ({} seed shares)...'.format(ss_count))
+			msg_r('Testing Seed ID collisions ({} seed shares, master_idx={})...'.format(ss_count,master_idx))
 			vmsg('')
 
-			seed_bin = bytes.fromhex('1dabcdef' * 4)
+			seed_bin = bytes.fromhex(seed_hex)
 			seed = Seed(seed_bin)
 
 			SeedShareIdx.max_val = ss_count
-			shares = seed.split(ss_count)
+			shares = seed.split(ss_count,use_master=bool(master_idx),master_idx=master_idx)
 			A = shares.get_share_by_idx(ss_count).sid
 			B = shares.get_share_by_seed_id(last_sid).sid
 			assert A == last_sid, A
@@ -141,6 +144,7 @@ class unit_test(object):
 		basic_ops(master_idx=1)
 		basic_ops(master_idx=5)
 		defaults_and_limits()
-		collisions()
+		collisions('1dabcdef'*4,65535,'B5CBCE0A',3,master_idx=None)
+		collisions('18abcdef'*4,65535,'FF03CE82',3,master_idx=1)
 
 		return True

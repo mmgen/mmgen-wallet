@@ -268,7 +268,6 @@ class SubSeed(SeedBase):
 		return scramble_seed(seed.data,scramble_key)[:16 if short else seed.byte_len]
 
 class SeedShareList(SubSeedList):
-	master_share = None
 	have_short = False
 	split_type = 'N-of-N'
 
@@ -281,24 +280,35 @@ class SeedShareList(SubSeedList):
 		self.id_str = id_str or 'default'
 		self.count = count
 
-		if master_idx:
-			self.master_share = SeedShareMaster(self,master_idx)
+		def make_master_share():
+			for nonce in range(SeedShare.max_nonce+1):
+				ms = SeedShareMaster(self,master_idx,nonce)
+				if ms.sid == parent_seed.sid:
+					if g.debug_subseed:
+						m = 'master_share seed ID collision with parent seed, incrementing nonce to {}'
+						msg(m.format(nonce+1))
+				else:
+					return ms
+			raise SubSeedNonceRangeExceeded('nonce range exceeded')
 
-		while True:
-			self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
-			if master_idx:
-				self.data['long'][self.master_share.derived_seed.sid] = (1,master_idx)
+		self.master_share = make_master_share() if master_idx else None
+
+		for nonce in range(SeedShare.max_nonce+1):
+			self.nonce_start = nonce
+			self.data = { 'long': IndexedDict(), 'short': IndexedDict() } # 'short' is required as a placeholder
+			if self.master_share:
+				self.data['long'][self.master_share.sid] = (1,self.master_share.nonce)
 			self._generate(count-1)
-			self.last_share = SeedShareLast(self)
-			sid = self.last_share.sid
-			if sid in self.data['long'] or sid == parent_seed.sid:
+			self.last_share = ls = SeedShareLast(self)
+			if ls.sid in self.data['long'].keys + [parent_seed.sid]:
 				# collision: throw out entire split list and redo with new start nonce
 				if g.debug_subseed:
-					self._collision_debug_msg(sid,count,self.nonce_start,nonce_desc='nonce_start')
-				self.nonce_start += 1
+					self._collision_debug_msg(ls.sid,count,nonce,nonce_desc='nonce_start')
 			else:
-				self.data['long'][sid] = (self.count,self.nonce_start)
+				self.data['long'][ls.sid] = (self.count,nonce)
 				break
+		else:
+			raise SubSeedNonceRangeExceeded('nonce range exceeded')
 
 		if g.debug_subseed:
 			A = parent_seed.data
@@ -331,7 +341,7 @@ class SeedShareList(SubSeedList):
 		fs2 = '{i:>5}: {}\n'
 		mfs1,mfs2,midx,msid = ('','','','')
 		if self.master_share:
-			mfs1,mfs2 = (' with master share #{} ({})',' master #{} ({})')
+			mfs1,mfs2 = (' with master share #{} ({})',' master share #{}')
 			midx,msid = (self.master_share.idx,self.master_share.sid)
 
 		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.bitlen)
@@ -341,7 +351,7 @@ class SeedShareList(SubSeedList):
 		hdr += fs1.format('------')
 
 		sl = self.data['long'].keys
-		body1 = fs2.format(sl[0]+mfs2.format(midx,msid),i=1)
+		body1 = fs2.format(sl[0]+mfs2.format(midx),i=1)
 		body = (fs2.format(sl[n],i=n+1) for n in range(1,len(self)))
 
 		return hdr + body1 + ''.join(body)
@@ -384,10 +394,11 @@ class SeedShareLast(SeedBase):
 class SeedShareMaster(SeedBase):
 
 	idx = MMGenImmutableAttr('idx',MasterShareIdx)
-	nonce = 0
+	nonce = MMGenImmutableAttr('nonce',int,typeconv=False)
 
-	def __init__(self,parent_list,idx):
+	def __init__(self,parent_list,idx,nonce):
 		self.idx = idx
+		self.nonce = nonce
 		self.parent_list = parent_list
 		SeedBase.__init__(self,self.make_base_seed_bin())
 
@@ -396,7 +407,7 @@ class SeedShareMaster(SeedBase):
 	def make_base_seed_bin(self):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
-		scramble_key = b'master:' + self.idx.to_bytes(2,'big')
+		scramble_key  = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	def make_derived_seed_bin(self,id_str,count):
