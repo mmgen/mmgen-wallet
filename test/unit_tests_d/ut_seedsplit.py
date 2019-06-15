@@ -58,7 +58,7 @@ class unit_test(object):
 
 					for share_count,j,k,l,m in ((2,c,c,d,i),(5,e,f,h,p)):
 
-						shares = seed.split(share_count,id_str,bool(master_idx),master_idx)
+						shares = seed.split(share_count,id_str,master_idx)
 						A = len(shares)
 						assert A == share_count, A
 
@@ -88,7 +88,7 @@ class unit_test(object):
 
 						if master_idx:
 							slist = [shares.get_share_by_idx(i+1,base_seed=True) for i in range(len(shares))]
-							A = Seed.join_shares(slist,True,master_idx,id_str).sid
+							A = Seed.join_shares(slist,master_idx,id_str).sid
 							assert A == b, A
 
 				msg('OK')
@@ -124,7 +124,7 @@ class unit_test(object):
 			seed = Seed(seed_bin)
 
 			SeedShareIdx.max_val = ss_count
-			shares = seed.split(ss_count,use_master=bool(master_idx),master_idx=master_idx)
+			shares = seed.split(ss_count,master_idx=master_idx)
 			A = shares.get_share_by_idx(ss_count).sid
 			B = shares.get_share_by_seed_id(last_sid).sid
 			assert A == last_sid, A

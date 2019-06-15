@@ -214,11 +214,11 @@ class Seed(SeedBase):
 	def subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
 		return self.subseeds.get_subseed_by_seed_id(sid,last_idx=last_idx,print_msg=print_msg)
 
-	def split(self,count,id_str=None,use_master=False,master_idx=MasterShareIdx.min_val):
-		return SeedShareList(self,count,id_str,master_idx if use_master else None)
+	def split(self,count,id_str=None,master_idx=None):
+		return SeedShareList(self,count,id_str,master_idx)
 
 	@staticmethod
-	def join_shares(seed_list,use_master=False,master_idx=MasterShareIdx.min_val,id_str=None):
+	def join_shares(seed_list,master_idx=None,id_str=None):
 		if not hasattr(seed_list,'__next__'): # seed_list can be iterator or iterable
 			seed_list = iter(seed_list)
 
@@ -233,13 +233,13 @@ class Seed(SeedBase):
 			d.ret ^= int(ss.data.hex(),16)
 			d.count += 1
 
-		if use_master:
+		if master_idx:
 			master_share = next(seed_list)
 
 		for ss in seed_list:
 			add_share(ss)
 
-		if use_master:
+		if master_idx:
 			add_share(SeedShareMasterJoining(master_idx,master_share,id_str,d.count+1).derived_seed)
 
 		SeedShareCount(d.count)
@@ -407,7 +407,7 @@ class SeedShareMaster(SeedBase):
 	def make_base_seed_bin(self):
 		seed = self.parent_list.parent_seed
 		# field maximums: idx: 65535 (1024)
-		scramble_key  = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
+		scramble_key = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 	def make_derived_seed_bin(self,id_str,count):
