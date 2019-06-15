@@ -855,6 +855,9 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			if m: msg_r('  {}...'.format(m))
 			ret = (p.expect_exact,p.expect)[regex](s)
 			vmsg("\nexpect: '{}' => {}".format(s,ret))
+			if g.debug:
+				pmsg('p.before:',p.before)
+				pmsg('p.after:',p.after)
 			if not (ret == 0 or (type(s) == list and ret in (0,1))):
 				die(2,"Expect failed: '{}' (return value: {})".format(s,ret))
 			if m: msg('OK')
@@ -863,6 +866,9 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 		def my_sendline(p,m,s,usr_ret):
 			if m: msg_r('  {}...'.format(m))
 			ret = p.sendline(s)
+			if g.debug:
+				pmsg('p.before:',p.before)
+				pmsg('p.after:',p.after)
 			if ret != usr_ret:
 				die(2,"Unable to send line '{}' (return value {})".format(s,ret))
 			if m: msg('OK')
@@ -873,7 +879,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			except: pass
 			else: die(1,"Wallet '{}' already exists!".format(fn))
 			p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
-			if g.debug: p.logfile = sys.stdout
+#			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
 			my_expect(p,'Awaiting initial prompt','Secret spend key: ')
 			my_sendline(p,'',d.sec,65)
 			my_expect(p,'','Enter.* new.* password.*: ',regex=True)
@@ -906,31 +912,34 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			p.read()
 
 		def sync(n,d,fn):
+			import time
 			try: os.stat(fn)
 			except: die(1,"Wallet '{}' does not exist!".format(fn))
 			p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn))
-			if g.debug: p.logfile = sys.stdout
+#			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
 			my_expect(p,'Awaiting password prompt','Wallet password: ')
 			my_sendline(p,'Sending password',d.wallet_passwd,33)
 
 			msg('  Starting refresh...')
 			height = None
 			while True:
-				ret = p.expect([r' / .*',r'\[wallet.*:.*'])
+				ret = p.expect([r'Height\s+\S+\s+/\s+\S+',r'\[wallet.*:.*'])
 				if ret == 0: # TODO: coverage
-					cur_block = p.before.decode().split()[-1]
-					height = p.after.decode()
-					msg_r('\r  Block {}{}'.format(cur_block,height))
+					d = p.after.decode().split()
+					msg_r('\r  Block {} / {}'.format(d[1],d[3]))
+					height = d[3]
+					time.sleep(0.5)
 				elif ret == 1:
 					if height:
-						height = height.split()[-1]
-						msg('\r  Block {h} / {h}'.format(h=height))
+						msg('\r  Block {h} / {h} (wallet in sync)'.format(h=height))
 					else:
 						msg('  Wallet in sync')
-					b = [l for l in p.before.decode().splitlines() if len(l) > 7 and l[:8] == 'Balance:'][0].split()
-					msg('  Balance: {} Unlocked balance: {}'.format(b[1],b[4]))
+					my_sendline(p,'Requesting account info','account',8)
+					my_expect(p,'Getting totals','Total\s+.*\n',regex=True)
+					b = p.after.decode().strip().split()[1:]
+					msg('  Balance: {} Unlocked balance: {}'.format(*b))
 					from mmgen.obj import XMRAmt
-					bals[fn] = ( XMRAmt(b[1][:-1]), XMRAmt(b[4]) )
+					bals[fn] = tuple(map(XMRAmt,b))
 					my_sendline(p,'Exiting','exit',5)
 					p.read()
 					break
