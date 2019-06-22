@@ -252,7 +252,7 @@ class EthereumMMGenTX(MMGenTX):
 				Nonce:     {}
 				Data:      {d}
 				\n""".replace('\t','')
-		keys = ('from','to','amt','nonce')
+		keys = ('from',('to','token_to')['token_to' in self.txobj],'amt','nonce')
 		ld = len(self.txobj['data'])
 		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in keys),
 							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld//2) if ld else Str('None'),
@@ -454,6 +454,9 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			self.data = o['data'] = t.create_data(o['to'],o['amt'])
 
 	def format_view_body(self,*args,**kwargs):
+		if self.data:
+			from .contract import Token
+			self.txobj['token_to'] = Token.transferdata2sendaddr(self.data)
 		return 'Token:     {d} {c}\n{r}'.format(
 			d=self.txobj['token_addr'].hl(),
 			c=blue('(' + g.dcoin + ')'),

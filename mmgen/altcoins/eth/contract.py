@@ -25,7 +25,7 @@ from . import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
-from mmgen.obj import MMGenObject,TokenAddr,CoinTxID,ETHAmt
+from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt
 from mmgen.util import msg,pmsg
 
 try:
@@ -49,6 +49,10 @@ class Token(MMGenObject): # ERC20
 			if not decimals:
 				raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
 		self.base_unit = Decimal('10') ** -decimals
+
+	@staticmethod
+	def transferdata2sendaddr(data): # online
+		return CoinAddr(parse_abi(data)[1][-40:])
 
 	def transferdata2amt(self,data): # online
 		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
