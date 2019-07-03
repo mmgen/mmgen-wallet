@@ -22,6 +22,7 @@ ts_regtest.py: Regtest tests for the test.py test suite
 
 import os,subprocess
 from decimal import Decimal
+from ast import literal_eval
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
@@ -158,9 +159,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal2f',                "Bob's balance (showempty=1 sort=age,reverse)"),
 		('bob_rbf_send',             'sending funds to Alice (RBF)'),
 		('get_mempool1',             'mempool (before RBF bump)'),
+		('bob_rbf_status1',          'getting status of transaction'),
 		('bob_rbf_bump',             'bumping RBF transaction'),
 		('get_mempool2',             'mempool (after RBF bump)'),
+		('bob_rbf_status2',          'getting status of transaction after replacement'),
+		('bob_rbf_status3',          'getting status of replacement transaction (mempool)'),
 		('generate',                 'mining a block'),
+		('bob_rbf_status4',          'getting status of transaction after confirmed (1) replacement'),
+		('bob_rbf_status5',          'getting status of replacement transaction (confirmed)'),
+		('generate',                 'mining a block'),
+		('bob_rbf_status6',          'getting status of transaction after confirmed (2) replacement'),
 		('bob_bal3',                 "Bob's balance"),
 		('bob_pre_import',           'sending to non-imported address'),
 		('generate',                 'mining a block'),
@@ -483,6 +491,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		cmp_or_die(rtBals[6],ret)
 		return t
 
+	def user_txsend_status(self,user,tx_file,exp1='',exp2='',extra_args=[],bogus_send=False):
+		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
+		t = self.spawn('mmgen-txsend',['-d',self.tmpdir,'--'+user,'--status'] + extra_args + [tx_file])
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+		if exp1: t.expect(exp1)
+		if exp2: t.expect(exp2)
+		return t
+
 	def user_txdo(  self, user, fee, outputs_cl, outputs_list,
 					extra_args   = [],
 					wf           = None,
@@ -590,8 +606,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		disable_debug()
 		ret = self.spawn('mmgen-regtest',['show_mempool']).read()
 		restore_debug()
-		from ast import literal_eval
-		return literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
+		self.mempool = literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
+		return self.mempool
 
 	def get_mempool1(self):
 		mp = self._get_mempool()
@@ -599,6 +615,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			rdie(2,'Mempool has more or less than one TX!')
 		self.write_to_tmpfile('rbf_txid',mp[0]+'\n')
 		return 'ok'
+
+	def bob_rbf_status(self,fee,exp1,exp2='',skip_bch=False):
+		if skip_bch and not g.proto.cap('rbf'):
+			msg('skipping test {} for BCH'.format(self.test_name))
+			return 'skip'
+		ext = ',{}]{x}.testnet.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
+		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
+		return self.user_txsend_status('bob',txfile,exp1,exp2)
+
+	def bob_rbf_status1(self):
+		return self.bob_rbf_status(rtFee[1],'in mempool, replaceable',skip_bch=True)
 
 	def get_mempool2(self):
 		if not g.proto.cap('rbf'):
@@ -610,6 +637,34 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if chk.strip() == mp[0]:
 			rdie(2,'TX in mempool has not changed!  RBF bump failed')
 		return 'ok'
+
+	def bob_rbf_status2(self):
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[1],
+			'Transaction has been replaced','{} in mempool'.format(self.mempool[0]),
+			skip_bch=True)
+
+	def bob_rbf_status3(self):
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[2],'status: in mempool, replaceable',skip_bch=True)
+
+	def bob_rbf_status4(self):
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[1],
+			'Replacement transaction has 1 confirmation',
+			'Replacing transactions:\n  {}'.format(self.mempool[0]),
+			skip_bch=True)
+
+	def bob_rbf_status5(self):
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[2],'Transaction has 1 confirmation',skip_bch=True)
+
+	def bob_rbf_status6(self):
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[1],
+			'Replacement transaction has 2 confirmations',
+			'Replacing transactions:\n  {}'.format(self.mempool[0]),
+			skip_bch=True)
 
 	@staticmethod
 	def _gen_pairs(n):

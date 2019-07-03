@@ -876,58 +876,66 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def has_segwit_outputs(self):
 		return any(o.mmid and o.mmid.mmtype in ('S','B') for o in self.outputs)
 
-	def is_in_mempool(self):
-		return 'size' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
-
-	def is_in_wallet(self):
-		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
-		if 'confirmations' in ret and ret['confirmations'] > 0:
-			return ret['confirmations']
-		else:
-			return False
-
-	def is_replaced(self):
-		if self.is_in_mempool(): return False
-		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
-		if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
-			return False
-		return -ret['confirmations'] + 1,ret # 1: replacement in mempool, 2: replacement confirmed
-
-	def is_in_utxos(self):
-		return 'txid' in g.rpch.getrawtransaction(self.coin_txid,True,on_fail='silent')
-
 	def get_status(self,status=False):
-		if self.is_in_mempool():
+
+		class r(object): pass
+
+		def is_in_wallet():
+			ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+			if 'confirmations' in ret and ret['confirmations'] > 0:
+				r.confs = ret['confirmations']
+				return True
+			else:
+				return False
+
+		def is_in_utxos():
+			return 'txid' in g.rpch.getrawtransaction(self.coin_txid,True,on_fail='silent')
+
+		def is_in_mempool():
+			return 'size' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
+
+		def is_replaced():
+			if is_in_mempool(): return False
+			ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+
+			if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
+				return False
+
+			r.replacing_confs = -ret['confirmations']
+			r.replacing_txs = ret['walletconflicts']
+			return True
+
+		if is_in_mempool():
 			if status:
 				d = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
 				brs = 'bip125-replaceable'
-				r = '{}replaceable'.format(('NOT ','')[brs in d and d[brs]=='yes'])
+				rep = '{}replaceable'.format(('NOT ','')[brs in d and d[brs]=='yes'])
 				t = d['timereceived']
 				m = 'Sent {} ({} h/m/s ago)'
 				b = m.format(time.strftime('%c',time.gmtime(t)),secs_to_dhms(int(time.time()-t)))
 				if opt.quiet:
 					msg('Transaction is in mempool')
 				else:
-					msg('TX status: in mempool, {}\n{}'.format(r,b))
+					msg('TX status: in mempool, {}\n{}'.format(rep,b))
 			else:
 				msg('Warning: transaction is in mempool!')
-		elif self.is_in_wallet():
-			confs = self.is_in_wallet()
-			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
-		elif self.is_in_utxos():
+		elif is_in_wallet():
+			die(0,'Transaction has {} confirmation{}'.format(r.confs,suf(r.confs)))
+		elif is_in_utxos():
 			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
-		else:
-			ret = self.is_replaced() # ret[0]==1: replacement in mempool, ret[0]==2: replacement confirmed
-			if ret and ret[0]:
-				m1 = 'Transaction has been replaced'
-				m2 = ('',', and the replacement TX is confirmed')[ret[0]==2]
-				msg('{}{}!'.format(m1,m2))
-				if not opt.quiet:
-					msg('Replacing transactions:')
-					rt = ret[1]['walletconflicts']
-					for t,s in [(tx,'size' in g.rpch.getmempoolentry(tx,on_fail='silent')) for tx in rt]:
-						msg('  {}{}'.format(t,('',' in mempool')[s]))
-				die(0,'')
+		elif is_replaced():
+			m1 = 'Transaction has been replaced'
+			m2 = 'Replacement transaction is in mempool'
+			rc = r.replacing_confs
+			if rc:
+				m2 = 'Replacement transaction has {} confirmation{}'.format(rc,suf(rc))
+			msg('{}\n{}'.format(m1,m2))
+			if not opt.quiet:
+				msg('Replacing transactions:')
+				d = ((t,g.rpch.getmempoolentry(t,on_fail='silent')) for t in r.replacing_txs)
+				for txid,mp_entry in d:
+					msg('  {}{}'.format(txid,' in mempool' if ('size' in mp_entry) else ''))
+			die(0,'')
 
 	def confirm_send(self):
 		m1 = ("Once this transaction is sent, there's no taking it back!",'')[bool(opt.quiet)]

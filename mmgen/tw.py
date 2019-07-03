@@ -121,8 +121,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		# 4. include_unsafe (boolean, optional, default=true) Include outputs that are not safe to spend
 		# 5. query_options  (json object, optional) JSON with query options
 
-		# for now, self.addrs is just an empty list for Bitcoin and friends
-		add_args = (9999999,self.addrs) if self.addrs else ()
 		return g.rpch.listunspent(self.minconf)
 
 	def get_unspent_data(self):
