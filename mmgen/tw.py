@@ -92,7 +92,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.age_fmt      = 'days'
 		self.sort_key     = 'age'
 		self.do_sort()
-		self.total        = self.get_total_coin()
 		self.disp_prec    = self.get_display_precision()
 
 	@property
@@ -109,7 +108,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def get_display_precision(self):
 		return g.proto.coin_amt.max_prec
 
-	def get_total_coin(self):
+	@property
+	def total(self):
 		return sum(i.amt for i in self.unspent)
 
 	def get_unspent_rpc(self):
@@ -377,7 +377,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if TrackingWallet(mode='w').remove_address(e.addr):
 						self.get_unspent_data()
 						self.do_sort()
-						self.total = self.get_total_coin()
 						oneshot_msg = yellow("{} #{} removed\n\n".format(capfirst(self.item_desc),idx))
 					else:
 						oneshot_msg = red('Address could not be removed\n\n')
