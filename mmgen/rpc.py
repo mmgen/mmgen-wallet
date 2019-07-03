@@ -261,4 +261,107 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
 
-def rpc_errmsg(ret): return ret[1][2]
+def init_daemon_parity():
+
+	def resolve_token_arg(token_arg):
+		from mmgen.obj import CoinAddr
+		from mmgen.altcoins.eth.tw import EthereumTrackingWallet
+		from mmgen.altcoins.eth.contract import Token
+
+		tw = EthereumTrackingWallet(no_rpc=True)
+
+		try:    addr = CoinAddr(token_arg,on_fail='raise')
+		except: addr = tw.sym2addr(token_arg)
+
+		if not addr:
+			m = "'{}': unrecognized token symbol"
+			raise UnrecognizedTokenSymbol(m.format(token_arg))
+
+		sym = tw.addr2sym(addr) # throws exception on failure
+		vmsg('ERC20 token resolved: {} ({})'.format(addr,sym))
+
+		return addr,sym
+
+	from mmgen.rpc import EthereumRPCConnection
+	conn = EthereumRPCConnection(
+				g.rpc_host or 'localhost',
+				g.rpc_port or g.proto.rpc_port)
+
+	conn.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
+	conn.coin_amt_type = str
+	g.chain = conn.parity_chain().replace(' ','_')
+
+	conn.caps = ()
+	try:
+		conn.request('eth_chainId')
+		conn.caps += ('eth_chainId',)
+	except RPCFailure:
+		pass
+
+	if conn.request('parity_nodeKind')['capability'] == 'full':
+		conn.caps += ('full_node',)
+
+	if g.token:
+		g.rpch = conn # set g.rpch so rpc_init() will return immediately
+		(g.token,g.dcoin) = resolve_token_arg(g.token)
+
+	return conn
+
+def init_daemon_bitcoind():
+
+	def check_chainfork_mismatch(conn):
+		block0 = conn.getblockhash(0)
+		latest = conn.getblockcount()
+		try:
+			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
+			for fork in g.proto.forks:
+				if fork[0] == None or latest < fork[0]: break
+				assert conn.getblockhash(fork[0]) == fork[1], (
+					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
+		except Exception as e:
+			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e.args[0],c=g.coin))
+
+	def check_chaintype_mismatch():
+		try:
+			if g.regtest: assert g.chain == 'regtest','--regtest option selected, but chain is not regtest'
+			if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
+			if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
+		except Exception as e:
+			die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
+
+	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
+
+	from mmgen.rpc import CoinDaemonRPCConnection
+	conn = CoinDaemonRPCConnection(
+				g.rpc_host or 'localhost',
+				g.rpc_port or g.proto.rpc_port,
+				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
+				g.rpc_password or cfg['rpcpassword'],
+				auth_cookie=get_coin_daemon_auth_cookie())
+
+	if g.bob or g.alice:
+		from . import regtest as rt
+		rt.user(('alice','bob')[g.bob],quiet=True)
+	conn.daemon_version = int(conn.getnetworkinfo()['version'])
+	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
+	g.chain = conn.getblockchaininfo()['chain']
+	if g.chain != 'regtest': g.chain += 'net'
+	assert g.chain in g.chains
+	check_chaintype_mismatch()
+
+	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+		check_chainfork_mismatch(conn)
+
+	conn.caps = ('full_node',)
+	for func,cap in (
+		('setlabel','label_api'),
+		('signrawtransactionwithkey','sign_with_key') ):
+		if len(conn.request('help',func).split('\n')) > 3:
+			conn.caps += (cap,)
+	return conn
+
+def init_daemon(name):
+	return globals()['init_daemon_'+name]()
+
+def rpc_errmsg(ret):
+	return ret[1][2]
