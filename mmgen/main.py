@@ -39,6 +39,7 @@ def launch(mod):
 		__import__('mmgen.main_' + mod)
 	except KeyboardInterrupt:
 		sys.stderr.write('\nUser interrupt\n')
+		sys.exit(1) # must exit normally so exit handlers will be called
 	except EOFError:
 		sys.stderr.write('\nEnd of file\n')
 	except Exception as e:

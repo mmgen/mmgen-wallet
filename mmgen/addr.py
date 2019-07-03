@@ -556,7 +556,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 					pop_list.append(n)
 		for n in reversed(pop_list): self.data.pop(n)
 		if pop_list:
-			vmsg(self.msgs['removed_dup_keys'].format(len(pop_list),suf(removed,'s')))
+			vmsg(self.msgs['removed_dup_keys'].format(len(pop_list),suf(removed)))
 
 	def add_wifs(self,key_list):
 		if not key_list: return
@@ -900,7 +900,8 @@ re-import your addresses.
 
 	def __init__(self,source=None):
 		self.al_ids = {}
-		if source == 'tw': self.add_tw_data()
+		if source == 'tw':
+			self.add_tw_data()
 
 	def seed_ids(self):
 		return list(self.al_ids.keys())

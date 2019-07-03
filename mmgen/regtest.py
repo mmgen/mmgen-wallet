@@ -333,4 +333,4 @@ def generate(blocks=1,silent=False):
 	if not out or len(literal_eval(out)) != blocks:
 		rdie(1,'Error generating blocks')
 	p.wait()
-	gmsg('Mined {} block{}'.format(blocks,suf(blocks,'s')))
+	gmsg('Mined {} block{}'.format(blocks,suf(blocks)))

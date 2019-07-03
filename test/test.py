@@ -69,6 +69,7 @@ def create_shm_dir(data_dir,trash_dir):
 
 import sys,os,time
 
+os.environ['MMGEN_TEST_SUITE'] = '1'
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
@@ -386,7 +387,7 @@ def clean(usr_dirs=None):
 		else:
 			die(1,'{}: invalid directory number'.format(d))
 	if dirlist:
-		iqmsg(green('Cleaned tmp director{} {}'.format(suf(dirlist,'y'),' '.join(dirlist))))
+		iqmsg(green('Cleaned tmp director{} {}'.format(suf(dirlist,'ies'),' '.join(dirlist))))
 	cleandir(data_dir)
 	cleandir(trash_dir)
 	iqmsg(green("Cleaned directories '{}'".format("' '".join([data_dir,trash_dir]))))
@@ -429,8 +430,6 @@ def set_environ_for_spawned_scripts():
 	os.environ['MMGEN_NO_LICENSE'] = '1'
 	os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 	os.environ['MMGEN_BOGUS_SEND'] = '1'
-	# Tell spawned programs they're running in the test suite
-	os.environ['MMGEN_TEST_SUITE'] = '1'
 
 def set_restore_term_at_exit():
 	import termios,atexit
@@ -880,23 +879,17 @@ try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
 except KeyboardInterrupt:
-	die(1,'\nExiting at user request')
+	die(1,'\ntest.py exiting at user request')
 except TestSuiteException as e:
 	ydie(1,e.args[0])
 except TestSuiteFatalException as e:
 	rdie(1,e.args[0])
 except Exception:
 	if opt.traceback:
+		msg(blue('Spawned script exited with error'))
+	else:
 		import traceback
 		print(''.join(traceback.format_exception(*sys.exc_info())))
-		try:
-			os.stat('my.err')
-			t = open('my.err').readlines()
-			if t:
-				msg_r('\n'+yellow(''.join(t[:-1]))+red(t[-1]))
-		except: pass
-		die(1,blue('Test script exited with error'))
-	else:
-		raise
+		msg(blue('Test script exited with error'))
 except:
 	raise

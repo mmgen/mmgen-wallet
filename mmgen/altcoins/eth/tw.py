@@ -233,11 +233,11 @@ class EthereumTwAddrList(TwAddrList):
 		rpc_init()
 		if g.token: self.token = Token(g.token)
 
-		tw = TrackingWallet().mmid_ordered_dict()
+		tw_dict = TrackingWallet().mmid_ordered_dict()
 		self.total = g.proto.coin_amt('0')
 
 		from mmgen.obj import CoinAddr
-		for mmid,d in list(tw.items()):
+		for mmid,d in list(tw_dict.items()):
 #			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list): continue

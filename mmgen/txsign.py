@@ -70,7 +70,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]
 	sids = {i.sid for i in mmids}
-	vmsg('Need seed{}: {}'.format(suf(sids,'s'),' '.join(sids)))
+	vmsg('Need seed{}: {}'.format(suf(sids),' '.join(sids)))
 	d = MMGenList()
 	from mmgen.addr import KeyAddrList
 	for sid in sids:
@@ -104,7 +104,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 					else:
 						die(3,wmsg['mapping_error'].format(m1,mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
-		vmsg('Added {} wif key{} from {}'.format(len(new_keys),suf(new_keys,'s'),desc))
+		vmsg('Added {} wif key{} from {}'.format(len(new_keys),suf(new_keys),desc))
 	return new_keys
 
 def _pop_and_return(args,cmplist): # strips found args
@@ -167,6 +167,6 @@ def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 
 	extra_sids = set(saved_seeds) - tx.get_input_sids() - tx.get_output_sids()
 	if extra_sids:
-		msg('Unused Seed ID{}: {}'.format(suf(extra_sids,'s'),' '.join(extra_sids)))
+		msg('Unused Seed ID{}: {}'.format(suf(extra_sids),' '.join(extra_sids)))
 
 	return tx.sign(tx_num_str,keys) # returns True or False

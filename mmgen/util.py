@@ -184,7 +184,7 @@ def dmsg(s):
 	if opt.debug: msg(s)
 
 def suf(arg,suf_type='s'):
-	suf_types = { 's':  ('s',''), 'es': ('es',''), 'y': ('ies','y') }
+	suf_types = { 's': '', 'es': '', 'ies': 'y' }
 	assert suf_type in suf_types
 	t = type(arg)
 	if t == int:
@@ -193,7 +193,7 @@ def suf(arg,suf_type='s'):
 		n = len(arg)
 	else:
 		die(2,'{}: invalid parameter for suf()'.format(arg))
-	return suf_types[suf_type][n==1]
+	return suf_types[suf_type] if n == 1 else suf_type
 
 def get_extension(f):
 	a,b = os.path.splitext(f)

@@ -157,7 +157,7 @@ if invoked_as in ('conv','passchg','subgen'):
 	gmsg('Processing output wallet')
 
 if invoked_as == 'subgen':
-	ss_out = SeedSource(seed=ss_in.seed.subseed(ss_idx,print_msg=True).data)
+	ss_out = SeedSource(seed_bin=ss_in.seed.subseed(ss_idx,print_msg=True).data)
 else:
 	ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 

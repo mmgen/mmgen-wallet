@@ -24,10 +24,15 @@ mmgen.exception: Exception classes for the MMGen suite
 class UserNonConfirmation(Exception):     mmcode = 1
 class BadAgeFormat(Exception):            mmcode = 1
 class BadFilename(Exception):             mmcode = 1
+class SocketError(Exception):             mmcode = 1
+class UserAddressNotInWallet(Exception):  mmcode = 1
 
 # 2: yellow hl, message only
+class InvalidTokenAddress(Exception):     mmcode = 2
 class UnrecognizedTokenSymbol(Exception): mmcode = 2
 class TokenNotInBlockchain(Exception):    mmcode = 2
+class TokenNotInWallet(Exception):        mmcode = 2
+class BadTwComment(Exception):            mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3

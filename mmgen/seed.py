@@ -72,6 +72,10 @@ class SeedBase(MMGenObject):
 	def hexdata(self):
 		return self.data.hex()
 
+	@property
+	def fn_stem(self):
+		return self.sid
+
 class SubSeedList(MMGenObject):
 	have_short = True
 	nonce_start = 0
@@ -612,7 +616,7 @@ class SeedSourceUnenc(SeedSource):
 	def _filename(self):
 		s = self.seed
 		return '{}[{}]{x}.{}'.format(
-			s.sid,
+			s.fn_stem,
 			s.bitlen,
 			self.ext,
 			x='-α' if g.debug_utf8 else '')
@@ -1121,7 +1125,7 @@ class Wallet (SeedSourceEnc):
 		s = self.seed
 		d = self.ssdata
 		return '{}-{}[{},{}]{x}.{}'.format(
-				s.sid,
+				s.fn_stem,
 				d.key_id,
 				s.bitlen,
 				d.hash_preset,
@@ -1248,7 +1252,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		s = self.seed
 		d = self.ssdata
 		return '{}-{}-{}[{},{}]{x}.{}'.format(
-				s.sid,
+				s.fn_stem,
 				d.key_id,
 				d.iv_id,
 				s.bitlen,

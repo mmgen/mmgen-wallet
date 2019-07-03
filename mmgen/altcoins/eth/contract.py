@@ -26,7 +26,7 @@ from . import rlp
 from mmgen.globalvars import g
 from mmgen.common import *
 from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt
-from mmgen.util import msg,pmsg
+from mmgen.util import msg
 
 try:
 	assert not g.use_internal_keccak_module
@@ -60,17 +60,16 @@ class Token(MMGenObject): # ERC20
 	def do_call(self,method_sig,method_args='',toUnit=False):
 		data = create_method_id(method_sig) + method_args
 		if g.debug:
-			msg('{}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
+			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
 		ret = g.rpch.eth_call({ 'to': '0x'+self.addr, 'data': '0x'+data })
 		return int(ret,16) * self.base_unit if toUnit else ret
 
 	def balance(self,acct_addr):
-		return self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True)
+		return ETHAmt(self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
 
 	def strip(self,s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
-	def total_supply(self): return self.do_call('totalSupply()',toUnit=True)
 	def decimals(self):
 			ret = self.do_call('decimals()')
 			try:
@@ -79,8 +78,15 @@ class Token(MMGenObject): # ERC20
 			except:
 				"RPC call to decimals() failed (returned '{}')".format(ret)
 			return int(b,16) if b else None
-	def name(self):         return self.strip(bytes.fromhex(self.do_call('name()')[2:]))
-	def symbol(self):       return self.strip(bytes.fromhex(self.do_call('symbol()')[2:]))
+
+	def name(self):
+		return self.strip(bytes.fromhex(self.do_call('name()')[2:]))
+
+	def symbol(self):
+		return self.strip(bytes.fromhex(self.do_call('symbol()')[2:]))
+
+	def total_supply(self):
+		return self.do_call('totalSupply()',toUnit=True)
 
 	def info(self):
 		fs = '{:15}{}\n' * 5
@@ -108,8 +114,8 @@ class Token(MMGenObject): # ERC20
 				'startgas': start_gas.toWei(),
 				'gasprice': gasPrice.toWei(),
 				'value':    0,
-				'nonce':   nonce,
-				'data':    bytes.fromhex(data) }
+				'nonce':    nonce,
+				'data':     bytes.fromhex(data) }
 
 	def txsign(self,tx_in,key,from_addr,chain_id=None):
 
@@ -125,8 +131,9 @@ class Token(MMGenObject): # ERC20
 			m = "Sender address '{}' does not match address of key '{}'!"
 			die(3,m.format(from_addr,tx.sender.hex()))
 		if g.debug:
-			msg('{}'.format('\n  '.join(parse_abi(data))))
+			msg('TOKEN DATA:')
 			pmsg(tx.to_dict())
+			msg('PARSED ABI DATA:\n  {}'.format('\n  '.join(parse_abi(tx.data.hex()))))
 		return hex_tx,coin_txid
 
 # The following are used for token deployment only:
@@ -145,9 +152,3 @@ class Token(MMGenObject): # ERC20
 								from_addr2=from_addr2)
 		(hex_tx,coin_txid) = self.txsign(tx_in,key,from_addr)
 		return self.txsend(hex_tx)
-
-	def transfer_from(self,from_addr,to_addr,amt,key,start_gas,gasPrice):
-		raise NotImplementedError('method not implemented')
-		return self.transfer(   from_addr,to_addr,amt,key,start_gas,gasPrice,
-								method_sig='transferFrom(address,address,uint256)',
-								from_addr2=from_addr)

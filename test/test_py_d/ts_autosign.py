@@ -155,8 +155,8 @@ class TestSuiteAutosign(TestSuiteBase):
 
 		def do_autosign(opts,mountpoint):
 			make_wallet(opts)
-
 			copy_files(mountpoint,include_bad_tx=True)
+
 			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
 			t.expect('{} transactions signed'.format(txcount))
 			t.expect('2 transactions failed to sign')

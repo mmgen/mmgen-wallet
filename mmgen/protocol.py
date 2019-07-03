@@ -21,7 +21,7 @@ protocol.py: Coin protocol functions, classes and methods
 """
 
 import sys,os,hashlib
-from mmgen.util import msg,pmsg,ymsg,Msg,pdie,ydie
+from mmgen.util import msg,ymsg,Msg,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
@@ -520,7 +520,6 @@ def make_init_genonly_altcoins_str(data):
 		if proto+'Protocol' in globals(): continue
 		if coin.lower() in CoinProtocol.coins: continue
 		out += fs.format(coin.lower(),proto,('None',proto+'TestnetProtocol')[coin in tn_coins])
-#	print out
 	return out
 
 def init_coin(coin,testnet=None):

@@ -348,13 +348,15 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 def opt_is_tx_fee(val,desc):
 	from mmgen.tx import MMGenTX
-	ret = MMGenTX().process_fee_spec(val,224,on_fail='return')
+	tx = MMGenTX()
+	# TODO: size is just a guess; do this check after parsing tx file
+	ret = tx.process_fee_spec(val,224,on_fail='return')
 	# Non-standard startgas: disable fee checking
 	if hasattr(opt,'contract_data') and opt.contract_data: ret = None
 	if hasattr(opt,'tx_gas') and opt.tx_gas:               ret = None
 	if ret == False:
 		msg("'{}': invalid {}\n(not a {} amount or {} specification)".format(
-				val,desc,g.coin.upper(),MMGenTX().rel_fee_desc))
+				val,desc,g.coin.upper(),tx.rel_fee_desc))
 	elif ret != None and ret > g.proto.max_tx_fee:
 		msg("'{}': invalid {}\n({} > max_tx_fee ({} {}))".format(
 				val,desc,ret.fmt(fs='1.1'),g.proto.max_tx_fee,g.coin.upper()))

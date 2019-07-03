@@ -170,16 +170,14 @@ def do_umount():
 
 def sign_tx_file(txfile,signed_txs):
 	try:
-		g.testnet = False
-		g.coin = 'BTC'
+		init_coin('BTC',testnet=False)
 		tmp_tx = mmgen.tx.MMGenTX(txfile,metadata_only=True)
 		init_coin(tmp_tx.coin)
 
 		if tmp_tx.chain != 'mainnet':
 			if tmp_tx.chain == 'testnet' or (
 				hasattr(g.proto,'chain_name') and tmp_tx.chain != g.proto.chain_name):
-				g.testnet = True
-				init_coin(tmp_tx.coin)
+				init_coin(tmp_tx.coin,testnet=True)
 
 		if hasattr(g.proto,'chain_name'):
 			m = 'Chains do not match! tx file: {}, proto: {}'

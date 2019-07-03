@@ -108,6 +108,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		return sum(i.amt for i in self.unspent)
 
 	def get_unspent_rpc(self):
+		# bitcoin-cli help listunspent:
+		# Arguments:
+		# 1. minconf        (numeric, optional, default=1) The minimum confirmations to filter
+		# 2. maxconf        (numeric, optional, default=9999999) The maximum confirmations to filter
+		# 3. addresses      (json array, optional, default=empty array) A json array of bitcoin addresses
+		# 4. include_unsafe (boolean, optional, default=true) Include outputs that are not safe to spend
+		# 5. query_options  (json object, optional) JSON with query options
+
+		# for now, self.addrs is just an empty list for Bitcoin and friends
+		add_args = (9999999,self.addrs) if self.addrs else ()
 		return g.rpch.listunspent(self.minconf)
 
 	def get_unspent_data(self):
@@ -115,8 +125,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data)) # testing, so ok
 		else:
 			us_rpc = self.get_unspent_rpc()
-#		write_data_to_file('bogus_unspent.json', repr(us), 'bogus unspent data')
-#		sys.exit(0)
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
 		confs_per_day = 60*60*24 // g.proto.secs_per_block
@@ -288,7 +296,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		return self.fmt_print
 
 	def display_total(self):
-		fs = '\nTotal unspent: {} {} ({} outputs)'
+		fs = '\nTotal unspent: {} {} ({} output%s)' % suf(self.unspent)
 		msg(fs.format(self.total.hl(),g.dcoin,len(self.unspent)))
 
 	def get_idx_from_user(self,get_label=False):
@@ -469,7 +477,7 @@ class TwAddrList(MMGenDict):
 		if age_fmt not in age_fmts:
 			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(age_fmt,age_fmts))
 		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
-		fs = '{{mid}}{} {{cmt}} {{amt}}{}'.format(('',' {addr}')[showbtcaddrs],('',' {age}')[show_age])
+		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
 		max_cmt_width = max(max(v['lbl'].comment.screen_width for v in self.values()),7)
@@ -483,7 +491,7 @@ class TwAddrList(MMGenDict):
 				cmt=TwComment.fmtc('COMMENT',width=max_cmt_width+1),
 				amt='BALANCE'.ljust(max_fp_len+4),
 				age=('CONFS','DAYS')[age_fmt=='days'],
-				)]
+				).rstrip()]
 
 		def sort_algo(j):
 			if sort and 'age' in sort:
@@ -515,7 +523,7 @@ class TwAddrList(MMGenDict):
 				cmt=e['lbl'].comment.fmt(width=max_cmt_width,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
 				age=mmid.confs // (1,confs_per_day)[age_fmt=='days'] if hasattr(mmid,'confs') and mmid.confs != None else '-'
-				))
+				).rstrip())
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
 

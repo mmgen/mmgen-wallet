@@ -44,7 +44,7 @@ class EthereumMMGenTX(MMGenTX):
 	usr_rel_fee = None # not in MMGenTX
 	disable_fee_check = False
 	txobj  = None # ""
-	data = HexStr('')
+	usr_contract_data = HexStr('')
 
 	def __init__(self,*args,**kwargs):
 		super(EthereumMMGenTX,self).__init__(*args,**kwargs)
@@ -53,7 +53,7 @@ class EthereumMMGenTX(MMGenTX):
 		if hasattr(opt,'contract_data') and opt.contract_data:
 			m = "'--contract-data' option may not be used with token transaction"
 			assert not 'Token' in type(self).__name__, m
-			self.data = HexStr(open(opt.contract_data).read().strip())
+			self.usr_contract_data = HexStr(open(opt.contract_data).read().strip())
 			self.disable_fee_check = True
 
 	@classmethod
@@ -120,7 +120,7 @@ class EthereumMMGenTX(MMGenTX):
 					'chainId':  Int(d['chainId']),
 					'data':     HexStr(d['data']) }
 		self.tx_gas = o['startGas'] # approximate, but better than nothing
-		self.data = o['data']
+		self.usr_contract_data = o['data']
 		if o['data'] and not o['to']: self.disable_fee_check = True
 		self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
 		self.txobj = o
@@ -139,7 +139,7 @@ class EthereumMMGenTX(MMGenTX):
 			'startGas': self.start_gas,
 			'nonce': self.get_nonce(),
 			'chainId': Int(g.rpch.request(chain_id_method),16),
-			'data':  self.data,
+			'data':  self.usr_contract_data,
 		}
 
 	# Instead of serializing tx data as with BTC, just create a JSON dump.
@@ -147,7 +147,7 @@ class EthereumMMGenTX(MMGenTX):
 	# thus removing an attack vector
 	def create_raw(self):
 		assert len(self.inputs) == 1,'Transaction has more than one input!'
-		o_ok = (0,1) if self.data else (1,)
+		o_ok = (0,1) if self.usr_contract_data else (1,)
 		o_num = len(self.outputs)
 		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
 		self.make_txobj()
@@ -166,7 +166,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
-		if lc == 0 and self.data and not 'Token' in type(self).__name__: return
+		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__: return
 		if lc != 1:
 			fs = '{} output{} specified, but Ethereum transactions must have exactly one'
 			die(1,fs.format(lc,suf(lc)))
@@ -264,7 +264,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def format_view_abs_fee(self):
 		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
-		note = ' (max)' if self.data else ''
+		note = ' (max)' if self.usr_contract_data else ''
 		return fee.hl() + note
 
 	def format_view_rel_fee(self,terse): return ''
@@ -337,7 +337,7 @@ class EthereumMMGenTX(MMGenTX):
 
 		confs = self.is_in_wallet()
 		if confs is not False:
-			if self.data:
+			if self.usr_contract_data:
 				exec_status = type(self).get_exec_status(self.coin_txid)
 				if exec_status == 0:
 					msg('Contract failed to execute!')
@@ -451,12 +451,12 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			o['token_addr'] = TokenAddr(d['token_addr'])
 			o['decimals']   = Int(d['decimals'])
 			t = Token(o['token_addr'],o['decimals'])
-			self.data = o['data'] = t.create_data(o['to'],o['amt'])
+			self.usr_contract_data = o['data'] = t.create_data(o['to'],o['amt'])
 
 	def format_view_body(self,*args,**kwargs):
-		if self.data:
+		if self.usr_contract_data:
 			from .contract import Token
-			self.txobj['token_to'] = Token.transferdata2sendaddr(self.data)
+			self.txobj['token_to'] = Token.transferdata2sendaddr(self.usr_contract_data)
 		return 'Token:     {d} {c}\n{r}'.format(
 			d=self.txobj['token_addr'].hl(),
 			c=blue('(' + g.dcoin + ')'),

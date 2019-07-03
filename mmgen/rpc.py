@@ -28,7 +28,7 @@ from decimal import Decimal
 def dmsg_rpc(s):
 	if g.debug_rpc: msg(s)
 
-class CoinDaemonRPCConnection(object):
+class CoinDaemonRPCConnection(MMGenObject):
 
 	auth = True
 	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
@@ -42,7 +42,7 @@ class CoinDaemonRPCConnection(object):
 		try:
 			socket.create_connection((host,port),timeout=3).close()
 		except:
-			die(1,'Unable to connect to {}:{}'.format(host,port))
+			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
 		if not self.auth:
 			pass

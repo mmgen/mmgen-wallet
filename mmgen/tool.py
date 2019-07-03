@@ -111,7 +111,7 @@ def _process_args(cmd,cmd_args):
 	if flag != 'VAR_ARGS':
 		if len(cmd_args) < len(c_args):
 			m1 = 'Command requires exactly {} non-keyword argument{}'
-			msg(m1.format(len(c_args),suf(c_args,'s')))
+			msg(m1.format(len(c_args),suf(c_args)))
 			_usage(cmd)
 
 		u_args = cmd_args[:len(c_args)]
@@ -459,25 +459,25 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
 		computed using a different algorithm and are NOT Electrum-compatible!
 	"""
-	def _do_random_mn(self,nbytes:int,wordlist_id:str):
+	def _do_random_mn(self,nbytes:int,wordlist:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
 		hexrand = get_random(nbytes).hex()
 		Vmsg('Seed: {}'.format(hexrand))
-		return self.hex2mn(hexrand,wordlist_id=wordlist_id)
+		return self.hex2mn(hexrand,wordlist=wordlist)
 
 	def mn_rand128(self,wordlist=dfl_wl_id):
-		"generate random 128-bit mnemonic"
+		"generate random 128-bit mnemonic seed phrase"
 		return self._do_random_mn(16,wordlist)
 
 	def mn_rand192(self,wordlist=dfl_wl_id):
-		"generate random 192-bit mnemonic"
+		"generate random 192-bit mnemonic seed phrase"
 		return self._do_random_mn(24,wordlist)
 
 	def mn_rand256(self,wordlist=dfl_wl_id):
-		"generate random 256-bit mnemonic"
+		"generate random 256-bit mnemonic seed phrase"
 		return self._do_random_mn(32,wordlist)
 
-	def hex2mn(self,hexstr:'sstr',wordlist_id=dfl_wl_id):
+	def hex2mn(self,hexstr:'sstr',wordlist=dfl_wl_id):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
 		opt.out_fmt = 'words'
 		from mmgen.seed import SeedSource
@@ -553,7 +553,9 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 		flist.sort_by_age(key=file_sort) # in-place sort
 
 		sep = '—'*77+'\n'
-		return sep.join([MMGenTX(fn).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]).rstrip()
+		return sep.join(
+			[MMGenTX(fn).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]
+		).rstrip()
 
 class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
 	"""
@@ -787,11 +789,11 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 		"view tracking wallet"
 		rpc_init()
 		from mmgen.tw import TwUnspentOutputs
-		tw = TwUnspentOutputs(minconf=minconf)
-		tw.do_sort(sort,reverse=reverse)
-		tw.age_fmt = age_fmt
-		tw.show_mmid = show_mmid
-		return tw.format_for_printing(color=True) if wide else tw.format_for_display()
+		twuo = TwUnspentOutputs(minconf=minconf)
+		twuo.do_sort(sort,reverse=reverse)
+		twuo.age_fmt = age_fmt
+		twuo.show_mmid = show_mmid
+		return twuo.format_for_printing(color=True) if wide else twuo.format_for_display()
 
 	def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"

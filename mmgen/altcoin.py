@@ -431,7 +431,6 @@ class CoinInfo(object):
 				line[n] = re.sub(r"'0x(....)'",r'0x\1',line[n])
 				line[n] = re.sub(r' ',r'',line[n]) + ('',',')[n != len(line)-1]
 
-			from mmgen.util import pmsg,pdie
 			if trust != -1:
 				if sym in tt:
 					src = tt[sym]

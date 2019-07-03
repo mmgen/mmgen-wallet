@@ -735,7 +735,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		self.check_pubkey_scripts()
 
-		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys,'s'),g.proto.daemon_name))
+		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys),g.proto.daemon_name))
 
 		if self.has_segwit_inputs():
 			from mmgen.addr import KeyGenerator,AddrGenerator
@@ -781,12 +781,12 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('OK')
 			return True
 		except Exception as e:
-			if g.traceback:
-				import traceback
-				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
 			try: m = '{}'.format(e.args[0])
 			except: m = repr(e.args[0])
 			msg('\n'+yellow(m))
+			if g.traceback:
+				import traceback
+				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
 			return False
 
 	def mark_raw(self):
@@ -1548,6 +1548,7 @@ class MMGenBumpTX(MMGenTX):
 			return False
 		return ret
 
+# NOT MAINTAINED
 class MMGenSplitTX(MMGenTX):
 
 	def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty

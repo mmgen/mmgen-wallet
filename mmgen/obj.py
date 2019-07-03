@@ -491,7 +491,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 
 	def __str__(self,color=False): # format simply, no exponential notation
 		return self.colorize(
-			str(int(self)) if int(self) == self else self.normalize().__format__('f'),
+				str(int(self)) if int(self) == self else
+				self.normalize().__format__('f'),
 			color=color)
 
 	def __repr__(self):
