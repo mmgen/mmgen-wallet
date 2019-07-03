@@ -22,7 +22,7 @@ common.py:  Common imports for all MMGen scripts
 
 import sys,os
 from mmgen.exception import *
-from mmgen.globalvars import g
+from mmgen.globalvars import *
 import mmgen.opts as opts
 from mmgen.opts import opt
 from mmgen.util import *

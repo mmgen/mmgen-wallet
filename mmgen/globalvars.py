@@ -23,6 +23,11 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 import sys,os
 from decimal import Decimal
 
+if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN_TRACEBACK'):
+	from mmgen.devtools import *
+else:
+	class MMGenObject(object): pass
+
 # Global vars are set to dfl values in class g.
 # They're overridden in this order:
 #   1 - config file

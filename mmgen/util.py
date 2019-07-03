@@ -25,7 +25,7 @@ from hashlib import sha256
 from string import hexdigits,digits
 from mmgen.color import *
 from mmgen.exception import *
-from mmgen.globalvars import g
+from mmgen.globalvars import *
 
 if g.platform == 'win':
 	def msg_r(s):
@@ -93,15 +93,7 @@ def pformat(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
 def pmsg(*args):
-	if not args: return
 	msg(pformat(args if len(args) > 1 else args[0]))
-def Pmsg(*args):
-	if not args: return
-	Msg(pformat(args if len(args) > 1 else args[0]))
-def pdie(*args,exit_val=1):
-	if not args: sys.exit(1)
-	die(exit_val,(pformat(args if len(args) > 1 else args[0])))
-def pdie2(*args): pdie(*args,exit_val=0)
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]

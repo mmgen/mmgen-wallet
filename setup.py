@@ -87,6 +87,7 @@ setup(
 			'mmgen.color',
 			'mmgen.common',
 			'mmgen.crypto',
+			'mmgen.devtools',
 			'mmgen.ed25519',
 			'mmgen.ed25519ll_djbec',
 			'mmgen.exception',
