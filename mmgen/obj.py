@@ -22,8 +22,10 @@ obj.py: MMGen native classes
 
 import sys,os,unicodedata
 from decimal import *
-from mmgen.color import *
 from string import hexdigits,ascii_letters,digits
+
+from mmgen.color import *
+from mmgen.exception import *
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -169,14 +171,19 @@ class InitErrors(object):
 		if m2: errmsg = '{!r}\n{}'.format(m2,errmsg)
 
 		from mmgen.globalvars import g
-		if g.traceback: cls.on_fail == 'raise'
 		from mmgen.util import die,msg
-		if   cls.on_fail == 'silent': return None # TODO: return False instead?
-		elif cls.on_fail == 'raise':  raise ValueError(errmsg)
-		elif cls.on_fail == 'die':    die(1,errmsg)
+		if cls.on_fail == 'silent':
+			return None # TODO: return False instead?
 		elif cls.on_fail == 'return':
 			if errmsg: msg(errmsg)
-			return None                       # TODO: here too?
+			return None # TODO: return False instead?
+		elif g.traceback or cls.on_fail == 'raise':
+			if hasattr(cls,'exc'):
+				raise cls.exc(errmsg)
+			else:
+				raise
+		elif cls.on_fail == 'die':
+			die(1,errmsg)
 
 class Hilite(object):
 
@@ -860,6 +867,7 @@ class MMGenWalletLabel(MMGenLabel):
 class TwComment(MMGenLabel):
 	max_screen_width = 80
 	desc = 'tracking wallet comment'
+	exc = BadTwComment
 
 class MMGenTXLabel(MMGenLabel):
 	max_len = 72

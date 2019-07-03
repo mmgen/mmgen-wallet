@@ -22,8 +22,10 @@ rpc.py:  Cryptocoin RPC library for the MMGen suite
 
 import http.client,base64,json
 
-from mmgen.common import *
 from decimal import Decimal
+
+from mmgen.common import *
+from mmgen.obj import MMGenObject
 
 def dmsg_rpc(s):
 	if g.debug_rpc: msg(s)
@@ -261,6 +263,8 @@ class EthereumRPCConnection(CoinDaemonRPCConnection):
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
 
+def rpc_errmsg(ret): return ret[1][2]
+
 def init_daemon_parity():
 
 	def resolve_token_arg(token_arg):
@@ -362,6 +366,3 @@ def init_daemon_bitcoind():
 
 def init_daemon(name):
 	return globals()['init_daemon_'+name]()
-
-def rpc_errmsg(ret):
-	return ret[1][2]

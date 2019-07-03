@@ -25,6 +25,8 @@ pn = os.path.dirname(sys.argv[0])
 os.chdir(os.path.join(pn,os.pardir))
 sys.path.__setitem__(0,os.path.abspath(os.curdir))
 
+os.environ['MMGEN_TEST_SUITE'] = '1'
+
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import *
@@ -53,6 +55,7 @@ def run_test(test,arg,input_data):
 	arg_copy = arg
 	kwargs = {'on_fail':'silent'} if opt.silent else {}
 	ret_chk = arg
+	exc_type = None
 	if input_data == 'good' and type(arg) == tuple: arg,ret_chk = arg
 	if type(arg) == dict: # pass one arg + kwargs to constructor
 		arg_copy = arg.copy()
@@ -67,6 +70,10 @@ def run_test(test,arg,input_data):
 			ret_chk = arg['ret']
 			del arg['ret']
 			del arg_copy['ret']
+		if 'ExcType' in arg:
+			exc_type = arg['ExcType']
+			del arg['ExcType']
+			del arg_copy['ExcType']
 		kwargs.update(arg)
 	elif type(arg) == tuple:
 		args = arg
@@ -91,7 +98,12 @@ def run_test(test,arg,input_data):
 		if not opt.super_silent:
 			msg('==> {}'.format(ret))
 		if opt.verbose and issubclass(cls,MMGenObject):
-			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
+			ret.ppmsg() if hasattr(ret,'ppmsg') else ppmsg(ret)
+	except Exception as e:
+		if not type(e).__name__ == exc_type:
+			raise
+		msg_r(' {}'.format(yellow(exc_type+':')))
+		msg(e.args[0])
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError('Error on good input data')

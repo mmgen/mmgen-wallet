@@ -27,6 +27,11 @@ from mmgen.tx import is_mmgen_id
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
+def get_tw_label(s):
+	try: return TwLabel(s,on_fail='raise')
+	except BadTwComment: raise
+	except: return None
+
 class TwUnspentOutputs(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
@@ -131,8 +136,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		tr_rpc = []
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for o in us_rpc:
-			if not lbl_id in o: continue          # coinbase outputs have no account field
-			l = TwLabel(o[lbl_id],on_fail='silent')
+			if not lbl_id in o: continue # coinbase outputs have no account field
+			l = get_tw_label(o[lbl_id])
 			if l:
 				o.update({
 					'twmmid': l.mmid,
@@ -427,7 +432,7 @@ class TwAddrList(MMGenDict):
 		for d in g.rpch.listunspent(0):
 			if not lbl_id in d: continue  # skip coinbase outputs with missing account
 			if d['confirmations'] < minconf: continue
-			label = TwLabel(d[lbl_id],on_fail='silent')
+			label = get_tw_label(d[lbl_id])
 			if label:
 				if usr_addr_list and (label.mmid not in usr_addr_list): continue
 				if label.mmid in self:
@@ -452,7 +457,7 @@ class TwAddrList(MMGenDict):
 			else:
 				acct_list = list(g.rpch.listaccounts(0,True).keys()) # raw list, no 'L'
 				acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
-			acct_labels = MMGenList([TwLabel(a,on_fail='silent') for a in acct_list])
+			acct_labels = MMGenList([get_tw_label(a) for a in acct_list])
 			check_dup_mmid(acct_labels)
 			assert len(acct_list) == len(acct_addrs),(
 				'listaccounts() and getaddressesbyaccount() not equal in length')
@@ -645,17 +650,16 @@ class TwGetBalance(MMGenObject):
 		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for d in g.rpch.listunspent(0):
-			try:
-				lbl = TwLabel(d[lbl_id],on_fail='silent')
-			except:
-				lbl,key = None,'Non-wallet'
-			else:
+			lbl = get_tw_label(d[lbl_id])
+			if lbl:
 				if lbl.mmid.type == 'mmgen':
 					key = lbl.mmid.obj.sid
 					if key not in self.data:
 						self.data[key] = [g.proto.coin_amt('0')] * 4
 				else:
 					key = 'Non-MMGen'
+			else:
+				lbl,key = None,'Non-wallet'
 
 			if not d['confirmations']:
 				self.data['TOTAL'][0] += d['amount']

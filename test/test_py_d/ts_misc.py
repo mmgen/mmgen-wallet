@@ -166,6 +166,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		('tool_rand2file',       (9,"'mmgen-tool rand2file'", [])),
 		('tool_encrypt',         (9,"'mmgen-tool encrypt' (random data)",     [])),
 		('tool_decrypt',         (9,"'mmgen-tool decrypt' (random data)", [[[enc_infn+'.mmenc'],9]])),
+		('tool_twview_bad_comment',(9,"'mmgen-tool twview' (with bad comment)", [])),
 		# ('tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])),
 	)
 
@@ -213,6 +214,16 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		if not g.platform == 'win':
 			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset,int(o))
+		return t
+
+	def tool_twview_bad_comment(self): # test correct operation of get_tw_label()
+		bw_save = os.getenv('MMGEN_BOGUS_WALLET_DATA')
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = joinpath(ref_dir,'bad-comment-unspent.json')
+		t = self.spawn('mmgen-tool',['twview'])
+		if bw_save:
+			os.environ['MMGEN_BOGUS_WALLET_DATA'] = bw_save
+		t.read()
+		t.req_exit_val = 2
 		return t
 
 class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):

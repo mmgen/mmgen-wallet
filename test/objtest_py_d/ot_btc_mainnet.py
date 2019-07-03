@@ -100,7 +100,10 @@ tests = OrderedDict([
 	}),
 	('TwLabel', {
 		'bad':  ('x x','x я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
-				'F00BAA12:Z:99',tw_pfx+' x',tw_pfx+'я x'),
+				'F00BAA12:Z:99',tw_pfx+' x',tw_pfx+'я x',
+				'F00BAA12:S:1 '+ utf8_ctrl[:40],
+				{'s':'F00BAA12:S:1 '+ utf8_ctrl[:40],'on_fail':'raise','ExcType':'BadTwComment'},
+				),
 		'good': (
 			('F00BAA12:99 a comment','F00BAA12:L:99 a comment'),
 			'F00BAA12:L:99 comment (UTF-8) α',
