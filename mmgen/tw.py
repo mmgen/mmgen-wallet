@@ -302,18 +302,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		fs = '\nTotal unspent: {} {} ({} output%s)' % suf(self.unspent)
 		msg(fs.format(self.total.hl(),g.dcoin,len(self.unspent)))
 
-	def get_idx_from_user(self,get_label=False):
+	def get_idx_from_user(self,action):
 		msg('')
 		while True:
 			ret = my_raw_input('Enter {} number (or RETURN to return to main menu): '.format(self.item_desc))
-			if ret == '': return (None,None) if get_label else None
-			n = AddrIdx(ret,on_fail='silent') # hacky way to test and convert to integer
+			if ret == '': return (None,None) if action == 'a_lbl_add' else None
+			n = AddrIdx(ret,on_fail='silent')
 			if not n or n < 1 or n > len(self.unspent):
 				msg('Choice must be a single number between 1 and {}'.format(len(self.unspent)))
-# 			elif not self.unspent[n-1].mmid:
-# 				msg('Address #{} is not an {} address. No label can be added to it'.format(n,g.proj_name))
 			else:
-				if get_label:
+				if action == 'a_lbl_add':
 					while True:
 						s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
 						if s == 'q':
@@ -326,7 +324,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 							if TwComment(s,on_fail='return'):
 								return n,s
 				else:
-					fs = "Removing {} #{} from tracking wallet.  Is this what you want?"
+					if action == 'a_addr_delete':
+						fs = "Removing {} #{} from tracking wallet.  Is this what you want?"
 					if keypress_confirm(fs.format(self.item_desc,n)):
 						return n
 
@@ -358,7 +357,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif action == 'd_reverse': self.unspent.reverse(); self.reverse = not self.reverse
 			elif action == 'a_quit': msg(''); return self.unspent
 			elif action == 'a_lbl_add':
-				idx,lbl = self.get_idx_from_user(get_label=True)
+				idx,lbl = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
 					if TrackingWallet(mode='w').add_label(e.twmmid,lbl,addr=e.addr):
@@ -368,8 +367,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						oneshot_msg = yellow("Label {} {} #{}\n\n".format(a,self.item_desc,idx))
 					else:
 						oneshot_msg = red('Label could not be added\n\n')
-			elif action == 'a_addr_remove':
-				idx = self.get_idx_from_user()
+			elif action == 'a_addr_delete':
+				idx = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
 					if TrackingWallet(mode='w').remove_address(e.addr):
