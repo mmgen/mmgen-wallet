@@ -137,7 +137,7 @@ class Hilite(object):
 				center=False,nullrepl='',append_chars='',append_color=False):
 		if cls.dtype == bytes: s = s.decode()
 		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
-		assert type(encl) is str and len(encl) in (0,2),"'encl' must be 2-character str"
+		assert isinstance(encl,str) and len(encl) in (0,2),"'encl' must be 2-character str"
 		a,b = list(encl) if encl else ('','')
 		add_len = len(a) + len(b) + len(append_chars)
 		if width == None: width = cls.width
@@ -188,7 +188,7 @@ class MMGenImmutableAttr(object): # Descriptor
 	def __init__(self,name,dtype,typeconv=True,no_type_check=False):
 		self.typeconv = typeconv
 		self.no_type_check = no_type_check
-		assert type(dtype) in (str,type) or dtype is None
+		assert isinstance(dtype,(str,type,type(None))),'{!r}: invalid dtype arg'.format(dtype)
 		self.name = name
 		self.dtype = dtype
 
@@ -328,7 +328,7 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 			if len(args) == 1:
 				s = args[0]
 				if type(s) == cls: return s
-				assert issubclass(type(s),str),'not a string or string subclass'
+				assert isinstance(s,str),'not a string or string subclass'
 				ss = s.split('-',1)
 				first = int(ss[0])
 				last = int(ss.pop())
@@ -384,7 +384,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			if from_unit:
 				assert from_unit in cls.units,(
 					"'{}': unrecognized denomination for {}".format(from_unit,cls.__name__))
-				assert type(num) == int,'value is not an integer or long integer'
+				assert type(num) == int,'value is not an integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			elif from_decimal:
 				assert type(num) == Decimal,(
@@ -542,7 +542,7 @@ class SeedID(str,Hilite,InitErrors):
 		try:
 			if seed:
 				from mmgen.seed import SeedBase
-				assert issubclass(type(seed),SeedBase),'not a subclass of SeedBase'
+				assert isinstance(seed,SeedBase),'not a subclass of SeedBase'
 				from mmgen.util import make_chksum_8
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
@@ -560,7 +560,7 @@ class SubSeedIdx(str,Hilite,InitErrors):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
 		try:
-			assert issubclass(type(s),str),'not a string or string subclass'
+			assert isinstance(s,str),'not a string or string subclass'
 			idx = s[:-1] if s[-1] in 'SsLl' else s
 			from mmgen.util import is_int
 			assert is_int(idx),"valid format: an integer, plus optional letter 'S','s','L' or 'l'"
@@ -653,7 +653,7 @@ class HexStr(str,Hilite,InitErrors):
 		cls.arg_chk(on_fail)
 		if case == None: case = cls.hexcase
 		try:
-			assert issubclass(type(s),str),'not a string or string subclass'
+			assert isinstance(s,str),'not a string or string subclass'
 			assert case in ('upper','lower'),"'{}' incorrect case specifier".format(case)
 			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
 			assert not len(s) % 2,'odd-length string'
@@ -749,8 +749,9 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 		cls.arg_chk(on_fail)
 		try:
 			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
-			t = MMGenAddrType,MMGenPasswordType
-			assert type(mmtype) in t,"{!r} not an instance of {}".format(mmtype,','.join([i.__name__ for i in t]))
+			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
+				m = '{!r}: not an instance of MMGenAddrType or MMGenPasswordType'.format(mmtype)
+				raise ValueError(m.format(mmtype))
 			me = str.__new__(cls,sid+':'+mmtype)
 			me.sid = sid
 			me.mmtype = mmtype

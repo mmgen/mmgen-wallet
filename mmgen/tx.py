@@ -681,7 +681,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return int(bytes.fromhex(self.hex[-8:])[::-1].hex(),16)
 
 	def set_hex_locktime(self,val):
-		assert type(val) == int,'locktime value not an integer'
+		assert isinstance(val,int),'locktime value not an integer'
 		self.hex = self.hex[:-8] + bytes.fromhex('{:08x}'.format(val))[::-1].hex()
 
 	def get_blockcount(self):
@@ -1435,7 +1435,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.send_amt = change_amt
 
 	def create(self,cmd_args,locktime,do_info=False):
-		assert type(locktime) == int
+		assert isinstance(locktime,int),'locktime must be of type int'
 
 		if opt.comment_file: self.add_comment(opt.comment_file)
 

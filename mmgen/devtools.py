@@ -40,7 +40,7 @@ class MMGenObject(object):
 					out.append('{s}{:<{l}}'.format(i,s=' '*(4*lvl+8),l=10,l2=8*(lvl+1)+8))
 				if hasattr(el,'ppformat'):
 					out.append('{:>{l}}{}'.format('',el.ppformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl+1)*8))
-				elif type(el) in scalars:
+				elif isinstance(el,scalars):
 					if isList(e):
 						out.append('{:>{l}}{:16}\n'.format('',repr(el),l=lvl*8))
 					else:
@@ -48,7 +48,8 @@ class MMGenObject(object):
 				elif isList(el) or isDict(el):
 					indent = 1 if is_dict else lvl*8+4
 					out.append('{:>{l}}{:16}'.format('','<'+type(el).__name__+'>',l=indent))
-					if isList(el) and type(el[0]) in scalars: out.append('\n')
+					if isList(el) and isinstance(el[0],scalars):
+						out.append('\n')
 					do_list(out,el,lvl=lvl+1,is_dict=isDict(el))
 				else:
 					out.append('{:>{l}}{:16} {}\n'.format('','<'+type(el).__name__+'>',repr(el),l=(lvl*8)+8))
@@ -57,11 +58,11 @@ class MMGenObject(object):
 
 		from collections import OrderedDict
 		def isDict(obj):
-			return issubclass(type(obj),dict) or issubclass(type(obj),OrderedDict)
+			return isinstance(obj,dict)
 		def isList(obj):
-			return issubclass(type(obj),list) and type(obj) != OrderedDict
+			return isinstance(obj,list)
 		def isScalar(obj):
-			return any(issubclass(type(obj),t) for t in scalars)
+			return isinstance(obj,scalars)
 
 # 		print type(self)
 # 		print dir(self)

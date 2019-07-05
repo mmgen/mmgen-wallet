@@ -201,7 +201,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	# given rel fee in wei, return absolute fee using tx_gas (not in MMGenTX)
 	def fee_rel2abs(self,rel_fee):
-		assert type(rel_fee) in (int,Int),"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
+		assert isinstance(rel_fee,int),"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
 		return ETHAmt(rel_fee * self.tx_gas.toWei(),'wei')
 
 	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.tx_fee_adj

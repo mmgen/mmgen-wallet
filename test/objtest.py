@@ -86,8 +86,8 @@ def run_test(test,arg,input_data):
 		ret = cls(*args,**kwargs)
 		bad_ret = list() if issubclass(cls,list) else None
 
-		if issubclass(type(ret_chk),str): ret_chk = ret_chk.encode()
-		if issubclass(type(ret),str): ret = ret.encode()
+		if isinstance(ret_chk,str): ret_chk = ret_chk.encode()
+		if isinstance(ret,str): ret = ret.encode()
 
 		if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
 			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
@@ -102,8 +102,9 @@ def run_test(test,arg,input_data):
 	except Exception as e:
 		if not type(e).__name__ == exc_type:
 			raise
-		msg_r(' {}'.format(yellow(exc_type+':')))
-		msg(e.args[0])
+		if not opt.super_silent:
+			msg_r(' {}'.format(yellow(exc_type+':')))
+			msg(e.args[0])
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError('Error on good input data')

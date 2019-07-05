@@ -671,12 +671,12 @@ def run_test(gid,cmd_name):
 				continue
 			cmd_out = run_func(cmd_name,args,out,opts,exec_code)
 
-		vmsg('Output: {}\n'.format(cmd_out if issubclass(type(out),str) else repr(cmd_out)))
+		vmsg('Output: {}\n'.format(cmd_out if isinstance(out,str) else repr(cmd_out)))
 
 		def check_output(cmd_out,out):
-			if issubclass(type(out),str): out = out.encode()
-			if issubclass(type(cmd_out),int): cmd_out = str(cmd_out).encode()
-			if issubclass(type(cmd_out),str): cmd_out = cmd_out.encode()
+			if isinstance(out,str): out = out.encode()
+			if isinstance(cmd_out,int): cmd_out = str(cmd_out).encode()
+			if isinstance(cmd_out,str): cmd_out = cmd_out.encode()
 
 			if type(out).__name__ == 'function':
 				assert out(cmd_out.decode()),"{}({}) failed!".format(out.__name__,cmd_out.decode())
@@ -694,7 +694,7 @@ def run_test(gid,cmd_name):
 			func_out = out[0](cmd_out)
 			assert func_out == out[1],(
 				"{}({}) == {} failed!\nOutput: {}".format(out[0].__name__,cmd_out,out[1],func_out))
-		elif type(out) in (list,tuple):
+		elif isinstance(out,(list,tuple)):
 			for co,o in zip(cmd_out.split(NL) if opt.fork else cmd_out,out):
 				check_output(co,o)
 		else:

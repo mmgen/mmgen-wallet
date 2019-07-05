@@ -160,7 +160,7 @@ def _process_args(cmd,cmd_args):
 		if arg_type == 'bytes' and type(arg) != bytes:
 			die(1,"'Binary input data must be supplied via STDIN")
 
-		if have_stdin_input and arg_type == 'str' and type(arg) == bytes:
+		if have_stdin_input and arg_type == 'str' and isinstance(arg,bytes):
 			arg = arg.decode()
 			if arg[-len(NL):] == NL: # rstrip one newline
 				arg = arg[:-len(NL)]
@@ -199,13 +199,13 @@ def _process_result(ret,pager=False,print_result=False):
 		return True
 	elif ret in (False,None):
 		ydie(1,"tool command returned '{}'".format(ret))
-	elif issubclass(type(ret),str):
+	elif isinstance(ret,str):
 		return triage_result(ret)
-	elif issubclass(type(ret),int):
+	elif isinstance(ret,int):
 		return triage_result(str(ret))
-	elif type(ret) == tuple:
-		return triage_result('\n'.join([r.decode() if issubclass(type(r),bytes) else r for r in ret]))
-	elif issubclass(type(ret),bytes):
+	elif isinstance(ret,tuple):
+		return triage_result('\n'.join([r.decode() if isinstance(r,bytes) else r for r in ret]))
+	elif isinstance(ret,bytes):
 		try:
 			o = ret.decode()
 			return o if not print_result else do_pager(o) if pager else Msg(o)

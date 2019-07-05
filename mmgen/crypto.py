@@ -108,7 +108,7 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
 	N,r,p = get_hash_params(hash_preset)
-	if type(passwd) == str: passwd = passwd.encode()
+	if isinstance(passwd,str): passwd = passwd.encode()
 
 	def do_hashlib_scrypt():
 		from hashlib import scrypt # Python >= v3.6

@@ -66,22 +66,22 @@ def mdie(*args):
 	mmsg(*args); sys.exit(0)
 
 def die_wait(delay,ev=0,s=''):
-	assert type(delay) == int
-	assert type(ev) == int
+	assert isinstance(delay,int)
+	assert isinstance(ev,int)
 	if s: msg(s)
 	time.sleep(delay)
 	sys.exit(ev)
 def die_pause(ev=0,s=''):
-	assert type(ev) == int
+	assert isinstance(ev,int)
 	if s: msg(s)
 	input('Press ENTER to exit')
 	sys.exit(ev)
 def die(ev=0,s=''):
-	assert type(ev) == int
+	assert isinstance(ev,int)
 	if s: msg(s)
 	sys.exit(ev)
 def Die(ev=0,s=''):
-	assert type(ev) == int
+	assert isinstance(ev,int)
 	if s: Msg(s)
 	sys.exit(ev)
 
@@ -177,11 +177,10 @@ def dmsg(s):
 
 def suf(arg,suf_type='s'):
 	suf_types = { 's': '', 'es': '', 'ies': 'y' }
-	assert suf_type in suf_types
-	t = type(arg)
-	if t == int:
+	assert suf_type in suf_types,'invalid suffix type'
+	if isinstance(arg,int):
 		n = arg
-	elif any(issubclass(t,c) for c in (list,tuple,set,dict)):
+	elif isinstance(arg,(list,tuple,set,dict)):
 		n = len(arg)
 	else:
 		die(2,'{}: invalid parameter for suf()'.format(arg))
@@ -196,7 +195,7 @@ def remove_extension(f,e):
 	return (f,a)[len(b)>1 and b[1:]==e]
 
 def make_chksum_N(s,nchars,sep=False):
-	if type(s) == str: s = s.encode()
+	if isinstance(s,str): s = s.encode()
 	if nchars%4 or not (4 <= nchars <= 64): return False
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = ('',' ')[bool(sep)]
@@ -208,7 +207,7 @@ def make_chksum_8(s,sep=False):
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
 	from mmgen.obj import HexStr
-	if type(s) == str: s = s.encode()
+	if isinstance(s,str): s = s.encode()
 	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
@@ -301,23 +300,25 @@ class baseconv(object):
 
 	@classmethod
 	def b58encode(cls,s,pad=None):
-		pad = cls.get_pad(s,pad,'en',cls.b58pad_lens,[bytes])
+		pad = cls.get_pad(s,pad,'b58encode',cls.b58pad_lens,(bytes,))
 		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
 
 	@classmethod
 	def b58decode(cls,s,pad=None):
-		pad = cls.get_pad(s,pad,'de',cls.b58pad_lens_rev,[bytes,str])
+		pad = cls.get_pad(s,pad,'b58decode',cls.b58pad_lens_rev,(bytes,str))
 		return bytes.fromhex(cls.tohex(s,'b58',pad=pad*2 if pad else None))
 
 	@staticmethod
-	def get_pad(s,pad,op,pad_map,ok_types):
-		m = "b58{}code() input must be one of {}, not '{}'"
-		assert type(s) in ok_types, m.format(op,repr([t.__name__ for t in ok_types]),type(s).__name__)
+	def get_pad(s,pad,op_desc,pad_map,ok_types):
+		if not isinstance(s,ok_types):
+			m = "{}() input must be one of {}, not '{}'"
+			raise ValueError(m.format(op_desc,repr([t.__name__ for t in ok_types]),type(s).__name__))
 		if pad:
-			assert type(pad) == bool, "'pad' must be boolean type"
+			assert type(pad) == bool,"'pad' must be boolean type"
 			d = dict(pad_map)
-			m = 'Invalid data length for b58{}code(pad=True) (must be one of {})'
-			assert len(s) in d, m.format(op,repr([e[0] for e in pad_map]))
+			if not len(s) in d:
+				m = 'Invalid data length for {}(pad=True) (must be one of {})'
+				raise ValueError(m.format(op_desc,repr([e[0] for e in pad_map])))
 			return d[len(s)]
 		else:
 			return None
@@ -347,7 +348,7 @@ class baseconv(object):
 	@classmethod
 	def tohex(cls,words_arg,wl_id,pad=None):
 
-		words = words_arg if type(words_arg) in (list,tuple) else tuple(words_arg.strip())
+		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
 
 		wl = cls.digits[wl_id]
 		base = len(wl)
@@ -604,7 +605,7 @@ def write_data_to_file( outfile,data,desc='data',
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 
-		sys.stdout.write(data.decode() if issubclass(type(data),bytes) else data)
+		sys.stdout.write(data.decode() if isinstance(data,bytes) else data)
 
 	def do_file(outfile,ask_write_prompt):
 		if opt.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):

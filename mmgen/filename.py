@@ -40,7 +40,7 @@ class Filename(MMGenObject):
 		from mmgen.tx import MMGenTX
 		if ftype:
 			if type(ftype) == type:
-				if issubclass(ftype,SeedSource) or issubclass(ftype,MMGenTX):
+				if issubclass(ftype,(SeedSource,MMGenTX)):
 					self.ftype = ftype
 				# elif: # other MMGen file types
 				else:
