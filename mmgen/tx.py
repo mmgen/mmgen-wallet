@@ -1507,7 +1507,7 @@ class MMGenBumpTX(MMGenTX):
 
 	def __init__(self,filename,send=False):
 
-		super(MMGenBumpTX,self).__init__(filename)
+		super().__init__(filename)
 
 		if not self.is_replaceable():
 			die(1,"Transaction '{}' is not replaceable".format(self.txid))
@@ -1563,7 +1563,7 @@ class MMGenBumpTX(MMGenTX):
 		self.update_output_amt(op_idx,self.sum_inputs()-self.sum_outputs(exclude=op_idx)-fee)
 
 	def convert_and_check_fee(self,tx_fee,desc):
-		ret = super(MMGenBumpTX,self).convert_and_check_fee(tx_fee,desc)
+		ret = super().convert_and_check_fee(tx_fee,desc)
 		if ret < self.min_fee:
 			msg('{} {c}: {} fee too small. Minimum fee: {} {c} ({} {})'.format(
 				ret,desc,self.min_fee,self.fee_abs2rel(self.min_fee.hl()),self.rel_fee_desc,c=g.coin))
@@ -1604,7 +1604,7 @@ class MMGenSplitTX(MMGenTX):
 		except:
 			ymsg('Connect to {} daemon failed.  Network fee estimation unavailable'.format(g.coin))
 			return self.get_usr_fee_interactive(opt.tx_fee,'User-selected')
-		return super(type(self),self).get_fee_from_user()
+		return super().get_fee_from_user()
 
 	def create_split(self,mmid):
 

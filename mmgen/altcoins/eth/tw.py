@@ -282,7 +282,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
-		super(EthereumTwUnspentOutputs,self).do_sort(key=key,reverse=reverse)
+		super().do_sort(key=key,reverse=reverse)
 
 	def get_unspent_rpc(self):
 		wl = self.wallet.sorted_list
@@ -305,7 +305,7 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	# NB: two wallet instances open simultaneously on the same data:
 	def get_unspent_data(self):
-		super(type(self),self).get_unspent_data()
+		super().get_unspent_data()
 		for e in self.unspent:
 			e.amt2 = self.wallet.get_eth_balance(e.addr)
 

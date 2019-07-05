@@ -49,7 +49,7 @@ class EthereumMMGenTX(MMGenTX):
 	usr_contract_data = HexStr('')
 
 	def __init__(self,*args,**kwargs):
-		super(EthereumMMGenTX,self).__init__(*args,**kwargs)
+		super().__init__(*args,**kwargs)
 		if hasattr(opt,'tx_gas') and opt.tx_gas:
 			self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
 		if hasattr(opt,'contract_data') and opt.contract_data:
@@ -463,7 +463,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 			die(1,(m1+m2).format(p=g.token,t=self.dcoin,n=capfirst(g.proto.name)))
 
 	def make_txobj(self): # called by create_raw()
-		super(EthereumTokenMMGenTX,self).make_txobj()
+		super().make_txobj()
 		t = self.token_obj
 		o = self.txobj
 		o['token_addr'] = t.addr
@@ -472,7 +472,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 		o['data'] = t.create_data(o['token_to'],o['amt'])
 
 	def check_txfile_hex_data(self):
-		d = super(EthereumTokenMMGenTX,self).check_txfile_hex_data()
+		d = super().check_txfile_hex_data()
 		o = self.txobj
 
 		if self.check_sigs(): # online, from rlp and wallet
@@ -496,7 +496,7 @@ class EthereumTokenMMGenTX(EthereumMMGenTX):
 		return 'Token:     {d} {c}\n{r}'.format(
 			d=self.txobj['token_addr'].hl(),
 			c=blue('(' + g.dcoin + ')'),
-			r=super(EthereumTokenMMGenTX,self).format_view_body(*args,**kwargs))
+			r=super().format_view_body(*args,**kwargs))
 
 	def do_sign(self,wif,tx_num_str):
 		o = self.txobj
