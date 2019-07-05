@@ -41,14 +41,19 @@ def create_method_id(sig): return keccak_256(sig.encode()).hexdigest()[:8]
 
 class Token(MMGenObject): # ERC20
 
+	_decimals = None
+
 	# Test that token is in the blockchain by calling constructor w/o decimals arg
 	def __init__(self,addr,decimals=None):
 		self.addr = TokenAddr(addr)
-		if decimals is None:
-			decimals = self.decimals()
-			if not decimals:
-				raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
-		self.base_unit = Decimal('10') ** -decimals
+		if decimals:
+			self._decimals = decimals
+		else:
+			rpc_init()
+			self.decimals()
+		if not self._decimals:
+			raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
+		self.base_unit = Decimal('10') ** -self._decimals
 
 	@staticmethod
 	def transferdata2sendaddr(data): # online
@@ -70,14 +75,17 @@ class Token(MMGenObject): # ERC20
 	def strip(self,s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
+	# TODO: make these properties
 	def decimals(self):
-			ret = self.do_call('decimals()')
+		if self._decimals == None:
+			res = self.do_call('decimals()')
 			try:
-				a,b = ret[:2],ret[2:]
-				assert a == '0x' and is_hex_str_lc(b)
+				assert res[:2] == '0x'
+				self._decimals = int(res[2:],16)
 			except:
-				"RPC call to decimals() failed (returned '{}')".format(ret)
-			return int(b,16) if b else None
+				msg("RPC call to decimals() failed (returned '{}')".format(res))
+				return None
+		return self._decimals
 
 	def name(self):
 		return self.strip(bytes.fromhex(self.do_call('name()')[2:]))
@@ -105,10 +113,8 @@ class Token(MMGenObject): # ERC20
 		amt_arg = '{:064x}'.format(int(amt//self.base_unit))
 		return create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
-	def txcreate(   self,from_addr,to_addr,amt,start_gas,gasPrice,nonce=None,
+	def make_tx_in( self,from_addr,to_addr,amt,start_gas,gasPrice,nonce,
 					method_sig='transfer(address,uint256)',from_addr2=None):
-		if nonce is None:
-			nonce = int(g.rpch.parity_nextNonce('0x'+from_addr),16)
 		data = self.create_data(to_addr,amt,method_sig=method_sig,from_addr=from_addr2)
 		return {'to':       bytes.fromhex(self.addr),
 				'startgas': start_gas.toWei(),
@@ -145,10 +151,11 @@ class Token(MMGenObject): # ERC20
 					method_sig='transfer(address,uint256)',
 					from_addr2=None,
 					return_data=False):
-		tx_in = self.txcreate(  from_addr,to_addr,amt,
-								start_gas,gasPrice,
-								nonce=None,
-								method_sig=method_sig,
-								from_addr2=from_addr2)
+		tx_in = self.make_tx_in(
+					from_addr,to_addr,amt,
+					start_gas,gasPrice,
+					nonce = int(g.rpch.parity_nextNonce('0x'+from_addr),16),
+					method_sig = method_sig,
+					from_addr2 = from_addr2 )
 		(hex_tx,coin_txid) = self.txsign(tx_in,key,from_addr)
 		return self.txsend(hex_tx)

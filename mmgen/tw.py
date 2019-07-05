@@ -20,6 +20,8 @@
 tw: Tracking wallet methods for the MMGen suite
 """
 
+import json
+from mmgen.exception import *
 from mmgen.common import *
 from mmgen.obj import *
 from mmgen.tx import is_mmgen_id
@@ -79,7 +81,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 """.strip().format(g.proj_name.lower())
 	}
 
-	def __init__(self,minconf=1):
+	def __init__(self,minconf=1,addrs=[]):
 		self.unspent      = self.MMGenTwOutputList()
 		self.fmt_display  = ''
 		self.fmt_print    = ''
@@ -88,11 +90,15 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.group        = False
 		self.show_mmid    = True
 		self.minconf      = minconf
-		self.get_unspent_data()
+		self.addrs        = addrs
 		self.age_fmt      = 'days'
 		self.sort_key     = 'age'
-		self.do_sort()
 		self.disp_prec    = self.get_display_precision()
+
+		self.wallet = TrackingWallet('w')
+		self.get_unspent_data()
+		self.do_sort()
+
 
 	@property
 	def age_fmt(self):
@@ -121,7 +127,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		# 4. include_unsafe (boolean, optional, default=true) Include outputs that are not safe to spend
 		# 5. query_options  (json object, optional) JSON with query options
 
-		return g.rpch.listunspent(self.minconf)
+		# for now, self.addrs is just an empty list for Bitcoin and friends
+		add_args = (9999999,self.addrs) if self.addrs else ()
+		return g.rpch.listunspent(self.minconf,*add_args)
 
 	def get_unspent_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
@@ -326,6 +334,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				else:
 					if action == 'a_addr_delete':
 						fs = "Removing {} #{} from tracking wallet.  Is this what you want?"
+					elif action == 'a_balance_refresh':
+						fs = "Refreshing tracking wallet {} #{}.  Is this what you want?"
 					if keypress_confirm(fs.format(self.item_desc,n)):
 						return n
 
@@ -356,11 +366,19 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif action == 'd_redraw': pass
 			elif action == 'd_reverse': self.unspent.reverse(); self.reverse = not self.reverse
 			elif action == 'a_quit': msg(''); return self.unspent
+			elif action == 'a_balance_refresh':
+				idx = self.get_idx_from_user(action)
+				if idx:
+					e = self.unspent[idx-1]
+					bal = self.wallet.get_balance(e.addr,force_rpc=True)
+					self.get_unspent_data()
+					self.do_sort()
+					oneshot_msg = yellow('{} balance for account #{} refreshed\n\n'.format(g.dcoin,idx))
 			elif action == 'a_lbl_add':
 				idx,lbl = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
-					if TrackingWallet(mode='w').add_label(e.twmmid,lbl,addr=e.addr):
+					if self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
 						self.get_unspent_data()
 						self.do_sort()
 						a = 'added to' if lbl else 'removed from'
@@ -371,7 +389,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				idx = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
-					if TrackingWallet(mode='w').remove_address(e.addr):
+					if self.wallet.remove_address(e.addr):
 						self.get_unspent_data()
 						self.do_sort()
 						oneshot_msg = yellow("{} #{} removed\n\n".format(capfirst(self.item_desc),idx))
@@ -398,7 +416,7 @@ class TwAddrList(MMGenDict):
 	def __new__(cls,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,'tw','TwAddrList'),*args,**kwargs)
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels):
+	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
 		def check_dup_mmid(acct_labels):
 			mmid_prev,err = None,False
@@ -530,16 +548,146 @@ class TwAddrList(MMGenDict):
 
 class TrackingWallet(MMGenObject):
 
+	caps = ('rescan','batch')
+	data_key = 'addresses'
+	use_tw_file = False
+	aggressive_sync = False
+
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'))
 
-	mode = 'r'
-	caps = ('rescan','batch')
+	def __init__(self,mode='r',no_rpc=False):
 
-	def __init__(self,mode='r'):
-		m = "'{}': invalid 'mode' parameter for {} constructor"
-		assert mode in ('r','w'),m.format(mode,type(self).__name__)
+		if g.debug:
+			print_stack_trace('TW INIT {!r} {!r}'.format(mode,self))
+
+		assert mode in ('r','w'),"{!r}: wallet mode must be 'r' or 'w'".format(self)
 		self.mode = mode
+		self.desc = self.base_desc = '{} tracking wallet'.format(capfirst(g.proto.name))
+
+		if self.use_tw_file:
+			self.init_from_wallet_file()
+		else:
+			self.init_empty()
+
+		if self.data['coin'] != g.coin:
+			m = 'Tracking wallet coin ({}) does not match current coin ({})!'
+			raise WalletFileError(m.format(self.data['coin'],g.coin))
+
+		self.conv_types(self.data[self.data_key])
+		self.rpc_init()
+		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
+
+	def init_empty(self):
+		self.data = { 'coin': g.coin, 'addresses': {} }
+
+	def init_from_wallet_file(self):
+
+		tw_dir = (
+			os.path.join(g.data_dir,g.proto.data_subdir) if g.coin == 'BTC' else
+			os.path.join(g.data_dir_root,'altcoins',g.coin.lower(),g.proto.data_subdir) )
+		self.tw_fn = os.path.join(tw_dir,'tracking-wallet.json')
+
+		check_or_create_dir(tw_dir)
+
+		try:
+			self.orig_data = get_data_from_file(self.tw_fn,quiet=True)
+			self.data = json.loads(self.orig_data)
+		except:
+			try: os.stat(self.tw_fn)
+			except:
+				self.orig_data = ''
+				self.init_empty()
+				self.force_write()
+			else:
+				m = "File '{}' exists but does not contain valid json data"
+				raise WalletFileError(m.format(self.tw_fn))
+		else:
+			self.upgrade_wallet_maybe()
+
+		# ensure that wallet file is written when user exits via KeyboardInterrupt:
+		if self.mode == 'w':
+			import atexit
+			def del_tw(tw):
+				dmsg('Running exit handler del_tw() for {!r}'.format(tw))
+				del tw
+			atexit.register(del_tw,self)
+
+	# TrackingWallet instances must be explicitly destroyed with 'del tw', 'del twuo.wallet'
+	# and the like to ensure the instance is deleted and wallet is written before global
+	# vars are destroyed by interpreter at shutdown.
+	# This is especially important, as exceptions are ignored within __del__():
+	#     /usr/share/doc/python3.6-doc/html/reference/datamodel.html#object.__del__
+	# This code can only be debugged by examining the program output.  Since no exceptions
+	# are raised, errors will not be caught by the test suite.
+	def __del__(self):
+		if g.debug:
+			print_stack_trace('TW DEL {!r}'.format(self))
+
+		if self.mode == 'w':
+			self.write()
+		elif g.debug:
+			msg('read-only wallet, doing nothing')
+
+	def upgrade_wallet_maybe(self): pass
+
+	@staticmethod
+	def conv_types(ad):
+		for k,v in ad.items():
+			if k in ('params','coin'): continue
+			v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
+			v['comment'] = TwComment(v['comment'],on_fail='raise')
+
+	def rpc_init(self):
+		rpc_init()
+
+	@property
+	def data_root(self):
+		return self.data[self.data_key]
+
+	@property
+	def data_root_desc(self):
+		return self.data_key
+
+	def cache_balance(self,addr,bal,session_cache,data_root,force=False):
+		if force or addr not in session_cache:
+			session_cache[addr] = str(bal)
+			if addr in data_root:
+				data_root[addr]['balance'] = str(bal)
+				if self.aggressive_sync:
+					self.write()
+
+	def get_cached_balance(self,addr,session_cache,data_root):
+		if addr in session_cache:
+			return g.proto.coin_amt(session_cache[addr])
+		if not g.use_cached_balances:
+			return None
+		if addr in data_root and 'balance' in data_root[addr]:
+			return g.proto.coin_amt(data_root[addr]['balance'])
+
+	def get_balance(self,addr,force_rpc=False):
+		ret = None if force_rpc else self.get_cached_balance(addr,self.cur_balances,self.data_root)
+		if ret == None:
+			ret = self.rpc_get_balance(addr)
+			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
+		return ret
+
+	def rpc_get_balance(self,addr):
+		raise NotImplementedError('not implemented')
+
+	@property
+	def sorted_list(self):
+		return sorted(
+			[ { 'addr':x[0],
+				'mmid':x[1]['mmid'],
+				'comment':x[1]['comment'] }
+					for x in self.data_root.items() if x[0] not in ('params','coin') ],
+			key=lambda x: x['mmid'].sort_key+x['addr'] )
+
+	@property
+	def mmid_ordered_dict(self):
+		from collections import OrderedDict
+		return OrderedDict([(x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list])
 
 	@write_mode
 	def import_address(self,addr,label,rescan):
@@ -549,11 +697,38 @@ class TrackingWallet(MMGenObject):
 	def batch_import_address(self,arg_list):
 		return g.rpch.importaddress(arg_list,batch=True)
 
+	def force_write(self):
+		mode_save = self.mode
+		self.mode = 'w'
+		self.write()
+		self.mode = mode_save
+
 	@write_mode
-	def write(self): pass
+	def write_changed(self,data):
+		write_data_to_file(
+			self.tw_fn,data,
+			desc='{} data'.format(self.base_desc),
+			ask_overwrite=False,ignore_opt_outdir=True,quiet=True,
+			check_data=True,cmp_data=self.orig_data)
+		self.orig_data = data
+
+	def write(self): # use 'check_data' to check wallet hasn't been altered by another program
+		if not self.use_tw_file:
+			dmsg("'use_tw_file' is False, doing nothing")
+			return
+		dmsg('write(): checking if {} data has changed'.format(self.desc))
+		wdata = json.dumps(self.data)
+
+		if self.orig_data != wdata:
+			if g.debug:
+				print_stack_trace('TW DATA CHANGED {!r}'.format(self))
+				print_diff(self.orig_data,wdata,from_json=True)
+			self.write_changed(wdata)
+		elif g.debug:
+			msg('Data is unchanged\n')
 
 	def is_in_wallet(self,addr):
-		return addr in TwAddrList([],0,True,True,True).coinaddr_list()
+		return addr in TwAddrList([],0,True,True,True,wallet=self).coinaddr_list()
 
 	@write_mode
 	def set_label(self,coinaddr,lbl):

@@ -24,7 +24,7 @@ import time
 
 from mmgen.common import *
 from mmgen.addr import AddrList,KeyAddrList
-from mmgen.obj import TwLabel
+from mmgen.obj import TwLabel,is_coin_addr
 
 ai_msgs = lambda k: {
 	'rescan': """
@@ -81,12 +81,6 @@ def import_mmgen_list(infile):
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 	return al
 
-try:
-	rpc_init()
-except UnrecognizedTokenSymbol as e:
-	m = "When importing addresses for a new token, the token must be specified by address, not symbol."
-	raise type(e)('{}\n{}'.format(e.args[0],m))
-
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
 	check_infile(infile)
@@ -111,6 +105,12 @@ err_msg = None
 from mmgen.tw import TrackingWallet
 tw = TrackingWallet(mode='w')
 
+if g.token:
+	if not is_coin_addr(g.token):
+		m = "When importing addresses for a new token, the token must be specified by address, not symbol."
+		raise InvalidTokenAddress('{!r}: invalid token address\n{}'.format(m))
+	sym = tw.addr2sym(g.token) # check for presence in wallet or blockchain; raises exception on failure
+
 if opt.rescan and not 'rescan' in tw.caps:
 	msg("'--rescan' ignored: not supported by {}".format(type(tw).__name__))
 	opt.rescan = False
@@ -127,6 +127,9 @@ def import_address(addr,label,rescan):
 	except Exception as e:
 		global err_msg
 		err_msg = e.args[0]
+	if g.token and not tw.get_token_param(g.token,'symbol'):
+		tw.set_token_param(g.token,'symbol',sym)
+		tw.set_token_param(g.token,'decimals',tw.token_obj.decimals())
 
 w_n_of_m = len(str(al.num_addrs)) * 2 + 2
 w_mmid = 1 if opt.addrlist or opt.address else len(str(max(al.idxs()))) + 13
@@ -183,4 +186,4 @@ if opt.batch:
 	ret = tw.batch_import_address(arg_list)
 	msg('OK: {} addresses imported'.format(len(ret)))
 
-tw.write()
+del tw

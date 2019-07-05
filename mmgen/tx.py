@@ -82,6 +82,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 	return CoinAddr(coin_addr)
 
 def segwit_is_active(exit_on_error=False):
+	rpc_init()
 	d = g.rpch.getblockchaininfo()
 	if d['chain'] == 'regtest':
 		return True
@@ -306,6 +307,7 @@ class MMGenTX(MMGenObject):
 	view_sort_orders = ('addr','raw')
 	dfl_view_sort_order = 'addr'
 
+	msg_wallet_low_coin = 'Wallet has insufficient funds for this transaction ({} {} needed)'
 	msg_low_coin = 'Selected outputs insufficient to fund this transaction ({} {} needed)'
 	msg_no_change_output = """
 ERROR: No change address specified.  If you wish to create a transaction with
@@ -318,7 +320,7 @@ inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
 Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower())
 
-	def __init__(self,filename=None,metadata_only=False,caller=None,quiet_open=False):
+	def __init__(self,filename=None,metadata_only=False,caller=None,quiet_open=False,offline=False):
 		self.inputs      = MMGenTxInputList()
 		self.outputs     = MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -415,6 +417,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		o = {e.addr:e.amt for e in self.outputs}
 		self.hex = HexStr(g.rpch.createrawtransaction(i,o))
 		self.update_txid()
+
+	def print_contract_addr(self): pass
 
 	# returns true if comment added or changed
 	def add_comment(self,infile=None):
@@ -1276,7 +1280,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if not self.chain and not self.inputs[0].addr.is_for_chain('testnet'):
 			self.chain = 'mainnet'
 
-		if self.dcoin: self.set_g_token()
+		if self.dcoin:
+			self.resolve_g_token_from_tx_file()
 
 	def process_cmd_arg(self,arg,ad_f,ad_w):
 
@@ -1320,7 +1325,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			check_infile(a)
 			ad_f.add(AddrList(a))
 
-		ad_w = AddrData(source='tw')
+		ad_w = AddrData(source='tw',wallet=self.twuo.wallet)
 
 		self.process_cmd_args(cmd_args,ad_f,ad_w)
 
@@ -1338,9 +1343,13 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						return selected
 					msg('Unspent output number must be <= {}'.format(len(unspent)))
 
-	def check_sufficient_funds(self,inputs_sum,foo):
-		if self.send_amt > inputs_sum:
-			msg(self.msg_low_coin.format(self.send_amt-inputs_sum,g.coin))
+	# we don't know fee yet, so perform preliminary check with fee == 0
+	def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
+		if self.twuo.total < self.send_amt:
+			msg(self.msg_wallet_low_coin.format(self.send_amt-inputs_sum,g.dcoin))
+			return False
+		if inputs_sum < self.send_amt:
+			msg(self.msg_low_coin.format(self.send_amt-inputs_sum,g.dcoin))
 			return False
 		return True
 
@@ -1380,17 +1389,21 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		return set(sel_nums) # silently discard duplicates
 
-	def get_inputs_from_user(self,tw):
+	def get_cmdline_input_addrs(self):
+		# Bitcoin full node, call doesn't go to the network, so just call listunspent with addrs=[]
+		return []
+
+	def get_inputs_from_user(self):
 
 		while True:
-			us_f = ('select_unspent','select_unspent_cmdline')[bool(opt.inputs)]
-			sel_nums = getattr(self,us_f)(tw.unspent)
+			us_f = self.select_unspent_cmdline if opt.inputs else self.select_unspent
+			sel_nums = us_f(self.twuo.unspent)
 
-			msg('Selected output{}: {}'.format(suf(sel_nums,'s'),' '.join(map(str,sel_nums))))
-			sel_unspent = tw.MMGenTwOutputList([tw.unspent[i-1] for i in sel_nums])
+			msg('Selected output{}: {}'.format(suf(sel_nums),' '.join(map(str,sel_nums))))
+			sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.unspent[i-1] for i in sel_nums])
 
 			inputs_sum = sum(s.amt for s in sel_unspent)
-			if not self.check_sufficient_funds(inputs_sum,sel_unspent):
+			if not self.precheck_sufficient_funds(inputs_sum,sel_unspent):
 				continue
 
 			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
@@ -1406,7 +1419,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 			change_amt = self.get_change_amt()
 
-			if change_amt >= 0: # TODO: show both ETH and token amts remaining
+			if change_amt >= 0:
 				p = self.final_inputs_ok_msg(change_amt)
 				if opt.yes or keypress_confirm(p+'. OK?',default_yes=True):
 					if opt.yes: msg(p)
@@ -1426,17 +1439,20 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if opt.comment_file: self.add_comment(opt.comment_file)
 
-		if not do_info: self.get_outputs_from_cmdline(cmd_args)
+		twuo_addrs = self.get_cmdline_input_addrs()
+
+		from mmgen.tw import TwUnspentOutputs
+		self.twuo = TwUnspentOutputs(minconf=opt.minconf,addrs=twuo_addrs)
+
+		if not do_info:
+			self.get_outputs_from_cmdline(cmd_args)
 
 		do_license_msg()
 
-		from mmgen.tw import TwUnspentOutputs
-		tw = TwUnspentOutputs(minconf=opt.minconf)
-
 		if not opt.inputs:
-			tw.view_and_sort(self)
+			self.twuo.view_and_sort(self)
 
-		tw.display_total()
+		self.twuo.display_total()
 
 		if do_info: sys.exit(0)
 
@@ -1446,7 +1462,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			('Unknown','{} {}'.format(self.send_amt.hl(),g.dcoin))[bool(self.send_amt)]
 		))
 
-		change_amt = self.get_inputs_from_user(tw)
+		change_amt = self.get_inputs_from_user()
 
 		self.update_change_output(change_amt)
 		self.update_send_amt(change_amt)
@@ -1478,6 +1494,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if not opt.yes:
 			self.view_with_prompt('View decoded transaction?')
+
+		del self.twuo
 
 class MMGenBumpTX(MMGenTX):
 

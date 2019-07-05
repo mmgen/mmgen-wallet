@@ -82,7 +82,7 @@ def opt_postproc_initializations():
 		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 	g.coin = g.coin.upper() # allow user to use lowercase
-	g.dcoin = g.coin
+	g.dcoin = g.coin # the display coin; for ERC20 tokens, g.dcoin is set to the token symbol
 
 def set_data_dir_root():
 	g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir)) if opt.data_dir else \
@@ -338,7 +338,6 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		opt.verbose,opt.quiet = (True,None)
 	if g.debug_opts: opt_postproc_debug()
 
-	g.altcoin_data_dir = os.path.join(g.data_dir_root,'altcoins')
 	warn_altcoins(altcoin_trust_level)
 
 	# We don't need this data anymore
@@ -348,7 +347,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 def opt_is_tx_fee(val,desc):
 	from mmgen.tx import MMGenTX
-	tx = MMGenTX()
+	tx = MMGenTX(offline=True)
 	# TODO: size is just a guess; do this check after parsing tx file
 	ret = tx.process_fee_spec(val,224,on_fail='return')
 	# Non-standard startgas: disable fee checking

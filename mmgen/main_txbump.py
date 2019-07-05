@@ -142,6 +142,10 @@ if g.proto.base_proto == 'Bitcoin':
 
 if not opt.yes:
 	tx.add_comment()   # edits an existing comment
+
+from mmgen.tw import TwUnspentOutputs
+tx.twuo = TwUnspentOutputs(minconf=opt.minconf)
+
 tx.create_raw()        # creates tx.hex, tx.txid
 tx.add_timestamp()
 tx.add_blockcount()
@@ -151,6 +155,8 @@ qmsg('Fee successfully increased')
 if not silent:
 	msg(green('\nREPLACEMENT TRANSACTION:'))
 	msg_r(tx.format_view(terse=True))
+
+del tx.twuo.wallet
 
 if seed_files or kl or kal:
 	if txsign(tx,seed_files,kl,kal):

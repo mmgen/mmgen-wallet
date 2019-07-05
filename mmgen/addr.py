@@ -898,10 +898,10 @@ re-import your addresses.
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'))
 
-	def __init__(self,source=None):
+	def __init__(self,source=None,wallet=None):
 		self.al_ids = {}
 		if source == 'tw':
-			self.add_tw_data()
+			self.add_tw_data(wallet)
 
 	def seed_ids(self):
 		return list(self.al_ids.keys())
@@ -923,7 +923,7 @@ re-import your addresses.
 		return (list(d.values())[0][0]) if d else None
 
 	@classmethod
-	def get_tw_data(cls):
+	def get_tw_data(cls,wallet=None):
 		vmsg('Getting address data from tracking wallet')
 		if 'label_api' in g.rpch.caps:
 			accts = g.rpch.listlabels()
@@ -933,8 +933,8 @@ re-import your addresses.
 			alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
 		return list(zip(accts,alists))
 
-	def add_tw_data(self):
-		d,out,i = self.get_tw_data(),{},0
+	def add_tw_data(self,wallet):
+		d,out,i = self.get_tw_data(wallet),{},0
 		for acct,addr_array in d:
 			l = TwLabel(acct,on_fail='silent')
 			if l and l.mmid.type == 'mmgen':

@@ -187,7 +187,7 @@ def sign_tx_file(txfile,signed_txs):
 		g.token = tmp_tx.dcoin
 		g.dcoin = tmp_tx.dcoin or g.coin
 
-		tx = mmgen.tx.MMGenTX(txfile)
+		tx = mmgen.tx.MMGenTX(txfile,offline=True)
 
 		if g.proto.sign_mode == 'daemon':
 			rpc_init(reinit=True)
@@ -200,6 +200,8 @@ def sign_tx_file(txfile,signed_txs):
 			return False
 	except Exception as e:
 		msg('An error occurred: {}'.format(e.args[0]))
+		if g.debug or g.traceback:
+			print_stack_trace('AUTOSIGN {}'.format(txfile))
 		return False
 	except:
 		return False

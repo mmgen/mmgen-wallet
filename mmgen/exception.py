@@ -38,6 +38,7 @@ class BadTwComment(Exception):            mmcode = 2
 class RPCFailure(Exception):              mmcode = 3
 class BadTxSizeEstimate(Exception):       mmcode = 3
 class MaxInputSizeExceeded(Exception):    mmcode = 3
+class WalletFileError(Exception):         mmcode = 3
 
 # 4: red hl, 'MMGen Fatal Error' + exception + message
 class BadMMGenTxID(Exception):            mmcode = 4

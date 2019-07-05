@@ -87,6 +87,8 @@ transaction reconfirmed before the timelock expires. Use at your own risk.
 
 cmd_args = opts.init(opts_data,add_opts=['tx_fee','tx_fee_adj','comment_file'])
 
+die(1,'This command is disabled')
+
 opt.other_coin = opt.other_coin.upper() if opt.other_coin else g.proto.forks[-1][2].upper()
 if opt.other_coin.lower() not in [e[2] for e in g.proto.forks if e[3] == True]:
 	die(1,"'{}': not a replayable fork of {} chain".format(opt.other_coin,g.coin))

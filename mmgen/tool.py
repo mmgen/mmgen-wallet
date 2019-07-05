@@ -554,7 +554,7 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 
 		sep = '—'*77+'\n'
 		return sep.join(
-			[MMGenTX(fn).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]
+			[MMGenTX(fn,offline=True).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]
 		).rstrip()
 
 class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
@@ -772,6 +772,7 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 				die(1,m.format(mmgen_addrs))
 			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
 
+		rpc_init()
 		from mmgen.tw import TwAddrList
 		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
 		if not al:
@@ -793,7 +794,9 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 		twuo.do_sort(sort,reverse=reverse)
 		twuo.age_fmt = age_fmt
 		twuo.show_mmid = show_mmid
-		return twuo.format_for_printing(color=True) if wide else twuo.format_for_display()
+		ret = twuo.format_for_printing(color=True) if wide else twuo.format_for_display()
+		del twuo.wallet
+		return ret
 
 	def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"

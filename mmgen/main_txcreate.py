@@ -54,6 +54,7 @@ opts_data = {
 -v, --verbose         Produce more verbose output
 -V, --vsize-adj=   f  Adjust transaction's estimated vsize by factor 'f'
 -y, --yes             Answer 'yes' to prompts, suppress non-essential output
+-X, --cached-balances Use cached balances (Ethereum only)
 """,
 		'notes': '\n{}{}',
 	},
@@ -70,6 +71,8 @@ opts_data = {
 }
 
 cmd_args = opts.init(opts_data)
+
+g.use_cached_balances = opt.cached_balances
 
 rpc_init()
 

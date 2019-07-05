@@ -21,11 +21,9 @@ rpc.py:  Cryptocoin RPC library for the MMGen suite
 """
 
 import http.client,base64,json
-
 from decimal import Decimal
 
 from mmgen.common import *
-from mmgen.obj import MMGenObject
 
 def dmsg_rpc(s):
 	if g.debug_rpc: msg(s)
@@ -81,6 +79,9 @@ class CoinDaemonRPCConnection(MMGenObject):
 	# on_fail is one of 'raise' (default), 'return' or 'silent'
 	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
 	def request(self,cmd,*args,**kwargs):
+
+		if g.debug:
+			print_stack_trace('RPC REQUEST {}\n  args: {!r}\n  kwargs: {!r}'.format(cmd,args,kwargs))
 
 		if g.rpc_fail_on_command == cmd:
 			cmd = 'badcommand_' + cmd

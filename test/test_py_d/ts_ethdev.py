@@ -53,11 +53,13 @@ except:
 
 if re.match(r'\b0.5.1\b',solc_ver): # Raspbian Stretch
 	vbal1 = '1.2288337'
+	vbal1a = 'TODO'
 	vbal2 = '99.997085083'
 	vbal3 = '1.23142165'
 	vbal4 = '127.0287837'
 elif solc_ver == '' or re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
 	vbal1 = '1.2288487'
+	vbal1a = '1.22627465'
 	vbal2 = '99.997092733'
 	vbal3 = '1.23142915'
 	vbal4 = '127.0287987'
@@ -77,31 +79,43 @@ bals = {
 			(burn_addr + '\s+Non-MMGen',amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a'),
+			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + '\s+Non-MMGen',amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
-			('98831F3A:E:11',vbal1,'a'),
+			('98831F3A:E:11',vbal1,'a1'),
+			('98831F3A:E:12',vbal2),
+			('98831F3A:E:21','2.345'),
+			(burn_addr + '\s+Non-MMGen',amt1)],
+	'10': [ ('98831F3A:E:1','0'),
+			('98831F3A:E:2','23.0218'),
+			('98831F3A:E:3','0.4321'),
+			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
 			(burn_addr + '\s+Non-MMGen',amt1)]
 }
+
 token_bals = {
 	'1': [  ('98831F3A:E:11','1000','1.234')],
-	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a'),
+	'2': [  ('98831F3A:E:11','998.76544',vbal3,'a1'),
 			('98831F3A:E:12','1.23456','0')],
-	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+	'3': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','0')],
-	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','0'),
 			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
-	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','99.99895'),
 			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
-	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a'),
+	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','0',vbal2),
+			('98831F3A:E:13','1.23456','0'),
+			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
+	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal1a,'a2'),
+			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + '\s+Non-MMGen',amt2,amt1)]
 }
@@ -120,12 +134,15 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	tmpdir_nums = [22]
 	cmd_group = (
 		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(g.coin)),
+		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
+		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
 		('addrgen',             'generating addresses'),
 		('addrimport',          'importing addresses'),
 		('addrimport_dev_addr', "importing Parity dev address 'Ox00a329c..'"),
 
 		('txcreate1',           'creating a transaction (spend from dev address to address :1)'),
 		('txsign1',             'signing the transaction'),
+		('tx_status0',          'getting the transaction status'),
 		('txsign1_ni',          'signing the transaction (non-interactive)'),
 		('txsend1',             'sending the transaction'),
 		('bal1',                'the {} balance'.format(g.coin)),
@@ -147,6 +164,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		('txsign4',             'signing the transaction'),
 		('txsend4',             'sending the transaction'),
+		('tx_status1a',         'getting the transaction status'),
 		('bal4',                'the {} balance'.format(g.coin)),
 
 		('txcreate5',           'creating a transaction (fund burn address)'),
@@ -192,6 +210,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_txcreate1',     'creating a token transaction'),
 		('token_txsign1',       'signing the transaction'),
 		('token_txsend1',       'sending the transaction'),
+		('tx_status3',          'getting the transaction status'),
 		('token_bal2',          'the {} balance and token balance'.format(g.coin)),
 
 		('token_txcreate2',     'creating a token transaction (to burn address)'),
@@ -232,6 +251,19 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_listaddresses1','listaddresses --token=mm1'),
 		('token_listaddresses2','listaddresses --token=mm1 showempty=1'),
 
+		('twview_cached_balances','twview (cached balances)'),
+		('token_twview_cached_balances','token twview (cached balances)'),
+		('txcreate_cached_balances','txcreate (cached balances)'),
+		('token_txcreate_cached_balances','token txcreate (cached balances)'),
+
+		('txdo_cached_balances',     'txdo (cached balances)'),
+		('txcreate_refresh_balances','refreshing balances'),
+		('bal10',                    'the {} balance'.format(g.coin)),
+
+		('token_txdo_cached_balances',     'token txdo (cached balances)'),
+		('token_txcreate_refresh_balances','refreshing token balances'),
+		('token_bal7',                     'the token balance'),
+
 		('twview1','twview'),
 		('twview2','twview wide=1'),
 		('twview3','twview wide=1 sort=age (ignored)'),
@@ -247,10 +279,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('edit_label2','adding label to addr #{} in {} tracking wallet (lat+cyr+gr)'.format(del_addrs[1],g.coin)),
 		('edit_label3','removing label from addr #{} in {} tracking wallet'.format(del_addrs[0],g.coin)),
 
+		('token_edit_label1','adding label to addr #{} in {} token tracking wallet'.format(del_addrs[0],g.coin)),
+
 		('remove_addr1','removing addr #{} from {} tracking wallet'.format(del_addrs[0],g.coin)),
 		('remove_addr2','removing addr #{} from {} tracking wallet'.format(del_addrs[1],g.coin)),
-		('remove_token_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],g.coin)),
-		('remove_token_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],g.coin)),
+		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],g.coin)),
+		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],g.coin)),
 
 		('stop',                'stopping parity'),
 	)
@@ -300,6 +334,25 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			die(1,'No parity executable found!')
 		return 'ok'
 
+	def wallet_upgrade(self,src_file):
+		if g.coin == 'ETC':
+			msg('skipping test {!r} for ETC'.format(self.test_name))
+			return 'skip'
+		src_dir = joinpath(ref_dir,'ethereum')
+		dest_dir = joinpath(self.tr.data_dir,'altcoins',g.coin.lower())
+		w_from = joinpath(src_dir,src_file)
+		w_to = joinpath(dest_dir,'tracking-wallet.json')
+		os.makedirs(dest_dir,mode=0o750,exist_ok=True)
+		dest = shutil.copy2(w_from,w_to)
+		assert dest == w_to, dest
+		t = self.spawn('mmgen-tool', self.eth_args + ['twview'])
+		t.read()
+		os.unlink(w_to)
+		return t
+
+	def wallet_upgrade1(self): return self.wallet_upgrade('tracking-wallet-v1.json')
+	def wallet_upgrade2(self): return self.wallet_upgrade('tracking-wallet-v2.json')
+
 	def addrgen(self,addrs='1-3,11-13,21-23'):
 		from mmgen.addr import MMGenAddrType
 		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file,addrs])
@@ -315,7 +368,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.read()
 			t.req_exit_val = 2
 			return t
-		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
+#		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect(expect)
 		t.read()
@@ -332,16 +385,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
 
-	def txcreate(self,args=[],menu=[],acct='1',non_mmgen_inputs=0,
+	def txcreate(self,args=[],menu=[],acct='1',non_mmgen_inputs=0,caller='txcreate',
 						interactive_fee = '50G',
 						eth_fee_res     = None,
 						fee_res_fs      = '0.00105 {} (50 gas price in Gwei)',
-						fee_desc        = 'gas price' ):
+						fee_desc        = 'gas price',
+						no_read         = False):
 		fee_res = fee_res_fs.format(g.coin)
-		t = self.spawn('mmgen-txcreate', self.eth_args + ['-B'] + args)
+		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
-		return self.txcreate_ui_common( t, menu=menu,
+		t = self.txcreate_ui_common( t, menu=menu, caller=caller,
 										input_sels_prompt = 'to spend from',
 										inputs            = acct,
 										file_desc         = 'Ethereum transaction',
@@ -352,6 +406,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 										fee_desc          = fee_desc,
 										eth_fee_res       = eth_fee_res,
 										add_comment       = tx_label_jp )
+		if not no_read:
+			t.read()
+		return t
 
 	def txsign(self,ni=False,ext='{}.rawtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -359,7 +416,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		write_to_file(keyfile,dfl_privkey+'\n')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
-						self.eth_args
+						['--outdir={}'.format(self.tmpdir),'--coin='+g.coin,'--quiet']
+						+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 						+ add_args
 						+ ([],['--yes'])[ni]
 						+ ['-k', keyfile, txfile, dfl_words_file] )
@@ -371,16 +429,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,quiet=True,bogus_send=bogus_send,has_label=True)
+		txid = self.txsend_ui_common(t,quiet=not g.debug,bogus_send=bogus_send,has_label=True)
 		return t
 
 	def txcreate1(self):
 		# valid_keypresses = EthereumTwUnspentOutputs.key_mappings.keys()
-		menu = ['a','d','r','M','D','e','m','m'] # include one invalid keypress, 'D'
+		menu = ['a','d','r','M','X','e','m','m'] # include one invalid keypress, 'X'
 		args = ['98831F3A:E:1,123.456']
 		return self.txcreate(args=args,menu=menu,acct='1',non_mmgen_inputs=1)
 
 	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'])
+	def tx_status0(self):
+		return self.tx_status(ext='{}.sigtx',expect_str='neither in mempool nor blockchain',exit_val=1)
 	def txsign1_ni(self): return self.txsign(ni=True)
 	def txsend1(self):    return self.txsend()
 	def bal1(self):       return self.bal(n='1')
@@ -399,16 +459,22 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txsend3(self): return self.txsend(ext='2.345,50000]{}.sigtx')
 	def bal3(self):    return self.bal(n='3')
 
-	def tx_status(self,ext,expect_str):
+	def tx_status(self,ext,expect_str,expect_str2='',add_args=[],exit_val=0):
 		ext = ext.format('-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		t = self.spawn('mmgen-txsend', self.eth_args + ['--status',txfile])
+		t = self.spawn('mmgen-txsend', self.eth_args + add_args + ['--status',txfile])
 		t.expect(expect_str)
+		if expect_str2:
+			t.expect(expect_str2)
 		t.read()
+		t.req_exit_val = exit_val
 		return t
 
 	def tx_status1(self):
 		return self.tx_status(ext='2.345,50000]{}.sigtx',expect_str='has 1 confirmation')
+
+	def tx_status1a(self):
+		return self.tx_status(ext='2.345,50000]{}.sigtx',expect_str='has 2 confirmations')
 
 	def txcreate4(self):
 		args = ['98831F3A:E:2,23.45495']
@@ -445,7 +511,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
 		for b in bals[n]:
 			addr,amt,adj = b if len(b) == 3 else b + (False,)
-			if adj and g.coin == 'ETC': amt = str(Decimal(amt) + self.bal_corr)
+			if adj and g.coin == 'ETC': amt = str(Decimal(amt) + Decimal(adj[1]) * self.bal_corr)
 			pat = r'{}\s+{}\s'.format(addr,amt.replace('.',r'\.'))
 			t.expect(pat,regex=True)
 		t.read()
@@ -455,7 +521,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
 		for b in token_bals[n]:
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
-			if adj and g.coin == 'ETC': _amt2 = str(Decimal(_amt2) + self.bal_corr)
+			if adj and g.coin == 'ETC': _amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
 			pat = r'{}\s+{}\s+{}\s'.format(addr,_amt1.replace('.',r'\.'),_amt2.replace('.',r'\.'))
 			t.expect(pat,regex=True)
 		t.read()
@@ -510,7 +576,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		try: os.mkdir(odir)
 		except: pass
-		cmd = ['scripts/create-token.py','--coin='+g.coin,'--outdir='+odir] + cmd_args + [dfl_addr_chk]
+		cmd = ['scripts/traceback_run.py','scripts/create-token.py','--coin='+g.coin,'--outdir='+odir] + cmd_args + [dfl_addr_chk]
 		imsg("Executing: {}".format(' '.join(cmd)))
 		subprocess.check_output(cmd,stderr=subprocess.STDOUT)
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
@@ -551,7 +617,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t = self.spawn('mmgen-txsend', self.eth_args + [txfile],no_msg=True)
 
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,caller=mmgen_cmd,quiet=True,bogus_send=False)
+		txid = self.txsend_ui_common(t,caller=mmgen_cmd,
+			quiet = mmgen_cmd == 'txdo' or not g.debug,
+			bogus_send=False)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
 		assert etx.get_exec_status(txid,True) != 0,(
@@ -648,12 +716,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
 		t = self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
-		return self.txcreate_ui_common( t,
+		t = self.txcreate_ui_common( t,
 										menu              = [],
 										inputs            = inputs,
 										input_sels_prompt = 'to spend from',
 										file_desc         = 'Ethereum token transaction',
 										add_comment       = tx_label_lat_cyr_gr)
+		t.read()
+		return t
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):
@@ -665,6 +735,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_txsign(ext='1.23456,50000]{}.rawtx',token='mm1')
 	def token_txsend1(self):
 		return self.token_txsend(ext='1.23456,50000]{}.sigtx',token='mm1')
+
+	def tx_status3(self):
+		return self.tx_status(
+			ext='1.23456,50000]{}.sigtx',
+			add_args=['--token=mm1'],
+			expect_str='successfully executed',
+			expect_str2='has 1 confirmation')
+
 	def token_bal2(self):
 		return self.token_bal(n='2')
 
@@ -745,6 +823,62 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_listaddresses2(self):
 		return self.listaddresses(args=['--token=mm1'],tool_args=['showempty=1'])
 
+	def twview_cached_balances(self):
+		return self.twview(args=['--cached-balances'])
+	def token_twview_cached_balances(self):
+		return self.twview(args=['--token=mm1','--cached-balances'])
+
+	def txcreate_cached_balances(self):
+		args = ['--tx-fee=20G','--cached-balances','98831F3A:E:3,0.1276']
+		return self.txcreate(args=args,acct='2')
+	def token_txcreate_cached_balances(self):
+		args=['--cached-balances','--tx-fee=12G','98831F3A:E:12,1.2789']
+		return self.token_txcreate(args=args,token='mm1')
+
+	def txdo_cached_balances(self,
+			acct = '2',
+			fee_res_fs = '0.00105 {} (50 gas price in Gwei)',
+			add_args = ['98831F3A:E:3,0.4321']):
+		args = ['--tx-fee=20G','--cached-balances'] + add_args + [dfl_words_file]
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_fs=fee_res_fs,no_read=True)
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+		self._do_confirm_send(t,quiet=not g.debug,sure=False)
+		t.read()
+		return t
+
+	def txcreate_refresh_balances(self,
+			bals=['2','3'],
+			args=['-B','--cached-balances','-i'],
+			total= '1000126.14829832312345678',adj_total=True,total_coin=g.coin):
+		if g.coin == 'ETC' and adj_total:
+			total = str(Decimal(total) + self.bal_corr)
+		t = self.spawn('mmgen-txcreate', self.eth_args + args)
+		for n in bals:
+			t.expect('[R]efresh balance:\b','R')
+			t.expect(' main menu): ',n)
+			t.expect('Is this what you want? (y/N): ','y')
+		t.expect('[R]efresh balance:\b','q')
+		t.expect('Total unspent: {} {}'.format(total,total_coin))
+		t.read()
+		return t
+
+	def bal10(self): return self.bal(n='10')
+
+	def token_txdo_cached_balances(self):
+		return self.txdo_cached_balances(
+					acct='1',
+					fee_res_fs='0.0026 {} (50 gas price in Gwei)',
+					add_args=['--token=mm1','98831F3A:E:12,43.21'])
+
+	def token_txcreate_refresh_balances(self):
+		return self.txcreate_refresh_balances(
+					bals=['1','2'],
+					args=['--token=mm1','-B','--cached-balances','-i'],
+					total='1000',adj_total=False,total_coin='MM1')
+
+	def token_bal7(self): return self.token_bal(n='7')
+
 	def twview1(self):
 		return self.twview()
 	def twview2(self):
@@ -767,11 +901,19 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def edit_label(self,out_num,args=[],action='l',label_text=None):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args + ['-B','-i'])
-		p1,p2 = ('emove address:\b','return to main menu): ')
+		p1,p2 = ('efresh balance:\b','return to main menu): ')
 		p3,r3 = (p2,label_text+'\n') if label_text is not None else ('(y/N): ','y')
 		p4,r4 = (('(y/N): ',),('y',)) if label_text == '' else ((),())
-		for p,r in zip((p1,p1,p2,p3)+p4+(p1,p1),('M',action,out_num+'\n',r3)+r4+('M','q')):
+		for p,r in zip((p1,p1,p2,p3)+p4,('M',action,out_num+'\n',r3)+r4):
 			t.expect(p,r)
+		m = (   'Account #{} removed' if action == 'D' else
+				'Label added to account #{}' if label_text else
+				'Label removed from account #{}' )
+		t.expect(m.format(out_num))
+		for p,r in zip((p1,p1),('M','q')):
+			t.expect(p,r)
+		t.expect('Total unspent:')
+		t.read()
 		return t
 
 	def edit_label1(self):
@@ -781,14 +923,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def edit_label3(self):
 		return self.edit_label(out_num=del_addrs[0],label_text='')
 
+	def token_edit_label1(self):
+		return self.edit_label(out_num='1',label_text='Token label #1',args=['--token=mm1'])
+
 	def remove_addr1(self):
-		return self.edit_label(out_num=del_addrs[0],action='R')
+		return self.edit_label(out_num=del_addrs[0],action='D')
 	def remove_addr2(self):
-		return self.edit_label(out_num=del_addrs[1],action='R')
-	def remove_token_addr1(self):
-		return self.edit_label(out_num=del_addrs[0],args=['--token=mm1'],action='R')
-	def remove_token_addr2(self):
-		return self.edit_label(out_num=del_addrs[1],args=['--token=mm1'],action='R')
+		return self.edit_label(out_num=del_addrs[1],action='D')
+	def token_remove_addr1(self):
+		return self.edit_label(out_num=del_addrs[0],args=['--token=mm1'],action='D')
+	def token_remove_addr2(self):
+		return self.edit_label(out_num=del_addrs[1],args=['--token=mm1'],action='D')
 
 	def stop(self):
 		self.spawn('',msg_only=True)

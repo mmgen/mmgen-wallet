@@ -78,6 +78,7 @@ opts_data = {
                        wallet is scanned for subseeds.
 -v, --verbose          Produce more verbose output
 -V, --vsize-adj=     f Adjust transaction's estimated vsize by factor 'f'
+-X, --cached-balances  Use cached balances (Ethereum only)
 -y, --yes              Answer 'yes' to prompts, suppress non-essential output
 -z, --show-hash-presets Show information on available hash presets
 """,
@@ -108,6 +109,8 @@ column below:
 
 cmd_args = opts.init(opts_data)
 
+g.use_cached_balances = opt.cached_balances
+
 rpc_init()
 
 from mmgen.tx import *
@@ -127,7 +130,6 @@ if txsign(tx,seed_files,kl,kal):
 	tx.write_to_file(ask_write=False)
 	tx.send(exit_on_fail=True)
 	tx.write_to_file(ask_overwrite=False,ask_write=False)
-	if hasattr(tx,'token_addr'):
-		msg('Contract address: {}'.format(tx.token_addr.hl()))
+	tx.print_contract_addr()
 else:
 	die(2,'Transaction could not be signed')

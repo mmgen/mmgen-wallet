@@ -27,7 +27,8 @@ from mmgen.obj import *
 from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX
 
 class EthereumMMGenTX(MMGenTX):
-	desc   = 'Ethereum transaction'
+	desc = 'Ethereum transaction'
+	contract_desc = 'contract'
 	tx_gas = ETHAmt(21000,'wei')    # an approximate number, used for fee estimation purposes
 	start_gas = ETHAmt(21000,'wei') # the actual startgas amt used in the transaction
 									# for simple sends with no data, tx_gas = start_gas = 21000
@@ -39,6 +40,7 @@ class EthereumMMGenTX(MMGenTX):
 	txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
 	txview_ftr_fs = 'Total in account: {i} {d}\nTotal to spend:   {o} {d}\nTX fee:           {a} {c}{r}\n'
 	txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
+	fmt_keys = ('from','to','amt','nonce')
 	usr_fee_prompt = 'Enter transaction fee or gas price: '
 	fn_fee_unit = 'Mwei'
 	usr_rel_fee = None # not in MMGenTX
@@ -57,10 +59,6 @@ class EthereumMMGenTX(MMGenTX):
 			self.disable_fee_check = True
 
 	@classmethod
-	def get_receipt(cls,txid):
-		return g.rpch.eth_getTransactionReceipt('0x'+txid)
-
-	@classmethod
 	def get_exec_status(cls,txid,silent=False):
 		d = g.rpch.eth_getTransactionReceipt('0x'+txid)
 		if not silent:
@@ -74,8 +72,7 @@ class EthereumMMGenTX(MMGenTX):
 		return self.fee
 
 	def check_fee(self):
-		if self.disable_fee_check: return
-		assert self.fee <= g.proto.max_tx_fee
+		assert self.disable_fee_check or (self.fee <= g.proto.max_tx_fee)
 
 	def get_hex_locktime(self): return None # TODO
 
@@ -87,32 +84,31 @@ class EthereumMMGenTX(MMGenTX):
 			return True
 		return False
 
-	# hex data if signed, json if unsigned: see create_raw()
+	# hex data if signed, json if unsigned
 	def check_txfile_hex_data(self):
 		if self.check_sigs():
-
 			from .pyethereum.transactions import Transaction
-
 			from . import rlp
 			etx = rlp.decode(bytes.fromhex(self.hex),Transaction)
 			d = etx.to_dict() # ==> hex values have '0x' prefix, 0 is '0x'
 			for k in ('sender','to','data'):
 				if k in d: d[k] = d[k].replace('0x','',1)
 			o = {   'from':     CoinAddr(d['sender']),
-					'to':       CoinAddr(d['to']) if d['to'] else Str(''),
+					'to':       CoinAddr(d['to']) if d['to'] else Str(''), # NB: for token, 'to' is token address
 					'amt':      ETHAmt(d['value'],'wei'),
 					'gasPrice': ETHAmt(d['gasprice'],'wei'),
 					'startGas': ETHAmt(d['startgas'],'wei'),
 					'nonce':    ETHNonce(d['nonce']),
 					'data':     HexStr(d['data']) }
-			if o['data'] and not o['to']:
-				self.token_addr = TokenAddr(etx.creates.hex())
+			if o['data'] and not o['to']: # token- or contract-creating transaction
+				o['token_addr'] = TokenAddr(etx.creates.hex()) # NB: could be a non-token contract address
+				self.disable_fee_check = True
 			txid = CoinTxID(etx.hash.hex())
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 		else:
 			d = json.loads(self.hex)
 			o = {   'from':     CoinAddr(d['from']),
-					'to':       CoinAddr(d['to']) if d['to'] else Str(''),
+					'to':       CoinAddr(d['to']) if d['to'] else Str(''), # NB: for token, 'to' is sendto address
 					'amt':      ETHAmt(d['amt']),
 					'gasPrice': ETHAmt(d['gasPrice']),
 					'startGas': ETHAmt(d['startGas']),
@@ -120,8 +116,6 @@ class EthereumMMGenTX(MMGenTX):
 					'chainId':  Int(d['chainId']),
 					'data':     HexStr(d['data']) }
 		self.tx_gas = o['startGas'] # approximate, but better than nothing
-		self.usr_contract_data = o['data']
-		if o['data'] and not o['to']: self.disable_fee_check = True
 		self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
 		self.txobj = o
 		return d # 'token_addr','decimals' required by subclass
@@ -129,7 +123,7 @@ class EthereumMMGenTX(MMGenTX):
 	def get_nonce(self):
 		return ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16))
 
-	def make_txobj(self): # create_raw
+	def make_txobj(self): # called by create_raw()
 		chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
 		self.txobj = {
 			'from': self.inputs[0].addr,
@@ -147,12 +141,12 @@ class EthereumMMGenTX(MMGenTX):
 	# thus removing an attack vector
 	def create_raw(self):
 		assert len(self.inputs) == 1,'Transaction has more than one input!'
-		o_ok = (0,1) if self.usr_contract_data else (1,)
 		o_num = len(self.outputs)
-		assert o_num in o_ok,'Transaction has invalid number of outputs!'.format(o_num)
+		o_ok = 0 if self.usr_contract_data else 1
+		assert o_num == o_ok,'Transaction has {} output{} (should have {})'.format(o_num,suf(o_num),o_ok)
 		self.make_txobj()
-		ol = {k: (v.decode() if issubclass(type(v),bytes) else str(v)) for k,v in self.txobj.items()}
-		self.hex = json.dumps(ol)
+		odict = { k: str(v) for k,v in self.txobj.items() if k != 'token_to' }
+		self.hex = json.dumps(odict)
 		self.update_txid()
 
 	def del_output(self,idx): pass
@@ -221,9 +215,7 @@ class EthereumMMGenTX(MMGenTX):
 		abs_fee = self.process_fee_spec(tx_fee,None,on_fail='return')
 		if abs_fee == False:
 			return False
-		elif self.disable_fee_check:
-			return abs_fee
-		elif abs_fee > g.proto.max_tx_fee:
+		elif not self.disable_fee_check and (abs_fee > g.proto.max_tx_fee):
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
 			msg(m.format(abs_fee.hl(),desc,g.proto.max_tx_fee.hl(),c=g.coin))
 			return False
@@ -240,9 +232,9 @@ class EthereumMMGenTX(MMGenTX):
 
 	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
 		m = {}
-		for k in ('in','out'):
-			if len(getattr(self,k+'puts')):
-				m[k] = getattr(self,k+'puts')[0].mmid if len(getattr(self,k+'puts')) else ''
+		for k in ('inputs','outputs'):
+			if len(getattr(self,k)):
+				m[k] = getattr(self,k)[0].mmid if len(getattr(self,k)) else ''
 				m[k] = ' ' + m[k].hl() if m[k] else ' ' + MMGenID.hlc(nonmm_str)
 		fs = """From:      {}{f_mmid}
 				To:        {}{t_mmid}
@@ -252,50 +244,56 @@ class EthereumMMGenTX(MMGenTX):
 				Nonce:     {}
 				Data:      {d}
 				\n""".replace('\t','')
-		keys = ('from',('to','token_to')['token_to' in self.txobj],'amt','nonce')
 		ld = len(self.txobj['data'])
-		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in keys),
+		return fs.format(   *((self.txobj[k] if self.txobj[k] != '' else Str('None')).hl() for k in self.fmt_keys),
 							d='{}... ({} bytes)'.format(self.txobj['data'][:40],ld//2) if ld else Str('None'),
 							c=g.dcoin if len(self.outputs) else '',
 							g=yellow(str(self.txobj['gasPrice'].to_unit('Gwei',show_decimal=True))),
 							G=yellow(str(self.txobj['startGas'].toKwei())),
-							t_mmid=m['out'] if len(self.outputs) else '',
-							f_mmid=m['in'])
+							t_mmid=m['outputs'] if len(self.outputs) else '',
+							f_mmid=m['inputs'])
 
 	def format_view_abs_fee(self):
 		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
-		note = ' (max)' if self.usr_contract_data else ''
+		note = ' (max)' if self.txobj['data'] else ''
 		return fee.hl() + note
 
 	def format_view_rel_fee(self,terse): return ''
 	def format_view_verbose_footer(self): return '' # TODO
 
-	def set_g_token(self):
-		die(2,"Transaction object mismatch.  Have you forgotten to include the '--token' option?")
+	def resolve_g_token_from_tx_file(self):
+		die(2,"The '--token' option must be specified for token transaction files")
 
 	def final_inputs_ok_msg(self,change_amt):
 		m = "Transaction leaves {} {} in the sender's account"
 		chg = '0' if (self.outputs and self.outputs[0].is_chg) else change_amt
 		return m.format(ETHAmt(chg).hl(),g.coin)
 
-	def do_sign(self,d,wif,tx_num_str):
-		d_in = {'to':       bytes.fromhex(d['to']),
-				'startgas': d['startGas'].toWei(),
-				'gasprice': d['gasPrice'].toWei(),
-				'value':    d['amt'].toWei() if d['amt'] else 0,
-				'nonce':    d['nonce'],
-				'data':     bytes.fromhex(d['data'])}
+	def do_sign(self,wif,tx_num_str):
+		o = self.txobj
+		o_conv = {
+			'to':       bytes.fromhex(o['to']),
+			'startgas': o['startGas'].toWei(),
+			'gasprice': o['gasPrice'].toWei(),
+			'value':    o['amt'].toWei() if o['amt'] else 0,
+			'nonce':    o['nonce'],
+			'data':     bytes.fromhex(o['data']) }
 
 		from .pyethereum.transactions import Transaction
-
-		etx = Transaction(**d_in).sign(wif,d['chainId'])
-		assert etx.sender.hex() == d['from'],(
+		etx = Transaction(**o_conv).sign(wif,o['chainId'])
+		assert etx.sender.hex() == o['from'],(
 			'Sender address recovered from signature does not match true sender')
+
 		from . import rlp
 		self.hex = rlp.encode(etx).hex()
 		self.coin_txid = CoinTxID(etx.hash.hex())
-		if d['data']:
-			self.token_addr = TokenAddr(etx.creates.hex())
+
+		if o['data']:
+			if o['to']:
+				assert self.txobj['token_addr'] == TokenAddr(etx.creates.hex()),'Token address mismatch'
+			else: # token- or contract-creating transaction
+				self.txobj['token_addr'] = TokenAddr(etx.creates.hex())
+
 		assert self.check_sigs(),'Signature check failed'
 
 	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
@@ -310,42 +308,47 @@ class EthereumMMGenTX(MMGenTX):
 		msg_r('Signing transaction{}...'.format(tx_num_str))
 
 		try:
-			self.do_sign(self.txobj,keys[0].sec.wif,tx_num_str)
+			self.do_sign(keys[0].sec.wif,tx_num_str)
 			msg('OK')
 			return True
 		except Exception as e:
+			m = "{!r}: transaction signing failed!"
+			msg(m.format(e.args[0]))
 			if g.traceback:
 				import traceback
 				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
-			m = "{!r}: transaction signing failed!"
-			msg(m.format(e.args[0]))
 			return False
 
-	def is_in_mempool(self):
-		return '0x'+self.coin_txid in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
-
-	def is_in_wallet(self):
-		d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
-		if d and 'blockNumber' in d and d['blockNumber'] is not None:
-			return 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
-		return False
-
 	def get_status(self,status=False):
-		if self.is_in_mempool():
+
+		class r(object): pass
+
+		def is_in_mempool():
+			if not 'full_node' in g.rpch.caps:
+				return False
+			return '0x'+self.coin_txid in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
+
+		def is_in_wallet():
+			d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
+			if d and 'blockNumber' in d and d['blockNumber'] is not None:
+				r.confs = 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
+				r.exec_status = int(d['status'],16)
+				return True
+			return False
+
+		if is_in_mempool():
 			msg('Transaction is in mempool' if status else 'Warning: transaction is in mempool!')
 			return
 
-		confs = self.is_in_wallet()
-		if confs is not False:
-			if self.usr_contract_data:
-				exec_status = type(self).get_exec_status(self.coin_txid)
-				if exec_status == 0:
-					msg('Contract failed to execute!')
-				else:
-					msg('Contract successfully executed with status {}'.format(exec_status))
-			die(0,'Transaction has {} confirmation{}'.format(confs,suf(confs,'s')))
-
 		if status:
+			if is_in_wallet():
+				if self.txobj['data']:
+					cd = capfirst(self.contract_desc)
+					if r.exec_status == 0:
+						msg('{} failed to execute!'.format(cd))
+					else:
+						msg('{} successfully executed with status {}'.format(cd,r.exec_status))
+				die(0,'Transaction has {} confirmation{}'.format(r.confs,suf(r.confs)))
 			die(1,'Transaction is neither in mempool nor blockchain!')
 
 	def send(self,prompt_user=True,exit_on_fail=False):
@@ -357,7 +360,7 @@ class EthereumMMGenTX(MMGenTX):
 
 		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
 
-		if not self.disable_fee_check and fee > g.proto.max_tx_fee:
+		if not self.disable_fee_check and (fee > g.proto.max_tx_fee):
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				fee,g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
 
@@ -383,91 +386,123 @@ class EthereumMMGenTX(MMGenTX):
 			self.add_blockcount()
 			return True
 
+	def get_cmdline_input_addrs(self):
+		ret = []
+		if opt.inputs:
+			from mmgen.tw import TrackingWallet
+			r = TrackingWallet().data_root # must create new instance here
+			m = 'Address {!r} not in tracking wallet'
+			for i in opt.inputs.split(','):
+				if is_mmgen_id(i):
+					for addr in r:
+						if r[addr]['mmid'] == i:
+							ret.append(addr)
+							break
+					else:
+						raise UserAddressNotInWallet(m.format(i))
+				elif is_coin_addr(i):
+					if not i in r:
+						raise UserAddressNotInWallet(m.format(i))
+					ret.append(i)
+				else:
+					die(1,"'{}': not an MMGen ID or coin address".format(i))
+		return ret
+
+	def print_contract_addr(self):
+		if 'token_addr' in self.txobj:
+			msg('Contract address: {}'.format(self.txobj['token_addr'].hl()))
+
 class EthereumTokenMMGenTX(EthereumMMGenTX):
-	desc   = 'Ethereum token transaction'
+	desc = 'Ethereum token transaction'
+	contract_desc = 'token contract'
 	tx_gas = ETHAmt(52000,'wei')
 	start_gas = ETHAmt(60000,'wei')
+	fmt_keys = ('from','token_to','amt','nonce')
 	fee_is_approximate = True
+
+	def __init__(self,*args,**kwargs):
+		if not kwargs.get('offline'):
+			from mmgen.tw import TrackingWallet
+			self.decimals = TrackingWallet().get_param('decimals')
+			from .contract import Token
+			self.token_obj = Token(g.token,self.decimals)
+		EthereumMMGenTX.__init__(self,*args,**kwargs)
 
 	def update_change_output(self,change_amt):
 		if self.outputs[0].is_chg:
 			self.update_output_amt(0,self.inputs[0].amt)
 
-	def check_sufficient_funds(self,inputs_sum,sel_unspent):
-		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+sel_unspent[0].addr),16),'wei')
+	# token transaction, so check both eth and token balances
+	# TODO: add test with insufficient funds
+	def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
+		eth_bal = self.twuo.wallet.get_eth_balance(sel_unspent[0].addr)
 		if eth_bal == 0: # we don't know the fee yet
 			msg('This account has no ether to pay for the transaction fee!')
 			return False
-		if self.send_amt > inputs_sum:
-			msg(self.msg_low_coin.format(self.send_amt-inputs_sum,g.dcoin))
-			return False
-		return True
+		return super().precheck_sufficient_funds(inputs_sum,sel_unspent)
 
 	def final_inputs_ok_msg(self,change_amt):
+		token_bal   = ( ETHAmt('0') if self.outputs[0].is_chg else
+						self.inputs[0].amt - self.outputs[0].amt )
 		m = "Transaction leaves ≈{} {} and {} {} in the sender's account"
-		if self.outputs[0].is_chg:
-			send_acct_tbal = '0'
-		else:
-			from .contract import Token
-			send_acct_tbal = Token(g.token).balance(self.inputs[0].addr) - self.outputs[0].amt
-		return m.format(ETHAmt(change_amt).hl(),g.coin,ETHAmt(send_acct_tbal).hl(),g.dcoin)
+		return m.format( change_amt.hl(), g.coin, token_bal.hl(), g.dcoin )
 
 	def get_change_amt(self): # here we know the fee
-		eth_bal = ETHAmt(int(g.rpch.eth_getBalance('0x'+self.inputs[0].addr),16),'wei')
+		eth_bal = self.twuo.wallet.get_eth_balance(self.inputs[0].addr)
 		return eth_bal - self.fee
 
-	def set_g_token(self):
+	def resolve_g_token_from_tx_file(self):
 		g.dcoin = self.dcoin
 		if is_hex_str(self.hex): return # for txsend we can leave g.token uninitialized
 		d = json.loads(self.hex)
 		if g.token.upper() == self.dcoin:
 			g.token = d['token_addr']
 		elif g.token != d['token_addr']:
-			m1 = "'{p}': invalid --token parameter for {t} Ethereum token transaction file\n"
+			m1 = "'{p}': invalid --token parameter for {t} {n} token transaction file\n"
 			m2 = "Please use '--token={t}'"
-			die(1,(m1+m2).format(p=g.token,t=self.dcoin))
+			die(1,(m1+m2).format(p=g.token,t=self.dcoin,n=capfirst(g.proto.name)))
 
-	def make_txobj(self):
+	def make_txobj(self): # called by create_raw()
 		super(EthereumTokenMMGenTX,self).make_txobj()
-		from .contract import Token
-		t = Token(g.token)
-		o = t.txcreate( self.inputs[0].addr,
-						self.outputs[0].addr,
-						(self.inputs[0].amt if self.outputs[0].is_chg else self.outputs[0].amt),
-						self.start_gas,
-						self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'))
-		self.txobj['token_addr'] = self.token_addr = t.addr
-		self.txobj['decimals']   = t.decimals()
+		t = self.token_obj
+		o = self.txobj
+		o['token_addr'] = t.addr
+		o['decimals'] = t.decimals()
+		o['token_to'] = o['to']
+		o['data'] = t.create_data(o['token_to'],o['amt'])
 
 	def check_txfile_hex_data(self):
 		d = super(EthereumTokenMMGenTX,self).check_txfile_hex_data()
 		o = self.txobj
-		from .contract import Token
-		if self.check_sigs(): # online, from rlp
-			rpc_init()
+
+		if self.check_sigs(): # online, from rlp and wallet
 			o['token_addr'] = TokenAddr(o['to'])
-			o['amt']        = Token(o['token_addr']).transferdata2amt(o['data'])
-		else:                # offline, from json
+			o['decimals'] = self.decimals
+		else:                 # offline, from json
 			o['token_addr'] = TokenAddr(d['token_addr'])
-			o['decimals']   = Int(d['decimals'])
-			t = Token(o['token_addr'],o['decimals'])
-			self.usr_contract_data = o['data'] = t.create_data(o['to'],o['amt'])
+			o['decimals'] = Int(d['decimals'])
+
+		from .contract import Token
+		t = self.token_obj = Token(o['token_addr'],o['decimals'])
+
+		if self.check_sigs(): # online, from rlp - 'amt' was eth amt, now token amt
+			o['amt'] = t.transferdata2amt(o['data'])
+		else:                 # offline, from json - 'amt' is token amt
+			o['data'] = t.create_data(o['to'],o['amt'])
+
+		o['token_to'] = type(t).transferdata2sendaddr(o['data'])
 
 	def format_view_body(self,*args,**kwargs):
-		if self.usr_contract_data:
-			from .contract import Token
-			self.txobj['token_to'] = Token.transferdata2sendaddr(self.usr_contract_data)
 		return 'Token:     {d} {c}\n{r}'.format(
 			d=self.txobj['token_addr'].hl(),
 			c=blue('(' + g.dcoin + ')'),
 			r=super(EthereumTokenMMGenTX,self).format_view_body(*args,**kwargs))
 
-	def do_sign(self,d,wif,tx_num_str):
-		from .contract import Token
-		d = self.txobj
-		t = Token(d['token_addr'],decimals=d['decimals'])
-		tx_in = t.txcreate(d['from'],d['to'],d['amt'],self.start_gas,d['gasPrice'],nonce=d['nonce'])
-		(self.hex,self.coin_txid) = t.txsign(tx_in,wif,d['from'],chain_id=d['chainId'])
+	def do_sign(self,wif,tx_num_str):
+		o = self.txobj
+		t = self.token_obj
+		tx_in = t.make_tx_in(o['from'],o['to'],o['amt'],self.start_gas,o['gasPrice'],nonce=o['nonce'])
+		(self.hex,self.coin_txid) = t.txsign(tx_in,wif,o['from'],chain_id=o['chainId'])
 		assert self.check_sigs(),'Signature check failed'
 
 class EthereumMMGenBumpTX(EthereumMMGenTX,MMGenBumpTX):

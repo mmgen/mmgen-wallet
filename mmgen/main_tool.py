@@ -71,6 +71,7 @@ opts_data = {
 -t, --type=t          Specify address type (valid options: 'legacy',
                       'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose         Produce more verbose output
+-X, --cached-balances Use cached balances (Ethereum only)
 """,
 	'notes': """
 
@@ -89,6 +90,8 @@ Type '{pn} help <command>' for help on a particular command
 }
 
 cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt','use_old_ed25519'])
+
+g.use_cached_balances = opt.cached_balances
 
 if len(cmd_args) < 1: opts.usage()
 cmd = cmd_args.pop(0)

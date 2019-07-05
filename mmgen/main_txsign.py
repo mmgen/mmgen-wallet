@@ -114,7 +114,7 @@ for tx_num,tx_file in enumerate(tx_files,1):
 	if len(tx_files) > 1:
 		msg('\nTransaction #{} of {}:'.format(tx_num,len(tx_files)))
 		tx_num_str = ' #{}'.format(tx_num)
-	tx = MMGenTX(tx_file)
+	tx = MMGenTX(tx_file,offline=True)
 
 	if tx.marked_signed():
 		msg('Transaction is already signed!'); continue

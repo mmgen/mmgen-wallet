@@ -235,7 +235,8 @@ class TestSuiteShared(object):
 		t.written_to_file('Encrypted secret keys',oo=True)
 		return t
 
-	def _do_confirm_send(self,t,quiet=False,confirm_send=True):
-		t.expect('Are you sure you want to broadcast this')
+	def _do_confirm_send(self,t,quiet=False,confirm_send=True,sure=True):
+		if sure:
+			t.expect('Are you sure you want to broadcast this')
 		m = ('YES, I REALLY WANT TO DO THIS','YES')[quiet]
 		t.expect("'{}' to confirm: ".format(m),('',m)[confirm_send]+'\n')
