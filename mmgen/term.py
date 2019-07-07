@@ -58,7 +58,6 @@ def _kb_hold_protect_unix():
 # as well as UTF8 chars (4 bytes max).
 def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True,num_chars=5):
 	msg_r(prompt)
-	sys.stderr.flush()
 	timeout = float(0.3)
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
@@ -81,7 +80,6 @@ def _get_keypress_unix(prompt='',immed_chars='',prehold_protect=True,num_chars=5
 
 def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None,num_chars=5):
 	msg_r(prompt)
-	sys.stderr.flush()
 	fd = sys.stdin.fileno()
 	old = termios.tcgetattr(fd)
 	tty.setcbreak(fd)
@@ -91,7 +89,6 @@ def _get_keypress_unix_raw(prompt='',immed_chars='',prehold_protect=None,num_cha
 
 def _get_keypress_unix_stub(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
 	msg_r(prompt)
-	sys.stderr.flush()
 	return sys.stdin.read(1).encode()
 
 #_get_keypress_unix_stub = _get_keypress_unix
@@ -112,7 +109,6 @@ def _kb_hold_protect_mswin():
 def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=None):
 
 	msg_r(prompt)
-	sys.stderr.flush()
 	timeout = float(0.5)
 
 	while True:
@@ -135,14 +131,12 @@ def _get_keypress_mswin(prompt='',immed_chars='',prehold_protect=True,num_chars=
 
 def _get_keypress_mswin_raw(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
 	msg_r(prompt)
-	sys.stderr.flush()
 	ch = msvcrt.getch()
 	if ch == b'\x03': raise KeyboardInterrupt
 	return ch
 
 def _get_keypress_mswin_stub(prompt='',immed_chars='',prehold_protect=None,num_chars=None):
 	msg_r(prompt)
-	sys.stderr.flush()
 	return os.read(0,1)
 
 def _get_terminal_size_linux():

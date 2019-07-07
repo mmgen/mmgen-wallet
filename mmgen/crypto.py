@@ -118,14 +118,18 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 		import scrypt
 		return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
 
-	msg_r('Hashing passphrase...')
+	if int(hash_preset) > 3:
+		msg_r('Hashing passphrase, please wait...')
+
 	# hashlib.scrypt doesn't support N > 14 (hash preset 3)
 	if N > 14 or g.force_standalone_scrypt_module:
 		ret = do_standalone_scrypt()
 	else:
 		try: ret = do_hashlib_scrypt()
 		except: ret = do_standalone_scrypt()
-	msg('done')
+
+	if int(hash_preset) > 3:
+		msg_r('\b'*34 + ' '*34 + '\b'*34)
 
 	return ret
 

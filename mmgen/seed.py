@@ -765,28 +765,27 @@ class Mnemonic (SeedSourceUnenc):
 			while True:
 				r = get_char('\r'+prompt).decode()
 				if r in urange: break
-			msg_r('\r' + ' '*len(prompt) + '\r')
+			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
 			return self.mn_lens[int(r)-1]
 
 		while True:
 			mn_len = choose_mn_len()
 			prompt = 'Mnemonic length of {} words chosen. OK?'.format(mn_len)
-			if keypress_confirm(prompt,default_yes=True,no_nl=True): break
-
+			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
+				break
 		wl = baseconv.digits[self.wl_id]
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
 
-		m  = 'Enter your {ml}-word mnemonic, hitting ENTER or SPACE after each word.\n'
+		m  = 'Enter your {ml}-word seed phrase, hitting ENTER or SPACE after each word.\n'
 		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
 		m += 'lowercase letter will be treated as a {lq}pad character{rq}, i.e. it will simply\n'
 		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
 		m += "of words.  For each word, once you've typed {lw} characters total (including\n"
-		m += 'pad characters) a pad character will enter the word.'
+		m += 'pad characters) any pad character will enter the word.'
 
 		# pexpect chokes on these utf8 chars under MSYS2
 		lq,rq = (('“','”'),('"','"'))[g.test_suite and g.platform=='win']
-
 		msg(m.format(ml=mn_len,lw=longest_word,lq=lq,rq=rq))
 
 		def get_word():

@@ -53,7 +53,7 @@ class unit_test(object):
 				seed2.subseeds._generate(10)
 				assert len(ss2_list) == 10, len(ss2_list)
 
-				assert seed.pformat() == seed2.pformat()
+				assert seed.ppformat() == seed2.ppformat()
 
 				s = seed.subseeds.format(1,g.subseeds)
 				s_lines = s.strip().split('\n')

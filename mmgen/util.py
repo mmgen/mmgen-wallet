@@ -31,11 +31,13 @@ if g.platform == 'win':
 	def msg_r(s):
 		try:
 			g.stderr.write(s)
+			g.stderr.flush()
 		except:
 			os.write(2,s.encode())
 	def Msg_r(s):
 		try:
 			g.stdout.write(s)
+			g.stdout.flush()
 		except:
 			os.write(1,s.encode())
 	def msg(s): msg_r(s + '\n')
@@ -300,16 +302,16 @@ class baseconv(object):
 
 	@classmethod
 	def b58encode(cls,s,pad=None):
-		pad = cls.get_pad(s,pad,'b58encode',cls.b58pad_lens,(bytes,))
+		pad = cls._get_pad(s,pad,'b58encode',cls.b58pad_lens,(bytes,))
 		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
 
 	@classmethod
 	def b58decode(cls,s,pad=None):
-		pad = cls.get_pad(s,pad,'b58decode',cls.b58pad_lens_rev,(bytes,str))
+		pad = cls._get_pad(s,pad,'b58decode',cls.b58pad_lens_rev,(bytes,str))
 		return bytes.fromhex(cls.tohex(s,'b58',pad=pad*2 if pad else None))
 
 	@staticmethod
-	def get_pad(s,pad,op_desc,pad_map,ok_types):
+	def _get_pad(s,pad,op_desc,pad_map,ok_types):
 		if not isinstance(s,ok_types):
 			m = "{}() input must be one of {}, not '{}'"
 			raise ValueError(m.format(op_desc,repr([t.__name__ for t in ok_types]),type(s).__name__))
@@ -329,21 +331,21 @@ class baseconv(object):
 
 	@classmethod
 	def check_wordlists(cls):
-		for k,v in list(cls.wl_chksums.items()): assert cls.get_wordlist_chksum(k) == v
+		for k,v in list(cls.wl_chksums.items()):
+			res = cls.get_wordlist_chksum(k)
+			assert res == v,'{}: checksum mismatch for {} (should be {})'.format(res,k,v)
 
 	@classmethod
 	def check_wordlist(cls,wl_id):
 
-		wl = baseconv.digits[wl_id]
-		Msg('Wordlist: {}\nLength: {} words'.format(capfirst(wl_id),len(wl)))
+		wl = cls.digits[wl_id]
+		qmsg('Wordlist: {}\nLength: {} words'.format(wl_id,len(wl)))
 		new_chksum = cls.get_wordlist_chksum(wl_id)
 
-		a,b = 'generated checksum','saved checksum'
+		a,b = 'generated','saved'
 		compare_chksums(new_chksum,a,cls.wl_chksums[wl_id],b,die_on_fail=True)
 
-		Msg('Checksum {} matches'.format(new_chksum))
-		Msg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
-
+		qmsg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
 
 	@classmethod
 	def tohex(cls,words_arg,wl_id,pad=None):
@@ -362,6 +364,8 @@ class baseconv(object):
 
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
+		if wl_id in ('electrum','tirosh'):
+			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
 		if not is_hex_str(hexnum):
 			die(2,"{!r}: not a hexadecimal number".format(hexnum))

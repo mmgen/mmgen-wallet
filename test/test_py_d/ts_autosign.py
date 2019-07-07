@@ -67,7 +67,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			mn_file = dfl_words_file
 			mn = read_from_file(mn_file).strip().split()
 			mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
-			stealth_mnemonic_entry(t,mn)
+			stealth_mnemonic_entry(t,mn,fmt='words')
 			wf = t.written_to_file('Autosign wallet')
 			t.ok()
 

@@ -141,19 +141,21 @@ class TestSuiteInput(TestSuiteBase):
 			return 'skip' # pexpect double-escapes utf8, so skip
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def mnemonic_entry(self):
-		mn = read_from_file(dfl_words_file).strip().split()[:12]
-		mn = ['foo'] + mn[:5] + ['realiz','realized'] + mn[5:]
-		t = self.spawn('mmgen-walletconv',['-S','-i','words','-o','words'])
+	def _mnemonic_entry(self,fmt,wf):
+		mn = read_from_file(wf).strip().split()
+		mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
+		t = self.spawn('mmgen-walletconv',['-S','-i',fmt,'-o',fmt])
 		t.expect('words: ','1')
 		t.expect('(Y/n): ','y')
-		stealth_mnemonic_entry(t,mn)
-		sid_chk = '5F9BC42F'
+		stealth_mnemonic_entry(t,mn,fmt=fmt)
+		sid_chk = 'FE3C6545'
 		sid = t.expect_getend('Valid mnemonic data for Seed ID ')[:8]
 		assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
 		t.expect('to confirm: ','YES\n')
 		t.read()
 		return t
+
+	def mnemonic_entry(self): return self._mnemonic_entry('words',mn_words_mmgen)
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"tests for interactive 'mmgen-tool' commands"

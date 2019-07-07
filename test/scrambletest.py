@@ -94,7 +94,11 @@ def run_tests():
 		msg_r('Testing: --coin {:4} {:22}'.format(coin.upper(),type_arg))
 		p = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		o = p.stdout.read().decode()
-		vmsg(o)
+		err = p.stderr.read().decode()
+		exit_val = p.wait()
+		if exit_val != 0:
+			ydie(2,'\nSpawned program exited with error code {}:\n{}'.format(exit_val,err))
+		vmsg('\nCOMMAND OUTPUT:\n[{}]'.format(o))
 		o = o.splitlines()
 		d = [e for e in o if len(e) > 4 and e[:9] == 'sc_debug_']
 		d.append('sc_debug_addr: ' + o[-2].split()[-1])
@@ -103,7 +107,7 @@ def run_tests():
 			a = test_data[test][n]
 			b = [e for e in d if e[:len(kk)] == kk][0][len(kk)+2:]
 			if b == a:
-				vmsg('sc_{}: {}'.format(k,a))
+				vmsg('sc_debug_{}: {}'.format(k,a))
 			else:
 				rdie(1,'\nError: sc_{} value {} does not match reference value {}'.format(k,b,a))
 		msg('OK')

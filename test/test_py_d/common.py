@@ -46,6 +46,7 @@ non_mmgen_fn = 'coinkey'
 
 ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
+mn_words_mmgen = os.path.join(ref_dir,'FE3C6545.mmwords')
 
 from mmgen.obj import MMGenTXLabel,TwComment
 
@@ -146,23 +147,26 @@ def get_label(do_shuffle=False):
 		label_iter = iter(labels)
 		return next(label_iter)
 
-def stealth_mnemonic_entry(t,mn):
+def stealth_mnemonic_entry(t,mn,fmt):
 	wnum = 1
-	max_wordlen = 12
+	max_wordlen = { 'words': 12 }[fmt]
 
 	def get_pad_chars(n):
 		ret = ''
 		for i in range(n):
-			m = int(os.urandom(1).hex(),16) % 32
+			m = int.from_bytes(os.urandom(1),'big') % 32
 			ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
 		return ret
 
 	for i in range(len(mn)):
 		w = mn[i]
-		if len(w) > 5:
+		if len(w) > (3,5)[max_wordlen==12]:
 			w = w + '\n'
 		else:
-			w = get_pad_chars(3 if randbool() else 0) + w[0] + get_pad_chars(3) + w[1:] + get_pad_chars(7)
+			w = (
+				get_pad_chars(2 if randbool() else 0)
+				+ w[0] + get_pad_chars(2) + w[1:]
+				+ get_pad_chars(9) )
 			w = w[:max_wordlen+1]
 		em,rm = 'Enter word #{}: ','Repeat word #{}: '
 		ret = t.expect((em.format(wnum),rm.format(wnum-1)))

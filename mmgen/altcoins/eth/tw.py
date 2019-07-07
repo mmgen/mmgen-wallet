@@ -303,7 +303,6 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	def get_display_precision(self): return 10 # truncate precision for narrow display
 
-	# NB: two wallet instances open simultaneously on the same data:
 	def get_unspent_data(self):
 		super().get_unspent_data()
 		for e in self.unspent:
