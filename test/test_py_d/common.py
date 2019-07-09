@@ -47,6 +47,7 @@ non_mmgen_fn = 'coinkey'
 ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
 mn_words_mmgen = os.path.join(ref_dir,'FE3C6545.mmwords')
+mn_words_bip39 = os.path.join(ref_dir,'FE3C6545.bip39')
 
 from mmgen.obj import MMGenTXLabel,TwComment
 
@@ -149,7 +150,7 @@ def get_label(do_shuffle=False):
 
 def stealth_mnemonic_entry(t,mn,fmt):
 	wnum = 1
-	max_wordlen = { 'words': 12 }[fmt]
+	max_wordlen = { 'words': 12, 'bip39': 8 }[fmt]
 
 	def get_pad_chars(n):
 		ret = ''

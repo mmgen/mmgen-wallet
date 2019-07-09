@@ -48,7 +48,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-words = """
+words = tuple("""
 abraham
 absent
 absorb
@@ -1682,4 +1682,4 @@ zigzag
 zipper
 zodiac
 zoom
-"""
+""".split())

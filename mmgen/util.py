@@ -283,9 +283,8 @@ def is_utf8(s): return is_ascii(s,enc='utf8')
 class baseconv(object):
 
 	mn_base = 1626 # tirosh list is 1633 words long!
+	mn_ids = ('mmgen','tirosh')
 	digits = {
-		'electrum': tuple(__import__('mmgen.mn_electrum',fromlist=['words']).words.split()),
-		'tirosh': tuple(__import__('mmgen.mn_tirosh',fromlist=['words']).words.split()[:mn_base]),
 		'b58': tuple('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'),
 		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
 		'b16': tuple('0123456789abcdef'),
@@ -293,12 +292,24 @@ class baseconv(object):
 		'b8':  tuple('01234567'),
 	}
 	wl_chksums = {
-		'electrum': '5ca31424',
-		'tirosh':   '48f05e1f', # tirosh truncated to mn_base (1626)
+		'mmgen':  '5ca31424',
+		'tirosh': '48f05e1f', # tirosh truncated to mn_base (1626)
 		# 'tirosh1633': '1a5faeff'
 	}
 	b58pad_lens =     [(16,22), (24,33), (32,44)]
 	b58pad_lens_rev = [(v,k) for k,v in b58pad_lens]
+
+	@classmethod
+	def init_mn(cls,mn_id):
+		assert mn_id in cls.mn_ids
+		if mn_id == 'mmgen':
+			from mmgen.mn_electrum import words
+			cls.digits[mn_id] = words
+		elif mn_id == 'tirosh':
+			from mmgen.mn_tirosh import words
+			cls.digits[mn_id] = words[:cls.mn_base]
+		else: # bip39
+			cls.digits[mn_id] = cls.words
 
 	@classmethod
 	def b58encode(cls,s,pad=None):
@@ -327,6 +338,7 @@ class baseconv(object):
 
 	@classmethod
 	def get_wordlist_chksum(cls,wl_id):
+		cls.init_mn(wl_id)
 		return sha256(' '.join(cls.digits[wl_id]).encode()).hexdigest()[:8]
 
 	@classmethod
@@ -364,7 +376,7 @@ class baseconv(object):
 
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
-		if wl_id in ('electrum','tirosh'):
+		if wl_id in ('mmgen','tirosh'):
 			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
 		if not is_hex_str(hexnum):
@@ -378,8 +390,6 @@ class baseconv(object):
 			num //= base
 		o = [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
 		return ''.join(o) if tostr else o
-
-baseconv.check_wordlists()
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext

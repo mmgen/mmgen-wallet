@@ -24,6 +24,7 @@ from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
+from mmgen.bip39 import bip39
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -97,7 +98,7 @@ def _usage(cmd=None,exit_val=1):
 		Msg(m2)
 	elif cmd in MMGenToolCmd._user_commands():
 		docstr = getattr(MMGenToolCmd,cmd).__doc__.strip()
-		msg('{}\n'.format(capfirst(docstr)))
+		msg('{}'.format(capfirst(docstr)))
 		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
@@ -224,8 +225,12 @@ def init_generators(arg=None):
 		kg = KeyGenerator(at)
 		ag = AddrGenerator(at)
 
-wordlists = 'electrum','tirosh'
-dfl_wl_id = 'electrum'
+dfl_mnemonic_fmt = 'mmgen'
+mnemonic_fmts = {
+	'mmgen': { 'fmt': 'words', 'conv_cls': baseconv },
+	'bip39': { 'fmt': 'bip39', 'conv_cls': bip39 },
+}
+mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
 
 class MMGenToolCmdBase(object):
 
@@ -454,53 +459,68 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 
 class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	"""
-	seed mnemonic utilities (wordlist: choose 'electrum' (default) or 'tirosh')
+	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39')
 
-		IMPORTANT NOTE: Though MMGen mnemonics use the Electrum wordlist, they're
-		computed using a different algorithm and are NOT Electrum-compatible!
+		IMPORTANT NOTE: MMGen's default seed phrase format uses the Electrum
+		wordlist, however seed phrases are computed using a different algorithm
+		and are NOT Electrum-compatible!
+
+		BIP39 support is fully compatible with the standard, allowing users to
+		import and export seed entropy from BIP39-compatible wallets.  However,
+		users should be aware that BIP39 support does not imply BIP32 support!
+		MMGen uses its own key derivation scheme differing from the one described
+		by the BIP32 protocol.
 	"""
-	def _do_random_mn(self,nbytes:int,wordlist:str):
+	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
 		hexrand = get_random(nbytes).hex()
 		Vmsg('Seed: {}'.format(hexrand))
-		return self.hex2mn(hexrand,wordlist=wordlist)
+		return self.hex2mn(hexrand,fmt=fmt)
 
-	def mn_rand128(self,wordlist=dfl_wl_id):
+	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"generate random 128-bit mnemonic seed phrase"
-		return self._do_random_mn(16,wordlist)
+		return self._do_random_mn(16,fmt)
 
-	def mn_rand192(self,wordlist=dfl_wl_id):
+	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"generate random 192-bit mnemonic seed phrase"
-		return self._do_random_mn(24,wordlist)
+		return self._do_random_mn(24,fmt)
 
-	def mn_rand256(self,wordlist=dfl_wl_id):
+	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"generate random 256-bit mnemonic seed phrase"
-		return self._do_random_mn(32,wordlist)
+		return self._do_random_mn(32,fmt)
 
-	def hex2mn(self,hexstr:'sstr',wordlist=dfl_wl_id):
-		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic"
-		opt.out_fmt = 'words'
+	def _get_mnemonic_fmt(self,fmt):
+		if fmt not in mnemonic_fmts:
+			m = '{!r}: invalid format (valid options: {})'
+			die(1,m.format(fmt,', '.join(mnemonic_fmts)))
+		return mnemonic_fmts[fmt]['fmt']
+
+	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
+		opt.out_fmt = self._get_mnemonic_fmt(fmt)
 		from mmgen.seed import SeedSource
 		s = SeedSource(seed_bin=bytes.fromhex(hexstr))
 		s._format()
 		return ' '.join(s.ssdata.mnemonic)
 
-	def mn2hex(self,seed_mnemonic:'sstr',wordlist=dfl_wl_id):
-		"convert a 12, 18 or 24-word mnemonic to a hexadecimal number"
+	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"convert a 12, 18 or 24-word mnemonic seed phrase to a hexadecimal number"
+		in_fmt = self._get_mnemonic_fmt(fmt)
 		opt.quiet = True
 		from mmgen.seed import SeedSource
-		return SeedSource(in_data=seed_mnemonic,in_fmt='words').seed.hexdata
+		return SeedSource(in_data=seed_mnemonic,in_fmt=in_fmt).seed.hexdata
 
-	def mn_stats(self,wordlist=dfl_wl_id):
+	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
-		wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
-		baseconv.check_wordlist(wordlist)
+		conv_cls = mnemonic_fmts[fmt]['conv_cls']
+		fmt in conv_cls.digits or die(1,"'{}': not a valid format".format(fmt))
+		conv_cls.check_wordlist(fmt)
 		return True
 
-	def mn_printlist(self,wordlist=dfl_wl_id,enum=False,pager=False):
+	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
-		wordlist in baseconv.digits or die(1,"'{}': not a valid wordlist".format(wordlist))
-		ret = baseconv.digits[wordlist]
+		self._get_mnemonic_fmt(fmt) # perform check
+		ret = mnemonic_fmts[fmt]['conv_cls'].digits[fmt]
 		if enum:
 			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
 		return '\n'.join(ret)

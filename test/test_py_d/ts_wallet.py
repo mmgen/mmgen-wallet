@@ -59,7 +59,8 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	cmd_group = (
 		# reading
 		('ref_wallet_conv',    'conversion of saved reference wallet'),
-		('ref_mn_conv',        'conversion of saved mnemonic'),
+		('ref_mn_conv',        'conversion of saved MMGen native mnemonic'),
+		('ref_bip39_conv',     'conversion of saved BIP39 mnemonic'),
 		('ref_seed_conv',      'conversion of saved seed file'),
 		('ref_hex_conv',       'conversion of saved hexadecimal seed file'),
 		('ref_brain_conv',     'conversion of ref brainwallet'),
@@ -69,7 +70,8 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		('ref_hincog_conv_old','conversion of saved hidden incog wallet (old format)'),
 		# writing
 		('ref_wallet_conv_out', 'ref seed conversion to wallet'),
-		('ref_mn_conv_out',     'ref seed conversion to mnemonic'),
+		('ref_mn_conv_out',     'ref seed conversion to MMGen native mnemonic'),
+		('ref_bip39_conv_out',  'ref seed conversion to BIP39 mnemonic'),
 		('ref_hex_conv_out',    'ref seed conversion to hex seed'),
 		('ref_seed_conv_out',   'ref seed conversion to seed'),
 		('ref_incog_conv_out',  'ref seed conversion to incog data'),
@@ -88,9 +90,12 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)]['ref_wallet'])
 		return self.walletconv_in(wf,'MMGen wallet',pw=True,oo=True)
 
-	def ref_mn_conv(self,ext='mmwords',desc='Mnemonic data'):
+	def ref_mn_conv(self,ext='mmwords',desc='MMGen native mnemonic data'):
 		wf = joinpath(ref_dir,self.seed_id+'.'+ext)
 		return self.walletconv_in(wf,desc,oo=True)
+
+	def ref_bip39_conv(self):
+		return self.ref_mn_conv(ext='bip39',desc='BIP39 mnemonic data')
 
 	def ref_seed_conv(self):
 		return self.ref_mn_conv(ext='mmseed',desc='Seed data')
@@ -123,7 +128,10 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		return self.walletconv_out('MMGen wallet','w',pw=True)
 
 	def ref_mn_conv_out(self):
-		return self.walletconv_out('mnemonic data','mn')
+		return self.walletconv_out('MMGen native mnemonic data','mn')
+
+	def ref_bip39_conv_out(self):
+		return self.walletconv_out('BIP39 mnemonic data','bip39')
 
 	def ref_seed_conv_out(self):
 		return self.walletconv_out('seed data','seed')
@@ -181,14 +189,14 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			else:
 				t.expect(['Passphrase is OK',' are correct'])
 		# Output
-		wf = t.written_to_file('Mnemonic data',oo=oo)
+		wf = t.written_to_file('MMGen native mnemonic data',oo=oo)
 		t.p.wait()
 		# back check of result
 		msg('' if opt.profile else ' OK')
 		return self.walletchk(  wf,
 								pf         = None,
 								extra_desc = '(check)',
-								desc       = 'mnemonic data',
+								desc       = 'MMGen native mnemonic data',
 								sid        = self.seed_id )
 
 	def walletconv_out(self,desc,out_fmt='w',uopts=[],uopts_chk=[],pw=False):

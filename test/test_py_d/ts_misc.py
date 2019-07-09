@@ -116,7 +116,8 @@ class TestSuiteInput(TestSuiteBase):
 	cmd_group = (
 		('password_entry_noecho', (1,"utf8 password entry", [])),
 		('password_entry_echo',   (1,"utf8 password entry (echoed)", [])),
-		('mnemonic_entry',        (1,"stealth mnemonic entry", [])),
+		('mnemonic_entry_mmgen',  (1,"stealth mnemonic entry (MMGen native)", [])),
+		('mnemonic_entry_bip39',  (1,"stealth mnemonic entry (BIP39)", [])),
 	)
 
 	def password_entry(self,prompt,cmd_args):
@@ -141,21 +142,23 @@ class TestSuiteInput(TestSuiteBase):
 			return 'skip' # pexpect double-escapes utf8, so skip
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def _mnemonic_entry(self,fmt,wf):
+	def _mnemonic_entry(self,fmt,mn_name,wf):
 		mn = read_from_file(wf).strip().split()
 		mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
 		t = self.spawn('mmgen-walletconv',['-S','-i',fmt,'-o',fmt])
+		t.expect('Mnemonic type: {}'.format(mn_name))
 		t.expect('words: ','1')
 		t.expect('(Y/n): ','y')
 		stealth_mnemonic_entry(t,mn,fmt=fmt)
 		sid_chk = 'FE3C6545'
-		sid = t.expect_getend('Valid mnemonic data for Seed ID ')[:8]
+		sid = t.expect_getend('Valid {} mnemonic data for Seed ID '.format(mn_name))[:8]
 		assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
 		t.expect('to confirm: ','YES\n')
 		t.read()
 		return t
 
-	def mnemonic_entry(self): return self._mnemonic_entry('words',mn_words_mmgen)
+	def mnemonic_entry_mmgen(self): return self._mnemonic_entry('words','MMGen native',mn_words_mmgen)
+	def mnemonic_entry_bip39(self): return self._mnemonic_entry('bip39','BIP39',mn_words_bip39)
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"tests for interactive 'mmgen-tool' commands"

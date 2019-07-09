@@ -21,7 +21,7 @@
 #    https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
 # Electrum - lightweight Bitcoin client. Copyright (C) 2011 thomasv@gitorious
 
-words = """
+words = tuple("""
 able
 about
 above
@@ -1648,4 +1648,4 @@ young
 yours
 yourself
 youth
-"""
+""".split())

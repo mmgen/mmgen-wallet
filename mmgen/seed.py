@@ -25,6 +25,7 @@ import os
 from mmgen.common import *
 from mmgen.obj import *
 from mmgen.crypto import *
+from mmgen.bip39 import bip39
 
 pnm = g.proj_name
 
@@ -33,17 +34,20 @@ def check_usr_seed_len(seed_len):
 		m = "ERROR: requested seed length ({}) doesn't match seed length of source ({})"
 		die(1,m.format((opt.seed_len,seed_len)))
 
-def is_mnemonic(s):
+def _is_mnemonic(s,fmt):
 	oq_save = opt.quiet
 	opt.quiet = True
 	try:
-		SeedSource(in_data=s,in_fmt='words')
+		SeedSource(in_data=s,in_fmt=fmt)
 		ret = True
 	except:
 		ret = False
 	finally:
 		opt.quiet = oq_save
 	return ret
+
+def is_bip39_mnemonic(s): return _is_mnemonic(s,fmt='bip39')
+def is_mmgen_mnemonic(s): return _is_mnemonic(s,fmt='words')
 
 class SeedBase(MMGenObject):
 
@@ -743,14 +747,20 @@ an empty passphrase, just hit ENTER twice.
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = encrypt_seed(self.seed.data,key)
 
-class Mnemonic (SeedSourceUnenc):
+class MMGenMnemonic(SeedSourceUnenc):
 
 	stdin_ok = True
 	fmt_codes = 'mmwords','words','mnemonic','mnem','mn','m'
-	desc = 'mnemonic data'
+	desc = 'MMGen native mnemonic data'
+	mn_name = 'MMGen native'
 	ext = 'mmwords'
 	mn_lens = [i // 32 * 3 for i in g.seed_lens]
-	wl_id = 'electrum' # or 'tirosh'
+	wl_id = 'mmgen'
+	conv_cls = baseconv
+
+	def __init__(self,*args,**kwargs):
+		self.conv_cls.init_mn(self.wl_id)
+		super().__init__(*args,**kwargs)
 
 	def _get_data_from_user(self,desc):
 
@@ -768,12 +778,15 @@ class Mnemonic (SeedSourceUnenc):
 			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
 			return self.mn_lens[int(r)-1]
 
+		msg('{} {}'.format(blue('Mnemonic type:'),yellow(self.mn_name)))
+
 		while True:
 			mn_len = choose_mn_len()
 			prompt = 'Mnemonic length of {} words chosen. OK?'.format(mn_len)
 			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
 				break
-		wl = baseconv.digits[self.wl_id]
+
+		wl = self.conv_cls.digits[self.wl_id]
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
 
@@ -832,8 +845,8 @@ class Mnemonic (SeedSourceUnenc):
 
 		hexseed = self.seed.hexdata
 
-		mn  = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
-		ret = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		mn  = self.conv_cls.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
+		ret = self.conv_cls.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
 
 		# Internal error, so just die on fail
 		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
@@ -851,12 +864,12 @@ class Mnemonic (SeedSourceUnenc):
 			return False
 
 		for n,w in enumerate(mn,1):
-			if w not in baseconv.digits[self.wl_id]:
-				msg('Invalid mnemonic: word #{} is not in the wordlist'.format(n))
+			if w not in self.conv_cls.digits[self.wl_id]:
+				msg('Invalid mnemonic: word #{} is not in the {} wordlist'.format(n,self.wl_id.upper()))
 				return False
 
-		hexseed = baseconv.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
-		ret     = baseconv.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
+		hexseed = self.conv_cls.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		ret     = self.conv_cls.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
 
 		if len(hexseed) * 4 not in g.seed_lens:
 			msg('Invalid mnemonic (produces too large a number)')
@@ -871,6 +884,15 @@ class Mnemonic (SeedSourceUnenc):
 		check_usr_seed_len(self.seed.bitlen)
 
 		return True
+
+class BIP39Mnemonic(MMGenMnemonic):
+
+	fmt_codes = ('bip39',)
+	desc = 'BIP39 mnemonic data'
+	mn_name = 'BIP39'
+	ext = 'bip39'
+	wl_id = 'bip39'
+	conv_cls = bip39
 
 class SeedFile (SeedSourceUnenc):
 

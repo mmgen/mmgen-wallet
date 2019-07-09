@@ -84,6 +84,7 @@ setup(
 			'mmgen.addr',
 			'mmgen.altcoin',
 			'mmgen.bech32',
+			'mmgen.bip39',
 			'mmgen.color',
 			'mmgen.common',
 			'mmgen.crypto',

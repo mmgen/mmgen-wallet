@@ -151,12 +151,14 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_wallet_chk', ([],'saved reference wallet')),
 		('ref_seed_chk',   ([],'saved seed file')),
 		('ref_hex_chk',    ([],'saved mmhex file')),
-		('ref_mn_chk',     ([],'saved mnemonic file')),
+		('ref_mn_chk',     ([],'saved native MMGen mnemonic file')),
+		('ref_bip39_chk',  ([],'saved BIP39 mnemonic file')),
 		('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
 		('ref_brain_chk',  ([],'saved brainwallet')), # in ts_shared
 		# generating new reference ('abc' brainwallet) files:
 		('ref_walletgen_brain',   ([],'generating new reference wallet + filename check (brain)')),
-		('ref_walletconv_words',  (['mmdat',pwfile],'wallet filename (words)')),
+		('ref_walletconv_words',  (['mmdat',pwfile],'wallet filename (native mnemonic)')),
+		('ref_walletconv_bip39',  (['mmdat',pwfile],'wallet filename (bip39)')),
 		('ref_walletconv_seed',   (['mmdat',pwfile],'wallet filename (seed)')),
 		('ref_walletconv_hexseed',(['mmdat',pwfile],'wallet filename (hex seed)')),
 		('ref_walletconv_incog',  (['mmdat',pwfile],'wallet filename (incog)')),
@@ -201,8 +203,12 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.ref_ss_chk(ss=HexSeedFile)
 
 	def ref_mn_chk(self):
-		from mmgen.seed import Mnemonic
-		return self.ref_ss_chk(ss=Mnemonic)
+		from mmgen.seed import MMGenMnemonic
+		return self.ref_ss_chk(ss=MMGenMnemonic)
+
+	def ref_bip39_chk(self):
+		from mmgen.seed import BIP39Mnemonic
+		return self.ref_ss_chk(ss=BIP39Mnemonic)
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):
 		source = TestSuiteWalletConv.sources[str(self.seed_len)]
@@ -263,7 +269,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def ref_walletconv_words(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='mn',desc='Mnemonic data',ext='mmwords')
+		return self.ref_walletconv(fn,pf,ofmt='mn',desc='MMGen native mnemonic data',ext='mmwords')
+
+	def ref_walletconv_bip39(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='bip39',desc='BIP39 mnemonic data',ext='bip39')
 
 	def ref_walletconv_seed(self,fn,pf):
 		return self.ref_walletconv(fn,pf,ofmt='mmseed',desc='Seed data',ext='mmseed')

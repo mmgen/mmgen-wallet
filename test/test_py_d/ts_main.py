@@ -94,6 +94,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		('export_seed',     (1,'seed export to mmseed format',   [[['mmdat'],1]])),
 		('export_hex',      (1,'seed export to hexadecimal format',  [[['mmdat'],1]])),
 		('export_mnemonic', (1,'seed export to mmwords format',  [[['mmdat'],1]])),
+		('export_bip39',    (1,'seed export to bip39 format',    [[['mmdat'],1]])),
 		('export_incog',    (1,'seed export to mmincog format',  [[['mmdat'],1]])),
 		('export_incog_hex',(1,'seed export to mmincog hex format', [[['mmdat'],1]])),
 		('export_incog_hidden',(1,'seed export to hidden mmincog format', [[['mmdat'],1]])),
@@ -227,7 +228,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'])
 		t.expect('Generating subseed 3L')
-		fn = t.written_to_file('Mnemonic data')
+		fn = t.written_to_file('MMGen native mnemonic data')
 		assert fn[-8:] == '.mmwords','incorrect file extension: {}'.format(fn[-8:])
 		return t
 
@@ -523,7 +524,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.export_seed(wf,desc=desc,out_fmt=out_fmt,pf=pf)
 
 	def export_mnemonic(self,wf):
-		return self.export_seed(wf,desc='mnemonic data',out_fmt='words')
+		return self.export_seed(wf,desc='MMGen native mnemonic data',out_fmt='words')
+
+	def export_bip39(self,wf):
+		return self.export_seed(wf,desc='BIP39 mnemonic data',out_fmt='bip39')
 
 	def export_incog(self,wf,desc='incognito data',out_fmt='i',add_args=[]):
 		uargs = ['-p1',self.usr_rand_arg] + add_args
@@ -560,7 +564,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.addrgen_seed(wf,foo,desc=desc,in_fmt=in_fmt)
 
 	def addrgen_mnemonic(self,wf,foo):
-		return self.addrgen_seed(wf,foo,desc='mnemonic data',in_fmt='words')
+		return self.addrgen_seed(wf,foo,desc='MMGen native mnemonic data',in_fmt='words')
 
 	def addrgen_incog(self,wf=[],foo='',in_fmt='i',desc='incognito data',args=[]):
 		t = self.spawn('mmgen-addrgen', args + self.segwit_arg + ['-i'+in_fmt,'-d',self.tmpdir]+

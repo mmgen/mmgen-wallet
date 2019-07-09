@@ -125,12 +125,12 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-subwalletgen',args,extra_desc='(generate subwallet)')
 		t.expect('Generating subseed {}'.format(ss_idx))
 		chk_sid = self.chk_data['ref_subwallet_sid']['98831F3A:{}'.format(ss_idx)]
-		fn = t.written_to_file('Mnemonic data')
+		fn = t.written_to_file('MMGen native mnemonic data')
 		assert chk_sid in fn,'incorrect filename: {} (does not contain {})'.format(fn,chk_sid)
 		ok()
 
 		t = self.spawn('mmgen-walletchk',[fn],extra_desc='(check subwallet)')
-		t.expect(r'Valid mnemonic data for Seed ID ([0-9A-F]*)\b',regex=True)
+		t.expect(r'Valid MMGen native mnemonic data for Seed ID ([0-9A-F]*)\b',regex=True)
 		sid = t.p.match.group(1)
 		assert sid == chk_sid,'subseed ID {} does not match expected value {}'.format(sid,chk_sid)
 		t.read()

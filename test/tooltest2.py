@@ -36,7 +36,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 from mmgen.common import *
 from test.common import *
 from mmgen.obj import is_wif,is_coin_addr
-from mmgen.seed import is_mnemonic
+from mmgen.seed import is_bip39_mnemonic,is_mmgen_mnemonic
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -94,10 +94,11 @@ kafile_code = (
 	"\nopt.use_old_ed25519 = None" +
 	"\nopt.passwd_file = 'test/ref/keyaddrfile_password'" )
 
+from test.unit_tests_d.ut_bip39 import unit_test as bip39
 tests = {
 	'Mnemonic': {
 		'hex2mn': [
-			( ['deadbeefdeadbeefdeadbeefdeadbeef'],
+			( ['deadbeefdeadbeefdeadbeefdeadbeef','fmt=mmgen'],
 			'table cast forgive master funny gaze sadness ripple million paint moral match' ),
 			( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
 			('swirl maybe anymore mix scale stray fog use approach page crime rhyme ' +
@@ -116,9 +117,9 @@ tests = {
 			( ['0000000000000000000000000000000000000000000000000000000000000001'],
 			('able able able able able able able able able able able able ' +
 			'able able able able able able able able able able able about') ),
-		],
+		] + [([a,'fmt=bip39'],b) for a,b in bip39.vectors],
 		'mn2hex': [
-			( ['table cast forgive master funny gaze sadness ripple million paint moral match'],
+			( ['table cast forgive master funny gaze sadness ripple million paint moral match','fmt=mmgen'],
 				'deadbeefdeadbeefdeadbeefdeadbeef' ),
 			( ['swirl maybe anymore mix scale stray fog use approach page crime rhyme ' +
 				'class former strange window snap soon'],
@@ -137,12 +138,30 @@ tests = {
 			( ['able able able able able able able able able able able able ' +
 				'able able able able able able able able able able able about'],
 				'0000000000000000000000000000000000000000000000000000000000000001'),
+		] + [([b,'fmt=bip39'],a) for a,b in bip39.vectors],
+		'mn_rand128': [
+			( [], is_mmgen_mnemonic, ['-r0']),
+			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
 		],
-		'mn_rand128':   [ ( [], is_mnemonic, ['-r0']), ( ['wordlist=tirosh'], is_mnemonic, ['-r0']), ],
-		'mn_rand192':   [ ( [], is_mnemonic, ['-r0']), ( ['wordlist=tirosh'], is_mnemonic, ['-r0']), ],
-		'mn_rand256':   [ ( [], is_mnemonic, ['-r0']), ( ['wordlist=tirosh'], is_mnemonic, ['-r0']), ],
-		'mn_stats':     [ ( [], is_str ), ( ['wordlist=tirosh'], is_str ), ],
-		'mn_printlist': [ ( [], is_str ), ( ['wordlist=tirosh'], is_str ), ],
+		'mn_rand192': [
+			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+		],
+		'mn_rand256': [
+			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
+			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+		],
+		'mn_stats': [
+			( [], is_str ),
+			( ['fmt=mmgen'], is_str ),
+			( ['fmt=bip39'], is_str ),
+		],
+		'mn_printlist': [
+			( [], is_str ),
+			( ['fmt=mmgen'], is_str ),
+			( ['fmt=bip39'], is_str ),
+		],
 	},
 	'Util': {
 		'hextob32': [
