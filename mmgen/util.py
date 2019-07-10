@@ -89,13 +89,17 @@ def Die(ev=0,s=''):
 
 def rdie(ev=0,s=''): die(ev,red(s))
 def ydie(ev=0,s=''): die(ev,yellow(s))
-def hi(): ymsg('hi')
 
 def pformat(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
 def pmsg(*args):
 	msg(pformat(args if len(args) > 1 else args[0]))
+def Pmsg(*args):
+	sys.stdout.write(ppformat(args if len(args) > 1 else args[0]) + '\n')
+def pdie(*args,exit_val=1):
+	sys.stderr.write(ppformat(args if len(args) > 1 else args[0]))
+	sys.exit(exit_val)
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
@@ -376,7 +380,7 @@ class baseconv(object):
 
 	@classmethod
 	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
-		if wl_id in ('mmgen','tirosh'):
+		if wl_id in ('mmgen','tirosh','bip39'):
 			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
 		if not is_hex_str(hexnum):

@@ -891,5 +891,6 @@ except Exception:
 		import traceback
 		print(''.join(traceback.format_exception(*sys.exc_info())))
 		msg(blue('Test script exited with error'))
+	raise
 except:
 	raise

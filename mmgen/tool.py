@@ -24,7 +24,6 @@ from mmgen.protocol import hash160
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
-from mmgen.bip39 import bip39
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -225,10 +224,14 @@ def init_generators(arg=None):
 		kg = KeyGenerator(at)
 		ag = AddrGenerator(at)
 
+def conv_cls_bip39():
+	from mmgen.bip39 import bip39
+	return bip39
+
 dfl_mnemonic_fmt = 'mmgen'
 mnemonic_fmts = {
-	'mmgen': { 'fmt': 'words', 'conv_cls': baseconv },
-	'bip39': { 'fmt': 'bip39', 'conv_cls': bip39 },
+	'mmgen': { 'fmt': 'words', 'conv_cls': lambda: baseconv },
+	'bip39': { 'fmt': 'bip39', 'conv_cls': conv_cls_bip39 },
 }
 mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
 
@@ -512,7 +515,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
-		conv_cls = mnemonic_fmts[fmt]['conv_cls']
+		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
 		fmt in conv_cls.digits or die(1,"'{}': not a valid format".format(fmt))
 		conv_cls.check_wordlist(fmt)
 		return True
@@ -520,7 +523,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
 		self._get_mnemonic_fmt(fmt) # perform check
-		ret = mnemonic_fmts[fmt]['conv_cls'].digits[fmt]
+		ret = mnemonic_fmts[fmt]['conv_cls']().digits[fmt]
 		if enum:
 			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
 		return '\n'.join(ret)

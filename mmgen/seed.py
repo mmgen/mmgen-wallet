@@ -25,7 +25,6 @@ import os
 from mmgen.common import *
 from mmgen.obj import *
 from mmgen.crypto import *
-from mmgen.bip39 import bip39
 
 pnm = g.proj_name
 
@@ -892,7 +891,11 @@ class BIP39Mnemonic(MMGenMnemonic):
 	mn_name = 'BIP39'
 	ext = 'bip39'
 	wl_id = 'bip39'
-	conv_cls = bip39
+
+	def __init__(self,*args,**kwargs):
+		from mmgen.bip39 import bip39
+		self.conv_cls = bip39
+		super().__init__(*args,**kwargs)
 
 class SeedFile (SeedSourceUnenc):
 
