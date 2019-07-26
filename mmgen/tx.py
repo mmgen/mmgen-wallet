@@ -386,9 +386,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs.pop(idx)
 
 	def sum_outputs(self,exclude=None):
-		if not len(self.outputs): return g.proto.coin_amt('0')
 		olist = self.outputs if exclude == None else \
 			self.outputs[:exclude] + self.outputs[exclude+1:]
+		if not olist:
+			return g.proto.coin_amt('0')
 		return g.proto.coin_amt(sum(e.amt for e in olist))
 
 	def add_mmaddrs_to_outputs(self,ad_w,ad_f):
@@ -1560,7 +1561,8 @@ class MMGenBumpTX(MMGenTX):
 		self.min_fee = self.sum_inputs() - self.sum_outputs() + self.get_relay_fee()
 
 	def update_fee(self,op_idx,fee):
-		self.update_output_amt(op_idx,self.sum_inputs()-self.sum_outputs(exclude=op_idx)-fee)
+		amt = self.sum_inputs() - self.sum_outputs(exclude=op_idx) - fee
+		self.update_output_amt(op_idx,amt)
 
 	def convert_and_check_fee(self,tx_fee,desc):
 		ret = super().convert_and_check_fee(tx_fee,desc)

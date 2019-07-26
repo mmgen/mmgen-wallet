@@ -151,6 +151,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_split1',               "splitting Bob's funds"),
 		('generate',                 'mining a block'),
 		('bob_bal2',                 "Bob's balance"),
+		('bob_rbf_1output_create',   'creating RBF tx with one output'),
+		('bob_rbf_1output_bump',     'bumping RBF tx with one output'),
 		('bob_bal2a',                "Bob's balance (age_fmt=confs)"),
 		('bob_bal2b',                "Bob's balance (showempty=1)"),
 		('bob_bal2c',                "Bob's balance (showempty=1 minconf=2 age_fmt=days)"),
@@ -283,7 +285,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn = get_file_with_ext(self._user_dir(user),'mmdat')
 		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True)
 		t.passphrase('MMGen wallet',rt_pw)
-		t.expect('Hashing passphrase...done')
 		sid = t.read().strip()[:8]
 		self.usr_subsids[user][subseed_idx] = sid
 		return sid
@@ -555,6 +556,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid(user)
 		return [self.get_addr_from_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
+	def bob_rbf_1output_create(self):
+		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
+		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
+		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
+
+	def bob_rbf_1output_bump(self):
+		ext = '9343,3]{x}.testnet.rawtx'.format(x='-α' if g.debug_utf8 else '')
+		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
+		return self.user_txbump('bob',self.tr.trash_dir,txfile,'8s',has_label=False,signed_tx=False)
+
 	def bob_rbf_send(self):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
@@ -574,26 +585,30 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = self._create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
-	def user_txbump(self,user,txfile,fee,red_op):
+	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True):
 		if not g.proto.cap('rbf'):
 			msg('Skipping RBF'); return 'skip'
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
-			['-d',self.tmpdir,'--send','--'+user,'--tx-fee='+fee,'--output-to-reduce='+red_op] + [txfile])
+			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?
-		t.do_comment(False,has_label=True)
-		t.passphrase('MMGen wallet',rt_pw)
-		t.written_to_file('Signed transaction')
-		self.txsend_ui_common(t,caller='txdo',bogus_send=False,file_desc='Signed transaction')
+		t.do_comment(False,has_label=has_label)
+		if signed_tx:
+			t.passphrase('MMGen wallet',rt_pw)
+			t.written_to_file('Signed transaction')
+			self.txsend_ui_common(t,caller='txdo',bogus_send=False,file_desc='Signed transaction')
+		else:
+			t.expect('Save transaction? (y/N): ','y')
+			t.written_to_file('Transaction')
 		t.read()
 		return t
 
 	def bob_rbf_bump(self):
 		ext = ',{}]{x}.testnet.sigtx'.format(rtFee[1][:-1],x='-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
-		return self.user_txbump('bob',txfile,rtFee[2],'c')
+		return self.user_txbump('bob',self.tmpdir,txfile,rtFee[2],add_args=['--send'])
 
 	def generate(self,coin=None,num_blocks=1):
 		int(num_blocks)
