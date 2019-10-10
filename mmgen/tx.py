@@ -446,7 +446,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		est_vsize = self.estimate_size()
 		d = g.rpch.decoderawtransaction(self.hex)
 		vsize = d['vsize'] if 'vsize' in d else d['size']
-		vmsg('\nSize: {}, Vsize: {} (true) {} (estimated)'.format(d['size'],vsize,est_vsize))
+		vmsg('\nVsize: {} (true) {} (estimated)'.format(vsize,est_vsize))
 		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
 		m2 = 'Your transaction fee estimates will be inaccurate\n'
 		m3 = 'Please re-create and re-sign the transaction using the option --vsize-adj={:1.2f}'
@@ -877,7 +877,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return any(o.mmid and o.mmid.mmtype in ('S','B') for o in self.outputs)
 
 	def is_in_mempool(self):
-		return 'size' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
+		return 'height' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
 
 	def is_in_wallet(self):
 		ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
@@ -925,7 +925,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				if not opt.quiet:
 					msg('Replacing transactions:')
 					rt = ret[1]['walletconflicts']
-					for t,s in [(tx,'size' in g.rpch.getmempoolentry(tx,on_fail='silent')) for tx in rt]:
+					for t,s in [(tx,'height' in g.rpch.getmempoolentry(tx,on_fail='silent')) for tx in rt]:
 						msg('  {}{}'.format(t,('',' in mempool')[s]))
 				die(0,'')
 
