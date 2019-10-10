@@ -27,7 +27,7 @@ from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
-def usage(): Die(2,'USAGE: {} {}'.format(g.prog_name,usage_txt))
+def usage(): Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
 
 def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:

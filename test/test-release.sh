@@ -256,6 +256,7 @@ t_alts="
 		$gentest_py --coin=btc 2:ext $rounds
 		$gentest_py --coin=btc --type=compressed 2:ext $rounds
 		$gentest_py --coin=btc --type=segwit 2:ext $rounds
+		$gentest_py --coin=btc --type=bech32 2:ext $rounds
 		$gentest_py --coin=ltc 2:ext $rounds
 		$gentest_py --coin=ltc --type=compressed 2:ext $rounds
 		$gentest_py --coin=zec 2:ext $rounds
@@ -389,8 +390,8 @@ f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 i_tool2='Tooltest2'
 s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2="
-	$tooltest2_py --quiet
-	$tooltest2_py --quiet --coin=btc
+	$tooltest2_py --quiet --fork # run once with --fork so commands are actually executed
+	$tooltest2_py --quiet --coin=btc --fork
 	$tooltest2_py --quiet --coin=btc --testnet=1
 	$tooltest2_py --quiet --coin=ltc
 	$tooltest2_py --quiet --coin=ltc --testnet=1

@@ -690,7 +690,8 @@ def run_test(gid,cmd_name):
 				continue
 			cmd_out = run_func(cmd_name,args,out,opts,exec_code)
 
-		vmsg('Output: {}\n'.format(cmd_out if isinstance(out,str) else repr(cmd_out)))
+		try:    vmsg('Output:\n{}\n'.format(cmd_out))
+		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
 
 		def check_output(cmd_out,out):
 			if isinstance(out,str): out = out.encode()

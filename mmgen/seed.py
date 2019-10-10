@@ -323,7 +323,9 @@ class SeedShareList(SubSeedList):
 			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
 
 	def get_share_by_idx(self,idx,base_seed=False):
-		if idx == self.count:
+		if idx < 1 or idx > self.count:
+			raise RangeError('{}: share index out of range'.format(idx))
+		elif idx == self.count:
 			return self.last_share
 		elif self.master_share and idx == 1:
 			return self.master_share if base_seed else self.master_share.derived_seed
@@ -348,7 +350,7 @@ class SeedShareList(SubSeedList):
 		fs2 = '{i:>5}: {}\n'
 		mfs1,mfs2,midx,msid = ('','','','')
 		if self.master_share:
-			mfs1,mfs2 = (' with master share #{} ({})',' master share #{}')
+			mfs1,mfs2 = (' with master share #{} ({})',' (master share #{})')
 			midx,msid = (self.master_share.idx,self.master_share.sid)
 
 		hdr  = '    {} {} ({} bits)\n'.format('Seed:',self.parent_seed.sid.hl(),self.parent_seed.bitlen)
@@ -458,9 +460,14 @@ class SeedSource(MMGenObject):
 				sstype.__name__,     'input file format'
 			)
 
-		if ss:
+		if seed or seed_bin:
+			sstype = cls.fmt_code_to_type(opt.out_fmt)
+			me = super(cls,cls).__new__(sstype or Wallet) # default to Wallet
+			me.seed = seed or Seed(seed_bin=seed_bin)
+			me.op = 'new'
+		elif ss:
 			sstype = ss.__class__ if passchg else cls.fmt_code_to_type(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
+			me = super(cls,cls).__new__(sstype or Wallet)
 			me.seed = ss.seed
 			me.ss_in = ss
 			me.op = ('conv','pwchg_new')[bool(passchg)]
@@ -477,16 +484,15 @@ class SeedSource(MMGenObject):
 			me = super(cls,cls).__new__(f.ftype)
 			me.infile = f
 			me.op = ('old','pwchg_old')[bool(passchg)]
-		elif in_fmt:  # Input format
+		elif in_fmt:
 			sstype = cls.fmt_code_to_type(in_fmt)
 			me = super(cls,cls).__new__(sstype)
 			me.op = ('old','pwchg_old')[bool(passchg)]
-		else: # Called with no args, 'seed' or 'seed_bin' - initialize with random or supplied seed
+		else: # called with no arguments: initialize with random seed
 			sstype = cls.fmt_code_to_type(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet) # default: Wallet
-			me.seed = seed or Seed(seed_bin=seed_bin or None)
+			me = super(cls,cls).__new__(sstype or Wallet)
+			me.seed = Seed(None)
 			me.op = 'new'
-#			die(1,me.seed.sid.hl()) # DEBUG
 
 		return me
 
@@ -1193,6 +1199,12 @@ class Brainwallet (SeedSourceEnc):
 		msg('Seed ID: {}'.format(self.seed.sid))
 		qmsg('Check this value against your records')
 		return True
+
+	def _format(self):
+		raise NotImplementedError('Brainwallet not supported as an output format')
+
+	def _encrypt(self):
+		raise NotImplementedError('Brainwallet not supported as an output format')
 
 class IncogWallet (SeedSourceEnc):
 

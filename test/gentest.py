@@ -94,7 +94,7 @@ def pyethereum_sec2addr(sec):
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
 	o = p.stdout.read().decode().splitlines()
-	return o[1].split()[1],o[0].split()[1]
+	return (o[1].split()[1],o[0].split()[1])
 
 def zcash_mini_sec2addr(sec):
 	p = sp.Popen(['zcash-mini','-key','-simple'],stderr=sp.PIPE,stdin=sp.PIPE,stdout=sp.PIPE)
@@ -103,14 +103,20 @@ def zcash_mini_sec2addr(sec):
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-	key = pcku.parse_key(sec,[network_for_netcode(coin)])[1]
-	if key is None: die(1,"can't parse {}".format(sec))
-	d = {
-		'legacy':     ('wif_uncompressed','address_uncompressed'),
-		'compressed': ('wif','address'),
-		'segwit':     ('wif','p2sh_segwit'),
-	}[addr_type.name]
-	return [pcku.create_output(sec,key,network_for_netcode(coin),d[i])[0][d[i]] for i in (0,1)]
+	network = network_for_netcode(coin)
+	key = network.keys.private(secret_exponent=int(sec,16),is_compressed=addr_type.name != 'legacy')
+	if key is None:
+		die(1,"can't parse {}".format(sec))
+	if addr_type.name in ('segwit','bech32'):
+		hash160_c = key.hash160(is_compressed=True)
+		if addr_type.name == 'segwit':
+			p2sh_script = network.contract.for_p2pkh_wit(hash160_c)
+			addr = network.address.for_p2s(p2sh_script)
+		else:
+			addr = network.address.for_p2pkh_wit(hash160_c)
+	else:
+		addr = key.address()
+	return (key.wif(),addr)
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
@@ -138,13 +144,11 @@ def init_external_prog():
 		ext_sec2addr = pyethereum_sec2addr
 		ext_lib = 'pyethereum'
 	elif test_support('pycoin'):
+		global network_for_netcode
 		try:
-			global pcku,secp256k1_generator,network_for_netcode
-			import pycoin.cmds.ku as pcku
-			from pycoin.ecdsa.secp256k1 import secp256k1_generator
 			from pycoin.networks.registry import network_for_netcode
 		except:
-			raise ImportError("Unable to import pycoin modules. Is pycoin installed and up-to-date?")
+			raise ImportError("Unable to import pycoin.networks.registry Is pycoin installed and up-to-date?")
 		ext_sec2addr = pycoin_sec2addr
 		ext_lib = 'pycoin'
 	elif test_support('keyconv'):
@@ -176,14 +180,14 @@ def compare_test():
 		if g.coin not in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
 			msg("Coin '{}' incompatible with external generator '{}'".format(g.coin,ext_lib))
 			return
-	m = "Comparing address generators '{}' and '{}' for coin {}"
 	last_t = time.time()
 	A = kg_a.desc
 	B = ext_lib if b == 'ext' else kg_b.desc
 	if A == B:
 		msg('skipping - generation methods A and B are the same ({})'.format(A))
 		return
-	qmsg(green(m.format(A,B,g.coin)))
+	m = "Comparing address generators '{}' and '{}' for coin {}, addrtype {!r}"
+	qmsg(green(m.format(A,B,g.coin,addr_type.name)))
 
 	for i in range(rounds):
 		if opt.verbose or time.time() - last_t >= 0.1:

@@ -159,7 +159,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal2d',                "Bob's balance (minconf=2)"),
 		('bob_bal2e',                "Bob's balance (showempty=1 sort=age)"),
 		('bob_bal2f',                "Bob's balance (showempty=1 sort=age,reverse)"),
-		('bob_rbf_send',             'sending funds to Alice (RBF)'),
+		('bob_send_maybe_rbf',       'sending funds to Alice (RBF, if supported)'),
 		('get_mempool1',             'mempool (before RBF bump)'),
 		('bob_rbf_status1',          'getting status of transaction'),
 		('bob_rbf_bump',             'bumping RBF transaction'),
@@ -557,16 +557,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return [self.get_addr_from_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
 	def bob_rbf_1output_create(self):
+		if g.coin != 'BTC': return 'skip' # non-coin-dependent test, so run just once for BTC
 		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
 		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
 		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
 
 	def bob_rbf_1output_bump(self):
+		if g.coin != 'BTC': return 'skip'
 		ext = '9343,3]{x}.testnet.rawtx'.format(x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',self.tr.trash_dir,txfile,'8s',has_label=False,signed_tx=False)
 
-	def bob_rbf_send(self):
+	def bob_send_maybe_rbf(self):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
 		return self.user_txdo('bob',rtFee[1],outputs_cl,'3',
@@ -586,8 +588,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
 	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True):
-		if not g.proto.cap('rbf'):
-			msg('Skipping RBF'); return 'skip'
+		if not g.proto.cap('rbf'): return 'skip'
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
 			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
@@ -631,20 +632,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		self.write_to_tmpfile('rbf_txid',mp[0]+'\n')
 		return 'ok'
 
-	def bob_rbf_status(self,fee,exp1,exp2='',skip_bch=False):
-		if skip_bch and not g.proto.cap('rbf'):
-			msg('skipping test {} for BCH'.format(self.test_name))
-			return 'skip'
+	def bob_rbf_status(self,fee,exp1,exp2=''):
+		if not g.proto.cap('rbf'): return 'skip'
 		ext = ',{}]{x}.testnet.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txsend_status('bob',txfile,exp1,exp2)
 
 	def bob_rbf_status1(self):
-		return self.bob_rbf_status(rtFee[1],'in mempool, replaceable',skip_bch=True)
+		if not g.proto.cap('rbf'): return 'skip'
+		return self.bob_rbf_status(rtFee[1],'in mempool, replaceable')
 
 	def get_mempool2(self):
-		if not g.proto.cap('rbf'):
-			msg('Skipping post-RBF mempool check'); return 'skip'
+		if not g.proto.cap('rbf'): return 'skip'
 		mp = self._get_mempool()
 		if len(mp) != 1:
 			rdie(2,'Mempool has more or less than one TX!')
@@ -656,30 +655,27 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_rbf_status2(self):
 		if not g.proto.cap('rbf'): return 'skip'
 		return self.bob_rbf_status(rtFee[1],
-			'Transaction has been replaced','{} in mempool'.format(self.mempool[0]),
-			skip_bch=True)
+			'Transaction has been replaced','{} in mempool'.format(self.mempool[0]))
 
 	def bob_rbf_status3(self):
 		if not g.proto.cap('rbf'): return 'skip'
-		return self.bob_rbf_status(rtFee[2],'status: in mempool, replaceable',skip_bch=True)
+		return self.bob_rbf_status(rtFee[2],'status: in mempool, replaceable')
 
 	def bob_rbf_status4(self):
 		if not g.proto.cap('rbf'): return 'skip'
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 1 confirmation',
-			'Replacing transactions:\n  {}'.format(self.mempool[0]),
-			skip_bch=True)
+			'Replacing transactions:\n  {}'.format(self.mempool[0]))
 
 	def bob_rbf_status5(self):
 		if not g.proto.cap('rbf'): return 'skip'
-		return self.bob_rbf_status(rtFee[2],'Transaction has 1 confirmation',skip_bch=True)
+		return self.bob_rbf_status(rtFee[2],'Transaction has 1 confirmation')
 
 	def bob_rbf_status6(self):
 		if not g.proto.cap('rbf'): return 'skip'
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 2 confirmations',
-			'Replacing transactions:\n  {}'.format(self.mempool[0]),
-			skip_bch=True)
+			'Replacing transactions:\n  {}'.format(self.mempool[0]))
 
 	@staticmethod
 	def _gen_pairs(n):

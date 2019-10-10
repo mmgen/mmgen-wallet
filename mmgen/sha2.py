@@ -22,6 +22,11 @@ sha2.py: A non-optimized but very compact implementation of the SHA2 hash
          SHA256Compress (unpadded SHA256, required for Zcash addresses)
 """
 
+# IMPORTANT NOTE: Since GMP precision is platform-dependent, generated constants
+# for SHA512 are not guaranteed to be correct!  Therefore, the SHA512
+# implementation must not be used for anything but testing and study.  Test with
+# the test/hashfunc.py script in the MMGen repository.
+
 from struct import pack,unpack
 
 class Sha2(object):
@@ -52,7 +57,8 @@ class Sha2(object):
 
 		if cls.use_gmp:
 			from gmpy2 import context,set_context,sqrt,cbrt
-			set_context(context(precision=75))
+			# context() parameters are platform-dependent!
+			set_context(context(precision=75,round=1)) # OK for gmp 6.1.2 / gmpy 2.1.0
 		else:
 			cbrt = lambda n: pow(n, 1 / 3)
 

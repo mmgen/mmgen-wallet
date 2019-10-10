@@ -20,6 +20,11 @@ test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 """
 
 import sys,os
+
+repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
+os.chdir(repo_root)
+sys.path = [repo_root] + sys.path
+
 from mmgen.util import die
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"

@@ -504,12 +504,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect(m)
 		if desc == 'hidden incognito data':
 			self.write_to_tmpfile(incog_id_fn,incog_id)
-			ret = t.expect(['Create? (Y/n): ',"'YES' to confirm: "])
-			if ret == 0:
-				t.send('\n')
-				t.expect('Enter file size: ',str(hincog_bytes)+'\n')
-			else:
-				t.send('YES\n')
+			t.hincog_create(hincog_bytes)
 		if out_fmt == 'w': t.label()
 		return t.written_to_file(capfirst(desc),oo=True),t
 

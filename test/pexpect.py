@@ -141,6 +141,15 @@ class MMGenPexpect(object):
 		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
 		return outfile
 
+	def hincog_create(self,hincog_bytes):
+		ret = self.expect(['Create? (Y/n): ',"'YES' to confirm: "])
+		if ret == 0:
+			self.send('\n')
+			self.expect('Enter file size: ',str(hincog_bytes)+'\n')
+		else:
+			self.send('YES\n')
+		return ret
+
 	def no_overwrite(self):
 		self.expect("Overwrite?  Type uppercase 'YES' to confirm: ",'\n')
 		self.expect('Exiting at user request')

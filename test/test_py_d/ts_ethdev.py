@@ -366,9 +366,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-addrimport', self.eth_args[1:] + add_args + [fn])
 		if bad_input:
 			t.read()
-			t.req_exit_val = 2
 			return t
-#		if g.debug: t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect(expect)
 		t.read()

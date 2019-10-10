@@ -159,16 +159,16 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		imsg('Creating block device image file')
 		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
 		subprocess.check_output(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'],stderr=subprocess.PIPE)
-		ic_dev = subprocess.check_output(['/sbin/losetup','-f']).strip().decode()
+		ic_dev = subprocess.check_output(['sudo','/sbin/losetup','-f']).strip().decode()
 		ic_dev_mode_orig = '{:o}'.format(os.stat(ic_dev).st_mode & 0xfff)
 		ic_dev_mode = '0666'
 		imsg("Changing permissions on loop device to '{}'".format(ic_dev_mode))
 		subprocess.check_output(['sudo','chmod',ic_dev_mode,ic_dev],stderr=subprocess.PIPE)
 		imsg("Attaching loop device '{}'".format(ic_dev))
-		subprocess.check_output(['/sbin/losetup',ic_dev,ic_img])
+		subprocess.check_output(['sudo','/sbin/losetup',ic_dev,ic_img])
 		self.ref_hincog_conv_out(ic_f=ic_dev)
 		imsg("Detaching loop device '{}'".format(ic_dev))
-		subprocess.check_output(['/sbin/losetup','-d',ic_dev])
+		subprocess.check_output(['sudo','/sbin/losetup','-d',ic_dev])
 		imsg("Resetting permissions on loop device to '{}'".format(ic_dev_mode_orig))
 		subprocess.check_output(['sudo','chmod',ic_dev_mode_orig,ic_dev],stderr=subprocess.PIPE)
 		return 'ok'
@@ -213,12 +213,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			for i in (1,2,3):
 				t.expect('Generating encryption key from OS random data ')
 		if desc == 'hidden incognito data':
-			ret = t.expect(['Create? (Y/n): ',"'YES' to confirm: "])
-			if ret == 0:
-				t.send('\n')
-				t.expect('Enter file size: ',str(hincog_bytes)+'\n')
-			else:
-				t.send('YES\n')
+			t.hincog_create(hincog_bytes)
 		if out_fmt == 'w': t.label()
 		wf = t.written_to_file(capfirst(desc),oo=True)
 		pf = None

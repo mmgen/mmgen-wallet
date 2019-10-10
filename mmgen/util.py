@@ -96,9 +96,9 @@ def pformat(d):
 def pmsg(*args):
 	msg(pformat(args if len(args) > 1 else args[0]))
 def Pmsg(*args):
-	sys.stdout.write(ppformat(args if len(args) > 1 else args[0]) + '\n')
+	sys.stdout.write(pformat(args if len(args) > 1 else args[0]) + '\n')
 def pdie(*args,exit_val=1):
-	sys.stderr.write(ppformat(args if len(args) > 1 else args[0]))
+	sys.stderr.write(pformat(args if len(args) > 1 else args[0]))
 	sys.exit(exit_val)
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
@@ -341,6 +341,11 @@ class baseconv(object):
 			return None
 
 	@classmethod
+	def get_wordlist(cls,wl_id):
+		cls.init_mn(wl_id)
+		return cls.digits[wl_id]
+
+	@classmethod
 	def get_wordlist_chksum(cls,wl_id):
 		cls.init_mn(wl_id)
 		return sha256(' '.join(cls.digits[wl_id]).encode()).hexdigest()[:8]
@@ -353,6 +358,7 @@ class baseconv(object):
 
 	@classmethod
 	def check_wordlist(cls,wl_id):
+		cls.init_mn(wl_id)
 
 		wl = cls.digits[wl_id]
 		qmsg('Wordlist: {}\nLength: {} words'.format(wl_id,len(wl)))

@@ -516,14 +516,13 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		fmt in conv_cls.digits or die(1,"'{}': not a valid format".format(fmt))
 		conv_cls.check_wordlist(fmt)
 		return True
 
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
-		self._get_mnemonic_fmt(fmt) # perform check
-		ret = mnemonic_fmts[fmt]['conv_cls']().digits[fmt]
+		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
+		ret = conv_cls.get_wordlist(fmt)
 		if enum:
 			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
 		return '\n'.join(ret)
