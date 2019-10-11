@@ -90,16 +90,9 @@ def Die(ev=0,s=''):
 def rdie(ev=0,s=''): die(ev,red(s))
 def ydie(ev=0,s=''): die(ev,yellow(s))
 
-def pformat(d):
+def mmgen_pformat(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
-def pmsg(*args):
-	msg(pformat(args if len(args) > 1 else args[0]))
-def Pmsg(*args):
-	sys.stdout.write(pformat(args if len(args) > 1 else args[0]) + '\n')
-def pdie(*args,exit_val=1):
-	sys.stderr.write(pformat(args if len(args) > 1 else args[0]))
-	sys.exit(exit_val)
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]

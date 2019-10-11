@@ -474,7 +474,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			out.append(e)
 			if g.debug_addrlist:
-				Msg('generate():\n{}'.format(e.ppformat()))
+				Msg('generate():\n{}'.format(e.pformat()))
 
 		qmsg('\r{}: {} {}{} generated{}'.format(
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
@@ -579,7 +579,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			qmsg_r('\rGenerating addresses from keylist: {}/{}'.format(n,len(d)))
 			e.addr = ag.to_addr(kg.to_pubhex(e.sec))
 			if g.debug_addrlist:
-				Msg('generate_addrs_from_keys():\n{}'.format(e.ppformat()))
+				Msg('generate_addrs_from_keys():\n{}'.format(e.pformat()))
 		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
 
 	def format(self,enable_comments=False):

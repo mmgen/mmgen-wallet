@@ -53,7 +53,7 @@ cmd_args = opts.init(opts_data)
 
 def run_test(test,arg,input_data):
 	arg_copy = arg
-	kwargs = {'on_fail':'silent'} if opt.silent else {}
+	kwargs = {'on_fail':'silent'} if opt.silent else {'on_fail':'die'}
 	ret_chk = arg
 	exc_type = None
 	if input_data == 'good' and type(arg) == tuple: arg,ret_chk = arg
@@ -98,7 +98,7 @@ def run_test(test,arg,input_data):
 		if not opt.super_silent:
 			msg('==> {}'.format(ret))
 		if opt.verbose and issubclass(cls,MMGenObject):
-			ret.ppmsg() if hasattr(ret,'ppmsg') else ppmsg(ret)
+			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 	except Exception as e:
 		if not type(e).__name__ == exc_type:
 			raise
@@ -120,10 +120,15 @@ def do_loop():
 	gl = globals()
 	exec('from test.objtest_py_d.ot_{}_{} import tests'.format(g.coin.lower(),network),gl,gl)
 	gmsg('Running data objest tests for {} {}'.format(g.coin,network))
+	clr = None
 	for test in tests:
 		if utests and test not in utests: continue
-		msg((blue,nocolor)[bool(opt.super_silent)]('Testing {}'.format(test)))
+		nl = ('\n','')[bool(opt.super_silent) or clr == None]
+		clr = (blue,nocolor)[bool(opt.super_silent)]
+		msg(clr('{}Testing {}'.format(nl,test)))
 		for k in ('bad','good'):
+			if not opt.silent:
+				msg(purple(capfirst(k)+' input:'))
 			for arg in tests[test][k]:
 				run_test(test,arg,input_data=k)
 

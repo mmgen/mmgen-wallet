@@ -4,16 +4,21 @@ import sys,os,pprint,traceback,re,json
 from decimal import Decimal
 from difflib import unified_diff
 
-def ppformat(d):
-	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
-def ppmsg(*args):
-	sys.stderr.write(ppformat(args if len(args) > 1 else args[0]) + '\n')
-def PPmsg(*args):
-	sys.stdout.write(ppformat(args if len(args) > 1 else args[0]) + '\n')
-def ppdie(*args,exit_val=1):
-	sys.stderr.write(ppformat(args if len(args) > 1 else args[0]))
+def pmsg(*args,out=sys.stderr):
+	d = args if len(args) > 1 else '' if not args else args[0]
+	out.write(pprint.PrettyPrinter(indent=4,compact=True).pformat(d) + '\n')
+def pdie(*args,exit_val=1,out=sys.stderr):
+	pmsg(*args,out=out)
 	sys.exit(exit_val)
-def ppdie2(*args): ppdie(*args,exit_val=0)
+def pexit(*args,out=sys.stderr):
+	pdie(*args,exit_val=0,out=out)
+
+def Pmsg(*args):
+	pmsg(*args,out=sys.stdout)
+def Pdie(*args):
+	pdie(*args,out=sys.stdout)
+def Pexit(*args):
+	pexit(*args,out=sys.stdout)
 
 def print_stack_trace(message):
 	tb1 = traceback.extract_stack()
@@ -28,9 +33,9 @@ def print_stack_trace(message):
 class MMGenObject(object):
 
 	# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
-	def ppmsg(self): print(self.ppformat())
-	def ppdie(self): print(self.ppformat()); sys.exit(0)
-	def ppformat(self,lvl=0,id_list=[]):
+	def pmsg(self): print(self.pformat())
+	def pdie(self): print(self.pformat()); sys.exit(0)
+	def pformat(self,lvl=0,id_list=[]):
 		scalars = (str,int,float,Decimal)
 		def do_list(out,e,lvl=0,is_dict=False):
 			out.append('\n')
@@ -38,8 +43,8 @@ class MMGenObject(object):
 				el = i if not is_dict else e[i]
 				if is_dict:
 					out.append('{s}{:<{l}}'.format(i,s=' '*(4*lvl+8),l=10,l2=8*(lvl+1)+8))
-				if hasattr(el,'ppformat'):
-					out.append('{:>{l}}{}'.format('',el.ppformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl+1)*8))
+				if hasattr(el,'pformat'):
+					out.append('{:>{l}}{}'.format('',el.pformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl+1)*8))
 				elif isinstance(el,scalars):
 					if isList(e):
 						out.append('{:>{l}}{:16}\n'.format('',repr(el),l=lvl*8))
@@ -84,8 +89,8 @@ class MMGenObject(object):
 			if isList(e) or isDict(e):
 				out.append('{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))
 				do_list(out,e,lvl=lvl,is_dict=isDict(e))
-			elif hasattr(e,'ppformat') and type(e) != type:
-				out.append('{:>{l}}{:10} {}'.format('',k,e.ppformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl*8)+4))
+			elif hasattr(e,'pformat') and type(e) != type:
+				out.append('{:>{l}}{:10} {}'.format('',k,e.pformat(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl*8)+4))
 			else:
 				out.append('{:>{l}}{:<10} {:16} {}\n'.format(
 					'',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))

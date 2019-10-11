@@ -160,14 +160,12 @@ def send(addr,amt):
 
 def show_mempool():
 	p = start_cmd('cli','getrawmempool')
-	from pprint import pformat
 	from ast import literal_eval
-	msg(pformat(literal_eval(p.stdout.read().decode())))
+	msg(mmgen_pformat(literal_eval(p.stdout.read().decode())))
 	p.wait()
 
 def cli(*args):
 	p = start_cmd(*(('cli',) + args))
-	from pprint import pformat
 	Msg_r(p.stdout.read().decode())
 	msg_r(p.stderr.read().decode())
 	p.wait()
