@@ -251,7 +251,7 @@ class MMGenListItem(MMGenObject):
 		if self.valid_attrs == None:
 			type(self).valid_attrs = (
 				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra ) -
-				{'pformat','pmsg','pdie','valid_attrs','valid_attrs_extra'} )
+				{'pfmt','pmsg','pdie','valid_attrs','valid_attrs_extra'} )
 		if args:
 			raise ValueError('Non-keyword args not allowed')
 		for k in kwargs:

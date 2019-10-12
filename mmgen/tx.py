@@ -818,8 +818,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		def check_equal(desc,hexio,mmio):
 			if mmio != hexio:
-				msg('\nMMGen {}:\n{}'.format(desc,mmgen_pformat(mmio)))
-				msg('Hex {}:\n{}'.format(desc,mmgen_pformat(hexio)))
+				msg('\nMMGen {}:\n{}'.format(desc,pp_fmt(mmio)))
+				msg('Hex {}:\n{}'.format(desc,pp_fmt(hexio)))
 				m2 = '{} in hex transaction data from coin daemon do not match those in MMGen transaction!\n'
 				raise TxHexMismatch((m2+m).format(desc.capitalize()))
 

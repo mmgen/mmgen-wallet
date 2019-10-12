@@ -161,7 +161,7 @@ def send(addr,amt):
 def show_mempool():
 	p = start_cmd('cli','getrawmempool')
 	from ast import literal_eval
-	msg(mmgen_pformat(literal_eval(p.stdout.read().decode())))
+	pp_msg(literal_eval(p.stdout.read().decode()))
 	p.wait()
 
 def cli(*args):
