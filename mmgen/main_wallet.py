@@ -24,7 +24,7 @@ import os
 from mmgen.common import *
 from mmgen.seed import SeedSource,Wallet
 from mmgen.filename import find_file_in_dir
-from mmgen.obj import MMGenWalletLabel
+from mmgen.obj import MMGenWalletLabel,MasterShareIdx
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -32,6 +32,7 @@ iaction = 'convert'
 oaction = 'convert'
 do_bw_note = True
 do_sw_note = False
+do_ss_note = False
 
 invoked_as = {
 	'mmgen-walletgen':    'gen',
@@ -39,6 +40,7 @@ invoked_as = {
 	'mmgen-walletchk':    'chk',
 	'mmgen-passchg':      'passchg',
 	'mmgen-subwalletgen': 'subgen',
+	'mmgen-seedsplit':    'seedsplit',
 }[g.prog_name]
 
 dsw = 'the default or specified {pnm} wallet'
@@ -69,6 +71,13 @@ elif invoked_as == 'subgen':
 	iaction = 'input'
 	oaction = 'output'
 	do_sw_note = True
+elif invoked_as == 'seedsplit':
+	desc = 'Generate a seed share from ' + dsw
+	opt_filter = 'dehHiJlLMIoOpPqrSvz-'
+	usage = '[opts] [infile] [<Split ID String>:]<index>:<share count>'
+	iaction = 'input'
+	oaction = 'output'
+	do_ss_note = True
 
 opts_data = {
 	'text': {
@@ -95,6 +104,7 @@ opts_data = {
                       with non-standard (< {g.seed_len}-bit) seed lengths.
 -L, --label=       l  Specify a label 'l' for output wallet
 -m, --keep-label      Reuse label of input wallet for output wallet
+-M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
                       for password hashing (default: '{g.hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
@@ -107,7 +117,7 @@ opts_data = {
 """,
 	'notes': """
 
-{n_sw}{n_pw}{n_bw}
+{n_ss}{n_sw}{n_pw}{n_bw}
 
 FMT CODES:
 
@@ -118,10 +128,13 @@ FMT CODES:
 		'options': lambda s: s.format(
 			iaction=capfirst(iaction),
 			oaction=capfirst(oaction),
+			ms_min=MasterShareIdx.min_val,
+			ms_max=MasterShareIdx.max_val,
 			g=g,
 		),
 		'notes': lambda s: s.format(
 			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			n_ss=('',help_notes('seedsplit')+'\n\n')[do_ss_note],
 			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
 			n_pw=help_notes('passwd'),
 			n_bw=('','\n\n'+help_notes('brainwallet'))[do_bw_note]
@@ -137,6 +150,24 @@ if opt.label:
 if invoked_as == 'subgen':
 	from mmgen.obj import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
+elif invoked_as == 'seedsplit':
+	from mmgen.obj import SeedSplitSpecifier
+	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
+	if cmd_args:
+		sss = SeedSplitSpecifier(cmd_args.pop(),on_fail='silent')
+		if master_share:
+			if not sss:
+				sss = SeedSplitSpecifier('1:2')
+			elif sss.idx == 1:
+				m1 = 'Share index of 1 meaningless in master share context.'
+				m2 = 'To generate a master share, omit the seed split specifier.'
+				die(1,m1+'  '+m2)
+		elif not sss:
+			opts.usage()
+	elif master_share:
+		sss = SeedSplitSpecifier('1:2')
+	else:
+		opts.usage()
 
 if cmd_args:
 	if invoked_as == 'gen' or len(cmd_args) > 1:
@@ -164,10 +195,15 @@ if invoked_as == 'chk':
 	sys.exit(0)
 
 if invoked_as != 'gen':
-	gmsg('Processing output wallet')
+	gmsg_r('Processing output wallet' + ('\n',' ')[invoked_as == 'seedsplit'])
 
 if invoked_as == 'subgen':
 	ss_out = SeedSource(seed_bin=ss_in.seed.subseed(ss_idx,print_msg=True).data)
+elif invoked_as == 'seedsplit':
+	shares = ss_in.seed.split(sss.count,sss.id,master_share)
+	seed_out = shares.get_share_by_idx(sss.idx,base_seed=True)
+	msg(seed_out.get_desc(ui=True))
+	ss_out = SeedSource(seed=seed_out)
 else:
 	ss_out = SeedSource(ss=ss_in,passchg=invoked_as=='passchg')
 

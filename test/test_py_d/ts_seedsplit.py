@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C)2013-2019 The MMGen Project <mmgen@tuta.io>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+ts_seedsplit.py: Seed split/join tests for the test.py test suite
+"""
+
+from mmgen.globalvars import g
+from mmgen.opts import opt
+
+from test.test_py_d.ts_base import *
+
+ref_wf = 'test/ref/98831F3A.bip39'
+ref_sid = '98831F3A'
+wpasswd = 'abc'
+sh1_passwd = 'xyz'
+
+class TestSuiteSeedSplit(TestSuiteBase):
+	'splitting and joining seeds'
+	networks = ('btc',)
+	tmpdir_nums = [23]
+	cmd_group = (
+		('ss_walletgen',                'wallet generation'),
+		('ss_2way_A_dfl1',              '2-way seed split (share A)'),
+		('ss_2way_B_dfl1',              '2-way seed split (share B)'),
+		('ss_2way_join_dfl1',           '2-way seed join'),
+		('ss_2way_A_dfl2',              "2-way seed split 'default' (share A)"),
+		('ss_2way_B_dfl2',              "2-way seed split 'default' (share B)"),
+		('ss_2way_join_dfl2',           "2-way seed join 'default'"),
+		('ss_2way_A_alice',             "2-way seed split 'alice' (share A)"),
+		('ss_2way_B_alice',             "2-way seed split 'alice' (share B)"),
+		('ss_2way_join_alice',          "2-way seed join 'alice'"),
+		('ss_2way_join_alice_mix',      "2-way seed join 'alice' (out of order)"),
+		('ss_2way_A_dfl_master3',       '2-way seed split with master share #3 (share A)'),
+		('ss_2way_B_dfl_master3',       '2-way seed split with master share #3 (share B)'),
+		('ss_2way_join_dfl_master3',    '2-way seed join with master share #3'),
+		('ss_2way_A_dfl_usw',           '2-way seed split of user-specified wallet (share A)'),
+		('ss_2way_B_dfl_usw',           '2-way seed split of user-specified wallet (share B)'),
+		('ss_2way_join_dfl_usw',        '2-way seed join of user-specified wallet'),
+		('ss_3way_A_dfl',               '3-way seed split (share A)'),
+		('ss_3way_B_dfl',               '3-way seed split (share B)'),
+		('ss_3way_C_dfl',               '3-way seed split (share C)'),
+		('ss_3way_join_dfl',            '3-way seed join'),
+		('ss_3way_join_dfl_mix',        '3-way seed join (out of order)'),
+		('ss_3way_A_foobar_master7',    "3-way seed split 'φυβαρ' with master share #7 (share A)"),
+		('ss_3way_B_foobar_master7',    "3-way seed split 'φυβαρ' with master share #7 (share B)"),
+		('ss_3way_C_foobar_master7',    "3-way seed split 'φυβαρ' with master share #7 (share C)"),
+		('ss_3way_join_foobar_master7', "3-way seed join 'φυβαρ' with master share #7"),
+		('ss_3way_join_foobar_master7_mix',"3-way seed join 'φυβαρ' with master share #7 (out of order)"),
+
+		('ss_3way_join_dfl_bad_invocation',"bad invocation of 'mmgen-seedjoin' - --id-str with non-master join"),
+		('ss_bad_invocation1',          "bad invocation of 'mmgen-seedsplit' - no arguments"),
+		('ss_bad_invocation2',          "bad invocation of 'mmgen-seedsplit' - master share with split specifier"),
+		('ss_bad_invocation3',          "bad invocation of 'mmgen-seedsplit' - nonexistent file"),
+		('ss_bad_invocation4',          "bad invocation of 'mmgen-seedsplit' - invalid file extension"),
+		('ss_bad_invocation5',          "bad invocation of 'mmgen-seedjoin' - no arguments"),
+		('ss_bad_invocation6',          "bad invocation of 'mmgen-seedjoin' - one file argument"),
+		('ss_bad_invocation7',          "bad invocation of 'mmgen-seedjoin' - invalid file extension"),
+		('ss_bad_invocation8',          "bad invocation of 'mmgen-seedjoin' - nonexistent file"),
+		('ss_bad_invocation9',          "bad invocation of 'mmgen-seedsplit' - bad specifier"),
+		('ss_bad_invocation10',         "bad invocation of 'mmgen-seedsplit' - nonexistent file"),
+		('ss_bad_invocation11',         "bad invocation of 'mmgen-seedsplit' - invalid file extension"),
+	)
+
+	def get_tmp_subdir(self,subdir):
+		return os.path.join(self.tmpdir,subdir)
+
+	def ss_walletgen(self):
+		t = self.spawn('mmgen-walletgen', ['-r0','-p1'])
+		t.passphrase_new('new MMGen wallet',wpasswd)
+		t.label()
+		self.write_to_tmpfile('dfl.sid',t.expect_getend('Seed ID: '))
+		t.expect('move it to the data directory? (Y/n): ','y')
+		t.written_to_file('MMGen wallet')
+		return t
+
+	def ss_splt(self,tdir,ofmt,spec,add_args=[],wf=None,master=None):
+		try: os.mkdir(self.get_tmp_subdir(tdir))
+		except: pass
+		t = self.spawn('mmgen-seedsplit',
+				['-q','-d',self.get_tmp_subdir(tdir),'-r0','-o',ofmt]
+				+ (['-L',(spec or 'label')] if ofmt == 'w' else [])
+				+ add_args
+				+ (['--master-share={}'.format(master)] if master else [])
+				+ ([wf] if wf else [])
+				+ ([spec] if spec else []))
+		if not wf:
+			t.passphrase('MMGen wallet',wpasswd)
+		if spec:
+			from mmgen.obj import SeedSplitSpecifier
+			sss = SeedSplitSpecifier(spec)
+			pat = "Processing .* {} of {} of .* id '{}'".format(sss.idx,sss.count,sss.id)
+		else:
+			pat = "master share #{}".format(master)
+		t.expect(pat,regex=True)
+		if ofmt in ('w','incog','incog_hex','hincog'):
+			desc = {'w':         'MMGen wallet',
+					'incog':     'incognito data',
+					'incog_hex': 'hex incognito data',
+					'hincog':    'hidden incognito data' }[ofmt]
+			t.hash_preset('new '+desc,'1')
+			t.passphrase_new('new '+desc,sh1_passwd)
+			if desc == 'hidden incognito data':
+				t.hincog_create(1234)
+			t.written_to_file(capfirst(desc))
+		else:
+			t.written_to_file('data')
+		return t
+
+	def ss_join(self,tdir,ofmt,in_exts,add_args=[],sid=None,bad_invocation=False,master=None,id_str=None):
+		td = self.get_tmp_subdir(tdir)
+		shares = [get_file_with_ext(td,f) for f in in_exts]
+		if not sid:
+			sid = self.read_from_tmpfile('dfl.sid')
+		t = self.spawn('mmgen-seedjoin',
+				add_args
+				+ (['--master-share={}'.format(master)] if master else [])
+				+ (['--id-str={}'.format(id_str)] if id_str else [])
+				+ ['-d',td,'-o',ofmt]
+				+ (['--label','Joined Wallet Label','-r0'] if ofmt == 'w' else [])
+				+ shares)
+		if bad_invocation:
+			t.read()
+			return t
+		w_enc   = ( 'MMGen wallet' if 'mmdat' in in_exts else
+					'incognito data' if 'mmincog' in in_exts else
+					'hex incognito data' if 'mmincox' in in_exts else
+					'hidden incognito data' if '-H' in add_args else '')
+		if 'incognito' in w_enc:
+			t.hash_preset(w_enc,'1')
+		if w_enc:
+			t.passphrase(w_enc,sh1_passwd)
+		if master:
+			fs = "master share #{}, split id '{}', share count {}"
+			pat = fs.format(master,id_str or 'default',len(shares)+('hidden' in w_enc))
+			t.expect(pat,regex=True)
+		sid_cmp = t.expect_getend('Joined Seed ID: ')
+		cmp_or_die(sid,sid_cmp)
+		if ofmt == 'w':
+			t.hash_preset('new MMGen wallet','1')
+			t.passphrase_new('new MMGen wallet',wpasswd)
+			t.written_to_file('MMGen wallet')
+		else:
+			t.written_to_file('data')
+		return t
+
+	def get_hincog_arg(self,tdir,suf='-default-2of2'):
+		sid = self.read_from_tmpfile('dfl.sid')
+		return os.path.join(self.tmpdir,tdir,sid+suf+'.hincog') + ',123'
+
+	def ss_2way_A_dfl1(self):    return self.ss_splt('2way_dfl1','w','1:2')
+	def ss_2way_B_dfl1(self):    return self.ss_splt('2way_dfl1','bip39','2:2')
+	def ss_2way_join_dfl1(self): return self.ss_join('2way_dfl1','w',['mmdat','bip39'])
+
+	def ss_2way_A_dfl2(self):    return self.ss_splt('2way_dfl2','seed','default:1:2')
+	def ss_2way_B_dfl2(self):
+		return self.ss_splt('2way_dfl2','hincog','default:2:2',['-J',self.get_hincog_arg('2way_dfl2')])
+	def ss_2way_join_dfl2(self):
+		return self.ss_join('2way_dfl2','hex',['mmseed'],['-H',self.get_hincog_arg('2way_dfl2')])
+
+	def ss_2way_A_alice(self):        return self.ss_splt('2way_alice','w','alice:1:2')
+	def ss_2way_B_alice(self):        return self.ss_splt('2way_alice','hex','alice:2:2')
+	def ss_2way_join_alice(self):     return self.ss_join('2way_alice','seed',['mmdat','mmhex'])
+	def ss_2way_join_alice_mix(self): return self.ss_join('2way_alice','seed',['mmhex','mmdat'])
+
+	def ss_2way_A_dfl_usw(self):    return self.ss_splt('2way_dfl_usw','words','1:2',[],wf=ref_wf)
+	def ss_2way_B_dfl_usw(self):    return self.ss_splt('2way_dfl_usw','incog','2:2',[],wf=ref_wf)
+	def ss_2way_join_dfl_usw(self): return self.ss_join('2way_dfl_usw','hex',['mmwords','mmincog'],sid=ref_sid)
+
+	def ss_3way_A_dfl(self):        return self.ss_splt('3way_dfl','words','1:3')
+	def ss_3way_B_dfl(self):        return self.ss_splt('3way_dfl','incog_hex','2:3')
+	def ss_3way_C_dfl(self):        return self.ss_splt('3way_dfl','bip39','3:3')
+	def ss_3way_join_dfl(self):     return self.ss_join('3way_dfl','hex',['mmwords','mmincox','bip39'])
+	def ss_3way_join_dfl_mix(self): return self.ss_join('3way_dfl','hex',['bip39','mmwords','mmincox'])
+
+	def ss_2way_A_dfl_master3(self):
+		return self.ss_splt('2way_dfl_master3','w','',master=3)
+	def ss_2way_B_dfl_master3(self):
+		return self.ss_splt('2way_dfl_master3','bip39','2:2',master=3)
+	def ss_2way_join_dfl_master3(self):
+		return self.ss_join('2way_dfl_master3','hex',['mmdat','bip39'],master=3)
+
+	tdir2 = '3way_foobar_master7'
+	def ss_3way_C_foobar_master7(self):
+		return self.ss_splt(self.tdir2,'hincog','',
+					['-J',self.get_hincog_arg(self.tdir2,'-master7')],master=7)
+	def ss_3way_B_foobar_master7(self):
+		return self.ss_splt(self.tdir2,'bip39','φυβαρ:2:3',master=7)
+	def ss_3way_A_foobar_master7(self):
+		return self.ss_splt(self.tdir2,'hex','φυβαρ:3:3',master=7)
+	def ss_3way_join_foobar_master7(self):
+		return self.ss_join(self.tdir2,'seed', ['bip39','mmhex'],
+							['-H',self.get_hincog_arg(self.tdir2,'-master7')],master=7,id_str='φυβαρ')
+	def ss_3way_join_foobar_master7_mix(self):
+		return self.ss_join(self.tdir2,'seed', ['mmhex','bip39'],
+							['-H',self.get_hincog_arg(self.tdir2,'-master7')],master=7,id_str='φυβαρ')
+
+	def ss_bad_invocation(self,cmd,args,exit_val):
+		t = self.spawn(cmd,args)
+		t.read()
+		t.req_exit_val = exit_val
+		return t
+
+	def ss_3way_join_dfl_bad_invocation(self):
+		t = self.ss_join('3way_dfl','hex',
+				['mmwords','mmincox','bip39'],
+				id_str='foo',
+				bad_invocation=True)
+		t.req_exit_val = 1
+		return t
+
+	def ss_bad_invocation1(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',[],1)
+	def ss_bad_invocation2(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',['-M1','1:9'],1)
+	def ss_bad_invocation3(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1)
+	def ss_bad_invocation4(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1)
+	def ss_bad_invocation5(self):
+		return self.ss_bad_invocation('mmgen-seedjoin',[],1)
+	def ss_bad_invocation6(self):
+		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a'],1)
+	def ss_bad_invocation7(self):
+		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1)
+	def ss_bad_invocation8(self):
+		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1)
+	def ss_bad_invocation9(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',['x'],1)
+	def ss_bad_invocation10(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1)
+	def ss_bad_invocation11(self):
+		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1)

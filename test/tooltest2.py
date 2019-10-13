@@ -330,6 +330,29 @@ tests = {
 				(md5_hash_strip,'996c047e8543d5dde6f82efc3214a6a1')
 			),
 		],
+		'list_shares': [
+			(   ['3','wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip,'84e8bdaebf9c816a8a3bd2ebec5a2e12')
+			),
+			(   ['3','id_str=default','wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip,'84e8bdaebf9c816a8a3bd2ebec5a2e12')
+			),
+			(   ['3','id_str=foo','wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip,'d2ac20823c4ea26f15234b5ca8df5d6f')
+			),
+			(   ['3','id_str=foo','master_share=0','wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip,'d2ac20823c4ea26f15234b5ca8df5d6f')
+			),
+			(   ['3','id_str=foo','master_share=5','wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip,'c4feedce40bb5959011ee4a996710832')
+			),
+			(   ['3','id_str=βαρ','master_share=5','wallet=test/ref/98831F3A.mmwords'],
+				(md5_hash_strip,'f7d254798fe2e34b94b5f4ff312998db')
+			),
+			(   ['4','id_str=βαρ','master_share=5','wallet=test/ref/98831F3A.bip39'],
+				(md5_hash_strip,'d3e479f55792181372a9f32a569c04e5')
+			),
+		],
 	},
 	'Coin': {
 		'addr2pubhash': {

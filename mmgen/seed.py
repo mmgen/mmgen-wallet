@@ -366,7 +366,38 @@ class SeedShareList(SubSeedList):
 
 		return hdr + body1 + ''.join(body)
 
-class SeedShare(SubSeed):
+class SeedShareBase(MMGenObject):
+
+	@property
+	def fn_stem(self):
+		pl = self.parent_list
+		msdata = '_with_master{}'.format(pl.master_share.idx) if pl.master_share else ''
+		return '{}-{}-{}of{}{}[{}]'.format(
+			pl.parent_seed.sid,
+			pl.id_str,
+			self.idx,
+			pl.count,
+			msdata,
+			self.sid)
+
+	@property
+	def desc(self):
+		return self.get_desc()
+
+	def get_desc(self,ui=False):
+		pl = self.parent_list
+		mss = ', with master share #{}'.format(pl.master_share.idx) if pl.master_share else ''
+		if ui:
+			m   = ( yellow("(share {} of {} of ")
+					+ pl.parent_seed.sid.hl()
+					+ yellow(', split id ')
+					+ pl.id_str.hl(encl="''")
+					+ yellow('{})') )
+		else:
+			m = "share {} of {} of " + pl.parent_seed.sid + ", split id '" + pl.id_str + "'{}"
+		return m.format(self.idx,pl.count,mss)
+
+class SeedShare(SeedShareBase,SubSeed):
 
 	@staticmethod
 	def make_subseed_bin(parent_list,idx:int,nonce:int,length:str):
@@ -380,7 +411,7 @@ class SeedShare(SubSeed):
 			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
-class SeedShareLast(SeedBase):
+class SeedShareLast(SeedShareBase,SeedBase):
 
 	idx = MMGenImmutableAttr('idx',SeedShareIdx)
 	nonce = 0
@@ -401,7 +432,7 @@ class SeedShareLast(SeedBase):
 
 		return ret.to_bytes(seed.byte_len,'big')
 
-class SeedShareMaster(SeedBase):
+class SeedShareMaster(SeedBase,SeedShareBase):
 
 	idx = MMGenImmutableAttr('idx',MasterShareIdx)
 	nonce = MMGenImmutableAttr('nonce',int,typeconv=False)
@@ -413,6 +444,13 @@ class SeedShareMaster(SeedBase):
 		SeedBase.__init__(self,self.make_base_seed_bin())
 
 		self.derived_seed = SeedBase(self.make_derived_seed_bin(parent_list.id_str,parent_list.count))
+
+	@property
+	def fn_stem(self):
+		return '{}-MASTER{}[{}]'.format(
+			self.parent_list.parent_seed.sid,
+			self.idx,
+			self.sid)
 
 	def make_base_seed_bin(self):
 		seed = self.parent_list.parent_seed
@@ -426,6 +464,11 @@ class SeedShareMaster(SeedBase):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big')
 		return scramble_seed(self.data,scramble_key)[:self.byte_len]
+
+	def get_desc(self,ui=False):
+		psid = self.parent_list.parent_seed.sid
+		mss = 'master share #{} of '.format(self.idx)
+		return yellow('(' + mss) + psid.hl() + yellow(')') if ui else mss + psid
 
 class SeedShareMasterJoining(SeedShareMaster):
 

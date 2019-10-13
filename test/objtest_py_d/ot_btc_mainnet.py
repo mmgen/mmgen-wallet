@@ -13,6 +13,8 @@ from mmgen.obj import *
 from mmgen.seed import *
 from .ot_common import *
 
+ssm = str(SeedShareCount.max_val)
+
 tests = OrderedDict([
 	('AddrIdx', {
 		'bad':  ('s',1.1,10000000,-1,0),
@@ -200,6 +202,12 @@ tests = OrderedDict([
 		'good': (
 			{'s':'password','ret':'P'},
 			{'s':'P','ret':'P'},
+		)
+	}),
+	('SeedSplitSpecifier', {
+		'bad': ('M','αβ:2',1,'0:1','1:1','2:1','3:2','1:2000','abc:0:2'),
+		'good': (
+			('1:2','2:2','alice:2:2','αβ:2:2','1:'+ssm,ssm+':'+ssm)
 		)
 	}),
 ])

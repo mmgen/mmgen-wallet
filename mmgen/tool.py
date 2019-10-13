@@ -726,6 +726,17 @@ class MMGenToolCmdWallet(MMGenToolCmdBase):
 		from mmgen.seed import SeedSource
 		return SeedSource(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
 
+	def list_shares(self,
+			share_count:int,
+			id_str='default',
+			master_share:"(min:1, max:{}, 0=no master share)".format(MasterShareIdx.max_val)=0,
+			wallet=''):
+		"list the Seed IDs of the shares resulting from a split of default or specified wallet"
+		opt.quiet = True
+		sf = get_seed_file([wallet] if wallet else [],1)
+		from mmgen.seed import SeedSource
+		return SeedSource(sf).seed.split(share_count,id_str,master_share).format()
+
 	def gen_key(self,mmgen_addr:str,wallet=''):
 		"generate a single MMGen WIF key from default or specified wallet"
 		return self.gen_addr(mmgen_addr,wallet,target='wif')

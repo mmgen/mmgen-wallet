@@ -39,6 +39,7 @@ def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
 def is_tw_label(s):      return TwLabel(s,on_fail='silent')
 def is_wif(s):           return WifKey(s,on_fail='silent')
 def is_viewkey(s):       return ViewKey(s,on_fail='silent')
+def is_seed_split_specifier(s): return SeedSplitSpecifier(s,on_fail='silent')
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0
@@ -822,6 +823,23 @@ class MMGenPWIDString(MMGenLabel):
 	forbidden = list(' :/\\')
 	trunc_ok = False
 
+class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
+	color = 'red'
+	def __new__(cls,s,on_fail='raise'):
+		if type(s) == cls: return s
+		cls.arg_chk(on_fail)
+		try:
+			arr = s.split(':')
+			assert len(arr) in (2,3), 'cannot be parsed'
+			a,b,c = arr if len(arr) == 3 else ['default'] + arr
+			me = str.__new__(cls,s)
+			me.id = SeedSplitIDString(a,on_fail=on_fail)
+			me.idx = SeedShareIdx(b,on_fail=on_fail)
+			me.count = SeedShareCount(c,on_fail=on_fail)
+			assert me.idx <= me.count, 'share index greater than share count'
+			return me
+		except Exception as e:
+			return cls.init_fail(e,s)
 
 class SeedSplitIDString(MMGenPWIDString):
 	desc = 'seed split ID string'

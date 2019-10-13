@@ -28,7 +28,7 @@ from mmgen.opts import opt
 from mmgen.util import *
 
 def help_notes(k):
-	from mmgen.obj import SubSeedIdxRange
+	from mmgen.obj import SubSeedIdxRange,SeedShareIdx,SeedShareCount,MasterShareIdx
 	from mmgen.seed import SeedSource
 	from mmgen.tx import MMGenTX
 	def fee_spec_letters(use_quotes=False):
@@ -41,6 +41,77 @@ def help_notes(k):
 	return {
 		'rel_fee_desc': MMGenTX().rel_fee_desc,
 		'fee_spec_letters': fee_spec_letters(),
+		'seedsplit': """
+COMMAND NOTES:
+
+This command generates shares one at a time.  Shares may be output to any
+MMGen wallet format, with one limitation: only one share in a given split may
+be in hidden incognito format, and it must be the master share in the case of
+a master-share split.
+
+If the command's optional first argument is omitted, the default wallet is
+used for the split.
+
+The last argument is a seed split specifier consisting of an optional split
+ID, a share index, and a share count, all separated by colons.  The split ID
+must be a valid UTF-8 string.  If omitted, the ID 'default' is used.  The
+share index (the index of the share being generated) must be in the range
+{sia}-{sib} and the share count (the total number of shares in the split)
+in the range {sca}-{scb}.
+
+Master Shares
+
+Each seed has a total of {msb} master shares, which can be used as the first
+shares in multiple splits if desired.  To generate a master share, use the
+--master-share (-M) option with an index in the range {msa}-{msb} and omit
+the last argument.
+
+When creating and joining a split using a master share, ensure that the same
+master share index is used in all split and join commands.
+
+EXAMPLES:
+
+  Create a 3-way default split of your default wallet, outputting all shares
+  to default wallet format.  Rejoin the split:
+
+    $ mmgen-seedsplit 1:3 # Step A
+    $ mmgen-seedsplit 2:3 # Step B
+    $ mmgen-seedsplit 3:3 # Step C
+    $ mmgen-seedjoin <output_of_step_A> <output_of_step_B> <output_of_step_C>
+
+  Create a 2-way split of your default wallet with ID string 'alice',
+  outputting shares to MMGen native mnemonic format.  Rejoin the split:
+
+    $ mmgen-seedsplit -o words alice:1:2 # Step D
+    $ mmgen-seedsplit -o words alice:2:2 # Step E
+    $ mmgen-seedjoin <output_of_step_D> <output_of_step_E>
+
+  Create a 2-way split of your default wallet with ID string 'bob' using
+  master share #7, outputting share #1 (the master share) to default wallet
+  format and share #2 to BIP39 format.  Rejoin the split:
+
+    $ mmgen-seedsplit -M7                   # Step X
+    $ mmgen-seedsplit -M7 -o bip39 bob:2:2  # Step Y
+    $ mmgen-seedjoin -M7 --id-str=bob <output_of_step_X> <output_of_step_Y>
+
+  Create a 2-way split of your default wallet with ID string 'alice' using
+  master share #7.  Rejoin the split using master share #7 generated in the
+  previous example:
+
+    $ mmgen-seedsplit -M7 -o bip39 alice:2:2 # Step Z
+    $ mmgen-seedjoin -M7 --id-str=alice <output_of_step_X> <output_of_step_Z>
+
+  Create a 2-way default split of your default wallet with an incognito-format
+  master share hidden in file 'my.hincog' at offset 1325.  Rejoin the split:
+
+    $ mmgen-seedsplit -M4 -o hincog -J my.hincog,1325 1:2 # Step M (share A)
+    $ mmgen-seedsplit -M4 -o bip39 2:2                    # Step N (share B)
+    $ mmgen-seedjoin -M4 -H my.hincog,1325 <output_of_step_N>
+
+""".strip().format(
+	sia=SeedShareIdx.min_val,sib=SeedShareIdx.max_val,
+	sca=SeedShareCount.min_val,scb=SeedShareCount.max_val,
+	msa=MasterShareIdx.min_val,msb=MasterShareIdx.max_val),
 		'subwallet': """
 SUBWALLETS:
 
