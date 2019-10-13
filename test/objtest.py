@@ -119,7 +119,7 @@ def do_loop():
 	network = ('mainnet','testnet')[bool(g.testnet)]
 	gl = globals()
 	exec('from test.objtest_py_d.ot_{}_{} import tests'.format(g.coin.lower(),network),gl,gl)
-	gmsg('Running data objest tests for {} {}'.format(g.coin,network))
+	gmsg('Running data object tests for {} {}'.format(g.coin,network))
 	clr = None
 	for test in tests:
 		if utests and test not in utests: continue

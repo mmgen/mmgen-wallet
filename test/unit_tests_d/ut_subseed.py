@@ -155,7 +155,7 @@ class unit_test(object):
 
 			msg_r('Testing Seed ID collisions ({} subseed pairs)...'.format(ss_count))
 
-			seed_bin = bytes.fromhex('12abcdef' * 8)
+			seed_bin = bytes.fromhex('12abcdef' * 8) # 95B3D78D
 			seed = Seed(seed_bin)
 
 			seed.subseeds._generate(ss_count)

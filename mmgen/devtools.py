@@ -6,7 +6,7 @@ from difflib import unified_diff
 
 def pmsg(*args,out=sys.stderr):
 	d = args if len(args) > 1 else '' if not args else args[0]
-	out.write(pprint.PrettyPrinter(indent=4,compact=True).pformat(d) + '\n')
+	out.write('\n' + pprint.PrettyPrinter(indent=4).pformat(d) + '\n')
 def pdie(*args,exit_val=1,out=sys.stderr):
 	pmsg(*args,out=out)
 	sys.exit(exit_val)

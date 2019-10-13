@@ -19,7 +19,10 @@
 """
 filename.py:  Filename class and methods for the MMGen suite
 """
+
 import sys,os
+
+from mmgen.exception import BadFileExtension,FileNotFound
 from mmgen.obj import *
 from mmgen.util import die,get_extension
 from mmgen.seed import *
@@ -51,11 +54,16 @@ class Filename(MMGenObject):
 			# TODO: other file types
 			self.ftype = SeedSource.ext_to_type(self.ext)
 			if not self.ftype:
-				die(3,"'{}': not a recognized extension for SeedSource".format(self.ext))
+				m = "'{}': not a recognized SeedSource file extension".format(self.ext)
+				raise BadFileExtension(m)
 
+		try:
+			st = os.stat(fn)
+		except:
+			raise FileNotFound('{!r}: file not found'.format(fn))
 
 		import stat
-		if stat.S_ISBLK(os.stat(fn).st_mode):
+		if stat.S_ISBLK(st.st_mode):
 			mode = (os.O_RDONLY,os.O_RDWR)[bool(write)]
 			if g.platform == 'win': mode |= os.O_BINARY
 			try:
@@ -68,10 +76,10 @@ class Filename(MMGenObject):
 				self.size = os.lseek(fd, 0, os.SEEK_END)
 				os.close(fd)
 		else:
-			self.size = os.stat(fn).st_size
-			self.mtime = os.stat(fn).st_mtime
-			self.ctime = os.stat(fn).st_ctime
-			self.atime = os.stat(fn).st_atime
+			self.size  = st.st_size
+			self.mtime = st.st_mtime
+			self.ctime = st.st_ctime
+			self.atime = st.st_atime
 
 class MMGenFileList(list,MMGenObject):
 

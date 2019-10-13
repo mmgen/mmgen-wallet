@@ -169,11 +169,15 @@ class Hilite(object):
 		return self.fmtc(self,*args,**kwargs)
 
 	@classmethod
-	def hlc(cls,s,color=True):
+	def hlc(cls,s,color=True,encl=''):
+		if encl:
+			assert isinstance(encl,str) and len(encl) == 2, "'encl' must be 2-character str"
+			s = encl[0] + s + encl[1]
 		return cls.colorize(s,color=color)
 
-	def hl(self,color=True):
-		return self.colorize(self,color=color)
+	def hl(self,*args,**kwargs):
+		assert args == () # forbid invocation w/o keywords
+		return self.hlc(self,*args,**kwargs)
 
 	def __str__(self):
 		return self.colorize(self,color=False)
@@ -816,9 +820,11 @@ class MMGenPWIDString(MMGenLabel):
 	min_len = 1
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
+	trunc_ok = False
 
-class SeedShareIDString(MMGenPWIDString):
-	desc = 'seed share ID string'
+
+class SeedSplitIDString(MMGenPWIDString):
+	desc = 'seed split ID string'
 
 class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	width = 1

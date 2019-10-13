@@ -50,8 +50,8 @@ def is_mmgen_mnemonic(s): return _is_mnemonic(s,fmt='words')
 
 class SeedBase(MMGenObject):
 
-	data    = MMGenImmutableAttr('data',bytes,typeconv=False)
-	sid     = MMGenImmutableAttr('sid',SeedID,typeconv=False)
+	data = MMGenImmutableAttr('data',bytes,typeconv=False)
+	sid  = MMGenImmutableAttr('sid',SeedID,typeconv=False)
 
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -60,8 +60,8 @@ class SeedBase(MMGenObject):
 		elif len(seed_bin)*8 not in g.seed_lens:
 			die(3,'{}: invalid seed length'.format(len(seed_bin)))
 
-		self.data      = seed_bin
-		self.sid       = SeedID(seed=self)
+		self.data = seed_bin
+		self.sid  = SeedID(seed=self)
 
 	@property
 	def bitlen(self):
@@ -176,11 +176,12 @@ class SubSeedList(MMGenObject):
 		def add_subseed(idx,length):
 			for nonce in range(self.nonce_start,self.member_type.max_nonce+1): # handle SeedID collisions
 				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
-				if not (sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid):
+				if sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid:
+					if g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
+						self._collision_debug_msg(sid,idx,nonce)
+				else:
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
-				elif g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
-					self._collision_debug_msg(sid,idx,nonce)
 			else: # must exit here, as this could leave self.data in inconsistent state
 				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
 
@@ -279,7 +280,7 @@ class SeedShareList(SubSeedList):
 	split_type = 'N-of-N'
 
 	count = MMGenImmutableAttr('count',SeedShareCount)
-	id_str = MMGenImmutableAttr('id_str',SeedShareIDString)
+	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
 
 	def __init__(self,parent_seed,count,id_str=None,master_idx=None):
 		self.member_type = SeedShare
@@ -307,12 +308,12 @@ class SeedShareList(SubSeedList):
 				self.data['long'][self.master_share.sid] = (1,self.master_share.nonce)
 			self._generate(count-1)
 			self.last_share = ls = SeedShareLast(self)
-			if ls.sid in self.data['long'].keys + [parent_seed.sid]:
+			if ls.sid in self.data['long'] or ls.sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
 				if g.debug_subseed:
 					self._collision_debug_msg(ls.sid,count,nonce,nonce_desc='nonce_start')
 			else:
-				self.data['long'][ls.sid] = (self.count,nonce)
+				self.data['long'][ls.sid] = (count,nonce)
 				break
 		else:
 			raise SubSeedNonceRangeExceeded('nonce range exceeded')
@@ -419,6 +420,8 @@ class SeedShareMaster(SeedBase):
 		scramble_key = b'master_share:' + self.idx.to_bytes(2,'big') + self.nonce.to_bytes(2,'big')
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
+	# Don't bother with avoiding seed ID collision here, as sid of derived seed is not used
+	# by user as an identifier
 	def make_derived_seed_bin(self,id_str,count):
 		# field maximums: id_str: none (256 chars), count: 65535 (1024)
 		scramble_key = id_str.encode() + b':' + count.to_bytes(2,'big')
@@ -426,7 +429,7 @@ class SeedShareMaster(SeedBase):
 
 class SeedShareMasterJoining(SeedShareMaster):
 
-	id_str = MMGenImmutableAttr('id_str',SeedShareIDString)
+	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
 	count = MMGenImmutableAttr('count',SeedShareCount)
 
 	def __init__(self,idx,base_seed,id_str,count):

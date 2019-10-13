@@ -503,7 +503,7 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
 	try: mode = os.stat(fname).st_mode
 	except:
-		die(1,"Unable to stat requested {} '{}'".format(ftype,fname))
+		raise FileNotFound("Requested {} '{}' not found".format(ftype,fname))
 
 	for t in ok_types:
 		if t[0](mode): break
@@ -521,6 +521,10 @@ def check_outfile(f,blkdev_ok=False):
 	return check_file_type_and_access(f,'output file',blkdev_ok=blkdev_ok)
 def check_outdir(f):
 	return check_file_type_and_access(f,'output directory')
+def check_wallet_extension(fn):
+	from mmgen.seed import SeedSource
+	if not SeedSource.ext_to_type(get_extension(fn)):
+		raise BadFileExtension("'{}': unrecognized seed source file extension".format(fn))
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 

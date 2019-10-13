@@ -66,6 +66,8 @@ elif invoked_as == 'subgen':
 	desc = 'Generate a subwallet from ' + dsw
 	opt_filter = 'dehHiJkKlLmoOpPqrSvz-' # omitted: f
 	usage = '[opts] [infile] <Subseed Index>'
+	iaction = 'input'
+	oaction = 'output'
 	do_sw_note = True
 
 opts_data = {
@@ -136,16 +138,24 @@ if invoked_as == 'subgen':
 	from mmgen.obj import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
 
+if cmd_args:
+	if invoked_as == 'gen' or len(cmd_args) > 1:
+		opts.usage()
+	check_infile(cmd_args[0])
+
 sf = get_seed_file(cmd_args,nargs,invoked_as=invoked_as)
 
-if not invoked_as == 'chk': do_license_msg()
+if invoked_as != 'chk':
+	do_license_msg()
 
-if invoked_as in ('conv','passchg','subgen'):
-	m1 = green('Processing input wallet')
-	m2 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
-	msg(m1+m2)
-
-ss_in = None if invoked_as == 'gen' else SeedSource(sf,passchg=(invoked_as=='passchg'))
+if invoked_as == 'gen':
+	ss_in = None
+else:
+	ss_in = SeedSource(sf,passchg=(invoked_as=='passchg'))
+	m1 = green('Processing input wallet ')
+	m2 = ss_in.seed.sid.hl()
+	m3 = yellow(' (default wallet)') if sf and os.path.dirname(sf) == g.data_dir else ''
+	msg(m1+m2+m3)
 
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
@@ -153,7 +163,7 @@ if invoked_as == 'chk':
 	# TODO: display creation date
 	sys.exit(0)
 
-if invoked_as in ('conv','passchg','subgen'):
+if invoked_as != 'gen':
 	gmsg('Processing output wallet')
 
 if invoked_as == 'subgen':
