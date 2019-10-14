@@ -151,13 +151,19 @@ class SubSeedList(MMGenObject):
 			do_msg(subseed)
 			return subseed
 
-	def _collision_debug_msg(self,sid,idx,nonce,nonce_desc='nonce'):
+	def _collision_debug_msg(self,sid,idx,nonce,nonce_desc='nonce',debug_last_share=False):
 		slen = 'short' if sid in self.data['short'] else 'long'
 		m1 = 'add_subseed(idx={},{}):'.format(idx,slen)
 		if sid == self.parent_seed.sid:
 			m2 = 'collision with parent Seed ID {},'.format(sid)
 		else:
-			m2 = 'collision with ID {} (idx={},{}),'.format(sid,self.data[slen][sid][0],slen)
+			if debug_last_share:
+				sl = g.debug_last_share_sid_len
+				colliding_idx = [d[:sl] for d in self.data[slen].keys].index(sid[:sl]) + 1
+				sid = sid[:sl]
+			else:
+				colliding_idx = self.data[slen][sid][0]
+			m2 = 'collision with ID {} (idx={},{}),'.format(sid,colliding_idx,slen)
 		msg('{:30} {:46} incrementing {} to {}'.format(m1,m2,nonce_desc,nonce+1))
 
 	def _generate(self,last_idx=None,last_sid=None):
@@ -282,7 +288,7 @@ class SeedShareList(SubSeedList):
 	count = MMGenImmutableAttr('count',SeedShareCount)
 	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
 
-	def __init__(self,parent_seed,count,id_str=None,master_idx=None):
+	def __init__(self,parent_seed,count,id_str=None,master_idx=None,debug_last_share=False):
 		self.member_type = SeedShare
 		self.parent_seed = parent_seed
 		self.id_str = id_str or 'default'
@@ -299,6 +305,15 @@ class SeedShareList(SubSeedList):
 					return ms
 			raise SubSeedNonceRangeExceeded('nonce range exceeded')
 
+		def last_share_debug(last_share):
+			if not debug_last_share:
+				return False
+			sid_len = g.debug_last_share_sid_len
+			lsid = last_share.sid[:sid_len]
+			psid = parent_seed.sid[:sid_len]
+			ssids = [d[:sid_len] for d in self.data['long'].keys]
+			return (lsid in ssids or lsid == psid)
+
 		self.master_share = make_master_share() if master_idx else None
 
 		for nonce in range(SeedShare.max_nonce+1):
@@ -308,10 +323,10 @@ class SeedShareList(SubSeedList):
 				self.data['long'][self.master_share.sid] = (1,self.master_share.nonce)
 			self._generate(count-1)
 			self.last_share = ls = SeedShareLast(self)
-			if ls.sid in self.data['long'] or ls.sid == parent_seed.sid:
+			if last_share_debug(ls) or ls.sid in self.data['long'] or ls.sid == parent_seed.sid:
 				# collision: throw out entire split list and redo with new start nonce
 				if g.debug_subseed:
-					self._collision_debug_msg(ls.sid,count,nonce,nonce_desc='nonce_start')
+					self._collision_debug_msg(ls.sid,count,nonce,'nonce_start',debug_last_share)
 			else:
 				self.data['long'][ls.sid] = (count,nonce)
 				break

@@ -8,7 +8,7 @@ from mmgen.common import *
 class unit_test(object):
 
 	def run_test(self,name):
-		from mmgen.seed import Seed
+		from mmgen.seed import Seed,SeedShareList
 		from mmgen.obj import SeedShareIdx
 
 		def basic_ops(master_idx):
@@ -140,10 +140,28 @@ class unit_test(object):
 			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))
 			msg('OK')
 
+		def last_share_collisions():
+			msg_r('Testing last share collisions with shortened Seed IDs')
+			vmsg('')
+			seed_bin = bytes.fromhex('2eadbeef'*8)
+			seed = Seed(seed_bin)
+			ssm_save = SeedShareIdx.max_val
+			ssm = SeedShareIdx.max_val = 2048
+			g.debug_last_share_sid_len = 3
+			shares = SeedShareList(seed,count=ssm,id_str='foo',master_idx=1,debug_last_share=True)
+			lsid = shares.last_share.sid
+			collisions = shares.data['long'][lsid][1]
+			assert collisions == 2, collisions
+			assert lsid == 'B5B8AD09', lsid
+			SeedShareIdx.max_val = ssm_save
+			vmsg_r('{} collisions, last_share sid {}'.format(collisions,lsid))
+			msg('..OK')
+
 		basic_ops(master_idx=None)
 		basic_ops(master_idx=1)
 		basic_ops(master_idx=5)
 		defaults_and_limits()
+		last_share_collisions()
 		collisions('1dabcdef'*4,65535,'B5CBCE0A',3,master_idx=None)
 		collisions('18abcdef'*4,65535,'FF03CE82',3,master_idx=1)
 
