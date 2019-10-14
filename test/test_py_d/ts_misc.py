@@ -41,6 +41,7 @@ class TestSuiteHelp(TestSuiteBase):
 		arg = '--help',
 		scripts = ( 'walletgen','walletconv','walletchk','passchg','subwalletgen',
 					'addrgen','keygen','passgen',
+					'seedsplit','seedjoin',
 					'txcreate','txsign','txsend','txdo','txbump',
 					'addrimport','tool','regtest','autosign')):
 		for s in scripts:

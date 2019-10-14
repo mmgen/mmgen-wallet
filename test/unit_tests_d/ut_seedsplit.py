@@ -11,6 +11,8 @@ class unit_test(object):
 		from mmgen.seed import Seed,SeedShareList
 		from mmgen.obj import SeedShareIdx
 
+		g.debug_subseed = opt.verbose
+
 		def basic_ops(master_idx):
 			test_data = {
 				'default': (
@@ -137,7 +139,7 @@ class unit_test(object):
 				collisions += shares.data['long'][sid][1]
 
 			assert collisions == collisions_chk, collisions
-			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))
+			vmsg_r('{} collisions, last_sid {}'.format(collisions,last_sid))
 			msg('OK')
 
 		def last_share_collisions():

@@ -480,7 +480,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
 		return out
 
-	def check_format(self,addr): return True # format is checked when added to list entry object
+	def check_format(self,addr):
+		return True # format is checked when added to list entry object
 
 	def scramble_seed(self,seed):
 		is_btcfork = g.proto.base_coin == 'BTC'
@@ -613,7 +614,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
 				if self.has_keys:
-					if opt.b16: out.append(fs.format('', 'orig_hex: '+e.sec.orig_hex,c))
+					if opt.b16:
+						out.append(fs.format('', 'orig_hex: '+e.sec.orig_hex,c))
 					out.append(fs.format('','{} {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
@@ -818,7 +820,8 @@ Record this checksum: it will be used to verify the password file in the future
 			self.pw_id_str = MMGenPWIDString(pw_id_str)
 			self.set_pw_fmt(pw_fmt)
 			self.set_pw_len(pw_len)
-			if chk_params_only: return
+			if chk_params_only:
+				return
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
 			self.data = self.generate(seed,pw_idxs)
 
