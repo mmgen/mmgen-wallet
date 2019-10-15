@@ -374,6 +374,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	has_keys = False
 	ext      = 'addrs'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
+	line_ctr = 0
 
 	def __init__(self,addrfile='',al_id='',adata=[],seed='',addr_idxs='',src='',
 					addrlist='',keylist='',mmtype=None):
@@ -387,6 +388,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
 			adata = self.generate(seed,addr_idxs)
 		elif addrfile:           # data from MMGen address file
+			self.infile = addrfile
 			adata = self.parse_file(addrfile) # sets self.al_id
 		elif al_id and adata:    # data from tracking wallet
 			self.al_id = al_id
@@ -626,8 +628,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def get_line(self,lines):
 		ret = lines.pop(0).split(None,2)
+		self.line_ctr += 1
 		if ret[0] == 'orig_hex:': # hacky
 			ret = lines.pop(0).split(None,2)
+			self.line_ctr += 1
 		return ret if len(ret) == 3 else ret + ['']
 
 	def parse_file_body(self,lines):
@@ -638,9 +642,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		while lines:
 			idx,addr,lbl = self.get_line(lines)
 
-			assert is_mmgen_idx(idx), (
-				"'{}': invalid address num. in line: '{}'".format(idx,' '.join([idx,addr,lbl])))
-			assert self.check_format(addr),"'{}': invalid {}".format(addr,self.data_desc)
+			assert is_mmgen_idx(idx),'invalid address index {!r}'.format(idx)
+			self.check_format(addr)
 
 			a = le(**{ 'idx':int(idx), self.main_attr:addr, 'label':lbl })
 
@@ -738,7 +741,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			data = self.parse_file_body(lines[1:-1])
 			assert isinstance(data,list),'Invalid file body data'
 		except Exception as e:
-			m = 'Invalid address list file ({})'.format(e.args[0])
+			lcs = ', list item {}'.format(self.line_ctr) if self.line_ctr else ''
+			m = 'Invalid data in {} list file {!r}{} ({})'.format(self.data_desc,self.infile,lcs,e.args[0])
 			if exit_on_error: die(3,m)
 			msg(msg)
 			return False
@@ -819,6 +823,7 @@ Record this checksum: it will be used to verify the password file in the future
 		self.update_msgs()
 
 		if infile:
+			self.infile = infile
 			self.data = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
 			if not chk_params_only:
@@ -887,11 +892,10 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):
-			msg('Password is not valid {} data'.format(self.pw_fmt))
-			return False
-		if len(pw) != self.pw_len:
-			msg('Password has incorrect length ({} != {})'.format(len(pw),self.pw_len))
-			return False
+			raise ValueError('Password is not valid {} data'.format(self.pw_info[self.pw_fmt].desc))
+		pwlen = len(pw.split()) if self.pw_fmt == 'bip39' else len(pw)
+		if pwlen != self.pw_len:
+			raise ValueError('Password has incorrect length ({} != {})'.format(pwlen,self.pw_len))
 		return True
 
 	def scramble_seed(self,seed):

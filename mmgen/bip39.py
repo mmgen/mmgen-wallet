@@ -2090,6 +2090,7 @@ zoo
 		'224': (7, 21),
 		'256': (8, 24),
 	}
+	digits = { 'bip39': words }
 
 	@classmethod
 	def tohex(cls,words,wl_id,pad=None):
