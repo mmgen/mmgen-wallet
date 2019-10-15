@@ -530,24 +530,32 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 class MMGenToolCmdFile(MMGenToolCmdBase):
 	"utilities for viewing/checking MMGen address and transaction files"
 
-	def addrfile_chksum(self,mmgen_addrfile:str):
-		"compute checksum for MMGen address file"
+	def _file_chksum(self,mmgen_addrfile,objname):
 		opt.yes = True
 		opt.quiet = True
-		from mmgen.addr import AddrList
-		return AddrList(mmgen_addrfile).chksum
+		from mmgen.addr import AddrList,KeyAddrList,PasswordList
+		ret = locals()[objname](mmgen_addrfile)
+		if opt.verbose:
+			if ret.al_id.mmtype.name == 'password':
+				fs = 'Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'
+				msg(fs.format(capfirst(ret.pw_info[ret.pw_fmt].desc),ret.pw_len,ret.pw_id_str))
+			else:
+				msg('Base coin:   {} {}'.format(ret.base_coin,('Mainnet','Testnet')[ret.is_testnet]))
+				msg('MMType:      {}'.format(capfirst(ret.al_id.mmtype.name)))
+			msg('List length: {}'.format(len(ret.data)))
+		return ret.chksum
+
+	def addrfile_chksum(self,mmgen_addrfile:str):
+		"compute checksum for MMGen address file"
+		return self._file_chksum(mmgen_addrfile,'AddrList')
 
 	def keyaddrfile_chksum(self,mmgen_keyaddrfile:str):
 		"compute checksum for MMGen key-address file"
-		opt.yes = True
-		opt.quiet = True
-		from mmgen.addr import KeyAddrList
-		return KeyAddrList(mmgen_keyaddrfile).chksum
+		return self._file_chksum(mmgen_keyaddrfile,'KeyAddrList')
 
 	def passwdfile_chksum(self,mmgen_passwdfile:str):
 		"compute checksum for MMGen password file"
-		from mmgen.addr import PasswordList
-		return PasswordList(infile=mmgen_passwdfile).chksum
+		return self._file_chksum(mmgen_passwdfile,'PasswordList')
 
 	def txview( varargs_call_sig = { # hack to allow for multiple filenames
 					'args': (

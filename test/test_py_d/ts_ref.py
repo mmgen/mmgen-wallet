@@ -41,7 +41,11 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_bech32addrfile':'98831F3A{}-B[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_keyaddrfile': '98831F3A{}[1,31-33,500-501,1010-1011]{}.akeys.mmenc',
-		'ref_passwdfile':  '98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws',
+		'ref_passwdfile_b32_24': '98831F3A-фубар@crypto.org-b32-24[1,4,1100].pws',
+		'ref_passwdfile_b32_12': '98831F3A-фубар@crypto.org-b32-12[1,4,1100].pws',
+		'ref_passwdfile_b58_10': '98831F3A-фубар@crypto.org-b58-10[1,4,1100].pws',
+		'ref_passwdfile_b58_20': '98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws',
+		'ref_passwdfile_hex_64': '98831F3A-фубар@crypto.org-hex-64[1,4,1100].pws',
 		'ref_tx_file': { # data shared with ref_altcoin, autosign
 			'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
 					'0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
@@ -77,7 +81,11 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			'btc': ('9F2D D781 1812 8BAD','88CC 5120 9A91 22C2'),
 			'ltc': ('B804 978A 8796 3ED4','98B5 AC35 F334 0398'),
 		},
-		'ref_passwdfile_chksum':   'A983 DAB9 5514 27FB',
+		'ref_passwdfile_b32_12_chksum': '7252 CD8D EF0D 3DB1',
+		'ref_passwdfile_b32_24_chksum': '8D56 3845 A072 A5B9',
+		'ref_passwdfile_b58_10_chksum': '534F CC1A 6701 9FED',
+		'ref_passwdfile_b58_20_chksum': 'DDD9 44B0 CA28 183F',
+		'ref_passwdfile_hex_64_chksum': 'F11D CB0A 8AE3 4D21',
 	}
 	cmd_group = ( # TODO: move to tooltest2
 		('ref_words_to_subwallet_chk1','subwallet generation from reference words file (long subseed)'),
@@ -90,7 +98,13 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		('ref_segwitaddrfile_chk','saved reference address file (segwit)'),
 		('ref_bech32addrfile_chk','saved reference address file (bech32)'),
 		('ref_keyaddrfile_chk','saved reference key-address file'),
-		('ref_passwdfile_chk', 'saved reference password file'),
+
+		('ref_passwdfile_chk_b58_20','saved reference password file (base58, 20 chars)'),
+		('ref_passwdfile_chk_b58_10','saved reference password file (base58, 10 chars)'),
+		('ref_passwdfile_chk_b32_24','saved reference password file (base32, 24 chars)'),
+		('ref_passwdfile_chk_b32_12','saved reference password file (base32, 12 chars)'),
+		('ref_passwdfile_chk_hex_64','saved reference password file (hexadecimal, 64 chars)'),
+
 #	Create the fake inputs:
 #	('txcreate8',          'transaction creation (8)'),
 		('ref_tx_chk',         'signing saved reference tx file'),
@@ -161,19 +175,29 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_subwallet_keygen2(self):
 		return self.ref_subwallet_addrgen('1S',target='key')
 
-	def ref_addrfile_chk(self,ftype='addr',coin=None,subdir=None,pfx=None,mmtype=None,add_args=[]):
-		af_key = 'ref_{}file'.format(ftype)
+	def ref_addrfile_chk(
+			self,
+			ftype    = 'addr',
+			coin     = None,
+			subdir   = None,
+			pfx      = None,
+			mmtype   = None,
+			add_args = [],
+			id_key   = None,
+			pat      = 'BTC Mainnet.*Legacy'):
+		af_key = 'ref_{}file'.format(ftype) + ('_' + id_key if id_key else '')
 		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
 		tool_cmd = ftype.replace('segwit','').replace('bech32','')+'file_chksum'
-		t = self.spawn('mmgen-tool',coin_arg+['-p1',tool_cmd,af]+add_args)
+		t = self.spawn('mmgen-tool',coin_arg+['--verbose','-p1',tool_cmd,af]+add_args)
 		if ftype == 'keyaddr':
 			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
-		rc = self.chk_data[   'ref_' + ftype + 'file_chksum' +
-					('_'+coin.lower() if coin else '') +
-					('_'+mmtype if mmtype else '')]
+		chksum_key = '_'.join([af_key,'chksum'] + ([coin.lower()] if coin else []) + ([mmtype] if mmtype else []))
+		rc = self.chk_data[chksum_key]
 		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
+		if pat:
+			t.expect(pat,regex=True)
 		t.expect(chksum_pat,regex=True)
 		m = t.p.match.group(0)
 		t.read()
@@ -183,20 +207,24 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_segwitaddrfile_chk(self):
 		if not 'S' in g.proto.mmtypes:
 			return skip('not supported')
-		else:
-			return self.ref_addrfile_chk(ftype='segwitaddr')
+		return self.ref_addrfile_chk(ftype='segwitaddr',pat='BTC Mainnet.*Segwit')
 
 	def ref_bech32addrfile_chk(self):
 		if not 'B' in g.proto.mmtypes:
 			return skip('not supported')
-		else:
-			return self.ref_addrfile_chk(ftype='bech32addr')
+		return self.ref_addrfile_chk(ftype='bech32addr',pat='BTC Mainnet.*Bech32')
 
 	def ref_keyaddrfile_chk(self):
 		return self.ref_addrfile_chk(ftype='keyaddr')
 
-	def ref_passwdfile_chk(self):
-		return self.ref_addrfile_chk(ftype='passwd')
+	def ref_passwdfile_chk(self,key,pat):
+		return self.ref_addrfile_chk(ftype='passwd',id_key=key,pat=pat)
+
+	def ref_passwdfile_chk_b58_20(self): return self.ref_passwdfile_chk(key='b58_20',pat='Base58.*len.* 20\n')
+	def ref_passwdfile_chk_b58_10(self): return self.ref_passwdfile_chk(key='b58_10',pat='Base58.*len.* 10\n')
+	def ref_passwdfile_chk_b32_24(self): return self.ref_passwdfile_chk(key='b32_24',pat='Base32.*len.* 24\n')
+	def ref_passwdfile_chk_b32_12(self): return self.ref_passwdfile_chk(key='b32_12',pat='Base32.*len.* 12\n')
+	def ref_passwdfile_chk_hex_64(self): return self.ref_passwdfile_chk(key='hex_64',pat='Hexadec.*len.* 64\n')
 
 	def ref_tx_chk(self):
 		fn = self.sources['ref_tx_file'][g.coin.lower()][bool(self.tn_ext)]

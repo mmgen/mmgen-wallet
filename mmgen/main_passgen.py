@@ -27,11 +27,8 @@ from mmgen.addr import PasswordList,AddrIdxList
 from mmgen.seed import SeedSource
 from mmgen.obj import MMGenPWIDString
 
-dfl_len = {
-	'b58': PasswordList.pw_info['b58']['dfl_len'],
-	'b32': PasswordList.pw_info['b32']['dfl_len'],
-	'hex': PasswordList.pw_info['hex']['dfl_len']
-}
+pwi = PasswordList.pw_info
+pwi_fs = '{:5} {:1} {:26} {:<7}  {:<7}  {}'
 
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
@@ -44,18 +41,17 @@ opts_data = {
 		'options': """
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
--b, --base32          Generate passwords in Base32 format instead of Base58
--x, --hex             Generate passwords in raw hex format instead of Base58
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
+-f, --passwd-fmt=  f  Generate passwords of format 'f'.  Default: {dpf}.
+                      See PASSWORD FORMATS below
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -O, --old-incog-fmt   Specify old-format incognito input
--L, --passwd-len=  l  Specify length of generated passwords
-                      (default: {d58} chars [base58], {d32} chars [base32],
-                      {dhex} chars [hex]).  An argument of 'h' will generate
-                      passwords of half the default length.
+-L, --passwd-len=  l  Specify length of generated passwords.  For defaults,
+                      see PASSWORD FORMATS below.  An argument of 'h' will
+                      generate passwords of half the default length.
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.seed_len}-bit) seed lengths
@@ -82,15 +78,19 @@ range(s).
 Changing either the password format (base32,base58) or length alters the seed
 and thus generates a completely new set of passwords.
 
-EXAMPLE:
+PASSWORD FORMATS:
 
-  Generate ten base58 passwords of length {d58} for Alice's email account:
+  {pfi}
+
+EXAMPLES:
+
+  Generate ten base58 passwords of length {i58.dfl_len} for Alice's email account:
   {g.prog_name} alice@nowhere.com 1-10
 
   Generate ten base58 passwords of length 16 for Alice's email account:
   {g.prog_name} -L16 alice@nowhere.com 1-10
 
-  Generate ten base32 passwords of length {d32} for Alice's email account:
+  Generate ten base32 passwords of length {i32.dfl_len} for Alice's email account:
   {g.prog_name} -b alice@nowhere.com 1-10
 
   The three sets of passwords are completely unrelated to each other, so
@@ -111,15 +111,19 @@ FMT CODES:
 	'code': {
 		'options': lambda s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
-			g=g,pnm=g.proj_name,d58=dfl_len['b58'],d32=dfl_len['b32'],dhex=dfl_len['hex'],
+			g=g,pnm=g.proj_name,
+			dpf=PasswordList.dfl_pw_fmt,
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 		),
 		'notes': lambda s: s.format(
-				o=opts,g=g,d58=dfl_len['b58'],d32=dfl_len['b32'],
+				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],
 				ml=MMGenPWIDString.max_len,
 				fs="', '".join(MMGenPWIDString.forbidden),
 				n_pw=help_notes('passwd'),
 				n_bw=help_notes('brainwallet'),
+				pfi='\n  '.join(
+					[pwi_fs.format('Code','','Description','Min Len','Max Len','Default Len')] +
+					[pwi_fs.format(k,'-',v.desc,v.min_len,v.max_len,v.dfl_len) for k,v in pwi.items()]),
 				n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines())
 		)
 	}
@@ -135,9 +139,8 @@ pw_id_str = cmd_args.pop()
 
 sf = get_seed_file(cmd_args,1)
 
-pw_fmt = ('b58','b32','hex')[bool(opt.base32)+2*bool(opt.hex)]
-
-pw_len = (opt.passwd_len,dfl_len[pw_fmt]//2)[opt.passwd_len in ('h','H')]
+pw_fmt = opt.passwd_fmt or PasswordList.dfl_pw_fmt
+pw_len = pwi[pw_fmt].dfl_len // 2 if opt.passwd_len in ('h','H') else opt.passwd_len
 
 PasswordList(pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt,chk_params_only=True)
 do_license_msg()

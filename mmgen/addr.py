@@ -350,10 +350,10 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {n} characters or less may be added to the right of each
+# A text label of {n} screen cells or less may be added to the right of each
 # address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
-""".strip().format(n=TwComment.max_len,pnm=pnm),
+""".strip().format(n=TwComment.max_screen_width,pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the address file in the future
 """.strip(),
@@ -624,33 +624,33 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
 
+	def get_line(self,lines):
+		ret = lines.pop(0).split(None,2)
+		if ret[0] == 'orig_hex:': # hacky
+			ret = lines.pop(0).split(None,2)
+		return ret if len(ret) == 3 else ret + ['']
+
 	def parse_file_body(self,lines):
 
 		ret = AddrListList()
 		le = self.entry_type
 
-		def get_line():
-			ret = lines.pop(0).split(None,2)
-			if ret[0] == 'orig_hex:': # hacky
-				return lines.pop(0).split(None,2)
-			return ret
-
 		while lines:
-			d = get_line()
+			idx,addr,lbl = self.get_line(lines)
 
-			assert is_mmgen_idx(d[0]),"'{}': invalid address num. in line: '{}'".format(d[0],' '.join(d))
-			assert self.check_format(d[1]),"'{}': invalid {}".format(d[1],self.data_desc)
+			assert is_mmgen_idx(idx), (
+				"'{}': invalid address num. in line: '{}'".format(idx,' '.join([idx,addr,lbl])))
+			assert self.check_format(addr),"'{}': invalid {}".format(addr,self.data_desc)
 
-			if len(d) != 3: d.append('')
-			a = le(**{'idx':int(d[0]),self.main_attr:d[1],'label':d[2]})
+			a = le(**{ 'idx':int(idx), self.main_attr:addr, 'label':lbl })
 
 			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
-				d = get_line()
+				d = self.get_line(lines)
 				assert d[0] == self.al_id.mmtype.wif_label,"Invalid line in file: '{}'".format(' '.join(d))
 				a.sec = PrivKey(wif=d[1])
 				for k,dtype in (('viewkey',ViewKey),('wallet_passwd',WalletPassword)):
 					if k in self.al_id.mmtype.extra_attrs:
-						d = get_line()
+						d = self.get_line(lines)
 						assert d[0] == k+':',"Invalid line in file: '{}'".format(' '.join(d))
 						setattr(a,k,dtype(d[1]))
 
@@ -696,7 +696,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			from mmgen.protocol import CoinProtocol
 			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
-			return base_coin,mmtype
+			return base_coin,mmtype,tn
 
 		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
 			m = '{} address file format, but base coin is {}!'
@@ -719,16 +719,20 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				self.set_pw_fmt(ss[0])
 				self.set_pw_len(ss[1])
 				self.pw_id_str = MMGenPWIDString(ls.pop())
-				mmtype = MMGenPasswordType('P')
+				base_coin,mmtype = None,MMGenPasswordType('P')
+				testnet = False
 			elif len(ls) == 1:
-				base_coin,mmtype = parse_addrfile_label(ls[0])
+				base_coin,mmtype,testnet = parse_addrfile_label(ls[0])
 				check_coin_mismatch(base_coin)
 			elif len(ls) == 0:
 				base_coin,mmtype = 'BTC',MMGenAddrType('L')
+				testnet = False
 				check_coin_mismatch(base_coin)
 			else:
 				raise ValueError("'{}': Invalid first line for {} file '{}'".format(lines[0],self.gen_desc,fn))
 
+			self.base_coin = base_coin
+			self.is_testnet = testnet
 			self.al_id = AddrListID(SeedID(sid=sid),mmtype)
 
 			data = self.parse_file_body(lines[1:-1])
@@ -771,6 +775,7 @@ class KeyList(AddrList):
 	ext      = 'keys'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
 
+from collections import namedtuple
 class PasswordList(AddrList):
 	msgs = {
 	'file_header': """
@@ -778,10 +783,10 @@ class PasswordList(AddrList):
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {n} characters or less may be added to the right of each
+# A text label of {n} screen cells or less may be added to the right of each
 # password.  The label may contain any printable ASCII symbol.
 #
-""".strip().format(n=TwComment.max_len,pnm=pnm),
+""".strip().format(n=TwComment.max_screen_width,pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the password file in the future
 """.strip()
@@ -798,12 +803,13 @@ Record this checksum: it will be used to verify the password file in the future
 	has_keys    = False
 	ext         = 'pws'
 	pw_len      = None
-	pw_fmt      = None
+	dfl_pw_fmt  = 'b58'
+	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','desc','chk_func'])
 	pw_info     = {
-		'b58': { 'min_len': 8 , 'max_len': 36 ,'dfl_len': 20, 'desc': 'base-58 password' },
-		'b32': { 'min_len': 10 ,'max_len': 42 ,'dfl_len': 24, 'desc': 'base-32 password' },
-		'hex': { 'min_len': 64 ,'max_len': 64 ,'dfl_len': 64, 'desc': 'raw hex password' }
-		}
+		'b32':   pwinfo(10, 42 ,24, 'base32 password',       is_b32_str),
+		'b58':   pwinfo(8,  36 ,20, 'base58 password',       is_b58_str),
+		'hex':   pwinfo(64, 64 ,64, 'hexadecimal password',  is_hex_str),
+	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
 	def __init__(   self,infile=None,seed=None,
@@ -815,8 +821,9 @@ Record this checksum: it will be used to verify the password file in the future
 		if infile:
 			self.data = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
-			for k in seed,pw_idxs: assert chk_params_only or k
-			for k in (pw_id_str,pw_fmt): assert k
+			if not chk_params_only:
+				for k in (seed,pw_idxs):
+					assert k
 			self.pw_id_str = MMGenPWIDString(pw_id_str)
 			self.set_pw_fmt(pw_fmt)
 			self.set_pw_len(pw_len)
@@ -835,7 +842,9 @@ Record this checksum: it will be used to verify the password file in the future
 		qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
 	def set_pw_fmt(self,pw_fmt):
-		assert pw_fmt in self.pw_info
+		if pw_fmt not in self.pw_info:
+			m = '{!r}: invalid password format.  Valid formats: {}'
+			raise InvalidPasswdFormat(m.format(pw_fmt,', '.join(sorted(self.pw_info))))
 		self.pw_fmt = pw_fmt
 
 	def chk_pw_len(self,passwd=None):
@@ -847,21 +856,21 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len = len(passwd)
 			fs = '{pw}: {b} has invalid length {l} ({c}{m} characters)'
 		d = self.pw_info[self.pw_fmt]
-		if pw_len > d['max_len']:
-			die(2,fs.format(l=pw_len,b=d['desc'],c='>',m=d['max_len'],pw=passwd))
-		elif pw_len < d['min_len']:
-			die(2,fs.format(l=pw_len,b=d['desc'],c='<',m=d['min_len'],pw=passwd))
+		if pw_len > d.max_len:
+			die(2,fs.format(l=pw_len,b=d.desc,c='>',m=d.max_len,pw=passwd))
+		elif pw_len < d.min_len:
+			die(2,fs.format(l=pw_len,b=d.desc,c='<',m=d.min_len,pw=passwd))
 
 	def set_pw_len(self,pw_len):
 		assert self.pw_fmt in self.pw_info
 		d = self.pw_info[self.pw_fmt]
 
 		if pw_len is None:
-			self.pw_len = d['dfl_len']
+			self.pw_len = d.dfl_len
 			return
 
 		if not is_int(pw_len):
-			die(2,"'{}': invalid user-requested password length (not an integer)".format(pw_len,d['desc']))
+			die(2,"'{}': invalid user-requested password length (not an integer)".format(pw_len,d.desc))
 		self.pw_len = int(pw_len)
 		self.chk_pw_len()
 
@@ -874,8 +883,8 @@ Record this checksum: it will be used to verify the password file in the future
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
 
 	def check_format(self,pw):
-		if not {'b58':is_b58_str,'b32':is_b32_str,'hex':is_hex_str}[self.pw_fmt](pw):
-			msg('Password is not a valid {} string'.format(self.pw_fmt))
+		if not self.pw_info[self.pw_fmt].chk_func(pw):
+			msg('Password is not valid {} data'.format(self.pw_fmt))
 			return False
 		if len(pw) != self.pw_len:
 			msg('Password has incorrect length ({} != {})'.format(len(pw),self.pw_len))

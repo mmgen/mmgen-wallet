@@ -30,6 +30,7 @@ class UserAddressNotInWallet(Exception):  mmcode = 1
 class MnemonicError(Exception):           mmcode = 1
 class RangeError(Exception):              mmcode = 1
 class FileNotFound(Exception):            mmcode = 1
+class InvalidPasswdFormat(Exception):     mmcode = 1
 
 # 2: yellow hl, message only
 class InvalidTokenAddress(Exception):     mmcode = 2

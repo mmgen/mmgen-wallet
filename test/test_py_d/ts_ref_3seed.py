@@ -73,6 +73,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			'ltc': ('A6AD DF53 5968 7B6A','9572 43E0 A4DC 0B2E'),
 		},
 		'refpasswdgen_1':     'EB29 DC4F 924B 289F',
+		'refpasswdgen_half_1':'D310 2593 B5D9 2E88',
 		'ref_b32passwdgen_1': '37B6 C218 2ABC 7508',
 		'ref_hexpasswdgen_1': '523A F547 0E69 8323',
 		'refaddrgen_legacy_2': {
@@ -108,6 +109,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			'ltc': ('5C12 FDD4 17AB F179','E195 B28C 59C4 C5EC'),
 		},
 		'refpasswdgen_2':     'ADEA 0083 094D 489A',
+		'refpasswdgen_half_2':'12B3 4929 9506 76E0',
 		'ref_b32passwdgen_2': '2A28 C5C7 36EC 217A',
 		'ref_hexpasswdgen_2': 'B11C AC6A 1464 608D',
 		'refaddrgen_legacy_3': {
@@ -143,6 +145,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			'ltc': ('74A0 7DD5 963B 6326','2CDA A007 4B9F E9A5'),
 		},
 		'refpasswdgen_3':     '2D6D 8FBA 422E 1315',
+		'refpasswdgen_half_3':'272C B770 0176 D7EA',
 		'ref_b32passwdgen_3': 'F6C1 CDFB 97D9 FCAE',
 		'ref_hexpasswdgen_3': 'BD4F A0AC 8628 4BE4',
 	}
@@ -171,9 +174,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('refkeyaddrgen_compressed', (['mmdat',pwfile],'new refwallet key-addr chksum (compressed)')),
 		('refkeyaddrgen_segwit', (['mmdat',pwfile],'new refwallet key-addr chksum (segwit)')),
 		('refkeyaddrgen_bech32', (['mmdat',pwfile],'new refwallet key-addr chksum (bech32)')),
-		('refpasswdgen',   (['mmdat',pwfile],'new refwallet passwd file chksum')),
-		('ref_b32passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
-		('ref_hexpasswdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
+		('refpasswdgen',         (['mmdat',pwfile],'new refwallet passwd file chksum')),
+		('refpasswdgen_half',    (['mmdat',pwfile],'new refwallet passwd file chksum (half-length)')),
+		('ref_b32passwdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
+		('ref_hexpasswdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -315,11 +319,14 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def refpasswdgen(self,wf,pf):
 		return self.addrgen(wf,pf,check_ref=True,ftype='pass',id_str='alice@crypto.org')
 
+	def refpasswdgen_half(self,wf,pf):
+		ea = ['--passwd-len=h']
+		return self.addrgen(wf,pf,check_ref=True,ftype='pass',id_str='alice@crypto.org',extra_args=ea)
+
 	def ref_b32passwdgen(self,wf,pf):
-		ea = ['--base32','--passwd-len','17']
+		ea = ['--passwd-fmt=b32','--passwd-len=17']
 		return self.addrgen(wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
 
 	def ref_hexpasswdgen(self,wf,pf):
-		ea = ['--hex']
+		ea = ['--passwd-fmt=hex']
 		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
-
