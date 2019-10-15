@@ -804,11 +804,11 @@ Record this checksum: it will be used to verify the password file in the future
 	ext         = 'pws'
 	pw_len      = None
 	dfl_pw_fmt  = 'b58'
-	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','desc','chk_func'])
+	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
 	pw_info     = {
-		'b32':   pwinfo(10, 42 ,24, 'base32 password',       is_b32_str),
-		'b58':   pwinfo(8,  36 ,20, 'base58 password',       is_b58_str),
-		'hex':   pwinfo(64, 64 ,64, 'hexadecimal password',  is_hex_str),
+		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),
+		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),
+		'hex':   pwinfo(32, 64 ,64, [32,48,64], 'hexadecimal password',  is_hex_str),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
@@ -849,20 +849,22 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def chk_pw_len(self,passwd=None):
 		if passwd is None:
-			assert self.pw_len
+			assert self.pw_len,'either passwd or pw_len must be set'
 			pw_len = self.pw_len
 			fs = '{l}: invalid user-requested length for {b} ({c}{m})'
 		else:
 			pw_len = len(passwd)
 			fs = '{pw}: {b} has invalid length {l} ({c}{m} characters)'
 		d = self.pw_info[self.pw_fmt]
-		if pw_len > d.max_len:
+		if d.valid_lens:
+			if pw_len not in d.valid_lens:
+				die(2,fs.format(l=pw_len,b=d.desc,c='not one of ',m=d.valid_lens,pw=passwd))
+		elif pw_len > d.max_len:
 			die(2,fs.format(l=pw_len,b=d.desc,c='>',m=d.max_len,pw=passwd))
 		elif pw_len < d.min_len:
 			die(2,fs.format(l=pw_len,b=d.desc,c='<',m=d.min_len,pw=passwd))
 
 	def set_pw_len(self,pw_len):
-		assert self.pw_fmt in self.pw_info
 		d = self.pw_info[self.pw_fmt]
 
 		if pw_len is None:
@@ -877,9 +879,10 @@ Record this checksum: it will be used to verify the password file in the future
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
 		if self.pw_fmt == 'hex':
-			return hex_sec
+			# take most significant part
+			return hex_sec[:self.pw_len]
 		else:
-			# we take least significant part
+			# take least significant part
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
 
 	def check_format(self,pw):

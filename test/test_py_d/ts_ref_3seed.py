@@ -76,6 +76,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'refpasswdgen_half_1':'D310 2593 B5D9 2E88',
 		'ref_b32passwdgen_1': '37B6 C218 2ABC 7508',
 		'ref_hexpasswdgen_1': '523A F547 0E69 8323',
+		'ref_hexpasswdgen_half_1': '8E99 E696 84CE E7D5',
 		'refaddrgen_legacy_2': {
 			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
 			'ltc': ('2B77 A009 D5D0 22AD','51D1 979D 0A35 F24B'),
@@ -112,6 +113,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'refpasswdgen_half_2':'12B3 4929 9506 76E0',
 		'ref_b32passwdgen_2': '2A28 C5C7 36EC 217A',
 		'ref_hexpasswdgen_2': 'B11C AC6A 1464 608D',
+		'ref_hexpasswdgen_half_2': '59F3 8F48 861E 1186',
 		'refaddrgen_legacy_3': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
 			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
@@ -148,6 +150,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'refpasswdgen_half_3':'272C B770 0176 D7EA',
 		'ref_b32passwdgen_3': 'F6C1 CDFB 97D9 FCAE',
 		'ref_hexpasswdgen_3': 'BD4F A0AC 8628 4BE4',
+		'ref_hexpasswdgen_half_3': 'FBDD F733 FFB9 21C1',
 	}
 	cmd_group = (
 		# reading
@@ -177,7 +180,8 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('refpasswdgen',         (['mmdat',pwfile],'new refwallet passwd file chksum')),
 		('refpasswdgen_half',    (['mmdat',pwfile],'new refwallet passwd file chksum (half-length)')),
 		('ref_b32passwdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
-		('ref_hexpasswdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
+		('ref_hexpasswdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (hex)')),
+		('ref_hexpasswdgen_half',(['mmdat',pwfile],'new refwallet passwd file chksum (hex, half-length)')),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -329,4 +333,8 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_hexpasswdgen(self,wf,pf):
 		ea = ['--passwd-fmt=hex']
+		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
+
+	def ref_hexpasswdgen_half(self,wf,pf):
+		ea = ['--passwd-fmt=hex','--passwd-len=h']
 		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)

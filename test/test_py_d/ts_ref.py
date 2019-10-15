@@ -45,6 +45,8 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_b32_12': '98831F3A-фубар@crypto.org-b32-12[1,4,1100].pws',
 		'ref_passwdfile_b58_10': '98831F3A-фубар@crypto.org-b58-10[1,4,1100].pws',
 		'ref_passwdfile_b58_20': '98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws',
+		'ref_passwdfile_hex_32': '98831F3A-фубар@crypto.org-hex-32[1,4,1100].pws',
+		'ref_passwdfile_hex_48': '98831F3A-фубар@crypto.org-hex-48[1,4,1100].pws',
 		'ref_passwdfile_hex_64': '98831F3A-фубар@crypto.org-hex-64[1,4,1100].pws',
 		'ref_tx_file': { # data shared with ref_altcoin, autosign
 			'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
@@ -85,6 +87,8 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_b32_24_chksum': '8D56 3845 A072 A5B9',
 		'ref_passwdfile_b58_10_chksum': '534F CC1A 6701 9FED',
 		'ref_passwdfile_b58_20_chksum': 'DDD9 44B0 CA28 183F',
+		'ref_passwdfile_hex_32_chksum': '05C7 3678 E25E BC32',
+		'ref_passwdfile_hex_48_chksum': '7DBB FFD0 633E DE6F',
 		'ref_passwdfile_hex_64_chksum': 'F11D CB0A 8AE3 4D21',
 	}
 	cmd_group = ( # TODO: move to tooltest2
@@ -103,6 +107,8 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		('ref_passwdfile_chk_b58_10','saved reference password file (base58, 10 chars)'),
 		('ref_passwdfile_chk_b32_24','saved reference password file (base32, 24 chars)'),
 		('ref_passwdfile_chk_b32_12','saved reference password file (base32, 12 chars)'),
+		('ref_passwdfile_chk_hex_32','saved reference password file (hexadecimal, 32 chars)'),
+		('ref_passwdfile_chk_hex_48','saved reference password file (hexadecimal, 48 chars)'),
 		('ref_passwdfile_chk_hex_64','saved reference password file (hexadecimal, 64 chars)'),
 
 #	Create the fake inputs:
@@ -224,6 +230,8 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_passwdfile_chk_b58_10(self): return self.ref_passwdfile_chk(key='b58_10',pat='Base58.*len.* 10\n')
 	def ref_passwdfile_chk_b32_24(self): return self.ref_passwdfile_chk(key='b32_24',pat='Base32.*len.* 24\n')
 	def ref_passwdfile_chk_b32_12(self): return self.ref_passwdfile_chk(key='b32_12',pat='Base32.*len.* 12\n')
+	def ref_passwdfile_chk_hex_32(self): return self.ref_passwdfile_chk(key='hex_32',pat='Hexadec.*len.* 32\n')
+	def ref_passwdfile_chk_hex_48(self): return self.ref_passwdfile_chk(key='hex_48',pat='Hexadec.*len.* 48\n')
 	def ref_passwdfile_chk_hex_64(self): return self.ref_passwdfile_chk(key='hex_64',pat='Hexadec.*len.* 64\n')
 
 	def ref_tx_chk(self):
