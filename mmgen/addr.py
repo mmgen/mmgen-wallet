@@ -610,7 +610,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		for e in self.data:
 			c = ' '+e.label if enable_comments and e.label else ''
 			if type(self) == KeyList:
-				out.append(fs.format(e.idx,'{} {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
+				out.append(fs.format(e.idx,'{}: {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
 			elif type(self) == PasswordList:
 				out.append(fs.format(e.idx,e.passwd,c))
 			else: # First line with idx
@@ -618,7 +618,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				if self.has_keys:
 					if opt.b16:
 						out.append(fs.format('', 'orig_hex: '+e.sec.orig_hex,c))
-					out.append(fs.format('','{} {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
+					out.append(fs.format('','{}: {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
 						if v: out.append(fs.format('','{}: {}'.format(k,v),c))
@@ -638,6 +638,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		ret = AddrListList()
 		le = self.entry_type
+		iifs = "{!r}: invalid identifier [expected '{}:']"
 
 		while lines:
 			idx,addr,lbl = self.get_line(lines)
@@ -649,12 +650,12 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
 				d = self.get_line(lines)
-				assert d[0] == self.al_id.mmtype.wif_label,"Invalid line in file: '{}'".format(' '.join(d))
+				assert d[0] == self.al_id.mmtype.wif_label+':',iifs.format(d[0],self.al_id.mmtype.wif_label)
 				a.sec = PrivKey(wif=d[1])
 				for k,dtype in (('viewkey',ViewKey),('wallet_passwd',WalletPassword)):
 					if k in self.al_id.mmtype.extra_attrs:
 						d = self.get_line(lines)
-						assert d[0] == k+':',"Invalid line in file: '{}'".format(' '.join(d))
+						assert d[0] == k+':',iifs.format(d[0],k)
 						setattr(a,k,dtype(d[1]))
 
 			ret.append(a)
@@ -741,7 +742,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			data = self.parse_file_body(lines[1:-1])
 			assert isinstance(data,list),'Invalid file body data'
 		except Exception as e:
-			lcs = ', list item {}'.format(self.line_ctr) if self.line_ctr else ''
+			lcs = ', content line {}'.format(self.line_ctr) if self.line_ctr else ''
 			m = 'Invalid data in {} list file {!r}{} ({})'.format(self.data_desc,self.infile,lcs,e.args[0])
 			if exit_on_error: die(3,m)
 			msg(msg)
@@ -810,8 +811,8 @@ Record this checksum: it will be used to verify the password file in the future
 	dfl_pw_fmt  = 'b58'
 	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
 	pw_info     = {
-		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),
-		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),
+		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),   # 32**24 < 2**128
+		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),   # 58**20 < 2**128
 		'hex':   pwinfo(32, 64 ,64, [32,48,64], 'hexadecimal password',  is_hex_str),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)

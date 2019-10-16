@@ -88,13 +88,14 @@ EXAMPLES:
   {g.prog_name} alice@nowhere.com 1-10
 
   Generate ten base58 passwords of length 16 for Alice's email account:
-  {g.prog_name} -L16 alice@nowhere.com 1-10
+  {g.prog_name} --passwd-len=16 alice@nowhere.com 1-10
 
   Generate ten base32 passwords of length {i32.dfl_len} for Alice's email account:
-  {g.prog_name} -b alice@nowhere.com 1-10
+  {g.prog_name} --passwd-fmt=b32 alice@nowhere.com 1-10
 
-  The three sets of passwords are completely unrelated to each other, so
-  Alice doesn't need to worry about password reuse.
+  All passwords are cryptographically unlinkable with each other, including
+  passwords with the same format but different length, so Alice needn't worry
+  about inadvertent reuse of private data.
 
 
                       NOTES FOR ALL GENERATOR COMMANDS

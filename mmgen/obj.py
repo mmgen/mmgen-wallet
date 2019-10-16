@@ -878,7 +878,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'compressed':False,
 				'gen_method':'ethereum',
 				'addr_fmt':'ethereum',
-				'wif_label':'privkey:',
+				'wif_label':'privkey',
 				'extra_attrs': ('wallet_passwd',),
 				'desc':'Ethereum address' },
 		'Z': {  'name':'zcash_z',
@@ -893,7 +893,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 				'compressed':False,
 				'gen_method':'monero',
 				'addr_fmt':'monero',
-				'wif_label':'spendkey:',
+				'wif_label':'spendkey',
 				'extra_attrs': ('viewkey','wallet_passwd'),
 				'desc':'Monero address'}
 	}
@@ -911,7 +911,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 					assert me in g.proto.mmtypes + ('P',), (
 						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
 					me.extra_attrs = v['extra_attrs'] if 'extra_attrs' in v else ()
-					me.wif_label   = v['wif_label'] if 'wif_label' in v else 'wif:'
+					me.wif_label   = v['wif_label'] if 'wif_label' in v else 'wif'
 					return me
 			raise ValueError('not found')
 		except Exception as e:

@@ -164,38 +164,50 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 
 
 	def ref_addrfile_chk_eth(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH')
+		return self.ref_addrfile_chk(ftype='addr',coin='ETH',subdir='ethereum',pfx='-ETH',
+				pat='ETH Mainnet.*Ethereum')
 
 	def ref_addrfile_chk_etc(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+		return self.ref_addrfile_chk(ftype='addr',coin='ETC',subdir='ethereum_classic',pfx='-ETC',
+				pat='ETH Mainnet.*Ethereum')
 
 	def ref_addrfile_chk_dash(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C')
+		return self.ref_addrfile_chk(ftype='addr',coin='DASH',subdir='dash',pfx='-DASH-C',
+				pat='DASH Mainnet.*Compressed')
 
 	def ref_addrfile_chk_zec(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
+		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-C',
+				pat='ZEC Mainnet.*Compressed')
 
 	def ref_addrfile_chk_zec_z(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
+		return self.ref_addrfile_chk(ftype='addr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z',
+				pat='ZEC Mainnet.*Zcash_z')
 
 	def ref_addrfile_chk_xmr(self):
-		return self.ref_addrfile_chk(ftype='addr',coin='XMR',subdir='monero',pfx='-XMR-M')
+		return self.ref_addrfile_chk(ftype='addr',coin='XMR',subdir='monero',pfx='-XMR-M',
+				pat='XMR Mainnet.*Monero')
 
 
 	def ref_keyaddrfile_chk_eth(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='ETH',subdir='ethereum',pfx='-ETH')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='ETH',subdir='ethereum',pfx='-ETH',
+				pat='ETH Mainnet.*Ethereum')
 
 	def ref_keyaddrfile_chk_etc(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='ETC',subdir='ethereum_classic',pfx='-ETC')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='ETC',subdir='ethereum_classic',pfx='-ETC',
+				pat='ETH Mainnet.*Ethereum')
 
 	def ref_keyaddrfile_chk_dash(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='DASH',subdir='dash',pfx='-DASH-C',
+				pat='DASH Mainnet.*Compressed')
 
 	def ref_keyaddrfile_chk_zec(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-C',
+				pat='ZEC Mainnet.*Compressed')
 
 	def ref_keyaddrfile_chk_zec_z(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='ZEC',subdir='zcash',pfx='-ZEC-Z',mmtype='z',
+				pat='ZEC Mainnet.*Zcash_z')
 
 	def ref_keyaddrfile_chk_xmr(self):
-		return self.ref_addrfile_chk(ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M')
+		return self.ref_addrfile_chk(ftype='keyaddr',coin='XMR',subdir='monero',pfx='-XMR-M',
+				pat='XMR Mainnet.*Monero')
