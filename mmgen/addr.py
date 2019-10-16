@@ -897,8 +897,8 @@ Record this checksum: it will be used to verify the password file in the future
 
 		if pw_bytes > seed.byte_len:
 			m1 = 'Cannot generate passwords with more entropy than underlying seed! ({} bits)'
-			m2 = 'Re-run the command with --passwd-len={}' if pf == 'hex' else \
-				 'Re-run the command, specifying a password length of {} or less'
+			m2  = ( 'Re-run the command with --passwd-len={}' if pf in ('bip39','hex') else
+					'Re-run the command, specifying a password length of {} or less' )
 			die(1,(m1+'\n'+m2).format(len(seed.data) * 8,good_pw_len))
 
 		if pf == 'hex' and pw_bytes < seed.byte_len:

@@ -56,6 +56,7 @@ os.environ['MMGEN_DEBUG_ADDRLIST'] = '1'
 if not opt.system:
 	os.environ['PYTHONPATH'] = repo_root
 
+# TODO: add vectors for 'mmgen-passgen'
 from collections import OrderedDict
 test_data = OrderedDict([
 #                  SCRAMBLED_SEED[:8] SCRAMBLE_KEY      ID_STR LBL          FIRST ADDR

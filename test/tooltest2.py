@@ -605,8 +605,8 @@ tests = {
 		},
 		'passwdfile_chksum': {
 			'btc_mainnet': [
-				( ['test/ref/98831F3A-фубар@crypto.org-b58-20[1,4,9-11,1100].pws'],
-					'A983 DAB9 5514 27FB', kafile_opts, kafile_code ), ],
+				( ['test/ref/98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws'],
+					'DDD9 44B0 CA28 183F', kafile_opts, kafile_code ), ],
 		},
 		'txview': {
 			'btc_mainnet': [ ( ['test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'], None ), ],
