@@ -188,13 +188,15 @@ class TestSuiteShared(object):
 		if sid: cmp_or_die(chk,sid)
 		return t
 
-	def addrgen(self,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None):
-		if not mmtype and ftype[:4] != 'pass':
+	def addrgen(self,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None,stdout=False):
+		passgen = ftype[:4] == 'pass'
+		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
-		cmd_pfx = (ftype,'pass')[ftype[:4]=='pass']
+		cmd_pfx = (ftype,'pass')[passgen]
 		t = self.spawn('mmgen-{}gen'.format(cmd_pfx),
 				['-d',self.tmpdir] + extra_args +
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
+				([],['--stdout'])[stdout] +
 				([],[wf])[bool(wf)] +
 				([],[id_str])[bool(id_str)] +
 				[getattr(self,'{}_idx_list'.format(cmd_pfx))],
@@ -202,15 +204,13 @@ class TestSuiteShared(object):
 		t.license()
 		t.passphrase('MMGen wallet',self.wpasswd)
 		t.expect('Passphrase is OK')
-		desc = ('address','password')[ftype[:4]=='pass']
+		desc = ('address','password')[passgen]
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
-		if ftype[:4] == 'pass':
-			t.expect('Encrypt password list? (y/N): ','\n')
-			t.written_to_file('Password list',oo=True)
-		else:
-			t.written_to_file('Addresses',oo=True)
+		if passgen:
+			t.expect('Encrypt password list? (y/N): ','N')
+		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
 		if check_ref:
-			chk_ref = (self.chk_data[self.test_name] if ftype[:4] == 'pass' else
+			chk_ref = (self.chk_data[self.test_name] if passgen else
 						self.chk_data[self.test_name][self.fork][g.testnet])
 			cmp_or_die(chk,chk_ref,desc='{}list data checksum'.format(ftype))
 		return t

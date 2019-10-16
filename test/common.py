@@ -25,6 +25,7 @@ class TestSuiteFatalException(Exception): pass
 
 import os
 from mmgen.common import *
+from mmgen.devtools import *
 
 ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
 ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars
