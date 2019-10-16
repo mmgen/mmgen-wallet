@@ -835,6 +835,7 @@ Record this checksum: it will be used to verify the password file in the future
 			self.set_pw_len(pw_len)
 			if chk_params_only:
 				return
+			self.set_pw_len_vs_seed_len(pw_len,seed)
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
 			self.data = self.generate(seed,pw_idxs)
 
@@ -882,6 +883,30 @@ Record this checksum: it will be used to verify the password file in the future
 		self.pw_len = int(pw_len)
 		self.chk_pw_len()
 
+	def set_pw_len_vs_seed_len(self,pw_len,seed):
+		pf = self.pw_fmt
+		if pf == 'hex':
+			pw_bytes = self.pw_len // 2
+			good_pw_len = seed.byte_len * 2
+		elif pf in ('b32','b58'):
+			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
+			pw_bytes = pw_int.bit_length() // 8
+			good_pw_len = len(baseconv.fromhex('ff'*seed.byte_len,wl_id=pf))
+		else:
+			raise NotImplementedError('{!r}: unknown password format'.format(pf))
+
+		if pw_bytes > seed.byte_len:
+			m1 = 'Cannot generate passwords with more entropy than underlying seed! ({} bits)'
+			m2 = 'Re-run the command with --passwd-len={}' if pf == 'hex' else \
+				 'Re-run the command, specifying a password length of {} or less'
+			die(1,(m1+'\n'+m2).format(len(seed.data) * 8,good_pw_len))
+
+		if pf == 'hex' and pw_bytes < seed.byte_len:
+			m1 = 'WARNING: requested {} length has less entropy than underlying seed!'
+			m2 = 'Is this what you want?'
+			if not keypress_confirm((m1+'\n'+m2).format(self.pw_info[pf].desc),default_yes=True):
+				die(1,'Exiting at user request')
+
 	def make_passwd(self,hex_sec):
 		assert self.pw_fmt in self.pw_info
 		if self.pw_fmt == 'hex':
@@ -894,7 +919,7 @@ Record this checksum: it will be used to verify the password file in the future
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):
 			raise ValueError('Password is not valid {} data'.format(self.pw_info[self.pw_fmt].desc))
-		pwlen = len(pw.split()) if self.pw_fmt == 'bip39' else len(pw)
+		pwlen = len(pw)
 		if pwlen != self.pw_len:
 			raise ValueError('Password has incorrect length ({} != {})'.format(pwlen,self.pw_len))
 		return True

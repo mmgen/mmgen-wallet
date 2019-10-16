@@ -75,7 +75,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'refpasswdgen_1':     'EB29 DC4F 924B 289F',
 		'refpasswdgen_half_1':'D310 2593 B5D9 2E88',
 		'ref_b32passwdgen_1': '37B6 C218 2ABC 7508',
-		'ref_hexpasswdgen_1': '523A F547 0E69 8323',
+		'ref_hexpasswdgen_1': '8E99 E696 84CE E7D5',
 		'ref_hexpasswdgen_half_1': '8E99 E696 84CE E7D5',
 		'refaddrgen_legacy_2': {
 			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
@@ -112,7 +112,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'refpasswdgen_2':     'ADEA 0083 094D 489A',
 		'refpasswdgen_half_2':'12B3 4929 9506 76E0',
 		'ref_b32passwdgen_2': '2A28 C5C7 36EC 217A',
-		'ref_hexpasswdgen_2': 'B11C AC6A 1464 608D',
+		'ref_hexpasswdgen_2': '88F9 0D48 3A7E 7CC2',
 		'ref_hexpasswdgen_half_2': '59F3 8F48 861E 1186',
 		'refaddrgen_legacy_3': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
@@ -332,9 +332,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.addrgen(wf,pf,check_ref=True,ftype='pass32',id_str='фубар@crypto.org',extra_args=ea)
 
 	def ref_hexpasswdgen(self,wf,pf):
-		ea = ['--passwd-fmt=hex']
+		pw_len = {'1':32,'2':48,'3':64}[self.test_name[-1]]
+		ea = ['--passwd-fmt=hex','--passwd-len={}'.format(pw_len)]
 		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
 
 	def ref_hexpasswdgen_half(self,wf,pf):
-		ea = ['--passwd-fmt=hex','--passwd-len=h']
-		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea)
+		ea = ['--passwd-fmt=hex','--passwd-len=h','--accept-defaults']
+		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea,stdout=1)
