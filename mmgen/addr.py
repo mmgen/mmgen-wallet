@@ -594,7 +594,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			out.append('# Record this value to a secure location.\n')
 
 		if type(self) == PasswordList:
-			lbl = '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+			lbl = '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
 		else:
 			bc,mt = g.proto.base_coin,self.al_id.mmtype
 			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
@@ -780,6 +780,10 @@ class KeyList(AddrList):
 	ext      = 'keys'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
 
+def is_bip39_str(s):
+	from mmgen.bip39 import bip39
+	return bool(bip39.tohex(s.split(),wl_id='bip39'))
+
 from collections import namedtuple
 class PasswordList(AddrList):
 	msgs = {
@@ -792,6 +796,13 @@ class PasswordList(AddrList):
 # password.  The label may contain any printable ASCII symbol.
 #
 """.strip().format(n=TwComment.max_screen_width,pnm=pnm),
+	'file_header_bip39': """
+# {pnm} BIP39 password file
+#
+# This file is editable.
+# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
+#
+""".strip().format(pnm=pnm),
 	'record_chksum': """
 Record this checksum: it will be used to verify the password file in the future
 """.strip()
@@ -813,9 +824,13 @@ Record this checksum: it will be used to verify the password file in the future
 	pw_info     = {
 		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),   # 32**24 < 2**128
 		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),   # 58**20 < 2**128
+		'bip39': pwinfo(12, 24 ,24, [12,18,24], 'BIP39 mnemonic',        is_bip39_str),
 		'hex':   pwinfo(32, 64 ,64, [32,48,64], 'hexadecimal password',  is_hex_str),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
+
+	feature_warn_fs = 'WARNING: {!r} is a potentially dangerous feature.  Use at your own risk!'
+	hex2bip39 = False
 
 	def __init__(   self,infile=None,seed=None,
 					pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
@@ -835,24 +850,35 @@ Record this checksum: it will be used to verify the password file in the future
 			self.set_pw_len(pw_len)
 			if chk_params_only:
 				return
+			if self.hex2bip39:
+				ymsg(self.feature_warn_fs.format(pw_fmt))
 			self.set_pw_len_vs_seed_len(pw_len,seed)
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
 			self.data = self.generate(seed,pw_idxs)
+
+		if self.pw_fmt == 'bip39':
+			self.msgs['file_header'] = self.msgs['file_header_bip39']
 
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''
 		self.chksum = AddrListChksum(self)
 
-		fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt,self.pw_len)
+		fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
 		self.id_str = AddrListIDStr(self,fs)
 		qmsg('Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
 		qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
 	def set_pw_fmt(self,pw_fmt):
-		if pw_fmt not in self.pw_info:
+		if pw_fmt == 'hex2bip39':
+			self.hex2bip39 = True
+			self.pw_fmt = 'bip39'
+			self.pw_fmt_disp = 'hex2bip39'
+		else:
+			self.pw_fmt = pw_fmt
+			self.pw_fmt_disp = pw_fmt
+		if self.pw_fmt not in self.pw_info:
 			m = '{!r}: invalid password format.  Valid formats: {}'
-			raise InvalidPasswdFormat(m.format(pw_fmt,', '.join(sorted(self.pw_info))))
-		self.pw_fmt = pw_fmt
+			raise InvalidPasswdFormat(m.format(self.pw_fmt,', '.join(sorted(self.pw_info))))
 
 	def chk_pw_len(self,passwd=None):
 		if passwd is None:
@@ -888,6 +914,10 @@ Record this checksum: it will be used to verify the password file in the future
 		if pf == 'hex':
 			pw_bytes = self.pw_len // 2
 			good_pw_len = seed.byte_len * 2
+		elif pf == 'bip39':
+			from mmgen.bip39 import bip39
+			pw_bytes = bip39.nwords2seedlen(self.pw_len,in_bytes=True)
+			good_pw_len = bip39.seedlen2nwords(len(seed.data),in_bytes=True)
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
@@ -901,7 +931,7 @@ Record this checksum: it will be used to verify the password file in the future
 					'Re-run the command, specifying a password length of {} or less' )
 			die(1,(m1+'\n'+m2).format(len(seed.data) * 8,good_pw_len))
 
-		if pf == 'hex' and pw_bytes < seed.byte_len:
+		if pf in ('bip39','hex') and pw_bytes < seed.byte_len:
 			m1 = 'WARNING: requested {} length has less entropy than underlying seed!'
 			m2 = 'Is this what you want?'
 			if not keypress_confirm((m1+'\n'+m2).format(self.pw_info[pf].desc),default_yes=True):
@@ -912,6 +942,11 @@ Record this checksum: it will be used to verify the password file in the future
 		if self.pw_fmt == 'hex':
 			# take most significant part
 			return hex_sec[:self.pw_len]
+		elif self.pw_fmt == 'bip39':
+			from mmgen.bip39 import bip39
+			pw_len_hex = bip39.nwords2seedlen(self.pw_len,in_hex=True)
+			# take most significant part
+			return ' '.join(bip39.fromhex(hex_sec[:pw_len_hex],wl_id='bip39'))
 		else:
 			# take least significant part
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
@@ -919,7 +954,7 @@ Record this checksum: it will be used to verify the password file in the future
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):
 			raise ValueError('Password is not valid {} data'.format(self.pw_info[self.pw_fmt].desc))
-		pwlen = len(pw)
+		pwlen = len(pw.split()) if self.pw_fmt == 'bip39' else len(pw)
 		if pwlen != self.pw_len:
 			raise ValueError('Password has incorrect length ({} != {})'.format(pwlen,self.pw_len))
 		return True
@@ -929,8 +964,31 @@ Record this checksum: it will be used to verify the password file in the future
 		# set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
 		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
+
+		if self.hex2bip39:
+			from mmgen.bip39 import bip39
+			pwlen = bip39.nwords2seedlen(self.pw_len,in_hex=True)
+			scramble_key = '{}:{}:{}'.format('hex',pwlen,self.pw_id_str)
+
 		from mmgen.crypto import scramble_seed
 		return scramble_seed(seed,scramble_key.encode())
+
+	def get_line(self,lines):
+		self.line_ctr += 1
+		if self.pw_fmt == 'bip39':
+			ret = lines.pop(0).split(None,self.pw_len+1)
+			if len(ret) > self.pw_len+1:
+				m1 = 'extraneous text {!r} found after password'.format(ret[self.pw_len+1])
+				m2 = '[bare comments not allowed in BIP39 password files]'
+				m = m1+' '+m2
+			elif len(ret) < self.pw_len+1:
+				m = 'invalid password length {}'.format(len(ret)-1)
+			else:
+				return (ret[0],' '.join(ret[1:self.pw_len+1]),'')
+			raise ValueError(m)
+		else:
+			ret = lines.pop(0).split(None,2)
+			return ret if len(ret) == 3 else ret + ['']
 
 class AddrData(MMGenObject):
 	msgs = {

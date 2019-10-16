@@ -77,6 +77,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'ref_b32passwdgen_1': '37B6 C218 2ABC 7508',
 		'ref_hexpasswdgen_1': '8E99 E696 84CE E7D5',
 		'ref_hexpasswdgen_half_1': '8E99 E696 84CE E7D5',
+		'ref_bip39_12_passwdgen_1': '834F CF45 0B33 8AF0',
+		'ref_bip39_18_passwdgen_1': '834F CF45 0B33 8AF0',
+		'ref_bip39_24_passwdgen_1': '834F CF45 0B33 8AF0',
+		'ref_hex2bip39_24_passwdgen_1': '91AF E735 A31D 72A0',
 		'refaddrgen_legacy_2': {
 			'btc': ('8C17 A5FA 0470 6E89','764C 66F9 7502 AAEA'),
 			'ltc': ('2B77 A009 D5D0 22AD','51D1 979D 0A35 F24B'),
@@ -114,6 +118,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'ref_b32passwdgen_2': '2A28 C5C7 36EC 217A',
 		'ref_hexpasswdgen_2': '88F9 0D48 3A7E 7CC2',
 		'ref_hexpasswdgen_half_2': '59F3 8F48 861E 1186',
+		'ref_bip39_12_passwdgen_2': 'D32D B8D7 A840 250B',
+		'ref_bip39_18_passwdgen_2': '0FAA 78DD A6BA 31AD',
+		'ref_bip39_24_passwdgen_2': '0FAA 78DD A6BA 31AD',
+		'ref_hex2bip39_24_passwdgen_2': '0E8E 23C9 923F 7C2D',
 		'refaddrgen_legacy_3': {
 			'btc': ('6FEF 6FB9 7B13 5D91','424E 4326 CFFE 5F51'),
 			'ltc': ('AD52 C3FE 8924 AAF0','4EBE 2E85 E969 1B30'),
@@ -151,6 +159,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'ref_b32passwdgen_3': 'F6C1 CDFB 97D9 FCAE',
 		'ref_hexpasswdgen_3': 'BD4F A0AC 8628 4BE4',
 		'ref_hexpasswdgen_half_3': 'FBDD F733 FFB9 21C1',
+		'ref_bip39_12_passwdgen_3': 'A86E EA14 974A 1B0E',
+		'ref_bip39_18_passwdgen_3': 'EF87 9904 88E2 5884',
+		'ref_bip39_24_passwdgen_3': 'EBE8 2A8F 8F8C 7DBD',
+		'ref_hex2bip39_24_passwdgen_3': '93FA 5EFD 33F3 760E',
 	}
 	cmd_group = (
 		# reading
@@ -182,6 +194,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_b32passwdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
 		('ref_hexpasswdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (hex)')),
 		('ref_hexpasswdgen_half',(['mmdat',pwfile],'new refwallet passwd file chksum (hex, half-length)')),
+		('ref_bip39_12_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (BIP39, 12 words)')),
+		('ref_bip39_18_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (BIP39, up to 18 words)')),
+		('ref_bip39_24_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (BIP39, up to 24 words)')),
+		('ref_hex2bip39_24_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -339,3 +355,15 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_hexpasswdgen_half(self,wf,pf):
 		ea = ['--passwd-fmt=hex','--passwd-len=h','--accept-defaults']
 		return self.addrgen(wf,pf,check_ref=True,ftype='passhex',id_str='фубар@crypto.org',extra_args=ea,stdout=1)
+
+	def ref_bip39_passwdgen(self,wf,pf,req_pw_len,pw_fmt='bip39',stdout=False):
+		pw_len = min(req_pw_len,{'1':12,'2':18,'3':24}[self.test_name[-1]])
+		ea = ['--passwd-fmt='+pw_fmt,'--passwd-len={}'.format(pw_len),'--accept-defaults']
+		return self.addrgen(
+			wf,pf,check_ref=True,ftype='passbip39',id_str='фубар@crypto.org',extra_args=ea,stdout=stdout)
+
+	def ref_bip39_12_passwdgen(self,wf,pf): return self.ref_bip39_passwdgen(wf,pf,12,stdout=True)
+	def ref_bip39_18_passwdgen(self,wf,pf): return self.ref_bip39_passwdgen(wf,pf,18,stdout=True)
+	def ref_bip39_24_passwdgen(self,wf,pf): return self.ref_bip39_passwdgen(wf,pf,24)
+
+	def ref_hex2bip39_24_passwdgen(self,wf,pf): return self.ref_bip39_passwdgen(wf,pf,24,'hex2bip39')

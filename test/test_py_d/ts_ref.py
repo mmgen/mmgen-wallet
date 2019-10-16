@@ -48,6 +48,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_hex_32': '98831F3A-фубар@crypto.org-hex-32[1,4,1100].pws',
 		'ref_passwdfile_hex_48': '98831F3A-фубар@crypto.org-hex-48[1,4,1100].pws',
 		'ref_passwdfile_hex_64': '98831F3A-фубар@crypto.org-hex-64[1,4,1100].pws',
+		'ref_passwdfile_bip39_12': '98831F3A-фубар@crypto.org-bip39-12[1,4,1100].pws',
+		'ref_passwdfile_bip39_18': '98831F3A-фубар@crypto.org-bip39-18[1,4,1100].pws',
+		'ref_passwdfile_bip39_24': '98831F3A-фубар@crypto.org-bip39-24[1,4,1100].pws',
+		'ref_passwdfile_hex2bip39_12': '98831F3A-фубар@crypto.org-hex2bip39-12[1,4,1100].pws',
 		'ref_tx_file': { # data shared with ref_altcoin, autosign
 			'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
 					'0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
@@ -90,6 +94,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_hex_32_chksum': '05C7 3678 E25E BC32',
 		'ref_passwdfile_hex_48_chksum': '7DBB FFD0 633E DE6F',
 		'ref_passwdfile_hex_64_chksum': 'F11D CB0A 8AE3 4D21',
+		'ref_passwdfile_bip39_12_chksum': 'BF57 02A3 5229 CF18',
+		'ref_passwdfile_bip39_18_chksum': '31D3 1656 B7DC 27CF',
+		'ref_passwdfile_bip39_24_chksum': 'E565 3A59 7D91 4671',
+		'ref_passwdfile_hex2bip39_12_chksum': '93AD 4AE2 03D1 8A0A',
 	}
 	cmd_group = ( # TODO: move to tooltest2
 		('ref_words_to_subwallet_chk1','subwallet generation from reference words file (long subseed)'),
@@ -110,6 +118,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		('ref_passwdfile_chk_hex_32','saved reference password file (hexadecimal, 32 chars)'),
 		('ref_passwdfile_chk_hex_48','saved reference password file (hexadecimal, 48 chars)'),
 		('ref_passwdfile_chk_hex_64','saved reference password file (hexadecimal, 64 chars)'),
+		('ref_passwdfile_chk_bip39_12','saved reference password file (BIP39, 12 words)'),
+		('ref_passwdfile_chk_bip39_18','saved reference password file (BIP39, 18 words)'),
+		('ref_passwdfile_chk_bip39_24','saved reference password file (BIP39, 24 words)'),
+		('ref_passwdfile_chk_hex2bip39_12','saved reference password file (hex-to-BIP39, 12 words)'),
 
 #	Create the fake inputs:
 #	('txcreate8',          'transaction creation (8)'),
@@ -233,6 +245,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_passwdfile_chk_hex_32(self): return self.ref_passwdfile_chk(key='hex_32',pat='Hexadec.*len.* 32\n')
 	def ref_passwdfile_chk_hex_48(self): return self.ref_passwdfile_chk(key='hex_48',pat='Hexadec.*len.* 48\n')
 	def ref_passwdfile_chk_hex_64(self): return self.ref_passwdfile_chk(key='hex_64',pat='Hexadec.*len.* 64\n')
+	def ref_passwdfile_chk_bip39_12(self): return self.ref_passwdfile_chk(key='bip39_12',pat='BIP39.*len.* 12\n')
+	def ref_passwdfile_chk_bip39_18(self): return self.ref_passwdfile_chk(key='bip39_18',pat='BIP39.*len.* 18\n')
+	def ref_passwdfile_chk_bip39_24(self): return self.ref_passwdfile_chk(key='bip39_24',pat='BIP39.*len.* 24\n')
+	def ref_passwdfile_chk_hex2bip39_12(self): return self.ref_passwdfile_chk(key='hex2bip39_12',pat='BIP39.*len.* 12\n')
 
 	def ref_tx_chk(self):
 		fn = self.sources['ref_tx_file'][g.coin.lower()][bool(self.tn_ext)]

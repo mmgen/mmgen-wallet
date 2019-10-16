@@ -2093,6 +2093,21 @@ zoo
 	digits = { 'bip39': words }
 
 	@classmethod
+	def nwords2seedlen(cls,nwords,in_bytes=False,in_hex=False):
+		for k,v in cls.constants.items():
+			if v[1] == nwords:
+				return int(k)//8 if in_bytes else int(k)//4 if in_hex else int(k)
+		raise MnemonicError('{!r}: invalid word length for BIP39 mnemonic'.format(nwords))
+
+	@classmethod
+	def seedlen2nwords(cls,seed_len,in_bytes=False,in_hex=False):
+		seed_bits = seed_len * 8 if in_bytes else seed_len * 4 if in_hex else seed_len
+		try:
+			return cls.constants[str(seed_bits)][1]
+		except:
+			raise ValueError('{!r}: invalid seed length for BIP39 mnemonic'.format(seed_bits))
+
+	@classmethod
 	def tohex(cls,words,wl_id,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
 		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"

@@ -93,6 +93,10 @@ EXAMPLES:
   Generate ten base32 passwords of length {i32.dfl_len} for Alice's email account:
   {g.prog_name} --passwd-fmt=b32 alice@nowhere.com 1-10
 
+  Generate three BIP39 mnemonic seed phrases of length {i39.dfl_len} for Alice's
+  Trezor device:
+  {g.prog_name} --passwd-fmt=bip39 mytrezor 1-3
+
   All passwords are cryptographically unlinkable with each other, including
   passwords with the same format but different length, so Alice needn't worry
   about inadvertent reuse of private data.
@@ -117,7 +121,7 @@ FMT CODES:
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 		),
 		'notes': lambda s: s.format(
-				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],
+				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
 				ml=MMGenPWIDString.max_len,
 				fs="', '".join(MMGenPWIDString.forbidden),
 				n_pw=help_notes('passwd'),
