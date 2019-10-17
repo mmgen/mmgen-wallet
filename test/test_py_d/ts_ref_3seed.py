@@ -40,6 +40,145 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	chk_data = {
 		'lens': (128, 192, 256),
 		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
+	}
+	cmd_group = (
+		# reading
+		('ref_wallet_chk', ([],'saved reference wallet')),
+		('ref_seed_chk',   ([],'saved seed file')),
+		('ref_hex_chk',    ([],'saved mmhex file')),
+		('ref_mn_chk',     ([],'saved native MMGen mnemonic file')),
+		('ref_bip39_chk',  ([],'saved BIP39 mnemonic file')),
+		('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
+		('ref_brain_chk',  ([],'saved brainwallet')), # in ts_shared
+		# generating new reference ('abc' brainwallet) files:
+		('ref_walletgen_brain',   ([],'generating new reference wallet + filename check (brain)')),
+		('ref_walletconv_words',  (['mmdat',pwfile],'wallet filename (native mnemonic)')),
+		('ref_walletconv_bip39',  (['mmdat',pwfile],'wallet filename (bip39)')),
+		('ref_walletconv_seed',   (['mmdat',pwfile],'wallet filename (seed)')),
+		('ref_walletconv_hexseed',(['mmdat',pwfile],'wallet filename (hex seed)')),
+		('ref_walletconv_incog',  (['mmdat',pwfile],'wallet filename (incog)')),
+		('ref_walletconv_xincog', (['mmdat',pwfile],'wallet filename (hex incog)')),
+	)
+
+	def __init__(self,trunner,cfgs,spawn):
+		for k,j in self.cmd_group:
+			for n in (1,2,3): # 128,192,256 bits
+				setattr(self,'{}_{}'.format(k,n),getattr(self,k))
+		if cfgs:
+			for n in self.tmpdir_nums:
+				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
+				cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
+		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+
+	def ref_wallet_chk(self):
+		wf = joinpath(ref_dir,TestSuiteWalletConv.sources[str(self.seed_len)]['ref_wallet'])
+		return self.walletchk(wf,pf=None,pw=True,sid=self.seed_id)
+
+	def ref_ss_chk(self,ss=None):
+		wf = joinpath(ref_dir,'{}.{}'.format(self.seed_id,ss.ext))
+		return self.walletchk(wf,pf=None,desc=ss.desc,sid=self.seed_id)
+
+	def ref_seed_chk(self):
+		from mmgen.seed import SeedFile
+		return self.ref_ss_chk(ss=SeedFile)
+
+	def ref_hex_chk(self):
+		from mmgen.seed import HexSeedFile
+		return self.ref_ss_chk(ss=HexSeedFile)
+
+	def ref_mn_chk(self):
+		from mmgen.seed import MMGenMnemonic
+		return self.ref_ss_chk(ss=MMGenMnemonic)
+
+	def ref_bip39_chk(self):
+		from mmgen.seed import BIP39Mnemonic
+		return self.ref_ss_chk(ss=BIP39Mnemonic)
+
+	def ref_hincog_chk(self,desc='hidden incognito data'):
+		source = TestSuiteWalletConv.sources[str(self.seed_len)]
+		for wtype,edesc,of_arg in ('hic_wallet','',[]), \
+								('hic_wallet_old','(old format)',['-O']):
+			ic_arg = ['-H{},{}'.format(joinpath(ref_dir,source[wtype]),ref_wallet_incog_offset)]
+			slarg = ['-l{} '.format(self.seed_len)]
+			hparg = ['-p1']
+			if wtype == 'hic_wallet_old' and opt.profile: msg('')
+			t = self.spawn('mmgen-walletchk',
+				slarg + hparg + of_arg + ic_arg,
+				extra_desc=edesc)
+			t.passphrase(desc,self.wpasswd)
+			if wtype == 'hic_wallet_old':
+				t.expect('Is the Seed ID correct? (Y/n): ','\n')
+			chk = t.expect_getend('Seed ID: ')
+			t.close()
+			cmp_or_die(self.seed_id,chk)
+			ok_msg()
+		t.skip_ok = True
+		return t
+
+	def ref_walletgen_brain(self):
+		sl_arg = '-l{}'.format(self.seed_len)
+		hp_arg = '-p{}'.format(ref_wallet_hash_preset)
+		label = "test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,self.seed_len)
+		bf = 'ref.mmbrain'
+		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ib','-L',label]
+		self.write_to_tmpfile(bf,ref_wallet_brainpass)
+		self.write_to_tmpfile(pwfile,self.wpasswd)
+		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
+		t.license()
+		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
+		t.passphrase_new('new MMGen wallet',self.wpasswd)
+		t.usr_rand(self.usr_rand_chars)
+		fn = os.path.split(t.written_to_file('MMGen wallet'))[-1]
+		import re
+		idx = int(self.test_name[-1]) - 1
+		pat = r'{}-[0-9A-F]{{8}}\[{},1\].mmdat'.format(
+			self.chk_data['sids'][idx],
+			self.chk_data['lens'][idx] )
+		assert re.match(pat,fn)
+		sid = os.path.basename(fn.split('-')[0])
+		cmp_or_die(sid,self.seed_id,desc='Seed ID')
+		return t
+
+	def ref_walletconv(self,fn,pf,ofmt,desc,ext,extra_args=[],re_pat=None):
+		t = self.spawn('mmgen-walletconv',extra_args+['-d','test/trash','-o',ofmt,'-P'+pf,fn])
+		fn = os.path.split(t.written_to_file(desc))[-1]
+		idx = int(self.test_name[-1]) - 1
+		sid = self.chk_data['sids'][idx]
+		slen = self.chk_data['lens'][idx]
+		if re_pat:
+			import re
+			assert re.match(re_pat.format(sid,slen),fn)
+		else:
+			cmp_or_die('{}[{}].{}'.format(sid,slen,ext),fn)
+		return t
+
+	def ref_walletconv_words(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='mn',desc='MMGen native mnemonic data',ext='mmwords')
+
+	def ref_walletconv_bip39(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='bip39',desc='BIP39 mnemonic data',ext='bip39')
+
+	def ref_walletconv_seed(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='mmseed',desc='Seed data',ext='mmseed')
+
+	def ref_walletconv_hexseed(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='mmhex',desc='Hexadecimal seed data',ext='mmhex')
+
+	def ref_walletconv_incog(self,fn,pf,desc='Incognito data',ofmt='incog',ext='mmincog'):
+		args = ['-r0','-p1']
+		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\].' + ext
+		return self.ref_walletconv(fn,pf,ofmt=ofmt,desc=desc,ext=ext,extra_args=args,re_pat=pat)
+
+	def ref_walletconv_xincog(self,fn,pf):
+		return self.ref_walletconv_incog(fn,pf,desc='Hex incognito data',ofmt='incog_hex',ext='mmincox')
+
+class TestSuiteRef3Addr(TestSuiteRef3Seed):
+	'generated reference address, key and passwd files for 128-, 192- and 256-bit seeds'
+	tmpdir_nums = [26,27,28]
+
+	chk_data = {
+		'lens': (128, 192, 256),
+		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
 		'refaddrgen_legacy_1': {
 			'btc': ('B230 7526 638F 38CB','A9DC 5A13 12CB 1317'),
 			'ltc': ('2B23 5E97 848A B961','AEC3 E774 0B21 0202'),
@@ -164,31 +303,9 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'ref_bip39_24_passwdgen_3': 'EBE8 2A8F 8F8C 7DBD',
 		'ref_hex2bip39_24_passwdgen_3': '93FA 5EFD 33F3 760E',
 	}
+
 	cmd_group = (
-		# reading
-		('ref_wallet_chk', ([],'saved reference wallet')),
-		('ref_seed_chk',   ([],'saved seed file')),
-		('ref_hex_chk',    ([],'saved mmhex file')),
-		('ref_mn_chk',     ([],'saved native MMGen mnemonic file')),
-		('ref_bip39_chk',  ([],'saved BIP39 mnemonic file')),
-		('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
-		('ref_brain_chk',  ([],'saved brainwallet')), # in ts_shared
-		# generating new reference ('abc' brainwallet) files:
-		('ref_walletgen_brain',   ([],'generating new reference wallet + filename check (brain)')),
-		('ref_walletconv_words',  (['mmdat',pwfile],'wallet filename (native mnemonic)')),
-		('ref_walletconv_bip39',  (['mmdat',pwfile],'wallet filename (bip39)')),
-		('ref_walletconv_seed',   (['mmdat',pwfile],'wallet filename (seed)')),
-		('ref_walletconv_hexseed',(['mmdat',pwfile],'wallet filename (hex seed)')),
-		('ref_walletconv_incog',  (['mmdat',pwfile],'wallet filename (incog)')),
-		('ref_walletconv_xincog', (['mmdat',pwfile],'wallet filename (hex incog)')),
-		('refaddrgen_legacy',     (['mmdat',pwfile],'new refwallet addr chksum (uncompressed)')),
-		('refaddrgen_compressed',     (['mmdat',pwfile],'new refwallet addr chksum (compressed)')),
-		('refaddrgen_segwit',     (['mmdat',pwfile],'new refwallet addr chksum (segwit)')),
-		('refaddrgen_bech32',     (['mmdat',pwfile],'new refwallet addr chksum (bech32)')),
-		('refkeyaddrgen_legacy',  (['mmdat',pwfile],'new refwallet key-addr chksum (uncompressed)')),
-		('refkeyaddrgen_compressed', (['mmdat',pwfile],'new refwallet key-addr chksum (compressed)')),
-		('refkeyaddrgen_segwit', (['mmdat',pwfile],'new refwallet key-addr chksum (segwit)')),
-		('refkeyaddrgen_bech32', (['mmdat',pwfile],'new refwallet key-addr chksum (bech32)')),
+		('ref_walletgen_brain',  ([],'generating new reference wallet + filename check (brain)')),
 		('refpasswdgen',         (['mmdat',pwfile],'new refwallet passwd file chksum')),
 		('refpasswdgen_half',    (['mmdat',pwfile],'new refwallet passwd file chksum (half-length)')),
 		('ref_b32passwdgen',     (['mmdat',pwfile],'new refwallet passwd file chksum (base32)')),
@@ -198,119 +315,15 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_bip39_18_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (BIP39, up to 18 words)')),
 		('ref_bip39_24_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (BIP39, up to 24 words)')),
 		('ref_hex2bip39_24_passwdgen',(['mmdat',pwfile],'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
+		('refaddrgen_legacy',     (['mmdat',pwfile],'new refwallet addr chksum (uncompressed)')),
+		('refaddrgen_compressed',     (['mmdat',pwfile],'new refwallet addr chksum (compressed)')),
+		('refaddrgen_segwit',     (['mmdat',pwfile],'new refwallet addr chksum (segwit)')),
+		('refaddrgen_bech32',     (['mmdat',pwfile],'new refwallet addr chksum (bech32)')),
+		('refkeyaddrgen_legacy',  (['mmdat',pwfile],'new refwallet key-addr chksum (uncompressed)')),
+		('refkeyaddrgen_compressed', (['mmdat',pwfile],'new refwallet key-addr chksum (compressed)')),
+		('refkeyaddrgen_segwit', (['mmdat',pwfile],'new refwallet key-addr chksum (segwit)')),
+		('refkeyaddrgen_bech32', (['mmdat',pwfile],'new refwallet key-addr chksum (bech32)')),
 	)
-
-	def __init__(self,trunner,cfgs,spawn):
-		for k,j in self.cmd_group:
-			for n in (1,2,3): # 128,192,256 bits
-				setattr(self,'{}_{}'.format(k,n),getattr(self,k))
-		if cfgs:
-			for n in self.tmpdir_nums:
-				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
-				cfgs[str(n)]['pass_idx_list'] = self.pass_idx_list_in
-		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-
-	def ref_wallet_chk(self):
-		wf = joinpath(ref_dir,TestSuiteWalletConv.sources[str(self.seed_len)]['ref_wallet'])
-		return self.walletchk(wf,pf=None,pw=True,sid=self.seed_id)
-
-	def ref_ss_chk(self,ss=None):
-		wf = joinpath(ref_dir,'{}.{}'.format(self.seed_id,ss.ext))
-		return self.walletchk(wf,pf=None,desc=ss.desc,sid=self.seed_id)
-
-	def ref_seed_chk(self):
-		from mmgen.seed import SeedFile
-		return self.ref_ss_chk(ss=SeedFile)
-
-	def ref_hex_chk(self):
-		from mmgen.seed import HexSeedFile
-		return self.ref_ss_chk(ss=HexSeedFile)
-
-	def ref_mn_chk(self):
-		from mmgen.seed import MMGenMnemonic
-		return self.ref_ss_chk(ss=MMGenMnemonic)
-
-	def ref_bip39_chk(self):
-		from mmgen.seed import BIP39Mnemonic
-		return self.ref_ss_chk(ss=BIP39Mnemonic)
-
-	def ref_hincog_chk(self,desc='hidden incognito data'):
-		source = TestSuiteWalletConv.sources[str(self.seed_len)]
-		for wtype,edesc,of_arg in ('hic_wallet','',[]), \
-								('hic_wallet_old','(old format)',['-O']):
-			ic_arg = ['-H{},{}'.format(joinpath(ref_dir,source[wtype]),ref_wallet_incog_offset)]
-			slarg = ['-l{} '.format(self.seed_len)]
-			hparg = ['-p1']
-			if wtype == 'hic_wallet_old' and opt.profile: msg('')
-			t = self.spawn('mmgen-walletchk',
-				slarg + hparg + of_arg + ic_arg,
-				extra_desc=edesc)
-			t.passphrase(desc,self.wpasswd)
-			if wtype == 'hic_wallet_old':
-				t.expect('Is the Seed ID correct? (Y/n): ','\n')
-			chk = t.expect_getend('Seed ID: ')
-			t.close()
-			cmp_or_die(self.seed_id,chk)
-			ok_msg()
-		t.skip_ok = True
-		return t
-
-	def ref_walletgen_brain(self):
-		sl_arg = '-l{}'.format(self.seed_len)
-		hp_arg = '-p{}'.format(ref_wallet_hash_preset)
-		label = "test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,self.seed_len)
-		bf = 'ref.mmbrain'
-		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ib','-L',label]
-		self.write_to_tmpfile(bf,ref_wallet_brainpass)
-		self.write_to_tmpfile(pwfile,self.wpasswd)
-		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
-		t.license()
-		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
-		t.passphrase_new('new MMGen wallet',self.wpasswd)
-		t.usr_rand(self.usr_rand_chars)
-		fn = os.path.split(t.written_to_file('MMGen wallet'))[-1]
-		import re
-		idx = int(self.test_name[-1]) - 1
-		pat = r'{}-[0-9A-F]{{8}}\[{},1\].mmdat'.format(
-			self.chk_data['sids'][idx],
-			self.chk_data['lens'][idx] )
-		assert re.match(pat,fn)
-		sid = os.path.basename(fn.split('-')[0])
-		cmp_or_die(sid,self.seed_id,desc='Seed ID')
-		return t
-
-	def ref_walletconv(self,fn,pf,ofmt,desc,ext,extra_args=[],re_pat=None):
-		t = self.spawn('mmgen-walletconv',extra_args+['-d','test/trash','-o',ofmt,'-P'+pf,fn])
-		fn = os.path.split(t.written_to_file(desc))[-1]
-		idx = int(self.test_name[-1]) - 1
-		sid = self.chk_data['sids'][idx]
-		slen = self.chk_data['lens'][idx]
-		if re_pat:
-			import re
-			assert re.match(re_pat.format(sid,slen),fn)
-		else:
-			cmp_or_die('{}[{}].{}'.format(sid,slen,ext),fn)
-		return t
-
-	def ref_walletconv_words(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='mn',desc='MMGen native mnemonic data',ext='mmwords')
-
-	def ref_walletconv_bip39(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='bip39',desc='BIP39 mnemonic data',ext='bip39')
-
-	def ref_walletconv_seed(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='mmseed',desc='Seed data',ext='mmseed')
-
-	def ref_walletconv_hexseed(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='mmhex',desc='Hexadecimal seed data',ext='mmhex')
-
-	def ref_walletconv_incog(self,fn,pf,desc='Incognito data',ofmt='incog',ext='mmincog'):
-		args = ['-r0','-p1']
-		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\].' + ext
-		return self.ref_walletconv(fn,pf,ofmt=ofmt,desc=desc,ext=ext,extra_args=args,re_pat=pat)
-
-	def ref_walletconv_xincog(self,fn,pf):
-		return self.ref_walletconv_incog(fn,pf,desc='Hex incognito data',ofmt='incog_hex',ext='mmincox')
 
 	def refaddrgen_legacy(self,wf,pf):
 		return self.addrgen(wf,pf=pf,check_ref=True,mmtype='legacy')

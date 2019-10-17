@@ -323,11 +323,16 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	},
 	'22': {},
 	'23': {},
+	# 26,27,28 are taken
 	'31': {},
 	'32': {},
 	'33': {},
 	'34': {},
 }
+
+for k in ('6','7','8'):
+	cfgs['2'+k] = {}
+	cfgs['2'+k].update(cfgs[k])
 
 for k in cfgs:
 	cfgs[k]['tmpdir'] = os.path.join('test','tmp{}'.format(k))
@@ -447,6 +452,7 @@ class CmdGroupMgr(object):
 		'main':             ('TestSuiteMain',{'full_data':True}),
 		'conv':             ('TestSuiteWalletConv',{'is3seed':True,'modname':'wallet'}),
 		'ref3':             ('TestSuiteRef3Seed',{'is3seed':True,'modname':'ref_3seed'}),
+		'ref3_addr':        ('TestSuiteRef3Addr',{'is3seed':True,'modname':'ref_3seed'}),
 		'ref':              ('TestSuiteRef',{}),
 		'ref_altcoin':      ('TestSuiteRefAltcoin',{}),
 		'seedsplit':        ('TestSuiteSeedSplit',{}),
@@ -467,6 +473,7 @@ class CmdGroupMgr(object):
 					'conv',
 					'ref',
 					'ref3',
+					'ref3_addr',
 					'ref_altcoin',
 					'tool',
 					'input',
