@@ -243,7 +243,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				a.set_comment(idx,get_label())
 			else:
 				if n % 2: a.set_comment(idx,'Test address {}'.format(n))
-		a.format(enable_comments=True)
+		a.format(add_comments=True)
 		write_data_to_file(outfile,a.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
 

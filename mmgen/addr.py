@@ -585,7 +585,15 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				Msg('generate_addrs_from_keys():\n{}'.format(e.pfmt()))
 		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
 
-	def format(self,enable_comments=False):
+	def make_label(self):
+		bc,mt = g.proto.base_coin,self.al_id.mmtype
+		l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
+		l_type = [] if mt == 'E' or (mt == 'L' and not g.proto.is_testnet()) else [mt.name.upper()]
+		l_tn   = [] if not g.proto.is_testnet() else ['TESTNET']
+		lbl_p2 = ':'.join(l_coin+l_type+l_tn)
+		return self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
+
+	def format(self,add_comments=False):
 
 		out = [self.msgs['file_header']+'\n']
 		if self.chksum:
@@ -593,22 +601,13 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 						capfirst(self.data_desc),self.id_str,self.chksum))
 			out.append('# Record this value to a secure location.\n')
 
-		if type(self) == PasswordList:
-			lbl = '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
-		else:
-			bc,mt = g.proto.base_coin,self.al_id.mmtype
-			l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
-			l_type = [] if mt == 'E' or (mt == 'L' and not g.proto.is_testnet()) else [mt.name.upper()]
-			l_tn   = [] if not g.proto.is_testnet() else ['TESTNET']
-			lbl_p2 = ':'.join(l_coin+l_type+l_tn)
-			lbl = self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
-
+		lbl = self.make_label()
 		dmsg_sc('lbl',lbl[9:])
 		out.append('{} {{'.format(lbl))
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
-			c = ' '+e.label if enable_comments and e.label else ''
+			c = ' '+e.label if add_comments and e.label else ''
 			if type(self) == KeyList:
 				out.append(fs.format(e.idx,'{}: {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
 			elif type(self) == PasswordList:
@@ -989,6 +988,9 @@ Record this checksum: it will be used to verify the password file in the future
 		else:
 			ret = lines.pop(0).split(None,2)
 			return ret if len(ret) == 3 else ret + ['']
+
+	def make_label(self):
+		return '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
 
 class AddrData(MMGenObject):
 	msgs = {
