@@ -297,7 +297,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				([wf] if wf else []) +
 				(['--subwallet='+subseed_idx] if subseed_idx else []) +
 				[addr_range],
-				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype]['name']))
+				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype].name))
 			t.passphrase('MMGen wallet',rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()
@@ -312,7 +312,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if not sid: sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
 		for mmtype in mmtypes or g.proto.mmtypes:
-			desc = MMGenAddrType.mmtypes[mmtype]['name']
+			desc = MMGenAddrType.mmtypes[mmtype].name
 			addrfile = joinpath(self._user_dir(user),
 				'{}{}{}[{}]{x}.testnet.addrs'.format(
 					sid,self.altcoin_pfx,id_strs[desc],addr_range,

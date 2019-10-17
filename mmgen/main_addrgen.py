@@ -104,7 +104,7 @@ FMT CODES:
 	'code': {
 		'options': lambda s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
-			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MMGenAddrType.mmtypes[g.proto.dfl_mmtype]['name']),
+			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MMGenAddrType.mmtypes[g.proto.dfl_mmtype].name),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			pnm=g.proj_name,
@@ -118,7 +118,7 @@ FMT CODES:
 			n_bw=help_notes('brainwallet'),
 			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
 			n_at='\n  '.join(["'{}','{:<12} - {}".format(
-				k,v['name']+"'",v['desc']) for k,v in list(MMGenAddrType.mmtypes.items())])
+				k,v.name+"'",v.desc) for k,v in MMGenAddrType.mmtypes.items()])
 		)
 	}
 }

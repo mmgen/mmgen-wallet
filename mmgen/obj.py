@@ -844,58 +844,32 @@ class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
 class SeedSplitIDString(MMGenPWIDString):
 	desc = 'seed split ID string'
 
+from collections import namedtuple
+ati = namedtuple('addrtype_info',
+	['name','pubkey_type','compressed','gen_method','addr_fmt','wif_label','extra_attrs','desc'])
+
 class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	width = 1
 	trunc_ok = False
 	color = 'blue'
-	mmtypes = { # 'name' is used to cook the seed, so it must never change!
-		'L': {  'name':'legacy',
-				'pubkey_type':'std',
-				'compressed':False,
-				'gen_method':'p2pkh',
-				'addr_fmt':'p2pkh',
-				'desc':'Legacy uncompressed address'},
-		'C': {  'name':'compressed',
-				'pubkey_type':'std',
-				'compressed':True,
-				'gen_method':'p2pkh',
-				'addr_fmt':'p2pkh',
-				'desc':'Compressed P2PKH address'},
-		'S': {  'name':'segwit',
-				'pubkey_type':'std',
-				'compressed':True,
-				'gen_method':'segwit',
-				'addr_fmt':'p2sh',
-				'desc':'Segwit P2SH-P2WPKH address' },
-		'B': {  'name':'bech32',
-				'pubkey_type':'std',
-				'compressed':True,
-				'gen_method':'bech32',
-				'addr_fmt':'bech32',
-				'desc':'Native Segwit (Bech32) address' },
-		'E': {  'name':'ethereum',
-				'pubkey_type':'std',
-				'compressed':False,
-				'gen_method':'ethereum',
-				'addr_fmt':'ethereum',
-				'wif_label':'privkey',
-				'extra_attrs': ('wallet_passwd',),
-				'desc':'Ethereum address' },
-		'Z': {  'name':'zcash_z',
-				'pubkey_type':'zcash_z',
-				'compressed':False,
-				'gen_method':'zcash_z',
-				'addr_fmt':'zcash_z',
-				'extra_attrs': ('viewkey',),
-				'desc':'Zcash z-address' },
-		'M': {  'name':'monero',
-				'pubkey_type':'monero',
-				'compressed':False,
-				'gen_method':'monero',
-				'addr_fmt':'monero',
-				'wif_label':'spendkey',
-				'extra_attrs': ('viewkey','wallet_passwd'),
-				'desc':'Monero address'}
+
+	name        = MMGenImmutableAttr('name',str)
+	pubkey_type = MMGenImmutableAttr('pubkey_type',str)
+	compressed  = MMGenImmutableAttr('compressed',bool)
+	gen_method  = MMGenImmutableAttr('gen_method',str)
+	addr_fmt    = MMGenImmutableAttr('addr_fmt',str)
+	wif_label   = MMGenImmutableAttr('wif_label',str)
+	extra_attrs = MMGenImmutableAttr('extra_attrs',tuple)
+	desc        = MMGenImmutableAttr('desc',str)
+
+	mmtypes = {
+		'L': ati('legacy',    'std', False,'p2pkh',   'p2pkh',   'wif', (), 'Legacy uncompressed address'),
+		'C': ati('compressed','std', True, 'p2pkh',   'p2pkh',   'wif', (), 'Compressed P2PKH address'),
+		'S': ati('segwit',    'std', True, 'segwit',  'p2sh',    'wif', (), 'Segwit P2SH-P2WPKH address'),
+		'B': ati('bech32',    'std', True, 'bech32',  'bech32',  'wif', (), 'Native Segwit (Bech32) address'),
+		'E': ati('ethereum',  'std', False,'ethereum','ethereum','privkey', ('wallet_passwd',),'Ethereum address'),
+		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
+		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
@@ -903,32 +877,25 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		from mmgen.globalvars import g
 		try:
 			for k,v in list(cls.mmtypes.items()):
-				if s in (k,v['name']):
-					if s == v['name']: s = k
+				if s in (k,v.name):
+					if s == v.name: s = k
 					me = str.__new__(cls,s)
-					for k in ('name','pubkey_type','compressed','gen_method','addr_fmt','desc'):
-						setattr(me,k,v[k])
+					for k in v._fields:
+						setattr(me,k,getattr(v,k))
 					assert me in g.proto.mmtypes + ('P',), (
 						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
-					me.extra_attrs = v['extra_attrs'] if 'extra_attrs' in v else ()
-					me.wif_label   = v['wif_label'] if 'wif_label' in v else 'wif'
 					return me
-			raise ValueError('not found')
+			raise ValueError('unrecognized address type')
 		except Exception as e:
-			m = '{}{!r}: invalid value for {} ({})'.format(
-				('{!r}\n'.format(errmsg) if errmsg else ''),s,cls.__name__,e.args[0])
+			emsg = '{!r}\n'.format(errmsg) if errmsg else ''
+			m = '{}{!r}: invalid value for {} ({})'.format(emsg,s,cls.__name__,e.args[0])
 			return cls.init_fail(e,m,preformat=True)
 
 	@classmethod
 	def get_names(cls):
-		return [v['name'] for v in cls.mmtypes.values()]
+		return [v.name for v in cls.mmtypes.values()]
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
-		'P': {  'name':'password',
-				'pubkey_type':'password',
-				'compressed':False,
-				'gen_method':None,
-				'addr_fmt':None,
-				'desc':'Password generated from MMGen seed'}
+		'P': ati('password', 'password', False, None, None, None, (), 'Password generated from MMGen seed')
 	}
