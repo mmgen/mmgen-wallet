@@ -190,9 +190,10 @@ class Int(int,Hilite): pass
 # Reassignment and deletion forbidden
 class MMGenImmutableAttr(object): # Descriptor
 
-	def __init__(self,name,dtype,typeconv=True,no_type_check=False):
+	def __init__(self,name,dtype,typeconv=True,no_type_check=False,set_none_ok=False):
 		self.typeconv = typeconv
 		self.no_type_check = no_type_check
+		self.set_none_ok = set_none_ok
 		assert isinstance(dtype,(str,type,type(None))),'{!r}: invalid dtype arg'.format(dtype)
 		self.name = name
 		self.dtype = dtype
@@ -209,7 +210,9 @@ class MMGenImmutableAttr(object): # Descriptor
 		if not self.set_attr_ok(instance):
 			m = "Attribute '{}' of {} instance cannot be reassigned"
 			raise AttributeError(m.format(self.name,type(instance)))
-		if self.typeconv:   # convert type
+		if self.set_none_ok and value == None:
+			instance.__dict__[self.name] = None
+		elif self.typeconv:   # convert type
 			instance.__dict__[self.name] = \
 				globals()[self.dtype](value,on_fail='raise') if type(self.dtype) == str else self.dtype(value)
 		else:               # check type
