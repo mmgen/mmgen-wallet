@@ -311,6 +311,7 @@ class AddrListChksum(str,Hilite):
 
 	def __new__(cls,addrlist):
 		ea = addrlist.al_id.mmtype.extra_attrs # add viewkey and passwd to the mix, if present
+		if ea == None: ea = ()
 		lines = [' '.join(
 					addrlist.chksum_rec_f(e) +
 					tuple(getattr(e,a) for a in ea if getattr(e,a))

@@ -732,17 +732,17 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				return cls.init_fail(e,s,objname='{} WIF key'.format(g.coin))
 		else:
 			try:
-				assert s,'private key hex data missing'
-				assert compressed is not None, "'compressed' arg missing"
+				assert s,'private key bin data missing'
 				assert pubkey_type is not None,"'pubkey_type' arg missing"
-				assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
 				assert len(s) == cls.width // 2,'key length must be {}'.format(cls.width // 2)
 				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
 					me = str.__new__(cls,s.hex())
 				else:
+					assert compressed is not None, "'compressed' arg missing"
+					assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
 					me = str.__new__(cls,g.proto.preprocess_key(s.hex(),pubkey_type))
 					me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
-				me.compressed = compressed
+					me.compressed = compressed
 				me.pubkey_type = pubkey_type
 				me.orig_hex = s.hex() # save the non-preprocessed key
 				return me
@@ -858,11 +858,11 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 
 	name        = MMGenImmutableAttr('name',str)
 	pubkey_type = MMGenImmutableAttr('pubkey_type',str)
-	compressed  = MMGenImmutableAttr('compressed',bool)
-	gen_method  = MMGenImmutableAttr('gen_method',str)
-	addr_fmt    = MMGenImmutableAttr('addr_fmt',str)
-	wif_label   = MMGenImmutableAttr('wif_label',str)
-	extra_attrs = MMGenImmutableAttr('extra_attrs',tuple)
+	compressed  = MMGenImmutableAttr('compressed',bool,set_none_ok=True)
+	gen_method  = MMGenImmutableAttr('gen_method',str,set_none_ok=True)
+	addr_fmt    = MMGenImmutableAttr('addr_fmt',str,set_none_ok=True)
+	wif_label   = MMGenImmutableAttr('wif_label',str,set_none_ok=True)
+	extra_attrs = MMGenImmutableAttr('extra_attrs',tuple,set_none_ok=True)
 	desc        = MMGenImmutableAttr('desc',str)
 
 	mmtypes = {
@@ -900,5 +900,5 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 
 class MMGenPasswordType(MMGenAddrType):
 	mmtypes = {
-		'P': ati('password', 'password', False, None, None, None, (), 'Password generated from MMGen seed')
+		'P': ati('password', 'password', None, None, None, None, None, 'Password generated from MMGen seed')
 	}
