@@ -356,7 +356,7 @@ def list_cmds():
 	cw,d = 0,[]
 	Msg(green('AVAILABLE COMMANDS:'))
 	for gname in gm.cmd_groups:
-		ts = gm.init_group(None,gname,None)
+		ts = gm.gm_init_group(None,gname,None)
 		d.append((gname,ts.__doc__.strip(),gm.cmd_list,gm.dpy_data))
 		cw = max(max(len(k) for k in gm.dpy_data),cw)
 
@@ -486,10 +486,9 @@ class CmdGroupMgr(object):
 		clsname,kwargs = self.cmd_groups[gname]
 		if modname == None and 'modname' in kwargs:
 			modname = kwargs['modname']
-		gl = globals()
-		exec('from test.test_py_d import ts_{}'.format(modname or gname),gl,gl)
-		exec('from test.test_py_d.ts_{} import {}'.format(modname or gname,clsname),gl,gl)
-		return clsname
+		import importlib
+		modpath = 'test.test_py_d.ts_{}'.format(modname or gname)
+		return getattr(importlib.import_module(modpath),clsname)
 
 	def create_group(self,gname,full_data=False,modname=None,is3seed=False,add_dpy=False):
 		"""
@@ -497,20 +496,20 @@ class CmdGroupMgr(object):
 		Alternatively, if called with 'add_dpy=True', updates 'dpy_data' from module data
 		without touching 'cmd_list'
 		"""
-		clsname = self.load_mod(gname,modname)
-		tmpdir_nums = globals()[clsname].tmpdir_nums
 
+		cls = self.load_mod(gname,modname)
 		cdata = []
-		for a,b in getattr(globals()[clsname],'cmd_group'):
+
+		for a,b in cls.cmd_group:
 			if is3seed:
-				for n,(i,j) in enumerate(zip(tmpdir_nums,(128,192,256))):
+				for n,(i,j) in enumerate(zip(cls.tmpdir_nums,(128,192,256))):
 					k = '{}_{}'.format(a,n+1)
 					if type(b) == str:
 						cdata.append( (k, (i,'{} ({}-bit)'.format(b,j),[[[],i]])) )
 					else:
 						cdata.append( (k, (i,'{} ({}-bit)'.format(b[1],j),[[b[0],i]])) )
 			else:
-				cdata.append( (a, b if full_data else (tmpdir_nums[0],b,[[[],tmpdir_nums[0]]])) )
+				cdata.append( (a, b if full_data else (cls.tmpdir_nums[0],b,[[[],cls.tmpdir_nums[0]]])) )
 
 		if add_dpy:
 			self.dpy_data.update(dict(cdata))
@@ -518,12 +517,12 @@ class CmdGroupMgr(object):
 			self.cmd_list = tuple(e[0] for e in cdata)
 			self.dpy_data = dict(cdata)
 
-		return clsname
+		return cls
 
-	def init_group(self,trunner,gname,spawn_prog):
-		clsname,kwargs = self.cmd_groups[gname]
-		self.create_group(gname,**kwargs)
-		return globals()[clsname](trunner,cfgs,spawn_prog)
+	def gm_init_group(self,trunner,gname,spawn_prog):
+		kwargs = self.cmd_groups[gname][1]
+		cls = self.create_group(gname,**kwargs)
+		return cls(trunner,cfgs,spawn_prog)
 
 	def find_cmd_in_groups(self,cmd,group=None):
 		"""
@@ -539,11 +538,11 @@ class CmdGroupMgr(object):
 
 		for gname in groups:
 			clsname,kwargs = self.cmd_groups[gname]
-			self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
-			if cmd in dict(globals()[clsname].cmd_group):       # first search the class
+			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
+			if cmd in cls.cmd_group:             # first search the class
 				return gname
-			if cmd in dir(globals()[clsname](None,None,None)):  # then a throwaway instance
-				return gname # cmd might be in several groups - we'll go with the first
+			if cmd in dir(cls(None,None,None)):  # then a throwaway instance
+				return gname # cmd might exist in more than one group - we'll go with the first
 		return None
 
 class TestSuiteRunner(object):
@@ -634,7 +633,7 @@ class TestSuiteRunner(object):
 		sys.stderr.write(green(m.format(self.cmd_total,suf(self.cmd_total),t//60,t%60)))
 
 	def init_group(self,gname,cmd=None):
-		ts_cls = globals()[CmdGroupMgr().load_mod(gname)]
+		ts_cls = CmdGroupMgr().load_mod(gname)
 
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(opt,k):
@@ -649,7 +648,7 @@ class TestSuiteRunner(object):
 		m3 = ' (--{})'.format(segwit_opt.replace('_','-')) if segwit_opt else ''
 		m = m1 + m2 + m3
 
-		if segwit_opt and not getattr(ts_cls,'segwit_opts_ok'):
+		if segwit_opt and not ts_cls.segwit_opts_ok:
 			iqmsg('INFO → skipping ' + m)
 			return False
 
@@ -667,7 +666,7 @@ class TestSuiteRunner(object):
 
 		bmsg('Executing ' + m)
 
-		self.ts = self.gm.init_group(self,gname,self.spawn_wrapper)
+		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 
 		if opt.exit_after and opt.exit_after not in self.gm.cmd_list:
 			die(1,'{!r}: command not recognized'.format(opt.exit_after))
