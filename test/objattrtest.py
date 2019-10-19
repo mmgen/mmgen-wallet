@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C)2013-2019 The MMGen Project <mmgen@tuta.io>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+test/objattrtest.py:  Test immutable attributes of MMGen data objects
+"""
+
+# TODO: test 'typeconv' during instance creation
+
+import sys,os
+pn = os.path.dirname(sys.argv[0])
+os.chdir(os.path.join(pn,os.pardir))
+sys.path.__setitem__(0,os.path.abspath(os.curdir))
+
+os.environ['MMGEN_TEST_SUITE'] = '1'
+
+# Import these _after_ local path's been added to sys.path
+from test.objattrtest_py_d.oat_common import *
+
+opts_data = {
+	'sets': [
+		('show_nonstandard_init', True, 'verbose', True),
+		('show_descriptor_type', True, 'verbose', True),
+	],
+	'text': {
+		'desc': 'Test immutable attributes of MMGen data objects',
+		'usage':'[options] [object]',
+		'options': """
+-h, --help                  Print this help message
+--, --longhelp              Print help message for long options (common options)
+-i, --show-nonstandard-init Display non-standard attribute initialization info
+-d, --show-descriptor-type  Display the attribute's descriptor type
+-v, --verbose               Produce more verbose output
+"""
+	}
+}
+
+cmd_args = opts.init(opts_data)
+init_coin(g.coin)
+from mmgen.tw import *
+
+pd = namedtuple('permission_bits', ['read_ok','delete_ok','reassign_ok'])
+
+def parse_permbits(bits):
+	return pd(
+		bool(0b001 & bits), # read
+		bool(0b010 & bits), # delete
+		bool(0b100 & bits), # reassign
+	)
+
+def get_descriptor_obj(objclass,attrname):
+	for o in (objclass,objclass.__bases__[0]): # assume there's only one base class
+		if attrname in o.__dict__:
+			return o.__dict__[attrname]
+	rdie(3,'unable to find descriptor {}.{}'.format(objclass.__name__,attrname))
+
+def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
+
+	class SampleObjError(Exception): pass
+
+	pname = perm_name.replace('_ok','')
+	pstem = pname.rstrip('e')
+
+	try:
+		if perm_name == 'read_ok':
+			getattr(obj,attrname)
+		elif perm_name == 'reassign_ok':
+			try:
+				so = sample_objs[attrval_type.__name__]
+			except:
+				raise SampleObjError('unable to find sample object of type {!r}'.format(attrval_type.__name__))
+			# MMGenListItemAttr allows setting an attribute if its value is None
+			if type(dobj) == MMGenListItemAttr and getattr(obj,attrname) == None:
+				setattr(obj,attrname,so)
+			setattr(obj,attrname,so)
+		elif perm_name == 'delete_ok':
+			delattr(obj,attrname)
+	except SampleObjError as e:
+		rdie(2,'Test script error ({})'.format(e))
+	except Exception as e:
+		if perm_value == True:
+			fs = '{!r}: unable to {} attribute {!r}, though {}ing is allowed ({})'
+			rdie(2,fs.format(type(obj).__name__,pname,attrname,pstem,e))
+	else:
+		if perm_value == False:
+			fs = '{!r}: attribute {!r} is {n}able, though {n}ing is forbidden'
+			rdie(2,fs.format(type(obj).__name__,attrname,n=pstem))
+
+def test_attr(data,obj,attrname,dobj,bits,attrval_type):
+	if hasattr(obj,attrname): # TODO
+		td_attrval_type = data.attrs[attrname][1]
+
+		if attrval_type not in (td_attrval_type,type(None)):
+			fs = '\nattribute {!r} of {!r} instance has incorrect type {!r} (should be {!r})'
+			rdie(2,fs.format(attrname,type(obj).__name__,attrval_type.__name__,td_attrval_type.__name__))
+
+	if hasattr(dobj,'__dict__'):
+		d = dobj.__dict__
+		bits = bits._asdict()
+		for k in ('reassign_ok','delete_ok'):
+			if k in d:
+				if d[k] != bits[k]:
+					fs = 'init value {iv}={a} for attr {n!r} does not match test data ({iv}={b})'
+					rdie(2,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
+				if opt.verbose and d[k] == True:
+					msg_r(' {}={!r}'.format(k,d[k]))
+
+		if opt.show_nonstandard_init:
+			for k,v in (('typeconv',False),('no_type_check',True),('set_none_ok',True)):
+				if d[k] == v:
+					msg_r(' {}={}'.format(k,v))
+
+def test_object(test_data,objname):
+
+	if '.' in objname:
+		on1,on2 = objname.split('.')
+		cls = getattr(globals()[on1],on2)
+	else:
+		cls = globals()[objname]
+
+	fs = 'Testing attribute ' + ('{!r:<15}{dt:13}' if opt.show_descriptor_type else '{!r}')
+	data = test_data[objname]
+	obj = cls(*data.args,**data.kwargs)
+
+	for attrname,adata in data.attrs.items():
+		dobj = get_descriptor_obj(type(obj),attrname)
+		if opt.verbose:
+			msg_r(fs.format(attrname,dt=type(dobj).__name__.replace('MMGen','')))
+		bits = parse_permbits(adata[0])
+		test_attr(data,obj,attrname,dobj,bits,adata[1])
+		for perm_name,perm_value in bits._asdict().items():
+			test_attr_perm(obj,attrname,perm_name,perm_value,dobj,adata[1])
+		vmsg('')
+
+def do_loop():
+	import importlib
+	network = ('mainnet','testnet')[bool(g.testnet)]
+	modname = 'test.objattrtest_py_d.oat_{}_{}'.format(g.coin.lower(),network)
+	test_data = importlib.import_module(modname).tests
+	gmsg('Running immutable attribute tests for {} {}'.format(g.coin,network))
+
+	utests = cmd_args
+	for obj in test_data:
+		if utests and obj not in utests: continue
+		clr = blue if opt.verbose else nocolor
+		msg(clr('Testing {}'.format(obj)))
+		test_object(test_data,obj)
+
+do_loop()

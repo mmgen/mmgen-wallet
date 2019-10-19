@@ -21,6 +21,7 @@ export MMGEN_NO_LICENSE=1
 export PYTHONPATH=.
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
+objattrtest_py='test/objattrtest.py'
 unit_tests_py='test/unit_tests.py --names --quiet'
 tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names'
@@ -88,6 +89,7 @@ do
 		python="python3 -m trace --count --file=test/trace.acc --coverdir=test/trace"
 		unit_tests_py="$python $unit_tests_py"
 		objtest_py="$python $objtest_py"
+		objattrtest_py="$python $objattrtest_py"
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
@@ -107,6 +109,7 @@ do
 		tooltest_py+=" --verbose" tooltest2_py+=" --verbose"
 		gentest_py+=" --verbose" mmgen_tool+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
+		objattrtest_py+=" --verbose"
 		scrambletest_py+=" --verbose" ;;
 	*)  exit ;;
 	esac
@@ -194,6 +197,7 @@ t_obj="
 	$objtest_py --coin=ltc
 	$objtest_py --coin=ltc --testnet=1
 	$objtest_py --coin=eth
+	$objattrtest_py
 "
 f_obj='Data object test complete'
 
