@@ -24,12 +24,9 @@ import sys,os,unicodedata
 from decimal import *
 from string import hexdigits,ascii_letters,digits
 
-if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN_TRACEBACK'):
-	from mmgen.devtools import *
-else:
-	class MMGenObject(object): pass
-from mmgen.color import *
 from mmgen.exception import *
+from mmgen.color import *
+from mmgen.devtools import *
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
