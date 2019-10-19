@@ -486,7 +486,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,s)
 			va = g.proto.verify_addr(s,hex_width=cls.hex_width,return_dict=True)
-			assert va,'failed verification'
+			assert va,'coin address {!r} failed verification'.format(s)
 			me.addr_fmt = va['format']
 			me.hex = va['hex']
 			return me

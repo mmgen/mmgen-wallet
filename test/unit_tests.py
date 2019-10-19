@@ -67,12 +67,14 @@ try:
 		if test not in all_tests:
 			die(1,"'{}': test not recognized".format(test))
 
+	import importlib
 	for test in (cmd_args or all_tests):
-		exec('from test.unit_tests_d.ut_{m} import unit_test'.format(m=test))
+		modname = 'test.unit_tests_d.ut_{}'.format(test)
+		mod = importlib.import_module(modname)
 		gmsg('Running unit test {}'.format(test))
-		if not unit_test().run_test(test):
+		if not mod.unit_test().run_test(test):
 			rdie(1,'Unit test {!r} failed'.format(test))
-		exec('del unit_test'.format(test))
+		del mod
 
 	exit_msg()
 except KeyboardInterrupt:

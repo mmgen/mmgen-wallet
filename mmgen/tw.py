@@ -61,7 +61,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	class MMGenTwOutputList(list,MMGenObject): pass
 
 	class MMGenTwUnspentOutput(MMGenListItem):
-	#	attrs = 'txid','vout','amt','label','twmmid','addr','confs','scriptPubKey','days','skip'
 		txid     = MMGenListItemAttr('txid','CoinTxID')
 		vout     = MMGenListItemAttr('vout',int,typeconv=False)
 		amt      = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)

@@ -115,13 +115,15 @@ def run_test(test,arg,input_data):
 		die(2,red('{}'.format(e.args[0])))
 
 def do_loop():
-	utests = cmd_args
+	import importlib
 	network = ('mainnet','testnet')[bool(g.testnet)]
-	gl = globals()
-	exec('from test.objtest_py_d.ot_{}_{} import tests'.format(g.coin.lower(),network),gl,gl)
+	modname = 'test.objtest_py_d.ot_{}_{}'.format(g.coin.lower(),network)
+	test_data = importlib.import_module(modname).tests
 	gmsg('Running data object tests for {} {}'.format(g.coin,network))
+
 	clr = None
-	for test in tests:
+	utests = cmd_args
+	for test in test_data:
 		if utests and test not in utests: continue
 		nl = ('\n','')[bool(opt.super_silent) or clr == None]
 		clr = (blue,nocolor)[bool(opt.super_silent)]
@@ -129,7 +131,7 @@ def do_loop():
 		for k in ('bad','good'):
 			if not opt.silent:
 				msg(purple(capfirst(k)+' input:'))
-			for arg in tests[test][k]:
+			for arg in test_data[test][k]:
 				run_test(test,arg,input_data=k)
 
 do_loop()

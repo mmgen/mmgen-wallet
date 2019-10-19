@@ -70,7 +70,7 @@ class g(object):
 	tx_confs     = 3
 	seed_len     = 256
 
-	# Constant vars - some of these might be overriden in opts.py, but they don't change thereafter
+	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
 
 	coin                 = 'BTC'
 	dcoin                = None # the display coin unit

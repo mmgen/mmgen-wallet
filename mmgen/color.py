@@ -26,7 +26,7 @@ _colors = {
 	'green':       (  121,      (32,1) ),
 	'yellow':      (  229,      (33,1) ),
 	'blue':        (  75,       (34,1) ),
-	'magenta':     (  213,      (35,1) ),
+	'magenta':     (  205,      (35,1) ),
 	'cyan':        (  122,      (36,1) ),
 	'pink':        (  218,      (35,1) ),
 	'orange':      (  216,      (31,1) ),
@@ -41,14 +41,14 @@ _colors = {
 	'yelbg':       ( (232,229), (30,103) ),
 }
 
-for c in _colors:
-	e = _colors[c]
-	globals()['_256_'+c]   = '\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int \
-						else '\033[38;5;{};48;5;{};1m'.format(*e[0])
-	globals()['_16_'+c]    = '\033[{}m'.format(e[1][0]) if e[1][1] == 0 \
-						else '\033[{};{}m'.format(*e[1])
-	globals()['_clr_'+c] = ''; _reset = ''
-	exec('def {c}(s): return _clr_{c}+s+_reset'.format(c=c))
+for _c in _colors:
+	_e = _colors[_c]
+	globals()['_256_'+_c]   = '\033[38;5;{};1m'.format(_e[0]) if type(_e[0]) == int \
+						else '\033[38;5;{};48;5;{};1m'.format(*_e[0])
+	globals()['_16_'+_c]    = '\033[{}m'.format(_e[1][0]) if _e[1][1] == 0 \
+						else '\033[{};{}m'.format(*_e[1])
+	globals()['_clr_'+_c] = ''; _reset = ''
+	exec('def {c}(s): return _clr_{c}+s+_reset'.format(c=_c))
 
 def nocolor(s): return s
 

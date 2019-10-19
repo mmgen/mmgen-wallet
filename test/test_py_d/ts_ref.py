@@ -30,6 +30,7 @@ from test.test_py_d.ts_base import *
 from test.test_py_d.ts_shared import *
 
 wpasswd = 'reference password'
+nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.testnet])
 
 class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	'saved reference files'
@@ -202,7 +203,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			mmtype   = None,
 			add_args = [],
 			id_key   = None,
-			pat      = 'BTC Mainnet.*Legacy'):
+			pat      = '{}.*Legacy'.format(nw_name)):
 		af_key = 'ref_{}file'.format(ftype) + ('_' + id_key if id_key else '')
 		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
@@ -225,12 +226,12 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_segwitaddrfile_chk(self):
 		if not 'S' in g.proto.mmtypes:
 			return skip('not supported')
-		return self.ref_addrfile_chk(ftype='segwitaddr',pat='BTC Mainnet.*Segwit')
+		return self.ref_addrfile_chk(ftype='segwitaddr',pat='{}.*Segwit'.format(nw_name))
 
 	def ref_bech32addrfile_chk(self):
 		if not 'B' in g.proto.mmtypes:
 			return skip('not supported')
-		return self.ref_addrfile_chk(ftype='bech32addr',pat='BTC Mainnet.*Bech32')
+		return self.ref_addrfile_chk(ftype='bech32addr',pat='{}.*Bech32'.format(nw_name))
 
 	def ref_keyaddrfile_chk(self):
 		return self.ref_addrfile_chk(ftype='keyaddr')

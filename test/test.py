@@ -140,10 +140,10 @@ If no command is given, the whole test suite is run.
 data_dir = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
 # we need the values of two opts before running opts.init, so parse without initializing:
-uopts = opts.init(opts_data,parse_only=True)[0]
+_uopts = opts.init(opts_data,parse_only=True)[0]
 
 # step 1: delete data_dir symlink in ./test;
-if not ('resume' in uopts or 'skip_deps' in uopts):
+if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	try: os.unlink(data_dir)
 	except: pass
 
@@ -154,7 +154,7 @@ usr_args = opts.init(opts_data)
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
-if not ('resume' in uopts or 'skip_deps' in uopts):
+if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
@@ -330,21 +330,24 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'34': {},
 }
 
-for k in ('6','7','8'):
-	cfgs['2'+k] = {}
-	cfgs['2'+k].update(cfgs[k])
+def fixup_cfgs():
+	for k in ('6','7','8'):
+		cfgs['2'+k] = {}
+		cfgs['2'+k].update(cfgs[k])
 
-for k in cfgs:
-	cfgs[k]['tmpdir'] = os.path.join('test','tmp{}'.format(k))
-	cfgs[k]['segwit'] = randbool() if opt.segwit_random else bool(opt.segwit or opt.bech32)
+	for k in cfgs:
+		cfgs[k]['tmpdir'] = os.path.join('test','tmp{}'.format(k))
+		cfgs[k]['segwit'] = randbool() if opt.segwit_random else bool(opt.segwit or opt.bech32)
 
-from copy import deepcopy
-for a,b in (('6','11'),('7','12'),('8','13')):
-	cfgs[b] = deepcopy(cfgs[a])
-	cfgs[b]['tmpdir'] = os.path.join('test','tmp'+b)
+	from copy import deepcopy
+	for a,b in (('6','11'),('7','12'),('8','13')):
+		cfgs[b] = deepcopy(cfgs[a])
+		cfgs[b]['tmpdir'] = os.path.join('test','tmp'+b)
 
-if g.debug_utf8:
-	for k in cfgs: cfgs[k]['tmpdir'] += '-α'
+	if g.debug_utf8:
+		for k in cfgs: cfgs[k]['tmpdir'] += '-α'
+
+fixup_cfgs()
 
 utils = {
 #	'check_deps': 'check dependencies for specified command (WIP)', # TODO
