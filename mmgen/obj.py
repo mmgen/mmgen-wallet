@@ -251,17 +251,30 @@ class MMGenListItem(MMGenObject):
 
 	valid_attrs = None
 	valid_attrs_extra = set()
+	invalid_attrs = {
+		'pfmt',
+		'pmsg',
+		'pdie',
+		'valid_attrs',
+		'valid_attrs_extra',
+		'invalid_attrs',
+		'immutable_attr_init_check',
+	}
 
 	def __init__(self,*args,**kwargs):
 		if self.valid_attrs == None:
 			type(self).valid_attrs = (
-				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra ) -
-				{'pfmt','pmsg','pdie','valid_attrs','valid_attrs_extra'} )
+				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra ) - self.invalid_attrs )
+
 		if args:
-			raise ValueError('Non-keyword args not allowed')
+			raise ValueError('Non-keyword args not allowed in {!r} constructor'.format(type(self).__name__))
+
 		for k in kwargs:
 			if kwargs[k] != None:
 				setattr(self,k,kwargs[k])
+
+		# Require all immutables to be initialized.  Check performed only when testing.
+		self.immutable_attr_init_check()
 
 	# allow only valid attributes to be set
 	def __setattr__(self,name,value):

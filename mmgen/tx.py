@@ -247,6 +247,8 @@ class MMGenTxIO(MMGenListItem):
 class MMGenTxInput(MMGenTxIO):
 	scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
 	sequence     = MMGenListItemAttr('sequence',int,typeconv=False)
+	# required by copy_inputs_from_tw()
+	copy_attrs = { 'scriptPubKey','vout','amt','label','mmid','addr','confs','txid' }
 
 class MMGenTxOutput(MMGenTxIO):
 	is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
@@ -660,10 +662,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# inputs methods
 	def copy_inputs_from_tw(self,tw_unspent_data):
 		self.inputs = MMGenTxInputList()
-		MMGenTxInput() # throwaway instance to initialize cls.valid_attrs
 		for d in tw_unspent_data:
-			t = MMGenTxInput(**{attr:getattr(d,attr) for attr in d.__dict__ if attr in MMGenTxInput.valid_attrs})
-			if d.twmmid.type == 'mmgen': t.mmid = d.twmmid # twmmid -> mmid
+			t = MMGenTxInput(**{attr:getattr(d,attr) for attr in d.__dict__ if attr in MMGenTxInput.copy_attrs})
+			if d.twmmid.type == 'mmgen':
+				t.mmid = d.twmmid # twmmid -> mmid
 			self.inputs.append(t)
 
 	def get_input_sids(self):

@@ -21,7 +21,7 @@ altcoins.eth.tw: Ethereum tracking wallet and related classes for the MMGen suit
 """
 
 from mmgen.common import *
-from mmgen.obj import ETHAmt,TwLabel,is_coin_addr,is_mmgen_id
+from mmgen.obj import ETHAmt,TwLabel,is_coin_addr,is_mmgen_id,MMGenListItem,MMGenListItemAttr,MMGenImmutableAttr
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
 from .contract import Token
@@ -294,6 +294,18 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 				'amount': self.wallet.get_balance(d['addr']),
 				'confirmations': 0, # TODO
 				} for d in wl]
+
+	class MMGenTwUnspentOutput(MMGenListItem):
+		txid   = MMGenListItemAttr('txid','CoinTxID')
+		vout   = MMGenListItemAttr('vout',int,typeconv=False)
+		amt    = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
+		amt2   = MMGenListItemAttr('amt2',g.proto.coin_amt.__name__)
+		label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
+		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
+		addr   = MMGenImmutableAttr('addr','CoinAddr')
+		confs  = MMGenImmutableAttr('confs',int,typeconv=False)
+		days   = MMGenListItemAttr('days',int,typeconv=False)
+		skip   = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 

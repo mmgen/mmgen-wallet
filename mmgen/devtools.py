@@ -2,6 +2,7 @@
 
 class MMGenObject(object):
 	'placeholder - overridden when testing'
+	def immutable_attr_init_check(self): pass
 
 import os
 if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN_TRACEBACK'):
@@ -106,6 +107,24 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 
 			import re
 			return re.sub('\n+','\n',''.join(out))
+
+		# Check that all immutables have been initialized.  Expensive, so do only when testing.
+		def immutable_attr_init_check(self):
+			from mmgen.globalvars import g
+			if g.test_suite:
+				from mmgen.util import rdie
+				cls = type(self)
+				for attrname in sorted({a for a in self.valid_attrs if a[0] != '_'}):
+					for o in (cls,cls.__bases__[0]): # assume there's only one base class
+						if attrname in o.__dict__:
+							attr = o.__dict__[attrname]
+							break
+					else:
+						rdie(3,'unable to find descriptor {}.{}'.format(cls.__name__,attrname))
+					if type(attr).__name__ == 'MMGenImmutableAttr':
+						if attrname not in self.__dict__:
+							fs = 'attribute {!r} of {} has not been initialized in constructor!'
+							rdie(3,fs.format(attrname,cls.__name__))
 
 	def print_diff(a,b,from_json=True):
 		if from_json:

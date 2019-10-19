@@ -300,7 +300,7 @@ class AddrListEntry(MMGenListItem):
 	wallet_passwd  = MMGenListItemAttr('wallet_passwd','WalletPassword')
 
 class PasswordListEntry(MMGenListItem):
-	passwd = MMGenImmutableAttr('passwd',str,typeconv=False) # TODO: create Password type
+	passwd = MMGenListItemAttr('passwd',str,typeconv=False) # TODO: create Password type
 	idx    = MMGenImmutableAttr('idx','AddrIdx')
 	label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 	sec    = MMGenListItemAttr('sec',PrivKey,typeconv=False)
