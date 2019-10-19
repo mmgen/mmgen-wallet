@@ -15,6 +15,7 @@ from mmgen.seed import *
 from mmgen.protocol import *
 from mmgen.addr import *
 from mmgen.tx import *
+from mmgen.tw import *
 
 from collections import namedtuple
 atd = namedtuple('attrtest_entry',['attrs','args','kwargs'])

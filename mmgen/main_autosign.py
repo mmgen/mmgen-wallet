@@ -278,7 +278,7 @@ def print_summary(signed_txs):
 				msg(fs.format(
 					tx.txid.fmt(width=t_wid,color=True) if nm is non_mmgen[0] else ' '*t_wid,
 					nm.addr.fmt(width=a_wid,color=True),
-					nm._amt.hl() + ' ' + yellow(tx.coin)))
+					nm.amt.hl() + ' ' + yellow(tx.coin)))
 	else:
 		msg('No non-MMGen outputs')
 

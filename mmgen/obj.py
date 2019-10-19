@@ -187,11 +187,12 @@ class Int(int,Hilite): pass
 # Reassignment and deletion forbidden
 class MMGenImmutableAttr(object): # Descriptor
 
-	def __init__(self,name,dtype,typeconv=True,no_type_check=False,set_none_ok=False):
+	ok_dtypes = (str,type,type(None),type(lambda:0))
+
+	def __init__(self,name,dtype,typeconv=True,set_none_ok=False):
 		self.typeconv = typeconv
-		self.no_type_check = no_type_check
 		self.set_none_ok = set_none_ok
-		assert isinstance(dtype,(str,type,type(None))),'{!r}: invalid dtype arg'.format(dtype)
+		assert isinstance(dtype,self.ok_dtypes),'{!r}: invalid dtype arg'.format(dtype)
 		self.name = name
 		self.dtype = dtype
 
@@ -201,7 +202,6 @@ class MMGenImmutableAttr(object): # Descriptor
 	# forbid all reassignment
 	def set_attr_ok(self,instance):
 		return not self.name in instance.__dict__
-#		return not hasattr(instance,self.name)
 
 	def __set__(self,instance,value):
 		if not self.set_attr_ok(instance):
@@ -212,8 +212,10 @@ class MMGenImmutableAttr(object): # Descriptor
 		elif self.typeconv:   # convert type
 			instance.__dict__[self.name] = \
 				globals()[self.dtype](value,on_fail='raise') if type(self.dtype) == str else self.dtype(value)
-		else:               # check type
-			if type(value) == self.dtype or self.no_type_check:
+		else:                 # check type
+			if type(value) == self.dtype:
+				instance.__dict__[self.name] = value
+			elif callable(self.dtype) and type(value) == self.dtype():
 				instance.__dict__[self.name] = value
 			else:
 				m = "Attribute '{}' of {} instance must of type {}"

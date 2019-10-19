@@ -51,8 +51,6 @@ opts_data = {
 }
 
 cmd_args = opts.init(opts_data)
-init_coin(g.coin)
-from mmgen.tw import *
 
 pd = namedtuple('permission_bits', ['read_ok','delete_ok','reassign_ok'])
 
@@ -121,7 +119,7 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 					msg_r(' {}={!r}'.format(k,d[k]))
 
 		if opt.show_nonstandard_init:
-			for k,v in (('typeconv',False),('no_type_check',True),('set_none_ok',True)):
+			for k,v in (('typeconv',False),('set_none_ok',True)):
 				if d[k] == v:
 					msg_r(' {}={}'.format(k,v))
 
@@ -161,4 +159,5 @@ def do_loop():
 		msg(clr('Testing {}'.format(obj)))
 		test_object(test_data,obj)
 
+init_coin(g.coin)
 do_loop()

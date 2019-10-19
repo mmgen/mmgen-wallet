@@ -298,8 +298,8 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid   = MMGenListItemAttr('txid','CoinTxID')
 		vout   = MMGenListItemAttr('vout',int,typeconv=False)
-		amt    = MMGenImmutableAttr('amt',g.proto.coin_amt.__name__)
-		amt2   = MMGenListItemAttr('amt2',g.proto.coin_amt.__name__)
+		amt    = MMGenImmutableAttr('amt',lambda:g.proto.coin_amt,typeconv=False)
+		amt2   = MMGenListItemAttr('amt2',lambda:g.proto.coin_amt,typeconv=False)
 		label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
 		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr   = MMGenImmutableAttr('addr','CoinAddr')
