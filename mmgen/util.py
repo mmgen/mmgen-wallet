@@ -920,13 +920,11 @@ def altcoin_subclass(cls,mod_id,cls_name):
 	mod_dir = g.proto.base_coin.lower()
 	pname = g.proto.class_pfx if hasattr(g.proto,'class_pfx') else capfirst(g.proto.name)
 	tname = 'Token' if g.token else ''
-	e1 = 'from mmgen.altcoins.{}.{} import {}{}{}'.format(mod_dir,mod_id,pname,tname,cls_name)
-	e2 = 'alt_cls = {}{}{}'.format(pname,tname,cls_name)
-	gl = globals()
+	import importlib
+	modname = 'mmgen.altcoins.{}.{}'.format(mod_dir,mod_id)
+	clsname = '{}{}{}'.format(pname,tname,cls_name)
 	try:
-		exec(e1,gl,gl)
-		exec(e2,gl,gl)
-		return alt_cls
+		return getattr(importlib.import_module(modname),clsname)
 	except ImportError:
 		return cls
 
