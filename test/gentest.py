@@ -89,17 +89,17 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
 def ethkey_sec2addr(sec):
-	p = sp.Popen(['ethkey','info',sec],stdout=sp.PIPE)
+	p = Popen(['ethkey','info',sec],stdout=PIPE)
 	o = p.stdout.read().decode().splitlines()
 	return sec,o[-1].split()[1]
 
 def keyconv_sec2addr(sec):
-	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
+	p = Popen(['keyconv','-C',g.coin,sec.wif],stderr=PIPE,stdout=PIPE)
 	o = p.stdout.read().decode().splitlines()
 	return (o[1].split()[1],o[0].split()[1])
 
 def zcash_mini_sec2addr(sec):
-	p = sp.Popen(['zcash-mini','-key','-simple'],stderr=sp.PIPE,stdin=sp.PIPE,stdout=sp.PIPE)
+	p = Popen(['zcash-mini','-key','-simple'],stderr=PIPE,stdin=PIPE,stdout=PIPE)
 	ret = p.communicate(sec.wif.encode()+b'\n')[0].decode().strip().split('\n')
 	return (sec.wif,ret[0],ret[-1])
 
@@ -122,7 +122,7 @@ def pycoin_sec2addr(sec):
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
-	global b,b_desc,ext_lib,ext_sec2addr,sp,eth,addr_type
+	global b,b_desc,ext_prog,ext_sec2addr,eth,addr_type
 
 	def test_support(k):
 		if b == k: return True
@@ -132,16 +132,13 @@ def init_external_prog():
 		return False
 
 	if b == 'zcash_mini' or addr_type.name == 'zcash_z':
-		import subprocess as sp
-		from mmgen.protocol import init_coin
 		ext_sec2addr = zcash_mini_sec2addr
-		ext_lib = 'zcash_mini'
+		ext_prog = 'zcash_mini'
 		init_coin('zec')
 		addr_type = MMGenAddrType('Z')
 	elif test_support('ethkey'): # build with 'cargo build -p ethkey-cli --release'
-		import subprocess as sp
 		ext_sec2addr = ethkey_sec2addr
-		ext_lib = 'ethkey'
+		ext_prog = 'ethkey'
 	elif test_support('pycoin'):
 		global network_for_netcode
 		try:
@@ -149,15 +146,14 @@ def init_external_prog():
 		except:
 			raise ImportError("Unable to import pycoin.networks.registry Is pycoin installed and up-to-date?")
 		ext_sec2addr = pycoin_sec2addr
-		ext_lib = 'pycoin'
+		ext_prog = 'pycoin'
 	elif test_support('keyconv'):
-		import subprocess as sp
 		ext_sec2addr = keyconv_sec2addr
-		ext_lib = 'keyconv'
+		ext_prog = 'keyconv'
 	else:
 		m = '{}: coin supported by MMGen but unsupported by gentest.py for {}'
 		raise ValueError(m.format(g.coin,('mainnet','testnet')[g.testnet]))
-	b_desc = ext_lib
+	b_desc = ext_prog
 	b = 'ext'
 
 def match_error(sec,wif,a_addr,b_addr,a,b):
@@ -175,13 +171,13 @@ def compare_test():
 			m = 'skipping - external program does not support {} for coin {}'
 			msg(m.format(addr_type.name.capitalize(),g.coin))
 			return
-	if 'ext_lib' in globals():
-		if g.coin not in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
-			msg("Coin '{}' incompatible with external generator '{}'".format(g.coin,ext_lib))
+	if 'ext_prog' in globals():
+		if g.coin not in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_prog]:
+			msg("Coin '{}' incompatible with external generator '{}'".format(g.coin,ext_prog))
 			return
 	last_t = time.time()
 	A = kg_a.desc
-	B = ext_lib if b == 'ext' else kg_b.desc
+	B = ext_prog if b == 'ext' else kg_b.desc
 	if A == B:
 		msg('skipping - generation methods A and B are the same ({})'.format(A))
 		return
@@ -211,7 +207,7 @@ def compare_test():
 			b_addr = ag.to_addr(kg_b.to_pubhex(sec))
 		vmsg('\nkey:  {}\naddr: {}\n'.format(sec.wif,a_addr))
 		if a_addr != b_addr:
-			match_error(sec,sec.wif,a_addr,b_addr,a,ext_lib if b == 'ext' else b)
+			match_error(sec,sec.wif,a_addr,b_addr,a,ext_prog if b == 'ext' else b)
 	qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
@@ -250,9 +246,14 @@ def dump_test():
 			match_error(sec,wif,a_addr,b_addr,3,a)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
+# begin execution
+from subprocess import Popen,PIPE
+from mmgen.protocol import init_coin
 from mmgen.altcoin import CoinInfo as ci
+
 urounds,fh = None,None
 dump = []
+
 if len(cmd_args) == 2:
 	try:
 		urounds = int(cmd_args[1])
@@ -302,10 +303,10 @@ ag = AddrGenerator(addr_type)
 
 if a and b:
 	if opt.all:
-		from mmgen.protocol import init_coin,init_genonly_altcoins,CoinProtocol
+		from mmgen.protocol import init_genonly_altcoins,CoinProtocol
 		init_genonly_altcoins('btc',trust_level=0)
 		mmgen_supported = CoinProtocol.get_valid_coins(upcase=True)
-		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
+		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_prog]:
 			if coin not in mmgen_supported: continue
 			init_coin(coin)
 			if addr_type not in g.proto.mmtypes:
