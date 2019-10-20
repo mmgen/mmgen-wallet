@@ -498,7 +498,7 @@ class CoinInfo(object):
 				# broken: DASH - only compressed, LTC segwit old fmt
 				'BTC','LTC','VIA','FTC','DOGE','MEC',
 				'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR'),
-			'pyethereum': ('ETH','ETC'),
+			'ethkey': ('ETH','ETC'),
 			'zcash_mini': ('ZEC',),
 			'keyconv': ( # all supported by vanitygen-plus 'keyconv' util
 				# broken: PIVX
@@ -515,7 +515,7 @@ class CoinInfo(object):
 				# broken: DASH - only compressed { 'DASH':'tDASH' }
 				'BTC':'XTN','LTC':'XLT','VIA':'TVI','FTC':'FTX','DOGE':'XDT','DCR':'DCRT'
 				},
-			'pyethereum': {},
+			'ethkey': {},
 			'keyconv': {}
 		}
 	}

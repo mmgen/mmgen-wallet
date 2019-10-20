@@ -64,7 +64,7 @@ EXAMPLES:
     (compare addrs generated with secp256k1 library to {dn} wallet dump)
 
   External libraries required for the 'ext' generator:
-    + pyethereum (for ETH,ETC)           https://github.com/ethereum/pyethereum
+    + ethkey     (for ETH,ETC)           https://github.com/paritytech/parity-ethereum
     + zcash-mini (for zcash_z addresses) https://github.com/FiloSottile/zcash-mini
     + pycoin     (for supported coins)   https://github.com/richardkiss/pycoin
     + keyconv    (for all other coins)   https://github.com/exploitagency/vanitygen-plus
@@ -88,8 +88,10 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
-def pyethereum_sec2addr(sec):
-	return sec,eth.privtoaddr(sec).hex()
+def ethkey_sec2addr(sec):
+	p = sp.Popen(['ethkey','info',sec],stdout=sp.PIPE)
+	o = p.stdout.read().decode().splitlines()
+	return sec,o[-1].split()[1]
 
 def keyconv_sec2addr(sec):
 	p = sp.Popen(['keyconv','-C',g.coin,sec.wif],stderr=sp.PIPE,stdout=sp.PIPE)
@@ -136,13 +138,10 @@ def init_external_prog():
 		ext_lib = 'zcash_mini'
 		init_coin('zec')
 		addr_type = MMGenAddrType('Z')
-	elif test_support('pyethereum'):
-		try:
-			import mmgen.altcoins.eth.pyethereum.utils as eth
-		except:
-			raise ImportError("Unable to import 'ethereum' module. Is pyethereum installed?")
-		ext_sec2addr = pyethereum_sec2addr
-		ext_lib = 'pyethereum'
+	elif test_support('ethkey'): # build with 'cargo build -p ethkey-cli --release'
+		import subprocess as sp
+		ext_sec2addr = ethkey_sec2addr
+		ext_lib = 'ethkey'
 	elif test_support('pycoin'):
 		global network_for_netcode
 		try:
@@ -286,7 +285,7 @@ else:
 	try:
 		a = int(a)
 		assert 1 <= a <= len(g.key_generators),'{}: invalid key generator'.format(a)
-		if b in ('ext','pyethereum','pycoin','keyconv','zcash_mini'):
+		if b in ('ext','ethkey','pycoin','keyconv','zcash_mini'):
 			init_external_prog()
 		else:
 			b = int(b)
@@ -309,9 +308,10 @@ if a and b:
 		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_lib]:
 			if coin not in mmgen_supported: continue
 			init_coin(coin)
-			tmp_addr_type = addr_type if addr_type in g.proto.mmtypes else MMGenAddrType(g.proto.dfl_mmtype)
-			kg_a = KeyGenerator(tmp_addr_type,a)
-			ag = AddrGenerator(tmp_addr_type)
+			if addr_type not in g.proto.mmtypes:
+				addr_type = MMGenAddrType(g.proto.dfl_mmtype)
+			kg_a = KeyGenerator(addr_type,a)
+			ag = AddrGenerator(addr_type)
 			compare_test()
 	else:
 		if b != 'ext':

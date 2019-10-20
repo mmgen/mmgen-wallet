@@ -247,23 +247,18 @@ t_alts="
 # disabled, pycoin generates old-style LTC Segwit addrs:
 #	$gentest_py --coin=ltc --type=segwit 2:ext $rounds
 
-# disabled, no pyethereum:
-#	$gentest_py --coin=etc 2:ext $rounds
-#	$gentest_py --coin=eth 2:ext $rounds
-#	$gentest_py --all 2:pyethereum $rounds
-
 [ "$MSYS2" ] || { # no pycoin, zcash-mini
 	t_alts="$t_alts
-		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
-		$gentest_py --all 2:zcash_mini $rounds_mid
-		$gentest_py --all 2:pycoin $rounds
-		$gentest_py --coin=btc 2:ext $rounds
-		$gentest_py --coin=btc --type=compressed 2:ext $rounds
+		$gentest_py --all --type=legacy 2:pycoin $rounds
+		$gentest_py --all --type=compressed 2:pycoin $rounds
 		$gentest_py --coin=btc --type=segwit 2:ext $rounds
 		$gentest_py --coin=btc --type=bech32 2:ext $rounds
-		$gentest_py --coin=ltc 2:ext $rounds
-		$gentest_py --coin=ltc --type=compressed 2:ext $rounds
+		$gentest_py --coin=etc 2:ext $rounds
+		$gentest_py --coin=eth 2:ext $rounds
+		$gentest_py --all 2:ethkey $rounds
 		$gentest_py --coin=zec 2:ext $rounds
+		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
+		$gentest_py --all 2:zcash_mini $rounds_mid
 	"
 }
 
