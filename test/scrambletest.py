@@ -17,7 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test/scrambletest.py: seed scrambling and addrlist data generation tests for all supported altcoins
+test/scrambletest.py: seed scrambling and addrlist data generation tests for all
+supported coins + passwords
 """
 
 import sys,os,subprocess
@@ -56,7 +57,6 @@ os.environ['MMGEN_DEBUG_ADDRLIST'] = '1'
 if not opt.system:
 	os.environ['PYTHONPATH'] = repo_root
 
-# TODO: add vectors for 'mmgen-passgen'
 from collections import namedtuple
 td = namedtuple('scrambletest_entry',['seed','str','id_str','lbl','addr'])
 
@@ -79,6 +79,18 @@ coin_data = {
 'zec':           td('0bf9b5b20af7b5a0','zec:legacy',    '-ZEC',  'ZEC',           't1URz8BHxV38v3gsaN6oHQNKC16s35R9WkY'),
 'zec_zcash_z':   td('b15570d033df9b1a','zec:zcash_z',   '-ZEC-Z','ZEC:ZCASH_Z',   'zcLMMsnzfFYZWU4avRBnuc83yh4jTtJXbtP32uWrs3ickzu1krMU4ppZCQPTwwfE9hLnRuFDSYF8VFW13aT9eeQK8aov3Ge'),
 'xmr':           td('c76af3b088da3364','xmr:monero',    '-XMR-M','XMR:MONERO',    '41tmwZd2CdXEGtWqGY9fH9FVtQM8VxZASYPQ3VJQhFjtGWYzQFuidD21vJYTi2yy3tXRYXTNXBTaYVLav62rwUUpFFyicZU'),
+}
+
+passwd_data = {
+'dfl_dfl_αω':  td('b78c363f3d6714f6', 'b58:20:αω',  '-αω-b58-20',  'αω b58:20',  'L3JcAZze6LQS2TFodoW9'),
+'dfl_H_αω':    td('2cba1ba1a73d5497', 'b58:10:αω',  '-αω-b58-10',  'αω b58:10',  'KgSBfzPBWj'),
+'b32_dfl_αω':  td('ad71ff8d0512660d', 'b32:24:αω',  '-αω-b32-24',  'αω b32:24',  'VQFESDGWAQCOCSG6GDLIG5OQ'),
+'b32_H_αω':    td('b050a1613dd4d3ad', 'b32:12:αω',  '-αω-b32-12',  'αω b32:12',  'QTI7HTVN3JOE'),
+'hex_dfl_αω':  td('8322b26abd931d55', 'hex:64:αω',  '-αω-hex-64',  'αω hex:64',  '6e9f8d5d2ec6c4f2a079b163e37f5dc2a7e6adb221c4de315078ffad971ba260'),
+'hex_H_αω':    td('46beb852d38ed5c4', 'hex:32:αω',  '-αω-hex-32',  'αω hex:32',  '86143b36b649728cc8f3677872ed37d3'),
+'bip39_dfl_αω':td('95b383d5092a55df', 'bip39:24:αω','-αω-bip39-24','αω bip39:24','treat athlete brand top beauty poverty senior unhappy vacant domain yellow scale fossil aim lonely fatal sun nuclear such ancient stage require stool similar'),
+'bip39_18_αω': td('29e5a605ffa36142', 'bip39:18:αω','-αω-bip39-18','αω bip39:18','better legal various ketchup then range festival either tomato cradle say absorb solar earth alter pattern canyon liar'),
+'bip39_12_αω': td('efa13cb309d7fc1d', 'bip39:12:αω','-αω-bip39-12','αω bip39:12','lady oppose theme fit position merry reopen acquire tuna dentist young chunk'),
 }
 
 cvr_opts = ' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) if opt.coverage else ''
@@ -122,9 +134,21 @@ def do_coin_tests():
 		cmd = cmd_base.format('addr') + ' --coin={}{} test/ref/98831F3A.mmwords 1'.format(coin,type_arg)
 		do_test(cmd,tdata,'--coin {:4} {:22}'.format(coin.upper(),type_arg),'address')
 
+def do_passwd_tests():
+	bmsg('Testing password scramble strings and list IDs')
+	for tname,tdata in passwd_data.items():
+		a,b,pwid = tname.split('_')
+		fmt_arg = '' if a == 'dfl' else '--passwd-fmt={} '.format(a)
+		len_arg = '' if b == 'dfl' else '--passwd-len={} '.format(b)
+		fs = '{}' + fmt_arg + len_arg + '{}' + pwid + ' 1'
+		cmd = cmd_base.format('pass') + ' ' + fs.format('--accept-defaults ','test/ref/98831F3A.mmwords ')
+		s = fs.format('','')
+		do_test(cmd,tdata,s+' '*(40-len(s)),'password')
+
 start_time = int(time.time())
 
 do_coin_tests()
+do_passwd_tests()
 
 t = int(time.time()) - start_time
 m = 'All requested tests finished OK, elapsed time: {:02}:{:02}'

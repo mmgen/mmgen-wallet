@@ -972,6 +972,7 @@ Record this checksum: it will be used to verify the password file in the future
 			scramble_key = '{}:{}:{}'.format('hex',pwlen,self.pw_id_str)
 
 		from mmgen.crypto import scramble_seed
+		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 
 	def get_line(self,lines):
