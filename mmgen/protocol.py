@@ -455,7 +455,7 @@ class CoinProtocol(MMGenObject):
 	def get_valid_coins(cls,upcase=False):
 		from mmgen.altcoin import CoinInfo as ci
 		ret = sorted(set(
-			[e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
+			[e.symbol for e in ci.coin_constants['mainnet'] if e.trust_level != -1]
 			+ list(cls.coins.keys())))
 		return [getattr(e,('lower','upper')[upcase])() for e in ret]
 
@@ -473,12 +473,12 @@ def init_genonly_altcoins(usr_coin,trust_level=None):
 		if usr_coin.lower() in CoinProtocol.coins:
 			return CoinProtocol.coins[usr_coin.lower()][2]
 		usr_coin = usr_coin.upper()
-		mn_coins = [e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
+		mn_coins = [e.symbol for e in ci.coin_constants['mainnet'] if e.trust_level != -1]
 		if usr_coin not in mn_coins: return None
-		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)][6]
+		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)].trust_level
 	data = {}
 	for k in ('mainnet','testnet'):
-		data[k] = [e for e in ci.coin_constants[k] if e[6] >= trust_level]
+		data[k] = [e for e in ci.coin_constants[k] if e.trust_level >= trust_level]
 	exec(make_init_genonly_altcoins_str(data),globals(),globals())
 	return trust_level
 
@@ -486,7 +486,7 @@ def make_init_genonly_altcoins_str(data):
 
 	def make_proto(e,testnet=False):
 		tn_str = 'Testnet' if testnet else ''
-		proto,coin = '{}{}Protocol'.format(e[0],tn_str),e[1]
+		proto,coin = '{}{}Protocol'.format(e.name,tn_str),e.symbol
 		if proto[0] in '0123456789': proto = 'X_'+proto
 		if proto in globals(): return ''
 		if coin.lower() in CoinProtocol.coins: return ''
@@ -496,13 +496,13 @@ def make_init_genonly_altcoins_str(data):
 
 		o  = ['class {}(Bitcoin{}ProtocolAddrgen):'.format(proto,tn_str)]
 		o += ["base_coin = '{}'".format(coin)]
-		o += ["name = '{}'".format(e[0].lower())]
-		o += ["nameCaps = '{}'".format(e[0])]
-		a = "addr_ver_num = {{ 'p2pkh': ({},{!r})".format(num2hexstr(e[3][0]),e[3][1])
-		b = ", 'p2sh':  ({},{!r})".format(num2hexstr(e[4][0]),e[4][1]) if e[4] else ''
+		o += ["name = '{}'".format(e.name.lower())]
+		o += ["nameCaps = '{}'".format(e.name)]
+		a = "addr_ver_num = {{ 'p2pkh': ({},{!r})".format(num2hexstr(e.p2pkh_info[0]),e.p2pkh_info[1])
+		b = ", 'p2sh':  ({},{!r})".format(num2hexstr(e.p2sh_info[0]),e.p2sh_info[1]) if e.p2sh_info else ''
 		o += [a+b+' }']
-		o += ["wif_ver_num = {{ 'std': {} }}".format(num2hexstr(e[2]))]
-		o += ["mmtypes = ('L','C'{})".format(",'S'" if e[5] else '')]
+		o += ["wif_ver_num = {{ 'std': {} }}".format(num2hexstr(e.wif_ver_num))]
+		o += ["mmtypes = ('L','C'{})".format(",'S'" if e.has_segwit else '')]
 		o += ["dfl_mmtype = '{}'".format('L')]
 		return '\n\t'.join(o) + '\n'
 
@@ -512,10 +512,10 @@ def make_init_genonly_altcoins_str(data):
 	for e in data['testnet']:
 		out += make_proto(e,testnet=True)
 
-	tn_coins = [e[1] for e in data['testnet']]
+	tn_coins = [e.symbol for e in data['testnet']]
 	fs = "CoinProtocol.coins['{}'] = ({}Protocol,{})\n"
 	for e in data['mainnet']:
-		proto,coin = e[0],e[1]
+		proto,coin = e.name,e.symbol
 		if proto[0] in '0123456789': proto = 'X_'+proto
 		if proto+'Protocol' in globals(): continue
 		if coin.lower() in CoinProtocol.coins: continue

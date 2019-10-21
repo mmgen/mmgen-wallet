@@ -34,171 +34,174 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 import sys
 def msg(s): sys.stderr.write(s+'\n')
 
+from collections import namedtuple
+ce = namedtuple('CoinInfoEntry',
+	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
+
 class CoinInfo(object):
 	coin_constants = {}
 	coin_constants['mainnet'] = (
-#    NAME                     SYM        WIF     P2PKH             P2SH              SEGWIT TRUST
-#                                        trust levels: 0=untested 1=low 2=med 3=high -1=disable
+#   Trust levels: 0=untested 1=low 2=med 3=high -1=disable
 #   Fork coins must be disabled here to prevent generation from incorrect sub-seed
-	('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
-	('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
-	('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
-	('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False,-1),
-	('2GiveCoin',             '2GIVE',   0xa7,   (0x27,('G','H')), None,             False, 0),
-	('42Coin',                '42',      0x88,   (0x08,'4'),       None,             False, 1),
-	('ACoin',                 'ACOIN',   0xe6,   (0x17,'A'),       None,             False, 0),
-	('Alphacoin',             'ALF',     0xd2,   (0x52,('Z','a')), None,             False, 0),
-	('Anoncoin',              'ANC',     0x97,   (0x17,'A'),       None,             False, 1),
-	('Apexcoin',              'APEX',    0x97,   (0x17,'A'),       None,             False, 0),
-	('Aquariuscoin',          'ARCO',    0x97,   (0x17,'A'),       None,             False, 0),
-	('Argentum',              'ARG',     0x97,   (0x17,'A'),       (0x05,'3'),       False, 1),
-	('AsiaCoin',              'AC',      0x97,   (0x17,'A'),       (0x08,'4'),       False, 1),
-	('Auroracoin',            'AUR',     0x97,   (0x17,'A'),       None,             False, 1),
-	('BBQcoin',               'BQC',     0xd5,   (0x55,'b'),       None,             False, 1),
-	('BitcoinDark',           'BTCD',    0xbc,   (0x3c,'R'),       (0x55,'b'),       False, 1),
-	('BitcoinFast',           'BCF',     0xe0,   (0x60,('f','g')), None,             False, 0),
-	('BitQuark',              'BTQ',     0xba,   (0x3a,'Q'),       None,             False, 0),
-	('Blackcoin',             'BLK',     0x99,   (0x19,'B'),       (0x55,'b'),       False, 1),
-	('BlackmoonCrypto',       'BMC',     0x83,   (0x03,'2'),       None,             False, 0),
-	('BlockCat',              'CAT',     0x95,   (0x15,'9'),       None,             False, 0),
-	('CanadaECoin',           'CDN',     0x9c,   (0x1c,'C'),       (0x05,'3'),       False, 1),
-	('CannabisCoin',          'CANN',    0x9c,   (0x1c,'C'),       None,             False, 0),
-	('CannaCoin',             'CCN',     0x9c,   (0x1c,'C'),       (0x05,'3'),       False, 1),
-	('Capricoin',             'CPC',     0x9c,   (0x1c,'C'),       None,             False, 0),
-	('CashCoin',              'CASH',    0xa2,   (0x22,('E','F')), None,             False, 0),
-	('CashOut',               'CSH',     0xa2,   (0x22,('E','F')), None,             False, 0),
-	('ChainCoin',             'CHC',     0x9c,   (0x1c,'C'),       None,             False, 0),
-	('Clams',                 'CLAM',    0x85,   (0x89,'x'),       (0x0d,'6'),       False, 1),
-	('CoinMagi',              'XMG',     0x94,   (0x14,'9'),       None,             False, 0),
-	('Condensate',            'RAIN',    0xbc,   (0x3c,'R'),       None,             False, 0),
-	('CryptoBullion',         'CBX',     0x8b,   (0x0b,'5'),       None,             False, 0),
-	('Cryptonite',            'XCN',     0x80,   (0x1c,'C'),       None,             False, 0),
-	('CryptoPennies',         'CRPS',    0xc2,   (0x42,'T'),       None,             False, 0),
-	('Dash',                  'DASH',    0xcc,   (0x4c,'X'),       (0x10,'7'),       False, 1),
-	('Decred',                'DCR',     0x22de, (0x073f,'D'),     (0x071a,'D'),     False, 1),
-	('DeepOnion',             'ONION',   0x9f,   (0x1f,'D'),       None,             False, 1),
-	('Defcoin',               'DFC',     0x9e,   (0x1e,'D'),       (0x05,'3'),       False, 1),
-	('Devcoin',               'DVC',     0x80,   (0x00,'1'),       None,             False, 1),
-	('DigiByte',              'DGB',     0x80,   (0x1e,'D'),       (0x05,'3'),       False, 1),
-	('DigiCoin',              'DGC',     0x9e,   (0x1e,'D'),       (0x05,'3'),       False, 1),
-	('DogecoinDark',          'DOGED',   0x9e,   (0x1e,'D'),       (0x21,'E'),       False, 1),
-	('Dogecoin',              'DOGE',    0x9e,   (0x1e,'D'),       (0x16,('9','A')), False, 2),
-	('DopeCoin',              'DOPE',    0x88,   (0x08,'4'),       (0x05,'3'),       False, 1),
-	('EGulden',               'EFL',     0xb0,   (0x30,'L'),       (0x05,'3'),       False, 1),
-	('Emerald',               'EMD',     0xa2,   (0x22,('E','F')), None,             False, 0),
-	('Emercoin',              'EMC',     0x80,   (0x21,'E'),       (0x5c,'e'),       False, 2),
-	('EnergyCoin',            'ENRG',    0xdc,   (0x5c,'e'),       None,             False, 0),
-	('Espers',                'ESP',     0xa1,   (0x21,'E'),       None,             False, 0),
-	('Faircoin',              'FAI',     0xdf,   (0x5f,'f'),       (0x24,'F'),       False, 1),
-	('Fastcoin',              'FST',     0xe0,   (0x60,('f','g')), None,             False, 0),
-	('Feathercoin',           'FTC',     0x8e,   (0x0e,('6','7')), (0x05,'3'),       False, 2),
-	('Fibre',                 'FIBRE',   0xa3,   (0x23,'F'),       None,             False, 0),
-	('FlorinCoin',            'FLO',     0xb0,   (0x23,'F'),       None,             False, 0),
-	('Fluttercoin',           'FLT',     0xa3,   (0x23,'F'),       None,             False, 0),
-	('Fuel2Coin',             'FC2',     0x80,   (0x24,'F'),       None,             False, 0),
-	('Fujicoin',              'FJC',     0xa4,   (0x24,'F'),       None,             False, 0),
-	('Fujinto',               'NTO',     0xa4,   (0x24,'F'),       None,             False, 0),
-	('GlobalBoost',           'BSTY',    0xa6,   (0x26,'G'),       None,             False, 0),
-	('GlobalCurrencyReserve', 'GCR',     0x9a,   (0x26,'G'),       (0x61,'g'),       False, 1),
-	('GoldenBird',            'XGB',     0xaf,   (0x2f,('K','L')), None,             False, 0),
-	('Goodcoin',              'GOOD',    0xa6,   (0x26,'G'),       None,             False, 0),
-	('GridcoinResearch',      'GRC',     0xbe,   (0x3e,('R','S')), None,             False, 1),
-	('Gulden',                'NLG',     0xa6,   (0x26,'G'),       None,             False, 1),
-	('Guncoin',               'GUN',     0xa7,   (0x27,('G','H')), None,             False, 1),
-	('HamRadioCoin',          'HAM',     0x80,   (0x00,'1'),       None,             False, 1),
-	('HTML5Coin',             'HTML5',   0xa8,   (0x28,'H'),       None,             False, 0),
-	('HyperStake',            'HYP',     0xf5,   (0x75,'p'),       None,             False, 0),
-	('iCash',                 'ICASH',   0xcc,   (0x66,'i'),       None,             False, 0),
-	('ImperiumCoin',          'IPC',     0xb0,   (0x30,'L'),       None,             False, 0),
-	('IncaKoin',              'NKA',     0xb5,   (0x35,'N'),       None,             False, 0),
-	('Influxcoin',            'INFX',    0xe6,   (0x66,'i'),       None,             False, 0),
-	('InPay',                 'INPAY',   0xb7,   (0x37,'P'),       None,             False, 0),
-#	('iXcoin',                'IXC',     0x80,   (0x8a,'x'),       None,             False, 1),
-	('Judgecoin',             'JUDGE',   0xab,   (0x2b,'J'),       None,             False, 0),
-	('Jumbucks',              'JBS',     0xab,   (0x2b,'J'),       (0x69,'j'),       False, 2),
-	('Lanacoin',              'LANA',    0xb0,   (0x30,'L'),       None,             False, 0),
-	('Latium',                'LAT',     0x80,   (0x17,'A'),       None,             False, 0),
-	('Litecoin',              'LTC',     0xb0,   (0x30,'L'),       (0x05,'3'),       True,  3),
-	('LiteDoge',              'LDOGE',   0xab,   (0x5a,'d'),       None,             False, 0),
-	('LomoCoin',              'LMC',     0xb0,   (0x30,'L'),       None,             False, 0),
-	('Marscoin',              'MARS',    0xb2,   (0x32,'M'),       None,             False, 0),
-	('MarsCoin',              'MRS',     0xb2,   (0x32,'M'),       None,             False, 0),
-	('MartexCoin',            'MXT',     0xb2,   (0x32,'M'),       None,             False, 0),
-	('MasterCar',             'MCAR',    0xe6,   (0x17,'A'),       None,             False, 0),
-	('MazaCoin',              'MZC',     0xe0,   (0x32,'M'),       (0x09,('4','5')), False, 2),
-	('MegaCoin',              'MEC',     0xb2,   (0x32,'M'),       None,             False, 1),
-	('MintCoin',              'MINT',    0xb3,   (0x33,'M'),       None,             False, 0),
-	('Mobius',                'MOBI',    0x80,   (0x00,'1'),       None,             False, 0),
-	('MonaCoin',              'MONA',    0xb0,   (0x32,'M'),       (0x05,'3'),       False, 1),
-	('MonetaryUnit',          'MUE',     0x8f,   (0x0f,'7'),       (0x09,('4','5')), False, 1),
-	('MoonCoin',              'MOON',    0x83,   (0x03,'2'),       None,             False, 0),
-	('MyriadCoin',            'MYR',     0xb2,   (0x32,'M'),       (0x09,('4','5')), False, 1),
-	('Myriadcoin',            'MYRIAD',  0xb2,   (0x32,'M'),       None,             False, 1),
-	('Namecoin',              'NMC',     0xb4,   (0x34,('M','N')), (0x0d,'6'),       False, 1),
-	('Neoscoin',              'NEOS',    0xef,   (0x3f,'S'),       (0xbc,'2'),       False, 1),
-	('NevaCoin',              'NEVA',    0xb1,   (0x35,'N'),       None,             False, 0),
-	('Novacoin',              'NVC',     0x88,   (0x08,'4'),       (0x14,'9'),       False, 1),
-	('OKCash',                'OK',      0xb7,   (0x37,'P'),       (0x1c,'C'),       False, 1),
-	('Omnicoin',              'OMC',     0xf3,   (0x73,'o'),       None,             False, 1),
-	('Omni',                  'OMNI',    0xf3,   (0x73,'o'),       None,             False, 0),
-	('Onix',                  'ONX',     0x80,   (0x8a,'x'),       None,             False, 0),
-	('PandaCoin',             'PND',     0xb7,   (0x37,'P'),       (0x16,('9','A')), False, 1),
-	('ParkByte',              'PKB',     0xb7,   (0x37,'P'),       (0x1c,'C'),       False, 1),
-	('Particl',               'PART',    0x6c,   (0x38,'P'),       None,             False, 0),
-	('Paycoin',               'CON',     0xb7,   (0x37,'P'),       None,             False, 1),
-	('Peercoin',              'PPC',     0xb7,   (0x37,'P'),       (0x75,'p'),       False, 1),
-	('PesetaCoin',            'PTC',     0xaf,   (0x2f,('K','L')), None,             False, 1),
-	('PhoenixCoin',           'PXC',     0xb8,   (0x38,'P'),       None,             False, 0),
-	('PinkCoin',              'PINK',    0x83,   (0x03,'2'),       None,             False, 1),
-	('PIVX',                  'PIVX',    0xd4,   (0x1e,'D'),       None,             False, 0),
-	('PokeChain',             'XPOKE',   0x9c,   (0x1c,'C'),       None,             False, 0),
-	('Potcoin',               'POT',     0xb7,   (0x37,'P'),       (0x05,'3'),       False, 1),
-	('Primecoin',             'XPM',     0x97,   (0x17,'A'),       (0x53,'a'),       False, 1),
-	('Quark',                 'QRK',     0xba,   (0x3a,'Q'),       None,             False, 0),
-	('ReddCoin',              'RDD',     0xbd,   (0x3d,'R'),       None,             False, 1),
-	('Riecoin',               'RIC',     0x80,   (0x3c,'R'),       (0x05,'3'),       False, 2),
-	('Rimbit',                'RBT',     0xbc,   (0x3c,'R'),       None,             False, 0),
-	('Rubycoin',              'RBY',     0xbd,   (0x3d,'R'),       (0x55,'b'),       False, 1),
-	('ShadowCash',            'SDC',     0xbf,   (0x3f,'S'),       (0x7d,'s'),       False, 1),
-	('Sibcoin',               'SIB',     0x80,   (0x3f,'S'),       None,             False, 0),
-	('SixEleven',             '611',     0x80,   (0x34,('M','N')), None,             False, 0),
-	('SmileyCoin',            'SMLY',    0x99,   (0x19,'B'),       None,             False, 0),
-	('Songcoin',              'SONG',    0xbf,   (0x3f,'S'),       None,             False, 0),
-	('Spreadcoin',            'SPR',     0xbf,   (0x3f,'S'),       None,             False, 1),
-	('Startcoin',             'START',   0xfd,   (0x7d,'s'),       (0x05,'3'),       False, 1),
-	('StealthCoin',           'XST',     0xbe,   (0x3e,('R','S')), None,             False, 0),
-	('SwagBucks',             'BUCKS',   0x99,   (0x3f,'S'),       None,             False, 0),
-	('SysCoin',               'SYS',     0x80,   (0x00,'1'),       None,             False, 0),
-	('TajCoin',               'TAJ',     0x6f,   (0x41,'T'),       None,             False, 0),
-	('Templecoin',            'TPC',     0xc1,   (0x41,'T'),       (0x05,'3'),       False, 1),
-	('Terracoin',             'TRC',     0x80,   (0x00,'1'),       None,             False, 0),
-	('Titcoin',               'TIT',     0x80,   (0x00,'1'),       None,             False, 0),
-	('TittieCoin',            'TTC',     0xc1,   (0x41,'T'),       None,             False, 0),
-	('Transfer',              'TX',      0x99,   (0x42,'T'),       None,             False, 0),
-	('Unobtanium',            'UNO',     0xe0,   (0x82,'u'),       (0x1e,'D'),       False, 2),
-	('Vcash',                 'XVC',     0xc7,   (0x47,'V'),       None,             False, 0),
-	('Vertcoin',              'VTC',     0xc7,   (0x47,'V'),       (0x05,'3'),       False, 1),
-	('Viacoin',               'VIA',     0xc7,   (0x47,'V'),       (0x21,'E'),       False, 2),
-	('VpnCoin',               'VPN',     0xc7,   (0x47,'V'),       (0x05,'3'),       False, 1),
-	('WankCoin',              'WKC',     0x80,   (0x00,'1'),       None,             False, 1),
-	('WashingtonCoin',        'WASH',    0xc9,   (0x49,'W'),       None,             False, 0),
-	('WeAreSatoshi',          'WSX',     0x97,   (0x87,'w'),       None,             False, 0),
-	('WisdomCoin',            'WISC',    0x87,   (0x49,'W'),       None,             False, 0),
-	('WorldCoin',             'WDC',     0xc9,   (0x49,'W'),       None,             False, 1),
-	('XRealEstateDevcoin',    'XRED',    0x80,   (0x00,'1'),       None,             False, 0),
-	('ZetaCoin',              'ZET',     0xe0,   (0x50,'Z'),       None,             False, 0),
-	('ZiftrCoin',             'ZRC',     0xd0,   (0x50,'Z'),       (0x05,'3'),       False, 1),
-	('ZLiteQubit',            'ZLQ',     0xe0,   (0x26,'G'),       None,             False, 0),
-	('Zoomcoin',              'ZOOM',    0xe7,   (0x67,'i'),       (0x5c,'e'),       False, 1),
+	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	ce('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	ce('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	ce('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False,-1),
+	ce('2GiveCoin',             '2GIVE',   0xa7,   (0x27,('G','H')), None,             False, 0),
+	ce('42Coin',                '42',      0x88,   (0x08,'4'),       None,             False, 1),
+	ce('ACoin',                 'ACOIN',   0xe6,   (0x17,'A'),       None,             False, 0),
+	ce('Alphacoin',             'ALF',     0xd2,   (0x52,('Z','a')), None,             False, 0),
+	ce('Anoncoin',              'ANC',     0x97,   (0x17,'A'),       None,             False, 1),
+	ce('Apexcoin',              'APEX',    0x97,   (0x17,'A'),       None,             False, 0),
+	ce('Aquariuscoin',          'ARCO',    0x97,   (0x17,'A'),       None,             False, 0),
+	ce('Argentum',              'ARG',     0x97,   (0x17,'A'),       (0x05,'3'),       False, 1),
+	ce('AsiaCoin',              'AC',      0x97,   (0x17,'A'),       (0x08,'4'),       False, 1),
+	ce('Auroracoin',            'AUR',     0x97,   (0x17,'A'),       None,             False, 1),
+	ce('BBQcoin',               'BQC',     0xd5,   (0x55,'b'),       None,             False, 1),
+	ce('BitcoinDark',           'BTCD',    0xbc,   (0x3c,'R'),       (0x55,'b'),       False, 1),
+	ce('BitcoinFast',           'BCF',     0xe0,   (0x60,('f','g')), None,             False, 0),
+	ce('BitQuark',              'BTQ',     0xba,   (0x3a,'Q'),       None,             False, 0),
+	ce('Blackcoin',             'BLK',     0x99,   (0x19,'B'),       (0x55,'b'),       False, 1),
+	ce('BlackmoonCrypto',       'BMC',     0x83,   (0x03,'2'),       None,             False, 0),
+	ce('BlockCat',              'CAT',     0x95,   (0x15,'9'),       None,             False, 0),
+	ce('CanadaECoin',           'CDN',     0x9c,   (0x1c,'C'),       (0x05,'3'),       False, 1),
+	ce('CannabisCoin',          'CANN',    0x9c,   (0x1c,'C'),       None,             False, 0),
+	ce('CannaCoin',             'CCN',     0x9c,   (0x1c,'C'),       (0x05,'3'),       False, 1),
+	ce('Capricoin',             'CPC',     0x9c,   (0x1c,'C'),       None,             False, 0),
+	ce('CashCoin',              'CASH',    0xa2,   (0x22,('E','F')), None,             False, 0),
+	ce('CashOut',               'CSH',     0xa2,   (0x22,('E','F')), None,             False, 0),
+	ce('ChainCoin',             'CHC',     0x9c,   (0x1c,'C'),       None,             False, 0),
+	ce('Clams',                 'CLAM',    0x85,   (0x89,'x'),       (0x0d,'6'),       False, 1),
+	ce('CoinMagi',              'XMG',     0x94,   (0x14,'9'),       None,             False, 0),
+	ce('Condensate',            'RAIN',    0xbc,   (0x3c,'R'),       None,             False, 0),
+	ce('CryptoBullion',         'CBX',     0x8b,   (0x0b,'5'),       None,             False, 0),
+	ce('Cryptonite',            'XCN',     0x80,   (0x1c,'C'),       None,             False, 0),
+	ce('CryptoPennies',         'CRPS',    0xc2,   (0x42,'T'),       None,             False, 0),
+	ce('Dash',                  'DASH',    0xcc,   (0x4c,'X'),       (0x10,'7'),       False, 1),
+	ce('Decred',                'DCR',     0x22de, (0x073f,'D'),     (0x071a,'D'),     False, 1),
+	ce('DeepOnion',             'ONION',   0x9f,   (0x1f,'D'),       None,             False, 1),
+	ce('Defcoin',               'DFC',     0x9e,   (0x1e,'D'),       (0x05,'3'),       False, 1),
+	ce('Devcoin',               'DVC',     0x80,   (0x00,'1'),       None,             False, 1),
+	ce('DigiByte',              'DGB',     0x80,   (0x1e,'D'),       (0x05,'3'),       False, 1),
+	ce('DigiCoin',              'DGC',     0x9e,   (0x1e,'D'),       (0x05,'3'),       False, 1),
+	ce('DogecoinDark',          'DOGED',   0x9e,   (0x1e,'D'),       (0x21,'E'),       False, 1),
+	ce('Dogecoin',              'DOGE',    0x9e,   (0x1e,'D'),       (0x16,('9','A')), False, 2),
+	ce('DopeCoin',              'DOPE',    0x88,   (0x08,'4'),       (0x05,'3'),       False, 1),
+	ce('EGulden',               'EFL',     0xb0,   (0x30,'L'),       (0x05,'3'),       False, 1),
+	ce('Emerald',               'EMD',     0xa2,   (0x22,('E','F')), None,             False, 0),
+	ce('Emercoin',              'EMC',     0x80,   (0x21,'E'),       (0x5c,'e'),       False, 2),
+	ce('EnergyCoin',            'ENRG',    0xdc,   (0x5c,'e'),       None,             False, 0),
+	ce('Espers',                'ESP',     0xa1,   (0x21,'E'),       None,             False, 0),
+	ce('Faircoin',              'FAI',     0xdf,   (0x5f,'f'),       (0x24,'F'),       False, 1),
+	ce('Fastcoin',              'FST',     0xe0,   (0x60,('f','g')), None,             False, 0),
+	ce('Feathercoin',           'FTC',     0x8e,   (0x0e,('6','7')), (0x05,'3'),       False, 2),
+	ce('Fibre',                 'FIBRE',   0xa3,   (0x23,'F'),       None,             False, 0),
+	ce('FlorinCoin',            'FLO',     0xb0,   (0x23,'F'),       None,             False, 0),
+	ce('Fluttercoin',           'FLT',     0xa3,   (0x23,'F'),       None,             False, 0),
+	ce('Fuel2Coin',             'FC2',     0x80,   (0x24,'F'),       None,             False, 0),
+	ce('Fujicoin',              'FJC',     0xa4,   (0x24,'F'),       None,             False, 0),
+	ce('Fujinto',               'NTO',     0xa4,   (0x24,'F'),       None,             False, 0),
+	ce('GlobalBoost',           'BSTY',    0xa6,   (0x26,'G'),       None,             False, 0),
+	ce('GlobalCurrencyReserve', 'GCR',     0x9a,   (0x26,'G'),       (0x61,'g'),       False, 1),
+	ce('GoldenBird',            'XGB',     0xaf,   (0x2f,('K','L')), None,             False, 0),
+	ce('Goodcoin',              'GOOD',    0xa6,   (0x26,'G'),       None,             False, 0),
+	ce('GridcoinResearch',      'GRC',     0xbe,   (0x3e,('R','S')), None,             False, 1),
+	ce('Gulden',                'NLG',     0xa6,   (0x26,'G'),       None,             False, 1),
+	ce('Guncoin',               'GUN',     0xa7,   (0x27,('G','H')), None,             False, 1),
+	ce('HamRadioCoin',          'HAM',     0x80,   (0x00,'1'),       None,             False, 1),
+	ce('HTML5Coin',             'HTML5',   0xa8,   (0x28,'H'),       None,             False, 0),
+	ce('HyperStake',            'HYP',     0xf5,   (0x75,'p'),       None,             False, 0),
+	ce('iCash',                 'ICASH',   0xcc,   (0x66,'i'),       None,             False, 0),
+	ce('ImperiumCoin',          'IPC',     0xb0,   (0x30,'L'),       None,             False, 0),
+	ce('IncaKoin',              'NKA',     0xb5,   (0x35,'N'),       None,             False, 0),
+	ce('Influxcoin',            'INFX',    0xe6,   (0x66,'i'),       None,             False, 0),
+	ce('InPay',                 'INPAY',   0xb7,   (0x37,'P'),       None,             False, 0),
+#	ce('iXcoin',                'IXC',     0x80,   (0x8a,'x'),       None,             False, 1),
+	ce('Judgecoin',             'JUDGE',   0xab,   (0x2b,'J'),       None,             False, 0),
+	ce('Jumbucks',              'JBS',     0xab,   (0x2b,'J'),       (0x69,'j'),       False, 2),
+	ce('Lanacoin',              'LANA',    0xb0,   (0x30,'L'),       None,             False, 0),
+	ce('Latium',                'LAT',     0x80,   (0x17,'A'),       None,             False, 0),
+	ce('Litecoin',              'LTC',     0xb0,   (0x30,'L'),       (0x05,'3'),       True,  3),
+	ce('LiteDoge',              'LDOGE',   0xab,   (0x5a,'d'),       None,             False, 0),
+	ce('LomoCoin',              'LMC',     0xb0,   (0x30,'L'),       None,             False, 0),
+	ce('Marscoin',              'MARS',    0xb2,   (0x32,'M'),       None,             False, 0),
+	ce('MarsCoin',              'MRS',     0xb2,   (0x32,'M'),       None,             False, 0),
+	ce('MartexCoin',            'MXT',     0xb2,   (0x32,'M'),       None,             False, 0),
+	ce('MasterCar',             'MCAR',    0xe6,   (0x17,'A'),       None,             False, 0),
+	ce('MazaCoin',              'MZC',     0xe0,   (0x32,'M'),       (0x09,('4','5')), False, 2),
+	ce('MegaCoin',              'MEC',     0xb2,   (0x32,'M'),       None,             False, 1),
+	ce('MintCoin',              'MINT',    0xb3,   (0x33,'M'),       None,             False, 0),
+	ce('Mobius',                'MOBI',    0x80,   (0x00,'1'),       None,             False, 0),
+	ce('MonaCoin',              'MONA',    0xb0,   (0x32,'M'),       (0x05,'3'),       False, 1),
+	ce('MonetaryUnit',          'MUE',     0x8f,   (0x0f,'7'),       (0x09,('4','5')), False, 1),
+	ce('MoonCoin',              'MOON',    0x83,   (0x03,'2'),       None,             False, 0),
+	ce('MyriadCoin',            'MYR',     0xb2,   (0x32,'M'),       (0x09,('4','5')), False, 1),
+	ce('Myriadcoin',            'MYRIAD',  0xb2,   (0x32,'M'),       None,             False, 1),
+	ce('Namecoin',              'NMC',     0xb4,   (0x34,('M','N')), (0x0d,'6'),       False, 1),
+	ce('Neoscoin',              'NEOS',    0xef,   (0x3f,'S'),       (0xbc,'2'),       False, 1),
+	ce('NevaCoin',              'NEVA',    0xb1,   (0x35,'N'),       None,             False, 0),
+	ce('Novacoin',              'NVC',     0x88,   (0x08,'4'),       (0x14,'9'),       False, 1),
+	ce('OKCash',                'OK',      0xb7,   (0x37,'P'),       (0x1c,'C'),       False, 1),
+	ce('Omnicoin',              'OMC',     0xf3,   (0x73,'o'),       None,             False, 1),
+	ce('Omni',                  'OMNI',    0xf3,   (0x73,'o'),       None,             False, 0),
+	ce('Onix',                  'ONX',     0x80,   (0x8a,'x'),       None,             False, 0),
+	ce('PandaCoin',             'PND',     0xb7,   (0x37,'P'),       (0x16,('9','A')), False, 1),
+	ce('ParkByte',              'PKB',     0xb7,   (0x37,'P'),       (0x1c,'C'),       False, 1),
+	ce('Particl',               'PART',    0x6c,   (0x38,'P'),       None,             False, 0),
+	ce('Paycoin',               'CON',     0xb7,   (0x37,'P'),       None,             False, 1),
+	ce('Peercoin',              'PPC',     0xb7,   (0x37,'P'),       (0x75,'p'),       False, 1),
+	ce('PesetaCoin',            'PTC',     0xaf,   (0x2f,('K','L')), None,             False, 1),
+	ce('PhoenixCoin',           'PXC',     0xb8,   (0x38,'P'),       None,             False, 0),
+	ce('PinkCoin',              'PINK',    0x83,   (0x03,'2'),       None,             False, 1),
+	ce('PIVX',                  'PIVX',    0xd4,   (0x1e,'D'),       None,             False, 0),
+	ce('PokeChain',             'XPOKE',   0x9c,   (0x1c,'C'),       None,             False, 0),
+	ce('Potcoin',               'POT',     0xb7,   (0x37,'P'),       (0x05,'3'),       False, 1),
+	ce('Primecoin',             'XPM',     0x97,   (0x17,'A'),       (0x53,'a'),       False, 1),
+	ce('Quark',                 'QRK',     0xba,   (0x3a,'Q'),       None,             False, 0),
+	ce('ReddCoin',              'RDD',     0xbd,   (0x3d,'R'),       None,             False, 1),
+	ce('Riecoin',               'RIC',     0x80,   (0x3c,'R'),       (0x05,'3'),       False, 2),
+	ce('Rimbit',                'RBT',     0xbc,   (0x3c,'R'),       None,             False, 0),
+	ce('Rubycoin',              'RBY',     0xbd,   (0x3d,'R'),       (0x55,'b'),       False, 1),
+	ce('ShadowCash',            'SDC',     0xbf,   (0x3f,'S'),       (0x7d,'s'),       False, 1),
+	ce('Sibcoin',               'SIB',     0x80,   (0x3f,'S'),       None,             False, 0),
+	ce('SixEleven',             '611',     0x80,   (0x34,('M','N')), None,             False, 0),
+	ce('SmileyCoin',            'SMLY',    0x99,   (0x19,'B'),       None,             False, 0),
+	ce('Songcoin',              'SONG',    0xbf,   (0x3f,'S'),       None,             False, 0),
+	ce('Spreadcoin',            'SPR',     0xbf,   (0x3f,'S'),       None,             False, 1),
+	ce('Startcoin',             'START',   0xfd,   (0x7d,'s'),       (0x05,'3'),       False, 1),
+	ce('StealthCoin',           'XST',     0xbe,   (0x3e,('R','S')), None,             False, 0),
+	ce('SwagBucks',             'BUCKS',   0x99,   (0x3f,'S'),       None,             False, 0),
+	ce('SysCoin',               'SYS',     0x80,   (0x00,'1'),       None,             False, 0),
+	ce('TajCoin',               'TAJ',     0x6f,   (0x41,'T'),       None,             False, 0),
+	ce('Templecoin',            'TPC',     0xc1,   (0x41,'T'),       (0x05,'3'),       False, 1),
+	ce('Terracoin',             'TRC',     0x80,   (0x00,'1'),       None,             False, 0),
+	ce('Titcoin',               'TIT',     0x80,   (0x00,'1'),       None,             False, 0),
+	ce('TittieCoin',            'TTC',     0xc1,   (0x41,'T'),       None,             False, 0),
+	ce('Transfer',              'TX',      0x99,   (0x42,'T'),       None,             False, 0),
+	ce('Unobtanium',            'UNO',     0xe0,   (0x82,'u'),       (0x1e,'D'),       False, 2),
+	ce('Vcash',                 'XVC',     0xc7,   (0x47,'V'),       None,             False, 0),
+	ce('Vertcoin',              'VTC',     0xc7,   (0x47,'V'),       (0x05,'3'),       False, 1),
+	ce('Viacoin',               'VIA',     0xc7,   (0x47,'V'),       (0x21,'E'),       False, 2),
+	ce('VpnCoin',               'VPN',     0xc7,   (0x47,'V'),       (0x05,'3'),       False, 1),
+	ce('WankCoin',              'WKC',     0x80,   (0x00,'1'),       None,             False, 1),
+	ce('WashingtonCoin',        'WASH',    0xc9,   (0x49,'W'),       None,             False, 0),
+	ce('WeAreSatoshi',          'WSX',     0x97,   (0x87,'w'),       None,             False, 0),
+	ce('WisdomCoin',            'WISC',    0x87,   (0x49,'W'),       None,             False, 0),
+	ce('WorldCoin',             'WDC',     0xc9,   (0x49,'W'),       None,             False, 1),
+	ce('XRealEstateDevcoin',    'XRED',    0x80,   (0x00,'1'),       None,             False, 0),
+	ce('ZetaCoin',              'ZET',     0xe0,   (0x50,'Z'),       None,             False, 0),
+	ce('ZiftrCoin',             'ZRC',     0xd0,   (0x50,'Z'),       (0x05,'3'),       False, 1),
+	ce('ZLiteQubit',            'ZLQ',     0xe0,   (0x26,'G'),       None,             False, 0),
+	ce('Zoomcoin',              'ZOOM',    0xe7,   (0x67,'i'),       (0x5c,'e'),       False, 1),
 	)
 
 	coin_constants['testnet'] = (
-	('Dash',        'DASH',  0xef,   (0x8c,'y'),       (0x13,('8','9')), False, 1),
-	('Decred',      'DCR',   0x230e, (0x0f21,'T'),     (0x0e6c,'S'),     False, 1),
-	('Dogecoin',    'DOGE',  0xf1,   (0x71,'n'),       (0xc4,'2'),       False, 2),
-	('Feathercoin', 'FTC',   0xc1,   (0x41,'T'),       (0xc4,'2'),       False, 2),
-	('Viacoin',     'VIA',   0xff,   (0x7f,'t'),       (0xc4,'2'),       False, 2),
-	('Emercoin',    'EMC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       False, 2),
+	ce('Dash',        'DASH',  0xef,   (0x8c,'y'),       (0x13,('8','9')), False, 1),
+	ce('Decred',      'DCR',   0x230e, (0x0f21,'T'),     (0x0e6c,'S'),     False, 1),
+	ce('Dogecoin',    'DOGE',  0xf1,   (0x71,'n'),       (0xc4,'2'),       False, 2),
+	ce('Feathercoin', 'FTC',   0xc1,   (0x41,'T'),       (0xc4,'2'),       False, 2),
+	ce('Viacoin',     'VIA',   0xff,   (0x7f,'t'),       (0xc4,'2'),       False, 2),
+	ce('Emercoin',    'EMC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       False, 2),
 	)
 
 	coin_sources = (
@@ -382,10 +385,10 @@ class CoinInfo(object):
 		'ZRC':    ['lb','vg']
 	}
 
-	# data is one of the coin_constants lists above
-	# normalize ints to hex, format width, add missing leading letters, set trust level from external_tests
-	# Insert a coin entry from outside source, set leading letters to '?' and trust to 0, then run fix_table()
-	# segwit column is updated manually for now
+	# Data is one of the coin_constants lists above.  Normalize ints to hex of correct width, add
+	# missing leading letters, set trust level from external_tests.
+	# Insert a coin entry from outside source, set version info leading letters to '?' and trust level
+	# to 0, then run CoinInfo.fix_table(data).  'has_segwit' field is updated manually for now.
 	@classmethod
 	def fix_table(cls,data):
 		import re
@@ -393,20 +396,20 @@ class CoinInfo(object):
 		def myhex(n):
 			return '0x{:0{}x}'.format(n,2 if n < 256 else 4)
 
-		def fix_col(line,n):
-			line[n] = list(line[n])
-			line[n][0] = myhex(line[n][0])
-			s1 = cls.find_addr_leading_symbol(int(line[n][0][2:],16))
-			m = 'Fixing coin {} [in data: {!r}] [computed: {}]'.format(line[0],line[n][1],s1)
-			if line[n][1] != '?':
-				assert s1 == line[n][1],'First letters do not match! {}'.format(m)
+		def fix_ver_info(e,k):
+			e[k] = list(e[k])
+			e[k][0] = myhex(e[k][0])
+			s1 = cls.find_addr_leading_symbol(int(e[k][0][2:],16))
+			m = 'Fixing leading address letter for coin {} ({!r} --> {})'.format(e['symbol'],e[k][1],s1)
+			if e[k][1] != '?':
+				assert s1 == e[k][1],'First letters do not match! {}'.format(m)
 			else:
 				msg(m)
-				line[n][1] = s1
-			line[n] = tuple(line[n])
+				e[k][1] = s1
+			e[k] = tuple(e[k])
 
 		old_sym = None
-		for sym in sorted([e[1] for e in data]):
+		for sym in sorted([e.symbol for e in data]):
 			if sym == old_sym:
 				msg("'{}': duplicate coin symbol in data!".format(sym))
 				sys.exit(2)
@@ -414,40 +417,40 @@ class CoinInfo(object):
 
 		tt = cls.create_trust_table()
 
-		w = max(len(e[0]) for e in data)
-		fs = '\t({{:{}}} {{:10}} {{:7}} {{:17}} {{:17}} {{:6}} {{}}),'.format(w+3)
-		for line in data:
-			line = list(line)
-			line[2] = myhex(line[2])
+		name_w = max(len(e.name) for e in data)
+		fs = '\t({:%s} {:10} {:7} {:17} {:17} {:6} {}),' % (name_w+3)
+		for e in data:
+			e = e._asdict()
+			e['wif_ver_num'] = myhex(e['wif_ver_num'])
+			sym,trust = e['symbol'],e['trust_level']
 
-			fix_col(line,3)
-			if type(line[4]) == tuple: fix_col(line,4)
+			fix_ver_info(e,'p2pkh_info')
+			if type(e['p2sh_info']) == tuple:
+				fix_ver_info(e,'p2sh_info')
 
-			sym,trust = line[1],line[6]
-
-			for n in range(len(line)):
-				line[n] = repr(line[n])
-				line[n] = re.sub(r"'0x(..)'",r'0x\1',line[n])
-				line[n] = re.sub(r"'0x(....)'",r'0x\1',line[n])
-				line[n] = re.sub(r' ',r'',line[n]) + ('',',')[n != len(line)-1]
+			for k in e.keys():
+				e[k] = repr(e[k])
+				e[k] = re.sub(r"'0x(..)'",r'0x\1',e[k])
+				e[k] = re.sub(r"'0x(....)'",r'0x\1',e[k])
+				e[k] = re.sub(r' ',r'',e[k]) + ('',',')[k != 'trust_level']
 
 			if trust != -1:
 				if sym in tt:
 					src = tt[sym]
 					if src != trust:
 						msg("Updating trust for coin '{}': {} -> {}".format(sym,trust,src))
-						line[6] = src
+						e['trust_level'] = src
 				else:
 					if trust != 0:
 						msg("Downgrading trust for coin '{}': {} -> {}".format(sym,trust,0))
-						line[6] = 0
+						e['trust_level'] = 0
 
 				if sym in cls.cross_checks:
-					if int(line[6]) == 0 and len(cls.cross_checks[sym]) > 1:
-						msg("Upgrading trust for coin '{}': {} -> {}".format(sym,line[6],1))
-						line[6] = 1
+					if int(e['trust_level']) == 0 and len(cls.cross_checks[sym]) > 1:
+						msg("Upgrading trust for coin '{}': {} -> {}".format(sym,e['trust_level'],1))
+						e['trust_level'] = 1
 
-			print(fs.format(*line))
+			print(fs.format(*e.values()))
 		msg('Processed {} entries'.format(len(data)))
 
 	@classmethod
@@ -469,12 +472,12 @@ class CoinInfo(object):
 
 	@classmethod
 	def print_symbols(cls,include_names=False,reverse=False):
-		w = max(len(e[0]) for e in cls.coin_constants['mainnet'])
-		for line in cls.coin_constants['mainnet']:
+		for e in cls.coin_constants['mainnet']:
 			if reverse:
-				print('{:6} {}'.format(line[1],line[0]))
+				print('{:6} {}'.format(e.symbol,e.name))
 			else:
-				print(('','{:{}} '.format(line[0],w))[include_names] + line[1])
+				name_w = max(len(e.name) for e in cls.coin_constants['mainnet'])
+				print(('{:{}} '.format(e.name,name_w) if include_names else '') + e.symbol)
 
 	@classmethod
 	def create_trust_table(cls):
