@@ -340,7 +340,8 @@ class AddrListIDStr(str,Hilite):
 			bc = (g.proto.base_coin,g.coin)[g.proto.base_coin=='ETH']
 			mt = addrlist.al_id.mmtype
 			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
-			dmsg_sc('id_str',ret[8:].split('[')[0])
+
+		dmsg_sc('id_str',ret[8:].split('[')[0])
 
 		return str.__new__(cls,ret)
 
