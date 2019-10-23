@@ -22,6 +22,7 @@ export PYTHONPATH=.
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'
+colortest_py='test/colortest.py'
 unit_tests_py='test/unit_tests.py --names --quiet'
 tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names'
@@ -33,7 +34,7 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj unit hash alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='obj color unit hash alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -60,6 +61,7 @@ do
 		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
+		echo   "     color    - color handling"
 		echo   "     unit     - unit tests"
 		echo   "     hash     - internal hash function implementations"
 		echo   "     alts     - operations for all supported gen-only altcoins"
@@ -200,6 +202,11 @@ t_obj="
 	$objattrtest_py
 "
 f_obj='Data object test complete'
+
+i_color='Color'
+s_color='Running color'
+t_color="$colortest_py"
+f_color='Color tests complete'
 
 i_unit='Unit'
 s_unit='Running unit'
