@@ -29,8 +29,8 @@ from test.common import *
 try:
 	import pexpect
 	from pexpect.popen_spawn import PopenSpawn
-except:
-	die(2,red('Pexpect module is missing.  Cannnot run test suite'))
+except ImportError as e:
+	die(2,red('Pexpect module is missing.  Cannnot run test suite ({!r})'.format(e)))
 
 def debug_pexpect_msg(p):
 	if opt.debug_pexpect:

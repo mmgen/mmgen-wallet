@@ -27,12 +27,7 @@ import sys,os,time
 from subprocess import run,PIPE
 from decimal import Decimal
 
-repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
-os.chdir(repo_root)
-sys.path[0] = repo_root
-os.environ['MMGEN_TEST_SUITE'] = '1'
-
-# Import these _after_ prepending repo_root to sys.path
+from tests_header import repo_root
 from mmgen.common import *
 from test.common import *
 from mmgen.obj import is_wif,is_coin_addr

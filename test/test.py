@@ -71,16 +71,11 @@ def create_shm_dir(data_dir,trash_dir):
 	return shm_dir
 
 import sys,os,time
-
-os.environ['MMGEN_TEST_SUITE'] = '1'
-repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
-os.chdir(repo_root)
-sys.path.__setitem__(0,repo_root)
+from tests_header import repo_root
 
 try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
 
-# Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from test.common import *
 from test.test_py_d.common import *

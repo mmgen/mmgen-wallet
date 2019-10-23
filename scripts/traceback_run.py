@@ -8,7 +8,7 @@ import sys,os,time
 
 def traceback_run_init():
 	import os
-	sys.path.insert(0,'.')
+	sys.path[0] = 'test' if os.path.dirname(sys.argv[1]) == 'test' else '.'
 
 	if 'TMUX' in os.environ: del os.environ['TMUX']
 	os.environ['MMGEN_TRACEBACK'] = '1'

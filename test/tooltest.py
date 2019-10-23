@@ -23,12 +23,7 @@ test/tooltest.py:  Tests for the 'mmgen-tool' utility
 import sys,os,binascii
 from subprocess import run,PIPE
 
-repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
-os.chdir(repo_root)
-sys.path.__setitem__(0,repo_root)
-os.environ['MMGEN_TEST_SUITE'] = '1'
-
-# Import this _after_ local path's been added to sys.path
+from tests_header import repo_root
 from mmgen.common import *
 from test.common import *
 
