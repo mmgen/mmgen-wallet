@@ -52,26 +52,41 @@ for _c in _colors:
 
 def nocolor(s): return s
 
+def get_terminfo_colors(term=None):
+	from subprocess import run,PIPE
+	cmd = ['infocmp','-0']
+	if term:
+		cmd.append(term)
+
+	def is_hex_str(s):
+		from string import hexdigits
+		return set(list(s)) <= set(list(hexdigits))
+
+	try:
+		cmdout = run(cmd,stdout=PIPE,check=True).stdout.decode()
+	except:
+		return None
+	else:
+		s = [e.split('#')[1] for e in cmdout.split(',') if e.startswith('colors')][0]
+		if s.isdecimal():
+			return int(s)
+		elif s.startswith('0x') and is_hex_str(s[2:]):
+			return int(s[2:],16)
+		else:
+			return None
+
 def init_color(num_colors='auto'):
 	assert num_colors in ('auto',8,16,256)
 	globals()['_reset'] = '\033[0m'
+
+	import os
+	t = os.getenv('TERM')
 	if num_colors in (8,16):
 		pfx = '_16_'
-	elif num_colors in (256,):
+	elif num_colors == 256 or (t and t.endswith('256color')) or get_terminfo_colors() == 256:
 		pfx = '_256_'
 	else:
-		try:
-			import os
-			assert os.environ['TERM'][-8:] == '256color'
-			pfx = '_256_'
-		except:
-			try:
-				import subprocess
-				a = subprocess.check_output(['infocmp','-0']).decode()
-				b = [e.split('#')[1] for e in a.split(',') if e[:6] == 'colors'][0]
-				pfx = ('_16_','_256_')[b=='256']
-			except:
-				pfx = '_16_'
+		pfx = '_16_'
 
 	for c in _colors:
 		globals()['_clr_'+c] = globals()[pfx+c]
@@ -88,16 +103,3 @@ def start_mscolor():
 	else:
 		g.stdout = sys.stdout
 		g.stderr = sys.stderr
-
-def test_color():
-	try:
-		import colorama
-		colorama.init(strip=True,convert=True)
-	except:
-		pass
-
-	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
-		init_color(num_colors=n)
-		print('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
-
-if __name__ == '__main__': test_color()
