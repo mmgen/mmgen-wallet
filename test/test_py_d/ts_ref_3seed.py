@@ -46,6 +46,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_wallet_chk', ([],'saved reference wallet')),
 		('ref_seed_chk',   ([],'saved seed file')),
 		('ref_hex_chk',    ([],'saved mmhex file')),
+		('ref_plainhex_chk',([],'saved hex file')),
 		('ref_mn_chk',     ([],'saved native MMGen mnemonic file')),
 		('ref_bip39_chk',  ([],'saved BIP39 mnemonic file')),
 		('ref_hincog_chk', ([],'saved hidden incog reference wallet')),
@@ -56,6 +57,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_walletconv_bip39',  (['mmdat',pwfile],'wallet filename (bip39)')),
 		('ref_walletconv_seed',   (['mmdat',pwfile],'wallet filename (seed)')),
 		('ref_walletconv_hexseed',(['mmdat',pwfile],'wallet filename (hex seed)')),
+		('ref_walletconv_plainhexseed',(['mmdat',pwfile],'wallet filename (plain hex seed)')),
 		('ref_walletconv_incog',  (['mmdat',pwfile],'wallet filename (incog)')),
 		('ref_walletconv_xincog', (['mmdat',pwfile],'wallet filename (hex incog)')),
 	)
@@ -85,6 +87,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_hex_chk(self):
 		from mmgen.seed import MMGenHexSeedFile
 		return self.ref_ss_chk(ss=MMGenHexSeedFile)
+
+	def ref_plainhex_chk(self):
+		from mmgen.seed import PlainHexSeedFile
+		return self.ref_ss_chk(ss=PlainHexSeedFile)
 
 	def ref_mn_chk(self):
 		from mmgen.seed import MMGenMnemonic
@@ -163,6 +169,9 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_walletconv_hexseed(self,fn,pf):
 		return self.ref_walletconv(fn,pf,ofmt='mmhex',desc='Hexadecimal seed data with checksum',ext='mmhex')
+
+	def ref_walletconv_plainhexseed(self,fn,pf):
+		return self.ref_walletconv(fn,pf,ofmt='hex',desc='Plain hexadecimal seed data',ext='hex')
 
 	def ref_walletconv_incog(self,fn,pf,desc='Incognito data',ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']

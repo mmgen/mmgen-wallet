@@ -63,6 +63,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		('ref_bip39_conv',     'conversion of saved BIP39 mnemonic'),
 		('ref_seed_conv',      'conversion of saved seed file'),
 		('ref_hex_conv',       'conversion of saved MMGen hexadecimal seed file'),
+		('ref_plainhex_conv',  'conversion of saved plain hexadecimal seed file'),
 		('ref_brain_conv',     'conversion of ref brainwallet'),
 		('ref_incog_conv',     'conversion of saved incog wallet'),
 		('ref_incox_conv',     'conversion of saved hex incog wallet'),
@@ -73,6 +74,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		('ref_mn_conv_out',     'ref seed conversion to MMGen native mnemonic'),
 		('ref_bip39_conv_out',  'ref seed conversion to BIP39 mnemonic'),
 		('ref_hex_conv_out',    'ref seed conversion to MMGen hex seed'),
+		('ref_plainhex_conv_out','ref seed conversion to plain hex seed'),
 		('ref_seed_conv_out',   'ref seed conversion to seed'),
 		('ref_incog_conv_out',  'ref seed conversion to incog data'),
 		('ref_incox_conv_out',  'ref seed conversion to hex incog data'),
@@ -102,6 +104,9 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 	def ref_hex_conv(self):
 		return self.ref_mn_conv(ext='mmhex',desc='Hexadecimal seed data with checksum')
+
+	def ref_plainhex_conv(self):
+		return self.ref_mn_conv(ext='hex',desc='Plain hexadecimal seed data')
 
 	def ref_brain_conv(self):
 		uopts = ['-i','b','-p','1','-l',str(self.seed_len)]
@@ -138,6 +143,9 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 	def ref_hex_conv_out(self):
 		return self.walletconv_out('hexadecimal seed data with checksum','hexseed')
+
+	def ref_plainhex_conv_out(self):
+		return self.walletconv_out('plain hexadecimal seed data','hex')
 
 	def ref_incog_conv_out(self):
 		return self.walletconv_out('incognito data',out_fmt='i',pw=True)

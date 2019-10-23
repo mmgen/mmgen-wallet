@@ -1014,6 +1014,35 @@ class MMGenSeedFile(SeedSourceUnenc):
 
 		return True
 
+class PlainHexSeedFile(SeedSourceUnenc):
+
+	stdin_ok = True
+	fmt_codes = 'hex','rawhex','plainhex'
+	desc = 'plain hexadecimal seed data'
+	ext = 'hex'
+
+	def _format(self):
+		self.fmt_data = self.seed.hexdata + '\n'
+
+	def _deformat(self):
+		desc = self.desc
+		d = self.fmt_data.strip()
+
+		if not is_hex_str_lc(d):
+			msg("'{}': not a lowercase hexidecimal string, in {}".format(d,desc))
+			return False
+
+		if not len(d)*4 in g.seed_lens:
+			msg('Invalid data length ({}) in {}'.format(len(d),desc))
+			return False
+
+		self.seed = Seed(bytes.fromhex(d))
+		self.ssdata.hexseed = d
+
+		check_usr_seed_len(self.seed.bitlen)
+
+		return True
+
 class MMGenHexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
