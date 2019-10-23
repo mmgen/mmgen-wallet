@@ -1,0 +1,2 @@
+The 'size' field was removed from mempool entry in Core v0.19.0, necessitating
+this trivial fix.
