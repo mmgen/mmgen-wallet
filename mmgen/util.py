@@ -848,14 +848,16 @@ def do_pager(text):
 
 	for pager in pagers:
 		try:
-			from subprocess import Popen,PIPE
-			p = Popen([pager],stdin=PIPE,shell=False)
-		except: pass
-		else:
-			p.communicate((text+(end_msg,'')[pager=='less']).encode())
+			from subprocess import run
+			m = text + ('' if pager == 'less' else end_msg)
+			p = run([pager],input=m.encode(),check=True)
 			msg_r('\r')
+		except:
+			pass
+		else:
 			break
-	else: Msg(text+end_msg)
+	else:
+		Msg(text+end_msg)
 
 def do_license_msg(immed=False):
 

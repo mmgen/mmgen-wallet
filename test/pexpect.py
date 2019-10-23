@@ -45,11 +45,8 @@ class MMGenPexpect(object):
 
 		if opt.direct_exec:
 			msg('')
-			from subprocess import call,check_output
-			f = (call,check_output)[bool(no_output)]
-			ret = f([args[0]] + args[1:])
-			if f == call and ret != 0:
-				die(1,red('ERROR: process returned a non-zero exit status ({})'.format(ret)))
+			from subprocess import run,DEVNULL
+			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
 		else:
 			if opt.pexpect_spawn:
 				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8')

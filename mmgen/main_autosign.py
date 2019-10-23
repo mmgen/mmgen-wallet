@@ -20,7 +20,8 @@
 mmgen-autosign: Auto-sign MMGen transactions
 """
 
-import sys,os,subprocess,time,signal,shutil
+import sys,os,time,signal,shutil
+from subprocess import run,PIPE,DEVNULL
 from stat import *
 
 mountpoint   = '/mnt/tx'
@@ -151,7 +152,7 @@ def get_wallet_files():
 
 def do_mount():
 	if not os.path.ismount(mountpoint):
-		if subprocess.Popen(['mount',mountpoint],stderr=subprocess.PIPE,stdout=subprocess.PIPE).wait() == 0:
+		if run(['mount',mountpoint],stderr=DEVNULL,stdout=DEVNULL).returncode == 0:
 			msg('Mounting '+mountpoint)
 	try:
 		ds = os.stat(tx_dir)
@@ -164,9 +165,9 @@ def do_mount():
 
 def do_umount():
 	if os.path.ismount(mountpoint):
-		subprocess.call(['sync'])
+		run(['sync'],check=True)
 		msg('Unmounting '+mountpoint)
-		subprocess.call(['umount',mountpoint])
+		run(['umount',mountpoint],check=True)
 
 def sign_tx_file(txfile,signed_txs):
 	try:
@@ -304,7 +305,7 @@ def wipe_existing_key():
 	except: pass
 	else:
 		msg('\nWiping existing key {}'.format(fn))
-		subprocess.call(['wipe','-cf',fn])
+		run(['wipe','-cf',fn],check=True)
 
 def create_key():
 	kdata = os.urandom(32).hex()
@@ -422,7 +423,7 @@ def check_access(fn,desc='status LED control',init_val=None):
 
 def check_wipe_present():
 	try:
-		subprocess.Popen(['wipe','-v'],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+		run(['wipe','-v'],stdout=DEVNULL,stderr=DEVNULL,check=True)
 	except:
 		die(2,"The 'wipe' utility must be installed before running this program")
 

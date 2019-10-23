@@ -21,6 +21,8 @@ ts_autosign.py: Autosign tests for the test.py test suite
 """
 
 import os,shutil
+from subprocess import run
+
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from test.common import *
@@ -107,11 +109,11 @@ class TestSuiteAutosign(TestSuiteBase):
 		def do_autosign_live(opts,mountpoint,led_opts=[],gen_wallet=True):
 
 			def do_mount():
-				try: subprocess.check_call(['mount',mountpoint])
+				try: run(['mount',mountpoint],check=True)
 				except: pass
 
 			def do_unmount():
-				try: subprocess.check_call(['umount',mountpoint])
+				try: run(['umount',mountpoint],check=True)
 				except: pass
 				omsg_r(blue('\nRemove removable device and then hit ENTER '))
 				input()
@@ -180,7 +182,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			mountpoint = '/mnt/tx'
 			if not os.path.ismount(mountpoint):
 				try:
-					subprocess.check_call(['mount',mountpoint])
+					run(['mount',mountpoint],check=True)
 					imsg("Mounted '{}'".format(mountpoint))
 				except:
 					ydie(1,"Could not mount '{}'!  Exiting".format(mountpoint))
@@ -201,7 +203,7 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			if led_support:
 				for fn in (led_files[led_support]):
-					subprocess.check_call(['sudo','chmod','0666',fn])
+					run(['sudo','chmod','0666',fn],check=True)
 				omsg(purple('Running autosign test with no LED'))
 				do_autosign_live(opts,mountpoint)
 				omsg(purple("Running autosign test with '--led'"))

@@ -20,7 +20,7 @@
 common.py: Shared routines and data for the test.py test suite
 """
 
-import os,time,subprocess
+import os,time
 from mmgen.common import *
 from ..common import *
 

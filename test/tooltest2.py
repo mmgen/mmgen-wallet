@@ -24,7 +24,7 @@ test/tooltest2.py:  Simple tests for the 'mmgen-tool' utility
 # TODO: move all(?) tests in 'tooltest.py' here (or duplicate them?)
 
 import sys,os,time
-from subprocess import Popen,PIPE
+from subprocess import run,PIPE
 from decimal import Decimal
 
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
@@ -649,26 +649,20 @@ def run_test(gid,cmd_name):
 	def fork_cmd(cmd_name,args,out,opts,exec_code):
 		cmd = list(tool_cmd) + (opts or []) + [cmd_name] + args
 		vmsg('{} {}'.format(green('Executing'),cyan(' '.join(cmd))))
-		p = Popen(cmd,stdin=(PIPE if stdin_input else None),stdout=PIPE,stderr=PIPE)
-		if stdin_input:
-			p.stdin.write(stdin_input)
-			p.stdin.close()
-		cmd_out = p.stdout.read()
-		try:
-			cmd_out = cmd_out.decode().strip()
-		except:
-			pass
-		cmd_err = p.stderr.read()
-		if cmd_err: vmsg(cmd_err.strip().decode())
-		if p.wait() != 0:
+		cp = run(cmd,input=stdin_input or None,stdout=PIPE,stderr=PIPE)
+		try:    cmd_out = cp.stdout.decode()
+		except: cmd_out = cp.stdout
+		if cp.stderr:
+			vmsg(cp.stderr.strip().decode())
+		if cp.returncode != 0:
 			import re
-			m = re.match(b"tool command returned '(None|False)'"+NL.encode(),cmd_err)
+			m = re.match(b"tool command returned '(None|False)'"+NL.encode(),cp.stderr)
 			if m:
 				return { b'None': None, b'False': False }[m.group(1)]
 			else:
-				ydie(1,'Spawned program exited with error: {}'.format(cmd_err))
+				ydie(1,'Spawned program exited with error: {}'.format(cp.stderr))
 
-		return cmd_out
+		return cmd_out.strip()
 
 	def run_func(cmd_name,args,out,opts,exec_code):
 		vmsg('{}: {}{}'.format(purple('Running'),

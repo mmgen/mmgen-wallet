@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys,os,json,re
-from subprocess import Popen,PIPE
+from subprocess import run,PIPE
 from mmgen.common import *
 from mmgen.obj import CoinAddr,is_coin_addr
 
@@ -185,8 +185,7 @@ def create_src(code):
 	return code
 
 def check_version():
-	p = Popen(['solc','--version'],stdout=PIPE)
-	res = p.stdout.read().decode()
+	res = run(['solc','--version'],stdout=PIPE).stdout.decode()
 	ver = re.search(r'Version:\s*(.*)',res).group(1)
 	msg("Installed solc version: {}".format(ver))
 	if not re.search(r'{}\b'.format(solc_version_pat),ver):
@@ -195,18 +194,17 @@ def check_version():
 def compile_code(code):
 	check_version()
 	cmd = ['solc','--optimize','--bin','--overwrite']
-	if not opt.stdout: cmd += ['--output-dir', opt.outdir or '.']
+	if not opt.stdout:
+		cmd += ['--output-dir', opt.outdir or '.']
 	cmd += ['-']
 	msg('Executing: {}'.format(' '.join(cmd)))
-	p = Popen(cmd,stdin=PIPE,stdout=PIPE,stderr=PIPE)
-	res = p.communicate(code.encode())
-	out = res[0].decode().replace('\r','')
-	err = res[1].decode().replace('\r','').strip()
-	rc = p.wait()
-	if rc != 0:
+	cp = run(cmd,input=code.encode(),stdout=PIPE,stderr=PIPE)
+	out = cp.stdout.decode().replace('\r','')
+	err = cp.stderr.decode().replace('\r','').strip()
+	if cp.returncode != 0:
 		rmsg('Solidity compiler produced the following error:')
 		msg(err)
-		rdie(2,'Solidity compiler exited with error (return val: {})'.format(rc))
+		rdie(2,'Solidity compiler exited with error (return val: {})'.format(cp.returncode))
 	if err:
 		ymsg('Solidity compiler produced the following warning:')
 		msg(err)

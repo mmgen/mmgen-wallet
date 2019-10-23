@@ -20,7 +20,7 @@
 ts_regtest.py: Regtest tests for the test.py test suite
 """
 
-import os,subprocess
+import os
 from decimal import Decimal
 from ast import literal_eval
 from mmgen.globalvars import g
@@ -680,11 +680,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	@staticmethod
 	def _gen_pairs(n):
 		disable_debug()
-		ret = [subprocess.check_output(
-						['python3',joinpath('cmds','mmgen-tool'),'--testnet=1'] +
-						(['--type=compressed'],[])[i==0] +
-						['-r0','randpair']
-					).decode().split() for i in range(n)]
+		from subprocess import run,PIPE
+		ret = [run(['python3',joinpath('cmds','mmgen-tool'),'--testnet=1'] +
+					(['--type=compressed'],[])[i==0] +
+					['-r0','randpair'],
+					stdout=PIPE,check=True
+				).stdout.decode().split() for i in range(n)]
 		restore_debug()
 		return ret
 

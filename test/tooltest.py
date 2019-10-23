@@ -20,7 +20,8 @@
 test/tooltest.py:  Tests for the 'mmgen-tool' utility
 """
 
-import sys,os,subprocess,binascii
+import sys,os,binascii
+from subprocess import run,PIPE
 
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
@@ -153,6 +154,7 @@ if opt.list_cmds:
 	Msg(fs.format('clean','Clean the tmp directory',w=w))
 	sys.exit(0)
 if opt.list_names:
+	tcmd = ['python3','test/tooltest2.py','--list-tested-cmds']
 	tested_in = {
 		'tooltest.py': [],
 		'test.py': (
@@ -161,7 +163,7 @@ if opt.list_names:
 			'add_label','remove_label','remove_address','twview',
 			'getbalance','listaddresses','listaddress'),
 		'test-release.sh': ('keyaddrlist2monerowallets','syncmonerowallets'),
-		'tooltest2.py': subprocess.check_output(['test/tooltest2.py','--list-tested-cmds']).decode().split()
+		'tooltest2.py': run(tcmd,stdout=PIPE,check=True).stdout.decode().split()
 	}
 	for v in cmd_data.values():
 		tested_in['tooltest.py'] += list(v['cmd_data'].keys())
@@ -218,17 +220,18 @@ class MMGenToolTestUtils(object):
 			else:
 				msg_r('Testing {:{w}}'.format(full_name+':',w=msg_w))
 
-		p = subprocess.Popen(sys_cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-		a,b = p.communicate()
+		cp = run(sys_cmd,stdout=PIPE,stderr=PIPE)
+		out = cp.stdout
+		err = cp.stderr
 		if opt.debug:
-			try: dmsg(b.decode())
-			except: dmsg(repr(b))
-		if not binary: a = a.decode()
-		retcode = p.wait()
-		if retcode != 0:
-			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),b.decode()))
-			rdie(1,'Called process returned with an error (retcode {})'.format(retcode))
-		return (a,a.rstrip())[bool(strip)]
+			try: dmsg(err.decode())
+			except: dmsg(repr(err))
+		if not binary:
+			out = out.decode()
+		if cp.returncode != 0:
+			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),err.decode()))
+			rdie(1,'Called process returned with an error (retcode {})'.format(cp.returncode))
+		return (out,out.rstrip())[bool(strip)]
 
 	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg='',strip_hex=False,add_opts=[]):
 		idata = read_from_file(f1).rstrip()
@@ -391,9 +394,7 @@ class MMGenToolTestCmds(object):
 		test_msg('command piping')
 		if opt.verbose:
 			sys.stderr.write(green('Executing ') + cyan(cmd) + '\n')
-		p = subprocess.Popen(cmd,stdout=subprocess.PIPE,shell=True)
-		res = p.stdout.read().decode().strip()
-		p.wait()
+		res = run(cmd,stdout=PIPE,shell=True).stdout.decode().strip()
 		addr = read_from_tmpfile(cfg,'wif2addr3.out').strip()
 		cmp_or_die(addr,res)
 		ok()

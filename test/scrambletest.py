@@ -21,7 +21,8 @@ test/scrambletest.py: seed scrambling and addrlist data generation tests for all
 supported coins + passwords
 """
 
-import sys,os,subprocess
+import sys,os
+from subprocess import run,PIPE
 repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 os.chdir(repo_root)
 sys.path.__setitem__(0,repo_root)
@@ -97,13 +98,10 @@ cvr_opts = ' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) 
 cmd_base = 'python3{} cmds/mmgen-{{}}gen -qS'.format(cvr_opts)
 
 def get_cmd_output(cmd):
-	p = subprocess.Popen(cmd.split(),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	o = p.stdout.read().decode()
-	err = p.stderr.read().decode()
-	exit_val = p.wait()
-	if exit_val != 0:
-		ydie(2,'\nSpawned program exited with error code {}:\n{}'.format(exit_val,err))
-	return o.splitlines()
+	cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+	if cp.returncode != 0:
+		ydie(2,'\nSpawned program exited with error code {}:\n{}'.format(cp.returncode,cp.stderr.decode()))
+	return cp.stdout.decode().splitlines()
 
 def do_test(cmd,tdata,msg_str,addr_desc):
 	vmsg(green('Executing: {}'.format(cmd)))

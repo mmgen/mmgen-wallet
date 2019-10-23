@@ -29,6 +29,7 @@ def create_shm_dir(data_dir,trash_dir):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
 	# under '/dev/shm' and put datadir and tmpdirs here.
 	import shutil
+	from subprocess import run
 	if g.platform == 'win':
 		for tdir in (data_dir,trash_dir):
 			try: os.listdir(tdir)
@@ -36,8 +37,10 @@ def create_shm_dir(data_dir,trash_dir):
 			else:
 				try: shutil.rmtree(tdir)
 				except: # we couldn't remove data dir - perhaps regtest daemon is running
-					try: subprocess.call(['python3',os.path.join('cmds','mmgen-regtest'),'stop'])
-					except: rdie(1,"Unable to remove {!r}!".format(tdir))
+					try:
+						run(['python3',os.path.join('cmds','mmgen-regtest'),'stop'],check=True)
+					except:
+						rdie(1,"Unable to remove {!r}!".format(tdir))
 					else:
 						time.sleep(2)
 						shutil.rmtree(tdir)
@@ -46,7 +49,7 @@ def create_shm_dir(data_dir,trash_dir):
 	else:
 		tdir,pfx = '/dev/shm','mmgen-test-'
 		try:
-			subprocess.call('rm -rf {}/{}*'.format(tdir,pfx),shell=True)
+			run('rm -rf {}/{}*'.format(tdir,pfx),shell=True,check=True)
 		except Exception as e:
 			die(2,'Unable to delete directory tree {}/{}* ({})'.format(tdir,pfx,e.args[0]))
 		try:

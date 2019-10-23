@@ -155,22 +155,25 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 									pw        = True )
 
 	def ref_hincog_blkdev_conv_out(self):
+		def do_run(cmd):
+			from subprocess import run,PIPE,DEVNULL
+			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
 		if self.skip_for_win(): return 'skip'
 		imsg('Creating block device image file')
 		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
-		subprocess.check_output(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'],stderr=subprocess.PIPE)
-		ic_dev = subprocess.check_output(['sudo','/sbin/losetup','-f']).strip().decode()
+		do_run(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'])
+		ic_dev = do_run(['sudo','/sbin/losetup','-f']).stdout.strip().decode()
 		ic_dev_mode_orig = '{:o}'.format(os.stat(ic_dev).st_mode & 0xfff)
 		ic_dev_mode = '0666'
 		imsg("Changing permissions on loop device to '{}'".format(ic_dev_mode))
-		subprocess.check_output(['sudo','chmod',ic_dev_mode,ic_dev],stderr=subprocess.PIPE)
+		do_run(['sudo','chmod',ic_dev_mode,ic_dev])
 		imsg("Attaching loop device '{}'".format(ic_dev))
-		subprocess.check_output(['sudo','/sbin/losetup',ic_dev,ic_img])
+		do_run(['sudo','/sbin/losetup',ic_dev,ic_img])
 		self.ref_hincog_conv_out(ic_f=ic_dev)
 		imsg("Detaching loop device '{}'".format(ic_dev))
-		subprocess.check_output(['sudo','/sbin/losetup','-d',ic_dev])
+		do_run(['sudo','/sbin/losetup','-d',ic_dev])
 		imsg("Resetting permissions on loop device to '{}'".format(ic_dev_mode_orig))
-		subprocess.check_output(['sudo','chmod',ic_dev_mode_orig,ic_dev],stderr=subprocess.PIPE)
+		do_run(['sudo','chmod',ic_dev_mode_orig,ic_dev])
 		return 'ok'
 
 	# wallet conversion tests

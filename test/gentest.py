@@ -88,20 +88,21 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
+from subprocess import run,PIPE,DEVNULL
+def get_cmd_output(cmd,input=None):
+	return run(cmd,input=input,stdout=PIPE,stderr=DEVNULL).stdout.decode().splitlines()
+
 def ethkey_sec2addr(sec):
-	p = Popen(['ethkey','info',sec],stdout=PIPE)
-	o = p.stdout.read().decode().splitlines()
-	return sec,o[-1].split()[1]
+	o = get_cmd_output(['ethkey','info',sec])
+	return (sec,o[-1].split()[1])
 
 def keyconv_sec2addr(sec):
-	p = Popen(['keyconv','-C',g.coin,sec.wif],stderr=PIPE,stdout=PIPE)
-	o = p.stdout.read().decode().splitlines()
+	o = get_cmd_output(['keyconv','-C',g.coin,sec.wif])
 	return (o[1].split()[1],o[0].split()[1])
 
 def zcash_mini_sec2addr(sec):
-	p = Popen(['zcash-mini','-key','-simple'],stderr=PIPE,stdin=PIPE,stdout=PIPE)
-	ret = p.communicate(sec.wif.encode()+b'\n')[0].decode().strip().split('\n')
-	return (sec.wif,ret[0],ret[-1])
+	o = get_cmd_output(['zcash-mini','-key','-simple'],input=(sec.wif+'\n').encode())
+	return (sec.wif,o[0],o[-1])
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
@@ -247,7 +248,6 @@ def dump_test():
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
 # begin execution
-from subprocess import Popen,PIPE
 from mmgen.protocol import init_coin
 from mmgen.altcoin import CoinInfo as ci
 

@@ -882,17 +882,16 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 		exit_if_mswin('Monero wallet operations')
 
 		def run_cmd(cmd):
-			import subprocess as sp
-			p = sp.Popen(cmd,stdin=sp.PIPE,stdout=sp.PIPE,stderr=sp.PIPE)
-			return p
+			from subprocess import run,PIPE,DEVNULL
+			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
 
 		def test_rpc():
-			p = run_cmd(['monero-wallet-cli','--version'])
-			if not b'Monero' in p.stdout.read():
+			cp = run_cmd(['monero-wallet-cli','--version'])
+			if not b'Monero' in cp.stdout:
 				die(1,"Unable to run 'monero-wallet-cli'!")
-			p = run_cmd(['monerod','status'])
+			cp = run_cmd(['monerod','status'])
 			import re
-			m = re.search(r'Height: (\d+)/\d+ ',p.stdout.read().decode())
+			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
 			if not m:
 				die(1,'Unable to connect to monerod!')
 			return int(m.group(1))

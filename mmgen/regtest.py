@@ -20,9 +20,9 @@
 regtest: Coin daemon regression test mode setup and operations for the MMGen suite
 """
 
-import os,subprocess,time,shutil
+import os,time,shutil
+from subprocess import run,PIPE
 from mmgen.common import *
-PIPE = subprocess.PIPE
 
 data_dir     = os.path.join(g.data_dir_root,'regtest',g.coin.lower())
 daemon_dir   = os.path.join(data_dir,'regtest')
@@ -54,8 +54,8 @@ def start_daemon(user,quiet=False,daemon=True,reindex=False):
 	if daemon: cmd += ('--daemon',)
 	if reindex: cmd += ('--reindex',)
 	if not g.debug or quiet: vmsg('{}'.format(' '.join(cmd)))
-	p = subprocess.Popen(cmd,stdout=PIPE,stderr=PIPE)
-	err = process_output(p,silent=False)[1]
+	cp = run(cmd,stdout=PIPE,stderr=PIPE)
+	err = process_output(cp,silent=False)[1]
 	if err:
 		rdie(1,'Error starting the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
 
@@ -74,16 +74,17 @@ def start_cmd(*args,**kwargs):
 		vmsg('{}'.format(' '.join(cmd)))
 	ip = op = ep = (PIPE,None)['no_pipe' in kwargs and kwargs['no_pipe']]
 	if 'pipe_stdout_only' in kwargs and kwargs['pipe_stdout_only']: ip = ep = None
-	return subprocess.Popen(cmd,stdin=ip,stdout=op,stderr=ep)
+	return run(cmd,stdin=ip,stdout=op,stderr=ep)
 
 def test_daemon():
-	p = start_cmd('cli','getblockcount',quiet=True)
-	err = process_output(p,silent=True)[1]
-	ret,state = p.wait(),None
+	cp = start_cmd('cli','getblockcount',quiet=True)
+	err = process_output(cp,silent=True)[1]
 	if "error: couldn't connect" in err or "error: Could not connect" in err:
-		state = 'stopped'
-	if not state: state = ('busy','ready')[ret==0]
-	return state
+		return 'stopped'
+	elif cp.returncode == 0:
+		return 'ready'
+	else:
+		return 'busy'
 
 def wait_for_daemon(state,silent=False,nonl=False):
 	for i in range(200):
@@ -92,7 +93,8 @@ def wait_for_daemon(state,silent=False,nonl=False):
 			if opt.verbose: msg('returning state '+ret)
 			else: gmsg_r('.')
 			if ret == state and not nonl: msg('')
-		if ret == state: return True
+		if ret == state:
+			return True
 		time.sleep(1)
 	else:
 		die(1,'timeout exceeded')
@@ -132,10 +134,11 @@ def create_data_dir():
 	try: os.makedirs(data_dir)
 	except: pass
 
-def process_output(p,silent=False):
-	out = p.stdout.read().decode()
-	if g.platform == 'win' and not opt.verbose: Msg_r(' \b')
-	err = p.stderr.read().decode()
+def process_output(cp,silent=False):
+	out = cp.stdout.decode()
+	if g.platform == 'win' and not opt.verbose:
+		Msg_r(' \b')
+	err = cp.stderr.decode()
 	if g.debug or not silent:
 		vmsg('stdout: [{}]'.format(out.strip()))
 		vmsg('stderr: [{}]'.format(err.strip()))
@@ -153,22 +156,19 @@ def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_err
 def send(addr,amt):
 	user('miner')
 	gmsg('Sending {} {} to address {}'.format(amt,g.coin,addr))
-	p = start_cmd('cli','sendtoaddress',addr,str(amt))
-	process_output(p)
-	p.wait()
+	cp = start_cmd('cli','sendtoaddress',addr,str(amt))
+	process_output(cp)
 	generate(1)
 
 def show_mempool():
-	p = start_cmd('cli','getrawmempool')
+	cp = start_cmd('cli','getrawmempool')
 	from ast import literal_eval
-	pp_msg(literal_eval(p.stdout.read().decode()))
-	p.wait()
+	pp_msg(literal_eval(cp.stdout.decode()))
 
 def cli(*args):
-	p = start_cmd(*(('cli',) + args))
-	Msg_r(p.stdout.read().decode())
-	msg_r(p.stderr.read().decode())
-	p.wait()
+	cp = start_cmd(*(('cli',) + args))
+	Msg_r(cp.stdout.decode())
+	msg_r(cp.stderr.decode())
 
 def fork(coin):
 	coin = coin.upper()
@@ -235,7 +235,7 @@ def get_current_user_win(quiet=False):
 	if test_daemon() == 'stopped': return None
 	logfile = os.path.join(daemon_dir,'debug.log')
 	for ss in ('Wallet completed loading in','Using wallet wallet'):
-		o = start_cmd('grep',ss,logfile,quiet=True).stdout.readlines()
+		o = start_cmd('grep',ss,logfile,quiet=True).stdout.splitlines()
 		if o:
 			last_line = o[-1].decode()
 			break
@@ -256,9 +256,10 @@ def get_current_user_win(quiet=False):
 		return None
 
 def get_current_user_unix(quiet=False):
-	p = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
-	cmdline = p.stdout.read().decode()
-	if not cmdline: return None
+	cp = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
+	cmdline = cp.stdout.decode()
+	if not cmdline:
+		return None
 	for k in ('miner','bob','alice'):
 		if 'wallet.dat.'+k in cmdline:
 			if not quiet: msg('Current user is {}'.format(k.capitalize()))
@@ -292,24 +293,23 @@ def user(user=None,quiet=False):
 def stop(silent=False,ignore_noconnect_error=True):
 	if test_daemon() != 'stopped' and not silent:
 		gmsg('Stopping {} regtest daemon for coin {}'.format(g.proto.name,g.coin))
-	p = start_cmd('cli','stop')
-	err = process_output(p)[1]
+	cp = start_cmd('cli','stop')
+	err = process_output(cp)[1]
 	if err:
 		if "couldn't connect to server" in err and not ignore_noconnect_error:
 			rdie(1,'Error stopping the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
 		msg(err)
-	return p.wait()
 
 def generate(blocks=1,silent=False):
 
 	def have_generatetoaddress():
-		p = start_cmd('cli','help','generatetoaddress')
-		out,err = process_output(p,silent=True)
+		cp = start_cmd('cli','help','generatetoaddress')
+		out = process_output(cp,silent=True)[0]
 		return not 'unknown command' in out
 
 	def get_miner_address():
-		p = start_cmd('cli','getnewaddress')
-		out,err = process_output(p,silent=True)
+		cp = start_cmd('cli','getnewaddress')
+		out,err = process_output(cp,silent=True)
 		if not err:
 			return out.strip()
 		else:
@@ -321,14 +321,14 @@ def generate(blocks=1,silent=False):
 	wait_for_daemon('ready',silent=True)
 
 	if have_generatetoaddress():
-		p = start_cmd('cli','generatetoaddress',str(blocks),get_miner_address())
+		cp = start_cmd('cli','generatetoaddress',str(blocks),get_miner_address())
 	else:
-		p = start_cmd('cli','generate',str(blocks))
+		cp = start_cmd('cli','generate',str(blocks))
 
-	out,err = process_output(p,silent=silent)
+	out,err = process_output(cp,silent=silent)
 
 	from ast import literal_eval
 	if not out or len(literal_eval(out)) != blocks:
 		rdie(1,'Error generating blocks')
-	p.wait()
+
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks)))

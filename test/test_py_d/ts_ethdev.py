@@ -20,8 +20,10 @@
 ts_ethdev.py: Ethdev tests for the test.py test suite
 """
 
-import sys,os,subprocess,re,shutil
+import sys,os,re,shutil
 from decimal import Decimal
+from subprocess import run,PIPE,DEVNULL
+
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die
@@ -45,9 +47,8 @@ parity_key_fn = 'parity.devkey'
 
 # Token sends require varying amounts of gas, depending on compiler version
 try:
-	solc_ver = re.search(r'Version:\s*(.*)',
-					subprocess.Popen(['solc','--version'],stdout=subprocess.PIPE
-						).stdout.read().decode()).group(1)
+	cmd_out = run(['solc','--version'],stdout=PIPE).stdout.decode()
+	solc_ver = re.search(r'Version:\s*(.*)',cmd_out).group(1)
 except:
 	solc_ver = '' # no solc on system - prompt for precompiled v0.5.3 contract files
 
@@ -306,10 +307,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			m3 = ['parity',lf_arg] + opts
 			m4 = '\nPress ENTER to continue: '
 			my_raw_input(m1 + m2 + ' '.join(m3) + m4)
-		elif subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
+		elif run(['which','parity'],stdout=DEVNULL).returncode == 0:
 			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
 			try:
-				pid = subprocess.check_output(['pgrep','-af',ss]).split()[0]
+				pid = run(['pgrep','-af',ss],stdout=PIPE).stdout.split()[0]
 				os.kill(int(pid),9)
 			except: pass
 			# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
@@ -318,12 +319,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			bdir = joinpath(self.tr.data_dir,'parity')
 			try: os.mkdir(bdir)
 			except: pass
-			redir = None if opt.exact_output else subprocess.PIPE
+			redir = None if opt.exact_output else PIPE
 			pidfile = joinpath(self.tmpdir,parity_pid_fn)
-			subprocess.check_call(['parity',lf_arg] + opts + ['daemon',pidfile],stderr=redir,stdout=redir)
+			run(['parity',lf_arg] + opts + ['daemon',pidfile],stderr=redir,stdout=redir,check=True)
 			time.sleep(3) # race condition
 			pid = self.read_from_tmpfile(parity_pid_fn)
-		elif subprocess.call('netstat -tnl | grep -q 127.0.0.1:8549',shell=True) == 0:
+		elif run('netstat -tnl | grep -q 127.0.0.1:8549',shell=True).returncode == 0:
 			m1 = 'No parity executable found on system, but port 8549 is active!'
 			m2 = 'Before continuing, you should probably run the command'
 			m3 = 'test/test.py -X setup ethdev'
@@ -574,9 +575,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
 		try: os.mkdir(odir)
 		except: pass
-		cmd = ['scripts/traceback_run.py','scripts/create-token.py','--coin='+g.coin,'--outdir='+odir] + cmd_args + [dfl_addr_chk]
+		cmd = [
+			'scripts/traceback_run.py',
+			'scripts/create-token.py',
+			'--coin=' + g.coin,
+			'--outdir=' + odir
+		] + cmd_args + [dfl_addr_chk]
 		imsg("Executing: {}".format(' '.join(cmd)))
-		subprocess.check_output(cmd,stderr=subprocess.STDOUT)
+		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
+		if cp.returncode != 0:
+			rdie(2,'solc failed with the following output: {}'.format(cp.stderr))
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
 		return 'ok'
 
@@ -937,12 +945,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.spawn('',msg_only=True)
 		if g.platform == 'win':
 			my_raw_input('Please stop parity and Press ENTER to continue: ')
-		elif subprocess.call(['which','parity'],stdout=subprocess.PIPE) == 0:
+		elif run(['which','parity'],stdout=DEVNULL).returncode == 0:
 			pid = self.read_from_tmpfile(parity_pid_fn)
 			if opt.no_daemon_stop:
 				msg_r('(leaving daemon running by user request)')
 			else:
-				subprocess.check_call(['kill',pid])
+				run(['kill',pid],check=True)
 		else:
 			imsg('No parity executable found on system. Ignoring')
 		return 'ok'

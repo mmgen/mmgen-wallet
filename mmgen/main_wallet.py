@@ -221,12 +221,12 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	confirm_or_raise(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
 	msg('Securely deleting old wallet')
-	from subprocess import check_output,CalledProcessError
-	sd_cmd = (['wipe','-sf'],['sdelete','-p','20'])[g.platform=='win']
+	from subprocess import run
+	wipe_cmd = ['sdelete','-p','20'] if g.platform=='win' else ['wipe','-sf']
 	try:
-		check_output(sd_cmd + [ss_in.infile.name])
+		run(wipe_cmd + [ss_in.infile.name],check=True)
 	except:
-		ymsg("WARNING: '{}' command failed, using regular file delete instead".format(sd_cmd[0]))
+		ymsg("WARNING: '{}' command failed, using regular file delete instead".format(wipe_cmd[0]))
 		os.unlink(ss_in.infile.name)
 else:
 	try:
