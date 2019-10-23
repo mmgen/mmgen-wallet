@@ -964,7 +964,7 @@ class BIP39Mnemonic(MMGenMnemonic):
 		self.conv_cls = bip39
 		super().__init__(*args,**kwargs)
 
-class SeedFile (SeedSourceUnenc):
+class MMGenSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
 	fmt_codes = 'mmseed','seed','s'
@@ -1014,11 +1014,11 @@ class SeedFile (SeedSourceUnenc):
 
 		return True
 
-class HexSeedFile(SeedSourceUnenc):
+class MMGenHexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'seedhex','hexseed','hex','mmhex'
-	desc = 'hexadecimal seed data'
+	fmt_codes = 'seedhex','hexseed','mmhex'
+	desc = 'hexadecimal seed data with checksum'
 	ext = 'mmhex'
 
 	def _format(self):

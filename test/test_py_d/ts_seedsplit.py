@@ -119,7 +119,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				t.hincog_create(1234)
 			t.written_to_file(capfirst(desc))
 		else:
-			t.written_to_file('data')
+			t.written_to_file('with checksum' if ofmt == 'mmhex' else 'data')
 		return t
 
 	def ss_join(self,tdir,ofmt,in_exts,add_args=[],sid=None,bad_invocation=False,master=None,id_str=None):
@@ -156,7 +156,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 			t.passphrase_new('new MMGen wallet',wpasswd)
 			t.written_to_file('MMGen wallet')
 		else:
-			t.written_to_file('data')
+			t.written_to_file('with checksum' if ofmt == 'mmhex' else 'data')
 		return t
 
 	def get_hincog_arg(self,tdir,suf='-default-2of2'):
@@ -171,29 +171,29 @@ class TestSuiteSeedSplit(TestSuiteBase):
 	def ss_2way_B_dfl2(self):
 		return self.ss_splt('2way_dfl2','hincog','default:2:2',['-J',self.get_hincog_arg('2way_dfl2')])
 	def ss_2way_join_dfl2(self):
-		return self.ss_join('2way_dfl2','hex',['mmseed'],['-H',self.get_hincog_arg('2way_dfl2')])
+		return self.ss_join('2way_dfl2','mmhex',['mmseed'],['-H',self.get_hincog_arg('2way_dfl2')])
 
 	def ss_2way_A_alice(self):        return self.ss_splt('2way_alice','w','alice:1:2')
-	def ss_2way_B_alice(self):        return self.ss_splt('2way_alice','hex','alice:2:2')
+	def ss_2way_B_alice(self):        return self.ss_splt('2way_alice','mmhex','alice:2:2')
 	def ss_2way_join_alice(self):     return self.ss_join('2way_alice','seed',['mmdat','mmhex'])
 	def ss_2way_join_alice_mix(self): return self.ss_join('2way_alice','seed',['mmhex','mmdat'])
 
 	def ss_2way_A_dfl_usw(self):    return self.ss_splt('2way_dfl_usw','words','1:2',[],wf=ref_wf)
 	def ss_2way_B_dfl_usw(self):    return self.ss_splt('2way_dfl_usw','incog','2:2',[],wf=ref_wf)
-	def ss_2way_join_dfl_usw(self): return self.ss_join('2way_dfl_usw','hex',['mmwords','mmincog'],sid=ref_sid)
+	def ss_2way_join_dfl_usw(self): return self.ss_join('2way_dfl_usw','mmhex',['mmwords','mmincog'],sid=ref_sid)
 
 	def ss_3way_A_dfl(self):        return self.ss_splt('3way_dfl','words','1:3')
 	def ss_3way_B_dfl(self):        return self.ss_splt('3way_dfl','incog_hex','2:3')
 	def ss_3way_C_dfl(self):        return self.ss_splt('3way_dfl','bip39','3:3')
-	def ss_3way_join_dfl(self):     return self.ss_join('3way_dfl','hex',['mmwords','mmincox','bip39'])
-	def ss_3way_join_dfl_mix(self): return self.ss_join('3way_dfl','hex',['bip39','mmwords','mmincox'])
+	def ss_3way_join_dfl(self):     return self.ss_join('3way_dfl','mmhex',['mmwords','mmincox','bip39'])
+	def ss_3way_join_dfl_mix(self): return self.ss_join('3way_dfl','mmhex',['bip39','mmwords','mmincox'])
 
 	def ss_2way_A_dfl_master3(self):
 		return self.ss_splt('2way_dfl_master3','w','',master=3)
 	def ss_2way_B_dfl_master3(self):
 		return self.ss_splt('2way_dfl_master3','bip39','2:2',master=3)
 	def ss_2way_join_dfl_master3(self):
-		return self.ss_join('2way_dfl_master3','hex',['mmdat','bip39'],master=3)
+		return self.ss_join('2way_dfl_master3','mmhex',['mmdat','bip39'],master=3)
 
 	tdir2 = '3way_foobar_master7'
 	def ss_3way_C_foobar_master7(self):
@@ -202,7 +202,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 	def ss_3way_B_foobar_master7(self):
 		return self.ss_splt(self.tdir2,'bip39','φυβαρ:2:3',master=7)
 	def ss_3way_A_foobar_master7(self):
-		return self.ss_splt(self.tdir2,'hex','φυβαρ:3:3',master=7)
+		return self.ss_splt(self.tdir2,'mmhex','φυβαρ:3:3',master=7)
 	def ss_3way_join_foobar_master7(self):
 		return self.ss_join(self.tdir2,'seed', ['bip39','mmhex'],
 							['-H',self.get_hincog_arg(self.tdir2,'-master7')],master=7,id_str='φυβαρ')
@@ -217,7 +217,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		return t
 
 	def ss_3way_join_dfl_bad_invocation(self):
-		t = self.ss_join('3way_dfl','hex',
+		t = self.ss_join('3way_dfl','mmhex',
 				['mmwords','mmincox','bip39'],
 				id_str='foo',
 				bad_invocation=True)

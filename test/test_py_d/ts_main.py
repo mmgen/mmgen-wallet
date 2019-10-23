@@ -515,7 +515,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		end_silence()
 		return t
 
-	def export_hex(self,wf,desc='hexadecimal seed data',out_fmt='hex',pf=None):
+	def export_hex(self,wf,desc='hexadecimal seed data with checksum',out_fmt='mmhex',pf=None):
 		return self.export_seed(wf,desc=desc,out_fmt=out_fmt,pf=pf)
 
 	def export_mnemonic(self,wf):
@@ -555,7 +555,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.req_exit_val = 1
 		return t
 
-	def addrgen_hex(self,wf,foo,desc='hexadecimal seed data',in_fmt='hex'):
+	def addrgen_hex(self,wf,foo,desc='hexadecimal seed data with checksum',in_fmt='mmhex'):
 		return self.addrgen_seed(wf,foo,desc=desc,in_fmt=in_fmt)
 
 	def addrgen_mnemonic(self,wf,foo):

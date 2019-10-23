@@ -79,12 +79,12 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf=None,desc=ss.desc,sid=self.seed_id)
 
 	def ref_seed_chk(self):
-		from mmgen.seed import SeedFile
-		return self.ref_ss_chk(ss=SeedFile)
+		from mmgen.seed import MMGenSeedFile
+		return self.ref_ss_chk(ss=MMGenSeedFile)
 
 	def ref_hex_chk(self):
-		from mmgen.seed import HexSeedFile
-		return self.ref_ss_chk(ss=HexSeedFile)
+		from mmgen.seed import MMGenHexSeedFile
+		return self.ref_ss_chk(ss=MMGenHexSeedFile)
 
 	def ref_mn_chk(self):
 		from mmgen.seed import MMGenMnemonic
@@ -162,7 +162,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.ref_walletconv(fn,pf,ofmt='mmseed',desc='Seed data',ext='mmseed')
 
 	def ref_walletconv_hexseed(self,fn,pf):
-		return self.ref_walletconv(fn,pf,ofmt='mmhex',desc='Hexadecimal seed data',ext='mmhex')
+		return self.ref_walletconv(fn,pf,ofmt='mmhex',desc='Hexadecimal seed data with checksum',ext='mmhex')
 
 	def ref_walletconv_incog(self,fn,pf,desc='Incognito data',ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']
