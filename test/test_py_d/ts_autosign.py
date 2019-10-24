@@ -226,7 +226,7 @@ class TestSuiteAutosignMinimal(TestSuiteAutosign):
 	)
 
 class TestSuiteAutosignLive(TestSuiteAutosignMinimal):
-	'live autosigning operations'
+	'live autosigning operations with device insertion/removal and LED check'
 	cmd_group = (
 		('autosign_live', 'transaction autosigning (BTC,ETH,ETC - test device insertion/removal + LED)'),
 	)

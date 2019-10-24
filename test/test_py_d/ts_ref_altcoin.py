@@ -96,10 +96,9 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 				wf = dfl_words_file
 				e = ['--coin='+coin,'--testnet='+('0','1')[tn]]
 				if token: e += ['--token='+token]
-				t = self.txsign(tf, wf, pf,
+				t = self.txsign(wf, tf, pf,
 								save       = False,
 								has_label  = True,
-								do_passwd  = False,
 								extra_desc = '({}{})'.format(token or coin,' testnet' if tn else ''),
 								extra_opts = e )
 				ok_msg()

@@ -22,6 +22,7 @@ ts_wallet.py: Wallet conversion tests for the test.py test suite
 
 import os
 from mmgen.opts import opt
+from mmgen.seed import *
 from test.test_py_d.common import *
 from test.test_py_d.ts_base import *
 from test.test_py_d.ts_shared import *
@@ -90,77 +91,55 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 	def ref_wallet_conv(self):
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)]['ref_wallet'])
-		return self.walletconv_in(wf,'MMGen wallet',pw=True,oo=True)
+		return self.walletconv_in(wf,oo=True)
 
-	def ref_mn_conv(self,ext='mmwords',desc='MMGen native mnemonic data'):
+	def ref_mn_conv(self,ext='mmwords'):
 		wf = joinpath(ref_dir,self.seed_id+'.'+ext)
-		return self.walletconv_in(wf,desc,oo=True)
+		return self.walletconv_in(wf,oo=True)
 
-	def ref_bip39_conv(self):
-		return self.ref_mn_conv(ext='bip39',desc='BIP39 mnemonic data')
-
-	def ref_seed_conv(self):
-		return self.ref_mn_conv(ext='mmseed',desc='Seed data')
-
-	def ref_hex_conv(self):
-		return self.ref_mn_conv(ext='mmhex',desc='Hexadecimal seed data with checksum')
-
-	def ref_plainhex_conv(self):
-		return self.ref_mn_conv(ext='hex',desc='Plain hexadecimal seed data')
+	def ref_bip39_conv(self):    return self.ref_mn_conv(ext='bip39')
+	def ref_seed_conv(self):     return self.ref_mn_conv(ext='mmseed')
+	def ref_hex_conv(self):      return self.ref_mn_conv(ext='mmhex')
+	def ref_plainhex_conv(self): return self.ref_mn_conv(ext='hex')
 
 	def ref_brain_conv(self):
 		uopts = ['-i','b','-p','1','-l',str(self.seed_len)]
-		return self.walletconv_in(None,'brainwallet',uopts,oo=True)
+		return self.walletconv_in(None,uopts,oo=True,icls=Brainwallet)
 
-	def ref_incog_conv(self,wfk='ic_wallet',in_fmt='i',desc='incognito data'):
+	def ref_incog_conv(self,wfk='ic_wallet',in_fmt='i'):
 		uopts = ['-i',in_fmt,'-p','1','-l',str(self.seed_len)]
 		wf = joinpath(ref_dir,self.sources[str(self.seed_len)][wfk])
-		return self.walletconv_in(wf,desc,uopts,oo=True,pw=True)
+		return self.walletconv_in(wf,uopts,oo=True)
 
 	def ref_incox_conv(self):
-		return self.ref_incog_conv(in_fmt='xi',wfk='ic_wallet_hex',desc='hex incognito data')
+		return self.ref_incog_conv(in_fmt='xi',wfk='ic_wallet_hex')
 
 	def ref_hincog_conv(self,wfk='hic_wallet',add_uopts=[]):
 		ic_f = joinpath(ref_dir,self.sources[str(self.seed_len)][wfk])
 		uopts = ['-i','hi','-p','1','-l',str(self.seed_len)] + add_uopts
 		hi_opt = ['-H','{},{}'.format(ic_f,ref_wallet_incog_offset)]
-		return self.walletconv_in(None,'hidden incognito data',uopts+hi_opt,oo=True,pw=True)
+		return self.walletconv_in(None,uopts+hi_opt,oo=True,icls=IncogWalletHidden)
 
 	def ref_hincog_conv_old(self):
 		return self.ref_hincog_conv(wfk='hic_wallet_old',add_uopts=['-O'])
 
-	def ref_wallet_conv_out(self):
-		return self.walletconv_out('MMGen wallet','w',pw=True)
-
-	def ref_mn_conv_out(self):
-		return self.walletconv_out('MMGen native mnemonic data','mn')
-
-	def ref_bip39_conv_out(self):
-		return self.walletconv_out('BIP39 mnemonic data','bip39')
-
-	def ref_seed_conv_out(self):
-		return self.walletconv_out('seed data','seed')
-
-	def ref_hex_conv_out(self):
-		return self.walletconv_out('hexadecimal seed data with checksum','hexseed')
-
-	def ref_plainhex_conv_out(self):
-		return self.walletconv_out('plain hexadecimal seed data','hex')
-
-	def ref_incog_conv_out(self):
-		return self.walletconv_out('incognito data',out_fmt='i',pw=True)
-
-	def ref_incox_conv_out(self):
-		return self.walletconv_out('hex incognito data',out_fmt='xi',pw=True)
+	def ref_wallet_conv_out(self):   return self.walletconv_out('w')
+	def ref_mn_conv_out(self):       return self.walletconv_out('mn')
+	def ref_bip39_conv_out(self):    return self.walletconv_out('bip39')
+	def ref_seed_conv_out(self):     return self.walletconv_out('seed')
+	def ref_hex_conv_out(self):      return self.walletconv_out('hexseed')
+	def ref_plainhex_conv_out(self): return self.walletconv_out('hex')
+	def ref_incog_conv_out(self):    return self.walletconv_out('i')
+	def ref_incox_conv_out(self):    return self.walletconv_out('xi')
 
 	def ref_hincog_conv_out(self,ic_f=None):
-		if not ic_f: ic_f = joinpath(self.tmpdir,hincog_fn)
+		if not ic_f:
+			ic_f = joinpath(self.tmpdir,hincog_fn)
 		hi_parms = '{},{}'.format(ic_f,ref_wallet_incog_offset)
 		sl_parm = '-l' + str(self.seed_len)
-		return self.walletconv_out( 'hidden incognito data','hi',
+		return self.walletconv_out('hi',
 									uopts     = ['-J',hi_parms,sl_parm],
-									uopts_chk = ['-H',hi_parms,sl_parm],
-									pw        = True )
+									uopts_chk = ['-H',hi_parms,sl_parm] )
 
 	def ref_hincog_blkdev_conv_out(self):
 		def do_run(cmd):
@@ -185,58 +164,61 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	# wallet conversion tests
-	def walletconv_in(self,infile,desc,uopts=[],pw=False,oo=False):
-		opts = ['-d',self.tmpdir,'-o','words',self.usr_rand_arg]
+	def walletconv_in(self,infile,uopts=[],oo=False,icls=None):
+		ocls = MMGenMnemonic
+		opts = ['-d',self.tmpdir,'-o',ocls.fmt_codes[0],self.usr_rand_arg]
 		if_arg = [infile] if infile else []
 		d = '(convert)'
 		t = self.spawn('mmgen-walletconv',opts+uopts+if_arg,extra_desc=d)
 		t.license()
-		if desc == 'brainwallet':
+		icls = icls or SeedSource.ext_to_type(get_extension(infile))
+		if icls == Brainwallet:
 			t.expect('Enter brainwallet: ',ref_wallet_brainpass+'\n')
+		pw = issubclass(icls,SeedSourceEnc) and icls != Brainwallet
 		if pw:
-			t.passphrase(desc,self.wpasswd)
+			t.passphrase(icls.desc,self.wpasswd)
 			if self.test_name[:19] == 'ref_hincog_conv_old':
 				t.expect('Is the Seed ID correct? (Y/n): ','\n')
 			else:
 				t.expect(['Passphrase is OK',' are correct'])
-		# Output
-		wf = t.written_to_file('MMGen native mnemonic data',oo=oo)
+		wf = t.written_to_file(capfirst(ocls.desc),oo=oo)
 		t.p.wait()
 		# back check of result
 		msg('' if opt.profile else ' OK')
 		return self.walletchk(  wf,
 								pf         = None,
 								extra_desc = '(check)',
-								desc       = 'MMGen native mnemonic data',
 								sid        = self.seed_id )
 
-	def walletconv_out(self,desc,out_fmt='w',uopts=[],uopts_chk=[],pw=False):
+	def walletconv_out(self,out_fmt='w',uopts=[],uopts_chk=[]):
+		wcls = SeedSource.fmt_code_to_type(out_fmt)
 		opts = ['-d',self.tmpdir,'-p1','-o',out_fmt] + uopts
 		infile = joinpath(ref_dir,self.seed_id+'.mmwords')
 		t = self.spawn('mmgen-walletconv',[self.usr_rand_arg]+opts+[infile],extra_desc='(convert)')
 
 		add_args = ['-l{}'.format(self.seed_len)]
 		t.license()
+		pw = issubclass(wcls,SeedSourceEnc) and wcls != Brainwallet
 		if pw:
-			t.passphrase_new('new '+desc,self.wpasswd)
+			t.passphrase_new('new '+wcls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
-		if ' '.join(desc.split()[-2:]) == 'incognito data':
+		if wcls in (IncogWallet,IncogWalletHex,IncogWalletHidden):
 			for i in (1,2,3):
 				t.expect('Generating encryption key from OS random data ')
-		if desc == 'hidden incognito data':
+		if wcls == IncogWalletHidden:
 			t.hincog_create(hincog_bytes)
-		if out_fmt == 'w': t.label()
-		wf = t.written_to_file(capfirst(desc),oo=True)
+		if out_fmt == 'w':
+			t.label()
+		wf = t.written_to_file(capfirst(wcls.desc),oo=True)
 		pf = None
 
-		if desc == 'hidden incognito data':
+		if wcls == IncogWalletHidden:
 			add_args += uopts_chk
 			wf = None
 		msg('' if opt.profile else ' OK')
 		return self.walletchk(  wf,
 								pf         = pf,
-								pw         = pw,
-								desc       = desc,
+								wcls       = wcls,
 								extra_desc = '(check)',
 								sid        = self.seed_id,
 								add_args   = add_args )

@@ -722,12 +722,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
 		t = self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
-		t = self.txcreate_ui_common( t,
-										menu              = [],
-										inputs            = inputs,
-										input_sels_prompt = 'to spend from',
-										file_desc         = 'Ethereum token transaction',
-										add_comment       = tx_label_lat_cyr_gr)
+		t = self.txcreate_ui_common(
+			t,
+			menu              = [],
+			inputs            = inputs,
+			input_sels_prompt = 'to spend from',
+			file_desc         = 'Ethereum token transaction',
+			add_comment       = tx_label_lat_cyr_gr )
 		t.read()
 		return t
 	def token_txsign(self,ext='',token=''):

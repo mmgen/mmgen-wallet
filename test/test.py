@@ -525,6 +525,12 @@ class CmdGroupMgr(object):
 		cls = self.create_group(gname,**kwargs)
 		return cls(trunner,cfgs,spawn_prog)
 
+	def list_cmd_groups(self):
+		for gname in self.cmd_groups:
+			clsname,kwargs = self.cmd_groups[gname]
+			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
+			msg('{:17} - {}'.format(gname,cls.__doc__))
+
 	def find_cmd_in_groups(self,cmd,group=None):
 		"""
 		Search for a test command in specified group or all configured command groups
@@ -875,7 +881,8 @@ if not opt.skip_deps: # do this before list cmds exit, so we stay in sync with s
 	create_tmp_dirs(shm_dir)
 
 if opt.list_cmd_groups:
-	Die(0,' '.join(CmdGroupMgr.cmd_groups))
+	CmdGroupMgr().list_cmd_groups()
+	Die(0,'\n'+' '.join(CmdGroupMgr.cmd_groups))
 elif opt.list_cmds:
 	list_cmds()
 

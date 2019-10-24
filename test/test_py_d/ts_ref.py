@@ -23,6 +23,7 @@ ts_ref.py: Reference file tests for the test.py test suite
 import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
+from mmgen.seed import MMGenMnemonic
 from test.common import *
 from test.test_py_d.common import *
 
@@ -33,7 +34,7 @@ wpasswd = 'reference password'
 nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.testnet])
 
 class TestSuiteRef(TestSuiteBase,TestSuiteShared):
-	'saved reference files'
+	'saved reference address, password and transaction files'
 	tmpdir_nums = [8]
 	networks = ('btc','btc_tn','ltc','ltc_tn')
 	passthru_opts = ('coin','testnet')
@@ -153,12 +154,13 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	def ref_words_to_subwallet_chk(self,ss_idx):
 		wf = dfl_words_file
-		args = ['-d',self.tr.trash_dir,'-o','words',wf,ss_idx]
+		ocls = MMGenMnemonic
+		args = ['-d',self.tr.trash_dir,'-o',ocls.fmt_codes[-1],wf,ss_idx]
 
 		t = self.spawn('mmgen-subwalletgen',args,extra_desc='(generate subwallet)')
 		t.expect('Generating subseed {}'.format(ss_idx))
 		chk_sid = self.chk_data['ref_subwallet_sid']['98831F3A:{}'.format(ss_idx)]
-		fn = t.written_to_file('MMGen native mnemonic data')
+		fn = t.written_to_file(capfirst(ocls.desc))
 		assert chk_sid in fn,'incorrect filename: {} (does not contain {})'.format(fn,chk_sid)
 		ok()
 
@@ -258,7 +260,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		wf = dfl_words_file
 		self.write_to_tmpfile(pwfile,wpasswd)
 		pf = joinpath(self.tmpdir,pwfile)
-		return self.txsign(tf,wf,pf,save=False,has_label=True,do_passwd=False,view='y')
+		return self.txsign(wf,tf,pf,save=False,has_label=True,view='y')
 
 	def ref_brain_chk_spc3(self):
 		return self.ref_brain_chk(bw_file=ref_bw_file_spc)

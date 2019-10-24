@@ -22,6 +22,7 @@ ts_seedsplit.py: Seed split/join tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
+from mmgen.seed import SeedSource,Wallet,IncogWallet,IncogWalletHex,IncogWalletHidden,SeedSourceEnc
 
 from test.test_py_d.ts_base import *
 
@@ -29,6 +30,7 @@ ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'
 wpasswd = 'abc'
 sh1_passwd = 'xyz'
+dfl_wcls = Wallet
 
 class TestSuiteSeedSplit(TestSuiteBase):
 	'splitting and joining seeds'
@@ -82,11 +84,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_walletgen(self):
 		t = self.spawn('mmgen-walletgen', ['-r0','-p1'])
-		t.passphrase_new('new MMGen wallet',wpasswd)
+		t.passphrase_new('new '+dfl_wcls.desc,wpasswd)
 		t.label()
 		self.write_to_tmpfile('dfl.sid',t.expect_getend('Seed ID: '))
 		t.expect('move it to the data directory? (Y/n): ','y')
-		t.written_to_file('MMGen wallet')
+		t.written_to_file(capfirst(dfl_wcls.desc))
 		return t
 
 	def ss_splt(self,tdir,ofmt,spec,add_args=[],wf=None,master=None):
@@ -100,7 +102,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				+ ([wf] if wf else [])
 				+ ([spec] if spec else []))
 		if not wf:
-			t.passphrase('MMGen wallet',wpasswd)
+			t.passphrase(dfl_wcls.desc,wpasswd)
 		if spec:
 			from mmgen.obj import SeedSplitSpecifier
 			sss = SeedSplitSpecifier(spec)
@@ -108,18 +110,14 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		else:
 			pat = "master share #{}".format(master)
 		t.expect(pat,regex=True)
-		if ofmt in ('w','incog','incog_hex','hincog'):
-			desc = {'w':         'MMGen wallet',
-					'incog':     'incognito data',
-					'incog_hex': 'hex incognito data',
-					'hincog':    'hidden incognito data' }[ofmt]
-			t.hash_preset('new '+desc,'1')
-			t.passphrase_new('new '+desc,sh1_passwd)
-			if desc == 'hidden incognito data':
+		ocls = SeedSource.fmt_code_to_type(ofmt)
+		pw = issubclass(ocls,SeedSourceEnc)
+		if pw:
+			t.hash_preset('new '+ocls.desc,'1')
+			t.passphrase_new('new '+ocls.desc,sh1_passwd)
+			if ocls == IncogWalletHidden:
 				t.hincog_create(1234)
-			t.written_to_file(capfirst(desc))
-		else:
-			t.written_to_file('with checksum' if ofmt == 'mmhex' else 'data')
+		t.written_to_file(capfirst(ocls.desc))
 		return t
 
 	def ss_join(self,tdir,ofmt,in_exts,add_args=[],sid=None,bad_invocation=False,master=None,id_str=None):
@@ -137,26 +135,26 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if bad_invocation:
 			t.read()
 			return t
-		w_enc   = ( 'MMGen wallet' if 'mmdat' in in_exts else
-					'incognito data' if 'mmincog' in in_exts else
-					'hex incognito data' if 'mmincox' in in_exts else
-					'hidden incognito data' if '-H' in add_args else '')
-		if 'incognito' in w_enc:
-			t.hash_preset(w_enc,'1')
-		if w_enc:
-			t.passphrase(w_enc,sh1_passwd)
+		icls = ( Wallet if 'mmdat' in in_exts
+			else IncogWallet if 'mmincog' in in_exts
+			else IncogWalletHex if 'mmincox' in in_exts
+			else IncogWalletHidden if '-H' in add_args
+			else None )
+		if icls in (IncogWallet,IncogWalletHex,IncogWalletHidden):
+			t.hash_preset(icls.desc,'1')
+		if icls:
+			t.passphrase(icls.desc,sh1_passwd)
 		if master:
 			fs = "master share #{}, split id '{}', share count {}"
-			pat = fs.format(master,id_str or 'default',len(shares)+('hidden' in w_enc))
+			pat = fs.format(master,id_str or 'default',len(shares)+(icls==IncogWalletHidden))
 			t.expect(pat,regex=True)
 		sid_cmp = t.expect_getend('Joined Seed ID: ')
 		cmp_or_die(sid,sid_cmp)
-		if ofmt == 'w':
-			t.hash_preset('new MMGen wallet','1')
-			t.passphrase_new('new MMGen wallet',wpasswd)
-			t.written_to_file('MMGen wallet')
-		else:
-			t.written_to_file('with checksum' if ofmt == 'mmhex' else 'data')
+		ocls = SeedSource.fmt_code_to_type(ofmt)
+		if ocls == Wallet:
+			t.hash_preset('new '+ocls.desc,'1')
+			t.passphrase_new('new '+ocls.desc,wpasswd)
+		t.written_to_file(capfirst(ocls.desc))
 		return t
 
 	def get_hincog_arg(self,tdir,suf='-default-2of2'):

@@ -24,6 +24,7 @@ import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import ymsg
+from mmgen.seed import SeedSource,SeedSourceEnc,Brainwallet,Wallet,IncogWalletHidden
 from test.test_py_d.common import *
 from test.common import *
 
@@ -144,20 +145,23 @@ class TestSuiteShared(object):
 		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 		return t
 
-	def txsign( self, txfile, wf,
+	def txsign( self, wf, txfile,
 				pf         = '',
 				bumpf      = '',
 				save       = True,
 				has_label  = False,
-				do_passwd  = True,
 				extra_opts = [],
 				extra_desc = '',
-				view       = 'n'):
+				view       = 'n',
+				dfl_wallet = False ):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
 		t.view_tx(view)
-		if do_passwd: t.passphrase('MMGen wallet',self.wpasswd)
+		wcls = Wallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
+		pw = issubclass(wcls,SeedSourceEnc) and wcls != Brainwallet
+		if pw:
+			t.passphrase(wcls.desc,self.wpasswd)
 		if save:
 			self.txsign_end(t,has_label=has_label)
 		else:
@@ -169,26 +173,35 @@ class TestSuiteShared(object):
 	def ref_brain_chk(self,bw_file=ref_bw_file):
 		wf = joinpath(ref_dir,bw_file)
 		add_args = ['-l{}'.format(self.seed_len), '-p'+ref_bw_hash_preset]
-		return self.walletchk(wf,pf=None,add_args=add_args,
-			desc='brainwallet',sid=self.ref_bw_seed_id)
+		return self.walletchk(wf,pf=None,add_args=add_args,sid=self.ref_bw_seed_id)
 
-	def walletchk(self,wf,pf,desc='MMGen wallet',add_args=[],sid=None,pw=False,extra_desc=''):
-		args = []
+	def walletchk(self,wf,pf,wcls=None,add_args=[],sid=None,extra_desc='',dfl_wallet=False):
 		hp = self.hash_preset if hasattr(self,'hash_preset') else '1'
-		wf_arg = [wf] if wf else []
+		wcls = wcls or SeedSource.ext_to_type(get_extension(wf))
 		t = self.spawn('mmgen-walletchk',
-				add_args+args+['-p',hp]+wf_arg,
+				([] if dfl_wallet else ['-i',wcls.fmt_codes[0]])
+				+ add_args + ['-p',hp]
+				+ ([wf] if wf else []),
 				extra_desc=extra_desc)
-		if desc != 'hidden incognito data':
-			t.expect("Getting {} from file '".format(desc))
+		if wcls != IncogWalletHidden:
+			t.expect("Getting {} from file '".format(wcls.desc))
+		pw = issubclass(wcls,SeedSourceEnc) and wcls != Brainwallet
 		if pw:
-			t.passphrase(desc,self.wpasswd)
+			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
-		chk = t.expect_getend('Valid {} for Seed ID '.format(desc))[:8]
+		chk = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))[:8]
 		if sid: cmp_or_die(chk,sid)
 		return t
 
-	def addrgen(self,wf,pf=None,check_ref=False,ftype='addr',id_str=None,extra_args=[],mmtype=None,stdout=False):
+	def addrgen(self,wf,
+				pf         = None,
+				check_ref  = False,
+				ftype      = 'addr',
+				id_str     = None,
+				extra_args = [],
+				mmtype     = None,
+				stdout     = False,
+				dfl_wallet = False ):
 		passgen = ftype[:4] == 'pass'
 		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
@@ -202,7 +215,8 @@ class TestSuiteShared(object):
 				[getattr(self,'{}_idx_list'.format(cmd_pfx))],
 				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
-		t.passphrase('MMGen wallet',self.wpasswd)
+		wcls = Wallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
+		t.passphrase(wcls.desc,self.wpasswd)
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[passgen]
 		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
@@ -223,7 +237,8 @@ class TestSuiteShared(object):
 				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
 				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
-		t.passphrase('MMGen wallet',self.wpasswd)
+		wcls = SeedSource.ext_to_type(get_extension(wf))
+		t.passphrase(wcls.desc,self.wpasswd)
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
 			chk_ref = self.chk_data[self.test_name][self.fork][g.testnet]

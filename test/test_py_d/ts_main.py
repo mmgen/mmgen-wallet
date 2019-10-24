@@ -22,6 +22,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
+from mmgen.seed import SeedSource,Wallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
 from test.common import *
 from test.test_py_d.common import *
 from test.test_py_d.ts_base import *
@@ -165,23 +166,23 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def subwalletgen_dfl_wallet(self,pf):
 		return self.subwalletgen(wf='default')
 
-	def export_seed_dfl_wallet(self,pf,desc='seed data',out_fmt='seed'):
-		return self.export_seed(wf=None,desc=desc,out_fmt=out_fmt,pf=pf)
+	def export_seed_dfl_wallet(self,pf,out_fmt='seed'):
+		return self.export_seed(wf=None,out_fmt=out_fmt,pf=pf)
 
 	def addrgen_dfl_wallet(self,pf=None,check_ref=False):
-		return self.addrgen(wf=None,pf=pf,check_ref=check_ref)
+		return self.addrgen(wf=None,pf=pf,check_ref=check_ref,dfl_wallet=True)
 
 	def txcreate_dfl_wallet(self,addrfile):
 		return self.txcreate_common(sources=['15'])
 
 	def txsign_dfl_wallet(self,txfile,pf='',save=True,has_label=False):
-		return self.txsign(txfile,wf=None,pf=pf,save=save,has_label=has_label)
+		return self.txsign(None,txfile,pf=pf,save=save,has_label=has_label,dfl_wallet=True)
 
 	def passchg_dfl_wallet(self,pf):
-		return self.passchg(wf=None,pf=pf)
+		return self.passchg(wf=None,pf=pf,dfl_wallet=True)
 
 	def walletchk_newpass_dfl_wallet(self,pf):
-		return self.walletchk_newpass(wf=None,pf=pf)
+		return self.walletchk_newpass(wf=None,wcls=Wallet,pf=pf,dfl_wallet=True)
 
 	def delete_dfl_wallet(self,pf):
 		self.write_to_tmpfile('del_dw_run',b'',binary=True)
@@ -201,12 +202,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		t.usr_rand(self.usr_rand_chars)
 		t.expect('Generating')
-		t.passphrase_new('new MMGen wallet',self.wpasswd)
+		wcls = Wallet
+		t.passphrase_new('new '+wcls.desc,self.wpasswd)
 		t.label()
 		if not self.have_dfl_wallet and gen_dfl_wallet:
 			t.expect('move it to the data directory? (Y/n): ','y')
 			self.have_dfl_wallet = True
-		t.written_to_file('MMGen wallet')
+		t.written_to_file(capfirst(wcls.desc))
 		return t
 
 	def subwalletgen(self,wf):
@@ -214,25 +216,30 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if wf != 'default': args += [wf]
 		t = self.spawn('mmgen-subwalletgen', args + ['10s'])
 		t.license()
-		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'])
+		wcls = Wallet
+		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'])
 		t.expect('Generating subseed 10S')
-		t.passphrase_new('new MMGen wallet','foo')
+		t.passphrase_new('new '+wcls.desc,'foo')
 		t.usr_rand(self.usr_rand_chars)
-		fn = t.written_to_file('MMGen wallet')
-		assert fn[-6:] == '.mmdat','incorrect file extension: {}'.format(fn[-6:])
+		fn = t.written_to_file(capfirst(wcls.desc))
+		ext = get_extension(fn)
+		assert ext,'incorrect file extension: {}'.format(ext)
 		return t
 
 	def subwalletgen_mnemonic(self,wf):
-		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-o','words',wf,'3L']
+		icls = SeedSource.ext_to_type(get_extension(wf))
+		ocls = MMGenMnemonic
+		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-o',ocls.fmt_codes[0],wf,'3L']
 		t = self.spawn('mmgen-subwalletgen', args)
 		t.license()
-		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'])
+		t.passphrase(icls.desc,self.cfgs['1']['wpasswd'])
 		t.expect('Generating subseed 3L')
-		fn = t.written_to_file('MMGen native mnemonic data')
-		assert fn[-8:] == '.mmwords','incorrect file extension: {}'.format(fn[-8:])
+		fn = t.written_to_file(capfirst(ocls.desc))
+		ext = get_extension(fn)
+		assert ext == ocls.ext,'incorrect file extension: {}'.format(ext)
 		return t
 
-	def passchg(self,wf,pf,label_action='cmdline'):
+	def passchg(self,wf,pf,label_action='cmdline',dfl_wallet=False):
 		silence()
 		self.write_to_tmpfile(pwfile,get_data_from_file(pf))
 		end_silence()
@@ -240,18 +247,19 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 					'keep':    ['-d',self.tr.trash_dir,'--keep-label'],
 					'user':    ['-d',self.tr.trash_dir]
 					}[label_action]
-		t = self.spawn('mmgen-passchg', add_args + [self.usr_rand_arg, '-p2'] + ([],[wf])[bool(wf)])
+		t = self.spawn('mmgen-passchg', add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []))
 		t.license()
-		t.passphrase('MMGen wallet',self.cfgs['1']['wpasswd'],pwtype='old')
+		wcls = Wallet
+		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
-		t.passphrase('MMGen wallet',self.wpasswd,pwtype='new') # reuse passphrase?
+		t.passphrase(wcls.desc,self.wpasswd,pwtype='new') # reuse passphrase?
 		t.expect('Repeat passphrase: ',self.wpasswd+'\n')
 		t.usr_rand(self.usr_rand_chars)
 		if label_action == 'user':
 			t.expect('Enter a wallet label.*: ','Interactive Label (UTF-8) α\n',regex=True)
 		t.expect_getend(('Label changed to ','Reusing label ')[label_action=='keep'])
 #		t.expect_getend('Key ID changed: ')
-		if not wf:
+		if dfl_wallet:
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 			t.written_to_file('New wallet')
 			t.expect('Securely deleting old wallet')
@@ -259,7 +267,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect('Wallet passphrase has changed')
 			t.expect_getend('has been changed to ')
 		else:
-			t.written_to_file('MMGen wallet')
+			t.written_to_file(capfirst(wcls.desc))
 		return t
 
 	def passchg_keeplabel(self,wf,pf):
@@ -268,8 +276,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def passchg_usrlabel(self,wf,pf):
 		return self.passchg(wf,pf,label_action='user')
 
-	def walletchk_newpass(self,wf,pf):
-		return self.walletchk(wf,pf,pw=True)
+	def walletchk_newpass(self,wf,pf,wcls=None,dfl_wallet=False):
+		return self.walletchk(wf,pf,wcls=wcls,dfl_wallet=dfl_wallet)
 
 	def _write_fake_data_to_file(self,d):
 		unspent_data_file = joinpath(self.tmpdir,'unspent.json')
@@ -459,8 +467,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect('OK? (Y/n): ','\n')
 		if seed_args: # sign and send
 			t.do_comment(False,has_label=True)
-			for cnum,desc in (('1','incognito data'),('3','MMGen wallet'),('4','MMGen wallet')):
-				t.passphrase(desc,self.cfgs[cnum]['wpasswd'])
+			for cnum,wcls in (('1',IncogWallet),('3',Wallet),('4',Wallet)):
+				t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 			self._do_confirm_send(t,quiet=not g.debug,confirm_send=True)
 			if g.debug:
 				t.written_to_file('Transaction')
@@ -486,66 +494,73 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		self.txsend_ui_common(t)
 		return t
 
-	def _walletconv_export(self,wf,desc,uargs=[],out_fmt='w',pf=None,out_pw=False):
+	def _walletconv_export(self,wf,uargs=[],out_fmt='w',pf=None):
 		opts = ['-d',self.tmpdir,'-o',out_fmt] + uargs + \
 			([],[wf])[bool(wf)] + ([],['-P',pf])[bool(pf)]
 		t = self.spawn('mmgen-walletconv',opts)
 		t.license()
+
 		if not pf:
-			t.passphrase('MMGen wallet',self.wpasswd)
+			icls = SeedSource.ext_to_type(get_extension(wf))
+			t.passphrase(icls.desc,self.wpasswd)
+
+		ocls = SeedSource.fmt_code_to_type(out_fmt)
+		out_pw = issubclass(ocls,SeedSourceEnc) and ocls != Brainwallet
 		if out_pw:
-			t.passphrase_new('new '+desc,self.wpasswd)
+			t.passphrase_new('new '+ocls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
 
-		if ' '.join(desc.split()[-2:]) == 'incognito data':
+		if ocls.__name__.startswith('Incog'):
 			m = 'Generating encryption key from OS random data '
 			t.expect(m); t.expect(m)
 			incog_id = t.expect_getend('New Incog Wallet ID: ')
 			t.expect(m)
-		if desc == 'hidden incognito data':
+		if ocls == IncogWalletHidden:
 			self.write_to_tmpfile(incog_id_fn,incog_id)
 			t.hincog_create(hincog_bytes)
-		if out_fmt == 'w': t.label()
-		return t.written_to_file(capfirst(desc),oo=True),t
+		elif ocls == Wallet:
+			t.label()
+		return t.written_to_file(capfirst(ocls.desc),oo=True),t
 
-	def export_seed(self,wf,desc='seed data',out_fmt='seed',pf=None):
-		f,t = self._walletconv_export(wf,desc=desc,out_fmt=out_fmt,pf=pf)
+	def export_seed(self,wf,out_fmt='seed',pf=None):
+		f,t = self._walletconv_export(wf,out_fmt=out_fmt,pf=pf)
 		silence()
-		msg('{}: {}'.format(capfirst(desc),cyan(get_data_from_file(f,desc))))
+		wcls = SeedSource.fmt_code_to_type(out_fmt)
+		msg('{}: {}'.format(capfirst(wcls.desc),cyan(get_data_from_file(f,wcls.desc))))
 		end_silence()
 		return t
 
-	def export_hex(self,wf,desc='hexadecimal seed data with checksum',out_fmt='mmhex',pf=None):
-		return self.export_seed(wf,desc=desc,out_fmt=out_fmt,pf=pf)
+	def export_hex(self,wf,out_fmt='mmhex',pf=None):
+		return self.export_seed(wf,out_fmt=out_fmt,pf=pf)
 
 	def export_mnemonic(self,wf):
-		return self.export_seed(wf,desc='MMGen native mnemonic data',out_fmt='words')
+		return self.export_seed(wf,out_fmt='words')
 
 	def export_bip39(self,wf):
-		return self.export_seed(wf,desc='BIP39 mnemonic data',out_fmt='bip39')
+		return self.export_seed(wf,out_fmt='bip39')
 
-	def export_incog(self,wf,desc='incognito data',out_fmt='i',add_args=[]):
+	def export_incog(self,wf,out_fmt='i',add_args=[]):
 		uargs = ['-p1',self.usr_rand_arg] + add_args
-		f,t = self._walletconv_export(wf,desc=desc,out_fmt=out_fmt,uargs=uargs,out_pw=True)
+		f,t = self._walletconv_export(wf,out_fmt=out_fmt,uargs=uargs)
 		return t
 
 	def export_incog_hex(self,wf):
-		return self.export_incog(wf,desc='hex incognito data',out_fmt='xi')
+		return self.export_incog(wf,out_fmt='xi')
 
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
 	def export_incog_hidden(self,wf):
 		rf = joinpath(self.tmpdir,hincog_fn)
 		add_args = ['-J','{},{}'.format(rf,hincog_offset)]
-		return self.export_incog(
-			wf,desc='hidden incognito data',out_fmt='hi',add_args=add_args)
+		return self.export_incog(wf,out_fmt='hi',add_args=add_args)
 
-	def addrgen_seed(self,wf,foo,desc='seed data',in_fmt='seed'):
-		stdout = desc == 'seed data' # capture output to screen once
+	def addrgen_seed(self,wf,foo,in_fmt='seed'):
+		wcls = SeedSource.fmt_code_to_type(in_fmt)
+		stdout = wcls == MMGenSeedFile # capture output to screen once
 		add_args = ([],['-S'])[bool(stdout)] + self.segwit_arg
 		t = self.spawn('mmgen-addrgen', add_args +
 				['-i'+in_fmt,'-d',self.tmpdir,wf,self.addr_idx_list])
 		t.license()
-		t.expect_getend('Valid {} for Seed ID '.format(desc))
+		t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))
 		vmsg('Comparing generated checksum with checksum from previous address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		if stdout: t.read()
@@ -555,19 +570,20 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.req_exit_val = 1
 		return t
 
-	def addrgen_hex(self,wf,foo,desc='hexadecimal seed data with checksum',in_fmt='mmhex'):
-		return self.addrgen_seed(wf,foo,desc=desc,in_fmt=in_fmt)
+	def addrgen_hex(self,wf,foo,in_fmt='mmhex'):
+		return self.addrgen_seed(wf,foo,in_fmt=in_fmt)
 
 	def addrgen_mnemonic(self,wf,foo):
-		return self.addrgen_seed(wf,foo,desc='MMGen native mnemonic data',in_fmt='words')
+		return self.addrgen_seed(wf,foo,in_fmt='words')
 
-	def addrgen_incog(self,wf=[],foo='',in_fmt='i',desc='incognito data',args=[]):
+	def addrgen_incog(self,wf=[],foo='',in_fmt='i',args=[]):
 		t = self.spawn('mmgen-addrgen', args + self.segwit_arg + ['-i'+in_fmt,'-d',self.tmpdir]+
 				([],[wf])[bool(wf)] + [self.addr_idx_list])
 		t.license()
 		t.expect_getend('Incog Wallet ID: ')
-		t.hash_preset(desc,'1')
-		t.passphrase('{} \w{{8}}'.format(desc),self.wpasswd)
+		wcls = SeedSource.fmt_code_to_type(in_fmt)
+		t.hash_preset(wcls.desc,'1')
+		t.passphrase('{} \w{{8}}'.format(wcls.desc),self.wpasswd)
 		vmsg('Comparing generated checksum with checksum from address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)
@@ -576,11 +592,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def addrgen_incog_hex(self,wf,foo):
-		return self.addrgen_incog(wf,'',in_fmt='xi',desc='hex incognito data')
+		return self.addrgen_incog(wf,'',in_fmt='xi')
 
 	def addrgen_incog_hidden(self,wf,foo):
 		rf = joinpath(self.tmpdir,hincog_fn)
-		return self.addrgen_incog([],'',in_fmt='hi',desc='hidden incognito data',
+		return self.addrgen_incog([],'',in_fmt='hi',
 			args=['-H','{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
 
 	def txsign_keyaddr(self,keyaddr_file,txfile):
@@ -603,12 +619,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def txcreate2(self,addrfile):
 		return self.txcreate_common(sources=['2'])
 
-	def txsign2(self,txf1,wf1,txf2,wf2):
+	def txsign2(self,wf1,txf1,wf2,txf2):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,txf1,wf1,txf2,wf2])
 		t.license()
-		for cnum in ('1','2'):
+		for cnum,wf in (('1',wf1),('2',wf2)):
+			wcls = SeedSource.ext_to_type(get_extension(wf))
 			t.view_tx('n')
-			t.passphrase('MMGen wallet',self.cfgs[cnum]['wpasswd'])
+			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 			self.txsign_end(t,cnum)
 		return t
 
@@ -628,8 +645,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,wf1,wf2,txf2])
 		t.license()
 		t.view_tx('n')
-		for cnum in ('1','3'):
-			t.passphrase('MMGen wallet',self.cfgs[cnum]['wpasswd'])
+		for cnum,wf in (('1',wf1),('3',wf2)):
+			wcls = SeedSource.ext_to_type(get_extension(wf))
+			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 		self.txsign_end(t)
 		return t
 
@@ -644,10 +662,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		args = ['-d',self.tmpdir,'-p1',self.usr_rand_arg,'-l'+seed_len,'-ib']
 		t = self.spawn('mmgen-walletconv', args + [bwf])
 		t.license()
-		t.passphrase_new('new MMGen wallet',self.wpasswd)
+		wcls = Wallet
+		t.passphrase_new('new ' +wcls.desc,self.wpasswd)
 		t.usr_rand(self.usr_rand_chars)
 		t.label()
-		t.written_to_file('MMGen wallet')
+		t.written_to_file(capfirst(wcls.desc))
 		return t
 
 	def addrgen4(self,wf):
@@ -664,8 +683,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 		t.view_tx('t')
 
-		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
-			t.passphrase('{}'.format(desc),self.cfgs[cnum]['wpasswd'])
+		for cnum,wcls in (('1',IncogWallet),('3',Wallet)):
+			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_end(t,has_label=True)
 		return t
@@ -677,8 +696,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.txcreate_common(sources=['1','2','3','4','14'],
 					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
 
-		for cnum,desc in (('1','incognito data'),('3','MMGen wallet')):
-			t.passphrase('{}'.format(desc),self.cfgs[cnum]['wpasswd'])
+		for cnum,wcls in (('1',IncogWallet),('3',Wallet)):
+			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_ui_common(t)
 		self.txsend_ui_common(t)
@@ -700,12 +719,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def txcreate5(self,addrfile):
 		return self.txcreate_common(sources=['20'],non_mmgen_input='20',non_mmgen_input_compressed=False)
 
-	def txsign5(self,txf,wf,bad_vsize=True,add_args=[]):
+	def txsign5(self,wf,txf,bad_vsize=True,add_args=[]):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
 		t = self.spawn('mmgen-txsign', add_args + ['-d',self.tmpdir,'-k',non_mm_file,txf,wf])
 		t.license()
 		t.view_tx('n')
-		t.passphrase('MMGen wallet',self.cfgs['20']['wpasswd'])
+		wcls = SeedSource.ext_to_type(get_extension(wf))
+		t.passphrase(wcls.desc,self.cfgs['20']['wpasswd'])
 		if bad_vsize:
 			t.expect('Estimated transaction vsize')
 			t.expect('1 transaction could not be signed')

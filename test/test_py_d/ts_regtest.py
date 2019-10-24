@@ -28,9 +28,11 @@ from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
 from mmgen.protocol import CoinProtocol
 from mmgen.addr import AddrList
+from mmgen.seed import Wallet
 from test.common import *
 from test.test_py_d.common import *
 
+dfl_wcls = Wallet
 rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001','bch':'0.001','ltc':'0.01'},
@@ -262,10 +264,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def walletgen(self,user):
 		t = self.spawn('mmgen-walletgen',['-q','-r0','-p1','--'+user])
-		t.passphrase_new('new MMGen wallet',rt_pw)
+		t.passphrase_new('new '+dfl_wcls.desc,rt_pw)
 		t.label()
 		t.expect('move it to the data directory? (Y/n): ','y')
-		t.written_to_file('MMGen wallet')
+		t.written_to_file(capfirst(dfl_wcls.desc))
 		return t
 
 	def walletgen_bob(self):   return self.walletgen('bob')
@@ -282,9 +284,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if subseed_idx in self.usr_subsids[user]:
 			return self.usr_subsids[user][subseed_idx]
 
-		fn = get_file_with_ext(self._user_dir(user),'mmdat')
+		icls = Wallet
+		fn = get_file_with_ext(self._user_dir(user),icls.ext)
 		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True)
-		t.passphrase('MMGen wallet',rt_pw)
+		t.passphrase(icls.desc,rt_pw)
 		sid = t.read().strip()[:8]
 		self.usr_subsids[user][subseed_idx] = sid
 		return sid
@@ -298,7 +301,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				(['--subwallet='+subseed_idx] if subseed_idx else []) +
 				[addr_range],
 				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype].name))
-			t.passphrase('MMGen wallet',rt_pw)
+			t.passphrase(dfl_wcls.desc,rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()
 		t.skip_ok = True
@@ -451,7 +454,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		fn = get_file_with_ext(self.tmpdir,'rawtx')
 		t = self.spawn('mmgen-txsign',['-d',self.tmpdir,'--bob','--subseeds=127',fn])
 		t.view_tx('t')
-		t.passphrase('MMGen wallet',rt_pw)
+		t.passphrase(dfl_wcls.desc,rt_pw)
 		t.do_comment(None)
 		t.expect('(Y/n): ','y')
 		t.written_to_file('Signed transaction')
@@ -524,7 +527,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 								add_comment     = tx_label_jp,
 								view            = 't',save=True)
 
-		t.passphrase('MMGen wallet',rt_pw)
+		t.passphrase(dfl_wcls.desc,rt_pw)
 		t.written_to_file('Signed transaction')
 		self._do_confirm_send(t)
 		s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
@@ -597,7 +600,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.do_comment(False,has_label=has_label)
 		if signed_tx:
-			t.passphrase('MMGen wallet',rt_pw)
+			t.passphrase(dfl_wcls.desc,rt_pw)
 			t.written_to_file('Signed transaction')
 			self.txsend_ui_common(t,caller='txdo',bogus_send=False,file_desc='Signed transaction')
 		else:
