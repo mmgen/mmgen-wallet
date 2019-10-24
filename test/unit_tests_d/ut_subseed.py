@@ -7,7 +7,7 @@ from mmgen.common import *
 
 class unit_test(object):
 
-	def run_test(self,name):
+	def run_test(self,name,ut):
 		from mmgen.seed import Seed
 		from mmgen.obj import SubSeedIdxRange
 

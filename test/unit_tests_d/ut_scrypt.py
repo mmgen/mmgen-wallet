@@ -7,7 +7,7 @@ from test.common import *
 
 class unit_test(object):
 
-	def run_test(self,name):
+	def run_test(self,name,ut):
 		import time
 
 		msg_r('Testing password hashing...')

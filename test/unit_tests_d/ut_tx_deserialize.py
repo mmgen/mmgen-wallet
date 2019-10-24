@@ -13,7 +13,7 @@ class unit_test(object):
 		if not self.core_repo_root:
 			die(1,'The environmental variable CORE_REPO_ROOT must be set before running this test')
 
-	def run_test(self,name):
+	def run_test(self,name,ut):
 
 		def test_tx(txhex,desc,n):
 

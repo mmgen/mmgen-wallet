@@ -97,7 +97,7 @@ class unit_test(object):
 		),
 	}
 
-	def run_test(self,name):
+	def run_test(self,name,ut):
 
 		msg_r('Testing base conversion routines...')
 

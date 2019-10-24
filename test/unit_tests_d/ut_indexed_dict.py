@@ -7,7 +7,7 @@ from mmgen.common import *
 
 class unit_test(object):
 
-	def run_test(self,name):
+	def run_test(self,name,ut):
 		bad_msg = ( 'initializing values via constructor',
 					'reassignment to existing key',
 					'item deletion',
