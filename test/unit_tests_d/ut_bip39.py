@@ -112,20 +112,6 @@ class unit_test(object):
 		vmsg('')
 		qmsg('Checking error handling:')
 
-		bad_data = (
-			('bad hex',                  'AssertionError',   'not a hexadecimal'),
-			('bad id (tohex)',           'AssertionError',   "must be 'bip39'"),
-			('bad seed len',             'AssertionError',   'invalid seed bit length'),
-			('bad mnemonic type',        'AssertionError',   'must be list'),
-			('bad id (fromhex)',         'AssertionError',   "must be 'bip39'"),
-			('tostr = True',             'AssertionError',   "'tostr' must be"),
-			('bad pad length (fromhex)', 'AssertionError',   "invalid pad len"),
-			('bad pad length (tohex)',   'AssertionError',   "invalid pad len"),
-			('bad word',                 'MnemonicError',    "not in the BIP39 word list"),
-			('bad checksum',             'MnemonicError',    "checksum"),
-			('bad seed phrase length',   'MnemonicError',    "phrase len"),
-		)
-
 		good_mn = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong".split()
 		bad_len_mn = "zoo zoo zoo".split()
 		bad_chksum_mn = "zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo".split()
@@ -133,29 +119,22 @@ class unit_test(object):
 		bad_seed = 'deadbeef'
 		good_seed = 'deadbeef' * 4
 
-		def bad0(): bip39.fromhex('xx','bip39')
-		def bad1(): bip39.fromhex(good_seed,'foo')
-		def bad2(): bip39.fromhex(bad_seed,'bip39')
-		def bad3(): bip39.tohex('string','bip39')
-		def bad4(): bip39.tohex(good_mn,'foo')
-		def bad5(): bip39.fromhex(good_seed,'bip39',tostr=True)
-		def bad6(): bip39.fromhex(good_seed,'bip39',pad=23)
-		def bad7(): bip39.tohex(good_mn,'bip39',pad=23)
-		def bad8(): bip39.tohex(bad_word_mn,'bip39')
-		def bad9(): bip39.tohex(bad_chksum_mn,'bip39')
-		def bad10(): bip39.tohex(bad_len_mn,'bip39')
+		b = bip39
+		bad_data = (
+('bad hex',             'AssertionError', 'not a hexadecimal', lambda:b.fromhex('xx','bip39')),
+('bad id (tohex)',      'AssertionError', "must be 'bip39'",   lambda:b.fromhex(good_seed,'foo')),
+('bad seed len',        'AssertionError', 'invalid seed bit',  lambda:b.fromhex(bad_seed,'bip39')),
+('bad mnemonic type',   'AssertionError', 'must be list',      lambda:b.tohex('string','bip39')),
+('bad id (fromhex)',    'AssertionError', "must be 'bip39'",   lambda:b.tohex(good_mn,'foo')),
+('tostr = True',        'AssertionError', "'tostr' must be",   lambda:b.fromhex(good_seed,'bip39',tostr=True)),
+('bad padlen (fromhex)','AssertionError', "invalid pad len",   lambda:b.fromhex(good_seed,'bip39',pad=23)),
+('bad padlen (tohex)',  'AssertionError', "invalid pad len",   lambda:b.tohex(good_mn,'bip39',pad=23)),
+('bad word',            'MnemonicError',  "not in the BIP39",  lambda:b.tohex(bad_word_mn,'bip39')),
+('bad checksum',        'MnemonicError',  "checksum",          lambda:b.tohex(bad_chksum_mn,'bip39')),
+('bad seedphrase len',  'MnemonicError',  "phrase len",        lambda:b.tohex(bad_len_mn,'bip39')),
+		)
 
-		for i in range(len(bad_data)):
-			try:
-				vmsg_r('    {:26}'.format(bad_data[i][0]+':'))
-				locals()['bad'+str(i)]()
-			except Exception as e:
-				n = type(e).__name__
-				vmsg(' {:15} [{}]'.format(n,e.args[0]))
-				assert n == bad_data[i][1]
-				assert bad_data[i][2] in e.args[0]
-			else:
-				rdie(3,"\nillegal action '{}' failed to raise exception".format(bad_data[n][0]))
+		ut.process_bad_data(bad_data)
 
 		vmsg('')
 		msg('OK')
