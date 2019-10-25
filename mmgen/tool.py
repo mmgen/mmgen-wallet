@@ -314,7 +314,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		return make_chksum_8(
 			get_data_from_file(infile,dash=True,quiet=True,binary=True))
 
-	def randb58(self,nbytes=32,pad=True):
+	def randb58(self,nbytes=32,pad=0):
 		"generate random data (default: 32 bytes) and convert it to base 58"
 		return baseconv.b58encode(get_random(nbytes),pad=pad)
 

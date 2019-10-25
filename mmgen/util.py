@@ -295,8 +295,12 @@ class baseconv(object):
 		'tirosh': '48f05e1f', # tirosh truncated to mn_base (1626)
 		# 'tirosh1633': '1a5faeff'
 	}
-	b58pad_lens =     [(16,22), (24,33), (32,44)]
-	b58pad_lens_rev = [(v,k) for k,v in b58pad_lens]
+	seed_pad_lens = {
+		'b58': { 16:22, 24:33, 32:44 },
+	}
+	seed_pad_lens_rev = {
+		'b58': { 22:16, 33:24, 44:32 },
+	}
 
 	@classmethod
 	def init_mn(cls,mn_id):
@@ -309,31 +313,6 @@ class baseconv(object):
 			cls.digits[mn_id] = words[:cls.mn_base]
 		else: # bip39
 			cls.digits[mn_id] = cls.words
-
-	@classmethod
-	def b58encode(cls,s,pad=None):
-		pad = cls._get_pad(s,pad,'b58encode',cls.b58pad_lens,(bytes,))
-		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
-
-	@classmethod
-	def b58decode(cls,s,pad=None):
-		pad = cls._get_pad(s,pad,'b58decode',cls.b58pad_lens_rev,(bytes,str))
-		return bytes.fromhex(cls.tohex(s,'b58',pad=pad*2 if pad else None))
-
-	@staticmethod
-	def _get_pad(s,pad,op_desc,pad_map,ok_types):
-		if not isinstance(s,ok_types):
-			m = "{}() input must be one of {}, not '{}'"
-			raise ValueError(m.format(op_desc,repr([t.__name__ for t in ok_types]),type(s).__name__))
-		if pad:
-			assert type(pad) == bool,"'pad' must be boolean type"
-			d = dict(pad_map)
-			if not len(s) in d:
-				m = 'Invalid data length for {}(pad=True) (must be one of {})'
-				raise ValueError(m.format(op_desc,repr([e[0] for e in pad_map])))
-			return d[len(s)]
-		else:
-			return None
 
 	@classmethod
 	def get_wordlist(cls,wl_id):
@@ -365,36 +344,95 @@ class baseconv(object):
 		qmsg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
 
 	@classmethod
+	def get_pad(cls,pad,seed_pad_func):
+		"""
+		'pad' argument to applicable baseconv methods must be either None, 'seed' or an integer.
+		If None, output of minimum (but never zero) length will be produced.
+		If 'seed', output length will be mapped from input length using seed_pad_lens.
+		If an integer, it refers to the minimum allowable *string length* of the output.
+		"""
+		if pad == None:
+			return 0
+		elif isinstance(pad,int) and type(pad) != bool:
+			return pad
+		elif pad == 'seed':
+			return seed_pad_func()
+		else:
+			m = "{!r}: illegal value for 'pad' (must be None,'seed' or int)"
+			raise BaseConversionPadError(m.format(pad))
+
+	@classmethod
 	def tohex(cls,words_arg,wl_id,pad=None):
+		"convert string or list data of base specified by 'wl_id' to hex string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
 
+		if len(words) == 0:
+			raise BaseConversionError('empty {} data'.format(wl_id))
+
+		def get_seed_pad():
+			assert wl_id in cls.seed_pad_lens_rev,'seed padding not supported for base {!r}'.format(wl_id)
+			d = cls.seed_pad_lens_rev[wl_id]
+			if not len(words) in d:
+				m = '{}: invalid length for seed-padded {} data in base conversion'
+				raise BaseConversionError(m.format(len(words),wl_id))
+			return d[len(words)] * 2
+
+		pad = max(cls.get_pad(pad,get_seed_pad),2)
 		wl = cls.digits[wl_id]
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			die(2,'{} is not in {} (base{}) format'.format(repr(words_arg),wl_id,base))
+			m = '{!r}: not in {} (base{}) format'
+			raise BaseConversionError(m.format(words_arg,wl_id,base))
 
 		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
-		ret = ('{:0{w}x}'.format(sum(deconv),w=pad or 0))
+		ret = ('{:0{w}x}'.format(sum(deconv),w=pad))
 		return (('','0')[len(ret) % 2] + ret)
 
 	@classmethod
-	def fromhex(cls,hexnum,wl_id,pad=None,tostr=False):
+	def fromhex(cls,hexstr,wl_id,pad=None,tostr=False):
+		"convert hex string to list or string data of base specified by 'wl_id'"
 		if wl_id in ('mmgen','tirosh','bip39'):
 			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
-		if not is_hex_str(hexnum):
-			die(2,"{!r}: not a hexadecimal number".format(hexnum))
+		if not is_hex_str(hexstr):
+			m = '{!r}: not a hexadecimal string'
+			raise HexadecimalStringError(m.format(hexstr))
 
+		if not hexstr:
+			m = 'empty hex strings not allowed in base conversion'
+			raise HexadecimalStringError(m)
+
+		def get_seed_pad():
+			assert wl_id in cls.seed_pad_lens,'seed padding not supported for base {!r}'.format(wl_id)
+			d = cls.seed_pad_lens[wl_id]
+			slen = len(hexstr) // 2
+			if not slen in d:
+				m = '{}: invalid seed byte length for seed-padded base conversion'
+				raise SeedLengthError(m.format(slen))
+			return d[slen]
+
+		pad = max(cls.get_pad(pad,get_seed_pad),1)
 		wl = cls.digits[wl_id]
 		base = len(wl)
-		num,ret = int(hexnum,16),[]
+
+		num,ret = int(hexstr,16),[]
 		while num:
 			ret.append(num % base)
 			num //= base
-		o = [wl[n] for n in [0] * ((pad or 0)-len(ret)) + ret[::-1]]
+		o = [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 		return ''.join(o) if tostr else o
+
+	@classmethod
+	def b58decode(cls,s,pad=None):
+		'convert base58 string to bytes'
+		return bytes.fromhex(cls.tohex(s,'b58',pad=pad))
+
+	@classmethod
+	def b58encode(cls,s,pad=None):
+		'convert bytes to base58 string'
+		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
