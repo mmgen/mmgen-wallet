@@ -698,7 +698,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
 		if self.label:
-			lines.append(baseconv.b58encode(self.label.encode()))
+			lines.append(baseconv.frombytes(self.label.encode(),'b58',tostr=True))
 		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
 			lines.append(self.coin_txid)
@@ -1214,7 +1214,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
-					comment = baseconv.b58decode(c).decode('utf8')
+					comment = baseconv.tobytes(c,'b58').decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
 					self.label = MMGenTXLabel(comment,on_fail='raise')

@@ -972,7 +972,7 @@ class MMGenSeedFile(SeedSourceUnenc):
 	ext = 'mmseed'
 
 	def _format(self):
-		b58seed = baseconv.b58encode(self.seed.data,pad='seed')
+		b58seed = baseconv.frombytes(self.seed.data,'b58',pad='seed',tostr=True)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
 		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum,split_into_cols(4,b58seed))
@@ -1000,7 +1000,7 @@ class MMGenSeedFile(SeedSourceUnenc):
 		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
 
-		ret = baseconv.b58decode(b,pad='seed')
+		ret = baseconv.tobytes(b,'b58',pad='seed')
 
 		if ret == False:
 			msg('Invalid base-58 encoded seed: {}'.format(val))
@@ -1146,8 +1146,8 @@ class Wallet (SeedSourceEnc):
 	def _format(self):
 		d = self.ssdata
 		s = self.seed
-		slt_fmt  = baseconv.b58encode(d.salt,pad='seed')
-		es_fmt = baseconv.b58encode(d.enc_seed,pad='seed')
+		slt_fmt  = baseconv.frombytes(d.salt,'b58',pad='seed',tostr=True)
+		es_fmt = baseconv.frombytes(d.enc_seed,'b58',pad='seed',tostr=True)
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format(s.sid.lower(), d.key_id.lower(),
@@ -1219,7 +1219,7 @@ class Wallet (SeedSourceEnc):
 					make_chksum_6(b58_val),'computed checksum',verbose=True):
 				return False
 
-			val = baseconv.b58decode(b58_val,pad='seed')
+			val = baseconv.tobytes(b58_val,'b58',pad='seed')
 			if val == False:
 				msg('Invalid base 58 number: {}'.format(b58_val))
 				return False

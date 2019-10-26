@@ -316,7 +316,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 
 	def randb58(self,nbytes=32,pad=0):
 		"generate random data (default: 32 bytes) and convert it to base 58"
-		return baseconv.b58encode(get_random(nbytes),pad=pad)
+		return baseconv.frombytes(get_random(nbytes),'b58',pad=pad,tostr=True)
 
 	def bytestob58(self,infile:str,pad=0):
 		"convert bytes to base 58 (supply data via STDIN)"

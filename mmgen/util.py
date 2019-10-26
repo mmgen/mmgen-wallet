@@ -432,16 +432,6 @@ class baseconv(object):
 		o = [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 		return ''.join(o) if tostr else o
 
-	@classmethod
-	def b58decode(cls,s,pad=None):
-		'convert base58 string to bytes'
-		return bytes.fromhex(cls.tohex(s,'b58',pad=pad))
-
-	@classmethod
-	def b58encode(cls,s,pad=None):
-		'convert bytes to base58 string'
-		return cls.fromhex(s.hex(),'b58',pad=pad,tostr=True)
-
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
 

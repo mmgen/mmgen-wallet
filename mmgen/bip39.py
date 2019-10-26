@@ -2169,11 +2169,3 @@ zoo
 		res = seed_bin + chk_bin
 
 		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(mn_len))
-
-	@classmethod
-	def b58encode(cls,*args,**kwargs):
-		raise NotImplementedError('not implemented')
-
-	@classmethod
-	def b58decode(cls,*args,**kwargs):
-		raise NotImplementedError('not implemented')
