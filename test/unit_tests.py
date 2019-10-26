@@ -61,20 +61,24 @@ class UnitTestHelpers(object):
 
 	@classmethod
 	def process_bad_data(cls,data):
+		import re
 		desc_w = max(len(e[0]) for e in data)
 		exc_w = max(len(e[1]) for e in data)
+		m_exc = '{!r}: incorrect exception type (expected {!r})'
+		m_err = '{!r}: incorrect error msg (should match {!r}'
+		m_noraise = "\nillegal action 'bad {}' failed to raise exception {!r}"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
-				vmsg_r('  {:{w}}'.format(desc+':',w=desc_w+1))
+				vmsg_r('  bad {:{w}}'.format(desc+':',w=desc_w+1))
 				func()
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0]
 				vmsg(' {:{w}} [{}]'.format(exc,emsg,w=exc_w))
-				assert exc == exc_chk,'{!r}: incorrect exception type (expected {!r})'.format(exc,exc_chk)
-				assert emsg_chk in emsg,'{!r}: incorrect error msg (should contain {!r}'.format(emsg,emsg_chk)
+				assert exc == exc_chk, m_exc.format(exc,exc_chk)
+				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:
-				rdie(3,"\nillegal action '{}' failed to raise exception {!r}".format(desc,exc_chk))
+				rdie(3,m_noraise.format(desc,exc_chk))
 
 try:
 	for test in cmd_args:

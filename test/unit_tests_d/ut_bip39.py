@@ -119,19 +119,20 @@ class unit_test(object):
 		bad_seed = 'deadbeef'
 		good_seed = 'deadbeef' * 4
 
-		b = bip39
+		th = bip39.tohex
+		fh = bip39.fromhex
 		bad_data = (
-('bad hex',             'AssertionError', 'not a hexadecimal', lambda:b.fromhex('xx','bip39')),
-('bad id (tohex)',      'AssertionError', "must be 'bip39'",   lambda:b.fromhex(good_seed,'foo')),
-('bad seed len',        'AssertionError', 'invalid seed bit',  lambda:b.fromhex(bad_seed,'bip39')),
-('bad mnemonic type',   'AssertionError', 'must be list',      lambda:b.tohex('string','bip39')),
-('bad id (fromhex)',    'AssertionError', "must be 'bip39'",   lambda:b.tohex(good_mn,'foo')),
-('tostr = True',        'AssertionError', "'tostr' must be",   lambda:b.fromhex(good_seed,'bip39',tostr=True)),
-('bad padlen (fromhex)','AssertionError', "invalid pad len",   lambda:b.fromhex(good_seed,'bip39',pad=23)),
-('bad padlen (tohex)',  'AssertionError', "invalid pad len",   lambda:b.tohex(good_mn,'bip39',pad=23)),
-('bad word',            'MnemonicError',  "not in the BIP39",  lambda:b.tohex(bad_word_mn,'bip39')),
-('bad checksum',        'MnemonicError',  "checksum",          lambda:b.tohex(bad_chksum_mn,'bip39')),
-('bad seedphrase len',  'MnemonicError',  "phrase len",        lambda:b.tohex(bad_len_mn,'bip39')),
+('hex',              'AssertionError', 'not a hexadecimal',lambda:fh('xx','bip39')),
+('id (tohex)',       'AssertionError', "must be 'bip39'",  lambda:fh(good_seed,'foo')),
+('seed len',         'AssertionError', 'invalid seed bit', lambda:fh(bad_seed,'bip39')),
+('mnemonic type',    'AssertionError', 'must be list',     lambda:th('string','bip39')),
+('id (fromhex)',     'AssertionError', "must be 'bip39'",  lambda:th(good_mn,'foo')),
+('arg (tostr=True)', 'AssertionError', "'tostr' must be",  lambda:fh(good_seed,'bip39',tostr=True)),
+('pad len (fromhex)','AssertionError', "invalid pad len",  lambda:fh(good_seed,'bip39',pad=23)),
+('pad len (tohex)',  'AssertionError', "invalid pad len",  lambda:th(good_mn,'bip39',pad=23)),
+('word',             'MnemonicError',  "not in the BIP39", lambda:th(bad_word_mn,'bip39')),
+('checksum',         'MnemonicError',  "checksum",         lambda:th(bad_chksum_mn,'bip39')),
+('seed phrase len',  'MnemonicError',  "phrase len",       lambda:th(bad_len_mn,'bip39')),
 		)
 
 		ut.process_bad_data(bad_data)

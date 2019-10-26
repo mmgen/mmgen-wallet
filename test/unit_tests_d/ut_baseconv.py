@@ -148,22 +148,23 @@ class unit_test(object):
 		vmsg('')
 		qmsg('Checking error handling:')
 
-		b = baseconv
+		th = baseconv.tohex
+		fh = baseconv.fromhex
 		bad_data = (
-('bad hexstr',       'HexadecimalStringError','not a hexadecimal str',   lambda:b.fromhex('x','b58')),
-('empty hexstr',     'HexadecimalStringError','empty hex strings not',   lambda:b.fromhex('','b58')),
-('bad b58 data',     'BaseConversionError',   'not in b58',              lambda:b.tohex('IfFzZ','b58')),
-('empty b58 data',   'BaseConversionError',   'empty b58 data',          lambda:b.tohex('','b58')),
-('empty b8 data' ,   'BaseConversionError',   'empty b8 data',           lambda:b.tohex('','b8')),
-('bad b32 data',     'BaseConversionError',   'not in b32',              lambda:b.tohex('1az','b32')),
-('bad pad arg (in)', 'BaseConversionPadError',"illegal value for 'pad'", lambda:b.fromhex('ff','b58',pad='foo')),
-('bad pad arg (in)', 'BaseConversionPadError',"illegal value for 'pad'", lambda:b.fromhex('ff','b58',pad=False)),
-('bad pad arg (in)', 'BaseConversionPadError',"illegal value for 'pad'", lambda:b.fromhex('ff','b58',pad=True)),
-('bad seedlen (in)', 'SeedLengthError',       "invalid seed byte length",lambda:b.fromhex('ff','b58',pad='seed')),
-('bad pad arg (out)','BaseConversionPadError',"illegal value for 'pad'", lambda:b.tohex('Z','b58',pad='foo')),
-('bad pad arg (out)','BaseConversionPadError',"illegal value for 'pad'", lambda:b.tohex('Z','b58',pad=False)),
-('bad pad arg (out)','BaseConversionPadError',"illegal value for 'pad'", lambda:b.tohex('Z','b58',pad=True)),
-('bad seedlen (out)','BaseConversionError',   "invalid length for seed", lambda:b.tohex('Z','b58',pad='seed')),
+('hexstr',          'HexadecimalStringError', ': not a hexadecimal str', lambda:fh('x','b58')),
+('hexstr (empty)',  'HexadecimalStringError', 'empty hex strings not',   lambda:fh('','b58')),
+('b58 data',        'BaseConversionError',    ': not in b58',            lambda:th('IfFzZ','b58')),
+('b58 data (empty)','BaseConversionError',    'empty b58 data',          lambda:th('','b58')),
+('b8 data (empty)' ,'BaseConversionError',    'empty b8 data',           lambda:th('','b8')),
+('b32 data',        'BaseConversionError',    'not in b32',              lambda:th('1az','b32')),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad='foo')),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad=False)),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad=True)),
+('seedlen (in)',    'SeedLengthError',        'invalid seed byte length',lambda:fh('ff','b58',pad='seed')),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad='foo')),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad=False)),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad=True)),
+('seedlen (out)',   'BaseConversionError',    'invalid length for seed', lambda:th('Z','b58',pad='seed')),
 		)
 
 		ut.process_bad_data(bad_data)
