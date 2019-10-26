@@ -148,12 +148,18 @@ class unit_test(object):
 		vmsg('')
 		qmsg('Checking error handling:')
 
+		bad_b58 = 'I'*22
+		bad_b58len = 'a'*23
+
 		th = baseconv.tohex
 		fh = baseconv.fromhex
 		bad_data = (
 ('hexstr',          'HexadecimalStringError', ': not a hexadecimal str', lambda:fh('x','b58')),
+('hexstr (seed)',   'HexadecimalStringError', 'seed data not a hexadec', lambda:fh('x','b58',pad='seed')),
 ('hexstr (empty)',  'HexadecimalStringError', 'empty hex strings not',   lambda:fh('','b58')),
 ('b58 data',        'BaseConversionError',    ': not in b58',            lambda:th('IfFzZ','b58')),
+('b58 data (seed)', 'BaseConversionError',    'seed data not in b58',    lambda:th(bad_b58,'b58',pad='seed')),
+('b58 len (seed)',  'BaseConversionError',    'invalid length for',      lambda:th(bad_b58len,'b58',pad='seed')),
 ('b58 data (empty)','BaseConversionError',    'empty b58 data',          lambda:th('','b58')),
 ('b8 data (empty)' ,'BaseConversionError',    'empty b8 data',           lambda:th('','b8')),
 ('b32 data',        'BaseConversionError',    'not in b32',              lambda:th('1az','b32')),

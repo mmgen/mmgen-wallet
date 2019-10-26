@@ -378,16 +378,16 @@ class baseconv(object):
 				raise BaseConversionError(m.format(len(words),wl_id))
 			return d[len(words)] * 2
 
-		pad = max(cls.get_pad(pad,get_seed_pad),2)
+		pad_val = max(cls.get_pad(pad,get_seed_pad),2)
 		wl = cls.digits[wl_id]
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			m = '{!r}: not in {} (base{}) format'
-			raise BaseConversionError(m.format(words_arg,wl_id,base))
+			m = ('{w!r}:','seed data')[pad=='seed'] + ' not in {i} (base{b}) format'
+			raise BaseConversionError(m.format(w=words_arg,i=wl_id,b=base))
 
 		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
-		ret = ('{:0{w}x}'.format(sum(deconv),w=pad))
+		ret = ('{:0{w}x}'.format(sum(deconv),w=pad_val))
 		return (('','0')[len(ret) % 2] + ret)
 
 	@classmethod
@@ -397,8 +397,8 @@ class baseconv(object):
 			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
 		if not is_hex_str(hexstr):
-			m = '{!r}: not a hexadecimal string'
-			raise HexadecimalStringError(m.format(hexstr))
+			m = ('{h!r}:','seed data')[pad=='seed'] + ' not a hexadecimal string'
+			raise HexadecimalStringError(m.format(h=hexstr))
 
 		if not hexstr:
 			m = 'empty hex strings not allowed in base conversion'

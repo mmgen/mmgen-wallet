@@ -2114,9 +2114,9 @@ zoo
 
 		wl = cls.digits[wl_id]
 
-		for w in words:
-			if w not in wl:
-				raise MnemonicError('{!r} is not in the BIP39 word list'.format(w))
+		for n in range(len(words)):
+			if words[n] not in wl:
+				raise MnemonicError('word #{} is not in the BIP39 word list'.format(n+1))
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
 
@@ -2141,13 +2141,13 @@ zoo
 		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
 
 		if chk_bin != chk_bin_chk:
-			raise MnemonicError('{}: invalid checksum (should be {})'.format(chk_bin,chk_bin_chk))
+			raise MnemonicError('invalid seed phrase checksum')
 
 		return seed_hex
 
 	@classmethod
 	def fromhex(cls,seed_hex,wl_id,pad=None,tostr=False):
-		assert is_hex_str(seed_hex),"{!r}: not a hexadecimal string".format(seed_hex)
+		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
 		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
 		assert tostr == False,"'tostr' must be False for 'bip39'"
 
