@@ -281,8 +281,15 @@ def is_utf8(s): return is_ascii(s,enc='utf8')
 
 class baseconv(object):
 
-	mn_base = 1626 # tirosh list is 1633 words long!
-	mn_ids = ('mmgen','tirosh')
+	desc = {
+		'b58':   ('base58',               'base58-encoded data'),
+		'b32':   ('MMGen base32',         'MMGen base32-encoded data created using simple base conversion'),
+		'b16':   ('hexadecimal string',   'base16 (hexadecimal) string data'),
+		'b10':   ('base10 string',        'base10 (decimal) string data'),
+		'b8':    ('base8 string',         'base8 (octal) string data'),
+		'mmgen': ('MMGen native mnemonic',
+		'MMGen native mnemonic seed phrase data created using old Electrum wordlist and simple base conversion'),
+	}
 	digits = {
 		'b58': tuple('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'),
 		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
@@ -290,6 +297,8 @@ class baseconv(object):
 		'b10': tuple('0123456789'),
 		'b8':  tuple('01234567'),
 	}
+	mn_base = 1626 # tirosh list is 1633 words long!
+	mn_ids = ('mmgen','tirosh')
 	wl_chksums = {
 		'mmgen':  '5ca31424',
 		'tirosh': '48f05e1f', # tirosh truncated to mn_base (1626)
@@ -371,16 +380,17 @@ class baseconv(object):
 		"convert string or list data of base 'wl_id' to byte string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
+		desc = cls.desc[wl_id][0]
 
 		if len(words) == 0:
-			raise BaseConversionError('empty {} data'.format(wl_id))
+			raise BaseConversionError('empty {} data'.format(desc))
 
 		def get_seed_pad():
 			assert wl_id in cls.seed_pad_lens_rev,'seed padding not supported for base {!r}'.format(wl_id)
 			d = cls.seed_pad_lens_rev[wl_id]
 			if not len(words) in d:
 				m = '{}: invalid length for seed-padded {} data in base conversion'
-				raise BaseConversionError(m.format(len(words),wl_id))
+				raise BaseConversionError(m.format(len(words),desc))
 			return d[len(words)]
 
 		pad_val = max(cls.get_pad(pad,get_seed_pad),1)
@@ -388,8 +398,8 @@ class baseconv(object):
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			m = ('{w!r}:','seed data')[pad=='seed'] + ' not in {i} (base{b}) format'
-			raise BaseConversionError(m.format(w=words_arg,i=wl_id,b=base))
+			m = ('{w!r}:','seed data')[pad=='seed'] + ' not in {d} format'
+			raise BaseConversionError(m.format(w=words_arg,d=desc))
 
 		ret = sum([wl.index(words[::-1][i])*(base**i) for i in range(len(words))])
 		bl = ret.bit_length()
@@ -416,7 +426,7 @@ class baseconv(object):
 			assert wl_id in cls.seed_pad_lens,'seed padding not supported for base {!r}'.format(wl_id)
 			d = cls.seed_pad_lens[wl_id]
 			if not len(bytestr) in d:
-				m = '{}: invalid seed byte length for seed-padded base conversion'
+				m = '{}: invalid byte length for seed data in seed-padded base conversion'
 				raise SeedLengthError(m.format(len(bytestr)))
 			return d[len(bytestr)]
 
