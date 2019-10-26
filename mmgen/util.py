@@ -346,14 +346,14 @@ class baseconv(object):
 	@classmethod
 	def get_pad(cls,pad,seed_pad_func):
 		"""
-		'pad' argument to applicable baseconv methods must be either None, 'seed' or an integer.
+		'pad' argument to baseconv conversion methods must be either None, 'seed' or an integer.
 		If None, output of minimum (but never zero) length will be produced.
-		If 'seed', output length will be mapped from input length using seed_pad_lens.
+		If 'seed', output length will be mapped from input length using data in seed_pad_lens.
 		If an integer, it refers to the minimum allowable *string length* of the output.
 		"""
 		if pad == None:
 			return 0
-		elif isinstance(pad,int) and type(pad) != bool:
+		elif type(pad) == int:
 			return pad
 		elif pad == 'seed':
 			return seed_pad_func()
@@ -363,7 +363,7 @@ class baseconv(object):
 
 	@classmethod
 	def tohex(cls,words_arg,wl_id,pad=None):
-		"convert string or list data of base specified by 'wl_id' to hex string"
+		"convert string or list data of base 'wl_id' to hex string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
 
@@ -392,7 +392,7 @@ class baseconv(object):
 
 	@classmethod
 	def fromhex(cls,hexstr,wl_id,pad=None,tostr=False):
-		"convert hex string to list or string data of base specified by 'wl_id'"
+		"convert hex string to list or string data of base 'wl_id'"
 		if wl_id in ('mmgen','tirosh','bip39'):
 			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 

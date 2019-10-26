@@ -120,7 +120,7 @@ class unit_test(object):
 			for (hexstr,pad),ret_chk in data:
 				ret = baseconv.fromhex(hexstr,wl_id=base,pad=pad,tostr=True)
 				if pad != 'seed':
-					assert len(ret) >= (pad or 0), perr.format(ret,pad)
+					assert len(ret) >= (pad or 0), perr.format(ret,pad or 0)
 				assert ret == ret_chk, rerr.format(ret,ret_chk)
 				vmsg(fs.format(h=hexstr,r=ret,p=str(pad)))
 #				msg("(('{h}',{p}),'{r}'),".format(h=hexstr,r=ret,c=ret_chk,p=pad))
@@ -137,9 +137,9 @@ class unit_test(object):
 					pad = len(hexstr)
 				ret = baseconv.tohex(ret_chk,wl_id=base,pad=pad)
 				if pad == None:
-					assert int(ret,16) == int(hexstr,16), rerr.format(ret,ret_chk)
+					assert int(ret,16) == int(hexstr,16), rerr.format(int(ret,16),int(hexstr,16))
 				else:
-					assert ret == hexstr, rerr.format(ret,ret_chk)
+					assert ret == hexstr, rerr.format(ret,hexstr)
 				vmsg(fs.format(h=ret_chk,r=ret,p=str(pad)))
 #				msg("(('{h}',{p}),'{r}'),".format(h=hexstr,r=ret_chk,c=ret_chk,p=pad))
 

@@ -152,7 +152,6 @@ class g(object):
 		'hidden_incog_input_params','in_fmt'
 	)
 	incompatible_opts = (
-		('base32','hex'), # mmgen-passgen
 		('bob','alice'),
 		('quiet','verbose'),
 		('label','keep_label'),
