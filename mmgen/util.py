@@ -349,7 +349,7 @@ class baseconv(object):
 		'pad' argument to baseconv conversion methods must be either None, 'seed' or an integer.
 		If None, output of minimum (but never zero) length will be produced.
 		If 'seed', output length will be mapped from input length using data in seed_pad_lens.
-		If an integer, it refers to the minimum allowable *string length* of the output.
+		If an integer, the string, hex string or byte output will be padded to this length.
 		"""
 		if pad == None:
 			return 0
@@ -364,6 +364,11 @@ class baseconv(object):
 	@classmethod
 	def tohex(cls,words_arg,wl_id,pad=None):
 		"convert string or list data of base 'wl_id' to hex string"
+		return cls.tobytes(words_arg,wl_id,pad//2 if type(pad)==int else pad).hex()
+
+	@classmethod
+	def tobytes(cls,words_arg,wl_id,pad=None):
+		"convert string or list data of base 'wl_id' to byte string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
 
@@ -376,9 +381,9 @@ class baseconv(object):
 			if not len(words) in d:
 				m = '{}: invalid length for seed-padded {} data in base conversion'
 				raise BaseConversionError(m.format(len(words),wl_id))
-			return d[len(words)] * 2
+			return d[len(words)]
 
-		pad_val = max(cls.get_pad(pad,get_seed_pad),2)
+		pad_val = max(cls.get_pad(pad,get_seed_pad),1)
 		wl = cls.digits[wl_id]
 		base = len(wl)
 
@@ -386,38 +391,41 @@ class baseconv(object):
 			m = ('{w!r}:','seed data')[pad=='seed'] + ' not in {i} (base{b}) format'
 			raise BaseConversionError(m.format(w=words_arg,i=wl_id,b=base))
 
-		deconv =  [wl.index(words[::-1][i])*(base**i) for i in range(len(words))]
-		ret = ('{:0{w}x}'.format(sum(deconv),w=pad_val))
-		return (('','0')[len(ret) % 2] + ret)
+		ret = sum([wl.index(words[::-1][i])*(base**i) for i in range(len(words))])
+		bl = ret.bit_length()
+		return ret.to_bytes(max(pad_val,bl//8+bool(bl%8)),'big')
 
 	@classmethod
 	def fromhex(cls,hexstr,wl_id,pad=None,tostr=False):
 		"convert hex string to list or string data of base 'wl_id'"
-		if wl_id in ('mmgen','tirosh','bip39'):
-			assert tostr == False,"'tostr' must be False for '{}'".format(wl_id)
 
 		if not is_hex_str(hexstr):
 			m = ('{h!r}:','seed data')[pad=='seed'] + ' not a hexadecimal string'
 			raise HexadecimalStringError(m.format(h=hexstr))
 
-		if not hexstr:
-			m = 'empty hex strings not allowed in base conversion'
-			raise HexadecimalStringError(m)
+		return cls.frombytes(bytes.fromhex(hexstr),wl_id,pad,tostr)
+
+	@classmethod
+	def frombytes(cls,bytestr,wl_id,pad=None,tostr=False):
+		"convert byte string to list or string data of base 'wl_id'"
+
+		if not bytestr:
+			raise BaseConversionError('empty data not allowed in base conversion')
 
 		def get_seed_pad():
 			assert wl_id in cls.seed_pad_lens,'seed padding not supported for base {!r}'.format(wl_id)
 			d = cls.seed_pad_lens[wl_id]
-			slen = len(hexstr) // 2
-			if not slen in d:
+			if not len(bytestr) in d:
 				m = '{}: invalid seed byte length for seed-padded base conversion'
-				raise SeedLengthError(m.format(slen))
-			return d[slen]
+				raise SeedLengthError(m.format(len(bytestr)))
+			return d[len(bytestr)]
 
 		pad = max(cls.get_pad(pad,get_seed_pad),1)
 		wl = cls.digits[wl_id]
 		base = len(wl)
 
-		num,ret = int(hexstr,16),[]
+		num = int.from_bytes(bytestr,'big')
+		ret = []
 		while num:
 			ret.append(num % base)
 			num //= base

@@ -156,7 +156,7 @@ class unit_test(object):
 		bad_data = (
 ('hexstr',          'HexadecimalStringError', ': not a hexadecimal str', lambda:fh('x','b58')),
 ('hexstr (seed)',   'HexadecimalStringError', 'seed data not a hexadec', lambda:fh('x','b58',pad='seed')),
-('hexstr (empty)',  'HexadecimalStringError', 'empty hex strings not',   lambda:fh('','b58')),
+('hexstr (empty)',  'BaseConversionError',    'empty data not allowed',  lambda:fh('','b58')),
 ('b58 data',        'BaseConversionError',    ': not in b58',            lambda:th('IfFzZ','b58')),
 ('b58 data (seed)', 'BaseConversionError',    'seed data not in b58',    lambda:th(bad_b58,'b58',pad='seed')),
 ('b58 len (seed)',  'BaseConversionError',    'invalid length for',      lambda:th(bad_b58len,'b58',pad='seed')),
