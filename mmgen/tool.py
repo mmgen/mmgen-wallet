@@ -275,7 +275,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		"convert hexadecimal value to bytes (warning: outputs binary data)"
 		return bytes.fromhex(hexstr)
 
-	def hexdump(self,infile:str,cols=8,line_nums=True):
+	def hexdump(self,infile:str,cols=8,line_nums='hex'):
 		"create hexdump of data from file (use '-' for stdin)"
 		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
 		return pretty_hexdump(data,cols=cols,line_nums=line_nums).rstrip()

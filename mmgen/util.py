@@ -476,15 +476,22 @@ def pretty_format(s,width=80,pfx=''):
 		s = s[i+1:]
 	return pfx + ('\n'+pfx).join(out)
 
-def pretty_hexdump(data,gw=2,cols=8,line_nums=False):
-	r = (0,1)[bool(len(data) % gw)]
+def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
+	assert line_nums in (None,'hex','dec'),"'line_nums' must be one of None, 'hex' or 'dec'"
+	ln_fs = '{:06x}: ' if line_nums == 'hex' else '{:06}: '
+	bytes_per_chunk = gw
+	if data_is_hex:
+		gw *= 2
+	nchunks = len(data)//gw + bool(len(data)%gw)
 	return ''.join(
-		[
-			('' if (line_nums == False or i % cols) else '{:06x}: '.format(i*gw)) +
-				data[i*gw:i*gw+gw].hex() + ('\n',' ')[bool((i+1) % cols)]
-					for i in range(len(data)//gw + r)
-		]
+		('' if (line_nums == None or i % cols) else ln_fs.format(i*bytes_per_chunk))
+		+ data[i*gw:i*gw+gw]
+		+ (' ' if (i+1) % cols else '\n')
+			for i in range(nchunks)
 	).rstrip() + '\n'
+
+def pretty_hexdump(data,gw=2,cols=8,line_nums=None):
+	return block_format(data.hex(),gw,cols,line_nums,data_is_hex=True)
 
 def decode_pretty_hexdump(data):
 	from string import hexdigits
