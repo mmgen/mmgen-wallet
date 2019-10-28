@@ -170,10 +170,10 @@ class AddrGeneratorMonero(AddrGenerator):
 		return AddrGenerator.__init__(addr_type)
 
 	def b58enc(self,addr_bytes):
-		enc = baseconv.fromhex
+		enc = baseconv.frombytes
 		l = len(addr_bytes)
-		a = ''.join([enc((addr_bytes[i*8:i*8+8]).hex(),'b58',pad=11,tostr=True) for i in range(l//8)])
-		b = enc((addr_bytes[l-l%8:]).hex(),'b58',pad=7,tostr=True)
+		a = ''.join([enc(addr_bytes[i*8:i*8+8],'b58',pad=11,tostr=True) for i in range(l//8)])
+		b = enc(addr_bytes[l-l%8:],'b58',pad=7,tostr=True)
 		return a + b
 
 	def to_addr(self,sk_hex): # sk_hex instead of pubhex
@@ -923,7 +923,7 @@ Record this checksum: it will be used to verify the password file in the future
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
-			good_pw_len = len(baseconv.fromhex('ff'*seed.byte_len,wl_id=pf))
+			good_pw_len = len(baseconv.frombytes(b'\xff'*seed.byte_len,wl_id=pf))
 		else:
 			raise NotImplementedError('{!r}: unknown password format'.format(pf))
 

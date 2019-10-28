@@ -321,11 +321,11 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def bytestob58(self,infile:str,pad=0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
-		return baseconv.fromhex(data.hex(),'b58',pad=pad,tostr=True)
+		return baseconv.frombytes(data,'b58',pad=pad,tostr=True)
 
 	def b58tobytes(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to bytes (warning: outputs binary data)"
-		return bytes.fromhex(baseconv.tohex(b58num,'b58',pad=pad))
+		return baseconv.tobytes(b58num,'b58',pad=pad)
 
 	def hextob58(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to base 58"

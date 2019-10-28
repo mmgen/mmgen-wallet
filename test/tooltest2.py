@@ -204,9 +204,9 @@ tests = {
 			( ['6h8cQN'], b'\xde\xad\xbe\xef' ),
 			( ['eFGDJURJykA'], b'\xde\xad\xbe\xef\xde\xad\xbe\xef' ),
 			( ['jpXCZedGfVQ'], b'\xff\xff\xff\xff\xff\xff\xff\xff' ),
-			( ['1','pad=16'],  b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
-			( ['1111111111','pad=16'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
-			( ['111111115Q','pad=2'], b'\xff' ),
+			( ['1','pad=8'],  b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
+			( ['1111111111','pad=8'], b'\x00\x00\x00\x00\x00\x00\x00\x00' ),
+			( ['111111115Q','pad=1'], b'\xff' ),
 		],
 		'hextob58': [
 			( ['deadbeef'], '6h8cQN' ),
