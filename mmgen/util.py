@@ -287,6 +287,7 @@ class baseconv(object):
 		'b16':   ('hexadecimal string',   'base16 (hexadecimal) string data'),
 		'b10':   ('base10 string',        'base10 (decimal) string data'),
 		'b8':    ('base8 string',         'base8 (octal) string data'),
+		'b6d':   ('base6d (die roll)',    'base6 data using the digits from one to six'),
 		'mmgen': ('MMGen native mnemonic',
 		'MMGen native mnemonic seed phrase data created using old Electrum wordlist and simple base conversion'),
 	}
@@ -296,6 +297,7 @@ class baseconv(object):
 		'b16': tuple('0123456789abcdef'),
 		'b10': tuple('0123456789'),
 		'b8':  tuple('01234567'),
+		'b6d': tuple('123456'),
 	}
 	mn_base = 1626 # tirosh list is 1633 words long!
 	mn_ids = ('mmgen','tirosh')
@@ -306,9 +308,11 @@ class baseconv(object):
 	}
 	seed_pad_lens = {
 		'b58': { 16:22, 24:33, 32:44 },
+		'b6d': { 16:50, 24:75, 32:100 },
 	}
 	seed_pad_lens_rev = {
 		'b58': { 22:16, 33:24, 44:32 },
+		'b6d': { 50:16, 75:24, 100:32 },
 	}
 
 	@classmethod

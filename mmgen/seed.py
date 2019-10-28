@@ -1014,6 +1014,27 @@ class MMGenSeedFile(SeedSourceUnenc):
 
 		return True
 
+class DieRollSeedFile(SeedSourceUnenc):
+
+	stdin_ok = True
+	fmt_codes = 'b6d','die','dieroll',
+	desc = 'base6d die roll seed data'
+	ext = 'b6d'
+
+	def _format(self):
+		d = baseconv.frombytes(self.seed.data,'b6d',pad='seed',tostr=True) + '\n'
+		self.fmt_data = block_format(d,gw=5,cols=5)
+
+	def _deformat(self):
+		d = self.fmt_data.translate(dict((ord(ws),None) for ws in '\t\n '))
+		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')
+
+		self.seed = Seed(seed_bytes)
+		self.ssdata.hexseed = seed_bytes.hex()
+
+		check_usr_seed_len(self.seed.bitlen)
+		return True
+
 class PlainHexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True

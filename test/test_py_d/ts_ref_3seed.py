@@ -48,6 +48,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_seed_chk',    ([],'saved seed file')),
 		('ref_hex_chk',     ([],'saved mmhex file')),
 		('ref_plainhex_chk',([],'saved hex file')),
+		('ref_dieroll_chk', ([],'saved dieroll (b6d) file')),
 		('ref_mn_chk',      ([],'saved native MMGen mnemonic file')),
 		('ref_bip39_chk',   ([],'saved BIP39 mnemonic file')),
 		('ref_hincog_chk',  ([],'saved hidden incog reference wallet')),
@@ -60,6 +61,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_walletconv_seed',        ([],'wallet filename (seed)')),
 		('ref_walletconv_hexseed',     ([],'wallet filename (hex seed)')),
 		('ref_walletconv_plainhexseed',([],'wallet filename (plain hex seed)')),
+		('ref_walletconv_dieroll',     ([],'wallet filename (dieroll (b6d) seed)')),
 		('ref_walletconv_incog',       ([],'wallet filename (incog)')),
 		('ref_walletconv_xincog',      ([],'wallet filename (hex incog)')),
 	)
@@ -93,6 +95,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_plainhex_chk(self):
 		from mmgen.seed import PlainHexSeedFile
 		return self.ref_ss_chk(ss=PlainHexSeedFile)
+
+	def ref_dieroll_chk(self):
+		from mmgen.seed import DieRollSeedFile
+		return self.ref_ss_chk(ss=DieRollSeedFile)
 
 	def ref_mn_chk(self):
 		from mmgen.seed import MMGenMnemonic
@@ -170,6 +176,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def ref_walletconv_seed(self):         return self.ref_walletconv(ofmt='mmseed')
 	def ref_walletconv_hexseed(self):      return self.ref_walletconv(ofmt='mmhex')
 	def ref_walletconv_plainhexseed(self): return self.ref_walletconv(ofmt='hex')
+	def ref_walletconv_dieroll(self):      return self.ref_walletconv(ofmt='dieroll')
 
 	def ref_walletconv_incog(self,ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']
