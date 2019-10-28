@@ -83,6 +83,7 @@ setup(
 			'mmgen.__init__',
 			'mmgen.addr',
 			'mmgen.altcoin',
+			'mmgen.baseconv',
 			'mmgen.bech32',
 			'mmgen.bip39',
 			'mmgen.color',

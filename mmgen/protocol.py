@@ -25,6 +25,7 @@ from mmgen.util import msg,ymsg,Msg,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
+from mmgen.baseconv import baseconv,is_b58_str
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib.new('ripemd160',hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
@@ -407,13 +408,11 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	def verify_addr(cls,addr,hex_width,return_dict=False):
 
 		def b58dec(addr_str):
-			from mmgen.util import baseconv
 			l = len(addr_str)
 			a = ''.join([baseconv.tohex(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l//11)])
 			b = baseconv.tohex(addr_str[-(l%11):],'b58',pad=10)
 			return a + b
 
-		from mmgen.util import is_b58_str
 		assert is_b58_str(addr),'Not valid base-58 string'
 		assert len(addr) == cls.addr_width,'Incorrect width'
 

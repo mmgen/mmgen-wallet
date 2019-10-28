@@ -133,7 +133,7 @@ class unit_test(object):
 
 		msg_r('Testing base conversion routines...')
 
-		from mmgen.util import baseconv
+		from mmgen.baseconv import baseconv
 		perr = "length of {!r} less than pad length ({})"
 		rerr = "return value ({!r}) does not match reference value ({!r})"
 

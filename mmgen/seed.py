@@ -25,6 +25,7 @@ import os
 from mmgen.common import *
 from mmgen.obj import *
 from mmgen.crypto import *
+from mmgen.baseconv import *
 
 pnm = g.proj_name
 

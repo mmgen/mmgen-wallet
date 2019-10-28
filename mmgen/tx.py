@@ -24,6 +24,7 @@ import sys,os,json
 from stat import *
 from mmgen.common import *
 from mmgen.obj import *
+from mmgen.baseconv import *
 
 wmsg = lambda k: {
 	'addr_in_addrfile_only': """

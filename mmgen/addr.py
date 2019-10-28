@@ -23,6 +23,7 @@ addr.py:  Address generation/display routines for the MMGen suite
 from hashlib import sha256,sha512
 from mmgen.common import *
 from mmgen.obj import *
+from mmgen.baseconv import *
 
 pnm = g.proj_name
 

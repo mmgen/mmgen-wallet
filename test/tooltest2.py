@@ -32,6 +32,7 @@ from mmgen.common import *
 from test.common import *
 from mmgen.obj import is_wif,is_coin_addr
 from mmgen.seed import is_bip39_mnemonic,is_mmgen_mnemonic
+from mmgen.baseconv import *
 
 NL = ('\n','\r\n')[g.platform=='win']
 

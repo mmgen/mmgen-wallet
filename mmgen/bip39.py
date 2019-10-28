@@ -23,7 +23,8 @@ bip39.py - Data and routines for BIP39 mnemonic seed phrases
 from hashlib import sha256
 
 from mmgen.exception import *
-from mmgen.util import baseconv,is_hex_str
+from mmgen.baseconv import *
+from mmgen.util import is_hex_str
 
 # implements a subset of the baseconv API
 class bip39(baseconv):
