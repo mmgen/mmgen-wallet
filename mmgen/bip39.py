@@ -2081,7 +2081,6 @@ zoo
 """.split())
 
 	mn_base = 2048
-	mn_ids = ('bip39',)
 	wl_chksums = { 'bip39': 'f18b9a84' }
 	#    ENT   CS  MS
 	constants = {
@@ -2170,3 +2169,7 @@ zoo
 		res = seed_bin + chk_bin
 
 		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(mn_len))
+
+	@classmethod
+	def init_mn(cls,mn_id):
+		assert mn_id == 'bip39', "'mn_id' must be 'bip39'"

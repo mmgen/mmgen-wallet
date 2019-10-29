@@ -24,7 +24,6 @@ import sys,os,json
 from stat import *
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.baseconv import *
 
 wmsg = lambda k: {
 	'addr_in_addrfile_only': """
@@ -699,6 +698,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
 		if self.label:
+			from mmgen.baseconv import baseconv
 			lines.append(baseconv.frombytes(self.label.encode(),'b58',tostr=True))
 		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
@@ -1215,6 +1215,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
+					from mmgen.baseconv import baseconv
 					comment = baseconv.tobytes(c,'b58').decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'

@@ -29,50 +29,53 @@ def is_b32_str(s): return set(list(s)) <= set(baseconv.digits['b32'])
 class baseconv(object):
 
 	desc = {
-		'b58':   ('base58',               'base58-encoded data'),
-		'b32':   ('MMGen base32',         'MMGen base32-encoded data created using simple base conversion'),
-		'b16':   ('hexadecimal string',   'base16 (hexadecimal) string data'),
-		'b10':   ('base10 string',        'base10 (decimal) string data'),
-		'b8':    ('base8 string',         'base8 (octal) string data'),
-		'b6d':   ('base6d (die roll)',    'base6 data using the digits from one to six'),
+		'b58':   ('base58',            'base58-encoded data'),
+		'b32':   ('MMGen base32',      'MMGen base32-encoded data created using simple base conversion'),
+		'b16':   ('hexadecimal string','base16 (hexadecimal) string data'),
+		'b10':   ('base10 string',     'base10 (decimal) string data'),
+		'b8':    ('base8 string',      'base8 (octal) string data'),
+		'b6d':   ('base6d (die roll)', 'base6 data using the digits from one to six'),
+		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
 		'mmgen': ('MMGen native mnemonic',
 		'MMGen native mnemonic seed phrase data created using old Electrum wordlist and simple base conversion'),
 	}
+	# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
+	# https://tools.ietf.org/html/rfc4648
 	digits = {
 		'b58': tuple('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'),
-		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
+		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'), # RFC 4648 alphabet
 		'b16': tuple('0123456789abcdef'),
 		'b10': tuple('0123456789'),
 		'b8':  tuple('01234567'),
 		'b6d': tuple('123456'),
 	}
 	mn_base = 1626 # tirosh list is 1633 words long!
-	mn_ids = ('mmgen','tirosh')
 	wl_chksums = {
 		'mmgen':  '5ca31424',
 		'tirosh': '48f05e1f', # tirosh truncated to mn_base (1626)
 		# 'tirosh1633': '1a5faeff'
 	}
-	seed_pad_lens = {
+	seedlen_map = {
 		'b58': { 16:22, 24:33, 32:44 },
 		'b6d': { 16:50, 24:75, 32:100 },
 	}
-	seed_pad_lens_rev = {
+	seedlen_map_rev = {
 		'b58': { 22:16, 33:24, 44:32 },
 		'b6d': { 50:16, 75:24, 100:32 },
 	}
 
 	@classmethod
 	def init_mn(cls,mn_id):
-		assert mn_id in cls.mn_ids
+		if mn_id in cls.digits:
+			return
 		if mn_id == 'mmgen':
 			from mmgen.mn_electrum import words
 			cls.digits[mn_id] = words
 		elif mn_id == 'tirosh':
 			from mmgen.mn_tirosh import words
 			cls.digits[mn_id] = words[:cls.mn_base]
-		else: # bip39
-			cls.digits[mn_id] = cls.words
+		else:
+			raise ValueError('{}: unrecognized mnemonic ID'.format(mn_id))
 
 	@classmethod
 	def get_wordlist(cls,wl_id):
@@ -109,7 +112,7 @@ class baseconv(object):
 		"""
 		'pad' argument to baseconv conversion methods must be either None, 'seed' or an integer.
 		If None, output of minimum (but never zero) length will be produced.
-		If 'seed', output length will be mapped from input length using data in seed_pad_lens.
+		If 'seed', output length will be mapped from input length using data in seedlen_map.
 		If an integer, the string, hex string or byte output will be padded to this length.
 		"""
 		if pad == None:
@@ -131,6 +134,9 @@ class baseconv(object):
 	def tobytes(cls,words_arg,wl_id,pad=None):
 		"convert string or list data of base 'wl_id' to byte string"
 
+		if wl_id not in cls.digits:
+			cls.init_mn(wl_id)
+
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
 		desc = cls.desc[wl_id][0]
 
@@ -138,8 +144,8 @@ class baseconv(object):
 			raise BaseConversionError('empty {} data'.format(desc))
 
 		def get_seed_pad():
-			assert wl_id in cls.seed_pad_lens_rev,'seed padding not supported for base {!r}'.format(wl_id)
-			d = cls.seed_pad_lens_rev[wl_id]
+			assert wl_id in cls.seedlen_map_rev,'seed padding not supported for base {!r}'.format(wl_id)
+			d = cls.seedlen_map_rev[wl_id]
 			if not len(words) in d:
 				m = '{}: invalid length for seed-padded {} data in base conversion'
 				raise BaseConversionError(m.format(len(words),desc))
@@ -172,12 +178,15 @@ class baseconv(object):
 	def frombytes(cls,bytestr,wl_id,pad=None,tostr=False):
 		"convert byte string to list or string data of base 'wl_id'"
 
+		if wl_id not in cls.digits:
+			cls.init_mn(wl_id)
+
 		if not bytestr:
 			raise BaseConversionError('empty data not allowed in base conversion')
 
 		def get_seed_pad():
-			assert wl_id in cls.seed_pad_lens,'seed padding not supported for base {!r}'.format(wl_id)
-			d = cls.seed_pad_lens[wl_id]
+			assert wl_id in cls.seedlen_map,'seed padding not supported for base {!r}'.format(wl_id)
+			d = cls.seedlen_map[wl_id]
 			if not len(bytestr) in d:
 				m = '{}: invalid byte length for seed data in seed-padded base conversion'
 				raise SeedLengthError(m.format(len(bytestr)))

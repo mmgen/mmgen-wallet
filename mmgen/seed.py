@@ -825,10 +825,6 @@ class MMGenMnemonic(SeedSourceUnenc):
 	wl_id = 'mmgen'
 	conv_cls = baseconv
 
-	def __init__(self,*args,**kwargs):
-		self.conv_cls.init_mn(self.wl_id)
-		super().__init__(*args,**kwargs)
-
 	def _get_data_from_user(self,desc):
 
 		if not g.stdin_tty:
@@ -853,6 +849,7 @@ class MMGenMnemonic(SeedSourceUnenc):
 			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
 				break
 
+		self.conv_cls.init_mn(self.wl_id)
 		wl = self.conv_cls.digits[self.wl_id]
 		longest_word = max(len(w) for w in wl)
 		from string import ascii_lowercase
@@ -923,6 +920,7 @@ class MMGenMnemonic(SeedSourceUnenc):
 
 	def _deformat(self):
 
+		self.conv_cls.init_mn(self.wl_id)
 		mn = self.fmt_data.split()
 
 		if len(mn) not in self.mn_lens:
@@ -1227,7 +1225,7 @@ class Wallet (SeedSourceEnc):
 			msg("Hash parameters '{}' don't match hash preset '{}'".format(' '.join(hash_params),d.hash_preset))
 			return False
 
-		lmin,foo,lmax = sorted(baseconv.seed_pad_lens_rev['b58']) # 22,33,44
+		lmin,foo,lmax = sorted(baseconv.seedlen_map_rev['b58']) # 22,33,44
 		for i,key in (4,'salt'),(5,'enc_seed'):
 			l = lines[i].split(' ')
 			chk = l.pop(0)

@@ -25,7 +25,6 @@ from mmgen.util import msg,ymsg,Msg,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
-from mmgen.baseconv import baseconv,is_b58_str
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib.new('ripemd160',hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
@@ -406,6 +405,8 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
+
+		from mmgen.baseconv import baseconv,is_b58_str
 
 		def b58dec(addr_str):
 			l = len(addr_str)
