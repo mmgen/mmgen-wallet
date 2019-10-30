@@ -120,6 +120,8 @@ class TestSuiteInput(TestSuiteBase):
 		('password_entry_echo',   (1,"utf8 password entry (echoed)", [])),
 		('mnemonic_entry_mmgen',  (1,"stealth mnemonic entry (MMGen native)", [])),
 		('mnemonic_entry_bip39',  (1,"stealth mnemonic entry (BIP39)", [])),
+		('dieroll_entry',         (1,"dieroll entry (base6d)", [])),
+		('dieroll_entry_usrrand', (1,"dieroll entry (base6d) with added user entropy", [])),
 	)
 
 	def password_entry(self,prompt,cmd_args):
@@ -150,12 +152,23 @@ class TestSuiteInput(TestSuiteBase):
 		if wcls.wclass == 'mnemonic':
 			mn = read_from_file(wf).strip().split()
 			mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
+		elif wcls.wclass == 'dieroll':
+			mn = list(read_from_file(wf).strip().translate(dict((ord(ws),None) for ws in '\t\n ')))
+			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
+				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
 		t.expect('{} type: {}'.format(capfirst(wcls.wclass),wcls.mn_type))
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
 		if wcls.wclass == 'mnemonic':
 			stealth_mnemonic_entry(t,mn,fmt=fmt)
+		elif wcls.wclass == 'dieroll':
+			user_dieroll_entry(t,mn)
+			if usr_rand:
+				t.expect(wcls.user_entropy_prompt,'y')
+				t.usr_rand(10)
+			else:
+				t.expect(wcls.user_entropy_prompt,'n')
 		if not usr_rand:
 			sid_chk = 'FE3C6545'
 			sid = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))[:8]
@@ -166,6 +179,8 @@ class TestSuiteInput(TestSuiteBase):
 
 	def mnemonic_entry_mmgen(self): return self._user_seed_entry('words')
 	def mnemonic_entry_bip39(self): return self._user_seed_entry('bip39')
+	def dieroll_entry(self):        return self._user_seed_entry('dieroll')
+	def dieroll_entry_usrrand(self):return self._user_seed_entry('dieroll',usr_rand=True,out_fmt='bip39')
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"tests for interactive 'mmgen-tool' commands"

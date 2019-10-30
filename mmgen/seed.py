@@ -1031,23 +1031,77 @@ class DieRollSeedFile(SeedSourceUnenc):
 	desc = 'base6d die roll seed data'
 	ext = 'b6d'
 	conv_cls = baseconv
+	wclass = 'dieroll'
+	wl_id = 'b6d'
+	mn_type = 'base6d'
+	choose_seedlen_prompt = 'Choose a seed length: 1) 128 bits, 2) 192 bits, 3) 256 bits: '
+	choose_seedlen_confirm = 'Seed length of {} bits chosen. OK?'
+	user_entropy_prompt = 'Would you like to provide some additional entropy from the keyboard?'
+	interactive_input = False
 
 	def _format(self):
 		d = baseconv.frombytes(self.seed.data,'b6d',pad='seed',tostr=True) + '\n'
 		self.fmt_data = block_format(d,gw=5,cols=5)
 
 	def _deformat(self):
+
 		d = self.fmt_data.translate(dict((ord(ws),None) for ws in '\t\n '))
 
 		# truncate seed to correct length, discarding high bits
 		seed_len = self.conv_cls.seedlen_map_rev['b6d'][len(d)]
 		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')[-seed_len:]
 
+		if self.interactive_input and opt.usr_randchars:
+			if keypress_confirm(self.user_entropy_prompt):
+				seed_bytes = add_user_random(seed_bytes,'die roll data')
+				self.desc += ' plus user-supplied entropy'
+
 		self.seed = Seed(seed_bytes)
 		self.ssdata.hexseed = seed_bytes.hex()
 
 		check_usr_seed_len(self.seed.bitlen)
 		return True
+
+	def _get_data_from_user(self,desc):
+
+		if not g.stdin_tty:
+			return get_data_from_user(desc)
+
+		seed_bitlens = [n*8 for n in sorted(self.conv_cls.seedlen_map['b6d'])]
+		seed_bitlen = self._choose_seedlen(self.wclass,seed_bitlens,self.mn_type)
+		nDierolls = self.conv_cls.seedlen_map['b6d'][seed_bitlen // 8]
+
+		m  = 'For a {sb}-bit seed you must roll the die {nd} times.  After each die roll,\n'
+		m += 'enter the result on the keyboard as a digit.  If you make an invalid entry,\n'
+		m += "you'll be prompted to re-enter it."
+
+		msg('\n'+m.format(sb=seed_bitlen,nd=nDierolls)+'\n')
+
+		b6d_digits = self.conv_cls.digits['b6d']
+
+		from mmgen.term import get_char,get_char
+		def get_digit(n):
+			p = '\b\b\b   \rEnter die roll #{}: '+ CUR_SHOW
+			sleep = 0.3
+			while True:
+				ch = get_char(p.format(n),num_chars=1,sleep=sleep).decode()
+				if ch in b6d_digits:
+					msg_r(CUR_HIDE + ' OK')
+					return ch
+				else:
+					msg_r(CUR_HIDE + '\rInvalid entry           ')
+					sleep = 0.7
+					p = '\r' + ' '*25 + CUR_SHOW + p
+
+		dierolls,n = [],1
+		while len(dierolls) < nDierolls:
+			dierolls.append(get_digit(n))
+			n += 1
+
+		msg('Die rolls successfully entered' + CUR_SHOW)
+		self.interactive_input = True
+
+		return ''.join(dierolls)
 
 class PlainHexSeedFile(SeedSourceUnenc):
 

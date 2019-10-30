@@ -173,3 +173,8 @@ def stealth_mnemonic_entry(t,mn,fmt):
 		for j in range(len(w)):
 			t.send(w[j])
 			time.sleep(0.005)
+
+def user_dieroll_entry(t,data):
+	for s in data:
+		t.expect(r'Enter die roll #.+: ',s,regex=True)
+		time.sleep(0.005)

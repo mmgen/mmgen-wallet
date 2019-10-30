@@ -96,6 +96,9 @@ def pp_fmt(d):
 def pp_msg(d):
 	msg(pp_fmt(d))
 
+CUR_HIDE = '\033[?25l'
+CUR_SHOW = '\033[?25h'
+
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
 	if type(refval) == bool:
