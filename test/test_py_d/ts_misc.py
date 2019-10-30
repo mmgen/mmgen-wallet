@@ -25,6 +25,7 @@ from test.common import *
 from test.test_py_d.common import *
 from test.test_py_d.ts_base import *
 from test.test_py_d.ts_main import TestSuiteMain
+from mmgen.seed import SeedSource
 
 class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
@@ -143,23 +144,28 @@ class TestSuiteInput(TestSuiteBase):
 			return 'skip' # pexpect double-escapes utf8, so skip
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def _mnemonic_entry(self,fmt,mn_name,wf):
-		mn = read_from_file(wf).strip().split()
-		mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
-		t = self.spawn('mmgen-walletconv',['-S','-i',fmt,'-o',fmt])
-		t.expect('Mnemonic type: {}'.format(mn_name))
-		t.expect('words: ','1')
+	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None):
+		wcls = SeedSource.fmt_code_to_type(fmt)
+		wf = os.path.join(ref_dir,'FE3C6545.{}'.format(wcls.ext))
+		if wcls.wclass == 'mnemonic':
+			mn = read_from_file(wf).strip().split()
+			mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
+		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
+		t.expect('{} type: {}'.format(capfirst(wcls.wclass),wcls.mn_type))
+		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
-		stealth_mnemonic_entry(t,mn,fmt=fmt)
-		sid_chk = 'FE3C6545'
-		sid = t.expect_getend('Valid {} mnemonic data for Seed ID '.format(mn_name))[:8]
-		assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
+		if wcls.wclass == 'mnemonic':
+			stealth_mnemonic_entry(t,mn,fmt=fmt)
+		if not usr_rand:
+			sid_chk = 'FE3C6545'
+			sid = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))[:8]
+			assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
 		t.expect('to confirm: ','YES\n')
 		t.read()
 		return t
 
-	def mnemonic_entry_mmgen(self): return self._mnemonic_entry('words','MMGen native',mn_words_mmgen)
-	def mnemonic_entry_bip39(self): return self._mnemonic_entry('bip39','BIP39',mn_words_bip39)
+	def mnemonic_entry_mmgen(self): return self._user_seed_entry('words')
+	def mnemonic_entry_bip39(self): return self._user_seed_entry('bip39')
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"tests for interactive 'mmgen-tool' commands"

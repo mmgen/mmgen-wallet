@@ -204,6 +204,9 @@ class g(object):
 	max_tx_file_size = 100000
 	max_input_size   = 1024 * 1024
 
+	# pexpect chokes on these utf8 chars under MSYS2
+	lq,rq = (('“','”'),('"','"'))[bool(os.getenv('MMGEN_TEST_SUITE')) and platform=='win']
+
 	passwd_max_tries = 5
 
 	max_urandchars = 80

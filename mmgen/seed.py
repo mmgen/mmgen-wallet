@@ -692,6 +692,29 @@ class SeedSourceUnenc(SeedSource):
 			self.ext,
 			x='-α' if g.debug_utf8 else '')
 
+	def _choose_seedlen(self,desc,ok_lens,subtype):
+
+		from mmgen.term import get_char
+
+		def choose_len():
+			prompt = self.choose_seedlen_prompt
+			while True:
+				r = get_char('\r'+prompt).decode()
+				if is_int(r) and 1 <= int(r) <= len(ok_lens):
+					break
+			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
+			return ok_lens[int(r)-1]
+
+		m1 = blue('{} type:'.format(capfirst(desc)))
+		m2 = yellow(subtype)
+		msg('{} {}'.format(m1,m2))
+
+		while True:
+			usr_len = choose_len()
+			prompt = self.choose_seedlen_confirm.format(usr_len)
+			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
+				return usr_len
+
 class SeedSourceEnc(SeedSource):
 
 	_msg = {
@@ -819,40 +842,28 @@ class MMGenMnemonic(SeedSourceUnenc):
 	stdin_ok = True
 	fmt_codes = 'mmwords','words','mnemonic','mnem','mn','m'
 	desc = 'MMGen native mnemonic data'
-	mn_name = 'MMGen native'
+	wclass = 'mnemonic'
+	mn_type = 'MMGen native'
 	ext = 'mmwords'
-	mn_lens = [i // 32 * 3 for i in g.seed_lens]
 	wl_id = 'mmgen'
 	conv_cls = baseconv
+	choose_seedlen_prompt = 'Choose a mnemonic length: 1) 12 words, 2) 18 words, 3) 24 words: '
+	choose_seedlen_confirm = 'Mnemonic length of {} words chosen. OK?'
+
+	@property
+	def mn_lens(self):
+		return sorted(self.conv_cls.seedlen_map_rev[self.wl_id])
 
 	def _get_data_from_user(self,desc):
 
 		if not g.stdin_tty:
 			return get_data_from_user(desc)
 
-		from mmgen.term import get_char_raw,get_char
-
-		def choose_mn_len():
-			prompt = 'Choose a mnemonic length: 1) 12 words, 2) 18 words, 3) 24 words: '
-			urange = [str(i+1) for i in range(len(self.mn_lens))]
-			while True:
-				r = get_char('\r'+prompt).decode()
-				if r in urange: break
-			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
-			return self.mn_lens[int(r)-1]
-
-		msg('{} {}'.format(blue('Mnemonic type:'),yellow(self.mn_name)))
-
-		while True:
-			mn_len = choose_mn_len()
-			prompt = 'Mnemonic length of {} words chosen. OK?'.format(mn_len)
-			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
-				break
+		mn_len = self._choose_seedlen(self.wclass,self.mn_lens,self.mn_type)
 
 		self.conv_cls.init_mn(self.wl_id)
 		wl = self.conv_cls.digits[self.wl_id]
 		longest_word = max(len(w) for w in wl)
-		from string import ascii_lowercase
 
 		m  = 'Enter your {ml}-word seed phrase, hitting ENTER or SPACE after each word.\n'
 		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
@@ -861,10 +872,10 @@ class MMGenMnemonic(SeedSourceUnenc):
 		m += "of words.  For each word, once you've typed {lw} characters total (including\n"
 		m += 'pad characters) any pad character will enter the word.'
 
-		# pexpect chokes on these utf8 chars under MSYS2
-		lq,rq = (('“','”'),('"','"'))[g.test_suite and g.platform=='win']
-		msg(m.format(ml=mn_len,lw=longest_word,lq=lq,rq=rq))
+		msg(m.format(ml=mn_len,lw=longest_word,lq=g.lq,rq=g.rq))
 
+		from string import ascii_lowercase
+		from mmgen.term import get_char_raw
 		def get_word():
 			s,pad = '',0
 			while True:
@@ -954,7 +965,7 @@ class BIP39Mnemonic(MMGenMnemonic):
 
 	fmt_codes = ('bip39',)
 	desc = 'BIP39 mnemonic data'
-	mn_name = 'BIP39'
+	mn_type = 'BIP39'
 	ext = 'bip39'
 	wl_id = 'bip39'
 

@@ -2082,6 +2082,8 @@ zoo
 
 	mn_base = 2048
 	wl_chksums = { 'bip39': 'f18b9a84' }
+	seedlen_map     = { 'bip39': { 16:12, 24:18, 32:24 } }
+	seedlen_map_rev = { 'bip39': { 12:16, 18:24, 24:32 } }
 	#    ENT   CS  MS
 	constants = {
 		'128': (4, 12),
