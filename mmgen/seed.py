@@ -1019,6 +1019,7 @@ class DieRollSeedFile(SeedSourceUnenc):
 	fmt_codes = 'b6d','die','dieroll',
 	desc = 'base6d die roll seed data'
 	ext = 'b6d'
+	conv_cls = baseconv
 
 	def _format(self):
 		d = baseconv.frombytes(self.seed.data,'b6d',pad='seed',tostr=True) + '\n'
@@ -1026,7 +1027,10 @@ class DieRollSeedFile(SeedSourceUnenc):
 
 	def _deformat(self):
 		d = self.fmt_data.translate(dict((ord(ws),None) for ws in '\t\n '))
-		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')
+
+		# truncate seed to correct length, discarding high bits
+		seed_len = self.conv_cls.seedlen_map_rev['b6d'][len(d)]
+		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')[-seed_len:]
 
 		self.seed = Seed(seed_bytes)
 		self.ssdata.hexseed = seed_bytes.hex()

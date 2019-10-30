@@ -129,6 +129,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 #	('txcreate8',          'transaction creation (8)'),
 		('ref_tx_chk',         'signing saved reference tx file'),
 		('ref_brain_chk_spc3', 'saved brainwallet (non-standard spacing)'),
+		('ref_dieroll_chk_overflow','saved dieroll wallet with extra entropy bits'),
 		('ref_tool_decrypt',   'decryption of saved MMGen-encrypted file'),
 	)
 
@@ -264,6 +265,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	def ref_brain_chk_spc3(self):
 		return self.ref_brain_chk(bw_file=ref_bw_file_spc)
+
+	def ref_dieroll_chk_overflow(self):
+		wf = joinpath(ref_dir,'overflow128.b6d')
+		return self.walletchk(wf,None,sid='8EC6D4A2')
 
 	def ref_tool_decrypt(self):
 		f = joinpath(ref_dir,ref_enc_fn)
