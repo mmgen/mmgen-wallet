@@ -276,7 +276,7 @@ tests = {
 		],
 		'randb58': [
 			( [], {'boolfunc':is_b58_str}, ['-r0'] ),
-			( ['nbytes=16'], {'boolfunc':is_b58_str,'len':22}, ['-r0'] ),
+			( ['nbytes=16'], {'boolfunc':is_b58_str}, ['-r0'] ),
 			( ['nbytes=12','pad=0'], is_b58_str, ['-r0'] ),
 		],
 	},

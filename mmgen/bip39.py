@@ -2114,8 +2114,8 @@ zoo
 
 		wl = cls.digits[wl_id]
 
-		for n in range(len(words)):
-			if words[n] not in wl:
+		for n,w in enumerate(words):
+			if w not in wl:
 				raise MnemonicError('word #{} is not in the BIP39 word list'.format(n+1))
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])

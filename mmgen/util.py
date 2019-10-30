@@ -268,12 +268,12 @@ def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower())
 def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
 def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))
 
+def is_utf8(s):
+	return is_ascii(s,enc='utf8')
 def is_ascii(s,enc='ascii'):
 	try:    s.decode(enc)
 	except: return False
 	else:   return True
-
-def is_utf8(s): return is_ascii(s,enc='utf8')
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
