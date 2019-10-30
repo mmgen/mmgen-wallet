@@ -511,8 +511,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.usr_rand(self.usr_rand_chars)
 
 		if ocls.__name__.startswith('Incog'):
-			m = 'Generating encryption key from OS random data '
-			t.expect(m); t.expect(m)
+			m = 'Encrypting OS random data with key'
+			t.expect(m)
+			t.expect(m)
 			incog_id = t.expect_getend('New Incog Wallet ID: ')
 			t.expect(m)
 		if ocls == IncogWalletHidden:

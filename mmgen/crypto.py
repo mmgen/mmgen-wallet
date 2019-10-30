@@ -27,12 +27,22 @@ from mmgen.common import *
 
 crmsg = {
 	'usr_rand_notice': """
-Since we don't fully trust our OS's random number generator, we'll provide
-some additional entropy of our own.  Please type {} symbols on your keyboard.
-Type slowly and choose your symbols carefully for maximum randomness.  Try to
-use both upper and lowercase as well as punctuation and numerals.  What you
-type will not be displayed on the screen.  Note that the timings between your
-keystrokes will also be used as a source of randomness.
+Now we're going to gather some additional input from the keyboard to
+further randomize the {d} we've already gathered.
+
+An encryption key will be created from this input, and the {d}
+will be encrypted using the key.  The resulting data is guaranteed to be at
+least as random as the original {d}, so even if you type very
+predictably no harm will be done.
+
+However, to gain the maximum benefit, try making your input as random as
+possible.  Type slowly and choose your symbols carefully.  Try to use both
+upper and lowercase as well as punctuation and numerals.  The timings between
+your keystrokes will also be used as a source of entropy, so be as
+unpredictable as possible in your timing as well.
+
+Please type {r} symbols on your keyboard.  What you type will not be displayed
+on the screen.
 """
 }
 
@@ -142,9 +152,9 @@ def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase
 	dmsg('Key: {}'.format(key.hex()))
 	return key
 
-def _get_random_data_from_user(uchars):
-	m = 'Enter {} random symbols' if opt.quiet else crmsg['usr_rand_notice']
-	msg(m.format(uchars))
+def _get_random_data_from_user(uchars,desc):
+	m = 'Enter {r} random symbols' if opt.quiet else crmsg['usr_rand_notice']
+	msg(m.format(r=uchars,d=desc))
 	prompt = 'You may begin typing.  {} symbols left: '
 
 	import time
@@ -163,22 +173,26 @@ def _get_random_data_from_user(uchars):
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
 
-	return key_data+''.join(fmt_time_data).encode()
+	return key_data + ''.join(fmt_time_data).encode()
 
 def get_random(length):
-	os_rand = os.urandom(length)
+	return add_user_random(os.urandom(length),'OS random data')
+
+def add_user_random(rand_bytes,desc):
+	assert type(rand_bytes) == bytes, (
+		"{!r}: invalid type for 'rand_bytes'".format(type(rand_bytes).__name__) )
 	if opt.usr_randchars:
-		from_what = 'OS random data'
 		if not g.user_entropy:
 			g.user_entropy = \
-				sha256(_get_random_data_from_user(opt.usr_randchars)).digest()
-			from_what += ' plus user-supplied entropy'
+				sha256(_get_random_data_from_user(opt.usr_randchars,desc)).digest()
+			urand_desc = 'user-supplied entropy'
 		else:
-			from_what += ' plus saved user-supplied entropy'
-		key = make_key(g.user_entropy,b'','2',from_what=from_what,verbose=True)
-		return encrypt_data(os_rand,key,desc='random data',verify=False)
+			urand_desc = 'saved user-supplied entropy'
+		key = make_key(g.user_entropy,b'','2',from_what=urand_desc,verbose=True)
+		msg('Encrypting {} with key'.format(desc))
+		return encrypt_data(rand_bytes,key,desc=desc,verify=False)
 	else:
-		return os_rand
+		return rand_bytes
 
 def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
 	prompt = """Enter hash preset for {},

@@ -208,7 +208,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 			t.usr_rand(self.usr_rand_chars)
 		if wcls in (IncogWallet,IncogWalletHex,IncogWalletHidden):
 			for i in (1,2,3):
-				t.expect('Generating encryption key from OS random data ')
+				t.expect('Encrypting OS random data with key')
 		if wcls == IncogWalletHidden:
 			t.hincog_create(hincog_bytes)
 		if out_fmt == 'w':

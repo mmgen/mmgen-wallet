@@ -95,10 +95,6 @@ class MMGenPexpect(object):
 	def label(self,label='Test Label (UTF-8) α'):
 		self.expect('Enter a wallet label, or hit ENTER for no label: ',label+'\n')
 
-	def usr_rand_out(self,saved=False):
-		fs = 'Generating encryption key from OS random data plus {}user-supplied entropy'
-		self.expect(fs.format(('','saved ')[saved]))
-
 	def usr_rand(self,num_chars):
 		if opt.usr_random:
 			self.interactive()
