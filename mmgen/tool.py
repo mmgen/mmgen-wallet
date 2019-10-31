@@ -355,6 +355,15 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		"convert an MMGen-flavor base 32 number to hexadecimal"
 		return baseconv.tohex(b32num.upper(),'b32',pad)
 
+	def hextob6d(self,hexstr:'sstr',pad=0,add_spaces=True):
+		"convert a hexadecimal number to die roll base6 (base6d)"
+		ret = baseconv.fromhex(hexstr,'b6d',pad,tostr=True)
+		return block_format(ret,gw=5,cols=None).strip() if add_spaces else ret
+
+	def b6dtohex(self,b6d_num:'sstr',pad=0):
+		"convert a die roll base6 (base6d) number to hexadecimal"
+		return baseconv.tohex(remove_whitespace(b6d_num),'b6d',pad)
+
 class MMGenToolCmdCoin(MMGenToolCmdBase):
 	"""
 	cryptocoin key/address utilities

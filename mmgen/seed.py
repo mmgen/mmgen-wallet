@@ -1045,10 +1045,15 @@ class DieRollSeedFile(SeedSourceUnenc):
 
 	def _deformat(self):
 
-		d = self.fmt_data.translate(dict((ord(ws),None) for ws in '\t\n '))
+		d = remove_whitespace(self.fmt_data)
+
+		rmap = self.conv_cls.seedlen_map_rev['b6d']
+		if not len(d) in rmap:
+			m = '{!r}: invalid length for {} (must be one of {})'
+			raise SeedLengthError(m.format(len(d),self.desc,list(rmap)))
 
 		# truncate seed to correct length, discarding high bits
-		seed_len = self.conv_cls.seedlen_map_rev['b6d'][len(d)]
+		seed_len = rmap[len(d)]
 		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')[-seed_len:]
 
 		if self.interactive_input and opt.usr_randchars:
