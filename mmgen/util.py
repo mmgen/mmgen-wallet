@@ -301,6 +301,9 @@ def get_from_brain_opt_params():
 	l,p = opt.from_brain.split(',')
 	return(int(l),p)
 
+def remove_whitespace(s):
+	return s.translate(dict((ord(ws),None) for ws in '\t\r\n '))
+
 def pretty_format(s,width=80,pfx=''):
 	out = []
 	while(s):
@@ -322,7 +325,7 @@ def block_format(data,gw=2,cols=8,line_nums=None,data_is_hex=False):
 	return ''.join(
 		('' if (line_nums == None or i % cols) else ln_fs.format(i*bytes_per_chunk))
 		+ data[i*gw:i*gw+gw]
-		+ (' ' if (i+1) % cols else '\n')
+		+ (' ' if (not cols or (i+1) % cols) else '\n')
 			for i in range(nchunks)
 	).rstrip() + '\n'
 

@@ -185,8 +185,8 @@ do_test() {
 		echo -e "${GREEN}Running:$RESET $YELLOW$test$RESET"
 #		continue
 		[ "$TESTING" ] || eval "$test" || {
-			echo -e $RED"Test '$CUR_TEST' failed at command '$test'"$RESET
-			exit
+			echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
+			exit 1
 		}
 	done
 }

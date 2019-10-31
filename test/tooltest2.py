@@ -51,7 +51,7 @@ def md5_hash_strip(s):
 opts_data = {
 	'text': {
 		'desc': "Simple test suite for the 'mmgen-tool' utility",
-		'usage':'[options] [command]',
+		'usage':'[options] [command]...',
 		'options': """
 -h, --help           Print this help message
 -C, --coverage       Produce code coverage info using trace module
@@ -706,22 +706,28 @@ def run_test(gid,cmd_name):
 		try:    vmsg('Output:\n{}\n'.format(cmd_out))
 		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
 
-		def check_output(cmd_out,out):
+		def check_output(out,chk):
+			if isinstance(chk,str): chk = chk.encode()
+			if isinstance(out,int): out = str(out).encode()
 			if isinstance(out,str): out = out.encode()
-			if isinstance(cmd_out,int): cmd_out = str(cmd_out).encode()
-			if isinstance(cmd_out,str): cmd_out = cmd_out.encode()
+			err_fs = "Output ({!r}) doesn't match expected output ({!r})"
+			try: outd = out.decode()
+			except: outd = None
 
-			if type(out).__name__ == 'function':
-				assert out(cmd_out.decode()),"{}({}) failed!".format(out.__name__,cmd_out.decode())
-			elif type(out) == dict:
-				for k in out:
+			if type(chk).__name__ == 'function':
+				assert chk(outd),"{}({}) failed!".format(chk.__name__,outd)
+			elif type(chk) == dict:
+				for k,v in chk.items():
 					if k == 'boolfunc':
-						assert out[k](cmd_out.decode()),"{}({}) failed!".format(out[k].__name__,cmd_out.decod())
+						assert v(outd),"{}({}) failed!".format(v.__name__,outd)
+					elif k == 'value':
+						assert outd == v, err_fs.format(outd,v)
 					else:
-						if not getattr(__builtins__,k)(cmd_out) == out[k]:
-							die(1,"{}({}) did not return {}!".format(k,cmd_out,out[k]))
-			elif out is not None:
-				assert cmd_out == out,"Output ({!r}) doesn't match expected output ({!r})".format(cmd_out,out)
+						outval = getattr(__builtins__,k)(out)
+						if outval != v:
+							die(1,"{}({}) returned {}, not {}!".format(k,out,outval,v))
+			elif chk is not None:
+				assert out == chk, err_fs.format(out,chk)
 
 		if type(out) == tuple and type(out[0]).__name__ == 'function':
 			func_out = out[0](cmd_out)
@@ -815,14 +821,12 @@ start_time = int(time.time())
 
 try:
 	if cmd_args:
-		if len(cmd_args) != 1:
-			die(1,'Only one command may be specified')
-		cmd = cmd_args[0]
-		if cmd in tests:
-			do_group(cmd)
-		else:
-			if not do_cmd_in_group(cmd):
-				die(1,"'{}': not a recognized test or test group".format(cmd))
+		for cmd in cmd_args:
+			if cmd in tests:
+				do_group(cmd)
+			else:
+				if not do_cmd_in_group(cmd):
+					die(1,"'{}': not a recognized test or test group".format(cmd))
 	else:
 		for garg in tests:
 			do_group(garg)
