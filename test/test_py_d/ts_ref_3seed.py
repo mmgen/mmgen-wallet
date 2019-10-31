@@ -42,6 +42,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'lens': (128, 192, 256),
 		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
 	}
+	shared_deps = ['mmdat',pwfile]
 	cmd_group = (
 		# reading saved reference wallets
 		('ref_wallet_chk',  ([],'saved reference wallet')),
@@ -189,6 +190,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 class TestSuiteRef3Addr(TestSuiteRef3Seed):
 	'generated reference address, key and password files for 128-, 192- and 256-bit seeds'
 	tmpdir_nums = [26,27,28]
+	shared_deps = ['mmdat',pwfile]
 
 	chk_data = {
 		'lens': (128, 192, 256),

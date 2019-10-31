@@ -501,14 +501,24 @@ class CmdGroupMgr(object):
 		cls = self.load_mod(gname,modname)
 		cdata = []
 
+		def get_shared_deps(cmdname,tmpdir_idx):
+			"""
+			shared_deps are "implied" dependencies for all cmds in cmd_group that don't appear in
+			the cmd_group data or cmds' argument lists.  Supported only for 3seed tests at present.
+			"""
+			if not hasattr(cls,'shared_deps'): return []
+			return [k for k,v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
+						if k in cls.shared_deps and v != cmdname]
+
 		for a,b in cls.cmd_group:
 			if is3seed:
 				for n,(i,j) in enumerate(zip(cls.tmpdir_nums,(128,192,256))):
 					k = '{}_{}'.format(a,n+1)
+					sdeps = get_shared_deps(k,i)
 					if type(b) == str:
-						cdata.append( (k, (i,'{} ({}-bit)'.format(b,j),[[[],i]])) )
+						cdata.append( (k, (i,'{} ({}-bit)'.format(b,j),[[[]+sdeps,i]])) )
 					else:
-						cdata.append( (k, (i,'{} ({}-bit)'.format(b[1],j),[[b[0],i]])) )
+						cdata.append( (k, (i,'{} ({}-bit)'.format(b[1],j),[[b[0]+sdeps,i]])) )
 			else:
 				cdata.append( (a, b if full_data else (cls.tmpdir_nums[0],b,[[[],cls.tmpdir_nums[0]]])) )
 
@@ -639,7 +649,7 @@ class TestSuiteRunner(object):
 		m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
 		sys.stderr.write(green(m.format(self.cmd_total,suf(self.cmd_total),t//60,t%60)))
 
-	def init_group(self,gname,cmd=None):
+	def init_group(self,gname,cmd=None,quiet=False):
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
 		for k in ('segwit','segwit_random','bech32'):
@@ -671,7 +681,8 @@ class TestSuiteRunner(object):
 				iqmsg('INFO → skipping ' + m)
 				return False
 
-		bmsg('Executing ' + m)
+		if not quiet:
+			bmsg('Executing ' + m)
 
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 
@@ -682,6 +693,7 @@ class TestSuiteRunner(object):
 
 	def run_tests(self,usr_args):
 		self.start_time = int(time.time())
+		gname_save = None
 		if usr_args:
 			for arg in usr_args:
 				if arg in self.gm.cmd_groups:
@@ -700,10 +712,14 @@ class TestSuiteRunner(object):
 					else:
 						gname = self.gm.find_cmd_in_groups(arg)
 					if gname:
-						if not self.init_group(gname,arg): continue
-						clean(self.ts.tmpdir_nums)
+						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
+						if not self.init_group(gname,arg,quiet=same_grp):
+							continue
+						if not same_grp:
+							clean(self.ts.tmpdir_nums)
 						self.check_needs_rerun(arg,build=True)
 						do_between()
+						gname_save = gname
 					else:
 						die(1,'{!r}: command not recognized'.format(arg))
 		else:
@@ -782,6 +798,10 @@ class TestSuiteRunner(object):
 
 		# delete files depended on by this cmd
 		arg_list = [get_file_with_ext(cfgs[num]['tmpdir'],ext) for num,ext in d]
+
+		# remove shared_deps from arg list
+		if hasattr(self.ts,'shared_deps'):
+			arg_list = arg_list[:-len(self.ts.shared_deps)]
 
 		if opt.resume:
 			if cmd == opt.resume:
