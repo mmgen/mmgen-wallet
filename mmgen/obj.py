@@ -689,6 +689,10 @@ class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower'
 class MMGenTxID(HexStr):      color,width,hexcase = 'red',6,'upper'
 
 class WifKey(str,Hilite,InitErrors):
+	"""
+	Initialize a WIF key, checking its well-formedness.
+	The numeric validity of the private key it encodes is not checked.
+	"""
 	width = 53
 	color = 'blue'
 	def __new__(cls,s,on_fail='die'):
@@ -697,7 +701,7 @@ class WifKey(str,Hilite,InitErrors):
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 			from mmgen.globalvars import g
-			g.proto.wif2hex(s) # raises exception on error
+			g.proto.parse_wif(s) # raises exception on error
 			return str.__new__(cls,s)
 		except Exception as e:
 			return cls.init_fail(e,s)
@@ -714,7 +718,12 @@ class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 			return me
 
 class PrivKey(str,Hilite,InitErrors,MMGenObject):
-
+	"""
+	Input:   a) raw, non-preprocessed bytes; or b) WIF key.
+	Output:  preprocessed hexadecimal key, plus WIF key in 'wif' attribute
+	For coins without a WIF format, 'wif' contains the preprocessed hex.
+	The numeric validity of the resulting key is always checked.
+	"""
 	color = 'red'
 	width = 64
 	trunc_ok = False
@@ -733,18 +742,21 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			try:
 				assert s == None,"'wif' and key hex args are mutually exclusive"
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-				w2h = g.proto.wif2hex(wif) # raises exception on error
-				me = str.__new__(cls,w2h['hex'])
-				me.compressed = w2h['compressed']
-				me.pubkey_type = w2h['pubkey_type']
+				k = g.proto.parse_wif(wif) # raises exception on error
+				me = str.__new__(cls,k.sec.hex())
+				me.compressed = k.compressed
+				me.pubkey_type = k.pubkey_type
 				me.wif = str.__new__(WifKey,wif) # check has been done
 				me.orig_hex = None
+				if k.sec != g.proto.preprocess_key(k.sec,k.pubkey_type):
+					m = '{} WIF key {!r} encodes private key with unacceptable value {}'
+					raise PrivateKeyError(m.format(g.proto.__name__,me.wif,me))
 				return me
 			except Exception as e:
 				return cls.init_fail(e,s,objname='{} WIF key'.format(g.coin))
 		else:
 			try:
-				assert s,'private key bin data missing'
+				assert s,'private key bytes data missing'
 				assert pubkey_type is not None,"'pubkey_type' arg missing"
 				assert len(s) == cls.width // 2,'key length must be {}'.format(cls.width // 2)
 				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
@@ -752,7 +764,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				else:
 					assert compressed is not None, "'compressed' arg missing"
 					assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
-					me = str.__new__(cls,g.proto.preprocess_key(s.hex(),pubkey_type))
+					me = str.__new__(cls,g.proto.preprocess_key(s,pubkey_type).hex())
 					me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 					me.compressed = compressed
 				me.pubkey_type = pubkey_type

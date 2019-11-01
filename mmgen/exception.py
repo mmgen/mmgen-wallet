@@ -48,6 +48,7 @@ class MaxInputSizeExceeded(Exception):    mmcode = 3
 class WalletFileError(Exception):         mmcode = 3
 class HexadecimalStringError(Exception):  mmcode = 3
 class SeedLengthError(Exception):         mmcode = 3
+class PrivateKeyError(Exception):         mmcode = 3
 
 # 4: red hl, 'MMGen Fatal Error' + exception + message
 class BadMMGenTxID(Exception):            mmcode = 4

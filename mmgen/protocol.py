@@ -21,10 +21,14 @@ protocol.py: Coin protocol functions, classes and methods
 """
 
 import sys,os,hashlib
+from collections import namedtuple
+
 from mmgen.util import msg,ymsg,Msg,ydie
 from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
+
+parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib.new('ripemd160',hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
@@ -108,19 +112,19 @@ class BitcoinProtocol(MMGenObject):
 	def cap(cls,s): return s in cls.caps
 
 	@classmethod
-	def preprocess_key(cls,hexpriv,pubkey_type):
+	def preprocess_key(cls,sec,pubkey_type):
 		# Key must be non-zero and less than group order of secp256k1 curve
-		if 0 < int(hexpriv,16) < cls.secp256k1_ge:
-			return hexpriv
+		if 0 < int.from_bytes(sec,'big') < cls.secp256k1_ge:
+			return sec
 		else: # chance of this is less than 1 in 2^127
-			pk = int(hexpriv,16)
+			pk = int.from_bytes(sec,'big')
 			if pk == 0: # chance of this is 1 in 2^256
 				ydie(3,'Private key is zero!')
 			elif pk == cls.secp256k1_ge: # ditto
 				ydie(3,'Private key == secp256k1_ge!')
 			else:
-				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(hexpriv))
-				return '{:064x}'.format(pk % cls.secp256k1_ge).encode()
+				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(sec.hex()))
+				return (pk % cls.secp256k1_ge).to_bytes(cls.privkey_len,'big')
 
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
@@ -129,7 +133,7 @@ class BitcoinProtocol(MMGenObject):
 		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + ('','01')[bool(compressed)])
 
 	@classmethod
-	def wif2hex(cls,wif):
+	def parse_wif(cls,wif):
 		key = _b58chk_decode(wif)
 		pubkey_type = None
 		for k,v in list(cls.wif_ver_num.items()):
@@ -143,9 +147,8 @@ class BitcoinProtocol(MMGenObject):
 		else:
 			assert len(key) == 64,'invalid key length'
 			compressed = False
-		assert 0 < int(key[:64],16) < cls.secp256k1_ge,(
-			"'{}': invalid WIF (produces key outside allowable range)".format(wif))
-		return { 'hex':key[:64], 'pubkey_type':pubkey_type, 'compressed':compressed }
+
+		return parsed_wif(bytes.fromhex(key[:64]), pubkey_type, compressed)
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
@@ -296,8 +299,8 @@ class DummyWIF(object):
 		return hexpriv
 
 	@classmethod
-	def wif2hex(cls,wif):
-		return { 'hex':wif, 'pubkey_type':cls.pubkey_type, 'compressed':False }
+	def parse_wif(cls,wif):
+		return parsed_wif(bytes.fromhex(wif), cls.pubkey_type, False)
 
 class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
@@ -362,11 +365,11 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 	dfl_mmtype   = 'L'
 
 	@classmethod
-	def preprocess_key(cls,hexpriv,pubkey_type): # zero the first four bits
-		if pubkey_type == 'zcash_z':
-			return '{:02x}'.format(int(hexpriv[:2],16) & 0x0f) + hexpriv[2:]
+	def preprocess_key(cls,sec,pubkey_type):
+		if pubkey_type == 'zcash_z': # zero the first four bits
+			return bytes([sec[0] & 0x0f]) + sec[1:]
 		else:
-			return hexpriv
+			return super(cls,cls).preprocess_key(sec,pubkey_type)
 
 	@classmethod
 	def pubhash2addr(cls,pubkey_hash,p2sh):
@@ -398,10 +401,10 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	pubkey_type = 'monero' # required by DummyWIF
 
 	@classmethod
-	def preprocess_key(cls,hexpriv,pubkey_type): # reduce key
+	def preprocess_key(cls,sec,pubkey_type): # reduce key
 		from mmgen.ed25519 import l
-		n = int(bytes.fromhex(hexpriv)[::-1].hex(),16) % l
-		return bytes.fromhex('{:064x}'.format(n))[::-1].hex()
+		n = int.from_bytes(sec[::-1],'big') % l
+		return int.to_bytes(n,cls.privkey_len,'big')[::-1]
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):

@@ -204,7 +204,7 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def to_viewkey(self,sk_hex):
 		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
-		return MoneroViewKey(g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).hexdigest(),None))
+		return MoneroViewKey(g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex())
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')
