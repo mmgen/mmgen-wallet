@@ -124,7 +124,8 @@ class BitcoinProtocol(MMGenObject):
 			elif pk == cls.secp256k1_ge: # ditto
 				ydie(3,'Private key == secp256k1_ge!')
 			else:
-				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(sec.hex()))
+				if not g.test_suite:
+					ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(hexpriv))
 				return (pk % cls.secp256k1_ge).to_bytes(cls.privkey_len,'big')
 
 	@classmethod

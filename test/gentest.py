@@ -228,6 +228,20 @@ def compare_test():
 				'\ninput:    {b}\n%-9s {k}\nvkey:     {v}\naddr:     {a}\n')[
 					'viewkey' in addr_type.extra_attrs] % (addr_type.wif_label + ':')
 
+	# test some important private key edge cases:
+	edgecase_sks = (
+		bytes([0x00]*31 + [0x01]), # min
+		bytes([0xff]*32),          # max
+		bytes([0x0f] + [0xff]*31), # same key as above for zcash-z
+		bytes([0x00]*31 + [0xff]), # monero will reduce
+		bytes([0xff]*31 + [0x0f]), # monero will not reduce
+	)
+
+	qmsg(purple('edge cases:'))
+	for i,in_bytes in enumerate(edgecase_sks):
+		do_compare_test(i,len(edgecase_sks),in_bytes)
+	qmsg(green('\rOK            ' if opt.verbose else 'OK'))
+
 	qmsg(purple('random input:'))
 	for i in range(rounds):
 		do_compare_test(i,rounds,os.urandom(32))
