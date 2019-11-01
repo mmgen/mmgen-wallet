@@ -66,6 +66,7 @@ EXAMPLES:
   External libraries required for the 'ext' generator:
     + ethkey     (for ETH,ETC)           https://github.com/paritytech/parity-ethereum
     + zcash-mini (for zcash_z addresses) https://github.com/FiloSottile/zcash-mini
+    + moneropy   (for Monero addresses)  https://github.com/bigreddmachine/MoneroPy
     + pycoin     (for supported coins)   https://github.com/richardkiss/pycoin
     + keyconv    (for all other coins)   https://github.com/exploitagency/vanitygen-plus
                  ('keyconv' generates uncompressed addresses only)
@@ -121,6 +122,10 @@ def pycoin_sec2addr(sec):
 		addr = key.address()
 	return (key.wif(),addr)
 
+def moneropy_sec2addr(sec):
+	sk_t,vk_t,addr_t = mp_acc.account_from_spend_key(sec) # VERY slow!
+	return (sk_t,addr_t,vk_t)
+
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
 	global b,b_desc,ext_prog,ext_sec2addr,eth,addr_type
@@ -148,6 +153,16 @@ def init_external_prog():
 			raise ImportError("Unable to import pycoin.networks.registry Is pycoin installed and up-to-date?")
 		ext_sec2addr = pycoin_sec2addr
 		ext_prog = 'pycoin'
+	elif test_support('moneropy'):
+		global mp_acc
+		try:
+			import moneropy.account as mp_acc
+		except:
+			raise ImportError("Unable to import moneropy.  Is moneropy installed on your system?")
+		ext_sec2addr = moneropy_sec2addr
+		init_coin('xmr')
+		ext_prog = 'moneropy'
+		addr_type = MMGenAddrType('M')
 	elif test_support('keyconv'):
 		ext_sec2addr = keyconv_sec2addr
 		ext_prog = 'keyconv'
@@ -291,7 +306,7 @@ else:
 	try:
 		a = int(a)
 		assert 1 <= a <= len(g.key_generators),'{}: invalid key generator'.format(a)
-		if b in ('ext','ethkey','pycoin','keyconv','zcash_mini'):
+		if b in ('ext','ethkey','pycoin','keyconv','zcash_mini','moneropy'):
 			init_external_prog()
 		else:
 			b = int(b)

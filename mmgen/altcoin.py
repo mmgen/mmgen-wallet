@@ -497,6 +497,7 @@ class CoinInfo(object):
 	trust_override = {'BTC':3,'BCH':3,'LTC':3,'DASH':1,'EMC':2}
 	external_tests = {
 		'mainnet': {
+			'moneropy': ('XMR',),
 			'pycoin': (
 				# broken: DASH - only compressed, LTC segwit old fmt
 				'BTC','LTC','VIA','FTC','DOGE','MEC',

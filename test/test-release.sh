@@ -278,6 +278,7 @@ t_alts="
 		$gentest_py --coin=zec 2:ext $rounds
 		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
 		$gentest_py --all 2:zcash_mini $rounds_mid
+		$gentest_py --all 2:moneropy $rounds_min
 	"
 }
 
