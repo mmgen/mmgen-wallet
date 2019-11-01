@@ -95,7 +95,7 @@ def get_cmd_output(cmd,input=None):
 
 def ethkey_sec2addr(sec):
 	o = get_cmd_output(['ethkey','info',sec])
-	return (sec,o[-1].split()[1])
+	return (o[0].split()[1],o[-1].split()[1])
 
 def keyconv_sec2addr(sec):
 	o = get_cmd_output(['keyconv','-C',g.coin,sec.wif])
@@ -103,7 +103,7 @@ def keyconv_sec2addr(sec):
 
 def zcash_mini_sec2addr(sec):
 	o = get_cmd_output(['zcash-mini','-key','-simple'],input=(sec.wif+'\n').encode())
-	return (sec.wif,o[0],o[-1])
+	return (o[1],o[0],o[-1])
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
