@@ -217,8 +217,8 @@ def speed_test():
 	qmsg(green(m.format(kg_a.desc,g.coin)))
 	from struct import pack,unpack
 	seed = os.urandom(28)
-	print('Incrementing key with each round')
-	print('Starting key:', (seed + pack('I',0)).hex())
+	qmsg('Incrementing key with each round')
+	qmsg('Starting key: {}'.format((seed + pack('I',0)).hex()))
 	import time
 	start = last_t = time.time()
 

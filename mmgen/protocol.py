@@ -24,7 +24,8 @@ import sys,os,hashlib
 from collections import namedtuple
 
 from mmgen.util import msg,ymsg,Msg,ydie
-from mmgen.obj import MMGenObject,BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
+from mmgen.devtools import *
+from mmgen.obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
 from mmgen.globalvars import g
 import mmgen.bech32 as bech32
 

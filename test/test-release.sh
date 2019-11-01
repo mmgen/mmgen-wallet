@@ -10,7 +10,8 @@ elif uname -a | grep -q 'MSYS'; then
 	SUDO='' MSYS2=1;
 fi
 
-RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" RESET="\e[0m"
+RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
+RESET="\e[0m"
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
@@ -25,8 +26,8 @@ objattrtest_py='test/objattrtest.py'
 colortest_py='test/colortest.py'
 unit_tests_py='test/unit_tests.py --names --quiet'
 tooltest_py='test/tooltest.py'
-tooltest2_py='test/tooltest2.py --names'
-gentest_py='test/gentest.py'
+tooltest2_py='test/tooltest2.py --names --quiet'
+gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
@@ -34,7 +35,7 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj color unit hash alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -108,9 +109,11 @@ do
 	t)  TESTING=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
-		tooltest_py+=" --verbose" tooltest2_py+=" --verbose"
-		gentest_py+=" --verbose" mmgen_tool+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
+		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
+		gentest_py="${gentest_py/--quiet/--verbose}"
+		tooltest_py+=" --verbose"
+		mmgen_tool+=" --verbose"
 		objattrtest_py+=" --verbose"
 		scrambletest_py+=" --verbose" ;;
 	*)  exit ;;
@@ -179,10 +182,12 @@ do_test() {
 
 	n=0
 	for test in "${tests_arr[@]}"; do
-		[ -z "$test" -o "${test:0:1}" == '#' ] && continue
+		[ -z "$test" ] && continue
+		test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
+		[ "${test:0:1}" == '#' ] && { echo -e "$test_disp"; continue; }
 		let n+=1
 		echo $skips | grep -q "\<$n\>" && continue
-		echo -e "${GREEN}Running:$RESET $YELLOW$test$RESET"
+		echo -e "${GREEN}Running:$RESET $test_disp"
 #		continue
 		[ "$TESTING" ] || eval "$test" || {
 			echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
@@ -225,14 +230,20 @@ f_hash='Hash function tests complete'
 [ "$ARM32" ] && t_hash_skip='2' # gmpy produces invalid init constants
 [ "$MSYS2" ] && t_hash_skip='2 3' # 2:py_long_long issues, 3:no pysha3 for keccak reference
 
+i_ref='Miscellaneous reference data tests'
+s_ref='The following tests will test some generated values against reference data'
+t_ref="
+	$scrambletest_py
+	$test_py ref_altcoin # generated addrfiles verified against checksums
+"
+f_ref='Miscellaneous reference data tests completed'
+
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
-	$scrambletest_py
-	$test_py ref_altcoin # generated addrfiles verified against checksums
 	$gentest_py --all 2:keyconv $rounds_mid
 
-	# speed tests, no verification
+	# speed tests, no verification:
 	$gentest_py --coin=btc 2 $rounds
 	$gentest_py --coin=btc --type=compressed 2 $rounds
 	$gentest_py --coin=btc --type=segwit 2 $rounds
@@ -256,6 +267,7 @@ t_alts="
 
 [ "$MSYS2" ] || { # no pycoin, zcash-mini
 	t_alts="$t_alts
+		# verification using external libraries and tools:
 		$gentest_py --all --type=legacy 2:pycoin $rounds
 		$gentest_py --all --type=compressed 2:pycoin $rounds
 		$gentest_py --coin=btc --type=segwit 2:ext $rounds
@@ -396,22 +408,22 @@ f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 i_tool2='Tooltest2'
 s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2="
-	$tooltest2_py --quiet --fork # run once with --fork so commands are actually executed
-	$tooltest2_py --quiet --coin=btc --fork
-	$tooltest2_py --quiet --coin=btc --testnet=1
-	$tooltest2_py --quiet --coin=ltc
-	$tooltest2_py --quiet --coin=ltc --testnet=1
-	$tooltest2_py --quiet --coin=bch
-	$tooltest2_py --quiet --coin=bch --testnet=1
-	$tooltest2_py --quiet --coin=zec
-	$tooltest2_py --quiet --coin=zec --type=zcash_z
-	$tooltest2_py --quiet --coin=xmr
-	$tooltest2_py --quiet --coin=dash
-	$tooltest2_py --quiet --coin=eth
-	$tooltest2_py --quiet --coin=eth --testnet=1
-	$tooltest2_py --quiet --coin=eth --token=mm1
-	$tooltest2_py --quiet --coin=eth --token=mm1 --testnet=1
-	$tooltest2_py --quiet --coin=etc
+	$tooltest2_py --fork # run once with --fork so commands are actually executed
+	$tooltest2_py
+	$tooltest2_py --testnet=1
+	$tooltest2_py --coin=ltc
+	$tooltest2_py --coin=ltc --testnet=1
+	$tooltest2_py --coin=bch
+	$tooltest2_py --coin=bch --testnet=1
+	$tooltest2_py --coin=zec
+	$tooltest2_py --coin=zec --type=zcash_z
+	$tooltest2_py --coin=xmr
+	$tooltest2_py --coin=dash
+	$tooltest2_py --coin=eth
+	$tooltest2_py --coin=eth --testnet=1
+	$tooltest2_py --coin=eth --token=mm1
+	$tooltest2_py --coin=eth --token=mm1 --testnet=1
+	$tooltest2_py --coin=etc
 "
 f_tool2='tooltest2 tests completed'
 
