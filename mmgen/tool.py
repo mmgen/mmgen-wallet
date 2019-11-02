@@ -340,12 +340,12 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal number to base58-check encoding"
 		from mmgen.protocol import _b58chk_encode
-		return _b58chk_encode(hexstr)
+		return _b58chk_encode(bytes.fromhex(hexstr))
 
 	def b58chktohex(self,b58chk_num:'sstr'):
 		"convert a base58-check encoded number to hexadecimal"
 		from mmgen.protocol import _b58chk_decode
-		return _b58chk_decode(b58chk_num)
+		return _b58chk_decode(b58chk_num).hex()
 
 	def hextob32(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to MMGen's flavor of base 32"

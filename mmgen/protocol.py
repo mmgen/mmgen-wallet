@@ -37,6 +37,9 @@ def hash160(hexnum): # take hex, return hex - OP_HASH160
 def hash256(hexnum): # take hex, return hex - OP_HASH256
 	return hashlib.sha256(hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
 
+def hash256bytes(bstr): # bytes in, bytes out - OP_HASH256
+	return hashlib.sha256(hashlib.sha256(bstr).digest()).digest()
+
 _b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
 # From en.bitcoin.it:
@@ -46,24 +49,22 @@ _b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The 'zero address':
 # 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
 
-def _b58chk_encode(hexstr):
-	lzeroes = (len(hexstr) - len(hexstr.lstrip('0'))) // 2
-	def b58enc(n):
+def _b58chk_encode(bstr):
+	lzeroes = len(bstr) - len(bstr.lstrip(b'\x00'))
+	def do_enc(n):
 		while n:
 			yield _b58a[n % 58]
 			n //= 58
-	return ('1' * lzeroes) + ''.join(b58enc(int(hexstr+hash256(hexstr)[:8],16)))[::-1]
+	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(bstr+hash256bytes(bstr)[:4],'big')))[::-1]
 
 def _b58chk_decode(s):
 	lzeroes = len(s) - len(s.lstrip('1'))
-	hexstr = '{}{:x}'.format(
-				'00' * lzeroes,
-				sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1])) )
-	if len(hexstr) % 2: hexstr = '0' + hexstr
-	if hexstr[-8:] != hash256(hexstr[:-8])[:8]:
-		fs = '_b58chk_decode(): {}: incorrect checksum for {!r}, expected {}'
-		raise ValueError(fs.format(hexstr[-8:],hexstr[:-8],hash256(hexstr[:-8])[:8]))
-	return hexstr[:-8]
+	res = sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1]))
+	bl = res.bit_length()
+	out = b'\x00' * lzeroes + res.to_bytes(bl//8 + bool(bl%8),'big')
+	if out[-4:] != hash256bytes(out[:-4])[:4]:
+		raise ValueError('_b58chk_decode(): incorrect checksum')
+	return out[:-4]
 
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
@@ -129,14 +130,18 @@ class BitcoinProtocol(MMGenObject):
 				return (pk % cls.secp256k1_ge).to_bytes(cls.privkey_len,'big')
 
 	@classmethod
-	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
-		assert len(hexpriv) == cls.privkey_len*2, '{} bytes: incorrect private key length!'.format(len(hexpriv)//2)
+	def hex2wif(cls,hexpriv,pubkey_type,compressed): # input is preprocessed hex
+		sec = bytes.fromhex(hexpriv)
+		assert len(sec) == cls.privkey_len, '{} bytes: incorrect private key length!'.format(len(sec))
 		assert pubkey_type in cls.wif_ver_num, '{!r}: invalid pubkey_type'.format(pubkey_type)
-		return _b58chk_encode(cls.wif_ver_num[pubkey_type] + hexpriv + ('','01')[bool(compressed)])
+		return _b58chk_encode(
+			bytes.fromhex(cls.wif_ver_num[pubkey_type])
+			+ sec
+			+ (b'',b'\x01')[bool(compressed)])
 
 	@classmethod
 	def parse_wif(cls,wif):
-		key = bytes.fromhex(_b58chk_decode(wif))
+		key = _b58chk_decode(wif)
 
 		for k,v in cls.wif_ver_num.items():
 			v = bytes.fromhex(v)
@@ -176,7 +181,7 @@ class BitcoinProtocol(MMGenObject):
 			if type(pfx) == tuple:
 				if addr[0] not in pfx: continue
 			elif addr[:len(pfx)] != pfx: continue
-			addr_hex = _b58chk_decode(addr)
+			addr_hex = _b58chk_decode(addr).hex()
 			if addr_hex[:len(ver_num)] != ver_num: continue
 			return {
 				'hex': addr_hex[len(ver_num):],
@@ -193,7 +198,7 @@ class BitcoinProtocol(MMGenObject):
 	def pubhash2addr(cls,pubkey_hash,p2sh):
 		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
 		s = cls.addr_ver_num[('p2pkh','p2sh')[p2sh]][0] + pubkey_hash
-		return _b58chk_encode(s)
+		return _b58chk_encode(bytes.fromhex(s))
 
 	# Segwit:
 	@classmethod

@@ -123,7 +123,8 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['zcash_z'][0] + (self.zhash256(key,0)+p2).hex())
+		ver_bytes = bytes.fromhex(g.proto.addr_ver_num['zcash_z'][0])
+		ret = _b58chk_encode(ver_bytes + self.zhash256(key,0) + p2)
 		assert len(ret) == self.addr_width,'Invalid Zcash z-address length'
 		return CoinAddr(ret)
 
@@ -135,7 +136,8 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
 		from mmgen.protocol import _b58chk_encode
-		ret = _b58chk_encode(g.proto.addr_ver_num['viewkey'][0] + vk.hex())
+		ver_bytes = bytes.fromhex(g.proto.addr_ver_num['viewkey'][0])
+		ret = _b58chk_encode(ver_bytes + vk)
 		assert len(ret) == self.vk_width,'Invalid Zcash view key length'
 		return ZcashViewKey(ret)
 
