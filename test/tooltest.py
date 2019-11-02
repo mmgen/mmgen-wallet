@@ -182,17 +182,17 @@ if opt.list_names:
 
 from mmgen.tx import is_wif,is_coin_addr
 
-msg_w = 33
+msg_w = 35
 def test_msg(m):
 	m2 = 'Testing {}'.format(m)
 	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format(m2,w=msg_w+8))
 
-maybe_compressed = ('','compressed')['C' in g.proto.mmtypes]
-maybe_segwit     = ('','segwit')['S' in g.proto.mmtypes]
-maybe_bech32     = ('','bech32')['B' in g.proto.mmtypes]
-maybe_type_compressed = ([],['--type=compressed'])['C' in g.proto.mmtypes]
-maybe_type_segwit     = ([],['--type=segwit'])['S' in g.proto.mmtypes]
-maybe_type_bech32     = ([],['--type=bech32'])['B' in g.proto.mmtypes]
+compressed = ('','compressed')['C' in g.proto.mmtypes]
+segwit     = ('','segwit')['S' in g.proto.mmtypes]
+bech32     = ('','bech32')['B' in g.proto.mmtypes]
+type_compressed_arg = ([],['--type=compressed'])['C' in g.proto.mmtypes]
+type_segwit_arg     = ([],['--type=segwit'])['S' in g.proto.mmtypes]
+type_bech32_arg     = ([],['--type=bech32'])['B' in g.proto.mmtypes]
 
 class MMGenToolTestUtils(object):
 
@@ -291,38 +291,38 @@ class MMGenToolTestCmds(object):
 
 	# Cryptocoin
 	def randwif(self,name):
-		for n,k in enumerate(['',maybe_compressed]):
+		for n,k in enumerate(['',compressed]):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1)
 			ok_or_die(ret,is_wif,'WIF key')
 	def randpair(self,name):
-		for n,k in enumerate(['',maybe_compressed,maybe_segwit,maybe_bech32]):
+		for n,k in enumerate(['',compressed,segwit,bech32]):
 			ao = ['--type='+k] if k else []
-			wif,addr = tu.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1).split()
+			wif,addr = tu.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1,literal=True).split()
 			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
 			ok_or_die(addr,is_coin_addr,'Coin address')
 	def wif2addr(self,name,f1,f2,f3,f4):
-		for n,f,k,m in (
-			(1,f1,'',''),
-			(2,f2,'',maybe_compressed),
-			(3,f3,maybe_segwit,''),
-			(4,f4,maybe_bech32,'')
+		for n,f,k in (
+			(1,f1,''),
+			(2,f2,compressed),
+			(3,f3,segwit),
+			(4,f4,bech32)
 			):
 			ao = ['--type='+k] if k else []
 			wif = read_from_file(f).split()[0]
-			tu.run_cmd_out(name,wif,add_opts=ao,fn_idx=n,extra_msg=m)
+			tu.run_cmd_out(name,wif,add_opts=ao,fn_idx=n)
 	def wif2hex(self,name,f1,f2,f3,f4):
 		for n,f,m in (
 			(1,f1,''),
-			(2,f2,maybe_compressed),
-			(3,f3,'{} for {}'.format(maybe_compressed,maybe_segwit)),
-			(4,f4,'{} for {}'.format(maybe_compressed,maybe_bech32))
+			(2,f2,compressed),
+			(3,f3,'{} for {}'.format(compressed or 'uncompressed',segwit or 'p2pkh')),
+			(4,f4,'{} for {}'.format(compressed or 'uncompressed',bech32 or 'p2pkh'))
 			):
 			wif = read_from_file(f).split()[0]
 			tu.run_cmd_out(name,wif,fn_idx=n,extra_msg=m)
 	def privhex2addr(self,name,f1,f2,f3,f4):
 		keys = [read_from_file(f).rstrip() for f in (f1,f2,f3,f4)]
-		for n,k in enumerate(('',maybe_compressed,maybe_segwit,maybe_bech32)):
+		for n,k in enumerate(('',compressed,segwit,bech32)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd(name,[keys[n]],add_opts=ao).rstrip()
 			iaddr = read_from_tmpfile(cfg,'randpair{}.out'.format(n+1)).split()[-1]
@@ -330,34 +330,34 @@ class MMGenToolTestCmds(object):
 			cmp_or_die(iaddr,ret)
 			ok()
 	def hex2wif(self,name,f1,f2,f3,f4):
-		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,maybe_compressed)):
+		for n,fi,fo,k in ((1,f1,f2,''),(2,f3,f4,compressed)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd_chk(name,fi,fo,add_opts=ao)
 	def addr2pubhash(self,name,f1,f2,f3,f4):
 		for n,f,m,ao in (
 			(1,f1,'',[]),
-			(2,f2,'from {}'.format(maybe_compressed),[]),
-			(4,f4,'',maybe_type_bech32),
+			(2,f2,'from {}'.format(compressed or 'uncompressed'),[]),
+			(4,f4,'',type_bech32_arg),
 			):
 			addr = read_from_file(f).split()[-1]
 			tu.run_cmd_out(name,addr,fn_idx=n,add_opts=ao,extra_msg=m)
 	def pubhash2addr(self,name,f1,f2,f3,f4,f5,f6,f7,f8):
 		for n,fi,fo,m,ao in (
 			(1,f1,f2,'',[]),
-			(2,f3,f4,'from {}'.format(maybe_compressed),[]),
-			(4,f7,f8,'',maybe_type_bech32)
+			(2,f3,f4,'from {}'.format(compressed or 'uncompressed'),[]),
+			(4,f7,f8,'',type_bech32_arg)
 			):
 			tu.run_cmd_chk(name,fi,fo,add_opts=ao,extra_msg=m)
 	def privhex2pubhex(self,name,f1,f2,f3): # from Hex2wif
 		addr = read_from_file(f3).strip()
-		tu.run_cmd_out(name,addr,add_opts=maybe_type_compressed,fn_idx=3) # what about uncompressed?
+		tu.run_cmd_out(name,addr,add_opts=type_compressed_arg,fn_idx=3) # what about uncompressed?
 	def pubhex2redeem_script(self,name,f1,f2,f3): # from above
 		addr = read_from_file(f3).strip()
-		tu.run_cmd_out(name,addr,add_opts=maybe_type_segwit,fn_idx=3)
+		tu.run_cmd_out(name,addr,add_opts=type_segwit_arg,fn_idx=3)
 		type_save = opt.type
 		opt.type = 'segwit'
 		rs = read_from_tmpfile(cfg,'privhex2pubhex3.out').strip()
-		tu.run_cmd_out('pubhex2addr',rs,add_opts=maybe_type_segwit,fn_idx=3,hush=True)
+		tu.run_cmd_out('pubhex2addr',rs,add_opts=type_segwit_arg,fn_idx=3,hush=True)
 		opt.type = type_save
 		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
 		addr2 = read_from_tmpfile(cfg,'randpair3.out').split()[1]
@@ -365,16 +365,16 @@ class MMGenToolTestCmds(object):
 		ok()
 	def wif2redeem_script(self,name,f1,f2,f3): # compare output with above
 		wif = read_from_file(f3).split()[0]
-		ret1 = tu.run_cmd_out(name,wif,add_opts=maybe_type_segwit,fn_idx=3,Return=True)
+		ret1 = tu.run_cmd_out(name,wif,add_opts=type_segwit_arg,fn_idx=3,Return=True)
 		ret2 = read_from_tmpfile(cfg,'pubhex2redeem_script3.out').strip()
 		cmp_or_die(ret1,ret2)
 		ok()
 	def wif2segwit_pair(self,name,f1,f2): # does its own checking, so just run
 		wif = read_from_file(f2).split()[0]
-		tu.run_cmd_out(name,wif,add_opts=maybe_type_segwit,fn_idx=2)
+		tu.run_cmd_out(name,wif,add_opts=type_segwit_arg,fn_idx=2)
 	def pubhex2addr(self,name,f1,f2,f3):
 		addr = read_from_file(f3).strip()
-		tu.run_cmd_out(name,addr,add_opts=maybe_type_segwit,fn_idx=3)
+		tu.run_cmd_out(name,addr,add_opts=type_segwit_arg,fn_idx=3)
 
 	def pipetest(self,name,f1,f2,f3):
 		wif = read_from_file(f3).split()[0]

@@ -89,21 +89,24 @@ if not 1 <= len(cmd_args) <= 2: opts.usage()
 
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
 
+from collections import namedtuple
+ep = namedtuple('external_prog_output',['wif','addr','vk'])
+
 from subprocess import run,PIPE,DEVNULL
 def get_cmd_output(cmd,input=None):
 	return run(cmd,input=input,stdout=PIPE,stderr=DEVNULL).stdout.decode().splitlines()
 
 def ethkey_sec2addr(sec):
 	o = get_cmd_output(['ethkey','info',sec])
-	return (o[0].split()[1],o[-1].split()[1])
+	return ep(o[0].split()[1],o[-1].split()[1],None)
 
 def keyconv_sec2addr(sec):
 	o = get_cmd_output(['keyconv','-C',g.coin,sec.wif])
-	return (o[1].split()[1],o[0].split()[1])
+	return ep(o[1].split()[1],o[0].split()[1],None)
 
 def zcash_mini_sec2addr(sec):
 	o = get_cmd_output(['zcash-mini','-key','-simple'],input=(sec.wif+'\n').encode())
-	return (o[1],o[0],o[-1])
+	return ep(o[1],o[0],o[-1])
 
 def pycoin_sec2addr(sec):
 	coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
@@ -120,11 +123,11 @@ def pycoin_sec2addr(sec):
 			addr = network.address.for_p2pkh_wit(hash160_c)
 	else:
 		addr = key.address()
-	return (key.wif(),addr)
+	return ep(key.wif(),addr,None)
 
 def moneropy_sec2addr(sec):
 	sk_t,vk_t,addr_t = mp_acc.account_from_spend_key(sec) # VERY slow!
-	return (sk_t,addr_t,vk_t)
+	return ep(sk_t,addr_t,vk_t)
 
 # pycoin/networks/all.py pycoin/networks/legacy_networks.py
 def init_external_prog():
@@ -150,7 +153,7 @@ def init_external_prog():
 		try:
 			from pycoin.networks.registry import network_for_netcode
 		except:
-			raise ImportError("Unable to import pycoin.networks.registry Is pycoin installed and up-to-date?")
+			raise ImportError("Unable to import pycoin.networks.registry.  Is pycoin installed on your system?")
 		ext_sec2addr = pycoin_sec2addr
 		ext_prog = 'pycoin'
 	elif test_support('moneropy'):
@@ -172,15 +175,22 @@ def init_external_prog():
 	b_desc = ext_prog
 	b = 'ext'
 
-def test_equal(a_addr,b_addr,sec,wif,a,b):
+def test_equal(a_addr,b_addr,in_bytes,sec,wif,a,b):
 	if a_addr != b_addr:
-		qmsg_r(red('\nERROR: Values do not match!'))
-		die(3,"""
-	  sec key   : {}
-	  WIF key   : {}
-	  {a:10}: {}
-	  {b:10}: {}
-	""".format(sec,wif,a_addr,b_addr,pnm=g.proj_name,a=kg_a.desc,b=b_desc).rstrip())
+		fs = """
+  {i:{w}}: {}
+  {s:{w}}: {}
+  {W:{w}}: {}
+  {a:{w}}: {}
+  {b:{w}}: {}
+			"""
+		die(3,
+			red('\nERROR: Values do not match!')
+			+ fs.format(
+				in_bytes.hex(), sec, wif, a_addr, b_addr,
+				i='input', s='sec key', W='WIF key', a=kg_a.desc, b=b_desc,
+				w=max(len(e) for e in (kg_a.desc,b_desc)) + 1
+		).rstrip())
 
 def compare_test():
 	for k in ('segwit','compressed'):
@@ -195,7 +205,7 @@ def compare_test():
 	global last_t
 	last_t = time.time()
 	A = kg_a.desc
-	B = ext_prog if b == 'ext' else kg_b.desc
+	B = b_desc
 	if A == B:
 		msg('skipping - generation methods A and B are the same ({})'.format(A))
 		return
@@ -208,24 +218,26 @@ def compare_test():
 			qmsg_r('\rRound {}/{} '.format(i+1,trounds))
 			last_t = time.time()
 		sec = PrivKey(in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
-		ph = kg_a.to_pubhex(sec)
-		a_addr = ag.to_addr(ph)
-		a_vk = ag.to_viewkey(ph) if 'viewkey' in addr_type.extra_attrs else None
+		a_ph = kg_a.to_pubhex(sec)
+		a_addr = ag.to_addr(a_ph)
+		a_vk = None
 		if b == 'ext':
-			if 'viewkey' in addr_type.extra_attrs:
-				b_wif,b_addr,b_vk = ext_sec2addr(sec)
-				test_equal(a_vk,b_vk,sec,sec.wif,a,b)
-			else:
-				b_wif,b_addr = ext_sec2addr(sec)
-			test_equal(sec.wif,b_wif,sec,sec.wif,a,b)
+			ret = ext_sec2addr(sec)
+			tinfo = (in_bytes,sec,sec.wif,a,ext_prog)
+			test_equal(sec.wif,ret.wif,*tinfo)
+			test_equal(a_addr,ret.addr,*tinfo)
+			if ret.vk:
+				a_vk = ag.to_viewkey(a_ph)
+				test_equal(a_vk,ret.vk,*tinfo)
 		else:
 			b_addr = ag.to_addr(kg_b.to_pubhex(sec))
+			tinfo = (in_bytes,sec,sec.wif,a,b)
+			test_equal(a_addr,b_addr,*tinfo)
 		vmsg(ct_fs.format(b=in_bytes.hex(),k=sec.wif,v=a_vk,a=a_addr))
-		test_equal(a_addr,b_addr,sec,sec.wif,a,ext_prog if b == 'ext' else b)
 		qmsg_r('\rRound {}/{} '.format(n+1,trounds))
 
 	ct_fs   = ( '\ninput:    {b}\n%-9s {k}\naddr:     {a}\n',
-				'\ninput:    {b}\n%-9s {k}\nvkey:     {v}\naddr:     {a}\n')[
+				'\ninput:    {b}\n%-9s {k}\nviewkey:  {v}\naddr:     {a}\n')[
 					'viewkey' in addr_type.extra_attrs] % (addr_type.wif_label + ':')
 
 	# test some important private key edge cases:
@@ -278,7 +290,8 @@ def dump_test():
 			die(2,'\nInvalid {}net WIF address in dump file: {}'.format(('main','test')[g.testnet],wif))
 		b_addr = ag.to_addr(kg_a.to_pubhex(sec))
 		vmsg('\nwif: {}\naddr: {}\n'.format(wif,b_addr))
-		test_equal(a_addr,b_addr,sec,wif,3,a)
+		tinfo = (bytes.fromhex(sec),sec,wif,3,a)
+		test_equal(a_addr,b_addr,*tinfo)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
 
 # begin execution

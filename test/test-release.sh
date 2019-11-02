@@ -222,7 +222,7 @@ i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
 t_hash="
 	$python test/hashfunc.py sha256 $rounds_max
-	$python test/hashfunc.py sha512 $rounds_max # native sha512 not used by MMGen
+	$python test/hashfunc.py sha512 $rounds_max # native sha512 - not used by MMGen
 	$python test/hashfunc.py keccak $rounds_max
 "
 f_hash='Hash function tests complete'
@@ -278,7 +278,7 @@ t_alts="
 		$gentest_py --coin=zec 2:ext $rounds
 		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
 		$gentest_py --all 2:zcash_mini $rounds_mid
-		$gentest_py --all 2:moneropy $rounds_min
+		$gentest_py --all 2:moneropy $rounds_mid # very slow, be patient!
 	"
 }
 
@@ -449,23 +449,25 @@ f_tool='tooltest tests completed'
 i_gen='Gentest'
 s_gen="The following tests will run '$gentest_py' on mainnet and testnet for all supported coins"
 t_gen="
-	$gentest_py -q 2 $REFDIR/btcwallet.dump
-	$gentest_py -q --type=segwit 2 $REFDIR/btcwallet-segwit.dump
-	$gentest_py -q --type=bech32 2 $REFDIR/btcwallet-bech32.dump
-	$gentest_py -q 1:2 $rounds
-	$gentest_py -q --type=segwit 1:2 $rounds
-	$gentest_py -q --type=bech32 1:2 $rounds
-	$gentest_py -q --testnet=1 2 $REFDIR/btcwallet-testnet.dump
-	$gentest_py -q --testnet=1 1:2 $rounds
-	$gentest_py -q --testnet=1 --type=segwit 1:2 $rounds
-	$gentest_py -q --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump
-	$gentest_py -q --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump
-	$gentest_py -q --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump
-	$gentest_py -q --coin=ltc 1:2 $rounds
-	$gentest_py -q --coin=ltc --type=segwit 1:2 $rounds
-	$gentest_py -q --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump
-	$gentest_py -q --coin=ltc --testnet=1 1:2 $rounds
-	$gentest_py -q --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
+	# wallet dumps:
+	$gentest_py 2 $REFDIR/btcwallet.dump
+	$gentest_py --type=segwit 2 $REFDIR/btcwallet-segwit.dump
+	$gentest_py --type=bech32 2 $REFDIR/btcwallet-bech32.dump
+	$gentest_py --testnet=1 2 $REFDIR/btcwallet-testnet.dump
+	$gentest_py --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump
+	$gentest_py --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump
+	$gentest_py --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump
+	$gentest_py --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump
+	# libsecp256k1 vs python-ecdsa:
+	$gentest_py 1:2 $rounds
+	$gentest_py --type=segwit 1:2 $rounds
+	$gentest_py --type=bech32 1:2 $rounds
+	$gentest_py --testnet=1 1:2 $rounds
+	$gentest_py --testnet=1 --type=segwit 1:2 $rounds
+	$gentest_py --coin=ltc 1:2 $rounds
+	$gentest_py --coin=ltc --type=segwit 1:2 $rounds
+	$gentest_py --coin=ltc --testnet=1 1:2 $rounds
+	$gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
 "
 f_gen='gentest tests completed'
 
