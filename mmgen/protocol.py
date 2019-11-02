@@ -136,21 +136,26 @@ class BitcoinProtocol(MMGenObject):
 
 	@classmethod
 	def parse_wif(cls,wif):
-		key = _b58chk_decode(wif)
-		pubkey_type = None
-		for k,v in list(cls.wif_ver_num.items()):
+		key = bytes.fromhex(_b58chk_decode(wif))
+
+		for k,v in cls.wif_ver_num.items():
+			v = bytes.fromhex(v)
 			if key[:len(v)] == v:
 				pubkey_type = k
 				key = key[len(v):]
-		assert pubkey_type,'invalid WIF version number'
-		if len(key) == 66:
-			assert key[-2:] == '01','invalid compressed key suffix'
-			compressed = True
+				break
 		else:
-			assert len(key) == 64,'invalid key length'
-			compressed = False
+			raise ValueError('invalid WIF version number')
 
-		return parsed_wif(bytes.fromhex(key[:64]), pubkey_type, compressed)
+		if len(key) == cls.privkey_len + 1:
+			assert key[-1] == 0x01,'{!r}: invalid compressed key suffix byte'.format(key[-1])
+			compressed = True
+		elif len(key) == cls.privkey_len:
+			compressed = False
+		else:
+			raise ValueError('{}: invalid key length'.format(len(key)))
+
+		return parsed_wif(key[:cls.privkey_len], pubkey_type, compressed)
 
 	@classmethod
 	def verify_addr(cls,addr,hex_width,return_dict=False):
