@@ -488,9 +488,13 @@ def init_genonly_altcoins(usr_coin,trust_level=None):
 		if usr_coin.lower() in CoinProtocol.coins:
 			return CoinProtocol.coins[usr_coin.lower()][2]
 		usr_coin = usr_coin.upper()
-		mn_coins = [e.symbol for e in ci.coin_constants['mainnet'] if e.trust_level != -1]
-		if usr_coin not in mn_coins: return None
-		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)].trust_level
+		usr_entry = [e for e in ci.coin_constants['mainnet'] if e.symbol == usr_coin]
+		if not usr_entry:
+			raise ValueError('Coin {} not recognized'.format(usr_coin))
+		usr_entry = usr_entry[0]
+		if usr_entry.trust_level == -1:
+			raise ValueError('Coin {} ({}) not supported'.format(usr_coin,usr_entry.name))
+		trust_level = usr_entry.trust_level
 	data = {}
 	for k in ('mainnet','testnet'):
 		data[k] = [e for e in ci.coin_constants[k] if e.trust_level >= trust_level]
