@@ -119,8 +119,8 @@ class BitcoinProtocol(MMGenObject):
 			elif pk == cls.secp256k1_ge: # ditto
 				ydie(3,'Private key == secp256k1_ge!')
 			else:
-				ymsg('Warning: private key is greater than secp256k1 group order!:\n  {}'.format(hexpriv))
-				return '{:064x}'.format(pk % cls.secp256k1_ge).encode()
+				ymsg('Warning: private key >secp256k1 group order was reduced')
+				return '{:064x}'.format(pk % cls.secp256k1_ge)
 
 	@classmethod
 	def hex2wif(cls,hexpriv,pubkey_type,compressed): # PrivKey
@@ -366,7 +366,7 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 		if pubkey_type == 'zcash_z':
 			return '{:02x}'.format(int(hexpriv[:2],16) & 0x0f) + hexpriv[2:]
 		else:
-			return hexpriv
+			return super(cls,cls).preprocess_key(hexpriv,pubkey_type)
 
 	@classmethod
 	def pubhash2addr(cls,pubkey_hash,p2sh):
@@ -473,9 +473,13 @@ def init_genonly_altcoins(usr_coin,trust_level=None):
 		if usr_coin.lower() in CoinProtocol.coins:
 			return CoinProtocol.coins[usr_coin.lower()][2]
 		usr_coin = usr_coin.upper()
-		mn_coins = [e[1] for e in ci.coin_constants['mainnet'] if e[6] != -1]
-		if usr_coin not in mn_coins: return None
-		trust_level = ci.coin_constants['mainnet'][mn_coins.index(usr_coin)][6]
+		usr_entry = [e for e in ci.coin_constants['mainnet'] if e[1] == usr_coin]
+		if not usr_entry:
+			raise ValueError('Coin {} not recognized'.format(usr_coin))
+		usr_entry = usr_entry[0]
+		if usr_entry[6] == -1:
+			raise ValueError('Coin {} ({}) not supported'.format(usr_coin,usr_entry[0]))
+		trust_level = usr_entry[6]
 	data = {}
 	for k in ('mainnet','testnet'):
 		data[k] = [e for e in ci.coin_constants[k] if e[6] >= trust_level]
