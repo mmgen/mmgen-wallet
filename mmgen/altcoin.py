@@ -510,16 +510,79 @@ class CoinInfo(object):
 		return tt
 
 	trust_override = {'BTC':3,'BCH':3,'LTC':3,'DASH':1,'EMC':2}
+
+	@classmethod
+	def get_test_support(cls,coin,addr_type,network,tool=None,verbose=False):
+		"""
+		If requested tool supports coin/addr_type/network triplet, return tool name.
+		If 'tool' is None, return tool that supports coin/addr_type/network triplet.
+		Return None on failure.
+		"""
+		tool_arg = tool
+		all_tools = [tool] if tool else list(cls.external_tests[network].keys())
+		coin = coin.upper()
+
+		for tool in all_tools:
+			if coin in cls.external_tests[network][tool]:
+				break
+		else:
+			if verbose:
+				m1 = 'Requested tool {t!r} does not support coin {c} on network {n}'
+				m2 = 'No test tool found for coin {c} on network {n}'
+				m = m1 if tool_arg else m2
+				msg(m.format(t=tool,c=coin,n=network))
+			return None
+
+		if addr_type == 'zcash_z':
+			if tool_arg in (None,'zcash-mini'):
+				return 'zcash-mini'
+			else:
+				if verbose:
+					m = "Address type {a!r} supported only by tool 'zcash-mini'"
+					msg(m.format(a=addr_type))
+				return None
+
+		try:
+			assert (
+				cls.external_tests_blacklist[addr_type][tool] == True
+				or coin in cls.external_tests_blacklist[addr_type][tool] )
+		except:
+			pass
+		else:
+			if verbose:
+				m = 'Tool {t!r} blacklisted for coin {c}, addr_type {a!r}'
+				msg(m.format(t=tool,c=coin,a=addr_type))
+			return None
+
+		if tool_arg: # skip whitelists
+			return tool
+
+		if addr_type in ('segwit','bech32'):
+			st = cls.external_tests_segwit_whitelist
+			if addr_type in st and coin in st[addr_type]:
+				return tool
+			else:
+				if verbose:
+					m1 = 'Requested tool {t!r} does not support coin {c}, addr_type {a!r}, on network {n}'
+					m2 = 'No test tool found supporting coin {c}, addr_type {a!r}, on network {n}'
+					m = m1 if tool_arg else m2
+					msg(m.format(t=tool,c=coin,n=network,a=addr_type))
+				return None
+
+		return tool
+
 	external_tests = {
 		'mainnet': {
-			'moneropy': ('XMR',),
+			# List in order of preference.
+			# If 'tool' is not specified, the first tool supporting the coin will be selected.
 			'pycoin': (
-				# broken: DASH - only compressed, LTC segwit old fmt
+				'DASH', # only compressed
 				'BTC','LTC','VIA','FTC','DOGE','MEC',
 				'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR'),
 			'ethkey': ('ETH','ETC'),
-			'zcash_mini': ('ZEC',),
-			'keyconv': ( # all supported by vanitygen-plus 'keyconv' util
+			'zcash-mini': ('ZEC',),
+			'moneropy': ('XMR',),
+			'keyconv': (
 				# broken: PIVX
 				'42','AC','AIB','ANC','ARS','ATMOS','AUR','BLK','BQC','BTC','TEST','BTCD','CCC','CCN','CDN',
 				'CLAM','CNC','CNOTE','CON','CRW','DEEPONION','DGB','DGC','DMD','DOGED','DOGE','DOPE',
@@ -531,16 +594,26 @@ class CoinInfo(object):
 		},
 		'testnet': {
 			'pycoin': {
-				# broken: DASH - only compressed { 'DASH':'tDASH' }
+				'DASH':'tDASH', # only compressed
 				'BTC':'XTN','LTC':'XLT','VIA':'TVI','FTC':'FTX','DOGE':'XDT','DCR':'DCRT'
 				},
 			'ethkey': {},
 			'keyconv': {}
 		}
 	}
-	external_tests_segwit_compressed = {
-		'segwit': ('BTC'),
+	external_tests_segwit_whitelist = {
+		# Whitelists apply to the *first* tool in cls.external_tests supporting the given coin/addr_type.
+		# They're ignored if specific tool is requested.
+		'segwit': ('BTC',), # LTC Segwit broken on pycoin: uses old fmt
+		'bech32': ('BTC','LTC'),
 		'compressed': (
-		'BTC','LTC','VIA','FTC','DOGE','DASH','MEC','MYR','UNO',
-		'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR','ZEC'),
+			'BTC','LTC','VIA','FTC','DOGE','DASH','MEC','MYR','UNO',
+			'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR','ZEC'
+		),
+	}
+	external_tests_blacklist = {
+		# Unconditionally block testing of the given coin/addr_type with given tool, or all coins if True
+		'legacy': { 'pycoin': ('DASH',) },
+		'segwit': { 'pycoin': ('LTC',), 'keyconv': True },
+		'bech32': { 'keyconv': True },
 	}

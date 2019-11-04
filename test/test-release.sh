@@ -97,7 +97,7 @@ do
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
 	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
-	F)  FAST=1 rounds=2 rounds_min=1 rounds_mid=3 rounds_max=5 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
+	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -241,8 +241,6 @@ f_ref='Miscellaneous reference data tests completed'
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
-	$gentest_py --all 2:keyconv $rounds_mid
-
 	# speed tests, no verification:
 	$gentest_py --coin=btc 2 $rounds
 	$gentest_py --coin=btc --type=compressed 2 $rounds
@@ -260,25 +258,27 @@ t_alts="
 	$gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
 	$gentest_py --coin=zec 2 $rounds
 	$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
+
+	# verification against external libraries and tools:
+	$gentest_py --all --type=legacy 2:keyconv $rounds
+	$gentest_py --all --type=compressed 2:keyconv $rounds
+	$gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
 "
 
-# disabled, pycoin generates old-style LTC Segwit addrs:
-#	$gentest_py --coin=ltc --type=segwit 2:ext $rounds
-
-[ "$MSYS2" ] || { # no pycoin, zcash-mini
+[ "$MSYS2" ] || { # no pycoin (libsecp256k1), zcash-mini (golang), ethkey (?)
 	t_alts="$t_alts
-		# verification using external libraries and tools:
 		$gentest_py --all --type=legacy 2:pycoin $rounds
 		$gentest_py --all --type=compressed 2:pycoin $rounds
-		$gentest_py --coin=btc --type=segwit 2:ext $rounds
-		$gentest_py --coin=btc --type=bech32 2:ext $rounds
-		$gentest_py --coin=etc 2:ext $rounds
-		$gentest_py --coin=eth 2:ext $rounds
+		$gentest_py --all --type=segwit 2:pycoin $rounds
+		$gentest_py --all --type=bech32 2:pycoin $rounds
+
+		$gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
+		$gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
+		$gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
+		$gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
+
+		$gentest_py --all 2:zcash-mini $rounds_mid
 		$gentest_py --all 2:ethkey $rounds
-		$gentest_py --coin=zec 2:ext $rounds
-		$gentest_py --coin=zec --type=zcash_z 2:ext $rounds_mid
-		$gentest_py --all 2:zcash_mini $rounds_mid
-		$gentest_py --all 2:moneropy $rounds_mid # very slow, be patient!
 	"
 }
 
