@@ -41,8 +41,9 @@ ce = namedtuple('CoinInfoEntry',
 class CoinInfo(object):
 	coin_constants = {}
 	coin_constants['mainnet'] = (
-#   Trust levels: 0=untested 1=low 2=med 3=high -1=disable
-#   Fork coins must be disabled here to prevent generation from incorrect sub-seed
+#   Trust levels: -1=disabled 0=untested 1=low 2=med 3=high 4=very high (no warn) 5=unconditional
+#   Trust levels apply to key/address generation only.
+#   Fork coins must be disabled here to prevent generation from incorrect sub-seed.
 	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
 	ce('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
 	ce('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
@@ -384,6 +385,18 @@ class CoinInfo(object):
 		'ZOOM':   ['lb','vg'],
 		'ZRC':    ['lb','vg']
 	}
+
+	@classmethod
+	def get_supported_coins(cls,network):
+		return [e for e in cls.coin_constants[network] if e.trust_level != -1]
+
+	@classmethod
+	def get_entry(cls,coin,network):
+		try:
+			idx = [e.symbol for e in cls.coin_constants[network]].index(coin.upper())
+		except:
+			return None
+		return cls.coin_constants[network][idx]
 
 	# Data is one of the coin_constants lists above.  Normalize ints to hex of correct width, add
 	# missing leading letters, set trust level from external_tests.

@@ -449,30 +449,26 @@ class MoneroTestnetProtocol(MoneroProtocol):
 	addr_ver_num = { 'monero': ('35','4'), 'monero_sub': ('3f','8') } # 53,63
 
 class CoinProtocol(MMGenObject):
+	pi = namedtuple('proto_info',['main_cls','test_cls','trust_level']) # trust levels: see altcoin.py
 	coins = {
-		#      mainnet testnet trustlevel (None == skip)
-		'btc': (BitcoinProtocol,BitcoinTestnetProtocol,None),
-		'bch': (BitcoinCashProtocol,BitcoinCashTestnetProtocol,None),
-		'ltc': (LitecoinProtocol,LitecoinTestnetProtocol,None),
-		'eth': (EthereumProtocol,EthereumTestnetProtocol,None),
-		'etc': (EthereumClassicProtocol,EthereumClassicTestnetProtocol,None),
-		'zec': (ZcashProtocol,ZcashTestnetProtocol,2),
-		'xmr': (MoneroProtocol,MoneroTestnetProtocol,None)
+		'btc': pi(BitcoinProtocol,BitcoinTestnetProtocol,5),
+		'bch': pi(BitcoinCashProtocol,BitcoinCashTestnetProtocol,5),
+		'ltc': pi(LitecoinProtocol,LitecoinTestnetProtocol,5),
+		'eth': pi(EthereumProtocol,EthereumTestnetProtocol,4),
+		'etc': pi(EthereumClassicProtocol,EthereumClassicTestnetProtocol,4),
+		'zec': pi(ZcashProtocol,ZcashTestnetProtocol,2),
+		'xmr': pi(MoneroProtocol,MoneroTestnetProtocol,4)
 	}
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
 		assert type(testnet) == bool
-		m = "'{}': not a valid coin. Valid choices are {}"
-		assert coin in cls.coins,m.format(coin,','.join(cls.get_valid_coins()))
+		m = "{}: not a valid coin for network {}\nSupported coins: {}"
+		assert coin in cls.coins, m.format(coin.upper(),g.network.upper(),cls.list_coins())
 		return cls.coins[coin][testnet]
 
 	@classmethod
-	def get_valid_coins(cls,upcase=False):
-		from mmgen.altcoin import CoinInfo as ci
-		ret = sorted(set(
-			[e.symbol for e in ci.coin_constants['mainnet'] if e.trust_level != -1]
-			+ list(cls.coins.keys())))
-		return [getattr(e,('lower','upper')[upcase])() for e in ret]
+	def list_coins(cls):
+		return ' '.join(c.upper() for c in cls.coins)
 
 	@classmethod
 	def get_base_coin_from_name(cls,name):
@@ -481,23 +477,36 @@ class CoinProtocol(MMGenObject):
 				return proto.base_coin
 		return False
 
-def init_genonly_altcoins(usr_coin,trust_level=None):
+def init_genonly_altcoins(usr_coin=None):
+	"""
+	Initialize altcoin protocol class or classes for current network.
+	If usr_coin is None, initializes all supported altcoins for current network.
+	Returns trust_level of usr_coin, or 0 (untrusted) if usr_coin is None.
+	"""
 	from mmgen.altcoin import CoinInfo as ci
-	if trust_level is None:
-		if not usr_coin: return None # BTC
+	data = { 'mainnet': (), 'testnet': () }
+	networks = ['mainnet'] + (['testnet'] if g.testnet else [])
+
+	if usr_coin == None:
+		for network in networks:
+			data[network] = ci.get_supported_coins(network)
+		trust_level = 0
+	else:
 		if usr_coin.lower() in CoinProtocol.coins:
-			return CoinProtocol.coins[usr_coin.lower()][2]
-		usr_coin = usr_coin.upper()
-		usr_entry = [e for e in ci.coin_constants['mainnet'] if e.symbol == usr_coin]
-		if not usr_entry:
-			raise ValueError('Coin {} not recognized'.format(usr_coin))
-		usr_entry = usr_entry[0]
-		if usr_entry.trust_level == -1:
-			raise ValueError('Coin {} ({}) not supported'.format(usr_coin,usr_entry.name))
-		trust_level = usr_entry.trust_level
-	data = {}
-	for k in ('mainnet','testnet'):
-		data[k] = [e for e in ci.coin_constants[k] if e.trust_level >= trust_level]
+			return CoinProtocol.coins[usr_coin.lower()].trust_level
+		for network in networks:
+			data[network] = (ci.get_entry(usr_coin,network),)
+
+		cinfo = data[g.network][0]
+		if not cinfo:
+			m = '{!r}: unrecognized coin for network {}'
+			raise ValueError(m.format(usr_coin.upper(),g.network.upper()))
+		if cinfo.trust_level == -1:
+			m = '{!r}: unsupported (disabled) coin for network {}'
+			raise ValueError(m.format(usr_coin.upper(),g.network.upper()))
+
+		trust_level = cinfo.trust_level
+
 	exec(make_init_genonly_altcoins_str(data),globals(),globals())
 	return trust_level
 

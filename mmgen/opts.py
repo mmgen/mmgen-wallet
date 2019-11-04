@@ -169,7 +169,8 @@ def override_from_env():
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
 
 def warn_altcoins(trust_level):
-	if trust_level == None: return
+	if trust_level > 3:
+		return
 	tl = (red('COMPLETELY UNTESTED'),red('LOW'),yellow('MEDIUM'),green('HIGH'))
 	m = """
 Support for coin '{}' is EXPERIMENTAL.  The {pn} project assumes no
@@ -270,7 +271,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	g.network = 'testnet' if g.testnet else 'mainnet'
 
 	from mmgen.protocol import init_genonly_altcoins,CoinProtocol
-	altcoin_trust_level = init_genonly_altcoins(opt.coin)
+	altcoin_trust_level = init_genonly_altcoins(opt.coin or 'btc')
 
 	# g.testnet is set, so we can set g.proto
 	g.proto = CoinProtocol(g.coin,g.testnet)

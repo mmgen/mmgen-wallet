@@ -351,10 +351,9 @@ ag = AddrGenerator(addr_type)
 if a and b:
 	if opt.all:
 		from mmgen.protocol import init_genonly_altcoins,CoinProtocol
-		init_genonly_altcoins('btc',trust_level=0)
-		mmgen_supported = CoinProtocol.get_valid_coins(upcase=True)
+		init_genonly_altcoins()
 		for coin in ci.external_tests[('mainnet','testnet')[g.testnet]][ext_prog]:
-			if coin not in mmgen_supported: continue
+			if coin not in CoinProtocol.coins: continue
 			init_coin(coin)
 			if addr_type not in g.proto.mmtypes:
 				addr_type = MMGenAddrType(g.proto.dfl_mmtype)
