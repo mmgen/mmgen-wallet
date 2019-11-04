@@ -147,10 +147,9 @@ def test_object(test_data,objname):
 
 def do_loop():
 	import importlib
-	network = ('mainnet','testnet')[bool(g.testnet)]
-	modname = 'test.objattrtest_py_d.oat_{}_{}'.format(g.coin.lower(),network)
+	modname = 'test.objattrtest_py_d.oat_{}_{}'.format(g.coin.lower(),g.network)
 	test_data = importlib.import_module(modname).tests
-	gmsg('Running immutable attribute tests for {} {}'.format(g.coin,network))
+	gmsg('Running immutable attribute tests for {} {}'.format(g.coin,g.network))
 
 	utests = cmd_args
 	for obj in test_data:

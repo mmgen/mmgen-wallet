@@ -267,6 +267,8 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	if g.regtest: g.testnet = True # These are equivalent for now
 
+	g.network = 'testnet' if g.testnet else 'mainnet'
+
 	from mmgen.protocol import init_genonly_altcoins,CoinProtocol
 	altcoin_trust_level = init_genonly_altcoins(opt.coin)
 
