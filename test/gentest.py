@@ -124,7 +124,11 @@ def get_cmd_output(cmd,input=None):
 from collections import namedtuple
 gtr = namedtuple('gen_tool_result',['wif','addr','vk'])
 
-class GenTool(object): pass
+class GenTool(object):
+
+	def run_tool(self,sec):
+		vcoin = 'BTC' if g.coin == 'BCH' else g.coin
+		return self.run(sec,vcoin)
 
 class GenToolEthkey(GenTool):
 	desc = 'ethkey'
@@ -133,14 +137,14 @@ class GenToolEthkey(GenTool):
 		global addr_type
 		addr_type = MMGenAddrType('E')
 
-	def run(self,sec):
+	def run(self,sec,vcoin):
 		o = get_cmd_output(['ethkey','info',sec])
 		return gtr(o[0].split()[1],o[-1].split()[1],None)
 
 class GenToolKeyconv(GenTool):
 	desc = 'keyconv'
-	def run(self,sec):
-		o = get_cmd_output(['keyconv','-C',g.coin,sec.wif])
+	def run(self,sec,vcoin):
+		o = get_cmd_output(['keyconv','-C',vcoin,sec.wif])
 		return gtr(o[1].split()[1],o[0].split()[1],None)
 
 class GenToolZcash_mini(GenTool):
@@ -150,7 +154,7 @@ class GenToolZcash_mini(GenTool):
 		global addr_type
 		addr_type = MMGenAddrType('Z')
 
-	def run(self,sec):
+	def run(self,sec,vcoin):
 		o = get_cmd_output(['zcash-mini','-key','-simple'],input=(sec.wif+'\n').encode())
 		return gtr(o[1],o[0],o[-1])
 
@@ -167,9 +171,10 @@ class GenToolPycoin(GenTool):
 			raise ImportError(m)
 		self.nfnc = network_for_netcode
 
-	def run(self,sec):
-		coin = ci.external_tests['testnet']['pycoin'][g.coin] if g.testnet else g.coin
-		network = self.nfnc(coin)
+	def run(self,sec,vcoin):
+		if g.testnet:
+			vcoin = ci.external_tests['testnet']['pycoin'][vcoin]
+		network = self.nfnc(vcoin)
 		key = network.keys.private(secret_exponent=int(sec,16),is_compressed=addr_type.name != 'legacy')
 		if key is None:
 			die(1,"can't parse {}".format(sec))
@@ -200,7 +205,7 @@ class GenToolMoneropy(GenTool):
 		global addr_type
 		addr_type = MMGenAddrType('M')
 
-	def run(self,sec):
+	def run(self,sec,vcoin):
 		sk_t,vk_t,addr_t = self.mpa.account_from_spend_key(sec) # VERY slow!
 		return gtr(sk_t,addr_t,vk_t)
 
@@ -269,7 +274,7 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 		a_vk = None
 		tinfo = (in_bytes,sec,sec.wif,kg_a.desc,kg_b.desc)
 		if isinstance(kg_b,GenTool):
-			b = kg_b.run(sec)
+			b = kg_b.run_tool(sec)
 			test_equal('WIF keys',sec.wif,b.wif,*tinfo)
 			test_equal('addresses',a_addr,b.addr,*tinfo)
 			if b.vk:

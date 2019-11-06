@@ -57,10 +57,9 @@ class CoinInfo(object):
 #   Trust levels apply to key/address generation only.
 #   Non core-coin fork coins (i.e. BCG) must be disabled here to prevent generation from
 #   incorrect scrambled seed.
-	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
-	ce('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
+	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True,  5),
+	ce('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False, 5),
 	ce('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
-	ce('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False,-1),
 	ce('2GiveCoin',             '2GIVE',   0xa7,   (0x27,('G','H')), None,             False, 0),
 	ce('42Coin',                '42',      0x88,   (0x08,'4'),       None,             False, 1),
 	ce('ACoin',                 'ACOIN',   0xe6,   (0x17,'A'),       None,             False, 0),
@@ -210,12 +209,16 @@ class CoinInfo(object):
 	)
 
 	coin_constants['testnet'] = (
+	ce('Bitcoin',     'BTC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
+	ce('Bcash',       'BCH',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
+	ce('BitcoinGold', 'BCG',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True, -1),
 	ce('Dash',        'DASH',  0xef,   (0x8c,'y'),       (0x13,('8','9')), False, 1),
 	ce('Decred',      'DCR',   0x230e, (0x0f21,'T'),     (0x0e6c,'S'),     False, 1),
 	ce('Dogecoin',    'DOGE',  0xf1,   (0x71,'n'),       (0xc4,'2'),       False, 2),
 	ce('Feathercoin', 'FTC',   0xc1,   (0x41,'T'),       (0xc4,'2'),       False, 2),
 	ce('Viacoin',     'VIA',   0xff,   (0x7f,'t'),       (0xc4,'2'),       False, 2),
 	ce('Emercoin',    'EMC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       False, 2),
+	ce('Litecoin',    'LTC',   0xef,   (0x6f,('m','n')), (0x3a,'Q'),       True,  5), # old p2sh: 0xc4
 	)
 
 	coin_sources = (
@@ -650,9 +653,11 @@ class CoinInfo(object):
 			# If 'tool' is not specified, the first tool supporting the coin will be selected.
 			'pycoin': (
 				'DASH', # only compressed
+				'BCH',
 				'BTC','LTC','VIA','FTC','DOGE','MEC',
 				'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR'),
 			'keyconv': (
+				'BCH',
 				# broken: PIVX
 				'42','AC','AIB','ANC','ARS','ATMOS','AUR','BLK','BQC','BTC','TEST','BTCD','CCC','CCN','CDN',
 				'CLAM','CNC','CNOTE','CON','CRW','DEEPONION','DGB','DGC','DMD','DOGED','DOGE','DOPE',
@@ -668,6 +673,7 @@ class CoinInfo(object):
 		'testnet': {
 			'pycoin': {
 				'DASH':'tDASH', # only compressed
+				'BCH':'XTN',
 				'BTC':'XTN','LTC':'XLT','VIA':'TVI','FTC':'FTX','DOGE':'XDT','DCR':'DCRT'
 				},
 			'ethkey': {},
