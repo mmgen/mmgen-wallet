@@ -34,6 +34,18 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 import sys
 def msg(s): sys.stderr.write(s+'\n')
 
+def test_equal(desc,a,b,*cdata):
+	if type(a) == int:
+		a = hex(a)
+		b = hex(b)
+	(network,coin,e,b_desc,verbose) = cdata
+	if verbose:
+		m = '  {:20}: {!r}'
+		msg(m.format(desc,a))
+	if a != b:
+		m = '{}s for {} {} do not match:\n  CoinInfo: {}\n  {}: {}'
+		raise ValueError(m.format(desc.capitalize(),coin.upper(),network,a,b_desc,b))
+
 from collections import namedtuple
 ce = namedtuple('CoinInfoEntry',
 	['name','symbol','wif_ver_num','p2pkh_info','p2sh_info','has_segwit','trust_level'])
@@ -123,7 +135,7 @@ class CoinInfo(object):
 	ce('Jumbucks',              'JBS',     0xab,   (0x2b,'J'),       (0x69,'j'),       False, 2),
 	ce('Lanacoin',              'LANA',    0xb0,   (0x30,'L'),       None,             False, 0),
 	ce('Latium',                'LAT',     0x80,   (0x17,'A'),       None,             False, 0),
-	ce('Litecoin',              'LTC',     0xb0,   (0x30,'L'),       (0x05,'3'),       True,  3),
+	ce('Litecoin',              'LTC',     0xb0,   (0x30,'L'),       (0x32,'M'),       True,  5), # old p2sh: 0x05
 	ce('LiteDoge',              'LDOGE',   0xab,   (0x5a,'d'),       None,             False, 0),
 	ce('LomoCoin',              'LMC',     0xb0,   (0x30,'L'),       None,             False, 0),
 	ce('Marscoin',              'MARS',    0xb2,   (0x32,'M'),       None,             False, 0),
@@ -388,6 +400,63 @@ class CoinInfo(object):
 	}
 
 	@classmethod
+	def verify_leading_symbols(cls,quiet=False,verbose=False):
+
+		for network in ('mainnet','testnet'):
+			for coin in [e.symbol for e in cls.coin_constants[network]]:
+				e = cls.get_entry(coin,network)
+				cdata = (network,coin,e,'Computed value',verbose)
+
+				if not quiet:
+					msg('{} {}'.format(coin,network))
+
+				vn_info = e.p2pkh_info
+				ret = cls.find_addr_leading_symbol(vn_info[0])
+				test_equal('P2PKH leading symbol',vn_info[1],ret,*cdata)
+
+				vn_info = e.p2sh_info
+				if vn_info:
+					ret = cls.find_addr_leading_symbol(vn_info[0])
+					test_equal('P2SH leading symbol',vn_info[1],ret,*cdata)
+
+	@classmethod
+	def verify_core_coin_data(cls,quiet=False,verbose=False):
+		from mmgen.protocol import CoinProtocol
+
+		for network in ('mainnet','testnet'):
+			for coin in CoinProtocol.core_coins:
+				e = cls.get_entry(coin,network)
+				if e:
+					proto = CoinProtocol(coin,testnet=network=='testnet')
+					cdata = (network,coin,e,proto.__name__,verbose)
+					if not quiet:
+						msg('Verifying {} {}'.format(coin.upper(),network))
+
+					if coin != 'bch': # TODO
+						test_equal('coin name',e.name,proto.name.capitalize(),*cdata)
+
+					if e.trust_level != -1:
+						test_equal('Trust level',e.trust_level,CoinProtocol.coins[coin].trust_level,*cdata)
+
+					test_equal(
+						'WIF version number',
+						e.wif_ver_num,
+						int.from_bytes(bytes.fromhex(proto.wif_ver_num['std']),'big'),
+						*cdata )
+
+					test_equal(
+						'P2PKH version number',
+						e.p2pkh_info[0],
+						int.from_bytes(proto.addr_fmt_to_ver_bytes('p2pkh'),'big'),
+						*cdata )
+
+					test_equal(
+						'P2SH version number',
+						e.p2sh_info[0],
+						int.from_bytes(proto.addr_fmt_to_ver_bytes('p2sh'),'big'),
+						*cdata )
+
+	@classmethod
 	def get_supported_coins(cls,network):
 		return [e for e in cls.coin_constants[network] if e.trust_level != -1]
 
@@ -469,6 +538,9 @@ class CoinInfo(object):
 
 	@classmethod
 	def find_addr_leading_symbol(cls,ver_num,verbose=False):
+
+		if ver_num == 0:
+			return '1'
 
 		def phash2addr(ver_num,pk_hash):
 			from mmgen.protocol import _b58chk_encode
@@ -618,3 +690,15 @@ class CoinInfo(object):
 		'segwit': { 'pycoin': ('LTC',), 'keyconv': True },
 		'bech32': { 'keyconv': True },
 	}
+
+if __name__ == '__main__':
+	quiet = '--quiet' in sys.argv
+	verbose = '--verbose' in sys.argv
+	if verbose:
+		quiet = False
+
+	msg('Checking CoinInfo WIF/P2PKH/P2SH version numbers and trust levels against protocol.py')
+	CoinInfo.verify_core_coin_data(quiet=quiet,verbose=verbose)
+
+	msg('Checking CoinInfo address leading symbols')
+	CoinInfo.verify_leading_symbols(quiet=quiet,verbose=verbose)

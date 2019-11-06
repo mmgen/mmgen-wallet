@@ -29,13 +29,14 @@ tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names --quiet'
 gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
+altcoin_py='mmgen/altcoin.py --quiet'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
+dfl_tests='misc obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
 add_tests='autosign_minimal autosign_live'
 
 PROGNAME=$(basename $0)
@@ -80,6 +81,7 @@ do
 		echo   "     tool     - tooltest (all supported coins)"
 		echo   "     tool2    - tooltest2 (all supported coins)"
 		echo   "     gen      - gentest (all supported coins)"
+		echo   "     misc     - miscellaneous tests that don't fit in the above categories"
 		echo   "  By default, all tests are run"
 		exit ;;
 	b)  test_py+=" --buf-keypress" ;;
@@ -110,6 +112,7 @@ do
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
+		altcoin_py="${altcoin_py/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
 		gentest_py="${gentest_py/--quiet/--verbose}"
 		tooltest_py+=" --verbose"
@@ -195,6 +198,13 @@ do_test() {
 		}
 	done
 }
+
+i_misc='Miscellaneous'
+s_misc='Testing various subsystems'
+t_misc="
+	$altcoin_py
+"
+f_misc='Miscellaneous tests complete'
 
 i_obj='Data object'
 s_obj='Testing data objects'

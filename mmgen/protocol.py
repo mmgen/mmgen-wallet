@@ -458,6 +458,8 @@ class CoinProtocol(MMGenObject):
 		'zec': pi(ZcashProtocol,ZcashTestnetProtocol,2),
 		'xmr': pi(MoneroProtocol,MoneroTestnetProtocol,4)
 	}
+	core_coins = tuple(coins.keys())
+
 	def __new__(cls,coin,testnet):
 		coin = coin.lower()
 		assert type(testnet) == bool
