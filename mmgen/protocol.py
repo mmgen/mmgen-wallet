@@ -479,7 +479,9 @@ class CoinProtocol(MMGenObject):
 def init_genonly_altcoins(usr_coin=None):
 	"""
 	Initialize altcoin protocol class or classes for current network.
-	If usr_coin is None, initializes all supported altcoins for current network.
+	If usr_coin is a core coin, initialization is skipped.
+	If usr_coin has a trust level of -1, an exception is raised.
+	If usr_coin is None, initializes all coins for current network with trust level >-1.
 	Returns trust_level of usr_coin, or 0 (untrusted) if usr_coin is None.
 	"""
 	from mmgen.altcoin import CoinInfo as ci
@@ -491,7 +493,7 @@ def init_genonly_altcoins(usr_coin=None):
 			data[network] = ci.get_supported_coins(network)
 		trust_level = 0
 	else:
-		if usr_coin.lower() in CoinProtocol.coins:
+		if usr_coin.lower() in CoinProtocol.core_coins: # core coin, so return immediately
 			return CoinProtocol.coins[usr_coin.lower()].trust_level
 		for network in networks:
 			data[network] = (ci.get_entry(usr_coin,network),)

@@ -32,7 +32,7 @@ from mmgen.common import *
 rounds = 100
 opts_data = {
 	'text': {
-		'desc': 'Test address generation of the MMGen suite in various ways',
+		'desc': 'Test key/address generation of the MMGen suite in various ways',
 		'usage':'[options] [spec] [rounds | dump file]',
 		'options': """
 -h, --help       Print this help message

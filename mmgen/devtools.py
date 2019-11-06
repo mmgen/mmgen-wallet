@@ -27,10 +27,10 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 	def Pexit(*args):
 		pexit(*args,out=sys.stdout)
 
-	def print_stack_trace(message):
+	def print_stack_trace(message=None):
 		tb1 = traceback.extract_stack()
 		tb2 = [t for t in tb1 if t.filename[:1] != '<'][2:-2]
-		sys.stderr.write('STACK TRACE {}:\n'.format(message))
+		sys.stderr.write('STACK TRACE {}:\n'.format(message or '(unnamed)'))
 		fs = '    {}:{}: in {}:\n        {}\n'
 		for t in tb2:
 			fn = re.sub(r'^\./','',os.path.relpath(t.filename))

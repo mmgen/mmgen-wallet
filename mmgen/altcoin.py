@@ -43,7 +43,8 @@ class CoinInfo(object):
 	coin_constants['mainnet'] = (
 #   Trust levels: -1=disabled 0=untested 1=low 2=med 3=high 4=very high (no warn) 5=unconditional
 #   Trust levels apply to key/address generation only.
-#   Fork coins must be disabled here to prevent generation from incorrect sub-seed.
+#   Non core-coin fork coins (i.e. BCG) must be disabled here to prevent generation from
+#   incorrect scrambled seed.
 	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
 	ce('BitcoinSegwit2X',       'B2X',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
 	ce('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
@@ -579,9 +580,6 @@ class CoinInfo(object):
 				'DASH', # only compressed
 				'BTC','LTC','VIA','FTC','DOGE','MEC',
 				'JBS','MZC','RIC','DFC','FAI','ARG','ZEC','DCR'),
-			'ethkey': ('ETH','ETC'),
-			'zcash-mini': ('ZEC',),
-			'moneropy': ('XMR',),
 			'keyconv': (
 				# broken: PIVX
 				'42','AC','AIB','ANC','ARS','ATMOS','AUR','BLK','BQC','BTC','TEST','BTCD','CCC','CCN','CDN',
@@ -590,7 +588,10 @@ class CoinInfo(object):
 				'IXC','JBS','LBRY','LEAF','LTC','MMC','MONA','MUE','MYRIAD','MZC','NEOS','NLG','NMC','NVC',
 				'NYAN','OK','OMC','PIGGY','PINK','PKB','PND','POT','PPC','PTC','PTS','QTUM','RBY','RDD',
 				'RIC','SCA','SDC','SKC','SPR','START','SXC','TPC','UIS','UNO','VIA','VPN','VTC','WDC','WKC',
-				'WUBS', 'XC', 'XPM', 'YAC', 'ZOOM', 'ZRC')
+				'WUBS', 'XC', 'XPM', 'YAC', 'ZOOM', 'ZRC'),
+			'ethkey': ('ETH','ETC'),
+			'zcash-mini': ('ZEC',),
+			'moneropy': ('XMR',),
 		},
 		'testnet': {
 			'pycoin': {
