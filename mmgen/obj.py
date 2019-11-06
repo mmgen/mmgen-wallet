@@ -497,10 +497,10 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,s)
-			va = g.proto.verify_addr(s,hex_width=cls.hex_width,return_dict=True)
-			assert va,'coin address {!r} failed verification'.format(s)
-			me.addr_fmt = va['format']
-			me.hex = va['hex']
+			ap = g.proto.parse_addr(s)
+			assert ap,'coin address {!r} could not be parsed'.format(s)
+			me.addr_fmt = ap.fmt
+			me.hex = ap.bytes.hex()
 			return me
 		except Exception as e:
 			return cls.init_fail(e,s,objname='{} address'.format(g.proto.__name__))
@@ -521,21 +521,12 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		if g.proto.__name__[:8] == 'Ethereum':
 			return True
 
-		def pfx_ok(pfx):
-			if type(pfx) == tuple:
-				if self[0] in pfx: return True
-			elif self[:len(pfx)] == pfx: return True
-			return False
-
 		proto = g.proto.get_protocol_by_chain(chain)
-		vn = proto.addr_ver_num
 
 		if self.addr_fmt == 'bech32':
 			return self[:len(proto.bech32_hrp)] == proto.bech32_hrp
-		elif self.addr_fmt == 'p2sh' and 'p2sh2' in vn:
-			return pfx_ok(vn['p2sh'][1]) or pfx_ok(vn['p2sh2'][1])
 		else:
-			return pfx_ok(vn[self.addr_fmt][1])
+			return bool(proto.parse_addr(self))
 
 class TokenAddr(CoinAddr):
 	color = 'blue'

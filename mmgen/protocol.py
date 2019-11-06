@@ -21,7 +21,7 @@ protocol.py: Coin protocol functions, classes and methods
 """
 
 import sys,os,hashlib
-from collections import namedtuple
+from collections import namedtuple,OrderedDict
 
 from mmgen.util import msg,ymsg,Msg,ydie
 from mmgen.devtools import *
@@ -30,6 +30,7 @@ from mmgen.globalvars import g
 import mmgen.bech32 as bech32
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
+parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
 
 def hash160(hexnum): # take hex, return hex - OP_HASH160
 	return hashlib.new('ripemd160',hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
@@ -71,7 +72,8 @@ class BitcoinProtocol(MMGenObject):
 	name            = 'bitcoin'
 	daemon_name     = 'bitcoind'
 	daemon_family   = 'bitcoind'
-	addr_ver_num    = { 'p2pkh': ('00','1'), 'p2sh':  ('05','3') }
+	addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
+	addr_len        = 20
 	wif_ver_num     = { 'std': '80' }
 	mmtypes         = ('L','C','S','B')
 	dfl_mmtype      = 'L'
@@ -101,6 +103,13 @@ class BitcoinProtocol(MMGenObject):
 	sign_mode          = 'daemon'
 	secp256k1_ge       = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 	privkey_len        = 32
+
+	@classmethod
+	def addr_fmt_to_ver_bytes(cls,req_fmt,return_hex=False):
+		for ver_hex,fmt in cls.addr_ver_bytes.items():
+			if req_fmt == fmt:
+				return ver_hex if return_hex else bytes.fromhex(ver_hex)
+		return False
 
 	@classmethod
 	def is_testnet(cls):
@@ -163,41 +172,38 @@ class BitcoinProtocol(MMGenObject):
 		return parsed_wif(key[:cls.privkey_len], pubkey_type, compressed)
 
 	@classmethod
-	def verify_addr(cls,addr,hex_width,return_dict=False):
+	def get_addr_len(cls,addr_fmt):
+		return cls.addr_len
 
-		if 'B' in cls.mmtypes and addr[:len(cls.bech32_hrp)] == cls.bech32_hrp:
-			ret = bech32.decode(cls.bech32_hrp,addr)
-			if ret[0] != cls.witness_vernum:
-				msg('{}: Invalid witness version number'.format(ret[0]))
-			elif ret[1]:
-				return {
-					'hex': bytes(ret[1]).hex(),
-					'format': 'bech32'
-				} if return_dict else True
-			return False
-
-		for addr_fmt in cls.addr_ver_num:
-			ver_num,pfx = cls.addr_ver_num[addr_fmt]
-			if type(pfx) == tuple:
-				if addr[0] not in pfx: continue
-			elif addr[:len(pfx)] != pfx: continue
-			addr_hex = _b58chk_decode(addr).hex()
-			if addr_hex[:len(ver_num)] != ver_num: continue
-			return {
-				'hex': addr_hex[len(ver_num):],
-				'format': { 'p2pkh':'p2pkh',
-							'p2sh':'p2sh',
-							'p2sh2':'p2sh',
-							'zcash_z':'zcash_z',
-							'viewkey':'viewkey'}[addr_fmt]
-			} if return_dict else True
+	@classmethod
+	def parse_addr_bytes(cls,addr_bytes):
+		for ver_hex,addr_fmt in cls.addr_ver_bytes.items():
+			ver_bytes = bytes.fromhex(ver_hex)
+			vlen = len(ver_bytes)
+			if addr_bytes[:vlen] == ver_bytes:
+				if len(addr_bytes[vlen:]) == cls.get_addr_len(addr_fmt):
+					return parsed_addr( addr_bytes[vlen:], addr_fmt )
 
 		return False
 
 	@classmethod
+	def parse_addr(cls,addr):
+
+		if 'B' in cls.mmtypes and addr[:len(cls.bech32_hrp)] == cls.bech32_hrp:
+			ret = bech32.decode(cls.bech32_hrp,addr)
+
+			if ret[0] != cls.witness_vernum:
+				msg('{}: Invalid witness version number'.format(ret[0]))
+				return False
+
+			return parsed_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
+
+		return cls.parse_addr_bytes(_b58chk_decode(addr))
+
+	@classmethod
 	def pubhash2addr(cls,pubkey_hash,p2sh):
 		assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
-		s = cls.addr_ver_num[('p2pkh','p2sh')[p2sh]][0] + pubkey_hash
+		s = cls.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=True) + pubkey_hash
 		return _b58chk_encode(bytes.fromhex(s))
 
 	# Segwit:
@@ -218,7 +224,7 @@ class BitcoinProtocol(MMGenObject):
 		return bech32.bech32_encode(cls.bech32_hrp,[cls.witness_vernum]+bech32.convertbits(d,8,5))
 
 class BitcoinTestnetProtocol(BitcoinProtocol):
-	addr_ver_num         = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
+	addr_ver_bytes       = { '6f': 'p2pkh', 'c4': 'p2sh' }
 	wif_ver_num          = { 'std': 'ef' }
 	data_subdir          = 'testnet'
 	daemon_data_subdir   = 'testnet3'
@@ -248,7 +254,7 @@ class BitcoinCashProtocol(BitcoinProtocol):
 
 class BitcoinCashTestnetProtocol(BitcoinCashProtocol):
 	rpc_port      = 18442
-	addr_ver_num  = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
+	addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
 	wif_ver_num   = { 'std': 'ef' }
 	data_subdir   = 'testnet'
 	daemon_data_subdir = 'testnet3'
@@ -265,7 +271,7 @@ class B2XProtocol(BitcoinProtocol):
 	]
 
 class B2XTestnetProtocol(B2XProtocol):
-	addr_ver_num       = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('c4','2') }
+	addr_ver_bytes     = { '6f': 'p2pkh', 'c4': 'p2sh' }
 	wif_ver_num        = { 'std': 'ef' }
 	data_subdir        = 'testnet'
 	daemon_data_subdir = 'testnet5'
@@ -277,7 +283,7 @@ class LitecoinProtocol(BitcoinProtocol):
 	daemon_name    = 'litecoind'
 	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' \
 						else os.path.join(g.home_dir,'.litecoin')
-	addr_ver_num   = { 'p2pkh': ('30','L'), 'p2sh':  ('32','M'), 'p2sh2':  ('05','3') } # 'p2sh' is new fmt
+	addr_ver_bytes = OrderedDict((('30','p2pkh'), ('32','p2sh'), ('05','p2sh'))) # new p2sh ver 0x32 must come first
 	wif_ver_num    = { 'std': 'b0' }
 	mmtypes         = ('L','C','S','B')
 	secs_per_block = 150
@@ -290,7 +296,7 @@ class LitecoinProtocol(BitcoinProtocol):
 
 class LitecoinTestnetProtocol(LitecoinProtocol):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'
-	addr_ver_num   = { 'p2pkh': ('6f',('m','n')), 'p2sh':  ('3a','Q'), 'p2sh2':  ('c4','2') }
+	addr_ver_bytes = OrderedDict((('6f','p2pkh'), ('3a','p2sh'), ('c4','p2sh')))
 	wif_ver_num    = { 'std': 'ef' } # same as Bitcoin testnet
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'
@@ -316,7 +322,7 @@ class DummyWIF(object):
 
 class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
-	addr_width = 40
+	addr_len   = 20
 	mmtypes    = ('E',)
 	dfl_mmtype = 'E'
 	name = 'ethereum'
@@ -336,10 +342,10 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 	base_proto  = 'Ethereum'
 
 	@classmethod
-	def verify_addr(cls,addr,hex_width,return_dict=False):
+	def parse_addr(cls,addr):
 		from mmgen.util import is_hex_str_lc
-		if is_hex_str_lc(addr) and len(addr) == cls.addr_width:
-			return { 'hex': addr, 'format': 'ethereum' } if return_dict else True
+		if is_hex_str_lc(addr) and len(addr) == cls.addr_len * 2:
+			return parsed_addr( bytes.fromhex(addr), 'ethereum' )
 		if g.debug: Msg("Invalid address '{}'".format(addr))
 		return False
 
@@ -367,14 +373,14 @@ class EthereumClassicTestnetProtocol(EthereumClassicProtocol):
 class ZcashProtocol(BitcoinProtocolAddrgen):
 	name         = 'zcash'
 	base_coin    = 'ZEC'
-	addr_ver_num = {
-		'p2pkh':   ('1cb8','t1'),
-		'p2sh':    ('1cbd','t3'),
-		'zcash_z': ('169a','zc'),
-		'viewkey': ('a8abd3','ZiVK') }
+	addr_ver_bytes = { '1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey' }
 	wif_ver_num  = { 'std': '80', 'zcash_z': 'ab36' }
 	mmtypes      = ('L','C','Z')
 	dfl_mmtype   = 'L'
+
+	@classmethod
+	def get_addr_len(cls,addr_fmt):
+		return (20,64)[addr_fmt in ('zcash_z','viewkey')]
 
 	@classmethod
 	def preprocess_key(cls,sec,pubkey_type):
@@ -395,21 +401,17 @@ class ZcashProtocol(BitcoinProtocolAddrgen):
 
 class ZcashTestnetProtocol(ZcashProtocol):
 	wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
-	addr_ver_num = {
-		'p2pkh':   ('1d25','tm'),
-		'p2sh':    ('1cba','t2'),
-		'zcash_z': ('16b6','zt'),
-		'viewkey': ('a8ac0c','ZiVt') }
+	addr_ver_bytes = { '1d25': 'p2pkh', '1cba': 'p2sh', '16b6': 'zcash_z', 'a8ac0c': 'viewkey' }
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 	name         = 'monero'
 	base_coin    = 'XMR'
-	addr_ver_num = { 'monero': ('12','4'), 'monero_sub': ('2a','8') } # 18,42
+	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
+	addr_len     = 68
 	wif_ver_num  = {}
 	mmtypes      = ('M',)
 	dfl_mmtype   = 'M'
-	addr_width   = 95
 	pubkey_type = 'monero' # required by DummyWIF
 
 	@classmethod
@@ -419,18 +421,15 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		return int.to_bytes(n,cls.privkey_len,'big')[::-1]
 
 	@classmethod
-	def verify_addr(cls,addr,hex_width,return_dict=False):
+	def parse_addr(cls,addr):
 
 		from mmgen.baseconv import baseconv,is_b58_str
 
 		def b58dec(addr_str):
 			l = len(addr_str)
-			a = ''.join([baseconv.tohex(addr_str[i*11:i*11+11],'b58',pad=16) for i in range(l//11)])
-			b = baseconv.tohex(addr_str[-(l%11):],'b58',pad=10)
+			a = b''.join([baseconv.tobytes(addr_str[i*11:i*11+11],'b58',pad=8) for i in range(l//11)])
+			b = baseconv.tobytes(addr_str[-(l%11):],'b58',pad=5)
 			return a + b
-
-		assert is_b58_str(addr),'Not valid base-58 string'
-		assert len(addr) == cls.addr_width,'Incorrect width'
 
 		ret = b58dec(addr)
 
@@ -440,13 +439,13 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 		except:
 			from mmgen.keccak import keccak_256
 
-		chk = keccak_256(bytes.fromhex(ret)[:-4]).hexdigest()[:8]
-		assert chk == ret[-8:],'{}: incorrect checksum.  Correct value: {}'.format(ret[-8:],chk)
+		chk = keccak_256(ret[:-4]).digest()[:4]
+		assert ret[-4:] == chk,'{}: incorrect checksum.  Correct value: {}'.format(ret[-4:].hex(),chk.hex())
 
-		return { 'hex': ret, 'format': 'monero' } if return_dict else True
+		return cls.parse_addr_bytes(ret)
 
 class MoneroTestnetProtocol(MoneroProtocol):
-	addr_ver_num = { 'monero': ('35','4'), 'monero_sub': ('3f','8') } # 53,63
+	addr_ver_bytes = { '35': 'monero', '3f': 'monero_sub' }
 
 class CoinProtocol(MMGenObject):
 	pi = namedtuple('proto_info',['main_cls','test_cls','trust_level']) # trust levels: see altcoin.py
@@ -526,9 +525,10 @@ def make_init_genonly_altcoins_str(data):
 		o += ["base_coin = '{}'".format(coin)]
 		o += ["name = '{}'".format(e.name.lower())]
 		o += ["nameCaps = '{}'".format(e.name)]
-		a = "addr_ver_num = {{ 'p2pkh': ({},{!r})".format(num2hexstr(e.p2pkh_info[0]),e.p2pkh_info[1])
-		b = ", 'p2sh':  ({},{!r})".format(num2hexstr(e.p2sh_info[0]),e.p2sh_info[1]) if e.p2sh_info else ''
-		o += [a+b+' }']
+		o += ["addr_ver_bytes = {{ {}: 'p2pkh'{} }}".format(
+			num2hexstr(e.p2pkh_info[0]),
+			", {}: 'p2sh'".format(num2hexstr(e.p2sh_info[0])) if e.p2sh_info else ''
+		)]
 		o += ["wif_ver_num = {{ 'std': {} }}".format(num2hexstr(e.wif_ver_num))]
 		o += ["mmtypes = ('L','C'{})".format(",'S'" if e.has_segwit else '')]
 		o += ["dfl_mmtype = '{}'".format('L')]

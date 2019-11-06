@@ -98,7 +98,9 @@ def segwit_is_active(exit_on_error=False):
 		return False
 
 def addr2pubhash(addr):
-	return g.proto.verify_addr(addr,addr.hex_width,return_dict=True)['hex']
+	ap = g.proto.parse_addr(addr)
+	assert ap,'coin address {!r} could not be parsed'.format(addr)
+	return ap.bytes.hex()
 
 def addr2scriptPubKey(addr):
 	return {
