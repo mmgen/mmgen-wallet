@@ -1521,6 +1521,21 @@ class MMGenBumpTX(MMGenTX):
 	def choose_output(self):
 		chg_idx = self.get_chg_output_idx()
 		init_reply = opt.output_to_reduce
+
+		def check_sufficient_funds(o_amt):
+			if o_amt < self.min_fee:
+				msg('Minimum fee ({} {c}) is greater than output amount ({} {c})'.format(
+					self.min_fee,o_amt,c=g.coin))
+				return False
+			return True
+
+		if len(self.outputs) == 1:
+			if check_sufficient_funds(self.outputs[0].amt):
+				self.bump_output_idx = 0
+				return 0
+			else:
+				die(1,'Insufficient funds to bump transaction')
+
 		while True:
 			if init_reply == None:
 				m = 'Choose an output to deduct the fee from (Hit ENTER for the change output): '
@@ -1539,13 +1554,11 @@ class MMGenBumpTX(MMGenTX):
 					o_amt = self.outputs[idx].amt
 					cs = ('',' (change output)')[chg_idx == idx]
 					p = 'Fee will be deducted from output {}{} ({} {})'.format(idx+1,cs,o_amt,g.coin)
-					if o_amt < self.min_fee:
-						msg('Minimum fee ({} {c}) is greater than output amount ({} {c})'.format(
-							self.min_fee,o_amt,c=g.coin))
-					elif opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
-						if opt.yes: msg(p)
-						self.bump_output_idx = idx
-						return idx
+					if check_sufficient_funds(o_amt):
+						if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
+							if opt.yes: msg(p)
+							self.bump_output_idx = idx
+							return idx
 
 	def set_min_fee(self):
 		self.min_fee = self.sum_inputs() - self.sum_outputs() + self.get_relay_fee()

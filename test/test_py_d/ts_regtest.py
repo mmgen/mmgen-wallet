@@ -569,7 +569,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if g.coin != 'BTC': return 'skip'
 		ext = '9343,3]{x}.testnet.rawtx'.format(x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
-		return self.user_txbump('bob',self.tr.trash_dir,txfile,'8s',has_label=False,signed_tx=False)
+		return self.user_txbump('bob',self.tr.trash_dir,txfile,'8s',has_label=False,signed_tx=False,one_output=True)
 
 	def bob_send_maybe_rbf(self):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
@@ -590,13 +590,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = self._create_tx_outputs('bob',(('L',1,''),)) # bob_sid:L:1
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
-	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True):
+	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True,one_output=False):
 		if not g.proto.cap('rbf'): return 'skip'
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
 			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		t.expect('OK? (Y/n): ','y') # output OK?
+		if not one_output:
+			t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?
 		t.do_comment(False,has_label=has_label)
 		if signed_tx:
