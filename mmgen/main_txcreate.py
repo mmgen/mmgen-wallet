@@ -37,6 +37,8 @@ opts_data = {
 -C, --tx-confs=    c  Desired number of confirmations (default: {g.tx_confs})
 -d, --outdir=      d  Specify an alternate directory 'd' for output
 -D, --contract-data=D Path to hex-encoded contract data (ETH only)
+-E, --fee-estimate-mode=M Specify the network fee estimate mode.  Choices:
+                      '{fec}'.  Default: '{fe}'
 -f, --tx-fee=      f  Transaction fee, as a decimal {cu} amount or as
                       {fu} (an integer followed by {fl}).
                       See FEE SPECIFICATION below.  If omitted, fee will be
@@ -63,6 +65,8 @@ opts_data = {
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			cu=g.coin,
+			fec="','".join(g.opt_values['fee_estimate_mode'][1]),
+			fe=g.opt_values['fee_estimate_mode'][1][0],
 			g=g),
 		'notes': lambda s: s.format(
 			help_notes('txcreate'),

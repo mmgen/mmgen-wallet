@@ -332,6 +332,10 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	if not check_opts(uopts):
 		die(1,'Options checking failed')
 
+	# Check user-set opts against g.opt_values, setting opt if unset:
+	if not check_opts2(uopts):
+		die(1,'Options checking failed')
+
 	if hasattr(g,'cfg_options_changed'):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
 		from mmgen.util import my_raw_input
@@ -366,7 +370,23 @@ def opt_is_tx_fee(val,desc):
 		return True
 	return False
 
-def check_opts(usr_opts):       # Returns false if any check fails
+def check_opts2(usr_opts): # Returns false if any check fails
+
+	for key in [e for e in opt.__dict__ if not e.startswith('__')]:
+		if key in g.opt_values:
+			val = getattr(opt,key)
+			d = g.opt_values[key]
+			if d[0] == 'nocase_str':
+				if val == None:
+					setattr(opt,key,d[1][0])
+				elif val.lower() not in d[1]:
+					m = "{!r}: invalid parameter for option --{} (valid choices: '{}')"
+					msg(m.format(val,key.replace('_','-'),"', '".join(d[1])))
+					return False
+
+	return True
+
+def check_opts(usr_opts): # Returns false if any check fails
 
 	def opt_splits(val,sep,n,desc):
 		sepword = 'comma' if sep == ',' else 'colon' if sep == ':' else "'{}'".format(sep)

@@ -198,6 +198,9 @@ class g(object):
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_DISABLE_MSWIN_PW_WARNING',
 	)
+	opt_values = { # first value is used as default
+		'fee_estimate_mode': ('nocase_str', ('conservative','economical')),
+	}
 
 	min_screen_width = 80
 	minconf = 1

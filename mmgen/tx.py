@@ -534,7 +534,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def get_rel_fee_from_network(self):
 		try:
-			ret = g.rpch.estimatesmartfee(opt.tx_confs)
+			ret = g.rpch.estimatesmartfee(opt.tx_confs,opt.fee_estimate_mode.upper())
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -607,10 +607,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			if tx_fee:
 				abs_fee = self.convert_and_check_fee(tx_fee,desc)
 			if abs_fee:
-				adj_disp = ' (after {}X adjustment)'.format(opt.tx_fee_adj)
 				p = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 						desc,
-						adj_disp if opt.tx_fee_adj != 1 and desc == 'Network-estimated' else '',
+						('',' (after {}X adjustment)'.format(opt.tx_fee_adj))[
+							opt.tx_fee_adj != 1 and desc.startswith('Network-estimated')],
 						('','≈')[self.fee_is_approximate],
 						abs_fee.hl(),
 						g.coin,
@@ -628,7 +628,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'User-selected'
 			start_fee = opt.tx_fee
 		else:
-			desc = 'Network-estimated'
+			desc = 'Network-estimated (mode: {})'.format(opt.fee_estimate_mode.upper())
 			fee_per_kb,fe_type = self.get_rel_fee_from_network()
 
 			if fee_per_kb < 0:
