@@ -499,8 +499,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
 		t = self.spawn('mmgen-txsend',['-d',self.tmpdir,'--'+user,'--status'] + extra_args + [tx_file])
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		if exp1: t.expect(exp1)
-		if exp2: t.expect(exp2)
+		if exp1: t.expect(exp1,regex=True)
+		if exp2: t.expect(exp2,regex=True)
 		return t
 
 	def user_txdo(  self, user, fee, outputs_cl, outputs_list,
@@ -626,8 +626,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		disable_debug()
 		ret = self.spawn('mmgen-regtest',['show_mempool']).read()
 		restore_debug()
-		self.mempool = literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
-		return self.mempool
+		return literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
 
 	def get_mempool1(self):
 		mp = self._get_mempool()
@@ -654,12 +653,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		chk = self.read_from_tmpfile('rbf_txid')
 		if chk.strip() == mp[0]:
 			rdie(2,'TX in mempool has not changed!  RBF bump failed')
+		self.write_to_tmpfile('rbf_txid2',mp[0]+'\n')
 		return 'ok'
 
 	def bob_rbf_status2(self):
 		if not g.proto.cap('rbf'): return 'skip'
+		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
-			'Transaction has been replaced','{} in mempool'.format(self.mempool[0]))
+			'Transaction has been replaced','{} in mempool'.format(new_txid))
 
 	def bob_rbf_status3(self):
 		if not g.proto.cap('rbf'): return 'skip'
@@ -667,9 +668,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_rbf_status4(self):
 		if not g.proto.cap('rbf'): return 'skip'
+		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 1 confirmation',
-			'Replacing transactions:\n  {}'.format(self.mempool[0]))
+			'Replacing transactions:\s+{}'.format(new_txid))
 
 	def bob_rbf_status5(self):
 		if not g.proto.cap('rbf'): return 'skip'
@@ -677,9 +679,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_rbf_status6(self):
 		if not g.proto.cap('rbf'): return 'skip'
+		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 2 confirmations',
-			'Replacing transactions:\n  {}'.format(self.mempool[0]))
+			'Replacing transactions:\s+{}'.format(new_txid))
 
 	@staticmethod
 	def _gen_pairs(n):

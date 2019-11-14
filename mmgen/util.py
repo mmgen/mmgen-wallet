@@ -520,7 +520,11 @@ def write_data_to_file( outfile,data,desc='data',
 			import msvcrt
 			msvcrt.setmode(sys.stdout.fileno(),os.O_BINARY)
 
-		sys.stdout.write(data.decode() if isinstance(data,bytes) else data)
+		# MSWin workaround. See msg_r()
+		try:
+			sys.stdout.write(data.decode() if isinstance(data,bytes) else data)
+		except:
+			os.write(1,data if isinstance(data,bytes) else data.encode())
 
 	def do_file(outfile,ask_write_prompt):
 		if opt.outdir and not ignore_opt_outdir and not os.path.isabs(outfile):

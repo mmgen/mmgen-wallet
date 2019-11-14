@@ -242,17 +242,17 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_passwdfile_chk(self,key,pat):
 		return self.ref_addrfile_chk(ftype='passwd',id_key=key,pat=pat)
 
-	def ref_passwdfile_chk_b58_20(self): return self.ref_passwdfile_chk(key='b58_20',pat='Base58.*len.* 20\n')
-	def ref_passwdfile_chk_b58_10(self): return self.ref_passwdfile_chk(key='b58_10',pat='Base58.*len.* 10\n')
-	def ref_passwdfile_chk_b32_24(self): return self.ref_passwdfile_chk(key='b32_24',pat='Base32.*len.* 24\n')
-	def ref_passwdfile_chk_b32_12(self): return self.ref_passwdfile_chk(key='b32_12',pat='Base32.*len.* 12\n')
-	def ref_passwdfile_chk_hex_32(self): return self.ref_passwdfile_chk(key='hex_32',pat='Hexadec.*len.* 32\n')
-	def ref_passwdfile_chk_hex_48(self): return self.ref_passwdfile_chk(key='hex_48',pat='Hexadec.*len.* 48\n')
-	def ref_passwdfile_chk_hex_64(self): return self.ref_passwdfile_chk(key='hex_64',pat='Hexadec.*len.* 64\n')
-	def ref_passwdfile_chk_bip39_12(self): return self.ref_passwdfile_chk(key='bip39_12',pat='BIP39.*len.* 12\n')
-	def ref_passwdfile_chk_bip39_18(self): return self.ref_passwdfile_chk(key='bip39_18',pat='BIP39.*len.* 18\n')
-	def ref_passwdfile_chk_bip39_24(self): return self.ref_passwdfile_chk(key='bip39_24',pat='BIP39.*len.* 24\n')
-	def ref_passwdfile_chk_hex2bip39_12(self): return self.ref_passwdfile_chk(key='hex2bip39_12',pat='BIP39.*len.* 12\n')
+	def ref_passwdfile_chk_b58_20(self): return self.ref_passwdfile_chk(key='b58_20',pat=r'Base58.*len.* 20\b')
+	def ref_passwdfile_chk_b58_10(self): return self.ref_passwdfile_chk(key='b58_10',pat=r'Base58.*len.* 10\b')
+	def ref_passwdfile_chk_b32_24(self): return self.ref_passwdfile_chk(key='b32_24',pat=r'Base32.*len.* 24\b')
+	def ref_passwdfile_chk_b32_12(self): return self.ref_passwdfile_chk(key='b32_12',pat=r'Base32.*len.* 12\b')
+	def ref_passwdfile_chk_hex_32(self): return self.ref_passwdfile_chk(key='hex_32',pat=r'Hexadec.*len.* 32\b')
+	def ref_passwdfile_chk_hex_48(self): return self.ref_passwdfile_chk(key='hex_48',pat=r'Hexadec.*len.* 48\b')
+	def ref_passwdfile_chk_hex_64(self): return self.ref_passwdfile_chk(key='hex_64',pat=r'Hexadec.*len.* 64\b')
+	def ref_passwdfile_chk_bip39_12(self): return self.ref_passwdfile_chk(key='bip39_12',pat=r'BIP39.*len.* 12\b')
+	def ref_passwdfile_chk_bip39_18(self): return self.ref_passwdfile_chk(key='bip39_18',pat=r'BIP39.*len.* 18\b')
+	def ref_passwdfile_chk_bip39_24(self): return self.ref_passwdfile_chk(key='bip39_24',pat=r'BIP39.*len.* 24\b')
+	def ref_passwdfile_chk_hex2bip39_12(self): return self.ref_passwdfile_chk(key='hex2bip39_12',pat=r'BIP39.*len.* 12\b')
 
 	def ref_tx_chk(self):
 		fn = self.sources['ref_tx_file'][g.coin.lower()][bool(self.tn_ext)]
