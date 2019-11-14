@@ -181,7 +181,32 @@ class Hilite(object):
 		return self.colorize(self,color=False)
 
 class Str(str,Hilite): pass
-class Int(int,Hilite): pass
+
+class Int(int,Hilite,InitErrors):
+	min_val = None
+	max_val = None
+	max_digits = None
+	color = 'red'
+
+	def __new__(cls,n,base=10,on_fail='raise'):
+		if type(n) == cls:
+			return n
+		cls.arg_chk(on_fail)
+		try:
+			me = int.__new__(cls,str(n),base)
+			if cls.min_val != None:
+				assert me >= cls.min_val,'is less than cls.min_val ({})'.format(cls.min_val)
+			if cls.max_val != None:
+				assert me <= cls.max_val,'is greater than cls.max_val ({})'.format(cls.max_val)
+			if cls.max_digits != None:
+				assert len(str(me)) <= cls.max_digits,'has more than {} digits'.format(cls.max_digits)
+			return me
+		except Exception as e:
+			return cls.init_fail(e,n)
+
+	@classmethod
+	def colorize(cls,n,color=True):
+		return Hilite.colorize(repr(n),color=color)
 
 # For attrs that are always present in the data instance
 # Reassignment and deletion forbidden
@@ -285,24 +310,7 @@ class MMGenListItem(MMGenObject):
 			raise AttributeError(m.format(name,type(self)))
 		return object.__setattr__(self,name,value)
 
-class MMGenIdx(int,InitErrors):
-	min_val = 1
-	max_val = None
-	max_digits = None
-	def __new__(cls,num,on_fail='die'):
-		cls.arg_chk(on_fail)
-		try:
-			assert type(num) is not float,'is float'
-			me = int.__new__(cls,num)
-			if cls.max_digits:
-				assert len(str(me)) <= cls.max_digits,'has more than {} digits'.format(cls.max_digits)
-			if cls.max_val:
-				assert me <= cls.max_val,'is greater than {}'.format(cls.max_val)
-			assert me >= cls.min_val,'is less than {}'.format(cls.min_val)
-			return me
-		except Exception as e:
-			return cls.init_fail(e,num)
-
+class MMGenIdx(Int): min_val = 1
 class SeedShareIdx(MMGenIdx): max_val = 1024
 class SeedShareCount(SeedShareIdx): min_val = 2
 class MasterShareIdx(MMGenIdx): max_val = 1024

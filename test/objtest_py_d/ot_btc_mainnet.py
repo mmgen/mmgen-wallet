@@ -16,6 +16,16 @@ from .ot_common import *
 ssm = str(SeedShareCount.max_val)
 
 tests = OrderedDict([
+	('Int', {
+		'bad':  ('1L',0.0,'0.0','1.0',1.0,'s',1.1,'1.1'),
+		'good': (
+			('0',0),('-1',-1),('7',7),-1,0,1,9999999,
+			{'n':'0x0','base':16,'ret':0},
+			{'n':'0x1','base':16,'ret':1},
+			{'n':'0xf','base':16,'ret':15},
+			{'n':'0xff','base':16,'ret':255},
+		)
+	}),
 	('AddrIdx', {
 		'bad':  ('s',1.1,10000000,-1,0),
 		'good': (('7',7),(1,1),(9999999,9999999))

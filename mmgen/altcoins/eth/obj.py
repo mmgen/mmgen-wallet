@@ -20,10 +20,10 @@
 altcoins.eth.obj: Ethereum data type classes for the MMGen suite
 """
 
-# Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 from decimal import Decimal
-from mmgen.color import *
-from mmgen.obj import *
+from mmgen.obj import BTCAmt,Int
+
+# Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 class ETHAmt(BTCAmt):
 	max_prec = 18
 	max_amt = None
@@ -44,20 +44,5 @@ class ETHAmt(BTCAmt):
 	def toSzabo(self):  return int(Decimal(self) // self.szabo)
 	def toFinney(self): return int(Decimal(self) // self.finney)
 
-class ETHNonce(int,Hilite,InitErrors): # WIP
-	def __new__(cls,n,on_fail='die'):
-		if type(n) == cls: return n
-		cls.arg_chk(on_fail)
-		from mmgen.util import is_int
-		try:
-			assert is_int(n),"'{}': value is not an integer".format(n)
-			n = int(n)
-			assert n >= 0,"'{}': value is negative".format(n)
-			return int.__new__(cls,n)
-		except Exception as e:
-			return cls.init_fail(e,n)
-
-	@classmethod
-	def colorize(cls,s,color=True):
-		k = color if type(color) is str else cls.color # hack: override color with str value
-		return globals()[k](str(s)) if (color or cls.color_always) else str(s)
+class ETHNonce(Int):
+	min_val = 0
