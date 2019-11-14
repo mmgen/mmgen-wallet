@@ -268,26 +268,29 @@ t_alts="
 	$gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
 	$gentest_py --coin=zec 2 $rounds
 	$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
-
 	# verification against external libraries and tools:
+	#   pycoin
+	$gentest_py --all --type=legacy 2:pycoin $rounds
+	$gentest_py --all --type=compressed 2:pycoin $rounds
+	$gentest_py --all --type=segwit 2:pycoin $rounds
+	$gentest_py --all --type=bech32 2:pycoin $rounds
+
+	$gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
+	$gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
+	$gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
+	$gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
+	#   keyconv
 	$gentest_py --all --type=legacy 2:keyconv $rounds
 	$gentest_py --all --type=compressed 2:keyconv $rounds
-	$gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
 "
 
-[ "$MSYS2" ] || { # no pycoin (libsecp256k1), zcash-mini (golang), ethkey (?)
-	t_alts="$t_alts
-		$gentest_py --all --type=legacy 2:pycoin $rounds
-		$gentest_py --all --type=compressed 2:pycoin $rounds
-		$gentest_py --all --type=segwit 2:pycoin $rounds
-		$gentest_py --all --type=bech32 2:pycoin $rounds
-
-		$gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
-		$gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
-		$gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
-		$gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
-
+[ "$MSYS2" ] || { # no moneropy (pysha3), zcash-mini (golang), ethkey (?)
+	t_alts+="
+		#   moneropy
+		$gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
+		#   zcash-mini
 		$gentest_py --all 2:zcash-mini $rounds_mid
+		#   ethkey
 		$gentest_py --all 2:ethkey $rounds
 	"
 }

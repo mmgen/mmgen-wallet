@@ -38,7 +38,7 @@ class my_build_ext(build_ext):
 	def build_extension(self,ext):
 		build_ext.build_extension(self,ext)
 		ext_src = self.get_ext_fullpath(ext.name)
-		ext_dest = os.path.join('mmgen','secp256k1.so')
+		ext_dest = os.path.join('mmgen',os.path.basename(ext_src))
 		try: os.unlink(ext_dest)
 		except: pass
 		os.chmod(ext_src,0o755)
@@ -54,10 +54,9 @@ class my_install_data(install_data):
 module1 = Extension(
 	name         = 'mmgen.secp256k1',
 	sources      = ['extmod/secp256k1mod.c'],
-	libraries    = ['secp256k1'],
-	library_dirs = ['/usr/local/lib',r'c:\msys\local\lib'],
-	# mingw32 needs this, Linux can use it, but it breaks mingw64
-	include_dirs = ['/usr/local/include',r'c:\msys\local\include'],
+	libraries    = ['secp256k1'] + ([],['gmp'])[have_msys2],
+	library_dirs = ['/usr/local/lib',r'C:\msys64\mingw64\lib',r'C:\msys64\usr\lib'],
+	include_dirs = ['/usr/local/include',r'C:\msys64\mingw64\include',r'C:\msys64\usr\include'],
 	)
 
 
@@ -73,7 +72,7 @@ setup(
 		platforms    = 'Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian',
 		keywords     = g.keywords,
 		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
-		ext_modules  = [] if have_msys2 else [module1],
+		ext_modules  = [module1],
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode
 				'data_files/mn_wordlist.c',
