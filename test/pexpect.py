@@ -48,18 +48,18 @@ class MMGenPexpect(object):
 			from subprocess import run,DEVNULL
 			run([args[0]] + args[1:],check=True,stdout=DEVNULL if no_output else None)
 		else:
+			timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
 			if opt.pexpect_spawn:
-				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8')
+				self.p = pexpect.spawn(args[0],args[1:],encoding='utf8',timeout=timeout)
 				self.p.delaybeforesend = 0
 			else:
-				self.p = PopenSpawn(args,encoding='utf8')
+				self.p = PopenSpawn(args,encoding='utf8',timeout=timeout)
 #				self.p.delaybeforesend = 0 # TODO: try this here too
 
 			if opt.exact_output: self.p.logfile = sys.stdout
 
 		self.req_exit_val = 0
 		self.skip_ok = False
-		self.timeout = int(opt.pexpect_timeout or 0) or (60,5)[bool(opt.debug_pexpect)]
 		self.sent_value = None
 
 	def do_decrypt_ka_data(self,hp,pw,desc='key-address data',check=True,have_yes_opt=False):
@@ -177,7 +177,7 @@ class MMGenPexpect(object):
 				ret = 0
 			else:
 				f = (self.p.expect_exact,self.p.expect)[bool(regex)]
-				ret = f(s,self.timeout)
+				ret = f(s)
 		except pexpect.TIMEOUT:
 			if opt.debug_pexpect: raise
 			m1 = red('\nERROR.  Expect {!r} timed out.  Exiting\n'.format(s))

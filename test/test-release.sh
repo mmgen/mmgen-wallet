@@ -320,7 +320,7 @@ t_monero="
 f_monero='Monero tests completed'
 
 [ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
-	t_monero="$t_monero
+	t_monero+="
 $mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
 $mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
 rm $TMPDIR/*-MoneroWallet*
@@ -430,7 +430,6 @@ t_tool2="
 	$tooltest2_py --coin=bch
 	$tooltest2_py --coin=bch --testnet=1
 	$tooltest2_py --coin=zec
-	$tooltest2_py --coin=zec --type=zcash_z
 	$tooltest2_py --coin=xmr
 	$tooltest2_py --coin=dash
 	$tooltest2_py --coin=eth

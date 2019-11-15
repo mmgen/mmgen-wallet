@@ -588,9 +588,10 @@ tests = {
 					'ED3D 8AA4 BED4 0B40'),
 			],
 			'zec_mainnet': [
-				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].addrs'],'903E 7225 DD86 6E01'), ],
-			'zec_z_mainnet': [
-				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].addrs'],'9C7A 72DC 3D4A B3AF'), ],
+				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].addrs'],'903E 7225 DD86 6E01'),
+				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].addrs'], '9C7A 72DC 3D4A B3AF',
+					['--type=zcash_z'], 'opt.type = "zcash_z"' ),
+			],
 			'xmr_mainnet': [
 				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].addrs'],'4369 0253 AC2C 0E38'), ],
 			'dash_mainnet': [
@@ -620,10 +621,10 @@ tests = {
 			],
 			'zec_mainnet': [
 				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'F05A 5A5C 0C8E 2617', kafile_opts, kafile_code ), ],
-			'zec_z_mainnet': [
-				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'6B87 9B2D 0D8D 8D1E', kafile_opts, kafile_code ), ],
+				'F05A 5A5C 0C8E 2617', kafile_opts, kafile_code ),
+				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'], '6B87 9B2D 0D8D 8D1E',
+					kafile_opts + ['--type=zcash_z'], kafile_code + '\nopt.type = "zcash_z"' ),
+			],
 			'xmr_mainnet': [
 				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].akeys.mmenc'],
 				'E0D7 9612 3D67 404A', kafile_opts, kafile_code ), ],
@@ -670,7 +671,7 @@ def run_test(gid,cmd_name):
 			data = data[k]
 			m2 = ' ({})'.format(k)
 		else:
-			msg("-- no data for {} ({}) - skipping".format(cmd_name,k))
+			qmsg("-- no data for {} ({}) - skipping".format(cmd_name,k))
 			return
 	else:
 		if g.coin != 'BTC' or g.testnet: return
@@ -814,7 +815,7 @@ def list_tested_cmds():
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cmd_args = opts.init(opts_data)
+cmd_args = opts.init(opts_data,add_opts=['use_old_ed25519'])
 
 import mmgen.tool as tool
 

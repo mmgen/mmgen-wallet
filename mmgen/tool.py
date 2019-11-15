@@ -419,7 +419,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 		return (rs,addr)
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
-		"generate coin address from private key in hex format"
+		"generate coin address from raw private key data in hexadecimal format"
 		init_generators()
 		pk = PrivKey(bytes.fromhex(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
 		ph = kg.to_pubhex(pk)

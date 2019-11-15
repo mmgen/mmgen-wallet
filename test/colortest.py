@@ -16,7 +16,7 @@ init_color()
 def test_color():
 	try:
 		import colorama
-		colorama.init(strip=True,convert=True)
+		start_mscolor()
 	except:
 		pass
 
@@ -24,7 +24,10 @@ def test_color():
 
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
-		print('{}: {}'.format(t,ret))
+		if ret == None:
+			ymsg('Warning: unable to get info for terminal {!r}'.format(t))
+			continue
+		msg('{}: {}'.format(t,ret))
 		assert c == ret, "'colors' value for terminal {} ({}) does not match expected value of {}".format(t,ret,c)
 
 	ret = get_terminfo_colors()

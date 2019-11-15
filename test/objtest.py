@@ -81,7 +81,8 @@ def run_test(test,arg,input_data):
 		args = [arg]
 	try:
 		if not opt.super_silent:
-			msg_r((orange,green)[input_data=='good']('{:<22}'.format(repr(arg_copy)+':')))
+			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
+			msg_r((orange,green)[input_data=='good']('{:<22}'.format(arg_disp+':')))
 		cls = globals()[test]
 		ret = cls(*args,**kwargs)
 		bad_ret = list() if issubclass(cls,list) else None
@@ -96,7 +97,9 @@ def run_test(test,arg,input_data):
 		if input_data=='good' and ret != ret_chk and repr(ret) != repr(ret_chk):
 			raise UserWarning("Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk))
 		if not opt.super_silent:
-			msg('==> {}'.format(ret))
+			try: ret_disp = ret.decode()
+			except: ret_disp = ret
+			msg('==> {!r}'.format(ret_disp))
 		if opt.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 	except Exception as e:

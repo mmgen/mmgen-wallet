@@ -179,7 +179,7 @@ This coin's {pn} testing status: {}
 Are you sure you want to continue?
 """.strip().format(g.coin,tl[trust_level],pn=g.proj_name)
 	if g.test_suite:
-		msg(m); return
+		qmsg(m); return
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
