@@ -731,7 +731,9 @@ class TrackingWallet(MMGenObject):
 
 	@write_mode
 	def set_label(self,coinaddr,lbl):
-		if 'label_api' in g.rpch.caps:
+		# bitcoin-abc 'setlabel' RPC is broken, so use old 'importaddress' method to set label
+		# broken behavior: new label is set OK, but old label gets attached to another address
+		if 'label_api' in g.rpch.caps and g.coin != 'BCH':
 			return g.rpch.setlabel(coinaddr,lbl,on_fail='return')
 		else:
 			# NOTE: this works because importaddress() removes the old account before
