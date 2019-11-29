@@ -25,8 +25,9 @@ from decimal import Decimal
 
 from mmgen.common import *
 
-def dmsg_rpc(s):
-	if g.debug_rpc: msg(s)
+def dmsg_rpc(fs,data=None,is_json=False):
+	if g.debug_rpc:
+		msg(fs if data == None else fs.format(pp_fmt(json.loads(data) if is_json else data)))
 
 class CoinDaemonRPCConnection(MMGenObject):
 
@@ -115,7 +116,7 @@ class CoinDaemonRPCConnection(MMGenObject):
 			raise RPCFailure(s)
 
 		dmsg_rpc('=== request() debug ===')
-		dmsg_rpc('    RPC POST data ==> {}\n'.format(p))
+		dmsg_rpc('    RPC POST data ==>\n{}\n',p)
 
 		ca_type = self.coin_amt_type if hasattr(self,'coin_amt_type') else str
 		from mmgen.obj import HexStr
@@ -147,7 +148,7 @@ class CoinDaemonRPCConnection(MMGenObject):
 			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
 			return do_fail(None,2,m.format(g.proto.daemon_name,self.host,self.port))
 
-		dmsg_rpc('    RPC GETRESPONSE data ==> {}\n'.format(r.__dict__))
+		dmsg_rpc('    RPC GETRESPONSE data ==>\n{}\n',r.__dict__)
 
 		if r.status != 200:
 			if cf['on_fail'] not in ('silent','raise'):
@@ -163,7 +164,7 @@ class CoinDaemonRPCConnection(MMGenObject):
 
 		r2 = r.read().decode()
 
-		dmsg_rpc('    RPC REPLY data ==> {}\n'.format(r2))
+		dmsg_rpc('    RPC REPLY data ==>\n{}\n',r2,is_json=True)
 
 		if not r2:
 			return do_fail(r,2,'Empty reply')
