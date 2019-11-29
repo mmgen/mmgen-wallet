@@ -115,8 +115,9 @@ def get_balances():
 	g.testnet = True
 	rpc_init()
 	for u in (user1,user2):
-		bal = g.proto.coin_amt(g.rpch.getbalance('*',0,True))
-		if u == user1: user(user2)
+		bal = sum(e['amount'] for e in g.rpch.listunspent(0))
+		if u == user1:
+			user(user2)
 		msg('{:<16} {:12}'.format(u.capitalize()+"'s balance:",bal))
 		tbal += bal
 	msg('{:<16} {:12}'.format('Total balance:',tbal))
