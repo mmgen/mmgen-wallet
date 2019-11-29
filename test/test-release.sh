@@ -36,8 +36,8 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 monero_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='misc obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_tn ltc_rt tool tool2 gen'
-add_tests='autosign_minimal autosign_live'
+dfl_tests='misc obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
+extra_tests='autosign_minimal autosign_live ltc_tn bch_tn'
 
 PROGNAME=$(basename $0)
 while getopts hbCfFiIlOpRtvV OPT
@@ -74,6 +74,7 @@ do
 		echo   "     btc_tn   - bitcoin testnet"
 		echo   "     btc_rt   - bitcoin regtest"
 		echo   "     bch      - bitcoin cash (BCH)"
+		echo   "     bch_tn   - bitcoin cash (BCH) testnet"
 		echo   "     bch_rt   - bitcoin cash (BCH) regtest"
 		echo   "     ltc      - litecoin"
 		echo   "     ltc_tn   - litecoin testnet"
@@ -103,7 +104,7 @@ do
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
-		echo -e "Additional tests:\n  $add_tests"
+		echo -e "Additional tests:\n  $extra_tests"
 		exit ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
@@ -389,6 +390,13 @@ s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the follow
 t_bch="$test_py --coin=bch --exclude regtest"
 f_bch='You may stop the Bitcoin ABC daemon if you wish'
 
+i_bch_tn='Bitcoin cash (BCH) testnet'
+s_bch_tn='The bitcoin-abc testnet daemon must both be running for the following tests'
+t_bch_tn="
+	$test_py --coin=bch --testnet=1 --exclude regtest
+"
+f_bch_tn='You may stop the bitcoin-abc testnet daemon if you wish'
+
 i_bch_rt='Bitcoin cash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt="$test_py --coin=bch regtest"
@@ -510,7 +518,7 @@ run_tests() {
 
 check_args() {
 	for i in $tests; do
-		echo "$dfl_tests $add_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
+		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
 	done
 }
 

@@ -66,8 +66,8 @@ class TestSuiteShared(object):
 		else:
 			if have_est_fee:
 				t.send('n')
-				if g.proto.base_coin == 'ETH': # TODO: pexpect race condition?
-					time.sleep(0.05)
+				if g.coin == 'BCH' or g.proto.base_coin == 'ETH': # TODO: pexpect race condition?
+					time.sleep(0.1)
 			if eth_fee_res:
 				t.expect('or gas price: ',interactive_fee+'\n')
 			else:
