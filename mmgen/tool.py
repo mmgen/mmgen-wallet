@@ -888,19 +888,23 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 		"sync Monero wallets from key-address list"
 		return self.monero_wallet_ops(infile=xmr_keyaddrfile,op='sync',addrs=addrs)
 
-	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs=''):
+	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[],wallet_cli_args=[]):
 
 		exit_if_mswin('Monero wallet operations')
+
+		if opt.rpc_port:
+			monerod_args = ['--rpc-bind-port={}'.format(opt.rpc_port)]
+			wallet_cli_args = ['--daemon-address=localhost:{}'.format(opt.rpc_port)]
 
 		def run_cmd(cmd):
 			from subprocess import run,PIPE,DEVNULL
 			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
 
 		def test_rpc():
-			cp = run_cmd(['monero-wallet-cli','--version'])
+			cp = run_cmd(['monero-wallet-cli'] + wallet_cli_args + ['--version'])
 			if not b'Monero' in cp.stdout:
 				die(1,"Unable to run 'monero-wallet-cli'!")
-			cp = run_cmd(['monerod','status'])
+			cp = run_cmd(['monerod'] + monerod_args + ['status'])
 			import re
 			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
 			if not m:
@@ -934,7 +938,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			try: os.stat(fn)
 			except: pass
 			else: die(1,"Wallet '{}' already exists!".format(fn))
-			p = pexpect.spawn('monero-wallet-cli --generate-from-spend-key {}'.format(fn))
+			p = pexpect.spawn('monero-wallet-cli', wallet_cli_args + ['--generate-from-spend-key',fn])
 #			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
 			my_expect(p,'Awaiting initial prompt','Secret spend key: ')
 			my_sendline(p,'',d.sec,65)
@@ -971,7 +975,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			import time
 			try: os.stat(fn)
 			except: die(1,"Wallet '{}' does not exist!".format(fn))
-			p = pexpect.spawn('monero-wallet-cli --wallet-file={}'.format(fn))
+			p = pexpect.spawn('monero-wallet-cli', wallet_cli_args + ['--wallet-file={}'.format(fn)])
 #			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
 			my_expect(p,'Awaiting password prompt','Wallet password: ')
 			my_sendline(p,'Sending password',d.wallet_passwd,33)

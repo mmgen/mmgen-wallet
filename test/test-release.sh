@@ -325,12 +325,13 @@ t_xmr="
 	cs2=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	[ \"\$cs1\" == \"\$cs2\" ]
 "
-f_xmr='You may stop the Monero mainnet daemon if you wish'
+f_xmr='Monero tests completed'
 
-mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
+mmgen_tool_xmr="$mmgen_tool --rpc-port=18181 -q --accept-defaults --outdir $TMPDIR"
 
 [ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
 	t_xmr+="
+test/start-coin-daemons.py xmr
 $mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
 $mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
 rm $TMPDIR/*-MoneroWallet*
@@ -338,10 +339,11 @@ $mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
 $mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
 $mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
 $mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys
+test/stop-coin-daemons.py -W xmr
 	"
 }
 
-[ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 8 13'
+[ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 9 14'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum and Ethereum Classic'
