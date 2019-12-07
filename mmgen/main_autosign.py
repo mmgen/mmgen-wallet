@@ -130,11 +130,12 @@ def check_daemons_running():
 
 	for coin in coins:
 		g.proto = CoinProtocol(coin,g.testnet)
-		if g.proto.sign_mode != 'daemon': continue
+		if g.proto.sign_mode != 'daemon':
+			continue
 		vmsg('Checking {} daemon'.format(coin))
 		try:
 			rpc_init(reinit=True)
-			g.rpch.getbalance()
+			g.rpch.getblockcount()
 		except SystemExit as e:
 			if e.code != 0:
 				fs = '{} daemon not running or not listening on port {}'

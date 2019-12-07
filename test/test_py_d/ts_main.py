@@ -144,6 +144,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
+		if g.coin.lower() not in self.networks:
+			return
 		rpc_init()
 		self.lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		if g.coin in ('BTC','BCH','LTC'):

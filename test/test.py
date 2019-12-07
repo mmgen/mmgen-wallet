@@ -84,6 +84,7 @@ g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
 
 opts_data = {
+	'sets': [('list_current_cmd_groups',True,'list_cmd_groups',True)],
 	'text': {
 		'desc': 'Test suite for the MMGen suite',
 		'usage':'[options] [command(s) or metacommand(s)]',
@@ -102,7 +103,8 @@ opts_data = {
 -e, --exact-output   Show the exact output of the MMGen script(s) being run
 -G, --exclude-groups=G Exclude the specified command groups (comma-separated)
 -l, --list-cmds      List and describe the commands in the test suite
--L, --list-cmd-groups Output a list of command groups, with no descriptions
+-L, --list-cmd-groups Output a list of command groups with descriptions
+-g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
 -o, --log            Log commands to file {lf}
 -O, --pexpect-spawn  Use pexpect.spawn instead of popen_spawn (much slower,
@@ -145,7 +147,7 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	try: os.unlink(data_dir)
 	except: pass
 
-sys.argv = [sys.argv[0]] + ['--data-dir='+data_dir] + sys.argv[1:]
+sys.argv.insert(1,'--data-dir=' + data_dir)
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
@@ -154,6 +156,8 @@ usr_args = opts.init(opts_data)
 trash_dir = os.path.join('test','trash')
 if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	shm_dir = create_shm_dir(data_dir,trash_dir)
+
+network_id = g.coin.lower() + ('_tn' if g.testnet else '')
 
 check_segwit_opts()
 
@@ -536,10 +540,23 @@ class CmdGroupMgr(object):
 		return cls(trunner,cfgs,spawn_prog)
 
 	def list_cmd_groups(self):
+		ginfo = []
 		for gname in self.cmd_groups:
 			clsname,kwargs = self.cmd_groups[gname]
 			cls = self.load_mod(gname,kwargs['modname'] if 'modname' in kwargs else None)
-			msg('{:17} - {}'.format(gname,cls.__doc__))
+			ginfo.append((gname,cls))
+
+		if opt.list_current_cmd_groups:
+			exclude = (opt.exclude_groups or '').split(',')
+			ginfo = [g for g in ginfo
+						if network_id in g[1].networks
+							and not g[0] in exclude
+							and g[0] in self.dfl_groups + tuple(usr_args) ]
+
+		for name,cls in ginfo:
+			msg('{:17} - {}'.format(name,cls.__doc__))
+
+		Die(0,'\n'+' '.join(e[0] for e in ginfo))
 
 	def find_cmd_in_groups(self,cmd,group=None):
 		"""
@@ -602,9 +619,9 @@ class TestSuiteRunner(object):
 
 		passthru_opts = ['--{}{}'.format(k.replace('_','-'),
 							'=' + getattr(opt,k) if getattr(opt,k) != True else '')
-								for k in self.ts.passthru_opts if getattr(opt,k)]
+								for k in ('data_dir',) + self.ts.passthru_opts if getattr(opt,k)]
 
-		args = [cmd] + passthru_opts + ['--data-dir='+self.data_dir] + args
+		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
 		if opt.traceback:
 			args = ['scripts/traceback_run.py'] + args
@@ -902,7 +919,6 @@ if not opt.skip_deps: # do this before list cmds exit, so we stay in sync with s
 
 if opt.list_cmd_groups:
 	CmdGroupMgr().list_cmd_groups()
-	Die(0,'\n'+' '.join(CmdGroupMgr.cmd_groups))
 elif opt.list_cmds:
 	list_cmds()
 

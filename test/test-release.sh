@@ -34,9 +34,9 @@ mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
-monero_addrs='3,99,2,22-24,101-104'
+xmr_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='misc obj color unit hash ref alts monero eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
+dfl_tests='misc obj color unit hash ref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
 extra_tests='autosign_minimal autosign_live ltc_tn bch_tn'
 
 PROGNAME=$(basename $0)
@@ -67,7 +67,7 @@ do
 		echo   "     unit     - unit tests"
 		echo   "     hash     - internal hash function implementations"
 		echo   "     alts     - operations for all supported gen-only altcoins"
-		echo   "     monero   - operations for Monero"
+		echo   "     xmr      - operations for Monero"
 		echo   "     eth      - operations for Ethereum"
 		echo   "     autosign - autosign"
 		echo   "     btc      - bitcoin"
@@ -99,8 +99,8 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
-	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 monero_addrs='3,23' unit_tests_py+=" --fast" ;;
+	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
+	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -109,7 +109,7 @@ do
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
 	R)  NO_TMPFILE_REMOVAL=1 ;;
-	t)  TESTING=1 ;;
+	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
@@ -188,12 +188,19 @@ do_test() {
 	for test in "${tests_arr[@]}"; do
 		[ -z "$test" ] && continue
 		test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
-		[ "${test:0:1}" == '#' ] && { echo -e "$test_disp"; continue; }
+		[ "${test:0:1}" == '#' ] && {
+			[ "$LIST_CMDS" ] || echo -e "$test_disp"
+			continue
+		}
 		let n+=1
 		echo $skips | grep -q "\<$n\>" && continue
-		echo -e "${GREEN}Running:$RESET $test_disp"
+		if [ "$LIST_CMDS" ]; then
+			echo $test
+		else
+			echo -e "${GREEN}Running:$RESET $test_disp"
+		fi
 #		continue
-		[ "$TESTING" ] || eval "$test" || {
+		[ "$LIST_CMDS" ] || eval "$test" || {
 			echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
 			exit 1
 		}
@@ -205,7 +212,7 @@ s_misc='Testing various subsystems'
 t_misc="
 	$altcoin_py
 "
-f_misc='Miscellaneous tests complete'
+f_misc='Miscellaneous tests completed'
 
 i_obj='Data object'
 s_obj='Testing data objects'
@@ -217,17 +224,17 @@ t_obj="
 	$objtest_py --coin=eth
 	$objattrtest_py
 "
-f_obj='Data object test complete'
+f_obj='Data object tests completed'
 
 i_color='Color'
-s_color='Running color'
+s_color='Testing terminal colors'
 t_color="$colortest_py"
-f_color='Color tests complete'
+f_color='Terminal color tests completed'
 
 i_unit='Unit'
-s_unit='Running unit'
+s_unit='The bitcoin and bitcoin-abc mainnet daemons must be running for the following tests'
 t_unit="$unit_tests_py"
-f_unit='Unit tests run complete'
+f_unit='You may stop the bitcoin and bitcoin-abc mainnet daemons if you wish'
 
 i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
@@ -236,12 +243,12 @@ t_hash="
 	$python test/hashfunc.py sha512 $rounds_max # native sha512 - not used by MMGen
 	$python test/hashfunc.py keccak $rounds_max
 "
-f_hash='Hash function tests complete'
+f_hash='Hash function tests completed'
 
 [ "$ARM32" ] && t_hash_skip='2' # gmpy produces invalid init constants
 [ "$MSYS2" ] && t_hash_skip='2 3' # 2:py_long_long issues, 3:no pysha3 for keccak reference
 
-i_ref='Miscellaneous reference data tests'
+i_ref='Miscellaneous reference data'
 s_ref='The following tests will test some generated values against reference data'
 t_ref="
 	$scrambletest_py
@@ -307,32 +314,34 @@ else
 fi
 mkdir -p $TMPDIR
 
-i_monero='Monero'
-s_monero='Testing key-address file generation and wallet creation and sync operations for Monero'
-s_monero='The monerod (mainnet) daemon must be running for the following tests'
-t_monero="
+i_xmr='Monero'
+s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
+s_xmr='The monerod (mainnet) daemon must be running for the following tests'
+t_xmr="
 	mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
-	$mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs
+	$mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
 	cs1=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
-	$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $monero_addrs
+	$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
 	cs2=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	[ \"\$cs1\" == \"\$cs2\" ]
 "
-f_monero='Monero tests completed'
+f_xmr='You may stop the Monero mainnet daemon if you wish'
+
+mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
 
 [ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
-	t_monero+="
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
+	t_xmr+="
+$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
+$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
 rm $TMPDIR/*-MoneroWallet*
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
-$mmgen_tool -q --accept-defaults --outdir $TMPDIR syncmonerowallets $TMPDIR/*-XMR*.akeys
+$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
+$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
+$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
+$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys
 	"
 }
 
-[ "$monero_addrs" == '3,23' ] && t_monero_skip='4 8 13'
+[ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 8 13'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum and Ethereum Classic'
@@ -345,19 +354,19 @@ f_eth='Ethereum tests completed'
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'
 t_autosign="$test_py autosign"
-f_autosign='Autosign test complete'
+f_autosign='Autosign test completed'
 
 i_autosign_minimal='Autosign Minimal'
 s_autosign_minimal='The bitcoin mainnet and testnet daemons must be running for the following test'
 t_autosign_minimal="$test_py autosign_minimal"
-f_autosign_minimal='Autosign Minimal test complete'
+f_autosign_minimal='Autosign Minimal test completed'
 
 i_autosign_live='Autosign Live'
 s_autosign_live="The bitcoin mainnet and testnet daemons must be running for the following test\n"
 s_autosign_live+="${YELLOW}Mountpoint, '/etc/fstab' and removable device must be configured "
 s_autosign_live+="as described in 'mmgen-autosign --help'${RESET}"
 t_autosign_live="$test_py autosign_live"
-f_autosign_live='Autosign Live test complete'
+f_autosign_live='Autosign Live test completed'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
@@ -385,25 +394,23 @@ s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt="$test_py regtest"
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
-i_bch='Bitcoin cash (BCH)'
-s_bch='The bitcoin cash daemon (Bitcoin ABC) must both be running for the following tests'
+i_bch='Bcash (BCH) mainnet'
+s_bch='The bitcoin-abc mainnet daemon must both be running for the following tests'
 t_bch="$test_py --coin=bch --exclude regtest"
 f_bch='You may stop the Bitcoin ABC daemon if you wish'
 
-i_bch_tn='Bitcoin cash (BCH) testnet'
+i_bch_tn='Bcash (BCH) testnet'
 s_bch_tn='The bitcoin-abc testnet daemon must both be running for the following tests'
-t_bch_tn="
-	$test_py --coin=bch --testnet=1 --exclude regtest
-"
-f_bch_tn='You may stop the bitcoin-abc testnet daemon if you wish'
+t_bch_tn="$test_py --coin=bch --testnet=1 --exclude regtest"
+f_bch_tn='Bcash (BCH) testnet tests completed'
 
-i_bch_rt='Bitcoin cash (BCH) regtest'
+i_bch_rt='Bcash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt="$test_py --coin=bch regtest"
-f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
+f_bch_tn='You may stop the bitcoin-abc testnet daemon if you wish'
 
 i_ltc='Litecoin'
-s_ltc='The litecoin daemon must both be running for the following tests'
+s_ltc='The litecoin mainnet daemon must both be running for the following tests'
 t_ltc="
 	$test_py --coin=ltc --exclude regtest
 	$test_py --coin=ltc --segwit
@@ -491,7 +498,7 @@ t_gen="
 "
 f_gen='gentest tests completed'
 
-[ -d .git -a -n "$INSTALL"  -a -z "$TESTING" ] && {
+[ -d .git -a -n "$INSTALL"  -a -z "$LIST_CMDS" ] && {
 	check
 	uninstall
 	install
@@ -507,12 +514,16 @@ prompt_skip() {
 
 run_tests() {
 	for t in $1; do
-		eval echo -e "'\n'"\${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
-		eval echo -e $(echo \$s_$t)
+		if [ "$LIST_CMDS" ]; then
+			eval echo -e '\\n#' $(echo \$i_$t) "\($t\)"
+		else
+			eval echo -e "'\n'"\${GREEN}'###' Running $(echo \$i_$t) tests\$RESET
+			eval echo -e $(echo \$s_$t)
+		fi
 		[ "$PAUSE" ] && prompt_skip && continue
 		CUR_TEST=$t
 		do_test $t
-		eval echo -e \$GREEN$(echo \$f_$t)\$RESET
+		[ "$LIST_CMDS" ] || eval echo -e $(echo \$f_$t)
 	done
 }
 
@@ -526,7 +537,7 @@ tests=$dfl_tests
 [ "$*" ] && tests="$*"
 
 check_args
-echo "Running tests: $tests"
+[ "$LIST_CMDS" ] || echo "Running tests: $tests"
 START=$(date +%s)
 run_tests "$tests"
 TIME=$(($(date +%s)-START))
@@ -534,4 +545,4 @@ MS=$(printf %02d:%02d $((TIME/60)) $((TIME%60)))
 
 [ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release-*
 
-echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"
+[ "$LIST_CMDS" ] || echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"

@@ -29,6 +29,7 @@ from mmgen.seed import SeedSource
 
 class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
+	networks = ('btc','ltc','bch','eth')
 	tmpdir_nums = []
 	passthru_opts = ('coin','testnet')
 	cmd_group = (

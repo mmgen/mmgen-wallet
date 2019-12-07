@@ -43,7 +43,7 @@ If no test is specified, all available tests are run
 	}
 }
 
-sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
+sys.argv.insert(1,'--skip-cfg-file')
 cmd_args = opts.init(opts_data)
 
 def exit_msg():

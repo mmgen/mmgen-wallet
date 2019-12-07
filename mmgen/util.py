@@ -778,15 +778,21 @@ def do_license_msg(immed=False):
 	msg('')
 
 def get_daemon_cfg_options(cfg_keys):
-	cfg_file = os.path.join(g.proto.daemon_data_dir,g.proto.name+'.conf')
+
+	# Use dirname() to remove 'bob' or 'alice' component
+	cfg_dir = os.path.dirname(g.data_dir) if g.regtest else g.proto.daemon_data_dir
+	cfg_file = os.path.join(cfg_dir,g.proto.name+'.conf' )
+
 	try:
-		lines = get_lines_from_file(cfg_file,'',silent=bool(opt.quiet))
+		lines = get_lines_from_file(cfg_file,'',silent=not opt.verbose)
 		kv_pairs = [l.split('=') for l in lines]
 		cfg = {k:v for k,v in kv_pairs if k in cfg_keys}
 	except:
 		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))
 		cfg = {}
+
 	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
+
 	return cfg
 
 def get_coin_daemon_auth_cookie():

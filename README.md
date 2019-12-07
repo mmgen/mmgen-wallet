@@ -105,8 +105,8 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
   “signature” of your transactions.
 - **[Full control over transaction fees][M]:** Fees are specified as absolute or
   sat/byte amounts and can be adjusted interactively, letting you round fees to
-  improve anonymity.  Network fee estimation is available. [RBF][R] and [fee
-  bumping][B] are supported.
+  improve anonymity.  Network fee estimation, [RBF][R] and [fee bumping][B] are
+  supported.
 - **Support for six wallet formats:** three encrypted (native wallet,
   brainwallet, incognito wallet) and three unencrypted (mnemonic, mmseed,
   hexseed).
@@ -119,7 +119,7 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 - **[Transaction autosigning][X]:** This feature puts your offline signing
   machine into “hands-off” mode, allowing you to transact directly from cold
   storage securely and conveniently.  Additional LED signaling support is
-  provided for RPi and Armbian-based boards.
+  provided for Raspbian and Armbian platforms.
 - **[Password generation][G]:** MMGen can be used to generate and manage your
   online passwords.  Passwords are identified by arbitrarily chosen strings like
   “alice@github” or “bob@reddit”.

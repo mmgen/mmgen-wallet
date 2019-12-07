@@ -194,6 +194,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			opts = ['--coins='+','.join(coins)]
 			led_files = {   'opi': ('/sys/class/leds/orangepi:red:status/brightness',),
 							'rpi': ('/sys/class/leds/led0/brightness','/sys/class/leds/led0/trigger') }
+
 			for k in ('opi','rpi'):
 				if os.path.exists(led_files[k][0]):
 					led_support = k
@@ -209,15 +210,17 @@ class TestSuiteAutosign(TestSuiteBase):
 				omsg(purple("Running autosign test with '--led'"))
 				do_autosign_live(opts,mountpoint,led_opts=['--led'],gen_wallet=False)
 				omsg(purple("Running autosign test with '--stealth-led'"))
-				return do_autosign_live(opts,mountpoint,led_opts=['--stealth-led'],gen_wallet=False)
+				ret = do_autosign_live(opts,mountpoint,led_opts=['--stealth-led'],gen_wallet=False)
 			else:
-				return do_autosign_live(opts,mountpoint)
+				ret = do_autosign_live(opts,mountpoint)
 		else:
 			mountpoint = self.tmpdir
 			opts = ['--no-insert-check','--mountpoint='+mountpoint,'--coins='+','.join(coins)]
 			try: os.mkdir(joinpath(mountpoint,'tx'))
 			except: pass
-			return do_autosign(opts,mountpoint)
+			ret = do_autosign(opts,mountpoint)
+
+		return ret
 
 class TestSuiteAutosignMinimal(TestSuiteAutosign):
 	'autosigning with BTC, ETH and ETC'

@@ -14,12 +14,13 @@ include test/ref/zcash/*
 include test/ref/monero/*
 include test/misc/*.py
 
+include test/test-release.sh
+
 include mmgen/altcoins/eth/rlp/LICENSE
 include mmgen/altcoins/eth/pyethereum/LICENSE
 
 include scripts/compute-file-chksum.py
 include scripts/create-token.py
-include scripts/test-release.sh
 include scripts/uninstall-mmgen.py
 
 prune test/ref/__db*

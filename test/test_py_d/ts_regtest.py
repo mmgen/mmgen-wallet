@@ -20,9 +20,8 @@
 ts_regtest.py: Regtest tests for the test.py test suite
 """
 
-import os
+import os,json
 from decimal import Decimal
-from ast import literal_eval
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
@@ -626,7 +625,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		disable_debug()
 		ret = self.spawn('mmgen-regtest',['show_mempool']).read()
 		restore_debug()
-		return literal_eval(ret.split('\n')[0]) # allow for extra output by handler at end
+		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])',ret) # allow for extra output by handler at end
+		return json.loads(m.group(1))
 
 	def get_mempool1(self):
 		mp = self._get_mempool()

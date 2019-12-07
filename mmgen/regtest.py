@@ -24,8 +24,8 @@ import os,time,shutil
 from subprocess import run,PIPE
 from mmgen.common import *
 
-data_dir     = os.path.join(g.data_dir_root,'regtest',g.coin.lower())
-daemon_dir   = os.path.join(data_dir,'regtest')
+data_dir     = os.path.abspath(os.path.join(g.data_dir_root,'regtest',g.coin.lower()))
+daemon_dir   = os.path.abspath(os.path.join(data_dir,'regtest'))
 rpc_ports    = { 'btc':8552, 'bch':8553, 'b2x':8554, 'ltc':8555 }
 rpc_port     = rpc_ports[g.coin.lower()]
 rpc_user     = 'bobandalice'
@@ -76,7 +76,7 @@ def start_cmd(*args,**kwargs):
 	if 'pipe_stdout_only' in kwargs and kwargs['pipe_stdout_only']: ip = ep = None
 	return run(cmd,stdin=ip,stdout=op,stderr=ep)
 
-def test_daemon():
+def get_daemon_state():
 	cp = start_cmd('cli','getblockcount',quiet=True)
 	err = process_output(cp,silent=True)[1]
 	if "error: couldn't connect" in err or "error: Could not connect" in err:
@@ -88,7 +88,7 @@ def test_daemon():
 
 def wait_for_daemon(state,silent=False,nonl=False):
 	for i in range(200):
-		ret = test_daemon()
+		ret = get_daemon_state()
 		if not silent:
 			if opt.verbose: msg('returning state '+ret)
 			else: gmsg_r('.')
@@ -171,47 +171,11 @@ def cli(*args):
 	Msg_r(cp.stdout.decode())
 	msg_r(cp.stderr.decode())
 
-def fork(coin):
-	coin = coin.upper()
-	from mmgen.protocol import CoinProtocol
-	forks = CoinProtocol(coin,False).forks
-	if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
-		die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
-
-	gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
-	source_data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
-
-	try: os.stat(source_data_dir)
-	except: die(1,"Source directory '{}' does not exist!".format(source_data_dir))
-
-	# stop the other daemon
-	global rpc_port,data_dir
-	rpc_port_save,data_dir_save = rpc_port,data_dir
-	rpc_port = rpc_ports[coin.lower()]
-	data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
-	if test_daemon() != 'stopped':
-		stop_and_wait(silent=True,stop_silent=True)
-	rpc_port,data_dir = rpc_port_save,data_dir_save
-
-	try: os.makedirs(data_dir)
-	except: pass
-
-	# stop our daemon
-	if test_daemon() != 'stopped':
-		stop_and_wait(silent=True,stop_silent=True)
-
-	create_data_dir()
-	os.rmdir(data_dir)
-	shutil.copytree(source_data_dir,data_dir,symlinks=True)
-	start_and_wait('miner',reindex=True,silent=True)
-	stop_and_wait(silent=True,stop_silent=True)
-	gmsg('Fork {} successfully created'.format(g.coin))
-
 def setup():
 	try: os.makedirs(data_dir)
 	except: pass
 
-	if test_daemon() != 'stopped':
+	if get_daemon_state() != 'stopped':
 		stop_and_wait(silent=True,stop_silent=True)
 	create_data_dir()
 
@@ -233,10 +197,11 @@ def setup():
 	gmsg('Setup complete')
 
 def get_current_user_win(quiet=False):
-	if test_daemon() == 'stopped': return None
+	if get_daemon_state() == 'stopped': return None
 	logfile = os.path.join(daemon_dir,'debug.log')
 	for ss in ('Wallet completed loading in','Using wallet wallet'):
-		o = start_cmd('grep',ss,logfile,quiet=True).stdout.splitlines()
+		cp = run(['grep',ss,logfile],stdout=PIPE)
+		o = cp.stdout.splitlines()
 		if o:
 			last_line = o[-1].decode()
 			break
@@ -257,7 +222,7 @@ def get_current_user_win(quiet=False):
 		return None
 
 def get_current_user_unix(quiet=False):
-	cp = start_cmd('pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port),quiet=True)
+	cp = run(['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port)],stdout=PIPE)
 	cmdline = cp.stdout.decode()
 	if not cmdline:
 		return None
@@ -276,9 +241,9 @@ def user(user=None,quiet=False):
 	if user==None:
 		get_current_user()
 		return True
-	if test_daemon() == 'busy':
+	if get_daemon_state() == 'busy':
 		wait_for_daemon('ready')
-	if test_daemon() == 'ready':
+	if get_daemon_state() == 'ready':
 		if user == get_current_user(quiet=True):
 			if not quiet: msg('{} is already the current user for coin {}'.format(user.capitalize(),g.coin))
 			return True
@@ -292,7 +257,7 @@ def user(user=None,quiet=False):
 	gmsg('done')
 
 def stop(silent=False,ignore_noconnect_error=True):
-	if test_daemon() != 'stopped' and not silent:
+	if get_daemon_state() != 'stopped' and not silent:
 		gmsg('Stopping {} regtest daemon for coin {}'.format(g.proto.name,g.coin))
 	cp = start_cmd('cli','stop')
 	err = process_output(cp)[1]
@@ -316,7 +281,7 @@ def generate(blocks=1,silent=False):
 		else:
 			rdie(1,'Error getting new address:\n{}'.format(err))
 
-	if test_daemon() == 'stopped':
+	if get_daemon_state() == 'stopped':
 		die(1,'Regtest daemon is not running')
 
 	wait_for_daemon('ready',silent=True)
@@ -333,3 +298,39 @@ def generate(blocks=1,silent=False):
 		rdie(1,'Error generating blocks')
 
 	gmsg('Mined {} block{}'.format(blocks,suf(blocks)))
+
+def fork(coin):
+	coin = coin.upper()
+	from mmgen.protocol import CoinProtocol
+	forks = CoinProtocol(coin,False).forks
+	if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
+		die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
+
+	gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
+	source_data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
+
+	try: os.stat(source_data_dir)
+	except: die(1,"Source directory '{}' does not exist!".format(source_data_dir))
+
+	# stop the other daemon
+	global rpc_port,data_dir
+	rpc_port_save,data_dir_save = rpc_port,data_dir
+	rpc_port = rpc_ports[coin.lower()]
+	data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
+	if get_daemon_state() != 'stopped':
+		stop_and_wait(silent=True,stop_silent=True)
+	rpc_port,data_dir = rpc_port_save,data_dir_save
+
+	try: os.makedirs(data_dir)
+	except: pass
+
+	# stop our daemon
+	if get_daemon_state() != 'stopped':
+		stop_and_wait(silent=True,stop_silent=True)
+
+	create_data_dir()
+	os.rmdir(data_dir)
+	shutil.copytree(source_data_dir,data_dir,symlinks=True)
+	start_and_wait('miner',reindex=True,silent=True)
+	stop_and_wait(silent=True,stop_silent=True)
+	gmsg('Fork {} successfully created'.format(g.coin))

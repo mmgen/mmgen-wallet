@@ -192,7 +192,6 @@ class CoinDaemonRPCConnection(MMGenObject):
 		'estimatesmartfee',
 		'getaddressesbyaccount',
 		'getaddressesbylabel',
-		'getbalance',
 		'getblock',
 		'getblockchaininfo',
 		'getblockcount',

@@ -88,7 +88,8 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
 			ref_subdir = self._get_ref_subdir_by_coin(coin)
 			for tn in (False,True):
-				if tn and coin == 'etc': continue
+				if tn and coin == 'etc':
+					continue
 				g.testnet = tn
 				init_coin(coin)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]

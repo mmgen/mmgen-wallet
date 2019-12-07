@@ -32,8 +32,7 @@ from test.test_py_d.ts_wallet import TestSuiteWalletConv
 
 class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	'saved wallet files for 128-, 192- and 256-bit seeds + generated filename checks'
-	networks = ('btc','btc_tn','ltc','ltc_tn')
-	passthru_opts = ('coin','testnet')
+	networks = ('btc',)
 	mmtypes = (None,)
 	tmpdir_nums = [6,7,8]
 	addr_idx_list_in = '1010,500-501,31-33,1,33,500,1011'
@@ -189,6 +188,8 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 class TestSuiteRef3Addr(TestSuiteRef3Seed):
 	'generated reference address, key and password files for 128-, 192- and 256-bit seeds'
+	networks = ('btc','btc_tn','ltc','ltc_tn')
+	passthru_opts = ('coin','testnet')
 	tmpdir_nums = [26,27,28]
 	shared_deps = ['mmdat',pwfile]
 

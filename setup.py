@@ -33,6 +33,13 @@ from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.install_data import install_data
 
+cwd = os.getcwd()
+
+def copy_owner(a,b):
+	st = os.stat(a)
+	try: os.chown(b,st.st_uid,st.st_gid,follow_symlinks=False)
+	except: pass
+
 # install extension module in repository after building
 class my_build_ext(build_ext):
 	def build_extension(self,ext):
@@ -44,6 +51,7 @@ class my_build_ext(build_ext):
 		os.chmod(ext_src,0o755)
 		print('copying {} to {}'.format(ext_src,ext_dest))
 		copy2(ext_src,ext_dest)
+		copy_owner(cwd,ext_dest)
 
 class my_install_data(install_data):
 	def run(self):
@@ -58,7 +66,6 @@ module1 = Extension(
 	library_dirs = ['/usr/local/lib',r'C:\msys64\mingw64\lib',r'C:\msys64\usr\lib'],
 	include_dirs = ['/usr/local/include',r'C:\msys64\mingw64\include',r'C:\msys64\usr\include'],
 	)
-
 
 from mmgen.globalvars import g
 setup(
@@ -109,6 +116,7 @@ setup(
 			'mmgen.tool',
 			'mmgen.tw',
 			'mmgen.tx',
+			'mmgen.txsign',
 			'mmgen.util',
 
 			'mmgen.altcoins.__init__',
@@ -151,7 +159,6 @@ setup(
 			'mmgen.main_txsend',
 			'mmgen.main_txsign',
 			'mmgen.main_wallet',
-			'mmgen.txsign',
 
 			'mmgen.share.__init__',
 			'mmgen.share.Opts',

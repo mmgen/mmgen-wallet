@@ -29,6 +29,7 @@ from test.test_py_d.common import *
 class TestSuiteBase(object):
 	'initializer class for the test.py test suite'
 	passthru_opts = ()
+	extra_spawn_args = []
 	networks = ()
 	segwit_opts_ok = False
 
