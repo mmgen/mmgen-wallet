@@ -138,6 +138,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	tmpdir_nums = [17]
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
+		('current_user',             'current user'),
 		('walletgen_bob',            'wallet generation (Bob)'),
 		('walletgen_alice',          'wallet generation (Alice)'),
 		('addrgen_bob',              'address generation (Bob)'),
@@ -257,8 +258,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
 		t = self.spawn('mmgen-regtest',['-n','setup'])
 		os.environ['MMGEN_TEST_SUITE'] = '1'
-		for s in ('Starting setup','Creating','Mined','Creating','Creating','Setup complete'):
+		for s in ('Starting','Creating','Mined','Creating','Creating','Setup complete'):
 			t.expect(s)
+		return t
+
+	def current_user(self):
+		t = self.spawn('mmgen-regtest', ['user'])
+		t.expect('Bob')
 		return t
 
 	def walletgen(self,user):
@@ -343,7 +349,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if not sid: sid = self._user_sid(user)
 		addr = self.get_addr_from_addrlist(user,sid,mmtype,0,addr_range=addr_range)
 		t = self.spawn('mmgen-regtest', ['send',str(addr),str(amt)])
-		t.expect('Sending {} {}'.format(amt,g.coin))
+		t.expect('Sending {} miner {}'.format(amt,g.coin))
 		t.expect('Mined 1 block')
 		return t
 
@@ -484,12 +490,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_1conf2_getbalance(self): return self.bob_getbalance(rtBals_gb['1conf2'],confs=2)
 
 	def bob_alice_bal(self):
-		t = self.spawn('mmgen-regtest',['get_balances'])
+		t = self.spawn('mmgen-regtest',['balances'])
 		t.expect('Switching')
-		ret = t.expect_getend("Bob's balance:").strip()
-		cmp_or_die(rtBals[4],ret)
 		ret = t.expect_getend("Alice's balance:").strip()
 		cmp_or_die(rtBals[5],ret)
+		ret = t.expect_getend("Bob's balance:").strip()
+		cmp_or_die(rtBals[4],ret)
 		ret = t.expect_getend("Total balance:").strip()
 		cmp_or_die(rtBals[6],ret)
 		return t
@@ -623,7 +629,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def _get_mempool(self):
 		disable_debug()
-		ret = self.spawn('mmgen-regtest',['show_mempool']).read()
+		ret = self.spawn('mmgen-regtest',['mempool']).read()
 		restore_debug()
 		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])',ret) # allow for extra output by handler at end
 		return json.loads(m.group(1))

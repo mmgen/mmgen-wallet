@@ -345,8 +345,8 @@ def init_daemon_bitcoind():
 				auth_cookie=get_coin_daemon_auth_cookie())
 
 	if g.bob or g.alice:
-		from . import regtest as rt
-		rt.user(('alice','bob')[g.bob],quiet=True)
+		from mmgen.regtest import MMGenRegtest
+		MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
 	conn.daemon_version = int(conn.getnetworkinfo()['version'])
 	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
 	g.chain = conn.getblockchaininfo()['chain']

@@ -316,10 +316,10 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		g.testnet = True
 		g.regtest = True
 		g.proto = CoinProtocol(g.coin,g.testnet)
-		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
-		from . import regtest as rt
 		g.rpc_host = 'localhost'
-		g.rpc_port = rt.rpc_port
+		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
+		from mmgen.regtest import MMGenRegtest as rt
+		g.rpc_port = rt.rpc_ports[g.coin.lower()]
 		g.rpc_user = rt.rpc_user
 		g.rpc_password = rt.rpc_password
 
@@ -535,9 +535,9 @@ def check_opts(usr_opts): # Returns false if any check fails
 				msg('--rbf requested, but {} does not support replace-by-fee transactions'.format(g.coin))
 				return False
 		elif key in ('bob','alice'):
-			from mmgen.regtest import daemon_dir
 			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
-			try: os.stat(daemon_dir)
+			from mmgen.regtest import MMGenRegtest
+			try: os.stat(os.path.join(MMGenRegtest(g.coin).data_dir,'regtest','debug.log'))
 			except: die(1,m.format(g.proj_name.lower()))
 		elif key == 'locktime':
 			if not opt_is_int(val,desc): return False

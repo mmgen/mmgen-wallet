@@ -20,110 +20,18 @@
 regtest: Coin daemon regression test mode setup and operations for the MMGen suite
 """
 
-import os,time,shutil
+import os,time,shutil,re,json
 from subprocess import run,PIPE
 from mmgen.common import *
+from mmgen.test_daemon import TestDaemon
 
-data_dir     = os.path.abspath(os.path.join(g.data_dir_root,'regtest',g.coin.lower()))
-daemon_dir   = os.path.abspath(os.path.join(data_dir,'regtest'))
-rpc_ports    = { 'btc':8552, 'bch':8553, 'b2x':8554, 'ltc':8555 }
-rpc_port     = rpc_ports[g.coin.lower()]
-rpc_user     = 'bobandalice'
-rpc_password = 'hodltothemoon'
+# To enforce MMGen policy that all testing must ignore the user's ~/.bitcoin
+# dir, locate the daemon datadir under MMGen data_dir:
+def dfl_data_dir(coin):
+	return os.path.abspath(os.path.join(g.data_dir_root,'regtest',coin.lower()))
 
-tr_wallet = lambda user: os.path.join(daemon_dir,'wallet.dat.'+user)
-
-common_args = lambda: (
-	'--rpcuser={}'.format(rpc_user),
-	'--rpcpassword={}'.format(rpc_password),
-	'--rpcport={}'.format(rpc_port),
-	'--regtest',
-	'--datadir={}'.format(data_dir))
-
-def start_daemon(user,quiet=False,daemon=True,reindex=False):
-	# requires Bitcoin ABC version >= 0.16.2
-	add_args = ()
-	if g.proto.daemon_name == 'bitcoind-abc': add_args = ('--usecashaddr=0',)
-	elif g.proto.daemon_name == 'litecoind':  add_args = ('--mempoolreplacement=1',)
-	cmd = (
-		g.proto.daemon_name,
-		'--listen=0',
-		'--keypool=1',
-		'--wallet={}'.format(os.path.basename(tr_wallet(user)))
-	) + add_args + common_args()
-	if daemon: cmd += ('--daemon',)
-	if reindex: cmd += ('--reindex',)
-	if not g.debug or quiet: vmsg('{}'.format(' '.join(cmd)))
-	cp = run(cmd,stdout=PIPE,stderr=PIPE)
-	err = process_output(cp,silent=False)[1]
-	if err:
-		rdie(1,'Error starting the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
-
-def start_daemon_mswin(user,quiet=False,reindex=False):
-	import threading
-	t = threading.Thread(target=start_daemon,args=[user,quiet,False,reindex])
-	t.daemon = True
-	t.start()
-	if not opt.verbose: Msg_r(' \b') # blocks w/o this...crazy
-
-def start_cmd(*args,**kwargs):
-	cmd = args
-	if args[0] == 'cli':
-		cmd = (g.proto.name+'-cli',) + common_args() + args[1:]
-	if g.debug or not 'quiet' in kwargs:
-		vmsg('{}'.format(' '.join(cmd)))
-	ip = op = ep = (PIPE,None)['no_pipe' in kwargs and kwargs['no_pipe']]
-	if 'pipe_stdout_only' in kwargs and kwargs['pipe_stdout_only']: ip = ep = None
-	return run(cmd,stdin=ip,stdout=op,stderr=ep)
-
-def get_daemon_state():
-	cp = start_cmd('cli','getblockcount',quiet=True)
-	err = process_output(cp,silent=True)[1]
-	if "error: couldn't connect" in err or "error: Could not connect" in err:
-		return 'stopped'
-	elif cp.returncode == 0:
-		return 'ready'
-	else:
-		return 'busy'
-
-def wait_for_daemon(state,silent=False,nonl=False):
-	for i in range(200):
-		ret = get_daemon_state()
-		if not silent:
-			if opt.verbose: msg('returning state '+ret)
-			else: gmsg_r('.')
-			if ret == state and not nonl: msg('')
-		if ret == state:
-			return True
-		time.sleep(1)
-	else:
-		die(1,'timeout exceeded')
-
-def get_balances():
-	user1 = get_current_user(quiet=True)
-	if user1 == None:
-		user('bob')
-		user1 = get_current_user(quiet=True)
-#		die(1,'Regtest daemon not running')
-	user2 = ('bob','alice')[user1=='bob']
-	tbal = 0
-	# don't need to save and restore these, as we exit immediately
-	g.rpc_host = 'localhost'
-	g.rpc_port = rpc_port
-	g.rpc_user = rpc_user
-	g.rpc_password = rpc_password
-	g.testnet = True
-	rpc_init()
-	for u in (user1,user2):
-		bal = sum(e['amount'] for e in g.rpch.listunspent(0))
-		if u == user1:
-			user(user2)
-		msg('{:<16} {:12}'.format(u.capitalize()+"'s balance:",bal))
-		tbal += bal
-	msg('{:<16} {:12}'.format('Total balance:',tbal))
-
-def create_data_dir():
-	try: os.stat(os.path.join(data_dir,'regtest')) # don't use daemon_dir, as data_dir may change
+def create_data_dir(data_dir):
+	try: os.stat(os.path.join(data_dir,'regtest'))
 	except: pass
 	else:
 		m = "Delete your existing MMGen regtest setup at '{}' and create a new one?"
@@ -135,202 +43,268 @@ def create_data_dir():
 	try: os.makedirs(data_dir)
 	except: pass
 
-def process_output(cp,silent=False):
-	out = cp.stdout.decode()
-	if g.platform == 'win' and not opt.verbose:
-		Msg_r(' \b')
-	err = cp.stderr.decode()
-	if g.debug or not silent:
-		vmsg('stdout: [{}]'.format(out.strip()))
-		vmsg('stderr: [{}]'.format(err.strip()))
-	return out,err
+class RegtestTestDaemon(MMGenObject): # mixin class
 
-def start_and_wait(user,silent=False,nonl=False,reindex=False):
-	vmsg('Starting {} regtest daemon'.format(g.proto.name))
-	(start_daemon_mswin,start_daemon)[g.platform=='linux'](user,reindex=reindex)
-	wait_for_daemon('ready',silent=silent,nonl=nonl)
+	def generate(self,blocks=1,silent=False):
 
-def stop_and_wait(silent=False,nonl=False,stop_silent=False,ignore_noconnect_error=False):
-	stop(silent=stop_silent,ignore_noconnect_error=ignore_noconnect_error)
-	wait_for_daemon('stopped',silent=silent,nonl=nonl)
+		def have_generatetoaddress():
+			cp = self.cli('help','generatetoaddress',check=False,silent=True)
+			return not 'unknown command' in cp.stdout.decode()
 
-def send(addr,amt):
-	user('miner')
-	gmsg('Sending {} {} to address {}'.format(amt,g.coin,addr))
-	cp = start_cmd('cli','sendtoaddress',addr,str(amt))
-	process_output(cp)
-	generate(1)
+		def get_miner_address():
+			return self.cli('getnewaddress',silent=silent).stdout.decode().strip()
 
-def show_mempool():
-	cp = start_cmd('cli','getrawmempool')
-	from ast import literal_eval
-	pp_msg(literal_eval(cp.stdout.decode()))
+		if self.state == 'stopped':
+			die(1,'Regtest daemon is not running')
 
-def cli(*args):
-	cp = start_cmd(*(('cli',) + args))
-	Msg_r(cp.stdout.decode())
-	msg_r(cp.stderr.decode())
+		self.wait_for_state('ready')
 
-def setup():
-	try: os.makedirs(data_dir)
-	except: pass
-
-	if get_daemon_state() != 'stopped':
-		stop_and_wait(silent=True,stop_silent=True)
-	create_data_dir()
-
-	gmsg('Starting setup')
-
-	gmsg_r('Creating miner wallet')
-	start_and_wait('miner')
-	generate(432,silent=True)
-	stop_and_wait(silent=True,stop_silent=True)
-
-	for user in ('alice','bob'):
-		gmsg_r("Creating {}'s tracking wallet".format(user.capitalize()))
-		start_and_wait(user)
-		if user == 'bob' and opt.setup_no_stop_daemon:
-			msg('Leaving daemon running with Bob as current user')
+		if have_generatetoaddress():
+			cmd = ( 'generatetoaddress', str(blocks), get_miner_address() )
 		else:
-			stop_and_wait(silent=True,stop_silent=True)
+			cmd = ( 'generate', str(blocks) )
 
-	gmsg('Setup complete')
+		out = self.cli(*cmd,silent=silent).stdout.decode().strip()
 
-def get_current_user_win(quiet=False):
-	if get_daemon_state() == 'stopped': return None
-	logfile = os.path.join(daemon_dir,'debug.log')
-	for ss in ('Wallet completed loading in','Using wallet wallet'):
-		cp = run(['grep',ss,logfile],stdout=PIPE)
-		o = cp.stdout.splitlines()
-		if o:
-			last_line = o[-1].decode()
-			break
-	else:
-		rdie(2,"Unable to find user info in 'debug.log'")
+		if len(json.loads(out)) != blocks:
+			rdie(1,'Error generating blocks')
 
-	import re
-	m = re.search(r'\bwallet\.dat\.([a-z]+)',last_line)
-	if not m:
+		gmsg('Mined {} block{}'.format(blocks,suf(blocks)))
+
+class MMGenRegtest(MMGenObject):
+
+	rpc_ports = { 'btc':8552, 'bch':8553, 'ltc':8555 }
+	rpc_user     = 'bobandalice'
+	rpc_password = 'hodltothemoon'
+	users        = ('bob','alice','miner')
+	coins        = ('btc','bch','ltc')
+	usr_cmds     = (
+		'bob','alice','miner','user','state',
+		'setup','generate','send','stop',
+		'balances','mempool','cli' )
+
+	def __init__(self,coin,datadir=None):
+		self.coin = coin.lower()
+		self.data_dir = datadir or dfl_data_dir(self.coin)
+		self.rpc_port = self.rpc_ports[self.coin]
+
+		assert self.coin in self.coins,'{!r}: invalid coin for regtest'.format(user)
+		assert os.path.isabs(self.data_dir), '{!r}: invalid datadir (not an absolute path)'.format(datadir)
+
+	def setup(self):
+
+		try: os.makedirs(self.data_dir)
+		except: pass
+
+		if self.daemon_state() != 'stopped':
+			self.stop_daemon()
+
+		create_data_dir(self.data_dir)
+
+		gmsg('Starting {} regtest setup'.format(self.coin))
+
+		gmsg('Creating miner wallet')
+		d = self.start_daemon('miner')
+		d.generate(432,silent=True)
+		d.stop(silent=True)
+
+		for user in ('alice','bob'):
+			gmsg("Creating {}'s tracking wallet".format(user.capitalize()))
+			d = self.start_daemon(user)
+			if user == 'bob' and opt.setup_no_stop_daemon:
+				msg('Leaving daemon running with Bob as current user')
+			else:
+				d.stop(silent=True)
+				time.sleep(0.2) # race condition? (BCH only)
+
+		gmsg('Setup complete')
+
+	def daemon_state(self):
+		return self.test_daemon().state
+
+	def daemon_shared_args(self):
+		return ['--rpcuser={}'.format(self.rpc_user),
+				'--rpcpassword={}'.format(self.rpc_password),
+				'--regtest' ]
+
+	def daemon_coind_args(self,user):
+		return ['--wallet=wallet.dat.{}'.format(user)]
+
+	def test_daemon(self,user=None,reindex=False):
+
+		assert user is None or user in self.users,'{!r}: invalid user for regtest'.format(user)
+
+		d = TestDaemon(self.coin,self.data_dir,desc='regtest daemon',rpc_port=self.rpc_port)
+
+		type(d).generate = RegtestTestDaemon.generate
+
+		d.net_desc = self.coin.upper()
+		d.usr_shared_args = self.daemon_shared_args()
+
+		if user:
+			d.usr_coind_args = self.daemon_coind_args(user)
+		if reindex:
+			d.usr_coind_args += ['--reindex']
+
+		return d
+
+	def start_daemon(self,user,reindex=False,silent=True):
+		d = self.test_daemon(user,reindex=reindex)
+		d.start(silent=silent)
+		return d
+
+	def stop_daemon(self,silent=True):
+		cp = self.test_daemon().stop(silent=silent)
+		if cp:
+			err = cp.stderr.decode()
+			if err:
+				if "couldn't connect to server" in err:
+					rdie(1,'Error stopping the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
+				msg(err)
+
+	def current_user_unix(self,quiet=False):
+		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,self.rpc_port)]
+		cmdout = run(cmd,stdout=PIPE).stdout.decode()
+		if cmdout:
+			for k in self.users:
+				if 'wallet.dat.'+k in cmdout:
+					return k
 		return None
 
-	user = m.group(1)
-	if user in ('miner','bob','alice'):
-		if not quiet:
-			msg('Current user is {}'.format(user.capitalize()))
-		return user
-	else:
-		return None
+	def current_user_win(self,quiet=False):
 
-def get_current_user_unix(quiet=False):
-	cp = run(['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,rpc_port)],stdout=PIPE)
-	cmdline = cp.stdout.decode()
-	if not cmdline:
-		return None
-	for k in ('miner','bob','alice'):
-		if 'wallet.dat.'+k in cmdline:
-			if not quiet: msg('Current user is {}'.format(k.capitalize()))
-			return k
-	return None
+		if self.daemon_state() == 'stopped':
+			return None
 
-get_current_user = { 'win':get_current_user_win, 'linux':get_current_user_unix }[g.platform]
+		debug_logfile = os.path.join(self.data_dir,'regtest','debug.log')
+		fd = os.open(debug_logfile,os.O_RDONLY|os.O_BINARY)
+		file_size = os.fstat(fd).st_size
 
-def bob():   return user('bob',quiet=False)
-def alice(): return user('alice',quiet=False)
-def miner(): return user('miner',quiet=False)
-def user(user=None,quiet=False):
-	if user==None:
-		get_current_user()
-		return True
-	if get_daemon_state() == 'busy':
-		wait_for_daemon('ready')
-	if get_daemon_state() == 'ready':
-		if user == get_current_user(quiet=True):
-			if not quiet: msg('{} is already the current user for coin {}'.format(user.capitalize(),g.coin))
-			return True
-		gmsg_r('Switching to user {} for coin {}'.format(user.capitalize(),g.coin))
-		stop_and_wait(silent=False,nonl=True,stop_silent=True)
-		time.sleep(0.1) # file lock has race condition - TODO: test for lock file
-		start_and_wait(user,nonl=True)
-	else:
-		gmsg_r('Starting regtest daemon for coin {} with current user {}'.format(g.coin,user.capitalize()))
-		start_and_wait(user,nonl=True)
-	gmsg('done')
+		def get_log_tail(num_bytes):
+			os.lseek(fd,max(0,file_size-num_bytes),os.SEEK_SET)
+			return os.read(fd,num_bytes)
 
-def stop(silent=False,ignore_noconnect_error=True):
-	if get_daemon_state() != 'stopped' and not silent:
-		gmsg('Stopping {} regtest daemon for coin {}'.format(g.proto.name,g.coin))
-	cp = start_cmd('cli','stop')
-	err = process_output(cp)[1]
-	if err:
-		if "couldn't connect to server" in err and not ignore_noconnect_error:
-			rdie(1,'Error stopping the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
-		msg(err)
+		lines = reversed(get_log_tail(40_000).decode().splitlines())
 
-def generate(blocks=1,silent=False):
+		for ss in ( 'BerkeleyEnvironment::Open',
+					'Wallet completed loading in',
+					'Using wallet wallet' ):
+			for line in lines:
+				if ss in line:
+					m = re.search(r'\bwallet\.dat\.([a-z]+)',line)
+					if m and m.group(1) in self.users:
+						return m.group(1)
 
-	def have_generatetoaddress():
-		cp = start_cmd('cli','help','generatetoaddress')
-		out = process_output(cp,silent=True)[0]
-		return not 'unknown command' in out
+		return None # failure to determine current user is not fatal, so don't raise exception
 
-	def get_miner_address():
-		cp = start_cmd('cli','getnewaddress')
-		out,err = process_output(cp,silent=True)
-		if not err:
-			return out.strip()
+	current_user = {
+		'win': current_user_win,
+		'linux': current_user_unix }[g.platform]
+
+	def stop(self):
+		self.stop_daemon(silent=False)
+
+	def state(self):
+		msg(self.daemon_state())
+
+	def balances(self,*users):
+		users = list(set(users or ['bob','alice']))
+		cur_user = self.current_user()
+		if cur_user in users:
+			users.remove(cur_user)
+			users = [cur_user] + users
+		bal = {}
+		for user in users:
+			d = self.switch_user(user,quiet=True)
+			out = d.cli('listunspent','0',silent=True).stdout.strip().decode()
+			bal[user] = sum(e['amount'] for e in json.loads(out))
+
+		fs = '{:<16} {:18.8f}'
+		for user in sorted(users):
+			msg(fs.format(user.capitalize()+"'s balance:",bal[user]))
+		msg(fs.format('Total balance:',sum(v for k,v in bal.items())))
+
+	def send(self,addr,amt):
+		d = self.switch_user('miner',quiet=True)
+		gmsg('Sending {} miner {} to address {}'.format(amt,d.coinsym.upper(),addr))
+		cp = d.cli('sendtoaddress',addr,str(amt),silent=True)
+		d.generate(1)
+
+	def mempool(self):
+		self.cli('getrawmempool')
+
+	def cli(self,*args,silent=False,check=True):
+		return self.test_daemon().cli(*args,silent=silent,check=check)
+
+	def cmd(self,args):
+		return getattr(self,args[0])(*args[1:])
+
+	def user(self):
+		u = self.current_user()
+		msg(u.capitalize() if u else str(u))
+
+	def bob(self):   self.switch_user('bob')
+	def alice(self): self.switch_user('alice')
+	def miner(self): self.switch_user('miner')
+
+	def switch_user(self,user,quiet=False):
+
+		d = self.test_daemon(user)
+
+		if d.state == 'busy':
+			d.wait_for_state('ready')
+
+		if d.state == 'ready':
+			if user == self.current_user():
+				if not quiet:
+					msg('{} is already the current user for {}'.format(user.capitalize(),d.net_desc))
+				return d
+			gmsg_r('Switching to user {} for {}'.format(user.capitalize(),d.net_desc))
+			d.stop(silent=True)
+			time.sleep(0.1) # file lock has race condition - TODO: test for lock file
+			d = self.start_daemon(user)
 		else:
-			rdie(1,'Error getting new address:\n{}'.format(err))
+			m = 'Starting {} {} with current user {}'
+			gmsg_r(m.format(d.net_desc,d.desc,user.capitalize()))
+			d.start(silent=True)
 
-	if get_daemon_state() == 'stopped':
-		die(1,'Regtest daemon is not running')
+		gmsg('...done')
+		return d
 
-	wait_for_daemon('ready',silent=True)
+	def generate(self,amt=1):
+		self.switch_user('miner',quiet=True).generate(int(amt),silent=True)
 
-	if have_generatetoaddress():
-		cp = start_cmd('cli','generatetoaddress',str(blocks),get_miner_address())
-	else:
-		cp = start_cmd('cli','generate',str(blocks))
+	def fork(self,coin): # currently disabled
 
-	out,err = process_output(cp,silent=silent)
+		from mmgen.protocol import CoinProtocol
+		forks = CoinProtocol(coin,False).forks
+		if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
+			die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
 
-	from ast import literal_eval
-	if not out or len(literal_eval(out)) != blocks:
-		rdie(1,'Error generating blocks')
+		gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
 
-	gmsg('Mined {} block{}'.format(blocks,suf(blocks)))
+		source_rt = MMGenRegtest(coin,dfl_data_dir(coin))
 
-def fork(coin):
-	coin = coin.upper()
-	from mmgen.protocol import CoinProtocol
-	forks = CoinProtocol(coin,False).forks
-	if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
-		die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
+		try: os.stat(source_rt.data_dir)
+		except: die(1,"Source directory '{}' does not exist!".format(source_rt.data_dir))
 
-	gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
-	source_data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
+		# stop the source daemon
+		if source_rt.daemon_state() != 'stopped':
+			source_rt.stop_daemon()
 
-	try: os.stat(source_data_dir)
-	except: die(1,"Source directory '{}' does not exist!".format(source_data_dir))
+		# stop our daemon
+		if self.daemon_state() != 'stopped':
+			self.stop_daemon()
 
-	# stop the other daemon
-	global rpc_port,data_dir
-	rpc_port_save,data_dir_save = rpc_port,data_dir
-	rpc_port = rpc_ports[coin.lower()]
-	data_dir = os.path.join(g.data_dir_root,'regtest',coin.lower())
-	if get_daemon_state() != 'stopped':
-		stop_and_wait(silent=True,stop_silent=True)
-	rpc_port,data_dir = rpc_port_save,data_dir_save
+		data_dir = dfl_data_dir(g.coin)
 
-	try: os.makedirs(data_dir)
-	except: pass
+		try: os.makedirs(data_dir)
+		except: pass
 
-	# stop our daemon
-	if get_daemon_state() != 'stopped':
-		stop_and_wait(silent=True,stop_silent=True)
+		create_data_dir(data_dir)
+		os.rmdir(data_dir)
+		shutil.copytree(source_data_dir,data_dir,symlinks=True)
+		self.start_daemon('miner',reindex=True)
+		self.stop_daemon()
 
-	create_data_dir()
-	os.rmdir(data_dir)
-	shutil.copytree(source_data_dir,data_dir,symlinks=True)
-	start_and_wait('miner',reindex=True,silent=True)
-	stop_and_wait(silent=True,stop_silent=True)
-	gmsg('Fork {} successfully created'.format(g.coin))
+		gmsg('Fork {} successfully created'.format(g.coin))

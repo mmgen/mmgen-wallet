@@ -40,42 +40,44 @@ opts_data = {
 
                          AVAILABLE COMMANDS
 
-  setup           - set up system for regtest operation with MMGen
-  fork COIN       - create a fork of coin COIN
+  setup           - set up Bob and Alice regtest mode
   stop            - stop the regtest coin daemon
   bob             - switch to Bob's wallet, starting daemon if necessary
   alice           - switch to Alice's wallet, starting daemon if necessary
+  miner           - switch to Miner's wallet, starting daemon if necessary
   user            - show current user
-  generate N      - mine n blocks (defaults to 1)
+  generate N      - mine N blocks (defaults to 1)
   send ADDR AMT   - send amount AMT of miner funds to address ADDR
-  test_daemon     - test whether daemon is running
-  get_balances    - get balances of Bob and Alice
-  show_mempool    - show transaction IDs in mempool
-  cli [arguments] - execute an RPC call with arguments
+  state           - show current state of daemon (ready, busy, or stopped)
+  balances        - get Bob and Alice's balances
+  mempool         - show transaction IDs in mempool
+  cli             - execute an RPC call with supplied arguments
 	"""
 	}
 }
 
 cmd_args = opts.init(opts_data)
 
-cmds = ('setup','stop','generate','test_daemon','create_data_dir','bob','alice','miner','user','send',
-		'wait_for_daemon','wait_for_exit','get_current_user','get_balances','show_mempool','cli','fork')
+from mmgen.regtest import MMGenRegtest
 
-try:
-	if cmd_args[0] == 'send':
-		assert len(cmd_args) == 3
-	elif cmd_args[0] == 'fork':
-		assert len(cmd_args) == 2
-	elif cmd_args[0] == 'generate':
-		assert len(cmd_args) in (1,2)
-		if len(cmd_args) == 2:
-			cmd_args[1] = int(cmd_args[1])
-	elif cmd_args[0] == 'cli':
-		pass
-	else:
-		assert cmd_args[0] in cmds and len(cmd_args) == 1
-except:
+def check_num_args():
+	m = getattr(MMGenRegtest,cmd_args[0])
+	margs = m.__code__.co_varnames[1:m.__code__.co_argcount]
+	mdfls = m.__defaults__ or ()
+	amin = len(margs) - len(mdfls)
+	amax = len(margs)
+	args = cmd_args[1:]
+	m = "{}: too {} arguments for command '%s' (must have no {} than {})" % cmd_args[0]
+	if len(args) < amin:
+		die(1,m.format(args,'few','less',amin))
+	elif len(cmd_args[1:]) > amax:
+		die(1,m.format(args,'many','more',amax))
+
+if not cmd_args:
 	opts.usage()
-else:
-	from mmgen.regtest import *
-	globals()[cmd_args[0]](*cmd_args[1:])
+elif cmd_args[0] not in MMGenRegtest.usr_cmds:
+	die(1,'{!r}: invalid command'.format(cmd_args[0]))
+elif cmd_args[0] not in ('cli','balances'):
+	check_num_args()
+
+MMGenRegtest(g.coin).cmd(cmd_args)
