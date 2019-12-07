@@ -53,10 +53,19 @@ class my_build_ext(build_ext):
 		copy2(ext_src,ext_dest)
 		copy_owner(cwd,ext_dest)
 
+def link_or_copy(tdir,a,b):
+	os.chdir(tdir)
+	try: os.unlink(b)
+	except FileNotFoundError: pass
+	copy2(a,b) if have_msys2 else os.symlink(a,b)
+	copy_owner(a,b)
+	os.chdir(cwd)
+
 class my_install_data(install_data):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
 			os.chmod(os.path.join('data_files',f),0o644)
+		link_or_copy('test','start-coin-daemons.py','stop-coin-daemons.py')
 		install_data.run(self)
 
 module1 = Extension(
