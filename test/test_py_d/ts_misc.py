@@ -31,7 +31,7 @@ class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
 	networks = ('btc','ltc','bch','eth')
 	tmpdir_nums = []
-	passthru_opts = ('coin','testnet')
+	passthru_opts = ('daemon_data_dir','coin','testnet')
 	cmd_group = (
 		('helpscreens',     (1,'help screens',             [])),
 		('longhelpscreens', (1,'help screens (--longhelp)',[])),
@@ -257,7 +257,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	'create a reference transaction file (administrative command)'
 	segwit_opts_ok = False
-	passthru_opts = ('coin','testnet')
+	passthru_opts = ('daemon_data_dir','coin','testnet')
 	tmpdir_nums = [31,32,33,34]
 	cmd_group = (
 		('ref_tx_addrgen1', (31,'address generation (legacy)', [[[],1]])),

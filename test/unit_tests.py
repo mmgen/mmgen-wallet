@@ -31,6 +31,7 @@ opts_data = {
 		'usage':'[options] [tests]',
 		'options': """
 -h, --help       Print this help message
+-A, --no-daemon-autostart Don't start and stop daemons automatically
 -f, --fast       Speed up execution by reducing rounds on some tests
 -l, --list       List available tests
 -n, --names      Print command names instead of descriptions

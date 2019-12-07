@@ -132,6 +132,8 @@ def check_daemons_running():
 		g.proto = CoinProtocol(coin,g.testnet)
 		if g.proto.sign_mode != 'daemon':
 			continue
+		if g.test_suite:
+			g.proto.daemon_data_dir = 'test/daemons/' + coin.lower()
 		vmsg('Checking {} daemon'.format(coin))
 		try:
 			rpc_init(reinit=True)
@@ -192,6 +194,8 @@ def sign_tx_file(txfile,signed_txs):
 		tx = mmgen.tx.MMGenTX(txfile,offline=True)
 
 		if g.proto.sign_mode == 'daemon':
+			if g.test_suite:
+				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
 			rpc_init(reinit=True)
 
 		if txsign(tx,wfs,None,None):

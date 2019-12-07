@@ -90,18 +90,24 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 			for tn in (False,True):
 				if tn and coin == 'etc':
 					continue
+				if coin == 'bch':
+					network_id = 'bch' + ('','_tn')[tn]
+					start_test_daemons(network_id)
 				g.testnet = tn
 				init_coin(coin)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]
 				tf = joinpath(ref_dir,ref_subdir,fn)
 				wf = dfl_words_file
 				e = ['--coin='+coin,'--testnet='+('0','1')[tn]]
+				e += ['--daemon-data-dir=test/daemons/bch']
 				if token: e += ['--token='+token]
 				t = self.txsign(wf, tf, pf,
 								save       = False,
 								has_label  = True,
 								extra_desc = '({}{})'.format(token or coin,' testnet' if tn else ''),
 								extra_opts = e )
+				if coin == 'bch':
+					stop_test_daemons(network_id)
 				ok_msg()
 		g.testnet = False
 		init_coin('btc')

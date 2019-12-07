@@ -5,6 +5,7 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit test for the MMGen 
 
 import os
 from mmgen.common import *
+from test.common import *
 
 class unit_test(object):
 
@@ -109,6 +110,7 @@ class unit_test(object):
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)
+				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
 				rpc_init(reinit=True)
 				test_tx(MMGenTX(fn).hex,fn,n+1)
 			init_coin('btc',False)
@@ -118,7 +120,9 @@ class unit_test(object):
 		from mmgen.tx import DeserializedTX
 		import json
 
+		start_test_daemons('btc','btc_tn','bch')
 		test_mmgen_txs()
 		test_core_vectors()
+		stop_test_daemons('btc','btc_tn','bch')
 
 		return True

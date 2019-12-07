@@ -91,6 +91,7 @@ opts_data = {
 		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
+-A, --no-daemon-autostart Don't start and stop daemons automatically
 -B, --bech32         Generate and use Bech32 addresses
 -b, --buf-keypress   Use buffered keypresses as with real human input
                      (often required on slow systems, or under emulation)
@@ -148,6 +149,7 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	except: pass
 
 sys.argv.insert(1,'--data-dir=' + data_dir)
+sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + (_uopts.get('coin') or 'btc'))
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
@@ -926,11 +928,14 @@ if opt.pause:
 	set_restore_term_at_exit()
 
 set_environ_for_spawned_scripts()
+start_test_daemons(network_id)
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
+	stop_test_daemons(network_id)
 except KeyboardInterrupt:
+	stop_test_daemons(network_id)
 	die(1,'\ntest.py exiting at user request')
 except TestSuiteException as e:
 	ydie(1,e.args[0])

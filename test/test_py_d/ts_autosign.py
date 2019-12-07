@@ -178,6 +178,9 @@ class TestSuiteAutosign(TestSuiteBase):
 			imsg('')
 			return t
 
+		network_ids = [c+'_tn' for c in coins] + coins
+		start_test_daemons(*network_ids)
+
 		if live:
 			mountpoint = '/mnt/tx'
 			if not os.path.ismount(mountpoint):
@@ -220,6 +223,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			except: pass
 			ret = do_autosign(opts,mountpoint)
 
+		stop_test_daemons(*network_ids)
 		return ret
 
 class TestSuiteAutosignMinimal(TestSuiteAutosign):

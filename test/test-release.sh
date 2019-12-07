@@ -234,7 +234,7 @@ f_color='Terminal color tests completed'
 i_unit='Unit'
 s_unit='The bitcoin and bitcoin-abc mainnet daemons must be running for the following tests'
 t_unit="$unit_tests_py"
-f_unit='You may stop the bitcoin and bitcoin-abc mainnet daemons if you wish'
+f_unit='Unit tests completed'
 
 i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
@@ -379,7 +379,7 @@ t_btc="
 	$test_py --bech32
 	$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
 "
-f_btc='You may stop the bitcoin (mainnet) daemon if you wish'
+f_btc='Bitcoin mainnet tests completed'
 
 i_btc_tn='Bitcoin testnet'
 s_btc_tn='The bitcoin testnet daemon must both be running for the following tests'
@@ -389,7 +389,7 @@ t_btc_tn="
 	$test_py --testnet=1 --segwit-random
 	$test_py --testnet=1 --bech32
 "
-f_btc_tn='You may stop the bitcoin testnet daemon if you wish'
+f_btc_tn='Bitcoin testnet tests completed'
 
 i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
@@ -399,7 +399,7 @@ f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 i_bch='Bcash (BCH) mainnet'
 s_bch='The bitcoin-abc mainnet daemon must both be running for the following tests'
 t_bch="$test_py --coin=bch --exclude regtest"
-f_bch='You may stop the Bitcoin ABC daemon if you wish'
+f_bch='Bcash (BCH) mainnet tests completed'
 
 i_bch_tn='Bcash (BCH) testnet'
 s_bch_tn='The bitcoin-abc testnet daemon must both be running for the following tests'
@@ -409,7 +409,7 @@ f_bch_tn='Bcash (BCH) testnet tests completed'
 i_bch_rt='Bcash (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt="$test_py --coin=bch regtest"
-f_bch_tn='You may stop the bitcoin-abc testnet daemon if you wish'
+f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 
 i_ltc='Litecoin'
 s_ltc='The litecoin mainnet daemon must both be running for the following tests'
@@ -419,7 +419,7 @@ t_ltc="
 	$test_py --coin=ltc --segwit-random
 	$test_py --coin=ltc --bech32
 "
-f_ltc='You may stop the litecoin daemon if you wish'
+f_ltc='Litecoin mainnet tests completed'
 
 i_ltc_tn='Litecoin testnet'
 s_ltc_tn='The litecoin testnet daemon must both be running for the following tests'
@@ -429,7 +429,7 @@ t_ltc_tn="
 	$test_py --coin=ltc --testnet=1 --segwit-random
 	$test_py --coin=ltc --testnet=1 --bech32
 "
-f_ltc_tn='You may stop the litecoin testnet daemon if you wish'
+f_ltc_tn='Litecoin testnet tests completed'
 
 i_ltc_rt='Litecoin regtest'
 s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"

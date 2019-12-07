@@ -164,3 +164,21 @@ def iqmsg(s):
 	if not opt.quiet: omsg(s)
 def iqmsg_r(s):
 	if not opt.quiet: omsg_r(s)
+
+def start_test_daemons(*network_ids):
+	return test_daemons_ops(*network_ids,op='start')
+
+def stop_test_daemons(*network_ids):
+	return test_daemons_ops(*network_ids,op='stop')
+
+def test_daemons_ops(*network_ids,op):
+	if opt.no_daemon_autostart:
+		return
+	from mmgen.test_daemon import TestDaemon
+	repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
+	silent = not opt.verbose and not (hasattr(opt,'exact_output') and opt.exact_output)
+	for network_id in network_ids:
+		if network_id not in TestDaemon.network_ids: # silently ignore invalid IDs
+			continue
+		datadir = '{}/test/daemons/{}'.format(repo_root,network_id.replace('_tn',''))
+		TestDaemon(network_id,datadir).cmd(op,silent=silent)
