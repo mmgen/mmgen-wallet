@@ -302,43 +302,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def setup(self):
 		self.spawn('',msg_only=True)
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		opts = ['--ports-shift=4','--config=dev']
-		lf_arg = '--log-file=' + joinpath(self.tr.data_dir,'parity.log')
 		if g.platform == 'win':
-			dc_dir = joinpath(os.environ['LOCALAPPDATA'],'Parity','Ethereum','chains','DevelopmentChain')
-			shutil.rmtree(dc_dir,ignore_errors=True)
 			m1 = 'Please copy precompiled contract data to {d}/mm1 and {d}/mm2\n'.format(d=self.tmpdir)
-			m2 = 'Then start parity on another terminal as follows:\n'
-			m3 = ['parity',lf_arg] + opts
-			m4 = '\nPress ENTER to continue: '
-			my_raw_input(m1 + m2 + ' '.join(m3) + m4)
-		elif run(['which','parity'],stdout=DEVNULL).returncode == 0:
-			ss = 'parity.*--log-file=test/data_dir.*/parity.log' # allow for UTF8_DEBUG
-			try:
-				pid = run(['pgrep','-af',ss],stdout=PIPE).stdout.split()[0]
-				os.kill(int(pid),9)
-			except: pass
-			# '--base-path' doesn't work together with daemon mode, so we have to clobber the main dev chain
-			dc_dir = joinpath(os.environ['HOME'],'.local/share/io.parity.ethereum/chains/DevelopmentChain')
-			shutil.rmtree(dc_dir,ignore_errors=True)
-			bdir = joinpath(self.tr.data_dir,'parity')
-			try: os.mkdir(bdir)
-			except: pass
-			redir = None if opt.exact_output else PIPE
-			pidfile = joinpath(self.tmpdir,parity_pid_fn)
-			run(['parity',lf_arg] + opts + ['daemon',pidfile],stderr=redir,stdout=redir,check=True)
-			time.sleep(3) # race condition
-			pid = self.read_from_tmpfile(parity_pid_fn)
-		elif run('netstat -tnl | grep -q 127.0.0.1:8549',shell=True).returncode == 0:
-			m1 = 'No parity executable found on system, but port 8549 is active!'
-			m2 = 'Before continuing, you should probably run the command'
-			m3 = 'test/test.py -X setup ethdev'
-			m4 = 'on the remote host.'
-			sys.stderr.write('{}\n{}\n{} {}\n'.format(m1,m2,cyan(m3),m4))
-			confirm_continue()
-		else:
-			die(1,'No parity executable found!')
+			m2 = '\nPress ENTER to continue: '
+			my_raw_input(m1+m2)
+		start_test_daemons(g.coin)
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):
@@ -950,14 +918,5 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def stop(self):
 		self.spawn('',msg_only=True)
-		if g.platform == 'win':
-			my_raw_input('Please stop parity and Press ENTER to continue: ')
-		elif run(['which','parity'],stdout=DEVNULL).returncode == 0:
-			pid = self.read_from_tmpfile(parity_pid_fn)
-			if opt.no_daemon_stop:
-				msg_r('(leaving daemon running by user request)')
-			else:
-				run(['kill',pid],check=True)
-		else:
-			imsg('No parity executable found on system. Ignoring')
+		stop_test_daemons(g.coin)
 		return 'ok'

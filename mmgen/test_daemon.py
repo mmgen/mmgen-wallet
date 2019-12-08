@@ -20,6 +20,7 @@
 test_daemon.py:  Daemon control classes for MMGen test suite and regtest mode
 """
 
+import shutil
 from subprocess import run,PIPE
 from collections import namedtuple
 from mmgen.exception import *
@@ -30,7 +31,7 @@ class TestDaemon(MMGenObject):
 
 	subclasses_must_implement = ('state','stop_cmd')
 
-	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr')
+	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr','eth','etc')
 
 	cd = namedtuple('coin_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn'])
 	coins = {
@@ -52,6 +53,7 @@ class TestDaemon(MMGenObject):
 	coind_args = []
 	cli_args = []
 	shared_args = []
+	coind_cmd = []
 
 	coin_specific_coind_args = []
 	coin_specific_cli_args = []
@@ -81,6 +83,7 @@ class TestDaemon(MMGenObject):
 
 		me = MMGenObject.__new__(
 			MoneroTestDaemon        if coinsym == 'xmr'
+			else EthereumTestDaemon if coinsym in ('eth','etc')
 			else BitcoinTestDaemon )
 
 		me.network_id = network_id
@@ -158,7 +161,8 @@ class TestDaemon(MMGenObject):
 				+ self.coin_specific_coind_args
 				+ self.coin_specific_shared_args
 				+ self.usr_coind_args
-				+ self.usr_shared_args)
+				+ self.usr_shared_args
+				+ self.coind_cmd )
 
 	def cli_cmd(self,*cmds):
 		return ([self.cli_exec]
@@ -193,6 +197,10 @@ class TestDaemon(MMGenObject):
 			os.makedirs(self.datadir,exist_ok=True)
 			if self.conf_file:
 				open('{}/{}'.format(self.datadir,self.conf_file),'w').write(self.cfg_file_hdr)
+			if self.use_pidfile and os.path.exists(self.pidfile):
+				# Parity just overwrites the data in an existing pidfile, leading to
+				# interesting consequences.
+				os.unlink(self.pidfile)
 			ret = self.do_start(silent=silent)
 			if self.wait:
 				self.wait_for_state('ready')
@@ -304,5 +312,51 @@ class MoneroTestDaemon(TestDaemon):
 	@property
 	def stop_cmd(self):
 		return [self.coind_exec] + self.shared_args + ['exit']
+
+class EthereumTestDaemon(TestDaemon):
+
+	def subclass_init(self):
+		# defaults:
+		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
+		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
+		self.chaindir = os.path.join(self.datadir,'devchain')
+		shutil.rmtree(self.chaindir,ignore_errors=True)
+
+	@property
+	def coind_cmd(self):
+		return ['daemon',self.pidfile] if self.platform == 'linux' else []
+
+	@property
+	def coind_args(self):
+		return ['--ports-shift={}'.format(self.port_shift),
+				'--base-path={}'.format(self.chaindir),
+				'--config=dev',
+				'--log-file={}'.format(os.path.join(self.datadir,'parity.log')) ]
+
+	@property
+	def state(self):
+		from mmgen.rpc import EthereumRPCConnection
+		try:
+			conn = EthereumRPCConnection('localhost',self.rpc_port,socket_timeout=0.2)
+		except:
+			return 'stopped'
+
+		ret = conn.eth_chainId(on_fail='return')
+
+		return ('stopped','ready')[ret == '0x11']
+
+	@property
+	def stop_cmd(self):
+		return ['kill','-Wf',self.pid] if g.platform == 'win' else ['kill',self.pid]
+
+	@property
+	def pid(self): # TODO: distinguish between ETH and ETC
+		if g.platform == 'win':
+			cp = self.run_cmd(['ps','-Wl'],silent=True,check=False)
+			for line in cp.stdout.decode().splitlines():
+				if 'parity.exe' in line:
+					return line.split()[3] # use Windows, not Cygwin, PID
+		else:
+			return super().pid
 
 TestDaemon.check_implement()
