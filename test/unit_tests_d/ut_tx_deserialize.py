@@ -107,13 +107,16 @@ class unit_test(object):
 					('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx') )
 			from mmgen.protocol import init_coin
 			from mmgen.tx import MMGenTX
+			from mmgen.test_daemon import TestDaemon
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
+				g.rpc_port = TestDaemon(coin + ('','_tn')[tn]).rpc_port
 				rpc_init(reinit=True)
 				test_tx(MMGenTX(fn).hex,fn,n+1)
 			init_coin('btc',False)
+			g.rpc_port = TestDaemon('btc').rpc_port
 			rpc_init(reinit=True)
 			Msg('OK')
 

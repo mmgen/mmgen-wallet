@@ -291,7 +291,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		self.rpc_port = 8549
+		from mmgen.test_daemon import TestDaemon
+		self.rpc_port = TestDaemon(g.coin).rpc_port
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
@@ -602,7 +603,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_compile(token_data)
 
 	def _rpc_init(self):
-		g.proto.rpc_port = 8549
+		g.proto.rpc_port = self.rpc_port
 		rpc_init()
 
 	def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):

@@ -58,6 +58,10 @@ else:
 		if i not in TestDaemon.network_ids:
 			die(1,'{!r}: invalid network ID'.format(i))
 
+if 'eth' in ids and 'etc' in ids:
+	msg('Cannot run ETH and ETC simultaneously, so skipping ETC')
+	ids.remove('etc')
+
 for network_id in ids:
 	network_id = network_id.lower()
 	coin = network_id.replace('_tn','')

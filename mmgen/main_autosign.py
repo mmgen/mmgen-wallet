@@ -113,6 +113,8 @@ import mmgen.tx
 import mmgen.altcoins.eth.tx
 from mmgen.txsign import txsign
 from mmgen.protocol import CoinProtocol,init_coin
+if g.test_suite:
+	from mmgen.test_daemon import TestDaemon
 
 if opt.stealth_led: opt.led = True
 
@@ -134,6 +136,7 @@ def check_daemons_running():
 			continue
 		if g.test_suite:
 			g.proto.daemon_data_dir = 'test/daemons/' + coin.lower()
+			g.rpc_port = TestDaemon(get_network_id(coin,g.testnet)).rpc_port
 		vmsg('Checking {} daemon'.format(coin))
 		try:
 			rpc_init(reinit=True)
@@ -196,6 +199,7 @@ def sign_tx_file(txfile,signed_txs):
 		if g.proto.sign_mode == 'daemon':
 			if g.test_suite:
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
+				g.rpc_port = TestDaemon(get_network_id(g.coin,g.testnet)).rpc_port
 			rpc_init(reinit=True)
 
 		if txsign(tx,wfs,None,None):

@@ -21,6 +21,7 @@ test_daemon.py:  Daemon control classes for MMGen test suite and regtest mode
 """
 
 from subprocess import run,PIPE
+from collections import namedtuple
 from mmgen.exception import *
 from mmgen.common import *
 
@@ -30,6 +31,18 @@ class TestDaemon(MMGenObject):
 	subclasses_must_implement = ('state','stop_cmd')
 
 	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr')
+
+	cd = namedtuple('coin_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn'])
+	coins = {
+		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333),
+		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442), # MMGen RPC dfls
+		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335),
+		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,28082),
+		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,8545),
+		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,8545)
+	}
+	port_shift = 1000
+
 	debug = False
 	wait = True
 	use_pidfile = True
@@ -83,12 +96,12 @@ class TestDaemon(MMGenObject):
 
 		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
 
-		self.coin,self.coind_exec,self.cli_exec,self.conf_file = {
-			'btc': ('Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf'),
-			'ltc': ('Litecoin','litecoind',   'litecoin-cli','litecoin.conf'),
-			'bch': ('Bcash',   'bitcoind-abc','bitcoin-cli', 'bitcoin.conf'),
-			'xmr': ('Monero',  'monerod',     'monerod',     'bitmonero.conf')
-		}[self.coinsym]
+		for k in self.coins[self.coinsym]._fields:
+			setattr(self,k,getattr(self.coins[self.coinsym],k))
+
+		self.rpc_port = self.usr_rpc_port or (
+			(self.dfl_rpc,self.dfl_rpc_tn)[self.network=='testnet'] + self.port_shift
+		)
 
 		self.net_desc = '{} {}'.format(self.coin,self.network)
 		self.subclass_init()
@@ -226,11 +239,16 @@ class BitcoinTestDaemon(TestDaemon):
 		if self.network=='testnet':
 			self.testnet_arg = ['--testnet']
 
-		self.shared_args = ['--datadir='+self.datadir]
-		if self.usr_rpc_port:
-			self.shared_args += ['--rpcport={}'.format(self.usr_rpc_port)]
+		self.shared_args = [
+			'--datadir={}'.format(self.datadir),
+			'--rpcport={}'.format(self.rpc_port) ]
 
-		self.coind_args = ['--listen=0','--keypool=1']
+		self.coind_args = [
+			'--listen=0',
+			'--keypool=1',
+			'--rpcallowip=127.0.0.1',
+			'--rpcbind=127.0.0.1:{}'.format(self.rpc_port) ]
+
 		if self.use_pidfile:
 			self.coind_args += ['--pid='+self.pidfile]
 
@@ -238,13 +256,7 @@ class BitcoinTestDaemon(TestDaemon):
 			self.coind_args += ['--daemon']
 
 		if self.coinsym == 'bch':
-			port = self.usr_rpc_port or (8442,18442)[self.network=='testnet']
-			self.coin_specific_coind_args = [
-				'--rpcallowip=127.0.0.1',
-				'--rpcbind=127.0.0.1:{}'.format(port),
-				'--usecashaddr=0' ]
-			if not self.usr_rpc_port:
-				self.coin_specific_cli_args = ['--rpcport={}'.format(port)]
+			self.coin_specific_coind_args = ['--usecashaddr=0']
 		elif self.coinsym == 'ltc':
 			self.coin_specific_coind_args = ['--mempoolreplacement=1']
 
@@ -266,7 +278,6 @@ class BitcoinTestDaemon(TestDaemon):
 		return self.cli_cmd('stop')
 
 class MoneroTestDaemon(TestDaemon):
-	rpc_port = 18181
 
 	@property
 	def shared_args(self):

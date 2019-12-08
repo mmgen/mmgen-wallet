@@ -84,6 +84,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
 		pf = joinpath(self.tmpdir,pwfile)
 		from mmgen.protocol import init_coin
+		from mmgen.test_daemon import TestDaemon
 		for k in ('bch','eth','mm1','etc'):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
 			ref_subdir = self._get_ref_subdir_by_coin(coin)
@@ -95,7 +96,8 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					network_id = get_network_id('bch',tn)
 					start_test_daemons(network_id)
 					extra_opts += [
-						'--daemon-data-dir=test/daemons/bch' ]
+						'--daemon-data-dir=test/daemons/bch',
+						'--rpc-port={}'.format(TestDaemon(network_id).rpc_port) ]
 				g.testnet = tn
 				init_coin(coin)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]

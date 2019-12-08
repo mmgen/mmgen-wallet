@@ -37,7 +37,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	'saved reference address, password and transaction files'
 	tmpdir_nums = [8]
 	networks = ('btc','btc_tn','ltc','ltc_tn')
-	passthru_opts = ('daemon_data_dir','coin','testnet')
+	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	sources = {
 		'ref_addrfile':    '98831F3A{}[1,31-33,500-501,1010-1011]{}.addrs',
 		'ref_segwitaddrfile':'98831F3A{}-S[1,31-33,500-501,1010-1011]{}.addrs',
