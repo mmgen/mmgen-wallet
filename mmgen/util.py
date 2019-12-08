@@ -840,3 +840,8 @@ def write_mode(orig_func):
 			die(1,m.format(type(self).__name__,locals()['orig_func'].__name__))
 		return orig_func(self,*args,**kwargs)
 	return f
+
+def get_network_id(coin=None,testnet=None):
+	if coin == None: assert testnet == None
+	if coin != None: assert testnet != None
+	return (coin or g.coin).lower() + ('','_tn')[testnet or g.testnet]

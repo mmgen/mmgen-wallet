@@ -148,18 +148,22 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	try: os.unlink(data_dir)
 	except: pass
 
+def get_coin():
+	return (_uopts.get('coin') or 'btc').lower()
+
+network_id = get_network_id(get_coin(),bool(_uopts.get('testnet')))
+
 sys.argv.insert(1,'--data-dir=' + data_dir)
-sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + (_uopts.get('coin') or 'btc'))
+sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
+
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
 if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	shm_dir = create_shm_dir(data_dir,trash_dir)
-
-network_id = g.coin.lower() + ('_tn' if g.testnet else '')
 
 check_segwit_opts()
 

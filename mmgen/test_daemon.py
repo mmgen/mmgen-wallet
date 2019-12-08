@@ -27,7 +27,7 @@ from mmgen.common import *
 class TestDaemon(MMGenObject):
 	cfg_file_hdr = ''
 
-	subclasses_must_implement = ('state','do_stop','stop_cmd')
+	subclasses_must_implement = ('state','stop_cmd')
 
 	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr')
 	debug = False
@@ -50,8 +50,13 @@ class TestDaemon(MMGenObject):
 
 	usr_rpc_port = None
 
-	def __new__(cls,network_id,datadir,desc='test suite daemon',rpc_port=None):
+	def __new__(cls,network_id,datadir=None,rpc_port=None,desc='test suite daemon'):
+
+		network_id = network_id.lower()
 		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
+
+		if not datadir: # hack for throwaway instances
+			datadir = '/tmp/foo'
 		assert os.path.isabs(datadir), '{!r}: invalid datadir (not an absolute path)'.format(datadir)
 
 		if network_id.endswith('_tn'):
@@ -61,7 +66,9 @@ class TestDaemon(MMGenObject):
 			coinsym = network_id
 			network = 'mainnet'
 
-		me = MMGenObject.__new__((BitcoinTestDaemon,MoneroTestDaemon)[coinsym=='xmr'])
+		me = MMGenObject.__new__(
+			MoneroTestDaemon        if coinsym == 'xmr'
+			else BitcoinTestDaemon )
 
 		me.network_id = network_id
 		me.coinsym = coinsym
@@ -72,7 +79,7 @@ class TestDaemon(MMGenObject):
 		me.usr_rpc_port = rpc_port
 		return me
 
-	def __init__(self,network_id,datadir,desc='test suite daemon',rpc_port=None):
+	def __init__(self,network_id,datadir=None,rpc_port=None,desc='test suite daemon'):
 
 		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
 
@@ -84,6 +91,9 @@ class TestDaemon(MMGenObject):
 		}[self.coinsym]
 
 		self.net_desc = '{} {}'.format(self.coin,self.network)
+		self.subclass_init()
+
+	def subclass_init(self): pass
 
 	def exec_cmd_thread(self,cmd,check):
 		import threading
@@ -109,7 +119,6 @@ class TestDaemon(MMGenObject):
 			cp = self.exec_cmd_thread(cmd,check)
 		else:
 			cp = self.exec_cmd(cmd,check)
-
 		if cp:
 			out = cp.stdout.decode().rstrip()
 			err = cp.stderr.decode().rstrip()
@@ -150,7 +159,14 @@ class TestDaemon(MMGenObject):
 				+ list(cmds))
 
 	def do_start(self,silent=False):
-		return self.run_cmd(self.start_cmd,silent=silent,is_daemon=True)
+		if not silent:
+			msg('Starting {} {}'.format(self.net_desc,self.desc))
+		return self.run_cmd(self.start_cmd,silent=True,is_daemon=True)
+
+	def do_stop(self,silent=False):
+		if not silent:
+			msg('Stopping {} {}'.format(self.net_desc,self.desc))
+		return self.run_cmd(self.stop_cmd,silent=True)
 
 	def cli(self,*cmds,silent=False,check=True):
 		return self.run_cmd(self.cli_cmd(*cmds),silent=silent,check=check)
@@ -200,12 +216,9 @@ class TestDaemon(MMGenObject):
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
 class BitcoinTestDaemon(TestDaemon):
-	dtype = 'bitcoin'
 	cfg_file_hdr = '# TestDaemon config file\n'
 
-	def __init__(self,network_id,datadir,desc='test suite daemon',rpc_port=None):
-
-		super().__init__(network_id,datadir,desc=desc)
+	def subclass_init(self):
 
 		if self.platform == 'win' and self.coinsym == 'bch':
 			self.use_pidfile = False
@@ -252,24 +265,20 @@ class BitcoinTestDaemon(TestDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-	def do_stop(self,silent=False):
-		if not silent:
-			msg('Stopping {} {}'.format(self.net_desc,self.desc))
-		return self.cli('stop',silent=True)
-
 class MoneroTestDaemon(TestDaemon):
-	dtype = 'monero'
+	rpc_port = 18181
 
-	def __init__(self,network_id,datadir,desc='test suite daemon',rpc_port=None):
+	@property
+	def shared_args(self):
+		return ['--zmq-rpc-bind-port={}'.format(self.rpc_port+1),'--rpc-bind-port={}'.format(self.rpc_port)]
 
-		super().__init__(network_id,datadir,desc=desc)
-
-		self.shared_args = ['--zmq-rpc-bind-port=18182','--rpc-bind-port=18181']
-		self.coind_args = [ '--bg-mining-enable',
-							'--pidfile='+self.pidfile,
-							'--data-dir='+self.datadir,
-							'--detach',
-							'--offline' ]
+	@property
+	def coind_args(self):
+		return ['--bg-mining-enable',
+				'--pidfile={}'.format(self.pidfile),
+				'--data-dir={}'.format(self.datadir),
+				'--detach',
+				'--offline' ]
 
 	@property
 	def state(self):
@@ -281,14 +290,8 @@ class MoneroTestDaemon(TestDaemon):
 			check=False )
 		return 'stopped' if 'Error:' in cp.stdout.decode() else 'ready'
 
-	def do_start(self,silent=False):
-		return super().do_start(silent=silent)
-
 	@property
 	def stop_cmd(self):
 		return [self.coind_exec] + self.shared_args + ['exit']
-
-	def do_stop(self,silent=False):
-		return self.run_cmd(self.stop_cmd,silent=silent)
 
 TestDaemon.check_implement()

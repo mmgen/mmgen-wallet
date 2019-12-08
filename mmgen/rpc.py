@@ -34,14 +34,14 @@ class CoinDaemonRPCConnection(MMGenObject):
 	auth = True
 	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
 
-	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None):
+	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None,socket_timeout=1):
 
 		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
 		dmsg_rpc(self.db_fs.format(h=host,p=port,u=user,pw=passwd,c=auth_cookie))
 
 		import socket
 		try:
-			socket.create_connection((host,port),timeout=3).close()
+			socket.create_connection((host,port),timeout=socket_timeout).close()
 		except:
 			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
@@ -287,7 +287,6 @@ def init_daemon_parity():
 
 		return addr,sym
 
-	from mmgen.rpc import EthereumRPCConnection
 	conn = EthereumRPCConnection(
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port)
@@ -336,7 +335,6 @@ def init_daemon_bitcoind():
 
 	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 
-	from mmgen.rpc import CoinDaemonRPCConnection
 	conn = CoinDaemonRPCConnection(
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port,

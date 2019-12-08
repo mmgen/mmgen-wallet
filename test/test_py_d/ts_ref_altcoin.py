@@ -88,24 +88,26 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
 			ref_subdir = self._get_ref_subdir_by_coin(coin)
 			for tn in (False,True):
+				extra_opts = ['--coin='+coin,'--testnet='+('0','1')[tn]]
 				if tn and coin == 'etc':
 					continue
 				if coin == 'bch':
-					network_id = 'bch' + ('','_tn')[tn]
+					network_id = get_network_id('bch',tn)
 					start_test_daemons(network_id)
+					extra_opts += [
+						'--daemon-data-dir=test/daemons/bch' ]
 				g.testnet = tn
 				init_coin(coin)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]
 				tf = joinpath(ref_dir,ref_subdir,fn)
 				wf = dfl_words_file
-				e = ['--coin='+coin,'--testnet='+('0','1')[tn]]
-				e += ['--daemon-data-dir=test/daemons/bch']
-				if token: e += ['--token='+token]
+				if token:
+					extra_opts += ['--token='+token]
 				t = self.txsign(wf, tf, pf,
 								save       = False,
 								has_label  = True,
 								extra_desc = '({}{})'.format(token or coin,' testnet' if tn else ''),
-								extra_opts = e )
+								extra_opts = extra_opts )
 				if coin == 'bch':
 					stop_test_daemons(network_id)
 				ok_msg()

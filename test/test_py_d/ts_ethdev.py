@@ -290,9 +290,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('stop',                'stopping parity'),
 	)
 
+	def __init__(self,trunner,cfgs,spawn):
+		self.rpc_port = 8549
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
+		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+
 	@property
 	def eth_args(self):
-		return ['--outdir={}'.format(self.tmpdir),'--coin='+g.coin,'--rpc-port=8549','--quiet']
+		return ['--outdir={}'.format(self.tmpdir),'--coin='+g.coin,'--rpc-port={}'.format(self.rpc_port),'--quiet']
 
 	def setup(self):
 		self.spawn('',msg_only=True)
