@@ -46,19 +46,26 @@ parity_pid_fn = 'parity.pid'
 parity_key_fn = 'parity.devkey'
 
 # Token sends require varying amounts of gas, depending on compiler version
-try:
-	cmd_out = run(['solc','--version'],stdout=PIPE).stdout.decode()
-	solc_ver = re.search(r'Version:\s*(.*)',cmd_out).group(1)
-except:
-	solc_ver = '' # no solc on system - prompt for precompiled v0.5.3 contract files
+def get_solc_ver():
+	try: cp = run(['solc','--version'],stdout=PIPE)
+	except: return None
 
-if re.match(r'\b0.5.1\b',solc_ver): # Raspbian Stretch
+	if cp.returncode:
+		return None
+
+	line = cp.stdout.decode().splitlines()[1]
+	m = re.search(r'Version:\s*(\d+)\.(\d+)\.(\d+)',line)
+	return '.'.join(m.groups()) if m else None
+
+solc_ver = get_solc_ver()
+
+if solc_ver == '0.5.1':
 	vbal1 = '1.2288337'
 	vbal1a = 'TODO'
 	vbal2 = '99.997085083'
 	vbal3 = '1.23142165'
 	vbal4 = '127.0287837'
-elif solc_ver == '' or re.match(r'\b0.5.3\b',solc_ver): # Ubuntu Bionic
+else: # 0.5.3 or precompiled 0.5.3
 	vbal1 = '1.2288487'
 	vbal1a = '1.22627465'
 	vbal2 = '99.997092733'
@@ -133,6 +140,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	networks = ('eth','etc')
 	passthru_opts = ('coin',)
 	tmpdir_nums = [22]
+	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
 	cmd_group = (
 		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(g.coin)),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
@@ -302,10 +310,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def setup(self):
 		self.spawn('',msg_only=True)
-		if g.platform == 'win':
-			m1 = 'Please copy precompiled contract data to {d}/mm1 and {d}/mm2\n'.format(d=self.tmpdir)
-			m2 = '\nPress ENTER to continue: '
-			my_raw_input(m1+m2)
+		if solc_ver in self.solc_vers:
+			imsg('Found solc version {}'.format(solc_ver))
+		else:
+			imsg('Solc compiler {}. Using precompiled contract data'.format(
+				'version {} not supported by test suite'.format(solc_ver)
+				if solc_ver else 'not found' ))
+			srcdir = os.path.join(self.tr.repo_root,'test','ref','ethereum','bin')
+			from shutil import copytree
+			for d in ('mm1','mm2'):
+				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 		start_test_daemons(g.coin)
 		return 'ok'
 
@@ -535,15 +549,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_compile(self,token_data={}):
 		odir = joinpath(self.tmpdir,token_data['symbol'].lower())
-		if self.skip_for_win():
-			try:
-				os.stat(os.path.join(odir,'Token.bin'))
-			except:
-				m ='Copy solc v0.5.3 contract data for token {} to directory {} and hit ENTER: '
-				input(m.format(token_data['symbol'],odir))
-			else:
-				msg('Using precompiled contract data in {}'.format(odir))
-			return 'skip'
+		if not solc_ver:
+			imsg('Using precompiled contract data in {}'.format(odir))
+			return 'skip' if os.path.exists(odir) else False
 		self.spawn('',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
 		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))

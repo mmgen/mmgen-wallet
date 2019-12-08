@@ -597,6 +597,7 @@ class TestSuiteRunner(object):
 		from collections import OrderedDict
 		self.rebuild_list = OrderedDict()
 		self.gm = CmdGroupMgr()
+		self.repo_root = repo_root
 
 		if opt.log:
 			self.log_fd = open(log_file,'a')
