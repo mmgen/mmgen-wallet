@@ -26,7 +26,7 @@ from collections import namedtuple
 from mmgen.exception import *
 from mmgen.common import *
 
-class TestDaemon(MMGenObject):
+class Daemon(MMGenObject):
 	cfg_file_hdr = ''
 
 	subclasses_must_implement = ('state','stop_cmd')
@@ -82,9 +82,9 @@ class TestDaemon(MMGenObject):
 			network = 'mainnet'
 
 		me = MMGenObject.__new__(
-			MoneroTestDaemon        if coinsym == 'xmr'
-			else EthereumTestDaemon if coinsym in ('eth','etc')
-			else BitcoinTestDaemon )
+			MoneroDaemon        if coinsym == 'xmr'
+			else EthereumDaemon if coinsym in ('eth','etc')
+			else BitcoinDaemon )
 
 		me.network_id = network_id
 		me.coinsym = coinsym
@@ -236,8 +236,8 @@ class TestDaemon(MMGenObject):
 			for k in cls.subclasses_must_implement:
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
-class BitcoinTestDaemon(TestDaemon):
-	cfg_file_hdr = '# TestDaemon config file\n'
+class BitcoinDaemon(Daemon):
+	cfg_file_hdr = '# BitcoinDaemon config file\n'
 
 	def subclass_init(self):
 
@@ -285,7 +285,7 @@ class BitcoinTestDaemon(TestDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-class MoneroTestDaemon(TestDaemon):
+class MoneroDaemon(Daemon):
 
 	@property
 	def shared_args(self):
@@ -313,7 +313,7 @@ class MoneroTestDaemon(TestDaemon):
 	def stop_cmd(self):
 		return [self.coind_exec] + self.shared_args + ['exit']
 
-class EthereumTestDaemon(TestDaemon):
+class EthereumDaemon(Daemon):
 
 	def subclass_init(self):
 		# defaults:
@@ -359,4 +359,4 @@ class EthereumTestDaemon(TestDaemon):
 		else:
 			return super().pid
 
-TestDaemon.check_implement()
+Daemon.check_implement()

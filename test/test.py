@@ -77,7 +77,7 @@ try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
 
 from mmgen.common import *
-from mmgen.daemon import TestDaemon
+from mmgen.daemon import Daemon
 from test.common import *
 from test.test_py_d.common import *
 
@@ -156,7 +156,7 @@ network_id = get_network_id(get_coin(),bool(_uopts.get('testnet')))
 
 sys.argv.insert(1,'--data-dir=' + data_dir)
 sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
-sys.argv.insert(1,'--rpc-port={}'.format(TestDaemon(network_id).rpc_port))
+sys.argv.insert(1,'--rpc-port={}'.format(Daemon(network_id).rpc_port))
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)

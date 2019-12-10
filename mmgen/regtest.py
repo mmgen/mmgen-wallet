@@ -23,7 +23,7 @@ regtest: Coin daemon regression test mode setup and operations for the MMGen sui
 import os,time,shutil,re,json
 from subprocess import run,PIPE
 from mmgen.common import *
-from mmgen.daemon import TestDaemon
+from mmgen.daemon import Daemon
 
 # To enforce MMGen policy that all testing must ignore the user's ~/.bitcoin
 # dir, locate the daemon datadir under MMGen data_dir:
@@ -43,7 +43,7 @@ def create_data_dir(data_dir):
 	try: os.makedirs(data_dir)
 	except: pass
 
-class RegtestTestDaemon(MMGenObject): # mixin class
+class RegtestDaemon(MMGenObject): # mixin class
 
 	def generate(self,blocks=1,silent=False):
 
@@ -134,9 +134,9 @@ class MMGenRegtest(MMGenObject):
 
 		assert user is None or user in self.users,'{!r}: invalid user for regtest'.format(user)
 
-		d = TestDaemon(self.coin,self.data_dir,desc='regtest daemon',rpc_port=self.rpc_port)
+		d = Daemon(self.coin,self.data_dir,desc='regtest daemon',rpc_port=self.rpc_port)
 
-		type(d).generate = RegtestTestDaemon.generate
+		type(d).generate = RegtestDaemon.generate
 
 		d.net_desc = self.coin.upper()
 		d.usr_shared_args = self.daemon_shared_args()

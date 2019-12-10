@@ -174,11 +174,11 @@ def stop_test_daemons(*network_ids):
 def test_daemons_ops(*network_ids,op):
 	if opt.no_daemon_autostart:
 		return
-	from mmgen.daemon import TestDaemon
+	from mmgen.daemon import Daemon
 	repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 	silent = not opt.verbose and not (hasattr(opt,'exact_output') and opt.exact_output)
 	for network_id in network_ids:
-		if network_id not in TestDaemon.network_ids: # silently ignore invalid IDs
+		if network_id not in Daemon.network_ids: # silently ignore invalid IDs
 			continue
 		datadir = '{}/test/daemons/{}'.format(repo_root,network_id.replace('_tn',''))
-		TestDaemon(network_id,datadir).cmd(op,silent=silent)
+		Daemon(network_id,datadir).cmd(op,silent=silent)

@@ -3,7 +3,7 @@
 import sys
 from tests_header import repo_root
 from mmgen.common import *
-from mmgen.daemon import TestDaemon
+from mmgen.daemon import Daemon
 from mmgen.regtest import MMGenRegtest
 
 action = g.prog_name.split('-')[0]
@@ -32,7 +32,7 @@ Valid Regtest users:       {ru}
 	'code': {
 		'options': lambda s: s.format(a=action.capitalize(),pn=g.prog_name),
 		'notes': lambda s: s.format(
-			nid=', '.join(TestDaemon.network_ids),
+			nid=', '.join(Daemon.network_ids),
 			rid=', '.join(MMGenRegtest.coins),
 			ru=', '.join(MMGenRegtest.users),
 		)
@@ -47,7 +47,7 @@ if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if opt.regtest_user:
 		ids = MMGenRegtest.coins
 	else:
-		ids = list(TestDaemon.network_ids)
+		ids = list(Daemon.network_ids)
 		if cmd_args[0] == 'no_xmr':
 			ids.remove('xmr')
 else:
@@ -55,7 +55,7 @@ else:
 	if not ids:
 		opts.usage()
 	for i in ids:
-		if i not in TestDaemon.network_ids:
+		if i not in Daemon.network_ids:
 			die(1,'{!r}: invalid network ID'.format(i))
 
 if 'eth' in ids and 'etc' in ids:
@@ -70,7 +70,7 @@ for network_id in ids:
 		d = MMGenRegtest(network_id,datadir).test_daemon(opt.regtest_user)
 	else:
 		datadir = '{}/test/daemons/{}'.format(repo_root,coin)
-		d = TestDaemon(network_id,datadir)
+		d = Daemon(network_id,datadir)
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:
