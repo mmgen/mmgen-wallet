@@ -23,7 +23,7 @@ regtest: Coin daemon regression test mode setup and operations for the MMGen sui
 import os,time,shutil,re,json
 from subprocess import run,PIPE
 from mmgen.common import *
-from mmgen.test_daemon import TestDaemon
+from mmgen.daemon import TestDaemon
 
 # To enforce MMGen policy that all testing must ignore the user's ~/.bitcoin
 # dir, locate the daemon datadir under MMGen data_dir:

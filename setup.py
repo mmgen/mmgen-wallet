@@ -122,7 +122,7 @@ setup(
 			'mmgen.seed',
 			'mmgen.sha2',
 			'mmgen.term',
-			'mmgen.test_daemon',
+			'mmgen.daemon',
 			'mmgen.tool',
 			'mmgen.tw',
 			'mmgen.tx',

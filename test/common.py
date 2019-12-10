@@ -174,7 +174,7 @@ def stop_test_daemons(*network_ids):
 def test_daemons_ops(*network_ids,op):
 	if opt.no_daemon_autostart:
 		return
-	from mmgen.test_daemon import TestDaemon
+	from mmgen.daemon import TestDaemon
 	repo_root = os.path.normpath(os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]),os.pardir)))
 	silent = not opt.verbose and not (hasattr(opt,'exact_output') and opt.exact_output)
 	for network_id in network_ids:

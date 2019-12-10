@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-test_daemon.py:  Daemon control classes for MMGen test suite and regtest mode
+daemon.py:  Daemon control interface for the MMGen suite
 """
 
 import shutil

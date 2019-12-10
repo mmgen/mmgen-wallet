@@ -107,7 +107,7 @@ class unit_test(object):
 					('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx') )
 			from mmgen.protocol import init_coin
 			from mmgen.tx import MMGenTX
-			from mmgen.test_daemon import TestDaemon
+			from mmgen.daemon import TestDaemon
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)

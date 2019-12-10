@@ -114,7 +114,7 @@ import mmgen.altcoins.eth.tx
 from mmgen.txsign import txsign
 from mmgen.protocol import CoinProtocol,init_coin
 if g.test_suite:
-	from mmgen.test_daemon import TestDaemon
+	from mmgen.daemon import TestDaemon
 
 if opt.stealth_led: opt.led = True
 

@@ -3,7 +3,7 @@
 import sys
 from tests_header import repo_root
 from mmgen.common import *
-from mmgen.test_daemon import TestDaemon
+from mmgen.daemon import TestDaemon
 from mmgen.regtest import MMGenRegtest
 
 action = g.prog_name.split('-')[0]

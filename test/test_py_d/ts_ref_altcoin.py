@@ -84,7 +84,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
 		pf = joinpath(self.tmpdir,pwfile)
 		from mmgen.protocol import init_coin
-		from mmgen.test_daemon import TestDaemon
+		from mmgen.daemon import TestDaemon
 		for k in ('bch','eth','mm1','etc'):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
 			ref_subdir = self._get_ref_subdir_by_coin(coin)

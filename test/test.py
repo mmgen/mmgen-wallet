@@ -77,7 +77,7 @@ try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
 
 from mmgen.common import *
-from mmgen.test_daemon import TestDaemon
+from mmgen.daemon import TestDaemon
 from test.common import *
 from test.test_py_d.common import *
 
