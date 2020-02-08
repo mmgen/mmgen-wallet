@@ -112,11 +112,11 @@ class unit_test(object):
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
-				g.rpc_port = Daemon(coin + ('','_tn')[tn]).rpc_port
+				g.rpc_port = Daemon(coin + ('','_tn')[tn],test_suite=True).rpc_port
 				rpc_init(reinit=True)
 				test_tx(MMGenTX(fn).hex,fn,n+1)
 			init_coin('btc',False)
-			g.rpc_port = Daemon('btc').rpc_port
+			g.rpc_port = Daemon('btc',test_suite=True).rpc_port
 			rpc_init(reinit=True)
 			Msg('OK')
 

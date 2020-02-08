@@ -231,6 +231,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
+		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
+		from mmgen.regtest import MMGenRegtest
+		rt = MMGenRegtest(g.coin)
 		coin = g.coin.lower()
 		for k in rt_data:
 			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None

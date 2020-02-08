@@ -64,13 +64,12 @@ if 'eth' in ids and 'etc' in ids:
 
 for network_id in ids:
 	network_id = network_id.lower()
-	coin = network_id.replace('_tn','')
 	if opt.regtest_user:
-		datadir = '{}/test/data_dir/regtest/{}'.format(repo_root,coin)
-		d = MMGenRegtest(network_id,datadir).test_daemon(opt.regtest_user)
+		d = MMGenRegtest(network_id).test_daemon(opt.regtest_user)
 	else:
-		datadir = '{}/test/daemons/{}'.format(repo_root,coin)
-		d = Daemon(network_id,datadir)
+		if network_id.endswith('_rt'):
+			continue
+		d = Daemon(network_id,test_suite=True)
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:

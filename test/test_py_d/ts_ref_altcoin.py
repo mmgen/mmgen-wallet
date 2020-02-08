@@ -97,7 +97,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					start_test_daemons(network_id)
 					extra_opts += [
 						'--daemon-data-dir=test/daemons/bch',
-						'--rpc-port={}'.format(Daemon(network_id).rpc_port) ]
+						'--rpc-port={}'.format(Daemon(network_id,test_suite=True).rpc_port) ]
 				g.testnet = tn
 				init_coin(coin)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]

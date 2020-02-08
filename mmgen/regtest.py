@@ -25,11 +25,6 @@ from subprocess import run,PIPE
 from mmgen.common import *
 from mmgen.daemon import Daemon
 
-# To enforce MMGen policy that all testing must ignore the user's ~/.bitcoin
-# dir, locate the daemon datadir under MMGen data_dir:
-def dfl_data_dir(coin):
-	return os.path.abspath(os.path.join(g.data_dir_root,'regtest',coin.lower()))
-
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
 	except: pass
@@ -73,7 +68,6 @@ class RegtestDaemon(MMGenObject): # mixin class
 
 class MMGenRegtest(MMGenObject):
 
-	rpc_ports = { 'btc':8552, 'bch':8553, 'ltc':8555 }
 	rpc_user     = 'bobandalice'
 	rpc_password = 'hodltothemoon'
 	users        = ('bob','alice','miner')
@@ -83,23 +77,22 @@ class MMGenRegtest(MMGenObject):
 		'setup','generate','send','stop',
 		'balances','mempool','cli' )
 
-	def __init__(self,coin,datadir=None):
+	def __init__(self,coin):
 		self.coin = coin.lower()
-		self.data_dir = datadir or dfl_data_dir(self.coin)
-		self.rpc_port = self.rpc_ports[self.coin]
+		self.test_suite = os.getenv('MMGEN_TEST_SUITE_REGTEST')
+		self.d = Daemon(self.coin+'_rt',test_suite=self.test_suite)
 
 		assert self.coin in self.coins,'{!r}: invalid coin for regtest'.format(user)
-		assert os.path.isabs(self.data_dir), '{!r}: invalid datadir (not an absolute path)'.format(datadir)
 
 	def setup(self):
 
-		try: os.makedirs(self.data_dir)
+		try: os.makedirs(self.d.datadir)
 		except: pass
 
 		if self.daemon_state() != 'stopped':
 			self.stop_daemon()
 
-		create_data_dir(self.data_dir)
+		create_data_dir(self.d.datadir)
 
 		gmsg('Starting {} regtest setup'.format(self.coin))
 
@@ -134,7 +127,7 @@ class MMGenRegtest(MMGenObject):
 
 		assert user is None or user in self.users,'{!r}: invalid user for regtest'.format(user)
 
-		d = Daemon(self.coin,self.data_dir,desc='regtest daemon',rpc_port=self.rpc_port)
+		d = Daemon(self.coin+'_rt',test_suite=self.test_suite)
 
 		type(d).generate = RegtestDaemon.generate
 
@@ -163,7 +156,7 @@ class MMGenRegtest(MMGenObject):
 				msg(err)
 
 	def current_user_unix(self,quiet=False):
-		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,self.rpc_port)]
+		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,self.d.rpc_port)]
 		cmdout = run(cmd,stdout=PIPE).stdout.decode()
 		if cmdout:
 			for k in self.users:
@@ -176,7 +169,7 @@ class MMGenRegtest(MMGenObject):
 		if self.daemon_state() == 'stopped':
 			return None
 
-		debug_logfile = os.path.join(self.data_dir,'regtest','debug.log')
+		debug_logfile = os.path.join(self.d.datadir,'regtest','debug.log')
 		fd = os.open(debug_logfile,os.O_RDONLY|os.O_BINARY)
 		file_size = os.fstat(fd).st_size
 
@@ -283,10 +276,10 @@ class MMGenRegtest(MMGenObject):
 
 		gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
 
-		source_rt = MMGenRegtest(coin,dfl_data_dir(coin))
+		source_rt = MMGenRegtest(coin)
 
-		try: os.stat(source_rt.data_dir)
-		except: die(1,"Source directory '{}' does not exist!".format(source_rt.data_dir))
+		try: os.stat(source_rt.d.datadir)
+		except: die(1,"Source directory '{}' does not exist!".format(source_rt.d.datadir))
 
 		# stop the source daemon
 		if source_rt.daemon_state() != 'stopped':
@@ -296,14 +289,12 @@ class MMGenRegtest(MMGenObject):
 		if self.daemon_state() != 'stopped':
 			self.stop_daemon()
 
-		data_dir = dfl_data_dir(g.coin)
-
-		try: os.makedirs(data_dir)
+		try: os.makedirs(self.d.datadir)
 		except: pass
 
-		create_data_dir(data_dir)
-		os.rmdir(data_dir)
-		shutil.copytree(source_data_dir,data_dir,symlinks=True)
+		create_data_dir(self.d.datadir)
+		os.rmdir(self.d.datadir)
+		shutil.copytree(source_data_dir,self.d.datadir,symlinks=True)
 		self.start_daemon('miner',reindex=True)
 		self.stop_daemon()
 

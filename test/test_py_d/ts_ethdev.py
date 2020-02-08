@@ -300,7 +300,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		from mmgen.daemon import Daemon
-		self.rpc_port = Daemon(g.coin).rpc_port
+		self.rpc_port = Daemon(g.coin,test_suite=True).rpc_port
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 

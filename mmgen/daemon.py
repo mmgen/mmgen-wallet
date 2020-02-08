@@ -31,18 +31,17 @@ class Daemon(MMGenObject):
 
 	subclasses_must_implement = ('state','stop_cmd')
 
-	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr','eth','etc')
+	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
-	cd = namedtuple('coin_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn'])
+	cd = namedtuple('daemon_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
 	daemon_ids = {
-		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333),
-		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442), # MMGen RPC dfls
-		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335),
-		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,28082),
-		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,8545),
-		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,8545)
+		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333,18444),
+		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
+		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335,19446),
+		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,None,None),
+		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,None,None),
+		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,None,None)
 	}
-	port_shift = 1000
 
 	debug = False
 	wait = True
@@ -63,20 +62,27 @@ class Daemon(MMGenObject):
 	usr_cli_args = []
 	usr_shared_args = []
 
-	usr_rpc_port = None
-
-	def __new__(cls,network_id,datadir=None,rpc_port=None,desc='test suite daemon'):
-
+	def __new__(cls,network_id,test_suite=False):
 		network_id = network_id.lower()
 		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
 
-		if not datadir: # hack for throwaway instances
-			datadir = '/tmp/foo'
-		assert os.path.isabs(datadir), '{!r}: invalid datadir (not an absolute path)'.format(datadir)
+		if test_suite:
+			rel_datadir = os.path.join('test','daemons')
+			desc = 'test suite daemon'
+		elif not network_id.endswith('_rt'):
+			raise RuntimeError('only test suite and regtest supported')
 
 		if network_id.endswith('_tn'):
 			daemon_id = network_id[:-3]
 			network = 'testnet'
+		elif network_id.endswith('_rt'):
+			daemon_id = network_id[:-3]
+			network = 'regtest'
+			desc = 'regtest daemon'
+			if test_suite:
+				rel_datadir = os.path.join('test','data_dir','regtest')
+			else:
+				rel_datadir = os.path.join(g.data_dir_root,'regtest')
 		else:
 			daemon_id = network_id
 			network = 'mainnet'
@@ -86,25 +92,32 @@ class Daemon(MMGenObject):
 			else EthereumDaemon if daemon_id in ('eth','etc')
 			else BitcoinDaemon )
 
+		if test_suite:
+			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir,daemon_id))
+			me.port_shift = 1237
+		else:
+			me.datadir = os.path.join(rel_datadir,daemon_id)
+			me.port_shift = 0
+
 		me.network_id = network_id
 		me.daemon_id = daemon_id
 		me.network = network
-		me.datadir = datadir
-		me.platform = g.platform
 		me.desc = desc
-		me.usr_rpc_port = rpc_port
+		me.platform = g.platform
 		return me
 
-	def __init__(self,network_id,datadir=None,rpc_port=None,desc='test suite daemon'):
+	def __init__(self,network_id,test_suite=False):
 
 		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
 
 		for k in self.daemon_ids[self.daemon_id]._fields:
 			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
 
-		self.rpc_port = self.usr_rpc_port or (
-			(self.dfl_rpc,self.dfl_rpc_tn)[self.network=='testnet'] + self.port_shift
-		)
+		self.rpc_port = {
+				'mainnet': self.dfl_rpc,
+				'testnet': self.dfl_rpc_tn,
+				'regtest': self.dfl_rpc_rt,
+			}[self.network] + self.port_shift
 
 		self.net_desc = '{} {}'.format(self.coin,self.network)
 		self.subclass_init()

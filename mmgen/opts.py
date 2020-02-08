@@ -318,10 +318,10 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
-		from mmgen.regtest import MMGenRegtest as rt
-		g.rpc_port = rt.rpc_ports[g.coin.lower()]
-		g.rpc_user = rt.rpc_user
-		g.rpc_password = rt.rpc_password
+		from mmgen.regtest import MMGenRegtest
+		g.rpc_user = MMGenRegtest.rpc_user
+		g.rpc_password = MMGenRegtest.rpc_password
+		g.rpc_port = MMGenRegtest(g.coin).d.rpc_port
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so now we can do this
 
@@ -537,7 +537,7 @@ def check_opts(usr_opts): # Returns false if any check fails
 		elif key in ('bob','alice'):
 			m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
 			from mmgen.regtest import MMGenRegtest
-			try: os.stat(os.path.join(MMGenRegtest(g.coin).data_dir,'regtest','debug.log'))
+			try: os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
 			except: die(1,m.format(g.proj_name.lower()))
 		elif key == 'locktime':
 			if not opt_is_int(val,desc): return False
