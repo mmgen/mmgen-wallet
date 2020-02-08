@@ -226,7 +226,7 @@ class MMGenRegtest(MMGenObject):
 
 	def send(self,addr,amt):
 		d = self.switch_user('miner',quiet=True)
-		gmsg('Sending {} miner {} to address {}'.format(amt,d.coinsym.upper(),addr))
+		gmsg('Sending {} miner {} to address {}'.format(amt,d.daemon_id.upper(),addr))
 		cp = d.cli('sendtoaddress',addr,str(amt),silent=True)
 		d.generate(1)
 

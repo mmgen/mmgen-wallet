@@ -34,7 +34,7 @@ class Daemon(MMGenObject):
 	network_ids = ('btc','btc_tn','bch','bch_tn','ltc','ltc_tn','xmr','eth','etc')
 
 	cd = namedtuple('coin_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn'])
-	coins = {
+	daemon_ids = {
 		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333),
 		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442), # MMGen RPC dfls
 		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335),
@@ -75,19 +75,19 @@ class Daemon(MMGenObject):
 		assert os.path.isabs(datadir), '{!r}: invalid datadir (not an absolute path)'.format(datadir)
 
 		if network_id.endswith('_tn'):
-			coinsym = network_id[:-3]
+			daemon_id = network_id[:-3]
 			network = 'testnet'
 		else:
-			coinsym = network_id
+			daemon_id = network_id
 			network = 'mainnet'
 
 		me = MMGenObject.__new__(
-			MoneroDaemon        if coinsym == 'xmr'
-			else EthereumDaemon if coinsym in ('eth','etc')
+			MoneroDaemon        if daemon_id == 'xmr'
+			else EthereumDaemon if daemon_id in ('eth','etc')
 			else BitcoinDaemon )
 
 		me.network_id = network_id
-		me.coinsym = coinsym
+		me.daemon_id = daemon_id
 		me.network = network
 		me.datadir = datadir
 		me.platform = g.platform
@@ -99,8 +99,8 @@ class Daemon(MMGenObject):
 
 		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
 
-		for k in self.coins[self.coinsym]._fields:
-			setattr(self,k,getattr(self.coins[self.coinsym],k))
+		for k in self.daemon_ids[self.daemon_id]._fields:
+			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
 
 		self.rpc_port = self.usr_rpc_port or (
 			(self.dfl_rpc,self.dfl_rpc_tn)[self.network=='testnet'] + self.port_shift
@@ -241,7 +241,7 @@ class BitcoinDaemon(Daemon):
 
 	def subclass_init(self):
 
-		if self.platform == 'win' and self.coinsym == 'bch':
+		if self.platform == 'win' and self.daemon_id == 'bch':
 			self.use_pidfile = False
 
 		if self.network=='testnet':
@@ -263,9 +263,9 @@ class BitcoinDaemon(Daemon):
 		if self.platform == 'linux':
 			self.coind_args += ['--daemon']
 
-		if self.coinsym == 'bch':
+		if self.daemon_id == 'bch':
 			self.coin_specific_coind_args = ['--usecashaddr=0']
-		elif self.coinsym == 'ltc':
+		elif self.daemon_id == 'ltc':
 			self.coin_specific_coind_args = ['--mempoolreplacement=1']
 
 	@property
