@@ -26,101 +26,13 @@ from collections import namedtuple
 from mmgen.exception import *
 from mmgen.common import *
 
-class CoinDaemon(MMGenObject):
-	cfg_file_hdr = ''
+class Daemon(MMGenObject):
 
 	subclasses_must_implement = ('state','stop_cmd')
-
-	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
-
-	cd = namedtuple('daemon_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
-	daemon_ids = {
-		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333,18444),
-		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
-		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335,19446),
-		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,None,None),
-		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,None,None),
-		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,None,None)
-	}
-
 	debug = False
 	wait = True
 	use_pidfile = True
-
-	testnet_arg = []
-
-	coind_args = []
-	cli_args = []
-	shared_args = []
-	coind_cmd = []
-
-	coin_specific_coind_args = []
-	coin_specific_cli_args = []
-	coin_specific_shared_args = []
-
-	usr_coind_args = []
-	usr_cli_args = []
-	usr_shared_args = []
-
-	def __new__(cls,network_id,test_suite=False):
-		network_id = network_id.lower()
-		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
-
-		if test_suite:
-			rel_datadir = os.path.join('test','daemons')
-			desc = 'test suite daemon'
-		elif not network_id.endswith('_rt'):
-			raise RuntimeError('only test suite and regtest supported')
-
-		if network_id.endswith('_tn'):
-			daemon_id = network_id[:-3]
-			network = 'testnet'
-		elif network_id.endswith('_rt'):
-			daemon_id = network_id[:-3]
-			network = 'regtest'
-			desc = 'regtest daemon'
-			if test_suite:
-				rel_datadir = os.path.join('test','data_dir','regtest')
-			else:
-				rel_datadir = os.path.join(g.data_dir_root,'regtest')
-		else:
-			daemon_id = network_id
-			network = 'mainnet'
-
-		me = MMGenObject.__new__(
-			MoneroDaemon        if daemon_id == 'xmr'
-			else EthereumDaemon if daemon_id in ('eth','etc')
-			else BitcoinDaemon )
-
-		if test_suite:
-			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir,daemon_id))
-			me.port_shift = 1237
-		else:
-			me.datadir = os.path.join(rel_datadir,daemon_id)
-			me.port_shift = 0
-
-		me.network_id = network_id
-		me.daemon_id = daemon_id
-		me.network = network
-		me.desc = desc
-		me.platform = g.platform
-		return me
-
-	def __init__(self,network_id,test_suite=False):
-
-		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
-
-		for k in self.daemon_ids[self.daemon_id]._fields:
-			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
-
-		self.rpc_port = {
-				'mainnet': self.dfl_rpc,
-				'testnet': self.dfl_rpc_tn,
-				'regtest': self.dfl_rpc_rt,
-			}[self.network] + self.port_shift
-
-		self.net_desc = '{} {}'.format(self.coin,self.network)
-		self.subclass_init()
+	conf_file = None
 
 	def subclass_init(self): pass
 
@@ -164,29 +76,6 @@ class CoinDaemon(MMGenObject):
 
 	def cmd(self,action,*args,**kwargs):
 		return getattr(self,action)(*args,**kwargs)
-
-	@property
-	def start_cmd(self):
-		return ([self.coind_exec]
-				+ self.testnet_arg
-				+ self.coind_args
-				+ self.shared_args
-				+ self.coin_specific_coind_args
-				+ self.coin_specific_shared_args
-				+ self.usr_coind_args
-				+ self.usr_shared_args
-				+ self.coind_cmd )
-
-	def cli_cmd(self,*cmds):
-		return ([self.cli_exec]
-				+ self.testnet_arg
-				+ self.cli_args
-				+ self.shared_args
-				+ self.coin_specific_cli_args
-				+ self.coin_specific_shared_args
-				+ self.usr_cli_args
-				+ self.usr_shared_args
-				+ list(cmds))
 
 	def do_start(self,silent=False):
 		if not silent:
@@ -248,6 +137,118 @@ class CoinDaemon(MMGenObject):
 		for subcls in cls.__subclasses__():
 			for k in cls.subclasses_must_implement:
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
+
+class CoinDaemon(Daemon):
+	cfg_file_hdr = ''
+
+	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
+
+	cd = namedtuple('daemon_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
+	daemon_ids = {
+		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333,18444),
+		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
+		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335,19446),
+		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,None,None),
+		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,None,None),
+		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,None,None)
+	}
+
+	testnet_arg = []
+	coind_args = []
+	cli_args = []
+	shared_args = []
+	coind_cmd = []
+
+	coin_specific_coind_args = []
+	coin_specific_cli_args = []
+	coin_specific_shared_args = []
+
+	usr_coind_args = []
+	usr_cli_args = []
+	usr_shared_args = []
+
+	def __new__(cls,network_id,test_suite=False):
+		network_id = network_id.lower()
+		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
+
+		if test_suite:
+			rel_datadir = os.path.join('test','daemons')
+			desc = 'test suite daemon'
+		elif not network_id.endswith('_rt'):
+			raise RuntimeError('only test suite and regtest supported for CoinDaemon')
+
+		if network_id.endswith('_tn'):
+			daemon_id = network_id[:-3]
+			network = 'testnet'
+		elif network_id.endswith('_rt'):
+			daemon_id = network_id[:-3]
+			network = 'regtest'
+			desc = 'regtest daemon'
+			if test_suite:
+				rel_datadir = os.path.join('test','data_dir','regtest')
+			else:
+				rel_datadir = os.path.join(g.data_dir_root,'regtest')
+		else:
+			daemon_id = network_id
+			network = 'mainnet'
+
+		me = MMGenObject.__new__(
+			MoneroDaemon        if daemon_id == 'xmr'
+			else EthereumDaemon if daemon_id in ('eth','etc')
+			else BitcoinDaemon )
+
+		if test_suite:
+			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir,daemon_id))
+			me.port_shift = 1237
+		else:
+			me.datadir = os.path.join(rel_datadir,daemon_id)
+			me.port_shift = 0
+
+		me.network_id = network_id
+		me.daemon_id = daemon_id
+		me.network = network
+		me.desc = desc
+		me.platform = g.platform
+		return me
+
+	def __init__(self,network_id,test_suite=False):
+
+		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
+
+		for k in self.daemon_ids[self.daemon_id]._fields:
+			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
+
+		self.rpc_port = {
+				'mainnet': self.dfl_rpc,
+				'testnet': self.dfl_rpc_tn,
+				'regtest': self.dfl_rpc_rt,
+			}[self.network] + self.port_shift
+
+		self.net_desc = '{} {}'.format(self.coin,self.network)
+		self.subclass_init()
+
+	@property
+	def start_cmd(self):
+		return ([self.coind_exec]
+				+ self.testnet_arg
+				+ self.coind_args
+				+ self.shared_args
+				+ self.coin_specific_coind_args
+				+ self.coin_specific_shared_args
+				+ self.usr_coind_args
+				+ self.usr_shared_args
+				+ self.coind_cmd )
+
+	def cli_cmd(self,*cmds):
+		return ([self.cli_exec]
+				+ self.testnet_arg
+				+ self.cli_args
+				+ self.shared_args
+				+ self.coin_specific_cli_args
+				+ self.coin_specific_shared_args
+				+ self.usr_cli_args
+				+ self.usr_shared_args
+				+ list(cmds))
 
 class BitcoinDaemon(CoinDaemon):
 	cfg_file_hdr = '# BitcoinDaemon config file\n'
