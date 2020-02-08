@@ -174,9 +174,9 @@ def stop_test_daemons(*network_ids):
 def test_daemons_ops(*network_ids,op):
 	if opt.no_daemon_autostart:
 		return
-	from mmgen.daemon import Daemon
+	from mmgen.daemon import CoinDaemon
 	silent = not opt.verbose and not (hasattr(opt,'exact_output') and opt.exact_output)
 	for network_id in network_ids:
-		if network_id not in Daemon.network_ids: # silently ignore invalid IDs
+		if network_id not in CoinDaemon.network_ids: # silently ignore invalid IDs
 			continue
-		Daemon(network_id,test_suite=True).cmd(op,silent=silent)
+		CoinDaemon(network_id,test_suite=True).cmd(op,silent=silent)

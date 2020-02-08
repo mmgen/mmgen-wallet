@@ -23,7 +23,7 @@ regtest: Coin daemon regression test mode setup and operations for the MMGen sui
 import os,time,shutil,re,json
 from subprocess import run,PIPE
 from mmgen.common import *
-from mmgen.daemon import Daemon
+from mmgen.daemon import CoinDaemon
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
@@ -80,7 +80,7 @@ class MMGenRegtest(MMGenObject):
 	def __init__(self,coin):
 		self.coin = coin.lower()
 		self.test_suite = os.getenv('MMGEN_TEST_SUITE_REGTEST')
-		self.d = Daemon(self.coin+'_rt',test_suite=self.test_suite)
+		self.d = CoinDaemon(self.coin+'_rt',test_suite=self.test_suite)
 
 		assert self.coin in self.coins,'{!r}: invalid coin for regtest'.format(user)
 
@@ -127,7 +127,7 @@ class MMGenRegtest(MMGenObject):
 
 		assert user is None or user in self.users,'{!r}: invalid user for regtest'.format(user)
 
-		d = Daemon(self.coin+'_rt',test_suite=self.test_suite)
+		d = CoinDaemon(self.coin+'_rt',test_suite=self.test_suite)
 
 		type(d).generate = RegtestDaemon.generate
 

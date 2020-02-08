@@ -26,7 +26,7 @@ from collections import namedtuple
 from mmgen.exception import *
 from mmgen.common import *
 
-class Daemon(MMGenObject):
+class CoinDaemon(MMGenObject):
 	cfg_file_hdr = ''
 
 	subclasses_must_implement = ('state','stop_cmd')
@@ -249,7 +249,7 @@ class Daemon(MMGenObject):
 			for k in cls.subclasses_must_implement:
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
-class BitcoinDaemon(Daemon):
+class BitcoinDaemon(CoinDaemon):
 	cfg_file_hdr = '# BitcoinDaemon config file\n'
 
 	def subclass_init(self):
@@ -298,7 +298,7 @@ class BitcoinDaemon(Daemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-class MoneroDaemon(Daemon):
+class MoneroDaemon(CoinDaemon):
 
 	@property
 	def shared_args(self):
@@ -326,7 +326,7 @@ class MoneroDaemon(Daemon):
 	def stop_cmd(self):
 		return [self.coind_exec] + self.shared_args + ['exit']
 
-class EthereumDaemon(Daemon):
+class EthereumDaemon(CoinDaemon):
 
 	def subclass_init(self):
 		# defaults:
@@ -372,4 +372,4 @@ class EthereumDaemon(Daemon):
 		else:
 			return super().pid
 
-Daemon.check_implement()
+CoinDaemon.check_implement()
