@@ -225,8 +225,8 @@ class g(object):
 	aesctr_dfl_iv  = b'\x00' * (aesctr_iv_len-1) + b'\x01'
 	hincog_chk_len = 8
 
-	key_generators = 'python-ecdsa','secp256k1' # '1','2'
-	key_generator  = 2 # secp256k1 is default
+	key_generators = ('python-ecdsa','libsecp256k1') # '1','2'
+	key_generator  = 2 # libsecp256k1 is default
 
 	force_standalone_scrypt_module = False
 	# Scrypt params: 'id_num': [N, p, r] (N is an exponent of two)

@@ -71,6 +71,24 @@ master share index is used in all split and join commands.
 
 EXAMPLES:
 
+  Split a BIP39 seed phrase into two BIP39 shares.  Rejoin the split:
+
+    $ echo 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong' > sample.bip39
+
+    $ mmgen-seedsplit -o bip39 sample.bip39 1:2
+    BIP39 mnemonic data written to file '03BAE887-default-1of2[D51CB683][128].bip39'
+
+    $ mmgen-seedsplit -o bip39 sample.bip39 2:2
+    BIP39 mnemonic data written to file '03BAE887-default-2of2[67BFD36E][128].bip39'
+
+    $ mmgen-seedjoin -o bip39 \\
+        '03BAE887-default-2of2[67BFD36E][128].bip39' \\
+        '03BAE887-default-1of2[D51CB683][128].bip39'
+    BIP39 mnemonic data written to file '03BAE887[128].bip39'
+
+    $ cat '03BAE887[128].bip39'
+    zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong
+
   Create a 3-way default split of your default wallet, outputting all shares
   to default wallet format.  Rejoin the split:
 

@@ -86,7 +86,7 @@ opts_data = {
 Address indexes are given as a comma-separated list and/or hyphen-separated
 range(s).
 
-{n_addrkey}If available, the secp256k1 library will be used for address generation.
+{n_addrkey}If available, the libsecp256k1 library will be used for address generation.
 
 ADDRESS TYPES:
   {n_at}
