@@ -88,6 +88,7 @@ passwd_data = {
 'bip39_dfl_αω':td('95b383d5092a55df', 'bip39:24:αω','-αω-bip39-24','αω bip39:24','treat athlete brand top beauty poverty senior unhappy vacant domain yellow scale fossil aim lonely fatal sun nuclear such ancient stage require stool similar'),
 'bip39_18_αω': td('29e5a605ffa36142', 'bip39:18:αω','-αω-bip39-18','αω bip39:18','better legal various ketchup then range festival either tomato cradle say absorb solar earth alter pattern canyon liar'),
 'bip39_12_αω': td('efa13cb309d7fc1d', 'bip39:12:αω','-αω-bip39-12','αω bip39:12','lady oppose theme fit position merry reopen acquire tuna dentist young chunk'),
+'xmrseed_dfl_αω':td('62f5b72a5ca89cab', 'xmrseed:25:αω','-αω-xmrseed-25','αω xmrseed:25','tequila eden skulls giving jester hospital dreams bakery adjust nanny cactus inwardly films amply nanny soggy vials muppet yellow woken ashtray organs exhale foes eden'),
 }
 
 cvr_opts = ' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) if opt.coverage else ''

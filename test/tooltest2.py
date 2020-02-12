@@ -32,6 +32,7 @@ from mmgen.common import *
 from test.common import *
 from mmgen.obj import is_wif,is_coin_addr
 from mmgen.seed import is_bip39_mnemonic,is_mmgen_mnemonic
+from mmgen.addr import is_xmrseed
 from mmgen.baseconv import *
 
 NL = ('\n','\r\n')[g.platform=='win']
@@ -112,6 +113,9 @@ tests = {
 			( ['0000000000000000000000000000000000000000000000000000000000000001'],
 			('able able able able able able able able able able able able ' +
 			'able able able able able able able able able able able about') ),
+			( ['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f','fmt=xmrseed'],
+			('viewpoint donuts ardent template unveil agile meant unafraid urgent athlete rustled mime azure ' +
+			'jaded hawk baby jagged haystack baby jagged haystack ramped oncoming point template') ),
 		] + [([a,'fmt=bip39'],b) for a,b in bip39.vectors],
 		'mn2hex': [
 			( ['table cast forgive master funny gaze sadness ripple million paint moral match','fmt=mmgen'],
@@ -133,6 +137,10 @@ tests = {
 			( ['able able able able able able able able able able able able ' +
 				'able able able able able able able able able able able about'],
 				'0000000000000000000000000000000000000000000000000000000000000001'),
+			( ['viewpoint donuts ardent template unveil agile meant unafraid urgent athlete ' +
+				'rustled mime azure jaded hawk baby jagged haystack baby jagged haystack ' +
+				'ramped oncoming point template','fmt=xmrseed'],
+				'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'),
 		] + [([b,'fmt=bip39'],a) for a,b in bip39.vectors],
 		'mn_rand128': [
 			( [], is_mmgen_mnemonic, ['-r0']),
@@ -146,16 +154,19 @@ tests = {
 		'mn_rand256': [
 			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),
 			( ['fmt=bip39'], is_bip39_mnemonic, ['-r0']),
+			( ['fmt=xmrseed'], is_xmrseed, ['-r0']),
 		],
 		'mn_stats': [
 			( [], is_str ),
 			( ['fmt=mmgen'], is_str ),
 			( ['fmt=bip39'], is_str ),
+			( ['fmt=xmrseed'], is_str ),
 		],
 		'mn_printlist': [
 			( [], is_str ),
 			( ['fmt=mmgen'], is_str ),
 			( ['fmt=bip39'], is_str ),
+			( ['fmt=xmrseed','enum=true'], is_str ),
 		],
 	},
 	'Util': {

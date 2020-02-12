@@ -42,6 +42,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		'sids': ('FE3C6545', '1378FC64', '98831F3A'),
 	}
 	shared_deps = ['mmdat',pwfile]
+	skip_cmds = (
+		'ref_xmrseed_25_passwdgen_1',
+		'ref_xmrseed_25_passwdgen_2',
+	)
 	cmd_group = (
 		# reading saved reference wallets
 		('ref_wallet_chk',  ([],'saved reference wallet')),
@@ -319,6 +323,7 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		'ref_bip39_18_passwdgen_3': 'EF87 9904 88E2 5884',
 		'ref_bip39_24_passwdgen_3': 'EBE8 2A8F 8F8C 7DBD',
 		'ref_hex2bip39_24_passwdgen_3': '93FA 5EFD 33F3 760E',
+		'ref_xmrseed_25_passwdgen_3': '91AE E76A 2827 C8CC',
 	}
 
 	cmd_group = (
@@ -339,6 +344,7 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		('ref_bip39_12_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, 12 words)')),
 		('ref_bip39_18_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 18 words)')),
 		('ref_bip39_24_passwdgen',    ([],'new refwallet passwd file chksum (BIP39, up to 24 words)')),
+		('ref_xmrseed_25_passwdgen',  ([],'new refwallet passwd file chksum (Monero new-style mnemonic, 25 words)')),
 		('ref_hex2bip39_24_passwdgen',([],'new refwallet passwd file chksum (hex-to-BIP39, up to 24 words)')),
 	)
 
@@ -383,6 +389,8 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 
 	def mn_pwgen(self,req_pw_len,pwfmt,ftype='passbip39',stdout=False):
 		pwlen = min(req_pw_len,{'1':12,'2':18,'3':24}[self.test_name[-1]])
+		if pwfmt == 'xmrseed':
+			pwlen += 1
 		ea = ['--accept-defaults']
 		return self.pwgen(ftype,'фубар@crypto.org',pwfmt,pwlen,ea,stdout=stdout)
 
@@ -390,3 +398,4 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 	def ref_bip39_18_passwdgen(self):     return self.mn_pwgen(18,'bip39',stdout=True)
 	def ref_bip39_24_passwdgen(self):     return self.mn_pwgen(24,'bip39')
 	def ref_hex2bip39_24_passwdgen(self): return self.mn_pwgen(24,'hex2bip39')
+	def ref_xmrseed_25_passwdgen(self):   return self.mn_pwgen(24,'xmrseed',ftype='passxmrseed')

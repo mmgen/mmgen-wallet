@@ -783,6 +783,9 @@ def is_bip39_str(s):
 	from mmgen.bip39 import bip39
 	return bool(bip39.tohex(s.split(),wl_id='bip39'))
 
+def is_xmrseed(s):
+	return bool(baseconv.tobytes(s.split(),wl_id='xmrseed'))
+
 from collections import namedtuple
 class PasswordList(AddrList):
 	msgs = {
@@ -824,6 +827,7 @@ Record this checksum: it will be used to verify the password file in the future
 		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),   # 32**24 < 2**128
 		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),   # 58**20 < 2**128
 		'bip39': pwinfo(12, 24 ,24, [12,18,24], 'BIP39 mnemonic',        is_bip39_str),
+		'xmrseed': pwinfo(25, 25, 25, [25],     'Monero new-style mnemonic', is_xmrseed),
 		'hex':   pwinfo(32, 64 ,64, [32,48,64], 'hexadecimal password',  is_hex_str),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
@@ -855,7 +859,7 @@ Record this checksum: it will be used to verify the password file in the future
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
 			self.data = self.generate(seed,pw_idxs)
 
-		if self.pw_fmt == 'bip39':
+		if self.pw_fmt in ('bip39','xmrseed'):
 			self.msgs['file_header'] = self.msgs['file_header_mn'].format(self.pw_fmt.upper())
 
 		self.num_addrs = len(self.data)
@@ -916,7 +920,13 @@ Record this checksum: it will be used to verify the password file in the future
 		elif pf == 'bip39':
 			from mmgen.bip39 import bip39
 			pw_bytes = bip39.nwords2seedlen(self.pw_len,in_bytes=True)
-			good_pw_len = bip39.seedlen2nwords(len(seed.data),in_bytes=True)
+			good_pw_len = bip39.seedlen2nwords(seed.byte_len,in_bytes=True)
+		elif pf == 'xmrseed':
+			pw_bytes = baseconv.seedlen_map_rev['xmrseed'][self.pw_len]
+			try:
+				good_pw_len = baseconv.seedlen_map['xmrseed'][seed.byte_len]
+			except:
+				die(1,'{}: unsupported seed length for Monero new-style mnemonic'.format(seed.byte_len*8))
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
@@ -946,6 +956,13 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len_hex = bip39.nwords2seedlen(self.pw_len,in_hex=True)
 			# take most significant part
 			return ' '.join(bip39.fromhex(hex_sec[:pw_len_hex],wl_id='bip39'))
+		elif self.pw_fmt == 'xmrseed':
+			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
+			# take most significant part
+			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
+			from mmgen.protocol import MoneroProtocol
+			bytes_preproc = MoneroProtocol.preprocess_key(bytes_trunc,None)
+			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
 			# take least significant part
 			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
@@ -953,7 +970,7 @@ Record this checksum: it will be used to verify the password file in the future
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):
 			raise ValueError('Password is not valid {} data'.format(self.pw_info[self.pw_fmt].desc))
-		pwlen = len(pw.split()) if self.pw_fmt == 'bip39' else len(pw)
+		pwlen = len(pw.split()) if self.pw_fmt in ('bip39','xmrseed') else len(pw)
 		if pwlen != self.pw_len:
 			raise ValueError('Password has incorrect length ({} != {})'.format(pwlen,self.pw_len))
 		return True
@@ -975,7 +992,7 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def get_line(self,lines):
 		self.line_ctr += 1
-		if self.pw_fmt == 'bip39':
+		if self.pw_fmt in ('bip39','xmrseed'):
 			ret = lines.pop(0).split(None,self.pw_len+1)
 			if len(ret) > self.pw_len+1:
 				m1 = 'extraneous text {!r} found after password'.format(ret[self.pw_len+1])

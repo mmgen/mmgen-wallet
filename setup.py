@@ -113,6 +113,7 @@ setup(
 			'mmgen.keccak',
 			'mmgen.license',
 			'mmgen.mn_electrum',
+			'mmgen.mn_monero',
 			'mmgen.mn_tirosh',
 			'mmgen.obj',
 			'mmgen.opts',

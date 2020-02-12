@@ -53,6 +53,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_bip39_12': '98831F3A-фубар@crypto.org-bip39-12[1,4,1100].pws',
 		'ref_passwdfile_bip39_18': '98831F3A-фубар@crypto.org-bip39-18[1,4,1100].pws',
 		'ref_passwdfile_bip39_24': '98831F3A-фубар@crypto.org-bip39-24[1,4,1100].pws',
+		'ref_passwdfile_xmrseed_25': '98831F3A-фубар@crypto.org-xmrseed-25[1,4,1100].pws',
 		'ref_passwdfile_hex2bip39_12': '98831F3A-фубар@crypto.org-hex2bip39-12[1,4,1100].pws',
 		'ref_tx_file': { # data shared with ref_altcoin, autosign
 			'btc': ('0B8D5A[15.31789,14,tl=1320969600].rawtx',
@@ -99,6 +100,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		'ref_passwdfile_bip39_12_chksum': 'BF57 02A3 5229 CF18',
 		'ref_passwdfile_bip39_18_chksum': '31D3 1656 B7DC 27CF',
 		'ref_passwdfile_bip39_24_chksum': 'E565 3A59 7D91 4671',
+		'ref_passwdfile_xmrseed_25_chksum': 'B488 21D3 4539 968D',
 		'ref_passwdfile_hex2bip39_12_chksum': '93AD 4AE2 03D1 8A0A',
 	}
 	cmd_group = ( # TODO: move to tooltest2
@@ -123,6 +125,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		('ref_passwdfile_chk_bip39_12','saved reference password file (BIP39, 12 words)'),
 		('ref_passwdfile_chk_bip39_18','saved reference password file (BIP39, 18 words)'),
 		('ref_passwdfile_chk_bip39_24','saved reference password file (BIP39, 24 words)'),
+		('ref_passwdfile_chk_xmrseed_25','saved reference password file (Monero new-style mnemonic, 25 words)'),
 		('ref_passwdfile_chk_hex2bip39_12','saved reference password file (hex-to-BIP39, 12 words)'),
 
 #	Create the fake inputs:
@@ -252,6 +255,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_passwdfile_chk_bip39_12(self): return self.ref_passwdfile_chk(key='bip39_12',pat=r'BIP39.*len.* 12\b')
 	def ref_passwdfile_chk_bip39_18(self): return self.ref_passwdfile_chk(key='bip39_18',pat=r'BIP39.*len.* 18\b')
 	def ref_passwdfile_chk_bip39_24(self): return self.ref_passwdfile_chk(key='bip39_24',pat=r'BIP39.*len.* 24\b')
+	def ref_passwdfile_chk_xmrseed_25(self): return self.ref_passwdfile_chk(key='xmrseed_25',pat=r'Mon.*len.* 25\b')
 	def ref_passwdfile_chk_hex2bip39_12(self): return self.ref_passwdfile_chk(key='hex2bip39_12',pat=r'BIP39.*len.* 12\b')
 
 	def ref_tx_chk(self):

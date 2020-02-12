@@ -234,6 +234,7 @@ dfl_mnemonic_fmt = 'mmgen'
 mnemonic_fmts = {
 	'mmgen': { 'fmt': 'words', 'conv_cls': lambda: baseconv },
 	'bip39': { 'fmt': 'bip39', 'conv_cls': conv_cls_bip39 },
+	'xmrseed': { 'fmt': 'xmrseed','conv_cls': lambda: baseconv },
 }
 mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
 
@@ -473,7 +474,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 
 class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	"""
-	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39')
+	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39', 'xmrseed')
 
 		IMPORTANT NOTE: MMGen's default seed phrase format uses the Electrum
 		wordlist, however seed phrases are computed using a different algorithm
@@ -484,10 +485,24 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		users should be aware that BIP39 support does not imply BIP32 support!
 		MMGen uses its own key derivation scheme differing from the one described
 		by the BIP32 protocol.
+
+		For Monero ('xmrseed') seed phrases, input data is reduced to a spendkey
+		before conversion so that a canonical seed phrase is produced.  This is
+		required because Monero seeds, unlike ordinary wallet seeds, are tied
+		to a concrete key/address pair.  To manually generate a Monero spendkey,
+		use the 'hex2wif' command.
 	"""
+
+	@staticmethod
+	def _xmr_reduce(bytestr):
+		from mmgen.protocol import MoneroProtocol
+		return MoneroProtocol.preprocess_key(bytestr,None)
+
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
 		randbytes = get_random(nbytes)
+		if fmt == 'xmrseed':
+			randbytes = self._xmr_reduce(randbytes)
 		if opt.verbose:
 			msg('Seed: {}'.format(randbytes.hex()))
 		return self.hex2mn(randbytes.hex(),fmt=fmt)
@@ -518,6 +533,8 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 			return ' '.join(bip39.fromhex(hexstr,fmt))
 		else:
 			bytestr = bytes.fromhex(hexstr)
+			if fmt == 'xmrseed':
+				bytestr = self._xmr_reduce(bytestr)
 			return baseconv.frombytes(bytestr,fmt,'seed',tostr=True)
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):

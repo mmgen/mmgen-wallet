@@ -9,6 +9,23 @@ from mmgen.exception import *
 class unit_test(object):
 
 	vectors = {
+		'xmrseed': (
+			# 42nsXK8WbVGTNayQ6Kjw5UdgqbQY5KCCufdxdCgF7NgTfjC69Mna7DJSYyie77hZTQ8H92G2HwgFhgEUYnDzrnLnQdF28r3
+			(('0000000000000000000000000000000000000000000000000000000000000001','seed'), # 0x1
+			'abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey abbey bamboo jaws jerseys abbey'),
+
+			# 49voQEbjouUQSDikRWKUt1PGbS47TBde4hiGyftN46CvTDd8LXCaimjHRGtofCJwY5Ed5QhYwc12P15AH5w7SxUAMCz1nr1
+			(('1c95988d7431ecd670cf7d73f45befc6feffffffffffffffffffffffffffff0f','seed'), # 0xffffffff * 8
+			'powder directed sayings enmity bacon vapidly entrance bumper noodles iguana sleepless nasty flying soil software foamy solved soggy foamy solved soggy jury yawning ankle solved'),
+
+			# 41i7saPWA53EoHenmJVRt34dubPxsXwoWMnw8AdMyx4mTD1svf7qYzcVjxxRfteLNdYrAxWUMmiPegFW9EfoNgXx7vDMExv
+			(('e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f','seed'), # 0xdeadbeef * 8
+			'viewpoint donuts ardent template unveil agile meant unafraid urgent athlete rustled mime azure jaded hawk baby jagged haystack baby jagged haystack ramped oncoming point template'),
+
+			# 42ey1afDFnn4886T7196doS9GPMzexD9gXpsZJDwVjeRVdFCSoHnv7KPbBeGpzJBzHRCAs9UxqeoyFQMYbqSWYTfJJQAWDm
+			(('148d78d2aba7dbca5cd8f6abcfb0b3c009ffbdbea1ff373d50ed94d78286640e','seed'), # Monero repo
+			'velvet lymph giddy number token physics poetry unquoted nibs useful sabotage limits benches lifestyle eden nitrogen anvil fewest avoid batch vials washing fences goat unquoted'),
+		),
 		'b58': (
 			(('00',None),'1'),
 			(('00',1),'1'),
@@ -161,7 +178,10 @@ class unit_test(object):
 			for (hexstr,pad),ret_chk in data:
 				if type(pad) == int:
 					pad = len(hexstr)
-				ret = baseconv.tohex(ret_chk,wl_id=base,pad=pad)
+				ret = baseconv.tohex(
+					ret_chk.split() if base == 'xmrseed' else ret_chk,
+					wl_id=base,
+					pad=pad)
 				if pad == None:
 					assert int(ret,16) == int(hexstr,16), rerr.format(int(ret,16),int(hexstr,16))
 				else:
