@@ -92,6 +92,9 @@ class g(object):
 	rpc_port             = 0
 	rpc_user             = ''
 	rpc_password         = ''
+	monero_wallet_rpc_host = 'localhost'
+	monero_wallet_rpc_user = 'monero'
+	monero_wallet_rpc_password = ''
 	rpc_fail_on_command  = ''
 	rpch                 = None # global RPC handle
 	use_cached_balances  = False
@@ -141,6 +144,7 @@ class g(object):
 	# 'long' opts - opt sets global var
 	common_opts = (
 		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
+		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
 		'accept_defaults','token'
 	)
@@ -162,6 +166,7 @@ class g(object):
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
+		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','subseeds',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',

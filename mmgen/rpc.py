@@ -261,6 +261,40 @@ class EthereumRPCConnection(RPCConnection):
 		'parity_versionInfo',
 	)
 
+class MoneroWalletRPCConnection(RPCConnection):
+	rpcmethods = (
+		'get_version',
+		'get_height',    # sync height of the open wallet
+		'get_balance',   # { "account_index":0,"address_indices":[0,1] }
+		'create_wallet', # { "filename":"name","password":"passw0rd","language":"English" }
+		'open_wallet',   # { "filename":"name","password":"passw0rd" }
+		'close_wallet',
+		'restore_deterministic_wallet', # name,password,seed (restore_height,language,seed_offset,autosave_current)
+		'refresh',       # {"start_height":100000}
+	)
+
+	def request(self,cmd,*args,**kwargs):
+		from subprocess import run,PIPE
+		data = {
+			'jsonrpc': '2.0',
+			'id': '0',
+			'method': cmd,
+			'params': kwargs,
+		}
+		exec_cmd = [
+			'curl', '--silent','--insecure', '--request', 'POST',
+			'--digest', '--user', '{}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
+			'--header', 'Content-Type: application/json',
+			'--data', json.dumps(data),
+			'https://{}:{}/json_rpc'.format(self.host,self.port) ]
+
+		cp = run(exec_cmd,stdout=PIPE,check=True)
+
+		res = json.loads(cp.stdout)
+		if 'error' in res:
+			raise RPCFailure(repr(res['error']))
+		return(res['result'])
+
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
 

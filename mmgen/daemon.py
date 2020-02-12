@@ -137,6 +137,61 @@ class Daemon(MMGenObject):
 			for k in cls.subclasses_must_implement:
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
+class MoneroWalletDaemon(Daemon):
+
+	desc = 'RPC daemon'
+	net_desc = 'Monero wallet'
+	daemon_id = 'xmr'
+	network = 'wallet RPC'
+
+	def __init__(self,wallet_dir,test_suite=False):
+		self.platform = g.platform
+		self.wallet_dir = wallet_dir
+		if test_suite:
+			self.datadir = os.path.join('test','monero-wallet-rpc')
+			self.rpc_port = 13142
+		else:
+			self.datadir = 'monero-wallet-rpc'
+			self.rpc_port = 13131
+		self.daemon_port = CoinDaemon('xmr',test_suite=test_suite).rpc_port
+		self.pidfile = os.path.join(self.datadir,'monero-wallet-rpc.pid')
+		self.logfile = os.path.join(self.datadir,'monero-wallet-rpc.log')
+
+		if not g.monero_wallet_rpc_password:
+			die(1,
+				'You must set your Monero wallet RPC password.\n' +
+				'This can be done on the command line, with the --monero-wallet-rpc-password\n' +
+				"option (insecure, not recommended), or by setting 'monero_wallet_rpc_password'\n" +
+				"in the MMGen config file." )
+
+	@property
+	def start_cmd(self):
+		return ['monero-wallet-rpc',
+				'--daemon-port={}'.format(self.daemon_port),
+				'--rpc-bind-port={}'.format(self.rpc_port),
+				'--wallet-dir='+self.wallet_dir,
+				'--detach',
+				'--log-file='+self.logfile,
+				'--rpc-login={}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
+				'--pidfile='+self.pidfile]
+
+	@property
+	def state(self):
+		from mmgen.rpc import MoneroWalletRPCConnection
+		try:
+			MoneroWalletRPCConnection(
+				g.monero_wallet_rpc_host,
+				self.rpc_port,
+				g.monero_wallet_rpc_user,
+				g.monero_wallet_rpc_password).get_version()
+			return 'ready'
+		except:
+			return 'stopped'
+
+	@property
+	def stop_cmd(self):
+		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
+
 class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	subclasses_must_implement = ('state','stop_cmd')

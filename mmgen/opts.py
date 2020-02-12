@@ -205,6 +205,9 @@ common_opts_data = {
 --, --rpc-port=p          Communicate with {dn} listening on port 'p'
 --, --rpc-user=user       Override 'rpcuser' in {pn}.conf
 --, --rpc-password=pass   Override 'rpcpassword' in {pn}.conf
+--, --monero-wallet-rpc-host=host Override 'monero_wallet_rpc_host' in mmgen.cfg
+--, --monero-wallet-rpc-user=user Override 'monero_wallet_rpc_user' in mmgen.cfg
+--, --monero-wallet-rpc-password=pass Override 'monero_wallet_rpc_password' in mmgen.cfg
 --, --regtest=0|1         Disable or enable regtest mode
 --, --testnet=0|1         Disable or enable testnet
 --, --skip-cfg-file       Skip reading the configuration file
