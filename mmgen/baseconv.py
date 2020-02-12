@@ -37,7 +37,7 @@ class baseconv(object):
 		'b6d':   ('base6d (die roll)', 'base6 data using the digits from one to six'),
 		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
 		'mmgen': ('MMGen native mnemonic',
-		'MMGen native mnemonic seed phrase data created using old Electrum wordlist and simple base conversion'),
+		'MMGen native mnemonic seed phrase created using old Electrum wordlist and simple base conversion'),
 	}
 	# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 	# https://tools.ietf.org/html/rfc4648

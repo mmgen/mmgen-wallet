@@ -42,7 +42,7 @@ opts_data = {
 -v, --verbose       Produce more verbose output
 """,
 	'notes': """
-
+Valid commands: 'coin','pw'
 If no command is given, the whole suite of tests is run.
 """
 	}
@@ -141,8 +141,9 @@ def do_passwd_tests():
 
 start_time = int(time.time())
 
-do_coin_tests()
-do_passwd_tests()
+cmds = cmd_args or ('coin','pw')
+for cmd in cmds:
+	{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
 
 t = int(time.time()) - start_time
 m = 'All requested tests finished OK, elapsed time: {:02}:{:02}'

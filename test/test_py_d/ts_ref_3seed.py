@@ -381,12 +381,12 @@ class TestSuiteRef3Addr(TestSuiteRef3Seed):
 		ea = ['--accept-defaults']
 		return self.pwgen('passhex','фубар@crypto.org','hex','h',ea,stdout=True)
 
-	def bip39pwgen(self,req_pw_len,pwfmt='bip39',stdout=False):
+	def mn_pwgen(self,req_pw_len,pwfmt,ftype='passbip39',stdout=False):
 		pwlen = min(req_pw_len,{'1':12,'2':18,'3':24}[self.test_name[-1]])
 		ea = ['--accept-defaults']
-		return self.pwgen('passbip39','фубар@crypto.org',pwfmt,pwlen,ea,stdout=stdout)
+		return self.pwgen(ftype,'фубар@crypto.org',pwfmt,pwlen,ea,stdout=stdout)
 
-	def ref_bip39_12_passwdgen(self):     return self.bip39pwgen(12,stdout=True)
-	def ref_bip39_18_passwdgen(self):     return self.bip39pwgen(18,stdout=True)
-	def ref_bip39_24_passwdgen(self):     return self.bip39pwgen(24)
-	def ref_hex2bip39_24_passwdgen(self): return self.bip39pwgen(24,'hex2bip39')
+	def ref_bip39_12_passwdgen(self):     return self.mn_pwgen(12,'bip39',stdout=True)
+	def ref_bip39_18_passwdgen(self):     return self.mn_pwgen(18,'bip39',stdout=True)
+	def ref_bip39_24_passwdgen(self):     return self.mn_pwgen(24,'bip39')
+	def ref_hex2bip39_24_passwdgen(self): return self.mn_pwgen(24,'hex2bip39')

@@ -32,7 +32,7 @@ class Daemon(MMGenObject):
 	debug = False
 	wait = True
 	use_pidfile = True
-	conf_file = None
+	cfg_file = None
 
 	def subclass_init(self): pass
 
@@ -97,8 +97,8 @@ class Daemon(MMGenObject):
 				msg(m.format(self.net_desc,self.desc,self.pid))
 		else:
 			os.makedirs(self.datadir,exist_ok=True)
-			if self.conf_file:
-				open('{}/{}'.format(self.datadir,self.conf_file),'w').write(self.cfg_file_hdr)
+			if self.cfg_file:
+				open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
 			if self.use_pidfile and os.path.exists(self.pidfile):
 				# Parity just overwrites the data in an existing pidfile, leading to
 				# interesting consequences.
@@ -125,7 +125,7 @@ class Daemon(MMGenObject):
 				return True
 			time.sleep(0.2)
 		else:
-			die(2,'Daemon wait timeout for {} {} exceeded'.format(self.coin,self.network))
+			die(2,'Daemon wait timeout for {} {} exceeded'.format(self.daemon_id.upper(),self.network))
 
 	@property
 	def is_ready(self):
@@ -361,11 +361,11 @@ class EthereumDaemon(CoinDaemon):
 
 	@property
 	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if g.platform == 'win' else ['kill',self.pid]
+		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
 
 	@property
 	def pid(self): # TODO: distinguish between ETH and ETC
-		if g.platform == 'win':
+		if self.platform == 'win':
 			cp = self.run_cmd(['ps','-Wl'],silent=True,check=False)
 			for line in cp.stdout.decode().splitlines():
 				if 'parity.exe' in line:

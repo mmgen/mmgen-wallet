@@ -29,7 +29,7 @@ def dmsg_rpc(fs,data=None,is_json=False):
 	if g.debug_rpc:
 		msg(fs if data == None else fs.format(pp_fmt(json.loads(data) if is_json else data)))
 
-class CoinDaemonRPCConnection(MMGenObject):
+class RPCConnection(MMGenObject):
 
 	auth = True
 	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
@@ -217,7 +217,7 @@ class CoinDaemonRPCConnection(MMGenObject):
 		'walletpassphrase',
 	)
 
-class EthereumRPCConnection(CoinDaemonRPCConnection):
+class EthereumRPCConnection(RPCConnection):
 
 	auth = False
 	db_fs = '    host [{h}] port [{p}]\n'
@@ -335,7 +335,7 @@ def init_daemon_bitcoind():
 
 	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
 
-	conn = CoinDaemonRPCConnection(
+	conn = RPCConnection(
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port,
 				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's

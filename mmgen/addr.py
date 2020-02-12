@@ -795,8 +795,8 @@ class PasswordList(AddrList):
 # password.  The label may contain any printable ASCII symbol.
 #
 """.strip().format(n=TwComment.max_screen_width,pnm=pnm),
-	'file_header_bip39': """
-# {pnm} BIP39 password file
+	'file_header_mn': """
+# {pnm} {{}} password file
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
@@ -856,7 +856,7 @@ Record this checksum: it will be used to verify the password file in the future
 			self.data = self.generate(seed,pw_idxs)
 
 		if self.pw_fmt == 'bip39':
-			self.msgs['file_header'] = self.msgs['file_header_bip39']
+			self.msgs['file_header'] = self.msgs['file_header_mn'].format(self.pw_fmt.upper())
 
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''

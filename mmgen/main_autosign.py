@@ -357,7 +357,7 @@ def setup():
 	opt.quiet = True
 	opt.in_fmt = 'words'
 	ss_in = SeedSource()
-	opt.out_fmt = 'mmdat'
+	opt.out_fmt = 'wallet'
 	opt.usr_randchars = 0
 	opt.hash_preset = '1'
 	opt.set_by_user = ['hash_preset']

@@ -241,7 +241,7 @@ class MMGenToolCmdBase(object):
 
 	@classmethod
 	def _user_commands(cls):
-		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__]
+		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__ and callable(getattr(cls,e))]
 
 
 class MMGenToolCmdMisc(MMGenToolCmdBase):
@@ -393,7 +393,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
 		init_generators('at')
-		return g.proto.hex2wif(privhex,pubkey_type=at.pubkey_type,compressed=at.compressed)
+		return PrivKey(bytes.fromhex(privhex),pubkey_type=at.pubkey_type,compressed=at.compressed).wif
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
@@ -487,9 +487,10 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	"""
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
-		hexrand = get_random(nbytes).hex()
-		Vmsg('Seed: {}'.format(hexrand))
-		return self.hex2mn(hexrand,fmt=fmt)
+		randbytes = get_random(nbytes)
+		if opt.verbose:
+			msg('Seed: {}'.format(randbytes.hex()))
+		return self.hex2mn(randbytes.hex(),fmt=fmt)
 
 	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"generate random 128-bit mnemonic seed phrase"
@@ -512,17 +513,21 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
 		opt.out_fmt = self._get_mnemonic_fmt(fmt)
-		from mmgen.seed import SeedSource
-		s = SeedSource(seed_bin=bytes.fromhex(hexstr))
-		s._format()
-		return ' '.join(s.ssdata.mnemonic)
+		if fmt == 'bip39':
+			from mmgen.bip39 import bip39
+			return ' '.join(bip39.fromhex(hexstr,fmt))
+		else:
+			bytestr = bytes.fromhex(hexstr)
+			return baseconv.frombytes(bytestr,fmt,'seed',tostr=True)
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 12, 18 or 24-word mnemonic seed phrase to a hexadecimal number"
 		in_fmt = self._get_mnemonic_fmt(fmt)
-		opt.quiet = True
-		from mmgen.seed import SeedSource
-		return SeedSource(in_data=seed_mnemonic,in_fmt=in_fmt).seed.hexdata
+		if fmt == 'bip39':
+			from mmgen.bip39 import bip39
+			return bip39.tohex(seed_mnemonic.split(),fmt)
+		else:
+			return baseconv.tohex(seed_mnemonic.split(),fmt,'seed')
 
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"

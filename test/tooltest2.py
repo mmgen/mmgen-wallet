@@ -75,7 +75,6 @@ If no command is given, the whole suite of tests is run.
 	}
 }
 
-
 sample_text_hexdump = (
 	'000000: 5468 6520 5469 6d65 7320 3033 2f4a 616e{n}' +
 	'000010: 2f32 3030 3920 4368 616e 6365 6c6c 6f72{n}' +

@@ -15,11 +15,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 # ------------------------------------------------------------------------------
+
 # MMGen note: this is a sorted version of the wordlist.
-# The original can be found at:
+# The unsorted original can be found at:
 #    https://github.com/spesmilo/electrum/blob/1.9.5/lib/mnemonic.py
 # Electrum - lightweight Bitcoin client. Copyright (C) 2011 thomasv@gitorious
+
+# Also available at:
+#    https://github.com/monero-project/monero/blob/master/src/mnemonics/english_old.h
 
 words = tuple("""
 able

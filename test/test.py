@@ -526,6 +526,8 @@ class CmdGroupMgr(object):
 			if is3seed:
 				for n,(i,j) in enumerate(zip(cls.tmpdir_nums,(128,192,256))):
 					k = '{}_{}'.format(a,n+1)
+					if hasattr(cls,'skip_cmds') and k in cls.skip_cmds:
+						continue
 					sdeps = get_shared_deps(k,i)
 					if type(b) == str:
 						cdata.append( (k, (i,'{} ({}-bit)'.format(b,j),[[[]+sdeps,i]])) )
