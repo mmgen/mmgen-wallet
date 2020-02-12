@@ -28,7 +28,6 @@ from mmgen.common import *
 
 class Daemon(MMGenObject):
 
-	subclasses_must_implement = ('state','stop_cmd')
 	debug = False
 	wait = True
 	use_pidfile = True
@@ -140,17 +139,19 @@ class Daemon(MMGenObject):
 
 class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
+	subclasses_must_implement = ('state','stop_cmd')
 
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
-	cd = namedtuple('daemon_data',['coin','coind_exec','cli_exec','conf_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
+	cd = namedtuple('daemon_data',
+				['coin','cls_pfx','coind_exec','cli_exec','cfg_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
 	daemon_ids = {
-		'btc': cd('Bitcoin',         'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8333,18333,18444),
-		'bch': cd('Bcash',           'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
-		'ltc': cd('Litecoin',        'litecoind',   'litecoin-cli','litecoin.conf', 9333,19335,19446),
-		'xmr': cd('Monero',          'monerod',     'monerod',     'bitmonero.conf',18082,None,None),
-		'eth': cd('Ethereum',        'parity',      'parity',      'parity.conf',   8545,None,None),
-		'etc': cd('Ethereum Classic','parity',      'parity',      'parity.conf',   8545,None,None)
+		'btc': cd('Bitcoin',         'Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8332,18332,18444),
+		'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
+		'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf', 9332,19332,19444),
+		'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',18081,None,None),
+		'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   8545,None,None),
+		'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   8545,None,None)
 	}
 
 	testnet_arg = []
@@ -171,43 +172,39 @@ class CoinDaemon(Daemon):
 		network_id = network_id.lower()
 		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
 
-		if test_suite:
-			rel_datadir = os.path.join('test','daemons')
-			desc = 'test suite daemon'
-		elif not network_id.endswith('_rt'):
-			raise RuntimeError('only test suite and regtest supported for CoinDaemon')
-
-		if network_id.endswith('_tn'):
-			daemon_id = network_id[:-3]
-			network = 'testnet'
-		elif network_id.endswith('_rt'):
-			daemon_id = network_id[:-3]
+		if network_id.endswith('_rt'):
 			network = 'regtest'
-			desc = 'regtest daemon'
-			if test_suite:
-				rel_datadir = os.path.join('test','data_dir','regtest')
-			else:
-				rel_datadir = os.path.join(g.data_dir_root,'regtest')
+			daemon_id = network_id[:-3]
+		elif network_id.endswith('_tn'):
+			network = 'testnet'
+			daemon_id = network_id[:-3]
 		else:
-			daemon_id = network_id
 			network = 'mainnet'
+			daemon_id = network_id
 
-		me = MMGenObject.__new__(
-			MoneroDaemon        if daemon_id == 'xmr'
-			else EthereumDaemon if daemon_id in ('eth','etc')
-			else BitcoinDaemon )
+		me = Daemon.__new__(globals()[cls.daemon_ids[daemon_id].cls_pfx+'Daemon'])
+		me.network_id = network_id
+		me.network = network
+		me.daemon_id = daemon_id
+
+		me.desc = 'daemon'
+		if network == 'regtest':
+			me.desc = 'regtest daemon'
+			if test_suite:
+				rel_datadir = os.path.join('test','data_dir','regtest',daemon_id)
+			else:
+				me.datadir = os.path.join(g.data_dir_root,'regtest',daemon_id)
+		elif test_suite:
+			me.desc = 'test suite daemon'
+			rel_datadir = os.path.join('test','daemons',daemon_id)
+		else:
+			from mmgen.protocol import CoinProtocol
+			me.datadir = CoinProtocol(daemon_id,False).daemon_data_dir
 
 		if test_suite:
-			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir,daemon_id))
-			me.port_shift = 1237
-		else:
-			me.datadir = os.path.join(rel_datadir,daemon_id)
-			me.port_shift = 0
+			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir))
 
-		me.network_id = network_id
-		me.daemon_id = daemon_id
-		me.network = network
-		me.desc = desc
+		me.port_shift = 1237 if test_suite else 0
 		me.platform = g.platform
 		return me
 
