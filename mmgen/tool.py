@@ -896,6 +896,27 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 class MMGenToolCmdMonero(MMGenToolCmdBase):
 	"Monero wallet utilities"
 
+	_chain_height = None
+	monerod_args = []
+
+	@property
+	def chain_height(self):
+		if self._chain_height == None:
+			from mmgen.daemon import CoinDaemon
+			port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
+			cmd = ['monerod','--rpc-bind-port={}'.format(port)] + self.monerod_args + ['status']
+
+			from subprocess import run,PIPE,DEVNULL
+			cp = run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
+			import re
+			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
+			if not m:
+				die(1,'Unable to connect to monerod!')
+			self._chain_height = int(m.group(1))
+			msg('Chain height: {}'.format(self._chain_height))
+
+		return self._chain_height
+
 	def keyaddrlist2monerowallets(  self,
 									xmr_keyaddrfile:str,
 									blockheight:'(default: current height)' = 0,
@@ -910,123 +931,81 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 		"sync Monero wallets from key-address list"
 		return self.monero_wallet_ops(infile=xmr_keyaddrfile,op='sync',addrs=addrs)
 
-	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[],wallet_cli_args=[]):
+	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[]):
 
-		exit_if_mswin('Monero wallet operations')
+		if monerod_args:
+			self.monerod_args = monerod_args
 
-		if opt.rpc_port:
-			monerod_args = ['--rpc-bind-port={}'.format(opt.rpc_port)]
-			wallet_cli_args = ['--daemon-address=localhost:{}'.format(opt.rpc_port)]
-
-		def run_cmd(cmd):
-			from subprocess import run,PIPE,DEVNULL
-			return run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
-
-		def test_rpc():
-			cp = run_cmd(['monero-wallet-cli'] + wallet_cli_args + ['--version'])
-			if not b'Monero' in cp.stdout:
-				die(1,"Unable to run 'monero-wallet-cli'!")
-			cp = run_cmd(['monerod'] + monerod_args + ['status'])
-			import re
-			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
-			if not m:
-				die(1,'Unable to connect to monerod!')
-			return int(m.group(1))
-
-		def my_expect(p,m,s,regex=False):
-			if m: msg_r('  {}...'.format(m))
-			ret = (p.expect_exact,p.expect)[regex](s)
-			vmsg("\nexpect: '{}' => {}".format(s,ret))
-			if g.debug:
-				pmsg('p.before:',p.before)
-				pmsg('p.after:',p.after)
-			if not (ret == 0 or (type(s) == list and ret in (0,1))):
-				die(2,"Expect failed: '{}' (return value: {})".format(s,ret))
-			if m: msg('OK')
-			return ret
-
-		def my_sendline(p,m,s,usr_ret):
-			if m: msg_r('  {}...'.format(m))
-			ret = p.sendline(s)
-			if g.debug:
-				pmsg('p.before:',p.before)
-				pmsg('p.after:',p.after)
-			if ret != usr_ret:
-				die(2,"Unable to send line '{}' (return value {})".format(s,ret))
-			if m: msg('OK')
-			vmsg("sendline: '{}' => {}".format(s,ret))
-
-		def create(n,d,fn):
+		def create(n,d,fn,c,m):
 			try: os.stat(fn)
 			except: pass
-			else: die(1,"Wallet '{}' already exists!".format(fn))
-			p = pexpect.spawn('monero-wallet-cli', wallet_cli_args + ['--generate-from-spend-key',fn])
-#			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
-			my_expect(p,'Awaiting initial prompt','Secret spend key: ')
-			my_sendline(p,'',d.sec,65)
-			my_expect(p,'','Enter.* new.* password.*: ',regex=True)
-			my_sendline(p,'Sending password',d.wallet_passwd,33)
-			my_expect(p,'','Confirm password: ')
-			my_sendline(p,'Sending password again',d.wallet_passwd,33)
-			my_expect(p,'','of your choice: ')
-			my_sendline(p,'','1',2)
-			my_expect(p,'monerod generating wallet','Generated new wallet: ')
-			my_expect(p,'','\n')
-			if d.addr not in p.before.decode():
-				die(3,'Addresses do not match!\n  MMGen: {}\n Monero: {}'.format(d.addr,p.before.decode()))
-			my_expect(p,'','View key: ')
-			my_expect(p,'','\n')
-			if d.viewkey not in p.before.decode():
-				die(3,'View keys do not match!\n  MMGen: {}\n Monero: {}'.format(d.viewkey,p.before.decode()))
-			my_expect(p,'','(YYYY-MM-DD): ')
-			h = str(blockheight or cur_height-1)
-			my_sendline(p,'',h,len(h)+1)
-			ret = my_expect(p,'',['Starting refresh','Still apply restore height?  (Y/Yes/N/No): '])
-			if ret == 1:
-				my_sendline(p,'','Y',2)
-				m = '  Warning: {}: blockheight argument is higher than current blockheight'
-				ymsg(m.format(blockheight))
-			elif blockheight:
-				p.logfile = sys.stderr
-			my_expect(p,'Syncing wallet','\[wallet.*$',regex=True)
-			p.logfile = None
-			my_sendline(p,'Exiting','exit',5)
-			p.read()
+			else:
+				ymsg("Wallet '{}' already exists!".format(fn))
+				return False
+			gmsg(m)
 
-		def sync(n,d,fn):
+			from mmgen.baseconv import baseconv
+			ret = c.restore_deterministic_wallet(
+				filename  = os.path.basename(fn),
+				password  = d.wallet_passwd,
+				seed      = baseconv.fromhex(d.sec,'xmrseed',tostr=True),
+				restore_height = blockheight,
+				language  = 'English' )
+
+			pp_msg(ret) if opt.verbose else msg('  Address: {}'.format(ret['address']))
+			return True
+
+		def sync(n,d,fn,c,m):
+			try:
+				os.stat(fn)
+			except:
+				ymsg("Wallet '{}' does not exist!".format(fn))
+				return False
+
+			chain_height = self.chain_height
+			gmsg(m)
+
 			import time
-			try: os.stat(fn)
-			except: die(1,"Wallet '{}' does not exist!".format(fn))
-			p = pexpect.spawn('monero-wallet-cli', wallet_cli_args + ['--wallet-file={}'.format(fn)])
-#			if g.debug: p.logfile = sys.stdout # TODO: Error: 'write() argument must be str, not bytes'
-			my_expect(p,'Awaiting password prompt','Wallet password: ')
-			my_sendline(p,'Sending password',d.wallet_passwd,33)
+			t_start = time.time()
 
-			msg('  Starting refresh...')
-			height = None
-			while True:
-				ret = p.expect([r'Height\s+\S+\s+/\s+\S+',r'\[wallet.*:.*'])
-				if ret == 0: # TODO: coverage
-					d = p.after.decode().split()
-					msg_r('\r  Block {} / {}'.format(d[1],d[3]))
-					height = d[3]
-					time.sleep(0.5)
-				elif ret == 1:
-					if height:
-						msg('\r  Block {h} / {h} (wallet in sync)'.format(h=height))
-					else:
-						msg('  Wallet in sync')
-					my_sendline(p,'Requesting account info','account',8)
-					my_expect(p,'Getting totals','Total\s+.*\n',regex=True)
-					b = p.after.decode().strip().split()[1:]
-					msg('  Balance: {} Unlocked balance: {}'.format(*b))
-					from mmgen.obj import XMRAmt
-					bals[fn] = tuple(map(XMRAmt,b))
-					my_sendline(p,'Exiting','exit',5)
-					p.read()
-					break
-				else:
-					die(2,"\nExpect failed: (return value: {})".format(ret))
+			msg_r('  Opening wallet...')
+			c.open_wallet(filename=os.path.basename(fn),password=d.wallet_passwd)
+			msg('done')
+
+			msg_r('  Getting wallet height...')
+			wallet_height = c.get_height()['height']
+			msg('\r  Wallet height: {}        '.format(wallet_height))
+
+			behind = chain_height - wallet_height
+			if behind > 1000:
+				m = '  Wallet is {} blocks behind chain tip.  Please be patient.  Syncing...'
+				msg_r(m.format(behind))
+
+			ret = c.refresh()
+
+			if behind > 1000:
+				msg('done')
+
+			if ret['received_money']:
+				msg('  Wallet has received funds')
+
+			t_elapsed = int(time.time() - t_start)
+
+			ret = c.get_balance() # account_index=0, address_indices=[0,1]
+
+			from mmgen.obj import XMRAmt
+			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit') for k in ('balance','unlocked_balance')])
+
+			if opt.verbose:
+				pp_msg(ret)
+			else:
+				msg('  Balance: {} Unlocked balance: {}'.format(*[b.hl() for b in bals[fn]]))
+
+			msg('  Wallet height: {}'.format(c.get_height()['height']))
+			msg('  Sync time: {:02}:{:02}'.format(t_elapsed//60,t_elapsed%60))
+
+			c.close_wallet()
+			return True
 
 		def process_wallets():
 			m =   { 'create': ('Creat','Generat',create,False),
@@ -1040,16 +1019,34 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			dl = len(data)
 			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
 			gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
+
+			from mmgen.daemon import MoneroWalletDaemon
+			wd = MoneroWalletDaemon(opt.outdir or '.',test_suite=g.test_suite)
+			wd.stop()
+			wd.start()
+
+			from mmgen.rpc import MoneroWalletRPCConnection
+			c = MoneroWalletRPCConnection(
+				g.monero_wallet_rpc_host,
+				wd.rpc_port,
+				g.monero_wallet_rpc_user,
+				g.monero_wallet_rpc_password)
+
+			wallets_processed = 0
 			for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
 				fn = os.path.join(
-					opt.outdir or '','{}-{}-MoneroWallet{}'.format(
+					opt.outdir or '.','{}-{}-MoneroWallet{}'.format(
 						al.al_id.sid,
 						d.idx,
 						'-α' if g.debug_utf8 else ''))
-				gmsg('\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn))
-				m[op][2](n,d,fn)
-			gmsg('\n{} wallet{} {}ed'.format(dl,suf(dl),m[op][0].lower()))
-			if op == 'sync':
+
+				info = '\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn)
+				wallets_processed += m[op][2](n,d,fn,c,info)
+
+			wd.stop()
+			gmsg('\n{} wallet{} {}ed'.format(wallets_processed,suf(wallets_processed),m[op][0].lower()))
+
+			if wallets_processed and op == 'sync':
 				col1_w = max(map(len,bals)) + 1
 				fs = '{:%s} {} {}' % col1_w
 				msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
@@ -1061,11 +1058,9 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 				msg(fs.format('-'*col1_w,'-'*18,'-'*18))
 				msg(fs.format('TOTAL:',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in tbals]))
 
-		os.environ['LANG'] = 'C'
-		import pexpect
 		if blockheight < 0:
 			blockheight = 0 # TODO: handle the non-zero case
-		cur_height = test_rpc() # empty blockchain returns 1
+
 		from collections import OrderedDict
 		bals = OrderedDict() # locked,unlocked
 

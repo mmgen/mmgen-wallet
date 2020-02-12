@@ -327,7 +327,7 @@ t_xmr="
 "
 f_xmr='Monero tests completed'
 
-mmgen_tool_xmr="$mmgen_tool --rpc-port=19319 -q --accept-defaults --outdir $TMPDIR"
+mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
 
 [ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
 	t_xmr+="
