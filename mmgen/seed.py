@@ -515,21 +515,24 @@ class SeedSource(MMGenObject):
 
 		in_fmt = in_fmt or opt.in_fmt
 
+		if hasattr(opt,'out_fmt') and opt.out_fmt:
+			out_cls = cls.fmt_code_to_type(opt.out_fmt)
+			if not out_cls:
+				die(1,'{!r}: unrecognized output format'.format(opt.out_fmt))
+		else:
+			out_cls = None
+
 		def die_on_opt_mismatch(opt,sstype):
-			opt_sstype = cls.fmt_code_to_type(opt)
 			compare_or_die(
-				opt_sstype.__name__, 'input format requested on command line',
-				sstype.__name__,     'input file format'
-			)
+				cls.fmt_code_to_type(opt).__name__, 'input format requested on command line',
+				sstype.__name__, 'input file format' )
 
 		if seed or seed_bin:
-			sstype = cls.fmt_code_to_type(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet) # default to Wallet
+			me = super(cls,cls).__new__(out_cls or Wallet) # default to Wallet
 			me.seed = seed or Seed(seed_bin=seed_bin)
 			me.op = 'new'
 		elif ss:
-			sstype = ss.__class__ if passchg else cls.fmt_code_to_type(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet)
+			me = super(cls,cls).__new__((ss.__class__ if passchg else out_cls) or Wallet)
 			me.seed = ss.seed
 			me.ss_in = ss
 			me.op = ('conv','pwchg_new')[bool(passchg)]
@@ -547,12 +550,10 @@ class SeedSource(MMGenObject):
 			me.infile = f
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		elif in_fmt:
-			sstype = cls.fmt_code_to_type(in_fmt)
-			me = super(cls,cls).__new__(sstype)
+			me = super(cls,cls).__new__(cls.fmt_code_to_type(in_fmt))
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		else: # called with no arguments: initialize with random seed
-			sstype = cls.fmt_code_to_type(opt.out_fmt)
-			me = super(cls,cls).__new__(sstype or Wallet)
+			me = super(cls,cls).__new__(out_cls or Wallet)
 			me.seed = Seed(None)
 			me.op = 'new'
 
