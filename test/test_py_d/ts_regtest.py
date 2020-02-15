@@ -231,6 +231,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
+		g.regtest = True
 		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
 		from mmgen.regtest import MMGenRegtest
 		rt = MMGenRegtest(g.coin)
@@ -555,8 +556,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		addrfile = get_file_with_ext(self._user_dir(user),ext,no_dot=True)
 		psave = g.proto
 		g.proto = CoinProtocol(g.coin,True)
-		if hasattr(g.proto,'bech32_hrp_rt'):
-			g.proto.bech32_hrp = g.proto.bech32_hrp_rt
 		silence()
 		addr = AddrList(addrfile).data[idx].addr
 		end_silence()

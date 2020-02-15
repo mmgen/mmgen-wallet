@@ -229,8 +229,7 @@ class BitcoinTestnetProtocol(BitcoinProtocol):
 	data_subdir          = 'testnet'
 	daemon_data_subdir   = 'testnet3'
 	rpc_port             = 18332
-	bech32_hrp           = 'tb'
-	bech32_hrp_rt        = 'bcrt'
+	bech32_hrps          = {'testnet':'tb','regtest':'bcrt'}
 
 class BitcoinCashProtocol(BitcoinProtocol):
 	# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
@@ -301,8 +300,7 @@ class LitecoinTestnetProtocol(LitecoinProtocol):
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'
 	rpc_port       = 19332
-	bech32_hrp     = 'tltc'
-	bech32_hrp_rt  = 'rltc'
+	bech32_hrps    = {'testnet':'tltc','regtest':'rltc'}
 
 class BitcoinProtocolAddrgen(BitcoinProtocol): mmcaps = ('key','addr')
 class BitcoinTestnetProtocolAddrgen(BitcoinTestnetProtocol): mmcaps = ('key','addr')
@@ -466,6 +464,8 @@ class CoinProtocol(MMGenObject):
 		m = "{}: not a valid coin for network {}\nSupported coins: {}"
 		assert coin in cls.coins, m.format(coin.upper(),g.network.upper(),' '.join(cls.list_coins()))
 		proto = cls.coins[coin][testnet]
+		if hasattr(proto,'bech32_hrps'):
+			proto.bech32_hrp = proto.bech32_hrps[('testnet','regtest')[g.regtest]]
 		return proto
 
 	@classmethod

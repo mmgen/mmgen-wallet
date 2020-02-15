@@ -328,9 +328,6 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so now we can do this
 
-	if g.regtest and hasattr(g.proto,'bech32_hrp_rt'):
-		g.proto.bech32_hrp = g.proto.bech32_hrp_rt
-
 	# Check user-set opts without modifying them
 	if not check_opts(uopts):
 		die(1,'Options checking failed')
