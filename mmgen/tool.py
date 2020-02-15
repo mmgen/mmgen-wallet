@@ -1087,3 +1087,116 @@ class MMGenToolCmd(
 		MMGenToolCmdRPC,
 		MMGenToolCmdMonero,
 	): pass
+
+class tool_api(
+		MMGenToolCmdUtil,
+		MMGenToolCmdCoin,
+		MMGenToolCmdMnemonic,
+	):
+	"""
+	API providing access to a subset of methods from the mmgen.tool module
+
+	Example:
+		from mmgen.tool import tool_api
+		tool = tool_api()
+
+		# Set the coin and network:
+		tool.init_coin('btc','mainnet')
+
+		# Print available address types:
+		tool.print_addrtypes()
+
+		# Set the address type:
+		tool.addrtype = 'segwit'
+
+		# Disable user entropy gathering (optional, reduces security):
+		tool.usr_randchars = 0
+
+		# Generate a random BTC segwit keypair:
+		wif,addr = tool.randpair()
+
+		# Set coin, network and address type:
+		tool.init_coin('ltc','testnet')
+		tool.addrtype = 'bech32'
+
+		# Generate a random LTC testnet Bech32 keypair:
+		wif,addr = tool.randpair()
+	"""
+
+	def __init__(self):
+		"""
+		Initializer - takes no arguments
+		"""
+		if not hasattr(opt,'version'):
+			opts.init({'text': { 'desc': '', 'usage':'', 'options':'' }})
+		opt.use_old_ed25519 = None
+		opt.type = None
+
+	def init_coin(self,coinsym,network):
+		"""
+		Initialize a coin/network pair
+		Valid choices for coins: one of the symbols returned by the 'coins' attribute
+		Valid choices for network: 'mainnet','testnet','regtest'
+		"""
+		from mmgen.protocol import init_coin,init_genonly_altcoins
+		init_genonly_altcoins(coinsym)
+		if network == 'regtest':
+			g.regtest = True
+		return init_coin(coinsym,{'mainnet':False,'testnet':True,'regtest':True}[network])
+
+	@property
+	def coins(self):
+		"""The available coins"""
+		from mmgen.protocol import CoinProtocol
+		from mmgen.altcoin import CoinInfo
+		return sorted(set(CoinProtocol.list_coins() + [c.symbol for c in CoinInfo.get_supported_coins(g.network)]))
+
+	@property
+	def coin(self):
+		"""The currently configured coin"""
+		return g.coin
+
+	@property
+	def network(self):
+		"""The currently configured network"""
+		if g.network == 'testnet':
+			return ('testnet','regtest')[g.regtest]
+		else:
+			return g.network
+
+	@property
+	def addrtypes(self):
+		"""
+		The available address types for current coin/network pair.  The
+		first-listed is the default
+		"""
+		return [MMGenAddrType(t).name for t in g.proto.mmtypes]
+
+	def print_addrtypes(self):
+		"""
+		Print the available address types for current coin/network pair along with
+		a description.  The first-listed is the default
+		"""
+		for t in [MMGenAddrType(s) for s in g.proto.mmtypes]:
+			print('{:<12} - {}'.format(t.name,t.desc))
+
+	@property
+	def addrtype(self):
+		"""The currently configured address type (is assignable)"""
+		return opt.type
+
+	@addrtype.setter
+	def addrtype(self,val):
+		opt.type = val
+
+	@property
+	def usr_randchars(self):
+		"""
+		The number of keystrokes of entropy to be gathered from the user.
+		Setting to zero disables user entropy gathering.
+		"""
+		return opt.usr_randchars
+
+	@usr_randchars.setter
+	def usr_randchars(self,val):
+		opt.usr_randchars = val

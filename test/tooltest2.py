@@ -55,6 +55,7 @@ opts_data = {
 		'usage':'[options] [command]...',
 		'options': """
 -h, --help           Print this help message
+-A, --tool-api       Test the tool_api subsystem
 -C, --coverage       Produce code coverage info using trace module
 -d, --die-on-missing Abort if no test data found for given command
 --, --longhelp       Print help message for long options (common options)
@@ -834,13 +835,34 @@ def run_test(gid,cmd_name):
 			opt.quiet = oq_save
 			return ret
 
+	def tool_api(cmd_name,args,out,opts,exec_code):
+		from mmgen.tool import tool_api
+		tool = tool_api()
+		if opts:
+			for o in opts:
+				if o.startswith('--type='):
+					tool.addrtype = o.split('=')[1]
+		pargs,kwargs = [],{}
+		for a in args:
+			if '=' in a:
+				a1,a2 = a.split('=')
+				kwargs[a1] = int(a2) if is_int(a2) else a2
+			else:
+				pargs.append(a)
+		return getattr(tool,cmd_name)(*pargs,**kwargs)
+
 	for d in data:
 		args,out,opts,exec_code = d + tuple([None] * (4-len(d)))
 		stdin_input = None
 		if args and type(args[0]) == bytes:
 			stdin_input = args[0]
 			args[0] = '-'
-		if opt.fork:
+
+		if opt.tool_api:
+			if args and args[0 ]== '-':
+				continue
+			cmd_out = tool_api(cmd_name,args,out,opts,exec_code)
+		elif opt.fork:
 			cmd_out = fork_cmd(cmd_name,args,out,opts,exec_code)
 		else:
 			if stdin_input and g.platform == 'win':
@@ -922,6 +944,10 @@ def list_tested_cmds():
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['use_old_ed25519'])
+
+if opt.tool_api:
+	del tests['Wallet']
+	del tests['File']
 
 import mmgen.tool as tool
 
