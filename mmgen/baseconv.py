@@ -102,6 +102,7 @@ class baseconv(object):
 		for k,v in list(cls.wl_chksums.items()):
 			res = cls.get_wordlist_chksum(k)
 			assert res == v,'{}: checksum mismatch for {} (should be {})'.format(res,k,v)
+		return True
 
 	@classmethod
 	def check_wordlist(cls,wl_id):
@@ -109,13 +110,16 @@ class baseconv(object):
 
 		wl = cls.digits[wl_id]
 		from mmgen.util import qmsg,compare_chksums
-		qmsg('Wordlist: {}\nLength: {} words'.format(wl_id,len(wl)))
+		ret = 'Wordlist: {}\nLength: {} words'.format(wl_id,len(wl))
 		new_chksum = cls.get_wordlist_chksum(wl_id)
 
 		a,b = 'generated','saved'
 		compare_chksums(new_chksum,a,cls.wl_chksums[wl_id],b,die_on_fail=True)
 
-		qmsg('List is sorted') if tuple(sorted(wl)) == wl else die(3,'ERROR: List is not sorted!')
+		if tuple(sorted(wl)) == wl:
+			return ret + '\nList is sorted'
+		else:
+			die(3,'ERROR: List is not sorted!')
 
 	@classmethod
 	def get_pad(cls,pad,seed_pad_func):

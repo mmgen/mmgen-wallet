@@ -305,14 +305,17 @@ t_alts="
 
 f_alts='Gen-only altcoin tests completed'
 
-[ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release*
-
-if [ "$MSYS2" ]; then
-	TMPDIR='/tmp/mmgen-test-release'
+if [ "$NO_TMPFILE_REMOVAL" ]; then
+	TMPDIR=$(echo /tmp/mmgen-test-release*)
 else
-	TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+	rm -rf /tmp/mmgen-test-release*
+	if [ "$MSYS2" ]; then
+		TMPDIR='/tmp/mmgen-test-release'
+	else
+		TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
+	fi
+	mkdir -p $TMPDIR
 fi
-mkdir -p $TMPDIR
 
 i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
@@ -439,6 +442,11 @@ f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 i_tool2='Tooltest2'
 s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2="
+	$tooltest2_py --tool-api # test the tool_api subsystem
+	$tooltest2_py --tool-api --testnet=1
+	$tooltest2_py --tool-api --coin=eth
+	$tooltest2_py --tool-api --coin=xmr
+	$tooltest2_py --tool-api --coin=zec
 	$tooltest2_py --fork # run once with --fork so commands are actually executed
 	$tooltest2_py
 	$tooltest2_py --testnet=1

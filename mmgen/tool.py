@@ -527,7 +527,6 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
-		opt.out_fmt = self._get_mnemonic_fmt(fmt)
 		if fmt == 'bip39':
 			from mmgen.bip39 import bip39
 			return ' '.join(bip39.fromhex(hexstr,fmt))
@@ -539,7 +538,6 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 12, 18 or 24-word mnemonic seed phrase to a hexadecimal number"
-		in_fmt = self._get_mnemonic_fmt(fmt)
 		if fmt == 'bip39':
 			from mmgen.bip39 import bip39
 			return bip39.tohex(seed_mnemonic.split(),fmt)
@@ -549,8 +547,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		conv_cls.check_wordlist(fmt)
-		return True
+		return conv_cls.check_wordlist(fmt)
 
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
@@ -896,12 +893,12 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 class MMGenToolCmdMonero(MMGenToolCmdBase):
 	"Monero wallet utilities"
 
-	_chain_height = None
+	_monero_chain_height = None
 	monerod_args = []
 
 	@property
-	def chain_height(self):
-		if self._chain_height == None:
+	def monero_chain_height(self):
+		if self._monero_chain_height == None:
 			from mmgen.daemon import CoinDaemon
 			port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
 			cmd = ['monerod','--rpc-bind-port={}'.format(port)] + self.monerod_args + ['status']
@@ -912,10 +909,10 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
 			if not m:
 				die(1,'Unable to connect to monerod!')
-			self._chain_height = int(m.group(1))
-			msg('Chain height: {}'.format(self._chain_height))
+			self._monero_chain_height = int(m.group(1))
+			msg('Chain height: {}'.format(self._monero_chain_height))
 
-		return self._chain_height
+		return self._monero_chain_height
 
 	def keyaddrlist2monerowallets(  self,
 									xmr_keyaddrfile:str,
@@ -962,7 +959,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 				ymsg("Wallet '{}' does not exist!".format(fn))
 				return False
 
-			chain_height = self.chain_height
+			chain_height = self.monero_chain_height
 			gmsg(m)
 
 			import time

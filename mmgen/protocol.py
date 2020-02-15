@@ -464,12 +464,13 @@ class CoinProtocol(MMGenObject):
 		coin = coin.lower()
 		assert type(testnet) == bool
 		m = "{}: not a valid coin for network {}\nSupported coins: {}"
-		assert coin in cls.coins, m.format(coin.upper(),g.network.upper(),cls.list_coins())
-		return cls.coins[coin][testnet]
+		assert coin in cls.coins, m.format(coin.upper(),g.network.upper(),' '.join(cls.list_coins()))
+		proto = cls.coins[coin][testnet]
+		return proto
 
 	@classmethod
 	def list_coins(cls):
-		return ' '.join(c.upper() for c in cls.coins)
+		return [c.upper() for c in cls.coins]
 
 	@classmethod
 	def get_base_coin_from_name(cls,name):
@@ -557,6 +558,8 @@ def make_init_genonly_altcoins_str(data):
 def init_coin(coin,testnet=None):
 	if testnet is not None:
 		g.testnet = testnet
+	g.network = ('mainnet','testnet')[g.testnet]
 	coin = coin.upper()
 	g.coin = coin
 	g.proto = CoinProtocol(coin,g.testnet)
+	return g.proto
