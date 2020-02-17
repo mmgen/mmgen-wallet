@@ -317,6 +317,7 @@ else
 	mkdir -p $TMPDIR
 fi
 
+mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
 i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_xmr='The monerod (mainnet) daemon must be running for the following tests'
@@ -327,24 +328,17 @@ t_xmr="
 	$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
 	cs2=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	[ \"\$cs1\" == \"\$cs2\" ]
+	test/start-coin-daemons.py xmr
+	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
+	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
+	rm $TMPDIR/*-MoneroWallet*
+	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
+	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
+	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
+	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys
+	test/stop-coin-daemons.py -W xmr
 "
 f_xmr='Monero tests completed'
-
-mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
-
-[ "$MSYS2" ] || { # password file descriptor issues, cannot use popen_spawn()
-	t_xmr+="
-test/start-coin-daemons.py xmr
-$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
-$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
-rm $TMPDIR/*-MoneroWallet*
-$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
-$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
-$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
-$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys
-test/stop-coin-daemons.py -W xmr
-	"
-}
 
 [ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 9 14'
 

@@ -32,15 +32,23 @@ class Daemon(MMGenObject):
 	wait = True
 	use_pidfile = True
 	cfg_file = None
+	new_console_mswin = False
+	ps_pid_mswin = False
 
 	def subclass_init(self): pass
 
 	def exec_cmd_thread(self,cmd,check):
 		import threading
-		t = threading.Thread(target=self.exec_cmd,args=(cmd,check))
+		tname = ('exec_cmd','exec_cmd_win_console')[self.platform == 'win' and self.new_console_mswin]
+		t = threading.Thread(target=getattr(self,tname),args=(cmd,check))
 		t.daemon = True
 		t.start()
 		Msg_r(' \b') # blocks w/o this...crazy
+
+	def exec_cmd_win_console(self,cmd,check):
+		from subprocess import Popen,CREATE_NEW_CONSOLE
+		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE)
+		p.wait()
 
 	def exec_cmd(self,cmd,check):
 		cp = run(cmd,check=False,stdout=PIPE,stderr=PIPE)
@@ -59,6 +67,7 @@ class Daemon(MMGenObject):
 			cp = self.exec_cmd_thread(cmd,check)
 		else:
 			cp = self.exec_cmd(cmd,check)
+
 		if cp:
 			out = cp.stdout.decode().rstrip()
 			err = cp.stderr.decode().rstrip()
@@ -71,7 +80,18 @@ class Daemon(MMGenObject):
 
 	@property
 	def pid(self):
-		return open(self.pidfile).read().strip() if self.use_pidfile else '(unknown)'
+		if self.ps_pid_mswin and self.platform == 'win':
+			# TODO: assumes only one running instance of given daemon
+			cp = self.run_cmd(['ps','-Wl'],silent=True,check=False)
+			for line in cp.stdout.decode().splitlines():
+				if self.exec_fn_mswin in line:
+					return line.split()[3] # use Windows, not Cygwin, PID
+			die(2,'PID for {!r} not found in ps output'.format(ss))
+		elif self.use_pidfile:
+			return open(self.pidfile).read().strip()
+		else:
+			return '(unknown)'
+
 
 	def cmd(self,action,*args,**kwargs):
 		return getattr(self,action)(*args,**kwargs)
@@ -143,6 +163,9 @@ class MoneroWalletDaemon(Daemon):
 	net_desc = 'Monero wallet'
 	daemon_id = 'xmr'
 	network = 'wallet RPC'
+	new_console_mswin = True
+	exec_fn_mswin = 'monero-wallet-rpc.exe'
+	ps_pid_mswin = True
 
 	def __init__(self,wallet_dir,test_suite=False):
 		self.platform = g.platform
@@ -157,6 +180,9 @@ class MoneroWalletDaemon(Daemon):
 		self.pidfile = os.path.join(self.datadir,'monero-wallet-rpc.pid')
 		self.logfile = os.path.join(self.datadir,'monero-wallet-rpc.log')
 
+		if self.platform == 'win':
+			self.use_pidfile = False
+
 		if not g.monero_wallet_rpc_password:
 			die(1,
 				'You must set your Monero wallet RPC password.\n' +
@@ -166,14 +192,16 @@ class MoneroWalletDaemon(Daemon):
 
 	@property
 	def start_cmd(self):
-		return ['monero-wallet-rpc',
-				'--daemon-port={}'.format(self.daemon_port),
-				'--rpc-bind-port={}'.format(self.rpc_port),
-				'--wallet-dir='+self.wallet_dir,
-				'--detach',
-				'--log-file='+self.logfile,
-				'--rpc-login={}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
-				'--pidfile='+self.pidfile]
+		cmd = [
+			'monero-wallet-rpc',
+			'--daemon-port={}'.format(self.daemon_port),
+			'--rpc-bind-port={}'.format(self.rpc_port),
+			'--wallet-dir='+self.wallet_dir,
+			'--log-file='+self.logfile,
+			'--rpc-login={}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password) ]
+		if self.platform == 'linux':
+			cmd += ['--pidfile={}'.format(self.pidfile),'--detach']
+		return cmd
 
 	@property
 	def state(self):
@@ -353,17 +381,27 @@ class BitcoinDaemon(CoinDaemon):
 
 class MoneroDaemon(CoinDaemon):
 
+	exec_fn_mswin = 'monerod.exe'
+	ps_pid_mswin = True
+	new_console_mswin = True
+
+	def subclass_init(self):
+		if self.platform == 'win':
+			self.use_pidfile = False
+
 	@property
 	def shared_args(self):
 		return ['--zmq-rpc-bind-port={}'.format(self.rpc_port+1),'--rpc-bind-port={}'.format(self.rpc_port)]
 
 	@property
 	def coind_args(self):
-		return ['--bg-mining-enable',
-				'--pidfile={}'.format(self.pidfile),
-				'--data-dir={}'.format(self.datadir),
-				'--detach',
-				'--offline' ]
+		cmd = [
+			'--bg-mining-enable',
+			'--data-dir={}'.format(self.datadir),
+			'--offline' ]
+		if self.platform == 'linux':
+			cmd += ['--pidfile={}'.format(self.pidfile),'--detach']
+		return cmd
 
 	@property
 	def state(self):
@@ -377,9 +415,15 @@ class MoneroDaemon(CoinDaemon):
 
 	@property
 	def stop_cmd(self):
-		return [self.coind_exec] + self.shared_args + ['exit']
+		if self.platform == 'win':
+			return ['kill','-Wf',self.pid]
+		else:
+			return [self.coind_exec] + self.shared_args + ['exit']
 
 class EthereumDaemon(CoinDaemon):
+
+	exec_fn_mswin = 'parity.exe'
+	ps_pid_mswin = True
 
 	def subclass_init(self):
 		# defaults:
@@ -414,15 +458,5 @@ class EthereumDaemon(CoinDaemon):
 	@property
 	def stop_cmd(self):
 		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
-
-	@property
-	def pid(self): # TODO: distinguish between ETH and ETC
-		if self.platform == 'win':
-			cp = self.run_cmd(['ps','-Wl'],silent=True,check=False)
-			for line in cp.stdout.decode().splitlines():
-				if 'parity.exe' in line:
-					return line.split()[3] # use Windows, not Cygwin, PID
-		else:
-			return super().pid
 
 CoinDaemon.check_implement()
