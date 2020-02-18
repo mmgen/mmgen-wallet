@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2019 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2020 The MMGen Project <mmgen@tuta.io>
 
 """
 test.objtest_py_d.ot_ltc_mainnet: LTC mainnet test vectors for MMGen data objects
