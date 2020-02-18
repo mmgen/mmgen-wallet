@@ -27,6 +27,10 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   wn: https://walletgenerator.net
 #   cc: https://www.cryptocompare.com/api/data/coinlist/ (names,symbols only)
 
+# BIP44
+# https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
+# BIP44 registered coin types: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+
 # WIP:
 #   NSR:  149/191 c/u,  63/('S'),  64/('S'|'T')
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')

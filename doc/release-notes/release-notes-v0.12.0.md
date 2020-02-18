@@ -22,7 +22,7 @@
 
 This release has been tested on the following platforms:
 
-		Debian Buster / x86_64
+        Debian Buster / x86_64
         Windows 10 Enterprise Eng. / MSYS2 / qemu-x86_64
 
 and with the following coin daemon versions:

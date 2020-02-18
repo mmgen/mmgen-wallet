@@ -1019,8 +1019,7 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 
 			from mmgen.daemon import MoneroWalletDaemon
 			wd = MoneroWalletDaemon(opt.outdir or '.',test_suite=g.test_suite)
-			wd.stop()
-			wd.start()
+			wd.restart()
 
 			from mmgen.rpc import MoneroWalletRPCConnection
 			c = MoneroWalletRPCConnection(

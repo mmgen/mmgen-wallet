@@ -28,7 +28,7 @@ from mmgen.seed import SeedSource
 from mmgen.obj import MMGenPWIDString
 
 pwi = PasswordList.pw_info
-pwi_fs = '{:5} {:1} {:26} {:<7}  {:<7}  {}'
+pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
 
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],

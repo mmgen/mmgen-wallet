@@ -37,11 +37,13 @@ rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 xmr_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
-extra_tests='autosign_minimal autosign_live ltc_tn bch_tn'
+extra_tests='autosign_minimal autosign_live etc ltc_tn bch_tn'
 noalt_tests='misc obj color unit hash ref autosign_minimal btc btc_tn btc_rt tool tool2 gen'
+quick_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
+qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hbCfFiIlOpRtvV OPT
+while getopts hbCfFi:I:lOpRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -52,8 +54,8 @@ do
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
 		echo   "           '-F'  Reduce rounds even further"
 		echo   "           '-i'  Create and install Python package, then run tests.  A branch"
-		echo   "                 must be supplied as the first argument"
-		echo   "           '-I'  Install the package only; don't run tests"
+		echo   "                 must be supplied as a parameter"
+		echo   "           '-I'  Like '-i', but install the package without running the tests"
 		echo   "           '-l'  List the test name symbols"
 		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
 		echo   "           '-p'  Pause between tests"
@@ -68,9 +70,12 @@ do
 		echo   "     color    - color handling"
 		echo   "     unit     - unit tests"
 		echo   "     hash     - internal hash function implementations"
+		echo   "     ref      - reference file checks"
+		echo   "     altref   - altcoin reference file checks"
 		echo   "     alts     - operations for all supported gen-only altcoins"
 		echo   "     xmr      - operations for Monero"
 		echo   "     eth      - operations for Ethereum"
+		echo   "     etc      - operations for Ethereum Classic"
 		echo   "     autosign - autosign"
 		echo   "     btc      - bitcoin"
 		echo   "     btc_tn   - bitcoin testnet"
@@ -87,7 +92,11 @@ do
 		echo   "     misc     - miscellaneous tests that don't fit in the above categories"
 		echo
 		echo   "  AVAILABLE TEST GROUPS:"
-		echo   "     noalt    - BTC-only tests + tests not requiring altcoin daemons"
+		echo   "     default  - All tests minus the extra tests"
+		echo   "     extra    - All tests minus the default tests"
+		echo   "     noalt    - BTC-only tests"
+		echo   "     quick    - Default tests minus btc_tn, bch, bch_rt, ltc and ltc_rt"
+		echo   "     qskip    - The tests skipped in the 'quick' test group"
 		echo
 		echo   "  By default, all tests are run"
 		exit ;;
@@ -107,11 +116,13 @@ do
 		mmgen_keygen="$python $mmgen_keygen" ;&
 	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
 	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
-	i)  INSTALL=1 ;;
-	I)  INSTALL_ONLY=1 ;;
+	i)  INSTALL=$OPTARG ;;
+	I)  INSTALL=$OPTARG INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
-		echo -e "Additional tests:\n $extra_tests"
-		echo -e "BTC-only ('noalt') test group:\n  $noalt_tests"
+		echo -e "Extra tests:\n  $extra_tests"
+		echo -e "'noalt' test group:\n  $noalt_tests"
+		echo -e "'quick' test group:\n  $quick_tests"
+		echo -e "'qskip' test group:\n  $qskip_tests"
 		exit ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
@@ -136,16 +147,18 @@ done
 
 shift $((OPTIND-1))
 
-if [ "$1" == 'noalt' ]; then
-	tests=$noalt_tests
-elif [ "$*" ]; then
-	tests="$*"
-else
-	tests=$dfl_tests
-fi
+case $1 in
+	'')        tests=$dfl_tests ;;
+	'default') tests=$dfl_tests ;;
+	'extra')   tests=$extra_tests ;;
+	'noalt')   tests=$noalt_tests ;;
+	'quick')   tests=$quick_tests ;;
+	'qskip')   tests=$qskip_tests ;;
+	*)         tests="$*" ;;
+esac
 
 [ "$INSTALL" ] && {
-	BRANCH=$1; shift
+	BRANCH=$INSTALL
 	BRANCHES=$(git branch)
 	FOUND_BRANCH=$(for b in ${BRANCHES/\*}; do [ "$b" == "$BRANCH" ] && echo ok; done)
 	[ "$FOUND_BRANCH" ] || { echo "Branch '$BRANCH' not found!"; exit; }
@@ -356,12 +369,18 @@ f_xmr='Monero tests completed'
 [ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 9 14'
 
 i_eth='Ethereum'
-s_eth='Testing transaction and tracking wallet operations for Ethereum and Ethereum Classic'
+s_eth='Testing transaction and tracking wallet operations for Ethereum'
 t_eth="
 	$test_py --coin=eth ethdev
-	$test_py --coin=etc ethdev
 "
 f_eth='Ethereum tests completed'
+
+i_etc='Ethereum Classic'
+s_etc='Testing transaction and tracking wallet operations for Ethereum Classic'
+t_etc="
+	$test_py --coin=etc ethdev
+"
+f_etc='Ethereum Classic tests completed'
 
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'

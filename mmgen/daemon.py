@@ -137,7 +137,10 @@ class Daemon(MMGenObject):
 		else:
 			if not silent:
 				msg('{} {} not running'.format(self.net_desc,self.desc))
-		# rm -rf $datadir
+
+	def restart(self,silent=False):
+		self.stop(silent=silent)
+		return self.start(silent=silent)
 
 	def wait_for_state(self,req_state):
 		for i in range(200):

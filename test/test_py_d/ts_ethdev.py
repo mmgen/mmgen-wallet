@@ -320,7 +320,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			from shutil import copytree
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
-		start_test_daemons(g.coin)
+		restart_test_daemons(g.coin)
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):

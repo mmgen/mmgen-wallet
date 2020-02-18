@@ -4,6 +4,7 @@ include doc/wiki/using-mmgen/*
 include test/*.py
 include test/test_py_d/*.py
 include test/objtest_py_d/*.py
+include test/objattrtest_py_d/*.py
 include test/unit_tests_d/*.py
 include test/ref/*
 include test/ref/litecoin/*
@@ -21,6 +22,7 @@ include mmgen/altcoins/eth/pyethereum/LICENSE
 
 include scripts/compute-file-chksum.py
 include scripts/create-token.py
+include scripts/traceback_run.py
 include scripts/uninstall-mmgen.py
 
 prune test/ref/__db*

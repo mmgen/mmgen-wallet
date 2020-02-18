@@ -171,6 +171,9 @@ def start_test_daemons(*network_ids):
 def stop_test_daemons(*network_ids):
 	return test_daemons_ops(*network_ids,op='stop')
 
+def restart_test_daemons(*network_ids):
+	return test_daemons_ops(*network_ids,op='restart')
+
 def test_daemons_ops(*network_ids,op):
 	if opt.no_daemon_autostart:
 		return
