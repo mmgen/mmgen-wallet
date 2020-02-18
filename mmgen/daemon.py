@@ -46,8 +46,9 @@ class Daemon(MMGenObject):
 		Msg_r(' \b') # blocks w/o this...crazy
 
 	def exec_cmd_win_console(self,cmd,check):
-		from subprocess import Popen,CREATE_NEW_CONSOLE
-		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE)
+		from subprocess import Popen,CREATE_NEW_CONSOLE,STARTUPINFO,STARTF_USESHOWWINDOW,SW_HIDE
+		si = STARTUPINFO(dwFlags=STARTF_USESHOWWINDOW,wShowWindow=SW_HIDE)
+		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE,startupinfo=si)
 		p.wait()
 
 	def exec_cmd(self,cmd,check):
