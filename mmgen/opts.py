@@ -168,21 +168,6 @@ def override_from_env():
 			gname = name[(6,14)[disable]:].lower()
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
 
-def warn_altcoins(trust_level):
-	if trust_level > 3:
-		return
-	tl = (red('COMPLETELY UNTESTED'),red('LOW'),yellow('MEDIUM'),green('HIGH'))
-	m = """
-Support for coin '{}' is EXPERIMENTAL.  The {pn} project assumes no
-responsibility for any loss of funds you may incur.
-This coin's {pn} testing status: {}
-Are you sure you want to continue?
-""".strip().format(g.coin,tl[trust_level],pn=g.proj_name)
-	if g.test_suite:
-		qmsg(m); return
-	if not keypress_confirm(m,default_yes=True):
-		sys.exit(0)
-
 def common_opts_code(s):
 	from mmgen.protocol import CoinProtocol
 	return s.format(
@@ -345,7 +330,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		opt.verbose,opt.quiet = (True,None)
 	if g.debug_opts: opt_postproc_debug()
 
-	warn_altcoins(altcoin_trust_level)
+	warn_altcoins(g.coin,altcoin_trust_level)
 
 	# We don't need this data anymore
 	del mmgen.share.Opts, opts_data

@@ -99,6 +99,23 @@ def pp_msg(d):
 CUR_HIDE = '\033[?25l'
 CUR_SHOW = '\033[?25h'
 
+def warn_altcoins(coinsym,trust_level):
+	if trust_level > 3:
+		return
+
+	tl = (red('COMPLETELY UNTESTED'),red('LOW'),yellow('MEDIUM'),green('HIGH'))
+	m = """
+Support for coin '{}' is EXPERIMENTAL.  The {pn} project assumes no
+responsibility for any loss of funds you may incur.
+This coin's {pn} testing status: {}
+Are you sure you want to continue?
+""".strip().format(coinsym.upper(),tl[trust_level],pn=g.proj_name)
+
+	if g.test_suite:
+		qmsg(m); return
+	if not keypress_confirm(m,default_yes=True):
+		sys.exit(0)
+
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 	src_str = (''," in '{}'".format(src))[bool(src)]
 	if type(refval) == bool:

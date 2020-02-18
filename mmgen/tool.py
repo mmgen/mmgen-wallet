@@ -1139,7 +1139,8 @@ class tool_api(
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
 		from mmgen.protocol import init_coin,init_genonly_altcoins
-		init_genonly_altcoins(coinsym)
+		altcoin_trust_level = init_genonly_altcoins(coinsym)
+		warn_altcoins(coinsym,altcoin_trust_level)
 		if network == 'regtest':
 			g.regtest = True
 		return init_coin(coinsym,{'mainnet':False,'testnet':True,'regtest':True}[network])
