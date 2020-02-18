@@ -104,7 +104,8 @@ class unit_test(object):
 		def test_mmgen_txs():
 			fns = ( ('btc',False,'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'),
 					('btc',True,'test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
-					('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx') )
+				#	('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx')
+				)
 			from mmgen.protocol import init_coin
 			from mmgen.tx import MMGenTX
 			from mmgen.daemon import CoinDaemon
@@ -123,9 +124,9 @@ class unit_test(object):
 		from mmgen.tx import DeserializedTX
 		import json
 
-		start_test_daemons('btc','btc_tn','bch')
+		start_test_daemons('btc','btc_tn') # ,'bch')
 		test_mmgen_txs()
 		test_core_vectors()
-		stop_test_daemons('btc','btc_tn','bch')
+		stop_test_daemons('btc','btc_tn') # ,'bch')
 
 		return True

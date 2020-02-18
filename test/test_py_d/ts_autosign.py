@@ -45,6 +45,7 @@ class TestSuiteAutosign(TestSuiteBase):
 	def autosign_minimal(self,live=False):
 		return self.autosign(
 					coins=['btc','eth'],
+					daemon_coins=['btc'],
 					txfiles=['btc','eth','mm1','etc'],
 					txcount=8,
 					live=live)
@@ -52,6 +53,7 @@ class TestSuiteAutosign(TestSuiteBase):
 	# tests everything except device detection, mount/unmount
 	def autosign(   self,
 					coins=['btc','bch','ltc','eth'],
+					daemon_coins=['btc','bch','ltc'],
 					txfiles=['btc','bch','ltc','eth','mm1','etc'],
 					txcount=12,
 					live=False):
@@ -178,7 +180,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			imsg('')
 			return t
 
-		network_ids = [c+'_tn' for c in coins] + coins
+		network_ids = [c+'_tn' for c in daemon_coins] + daemon_coins
 		start_test_daemons(*network_ids)
 
 		if live:

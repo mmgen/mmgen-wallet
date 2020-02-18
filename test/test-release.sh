@@ -36,15 +36,16 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 xmr_addrs='3,99,2,22-24,101-104'
 
-dfl_tests='misc obj color unit hash ref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
+dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
 extra_tests='autosign_minimal autosign_live ltc_tn bch_tn'
+noalt_tests='misc obj color unit hash ref autosign_minimal btc btc_tn btc_rt tool tool2 gen'
 
 PROGNAME=$(basename $0)
 while getopts hbCfFiIlOpRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
-		echo   "  USAGE:           $PROGNAME [options] [tests]"
+		echo   "  USAGE:           $PROGNAME [options] [tests or test group]"
 		echo   "  OPTIONS: '-h'  Print this help message"
 		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           '-C'  Run tests in coverage mode"
@@ -61,6 +62,7 @@ do
 		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with"
 		echo   "                 '--verbose' switch"
 		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
+		echo
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
 		echo   "     color    - color handling"
@@ -83,6 +85,10 @@ do
 		echo   "     tool2    - tooltest2 (all supported coins)"
 		echo   "     gen      - gentest (all supported coins)"
 		echo   "     misc     - miscellaneous tests that don't fit in the above categories"
+		echo
+		echo   "  AVAILABLE TEST GROUPS:"
+		echo   "     noalt    - BTC-only tests + tests not requiring altcoin daemons"
+		echo
 		echo   "  By default, all tests are run"
 		exit ;;
 	b)  test_py+=" --buf-keypress" ;;
@@ -104,7 +110,8 @@ do
 	i)  INSTALL=1 ;;
 	I)  INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
-		echo -e "Additional tests:\n  $extra_tests"
+		echo -e "Additional tests:\n $extra_tests"
+		echo -e "BTC-only ('noalt') test group:\n  $noalt_tests"
 		exit ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
@@ -128,6 +135,14 @@ done
 [ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
 
 shift $((OPTIND-1))
+
+if [ "$1" == 'noalt' ]; then
+	tests=$noalt_tests
+elif [ "$*" ]; then
+	tests="$*"
+else
+	tests=$dfl_tests
+fi
 
 [ "$INSTALL" ] && {
 	BRANCH=$1; shift
@@ -240,7 +255,7 @@ i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
 t_hash="
 	$python test/hashfunc.py sha256 $rounds_max
-	$python test/hashfunc.py sha512 $rounds_max # native sha512 - not used by MMGen
+	$python test/hashfunc.py sha512 $rounds_max # native SHA512 - not used by the MMGen wallet
 	$python test/hashfunc.py keccak $rounds_max
 "
 f_hash='Hash function tests completed'
@@ -252,22 +267,20 @@ i_ref='Miscellaneous reference data'
 s_ref='The following tests will test some generated values against reference data'
 t_ref="
 	$scrambletest_py
-	$test_py ref_altcoin # generated addrfiles verified against checksums
 "
 f_ref='Miscellaneous reference data tests completed'
+
+i_altref='Altcoin reference file'
+s_altref='The following tests will test some generated altcoin files against reference data'
+t_altref="
+	$test_py ref_altcoin # generated addrfiles verified against checksums
+"
+f_altref='Altcoin reference file tests completed'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
 	# speed tests, no verification:
-	$gentest_py --coin=btc 2 $rounds
-	$gentest_py --coin=btc --type=compressed 2 $rounds
-	$gentest_py --coin=btc --type=segwit 2 $rounds
-	$gentest_py --coin=btc --type=bech32 2 $rounds
-	$gentest_py --coin=ltc 2 $rounds
-	$gentest_py --coin=ltc --type=compressed 2 $rounds
-	$gentest_py --coin=ltc --type=segwit 2 $rounds
-	$gentest_py --coin=ltc --type=bech32 2 $rounds
 	$gentest_py --coin=etc 2 $rounds
 	$gentest_py --coin=etc --use-internal-keccak-module 2 $rounds_min
 	$gentest_py --coin=eth 2 $rounds
@@ -370,7 +383,7 @@ f_autosign_live='Autosign Live test completed'
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc="
-	$test_py --exclude regtest,autosign_minimal
+	$test_py --exclude regtest,autosign_minimal,ref_altcoin
 	$test_py --segwit
 	$test_py --segwit-random
 	$test_py --bech32
@@ -478,8 +491,17 @@ t_tool="
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'
-s_gen="The following tests will run '$gentest_py' on mainnet and testnet for all supported coins"
+s_gen="The following tests will run '$gentest_py' for BTC and LTC mainnet and testnet"
 t_gen="
+	# speed tests, no verification:
+	$gentest_py --coin=btc 2 $rounds
+	$gentest_py --coin=btc --type=compressed 2 $rounds
+	$gentest_py --coin=btc --type=segwit 2 $rounds
+	$gentest_py --coin=btc --type=bech32 2 $rounds
+	$gentest_py --coin=ltc 2 $rounds
+	$gentest_py --coin=ltc --type=compressed 2 $rounds
+	$gentest_py --coin=ltc --type=segwit 2 $rounds
+	$gentest_py --coin=ltc --type=bech32 2 $rounds
 	# wallet dumps:
 	$gentest_py 2 $REFDIR/btcwallet.dump
 	$gentest_py --type=segwit 2 $REFDIR/btcwallet-segwit.dump
@@ -536,9 +558,6 @@ check_args() {
 		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
 	done
 }
-
-tests=$dfl_tests
-[ "$*" ] && tests="$*"
 
 check_args
 [ "$LIST_CMDS" ] || echo "Running tests: $tests"
