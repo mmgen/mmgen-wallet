@@ -123,6 +123,13 @@ class RPCConnection(MMGenObject):
 
 		data = json.dumps(p,cls=MyJSONEncoder)
 
+		if g.platform == 'win' and len(data) < 4096: # set way below ARG_MAX, just to be safe
+			return self.do_request_curl(data,cf)
+		else:
+			return self.do_request_httplib(data,cf)
+
+	def do_request_httplib(self,data,cf):
+
 		def do_fail(*args): # args[0] is either None or HTTPResponse object
 			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
 
@@ -183,6 +190,32 @@ class RPCConnection(MMGenObject):
 				ret.append(resp['result'])
 
 		return ret if cf['batch'] else ret[0]
+
+	def do_request_curl(self,data,cf):
+		from subprocess import run,PIPE
+		exec_cmd = ['curl', '--proxy', '', '--silent','--request', 'POST', '--data-binary', data]
+		for k,v in self.http_hdrs.items():
+			exec_cmd += ['--header', '{}: {}'.format(k,v)]
+		if self.auth:
+			exec_cmd += ['--user', self.auth_str]
+		exec_cmd += ['http://{}:{}/'.format(self.host,self.port)]
+
+		cp = run(exec_cmd,stdout=PIPE,check=True)
+		res = json.loads(cp.stdout,parse_float=Decimal)
+		dmsg_rpc('    RPC RESULT data ==>\n{}\n',res)
+
+		def do_fail(s):
+			if cf['on_fail'] in ('return','silent'):
+				return ('rpcfail',s)
+			raise RPCFailure(s)
+
+		for resp in ([res],res)[cf['batch']]:
+			if 'error' in resp and resp['error'] != None:
+				return do_fail('{} returned an error: {}'.format(g.proto.daemon_name,resp['error']))
+			elif 'result' not in resp:
+				return do_fail('Missing JSON-RPC result\n{!r}'.format(resp))
+
+		return [r['result'] for r in res] if cf['batch'] else res['result']
 
 	rpcmethods = (
 		'backupwallet',
