@@ -33,6 +33,7 @@ class RPCConnection(MMGenObject):
 
 	auth = True
 	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
+	http_hdrs = { 'Content-Type': 'application/json' }
 
 	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None,socket_timeout=1):
 
@@ -65,6 +66,12 @@ class RPCConnection(MMGenObject):
 					dn=g.proto.daemon_name,
 					pnm=g.proj_name))
 
+		if self.auth:
+			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [Basic {}]\n'
+			as_enc = base64.b64encode(self.auth_str.encode()).decode()
+			dmsg_rpc(fs.format(self.auth_str,'',as_enc))
+			self.http_hdrs.update({ 'Host':host, 'Authorization':'Basic {}'.format(as_enc) })
+
 		self.host = host
 		self.port = port
 
@@ -95,25 +102,10 @@ class RPCConnection(MMGenObject):
 		for k in cf:
 			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
 
-		hc = http.client.HTTPConnection(self.host,self.port,cf['timeout'])
-
 		if cf['batch']:
 			p = [{'method':cmd,'params':r,'id':n,'jsonrpc':'2.0'} for n,r in enumerate(args[0],1)]
 		else:
 			p = {'method':cmd,'params':args,'id':1,'jsonrpc':'2.0'}
-
-		def do_fail(*args): # args[0] is either None or HTTPResponse object
-			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
-
-			try:    s = '{}'.format(args[2])
-			except: s = repr(args[2])
-
-			if s == '' and args[0] != None:
-				from http import HTTPStatus
-				hs = HTTPStatus(args[0].code)
-				s = '{} {}'.format(hs.value,hs.name)
-
-			raise RPCFailure(s)
 
 		dmsg_rpc('=== request() debug ===')
 		dmsg_rpc('    RPC POST data ==>\n{}\n',p)
@@ -129,15 +121,24 @@ class RPCConnection(MMGenObject):
 				else:
 					return json.JSONEncoder.default(self,obj)
 
-		http_hdr = { 'Content-Type': 'application/json' }
-		if self.auth:
-			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [Basic {}]\n'
-			as_enc = base64.b64encode(self.auth_str.encode())
-			dmsg_rpc(fs.format(self.auth_str,'',as_enc))
-			http_hdr.update({ 'Host':self.host, 'Authorization':'Basic {}'.format(as_enc.decode()) })
+		data = json.dumps(p,cls=MyJSONEncoder)
 
+		def do_fail(*args): # args[0] is either None or HTTPResponse object
+			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
+
+			try:    s = '{}'.format(args[2])
+			except: s = repr(args[2])
+
+			if s == '' and args[0] != None:
+				from http import HTTPStatus
+				hs = HTTPStatus(args[0].code)
+				s = '{} {}'.format(hs.value,hs.name)
+
+			raise RPCFailure(s)
+
+		hc = http.client.HTTPConnection(self.host,self.port,cf['timeout'])
 		try:
-			hc.request('POST','/',json.dumps(p,cls=MyJSONEncoder),http_hdr)
+			hc.request('POST','/',data,self.http_hdrs)
 		except Exception as e:
 			m = '{}\nUnable to connect to {} at {}:{}'
 			return do_fail(None,2,m.format(e.args[0],g.proto.daemon_name,self.host,self.port))
@@ -282,7 +283,7 @@ class MoneroWalletRPCConnection(RPCConnection):
 			'params': kwargs,
 		}
 		exec_cmd = [
-			'curl', '--silent','--insecure', '--request', 'POST',
+			'curl', '--proxy', '', '--silent','--insecure', '--request', 'POST',
 			'--digest', '--user', '{}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
 			'--header', 'Content-Type: application/json',
 			'--data', json.dumps(data),
@@ -298,7 +299,11 @@ class MoneroWalletRPCConnection(RPCConnection):
 def rpc_error(ret):
 	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
 
-def rpc_errmsg(ret): return ret[1][2]
+def rpc_errmsg(ret):
+	try:
+		return ret[1][2]
+	except:
+		return repr(ret)
 
 def init_daemon_parity():
 
