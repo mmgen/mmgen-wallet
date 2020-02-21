@@ -74,6 +74,8 @@ class RPCConnection(MMGenObject):
 
 		self.host = host
 		self.port = port
+		self.user = user
+		self.passwd = passwd
 
 		for method in self.rpcmethods:
 			exec('{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
@@ -296,18 +298,44 @@ class EthereumRPCConnection(RPCConnection):
 	)
 
 class MoneroWalletRPCConnection(RPCConnection):
+
 	rpcmethods = (
 		'get_version',
 		'get_height',    # sync height of the open wallet
-		'get_balance',   # { "account_index":0,"address_indices":[0,1] }
-		'create_wallet', # { "filename":"name","password":"passw0rd","language":"English" }
-		'open_wallet',   # { "filename":"name","password":"passw0rd" }
+		'get_balance',   # account_index=0, address_indices=[]
+		'create_wallet', # filename, password, language="English"
+		'open_wallet',   # filename, password
 		'close_wallet',
 		'restore_deterministic_wallet', # name,password,seed (restore_height,language,seed_offset,autosave_current)
-		'refresh',       # {"start_height":100000}
+		'refresh',       # start_height
 	)
 
 	def request(self,cmd,*args,**kwargs):
+		if args != ():
+			m = '{}.request() accepts only keyword args\nCmd: {!r}'
+			raise ValueError(m.format(type(self).__name__,cmd))
+		import requests
+		import urllib3
+		urllib3.disable_warnings()
+		ret = requests.post(
+			url = 'https://{}:{}/json_rpc'.format(self.host,self.port),
+			json = {
+				'jsonrpc': '2.0',
+				'id': '0',
+				'method': cmd,
+				'params': kwargs,
+			},
+			auth = requests.auth.HTTPDigestAuth(self.user,self.passwd),
+			headers = self.http_hdrs,
+			verify = False )
+
+		res = json.loads(ret._content)
+		if 'error' in res:
+			raise RPCFailure(repr(res['error']))
+		return(res['result'])
+
+	def request_curltest(self,cmd,*args,**kwargs):
+		"insecure, for testing only"
 		from subprocess import run,PIPE
 		data = {
 			'jsonrpc': '2.0',
@@ -316,7 +344,7 @@ class MoneroWalletRPCConnection(RPCConnection):
 			'params': kwargs,
 		}
 		exec_cmd = [
-			'curl', '--proxy', '', '--silent','--insecure', '--request', 'POST',
+			'curl', '--proxy', '', '--verbose','--insecure', '--request', 'POST',
 			'--digest', '--user', '{}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
 			'--header', 'Content-Type: application/json',
 			'--data', json.dumps(data),
