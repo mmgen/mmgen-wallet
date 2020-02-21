@@ -34,6 +34,7 @@ class Daemon(MMGenObject):
 	cfg_file = None
 	new_console_mswin = False
 	ps_pid_mswin = False
+	lockfile = None
 
 	def subclass_init(self): pass
 
@@ -111,25 +112,40 @@ class Daemon(MMGenObject):
 		return self.run_cmd(self.cli_cmd(*cmds),silent=silent,check=check)
 
 	def start(self,silent=False):
-		if self.is_ready:
+		if self.state == 'ready':
 			if not silent:
 				m = '{} {} already running with pid {}'
 				msg(m.format(self.net_desc,self.desc,self.pid))
+			return
+
+		self.wait_for_state('stopped')
+
+		os.makedirs(self.datadir,exist_ok=True)
+		if self.cfg_file:
+			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
+
+		if self.use_pidfile and os.path.exists(self.pidfile):
+			# Parity just overwrites the data in an existing pidfile without zeroing it first,
+			# leading to interesting consequences.
+			os.unlink(self.pidfile)
+
+		for i in range(20):
+			try: ret = self.do_start(silent=silent)
+			except FileNotFoundError as e:
+				die(e.errno,e.strerror)
+			except: pass
+			else: break
+			time.sleep(1)
 		else:
-			os.makedirs(self.datadir,exist_ok=True)
-			if self.cfg_file:
-				open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
-			if self.use_pidfile and os.path.exists(self.pidfile):
-				# Parity just overwrites the data in an existing pidfile, leading to
-				# interesting consequences.
-				os.unlink(self.pidfile)
-			ret = self.do_start(silent=silent)
-			if self.wait:
-				self.wait_for_state('ready')
-			return ret
+			die(2,'Unable to start daemon')
+
+		if self.wait:
+			self.wait_for_state('ready')
+
+		return ret
 
 	def stop(self,silent=False):
-		if self.is_ready:
+		if self.state == 'ready':
 			ret = self.do_stop(silent=silent)
 			if self.wait:
 				self.wait_for_state('stopped')
@@ -149,10 +165,6 @@ class Daemon(MMGenObject):
 			time.sleep(0.2)
 		else:
 			die(2,'Daemon wait timeout for {} {} exceeded'.format(self.daemon_id.upper(),self.network))
-
-	@property
-	def is_ready(self):
-		return self.state == 'ready'
 
 	@classmethod
 	def check_implement(cls):
@@ -231,14 +243,15 @@ class CoinDaemon(Daemon):
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
 	cd = namedtuple('daemon_data',
-				['coin','cls_pfx','coind_exec','cli_exec','cfg_file','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
-	daemon_ids = {
-		'btc': cd('Bitcoin',         'Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf',  8332,18332,18444),
-		'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf',  8442,18442,18553),# MMGen RPC dfls
-		'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf', 9332,19332,19444),
-		'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',18081,None,None),
-		'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   8545,None,None),
-		'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   8545,None,None)
+		['coin','cls_pfx','coind_exec','cli_exec','cfg_file','testnet_dir','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
+
+	daemon_ids = { # for BCH we use non-standard RPC ports
+'btc': cd('Bitcoin',         'Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf', 'testnet3',8332,18332,18444),
+'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf', 'testnet3',8442,18442,18553),
+'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf','testnet4',9332,19332,19444),
+'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',None,     18081,None,None),
+'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   None,     8545, None,None),
+'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, None,None)
 	}
 
 	testnet_arg = []
@@ -342,7 +355,7 @@ class BitcoinDaemon(CoinDaemon):
 		if self.platform == 'win' and self.daemon_id == 'bch':
 			self.use_pidfile = False
 
-		if self.network=='testnet':
+		if self.network == 'testnet':
 			self.testnet_arg = ['--testnet']
 
 		self.shared_args = [
@@ -366,6 +379,11 @@ class BitcoinDaemon(CoinDaemon):
 		elif self.daemon_id == 'ltc':
 			self.coin_specific_coind_args = ['--mempoolreplacement=1']
 
+		if self.network == 'testnet':
+			self.lockfile = os.path.join(self.datadir,self.testnet_dir,'.cookie')
+		elif self.network == 'mainnet':
+			self.lockfile = os.path.join(self.datadir,'.cookie')
+
 	@property
 	def state(self):
 		cp = self.cli('getblockcount',silent=True,check=False)
@@ -373,7 +391,11 @@ class BitcoinDaemon(CoinDaemon):
 		if ("error: couldn't connect" in err
 			or "error: Could not connect" in err
 			or "does not exist" in err ):
-			return 'stopped'
+			# regtest has no cookie file, so test will always fail
+			if self.lockfile and os.path.exists(self.lockfile):
+				return 'busy'
+			else:
+				return 'stopped'
 		elif cp.returncode == 0:
 			return 'ready'
 		else:
