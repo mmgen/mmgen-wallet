@@ -37,18 +37,19 @@ rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 xmr_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
-extra_tests='autosign_minimal autosign_live etc ltc_tn bch_tn'
-noalt_tests='misc obj color unit hash ref autosign_minimal btc btc_tn btc_rt tool tool2 gen'
+extra_tests='autosign_btc autosign_live etc ltc_tn bch_tn'
+noalt_tests='misc obj color unit hash ref autosign_btc btc btc_tn btc_rt tool tool2 gen'
 quick_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hbCfFi:I:lOpRtvV OPT
+while getopts hAbCfFi:I:lOpRtvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
 		echo   "  USAGE:           $PROGNAME [options] [tests or test group]"
 		echo   "  OPTIONS: '-h'  Print this help message"
+		echo   "           '-A'  Skip tests requiring altcoin modules or daemons"
 		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           '-C'  Run tests in coverage mode"
 		echo   "           '-f'  Speed up the tests by using fewer rounds"
@@ -100,6 +101,7 @@ do
 		echo
 		echo   "  By default, all tests are run"
 		exit ;;
+	A)  SKIP_ALT=1 ;;
 	b)  test_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
@@ -151,7 +153,7 @@ case $1 in
 	'')        tests=$dfl_tests ;;
 	'default') tests=$dfl_tests ;;
 	'extra')   tests=$extra_tests ;;
-	'noalt')   tests=$noalt_tests ;;
+	'noalt')   tests=$noalt_tests SKIP_ALT=1 ;;
 	'quick')   tests=$quick_tests ;;
 	'qskip')   tests=$qskip_tests ;;
 	*)         tests="$*" ;;
@@ -316,16 +318,16 @@ t_alts="
 	#   keyconv
 	$gentest_py --all --type=legacy 2:keyconv $rounds
 	$gentest_py --all --type=compressed 2:keyconv $rounds
+	#   ethkey
+	$gentest_py --all 2:ethkey $rounds
 "
 
-[ "$MSYS2" ] || { # no moneropy (pysha3), zcash-mini (golang), ethkey (?)
+[ "$MSYS2" ] || { # no moneropy (pysha3), zcash-mini (golang)
 	t_alts+="
 		#   moneropy
 		$gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
 		#   zcash-mini
 		$gentest_py --all 2:zcash-mini $rounds_mid
-		#   ethkey
-		$gentest_py --all 2:ethkey $rounds
 	"
 }
 
@@ -343,7 +345,7 @@ else
 	mkdir -p $TMPDIR
 fi
 
-mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR"
+mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
 i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_xmr='The monerod (mainnet) daemon must be running for the following tests'
@@ -387,10 +389,10 @@ s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons mu
 t_autosign="$test_py autosign"
 f_autosign='Autosign test completed'
 
-i_autosign_minimal='Autosign Minimal'
-s_autosign_minimal='The bitcoin mainnet and testnet daemons must be running for the following test'
-t_autosign_minimal="$test_py autosign_minimal"
-f_autosign_minimal='Autosign Minimal test completed'
+i_autosign_btc='Autosign BTC'
+s_autosign_btc='The bitcoin mainnet and testnet daemons must be running for the following test'
+t_autosign_btc="$test_py autosign_btc"
+f_autosign_btc='Autosign BTC test completed'
 
 i_autosign_live='Autosign Live'
 s_autosign_live="The bitcoin mainnet and testnet daemons must be running for the following test\n"
@@ -402,7 +404,7 @@ f_autosign_live='Autosign Live test completed'
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc="
-	$test_py --exclude regtest,autosign_minimal,ref_altcoin
+	$test_py --exclude regtest,autosign,ref_altcoin
 	$test_py --segwit
 	$test_py --segwit-random
 	$test_py --bech32
@@ -473,7 +475,6 @@ t_tool2="
 	$tooltest2_py --tool-api --coin=eth
 	$tooltest2_py --tool-api --coin=xmr
 	$tooltest2_py --tool-api --coin=zec
-	$tooltest2_py --fork # run once with --fork so commands are actually executed
 	$tooltest2_py
 	$tooltest2_py --testnet=1
 	$tooltest2_py --coin=ltc
@@ -488,8 +489,10 @@ t_tool2="
 	$tooltest2_py --coin=eth --token=mm1
 	$tooltest2_py --coin=eth --token=mm1 --testnet=1
 	$tooltest2_py --coin=etc
+	$tooltest2_py --fork # run once with --fork so commands are actually executed
 "
 f_tool2='tooltest2 tests completed'
+[ "$SKIP_ALT" ] && t_tool2_skip='17 18'
 
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"

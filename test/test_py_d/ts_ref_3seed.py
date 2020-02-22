@@ -150,10 +150,11 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		fn = os.path.split(t.written_to_file(capfirst(ocls.desc)))[-1]
 		import re
 		idx = int(self.test_name[-1]) - 1
-		pat = r'{}-[0-9A-F]{{8}}\[{},1\].mmdat'.format(
+		pat = r'{}-[0-9A-F]{{8}}\[{},1\]{}.mmdat'.format(
 			self.chk_data['sids'][idx],
-			self.chk_data['lens'][idx] )
-		assert re.match(pat,fn)
+			self.chk_data['lens'][idx],
+			'-α' if g.debug_utf8 else '')
+		assert re.match(pat,fn),'{} != {}'.format(pat,fn)
 		sid = os.path.basename(fn.split('-')[0])
 		cmp_or_die(sid,self.seed_id,desc='Seed ID')
 		return t
@@ -170,9 +171,9 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		if re_pat:
 			import re
 			pat = re_pat.format(sid,slen)
-			assert re.match(pat,fn),'{} {}'.format(pat,fn)
+			assert re.match(pat,fn),'{} != {}'.format(pat,fn)
 		else:
-			cmp_or_die('{}[{}].{}'.format(sid,slen,wcls.ext),fn)
+			cmp_or_die('{}[{}]{}.{}'.format(sid,slen,'-α' if g.debug_utf8 else '',wcls.ext),fn)
 		return t
 
 	def ref_walletconv_words(self):        return self.ref_walletconv(ofmt='mn')
@@ -184,7 +185,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_walletconv_incog(self,ofmt='incog',ext='mmincog'):
 		args = ['-r0','-p1']
-		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\].' + ext
+		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if g.debug_utf8 else '') + '.' + ext
 		return self.ref_walletconv(ofmt=ofmt,extra_args=args,re_pat=pat)
 
 	def ref_walletconv_xincog(self):

@@ -40,14 +40,14 @@ class TestSuiteAutosign(TestSuiteBase):
 	)
 
 	def autosign_live(self):
-		return self.autosign_minimal(live=True)
+		return self.autosign_btc(live=True)
 
-	def autosign_minimal(self,live=False):
+	def autosign_btc(self,live=False):
 		return self.autosign(
-					coins=['btc','eth'],
+					coins=['btc'],
 					daemon_coins=['btc'],
-					txfiles=['btc','eth','mm1','etc'],
-					txcount=8,
+					txfiles=['btc'],
+					txcount=3,
 					live=live)
 
 	# tests everything except device detection, mount/unmount
@@ -228,13 +228,13 @@ class TestSuiteAutosign(TestSuiteBase):
 		stop_test_daemons(*network_ids)
 		return ret
 
-class TestSuiteAutosignMinimal(TestSuiteAutosign):
-	'autosigning with BTC, ETH and ETC'
+class TestSuiteAutosignBTC(TestSuiteAutosign):
+	'autosigning with BTC'
 	cmd_group = (
-		('autosign_minimal', 'transaction autosigning (BTC,ETH,ETC)'),
+		('autosign_btc', 'transaction autosigning (BTC only)'),
 	)
 
-class TestSuiteAutosignLive(TestSuiteAutosignMinimal):
+class TestSuiteAutosignLive(TestSuiteAutosignBTC):
 	'live autosigning operations with device insertion/removal and LED check'
 	cmd_group = (
 		('autosign_live', 'transaction autosigning (BTC,ETH,ETC - test device insertion/removal + LED)'),

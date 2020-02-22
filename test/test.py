@@ -476,7 +476,7 @@ class CmdGroupMgr(object):
 #		'chainsplit':       ('TestSuiteChainsplit',{}),
 		'ethdev':           ('TestSuiteEthdev',{}),
 		'autosign':         ('TestSuiteAutosign',{}),
-		'autosign_minimal': ('TestSuiteAutosignMinimal',{'modname':'autosign'}),
+		'autosign_btc':     ('TestSuiteAutosignBTC',{'modname':'autosign'}),
 		'autosign_live':    ('TestSuiteAutosignLive',{'modname':'autosign'}),
 		'create_ref_tx':    ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
 	}
@@ -491,7 +491,7 @@ class CmdGroupMgr(object):
 					'tool',
 					'input',
 					'output',
-					'autosign_minimal',
+					'autosign',
 					'regtest',
 					'ethdev')
 
@@ -600,6 +600,7 @@ class TestSuiteRunner(object):
 		self.rebuild_list = OrderedDict()
 		self.gm = CmdGroupMgr()
 		self.repo_root = repo_root
+		self.skipped_warnings = []
 
 		if opt.log:
 			self.log_fd = open(log_file,'a')
@@ -863,6 +864,12 @@ class TestSuiteRunner(object):
 		if cmd == opt.exit_after:
 			sys.exit(0)
 
+	def warn_skipped(self):
+		if self.skipped_warnings:
+			print(yellow('The following tests were skipped and may require attention:'))
+			r = '-' * 72 + '\n'
+			print(r+('\n'+r).join(self.skipped_warnings))
+
 	def process_retval(self,cmd,ret):
 		if type(ret).__name__ == 'MMGenPexpect':
 			ret.ok()
@@ -872,6 +879,9 @@ class TestSuiteRunner(object):
 			self.cmd_total += 1
 		elif ret == 'skip':
 			pass
+		elif type(ret) == tuple and ret[0] == 'skip_warn':
+			self.skipped_warnings.append(
+				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))
 		else:
 			rdie(1,'{!r} returned {}'.format(cmd,ret))
 
@@ -942,9 +952,11 @@ start_test_daemons(network_id)
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
+	tr.warn_skipped()
 	stop_test_daemons(network_id)
 except KeyboardInterrupt:
 	stop_test_daemons(network_id)
+	tr.warn_skipped()
 	die(1,'\ntest.py exiting at user request')
 except TestSuiteException as e:
 	ydie(1,e.args[0])

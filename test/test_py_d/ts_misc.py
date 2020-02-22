@@ -135,16 +135,18 @@ class TestSuiteInput(TestSuiteBase):
 
 	def password_entry_noecho(self):
 		if self.skip_for_win():
-			msg('Perform this test by hand on MSWin with non-ASCII password abc-α:')
-			msg('  test/misc/password_entry.py')
-			return 'skip' # getpass() can't handle utf8, and pexpect double-escapes utf8, so skip
+			m = "getpass() doesn't work with pexpect.popen_spawn!\n"
+			m += 'Perform the following test by hand with non-ASCII password abc-α:\n'
+			m += '  test/misc/password_entry.py'
+			return ('skip_warn',m)
 		return self.password_entry('Enter passphrase: ',[])
 
 	def password_entry_echo(self):
 		if self.skip_for_win():
-			msg('Perform this test by hand on MSWin with non-ASCII password abc-α:')
-			msg('  test/misc/password_entry.py --echo-passphrase')
-			return 'skip' # pexpect double-escapes utf8, so skip
+			m = "getpass() doesn't work with pexpect.popen_spawn!\n"
+			m += 'Perform the following test by hand with non-ASCII password abc-α:\n'
+			m += '  test/misc/password_entry.py --echo-passphrase'
+			return ('skip_warn',m)
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
 	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None):

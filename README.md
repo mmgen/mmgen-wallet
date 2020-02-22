@@ -1,10 +1,6 @@
-***Note: This is the source code repository of the MMGen wallet system.  For an
-easier way to install MMGen, check out the prebuilt bootable USB images on the
-[MMGenLive][8] home page.***
-
 # MMGen = Multi-Mode GENerator
 
-##### a Bitcoin and altcoin online/offline software wallet for the command line
+##### An online/offline cryptocurrency wallet for the command line
 
 ### Description
 
@@ -15,7 +11,7 @@ offline computers to provide a robust solution for securely storing, tracking,
 sending and receiving your crypto assets.
 
 The online computer is used for tracking balances and creating and sending
-transactions, while the offline computer (typically an air-gapped, low-power
+transactions, while the offline machine (typically an air-gapped, low-power
 device such as a Raspberry Pi) takes care of wallet creation, address generation
 and transaction signing.  All operations involving secret data are handled
 offline: **your seed and private keys never come into contact with a
@@ -34,36 +30,11 @@ of address/key pairs from a single seed.  Your wallet never changes, so you need
 back it up only once.
 
 At the heart of the MMGen system is the seed, the “master key” providing access
-to all your crypto assets.  The seed can be stored in five different ways:
-
-  1. as a password-encrypted wallet.  The crack-resistant Scrypt hash function
-	 is used for password hashing.  Scrypt’s parameters can be tuned to make
-	 your wallet’s password very difficult to crack should it fall into the
-	 wrong hands.  The wallet is a compact, six-line text file suitable for
-	 printing or even writing out by hand;
-
-  2. as a seed file: a one-line, conveniently formatted base-58 representation
-	 of your unencrypted seed plus a checksum;
-
-  3. as an Electrum-like mnemonic seed phrase of 12, 18 or 24 words;
-
-  4. as a brainwallet passphrase (this option is recommended only for users who
-	 understand the risks of brainwallets and know how to create a strong
-	 brainwallet passphrase).  The brainwallet is hashed using Scrypt with
-	 tunable parameters, making it much harder to crack than standard SHA256
-	 brainwallets; or
-
-  5. as “incognito data”, a wallet encrypted to make it indistinguishable
-	 from random data.  This data can be hidden on a disk partition filled with
-	 random data, or in a file at an offset of your choice.  This makes it
-	 possible to hide a wallet at a non-private location—on cloud storage, for
-	 example.  Incognito wallet hiding/retrieval is seamlessly integrated into
-	 MMGen, making its use nearly as easy as that of the standard wallet.
-
-The best part is that all these methods can be combined.  If you forget your
-mnemonic seed phrase, for example, you can regenerate it from a stored wallet
-or seed file.  Correspondingly, a lost wallet can be regenerated from a mnemonic
-or seed or vice-versa.
+to all your crypto assets.  The seed can be stored in many different formats:
+as a password-encrypted wallet (the default), as a one-line base58 or
+hexidecimal seed file, as an Electrum-based mnemonic seed phrase, as a
+brainwallet passphrase, or as “incognito data” hideable within random data in a
+file or block device.  Conversion between all formats is supported.
 
 ***mmgen-txcreate running in a terminal window***
 ![mmgen-txcreate running in a terminal window][9]
@@ -94,7 +65,7 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
   [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
 - **[Address generation support][ag]** for the above coins, plus [Monero][mx],
   [Zcash][zx] (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
-- **Support for all Bitcoin address types** including segwit-p2sh and bech32.
+- **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.
 - **Independent key derivation for each address type:** No two addresses ever
   share the same private key.  Certain wallets in wide use today regrettably
   fail to guarantee this property, leading to the danger of inadvertent key
@@ -118,11 +89,12 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
   always be regenerated from their parent.
 - **[Transaction autosigning][X]:** This feature puts your offline signing
   machine into “hands-off” mode, allowing you to transact directly from cold
-  storage securely and conveniently.  Additional LED signaling support is
+  storage securely and conveniently.  Additional LED blinking support is
   provided for Raspbian and Armbian platforms.
 - **[Password generation][G]:** MMGen can be used to generate and manage your
-  online passwords.  Passwords are identified by arbitrarily chosen strings like
-  “alice@github” or “bob@reddit”.
+  online passwords.  Password lists are identified by arbitrarily chosen strings
+  like “alice@github” or “bob@reddit”.  Passwords of different lengths and
+  formats are supported.
 - **Selectable seed lengths** of 128, 192 or 256 bits.  Subwallets may have
   shorter seeds than their parent.
 - **User-enhanced entropy:** All operations requiring random data will prompt
@@ -144,6 +116,10 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 - **Scriptability:** Most MMGen commands can be made non-interactive, allowing
   you to automate repetitive tasks using shell scripts.  Most of the
   `mmgen-tool` utility’s commands can be piped.
+
+#### Supported platforms:
+
+Linux, Armbian, Raspbian, Windows/MSYS2
 
 ### Download/Install
 

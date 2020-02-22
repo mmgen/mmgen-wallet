@@ -866,12 +866,12 @@ class MMGenMnemonic(SeedSourceUnenc):
 
 		m  = 'Enter your {ml}-word seed phrase, hitting ENTER or SPACE after each word.\n'
 		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
-		m += 'lowercase letter will be treated as a {lq}pad character{rq}, i.e. it will simply\n'
+		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
 		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
 		m += "of words.  For each word, once you've typed {lw} characters total (including\n"
 		m += 'pad characters) any pad character will enter the word.'
 
-		msg(m.format(ml=mn_len,lw=longest_word,lq=g.lq,rq=g.rq))
+		msg(m.format(ml=mn_len,lw=longest_word))
 
 		from string import ascii_lowercase
 		from mmgen.term import get_char_raw

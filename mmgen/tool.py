@@ -495,8 +495,11 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 
 	@staticmethod
 	def _xmr_reduce(bytestr):
-		from mmgen.protocol import MoneroProtocol
-		return MoneroProtocol.preprocess_key(bytestr,None)
+		from mmgen.protocol import MoneroProtocol as mp
+		if len(bytestr) != mp.privkey_len:
+			m = '{!r}: invalid bit length for Monero private key (must be {})'
+			die(1,m.format(len(bytestr*8),mp.privkey_len*8))
+		return mp.preprocess_key(bytestr,None)
 
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
@@ -891,7 +894,13 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 		return ret
 
 class MMGenToolCmdMonero(MMGenToolCmdBase):
-	"Monero wallet utilities"
+	"""
+	Monero wallet utilities
+
+	Note that the use of these commands requires private data to be exposed on
+	a network-connected machine in order to unlock the Monero wallets.  This is
+	a violation of MMGen's security policy.
+	"""
 
 	_monero_chain_height = None
 	monerod_args = []
@@ -918,14 +927,14 @@ class MMGenToolCmdMonero(MMGenToolCmdBase):
 									xmr_keyaddrfile:str,
 									blockheight:'(default: current height)' = 0,
 									addrs:'(integer range or list)' = ''):
-		"create Monero wallets from key-address list"
+		"create Monero wallets from a key-address list"
 		return self.monero_wallet_ops(  infile = xmr_keyaddrfile,
 										op = 'create',
 										blockheight = blockheight,
 										addrs = addrs)
 
 	def syncmonerowallets(self,xmr_keyaddrfile:str,addrs:'(integer range or list)'=''):
-		"sync Monero wallets from key-address list"
+		"sync Monero wallets from a key-address list"
 		return self.monero_wallet_ops(infile=xmr_keyaddrfile,op='sync',addrs=addrs)
 
 	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[]):

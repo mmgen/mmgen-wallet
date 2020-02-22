@@ -630,9 +630,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def _get_mempool(self):
-		disable_debug()
+		if not g.debug_utf8:
+			disable_debug()
 		ret = self.spawn('mmgen-regtest',['mempool']).read()
-		restore_debug()
+		if not g.debug_utf8:
+			restore_debug()
 		m = re.search(r'(\[\s*"[a-f0-9]{64}"\s*])',ret) # allow for extra output by handler at end
 		return json.loads(m.group(1))
 

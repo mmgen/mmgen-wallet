@@ -158,13 +158,20 @@ class Daemon(MMGenObject):
 		self.stop(silent=silent)
 		return self.start(silent=silent)
 
+	def test_socket(self,host,port,timeout=10):
+		import socket
+		try: socket.create_connection((host,port),timeout=timeout).close()
+		except: return False
+		else: return True
+
 	def wait_for_state(self,req_state):
-		for i in range(200):
+		for i in range(300):
 			if self.state == req_state:
 				return True
 			time.sleep(0.2)
 		else:
-			die(2,'Daemon wait timeout for {} {} exceeded'.format(self.daemon_id.upper(),self.network))
+			m = 'Wait for state {!r} timeout exceeded for daemon {} {}'
+			die(2,m.format(req_state,self.daemon_id.upper(),self.network))
 
 	@classmethod
 	def check_implement(cls):
@@ -221,6 +228,8 @@ class MoneroWalletDaemon(Daemon):
 
 	@property
 	def state(self):
+		if not self.test_socket(g.monero_wallet_rpc_host,self.rpc_port):
+			return 'stopped'
 		from mmgen.rpc import MoneroWalletRPCConnection
 		try:
 			MoneroWalletRPCConnection(
@@ -291,7 +300,11 @@ class CoinDaemon(Daemon):
 		if network == 'regtest':
 			me.desc = 'regtest daemon'
 			if test_suite:
-				rel_datadir = os.path.join('test','data_dir','regtest',daemon_id)
+				rel_datadir = os.path.join(
+					'test',
+					'data_dir{}'.format('-α' if g.debug_utf8 else ''),
+					'regtest',
+					daemon_id )
 			else:
 				me.datadir = os.path.join(g.data_dir_root,'regtest',daemon_id)
 		elif test_suite:
@@ -431,6 +444,8 @@ class MoneroDaemon(CoinDaemon):
 
 	@property
 	def state(self):
+		if not self.test_socket(g.monero_wallet_rpc_host,self.rpc_port):
+			return 'stopped'
 		cp = self.run_cmd(
 			[self.coind_exec]
 			+ self.shared_args

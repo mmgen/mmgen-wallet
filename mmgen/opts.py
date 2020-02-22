@@ -294,10 +294,6 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		if not 'code' in opts_data:
 			opts_data['code'] = {}
 		opts_data['code']['long_options'] = common_opts_data['code']
-		if g.debug_utf8:
-			for k in opts_data:
-				if type(opts_data[k]) == str:
-					opts_data[k] += '-α'
 		mmgen.share.Opts.print_help(opts_data,opt_filter) # exits
 
 	if g.bob or g.alice:

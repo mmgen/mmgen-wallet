@@ -23,7 +23,7 @@ common.py: Shared routines and data for the MMGen test suites
 class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
-import os
+import os,time
 from mmgen.common import *
 from mmgen.devtools import *
 
@@ -166,13 +166,18 @@ def iqmsg_r(s):
 	if not opt.quiet: omsg_r(s)
 
 def start_test_daemons(*network_ids):
+	if hasattr(opt,'no_daemon_autostart') and opt.no_daemon_autostart:
+		return
 	return test_daemons_ops(*network_ids,op='start')
 
 def stop_test_daemons(*network_ids):
+	if hasattr(opt,'no_daemon_stop') and opt.no_daemon_stop:
+		return
 	return test_daemons_ops(*network_ids,op='stop')
 
 def restart_test_daemons(*network_ids):
-	return test_daemons_ops(*network_ids,op='restart')
+	stop_test_daemons(*network_ids)
+	return start_test_daemons(*network_ids)
 
 def test_daemons_ops(*network_ids,op):
 	if opt.no_daemon_autostart:
