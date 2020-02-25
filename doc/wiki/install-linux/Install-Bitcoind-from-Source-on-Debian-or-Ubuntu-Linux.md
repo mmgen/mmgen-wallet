@@ -9,7 +9,7 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 
 	sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-program-options-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev
 
-> You'll also need the following standard dependencies, if they're not already on
+> You’ll also need the following standard dependencies, if they’re not already on
 > your system:
 
 	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libdb-dev libdb++-dev libevent-dev
@@ -31,7 +31,7 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 
 > The '-j4' option will speed the build process up by using 4 cores of a 4-core
 > processor, if you have them.  If overheating issues are a problem for your CPU
-> or you're short on memory, you may want to omit the option or reduce the
+> or you’re short on memory, you may want to omit the option or reduce the
 > number of cores used.
 
 > For more detailed build information, consult the file [doc/build-unix.md][bu]
@@ -64,7 +64,7 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 	$ cd src
 	$ sudo install -sv bitcoind /usr/local/bin/bitcoind-abc
 
-> From now on, you'll invoke the daemon as 'bitcoind-abc' instead of 'bitcoind'.
+> From now on, you’ll invoke the daemon as 'bitcoind-abc' instead of 'bitcoind'.
 
 ### Compile and install Litecoin Core (optional):
 

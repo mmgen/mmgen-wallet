@@ -11,13 +11,13 @@ from which it was derived.
 Subwallets are specified by a “Subseed Index” consisting of:
 
   a) an integer in the range 1-1000000, plus
-  b) an optional single letter, ‘L’ or ‘S’
+  b) an optional single letter, `L` or `S`
 
-The letter designates the length of the subwallet’s seed.  If omitted, ‘L’ is
+The letter designates the length of the subwallet’s seed.  If omitted, `L` is
 assumed.
 
-Long (‘L’) subwallets have the same seed length as their parent wallet
-(typically 256 bits), while short (‘S’) subwallets always have 128-bit seeds.
+Long (`L`) subwallets have the same seed length as their parent wallet
+(typically 256 bits), while short (`S`) subwallets always have 128-bit seeds.
 Long and short subwallets for a given index are derived independently, so both
 may be used.
 
@@ -83,8 +83,8 @@ to a single master wallet and derive all subwallets from this single parent.
 ### Address generation and transaction signing using the parent wallet
 
 A parent wallet may be used to generate keys and addresses for its associated
-subwallets.  Given our above example (a default wallet having subwallet 4S with
-Seed ID 3E885EC4), the following two commands are equivalent:
+subwallets.  Given our above example (a default wallet having subwallet `4S` with
+Seed ID `3E885EC4`), the following two commands are equivalent:
 
 	# Generate ten bech32 addresses from the subwallet:
 	$ mmgen-addrgen --type=bech32 3E885EC4-ABCDEF00[128,3].mmdat 1-10
@@ -121,5 +121,13 @@ wallet’s search like this:
 	$ mmgen-txsign --subseeds=144 *.rawtx
 
 This is basically all you need to know about subwallets.  For live versions of
-the above examples that can be run as-is, see commits 7538a94, d1b8aef and
-82086c9.
+the above examples that can be run as-is, see commits [`7538a94`][c1],
+[`d1b8aef`][c2 ]and [`82086c9`][c3].
+
+For more detailed usage information, see the [`mmgen-subwalletgen` help
+screen][sh].
+
+[c1]: https://github.com/mmgen/mmgen/commit/7538a9460e897b9b23d8ac58853c33713334043f
+[c2]: https://github.com/mmgen/mmgen/commit/d1b8aefde6d3a13337cbe3147d9913eb09b6765b
+[c3]: https://github.com/mmgen/mmgen/commit/82086c9936843dc43c1892b672cdf1680763ee84
+[sh]: https://github.com/mmgen/mmgen/wiki/subwalletgen-[MMGen-command-help]

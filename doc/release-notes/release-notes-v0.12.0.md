@@ -41,7 +41,7 @@ and with the following coin daemon versions:
 
         * Parity crashes on startup on some systems when in developer mode,
         causing the 'eth' test to fail.  This is a problem with Parity, not
-        MMGen.  On cleanly installed systems, Parity and the 'eth' test ran
+        MMGen.  On cleanly installed systems, Parity and the 'eth' test run
         without issue on all tested platforms.
 
 Altcoin address generation has been additionally tested using the following

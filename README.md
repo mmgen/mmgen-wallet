@@ -32,9 +32,10 @@ back it up only once.
 At the heart of the MMGen system is the seed, the “master key” providing access
 to all your crypto assets.  The seed can be stored in many different formats:
 as a password-encrypted wallet (the default), as a one-line base58 or
-hexidecimal seed file, as an Electrum-based mnemonic seed phrase, as a
-brainwallet passphrase, or as “incognito data” hideable within random data in a
-file or block device.  Conversion between all formats is supported.
+hexadecimal seed file, as formatted “dieroll base6” data, as an Electrum-based
+or BIP39 mnemonic seed phrase, as a brainwallet passphrase, or as “incognito
+data” hideable within random data in a file or block device.  Conversion between
+all formats is supported.
 
 ***mmgen-txcreate running in a terminal window***
 ![mmgen-txcreate running in a terminal window][9]
@@ -59,6 +60,10 @@ found in contemporary English poetry.  The high emotional impact of these words
 makes seed phrases easy to memorize.  Curiously, only 861 of them are shared by
 the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 
+Beginning with version 0.12.0, BIP39 mnemonic format is also supported, allowing
+you to use MMGen as a master wallet for other wallets supporting that widespread
+standard.
+
 #### A brief overview of MMGen’s unique feature set:
 
 - **[Full transaction and address tracking support][T]** for Bitcoin, [Bcash][bx],
@@ -78,15 +83,20 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
   sat/byte amounts and can be adjusted interactively, letting you round fees to
   improve anonymity.  Network fee estimation, [RBF][R] and [fee bumping][B] are
   supported.
-- **Support for six wallet formats:** three encrypted (native wallet,
-  brainwallet, incognito wallet) and three unencrypted (mnemonic, mmseed,
-  hexseed).
+- **Support for nine wallet formats:** three encrypted (native wallet,
+  brainwallet, incognito wallet) and six unencrypted (native mnemonic,
+  **BIP39,** mmseed, hexseed, plain hex, dieroll).
+- Interactive **dieroll wallet** generation via `mmgen-walletconv -i dieroll`.
+- Support for new-style **Monero mnemonics** in `mmgen-tool` and `mmgen-passgen`.
 - **[Subwallets][U]:** Subwallets have many applications, the most notable being
   online hot wallets, decoy wallets and travel wallets.  MMGen subwallets are
   functionally and externally identical to ordinary wallets, which provides a
   key security benefit: only the user who generated the subwallet knows that it
   is indeed a subwallet.  Subwallets don’t need to be backed up, as they can
   always be regenerated from their parent.
+- **[XOR (N-of-N) seed splitting][O]** with shares exportable to all MMGen
+  wallet formats.  The [master share][ms] feature allows you to create multiple
+  splits with a single master share.
 - **[Transaction autosigning][X]:** This feature puts your offline signing
   machine into “hands-off” mode, allowing you to transact directly from cold
   storage securely and conveniently.  Additional LED blinking support is
@@ -94,7 +104,7 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 - **[Password generation][G]:** MMGen can be used to generate and manage your
   online passwords.  Password lists are identified by arbitrarily chosen strings
   like “alice@github” or “bob@reddit”.  Passwords of different lengths and
-  formats are supported.
+  formats, including BIP39, are supported.
 - **Selectable seed lengths** of 128, 192 or 256 bits.  Subwallets may have
   shorter seeds than their parent.
 - **User-enhanced entropy:** All operations requiring random data will prompt
@@ -116,6 +126,12 @@ the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 - **Scriptability:** Most MMGen commands can be made non-interactive, allowing
   you to automate repetitive tasks using shell scripts.  Most of the
   `mmgen-tool` utility’s commands can be piped.
+- A convenient [**tool API interface**][ta] that allows you to use MMGen as a
+  crypto library for your Python project.
+
+#### Supported platforms:
+
+Linux, Armbian, Raspbian, Windows/MSYS2
 
 #### Supported platforms:
 
@@ -143,6 +159,12 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 > #### [Altcoin and Forkcoin support (ETH,ETC,XMR,ZEC,LTC,BCH and 144 Bitcoin-derived alts)][F]
 
 > #### [Subwallets][U]
+
+> #### [XOR Seed Splitting][O]
+
+> #### [Test Suite][ts]
+
+> #### [Tool API][ta]
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -183,3 +205,7 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [R]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_rbf
 [B]: https://github.com/mmgen/mmgen/wiki/txbump-[MMGen-command-help]
 [69]: https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
+[O]: https://github.com/mmgen/mmgen/wiki/XOR-Seed-Splitting:-Theory-and-Practice
+[ms]: https://github.com/mmgen/mmgen/wiki/seedsplit-[MMGen-command-help]
+[ta]: https://github.com/mmgen/mmgen/wiki/Tool-API
+[ts]: https://github.com/mmgen/mmgen/wiki/Test-Suite

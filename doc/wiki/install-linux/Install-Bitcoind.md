@@ -7,14 +7,14 @@ machine.
 
 The bitcoin daemon on the **online computer** requires a complete and
 up-to-date blockchain for tracking addresses.  Since its work is more CPU and
-disk intensive, a more powerful computer is required here.  You'll also need
-plenty of free disk space for the growing blockchain (~220GB at the time of
+disk intensive, a more powerful computer is required here.  You’ll also need
+plenty of free disk space for the growing blockchain (~265GB at the time of
 writing).
 
 Two blockchain operations are especially resource-intensive: **synchronizing
 the blockchain** and **importing existing addresses with balances**.  If you
 synchronize often (once a week, for example) and take care to import your
-addresses **before** spending into them, then it's possible to get by with a
+addresses **before** spending into them, then it’s possible to get by with a
 more low-powered computer as your online machine.
 
 ### <a name='a_d'>Download:</a>
@@ -74,7 +74,7 @@ more low-powered computer as your online machine.
 
 > **Windows:**
 
->> In the Windows command-line environment processes don't fork to run in the
+>> In the Windows command-line environment processes don’t fork to run in the
 >> background, so to run multiple daemons simultaneously you must start each
 >> one in a separate terminal window.  Start your daemons like this:
 
@@ -115,11 +115,11 @@ more low-powered computer as your online machine.
 	# Litecoin:
 	$ litecoin-cli help
 
-> Warning: If you're using an existing Bitcoin or Litecoin installation, **move
-> your wallet.dat out of harm's way** before starting the daemon.  The new
+> Warning: If you’re using an existing Bitcoin or Litecoin installation, **move
+> your wallet.dat out of harm’s way** before starting the daemon.  The new
 > wallet now created will be used as your **tracking wallet**.
 
-> If you're connected to the Internet, the daemon(s) will begin downloading and
+> If you’re connected to the Internet, the daemon(s) will begin downloading and
 > verifying the blockchain.  This can take from several hours to several days
 > depending on the speed of your computer, the size of the blockchain(s) in
 > question and your Internet connection.  You can speed up your initial block
@@ -137,4 +137,4 @@ more low-powered computer as your online machine.
 [bd]: https://bitcoin.org/bin/blockchain/
 [05]: Editing-the-user-path-in-Windows
 [abc]: https://download.bitcoinabc.org/
-[lc]: https://download.litecoin.org/litecoin-0.15.0.1rc1/
+[lc]: https://download.litecoin.org/litecoin-0.17.1/

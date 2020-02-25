@@ -17,15 +17,19 @@
 #### [Additional Features](#a_af)
 * [Using the mnemonic, seed and hexseed formats](#a_ms)
 * [Mnemonics, seeds and hexseeds: additional information](#a_ai)
+* [Die roll wallet generation](#a_dr)
+* [BIP39 mnemonic support](#a_39)
+* [Monero mnemonic support](#a_mm)
 * [Incognito wallets](#a_ic)
 	* [Hidden incognito wallets](#a_hi)
 
 #### [Advanced Topics](#a_at)
-* [Hot wallets and key-address files](#a_hw)
+* [Hot wallets](#a_hw)
 * [Transaction Fees](#a_fee)
 * [BIP 125 replace-by-fee (RBF) transactions](#a_rbf)
 	* [With an online (hot) wallet](#a_rbf_onl)
 	* [With an offline (cold storage) wallet](#a_rbf_onf)
+* [Keeping your installation up to date](#a_utd)
 
 ### <a name='a_i'>Preliminaries</a>
 
@@ -33,8 +37,8 @@
 
 Before you begin, note that the filenames, seed IDs and Bitcoin addresses used
 in this primer are intentionally invalid and are for purposes of illustration
-only.  As you perform the exercises, you'll naturally substitute real ones in
-their place.
+only.  As you perform the exercises, you will substitute real ones in their
+place.
 
 The up arrow (for repeating commands) and tab key (or Ctrl-I) (for completing
 commands and filenames) will speed up your work at the command line greatly.
@@ -42,8 +46,8 @@ commands and filenames) will speed up your work at the command line greatly.
 #### <a name='a_iv'>Invocation</a>
 
 The MMGen wallet system is not a single program but a suite of lightweight
-commands run from the command line.  MMGen's commands all begin, not
-surprisingly, with 'mmgen'.  To see a list of available commands, type 'mmgen'
+commands run from the command line.  MMGen’s commands all begin, not
+surprisingly, with `mmgen`.  To see a list of available commands, type `mmgen`
 followed by the TAB key.  Every mmgen command has a help screen displaying
 detailed usage and options information.  To view it, type the command name
 followed by `--help`.  Note that most command options have long and short
@@ -58,7 +62,7 @@ essential information.  These options are available for all MMGen commands.  The
 information and can be used to make some commands non-interactive and scriptable.
 
 Certain options require parameters, such as the `--seed-len` option, for
-instance, which takes a parameter of '128', '192' or '256'.  Commands may also
+instance, which takes a parameter of `128`, `192` or `256`.  Commands may also
 take optional or required arguments.  For example, `mmgen-addrgen` requires an
 address or range of addresses as an argument.  Arguments must always follow
 options on the command line.
@@ -73,36 +77,36 @@ Sample MMGen command invocations:
 #### <a name='a_cf'>Configuration file</a>
 
 Just like Bitcoin Core, MMGen has its own data directory and configuration file.
-The data directory is '.mmgen' in the user's home directory and the config
-file is 'mmgen.cfg'.  The config file contains global settings which you may
+The data directory is `.mmgen` in the user’s home directory and the config
+file is `mmgen.cfg`.  The config file contains global settings which you may
 wish to edit at some point to customize your installation.  These settings
 include the maximum transaction fee; the user name, password and hostname
 used for communicating with bitcoind; and a number of others.
 
 #### <a name='a_ts'>Bob and Alice regtest mode</a>
 
-If you just want to quickly try out MMGen, it's possible to perform all wallet
+If you just want to quickly try out MMGen, it’s possible to perform all wallet
 generation, wallet format conversion, address and key generation, and address
 import operations on an offline computer with no blockchain and no bitcoin
 balance.
 
 If you want to practice creating, signing and sending transactions with real
-bitcoins, however, you'll need a fully synced blockchain and some coins to play
+bitcoins, however, you’ll need a fully synced blockchain and some coins to play
 with.  This involves an expenditure of both time and money.
 
-Fortunately, there's an alternative: MMGen's **regtest mode** creates a virtual
+Fortunately, there’s an alternative: MMGen’s **regtest mode** creates a virtual
 network of two users, Bob and Alice, who transact with each other on a private
-blockchain.  All of MMGen's functionality is available in regtest mode, making
+blockchain.  All of MMGen’s functionality is available in regtest mode, making
 it an ideal way to learn to use the MMGen wallet without risking real coins.
 You may wish to pause here and perform the steps in the tutorial [MMGen Quick
-Start with Regtest Mode][06] before continuing on.
+Start with Regtest Mode][04] before continuing on.
 
 ### <a name='a_bo'>Basic Operations</a>
 
 #### <a name='a_gw'>Generate an MMGen wallet (offline computer)</a>
 
 *NOTE: MMGen supports a “default wallet” feature.  After generating your wallet,
-you'll be prompted to make it your default.  If you answer 'y', the wallet will
+you’ll be prompted to make it your default.  If you answer ‘y’, the wallet will
 be stored in your MMGen data directory and used for all future commands that
 require a wallet or other seed source.*
 
@@ -111,7 +115,7 @@ location other than your MMGen data directory.  Otherwise, it’s recommended,
 as it frees you from having to type your wallet filename on the command line.*
 
 *The following examples suppose that you’ve chosen to use a default wallet.
-If you haven't, then you must include the path to a wallet file or other seed
+If you haven’t, then you must include the path to a wallet file or other seed
 source in all commands where a seed source is required.*
 
 On your offline computer, generate an MMGen wallet:
@@ -120,15 +124,15 @@ On your offline computer, generate an MMGen wallet:
 	...
 	MMGen wallet written to file '/home/username/.mmgen/89ABCDEF-76543210[256,3].mmdat'
 
-‘89ABCDEF’ is the Seed ID; ‘76543210’ is the Key ID. These are randomly
+`89ABCDEF` is the Seed ID; `76543210` is the Key ID. These are randomly
 generated, so your IDs will of course be different than these.
 
 The Seed ID never changes and is used to identify all keys/addresses generated
-by this wallet.  Since it's your wallet's primary identifier, you should
+by this wallet.  Since it’s your wallet’s primary identifier, you should
 memorize it visually.  The Key ID changes whenever the wallet’s password or hash
-preset are changed and doesn't need to be memorized.
+preset are changed and doesn’t need to be memorized.
 
-‘256’ is the seed length; ‘3’ is the scrypt hash preset.  These values are
+`256` is the seed length; `3` is the scrypt hash preset.  These values are
 configurable: type `mmgen-walletgen --help` for details.
 
 Before moving any funds into your MMGen wallet, you should back it up in several
@@ -143,9 +147,9 @@ printed out on paper.
 
 Another highly recommended way to back up your wallet is to generate a mnemonic
 or seed file [as described below](#a_ms) and memorize it.  If you have an
-average or better memory, you'll find memorizing your mnemonic to be
+average or better memory, you’ll find memorizing your mnemonic to be
 surprisingly easy. And the peace of mind that comes with knowing that your coins
-are recoverable **even if you lose all your physical backups** can't be
+are recoverable **even if you lose all your physical backups** can’t be
 overestimated.
 
 #### <a name='a_ga'>Generate addresses (offline computer)</a>
@@ -170,12 +174,12 @@ Now generate ten Segwit-P2SH addresses with your just-created wallet:
 	  10   3H7vVTk4ejUbQXw45I6g5qvPBSe9bsjDqh
 	}
 
-Note that the address range ‘1-10’ specified on the command line is included in
+Note that the address range `1-10` specified on the command line is included in
 the resulting filename.
 
-MMGen currently supports four Bitcoin address types: ‘legacy’ (uncompressed
-P2PKH), ‘compressed’ (compressed P2PKH), ‘segwit’ (P2SH-P2WPKH) and ‘bech32’
-(native Segwit), denoted by the code letters ‘L’, ‘C’, ‘S’ and ‘B’ respectively.
+MMGen currently supports four Bitcoin address types: `legacy` (uncompressed
+P2PKH), `compressed` (compressed P2PKH), `segwit` (P2SH-P2WPKH) and `bech32`
+(native Segwit), denoted by the code letters `L`, `C`, `S` and `B` respectively.
 Address types can be referred to either in full or by code letter.  To generate
 Bech32 addresses, for example, you can specify either `--type=bech32` or
 `--type=B` on the command line.
@@ -183,8 +187,8 @@ Bech32 addresses, for example, you can specify either `--type=bech32` or
 For backwards compatibility, legacy addresses are generated by default, but this
 is probably not what you want unless you have a very old MMGen installation
 created before compressed address support was added.  Most new users will wish
-to generate either Segwit-P2SH (‘S’) or Bech32 (‘B’) addresses instead.  For
-BCH, which lacks Segwit support, compressed (‘C’) addresses are the best choice.
+to generate either Segwit-P2SH (`S`) or Bech32 (`B`) addresses instead.  For
+BCH, which lacks Segwit support, compressed (`C`) addresses are the best choice.
 
 Generation examples for various address types:
 
@@ -218,7 +222,7 @@ filename.
 To fund your MMGen wallet, first import the addresses into your tracking wallet
 and then spend some BTC into any of them.  If you run out of addresses, generate
 more.  To generate a hundred addresses you’d specify an address range of
-‘1-100’.
+`1-100`.
 
 Let’s say you’ve decided to spend some BTC into the first four addresses above.
 Begin by importing these addresses into the tracking wallet on your online
@@ -250,7 +254,7 @@ adding labels to the addresses you’ve chosen to spend to:
 	  10   3H7vVTk4ejUbQXw45I6g5qvPBSe9bsjDqh
 	}
 
-Any line beginning with ‘#’ is a comment.  Comments may be placed at the ends
+Any line beginning with `#` is a comment.  Comments may be placed at the ends
 of lines as well.
 
 Save the file, copy it onto a USB stick and transfer it to your online computer.
@@ -258,8 +262,8 @@ Save the file, copy it onto a USB stick and transfer it to your online computer.
 #### <a name='a_ia'>Import addresses (online computer)</a>
 
 On your online computer, go to your bitcoind data directory and move any
-existing 'wallet.dat' file out of harm’s way.  Start bitcoind and let it
-generate a new 'wallet.dat'; this you’ll use as your tracking wallet.  Import
+existing `wallet.dat` file out of harm’s way.  Start bitcoind and let it
+generate a new `wallet.dat`; this you’ll use as your tracking wallet.  Import
 your ten addresses into the new tracking wallet with the command:
 
 	$ mmgen-addrimport --batch my.addrs
@@ -287,10 +291,10 @@ addresses where the funds are stored in a separate file to use during signing.*
 
 Note that each address has a unique ID (the ‘MMGen ID’) consisting of a Seed ID,
 address type code letter, and index.  Addresses of different types may be
-imported into the same tracking wallet, and since they're generated from different
-sub-seeds you needn't worry about key reuse.  For example, the addresses
+imported into the same tracking wallet, and since they’re generated from different
+sub-seeds you needn’t worry about key reuse.  For example, the addresses
 `89ABCDEF:S:1` and `89ABCDEF:B:1` are cryptographically distinct: no one but the
-wallet's owner can see that they were generated from the same seed.
+wallet’s owner can see that they were generated from the same seed.
 
 Now that your addresses are being tracked, you may go ahead and send some BTC to
 them over the Bitcoin network.  If you send 0.1, 0.2, 0.3 and 0.4 BTC
@@ -310,36 +314,36 @@ have confirmed:
 Now that you have some BTC under MMGen’s control, you’re ready to create a
 transaction.  Note that transactions are harmless until they’re signed and
 broadcast to the network, so feel free to experiment and create transactions
-with different combinations of inputs and outputs.  Of course, if you're using
+with different combinations of inputs and outputs.  Of course, if you’re using
 testnet or regtest mode, then you risk nothing even when broadcasting
 transactions.
 
-To send 0.1 BTC to the a third-party address 3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,
-for example, and send the change back to yourself at address 89ABCDEF:S:5, you’d
-issue the following command:
+To send 0.1 BTC to the a third-party address
+`3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc`, for example, and send the change back to
+yourself at address `89ABCDEF:S:5`, you’d issue the following command:
 
 	$ mmgen-txcreate 3AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 89ABCDEF:S:5
 
-'mmgen-txcreate' accepts either MMGen IDs or Bitcoin addresses as arguments.
+`mmgen-txcreate` accepts either MMGen IDs or Bitcoin addresses as arguments.
 
 NOTE: For backwards compatibility, legacy addresses may omit the code letter
-from the MMGen ID.  Thus address ‘89ABCDEF:L:5’ may be expressed as
-‘89ABCDEF:5’.  For other address types the code letter is mandatory.
+from the MMGen ID.  Thus address `89ABCDEF:L:5` may be expressed as
+`89ABCDEF:5`.  For other address types the code letter is mandatory.
 
-To send 0.1 BTC to each of addresses 89ABCDEF:S:6 and 89ABCDEF:S:7 and return
-the change to 89ABCDEF:S:8, you’d do this:
+To send 0.1 BTC to each of addresses `89ABCDEF:S:6` and `89ABCDEF:S:7` and return
+the change to `89ABCDEF:S:8`, you’d do this:
 
 	$ mmgen-txcreate 89ABCDEF:S:6,0.1 89ABCDEF:S:7,0.1 89ABCDEF:S:8
 
 As you can see, each send address is followed by a comma and the amount.  The
 address with no amount is the change address.  All addresses belonging to your
 seed in the above examples are already imported and tracked, so you’re OK.  If
-you wanted to send to 89ABCDEF:S:11, you'd have to import it first.
+you wanted to send to `89ABCDEF:S:11`, you’d have to import it first.
 
 
 Let’s go with the first of our two examples above.
 
-Upon invocation, the 'mmgen-txcreate' command shows you a list of your
+Upon invocation, the `mmgen-txcreate` command shows you a list of your
 unspent outputs along with a menu allowing you to sort the outputs by four
 criteria: transaction ID, address, amount and transaction age.  Your overall
 balance in BTC appears at the top of the screen.  In our example, the display
@@ -356,7 +360,7 @@ will look something like this:
 	Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
 	'q'=quit view, 'p'=print to file, 'v'=pager view, 'w'=wide view, 'l'=add label:
 
-After quitting the menu with 'q', you’ll see the following prompt:
+After quitting the menu with ‘q’, you’ll see the following prompt:
 
 	Enter a range or space-separated list of outputs to spend:
 
@@ -383,12 +387,12 @@ using your default wallet:
 	...
 	Signed transaction written to file 'FEDCBA[0.1].sigtx'
 
-Note that the signed transaction file has a new extension, '.sigtx'.
+Note that the signed transaction file has a new extension, `.sigtx`.
 
 #### <a name='a_st'>Send a transaction (online computer)</a>
 
 Now you’re ready for the final step: broadcasting the transaction to the
-network.  Start bitcoind if it's not already running, and make sure your
+network.  Start bitcoind if it’s not already running, and make sure your
 blockchain is fully synced.  Then copy the signed transaction file to your
 online computer and issue the command:
 
@@ -396,9 +400,9 @@ online computer and issue the command:
 	...
 	Transaction sent: abcd1234....
 
-Like all MMGen commands, 'mmgen-txsend' is interactive, so you’ll be prompted
+Like all MMGen commands, `mmgen-txsend` is interactive, so you’ll be prompted
 before the transaction is actually broadcast.  If the send was successful, a
-64-character hexadecimal Bitcoin Transaction ID will be displayed ('abcd1234...'
+64-character hexadecimal Bitcoin Transaction ID will be displayed (`abcd1234...`
 in our case).
 
 Once the transaction is broadcast to the network and confirmed, your address
@@ -437,11 +441,11 @@ Using your default wallet from the exercises above, generate a mnemonic:
 Since our seed is 256 bits long, the mnemonic contains 24 words.  128-bit and
 192-bit seeds generate shorter mnemonics of 12 and 18 words, respectively.
 Wallets with these seed lengths can be generated using the `--seed-len` option
-to 'mmgen-walletgen'.
+to `mmgen-walletgen`.
 
 Though some consider 128 bits of entropy to provide adequate security for the
 foreseeable future, it’s advisable to stick to the default 256-bit seed length.
-You'll find that even a 24-word mnemonic is not difficult to memorize.
+You’ll find that even a 24-word mnemonic is not difficult to memorize.
 
 NOTE: MMGen mnemonics are generated from the Electrum wordlist, but using
 ordinary base conversion instead of Electrum’s more complicated algorithm.
@@ -470,7 +474,7 @@ Note that the regenerated wallet has a different Key ID but of course the same
 Seed ID.
 
 An alternative to mnemonics, seed files provide yet another way of representing
-your seed.  They bear the extension '.mmseed' and are generated exactly the same
+your seed.  They bear the extension `.mmseed` and are generated exactly the same
 way as mnemonic files:
 
 	$ mmgen-walletconv -o seed
@@ -500,14 +504,14 @@ a simple Unix shell command:
 	$ echo -n XnyC NfPH piuW dQ2d nM47 VU | tr -d ' '| sha256sum | cut -c 1-6
 	0fe02f
 
-Or you can do the same thing with 'mmgen-tool':
+Or you can do the same thing with `mmgen-tool`:
 
 	$ mmgen-tool str2id6 'XnyC NfPH piuW dQ2d nM47 VU'
 	0fe02f
 
 Beginning with version 0.9.0, MMGen also supports seed files in hexadecimal
 (hexseed) format.  Hexseed files are identical to seed files but encoded in
-hexadecimal rather than base 58.  They bear the extension '.mmhex':
+hexadecimal rather than base 58.  They bear the extension `.mmhex`:
 
 	$ cat FE3C6545.mmhex
 	afc3fe 456d 7f5f 1c4b fe3b c916 b875 60ae 6a3e
@@ -525,8 +529,10 @@ tutorial][03].
 #### <a name='a_ai'>Mnemonics, seeds and hexseeds: additional information</a>
 
 All MMGen commands that take mnemonic, seed or hexseed data may receive the data
-from a prompt instead of a file.  Just omit the file name and specify the input
-format:
+interactively from the user instead of from a file.  This feature allows you to
+store your seed entirely in your head if you wish and never record it on a
+physical medium.  To input your seed data at the prompt, just specify an input
+format instead of a file name:
 
 	$ mmgen-addrgen -i words 1-10
 	...
@@ -535,24 +541,70 @@ format:
 	Enter your 12-word mnemonic, hitting RETURN or SPACE after each word:
 	Enter word #1:
 
-MMGen prompts you for each of the mnemonic's words individually, checking it for
-validity and reprompting if necessary.  What you type is not displayed on the
-screen of course, being secret data.
+Here MMGen prompts you interactively for each word of the seed phrase, checking
+it for validity and reprompting if necessary.  The words are not displayed on
+the screen.
 
-The mnemonic prompt feature allows you to store and use your seed entirely in
-your head if you wish, never recording it on a persistent physical medium.
-
-With the `-S` option, MMGen commands may be requested to print wallet data to
-screen instead of a file.  To safeguard against over-the-shoulder, Tempest and
-other side-channel attacks, you’ll be prompted before this sensitive data is
-actually displayed.  MMGen never prints decrypted private data to screen unless
-you ask it to.
+As a safeguard against over-the-shoulder, Tempest and other side-channel
+attacks, MMGen never outputs secret data to the screen, unless you ask it to
+with the `--stdout` or `-S` option.  When using this option, you’ll still be
+prompted before the secret data is actually displayed.  This safety prompt is
+overridden by the `--quiet` option, however, so you must always think twice
+before using `--stdout`.
 
 The output of any MMGen command may be written to a directory of your choice
-using the `-d` option.  For example, on a Linux system you can use
-`-d /dev/shm` to write keys and seeds to volatile memory instead of disk,
-ensuring that no trace of secret data remains once your computer’s been
+using the `--outdir` or `-d` option.  For example, on a Linux system you can use
+`--outdir=/dev/shm` to write keys and seeds to volatile memory instead of disk,
+ensuring that no trace of your secret data remains once your computer’s been
 powered down.
+
+#### <a name='a_dr'>Die roll wallet generation</a>
+
+Interactive dieroll wallet generation works just like the interactive mnemonic
+input described in the preceding section.  To generate a new dieroll wallet,
+type:
+
+	$ mmgen-walletconv -i dieroll
+
+To save the wallet in a format of your choice, use the `-o` option:
+
+	$ mmgen-walletconv -i dieroll -o bip39
+
+50, 75 and 100 rolls of the die are required to create 128, 192 and 256-bit
+seeds, respectively.
+
+#### <a name='a_39'>BIP39 support</a>
+
+BIP39 mnemonic support and usage is identical to that for native MMGen mnemonics
+described above.  Just use the `bip39` format specifier and extension instead of
+`words`.
+
+Convert an MMGen native mnemonic wallet to BIP39:
+
+	$ mmgen-walletconv -o bip39 mywallet.words
+
+Restore an MMGen wallet from a BIP39 seed phrase in a file:
+
+	$ mmgen-walletconv seed.bip39
+
+#### <a name='a_mm'>Monero mnemonic support</a>
+
+MMGen has limited support for Monero new-style mnemonics.  While they can’t be
+used as wallets, they’re supported as a password format by the `mmgen-passgen`
+command and can be converted to and from hex data by the `mmgen-tool` mnemonic
+commands.  The format specifier and extension is `xmrseed`.  Only 25-word
+mnemonics (256-bit keys) are supported.  Key data is reduced in accordance with
+the Monero protocol before conversion, so the resulting mnemonics are guaranteed
+to be canonical.
+
+Generate a random Monero seed phrase:
+
+	$ mmgen-tool mn_rand256 fmt=xmrseed
+
+Generate a list of passwords in Monero mnemonic format with ID 'foo' from your
+default wallet:
+
+	$ mmgen-passgen -f xmrseed 'foo' 1-10
 
 #### <a name='a_ic'>Incognito wallets</a>
 
@@ -563,14 +615,14 @@ the wallet is hidden, or whether the file or partition contains anything of
 interest at all, for that matter.
 
 An incognito wallet with a reasonably secure password could even be hidden on
-unencrypted cloud storage.  Hiding your wallet at some offset in a 1 GB file
+unencrypted cloud storage.  Hiding your wallet at some offset in a 1GB file
 increases the difficulty of any attack by a factor of one billion, assuming
 again that any potential attacker even knows or suspects you have an MMGen
 wallet hidden there.
 
 If you plan to store your incognito wallet in an insecure location such as cloud
 storage, you’re advised to use a strong scrypt (hash) preset and a strong
-password.  These can be changed using the 'mmgen-passchg' utility:
+password.  These can be changed using the `mmgen-passchg` utility:
 
 	$ mmgen-passchg -p 5 89ABCDEF-01234567[256,3].mmdat
 	...
@@ -583,7 +635,7 @@ password.  These can be changed using the 'mmgen-passchg' utility:
 	MMGen wallet written to file '89ABCDEF-87654321[256,5].mmdat'
 
 The scrypt preset is the numeral in the wallet filename following the seed
-length.  As you can see, it’s now changed to '5'.  Now export your new toughened
+length.  As you can see, it’s now changed to `5`.  Now export your new toughened
 wallet to incognito format, using the `-k` option to leave the passphrase
 unchanged:
 
@@ -637,7 +689,7 @@ MMGen wallet, mnemonic or seed file to generate addresses and sign transactions:
 With the `-o hincog` option, incognito wallet data can be created and hidden at
 a specified offset in a file or partition in a single convenient operation, with
 the random file being created automatically if necessary.  Here’s how you’d
-create a 1GB file 'random.dat' and hide a wallet in it at offset 123456789:
+create a 1GB file `random.dat` and hide a wallet in it at offset `123456789`:
 
 	$ mmgen-walletconv -k -o hincog -J random.dat,123456789 89ABCDEF-87654321[256,5].mmdat
 	...
@@ -649,8 +701,8 @@ create a 1GB file 'random.dat' and hide a wallet in it at offset 123456789:
 	Data written to file 'random.dat' at offset 123456789
 
 Your ‘random’ file can now be uploaded to a cloud storage service, for example,
-or some other location on the Net, preferably non-public one (in a real-life
-situation you will choose a less obvious offset than '123456789' though, won’t
+or some other, preferably non-public, location on the Internet (in a real-life
+situation you will choose a less obvious offset than `123456789` though, won’t
 you?).
 
 Now let’s say at some point in the future you download this file to recover
@@ -679,75 +731,83 @@ Transaction signing uses the same syntax:
 
 ### <a name='a_at'>Advanced Topics</a>
 
-#### <a name='a_hw'>Hot wallets and key-address files</a>
+#### <a name='a_hw'>Hot wallets</a>
 
-Chances are you'll want to use MMGen not only for cold storage but for
-day-to-day transactions too.  For this you'll need to place a portion of your
-funds in a “hot wallet” on your online computer.  With hot wallet funds you
-can use the command `mmgen-txdo` to quickly create, sign and send transactions
-in one operation.
+Chances are you’ll want to use MMGen not only for cold storage but for
+day-to-day transactions too.  For this you’ll need to place a portion of your
+funds in a “hot wallet” on your online computer.  With a hot wallet you can use
+the command `mmgen-txdo` to quickly create, sign and send transactions in one
+operation.
 
-There are two hot wallet strategies you can use.  The first is to generate a
-separate MMGen wallet on your online computer for use as the hot wallet.  The
-advantage of this is convenience: you won't have to specify a wallet or seed
-source on the command line.  In addition, your hot wallet and cold wallet funds
-will be easily distinguishable in your tracking wallet by their different Seed
-IDs.  The drawback of this strategy is that you now have two seeds that need
-backing up or memorizing.
+*Note: prior to Version 0.11.0, MMGen implemented hot wallets using [key-address
+files][05], but these have now been obsoleted by [subwallets][06].  Information
+on key-address files is archived [here][05] for the benefit of legacy
+installations only.*
 
-The other strategy, which avoids this drawback, is to partition your cold wallet
-by mentally setting aside “hot” and “cold” address ranges.  For example, you
-might choose to reserve all addresses in the range 1-1000 for cold storage and
-everything above that for your hot wallet.
+*Additional note: instead of using a hot wallet, you might consider setting up
+[transaction autosigning][07] on your offline machine.  Autosigning makes it
+possible to transact directly from cold storage in a secure and convenient way.
+Autosigning is available for Linux-based systems only and works best with
+Raspberry Pi and similar devices, for which LED support is provided.*
 
-The next step is to create a key-address file for a sufficient number of “hot”
-addresses to cover your day-to-day transaction needs for the foreseeable future.
-A key-address file is just like an address file except that it contains keys as
-well as addresses, thus functioning as a hot wallet for a range of addresses.
-Assuming your hot address range begins at 1001, you could start by creating a
-key-address file for a hundred hot addresses like this:
+Setting up a hot wallet is easy.  Using the [Subwallets][06] wiki page as your
+guide, generate a subwallet on your offline machine for use as a hot wallet.
+Since this wallet is going to be used in an online environment, make sure it’s
+protected with a strong password and hash preset.
 
-	$ mmgen-keygen --type=segwit 1001-1100
+	$ mmgen-subwalletgen -p5 1L
 	...
-	Secret keys written to file '89ABCDEF-S[1001-1100].akeys.mmenc'
+	MMGen wallet written to file 'FC9A8735-ABCDEF00[256,5].mmdat'
 
-`mmgen-keygen` prompts you for a password to encrypt the key-address file with.
-This is a wise precaution, as it provides at least some security for keys that
-will be stored on an online machine.
+Copy the subwallet to a USB stick or other removable device.
 
-Now copy the key-address file to your online machine and import the addresses
-into your tracking wallet:
+Now on your online computer, check your MMGen data directory for the presence of
+wallet files:
 
-	$ mmgen-addrimport --batch --keyaddr-file '89ABCDEF-S[1001-1100].akeys.mmenc'
+	$ ls $HOME/.mmgen/*.mmdat
 
-After funding your hot wallet by spending into some addresses in this range you
-can do quickie transactions with these funds using the `mmgen-txdo` command:
+If any are present (there shouldn’t be if you’ve been following this guide!),
+move them out of harm’s way, or copy them to a backup location and securely
+delete the originals with `wipe` or `sdelete` if they’re securing any funds.
 
-	$ mmgen-txdo -M '89ABCDEF-S[1001-1100].akeys.mmenc' 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 89ABCDEF:S:1010
+Copy the subwallet file to your MMGen data directory, making it your default
+wallet for the online machine:
+
+	$ cp 'FC9A8735-ABCDEF00[256,5].mmdat' $HOME/.mmgen
+
+Securely delete the original file.
+
+Generate a range of addresses with your online default wallet/subwallet and
+import them into your tracking wallet: 
+
+	$ mmgen-addrgen --type=bech32 1-10
+	$ mmgen-addrimport FC9A8735-B*.addrs
+
+Send some coins to an address or addresses in this range using your method of
+choice.
+
+Now you can spend from these addresses using `mmgen-txdo`, creating, signing
+and sending transactions in one operation:
+
+	$ mmgen-txdo 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 FC9A8735:S:2
+	(choose an input from wallet FC9A8735)
 	...
-	Transaction sent: dcea1357....
+	Transaction sent: abcd1234....
 
-The `--mmgen-keys-from-file` or `-M` option is required when using a key-address
-file in place of a default wallet.  Note that your change address
-89ABCDEF:S:1010 is within the range covered by the key-address file, so your
-change funds will remain “hot spendable”.
-
-Using `mmgen-txdo` with a default online hot wallet is even simpler.  For a hot
-wallet with Seed ID 0FDE89AB, for instance, creating and sending a transaction
-would look like this:
-
-	$ mmgen-txdo 1AmkUxrfy5dMrfmeYwTxLxfIswUCcpeysc,0.1 0FDE89AB:S:10
-
+Bear in mind that your subwallet/online default wallet doesn’t require a backup,
+as it can always be regenerated from its offline parent.  If you ever wish to
+delete it, however, you should do so securely if there are still funds under its
+control.
 
 #### <a name='a_fee'>Transaction Fees</a>
 
 MMGen gives you several options for dealing with transaction fees.
 
 Firstly, and most simply, you may do nothing, in which case MMGen will calculate
-the fee automatically using bitcoind’s 'estimatefee' RPC call.  You can adjust
+the fee automatically using bitcoind’s `estimatefee` RPC call.  You can adjust
 the estimated fee by any factor using the `--tx-fee-adj` option, a handy feature
 when you need transactions to confirm a bit more quickly.  MMGen has no default
-fee, so if network fee estimation fails for any reason, you'll be prompted to
+fee, so if network fee estimation fails for any reason, you’ll be prompted to
 enter the fee manually.
 
 Secondly, you may specify the fee as an absolute BTC amount (a decimal number).
@@ -757,8 +817,8 @@ creating transactions with `mmgen-txcreate`, `mmgen-txdo` or `mmgen-txbump`.
 Thirdly, instead of using an absolute BTC amount, you may specify the fee in
 satoshis per byte and let MMGen calculate the fee based on the transaction size.
 This also works both on the command line and at the interactive prompt.  The
-satoshis-per-byte specification is an integer followed by the letter 's'.  A fee
-of 90 satoshis per byte is thus represented as '90s'.
+satoshis-per-byte specification is an integer followed by the letter `s`.  A fee
+of 90 satoshis per byte is thus represented as `90s`.
 
 MMGen has a hard maximum fee (currently 0.003 BTC) which is alterable only in the
 config file.  Thus MMGen will never create or broadcast any transaction with a
@@ -777,7 +837,7 @@ creating replacement transactions from existing replaceable ones.
 `mmgen-txbump` can create, sign and send transactions in a single operation if
 desired.
 
-Continuing the examples from our primer above, we'll examine two RBF scenarios,
+Continuing the examples from our primer above, we’ll examine two RBF scenarios,
 one for a hot wallet and one for a cold storage wallet.  In the first scenario,
 initial and replacement transactions will be created, signed and sent in one
 operation.  In the second, a batch of replacement transactions with
@@ -794,8 +854,8 @@ satoshis per byte:
 	...
 	Transaction sent: dcba4321....
 
-Here you've sent 0.1 BTC to a third-party address and the change back to
-yourself at address #5 of your default hot wallet with Seed ID 0FDE89AB.
+Here you’ve sent 0.1 BTC to a third-party address and the change back to
+yourself at address #5 of your default hot wallet with Seed ID `0FDE89AB`.
 
 Note that the fee is shown in the filename after the send amount.  The presence
 of the fee in the filename identifies the transaction as replaceable.
@@ -810,20 +870,17 @@ and send a replacement transaction with a higher fee, say 100 satoshis per byte:
 	Transaction sent: eef01357....
 
 The `--send` switch instructs `mmgen-txbump` to sign and send the transaction
-after creating it.  The `--output-to-reduce` switch with an argument of 'c'
-requests that the increased fee be deducted from the change ('c') output, which
+after creating it.  The `--output-to-reduce` switch with an argument of `c`
+requests that the increased fee be deducted from the change (`c`) output, which
 is usually what is desired.  If you want it taken from some other output,
 identify the output by number.  Note that the resulting replacement transaction
-has a different identifier, since it's a new transaction.
+has a different identifier, since it’s a new transaction.
 
 If this transaction also fails to confirm, then repeat the above step as many
 times as necessary to get a confirmation, increasing the fee each time.  The
 only thing you have to modify with each iteration is the argument to `--tx-fee`.
 To reduce your typing even further, use the `--yes` switch to skip all
 non-essential prompts.
-
-Note that if you're using a key-address file instead of a default hot wallet,
-you'll need to supply it on the command line as a parameter to the `-M` option.
 
 #### <a name='a_rbf_onf'>With an offline (cold storage) wallet</a>
 
@@ -858,12 +915,53 @@ Copy the files to an empty folder, transfer the folder to your offline machine a
 Then copy the signed transaction files back to your online machine and broadcast
 them in turn until you get a confirmation:
 
-	$ mmgen-txsend FEDCBC[0.1,50].sigtx   # ...if this doesn't confirm, then
-	$ mmgen-txsend 3EBB00[0.1,100].sigtx  # ...if this doesn't confirm, then
-	$ mmgen-txsend 124FFF[0.1,150].sigtx  # ...if this doesn't confirm, then
+	$ mmgen-txsend FEDCBC[0.1,50].sigtx   # ...if this doesn’t confirm, then
+	$ mmgen-txsend 3EBB00[0.1,100].sigtx  # ...if this doesn’t confirm, then
+	$ mmgen-txsend 124FFF[0.1,150].sigtx  # ...if this doesn’t confirm, then
 	$ mmgen-txsend 73DABB[0.1,200].sigtx
+
+#### <a name='a_utd'>Keeping your installation up to date</a>
+
+To make sure you have all the latest features and bugfixes, it’s a good idea to
+keep your MMGen installation upgraded to the latest version.  MMGen does no
+checking for updates itself, so the following steps should be performed by you
+on a periodic basis.
+
+If you’ve deleted or lost your local copy of the MMGen repository, clone it
+again from Github or Gitlab:
+
+	$ git clone https://github.com/mmgen/mmgen.git # Github
+	$ git clone https://gitlab.com/mmgen/mmgen.git # Gitlab
+
+Enter the repository and check out the master branch.  Pull the latest changes
+from the remote repository:
+
+	$ cd mmgen
+	$ git checkout master
+	$ git pull
+
+Check out the current stable version for your operating system:
+
+	$ git checkout stable_linux # for Linux-based systems
+	$ git checkout stable_msys2 # for Microsoft Windows / MSYS2 systems
+
+Note that if you want to try out the latest “bleeding edge” (and possibly
+unstable) features, you can just remain on the master branch and omit the
+preceding step.  Information on recently added features can be found by typing
+`git log` or visiting the commits page on [Github][hc] or [Gitlab][lc].
+
+Check the latest release notes in `doc/release-notes` and make note of any new
+features or requirements.  Now perform the install:
+
+	$ sudo ./setup.py install # Linux
+	$ ./setup.py install      # Windows / MSYS2
 
 [01]: Tracking-and-spending-ordinary-Bitcoin-addresses
 [02]: https://tpfaucet.appspot.com
 [03]: Recovering-Your-Keys-Without-the-MMGen-Software
-[06]: MMGen-Quick-Start-with-Regtest-Mode
+[04]: MMGen-Quick-Start-with-Regtest-Mode
+[05]: Key-address-files
+[06]: Subwallets
+[07]: autosign-[MMGen-command-help]
+[hc]: https://github.com/mmgen/mmgen/commits/master
+[lc]: https://gitlab.com/mmgen/mmgen/commits/master

@@ -26,17 +26,22 @@ MMGen uses Parity to communicate with the Ethereum blockchain.  For information
 on installing Parity on your system, visit the Parity Ethereum [homepage][h] or
 [Git repository][g].  [MMGenLive][l] users can install Parity automatically from
 signed binaries using the [`mmlive-daemon-upgrade`][U] script.  Parity is not
-used for transaction signing, so you needn't install it on your offline machine.
+used for transaction signing, so you needn’t install it on your offline machine.
 
 Parity must be invoked with the `--jsonrpc-apis=all` option so that MMGen can
-communicate with it.  If you're running the daemon and MMGen on different
-machines you'll also need the following:
+communicate with it.  If you’re running the daemon and MMGen on different
+machines you’ll also need the following:
 
-	--jsonrpc-hosts=all --jsonrpc-interface=<IP of Parity's host>
+	--jsonrpc-hosts=all --jsonrpc-interface=<IP of Parity’s host>
 
 To transact Ethereum Classic, use `--chain=classic --jsonrpc-port=8555`
 
 To run the daemon offline, use `--mode=offline`, otherwise `--mode=active`.
+
+MMGen can also be used with Parity’s light client mode, which queries other
+nodes on the Ethereum network for blockchain data.  Add the `--light` option to
+the Parity command line and read the applicable note in the [Transacting](#a_tx)
+section below.
 
 You may require other options as well.  Consult `parity --help` for the full
 list.
@@ -62,13 +67,19 @@ will prevent pip from installing a lot of unneeded stuff:
 Basic operations with ETH, ETC and ERC20 tokens work as described in the
 [Getting Started][bo] guide, with some differences.  Please note the following:
 
-* Don't forget to invoke all commands with either `--coin=eth` or `--coin=etc`.
+* Don’t forget to invoke all commands with `--coin=eth` or `--coin=etc`.
 * Use the `--token` switch with all token operations.  When importing addresses
-  into your token tracking wallet you must use the token's address as the
+  into your token tracking wallet you must use the token’s address as the
   argument.  After this, the token symbol, e.g. `--token=eos`, is sufficient.
 * Addresses and other hexadecimal values are given without the leading `0x`.
 * Fees are expressed in Gas price, e.g. `12G` for 12 Gwei or `1000M` for 1000
-  Mwei.  This works both at the command line and interactive prompt.
+  Mwei.  This works at both the command line and interactive prompt.
+* When using Parity in light client mode, the `--cached-balances` option
+  will greatly speed up operations of the `mmgen-txcreate`, `mmgen-txdo` and
+  `mmgen-tool twview` commands by reducing network queries to a minimum.  If
+  your account balances have changed, they may be refreshed interactively within
+  the TRACKED ACCOUNTS menu.  Cached balances are stored persistently in your
+  tracking wallet.
 
 ##### Transacting example:
 
@@ -85,7 +96,7 @@ Create an EOS token tracking wallet and import the addresses into it:
 
 *Unlike the case with BTC and derivatives, ETH and ETC tracking wallets are
 created and managed by MMGen itself and located under the MMGen data directory.
-Token tracking wallets are located inside their underlying coin's
+Token tracking wallets are located inside their underlying coin’s
 `tracking-wallet.json` file.  Address (account) balances are retrieved directly
 from the blockchain.  Tracking wallet views are separate for each token.*
 
@@ -200,17 +211,17 @@ MMGen requires that the bitcoin-abc daemon be listening on non-standard
 `--usecashaddr=0` option.
 
 Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
-commands.  It's that simple!
+commands.  It’s that simple!
 
 ### <a name='a_zec'>Key/address generation for Zcash (ZEC)</a>
 
-MMGen's enhanced support for Zcash includes generation of **z-addresses.**
+MMGen’s enhanced support for Zcash includes generation of **z-addresses.**
 
 Generate ten Zcash z-address key/address pairs from your default wallet:
 
 	$ mmgen-keygen --coin=zec --type=zcash_z 1-10
 
-The addresses' view keys are included in the output file as well.
+The addresses’ view keys are included in the output file as well.
 
 NOTE: Since your key/address file will probably be used on an online computer,
 you should encrypt it with a good password when prompted to do so. The file can
@@ -223,17 +234,21 @@ To generate Zcash t-addresses, just omit the `--type` argument:
 
 ### <a name='a_xmr'>Key/address generation and wallet creation/syncing for Monero (XMR)</a>
 
-MMGen's enhanced support for Monero includes automated Monero wallet creation
-and syncing.
+Generate ten Monero key/address pairs from your default wallet:
+
+	$ mmgen-keygen --coin=xmr 1-10
+
+MMGen’s enhanced support for Monero includes automated Monero wallet creation
+and syncing tools.
+
+*Note that the use of these tools requires private data to be exposed on a
+network-connected machine in order to unlock the Monero wallets, which is a
+violation of MMGen’s security policy.*
 
 Install the following dependencies:
 
 	$ sudo -H pip3 install pysha3
 	$ sudo -H pip3 install ed25519ll # optional, but greatly speeds up address generation
-
-Generate ten Monero address pairs from your default wallet:
-
-	$ mmgen-keygen --coin=xmr 1-10
 
 In addition to spend and view keys, Monero key/address files also include a
 wallet password for each address (the password is the double SHA256 of the spend
@@ -244,7 +259,7 @@ key in the key/address file by running the following command:
 
 and pasting in the key and password data when prompted.  [Monerod][M] must be
 installed and running and `monero-wallet-cli` be located in your executable
-path.
+path.  Launch monerod with the `--bg-mining-enable` switch.
 
 To save your time and labor, the `mmgen-tool` utility includes a command that
 completely automates this process:
@@ -254,7 +269,7 @@ completely automates this process:
 This will generate a uniquely-named Monero wallet for each key/address pair in
 the key/address file and encrypt it with its respective password.  No user
 interaction is required.  By default, wallets are synced to the current block
-height, as they're assumed to be empty, but this behavior can be overridden:
+height, as they’re assumed to be empty, but this behavior can be overridden:
 
 	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc blockheight=123456
 
@@ -268,7 +283,7 @@ have a large batch of wallets requiring long sync times.
 
 ### <a name='a_kg'>Key/address generation support for 144 Bitcoin-derived altcoins</a>
 
-To generate key/address pairs for these coins, just specify the coin's symbol
+To generate key/address pairs for these coins, just specify the coin’s symbol
 with the `--coin` argument:
 
 	# For DASH:
@@ -280,13 +295,13 @@ For compressed public keys, add the `--type=compressed` option:
 
 	$ mmgen-keygen --coin=dash --type=compressed 1-10
 
-If it's just the addresses you want, then use `mmgen-addrgen` instead:
+If it’s just the addresses you want, then use `mmgen-addrgen` instead:
 
-	$ mmgen-addrgen --coin=dash 1-10
+	$ mmgen-addrgen --coin=dash --type=compressed 1-10
 
 Regarding encryption of key/address files, see the note for Zcash above.
 
-Here's a complete list of supported altcoins as of this writing:
+Here’s a complete list of supported altcoins as of this writing:
 
 	2give,42,611,ac,acoin,alf,anc,apex,arco,arg,aur,bcf,blk,bmc,bqc,bsty,btcd,
 	btq,bucks,cann,cash,cat,cbx,ccn,cdn,chc,clam,con,cpc,crps,csh,dash,dcr,dfc,
@@ -298,10 +313,10 @@ Here's a complete list of supported altcoins as of this writing:
 	sys,taj,tit,tpc,trc,ttc,tx,uno,via,vpn,vtc,wash,wdc,wisc,wkc,wsx,xcn,xgb,
 	xmg,xpm,xpoke,xred,xst,xvc,zet,zlq,zoom,zrc,bch,etc,eth,ltc,xmr,zec
 
-Note that support for these coins is EXPERIMENTAL.  Many of them have received
-only minimal testing, or no testing at all.  At startup you'll be informed of
-the level of your selected coin's support reliability as deemed by the MMGen
-Project.
+Note that support for most of these coins is EXPERIMENTAL.  Many of them have
+received only minimal testing, or no testing at all.  At startup you’ll be
+informed of the level of your selected coin’s support reliability as deemed by
+the MMGen Project.
 
 [h]: https://www.parity.io/ethereum
 [g]: https://github.com/paritytech/parity-ethereum/releases

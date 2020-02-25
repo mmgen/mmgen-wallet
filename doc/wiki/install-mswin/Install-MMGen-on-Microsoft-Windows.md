@@ -13,10 +13,10 @@ its use is deprecated.  Installation instructions for MMGen under MinGW-64 and
 MSYS are archived [here][di] for historical interest only.*
 
 Before you get started, just a reminder that MMGen must be installed on two
-computers, one online and one offline, to be used securely.  All operations
-involving private data—wallet generation, address generation and transaction
-signing—are handled offline, while the online installation takes care of
-tracking balances and creating and sending transactions.
+computers, one online and one offline, if you want to use it securely.  All
+operations involving private data—wallet generation, address generation and
+transaction signing—are handled offline, while the online installation takes
+care of tracking balances and creating and sending transactions.
 
 This means that once you’ve finished the install process, the computer you’ve
 designated for offline use must be taken offline **permanently.** Furthermore,
@@ -48,6 +48,14 @@ text window, append a space followed by the text `C:\\msys64\usr\bin\bash.exe
 
 Save your changes and double click the icon to launch your MSYS2-enabled
 PowerShell.  From now on, all your work will be done in this terminal.
+
+Note that the root of your MSYS2 installation is located in `C:\\msys64`, so the
+following commands, for example:
+
+		$ ls /etc              # the path as seen within MSYS2
+		$ ls 'C:\\msys64\etc'  # the path as seen by Windows
+
+will produce a listing of the same directory.
 
 ### 3. Upgrade MSYS2
 
@@ -131,8 +139,9 @@ PowerShell.  From now on, all your work will be done in this terminal.
 		$ pacman -Su
 
 > When the process is finished, close your terminal window as requested and
-> reopen another one.  Your mirror lists were overwritten by the upgrade
-> operation, so you must restore them from your modified versions.
+> reopen another one.  Your mirror lists may have been overwritten by the
+> upgrade operation, in which case you should restore them from your modified
+> versions.
 
 > Now reissue the `pacman -Sup` command, which will generate a much longer list
 > of URLs this time.  Download and copy the listed files to the package cache
@@ -156,28 +165,38 @@ specifically required by MMGen.
 
 Install the packages and their dependencies:
 
-	$ pacman -S tar git nano vim \
+	$ pacman -S tar git nano vim autoconf automake-wrapper autogen \
+		mingw64/mingw-w64-x86_64-libtool \
+		mingw64/mingw-w64-x86_64-pcre \
+		mingw64/mingw-w64-x86_64-make \
 		mingw64/mingw-w64-x86_64-python3-cryptography \
 		mingw64/mingw-w64-x86_64-python3-six \
 		mingw64/mingw-w64-x86_64-python3-pexpect \
 		mingw64/mingw-w64-x86_64-python3-gmpy2 \
 		mingw64/mingw-w64-x86_64-libsodium \
 		mingw64/mingw-w64-x86_64-python3-pynacl \
-		mingw64/mingw-w64-x86_64-python3-pip
+		mingw64/mingw-w64-x86_64-python3-pip \
+		mingw64/mingw-w64-x86_64-gcc
 
-### 5. Set your PATH environmental variable
+### 5. Set up your environment
+
+Create the `/usr/local/bin` directory.  This is where you’ll place various
+binaries required by MMGen:
+
+	$ mkdir -p /usr/local/bin  # seen by Windows as C:\\msys64\usr\local\bin
 
 Open your shell’s runtime configuration file in a text editor:
 
 	$ nano ~/.bashrc
 
-Add the following line to the end of the file, save and exit:
+Add the following two lines to the end of the file, save and exit:
 
 	export PATH="/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-abc/daemon"
+	export PYTHONUTF8=1
 
 Close and reopen the terminal window to update your working environment.
 
-### 6. Install the remaining MMGen dependencies
+### 6. Install MMGen dependencies not provided by MSYS2
 
 Three of MMGen’s Python dependencies, `ecdsa`, `py_ecc` and `mypy_extensions`,
 are not provided by MSYS2.  If you’re online, you can install them using the pip
@@ -195,7 +214,69 @@ containing the files and install them as follows:
 
 	$ pip3 install --no-deps *.whl
 
-### 7. Install MMGen
+### 7. Install the standalone scrypt package (required for strong password hashing)
+
+Thanks to a faulty implementation of the `scrypt` function included in Python’s
+`hashlib`, the standalone `scrypt` module is required for stronger-than-default
+password hashing, i.e. hash presets greater than `3`.  Installing the package is
+therefore highly recommended.
+
+On your online machine, download the tar archive:
+
+	$ pip3 download --no-deps scrypt==0.8.13
+
+On your offline machine, unpack and enter the archive:
+
+	$ tar fax scrypt-0.8.13.tar.gz
+	$ cd scrypt-0.8.13
+
+Open the file `setup.py` in your text editor.  Right before the line beginning
+with:
+
+	scrypt_module = Extension(
+
+add the following line (with no indentation):
+
+	includes = ['/mingw64/include']
+
+Also change the line:
+
+	libraries = ['libcrypto_static']
+
+to read:
+
+	libraries = ['libcrypto']
+
+Save the file and exit the editor.  Now build and install:
+
+	$ python3 setup.py build --compiler=mingw32
+	$ python3 setup.py install
+
+### 8. Install the secp256k1 library
+
+On your online machine, clone the repository:
+
+	$ git clone https://github.com/bitcoin-core/secp256k1.git
+
+If you’re doing an offline install, copy the cloned secp256k1 directory
+to your offline machine.
+
+Enter the directory, configure, build and install:
+
+	$ cd secp256k1
+	$ libtoolize
+	$ ./autogen.sh
+	$ ./configure
+	$ mingw32-make.exe install MAKE=mingw32-make LIBTOOL=$(which libtool) 
+
+### 9. Install the sdelete utility (required for secure wallet deletion)
+
+Grab the latest SDelete [zip archive][sd], and unzip and copy `sdelete.exe` to
+`/usr/local/bin`.  You must run the program once manually to accept the license
+agreement.  Failing to do this will cause some scripts to hang, so you should do
+it now.
+
+### 10. Install MMGen
 
 Now you’re ready to install MMGen itself.  On your online machine, clone the
 repository:
@@ -209,10 +290,19 @@ to your offline machine.
 Enter the directory and install:
 
 	$ cd mmgen
-	$ git checkout stable_msys2
+	$ git checkout stable_msys2 # See 'Note' below
 	$ ./setup.py install
 
-### 8. Install and launch your coin daemons
+**Note:** if you want to use features that have appeared since the latest
+`stable_msys2` release, then you can omit the `git checkout` step and remain on
+the `master` branch.  But please be aware that security vulnerabilities are more
+likely to be present in new code than in a stable release.  In addition, while
+the tip of `master` is always tested on Linux before being pushed to the public
+repository, it’s not guaranteed to install or run on MSYS2.  Installation or
+runtime issues may also arise due to missing dependencies or installation steps
+not yet covered in the documentation.
+
+### 11. Install and launch your coin daemons
 
 At this point your MMGen installation will be able to generate wallets, along
 with keys and addresses for all supported coins.  However, if you intend to do
@@ -229,10 +319,7 @@ offline machines.
 To transact ETH, ETC or ERC20 tokens you’ll need the latest Windows `parity.exe`
 binary from the [Parity Github repository][pg].  Parity, unlike the other coin
 daemons, needs to be installed on the online machine only.  Copy the binary to
-your executable path, preferably `C:\\msys64\usr\local\bin`.  If the target
-directory doesn’t exist yet, create it in your terminal like this:
-
-	$ mkdir -p /usr/local/bin
+your executable path, preferably `/usr/local/bin`.
 
 Typically you’ll wish to launch Parity as follows:
 
@@ -240,42 +327,25 @@ Typically you’ll wish to launch Parity as follows:
 
 More information on Parity’s command-line options can be found [here][pl].
 
-### 9. You’re done!
+### 12. You’re done!
 
 Congratulations, your installation is now complete, and you can proceed to
-[**Getting Started with MMGen**][gs]. Before doing so, however, you might want
-to acquaint yourself with some caveats regarding running MMGen on
-Microsoft Windows:
+[**Getting Started with MMGen**][gs].  Note that all features supported by
+MMGen on Linux, except for [autosigning][ax], are now supported on MSYS2 too.
+Please be aware of the following, however:
 
- + [Autosigning][X] is not supported on Windows and is not likely to be in the
-   future. 
- + [Monero wallet creation/syncing][M] support is also lacking due to password
-   file descriptor issues with `monero-wallet-cli`.
- + Due to unpredictable behavior of MSYS2's Python `getpass()` implementation,
-   passwords containing non-ASCII characters should be entered using the
-   `--echo-passphrase` option or via a password file.  Otherwise, these
-   symbols might end up being silently ignored.  
-   If you have an all-ASCII wallet password and wish to silence the annoying
-   warning you’re getting before every password prompt, set `mswin_pw_warning`
-   to `false` in `mmgen.cfg`.  
-   If you *really* don't want to have your passwords echoed, you may test whether
-   `getpass()` is reading your non-ASCII input correctly by running the script
-   `test/misc/password_entry.py`.  If the script reads back the characters
-   exactly as you entered them, then you’re probably safe and can go ahead and
-   disable the warning.
- + Though MSYS2 support is well tested and considered stable, it’s a new feature
-   and other glitches might remain.  If you think you've found a bug, don't
-   hesistate to file an issue at <https://github.com/mmgen/mmgen/issues>.
-
++ Non-ASCII filenames cannot be used with the Monero wallet syncing tool.  This
+  appears to be an issue with the Monero wallet RPC daemon rather than MMGen.
 
 [mh]: https://www.msys2.org
 [mp]: https://sourceforge.net/projects/msys2
 [mw]: https://github.com/msys2/msys2/wiki
 [ov]: https://github.com/mmgen/mmgen/releases/tag/v0.9.8
+[sd]: https://download.sysinternals.com/files/SDelete.zip
+[pg]: https://github.com/paritytech/parity-ethereum/releases
 [di]: Deprecated-MSWin-Installation
 [ib]: Install-Bitcoind
 [gs]: Getting-Started-with-MMGen
-[pg]: https://github.com/paritytech/parity-ethereum/releases
 [pl]: Altcoin-and-Forkcoin-Support#a_par
-[X]:  autosign-[MMGen-command-help]
-[M]:  Altcoin-and-Forkcoin-Support#a_xmr
+[ax]: autosign-[MMGen-command-help]
+[mc]: Altcoin-and-Forkcoin-Support#a_xmr
