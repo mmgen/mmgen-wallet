@@ -35,6 +35,8 @@ class Daemon(MMGenObject):
 	new_console_mswin = False
 	ps_pid_mswin = False
 	lockfile = None
+	avail_flags = ()
+	_flags = []
 
 	def subclass_init(self): pass
 
@@ -180,6 +182,26 @@ class Daemon(MMGenObject):
 			for k in cls.subclasses_must_implement:
 				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
+	@property
+	def flags(self):
+		return self._flags
+
+	def add_flag(self,val):
+		if val not in self.avail_flags:
+			m = '{!r}: unrecognized flag (available options: {})'
+			die(1,m.format(val,self.avail_flags))
+		if val in self._flags:
+			die(1,'Flag {!r} already set'.format(val))
+		self._flags.append(val)
+
+	def remove_flag(self,val):
+		if val not in self.avail_flags:
+			m = '{!r}: unrecognized flag (available options: {})'
+			die(1,m.format(val,self.avail_flags))
+		if val not in self._flags:
+			die(1,'Flag {!r} not set, so cannot be removed'.format(val))
+		self._flags.remove(val)
+
 class MoneroWalletDaemon(Daemon):
 
 	desc = 'RPC daemon'
@@ -223,7 +245,8 @@ class MoneroWalletDaemon(Daemon):
 			'--log-file='+self.logfile,
 			'--rpc-login={}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password) ]
 		if self.platform == 'linux':
-			cmd += ['--pidfile={}'.format(self.pidfile),'--detach']
+			cmd += ['--pidfile={}'.format(self.pidfile)]
+			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
 		return cmd
 
 	@property
@@ -248,6 +271,7 @@ class MoneroWalletDaemon(Daemon):
 class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	subclasses_must_implement = ('state','stop_cmd')
+	avail_flags = ('no_daemonize',)
 
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
@@ -265,6 +289,7 @@ class CoinDaemon(Daemon):
 
 	testnet_arg = []
 	coind_args = []
+	daemonize_args = []
 	cli_args = []
 	shared_args = []
 	coind_cmd = []
@@ -277,7 +302,8 @@ class CoinDaemon(Daemon):
 	usr_cli_args = []
 	usr_shared_args = []
 
-	def __new__(cls,network_id,test_suite=False):
+	def __new__(cls,network_id,test_suite=False,flags=None):
+
 		network_id = network_id.lower()
 		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
 
@@ -321,7 +347,14 @@ class CoinDaemon(Daemon):
 		me.platform = g.platform
 		return me
 
-	def __init__(self,network_id,test_suite=False):
+	def __init__(self,network_id,test_suite=False,flags=None):
+
+		if flags:
+			if type(flags) not in (list,tuple):
+				m = '{!r}: illegal value for flags (must be list or tuple)'
+				die(1,m.format(flags))
+			for flag in flags:
+				self.add_flag(flag)
 
 		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
 
@@ -347,6 +380,7 @@ class CoinDaemon(Daemon):
 				+ self.coin_specific_shared_args
 				+ self.usr_coind_args
 				+ self.usr_shared_args
+				+ self.daemonize_args
 				+ self.coind_cmd )
 
 	def cli_cmd(self,*cmds):
@@ -384,8 +418,8 @@ class BitcoinDaemon(CoinDaemon):
 		if self.use_pidfile:
 			self.coind_args += ['--pid='+self.pidfile]
 
-		if self.platform == 'linux':
-			self.coind_args += ['--daemon']
+		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
+			self.daemonize_args = ['--daemon']
 
 		if self.daemon_id == 'bch':
 			self.coin_specific_coind_args = ['--usecashaddr=0']
@@ -439,7 +473,8 @@ class MoneroDaemon(CoinDaemon):
 			'--data-dir={}'.format(self.datadir),
 			'--offline' ]
 		if self.platform == 'linux':
-			cmd += ['--pidfile={}'.format(self.pidfile),'--detach']
+			cmd += ['--pidfile={}'.format(self.pidfile)]
+			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
 		return cmd
 
 	@property
@@ -472,10 +507,12 @@ class EthereumDaemon(CoinDaemon):
 		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
 		self.chaindir = os.path.join(self.datadir,'devchain')
 		shutil.rmtree(self.chaindir,ignore_errors=True)
+		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
+			self.daemonize_args = ['daemon',self.pidfile]
 
 	@property
 	def coind_cmd(self):
-		return ['daemon',self.pidfile] if self.platform == 'linux' else []
+		return []
 
 	@property
 	def coind_args(self):

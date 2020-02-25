@@ -17,6 +17,7 @@ opts_data = {
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -d, --debug          Produce debugging output (implies --verbose)
+-D, --no-daemonize   Don't fork daemon to background
 -r, --regtest-user=U {a} a regtest daemon for user 'U'
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
@@ -69,7 +70,7 @@ for network_id in ids:
 	else:
 		if network_id.endswith('_rt'):
 			continue
-		d = CoinDaemon(network_id,test_suite=True)
+		d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:

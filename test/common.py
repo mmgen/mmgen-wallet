@@ -23,7 +23,7 @@ common.py: Shared routines and data for the MMGen test suites
 class TestSuiteException(Exception): pass
 class TestSuiteFatalException(Exception): pass
 
-import os,time
+import os
 from mmgen.common import *
 from mmgen.devtools import *
 

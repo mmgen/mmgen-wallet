@@ -19,8 +19,9 @@
  - New Tool API interface: f8056630
  - New [Daemon control interface][dc] and [test daemon start/stop utilities][ss]
  - Full automation of test suite with automatic starting/stopping of daemons
+ - New wiki documentation for the [Test Suite][ts] and [Tool API][ta]
  - UTF8 password entry works reliably under MSYS2, warnings disabled
- - Plus lots of code cleanups, bugfixes, new tests and [expanded documentation][w]
+ - Plus lots of code reorganization, cleanups, bugfixes and new tests!
 
 This release has been tested on the following platforms:
 
@@ -36,7 +37,12 @@ and with the following coin daemon versions:
         Bitcoin-ABC 0.21.0
         Litecoin Core 0.17.1
         Monerod 0.15.0.1
-        Parity Ethereum 2.7.2
+        Parity Ethereum 2.7.2*
+
+        * Parity crashes on startup on some systems when in developer mode,
+        causing the 'eth' test to fail.  This is a problem with Parity, not
+        MMGen.  On cleanly installed systems, Parity and the 'eth' test ran
+        without issue on all tested platforms.
 
 Altcoin address generation has been additionally tested using the following
 tools as references:
@@ -45,7 +51,8 @@ tools as references:
         pycoin 11f60a7c (https://github.com/richardkiss/pycoin)
         vanitygen-plus 22123128 (https://github.com/exploitagency/vanitygen-plus)
 
-[xo]: https://github.com/mmgen/mmgen/wiki/XOR-Seed-Splitting:-Theory-and-Practice.md
+[xo]: https://github.com/mmgen/mmgen/wiki/XOR-Seed-Splitting:-Theory-and-Practice
 [dc]: https://github.com/mmgen/mmgen/blob/master/mmgen/daemon.py
 [ss]: https://github.com/mmgen/mmgen/blob/master/test/start-coin-daemons.py
-[w]: https://github.com/mmgen/mmgen/wiki
+[ts]: https://github.com/mmgen/mmgen/wiki/Test-Suite
+[ta]: https://github.com/mmgen/mmgen/wiki/Tool-API

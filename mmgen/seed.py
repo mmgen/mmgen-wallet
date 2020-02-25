@@ -1122,7 +1122,7 @@ class PlainHexSeedFile(SeedSourceUnenc):
 		d = self.fmt_data.strip()
 
 		if not is_hex_str_lc(d):
-			msg("'{}': not a lowercase hexidecimal string, in {}".format(d,desc))
+			msg("'{}': not a lowercase hexadecimal string, in {}".format(d,desc))
 			return False
 
 		if not len(d)*4 in g.seed_lens:
