@@ -20,13 +20,12 @@ import sys,os,subprocess
 from shutil import copy2
 
 ver = sys.version_info[:2]
-min_ver = (3,5)
+min_ver = (3,6)
 if ver[0] < min_ver[0] or ver[1] < min_ver[1]:
 	m = '{}.{}: wrong Python version.  MMGen requires Python {M}.{m} or greater\n'
 	sys.stderr.write(m.format(*ver,M=min_ver[0],m=min_ver[1]))
 	sys.exit(1)
 
-have_arm   = subprocess.check_output(['uname','-m']).strip() == b'aarch64'
 have_msys2 = subprocess.check_output(['uname','-s']).strip()[:7] == b'MSYS_NT'
 
 from distutils.core import setup,Extension

@@ -50,6 +50,8 @@ tools as references:
         zcash-mini a2b35042 (https://github.com/FiloSottile/zcash-mini)
         pycoin 11f60a7c (https://github.com/richardkiss/pycoin)
         vanitygen-plus 22123128 (https://github.com/exploitagency/vanitygen-plus)
+        MoneroPy 98e7feb2 (https://github.com/bigreddmachine/MoneroPy)
+        ethkey 2.7.2 (https://github.com/paritytech/parity-ethereum)
 
 [xo]: https://github.com/mmgen/mmgen/wiki/XOR-Seed-Splitting:-Theory-and-Practice
 [dc]: https://github.com/mmgen/mmgen/blob/master/mmgen/daemon.py

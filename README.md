@@ -133,10 +133,6 @@ standard.
 
 Linux, Armbian, Raspbian, Windows/MSYS2
 
-#### Supported platforms:
-
-Linux, Armbian, Raspbian, Windows/MSYS2
-
 ### Download/Install
 
 > #### [Install a prebuilt bootable image (MMGenLive) on a USB stick][8]
