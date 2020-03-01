@@ -126,8 +126,8 @@ standard.
 - **Scriptability:** Most MMGen commands can be made non-interactive, allowing
   you to automate repetitive tasks using shell scripts.  Most of the
   `mmgen-tool` utility’s commands can be piped.
-- A convenient [**tool API interface**][ta] that allows you to use MMGen as a
-  crypto library for your Python project.
+- A convenient [**tool API interface**][ta] allows you to use MMGen as a crypto
+  library for your Python project.
 
 #### Supported platforms:
 
