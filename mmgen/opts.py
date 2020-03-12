@@ -76,15 +76,6 @@ def opt_postproc_debug():
 	Msg('\n=== end opts.py debug ===\n')
 
 def opt_postproc_initializations():
-	from mmgen.term import set_terminal_vars
-	set_terminal_vars()
-
-	if g.color: # MMGEN_DISABLE_COLOR sets this to False
-		from mmgen.color import start_mscolor,init_color
-		if g.platform == 'win':
-			start_mscolor()
-		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
-
 	g.coin = g.coin.upper() # allow user to use lowercase
 	g.dcoin = g.coin # the display coin; for ERC20 tokens, g.dcoin is set to the token symbol
 
@@ -95,85 +86,39 @@ def set_data_dir_root():
 	# mainnet and testnet share cfg file, as with Core
 	g.cfg_file = os.path.join(g.data_dir_root,'{}.cfg'.format(g.proj_name.lower()))
 
-def get_cfg_template_data():
-	# https://wiki.debian.org/Python:
-	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
-	# TODO - test for Windows
-	# This must match the configuration in setup.py
-	cfg_template = os.path.join(*([sys.prefix]
-				+ (['share'],['local','share'])[g.platform=='linux']
-				+ [g.proj_name.lower(),os.path.basename(g.cfg_file)]))
-	try:
-		return open(cfg_template).read()
-	except:
-		msg("WARNING: configuration template not found at '{}'".format(cfg_template))
-		return ''
+def init_term_and_color():
+	from mmgen.term import set_terminal_vars
+	set_terminal_vars()
 
-def get_data_from_cfg_file():
-	check_or_create_dir(g.data_dir_root) # dies on error
-	template_data = get_cfg_template_data()
-	data = {}
+	if g.color: # MMGEN_DISABLE_COLOR sets this to False
+		from mmgen.color import start_mscolor,init_color
+		if g.platform == 'win':
+			start_mscolor()
+		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
-	def copy_template_data(fn):
-		try:
-			open(fn,'wb').write(template_data.encode())
-			os.chmod(fn,0o600)
-		except:
-			die(2,"ERROR: unable to write to datadir '{}'".format(g.data_dir))
-
-	for k,suf in (('cfg',''),('sample','.sample')):
-		try:
-			data[k] = open(g.cfg_file+suf,'rb').read().decode()
-		except:
-			if template_data:
-				copy_template_data(g.cfg_file+suf)
-				data[k] = template_data
-			else:
-				data[k] = ''
-
-	if template_data and data['sample'] != template_data:
-		g.cfg_options_changed = True
-		copy_template_data(g.cfg_file+'.sample')
-
-	return data['cfg']
-
-def override_globals_from_cfg_file(cfg_data):
-	import re
+def override_globals_from_cfg_file(ucfg):
 	from mmgen.protocol import CoinProtocol
-	from mmgen.util import strip_comments
-
-	for n,l in enumerate(cfg_data.splitlines(),1):
-
-		l = strip_comments(l)
-		if l == '':
-			continue
-
-		try:
-			m = re.match(r'(\w+)(\s+(\S+)|(\s+\w+:\S+)+)$',l) # allow multiple colon-separated values
-			name = m[1]
-			val = dict([i.split(':') for i in m[2].split()]) if m[4] else m[3]
-		except:
-			raise CfgFileParseError('Parse error in file {!r}, line {}'.format(g.cfg_file,n))
-
-		if name in g.cfg_file_opts:
-			ns = name.split('_')
+	for d in ucfg.parse():
+		val = d.value
+		if d.name in g.cfg_file_opts:
+			ns = d.name.split('_')
 			if ns[0] in CoinProtocol.coins:
 				nse,tn = (ns[2:],True) if len(ns) > 2 and ns[1] == 'testnet' else (ns[1:],False)
 				cls = CoinProtocol(ns[0],tn)
 				attr = '_'.join(nse)
 			else:
 				cls = g
-				attr = name
+				attr = d.name
 			refval = getattr(cls,attr)
-			if type(refval) is dict and type(val) is str: # catch single colon-separated value
+			if type(refval) is dict and type(val) is str: # hack - catch single colon-separated value
 				try:
 					val = dict([val.split(':')])
 				except:
-					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(g.cfg_file,n))
-			val_conv = set_for_type(val,refval,attr,src=g.cfg_file)
+					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(ucfg.fn,d.lineno))
+			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			setattr(cls,attr,val_conv)
 		else:
-			die(2,'{!r}: unrecognized option in {!r}'.format(name,g.cfg_file))
+			die(2,'{!r}: unrecognized option in {!r}, line {}'.format(d.name,ucfg.fn,d.lineno))
 
 def override_globals_from_env():
 	for name in g.env_opts:
@@ -263,8 +208,15 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
 	# We must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
 	set_data_dir_root()
+	check_or_create_dir(g.data_dir_root)
+
+	init_term_and_color()
+
 	if not opt.skip_cfg_file:
-		override_globals_from_cfg_file(get_data_from_cfg_file())
+		from mmgen.cfg import cfg_file
+		cfg_file('sample') # check for changes in system template file
+		override_globals_from_cfg_file(cfg_file('usr'))
+
 	override_globals_from_env()
 
 	# Set globals from opts, setting type from original global value

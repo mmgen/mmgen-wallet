@@ -131,6 +131,14 @@ class g(object):
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
+	# https://wiki.debian.org/Python:
+	#   Debian (Ubuntu) sys.prefix is '/usr' rather than '/usr/local, so add 'local'
+	# This must match the configuration in setup.py
+	shared_data_path = os.path.join(
+		sys.prefix,
+		*(['local','share'] if platform == 'linux' else ['share']),
+		proj_name.lower()
+	)
 	data_dir_root,data_dir,cfg_file = None,None,None
 	daemon_data_dir = '' # set by user or protocol
 

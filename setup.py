@@ -100,6 +100,7 @@ setup(
 			'mmgen.baseconv',
 			'mmgen.bech32',
 			'mmgen.bip39',
+			'mmgen.cfg',
 			'mmgen.color',
 			'mmgen.common',
 			'mmgen.crypto',
