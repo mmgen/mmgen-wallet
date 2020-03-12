@@ -184,7 +184,7 @@ class baseconv(object):
 				die(2,'{}: invalid length for Monero mnemonic'.format(len(words)))
 
 			z = cls.monero_mn_checksum(words[:-1])
-			assert z == words[-1],'{!r}: invalid Monero checksum (should be {!r})'.format(words[-1],z)
+			assert z == words[-1],'invalid Monero mnemonic checksum'
 			words = tuple(words[:-1])
 
 			ret = b''

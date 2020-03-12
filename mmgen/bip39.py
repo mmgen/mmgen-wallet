@@ -2127,7 +2127,7 @@ zoo
 				bitlen = int(k)
 				break
 		else:
-			raise MnemonicError('{}: invalid seed phrase length'.format(len(words)))
+			raise MnemonicError('{}: invalid BIP39 seed phrase length'.format(len(words)))
 
 		if pad != None:
 			assert pad * 4 == bitlen, '{}: invalid pad length'.format(pad)
@@ -2143,7 +2143,7 @@ zoo
 		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
 
 		if chk_bin != chk_bin_chk:
-			raise MnemonicError('invalid seed phrase checksum')
+			raise MnemonicError('invalid BIP39 seed phrase checksum')
 
 		return seed_hex
 

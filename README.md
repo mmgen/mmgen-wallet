@@ -80,9 +80,9 @@ standard.
 - **[BIP69 transaction input and output ordering][69]** helps anonymize the
   “signature” of your transactions.
 - **[Full control over transaction fees][M]:** Fees are specified as absolute or
-  sat/byte amounts and can be adjusted interactively, letting you round fees to
-  improve anonymity.  Network fee estimation, [RBF][R] and [fee bumping][B] are
-  supported.
+  satoshi/byte amounts and can be adjusted interactively, letting you round fees
+  to improve anonymity.  Network fee estimation (with selectable estimation
+  mode), [RBF][R] and [fee bumping][B] are supported.
 - **Support for nine wallet formats:** three encrypted (native wallet,
   brainwallet, incognito wallet) and six unencrypted (native mnemonic,
   **BIP39,** mmseed, hexseed, plain hex, dieroll).
@@ -99,7 +99,7 @@ standard.
   splits with a single master share.
 - **[Transaction autosigning][X]:** This feature puts your offline signing
   machine into “hands-off” mode, allowing you to transact directly from cold
-  storage securely and conveniently.  Additional LED blinking support is
+  storage securely and conveniently.  Additional LED signaling support is
   provided for Raspbian and Armbian platforms.
 - **[Password generation][G]:** MMGen can be used to generate and manage your
   online passwords.  Password lists are identified by arbitrarily chosen strings
@@ -113,9 +113,8 @@ standard.
 - **Wallet-free operation:** All wallet operations can be performed directly
   from your seed phrase at the prompt, allowing you to dispense with a
   physically stored wallet entirely if you wish.
-- **Stealth mnemonic entry:** To guard against acoustic side-channel attacks,
-  you can obfuscate your seed phrase with “dead” keystrokes as you enter it from
-  the keyboard.
+- **Stealth mnemonic entry:** This feature allows you to obfuscate your seed
+  phrase with “dead” keystrokes to guard against acoustic side-channel attacks.
 - **Network privacy:** MMGen never “calls home” or checks for upgrades over the
   network.  No information about your wallet installation or crypto assets is
   ever leaked to third parties.
@@ -124,10 +123,11 @@ standard.
 - **Terminal-based:** MMGen can be run in a screen or tmux session on your local
   network.
 - **Scriptability:** Most MMGen commands can be made non-interactive, allowing
-  you to automate repetitive tasks using shell scripts.  Most of the
-  `mmgen-tool` utility’s commands can be piped.
-- A convenient [**tool API interface**][ta] allows you to use MMGen as a crypto
-  library for your Python project.
+  you to automate repetitive tasks using shell scripts.
+- The project also includes the [`mmgen-tool`][L] utility, a handy “pocket
+  knife” for cryptocurrency developers, along with an easy-to-use [**tool API
+  interface**][ta] providing access to a subset of its commands from within
+  Python.
 
 #### Supported platforms:
 
@@ -205,3 +205,4 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [ms]: https://github.com/mmgen/mmgen/wiki/seedsplit-[MMGen-command-help]
 [ta]: https://github.com/mmgen/mmgen/wiki/Tool-API
 [ts]: https://github.com/mmgen/mmgen/wiki/Test-Suite
+[L]: https://github.com/mmgen/mmgen/wiki/tool-[MMGen-command-help].md

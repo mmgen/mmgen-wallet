@@ -146,30 +146,36 @@ def get_label(do_shuffle=False):
 		label_iter = iter(labels)
 		return next(label_iter)
 
-def stealth_mnemonic_entry(t,mn,fmt):
-	wnum = 1
-	max_wordlen = { 'words': 12, 'bip39': 8 }[fmt]
+def stealth_mnemonic_entry(t,mn,fmt,pad_entry=False):
 
-	def get_pad_chars(n):
-		ret = ''
-		for i in range(n):
-			m = int.from_bytes(os.urandom(1),'big') % 32
-			ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
+	def pad_mnemonic(mn,ss_len):
+		def get_pad_chars(n):
+			ret = ''
+			for i in range(n):
+				m = int.from_bytes(os.urandom(1),'big') % 32
+				ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
+			return ret
+		ret = []
+		for w in mn:
+			if len(w) > (3,5)[ss_len==12]:
+				w = w + '\n'
+			else:
+				w = (
+					get_pad_chars(2 if randbool() else 0)
+					+ w[0] + get_pad_chars(2) + w[1:]
+					+ get_pad_chars(9) )
+				w = w[:ss_len+1]
+			ret.append(w)
 		return ret
 
-	for i in range(len(mn)):
-		w = mn[i]
-		if len(w) > (3,5)[max_wordlen==12]:
-			w = w + '\n'
-		else:
-			w = (
-				get_pad_chars(2 if randbool() else 0)
-				+ w[0] + get_pad_chars(2) + w[1:]
-				+ get_pad_chars(9) )
-			w = w[:max_wordlen+1]
-		em,rm = 'Enter word #{}: ','Repeat word #{}: '
+	mn = ['fzr'] + mn[:5] + ['grd','grdbxm'] + mn[5:]
+	mn = pad_mnemonic(mn,(12,8)[fmt=='bip39'])
+
+	wnum,em,rm = 1,'Enter word #{}: ','Repeat word #{}: '
+	for w in mn:
 		ret = t.expect((em.format(wnum),rm.format(wnum-1)))
-		if ret == 0: wnum += 1
+		if ret == 0:
+			wnum += 1
 		for j in range(len(w)):
 			t.send(w[j])
 			time.sleep(0.005)

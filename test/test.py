@@ -396,7 +396,8 @@ def list_tmpdirs():
 	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
 def clean(usr_dirs=None):
-	if opt.skip_deps: return
+	if opt.skip_deps:
+		return
 	all_dirs = list_tmpdirs()
 	dirnums = map(int,(usr_dirs if usr_dirs is not None else all_dirs))
 	dirlist = list(map(str,sorted(dirnums)))
@@ -460,40 +461,32 @@ def set_restore_term_at_exit():
 
 class CmdGroupMgr(object):
 
-	cmd_groups = {
+	cmd_groups_dfl = {
 		'helpscreens':      ('TestSuiteHelp',{'modname':'misc','full_data':True}),
 		'main':             ('TestSuiteMain',{'full_data':True}),
 		'conv':             ('TestSuiteWalletConv',{'is3seed':True,'modname':'wallet'}),
+		'ref':              ('TestSuiteRef',{}),
 		'ref3':             ('TestSuiteRef3Seed',{'is3seed':True,'modname':'ref_3seed'}),
 		'ref3_addr':        ('TestSuiteRef3Addr',{'is3seed':True,'modname':'ref_3seed'}),
-		'ref':              ('TestSuiteRef',{}),
 		'ref_altcoin':      ('TestSuiteRefAltcoin',{}),
 		'seedsplit':        ('TestSuiteSeedSplit',{}),
 		'tool':             ('TestSuiteTool',{'modname':'misc','full_data':True}),
 		'input':            ('TestSuiteInput',{'modname':'misc','full_data':True}),
 		'output':           ('TestSuiteOutput',{'modname':'misc','full_data':True}),
+		'autosign':         ('TestSuiteAutosign',{}),
 		'regtest':          ('TestSuiteRegtest',{}),
 #		'chainsplit':       ('TestSuiteChainsplit',{}),
 		'ethdev':           ('TestSuiteEthdev',{}),
-		'autosign':         ('TestSuiteAutosign',{}),
+	}
+
+	cmd_groups_extra = {
 		'autosign_btc':     ('TestSuiteAutosignBTC',{'modname':'autosign'}),
 		'autosign_live':    ('TestSuiteAutosignLive',{'modname':'autosign'}),
 		'create_ref_tx':    ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
 	}
 
-	dfl_groups =  ( 'helpscreens',
-					'main',
-					'conv',
-					'ref',
-					'ref3',
-					'ref3_addr',
-					'ref_altcoin',
-					'tool',
-					'input',
-					'output',
-					'autosign',
-					'regtest',
-					'ethdev')
+	cmd_groups = cmd_groups_dfl.copy()
+	cmd_groups.update(cmd_groups_extra)
 
 	def load_mod(self,gname,modname=None):
 		clsname,kwargs = self.cmd_groups[gname]
@@ -561,7 +554,7 @@ class CmdGroupMgr(object):
 			ginfo = [g for g in ginfo
 						if network_id in g[1].networks
 							and not g[0] in exclude
-							and g[0] in self.dfl_groups + tuple(usr_args) ]
+							and g[0] in self.cmd_groups_dfl + tuple(usr_args) ]
 
 		for name,cls in ginfo:
 			msg('{:17} - {}'.format(name,cls.__doc__))
@@ -631,7 +624,7 @@ class TestSuiteRunner(object):
 
 		passthru_opts = ['--{}{}'.format(k.replace('_','-'),
 							'=' + getattr(opt,k) if getattr(opt,k) != True else '')
-								for k in ('data_dir',) + self.ts.passthru_opts if getattr(opt,k)]
+								for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
 
 		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
@@ -755,9 +748,9 @@ class TestSuiteRunner(object):
 			if opt.exclude_groups:
 				exclude = opt.exclude_groups.split(',')
 				for e in exclude:
-					if e not in self.gm.dfl_groups:
+					if e not in self.gm.cmd_groups_dfl:
 						die(1,'{!r}: group not recognized'.format(e))
-			for gname in self.gm.dfl_groups:
+			for gname in self.gm.cmd_groups_dfl:
 				if opt.exclude_groups and gname in exclude: continue
 				if not self.init_group(gname): continue
 				clean(self.ts.tmpdir_nums)

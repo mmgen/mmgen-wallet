@@ -728,10 +728,8 @@ an empty passphrase, just hit ENTER twice.
 	}
 
 	def _get_hash_preset_from_user(self,hp,desc_suf=''):
-# 					hp=a,
 		n = ('','old ')[self.op=='pwchg_old']
-		m,n = (('to accept the default',n),('to reuse the old','new '))[
-						int(self.op=='pwchg_new')]
+		m,n = (('to accept the default',n),('to reuse the old','new '))[self.op=='pwchg_new']
 		fs = "Enter {}hash preset for {}{}{},\n or hit ENTER {} value ('{}'): "
 		p = fs.format(
 			n,
@@ -1075,27 +1073,33 @@ class DieRollSeedFile(SeedSourceUnenc):
 		seed_bitlen = self._choose_seedlen(self.wclass,seed_bitlens,self.mn_type)
 		nDierolls = self.conv_cls.seedlen_map['b6d'][seed_bitlen // 8]
 
-		m  = 'For a {sb}-bit seed you must roll the die {nd} times.  After each die roll,\n'
-		m += 'enter the result on the keyboard as a digit.  If you make an invalid entry,\n'
-		m += "you'll be prompted to re-enter it."
-
-		msg('\n'+m.format(sb=seed_bitlen,nd=nDierolls)+'\n')
+		m = """
+			For a {sb}-bit seed you must roll the die {nd} times.  After each die roll,
+			enter the result on the keyboard as a digit.  If you make an invalid entry,
+			you'll be prompted to re-enter it.
+		"""
+		msg('\n'+fmt(m.strip()).format(sb=seed_bitlen,nd=nDierolls)+'\n')
 
 		b6d_digits = self.conv_cls.digits['b6d']
 
-		from mmgen.term import get_char,get_char
+		cr = '\n' if g.test_suite else '\r'
+		prompt_fs = '\b\b\b   {}Enter die roll #{{}}: {}'.format(cr,CUR_SHOW)
+		clear_line = '' if g.test_suite else '\r' + ' ' * 25
+		invalid_msg = CUR_HIDE + cr + 'Invalid entry' + ' ' * 11
+
+		from mmgen.term import get_char
 		def get_digit(n):
-			p = '\b\b\b   \rEnter die roll #{}: '+ CUR_SHOW
-			sleep = 0.3
+			p = prompt_fs
+			sleep = g.short_disp_timeout
 			while True:
 				ch = get_char(p.format(n),num_chars=1,sleep=sleep).decode()
 				if ch in b6d_digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch
 				else:
-					msg_r(CUR_HIDE + '\rInvalid entry           ')
-					sleep = 0.7
-					p = '\r' + ' '*25 + CUR_SHOW + p
+					msg_r(invalid_msg)
+					sleep = g.err_disp_timeout
+					p = clear_line + prompt_fs
 
 		dierolls,n = [],1
 		while len(dierolls) < nDierolls:

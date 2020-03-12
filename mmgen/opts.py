@@ -21,21 +21,24 @@ opts.py:  MMGen-specific options processing after generic processing by share.Op
 """
 import sys,os,stat
 
-class opt(object): pass
+class opt(object):
+	pass
 
 from mmgen.globalvars import g
 import mmgen.share.Opts
 from mmgen.util import *
 
-def usage(): Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
+def usage():
+	Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
+
+def fmt_opt(o):
+	return '--' + o.replace('_','-')
 
 def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:
 		bad = [k for k in opt.__dict__ if opt.__dict__[k] and k in group]
 		if len(bad) > 1:
 			die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
-
-def fmt_opt(o): return '--' + o.replace('_','-')
 
 def _show_hash_presets():
 	fs = '  {:<7} {:<6} {:<3}  {}'
@@ -55,7 +58,8 @@ def opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args):
 		('Cmd args',           args),
 	)
 	Msg('\n=== opts.py debug ===')
-	for e in d: Msg('    {:<20}: {}'.format(*e))
+	for e in d:
+		Msg('    {:<20}: {}'.format(*e))
 
 def opt_postproc_debug():
 	a = [k for k in dir(opt) if k[:2] != '__' and getattr(opt,k) != None]
@@ -106,7 +110,6 @@ def get_cfg_template_data():
 		return ''
 
 def get_data_from_cfg_file():
-	from mmgen.util import msg,die,check_or_create_dir
 	check_or_create_dir(g.data_dir_root) # dies on error
 	template_data = get_cfg_template_data()
 	data = {}
@@ -134,32 +137,45 @@ def get_data_from_cfg_file():
 
 	return data['cfg']
 
-def override_from_cfg_file(cfg_data):
-	from mmgen.util import die,strip_comments,set_for_type
+def override_globals_from_cfg_file(cfg_data):
 	import re
 	from mmgen.protocol import CoinProtocol
-	for n,l in enumerate(cfg_data.splitlines(),1): # DOS-safe
-		l = strip_comments(l)
-		if l == '': continue
-		m = re.match(r'(\w+)\s+(\S+)$',l)
-		if not m: die(2,"Parse error in file '{}', line {}".format(g.cfg_file,n))
-		name,val = m.groups()
-		if name in g.cfg_file_opts:
-			pfx,cfg_var = name.split('_',1)
-			if pfx in CoinProtocol.coins:
-				tn = False
-				cv1,cv2 = cfg_var.split('_',1)
-				if cv1 in ('mainnet','testnet'):
-					tn,cfg_var = (cv1 == 'testnet'),cv2
-				cls,attr = CoinProtocol(pfx,tn),cfg_var
-			else:
-				cls,attr = g,name
-			setattr(cls,attr,set_for_type(val,getattr(cls,attr),attr,src=g.cfg_file))
-		else:
-			die(2,"'{}': unrecognized option in '{}'".format(name,g.cfg_file))
+	from mmgen.util import strip_comments
 
-def override_from_env():
-	from mmgen.util import set_for_type
+	for n,l in enumerate(cfg_data.splitlines(),1):
+
+		l = strip_comments(l)
+		if l == '':
+			continue
+
+		try:
+			m = re.match(r'(\w+)(\s+(\S+)|(\s+\w+:\S+)+)$',l) # allow multiple colon-separated values
+			name = m[1]
+			val = dict([i.split(':') for i in m[2].split()]) if m[4] else m[3]
+		except:
+			raise CfgFileParseError('Parse error in file {!r}, line {}'.format(g.cfg_file,n))
+
+		if name in g.cfg_file_opts:
+			ns = name.split('_')
+			if ns[0] in CoinProtocol.coins:
+				nse,tn = (ns[2:],True) if len(ns) > 2 and ns[1] == 'testnet' else (ns[1:],False)
+				cls = CoinProtocol(ns[0],tn)
+				attr = '_'.join(nse)
+			else:
+				cls = g
+				attr = name
+			refval = getattr(cls,attr)
+			if type(refval) is dict and type(val) is str: # catch single colon-separated value
+				try:
+					val = dict([val.split(':')])
+				except:
+					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(g.cfg_file,n))
+			val_conv = set_for_type(val,refval,attr,src=g.cfg_file)
+			setattr(cls,attr,val_conv)
+		else:
+			die(2,'{!r}: unrecognized option in {!r}'.format(name,g.cfg_file))
+
+def override_globals_from_env():
 	for name in g.env_opts:
 		if name == 'MMGEN_DEBUG_ALL': continue
 		disable = name[:14] == 'MMGEN_DISABLE_'
@@ -176,7 +192,7 @@ def common_opts_code(s):
 		cu_all=' '.join(CoinProtocol.coins) )
 
 common_opts_data = {
-	# most, but not all, of these set the corresponding global var
+	# Most but not all of these set the corresponding global var
 	'text': """
 --, --accept-defaults     Accept defaults at all prompts
 --, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
@@ -213,41 +229,47 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	if parse_only:
 		return uopts,args,short_opts,long_opts,skipped_opts
 
-	if g.debug_opts: opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
+	if g.debug_opts:
+		opt_preproc_debug(short_opts,long_opts,skipped_opts,uopts,args)
 
-	# Save this for usage()
+	# Copy parsed opts to opt, setting values to None if not set by user
+	for o in  (
+			tuple(s.rstrip('=') for s in long_opts)
+			+ tuple(add_opts)
+			+ tuple(skipped_opts)
+			+ g.required_opts
+			+ g.common_opts ):
+		setattr(opt,o,uopts[o] if o in uopts else None)
+
+	# Make this available to usage()
 	global usage_txt
 	usage_txt = opts_data['text']['usage']
 
-	# Transfer uopts into opt, setting program's opts + required opts to None if not set by user
-	for o in  ( tuple([s.rstrip('=') for s in long_opts] + add_opts + skipped_opts)
-				+ g.required_opts
-				+ g.common_opts ):
-		setattr(opt,o,uopts[o] if o in uopts else None)
-
-	if opt.version: Die(0,"""
-    {pn} version {g.version}
-    Part of the {g.proj_name} suite, an online/offline cryptocoin wallet for the command line.
-    Copyright (C) {g.Cdates} {g.author} {g.email}
-	""".format(g=g,pn=g.prog_name.upper()).lstrip('\n').rstrip())
-
+	if opt.version:
+		Die(0,fmt("""
+			{pn} version {g.version}
+			Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
+			command line.  Copyright (C){g.Cdates} {g.author} {g.email}
+		""".format(g=g,pn=g.prog_name.upper()),indent='    ').rstrip())
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in g.env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
-	# === Interaction with global vars begins here ===
+	# === begin global var initialization === #
 
 	# NB: user opt --data-dir is actually g.data_dir_root
 	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
 	# We must set g.data_dir_root and g.cfg_file from cmdline before processing cfg file
 	set_data_dir_root()
 	if not opt.skip_cfg_file:
-		override_from_cfg_file(get_data_from_cfg_file())
-	override_from_env()
+		override_globals_from_cfg_file(get_data_from_cfg_file())
+	override_globals_from_env()
 
-	# User opt sets global var - do these here, before opt is set from g.global_sets_opt
+	# Set globals from opts, setting type from original global value
+	# Do here, before opts are set from globals below
+	# g.coin is finalized here
 	for k in (g.common_opts + g.opt_sets_global):
 		if hasattr(opt,k):
 			val = getattr(opt,k)
@@ -261,18 +283,20 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	from mmgen.protocol import init_genonly_altcoins,CoinProtocol
 	altcoin_trust_level = init_genonly_altcoins(opt.coin or 'btc')
 
-	# g.testnet is set, so we can set g.proto
+	# g.testnet is finalized, so we can set g.proto
 	g.proto = CoinProtocol(g.coin,g.testnet)
 
-	# global sets proto
-	if g.daemon_data_dir: g.proto.daemon_data_dir = g.daemon_data_dir
+	# this could have been set from long opts
+	if g.daemon_data_dir:
+		g.proto.daemon_data_dir = g.daemon_data_dir
 
 	# g.proto is set, so we can set g.data_dir
 	g.data_dir = os.path.normpath(os.path.join(g.data_dir_root,g.proto.data_subdir))
 
-	# If user opt is set, convert its type based on value in mmgen.globalvars (g)
-	# If unset, set it to default value in mmgen.globalvars (g)
-	setattr(opt,'set_by_user',[])
+	# Set user opts from globals:
+	# - if opt is unset, set it to global value
+	# - if opt is set, convert its type to that of global value
+	opt.set_by_user = []
 	for k in g.global_sets_opt:
 		if k in opt.__dict__ and getattr(opt,k) != None:
 			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
@@ -284,7 +308,8 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		_show_hash_presets()
 		sys.exit(0)
 
-	if opt.verbose: opt.quiet = None
+	if opt.verbose:
+		opt.quiet = None
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
@@ -313,19 +338,20 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	if not check_opts(uopts):
 		die(1,'Options checking failed')
 
-	# Check user-set opts against g.opt_values, setting opt if unset:
+	# Check user-set opts against g.autoset_opts, setting opt if unset:
 	if not check_opts2(uopts):
 		die(1,'Options checking failed')
 
 	if hasattr(g,'cfg_options_changed'):
 		ymsg("Warning: config file options have changed! See '{}' for details".format(g.cfg_file+'.sample'))
 		if not g.test_suite:
-			from mmgen.util import my_raw_input
 			my_raw_input('Hit ENTER to continue: ')
 
 	if g.debug and g.prog_name != 'test.py':
 		opt.verbose,opt.quiet = (True,None)
-	if g.debug_opts: opt_postproc_debug()
+
+	if g.debug_opts:
+		opt_postproc_debug()
 
 	warn_altcoins(g.coin,altcoin_trust_level)
 
@@ -355,9 +381,9 @@ def opt_is_tx_fee(val,desc):
 def check_opts2(usr_opts): # Returns false if any check fails
 
 	for key in [e for e in opt.__dict__ if not e.startswith('__')]:
-		if key in g.opt_values:
+		if key in g.autoset_opts:
 			val = getattr(opt,key)
-			d = g.opt_values[key]
+			d = g.autoset_opts[key]
 			if d[0] == 'nocase_str':
 				if val == None:
 					setattr(opt,key,d[1][0])
@@ -426,7 +452,6 @@ def check_opts(usr_opts): # Returns false if any check fails
 
 		desc = "parameter for '{}' option".format(fmt_opt(key))
 
-		from mmgen.util import check_infile,check_outfile,check_outdir
 		# Check for file existence and readability
 		if key in ('keys_from_file','mmgen_keys_from_file',
 				'passwd_file','keysforaddrs','comment_file'):

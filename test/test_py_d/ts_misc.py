@@ -92,7 +92,7 @@ class TestSuiteHelp(TestSuiteBase):
 		return self._run_cmd('test.py',['-l'],cmd_dir='test',extra_desc='(cmd list)')
 
 class TestSuiteOutput(TestSuiteBase):
-	'screen output tests'
+	'screen output'
 	networks = ('btc',)
 	tmpdir_nums = []
 	cmd_group = (
@@ -117,12 +117,12 @@ class TestSuiteInput(TestSuiteBase):
 	networks = ('btc',)
 	tmpdir_nums = []
 	cmd_group = (
-		('password_entry_noecho', (1,"utf8 password entry", [])),
-		('password_entry_echo',   (1,"utf8 password entry (echoed)", [])),
-		('mnemonic_entry_mmgen',  (1,"stealth mnemonic entry (MMGen native)", [])),
-		('mnemonic_entry_bip39',  (1,"stealth mnemonic entry (BIP39)", [])),
-		('dieroll_entry',         (1,"dieroll entry (base6d)", [])),
-		('dieroll_entry_usrrand', (1,"dieroll entry (base6d) with added user entropy", [])),
+		('password_entry_noecho',         (1,"utf8 password entry", [])),
+		('password_entry_echo',           (1,"utf8 password entry (echoed)", [])),
+		('mnemonic_entry_mmgen',          (1,"stealth mnemonic entry (mmgen)", [])),
+		('mnemonic_entry_bip39',          (1,"stealth mnemonic entry (bip39)", [])),
+		('dieroll_entry',                 (1,"dieroll entry (base6d)", [])),
+		('dieroll_entry_usrrand',         (1,"dieroll entry (base6d) with added user entropy", [])),
 	)
 
 	def password_entry(self,prompt,cmd_args):
@@ -149,14 +149,13 @@ class TestSuiteInput(TestSuiteBase):
 			return ('skip_warn',m)
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None):
+	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,mn=None):
 		wcls = SeedSource.fmt_code_to_type(fmt)
 		wf = os.path.join(ref_dir,'FE3C6545.{}'.format(wcls.ext))
 		if wcls.wclass == 'mnemonic':
-			mn = read_from_file(wf).strip().split()
-			mn = ['foo'] + mn[:5] + ['grac','graceful'] + mn[5:]
+			mn = mn or read_from_file(wf).strip().split()
 		elif wcls.wclass == 'dieroll':
-			mn = list(read_from_file(wf).strip().translate(dict((ord(ws),None) for ws in '\t\n ')))
+			mn = mn or list(read_from_file(wf).strip().translate(dict((ord(ws),None) for ws in '\t\n ')))
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])

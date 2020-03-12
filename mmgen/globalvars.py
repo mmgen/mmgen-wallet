@@ -22,6 +22,7 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 
 import sys,os
 from decimal import Decimal
+from collections import namedtuple
 from mmgen.devtools import *
 
 # Global vars are set to dfl values in class g.
@@ -50,11 +51,13 @@ class g(object):
 	keywords  = 'Bitcoin, BTC, Ethereum, ETH, Monero, XMR, ERC20, cryptocurrency, wallet, BIP32, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MSYS2, MinGW, MinGW64, MSWin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, SHA256Compress, monerod, EMC, Emercoin, token, deploy, contract, gas, fee, smart contract, solidity, Parity, testnet, devmode, Kovan'
 	max_int   = 0xffffffff
 
-	stdin_tty = bool(sys.stdin.isatty() or os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'))
+	stdin_tty = sys.stdin.isatty()
 	stdout = sys.stdout
 	stderr = sys.stderr
 
 	http_timeout = 60
+	err_disp_timeout = 0.7
+	short_disp_timeout = 0.3
 
 	# Variables - these might be altered at runtime:
 
@@ -121,9 +124,9 @@ class g(object):
 
 	color = sys.stdout.isatty()
 
-	if os.getenv('HOME'):                             # Linux or MSYS
+	if os.getenv('HOME'):   # Linux or MSYS
 		home_dir = os.getenv('HOME')
-	elif platform == 'win': # Windows native:
+	elif platform == 'win': # non-MSYS Windows - not supported
 		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
@@ -154,7 +157,6 @@ class g(object):
 	)
 	incompatible_opts = (
 		('bob','alice'),
-		('quiet','verbose'),
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
@@ -200,8 +202,11 @@ class g(object):
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_DISABLE_MSWIN_PW_WARNING',
 	)
-	opt_values = { # first value is used as default
-		'fee_estimate_mode': ('nocase_str', ('conservative','economical')),
+	# Auto-typechecked and auto-set opts - incompatible with global_sets_opt and opt_sets_global
+	# First value in list is the default
+	ov = namedtuple('autoset_opt_info',['type','choices'])
+	autoset_opts = {
+		'fee_estimate_mode': ov('nocase_pfx', ('conservative','economical')),
 	}
 
 	min_screen_width = 80
@@ -221,7 +226,7 @@ class g(object):
 	mmenc_ext      = 'mmenc'
 	salt_len       = 16
 	aesctr_iv_len  = 16
-	aesctr_dfl_iv  = b'\x00' * (aesctr_iv_len-1) + b'\x01'
+	aesctr_dfl_iv  = int.to_bytes(1,aesctr_iv_len,'big')
 	hincog_chk_len = 8
 
 	key_generators = ('python-ecdsa','libsecp256k1') # '1','2'
@@ -240,3 +245,14 @@ class g(object):
 		'6': [17, 8, 20],
 		'7': [18, 8, 24],
 	}
+
+	if os.getenv('MMGEN_TEST_SUITE'):
+		err_disp_timeout = 0.1
+		short_disp_timeout = 0.1
+		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
+			stdin_tty = True
+
+	if os.getenv('MMGEN_DEBUG_ALL'):
+		for name in env_opts:
+			if name[:11] == 'MMGEN_DEBUG':
+				os.environ[name] = '1'

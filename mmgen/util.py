@@ -96,6 +96,21 @@ def pp_fmt(d):
 def pp_msg(d):
 	msg(pp_fmt(d))
 
+def fmt(s,indent=''):
+	"de-indent multiple lines of text, or indent with specified string"
+	return indent + ('\n'+indent).join([l.strip() for l in s.strip().splitlines()]) + '\n'
+
+def fmt_list(l,fmt='dfl',indent=''):
+	"pretty-format a list"
+	sep,lq,rq = {
+		'utf8':      ("“, ”",      "“",    "”"),
+		'dfl':       ("', '",      "'",    "'"),
+		'bare':      (' ',         '',     '' ),
+		'no_quotes': (', ',        '',     '' ),
+		'col':       ('\n'+indent, indent, '' ),
+	}[fmt]
+	return lq + sep.join(l) + rq
+
 CUR_HIDE = '\033[?25l'
 CUR_SHOW = '\033[?25h'
 
@@ -103,35 +118,46 @@ def warn_altcoins(coinsym,trust_level):
 	if trust_level > 3:
 		return
 
-	tl = (red('COMPLETELY UNTESTED'),red('LOW'),yellow('MEDIUM'),green('HIGH'))
+	tl_str = (
+		red('COMPLETELY UNTESTED'),
+		red('LOW'),
+		yellow('MEDIUM'),
+		green('HIGH'),
+	)[trust_level]
+
 	m = """
-Support for coin '{}' is EXPERIMENTAL.  The {pn} project assumes no
-responsibility for any loss of funds you may incur.
-This coin's {pn} testing status: {}
-Are you sure you want to continue?
-""".strip().format(coinsym.upper(),tl[trust_level],pn=g.proj_name)
+		Support for coin {!r} is EXPERIMENTAL.  The {pn} project
+		assumes no responsibility for any loss of funds you may incur.
+		This coin’s {pn} testing status: {}
+		Are you sure you want to continue?
+	"""
+	m = fmt(m).strip().format(coinsym.upper(),tl_str,pn=g.proj_name)
 
 	if g.test_suite:
-		qmsg(m); return
+		qmsg(m)
+		return
+
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
-	src_str = (''," in '{}'".format(src))[bool(src)]
+
 	if type(refval) == bool:
 		v = str(val).lower()
-		if v in ('true','yes','1'):          ret = True
-		elif v in ('false','no','none','0'): ret = False
-		else: die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
-				val,desc,src_str,'bool'))
-		if invert_bool: ret = not ret
+		ret = True if v in ('true','yes','1') else False if v in ('false','no','none','0') else None
+		if ret is not None:
+			return not ret if invert_bool else ret
 	else:
 		try:
-			ret = type(refval)((val,not val)[invert_bool])
+			return type(refval)(not val if invert_bool else val)
 		except:
-			die(1,"'{}': invalid value for '{}'{} (must be of type '{}')".format(
-				val,desc,src_str,type(refval).__name__))
-	return ret
+			pass
+
+	die(1,'{!r}: invalid value for {!r}{} (must be of type {!r})'.format(
+		val,
+		desc,
+		' in {!r}'.format(src) if src else '',
+		type(refval).__name__) )
 
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
@@ -196,16 +222,31 @@ def Vmsg_r(s,force=False):
 def dmsg(s):
 	if opt.debug: msg(s)
 
-def suf(arg,suf_type='s'):
-	suf_types = { 's': '', 'es': '', 'ies': 'y' }
-	assert suf_type in suf_types,'invalid suffix type'
+def suf(arg,suf_type='s',verb='none'):
+	suf_types = {
+		'none': {
+			's':   ('s',  ''),
+			'es':  ('es', ''),
+			'ies': ('ies','y'),
+		},
+		'is': {
+			's':   ('s are',  ' is'),
+			'es':  ('es are', ' is'),
+			'ies': ('ies are','y is'),
+		},
+		'has': {
+			's':   ('s have',  ' has'),
+			'es':  ('es have', ' has'),
+			'ies': ('ies have','y has'),
+		},
+	}
 	if isinstance(arg,int):
 		n = arg
 	elif isinstance(arg,(list,tuple,set,dict)):
 		n = len(arg)
 	else:
 		die(2,'{}: invalid parameter for suf()'.format(arg))
-	return suf_types[suf_type] if n == 1 else suf_type
+	return suf_types[verb][suf_type][n == 1]
 
 def get_extension(f):
 	a,b = os.path.splitext(f)

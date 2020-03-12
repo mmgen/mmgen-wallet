@@ -138,7 +138,7 @@ class Token(MMGenObject): # ERC20
 			die(3,m.format(from_addr,tx.sender.hex()))
 		if g.debug:
 			msg('TOKEN DATA:')
-			pmsg(tx.to_dict())
+			pp_msg(tx.to_dict())
 			msg('PARSED ABI DATA:\n  {}'.format('\n  '.join(parse_abi(tx.data.hex()))))
 		return hex_tx,coin_txid
 

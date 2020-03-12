@@ -540,7 +540,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 			return baseconv.frombytes(bytestr,fmt,'seed',tostr=True)
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
-		"convert a 12, 18 or 24-word mnemonic seed phrase to a hexadecimal number"
+		"convert a mnemonic seed phrase to a hexadecimal number"
 		if fmt == 'bip39':
 			from mmgen.bip39 import bip39
 			return bip39.tohex(seed_mnemonic.split(),fmt)
