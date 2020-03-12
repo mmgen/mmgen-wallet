@@ -113,6 +113,8 @@ standard.
 - **Wallet-free operation:** All wallet operations can be performed directly
   from your seed phrase at the prompt, allowing you to dispense with a
   physically stored wallet entirely if you wish.
+- Word-completing **mnemonic entry modes** customized for each of MMGen’s
+  supported wordlists minimize keystrokes during seed phrase entry.
 - **Stealth mnemonic entry:** This feature allows you to obfuscate your seed
   phrase with “dead” keystrokes to guard against acoustic side-channel attacks.
 - **Network privacy:** MMGen never “calls home” or checks for upgrades over the

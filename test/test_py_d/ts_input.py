@@ -22,7 +22,16 @@ class TestSuiteInput(TestSuiteBase):
 		('password_entry_noecho',         (1,"utf8 password entry", [])),
 		('password_entry_echo',           (1,"utf8 password entry (echoed)", [])),
 		('mnemonic_entry_mmgen',          (1,"stealth mnemonic entry (mmgen)", [])),
+		('mnemonic_entry_mmgen_minimal',  (1,"stealth mnemonic entry (mmgen - minimal entry mode)", [])),
 		('mnemonic_entry_bip39',          (1,"stealth mnemonic entry (bip39)", [])),
+		('mnemonic_entry_bip39_short',    (1,"stealth mnemonic entry (bip39 - short entry mode)", [])),
+		('mn2hex_interactive_mmgen',      (1,"mn2hex_interactive (mmgen)", [])),
+		('mn2hex_interactive_mmgen_fixed',(1,"mn2hex_interactive (mmgen - fixed (10-letter) entry mode)", [])),
+		('mn2hex_interactive_bip39',      (1,"mn2hex_interactive (bip39)", [])),
+		('mn2hex_interactive_bip39_short',(1,"mn2hex_interactive (bip39 - short entry mode (+pad entry))", [])),
+		('mn2hex_interactive_bip39_fixed',(1,"mn2hex_interactive (bip39 - fixed (4-letter) entry mode)", [])),
+		('mn2hex_interactive_xmr',        (1,"mn2hex_interactive (xmrseed)", [])),
+		('mn2hex_interactive_xmr_short',  (1,"mn2hex_interactive (xmrseed - short entry mode)", [])),
 		('dieroll_entry',                 (1,"dieroll entry (base6d)", [])),
 		('dieroll_entry_usrrand',         (1,"dieroll entry (base6d) with added user entropy", [])),
 	)
@@ -51,7 +60,21 @@ class TestSuiteInput(TestSuiteBase):
 			return ('skip_warn',m)
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,mn=None):
+	def _mn2hex(self,fmt,entry_mode='full',mn=None,pad_entry=False):
+		mn = mn or sample_mn[fmt]['mn'].split()
+		t = self.spawn('mmgen-tool',['mn2hex_interactive','fmt='+fmt,'mn_len=12','print_mn=1'])
+		from mmgen.mn_entry import mn_entry
+		mne = mn_entry(fmt,entry_mode)
+		t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+		t.expect('Using (.+) entry mode',regex=True)
+		mode = t.p.match.group(1).lower()
+		assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
+		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)
+		t.expect(sample_mn[fmt]['hex'])
+		t.read()
+		return t
+
+	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
 		wcls = SeedSource.fmt_code_to_type(fmt)
 		wf = os.path.join(ref_dir,'FE3C6545.{}'.format(wcls.ext))
 		if wcls.wclass == 'mnemonic':
@@ -65,7 +88,15 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
 		if wcls.wclass == 'mnemonic':
-			stealth_mnemonic_entry(t,mn,fmt=fmt)
+			t.expect('Entry mode: ','6')
+			t.expect('invalid')
+			from mmgen.mn_entry import mn_entry
+			mne = mn_entry(fmt,entry_mode)
+			t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+			t.expect('Using (.+) entry mode',regex=True)
+			mode = t.p.match.group(1).lower()
+			assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
+			stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode)
 		elif wcls.wclass == 'dieroll':
 			user_dieroll_entry(t,mn)
 			if usr_rand:
@@ -81,8 +112,39 @@ class TestSuiteInput(TestSuiteBase):
 		t.read()
 		return t
 
+	def mnemonic_entry_mmgen_minimal(self):
+		from mmgen.mn_entry import mn_entry
+		# erase_chars: '\b\x7f'
+		m = mn_entry('mmgen','minimal')
+		np = 2
+		mn = (
+			'z',
+			'aa',
+			'1d2ud',
+			'fo{}ot{}#'.format('1' * np, '2' * (m.em.pad_max - np)), # substring of 'football'
+			'des1p)%erate\n', # substring of 'desperately'
+			'#t!(ie',
+			'!)sto8o',
+			'the123m8!%s',
+			'349t(5)rip',
+			'di\b\bdesce',
+			'cea',
+			'bu\x7f\x7fsuic',
+			'app\bpl',
+			'wd',
+			'busy')
+		return self._user_seed_entry('words',entry_mode='minimal',mn=mn)
 	def mnemonic_entry_mmgen(self):           return self._user_seed_entry('words',entry_mode='full')
 	def mnemonic_entry_bip39(self):           return self._user_seed_entry('bip39',entry_mode='full')
+	def mnemonic_entry_bip39_short(self):     return self._user_seed_entry('bip39',entry_mode='short')
+
+	def mn2hex_interactive_mmgen(self):       return self._mn2hex('mmgen',entry_mode='full')
+	def mn2hex_interactive_mmgen_fixed(self): return self._mn2hex('mmgen',entry_mode='fixed')
+	def mn2hex_interactive_bip39(self):       return self._mn2hex('bip39',entry_mode='full')
+	def mn2hex_interactive_bip39_short(self): return self._mn2hex('bip39',entry_mode='short',pad_entry=True)
+	def mn2hex_interactive_bip39_fixed(self): return self._mn2hex('bip39',entry_mode='fixed')
+	def mn2hex_interactive_xmr(self):         return self._mn2hex('xmrseed',entry_mode='full')
+	def mn2hex_interactive_xmr_short(self):   return self._mn2hex('xmrseed',entry_mode='short')
 
 	def dieroll_entry(self):         return self._user_seed_entry('dieroll')
 	def dieroll_entry_usrrand(self): return self._user_seed_entry('dieroll',usr_rand=True,out_fmt='bip39')

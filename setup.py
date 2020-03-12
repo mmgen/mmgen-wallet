@@ -112,6 +112,7 @@ setup(
 			'mmgen.globalvars',
 			'mmgen.keccak',
 			'mmgen.license',
+			'mmgen.mn_entry',
 			'mmgen.mn_electrum',
 			'mmgen.mn_monero',
 			'mmgen.mn_tirosh',

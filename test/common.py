@@ -44,6 +44,20 @@ text_jp = '必要なのは、信用ではなく暗号化された証明に基づ
 text_zh = '所以，我們非常需要這樣一種電子支付系統，它基於密碼學原理而不基於信用，使得任何達成一致的雙方，能夠直接進行支付，從而不需要協力廠商仲介的參與。。' # 72 chars ('F'ull + 'W'ide)
 
 sample_text = 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'
+sample_mn = {
+	'mmgen': { # 'able': 0, 'youth': 1625, 'after' == 'afternoon'[:5]
+		'mn': 'able cast forgive master funny gaze after afternoon million paint moral youth',
+		'hex': '0005685ab4e94cbe3b228cf92112bc5f',
+	},
+	'bip39': { # len('sun') < uniq_ss_len
+		'mn': 'vessel ladder alter error federal sibling chat ability sun glass valve picture',
+		'hex': 'f30f8c1da665478f49b001d94c5fc452',
+	},
+	'xmrseed': {
+		'mn': 'viewpoint donuts ardent template unveil agile meant unafraid urgent athlete rustled mime azure jaded hawk baby jagged haystack baby jagged haystack ramped oncoming point template',
+		'hex': 'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f',
+	},
+}
 
 ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'

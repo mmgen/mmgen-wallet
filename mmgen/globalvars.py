@@ -115,6 +115,8 @@ class g(object):
 	test_suite_popen_spawn = False
 	terminal_width       = 0
 
+	mnemonic_entry_modes = {}
+
 	for k in ('linux','win','msys'):
 		if sys.platform[:len(k)] == k:
 			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
@@ -174,7 +176,7 @@ class g(object):
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
 		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
-		'daemon_data_dir','force_256_color','regtest','subseeds',
+		'daemon_data_dir','force_256_color','regtest','subseeds','mnemonic_entry_modes',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
 		'max_tx_file_size','max_input_size'

@@ -547,6 +547,14 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 		else:
 			return baseconv.tohex(seed_mnemonic.split(),fmt,'seed')
 
+	def mn2hex_interactive( self, fmt:mn_opts_disp=dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
+		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
+		from mmgen.mn_entry import mn_entry
+		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
+		if print_mn:
+			msg(mn)
+		return self.mn2hex(seed_mnemonic=mn,fmt=fmt)
+
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()

@@ -856,56 +856,9 @@ class MMGenMnemonic(SeedSourceUnenc):
 		if not g.stdin_tty:
 			return get_data_from_user(desc)
 
+		from mmgen.mn_entry import mn_entry # import here to catch cfg var errors
 		mn_len = self._choose_seedlen(self.wclass,self.mn_lens,self.mn_type)
-
-		self.conv_cls.init_mn(self.wl_id)
-		wl = self.conv_cls.digits[self.wl_id]
-		longest_word = max(len(w) for w in wl)
-
-		m  = 'Enter your {ml}-word seed phrase, hitting ENTER or SPACE after each word.\n'
-		m += "Optionally, you may use pad characters.  Anything you type that's not a\n"
-		m += 'lowercase letter will be treated as a “pad character”, i.e. it will simply\n'
-		m += 'be discarded.  Pad characters may be typed before, after, or in the middle\n'
-		m += "of words.  For each word, once you've typed {lw} characters total (including\n"
-		m += 'pad characters) any pad character will enter the word.'
-
-		msg(m.format(ml=mn_len,lw=longest_word))
-
-		from string import ascii_lowercase
-		from mmgen.term import get_char_raw
-		def get_word():
-			s,pad = '',0
-			while True:
-				ch = get_char_raw('',num_chars=1).decode()
-				if ch in '\b\x7f':
-					if s: s = s[:-1]
-				elif ch in '\n\r ':
-					if s: break
-				elif ch not in ascii_lowercase:
-					pad += 1
-					if s and pad + len(s) > longest_word:
-						break
-				else:
-					s += ch
-			return s
-
-		def in_list(w):
-			from bisect import bisect_left
-			idx = bisect_left(wl,w)
-			return(True,False)[idx == len(wl) or w != wl[idx]]
-
-		p = ('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
-		words,err = [],0
-		while len(words) < mn_len:
-			msg_r('{r}{s}{r}'.format(r='\r',s=' '*40))
-			if err == 1: time.sleep(0.1)
-			msg_r(p[err].format(len(words)+1))
-			s = get_word()
-			if in_list(s): words.append(s)
-			err = (1,0)[in_list(s)]
-		msg('')
-		qmsg('Mnemonic successfully entered')
-		return ' '.join(words)
+		return mn_entry(self.wl_id).get_mnemonic_from_user(mn_len)
 
 	@staticmethod
 	def _mn2hex_pad(mn): return len(mn) * 8 // 3

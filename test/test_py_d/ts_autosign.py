@@ -70,7 +70,11 @@ class TestSuiteAutosign(TestSuiteBase):
 			t.expect('OK? (Y/n): ','\n')
 			mn_file = dfl_words_file
 			mn = read_from_file(mn_file).strip().split()
-			stealth_mnemonic_entry(t,mn,fmt='words')
+			from mmgen.mn_entry import mn_entry
+			entry_mode = 'full'
+			mne = mn_entry('mmgen',entry_mode)
+			t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 			wf = t.written_to_file('Autosign wallet')
 			t.ok()
 
