@@ -136,4 +136,6 @@ def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
 	opts,args = process_opts(opts_data,short_opts,long_opts)
 
-	return opts,args,short_opts,long_opts,skipped_opts
+	from collections import namedtuple
+	ret = namedtuple('parsed_cmd_opts',['user_opts','cmd_args','short_opts','long_opts','skipped_opts'])
+	return ret(opts,args,short_opts,long_opts,skipped_opts)

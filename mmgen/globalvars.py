@@ -210,6 +210,14 @@ class g(object):
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_DISABLE_MSWIN_PW_WARNING',
 	)
+	infile_opts = (
+		'keys_from_file',
+		'mmgen_keys_from_file',
+		'passwd_file',
+		'keysforaddrs',
+		'comment_file',
+		'contract_data',
+	)
 	# Auto-typechecked and auto-set opts - incompatible with global_sets_opt and opt_sets_global
 	# First value in list is the default
 	ov = namedtuple('autoset_opt_info',['type','choices'])

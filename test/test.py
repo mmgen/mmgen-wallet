@@ -142,7 +142,7 @@ If no command is given, the whole test suite is run.
 data_dir = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
 # we need the values of two opts before running opts.init, so parse without initializing:
-_uopts = opts.init(opts_data,parse_only=True)[0]
+_uopts = opts.init(opts_data,parse_only=True).user_opts
 
 # step 1: delete data_dir symlink in ./test;
 if not ('resume' in _uopts or 'skip_deps' in _uopts):
@@ -160,7 +160,6 @@ sys.argv.insert(1,'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
-
 
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
@@ -339,6 +338,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'33': {},
 	'34': {},
 	'40': {},
+	'41': {},
 }
 
 def fixup_cfgs():
@@ -463,6 +463,7 @@ def set_restore_term_at_exit():
 class CmdGroupMgr(object):
 
 	cmd_groups_dfl = {
+		'opts':             ('TestSuiteOpts',{'full_data':True}),
 		'cfg':              ('TestSuiteCfg',{'full_data':True}),
 		'helpscreens':      ('TestSuiteHelp',{'modname':'misc','full_data':True}),
 		'main':             ('TestSuiteMain',{'full_data':True}),

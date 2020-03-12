@@ -113,7 +113,7 @@ if opt.tx_fees:
 	for idx,g_coin in ((1,opt.other_coin),(0,g.coin)):
 		init_coin(g_coin)
 		opt.tx_fee = opt.tx_fees.split(',')[idx]
-		opts.opt_is_tx_fee(opt.tx_fee,'transaction fee') or sys.exit(1)
+		opts.opt_is_tx_fee('foo',opt.tx_fee,'transaction fee') # raises exception on error
 
 rpc_init(reinit=True)
 
