@@ -657,9 +657,9 @@ tests = {
 		},
 	},
 	# TODO: compressed address files are missing
-	# 		'addrfile_compressed_chk':
-	# 			'btc': ('A33C 4FDE F515 F5BC','6C48 AA57 2056 C8C8'),
-	# 			'ltc': ('3FC0 8F03 C2D6 BD19','4C0A 49B6 2DD1 1BE0'),
+	#		'addrfile_compressed_chk':
+	#			'btc': ('A33C 4FDE F515 F5BC','6C48 AA57 2056 C8C8'),
+	#			'ltc': ('3FC0 8F03 C2D6 BD19','4C0A 49B6 2DD1 1BE0'),
 	'File': {
 		'addrfile_chksum': {
 			'btc_mainnet': [

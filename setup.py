@@ -19,11 +19,13 @@
 import sys,os,subprocess
 from shutil import copy2
 
-ver = sys.version_info[:2]
-min_ver = (3,6)
-if ver[0] < min_ver[0] or ver[1] < min_ver[1]:
-	m = '{}.{}: wrong Python version.  MMGen requires Python {M}.{m} or greater\n'
-	sys.stderr.write(m.format(*ver,M=min_ver[0],m=min_ver[1]))
+sys_ver = sys.version_info[:2]
+req_ver = (3,7)
+ver2f = lambda t: float('{}.{:03}'.format(*t))
+
+if ver2f(sys_ver) < ver2f(req_ver):
+	m = '{}.{}: wrong Python version.  MMGen requires Python {}.{} or greater\n'
+	sys.stderr.write(m.format(*sys_ver,*req_ver))
 	sys.exit(1)
 
 have_msys2 = subprocess.check_output(['uname','-s']).strip()[:7] == b'MSYS_NT'

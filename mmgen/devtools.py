@@ -78,19 +78,11 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 			def isScalar(obj):
 				return isinstance(obj,scalars)
 
-#	 		print type(self)
-#	 		print dir(self)
-#	 		print self.__dict__
-#	 		print self.__dict__.keys()
-#	 		print self.keys()
-
 			out = ['<{}>{}\n'.format(type(self).__name__,' '+repr(self) if isScalar(self) else '')]
 			if id(self) in id_list:
 				return out[-1].rstrip() + ' [RECURSION]\n'
 			if isList(self) or isDict(self):
 				do_list(out,self,lvl=lvl,is_dict=isDict(self))
-
-#			print repr(self.__dict__.keys())
 
 			for k in self.__dict__:
 				if k in ('_OrderedDict__root','_OrderedDict__map'): continue # excluded because of recursion

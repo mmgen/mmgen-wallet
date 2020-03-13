@@ -70,7 +70,7 @@ class TestSuiteCfg(TestSuiteBase):
 		u = read_from_file(self.path('usr'))
 		S = read_from_file(self.path('sys'))
 		assert u[-1] == '\n', u
-		assert u == S, 'u != S'
+		assert u.replace('\r\n','\n') == S, 'u != S'
 		self.check_replaced_sample()
 		return t
 

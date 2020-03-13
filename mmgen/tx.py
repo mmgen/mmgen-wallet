@@ -1046,9 +1046,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				get_char('Press any key to continue: ')
 				msg('')
 
-# 	def is_replaceable_from_rpc(self):
-# 		dec_tx = g.rpch.decoderawtransaction(self.hex)
-# 		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
+#	def is_replaceable_from_rpc(self):
+#		dec_tx = g.rpch.decoderawtransaction(self.hex)
+#		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
 
 	def is_replaceable(self):
 		return self.inputs[0].sequence == g.max_int - 2

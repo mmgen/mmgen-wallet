@@ -126,8 +126,6 @@ def _process_args(cmd,cmd_args):
 				max_dlen_spec = '10kB' # limit input to 10KB for now
 				max_dlen = MMGenToolCmdUtil().bytespec(max_dlen_spec)
 				u_args[0] = os.read(0,max_dlen)
-# 				try: u_args[0] = u_args[0].decode()
-# 				except: pass
 				have_stdin_input = True
 				if len(u_args[0]) >= max_dlen:
 					die(2,'Maximum data input for this command is {}'.format(max_dlen_spec))

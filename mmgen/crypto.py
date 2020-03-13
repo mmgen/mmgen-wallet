@@ -159,10 +159,10 @@ def _get_random_data_from_user(uchars,desc):
 
 	import time
 	from mmgen.term import get_char_raw
-	key_data,time_data = bytes(),[]
+	key_data,time_data = '',[]
 
 	for i in range(uchars):
-		key_data += get_char_raw('\r'+prompt.format(uchars-i))
+		key_data += get_char_raw('\r'+prompt.format(uchars-i)).decode()
 		time_data.append(time.time())
 
 	if opt.quiet: msg_r('\r')
@@ -173,7 +173,7 @@ def _get_random_data_from_user(uchars,desc):
 	prompt = 'User random data successfully acquired.  Press ENTER to continue'
 	prompt_and_get_char(prompt,'',enter_ok=True)
 
-	return key_data + ''.join(fmt_time_data).encode()
+	return key_data.encode() + ''.join(fmt_time_data).encode()
 
 def get_random(length):
 	return add_user_random(os.urandom(length),'OS random data')

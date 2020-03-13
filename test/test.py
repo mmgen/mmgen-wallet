@@ -815,10 +815,6 @@ class TestSuiteRunner(object):
 
 	def run_test(self,cmd):
 
-		# delete files produced by this cmd
-# 		for ext,tmpdir in find_generated_exts(cmd):
-# 			print cmd, get_file_with_ext(tmpdir,ext)
-
 		d = [(str(num),ext) for exts,num in self.gm.dpy_data[cmd][2] for ext in exts]
 
 		# delete files depended on by this cmd

@@ -750,8 +750,6 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 
-	from mmgen.term import get_char
-
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
 	p = prompt if complete_prompt else '{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
@@ -760,30 +758,27 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete
 		msg(p)
 		return default_yes
 
+	from mmgen.term import get_char
 	while True:
-		r = get_char(p).strip(b'\n\r')
-		if not r:
-			if default_yes: msg_r(nl); return True
-			else:           msg_r(nl); return False
-		elif r in b'yY': msg_r(nl); return True
-		elif r in b'nN': msg_r(nl); return False
+		reply = get_char(p).decode().strip('\n\r')
+		if not reply:
+			msg_r(nl)
+			return True if default_yes else False
+		elif reply in 'yYnN':
+			msg_r(nl)
+			return True if reply in 'yY' else False
 		else:
-			if verbose: msg('\nInvalid reply')
-			else: msg_r('\r')
+			msg_r('\nInvalid reply\n' if verbose else '\r')
 
 def prompt_and_get_char(prompt,chars,enter_ok=False,verbose=False):
 
 	from mmgen.term import get_char
-
 	while True:
-		reply = get_char('{}: '.format(prompt)).strip(b'\n\r')
-
-		if reply in chars.encode() or (enter_ok and not reply):
+		reply = get_char('{}: '.format(prompt)).decode().strip('\n\r')
+		if reply in chars or (enter_ok and not reply):
 			msg('')
-			return reply.decode()
-
-		if verbose: msg('\nInvalid reply')
-		else: msg_r('\r')
+			return reply
+		msg_r('\nInvalid reply\n' if verbose else '\r')
 
 def do_pager(text):
 
@@ -811,22 +806,22 @@ def do_pager(text):
 
 def do_license_msg(immed=False):
 
-	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty: return
-
-	import mmgen.license as gpl
+	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty:
+		return
 
 	p = "Press 'w' for conditions and warranty info, or 'c' to continue:"
+	import mmgen.license as gpl
 	msg(gpl.warning)
 	prompt = '{} '.format(p.strip())
 
 	from mmgen.term import get_char
-
 	while True:
-		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])
-		if reply == b'w':
+		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)]).decode()
+		if reply == 'w':
 			do_pager(gpl.conditions)
-		elif reply == b'c':
-			msg(''); break
+		elif reply == 'c':
+			msg('')
+			break
 		else:
 			msg_r('\r')
 	msg('')

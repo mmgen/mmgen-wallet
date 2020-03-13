@@ -696,7 +696,6 @@ class SeedSourceUnenc(SeedSource):
 	def _choose_seedlen(self,desc,ok_lens,subtype):
 
 		from mmgen.term import get_char
-
 		def choose_len():
 			prompt = self.choose_seedlen_prompt
 			while True:
