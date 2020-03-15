@@ -344,8 +344,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		no_output,oneshot_msg = False,None
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
-			reply = get_char('' if no_output else self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
-								immed_chars=''.join(self.key_mappings.keys()))
+			reply = get_char(
+				'' if no_output else self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
+				immed_chars=''.join(self.key_mappings.keys())
+			)
 			no_output = False
 			oneshot_msg = '' if oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:

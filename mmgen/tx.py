@@ -1030,11 +1030,20 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			ask_tty=ask_tty,
 			ask_write_default_yes=ask_write_default_yes)
 
-	def view_with_prompt(self,prompt=''):
-		prompt += ' (y)es, (N)o, pager (v)iew, (t)erse view'
-		reply = prompt_and_get_char(prompt,'YyNnVvTt',enter_ok=True)
-		if reply and reply in 'YyVvTt':
-			self.view(pager=reply in 'Vv',terse=reply in 'Tt')
+	def view_with_prompt(self,prompt='',pause=True):
+		prompt += ' (y)es, (N)o, pager (v)iew, (t)erse view: '
+		from mmgen.term import get_char
+		ok_chars = 'YyNnVvTt'
+		while True:
+			reply = get_char(prompt,immed_chars=ok_chars).strip('\n\r')
+			msg('')
+			if reply == '' or reply in 'Nn':
+				break
+			elif reply in 'YyVvTt':
+				self.view(pager=reply in 'Vv',terse=reply in 'Tt',pause=pause)
+				break
+			else:
+				msg('Invalid reply')
 
 	def view(self,pager=False,pause=True,terse=False):
 		o = self.format_view(terse=terse)

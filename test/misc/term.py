@@ -67,22 +67,6 @@ def tt_my_raw_input():
 	reply = my_raw_input('\nEnter text: ')
 	confirm('Did you enter the text {!r}?'.format(reply))
 
-def tt_prompt_and_get_char():
-	cmsg('Testing prompt_and_get_char():')
-	m = 'Type some letters besides "x" or "z", then "x" or "z"'
-	reply = prompt_and_get_char(m,'xz')
-	confirm('Did you enter the letter {!r}?'.format(reply))
-
-def tt_prompt_and_get_char_enter_ok():
-	cmsg('Testing prompt_and_get_char() with blank choices and enter_ok=True:')
-	for m in (
-		'Type ENTER',
-		'Type any letter followed by a pause, followed by ENTER',
-	):
-		reply = prompt_and_get_char(m,'',enter_ok=True)
-		assert reply == ''
-		msg('OK')
-
 def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	fname = ('get_char','get_char_raw')[raw]
 	fs = fmt("""
@@ -130,6 +114,30 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	except KeyboardInterrupt:
 		msg('\nDone')
 
+def tt_urand():
+	cmsg('Testing _get_random_data_from_user():')
+	from mmgen.crypto import _get_random_data_from_user
+	ret = _get_random_data_from_user(10,desc='data',test_suite=True).decode()
+	msg('USER ENTROPY (user input + keystroke timings):\n\n{}'.format(fmt(ret,'  ')))
+	times = ret.splitlines()[1:]
+	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
+	if avg_prec < g.min_time_precision:
+		m = 'WARNING: Avg. time precision of only {} decimal points.  User entropy quality is degraded!'
+		ymsg(m.format(avg_prec))
+	else:
+		msg('Average time precision: {} decimal points - OK'.format(avg_prec))
+	my_raw_input('Press ENTER to continue: ')
+
+def tt_txview():
+	cmsg('Testing tx.view_with_prompt() (try each viewing option)')
+	from mmgen.tx import MMGenTX
+	fn = 'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'
+	tx = MMGenTX(fn,offline=True)
+	while True:
+		tx.view_with_prompt('View data for transaction?',pause=False)
+		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
+			break
+
 if g.platform == 'linux':
 	import termios,atexit
 	fd = sys.stdin.fileno()
@@ -142,8 +150,8 @@ tt_get_terminal_size()
 tt_color()
 tt_license()
 tt_my_raw_input()
-tt_prompt_and_get_char()
-tt_prompt_and_get_char_enter_ok()
+tt_urand()
+tt_txview()
 
 tt_get_char(one_char=True)
 tt_get_char(one_char=True,sleep=1)

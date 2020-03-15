@@ -152,8 +152,8 @@ def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase
 	dmsg('Key: {}'.format(key.hex()))
 	return key
 
-def _get_random_data_from_user(uchars,desc):
-	m = 'Enter {r} random symbols' if opt.quiet else crmsg['usr_rand_notice']
+def _get_random_data_from_user(uchars,desc,test_suite=False):
+	m = 'Enter {r} random symbols' if opt.quiet or test_suite else crmsg['usr_rand_notice']
 	msg(m.format(r=uchars,d=desc))
 	prompt = 'You may begin typing.  {} symbols left: '
 
@@ -165,15 +165,24 @@ def _get_random_data_from_user(uchars,desc):
 		key_data += get_char_raw('\r'+prompt.format(uchars-i))
 		time_data.append(time.time())
 
-	if opt.quiet: msg_r('\r')
-	else: msg_r("\rThank you.  That's enough.{}\n\n".format(' '*18))
+	msg_r('\r' if opt.quiet else "\rThank you.  That's enough.{}\n\n".format(' '*18))
 
-	fmt_time_data = list(map('{:.22f}'.format,time_data))
-	dmsg('\nUser input:\n{!r}\nKeystroke time values:\n{}\n'.format(key_data,'\n'.join(fmt_time_data)))
-	prompt = 'User random data successfully acquired.  Press ENTER to continue'
-	prompt_and_get_char(prompt,'',enter_ok=True)
+	time_data = ['{:.22f}'.format(t).rstrip('0') for t in time_data]
 
-	return key_data.encode() + ''.join(fmt_time_data).encode()
+	avg_prec = sum(len(t.split('.')[1]) for t in time_data) // len(time_data)
+	if avg_prec < g.min_time_precision:
+		m = 'WARNING: Avg. time precision of only {} decimal points.  User entropy quality is degraded!'
+		ymsg(m.format(avg_prec))
+
+	ret = key_data + '\n' + '\n'.join(time_data)
+
+	if g.debug:
+		msg('USER ENTROPY (user input + keystroke timings):\n{}'.format(ret))
+
+	if not test_suite:
+		my_raw_input('User random data successfully acquired.  Press ENTER to continue: ')
+
+	return ret.encode()
 
 def get_random(length):
 	return add_user_random(os.urandom(length),'OS random data')

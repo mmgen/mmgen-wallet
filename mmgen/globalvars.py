@@ -58,6 +58,7 @@ class g(object):
 	http_timeout = 60
 	err_disp_timeout = 0.7
 	short_disp_timeout = 0.3
+	min_time_precision = 18
 
 	# Variables - these might be altered at runtime:
 
