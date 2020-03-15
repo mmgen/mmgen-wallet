@@ -699,7 +699,7 @@ class SeedSourceUnenc(SeedSource):
 		def choose_len():
 			prompt = self.choose_seedlen_prompt
 			while True:
-				r = get_char('\r'+prompt).decode()
+				r = get_char('\r'+prompt)
 				if is_int(r) and 1 <= int(r) <= len(ok_lens):
 					break
 			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
@@ -1044,7 +1044,7 @@ class DieRollSeedFile(SeedSourceUnenc):
 			p = prompt_fs
 			sleep = g.short_disp_timeout
 			while True:
-				ch = get_char(p.format(n),num_chars=1,sleep=sleep).decode()
+				ch = get_char(p.format(n),num_chars=1,sleep=sleep)
 				if ch in b6d_digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch

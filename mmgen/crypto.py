@@ -162,7 +162,7 @@ def _get_random_data_from_user(uchars,desc):
 	key_data,time_data = '',[]
 
 	for i in range(uchars):
-		key_data += get_char_raw('\r'+prompt.format(uchars-i)).decode()
+		key_data += get_char_raw('\r'+prompt.format(uchars-i))
 		time_data.append(time.time())
 
 	if opt.quiet: msg_r('\r')

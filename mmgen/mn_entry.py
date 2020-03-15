@@ -52,7 +52,7 @@ class MnEntryMode(object):
 	def get_char(self,s):
 		did_erase = False
 		while True:
-			ch = get_char_raw('',num_chars=1).decode()
+			ch = get_char_raw('',num_chars=1)
 			if s and ch in _erase_chars:
 				s = s[:-1]
 				did_erase = True
@@ -320,7 +320,7 @@ class MnemonicEntry(object):
 				fmt(mode.choose_info,' '*14).lstrip().format(usl=self.uniq_ss_len),
 			))
 		while True:
-			uret = get_char('Entry mode: ').decode()
+			uret = get_char('Entry mode: ')
 			if uret in [str(i) for i in range(1,len(em_objs)+1)]:
 				return em_objs[int(uret)-1]
 			else:

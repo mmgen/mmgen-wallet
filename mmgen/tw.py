@@ -187,7 +187,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def set_term_columns(self):
 		from mmgen.term import get_terminal_size
 		while True:
-			self.cols = g.terminal_width or get_terminal_size()[0]
+			self.cols = g.terminal_width or get_terminal_size().width
 			if self.cols >= g.min_screen_width: break
 			m1 = 'Screen too narrow to display the tracking wallet\n'
 			m2 = 'Please resize your screen to at least {} characters and hit ENTER '
@@ -345,7 +345,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char('' if no_output else self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
-								immed_chars=''.join(self.key_mappings.keys())).decode()
+								immed_chars=''.join(self.key_mappings.keys()))
 			no_output = False
 			oneshot_msg = '' if oneshot_msg else None # tristate, saves previous state
 			if reply not in self.key_mappings:

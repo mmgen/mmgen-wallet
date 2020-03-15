@@ -78,8 +78,8 @@ def opt_postproc_debug():
 	Msg('\n=== end opts.py debug ===\n')
 
 def init_term_and_color():
-	from mmgen.term import set_terminal_vars
-	set_terminal_vars()
+	from mmgen.term import init_term
+	init_term()
 
 	if g.color: # MMGEN_DISABLE_COLOR sets this to False
 		from mmgen.color import start_mscolor,init_color

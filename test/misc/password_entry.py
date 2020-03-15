@@ -6,7 +6,6 @@ parpar = os.path.dirname(os.path.dirname(pn))
 os.chdir(parpar)
 sys.path[0] = os.curdir
 
-from mmgen.util import msg
 from mmgen.common import *
 
 cmd_args = opts.init({'text': { 'desc': '', 'usage':'', 'options':'-e, --echo-passphrase foo' }})
