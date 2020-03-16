@@ -5,7 +5,7 @@ test/unit_tests_d/ut_tx_deserialize: TX deserialization unit test for the MMGen 
 
 import os
 from mmgen.common import *
-from test.common import *
+from ..include.common import *
 
 class unit_test(object):
 

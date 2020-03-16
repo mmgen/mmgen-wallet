@@ -24,11 +24,11 @@ ts_ref_3seed.py: Saved and generated reference file tests for 128, 192 and
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.seed import SeedSource
-from test.common import *
-from test.test_py_d.common import *
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
-from test.test_py_d.ts_wallet import TestSuiteWalletConv
+from ..include.common import *
+from .common import *
+from .ts_base import *
+from .ts_shared import *
+from .ts_wallet import TestSuiteWalletConv
 
 class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	'saved wallet files for 128-, 192- and 256-bit seeds + generated filename checks'

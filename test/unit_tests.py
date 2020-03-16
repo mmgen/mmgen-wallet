@@ -22,7 +22,7 @@ test/unit_tests.py:  Unit tests for the MMGen suite
 
 import sys,os,time
 
-from tests_header import repo_root
+from include.tests_header import repo_root
 from mmgen.common import *
 
 opts_data = {

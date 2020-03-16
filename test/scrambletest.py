@@ -24,9 +24,9 @@ supported coins + passwords
 import sys,os
 from subprocess import run,PIPE
 
-from tests_header import repo_root
+from include.tests_header import repo_root
 from mmgen.common import *
-from test.common import *
+from test.include.common import *
 
 opts_data = {
 	'text': {

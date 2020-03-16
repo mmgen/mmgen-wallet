@@ -23,9 +23,9 @@ ts_wallet.py: Wallet conversion tests for the test.py test suite
 import os
 from mmgen.opts import opt
 from mmgen.seed import *
-from test.test_py_d.common import *
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
+from .common import *
+from .ts_base import *
+from .ts_shared import *
 
 class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	'wallet conversion to and from reference data'

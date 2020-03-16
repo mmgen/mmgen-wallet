@@ -13,6 +13,7 @@ text = {
 	'jp': 'Japanese text: {}'.format('必要なのは、信用ではなく暗号化された証明に基づく電子取引システムであり、')
 }
 
-assert cmd_args[0] in text,'argument must be one of {}'.format(list(text.keys()))
+if not cmd_args or not cmd_args[0] in text:
+	die(2,'argument must be one of {}'.format(list(text.keys())))
 
 msg(text[cmd_args[0]])

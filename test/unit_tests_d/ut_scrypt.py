@@ -3,7 +3,7 @@
 test/unit_tests_d/ut_scrypt.py: password hashing unit test for the MMGen suite
 """
 
-from test.common import *
+from ..include.common import *
 
 class unit_test(object):
 

@@ -12,8 +12,8 @@ ts_misc.py: CfgFile tests for the MMGen test.py test suite
 
 import shutil
 
-from test.common import *
-from test.test_py_d.ts_base import *
+from ..include.common import *
+from .ts_base import *
 from mmgen.cfg import *
 
 class TestSuiteCfg(TestSuiteBase):

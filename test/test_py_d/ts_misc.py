@@ -21,10 +21,10 @@ ts_misc.py: Miscellaneous test groups for the test.py test suite
 """
 
 from mmgen.globalvars import g
-from test.common import *
-from test.test_py_d.common import *
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_main import TestSuiteMain
+from ..include.common import *
+from .common import *
+from .ts_base import *
+from .ts_main import TestSuiteMain
 
 class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'

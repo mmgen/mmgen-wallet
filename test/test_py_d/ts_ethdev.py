@@ -28,8 +28,8 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die
 from mmgen.exception import *
-from test.common import *
-from test.test_py_d.common import *
+from ..include.common import *
+from .common import *
 
 del_addrs = ('4','1')
 dfl_sid = '98831F3A'
@@ -132,8 +132,8 @@ token_bals_getbalance = {
 	'2': ('111.888877776666555545','888.111122223333444455')
 }
 
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
+from .ts_base import *
+from .ts_shared import *
 
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'

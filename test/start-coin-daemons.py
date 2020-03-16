@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
-from tests_header import repo_root
+from include.tests_header import repo_root
 from mmgen.common import *
 from mmgen.daemon import CoinDaemon
 from mmgen.regtest import MMGenRegtest

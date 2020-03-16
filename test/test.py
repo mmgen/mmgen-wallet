@@ -71,14 +71,14 @@ def create_shm_dir(data_dir,trash_dir):
 	return shm_dir
 
 import sys,os,time
-from tests_header import repo_root
+from include.tests_header import repo_root
 
 try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
 
 from mmgen.common import *
 from mmgen.daemon import CoinDaemon
-from test.common import *
+from test.include.common import *
 from test.test_py_d.common import *
 
 g.quiet = False # if 'quiet' was set in config file, disable here
@@ -666,7 +666,7 @@ class TestSuiteRunner(object):
 			except:
 				self.log_fd.write(ascii(cmd_disp)+'\n')
 
-		from test.pexpect import MMGenPexpect
+		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect(args,no_output=no_output)
 
 	def end_msg(self):

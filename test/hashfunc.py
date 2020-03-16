@@ -20,7 +20,7 @@ test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 """
 
 import sys,os
-import tests_header
+import include.tests_header
 from mmgen.util import die
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"

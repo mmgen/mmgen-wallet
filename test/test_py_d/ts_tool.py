@@ -10,9 +10,9 @@
 ts_tool.py: tool tests for the MMGen test.py test suite
 """
 
-from test.common import *
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_main import TestSuiteMain
+from ..include.common import *
+from .ts_base import *
+from .ts_main import TestSuiteMain
 
 class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	"interactive 'mmgen-tool' commands"

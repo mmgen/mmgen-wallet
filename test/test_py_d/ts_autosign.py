@@ -25,11 +25,12 @@ from subprocess import run
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from test.common import *
-from test.test_py_d.common import *
+from ..include.common import *
+from .common import *
 
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
+from .ts_base import *
+from .ts_shared import *
+from .input import *
 
 class TestSuiteAutosign(TestSuiteBase):
 	'autosigning with BTC, BCH, LTC, ETH and ETC'
@@ -86,7 +87,7 @@ class TestSuiteAutosign(TestSuiteBase):
 						('mm1','ethereum'),
 						('etc','ethereum_classic'))
 			fdata = [e for e in fdata_in if e[0] in txfiles]
-			from test.test_py_d.ts_ref import TestSuiteRef
+			from .ts_ref import TestSuiteRef
 			tfns  = [TestSuiteRef.sources['ref_tx_file'][c][1] for c,d in fdata] + \
 					[TestSuiteRef.sources['ref_tx_file'][c][0] for c,d in fdata] + \
 					['25EFA3[2.34].testnet.rawtx'] # TX with 2 non-MMGen outputs

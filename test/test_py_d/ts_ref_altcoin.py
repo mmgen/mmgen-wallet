@@ -23,9 +23,9 @@ ts_ref_altcoin.py: Altcoin reference file tests for the test.py test suite
 import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from test.test_py_d.common import *
-from test.test_py_d.ts_ref import *
-from test.test_py_d.ts_base import *
+from .common import *
+from .ts_ref import *
+from .ts_base import *
 
 class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 	'saved and generated altcoin reference files'

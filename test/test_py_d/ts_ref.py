@@ -24,11 +24,11 @@ import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.seed import MMGenMnemonic
-from test.common import *
-from test.test_py_d.common import *
+from ..include.common import *
+from .common import *
 
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
+from .ts_base import *
+from .ts_shared import *
 
 wpasswd = 'reference password'
 nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.testnet])

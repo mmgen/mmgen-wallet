@@ -28,8 +28,8 @@ from mmgen.util import die,gmsg,write_data_to_file
 from mmgen.protocol import CoinProtocol
 from mmgen.addr import AddrList
 from mmgen.seed import Wallet
-from test.common import *
-from test.test_py_d.common import *
+from ..include.common import *
+from .common import *
 
 dfl_wcls = Wallet
 rt_pw = 'abc-α'
@@ -128,8 +128,8 @@ rt_data = {
 	}
 }
 
-from test.test_py_d.ts_base import *
-from test.test_py_d.ts_shared import *
+from .ts_base import *
+from .ts_shared import *
 
 class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	'transacting and tracking wallet operations via regtest mode'

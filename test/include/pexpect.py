@@ -24,7 +24,7 @@ import sys,os,time
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import msg,msg_r,vmsg,vmsg_r,rmsg,red,yellow,green,cyan,die,rdie
-from test.common import *
+from .common import *
 
 try:
 	import pexpect

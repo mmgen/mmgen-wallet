@@ -25,8 +25,8 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import ymsg
 from mmgen.seed import SeedSource,SeedSourceEnc,Brainwallet,Wallet,IncogWalletHidden
-from test.test_py_d.common import *
-from test.common import *
+from ..include.common import *
+from .common import *
 
 class TestSuiteShared(object):
 	'shared methods for the test.py test suite'

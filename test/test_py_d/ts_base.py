@@ -23,8 +23,8 @@ ts_base.py: Base class for the test.py test suite
 import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from test.common import *
-from test.test_py_d.common import *
+from ..include.common import *
+from .common import *
 
 class TestSuiteBase(object):
 	'initializer class for the test.py test suite'

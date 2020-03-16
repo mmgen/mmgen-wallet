@@ -24,7 +24,7 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.seed import SeedSource,Wallet,IncogWallet,IncogWalletHex,IncogWalletHidden,SeedSourceEnc
 
-from test.test_py_d.ts_base import *
+from .ts_base import *
 
 ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'

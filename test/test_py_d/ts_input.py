@@ -10,8 +10,9 @@
 ts_input.py: user input tests for the MMGen test.py test suite
 """
 
-from test.common import *
-from test.test_py_d.ts_base import *
+from ..include.common import *
+from .ts_base import *
+from .input import *
 from mmgen.seed import SeedSource
 
 class TestSuiteInput(TestSuiteBase):

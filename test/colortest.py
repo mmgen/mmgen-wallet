@@ -7,8 +7,8 @@
 colortest.py:  test color handling for the MMGen suite
 """
 
-import tests_header
-from test.common import *
+import include.tests_header
+from include.common import *
 from mmgen.color import *
 from mmgen.color import _colors
 init_color()
