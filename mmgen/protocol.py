@@ -103,6 +103,7 @@ class BitcoinProtocol(MMGenObject):
 	sign_mode          = 'daemon'
 	secp256k1_ge       = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 	privkey_len        = 32
+	avg_bdi            = int(9.7 * 60) # average block discovery interval (historical)
 
 	@classmethod
 	def addr_fmt_to_ver_bytes(cls,req_fmt,return_hex=False):
@@ -292,6 +293,7 @@ class LitecoinProtocol(BitcoinProtocol):
 	base_coin      = 'LTC'
 	forks          = []
 	bech32_hrp     = 'ltc'
+	avg_bdi        = 2 * 60
 
 class LitecoinTestnetProtocol(LitecoinProtocol):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'

@@ -34,6 +34,34 @@ def get_tw_label(s):
 	except BadTwComment: raise
 	except: return None
 
+_date2days = lambda date: (g.rpch.cur_date - date) // 86400
+_confs2date_approx = lambda o: g.rpch.cur_date - int(g.proto.avg_bdi * (o.confs - 1))
+_confs2date_exact = lambda o: (
+#		g.rpch.getblockheader(g.rpch.getblockhash(g.rpch.blockcount - (o.confs - 1)))['time']
+		g.rpch.gettransaction(o.txid)['blocktime'] # same as above, differs from 'time'
+			if o.confs
+		else g.rpch.cur_date )
+
+if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
+	# 1831006505 (09 Jan 2028) = projected time of block 1000000
+	_date2days = lambda date: (1831006505 - date) // 86400
+	_confs2date_approx = lambda o: 1831006505 - (10 * 60 * (o.confs - 1))
+	_confs2date_exact = lambda o: 1831006505 - int(9.7 * 60 * (o.confs - 1))
+
+def _format_date(secs):
+	t = time.gmtime(secs)
+	return '{}-{:02}-{:02}'.format(str(t.tm_year)[2:],t.tm_mon,t.tm_mday)
+
+def _format_date_time(secs):
+	t = time.gmtime(secs)
+	return '{}-{:02}-{:02} {:02}:{:02}'.format(
+				t.tm_year,
+				t.tm_mon,
+				t.tm_mday,
+				t.tm_hour,
+				t.tm_min,
+			)
+
 class TwUnspentOutputs(MMGenObject):
 
 	def __new__(cls,*args,**kwargs):
@@ -49,14 +77,23 @@ class TwUnspentOutputs(MMGenObject):
 	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
 	prompt = """
 Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: show [D]ays, [g]roup, show [m]mgen addr, r[e]draw screen
+Display options: show [D]ays, [g]roup, [m]mgen addr, e[x]act age; r[e]draw
 Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 """
 	key_mappings = {
 		't':'s_txid','a':'s_amt','d':'s_addr','A':'s_age','r':'d_reverse','M':'s_twmmid',
-		'D':'d_days','g':'d_group','m':'d_mmid','e':'d_redraw',
+		'D':'d_days','g':'d_group','m':'d_mmid','x':'d_exact_age','e':'d_redraw',
 		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add' }
 	col_adj = 38
+	age_fmts = ('confs','block','days','date','date_time')
+	age_fmts_ia = ('confs','block','days','date')
+	_age_fmt = 'confs'
+	age_precs = ('approx','exact')
+	age_prec = 'approx'
+	age_prec_disp = {
+		'approx': '(≈)',
+		'exact': '',
+	}
 
 	class MMGenTwOutputList(list,MMGenObject): pass
 
@@ -69,8 +106,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr     = MMGenImmutableAttr('addr','CoinAddr')
 		confs    = MMGenImmutableAttr('confs',int,typeconv=False)
+		date     = MMGenListItemAttr('date',int,typeconv=False,reassign_ok=True)
 		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
-		days    = MMGenListItemAttr('days',int,typeconv=False)
 		skip    = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
 
 	wmsg = {
@@ -90,7 +127,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.show_mmid    = True
 		self.minconf      = minconf
 		self.addrs        = addrs
-		self.age_fmt      = 'days'
 		self.sort_key     = 'age'
 		self.disp_prec    = self.get_display_precision()
 
@@ -98,16 +134,14 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.get_unspent_data()
 		self.do_sort()
 
-
 	@property
 	def age_fmt(self):
 		return self._age_fmt
 
 	@age_fmt.setter
 	def age_fmt(self,val):
-		age_fmts = ('days','confs')
-		if val not in age_fmts:
-			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(val,age_fmts))
+		if val not in self.age_fmts:
+			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(val,self.age_fmts))
 		self._age_fmt = val
 
 	def get_display_precision(self):
@@ -137,7 +171,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			us_rpc = self.get_unspent_rpc()
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
-		confs_per_day = 60*60*24 // g.proto.secs_per_block
 		tr_rpc = []
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for o in us_rpc:
@@ -147,7 +180,6 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				o.update({
 					'twmmid': l.mmid,
 					'label':  l.comment,
-					'days':   int(o['confirmations'] // confs_per_day),
 					'amt':    g.proto.coin_amt(o['amount']),
 					'addr':   CoinAddr(o['address']),
 					'confs':  o['confirmations']
@@ -207,7 +239,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		acct_w = min(max_acct_w, max(24,addr_w-10))
 		btaddr_w = addr_w - acct_w - 1
 		label_w = acct_w - mmid_w - 1
-		tx_w = min(self.txid_w,self.cols-addr_w-28-col1_w) # min=7
+		tx_w = min(self.txid_w,self.cols-addr_w-29-col1_w) # min=6 TODO
 		txdots = ('','..')[tx_w < self.txid_w]
 
 		for i in unsp: i.skip = ''
@@ -222,14 +254,22 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		fs = {  'btc':   ' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (col1_w,tx_w),
 				'eth':   ' {n:%s} {a} {A}' % col1_w,
 				'token': ' {n:%s} {a} {A} {A2}' % col1_w }[self.disp_type]
-		out += [fs.format(  n='Num',
-							t='TXid'.ljust(tx_w - 5) + ' Vout',
-							v='',
+		fs_hdr = ' {n:%s} {t:%s} {a} {A} {c:<}' % (col1_w,tx_w) if self.disp_type == 'btc' else fs
+		date_hdr = {
+			'confs':     lambda: 'Confs',
+			'block':     lambda: 'Block',
+			'days':      lambda: 'Age({}d)'.format(self.age_prec_disp[self.age_prec][1:2]),
+			'date':      lambda: 'Date'+self.age_prec_disp[self.age_prec],
+			'date_time': lambda: 'Date'+self.age_prec_disp[self.age_prec],
+		}
+		out += [fs_hdr.format(
+							n='Num',
+							t='TXid'.ljust(tx_w - 2) + ' Vout',
 							a='Address'.ljust(addr_w),
-							A='Amt({})'.format(g.dcoin).ljust(self.disp_prec+3),
+							A='Amt({})'.format(g.dcoin).ljust(self.disp_prec+5),
 							A2=' Amt({})'.format(g.coin).ljust(self.disp_prec+4),
-							c=('Confs','Age(d)')[self.age_fmt=='days']
-							).rstrip()]
+							c = date_hdr[self.age_fmt](),
+						).rstrip()]
 
 		for n,i in enumerate(unsp):
 			addr_dots = '|' + '.'*(addr_w-1)
@@ -254,29 +294,31 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 									a=addr_out,
 									A=i.amt.fmt(color=True,prec=self.disp_prec),
 									A2=(i.amt2.fmt(color=True,prec=self.disp_prec) if i.amt2 is not None else ''),
-									c=i.days if self.age_fmt == 'days' else i.confs
+									c=self.age_disp(i,self.age_fmt),
 									).rstrip())
 
 		self.fmt_display = '\n'.join(out) + '\n'
 		return self.fmt_display
 
-	def format_for_printing(self,color=False):
+	def format_for_printing(self,color=False,show_confs=True):
 
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
-		amt_w = g.proto.coin_amt.max_prec + 4
-		fs = {  'btc':   ' {n:4} {t:%s} {a} {m} {A:%s} {c:<8} {g:<6} {l}' % (self.txid_w+3,amt_w),
+		amt_w = g.proto.coin_amt.max_prec + 5
+		cfs = '{c:<8} ' if show_confs else ''
+		fs = {  'btc': (' {n:4} {t:%s} {a} {m} {A:%s} ' + cfs + '{b:<8} {D:<19} {l}') % (self.txid_w+3,amt_w),
 				'eth':   ' {n:4} {a} {m} {A:%s} {l}' % amt_w,
 				'token': ' {n:4} {a} {m} {A:%s} {A2:%s} {l}' % (amt_w,amt_w)
 				}[self.disp_type]
 		out = [fs.format(   n='Num',
 							t='Tx ID,Vout',
 							a='Address'.ljust(addr_w),
-							m='MMGen ID'.ljust(mmid_w+1),
-							A='Amount({})'.format(g.dcoin).ljust(amt_w+1),
+							m='MMGen ID'.ljust(mmid_w),
+							A='Amount({})'.format(g.dcoin),
 							A2='Amount({})'.format(g.coin),
 							c='Confs',  # skipped for eth
-							g='Age(d)', # skipped for eth
+							b='Block',  # skipped for eth
+							D='Date'+self.age_prec_disp[self.age_prec], # skipped for eth
 							l='Label')]
 
 		max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [2])
@@ -291,14 +333,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						A=i.amt.fmt(color=color),
 						A2=(i.amt2.fmt(color=color) if i.amt2 is not None else ''),
 						c=i.confs,
-						g=i.days,
+						b=g.rpch.blockcount - (i.confs - 1),
+						D=self.age_disp(i,'date_time'),
 						l=i.label.hl(color=color) if i.label else
 							TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
 
-		fs = '{} ({} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
+		fs = '{} (block #{}, {} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
 				capfirst(self.desc),
-				make_timestr(),
+				g.rpch.blockcount,
+				make_timestr(g.rpch.cur_date),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
 				g.dcoin,
@@ -359,11 +403,16 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			if action[:2] == 's_':
 				self.do_sort(action[2:])
 				if action == 's_twmmid': self.show_mmid = True
-			elif action == 'd_days': self.age_fmt = ('days','confs')[self.age_fmt=='days']
+			elif action == 'd_days':
+				af = self.age_fmts_ia
+				self.age_fmt = af[(af.index(self.age_fmt) + 1) % len(af)]
 			elif action == 'd_mmid': self.show_mmid = not self.show_mmid
 			elif action == 'd_group':
 				if self.can_group:
 					self.group = not self.group
+			elif action == 'd_exact_age':
+				ap = self.age_precs
+				self.age_prec = ap[(ap.index(self.age_prec) + 1) % len(ap)]
 			elif action == 'd_redraw': pass
 			elif action == 'd_reverse': self.unspent.reverse(); self.reverse = not self.reverse
 			elif action == 'a_quit': msg(''); return self.unspent
@@ -412,12 +461,33 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
 					no_output = True
 
+	def age_disp(self,o,age_fmt):
+		if age_fmt == 'confs':
+			return o.confs
+		elif age_fmt == 'block':
+			return g.rpch.blockcount - (o.confs - 1)
+		else:
+			if self.age_prec == 'approx':
+				date = _confs2date_approx(o)
+			else:
+				if o.date == None:
+					o.date = _confs2date_exact(o)
+				date = o.date
+			return {
+				'days': _date2days(date),
+				'date': _format_date(date),
+				'date_time': _format_date_time(date),
+			}[age_fmt]
+
 class TwAddrList(MMGenDict):
+
+	age_fmts = TwUnspentOutputs.age_fmts
+	age_disp = TwUnspentOutputs.age_disp
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,'tw','TwAddrList'),*args,**kwargs)
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,exact_age,wallet=None):
 
 		def check_dup_mmid(acct_labels):
 			mmid_prev,err = None,False
@@ -440,6 +510,7 @@ class TwAddrList(MMGenDict):
 						msg("'{}': more than one {} address in account!".format(addrs,g.coin))
 			if err: rdie(3,'Tracking wallet is corrupted!')
 
+		self.age_prec = 'exact' if exact_age else 'approx'
 		self.total = g.proto.coin_amt('0')
 		rpc_init()
 
@@ -449,17 +520,21 @@ class TwAddrList(MMGenDict):
 			if d['confirmations'] < minconf: continue
 			label = get_tw_label(d[lbl_id])
 			if label:
-				if usr_addr_list and (label.mmid not in usr_addr_list): continue
-				if label.mmid in self:
-					if self[label.mmid]['addr'] != d['address']:
+				lm = label.mmid
+				if usr_addr_list and (lm not in usr_addr_list):
+					continue
+				if lm in self:
+					if self[lm]['addr'] != d['address']:
 						die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
-								g.coin,d['address'],self[label.mmid]['addr']))
+								g.coin,d['address'],self[lm]['addr']))
 				else:
-					self[label.mmid] = {'amt': g.proto.coin_amt('0'),
-										'lbl':  label,
-										'addr': CoinAddr(d['address'])}
-					self[label.mmid]['lbl'].mmid.confs = d['confirmations']
-				self[label.mmid]['amt'] += d['amount']
+					lm.confs = d['confirmations']
+					lm.txid = d['txid']
+					lm.date = None
+					self[lm] = {'amt': g.proto.coin_amt('0'),
+								'lbl': label,
+								'addr': CoinAddr(d['address'])}
+				self[lm]['amt'] += d['amount']
 				self.total += d['amount']
 
 		# We use listaccounts only for empty addresses, as it shows false positive balances
@@ -493,9 +568,8 @@ class TwAddrList(MMGenDict):
 	def coinaddr_list(self): return [self[k]['addr'] for k in self]
 
 	def format(self,showbtcaddrs,sort,show_age,age_fmt):
-		age_fmts = ('days','confs')
-		if age_fmt not in age_fmts:
-			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(age_fmt,age_fmts))
+		if age_fmt not in self.age_fmts:
+			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(age_fmt,self.age_fmts))
 		out = ['Chain: '+green(g.chain.upper())] if g.chain != 'mainnet' else []
 		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
@@ -510,7 +584,7 @@ class TwAddrList(MMGenDict):
 				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
 				cmt=TwComment.fmtc('COMMENT',width=max_cmt_width+1),
 				amt='BALANCE'.ljust(max_fp_len+4),
-				age=('CONFS','DAYS')[age_fmt=='days'],
+				age=age_fmt.upper()
 				).rstrip()]
 
 		def sort_algo(j):
@@ -518,13 +592,12 @@ class TwAddrList(MMGenDict):
 				return '{}_{:>012}_{}'.format(
 					j.obj.rsplit(':',1)[0],
 					# Hack, but OK for the foreseeable future:
-					(1000000000-j.confs if hasattr(j,'confs') and j.confs != None else 0),
+					(1000000000-(j.confs or 0) if hasattr(j,'confs') else 0),
 					j.sort_key)
 			else:
 				return j.sort_key
 
 		al_id_save = None
-		confs_per_day = 60*60*24 // g.proto.secs_per_block
 		for mmid in sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
 			if mmid.type == 'mmgen':
 				if al_id_save and al_id_save != mmid.obj.al_id:
@@ -542,7 +615,7 @@ class TwAddrList(MMGenDict):
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 				cmt=e['lbl'].comment.fmt(width=max_cmt_width,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
-				age=mmid.confs // (1,confs_per_day)[age_fmt=='days'] if hasattr(mmid,'confs') and mmid.confs != None else '-'
+				age=self.age_disp(mmid,age_fmt) if hasattr(mmid,'confs') and mmid.confs != None else '-'
 				).rstrip())
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
@@ -729,7 +802,7 @@ class TrackingWallet(MMGenObject):
 			msg('Data is unchanged\n')
 
 	def is_in_wallet(self,addr):
-		return addr in TwAddrList([],0,True,True,True,wallet=self).coinaddr_list()
+		return addr in TwAddrList([],0,True,True,True,False,wallet=self).coinaddr_list()
 
 	@write_mode
 	def set_label(self,coinaddr,lbl):

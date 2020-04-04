@@ -27,6 +27,9 @@ from mmgen.addr import *
 
 NL = ('\n','\r\n')[g.platform=='win']
 
+def _options_annot_str(l):
+	return '(valid options: {})'.format(','.join(l))
+
 def _create_call_sig(cmd,parsed=False):
 
 	m = getattr(MMGenToolCmd,cmd)
@@ -803,6 +806,8 @@ class MMGenToolCmdWallet(MMGenToolCmdBase):
 		ret = d.sec.wif if target=='wif' else d.addr
 		return ret
 
+from mmgen.tw import TwAddrList,TwUnspentOutputs
+
 class MMGenToolCmdRPC(MMGenToolCmdBase):
 	"tracking wallet commands using the JSON-RPC interface"
 
@@ -817,14 +822,18 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 					pager = False,
 					showempty = True,
 					showbtcaddr = True,
-					age_fmt:'(valid options: days,confs)' = ''):
+					age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
+					exact_age = False,
+					):
 		"list the specified MMGen address and its balance"
 		return self.listaddresses(  mmgen_addrs = mmgen_addr,
 									minconf = minconf,
 									pager = pager,
 									showempty = showempty,
 									showbtcaddrs = showbtcaddr,
-									age_fmt = age_fmt)
+									age_fmt = age_fmt,
+									exact_age = exact_age,
+								)
 
 	def listaddresses(  self,
 						mmgen_addrs:'(range or list)' = '',
@@ -834,7 +843,9 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 						showbtcaddrs = True,
 						all_labels = False,
 						sort:'(valid options: reverse,age)' = '',
-						age_fmt:'(valid options: days,confs)' = ''):
+						age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
+						exact_age = False,
+						):
 		"list MMGen addresses and their balances"
 		show_age = bool(age_fmt)
 
@@ -853,11 +864,10 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
 
 		rpc_init()
-		from mmgen.tw import TwAddrList
-		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
+		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,exact_age)
 		if not al:
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-		return al.format(showbtcaddrs,sort,show_age,age_fmt or 'days')
+		return al.format(showbtcaddrs,sort,show_age,age_fmt or 'confs')
 
 	def twview( self,
 				pager = False,
@@ -865,16 +875,18 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 				wide = False,
 				minconf = 1,
 				sort = 'age',
-				age_fmt:'(valid options: days,confs)' = 'days',
-				show_mmid = True):
+				age_fmt: _options_annot_str(TwUnspentOutputs.age_fmts) = 'confs',
+				exact_age = False,
+				show_mmid = True,
+				wide_show_confs = True):
 		"view tracking wallet"
 		rpc_init()
-		from mmgen.tw import TwUnspentOutputs
 		twuo = TwUnspentOutputs(minconf=minconf)
 		twuo.do_sort(sort,reverse=reverse)
 		twuo.age_fmt = age_fmt
+		twuo.age_prec = 'exact' if exact_age else 'approx'
 		twuo.show_mmid = show_mmid
-		ret = twuo.format_for_printing(color=True) if wide else twuo.format_for_display()
+		ret = twuo.format_for_printing(color=True,show_confs=wide_show_confs) if wide else twuo.format_for_display()
 		del twuo.wallet
 		return ret
 

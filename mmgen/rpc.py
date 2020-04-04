@@ -232,6 +232,7 @@ class RPCConnection(MMGenObject):
 		'getblockchaininfo',
 		'getblockcount',
 		'getblockhash',
+		'getblockheader',
 		'getmempoolinfo',
 		'getmempoolentry',
 		'getnettotals',
@@ -257,6 +258,8 @@ class EthereumRPCConnection(RPCConnection):
 
 	auth = False
 	db_fs = '    host [{h}] port [{p}]\n'
+	_blockcount = None
+	_cur_date = None
 
 	rpcmethods = (
 		'eth_accounts',
@@ -268,7 +271,6 @@ class EthereumRPCConnection(RPCConnection):
 		'eth_gasPrice',
 		'eth_getBalance',
 		'eth_getBlockByHash',
-		'eth_getBlockByNumber',
 		'eth_getCode',
 		'eth_getTransactionByHash',
 		'eth_getTransactionReceipt',
@@ -285,6 +287,7 @@ class EthereumRPCConnection(RPCConnection):
 		'parity_composeTransaction',
 		'parity_gasCeilTarget',
 		'parity_gasFloorTarget',
+		'parity_getBlockHeaderByNumber',
 		'parity_localTransactions',
 		'parity_minGasPrice',
 		'parity_mode',
@@ -296,6 +299,19 @@ class EthereumRPCConnection(RPCConnection):
 		'parity_pendingTransactionsStats',
 		'parity_versionInfo',
 	)
+
+	# blockcount and cur_date require network RPC calls, so evaluate lazily
+	@property
+	def blockcount(self):
+		if self._blockcount == None:
+			self._blockcount = int(self.eth_blockNumber(),16)
+		return self._blockcount
+
+	@property
+	def cur_date(self):
+		if self._cur_date == None:
+			self._cur_date = int(self.parity_getBlockHeaderByNumber(hex(self.blockcount))['timestamp'],16)
+		return self._cur_date
 
 class MoneroWalletRPCConnection(RPCConnection):
 
@@ -390,7 +406,6 @@ def init_daemon_parity():
 	conn = EthereumRPCConnection(
 				g.rpc_host or 'localhost',
 				g.rpc_port or g.proto.rpc_port)
-
 	conn.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
 	conn.coin_amt_type = str
 	g.chain = conn.parity_chain().replace(' ','_')
@@ -415,7 +430,7 @@ def init_daemon_bitcoind():
 
 	def check_chainfork_mismatch(conn):
 		block0 = conn.getblockhash(0)
-		latest = conn.getblockcount()
+		latest = conn.blockcount
 		try:
 			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
 			for fork in g.proto.forks:
@@ -446,6 +461,8 @@ def init_daemon_bitcoind():
 		from mmgen.regtest import MMGenRegtest
 		MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
 	conn.daemon_version = int(conn.getnetworkinfo()['version'])
+	conn.blockcount = conn.getblockcount()
+	conn.cur_date = conn.getblockheader(conn.getblockhash(conn.blockcount))['time']
 	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
 	g.chain = conn.getblockchaininfo()['chain']
 	if g.chain != 'regtest': g.chain += 'net'

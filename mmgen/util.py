@@ -297,13 +297,11 @@ def decode_timestamp(s):
 
 def make_timestamp(secs=None):
 	t = int(secs) if secs else time.time()
-	tv = time.gmtime(t)[:6]
-	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*tv)
+	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*time.gmtime(t)[:6])
 
 def make_timestr(secs=None):
 	t = int(secs) if secs else time.time()
-	tv = time.gmtime(t)[:6]
-	return '{:04d}/{:02d}/{:02d} {:02d}:{:02d}:{:02d}'.format(*tv)
+	return '{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(*time.gmtime(t)[:6])
 
 def secs_to_dhms(secs):
 	dsecs = secs//3600

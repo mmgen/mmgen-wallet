@@ -309,7 +309,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			'address': coinaddr,
 			'spendable': False,
 			'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
-			'confirmations': getrandnum(3) // 2 # max: 8388608 (7 digits)
+			'confirmations': getrandnum(3) // 20 # max: 838860 (6 digits)
 		}
 		return ret
 

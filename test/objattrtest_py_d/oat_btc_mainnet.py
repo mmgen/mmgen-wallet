@@ -116,7 +116,6 @@ tests = {
 		'addr':         (0b001, CoinAddr),
 		'confs':        (0b001, int),
 		'scriptPubKey': (0b001, HexStr),
-		'days':         (0b001, int),
 		'skip':         (0b101, str),
 		},
 		[],

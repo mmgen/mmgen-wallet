@@ -304,8 +304,10 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
 		addr   = MMGenImmutableAttr('addr','CoinAddr')
 		confs  = MMGenImmutableAttr('confs',int,typeconv=False)
-		days   = MMGenListItemAttr('days',int,typeconv=False)
 		skip   = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
+
+	def age_disp(self,o,age_fmt): # TODO
+		return None
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
@@ -322,7 +324,7 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 class EthereumTwAddrList(TwAddrList):
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,exact_age,wallet=None):
 
 		self.wallet = wallet or TrackingWallet(mode='w')
 		tw_dict = self.wallet.mmid_ordered_dict

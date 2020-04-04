@@ -31,6 +31,9 @@ from mmgen.seed import Wallet
 from ..include.common import *
 from .common import *
 
+pat_date = r'\b\d\d-\d\d-\d\d\b'
+pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
+
 dfl_wcls = Wallet
 rt_pw = 'abc-α'
 rt_data = {
@@ -225,6 +228,17 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_add_label_badaddr2', 'adding a label with invalid address for this chain'),
 		('alice_add_label_badaddr3', 'adding a label with wrong MMGen address'),
 		('alice_add_label_badaddr4', 'adding a label with wrong coin address'),
+		('alice_listaddresses',                 'listaddresses'),
+		('alice_listaddresses_days',            'listaddresses (age_fmt=days)'),
+		('alice_listaddresses_date',            'listaddresses (age_fmt=date)'),
+		('alice_listaddresses_date_time',       'listaddresses (age_fmt=date_time)'),
+		('alice_listaddresses_date_time_exact', 'listaddresses (age_fmt=date_time exact_age=1)'),
+		('alice_twview',                 'twview'),
+		('alice_twview_days',            'twview (age_fmt=days)'),
+		('alice_twview_date',            'twview (age_fmt=date)'),
+		('alice_twview_date_time',       'twview (age_fmt=date_time)'),
+		('alice_twview_date_time_exact', 'twview (age_fmt=date_time exact_age=1)'),
+		('alice_txcreate_info',          'txcreate -i'),
 
 		('stop',                     'stopping regtest daemon'),
 	)
@@ -839,6 +853,63 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r"Enter unspent.*return to main menu\):.",output+'\n',regex=True)
 		t.expect(r"Enter label text.*return to main menu\):.",label+'\n',regex=True)
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
+		return t
+
+	def alice_listaddresses(self,args=[],expect=r'500\b'):
+		t = self.spawn('mmgen-tool',['--alice','listaddresses','showempty=1'] + args)
+		t.expect(expect,regex=True)
+		t.read()
+		return t
+
+	def alice_listaddresses_days(self):
+		return self.alice_listaddresses(args=['age_fmt=days'],expect=r'500\s+\d+\b')
+
+	def alice_listaddresses_date(self):
+		return self.alice_listaddresses(args=['age_fmt=date'],expect=r'500\s+'+pat_date)
+
+	def alice_listaddresses_date_time(self):
+		return self.alice_listaddresses(
+			args=['age_fmt=date_time'],
+			expect=r'500\s+'+pat_date_time)
+
+	def alice_listaddresses_date_time_exact(self):
+		return self.alice_listaddresses(
+			args=['age_fmt=date_time','exact_age=1'],
+			expect=r'500\s+'+pat_date_time)
+
+	def alice_twview(self,args=[],expect=r'500\s+\d+\b'):
+		t = self.spawn('mmgen-tool',['--alice','twview'] + args)
+		t.expect(expect,regex=True)
+		t.read()
+		return t
+
+	def alice_twview_days(self):
+		return self.alice_twview(args=['age_fmt=days'],expect=r'500\s+\d+\b')
+
+	def alice_twview_date(self):
+		return self.alice_twview(args=['age_fmt=date'],expect=r'500\s+'+pat_date)
+
+	def alice_twview_date_time(self):
+		return self.alice_twview(args=['age_fmt=date_time'],expect=r'500\s+'+pat_date_time)
+
+	def alice_twview_date_time_exact(self):
+		return self.alice_twview(
+			args=['age_fmt=date_time','exact_age=1'],
+			expect=r'500\s+'+pat_date_time)
+
+	def alice_txcreate_info(self,args=[]):
+		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
+		for e,s in (
+				(r'500\s+\d+\b','D'),
+				(r'500\s+\d+\b','D'),
+				(r'500\s+\d+\b','D'),
+				(r'500\s+'+pat_date,'w'),
+				(r'500\s+\d+\s+\d+\s+'+pat_date_time,'x'),
+				(r'500\s+'+pat_date,'w'),
+				(r'500\s+\d+\s+\d+\s+'+pat_date_time,'q'),
+			):
+			t.expect(e,s,regex=True)
+		t.read()
 		return t
 
 	def stop(self):
