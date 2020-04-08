@@ -125,9 +125,9 @@ rt_data = {
 	},
 	'rtBobOp3': {'btc':'S:2','bch':'L:3','ltc':'S:2'},
 	'rtAmts': {
-		'btc': ('500',),
-		'bch': ('500',),
-		'ltc': ('5500',)
+		'btc': ('500','500'),
+		'bch': ('500','560'),
+		'ltc': ('5500','5500')
 	}
 }
 
@@ -855,58 +855,60 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		return t
 
-	def alice_listaddresses(self,args=[],expect=r'500\b'):
+	def alice_listaddresses(self,args=[],expect=None):
+		expect = expect or rf'{rtAmts[1]}\b'
 		t = self.spawn('mmgen-tool',['--alice','listaddresses','showempty=1'] + args)
 		t.expect(expect,regex=True)
 		t.read()
 		return t
 
 	def alice_listaddresses_days(self):
-		return self.alice_listaddresses(args=['age_fmt=days'],expect=r'500\s+\d+\b')
+		return self.alice_listaddresses(args=['age_fmt=days'],expect=rf'{rtAmts[1]}\s+\d+\b')
 
 	def alice_listaddresses_date(self):
-		return self.alice_listaddresses(args=['age_fmt=date'],expect=r'500\s+'+pat_date)
+		return self.alice_listaddresses(args=['age_fmt=date'],expect=rf'{rtAmts[1]}\s+'+pat_date)
 
 	def alice_listaddresses_date_time(self):
 		return self.alice_listaddresses(
 			args=['age_fmt=date_time'],
-			expect=r'500\s+'+pat_date_time)
+			expect=rf'{rtAmts[1]}\s+'+pat_date_time)
 
 	def alice_listaddresses_date_time_exact(self):
 		return self.alice_listaddresses(
 			args=['age_fmt=date_time','exact_age=1'],
-			expect=r'500\s+'+pat_date_time)
+			expect=rf'{rtAmts[1]}\s+'+pat_date_time)
 
-	def alice_twview(self,args=[],expect=r'500\s+\d+\b'):
+	def alice_twview(self,args=[],expect=None):
+		expect = expect or rf'{rtAmts[0]}\b'
 		t = self.spawn('mmgen-tool',['--alice','twview'] + args)
 		t.expect(expect,regex=True)
 		t.read()
 		return t
 
 	def alice_twview_days(self):
-		return self.alice_twview(args=['age_fmt=days'],expect=r'500\s+\d+\b')
+		return self.alice_twview(args=['age_fmt=days'],expect=rf'{rtAmts[0]}\s+\d+\b')
 
 	def alice_twview_date(self):
-		return self.alice_twview(args=['age_fmt=date'],expect=r'500\s+'+pat_date)
+		return self.alice_twview(args=['age_fmt=date'],expect=rf'{rtAmts[0]}\s+'+pat_date)
 
 	def alice_twview_date_time(self):
-		return self.alice_twview(args=['age_fmt=date_time'],expect=r'500\s+'+pat_date_time)
+		return self.alice_twview(args=['age_fmt=date_time'],expect=rf'{rtAmts[0]}\s+'+pat_date_time)
 
 	def alice_twview_date_time_exact(self):
 		return self.alice_twview(
 			args=['age_fmt=date_time','exact_age=1'],
-			expect=r'500\s+'+pat_date_time)
+			expect=rf'{rtAmts[0]}\s+'+pat_date_time)
 
 	def alice_txcreate_info(self,args=[]):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
 		for e,s in (
-				(r'500\s+\d+\b','D'),
-				(r'500\s+\d+\b','D'),
-				(r'500\s+\d+\b','D'),
-				(r'500\s+'+pat_date,'w'),
-				(r'500\s+\d+\s+\d+\s+'+pat_date_time,'x'),
-				(r'500\s+'+pat_date,'w'),
-				(r'500\s+\d+\s+\d+\s+'+pat_date_time,'q'),
+				(rf'{rtAmts[0]}\s+\d+\b','D'),
+				(rf'{rtAmts[0]}\s+\d+\b','D'),
+				(rf'{rtAmts[0]}\s+\d+\b','D'),
+				(rf'{rtAmts[0]}\s+'+pat_date,'w'),
+				(rf'{rtAmts[0]}\s+\d+\s+\d+\s+'+pat_date_time,'x'),
+				(rf'{rtAmts[0]}\s+'+pat_date,'w'),
+				(rf'{rtAmts[0]}\s+\d+\s+\d+\s+'+pat_date_time,'q'),
 			):
 			t.expect(e,s,regex=True)
 		t.read()
