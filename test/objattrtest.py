@@ -82,8 +82,8 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 				so = sample_objs[attrval_type.__name__]
 			except:
 				raise SampleObjError('unable to find sample object of type {!r}'.format(attrval_type.__name__))
-			# MMGenListItemAttr allows setting an attribute if its value is None
-			if type(dobj) == MMGenListItemAttr and getattr(obj,attrname) == None:
+			# ListItemAttr allows setting an attribute if its value is None
+			if type(dobj) == ListItemAttr and getattr(obj,attrname) == None:
 				setattr(obj,attrname,so)
 			setattr(obj,attrname,so)
 		elif perm_name == 'delete_ok':

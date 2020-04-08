@@ -98,17 +98,17 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	class MMGenTwOutputList(list,MMGenObject): pass
 
 	class MMGenTwUnspentOutput(MMGenListItem):
-		txid     = MMGenListItemAttr('txid','CoinTxID')
-		vout     = MMGenListItemAttr('vout',int,typeconv=False)
-		amt      = MMGenImmutableAttr('amt',lambda:g.proto.coin_amt,typeconv=False)
-		amt2     = MMGenListItemAttr('amt2',lambda:g.proto.coin_amt,typeconv=False)
-		label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-		twmmid   = MMGenImmutableAttr('twmmid','TwMMGenID')
-		addr     = MMGenImmutableAttr('addr','CoinAddr')
-		confs    = MMGenImmutableAttr('confs',int,typeconv=False)
-		date     = MMGenListItemAttr('date',int,typeconv=False,reassign_ok=True)
-		scriptPubKey = MMGenImmutableAttr('scriptPubKey','HexStr')
-		skip    = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
+		txid         = ListItemAttr('CoinTxID')
+		vout         = ListItemAttr(int,typeconv=False)
+		amt          = ImmutableAttr(lambda:g.proto.coin_amt,typeconv=False)
+		amt2         = ListItemAttr(lambda:g.proto.coin_amt,typeconv=False)
+		label        = ListItemAttr('TwComment',reassign_ok=True)
+		twmmid       = ImmutableAttr('TwMMGenID')
+		addr         = ImmutableAttr('CoinAddr')
+		confs        = ImmutableAttr(int,typeconv=False)
+		date         = ListItemAttr(int,typeconv=False,reassign_ok=True)
+		scriptPubKey = ImmutableAttr('HexStr')
+		skip         = ListItemAttr(str,typeconv=False,reassign_ok=True)
 
 	wmsg = {
 	'no_spendable_outputs': """

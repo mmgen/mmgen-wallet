@@ -210,16 +210,18 @@ class Int(int,Hilite,InitErrors):
 
 # For attrs that are always present in the data instance
 # Reassignment and deletion forbidden
-class MMGenImmutableAttr(object): # Descriptor
+class ImmutableAttr(object): # Descriptor
 
 	ok_dtypes = (str,type,type(None),type(lambda:0))
 
-	def __init__(self,name,dtype,typeconv=True,set_none_ok=False):
+	def __init__(self,dtype,typeconv=True,set_none_ok=False):
 		self.typeconv = typeconv
 		self.set_none_ok = set_none_ok
 		assert isinstance(dtype,self.ok_dtypes),'{!r}: invalid dtype arg'.format(dtype)
-		self.name = name
 		self.dtype = dtype
+
+	def __set_name__(self,owner,name):
+		self.name = name
 
 	def __get__(self,instance,owner):
 		return instance.__dict__[self.name]
@@ -252,12 +254,12 @@ class MMGenImmutableAttr(object): # Descriptor
 
 # For attrs that might not be present in the data instance
 # Reassignment or deletion allowed if specified
-class MMGenListItemAttr(MMGenImmutableAttr): # Descriptor
+class ListItemAttr(ImmutableAttr): # Descriptor
 
-	def __init__(self,name,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
+	def __init__(self,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
 		self.reassign_ok = reassign_ok
 		self.delete_ok = delete_ok
-		MMGenImmutableAttr.__init__(self,name,dtype,typeconv=typeconv)
+		ImmutableAttr.__init__(self,dtype,typeconv=typeconv)
 
 	# return None if attribute doesn't exist
 	def __get__(self,instance,owner):
@@ -272,7 +274,7 @@ class MMGenListItemAttr(MMGenImmutableAttr): # Descriptor
 			if self.name in instance.__dict__:
 				del instance.__dict__[self.name]
 		else:
-			MMGenImmutableAttr.__delete__(self,instance)
+			ImmutableAttr.__delete__(self,instance)
 
 class MMGenListItem(MMGenObject):
 
@@ -729,8 +731,8 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	width = 64
 	trunc_ok = False
 
-	compressed = MMGenImmutableAttr('compressed',bool,typeconv=False)
-	wif        = MMGenImmutableAttr('wif',WifKey,typeconv=False)
+	compressed = ImmutableAttr(bool,typeconv=False)
+	wif        = ImmutableAttr(WifKey,typeconv=False)
 
 	# initialize with (priv_bin,compressed), WIF or self
 	def __new__(cls,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
@@ -881,14 +883,14 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	color = 'blue'
 
-	name        = MMGenImmutableAttr('name',str)
-	pubkey_type = MMGenImmutableAttr('pubkey_type',str)
-	compressed  = MMGenImmutableAttr('compressed',bool,set_none_ok=True)
-	gen_method  = MMGenImmutableAttr('gen_method',str,set_none_ok=True)
-	addr_fmt    = MMGenImmutableAttr('addr_fmt',str,set_none_ok=True)
-	wif_label   = MMGenImmutableAttr('wif_label',str,set_none_ok=True)
-	extra_attrs = MMGenImmutableAttr('extra_attrs',tuple,set_none_ok=True)
-	desc        = MMGenImmutableAttr('desc',str)
+	name        = ImmutableAttr(str)
+	pubkey_type = ImmutableAttr(str)
+	compressed  = ImmutableAttr(bool,set_none_ok=True)
+	gen_method  = ImmutableAttr(str,set_none_ok=True)
+	addr_fmt    = ImmutableAttr(str,set_none_ok=True)
+	wif_label   = ImmutableAttr(str,set_none_ok=True)
+	extra_attrs = ImmutableAttr(tuple,set_none_ok=True)
+	desc        = ImmutableAttr(str)
 
 	mmtypes = {
 		'L': ati('legacy',    'std', False,'p2pkh',   'p2pkh',   'wif', (), 'Legacy uncompressed address'),

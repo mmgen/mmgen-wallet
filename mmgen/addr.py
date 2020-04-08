@@ -290,18 +290,18 @@ class KeyGeneratorDummy(KeyGenerator):
 		return PubKey(privhex,compressed=privhex.compressed)
 
 class AddrListEntry(MMGenListItem):
-	addr    = MMGenListItemAttr('addr','CoinAddr')
-	idx     = MMGenListItemAttr('idx','AddrIdx') # not present in flat addrlists
-	label   = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-	sec     = MMGenListItemAttr('sec',PrivKey,typeconv=False)
-	viewkey = MMGenListItemAttr('viewkey','ViewKey')
-	wallet_passwd  = MMGenListItemAttr('wallet_passwd','WalletPassword')
+	addr          = ListItemAttr('CoinAddr')
+	idx           = ListItemAttr('AddrIdx') # not present in flat addrlists
+	label         = ListItemAttr('TwComment',reassign_ok=True)
+	sec           = ListItemAttr(PrivKey,typeconv=False)
+	viewkey       = ListItemAttr('ViewKey')
+	wallet_passwd = ListItemAttr('WalletPassword')
 
 class PasswordListEntry(MMGenListItem):
-	passwd = MMGenListItemAttr('passwd',str,typeconv=False) # TODO: create Password type
-	idx    = MMGenImmutableAttr('idx','AddrIdx')
-	label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-	sec    = MMGenListItemAttr('sec',PrivKey,typeconv=False)
+	passwd = ListItemAttr(str,typeconv=False) # TODO: create Password type
+	idx    = ImmutableAttr('AddrIdx')
+	label  = ListItemAttr('TwComment',reassign_ok=True)
+	sec    = ListItemAttr(PrivKey,typeconv=False)
 
 class AddrListChksum(str,Hilite):
 	color = 'pink'

@@ -21,7 +21,7 @@ altcoins.eth.tw: Ethereum tracking wallet and related classes for the MMGen suit
 """
 
 from mmgen.common import *
-from mmgen.obj import ETHAmt,TwLabel,is_coin_addr,is_mmgen_id,MMGenListItem,MMGenListItemAttr,MMGenImmutableAttr
+from mmgen.obj import ETHAmt,TwLabel,is_coin_addr,is_mmgen_id,MMGenListItem,ListItemAttr,ImmutableAttr
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
 from mmgen.addr import AddrData
 from .contract import Token
@@ -296,15 +296,15 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 				} for d in wl]
 
 	class MMGenTwUnspentOutput(MMGenListItem):
-		txid   = MMGenListItemAttr('txid','CoinTxID')
-		vout   = MMGenListItemAttr('vout',int,typeconv=False)
-		amt    = MMGenImmutableAttr('amt',lambda:g.proto.coin_amt,typeconv=False)
-		amt2   = MMGenListItemAttr('amt2',lambda:g.proto.coin_amt,typeconv=False)
-		label  = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-		twmmid = MMGenImmutableAttr('twmmid','TwMMGenID')
-		addr   = MMGenImmutableAttr('addr','CoinAddr')
-		confs  = MMGenImmutableAttr('confs',int,typeconv=False)
-		skip   = MMGenListItemAttr('skip',str,typeconv=False,reassign_ok=True)
+		txid   = ListItemAttr('CoinTxID')
+		vout   = ListItemAttr(int,typeconv=False)
+		amt    = ImmutableAttr(lambda:g.proto.coin_amt,typeconv=False)
+		amt2   = ListItemAttr(lambda:g.proto.coin_amt,typeconv=False)
+		label  = ListItemAttr('TwComment',reassign_ok=True)
+		twmmid = ImmutableAttr('TwMMGenID')
+		addr   = ImmutableAttr('CoinAddr')
+		confs  = ImmutableAttr(int,typeconv=False)
+		skip   = ListItemAttr(str,typeconv=False,reassign_ok=True)
 
 	def age_disp(self,o,age_fmt): # TODO
 		return None

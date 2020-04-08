@@ -113,7 +113,7 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 							break
 					else:
 						rdie(3,'unable to find descriptor {}.{}'.format(cls.__name__,attrname))
-					if type(attr).__name__ == 'MMGenImmutableAttr':
+					if type(attr).__name__ == 'ImmutableAttr':
 						if attrname not in self.__dict__:
 							fs = 'attribute {!r} of {} has not been initialized in constructor!'
 							rdie(3,fs.format(attrname,cls.__name__))

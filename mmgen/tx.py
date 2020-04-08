@@ -221,23 +221,23 @@ class DeserializedTX(dict,MMGenObject):
 		dict.__init__(self,d)
 
 class MMGenTxIO(MMGenListItem):
-	vout     = MMGenListItemAttr('vout',int,typeconv=False)
-	amt      = MMGenImmutableAttr('amt',lambda:g.proto.coin_amt,typeconv=False)
-	label    = MMGenListItemAttr('label','TwComment',reassign_ok=True)
-	mmid     = MMGenListItemAttr('mmid','MMGenID')
-	addr     = MMGenImmutableAttr('addr','CoinAddr')
-	confs    = MMGenListItemAttr('confs',int,typeconv=True) # confs of type long exist in the wild, so convert
-	txid     = MMGenListItemAttr('txid','CoinTxID')
-	have_wif = MMGenListItemAttr('have_wif',bool,typeconv=False,delete_ok=True)
+	vout     = ListItemAttr(int,typeconv=False)
+	amt      = ImmutableAttr(lambda:g.proto.coin_amt,typeconv=False)
+	label    = ListItemAttr('TwComment',reassign_ok=True)
+	mmid     = ListItemAttr('MMGenID')
+	addr     = ImmutableAttr('CoinAddr')
+	confs    = ListItemAttr(int,typeconv=True) # confs of type long exist in the wild, so convert
+	txid     = ListItemAttr('CoinTxID')
+	have_wif = ListItemAttr(bool,typeconv=False,delete_ok=True)
 
 class MMGenTxInput(MMGenTxIO):
-	scriptPubKey = MMGenListItemAttr('scriptPubKey','HexStr')
-	sequence     = MMGenListItemAttr('sequence',int,typeconv=False)
+	scriptPubKey = ListItemAttr('HexStr')
+	sequence     = ListItemAttr(int,typeconv=False)
 	# required by copy_inputs_from_tw()
 	copy_attrs = { 'scriptPubKey','vout','amt','label','mmid','addr','confs','txid' }
 
 class MMGenTxOutput(MMGenTxIO):
-	is_chg = MMGenListItemAttr('is_chg',bool,typeconv=False)
+	is_chg = ListItemAttr(bool,typeconv=False)
 
 class MMGenTxInputList(list,MMGenObject):
 

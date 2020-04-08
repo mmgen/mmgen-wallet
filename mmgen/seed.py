@@ -51,8 +51,8 @@ def is_mmgen_mnemonic(s): return _is_mnemonic(s,fmt='words')
 
 class SeedBase(MMGenObject):
 
-	data = MMGenImmutableAttr('data',bytes,typeconv=False)
-	sid  = MMGenImmutableAttr('sid',SeedID,typeconv=False)
+	data = ImmutableAttr(bytes,typeconv=False)
+	sid  = ImmutableAttr(SeedID,typeconv=False)
 
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
@@ -262,9 +262,9 @@ class Seed(SeedBase):
 
 class SubSeed(SeedBase):
 
-	idx    = MMGenImmutableAttr('idx',int,typeconv=False)
-	nonce  = MMGenImmutableAttr('nonce',int,typeconv=False)
-	ss_idx = MMGenImmutableAttr('ss_idx',SubSeedIdx)
+	idx    = ImmutableAttr(int,typeconv=False)
+	nonce  = ImmutableAttr(int,typeconv=False)
+	ss_idx = ImmutableAttr(SubSeedIdx)
 	max_nonce = 1000
 
 	def __init__(self,parent_list,idx,nonce,length):
@@ -286,8 +286,8 @@ class SeedShareList(SubSeedList):
 	have_short = False
 	split_type = 'N-of-N'
 
-	count = MMGenImmutableAttr('count',SeedShareCount)
-	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
+	count  = ImmutableAttr(SeedShareCount)
+	id_str = ImmutableAttr(SeedSplitIDString)
 
 	def __init__(self,parent_seed,count,id_str=None,master_idx=None,debug_last_share=False):
 		self.member_type = SeedShare
@@ -429,7 +429,7 @@ class SeedShare(SeedShareBase,SubSeed):
 
 class SeedShareLast(SeedShareBase,SeedBase):
 
-	idx = MMGenImmutableAttr('idx',SeedShareIdx)
+	idx = ImmutableAttr(SeedShareIdx)
 	nonce = 0
 
 	def __init__(self,parent_list):
@@ -450,8 +450,8 @@ class SeedShareLast(SeedShareBase,SeedBase):
 
 class SeedShareMaster(SeedBase,SeedShareBase):
 
-	idx = MMGenImmutableAttr('idx',MasterShareIdx)
-	nonce = MMGenImmutableAttr('nonce',int,typeconv=False)
+	idx   = ImmutableAttr(MasterShareIdx)
+	nonce = ImmutableAttr(int,typeconv=False)
 
 	def __init__(self,parent_list,idx,nonce):
 		self.idx = idx
@@ -488,8 +488,8 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 
 class SeedShareMasterJoining(SeedShareMaster):
 
-	id_str = MMGenImmutableAttr('id_str',SeedSplitIDString)
-	count = MMGenImmutableAttr('count',SeedShareCount)
+	id_str = ImmutableAttr(SeedSplitIDString)
+	count  = ImmutableAttr(SeedShareCount)
 
 	def __init__(self,idx,base_seed,id_str,count):
 		SeedBase.__init__(self,seed_bin=base_seed.data)
