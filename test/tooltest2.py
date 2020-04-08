@@ -783,8 +783,7 @@ def run_test(gid,cmd_name):
 	else:
 		if g.coin != 'BTC' or g.testnet: return
 		m2 = ''
-	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else
-			docstring_head(getattr(getattr(tool,'MMGenToolCmd'+gid),cmd_name)),m2)
+	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else docstring_head(tc[cmd_name]),m2)
 
 	msg_r(green(m)+'\n' if opt.verbose else m)
 
@@ -821,7 +820,7 @@ def run_test(gid,cmd_name):
 				os.close(fd1)
 				stdin_save = os.dup(0)
 				os.dup2(fd0,0)
-				cmd_out = getattr(tc,cmd_name)(*aargs,**kwargs)
+				cmd_out = tc.call(cmd_name,*aargs,**kwargs)
 				os.dup2(stdin_save,0)
 				os.wait()
 				opt.quiet = oq_save
@@ -832,7 +831,7 @@ def run_test(gid,cmd_name):
 				vmsg('Input: {!r}'.format(stdin_input))
 				sys.exit(0)
 		else:
-			ret = getattr(tc,cmd_name)(*aargs,**kwargs)
+			ret = tc.call(cmd_name,*aargs,**kwargs)
 			opt.quiet = oq_save
 			return ret
 
@@ -917,9 +916,9 @@ def docstring_head(obj):
 def do_group(gid):
 	qmsg(blue("Testing {}".format(
 		"command group '{}'".format(gid) if opt.names
-			else docstring_head(getattr(tool,'MMGenToolCmd'+gid)))))
+			else docstring_head(tc.classes['MMGenToolCmd'+gid]))))
 
-	for cname in [e for e in dir(getattr(tool,'MMGenToolCmd'+gid)) if e[0] != '_']:
+	for cname in tc.classes['MMGenToolCmd'+gid].user_commands:
 		if cname not in tests[gid]:
 			m = 'No test for command {!r} in group {!r}!'.format(cname,gid)
 			if opt.die_on_missing:
@@ -950,11 +949,12 @@ if opt.tool_api:
 	del tests['File']
 
 import mmgen.tool as tool
+tc = tool.MMGenToolCmds
 
 if opt.list_tests:
 	Msg('Available tests:')
 	for gid in tests:
-		Msg('  {:6} - {}'.format(gid,docstring_head(getattr(tool,'MMGenToolCmd'+gid))))
+		Msg('  {:6} - {}'.format(gid,docstring_head(tc.classes['MMGenToolCmd'+gid])))
 	sys.exit(0)
 
 if opt.list_tested_cmds:
@@ -986,7 +986,6 @@ if opt.fork:
 		tool_cmd = ('python3',) + tool_cmd
 else:
 	opt.usr_randchars = 0
-	tc = tool.MMGenToolCmd()
 
 start_time = int(time.time())
 

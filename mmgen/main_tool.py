@@ -26,7 +26,7 @@ from mmgen.common import *
 def make_cmd_help():
 	import mmgen.tool
 	def make_help():
-		for bc in mmgen.tool.MMGenToolCmd.__bases__:
+		for bc in mmgen.tool.MMGenToolCmds.classes.values():
 			cls_doc = bc.__doc__.strip().split('\n')
 			for l in cls_doc:
 				if l is cls_doc[0]:
@@ -39,10 +39,9 @@ def make_cmd_help():
 					yield ''
 			yield ''
 
-			max_w = max(map(len,bc._user_commands()))
+			max_w = max(map(len,bc.user_commands))
 			fs = '  {{:{}}} - {{}}'.format(max_w)
-			for name in bc._user_commands():
-				code = getattr(bc,name)
+			for name,code in bc.user_commands.items():
 				if code.__doc__:
 					yield fs.format(name,
 						pretty_format(
@@ -98,16 +97,15 @@ if len(cmd_args) < 1: opts.usage()
 cmd = cmd_args.pop(0)
 
 import mmgen.tool as tool
-tc = tool.MMGenToolCmd()
 
 if cmd in ('help','usage') and cmd_args:
 	cmd_args[0] = 'command_name=' + cmd_args[0]
 
-if cmd not in dir(tc):
+if cmd not in tool.MMGenToolCmds:
 	die(1,"'{}': no such command".format(cmd))
 
 args,kwargs = tool._process_args(cmd,cmd_args)
 
-ret = getattr(tc,cmd)(*args,**kwargs)
+ret = tool.MMGenToolCmds.call(cmd,*args,**kwargs)
 
 tool._process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)

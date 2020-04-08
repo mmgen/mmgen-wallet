@@ -32,7 +32,7 @@ def _options_annot_str(l):
 
 def _create_call_sig(cmd,parsed=False):
 
-	m = getattr(MMGenToolCmd,cmd)
+	m = MMGenToolCmds[cmd]
 
 	if 'varargs_call_sig' in m.__code__.co_varnames: # hack
 		flag = 'VAR_ARGS'
@@ -90,16 +90,16 @@ def _usage(cmd=None,exit_val=1):
 
 	if not cmd:
 		Msg(m1)
-		for bc in MMGenToolCmd.__bases__:
+		for bc in MMGenToolCmds.classes.values():
 			cls_info = bc.__doc__.strip().split('\n')[0]
 			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
-			max_w = max(map(len,bc._user_commands()))
-			for cmd in bc._user_commands():
+			max_w = max(map(len,bc.user_commands))
+			for cmd in bc.user_commands:
 				Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
 			Msg('')
 		Msg(m2)
-	elif cmd in MMGenToolCmd._user_commands():
-		msg('{}'.format(capfirst(getattr(MMGenToolCmd,cmd).__doc__.strip())))
+	elif cmd in MMGenToolCmds:
+		msg('{}'.format(capfirst(MMGenToolCmds[cmd].__doc__.strip())))
 		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
@@ -236,11 +236,43 @@ mnemonic_fmts = {
 }
 mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
 
-class MMGenToolCmds(object):
+class MMGenToolCmdMeta(type):
+	classes = {}
+	methods = {}
+	def __new__(mcls,name,bases,namespace):
+		methods = {k:v for k,v in namespace.items() if k[0] != '_' and callable(v)}
+		if g.test_suite:
+			if name in mcls.classes:
+				raise ValueError(f'Class {name!r} already defined!')
+			for m in methods:
+				if m in mcls.methods:
+					raise ValueError(f'Method {m!r} already defined!')
+				if not getattr(m,'__doc__',None):
+					raise ValueError(f'Method {m!r} has no doc string!')
+		cls = super().__new__(mcls,name,bases,namespace)
+		if bases and name != 'tool_api':
+			mcls.classes[name] = cls
+			mcls.methods.update(methods)
+		return cls
 
-	@classmethod
-	def _user_commands(cls):
-		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__ and callable(getattr(cls,e))]
+	def __iter__(cls):
+		return cls.methods.__iter__()
+
+	def __getitem__(cls,val):
+		return cls.methods.__getitem__(val)
+
+	def __contains__(cls,val):
+		return cls.methods.__contains__(val)
+
+	def call(cls,cmd_name,*args,**kwargs):
+		subcls = cls.classes[cls.methods[cmd_name].__qualname__.split('.')[0]]
+		return getattr(subcls(),cmd_name)(*args,**kwargs)
+
+	@property
+	def user_commands(cls):
+		return {k:v for k,v in cls.__dict__.items() if k in cls.methods}
+
+class MMGenToolCmds(metaclass=MMGenToolCmdMeta): pass
 
 class MMGenToolCmdMisc(MMGenToolCmds):
 	"miscellaneous commands"
@@ -1096,19 +1128,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				rdie(1,'Error: {!r}'.format(e.args[0]))
 
 		return True
-
-class MMGenToolCmd(
-		MMGenToolCmdMisc,
-		MMGenToolCmdUtil,
-		MMGenToolCmdCoin,
-		MMGenToolCmdMnemonic,
-		MMGenToolCmdFile,
-		MMGenToolCmdFileCrypt,
-		MMGenToolCmdFileUtil,
-		MMGenToolCmdWallet,
-		MMGenToolCmdRPC,
-		MMGenToolCmdMonero,
-	): pass
 
 class tool_api(
 		MMGenToolCmdUtil,

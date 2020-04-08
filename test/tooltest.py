@@ -171,7 +171,7 @@ if opt.list_names:
 	ignore = ()
 	from mmgen.tool import MMGenToolCmd
 	uc = sorted(
-		set(MMGenToolCmd._user_commands()) -
+		set(MMGenToolCmds) -
 		set(ignore) -
 		set(tested_in['tooltest.py']) -
 		set(tested_in['tooltest2.py']) -
