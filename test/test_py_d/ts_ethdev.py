@@ -636,9 +636,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_transfer_ops(self,op,amt=1000):
 		self.spawn('',msg_only=True)
 		sid = dfl_sid
-		from mmgen.tool import MMGenToolCmd
+		from mmgen.tool import MMGenToolCmdWallet
 		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
-		usr_addrs = [MMGenToolCmd().gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
+		usr_addrs = [MMGenToolCmdWallet().gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 		self._rpc_init()
 
 		from mmgen.altcoins.eth.contract import Token

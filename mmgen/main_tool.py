@@ -25,33 +25,34 @@ from mmgen.common import *
 
 def make_cmd_help():
 	import mmgen.tool
-	out = []
-	for bc in mmgen.tool.MMGenToolCmd.__bases__:
-		cls_doc = bc.__doc__.strip().split('\n')
-		for l in cls_doc:
-			if l is cls_doc[0]: l += ':'
-			l = l.replace('\t','',1)
-			if l:
-				l = l.replace('\t','  ')
-				out.append(l[0].upper() + l[1:])
-			else:
-				out.append('')
-		out.append('')
+	def make_help():
+		for bc in mmgen.tool.MMGenToolCmd.__bases__:
+			cls_doc = bc.__doc__.strip().split('\n')
+			for l in cls_doc:
+				if l is cls_doc[0]:
+					l += ':'
+				l = l.replace('\t','',1)
+				if l:
+					l = l.replace('\t','  ')
+					yield l[0].upper() + l[1:]
+				else:
+					yield ''
+			yield ''
 
-		cls_funcs = bc._user_commands()
-		max_w = max(map(len,cls_funcs))
-		fs = '  {{:{}}} - {{}}'.format(max_w)
-		for func in cls_funcs:
-			m = getattr(bc,func)
-			if m.__doc__:
-				out.append(fs.format(func,
-					pretty_format(  m.__doc__.strip().replace('\n\t\t',' '),
-									width=79-(max_w+7),
-									pfx=' '*(max_w+5)).lstrip()
-				))
-		out.append('')
+			max_w = max(map(len,bc._user_commands()))
+			fs = '  {{:{}}} - {{}}'.format(max_w)
+			for name in bc._user_commands():
+				code = getattr(bc,name)
+				if code.__doc__:
+					yield fs.format(name,
+						pretty_format(
+							code.__doc__.strip().replace('\n\t\t',' '),
+							width=79-(max_w+7),
+							pfx=' '*(max_w+5)).lstrip()
+					)
+			yield ''
 
-	return '\n'.join(out)
+	return '\n'.join(make_help())
 
 opts_data = {
 	'text': {

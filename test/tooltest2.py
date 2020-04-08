@@ -784,7 +784,7 @@ def run_test(gid,cmd_name):
 		if g.coin != 'BTC' or g.testnet: return
 		m2 = ''
 	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else
-			extract_docstring(getattr(getattr(tool,'MMGenToolCmd'+gid),cmd_name)),m2)
+			docstring_head(getattr(getattr(tool,'MMGenToolCmd'+gid),cmd_name)),m2)
 
 	msg_r(green(m)+'\n' if opt.verbose else m)
 
@@ -813,7 +813,8 @@ def run_test(gid,cmd_name):
 		if exec_code: exec(exec_code)
 		aargs,kwargs = tool._process_args(cmd_name,args)
 		oq_save = opt.quiet
-		if not opt.verbose: opt.quiet = True
+		if not opt.verbose:
+			opt.quiet = True
 		if stdin_input:
 			fd0,fd1 = os.pipe()
 			if os.fork(): # parent
@@ -910,13 +911,13 @@ def run_test(gid,cmd_name):
 	if not opt.verbose:
 		msg('OK')
 
-def extract_docstring(obj):
+def docstring_head(obj):
 	return obj.__doc__.strip().split('\n')[0]
 
 def do_group(gid):
 	qmsg(blue("Testing {}".format(
 		"command group '{}'".format(gid) if opt.names
-			else extract_docstring(getattr(tool,'MMGenToolCmd'+gid)))))
+			else docstring_head(getattr(tool,'MMGenToolCmd'+gid)))))
 
 	for cname in [e for e in dir(getattr(tool,'MMGenToolCmd'+gid)) if e[0] != '_']:
 		if cname not in tests[gid]:
@@ -938,8 +939,7 @@ def do_cmd_in_group(cmd):
 
 def list_tested_cmds():
 	for gid in tests:
-		for cname in [e for e in dir(getattr(tool,'MMGenToolCmd'+gid)) if e[0] != '_']:
-			Msg(cname)
+		Msg('\n'.join(tests[gid]))
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
@@ -954,7 +954,7 @@ import mmgen.tool as tool
 if opt.list_tests:
 	Msg('Available tests:')
 	for gid in tests:
-		Msg('  {:6} - {}'.format(gid,extract_docstring(getattr(tool,'MMGenToolCmd'+gid))))
+		Msg('  {:6} - {}'.format(gid,docstring_head(getattr(tool,'MMGenToolCmd'+gid))))
 	sys.exit(0)
 
 if opt.list_tested_cmds:

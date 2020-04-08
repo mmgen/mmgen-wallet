@@ -44,7 +44,7 @@ class TestSuiteHelp(TestSuiteBase):
 					'addrgen','keygen','passgen',
 					'seedsplit','seedjoin',
 					'txcreate','txsign','txsend','txdo','txbump',
-					'addrimport','tool','regtest','autosign')):
+					'addrimport','regtest','autosign')):
 		for s in scripts:
 			t = self._run_cmd('mmgen-'+s,[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
 		return t
@@ -82,8 +82,10 @@ class TestSuiteHelp(TestSuiteBase):
 		return t
 
 	def tool_help(self):
+		self._run_cmd('mmgen-tool',['--help'],extra_desc="('mmgen-tool --help')")
 		self._run_cmd('mmgen-tool',['help'],extra_desc="('mmgen-tool help')")
-		return self._run_cmd('mmgen-tool',['usage'],extra_desc="('mmgen-tool usage')")
+		self._run_cmd('mmgen-tool',['usage'],extra_desc="('mmgen-tool usage')")
+		return self._run_cmd('mmgen-tool',['help','randpair'],extra_desc="('mmgen-tool help randpair')")
 
 	def test_help(self):
 		self._run_cmd('test.py',['-h'],cmd_dir='test')

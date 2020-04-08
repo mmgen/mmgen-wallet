@@ -93,16 +93,13 @@ def _usage(cmd=None,exit_val=1):
 		for bc in MMGenToolCmd.__bases__:
 			cls_info = bc.__doc__.strip().split('\n')[0]
 			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
-			ucmds = bc._user_commands()
-			max_w = max(map(len,ucmds))
-			for cmd in ucmds:
-				if getattr(MMGenToolCmd,cmd).__doc__:
-					Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
+			max_w = max(map(len,bc._user_commands()))
+			for cmd in bc._user_commands():
+				Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
 			Msg('')
 		Msg(m2)
 	elif cmd in MMGenToolCmd._user_commands():
-		docstr = getattr(MMGenToolCmd,cmd).__doc__.strip()
-		msg('{}'.format(capfirst(docstr)))
+		msg('{}'.format(capfirst(getattr(MMGenToolCmd,cmd).__doc__.strip())))
 		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
@@ -239,14 +236,13 @@ mnemonic_fmts = {
 }
 mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
 
-class MMGenToolCmdBase(object):
+class MMGenToolCmds(object):
 
 	@classmethod
 	def _user_commands(cls):
 		return [e for e in dir(cls) if e[0] != '_' and getattr(cls,e).__doc__ and callable(getattr(cls,e))]
 
-
-class MMGenToolCmdMisc(MMGenToolCmdBase):
+class MMGenToolCmdMisc(MMGenToolCmds):
 	"miscellaneous commands"
 
 	def help(self,command_name=''):
@@ -255,7 +251,7 @@ class MMGenToolCmdMisc(MMGenToolCmdBase):
 
 	usage = help
 
-class MMGenToolCmdUtil(MMGenToolCmdBase):
+class MMGenToolCmdUtil(MMGenToolCmds):
 	"general string conversion and hashing utilities"
 
 	def bytespec(self,dd_style_byte_specifier:str):
@@ -366,7 +362,7 @@ class MMGenToolCmdUtil(MMGenToolCmdBase):
 		"convert a die roll base6 (base6d) number to hexadecimal"
 		return baseconv.tohex(remove_whitespace(b6d_num),'b6d',pad)
 
-class MMGenToolCmdCoin(MMGenToolCmdBase):
+class MMGenToolCmdCoin(MMGenToolCmds):
 	"""
 	cryptocoin key/address utilities
 
@@ -448,7 +444,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
 		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
-		return self.pubhash2addr(self.hash160(redeem_scripthex))
+		return self.pubhash2addr(hash160(redeem_scripthex))
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
@@ -473,7 +469,7 @@ class MMGenToolCmdCoin(MMGenToolCmdBase):
 		from mmgen.tx import scriptPubKey2addr
 		return scriptPubKey2addr(hexstr)[0]
 
-class MMGenToolCmdMnemonic(MMGenToolCmdBase):
+class MMGenToolCmdMnemonic(MMGenToolCmds):
 	"""
 	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39', 'xmrseed')
 
@@ -569,7 +565,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmdBase):
 			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
 		return '\n'.join(ret)
 
-class MMGenToolCmdFile(MMGenToolCmdBase):
+class MMGenToolCmdFile(MMGenToolCmds):
 	"utilities for viewing/checking MMGen address and transaction files"
 
 	def _file_chksum(self,mmgen_addrfile,objname):
@@ -629,7 +625,7 @@ class MMGenToolCmdFile(MMGenToolCmdBase):
 			[MMGenTX(fn,offline=True).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]
 		).rstrip()
 
-class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
+class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	"""
 	file encryption and decryption
 
@@ -661,7 +657,7 @@ class MMGenToolCmdFileCrypt(MMGenToolCmdBase):
 		write_data_to_file(outfile,dec_d,'decrypted data',binary=True)
 		return True
 
-class MMGenToolCmdFileUtil(MMGenToolCmdBase):
+class MMGenToolCmdFileUtil(MMGenToolCmds):
 	"file utilities"
 
 	def find_incog_data(self,filename:str,incog_id:str,keep_searching=False):
@@ -751,7 +747,7 @@ class MMGenToolCmdFileUtil(MMGenToolCmdBase):
 
 		return True
 
-class MMGenToolCmdWallet(MMGenToolCmdBase):
+class MMGenToolCmdWallet(MMGenToolCmds):
 	"key, address or subseed generation from an MMGen wallet"
 
 	def get_subseed(self,subseed_idx:str,wallet=''):
@@ -808,7 +804,7 @@ class MMGenToolCmdWallet(MMGenToolCmdBase):
 
 from mmgen.tw import TwAddrList,TwUnspentOutputs
 
-class MMGenToolCmdRPC(MMGenToolCmdBase):
+class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
 
 	def getbalance(self,minconf=1,quiet=False,pager=False):
@@ -911,7 +907,7 @@ class MMGenToolCmdRPC(MMGenToolCmdBase):
 			msg("Address '{}' deleted from tracking wallet".format(ret))
 		return ret
 
-class MMGenToolCmdMonero(MMGenToolCmdBase):
+class MMGenToolCmdMonero(MMGenToolCmds):
 	"""
 	Monero wallet utilities
 
