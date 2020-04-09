@@ -760,8 +760,7 @@ class TrackingWallet(MMGenObject):
 
 	@property
 	def mmid_ordered_dict(self):
-		from collections import OrderedDict
-		return OrderedDict([(x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list])
+		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
 	@write_mode
 	def import_address(self,addr,label,rescan):

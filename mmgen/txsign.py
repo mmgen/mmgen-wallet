@@ -38,8 +38,7 @@ ERROR: a key file must be supplied for the following non-{pnm} address{{}}:\n   
 """.format(pnm=pnm).strip()
 }
 
-from collections import OrderedDict
-saved_seeds = OrderedDict()
+saved_seeds = {}
 
 def get_seed_for_seed_id(sid,infiles,saved_seeds):
 

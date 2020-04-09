@@ -1112,8 +1112,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		if blockheight < 0:
 			blockheight = 0 # TODO: handle the non-zero case
 
-		from collections import OrderedDict
-		bals = OrderedDict() # locked,unlocked
+		bals = {} # locked,unlocked
 
 		try:
 			process_wallets()

@@ -592,8 +592,7 @@ class TestSuiteRunner(object):
 		self.data_dir = data_dir
 		self.trash_dir = trash_dir
 		self.cmd_total = 0
-		from collections import OrderedDict
-		self.rebuild_list = OrderedDict()
+		self.rebuild_list = {}
 		self.gm = CmdGroupMgr()
 		self.repo_root = repo_root
 		self.skipped_warnings = []

@@ -54,47 +54,46 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
 
-from collections import OrderedDict
-cmd_data = OrderedDict([
-	('cryptocoin', {
-			'desc': 'Cryptocoin address/key commands',
-			'cmd_data': OrderedDict([
-				('randwif',        ()),
-				('randpair',       ()), # create 4 pairs: uncomp,comp,segwit,bech32
-				('wif2addr',       ('randpair','o4')),
-				('wif2hex',        ('randpair','o4')),
+cmd_data = {
+	'cryptocoin': {
+		'desc': 'Cryptocoin address/key commands',
+		'cmd_data': {
+			'randwif':        (),
+			'randpair':       (), # create 4 pairs: uncomp,comp,segwit,bech32
+			'wif2addr':       ('randpair','o4'),
+			'wif2hex':        ('randpair','o4'),
+			'privhex2pubhex': ('wif2hex','o3'),        # segwit only
+			'pubhex2addr':    ('privhex2pubhex','o3'), # segwit only
+			'hex2wif':        ('wif2hex','io2'),       # uncomp, comp
+			'addr2pubhash':   ('randpair','o4'),       # uncomp, comp, bech32
+			'pubhash2addr':   ('addr2pubhash','io4'),  # uncomp, comp, bech32
+		},
+	},
+	'mnemonic': {
+		'desc': 'mnemonic commands',
+		'cmd_data': {
+			'hex2mn':       (),
+			'mn2hex':       ('hex2mn','io3'),
+			'mn_rand128':   (),
+			'mn_rand192':   (),
+			'mn_rand256':   (),
+			'mn_stats':     (),
+			'mn_printlist': (),
+		},
+	},
+}
 
-				('privhex2pubhex', ('wif2hex','o3')),        # segwit only
-				('pubhex2addr',    ('privhex2pubhex','o3')), # segwit only
-				('hex2wif',        ('wif2hex','io2')),       # uncomp, comp
-				('addr2pubhash',   ('randpair','o4'))] +     # uncomp, comp, bech32
-			([],[
-				('pubhash2addr',   ('addr2pubhash','io4'))   # uncomp, comp, bech32
-			])[opt.type != 'zcash_z'] +
-			([],[
-				('pubhex2redeem_script', ('privhex2pubhex','o3')),
-				('wif2redeem_script', ('randpair','o3')),
-				('wif2segwit_pair',   ('randpair','o2')),
-				('privhex2addr',   ('wif2hex','o4')), # compare with output of randpair
-				('pipetest',       ('randpair','o3'))
-			])[g.coin in ('BTC','LTC')]
-			)
-		}
-	),
-	('mnemonic', {
-			'desc': 'mnemonic commands',
-			'cmd_data': OrderedDict([
-				('hex2mn',       ()),
-				('mn2hex',       ('hex2mn','io3')),
-				('mn_rand128',   ()),
-				('mn_rand192',   ()),
-				('mn_rand256',   ()),
-				('mn_stats',     ()),
-				('mn_printlist', ()),
-			])
-		}
-	),
-])
+if g.coin in ('BTC','LTC'):
+	cmd_data['cryptocoin']['cmd_data'].update({
+		'pubhex2redeem_script': ('privhex2pubhex','o3'),
+		'wif2redeem_script':    ('randpair','o3'),
+		'wif2segwit_pair':      ('randpair','o2'),
+		'privhex2addr':         ('wif2hex','o4'), # compare with output of randpair
+		'pipetest':             ('randpair','o3')
+	})
+
+if opt.type == 'zcash_z':
+	del cmd_data['cryptocoin']['cmd_data']['pubhash2addr']
 
 cfg = {
 	'name':          'the tool utility',

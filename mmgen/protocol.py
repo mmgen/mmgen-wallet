@@ -21,7 +21,7 @@ protocol.py: Coin protocol functions, classes and methods
 """
 
 import sys,os,hashlib
-from collections import namedtuple,OrderedDict
+from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
@@ -283,7 +283,7 @@ class LitecoinProtocol(BitcoinProtocol):
 	daemon_name    = 'litecoind'
 	daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' \
 						else os.path.join(g.home_dir,'.litecoin')
-	addr_ver_bytes = OrderedDict((('30','p2pkh'), ('32','p2sh'), ('05','p2sh'))) # new p2sh ver 0x32 must come first
+	addr_ver_bytes = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
 	wif_ver_num    = { 'std': 'b0' }
 	mmtypes         = ('L','C','S','B')
 	secs_per_block = 150
@@ -297,7 +297,7 @@ class LitecoinProtocol(BitcoinProtocol):
 
 class LitecoinTestnetProtocol(LitecoinProtocol):
 	# addr ver nums same as Bitcoin testnet, except for 'p2sh'
-	addr_ver_bytes = OrderedDict((('6f','p2pkh'), ('3a','p2sh'), ('c4','p2sh')))
+	addr_ver_bytes = { '6f':'p2pkh', '3a':'p2sh', 'c4':'p2sh' }
 	wif_ver_num    = { 'std': 'ef' } # same as Bitcoin testnet
 	data_subdir    = 'testnet'
 	daemon_data_subdir = 'testnet4'

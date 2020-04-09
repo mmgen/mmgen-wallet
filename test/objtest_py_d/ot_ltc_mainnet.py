@@ -7,26 +7,24 @@
 test.objtest_py_d.ot_ltc_mainnet: LTC mainnet test vectors for MMGen data objects
 """
 
-from collections import OrderedDict
-
 from mmgen.obj import *
 from .ot_common import *
 
-tests = OrderedDict([
-	('LTCAmt', {
+tests = {
+	'LTCAmt': {
 		'bad':  ('-3.2','0.123456789',123,'123L','88000000',80999999.12345678),
 		'good': (('80999999.12345678',Decimal('80999999.12345678')),)
-	}),
-	('CoinAddr', {
+	},
+	'CoinAddr': {
 		'bad':  (1,'x','я'),
 		'good': ('LXYx4j8PDGE8GEwDFnEQhcLyHFGsRxSJwt','MEnuCzUGHaQx9fK5WYvLwR1NK4SAo8HmSr'),
-	}),
-	('WifKey', {
+	},
+	'WifKey': {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
 		'good': ('6udBAGS6B9RfGyvEQDkVDsWy3Kqv9eTULqtEfVkJtTJyHdLvojw',
 				'T7kCSp5E71jzV2zEJW4q5qU1SMB5CSz8D9VByxMBkamv1uM3Jjca'),
-	}),
-	('PrivKey', {
+	},
+	'PrivKey': {
 		'bad': (
 			{'wif':1},
 			{'wif':'1'},
@@ -47,5 +45,5 @@ tests = OrderedDict([
 			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
 			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
 		)
-	}),
-])
+	},
+}

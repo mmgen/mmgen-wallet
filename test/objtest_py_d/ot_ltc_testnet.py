@@ -7,22 +7,20 @@
 test.objtest_py_d.ot_ltc_testnet: LTC testnet test vectors for MMGen data objects
 """
 
-from collections import OrderedDict
-
 from mmgen.obj import *
 from .ot_common import *
 
-tests = OrderedDict([
-	('CoinAddr', {
+tests = {
+	'CoinAddr': {
 		'bad':  (1,'x','я'),
 		'good': ('n2D3joAy3yE5fqxUeCp38X6uPUcVn7EFw9','QN59YbnHsPQcbKWSq9PmTpjrhBnHGQqRmf')
-	}),
-	('WifKey', {
+	},
+	'WifKey': {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
 		'good': ('936Fd4qs3Zy2ZiYHH7vZ3UpT23KtCAiGiG2xBTkjHo7jE9aWA2f',
 				'cQY3EumdaSNuttvDSUuPdiMYLyw8aVmYfFqxo9kdPuWbJBN4Ny66')
-	}),
-	('PrivKey', {
+	},
+	'PrivKey': {
 		'bad': (
 			{'wif':1},
 			{'wif':'1'},
@@ -43,5 +41,5 @@ tests = OrderedDict([
 			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
 			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
 		)
-	}),
-])
+	},
+}

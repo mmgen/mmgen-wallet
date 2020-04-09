@@ -70,7 +70,6 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 					out.append('\n')
 				if not e: out.append('{}\n'.format(repr(e)))
 
-			from collections import OrderedDict
 			def isDict(obj):
 				return isinstance(obj,dict)
 			def isList(obj):
@@ -85,7 +84,6 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 				do_list(out,self,lvl=lvl,is_dict=isDict(self))
 
 			for k in self.__dict__:
-				if k in ('_OrderedDict__root','_OrderedDict__map'): continue # excluded because of recursion
 				e = getattr(self,k)
 				if isList(e) or isDict(e):
 					out.append('{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))

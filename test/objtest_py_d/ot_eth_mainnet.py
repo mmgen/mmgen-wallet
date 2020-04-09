@@ -7,13 +7,11 @@
 test.objtest_py_d.ot_eth_mainnet: ETH mainnet test vectors for MMGen data objects
 """
 
-from collections import OrderedDict
-
 from mmgen.obj import *
 from .ot_common import *
 
-tests = OrderedDict([
-	('ETHAmt', {
+tests = {
+	'ETHAmt': {
 		'bad':  ('-3.2','0.1234567891234567891',123,'123L',
 					{'num':'1','from_decimal':True},
 					{'num':1,'from_decimal':True},
@@ -27,8 +25,8 @@ tests = OrderedDict([
 				{'num':1234,'from_unit':'wei','ret':Decimal('0.000000000000001234')},
 				{'num':1234,'from_unit':'Mwei','ret':Decimal('0.000000001234')},
 		)
-	}),
-	('ETHNonce', {
+	},
+	'ETHNonce': {
 		'bad': ('z','я',-1,'-1',0.0,'0.0'),
 		'good': (
 			('0',0),('1',1),('100',100),1,100,
@@ -37,5 +35,5 @@ tests = OrderedDict([
 			{'n':'0xf','base':16,'ret':15},
 			{'n':'0xff','base':16,'ret':255},
 		)
-	}),
-])
+	},
+}
