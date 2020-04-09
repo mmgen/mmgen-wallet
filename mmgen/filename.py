@@ -39,7 +39,7 @@ class Filename(MMGenObject):
 		self.ctime    = None
 		self.atime    = None
 
-		from mmgen.seed import Wallet
+		from .wallet import Wallet
 		from mmgen.tx import MMGenTX
 		if ftype:
 			if isinstance(ftype,type):
@@ -99,7 +99,7 @@ def find_files_in_dir(ftype,fdir,no_dups=False):
 	if not isinstance(ftype,type):
 		die(3,"'{}': is of type {} (not a subclass of type 'type')".format(ftype,type(ftype)))
 
-	from mmgen.seed import Wallet
+	from .wallet import Wallet
 	if not issubclass(ftype,Wallet):
 		die(3,"'{}': not a recognized file type".format(ftype))
 

@@ -27,7 +27,7 @@ from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
 from mmgen.protocol import CoinProtocol
 from mmgen.addr import AddrList
-from mmgen.seed import MMGenWallet
+from mmgen.wallet import MMGenWallet
 from ..include.common import *
 from .common import *
 

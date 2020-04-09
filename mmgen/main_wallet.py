@@ -22,7 +22,7 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 
 import os
 from mmgen.common import *
-from mmgen.seed import Wallet,MMGenWallet
+from .wallet import Wallet,MMGenWallet
 from mmgen.filename import find_file_in_dir
 from mmgen.obj import MMGenWalletLabel,MasterShareIdx
 

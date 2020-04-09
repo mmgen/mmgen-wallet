@@ -392,7 +392,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		msg_r('{} option {!r}{}'.format(beg,s,end))
 
 	def chk_in_fmt(key,val,desc):
-		from mmgen.seed import Wallet,IncogWallet,Brainwallet,IncogWalletHidden
+		from .wallet import Wallet,IncogWallet,Brainwallet,IncogWalletHidden
 		sstype = Wallet.fmt_code_to_type(val)
 		if not sstype:
 			opt_unrecognized(key,val)
@@ -434,7 +434,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 		if hasattr(opt,key2):
 			val2 = getattr(opt,key2)
-			from mmgen.seed import IncogWalletHidden
+			from .wallet import IncogWalletHidden
 			if val2 and val2 not in IncogWalletHidden.fmt_codes:
 				fs = 'Option conflict:\n  {}, with\n  {}={}'
 				raise UserOptError(fs.format(fmt_opt(key),fmt_opt(key2),val2))

@@ -24,7 +24,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
-from mmgen.seed import Wallet
+from .wallet import Wallet
 
 if g.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'

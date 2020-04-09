@@ -21,7 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.common import *
-from mmgen.seed import Wallet
+from .wallet import Wallet
 from mmgen.obj import SubSeedIdxRange
 
 opts_data = {

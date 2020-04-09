@@ -22,7 +22,7 @@ ts_seedsplit.py: Seed split/join tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import Wallet,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,WalletEnc
+from mmgen.wallet import Wallet,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,WalletEnc
 
 from .ts_base import *
 

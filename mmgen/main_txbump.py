@@ -22,7 +22,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 from mmgen.common import *
-from mmgen.seed import Wallet
+from .wallet import Wallet
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],

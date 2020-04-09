@@ -23,7 +23,8 @@ mmgen/main_seedjoin: Regenerate an MMGen deterministic wallet from seed shares
 
 from mmgen.common import *
 from mmgen.obj import MasterShareIdx,SeedSplitIDString,MMGenWalletLabel
-from mmgen.seed import Seed,Wallet,SeedShareMasterJoining
+from .seed import Seed,SeedShareMasterJoining
+from .wallet import Wallet
 
 opts_data = {
 	'text': {

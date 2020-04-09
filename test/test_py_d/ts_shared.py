@@ -24,7 +24,7 @@ import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import ymsg
-from mmgen.seed import Wallet,WalletEnc,Brainwallet,MMGenWallet,IncogWalletHidden
+from mmgen.wallet import Wallet,WalletEnc,Brainwallet,MMGenWallet,IncogWalletHidden
 from ..include.common import *
 from .common import *
 

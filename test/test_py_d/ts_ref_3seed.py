@@ -23,7 +23,7 @@ ts_ref_3seed.py: Saved and generated reference file tests for 128, 192 and
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import Wallet
+from mmgen.wallet import *
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -89,27 +89,21 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf=None,wcls=ss,sid=self.seed_id)
 
 	def ref_seed_chk(self):
-		from mmgen.seed import MMGenSeedFile
 		return self.ref_ss_chk(ss=MMGenSeedFile)
 
 	def ref_hex_chk(self):
-		from mmgen.seed import MMGenHexSeedFile
 		return self.ref_ss_chk(ss=MMGenHexSeedFile)
 
 	def ref_plainhex_chk(self):
-		from mmgen.seed import PlainHexSeedFile
 		return self.ref_ss_chk(ss=PlainHexSeedFile)
 
 	def ref_dieroll_chk(self):
-		from mmgen.seed import DieRollSeedFile
 		return self.ref_ss_chk(ss=DieRollSeedFile)
 
 	def ref_mn_chk(self):
-		from mmgen.seed import MMGenMnemonic
 		return self.ref_ss_chk(ss=MMGenMnemonic)
 
 	def ref_bip39_chk(self):
-		from mmgen.seed import BIP39Mnemonic
 		return self.ref_ss_chk(ss=BIP39Mnemonic)
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):

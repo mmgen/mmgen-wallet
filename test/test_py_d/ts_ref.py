@@ -23,7 +23,7 @@ ts_ref.py: Reference file tests for the test.py test suite
 import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import MMGenMnemonic
+from mmgen.wallet import MMGenMnemonic
 from ..include.common import *
 from .common import *
 

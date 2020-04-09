@@ -29,7 +29,7 @@ from mmgen.util import *
 
 def help_notes(k):
 	from mmgen.obj import SubSeedIdxRange,SeedShareIdx,SeedShareCount,MasterShareIdx
-	from mmgen.seed import Wallet
+	from .wallet import Wallet
 	from mmgen.tx import MMGenTX
 	def fee_spec_letters(use_quotes=False):
 		cu = g.proto.coin_amt.units

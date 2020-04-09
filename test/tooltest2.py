@@ -31,7 +31,7 @@ from include.tests_header import repo_root
 from mmgen.common import *
 from test.include.common import *
 from mmgen.obj import is_wif,is_coin_addr
-from mmgen.seed import is_bip39_mnemonic,is_mmgen_mnemonic
+from mmgen.wallet import is_bip39_mnemonic,is_mmgen_mnemonic
 from mmgen.addr import is_xmrseed
 from mmgen.baseconv import *
 

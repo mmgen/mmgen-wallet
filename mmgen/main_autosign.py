@@ -249,7 +249,7 @@ def decrypt_wallets():
 	opt.set_by_user = ['hash_preset']
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 #	opt.passwd_file = '/tmp/key'
-	from mmgen.seed import Wallet
+	from .wallet import Wallet
 	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
 	fails = 0
 	for wf in wfs:
@@ -352,7 +352,7 @@ def create_wallet_dir():
 def setup():
 	remove_wallet_dir()
 	gen_key(no_unmount=True)
-	from mmgen.seed import Wallet
+	from .wallet import Wallet
 	opt.hidden_incog_input_params = None
 	opt.quiet = True
 	opt.in_fmt = 'words'

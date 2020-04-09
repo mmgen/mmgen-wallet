@@ -24,7 +24,7 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import PasswordList,AddrIdxList
-from mmgen.seed import Wallet
+from .wallet import Wallet
 from mmgen.obj import MMGenPWIDString
 
 pwi = PasswordList.pw_info

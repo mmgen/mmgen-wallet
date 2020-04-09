@@ -13,7 +13,7 @@ ts_input.py: user input tests for the MMGen test.py test suite
 from ..include.common import *
 from .ts_base import *
 from .input import *
-from mmgen.seed import Wallet
+from mmgen.wallet import Wallet
 
 class TestSuiteInput(TestSuiteBase):
 	'user input'

@@ -22,7 +22,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import Wallet,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
+from mmgen.wallet import Wallet,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
 from ..include.common import *
 from .common import *
 from .ts_base import *

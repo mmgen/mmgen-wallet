@@ -22,7 +22,7 @@ ts_wallet.py: Wallet conversion tests for the test.py test suite
 
 import os
 from mmgen.opts import opt
-from mmgen.seed import *
+from mmgen.wallet import *
 from .common import *
 from .ts_base import *
 from .ts_shared import *
