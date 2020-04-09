@@ -120,7 +120,7 @@ def get_seed_files(opt,args):
 	u,e = SeedSourceUnenc,SeedSourceEnc
 	ret = _pop_and_return(args,u.get_extensions())
 	from mmgen.filename import find_file_in_dir
-	wf = find_file_in_dir(Wallet,g.data_dir) # Make this the first encrypted ss in the list
+	wf = find_file_in_dir(MMGenWallet,g.data_dir) # Make this the first encrypted ss in the list
 	if wf: ret.append(wf)
 	ret += _pop_and_return(args,e.get_extensions())
 	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat

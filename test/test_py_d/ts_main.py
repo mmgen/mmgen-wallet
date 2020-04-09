@@ -22,7 +22,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import SeedSource,Wallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
+from mmgen.seed import SeedSource,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -184,7 +184,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.passchg(wf=None,pf=pf,dfl_wallet=True)
 
 	def walletchk_newpass_dfl_wallet(self,pf):
-		return self.walletchk_newpass(wf=None,wcls=Wallet,pf=pf,dfl_wallet=True)
+		return self.walletchk_newpass(wf=None,wcls=MMGenWallet,pf=pf,dfl_wallet=True)
 
 	def delete_dfl_wallet(self,pf):
 		self.write_to_tmpfile('del_dw_run',b'',binary=True)
@@ -204,7 +204,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		t.usr_rand(self.usr_rand_chars)
 		t.expect('Generating')
-		wcls = Wallet
+		wcls = MMGenWallet
 		t.passphrase_new('new '+wcls.desc,self.wpasswd)
 		t.label()
 		if not self.have_dfl_wallet and gen_dfl_wallet:
@@ -218,7 +218,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if wf != 'default': args += [wf]
 		t = self.spawn('mmgen-subwalletgen', args + ['10s'])
 		t.license()
-		wcls = Wallet
+		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'])
 		t.expect('Generating subseed 10S')
 		t.passphrase_new('new '+wcls.desc,'foo')
@@ -251,7 +251,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 					}[label_action]
 		t = self.spawn('mmgen-passchg', add_args + [self.usr_rand_arg, '-p2'] + ([wf] if wf else []))
 		t.license()
-		wcls = Wallet
+		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
 		t.passphrase(wcls.desc,self.wpasswd,pwtype='new') # reuse passphrase?
@@ -469,7 +469,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect('OK? (Y/n): ','\n')
 		if seed_args: # sign and send
 			t.do_comment(False,has_label=True)
-			for cnum,wcls in (('1',IncogWallet),('3',Wallet),('4',Wallet)):
+			for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet),('4',MMGenWallet)):
 				t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 			self._do_confirm_send(t,quiet=not g.debug,confirm_send=True)
 			if g.debug:
@@ -521,7 +521,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if ocls == IncogWalletHidden:
 			self.write_to_tmpfile(incog_id_fn,incog_id)
 			t.hincog_create(hincog_bytes)
-		elif ocls == Wallet:
+		elif ocls == MMGenWallet:
 			t.label()
 		return t.written_to_file(capfirst(ocls.desc),oo=True),t
 
@@ -665,7 +665,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		args = ['-d',self.tmpdir,'-p1',self.usr_rand_arg,'-l'+seed_len,'-ib']
 		t = self.spawn('mmgen-walletconv', args + [bwf])
 		t.license()
-		wcls = Wallet
+		wcls = MMGenWallet
 		t.passphrase_new('new ' +wcls.desc,self.wpasswd)
 		t.usr_rand(self.usr_rand_chars)
 		t.label()
@@ -686,7 +686,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 		t.view_tx('t')
 
-		for cnum,wcls in (('1',IncogWallet),('3',Wallet)):
+		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
 			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_end(t,has_label=True)
@@ -699,7 +699,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.txcreate_common(sources=['1','2','3','4','14'],
 					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
 
-		for cnum,wcls in (('1',IncogWallet),('3',Wallet)):
+		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
 			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_ui_common(t)

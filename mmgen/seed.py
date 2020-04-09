@@ -535,11 +535,11 @@ class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
 				sstype.__name__, 'input file format' )
 
 		if seed or seed_bin:
-			me = super(cls,cls).__new__(out_cls or Wallet) # default to Wallet
+			me = super(cls,cls).__new__(out_cls or MMGenWallet) # default to MMGenWallet
 			me.seed = seed or Seed(seed_bin=seed_bin)
 			me.op = 'new'
 		elif ss:
-			me = super(cls,cls).__new__((ss.__class__ if passchg else out_cls) or Wallet)
+			me = super(cls,cls).__new__((ss.__class__ if passchg else out_cls) or MMGenWallet)
 			me.seed = ss.seed
 			me.ss_in = ss
 			me.op = ('conv','pwchg_new')[bool(passchg)]
@@ -560,7 +560,7 @@ class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
 			me = super(cls,cls).__new__(cls.fmt_code_to_type(in_fmt))
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		else: # called with no arguments: initialize with random seed
-			me = super(cls,cls).__new__(out_cls or Wallet)
+			me = super(cls,cls).__new__(out_cls or MMGenWallet)
 			me.seed = Seed(None)
 			me.op = 'new'
 
@@ -1136,7 +1136,7 @@ class MMGenHexSeedFile(SeedSourceUnenc):
 
 		return True
 
-class Wallet(SeedSourceEnc):
+class MMGenWallet(SeedSourceEnc):
 
 	fmt_codes = ('wallet','w')
 	desc = g.proj_name + ' wallet'

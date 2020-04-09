@@ -24,7 +24,7 @@ import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import ymsg
-from mmgen.seed import SeedSource,SeedSourceEnc,Brainwallet,Wallet,IncogWalletHidden
+from mmgen.seed import SeedSource,SeedSourceEnc,Brainwallet,MMGenWallet,IncogWalletHidden
 from ..include.common import *
 from .common import *
 
@@ -158,7 +158,7 @@ class TestSuiteShared(object):
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
 		t.view_tx(view)
-		wcls = Wallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
+		wcls = MMGenWallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
 		pw = issubclass(wcls,SeedSourceEnc) and wcls != Brainwallet
 		if pw:
 			t.passphrase(wcls.desc,self.wpasswd)
@@ -215,7 +215,7 @@ class TestSuiteShared(object):
 				[getattr(self,'{}_idx_list'.format(cmd_pfx))],
 				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
 		t.license()
-		wcls = Wallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
+		wcls = MMGenWallet if dfl_wallet else SeedSource.ext_to_type(get_extension(wf))
 		t.passphrase(wcls.desc,self.wpasswd)
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[passgen]

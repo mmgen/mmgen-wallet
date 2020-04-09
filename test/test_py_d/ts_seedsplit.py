@@ -22,7 +22,7 @@ ts_seedsplit.py: Seed split/join tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import SeedSource,Wallet,IncogWallet,IncogWalletHex,IncogWalletHidden,SeedSourceEnc
+from mmgen.seed import SeedSource,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,SeedSourceEnc
 
 from .ts_base import *
 
@@ -30,7 +30,7 @@ ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'
 wpasswd = 'abc'
 sh1_passwd = 'xyz'
-dfl_wcls = Wallet
+dfl_wcls = MMGenWallet
 
 class TestSuiteSeedSplit(TestSuiteBase):
 	'splitting and joining seeds'
@@ -135,7 +135,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if bad_invocation:
 			t.read()
 			return t
-		icls = ( Wallet if 'mmdat' in in_exts
+		icls = ( MMGenWallet if 'mmdat' in in_exts
 			else IncogWallet if 'mmincog' in in_exts
 			else IncogWalletHex if 'mmincox' in in_exts
 			else IncogWalletHidden if '-H' in add_args
@@ -151,7 +151,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		sid_cmp = t.expect_getend('Joined Seed ID: ')
 		cmp_or_die(sid,sid_cmp)
 		ocls = SeedSource.fmt_code_to_type(ofmt)
-		if ocls == Wallet:
+		if ocls == MMGenWallet:
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,wpasswd)
 		t.written_to_file(capfirst(ocls.desc))

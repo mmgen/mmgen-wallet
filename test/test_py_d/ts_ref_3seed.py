@@ -144,7 +144,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
 		t.license()
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
-		ocls = Wallet
+		ocls = MMGenWallet
 		t.passphrase_new('new '+ocls.desc,self.wpasswd)
 		t.usr_rand(self.usr_rand_chars)
 		fn = os.path.split(t.written_to_file(capfirst(ocls.desc)))[-1]

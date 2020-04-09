@@ -27,14 +27,14 @@ from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
 from mmgen.protocol import CoinProtocol
 from mmgen.addr import AddrList
-from mmgen.seed import Wallet
+from mmgen.seed import MMGenWallet
 from ..include.common import *
 from .common import *
 
 pat_date = r'\b\d\d-\d\d-\d\d\b'
 pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
 
-dfl_wcls = Wallet
+dfl_wcls = MMGenWallet
 rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001','bch':'0.001','ltc':'0.01'},
@@ -307,7 +307,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if subseed_idx in self.usr_subsids[user]:
 			return self.usr_subsids[user][subseed_idx]
 
-		icls = Wallet
+		icls = MMGenWallet
 		fn = get_file_with_ext(self._user_dir(user),icls.ext)
 		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True)
 		t.passphrase(icls.desc,rt_pw)

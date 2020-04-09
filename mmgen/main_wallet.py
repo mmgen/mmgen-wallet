@@ -22,7 +22,7 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 
 import os
 from mmgen.common import *
-from mmgen.seed import SeedSource,Wallet
+from mmgen.seed import SeedSource,MMGenWallet
 from mmgen.filename import find_file_in_dir
 from mmgen.obj import MMGenWalletLabel,MasterShareIdx
 
@@ -233,7 +233,7 @@ else:
 		assert invoked_as == 'gen','dw'
 		assert not opt.outdir,'dw'
 		assert not opt.stdout,'dw'
-		assert not find_file_in_dir(Wallet,g.data_dir),'dw'
+		assert not find_file_in_dir(MMGenWallet,g.data_dir),'dw'
 		m = 'Make this wallet your default and move it to the data directory?'
 		assert keypress_confirm(m,default_yes=True),'dw'
 	except Exception as e:
