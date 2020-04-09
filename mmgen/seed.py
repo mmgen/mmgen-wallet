@@ -195,7 +195,8 @@ class SubSeedList(MMGenObject):
 		for idx in SubSeedIdxRange(first_idx,last_idx).iterate():
 			match1 = add_subseed(idx,'long')
 			match2 = add_subseed(idx,'short') if self.have_short else False
-			if match1 or match2: break
+			if match1 or match2:
+				break
 
 	def format(self,first_idx,last_idx):
 
@@ -604,23 +605,17 @@ class SeedSource(MMGenObject):
 	def _deformat_retry(self):
 		while True:
 			self._get_data()
-			if self._deformat(): break
+			if self._deformat():
+				break
 			msg('Trying again...')
 
 	def _decrypt_retry(self):
 		while True:
-			if self._decrypt(): break
+			if self._decrypt():
+				break
 			if opt.passwd_file:
 				die(2,'Passphrase from password file, so exiting')
 			msg('Trying again...')
-
-	@classmethod
-	def get_subclasses_str(cls): # returns name of calling class too
-		return cls.__name__ + ' ' + ''.join([c.get_subclasses_str() for c in cls.__subclasses__()])
-
-	@classmethod
-	def get_subclasses_easy(cls,acc=[]):
-		return [globals()[c] for c in cls.get_subclasses_str().split()]
 
 	@classmethod
 	def get_subclasses(cls): # returns calling class too
@@ -637,18 +632,18 @@ class SeedSource(MMGenObject):
 
 	@classmethod
 	def fmt_code_to_type(cls,fmt_code):
-		if not fmt_code: return None
-		for c in cls.get_subclasses():
-			if hasattr(c,'fmt_codes') and fmt_code in c.fmt_codes:
-				return c
+		if fmt_code:
+			for c in cls.get_subclasses():
+				if fmt_code in getattr(c,'fmt_codes',[]):
+					return c
 		return None
 
 	@classmethod
 	def ext_to_type(cls,ext):
-		if not ext: return None
-		for c in cls.get_subclasses():
-			if hasattr(c,'ext') and ext == c.ext:
-				return c
+		if ext:
+			for c in cls.get_subclasses():
+				if ext == getattr(c,'ext',None):
+					return c
 		return None
 
 	@classmethod
@@ -793,7 +788,8 @@ an empty passphrase, just hit ENTER twice.
 			else:
 				die(2,'User failed to duplicate passphrase in {} attempts'.format(g.passwd_max_tries))
 
-		if pw == '': qmsg('WARNING: Empty passphrase')
+		if pw == '':
+			qmsg('WARNING: Empty passphrase')
 		self.ssdata.passwd = pw
 		return pw
 
@@ -833,15 +829,10 @@ an empty passphrase, just hit ENTER twice.
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = encrypt_seed(self.seed.data,key)
 
-class MMGenMnemonic(SeedSourceUnenc):
+class Mnemonic(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'mmwords','words','mnemonic','mnem','mn','m'
-	desc = 'MMGen native mnemonic data'
 	wclass = 'mnemonic'
-	mn_type = 'MMGen native'
-	ext = 'mmwords'
-	wl_id = 'mmgen'
 	conv_cls = baseconv
 	choose_seedlen_prompt = 'Choose a mnemonic length: 1) 12 words, 2) 18 words, 3) 24 words: '
 	choose_seedlen_confirm = 'Mnemonic length of {} words chosen. OK?'
@@ -910,7 +901,15 @@ class MMGenMnemonic(SeedSourceUnenc):
 
 		return True
 
-class BIP39Mnemonic(MMGenMnemonic):
+class MMGenMnemonic(Mnemonic):
+
+	fmt_codes = ('mmwords','words','mnemonic','mnem','mn','m')
+	desc = 'MMGen native mnemonic data'
+	mn_type = 'MMGen native'
+	ext = 'mmwords'
+	wl_id = 'mmgen'
+
+class BIP39Mnemonic(Mnemonic):
 
 	fmt_codes = ('bip39',)
 	desc = 'BIP39 mnemonic data'
@@ -926,7 +925,7 @@ class BIP39Mnemonic(MMGenMnemonic):
 class MMGenSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'mmseed','seed','s'
+	fmt_codes = ('mmseed','seed','s')
 	desc = 'seed data'
 	ext = 'mmseed'
 
@@ -976,7 +975,7 @@ class MMGenSeedFile(SeedSourceUnenc):
 class DieRollSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'b6d','die','dieroll',
+	fmt_codes = ('b6d','die','dieroll')
 	desc = 'base6d die roll seed data'
 	ext = 'b6d'
 	conv_cls = baseconv
@@ -1066,7 +1065,7 @@ class DieRollSeedFile(SeedSourceUnenc):
 class PlainHexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'hex','rawhex','plainhex'
+	fmt_codes = ('hex','rawhex','plainhex')
 	desc = 'plain hexadecimal seed data'
 	ext = 'hex'
 
@@ -1095,7 +1094,7 @@ class PlainHexSeedFile(SeedSourceUnenc):
 class MMGenHexSeedFile(SeedSourceUnenc):
 
 	stdin_ok = True
-	fmt_codes = 'seedhex','hexseed','mmhex'
+	fmt_codes = ('seedhex','hexseed','mmhex')
 	desc = 'hexadecimal seed data with checksum'
 	ext = 'mmhex'
 
@@ -1140,9 +1139,9 @@ class MMGenHexSeedFile(SeedSourceUnenc):
 
 		return True
 
-class Wallet (SeedSourceEnc):
+class Wallet(SeedSourceEnc):
 
-	fmt_codes = 'wallet','w'
+	fmt_codes = ('wallet','w')
 	desc = g.proj_name + ' wallet'
 	ext = 'mmdat'
 
@@ -1228,7 +1227,8 @@ class Wallet (SeedSourceEnc):
 			return True
 
 		lines = self.fmt_data.splitlines()
-		if not check_master_chksum(lines,self.desc): return False
+		if not check_master_chksum(lines,self.desc):
+			return False
 
 		d = self.ssdata
 		d.label = MMGenWalletLabel(lines[1])
@@ -1301,10 +1301,10 @@ class Wallet (SeedSourceEnc):
 				self.ext,
 				x='-α' if g.debug_utf8 else '')
 
-class Brainwallet (SeedSourceEnc):
+class Brainwallet(SeedSourceEnc):
 
 	stdin_ok = True
-	fmt_codes = 'mmbrain','brainwallet','brain','bw','b'
+	fmt_codes = ('mmbrain','brainwallet','brain','bw','b')
 	desc = 'brainwallet'
 	ext = 'mmbrain'
 	# brainwallet warning message? TODO
@@ -1345,13 +1345,7 @@ class Brainwallet (SeedSourceEnc):
 	def _encrypt(self):
 		raise NotImplementedError('Brainwallet not supported as an output format')
 
-class IncogWallet (SeedSourceEnc):
-
-	file_mode = 'binary'
-	fmt_codes = 'mmincog','incog','icg','i'
-	desc = 'incognito data'
-	ext = 'mmincog'
-	no_tty = True
+class IncogWalletBase(SeedSourceEnc):
 
 	_msg = {
 		'check_incog_id': """
@@ -1437,7 +1431,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _deformat(self):
 
-		if not self._incog_data_size_chk(): return False
+		if not self._incog_data_size_chk():
+			return False
 
 		d = self.ssdata
 		d.iv             = self.fmt_data[0:g.aesctr_iv_len]
@@ -1492,31 +1487,41 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		else:
 			return False
 
-class IncogWalletHex (IncogWallet):
+class IncogWallet(IncogWalletBase):
 
-	file_mode = 'text'
+	desc = 'incognito data'
+	fmt_codes = ('mmincog','incog','icg','i')
+	ext = 'mmincog'
+	file_mode = 'binary'
+	no_tty = True
+
+class IncogWalletHex(IncogWalletBase):
+
 	desc = 'hex incognito data'
-	fmt_codes = 'mmincox','incox','incog_hex','xincog','ix','xi'
+	fmt_codes = ('mmincox','incox','incog_hex','xincog','ix','xi')
 	ext = 'mmincox'
+	file_mode = 'text'
 	no_tty = False
 
 	def _deformat(self):
 		ret = decode_pretty_hexdump(self.fmt_data)
 		if ret:
 			self.fmt_data = ret
-			return IncogWallet._deformat(self)
+			return super()._deformat()
 		else:
 			return False
 
 	def _format(self):
-		IncogWallet._format(self)
+		super()._format()
 		self.fmt_data = pretty_hexdump(self.fmt_data)
 
-class IncogWalletHidden (IncogWallet):
+class IncogWalletHidden(IncogWalletBase):
 
 	desc = 'hidden incognito data'
-	fmt_codes = 'incog_hidden','hincog','ih','hi'
+	fmt_codes = ('incog_hidden','hincog','ih','hi')
 	ext = None
+	file_mode = 'binary'
+	no_tty = True
 
 	_msg = {
 		'choose_file_size': """
@@ -1588,7 +1593,8 @@ harder to find, you're advised to choose a much larger file size than this.
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
 					fsize = parse_bytespec(my_raw_input('Enter file size: '))
-					if fsize >= min_fsize: break
+					if fsize >= min_fsize:
+						break
 					msg('File size must be an integer no less than {}'.format(min_fsize))
 
 				from mmgen.tool import MMGenToolCmdFileUtil
