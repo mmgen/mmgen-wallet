@@ -42,7 +42,7 @@ class Filename(MMGenObject):
 		from mmgen.seed import SeedSource
 		from mmgen.tx import MMGenTX
 		if ftype:
-			if type(ftype) == type:
+			if isinstance(ftype,type):
 				if issubclass(ftype,(SeedSource,MMGenTX)):
 					self.ftype = ftype
 				# elif: # other MMGen file types
@@ -96,8 +96,8 @@ class MMGenFileList(list,MMGenObject):
 		self.sort(key=lambda a: getattr(a,key),reverse=reverse)
 
 def find_files_in_dir(ftype,fdir,no_dups=False):
-	if type(ftype) != type:
-		die(3,"'{}': not a type".format(ftype))
+	if not isinstance(ftype,type):
+		die(3,"'{}': is of type {} (not a subclass of type 'type')".format(ftype,type(ftype)))
 
 	from mmgen.seed import SeedSource
 	if not issubclass(ftype,SeedSource):
