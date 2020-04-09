@@ -20,7 +20,7 @@
 mmgen-txsend: Broadcast a transaction signed by 'mmgen-txsign' to the network
 """
 
-from mmgen.common import *
+from .common import *
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -48,7 +48,7 @@ else: opts.usage()
 
 if not opt.status: do_license_msg()
 
-from mmgen.tx import *
+from .tx import *
 
 tx = MMGenTX(infile,quiet_open=True) # sig check performed here
 vmsg("Signed transaction file '{}' is valid".format(infile))

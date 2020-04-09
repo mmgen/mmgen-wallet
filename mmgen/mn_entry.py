@@ -22,10 +22,10 @@ mn_entry.py - Mnemonic user entry methods for the MMGen suite
 
 import time
 
-from mmgen.globalvars import *
-from mmgen.util import msg,msg_r,qmsg,fmt,fmt_list,capfirst,die
-from mmgen.term import get_char,get_char_raw
-from mmgen.color import cyan
+from .globalvars import *
+from .util import msg,msg_r,qmsg,fmt,fmt_list,capfirst,die
+from .term import get_char,get_char_raw
+from .color import cyan
 
 from string import ascii_lowercase as _word_chars
 _return_chars = '\n\r '

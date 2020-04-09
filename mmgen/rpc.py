@@ -23,7 +23,7 @@ rpc.py:  Cryptocoin RPC library for the MMGen suite
 import http.client,base64,json
 from decimal import Decimal
 
-from mmgen.common import *
+from .common import *
 
 def dmsg_rpc(fs,data=None,is_json=False):
 	if g.debug_rpc:
@@ -113,7 +113,7 @@ class RPCConnection(MMGenObject):
 		dmsg_rpc('    RPC POST data ==>\n{}\n',p)
 
 		ca_type = self.coin_amt_type if hasattr(self,'coin_amt_type') else str
-		from mmgen.obj import HexStr
+		from .obj import HexStr
 		class MyJSONEncoder(json.JSONEncoder):
 			def default(self,obj):
 				if isinstance(obj,g.proto.coin_amt):
@@ -385,9 +385,9 @@ def rpc_errmsg(ret):
 def init_daemon_parity():
 
 	def resolve_token_arg(token_arg):
-		from mmgen.obj import CoinAddr
-		from mmgen.altcoins.eth.tw import EthereumTrackingWallet
-		from mmgen.altcoins.eth.contract import Token
+		from .obj import CoinAddr
+		from .altcoins.eth.tw import EthereumTrackingWallet
+		from .altcoins.eth.contract import Token
 
 		tw = EthereumTrackingWallet(no_rpc=True)
 
@@ -458,7 +458,7 @@ def init_daemon_bitcoind():
 				auth_cookie=get_coin_daemon_auth_cookie())
 
 	if g.bob or g.alice:
-		from mmgen.regtest import MMGenRegtest
+		from .regtest import MMGenRegtest
 		MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
 	conn.daemon_version = int(conn.getnetworkinfo()['version'])
 	conn.blockcount = conn.getblockcount()

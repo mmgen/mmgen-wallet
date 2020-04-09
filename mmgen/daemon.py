@@ -23,8 +23,8 @@ daemon.py:  Daemon control interface for the MMGen suite
 import shutil
 from subprocess import run,PIPE
 from collections import namedtuple
-from mmgen.exception import *
-from mmgen.common import *
+from .exception import *
+from .common import *
 
 class Daemon(MMGenObject):
 
@@ -253,7 +253,7 @@ class MoneroWalletDaemon(Daemon):
 	def state(self):
 		if not self.test_socket(g.monero_wallet_rpc_host,self.rpc_port):
 			return 'stopped'
-		from mmgen.rpc import MoneroWalletRPCConnection
+		from .rpc import MoneroWalletRPCConnection
 		try:
 			MoneroWalletRPCConnection(
 				g.monero_wallet_rpc_host,
@@ -337,7 +337,7 @@ class CoinDaemon(Daemon):
 			me.desc = 'test suite daemon'
 			rel_datadir = os.path.join('test','daemons',daemon_id)
 		else:
-			from mmgen.protocol import CoinProtocol
+			from .protocol import CoinProtocol
 			me.datadir = CoinProtocol(daemon_id,False).daemon_data_dir
 
 		if test_suite:
@@ -523,7 +523,7 @@ class EthereumDaemon(CoinDaemon):
 
 	@property
 	def state(self):
-		from mmgen.rpc import EthereumRPCConnection
+		from .rpc import EthereumRPCConnection
 		try:
 			conn = EthereumRPCConnection('localhost',self.rpc_port,socket_timeout=0.2)
 		except:

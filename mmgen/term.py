@@ -22,7 +22,7 @@ term.py:  Terminal classes for the MMGen suite
 
 import sys,os,time
 from collections import namedtuple
-from mmgen.common import *
+from .common import *
 
 try:
 	import tty,termios

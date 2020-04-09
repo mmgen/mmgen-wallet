@@ -23,7 +23,7 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 import sys,os
 from decimal import Decimal
 from collections import namedtuple
-from mmgen.devtools import *
+from .devtools import *
 
 # Global vars are set to dfl values in class g.
 # They're overridden in this order:

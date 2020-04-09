@@ -21,9 +21,9 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
                deterministic wallet
 """
 
-from mmgen.common import *
-from mmgen.crypto import *
-from mmgen.addr import *
+from .common import *
+from .crypto import *
+from .addr import *
 from .wallet import Wallet
 
 if g.prog_name == 'mmgen-keygen':

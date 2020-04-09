@@ -22,8 +22,8 @@ tx.py:  Transaction routines for the MMGen suite
 
 import sys,os,json
 from stat import *
-from mmgen.common import *
-from mmgen.obj import *
+from .common import *
+from .obj import *
 
 wmsg = lambda k: {
 	'addr_in_addrfile_only': """
@@ -700,7 +700,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			repr([amt_to_str(e.__dict__) for e in self.outputs])
 		]
 		if self.label:
-			from mmgen.baseconv import baseconv
+			from .baseconv import baseconv
 			lines.append(baseconv.frombytes(self.label.encode(),'b58',tostr=True))
 		if self.coin_txid:
 			if not self.label: lines.append('-') # keep old tx files backwards compatible
@@ -732,7 +732,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys),g.proto.daemon_name))
 
 		if self.has_segwit_inputs():
-			from mmgen.addr import KeyGenerator,AddrGenerator
+			from .addr import KeyGenerator,AddrGenerator
 			kg = KeyGenerator('std')
 			ag = AddrGenerator('segwit')
 			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
@@ -963,7 +963,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		ret = None if g.bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
 
-		from mmgen.rpc import rpc_error,rpc_errmsg
+		from .rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
 			errmsg = rpc_errmsg(ret)
 			if 'Signature must use SIGHASH_FORKID' in errmsg:
@@ -1032,7 +1032,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def view_with_prompt(self,prompt='',pause=True):
 		prompt += ' (y)es, (N)o, pager (v)iew, (t)erse view: '
-		from mmgen.term import get_char
+		from .term import get_char
 		ok_chars = 'YyNnVvTt'
 		while True:
 			reply = get_char(prompt,immed_chars=ok_chars).strip('\n\r')
@@ -1050,7 +1050,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if pager: do_pager(o)
 		else:
 			msg_r(o)
-			from mmgen.term import get_char
+			from .term import get_char
 			if pause:
 				get_char('Press any key to continue: ')
 				msg('')
@@ -1226,7 +1226,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
-					from mmgen.baseconv import baseconv
+					from .baseconv import baseconv
 					comment = baseconv.tobytes(c,'b58').decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
@@ -1316,7 +1316,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			die(2,'At least one output must be specified on the command line')
 
 	def get_outputs_from_cmdline(self,cmd_args):
-		from mmgen.addr import AddrList,AddrData
+		from .addr import AddrList,AddrData
 		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
 		cmd_args = set(cmd_args) - set(addrfiles)
 
@@ -1441,7 +1441,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		twuo_addrs = self.get_cmdline_input_addrs()
 
-		from mmgen.tw import TwUnspentOutputs
+		from .tw import TwUnspentOutputs
 		self.twuo = TwUnspentOutputs(minconf=opt.minconf,addrs=twuo_addrs)
 
 		if not do_info:
@@ -1593,7 +1593,7 @@ class MMGenSplitTX(MMGenTX):
 
 	def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty
 
-		from mmgen.addr import AddrData
+		from .addr import AddrData
 		ad_w = AddrData(source='tw')
 
 		if is_mmgen_id(mmid):

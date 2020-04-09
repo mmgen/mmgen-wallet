@@ -30,7 +30,7 @@ part_label   = 'MMGEN_TX'
 wallet_dir   = '/dev/shm/autosign'
 key_fn       = 'autosign.key'
 
-from mmgen.common import *
+from .common import *
 prog_name = os.path.basename(sys.argv[0])
 opts_data = {
 	'text': {
@@ -111,10 +111,10 @@ exit_if_mswin('autosigning')
 
 import mmgen.tx
 import mmgen.altcoins.eth.tx
-from mmgen.txsign import txsign
-from mmgen.protocol import CoinProtocol,init_coin
+from .txsign import txsign
+from .protocol import CoinProtocol,init_coin
 if g.test_suite:
-	from mmgen.daemon import CoinDaemon
+	from .daemon import CoinDaemon
 
 if opt.stealth_led: opt.led = True
 
@@ -362,7 +362,7 @@ def setup():
 	opt.hash_preset = '1'
 	opt.set_by_user = ['hash_preset']
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
-	from mmgen.obj import MMGenWalletLabel
+	from .obj import MMGenWalletLabel
 	opt.label = MMGenWalletLabel('Autosign Wallet')
 	ss_out = Wallet(ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)

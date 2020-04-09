@@ -21,7 +21,7 @@ mmgen-regtest: Coin daemon regression test mode setup and operations for the MMG
                suite
 """
 
-from mmgen.common import *
+from .common import *
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -58,7 +58,7 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-from mmgen.regtest import MMGenRegtest
+from .regtest import MMGenRegtest
 
 def check_num_args():
 	m = getattr(MMGenRegtest,cmd_args[0])

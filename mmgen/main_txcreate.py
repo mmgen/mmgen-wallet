@@ -21,7 +21,7 @@ mmgen-txcreate: Create a cryptocoin transaction with MMGen- and/or non-MMGen
                 inputs and outputs
 """
 
-from mmgen.common import *
+from .common import *
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -79,7 +79,7 @@ g.use_cached_balances = opt.cached_balances
 
 rpc_init()
 
-from mmgen.tx import MMGenTX
+from .tx import MMGenTX
 tx = MMGenTX()
 tx.create(cmd_args,int(opt.locktime or 0),do_info=opt.info)
 tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)

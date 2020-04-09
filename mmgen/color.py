@@ -93,12 +93,12 @@ def init_color(num_colors='auto'):
 
 def start_mscolor():
 	import sys
-	from mmgen.globalvars import g
+	from .globalvars import g
 	try:
 		import colorama
 		colorama.init(strip=True,convert=True)
 	except:
-		from mmgen.util import msg
+		from .util import msg
 		msg('Import of colorama module failed')
 	else:
 		g.stdout = sys.stdout

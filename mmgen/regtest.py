@@ -22,8 +22,8 @@ regtest: Coin daemon regression test mode setup and operations for the MMGen sui
 
 import os,time,shutil,re,json
 from subprocess import run,PIPE
-from mmgen.common import *
-from mmgen.daemon import CoinDaemon
+from .common import *
+from .daemon import CoinDaemon
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
@@ -269,7 +269,7 @@ class MMGenRegtest(MMGenObject):
 
 	def fork(self,coin): # currently disabled
 
-		from mmgen.protocol import CoinProtocol
+		from .protocol import CoinProtocol
 		forks = CoinProtocol(coin,False).forks
 		if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
 			die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))

@@ -22,10 +22,10 @@ filename.py:  Filename class and methods for the MMGen suite
 
 import sys,os
 
-from mmgen.exception import BadFileExtension,FileNotFound
-from mmgen.obj import *
-from mmgen.util import die,get_extension
-from mmgen.seed import *
+from .exception import BadFileExtension,FileNotFound
+from .obj import *
+from .util import die,get_extension
+from .seed import *
 
 class Filename(MMGenObject):
 
@@ -40,7 +40,7 @@ class Filename(MMGenObject):
 		self.atime    = None
 
 		from .wallet import Wallet
-		from mmgen.tx import MMGenTX
+		from .tx import MMGenTX
 		if ftype:
 			if isinstance(ftype,type):
 				if issubclass(ftype,(Wallet,MMGenTX)):

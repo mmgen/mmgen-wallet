@@ -20,9 +20,9 @@
 mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
-from mmgen.common import *
+from .common import *
 from .wallet import Wallet
-from mmgen.obj import SubSeedIdxRange
+from .obj import SubSeedIdxRange
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -116,8 +116,8 @@ g.use_cached_balances = opt.cached_balances
 
 rpc_init()
 
-from mmgen.tx import *
-from mmgen.txsign import *
+from .tx import *
+from .txsign import *
 
 seed_files = get_seed_files(opt,cmd_args)
 

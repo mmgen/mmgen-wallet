@@ -21,9 +21,9 @@ addr.py:  Address generation/display routines for the MMGen suite
 """
 
 from hashlib import sha256,sha512
-from mmgen.common import *
-from mmgen.obj import *
-from mmgen.baseconv import *
+from .common import *
+from .obj import *
+from .baseconv import *
 
 pnm = g.proj_name
 
@@ -53,7 +53,7 @@ class AddrGenerator(MMGenObject):
 
 class AddrGeneratorP2PKH(AddrGenerator):
 	def to_addr(self,pubhex):
-		from mmgen.protocol import hash160
+		from .protocol import hash160
 		assert type(pubhex) == PubKey
 		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
@@ -72,7 +72,7 @@ class AddrGeneratorSegwit(AddrGenerator):
 class AddrGeneratorBech32(AddrGenerator):
 	def to_addr(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		from mmgen.protocol import hash160
+		from .protocol import hash160
 		return CoinAddr(g.proto.pubhash2bech32addr(hash160(pubhex)))
 
 	def to_segwit_redeem_script(self,pubhex):
@@ -86,10 +86,10 @@ class AddrGeneratorEthereum(AddrGenerator):
 			assert not g.use_internal_keccak_module
 			from sha3 import keccak_256
 		except:
-			from mmgen.keccak import keccak_256
+			from .keccak import keccak_256
 		self.keccak_256 = keccak_256
 
-		from mmgen.protocol import hash256
+		from .protocol import hash256
 		self.hash256 = hash256
 
 		return AddrGenerator.__init__(addr_type)
@@ -111,7 +111,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		s = bytearray(s + bytes(32))
 		s[0] |= 0xc0
 		s[32] = t
-		from mmgen.sha2 import Sha256
+		from .sha2 import Sha256
 		return Sha256(s,preprocess=False).digest()
 
 	def to_addr(self,pubhex): # pubhex is really privhex
@@ -119,7 +119,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
-		from mmgen.protocol import _b58chk_encode
+		from .protocol import _b58chk_encode
 		ver_bytes = g.proto.addr_fmt_to_ver_bytes('zcash_z')
 		ret = _b58chk_encode(ver_bytes + self.zhash256(key,0) + p2)
 		return CoinAddr(ret)
@@ -131,7 +131,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		vk[32] &= 0xf8
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
-		from mmgen.protocol import _b58chk_encode
+		from .protocol import _b58chk_encode
 		ver_bytes = g.proto.addr_fmt_to_ver_bytes('viewkey')
 		ret = _b58chk_encode(ver_bytes + vk)
 		return ZcashViewKey(ret)
@@ -147,17 +147,17 @@ class AddrGeneratorMonero(AddrGenerator):
 			assert not g.use_internal_keccak_module
 			from sha3 import keccak_256
 		except:
-			from mmgen.keccak import keccak_256
+			from .keccak import keccak_256
 		self.keccak_256 = keccak_256
 
-		from mmgen.protocol import hash256
+		from .protocol import hash256
 		self.hash256 = hash256
 
 		if opt.use_old_ed25519:
-			from mmgen.ed25519 import edwards,encodepoint,B,scalarmult
+			from .ed25519 import edwards,encodepoint,B,scalarmult
 		else:
-			from mmgen.ed25519ll_djbec import scalarmult
-			from mmgen.ed25519 import edwards,encodepoint,B
+			from .ed25519ll_djbec import scalarmult
+			from .ed25519 import edwards,encodepoint,B
 
 		self.edwards     = edwards
 		self.encodepoint = encodepoint
@@ -233,7 +233,7 @@ class KeyGenerator(MMGenObject):
 	@classmethod
 	def test_for_secp256k1(self,silent=False):
 		try:
-			from mmgen.secp256k1 import priv2pub
+			from .secp256k1 import priv2pub
 			m = 'Unable to execute priv2pub() from secp256k1 extension module'
 			assert priv2pub(bytes.fromhex('deadbeef'*8),1),m
 			return True
@@ -280,7 +280,7 @@ class KeyGeneratorSecp256k1(KeyGenerator):
 	desc = 'mmgen-secp256k1'
 	def to_pubhex(self,privhex):
 		assert type(privhex) == PrivKey
-		from mmgen.secp256k1 import priv2pub
+		from .secp256k1 import priv2pub
 		return PubKey(priv2pub(bytes.fromhex(privhex),int(privhex.compressed)).hex(),compressed=privhex.compressed)
 
 class KeyGeneratorDummy(KeyGenerator):
@@ -494,14 +494,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			scramble_key = g.coin.lower()
 		else:
 			scramble_key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
-		from mmgen.crypto import scramble_seed
+		from .crypto import scramble_seed
 		if g.proto.is_testnet():
 			scramble_key += ':testnet'
 		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 
 	def encrypt(self,desc='new key list'):
-		from mmgen.crypto import mmgen_encrypt
+		from .crypto import mmgen_encrypt
 		self.fmt_data = mmgen_encrypt(self.fmt_data.encode(),desc,'')
 		self.ext += '.'+g.mmenc_ext
 
@@ -697,7 +697,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			else:
 				mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
 
-			from mmgen.protocol import CoinProtocol
+			from .protocol import CoinProtocol
 			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
 			return base_coin,mmtype,tn
 
@@ -780,7 +780,7 @@ class KeyList(AddrList):
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
 
 def is_bip39_str(s):
-	from mmgen.bip39 import bip39
+	from .bip39 import bip39
 	return bool(bip39.tohex(s.split(),wl_id='bip39'))
 
 def is_xmrseed(s):
@@ -918,7 +918,7 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_bytes = self.pw_len // 2
 			good_pw_len = seed.byte_len * 2
 		elif pf == 'bip39':
-			from mmgen.bip39 import bip39
+			from .bip39 import bip39
 			pw_bytes = bip39.nwords2seedlen(self.pw_len,in_bytes=True)
 			good_pw_len = bip39.seedlen2nwords(seed.byte_len,in_bytes=True)
 		elif pf == 'xmrseed':
@@ -952,7 +952,7 @@ Record this checksum: it will be used to verify the password file in the future
 			# take most significant part
 			return hex_sec[:self.pw_len]
 		elif self.pw_fmt == 'bip39':
-			from mmgen.bip39 import bip39
+			from .bip39 import bip39
 			pw_len_hex = bip39.nwords2seedlen(self.pw_len,in_hex=True)
 			# take most significant part
 			return ' '.join(bip39.fromhex(hex_sec[:pw_len_hex],wl_id='bip39'))
@@ -960,7 +960,7 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
 			# take most significant part
 			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
-			from mmgen.protocol import MoneroProtocol
+			from .protocol import MoneroProtocol
 			bytes_preproc = MoneroProtocol.preprocess_key(bytes_trunc,None)
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
@@ -982,11 +982,11 @@ Record this checksum: it will be used to verify the password file in the future
 		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
 
 		if self.hex2bip39:
-			from mmgen.bip39 import bip39
+			from .bip39 import bip39
 			pwlen = bip39.nwords2seedlen(self.pw_len,in_hex=True)
 			scramble_key = '{}:{}:{}'.format('hex',pwlen,self.pw_id_str)
 
-		from mmgen.crypto import scramble_seed
+		from .crypto import scramble_seed
 		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 

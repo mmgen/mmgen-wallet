@@ -21,10 +21,10 @@ tw: Tracking wallet methods for the MMGen suite
 """
 
 import json
-from mmgen.exception import *
-from mmgen.common import *
-from mmgen.obj import *
-from mmgen.tx import is_mmgen_id
+from .exception import *
+from .common import *
+from .obj import *
+from .tx import is_mmgen_id
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 def CUR_RIGHT(n): return '\033[{}C'.format(n)
@@ -217,7 +217,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		return ret
 
 	def set_term_columns(self):
-		from mmgen.term import get_terminal_size
+		from .term import get_terminal_size
 		while True:
 			self.cols = g.terminal_width or get_terminal_size().width
 			if self.cols >= g.min_screen_width: break
@@ -383,7 +383,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						return n
 
 	def view_and_sort(self,tx):
-		from mmgen.term import get_char
+		from .term import get_char
 		prompt = self.prompt.strip() + '\b'
 		no_output,oneshot_msg = False,None
 		while True:
@@ -819,7 +819,7 @@ class TrackingWallet(MMGenObject):
 	# returns on failure
 	@write_mode
 	def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
-		from mmgen.tx import is_mmgen_id,is_coin_addr
+		from .tx import is_mmgen_id,is_coin_addr
 		mmaddr,coinaddr = None,None
 		if is_coin_addr(addr or arg1):
 			coinaddr = CoinAddr(addr or arg1,on_fail='return')
@@ -827,7 +827,7 @@ class TrackingWallet(MMGenObject):
 			mmaddr = TwMMGenID(arg1)
 
 		if mmaddr and not coinaddr:
-			from mmgen.addr import AddrData
+			from .addr import AddrData
 			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
 
 		try:
@@ -842,7 +842,7 @@ class TrackingWallet(MMGenObject):
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
 		if not mmaddr:
-			from mmgen.addr import AddrData
+			from .addr import AddrData
 			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
@@ -856,7 +856,7 @@ class TrackingWallet(MMGenObject):
 
 		ret = self.set_label(coinaddr,lbl)
 
-		from mmgen.rpc import rpc_error,rpc_errmsg
+		from .rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
 			msg('From {}: {}'.format(g.proto.daemon_name,rpc_errmsg(ret)))
 			if not silent:

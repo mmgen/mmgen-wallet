@@ -21,7 +21,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
               transaction, and optionally sign and send it
 """
 
-from mmgen.common import *
+from .common import *
 from .wallet import Wallet
 
 opts_data = {
@@ -101,8 +101,8 @@ rpc_init()
 tx_file = cmd_args.pop(0)
 check_infile(tx_file)
 
-from mmgen.tx import *
-from mmgen.txsign import *
+from .tx import *
+from .txsign import *
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 
@@ -143,7 +143,7 @@ if g.proto.base_proto == 'Bitcoin':
 if not opt.yes:
 	tx.add_comment()   # edits an existing comment
 
-from mmgen.tw import TwUnspentOutputs
+from .tw import TwUnspentOutputs
 tx.twuo = TwUnspentOutputs(minconf=opt.minconf)
 
 tx.create_raw()        # creates tx.hex, tx.txid

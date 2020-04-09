@@ -21,7 +21,7 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
              Part of the MMGen suite
 """
 
-from mmgen.common import *
+from .common import *
 
 def make_cmd_help():
 	import mmgen.tool

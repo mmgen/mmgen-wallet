@@ -24,7 +24,7 @@ mmgen-split: Split funds after a replayable chain fork using a timelocked transa
 
 import time
 
-from mmgen.common import *
+from .common import *
 
 opts_data = {
 	'text': {
@@ -97,7 +97,7 @@ if len(cmd_args) != 2:
 	fs = 'This command requires exactly two {} addresses as arguments'
 	die(1,fs.format(g.proj_name))
 
-from mmgen.obj import MMGenID
+from .obj import MMGenID
 try:
 	mmids = [MMGenID(a,on_fail='die') for a in cmd_args]
 except:
@@ -106,8 +106,8 @@ except:
 if mmids[0] == mmids[1]:
 	die(2,'Both transactions have the same output! ({})'.format(mmids[0]))
 
-from mmgen.tx import MMGenSplitTX
-from mmgen.protocol import init_coin
+from .tx import MMGenSplitTX
+from .protocol import init_coin
 
 if opt.tx_fees:
 	for idx,g_coin in ((1,opt.other_coin),(0,g.coin)):

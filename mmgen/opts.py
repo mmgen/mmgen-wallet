@@ -25,10 +25,10 @@ class opt_cls(object):
 	pass
 opt = opt_cls()
 
-from mmgen.exception import UserOptError
-from mmgen.globalvars import g
+from .exception import UserOptError
+from .globalvars import g
 import mmgen.share.Opts
-from mmgen.util import *
+from .util import *
 
 def usage():
 	Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
@@ -78,17 +78,17 @@ def opt_postproc_debug():
 	Msg('\n=== end opts.py debug ===\n')
 
 def init_term_and_color():
-	from mmgen.term import init_term
+	from .term import init_term
 	init_term()
 
 	if g.color: # MMGEN_DISABLE_COLOR sets this to False
-		from mmgen.color import start_mscolor,init_color
+		from .color import start_mscolor,init_color
 		if g.platform == 'win':
 			start_mscolor()
 		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 def override_globals_from_cfg_file(ucfg):
-	from mmgen.protocol import CoinProtocol
+	from .protocol import CoinProtocol
 	for d in ucfg.parse():
 		val = d.value
 		if d.name in g.cfg_file_opts:
@@ -121,7 +121,7 @@ def override_globals_from_env():
 			setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
 
 def common_opts_code(s):
-	from mmgen.protocol import CoinProtocol
+	from .protocol import CoinProtocol
 	return s.format(
 		pnm=g.proj_name,pn=g.proto.name,dn=g.proto.daemon_name,
 		cu_dfl=g.coin,
@@ -228,7 +228,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	init_term_and_color()
 
 	if not opt.skip_cfg_file:
-		from mmgen.cfg import cfg_file
+		from .cfg import cfg_file
 		cfg_file('sample') # check for changes in system template file
 		override_globals_from_cfg_file(cfg_file('usr'))
 
@@ -251,7 +251,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	g.network = 'testnet' if g.testnet else 'mainnet'
 
-	from mmgen.protocol import init_genonly_altcoins,CoinProtocol
+	from .protocol import init_genonly_altcoins,CoinProtocol
 	altcoin_trust_level = init_genonly_altcoins(g.coin)
 
 	# g.testnet is finalized, so we can set g.proto
@@ -288,7 +288,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		g.proto = CoinProtocol(g.coin,g.testnet)
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
-		from mmgen.regtest import MMGenRegtest
+		from .regtest import MMGenRegtest
 		g.rpc_user = MMGenRegtest.rpc_user
 		g.rpc_password = MMGenRegtest.rpc_password
 		g.rpc_port = MMGenRegtest(g.coin).d.rpc_port
@@ -335,7 +335,7 @@ def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 	if hasattr(opt,'tx_gas') and opt.tx_gas:
 		return
 
-	from mmgen.tx import MMGenTX
+	from .tx import MMGenTX
 	tx = MMGenTX(offline=True)
 	# Size of 224 is just a ball-park figure to eliminate the most extreme cases at startup
 	# This check will be performed again once we know the true size
@@ -480,7 +480,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_compares(val,'>',0,desc)
 
 	def chk_coin(key,val,desc):
-		from mmgen.protocol import CoinProtocol
+		from .protocol import CoinProtocol
 		opt_is_in_list(val.lower(),list(CoinProtocol.coins.keys()),'coin')
 
 	def chk_rbf(key,val,desc):
@@ -490,7 +490,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 	def chk_bob(key,val,desc):
 		m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
-		from mmgen.regtest import MMGenRegtest
+		from .regtest import MMGenRegtest
 		try:
 			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
 		except:

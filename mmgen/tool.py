@@ -20,10 +20,10 @@
 tool.py:  Routines for the 'mmgen-tool' utility
 """
 
-from mmgen.protocol import hash160
-from mmgen.common import *
-from mmgen.crypto import *
-from mmgen.addr import *
+from .protocol import hash160
+from .common import *
+from .crypto import *
+from .addr import *
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -215,7 +215,7 @@ def _process_result(ret,pager=False,print_result=False):
 	else:
 		ydie(1,"tool.py: can't handle return value of type '{}'".format(type(ret).__name__))
 
-from mmgen.obj import MMGenAddrType
+from .obj import MMGenAddrType
 
 def init_generators(arg=None):
 	global at,kg,ag
@@ -225,7 +225,7 @@ def init_generators(arg=None):
 		ag = AddrGenerator(at)
 
 def conv_cls_bip39():
-	from mmgen.bip39 import bip39
+	from .bip39 import bip39
 	return bip39
 
 dfl_mnemonic_fmt = 'mmgen'
@@ -369,12 +369,12 @@ class MMGenToolCmdUtil(MMGenToolCmds):
 
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal number to base58-check encoding"
-		from mmgen.protocol import _b58chk_encode
+		from .protocol import _b58chk_encode
 		return _b58chk_encode(bytes.fromhex(hexstr))
 
 	def b58chktohex(self,b58chk_num:'sstr'):
 		"convert a base58-check encoded number to hexadecimal"
-		from mmgen.protocol import _b58chk_decode
+		from .protocol import _b58chk_decode
 		return _b58chk_decode(b58chk_num).hex()
 
 	def hextob32(self,hexstr:'sstr',pad=0):
@@ -488,17 +488,17 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
-		from mmgen.tx import addr2pubhash
+		from .tx import addr2pubhash
 		return addr2pubhash(CoinAddr(addr))
 
 	def addr2scriptpubkey(self,addr:'sstr'):
 		"convert coin address to scriptPubKey"
-		from mmgen.tx import addr2scriptPubKey
+		from .tx import addr2scriptPubKey
 		return addr2scriptPubKey(CoinAddr(addr))
 
 	def scriptpubkey2addr(self,hexstr:'sstr'):
 		"convert scriptPubKey to coin address"
-		from mmgen.tx import scriptPubKey2addr
+		from .tx import scriptPubKey2addr
 		return scriptPubKey2addr(hexstr)[0]
 
 class MMGenToolCmdMnemonic(MMGenToolCmds):
@@ -524,7 +524,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	@staticmethod
 	def _xmr_reduce(bytestr):
-		from mmgen.protocol import MoneroProtocol as mp
+		from .protocol import MoneroProtocol as mp
 		if len(bytestr) != mp.privkey_len:
 			m = '{!r}: invalid bit length for Monero private key (must be {})'
 			die(1,m.format(len(bytestr*8),mp.privkey_len*8))
@@ -560,7 +560,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
 		if fmt == 'bip39':
-			from mmgen.bip39 import bip39
+			from .bip39 import bip39
 			return ' '.join(bip39.fromhex(hexstr,fmt))
 		else:
 			bytestr = bytes.fromhex(hexstr)
@@ -571,14 +571,14 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a mnemonic seed phrase to a hexadecimal number"
 		if fmt == 'bip39':
-			from mmgen.bip39 import bip39
+			from .bip39 import bip39
 			return bip39.tohex(seed_mnemonic.split(),fmt)
 		else:
 			return baseconv.tohex(seed_mnemonic.split(),fmt,'seed')
 
 	def mn2hex_interactive( self, fmt:mn_opts_disp=dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
-		from mmgen.mn_entry import mn_entry
+		from .mn_entry import mn_entry
 		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
 		if print_mn:
 			msg(mn)
@@ -603,7 +603,7 @@ class MMGenToolCmdFile(MMGenToolCmds):
 	def _file_chksum(self,mmgen_addrfile,objname):
 		opt.yes = True
 		opt.quiet = True
-		from mmgen.addr import AddrList,KeyAddrList,PasswordList
+		from .addr import AddrList,KeyAddrList,PasswordList
 		ret = locals()[objname](mmgen_addrfile)
 		if opt.verbose:
 			if ret.al_id.mmtype.name == 'password':
@@ -647,8 +647,8 @@ class MMGenToolCmdFile(MMGenToolCmds):
 		tx_sort = kwargs.get('sort') or 'addr'
 		file_sort = kwargs.get('filesort') or 'mtime'
 
-		from mmgen.filename import MMGenFileList
-		from mmgen.tx import MMGenTX
+		from .filename import MMGenFileList
+		from .tx import MMGenTX
 		flist = MMGenFileList(infiles,ftype=MMGenTX)
 		flist.sort_by_age(key=file_sort) # in-place sort
 
@@ -834,14 +834,14 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		ret = d.sec.wif if target=='wif' else d.addr
 		return ret
 
-from mmgen.tw import TwAddrList,TwUnspentOutputs
+from .tw import TwAddrList,TwUnspentOutputs
 
 class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
 
 	def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
-		from mmgen.tw import TwGetBalance
+		from .tw import TwGetBalance
 		return TwGetBalance(minconf,quiet).format()
 
 	def listaddress(self,
@@ -921,7 +921,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 	def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		rpc_init()
-		from mmgen.tw import TrackingWallet
+		from .tw import TrackingWallet
 		TrackingWallet(mode='w').add_label(mmgen_or_coin_addr,label,on_fail='raise')
 		return True
 
@@ -932,7 +932,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 
 	def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
-		from mmgen.tw import TrackingWallet
+		from .tw import TrackingWallet
 		tw = TrackingWallet(mode='w')
 		ret = tw.remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
@@ -954,7 +954,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 	@property
 	def monero_chain_height(self):
 		if self._monero_chain_height == None:
-			from mmgen.daemon import CoinDaemon
+			from .daemon import CoinDaemon
 			port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
 			cmd = ['monerod','--rpc-bind-port={}'.format(port)] + self.monerod_args + ['status']
 
@@ -996,7 +996,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				return False
 			gmsg(m)
 
-			from mmgen.baseconv import baseconv
+			from .baseconv import baseconv
 			ret = c.restore_deterministic_wallet(
 				filename  = os.path.basename(fn),
 				password  = d.wallet_passwd,
@@ -1045,7 +1045,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 			ret = c.get_balance() # account_index=0, address_indices=[0,1]
 
-			from mmgen.obj import XMRAmt
+			from .obj import XMRAmt
 			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit') for k in ('balance','unlocked_balance')])
 
 			if opt.verbose:
@@ -1063,20 +1063,20 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			m =   { 'create': ('Creat','Generat',create,False),
 					'sync':   ('Sync', 'Sync',   sync,  True) }
 			opt.accept_defaults = opt.accept_defaults or m[op][3]
-			from mmgen.protocol import init_coin
+			from .protocol import init_coin
 			init_coin('xmr')
-			from mmgen.addr import AddrList
+			from .addr import AddrList
 			al = KeyAddrList(infile)
 			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
 			dl = len(data)
 			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
 			gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
 
-			from mmgen.daemon import MoneroWalletDaemon
+			from .daemon import MoneroWalletDaemon
 			wd = MoneroWalletDaemon(opt.outdir or '.',test_suite=g.test_suite)
 			wd.restart()
 
-			from mmgen.rpc import MoneroWalletRPCConnection
+			from .rpc import MoneroWalletRPCConnection
 			c = MoneroWalletRPCConnection(
 				g.monero_wallet_rpc_host,
 				wd.rpc_port,
@@ -1101,7 +1101,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				col1_w = max(map(len,bals)) + 1
 				fs = '{:%s} {} {}' % col1_w
 				msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
-				from mmgen.obj import XMRAmt
+				from .obj import XMRAmt
 				tbals = [XMRAmt('0'),XMRAmt('0')]
 				for bal in bals:
 					for i in (0,1): tbals[i] += bals[bal][i]
@@ -1179,7 +1179,7 @@ class tool_api(
 		Valid choices for coins: one of the symbols returned by the 'coins' attribute
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
-		from mmgen.protocol import init_coin,init_genonly_altcoins
+		from .protocol import init_coin,init_genonly_altcoins
 		altcoin_trust_level = init_genonly_altcoins(coinsym)
 		warn_altcoins(coinsym,altcoin_trust_level)
 		if network == 'regtest':
@@ -1189,8 +1189,8 @@ class tool_api(
 	@property
 	def coins(self):
 		"""The available coins"""
-		from mmgen.protocol import CoinProtocol
-		from mmgen.altcoin import CoinInfo
+		from .protocol import CoinProtocol
+		from .altcoin import CoinInfo
 		return sorted(set(CoinProtocol.list_coins() + [c.symbol for c in CoinInfo.get_supported_coins(g.network)]))
 
 	@property

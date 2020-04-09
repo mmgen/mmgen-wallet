@@ -23,9 +23,9 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 import sys,os,time,stat,re
 from hashlib import sha256
 from string import hexdigits,digits
-from mmgen.color import *
-from mmgen.exception import *
-from mmgen.globalvars import *
+from .color import *
+from .exception import *
+from .globalvars import *
 
 if g.platform == 'win':
 	def msg_r(s):
@@ -201,7 +201,7 @@ def check_or_create_dir(path):
 		except:
 			die(2,"ERROR: unable to read or create path '{}'".format(path))
 
-from mmgen.opts import opt
+from .opts import opt
 
 def qmsg(s,alt=None):
 	if opt.quiet:
@@ -264,11 +264,11 @@ def make_chksum_N(s,nchars,sep=False):
 	return sep.join([s[i*4:i*4+4] for i in range(nchars//4)])
 
 def make_chksum_8(s,sep=False):
-	from mmgen.obj import HexStr
+	from .obj import HexStr
 	s = HexStr(sha256(sha256(s).digest()).hexdigest()[:8].upper(),case='upper')
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
-	from mmgen.obj import HexStr
+	from .obj import HexStr
 	if isinstance(s,str): s = s.encode()
 	return HexStr(sha256(s).hexdigest()[:6])
 def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
@@ -477,7 +477,7 @@ def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
 def get_seed_file(cmd_args,nargs,invoked_as=None):
-	from mmgen.filename import find_file_in_dir
+	from .filename import find_file_in_dir
 	from .wallet import MMGenWallet
 
 	wf = find_file_in_dir(MMGenWallet,g.data_dir)
@@ -658,7 +658,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
 		qmsg("{} {} '{}'".format(m,desc,fn))
-		from mmgen.crypto import mmgen_decrypt_retry
+		from .crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
 
@@ -720,7 +720,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 		msg_r(prompt)
 		prompt = ''
 
-	from mmgen.term import kb_hold_protect
+	from .term import kb_hold_protect
 	kb_hold_protect()
 
 	if g.test_suite_popen_spawn:
@@ -756,7 +756,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete
 		msg(p)
 		return default_yes
 
-	from mmgen.term import get_char
+	from .term import get_char
 	while True:
 		reply = get_char(p,immed_chars='yYnN').strip('\n\r')
 		if not reply:
@@ -802,7 +802,7 @@ def do_license_msg(immed=False):
 	msg(gpl.warning)
 	prompt = '{} '.format(p.strip())
 
-	from mmgen.term import get_char
+	from .term import get_char
 	while True:
 		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])
 		if reply == 'w':
@@ -840,7 +840,7 @@ def rpc_init(reinit=False):
 	if not 'rpc' in g.proto.mmcaps:
 		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
 	if g.rpch != None and not reinit: return g.rpch
-	from mmgen.rpc import init_daemon
+	from .rpc import init_daemon
 	g.rpch = init_daemon(g.proto.daemon_family)
 	return g.rpch
 

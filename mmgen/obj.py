@@ -24,9 +24,9 @@ import sys,os,unicodedata
 from decimal import *
 from string import hexdigits,ascii_letters,digits
 
-from mmgen.exception import *
-from mmgen.color import *
-from mmgen.devtools import *
+from .exception import *
+from .color import *
+from .devtools import *
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -105,8 +105,8 @@ class InitErrors(object):
 
 		if m2: errmsg = '{!r}\n{}'.format(m2,errmsg)
 
-		from mmgen.globalvars import g
-		from mmgen.util import die,msg
+		from .globalvars import g
+		from .util import die,msg
 		if cls.on_fail == 'silent':
 			return None # TODO: return False instead?
 		elif cls.on_fail == 'return':
@@ -495,7 +495,7 @@ class XMRAmt(BTCAmt):
 	min_coin_unit = Decimal('0.000000000001')
 	units = ('min_coin_unit',)
 
-from mmgen.altcoins.eth.obj import ETHAmt,ETHNonce
+from .altcoins.eth.obj import ETHAmt,ETHNonce
 
 class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	color = 'cyan'
@@ -505,7 +505,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
-		from mmgen.globalvars import g
+		from .globalvars import g
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,s)
@@ -529,7 +529,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 
 	def is_for_chain(self,chain):
 
-		from mmgen.globalvars import g
+		from .globalvars import g
 		if g.proto.__name__[:8] == 'Ethereum':
 			return True
 
@@ -545,7 +545,7 @@ class TokenAddr(CoinAddr):
 
 class ViewKey(object):
 	def __new__(cls,s,on_fail='die'):
-		from mmgen.globalvars import g
+		from .globalvars import g
 		if g.proto.name == 'zcash':
 			return ZcashViewKey.__new__(ZcashViewKey,s,on_fail)
 		elif g.proto.name == 'monero':
@@ -564,9 +564,9 @@ class SeedID(str,Hilite,InitErrors):
 		cls.arg_chk(on_fail)
 		try:
 			if seed:
-				from mmgen.seed import SeedBase
+				from .seed import SeedBase
 				assert isinstance(seed,SeedBase),'not a subclass of SeedBase'
-				from mmgen.util import make_chksum_8
+				from .util import make_chksum_8
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
 				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
@@ -585,7 +585,7 @@ class SubSeedIdx(str,Hilite,InitErrors):
 		try:
 			assert isinstance(s,str),'not a string or string subclass'
 			idx = s[:-1] if s[-1] in 'SsLl' else s
-			from mmgen.util import is_int
+			from .util import is_int
 			assert is_int(idx),"valid format: an integer, plus optional letter 'S','s','L' or 'l'"
 			idx = int(idx)
 			assert idx >= SubSeedIdxRange.min_idx, 'subseed index < {:,}'.format(SubSeedIdxRange.min_idx)
@@ -605,7 +605,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(on_fail)
-		from mmgen.globalvars import g
+		from .globalvars import g
 		try:
 			ss = str(s).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
@@ -634,7 +634,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
-				from mmgen.globalvars import g
+				from .globalvars import g
 				assert s.split(':',1)[0] == g.proto.base_coin.lower(),(
 					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
 				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
@@ -703,7 +703,7 @@ class WifKey(str,Hilite,InitErrors):
 		cls.arg_chk(on_fail)
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-			from mmgen.globalvars import g
+			from .globalvars import g
 			g.proto.parse_wif(s) # raises exception on error
 			return str.__new__(cls,s)
 		except Exception as e:
@@ -736,7 +736,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
 	# initialize with (priv_bin,compressed), WIF or self
 	def __new__(cls,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
-		from mmgen.globalvars import g
+		from .globalvars import g
 
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
@@ -904,7 +904,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
-		from mmgen.globalvars import g
+		from .globalvars import g
 		try:
 			for k,v in list(cls.mmtypes.items()):
 				if s in (k,v.name):

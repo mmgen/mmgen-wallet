@@ -23,7 +23,7 @@ crypto.py:  Cryptographic and related routines for the MMGen suite
 from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 from cryptography.hazmat.backends import default_backend
 from hashlib import sha256
-from mmgen.common import *
+from .common import *
 
 crmsg = {
 	'usr_rand_notice': """
@@ -158,7 +158,7 @@ def _get_random_data_from_user(uchars,desc,test_suite=False):
 	prompt = 'You may begin typing.  {} symbols left: '
 
 	import time
-	from mmgen.term import get_char_raw
+	from .term import get_char_raw
 	key_data,time_data = '',[]
 
 	for i in range(uchars):

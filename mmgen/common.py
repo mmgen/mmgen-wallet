@@ -21,16 +21,16 @@ common.py:  Common imports for all MMGen scripts
 """
 
 import sys,os
-from mmgen.exception import *
-from mmgen.globalvars import *
+from .exception import *
+from .globalvars import *
 import mmgen.opts as opts
-from mmgen.opts import opt
-from mmgen.util import *
+from .opts import opt
+from .util import *
 
 def help_notes(k):
-	from mmgen.obj import SubSeedIdxRange,SeedShareIdx,SeedShareCount,MasterShareIdx
+	from .obj import SubSeedIdxRange,SeedShareIdx,SeedShareCount,MasterShareIdx
 	from .wallet import Wallet
-	from mmgen.tx import MMGenTX
+	from .tx import MMGenTX
 	def fee_spec_letters(use_quotes=False):
 		cu = g.proto.coin_amt.units
 		sep,conj = ((',',' or '),("','","' or '"))[use_quotes]

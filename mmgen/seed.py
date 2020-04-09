@@ -20,8 +20,8 @@
 seed.py:  Seed-related classes and methods for the MMGen suite
 """
 
-from mmgen.common import *
-from mmgen.obj import *
+from .common import *
+from .obj import *
 from .crypto import get_random,scramble_seed
 
 class SeedBase(MMGenObject):

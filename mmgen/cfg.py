@@ -27,8 +27,8 @@ cfg.py: API for the MMGen runtime configuration file and related files
 import sys,os,re,hashlib
 from collections import namedtuple
 
-from mmgen.globalvars import *
-from mmgen.util import *
+from .globalvars import *
+from .util import *
 
 def cfg_file(id_str):
 	return CfgFile.get_cls_by_id(id_str)()

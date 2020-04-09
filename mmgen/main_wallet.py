@@ -21,10 +21,10 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 """
 
 import os
-from mmgen.common import *
+from .common import *
 from .wallet import Wallet,MMGenWallet
-from mmgen.filename import find_file_in_dir
-from mmgen.obj import MMGenWalletLabel,MasterShareIdx
+from .filename import find_file_in_dir
+from .obj import MMGenWalletLabel,MasterShareIdx
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -148,10 +148,10 @@ if opt.label:
 	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
 
 if invoked_as == 'subgen':
-	from mmgen.obj import SubSeedIdx
+	from .obj import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
-	from mmgen.obj import SeedSplitSpecifier
+	from .obj import SeedSplitSpecifier
 	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
 	if cmd_args:
 		sss = SeedSplitSpecifier(cmd_args.pop(),on_fail='silent')

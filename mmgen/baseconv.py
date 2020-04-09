@@ -21,8 +21,8 @@ baseconv.py:  base conversion class for the MMGen suite
 """
 
 from hashlib import sha256
-from mmgen.exception import *
-from mmgen.util import die
+from .exception import *
+from .util import die
 
 def is_b58_str(s): return set(list(s)) <= set(baseconv.digits['b58'])
 def is_b32_str(s): return set(list(s)) <= set(baseconv.digits['b32'])
@@ -76,13 +76,13 @@ class baseconv(object):
 		if mn_id in cls.digits:
 			return
 		if mn_id == 'mmgen':
-			from mmgen.mn_electrum import words
+			from .mn_electrum import words
 			cls.digits[mn_id] = words
 		elif mn_id == 'xmrseed':
-			from mmgen.mn_monero import words
+			from .mn_monero import words
 			cls.digits[mn_id] = words
 		elif mn_id == 'tirosh':
-			from mmgen.mn_tirosh import words
+			from .mn_tirosh import words
 			cls.digits[mn_id] = words[:cls.mn_base]
 		else:
 			raise ValueError('{}: unrecognized mnemonic ID'.format(mn_id))
@@ -109,7 +109,7 @@ class baseconv(object):
 		cls.init_mn(wl_id)
 
 		wl = cls.digits[wl_id]
-		from mmgen.util import qmsg,compare_chksums
+		from .util import qmsg,compare_chksums
 		ret = 'Wordlist: {}\nLength: {} words'.format(wl_id,len(wl))
 		new_chksum = cls.get_wordlist_chksum(wl_id)
 
@@ -202,7 +202,7 @@ class baseconv(object):
 	def fromhex(cls,hexstr,wl_id,pad=None,tostr=False):
 		"convert hex string to list or string data of base 'wl_id'"
 
-		from mmgen.util import is_hex_str
+		from .util import is_hex_str
 		if not is_hex_str(hexstr):
 			m = ('{h!r}:','seed data')[pad=='seed'] + ' not a hexadecimal string'
 			raise HexadecimalStringError(m.format(h=hexstr))

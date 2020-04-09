@@ -21,11 +21,11 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
                deterministic wallet
 """
 
-from mmgen.common import *
-from mmgen.crypto import *
-from mmgen.addr import PasswordList,AddrIdxList
+from .common import *
+from .crypto import *
+from .addr import PasswordList,AddrIdxList
 from .wallet import Wallet
-from mmgen.obj import MMGenPWIDString
+from .obj import MMGenPWIDString
 
 pwi = PasswordList.pw_info
 pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'

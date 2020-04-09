@@ -22,9 +22,9 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 
 import time
 
-from mmgen.common import *
-from mmgen.addr import AddrList,KeyAddrList
-from mmgen.obj import TwLabel,is_coin_addr
+from .common import *
+from .addr import AddrList,KeyAddrList
+from .obj import TwLabel,is_coin_addr
 
 ai_msgs = lambda k: {
 	'rescan': """
@@ -76,7 +76,7 @@ cmd_args = opts.init(opts_data)
 def import_mmgen_list(infile):
 	al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
 	if al.al_id.mmtype in ('S','B'):
-		from mmgen.tx import segwit_is_active
+		from .tx import segwit_is_active
 		if not segwit_is_active():
 			rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 	return al
@@ -102,7 +102,7 @@ qmsg('OK. {} addresses{}'.format(al.num_addrs,m))
 
 err_msg = None
 
-from mmgen.tw import TrackingWallet
+from .tw import TrackingWallet
 tw = TrackingWallet(mode='w')
 
 if g.token:

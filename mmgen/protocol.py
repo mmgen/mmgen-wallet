@@ -23,10 +23,10 @@ protocol.py: Coin protocol functions, classes and methods
 import sys,os,hashlib
 from collections import namedtuple,OrderedDict
 
-from mmgen.util import msg,ymsg,Msg,ydie
-from mmgen.devtools import *
-from mmgen.obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
-from mmgen.globalvars import g
+from .util import msg,ymsg,Msg,ydie
+from .devtools import *
+from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
+from .globalvars import g
 import mmgen.bech32 as bech32
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
@@ -343,7 +343,7 @@ class EthereumProtocol(DummyWIF,BitcoinProtocol):
 
 	@classmethod
 	def parse_addr(cls,addr):
-		from mmgen.util import is_hex_str_lc
+		from .util import is_hex_str_lc
 		if is_hex_str_lc(addr) and len(addr) == cls.addr_len * 2:
 			return parsed_addr( bytes.fromhex(addr), 'ethereum' )
 		if g.debug: Msg("Invalid address '{}'".format(addr))
@@ -416,14 +416,14 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 
 	@classmethod
 	def preprocess_key(cls,sec,pubkey_type): # reduce key
-		from mmgen.ed25519 import l
+		from .ed25519 import l
 		n = int.from_bytes(sec[::-1],'big') % l
 		return int.to_bytes(n,cls.privkey_len,'big')[::-1]
 
 	@classmethod
 	def parse_addr(cls,addr):
 
-		from mmgen.baseconv import baseconv,is_b58_str
+		from .baseconv import baseconv,is_b58_str
 
 		def b58dec(addr_str):
 			l = len(addr_str)
@@ -437,7 +437,7 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 			assert not g.use_internal_keccak_module
 			from sha3 import keccak_256
 		except:
-			from mmgen.keccak import keccak_256
+			from .keccak import keccak_256
 
 		chk = keccak_256(ret[:-4]).digest()[:4]
 		assert ret[-4:] == chk,'{}: incorrect checksum.  Correct value: {}'.format(ret[-4:].hex(),chk.hex())
@@ -489,7 +489,7 @@ def init_genonly_altcoins(usr_coin=None):
 	If usr_coin is None, initializes all coins for current network with trust level >-1.
 	Returns trust_level of usr_coin, or 0 (untrusted) if usr_coin is None.
 	"""
-	from mmgen.altcoin import CoinInfo as ci
+	from .altcoin import CoinInfo as ci
 	data = { 'mainnet': (), 'testnet': () }
 	networks = ['mainnet'] + (['testnet'] if g.testnet else [])
 

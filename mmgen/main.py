@@ -27,7 +27,7 @@ def launch(mod):
 	if mod == 'keygen': mod = 'addrgen'
 
 	import sys,os
-	from mmgen.globalvars import g
+	from .globalvars import g
 
 	if g.platform == 'linux' and sys.stdin.isatty():
 		import termios,atexit
@@ -49,7 +49,7 @@ def launch(mod):
 			try: m = '{}'.format(e.args[0])
 			except: m = repr(e.args[0])
 
-			from mmgen.util import die,ydie,rdie
+			from .util import die,ydie,rdie
 			d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
 					(die, 1,'{m}'),
 					(ydie,2,'{m}'),

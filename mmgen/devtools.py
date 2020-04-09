@@ -102,9 +102,9 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 
 		# Check that all immutables have been initialized.  Expensive, so do only when testing.
 		def immutable_attr_init_check(self):
-			from mmgen.globalvars import g
+			from .globalvars import g
 			if g.test_suite:
-				from mmgen.util import rdie
+				from .util import rdie
 				cls = type(self)
 				for attrname in sorted({a for a in self.valid_attrs if a[0] != '_'}):
 					for o in (cls,cls.__bases__[0]): # assume there's only one base class
