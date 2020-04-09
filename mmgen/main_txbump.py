@@ -22,7 +22,7 @@ mmgen-txbump: Increase the fee on a replaceable (replace-by-fee) MMGen
 """
 
 from mmgen.common import *
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
@@ -90,7 +90,7 @@ column below:
 		'notes': lambda s: s.format(
 			help_notes('fee'),
 			help_notes('txsign'),
-			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()))
+			f='\n  '.join(Wallet.format_fmt_codes().splitlines()))
 	}
 }
 

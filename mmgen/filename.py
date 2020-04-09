@@ -39,22 +39,22 @@ class Filename(MMGenObject):
 		self.ctime    = None
 		self.atime    = None
 
-		from mmgen.seed import SeedSource
+		from mmgen.seed import Wallet
 		from mmgen.tx import MMGenTX
 		if ftype:
 			if isinstance(ftype,type):
-				if issubclass(ftype,(SeedSource,MMGenTX)):
+				if issubclass(ftype,(Wallet,MMGenTX)):
 					self.ftype = ftype
 				# elif: # other MMGen file types
 				else:
-					die(3,"'{}': not a recognized file type for SeedSource".format(ftype))
+					die(3,"'{}': not a recognized file type for Wallet".format(ftype))
 			else:
 				die(3,"'{}': not a class".format(ftype))
 		else:
 			# TODO: other file types
-			self.ftype = SeedSource.ext_to_type(self.ext)
+			self.ftype = Wallet.ext_to_type(self.ext)
 			if not self.ftype:
-				m = "'{}': not a recognized SeedSource file extension".format(self.ext)
+				m = "'{}': not a recognized Wallet file extension".format(self.ext)
 				raise BadFileExtension(m)
 
 		try:
@@ -99,8 +99,8 @@ def find_files_in_dir(ftype,fdir,no_dups=False):
 	if not isinstance(ftype,type):
 		die(3,"'{}': is of type {} (not a subclass of type 'type')".format(ftype,type(ftype)))
 
-	from mmgen.seed import SeedSource
-	if not issubclass(ftype,SeedSource):
+	from mmgen.seed import Wallet
+	if not issubclass(ftype,Wallet):
 		die(3,"'{}': not a recognized file type".format(ftype))
 
 	try: dirlist = os.listdir(fdir)

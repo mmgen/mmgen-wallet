@@ -22,7 +22,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import SeedSource,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
+from mmgen.seed import Wallet,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -229,7 +229,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def subwalletgen_mnemonic(self,wf):
-		icls = SeedSource.ext_to_type(get_extension(wf))
+		icls = Wallet.ext_to_type(get_extension(wf))
 		ocls = MMGenMnemonic
 		args = [self.usr_rand_arg,'-p1','-d',self.tr.trash_dir,'-o',ocls.fmt_codes[0],wf,'3L']
 		t = self.spawn('mmgen-subwalletgen', args)
@@ -503,11 +503,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 
 		if not pf:
-			icls = SeedSource.ext_to_type(get_extension(wf))
+			icls = Wallet.ext_to_type(get_extension(wf))
 			t.passphrase(icls.desc,self.wpasswd)
 
-		ocls = SeedSource.fmt_code_to_type(out_fmt)
-		out_pw = issubclass(ocls,SeedSourceEnc) and ocls != Brainwallet
+		ocls = Wallet.fmt_code_to_type(out_fmt)
+		out_pw = issubclass(ocls,WalletEnc) and ocls != Brainwallet
 		if out_pw:
 			t.passphrase_new('new '+ocls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
@@ -528,7 +528,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def export_seed(self,wf,out_fmt='seed',pf=None):
 		f,t = self._walletconv_export(wf,out_fmt=out_fmt,pf=pf)
 		silence()
-		wcls = SeedSource.fmt_code_to_type(out_fmt)
+		wcls = Wallet.fmt_code_to_type(out_fmt)
 		msg('{}: {}'.format(capfirst(wcls.desc),cyan(get_data_from_file(f,wcls.desc))))
 		end_silence()
 		return t
@@ -557,7 +557,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.export_incog(wf,out_fmt='hi',add_args=add_args)
 
 	def addrgen_seed(self,wf,foo,in_fmt='seed'):
-		wcls = SeedSource.fmt_code_to_type(in_fmt)
+		wcls = Wallet.fmt_code_to_type(in_fmt)
 		stdout = wcls == MMGenSeedFile # capture output to screen once
 		add_args = ([],['-S'])[bool(stdout)] + self.segwit_arg
 		t = self.spawn('mmgen-addrgen', add_args +
@@ -584,7 +584,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				([],[wf])[bool(wf)] + [self.addr_idx_list])
 		t.license()
 		t.expect_getend('Incog Wallet ID: ')
-		wcls = SeedSource.fmt_code_to_type(in_fmt)
+		wcls = Wallet.fmt_code_to_type(in_fmt)
 		t.hash_preset(wcls.desc,'1')
 		t.passphrase('{} \w{{8}}'.format(wcls.desc),self.wpasswd)
 		vmsg('Comparing generated checksum with checksum from address file')
@@ -626,7 +626,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,txf1,wf1,txf2,wf2])
 		t.license()
 		for cnum,wf in (('1',wf1),('2',wf2)):
-			wcls = SeedSource.ext_to_type(get_extension(wf))
+			wcls = Wallet.ext_to_type(get_extension(wf))
 			t.view_tx('n')
 			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 			self.txsign_end(t,cnum)
@@ -649,7 +649,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		t.view_tx('n')
 		for cnum,wf in (('1',wf1),('3',wf2)):
-			wcls = SeedSource.ext_to_type(get_extension(wf))
+			wcls = Wallet.ext_to_type(get_extension(wf))
 			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 		self.txsign_end(t)
 		return t
@@ -727,7 +727,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txsign', add_args + ['-d',self.tmpdir,'-k',non_mm_file,txf,wf])
 		t.license()
 		t.view_tx('n')
-		wcls = SeedSource.ext_to_type(get_extension(wf))
+		wcls = Wallet.ext_to_type(get_extension(wf))
 		t.passphrase(wcls.desc,self.cfgs['20']['wpasswd'])
 		if bad_vsize:
 			t.expect('Estimated transaction vsize')

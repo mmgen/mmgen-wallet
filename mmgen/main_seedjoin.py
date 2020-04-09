@@ -23,7 +23,7 @@ mmgen/main_seedjoin: Regenerate an MMGen deterministic wallet from seed shares
 
 from mmgen.common import *
 from mmgen.obj import MasterShareIdx,SeedSplitIDString,MMGenWalletLabel
-from mmgen.seed import Seed,SeedSource,SeedShareMasterJoining
+from mmgen.seed import Seed,Wallet,SeedShareMasterJoining
 
 opts_data = {
 	'text': {
@@ -82,7 +82,7 @@ FMT CODES:
 			g=g,
 		),
 		'notes': lambda s: s.format(
-			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			f='\n  '.join(Wallet.format_fmt_codes().splitlines()),
 			n_pw=help_notes('passwd'),
 		)
 	}
@@ -127,8 +127,8 @@ do_license_msg()
 
 qmsg('Input files:\n  {}\n'.format('\n  '.join(cmd_args)))
 
-shares = [SeedSource().seed] if opt.hidden_incog_input_params else []
-shares += [SeedSource(fn).seed for fn in cmd_args]
+shares = [Wallet().seed] if opt.hidden_incog_input_params else []
+shares += [Wallet(fn).seed for fn in cmd_args]
 
 if opt.master_share:
 	share1 = SeedShareMasterJoining(master_idx,shares[0],id_str,len(shares)).derived_seed
@@ -143,4 +143,4 @@ seed_out = Seed.join_shares([share1]+shares[1:])
 
 msg('OK\nJoined Seed ID: {}'.format(seed_out.sid.hl()))
 
-SeedSource(seed=seed_out).write_to_file()
+Wallet(seed=seed_out).write_to_file()

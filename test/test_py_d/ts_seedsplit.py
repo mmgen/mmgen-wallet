@@ -22,7 +22,7 @@ ts_seedsplit.py: Seed split/join tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import SeedSource,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,SeedSourceEnc
+from mmgen.seed import Wallet,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,WalletEnc
 
 from .ts_base import *
 
@@ -110,8 +110,8 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		else:
 			pat = "master share #{}".format(master)
 		t.expect(pat,regex=True)
-		ocls = SeedSource.fmt_code_to_type(ofmt)
-		pw = issubclass(ocls,SeedSourceEnc)
+		ocls = Wallet.fmt_code_to_type(ofmt)
+		pw = issubclass(ocls,WalletEnc)
 		if pw:
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,sh1_passwd)
@@ -150,7 +150,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 			t.expect(pat,regex=True)
 		sid_cmp = t.expect_getend('Joined Seed ID: ')
 		cmp_or_die(sid,sid_cmp)
-		ocls = SeedSource.fmt_code_to_type(ofmt)
+		ocls = Wallet.fmt_code_to_type(ofmt)
 		if ocls == MMGenWallet:
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,wpasswd)

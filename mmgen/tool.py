@@ -786,23 +786,23 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
-		from mmgen.seed import SeedSource
-		return SeedSource(sf).seed.subseed(subseed_idx).sid
+		from mmgen.seed import Wallet
+		return Wallet(sf).seed.subseed(subseed_idx).sid
 
 	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=g.subseeds):
 		"get the Subseed Index of a single subseed by Seed ID for default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
-		from mmgen.seed import SeedSource
-		ret = SeedSource(sf).seed.subseed_by_seed_id(seed_id,last_idx)
+		from mmgen.seed import Wallet
+		ret = Wallet(sf).seed.subseed_by_seed_id(seed_id,last_idx)
 		return ret.ss_idx if ret else None
 
 	def list_subseeds(self,subseed_idx_range:str,wallet=''):
 		"list a range of subseed Seed IDs for default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
-		from mmgen.seed import SeedSource
-		return SeedSource(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
+		from mmgen.seed import Wallet
+		return Wallet(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
 
 	def list_shares(self,
 			share_count:int,
@@ -812,8 +812,8 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		"list the Seed IDs of the shares resulting from a split of default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
-		from mmgen.seed import SeedSource
-		return SeedSource(sf).seed.split(share_count,id_str,master_share).format()
+		from mmgen.seed import Wallet
+		return Wallet(sf).seed.split(share_count,id_str,master_share).format()
 
 	def gen_key(self,mmgen_addr:str,wallet=''):
 		"generate a single MMGen WIF key from default or specified wallet"
@@ -824,8 +824,8 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		addr = MMGenID(mmgen_addr)
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
-		from mmgen.seed import SeedSource
-		ss = SeedSource(sf)
+		from mmgen.seed import Wallet
+		ss = Wallet(sf)
 		if ss.seed.sid != addr.sid:
 			m = 'Seed ID of requested address ({}) does not match wallet ({})'
 			die(1,m.format(addr.sid,ss.seed.sid))

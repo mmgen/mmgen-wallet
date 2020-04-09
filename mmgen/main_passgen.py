@@ -24,7 +24,7 @@ mmgen-passgen: Generate a series or range of passwords from an MMGen
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import PasswordList,AddrIdxList
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 from mmgen.obj import MMGenPWIDString
 
 pwi = PasswordList.pw_info
@@ -129,7 +129,7 @@ FMT CODES:
 				pfi='\n  '.join(
 					[pwi_fs.format('Code','','Description','Min Len','Max Len','Default Len')] +
 					[pwi_fs.format(k,'-',v.desc,v.min_len,v.max_len,v.dfl_len) for k,v in pwi.items()]),
-				n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines())
+				n_fmt='\n  '.join(Wallet.format_fmt_codes().splitlines())
 		)
 	}
 }
@@ -150,7 +150,7 @@ pw_len = pwi[pw_fmt].dfl_len // 2 if opt.passwd_len in ('h','H') else opt.passwd
 PasswordList(pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt,chk_params_only=True)
 do_license_msg()
 
-ss = SeedSource(sf)
+ss = Wallet(sf)
 
 al = PasswordList(seed=ss.seed,pw_idxs=pw_idxs,pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt)
 

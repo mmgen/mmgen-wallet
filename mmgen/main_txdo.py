@@ -21,7 +21,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 """
 
 from mmgen.common import *
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 from mmgen.obj import SubSeedIdxRange
 
 opts_data = {
@@ -106,7 +106,7 @@ column below:
 			help_notes('txcreate'),
 			help_notes('fee'),
 			help_notes('txsign'),
-			f='\n  '.join(SeedSource.format_fmt_codes().splitlines()))
+			f='\n  '.join(Wallet.format_fmt_codes().splitlines()))
 	}
 }
 

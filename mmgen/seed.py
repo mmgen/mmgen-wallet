@@ -38,7 +38,7 @@ def _is_mnemonic(s,fmt):
 	oq_save = opt.quiet
 	opt.quiet = True
 	try:
-		SeedSource(in_data=s,in_fmt=fmt)
+		Wallet(in_data=s,in_fmt=fmt)
 		ret = True
 	except:
 		ret = False
@@ -499,13 +499,13 @@ class SeedShareMasterJoining(SeedShareMaster):
 		self.count = count
 		self.derived_seed = SeedBase(self.make_derived_seed_bin(self.id_str,self.count))
 
-class SeedSourceMeta(type):
+class WalletMeta(type):
 	wallet_classes = set() # one-instance class, so store data in class attr
 	def __init__(cls,name,bases,namespace):
 		cls.wallet_classes.add(cls)
 		cls.wallet_classes -= set(bases)
 
-class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
+class Wallet(MMGenObject,metaclass=WalletMeta):
 
 	desc = g.proj_name + ' seed source'
 	file_mode = 'text'
@@ -515,7 +515,7 @@ class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
 	op = None
 	_msg = {}
 
-	class SeedSourceData(MMGenObject): pass
+	class WalletData(MMGenObject): pass
 
 	def __new__(cls,fn=None,ss=None,seed_bin=None,seed=None,
 				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
@@ -569,7 +569,7 @@ class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
 	def __init__(self,fn=None,ss=None,seed_bin=None,seed=None,
 				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
 
-		self.ssdata = self.SeedSourceData()
+		self.ssdata = self.WalletData()
 		self.msg = {}
 		self.in_data = in_data
 
@@ -672,7 +672,7 @@ class SeedSource(MMGenObject,metaclass=SeedSourceMeta):
 			of = os.path.abspath(os.path.join(outdir,self._filename()))
 		write_data_to_file(of if outdir else self._filename(),self.fmt_data,**kwargs)
 
-class SeedSourceUnenc(SeedSource):
+class WalletUnenc(Wallet):
 
 	def _decrypt_retry(self): pass
 	def _encrypt(self): pass
@@ -707,7 +707,7 @@ class SeedSourceUnenc(SeedSource):
 			if keypress_confirm(prompt,default_yes=True,no_nl=not g.test_suite):
 				return usr_len
 
-class SeedSourceEnc(SeedSource):
+class WalletEnc(Wallet):
 
 	_msg = {
 		'choose_passphrase': """
@@ -826,7 +826,7 @@ an empty passphrase, just hit ENTER twice.
 		d.key_id   = make_chksum_8(key)
 		d.enc_seed = encrypt_seed(self.seed.data,key)
 
-class Mnemonic(SeedSourceUnenc):
+class Mnemonic(WalletUnenc):
 
 	stdin_ok = True
 	wclass = 'mnemonic'
@@ -919,7 +919,7 @@ class BIP39Mnemonic(Mnemonic):
 		self.conv_cls = bip39
 		super().__init__(*args,**kwargs)
 
-class MMGenSeedFile(SeedSourceUnenc):
+class MMGenSeedFile(WalletUnenc):
 
 	stdin_ok = True
 	fmt_codes = ('mmseed','seed','s')
@@ -969,7 +969,7 @@ class MMGenSeedFile(SeedSourceUnenc):
 
 		return True
 
-class DieRollSeedFile(SeedSourceUnenc):
+class DieRollSeedFile(WalletUnenc):
 
 	stdin_ok = True
 	fmt_codes = ('b6d','die','dieroll')
@@ -1059,7 +1059,7 @@ class DieRollSeedFile(SeedSourceUnenc):
 
 		return ''.join(dierolls)
 
-class PlainHexSeedFile(SeedSourceUnenc):
+class PlainHexSeedFile(WalletUnenc):
 
 	stdin_ok = True
 	fmt_codes = ('hex','rawhex','plainhex')
@@ -1088,7 +1088,7 @@ class PlainHexSeedFile(SeedSourceUnenc):
 
 		return True
 
-class MMGenHexSeedFile(SeedSourceUnenc):
+class MMGenHexSeedFile(WalletUnenc):
 
 	stdin_ok = True
 	fmt_codes = ('seedhex','hexseed','mmhex')
@@ -1136,7 +1136,7 @@ class MMGenHexSeedFile(SeedSourceUnenc):
 
 		return True
 
-class MMGenWallet(SeedSourceEnc):
+class MMGenWallet(WalletEnc):
 
 	fmt_codes = ('wallet','w')
 	desc = g.proj_name + ' wallet'
@@ -1298,7 +1298,7 @@ class MMGenWallet(SeedSourceEnc):
 				self.ext,
 				x='-α' if g.debug_utf8 else '')
 
-class Brainwallet(SeedSourceEnc):
+class Brainwallet(WalletEnc):
 
 	stdin_ok = True
 	fmt_codes = ('mmbrain','brainwallet','brain','bw','b')
@@ -1342,7 +1342,7 @@ class Brainwallet(SeedSourceEnc):
 	def _encrypt(self):
 		raise NotImplementedError('Brainwallet not supported as an output format')
 
-class IncogWalletBase(SeedSourceEnc):
+class IncogWalletBase(WalletEnc):
 
 	_msg = {
 		'check_incog_id': """
@@ -1568,7 +1568,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.close(fh)
 		qmsg("Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
 
-	# overrides method in SeedSource
+	# overrides method in Wallet
 	def write_to_file(self):
 		d = self.ssdata
 		self._format()

@@ -13,7 +13,7 @@ ts_input.py: user input tests for the MMGen test.py test suite
 from ..include.common import *
 from .ts_base import *
 from .input import *
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 
 class TestSuiteInput(TestSuiteBase):
 	'user input'
@@ -76,7 +76,7 @@ class TestSuiteInput(TestSuiteBase):
 		return t
 
 	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
-		wcls = SeedSource.fmt_code_to_type(fmt)
+		wcls = Wallet.fmt_code_to_type(fmt)
 		wf = os.path.join(ref_dir,'FE3C6545.{}'.format(wcls.ext))
 		if wcls.wclass == 'mnemonic':
 			mn = mn or read_from_file(wf).strip().split()

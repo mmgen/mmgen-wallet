@@ -470,8 +470,8 @@ def check_outfile(f,blkdev_ok=False):
 def check_outdir(f):
 	return check_file_type_and_access(f,'output directory')
 def check_wallet_extension(fn):
-	from mmgen.seed import SeedSource
-	if not SeedSource.ext_to_type(get_extension(fn)):
+	from mmgen.seed import Wallet
+	if not Wallet.ext_to_type(get_extension(fn)):
 		raise BadFileExtension("'{}': unrecognized seed source file extension".format(fn))
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))

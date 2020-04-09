@@ -249,12 +249,12 @@ def decrypt_wallets():
 	opt.set_by_user = ['hash_preset']
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 #	opt.passwd_file = '/tmp/key'
-	from mmgen.seed import SeedSource
+	from mmgen.seed import Wallet
 	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
 	fails = 0
 	for wf in wfs:
 		try:
-			SeedSource(wf)
+			Wallet(wf)
 		except SystemExit as e:
 			if e.code != 0:
 				fails += 1
@@ -352,11 +352,11 @@ def create_wallet_dir():
 def setup():
 	remove_wallet_dir()
 	gen_key(no_unmount=True)
-	from mmgen.seed import SeedSource
+	from mmgen.seed import Wallet
 	opt.hidden_incog_input_params = None
 	opt.quiet = True
 	opt.in_fmt = 'words'
-	ss_in = SeedSource()
+	ss_in = Wallet()
 	opt.out_fmt = 'wallet'
 	opt.usr_randchars = 0
 	opt.hash_preset = '1'
@@ -364,7 +364,7 @@ def setup():
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 	from mmgen.obj import MMGenWalletLabel
 	opt.label = MMGenWalletLabel('Autosign Wallet')
-	ss_out = SeedSource(ss=ss_in)
+	ss_out = Wallet(ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)
 
 def ev_sleep(secs):

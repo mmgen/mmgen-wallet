@@ -24,7 +24,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 from mmgen.common import *
 from mmgen.crypto import *
 from mmgen.addr import *
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 
 if g.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
@@ -116,7 +116,7 @@ FMT CODES:
 			n_sw=help_notes('subwallet')+'\n\n',
 			n_pw=help_notes('passwd')+'\n\n',
 			n_bw=help_notes('brainwallet'),
-			n_fmt='\n  '.join(SeedSource.format_fmt_codes().splitlines()),
+			n_fmt='\n  '.join(Wallet.format_fmt_codes().splitlines()),
 			n_at='\n  '.join(["'{}','{:<12} - {}".format(
 				k,v.name+"'",v.desc) for k,v in MMGenAddrType.mmtypes.items()])
 		)
@@ -139,7 +139,7 @@ sf = get_seed_file(cmd_args,1)
 
 do_license_msg()
 
-ss = SeedSource(sf)
+ss = Wallet(sf)
 
 ss_seed = ss.seed if opt.subwallet is None else ss.seed.subseed(opt.subwallet,print_msg=True)
 

@@ -392,8 +392,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		msg_r('{} option {!r}{}'.format(beg,s,end))
 
 	def chk_in_fmt(key,val,desc):
-		from mmgen.seed import SeedSource,IncogWallet,Brainwallet,IncogWalletHidden
-		sstype = SeedSource.fmt_code_to_type(val)
+		from mmgen.seed import Wallet,IncogWallet,Brainwallet,IncogWalletHidden
+		sstype = Wallet.fmt_code_to_type(val)
 		if not sstype:
 			opt_unrecognized(key,val)
 		if key == 'out_fmt':

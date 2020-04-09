@@ -49,14 +49,14 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 	subseeds_checked = False
 	while True:
 		if infiles:
-			seed = SeedSource(infiles.pop(0),ignore_in_fmt=True).seed
+			seed = Wallet(infiles.pop(0),ignore_in_fmt=True).seed
 		elif subseeds_checked == False:
 			seed = saved_seeds[list(saved_seeds)[0]].subseed_by_seed_id(sid,print_msg=True)
 			subseeds_checked = True
 			if not seed: continue
 		elif opt.in_fmt:
 			qmsg('Need seed data for Seed ID {}'.format(sid))
-			seed = SeedSource().seed
+			seed = Wallet().seed
 			msg('User input produced Seed ID {}'.format(seed.sid))
 			if not seed.sid == sid: # TODO: add test
 				seed = seed.subseed_by_seed_id(sid,print_msg=True)
@@ -117,7 +117,7 @@ def get_tx_files(opt,args):
 
 def get_seed_files(opt,args):
 	# favor unencrypted seed sources first, as they don't require passwords
-	u,e = SeedSourceUnenc,SeedSourceEnc
+	u,e = WalletUnenc,WalletEnc
 	ret = _pop_and_return(args,u.get_extensions())
 	from mmgen.filename import find_file_in_dir
 	wf = find_file_in_dir(MMGenWallet,g.data_dir) # Make this the first encrypted ss in the list

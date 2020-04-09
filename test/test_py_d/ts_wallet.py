@@ -175,10 +175,10 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		d = '(convert)'
 		t = self.spawn('mmgen-walletconv',opts+uopts+if_arg,extra_desc=d)
 		t.license()
-		icls = icls or SeedSource.ext_to_type(get_extension(infile))
+		icls = icls or Wallet.ext_to_type(get_extension(infile))
 		if icls == Brainwallet:
 			t.expect('Enter brainwallet: ',ref_wallet_brainpass+'\n')
-		pw = issubclass(icls,SeedSourceEnc) and icls != Brainwallet
+		pw = issubclass(icls,WalletEnc) and icls != Brainwallet
 		if pw:
 			t.passphrase(icls.desc,self.wpasswd)
 			if self.test_name[:19] == 'ref_hincog_conv_old':
@@ -195,14 +195,14 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 								sid        = self.seed_id )
 
 	def walletconv_out(self,out_fmt='w',uopts=[],uopts_chk=[]):
-		wcls = SeedSource.fmt_code_to_type(out_fmt)
+		wcls = Wallet.fmt_code_to_type(out_fmt)
 		opts = ['-d',self.tmpdir,'-p1','-o',out_fmt] + uopts
 		infile = joinpath(ref_dir,self.seed_id+'.mmwords')
 		t = self.spawn('mmgen-walletconv',[self.usr_rand_arg]+opts+[infile],extra_desc='(convert)')
 
 		add_args = ['-l{}'.format(self.seed_len)]
 		t.license()
-		pw = issubclass(wcls,SeedSourceEnc) and wcls != Brainwallet
+		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
 		if pw:
 			t.passphrase_new('new '+wcls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)

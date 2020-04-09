@@ -23,7 +23,7 @@ ts_ref_3seed.py: Saved and generated reference file tests for 128, 192 and
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.seed import SeedSource
+from mmgen.seed import Wallet
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -163,7 +163,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		wf = self.get_file_with_ext('mmdat')
 		pf = joinpath(self.tmpdir,pwfile)
 		t = self.spawn('mmgen-walletconv',extra_args+['-d','test/trash','-o',ofmt,'-P'+pf,wf])
-		wcls = SeedSource.fmt_code_to_type(ofmt)
+		wcls = Wallet.fmt_code_to_type(ofmt)
 		fn = os.path.split(t.written_to_file(capfirst(wcls.desc)))[-1]
 		idx = int(self.test_name[-1]) - 1
 		sid = self.chk_data['sids'][idx]
