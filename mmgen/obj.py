@@ -25,8 +25,8 @@ from decimal import *
 from string import hexdigits,ascii_letters,digits
 
 from .exception import *
+from .globalvars import *
 from .color import *
-from .devtools import *
 
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
@@ -105,7 +105,6 @@ class InitErrors(object):
 
 		if m2: errmsg = '{!r}\n{}'.format(m2,errmsg)
 
-		from .globalvars import g
 		from .util import die,msg
 		if cls.on_fail == 'silent':
 			return None # TODO: return False instead?
@@ -120,28 +119,38 @@ class InitErrors(object):
 		elif cls.on_fail == 'die':
 			die(1,errmsg)
 
+	@classmethod
+	def method_not_implemented(cls):
+		import traceback
+		raise NotImplementedError('method {!r} not implemented for class {!r}'.format(
+				traceback.extract_stack()[-2].name, cls.__name__))
+
 class Hilite(object):
 
 	color = 'red'
-	color_always = False
 	width = 0
 	trunc_ok = True
-	dtype = str
 
 	@classmethod
 	# 'width' is screen width (greater than len(s) for CJK strings)
 	# 'append_chars' and 'encl' must consist of single-width chars only
 	def fmtc(cls,s,width=None,color=False,encl='',trunc_ok=None,
 				center=False,nullrepl='',append_chars='',append_color=False):
-		if cls.dtype == bytes: s = s.decode()
 		s_wide_count = len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
-		assert isinstance(encl,str) and len(encl) in (0,2),"'encl' must be 2-character str"
-		a,b = list(encl) if encl else ('','')
-		add_len = len(a) + len(b) + len(append_chars)
-		if width == None: width = cls.width
-		if trunc_ok == None: trunc_ok = cls.trunc_ok
-		assert width >= 2 + add_len,( # 2 because CJK
-			"'{!r}': invalid width ({}) (width must be at least 2)".format(s,width))
+		if encl:
+			a,b = list(encl)
+			add_len = len(append_chars) + 2
+		else:
+			a,b = ('','')
+			add_len = len(append_chars)
+		if width == None:
+			width = cls.width
+		if trunc_ok == None:
+			trunc_ok = cls.trunc_ok
+		if g.test_suite:
+			assert isinstance(encl,str) and len(encl) in (0,2),"'encl' must be 2-character str"
+			assert width >= 2 + add_len,( # 2 because CJK
+				"'{!r}': invalid width ({}) (width must be at least 2)".format(s,width))
 		if len(s) + s_wide_count + add_len > width:
 			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
 			s = truncate_str(s,width-add_len)
@@ -149,18 +158,17 @@ class Hilite(object):
 			s = nullrepl.center(width)
 		else:
 			s = a+s+b
-			if center: s = s.center(width)
+			if center:
+				s = s.center(width)
 		if append_chars:
 			return cls.colorize(s,color=color) + \
-					cls.colorize(append_chars.ljust(width-len(s)-s_wide_count),color=append_color)
+					cls.colorize(append_chars.ljust(width-len(s)-s_wide_count),color_override=append_color)
 		else:
 			return cls.colorize(s.ljust(width-s_wide_count),color=color)
 
 	@classmethod
-	def colorize(cls,s,color=True):
-		if cls.dtype == bytes: s = s.decode()
-		k = color if type(color) is str else cls.color # hack: override color with str value
-		return globals()[k](s) if (color or cls.color_always) else s
+	def colorize(cls,s,color=True,color_override=''):
+		return globals()[color_override or cls.color](s) if color else s
 
 	def fmt(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords
@@ -176,9 +184,6 @@ class Hilite(object):
 	def hl(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords
 		return self.hlc(self,*args,**kwargs)
-
-	def __str__(self):
-		return self.colorize(self,color=False)
 
 class Str(str,Hilite): pass
 
@@ -205,8 +210,12 @@ class Int(int,Hilite,InitErrors):
 			return cls.init_fail(e,n)
 
 	@classmethod
+	def fmtc(cls,*args,**kwargs):
+		cls.method_not_implemented()
+
+	@classmethod
 	def colorize(cls,n,color=True):
-		return Hilite.colorize(repr(n),color=color)
+		return super().colorize(repr(n),color=color)
 
 # For attrs that are always present in the data instance
 # Reassignment and deletion forbidden
@@ -443,7 +452,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 
 	@classmethod
 	def fmtc(cls):
-		raise NotImplementedError
+		cls.method_not_implemented()
 
 	def fmt(self,fs=None,color=False,suf='',prec=1000):
 		if fs == None: fs = self.amt_fs
@@ -505,7 +514,6 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die'):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
-		from .globalvars import g
 		try:
 			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,s)
@@ -519,17 +527,11 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
-		# True -> 'cyan': use the str value override hack
-		if 'color' in kwargs and kwargs['color'] == True:
-			kwargs['color'] = cls.color
-		if not 'width' in kwargs: kwargs['width'] = cls.width
-		if kwargs['width'] < len(s):
-			s = s[:kwargs['width']-2] +  '..'
-		return Hilite.fmtc(s,**kwargs)
+		w = kwargs['width'] or cls.width
+		return super().fmtc(s[:w-2]+'..' if w < len(s) else s, **kwargs)
 
 	def is_for_chain(self,chain):
 
-		from .globalvars import g
 		if g.proto.__name__[:8] == 'Ethereum':
 			return True
 
@@ -545,7 +547,6 @@ class TokenAddr(CoinAddr):
 
 class ViewKey(object):
 	def __new__(cls,s,on_fail='die'):
-		from .globalvars import g
 		if g.proto.name == 'zcash':
 			return ZcashViewKey.__new__(ZcashViewKey,s,on_fail)
 		elif g.proto.name == 'monero':
@@ -605,7 +606,6 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
 		cls.arg_chk(on_fail)
-		from .globalvars import g
 		try:
 			ss = str(s).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
@@ -634,7 +634,6 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
-				from .globalvars import g
 				assert s.split(':',1)[0] == g.proto.base_coin.lower(),(
 					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
 				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
@@ -670,7 +669,6 @@ class HexStr(str,Hilite,InitErrors):
 	width = None
 	hexcase = 'lower'
 	trunc_ok = False
-	dtype = str
 	def __new__(cls,s,on_fail='die',case=None):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
@@ -682,7 +680,7 @@ class HexStr(str,Hilite,InitErrors):
 			assert not len(s) % 2,'odd-length string'
 			if cls.width:
 				assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
-			return cls.dtype.__new__(cls,s)
+			return str.__new__(cls,s)
 		except Exception as e:
 			return cls.init_fail(e,s)
 
@@ -703,7 +701,6 @@ class WifKey(str,Hilite,InitErrors):
 		cls.arg_chk(on_fail)
 		try:
 			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-			from .globalvars import g
 			g.proto.parse_wif(s) # raises exception on error
 			return str.__new__(cls,s)
 		except Exception as e:
@@ -736,7 +733,6 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 
 	# initialize with (priv_bin,compressed), WIF or self
 	def __new__(cls,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
-		from .globalvars import g
 
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
@@ -904,7 +900,6 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 	def __new__(cls,s,on_fail='die',errmsg=None):
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
-		from .globalvars import g
 		try:
 			for k,v in list(cls.mmtypes.items()):
 				if s in (k,v.name):
