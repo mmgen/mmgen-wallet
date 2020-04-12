@@ -94,7 +94,7 @@ def _usage(cmd=None,exit_val=1):
 			cls_info = bc.__doc__.strip().split('\n')[0]
 			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
 			max_w = max(map(len,bc.user_commands))
-			for cmd in bc.user_commands:
+			for cmd in sorted(bc.user_commands):
 				Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
 			Msg('')
 		Msg(m2)
@@ -240,7 +240,7 @@ class MMGenToolCmdMeta(type):
 	classes = {}
 	methods = {}
 	def __new__(mcls,name,bases,namespace):
-		methods = {k:v for k,v in namespace.items() if k[0] != '_' and callable(v)}
+		methods = {k:v for k,v in namespace.items() if k[0] != '_' and callable(v) and v.__doc__}
 		if g.test_suite:
 			if name in mcls.classes:
 				raise ValueError(f'Class {name!r} already defined!')

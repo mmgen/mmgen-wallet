@@ -107,6 +107,8 @@ def fmt_list(l,fmt='dfl',indent=''):
 		'dfl':       ("', '",      "'",    "'"),
 		'bare':      (' ',         '',     '' ),
 		'no_quotes': (', ',        '',     '' ),
+		'no_spc':    ("','",       "'",    "'"),
+		'min':       (",",         "'",    "'"),
 		'col':       ('\n'+indent, indent, '' ),
 	}[fmt]
 	return lq + sep.join(l) + rq
@@ -390,8 +392,8 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=None):
 
 def decode_pretty_hexdump(data):
 	from string import hexdigits
-	pat = r'^[{}]+:\s+'.format(hexdigits)
-	lines = [re.sub(pat,'',l) for l in data.splitlines()]
+	pat = re.compile(fr'^[{hexdigits}]+:\s+')
+	lines = [pat.sub('',line) for line in data.splitlines()]
 	try:
 		return bytes.fromhex(''.join((''.join(lines).split())))
 	except:

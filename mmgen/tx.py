@@ -588,18 +588,21 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	# given tx size and absolute fee or fee spec, return absolute fee
 	# relative fee is N+<first letter of unit name>
 	def process_fee_spec(self,tx_fee,tx_size,on_fail='throw'):
-		import re
-		units = {u[0]:u for u in g.proto.coin_amt.units}
-		pat = r'([1-9][0-9]*)({})'.format('|'.join(units.keys()))
+
 		if g.proto.coin_amt(tx_fee,on_fail='silent'):
 			return g.proto.coin_amt(tx_fee)
-		elif re.match(pat,tx_fee):
-			return self.convert_fee_spec(tx_size,units,*re.match(pat,tx_fee).groups())
 		else:
-			if on_fail == 'return':
-				return False
-			elif on_fail == 'throw':
-				assert False, "'{}': invalid tx-fee argument".format(tx_fee)
+			import re
+			units = {u[0]:u for u in g.proto.coin_amt.units}
+			pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
+			if pat.match(tx_fee):
+				amt,unit = pat.match(tx_fee).groups()
+				return self.convert_fee_spec(tx_size,units,amt,unit)
+
+		if on_fail == 'return':
+			return False
+		elif on_fail == 'throw':
+			assert False, "'{}': invalid tx-fee argument".format(tx_fee)
 
 	def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
 		abs_fee = None

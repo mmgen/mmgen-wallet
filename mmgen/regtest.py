@@ -179,12 +179,13 @@ class MMGenRegtest(MMGenObject):
 
 		lines = reversed(get_log_tail(40_000).decode().splitlines())
 
+		pat = re.compile(r'\bwallet\.dat\.([a-z]+)')
 		for ss in ( 'BerkeleyEnvironment::Open',
 					'Wallet completed loading in',
 					'Using wallet wallet' ):
 			for line in lines:
 				if ss in line:
-					m = re.search(r'\bwallet\.dat\.([a-z]+)',line)
+					m = pat.search(line)
 					if m and m.group(1) in self.users:
 						return m.group(1)
 

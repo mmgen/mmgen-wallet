@@ -41,7 +41,7 @@ def make_cmd_help():
 
 			max_w = max(map(len,bc.user_commands))
 			fs = '  {{:{}}} - {{}}'.format(max_w)
-			for name,code in bc.user_commands.items():
+			for name,code in sorted(bc.user_commands.items()):
 				if code.__doc__:
 					yield fs.format(name,
 						pretty_format(

@@ -171,7 +171,7 @@ class g(object):
 		('label','keep_label'),
 		('tx_id','info'),
 		('tx_id','terse_info'),
-		('batch','rescan') # still incompatible as of Core 0.15.0
+		('batch','rescan'), # TODO: still incompatible?
 	)
 	cfg_file_opts = (
 		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',

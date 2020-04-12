@@ -22,21 +22,24 @@ def traceback_run_init():
 
 def traceback_run_process_exception():
 	import traceback,re
-	l = traceback.format_exception(*sys.exc_info()) # returns a list
+	lines = traceback.format_exception(*sys.exc_info()) # returns a list
 
-	for n in range(len(l)):
-		l[n] = re.sub('File "<string>"','File "{}"'.format(traceback_run_execed_file),l[n],count=1)
+	pat = re.compile('File "<string>"')
+	repl = f'File "{traceback_run_execed_file}"'
+	lines = [pat.sub(repl,line,count=1) for line in lines]
 
-	exc = l.pop()
-	if exc[:11] == 'SystemExit:': l.pop()
+	exc = lines.pop()
+	if exc.startswith('SystemExit:'):
+		lines.pop()
+
 	if False: # was: if os.getenv('MMGEN_DISABLE_COLOR'):
-		sys.stdout.write('{}{}'.format(''.join(l),exc))
+		sys.stdout.write('{}{}'.format(''.join(lines),exc))
 	else:
-		def red(s): return '\033[31;1m{}\033[0m'.format(s)
-		def yellow(s): return '\033[33;1m{}\033[0m'.format(s)
-		sys.stdout.write('{}{}'.format(yellow(''.join(l)),red(exc)))
+		yellow = lambda s: f'\033[33;1m{s}\033[0m'
+		red    = lambda s: f'\033[31;1m{s}\033[0m'
+		sys.stdout.write('{}{}'.format(yellow(''.join(lines)),red(exc)))
 
-	open(traceback_run_outfile,'w').write(''.join(l+[exc]))
+	open(traceback_run_outfile,'w').write(''.join(lines+[exc]))
 
 traceback_run_outfile = traceback_run_init()
 traceback_run_tstart = time.time()
