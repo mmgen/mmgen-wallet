@@ -20,122 +20,117 @@
 Opts.py:  Generic options parsing
 """
 
-import sys,getopt
-import collections
+import sys,re
+from collections import namedtuple
+
+pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
 
 def usage(opts_data):
 	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
-def print_help(opts_data,opt_filter):
+def print_help(po,opts_data,opt_filter):
+
+	def parse_lines(text):
+		filtered = False
+		for line in text.strip().splitlines():
+			m = pat.match(line)
+			if m:
+				filtered = bool(opt_filter and m[1] not in opt_filter)
+				if not filtered:
+					yield fs.format( ('-'+m[1]+',','')[m[1]=='-'], m[2], m[4] )
+			elif not filtered:
+				yield line
+
+	opts_type,fs = ('options','{:<3} --{} {}') if 'help' in po.user_opts else ('long_options','{}  --{} {}')
 	t = opts_data['text']
 	c = opts_data['code']
+	nl = '\n  '
 
-	# header
+	text = nl.join(parse_lines(t[opts_type]))
+
 	pn = opts_data['prog_name']
-	out  = '  {:<{p}} {}\n'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
-	out += '  {:<{p}} {} {}\n'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
+	out = (
+		'  {:<{p}} {}'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
+		+ nl + '{:<{p}} {} {}'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
+		+ nl + opts_type.upper().replace('_',' ') + ':'
+		+ nl + (c[opts_type](text) if opts_type in c else text)
+	)
 
-	# options
-	if opts_data['do_help'] == 'longhelp':
-		hdr,ls,es = ('  LONG OPTIONS:','','    ')
-		text = t['long_options'].strip()
-		code = c['long_options'] if 'long_options' in c else None
-	else:
-		hdr,ls,es = ('OPTIONS:','  ','')
-		text = t['options']
-		code = c['options'] if 'options' in c else None
-
-	ftext = code(text) if code else text
-	out += '{ls}{}\n{ls}{es}{}'.format(hdr,('\n'+ls).join(ftext.splitlines()),ls=ls,es=es)
-
-	# notes
-	if opts_data['do_help'] == 'help' and 'notes' in t:
-		ftext = c['notes'](t['notes']) if 'notes' in c else t['notes']
-		out += '\n  ' + '\n  '.join(ftext.rstrip().splitlines())
+	if opts_type == 'options' and 'notes' in t:
+		ntext = c['notes'](t['notes']) if 'notes' in c else t['notes']
+		out += nl + nl.join(ntext.rstrip().splitlines())
 
 	print(out)
 	sys.exit(0)
 
-def process_opts(opts_data,short_opts,long_opts):
+def process_uopts(opts_data,short_opts,long_opts):
 
-	import os
+	import os,getopt
 	opts_data['prog_name'] = os.path.basename(sys.argv[0])
-	long_opts  = [i.replace('_','-') for i in long_opts]
 
-	so_str = short_opts.replace('-:','').replace('-','')
-	try: cl_opts,args = getopt.getopt(sys.argv[1:], so_str, long_opts)
-	except getopt.GetoptError as err:
-		print(str(err))
-		sys.exit(2)
+	try:
+		cl_uopts,uargs = getopt.getopt(sys.argv[1:],''.join(short_opts),long_opts)
+	except getopt.GetoptError as e:
+		print(e.args[0])
+		sys.exit(1)
 
-	sopts_list = ':_'.join(['_'.join(list(i)) for i in short_opts.split(':')]).split('_')
-	opts = {}
-	opts_data['do_help'] = False
+	def get_uopts():
+		for uopt,uparm in cl_uopts:
+			if uopt.startswith('--'):
+				lo = uopt[2:]
+				if lo in long_opts:
+					yield (lo.replace('-','_'), True)
+				else: # lo+'=' in long_opts
+					yield (lo.replace('-','_'), uparm)
+			else: # uopt.startswith('-')
+				so = uopt[1]
+				if so in short_opts:
+					yield (long_opts[short_opts.index(so)].replace('-','_'), True)
+				else: # so+':' in short_opts
+					yield (long_opts[short_opts.index(so+':')][:-1].replace('-','_'), uparm)
 
-	for opt,arg in cl_opts:
-		if opt in ('-h','--help'):
-			opts_data['do_help'] = 'help'
-		elif opt == '--longhelp':
-			opts_data['do_help'] = 'longhelp'
-		elif opt[:2] == '--' and opt[2:] in long_opts:
-			opts[opt[2:].replace('-','_')] = True
-		elif opt[:2] == '--' and opt[2:]+'=' in long_opts:
-			opts[opt[2:].replace('-','_')] = arg
-		elif opt[1] != '-' and opt[1] in sopts_list:
-			opts[long_opts[sopts_list.index(opt[1:])].replace('-','_')] = True
-		elif opt[1] != '-' and opt[1:]+':' in sopts_list:
-			opts[long_opts[sopts_list.index(
-					opt[1:]+':')][:-1].replace('-','_')] = arg
-		else: assert False, 'Invalid option'
+	uopts = dict(get_uopts())
 
 	if 'sets' in opts_data:
-		for o_in,v_in,o_out,v_out in opts_data['sets']:
-			if o_in in opts:
-				v = opts[o_in]
-				if (v and v_in == bool) or v == v_in:
-					if o_out in opts and opts[o_out] != v_out:
+		for a_opt,a_val,b_opt,b_val in opts_data['sets']:
+			if a_opt in uopts:
+				u_val = uopts[a_opt]
+				if (u_val and a_val == bool) or u_val == a_val:
+					if b_opt in uopts and uopts[b_opt] != b_val:
 						sys.stderr.write(
-							'Option conflict:\n  --{}={}, with\n  --{}={}\n'.format(
-								o_out.replace('_','-'),opts[o_out],
-								o_in.replace('_','-'),opts[o_in]))
+							'Option conflict:'
+							+ '\n  --{}={}, with'.format(b_opt.replace('_','-'),uopts[b_opt])
+							+ '\n  --{}={}\n'.format(a_opt.replace('_','-'),uopts[a_opt]) )
 						sys.exit(1)
 					else:
-						opts[o_out] = v_out
+						uopts[b_opt] = b_val
 
-	return opts,args
+	return uopts,uargs
 
 def parse_opts(opts_data,opt_filter=None,parse_only=False):
 
-	import re
-	pat = r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)'
-	od_all = []
-
-	for k in ('options','long_options'):
-		if k not in opts_data['text']: continue
-		od,skip = [],True
-		for l in opts_data['text'][k].strip().splitlines():
-			m = re.match(pat,l)
+	short_opts,long_opts,skipped_opts = [],[],[]
+	def parse_lines(opts_type):
+		for line in opts_data['text'][opts_type].strip().splitlines():
+			m = pat.match(line)
 			if m:
-				skip = bool(opt_filter) and m.group(1) not in opt_filter
-				app = (['',''],[':','='])[m.group(3) == '=']
-				od.append(list(m.groups()) + app + [skip])
-			else:
-				if not skip: od[-1][3] += '\n' + l
+				if bool(opt_filter and m[1] not in opt_filter):
+					skipped_opts.append(m[2])
+				else:
+					if opts_type == 'options':
+						short_opts.append(m[1] + ('',':')[m[3] == '='])
+					long_opts.append(m[2] + ('','=')[m[3] == '='])
 
-		if not parse_only:
-			opts_data['text'][k] = '\n'.join(
-				['{:<3} --{} {}'.format(
-					('-'+d[0]+',','')[d[0]=='-'],d[1],d[3]) for d in od if d[6] == False]
-			)
-		od_all += od
+	for opts_type in ('options','long_options'):
+		parse_lines(opts_type)
 
-	short_opts    = ''.join([d[0]+d[4] for d in od_all if d[6] == False])
-	long_opts     = [d[1].replace('-','_')+d[5] for d in od_all if d[6] == False]
-	skipped_opts  = [d[1].replace('-','_') for d in od_all if d[6] == True]
+	uopts,uargs = process_uopts(opts_data,short_opts,long_opts)
 
-	opts,args = process_opts(opts_data,short_opts,long_opts)
-
-	from collections import namedtuple
-	ret = namedtuple('parsed_cmd_opts',['user_opts','cmd_args','short_opts','long_opts','skipped_opts'])
-	return ret(opts,args,short_opts,long_opts,skipped_opts)
+	po = namedtuple('parsed_cmd_opts',['user_opts','cmd_args','opts','skipped_opts'])
+	return po(
+		uopts, # dict
+		uargs, # list, callers can pop
+		tuple(o.replace('-','_').rstrip('=') for o in long_opts),
+		tuple(o.replace('-','_') for o in skipped_opts),
+	)

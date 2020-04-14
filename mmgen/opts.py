@@ -53,8 +53,7 @@ def _show_hash_presets():
 def opt_preproc_debug(po):
 	d = (
 		('Cmdline',            ' '.join(sys.argv)),
-		('Short opts',         po.short_opts),
-		('Long opts',          po.long_opts),
+		('Opts',               po.opts),
 		('Skipped opts',       po.skipped_opts),
 		('User-selected opts', po.user_opts),
 		('Cmd args',           po.cmd_args),
@@ -184,7 +183,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	opts_data['text']['long_options'] = common_opts_data['text']
 
-	# po: user_opts cmd_args short_opts long_opts skipped_opts
+	# po: user_opts cmd_args opts skipped_opts
 	po = mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
 
 	if parse_only:
@@ -194,10 +193,10 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		opt_preproc_debug(po)
 
 	# Copy parsed opts to opt, setting values to None if not set by user
-	for o in  (
-			tuple(s.rstrip('=') for s in po.long_opts)
+	for o in set(
+			po.opts
+			+ po.skipped_opts
 			+ tuple(add_opts)
-			+ tuple(po.skipped_opts)
 			+ g.required_opts
 			+ g.common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
@@ -295,13 +294,14 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	# === end global var initialization === #
 
-	if opts_data['do_help']: # print help screen only after global vars are initialized
+	die_on_incompatible_opts(g.incompatible_opts)
+
+	# print help screen only after global vars are initialized:
+	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
 		if not 'code' in opts_data:
 			opts_data['code'] = {}
 		opts_data['code']['long_options'] = common_opts_data['code']
-		mmgen.share.Opts.print_help(opts_data,opt_filter) # exits
-
-	die_on_incompatible_opts(g.incompatible_opts)
+		mmgen.share.Opts.print_help(po,opts_data,opt_filter) # exits
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so we can create it
 

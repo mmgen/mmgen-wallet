@@ -167,6 +167,7 @@ class g(object):
 		'hidden_incog_input_params','in_fmt'
 	)
 	incompatible_opts = (
+		('help','longhelp'),
 		('bob','alice'),
 		('label','keep_label'),
 		('tx_id','info'),
