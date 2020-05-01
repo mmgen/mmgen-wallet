@@ -324,7 +324,9 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 class EthereumTwAddrList(TwAddrList):
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,exact_age,wallet=None):
+	has_age = False
+
+	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
 		self.wallet = wallet or TrackingWallet(mode='w')
 		tw_dict = self.wallet.mmid_ordered_dict

@@ -278,7 +278,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('twview3','twview wide=1 sort=age (ignored)'),
 		('twview4','twview wide=1 minconf=999999999 (ignored)'),
 		('twview5','twview wide=1 minconf=0 (ignored)'),
-		('twview6','twview age_fmt=days (ignored)'),
 
 		('token_twview1','twview --token=mm1'),
 		('token_twview2','twview --token=mm1 wide=1'),
@@ -878,8 +877,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.twview(tool_args=['wide=1','minconf=999999999'])
 	def twview5(self):
 		return self.twview(tool_args=['wide=1','minconf=0'])
-	def twview6(self):
-		return self.twview(tool_args=['age_fmt=days'])
 
 	def token_twview1(self):
 		return self.twview(args=['--token=mm1'])

@@ -232,12 +232,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_listaddresses_days',            'listaddresses (age_fmt=days)'),
 		('alice_listaddresses_date',            'listaddresses (age_fmt=date)'),
 		('alice_listaddresses_date_time',       'listaddresses (age_fmt=date_time)'),
-		('alice_listaddresses_date_time_exact', 'listaddresses (age_fmt=date_time exact_age=1)'),
 		('alice_twview',                 'twview'),
 		('alice_twview_days',            'twview (age_fmt=days)'),
 		('alice_twview_date',            'twview (age_fmt=date)'),
 		('alice_twview_date_time',       'twview (age_fmt=date_time)'),
-		('alice_twview_date_time_exact', 'twview (age_fmt=date_time exact_age=1)'),
 		('alice_txcreate_info',          'txcreate -i'),
 
 		('stop',                     'stopping regtest daemon'),
@@ -873,11 +871,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			args=['age_fmt=date_time'],
 			expect=rf'{rtAmts[1]}\s+'+pat_date_time)
 
-	def alice_listaddresses_date_time_exact(self):
-		return self.alice_listaddresses(
-			args=['age_fmt=date_time','exact_age=1'],
-			expect=rf'{rtAmts[1]}\s+'+pat_date_time)
-
 	def alice_twview(self,args=[],expect=None):
 		expect = expect or rf'{rtAmts[0]}\b'
 		t = self.spawn('mmgen-tool',['--alice','twview'] + args)
@@ -894,19 +887,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_twview_date_time(self):
 		return self.alice_twview(args=['age_fmt=date_time'],expect=rf'{rtAmts[0]}\s+'+pat_date_time)
 
-	def alice_twview_date_time_exact(self):
-		return self.alice_twview(
-			args=['age_fmt=date_time','exact_age=1'],
-			expect=rf'{rtAmts[0]}\s+'+pat_date_time)
-
 	def alice_txcreate_info(self,args=[]):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
 		for e,s in (
 				(rf'{rtAmts[0]}\s+\d+\b','D'),
 				(rf'{rtAmts[0]}\s+\d+\b','D'),
 				(rf'{rtAmts[0]}\s+\d+\b','D'),
-				(rf'{rtAmts[0]}\s+'+pat_date,'w'),
-				(rf'{rtAmts[0]}\s+\d+\s+\d+\s+'+pat_date_time,'x'),
 				(rf'{rtAmts[0]}\s+'+pat_date,'w'),
 				(rf'{rtAmts[0]}\s+\d+\s+\d+\s+'+pat_date_time,'q'),
 			):
