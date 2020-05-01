@@ -46,13 +46,11 @@ class RPCConnection(MMGenObject):
 		except:
 			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
-		if not self.auth:
+		if user and passwd: # user/pass overrides cookie
 			pass
-		elif user and passwd:
-			self.auth_str = '{}:{}'.format(user,passwd)
 		elif auth_cookie:
-			self.auth_str = auth_cookie
-		else:
+			user,passwd = auth_cookie.split(':')
+		elif self.auth:
 			msg('Error: no {} RPC authentication method found'.format(g.proto.name.capitalize()))
 			if passwd: die(1,"'rpcuser' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
 			elif user: die(1,"'rpcpassword' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
@@ -67,10 +65,11 @@ class RPCConnection(MMGenObject):
 					pnm=g.proj_name))
 
 		if self.auth:
-			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [Basic {}]\n'
-			as_enc = base64.b64encode(self.auth_str.encode()).decode()
-			dmsg_rpc(fs.format(self.auth_str,'',as_enc))
-			self.http_hdrs.update({ 'Host':host, 'Authorization':'Basic {}'.format(as_enc) })
+			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
+			auth_str = f'{user}:{passwd}'
+			auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
+			dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
+			self.http_hdrs.update({ 'Host': host, 'Authorization': auth_str_b64 })
 
 		self.host = host
 		self.port = port
@@ -80,6 +79,20 @@ class RPCConnection(MMGenObject):
 		for method in self.rpcmethods:
 			exec('{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
 						c=type(self).__name__,m=method))
+
+	def calls(self,method,args_list):
+		"""
+		Perform a list of RPC calls, returning results in a list
+
+		Can be called two ways:
+		  1) method = methodname, args_list = [args_tuple1, args_tuple2,...]
+		  2) method = None, args_list = [(methodname1,args_tuple1), (methodname2,args_tuple2), ...]
+		"""
+
+		cmd_list = args_list if method == None else tuple(zip([method] * len(args_list), args_list))
+
+		if True:
+			return [self.request(method,*params) for method,params in cmd_list]
 
 	# Normal mode: call with arg list unrolled, exactly as with cli
 	# Batch mode:  call with list of arg lists as first argument
@@ -199,7 +212,7 @@ class RPCConnection(MMGenObject):
 		for k,v in self.http_hdrs.items():
 			exec_cmd += ['--header', '{}: {}'.format(k,v)]
 		if self.auth:
-			exec_cmd += ['--user', self.auth_str]
+			exec_cmd += ['--user', self.user + ':' + self.passwd]
 		exec_cmd += ['http://{}:{}/'.format(self.host,self.port)]
 
 		cp = run(exec_cmd,stdout=PIPE,check=True)
@@ -233,6 +246,7 @@ class RPCConnection(MMGenObject):
 		'getblockcount',
 		'getblockhash',
 		'getblockheader',
+		'getblockstats', # mmgen-node-tools
 		'getmempoolinfo',
 		'getmempoolentry',
 		'getnettotals',

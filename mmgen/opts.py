@@ -164,8 +164,8 @@ common_opts_data = {
 --, --no-license          Suppress the GPL license prompt
 --, --rpc-host=h          Communicate with {dn} running on host 'h'
 --, --rpc-port=p          Communicate with {dn} listening on port 'p'
---, --rpc-user=user       Override 'rpcuser' in {pn}.conf
---, --rpc-password=pass   Override 'rpcpassword' in {pn}.conf
+--, --rpc-user=user       Override 'rpc_user' in mmgen.cfg
+--, --rpc-password=pass   Override 'rpc_password' in mmgen.cfg
 --, --monero-wallet-rpc-host=host Override 'monero_wallet_rpc_host' in mmgen.cfg
 --, --monero-wallet-rpc-user=user Override 'monero_wallet_rpc_user' in mmgen.cfg
 --, --monero-wallet-rpc-password=pass Override 'monero_wallet_rpc_password' in mmgen.cfg

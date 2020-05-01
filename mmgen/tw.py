@@ -34,33 +34,28 @@ def get_tw_label(s):
 	except BadTwComment: raise
 	except: return None
 
-_date2days = lambda date: (g.rpch.cur_date - date) // 86400
+_date_formatter = {
+	'days':      lambda secs: (g.rpch.cur_date - secs) // 86400,
+	'date':      lambda secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:],
+	'date_time': lambda secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
+}
+
 _confs2date_approx = lambda o: g.rpch.cur_date - int(g.proto.avg_bdi * (o.confs - 1))
-_confs2date_exact = lambda o: (
-#		g.rpch.getblockheader(g.rpch.getblockhash(g.rpch.blockcount - (o.confs - 1)))['time']
-		g.rpch.gettransaction(o.txid)['blocktime'] # same as above, differs from 'time'
-			if o.confs
-		else g.rpch.cur_date )
+
+def _set_dates(us):
+	if us and us[0].date is None:
+		# 'blocktime' differs from 'time', is same as getblockheader['time']
+		dates = [o['blocktime'] for o in g.rpch.calls('gettransaction',[(o.txid,) for o in us])]
+		for o,date in zip(us,dates):
+			o.date = date
 
 if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
-	_date2days = lambda date: (1831006505 - date) // 86400
+	_date_formatter['days'] = lambda date: (1831006505 - date) // 86400
 	_confs2date_approx = lambda o: 1831006505 - (10 * 60 * (o.confs - 1))
-	_confs2date_exact = lambda o: 1831006505 - int(9.7 * 60 * (o.confs - 1))
-
-def _format_date(secs):
-	t = time.gmtime(secs)
-	return '{}-{:02}-{:02}'.format(str(t.tm_year)[2:],t.tm_mon,t.tm_mday)
-
-def _format_date_time(secs):
-	t = time.gmtime(secs)
-	return '{}-{:02}-{:02} {:02}:{:02}'.format(
-				t.tm_year,
-				t.tm_mon,
-				t.tm_mday,
-				t.tm_hour,
-				t.tm_min,
-			)
+	def _set_dates(us):
+		for o in us:
+			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
 
 class TwUnspentOutputs(MMGenObject):
 
@@ -86,7 +81,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add' }
 	col_adj = 38
 	age_fmts = ('confs','block','days','date','date_time')
-	age_fmts_ia = ('confs','block','days','date')
+	age_fmts_date_dependent = ('days','date','date_time')
+	age_fmts_interactive = ('confs','block','days','date')
 	_age_fmt = 'confs'
 	age_precs = ('approx','exact')
 	age_prec = 'approx'
@@ -227,6 +223,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 	def format_for_display(self):
 		unsp = self.unspent
+		if self.age_fmt in self.age_fmts_date_dependent and self.age_prec == 'exact':
+			_set_dates(unsp)
 		self.set_term_columns()
 
 		# allow for 7-digit confirmation nums
@@ -301,7 +299,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		return self.fmt_display
 
 	def format_for_printing(self,color=False,show_confs=True):
-
+		if self.age_fmt in self.age_fmts_date_dependent and self.age_prec == 'exact':
+			_set_dates(self.unspent)
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = g.proto.coin_amt.max_prec + 5
@@ -404,7 +403,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				self.do_sort(action[2:])
 				if action == 's_twmmid': self.show_mmid = True
 			elif action == 'd_days':
-				af = self.age_fmts_ia
+				af = self.age_fmts_interactive
 				self.age_fmt = af[(af.index(self.age_fmt) + 1) % len(af)]
 			elif action == 'd_mmid': self.show_mmid = not self.show_mmid
 			elif action == 'd_group':
@@ -467,22 +466,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		elif age_fmt == 'block':
 			return g.rpch.blockcount - (o.confs - 1)
 		else:
-			if self.age_prec == 'approx':
-				date = _confs2date_approx(o)
-			else:
-				if o.date == None:
-					o.date = _confs2date_exact(o)
-				date = o.date
-			return {
-				'days': _date2days(date),
-				'date': _format_date(date),
-				'date_time': _format_date_time(date),
-			}[age_fmt]
+			return _date_formatter[age_fmt](_confs2date_approx(o) if self.age_prec == 'approx' else o.date)
 
 class TwAddrList(MMGenDict):
 
 	age_fmts = TwUnspentOutputs.age_fmts
 	age_disp = TwUnspentOutputs.age_disp
+	age_prec_disp = TwUnspentOutputs.age_prec_disp
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,'tw','TwAddrList'),*args,**kwargs)
@@ -584,7 +574,7 @@ class TwAddrList(MMGenDict):
 				addr=(CoinAddr.fmtc('ADDRESS',width=addr_width) if showbtcaddrs else None),
 				cmt=TwComment.fmtc('COMMENT',width=max_cmt_width+1),
 				amt='BALANCE'.ljust(max_fp_len+4),
-				age=age_fmt.upper()
+				age=age_fmt.upper()+self.age_prec_disp[self.age_prec],
 				).rstrip()]
 
 		def sort_algo(j):
@@ -598,7 +588,10 @@ class TwAddrList(MMGenDict):
 				return j.sort_key
 
 		al_id_save = None
-		for mmid in sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort)):
+		mmids = sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort))
+		if show_age and self.age_prec == 'exact':
+			_set_dates([o for o in mmids if hasattr(o,'confs')])
+		for mmid in mmids:
 			if mmid.type == 'mmgen':
 				if al_id_save and al_id_save != mmid.obj.al_id:
 					out.append('')
@@ -615,7 +608,7 @@ class TwAddrList(MMGenDict):
 				addr=(e['addr'].fmt(color=True,width=addr_width) if showbtcaddrs else None),
 				cmt=e['lbl'].comment.fmt(width=max_cmt_width,color=True,nullrepl='-'),
 				amt=e['amt'].fmt('4.{}'.format(max(max_fp_len,3)),color=True),
-				age=self.age_disp(mmid,age_fmt) if hasattr(mmid,'confs') and mmid.confs != None else '-'
+				age=self.age_disp(mmid,age_fmt) if show_age and hasattr(mmid,'confs') else '-'
 				).rstrip())
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
