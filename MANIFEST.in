@@ -2,6 +2,7 @@ include README.md SIGNING_KEYS.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
 
 include test/*.py
+include test/include/*.py
 include test/test_py_d/*.py
 include test/objtest_py_d/*.py
 include test/objattrtest_py_d/*.py

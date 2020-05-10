@@ -313,7 +313,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.outputs     = MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.fee         = g.proto.coin_amt('0')
-		self.hex         = ''          # raw serialized hex transaction
+		self.hex         = ''                     # raw serialized hex transaction
 		self.label       = MMGenTXLabel('')
 		self.txid        = ''
 		self.coin_txid    = ''
@@ -330,7 +330,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if filename:
 			self.parse_tx_file(filename,metadata_only=metadata_only,quiet_open=quiet_open)
-			if metadata_only: return
+			if metadata_only:
+				return
 			self.check_pubkey_scripts()
 			self.check_sigs() # marks the tx as signed
 
@@ -538,8 +539,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
-			fee_per_kb = g.rpch.estimatefee() if g.coin=='BCH' and g.rpch.daemon_version >= 190100 \
-					else g.rpch.estimatefee(opt.tx_confs)
+			args = () if g.coin=='BCH' and g.rpc.daemon_version >= 190100 else (opt.tx_confs,)
+			fee_per_kb = await g.rpc.call('estimatefee',*args)
 			fe_type = 'estimatefee'
 
 		return fee_per_kb,fe_type
@@ -982,7 +983,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				m = errmsg
 			msg(yellow(m))
 			msg(red('Send of MMGen transaction {} failed'.format(self.txid)))
-			if exit_on_fail: sys.exit(1)
+			if exit_on_fail:
+				sys.exit(1)
 			return False
 		else:
 			if g.bogus_send:
@@ -1267,7 +1269,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			desc = 'send amount in metadata'
 			self.send_amt = g.proto.coin_amt(send_amt,on_fail='raise')
 
-			desc = 'transaction hex data'
+			desc = 'transaction file hex data'
 			self.check_txfile_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
@@ -1457,7 +1459,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		self.twuo.display_total()
 
-		if do_info: sys.exit(0)
+		if do_info:
+			sys.exit(0)
 
 		self.send_amt = self.sum_outputs()
 
@@ -1515,7 +1518,7 @@ class MMGenBumpTX(MMGenTX):
 		if not self.is_replaceable():
 			die(1,"Transaction '{}' is not replaceable".format(self.txid))
 
-		# If sending, require tx to have been signed
+		# If sending, require tx to be signed
 		if send:
 			if not self.marked_signed():
 				die(1,"File '{}' is not a signed {} transaction file".format(filename,g.proj_name))
@@ -1568,7 +1571,8 @@ class MMGenBumpTX(MMGenTX):
 					p = 'Fee will be deducted from output {}{} ({} {})'.format(idx+1,cs,o_amt,g.coin)
 					if check_sufficient_funds(o_amt):
 						if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
-							if opt.yes: msg(p)
+							if opt.yes:
+								msg(p)
 							self.bump_output_idx = idx
 							return idx
 

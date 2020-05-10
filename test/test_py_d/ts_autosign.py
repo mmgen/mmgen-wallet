@@ -157,12 +157,16 @@ class TestSuiteAutosign(TestSuiteBase):
 			copy_files(mountpoint,remove_signed_only=True,include_bad_tx=not led_opts)
 			do_unmount()
 			do_loop()
+			imsg(purple('\nKilling wait loop!'))
 			t.kill(2) # 2 = SIGINT
 			t.req_exit_val = 1
 			return t
 
 		def do_autosign(opts,mountpoint):
-			make_wallet(opts)
+
+			if not opt.skip_deps:
+				make_wallet(opts)
+
 			copy_files(mountpoint,include_bad_tx=True)
 
 			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')

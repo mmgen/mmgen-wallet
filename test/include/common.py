@@ -165,25 +165,22 @@ def iqmsg_r(s):
 	if not opt.quiet: omsg_r(s)
 
 def start_test_daemons(*network_ids):
-	if hasattr(opt,'no_daemon_autostart') and opt.no_daemon_autostart:
-		return
-	return test_daemons_ops(*network_ids,op='start')
+	if not opt.no_daemon_autostart:
+		return test_daemons_ops(*network_ids,op='start')
 
 def stop_test_daemons(*network_ids):
-	if hasattr(opt,'no_daemon_stop') and opt.no_daemon_stop:
-		return
-	return test_daemons_ops(*network_ids,op='stop')
+	if not opt.no_daemon_stop:
+		return test_daemons_ops(*network_ids,op='stop')
 
 def restart_test_daemons(*network_ids):
 	stop_test_daemons(*network_ids)
 	return start_test_daemons(*network_ids)
 
 def test_daemons_ops(*network_ids,op):
-	if opt.no_daemon_autostart:
-		return
-	from mmgen.daemon import CoinDaemon
-	silent = not opt.verbose and not (hasattr(opt,'exact_output') and opt.exact_output)
-	for network_id in network_ids:
-		if network_id not in CoinDaemon.network_ids: # silently ignore invalid IDs
-			continue
-		CoinDaemon(network_id,test_suite=True).cmd(op,silent=silent)
+	if not opt.no_daemon_autostart:
+		from mmgen.daemon import CoinDaemon
+		silent = not opt.verbose and not getattr(opt,'exact_output',False)
+		for network_id in network_ids:
+			if network_id.lower() not in CoinDaemon.network_ids: # silently ignore invalid IDs
+				continue
+			CoinDaemon(network_id,test_suite=True).cmd(op,silent=silent)

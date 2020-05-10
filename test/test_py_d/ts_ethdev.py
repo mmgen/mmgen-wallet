@@ -151,7 +151,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		('txcreate1',           'creating a transaction (spend from dev address to address :1)'),
 		('txsign1',             'signing the transaction'),
-		('tx_status0',          'getting the transaction status'),
+		('tx_status0_bad',      'getting the transaction status'),
 		('txsign1_ni',          'signing the transaction (non-interactive)'),
 		('txsend1',             'sending the transaction'),
 		('bal1',                'the {} balance'.format(g.coin)),
@@ -425,7 +425,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.txcreate(args=args,menu=menu,acct='1',non_mmgen_inputs=1)
 
 	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'])
-	def tx_status0(self):
+	def tx_status0_bad(self):
 		return self.tx_status(ext='{}.sigtx',expect_str='neither in mempool nor blockchain',exit_val=1)
 	def txsign1_ni(self): return self.txsign(ni=True)
 	def txsend1(self):    return self.txsend()

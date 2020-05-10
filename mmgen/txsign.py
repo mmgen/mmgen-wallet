@@ -150,7 +150,8 @@ def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 		tmp = KeyAddrList(addrlist=non_mm_addrs)
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
-		if m: die(2,wmsg['missing_keys_error'].format(suf(m,'es'),'\n    '.join(m)))
+		if m:
+			die(2,wmsg['missing_keys_error'].format(suf(m,'es'),'\n    '.join(m)))
 		keys += tmp.data
 
 	if opt.mmgen_keys_from_file:

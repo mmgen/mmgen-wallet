@@ -161,7 +161,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		tr_rpc = []
 		lbl_id = ('account','label')['label_api' in g.rpch.caps]
 		for o in us_rpc:
-			if not lbl_id in o: continue # coinbase outputs have no account field
+			if not lbl_id in o:
+				continue # coinbase outputs have no account field
 			l = get_tw_label(o[lbl_id])
 			if l:
 				o.update({
@@ -172,6 +173,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					'confs':  o['confirmations']
 				})
 				tr_rpc.append(o)
+
 		self.unspent = self.MMGenTwOutputList(
 						self.MMGenTwUnspentOutput(
 							**{k:v for k,v in o.items() if k in dir(self.MMGenTwUnspentOutput)}
@@ -668,14 +670,19 @@ class TrackingWallet(MMGenObject):
 				del tw
 			atexit.register(del_tw,self)
 
-	# TrackingWallet instances must be explicitly destroyed with 'del tw', 'del twuo.wallet'
-	# and the like to ensure the instance is deleted and wallet is written before global
-	# vars are destroyed by interpreter at shutdown.
-	# This is especially important, as exceptions are ignored within __del__():
-	#     /usr/share/doc/python3.6-doc/html/reference/datamodel.html#object.__del__
-	# This code can only be debugged by examining the program output.  Since no exceptions
-	# are raised, errors will not be caught by the test suite.
 	def __del__(self):
+		"""
+		TrackingWallet instances opened in write or import mode must be explicitly destroyed
+		with 'del tw', 'del twuo.wallet' and the like to ensure the instance is deleted and
+		wallet is written before global vars are destroyed by the interpreter at shutdown.
+
+		Not that this code can only be debugged by examining the program output, as exceptions
+		are ignored within __del__():
+
+			/usr/share/doc/python3.6-doc/html/reference/datamodel.html#object.__del__
+
+		Since no exceptions are raised, errors will not be caught by the test suite.
+		"""
 		if g.debug:
 			print_stack_trace('TW DEL {!r}'.format(self))
 
@@ -684,7 +691,8 @@ class TrackingWallet(MMGenObject):
 		elif g.debug:
 			msg('read-only wallet, doing nothing')
 
-	def upgrade_wallet_maybe(self): pass
+	def upgrade_wallet_maybe(self):
+		pass
 
 	@staticmethod
 	def conv_types(ad):
@@ -825,12 +833,14 @@ class TrackingWallet(MMGenObject):
 			from .addr import AddrData
 			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
 
-		if not mmaddr: mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
+		if not mmaddr:
+			mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
 
 		mmaddr = TwMMGenID(mmaddr)
 
 		cmt = TwComment(label,on_fail=on_fail)
-		if cmt in (False,None): return False
+		if cmt in (False,None):
+			return False
 
 		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
 

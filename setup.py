@@ -20,7 +20,7 @@ import sys,os,subprocess
 from shutil import copy2
 
 sys_ver = sys.version_info[:2]
-req_ver = (3,7)
+req_ver = (3,6)
 ver2f = lambda t: float('{}.{:03}'.format(*t))
 
 if ver2f(sys_ver) < ver2f(req_ver):

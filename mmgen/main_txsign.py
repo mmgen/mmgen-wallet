@@ -91,8 +91,11 @@ column below:
 
 infiles = opts.init(opts_data,add_opts=['b16'])
 
-if not infiles: opts.usage()
-for i in infiles: check_infile(i)
+if not infiles:
+	opts.usage()
+
+for i in infiles:
+	check_infile(i)
 
 if g.proto.sign_mode == 'daemon':
 	rpc_init()

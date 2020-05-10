@@ -44,9 +44,11 @@ rpc_init()
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
-else: opts.usage()
+else:
+	opts.usage()
 
-if not opt.status: do_license_msg()
+if not opt.status:
+	do_license_msg()
 
 from .tx import *
 

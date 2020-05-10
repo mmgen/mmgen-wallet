@@ -96,9 +96,9 @@ def pp_fmt(d):
 def pp_msg(d):
 	msg(pp_fmt(d))
 
-def fmt(s,indent=''):
+def fmt(s,indent='',strip_char=None):
 	"de-indent multiple lines of text, or indent with specified string"
-	return indent + ('\n'+indent).join([l.strip() for l in s.strip().splitlines()]) + '\n'
+	return indent + ('\n'+indent).join([l.strip(strip_char) for l in s.strip().splitlines()]) + '\n'
 
 def fmt_list(l,fmt='dfl',indent=''):
 	"pretty-format a list"
@@ -608,6 +608,8 @@ def write_data_to_file( outfile,data,desc='data',
 				d = ''
 			finally:
 				if d != cmp_data:
+					if g.test_suite:
+						print_diff(cmp_data,d)
 					m = "{} in file '{}' has been altered by some other program!  Aborting file write"
 					die(3,m.format(desc,outfile))
 

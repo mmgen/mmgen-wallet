@@ -264,9 +264,11 @@ class MMGenToolCmdMeta(type):
 	def __contains__(cls,val):
 		return cls.methods.__contains__(val)
 
+	def classname(cls,cmd_name):
+		return cls.methods[cmd_name].__qualname__.split('.')[0]
+
 	def call(cls,cmd_name,*args,**kwargs):
-		subcls = cls.classes[cls.methods[cmd_name].__qualname__.split('.')[0]]
-		return getattr(subcls(),cmd_name)(*args,**kwargs)
+		return getattr(cls.classes[cls.classname(cmd_name)](),cmd_name)(*args,**kwargs)
 
 	@property
 	def user_commands(cls):
@@ -909,7 +911,10 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 		twuo.do_sort(sort,reverse=reverse)
 		twuo.age_fmt = age_fmt
 		twuo.show_mmid = show_mmid
-		ret = twuo.format_for_printing(color=True,show_confs=wide_show_confs) if wide else twuo.format_for_display()
+		if wide:
+			ret = twuo.format_for_printing(color=True,show_confs=wide_show_confs)
+		else:
+			ret = twuo.format_for_display()
 		del twuo.wallet
 		return ret
 
@@ -940,7 +945,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 	Note that the use of these commands requires private data to be exposed on
 	a network-connected machine in order to unlock the Monero wallets.  This is
-	a violation of MMGen's security policy.
+	a violation of good security practice.
 	"""
 
 	_monero_chain_height = None
@@ -999,7 +1004,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				restore_height = blockheight,
 				language  = 'English' )
 
-			pp_msg(ret) if opt.verbose else msg('  Address: {}'.format(ret['address']))
+			pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
 			return True
 
 		def sync(n,d,fn,c,m):
@@ -1043,7 +1048,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			from .obj import XMRAmt
 			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit') for k in ('balance','unlocked_balance')])
 
-			if opt.verbose:
+			if opt.debug:
 				pp_msg(ret)
 			else:
 				msg('  Balance: {} Unlocked balance: {}'.format(*[b.hl() for b in bals[fn]]))

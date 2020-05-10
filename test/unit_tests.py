@@ -28,7 +28,7 @@ from mmgen.common import *
 opts_data = {
 	'text': {
 		'desc': "Unit tests for the MMGen suite",
-		'usage':'[options] [tests]',
+		'usage':'[options] [tests | test [subtest]]',
 		'options': """
 -h, --help       Print this help message
 -A, --no-daemon-autostart Don't start and stop daemons automatically
@@ -45,7 +45,7 @@ If no test is specified, all available tests are run
 }
 
 sys.argv.insert(1,'--skip-cfg-file')
-cmd_args = opts.init(opts_data)
+cmd_args = opts.init(opts_data,add_opts=['no_daemon_stop'])
 
 def exit_msg():
 	t = int(time.time()) - start_time
@@ -81,20 +81,40 @@ class UnitTestHelpers(object):
 			else:
 				rdie(3,m_noraise.format(desc,exc_chk))
 
+def run_test(test,subtest=None):
+	modname = 'test.unit_tests_d.ut_{}'.format(test)
+	mod = importlib.import_module(modname)
+
+	def run_subtest(subtest):
+		gmsg(f'Running unit subtest {test}.{subtest}')
+		t = getattr(mod,'unit_tests')()
+		if not getattr(t,subtest)(test,UnitTestHelpers):
+			rdie(1,f'Unit subtest {subtest!r} failed')
+		pass
+
+	if subtest:
+		run_subtest(subtest)
+	else:
+		gmsg(f'Running unit test {test}')
+		if hasattr(mod,'unit_tests'):
+			t = getattr(mod,'unit_tests')
+			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
+			for subtest in subtests:
+				run_subtest(subtest)
+		else:
+			if not mod.unit_test().run_test(test,UnitTestHelpers):
+				rdie(1,'Unit test {test!r} failed')
+
 try:
-	for test in cmd_args:
-		if test not in all_tests:
-			die(1,"'{}': test not recognized".format(test))
-
 	import importlib
-	for test in (cmd_args or all_tests):
-		modname = 'test.unit_tests_d.ut_{}'.format(test)
-		mod = importlib.import_module(modname)
-		gmsg('Running unit test {}'.format(test))
-		if not mod.unit_test().run_test(test,UnitTestHelpers):
-			rdie(1,'Unit test {!r} failed'.format(test))
-		del mod
-
+	if len(cmd_args) == 2 and cmd_args[0] in all_tests and cmd_args[1] not in all_tests:
+		run_test(*cmd_args) # assume 2nd arg is subtest
+	else:
+		for test in cmd_args:
+			if test not in all_tests:
+				die(1,f'{test!r}: test not recognized')
+		for test in (cmd_args or all_tests):
+			run_test(test)
 	exit_msg()
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))

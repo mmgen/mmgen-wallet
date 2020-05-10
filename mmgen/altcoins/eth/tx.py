@@ -118,7 +118,7 @@ class EthereumMMGenTX(MMGenTX):
 		self.tx_gas = o['startGas'] # approximate, but better than nothing
 		self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
 		self.txobj = o
-		return d # 'token_addr','decimals' required by subclass
+		return d # 'token_addr','decimals' required by Token subclass
 
 	def get_nonce(self):
 		return ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16))
@@ -149,7 +149,8 @@ class EthereumMMGenTX(MMGenTX):
 		self.hex = json.dumps(odict)
 		self.update_txid()
 
-	def del_output(self,idx): pass
+	def del_output(self,idx):
+		pass
 
 	def update_txid(self):
 		assert not is_hex_str(self.hex),'update_txid() must be called only when self.hex is not hex data'
@@ -160,12 +161,14 @@ class EthereumMMGenTX(MMGenTX):
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
-		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__: return
+		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__:
+			return
 		if lc != 1:
 			fs = '{} output{} specified, but Ethereum transactions must have exactly one'
 			die(1,fs.format(lc,suf(lc)))
 
-		for a in cmd_args: self.process_cmd_arg(a,ad_f,ad_w)
+		for a in cmd_args:
+			self.process_cmd_arg(a,ad_f,ad_w)
 
 	def select_unspent(self,unspent):
 		prompt = 'Enter an account to spend from: '
@@ -366,7 +369,8 @@ class EthereumMMGenTX(MMGenTX):
 
 		self.get_status()
 
-		if prompt_user: self.confirm_send()
+		if prompt_user:
+			self.confirm_send()
 
 		ret = None if g.bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
 
@@ -374,11 +378,14 @@ class EthereumMMGenTX(MMGenTX):
 		if rpc_error(ret):
 			msg(yellow(rpc_errmsg(ret)))
 			msg(red('Send of MMGen transaction {} failed'.format(self.txid)))
-			if exit_on_fail: sys.exit(1)
+			if exit_on_fail:
+				sys.exit(1)
 			return False
 		else:
-			m = 'BOGUS transaction NOT sent: {}' if g.bogus_send else 'Transaction sent: {}'
-			if not g.bogus_send:
+			if g.bogus_send:
+				m = 'BOGUS transaction NOT sent: {}'
+			else:
+				m = 'Transaction sent: {}'
 				assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
 			self.desc = 'sent transaction'
 			msg(m.format(self.coin_txid.hl()))

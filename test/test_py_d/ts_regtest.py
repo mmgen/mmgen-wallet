@@ -725,11 +725,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_txdo('bob',rtFee[4],[pairs[0][1]],'3')
 
 	def user_import(self,user,args):
-		t = self.spawn('mmgen-addrimport',['--quiet','--'+user]+args)
+		t = self.spawn('mmgen-addrimport',['--'+user]+args)
 		if g.debug:
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect('OK')
+		t.read()
 		return t
 
 	def bob_import_addr(self):

@@ -37,6 +37,13 @@ class g(object):
 		if s: sys.stderr.write(s+'\n')
 		sys.exit(ev)
 
+	for k in ('linux','win','msys'):
+		if sys.platform[:len(k)] == k:
+			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
+			break
+	else:
+		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
+
 	# Constants:
 
 	version      = '0.12.099'
@@ -89,7 +96,7 @@ class g(object):
 	use_internal_keccak_module = False
 
 	chain                = None # set by first call to rpc_init()
-	chains               = 'mainnet','testnet','regtest'
+	chains               = ('mainnet','testnet','regtest')
 
 	# rpc:
 	rpc_host             = ''
@@ -117,13 +124,6 @@ class g(object):
 	terminal_width       = 0
 
 	mnemonic_entry_modes = {}
-
-	for k in ('linux','win','msys'):
-		if sys.platform[:len(k)] == k:
-			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
-			break
-	else:
-		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
 
 	color = sys.stdout.isatty()
 
@@ -154,7 +154,8 @@ class g(object):
 
 	# 'long' opts - opt sets global var
 	common_opts = (
-		'color','no_license','rpc_host','rpc_port','testnet','rpc_user','rpc_password',
+		'color','no_license','testnet',
+		'rpc_host','rpc_port','rpc_user','rpc_password',
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
 		'accept_defaults','token'

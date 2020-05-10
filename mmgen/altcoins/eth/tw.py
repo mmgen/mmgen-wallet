@@ -95,9 +95,9 @@ class EthereumTrackingWallet(TrackingWallet):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:
-				msg("Warning: MMGen ID '{}' was missing in tracking wallet!".format(label.mmid))
+				msg(f'Warning: MMGen ID {label.mmid!r} was missing in tracking wallet!')
 			elif r[addr]['mmid'] != label.mmid:
-				die(3,"MMGen ID '{}' does not match tracking wallet!".format(label.mmid))
+				die(3,'MMGen ID {label.mmid!r} does not match tracking wallet!')
 		r[addr] = { 'mmid': label.mmid, 'comment': label.comment }
 
 	@write_mode
@@ -153,14 +153,15 @@ class EthereumTrackingWallet(TrackingWallet):
 			if self.data['tokens'][addr]['params'].get('symbol') == sym.upper():
 				return addr
 
-		if no_rpc: return None
+		if no_rpc:
+			return None
 
 		for addr in self.data['tokens']:
 			if Token(addr).symbol().upper() == sym.upper():
 				self.force_set_token_param(addr,'symbol',sym.upper())
 				return addr
-
-		return None
+		else:
+			return None
 
 	def get_token_param(self,token,param):
 		if token in self.data['tokens']:
@@ -180,6 +181,7 @@ class EthereumTrackingWallet(TrackingWallet):
 
 class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 
+	desc = 'Ethereum token tracking wallet'
 	decimals = None
 	symbol = None
 	cur_eth_balances = {}
@@ -315,7 +317,8 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 	prompt_fs = 'Total to spend: {} {}\n\n'
 	col_adj = 37
 
-	def get_display_precision(self): return 10 # truncate precision for narrow display
+	def get_display_precision(self):
+		return 10 # truncate precision for narrow display
 
 	def get_unspent_data(self):
 		super().get_unspent_data()
@@ -336,11 +339,12 @@ class EthereumTwAddrList(TwAddrList):
 		for mmid,d in list(tw_dict.items()):
 #			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
-			if usr_addr_list and (label.mmid not in usr_addr_list): continue
+			if usr_addr_list and (label.mmid not in usr_addr_list):
+				continue
 			bal = self.wallet.get_balance(d['addr'])
 			if bal == 0 and not showempty:
-				if not label.comment: continue
-				if not all_labels: continue
+				if not label.comment or not all_labels:
+					continue
 			self[label.mmid] = {'amt': g.proto.coin_amt('0'), 'lbl':  label }
 			if showbtcaddrs:
 				self[label.mmid]['addr'] = CoinAddr(d['addr'])

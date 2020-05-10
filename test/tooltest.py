@@ -437,6 +437,7 @@ try:
 			die(1,'Only one command may be specified')
 		cmd = cmd_args[0]
 		if cmd in cmd_data:
+			cleandir(cfg['tmpdir'],do_msg=True)
 			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
 			do_cmds(cmd)
 		elif cmd == 'clean':

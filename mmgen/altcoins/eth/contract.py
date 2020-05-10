@@ -67,7 +67,10 @@ class Token(MMGenObject): # ERC20
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
 		ret = g.rpch.eth_call({ 'to': '0x'+self.addr, 'data': '0x'+data })
-		return int(ret,16) * self.base_unit if toUnit else ret
+		if toUnit:
+			return int(ret,16) * self.base_unit
+		else:
+			return ret
 
 	def balance(self,acct_addr):
 		return ETHAmt(self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
@@ -98,11 +101,11 @@ class Token(MMGenObject): # ERC20
 
 	def info(self):
 		fs = '{:15}{}\n' * 5
-		return fs.format('token address:',self.addr,
-						'token symbol:',self.symbol(),
-						'token name:',self.name(),
-						'decimals:',self.decimals(),
-						'total supply:',self.total_supply())
+		return fs.format('token address:', self.addr,
+						'token symbol:',   self.symbol(),
+						'token name:',     self.name(),
+						'decimals:',       self.decimals(),
+						'total supply:',   self.total_supply())
 
 	def code(self):
 		return g.rpch.eth_getCode('0x'+self.addr)[2:]

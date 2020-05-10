@@ -112,7 +112,8 @@ def override_globals_from_cfg_file(ucfg):
 
 def override_globals_from_env():
 	for name in g.env_opts:
-		if name == 'MMGEN_DEBUG_ALL': continue
+		if name == 'MMGEN_DEBUG_ALL':
+			continue
 		disable = name[:14] == 'MMGEN_DISABLE_'
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
 		if val: # exclude empty string values; string value of '0' or 'false' sets variable to False
@@ -528,9 +529,9 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 def check_and_set_autoset_opts(): # Raises exception if any check fails
 
 	def nocase_str(key,val,asd):
-		if val.lower() in asd.choices:
-			return True
-		else:
+		try:
+			return asd.choices.index(val)
+		except:
 			return 'one of'
 
 	def nocase_pfx(key,val,asd):

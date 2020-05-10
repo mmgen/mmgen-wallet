@@ -56,6 +56,8 @@ class Daemon(MMGenObject):
 
 	def exec_cmd(self,cmd,check):
 		cp = run(cmd,check=False,stdout=PIPE,stderr=PIPE)
+		if self.debug:
+			print(cp)
 		if check and cp.returncode != 0:
 			raise MMGenCalledProcessError(cp)
 		return cp
@@ -172,8 +174,8 @@ class Daemon(MMGenObject):
 				return True
 			time.sleep(0.2)
 		else:
-			m = 'Wait for state {!r} timeout exceeded for daemon {} {}'
-			die(2,m.format(req_state,self.daemon_id.upper(),self.network))
+			m = 'Wait for state {!r} timeout exceeded for daemon {} {} (port {})'
+			die(2,m.format(req_state,self.daemon_id.upper(),self.network,self.rpc_port))
 
 	@classmethod
 	def check_implement(cls):
@@ -201,6 +203,13 @@ class Daemon(MMGenObject):
 		if val not in self._flags:
 			die(1,'Flag {!r} not set, so cannot be removed'.format(val))
 		self._flags.remove(val)
+
+	def remove_datadir(self):
+		if self.state == 'stopped':
+			import shutil
+			shutil.rmtree(self.datadir,ignore_errors=True)
+		else:
+			msg(f'Cannot remove {self.datadir!r} - daemon is not stopped')
 
 class MoneroWalletDaemon(Daemon):
 

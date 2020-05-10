@@ -67,6 +67,8 @@ def _b58chk_decode(s):
 		raise ValueError('_b58chk_decode(): incorrect checksum')
 	return out[:-4]
 
+finfo = namedtuple('fork_info',['height','hash','name','replayable'])
+
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
 	name            = 'bitcoin'
@@ -87,9 +89,9 @@ class BitcoinProtocol(MMGenObject):
 	daemon_data_subdir = ''
 	sighash_type = 'ALL'
 	block0 = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
-	forks = [ # height, hash, name, replayable
-		(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','bch',False),
-		(None,'','b2x',True)
+	forks = [
+		finfo(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','BCH',False),
+		finfo(None,'','B2X',True),
 	]
 	caps               = ('rbf','segwit')
 	mmcaps             = ('key','addr','rpc','tx')
@@ -241,7 +243,7 @@ class BitcoinCashProtocol(BitcoinProtocol):
 	mmtypes        = ('L','C')
 	sighash_type   = 'ALL|FORKID'
 	forks = [
-		(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','btc',False)
+		finfo(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','BTC',False)
 	]
 	caps = ()
 	coin_amt        = BCHAmt
@@ -267,7 +269,7 @@ class B2XProtocol(BitcoinProtocol):
 	coin_amt        = B2XAmt
 	max_tx_fee      = B2XAmt('0.1')
 	forks = [
-		(None,'','btc',True) # activation: 494784
+		finfo(None,'','BTC',True) # activation: 494784
 	]
 
 class B2XTestnetProtocol(B2XProtocol):

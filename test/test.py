@@ -60,8 +60,8 @@ def create_shm_dir(data_dir,trash_dir):
 
 		dest = os.path.join(shm_dir,os.path.basename(trash_dir))
 		os.mkdir(dest,0o755)
-		try: os.unlink(trash_dir)
-		except: pass
+
+		run(f'rm -rf {trash_dir}',shell=True,check=True)
 		os.symlink(dest,trash_dir)
 
 		dest = os.path.join(shm_dir,os.path.basename(data_dir))
@@ -115,6 +115,7 @@ opts_data = {
 -P, --profile        Record the execution time of each script
 -q, --quiet          Produce minimal output.  Suppress dependency info
 -r, --resume=c       Resume at command 'c' after interrupted run
+-R, --resume-after=c Same, but resume at command following 'c'
 -s, --system         Test scripts and modules installed on system rather
                      than those in the repo root
 -S, --skip-deps      Skip dependency checking for command
@@ -168,12 +169,18 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 
 check_segwit_opts()
 
-if opt.profile: opt.names = True
-if opt.resume: opt.skip_deps = True
+if opt.profile:
+	opt.names = True
 
 if opt.exact_output:
 	def msg(s): pass
 	qmsg = qmsg_r = vmsg = vmsg_r = msg_r = msg
+
+if opt.resume or opt.resume_after:
+	opt.skip_deps = True
+	resume = opt.resume or opt.resume_after
+else:
+	resume = False
 
 cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'1':  { 'wpasswd':       'Dorian-α',
@@ -514,7 +521,9 @@ class CmdGroupMgr(object):
 			shared_deps are "implied" dependencies for all cmds in cmd_group that don't appear in
 			the cmd_group data or cmds' argument lists.  Supported only for 3seed tests at present.
 			"""
-			if not hasattr(cls,'shared_deps'): return []
+			if not hasattr(cls,'shared_deps'):
+				return []
+
 			return [k for k,v in cfgs[str(tmpdir_idx)]['dep_generators'].items()
 						if k in cls.shared_deps and v != cmdname]
 
@@ -543,6 +552,7 @@ class CmdGroupMgr(object):
 	def gm_init_group(self,trunner,gname,spawn_prog):
 		kwargs = self.cmd_groups[gname][1]
 		cls = self.create_group(gname,**kwargs)
+		cls.group_name = gname
 		return cls(trunner,cfgs,spawn_prog)
 
 	def list_cmd_groups(self):
@@ -657,13 +667,15 @@ class TestSuiteRunner(object):
 			else:
 				omsg_r('Testing {}: '.format(desc))
 
-		if msg_only: return
+		if msg_only:
+			return
 
 		if opt.log:
-			try:
-				self.log_fd.write(cmd_disp+'\n')
-			except:
-				self.log_fd.write(ascii(cmd_disp)+'\n')
+			self.log_fd.write('[{}][{}:{}] {}\n'.format(
+				g.coin.lower(),
+				self.ts.group_name,
+				self.ts.test_name,
+				cmd_disp))
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect(args,no_output=no_output)
@@ -710,6 +722,11 @@ class TestSuiteRunner(object):
 
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 
+		if opt.resume_after:
+			global resume
+			resume = self.gm.cmd_list[self.gm.cmd_list.index(resume)+1]
+			omsg(f'INFO → Resuming at command {resume!r}')
+
 		if opt.exit_after and opt.exit_after not in self.gm.cmd_list:
 			die(1,'{!r}: command not recognized'.format(opt.exit_after))
 
@@ -721,7 +738,8 @@ class TestSuiteRunner(object):
 		if usr_args:
 			for arg in usr_args:
 				if arg in self.gm.cmd_groups:
-					if not self.init_group(arg): continue
+					if not self.init_group(arg):
+						continue
 					clean(self.ts.tmpdir_nums)
 					for cmd in self.gm.cmd_list:
 						self.check_needs_rerun(cmd,build=True)
@@ -753,8 +771,10 @@ class TestSuiteRunner(object):
 					if e not in self.gm.cmd_groups_dfl:
 						die(1,'{!r}: group not recognized'.format(e))
 			for gname in self.gm.cmd_groups_dfl:
-				if opt.exclude_groups and gname in exclude: continue
-				if not self.init_group(gname): continue
+				if opt.exclude_groups and gname in exclude:
+					continue
+				if not self.init_group(gname):
+					continue
 				clean(self.ts.tmpdir_nums)
 				for cmd in self.gm.cmd_list:
 					self.check_needs_rerun(cmd,build=True)
@@ -823,13 +843,13 @@ class TestSuiteRunner(object):
 		if hasattr(self.ts,'shared_deps'):
 			arg_list = arg_list[:-len(self.ts.shared_deps)]
 
-		if opt.resume:
-			if cmd == opt.resume:
-				bmsg('Resuming at {!r}'.format(cmd))
-				opt.resume = False
-				opt.skip_deps = False
-			else:
+		global resume
+		if resume:
+			if cmd != resume:
 				return
+			bmsg('Resuming at {!r}'.format(cmd))
+			resume = False
+			opt.skip_deps = False
 
 		if opt.profile: start = time.time()
 
@@ -938,15 +958,18 @@ if opt.pause:
 	set_restore_term_at_exit()
 
 set_environ_for_spawned_scripts()
-start_test_daemons(network_id)
+if network_id not in ('eth','etc'):
+	start_test_daemons(network_id)
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
 	tr.warn_skipped()
-	stop_test_daemons(network_id)
+	if network_id not in ('eth','etc'):
+		stop_test_daemons(network_id)
 except KeyboardInterrupt:
-	stop_test_daemons(network_id)
+	if network_id not in ('eth','etc'):
+		stop_test_daemons(network_id)
 	tr.warn_skipped()
 	die(1,'\ntest.py exiting at user request')
 except TestSuiteException as e:
