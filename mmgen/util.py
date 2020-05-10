@@ -843,10 +843,10 @@ def get_coin_daemon_auth_cookie():
 def rpc_init(reinit=False):
 	if not 'rpc' in g.proto.mmcaps:
 		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
-	if g.rpch != None and not reinit: return g.rpch
+	if g.rpc != None and not reinit: return g.rpc
 	from .rpc import init_daemon
-	g.rpch = init_daemon(g.proto.daemon_family)
-	return g.rpch
+	g.rpc = init_daemon(g.proto.daemon_family)
+	return g.rpc
 
 def format_par(s,indent=0,width=80,as_list=False):
 	words,lines = s.split(),[]

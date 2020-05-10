@@ -25,7 +25,7 @@ class unit_test(object):
 						return True
 				return False
 
-			d = g.rpch.decoderawtransaction(txhex)
+			d = g.rpc.decoderawtransaction(txhex)
 
 			if has_nonstandard_outputs(d['vout']): return False
 

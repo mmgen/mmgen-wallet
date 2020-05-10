@@ -88,7 +88,7 @@ class EthereumTrackingWallet(TrackingWallet):
 	def rpc_init(self): pass
 
 	def rpc_get_balance(self,addr):
-		return ETHAmt(int(g.rpch.eth_getBalance('0x'+addr),16),'wei')
+		return ETHAmt(int(g.rpc.eth_getBalance('0x'+addr),16),'wei')
 
 	@write_mode
 	def import_address(self,addr,label,foo):

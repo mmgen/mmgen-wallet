@@ -35,7 +35,7 @@ def get_tw_label(s):
 	except: return None
 
 _date_formatter = {
-	'days':      lambda secs: (g.rpch.cur_date - secs) // 86400,
+	'days':      lambda secs: (g.rpc.cur_date - secs) // 86400,
 	'date':      lambda secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:],
 	'date_time': lambda secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
 }
@@ -43,7 +43,7 @@ _date_formatter = {
 def _set_dates(us):
 	if us and us[0].date is None:
 		# 'blocktime' differs from 'time', is same as getblockheader['time']
-		dates = [o['blocktime'] for o in g.rpch.calls('gettransaction',[(o.txid,) for o in us])]
+		dates = [o['blocktime'] for o in g.rpc.calls('gettransaction',[(o.txid,) for o in us])]
 		for o,date in zip(us,dates):
 			o.date = date
 
@@ -149,7 +149,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		# for now, self.addrs is just an empty list for Bitcoin and friends
 		add_args = (9999999,self.addrs) if self.addrs else ()
-		return g.rpch.listunspent(self.minconf,*add_args)
+		return g.rpc.listunspent(self.minconf,*add_args)
 
 	def get_unspent_data(self):
 		if g.bogus_wallet_data: # for debugging purposes only
@@ -159,7 +159,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
 		tr_rpc = []
-		lbl_id = ('account','label')['label_api' in g.rpch.caps]
+		lbl_id = ('account','label')['label_api' in g.rpc.caps]
 		for o in us_rpc:
 			if not lbl_id in o:
 				continue # coinbase outputs have no account field
@@ -325,7 +325,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						A=i.amt.fmt(color=color),
 						A2=(i.amt2.fmt(color=color) if i.amt2 is not None else ''),
 						c=i.confs,
-						b=g.rpch.blockcount - (i.confs - 1),
+						b=g.rpc.blockcount - (i.confs - 1),
 						D=self.age_disp(i,'date_time'),
 						l=i.label.hl(color=color) if i.label else
 							TwComment.fmtc('',color=color,nullrepl='-',width=max_lbl_len)).rstrip())
@@ -333,8 +333,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		fs = '{} (block #{}, {} UTC)\nSort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs.format(
 				capfirst(self.desc),
-				g.rpch.blockcount,
-				make_timestr(g.rpch.cur_date),
+				g.rpc.blockcount,
+				make_timestr(g.rpc.cur_date),
 				' '.join(self.sort_info(include_group=False)),
 				'\n'.join(out),
 				g.dcoin,
@@ -454,7 +454,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		if age_fmt == 'confs':
 			return o.confs
 		elif age_fmt == 'block':
-			return g.rpch.blockcount - (o.confs - 1)
+			return g.rpc.blockcount - (o.confs - 1)
 		else:
 			return _date_formatter[age_fmt](o.date)
 
@@ -492,8 +492,8 @@ class TwAddrList(MMGenDict):
 		self.total = g.proto.coin_amt('0')
 		rpc_init()
 
-		lbl_id = ('account','label')['label_api' in g.rpch.caps]
-		for d in g.rpch.listunspent(0):
+		lbl_id = ('account','label')['label_api' in g.rpc.caps]
+		for d in g.rpc.listunspent(0):
 			if not lbl_id in d: continue  # skip coinbase outputs with missing account
 			if d['confirmations'] < minconf: continue
 			label = get_tw_label(d[lbl_id])
@@ -519,12 +519,12 @@ class TwAddrList(MMGenDict):
 		if showempty or all_labels:
 			# for compatibility with old mmids, must use raw RPC rather than native data for matching
 			# args: minconf,watchonly, MUST use keys() so we get list, not dict
-			if 'label_api' in g.rpch.caps:
-				acct_list = g.rpch.listlabels()
-				acct_addrs = [list(a.keys()) for a in g.rpch.getaddressesbylabel([[k] for k in acct_list],batch=True)]
+			if 'label_api' in g.rpc.caps:
+				acct_list = g.rpc.listlabels()
+				acct_addrs = [list(a.keys()) for a in g.rpc.getaddressesbylabel([[k] for k in acct_list],batch=True)]
 			else:
-				acct_list = list(g.rpch.listaccounts(0,True).keys()) # raw list, no 'L'
-				acct_addrs = g.rpch.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
+				acct_list = list(g.rpc.listaccounts(0,True).keys()) # raw list, no 'L'
+				acct_addrs = g.rpc.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
 			acct_labels = MMGenList([get_tw_label(a) for a in acct_list])
 			check_dup_mmid(acct_labels)
 			assert len(acct_list) == len(acct_addrs),(
@@ -753,11 +753,11 @@ class TrackingWallet(MMGenObject):
 
 	@write_mode
 	def import_address(self,addr,label,rescan):
-		return g.rpch.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
+		return g.rpc.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
 
 	@write_mode
 	def batch_import_address(self,arg_list):
-		return g.rpch.importaddress(arg_list,batch=True)
+		return g.rpc.importaddress(arg_list,batch=True)
 
 	def force_write(self):
 		mode_save = self.mode
@@ -796,13 +796,13 @@ class TrackingWallet(MMGenObject):
 	def set_label(self,coinaddr,lbl):
 		# bitcoin-abc 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# broken behavior: new label is set OK, but old label gets attached to another address
-		if 'label_api' in g.rpch.caps and g.coin != 'BCH':
-			return g.rpch.setlabel(coinaddr,lbl,on_fail='return')
+		if 'label_api' in g.rpc.caps and g.coin != 'BCH':
+			return g.rpc.setlabel(coinaddr,lbl,on_fail='return')
 		else:
 			# NOTE: this works because importaddress() removes the old account before
 			# associating the new account with the address.
 			# RPC args: addr,label,rescan[=true],p2sh[=none]
-			return g.rpch.importaddress(coinaddr,lbl,False,on_fail='return')
+			return g.rpc.importaddress(coinaddr,lbl,False,on_fail='return')
 
 	# returns on failure
 	@write_mode
@@ -885,8 +885,8 @@ class TwGetBalance(MMGenObject):
 
 	def create_data(self):
 		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
-		lbl_id = ('account','label')['label_api' in g.rpch.caps]
-		for d in g.rpch.listunspent(0):
+		lbl_id = ('account','label')['label_api' in g.rpc.caps]
+		for d in g.rpc.listunspent(0):
 			lbl = get_tw_label(d[lbl_id])
 			if lbl:
 				if lbl.mmid.type == 'mmgen':

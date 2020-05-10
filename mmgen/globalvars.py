@@ -107,7 +107,7 @@ class g(object):
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
 	rpc_fail_on_command  = ''
-	rpch                 = None # global RPC handle
+	rpc                 = None # global RPC handle
 	use_cached_balances  = False
 
 	# regtest:

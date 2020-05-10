@@ -1050,12 +1050,12 @@ re-import your addresses.
 	@classmethod
 	def get_tw_data(cls,wallet=None):
 		vmsg('Getting address data from tracking wallet')
-		if 'label_api' in g.rpch.caps:
-			accts = g.rpch.listlabels()
-			alists = [list(a.keys()) for a in g.rpch.getaddressesbylabel([[k] for k in accts],batch=True)]
+		if 'label_api' in g.rpc.caps:
+			accts = g.rpc.listlabels()
+			alists = [list(a.keys()) for a in g.rpc.getaddressesbylabel([[k] for k in accts],batch=True)]
 		else:
-			accts = g.rpch.listaccounts(0,True)
-			alists = g.rpch.getaddressesbyaccount([[k] for k in accts],batch=True)
+			accts = g.rpc.listaccounts(0,True)
+			alists = g.rpc.getaddressesbyaccount([[k] for k in accts],batch=True)
 		return list(zip(accts,alists))
 
 	def add_tw_data(self,wallet):

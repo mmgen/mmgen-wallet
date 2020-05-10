@@ -60,7 +60,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	@classmethod
 	def get_exec_status(cls,txid,silent=False):
-		d = g.rpch.eth_getTransactionReceipt('0x'+txid)
+		d = g.rpc.eth_getTransactionReceipt('0x'+txid)
 		if not silent:
 			if 'contractAddress' in d and d['contractAddress']:
 				msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
@@ -121,10 +121,10 @@ class EthereumMMGenTX(MMGenTX):
 		return d # 'token_addr','decimals' required by Token subclass
 
 	def get_nonce(self):
-		return ETHNonce(int(g.rpch.parity_nextNonce('0x'+self.inputs[0].addr),16))
+		return ETHNonce(int(g.rpc.parity_nextNonce('0x'+self.inputs[0].addr),16))
 
 	def make_txobj(self): # called by create_raw()
-		chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
+		chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpc.caps]
 		self.txobj = {
 			'from': self.inputs[0].addr,
 			'to':   self.outputs[0].addr if self.outputs else Str(''),
@@ -132,7 +132,7 @@ class EthereumMMGenTX(MMGenTX):
 			'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
 			'startGas': self.start_gas,
 			'nonce': self.get_nonce(),
-			'chainId': Int(g.rpch.request(chain_id_method),16),
+			'chainId': Int(g.rpc.request(chain_id_method),16),
 			'data':  self.usr_contract_data,
 		}
 
@@ -157,7 +157,7 @@ class EthereumMMGenTX(MMGenTX):
 		self.txid = MMGenTxID(make_chksum_6(self.hex).upper())
 
 	def get_blockcount(self):
-		return Int(g.rpch.eth_blockNumber(),16)
+		return Int(g.rpc.eth_blockNumber(),16)
 
 	def process_cmd_args(self,cmd_args,ad_f,ad_w):
 		lc = len(cmd_args)
@@ -195,7 +195,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	# get rel_fee (gas price) from network, return in native wei
 	def get_rel_fee_from_network(self):
-		return Int(g.rpch.eth_gasPrice(),16),'eth_gasPrice' # ==> rel_fee,fe_type
+		return Int(g.rpc.eth_gasPrice(),16),'eth_gasPrice' # ==> rel_fee,fe_type
 
 	# given rel fee and units, return absolute fee using tx_gas
 	def convert_fee_spec(self,foo,units,amt,unit):
@@ -327,14 +327,14 @@ class EthereumMMGenTX(MMGenTX):
 		class r(object): pass
 
 		def is_in_mempool():
-			if not 'full_node' in g.rpch.caps:
+			if not 'full_node' in g.rpc.caps:
 				return False
-			return '0x'+self.coin_txid in [x['hash'] for x in g.rpch.parity_pendingTransactions()]
+			return '0x'+self.coin_txid in [x['hash'] for x in g.rpc.parity_pendingTransactions()]
 
 		def is_in_wallet():
-			d = g.rpch.eth_getTransactionReceipt('0x'+self.coin_txid)
+			d = g.rpc.eth_getTransactionReceipt('0x'+self.coin_txid)
 			if d and 'blockNumber' in d and d['blockNumber'] is not None:
-				r.confs = 1 + int(g.rpch.eth_blockNumber(),16) - int(d['blockNumber'],16)
+				r.confs = 1 + int(g.rpc.eth_blockNumber(),16) - int(d['blockNumber'],16)
 				r.exec_status = int(d['status'],16)
 				return True
 			return False
@@ -372,7 +372,7 @@ class EthereumMMGenTX(MMGenTX):
 		if prompt_user:
 			self.confirm_send()
 
-		ret = None if g.bogus_send else g.rpch.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
+		ret = None if g.bogus_send else g.rpc.eth_sendRawTransaction('0x'+self.hex,on_fail='return')
 
 		from mmgen.rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):

@@ -435,7 +435,7 @@ def init_daemon_parity():
 		conn.caps += ('full_node',)
 
 	if g.token:
-		g.rpch = conn # set g.rpch so rpc_init() will return immediately
+		g.rpc = conn # set g.rpc so rpc_init() will return immediately
 		(g.token,g.dcoin) = resolve_token_arg(g.token)
 
 	return conn

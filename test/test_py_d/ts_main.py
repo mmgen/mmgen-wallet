@@ -147,7 +147,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if g.coin.lower() not in self.networks:
 			return
 		rpc_init()
-		self.lbl_id = ('account','label')['label_api' in g.rpch.caps]
+		self.lbl_id = ('account','label')['label_api' in g.rpc.caps]
 		if g.coin in ('BTC','BCH','LTC'):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[g.coin.lower()]
 			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[g.coin.lower()]

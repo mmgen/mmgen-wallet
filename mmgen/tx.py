@@ -83,7 +83,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 
 def segwit_is_active(exit_on_error=False):
 	rpc_init()
-	d = g.rpch.getblockchaininfo()
+	d = g.rpc.getblockchaininfo()
 	if d['chain'] == 'regtest':
 		return True
 	if (    'bip9_softforks' in d
@@ -405,7 +405,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
 		o = {e.addr:e.amt for e in self.outputs}
-		self.hex = HexStr(g.rpch.createrawtransaction(i,o))
+		self.hex = HexStr(g.rpc.createrawtransaction(i,o))
 		self.update_txid()
 
 	def print_contract_addr(self): pass
@@ -438,7 +438,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def compare_size_and_estimated_size(self):
 		est_vsize = self.estimate_size()
-		d = g.rpch.decoderawtransaction(self.hex)
+		d = g.rpc.decoderawtransaction(self.hex)
 		vsize = d['vsize'] if 'vsize' in d else d['size']
 		vmsg('\nVsize: {} (true) {} (estimated)'.format(vsize,est_vsize))
 		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
@@ -523,7 +523,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	# coin-specific fee routines
 	def get_relay_fee(self):
-		kb_fee = g.proto.coin_amt(g.rpch.getnetworkinfo()['relayfee'])
+		kb_fee = g.proto.coin_amt(g.rpc.getnetworkinfo()['relayfee'])
 		ret = kb_fee * self.estimate_size() // 1024
 		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
 		return ret
@@ -535,7 +535,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def get_rel_fee_from_network(self):
 		try:
-			ret = g.rpch.estimatesmartfee(opt.tx_confs,opt.fee_estimate_mode.upper())
+			ret = g.rpc.estimatesmartfee(opt.tx_confs,opt.fee_estimate_mode.upper())
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -678,7 +678,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.hex = self.hex[:-8] + bytes.fromhex('{:08x}'.format(val))[::-1].hex()
 
 	def get_blockcount(self):
-		return int(g.rpch.getblockcount())
+		return int(g.rpc.getblockcount())
 
 	def add_blockcount(self):
 		self.blockcount = self.get_blockcount()
@@ -754,9 +754,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		wifs = [d.sec.wif for d in keys]
 
 		try:
-			ret = g.rpch.signrawtransactionwithkey(self.hex,wifs,sig_data,g.proto.sighash_type) \
-				if 'sign_with_key' in g.rpch.caps else \
-					g.rpch.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
+			ret = g.rpc.signrawtransactionwithkey(self.hex,wifs,sig_data,g.proto.sighash_type) \
+				if 'sign_with_key' in g.rpc.caps else \
+					g.rpc.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
 		except Exception as e:
 			msg(yellow('This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
 				if 'Invalid sighash param' in e.args[0] else e.args[0]))
@@ -774,7 +774,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.check_hex_tx_matches_mmgen_tx(dt)
 			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
 			self.check_sigs(dt)
-			if not self.coin_txid == g.rpch.decoderawtransaction(ret['hex'])['txid']:
+			if not self.coin_txid == g.rpc.decoderawtransaction(ret['hex'])['txid']:
 				raise BadMMGenTxID('txid mismatch (after signing)')
 			msg('OK')
 			return True
@@ -879,7 +879,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		class r(object): pass
 
 		def is_in_wallet():
-			ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+			ret = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
 			if 'confirmations' in ret and ret['confirmations'] > 0:
 				r.confs = ret['confirmations']
 				return True
@@ -887,14 +887,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				return False
 
 		def is_in_utxos():
-			return 'txid' in g.rpch.getrawtransaction(self.coin_txid,True,on_fail='silent')
+			return 'txid' in g.rpc.getrawtransaction(self.coin_txid,True,on_fail='silent')
 
 		def is_in_mempool():
-			return 'height' in g.rpch.getmempoolentry(self.coin_txid,on_fail='silent')
+			return 'height' in g.rpc.getmempoolentry(self.coin_txid,on_fail='silent')
 
 		def is_replaced():
 			if is_in_mempool(): return False
-			ret = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+			ret = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
 
 			if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
 				return False
@@ -905,7 +905,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if is_in_mempool():
 			if status:
-				d = g.rpch.gettransaction(self.coin_txid,on_fail='silent')
+				d = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
 				brs = 'bip125-replaceable'
 				rep = '{}replaceable'.format(('NOT ','')[brs in d and d[brs]=='yes'])
 				t = d['timereceived']
@@ -930,7 +930,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			msg('{}\n{}'.format(m1,m2))
 			if not opt.quiet:
 				msg('Replacing transactions:')
-				d = ((t,g.rpch.getmempoolentry(t,on_fail='silent')) for t in r.replacing_txs)
+				d = ((t,g.rpc.getmempoolentry(t,on_fail='silent')) for t in r.replacing_txs)
 				for txid,mp_entry in d:
 					msg('  {}{}'.format(txid,' in mempool' if ('height' in mp_entry) else ''))
 			die(0,'')
@@ -965,7 +965,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if prompt_user: self.confirm_send()
 
-		ret = None if g.bogus_send else g.rpch.sendrawtransaction(self.hex,on_fail='return')
+		ret = None if g.bogus_send else g.rpc.sendrawtransaction(self.hex,on_fail='return')
 
 		from .rpc import rpc_error,rpc_errmsg
 		if rpc_error(ret):
@@ -1061,7 +1061,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				msg('')
 
 #	def is_replaceable_from_rpc(self):
-#		dec_tx = g.rpch.decoderawtransaction(self.hex)
+#		dec_tx = g.rpc.decoderawtransaction(self.hex)
 #		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
 
 	def is_replaceable(self):

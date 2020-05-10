@@ -121,7 +121,7 @@ tx1 = MMGenSplitTX()
 opt.no_blank = True
 
 gmsg("Creating timelocked transaction for long chain ({})".format(g.coin))
-locktime = int(opt.locktime or 0) or g.rpch.getblockcount()
+locktime = int(opt.locktime or 0) or g.rpc.getblockcount()
 tx1.create(mmids[0],locktime)
 
 tx1.format()

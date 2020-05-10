@@ -66,7 +66,7 @@ class Token(MMGenObject): # ERC20
 		data = create_method_id(method_sig) + method_args
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
-		ret = g.rpch.eth_call({ 'to': '0x'+self.addr, 'data': '0x'+data })
+		ret = g.rpc.eth_call({ 'to': '0x'+self.addr, 'data': '0x'+data })
 		if toUnit:
 			return int(ret,16) * self.base_unit
 		else:
@@ -108,7 +108,7 @@ class Token(MMGenObject): # ERC20
 						'total supply:',   self.total_supply())
 
 	def code(self):
-		return g.rpch.eth_getCode('0x'+self.addr)[2:]
+		return g.rpc.eth_getCode('0x'+self.addr)[2:]
 
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
@@ -131,8 +131,8 @@ class Token(MMGenObject): # ERC20
 		from .pyethereum.transactions import Transaction
 
 		if chain_id is None:
-			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpch.caps]
-			chain_id = int(g.rpch.request(chain_id_method),16)
+			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpc.caps]
+			chain_id = int(g.rpc.request(chain_id_method),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = rlp.encode(tx).hex()
 		coin_txid = CoinTxID(tx.hash.hex())
@@ -148,7 +148,7 @@ class Token(MMGenObject): # ERC20
 # The following are used for token deployment only:
 
 	def txsend(self,hex_tx):
-		return g.rpch.eth_sendRawTransaction('0x'+hex_tx).replace('0x','',1)
+		return g.rpc.eth_sendRawTransaction('0x'+hex_tx).replace('0x','',1)
 
 	def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
@@ -157,7 +157,7 @@ class Token(MMGenObject): # ERC20
 		tx_in = self.make_tx_in(
 					from_addr,to_addr,amt,
 					start_gas,gasPrice,
-					nonce = int(g.rpch.parity_nextNonce('0x'+from_addr),16),
+					nonce = int(g.rpc.parity_nextNonce('0x'+from_addr),16),
 					method_sig = method_sig,
 					from_addr2 = from_addr2 )
 		(hex_tx,coin_txid) = self.txsign(tx_in,key,from_addr)
