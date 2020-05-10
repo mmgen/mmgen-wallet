@@ -125,7 +125,7 @@ class Daemon(MMGenObject):
 		self.wait_for_state('stopped')
 
 		os.makedirs(self.datadir,exist_ok=True)
-		if self.cfg_file:
+		if self.cfg_file and not 'keep_cfg_file' in self.flags:
 			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
@@ -221,7 +221,7 @@ class MoneroWalletDaemon(Daemon):
 	exec_fn_mswin = 'monero-wallet-rpc.exe'
 	ps_pid_mswin = True
 
-	def __init__(self,wallet_dir,test_suite=False):
+	def __init__(self,wallet_dir,test_suite=False,host=None,user=None,passwd=None):
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
 		if test_suite:
@@ -237,7 +237,13 @@ class MoneroWalletDaemon(Daemon):
 		if self.platform == 'win':
 			self.use_pidfile = False
 
-		if not g.monero_wallet_rpc_password:
+		self.host = host or g.monero_wallet_rpc_host
+		self.user = user or g.monero_wallet_rpc_user
+		self.passwd = passwd or g.monero_wallet_rpc_password
+
+		assert self.host
+		assert self.user
+		if not self.passwd:
 			die(1,
 				'You must set your Monero wallet RPC password.\n' +
 				'This can be done on the command line, with the --monero-wallet-rpc-password\n' +
@@ -252,7 +258,7 @@ class MoneroWalletDaemon(Daemon):
 			'--rpc-bind-port={}'.format(self.rpc_port),
 			'--wallet-dir='+self.wallet_dir,
 			'--log-file='+self.logfile,
-			'--rpc-login={}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password) ]
+			'--rpc-login={}:{}'.format(self.user,self.passwd) ]
 		if self.platform == 'linux':
 			cmd += ['--pidfile={}'.format(self.pidfile)]
 			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
@@ -260,15 +266,16 @@ class MoneroWalletDaemon(Daemon):
 
 	@property
 	def state(self):
-		if not self.test_socket(g.monero_wallet_rpc_host,self.rpc_port):
+		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
+		if not self.test_socket(self.host,self.rpc_port):
 			return 'stopped'
-		from .rpc import MoneroWalletRPCConnection
+		from .rpc import MoneroWalletRPCClient
 		try:
-			MoneroWalletRPCConnection(
-				g.monero_wallet_rpc_host,
+			MoneroWalletRPCClient(
+				self.host,
 				self.rpc_port,
-				g.monero_wallet_rpc_user,
-				g.monero_wallet_rpc_password).get_version()
+				self.user,
+				self.passwd).call('get_version')
 			return 'ready'
 		except:
 			return 'stopped'
@@ -280,7 +287,7 @@ class MoneroWalletDaemon(Daemon):
 class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	subclasses_must_implement = ('state','stop_cmd')
-	avail_flags = ('no_daemonize',)
+	avail_flags = ('no_daemonize','keep_cfg_file')
 
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
@@ -466,6 +473,7 @@ class MoneroDaemon(CoinDaemon):
 	exec_fn_mswin = 'monerod.exe'
 	ps_pid_mswin = True
 	new_console_mswin = True
+	host = 'localhost' # FIXME
 
 	def subclass_init(self):
 		if self.platform == 'win':
@@ -488,7 +496,7 @@ class MoneroDaemon(CoinDaemon):
 
 	@property
 	def state(self):
-		if not self.test_socket(g.monero_wallet_rpc_host,self.rpc_port):
+		if not self.test_socket(self.host,self.rpc_port):
 			return 'stopped'
 		cp = self.run_cmd(
 			[self.coind_exec]
@@ -532,15 +540,22 @@ class EthereumDaemon(CoinDaemon):
 
 	@property
 	def state(self):
-		from .rpc import EthereumRPCConnection
+		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
+
+		# the following code does not work
+		from mmgen.protocol import init_coin
+		init_coin('eth')
+
+		async def do():
+			print(g.rpc)
+			ret = await g.rpc.call('eth_chainId')
+			print(ret)
+			return ('stopped','ready')[ret == '0x11']
+
 		try:
-			conn = EthereumRPCConnection('localhost',self.rpc_port,socket_timeout=0.2)
-		except:
+			return run_session(do()) # socket exception is not propagated
+		except:# SocketError:
 			return 'stopped'
-
-		ret = conn.eth_chainId(on_fail='return')
-
-		return ('stopped','ready')[ret == '0x11']
 
 	@property
 	def stop_cmd(self):

@@ -182,6 +182,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_import_addr',          'importing non-MMGen address with --rescan'),
 		('bob_bal4',                 "Bob's balance (after import with rescan)"),
 		('bob_import_list',          'importing flat address list'),
+		('bob_import_list_rescan',   'importing flat address list with --rescan'),
 		('bob_split2',               "splitting Bob's funds"),
 		('bob_0conf0_getbalance',    "Bob's balance (unconfirmed, minconf=0)"),
 		('bob_0conf1_getbalance',    "Bob's balance (unconfirmed, minconf=1)"),
@@ -735,11 +736,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_import_addr(self):
 		addr = self.read_from_tmpfile('non-mmgen.addrs').split()[0]
-		return self.user_import('bob',['--rescan','--address='+addr])
+		return self.user_import('bob',['--quiet','--address='+addr])
 
 	def bob_import_list(self):
 		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
-		return self.user_import('bob',['--addrlist',addrfile])
+		return self.user_import('bob',['--quiet','--addrlist',addrfile])
+
+	def bob_import_list_rescan(self):
+		addrfile = joinpath(self.tmpdir,'non-mmgen.addrs')
+		return self.user_import('bob',['--quiet','--rescan','--addrlist',addrfile])
 
 	def bob_split2(self):
 		addrs = self.read_from_tmpfile('non-mmgen.addrs').split()

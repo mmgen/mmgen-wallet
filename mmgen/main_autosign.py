@@ -112,18 +112,19 @@ cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
 exit_if_mswin('autosigning')
 
 import mmgen.tx
-import mmgen.altcoins.eth.tx
 from .txsign import txsign
 from .protocol import CoinProtocol,init_coin
+from .rpc import rpc_init
+
 if g.test_suite:
 	from .daemon import CoinDaemon
 
 if opt.mountpoint:
-	mountpoint = opt.mountpoint # TODO: make global
+	mountpoint = opt.mountpoint
 
 opt.outdir = tx_dir = os.path.join(mountpoint,'tx')
 
-def check_daemons_running():
+async def check_daemons_running():
 	if opt.coin:
 		die(1,'--coin option not supported with this command.  Use --coins instead')
 	if opt.coins:
@@ -140,7 +141,7 @@ def check_daemons_running():
 				g.rpc_port = CoinDaemon(get_network_id(coin,g.testnet),test_suite=True).rpc_port
 			vmsg(f'Checking {coin} daemon')
 			try:
-				rpc_init(reinit=True)
+				await rpc_init()
 			except SystemExit as e:
 				if e.code != 0:
 					ydie(1,f'{coin} daemon not running or not listening on port {g.proto.rpc_port}')
@@ -174,7 +175,7 @@ def do_umount():
 		msg(f'Unmounting {mountpoint}')
 		run(['umount',mountpoint],check=True)
 
-def sign_tx_file(txfile,signed_txs):
+async def sign_tx_file(txfile,signed_txs):
 	try:
 		init_coin('BTC',testnet=False)
 		tmp_tx = mmgen.tx.MMGenTX(txfile,metadata_only=True)
@@ -193,15 +194,15 @@ def sign_tx_file(txfile,signed_txs):
 		g.token = tmp_tx.dcoin
 		g.dcoin = tmp_tx.dcoin or g.coin
 
-		tx = mmgen.tx.MMGenTX(txfile,offline=True)
+		tx = mmgen.tx.MMGenTxForSigning(txfile)
 
 		if g.proto.sign_mode == 'daemon':
 			if g.test_suite:
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
 				g.rpc_port = CoinDaemon(get_network_id(g.coin,g.testnet),test_suite=True).rpc_port
-			rpc_init(reinit=True)
+			await rpc_init()
 
-		if txsign(tx,wfs,None,None):
+		if await txsign(tx,wfs,None,None):
 			tx.write_to_file(ask_write=False)
 			signed_txs.append(tx)
 			return True
@@ -215,7 +216,7 @@ def sign_tx_file(txfile,signed_txs):
 	except:
 		return False
 
-def sign():
+async def sign():
 	dirlist  = os.listdir(tx_dir)
 	raw,signed = [set(f[:-6] for f in dirlist if f.endswith(ext)) for ext in ('.rawtx','.sigtx')]
 	unsigned = [os.path.join(tx_dir,f+'.rawtx') for f in raw - signed]
@@ -223,7 +224,7 @@ def sign():
 	if unsigned:
 		signed_txs,fails = [],[]
 		for txfile in unsigned:
-			ret = sign_tx_file(txfile,signed_txs)
+			ret = await sign_tx_file(txfile,signed_txs)
 			if not ret:
 				fails.append(txfile)
 			qmsg('')
@@ -296,23 +297,23 @@ def print_summary(signed_txs):
 	else:
 		msg('No non-MMGen outputs')
 
-def do_sign():
+async def do_sign():
 	if not opt.stealth_led:
-		set_led('busy')
+		led.set('busy')
 	do_mount()
 	key_ok = decrypt_wallets()
 	if key_ok:
 		if opt.stealth_led:
-			set_led('busy')
-		ret = sign()
+			led.set('busy')
+		ret = await sign()
 		do_umount()
-		set_led(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
+		led.set(('standby','off','error')[(not ret)*2 or bool(opt.stealth_led)])
 		return ret
 	else:
 		msg('Password is incorrect!')
 		do_umount()
 		if not opt.stealth_led:
-			set_led('error')
+			led.set('error')
 		return False
 
 def wipe_existing_key():
@@ -374,35 +375,6 @@ def setup():
 	ss_out = Wallet(ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)
 
-def ev_sleep(secs):
-	ev.wait(secs)
-	return ev.isSet()
-
-def do_led(on,off):
-	if not on:
-		open(status_ctl,'w').write('0\n')
-		while True:
-			if ev_sleep(3600): return
-
-	while True:
-		for s_time,val in ((on,255),(off,0)):
-			open(status_ctl,'w').write('{}\n'.format(val))
-			if ev_sleep(s_time): return
-
-def set_led(cmd):
-	if not opt.led: return
-	vmsg("Setting LED state to '{}'".format(cmd))
-	timings = {
-		'off':     ( 0, 0 ),
-		'standby': ( 2.2, 0.2 ),
-		'busy':    ( 0.06, 0.06 ),
-		'error':   ( 0.5, 0.5 )}[cmd]
-	global led_thread
-	if led_thread:
-		ev.set(); led_thread.join(); ev.clear()
-	led_thread = threading.Thread(target=do_led,name='LED loop',args=timings)
-	led_thread.start()
-
 def get_insert_status():
 	if opt.no_insert_check:
 		return True
@@ -410,15 +382,21 @@ def get_insert_status():
 	except: return False
 	else: return True
 
-def do_loop():
+def check_wipe_present():
+	try:
+		run(['wipe','-v'],stdout=DEVNULL,stderr=DEVNULL,check=True)
+	except:
+		die(2,"The 'wipe' utility must be installed before running this program")
+
+async def do_loop():
 	n,prev_status = 0,False
 	if not opt.stealth_led:
-		set_led('standby')
+		led.set('standby')
 	while True:
 		status = get_insert_status()
 		if status and not prev_status:
 			msg('Device insertion detected')
-			do_sign()
+			await do_sign()
 		prev_status = status
 		if not n % 10:
 			msg_r('\r{}\rWaiting'.format(' '*17))
@@ -427,54 +405,6 @@ def do_loop():
 		msg_r('.')
 		n += 1
 
-def check_access(fn,desc='status LED control',init_val=None):
-	try:
-		b = open(fn).read().strip()
-		open(fn,'w').write('{}\n'.format(init_val or b))
-		return True
-	except:
-		m1 = "You do not have access to the {} file\n".format(desc)
-		m2 = "To allow access, run 'sudo chmod 0666 {}'".format(fn)
-		msg(m1+m2)
-		return False
-
-def check_wipe_present():
-	try:
-		run(['wipe','-v'],stdout=DEVNULL,stderr=DEVNULL,check=True)
-	except:
-		die(2,"The 'wipe' utility must be installed before running this program")
-
-def init_led():
-	sc = {
-		'opi': '/sys/class/leds/orangepi:red:status/brightness',
-		'rpi': '/sys/class/leds/led0/brightness'
-	}
-	tc = {
-		'rpi': '/sys/class/leds/led0/trigger', # mmc,none
-	}
-	for k in ('opi','rpi'):
-		try: os.stat(sc[k])
-		except: pass
-		else:
-			board = k
-			break
-	else:
-		die(2,'Control files not found!  LED option not supported')
-
-	status_ctl  = sc[board]
-	trigger_ctl = tc[board] if board in tc else None
-
-	if not check_access(status_ctl) or (
-			trigger_ctl and not check_access(trigger_ctl,desc='LED trigger',init_val='none')
-		):
-		sys.exit(1)
-
-	if trigger_ctl:
-		open(trigger_ctl,'w').write('none\n')
-
-	return status_ctl,trigger_ctl
-
-# main()
 if len(cmd_args) not in (0,1):
 	opts.usage()
 
@@ -489,32 +419,29 @@ if len(cmd_args) == 1:
 check_wipe_present()
 wfs = get_wallet_files()
 
-check_daemons_running()
-
-def at_exit(exit_val,nl=False):
-	if nl: msg('')
-	msg('Cleaning up...')
-	if opt.led:
-		set_led('off')
-		ev.set()
-		led_thread.join()
-		if trigger_ctl:
-			open(trigger_ctl,'w').write('mmc0\n')
+def at_exit(exit_val,message='\nCleaning up...'):
+	if message:
+		msg(message)
+	led.stop()
 	sys.exit(exit_val)
 
-def handler(a,b): at_exit(1,nl=True)
+def handler(a,b):
+	at_exit(1)
 
 signal.signal(signal.SIGTERM,handler)
 signal.signal(signal.SIGINT,handler)
 
-if opt.led:
-	import threading
-	status_ctl,trigger_ctl = init_led()
-	ev = threading.Event()
-	led_thread = None
+from .led import LEDControl
+led = LEDControl(enabled=opt.led,simulate=g.test_suite and not os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LIVE'))
+led.set('off')
 
-if len(cmd_args) == 0:
-	ret = do_sign()
-	at_exit(int(not ret))
-elif cmd_args[0] == 'wait':
-	do_loop()
+async def main():
+	await check_daemons_running()
+
+	if len(cmd_args) == 0:
+		ret = await do_sign()
+		at_exit(int(not ret),message='')
+	elif cmd_args[0] == 'wait':
+		await do_loop()
+
+run_session(main(),do_rpc_init=False)

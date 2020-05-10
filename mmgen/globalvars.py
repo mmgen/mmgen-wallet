@@ -47,7 +47,7 @@ class g(object):
 	# Constants:
 
 	version      = '0.12.099'
-	release_date = 'March 2020'
+	release_date = 'May 2020'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -95,7 +95,7 @@ class g(object):
 	accept_defaults      = False
 	use_internal_keccak_module = False
 
-	chain                = None # set by first call to rpc_init()
+	chain                = None
 	chains               = ('mainnet','testnet','regtest')
 
 	# rpc:
@@ -107,7 +107,8 @@ class g(object):
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
 	rpc_fail_on_command  = ''
-	rpc                 = None # global RPC handle
+	rpc                  = None # global RPC handle
+	aiohttp_rpc_queue_len = 16
 	use_cached_balances  = False
 
 	# regtest:
@@ -155,7 +156,7 @@ class g(object):
 	# 'long' opts - opt sets global var
 	common_opts = (
 		'color','no_license','testnet',
-		'rpc_host','rpc_port','rpc_user','rpc_password',
+		'rpc_host','rpc_port','rpc_user','rpc_password','rpc_backend','aiohttp_rpc_queue_len',
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
 		'accept_defaults','token'
@@ -210,6 +211,7 @@ class g(object):
 		'MMGEN_TESTNET',
 		'MMGEN_REGTEST',
 		'MMGEN_TRACEBACK',
+		'MMGEN_RPC_BACKEND',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 
 		'MMGEN_DISABLE_COLOR',
@@ -223,12 +225,15 @@ class g(object):
 		'comment_file',
 		'contract_data',
 	)
-	# Auto-typechecked and auto-set opts - incompatible with global_sets_opt and opt_sets_global
+	# Auto-typechecked and auto-set opts.  These have no corresponding value in g.
 	# First value in list is the default
 	ov = namedtuple('autoset_opt_info',['type','choices'])
 	autoset_opts = {
-		'fee_estimate_mode': ov('nocase_pfx', ('conservative','economical')),
+		'fee_estimate_mode': ov('nocase_pfx', ['conservative','economical']),
+		'rpc_backend':       ov('nocase_pfx', ['auto','httplib','curl','aiohttp','requests']),
 	}
+	if platform == 'win':
+		autoset_opts['rpc_backend'].choices.remove('aiohttp')
 
 	min_screen_width = 80
 	minconf = 1

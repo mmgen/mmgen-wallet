@@ -28,6 +28,12 @@ from .exception import *
 from .globalvars import *
 from .color import *
 
+class aInitMeta(type):
+	async def __call__(cls,*args,**kwargs):
+		instance = super().__call__(*args,**kwargs)
+		await instance.__ainit__(*args,**kwargs)
+		return instance
+
 def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
 def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')

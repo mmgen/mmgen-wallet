@@ -82,8 +82,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f):
 	return CoinAddr(coin_addr)
 
 def segwit_is_active(exit_on_error=False):
-	rpc_init()
-	d = g.rpc.getblockchaininfo()
+	d = g.rpc.cached['blockchaininfo']
 	if d['chain'] == 'regtest':
 		return True
 	if (    'bip9_softforks' in d
@@ -281,6 +280,7 @@ class MMGenTX(MMGenObject):
 	sig_ext  = 'sigtx'
 	txid_ext = 'txid'
 	desc     = 'transaction'
+	hexdata_type = 'hex'
 	fee_fail_fs = 'Network fee estimation for {c} confirmations failed ({t})'
 	no_chg_msg = 'Warning: Change address will be deleted as transaction produces no change'
 	rel_fee_desc = 'satoshis per byte'
@@ -308,7 +308,11 @@ inputs must be supplied to '{pnl}-txsign' in a file with the '--keys-from-file'
 option.
 Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_name.lower())
 
-	def __init__(self,filename=None,metadata_only=False,caller=None,quiet_open=False,offline=False):
+	def __init__(self,filename=None,metadata_only=False,caller=None,quiet_open=False,data=None,tw=None):
+		if data:
+			assert type(data) is dict, type(data)
+			self.__dict__ = data
+			return
 		self.inputs      = MMGenTxInputList()
 		self.outputs     = MMGenTxOutputList()
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
@@ -327,6 +331,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		self.dcoin       = None
 		self.caller      = caller
 		self.locktime    = None
+		self.tw          = tw
 
 		if filename:
 			self.parse_tx_file(filename,metadata_only=metadata_only,quiet_open=quiet_open)
@@ -400,12 +405,12 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def update_txid(self):
 		self.txid = MMGenTxID(make_chksum_6(bytes.fromhex(self.hex)).upper())
 
-	def create_raw(self):
+	async def create_raw(self):
 		i = [{'txid':e.txid,'vout':e.vout} for e in self.inputs]
 		if self.inputs[0].sequence:
 			i[0]['sequence'] = self.inputs[0].sequence
 		o = {e.addr:e.amt for e in self.outputs}
-		self.hex = HexStr(g.rpc.createrawtransaction(i,o))
+		self.hex = HexStr(await g.rpc.call('createrawtransaction',i,o))
 		self.update_txid()
 
 	def print_contract_addr(self): pass
@@ -436,9 +441,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def has_segwit_inputs(self):
 		return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
 
-	def compare_size_and_estimated_size(self):
+	def compare_size_and_estimated_size(self,tx_decoded):
 		est_vsize = self.estimate_size()
-		d = g.rpc.decoderawtransaction(self.hex)
+		d = tx_decoded
 		vsize = d['vsize'] if 'vsize' in d else d['size']
 		vmsg('\nVsize: {} (true) {} (estimated)'.format(vsize,est_vsize))
 		m1 = 'Estimated transaction vsize is {:1.2f} times the true vsize\n'
@@ -522,8 +527,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		return int(ret * float(opt.vsize_adj)) if hasattr(opt,'vsize_adj') and opt.vsize_adj else ret
 
 	# coin-specific fee routines
-	def get_relay_fee(self):
-		kb_fee = g.proto.coin_amt(g.rpc.getnetworkinfo()['relayfee'])
+	@property
+	def relay_fee(self):
+		kb_fee = g.proto.coin_amt(g.rpc.cached['networkinfo']['relayfee'])
 		ret = kb_fee * self.estimate_size() // 1024
 		vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=g.coin))
 		return ret
@@ -533,9 +539,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		unit = getattr(g.proto.coin_amt,to_unit or 'min_coin_unit')
 		return int(abs_fee // unit // self.estimate_size())
 
-	def get_rel_fee_from_network(self):
+	async def get_rel_fee_from_network(self):
 		try:
-			ret = g.rpc.estimatesmartfee(opt.tx_confs,opt.fee_estimate_mode.upper())
+			ret = await g.rpc.call('estimatesmartfee',opt.tx_confs,opt.fee_estimate_mode.upper())
 			fee_per_kb = ret['feerate'] if 'feerate' in ret else -2
 			fe_type = 'estimatesmartfee'
 		except:
@@ -577,9 +583,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			m = '{} {c}: {} fee too large (maximum fee: {} {c})'
 			msg(m.format(abs_fee,desc,g.proto.max_tx_fee,c=g.coin))
 			return False
-		elif abs_fee < self.get_relay_fee():
+		elif abs_fee < self.relay_fee:
 			m = '{} {c}: {} fee too small (below relay fee of {} {c})'
-			msg(m.format(str(abs_fee),desc,str(self.get_relay_fee()),c=g.coin))
+			msg(m.format(str(abs_fee),desc,str(self.relay_fee),c=g.coin))
 			return False
 		else:
 			return abs_fee
@@ -626,14 +632,14 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			tx_fee = my_raw_input(self.usr_fee_prompt)
 			desc = 'User-selected'
 
-	def get_fee_from_user(self,have_estimate_fail=[]):
+	async def get_fee_from_user(self,have_estimate_fail=[]):
 
 		if opt.tx_fee:
 			desc = 'User-selected'
 			start_fee = opt.tx_fee
 		else:
 			desc = 'Network-estimated (mode: {})'.format(opt.fee_estimate_mode.upper())
-			fee_per_kb,fe_type = self.get_rel_fee_from_network()
+			fee_per_kb,fe_type = await self.get_rel_fee_from_network()
 
 			if fee_per_kb < 0:
 				if not have_estimate_fail:
@@ -677,11 +683,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		assert isinstance(val,int),'locktime value not an integer'
 		self.hex = self.hex[:-8] + bytes.fromhex('{:08x}'.format(val))[::-1].hex()
 
-	def get_blockcount(self):
-		return int(g.rpc.getblockcount())
-
 	def add_blockcount(self):
-		self.blockcount = self.get_blockcount()
+		self.blockcount = g.rpc.blockcount
 
 	def format(self):
 		self.inputs.check_coin_mismatch()
@@ -717,75 +720,6 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def get_non_mmaddrs(self,desc):
 		return {i.addr for i in getattr(self,desc) if not i.mmid}
-
-	def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
-
-		if self.marked_signed():
-			msg('Transaction is already signed!')
-			return False
-
-		if not self.check_correct_chain(on_fail='return'):
-			return False
-
-		if (self.has_segwit_inputs() or self.has_segwit_outputs()) and not g.proto.cap('segwit'):
-			ymsg("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin))
-			return False
-
-		self.check_pubkey_scripts()
-
-		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys),g.proto.daemon_name))
-
-		if self.has_segwit_inputs():
-			from .addr import KeyGenerator,AddrGenerator
-			kg = KeyGenerator('std')
-			ag = AddrGenerator('segwit')
-			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
-
-		sig_data = []
-		for d in self.inputs:
-			e = {k:getattr(d,k) for k in ('txid','vout','scriptPubKey','amt')}
-			e['amount'] = e['amt']
-			del e['amt']
-			if d.mmid and d.mmid.mmtype == 'S':
-				e['redeemScript'] = ag.to_segwit_redeem_script(kg.to_pubhex(keydict[d.addr]))
-			sig_data.append(e)
-
-		msg_r('Signing transaction{}...'.format(tx_num_str))
-		wifs = [d.sec.wif for d in keys]
-
-		try:
-			ret = g.rpc.signrawtransactionwithkey(self.hex,wifs,sig_data,g.proto.sighash_type) \
-				if 'sign_with_key' in g.rpc.caps else \
-					g.rpc.signrawtransaction(self.hex,sig_data,wifs,g.proto.sighash_type)
-		except Exception as e:
-			msg(yellow('This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
-				if 'Invalid sighash param' in e.args[0] else e.args[0]))
-			return False
-
-		if not ret['complete']:
-			msg('failed\n{} returned the following errors:'.format(g.proto.daemon_name.capitalize()))
-			msg(repr(ret['errors']))
-			return False
-
-		try:
-			self.hex = HexStr(ret['hex'])
-			self.compare_size_and_estimated_size()
-			dt = DeserializedTX(self.hex)
-			self.check_hex_tx_matches_mmgen_tx(dt)
-			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
-			self.check_sigs(dt)
-			if not self.coin_txid == g.rpc.decoderawtransaction(ret['hex'])['txid']:
-				raise BadMMGenTxID('txid mismatch (after signing)')
-			msg('OK')
-			return True
-		except Exception as e:
-			try: m = '{}'.format(e.args[0])
-			except: m = repr(e.args[0])
-			msg('\n'+yellow(m))
-			if g.traceback:
-				import traceback
-				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
-			return False
 
 	def mark_raw(self):
 		self.desc = 'transaction'
@@ -874,38 +808,45 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def has_segwit_outputs(self):
 		return any(o.mmid and o.mmid.mmtype in ('S','B') for o in self.outputs)
 
-	def get_status(self,status=False):
+	async def get_status(self,status=False):
 
 		class r(object): pass
 
-		def is_in_wallet():
-			ret = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
+		async def is_in_wallet():
+			try: ret = await g.rpc.call('gettransaction',self.coin_txid)
+			except: return False
 			if 'confirmations' in ret and ret['confirmations'] > 0:
 				r.confs = ret['confirmations']
 				return True
 			else:
 				return False
 
-		def is_in_utxos():
-			return 'txid' in g.rpc.getrawtransaction(self.coin_txid,True,on_fail='silent')
+		async def is_in_utxos():
+			try: return 'txid' in await g.rpc.call('getrawtransaction',self.coin_txid,True)
+			except: return False
 
-		def is_in_mempool():
-			return 'height' in g.rpc.getmempoolentry(self.coin_txid,on_fail='silent')
+		async def is_in_mempool():
+			try: return 'height' in await g.rpc.call('getmempoolentry',self.coin_txid)
+			except: return False
 
-		def is_replaced():
-			if is_in_mempool(): return False
-			ret = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
-
-			if not 'bip125-replaceable' in ret or not 'confirmations' in ret or ret['confirmations'] > 0:
+		async def is_replaced():
+			if await is_in_mempool():
 				return False
+			try:
+				ret = await g.rpc.call('gettransaction',self.coin_txid)
+			except:
+				return False
+			else:
+				if 'bip125-replaceable' in ret and 'confirmations' in ret and ret['confirmations'] <= 0:
+					r.replacing_confs = -ret['confirmations']
+					r.replacing_txs = ret['walletconflicts']
+					return True
+				else:
+					return False
 
-			r.replacing_confs = -ret['confirmations']
-			r.replacing_txs = ret['walletconflicts']
-			return True
-
-		if is_in_mempool():
+		if await is_in_mempool():
 			if status:
-				d = g.rpc.gettransaction(self.coin_txid,on_fail='silent')
+				d = await g.rpc.call('gettransaction',self.coin_txid)
 				brs = 'bip125-replaceable'
 				rep = '{}replaceable'.format(('NOT ','')[brs in d and d[brs]=='yes'])
 				t = d['timereceived']
@@ -917,22 +858,23 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 					msg('TX status: in mempool, {}\n{}'.format(rep,b))
 			else:
 				msg('Warning: transaction is in mempool!')
-		elif is_in_wallet():
+		elif await is_in_wallet():
 			die(0,'Transaction has {} confirmation{}'.format(r.confs,suf(r.confs)))
-		elif is_in_utxos():
+		elif await is_in_utxos():
 			die(2,red('ERROR: transaction is in the blockchain (but not in the tracking wallet)!'))
-		elif is_replaced():
-			m1 = 'Transaction has been replaced'
-			m2 = 'Replacement transaction is in mempool'
-			rc = r.replacing_confs
-			if rc:
-				m2 = 'Replacement transaction has {} confirmation{}'.format(rc,suf(rc))
-			msg('{}\n{}'.format(m1,m2))
+		elif await is_replaced():
+			msg('Transaction has been replaced\nReplacement transaction ' + (
+					f'has {r.replacing_confs} confirmation{suf(r.replacing_confs)}'
+				if r.replacing_confs else
+					'is in mempool' ))
 			if not opt.quiet:
 				msg('Replacing transactions:')
-				d = ((t,g.rpc.getmempoolentry(t,on_fail='silent')) for t in r.replacing_txs)
-				for txid,mp_entry in d:
-					msg('  {}{}'.format(txid,' in mempool' if ('height' in mp_entry) else ''))
+				d = []
+				for txid in r.replacing_txs:
+					try:    d.append(await g.rpc.call('getmempoolentry',txid))
+					except: d.append({})
+				for txid,mp_entry in zip(r.replacing_txs,d):
+					msg(f'  {txid}' + ('',' in mempool')['height' in mp_entry])
 			die(0,'')
 
 	def confirm_send(self):
@@ -942,8 +884,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		confirm_or_raise(m1,m2,m3)
 		msg('Sending transaction')
 
-	def send(self,prompt_user=True,exit_on_fail=False):
-
+	async def send(self,prompt_user=True,exit_on_fail=False):
 		if not self.marked_signed():
 			die(1,'Transaction is not signed!')
 
@@ -961,15 +902,21 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
 				self.get_fee_from_tx(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
 
-		self.get_status()
+		await self.get_status()
 
-		if prompt_user: self.confirm_send()
+		if prompt_user:
+			self.confirm_send()
 
-		ret = None if g.bogus_send else g.rpc.sendrawtransaction(self.hex,on_fail='return')
+		if g.bogus_send:
+			ret = None
+		else:
+			try:
+				ret = await g.rpc.call('sendrawtransaction',self.hex)
+			except Exception as e:
+				ret = False
 
-		from .rpc import rpc_error,rpc_errmsg
-		if rpc_error(ret):
-			errmsg = rpc_errmsg(ret)
+		if ret == False:
+			errmsg = e
 			if 'Signature must use SIGHASH_FORKID' in errmsg:
 				m  = 'The Aug. 1 2017 UAHF has activated on this chain.'
 				m += "\nRe-run the script with the --coin=bch option."
@@ -1061,7 +1008,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 				msg('')
 
 #	def is_replaceable_from_rpc(self):
-#		dec_tx = g.rpc.decoderawtransaction(self.hex)
+#		dec_tx = await g.rpc.call('decoderawtransaction',self.hex)
 #		return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
 
 	def is_replaceable(self):
@@ -1138,8 +1085,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		blockcount = None
 		if g.proto.base_coin != 'ETH':
 			try:
-				rpc_init()
-				blockcount = self.get_blockcount()
+				blockcount = g.rpc.blockcount
 			except:
 				pass
 
@@ -1186,6 +1132,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def check_txfile_hex_data(self):
 		self.hex = HexStr(self.hex,on_fail='raise')
+
+	def parse_txfile_hex_data(self):
+		pass
 
 	def parse_tx_file(self,infile,metadata_only=False,quiet_open=False):
 
@@ -1271,6 +1220,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 			desc = 'transaction file hex data'
 			self.check_txfile_hex_data()
+			desc = f'transaction file {self.hexdata_type} data'
+			self.parse_txfile_hex_data()
 			# the following ops will all fail if g.coin doesn't match self.coin
 			desc = 'coin type in metadata'
 			assert self.coin == g.coin,self.coin
@@ -1286,7 +1237,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			self.chain = 'mainnet'
 
 		if self.dcoin:
-			self.resolve_g_token_from_tx_file()
+			self.resolve_g_token_from_txfile()
+			g.dcoin = self.dcoin
 
 	def process_cmd_arg(self,arg,ad_f,ad_w):
 
@@ -1320,8 +1272,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if not self.outputs:
 			die(2,'At least one output must be specified on the command line')
 
-	def get_outputs_from_cmdline(self,cmd_args):
-		from .addr import AddrList,AddrData
+	async def get_outputs_from_cmdline(self,cmd_args):
+		from .addr import AddrList,AddrData,TwAddrData
 		addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
 		cmd_args = set(cmd_args) - set(addrfiles)
 
@@ -1330,7 +1282,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			check_infile(a)
 			ad_f.add(AddrList(a))
 
-		ad_w = AddrData(source='tw',wallet=self.twuo.wallet)
+		ad_w = await TwAddrData(wallet=self.tw)
 
 		self.process_cmd_args(cmd_args,ad_f,ad_w)
 
@@ -1349,7 +1301,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 					msg('Unspent output number must be <= {}'.format(len(unspent)))
 
 	# we don't know fee yet, so perform preliminary check with fee == 0
-	def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
+	async def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
 		if self.twuo.total < self.send_amt:
 			msg(self.msg_wallet_low_coin.format(self.send_amt-inputs_sum,g.dcoin))
 			return False
@@ -1358,7 +1310,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			return False
 		return True
 
-	def get_change_amt(self):
+	async def get_change_amt(self):
 		return self.sum_inputs() - self.send_amt - self.fee
 
 	def warn_insufficient_chg(self,change_amt):
@@ -1394,11 +1346,11 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		return set(sel_nums) # silently discard duplicates
 
-	def get_cmdline_input_addrs(self):
+	async def get_cmdline_input_addrs(self):
 		# Bitcoin full node, call doesn't go to the network, so just call listunspent with addrs=[]
 		return []
 
-	def get_inputs_from_user(self):
+	async def get_inputs_from_user(self):
 
 		while True:
 			us_f = self.select_unspent_cmdline if opt.inputs else self.select_unspent
@@ -1408,7 +1360,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.unspent[i-1] for i in sel_nums])
 
 			inputs_sum = sum(s.amt for s in sel_unspent)
-			if not self.precheck_sufficient_funds(inputs_sum,sel_unspent):
+			if not await self.precheck_sufficient_funds(inputs_sum,sel_unspent):
 				continue
 
 			non_mmaddrs = [i for i in sel_unspent if i.twmmid.type == 'non-mmgen']
@@ -1420,9 +1372,9 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 			self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 
-			self.fee = self.get_fee_from_user()
+			self.fee = await self.get_fee_from_user()
 
-			change_amt = self.get_change_amt()
+			change_amt = await self.get_change_amt()
 
 			if change_amt >= 0:
 				p = self.final_inputs_ok_msg(change_amt)
@@ -1439,27 +1391,34 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if not self.send_amt:
 			self.send_amt = change_amt
 
-	def create(self,cmd_args,locktime,do_info=False):
+	async def set_token_params(self):
+		pass
+
+	async def create(self,cmd_args,locktime,do_info=False):
 		assert isinstance(locktime,int),'locktime must be of type int'
 
-		if opt.comment_file: self.add_comment(opt.comment_file)
-
-		twuo_addrs = self.get_cmdline_input_addrs()
-
 		from .tw import TwUnspentOutputs
-		self.twuo = TwUnspentOutputs(minconf=opt.minconf,addrs=twuo_addrs)
+
+		if opt.comment_file:
+			self.add_comment(opt.comment_file)
+
+		twuo_addrs = await self.get_cmdline_input_addrs()
+
+		self.twuo = await TwUnspentOutputs(minconf=opt.minconf,addrs=twuo_addrs)
+		await self.twuo.get_unspent_data()
 
 		if not do_info:
-			self.get_outputs_from_cmdline(cmd_args)
+			await self.get_outputs_from_cmdline(cmd_args)
 
 		do_license_msg()
 
 		if not opt.inputs:
-			self.twuo.view_and_sort(self)
+			await self.twuo.view_and_sort(self)
 
 		self.twuo.display_total()
 
 		if do_info:
+			del self.twuo.wallet
 			sys.exit(0)
 
 		self.send_amt = self.sum_outputs()
@@ -1468,7 +1427,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 			('Unknown','{} {}'.format(self.send_amt.hl(),g.dcoin))[bool(self.send_amt)]
 		))
 
-		change_amt = self.get_inputs_from_user()
+		change_amt = await self.get_inputs_from_user()
 
 		self.update_change_output(change_amt)
 		self.update_send_amt(change_amt)
@@ -1482,7 +1441,8 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if not opt.yes:
 			self.add_comment()  # edits an existing comment
-		self.create_raw()       # creates self.hex, self.txid
+
+		await self.create_raw()       # creates self.hex, self.txid
 
 		if g.proto.base_proto == 'Bitcoin' and locktime:
 			msg('Setting nlocktime to {}!'.format(strfmt_locktime(locktime)))
@@ -1501,9 +1461,85 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 		if not opt.yes:
 			self.view_with_prompt('View decoded transaction?')
 
-		del self.twuo
+		del self.twuo.wallet
 
-class MMGenBumpTX(MMGenTX):
+class MMGenTxForSigning(MMGenTX):
+
+	hexdata_type = 'json'
+
+	def __new__(cls,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,'tx','MMGenTxForSigning'))
+
+	async def sign(self,tx_num_str,keys): # return True or False; don't exit or raise exception
+
+		if self.marked_signed():
+			msg('Transaction is already signed!')
+			return False
+
+		if not self.check_correct_chain(on_fail='return'):
+			return False
+
+		if (self.has_segwit_inputs() or self.has_segwit_outputs()) and not g.proto.cap('segwit'):
+			ymsg("TX has Segwit inputs or outputs, but {} doesn't support Segwit!".format(g.coin))
+			return False
+
+		self.check_pubkey_scripts()
+
+		qmsg('Passing {} key{} to {}'.format(len(keys),suf(keys),g.proto.daemon_name))
+
+		if self.has_segwit_inputs():
+			from .addr import KeyGenerator,AddrGenerator
+			kg = KeyGenerator('std')
+			ag = AddrGenerator('segwit')
+			keydict = MMGenDict([(d.addr,d.sec) for d in keys])
+
+		sig_data = []
+		for d in self.inputs:
+			e = {k:getattr(d,k) for k in ('txid','vout','scriptPubKey','amt')}
+			e['amount'] = e['amt']
+			del e['amt']
+			if d.mmid and d.mmid.mmtype == 'S':
+				e['redeemScript'] = ag.to_segwit_redeem_script(kg.to_pubhex(keydict[d.addr]))
+			sig_data.append(e)
+
+		msg_r('Signing transaction{}...'.format(tx_num_str))
+		wifs = [d.sec.wif for d in keys]
+
+		try:
+			args = (
+				('signrawtransaction',self.hex,sig_data,wifs,g.proto.sighash_type),
+				('signrawtransactionwithkey',self.hex,wifs,sig_data,g.proto.sighash_type)
+			)['sign_with_key' in g.rpc.caps]
+			ret = await g.rpc.call(*args)
+		except Exception as e:
+			msg(yellow((
+				e.args[0],
+				'This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
+			)['Invalid sighash param' in e.args[0]]))
+			return False
+
+		try:
+			self.hex = HexStr(ret['hex'])
+			tx_decoded = await g.rpc.call('decoderawtransaction',ret['hex'])
+			self.compare_size_and_estimated_size(tx_decoded)
+			dt = DeserializedTX(self.hex)
+			self.check_hex_tx_matches_mmgen_tx(dt)
+			self.coin_txid = CoinTxID(dt['txid'],on_fail='raise')
+			self.check_sigs(dt)
+			if not self.coin_txid == tx_decoded['txid']:
+				raise BadMMGenTxID('txid mismatch (after signing)')
+			msg('OK')
+			return True
+		except Exception as e:
+			try: m = '{}'.format(e.args[0])
+			except: m = repr(e.args[0])
+			msg('\n'+yellow(m))
+			if g.traceback:
+				import traceback
+				ymsg('\n'+''.join(traceback.format_exception(*sys.exc_info())))
+			return False
+
+class MMGenBumpTX(MMGenTxForSigning):
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenTX.__new__(altcoin_subclass(cls,'tx','MMGenBumpTX'),*args,**kwargs)
@@ -1511,9 +1547,8 @@ class MMGenBumpTX(MMGenTX):
 	min_fee = None
 	bump_output_idx = None
 
-	def __init__(self,filename,send=False):
-
-		super().__init__(filename)
+	def __init__(self,filename,send=False,tw=None):
+		super().__init__(filename,tw=tw)
 
 		if not self.is_replaceable():
 			die(1,"Transaction '{}' is not replaceable".format(self.txid))
@@ -1576,8 +1611,9 @@ class MMGenBumpTX(MMGenTX):
 							self.bump_output_idx = idx
 							return idx
 
-	def set_min_fee(self):
-		self.min_fee = self.sum_inputs() - self.sum_outputs() + self.get_relay_fee()
+	@property
+	def min_fee(self):
+		return self.sum_inputs() - self.sum_outputs() + self.relay_fee
 
 	def update_fee(self,op_idx,fee):
 		amt = self.sum_inputs() - self.sum_outputs(exclude=op_idx) - fee
@@ -1598,10 +1634,10 @@ class MMGenBumpTX(MMGenTX):
 # NOT MAINTAINED
 class MMGenSplitTX(MMGenTX):
 
-	def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty
+	async def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty
 
-		from .addr import AddrData
-		ad_w = AddrData(source='tw')
+		from .addr import TwAddrData
+		ad_w = await TwAddrData()
 
 		if is_mmgen_id(mmid):
 			coin_addr = mmaddr2coinaddr(mmid,ad_w,None) if is_mmgen_id(mmid) else CoinAddr(mmid)
@@ -1620,17 +1656,12 @@ class MMGenSplitTX(MMGenTX):
 			g.rpc_host = opt.rpc_host2
 		if opt.tx_fees:
 			opt.tx_fee = opt.tx_fees.split(',')[1]
-		try:
-			rpc_init(reinit=True)
-		except:
-			ymsg('Connect to {} daemon failed.  Network fee estimation unavailable'.format(g.coin))
-			return self.get_usr_fee_interactive(opt.tx_fee,'User-selected')
 		return super().get_fee_from_user()
 
-	def create_split(self,mmid):
+	async def create_split(self,mmid):
 
 		self.outputs = self.MMGenTxOutputList()
-		self.get_outputs_from_cmdline(mmid)
+		await self.get_outputs_from_cmdline(mmid)
 
 		while True:
 			change_amt = self.sum_inputs() - self.get_split_fee_from_user()
@@ -1647,7 +1678,8 @@ class MMGenSplitTX(MMGenTX):
 
 		if not opt.yes:
 			self.add_comment()  # edits an existing comment
-		self.create_raw()       # creates self.hex, self.txid
+
+		await self.create_raw()       # creates self.hex, self.txid
 
 		self.add_timestamp()
 		self.add_blockcount() # TODO

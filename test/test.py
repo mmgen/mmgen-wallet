@@ -492,6 +492,7 @@ class CmdGroupMgr(object):
 	cmd_groups_extra = {
 		'autosign_btc':     ('TestSuiteAutosignBTC',{'modname':'autosign'}),
 		'autosign_live':    ('TestSuiteAutosignLive',{'modname':'autosign'}),
+		'autosign_live_simulate': ('TestSuiteAutosignLiveSimulate',{'modname':'autosign'}),
 		'create_ref_tx':    ('TestSuiteRefTX',{'modname':'misc','full_data':True}),
 	}
 
@@ -867,7 +868,10 @@ class TestSuiteRunner(object):
 			if k in cfg:
 				setattr(self.ts,k,cfg[k])
 
-		self.process_retval(cmd,getattr(self.ts,cmd)(*arg_list)) # run the test
+		ret = getattr(self.ts,cmd)(*arg_list) # run the test
+		if type(ret).__name__ == 'coroutine':
+			ret = run_session(ret)
+		self.process_retval(cmd,ret)
 
 		if opt.profile:
 			omsg('\r\033[50C{:.4f}'.format(time.time() - start))

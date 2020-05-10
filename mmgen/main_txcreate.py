@@ -78,9 +78,11 @@ cmd_args = opts.init(opts_data)
 
 g.use_cached_balances = opt.cached_balances
 
-rpc_init()
+async def main():
+	from .tx import MMGenTX
+	from .tw import TrackingWallet
+	tx = MMGenTX(tw=await TrackingWallet() if g.token else None)
+	await tx.create(cmd_args,int(opt.locktime or 0),do_info=opt.info)
+	tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)
 
-from .tx import MMGenTX
-tx = MMGenTX()
-tx.create(cmd_args,int(opt.locktime or 0),do_info=opt.info)
-tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)
+run_session(main())

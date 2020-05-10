@@ -20,6 +20,7 @@
 
 """
 mmgen-split: Split funds after a replayable chain fork using a timelocked transaction
+             UNMAINTAINED
 """
 
 import time
@@ -115,28 +116,27 @@ if opt.tx_fees:
 		opt.tx_fee = opt.tx_fees.split(',')[idx]
 		opts.opt_is_tx_fee('foo',opt.tx_fee,'transaction fee') # raises exception on error
 
-rpc_init(reinit=True)
-
 tx1 = MMGenSplitTX()
 opt.no_blank = True
 
-gmsg("Creating timelocked transaction for long chain ({})".format(g.coin))
-locktime = int(opt.locktime or 0) or g.rpc.getblockcount()
-tx1.create(mmids[0],locktime)
+async def main():
+	gmsg("Creating timelocked transaction for long chain ({})".format(g.coin))
+	locktime = int(opt.locktime or 0) or await g.rpc.call('getblockcount')
+	tx1.create(mmids[0],locktime)
 
-tx1.format()
-tx1.create_fn()
+	tx1.format()
+	tx1.create_fn()
 
-gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
+	gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
 
-init_coin(opt.other_coin)
+	init_coin(opt.other_coin)
 
-tx2 = MMGenSplitTX()
-tx2.inputs = tx1.inputs
-tx2.inputs.convert_coin()
+	tx2 = MMGenSplitTX()
+	tx2.inputs = tx1.inputs
+	tx2.inputs.convert_coin()
 
-tx2.create_split(mmids[1])
+	tx2.create_split(mmids[1])
 
-for tx,desc in ((tx1,'Long chain (timelocked)'),(tx2,'Short chain')):
-	tx.desc = desc + ' transaction'
-	tx.write_to_file(ask_write=False,ask_overwrite=not opt.yes,ask_write_default_yes=False)
+	for tx,desc in ((tx1,'Long chain (timelocked)'),(tx2,'Short chain')):
+		tx.desc = desc + ' transaction'
+		tx.write_to_file(ask_write=False,ask_overwrite=not opt.yes,ask_write_default_yes=False)

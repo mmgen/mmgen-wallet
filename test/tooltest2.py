@@ -759,7 +759,10 @@ tests = {
 			'ltc_testnet': [ ( ['test/ref/litecoin/A5A1E0-LTC[1454.64322,1453,tl=1320969600].testnet.rawtx'],
 									None ), ],
 			'eth_mainnet': [ ( ['test/ref/ethereum/88FEFD-ETH[23.45495,40000].rawtx'], None ), ],
-			'eth_testnet': [ ( ['test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.rawtx'], None ), ],
+			'eth_testnet': [ ( [
+				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.rawtx',
+				'test/ref/ethereum/B472BD-ETH[23.45495,40000].testnet.sigtx'
+				], None ), ],
 			'mm1_mainnet': [ ( ['test/ref/ethereum/5881D2-MM1[1.23456,50000].rawtx'], None ), ],
 			'mm1_testnet': [ ( ['test/ref/ethereum/6BDB25-MM1[1.23456,50000].testnet.rawtx'], None ), ],
 			'etc_mainnet': [ ( ['test/ref/ethereum_classic/ED3848-ETC[1.2345,40000].rawtx'], None ), ],

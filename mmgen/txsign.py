@@ -139,7 +139,7 @@ def get_keylist(opt):
 		return kal
 	return None
 
-def txsign(tx,seed_files,kl,kal,tx_num_str=''):
+async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 
 	keys = MMGenList() # list of AddrListEntry objects
 	non_mm_addrs = tx.get_non_mmaddrs('inputs')
@@ -169,4 +169,4 @@ def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 	if extra_sids:
 		msg('Unused Seed ID{}: {}'.format(suf(extra_sids),' '.join(extra_sids)))
 
-	return tx.sign(tx_num_str,keys) # returns True or False
+	return await tx.sign(tx_num_str,keys) # returns True or False

@@ -1023,10 +1023,8 @@ re-import your addresses.
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'))
 
-	def __init__(self,source=None,wallet=None):
+	def __init__(self,*args,**kwargs):
 		self.al_ids = {}
-		if source == 'tw':
-			self.add_tw_data(wallet)
 
 	def seed_ids(self):
 		return list(self.al_ids.keys())
@@ -1048,30 +1046,34 @@ re-import your addresses.
 		return (list(d.values())[0][0]) if d else None
 
 	@classmethod
-	def get_tw_data(cls,wallet=None):
+	async def get_tw_data(cls,wallet=None):
 		vmsg('Getting address data from tracking wallet')
 		if 'label_api' in g.rpc.caps:
-			accts = g.rpc.listlabels()
-			alists = [list(a.keys()) for a in g.rpc.getaddressesbylabel([[k] for k in accts],batch=True)]
+			accts = await g.rpc.call('listlabels')
+			ll = await g.rpc.batch_call('getaddressesbylabel',[(k,) for k in accts])
+			alists = [list(a.keys()) for a in ll]
 		else:
-			accts = g.rpc.listaccounts(0,True)
-			alists = g.rpc.getaddressesbyaccount([[k] for k in accts],batch=True)
+			accts = await g.rpc.call('listaccounts',0,True)
+			alists = await g.rpc.batch_call('getaddressesbyaccount',[(k,) for k in accts])
 		return list(zip(accts,alists))
 
-	def add_tw_data(self,wallet):
-		d,out,i = self.get_tw_data(wallet),{},0
-		for acct,addr_array in d:
+	async def add_tw_data(self,wallet):
+
+		twd = await type(self).get_tw_data(wallet)
+		out,i = {},0
+		for acct,addr_array in twd:
 			l = TwLabel(acct,on_fail='silent')
 			if l and l.mmid.type == 'mmgen':
 				obj = l.mmid.obj
-				i += 1
 				if len(addr_array) != 1:
 					die(2,self.msgs['too_many_acct_addresses'].format(acct))
 				al_id = AddrListID(SeedID(sid=obj.sid),MMGenAddrType(obj.mmtype))
 				if al_id not in out:
 					out[al_id] = []
 				out[al_id].append(AddrListEntry(idx=obj.idx,addr=addr_array[0],label=l.comment))
-		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(d)))
+				i += 1
+
+		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(twd)))
 		for al_id in out:
 			self.add(AddrList(al_id=al_id,adata=AddrListList(sorted(out[al_id],key=lambda a: a.idx))))
 
@@ -1087,3 +1089,15 @@ re-import your addresses.
 		for al_id in self.al_ids:
 			d.update(self.al_ids[al_id].make_reverse_dict(coinaddrs))
 		return d
+
+class TwAddrData(AddrData,metaclass=aInitMeta):
+
+	def __new__(cls,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwAddrData'))
+
+	def __init__(self,*args,**kwargs):
+		pass
+
+	async def __ainit__(self,wallet=None):
+		self.al_ids = {}
+		await self.add_tw_data(wallet)

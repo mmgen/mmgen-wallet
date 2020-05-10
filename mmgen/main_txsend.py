@@ -40,8 +40,6 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-rpc_init()
-
 if len(cmd_args) == 1:
 	infile = cmd_args[0]; check_infile(infile)
 else:
@@ -52,22 +50,33 @@ if not opt.status:
 
 from .tx import *
 
-tx = MMGenTX(infile,quiet_open=True) # sig check performed here
-vmsg("Signed transaction file '{}' is valid".format(infile))
+async def main():
 
-if not tx.marked_signed():
-	die(1,'Transaction is not signed!')
+	from .tw import TrackingWallet
+	tx = MMGenTX(infile,quiet_open=True,tw=await TrackingWallet() if g.token else None)
 
-if opt.status:
-	if tx.coin_txid: qmsg('{} txid: {}'.format(g.coin,tx.coin_txid.hl()))
-	tx.get_status(status=True)
-	sys.exit(0)
+	if g.token:
+		from .tw import TrackingWallet
+		tx.tw = await TrackingWallet()
 
-if not opt.yes:
-	tx.view_with_prompt('View transaction data?')
-	if tx.add_comment(): # edits an existing comment, returns true if changed
-		tx.write_to_file(ask_write_default_yes=True)
+	vmsg("Signed transaction file '{}' is valid".format(infile))
 
-tx.send(exit_on_fail=True)
-tx.write_to_file(ask_overwrite=False,ask_write=False)
-tx.print_contract_addr()
+	if not tx.marked_signed():
+		die(1,'Transaction is not signed!')
+
+	if opt.status:
+		if tx.coin_txid:
+			qmsg('{} txid: {}'.format(g.coin,tx.coin_txid.hl()))
+		await tx.get_status(status=True)
+		sys.exit(0)
+
+	if not opt.yes:
+		tx.view_with_prompt('View transaction data?')
+		if tx.add_comment(): # edits an existing comment, returns true if changed
+			tx.write_to_file(ask_write_default_yes=True)
+
+	await tx.send(exit_on_fail=True)
+	tx.write_to_file(ask_overwrite=False,ask_write=False)
+	tx.print_contract_addr()
+
+run_session(main())

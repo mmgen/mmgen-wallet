@@ -25,7 +25,7 @@ from . import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
-from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt
+from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt,aInitMeta
 from mmgen.util import msg
 
 try:
@@ -39,21 +39,7 @@ def parse_abi(s):
 
 def create_method_id(sig): return keccak_256(sig.encode()).hexdigest()[:8]
 
-class Token(MMGenObject): # ERC20
-
-	_decimals = None
-
-	# Test that token is in the blockchain by calling constructor w/o decimals arg
-	def __init__(self,addr,decimals=None):
-		self.addr = TokenAddr(addr)
-		if decimals:
-			self._decimals = decimals
-		else:
-			rpc_init()
-			self.decimals()
-		if not self._decimals:
-			raise TokenNotInBlockchain("Token '{}' not in blockchain".format(addr))
-		self.base_unit = Decimal('10') ** -self._decimals
+class TokenBase(MMGenObject): # ERC20
 
 	@staticmethod
 	def transferdata2sendaddr(data): # online
@@ -62,53 +48,50 @@ class Token(MMGenObject): # ERC20
 	def transferdata2amt(self,data): # online
 		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
 
-	def do_call(self,method_sig,method_args='',toUnit=False):
+	async def do_call(self,method_sig,method_args='',toUnit=False):
 		data = create_method_id(method_sig) + method_args
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
-		ret = g.rpc.eth_call({ 'to': '0x'+self.addr, 'data': '0x'+data })
+		ret = await g.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data })
 		if toUnit:
 			return int(ret,16) * self.base_unit
 		else:
 			return ret
 
-	def balance(self,acct_addr):
-		return ETHAmt(self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
+	async def get_balance(self,acct_addr):
+		return ETHAmt(await self.do_call('balanceOf(address)',acct_addr.rjust(64,'0'),toUnit=True))
 
 	def strip(self,s):
 		return ''.join([chr(b) for b in s if 32 <= b <= 127]).strip()
 
-	# TODO: make these properties
-	def decimals(self):
-		if self._decimals == None:
-			res = self.do_call('decimals()')
-			try:
-				assert res[:2] == '0x'
-				self._decimals = int(res[2:],16)
-			except:
-				msg("RPC call to decimals() failed (returned '{}')".format(res))
-				return None
-		return self._decimals
+	async def get_name(self):
+		return self.strip(bytes.fromhex((await self.do_call('name()'))[2:]))
 
-	def name(self):
-		return self.strip(bytes.fromhex(self.do_call('name()')[2:]))
+	async def get_symbol(self):
+		return self.strip(bytes.fromhex((await self.do_call('symbol()'))[2:]))
 
-	def symbol(self):
-		return self.strip(bytes.fromhex(self.do_call('symbol()')[2:]))
+	async def get_decimals(self):
+		ret = await self.do_call('decimals()')
+		try:
+			assert ret[:2] == '0x'
+			return int(ret,16)
+		except:
+			msg("RPC call to decimals() failed (returned '{}')".format(ret))
+			return None
 
-	def total_supply(self):
-		return self.do_call('totalSupply()',toUnit=True)
+	async def get_total_supply(self):
+		return await self.do_call('totalSupply()',toUnit=True)
 
-	def info(self):
+	async def info(self):
 		fs = '{:15}{}\n' * 5
 		return fs.format('token address:', self.addr,
-						'token symbol:',   self.symbol(),
-						'token name:',     self.name(),
-						'decimals:',       self.decimals(),
-						'total supply:',   self.total_supply())
+						'token symbol:',   await self.get_symbol(),
+						'token name:',     await self.get_name(),
+						'decimals:',       self.decimals,
+						'total supply:',   await self.get_total_supply())
 
-	def code(self):
-		return g.rpc.eth_getCode('0x'+self.addr)[2:]
+	async def code(self):
+		return (await g.rpc.call('eth_getCode','0x'+self.addr))[2:]
 
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
@@ -126,13 +109,13 @@ class Token(MMGenObject): # ERC20
 				'nonce':    nonce,
 				'data':     bytes.fromhex(data) }
 
-	def txsign(self,tx_in,key,from_addr,chain_id=None):
+	async def txsign(self,tx_in,key,from_addr,chain_id=None):
 
 		from .pyethereum.transactions import Transaction
 
 		if chain_id is None:
 			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpc.caps]
-			chain_id = int(g.rpc.request(chain_id_method),16)
+			chain_id = int(await g.rpc.call(chain_id_method),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = rlp.encode(tx).hex()
 		coin_txid = CoinTxID(tx.hash.hex())
@@ -147,18 +130,38 @@ class Token(MMGenObject): # ERC20
 
 # The following are used for token deployment only:
 
-	def txsend(self,hex_tx):
-		return g.rpc.eth_sendRawTransaction('0x'+hex_tx).replace('0x','',1)
+	async def txsend(self,hex_tx):
+		return (await g.rpc.call('eth_sendRawTransaction','0x'+hex_tx)).replace('0x','',1)
 
-	def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
+	async def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
 					from_addr2=None,
 					return_data=False):
 		tx_in = self.make_tx_in(
 					from_addr,to_addr,amt,
 					start_gas,gasPrice,
-					nonce = int(g.rpc.parity_nextNonce('0x'+from_addr),16),
+					nonce = int(await g.rpc.call('parity_nextNonce','0x'+from_addr),16),
 					method_sig = method_sig,
 					from_addr2 = from_addr2 )
-		(hex_tx,coin_txid) = self.txsign(tx_in,key,from_addr)
-		return self.txsend(hex_tx)
+		(hex_tx,coin_txid) = await self.txsign(tx_in,key,from_addr)
+		return await self.txsend(hex_tx)
+
+class Token(TokenBase):
+
+	def __init__(self,addr,decimals):
+		self.addr = TokenAddr(addr)
+		assert isinstance(decimals,int),f'decimals param must be int instance, not {type(decimals)}'
+		self.decimals = decimals
+		self.base_unit = Decimal('10') ** -self.decimals
+
+class TokenResolve(TokenBase,metaclass=aInitMeta):
+
+	def __init__(self,addr):
+		return super().__init__()
+
+	async def __ainit__(self,addr):
+		self.addr = TokenAddr(addr)
+		decimals = await self.get_decimals() # requires self.addr!
+		if not decimals:
+			raise TokenNotInBlockchain(f'Token {addr!r} not in blockchain')
+		Token.__init__(self,addr,decimals)

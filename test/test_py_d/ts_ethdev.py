@@ -211,7 +211,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_addrgen',        'generating token addresses'),
 		('token_addrimport_badaddr1','importing token addresses (no token address)'),
 		('token_addrimport_badaddr2','importing token addresses (bad token address)'),
-		('token_addrimport',    'importing token addresses'),
+		('token_addrimport',     'importing token addresses'),
+		('token_addrimport_batch','importing token addresses (dummy batch mode)'),
 
 		('bal7',                'the {} balance'.format(g.coin)),
 		('token_bal1',          'the {} balance and token balance'.format(g.coin)),
@@ -351,7 +352,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrimport(self,ext='21-23]{}.addrs',expect='9/9',add_args=[],bad_input=False):
 		ext = ext.format('-α' if g.debug_utf8 else '')
 		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
-		t = self.spawn('mmgen-addrimport', self.eth_args[1:] + add_args + [fn])
+		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn])
 		if bad_input:
 			t.read()
 			return t
@@ -507,9 +508,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
 		for b in token_bals[n]:
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
-			if adj and g.coin == 'ETC': _amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
+			if adj and g.coin == 'ETC':
+				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
 			pat = r'{}\s+{}\s+{}\s'.format(addr,_amt1.replace('.',r'\.'),_amt2.replace('.',r'\.'))
 			t.expect(pat,regex=True)
+		t.expect('Total MM1:')
 		t.read()
 		return t
 
@@ -577,12 +580,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		token_data = { 'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10 }
 		return self.token_compile(token_data)
 
-	def _rpc_init(self):
-		g.proto.rpc_port = self.rpc_port
-		rpc_init()
-
-	def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
-		self._rpc_init()
+	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		keyfile = joinpath(self.tmpdir,parity_key_fn)
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
 		os.environ['MMGEN_BOGUS_SEND'] = ''
@@ -609,62 +607,63 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			bogus_send=False)
 		addr = t.expect_getend('Contract address: ')
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		assert etx.get_exec_status(txid,True) != 0,(
+		assert (await etx.get_exec_status(txid,True)) != 0,(
 			"Contract '{}:{}' failed to execute. Aborting".format(num,key))
 		if key == 'Token':
 			self.write_to_tmpfile('token_addr{}'.format(num),addr+'\n')
 			imsg('\nToken MM{} deployed!'.format(num))
 		return t
 
-	def token_deploy1a(self): return self.token_deploy(num=1,key='SafeMath',gas=200000)
-	def token_deploy1b(self): return self.token_deploy(num=1,key='Owned',gas=250000)
-	def token_deploy1c(self): return self.token_deploy(num=1,key='Token',gas=1100000,tx_fee='7G')
+	async def token_deploy1a(self): return await self.token_deploy(num=1,key='SafeMath',gas=200000)
+	async def token_deploy1b(self): return await self.token_deploy(num=1,key='Owned',gas=250000)
+	async def token_deploy1c(self): return await self.token_deploy(num=1,key='Token',gas=1100000,tx_fee='7G')
 
 	def tx_status2(self):
 		return self.tx_status(ext=g.coin+'[0,7000]{}.sigtx',expect_str='successfully executed')
 
 	def bal6(self): return self.bal5()
 
-	def token_deploy2a(self): return self.token_deploy(num=2,key='SafeMath',gas=200000)
-	def token_deploy2b(self): return self.token_deploy(num=2,key='Owned',gas=250000)
-	def token_deploy2c(self): return self.token_deploy(num=2,key='Token',gas=1100000)
+	async def token_deploy2a(self): return await self.token_deploy(num=2,key='SafeMath',gas=200000)
+	async def token_deploy2b(self): return await self.token_deploy(num=2,key='Owned',gas=250000)
+	async def token_deploy2c(self): return await self.token_deploy(num=2,key='Token',gas=1100000)
 
-	def contract_deploy(self): # test create,sign,send
-		return self.token_deploy(num=2,key='SafeMath',gas=1100000,mmgen_cmd='txcreate')
+	async def contract_deploy(self): # test create,sign,send
+		return await self.token_deploy(num=2,key='SafeMath',gas=1100000,mmgen_cmd='txcreate')
 
-	def token_transfer_ops(self,op,amt=1000):
+	async def token_transfer_ops(self,op,amt=1000):
 		self.spawn('',msg_only=True)
 		sid = dfl_sid
 		from mmgen.tool import MMGenToolCmdWallet
 		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
 		usr_addrs = [MMGenToolCmdWallet().gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
-		self._rpc_init()
 
-		from mmgen.altcoins.eth.contract import Token
+		from mmgen.altcoins.eth.contract import TokenResolve
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
-		def do_transfer():
+		async def do_transfer():
 			for i in range(2):
-				tk = Token(self.read_from_tmpfile('token_addr{}'.format(i+1)).strip())
-				imsg_r('\n'+tk.info())
-				imsg('dev token balance (pre-send): {}'.format(tk.balance(dfl_addr)))
+				tk = await TokenResolve(self.read_from_tmpfile('token_addr{}'.format(i+1)).strip())
+				imsg_r('\n' + await tk.info())
+				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_addr)))
 				imsg('Sending {} {} to address {} ({})'.format(amt,g.coin,usr_addrs[i],usr_mmaddrs[i]))
 				from mmgen.obj import ETHAmt
-				txid = tk.transfer( dfl_addr, usr_addrs[i], amt, dfl_privkey,
+				txid = await tk.transfer( dfl_addr, usr_addrs[i], amt, dfl_privkey,
 									start_gas = ETHAmt(60000,'wei'),
 									gasPrice  = ETHAmt(8,'Gwei') )
-				assert etx.get_exec_status(txid,True) != 0,'Transfer of token funds failed. Aborting'
+				assert (await etx.get_exec_status(txid,True)) != 0,'Transfer of token funds failed. Aborting'
 
-		def show_bals():
+		async def show_bals():
 			for i in range(2):
-				tk = Token(self.read_from_tmpfile('token_addr{}'.format(i+1)).strip())
-				imsg('Token: {}'.format(tk.symbol()))
-				imsg('dev token balance: {}'.format(tk.balance(dfl_addr)))
+				tk = await TokenResolve(self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				imsg('Token: {}'.format(await tk.get_symbol()))
+				imsg('dev token balance: {}'.format(await tk.get_balance(dfl_addr)))
 				imsg('usr token balance: {} ({} {})'.format(
-						tk.balance(usr_addrs[i]),usr_mmaddrs[i],usr_addrs[i]))
+						await tk.get_balance(usr_addrs[i]),usr_mmaddrs[i],usr_addrs[i]))
 
 		silence()
-		if op == 'show_bals': show_bals()
-		elif op == 'do_transfer': do_transfer()
+		if op == 'show_bals':
+			await show_bals()
+		elif op == 'do_transfer':
+			await do_transfer()
 		end_silence()
 		return 'ok'
 
@@ -689,14 +688,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.req_exit_val = 2
 		return t
 
-	def token_addrimport(self):
+	def token_addrimport(self,extra_args=[],expect='3/3'):
 		for n,r in ('1','11-13'),('2','21-23'):
 			tk_addr = self.read_from_tmpfile('token_addr'+n).strip()
-			t = self.addrimport(ext='['+r+']{}.addrs',expect='3/3',add_args=['--token='+tk_addr])
+			t = self.addrimport(ext='['+r+']{}.addrs',expect=expect,add_args=['--token='+tk_addr]+extra_args)
 			t.p.wait()
 			ok_msg()
 		t.skip_ok = True
 		return t
+
+	def token_addrimport_batch(self):
+		return self.token_addrimport(extra_args=['--batch'],expect='OK: 3')
 
 	def bal7(self):       return self.bal5()
 	def token_bal1(self): return self.token_bal(n='1')

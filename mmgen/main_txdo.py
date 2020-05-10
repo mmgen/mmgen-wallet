@@ -115,8 +115,6 @@ cmd_args = opts.init(opts_data)
 
 g.use_cached_balances = opt.cached_balances
 
-rpc_init()
-
 from .tx import *
 from .txsign import *
 
@@ -124,16 +122,23 @@ seed_files = get_seed_files(opt,cmd_args)
 
 kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
-if kl and kal: kl.remove_dup_keys(kal)
+if kl and kal:
+	kl.remove_dup_keys(kal)
 
-tx = MMGenTX(caller='txdo')
+async def main():
+	from .tw import TrackingWallet
+	tx1 = MMGenTX(caller='txdo',tw=await TrackingWallet() if g.token else None)
 
-tx.create(cmd_args,int(opt.locktime or 0))
+	await tx1.create(cmd_args,int(opt.locktime or 0))
 
-if txsign(tx,seed_files,kl,kal):
-	tx.write_to_file(ask_write=False)
-	tx.send(exit_on_fail=True)
-	tx.write_to_file(ask_overwrite=False,ask_write=False)
-	tx.print_contract_addr()
-else:
-	die(2,'Transaction could not be signed')
+	tx2 = MMGenTxForSigning(data=tx1.__dict__)
+
+	if await txsign(tx2,seed_files,kl,kal):
+		tx2.write_to_file(ask_write=False)
+		await tx2.send(exit_on_fail=True)
+		tx2.write_to_file(ask_overwrite=False,ask_write=False)
+		tx2.print_contract_addr()
+	else:
+		die(2,'Transaction could not be signed')
+
+run_session(main())

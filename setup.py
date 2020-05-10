@@ -114,6 +114,7 @@ setup(
 			'mmgen.filename',
 			'mmgen.globalvars',
 			'mmgen.keccak',
+			'mmgen.led',
 			'mmgen.license',
 			'mmgen.mn_electrum',
 			'mmgen.mn_entry',

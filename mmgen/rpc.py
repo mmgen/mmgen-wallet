@@ -20,217 +20,383 @@
 rpc.py:  Cryptocoin RPC library for the MMGen suite
 """
 
-import http.client,base64,json
+import base64,json,asyncio
 from decimal import Decimal
-
 from .common import *
+from .obj import aInitMeta
+
+rpc_credentials_msg = lambda: '\n'+fmt(f"""
+	Error: no {g.proto.name.capitalize()} RPC authentication method found
+
+	RPC credentials must be supplied using one of the following methods:
+
+	A) If daemon is local and running as same user as you:
+
+	   - no credentials required, or matching rpcuser/rpcpassword and
+	     rpc_user/rpc_password values in {g.proto.name}.conf and mmgen.cfg
+
+	B) If daemon is running remotely or as different user:
+
+	   - matching credentials in {g.proto.name}.conf and mmgen.cfg as described above
+
+	The --rpc-user/--rpc-password options may be supplied on the MMGen command line.
+	They override the corresponding values in mmgen.cfg. Set them to an empty string
+	to use cookie authentication with a local server when the options are set
+	in mmgen.cfg.
+
+	For better security, rpcauth should be used in {g.proto.name}.conf instead of
+	rpcuser/rpcpassword.
+
+""",strip_char='\t')
 
 def dmsg_rpc(fs,data=None,is_json=False):
 	if g.debug_rpc:
 		msg(fs if data == None else fs.format(pp_fmt(json.loads(data) if is_json else data)))
 
-class RPCConnection(MMGenObject):
+class json_encoder(json.JSONEncoder):
+	def default(self,obj):
+		if isinstance(obj,Decimal):
+			return str(obj)
+		else:
+			return json.JSONEncoder.default(self,obj)
 
-	auth = True
-	db_fs = '    host [{h}] port [{p}] user [{u}] passwd [{pw}] auth_cookie [{c}]\n'
-	http_hdrs = { 'Content-Type': 'application/json' }
+class RPCBackends:
 
-	def __init__(self,host=None,port=None,user=None,passwd=None,auth_cookie=None,socket_timeout=1):
+	class aiohttp:
+
+		def __init__(self,caller):
+			self.caller = caller
+			self.session = g.session
+			self.url = caller.url
+			self.timeout = caller.timeout
+			if caller.auth_type == 'basic':
+				import aiohttp
+				self.auth = aiohttp.BasicAuth(*caller.auth,encoding='UTF-8')
+			else:
+				self.auth = None
+
+		async def run(self,payload,timeout=None):
+			dmsg_rpc('\n    RPC PAYLOAD data (aiohttp) ==>\n{}\n',payload)
+			async with self.session.post(
+				url     = self.url,
+				auth    = self.auth,
+				data    = json.dumps(payload,cls=json_encoder),
+				timeout = timeout or self.timeout,
+			) as res:
+				return (await res.text(),res.status)
+
+	class requests:
+
+		def __init__(self,caller):
+			self.url = caller.url
+			self.timeout = caller.timeout
+			import requests,urllib3
+			urllib3.disable_warnings()
+			self.session = requests.Session()
+			self.session.headers = caller.http_hdrs
+			if caller.auth_type:
+				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
+				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
+
+		async def run(self,payload,timeout=None):
+			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
+			res = self.session.post(
+				url = self.url,
+				data = json.dumps(payload,cls=json_encoder),
+				timeout = timeout or self.timeout,
+				verify = False )
+			return (res.content,res.status_code)
+
+	class httplib:
+
+		def __init__(self,caller):
+			import http.client
+			self.session = http.client.HTTPConnection(caller.host,caller.port,caller.timeout)
+			self.http_hdrs = caller.http_hdrs
+			self.host = caller.host
+			self.port = caller.port
+			if caller.auth_type == 'basic':
+				auth_str = f'{caller.auth.user}:{caller.auth.passwd}'
+				auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
+				self.http_hdrs.update({ 'Host': self.host, 'Authorization': auth_str_b64 })
+				fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
+				dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
+
+		async def run(self,payload,timeout=None):
+			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
+			if timeout:
+				import http.client
+				s = http.client.HTTPConnection(self.host,self.port,timeout)
+			else:
+				s = self.session
+			try:
+				s.request(
+					method  = 'POST',
+					url     = '/',
+					body    = json.dumps(payload,cls=json_encoder),
+					headers = self.http_hdrs )
+				r = s.getresponse() # => http.client.HTTPResponse instance
+			except Exception as e:
+				raise RPCFailure(str(e))
+			return (r.read(),r.status)
+
+	class curl:
+
+		def __init__(self,caller):
+
+			def gen():
+				for k,v in caller.http_hdrs.items():
+					for s in ('--header',f'{k}: {v}'):
+						yield s
+				if caller.auth_type:
+					"""
+					Authentication with curl is insecure, as it exposes the user's credentials
+					via the command line.  Use for testing only.
+					"""
+					for s in ('--user',f'{caller.auth.user}:{caller.auth.passwd}'):
+						yield s
+				if caller.auth_type == 'digest':
+					yield '--digest'
+
+			self.url = caller.url
+			self.exec_opts = list(gen()) + ['--silent']
+			self.arg_max = 8192 # set way below system ARG_MAX, just to be safe
+			self.timeout = caller.timeout
+
+		async def run(self,payload,timeout=None):
+			data = json.dumps(payload,cls=json_encoder)
+			if len(data) > self.arg_max:
+				return self.httplib(payload,timeout=timeout)
+			dmsg_rpc('\n    RPC PAYLOAD data (curl) ==>\n{}\n',payload)
+			exec_cmd = [
+				'curl',
+				'--proxy', '',
+				'--connect-timeout', str(timeout or self.timeout),
+				'--request', 'POST',
+				'--write-out', '%{http_code}',
+				'--data-binary', data
+				] + self.exec_opts + [self.url]
+
+			dmsg_rpc('    RPC curl exec data ==>\n{}\n',exec_cmd)
+
+			from subprocess import run,PIPE
+			res = run(exec_cmd,stdout=PIPE,check=True).stdout.decode()
+			# res = run(exec_cmd,stdout=PIPE,check=True,text='UTF-8').stdout # Python 3.7+
+			return (res[:-3],int(res[-3:]))
+
+from collections import namedtuple
+auth_data = namedtuple('rpc_auth_data',['user','passwd'])
+
+class RPCClient(MMGenObject):
+
+	has_auth_cookie = False
+	url_fs = 'http://{}:{}'
+
+	def __init__(self,host,port):
 
 		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
-		dmsg_rpc(self.db_fs.format(h=host,p=port,u=user,pw=passwd,c=auth_cookie))
+		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')
 
 		import socket
 		try:
-			socket.create_connection((host,port),timeout=socket_timeout).close()
+			socket.create_connection((host,port),timeout=1).close()
 		except:
 			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
-		if user and passwd: # user/pass overrides cookie
-			pass
-		elif auth_cookie:
-			user,passwd = auth_cookie.split(':')
-		elif self.auth:
-			msg('Error: no {} RPC authentication method found'.format(g.proto.name.capitalize()))
-			if passwd: die(1,"'rpcuser' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
-			elif user: die(1,"'rpcpassword' entry not found in {}.conf or mmgen.cfg".format(g.proto.name))
-			else:
-				m1 = 'Either provide rpcuser/rpcpassword in {pn}.conf or mmgen.cfg\n'
-				m2 = '(or, alternatively, copy the authentication cookie to the {pnu}\n'
-				m3 = 'data dir if {pnm} and {dn} are running as different users)'
-				die(1,(m1+m2+m3).format(
-					pn=g.proto.name,
-					pnu=g.proto.name.capitalize(),
-					dn=g.proto.daemon_name,
-					pnm=g.proj_name))
-
-		if self.auth:
-			fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
-			auth_str = f'{user}:{passwd}'
-			auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
-			dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
-			self.http_hdrs.update({ 'Host': host, 'Authorization': auth_str_b64 })
-
+		self.http_hdrs = { 'Content-Type': 'application/json' }
+		self.url = self.url_fs.format(host,port)
 		self.host = host
 		self.port = port
-		self.user = user
-		self.passwd = passwd
+		self.timeout = g.http_timeout
+		self.auth = None
 
-		for method in self.rpcmethods:
-			exec('{c}.{m} = lambda self,*args,**kwargs: self.request("{m}",*args,**kwargs)'.format(
-						c=type(self).__name__,m=method))
+	def set_backend(self,backend=None):
+		bn = backend or opt.rpc_backend
+		if bn == 'auto':
+			self.backend = {'linux':RPCBackends.httplib,'win':RPCBackends.curl}[g.platform](self)
+		else:
+			self.backend = getattr(RPCBackends,bn)(self)
 
-	def calls(self,method,args_list):
+	def set_auth(self):
 		"""
-		Perform a list of RPC calls, returning results in a list
+		MMGen's credentials override coin daemon's
+		"""
+		if g.rpc_user:
+			user,passwd = (g.rpc_user,g.rpc_password)
+		else:
+			user,passwd = get_coin_daemon_cfg_options(('rpcuser','rpcpassword')).values()
 
+		if user and passwd:
+			self.auth = auth_data(user,passwd)
+			return
+
+		if self.has_auth_cookie:
+			cookie = self.get_daemon_auth_cookie()
+			if cookie:
+				self.auth = auth_data(*cookie.split(':'))
+				return
+
+		die(1,rpc_credentials_msg())
+
+	# positional params are passed to the daemon, kwargs to the backend
+	# 'timeout' is currently the only supported kwarg
+
+	async def call(self,method,*params,**kwargs):
+		"""
+		default call: call with param list unrolled, exactly as with cli
+		"""
+		if method == g.rpc_fail_on_command:
+			method = 'badcommand_' + method
+		return await self.process_http_resp(self.backend.run(
+			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
+			**kwargs
+		))
+
+	async def batch_call(self,method,param_list,**kwargs):
+		"""
+		Make a single call with a list of tuples as first argument
+		For RPC calls that return a list of results
+		"""
+		return await self.process_http_resp(self.backend.run(
+			payload = [{
+				'id': n,
+				'jsonrpc': '2.0',
+				'method': method,
+				'params': params } for n,params in enumerate(param_list,1) ],
+			**kwargs
+		),batch=True)
+
+	async def gathered_call(self,method,args_list,**kwargs):
+		"""
+		Perform multiple RPC calls, returning results in a list
 		Can be called two ways:
 		  1) method = methodname, args_list = [args_tuple1, args_tuple2,...]
 		  2) method = None, args_list = [(methodname1,args_tuple1), (methodname2,args_tuple2), ...]
 		"""
-
 		cmd_list = args_list if method == None else tuple(zip([method] * len(args_list), args_list))
 
-		if True:
-			return [self.request(method,*params) for method,params in cmd_list]
-
-	# Normal mode: call with arg list unrolled, exactly as with cli
-	# Batch mode:  call with list of arg lists as first argument
-	# kwargs are for local use and are not passed to server
-
-	# By default, raises RPCFailure exception with an error msg on all errors and exceptions
-	# on_fail is one of 'raise' (default), 'return' or 'silent'
-	# With on_fail='return', returns 'rpcfail',(resp_object,(die_args))
-	def request(self,cmd,*args,**kwargs):
-
-		if g.debug:
-			print_stack_trace('RPC REQUEST {}\n  args: {!r}\n  kwargs: {!r}'.format(cmd,args,kwargs))
-
-		if g.rpc_fail_on_command == cmd:
-			cmd = 'badcommand_' + cmd
-
-		cf = { 'timeout':g.http_timeout, 'batch':False, 'on_fail':'raise' }
-
-		if cf['on_fail'] not in ('raise','return','silent'):
-			raise ValueError("request(): {}: illegal value for 'on_fail'".format(cf['on_fail']))
-
-		for k in cf:
-			if k in kwargs and kwargs[k]: cf[k] = kwargs[k]
-
-		if cf['batch']:
-			p = [{'method':cmd,'params':r,'id':n,'jsonrpc':'2.0'} for n,r in enumerate(args[0],1)]
-		else:
-			p = {'method':cmd,'params':args,'id':1,'jsonrpc':'2.0'}
-
-		dmsg_rpc('=== request() debug ===')
-		dmsg_rpc('    RPC POST data ==>\n{}\n',p)
-
-		ca_type = self.coin_amt_type if hasattr(self,'coin_amt_type') else str
-		from .obj import HexStr
-		class MyJSONEncoder(json.JSONEncoder):
-			def default(self,obj):
-				if isinstance(obj,g.proto.coin_amt):
-					return ca_type(obj)
-				elif isinstance(obj,HexStr):
-					return obj
-				else:
-					return json.JSONEncoder.default(self,obj)
-
-		data = json.dumps(p,cls=MyJSONEncoder)
-
-		if g.platform == 'win' and len(data) < 4096: # set way below ARG_MAX, just to be safe
-			return self.do_request_curl(data,cf)
-		else:
-			return self.do_request_httplib(data,cf)
-
-	def do_request_httplib(self,data,cf):
-
-		def do_fail(*args): # args[0] is either None or HTTPResponse object
-			if cf['on_fail'] in ('return','silent'): return 'rpcfail',args
-
-			try:    s = '{}'.format(args[2])
-			except: s = repr(args[2])
-
-			if s == '' and args[0] != None:
-				from http import HTTPStatus
-				hs = HTTPStatus(args[0].code)
-				s = '{} {}'.format(hs.value,hs.name)
-
-			raise RPCFailure(s)
-
-		hc = http.client.HTTPConnection(self.host,self.port,cf['timeout'])
-		try:
-			hc.request('POST','/',data,self.http_hdrs)
-		except Exception as e:
-			m = '{}\nUnable to connect to {} at {}:{}'
-			return do_fail(None,2,m.format(e.args[0],g.proto.daemon_name,self.host,self.port))
-
-		try:
-			r = hc.getresponse() # returns HTTPResponse instance
-		except Exception:
-			m = 'Unable to connect to {} at {}:{} (but port is bound?)'
-			return do_fail(None,2,m.format(g.proto.daemon_name,self.host,self.port))
-
-		dmsg_rpc('    RPC GETRESPONSE data ==>\n{}\n',r.__dict__)
-
-		if r.status != 200:
-			if cf['on_fail'] not in ('silent','raise'):
-				msg_r(yellow('{} RPC Error: '.format(g.proto.daemon_name.capitalize())))
-				msg(red('{} {}'.format(r.status,r.reason)))
-			e1 = r.read().decode()
-			try:
-				e3 = json.loads(e1)['error']
-				e2 = '{} (code {})'.format(e3['message'],e3['code'])
-			except:
-				e2 = str(e1)
-			return do_fail(r,1,e2)
-
-		r2 = r.read().decode()
-
-		dmsg_rpc('    RPC REPLY data ==>\n{}\n',r2,is_json=True)
-
-		if not r2:
-			return do_fail(r,2,'Empty reply')
-
-		r3 = json.loads(r2,parse_float=Decimal)
+		cur_pos = 0
+		chunk_size = 1024
 		ret = []
 
-		for resp in r3 if cf['batch'] else [r3]:
-			if 'error' in resp and resp['error'] != None:
-				return do_fail(r,1,'{} returned an error: {}'.format(
-					g.proto.daemon_name.capitalize(),resp['error']))
-			elif 'result' not in resp:
-				return do_fail(r,1, 'Missing JSON-RPC result\n' + repr(resps))
+		while cur_pos < len(cmd_list):
+			tasks = [self.process_http_resp(self.backend.run(
+						payload = {'id': n, 'jsonrpc': '2.0', 'method': method, 'params': params },
+						**kwargs
+					)) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
+			ret.extend(await asyncio.gather(*tasks))
+			cur_pos += chunk_size
+
+		return ret
+
+	async def process_http_resp(self,coro,batch=False):
+		text,status = await coro
+		if status == 200:
+			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
+			if batch:
+				return [r['result'] for r in json.loads(text,parse_float=Decimal,encoding='UTF-8')]
 			else:
-				ret.append(resp['result'])
+				try:
+					return json.loads(text,parse_float=Decimal,encoding='UTF-8')['result']
+				except:
+					raise RPCFailure(json.loads(text)['error']['message'])
+		else:
+			import http
+			s = http.HTTPStatus(status)
+			m = ''
+			if text:
+				try: m = ': ' + json.loads(text)['error']['message']
+				except:
+					try: m = f': {text.decode()}'
+					except: m = f': {text}'
+			raise RPCFailure(f'{s.value} {s.name}{m}')
 
-		return ret if cf['batch'] else ret[0]
 
-	def do_request_curl(self,data,cf):
-		from subprocess import run,PIPE
-		exec_cmd = ['curl', '--proxy', '', '--silent','--request', 'POST', '--data-binary', data]
-		for k,v in self.http_hdrs.items():
-			exec_cmd += ['--header', '{}: {}'.format(k,v)]
-		if self.auth:
-			exec_cmd += ['--user', self.user + ':' + self.passwd]
-		exec_cmd += ['http://{}:{}/'.format(self.host,self.port)]
+class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
-		cp = run(exec_cmd,stdout=PIPE,check=True)
-		res = json.loads(cp.stdout,parse_float=Decimal)
-		dmsg_rpc('    RPC RESULT data ==>\n{}\n',res)
+	auth_type = 'basic'
+	has_auth_cookie = True
 
-		def do_fail(s):
-			if cf['on_fail'] in ('return','silent'):
-				return ('rpcfail',s)
-			raise RPCFailure(s)
+	def __init__(self,*args,**kwargs): pass
 
-		for resp in ([res],res)[cf['batch']]:
-			if 'error' in resp and resp['error'] != None:
-				return do_fail('{} returned an error: {}'.format(g.proto.daemon_name,resp['error']))
-			elif 'result' not in resp:
-				return do_fail('Missing JSON-RPC result\n{!r}'.format(resp))
+	async def __ainit__(self,backend=None):
 
-		return [r['result'] for r in res] if cf['batch'] else res['result']
+		async def check_chainfork_mismatch(block0):
+			try:
+				assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
+				for fork in g.proto.forks:
+					if fork.height == None or self.blockcount < fork.height:
+						break
+					if fork.hash != await self.call('getblockhash',fork.height):
+						die(3,f'Bad block hash at fork block {fork.height}. Is this the {fork.name} chain?')
+			except Exception as e:
+				die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e.args[0],c=g.coin))
+
+		def check_chaintype_mismatch():
+			try:
+				if g.regtest: assert g.chain == 'regtest','--regtest option selected, but chain is not regtest'
+				if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
+				if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
+			except Exception as e:
+				die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
+
+		user,passwd = get_coin_daemon_cfg_options(('rpcuser','rpcpassword')).values()
+
+		super().__init__(
+			host = g.rpc_host or 'localhost',
+			port = g.rpc_port or g.proto.rpc_port)
+
+		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests socket
+		self.set_backend(backend) # backend requires self.auth
+
+		if g.bob or g.alice:
+			from .regtest import MMGenRegtest
+			MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
+
+		self.cached = {}
+		(
+			self.cached['networkinfo'],
+			self.blockcount,
+			self.cached['blockchaininfo'],
+			block0
+		) = await self.gathered_call(None, (
+				('getnetworkinfo',()),
+				('getblockcount',()),
+				('getblockchaininfo',()),
+				('getblockhash',(0,)),
+			))
+		self.daemon_version = self.cached['networkinfo']['version']
+		g.chain = self.cached['blockchaininfo']['chain']
+
+		tip = await self.call('getblockhash',self.blockcount)
+		self.cur_date = (await self.call('getblockheader',tip))['time']
+		if g.chain != 'regtest':
+			g.chain += 'net'
+		assert g.chain in g.chains
+		check_chaintype_mismatch()
+
+		if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+			await check_chainfork_mismatch(block0)
+
+		self.caps = ('full_node',)
+		for func,cap in (
+			('setlabel','label_api'),
+			('signrawtransactionwithkey','sign_with_key') ):
+			if len((await self.call('help',func)).split('\n')) > 3:
+				self.caps += (cap,)
+
+	# TODO: these belong in protocol.py
+	@classmethod
+	def get_daemon_auth_cookie_fn(cls):
+		cdir = os.path.join(
+			g.proto.daemon_data_dir,
+			g.proto.daemon_data_subdir )
+		return os.path.join(cdir,'.cookie')
+
+	@classmethod
+	def get_daemon_auth_cookie(cls):
+		fn = cls.get_daemon_auth_cookie_fn()
+		return get_lines_from_file(fn,'')[0] if file_is_readable(fn) else ''
 
 	rpcmethods = (
 		'backupwallet',
@@ -268,12 +434,39 @@ class RPCConnection(MMGenObject):
 		'walletpassphrase',
 	)
 
-class EthereumRPCConnection(RPCConnection):
+class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
-	auth = False
-	db_fs = '    host [{h}] port [{p}]\n'
-	_blockcount = None
-	_cur_date = None
+	auth_type = None
+
+	def __init__(self,*args,**kwargs): pass
+
+	async def __ainit__(self,backend=None):
+
+		super().__init__(
+			host = g.rpc_host or 'localhost',
+			port = g.rpc_port or g.proto.rpc_port )
+
+		self.set_backend(backend)
+
+		self.blockcount = int(await self.call('eth_blockNumber'),16)
+
+		vi,bh,ch,nk = await self.gathered_call(None, (
+				('parity_versionInfo',()),
+				('parity_getBlockHeaderByNumber',()),
+				('parity_chain',()),
+				('parity_nodeKind',()),
+			))
+
+		self.daemon_version = vi['version']
+		self.cur_date = int(bh['timestamp'],16)
+		g.chain = ch.replace(' ','_')
+		self.caps = ('full_node',) if nk['capability'] == 'full' else ()
+
+		try:
+			await self.call('eth_chainId')
+			self.caps += ('eth_chainId',)
+		except RPCFailure:
+			pass
 
 	rpcmethods = (
 		'eth_accounts',
@@ -314,20 +507,25 @@ class EthereumRPCConnection(RPCConnection):
 		'parity_versionInfo',
 	)
 
-	# blockcount and cur_date require network RPC calls, so evaluate lazily
-	@property
-	def blockcount(self):
-		if self._blockcount == None:
-			self._blockcount = int(self.eth_blockNumber(),16)
-		return self._blockcount
+class MoneroWalletRPCClient(RPCClient):
 
-	@property
-	def cur_date(self):
-		if self._cur_date == None:
-			self._cur_date = int(self.parity_getBlockHeaderByNumber(hex(self.blockcount))['timestamp'],16)
-		return self._cur_date
+	auth_type = 'digest'
+	url_fs = 'http://{}:{}/json_rpc'
 
-class MoneroWalletRPCConnection(RPCConnection):
+	def __init__(self,host,port,user,passwd):
+		super().__init__(host,port)
+		self.auth = auth_data(user,passwd)
+		self.set_backend('requests')
+		if False: # insecure, for debugging only
+			self.backend = RPCBackends.curl(self)
+			self.backend.exec_opts.remove('--silent')
+			self.backend.exec_opts.extend(['--insecure','--verbose'])
+
+	async def call(self,method,*params,**kwargs):
+		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
+		return await self.process_http_resp(self.backend.run(
+			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
+		))
 
 	rpcmethods = (
 		'get_version',
@@ -340,159 +538,16 @@ class MoneroWalletRPCConnection(RPCConnection):
 		'refresh',       # start_height
 	)
 
-	def request(self,cmd,*args,**kwargs):
-		if args != ():
-			m = '{}.request() accepts only keyword args\nCmd: {!r}'
-			raise ValueError(m.format(type(self).__name__,cmd))
-		import requests
-		import urllib3
-		urllib3.disable_warnings()
-		ret = requests.post(
-			url = 'https://{}:{}/json_rpc'.format(self.host,self.port),
-			json = {
-				'jsonrpc': '2.0',
-				'id': '0',
-				'method': cmd,
-				'params': kwargs,
-			},
-			auth = requests.auth.HTTPDigestAuth(self.user,self.passwd),
-			headers = self.http_hdrs,
-			verify = False )
+async def rpc_init(proto=None,backend=None):
 
-		res = json.loads(ret._content)
-		if 'error' in res:
-			raise RPCFailure(repr(res['error']))
-		return(res['result'])
+	proto = proto or g.proto
 
-	def request_curltest(self,cmd,*args,**kwargs):
-		"insecure, for testing only"
-		from subprocess import run,PIPE
-		data = {
-			'jsonrpc': '2.0',
-			'id': '0',
-			'method': cmd,
-			'params': kwargs,
-		}
-		exec_cmd = [
-			'curl', '--proxy', '', '--verbose','--insecure', '--request', 'POST',
-			'--digest', '--user', '{}:{}'.format(g.monero_wallet_rpc_user,g.monero_wallet_rpc_password),
-			'--header', 'Content-Type: application/json',
-			'--data', json.dumps(data),
-			'https://{}:{}/json_rpc'.format(self.host,self.port) ]
+	if not 'rpc' in proto.mmcaps:
+		die(1,'Coin daemon operations not supported for {}!'.format(proto.__name__))
 
-		cp = run(exec_cmd,stdout=PIPE,check=True)
+	g.rpc = await {
+		'bitcoind': BitcoinRPCClient,
+		'parity':   EthereumRPCClient,
+	}[proto.daemon_family](backend=backend)
 
-		res = json.loads(cp.stdout)
-		if 'error' in res:
-			raise RPCFailure(repr(res['error']))
-		return(res['result'])
-
-def rpc_error(ret):
-	return type(ret) is tuple and ret and ret[0] == 'rpcfail'
-
-def rpc_errmsg(ret):
-	try:
-		return ret[1][2]
-	except:
-		return repr(ret)
-
-def init_daemon_parity():
-
-	def resolve_token_arg(token_arg):
-		from .obj import CoinAddr
-		from .altcoins.eth.tw import EthereumTrackingWallet
-		from .altcoins.eth.contract import Token
-
-		tw = EthereumTrackingWallet(no_rpc=True)
-
-		try:    addr = CoinAddr(token_arg,on_fail='raise')
-		except: addr = tw.sym2addr(token_arg)
-
-		if not addr:
-			m = "'{}': unrecognized token symbol"
-			raise UnrecognizedTokenSymbol(m.format(token_arg))
-
-		sym = tw.addr2sym(addr) # throws exception on failure
-		vmsg('ERC20 token resolved: {} ({})'.format(addr,sym))
-
-		return addr,sym
-
-	conn = EthereumRPCConnection(
-				g.rpc_host or 'localhost',
-				g.rpc_port or g.proto.rpc_port)
-	conn.daemon_version = conn.parity_versionInfo()['version'] # fail immediately if daemon is geth
-	conn.coin_amt_type = str
-	g.chain = conn.parity_chain().replace(' ','_')
-
-	conn.caps = ()
-	try:
-		conn.request('eth_chainId')
-		conn.caps += ('eth_chainId',)
-	except RPCFailure:
-		pass
-
-	if conn.request('parity_nodeKind')['capability'] == 'full':
-		conn.caps += ('full_node',)
-
-	if g.token:
-		g.rpc = conn # set g.rpc so rpc_init() will return immediately
-		(g.token,g.dcoin) = resolve_token_arg(g.token)
-
-	return conn
-
-def init_daemon_bitcoind():
-
-	def check_chainfork_mismatch(conn):
-		block0 = conn.getblockhash(0)
-		latest = conn.blockcount
-		try:
-			assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
-			for fork in g.proto.forks:
-				if fork[0] == None or latest < fork[0]: break
-				assert conn.getblockhash(fork[0]) == fork[1], (
-					'Bad block hash at fork block {}. Is this the {} chain?'.format(fork[0],fork[2].upper()))
-		except Exception as e:
-			die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e.args[0],c=g.coin))
-
-	def check_chaintype_mismatch():
-		try:
-			if g.regtest: assert g.chain == 'regtest','--regtest option selected, but chain is not regtest'
-			if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
-			if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
-		except Exception as e:
-			die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
-
-	cfg = get_daemon_cfg_options(('rpcuser','rpcpassword'))
-
-	conn = RPCConnection(
-				g.rpc_host or 'localhost',
-				g.rpc_port or g.proto.rpc_port,
-				g.rpc_user or cfg['rpcuser'], # MMGen's rpcuser,rpcpassword override coin daemon's
-				g.rpc_password or cfg['rpcpassword'],
-				auth_cookie=get_coin_daemon_auth_cookie())
-
-	if g.bob or g.alice:
-		from .regtest import MMGenRegtest
-		MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
-	conn.daemon_version = int(conn.getnetworkinfo()['version'])
-	conn.blockcount = conn.getblockcount()
-	conn.cur_date = conn.getblockheader(conn.getblockhash(conn.blockcount))['time']
-	conn.coin_amt_type = (float,str)[conn.daemon_version>=120000]
-	g.chain = conn.getblockchaininfo()['chain']
-	if g.chain != 'regtest': g.chain += 'net'
-	assert g.chain in g.chains
-	check_chaintype_mismatch()
-
-	if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
-		check_chainfork_mismatch(conn)
-
-	conn.caps = ('full_node',)
-	for func,cap in (
-		('setlabel','label_api'),
-		('signrawtransactionwithkey','sign_with_key') ):
-		if len(conn.request('help',func).split('\n')) > 3:
-			conn.caps += (cap,)
-	return conn
-
-def init_daemon(name):
-	return globals()['init_daemon_'+name]()
+	return g.rpc

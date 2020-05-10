@@ -96,8 +96,6 @@ column below:
 
 cmd_args = opts.init(opts_data)
 
-rpc_init()
-
 tx_file = cmd_args.pop(0)
 check_infile(tx_file)
 
@@ -109,61 +107,62 @@ seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 kal = get_keyaddrlist(opt)
 kl = get_keylist(opt)
 
-tx = MMGenBumpTX(filename=tx_file,send=(seed_files or kl or kal))
+sign_and_send = bool(seed_files or kl or kal)
 
 do_license_msg()
 
 silent = opt.yes and opt.tx_fee != None and opt.output_to_reduce != None
 
-if not silent:
-	msg(green('ORIGINAL TRANSACTION'))
-	msg(tx.format_view(terse=True))
+async def main():
 
-tx.set_min_fee()
+	from .tw import TrackingWallet
+	tx = MMGenBumpTX(filename=tx_file,send=sign_and_send,tw=await TrackingWallet() if g.token else None)
 
-tx.check_bumpable()
+	if not silent:
+		msg(green('ORIGINAL TRANSACTION'))
+		msg(tx.format_view(terse=True))
 
-msg('Creating new transaction')
+	tx.check_bumpable() # needs cached networkinfo['relayfee']
 
-op_idx = tx.choose_output()
+	msg('Creating new transaction')
 
-if not silent:
-	msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),g.coin))
+	op_idx = tx.choose_output()
 
-fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
+	if not silent:
+		msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),g.coin))
 
-tx.update_fee(op_idx,fee)
+	fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
-d = tx.get_fee_from_tx()
-assert d == fee and d <= g.proto.max_tx_fee
+	tx.update_fee(op_idx,fee)
 
-if g.proto.base_proto == 'Bitcoin':
-	tx.outputs.sort_bip69() # output amts have changed, so re-sort
+	d = tx.get_fee_from_tx()
+	assert d == fee and d <= g.proto.max_tx_fee
 
-if not opt.yes:
-	tx.add_comment()   # edits an existing comment
+	if g.proto.base_proto == 'Bitcoin':
+		tx.outputs.sort_bip69() # output amts have changed, so re-sort
 
-from .tw import TwUnspentOutputs
-tx.twuo = TwUnspentOutputs(minconf=opt.minconf)
+	if not opt.yes:
+		tx.add_comment()   # edits an existing comment
 
-tx.create_raw()        # creates tx.hex, tx.txid
-tx.add_timestamp()
-tx.add_blockcount()
+	await tx.create_raw() # creates tx.hex, tx.txid
 
-qmsg('Fee successfully increased')
+	tx.add_timestamp()
+	tx.add_blockcount()
 
-if not silent:
-	msg(green('\nREPLACEMENT TRANSACTION:'))
-	msg_r(tx.format_view(terse=True))
+	qmsg('Fee successfully increased')
 
-del tx.twuo.wallet
+	if not silent:
+		msg(green('\nREPLACEMENT TRANSACTION:'))
+		msg_r(tx.format_view(terse=True))
 
-if seed_files or kl or kal:
-	if txsign(tx,seed_files,kl,kal):
-		tx.write_to_file(ask_write=False)
-		tx.send(exit_on_fail=True)
-		tx.write_to_file(ask_write=False)
+	if sign_and_send:
+		if await txsign(tx,seed_files,kl,kal):
+			tx.write_to_file(ask_write=False)
+			await tx.send(exit_on_fail=True)
+			tx.write_to_file(ask_write=False)
+		else:
+			die(2,'Transaction could not be signed')
 	else:
-		die(2,'Transaction could not be signed')
-else:
-	tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
+		tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
+
+run_session(main())

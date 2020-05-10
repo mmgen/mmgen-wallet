@@ -650,14 +650,15 @@ class MMGenToolCmdFile(MMGenToolCmds):
 		file_sort = kwargs.get('filesort') or 'mtime'
 
 		from .filename import MMGenFileList
-		from .tx import MMGenTX
+		from .tx import MMGenTX,MMGenTxForSigning
 		flist = MMGenFileList(infiles,ftype=MMGenTX)
 		flist.sort_by_age(key=file_sort) # in-place sort
 
-		sep = '—'*77+'\n'
-		return sep.join(
-			[MMGenTX(fn,offline=True).format_view(terse=terse,sort=tx_sort) for fn in flist.names()]
-		).rstrip()
+		def gen():
+			for fn in flist.names():
+				yield (MMGenTxForSigning,MMGenTX)[fn.endswith('.sigtx')](fn).format_view(terse=terse,sort=tx_sort)
+
+		return ('—'*77+'\n').join(gen()).rstrip()
 
 class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	"""
@@ -841,12 +842,12 @@ from .tw import TwAddrList,TwUnspentOutputs
 class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
 
-	def getbalance(self,minconf=1,quiet=False,pager=False):
+	async def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from .tw import TwGetBalance
-		return TwGetBalance(minconf,quiet).format()
+		return (await TwGetBalance(minconf,quiet)).format()
 
-	def listaddress(self,
+	async def listaddress(self,
 					mmgen_addr:str,
 					minconf = 1,
 					pager = False,
@@ -855,7 +856,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 					age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
 					):
 		"list the specified MMGen address and its balance"
-		return self.listaddresses(  mmgen_addrs = mmgen_addr,
+		return await self.listaddresses(  mmgen_addrs = mmgen_addr,
 									minconf = minconf,
 									pager = pager,
 									showempty = showempty,
@@ -863,7 +864,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 									age_fmt = age_fmt,
 								)
 
-	def listaddresses(  self,
+	async def listaddresses(  self,
 						mmgen_addrs:'(range or list)' = '',
 						minconf = 1,
 						showempty = False,
@@ -890,13 +891,12 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				die(1,m.format(mmgen_addrs))
 			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
 
-		rpc_init()
-		al = TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
+		al = await TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
 		if not al:
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
-		return al.format(showbtcaddrs,sort,show_age,age_fmt or 'confs')
+		return await al.format(showbtcaddrs,sort,show_age,age_fmt or 'confs')
 
-	def twview( self,
+	async def twview( self,
 				pager = False,
 				reverse = False,
 				wide = False,
@@ -906,9 +906,8 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				show_mmid = True,
 				wide_show_confs = True):
 		"view tracking wallet"
-		rpc_init()
-		twuo = TwUnspentOutputs(minconf=minconf)
-		twuo.do_sort(sort,reverse=reverse)
+		twuo = await TwUnspentOutputs(minconf=minconf)
+		await twuo.get_unspent_data(reverse_sort=reverse)
 		twuo.age_fmt = age_fmt
 		twuo.show_mmid = show_mmid
 		if wide:
@@ -916,25 +915,23 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 		else:
 			ret = twuo.format_for_display()
 		del twuo.wallet
-		return ret
+		return await ret
 
-	def add_label(self,mmgen_or_coin_addr:str,label:str):
+	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
-		rpc_init()
 		from .tw import TrackingWallet
-		TrackingWallet(mode='w').add_label(mmgen_or_coin_addr,label,on_fail='raise')
+		await (await TrackingWallet(mode='w')).add_label(mmgen_or_coin_addr,label,on_fail='raise')
 		return True
 
-	def remove_label(self,mmgen_or_coin_addr:str):
+	async def remove_label(self,mmgen_or_coin_addr:str):
 		"remove descriptive label for address in tracking wallet"
-		self.add_label(mmgen_or_coin_addr,'')
+		await self.add_label(mmgen_or_coin_addr,'')
 		return True
 
-	def remove_address(self,mmgen_or_coin_addr:str):
+	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
 		from .tw import TrackingWallet
-		tw = TrackingWallet(mode='w')
-		ret = tw.remove_address(mmgen_or_coin_addr) # returns None on failure
+		ret = await (await TrackingWallet(mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
 			msg("Address '{}' deleted from tracking wallet".format(ret))
 		return ret
@@ -988,7 +985,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		if monerod_args:
 			self.monerod_args = monerod_args
 
-		def create(n,d,fn,c,m):
+		async def create(n,d,fn,c,m):
 			try: os.stat(fn)
 			except: pass
 			else:
@@ -997,7 +994,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			gmsg(m)
 
 			from .baseconv import baseconv
-			ret = c.restore_deterministic_wallet(
+			ret = await c.call(
+				'restore_deterministic_wallet',
 				filename  = os.path.basename(fn),
 				password  = d.wallet_passwd,
 				seed      = baseconv.fromhex(d.sec,'xmrseed',tostr=True),
@@ -1007,7 +1005,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
 			return True
 
-		def sync(n,d,fn,c,m):
+		async def sync(n,d,fn,c,m):
 			try:
 				os.stat(fn)
 			except:
@@ -1021,11 +1019,14 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			t_start = time.time()
 
 			msg_r('  Opening wallet...')
-			c.open_wallet(filename=os.path.basename(fn),password=d.wallet_passwd)
+			await c.call(
+				'open_wallet',
+				filename=os.path.basename(fn),
+				password=d.wallet_passwd )
 			msg('done')
 
 			msg_r('  Getting wallet height...')
-			wallet_height = c.get_height()['height']
+			wallet_height = (await c.call('get_height'))['height']
 			msg('\r  Wallet height: {}        '.format(wallet_height))
 
 			behind = chain_height - wallet_height
@@ -1033,7 +1034,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				m = '  Wallet is {} blocks behind chain tip.  Please be patient.  Syncing...'
 				msg_r(m.format(behind))
 
-			ret = c.refresh()
+			ret = await c.call('refresh')
 
 			if behind > 1000:
 				msg('done')
@@ -1043,7 +1044,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 			t_elapsed = int(time.time() - t_start)
 
-			ret = c.get_balance() # account_index=0, address_indices=[0,1]
+			ret = await c.call('get_balance') # account_index=0, address_indices=[0,1]
 
 			from .obj import XMRAmt
 			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit') for k in ('balance','unlocked_balance')])
@@ -1053,16 +1054,14 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			else:
 				msg('  Balance: {} Unlocked balance: {}'.format(*[b.hl() for b in bals[fn]]))
 
-			msg('  Wallet height: {}'.format(c.get_height()['height']))
+			msg('  Wallet height: {}'.format((await c.call('get_height'))['height']))
 			msg('  Sync time: {:02}:{:02}'.format(t_elapsed//60,t_elapsed%60))
 
-			c.close_wallet()
+			await c.call('close_wallet')
 			return True
 
-		def process_wallets():
-			m =   { 'create': ('Creat','Generat',create,False),
-					'sync':   ('Sync', 'Sync',   sync,  True) }
-			opt.accept_defaults = opt.accept_defaults or m[op][3]
+		async def process_wallets(op):
+			opt.accept_defaults = opt.accept_defaults or op.accept_defaults
 			from .protocol import init_coin
 			init_coin('xmr')
 			from .addr import AddrList
@@ -1070,18 +1069,18 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
 			dl = len(data)
 			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
-			gmsg('\n{}ing {} wallet{}'.format(m[op][0],dl,suf(dl)))
+			gmsg('\n{}ing {} wallet{}'.format(op.desc,dl,suf(dl)))
 
 			from .daemon import MoneroWalletDaemon
 			wd = MoneroWalletDaemon(opt.outdir or '.',test_suite=g.test_suite)
 			wd.restart()
 
-			from .rpc import MoneroWalletRPCConnection
-			c = MoneroWalletRPCConnection(
-				g.monero_wallet_rpc_host,
-				wd.rpc_port,
-				g.monero_wallet_rpc_user,
-				g.monero_wallet_rpc_password)
+			from .rpc import MoneroWalletRPCClient
+			c = MoneroWalletRPCClient(
+				host = g.monero_wallet_rpc_host,
+				port = wd.rpc_port,
+				user = g.monero_wallet_rpc_user,
+				passwd = g.monero_wallet_rpc_password)
 
 			wallets_processed = 0
 			for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
@@ -1091,13 +1090,13 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						d.idx,
 						'-α' if g.debug_utf8 else ''))
 
-				info = '\n{}ing wallet {}/{} ({})'.format(m[op][1],n+1,dl,fn)
-				wallets_processed += m[op][2](n,d,fn,c,info)
+				info = '\n{}ing wallet {}/{} ({})'.format(op.action,n+1,dl,fn)
+				wallets_processed += await op.func(n,d,fn,c,info)
 
 			wd.stop()
-			gmsg('\n{} wallet{} {}ed'.format(wallets_processed,suf(wallets_processed),m[op][0].lower()))
+			gmsg('\n{} wallet{} {}ed'.format(wallets_processed,suf(wallets_processed),op.desc.lower()))
 
-			if wallets_processed and op == 'sync':
+			if wallets_processed and op.name == 'sync':
 				col1_w = max(map(len,bals)) + 1
 				fs = '{:%s} {} {}' % col1_w
 				msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
@@ -1114,8 +1113,13 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		bals = {} # locked,unlocked
 
+		from collections import namedtuple
+		wo = namedtuple('mwo',['name','desc','action','func','accept_defaults'])
+		op = { # reusing name!
+			'create': wo('create', 'Creat', 'Generat', create, False),
+			'sync':   wo('sync',   'Sync',  'Sync',    sync,   True) }[op]
 		try:
-			process_wallets()
+			run_session(process_wallets(op),do_rpc_init=False)
 		except KeyboardInterrupt:
 			rdie(1,'\nUser interrupt\n')
 		except EOFError:

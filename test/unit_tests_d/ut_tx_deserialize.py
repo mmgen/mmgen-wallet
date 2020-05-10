@@ -3,9 +3,14 @@
 test/unit_tests_d/ut_tx_deserialize: TX deserialization unit test for the MMGen suite
 """
 
-import os
+import os,json
+
 from mmgen.common import *
 from ..include.common import *
+from mmgen.protocol import init_coin
+from mmgen.tx import MMGenTX,DeserializedTX
+from mmgen.rpc import rpc_init
+from mmgen.daemon import CoinDaemon
 
 class unit_test(object):
 
@@ -16,7 +21,7 @@ class unit_test(object):
 
 	def run_test(self,name,ut):
 
-		def test_tx(txhex,desc,n):
+		async def test_tx(txhex,desc,n):
 
 			def has_nonstandard_outputs(outputs):
 				for o in outputs:
@@ -25,7 +30,7 @@ class unit_test(object):
 						return True
 				return False
 
-			d = g.rpc.decoderawtransaction(txhex)
+			d = await g.rpc.call('decoderawtransaction',txhex)
 
 			if has_nonstandard_outputs(d['vout']): return False
 
@@ -86,7 +91,7 @@ class unit_test(object):
 				Msg_r('Testing transactions from {!r}'.format(fn))
 				if not opt.quiet: Msg('')
 
-		def test_core_vectors():
+		async def test_core_vectors():
 			self._get_core_repo_root()
 			fn_b = 'src/test/data/tx_valid.json'
 			fn = os.path.join(self.core_repo_root,fn_b)
@@ -95,38 +100,33 @@ class unit_test(object):
 			n = 1
 			for e in data:
 				if type(e[0]) == list:
-					test_tx(e[1],desc,n)
+					await rpc_init()
+					await test_tx(e[1],desc,n)
 					n += 1
 				else:
 					desc = e[0]
 			Msg('OK')
 
-		def test_mmgen_txs():
+		async def test_mmgen_txs():
 			fns = ( ('btc',False,'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'),
 					('btc',True,'test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
 				#	('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx')
 				)
-			from mmgen.protocol import init_coin
-			from mmgen.tx import MMGenTX
-			from mmgen.daemon import CoinDaemon
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			for n,(coin,tn,fn) in enumerate(fns):
 				init_coin(coin,tn)
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
 				g.rpc_port = CoinDaemon(coin + ('','_tn')[tn],test_suite=True).rpc_port
-				rpc_init(reinit=True)
-				test_tx(MMGenTX(fn).hex,fn,n+1)
+				await rpc_init()
+				await test_tx(MMGenTX(fn).hex,fn,n+1)
 			init_coin('btc',False)
 			g.rpc_port = CoinDaemon('btc',test_suite=True).rpc_port
-			rpc_init(reinit=True)
+			await rpc_init()
 			Msg('OK')
 
-		from mmgen.tx import DeserializedTX
-		import json
-
 		start_test_daemons('btc','btc_tn') # ,'bch')
-		test_mmgen_txs()
-		test_core_vectors()
+		run_session(test_mmgen_txs(),do_rpc_init=False)
+		run_session(test_core_vectors(),do_rpc_init=False)
 		stop_test_daemons('btc','btc_tn') # ,'bch')
 
 		return True

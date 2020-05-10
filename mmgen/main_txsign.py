@@ -97,9 +97,6 @@ if not infiles:
 for i in infiles:
 	check_infile(i)
 
-if g.proto.sign_mode == 'daemon':
-	rpc_init()
-
 if not opt.info and not opt.terse_info:
 	do_license_msg(immed=True)
 
@@ -107,39 +104,51 @@ from .txsign import *
 
 tx_files   = get_tx_files(opt,infiles)
 seed_files = get_seed_files(opt,infiles)
-
 kal        = get_keyaddrlist(opt)
 kl         = get_keylist(opt)
-if kl and kal: kl.remove_dup_keys(kal)
 
-tx_num_str,bad_tx_count = '',0
-for tx_num,tx_file in enumerate(tx_files,1):
-	if len(tx_files) > 1:
-		msg('\nTransaction #{} of {}:'.format(tx_num,len(tx_files)))
-		tx_num_str = ' #{}'.format(tx_num)
-	tx = MMGenTX(tx_file,offline=True)
+if kl and kal:
+	kl.remove_dup_keys(kal)
 
-	if tx.marked_signed():
-		msg('Transaction is already signed!'); continue
+async def main():
+	bad_tx_count = 0
+	tx_num_disp = ''
+	for tx_num,tx_file in enumerate(tx_files,1):
+		if len(tx_files) > 1:
+			msg('\nTransaction #{} of {}:'.format(tx_num,len(tx_files)))
+			tx_num_disp = f' #{tx_num}'
 
-	vmsg("Successfully opened transaction file '{}'".format(tx_file))
+		tx = MMGenTxForSigning(tx_file)
 
-	if opt.tx_id:
-		msg(tx.txid); continue
+		if tx.marked_signed():
+			msg('Transaction is already signed!')
+			continue
 
-	if opt.info or opt.terse_info:
-		tx.view(pause=False,terse=opt.terse_info); continue
+		vmsg(f'Successfully opened transaction file {tx_file!r}')
 
-	if not opt.yes:
-		tx.view_with_prompt('View data for transaction{}?'.format(tx_num_str))
+		if opt.tx_id:
+			msg(tx.txid)
+			continue
 
-	if txsign(tx,seed_files,kl,kal,tx_num_str):
+		if opt.info or opt.terse_info:
+			tx.view(pause=False,terse=opt.terse_info)
+			continue
+
 		if not opt.yes:
-			tx.add_comment() # edits an existing comment
-		tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_str)
-	else:
-		ymsg('Transaction could not be signed')
-		bad_tx_count += 1
+			tx.view_with_prompt(f'View data for transaction{tx_num_disp}?')
 
-if bad_tx_count:
-	ydie(2,'{} transaction{} could not be signed'.format(bad_tx_count,suf(bad_tx_count)))
+		if await txsign(tx,seed_files,kl,kal,tx_num_disp):
+			if not opt.yes:
+				tx.add_comment() # edits an existing comment
+			tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_disp)
+		else:
+			ymsg('Transaction could not be signed')
+			bad_tx_count += 1
+
+	if bad_tx_count:
+		ydie(2,f'{bad_tx_count} transaction{suf(bad_tx_count)} could not be signed')
+
+run_session(
+	main(),
+	do_rpc_init = g.proto.sign_mode == 'daemon'
+)

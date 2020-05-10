@@ -40,21 +40,21 @@ _date_formatter = {
 	'date_time': lambda secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
 }
 
-def _set_dates(us):
+async def _set_dates(us):
 	if us and us[0].date is None:
 		# 'blocktime' differs from 'time', is same as getblockheader['time']
-		dates = [o['blocktime'] for o in g.rpc.calls('gettransaction',[(o.txid,) for o in us])]
+		dates = [o['blocktime'] for o in await g.rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
 		for o,date in zip(us,dates):
 			o.date = date
 
 if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
 	_date_formatter['days'] = lambda date: (1831006505 - date) // 86400
-	def _set_dates(us):
+	async def _set_dates(us):
 		for o in us:
 			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
 
-class TwUnspentOutputs(MMGenObject):
+class TwUnspentOutputs(MMGenObject,metaclass=aInitMeta):
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwUnspentOutputs'))
@@ -104,7 +104,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 """.strip().format(g.proj_name.lower())
 	}
 
-	def __init__(self,minconf=1,addrs=[]):
+	async def __ainit__(self,minconf=1,addrs=[]):
 		self.unspent      = self.MMGenTwOutputList()
 		self.fmt_display  = ''
 		self.fmt_print    = ''
@@ -117,9 +117,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.sort_key     = 'age'
 		self.disp_prec    = self.get_display_precision()
 
-		self.wallet = TrackingWallet('w')
-		self.get_unspent_data()
-		self.do_sort()
+		self.wallet = await TrackingWallet(mode='w')
 
 	@property
 	def age_fmt(self):
@@ -138,7 +136,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def total(self):
 		return sum(i.amt for i in self.unspent)
 
-	def get_unspent_rpc(self):
+	async def get_unspent_rpc(self):
 		# bitcoin-cli help listunspent:
 		# Arguments:
 		# 1. minconf        (numeric, optional, default=1) The minimum confirmations to filter
@@ -149,17 +147,20 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 
 		# for now, self.addrs is just an empty list for Bitcoin and friends
 		add_args = (9999999,self.addrs) if self.addrs else ()
-		return g.rpc.listunspent(self.minconf,*add_args)
+		return await g.rpc.call('listunspent',self.minconf,*add_args)
 
-	def get_unspent_data(self):
+	async def get_unspent_data(self,sort_key=None,reverse_sort=False):
 		if g.bogus_wallet_data: # for debugging purposes only
 			us_rpc = eval(get_data_from_file(g.bogus_wallet_data)) # testing, so ok
 		else:
-			us_rpc = self.get_unspent_rpc()
+			us_rpc = await self.get_unspent_rpc()
 
-		if not us_rpc: die(0,self.wmsg['no_spendable_outputs'])
+		if not us_rpc:
+			die(0,self.wmsg['no_spendable_outputs'])
+
 		tr_rpc = []
 		lbl_id = ('account','label')['label_api' in g.rpc.caps]
+
 		for o in us_rpc:
 			if not lbl_id in o:
 				continue # coinbase outputs have no account field
@@ -182,6 +183,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			if u.label == None: u.label = ''
 		if not self.unspent:
 			die(1,'No tracked {}s in tracking wallet!'.format(self.item_desc))
+
+		self.do_sort(key=sort_key,reverse=reverse_sort)
 
 	def do_sort(self,key=None,reverse=False):
 		sort_funcs = {
@@ -214,10 +217,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			m2 = 'Please resize your screen to at least {} characters and hit ENTER '
 			my_raw_input((m1+m2).format(g.min_screen_width))
 
-	def format_for_display(self):
+	async def format_for_display(self):
 		unsp = self.unspent
 		if self.age_fmt in self.age_fmts_date_dependent:
-			_set_dates(unsp)
+			await _set_dates(unsp)
 		self.set_term_columns()
 
 		# allow for 7-digit confirmation nums
@@ -291,9 +294,9 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		self.fmt_display = '\n'.join(out) + '\n'
 		return self.fmt_display
 
-	def format_for_printing(self,color=False,show_confs=True):
+	async def format_for_printing(self,color=False,show_confs=True):
 		if self.age_fmt in self.age_fmts_date_dependent:
-			_set_dates(self.unspent)
+			await _set_dates(self.unspent)
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = g.proto.coin_amt.max_prec + 5
@@ -374,14 +377,14 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					if keypress_confirm(fs.format(self.item_desc,n)):
 						return n
 
-	def view_and_sort(self,tx):
+	async def view_and_sort(self,tx):
 		from .term import get_char
 		prompt = self.prompt.strip() + '\b'
 		no_output,oneshot_msg = False,None
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char(
-				'' if no_output else self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
+				'' if no_output else await self.format_for_display()+'\n'+(oneshot_msg or '')+prompt,
 				immed_chars=''.join(self.key_mappings.keys())
 			)
 			no_output = False
@@ -409,17 +412,15 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				idx = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
-					bal = self.wallet.get_balance(e.addr,force_rpc=True)
-					self.get_unspent_data()
-					self.do_sort()
+					bal = await self.wallet.get_balance(e.addr,force_rpc=True)
+					await self.get_unspent_data()
 					oneshot_msg = yellow('{} balance for account #{} refreshed\n\n'.format(g.dcoin,idx))
 			elif action == 'a_lbl_add':
 				idx,lbl = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
-					if self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
-						self.get_unspent_data()
-						self.do_sort()
+					if await self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
+						await self.get_unspent_data()
 						a = 'added to' if lbl else 'removed from'
 						oneshot_msg = yellow("Label {} {} #{}\n\n".format(a,self.item_desc,idx))
 					else:
@@ -428,9 +429,8 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 				idx = self.get_idx_from_user(action)
 				if idx:
 					e = self.unspent[idx-1]
-					if self.wallet.remove_address(e.addr):
-						self.get_unspent_data()
-						self.do_sort()
+					if await self.wallet.remove_address(e.addr):
+						await self.get_unspent_data()
 						oneshot_msg = yellow("{} #{} removed\n\n".format(capfirst(self.item_desc),idx))
 					else:
 						oneshot_msg = red('Address could not be removed\n\n')
@@ -439,13 +439,13 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 										','.join(self.sort_info(include_group=False)).lower())
 				msg('')
 				try:
-					write_data_to_file(of,self.format_for_printing(),desc='{} listing'.format(self.desc))
+					write_data_to_file(of,await self.format_for_printing(),desc='{} listing'.format(self.desc))
 				except UserNonConfirmation as e:
 					oneshot_msg = red("File '{}' not overwritten by user request\n\n".format(of))
 				else:
 					oneshot_msg = yellow("Data written to '{}'\n\n".format(of))
 			elif action in ('a_view','a_view_wide'):
-				do_pager(self.fmt_display if action == 'a_view' else self.format_for_printing(color=True))
+				do_pager(self.fmt_display if action == 'a_view' else await self.format_for_printing(color=True))
 				if g.platform == 'linux' and oneshot_msg == None:
 					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
 					no_output = True
@@ -458,7 +458,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		else:
 			return _date_formatter[age_fmt](o.date)
 
-class TwAddrList(MMGenDict):
+class TwAddrList(MMGenDict,metaclass=aInitMeta):
 	has_age = True
 	age_fmts = TwUnspentOutputs.age_fmts
 	age_disp = TwUnspentOutputs.age_disp
@@ -466,7 +466,10 @@ class TwAddrList(MMGenDict):
 	def __new__(cls,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,'tw','TwAddrList'),*args,**kwargs)
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	def __init__(self,*args,**kwargs):
+		pass
+
+	async def __ainit__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
 		def check_dup_mmid(acct_labels):
 			mmid_prev,err = None,False
@@ -490,10 +493,9 @@ class TwAddrList(MMGenDict):
 			if err: rdie(3,'Tracking wallet is corrupted!')
 
 		self.total = g.proto.coin_amt('0')
-		rpc_init()
 
 		lbl_id = ('account','label')['label_api' in g.rpc.caps]
-		for d in g.rpc.listunspent(0):
+		for d in await g.rpc.call('listunspent',0):
 			if not lbl_id in d: continue  # skip coinbase outputs with missing account
 			if d['confirmations'] < minconf: continue
 			label = get_tw_label(d[lbl_id])
@@ -520,11 +522,12 @@ class TwAddrList(MMGenDict):
 			# for compatibility with old mmids, must use raw RPC rather than native data for matching
 			# args: minconf,watchonly, MUST use keys() so we get list, not dict
 			if 'label_api' in g.rpc.caps:
-				acct_list = g.rpc.listlabels()
-				acct_addrs = [list(a.keys()) for a in g.rpc.getaddressesbylabel([[k] for k in acct_list],batch=True)]
+				acct_list = await g.rpc.call('listlabels')
+				aa = await g.rpc.batch_call('getaddressesbylabel',[(k,) for k in acct_list])
+				acct_addrs = [list(a.keys()) for a in aa]
 			else:
-				acct_list = list(g.rpc.listaccounts(0,True).keys()) # raw list, no 'L'
-				acct_addrs = g.rpc.getaddressesbyaccount([[a] for a in acct_list],batch=True) # use raw list here
+				acct_list = list((await g.rpc.call('listaccounts',0,True)).keys()) # raw list, no 'L'
+				acct_addrs = await g.rpc.batch_call('getaddressesbyaccount',[(a,) for a in acct_list]) # use raw list here
 			acct_labels = MMGenList([get_tw_label(a) for a in acct_list])
 			check_dup_mmid(acct_labels)
 			assert len(acct_list) == len(acct_addrs),(
@@ -545,7 +548,7 @@ class TwAddrList(MMGenDict):
 
 	def coinaddr_list(self): return [self[k]['addr'] for k in self]
 
-	def format(self,showbtcaddrs,sort,show_age,age_fmt):
+	async def format(self,showbtcaddrs,sort,show_age,age_fmt):
 		if not self.has_age:
 			show_age = False
 		if age_fmt not in self.age_fmts:
@@ -580,7 +583,7 @@ class TwAddrList(MMGenDict):
 		al_id_save = None
 		mmids = sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort))
 		if show_age:
-			_set_dates([o for o in mmids if hasattr(o,'confs')])
+			await _set_dates([o for o in mmids if hasattr(o,'confs')])
 		for mmid in mmids:
 			if mmid.type == 'mmgen':
 				if al_id_save and al_id_save != mmid.obj.al_id:
@@ -603,22 +606,27 @@ class TwAddrList(MMGenDict):
 
 		return '\n'.join(out + ['\nTOTAL: {} {}'.format(self.total.hl(color=True),g.dcoin)])
 
-class TrackingWallet(MMGenObject):
+class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 	caps = ('rescan','batch')
 	data_key = 'addresses'
 	use_tw_file = False
 	aggressive_sync = False
+	importing = False
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TrackingWallet'))
 
-	def __init__(self,mode='r',no_rpc=False):
+	async def __ainit__(self,mode='r'):
+
+		assert mode in ('r','w','i'), "{!r}: wallet mode must be 'r','w' or 'i'".format(mode)
+		if mode == 'i':
+			self.importing = True
+			mode = 'w'
 
 		if g.debug:
 			print_stack_trace('TW INIT {!r} {!r}'.format(mode,self))
 
-		assert mode in ('r','w'),"{!r}: wallet mode must be 'r' or 'w'".format(self)
 		self.mode = mode
 		self.desc = self.base_desc = '{} tracking wallet'.format(capfirst(g.proto.name))
 
@@ -632,7 +640,6 @@ class TrackingWallet(MMGenObject):
 			raise WalletFileError(m.format(self.data['coin'],g.coin))
 
 		self.conv_types(self.data[self.data_key])
-		self.rpc_init()
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
 
 	def init_empty(self):
@@ -697,12 +704,9 @@ class TrackingWallet(MMGenObject):
 	@staticmethod
 	def conv_types(ad):
 		for k,v in ad.items():
-			if k in ('params','coin'): continue
-			v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
-			v['comment'] = TwComment(v['comment'],on_fail='raise')
-
-	def rpc_init(self):
-		rpc_init()
+			if k not in ('params','coin'):
+				v['mmid'] = TwMMGenID(v['mmid'],on_fail='raise')
+				v['comment'] = TwComment(v['comment'],on_fail='raise')
 
 	@property
 	def data_root(self):
@@ -728,14 +732,14 @@ class TrackingWallet(MMGenObject):
 		if addr in data_root and 'balance' in data_root[addr]:
 			return g.proto.coin_amt(data_root[addr]['balance'])
 
-	def get_balance(self,addr,force_rpc=False):
+	async def get_balance(self,addr,force_rpc=False):
 		ret = None if force_rpc else self.get_cached_balance(addr,self.cur_balances,self.data_root)
 		if ret == None:
-			ret = self.rpc_get_balance(addr)
+			ret = await self.rpc_get_balance(addr)
 			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
 		return ret
 
-	def rpc_get_balance(self,addr):
+	async def rpc_get_balance(self,addr):
 		raise NotImplementedError('not implemented')
 
 	@property
@@ -752,12 +756,12 @@ class TrackingWallet(MMGenObject):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
 
 	@write_mode
-	def import_address(self,addr,label,rescan):
-		return g.rpc.importaddress(addr,label,rescan,timeout=(False,3600)[rescan])
+	async def import_address(self,addr,label,rescan):
+		return await g.rpc.call('importaddress',addr,label,rescan,timeout=(False,3600)[rescan])
 
 	@write_mode
 	def batch_import_address(self,arg_list):
-		return g.rpc.importaddress(arg_list,batch=True)
+		return g.rpc.batch_call('importaddress',arg_list)
 
 	def force_write(self):
 		mode_save = self.mode
@@ -789,24 +793,30 @@ class TrackingWallet(MMGenObject):
 		elif g.debug:
 			msg('Data is unchanged\n')
 
-	def is_in_wallet(self,addr):
-		return addr in TwAddrList([],0,True,True,True,wallet=self).coinaddr_list()
+	async def is_in_wallet(self,addr):
+		return addr in (await TwAddrList([],0,True,True,True,wallet=self)).coinaddr_list()
 
 	@write_mode
-	def set_label(self,coinaddr,lbl):
+	async def set_label(self,coinaddr,lbl):
 		# bitcoin-abc 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# broken behavior: new label is set OK, but old label gets attached to another address
 		if 'label_api' in g.rpc.caps and g.coin != 'BCH':
-			return g.rpc.setlabel(coinaddr,lbl,on_fail='return')
+			args = ('setlabel',coinaddr,lbl)
 		else:
 			# NOTE: this works because importaddress() removes the old account before
 			# associating the new account with the address.
 			# RPC args: addr,label,rescan[=true],p2sh[=none]
-			return g.rpc.importaddress(coinaddr,lbl,False,on_fail='return')
+			args = ('importaddress',coinaddr,lbl,False)
+
+		try:
+			return await g.rpc.call(*args)
+		except Exception as e:
+			rmsg(e.args[0])
+			return False
 
 	# returns on failure
 	@write_mode
-	def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
+	async def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
 		from .tx import is_mmgen_id,is_coin_addr
 		mmaddr,coinaddr = None,None
 		if is_coin_addr(addr or arg1):
@@ -815,14 +825,14 @@ class TrackingWallet(MMGenObject):
 			mmaddr = TwMMGenID(arg1)
 
 		if mmaddr and not coinaddr:
-			from .addr import AddrData
-			coinaddr = AddrData(source='tw').mmaddr2coinaddr(mmaddr)
+			from .addr import TwAddrData
+			coinaddr = (await TwAddrData()).mmaddr2coinaddr(mmaddr)
 
 		try:
 			if not is_mmgen_id(arg1):
 				assert coinaddr,"Invalid coin address for this chain: {}".format(arg1)
 			assert coinaddr,"{pn} address '{ma}' not found in tracking wallet"
-			assert self.is_in_wallet(coinaddr),"Address '{ca}' not found in tracking wallet"
+			assert await self.is_in_wallet(coinaddr),"Address '{ca}' not found in tracking wallet"
 		except Exception as e:
 			msg(e.args[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
 			return False
@@ -830,8 +840,8 @@ class TrackingWallet(MMGenObject):
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
 		if not mmaddr:
-			from .addr import AddrData
-			mmaddr = AddrData(source='tw').coinaddr2mmaddr(coinaddr)
+			from .addr import TwAddrData
+			mmaddr = (await TwAddrData()).coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr:
 			mmaddr = '{}:{}'.format(g.proto.base_coin.lower(),coinaddr)
@@ -844,11 +854,7 @@ class TrackingWallet(MMGenObject):
 
 		lbl = TwLabel(mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
 
-		ret = self.set_label(coinaddr,lbl)
-
-		from .rpc import rpc_error,rpc_errmsg
-		if rpc_error(ret):
-			msg('From {}: {}'.format(g.proto.daemon_name,rpc_errmsg(ret)))
+		if await self.set_label(coinaddr,lbl) == False:
 			if not silent:
 				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
 			return False
@@ -861,32 +867,31 @@ class TrackingWallet(MMGenObject):
 			return True
 
 	@write_mode
-	def remove_label(self,mmaddr):
-		self.add_label(mmaddr,'')
+	async def remove_label(self,mmaddr):
+		await self.add_label(mmaddr,'')
 
 	@write_mode
-	def remove_address(self,addr):
+	async def remove_address(self,addr):
 		raise NotImplementedError('address removal not implemented for coin {}'.format(g.coin))
 
-class TwGetBalance(MMGenObject):
+class TwGetBalance(MMGenObject,metaclass=aInitMeta):
 
 	fs = '{w:13} {u:<16} {p:<16} {c}\n'
 
 	def __new__(cls,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwGetBalance'))
 
-	def __init__(self,minconf,quiet):
+	async def __ainit__(self,minconf,quiet):
 
-		rpc_init()
 		self.minconf = minconf
 		self.quiet = quiet
 		self.data = {k:[g.proto.coin_amt('0')] * 4 for k in ('TOTAL','Non-MMGen','Non-wallet')}
-		self.create_data()
+		await self.create_data()
 
-	def create_data(self):
+	async def create_data(self):
 		# 0: unconfirmed, 1: below minconf, 2: confirmed, 3: spendable (privkey in wallet)
 		lbl_id = ('account','label')['label_api' in g.rpc.caps]
-		for d in g.rpc.listunspent(0):
+		for d in await g.rpc.call('listunspent',0):
 			lbl = get_tw_label(d[lbl_id])
 			if lbl:
 				if lbl.mmid.type == 'mmgen':

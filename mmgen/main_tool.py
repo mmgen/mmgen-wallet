@@ -110,4 +110,7 @@ args,kwargs = tool._process_args(cmd,cmd_args)
 
 ret = tool.MMGenToolCmds.call(cmd,*args,**kwargs)
 
+if type(ret).__name__ == 'coroutine':
+	ret = run_session(ret)
+
 tool._process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)

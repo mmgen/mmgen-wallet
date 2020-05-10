@@ -110,7 +110,7 @@ def override_globals_from_cfg_file(ucfg):
 		else:
 			die(2,'{!r}: unrecognized option in {!r}, line {}'.format(d.name,ucfg.fn,d.lineno))
 
-def override_globals_from_env():
+def override_globals_and_set_opts_from_env(opt):
 	for name in g.env_opts:
 		if name == 'MMGEN_DEBUG_ALL':
 			continue
@@ -118,7 +118,13 @@ def override_globals_from_env():
 		val = os.getenv(name) # os.getenv() returns None if env var is unset
 		if val: # exclude empty string values; string value of '0' or 'false' sets variable to False
 			gname = name[(6,14)[disable]:].lower()
-			setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
+			if hasattr(g,gname):
+				setattr(g,gname,set_for_type(val,getattr(g,gname),name,disable))
+			elif hasattr(opt,gname):
+				if getattr(opt,gname) is None: # env must not override cmdline!
+					setattr(opt,gname,val)
+			else:
+				raise ValueError(f'Name {gname} not present in globals or opts')
 
 def common_opts_code(s):
 	from .protocol import CoinProtocol
@@ -167,6 +173,8 @@ common_opts_data = {
 --, --rpc-port=p          Communicate with {dn} listening on port 'p'
 --, --rpc-user=user       Override 'rpc_user' in mmgen.cfg
 --, --rpc-password=pass   Override 'rpc_password' in mmgen.cfg
+--, --rpc-backend=s       Override 'rpc_backend' in mmgen.cfg
+--, --aiohttp-rpc-queue-len=N Override 'aiohttp_rpc_queue_len' in mmgen.cfg
 --, --monero-wallet-rpc-host=host Override 'monero_wallet_rpc_host' in mmgen.cfg
 --, --monero-wallet-rpc-user=user Override 'monero_wallet_rpc_user' in mmgen.cfg
 --, --monero-wallet-rpc-password=pass Override 'monero_wallet_rpc_password' in mmgen.cfg
@@ -232,7 +240,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		cfg_file('sample') # check for changes in system template file
 		override_globals_from_cfg_file(cfg_file('usr'))
 
-	override_globals_from_env()
+	override_globals_and_set_opts_from_env(opt)
 
 	# Set globals from opts, setting type from original global value
 	# Do here, before opts are set from globals below
@@ -240,7 +248,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	for k in (g.common_opts + g.opt_sets_global):
 		if hasattr(opt,k):
 			val = getattr(opt,k)
-			if val != None:
+			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
 	g.coin = g.coin.upper() # allow user to use lowercase
@@ -337,7 +345,7 @@ def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 		return
 
 	from .tx import MMGenTX
-	tx = MMGenTX(offline=True)
+	tx = MMGenTX()
 	# Size of 224 is just a ball-park figure to eliminate the most extreme cases at startup
 	# This check will be performed again once we know the true size
 	ret = tx.process_fee_spec(val,224,on_fail='return')
@@ -466,7 +474,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_compares(val,'<=',g.max_urandchars,desc)
 
 	def chk_tx_fee(key,val,desc):
-		opt_is_tx_fee(key,val,desc)
+		pass
+#		opt_is_tx_fee(key,val,desc) # TODO: move this check elsewhere
 
 	def chk_tx_confs(key,val,desc):
 		opt_is_int(val,desc)

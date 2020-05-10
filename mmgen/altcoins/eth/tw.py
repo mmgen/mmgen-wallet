@@ -22,27 +22,17 @@ altcoins.eth.tw: Ethereum tracking wallet and related classes for the MMGen suit
 
 from mmgen.common import *
 from mmgen.obj import ETHAmt,TwLabel,is_coin_addr,is_mmgen_id,MMGenListItem,ListItemAttr,ImmutableAttr
-from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs
-from mmgen.addr import AddrData
-from .contract import Token
+from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs,TwGetBalance
+from mmgen.addr import AddrData,TwAddrData
+from .contract import Token,TokenResolve
 
 class EthereumTrackingWallet(TrackingWallet):
 
-	caps = ()
+	caps = ('batch',)
 	data_key = 'accounts'
 	use_tw_file = True
 
-	def __init__(self,mode='r',no_rpc=False):
-		TrackingWallet.__init__(self,mode=mode)
-
-		for v in self.data['tokens'].values():
-			self.conv_types(v)
-
-		if g.token and not is_coin_addr(g.token):
-			ret = self.sym2addr(g.token,no_rpc=no_rpc)
-			if ret: g.token = ret
-
-	def is_in_wallet(self,addr):
+	async def is_in_wallet(self,addr):
 		return addr in self.data_root
 
 	def init_empty(self):
@@ -84,14 +74,17 @@ class EthereumTrackingWallet(TrackingWallet):
 			self.force_write()
 			msg('{} upgraded successfully!'.format(self.desc))
 
-	# Don't call rpc_init() for Ethereum, because it may create a wallet instance
-	def rpc_init(self): pass
-
-	def rpc_get_balance(self,addr):
-		return ETHAmt(int(g.rpc.eth_getBalance('0x'+addr),16),'wei')
+	async def rpc_get_balance(self,addr):
+		return ETHAmt(int(await g.rpc.call('eth_getBalance','0x'+addr),16),'wei')
 
 	@write_mode
-	def import_address(self,addr,label,foo):
+	async def batch_import_address(self,args_list):
+		for arg_list in args_list:
+			await self.import_address(*arg_list)
+		return args_list
+
+	@write_mode
+	async def import_address(self,addr,label,foo):
 		r = self.data_root
 		if addr in r:
 			if not r[addr]['mmid'] and label.mmid:
@@ -101,7 +94,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		r[addr] = { 'mmid': label.mmid, 'comment': label.comment }
 
 	@write_mode
-	def remove_address(self,addr):
+	async def remove_address(self,addr):
 		r = self.data_root
 
 		if is_coin_addr(addr):
@@ -109,7 +102,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		elif is_mmgen_id(addr):
 			have_match = lambda k: r[k]['mmid'] == addr
 		else:
-			die(1,"'{}' is not an Ethereum address or MMGen ID".format(addr))
+			die(1,f'{addr!r} is not an Ethereum address or MMGen ID')
 
 		for k in r:
 			if have_match(k):
@@ -119,46 +112,30 @@ class EthereumTrackingWallet(TrackingWallet):
 				self.write()
 				return ret
 		else:
-			m = "Address '{}' not found in '{}' section of tracking wallet"
-			msg(m.format(addr,self.data_root_desc))
+			msg(f'Address {addr!r} not found in {self.data_root_desc!r} section of tracking wallet')
 			return None
 
 	@write_mode
-	def set_label(self,coinaddr,lbl):
+	async def set_label(self,coinaddr,lbl):
 		for addr,d in list(self.data_root.items()):
 			if addr == coinaddr:
 				d['comment'] = lbl.comment
 				self.write()
 				return None
-		else: # emulate on_fail='return' of RPC library
-			m = "Address '{}' not found in '{}' section of tracking wallet"
-			return ('rpcfail',(None,2,m.format(coinaddr,self.data_root_desc)))
+		else:
+			msg(f'Address {coinaddr!r} not found in {self.data_root_desc!r} section of tracking wallet')
+			return False
 
-	def addr2sym(self,req_addr):
-
+	async def addr2sym(self,req_addr):
 		for addr in self.data['tokens']:
 			if addr == req_addr:
-				ret = self.data['tokens'][addr]['params'].get('symbol')
-				if ret: return ret
-				else: break
-
-		self.token_obj = Token(req_addr)
-		ret = self.token_obj.symbol().upper()
-		self.force_set_token_param(req_addr,'symbol',ret)
-		return ret
-
-	def sym2addr(self,sym,no_rpc=False):
-
-		for addr in self.data['tokens']:
-			if self.data['tokens'][addr]['params'].get('symbol') == sym.upper():
-				return addr
-
-		if no_rpc:
+				return self.data['tokens'][addr]['params']['symbol']
+		else:
 			return None
 
+	async def sym2addr(self,sym):
 		for addr in self.data['tokens']:
-			if Token(addr).symbol().upper() == sym.upper():
-				self.force_set_token_param(addr,'symbol',sym.upper())
+			if self.data['tokens'][addr]['params']['symbol'] == sym.upper():
 				return addr
 		else:
 			return None
@@ -168,17 +145,6 @@ class EthereumTrackingWallet(TrackingWallet):
 			return self.data['tokens'][token]['params'].get(param)
 		return None
 
-	def force_set_token_param(self,*args,**kwargs):
-		mode_save = self.mode
-		self.mode = 'w'
-		self.set_token_param(*args,**kwargs)
-		self.mode = mode_save
-
-	@write_mode
-	def set_token_param(self,token,param,val):
-		if token in self.data['tokens']:
-			self.data['tokens'][token]['params'][param] = val
-
 class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 
 	desc = 'Ethereum token tracking wallet'
@@ -186,29 +152,32 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 	symbol = None
 	cur_eth_balances = {}
 
-	def __init__(self,mode='r',no_rpc=False):
-		EthereumTrackingWallet.__init__(self,mode=mode,no_rpc=no_rpc)
+	async def __ainit__(self,mode='r'):
+		await super().__ainit__(mode=mode)
 
-		self.desc = 'Ethereum token tracking wallet'
+		for v in self.data['tokens'].values():
+			self.conv_types(v)
 
 		if not is_coin_addr(g.token):
-			raise UnrecognizedTokenSymbol('Specified token {!r} could not be resolved!'.format(g.token))
+			g.token = await self.sym2addr(g.token) # returns None on failure
 
-		if mode == 'r' and not g.token in self.data['tokens']:
+		if not is_coin_addr(g.token):
+			if self.importing:
+				m = 'When importing addresses for a new token, the token must be specified by address, not symbol.'
+				raise InvalidTokenAddress(f'{g.token!r}: invalid token address\n{m}')
+			else:
+				raise UnrecognizedTokenSymbol(f'Specified token {g.token!r} could not be resolved!')
+
+		if g.token in self.data['tokens']:
+			self.decimals = self.data['tokens'][g.token]['params']['decimals']
+			self.symbol = self.data['tokens'][g.token]['params']['symbol']
+		elif not self.importing:
 			raise TokenNotInWallet('Specified token {!r} not in wallet!'.format(g.token))
 
 		self.token = g.token
+		g.dcoin = self.symbol
 
-		if self.token in self.data['tokens']:
-			for k in ('decimals','symbol'):
-				setattr(self,k,self.get_param(k))
-				if getattr(self,k) == None:
-					setattr(self,k,getattr(Token(self.token,self.decimals),k)())
-					if getattr(self,k) != None:
-						self.set_param(k,getattr(self,k))
-						self.write()
-
-	def is_in_wallet(self,addr):
+	async def is_in_wallet(self,addr):
 		return addr in self.data['tokens'][self.token]
 
 	@property
@@ -217,43 +186,39 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 
 	@property
 	def data_root_desc(self):
-		return 'token ' + Token(self.token,self.decimals).symbol()
+		return 'token ' + self.get_param('symbol')
 
-	@write_mode
-	def add_token(self,token):
-		msg("Adding token '{}' to tracking wallet.".format(token))
-		self.data['tokens'][token] = { 'params': {} }
+	async def rpc_get_balance(self,addr):
+		return await Token(self.token,self.decimals).get_balance(addr)
 
-	@write_mode
-	def import_address(self,*args,**kwargs):
-		if self.token not in self.data['tokens']:
-			self.add_token(self.token)
-		EthereumTrackingWallet.import_address(self,*args,**kwargs)
-
-	def rpc_get_balance(self,addr):
-		return Token(self.token,self.decimals).balance(addr)
-
-	def get_eth_balance(self,addr,force_rpc=False):
+	async def get_eth_balance(self,addr,force_rpc=False):
 		cache = self.cur_eth_balances
-		data_root = self.data['accounts']
-		ret = None if force_rpc else self.get_cached_balance(addr,cache,data_root)
+		r = self.data['accounts']
+		ret = None if force_rpc else self.get_cached_balance(addr,cache,r)
 		if ret == None:
-			ret = EthereumTrackingWallet.rpc_get_balance(self,addr)
-			self.cache_balance(addr,ret,cache,data_root)
+			ret = await super().rpc_get_balance(addr)
+			self.cache_balance(addr,ret,cache,r)
 		return ret
 
-	def force_set_param(self,*args,**kwargs):
-		mode_save = self.mode
-		self.mode = 'w'
-		self.set_param(*args,**kwargs)
-		self.mode = mode_save
+	def get_param(self,param):
+		return self.data['tokens'][self.token]['params'][param]
 
 	@write_mode
-	def set_param(self,param,val):
-		self.data['tokens'][self.token]['params'][param] = val
-
-	def get_param(self,param):
-		return self.data['tokens'][self.token]['params'].get(param)
+	async def import_token(tw):
+		"""
+		Token 'symbol' and 'decimals' values are resolved from the network by the system just
+		once, upon token import.  Thereafter, token address, symbol and decimals are resolved
+		either from the tracking wallet (online operations) or transaction file (when signing).
+		"""
+		if not g.token in tw.data['tokens']:
+			t = await TokenResolve(g.token)
+			tw.token = g.token
+			tw.data['tokens'][tw.token] = {
+				'params': {
+					'symbol': await t.get_symbol(),
+					'decimals': t.decimals
+				}
+			}
 
 # No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
@@ -277,23 +242,23 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide',
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
 
-	def __init__(self,*args,**kwargs):
+	async def __ainit__(self,*args,**kwargs):
 		if g.use_cached_balances:
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
-		TwUnspentOutputs.__init__(self,*args,**kwargs)
+		await TwUnspentOutputs.__ainit__(self,*args,**kwargs)
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
 		super().do_sort(key=key,reverse=reverse)
 
-	def get_unspent_rpc(self):
+	async def get_unspent_rpc(self):
 		wl = self.wallet.sorted_list
 		if self.addrs:
 			wl = [d for d in wl if d['addr'] in self.addrs]
 		return [{
 				'account': TwLabel(d['mmid']+' '+d['comment'],on_fail='raise'),
 				'address': d['addr'],
-				'amount': self.wallet.get_balance(d['addr']),
+				'amount': await self.wallet.get_balance(d['addr']),
 				'confirmations': 0, # TODO
 				} for d in wl]
 
@@ -311,6 +276,9 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	def age_disp(self,o,age_fmt): # TODO
 		return None
 
+	def age_disp(self,o,age_fmt): # TODO
+		return None
+
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	disp_type = 'token'
@@ -320,18 +288,18 @@ class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 	def get_display_precision(self):
 		return 10 # truncate precision for narrow display
 
-	def get_unspent_data(self):
-		super().get_unspent_data()
+	async def get_unspent_data(self,*args,**kwargs):
+		await super().get_unspent_data(*args,**kwargs)
 		for e in self.unspent:
-			e.amt2 = self.wallet.get_eth_balance(e.addr)
+			e.amt2 = await self.wallet.get_eth_balance(e.addr)
 
 class EthereumTwAddrList(TwAddrList):
 
 	has_age = False
 
-	def __init__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	async def __ainit__(self,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
-		self.wallet = wallet or TrackingWallet(mode='w')
+		self.wallet = wallet or await TrackingWallet(mode='w')
 		tw_dict = self.wallet.mmid_ordered_dict
 		self.total = g.proto.coin_amt('0')
 
@@ -341,7 +309,7 @@ class EthereumTwAddrList(TwAddrList):
 			label = TwLabel(mmid+' '+d['comment'],on_fail='raise')
 			if usr_addr_list and (label.mmid not in usr_addr_list):
 				continue
-			bal = self.wallet.get_balance(d['addr'])
+			bal = await self.wallet.get_balance(d['addr'])
 			if bal == 0 and not showempty:
 				if not label.comment or not all_labels:
 					continue
@@ -352,18 +320,20 @@ class EthereumTwAddrList(TwAddrList):
 			self[label.mmid]['amt'] += bal
 			self.total += bal
 
-class EthereumTokenTwAddrList(EthereumTwAddrList): pass
+		del self.wallet
 
-from mmgen.tw import TwGetBalance
+class EthereumTokenTwAddrList(EthereumTwAddrList):
+	pass
+
 class EthereumTwGetBalance(TwGetBalance):
 
 	fs = '{w:13} {c}\n' # TODO - for now, just suppress display of meaningless data
 
-	def __init__(self,*args,**kwargs):
-		self.wallet = TrackingWallet(mode='w')
-		TwGetBalance.__init__(self,*args,**kwargs)
+	async def __ainit__(self,*args,**kwargs):
+		self.wallet = await TrackingWallet(mode='w')
+		await TwGetBalance.__ainit__(self,*args,**kwargs)
 
-	def create_data(self):
+	async def create_data(self):
 		data = self.wallet.mmid_ordered_dict
 		for d in data:
 			if d.type == 'mmgen':
@@ -374,20 +344,24 @@ class EthereumTwGetBalance(TwGetBalance):
 				key = 'Non-MMGen'
 
 			conf_level = 2 # TODO
-			amt = self.wallet.get_balance(data[d]['addr'])
+			amt = await self.wallet.get_balance(data[d]['addr'])
 
 			self.data['TOTAL'][conf_level] += amt
 			self.data[key][conf_level] += amt
 
-class EthereumTokenTwGetBalance(EthereumTwGetBalance): pass
+		del self.wallet
 
-class EthereumAddrData(AddrData):
+class EthereumTwAddrData(TwAddrData):
 
 	@classmethod
-	def get_tw_data(cls,wallet=None):
+	async def get_tw_data(cls,wallet=None):
 		vmsg('Getting address data from tracking wallet')
-		tw = (wallet or TrackingWallet()).mmid_ordered_dict
+		tw = (wallet or await TrackingWallet()).mmid_ordered_dict
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
 		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in list(tw.items())]
 
+class EthereumTokenTwGetBalance(EthereumTwGetBalance): pass
+class EthereumTokenTwAddrData(EthereumTwAddrData): pass
+
+class EthereumAddrData(AddrData): pass
 class EthereumTokenAddrData(EthereumAddrData): pass

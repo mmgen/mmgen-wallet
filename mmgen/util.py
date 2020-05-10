@@ -818,35 +818,32 @@ def do_license_msg(immed=False):
 			msg_r('\r')
 	msg('')
 
-def get_daemon_cfg_options(cfg_keys):
-
+# TODO: these belong in protocol.py
+def get_coin_daemon_cfg_fn():
 	# Use dirname() to remove 'bob' or 'alice' component
 	cfg_dir = os.path.dirname(g.data_dir) if g.regtest else g.proto.daemon_data_dir
-	cfg_file = os.path.join(cfg_dir,g.proto.name+'.conf' )
+	return os.path.join(cfg_dir,g.proto.name+'.conf' )
 
+def get_coin_daemon_cfg_options(req_keys):
+
+	fn = get_coin_daemon_cfg_fn()
 	try:
-		lines = get_lines_from_file(cfg_file,'',silent=not opt.verbose)
-		kv_pairs = [l.split('=') for l in lines]
-		cfg = {k:v for k,v in kv_pairs if k in cfg_keys}
+		lines = get_lines_from_file(fn,'',silent=not opt.verbose)
 	except:
-		vmsg("Warning: '{}' does not exist or is unreadable".format(cfg_file))
-		cfg = {}
+		vmsg(f'Warning: {fn!r} does not exist or is unreadable')
+		return dict((k,None) for k in req_keys)
 
-	for k in set(cfg_keys) - set(cfg.keys()): cfg[k] = ''
+	def gen():
+		for key in req_keys:
+			val = None
+			for l in lines:
+				if l.startswith(key):
+					res = l.split('=',1)
+					if len(res) == 2 and not ' ' in res[1].strip():
+						val = res[1].strip()
+			yield (key,val)
 
-	return cfg
-
-def get_coin_daemon_auth_cookie():
-	f = os.path.join(g.proto.daemon_data_dir,g.proto.daemon_data_subdir,'.cookie')
-	return get_lines_from_file(f,'')[0] if file_is_readable(f) else ''
-
-def rpc_init(reinit=False):
-	if not 'rpc' in g.proto.mmcaps:
-		die(1,'Coin daemon operations not supported for coin {}!'.format(g.coin))
-	if g.rpc != None and not reinit: return g.rpc
-	from .rpc import init_daemon
-	g.rpc = init_daemon(g.proto.daemon_family)
-	return g.rpc
+	return dict(gen())
 
 def format_par(s,indent=0,width=80,as_list=False):
 	words,lines = s.split(),[]
@@ -886,3 +883,28 @@ def get_network_id(coin=None,testnet=None):
 	if coin == None: assert testnet == None
 	if coin != None: assert testnet != None
 	return (coin or g.coin).lower() + ('','_tn')[testnet or g.testnet]
+
+def run_session(callback,do_rpc_init=True,backend=None):
+	backend = backend or opt.rpc_backend
+	import asyncio
+	async def do():
+		if backend == 'aiohttp':
+			import aiohttp
+			async with aiohttp.ClientSession(
+				headers = { 'Content-Type': 'application/json' },
+				connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len),
+			) as g.session:
+				if do_rpc_init:
+					from .rpc import rpc_init
+					await rpc_init(backend=backend)
+				ret = await callback
+			g.session = None
+			return ret
+		else:
+			if do_rpc_init:
+				from .rpc import rpc_init
+				await rpc_init(backend=backend)
+			return await callback
+
+	# return asyncio.run(do()) # Python 3.7+
+	return asyncio.get_event_loop().run_until_complete(do())
