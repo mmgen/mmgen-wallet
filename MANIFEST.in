@@ -26,4 +26,6 @@ include scripts/create-token.py
 include scripts/traceback_run.py
 include scripts/uninstall-mmgen.py
 
+include examples/halving-calculator.py
+
 prune test/ref/__db*

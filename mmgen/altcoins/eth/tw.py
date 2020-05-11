@@ -276,9 +276,6 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 	def age_disp(self,o,age_fmt): # TODO
 		return None
 
-	def age_disp(self,o,age_fmt): # TODO
-		return None
-
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
 	disp_type = 'token'
