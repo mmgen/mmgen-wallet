@@ -137,8 +137,6 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 
 ### Download/Install
 
-> #### [Install a prebuilt bootable image (MMGenLive) on a USB stick][8]
-
 > #### [Install from source on Microsoft Windows][1]
 
 > #### [Install from source on Debian, Ubuntu, Raspbian or Armbian Linux][2]
