@@ -144,7 +144,7 @@ class RPCBackends:
 
 		def __init__(self,caller):
 
-			def gen():
+			def gen_opts():
 				for k,v in caller.http_hdrs.items():
 					for s in ('--header',f'{k}: {v}'):
 						yield s
@@ -157,9 +157,11 @@ class RPCBackends:
 						yield s
 				if caller.auth_type == 'digest':
 					yield '--digest'
+				if caller.proto == 'https' and caller.verify_server == False:
+					yield '--insecure'
 
 			self.url = caller.url
-			self.exec_opts = list(gen()) + ['--silent']
+			self.exec_opts = list(gen_opts()) + ['--silent']
 			self.arg_max = 8192 # set way below system ARG_MAX, just to be safe
 			self.timeout = caller.timeout
 
@@ -189,8 +191,10 @@ auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
 class RPCClient(MMGenObject):
 
+	auth_type = None
 	has_auth_cookie = False
-	url_fs = 'http://{}:{}'
+	proto = 'http'
+	host_path = ''
 
 	def __init__(self,host,port):
 
@@ -204,7 +208,7 @@ class RPCClient(MMGenObject):
 			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
-		self.url = self.url_fs.format(host,port)
+		self.url = f'{self.proto}://{host}:{port}{self.host_path}'
 		self.host = host
 		self.port = port
 		self.timeout = g.http_timeout
@@ -436,8 +440,6 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
-	auth_type = None
-
 	def __init__(self,*args,**kwargs): pass
 
 	async def __ainit__(self,backend=None):
@@ -510,16 +512,19 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 class MoneroWalletRPCClient(RPCClient):
 
 	auth_type = 'digest'
-	url_fs = 'http://{}:{}/json_rpc'
+	proto = 'https'
+	host_path = '/json_rpc'
+	verify_server = False
 
 	def __init__(self,host,port,user,passwd):
 		super().__init__(host,port)
 		self.auth = auth_data(user,passwd)
-		self.set_backend('requests')
-		if False: # insecure, for debugging only
-			self.backend = RPCBackends.curl(self)
+		if True:
+			self.set_backend('requests')
+		else: # insecure, for debugging only
+			self.set_backend('curl')
 			self.backend.exec_opts.remove('--silent')
-			self.backend.exec_opts.extend(['--insecure','--verbose'])
+			self.backend.exec_opts.append('--verbose')
 
 	async def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'

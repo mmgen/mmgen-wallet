@@ -32,6 +32,7 @@ opts_data = {
 		'options': """
 -h, --help       Print this help message
 -A, --no-daemon-autostart Don't start and stop daemons automatically
+-D, --no-daemon-stop Don't stop auto-started daemons after running tests
 -f, --fast       Speed up execution by reducing rounds on some tests
 -l, --list       List available tests
 -n, --names      Print command names instead of descriptions
@@ -45,7 +46,7 @@ If no test is specified, all available tests are run
 }
 
 sys.argv.insert(1,'--skip-cfg-file')
-cmd_args = opts.init(opts_data,add_opts=['no_daemon_stop'])
+cmd_args = opts.init(opts_data)
 
 def exit_msg():
 	t = int(time.time()) - start_time

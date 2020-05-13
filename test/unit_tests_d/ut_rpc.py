@@ -84,7 +84,8 @@ class unit_tests:
 
 		async def run():
 			md = CoinDaemon('xmr',test_suite=True)
-			md.start()
+			if not opt.no_daemon_autostart:
+				md.start()
 
 			g.monero_wallet_rpc_password = 'passwOrd'
 			mwd = MoneroWalletDaemon(wallet_dir='test/trash',test_suite=True)
@@ -99,10 +100,13 @@ class unit_tests:
 			await c.call('get_version')
 
 			gmsg('OK')
+
 			mwd.wait = False
 			mwd.stop()
-			md.wait = False
-			md.stop()
+
+			if not opt.no_daemon_stop:
+				md.wait = False
+				md.stop()
 
 		run_session(run(),do_rpc_init=False)
 		return True
