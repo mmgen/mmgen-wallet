@@ -25,26 +25,26 @@ from decimal import Decimal
 from .common import *
 from .obj import aInitMeta
 
-rpc_credentials_msg = lambda: '\n'+fmt(f"""
-	Error: no {g.proto.name.capitalize()} RPC authentication method found
+rpc_credentials_msg = lambda self: '\n'+fmt(f"""
+	Error: no {self.proto.name.capitalize()} RPC authentication method found
 
 	RPC credentials must be supplied using one of the following methods:
 
 	A) If daemon is local and running as same user as you:
 
 	   - no credentials required, or matching rpcuser/rpcpassword and
-	     rpc_user/rpc_password values in {g.proto.name}.conf and mmgen.cfg
+	     rpc_user/rpc_password values in {self.proto.name}.conf and mmgen.cfg
 
 	B) If daemon is running remotely or as different user:
 
-	   - matching credentials in {g.proto.name}.conf and mmgen.cfg as described above
+	   - matching credentials in {self.proto.name}.conf and mmgen.cfg as described above
 
 	The --rpc-user/--rpc-password options may be supplied on the MMGen command line.
 	They override the corresponding values in mmgen.cfg. Set them to an empty string
 	to use cookie authentication with a local server when the options are set
 	in mmgen.cfg.
 
-	For better security, rpcauth should be used in {g.proto.name}.conf instead of
+	For better security, rpcauth should be used in {self.proto.name}.conf instead of
 	rpcuser/rpcpassword.
 
 """,strip_char='\t')
@@ -157,7 +157,7 @@ class RPCBackends:
 						yield s
 				if caller.auth_type == 'digest':
 					yield '--digest'
-				if caller.proto == 'https' and caller.verify_server == False:
+				if caller.network_proto == 'https' and caller.verify_server == False:
 					yield '--insecure'
 
 			self.url = caller.url
@@ -193,7 +193,7 @@ class RPCClient(MMGenObject):
 
 	auth_type = None
 	has_auth_cookie = False
-	proto = 'http'
+	network_proto = 'http'
 	host_path = ''
 
 	def __init__(self,host,port):
@@ -208,7 +208,7 @@ class RPCClient(MMGenObject):
 			raise SocketError('Unable to connect to {}:{}'.format(host,port))
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
-		self.url = f'{self.proto}://{host}:{port}{self.host_path}'
+		self.url = f'{self.network_proto}://{host}:{port}{self.host_path}'
 		self.host = host
 		self.port = port
 		self.timeout = g.http_timeout
@@ -240,7 +240,7 @@ class RPCClient(MMGenObject):
 				self.auth = auth_data(*cookie.split(':'))
 				return
 
-		die(1,rpc_credentials_msg())
+		die(1,rpc_credentials_msg(self))
 
 	# positional params are passed to the daemon, kwargs to the backend
 	# 'timeout' is currently the only supported kwarg
@@ -323,12 +323,12 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 	def __init__(self,*args,**kwargs): pass
 
-	async def __ainit__(self,backend=None):
+	async def __ainit__(self,proto,backend):
 
 		async def check_chainfork_mismatch(block0):
 			try:
-				assert block0 == g.proto.block0,'Incorrect Genesis block for {}'.format(g.proto.__name__)
-				for fork in g.proto.forks:
+				assert block0 == self.proto.block0,'Incorrect Genesis block for {}'.format(self.proto.__name__)
+				for fork in self.proto.forks:
 					if fork.height == None or self.blockcount < fork.height:
 						break
 					if fork.hash != await self.call('getblockhash',fork.height):
@@ -344,11 +344,12 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 			except Exception as e:
 				die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
 
+		self.proto = proto
 		user,passwd = get_coin_daemon_cfg_options(('rpcuser','rpcpassword')).values()
 
 		super().__init__(
 			host = g.rpc_host or 'localhost',
-			port = g.rpc_port or g.proto.rpc_port)
+			port = g.rpc_port or self.proto.rpc_port)
 
 		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests socket
 		self.set_backend(backend) # backend requires self.auth
@@ -389,17 +390,14 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 			if len((await self.call('help',func)).split('\n')) > 3:
 				self.caps += (cap,)
 
-	# TODO: these belong in protocol.py
-	@classmethod
-	def get_daemon_auth_cookie_fn(cls):
+	def get_daemon_auth_cookie_fn(self):
 		cdir = os.path.join(
-			g.proto.daemon_data_dir,
-			g.proto.daemon_data_subdir )
+			self.proto.daemon_data_dir,
+			self.proto.daemon_data_subdir )
 		return os.path.join(cdir,'.cookie')
 
-	@classmethod
-	def get_daemon_auth_cookie(cls):
-		fn = cls.get_daemon_auth_cookie_fn()
+	def get_daemon_auth_cookie(self):
+		fn = self.get_daemon_auth_cookie_fn()
 		return get_lines_from_file(fn,'')[0] if file_is_readable(fn) else ''
 
 	rpcmethods = (
@@ -442,11 +440,13 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
 	def __init__(self,*args,**kwargs): pass
 
-	async def __ainit__(self,backend=None):
+	async def __ainit__(self,proto,backend):
+
+		self.proto = proto
 
 		super().__init__(
 			host = g.rpc_host or 'localhost',
-			port = g.rpc_port or g.proto.rpc_port )
+			port = g.rpc_port or self.proto.rpc_port )
 
 		self.set_backend(backend)
 
@@ -512,7 +512,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 class MoneroWalletRPCClient(RPCClient):
 
 	auth_type = 'digest'
-	proto = 'https'
+	network_proto = 'https'
 	host_path = '/json_rpc'
 	verify_server = False
 
@@ -546,6 +546,7 @@ class MoneroWalletRPCClient(RPCClient):
 async def rpc_init(proto=None,backend=None):
 
 	proto = proto or g.proto
+	backend = backend or g.rpc_backend
 
 	if not 'rpc' in proto.mmcaps:
 		die(1,'Coin daemon operations not supported for {}!'.format(proto.__name__))
@@ -553,6 +554,6 @@ async def rpc_init(proto=None,backend=None):
 	g.rpc = await {
 		'bitcoind': BitcoinRPCClient,
 		'parity':   EthereumRPCClient,
-	}[proto.daemon_family](backend=backend)
+	}[proto.daemon_family](proto=proto,backend=backend)
 
 	return g.rpc

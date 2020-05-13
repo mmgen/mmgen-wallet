@@ -476,13 +476,6 @@ class CoinProtocol(MMGenObject):
 	def list_coins(cls):
 		return [c.upper() for c in cls.coins]
 
-	@classmethod
-	def get_base_coin_from_name(cls,name):
-		for (proto,foo) in cls.coins.values():
-			if name == proto.__name__[:-8].lower():
-				return proto.base_coin
-		return False
-
 def init_genonly_altcoins(usr_coin=None):
 	"""
 	Initialize altcoin protocol class or classes for current network.
@@ -563,7 +556,6 @@ def init_coin(coin,testnet=None):
 	if testnet is not None:
 		g.testnet = testnet
 	g.network = ('mainnet','testnet')[g.testnet]
-	coin = coin.upper()
-	g.coin = coin
-	g.proto = CoinProtocol(coin,g.testnet)
+	g.coin = coin.upper()
+	g.proto = CoinProtocol(g.coin,g.testnet)
 	return g.proto

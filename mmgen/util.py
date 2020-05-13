@@ -884,8 +884,9 @@ def get_network_id(coin=None,testnet=None):
 	if coin != None: assert testnet != None
 	return (coin or g.coin).lower() + ('','_tn')[testnet or g.testnet]
 
-def run_session(callback,do_rpc_init=True,backend=None):
+def run_session(callback,do_rpc_init=True,proto=None,backend=None):
 	backend = backend or opt.rpc_backend
+	proto = proto or g.proto
 	import asyncio
 	async def do():
 		if backend == 'aiohttp':
@@ -896,14 +897,14 @@ def run_session(callback,do_rpc_init=True,backend=None):
 			) as g.session:
 				if do_rpc_init:
 					from .rpc import rpc_init
-					await rpc_init(backend=backend)
+					await rpc_init(proto=proto,backend=backend)
 				ret = await callback
 			g.session = None
 			return ret
 		else:
 			if do_rpc_init:
 				from .rpc import rpc_init
-				await rpc_init(backend=backend)
+				await rpc_init(proto=proto,backend=backend)
 			return await callback
 
 	# return asyncio.run(do()) # Python 3.7+
