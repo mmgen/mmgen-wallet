@@ -231,12 +231,12 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	def ref_segwitaddrfile_chk(self):
 		if not 'S' in g.proto.mmtypes:
-			return skip('not supported by {}'.format(g.proto.__name__))
+			return skip('not supported by {}'.format(type(g.proto).__name__))
 		return self.ref_addrfile_chk(ftype='segwitaddr',pat='{}.*Segwit'.format(nw_name))
 
 	def ref_bech32addrfile_chk(self):
 		if not 'B' in g.proto.mmtypes:
-			return skip('not supported by {}'.format(g.proto.__name__))
+			return skip('not supported by {}'.format(type(g.proto).__name__))
 		return self.ref_addrfile_chk(ftype='bech32addr',pat='{}.*Bech32'.format(nw_name))
 
 	def ref_keyaddrfile_chk(self):

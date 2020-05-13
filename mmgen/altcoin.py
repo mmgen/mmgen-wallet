@@ -435,7 +435,7 @@ class CoinInfo(object):
 				e = cls.get_entry(coin,network)
 				if e:
 					proto = CoinProtocol(coin,testnet=network=='testnet')
-					cdata = (network,coin,e,proto.__name__,verbose)
+					cdata = (network,coin,e,type(proto).__name__,verbose)
 					if not quiet:
 						msg('Verifying {} {}'.format(coin.upper(),network))
 

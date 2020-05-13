@@ -961,7 +961,7 @@ Record this checksum: it will be used to verify the password file in the future
 			# take most significant part
 			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
 			from .protocol import MoneroProtocol
-			bytes_preproc = MoneroProtocol.preprocess_key(bytes_trunc,None)
+			bytes_preproc = MoneroProtocol().preprocess_key(bytes_trunc,None)
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
 			# take least significant part

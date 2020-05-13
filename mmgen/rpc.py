@@ -327,7 +327,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 		async def check_chainfork_mismatch(block0):
 			try:
-				assert block0 == self.proto.block0,'Incorrect Genesis block for {}'.format(self.proto.__name__)
+				assert block0 == self.proto.block0,'Incorrect Genesis block for {}'.format(type(self.proto).__name__)
 				for fork in self.proto.forks:
 					if fork.height == None or self.blockcount < fork.height:
 						break
@@ -546,10 +546,10 @@ class MoneroWalletRPCClient(RPCClient):
 async def rpc_init(proto=None,backend=None):
 
 	proto = proto or g.proto
-	backend = backend or g.rpc_backend
+	backend = backend or opt.rpc_backend
 
 	if not 'rpc' in proto.mmcaps:
-		die(1,'Coin daemon operations not supported for {}!'.format(proto.__name__))
+		die(1,'Coin daemon operations not supported for {}!'.format(type(proto).__name__))
 
 	g.rpc = await {
 		'bitcoind': BitcoinRPCClient,

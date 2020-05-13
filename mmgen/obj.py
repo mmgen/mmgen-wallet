@@ -529,7 +529,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 			me.hex = ap.bytes.hex()
 			return me
 		except Exception as e:
-			return cls.init_fail(e,s,objname='{} address'.format(g.proto.__name__))
+			return cls.init_fail(e,s,objname='{} address'.format(type(g.proto).__name__))
 
 	@classmethod
 	def fmtc(cls,s,**kwargs):
@@ -538,7 +538,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 
 	def is_for_chain(self,chain):
 
-		if g.proto.__name__[:8] == 'Ethereum':
+		if type(g.proto).__name__[:8] == 'Ethereum':
 			return True
 
 		proto = g.proto.get_protocol_by_chain(chain)
@@ -620,7 +620,7 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 			me.sid = SeedID(sid=ss[0],on_fail='raise')
 			me.idx = AddrIdx(ss[-1],on_fail='raise')
 			me.mmtype = t
-			assert t in g.proto.mmtypes,'{}: invalid address type for {}'.format(t,g.proto.__name__)
+			assert t in g.proto.mmtypes,'{}: invalid address type for {}'.format(t,type(g.proto).__name__)
 			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
 			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
 			return me
@@ -755,7 +755,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				me.orig_hex = None
 				if k.sec != g.proto.preprocess_key(k.sec,k.pubkey_type):
 					m = '{} WIF key {!r} encodes private key with unacceptable value {}'
-					raise PrivateKeyError(m.format(g.proto.__name__,me.wif,me))
+					raise PrivateKeyError(m.format(type(g.proto).__name__,me.wif,me))
 				return me
 			except Exception as e:
 				return cls.init_fail(e,s,objname='{} WIF key'.format(g.coin))
@@ -914,7 +914,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 					for k in v._fields:
 						setattr(me,k,getattr(v,k))
 					assert me in g.proto.mmtypes + ('P',), (
-						"'{}': invalid address type for {}".format(me.name,g.proto.__name__))
+						"'{}': invalid address type for {}".format(me.name,type(g.proto).__name__))
 					return me
 			raise ValueError('unrecognized address type')
 		except Exception as e:

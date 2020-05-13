@@ -23,7 +23,7 @@ test/test.py: Test suite for the MMGen wallet system
 def check_segwit_opts():
 	for k,m in (('segwit','S'),('segwit_random','S'),('bech32','B')):
 		if getattr(opt,k) and m not in g.proto.mmtypes:
-			die(1,'--{} option incompatible with {}'.format(k.replace('_','-'),g.proto.__name__))
+			die(1,'--{} option incompatible with {}'.format(k.replace('_','-'),type(g.proto).__name__))
 
 def create_shm_dir(data_dir,trash_dir):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory

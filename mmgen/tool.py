@@ -526,11 +526,12 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	@staticmethod
 	def _xmr_reduce(bytestr):
-		from .protocol import MoneroProtocol as mp
-		if len(bytestr) != mp.privkey_len:
+		from .protocol import MoneroProtocol
+		p = MoneroProtocol()
+		if len(bytestr) != p.privkey_len:
 			m = '{!r}: invalid bit length for Monero private key (must be {})'
-			die(1,m.format(len(bytestr*8),mp.privkey_len*8))
-		return mp.preprocess_key(bytestr,None)
+			die(1,m.format(len(bytestr*8),p.privkey_len*8))
+		return p.preprocess_key(bytestr,None)
 
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
