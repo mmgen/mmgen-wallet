@@ -6,7 +6,7 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 from mmgen.common import *
 from mmgen.exception import *
 
-from mmgen.protocol import init_coin,EthereumProtocol
+from mmgen.protocol import init_coin
 from mmgen.rpc import MoneroWalletRPCClient
 from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
@@ -72,7 +72,6 @@ class unit_tests:
 		async def run_test():
 			qmsg('  Testing backend {!r}'.format(type(g.rpc.backend).__name__))
 			ret = await g.rpc.call('parity_versionInfo',timeout=300)
-			#print(ret)
 
 		for backend in g.autoset_opts['rpc_backend'].choices:
 			run_session(run_test(),backend=backend)

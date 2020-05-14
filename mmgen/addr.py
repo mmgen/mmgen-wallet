@@ -960,8 +960,8 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
 			# take most significant part
 			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
-			from .protocol import MoneroProtocol
-			bytes_preproc = MoneroProtocol().preprocess_key(bytes_trunc,None)
+			from .protocol import CoinProtocol
+			bytes_preproc = CoinProtocol.Monero().preprocess_key(bytes_trunc,None)
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
 			# take least significant part

@@ -526,8 +526,8 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	@staticmethod
 	def _xmr_reduce(bytestr):
-		from .protocol import MoneroProtocol
-		p = MoneroProtocol()
+		from .protocol import CoinProtocol
+		p = CoinProtocol.Monero()
 		if len(bytestr) != p.privkey_len:
 			m = '{!r}: invalid bit length for Monero private key (must be {})'
 			die(1,m.format(len(bytestr*8),p.privkey_len*8))

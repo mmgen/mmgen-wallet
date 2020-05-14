@@ -860,11 +860,10 @@ def format_par(s,indent=0,width=80,as_list=False):
 def altcoin_subclass(cls,mod_id,cls_name):
 	if cls.__name__ != cls_name: return cls
 	mod_dir = g.proto.base_coin.lower()
-	pname = g.proto.class_pfx if hasattr(g.proto,'class_pfx') else capfirst(g.proto.name)
 	tname = 'Token' if g.token else ''
 	import importlib
 	modname = 'mmgen.altcoins.{}.{}'.format(mod_dir,mod_id)
-	clsname = '{}{}{}'.format(pname,tname,cls_name)
+	clsname = '{}{}{}'.format(capfirst(g.proto.mod_clsname),tname,cls_name)
 	try:
 		return getattr(importlib.import_module(modname),clsname)
 	except ImportError:

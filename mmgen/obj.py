@@ -538,10 +538,10 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 
 	def is_for_chain(self,chain):
 
-		if type(g.proto).__name__[:8] == 'Ethereum':
+		if type(g.proto).__name__.startswith('Ethereum'):
 			return True
 
-		proto = g.proto.get_protocol_by_chain(chain)
+		proto = CoinProtocol.get_protocol_by_chain(chain)
 
 		if self.addr_fmt == 'bech32':
 			return self[:len(proto.bech32_hrp)] == proto.bech32_hrp
