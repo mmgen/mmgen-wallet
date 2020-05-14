@@ -69,6 +69,19 @@ def _b58chk_decode(s):
 
 finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 
+class CoinProtocol(MMGenObject):
+	proto_info = namedtuple('proto_info',['mainnet','testnet','trust_level']) # trust levels: see altcoin.py
+	coins = {
+		'btc': proto_info('Bitcoin',         'BitcoinTestnet',         5),
+		'bch': proto_info('BitcoinCash',     'BitcoinCashTestnet',     5),
+		'ltc': proto_info('Litecoin',        'LitecoinTestnet',        5),
+		'eth': proto_info('Ethereum',        'EthereumTestnet',        4),
+		'etc': proto_info('EthereumClassic', 'EthereumClassicTestnet', 4),
+		'zec': proto_info('Zcash',           'ZcashTestnet',           2),
+		'xmr': proto_info('Monero',          'MoneroTestnet',          4)
+	}
+	core_coins = tuple(coins.keys()) # coins may be added by init_genonly_altcoins(), so save
+
 # chainparams.cpp
 class BitcoinProtocol(MMGenObject):
 	name            = 'bitcoin'
@@ -118,7 +131,7 @@ class BitcoinProtocol(MMGenObject):
 
 	@staticmethod
 	def get_protocol_by_chain(chain):
-		return CoinProtocol(g.coin,{'mainnet':False,'testnet':True,'regtest':True}[chain])
+		return init_proto(g.coin,{'mainnet':False,'testnet':True,'regtest':True}[chain])
 
 	def cap(self,s): return s in self.caps
 
@@ -425,32 +438,18 @@ class MoneroProtocol(DummyWIF,BitcoinProtocolAddrgen):
 class MoneroTestnetProtocol(MoneroProtocol):
 	addr_ver_bytes = { '35': 'monero', '3f': 'monero_sub' }
 
-class CoinProtocol(MMGenObject):
-	pi = namedtuple('proto_info',['main_cls','test_cls','trust_level']) # trust levels: see altcoin.py
-	coins = {
-		'btc': pi(BitcoinProtocol,BitcoinTestnetProtocol,5),
-		'bch': pi(BitcoinCashProtocol,BitcoinCashTestnetProtocol,5),
-		'ltc': pi(LitecoinProtocol,LitecoinTestnetProtocol,5),
-		'eth': pi(EthereumProtocol,EthereumTestnetProtocol,4),
-		'etc': pi(EthereumClassicProtocol,EthereumClassicTestnetProtocol,4),
-		'zec': pi(ZcashProtocol,ZcashTestnetProtocol,2),
-		'xmr': pi(MoneroProtocol,MoneroTestnetProtocol,4)
-	}
-	core_coins = tuple(coins.keys())
-
-	def __new__(cls,coin,testnet):
-		coin = coin.lower()
-		assert type(testnet) == bool
-		m = "{}: not a valid coin for network {}\nSupported coins: {}"
-		assert coin in cls.coins, m.format(coin.upper(),g.network.upper(),' '.join(cls.list_coins()))
-		proto = cls.coins[coin][testnet]
-		if hasattr(proto,'bech32_hrps'):
-			proto.bech32_hrp = proto.bech32_hrps[('testnet','regtest')[g.regtest]]
-		return proto()
-
-	@classmethod
-	def list_coins(cls):
-		return [c.upper() for c in cls.coins]
+def init_proto(coin,testnet):
+	coin = coin.lower()
+	assert type(testnet) == bool, type(testnet)
+	if coin not in CoinProtocol.coins:
+		raise ValueError(
+			'{}: not a valid coin for network {}\nSupported coins: {}'.format(
+				coin.upper(),g.network.upper(),
+				' '.join(c.upper() for c in CoinProtocol.coins) ))
+	proto = globals()[CoinProtocol.coins[coin][testnet] + 'Protocol']
+	if hasattr(proto,'bech32_hrps'):
+		proto.bech32_hrp = proto.bech32_hrps[('testnet','regtest')[g.regtest]]
+	return proto()
 
 def init_genonly_altcoins(usr_coin=None):
 	"""
@@ -519,13 +518,13 @@ def make_init_genonly_altcoins_str(data):
 		out += make_proto(e,testnet=True)
 
 	tn_coins = [e.symbol for e in data['testnet']]
-	fs = "CoinProtocol.coins['{}'] = ({}Protocol,{})\n"
+	fs = "CoinProtocol.coins['{}'] = CoinProtocol.proto_info('{}',{},{})\n"
 	for e in data['mainnet']:
 		proto,coin = e.name,e.symbol
 		if proto[0] in '0123456789': proto = 'X_'+proto
 		if proto+'Protocol' in globals(): continue
 		if coin.lower() in CoinProtocol.coins: continue
-		out += fs.format(coin.lower(),proto,('None',proto+'TestnetProtocol')[coin in tn_coins])
+		out += fs.format(coin.lower(),proto,('None',f"'{proto}Testnet'")[coin in tn_coins],e.trust_level)
 	return out
 
 def init_coin(coin,testnet=None):
@@ -533,5 +532,5 @@ def init_coin(coin,testnet=None):
 		g.testnet = testnet
 	g.network = ('mainnet','testnet')[g.testnet]
 	g.coin = coin.upper()
-	g.proto = CoinProtocol(g.coin,g.testnet)
+	g.proto = init_proto(g.coin,g.testnet)
 	return g.proto

@@ -25,7 +25,7 @@ from decimal import Decimal
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
-from mmgen.protocol import CoinProtocol
+from mmgen.protocol import init_proto
 from mmgen.addr import AddrList
 from mmgen.wallet import MMGenWallet
 from ..include.common import *
@@ -344,7 +344,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 					x='-α' if g.debug_utf8 else ''))
 			if mmtype == g.proto.mmtypes[0] and user == 'bob':
 				psave = g.proto
-				g.proto = CoinProtocol(g.coin,True)
+				g.proto = init_proto(g.coin,True)
 				self._add_comments_to_addr_file(addrfile,addrfile,use_labels=True)
 				g.proto = psave
 			t = self.spawn( 'mmgen-addrimport',
@@ -568,7 +568,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			sid,self.altcoin_pfx,id_str,addr_range,x='-α' if g.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user),ext,no_dot=True)
 		psave = g.proto
-		g.proto = CoinProtocol(g.coin,True)
+		g.proto = init_proto(g.coin,True)
 		silence()
 		addr = AddrList(addrfile).data[idx].addr
 		end_silence()
@@ -810,7 +810,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			"MMGen address '{}' not found in tracking wallet".format(addr))
 
 	def alice_add_label_badaddr4(self):
-		addr = CoinProtocol(g.coin,True).pubhash2addr('00'*20,False) # testnet zero address
+		addr = init_proto(g.coin,True).pubhash2addr('00'*20,False) # testnet zero address
 		return self.alice_add_label_badaddr(addr,
 			"Address '{}' not found in tracking wallet".format(addr))
 

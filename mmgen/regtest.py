@@ -270,8 +270,8 @@ class MMGenRegtest(MMGenObject):
 
 	def fork(self,coin): # currently disabled
 
-		from .protocol import CoinProtocol
-		forks = CoinProtocol(coin,False).forks
+		from .protocol import init_proto
+		forks = init_proto(coin,False).forks
 		if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
 			die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
 

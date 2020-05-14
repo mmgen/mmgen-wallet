@@ -1195,7 +1195,10 @@ class tool_api(
 		"""The available coins"""
 		from .protocol import CoinProtocol
 		from .altcoin import CoinInfo
-		return sorted(set(CoinProtocol.list_coins() + [c.symbol for c in CoinInfo.get_supported_coins(g.network)]))
+		return sorted(set(
+			[c.upper() for c in CoinProtocol.coins]
+			+ [c.symbol for c in CoinInfo.get_supported_coins(g.network)]
+		))
 
 	@property
 	def coin(self):

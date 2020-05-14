@@ -113,7 +113,7 @@ exit_if_mswin('autosigning')
 
 import mmgen.tx
 from .txsign import txsign
-from .protocol import CoinProtocol,init_coin
+from .protocol import init_proto,init_coin
 from .rpc import rpc_init
 
 if g.test_suite:
@@ -134,7 +134,7 @@ async def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
-		g.proto = CoinProtocol(coin,g.testnet)
+		g.proto = init_proto(coin,g.testnet)
 		if g.proto.sign_mode == 'daemon':
 			if g.test_suite:
 				g.proto.daemon_data_dir = 'test/daemons/' + coin.lower()

@@ -87,14 +87,14 @@ def init_term_and_color():
 		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 def override_globals_from_cfg_file(ucfg):
-	from .protocol import CoinProtocol
+	from .protocol import CoinProtocol,init_proto
 	for d in ucfg.parse():
 		val = d.value
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in CoinProtocol.coins:
 				nse,tn = (ns[2:],True) if len(ns) > 2 and ns[1] == 'testnet' else (ns[1:],False)
-				cls = CoinProtocol(ns[0],tn)
+				cls = init_proto(ns[0],tn)
 				attr = '_'.join(nse)
 			else:
 				cls = g
@@ -259,11 +259,11 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 
 	g.network = 'testnet' if g.testnet else 'mainnet'
 
-	from .protocol import init_genonly_altcoins,CoinProtocol
+	from .protocol import init_genonly_altcoins,init_proto
 	altcoin_trust_level = init_genonly_altcoins(g.coin)
 
 	# g.testnet is finalized, so we can set g.proto
-	g.proto = CoinProtocol(g.coin,g.testnet)
+	g.proto = init_proto(g.coin,g.testnet)
 
 	# this could have been set from long opts
 	if g.daemon_data_dir:
@@ -293,7 +293,7 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 	if g.bob or g.alice:
 		g.testnet = True
 		g.regtest = True
-		g.proto = CoinProtocol(g.coin,g.testnet)
+		g.proto = init_proto(g.coin,g.testnet)
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		from .regtest import MMGenRegtest
@@ -491,7 +491,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 	def chk_coin(key,val,desc):
 		from .protocol import CoinProtocol
-		opt_is_in_list(val.lower(),list(CoinProtocol.coins.keys()),'coin')
+		opt_is_in_list(val.lower(),CoinProtocol.coins,'coin')
 
 	def chk_rbf(key,val,desc):
 		if not g.proto.cap('rbf'):

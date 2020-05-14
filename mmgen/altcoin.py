@@ -428,13 +428,13 @@ class CoinInfo(object):
 
 	@classmethod
 	def verify_core_coin_data(cls,quiet=False,verbose=False):
-		from mmgen.protocol import CoinProtocol
+		from mmgen.protocol import CoinProtocol,init_proto
 
 		for network in ('mainnet','testnet'):
 			for coin in CoinProtocol.core_coins:
 				e = cls.get_entry(coin,network)
 				if e:
-					proto = CoinProtocol(coin,testnet=network=='testnet')
+					proto = init_proto(coin,testnet=network=='testnet')
 					cdata = (network,coin,e,type(proto).__name__,verbose)
 					if not quiet:
 						msg('Verifying {} {}'.format(coin.upper(),network))

@@ -697,8 +697,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			else:
 				mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
 
-			from .protocol import CoinProtocol
-			base_coin = CoinProtocol(al_coin or 'BTC',testnet=False).base_coin
+			from .protocol import init_proto
+			base_coin = init_proto(al_coin or 'BTC',testnet=False).base_coin
 			return base_coin,mmtype,tn
 
 		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin

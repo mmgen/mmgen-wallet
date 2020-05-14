@@ -421,7 +421,7 @@ elif not b and hasattr(arg2,'read'):
 	dump_test(a,ag,arg2)
 elif a and b and type(arg2) == int:
 	if opt.all:
-		from mmgen.protocol import init_genonly_altcoins,CoinProtocol
+		from mmgen.protocol import CoinProtocol,init_genonly_altcoins
 		init_genonly_altcoins()
 		for coin in ci.external_tests[g.network][b.desc]:
 			if coin.lower() not in CoinProtocol.coins:

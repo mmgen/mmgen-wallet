@@ -353,8 +353,8 @@ class CoinDaemon(Daemon):
 			me.desc = 'test suite daemon'
 			rel_datadir = os.path.join('test','daemons',daemon_id)
 		else:
-			from .protocol import CoinProtocol
-			me.datadir = CoinProtocol(daemon_id,False).daemon_data_dir
+			from .protocol import init_proto
+			me.datadir = init_proto(daemon_id,False).daemon_data_dir
 
 		if test_suite:
 			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir))
