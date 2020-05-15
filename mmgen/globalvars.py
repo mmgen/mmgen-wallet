@@ -25,27 +25,20 @@ from decimal import Decimal
 from collections import namedtuple
 from .devtools import *
 
-# Global vars are set to dfl values in class g.
-# They're overridden in this order:
-#   1 - config file
-#   2 - environmental vars
-#   3 - command line
+def die(exit_val,s=''):
+	if s:
+		sys.stderr.write(s+'\n')
+	sys.exit(exit_val)
 
-class g(object):
-
-	def die(ev=0,s=''):
-		if s: sys.stderr.write(s+'\n')
-		sys.exit(ev)
-
-	for k in ('linux','win','msys'):
-		if sys.platform[:len(k)] == k:
-			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
-			break
-	else:
-		die(1,"'{}': platform not supported by {}\n".format(sys.platform,proj_name))
-
+class GlobalContext:
+	"""
+	Set global vars to default values
+	Globals are overridden in this order:
+	  1 - config file
+	  2 - environmental vars
+	  3 - command line
+	"""
 	# Constants:
-
 	version      = '0.12.099'
 	release_date = 'May 2020'
 
@@ -125,13 +118,19 @@ class g(object):
 	terminal_width       = 0
 
 	mnemonic_entry_modes = {}
-
 	color = sys.stdout.isatty()
 
-	if os.getenv('HOME'):   # Linux or MSYS
+	for k in ('linux','win','msys'):
+		if sys.platform[:len(k)] == k:
+			platform = { 'linux':'linux', 'win':'win', 'msys':'win' }[k]
+			break
+	else:
+		die(1,f'{sys.platform!r}: platform not supported by {proj_name}')
+
+	if os.getenv('HOME'):   # Linux or MSYS2
 		home_dir = os.getenv('HOME')
-	elif platform == 'win': # non-MSYS Windows - not supported
-		die(1,'$HOME not set!  {} for Windows must be run in MSYS environment'.format(proj_name))
+	elif platform == 'win': # Windows without MSYS2 - not supported
+		die(1,f'$HOME not set!  {proj_name} for Windows must be run in MSYS2 environment')
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
@@ -282,3 +281,5 @@ class g(object):
 		for name in env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
+
+g = GlobalContext()

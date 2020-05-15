@@ -541,6 +541,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		if type(g.proto).__name__.startswith('Ethereum'):
 			return True
 
+		from mmgen.protocol import CoinProtocol
 		proto = CoinProtocol.get_protocol_by_chain(chain)
 
 		if self.addr_fmt == 'bech32':
