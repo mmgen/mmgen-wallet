@@ -71,32 +71,33 @@ finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 
 class CoinProtocol(MMGenObject):
 
-	proto_info = namedtuple('proto_info',['mainnet','testnet','trust_level']) # trust levels: see altcoin.py
+	proto_info = namedtuple('proto_info',['base_name','trust_level']) # trust levels: see altcoin.py
 	coins = {
-		'btc': proto_info('Bitcoin',         'BitcoinTestnet',         5),
-		'bch': proto_info('BitcoinCash',     'BitcoinCashTestnet',     5),
-		'ltc': proto_info('Litecoin',        'LitecoinTestnet',        5),
-		'eth': proto_info('Ethereum',        'EthereumTestnet',        4),
-		'etc': proto_info('EthereumClassic', 'EthereumClassicTestnet', 4),
-		'zec': proto_info('Zcash',           'ZcashTestnet',           2),
-		'xmr': proto_info('Monero',          'MoneroTestnet',          4)
+		'btc': proto_info('Bitcoin',         5),
+		'bch': proto_info('BitcoinCash',     5),
+		'ltc': proto_info('Litecoin',        5),
+		'eth': proto_info('Ethereum',        4),
+		'etc': proto_info('EthereumClassic', 4),
+		'zec': proto_info('Zcash',           2),
+		'xmr': proto_info('Monero',          4)
 	}
 	core_coins = tuple(coins.keys()) # coins may be added by init_genonly_altcoins(), so save
 
-	@staticmethod
-	def get_protocol_by_chain(chain):
-		return init_proto(g.coin,{'mainnet':False,'testnet':True,'regtest':True}[chain])
-
 	class Common(MMGenObject):
+		networks = ('mainnet','testnet','regtest')
+
+		def __init__(self,coin,base_name,network):
+			self.coin    = coin.upper()
+			self.name    = base_name[0].lower() + base_name[1:]
+			self.network = network
 
 		def is_testnet(self):
-			return type(self).__name__.endswith('Testnet')
+			return self.network in ('testnet','regtest')
 
 		def cap(self,s):
 			return s in self.caps
 
 	class Bitcoin(Common): # chainparams.cpp
-		name            = 'bitcoin'
 		mod_clsname     = 'bitcoin'
 		daemon_name     = 'bitcoind'
 		daemon_family   = 'bitcoind'
@@ -236,7 +237,10 @@ class CoinProtocol(MMGenObject):
 		data_subdir         = 'testnet'
 		daemon_data_subdir  = 'testnet3'
 		rpc_port            = 18332
-		bech32_hrps         = {'testnet':'tb','regtest':'bcrt'}
+		bech32_hrp          = 'tb'
+
+	class BitcoinRegtest(BitcoinTestnet):
+		bech32_hrp          = 'bcrt'
 
 	class BitcoinCash(Bitcoin):
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
@@ -263,6 +267,9 @@ class CoinProtocol(MMGenObject):
 		data_subdir    = 'testnet'
 		daemon_data_subdir = 'testnet3'
 
+	class BitcoinCashRegtest(BitcoinCashTestnet):
+		pass
+
 	class B2X(Bitcoin):
 		daemon_name     = 'bitcoind-2x'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
@@ -283,7 +290,6 @@ class CoinProtocol(MMGenObject):
 
 	class Litecoin(Bitcoin):
 		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
-		name            = 'litecoin'
 		daemon_name     = 'litecoind'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' \
 							else os.path.join(g.home_dir,'.litecoin')
@@ -306,7 +312,10 @@ class CoinProtocol(MMGenObject):
 		data_subdir        = 'testnet'
 		daemon_data_subdir = 'testnet4'
 		rpc_port           = 19332
-		bech32_hrps        = {'testnet':'tltc','regtest':'rltc'}
+		bech32_hrp         = 'tltc'
+
+	class LitecoinRegtest(LitecoinTestnet):
+		bech32_hrp        = 'rltc'
 
 	class BitcoinAddrgen(Bitcoin):
 		mmcaps = ('key','addr')
@@ -330,7 +339,6 @@ class CoinProtocol(MMGenObject):
 		addr_len      = 20
 		mmtypes       = ('E',)
 		dfl_mmtype    = 'E'
-		name          = 'ethereum'
 		mod_clsname   = 'ethereum'
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
@@ -365,7 +373,6 @@ class CoinProtocol(MMGenObject):
 		chain_name  = 'kovan'
 
 	class EthereumClassic(Ethereum):
-		name       = 'ethereumClassic' # TODO
 		rpc_port   = 8555 # start Parity with --jsonrpc-port=8555 or --ports-shift=10
 		chain_name = 'ethereum_classic' # chain_id 0x3d (61)
 
@@ -374,7 +381,6 @@ class CoinProtocol(MMGenObject):
 		chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
 
 	class Zcash(BitcoinAddrgen):
-		name           = 'zcash'
 		base_coin      = 'ZEC'
 		addr_ver_bytes = { '1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey' }
 		wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
@@ -405,7 +411,6 @@ class CoinProtocol(MMGenObject):
 
 # https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 	class Monero(DummyWIF,BitcoinAddrgen):
-		name           = 'monero'
 		base_coin      = 'XMR'
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 		addr_len       = 68
@@ -445,18 +450,32 @@ class CoinProtocol(MMGenObject):
 	class MoneroTestnet(Monero):
 		addr_ver_bytes = { '35': 'monero', '3f': 'monero_sub' }
 
-def init_proto(coin,testnet):
+def init_proto(coin,testnet=False,regtest=False,network=None):
+
+	assert type(testnet) == bool
+	assert type(regtest) == bool
+
+	if network is None:
+		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
+	else:
+		assert network in CoinProtocol.Common.networks
+		assert testnet == False
+		assert regtest == False
+
 	coin = coin.lower()
-	assert type(testnet) == bool, type(testnet)
 	if coin not in CoinProtocol.coins:
 		raise ValueError(
 			'{}: not a valid coin for network {}\nSupported coins: {}'.format(
 				coin.upper(),g.network.upper(),
 				' '.join(c.upper() for c in CoinProtocol.coins) ))
-	proto = getattr(CoinProtocol,CoinProtocol.coins[coin][testnet])
-	if hasattr(proto,'bech32_hrps'):
-		proto.bech32_hrp = proto.bech32_hrps[('testnet','regtest')[g.regtest]]
-	return proto()
+
+	base_name = CoinProtocol.coins[coin].base_name
+	proto_name = base_name + ('' if network == 'mainnet' else network.capitalize())
+
+	return getattr(CoinProtocol,proto_name)(
+		coin      = coin,
+		base_name = base_name,
+		network   = network )
 
 def init_genonly_altcoins(usr_coin=None):
 	"""
@@ -513,8 +532,6 @@ def make_init_genonly_altcoins_str(data):
 		return f"""
 	class {proto}(CoinProtocol.BitcoinAddrgen{tn_str}):
 		base_coin      = {coin!r}
-		name           = {e.name.lower()!r}
-		nameCaps       = {e.name!r}
 		addr_ver_bytes = {{ {num2hexstr(e.p2pkh_info[0])}: 'p2pkh'{p2sh_info} }}
 		wif_ver_num    = {{ 'std': {num2hexstr(e.wif_ver_num)} }}
 		mmtypes        = ('L','C'{sw_mmtype})
@@ -535,10 +552,9 @@ def make_init_genonly_altcoins_str(data):
 				proto = 'X_'+proto
 			if hasattr(CoinProtocol,proto) or coin.lower() in CoinProtocol.coins:
 				continue
-			yield 'CoinProtocol.coins[{!r}] = CoinProtocol.proto_info({!r},{},{})'.format(
+			yield 'CoinProtocol.coins[{!r}] = CoinProtocol.proto_info({!r},{})'.format(
 				coin.lower(),
 				proto,
-				('None',f"'{proto}Testnet'")[coin in [e.symbol for e in data['testnet']]],
 				e.trust_level )
 
 	return '\n'.join(gen_text()) + '\n'
@@ -546,7 +562,7 @@ def make_init_genonly_altcoins_str(data):
 def init_coin(coin,testnet=None):
 	if testnet is not None:
 		g.testnet = testnet
-	g.network = ('mainnet','testnet')[g.testnet]
+	g.network = 'regtest' if g.regtest else 'testnet' if g.testnet else 'mainnet'
 	g.coin = coin.upper()
-	g.proto = init_proto(g.coin,g.testnet)
+	g.proto = init_proto(g.coin,testnet=g.testnet,regtest=g.regtest)
 	return g.proto

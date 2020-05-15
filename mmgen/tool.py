@@ -526,12 +526,12 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	@staticmethod
 	def _xmr_reduce(bytestr):
-		from .protocol import CoinProtocol
-		p = CoinProtocol.Monero()
-		if len(bytestr) != p.privkey_len:
+		from .protocol import init_proto
+		proto = init_proto('xmr')
+		if len(bytestr) != proto.privkey_len:
 			m = '{!r}: invalid bit length for Monero private key (must be {})'
-			die(1,m.format(len(bytestr*8),p.privkey_len*8))
-		return p.preprocess_key(bytestr,None)
+			die(1,m.format(len(bytestr*8),proto.privkey_len*8))
+		return proto.preprocess_key(bytestr,None)
 
 	def _do_random_mn(self,nbytes:int,fmt:str):
 		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
@@ -1208,10 +1208,7 @@ class tool_api(
 	@property
 	def network(self):
 		"""The currently configured network"""
-		if g.network == 'testnet':
-			return ('testnet','regtest')[g.regtest]
-		else:
-			return g.network
+		return g.network
 
 	@property
 	def addrtypes(self):

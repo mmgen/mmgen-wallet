@@ -273,7 +273,7 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	if g.regtest: # These are equivalent for now
 		g.testnet = True
 
-	g.network = 'testnet' if g.testnet else 'mainnet'
+	g.network = 'regtest' if g.regtest else 'testnet' if g.testnet else 'mainnet'
 
 	from .protocol import init_genonly_altcoins,init_proto
 	altcoin_trust_level = init_genonly_altcoins(g.coin)
@@ -309,7 +309,7 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	if g.bob or g.alice:
 		g.testnet = True
 		g.regtest = True
-		g.proto = init_proto(g.coin,g.testnet)
+		g.proto = init_proto(g.coin,regtest=True)
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		from .regtest import MMGenRegtest

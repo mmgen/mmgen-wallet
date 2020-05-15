@@ -698,8 +698,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
 
 			from .protocol import init_proto
-			base_coin = init_proto(al_coin or 'BTC',testnet=False).base_coin
-			return base_coin,mmtype,tn
+			return (init_proto(al_coin or 'BTC').base_coin, mmtype, tn)
 
 		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
 			m = '{} address file format, but base coin is {}!'
@@ -960,8 +959,8 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
 			# take most significant part
 			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
-			from .protocol import CoinProtocol
-			bytes_preproc = CoinProtocol.Monero().preprocess_key(bytes_trunc,None)
+			from .protocol import init_proto
+			bytes_preproc = init_proto('xmr').preprocess_key(bytes_trunc,None)
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
 			# take least significant part
