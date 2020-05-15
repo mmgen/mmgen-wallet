@@ -83,6 +83,7 @@ class TestSuiteHelp(TestSuiteBase):
 
 	def tool_help(self):
 		self._run_cmd('mmgen-tool',['--help'],extra_desc="('mmgen-tool --help')")
+		self._run_cmd('mmgen-tool',['--longhelp'],extra_desc="('mmgen-tool --longhelp')")
 		self._run_cmd('mmgen-tool',['help'],extra_desc="('mmgen-tool help')")
 		self._run_cmd('mmgen-tool',['usage'],extra_desc="('mmgen-tool usage')")
 		return self._run_cmd('mmgen-tool',['help','randpair'],extra_desc="('mmgen-tool help randpair')")

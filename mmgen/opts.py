@@ -129,9 +129,12 @@ def override_globals_and_set_opts_from_env(opt):
 def common_opts_code(s):
 	from .protocol import CoinProtocol
 	return s.format(
-		pnm=g.proj_name,pn=g.proto.name,dn=g.proto.daemon_name,
-		cu_dfl=g.coin,
-		cu_all=' '.join(CoinProtocol.coins) )
+		pnm    = g.proj_name,
+		pn     = g.proto.name,
+		dn     = g.proto.daemon_name,
+		cu_dfl = g.coin,
+		cu_all = ' '.join(CoinProtocol.coins)
+	)
 
 def show_common_opts_diff():
 
@@ -161,38 +164,51 @@ common_opts_data = {
 	# Most but not all of these set the corresponding global var
 	# View differences with show_common_opts_diff()
 	'text': """
---, --accept-defaults     Accept defaults at all prompts
---, --coin=c              Choose coin unit. Default: {cu_dfl}. Options: {cu_all}
---, --token=t             Specify an ERC20 token by address or symbol
---, --color=0|1           Disable or enable color output
---, --force-256-color     Force 256-color output when color is enabled
---, --daemon-data-dir=d   Specify coin daemon data directory location 'd'
---, --data-dir=d          Specify {pnm} data directory location 'd'
---, --no-license          Suppress the GPL license prompt
---, --rpc-host=h          Communicate with {dn} running on host 'h'
---, --rpc-port=p          Communicate with {dn} listening on port 'p'
---, --rpc-user=user       Override 'rpc_user' in mmgen.cfg
---, --rpc-password=pass   Override 'rpc_password' in mmgen.cfg
---, --rpc-backend=s       Override 'rpc_backend' in mmgen.cfg
---, --aiohttp-rpc-queue-len=N Override 'aiohttp_rpc_queue_len' in mmgen.cfg
---, --monero-wallet-rpc-host=host Override 'monero_wallet_rpc_host' in mmgen.cfg
---, --monero-wallet-rpc-user=user Override 'monero_wallet_rpc_user' in mmgen.cfg
---, --monero-wallet-rpc-password=pass Override 'monero_wallet_rpc_password' in mmgen.cfg
---, --regtest=0|1         Disable or enable regtest mode
---, --testnet=0|1         Disable or enable testnet
---, --skip-cfg-file       Skip reading the configuration file
---, --version             Print version information and exit
---, --bob                 Switch to user "Bob" in MMGen regtest setup
---, --alice               Switch to user "Alice" in MMGen regtest setup
+--, --accept-defaults      Accept defaults at all prompts
+--, --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
+--, --token=t              Specify an ERC20 token by address or symbol
+--, --color=0|1            Disable or enable color output
+--, --force-256-color      Force 256-color output when color is enabled
+--, --data-dir=path        Specify {pnm} data directory location
+--, --daemon-data-dir=path Specify {dn} data directory location
+--, --no-license           Suppress the GPL license prompt
+--, --rpc-host=host        Communicate with {dn} running on host 'host'
+--, --rpc-port=port        Communicate with {dn} listening on port 'port'
+--, --rpc-user=user        Authenticate to {dn} using username 'user'
+--, --rpc-password=pass    Authenticate to {dn} using password 'pass'
+--, --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
+--, --aiohttp-rpc-queue-len=N Use 'N' simultaneous RPC connections with aiohttp
+--, --monero-wallet-rpc-host=host  Specify Monero wallet daemon host
+--, --monero-wallet-rpc-user=user  Specify Monero wallet daemon username
+--, --monero-wallet-rpc-password=pass  Specify Monero wallet daemon password
+--, --regtest=0|1          Disable or enable regtest mode
+--, --testnet=0|1          Disable or enable testnet
+--, --skip-cfg-file        Skip reading the configuration file
+--, --version              Print version information and exit
+--, --bob                  Switch to user "Bob" in MMGen regtest setup
+--, --alice                Switch to user "Alice" in MMGen regtest setup
 	""",
 	'code': common_opts_code
 }
 
-def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
+opts_data_dfl = {
+	'text': {
+		'desc': '',
+		'usage':'',
+		'options': """
+-h, --help         Print this help message
+--, --longhelp     Print help message for long (common) options
+"""
+	}
+}
+
+def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
+
+	opts_data = opts_data or opts_data_dfl
 
 	opts_data['text']['long_options'] = common_opts_data['text']
 
-	# po: user_opts cmd_args opts skipped_opts
+	# po: (user_opts,cmd_args,opts,skipped_opts)
 	po = mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
 
 	if parse_only:
@@ -310,6 +326,17 @@ def init(opts_data,add_opts=[],opt_filter=None,parse_only=False):
 		if not 'code' in opts_data:
 			opts_data['code'] = {}
 		opts_data['code']['long_options'] = common_opts_data['code']
+
+		if getattr(opt,'longhelp',None):
+			def remove_unneeded_long_opts():
+				d = opts_data['text']['long_options']
+				if g.prog_name != 'mmgen-tool':
+					d = '\n'.join(''+i for i in d.split('\n') if not '--monero-wallet' in i)
+				if g.proto.base_proto != 'Ethereum':
+					d = '\n'.join(''+i for i in d.split('\n') if not '--token' in i)
+				opts_data['text']['long_options'] = d
+			remove_unneeded_long_opts()
+
 		mmgen.share.Opts.print_help(po,opts_data,opt_filter) # exits
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so we can create it

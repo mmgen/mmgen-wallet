@@ -10,7 +10,7 @@ import time
 from decimal import Decimal
 from mmgen.common import *
 
-opts.init({ 'text': { 'desc':'', 'usage':'', 'options':'' }})
+opts.init()
 
 HalvingInterval = 210000 # src/chainparams.cpp
 
