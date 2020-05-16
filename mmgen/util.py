@@ -860,12 +860,13 @@ def format_par(s,indent=0,width=80,as_list=False):
 
 # module loading magic for tx.py and tw.py
 def altcoin_subclass(cls,mod_id,cls_name):
-	if cls.__name__ != cls_name: return cls
+	if cls.__name__ != cls_name:
+		return cls
 	mod_dir = g.proto.base_coin.lower()
 	tname = 'Token' if g.token else ''
 	import importlib
-	modname = 'mmgen.altcoins.{}.{}'.format(mod_dir,mod_id)
-	clsname = '{}{}{}'.format(capfirst(g.proto.mod_clsname),tname,cls_name)
+	modname = f'mmgen.altcoins.{mod_dir}.{mod_id}'
+	clsname = g.proto.mod_clsname + tname + cls_name
 	try:
 		return getattr(importlib.import_module(modname),clsname)
 	except ImportError:

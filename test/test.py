@@ -23,7 +23,7 @@ test/test.py: Test suite for the MMGen wallet system
 def check_segwit_opts():
 	for k,m in (('segwit','S'),('segwit_random','S'),('bech32','B')):
 		if getattr(opt,k) and m not in g.proto.mmtypes:
-			die(1,'--{} option incompatible with {}'.format(k.replace('_','-'),type(g.proto).__name__))
+			die(1,f'--{k.replace("_","-")} option incompatible with {g.proto.cls_name}')
 
 def create_shm_dir(data_dir,trash_dir):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
@@ -696,11 +696,14 @@ class TestSuiteRunner(object):
 		else:
 			segwit_opt = None
 
-		m1 = ('test group {g!r}','{g}:{c}')[bool(cmd)].format(g=gname,c=cmd)
-		m2 = ' for {} {}net'.format(g.coin.lower(),'test' if g.proto.testnet else 'main') \
-				if len(ts_cls.networks) != 1 else ''
-		m3 = ' (--{})'.format(segwit_opt.replace('_','-')) if segwit_opt else ''
-		m = m1 + m2 + m3
+		def gen_msg():
+			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname,c=cmd)
+			if len(ts_cls.networks) != 1:
+				yield ' for {} {}'.format(g.proto.coin,g.proto.network)
+			if segwit_opt:
+				yield ' (--{})'.format(segwit_opt.replace('_','-'))
+
+		m = ''.join(gen_msg())
 
 		if segwit_opt and not ts_cls.segwit_opts_ok:
 			iqmsg('INFO → skipping ' + m)

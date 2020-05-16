@@ -678,10 +678,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			al_coin,al_mmtype = None,None
 			tn = lbl[-8:] == ':TESTNET'
 			if tn:
-				assert g.proto.testnet,'{} file is testnet but protocol is mainnet!'.format(self.data_desc)
+				assert g.proto.testnet, f'{self.data_desc} file is testnet but protocol is mainnet!'
 				lbl = lbl[:-8]
 			else:
-				assert not g.proto.testnet,'{} file is mainnet but protocol is testnet!'.format(self.data_desc)
+				assert not g.proto.testnet, f'{self.data_desc} file is mainnet but protocol is testnet!'
 			lbl = lbl.split(':',1)
 			if len(lbl) == 2:
 				al_coin,al_mmtype = lbl[0],lbl[1].lower()

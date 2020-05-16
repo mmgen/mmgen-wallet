@@ -88,18 +88,19 @@ class CoinProtocol(MMGenObject):
 		networks = ('mainnet','testnet','regtest')
 
 		def __init__(self,coin,name,network):
-			self.coin    = coin.upper()
-			self.dcoin   = self.coin # display coin - for Ethereum, is set to ERC20 token name
-			self.name    = name
-			self.network = network
-			self.testnet = network in ('testnet','regtest')
-			self.regtest = network == 'regtest'
+			self.coin     = coin.upper()
+			self.dcoin    = self.coin # display coin - for Ethereum, is set to ERC20 token name
+			self.name     = name
+			self.cls_name = type(self).__name__
+			self.network  = network
+			self.testnet  = network in ('testnet','regtest')
+			self.regtest  = network == 'regtest'
 
 		def cap(self,s):
 			return s in self.caps
 
 	class Bitcoin(Common): # chainparams.cpp
-		mod_clsname     = 'bitcoin'
+		mod_clsname     = 'Bitcoin'
 		daemon_name     = 'bitcoind'
 		daemon_family   = 'bitcoind'
 		addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
@@ -342,7 +343,7 @@ class CoinProtocol(MMGenObject):
 		addr_len      = 20
 		mmtypes       = ('E',)
 		dfl_mmtype    = 'E'
-		mod_clsname   = 'ethereum'
+		mod_clsname   = 'Ethereum'
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 

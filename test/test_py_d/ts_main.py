@@ -147,8 +147,6 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if g.coin.lower() not in self.networks:
 			return
 		from mmgen.rpc import rpc_init
-		if g.proto.regtest: # rpc_init hack
-			g.proto = init_proto(g.coin,network='testnet')
 		self.rpc = run_session(rpc_init())
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]
 		if g.coin in ('BTC','BCH','LTC'):
