@@ -242,7 +242,7 @@ class RPCClient(MMGenObject):
 
 		die(1,rpc_credentials_msg.format(
 			proto_name = self.proto.name,
-	        cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
+			cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
 		))
 
 	# positional params are passed to the daemon, kwargs to the backend

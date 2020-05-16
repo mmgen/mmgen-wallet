@@ -33,6 +33,30 @@ from .util import *
 def usage():
 	Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
 
+def version():
+	Die(0,fmt("""
+		{pn} version {g.version}
+		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
+		command line.  Copyright (C){g.Cdates} {g.author} {g.email}
+	""".format(g=g,pn=g.prog_name.upper()),indent='    ').rstrip())
+
+def print_help(po,opts_data,opt_filter):
+	if not 'code' in opts_data:
+		opts_data['code'] = {}
+
+	if getattr(opt,'longhelp',None):
+		opts_data['code']['long_options'] = common_opts_data['code']
+		def remove_unneeded_long_opts():
+			d = opts_data['text']['long_options']
+			if g.prog_name != 'mmgen-tool':
+				d = '\n'.join(''+i for i in d.split('\n') if not '--monero-wallet' in i)
+			if g.proto.base_proto != 'Ethereum':
+				d = '\n'.join(''+i for i in d.split('\n') if not '--token' in i)
+			opts_data['text']['long_options'] = d
+		remove_unneeded_long_opts()
+
+	mmgen.share.Opts.print_help(po,opts_data,opt_filter) # exits
+
 def fmt_opt(o):
 	return '--' + o.replace('_','-')
 
@@ -198,7 +222,8 @@ opts_data_dfl = {
 
 def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 
-	opts_data = opts_data or opts_data_dfl
+	if opts_data is None:
+		opts_data = opts_data_dfl
 
 	opts_data['text']['long_options'] = common_opts_data['text']
 
@@ -225,11 +250,7 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	usage_txt = opts_data['text']['usage']
 
 	if opt.version:
-		Die(0,fmt("""
-			{pn} version {g.version}
-			Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
-			command line.  Copyright (C){g.Cdates} {g.author} {g.email}
-		""".format(g=g,pn=g.prog_name.upper()),indent='    ').rstrip())
+		version() # exits
 
 	# === begin global var initialization === #
 
@@ -312,21 +333,7 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 
 	# print help screen only after global vars are initialized:
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
-		if not 'code' in opts_data:
-			opts_data['code'] = {}
-		opts_data['code']['long_options'] = common_opts_data['code']
-
-		if getattr(opt,'longhelp',None):
-			def remove_unneeded_long_opts():
-				d = opts_data['text']['long_options']
-				if g.prog_name != 'mmgen-tool':
-					d = '\n'.join(''+i for i in d.split('\n') if not '--monero-wallet' in i)
-				if g.proto.base_proto != 'Ethereum':
-					d = '\n'.join(''+i for i in d.split('\n') if not '--token' in i)
-				opts_data['text']['long_options'] = d
-			remove_unneeded_long_opts()
-
-		mmgen.share.Opts.print_help(po,opts_data,opt_filter) # exits
+		print_help(po,opts_data,opt_filter) # exits
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so we can create it
 

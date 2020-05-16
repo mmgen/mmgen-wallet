@@ -3,7 +3,7 @@
 from mmgen.util import msg
 from mmgen.common import *
 
-cmd_args = opts.init({'text': { 'desc': '', 'usage':'', 'options':'' }})
+cmd_args = opts.init()
 
 from mmgen.cfg import cfg_file
 cu = cfg_file('usr')

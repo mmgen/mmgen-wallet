@@ -2,7 +2,7 @@
 
 from mmgen.common import *
 
-cmd_args = opts.init({'text': { 'desc': '', 'usage':'', 'options':'' }})
+cmd_args = opts.init()
 
 from mmgen.util import msg
 

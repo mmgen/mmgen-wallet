@@ -1173,7 +1173,7 @@ class tool_api(
 		Initializer - takes no arguments
 		"""
 		if not hasattr(opt,'version'):
-			opts.init({'text': { 'desc': '', 'usage':'', 'options':'' }})
+			opts.init()
 		opt.use_old_ed25519 = None
 		opt.type = None
 
