@@ -119,9 +119,9 @@ def run_test(test,arg,input_data):
 
 def do_loop():
 	import importlib
-	modname = 'test.objtest_py_d.ot_{}_{}'.format(g.coin.lower(),g.network)
+	modname = 'test.objtest_py_d.ot_{}_{}'.format(g.coin.lower(),g.proto.network)
 	test_data = importlib.import_module(modname).tests
-	gmsg('Running data object tests for {} {}'.format(g.coin,g.network))
+	gmsg('Running data object tests for {} {}'.format(g.coin,g.proto.network))
 
 	clr = None
 	utests = cmd_args

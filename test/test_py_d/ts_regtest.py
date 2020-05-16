@@ -244,7 +244,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
-		g.regtest = True
 		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
 		from mmgen.regtest import MMGenRegtest
 		rt = MMGenRegtest(g.coin)
@@ -268,7 +267,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def setup(self):
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		if g.testnet:
+		if g.proto.testnet:
 			die(2,'--testnet option incompatible with regtest test suite')
 		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass

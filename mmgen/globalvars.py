@@ -72,8 +72,6 @@ class GlobalContext:
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
 
-	coin                 = 'BTC'
-	dcoin                = None # the display coin unit
 	token                = ''
 	debug                = False
 	debug_opts           = False
@@ -281,5 +279,13 @@ class GlobalContext:
 		for name in env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
+
+	@property
+	def coin(self):
+		return self.proto.coin
+
+	@property
+	def dcoin(self):
+		return self.proto.dcoin
 
 g = GlobalContext()

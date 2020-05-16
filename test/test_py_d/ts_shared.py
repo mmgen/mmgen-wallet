@@ -225,7 +225,7 @@ class TestSuiteShared(object):
 		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
 		if check_ref:
 			chk_ref = (self.chk_data[self.test_name] if passgen else
-						self.chk_data[self.test_name][self.fork][g.testnet])
+						self.chk_data[self.test_name][self.fork][g.proto.testnet])
 			cmp_or_die(chk,chk_ref,desc='{}list data checksum'.format(ftype))
 		return t
 
@@ -241,7 +241,7 @@ class TestSuiteShared(object):
 		t.passphrase(wcls.desc,self.wpasswd)
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
-			chk_ref = self.chk_data[self.test_name][self.fork][g.testnet]
+			chk_ref = self.chk_data[self.test_name][self.fork][g.proto.testnet]
 			cmp_or_die(chk,chk_ref,desc='key-address list data checksum')
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(self.usr_rand_chars)

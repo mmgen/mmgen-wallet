@@ -953,7 +953,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 	def create_fn(self):
 		tl = self.get_hex_locktime()
-		tn = ('','.testnet')[g.proto.is_testnet()]
+		tn = ('','.testnet')[g.proto.testnet]
 		self.fn = '{}{}[{!s}{}{}]{x}{}.{}'.format(
 			self.txid,
 			('-'+g.dcoin,'')[g.coin=='BTC'],
@@ -1238,7 +1238,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if self.dcoin:
 			self.resolve_g_token_from_txfile()
-			g.dcoin = self.dcoin
+			g.proto.dcoin = self.dcoin
 
 	def process_cmd_arg(self,arg,ad_f,ad_w):
 

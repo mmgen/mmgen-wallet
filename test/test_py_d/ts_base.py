@@ -42,7 +42,7 @@ class TestSuiteBase(object):
 		self.usr_rand_chars = (5,30)[bool(opt.usr_random)]
 		self.usr_rand_arg = '-r{}'.format(self.usr_rand_chars)
 		self.altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
-		self.tn_ext = ('','.testnet')[g.testnet]
+		self.tn_ext = ('','.testnet')[g.proto.testnet]
 		d = {'bch':'btc','btc':'btc','ltc':'ltc'}
 		self.fork = d[g.coin.lower()] if g.coin.lower() in d else None
 

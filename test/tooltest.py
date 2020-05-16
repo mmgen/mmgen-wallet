@@ -119,7 +119,7 @@ cfg = {
 
 ref_subdir  = '' if g.proto.base_coin == 'BTC' else g.proto.name
 altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
-tn_ext = ('','.testnet')[g.testnet]
+tn_ext = ('','.testnet')[g.proto.testnet]
 
 mmgen_cmd = 'mmgen-tool'
 

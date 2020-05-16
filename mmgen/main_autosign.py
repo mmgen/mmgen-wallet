@@ -134,11 +134,11 @@ async def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
-		g.proto = init_proto(coin,g.testnet)
+		g.proto = init_proto(coin,g.proto.testnet)
 		if g.proto.sign_mode == 'daemon':
 			if g.test_suite:
 				g.proto.daemon_data_dir = 'test/daemons/' + coin.lower()
-				g.rpc_port = CoinDaemon(get_network_id(coin,g.testnet),test_suite=True).rpc_port
+				g.rpc_port = CoinDaemon(get_network_id(coin,g.proto.testnet),test_suite=True).rpc_port
 			vmsg(f'Checking {coin} daemon')
 			try:
 				await rpc_init()
@@ -192,14 +192,14 @@ async def sign_tx_file(txfile,signed_txs):
 
 		g.chain = tmp_tx.chain
 		g.token = tmp_tx.dcoin
-		g.dcoin = tmp_tx.dcoin or g.coin
+		g.proto.dcoin = tmp_tx.dcoin or g.proto.coin
 
 		tx = mmgen.tx.MMGenTxForSigning(txfile)
 
 		if g.proto.sign_mode == 'daemon':
 			if g.test_suite:
 				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
-				g.rpc_port = CoinDaemon(get_network_id(g.coin,g.testnet),test_suite=True).rpc_port
+				g.rpc_port = CoinDaemon(get_network_id(g.coin,g.proto.testnet),test_suite=True).rpc_port
 			await rpc_init()
 
 		if await txsign(tx,wfs,None,None):

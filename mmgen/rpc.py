@@ -25,26 +25,26 @@ from decimal import Decimal
 from .common import *
 from .obj import aInitMeta
 
-rpc_credentials_msg = lambda self: '\n'+fmt(f"""
-	Error: no {self.proto.name.capitalize()} RPC authentication method found
+rpc_credentials_msg = '\n'+fmt("""
+	Error: no {proto_name} RPC authentication method found
 
 	RPC credentials must be supplied using one of the following methods:
 
 	A) If daemon is local and running as same user as you:
 
 	   - no credentials required, or matching rpcuser/rpcpassword and
-	     rpc_user/rpc_password values in {self.proto.name}.conf and mmgen.cfg
+	     rpc_user/rpc_password values in {base_name}.conf and mmgen.cfg
 
 	B) If daemon is running remotely or as different user:
 
-	   - matching credentials in {self.proto.name}.conf and mmgen.cfg as described above
+	   - matching credentials in {base_name}.conf and mmgen.cfg as described above
 
 	The --rpc-user/--rpc-password options may be supplied on the MMGen command line.
 	They override the corresponding values in mmgen.cfg. Set them to an empty string
 	to use cookie authentication with a local server when the options are set
 	in mmgen.cfg.
 
-	For better security, rpcauth should be used in {self.proto.name}.conf instead of
+	For better security, rpcauth should be used in {base_name}.conf instead of
 	rpcuser/rpcpassword.
 
 """,strip_char='\t')
@@ -240,7 +240,10 @@ class RPCClient(MMGenObject):
 				self.auth = auth_data(*cookie.split(':'))
 				return
 
-		die(1,rpc_credentials_msg(self))
+		die(1,rpc_credentials_msg.format(
+			proto_name = capfirst(self.proto.name),
+	        base_name = self.proto.is_fork_of or self.proto.name,
+		))
 
 	# positional params are passed to the daemon, kwargs to the backend
 	# 'timeout' is currently the only supported kwarg
@@ -338,9 +341,12 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 		def check_chaintype_mismatch():
 			try:
-				if g.regtest: assert g.chain == 'regtest','--regtest option selected, but chain is not regtest'
-				if g.testnet: assert g.chain != 'mainnet','--testnet option selected, but chain is mainnet'
-				if not g.testnet: assert g.chain == 'mainnet','mainnet selected, but chain is not mainnet'
+				if g.proto.regtest:
+					assert g.chain == 'regtest', '--regtest option selected, but chain is not regtest'
+				if g.proto.testnet:
+					assert g.chain != 'mainnet', '--testnet option selected, but chain is mainnet'
+				else:
+					assert g.chain == 'mainnet', 'mainnet selected, but chain is not mainnet'
 			except Exception as e:
 				die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
 

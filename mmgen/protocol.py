@@ -71,7 +71,7 @@ finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 
 class CoinProtocol(MMGenObject):
 
-	proto_info = namedtuple('proto_info',['base_name','trust_level']) # trust levels: see altcoin.py
+	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin.py
 	coins = {
 		'btc': proto_info('Bitcoin',         5),
 		'bch': proto_info('BitcoinCash',     5),
@@ -84,15 +84,16 @@ class CoinProtocol(MMGenObject):
 	core_coins = tuple(coins.keys()) # coins may be added by init_genonly_altcoins(), so save
 
 	class Common(MMGenObject):
+		is_fork_of = None
 		networks = ('mainnet','testnet','regtest')
 
-		def __init__(self,coin,base_name,network):
+		def __init__(self,coin,name,network):
 			self.coin    = coin.upper()
-			self.name    = base_name[0].lower() + base_name[1:]
+			self.dcoin   = self.coin # display coin - for Ethereum, is set to ERC20 token name
+			self.name    = name[0].lower() + name[1:]
 			self.network = network
-
-		def is_testnet(self):
-			return self.network in ('testnet','regtest')
+			self.testnet = network in ('testnet','regtest')
+			self.regtest = network == 'regtest'
 
 		def cap(self,s):
 			return s in self.caps
@@ -243,6 +244,7 @@ class CoinProtocol(MMGenObject):
 		bech32_hrp          = 'bcrt'
 
 	class BitcoinCash(Bitcoin):
+		is_fork_of      = 'bitcoin'
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
 		daemon_name     = 'bitcoind-abc'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_ABC') if g.platform == 'win' \
@@ -271,6 +273,7 @@ class CoinProtocol(MMGenObject):
 		pass
 
 	class B2X(Bitcoin):
+		is_fork_of      = 'bitcoin'
 		daemon_name     = 'bitcoind-2x'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
 							else os.path.join(g.home_dir,'.bitcoin-2x')
@@ -466,18 +469,18 @@ def init_proto(coin,testnet=False,regtest=False,network=None):
 	if coin not in CoinProtocol.coins:
 		raise ValueError(
 			'{}: not a valid coin for network {}\nSupported coins: {}'.format(
-				coin.upper(),g.network.upper(),
+				coin.upper(),network.upper(),
 				' '.join(c.upper() for c in CoinProtocol.coins) ))
 
-	base_name = CoinProtocol.coins[coin].base_name
-	proto_name = base_name + ('' if network == 'mainnet' else network.capitalize())
+	name = CoinProtocol.coins[coin].name
+	proto_name = name + ('' if network == 'mainnet' else network.capitalize())
 
 	return getattr(CoinProtocol,proto_name)(
-		coin      = coin,
-		base_name = base_name,
-		network   = network )
+		coin    = coin,
+		name    = name,
+		network = network )
 
-def init_genonly_altcoins(usr_coin=None):
+def init_genonly_altcoins(usr_coin=None,testnet=False):
 	"""
 	Initialize altcoin protocol class or classes for current network.
 	If usr_coin is a core coin, initialization is skipped.
@@ -487,7 +490,8 @@ def init_genonly_altcoins(usr_coin=None):
 	"""
 	from .altcoin import CoinInfo as ci
 	data = { 'mainnet': (), 'testnet': () }
-	networks = ['mainnet'] + (['testnet'] if g.testnet else [])
+	networks = ['mainnet'] + (['testnet'] if testnet else [])
+	network = 'testnet' if testnet else 'mainnet'
 
 	if usr_coin == None:
 		for network in networks:
@@ -499,13 +503,13 @@ def init_genonly_altcoins(usr_coin=None):
 		for network in networks:
 			data[network] = (ci.get_entry(usr_coin,network),)
 
-		cinfo = data[g.network][0]
+		cinfo = data[network][0]
 		if not cinfo:
 			m = '{!r}: unrecognized coin for network {}'
-			raise ValueError(m.format(usr_coin.upper(),g.network.upper()))
+			raise ValueError(m.format(usr_coin.upper(),network.upper()))
 		if cinfo.trust_level == -1:
 			m = '{!r}: unsupported (disabled) coin for network {}'
-			raise ValueError(m.format(usr_coin.upper(),g.network.upper()))
+			raise ValueError(m.format(usr_coin.upper(),network.upper()))
 
 		trust_level = cinfo.trust_level
 
@@ -560,9 +564,7 @@ def make_init_genonly_altcoins_str(data):
 	return '\n'.join(gen_text()) + '\n'
 
 def init_coin(coin,testnet=None):
-	if testnet is not None:
-		g.testnet = testnet
-	g.network = 'regtest' if g.regtest else 'testnet' if g.testnet else 'mainnet'
-	g.coin = coin.upper()
-	g.proto = init_proto(g.coin,testnet=g.testnet,regtest=g.regtest)
+	if testnet is None:
+		testnet = g.proto.testnet
+	g.proto = init_proto(coin,testnet=testnet,regtest=g.proto.regtest)
 	return g.proto

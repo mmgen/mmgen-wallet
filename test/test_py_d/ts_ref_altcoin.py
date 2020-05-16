@@ -89,7 +89,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
 			ref_subdir = self._get_ref_subdir_by_coin(coin)
 			for tn in (False,True):
-				extra_opts = ['--coin='+coin,'--testnet='+('0','1')[tn]]
+				extra_opts = ['--coin='+coin,f'--testnet={int(tn)}']
 				if tn and coin == 'etc':
 					continue
 				if coin == 'bch':
@@ -98,8 +98,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					extra_opts += [
 						'--daemon-data-dir=test/daemons/bch',
 						'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port) ]
-				g.testnet = tn
-				init_coin(coin)
+				init_coin(coin,testnet=tn)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]
 				tf = joinpath(ref_dir,ref_subdir,fn)
 				wf = dfl_words_file
@@ -113,7 +112,6 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 				if coin == 'bch':
 					stop_test_daemons(network_id)
 				ok_msg()
-		g.testnet = False
 		init_coin('btc')
 		t.skip_ok = True
 		return t

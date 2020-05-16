@@ -1184,10 +1184,8 @@ class tool_api(
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
 		from .protocol import init_coin,init_genonly_altcoins
-		altcoin_trust_level = init_genonly_altcoins(coinsym)
+		altcoin_trust_level = init_genonly_altcoins(coinsym,testnet=network in ('testnet','regtest'))
 		warn_altcoins(coinsym,altcoin_trust_level)
-		if network == 'regtest':
-			g.regtest = True
 		return init_coin(coinsym,{'mainnet':False,'testnet':True,'regtest':True}[network])
 
 	@property
@@ -1197,7 +1195,7 @@ class tool_api(
 		from .altcoin import CoinInfo
 		return sorted(set(
 			[c.upper() for c in CoinProtocol.coins]
-			+ [c.symbol for c in CoinInfo.get_supported_coins(g.network)]
+			+ [c.symbol for c in CoinInfo.get_supported_coins(g.proto.network)]
 		))
 
 	@property
@@ -1208,7 +1206,7 @@ class tool_api(
 	@property
 	def network(self):
 		"""The currently configured network"""
-		return g.network
+		return g.proto.network
 
 	@property
 	def addrtypes(self):

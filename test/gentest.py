@@ -172,7 +172,7 @@ class GenToolPycoin(GenTool):
 		self.nfnc = network_for_netcode
 
 	def run(self,sec,vcoin):
-		if g.testnet:
+		if g.proto.testnet:
 			vcoin = ci.external_tests['testnet']['pycoin'][vcoin]
 		network = self.nfnc(vcoin)
 		key = network.keys.private(secret_exponent=int(sec,16),is_compressed=addr_type.name != 'legacy')
@@ -212,7 +212,7 @@ class GenToolMoneropy(GenTool):
 def get_tool(arg):
 
 	if arg not in ext_progs + ['ext']:
-		die(1,'{!r}: unsupported tool for network {}'.format(arg,g.network))
+		die(1,'{!r}: unsupported tool for network {}'.format(arg,g.proto.network))
 
 	if opt.all:
 		if arg == 'ext':
@@ -222,7 +222,7 @@ def get_tool(arg):
 		tool = ci.get_test_support(
 			g.coin,
 			addr_type.name,
-			g.network,
+			g.proto.network,
 			verbose = not opt.quiet,
 			tool = arg if arg in ext_progs else None )
 		if not tool:
@@ -251,11 +251,11 @@ def test_equal(desc,a_val,b_val,in_bytes,sec,wif,a_desc,b_desc):
 def gentool_test(kg_a,kg_b,ag,rounds):
 
 	m = "Comparing address generators '{A}' and '{B}' for {N} {c} ({n}), addrtype {a!r}"
-	e = ci.get_entry(g.coin,g.network)
+	e = ci.get_entry(g.coin,g.proto.network)
 	qmsg(green(m.format(
 		A = kg_a.desc,
 		B = kg_b.desc,
-		N = g.network,
+		N = g.proto.network,
 		c = g.coin,
 		n = e.name if e else '---',
 		a = addr_type.name )))
@@ -343,7 +343,7 @@ def dump_test(kg,ag,fh):
 		try:
 			b_sec = PrivKey(wif=b_wif)
 		except:
-			die(2,'\nInvalid {} WIF address in dump file: {}'.format(g.network,b_wif))
+			die(2,'\nInvalid {} WIF address in dump file: {}'.format(g.proto.network,b_wif))
 		a_addr = ag.to_addr(kg.to_pubhex(b_sec))
 		vmsg('\nwif: {}\naddr: {}\n'.format(b_wif,b_addr))
 		tinfo = (bytes.fromhex(b_sec),b_sec,b_wif,kg.desc,fh.name)
@@ -396,7 +396,7 @@ from mmgen.obj import MMGenAddrType,PrivKey
 from mmgen.addr import KeyGenerator,AddrGenerator
 
 addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
-ext_progs = list(ci.external_tests[g.network])
+ext_progs = list(ci.external_tests[g.proto.network])
 
 arg1 = cmd_args[0].split(':')
 if len(arg1) == 1:
@@ -422,8 +422,8 @@ elif not b and hasattr(arg2,'read'):
 elif a and b and type(arg2) == int:
 	if opt.all:
 		from mmgen.protocol import CoinProtocol,init_genonly_altcoins
-		init_genonly_altcoins()
-		for coin in ci.external_tests[g.network][b.desc]:
+		init_genonly_altcoins(testnet=g.proto.testnet)
+		for coin in ci.external_tests[g.proto.network][b.desc]:
 			if coin.lower() not in CoinProtocol.coins:
 #				ymsg('Coin {} not configured'.format(coin))
 				continue
@@ -433,7 +433,7 @@ elif a and b and type(arg2) == int:
 			# g.proto has changed, so reinit kg and ag just to be on the safe side:
 			a = KeyGenerator(addr_type,a_num)
 			ag = AddrGenerator(addr_type)
-			b_chk = ci.get_test_support(g.coin,addr_type.name,g.network,tool=b.desc,verbose=not opt.quiet)
+			b_chk = ci.get_test_support(g.coin,addr_type.name,g.proto.network,tool=b.desc,verbose=not opt.quiet)
 			if b_chk == b.desc:
 				gentool_test(a,b,ag,arg2)
 	else:

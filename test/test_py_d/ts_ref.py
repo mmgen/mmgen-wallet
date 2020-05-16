@@ -31,7 +31,7 @@ from .ts_base import *
 from .ts_shared import *
 
 wpasswd = 'reference password'
-nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.testnet])
+nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.proto.testnet])
 
 class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	'saved reference address, password and transaction files'
@@ -220,7 +220,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
 		chksum_key = '_'.join([af_key,'chksum'] + ([coin.lower()] if coin else []) + ([mmtype] if mmtype else []))
 		rc = self.chk_data[chksum_key]
-		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.testnet]
+		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.proto.testnet]
 		if pat:
 			t.expect(pat,regex=True)
 		t.expect(chksum_pat,regex=True)

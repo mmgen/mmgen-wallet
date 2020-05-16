@@ -821,7 +821,7 @@ def do_license_msg(immed=False):
 # TODO: these belong in protocol.py
 def get_coin_daemon_cfg_fn():
 	# Use dirname() to remove 'bob' or 'alice' component
-	cfg_dir = os.path.dirname(g.data_dir) if g.regtest else g.proto.daemon_data_dir
+	cfg_dir = os.path.dirname(g.data_dir) if g.proto.regtest else g.proto.daemon_data_dir
 	return os.path.join(cfg_dir,g.proto.name+'.conf' )
 
 def get_coin_daemon_cfg_options(req_keys):
@@ -878,10 +878,9 @@ def write_mode(orig_func):
 		return orig_func(self,*args,**kwargs)
 	return f
 
-def get_network_id(coin=None,testnet=None):
-	if coin == None: assert testnet == None
-	if coin != None: assert testnet != None
-	return (coin or g.coin).lower() + ('','_tn')[testnet or g.testnet]
+def get_network_id(coin,testnet):
+	assert type(testnet) == bool
+	return coin.lower() + ('','_tn')[testnet]
 
 def run_session(callback,do_rpc_init=True,proto=None,backend=None):
 	backend = backend or opt.rpc_backend

@@ -175,7 +175,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			raise TokenNotInWallet('Specified token {!r} not in wallet!'.format(g.token))
 
 		self.token = g.token
-		g.dcoin = self.symbol
+		g.proto.dcoin = self.symbol
 
 	async def is_in_wallet(self,addr):
 		return addr in self.data['tokens'][self.token]

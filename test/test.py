@@ -697,7 +697,7 @@ class TestSuiteRunner(object):
 			segwit_opt = None
 
 		m1 = ('test group {g!r}','{g}:{c}')[bool(cmd)].format(g=gname,c=cmd)
-		m2 = ' for {} {}net'.format(g.coin.lower(),'test' if g.testnet else 'main') \
+		m2 = ' for {} {}net'.format(g.coin.lower(),'test' if g.proto.testnet else 'main') \
 				if len(ts_cls.networks) != 1 else ''
 		m3 = ' (--{})'.format(segwit_opt.replace('_','-')) if segwit_opt else ''
 		m = m1 + m2 + m3
@@ -710,7 +710,7 @@ class TestSuiteRunner(object):
 		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ts_cls.networks]
 		if nws:
 			coin = g.coin.lower()
-			nw = ('mainnet','testnet')[g.testnet]
+			nw = ('mainnet','testnet')[g.proto.testnet]
 			for a,b in nws:
 				if a == coin and b == nw:
 					break

@@ -267,19 +267,16 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
-	g.coin = g.coin.upper() # allow user to use lowercase
-	g.dcoin = g.coin # the display coin; for ERC20 tokens, g.dcoin is set to the token symbol
-
-	if g.regtest: # These are equivalent for now
-		g.testnet = True
-
-	g.network = 'regtest' if g.regtest else 'testnet' if g.testnet else 'mainnet'
-
 	from .protocol import init_genonly_altcoins,init_proto
-	altcoin_trust_level = init_genonly_altcoins(g.coin)
 
-	# g.testnet is finalized, so we can set g.proto
-	g.proto = init_proto(g.coin,g.testnet)
+	altcoin_trust_level = init_genonly_altcoins(
+		opt.coin or 'btc',
+		testnet = g.testnet or g.regtest )
+
+	g.proto = init_proto(
+		opt.coin or 'btc',
+		testnet = g.testnet,
+		regtest = g.regtest )
 
 	# this could have been set from long opts
 	if g.daemon_data_dir:
@@ -307,8 +304,6 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 		opt.quiet = None
 
 	if g.bob or g.alice:
-		g.testnet = True
-		g.regtest = True
 		g.proto = init_proto(g.coin,regtest=True)
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])

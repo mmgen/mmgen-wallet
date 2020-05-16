@@ -774,9 +774,9 @@ coin_dependent_groups = ('Coin','File') # TODO: do this as attr of each group in
 
 def run_test(gid,cmd_name):
 	data = tests[gid][cmd_name]
-	# behavior is like test.py: run coin-dependent tests only if g.testnet or g.coin != BTC
+	# behavior is like test.py: run coin-dependent tests only if g.proto.testnet or g.coin != BTC
 	if gid in coin_dependent_groups:
-		k = '{}_{}net'.format((g.token.lower() if g.token else g.coin.lower()),('main','test')[g.testnet])
+		k = '{}_{}net'.format((g.token.lower() if g.token else g.coin.lower()),('main','test')[g.proto.testnet])
 		if k in data:
 			data = data[k]
 			m2 = ' ({})'.format(k)
@@ -784,7 +784,8 @@ def run_test(gid,cmd_name):
 			qmsg("-- no data for {} ({}) - skipping".format(cmd_name,k))
 			return
 	else:
-		if g.coin != 'BTC' or g.testnet: return
+		if g.coin != 'BTC' or g.proto.testnet:
+			return
 		m2 = ''
 	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else docstring_head(tc[cmd_name]),m2)
 
