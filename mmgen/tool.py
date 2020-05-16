@@ -1063,8 +1063,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		async def process_wallets(op):
 			opt.accept_defaults = opt.accept_defaults or op.accept_defaults
-			from .protocol import init_coin
-			init_coin('xmr')
+			from .protocol import init_proto
+			g.proto = init_proto('xmr')
 			from .addr import AddrList
 			al = KeyAddrList(infile)
 			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
@@ -1183,10 +1183,10 @@ class tool_api(
 		Valid choices for coins: one of the symbols returned by the 'coins' attribute
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
-		from .protocol import init_coin,init_genonly_altcoins
+		from .protocol import init_proto,init_genonly_altcoins
 		altcoin_trust_level = init_genonly_altcoins(coinsym,testnet=network in ('testnet','regtest'))
 		warn_altcoins(coinsym,altcoin_trust_level)
-		return init_coin(coinsym,{'mainnet':False,'testnet':True,'regtest':True}[network])
+		return init_proto(coinsym,network=network)
 
 	@property
 	def coins(self):

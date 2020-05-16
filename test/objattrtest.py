@@ -158,5 +158,5 @@ def do_loop():
 		msg(clr('Testing {}'.format(obj)))
 		test_object(test_data,obj)
 
-init_coin(g.coin)
+g.proto = init_proto(g.coin)
 do_loop()

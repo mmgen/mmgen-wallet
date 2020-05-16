@@ -83,7 +83,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 	def ref_altcoin_tx_chk(self):
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
 		pf = joinpath(self.tmpdir,pwfile)
-		from mmgen.protocol import init_coin
+		from mmgen.protocol import init_proto
 		from mmgen.daemon import CoinDaemon
 		for k in ('bch','eth','mm1','etc'):
 			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
@@ -98,7 +98,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					extra_opts += [
 						'--daemon-data-dir=test/daemons/bch',
 						'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port) ]
-				init_coin(coin,testnet=tn)
+				g.proto = init_proto(coin,testnet=tn)
 				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]
 				tf = joinpath(ref_dir,ref_subdir,fn)
 				wf = dfl_words_file
@@ -112,7 +112,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 				if coin == 'bch':
 					stop_test_daemons(network_id)
 				ok_msg()
-		init_coin('btc')
+		g.proto = init_proto('btc')
 		t.skip_ok = True
 		return t
 

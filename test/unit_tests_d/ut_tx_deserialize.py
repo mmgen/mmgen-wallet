@@ -7,7 +7,7 @@ import os,json
 
 from mmgen.common import *
 from ..include.common import *
-from mmgen.protocol import init_coin
+from mmgen.protocol import init_proto
 from mmgen.tx import MMGenTX,DeserializedTX
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
@@ -114,11 +114,11 @@ class unit_test(object):
 				)
 			print_info('test/ref/*rawtx','MMGen reference transactions')
 			g.rpc_port = None
-			for n,(coin,tn,fn) in enumerate(fns):
-				proto = init_coin(coin,tn)
-				proto.daemon_data_dir = 'test/daemons/' + coin
-				proto.rpc_port = CoinDaemon(coin + ('','_tn')[tn],test_suite=True).rpc_port
-				await rpc_init(proto=proto)
+			for n,(coin,testnet,fn) in enumerate(fns):
+				g.proto = init_proto(coin,testnet=testnet)
+				g.proto.daemon_data_dir = 'test/daemons/' + coin
+				g.proto.rpc_port = CoinDaemon(coin + ('','_tn')[testnet],test_suite=True).rpc_port
+				await rpc_init()
 				await test_tx(MMGenTX(fn).hex,fn,n+1)
 			Msg('OK')
 

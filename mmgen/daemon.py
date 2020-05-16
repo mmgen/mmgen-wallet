@@ -543,17 +543,15 @@ class EthereumDaemon(CoinDaemon):
 		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
 
 		# the following code does not work
-		from mmgen.protocol import init_coin
-		init_coin('eth')
-
 		async def do():
 			print(g.rpc)
 			ret = await g.rpc.call('eth_chainId')
 			print(ret)
 			return ('stopped','ready')[ret == '0x11']
 
+		from mmgen.protocol import init_proto
 		try:
-			return run_session(do()) # socket exception is not propagated
+			return run_session(do(),proto=init_proto('eth')) # socket exception is not propagated
 		except:# SocketError:
 			return 'stopped'
 

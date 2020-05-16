@@ -562,9 +562,3 @@ def make_init_genonly_altcoins_str(data):
 				e.trust_level )
 
 	return '\n'.join(gen_text()) + '\n'
-
-def init_coin(coin,testnet=None):
-	if testnet is None:
-		testnet = g.proto.testnet
-	g.proto = init_proto(coin,testnet=testnet,regtest=g.proto.regtest)
-	return g.proto

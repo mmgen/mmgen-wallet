@@ -133,7 +133,7 @@ class GenTool(object):
 class GenToolEthkey(GenTool):
 	desc = 'ethkey'
 	def __init__(self):
-		init_coin('eth')
+		g.proto = init_proto('eth')
 		global addr_type
 		addr_type = MMGenAddrType('E')
 
@@ -150,7 +150,7 @@ class GenToolKeyconv(GenTool):
 class GenToolZcash_mini(GenTool):
 	desc = 'zcash-mini'
 	def __init__(self):
-		init_coin('zec')
+		g.proto = init_proto('zec')
 		global addr_type
 		addr_type = MMGenAddrType('Z')
 
@@ -200,7 +200,7 @@ class GenToolMoneropy(GenTool):
 			raise ImportError(m)
 
 		self.mpa = moneropy.account
-		init_coin('xmr')
+		g.proto = init_proto('xmr')
 
 		global addr_type
 		addr_type = MMGenAddrType('M')
@@ -390,7 +390,7 @@ def parse_arg2():
 		die(1,m)
 
 # begin execution
-from mmgen.protocol import init_coin
+from mmgen.protocol import init_proto
 from mmgen.altcoin import CoinInfo as ci
 from mmgen.obj import MMGenAddrType,PrivKey
 from mmgen.addr import KeyGenerator,AddrGenerator
@@ -427,7 +427,7 @@ elif a and b and type(arg2) == int:
 			if coin.lower() not in CoinProtocol.coins:
 #				ymsg('Coin {} not configured'.format(coin))
 				continue
-			init_coin(coin)
+			g.proto = init_proto(coin)
 			if addr_type not in g.proto.mmtypes:
 				continue
 			# g.proto has changed, so reinit kg and ag just to be on the safe side:

@@ -113,7 +113,7 @@ exit_if_mswin('autosigning')
 
 import mmgen.tx
 from .txsign import txsign
-from .protocol import init_proto,init_coin
+from .protocol import init_proto
 from .rpc import rpc_init
 
 if g.test_suite:
@@ -177,14 +177,14 @@ def do_umount():
 
 async def sign_tx_file(txfile,signed_txs):
 	try:
-		init_coin('BTC',testnet=False)
+		g.proto = init_proto('BTC',testnet=False)
 		tmp_tx = mmgen.tx.MMGenTX(txfile,metadata_only=True)
-		init_coin(tmp_tx.coin)
+		g.proto = init_proto(tmp_tx.coin)
 
 		if tmp_tx.chain != 'mainnet':
 			if tmp_tx.chain == 'testnet' or (
 				hasattr(g.proto,'chain_name') and tmp_tx.chain != g.proto.chain_name):
-				init_coin(tmp_tx.coin,testnet=True)
+				g.proto = init_proto(tmp_tx.coin,testnet=True)
 
 		if hasattr(g.proto,'chain_name'):
 			if tmp_tx.chain != g.proto.chain_name:
@@ -265,7 +265,7 @@ def print_summary(signed_txs):
 		bmsg('\nAutosign summary:\n')
 		def gen():
 			for tx in signed_txs:
-				init_coin(tx.coin,tx.chain == 'testnet')
+				g.proto = init_proto(tx.coin,testnet=tx.chain=='testnet')
 				yield tx.format_view(terse=True)
 		msg_r(''.join(gen()))
 		return

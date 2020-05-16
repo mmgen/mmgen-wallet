@@ -6,7 +6,7 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 from mmgen.common import *
 from mmgen.exception import *
 
-from mmgen.protocol import init_coin
+from mmgen.protocol import init_proto
 from mmgen.rpc import MoneroWalletRPCClient
 from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
@@ -84,7 +84,6 @@ class unit_tests:
 	def eth(self,name,ut):
 		ed = CoinDaemon('eth',test_suite=True)
 		ed.start()
-		init_coin('eth')
 		g.rpc_port = CoinDaemon('eth',test_suite=True).rpc_port
 
 		async def run_test():
@@ -92,7 +91,7 @@ class unit_tests:
 			ret = await g.rpc.call('parity_versionInfo',timeout=300)
 
 		for backend in g.autoset_opts['rpc_backend'].choices:
-			run_session(run_test(),backend=backend)
+			run_session(run_test(),proto=init_proto('eth'),backend=backend)
 
 		ed.stop()
 		return True

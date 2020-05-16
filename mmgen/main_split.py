@@ -108,11 +108,11 @@ if mmids[0] == mmids[1]:
 	die(2,'Both transactions have the same output! ({})'.format(mmids[0]))
 
 from .tx import MMGenSplitTX
-from .protocol import init_coin
+from .protocol import init_proto
 
 if opt.tx_fees:
 	for idx,g_coin in ((1,opt.other_coin),(0,g.coin)):
-		init_coin(g_coin)
+		g.proto = init_proto(g_coin)
 		opt.tx_fee = opt.tx_fees.split(',')[idx]
 		opts.opt_is_tx_fee('foo',opt.tx_fee,'transaction fee') # raises exception on error
 
@@ -129,7 +129,7 @@ async def main():
 
 	gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
 
-	init_coin(opt.other_coin)
+	g.proto = init_proto(opt.other_coin)
 
 	tx2 = MMGenSplitTX()
 	tx2.inputs = tx1.inputs
