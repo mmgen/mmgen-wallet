@@ -36,7 +36,9 @@ class Daemon(MMGenObject):
 	ps_pid_mswin = False
 	lockfile = None
 	avail_flags = ()
-	_flags = []
+
+	def __init__(self):
+		self._flags = []
 
 	def subclass_init(self): pass
 
@@ -222,6 +224,7 @@ class MoneroWalletDaemon(Daemon):
 	ps_pid_mswin = True
 
 	def __init__(self,wallet_dir,test_suite=False,host=None,user=None,passwd=None):
+		super().__init__()
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
 		if test_suite:
@@ -303,21 +306,6 @@ class CoinDaemon(Daemon):
 'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, None,None)
 	}
 
-	testnet_arg = []
-	coind_args = []
-	daemonize_args = []
-	cli_args = []
-	shared_args = []
-	coind_cmd = []
-
-	coin_specific_coind_args = []
-	coin_specific_cli_args = []
-	coin_specific_shared_args = []
-
-	usr_coind_args = []
-	usr_cli_args = []
-	usr_shared_args = []
-
 	def __new__(cls,network_id,test_suite=False,flags=None):
 
 		network_id = network_id.lower()
@@ -364,6 +352,21 @@ class CoinDaemon(Daemon):
 		return me
 
 	def __init__(self,network_id,test_suite=False,flags=None):
+		super().__init__()
+
+		self.testnet_arg = []
+		self.daemonize_args = []
+		self.cli_args = []
+		self.coind_cmd = []
+
+		self.coin_specific_coind_args = []
+		self.coin_specific_cli_args = []
+		self.coin_specific_shared_args = []
+
+		self.usr_coind_args = []
+		self.usr_cli_args = []
+		self.usr_shared_args = []
+
 
 		if flags:
 			if type(flags) not in (list,tuple):
@@ -519,6 +522,7 @@ class EthereumDaemon(CoinDaemon):
 	ps_pid_mswin = True
 
 	def subclass_init(self):
+		self.shared_args = []
 		# defaults:
 		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
 		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
@@ -526,10 +530,6 @@ class EthereumDaemon(CoinDaemon):
 		shutil.rmtree(self.chaindir,ignore_errors=True)
 		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
 			self.daemonize_args = ['daemon',self.pidfile]
-
-	@property
-	def coind_cmd(self):
-		return []
 
 	@property
 	def coind_args(self):

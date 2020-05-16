@@ -28,7 +28,7 @@ from mmgen.common import *
 opts_data = {
 	'text': {
 		'desc': "Unit tests for the MMGen suite",
-		'usage':'[options] [tests | test [subtest]]',
+		'usage':'[options] [test | test.subtest]...',
 		'options': """
 -h, --help       Print this help message
 -A, --no-daemon-autostart Don't start and stop daemons automatically
@@ -108,14 +108,14 @@ def run_test(test,subtest=None):
 
 try:
 	import importlib
-	if len(cmd_args) == 2 and cmd_args[0] in all_tests and cmd_args[1] not in all_tests:
-		run_test(*cmd_args) # assume 2nd arg is subtest
-	else:
-		for test in cmd_args:
-			if test not in all_tests:
-				die(1,f'{test!r}: test not recognized')
-		for test in (cmd_args or all_tests):
-			run_test(test)
+	for test in (cmd_args or all_tests):
+		if '.' in test:
+			test,subtest = test.split('.')
+		else:
+			subtest = None
+		if test not in all_tests:
+			die(1,f'{test!r}: test not recognized')
+		run_test(test,subtest=subtest)
 	exit_msg()
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))

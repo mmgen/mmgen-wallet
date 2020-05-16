@@ -10,7 +10,44 @@ from mmgen.protocol import init_coin
 from mmgen.rpc import MoneroWalletRPCClient
 from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
+def auth_test(d):
+	d.stop()
+	if g.platform != 'win':
+		qmsg(f'\n  Testing authentication with credentials from bitcoin.conf:')
+		d.remove_datadir()
+		os.makedirs(d.datadir)
+
+		cf = os.path.join(d.datadir,'bitcoin.conf')
+		open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
+
+		d.add_flag('keep_cfg_file')
+		d.start()
+
+		async def do():
+			assert g.rpc.auth.user == 'ut_rpc', 'user is not ut_rpc!'
+
+		run_session(do())
+		d.stop()
+
 class unit_tests:
+
+	def bch(self,name,ut):
+
+		async def run_test():
+			qmsg('  Testing backend {!r}'.format(type(g.rpc.backend).__name__))
+
+		d = CoinDaemon('bch',test_suite=True)
+		d.remove_datadir()
+		d.start()
+		g.proto.daemon_data_dir = d.datadir # location of cookie file
+		g.rpc_port = d.rpc_port
+
+		for backend in g.autoset_opts['rpc_backend'].choices:
+			run_session(run_test(),backend=backend)
+
+		auth_test(d)
+		qmsg('  OK')
+		return True
 
 	def btc(self,name,ut):
 
@@ -40,26 +77,7 @@ class unit_tests:
 		for backend in g.autoset_opts['rpc_backend'].choices:
 			run_session(run_test(),backend=backend)
 
-		d.stop()
-
-		if g.platform != 'win':
-
-			qmsg(f'\n  Testing authentication with credentials from bitcoin.conf:')
-			d.remove_datadir()
-			os.makedirs(d.datadir)
-
-			cf = os.path.join(d.datadir,'bitcoin.conf')
-			open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
-
-			d.add_flag('keep_cfg_file')
-			d.start()
-
-			async def do():
-				assert g.rpc.auth.user == 'ut_rpc', 'user is not ut_rpc!'
-
-			run_session(do())
-			d.stop()
-
+		auth_test(d)
 		qmsg('  OK')
 		return True
 
