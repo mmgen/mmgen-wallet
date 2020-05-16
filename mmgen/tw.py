@@ -628,7 +628,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 			print_stack_trace('TW INIT {!r} {!r}'.format(mode,self))
 
 		self.mode = mode
-		self.desc = self.base_desc = '{} tracking wallet'.format(capfirst(g.proto.name))
+		self.desc = self.base_desc = f'{g.proto.name} tracking wallet'
 
 		if self.use_tw_file:
 			self.init_from_wallet_file()

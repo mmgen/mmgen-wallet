@@ -900,7 +900,10 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 		if self.get_fee_from_tx() > g.proto.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-				self.get_fee_from_tx(),g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
+				self.get_fee_from_tx(),
+				g.proto.name,
+				g.proto.max_tx_fee,
+				g.proto.coin ))
 
 		await self.get_status()
 
@@ -1171,7 +1174,7 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 
 			if len(tx_data) == 6:
 				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
-				desc = '{} TxID'.format(g.proto.name.capitalize())
+				desc = f'{g.proto.name} TxID'
 				self.coin_txid = CoinTxID(tx_data.pop(-1),on_fail='raise')
 
 			if len(tx_data) == 5:

@@ -126,7 +126,7 @@ class TestSuiteCfg(TestSuiteBase):
 
 		if old_set:
 			t.expect('unrecognized option')
-			t.req_exit_val = 2
+			t.req_exit_val = 1
 
 		if args == ['parse_test']:
 			t.expect('parsed chunks: 29')

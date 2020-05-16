@@ -554,12 +554,12 @@ class TokenAddr(CoinAddr):
 
 class ViewKey(object):
 	def __new__(cls,s,on_fail='die'):
-		if g.proto.name == 'zcash':
+		if g.proto.name == 'Zcash':
 			return ZcashViewKey.__new__(ZcashViewKey,s,on_fail)
-		elif g.proto.name == 'monero':
+		elif g.proto.name == 'Monero':
 			return MoneroViewKey.__new__(MoneroViewKey,s,on_fail)
 		else:
-			raise ValueError('{}: protocol does not support view keys'.format(g.proto.name.capitalize()))
+			raise ValueError(f'{g.proto.name}: protocol does not support view keys')
 
 class ZcashViewKey(CoinAddr): hex_width = 128
 

@@ -333,8 +333,12 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			from mmgen.addr import AddrGenerator,KeyGenerator
 			rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
-			write_data_to_file(of,  privkey.wif+'\n','compressed {} key'.format(g.proto.name),
-									quiet=True,ignore_opt_outdir=True)
+			write_data_to_file(
+				outfile           = of,
+				data              = privkey.wif + '\n',
+				desc              = f'compressed {g.proto.name} key',
+				quiet             = True,
+				ignore_opt_outdir = True )
 			out.append(self._create_fake_unspent_entry(rand_coinaddr,non_mmgen=True,segwit=False))
 
 		return out

@@ -308,7 +308,10 @@ class EthereumMMGenTX(MMGenTX):
 
 		if not self.disable_fee_check and (fee > g.proto.max_tx_fee):
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-				fee,g.proto.name.capitalize(),g.proto.max_tx_fee,g.coin))
+				fee,
+				g.proto.name,
+				g.proto.max_tx_fee,
+				g.proto.coin ))
 
 		await self.get_status()
 
@@ -500,9 +503,12 @@ class EthereumTokenMMGenTxForSigning(EthereumTokenMMGenTX,EthereumMMGenTxForSign
 		if g.token.upper() == self.dcoin:
 			g.token = d['token_addr']
 		elif g.token != d['token_addr']:
-			m1 = "'{p}': invalid --token parameter for {t} {n} token transaction file\n"
-			m2 = "Please use '--token={t}'"
-			die(1,(m1+m2).format(p=g.token,t=self.dcoin,n=capfirst(g.proto.name)))
+			die(1,"""
+			{p!r}: invalid --token parameter for {t} {n} token transaction file\nPlease use '--token={t}'
+			""").strip().format(
+				p = g.token,
+				t = self.dcoin,
+				n = g.proto.name )
 
 	def parse_txfile_hex_data(self):
 		d = EthereumMMGenTxForSigning.parse_txfile_hex_data(self)

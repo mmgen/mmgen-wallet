@@ -90,7 +90,7 @@ class CoinProtocol(MMGenObject):
 		def __init__(self,coin,name,network):
 			self.coin    = coin.upper()
 			self.dcoin   = self.coin # display coin - for Ethereum, is set to ERC20 token name
-			self.name    = name[0].lower() + name[1:]
+			self.name    = name
 			self.network = network
 			self.testnet = network in ('testnet','regtest')
 			self.regtest = network == 'regtest'
@@ -244,7 +244,7 @@ class CoinProtocol(MMGenObject):
 		bech32_hrp          = 'bcrt'
 
 	class BitcoinCash(Bitcoin):
-		is_fork_of      = 'bitcoin'
+		is_fork_of      = 'Bitcoin'
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
 		daemon_name     = 'bitcoind-abc'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_ABC') if g.platform == 'win' \
@@ -273,7 +273,7 @@ class CoinProtocol(MMGenObject):
 		pass
 
 	class B2X(Bitcoin):
-		is_fork_of      = 'bitcoin'
+		is_fork_of      = 'Bitcoin'
 		daemon_name     = 'bitcoind-2x'
 		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
 							else os.path.join(g.home_dir,'.bitcoin-2x')

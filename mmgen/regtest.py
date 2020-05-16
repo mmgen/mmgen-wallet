@@ -152,8 +152,9 @@ class MMGenRegtest(MMGenObject):
 			err = cp.stderr.decode()
 			if err:
 				if "couldn't connect to server" in err:
-					rdie(1,'Error stopping the {} daemon:\n{}'.format(g.proto.name.capitalize(),err))
-				msg(err)
+					rdie(1,f'Error stopping the {g.proto.name} daemon:\n{err}')
+				else:
+					msg(err)
 
 	def current_user_unix(self,quiet=False):
 		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,self.d.rpc_port)]

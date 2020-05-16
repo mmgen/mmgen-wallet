@@ -822,7 +822,9 @@ def do_license_msg(immed=False):
 def get_coin_daemon_cfg_fn():
 	# Use dirname() to remove 'bob' or 'alice' component
 	cfg_dir = os.path.dirname(g.data_dir) if g.proto.regtest else g.proto.daemon_data_dir
-	return os.path.join(cfg_dir,g.proto.name+'.conf' )
+	return os.path.join(
+		cfg_dir,
+		(g.proto.is_fork_of or g.proto.name).lower() + '.conf' )
 
 def get_coin_daemon_cfg_options(req_keys):
 

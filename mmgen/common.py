@@ -200,7 +200,7 @@ addresses of the form <seed ID>:<index>.
 
 To send the value of all inputs (minus TX fee) to a single output, specify
 one address with no amount on the command line.
-""".format(g=g,pnm=g.proj_name,pnu=g.proto.name.capitalize()),
+""".format(g=g,pnm=g.proj_name,pnu=g.proto.name),
 		'fee': """
 FEE SPECIFICATION: Transaction fees, both on the command line and at the
 interactive prompt, may be specified as either absolute {c} amounts, using
@@ -232,7 +232,7 @@ must also be supplied on the command line if the data can't be found in the
 default wallet.
 """.format( dn=g.proto.daemon_name,
 			pnm=g.proj_name,
-			pnu=g.proto.name.capitalize(),
+			pnu=g.proto.name,
 			pnl=g.proj_name.lower())
 	}[k] + ('-α' if g.debug_utf8 else '')
 

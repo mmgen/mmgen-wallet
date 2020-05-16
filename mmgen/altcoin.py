@@ -440,7 +440,7 @@ class CoinInfo(object):
 						msg('Verifying {} {}'.format(coin.upper(),network))
 
 					if coin != 'bch': # TODO
-						test_equal('coin name',e.name,proto.name.capitalize(),*cdata)
+						test_equal('coin name',e.name,proto.name,*cdata)
 
 					if e.trust_level != -1:
 						test_equal('Trust level',e.trust_level,CoinProtocol.coins[coin].trust_level,*cdata)

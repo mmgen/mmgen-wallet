@@ -104,11 +104,11 @@ def override_globals_from_cfg_file(ucfg):
 				try:
 					val = dict([val.split(':')])
 				except:
-					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(ucfg.fn,d.lineno))
+					raise CfgFileParseError(f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			setattr(cls,attr,val_conv)
 		else:
-			die(2,'{!r}: unrecognized option in {!r}, line {}'.format(d.name,ucfg.fn,d.lineno))
+			raise CfgFileParseError(f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}')
 
 def override_globals_and_set_opts_from_env(opt):
 	for name in g.env_opts:
@@ -125,16 +125,6 @@ def override_globals_and_set_opts_from_env(opt):
 					setattr(opt,gname,val)
 			else:
 				raise ValueError(f'Name {gname} not present in globals or opts')
-
-def common_opts_code(s):
-	from .protocol import CoinProtocol
-	return s.format(
-		pnm    = g.proj_name,
-		pn     = g.proto.name,
-		dn     = g.proto.daemon_name,
-		cu_dfl = g.coin,
-		cu_all = ' '.join(CoinProtocol.coins)
-	)
 
 def show_common_opts_diff():
 
@@ -188,7 +178,11 @@ common_opts_data = {
 --, --bob                  Switch to user "Bob" in MMGen regtest setup
 --, --alice                Switch to user "Alice" in MMGen regtest setup
 	""",
-	'code': common_opts_code
+	'code': lambda s: s.format(
+			pnm    = g.proj_name,
+			dn     = g.proto.daemon_name,
+			cu_dfl = g.coin,
+		)
 }
 
 opts_data_dfl = {

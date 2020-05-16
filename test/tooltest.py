@@ -117,7 +117,7 @@ cfg = {
 	}
 }
 
-ref_subdir  = '' if g.proto.base_coin == 'BTC' else g.proto.name
+ref_subdir  = '' if g.proto.base_coin == 'BTC' else g.proto.name.lower()
 altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
 tn_ext = ('','.testnet')[g.proto.testnet]
 
