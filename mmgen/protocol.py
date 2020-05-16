@@ -110,11 +110,10 @@ class CoinProtocol(MMGenObject):
 		dfl_mmtype      = 'L'
 		data_subdir     = ''
 		rpc_port        = 8332
-		secs_per_block  = 600
 		coin_amt        = BTCAmt
 		max_tx_fee      = BTCAmt('0.003')
-		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin') if g.platform == 'win' \
-							else os.path.join(g.home_dir,'.bitcoin')
+		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin') if g.platform == 'win' else
+							os.path.join(g.home_dir,'.bitcoin') )
 		daemon_data_subdir = ''
 		sighash_type    = 'ALL'
 		block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
@@ -248,8 +247,8 @@ class CoinProtocol(MMGenObject):
 		is_fork_of      = 'Bitcoin'
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
 		daemon_name     = 'bitcoind-abc'
-		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_ABC') if g.platform == 'win' \
-							else os.path.join(g.home_dir,'.bitcoin-abc')
+		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin_ABC') if g.platform == 'win' else
+							os.path.join(g.home_dir,'.bitcoin-abc') )
 		rpc_port        = 8442
 		mmtypes         = ('L','C')
 		sighash_type    = 'ALL|FORKID'
@@ -276,8 +275,8 @@ class CoinProtocol(MMGenObject):
 	class B2X(Bitcoin):
 		is_fork_of      = 'Bitcoin'
 		daemon_name     = 'bitcoind-2x'
-		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' \
-							else os.path.join(g.home_dir,'.bitcoin-2x')
+		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' else
+							os.path.join(g.home_dir,'.bitcoin-2x') )
 		rpc_port        = 8338
 		coin_amt        = B2XAmt
 		max_tx_fee      = B2XAmt('0.1')
@@ -295,19 +294,18 @@ class CoinProtocol(MMGenObject):
 	class Litecoin(Bitcoin):
 		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
 		daemon_name     = 'litecoind'
-		daemon_data_dir = os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' \
-							else os.path.join(g.home_dir,'.litecoin')
+		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' else
+							os.path.join(g.home_dir,'.litecoin') )
 		addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
 		wif_ver_num     = { 'std': 'b0' }
 		mmtypes         = ('L','C','S','B')
-		secs_per_block  = 150
 		rpc_port        = 9332
 		coin_amt        = LTCAmt
 		max_tx_fee      = LTCAmt('0.3')
 		base_coin       = 'LTC'
 		forks           = []
 		bech32_hrp      = 'ltc'
-		avg_bdi         = 2 * 60
+		avg_bdi         = 150
 
 	class LitecoinTestnet(Litecoin):
 		# addr ver nums same as Bitcoin testnet, except for 'p2sh'
@@ -327,7 +325,7 @@ class CoinProtocol(MMGenObject):
 	class BitcoinAddrgenTestnet(BitcoinTestnet):
 		mmcaps = ('key','addr')
 
-	class DummyWIF(object):
+	class DummyWIF:
 
 		def hex2wif(self,hexpriv,pubkey_type,compressed):
 			n = self.name.capitalize()
@@ -358,16 +356,18 @@ class CoinProtocol(MMGenObject):
 		sign_mode     = 'standalone'
 		caps          = ('token',)
 		base_proto    = 'Ethereum'
+		avg_bdi       = 15
 
 		def parse_addr(self,addr):
 			from .util import is_hex_str_lc
 			if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
 				return parsed_addr( bytes.fromhex(addr), 'ethereum' )
-			if g.debug: Msg("Invalid address '{}'".format(addr))
+			if g.debug:
+				Msg(f'Invalid address: {addr}')
 			return False
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
-			assert len(pubkey_hash) == 40,'{}: invalid length for pubkey hash'.format(len(pubkey_hash))
+			assert len(pubkey_hash) == 40, f'{len(pubkey_hash)}: invalid length for pubkey hash'
 			assert not p2sh,'Ethereum has no P2SH address format'
 			return pubkey_hash
 
@@ -390,6 +390,7 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
 		mmtypes        = ('L','C','Z')
 		dfl_mmtype     = 'L'
+		avg_bdi        = 75
 
 		def get_addr_len(self,addr_fmt):
 			return (20,64)[addr_fmt in ('zcash_z','viewkey')]
@@ -413,7 +414,7 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
 		addr_ver_bytes = { '1d25': 'p2pkh', '1cba': 'p2sh', '16b6': 'zcash_z', 'a8ac0c': 'viewkey' }
 
-# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
+	# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 	class Monero(DummyWIF,BitcoinAddrgen):
 		base_coin      = 'XMR'
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
@@ -422,6 +423,7 @@ class CoinProtocol(MMGenObject):
 		mmtypes        = ('M',)
 		dfl_mmtype     = 'M'
 		pubkey_type    = 'monero' # required by DummyWIF
+		avg_bdi        = 120
 
 		def preprocess_key(self,sec,pubkey_type): # reduce key
 			from .ed25519 import l
@@ -447,7 +449,7 @@ class CoinProtocol(MMGenObject):
 				from .keccak import keccak_256
 
 			chk = keccak_256(ret[:-4]).digest()[:4]
-			assert ret[-4:] == chk,'{}: incorrect checksum.  Correct value: {}'.format(ret[-4:].hex(),chk.hex())
+			assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
 
 			return self.parse_addr_bytes(ret)
 
@@ -506,11 +508,9 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 
 		cinfo = data[network][0]
 		if not cinfo:
-			m = '{!r}: unrecognized coin for network {}'
-			raise ValueError(m.format(usr_coin.upper(),network.upper()))
+			raise ValueError(f'{usr_coin.upper()!r}: unrecognized coin for network {network.upper()}')
 		if cinfo.trust_level == -1:
-			m = '{!r}: unsupported (disabled) coin for network {}'
-			raise ValueError(m.format(usr_coin.upper(),network.upper()))
+			raise ValueError(f'{usr_coin.upper()!r}: unsupported (disabled) coin for network {network.upper()}')
 
 		trust_level = cinfo.trust_level
 
@@ -549,7 +549,6 @@ def make_init_genonly_altcoins_str(data):
 			yield make_proto(e)
 		for e in data['testnet']:
 			yield make_proto(e,testnet=True)
-		yield ''
 
 		for e in data['mainnet']:
 			proto,coin = e.name,e.symbol

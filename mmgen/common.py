@@ -193,7 +193,7 @@ Network-estimated fees will be multiplied by the value of '--tx-fee-adj',
 if specified.
 
 Ages of transactions are approximate based on an average block discovery
-interval of one per {g.proto.secs_per_block} seconds.
+interval of one per {g.proto.avg_bdi} seconds.
 
 All addresses on the command line can be either {pnu} addresses or {pnm}
 addresses of the form <seed ID>:<index>.

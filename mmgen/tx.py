@@ -1020,22 +1020,22 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 	def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
 
 		if sort not in self.view_sort_orders:
-			m = '{!r}: invalid transaction view sort order.  Valid options: {}'
-			die(1,m.format(sort,','.join(self.view_sort_orders)))
+			die(1,f'{sort!r}: invalid transaction view sort order. Valid options: {{}}'.format(
+					','.join(self.view_sort_orders) ))
 
 		def format_io(desc):
 			io = getattr(self,desc)
-			ip = desc == 'inputs'
-			out = desc.capitalize() + ':\n' + enl
+			is_input = desc == 'inputs'
+			yield desc.capitalize() + ':\n' + enl
 			addr_w = max(len(e.addr) for e in io)
-			confs_per_day = 60*60*24 // g.proto.secs_per_block
+			confs_per_day = 60*60*24 // g.proto.avg_bdi
 			io_sorted = {
 				# prepend '/' (sorts before '0') to ensure non-MMGen addrs are displayed first
 				'addr': lambda: sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else '/'+o.addr),
 				'raw':  lambda: io
 			}[sort]
 			for n,e in enumerate(io_sorted()):
-				if ip and blockcount:
+				if is_input and blockcount:
 					confs = e.confs + blockcount - self.blockcount
 					days = int(confs // confs_per_day)
 				if e.mmid:
@@ -1043,30 +1043,38 @@ Selected non-{pnm} inputs: {{}}""".strip().format(pnm=g.proj_name,pnl=g.proj_nam
 						width=max_mmwid,
 						encl='()',
 						color=True,
-						append_chars=('',' (chg)')[bool(not ip and e.is_chg and terse)],
+						append_chars=('',' (chg)')[bool(not is_input and e.is_chg and terse)],
 						append_color='green')
 				else:
 					mmid_fmt = MMGenID.fmtc(nonmm_str,width=max_mmwid,color=True)
 				if terse:
-					out += '{:3} {} {} {} {}\n'.format(n+1,
+					yield '{:3} {} {} {} {}\n'.format(
+						n+1,
 						e.addr.fmt(color=True,width=addr_w),
-						mmid_fmt,e.amt.hl(),g.dcoin)
+						mmid_fmt,
+						e.amt.hl(),
+						g.dcoin )
 				else:
-					icommon = [
-						((n+1,'')[ip],'address:',e.addr.fmt(color=True,width=addr_w) + ' '+mmid_fmt),
-						('','comment:',e.label.hl() if e.label else ''),
-						('','amount:','{} {}'.format(e.amt.hl(),g.dcoin))]
-					items = [(n+1, 'tx,vout:','{},{}'.format(e.txid,e.vout))] + icommon + [
-						('','confirmations:','{} (around {} days)'.format(confs,days) if blockcount else '')
-					] if ip else icommon + [
-						('','change:',green('True') if e.is_chg else '')]
-					out += '\n'.join([('{:>3} {:<8} {}'.format(*d)) for d in items if d[2]]) + '\n\n'
-			return out
+					def gen():
+						if is_input:
+							yield (n+1,      'tx,vout:', e.txid + ',' + str(e.vout))
+							yield ('',       'address:', e.addr.fmt(color=True,width=addr_w) + ' ' + mmid_fmt)
+						else:
+							yield (n+1,      'address:', e.addr.fmt(color=True,width=addr_w) + ' ' + mmid_fmt)
+						if e.label:
+							yield ('',       'comment:', e.label.hl())
+						yield     ('',       'amount:',  e.amt.hl() + ' ' + g.dcoin)
+						if is_input and blockcount:
+							yield ('',       'confirmations:', f'{confs} (around {days} days)')
+						if not is_input and e.is_chg:
+							yield ('',       'change:',  green('True'))
+					yield '\n'.join('{:>3} {:<8} {}'.format(*d) for d in gen()) + '\n\n'
 
-		md = {'raw':'raw','addr':'address'}
-		m = 'Displaying inputs and outputs in {} sort order'.format(md[sort])
-
-		return m + ('\n\n','\n')[terse] + format_io('inputs') + format_io('outputs')
+		return (
+			'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])
+			+ ('\n\n','\n')[terse]
+			+ ''.join(format_io('inputs'))
+			+ ''.join(format_io('outputs')) )
 
 	def format_view_rel_fee(self,terse):
 		return ' ({} {})\n'.format(
