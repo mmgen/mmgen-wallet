@@ -223,10 +223,11 @@ class Int(int,Hilite,InitErrors):
 	def colorize(cls,n,color=True):
 		return super().colorize(repr(n),color=color)
 
-# For attrs that are always present in the data instance
-# Reassignment and deletion forbidden
-class ImmutableAttr(object): # Descriptor
-
+class ImmutableAttr: # Descriptor
+	"""
+	For attributes that are always present in the data instance
+	Reassignment and deletion forbidden
+	"""
 	ok_dtypes = (str,type,type(None),type(lambda:0))
 
 	def __init__(self,dtype,typeconv=True,set_none_ok=False):
@@ -241,14 +242,13 @@ class ImmutableAttr(object): # Descriptor
 	def __get__(self,instance,owner):
 		return instance.__dict__[self.name]
 
-	# forbid all reassignment
-	def set_attr_ok(self,instance):
+	def setattr_condition(self,instance):
+		'forbid all reassignment'
 		return not self.name in instance.__dict__
 
 	def __set__(self,instance,value):
-		if not self.set_attr_ok(instance):
-			m = "Attribute '{}' of {} instance cannot be reassigned"
-			raise AttributeError(m.format(self.name,type(instance)))
+		if not self.setattr_condition(instance):
+			raise AttributeError('Attribute {self.name!r} of {type(instance)} instance cannot be reassigned')
 		if self.set_none_ok and value == None:
 			instance.__dict__[self.name] = None
 		elif self.typeconv:   # convert type
@@ -260,28 +260,27 @@ class ImmutableAttr(object): # Descriptor
 			elif callable(self.dtype) and type(value) == self.dtype():
 				instance.__dict__[self.name] = value
 			else:
-				m = "Attribute '{}' of {} instance must of type {}"
-				raise TypeError(m.format(self.name,type(instance),self.dtype))
+				raise TypeError('Attribute {self.name!r} of {type(instance)} instance must of type {self.dtype}')
 
 	def __delete__(self,instance):
-		m = "Atribute '{}' of {} instance cannot be deleted"
-		raise AttributeError(m.format(self.name,type(instance)))
+		raise AttributeError('Attribute {self.name!r} of {type(instance)} instance cannot be deleted')
 
-# For attrs that might not be present in the data instance
-# Reassignment or deletion allowed if specified
-class ListItemAttr(ImmutableAttr): # Descriptor
-
+class ListItemAttr(ImmutableAttr):
+	"""
+	For attributes that might not be present in the data instance
+	Reassignment or deletion allowed if specified
+	"""
 	def __init__(self,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
 		self.reassign_ok = reassign_ok
 		self.delete_ok = delete_ok
 		ImmutableAttr.__init__(self,dtype,typeconv=typeconv)
 
-	# return None if attribute doesn't exist
 	def __get__(self,instance,owner):
+		"return None if attribute doesn't exist"
 		try: return instance.__dict__[self.name]
 		except: return None
 
-	def set_attr_ok(self,instance):
+	def setattr_condition(self,instance):
 		return getattr(instance,self.name) == None or self.reassign_ok
 
 	def __delete__(self,instance):
@@ -313,9 +312,9 @@ class MMGenListItem(MMGenObject):
 		if args:
 			raise ValueError('Non-keyword args not allowed in {!r} constructor'.format(type(self).__name__))
 
-		for k in kwargs:
-			if kwargs[k] != None:
-				setattr(self,k,kwargs[k])
+		for k,v in kwargs.items():
+			if v != None:
+				setattr(self,k,v)
 
 		# Require all immutables to be initialized.  Check performed only when testing.
 		self.immutable_attr_init_check()
