@@ -135,7 +135,7 @@ async def main():
 
 	tx.update_fee(op_idx,fee)
 
-	d = tx.get_fee_from_tx()
+	d = tx.get_fee()
 	assert d == fee and d <= g.proto.max_tx_fee
 
 	if g.proto.base_proto == 'Bitcoin':

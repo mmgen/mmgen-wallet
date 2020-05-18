@@ -305,8 +305,8 @@ class MMGenTX(MMGenObject):
 	msg_non_mmgen_inputs = fmt(f"""
 		NOTE: This transaction includes non-{g.proj_name} inputs, which makes the signing
 		process more complicated.  When signing the transaction, keys for non-{g.proj_name}
-		inputs must be supplied to '{g.proj_name.lower()}-txsign' in a file with the '--keys-from-file'
-		option.
+		inputs must be supplied using the '--keys-from-file' option.  The key file
+		must contain exactly one key per line.
 		Selected non-{g.proj_name} inputs: {{}}
 	""").strip()
 
@@ -322,7 +322,7 @@ class MMGenTX(MMGenObject):
 		self.hex         = ''                     # raw serialized hex transaction
 		self.label       = MMGenTxLabel('')
 		self.txid        = ''
-		self.coin_txid    = ''
+		self.coin_txid   = ''
 		self.timestamp   = ''
 		self.chksum      = ''
 		self.fmt_data    = ''
@@ -438,7 +438,7 @@ class MMGenTX(MMGenObject):
 	def edit_comment(self):
 		return self.add_comment(self)
 
-	def get_fee_from_tx(self):
+	def get_fee(self):
 		return self.sum_inputs() - self.sum_outputs()
 
 	def has_segwit_inputs(self):
@@ -902,9 +902,9 @@ class MMGenTX(MMGenObject):
 			m = 'Transaction has MMGen Segwit outputs, but this blockchain does not support Segwit'
 			die(2,m+' at the current height')
 
-		if self.get_fee_from_tx() > g.proto.max_tx_fee:
+		if self.get_fee() > g.proto.max_tx_fee:
 			die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-				self.get_fee_from_tx(),
+				self.get_fee(),
 				g.proto.name,
 				g.proto.max_tx_fee,
 				g.proto.coin ))
@@ -960,7 +960,7 @@ class MMGenTX(MMGenObject):
 			('-'+g.dcoin,'')[g.coin=='BTC'],
 			self.send_amt,
 			('',',{}'.format(self.fee_abs2rel(
-								self.get_fee_from_tx(),to_unit=self.fn_fee_unit))
+								self.get_fee(),to_unit=self.fn_fee_unit))
 							)[self.is_replaceable()],
 			('',',tl={}'.format(tl))[bool(tl)],
 			tn,self.ext,
@@ -1082,11 +1082,11 @@ class MMGenTX(MMGenObject):
 
 	def format_view_rel_fee(self,terse):
 		return ' ({} {})\n'.format(
-			pink(str(self.fee_abs2rel(self.get_fee_from_tx()))),
+			pink(str(self.fee_abs2rel(self.get_fee()))),
 			self.rel_fee_disp)
 
 	def format_view_abs_fee(self):
-		return g.proto.coin_amt(self.get_fee_from_tx()).hl()
+		return g.proto.coin_amt(self.get_fee()).hl()
 
 	def format_view_verbose_footer(self):
 		tsize = len(self.hex)//2 if self.hex else 'unknown'

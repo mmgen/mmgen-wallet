@@ -74,7 +74,7 @@ class EthereumMMGenTX(MMGenTX):
 
 	def is_replaceable(self): return True
 
-	def get_fee_from_tx(self):
+	def get_fee(self):
 		return self.fee
 
 	def check_fee(self):

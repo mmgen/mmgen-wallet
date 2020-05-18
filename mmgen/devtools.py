@@ -9,7 +9,7 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 
 	import sys,re,traceback,json,pprint
 	from decimal import Decimal
-	from difflib import unified_diff
+	from difflib import unified_diff,ndiff
 
 	def pmsg(*args,out=sys.stderr):
 		d = args if len(args) > 1 else '' if not args else args[0]
@@ -119,11 +119,16 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 							fs = 'attribute {!r} of {} has not been initialized in constructor!'
 							rdie(3,fs.format(attrname,cls.__name__))
 
-	def print_diff(a,b,from_json=True):
+	def print_diff(a,b,from_file='',to_file='',from_json=True):
 		if from_json:
 			a = json.dumps(json.loads(a),indent=4).split('\n') if a else []
 			b = json.dumps(json.loads(b),indent=4).split('\n') if b else []
 		else:
 			a = a.split('\n')
 			b = b.split('\n')
-		sys.stderr.write('  DIFF:\n    {}\n'.format('\n    '.join(unified_diff(a,b))))
+		sys.stderr.write('  DIFF:\n    {}\n'.format('\n    '.join(unified_diff(a,b,from_file,to_file))))
+
+	def get_ndiff(a,b):
+		a = a.split('\n')
+		b = b.split('\n')
+		return ndiff(a,b)
