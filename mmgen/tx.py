@@ -320,7 +320,7 @@ class MMGenTX(MMGenObject):
 		self.send_amt    = g.proto.coin_amt('0')  # total amt minus change
 		self.fee         = g.proto.coin_amt('0')
 		self.hex         = ''                     # raw serialized hex transaction
-		self.label       = MMGenTXLabel('')
+		self.label       = MMGenTxLabel('')
 		self.txid        = ''
 		self.coin_txid    = ''
 		self.timestamp   = ''
@@ -421,12 +421,12 @@ class MMGenTX(MMGenObject):
 	# returns true if comment added or changed
 	def add_comment(self,infile=None):
 		if infile:
-			self.label = MMGenTXLabel(get_data_from_file(infile,'transaction comment'))
+			self.label = MMGenTxLabel(get_data_from_file(infile,'transaction comment'))
 		else: # get comment from user, or edit existing comment
 			m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
 			if keypress_confirm(m,default_yes=False):
 				while True:
-					s = MMGenTXLabel(my_raw_input('Comment: ',insert_txt=self.label))
+					s = MMGenTxLabel(my_raw_input('Comment: ',insert_txt=self.label))
 					if s:
 						lbl_save = self.label
 						self.label = s
@@ -1198,7 +1198,7 @@ class MMGenTX(MMGenObject):
 
 			if len(tx_data) == 5:
 				# rough check: allow for 4-byte utf8 characters + base58 (4 * 11 / 8 = 6 (rounded up))
-				assert len(tx_data[-1]) < MMGenTXLabel.max_len*6,'invalid comment length'
+				assert len(tx_data[-1]) < MMGenTxLabel.max_len*6,'invalid comment length'
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
@@ -1206,7 +1206,7 @@ class MMGenTX(MMGenObject):
 					comment = baseconv.tobytes(c,'b58').decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
-					self.label = MMGenTXLabel(comment,on_fail='raise')
+					self.label = MMGenTxLabel(comment,on_fail='raise')
 
 			desc = 'number of lines' # four required lines
 			metadata,self.hex,inputs_data,outputs_data = tx_data

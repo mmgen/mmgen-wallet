@@ -47,13 +47,13 @@ non_mmgen_fn = 'coinkey'
 ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
 
-from mmgen.obj import MMGenTXLabel,TwComment
+from mmgen.obj import MMGenTxLabel,TwComment
 
 tx_label_jp = text_jp
 tx_label_zh = text_zh
 
 lcg = ascii_cyr_gr if g.platform == 'win' else lat_cyr_gr # MSYS2 popen_spawn issue
-tx_label_lat_cyr_gr = lcg[:MMGenTXLabel.max_len] # 72 chars
+tx_label_lat_cyr_gr = lcg[:MMGenTxLabel.max_len] # 72 chars
 
 tw_label_zh         = text_zh[:TwComment.max_screen_width // 2]
 tw_label_lat_cyr_gr = lcg[:TwComment.max_screen_width] # 80 chars

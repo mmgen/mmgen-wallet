@@ -184,7 +184,7 @@ tests = {
 					text_jp[:40],
 					text_zh[:40] )
 	},
-	'MMGenTXLabel':{
+	'MMGenTxLabel':{
 		'bad': (utf8_text[:73],utf8_combining[:72],utf8_ctrl[:72],gr_uc_w_ctrl),
 		'good':  (utf8_text[:72],)
 	},
