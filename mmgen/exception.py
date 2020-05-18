@@ -43,6 +43,7 @@ class TokenNotInWallet(Exception):        mmcode = 2
 class BadTwComment(Exception):            mmcode = 2
 class BaseConversionError(Exception):     mmcode = 2
 class BaseConversionPadError(Exception):  mmcode = 2
+class TransactionChainMismatch(Exception):mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3

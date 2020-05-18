@@ -22,6 +22,7 @@ altcoins.eth.tx: Ethereum transaction classes for the MMGen suite
 
 import json
 from mmgen.common import *
+from mmgen.exception import TransactionChainMismatch
 from mmgen.obj import *
 
 from mmgen.tx import MMGenTX,MMGenBumpTX,MMGenSplitTX,MMGenTxForSigning
@@ -208,7 +209,7 @@ class EthereumMMGenTX(MMGenTX):
 		return ret
 
 	def convert_and_check_fee(self,tx_fee,desc='Missing description'):
-		abs_fee = self.process_fee_spec(tx_fee,None,on_fail='return')
+		abs_fee = self.process_fee_spec(tx_fee,None)
 		if abs_fee == False:
 			return False
 		elif not self.disable_fee_check and (abs_fee > g.proto.max_tx_fee):
@@ -302,7 +303,7 @@ class EthereumMMGenTX(MMGenTX):
 		if not self.marked_signed():
 			die(1,'Transaction is not signed!')
 
-		self.check_correct_chain(on_fail='die')
+		self.check_correct_chain()
 
 		fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
 
@@ -420,7 +421,9 @@ class EthereumMMGenTxForSigning(EthereumMMGenTX,MMGenTxForSigning):
 			msg('Transaction is already signed!')
 			return False
 
-		if not self.check_correct_chain(on_fail='return'):
+		try:
+			self.check_correct_chain()
+		except TransactionChainMismatch:
 			return False
 
 		msg_r('Signing transaction{}...'.format(tx_num_str))
@@ -503,12 +506,11 @@ class EthereumTokenMMGenTxForSigning(EthereumTokenMMGenTX,EthereumMMGenTxForSign
 		if g.token.upper() == self.dcoin:
 			g.token = d['token_addr']
 		elif g.token != d['token_addr']:
-			die(1,"""
-			{p!r}: invalid --token parameter for {t} {n} token transaction file\nPlease use '--token={t}'
-			""").strip().format(
-				p = g.token,
-				t = self.dcoin,
-				n = g.proto.name )
+			die(1,
+			"{!r}: invalid --token parameter for {t} {} token transaction file\nPlease use '--token={t}'".format(
+				g.token,
+				g.proto.name,
+				t = self.dcoin ))
 
 	def parse_txfile_hex_data(self):
 		d = EthereumMMGenTxForSigning.parse_txfile_hex_data(self)

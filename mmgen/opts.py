@@ -371,7 +371,7 @@ def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 	tx = MMGenTX()
 	# Size of 224 is just a ball-park figure to eliminate the most extreme cases at startup
 	# This check will be performed again once we know the true size
-	ret = tx.process_fee_spec(val,224,on_fail='return')
+	ret = tx.process_fee_spec(val,224)
 
 	if ret == False:
 		raise UserOptError('{!r}: invalid {}\n(not a {} amount or {} specification)'.format(
