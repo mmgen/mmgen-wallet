@@ -131,6 +131,7 @@ setup(
 			'mmgen.tool',
 			'mmgen.tw',
 			'mmgen.tx',
+			'mmgen.txfile',
 			'mmgen.txsign',
 			'mmgen.util',
 			'mmgen.wallet',
