@@ -223,7 +223,7 @@ class DeserializedTX(dict,MMGenObject):
 
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(int,typeconv=False)
-	amt      = ImmutableAttr(lambda:g.proto.coin_amt,typeconv=False)
+	amt      = ImmutableAttr(lambda val:g.proto.coin_amt(val),typeconv=False)
 	label    = ListItemAttr('TwComment',reassign_ok=True)
 	mmid     = ListItemAttr('MMGenID')
 	addr     = ImmutableAttr('CoinAddr')

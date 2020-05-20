@@ -87,8 +87,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	class MMGenTwUnspentOutput(MMGenListItem):
 		txid         = ListItemAttr('CoinTxID')
 		vout         = ListItemAttr(int,typeconv=False)
-		amt          = ImmutableAttr(lambda:g.proto.coin_amt,typeconv=False)
-		amt2         = ListItemAttr(lambda:g.proto.coin_amt,typeconv=False)
+		amt          = ImmutableAttr(lambda val:g.proto.coin_amt(val),typeconv=False)
+		amt2         = ListItemAttr(lambda val:g.proto.coin_amt(val),typeconv=False)
 		label        = ListItemAttr('TwComment',reassign_ok=True)
 		twmmid       = ImmutableAttr('TwMMGenID')
 		addr         = ImmutableAttr('CoinAddr')

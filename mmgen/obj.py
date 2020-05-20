@@ -231,10 +231,30 @@ class ImmutableAttr: # Descriptor
 	ok_dtypes = (str,type,type(None),type(lambda:0))
 
 	def __init__(self,dtype,typeconv=True,set_none_ok=False):
-		self.typeconv = typeconv
-		self.set_none_ok = set_none_ok
-		assert isinstance(dtype,self.ok_dtypes),'{!r}: invalid dtype arg'.format(dtype)
-		self.dtype = dtype
+		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
+		if set_none_ok:   assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
+
+		if type(dtype).__name__ == 'function':
+			self.conv = lambda instance,value: dtype(value)
+		elif typeconv:
+			"convert this attribute's type"
+			if type(dtype) == str:
+				self.conv = lambda instance,value: globals()[dtype](value,on_fail='raise')
+			else:
+				if set_none_ok:
+					self.conv = lambda instance,value: None if value is None else dtype(value)
+				else:
+					self.conv = lambda instance,value: dtype(value)
+		else:
+			"check this attribute's type"
+			def assign_with_check(instance,value):
+				if type(value) == dtype:
+					return value
+				raise TypeError('Attribute {!r} of {} instance must of type {}'.format(
+					self.name,
+					type(instance).__name__,
+					dtype ))
+			self.conv = assign_with_check
 
 	def __set_name__(self,owner,name):
 		self.name = name
@@ -248,22 +268,12 @@ class ImmutableAttr: # Descriptor
 
 	def __set__(self,instance,value):
 		if not self.setattr_condition(instance):
-			raise AttributeError('Attribute {self.name!r} of {type(instance)} instance cannot be reassigned')
-		if self.set_none_ok and value == None:
-			instance.__dict__[self.name] = None
-		elif self.typeconv:   # convert type
-			instance.__dict__[self.name] = \
-				globals()[self.dtype](value,on_fail='raise') if type(self.dtype) == str else self.dtype(value)
-		else:                 # check type
-			if type(value) == self.dtype:
-				instance.__dict__[self.name] = value
-			elif callable(self.dtype) and type(value) == self.dtype():
-				instance.__dict__[self.name] = value
-			else:
-				raise TypeError('Attribute {self.name!r} of {type(instance)} instance must of type {self.dtype}')
+			raise AttributeError(f'Attribute {self.name!r} of {type(instance)} instance cannot be reassigned')
+		instance.__dict__[self.name] = self.conv(instance,value)
 
 	def __delete__(self,instance):
-		raise AttributeError('Attribute {self.name!r} of {type(instance)} instance cannot be deleted')
+		raise AttributeError(
+			f'Attribute {self.name!r} of {type(instance).__name__} instance cannot be deleted')
 
 class ListItemAttr(ImmutableAttr):
 	"""
