@@ -45,7 +45,7 @@ import mmgen.tx
 tx = mmgen.tx.MMGenTX(cmd_args[0])
 
 if opt.verbose:
-	gmsg('Original transaction is in {} format'.format(g.coin))
+	gmsg(f'Original transaction is in {g.coin} format')
 
 from mmgen.protocol import init_proto
 g.proto = init_proto('bch')

@@ -142,7 +142,7 @@ If no command is given, the whole test suite is run.
 
 data_dir = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
 
-# we need the values of two opts before running opts.init, so parse without initializing:
+# we need some opt values before running opts.init, so parse without initializing:
 _uopts = opts.init(opts_data,parse_only=True).user_opts
 
 # step 1: delete data_dir symlink in ./test;

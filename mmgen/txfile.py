@@ -70,7 +70,7 @@ class MMGenTxFile:
 
 			if len(tx_data) == 6:
 				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
-				desc = f'{g.proto.name} TxID'
+				desc = f'coin TxID'
 				tx.coin_txid = CoinTxID(tx_data.pop(-1),on_fail='raise')
 
 			if len(tx_data) == 5:

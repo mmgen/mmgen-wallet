@@ -64,7 +64,8 @@ class TestSuiteAutosign(TestSuiteBase):
 					live=False,
 					simulate=False):
 
-		if self.skip_for_win(): return 'skip'
+		if self.skip_for_win():
+			return 'skip'
 
 		def make_wallet(opts):
 			t = self.spawn('mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')

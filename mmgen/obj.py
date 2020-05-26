@@ -34,14 +34,14 @@ class aInitMeta(type):
 		await instance.__ainit__(*args,**kwargs)
 		return instance
 
-def is_mmgen_seed_id(s): return SeedID(sid=s,on_fail='silent')
-def is_mmgen_idx(s):     return AddrIdx(s,on_fail='silent')
-def is_mmgen_id(s):      return MMGenID(s,on_fail='silent')
-def is_coin_addr(s):     return CoinAddr(s,on_fail='silent')
-def is_addrlist_id(s):   return AddrListID(s,on_fail='silent')
-def is_tw_label(s):      return TwLabel(s,on_fail='silent')
-def is_wif(s):           return WifKey(s,on_fail='silent')
-def is_viewkey(s):       return ViewKey(s,on_fail='silent')
+def is_mmgen_seed_id(s):        return SeedID(sid=s,on_fail='silent')
+def is_mmgen_idx(s):            return AddrIdx(s,on_fail='silent')
+def is_mmgen_id(s):             return MMGenID(s,on_fail='silent')
+def is_coin_addr(s):            return CoinAddr(s,on_fail='silent')
+def is_addrlist_id(s):          return AddrListID(s,on_fail='silent')
+def is_tw_label(s):             return TwLabel(s,on_fail='silent')
+def is_wif(s):                  return WifKey(s,on_fail='silent')
+def is_viewkey(s):              return ViewKey(s,on_fail='silent')
 def is_seed_split_specifier(s): return SeedSplitSpecifier(s,on_fail='silent')
 
 def truncate_str(s,width): # width = screen width
@@ -641,22 +641,23 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,s,on_fail='die'):
-		if type(s) == cls: return s
+	def __new__(cls,id_str,on_fail='die'):
+		if type(id_str) == cls:
+			return id_str
 		cls.arg_chk(on_fail)
 		ret = None
 		try:
-			ret = MMGenID(s,on_fail='raise')
+			ret = MMGenID(id_str,on_fail='raise')
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
-				assert s.split(':',1)[0] == g.proto.base_coin.lower(),(
+				assert id_str.split(':',1)[0] == g.proto.base_coin.lower(),(
 					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
-				assert set(s[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
-				assert len(s) > 4,'not more that four characters long'
-				ret,sort_key,idtype = str(s),'z_'+s,'non-mmgen'
+				assert set(id_str[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
+				assert len(id_str) > 4,'not more that four characters long'
+				ret,sort_key,idtype = str(id_str),'z_'+id_str,'non-mmgen'
 			except Exception as e2:
-				return cls.init_fail(e,s,e2=e2)
+				return cls.init_fail(e,id_str,e2=e2)
 
 		me = str.__new__(cls,ret)
 		me.obj = ret
@@ -666,19 +667,20 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
-	def __new__(cls,s,on_fail='die'):
-		if type(s) == cls: return s
+	def __new__(cls,text,on_fail='die'):
+		if type(text) == cls:
+			return text
 		cls.arg_chk(on_fail)
 		try:
-			ss = s.split(None,1)
-			mmid = TwMMGenID(ss[0],on_fail='raise')
-			comment = TwComment(ss[1] if len(ss) == 2 else '',on_fail='raise')
+			ts = text.split(None,1)
+			mmid = TwMMGenID(ts[0],on_fail='raise')
+			comment = TwComment(ts[1] if len(ts) == 2 else '',on_fail='raise')
 			me = str.__new__(cls,'{}{}'.format(mmid,' {}'.format(comment) if comment else ''))
 			me.mmid = mmid
 			me.comment = comment
 			return me
 		except Exception as e:
-			return cls.init_fail(e,s)
+			return cls.init_fail(e,text)
 
 class HexStr(str,Hilite,InitErrors):
 	color = 'red'
@@ -712,15 +714,16 @@ class WifKey(str,Hilite,InitErrors):
 	"""
 	width = 53
 	color = 'blue'
-	def __new__(cls,s,on_fail='die'):
-		if type(s) == cls: return s
+	def __new__(cls,wif,on_fail='die'):
+		if type(wif) == cls:
+			return wif
 		cls.arg_chk(on_fail)
 		try:
-			assert set(s) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-			g.proto.parse_wif(s) # raises exception on error
-			return str.__new__(cls,s)
+			assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
+			g.proto.parse_wif(wif) # raises exception on error
+			return str.__new__(cls,wif)
 		except Exception as e:
-			return cls.init_fail(e,s)
+			return cls.init_fail(e,wif)
 
 class PubKey(HexStr,MMGenObject): # TODO: add some real checks
 	def __new__(cls,s,compressed,on_fail='die'):
@@ -797,8 +800,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 		try:
 			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
 			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
-				m = '{!r}: not an instance of MMGenAddrType or MMGenPasswordType'.format(mmtype)
-				raise ValueError(m.format(mmtype))
+				raise ValueError(f'{mmtype!r}: not an instance of MMGenAddrType or MMGenPasswordType')
 			me = str.__new__(cls,sid+':'+mmtype)
 			me.sid = sid
 			me.mmtype = mmtype
@@ -913,24 +915,26 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
-	def __new__(cls,s,on_fail='die',errmsg=None):
-		if type(s) == cls: return s
+	def __new__(cls,id_str,on_fail='die',errmsg=None):
+		if type(id_str) == cls:
+			return id_str
 		cls.arg_chk(on_fail)
 		try:
 			for k,v in list(cls.mmtypes.items()):
-				if s in (k,v.name):
-					if s == v.name: s = k
-					me = str.__new__(cls,s)
+				if id_str in (k,v.name):
+					if id_str == v.name:
+						id_str = k
+					me = str.__new__(cls,id_str)
 					for k in v._fields:
 						setattr(me,k,getattr(v,k))
 					if me not in g.proto.mmtypes + ('P',):
 						raise ValueError(f'{me.name!r}: invalid address type for {g.proto.cls_name}')
 					return me
-			raise ValueError('unrecognized address type')
+			raise ValueError(f'{id_str}: unrecognized address type for protocol {proto.name}')
 		except Exception as e:
-			emsg = '{!r}\n'.format(errmsg) if errmsg else ''
-			m = '{}{!r}: invalid value for {} ({})'.format(emsg,s,cls.__name__,e.args[0])
-			return cls.init_fail(e,m,preformat=True)
+			return cls.init_fail( e,
+				f"{errmsg or ''}{id_str!r}: invalid value for {cls.__name__} ({e!s})",
+				preformat = True )
 
 	@classmethod
 	def get_names(cls):

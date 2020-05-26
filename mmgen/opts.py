@@ -55,7 +55,10 @@ def print_help(po,opts_data,opt_filter):
 			opts_data['text']['long_options'] = d
 		remove_unneeded_long_opts()
 
-	mmgen.share.Opts.print_help(po,opts_data,opt_filter) # exits
+	mmgen.share.Opts.print_help( # exits
+		po,
+		opts_data,
+		opt_filter )
 
 def fmt_opt(o):
 	return '--' + o.replace('_','-')

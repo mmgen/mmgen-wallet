@@ -141,7 +141,7 @@ class GlobalContext:
 		proj_name.lower()
 	)
 	data_dir_root,data_dir,cfg_file = None,None,None
-	daemon_data_dir = '' # set by user or protocol
+	daemon_data_dir = '' # set by user
 
 	# global var sets user opt:
 	global_sets_opt = ( 'minconf','seed_len','hash_preset','usr_randchars','debug',

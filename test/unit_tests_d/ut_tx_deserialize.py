@@ -88,15 +88,16 @@ class unit_test(object):
 					extra_desc,
 					'' if opt.quiet else '\n'))
 			else:
-				Msg_r('Testing transactions from {!r}'.format(fn))
-				if not opt.quiet: Msg('')
+				Msg_r(f'Testing {extra_desc} transactions from {fn!r}')
+				if not opt.quiet:
+					Msg('')
 
 		async def test_core_vectors():
 			self._get_core_repo_root()
 			fn_b = 'src/test/data/tx_valid.json'
 			fn = os.path.join(self.core_repo_root,fn_b)
 			data = json.loads(open(fn).read())
-			print_info(fn_b,'Core test vectors')
+			print_info(fn_b,'Core test vector')
 			n = 1
 			for e in data:
 				if type(e[0]) == list:
@@ -112,7 +113,7 @@ class unit_test(object):
 					('btc',True,'test/ref/0C7115[15.86255,14,tl=1320969600].testnet.rawtx'),
 				#	('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx')
 				)
-			print_info('test/ref/*rawtx','MMGen reference transactions')
+			print_info('test/ref/*rawtx','MMGen reference')
 			g.rpc_port = None
 			for n,(coin,testnet,fn) in enumerate(fns):
 				g.proto = init_proto(coin,testnet=testnet)

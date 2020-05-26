@@ -457,8 +457,8 @@ class CoinProtocol(MMGenObject):
 
 def init_proto(coin,testnet=False,regtest=False,network=None):
 
-	assert type(testnet) == bool
-	assert type(regtest) == bool
+	assert type(testnet) == bool, 'init_proto_chk1'
+	assert type(regtest) == bool, 'init_proto_chk2'
 
 	if network is None:
 		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'

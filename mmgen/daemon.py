@@ -302,8 +302,8 @@ class CoinDaemon(Daemon):
 'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf', 'testnet3',8442,18442,18553),
 'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf','testnet4',9332,19332,19444),
 'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',None,     18081,None,None),
-'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   None,     8545, None,None),
-'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, None,None)
+'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   None,     8545, 8545,8545),
+'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, 8545,8545)
 	}
 
 	def __new__(cls,network_id,test_suite=False,flags=None):
@@ -459,13 +459,16 @@ class BitcoinDaemon(CoinDaemon):
 			or "does not exist" in err ):
 			# regtest has no cookie file, so test will always fail
 			if self.lockfile and os.path.exists(self.lockfile):
-				return 'busy'
+				ret = 'busy'
 			else:
-				return 'stopped'
+				ret = 'stopped'
 		elif cp.returncode == 0:
-			return 'ready'
+			ret = 'ready'
 		else:
-			return 'busy'
+			ret = 'busy'
+		if self.debug:
+			print(f'State: {ret!r}')
+		return ret
 
 	@property
 	def stop_cmd(self):

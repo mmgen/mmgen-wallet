@@ -287,8 +287,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		write_data_to_file(unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
 		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
-		if opt.print_cmdline: msg(bwd_msg)
-		if opt.log: self.tr.log_fd.write(bwd_msg + ' ')
+		if opt.print_cmdline:
+			msg(bwd_msg)
+		if opt.log:
+			self.tr.log_fd.write(bwd_msg + ' ')
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write("Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
 
@@ -327,9 +329,14 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		if non_mmgen_input:
 			from mmgen.obj import PrivKey
-			privkey = PrivKey(os.urandom(32),compressed=non_mmgen_input_compressed,pubkey_type='std')
+			privkey = PrivKey(
+				os.urandom(32),
+				compressed  = non_mmgen_input_compressed,
+				pubkey_type = 'std' )
 			from mmgen.addr import AddrGenerator,KeyGenerator
-			rand_coinaddr = AddrGenerator('p2pkh').to_addr(KeyGenerator('std').to_pubhex(privkey))
+			rand_coinaddr = AddrGenerator(
+				'p2pkh'
+				).to_addr(KeyGenerator(g.proto,'std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(
 				outfile           = of,
@@ -390,15 +397,15 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
 	def txcreate_common(self,
-						sources=['1'],
-						non_mmgen_input='',
-						do_label=False,
-						txdo_args=[],
-						add_args=[],
-						view='n',
-						addrs_per_wallet=addrs_per_wallet,
-						non_mmgen_input_compressed=True,
-						cmdline_inputs=False):
+						sources                    = ['1'],
+						non_mmgen_input            = '',
+						do_label                   = False,
+						txdo_args                  = [],
+						add_args                   = [],
+						view                       = 'n',
+						addrs_per_wallet           = addrs_per_wallet,
+						non_mmgen_input_compressed = True,
+						cmdline_inputs             = False )
 
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
@@ -417,7 +424,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				),'--outdir='+self.tr.trash_dir] + cmd_args[1:]
 		end_silence()
 
-		if opt.verbose or opt.exact_output: sys.stderr.write('\n')
+		if opt.verbose or opt.exact_output:
+			sys.stderr.write('\n')
 
 		t = self.spawn(
 			'mmgen-'+('txcreate','txdo')[bool(txdo_args)],
@@ -446,14 +454,15 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect('Continue anyway? (y/N): ','y')
 
 		outputs_list = [(addrs_per_wallet+1)*i + 1 for i in range(len(tx_data))]
-		if non_mmgen_input: outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
+		if non_mmgen_input:
+			outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 
 		self.txcreate_ui_common(t,
-					menu=(['M'],['M','D','m','g'])[self.test_name=='txcreate'],
-					inputs=' '.join(map(str,outputs_list)),
-					add_comment=('',tx_label_lat_cyr_gr)[do_label],
-					non_mmgen_inputs=(0,1)[bool(non_mmgen_input and not txdo_args)],
-					view=view)
+					menu             = (['M'],['M','D','m','g'])[self.test_name=='txcreate'],
+					inputs           = ' '.join(map(str,outputs_list)),
+					add_comment      = ('',tx_label_lat_cyr_gr)[do_label],
+					non_mmgen_inputs = (0,1)[bool(non_mmgen_input and not txdo_args)],
+					view             = view )
 
 		return t
 
@@ -681,12 +690,23 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.addrgen(wf,pf='')
 
 	def txcreate4(self,f1,f2,f3,f4,f5,f6):
-		return self.txcreate_common(sources=['1','2','3','4','14'],non_mmgen_input='4',do_label=True,view='y')
+		return self.txcreate_common(
+			sources         = ['1', '2', '3', '4', '14'],
+			non_mmgen_input = '4',
+			do_label        = True,
+			view            = 'y' )
 
 	def txsign4(self,f1,f2,f3,f4,f5,f6):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
-		a = ['-d',self.tmpdir,'-i','brain','-b'+self.bw_params,'-p1','-k',non_mm_file,'-M',f6,f1,f2,f3,f4,f5]
-		t = self.spawn('mmgen-txsign',a)
+		add_args = [
+			'-d', self.tmpdir,
+			'-i', 'brain',
+			'-b' + self.bw_params,
+			'-p1',
+			'--keys-from-file=' + non_mm_file,
+			'--mmgen-keys-from-file=' + f6,
+			f1, f2, f3, f4, f5 ]
+		t = self.spawn('mmgen-txsign',add_args)
 		t.license()
 		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 		t.view_tx('t')
@@ -699,7 +719,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def txdo4(self,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
-		add_args = ['-d',self.tmpdir,'-i','brain','-b'+self.bw_params,'-p1','-k',non_mm_file,'-M',f12]
+		add_args = [
+			'-d', self.tmpdir,
+			'-i', 'brain',
+			'-b'+self.bw_params,
+			'-p1',
+			'--keys-from-file=' + non_mm_file,
+			'--mmgen-keys-from-file=' + f12 ]
 		self.get_file_with_ext('sigtx',delete_all=True) # delete tx signed by txsign4
 		t = self.txcreate_common(sources=['1','2','3','4','14'],
 					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
@@ -725,7 +751,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.addrgen(wf,pf='')
 
 	def txcreate5(self,addrfile):
-		return self.txcreate_common(sources=['20'],non_mmgen_input='20',non_mmgen_input_compressed=False)
+		return self.txcreate_common(
+			sources                    = ['20'],
+			non_mmgen_input            = '20',
+			non_mmgen_input_compressed = False )
 
 	def txsign5(self,wf,txf,bad_vsize=True,add_args=[]):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
@@ -754,7 +783,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def txcreate6(self,addrfile):
 		return self.txcreate_common(
-			sources=['21'],non_mmgen_input='21',non_mmgen_input_compressed=False,add_args=['--vsize-adj=1.08'])
+			sources                    = ['21'],
+			non_mmgen_input            = '21',
+			non_mmgen_input_compressed = False,
+			add_args                   = ['--vsize-adj=1.08'] )
 
 	def txsign6(self,txf,wf):
 		return self.txsign5(txf,wf,bad_vsize=False,add_args=['--vsize-adj=1.08'])

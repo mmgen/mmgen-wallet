@@ -137,7 +137,8 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 		return TestSuiteMain.__init__(self,trunner,cfgs,spawn)
 
 	def ref_tx_addrgen(self,atype):
-		if atype not in g.proto.mmtypes: return
+		if atype not in g.proto.mmtypes:
+			return
 		t = self.spawn('mmgen-addrgen',['--outdir='+self.tmpdir,'--type='+atype,dfl_words_file,'1-2'])
 		t.read()
 		return t

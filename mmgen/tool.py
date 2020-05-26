@@ -409,28 +409,39 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def randwif(self):
 		"generate a random private key in WIF format"
 		init_generators('at')
-		return PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed).wif
+		return PrivKey(
+			get_random(32),
+			pubkey_type = at.pubkey_type,
+			compressed  = at.compressed ).wif
 
 	def randpair(self):
 		"generate a random private key/address pair"
 		init_generators()
-		privhex = PrivKey(get_random(32),pubkey_type=at.pubkey_type,compressed=at.compressed)
+		privhex = PrivKey(
+			get_random(32),
+			pubkey_type = at.pubkey_type,
+			compressed  = at.compressed )
 		addr = ag.to_addr(kg.to_pubhex(privhex))
 		return (privhex.wif,addr)
 
 	def wif2hex(self,wifkey:'sstr'):
 		"convert a private key from WIF to hex format"
-		return PrivKey(wif=wifkey)
+		return PrivKey(
+			wif = wifkey )
 
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
 		init_generators('at')
-		return PrivKey(bytes.fromhex(privhex),pubkey_type=at.pubkey_type,compressed=at.compressed).wif
+		return PrivKey(
+			bytes.fromhex(privhex),
+			pubkey_type = at.pubkey_type,
+			compressed  = at.compressed ).wif
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
 		init_generators()
-		privhex = PrivKey(wif=wifkey)
+		privhex = PrivKey(
+			wif = wifkey )
 		addr = ag.to_addr(kg.to_pubhex(privhex))
 		return addr
 
@@ -438,14 +449,16 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		init_generators()
-		privhex = PrivKey(wif=wifkey)
+		privhex = PrivKey(
+			wif = wifkey )
 		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
 		init_generators()
-		pubhex = kg.to_pubhex(PrivKey(wif=wifkey))
+		pubhex = kg.to_pubhex(PrivKey(
+			wif = wifkey ))
 		addr = ag.to_addr(pubhex)
 		rs = ag.to_segwit_redeem_script(pubhex)
 		return (rs,addr)
@@ -453,7 +466,10 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
 		init_generators()
-		pk = PrivKey(bytes.fromhex(privhex),compressed=at.compressed,pubkey_type=at.pubkey_type)
+		pk = PrivKey(
+			bytes.fromhex(privhex),
+			compressed  = at.compressed,
+			pubkey_type = at.pubkey_type )
 		ph = kg.to_pubhex(pk)
 		return ph if output_pubhex else ag.to_addr(ph)
 
@@ -833,7 +849,10 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		if ss.seed.sid != addr.sid:
 			m = 'Seed ID of requested address ({}) does not match wallet ({})'
 			die(1,m.format(addr.sid,ss.seed.sid))
-		al = AddrList(seed=ss.seed,addr_idxs=AddrIdxList(str(addr.idx)),mmtype=addr.mmtype)
+		al = AddrList(
+			seed      = ss.seed,
+			addr_idxs = AddrIdxList(str(addr.idx)),
+			mmtype    = addr.mmtype )
 		d = al.data[0]
 		ret = d.sec.wif if target=='wif' else d.addr
 		return ret

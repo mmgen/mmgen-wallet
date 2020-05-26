@@ -131,4 +131,4 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 	def get_ndiff(a,b):
 		a = a.split('\n')
 		b = b.split('\n')
-		return ndiff(a,b)
+		return list(ndiff(a,b))

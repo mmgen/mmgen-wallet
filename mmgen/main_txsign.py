@@ -78,10 +78,14 @@ column below:
 	},
 	'code': {
 		'options': lambda s: s.format(
-			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
+			g=g,
+			pnm=g.proj_name,
+			pnl=g.proj_name.lower(),
+			dn=g.proto.daemon_name,
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
-			ss=g.subseeds,ss_max=SubSeedIdxRange.max_idx,
+			ss=g.subseeds,
+			ss_max=SubSeedIdxRange.max_idx,
 			cu=g.coin),
 		'notes': lambda s: s.format(
 			help_notes('txsign'),

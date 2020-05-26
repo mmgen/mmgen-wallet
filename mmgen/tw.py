@@ -401,13 +401,19 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			elif action == 'd_days':
 				af = self.age_fmts_interactive
 				self.age_fmt = af[(af.index(self.age_fmt) + 1) % len(af)]
-			elif action == 'd_mmid': self.show_mmid = not self.show_mmid
+			elif action == 'd_mmid':
+				self.show_mmid = not self.show_mmid
 			elif action == 'd_group':
 				if self.can_group:
 					self.group = not self.group
-			elif action == 'd_redraw': pass
-			elif action == 'd_reverse': self.unspent.reverse(); self.reverse = not self.reverse
-			elif action == 'a_quit': msg(''); return self.unspent
+			elif action == 'd_redraw':
+				pass
+			elif action == 'd_reverse':
+				self.unspent.reverse()
+				self.reverse = not self.reverse
+			elif action == 'a_quit':
+				msg('')
+				return self.unspent
 			elif action == 'a_balance_refresh':
 				idx = self.get_idx_from_user(action)
 				if idx:
@@ -546,7 +552,8 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 	def raw_list(self):
 		return [((k if k.type == 'mmgen' else 'Non-MMGen'),self[k]['addr'],self[k]['amt']) for k in self]
 
-	def coinaddr_list(self): return [self[k]['addr'] for k in self]
+	def coinaddr_list(self):
+		return [self[k]['addr'] for k in self]
 
 	async def format(self,showbtcaddrs,sort,show_age,age_fmt):
 		if not self.has_age:
@@ -649,7 +656,11 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 		tw_dir = (
 			os.path.join(g.data_dir,g.proto.data_subdir) if g.coin == 'BTC' else
-			os.path.join(g.data_dir_root,'altcoins',g.coin.lower(),g.proto.data_subdir) )
+			os.path.join(
+				g.data_dir_root,
+				'altcoins',
+				g.coin.lower(),
+				g.proto.data_subdir) )
 		self.tw_fn = os.path.join(tw_dir,'tracking-wallet.json')
 
 		check_or_create_dir(tw_dir)

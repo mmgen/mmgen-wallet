@@ -205,7 +205,7 @@ class RPCClient(MMGenObject):
 		try:
 			socket.create_connection((host,port),timeout=1).close()
 		except:
-			raise SocketError('Unable to connect to {}:{}'.format(host,port))
+			raise SocketError(f'Unable to connect to {host}:{port}')
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
 		self.url = f'{self.network_proto}://{host}:{port}{self.host_path}'

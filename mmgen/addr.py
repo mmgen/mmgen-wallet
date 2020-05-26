@@ -28,17 +28,18 @@ from .baseconv import *
 pnm = g.proj_name
 
 def dmsg_sc(desc,data):
-	if g.debug_addrlist: Msg('sc_debug_{}: {}'.format(desc,data))
+	if g.debug_addrlist:
+		Msg(f'sc_debug_{desc}: {data}')
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,addr_type):
 		if type(addr_type) == str: # allow override w/o check
 			gen_method = addr_type
 		elif type(addr_type) == MMGenAddrType:
-			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
+			assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {g.coin}'
 			gen_method = addr_type.gen_method
 		else:
-			raise TypeError('{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__))
+			raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
 		gen_methods = {
 			'p2pkh':    AddrGeneratorP2PKH,
 			'segwit':   AddrGeneratorSegwit,
@@ -92,8 +93,6 @@ class AddrGeneratorEthereum(AddrGenerator):
 		from .protocol import hash256
 		self.hash256 = hash256
 
-		return AddrGenerator.__init__(addr_type)
-
 	def to_addr(self,pubhex):
 		assert type(pubhex) == PubKey
 		return CoinAddr(self.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
@@ -116,7 +115,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 
 	def to_addr(self,pubhex): # pubhex is really privhex
 		key = bytes.fromhex(pubhex)
-		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
+		assert len(key) == 32, f'{len(key)}: incorrect privkey length'
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from .protocol import _b58chk_encode
@@ -126,7 +125,7 @@ class AddrGeneratorZcashZ(AddrGenerator):
 
 	def to_viewkey(self,pubhex): # pubhex is really privhex
 		key = bytes.fromhex(pubhex)
-		assert len(key) == 32,'{}: incorrect privkey length'.format(len(key))
+		assert len(key) == 32, f'{len(key)}: incorrect privkey length'
 		vk = bytearray(self.zhash256(key,0)+self.zhash256(key,1))
 		vk[32] &= 0xf8
 		vk[63] &= 0x7f
@@ -164,8 +163,6 @@ class AddrGeneratorMonero(AddrGenerator):
 		self.scalarmult  = scalarmult
 		self.B           = B
 
-		return AddrGenerator.__init__(addr_type)
-
 	def b58enc(self,addr_bytes):
 		enc = baseconv.frombytes
 		l = len(addr_bytes)
@@ -194,14 +191,16 @@ class AddrGeneratorMonero(AddrGenerator):
 		pvk_str = self.encodepoint(scalarmultbase(hex2int_le(vk_hex)))
 		addr_p1 = g.proto.addr_fmt_to_ver_bytes('monero') + pk_str + pvk_str
 
-		return CoinAddr(self.b58enc(addr_p1 + self.keccak_256(addr_p1).digest()[:4]))
+		return CoinAddr(
+			addr = self.b58enc(addr_p1 + self.keccak_256(addr_p1).digest()[:4]) )
 
 	def to_wallet_passwd(self,sk_hex):
 		return WalletPassword(self.hash256(sk_hex)[:32])
 
 	def to_viewkey(self,sk_hex):
-		assert len(sk_hex) == 64,'{}: incorrect privkey length'.format(len(sk_hex))
-		return MoneroViewKey(g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex())
+		assert len(sk_hex) == 64, f'{len(sk_hex)}: incorrect privkey length'
+		return MoneroViewKey(
+			g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex() )
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')
@@ -319,6 +318,7 @@ class AddrListChksum(str,Hilite):
 class AddrListIDStr(str,Hilite):
 	color = 'green'
 	trunc_ok = False
+
 	def __new__(cls,addrlist,fmt_str=None):
 		idxs = [e.idx for e in addrlist.data]
 		prev = idxs[0]
@@ -376,8 +376,16 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
 	line_ctr = 0
 
-	def __init__(self,addrfile='',al_id='',adata=[],seed='',addr_idxs='',src='',
-					addrlist='',keylist='',mmtype=None):
+	def __init__(self,
+		addrfile  = '',
+		al_id     = '',
+		adata     = [],
+		seed      = '',
+		addr_idxs = '',
+		src       = '',
+		addrlist  = '',
+		keylist   = '',
+		mmtype    = None ):
 
 		do_chksum = True
 		self.update_msgs()
@@ -460,7 +468,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			e = le(idx=num)
 
 			# Secret key is double sha256 of seed hash round /num/
-			e.sec = PrivKey(sha256(sha256(seed).digest()).digest(),compressed=compressed,pubkey_type=pubkey_type)
+			e.sec = PrivKey(
+				sha256(sha256(seed).digest()).digest(),
+				compressed  = compressed,
+				pubkey_type = pubkey_type )
 
 			if self.gen_addrs:
 				pubhex = kg.to_pubhex(e.sec)
@@ -707,17 +718,17 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		lines = get_lines_from_file(fn,self.data_desc+' data',trim_comments=True)
 
 		try:
-			assert len(lines) >= 3,  'Too few lines in address file ({})'.format(len(lines))
+			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
 			ls = lines[0].split()
-			assert 1 < len(ls) < 5,  "Invalid first line for {} file: '{}'".format(self.gen_desc,lines[0])
-			assert ls.pop() == '{',  "'{}': invalid first line".format(ls)
-			assert lines[-1] == '}', "'{}': invalid last line".format(lines[-1])
+			assert 1 < len(ls) < 5, f'Invalid first line for {self.gen_desc} file: {lines[0]!r}'
+			assert ls.pop() == '{', f'{ls!r}: invalid first line'
+			assert lines[-1] == '}', f'{lines[-1]!r}: invalid last line'
 			sid = ls.pop(0)
-			assert is_mmgen_seed_id(sid),"'{}': invalid Seed ID".format(ls[0])
+			assert is_mmgen_seed_id(sid), f'{sid!r}: invalid Seed ID'
 
 			if type(self) == PasswordList and len(ls) == 2:
 				ss = ls.pop().split(':')
-				assert len(ss) == 2,"'{}': invalid password length specifier (must contain colon)".format(ls[2])
+				assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
 				self.set_pw_fmt(ss[0])
 				self.set_pw_len(ss[1])
 				self.pw_id_str = MMGenPWIDString(ls.pop())
@@ -740,11 +751,16 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			data = self.parse_file_body(lines[1:-1])
 			assert isinstance(data,list),'Invalid file body data'
 		except Exception as e:
-			lcs = ', content line {}'.format(self.line_ctr) if self.line_ctr else ''
-			m = 'Invalid data in {} list file {!r}{} ({})'.format(self.data_desc,self.infile,lcs,e.args[0])
-			if exit_on_error: die(3,m)
-			msg(msg)
-			return False
+			m = 'Invalid data in {} list file {!r}{} ({!s})'.format(
+				self.data_desc,
+				self.infile,
+				(f', content line {self.line_ctr}' if self.line_ctr else ''),
+				e )
+			if exit_on_error:
+				die(3,m)
+			else:
+				msg(m)
+				return False
 
 		return data
 
@@ -761,12 +777,12 @@ class KeyAddrList(AddrList):
 
 class KeyList(AddrList):
 	msgs = {
-	'file_header': """
+	'file_header': f"""
 # {pnm} key file
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-""".strip().format(pnm=pnm)
+""".strip()
 	}
 	data_desc = 'key'
 	file_desc = 'secret keys'
@@ -788,22 +804,22 @@ def is_xmrseed(s):
 from collections import namedtuple
 class PasswordList(AddrList):
 	msgs = {
-	'file_header': """
+	'file_header': f"""
 # {pnm} password file
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {n} screen cells or less may be added to the right of each
+# A text label of {TwComment.max_screen_width} screen cells or less may be added to the right of each
 # password.  The label may contain any printable ASCII symbol.
 #
-""".strip().format(n=TwComment.max_screen_width,pnm=pnm),
-	'file_header_mn': """
+""".strip(),
+	'file_header_mn': f"""
 # {pnm} {{}} password file
 #
 # This file is editable.
 # Everything following a hash symbol '#' is a comment and ignored by {pnm}.
 #
-""".strip().format(pnm=pnm),
+""".strip(),
 	'record_chksum': """
 Record this checksum: it will be used to verify the password file in the future
 """.strip()
@@ -823,20 +839,26 @@ Record this checksum: it will be used to verify the password file in the future
 	dfl_pw_fmt  = 'b58'
 	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
 	pw_info     = {
-		'b32':   pwinfo(10, 42 ,24, None,       'base32 password',       is_b32_str),   # 32**24 < 2**128
-		'b58':   pwinfo(8,  36 ,20, None,       'base58 password',       is_b58_str),   # 58**20 < 2**128
-		'bip39': pwinfo(12, 24 ,24, [12,18,24], 'BIP39 mnemonic',        is_bip39_str),
-		'xmrseed': pwinfo(25, 25, 25, [25],     'Monero new-style mnemonic', is_xmrseed),
-		'hex':   pwinfo(32, 64 ,64, [32,48,64], 'hexadecimal password',  is_hex_str),
+		'b32':     pwinfo(10, 42 ,24, None,      'base32 password',          is_b32_str), # 32**24 < 2**128
+		'b58':     pwinfo(8,  36 ,20, None,      'base58 password',          is_b58_str), # 58**20 < 2**128
+		'bip39':   pwinfo(12, 24 ,24, [12,18,24],'BIP39 mnemonic',           is_bip39_str),
+		'xmrseed': pwinfo(25, 25, 25, [25],      'Monero new-style mnemonic',is_xmrseed),
+		'hex':     pwinfo(32, 64 ,64, [32,48,64],'hexadecimal password',     is_hex_str),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
 	feature_warn_fs = 'WARNING: {!r} is a potentially dangerous feature.  Use at your own risk!'
 	hex2bip39 = False
 
-	def __init__(   self,infile=None,seed=None,
-					pw_idxs=None,pw_id_str=None,pw_len=None,pw_fmt=None,
-					chk_params_only=False):
+	def __init__(self,
+		infile          = None,
+		seed            = None,
+		pw_idxs         = None,
+		pw_id_str       = None,
+		pw_len          = None,
+		pw_fmt          = None,
+		chk_params_only = False
+		):
 
 		self.update_msgs()
 
@@ -879,8 +901,10 @@ Record this checksum: it will be used to verify the password file in the future
 			self.pw_fmt = pw_fmt
 			self.pw_fmt_disp = pw_fmt
 		if self.pw_fmt not in self.pw_info:
-			m = '{!r}: invalid password format.  Valid formats: {}'
-			raise InvalidPasswdFormat(m.format(self.pw_fmt,', '.join(sorted(self.pw_info))))
+			raise InvalidPasswdFormat(
+				'{!r}: invalid password format.  Valid formats: {}'.format(
+					self.pw_fmt,
+					', '.join(self.pw_info) ))
 
 	def chk_pw_len(self,passwd=None):
 		if passwd is None:

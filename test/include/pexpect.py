@@ -83,7 +83,8 @@ class MMGenPexpect(object):
 		ret = self.p.wait()
 		if ret != self.req_exit_val and not opt.coverage:
 			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
-		if opt.profile: return
+		if opt.profile:
+			return
 		if not self.skip_ok:
 			sys.stderr.write(green('OK\n') if opt.exact_output or opt.verbose else (' OK\n'))
 		return self

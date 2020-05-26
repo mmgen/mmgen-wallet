@@ -54,17 +54,18 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 			subseeds_checked = True
 			if not seed: continue
 		elif opt.in_fmt:
-			qmsg('Need seed data for Seed ID {}'.format(sid))
+			qmsg(f'Need seed data for Seed ID {sid}')
 			seed = Wallet().seed
-			msg('User input produced Seed ID {}'.format(seed.sid))
+			msg(f'User input produced Seed ID {seed.sid}')
 			if not seed.sid == sid: # TODO: add test
 				seed = seed.subseed_by_seed_id(sid,print_msg=True)
 
 		if seed:
 			saved_seeds[seed.sid] = seed
-			if seed.sid == sid: return seed
+			if seed.sid == sid:
+				return seed
 		else:
-			die(2,'ERROR: No seed source found for Seed ID: {}'.format(sid))
+			die(2,f'ERROR: No seed source found for Seed ID: {sid}')
 
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 	mmids = [e.mmid for e in need_keys]
@@ -84,12 +85,15 @@ def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds):
 
 def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 	need_keys = [e for e in getattr(tx,src) if e.mmid and not e.have_wif]
-	if not need_keys: return []
-	desc,m1 = ('key-address file','From key-address file:') if keyaddr_list else \
-					('seed(s)','Generated from seed:')
-	qmsg('Checking {} -> {} address mappings for {} (from {})'.format(pnm,g.coin,src,desc))
-	d = MMGenList([keyaddr_list]) if keyaddr_list else \
-		generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds)
+	if not need_keys:
+		return []
+	desc,src_desc = (
+		('key-address file','From key-address file:') if keyaddr_list else
+		('seed(s)','Generated from seed:') )
+	qmsg(f'Checking {g.proj_name} -> {g.coin} address mappings for {src} (from {desc})')
+	d = (
+		MMGenList([keyaddr_list]) if keyaddr_list else
+		generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds) )
 	new_keys = []
 	for e in need_keys:
 		for kal in d:
@@ -101,9 +105,9 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 						if src == 'inputs':
 							new_keys.append(f)
 					else:
-						die(3,wmsg['mapping_error'].format(m1,mmid,f.addr,'tx file:',e.mmid,e.addr))
+						die(3,wmsg['mapping_error'].format(src_desc,mmid,f.addr,'tx file:',e.mmid,e.addr))
 	if new_keys:
-		vmsg('Added {} wif key{} from {}'.format(len(new_keys),suf(new_keys),desc))
+		vmsg(f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}')
 	return new_keys
 
 def _pop_and_return(args,cmplist): # strips found args
@@ -111,7 +115,8 @@ def _pop_and_return(args,cmplist): # strips found args
 
 def get_tx_files(opt,args):
 	ret = _pop_and_return(args,[MMGenTX.raw_ext])
-	if not ret: die(1,'You must specify a raw transaction file!')
+	if not ret:
+		die(1,'You must specify a raw transaction file!')
 	return ret
 
 def get_seed_files(opt,args):
@@ -142,12 +147,13 @@ def get_keylist(opt):
 async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 
 	keys = MMGenList() # list of AddrListEntry objects
-	non_mm_addrs = tx.get_non_mmaddrs('inputs')
+	non_mmaddrs = tx.get_non_mmaddrs('inputs')
 
-	if non_mm_addrs:
+	if non_mmaddrs:
 		if not kl:
 			die(2,'Transaction has non-{} inputs, but no flat key list is present'.format(g.proj_name))
-		tmp = KeyAddrList(addrlist=non_mm_addrs)
+		tmp = KeyAddrList(
+			addrlist = non_mmaddrs )
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
 		if m:
@@ -161,12 +167,12 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 	keys += add_keys(tx,'inputs',seed_files,saved_seeds)
 	add_keys(tx,'outputs',seed_files,saved_seeds)
 
-	# this attr must not be written to file
+	# this (boolean) attr isn't needed in transaction file
 	tx.delete_attrs('inputs','have_wif')
 	tx.delete_attrs('outputs','have_wif')
 
 	extra_sids = set(saved_seeds) - tx.get_input_sids() - tx.get_output_sids()
 	if extra_sids:
-		msg('Unused Seed ID{}: {}'.format(suf(extra_sids),' '.join(extra_sids)))
+		msg(f"Unused Seed ID{suf(extra_sids)}: {' '.join(extra_sids)}")
 
 	return await tx.sign(tx_num_str,keys) # returns True or False

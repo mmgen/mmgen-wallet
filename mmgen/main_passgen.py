@@ -147,12 +147,22 @@ sf = get_seed_file(cmd_args,1)
 pw_fmt = opt.passwd_fmt or PasswordList.dfl_pw_fmt
 pw_len = pwi[pw_fmt].dfl_len // 2 if opt.passwd_len in ('h','H') else opt.passwd_len
 
-PasswordList(pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt,chk_params_only=True)
+PasswordList(
+	pw_id_str       = pw_id_str,
+	pw_len          = pw_len,
+	pw_fmt          = pw_fmt,
+	chk_params_only = True )
+
 do_license_msg()
 
 ss = Wallet(sf)
 
-al = PasswordList(seed=ss.seed,pw_idxs=pw_idxs,pw_id_str=pw_id_str,pw_len=pw_len,pw_fmt=pw_fmt)
+al = PasswordList(
+	seed      = ss.seed,
+	pw_idxs   = pw_idxs,
+	pw_id_str = pw_id_str,
+	pw_len    = pw_len,
+	pw_fmt    = pw_fmt )
 
 al.format()
 

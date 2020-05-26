@@ -37,7 +37,8 @@ from mmgen.baseconv import *
 
 NL = ('\n','\r\n')[g.platform=='win']
 
-def is_str(s): return type(s) == str
+def is_str(s):
+	return type(s) == str
 
 def md5_hash(s):
 	from hashlib import md5
@@ -781,7 +782,7 @@ def run_test(gid,cmd_name):
 			data = data[k]
 			m2 = ' ({})'.format(k)
 		else:
-			qmsg("-- no data for {} ({}) - skipping".format(cmd_name,k))
+			qmsg(f'-- no data for {cmd_name} ({k}) - skipping')
 			return
 	else:
 		if g.coin != 'BTC' or g.proto.testnet:
@@ -805,7 +806,7 @@ def run_test(gid,cmd_name):
 			if m:
 				return { b'None': None, b'False': False }[m.group(1)]
 			else:
-				ydie(1,'Spawned program exited with error: {}'.format(cp.stderr))
+				ydie(1,f'Spawned program exited with error: {cp.stderr}')
 
 		return cmd_out.strip()
 
@@ -878,32 +879,39 @@ def run_test(gid,cmd_name):
 		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
 
 		def check_output(out,chk):
-			if isinstance(chk,str): chk = chk.encode()
-			if isinstance(out,int): out = str(out).encode()
-			if isinstance(out,str): out = out.encode()
+			if isinstance(chk,str):
+				chk = chk.encode()
+			if isinstance(out,int):
+				out = str(out).encode()
+			if isinstance(out,str):
+				out = out.encode()
 			err_fs = "Output ({!r}) doesn't match expected output ({!r})"
 			try: outd = out.decode()
 			except: outd = None
 
 			if type(chk).__name__ == 'function':
-				assert chk(outd),"{}({}) failed!".format(chk.__name__,outd)
+				assert chk(outd), f'{chk.__name__}({outd}) failed!'
 			elif type(chk) == dict:
 				for k,v in chk.items():
 					if k == 'boolfunc':
-						assert v(outd),"{}({}) failed!".format(v.__name__,outd)
+						assert v(outd), f'{v.__name__}({outd}) failed!'
 					elif k == 'value':
 						assert outd == v, err_fs.format(outd,v)
 					else:
 						outval = getattr(__builtins__,k)(out)
 						if outval != v:
-							die(1,"{}({}) returned {}, not {}!".format(k,out,outval,v))
+							die(1,f'{k}({out}) returned {outval}, not {v}!')
 			elif chk is not None:
 				assert out == chk, err_fs.format(out,chk)
 
 		if type(out) == tuple and type(out[0]).__name__ == 'function':
 			func_out = out[0](cmd_out)
 			assert func_out == out[1],(
-				"{}({}) == {} failed!\nOutput: {}".format(out[0].__name__,cmd_out,out[1],func_out))
+				'{}({}) == {} failed!\nOutput: {}'.format(
+					out[0].__name__,
+					cmd_out,
+					out[1],
+					func_out ))
 		elif isinstance(out,(list,tuple)):
 			for co,o in zip(cmd_out.split(NL) if opt.fork else cmd_out,out):
 				check_output(co,o)
@@ -918,13 +926,13 @@ def docstring_head(obj):
 	return obj.__doc__.strip().split('\n')[0]
 
 def do_group(gid):
-	qmsg(blue("Testing {}".format(
-		"command group '{}'".format(gid) if opt.names
-			else docstring_head(tc.classes['MMGenToolCmd'+gid]))))
+	qmsg(blue('Testing ' +
+		f'command group {gid!r}' if opt.names else
+		docstring_head(tc.classes['MMGenToolCmd'+gid]) ))
 
 	for cname in tc.classes['MMGenToolCmd'+gid].user_commands:
 		if cname not in tests[gid]:
-			m = 'No test for command {!r} in group {!r}!'.format(cname,gid)
+			m = f'No test for command {cname!r} in group {gid!r}!'
 			if opt.die_on_missing:
 				die(1,m+'  Aborting')
 			else:
@@ -958,7 +966,9 @@ tc = tool.MMGenToolCmds
 if opt.list_tests:
 	Msg('Available tests:')
 	for gid in tests:
-		Msg('  {:6} - {}'.format(gid,docstring_head(tc.classes['MMGenToolCmd'+gid])))
+		Msg('  {:6} - {}'.format(
+			gid,
+			docstring_head(tc.classes['MMGenToolCmd'+gid]) ))
 	sys.exit(0)
 
 if opt.list_tested_cmds:
@@ -993,19 +1003,22 @@ else:
 
 start_time = int(time.time())
 
-try:
-	if cmd_args:
-		for cmd in cmd_args:
-			if cmd in tests:
-				do_group(cmd)
-			else:
-				if not do_cmd_in_group(cmd):
-					die(1,"'{}': not a recognized test or test group".format(cmd))
-	else:
-		for garg in tests:
-			do_group(garg)
-except KeyboardInterrupt:
-	die(1,green('\nExiting at user request'))
+def main():
+	try:
+		if cmd_args:
+			for cmd in cmd_args:
+				if cmd in tests:
+					await do_group(cmd)
+				else:
+					if not do_cmd_in_group(cmd):
+						die(1,f'{cmd!r}: not a recognized test or test group')
+		else:
+			for garg in tests:
+				await do_group(garg)
+	except KeyboardInterrupt:
+		die(1,green('\nExiting at user request'))
+
+main()
 
 t = int(time.time()) - start_time
 gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))

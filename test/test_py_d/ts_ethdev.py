@@ -135,6 +135,8 @@ token_bals_getbalance = {
 from .ts_base import *
 from .ts_shared import *
 
+coin = g.coin
+
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth','etc')
@@ -142,7 +144,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	tmpdir_nums = [22]
 	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
 	cmd_group = (
-		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(g.coin)),
+		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(coin)),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
 		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
 		('addrgen',             'generating addresses'),
@@ -154,17 +156,17 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('tx_status0_bad',      'getting the transaction status'),
 		('txsign1_ni',          'signing the transaction (non-interactive)'),
 		('txsend1',             'sending the transaction'),
-		('bal1',                'the {} balance'.format(g.coin)),
+		('bal1',                'the {} balance'.format(coin)),
 
 		('txcreate2',           'creating a transaction (spend from dev address to address :11)'),
 		('txsign2',             'signing the transaction'),
 		('txsend2',             'sending the transaction'),
-		('bal2',                'the {} balance'.format(g.coin)),
+		('bal2',                'the {} balance'.format(coin)),
 
 		('txcreate3',           'creating a transaction (spend from dev address to address :21)'),
 		('txsign3',             'signing the transaction'),
 		('txsend3',             'sending the transaction'),
-		('bal3',                'the {} balance'.format(g.coin)),
+		('bal3',                'the {} balance'.format(coin)),
 
 		('tx_status1',          'getting the transaction status'),
 
@@ -174,14 +176,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('txsign4',             'signing the transaction'),
 		('txsend4',             'sending the transaction'),
 		('tx_status1a',         'getting the transaction status'),
-		('bal4',                'the {} balance'.format(g.coin)),
+		('bal4',                'the {} balance'.format(coin)),
 
 		('txcreate5',           'creating a transaction (fund burn address)'),
 		('txsign5',             'signing the transaction'),
 		('txsend5',             'sending the transaction'),
 
 		('addrimport_burn_addr',"importing burn address"),
-		('bal5',                'the {} balance'.format(g.coin)),
+		('bal5',                'the {} balance'.format(coin)),
 
 		('add_label1',          'adding a UTF-8 label (zh)'),
 		('chk_label1',          'the label'),
@@ -196,7 +198,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_deploy1c',       'deploying ERC20 token #1 (Token)'),
 
 		('tx_status2',           'getting the transaction status'),
-		('bal6',                 'the {} balance'.format(g.coin)),
+		('bal6',                 'the {} balance'.format(coin)),
 
 		('token_compile2',       'compiling ERC20 token #2'),
 
@@ -214,43 +216,43 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_addrimport',     'importing token addresses'),
 		('token_addrimport_batch','importing token addresses (dummy batch mode)'),
 
-		('bal7',                'the {} balance'.format(g.coin)),
-		('token_bal1',          'the {} balance and token balance'.format(g.coin)),
+		('bal7',                'the {} balance'.format(coin)),
+		('token_bal1',          'the {} balance and token balance'.format(coin)),
 
 		('token_txcreate1',     'creating a token transaction'),
 		('token_txsign1',       'signing the transaction'),
 		('token_txsend1',       'sending the transaction'),
 		('tx_status3',          'getting the transaction status'),
-		('token_bal2',          'the {} balance and token balance'.format(g.coin)),
+		('token_bal2',          'the {} balance and token balance'.format(coin)),
 
 		('token_txcreate2',     'creating a token transaction (to burn address)'),
 		('token_txbump',        'bumping the transaction fee'),
 
 		('token_txsign2',       'signing the transaction'),
 		('token_txsend2',       'sending the transaction'),
-		('token_bal3',          'the {} balance and token balance'.format(g.coin)),
+		('token_bal3',          'the {} balance and token balance'.format(coin)),
 
 		('del_dev_addr',        "deleting the dev address"),
 
-		('bal1_getbalance',     'the {} balance (getbalance)'.format(g.coin)),
+		('bal1_getbalance',     'the {} balance (getbalance)'.format(coin)),
 
 		('addrimport_token_burn_addr',"importing the token burn address"),
 
-		('token_bal4',          'the {} balance and token balance'.format(g.coin)),
+		('token_bal4',          'the {} balance and token balance'.format(coin)),
 		('token_bal_getbalance','the token balance (getbalance)'),
 
 		('txcreate_noamt',     'creating a transaction (full amount send)'),
 		('txsign_noamt',       'signing the transaction'),
 		('txsend_noamt',       'sending the transaction'),
 
-		('bal8',                'the {} balance'.format(g.coin)),
+		('bal8',                'the {} balance'.format(coin)),
 		('token_bal5',          'the token balance'),
 
 		('token_txcreate_noamt', 'creating a token transaction (full amount send)'),
 		('token_txsign_noamt',   'signing the transaction'),
 		('token_txsend_noamt',   'sending the transaction'),
 
-		('bal9',                'the {} balance'.format(g.coin)),
+		('bal9',                'the {} balance'.format(coin)),
 		('token_bal6',          'the token balance'),
 
 		('listaddresses1',      'listaddresses'),
@@ -268,7 +270,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		('txdo_cached_balances',     'txdo (cached balances)'),
 		('txcreate_refresh_balances','refreshing balances'),
-		('bal10',                    'the {} balance'.format(g.coin)),
+		('bal10',                    'the {} balance'.format(coin)),
 
 		('token_txdo_cached_balances',     'token txdo (cached balances)'),
 		('token_txcreate_refresh_balances','refreshing token balances'),
@@ -284,16 +286,16 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_twview2','twview --token=mm1 wide=1'),
 		('token_twview3','twview --token=mm1 wide=1 sort=age (ignored)'),
 
-		('edit_label1','adding label to addr #{} in {} tracking wallet (zh)'.format(del_addrs[0],g.coin)),
-		('edit_label2','adding label to addr #{} in {} tracking wallet (lat+cyr+gr)'.format(del_addrs[1],g.coin)),
-		('edit_label3','removing label from addr #{} in {} tracking wallet'.format(del_addrs[0],g.coin)),
+		('edit_label1','adding label to addr #{} in {} tracking wallet (zh)'.format(del_addrs[0],coin)),
+		('edit_label2','adding label to addr #{} in {} tracking wallet (lat+cyr+gr)'.format(del_addrs[1],coin)),
+		('edit_label3','removing label from addr #{} in {} tracking wallet'.format(del_addrs[0],coin)),
 
-		('token_edit_label1','adding label to addr #{} in {} token tracking wallet'.format(del_addrs[0],g.coin)),
+		('token_edit_label1','adding label to addr #{} in {} token tracking wallet'.format(del_addrs[0],coin)),
 
-		('remove_addr1','removing addr #{} from {} tracking wallet'.format(del_addrs[0],g.coin)),
-		('remove_addr2','removing addr #{} from {} tracking wallet'.format(del_addrs[1],g.coin)),
-		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],g.coin)),
-		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],g.coin)),
+		('remove_addr1','removing addr #{} from {} tracking wallet'.format(del_addrs[0],coin)),
+		('remove_addr2','removing addr #{} from {} tracking wallet'.format(del_addrs[1],coin)),
+		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],coin)),
+		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],coin)),
 
 		('stop',                'stopping parity'),
 	)
@@ -472,7 +474,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 								non_mmgen_inputs = 0,
 								interactive_fee  = interactive_fee,
 								fee_res_fs       = fee_res_fs,
-								eth_fee_res      = True)
+								eth_fee_res      = True )
 
 	def txbump(self,ext=',40000]{}.rawtx',fee='50G',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -520,7 +522,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		bal1 = token_bals_getbalance[idx][0]
 		bal2 = token_bals_getbalance[idx][1]
 		bal1 = Decimal(bal1)
-		if etc_adj and g.coin == 'ETC': bal1 += self.bal_corr
+		if etc_adj and g.coin == 'ETC':
+			bal1 += self.bal_corr
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
 		t.expect(r'\n[0-9A-F]{8}: .* '+str(bal1),regex=True)
 		t.expect(r'\nNon-MMGen: .* '+bal2,regex=True)
@@ -641,19 +644,25 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx
 		async def do_transfer():
 			for i in range(2):
-				tk = await TokenResolve(self.read_from_tmpfile('token_addr{}'.format(i+1)).strip())
-				imsg_r('\n' + await tk.info())
+				tk = await TokenResolve(
+					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
+				imsg_r( '\n' + await tk.info() )
 				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_addr)))
 				imsg('Sending {} {} to address {} ({})'.format(amt,g.coin,usr_addrs[i],usr_mmaddrs[i]))
 				from mmgen.obj import ETHAmt
-				txid = await tk.transfer( dfl_addr, usr_addrs[i], amt, dfl_privkey,
-									start_gas = ETHAmt(60000,'wei'),
-									gasPrice  = ETHAmt(8,'Gwei') )
+				txid = await tk.transfer(
+					dfl_addr,
+					usr_addrs[i],
+					amt,
+					dfl_privkey,
+					start_gas = ETHAmt(60000,'wei'),
+					gasPrice  = ETHAmt(8,'Gwei') )
 				assert (await etx.get_exec_status(txid,True)) != 0,'Transfer of token funds failed. Aborting'
 
 		async def show_bals():
 			for i in range(2):
-				tk = await TokenResolve(self.read_from_tmpfile(f'token_addr{i+1}').strip())
+				tk = await TokenResolve(
+					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
 				imsg('Token: {}'.format(await tk.get_symbol()))
 				imsg('dev token balance: {}'.format(await tk.get_balance(dfl_addr)))
 				imsg('usr token balance: {} ({} {})'.format(
@@ -840,7 +849,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txcreate_refresh_balances(self,
 			bals=['2','3'],
 			args=['-B','--cached-balances','-i'],
-			total= '1000126.14829832312345678',adj_total=True,total_coin=g.coin):
+			total= '1000126.14829832312345678',
+			adj_total=True,
+			total_coin=g.coin):
 		if g.coin == 'ETC' and adj_total:
 			total = str(Decimal(total) + self.bal_corr)
 		t = self.spawn('mmgen-txcreate', self.eth_args + args)

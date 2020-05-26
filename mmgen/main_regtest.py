@@ -79,4 +79,5 @@ elif cmd_args[0] not in MMGenRegtest.usr_cmds:
 	die(1,'{!r}: invalid command'.format(cmd_args[0]))
 elif cmd_args[0] not in ('cli','balances'):
 	check_num_args()
+
 MMGenRegtest(g.coin).cmd(cmd_args)

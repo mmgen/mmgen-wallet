@@ -369,8 +369,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect('Mined 1 block')
 		return t
 
-	def fund_bob(self):   return self.fund_wallet('bob','C',rtFundAmt)
-	def fund_alice(self): return self.fund_wallet('alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
+	def fund_bob(self):
+		return self.fund_wallet('bob','C',rtFundAmt)
+
+	def fund_alice(self):
+		return self.fund_wallet('alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
 
 	def user_twview(self,user,chk=None,sort='age'):
 		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
@@ -579,16 +582,24 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return [self.get_addr_from_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
 	def bob_rbf_1output_create(self):
-		if g.coin != 'BTC': return 'skip' # non-coin-dependent test, so run just once for BTC
+		if g.coin != 'BTC':
+			return 'skip' # non-coin-dependent test, so run just once for BTC
 		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
 		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
 		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
 
 	def bob_rbf_1output_bump(self):
-		if g.coin != 'BTC': return 'skip'
+		if g.coin != 'BTC':
+			return 'skip'
 		ext = '9343,3]{x}.testnet.rawtx'.format(x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
-		return self.user_txbump('bob',self.tr.trash_dir,txfile,'8s',has_label=False,signed_tx=False,one_output=True)
+		return self.user_txbump('bob',
+			self.tr.trash_dir,
+			txfile,
+			'8s',
+			has_label  = False,
+			signed_tx  = False,
+			one_output = True )
 
 	def bob_send_maybe_rbf(self):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
@@ -610,7 +621,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
 	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True,one_output=False):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
 			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
@@ -658,17 +670,20 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	def bob_rbf_status(self,fee,exp1,exp2=''):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		ext = ',{}]{x}.testnet.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txsend_status('bob',txfile,exp1,exp2)
 
 	def bob_rbf_status1(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		return self.bob_rbf_status(rtFee[1],'in mempool, replaceable')
 
 	def get_mempool2(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		mp = self._get_mempool()
 		if len(mp) != 1:
 			rdie(2,'Mempool has more or less than one TX!')
@@ -679,28 +694,33 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	def bob_rbf_status2(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Transaction has been replaced','{} in mempool'.format(new_txid))
 
 	def bob_rbf_status3(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		return self.bob_rbf_status(rtFee[2],'status: in mempool, replaceable')
 
 	def bob_rbf_status4(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 1 confirmation',
 			'Replacing transactions:\s+{}'.format(new_txid))
 
 	def bob_rbf_status5(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		return self.bob_rbf_status(rtFee[2],'Transaction has 1 confirmation')
 
 	def bob_rbf_status6(self):
-		if not g.proto.cap('rbf'): return 'skip'
+		if not g.proto.cap('rbf'):
+			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 2 confirmations',
@@ -750,7 +770,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		amts = (1.12345678,2.87654321,3.33443344,4.00990099,5.43214321)
 		outputs1 = list(map('{},{}'.format,addrs,amts))
 		sid = self._user_sid('bob')
-		l1,l2 = (':S',':B') if 'B' in g.proto.mmtypes else (':S',':S') if g.proto.cap('segwit') else (':L',':L')
+		l1,l2 = (
+			(':S',':B') if 'B' in g.proto.mmtypes else
+			(':S',':S') if g.proto.cap('segwit') else
+			(':L',':L') )
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
 		return self.user_txdo('bob',rtFee[5],outputs1+outputs2,'1-2')
 

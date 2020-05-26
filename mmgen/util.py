@@ -201,7 +201,7 @@ def check_or_create_dir(path):
 		try:
 			os.makedirs(path,0o700)
 		except:
-			die(2,"ERROR: unable to read or create path '{}'".format(path))
+			die(2,f'ERROR: unable to read or create path {path!r}')
 
 from .opts import opt
 
@@ -250,13 +250,12 @@ def suf(arg,suf_type='s',verb='none'):
 		die(2,'{}: invalid parameter for suf()'.format(arg))
 	return suf_types[verb][suf_type][n == 1]
 
-def get_extension(f):
-	a,b = os.path.splitext(f)
-	return ('',b[1:])[len(b) > 1]
+def get_extension(fn):
+	return os.path.splitext(fn)[1][1:]
 
-def remove_extension(f,e):
-	a,b = os.path.splitext(f)
-	return (f,a)[len(b)>1 and b[1:]==e]
+def remove_extension(fn,ext):
+	a,b = os.path.splitext(fn)
+	return a if b[1:] == ext else fn
 
 def make_chksum_N(s,nchars,sep=False):
 	if isinstance(s,str): s = s.encode()

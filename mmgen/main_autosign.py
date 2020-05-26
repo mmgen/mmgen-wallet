@@ -130,7 +130,7 @@ async def check_daemons_running():
 	if opt.coins:
 		coins = opt.coins.upper().split(',')
 	else:
-		ymsg('Warning: no coins specified, so defaulting to BTC only')
+		ymsg('Warning: no coins specified, defaulting to BTC')
 		coins = ['BTC']
 
 	for coin in coins:
@@ -165,9 +165,9 @@ def do_mount():
 	try:
 		ds = os.stat(tx_dir)
 		assert S_ISDIR(ds.st_mode), f'{tx_dir!r} is not a directory!'
-		assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR,f'{tx_dir!r} is not read/write for this user!'
+		assert ds.st_mode & S_IWUSR|S_IRUSR == S_IWUSR|S_IRUSR, f'{tx_dir!r} is not read/write for this user!'
 	except:
-		die(1,'{tx_dir!r} missing, or not read/writable by user!')
+		die(1,f'{tx_dir!r} missing or not read/writable by user!')
 
 def do_umount():
 	if os.path.ismount(mountpoint):
@@ -229,9 +229,9 @@ async def sign():
 				fails.append(txfile)
 			qmsg('')
 		time.sleep(0.3)
-		msg('{} transaction{} signed'.format(len(signed_txs),suf(signed_txs)))
+		msg(f'{len(signed_txs)} transaction{suf(signed_txs)} signed')
 		if fails:
-			rmsg('{} transaction{} failed to sign'.format(len(fails),suf(fails)))
+			rmsg(f'{len(fails)} transaction{suf(fails)} failed to sign')
 		if signed_txs and not opt.no_summary:
 			print_summary(signed_txs)
 		if fails:
@@ -248,7 +248,7 @@ def decrypt_wallets():
 	opt.set_by_user = ['hash_preset']
 	opt.passwd_file = os.path.join(tx_dir,key_fn)
 	from .wallet import Wallet
-	msg("Unlocking wallet{} with key from '{}'".format(suf(wfs),opt.passwd_file))
+	msg(f'Unlocking wallet{suf(wfs)} with key from {opt.passwd_file!r}')
 	fails = 0
 	for wf in wfs:
 		try:
@@ -321,13 +321,13 @@ def wipe_existing_key():
 	try: os.stat(fn)
 	except: pass
 	else:
-		msg('\nWiping existing key {}'.format(fn))
+		msg(f'\nWiping existing key {fn!r}')
 		run(['wipe','-cf',fn],check=True)
 
 def create_key():
 	kdata = os.urandom(32).hex()
 	fn = os.path.join(tx_dir,key_fn)
-	desc = 'key file {}'.format(fn)
+	desc = f'key file {fn!r}'
 	msg('Creating ' + desc)
 	try:
 		open(fn,'w').write(kdata+'\n')
@@ -347,7 +347,7 @@ def gen_key(no_unmount=False):
 		do_umount()
 
 def remove_wallet_dir():
-	msg("Deleting '{}'".format(wallet_dir))
+	msg(f'Deleting {wallet_dir!r}')
 	try: shutil.rmtree(wallet_dir)
 	except: pass
 
@@ -355,7 +355,7 @@ def create_wallet_dir():
 	try: os.mkdir(wallet_dir)
 	except: pass
 	try: os.stat(wallet_dir)
-	except: die(2,"Unable to create wallet directory '{}'".format(wallet_dir))
+	except: die(2,f'Unable to create wallet directory {wallet_dir!r}')
 
 def setup():
 	remove_wallet_dir()
@@ -399,7 +399,7 @@ async def do_loop():
 			await do_sign()
 		prev_status = status
 		if not n % 10:
-			msg_r('\r{}\rWaiting'.format(' '*17))
+			msg_r(f"\r{' '*17}\rWaiting")
 			sys.stderr.flush()
 		time.sleep(1)
 		msg_r('.')

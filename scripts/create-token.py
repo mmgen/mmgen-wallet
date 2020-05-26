@@ -187,9 +187,9 @@ def create_src(code):
 def check_version():
 	res = run(['solc','--version'],stdout=PIPE).stdout.decode()
 	ver = re.search(r'Version:\s*(.*)',res).group(1)
-	msg("Installed solc version: {}".format(ver))
+	msg(f'Installed solc version: {ver}')
 	if not re.search(r'{}\b'.format(solc_version_pat),ver):
-		ydie(1,'Incorrect Solidity compiler version (need version {})'.format(solc_version_pat))
+		ydie(1,f'Incorrect Solidity compiler version (need version {solc_version_pat})')
 
 def compile_code(code):
 	check_version()
@@ -197,14 +197,14 @@ def compile_code(code):
 	if not opt.stdout:
 		cmd += ['--output-dir', opt.outdir or '.']
 	cmd += ['-']
-	msg('Executing: {}'.format(' '.join(cmd)))
+	msg(f"Executing: {' '.join(cmd)}")
 	cp = run(cmd,input=code.encode(),stdout=PIPE,stderr=PIPE)
 	out = cp.stdout.decode().replace('\r','')
 	err = cp.stderr.decode().replace('\r','').strip()
 	if cp.returncode != 0:
 		rmsg('Solidity compiler produced the following error:')
 		msg(err)
-		rdie(2,'Solidity compiler exited with error (return val: {})'.format(cp.returncode))
+		rdie(2,f'Solidity compiler exited with error (return val: {cp.returncode})')
 	if err:
 		ymsg('Solidity compiler produced the following warning:')
 		msg(err)

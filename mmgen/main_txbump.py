@@ -82,7 +82,10 @@ column below:
 	},
 	'code': {
 		'options': lambda s: s.format(
-			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),dn=g.proto.daemon_name,
+			g=g,
+			pnm=g.proj_name,
+			pnl=g.proj_name.lower(),
+			dn=proto.daemon_name,
 			fu=help_notes('rel_fee_desc'),fl=help_notes('fee_spec_letters'),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
