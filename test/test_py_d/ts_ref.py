@@ -31,7 +31,6 @@ from .ts_base import *
 from .ts_shared import *
 
 wpasswd = 'reference password'
-nw_name = '{} {}'.format(g.coin,('Mainnet','Testnet')[g.proto.testnet])
 
 class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	'saved reference address, password and transaction files'
@@ -136,6 +135,10 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		('ref_tool_decrypt',   'decryption of saved MMGen-encrypted file'),
 	)
 
+	@property
+	def nw_desc(self):
+		return '{} {}'.format(self.proto.coin,('Mainnet','Testnet')[self.proto.testnet])
+
 	def _get_ref_subdir_by_coin(self,coin):
 		return {'btc': '',
 				'bch': '',
@@ -148,7 +151,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	@property
 	def ref_subdir(self):
-		return self._get_ref_subdir_by_coin(g.coin)
+		return self._get_ref_subdir_by_coin(self.proto.coin)
 
 	def ref_words_to_subwallet_chk1(self):
 		return self.ref_words_to_subwallet_chk('32L')
@@ -209,7 +212,9 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			mmtype   = None,
 			add_args = [],
 			id_key   = None,
-			pat      = '{}.*Legacy'.format(nw_name)):
+			pat      = None ):
+
+		pat = pat or f'{self.nw_desc}.*Legacy'
 		af_key = 'ref_{}file'.format(ftype) + ('_' + id_key if id_key else '')
 		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
@@ -220,7 +225,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			t.do_decrypt_ka_data(hp=ref_kafile_hash_preset,pw=ref_kafile_pass,have_yes_opt=True)
 		chksum_key = '_'.join([af_key,'chksum'] + ([coin.lower()] if coin else []) + ([mmtype] if mmtype else []))
 		rc = self.chk_data[chksum_key]
-		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[g.proto.base_coin.lower()][g.proto.testnet]
+		ref_chksum = rc if (ftype == 'passwd' or coin) else rc[self.proto.base_coin.lower()][self.proto.testnet]
 		if pat:
 			t.expect(pat,regex=True)
 		t.expect(chksum_pat,regex=True)
@@ -230,14 +235,14 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def ref_segwitaddrfile_chk(self):
-		if not 'S' in g.proto.mmtypes:
-			return skip(f'not supported by {g.protocol.cls_name} protocol')
-		return self.ref_addrfile_chk(ftype='segwitaddr',pat='{}.*Segwit'.format(nw_name))
+		if not 'S' in self.proto.mmtypes:
+			return skip(f'not supported by {self.proto.cls_name} protocol')
+		return self.ref_addrfile_chk(ftype='segwitaddr',pat='{}.*Segwit'.format(self.nw_desc))
 
 	def ref_bech32addrfile_chk(self):
-		if not 'B' in g.proto.mmtypes:
-			return skip(f'not supported by {g.protocol.cls_name} protocol')
-		return self.ref_addrfile_chk(ftype='bech32addr',pat='{}.*Bech32'.format(nw_name))
+		if not 'B' in self.proto.mmtypes:
+			return skip(f'not supported by {self.proto.cls_name} protocol')
+		return self.ref_addrfile_chk(ftype='bech32addr',pat='{}.*Bech32'.format(self.nw_desc))
 
 	def ref_keyaddrfile_chk(self):
 		return self.ref_addrfile_chk(ftype='keyaddr')
@@ -259,7 +264,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_passwdfile_chk_hex2bip39_12(self): return self.ref_passwdfile_chk(key='hex2bip39_12',pat=r'BIP39.*len.* 12\b')
 
 	def ref_tx_chk(self):
-		fn = self.sources['ref_tx_file'][g.coin.lower()][bool(self.tn_ext)]
+		fn = self.sources['ref_tx_file'][self.proto.coin.lower()][bool(self.tn_ext)]
 		if not fn: return
 		tf = joinpath(ref_dir,self.ref_subdir,fn)
 		wf = dfl_words_file

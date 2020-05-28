@@ -55,8 +55,10 @@ def run_test(test,arg,input_data):
 	arg_copy = arg
 	kwargs = {'on_fail':'silent'} if opt.silent else {'on_fail':'die'}
 	ret_chk = arg
+	ret_idx = None
 	exc_type = None
-	if input_data == 'good' and type(arg) == tuple: arg,ret_chk = arg
+	if input_data == 'good' and type(arg) == tuple:
+		arg,ret_chk = arg
 	if type(arg) == dict: # pass one arg + kwargs to constructor
 		arg_copy = arg.copy()
 		if 'arg' in arg:
@@ -70,6 +72,10 @@ def run_test(test,arg,input_data):
 			ret_chk = arg['ret']
 			del arg['ret']
 			del arg_copy['ret']
+		if 'ret_idx' in arg:
+			ret_idx = arg['ret_idx']
+			del arg['ret_idx']
+			del arg_copy['ret_idx']
 		if 'ExcType' in arg:
 			exc_type = arg['ExcType']
 			del arg['ExcType']
@@ -94,8 +100,11 @@ def run_test(test,arg,input_data):
 			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
 		if opt.silent and input_data=='good' and ret==bad_ret:
 			raise UserWarning("'None' returned with good input data")
-		if input_data=='good' and ret != ret_chk and repr(ret) != repr(ret_chk):
-			raise UserWarning("Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk))
+		if input_data=='good':
+			if ret_idx:
+				ret_chk = arg[list(arg.keys())[ret_idx]].encode()
+			if ret != ret_chk and repr(ret) != repr(ret_chk):
+				raise UserWarning("Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk))
 		if not opt.super_silent:
 			try: ret_disp = ret.decode()
 			except: ret_disp = ret
@@ -119,9 +128,9 @@ def run_test(test,arg,input_data):
 
 def do_loop():
 	import importlib
-	modname = 'test.objtest_py_d.ot_{}_{}'.format(g.coin.lower(),g.proto.network)
+	modname = f'test.objtest_py_d.ot_{proto.coin.lower()}_{proto.network}'
 	test_data = importlib.import_module(modname).tests
-	gmsg('Running data object tests for {} {}'.format(g.coin,g.proto.network))
+	gmsg(f'Running data object tests for {proto.coin} {proto.network}')
 
 	clr = None
 	utests = cmd_args
@@ -136,4 +145,6 @@ def do_loop():
 			for arg in test_data[test][k]:
 				run_test(test,arg,input_data=k)
 
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
 do_loop()

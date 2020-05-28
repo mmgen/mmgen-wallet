@@ -106,7 +106,7 @@ Supported external tools:
 			prog='test/gentest.py',
 			pnm=g.proj_name,
 			snum=rounds,
-			dn=g.proto.daemon_name)
+			dn=proto.daemon_name)
 	}
 }
 
@@ -116,6 +116,9 @@ cmd_args = opts.init(opts_data,add_opts=['exact_output','use_old_ed25519'])
 
 if not 1 <= len(cmd_args) <= 2:
 	opts.usage()
+
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
 
 from subprocess import run,PIPE,DEVNULL
 def get_cmd_output(cmd,input=None):
@@ -127,15 +130,15 @@ gtr = namedtuple('gen_tool_result',['wif','addr','vk'])
 class GenTool(object):
 
 	def run_tool(self,sec):
-		vcoin = 'BTC' if g.coin == 'BCH' else g.coin
+		vcoin = 'BTC' if proto.coin == 'BCH' else proto.coin
 		return self.run(sec,vcoin)
 
 class GenToolEthkey(GenTool):
 	desc = 'ethkey'
 	def __init__(self):
-		g.proto = init_proto('eth')
+		proto = init_proto('eth')
 		global addr_type
-		addr_type = MMGenAddrType('E')
+		addr_type = MMGenAddrType(proto,'E')
 
 	def run(self,sec,vcoin):
 		o = get_cmd_output(['ethkey','info',sec])
@@ -150,9 +153,9 @@ class GenToolKeyconv(GenTool):
 class GenToolZcash_mini(GenTool):
 	desc = 'zcash-mini'
 	def __init__(self):
-		g.proto = init_proto('zec')
+		proto = init_proto('zec')
 		global addr_type
-		addr_type = MMGenAddrType('Z')
+		addr_type = MMGenAddrType(proto,'Z')
 
 	def run(self,sec,vcoin):
 		o = get_cmd_output(['zcash-mini','-key','-simple'],input=(sec.wif+'\n').encode())
@@ -172,7 +175,7 @@ class GenToolPycoin(GenTool):
 		self.nfnc = network_for_netcode
 
 	def run(self,sec,vcoin):
-		if g.proto.testnet:
+		if proto.testnet:
 			vcoin = ci.external_tests['testnet']['pycoin'][vcoin]
 		network = self.nfnc(vcoin)
 		key = network.keys.private(secret_exponent=int(sec,16),is_compressed=addr_type.name != 'legacy')
@@ -200,10 +203,10 @@ class GenToolMoneropy(GenTool):
 			raise ImportError(m)
 
 		self.mpa = moneropy.account
-		g.proto = init_proto('xmr')
+		proto = init_proto('xmr')
 
 		global addr_type
-		addr_type = MMGenAddrType('M')
+		addr_type = MMGenAddrType(proto,'M')
 
 	def run(self,sec,vcoin):
 		sk_t,vk_t,addr_t = self.mpa.account_from_spend_key(sec) # VERY slow!
@@ -212,7 +215,7 @@ class GenToolMoneropy(GenTool):
 def get_tool(arg):
 
 	if arg not in ext_progs + ['ext']:
-		die(1,'{!r}: unsupported tool for network {}'.format(arg,g.proto.network))
+		die(1,'{!r}: unsupported tool for network {}'.format(arg,proto.network))
 
 	if opt.all:
 		if arg == 'ext':
@@ -220,9 +223,9 @@ def get_tool(arg):
 		return arg
 	else:
 		tool = ci.get_test_support(
-			g.coin,
+			proto.coin,
 			addr_type.name,
-			g.proto.network,
+			proto.network,
 			verbose = not opt.quiet,
 			tool = arg if arg in ext_progs else None )
 		if not tool:
@@ -251,12 +254,12 @@ def test_equal(desc,a_val,b_val,in_bytes,sec,wif,a_desc,b_desc):
 def gentool_test(kg_a,kg_b,ag,rounds):
 
 	m = "Comparing address generators '{A}' and '{B}' for {N} {c} ({n}), addrtype {a!r}"
-	e = ci.get_entry(g.coin,g.proto.network)
+	e = ci.get_entry(proto.coin,proto.network)
 	qmsg(green(m.format(
 		A = kg_a.desc,
 		B = kg_b.desc,
-		N = g.proto.network,
-		c = g.coin,
+		N = proto.network,
+		c = proto.coin,
 		n = e.name if e else '---',
 		a = addr_type.name )))
 
@@ -268,7 +271,7 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 		if opt.verbose or time.time() - last_t >= 0.1:
 			qmsg_r('\rRound {}/{} '.format(i+1,trounds))
 			last_t = time.time()
-		sec = PrivKey(in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
+		sec = PrivKey(proto,in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		a_ph = kg_a.to_pubhex(sec)
 		a_addr = ag.to_addr(a_ph)
 		a_vk = None
@@ -311,7 +314,7 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 
 def speed_test(kg,ag,rounds):
 	m = "Testing speed of address generator '{}' for coin {}"
-	qmsg(green(m.format(kg.desc,g.coin)))
+	qmsg(green(m.format(kg.desc,proto.coin)))
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	qmsg('Incrementing key with each round')
@@ -323,7 +326,7 @@ def speed_test(kg,ag,rounds):
 		if time.time() - last_t >= 0.1:
 			qmsg_r('\rRound {}/{} '.format(i+1,rounds))
 			last_t = time.time()
-		sec = PrivKey(seed+pack('I',i),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
+		sec = PrivKey(proto,seed+pack('I',i),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		addr = ag.to_addr(kg.to_pubhex(sec))
 		vmsg('\nkey:  {}\naddr: {}\n'.format(sec.wif,addr))
 	qmsg_r('\rRound {}/{} '.format(i+1,rounds))
@@ -341,9 +344,9 @@ def dump_test(kg,ag,fh):
 	for count,(b_wif,b_addr) in enumerate(dump,1):
 		qmsg_r('\rKey {}/{} '.format(count,len(dump)))
 		try:
-			b_sec = PrivKey(wif=b_wif)
+			b_sec = PrivKey(proto,wif=b_wif)
 		except:
-			die(2,'\nInvalid {} WIF address in dump file: {}'.format(g.proto.network,b_wif))
+			die(2,'\nInvalid {} WIF address in dump file: {}'.format(proto.network,b_wif))
 		a_addr = ag.to_addr(kg.to_pubhex(b_sec))
 		vmsg('\nwif: {}\naddr: {}\n'.format(b_wif,b_addr))
 		tinfo = (bytes.fromhex(b_sec),b_sec,b_wif,kg.desc,fh.name)
@@ -366,12 +369,12 @@ def parse_arg1(arg,arg_id):
 	if arg_id == 'a':
 		if is_int(arg):
 			a_num = check_gen_num(arg)
-			return (KeyGenerator(addr_type,a_num),a_num)
+			return (KeyGenerator(proto,addr_type,a_num),a_num)
 		else:
 			die(1,m1)
 	elif arg_id == 'b':
 		if is_int(arg):
-			return KeyGenerator(addr_type,check_gen_num(arg))
+			return KeyGenerator(proto,addr_type,check_gen_num(arg))
 		elif arg in ext_progs + ['ext']:
 			return init_tool(get_tool(arg))
 		else:
@@ -395,8 +398,10 @@ from mmgen.altcoin import CoinInfo as ci
 from mmgen.obj import MMGenAddrType,PrivKey
 from mmgen.addr import KeyGenerator,AddrGenerator
 
-addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype)
-ext_progs = list(ci.external_tests[g.proto.network])
+addr_type = MMGenAddrType(
+	proto = proto,
+	id_str = opt.type or proto.dfl_mmtype )
+ext_progs = list(ci.external_tests[proto.network])
 
 arg1 = cmd_args[0].split(':')
 if len(arg1) == 1:
@@ -413,7 +418,8 @@ if type(a) == type(b):
 
 arg2 = parse_arg2()
 
-ag = AddrGenerator(addr_type)
+if not opt.all:
+	ag = AddrGenerator(proto,addr_type)
 
 if not b and type(arg2) == int:
 	speed_test(a,ag,arg2)
@@ -422,18 +428,18 @@ elif not b and hasattr(arg2,'read'):
 elif a and b and type(arg2) == int:
 	if opt.all:
 		from mmgen.protocol import CoinProtocol,init_genonly_altcoins
-		init_genonly_altcoins(testnet=g.proto.testnet)
-		for coin in ci.external_tests[g.proto.network][b.desc]:
+		init_genonly_altcoins(testnet=proto.testnet)
+		for coin in ci.external_tests[proto.network][b.desc]:
 			if coin.lower() not in CoinProtocol.coins:
 #				ymsg('Coin {} not configured'.format(coin))
 				continue
-			g.proto = init_proto(coin)
-			if addr_type not in g.proto.mmtypes:
+			proto = init_proto(coin)
+			if addr_type not in proto.mmtypes:
 				continue
-			# g.proto has changed, so reinit kg and ag just to be on the safe side:
-			a = KeyGenerator(addr_type,a_num)
-			ag = AddrGenerator(addr_type)
-			b_chk = ci.get_test_support(g.coin,addr_type.name,g.proto.network,tool=b.desc,verbose=not opt.quiet)
+			# proto has changed, so reinit kg and ag
+			a = KeyGenerator(proto,addr_type,a_num)
+			ag = AddrGenerator(proto,addr_type)
+			b_chk = ci.get_test_support(proto.coin,addr_type.name,proto.network,tool=b.desc,verbose=not opt.quiet)
 			if b_chk == b.desc:
 				gentool_test(a,b,ag,arg2)
 	else:

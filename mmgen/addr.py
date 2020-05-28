@@ -24,6 +24,7 @@ from hashlib import sha256,sha512
 from .common import *
 from .obj import *
 from .baseconv import *
+from .protocol import init_proto
 
 pnm = g.proj_name
 
@@ -32,11 +33,11 @@ def dmsg_sc(desc,data):
 		Msg(f'sc_debug_{desc}: {data}')
 
 class AddrGenerator(MMGenObject):
-	def __new__(cls,addr_type):
+	def __new__(cls,proto,addr_type):
 		if type(addr_type) == str: # allow override w/o check
 			gen_method = addr_type
 		elif type(addr_type) == MMGenAddrType:
-			assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {g.coin}'
+			assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
 			gen_method = addr_type.gen_method
 		else:
 			raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
@@ -50,13 +51,14 @@ class AddrGenerator(MMGenObject):
 		assert gen_method in gen_methods
 		me = super(cls,cls).__new__(gen_methods[gen_method])
 		me.desc = gen_methods
+		me.proto = proto
 		return me
 
 class AddrGeneratorP2PKH(AddrGenerator):
 	def to_addr(self,pubhex):
 		from .protocol import hash160
 		assert type(pubhex) == PubKey
-		return CoinAddr(g.proto.pubhash2addr(hash160(pubhex),p2sh=False))
+		return CoinAddr(self.proto,self.proto.pubhash2addr(hash160(pubhex),p2sh=False))
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError('Segwit redeem script not supported by this address type')
@@ -64,24 +66,24 @@ class AddrGeneratorP2PKH(AddrGenerator):
 class AddrGeneratorSegwit(AddrGenerator):
 	def to_addr(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return CoinAddr(g.proto.pubhex2segwitaddr(pubhex))
+		return CoinAddr(self.proto,self.proto.pubhex2segwitaddr(pubhex))
 
 	def to_segwit_redeem_script(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return HexStr(g.proto.pubhex2redeem_script(pubhex))
+		return HexStr(self.proto.pubhex2redeem_script(pubhex))
 
 class AddrGeneratorBech32(AddrGenerator):
 	def to_addr(self,pubhex):
 		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
 		from .protocol import hash160
-		return CoinAddr(g.proto.pubhash2bech32addr(hash160(pubhex)))
+		return CoinAddr(self.proto,self.proto.pubhash2bech32addr(hash160(pubhex)))
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError('Segwit redeem script not supported by this address type')
 
 class AddrGeneratorEthereum(AddrGenerator):
 
-	def __init__(self,addr_type):
+	def __init__(self,proto,addr_type):
 
 		try:
 			assert not g.use_internal_keccak_module
@@ -95,7 +97,7 @@ class AddrGeneratorEthereum(AddrGenerator):
 
 	def to_addr(self,pubhex):
 		assert type(pubhex) == PubKey
-		return CoinAddr(self.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
+		return CoinAddr(self.proto,self.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
 
 	def to_wallet_passwd(self,sk_hex):
 		return WalletPassword(self.hash256(sk_hex)[:32])
@@ -119,9 +121,9 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		from nacl.bindings import crypto_scalarmult_base
 		p2 = crypto_scalarmult_base(self.zhash256(key,1))
 		from .protocol import _b58chk_encode
-		ver_bytes = g.proto.addr_fmt_to_ver_bytes('zcash_z')
+		ver_bytes = self.proto.addr_fmt_to_ver_bytes('zcash_z')
 		ret = _b58chk_encode(ver_bytes + self.zhash256(key,0) + p2)
-		return CoinAddr(ret)
+		return CoinAddr(self.proto,ret)
 
 	def to_viewkey(self,pubhex): # pubhex is really privhex
 		key = bytes.fromhex(pubhex)
@@ -131,16 +133,16 @@ class AddrGeneratorZcashZ(AddrGenerator):
 		vk[63] &= 0x7f
 		vk[63] |= 0x40
 		from .protocol import _b58chk_encode
-		ver_bytes = g.proto.addr_fmt_to_ver_bytes('viewkey')
+		ver_bytes = self.proto.addr_fmt_to_ver_bytes('viewkey')
 		ret = _b58chk_encode(ver_bytes + vk)
-		return ZcashViewKey(ret)
+		return ZcashViewKey(self.proto,ret)
 
 	def to_segwit_redeem_script(self,pubhex):
 		raise NotImplementedError('Zcash z-addresses incompatible with Segwit')
 
 class AddrGeneratorMonero(AddrGenerator):
 
-	def __init__(self,addr_type):
+	def __init__(self,proto,addr_type):
 
 		try:
 			assert not g.use_internal_keccak_module
@@ -189,9 +191,10 @@ class AddrGeneratorMonero(AddrGenerator):
 		vk_hex = self.to_viewkey(sk_hex)
 		pk_str  = self.encodepoint(scalarmultbase(hex2int_le(sk_hex)))
 		pvk_str = self.encodepoint(scalarmultbase(hex2int_le(vk_hex)))
-		addr_p1 = g.proto.addr_fmt_to_ver_bytes('monero') + pk_str + pvk_str
+		addr_p1 = self.proto.addr_fmt_to_ver_bytes('monero') + pk_str + pvk_str
 
 		return CoinAddr(
+			proto = self.proto,
 			addr = self.b58enc(addr_p1 + self.keccak_256(addr_p1).digest()[:4]) )
 
 	def to_wallet_passwd(self,sk_hex):
@@ -200,34 +203,36 @@ class AddrGeneratorMonero(AddrGenerator):
 	def to_viewkey(self,sk_hex):
 		assert len(sk_hex) == 64, f'{len(sk_hex)}: incorrect privkey length'
 		return MoneroViewKey(
-			g.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex() )
+			self.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex() )
 
 	def to_segwit_redeem_script(self,sk_hex):
 		raise NotImplementedError('Monero addresses incompatible with Segwit')
 
 class KeyGenerator(MMGenObject):
 
-	def __new__(cls,addr_type,generator=None,silent=False):
+	def __new__(cls,proto,addr_type,generator=None,silent=False):
 		if type(addr_type) == str: # allow override w/o check
 			pubkey_type = addr_type
 		elif type(addr_type) == MMGenAddrType:
-			assert addr_type in g.proto.mmtypes,'{}: invalid address type for coin {}'.format(addr_type,g.coin)
+			assert addr_type in proto.mmtypes, f'{address}: invalid address type for coin {proto.coin}'
 			pubkey_type = addr_type.pubkey_type
 		else:
-			raise TypeError('{}: incorrect argument type for {}()'.format(type(addr_type),cls.__name__))
+			raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
 		if pubkey_type == 'std':
 			if cls.test_for_secp256k1(silent=silent) and generator != 1:
 				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
-					return super(cls,cls).__new__(KeyGeneratorSecp256k1)
+					me = super(cls,cls).__new__(KeyGeneratorSecp256k1)
 			else:
 				qmsg('Using (slow) native Python ECDSA library for address generation')
-				return super(cls,cls).__new__(KeyGeneratorPython)
+				me = super(cls,cls).__new__(KeyGeneratorPython)
 		elif pubkey_type in ('zcash_z','monero'):
 			me = super(cls,cls).__new__(KeyGeneratorDummy)
 			me.desc = 'mmgen-'+pubkey_type
-			return me
 		else:
-			raise ValueError('{}: invalid pubkey_type argument'.format(pubkey_type))
+			raise ValueError(f'{pubkey_type}: invalid pubkey_type argument')
+
+		me.proto = proto
+		return me
 
 	@classmethod
 	def test_for_secp256k1(self,silent=False):
@@ -288,19 +293,25 @@ class KeyGeneratorDummy(KeyGenerator):
 		assert type(privhex) == PrivKey
 		return PubKey(privhex,compressed=privhex.compressed)
 
-class AddrListEntry(MMGenListItem):
-	addr          = ListItemAttr('CoinAddr')
+class AddrListEntryBase(MMGenListItem):
+	invalid_attrs = {'proto'}
+	def __init__(self,proto,**kwargs):
+		self.__dict__['proto'] = proto
+		MMGenListItem.__init__(self,**kwargs)
+
+class AddrListEntry(AddrListEntryBase):
+	addr          = ListItemAttr('CoinAddr',include_proto=True)
 	idx           = ListItemAttr('AddrIdx') # not present in flat addrlists
 	label         = ListItemAttr('TwComment',reassign_ok=True)
-	sec           = ListItemAttr(PrivKey,typeconv=False)
-	viewkey       = ListItemAttr('ViewKey')
+	sec           = ListItemAttr('PrivKey',include_proto=True)
+	viewkey       = ListItemAttr('ViewKey',include_proto=True)
 	wallet_passwd = ListItemAttr('WalletPassword')
 
-class PasswordListEntry(MMGenListItem):
+class PasswordListEntry(AddrListEntryBase):
 	passwd = ListItemAttr(str,typeconv=False) # TODO: create Password type
 	idx    = ImmutableAttr('AddrIdx')
 	label  = ListItemAttr('TwComment',reassign_ok=True)
-	sec    = ListItemAttr(PrivKey,typeconv=False)
+	sec    = ListItemAttr('PrivKey',include_proto=True)
 
 class AddrListChksum(str,Hilite):
 	color = 'pink'
@@ -335,7 +346,7 @@ class AddrListIDStr(str,Hilite):
 		if fmt_str:
 			ret = fmt_str.format(s)
 		else:
-			bc = (g.proto.base_coin,g.coin)[g.proto.base_coin=='ETH']
+			bc = (addrlist.proto.base_coin,addrlist.proto.coin)[addrlist.proto.base_coin=='ETH']
 			mt = addrlist.al_id.mmtype
 			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
 
@@ -376,7 +387,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
 	line_ctr = 0
 
-	def __init__(self,
+	def __init__(self,proto,
 		addrfile  = '',
 		al_id     = '',
 		adata     = [],
@@ -389,8 +400,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		do_chksum = True
 		self.update_msgs()
-		mmtype = mmtype or g.proto.dfl_mmtype
-		assert mmtype in MMGenAddrType.mmtypes,'{}: mmtype not in {}'.format(mmtype,repr(MMGenAddrType.mmtypes))
+		mmtype = mmtype or proto.dfl_mmtype
+		assert mmtype in MMGenAddrType.mmtypes, f'{mmtype}: mmtype not in {MMGenAddrType.mmtypes!r}'
+
+		from .protocol import CoinProtocol
+		self.bitcoin_addrtypes = tuple(
+			MMGenAddrType(CoinProtocol.Bitcoin,key).name for key in CoinProtocol.Bitcoin.mmtypes)
+
+		self.proto = proto
 
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
@@ -403,10 +420,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			do_chksum = False
 		elif addrlist:           # data from flat address list
 			self.al_id = None
-			adata = AddrListList([AddrListEntry(addr=a) for a in set(addrlist)])
+			adata = AddrListData([AddrListEntry(proto=proto,addr=a) for a in set(addrlist)])
 		elif keylist:            # data from flat key list
 			self.al_id = None
-			adata = AddrListList([AddrListEntry(sec=PrivKey(wif=k)) for k in set(keylist)])
+			adata = AddrListData([AddrListEntry(proto=proto,sec=PrivKey(proto=proto,wif=k)) for k in set(keylist)])
 		elif seed or addr_idxs:
 			die(3,'Must specify both seed and addr indexes')
 		elif al_id or adata:
@@ -448,10 +465,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		gen_viewkey       = type(self) == KeyAddrList and 'viewkey' in self.al_id.mmtype.extra_attrs
 
 		if self.gen_addrs:
-			kg = KeyGenerator(self.al_id.mmtype)
-			ag = AddrGenerator(self.al_id.mmtype)
+			kg = KeyGenerator(self.proto,self.al_id.mmtype)
+			ag = AddrGenerator(self.proto,self.al_id.mmtype)
 
-		t_addrs,num,pos,out = len(addrnums),0,0,AddrListList()
+		t_addrs,num,pos,out = len(addrnums),0,0,AddrListData()
 		le = self.entry_type
 
 		while pos != t_addrs:
@@ -465,10 +482,11 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			if not g.debug:
 				qmsg_r('\rGenerating {} #{} ({} of {})'.format(self.gen_desc,num,pos,t_addrs))
 
-			e = le(idx=num)
+			e = le(proto=self.proto,idx=num)
 
 			# Secret key is double sha256 of seed hash round /num/
 			e.sec = PrivKey(
+				self.proto,
 				sha256(sha256(seed).digest()).digest(),
 				compressed  = compressed,
 				pubkey_type = pubkey_type )
@@ -497,17 +515,17 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		return True # format is checked when added to list entry object
 
 	def scramble_seed(self,seed):
-		is_btcfork = g.proto.base_coin == 'BTC'
-		if is_btcfork and self.al_id.mmtype == 'L' and not g.proto.testnet:
+		is_btcfork = self.proto.base_coin == 'BTC'
+		if is_btcfork and self.al_id.mmtype == 'L' and not self.proto.testnet:
 			dmsg_sc('str','(none)')
 			return seed
-		if g.proto.base_coin == 'ETH':
-			scramble_key = g.coin.lower()
+		if self.proto.base_coin == 'ETH':
+			scramble_key = self.proto.coin.lower()
 		else:
-			scramble_key = (g.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
+			scramble_key = (self.proto.coin.lower()+':','')[is_btcfork] + self.al_id.mmtype.name
 		from .crypto import scramble_seed
-		if g.proto.testnet:
-			scramble_key += ':testnet'
+		if self.proto.testnet:
+			scramble_key += ':' + self.proto.network
 		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 
@@ -517,7 +535,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		self.ext += '.'+g.mmenc_ext
 
 	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
-		tn = ('','.testnet')[g.proto.testnet]
+		tn = ('.' + self.proto.network) if self.proto.testnet else ''
 		fn = '{}{x}{}.{}'.format(self.id_str,tn,self.ext,x='-α' if g.debug_utf8 else '')
 		ask_tty = self.has_keys and not opt.quiet
 		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
@@ -554,12 +572,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			if idx == e.idx:
 				e.label = comment
 
-	def make_reverse_dict(self,coinaddrs):
-		d,b = MMGenDict(),coinaddrs
+	def make_reverse_dict_addrlist(self,coinaddrs):
+		d = MMGenDict()
+		b = coinaddrs
 		for e in self.data:
 			try:
-				d[b[b.index(e.addr)]] = MMGenID('{}:{}'.format(self.al_id,e.idx)),e.label
-			except: pass
+				d[b[b.index(e.addr)]] = ( MMGenID(self.proto, f'{self.al_id}:{e.idx}'), e.label )
+			except ValueError:
+				pass
 		return d
 
 	def remove_dup_keys(self,cmplist):
@@ -585,9 +605,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def generate_addrs_from_keys(self):
 		# assume that the first listed mmtype is valid for flat key list
-		t = MMGenAddrType(g.proto.mmtypes[0])
-		kg = KeyGenerator(t.pubkey_type)
-		ag = AddrGenerator(t.gen_method)
+		t = self.proto.addr_type(self.proto.mmtypes[0])
+		kg = KeyGenerator(self.proto,t.pubkey_type)
+		ag = AddrGenerator(self.proto,t.gen_method)
 		d = self.data
 		for n,e in enumerate(d,1):
 			qmsg_r('\rGenerating addresses from keylist: {}/{}'.format(n,len(d)))
@@ -597,10 +617,10 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
 
 	def make_label(self):
-		bc,mt = g.proto.base_coin,self.al_id.mmtype
-		l_coin = [] if bc == 'BTC' else [g.coin] if bc == 'ETH' else [bc]
-		l_type = [] if mt == 'E' or (mt == 'L' and not g.proto.testnet) else [mt.name.upper()]
-		l_tn   = [] if not g.proto.testnet else ['TESTNET']
+		bc,mt = self.proto.base_coin,self.al_id.mmtype
+		l_coin = [] if bc == 'BTC' else [self.proto.coin] if bc == 'ETH' else [bc]
+		l_type = [] if mt == 'E' or (mt == 'L' and not self.proto.testnet) else [mt.name.upper()]
+		l_tn   = [] if not self.proto.testnet else [self.proto.network.upper()]
 		lbl_p2 = ':'.join(l_coin+l_type+l_tn)
 		return self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
 
@@ -646,34 +666,36 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def parse_file_body(self,lines):
 
-		ret = AddrListList()
+		ret = AddrListData()
 		le = self.entry_type
 		iifs = "{!r}: invalid identifier [expected '{}:']"
 
 		while lines:
 			idx,addr,lbl = self.get_line(lines)
 
-			assert is_mmgen_idx(idx),'invalid address index {!r}'.format(idx)
+			assert is_mmgen_idx(idx), f'invalid address index {idx!r}'
 			self.check_format(addr)
 
-			a = le(**{ 'idx':int(idx), self.main_attr:addr, 'label':lbl })
+			a = le(**{ 'proto': self.proto, 'idx':int(idx), self.main_attr:addr, 'label':lbl })
 
 			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
 				d = self.get_line(lines)
 				assert d[0] == self.al_id.mmtype.wif_label+':',iifs.format(d[0],self.al_id.mmtype.wif_label)
-				a.sec = PrivKey(wif=d[1])
-				for k,dtype in (('viewkey',ViewKey),('wallet_passwd',WalletPassword)):
+				a.sec = PrivKey(proto=self.proto,wif=d[1])
+				for k,dtype,add_proto in (
+					('viewkey',ViewKey,True),
+					('wallet_passwd',WalletPassword,False) ):
 					if k in self.al_id.mmtype.extra_attrs:
 						d = self.get_line(lines)
 						assert d[0] == k+':',iifs.format(d[0],k)
-						setattr(a,k,dtype(d[1]))
+						setattr(a,k,dtype( *((self.proto,d[1]) if add_proto else (d[1],)) ) )
 
 			ret.append(a)
 
 		if self.has_keys:
 			if (hasattr(opt,'yes') and opt.yes) or keypress_confirm('Check key-to-address validity?'):
-				kg = KeyGenerator(self.al_id.mmtype)
-				ag = AddrGenerator(self.al_id.mmtype)
+				kg = KeyGenerator(self.proto,self.al_id.mmtype)
+				ag = AddrGenerator(self.proto,self.al_id.mmtype)
 				llen = len(ret)
 				for n,e in enumerate(ret):
 					qmsg_r('\rVerifying keys {}/{}'.format(n+1,llen))
@@ -685,35 +707,46 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 	def parse_file(self,fn,buf=[],exit_on_error=True):
 
-		def parse_addrfile_label(lbl): # we must maintain backwards compat, so parse is tricky
-			al_coin,al_mmtype = None,None
-			tn = lbl[-8:] == ':TESTNET'
-			if tn:
-				assert g.proto.testnet, f'{self.data_desc} file is testnet but protocol is mainnet!'
+		def parse_addrfile_label(lbl):
+			"""
+			label examples:
+			- Bitcoin legacy mainnet:   no label
+			- Bitcoin legacy testnet:   'LEGACY:TESTNET'
+			- Bitcoin Segwit:           'SEGWIT'
+			- Bitcoin Segwit testnet:   'SEGWIT:TESTNET'
+			- Bitcoin Bech32 regtest:   'BECH32:REGTEST'
+			- Litecoin legacy mainnet:  'LTC'
+			- Litecoin Bech32 mainnet:  'LTC:BECH32'
+			- Litecoin legacy testnet:  'LTC:LEGACY:TESTNET'
+			- Ethereum mainnet:         'ETH'
+			- Ethereum Classic mainnet: 'ETC'
+			- Ethereum regtest:         'ETH:REGTEST'
+			"""
+			lbl = lbl.lower()
+
+			# remove the network component:
+			if lbl.endswith(':testnet'):
+				network = 'testnet'
+				lbl = lbl[:-8]
+			elif lbl.endswith(':regtest'):
+				network = 'regtest'
 				lbl = lbl[:-8]
 			else:
-				assert not g.proto.testnet, f'{self.data_desc} file is mainnet but protocol is testnet!'
-			lbl = lbl.split(':',1)
-			if len(lbl) == 2:
-				al_coin,al_mmtype = lbl[0],lbl[1].lower()
-			else:
-				if lbl[0].lower() in MMGenAddrType.get_names():
-					al_mmtype = lbl[0].lower()
-				else:
-					al_coin = lbl[0]
+				network = 'mainnet'
 
-			# this block fails if al_mmtype is invalid for g.coin
-			if not al_mmtype:
-				mmtype = MMGenAddrType('E' if al_coin in ('ETH','ETC') else 'L',on_fail='raise')
-			else:
-				mmtype = MMGenAddrType(al_mmtype,on_fail='raise')
+			if lbl in self.bitcoin_addrtypes:
+				coin,mmtype_key = ( 'BTC', lbl )
+			elif ':' in lbl: # first component is coin, second is mmtype_key
+				coin,mmtype_key = lbl.split(':')
+			else:            # only component is coin
+				coin,mmtype_key = ( lbl, None )
 
-			from .protocol import init_proto
-			return (init_proto(al_coin or 'BTC').base_coin, mmtype, tn)
+			proto = init_proto(coin=coin,network=network)
 
-		def check_coin_mismatch(base_coin): # die if addrfile coin doesn't match g.coin
-			m = '{} address file format, but base coin is {}!'
-			assert base_coin == g.proto.base_coin, m.format(base_coin,g.proto.base_coin)
+			if mmtype_key == None:
+				mmtype_key = proto.mmtypes[0]
+
+			return ( proto, proto.addr_type(mmtype_key) )
 
 		lines = get_lines_from_file(fn,self.data_desc+' data',trim_comments=True)
 
@@ -732,20 +765,31 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				self.set_pw_fmt(ss[0])
 				self.set_pw_len(ss[1])
 				self.pw_id_str = MMGenPWIDString(ls.pop())
-				base_coin,mmtype = None,MMGenPasswordType('P')
-				testnet = False
+				proto = init_proto('btc')# FIXME: dummy protocol
+				mmtype = MMGenPasswordType(proto,'P')
 			elif len(ls) == 1:
-				base_coin,mmtype,testnet = parse_addrfile_label(ls[0])
-				check_coin_mismatch(base_coin)
+				proto,mmtype = parse_addrfile_label(ls[0])
 			elif len(ls) == 0:
-				base_coin,mmtype = 'BTC',MMGenAddrType('L')
-				testnet = False
-				check_coin_mismatch(base_coin)
+				proto = init_proto('btc')
+				mmtype = proto.addr_type('L')
 			else:
-				raise ValueError("'{}': Invalid first line for {} file '{}'".format(lines[0],self.gen_desc,fn))
+				raise ValueError(f'{lines[0]}: Invalid first line for {self.gen_desc} file {fn!r}')
 
-			self.base_coin = base_coin
-			self.is_testnet = testnet
+			if type(self) != PasswordList:
+				if proto.base_coin != self.proto.base_coin or proto.network != self.proto.network:
+					"""
+					Having caller supply protocol and checking address file protocol against it here
+					allows us to catch all mismatches in one place.  This behavior differs from that of
+					transaction files, which determine the protocol independently, requiring the caller
+					to check for protocol mismatches (e.g. MMGenTX.check_correct_chain())
+					"""
+					raise ValueError(
+						f'{self.data_desc} file is '
+						+ f'{proto.base_coin} {proto.network} but protocol is '
+						+ f'{self.proto.base_coin} {self.proto.network}' )
+
+			self.base_coin = proto.base_coin
+			self.network = proto.network
 			self.al_id = AddrListID(SeedID(sid=sid),mmtype)
 
 			data = self.parse_file_body(lines[1:-1])
@@ -850,7 +894,7 @@ Record this checksum: it will be used to verify the password file in the future
 	feature_warn_fs = 'WARNING: {!r} is a potentially dangerous feature.  Use at your own risk!'
 	hex2bip39 = False
 
-	def __init__(self,
+	def __init__(self,proto,
 		infile          = None,
 		seed            = None,
 		pw_idxs         = None,
@@ -860,6 +904,7 @@ Record this checksum: it will be used to verify the password file in the future
 		chk_params_only = False
 		):
 
+		self.proto = proto # proto is ignored
 		self.update_msgs()
 
 		if infile:
@@ -877,7 +922,7 @@ Record this checksum: it will be used to verify the password file in the future
 			if self.hex2bip39:
 				ymsg(self.feature_warn_fs.format(pw_fmt))
 			self.set_pw_len_vs_seed_len(pw_len,seed)
-			self.al_id = AddrListID(seed.sid,MMGenPasswordType('P'))
+			self.al_id = AddrListID(seed.sid,MMGenPasswordType(self.proto,'P'))
 			self.data = self.generate(seed,pw_idxs)
 
 		if self.pw_fmt in ('bip39','xmrseed'):
@@ -983,7 +1028,6 @@ Record this checksum: it will be used to verify the password file in the future
 			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
 			# take most significant part
 			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
-			from .protocol import init_proto
 			bytes_preproc = init_proto('xmr').preprocess_key(bytes_trunc,None)
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
@@ -1043,11 +1087,13 @@ re-import your addresses.
 """.strip().format(pnm=pnm)
 	}
 
-	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','AddrData'))
+	def __new__(cls,proto,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self,proto,*args,**kwargs):
 		self.al_ids = {}
+		self.proto = proto
+		self.rpc = None
 
 	def seed_ids(self):
 		return list(self.al_ids.keys())
@@ -1058,7 +1104,7 @@ re-import your addresses.
 			return self.al_ids[al_id]
 
 	def mmaddr2coinaddr(self,mmaddr):
-		al_id,idx = MMGenID(mmaddr).rsplit(':',1)
+		al_id,idx = MMGenID(self.proto,mmaddr).rsplit(':',1)
 		coinaddr = ''
 		if al_id in self.al_ids:
 			coinaddr = self.addrlist(al_id).coinaddr(int(idx))
@@ -1067,38 +1113,6 @@ re-import your addresses.
 	def coinaddr2mmaddr(self,coinaddr):
 		d = self.make_reverse_dict([coinaddr])
 		return (list(d.values())[0][0]) if d else None
-
-	@classmethod
-	async def get_tw_data(cls,wallet=None):
-		vmsg('Getting address data from tracking wallet')
-		if 'label_api' in g.rpc.caps:
-			accts = await g.rpc.call('listlabels')
-			ll = await g.rpc.batch_call('getaddressesbylabel',[(k,) for k in accts])
-			alists = [list(a.keys()) for a in ll]
-		else:
-			accts = await g.rpc.call('listaccounts',0,True)
-			alists = await g.rpc.batch_call('getaddressesbyaccount',[(k,) for k in accts])
-		return list(zip(accts,alists))
-
-	async def add_tw_data(self,wallet):
-
-		twd = await type(self).get_tw_data(wallet)
-		out,i = {},0
-		for acct,addr_array in twd:
-			l = TwLabel(acct,on_fail='silent')
-			if l and l.mmid.type == 'mmgen':
-				obj = l.mmid.obj
-				if len(addr_array) != 1:
-					die(2,self.msgs['too_many_acct_addresses'].format(acct))
-				al_id = AddrListID(SeedID(sid=obj.sid),MMGenAddrType(obj.mmtype))
-				if al_id not in out:
-					out[al_id] = []
-				out[al_id].append(AddrListEntry(idx=obj.idx,addr=addr_array[0],label=l.comment))
-				i += 1
-
-		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(twd)))
-		for al_id in out:
-			self.add(AddrList(al_id=al_id,adata=AddrListList(sorted(out[al_id],key=lambda a: a.idx))))
 
 	def add(self,addrlist):
 		if type(addrlist) == AddrList:
@@ -1110,17 +1124,53 @@ re-import your addresses.
 	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()
 		for al_id in self.al_ids:
-			d.update(self.al_ids[al_id].make_reverse_dict(coinaddrs))
+			d.update(self.al_ids[al_id].make_reverse_dict_addrlist(coinaddrs))
 		return d
 
 class TwAddrData(AddrData,metaclass=aInitMeta):
 
-	def __new__(cls,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,'tw','TwAddrData'))
+	def __new__(cls,proto,*args,**kwargs):
+		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
 
-	def __init__(self,*args,**kwargs):
+	def __init__(self,proto,*args,**kwargs):
 		pass
 
-	async def __ainit__(self,wallet=None):
+	async def __ainit__(self,proto,wallet=None):
+		self.proto = proto
+		from .rpc import rpc_init
+		self.rpc = await rpc_init(proto)
 		self.al_ids = {}
 		await self.add_tw_data(wallet)
+
+	async def get_tw_data(self,wallet=None):
+		vmsg('Getting address data from tracking wallet')
+		c = self.rpc
+		if 'label_api' in c.caps:
+			accts = await c.call('listlabels')
+			ll = await c.batch_call('getaddressesbylabel',[(k,) for k in accts])
+			alists = [list(a.keys()) for a in ll]
+		else:
+			accts = await c.call('listaccounts',0,True)
+			alists = await c.batch_call('getaddressesbyaccount',[(k,) for k in accts])
+		return list(zip(accts,alists))
+
+	async def add_tw_data(self,wallet):
+
+		twd = await self.get_tw_data(wallet)
+		out,i = {},0
+		for acct,addr_array in twd:
+			l = TwLabel(self.proto,acct,on_fail='silent')
+			if l and l.mmid.type == 'mmgen':
+				obj = l.mmid.obj
+				if len(addr_array) != 1:
+					die(2,self.msgs['too_many_acct_addresses'].format(acct))
+				al_id = AddrListID(SeedID(sid=obj.sid),self.proto.addr_type(obj.mmtype))
+				if al_id not in out:
+					out[al_id] = []
+				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],label=l.comment))
+				i += 1
+
+		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(twd)))
+		for al_id in out:
+			self.add(AddrList(self.proto,al_id=al_id,adata=AddrListData(sorted(out[al_id],key=lambda a: a.idx))))
+

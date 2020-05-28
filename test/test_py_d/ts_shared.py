@@ -35,7 +35,7 @@ class TestSuiteShared(object):
 							caller            = None,
 							menu              = [],
 							inputs            = '1',
-							file_desc         = 'Transaction',
+							file_desc         = 'Unsigned transaction',
 							input_sels_prompt = 'to spend',
 							bad_input_sels    = False,
 							non_mmgen_inputs  = 0,
@@ -45,7 +45,8 @@ class TestSuiteShared(object):
 							eth_fee_res       = None,
 							add_comment       = '',
 							view              = 't',
-							save              = True ):
+							save              = True,
+							tweaks            = [] ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -54,11 +55,8 @@ class TestSuiteShared(object):
 		if bad_input_sels:
 			for r in ('x','3-1','9999'):
 				t.expect(input_sels_prompt+': ',r+'\n')
-		t.expect(input_sels_prompt+': ',inputs+'\n')
 
-		if not txdo:
-			for i in range(non_mmgen_inputs):
-				t.expect('Accept? (y/N): ','y')
+		t.expect(input_sels_prompt+': ',inputs+'\n')
 
 		have_est_fee = t.expect([fee_desc+': ','OK? (Y/n): ']) == 1
 		if have_est_fee and not interactive_fee:
@@ -66,7 +64,7 @@ class TestSuiteShared(object):
 		else:
 			if have_est_fee:
 				t.send('n')
-				if g.coin == 'BCH' or g.proto.base_coin == 'ETH': # TODO: pexpect race condition?
+				if self.proto.coin == 'BCH' or self.proto.base_coin == 'ETH': # TODO: pexpect race condition?
 					time.sleep(0.1)
 			if eth_fee_res:
 				t.expect('or gas price: ',interactive_fee+'\n')
@@ -76,6 +74,10 @@ class TestSuiteShared(object):
 			t.expect('OK? (Y/n): ','y')
 
 		t.expect('(Y/n): ','\n')     # chg amt OK?
+
+		if 'confirm_non_mmgen' in tweaks:
+			t.expect('Continue? (Y/n)','\n')
+
 		t.do_comment(add_comment)
 		t.view_tx(view)
 		if not txdo:
@@ -225,7 +227,7 @@ class TestSuiteShared(object):
 		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
 		if check_ref:
 			chk_ref = (self.chk_data[self.test_name] if passgen else
-						self.chk_data[self.test_name][self.fork][g.proto.testnet])
+						self.chk_data[self.test_name][self.fork][self.proto.testnet])
 			cmp_or_die(chk,chk_ref,desc='{}list data checksum'.format(ftype))
 		return t
 
@@ -241,7 +243,7 @@ class TestSuiteShared(object):
 		t.passphrase(wcls.desc,self.wpasswd)
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:
-			chk_ref = self.chk_data[self.test_name][self.fork][g.proto.testnet]
+			chk_ref = self.chk_data[self.test_name][self.fork][self.proto.testnet]
 			cmp_or_die(chk,chk_ref,desc='key-address list data checksum')
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(self.usr_rand_chars)

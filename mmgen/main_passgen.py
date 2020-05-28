@@ -120,7 +120,7 @@ FMT CODES:
 			dpf=PasswordList.dfl_pw_fmt,
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
 		),
-		'notes': lambda s: s.format(
+		'notes': lambda help_notes,s: s.format(
 				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],
 				ml=MMGenPWIDString.max_len,
 				fs="', '".join(MMGenPWIDString.forbidden),
@@ -147,7 +147,11 @@ sf = get_seed_file(cmd_args,1)
 pw_fmt = opt.passwd_fmt or PasswordList.dfl_pw_fmt
 pw_len = pwi[pw_fmt].dfl_len // 2 if opt.passwd_len in ('h','H') else opt.passwd_len
 
+from .protocol import init_proto
+proto = init_proto('btc') # TODO: get rid of dummy proto
+
 PasswordList(
+	proto           = proto,
 	pw_id_str       = pw_id_str,
 	pw_len          = pw_len,
 	pw_fmt          = pw_fmt,
@@ -158,6 +162,7 @@ do_license_msg()
 ss = Wallet(sf)
 
 al = PasswordList(
+	proto     = proto,
 	seed      = ss.seed,
 	pw_idxs   = pw_idxs,
 	pw_id_str = pw_id_str,

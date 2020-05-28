@@ -228,7 +228,7 @@ class RPCClient(MMGenObject):
 		if g.rpc_user:
 			user,passwd = (g.rpc_user,g.rpc_password)
 		else:
-			user,passwd = get_coin_daemon_cfg_options(('rpcuser','rpcpassword')).values()
+			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
 
 		if user and passwd:
 			self.auth = auth_data(user,passwd)
@@ -318,52 +318,29 @@ class RPCClient(MMGenObject):
 					except: m = f': {text}'
 			raise RPCFailure(f'{s.value} {s.name}{m}')
 
-
 class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 	auth_type = 'basic'
 	has_auth_cookie = True
 
-	def __init__(self,*args,**kwargs): pass
+	def __init__(self,*args,**kwargs):
+		pass
 
-	async def __ainit__(self,proto,backend):
-
-		async def check_chainfork_mismatch(block0):
-			try:
-				if block0 != self.proto.block0:
-					raise ValueError(f'Invalid Genesis block for {self.proto.cls_name} protocol')
-				for fork in self.proto.forks:
-					if fork.height == None or self.blockcount < fork.height:
-						break
-					if fork.hash != await self.call('getblockhash',fork.height):
-						die(3,f'Bad block hash at fork block {fork.height}. Is this the {fork.name} chain?')
-			except Exception as e:
-				die(2,"{}\n'{c}' requested, but this is not the {c} chain!".format(e.args[0],c=g.coin))
-
-		def check_chaintype_mismatch():
-			try:
-				if g.proto.regtest:
-					assert g.chain == 'regtest', '--regtest option selected, but chain is not regtest'
-				if g.proto.testnet:
-					assert g.chain != 'mainnet', '--testnet option selected, but chain is mainnet'
-				else:
-					assert g.chain == 'mainnet', 'mainnet selected, but chain is not mainnet'
-			except Exception as e:
-				die(1,'{}\nChain is {}!'.format(e.args[0],g.chain))
+	async def __ainit__(self,proto,daemon,backend):
 
 		self.proto = proto
-		user,passwd = get_coin_daemon_cfg_options(('rpcuser','rpcpassword')).values()
+		self.daemon_data_dir = daemon.datadir
 
 		super().__init__(
-			host = g.rpc_host or 'localhost',
-			port = g.rpc_port or self.proto.rpc_port)
+			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
+			port = daemon.rpc_port )
 
-		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests socket
+		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests daemon is listening
 		self.set_backend(backend) # backend requires self.auth
 
 		if g.bob or g.alice:
 			from .regtest import MMGenRegtest
-			MMGenRegtest(g.coin).switch_user(('alice','bob')[g.bob],quiet=True)
+			MMGenRegtest(self.proto.coin).switch_user(('alice','bob')[g.bob],quiet=True)
 
 		self.cached = {}
 		(
@@ -378,16 +355,27 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 				('getblockhash',(0,)),
 			))
 		self.daemon_version = self.cached['networkinfo']['version']
-		g.chain = self.cached['blockchaininfo']['chain']
+		self.chain = self.cached['blockchaininfo']['chain']
 
 		tip = await self.call('getblockhash',self.blockcount)
 		self.cur_date = (await self.call('getblockheader',tip))['time']
-		if g.chain != 'regtest':
-			g.chain += 'net'
-		assert g.chain in g.chains
-		check_chaintype_mismatch()
+		if self.chain != 'regtest':
+			self.chain += 'net'
+		assert self.chain in self.proto.networks
 
-		if g.chain == 'mainnet': # skip this for testnet, as Genesis block may change
+		async def check_chainfork_mismatch(block0):
+			try:
+				if block0 != self.proto.block0:
+					raise ValueError(f'Invalid Genesis block for {self.proto.cls_name} protocol')
+				for fork in self.proto.forks:
+					if fork.height == None or self.blockcount < fork.height:
+						break
+					if fork.hash != await self.call('getblockhash',fork.height):
+						die(3,f'Bad block hash at fork block {fork.height}. Is this the {fork.name} chain?')
+			except Exception as e:
+				die(2,'{!s}\n{c!r} requested, but this is not the {c} chain!'.format(e,c=self.proto.coin))
+
+		if self.chain == 'mainnet': # skip this for testnet, as Genesis block may change
 			await check_chainfork_mismatch(block0)
 
 		self.caps = ('full_node',)
@@ -397,15 +385,59 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 			if len((await self.call('help',func)).split('\n')) > 3:
 				self.caps += (cap,)
 
+	def get_daemon_cfg_fn(self):
+		# Use dirname() to remove 'bob' or 'alice' component
+		cfg_dir = os.path.dirname(g.data_dir) if self.proto.regtest else self.daemon_data_dir
+		return os.path.join(
+			cfg_dir,
+			(self.proto.is_fork_of or self.proto.name).lower() + '.conf' )
+
 	def get_daemon_auth_cookie_fn(self):
-		cdir = os.path.join(
-			self.proto.daemon_data_dir,
-			self.proto.daemon_data_subdir )
-		return os.path.join(cdir,'.cookie')
+		return os.path.join(
+			self.daemon_data_dir,
+			self.proto.daemon_data_subdir,
+			'.cookie' )
+
+	def get_daemon_cfg_options(self,req_keys):
+
+		fn = self.get_daemon_cfg_fn()
+		try:
+			lines = get_lines_from_file(fn,'',silent=not opt.verbose)
+		except:
+			vmsg(f'Warning: {fn!r} does not exist or is unreadable')
+			return dict((k,None) for k in req_keys)
+
+		def gen():
+			for key in req_keys:
+				val = None
+				for l in lines:
+					if l.startswith(key):
+						res = l.split('=',1)
+						if len(res) == 2 and not ' ' in res[1].strip():
+							val = res[1].strip()
+				yield (key,val)
+
+		return dict(gen())
 
 	def get_daemon_auth_cookie(self):
 		fn = self.get_daemon_auth_cookie_fn()
 		return get_lines_from_file(fn,'')[0] if file_is_readable(fn) else ''
+
+	def info(self,info_id):
+
+		def segwit_is_active():
+			d = self.cached['blockchaininfo']
+			if d['chain'] == 'regtest':
+				return True
+			if (    'bip9_softforks' in d
+					and 'segwit' in d['bip9_softforks']
+					and d['bip9_softforks']['segwit']['status'] == 'active'):
+				return True
+			if g.test_suite:
+				return True
+			return False
+
+		return locals()[info_id]()
 
 	rpcmethods = (
 		'backupwallet',
@@ -445,15 +477,16 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
-	def __init__(self,*args,**kwargs): pass
+	def __init__(self,*args,**kwargs):
+		pass
 
-	async def __ainit__(self,proto,backend):
-
+	async def __ainit__(self,proto,daemon,backend):
 		self.proto = proto
+		self.daemon_data_dir = daemon.datadir
 
 		super().__init__(
-			host = g.rpc_host or 'localhost',
-			port = g.rpc_port or self.proto.rpc_port )
+			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
+			port = daemon.rpc_port )
 
 		self.set_backend(backend)
 
@@ -468,7 +501,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
 		self.daemon_version = vi['version']
 		self.cur_date = int(bh['timestamp'],16)
-		g.chain = ch.replace(' ','_')
+		self.chain = ch.replace(' ','_')
 		self.caps = ('full_node',) if nk['capability'] == 'full' else ()
 
 		try:
@@ -550,17 +583,25 @@ class MoneroWalletRPCClient(RPCClient):
 		'refresh',       # start_height
 	)
 
-async def rpc_init(proto=None,backend=None):
-
-	proto = proto or g.proto
-	backend = backend or opt.rpc_backend
+async def rpc_init(proto,backend=None):
 
 	if not 'rpc' in proto.mmcaps:
 		die(1,f'Coin daemon operations not supported for {proto.name} protocol!')
 
-	g.rpc = await {
+	from .daemon import CoinDaemon
+	rpc = await {
 		'bitcoind': BitcoinRPCClient,
 		'parity':   EthereumRPCClient,
-	}[proto.daemon_family](proto=proto,backend=backend)
+	}[proto.daemon_family](
+		proto   = proto,
+		daemon  = CoinDaemon(proto=proto,test_suite=g.test_suite),
+		backend = backend or opt.rpc_backend )
 
-	return g.rpc
+	if proto.chain_name != rpc.chain:
+		raise RPCChainMismatch(
+			'{} protocol chain is {}, but coin daemon chain is {}'.format(
+				proto.cls_name,
+				proto.chain_name.upper(),
+				rpc.chain.upper() ))
+
+	return rpc

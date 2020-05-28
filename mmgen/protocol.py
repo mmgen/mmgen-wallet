@@ -25,7 +25,7 @@ from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
-from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt
+from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt,CoinAddr,MMGenAddrType,PrivKey
 from .globalvars import g
 import mmgen.bech32 as bech32
 
@@ -87,14 +87,61 @@ class CoinProtocol(MMGenObject):
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
 
-		def __init__(self,coin,name,network):
-			self.coin     = coin.upper()
-			self.dcoin    = self.coin # display coin - for Ethereum, is set to ERC20 token name
-			self.name     = name
-			self.cls_name = type(self).__name__
-			self.network  = network
-			self.testnet  = network in ('testnet','regtest')
-			self.regtest  = network == 'regtest'
+		def __init__(self,coin,name,network,tokensym=None):
+			self.coin       = coin.upper()
+			self.name       = name
+			self.network    = network
+			self.tokensym   = tokensym
+			self.cls_name   = type(self).__name__
+			self.testnet    = network in ('testnet','regtest')
+			self.regtest    = network == 'regtest'
+			self.network_id = coin.lower() + {
+				'mainnet': '',
+				'testnet': '_tn',
+				'regtest': '_rt',
+			}[network]
+
+			if not hasattr(self,'chain_name'):
+				self.chain_name = self.network
+
+			if self.tokensym:
+				assert isinstance(self,CoinProtocol.Ethereum), 'CoinProtocol.Base_chk1'
+
+		@property
+		def dcoin(self):
+			return self.coin
+
+		@classmethod
+		def chain_name_to_network(cls,coin,chain_name):
+			"""
+			The generic networks 'mainnet', 'testnet' and 'regtest' are required for all coins
+			that support transaction operations.
+
+			For protocols that have specific names for chains corresponding to these networks,
+			the attribute 'chain_name' is used, while 'network' retains the generic name.
+			For Bitcoin and Bitcoin forks, 'network' and 'chain_name' are equivalent.
+			"""
+			for network,suf in (
+					('mainnet',''),
+					('testnet','Testnet'),
+					('regtest','Regtest' ),
+				):
+				name = CoinProtocol.coins[coin.lower()].name + suf
+				proto = getattr(CoinProtocol,name)
+				proto_chain_name = getattr(proto,'chain_name',None) or network
+				if chain_name == proto_chain_name:
+					return network
+			raise ValueError(f'{chain_name}: unrecognized chain name for coin {coin}')
+
+		@staticmethod
+		def parse_network_id(network_id):
+			nid = namedtuple('parsed_network_id',['coin','network'])
+			if network_id.endswith('_tn'):
+				return nid(network_id[:-3],'testnet')
+			elif network_id.endswith('_rt'):
+				return nid(network_id[:-3],'regtest')
+			else:
+				return nid(network_id,'mainnet')
 
 		def cap(self,s):
 			return s in self.caps
@@ -118,7 +165,19 @@ class CoinProtocol(MMGenObject):
 
 			return False
 
+		def coin_addr(self,addr):
+			return CoinAddr(proto=self,addr=addr)
+
+		def addr_type(self,id_str,on_fail='die'):
+			return MMGenAddrType(proto=self,id_str=id_str,on_fail=on_fail)
+
+		def priv_key(self,s,on_fail='die'):
+			return PrivKey(proto=self,s=s,on_fail=on_fail)
+
 	class Secp256k1(Base):
+		"""
+		Bitcoin and Ethereum protocols inherit from this class
+		"""
 		secp256k1_ge = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 		privkey_len  = 32
 
@@ -138,6 +197,9 @@ class CoinProtocol(MMGenObject):
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 
 	class Bitcoin(Secp256k1): # chainparams.cpp
+		"""
+		All Bitcoin code and chain forks inherit from this class
+		"""
 		mod_clsname     = 'Bitcoin'
 		daemon_name     = 'bitcoind'
 		daemon_family   = 'bitcoind'
@@ -146,7 +208,6 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num     = { 'std': '80' }
 		mmtypes         = ('L','C','S','B')
 		dfl_mmtype      = 'L'
-		data_subdir     = ''
 		rpc_port        = 8332
 		coin_amt        = BTCAmt
 		max_tx_fee      = BTCAmt('0.003')
@@ -237,7 +298,6 @@ class CoinProtocol(MMGenObject):
 	class BitcoinTestnet(Bitcoin):
 		addr_ver_bytes      = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num         = { 'std': 'ef' }
-		data_subdir         = 'testnet'
 		daemon_data_subdir  = 'testnet3'
 		rpc_port            = 18332
 		bech32_hrp          = 'tb'
@@ -268,7 +328,6 @@ class CoinProtocol(MMGenObject):
 		rpc_port       = 18442
 		addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num    = { 'std': 'ef' }
-		data_subdir    = 'testnet'
 		daemon_data_subdir = 'testnet3'
 
 	class BitcoinCashRegtest(BitcoinCashTestnet):
@@ -289,7 +348,6 @@ class CoinProtocol(MMGenObject):
 	class B2XTestnet(B2X):
 		addr_ver_bytes     = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num        = { 'std': 'ef' }
-		data_subdir        = 'testnet'
 		daemon_data_subdir = 'testnet5'
 		rpc_port           = 18338
 
@@ -313,7 +371,6 @@ class CoinProtocol(MMGenObject):
 		# addr ver nums same as Bitcoin testnet, except for 'p2sh'
 		addr_ver_bytes     = { '6f':'p2pkh', '3a':'p2sh', 'c4':'p2sh' }
 		wif_ver_num        = { 'std': 'ef' } # same as Bitcoin testnet
-		data_subdir        = 'testnet'
 		daemon_data_subdir = 'testnet4'
 		rpc_port           = 19332
 		bech32_hrp         = 'tltc'
@@ -340,9 +397,10 @@ class CoinProtocol(MMGenObject):
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 
-		data_subdir   = ''
 		daemon_name   = 'parity'
 		daemon_family = 'parity'
+		daemon_data_dir = os.path.join(g.home_dir,'.local','share','io.parity.ethereum')
+		daemon_data_subdir = ''
 		rpc_port      = 8545
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')
@@ -352,6 +410,10 @@ class CoinProtocol(MMGenObject):
 		mmcaps        = ('key','addr','rpc','tx')
 		base_proto    = 'Ethereum'
 		avg_bdi       = 15
+
+		@property
+		def dcoin(self):
+			return self.tokensym or self.coin
 
 		def parse_addr(self,addr):
 			from .util import is_hex_str_lc
@@ -367,9 +429,11 @@ class CoinProtocol(MMGenObject):
 			return pubkey_hash
 
 	class EthereumTestnet(Ethereum):
-		data_subdir = 'testnet'
 		rpc_port    = 8547 # start Parity with --jsonrpc-port=8547 or --ports-shift=2
 		chain_name  = 'kovan'
+
+	class EthereumRegtest(EthereumTestnet):
+		chain_name  = 'developmentchain'
 
 	class EthereumClassic(Ethereum):
 		rpc_port   = 8555 # start Parity with --jsonrpc-port=8555 or --ports-shift=10
@@ -378,6 +442,9 @@ class CoinProtocol(MMGenObject):
 	class EthereumClassicTestnet(EthereumClassic):
 		rpc_port   = 8557 # start Parity with --jsonrpc-port=8557 or --ports-shift=12
 		chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
+
+	class EthereumClassicRegtest(EthereumClassicTestnet):
+		chain_name  = 'developmentchain'
 
 	class Zcash(Bitcoin):
 		base_coin      = 'ZEC'
@@ -420,7 +487,6 @@ class CoinProtocol(MMGenObject):
 		dfl_mmtype     = 'M'
 		pubkey_type    = 'monero' # required by DummyWIF
 		avg_bdi        = 120
-		data_subdir    = ''
 		privkey_len    = 32
 		mmcaps         = ('key','addr')
 
@@ -455,17 +521,21 @@ class CoinProtocol(MMGenObject):
 	class MoneroTestnet(Monero):
 		addr_ver_bytes = { '35': 'monero', '3f': 'monero_sub' }
 
-def init_proto(coin,testnet=False,regtest=False,network=None):
+def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None):
 
 	assert type(testnet) == bool, 'init_proto_chk1'
 	assert type(regtest) == bool, 'init_proto_chk2'
+	assert coin or network_id, 'init_proto_chk3'
+	assert not (coin and network_id), 'init_proto_chk4'
 
-	if network is None:
-		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
+	if network_id:
+		coin,network = CoinProtocol.Base.parse_network_id(network_id)
+	elif network:
+		assert network in CoinProtocol.Base.networks, f'init_proto_chk5 - {network!r}: invalid network'
+		assert testnet == False, 'init_proto_chk6'
+		assert regtest == False, 'init_proto_chk7'
 	else:
-		assert network in CoinProtocol.Base.networks
-		assert testnet == False
-		assert regtest == False
+		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
 
 	coin = coin.lower()
 	if coin not in CoinProtocol.coins:
@@ -478,9 +548,18 @@ def init_proto(coin,testnet=False,regtest=False,network=None):
 	proto_name = name + ('' if network == 'mainnet' else network.capitalize())
 
 	return getattr(CoinProtocol,proto_name)(
-		coin    = coin,
-		name    = name,
-		network = network )
+		coin      = coin,
+		name      = name,
+		network   = network,
+		tokensym  = tokensym )
+
+def init_proto_from_opts():
+	from .opts import opt
+	return init_proto(
+		coin      = g.coin,
+		testnet   = g.testnet,
+		regtest   = g.regtest,
+		tokensym  = g.token )
 
 def init_genonly_altcoins(usr_coin=None,testnet=False):
 	"""

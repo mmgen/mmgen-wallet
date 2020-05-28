@@ -21,7 +21,7 @@ class unit_test(object):
 
 	def run_test(self,name,ut):
 
-		async def test_tx(txhex,desc,n):
+		async def test_tx(tx_proto,tx_hex,desc,n):
 
 			def has_nonstandard_outputs(outputs):
 				for o in outputs:
@@ -30,11 +30,12 @@ class unit_test(object):
 						return True
 				return False
 
-			d = await g.rpc.call('decoderawtransaction',txhex)
+			rpc = await rpc_init(proto=tx_proto)
+			d = await rpc.call('decoderawtransaction',tx_hex)
 
 			if has_nonstandard_outputs(d['vout']): return False
 
-			dt = DeserializedTX(txhex)
+			dt = DeserializedTX(tx_proto,tx_hex)
 
 			if opt.verbose:
 				Msg('\n====================================================')
@@ -101,8 +102,11 @@ class unit_test(object):
 			n = 1
 			for e in data:
 				if type(e[0]) == list:
-					await rpc_init()
-					await test_tx(e[1],desc,n)
+					await test_tx(
+						tx_proto = init_proto('btc'),
+						tx_hex   = e[1],
+						desc     = desc,
+						n        = n )
 					n += 1
 				else:
 					desc = e[0]
@@ -114,18 +118,18 @@ class unit_test(object):
 				#	('bch',False,'test/ref/460D4D-BCH[10.19764,tl=1320969600].rawtx')
 				)
 			print_info('test/ref/*rawtx','MMGen reference')
-			g.rpc_port = None
 			for n,(coin,testnet,fn) in enumerate(fns):
-				g.proto = init_proto(coin,testnet=testnet)
-				g.proto.daemon_data_dir = 'test/daemons/' + coin
-				g.proto.rpc_port = CoinDaemon(coin + ('','_tn')[testnet],test_suite=True).rpc_port
-				await rpc_init()
-				await test_tx(MMGenTX(fn).hex,fn,n+1)
+				tx = MMGenTX.Unsigned(filename=fn)
+				await test_tx(
+					tx_proto = tx.proto,
+					tx_hex   = tx.hex,
+					desc     = fn,
+					n        = n+1 )
 			Msg('OK')
 
 		start_test_daemons('btc','btc_tn') # ,'bch')
-		run_session(test_mmgen_txs(),do_rpc_init=False)
-		run_session(test_core_vectors(),do_rpc_init=False)
+		run_session(test_core_vectors())
+		run_session(test_mmgen_txs())
 		stop_test_daemons('btc','btc_tn') # ,'bch')
 
 		return True

@@ -137,7 +137,7 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 		return TestSuiteMain.__init__(self,trunner,cfgs,spawn)
 
 	def ref_tx_addrgen(self,atype):
-		if atype not in g.proto.mmtypes:
+		if atype not in self.proto.mmtypes:
 			return
 		t = self.spawn('mmgen-addrgen',['--outdir='+self.tmpdir,'--type='+atype,dfl_words_file,'1-2'])
 		t.read()
@@ -150,8 +150,8 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 
 	def ref_tx_txcreate(self,f1,f2,f3,f4):
 		sources = ['31','32']
-		if 'S' in g.proto.mmtypes: sources += ['33']
-		if 'B' in g.proto.mmtypes: sources += ['34']
+		if 'S' in self.proto.mmtypes: sources += ['33']
+		if 'B' in self.proto.mmtypes: sources += ['34']
 		return self.txcreate_common(
 									addrs_per_wallet = 2,
 									sources          = sources,

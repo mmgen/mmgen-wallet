@@ -230,7 +230,6 @@ class TestSuiteAutosign(TestSuiteBase):
 		if simulate and not opt.exact_output:
 			rmsg('This command must be run with --exact-output enabled!')
 			return False
-
 		network_ids = [c+'_tn' for c in daemon_coins] + daemon_coins
 		start_test_daemons(*network_ids)
 

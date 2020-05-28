@@ -116,6 +116,11 @@ def fmt_list(l,fmt='dfl',indent=''):
 CUR_HIDE = '\033[?25l'
 CUR_SHOW = '\033[?25h'
 
+def exit_if_mswin(feature):
+	if g.platform == 'win':
+		m = capfirst(feature) + ' not supported on the MSWin / MSYS2 platform'
+		ydie(1,m)
+
 def warn_altcoins(coinsym,trust_level):
 	if trust_level > 3:
 		return
@@ -817,35 +822,6 @@ def do_license_msg(immed=False):
 			msg_r('\r')
 	msg('')
 
-# TODO: these belong in protocol.py
-def get_coin_daemon_cfg_fn():
-	# Use dirname() to remove 'bob' or 'alice' component
-	cfg_dir = os.path.dirname(g.data_dir) if g.proto.regtest else g.proto.daemon_data_dir
-	return os.path.join(
-		cfg_dir,
-		(g.proto.is_fork_of or g.proto.name).lower() + '.conf' )
-
-def get_coin_daemon_cfg_options(req_keys):
-
-	fn = get_coin_daemon_cfg_fn()
-	try:
-		lines = get_lines_from_file(fn,'',silent=not opt.verbose)
-	except:
-		vmsg(f'Warning: {fn!r} does not exist or is unreadable')
-		return dict((k,None) for k in req_keys)
-
-	def gen():
-		for key in req_keys:
-			val = None
-			for l in lines:
-				if l.startswith(key):
-					res = l.split('=',1)
-					if len(res) == 2 and not ' ' in res[1].strip():
-						val = res[1].strip()
-			yield (key,val)
-
-	return dict(gen())
-
 def format_par(s,indent=0,width=80,as_list=False):
 	words,lines = s.split(),[]
 	assert width >= indent + 4,'width must be >= indent + 4'
@@ -857,19 +833,29 @@ def format_par(s,indent=0,width=80,as_list=False):
 		lines.append(' '*indent + line)
 	return lines if as_list else '\n'.join(lines) + '\n'
 
-# module loading magic for tx.py and tw.py
-def altcoin_subclass(cls,mod_id,cls_name):
-	if cls.__name__ != cls_name:
+def altcoin_subclass(cls,proto,mod_dir):
+	"""
+	magic module loading and class retrieval
+	"""
+	from .protocol import CoinProtocol
+	if isinstance(proto,CoinProtocol.Bitcoin):
 		return cls
-	mod_dir = g.proto.base_coin.lower()
-	tname = 'Token' if g.token else ''
+
+	modname = f'mmgen.altcoins.{proto.base_coin.lower()}.{mod_dir}'
+
 	import importlib
-	modname = f'mmgen.altcoins.{mod_dir}.{mod_id}'
-	clsname = g.proto.mod_clsname + tname + cls_name
-	try:
+	if mod_dir == 'tx': # nested classes
+		outer_clsname,inner_clsname = (
+			proto.mod_clsname
+			+ ('Token' if proto.tokensym else '')
+			+ cls.__qualname__ ).split('.')
+		return getattr(getattr(importlib.import_module(modname),outer_clsname),inner_clsname)
+	else:
+		clsname = (
+			proto.mod_clsname
+			+ ('Token' if proto.tokensym else '')
+			+ cls.__name__ )
 		return getattr(importlib.import_module(modname),clsname)
-	except ImportError:
-		return cls
 
 # decorator for TrackingWallet
 def write_mode(orig_func):
@@ -880,13 +866,8 @@ def write_mode(orig_func):
 		return orig_func(self,*args,**kwargs)
 	return f
 
-def get_network_id(coin,testnet):
-	assert type(testnet) == bool
-	return coin.lower() + ('','_tn')[testnet]
-
-def run_session(callback,do_rpc_init=True,proto=None,backend=None):
+def run_session(callback,backend=None):
 	backend = backend or opt.rpc_backend
-	proto = proto or g.proto
 	import asyncio
 	async def do():
 		if backend == 'aiohttp':
@@ -895,16 +876,10 @@ def run_session(callback,do_rpc_init=True,proto=None,backend=None):
 				headers = { 'Content-Type': 'application/json' },
 				connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len),
 			) as g.session:
-				if do_rpc_init:
-					from .rpc import rpc_init
-					await rpc_init(proto=proto,backend=backend)
 				ret = await callback
 			g.session = None
 			return ret
 		else:
-			if do_rpc_init:
-				from .rpc import rpc_init
-				await rpc_init(proto=proto,backend=backend)
 			return await callback
 
 	# return asyncio.run(do()) # Python 3.7+

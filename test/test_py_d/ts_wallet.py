@@ -48,7 +48,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 					'hic_wallet_old':  '1378FC64-B55E9958-D85FF20C[192,1].incog-old.offset123',
 				},
 				'256': {
-					'ref_wallet':      '98831F3A-{}[256,1].mmdat'.format(('27F2BF93','E2687906')[g.proto.testnet]),
+					'ref_wallet':      '98831F3A-27F2BF93[256,1].mmdat',
 					'ic_wallet':       '98831F3A-5482381C-18460FB1[256,1].mmincog',
 					'ic_wallet_hex':   '98831F3A-1630A9F2-870376A9[256,1].mmincox',
 

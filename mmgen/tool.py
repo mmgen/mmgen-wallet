@@ -217,13 +217,6 @@ def _process_result(ret,pager=False,print_result=False):
 
 from .obj import MMGenAddrType
 
-def init_generators(arg=None):
-	global at,kg,ag
-	at = MMGenAddrType((hasattr(opt,'type') and opt.type) or g.proto.dfl_mmtype)
-	if arg != 'at':
-		kg = KeyGenerator(at)
-		ag = AddrGenerator(at)
-
 def conv_cls_bip39():
 	from .bip39 import bip39
 	return bip39
@@ -274,7 +267,22 @@ class MMGenToolCmdMeta(type):
 	def user_commands(cls):
 		return {k:v for k,v in cls.__dict__.items() if k in cls.methods}
 
-class MMGenToolCmds(metaclass=MMGenToolCmdMeta): pass
+class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
+
+	def __init__(self,proto=None):
+		from .protocol import init_proto_from_opts
+		self.proto = proto or init_proto_from_opts()
+		if g.token:
+			self.proto.tokensym = g.token.upper()
+
+	def init_generators(self,arg=None):
+		global at,kg,ag
+		at = MMGenAddrType(
+			proto = self.proto,
+			id_str = getattr(opt,'type',None) or self.proto.dfl_mmtype )
+		if arg != 'at':
+			kg = KeyGenerator(self.proto,at)
+			ag = AddrGenerator(self.proto,at)
 
 class MMGenToolCmdMisc(MMGenToolCmds):
 	"miscellaneous commands"
@@ -408,16 +416,18 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	"""
 	def randwif(self):
 		"generate a random private key in WIF format"
-		init_generators('at')
+		self.init_generators('at')
 		return PrivKey(
+			self.proto,
 			get_random(32),
 			pubkey_type = at.pubkey_type,
 			compressed  = at.compressed ).wif
 
 	def randpair(self):
 		"generate a random private key/address pair"
-		init_generators()
+		self.init_generators()
 		privhex = PrivKey(
+			self.proto,
 			get_random(32),
 			pubkey_type = at.pubkey_type,
 			compressed  = at.compressed )
@@ -427,20 +437,23 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def wif2hex(self,wifkey:'sstr'):
 		"convert a private key from WIF to hex format"
 		return PrivKey(
+			self.proto,
 			wif = wifkey )
 
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
-		init_generators('at')
+		self.init_generators('at')
 		return PrivKey(
+			self.proto,
 			bytes.fromhex(privhex),
 			pubkey_type = at.pubkey_type,
 			compressed  = at.compressed ).wif
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
-		init_generators()
+		self.init_generators()
 		privhex = PrivKey(
+			self.proto,
 			wif = wifkey )
 		addr = ag.to_addr(kg.to_pubhex(privhex))
 		return addr
@@ -448,16 +461,18 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
-		init_generators()
+		self.init_generators()
 		privhex = PrivKey(
+			self.proto,
 			wif = wifkey )
 		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
-		init_generators()
+		self.init_generators()
 		pubhex = kg.to_pubhex(PrivKey(
+			self.proto,
 			wif = wifkey ))
 		addr = ag.to_addr(pubhex)
 		rs = ag.to_segwit_redeem_script(pubhex)
@@ -465,8 +480,9 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
-		init_generators()
+		self.init_generators()
 		pk = PrivKey(
+			self.proto,
 			bytes.fromhex(privhex),
 			compressed  = at.compressed,
 			pubkey_type = at.pubkey_type )
@@ -480,14 +496,14 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
 		if opt.type == 'segwit':
-			return g.proto.pubhex2segwitaddr(pubkeyhex)
+			return self.proto.pubhex2segwitaddr(pubkeyhex)
 		else:
 			return self.pubhash2addr(hash160(pubkeyhex))
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
 		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
-		return g.proto.pubhex2redeem_script(pubkeyhex)
+		return self.proto.pubhex2redeem_script(pubkeyhex)
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
@@ -499,25 +515,25 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
 		if opt.type == 'bech32':
-			return g.proto.pubhash2bech32addr(pubhashhex)
+			return self.proto.pubhash2bech32addr(pubhashhex)
 		else:
-			init_generators('at')
-			return g.proto.pubhash2addr(pubhashhex,at.addr_fmt=='p2sh')
+			self.init_generators('at')
+			return self.proto.pubhash2addr(pubhashhex,at.addr_fmt=='p2sh')
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
 		from .tx import addr2pubhash
-		return addr2pubhash(CoinAddr(addr))
+		return addr2pubhash(self.proto,CoinAddr(self.proto,addr))
 
 	def addr2scriptpubkey(self,addr:'sstr'):
 		"convert coin address to scriptPubKey"
 		from .tx import addr2scriptPubKey
-		return addr2scriptPubKey(CoinAddr(addr))
+		return addr2scriptPubKey(self.proto,CoinAddr(self.proto,addr))
 
 	def scriptpubkey2addr(self,hexstr:'sstr'):
 		"convert scriptPubKey to coin address"
 		from .tx import scriptPubKey2addr
-		return scriptPubKey2addr(hexstr)[0]
+		return scriptPubKey2addr(self.proto,hexstr)[0]
 
 class MMGenToolCmdMnemonic(MMGenToolCmds):
 	"""
@@ -623,13 +639,13 @@ class MMGenToolCmdFile(MMGenToolCmds):
 		opt.yes = True
 		opt.quiet = True
 		from .addr import AddrList,KeyAddrList,PasswordList
-		ret = locals()[objname](mmgen_addrfile)
+		ret = locals()[objname](self.proto,mmgen_addrfile)
 		if opt.verbose:
 			if ret.al_id.mmtype.name == 'password':
 				fs = 'Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'
 				msg(fs.format(capfirst(ret.pw_info[ret.pw_fmt].desc),ret.pw_len,ret.pw_id_str))
 			else:
-				msg('Base coin:   {} {}'.format(ret.base_coin,('Mainnet','Testnet')[ret.is_testnet]))
+				msg(f'Base coin:   {ret.base_coin} {capfirst(ret.network)}')
 				msg('MMType:      {}'.format(capfirst(ret.al_id.mmtype.name)))
 			msg('List length: {}'.format(len(ret.data)))
 		return ret.chksum
@@ -646,7 +662,7 @@ class MMGenToolCmdFile(MMGenToolCmds):
 		"compute checksum for MMGen password file"
 		return self._file_chksum(mmgen_passwdfile,'PasswordList')
 
-	def txview( varargs_call_sig = { # hack to allow for multiple filenames
+	async def txview( varargs_call_sig = { # hack to allow for multiple filenames
 					'args': (
 						'mmgen_tx_file(s)',
 						'pager',
@@ -667,15 +683,23 @@ class MMGenToolCmdFile(MMGenToolCmds):
 		file_sort = kwargs.get('filesort') or 'mtime'
 
 		from .filename import MMGenFileList
-		from .tx import MMGenTX,MMGenTxForSigning
+		from .tx import MMGenTX
 		flist = MMGenFileList(infiles,ftype=MMGenTX)
 		flist.sort_by_age(key=file_sort) # in-place sort
 
-		def gen():
-			for fn in flist.names():
-				yield (MMGenTxForSigning,MMGenTX)[fn.endswith('.sigtx')](fn).format_view(terse=terse,sort=tx_sort)
+		async def process_file(fn):
+			if fn.endswith(MMGenTX.Signed.ext):
+				tx = MMGenTX.Signed(
+					filename   = fn,
+					quiet_open = True,
+					tw         = await MMGenTX.Signed.get_tracking_wallet(fn) )
+			else:
+				tx = MMGenTX.Unsigned(
+					filename   = fn,
+					quiet_open = True )
+			return tx.format_view(terse=terse,sort=tx_sort)
 
-		return ('—'*77+'\n').join(gen()).rstrip()
+		return ('—'*77+'\n').join([await process_file(fn) for fn in flist.names()]).rstrip()
 
 class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	"""
@@ -841,7 +865,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 
 	def gen_addr(self,mmgen_addr:str,wallet='',target='addr'):
 		"generate a single MMGen address from default or specified wallet"
-		addr = MMGenID(mmgen_addr)
+		addr = MMGenID(self.proto,mmgen_addr)
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
 		from .wallet import Wallet
@@ -850,6 +874,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 			m = 'Seed ID of requested address ({}) does not match wallet ({})'
 			die(1,m.format(addr.sid,ss.seed.sid))
 		al = AddrList(
+			proto     = self.proto,
 			seed      = ss.seed,
 			addr_idxs = AddrIdxList(str(addr.idx)),
 			mmtype    = addr.mmtype )
@@ -865,7 +890,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 	async def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from .tw import TwGetBalance
-		return (await TwGetBalance(minconf,quiet)).format()
+		return (await TwGetBalance(self.proto,minconf,quiet)).format()
 
 	async def listaddress(self,
 					mmgen_addr:str,
@@ -909,9 +934,9 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 			if len(a) != 2:
 				m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
 				die(1,m.format(mmgen_addrs))
-			usr_addr_list = [MMGenID('{}:{}'.format(a[0],i)) for i in AddrIdxList(a[1])]
+			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
-		al = await TwAddrList(usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
+		al = await TwAddrList(self.proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
 		if not al:
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
 		return await al.format(showbtcaddrs,sort,show_age,age_fmt or 'confs')
@@ -926,7 +951,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				show_mmid = True,
 				wide_show_confs = True):
 		"view tracking wallet"
-		twuo = await TwUnspentOutputs(minconf=minconf)
+		twuo = await TwUnspentOutputs(self.proto,minconf=minconf)
 		await twuo.get_unspent_data(reverse_sort=reverse)
 		twuo.age_fmt = age_fmt
 		twuo.show_mmid = show_mmid
@@ -940,7 +965,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
 		from .tw import TrackingWallet
-		await (await TrackingWallet(mode='w')).add_label(mmgen_or_coin_addr,label,on_fail='raise')
+		await (await TrackingWallet(self.proto,mode='w')).add_label(mmgen_or_coin_addr,label,on_fail='raise')
 		return True
 
 	async def remove_label(self,mmgen_or_coin_addr:str):
@@ -951,7 +976,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
 		from .tw import TrackingWallet
-		ret = await (await TrackingWallet(mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
+		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
 			msg("Address '{}' deleted from tracking wallet".format(ret))
 		return ret
@@ -1083,9 +1108,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		async def process_wallets(op):
 			opt.accept_defaults = opt.accept_defaults or op.accept_defaults
 			from .protocol import init_proto
-			g.proto = init_proto('xmr')
+			proto = init_proto('xmr',network='mainnet')
 			from .addr import AddrList
-			al = KeyAddrList(infile)
+			al = KeyAddrList(proto,infile)
 			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
 			dl = len(data)
 			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
@@ -1139,7 +1164,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			'create': wo('create', 'Creat', 'Generat', create, False),
 			'sync':   wo('sync',   'Sync',  'Sync',    sync,   True) }[op]
 		try:
-			run_session(process_wallets(op),do_rpc_init=False)
+			run_session(process_wallets(op))
 		except KeyboardInterrupt:
 			rdie(1,'\nUser interrupt\n')
 		except EOFError:
@@ -1191,6 +1216,7 @@ class tool_api(
 		"""
 		Initializer - takes no arguments
 		"""
+		super().__init__()
 		if not hasattr(opt,'version'):
 			opts.init()
 		opt.use_old_ed25519 = None
@@ -1205,7 +1231,8 @@ class tool_api(
 		from .protocol import init_proto,init_genonly_altcoins
 		altcoin_trust_level = init_genonly_altcoins(coinsym,testnet=network in ('testnet','regtest'))
 		warn_altcoins(coinsym,altcoin_trust_level)
-		return init_proto(coinsym,network=network)
+		self.proto = init_proto(coinsym,network=network) # FIXME
+		return self.proto
 
 	@property
 	def coins(self):
@@ -1214,18 +1241,18 @@ class tool_api(
 		from .altcoin import CoinInfo
 		return sorted(set(
 			[c.upper() for c in CoinProtocol.coins]
-			+ [c.symbol for c in CoinInfo.get_supported_coins(g.proto.network)]
+			+ [c.symbol for c in CoinInfo.get_supported_coins(self.proto.network)]
 		))
 
 	@property
 	def coin(self):
 		"""The currently configured coin"""
-		return g.coin
+		return self.proto.coin
 
 	@property
 	def network(self):
 		"""The currently configured network"""
-		return g.proto.network
+		return self.proto.network
 
 	@property
 	def addrtypes(self):
@@ -1233,14 +1260,14 @@ class tool_api(
 		The available address types for current coin/network pair.  The
 		first-listed is the default
 		"""
-		return [MMGenAddrType(t).name for t in g.proto.mmtypes]
+		return [MMGenAddrType(proto=proto,id_str=id_str).name for id_str in self.proto.mmtypes]
 
 	def print_addrtypes(self):
 		"""
 		Print the available address types for current coin/network pair along with
 		a description.  The first-listed is the default
 		"""
-		for t in [MMGenAddrType(s) for s in g.proto.mmtypes]:
+		for t in [MMGenAddrType(proto=proto,id_str=id_str).name for id_str in self.proto.mmtypes]:
 			print('{:<12} - {}'.format(t.name,t.desc))
 
 	@property

@@ -23,16 +23,18 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 
 from .common import *
 from .crypto import *
-from .addr import *
+from .addr import AddrList,KeyAddrList,KeyList,MMGenAddrType,AddrIdxList
 from .wallet import Wallet
 
 if g.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
+	gen_clsname = 'KeyAddrList'
 	gen_desc = 'secret keys'
 	opt_filter = None
 	note_addrkey = 'By default, both addresses and secret keys are generated.\n\n'
 else:
 	gen_what = 'addresses'
+	gen_clsname = 'AddrList'
 	gen_desc = 'addresses'
 	opt_filter = 'hbcdeEiHOkKlpzPqrStUv-'
 	note_addrkey = ''
@@ -102,16 +104,16 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda proto,s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
-			dmat="'{}' or '{}'".format(g.proto.dfl_mmtype,MMGenAddrType.mmtypes[g.proto.dfl_mmtype].name),
+			dmat="'{}' or '{}'".format(proto.dfl_mmtype,MMGenAddrType.mmtypes[proto.dfl_mmtype].name),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			pnm=g.proj_name,
 			what=gen_what,
 			g=g,
 		),
-		'notes': lambda s: s.format(
+		'notes': lambda help_notes,s: s.format(
 			n_addrkey=note_addrkey,
 			n_sw=help_notes('subwallet')+'\n\n',
 			n_pw=help_notes('passwd')+'\n\n',
@@ -126,7 +128,14 @@ FMT CODES:
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
 errmsg = "'{}': invalid parameter for --type option".format(opt.type)
-addr_type = MMGenAddrType(opt.type or g.proto.dfl_mmtype,errmsg=errmsg)
+
+from .protocol import init_proto_from_opts
+proto = init_proto_from_opts()
+
+addr_type = MMGenAddrType(
+	proto = proto,
+	id_str = opt.type or proto.dfl_mmtype,
+	errmsg = errmsg )
 
 if len(cmd_args) < 1: opts.usage()
 
@@ -143,8 +152,15 @@ ss = Wallet(sf)
 
 ss_seed = ss.seed if opt.subwallet is None else ss.seed.subseed(opt.subwallet,print_msg=True)
 
-i = (gen_what=='addresses') or bool(opt.no_addresses)*2
-al = (KeyAddrList,AddrList,KeyList)[i](seed=ss_seed,addr_idxs=idxs,mmtype=addr_type)
+if opt.no_addresses:
+	gen_clsname = 'KeyList'
+
+al = globals()[gen_clsname](
+	proto     = proto,
+	seed      = ss_seed,
+	addr_idxs = idxs,
+	mmtype    = addr_type )
+
 al.format()
 
 if al.gen_addrs and opt.print_checksum:

@@ -72,6 +72,7 @@ class GlobalContext:
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
 
+	coin                 = ''
 	token                = ''
 	debug                = False
 	debug_opts           = False
@@ -86,9 +87,6 @@ class GlobalContext:
 	accept_defaults      = False
 	use_internal_keccak_module = False
 
-	chain                = None
-	chains               = ('mainnet','testnet','regtest')
-
 	# rpc:
 	rpc_host             = ''
 	rpc_port             = 0
@@ -98,7 +96,6 @@ class GlobalContext:
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
 	rpc_fail_on_command  = ''
-	rpc                  = None # global RPC handle
 	aiohttp_rpc_queue_len = 16
 	use_cached_balances  = False
 
@@ -279,13 +276,5 @@ class GlobalContext:
 		for name in env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
-
-	@property
-	def coin(self):
-		return self.proto.coin
-
-	@property
-	def dcoin(self):
-		return self.proto.dcoin
 
 g = GlobalContext()

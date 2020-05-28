@@ -29,7 +29,9 @@ def usage(opts_data):
 	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
 	sys.exit(2)
 
-def print_help(po,opts_data,opt_filter):
+def print_help(proto,po,opts_data,opt_filter):
+
+	from mmgen.util import pdie # DEBUG
 
 	def parse_lines(text):
 		filtered = False
@@ -47,21 +49,40 @@ def print_help(po,opts_data,opt_filter):
 	c = opts_data['code']
 	nl = '\n  '
 
-	text = nl.join(parse_lines(t[opts_type]))
-
 	pn = opts_data['prog_name']
-	out = (
-		'  {:<{p}} {}'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
-		+ nl + '{:<{p}} {} {}'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
-		+ nl + opts_type.upper().replace('_',' ') + ':'
-		+ nl + (c[opts_type](text) if opts_type in c else text)
-	)
 
-	if opts_type == 'options' and 'notes' in t:
-		ntext = c['notes'](t['notes']) if 'notes' in c else t['notes']
-		out += nl + nl.join(ntext.rstrip().splitlines())
+	from mmgen.help import help_notes_func
+	def help_notes(k):
+		return help_notes_func(proto,k)
 
-	print(out)
+	def gen_arg_tuple(func,text):
+		d = {'proto': proto,'help_notes':help_notes}
+		for arg in func.__code__.co_varnames:
+			yield d[arg] if arg in d else text
+
+	def gen_text():
+		yield '  {:<{p}} {}'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
+		yield '{:<{p}} {} {}'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
+		yield opts_type.upper().replace('_',' ') + ':'
+
+		# process code for options
+		opts_text = nl.join(parse_lines(t[opts_type]))
+		if opts_type in c:
+			arg_tuple = tuple(gen_arg_tuple(c[opts_type],opts_text))
+			yield c[opts_type](*arg_tuple)
+		else:
+			yield opts_text
+
+		# process code for notes
+		if opts_type == 'options' and 'notes' in t:
+			notes_text = t['notes']
+			if 'notes' in c:
+				arg_tuple = tuple(gen_arg_tuple(c['notes'],notes_text))
+				notes_text = c['notes'](*arg_tuple)
+			for line in notes_text.splitlines():
+				yield line
+
+	print(nl.join(gen_text()))
 	sys.exit(0)
 
 def process_uopts(opts_data,short_opts,long_opts):

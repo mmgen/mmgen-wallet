@@ -54,6 +54,9 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
 
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
+
 cmd_data = {
 	'cryptocoin': {
 		'desc': 'Cryptocoin address/key commands',
@@ -83,7 +86,7 @@ cmd_data = {
 	},
 }
 
-if g.coin in ('BTC','LTC'):
+if proto.coin in ('BTC','LTC'):
 	cmd_data['cryptocoin']['cmd_data'].update({
 		'pubhex2redeem_script': ('privhex2pubhex','o3'),
 		'wif2redeem_script':    ('randpair','o3'),
@@ -117,9 +120,9 @@ cfg = {
 	}
 }
 
-ref_subdir  = '' if g.proto.base_coin == 'BTC' else g.proto.name.lower()
-altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
-tn_ext = ('','.testnet')[g.proto.testnet]
+ref_subdir  = '' if proto.base_coin == 'BTC' else proto.name.lower()
+altcoin_pfx = '' if proto.base_coin == 'BTC' else '-'+proto.base_coin
+tn_ext = ('','.testnet')[proto.testnet]
 
 mmgen_cmd = 'mmgen-tool'
 
@@ -180,18 +183,22 @@ if opt.list_names:
 	die(0,'\n{}\n  {}'.format(yellow('Untested commands:'),'\n  '.join(uc)))
 
 from mmgen.tx import is_wif,is_coin_addr
+def is_wif_loc(s):
+	return is_wif(proto,s)
+def is_coin_addr_loc(s):
+	return is_coin_addr(proto,s)
 
 msg_w = 35
 def test_msg(m):
 	m2 = 'Testing {}'.format(m)
 	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format(m2,w=msg_w+8))
 
-compressed = ('','compressed')['C' in g.proto.mmtypes]
-segwit     = ('','segwit')['S' in g.proto.mmtypes]
-bech32     = ('','bech32')['B' in g.proto.mmtypes]
-type_compressed_arg = ([],['--type=compressed'])['C' in g.proto.mmtypes]
-type_segwit_arg     = ([],['--type=segwit'])['S' in g.proto.mmtypes]
-type_bech32_arg     = ([],['--type=bech32'])['B' in g.proto.mmtypes]
+compressed = ('','compressed')['C' in proto.mmtypes]
+segwit     = ('','segwit')['S' in proto.mmtypes]
+bech32     = ('','bech32')['B' in proto.mmtypes]
+type_compressed_arg = ([],['--type=compressed'])['C' in proto.mmtypes]
+type_segwit_arg     = ([],['--type=segwit'])['S' in proto.mmtypes]
+type_bech32_arg     = ([],['--type=bech32'])['B' in proto.mmtypes]
 
 class MMGenToolTestUtils(object):
 
@@ -293,13 +300,13 @@ class MMGenToolTestCmds(object):
 		for n,k in enumerate(['',compressed]):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1)
-			ok_or_die(ret,is_wif,'WIF key')
+			ok_or_die(ret,is_wif_loc,'WIF key')
 	def randpair(self,name):
 		for n,k in enumerate(['',compressed,segwit,bech32]):
 			ao = ['--type='+k] if k else []
 			wif,addr = tu.run_cmd_out(name,add_opts=ao,Return=True,fn_idx=n+1,literal=True).split()
-			ok_or_die(wif,is_wif,'WIF key',skip_ok=True)
-			ok_or_die(addr,is_coin_addr,'Coin address')
+			ok_or_die(wif,is_wif_loc,'WIF key',skip_ok=True)
+			ok_or_die(addr,is_coin_addr_loc,'Coin address')
 	def wif2addr(self,name,f1,f2,f3,f4):
 		for n,f,k in (
 			(1,f1,''),

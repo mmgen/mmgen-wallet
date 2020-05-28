@@ -80,19 +80,23 @@ transaction reconfirmed before the timelock expires. Use at your own risk.
 """.format(pnm=g.proj_name)
 	},
 	'code': {
-		'options': lambda s: s.format(
-			oc=g.proto.forks[-1][2].upper(),
+		'options': lambda proto,s: s.format(
+			oc=proto.forks[-1][2].upper(),
 			bh='current block height'),
 	}
 }
 
 cmd_args = opts.init(opts_data,add_opts=['tx_fee','tx_fee_adj','comment_file'])
 
+from .protocol import init_proto_from_opts
+proto = init_proto_from_opts()
+
 die(1,'This command is disabled')
 
-opt.other_coin = opt.other_coin.upper() if opt.other_coin else g.proto.forks[-1][2].upper()
-if opt.other_coin.lower() not in [e[2] for e in g.proto.forks if e[3] == True]:
-	die(1,"'{}': not a replayable fork of {} chain".format(opt.other_coin,g.coin))
+# the following code is broken:
+opt.other_coin = opt.other_coin.upper() if opt.other_coin else proto.forks[-1][2].upper()
+if opt.other_coin.lower() not in [e[2] for e in proto.forks if e[3] == True]:
+	die(1,"'{}': not a replayable fork of {} chain".format(opt.other_coin,proto.coin))
 
 if len(cmd_args) != 2:
 	fs = 'This command requires exactly two {} addresses as arguments'
@@ -111,8 +115,8 @@ from .tx import MMGenSplitTX
 from .protocol import init_proto
 
 if opt.tx_fees:
-	for idx,g_coin in ((1,opt.other_coin),(0,g.coin)):
-		g.proto = init_proto(g_coin)
+	for idx,g_coin in ((1,opt.other_coin),(0,proto.coin)):
+		proto = init_proto(g_coin)
 		opt.tx_fee = opt.tx_fees.split(',')[idx]
 		opts.opt_is_tx_fee('foo',opt.tx_fee,'transaction fee') # raises exception on error
 
@@ -120,8 +124,11 @@ tx1 = MMGenSplitTX()
 opt.no_blank = True
 
 async def main():
-	gmsg("Creating timelocked transaction for long chain ({})".format(g.coin))
-	locktime = int(opt.locktime or 0) or await g.rpc.call('getblockcount')
+	gmsg("Creating timelocked transaction for long chain ({})".format(proto.coin))
+	locktime = int(opt.locktime)
+	if not locktime:
+		rpc = rpc_init(proto)
+		locktime = rpc.call('getblockcount')
 	tx1.create(mmids[0],locktime)
 
 	tx1.format()
@@ -129,7 +136,7 @@ async def main():
 
 	gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
 
-	g.proto = init_proto(opt.other_coin)
+	proto = init_proto(opt.other_coin)
 
 	tx2 = MMGenSplitTX()
 	tx2.inputs = tx1.inputs

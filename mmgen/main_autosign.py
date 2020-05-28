@@ -134,17 +134,13 @@ async def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
-		g.proto = init_proto(coin,g.proto.testnet)
-		if g.proto.sign_mode == 'daemon':
-			if g.test_suite:
-				g.proto.daemon_data_dir = 'test/daemons/' + coin.lower()
-				g.rpc_port = CoinDaemon(get_network_id(coin,g.proto.testnet),test_suite=True).rpc_port
+		proto = init_proto(coin,testnet=g.testnet)
+		if proto.sign_mode == 'daemon':
 			vmsg(f'Checking {coin} daemon')
 			try:
-				await rpc_init()
-			except SystemExit as e:
-				if e.code != 0:
-					ydie(1,f'{coin} daemon not running or not listening on port {g.proto.rpc_port}')
+				await rpc_init(proto)
+			except SocketError as e:
+				ydie(1,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
 
 def get_wallet_files():
 	try:
@@ -175,45 +171,23 @@ def do_umount():
 		msg(f'Unmounting {mountpoint}')
 		run(['umount',mountpoint],check=True)
 
-async def sign_tx_file(txfile,signed_txs):
+async def sign_tx_file(txfile):
+	from .tx import MMGenTX
 	try:
-		g.proto = init_proto('BTC',testnet=False)
-		tmp_tx = mmgen.tx.MMGenTX(txfile,metadata_only=True)
-		g.proto = init_proto(tmp_tx.coin)
-
-		if tmp_tx.chain != 'mainnet':
-			if tmp_tx.chain == 'testnet' or (
-				hasattr(g.proto,'chain_name') and tmp_tx.chain != g.proto.chain_name):
-				g.proto = init_proto(tmp_tx.coin,testnet=True)
-
-		if hasattr(g.proto,'chain_name'):
-			if tmp_tx.chain != g.proto.chain_name:
-				die(2, f'Chains do not match! tx file: {tmp_tx.chain}, proto: {g.proto.chain_name}')
-
-		g.chain = tmp_tx.chain
-		g.token = tmp_tx.dcoin
-		g.proto.dcoin = tmp_tx.dcoin or g.proto.coin
-
-		tx = mmgen.tx.MMGenTxForSigning(txfile)
-
-		if g.proto.sign_mode == 'daemon':
-			if g.test_suite:
-				g.proto.daemon_data_dir = 'test/daemons/' + g.coin.lower()
-				g.rpc_port = CoinDaemon(get_network_id(g.coin,g.proto.testnet),test_suite=True).rpc_port
-			await rpc_init()
-
-		if await txsign(tx,wfs,None,None):
-			tx.write_to_file(ask_write=False)
-			signed_txs.append(tx)
-			return True
+		tx1 = MMGenTX.Unsigned(filename=txfile)
+		if tx1.proto.sign_mode == 'daemon':
+			tx1.rpc = await rpc_init(tx1.proto)
+		tx2 = await txsign(tx1,wfs,None,None)
+		if tx2:
+			tx2.write_to_file(ask_write=False)
+			return tx2
 		else:
 			return False
 	except Exception as e:
-		msg(f'An error occurred: {e.args[0]}')
-		if g.debug or g.traceback:
-			print_stack_trace(f'AUTOSIGN {txfile}')
+		ymsg(f'An error occurred with transaction {txfile!r}:\n    {e!s}')
 		return False
 	except:
+		ymsg(f'An error occurred with transaction {txfile!r}')
 		return False
 
 async def sign():
@@ -224,8 +198,10 @@ async def sign():
 	if unsigned:
 		signed_txs,fails = [],[]
 		for txfile in unsigned:
-			ret = await sign_tx_file(txfile,signed_txs)
-			if not ret:
+			ret = await sign_tx_file(txfile)
+			if ret:
+				signed_txs.append(ret)
+			else:
 				fails.append(txfile)
 			qmsg('')
 		time.sleep(0.3)
@@ -265,7 +241,6 @@ def print_summary(signed_txs):
 		bmsg('\nAutosign summary:\n')
 		def gen():
 			for tx in signed_txs:
-				g.proto = init_proto(tx.coin,testnet=tx.chain=='testnet')
 				yield tx.format_view(terse=True)
 		msg_r(''.join(gen()))
 		return
@@ -444,4 +419,4 @@ async def main():
 	elif cmd_args[0] == 'wait':
 		await do_loop()
 
-run_session(main(),do_rpc_init=False)
+run_session(main())

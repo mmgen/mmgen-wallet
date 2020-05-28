@@ -138,6 +138,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	'transacting and tracking wallet operations via regtest mode'
 	networks = ('btc','ltc','bch')
 	passthru_opts = ('coin',)
+	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
@@ -244,18 +245,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
+		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
-		from mmgen.regtest import MMGenRegtest
-		rt = MMGenRegtest(g.coin)
-		coin = g.coin.lower()
+		if self.proto.testnet:
+			die(2,'--testnet and --regtest options incompatible with regtest test suite')
+		self.proto = init_proto(self.proto.coin,network='regtest')
+		coin = self.proto.coin.lower()
 		for k in rt_data:
 			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None
-		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
 		silence()
 		gmsg("Adding comments to address file '{}'".format(addrfile))
-		a = AddrList(addrfile)
+		a = AddrList(self.proto,addrfile)
 		for n,idx in enumerate(a.idxs(),1):
 			if use_labels:
 				a.set_comment(idx,get_label())
@@ -267,8 +269,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def setup(self):
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
-		if g.proto.testnet:
-			die(2,'--testnet option incompatible with regtest test suite')
 		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
@@ -295,7 +295,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def walletgen_alice(self): return self.walletgen('alice')
 
 	def _user_dir(self,user,coin=None):
-		return joinpath(self.tr.data_dir,'regtest',coin or g.coin.lower(),user)
+		return joinpath(self.tr.data_dir,'regtest',coin or self.proto.coin.lower(),user)
 
 	def _user_sid(self,user):
 		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
@@ -315,7 +315,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def addrgen(self,user,wf=None,addr_range='1-5',subseed_idx=None,mmtypes=[]):
 		from mmgen.addr import MMGenAddrType
-		for mmtype in mmtypes or g.proto.mmtypes:
+		for mmtype in mmtypes or self.proto.mmtypes:
 			t = self.spawn('mmgen-addrgen',
 				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self._user_dir(user))] +
 				([wf] if wf else []) +
@@ -335,17 +335,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		id_strs = { 'legacy':'', 'compressed':'-C', 'segwit':'-S', 'bech32':'-B' }
 		if not sid: sid = self._user_sid(user)
 		from mmgen.addr import MMGenAddrType
-		for mmtype in mmtypes or g.proto.mmtypes:
+		for mmtype in mmtypes or self.proto.mmtypes:
 			desc = MMGenAddrType.mmtypes[mmtype].name
 			addrfile = joinpath(self._user_dir(user),
-				'{}{}{}[{}]{x}.testnet.addrs'.format(
+				'{}{}{}[{}]{x}.regtest.addrs'.format(
 					sid,self.altcoin_pfx,id_strs[desc],addr_range,
 					x='-α' if g.debug_utf8 else ''))
-			if mmtype == g.proto.mmtypes[0] and user == 'bob':
-				psave = g.proto
-				g.proto = init_proto(g.coin,regtest=True)
+			if mmtype == self.proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(addrfile,addrfile,use_labels=True)
-				g.proto = psave
 			t = self.spawn( 'mmgen-addrimport',
 							['--quiet', '--'+user, '--batch', addrfile],
 							extra_desc='({})'.format(desc))
@@ -365,7 +362,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if not sid: sid = self._user_sid(user)
 		addr = self.get_addr_from_addrlist(user,sid,mmtype,0,addr_range=addr_range)
 		t = self.spawn('mmgen-regtest', ['send',str(addr),str(amt)])
-		t.expect('Sending {} miner {}'.format(amt,g.coin))
+		t.expect(f'Sending {amt} miner {self.proto.coin}')
 		t.expect('Mined 1 block')
 		return t
 
@@ -373,7 +370,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.fund_wallet('bob','C',rtFundAmt)
 
 	def fund_alice(self):
-		return self.fund_wallet('alice',('L','S')[g.proto.cap('segwit')],rtFundAmt)
+		return self.fund_wallet('alice',('L','S')[self.proto.cap('segwit')],rtFundAmt)
 
 	def user_twview(self,user,chk=None,sort='age'):
 		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
@@ -388,8 +385,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if skip_check:
 			t.read()
 		else:
-			total = t.expect_getend('TOTAL: ')
-			cmp_or_die('{} {}'.format(bal,g.coin),total)
+			cmp_or_die(f'{bal} {self.proto.coin}',t.expect_getend('TOTAL: '))
 		t.req_exit_val = exit_val
 		return t
 
@@ -451,9 +447,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_subwallet_fund(self):
 		sid1 = self._get_user_subsid('bob','29L')
 		sid2 = self._get_user_subsid('bob','127S')
-		chg_addr = self._user_sid('bob') + (':B:1',':L:1')[g.coin=='BCH']
+		chg_addr = self._user_sid('bob') + (':B:1',':L:1')[self.proto.coin=='BCH']
 		outputs_cl = [sid1+':C:2,0.29',sid2+':C:3,0.127',chg_addr]
-		inputs = ('3','1')[g.coin=='BCH']
+		inputs = ('3','1')[self.proto.coin=='BCH']
 		return self.user_txdo('bob',rtFee[1],outputs_cl,inputs,extra_args=['--subseeds=127'])
 
 	def bob_twview2(self):
@@ -471,7 +467,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txcreate',['-d',self.tmpdir,'-B','--bob'] + outputs_cl)
 		return self.txcreate_ui_common(t,
 								menu            = ['a'],
-								inputs          = ('1,2','2,3')[g.coin=='BCH'],
+								inputs          = ('1,2','2,3')[self.proto.coin=='BCH'],
 								interactive_fee = '0.00001')
 
 	def bob_subwallet_txsign(self):
@@ -486,12 +482,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_subwallet_txdo(self):
 		outputs_cl = [self._user_sid('bob')+':L:5']
-		inputs = ('1,2','2,3')[g.coin=='BCH']
+		inputs = ('1,2','2,3')[self.proto.coin=='BCH']
 		return self.user_txdo('bob',rtFee[5],outputs_cl,inputs,menu=['a'],extra_args=['--subseeds=127']) # sort: amt
 
 	def bob_twview4(self):
 		sid = self._user_sid('bob')
-		amt = ('0.4169328','0.41364')[g.coin=='LTC']
+		amt = ('0.4169328','0.41364')[self.proto.coin=='LTC']
 		return self.user_twview('bob',chk=r'\b{}:L:5\b\s+.*\s+\b{}\b'.format(sid,amt),sort='twmmid')
 
 	def bob_getbalance(self,bals,confs=1):
@@ -499,7 +495,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			assert Decimal(bals['mmgen'][i]) + Decimal(bals['nonmm'][i]) == Decimal(bals['total'][i])
 		t = self.spawn('mmgen-tool',['--bob','getbalance','minconf={}'.format(confs)])
 		for k in ('mmgen','nonmm','total'):
-			t.expect(r'\n\S+:\s+{} {c}\s+{} {c}\s+{} {c}'.format(*bals[k],c=g.coin),regex=True)
+			t.expect(r'\n\S+:\s+{} {c}\s+{} {c}\s+{} {c}'.format(*bals[k],c=self.proto.coin),regex=True)
 		t.read()
 		return t
 
@@ -566,15 +562,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def get_addr_from_addrlist(self,user,sid,mmtype,idx,addr_range='1-5'):
 		id_str = { 'L':'', 'S':'-S', 'C':'-C', 'B':'-B' }[mmtype]
-		ext = '{}{}{}[{}]{x}.testnet.addrs'.format(
+		ext = '{}{}{}[{}]{x}.regtest.addrs'.format(
 			sid,self.altcoin_pfx,id_str,addr_range,x='-α' if g.debug_utf8 else '')
 		addrfile = get_file_with_ext(self._user_dir(user),ext,no_dot=True)
-		psave = g.proto
-		g.proto = init_proto(g.coin,regtest=True)
 		silence()
-		addr = AddrList(addrfile).data[idx].addr
+		addr = AddrList(self.proto,addrfile).data[idx].addr
 		end_silence()
-		g.proto = psave
 		return addr
 
 	def _create_tx_outputs(self,user,data):
@@ -582,16 +575,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return [self.get_addr_from_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
 	def bob_rbf_1output_create(self):
-		if g.coin != 'BTC':
-			return 'skip' # non-coin-dependent test, so run just once for BTC
+		if self.proto.coin != 'BTC': # non-coin-dependent test, so run just once for BTC
+			return 'skip'
 		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
 		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
 		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
 
 	def bob_rbf_1output_bump(self):
-		if g.coin != 'BTC':
+		if self.proto.coin != 'BTC':
 			return 'skip'
-		ext = '9343,3]{x}.testnet.rawtx'.format(x='-α' if g.debug_utf8 else '')
+		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',
 			self.tr.trash_dir,
@@ -605,12 +598,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = self._create_tx_outputs('alice',(('L',1,',60'),('C',1,',40'))) # alice_sid:L:1, alice_sid:C:1
 		outputs_cl += [self._user_sid('bob')+':'+rtBobOp3]
 		return self.user_txdo('bob',rtFee[1],outputs_cl,'3',
-					extra_args=([],['--rbf'])[g.proto.cap('rbf')])
+					extra_args=([],['--rbf'])[self.proto.cap('rbf')])
 
 	def bob_send_non_mmgen(self):
 		outputs_cl = self._create_tx_outputs('alice',(
-			(('L','S')[g.proto.cap('segwit')],2,',10'),
-			(('L','S')[g.proto.cap('segwit')],3,'')
+			(('L','S')[self.proto.cap('segwit')],2,',10'),
+			(('L','S')[self.proto.cap('segwit')],3,'')
 		)) # alice_sid:S:2, alice_sid:S:3
 		keyfile = joinpath(self.tmpdir,'non-mmgen.keys')
 		return self.user_txdo('bob',rtFee[3],outputs_cl,'1,4-10',
@@ -621,7 +614,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self.user_txdo('alice',None,outputs_cl,'1') # fee=None
 
 	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True,one_output=False):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
@@ -636,19 +629,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.written_to_file('Signed transaction')
 			self.txsend_ui_common(t,caller='txdo',bogus_send=False,file_desc='Signed transaction')
 		else:
-			t.expect('Save transaction? (y/N): ','y')
-			t.written_to_file('Transaction')
+			t.expect('Save fee-bumped transaction? (y/N): ','y')
+			t.written_to_file('Fee-bumped transaction')
 		t.read()
 		return t
 
 	def bob_rbf_bump(self):
-		ext = ',{}]{x}.testnet.sigtx'.format(rtFee[1][:-1],x='-α' if g.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(rtFee[1][:-1],x='-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txbump('bob',self.tmpdir,txfile,rtFee[2],add_args=['--send'])
 
 	def generate(self,coin=None,num_blocks=1):
 		int(num_blocks)
-		if coin: opt.coin = coin
 		t = self.spawn('mmgen-regtest',['generate',str(num_blocks)])
 		t.expect('Mined {} block'.format(num_blocks))
 		return t
@@ -670,19 +662,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	def bob_rbf_status(self,fee,exp1,exp2=''):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
-		ext = ',{}]{x}.testnet.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
+		ext = ',{}]{x}.regtest.sigtx'.format(fee[:-1],x='-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,delete=False,no_dot=True)
 		return self.user_txsend_status('bob',txfile,exp1,exp2)
 
 	def bob_rbf_status1(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		return self.bob_rbf_status(rtFee[1],'in mempool, replaceable')
 
 	def get_mempool2(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		mp = self._get_mempool()
 		if len(mp) != 1:
@@ -694,19 +686,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return 'ok'
 
 	def bob_rbf_status2(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Transaction has been replaced','{} in mempool'.format(new_txid))
 
 	def bob_rbf_status3(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		return self.bob_rbf_status(rtFee[2],'status: in mempool, replaceable')
 
 	def bob_rbf_status4(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
@@ -714,12 +706,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			'Replacing transactions:\s+{}'.format(new_txid))
 
 	def bob_rbf_status5(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		return self.bob_rbf_status(rtFee[2],'Transaction has 1 confirmation')
 
 	def bob_rbf_status6(self):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
@@ -730,7 +722,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def _gen_pairs(n):
 		disable_debug()
 		from subprocess import run,PIPE
-		ret = [run(['python3',joinpath('cmds','mmgen-tool'),'--testnet=1'] +
+		ret = [run(['python3',joinpath('cmds','mmgen-tool'),'--regtest=1'] +
 					(['--type=compressed'],[])[i==0] +
 					['-r0','randpair'],
 					stdout=PIPE,check=True
@@ -771,8 +763,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs1 = list(map('{},{}'.format,addrs,amts))
 		sid = self._user_sid('bob')
 		l1,l2 = (
-			(':S',':B') if 'B' in g.proto.mmtypes else
-			(':S',':S') if g.proto.cap('segwit') else
+			(':S',':B') if 'B' in self.proto.mmtypes else
+			(':S',':S') if self.proto.cap('segwit') else
 			(':L',':L') )
 		outputs2 = [sid+':C:2,6.333', sid+':L:3,6.667',sid+l1+':4,0.123',sid+l2+':5']
 		return self.user_txdo('bob',rtFee[5],outputs1+outputs2,'1-2')
@@ -799,20 +791,20 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		sid = self._user_sid('alice')
 		return self.user_add_label('alice',sid+':C:1','Replacement Label')
 
-	def alice_add_label_coinaddr(self):
-		mmid = self._user_sid('alice') + (':S:1',':L:1')[g.coin=='BCH']
-		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
-		btcaddr = [i for i in t.read().splitlines() if i.lstrip()[0:len(mmid)] == mmid][0].split()[1]
-		return self.user_add_label('alice',btcaddr,'Label added using coin address')
-
-	def user_chk_label(self,user,addr,label):
+	def _user_chk_label(self,user,addr,label):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
 		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label),regex=True)
 		return t
 
+	def alice_add_label_coinaddr(self):
+		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
+		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
+		addr = [i for i in t.read().splitlines() if i.startswith(mmid)][0].split()[1]
+		return self.user_add_label('alice',addr,'Label added using coin address of MMGen address')
+
 	def alice_chk_label_coinaddr(self):
-		mmid = self._user_sid('alice') + (':S:1',':L:1')[g.coin=='BCH']
-		return self.user_chk_label('alice',mmid,'Label added using coin address')
+		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
+		return self._user_chk_label('alice',mmid,'Label added using coin address of MMGen address')
 
 	def alice_add_label_badaddr(self,addr,reply):
 		t = self.spawn('mmgen-tool',['--alice','add_label',addr,'(none)'])
@@ -820,21 +812,19 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def alice_add_label_badaddr1(self):
-		return self.alice_add_label_badaddr(rt_pw,'Invalid coin address for this chain: ')
+		return self.alice_add_label_badaddr( rt_pw,'Invalid coin address for this chain: ')
 
 	def alice_add_label_badaddr2(self):
-		addr = g.proto.pubhash2addr('00'*20,False) # mainnet zero address
-		return self.alice_add_label_badaddr(addr,'Invalid coin address for this chain: '+addr)
+		addr = init_proto(self.proto.coin,network='mainnet').pubhash2addr('00'*20,False) # mainnet zero address
+		return self.alice_add_label_badaddr( addr, f'Invalid coin address for this chain: {addr}' )
 
 	def alice_add_label_badaddr3(self):
 		addr = self._user_sid('alice') + ':C:123'
-		return self.alice_add_label_badaddr(addr,
-			"MMGen address '{}' not found in tracking wallet".format(addr))
+		return self.alice_add_label_badaddr( addr, f'MMGen address {addr!r} not found in tracking wallet' )
 
 	def alice_add_label_badaddr4(self):
-		addr = init_proto(g.coin,regtest=True).pubhash2addr('00'*20,False) # testnet zero address
-		return self.alice_add_label_badaddr(addr,
-			"Address '{}' not found in tracking wallet".format(addr))
+		addr = self.proto.pubhash2addr('00'*20,False) # regtest (testnet) zero address
+		return self.alice_add_label_badaddr( addr, f'Address {addr!r} not found in tracking wallet' )
 
 	def alice_bal_rpcfail(self):
 		addr = self._user_sid('alice') + ':C:2'
@@ -848,29 +838,29 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_remove_label1(self):
 		sid = self._user_sid('alice')
-		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
+		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
 		return self.user_remove_label('alice',mmid)
 
 	def alice_chk_label1(self):
 		sid = self._user_sid('alice')
-		return self.user_chk_label('alice',sid+':C:1','Original Label - 月へ')
+		return self._user_chk_label('alice',sid+':C:1','Original Label - 月へ')
 
 	def alice_chk_label2(self):
 		sid = self._user_sid('alice')
-		return self.user_chk_label('alice',sid+':C:1','Replacement Label')
+		return self._user_chk_label('alice',sid+':C:1','Replacement Label')
 
 	def alice_edit_label1(self): return self.user_edit_label('alice','4',tw_label_lat_cyr_gr)
 	def alice_edit_label2(self): return self.user_edit_label('alice','3',tw_label_zh)
 
 	def alice_chk_label3(self):
 		sid = self._user_sid('alice')
-		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
-		return self.user_chk_label('alice',mmid,tw_label_lat_cyr_gr)
+		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
+		return self._user_chk_label('alice',mmid,tw_label_lat_cyr_gr)
 
 	def alice_chk_label4(self):
 		sid = self._user_sid('alice')
-		mmid = sid + (':S:3',':L:3')[g.coin=='BCH']
-		return self.user_chk_label('alice',mmid,'-')
+		mmid = sid + (':S:3',':L:3')[self.proto.coin=='BCH']
+		return self._user_chk_label('alice',mmid,'-')
 
 	def user_edit_label(self,user,output,label):
 		t = self.spawn('mmgen-txcreate',['-B','--'+user,'-i'])

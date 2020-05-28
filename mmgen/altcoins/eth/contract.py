@@ -37,13 +37,13 @@ except:
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
-def create_method_id(sig): return keccak_256(sig.encode()).hexdigest()[:8]
+def create_method_id(sig):
+	return keccak_256(sig.encode()).hexdigest()[:8]
 
 class TokenBase(MMGenObject): # ERC20
 
-	@staticmethod
-	def transferdata2sendaddr(data): # online
-		return CoinAddr(parse_abi(data)[1][-40:])
+	def transferdata2sendaddr(self,data): # online
+		return CoinAddr(self.proto,parse_abi(data)[1][-40:])
 
 	def transferdata2amt(self,data): # online
 		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
@@ -52,7 +52,7 @@ class TokenBase(MMGenObject): # ERC20
 		data = create_method_id(method_sig) + method_args
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
-		ret = await g.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data })
+		ret = await self.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data })
 		if toUnit:
 			return int(ret,16) * self.base_unit
 		else:
@@ -91,7 +91,7 @@ class TokenBase(MMGenObject): # ERC20
 						'total supply:',   await self.get_total_supply())
 
 	async def code(self):
-		return (await g.rpc.call('eth_getCode','0x'+self.addr))[2:]
+		return (await self.rpc.call('eth_getCode','0x'+self.addr))[2:]
 
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
@@ -114,14 +114,13 @@ class TokenBase(MMGenObject): # ERC20
 		from .pyethereum.transactions import Transaction
 
 		if chain_id is None:
-			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in g.rpc.caps]
-			chain_id = int(await g.rpc.call(chain_id_method),16)
+			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in self.rpc.caps]
+			chain_id = int(await self.rpc.call(chain_id_method),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = rlp.encode(tx).hex()
 		coin_txid = CoinTxID(tx.hash.hex())
 		if tx.sender.hex() != from_addr:
-			m = "Sender address '{}' does not match address of key '{}'!"
-			die(3,m.format(from_addr,tx.sender.hex()))
+			die(3,f'Sender address {from_addr!r} does not match address of key {tx.sender.hex()!r}!')
 		if g.debug:
 			msg('TOKEN DATA:')
 			pp_msg(tx.to_dict())
@@ -131,7 +130,7 @@ class TokenBase(MMGenObject): # ERC20
 # The following are used for token deployment only:
 
 	async def txsend(self,hex_tx):
-		return (await g.rpc.call('eth_sendRawTransaction','0x'+hex_tx)).replace('0x','',1)
+		return (await self.rpc.call('eth_sendRawTransaction','0x'+hex_tx)).replace('0x','',1)
 
 	async def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
@@ -140,7 +139,7 @@ class TokenBase(MMGenObject): # ERC20
 		tx_in = self.make_tx_in(
 					from_addr,to_addr,amt,
 					start_gas,gasPrice,
-					nonce = int(await g.rpc.call('parity_nextNonce','0x'+from_addr),16),
+					nonce = int(await self.rpc.call('parity_nextNonce','0x'+from_addr),16),
 					method_sig = method_sig,
 					from_addr2 = from_addr2 )
 		(hex_tx,coin_txid) = await self.txsign(tx_in,key,from_addr)
@@ -148,20 +147,24 @@ class TokenBase(MMGenObject): # ERC20
 
 class Token(TokenBase):
 
-	def __init__(self,addr,decimals):
-		self.addr = TokenAddr(addr)
+	def __init__(self,proto,addr,decimals,rpc=None):
+		self.proto = proto
+		self.addr = TokenAddr(proto,addr)
 		assert isinstance(decimals,int),f'decimals param must be int instance, not {type(decimals)}'
 		self.decimals = decimals
 		self.base_unit = Decimal('10') ** -self.decimals
+		self.rpc = rpc
 
 class TokenResolve(TokenBase,metaclass=aInitMeta):
 
-	def __init__(self,addr):
+	def __init__(self,*args,**kwargs):
 		return super().__init__()
 
-	async def __ainit__(self,addr):
-		self.addr = TokenAddr(addr)
+	async def __ainit__(self,proto,rpc,addr):
+		self.proto = proto
+		self.rpc = rpc
+		self.addr = TokenAddr(proto,addr)
 		decimals = await self.get_decimals() # requires self.addr!
 		if not decimals:
 			raise TokenNotInBlockchain(f'Token {addr!r} not in blockchain')
-		Token.__init__(self,addr,decimals)
+		Token.__init__(self,proto,addr,decimals,rpc)

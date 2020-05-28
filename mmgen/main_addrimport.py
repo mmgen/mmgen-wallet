@@ -24,7 +24,7 @@ import time
 
 from .common import *
 from .addr import AddrList,KeyAddrList
-from .obj import TwLabel,is_coin_addr
+from .obj import TwLabel
 
 ai_msgs = lambda k: {
 	'rescan': """
@@ -61,6 +61,7 @@ opts_data = {
 -q, --quiet        Suppress warnings
 -r, --rescan       Rescan the blockchain.  Required if address to import is
                    in the blockchain and has a balance.  Rescanning is slow.
+-t, --token-addr=A Import addresses for ERC20 token with address 'A'
 """,
 	'notes': """\n
 This command can also be used to update the comment fields of addresses
@@ -71,13 +72,12 @@ The --batch and --rescan options cannot be used together.
 	}
 }
 
-def parse_cmd_args(cmd_args):
+def parse_cmd_args(rpc,cmd_args):
 
 	def import_mmgen_list(infile):
-		al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](infile)
+		al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](proto,infile)
 		if al.al_id.mmtype in ('S','B'):
-			from .tx import segwit_is_active
-			if not segwit_is_active():
+			if not rpc.info('segwit_is_active'):
 				rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 		return al
 
@@ -85,14 +85,14 @@ def parse_cmd_args(cmd_args):
 		infile = cmd_args[0]
 		check_infile(infile)
 		if opt.addrlist:
-			al = AddrList(addrlist=get_lines_from_file(
-				infile,
-				'non-{pnm} addresses'.format(pnm=g.proj_name),
-				trim_comments=True))
+			al = AddrList(
+				proto = proto,
+				addrlist = get_lines_from_file(infile,'non-{pnm} addresses'.format(pnm=g.proj_name),
+				trim_comments = True) )
 		else:
 			al = import_mmgen_list(infile)
 	elif len(cmd_args) == 0 and opt.address:
-		al = AddrList(addrlist=[opt.address])
+		al = AddrList(proto=proto,addrlist=[opt.address])
 		infile = 'command line'
 	else:
 		die(1,ai_msgs('bad_args'))
@@ -145,17 +145,28 @@ def make_args_list(tw,al,batch,rescan):
 			label = '{}:{}'.format(al.al_id,e.idx) + (' ' + e.label if e.label else '')
 			add_msg = label
 		else:
-			label = '{}:{}'.format(g.proto.base_coin.lower(),e.addr)
+			label = '{}:{}'.format(proto.base_coin.lower(),e.addr)
 			add_msg = 'non-'+g.proj_name
 
 		if batch:
-			yield (e.addr,TwLabel(label),False)
+			yield (e.addr,TwLabel(proto,label),False)
 		else:
 			msg_args = ( f'{num}/{al.num_addrs}:', e.addr, '('+add_msg+')' )
-			yield (tw,e.addr,TwLabel(label),rescan,fs,msg_args)
+			yield (tw,e.addr,TwLabel(proto,label),rescan,fs,msg_args)
 
 async def main():
-	al,infile = parse_cmd_args(cmd_args)
+	from .tw import TrackingWallet
+	if opt.token_addr:
+		proto.tokensym = 'foo' # hack to trigger 'Token' in altcoin_subclass()
+	tw = await TrackingWallet(
+		proto      = proto,
+		token_addr = opt.token_addr,
+		mode       = 'i' )
+
+	from .rpc import rpc_init
+	tw.rpc = await rpc_init(proto)
+
+	al,infile = parse_cmd_args(tw.rpc,cmd_args)
 
 	qmsg(
 		f'OK. {al.num_addrs} addresses'
@@ -165,16 +176,7 @@ async def main():
 		f'Importing {len(al.data)} address{suf(al.data,"es")} from {infile}'
 		+ (' (batch mode)' if opt.batch else '') )
 
-	if not al.data[0].addr.is_for_chain(g.chain):
-		die(2,f'Address{(" list","")[bool(opt.address)]} incompatible with {g.chain} chain!')
-
-	from .tw import TrackingWallet
-	tw = await TrackingWallet(mode='i')
-
 	batch,rescan = check_opts(tw)
-
-	if g.token:
-		await tw.import_token()
 
 	args_list = make_args_list(tw,al,batch,rescan)
 
@@ -192,5 +194,7 @@ async def main():
 	del tw
 
 cmd_args = opts.init(opts_data)
+from .protocol import init_proto_from_opts
+proto = init_proto_from_opts()
 import asyncio
 run_session(main())

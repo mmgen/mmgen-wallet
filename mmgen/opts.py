@@ -44,18 +44,22 @@ def print_help(po,opts_data,opt_filter):
 	if not 'code' in opts_data:
 		opts_data['code'] = {}
 
+	from .protocol import init_proto_from_opts
+	proto = init_proto_from_opts()
+
 	if getattr(opt,'longhelp',None):
 		opts_data['code']['long_options'] = common_opts_data['code']
 		def remove_unneeded_long_opts():
 			d = opts_data['text']['long_options']
 			if g.prog_name != 'mmgen-tool':
 				d = '\n'.join(''+i for i in d.split('\n') if not '--monero-wallet' in i)
-			if g.proto.base_proto != 'Ethereum':
+			if proto.base_proto != 'Ethereum':
 				d = '\n'.join(''+i for i in d.split('\n') if not '--token' in i)
 			opts_data['text']['long_options'] = d
 		remove_unneeded_long_opts()
 
 	mmgen.share.Opts.print_help( # exits
+		proto,
 		po,
 		opts_data,
 		opt_filter )
@@ -76,6 +80,7 @@ def _show_hash_presets():
 	for i in sorted(g.hash_presets.keys()):
 		msg(fs.format(i,*g.hash_presets[i]))
 	msg('N = memory usage (power of two), p = iterations (rounds)')
+	sys.exit(0)
 
 def opt_preproc_debug(po):
 	d = (
@@ -205,10 +210,10 @@ common_opts_data = {
 --, --bob                  Switch to user "Bob" in MMGen regtest setup
 --, --alice                Switch to user "Alice" in MMGen regtest setup
 	""",
-	'code': lambda s: s.format(
+	'code': lambda proto,s: s.format(
 			pnm    = g.proj_name,
-			dn     = g.proto.daemon_name,
-			cu_dfl = g.coin,
+			dn     = proto.daemon_name,
+			cu_dfl = proto.coin,
 		)
 }
 
@@ -256,14 +261,24 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 		version() # exits
 
 	# === begin global var initialization === #
-
-	# NB: user opt --data-dir is actually g.data_dir_root
-	# cfg file is in g.data_dir_root, wallet and other data are in g.data_dir
-	# We must set g.data_dir_root from --data-dir before processing cfg file
-	g.data_dir_root = (
-			os.path.normpath(os.path.expanduser(opt.data_dir))
-		if opt.data_dir else
-			os.path.join(g.home_dir,'.'+g.proj_name.lower()) )
+	"""
+	NB: user opt --data-dir is actually data_dir_root
+	- data_dir is data_dir_root plus optionally 'regtest' or 'testnet', so for mainnet
+	  data_dir == data_dir_root
+	- As with Bitcoin Core, cfg file is in data_dir_root, wallets and other data are
+	  in data_dir
+	- Since cfg file is in data_dir_root, data_dir_root must be finalized before we
+	  can process cfg file
+	- Since data_dir depends on the values of g.testnet and g.regtest, these must be
+	  finalized before setting data_dir
+	"""
+	if opt.data_dir:
+		g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir))
+	elif os.getenv('MMGEN_TEST_SUITE'):
+		from test.include.common import get_data_dir
+		g.data_dir_root = get_data_dir()
+	else:
+		g.data_dir_root = os.path.join(g.home_dir,'.'+g.proj_name.lower())
 
 	check_or_create_dir(g.data_dir_root)
 
@@ -278,30 +293,18 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 
 	# Set globals from opts, setting type from original global value
 	# Do here, before opts are set from globals below
-	# g.coin is finalized here
 	for k in (g.common_opts + g.opt_sets_global):
 		if hasattr(opt,k):
 			val = getattr(opt,k)
 			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
 
-	from .protocol import init_genonly_altcoins,init_proto
-
-	altcoin_trust_level = init_genonly_altcoins(
-		opt.coin or 'btc',
-		testnet = g.testnet or g.regtest )
-
-	g.proto = init_proto(
-		opt.coin or 'btc',
-		testnet = g.testnet,
-		regtest = g.regtest )
-
-	# this could have been set from long opts
-	if g.daemon_data_dir:
-		g.proto.daemon_data_dir = g.daemon_data_dir
-
-	# g.proto is set, so we can set g.data_dir
-	g.data_dir = os.path.normpath(os.path.join(g.data_dir_root,g.proto.data_subdir))
+	"""
+	g.testnet and g.regtest are finalized, so we can set g.data_dir
+	"""
+	g.data_dir = os.path.normpath(os.path.join(
+		g.data_dir_root,
+		('regtest' if g.regtest else 'testnet' if g.testnet else '') ))
 
 	# Set user opts from globals:
 	# - if opt is unset, set it to global value
@@ -314,15 +317,14 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 		else:
 			setattr(opt,k,getattr(g,k))
 
-	if opt.show_hash_presets:
+	if opt.show_hash_presets: # exits
 		_show_hash_presets()
-		sys.exit(0)
 
-	if opt.verbose:
-		opt.quiet = None
+	g.coin = g.coin.upper() or 'BTC'
+	g.token = g.token.upper() or None
 
 	if g.bob or g.alice:
-		g.proto = init_proto(g.coin,regtest=True)
+		g.regtest = True
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 		from .regtest import MMGenRegtest
@@ -330,13 +332,20 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 		g.rpc_password = MMGenRegtest.rpc_password
 		g.rpc_port = MMGenRegtest(g.coin).d.rpc_port
 
-	# === end global var initialization === #
+	from .protocol import init_genonly_altcoins
+	altcoin_trust_level = init_genonly_altcoins(
+		g.coin,
+		testnet = g.testnet or g.regtest )
 
-	die_on_incompatible_opts(g.incompatible_opts)
+	# === end global var initialization === #
 
 	# print help screen only after global vars are initialized:
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
 		print_help(po,opts_data,opt_filter) # exits
+
+	warn_altcoins(g.coin,altcoin_trust_level)
+
+	die_on_incompatible_opts(g.incompatible_opts)
 
 	check_or_create_dir(g.data_dir) # g.data_dir is finalized, so we can create it
 
@@ -346,13 +355,14 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	# Check all opts against g.autoset_opts, setting if unset
 	check_and_set_autoset_opts()
 
+	if opt.verbose:
+		opt.quiet = None
+
 	if g.debug and g.prog_name != 'test.py':
 		opt.verbose,opt.quiet = (True,None)
 
 	if g.debug_opts:
 		opt_postproc_debug()
-
-	warn_altcoins(g.coin,altcoin_trust_level)
 
 	# We don't need this data anymore
 	del mmgen.share.Opts
@@ -362,6 +372,7 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 
 	return po.cmd_args
 
+# DISABLED
 def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 
 	# contract data or non-standard startgas: disable fee checking
@@ -371,18 +382,19 @@ def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 		return
 
 	from .tx import MMGenTX
-	tx = MMGenTX()
+	from .protocol import init_proto_from_opts
+	tx = MMGenTX.New(init_proto_from_opts())
 	# Size of 224 is just a ball-park figure to eliminate the most extreme cases at startup
 	# This check will be performed again once we know the true size
 	ret = tx.process_fee_spec(val,224)
 
 	if ret == False:
 		raise UserOptError('{!r}: invalid {}\n(not a {} amount or {} specification)'.format(
-				val,desc,g.coin.upper(),tx.rel_fee_desc))
+				val,desc,tx.proto.coin.upper(),tx.rel_fee_desc))
 
-	if ret > g.proto.max_tx_fee:
+	if ret > tx.proto.max_tx_fee:
 		raise UserOptError('{!r}: invalid {}\n({} > max_tx_fee ({} {}))'.format(
-				val,desc,ret.fmt(fs='1.1'),g.proto.max_tx_fee,g.coin.upper()))
+				val,desc,ret.fmt(fs='1.1'),tx.proto.max_tx_fee,tx.proto.coin.upper()))
 
 def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
@@ -519,10 +531,11 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		from .protocol import CoinProtocol
 		opt_is_in_list(val.lower(),CoinProtocol.coins,'coin')
 
-	def chk_rbf(key,val,desc):
-		if not g.proto.cap('rbf'):
-			m = '--rbf requested, but {} does not support replace-by-fee transactions'
-			raise UserOptError(m.format(g.coin))
+# TODO: move this check elsewhere
+#	def chk_rbf(key,val,desc):
+#		if not proto.cap('rbf'):
+#			m = '--rbf requested, but {} does not support replace-by-fee transactions'
+#			raise UserOptError(m.format(proto.coin))
 
 	def chk_bob(key,val,desc):
 		m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
@@ -538,13 +551,14 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_int(val,desc)
 		opt_compares(int(val),'>',0,desc)
 
-	def chk_token(key,val,desc):
-		if not 'token' in g.proto.caps:
-			raise UserOptError('Coin {!r} does not support the --token option'.format(g.coin))
-		if len(val) == 40 and is_hex_str(val):
-			return
-		if len(val) > 20 or not all(s.isalnum() for s in val):
-			raise UserOptError('{!r}: invalid parameter for --token option'.format(val))
+# TODO: move this check elsewhere
+#	def chk_token(key,val,desc):
+#		if not 'token' in proto.caps:
+#			raise UserOptError('Coin {!r} does not support the --token option'.format(tx.coin))
+#		if len(val) == 40 and is_hex_str(val):
+#			return
+#		if len(val) > 20 or not all(s.isalnum() for s in val):
+#			raise UserOptError('{!r}: invalid parameter for --token option'.format(val))
 
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 

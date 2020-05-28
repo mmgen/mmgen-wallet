@@ -82,7 +82,7 @@ FMT CODES:
 			ms_max=MasterShareIdx.max_val,
 			g=g,
 		),
-		'notes': lambda s: s.format(
+		'notes': lambda help_notes,s: s.format(
 			f='\n  '.join(Wallet.format_fmt_codes().splitlines()),
 			n_pw=help_notes('passwd'),
 		)

@@ -113,6 +113,7 @@ setup(
 			'mmgen.exception',
 			'mmgen.filename',
 			'mmgen.globalvars',
+			'mmgen.help',
 			'mmgen.keccak',
 			'mmgen.led',
 			'mmgen.license',

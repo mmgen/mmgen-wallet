@@ -81,7 +81,7 @@ column below:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda help_notes,proto,s: s.format(
 			g=g,
 			pnm=g.proj_name,
 			pnl=g.proj_name.lower(),
@@ -89,8 +89,8 @@ column below:
 			fu=help_notes('rel_fee_desc'),fl=help_notes('fee_spec_letters'),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
-			cu=g.coin),
-		'notes': lambda s: s.format(
+			cu=proto.coin),
+		'notes': lambda help_notes,s: s.format(
 			help_notes('fee'),
 			help_notes('txsign'),
 			f='\n  '.join(Wallet.format_fmt_codes().splitlines()))
@@ -107,41 +107,56 @@ from .txsign import *
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 
-kal = get_keyaddrlist(opt)
-kl = get_keylist(opt)
-
-sign_and_send = bool(seed_files or kl or kal)
-
 do_license_msg()
 
 silent = opt.yes and opt.tx_fee != None and opt.output_to_reduce != None
 
+ext = get_extension(tx_file)
+ext_data = {
+	MMGenTX.Unsigned.ext: 'Unsigned',
+	MMGenTX.Signed.ext:   'Signed',
+}
+if ext not in ext_data:
+	die(1,f'{ext!r}: unrecognized file extension')
+
 async def main():
 
-	from .tw import TrackingWallet
-	tx = MMGenBumpTX(filename=tx_file,send=sign_and_send,tw=await TrackingWallet() if g.token else None)
+	orig_tx = getattr(MMGenTX,ext_data[ext])(filename=tx_file)
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
-		msg(tx.format_view(terse=True))
+		msg(orig_tx.format_view(terse=True))
+
+	kal = get_keyaddrlist(orig_tx.proto,opt)
+	kl = get_keylist(orig_tx.proto,opt)
+	sign_and_send = bool(seed_files or kl or kal)
+
+	from .tw import TrackingWallet
+	tx = MMGenTX.Bump(
+		data = orig_tx.__dict__,
+		send = sign_and_send,
+		tw   = await TrackingWallet(orig_tx.proto) if orig_tx.proto.tokensym else None )
+
+	from .rpc import rpc_init
+	tx.rpc = await rpc_init(tx.proto)
 
 	tx.check_bumpable() # needs cached networkinfo['relayfee']
 
-	msg('Creating new transaction')
+	msg('Creating replacement transaction')
 
 	op_idx = tx.choose_output()
 
 	if not silent:
-		msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),g.coin))
+		msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),tx.proto.coin))
 
 	fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
 	tx.update_fee(op_idx,fee)
 
 	d = tx.get_fee()
-	assert d == fee and d <= g.proto.max_tx_fee
+	assert d == fee and d <= tx.proto.max_tx_fee
 
-	if g.proto.base_proto == 'Bitcoin':
+	if tx.proto.base_proto == 'Bitcoin':
 		tx.outputs.sort_bip69() # output amts have changed, so re-sort
 
 	if not opt.yes:
@@ -159,10 +174,12 @@ async def main():
 		msg_r(tx.format_view(terse=True))
 
 	if sign_and_send:
-		if await txsign(tx,seed_files,kl,kal):
-			tx.write_to_file(ask_write=False)
-			await tx.send(exit_on_fail=True)
-			tx.write_to_file(ask_write=False)
+		tx2 = MMGenTX.Unsigned(data=tx.__dict__)
+		tx3 = await txsign(tx2,seed_files,kl,kal)
+		if tx3:
+			tx3.write_to_file(ask_write=False)
+			await tx3.send(exit_on_fail=True)
+			tx3.write_to_file(ask_write=False)
 		else:
 			die(2,'Transaction could not be signed')
 	else:

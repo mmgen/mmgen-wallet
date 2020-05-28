@@ -52,9 +52,13 @@ opts_data = {
 }
 
 cmd_args = opts.init(opts_data)
-assert g.coin in ('ETH','ETC'),'--coin option must be set to ETH or ETC'
 
-if not len(cmd_args) == 1 or not is_coin_addr(cmd_args[0].lower()):
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
+
+assert proto.coin in ('ETH','ETC'),'--coin option must be set to ETH or ETC'
+
+if not len(cmd_args) == 1 or not is_coin_addr(proto,cmd_args[0].lower()):
 	opts.usage()
 
 owner_addr = '0x' + cmd_args[0]

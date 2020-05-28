@@ -35,16 +35,18 @@ class TestSuiteBase(object):
 	segwit_opts_ok = False
 
 	def __init__(self,trunner,cfgs,spawn):
+		from mmgen.protocol import init_proto_from_opts
+		self.proto = init_proto_from_opts()
 		self.tr = trunner
 		self.cfgs = cfgs
 		self.spawn = spawn
 		self.have_dfl_wallet = False
 		self.usr_rand_chars = (5,30)[bool(opt.usr_random)]
 		self.usr_rand_arg = '-r{}'.format(self.usr_rand_chars)
-		self.altcoin_pfx = '' if g.proto.base_coin == 'BTC' else '-'+g.proto.base_coin
-		self.tn_ext = ('','.testnet')[g.proto.testnet]
+		self.altcoin_pfx = '' if self.proto.base_coin == 'BTC' else '-'+self.proto.base_coin
+		self.tn_ext = ('','.testnet')[self.proto.testnet]
 		d = {'bch':'btc','btc':'btc','ltc':'ltc'}
-		self.fork = d[g.coin.lower()] if g.coin.lower() in d else None
+		self.fork = d[self.proto.coin.lower()] if self.proto.coin.lower() in d else None
 
 	@property
 	def tmpdir(self):

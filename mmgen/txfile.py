@@ -46,15 +46,15 @@ class MMGenTxFile:
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
 			assert type(d) == list,'{} data not a list!'.format(desc)
-			if not (desc == 'outputs' and g.proto.base_coin == 'ETH'): # ETH txs can have no outputs
+			if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs
 				assert len(d),'no {}!'.format(desc)
 			for e in d:
-				e['amt'] = g.proto.coin_amt(e['amt'])
+				e['amt'] = tx.proto.coin_amt(e['amt'])
 			io,io_list = (
 				(MMGenTxOutput,MMGenTxOutputList),
 				(MMGenTxInput,MMGenTxInputList)
 			)[desc=='inputs']
-			return io_list(io(**e) for e in d)
+			return io_list(tx,[io(tx.proto,**e) for e in d])
 
 		tx_data = get_data_from_file(infile,tx.desc+' data',quiet=quiet_open)
 
@@ -94,58 +94,51 @@ class MMGenTxFile:
 				desc = 'locktime'
 				tx.locktime = int(metadata.pop()[3:])
 
-			tx.coin = metadata.pop(0) if len(metadata) == 6 else 'BTC'
-			if ':' in tx.coin:
-				tx.coin,tx.dcoin = tx.coin.split(':')
+			desc = 'coin token in metadata'
+			coin = metadata.pop(0) if len(metadata) == 6 else 'BTC'
+			coin,tokensym = coin.split(':') if ':' in coin else (coin,None)
 
-			if len(metadata) == 5:
-				t = metadata.pop(0)
-				tx.chain = (t.lower(),None)[t=='Unknown']
+			desc = 'chain token in metadata'
+			tx.chain = metadata.pop(0).lower() if len(metadata) == 5 else 'mainnet'
 
-			desc = 'metadata (4 items minimum required)'
+			from .protocol import CoinProtocol,init_proto
+			network = CoinProtocol.Base.chain_name_to_network(coin,tx.chain)
+
+			desc = 'initialization of protocol'
+			tx.proto = init_proto(coin,network=network)
+			if tokensym:
+				tx.proto.tokensym = tokensym
+
+			desc = 'metadata (4 items)'
 			txid,send_amt,tx.timestamp,blockcount = metadata
 
-			desc = 'txid in metadata'
+			desc = 'TxID in metadata'
 			tx.txid = MMGenTxID(txid,on_fail='raise')
 			desc = 'send amount in metadata'
-			tx.send_amt = UnknownCoinAmt(send_amt) # temporary, for 'metadata_only'
+			tx.send_amt = tx.proto.coin_amt(send_amt)
 			desc = 'block count in metadata'
 			tx.blockcount = int(blockcount)
 
 			if metadata_only:
 				return
 
-			desc = 'send amount in metadata'
-			tx.send_amt = g.proto.coin_amt(send_amt,on_fail='raise')
-
 			desc = 'transaction file hex data'
 			tx.check_txfile_hex_data()
-			desc = f'transaction file {tx.hexdata_type} data'
+			desc = 'Ethereum transaction file hex or json data'
 			tx.parse_txfile_hex_data()
-			# the following ops will all fail if g.coin doesn't match tx.coin
-			desc = 'coin type in metadata'
-			assert tx.coin == g.coin, tx.coin
 			desc = 'inputs data'
 			tx.inputs  = eval_io_data(inputs_data,'inputs')
 			desc = 'outputs data'
 			tx.outputs = eval_io_data(outputs_data,'outputs')
 		except Exception as e:
-			die(2,f'Invalid {desc} in transaction file: {e.args[0]}')
-
-		# is_for_chain() is no-op for Ethereum: test and mainnet addrs have same format
-		if not tx.chain and not tx.inputs[0].addr.is_for_chain('testnet'):
-			tx.chain = 'mainnet'
-
-		if tx.dcoin:
-			tx.resolve_g_token_from_txfile()
-			g.proto.dcoin = tx.dcoin
+			die(2,f'Invalid {desc} in transaction file: {e!s}')
 
 	def make_filename(self):
 		tx = self.tx
 		def gen_filename():
 			yield tx.txid
-			if g.coin != 'BTC':
-				yield '-' + g.dcoin
+			if tx.coin != 'BTC':
+				yield '-' + tx.dcoin
 			yield f'[{tx.send_amt!s}'
 			if tx.is_replaceable():
 				yield ',{}'.format(tx.fee_abs2rel(tx.get_fee(),to_unit=tx.fn_fee_unit))
@@ -154,24 +147,22 @@ class MMGenTxFile:
 			yield ']'
 			if g.debug_utf8:
 				yield '-α'
-			if g.proto.testnet:
-				yield '.testnet'
+			if tx.proto.testnet:
+				yield '.' + tx.proto.network
 			yield '.' + tx.ext
 		return ''.join(gen_filename())
 
 	def format(self):
 		tx = self.tx
-		tx.inputs.check_coin_mismatch()
-		tx.outputs.check_coin_mismatch()
 
 		def amt_to_str(d):
 			return {k: (str(d[k]) if k == 'amt' else d[k]) for k in d}
 
-		coin_id = '' if g.coin == 'BTC' else g.coin + ('' if g.coin == g.dcoin else ':'+g.dcoin)
+		coin_id = '' if tx.coin == 'BTC' else tx.coin + ('' if tx.coin == tx.dcoin else ':'+tx.dcoin)
 		lines = [
 			'{}{} {} {} {} {}{}'.format(
 				(coin_id+' ' if coin_id else ''),
-				tx.chain.upper() if tx.chain else 'Unknown',
+				tx.chain.upper(),
 				tx.txid,
 				tx.send_amt,
 				tx.timestamp,
@@ -179,8 +170,8 @@ class MMGenTxFile:
 				('',' LT={}'.format(tx.locktime))[bool(tx.locktime)]
 			),
 			tx.hex,
-			ascii([amt_to_str(e.__dict__) for e in tx.inputs]),
-			ascii([amt_to_str(e.__dict__) for e in tx.outputs])
+			ascii([amt_to_str(e._asdict()) for e in tx.inputs]),
+			ascii([amt_to_str(e._asdict()) for e in tx.outputs])
 		]
 
 		if tx.label:
@@ -222,3 +213,10 @@ class MMGenTxFile:
 			ask_write             = ask_write,
 			ask_tty               = ask_tty,
 			ask_write_default_yes = ask_write_default_yes )
+
+	@classmethod
+	def get_proto(cls,filename,quiet_open=False):
+		from .tx import MMGenTX
+		tmp_tx = MMGenTX.Base()
+		cls(tmp_tx).parse(filename,metadata_only=True,quiet_open=quiet_open)
+		return tmp_tx.proto

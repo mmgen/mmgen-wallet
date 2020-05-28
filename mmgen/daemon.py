@@ -306,20 +306,20 @@ class CoinDaemon(Daemon):
 'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, 8545,8545)
 	}
 
-	def __new__(cls,network_id,test_suite=False,flags=None):
+	def __new__(cls,network_id=None,test_suite=False,flags=None,proto=None):
 
-		network_id = network_id.lower()
-		assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
+		assert network_id or proto, 'CoinDaemon_chk1'
+		assert not (network_id and proto), 'CoinDaemon_chk2'
 
-		if network_id.endswith('_rt'):
-			network = 'regtest'
-			daemon_id = network_id[:-3]
-		elif network_id.endswith('_tn'):
-			network = 'testnet'
-			daemon_id = network_id[:-3]
+		if proto:
+			network_id = proto.network_id
+			network    = proto.network
+			daemon_id  = proto.coin.lower()
 		else:
-			network = 'mainnet'
-			daemon_id = network_id
+			network_id = network_id.lower()
+			assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
+			from mmgen.protocol import CoinProtocol
+			daemon_id,network = CoinProtocol.Base.parse_network_id(network_id)
 
 		me = Daemon.__new__(globals()[cls.daemon_ids[daemon_id].cls_pfx+'Daemon'])
 		me.network_id = network_id
@@ -336,22 +336,30 @@ class CoinDaemon(Daemon):
 					'regtest',
 					daemon_id )
 			else:
-				me.datadir = os.path.join(g.data_dir_root,'regtest',daemon_id)
+				datadir = os.path.join(g.data_dir_root,'regtest',daemon_id)
 		elif test_suite:
 			me.desc = 'test suite daemon'
 			rel_datadir = os.path.join('test','daemons',daemon_id)
 		else:
-			from .protocol import init_proto
-			me.datadir = init_proto(daemon_id,False).daemon_data_dir
+			if proto:
+				datadir = proto.daemon_data_dir
+			else:
+				from .protocol import init_proto
+				datadir = init_proto(coin=daemon_id,testnet=False).daemon_data_dir
 
 		if test_suite:
-			me.datadir = os.path.abspath(os.path.join(os.getcwd(),rel_datadir))
+			datadir = os.path.join(os.getcwd(),rel_datadir)
+
+		if g.daemon_data_dir: # user-set value must override
+			datadir = g.daemon_data_dir
+
+		me.datadir = os.path.abspath(datadir)
 
 		me.port_shift = 1237 if test_suite else 0
 		me.platform = g.platform
 		return me
 
-	def __init__(self,network_id,test_suite=False,flags=None):
+	def __init__(self,network_id=None,test_suite=False,flags=None,proto=None):
 		super().__init__()
 
 		self.testnet_arg = []
@@ -385,6 +393,9 @@ class CoinDaemon(Daemon):
 				'testnet': self.dfl_rpc_tn,
 				'regtest': self.dfl_rpc_rt,
 			}[self.network] + self.port_shift
+
+		if g.rpc_port: # user-set value must override
+			self.rpc_port = g.rpc_port
 
 		self.net_desc = '{} {}'.format(self.coin,self.network)
 		self.subclass_init()
@@ -547,14 +558,11 @@ class EthereumDaemon(CoinDaemon):
 
 		# the following code does not work
 		async def do():
-			print(g.rpc)
-			ret = await g.rpc.call('eth_chainId')
-			print(ret)
+			ret = await self.rpc.call('eth_chainId')
 			return ('stopped','ready')[ret == '0x11']
 
-		from mmgen.protocol import init_proto
 		try:
-			return run_session(do(),proto=init_proto('eth')) # socket exception is not propagated
+			return run_session(do()) # socket exception is not propagated
 		except:# SocketError:
 			return 'stopped'
 

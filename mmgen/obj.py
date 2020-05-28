@@ -36,13 +36,12 @@ class aInitMeta(type):
 
 def is_mmgen_seed_id(s):        return SeedID(sid=s,on_fail='silent')
 def is_mmgen_idx(s):            return AddrIdx(s,on_fail='silent')
-def is_mmgen_id(s):             return MMGenID(s,on_fail='silent')
-def is_coin_addr(s):            return CoinAddr(s,on_fail='silent')
 def is_addrlist_id(s):          return AddrListID(s,on_fail='silent')
-def is_tw_label(s):             return TwLabel(s,on_fail='silent')
-def is_wif(s):                  return WifKey(s,on_fail='silent')
-def is_viewkey(s):              return ViewKey(s,on_fail='silent')
 def is_seed_split_specifier(s): return SeedSplitSpecifier(s,on_fail='silent')
+
+def is_mmgen_id(proto,s):  return MMGenID(proto,s,on_fail='silent')
+def is_coin_addr(proto,s): return CoinAddr(proto,s,on_fail='silent')
+def is_wif(proto,s):       return WifKey(proto,s,on_fail='silent')
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0
@@ -87,7 +86,7 @@ class IndexedDict(dict):
 
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
-class AddrListList(list,MMGenObject): pass
+class AddrListData(list,MMGenObject): pass
 
 class InitErrors(object):
 
@@ -230,16 +229,21 @@ class ImmutableAttr: # Descriptor
 	"""
 	ok_dtypes = (str,type,type(None),type(lambda:0))
 
-	def __init__(self,dtype,typeconv=True,set_none_ok=False):
+	def __init__(self,dtype,typeconv=True,set_none_ok=False,include_proto=False):
 		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
+		if include_proto: assert typeconv and type(dtype) == str, 'ImmutableAttr_check2'
 		if set_none_ok:   assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
 
-		if type(dtype).__name__ == 'function':
-			self.conv = lambda instance,value: dtype(value)
+		if dtype is None:
+			'use instance-defined conversion function for this attribute'
+			self.conv = lambda instance,value: getattr(instance.conv_funcs,self.name)(instance,value)
 		elif typeconv:
 			"convert this attribute's type"
 			if type(dtype) == str:
-				self.conv = lambda instance,value: globals()[dtype](value,on_fail='raise')
+				if include_proto:
+					self.conv = lambda instance,value: globals()[dtype](instance.proto,value,on_fail='raise')
+				else:
+					self.conv = lambda instance,value: globals()[dtype](value,on_fail='raise')
 			else:
 				if set_none_ok:
 					self.conv = lambda instance,value: None if value is None else dtype(value)
@@ -280,10 +284,10 @@ class ListItemAttr(ImmutableAttr):
 	For attributes that might not be present in the data instance
 	Reassignment or deletion allowed if specified
 	"""
-	def __init__(self,dtype,typeconv=True,reassign_ok=False,delete_ok=False):
+	def __init__(self,dtype,typeconv=True,include_proto=False,reassign_ok=False,delete_ok=False):
 		self.reassign_ok = reassign_ok
 		self.delete_ok = delete_ok
-		ImmutableAttr.__init__(self,dtype,typeconv=typeconv)
+		ImmutableAttr.__init__(self,dtype,typeconv=typeconv,include_proto=include_proto)
 
 	def __get__(self,instance,owner):
 		"return None if attribute doesn't exist"
@@ -301,8 +305,7 @@ class ListItemAttr(ImmutableAttr):
 			ImmutableAttr.__delete__(self,instance)
 
 class MMGenListItem(MMGenObject):
-
-	valid_attrs = None
+	valid_attrs = set()
 	valid_attrs_extra = set()
 	invalid_attrs = {
 		'pfmt',
@@ -312,15 +315,20 @@ class MMGenListItem(MMGenObject):
 		'valid_attrs_extra',
 		'invalid_attrs',
 		'immutable_attr_init_check',
+		'conv_funcs',
+		'_asdict',
 	}
 
 	def __init__(self,*args,**kwargs):
-		if self.valid_attrs == None:
-			type(self).valid_attrs = (
-				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra ) - self.invalid_attrs )
+		# generate valid_attrs, or use the class valid_attrs if set
+		self.__dict__['valid_attrs'] = self.valid_attrs or (
+				( {e for e in dir(self) if e[:2] != '__'} | self.valid_attrs_extra )
+				- MMGenListItem.invalid_attrs
+				- self.invalid_attrs
+			)
 
 		if args:
-			raise ValueError('Non-keyword args not allowed in {!r} constructor'.format(type(self).__name__))
+			raise ValueError(f'Non-keyword args not allowed in {type(self).__name__!r} constructor')
 
 		for k,v in kwargs.items():
 			if v != None:
@@ -332,9 +340,11 @@ class MMGenListItem(MMGenObject):
 	# allow only valid attributes to be set
 	def __setattr__(self,name,value):
 		if name not in self.valid_attrs:
-			m = "'{}': no such attribute in class {}"
-			raise AttributeError(m.format(name,type(self)))
+			raise AttributeError(f'{name!r}: no such attribute in class {type(self)}')
 		return object.__setattr__(self,name,value)
+
+	def _asdict(self):
+		return dict((k,v) for k,v in self.__dict__.items() if k in self.valid_attrs)
 
 class MMGenIdx(Int): min_val = 1
 class SeedShareIdx(MMGenIdx): max_val = 1024
@@ -526,49 +536,38 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	hex_width = 40
 	width = 1
 	trunc_ok = False
-	def __new__(cls,s,on_fail='die'):
-		if type(s) == cls: return s
+	def __new__(cls,proto,addr,on_fail='die'):
+		if type(addr) == cls:
+			return addr
 		cls.arg_chk(on_fail)
 		try:
-			assert set(s) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
-			me = str.__new__(cls,s)
-			ap = g.proto.parse_addr(s)
-			assert ap,'coin address {!r} could not be parsed'.format(s)
+			assert set(addr) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
+			me = str.__new__(cls,addr)
+			ap = proto.parse_addr(addr)
+			assert ap, f'coin address {addr!r} could not be parsed'
 			me.addr_fmt = ap.fmt
 			me.hex = ap.bytes.hex()
+			me.proto = proto
 			return me
 		except Exception as e:
-			return cls.init_fail(e,s,objname=f'{g.proto.cls_name} address')
+			return cls.init_fail(e,addr,objname=f'{proto.cls_name} address')
 
 	@classmethod
-	def fmtc(cls,s,**kwargs):
+	def fmtc(cls,addr,**kwargs):
 		w = kwargs['width'] or cls.width
-		return super().fmtc(s[:w-2]+'..' if w < len(s) else s, **kwargs)
-
-	def is_for_chain(self,chain):
-
-		if g.proto.name.startswith('Ethereum'):
-			return True
-
-		from mmgen.protocol import init_proto
-		proto = init_proto(g.coin,network=chain)
-
-		if self.addr_fmt == 'bech32':
-			return self[:len(proto.bech32_hrp)] == proto.bech32_hrp
-		else:
-			return bool(proto.parse_addr(self))
+		return super().fmtc(addr[:w-2]+'..' if w < len(addr) else addr, **kwargs)
 
 class TokenAddr(CoinAddr):
 	color = 'blue'
 
 class ViewKey(object):
-	def __new__(cls,s,on_fail='die'):
-		if g.proto.name == 'Zcash':
-			return ZcashViewKey.__new__(ZcashViewKey,s,on_fail)
-		elif g.proto.name == 'Monero':
-			return MoneroViewKey.__new__(MoneroViewKey,s,on_fail)
+	def __new__(cls,proto,viewkey,on_fail='die'):
+		if proto.name == 'Zcash':
+			return ZcashViewKey.__new__(ZcashViewKey,proto,viewkey,on_fail)
+		elif proto.name == 'Monero':
+			return MoneroViewKey.__new__(MoneroViewKey,viewkey,on_fail)
 		else:
-			raise ValueError(f'{g.proto.name}: protocol does not support view keys')
+			raise ValueError(f'{proto.name}: protocol does not support view keys')
 
 class ZcashViewKey(CoinAddr): hex_width = 128
 
@@ -620,39 +619,40 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,s,on_fail='die'):
+	def __new__(cls,proto,id_str,on_fail='die'):
 		cls.arg_chk(on_fail)
 		try:
-			ss = str(s).split(':')
+			ss = str(id_str).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
-			t = MMGenAddrType((ss[1],g.proto.dfl_mmtype)[len(ss)==2],on_fail='raise')
+			t = proto.addr_type((ss[1],proto.dfl_mmtype)[len(ss)==2],on_fail='raise')
 			me = str.__new__(cls,'{}:{}:{}'.format(ss[0],t,ss[-1]))
 			me.sid = SeedID(sid=ss[0],on_fail='raise')
 			me.idx = AddrIdx(ss[-1],on_fail='raise')
 			me.mmtype = t
-			assert t in g.proto.mmtypes, f'{t}: invalid address type for {g.proto.cls_name}'
+			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
 			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
 			me.sort_key = '{}:{}:{:0{w}}'.format(me.sid,me.mmtype,me.idx,w=me.idx.max_digits)
+			me.proto = proto
 			return me
 		except Exception as e:
-			return cls.init_fail(e,s)
+			return cls.init_fail(e,id_str)
 
 class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,id_str,on_fail='die'):
+	def __new__(cls,proto,id_str,on_fail='die'):
 		if type(id_str) == cls:
 			return id_str
 		cls.arg_chk(on_fail)
 		ret = None
 		try:
-			ret = MMGenID(id_str,on_fail='raise')
+			ret = MMGenID(proto,id_str,on_fail='raise')
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
-				assert id_str.split(':',1)[0] == g.proto.base_coin.lower(),(
-					"not a string beginning with the prefix '{}:'".format(g.proto.base_coin.lower()))
+				assert id_str.split(':',1)[0] == proto.base_coin.lower(),(
+					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
 				assert set(id_str[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 				assert len(id_str) > 4,'not more that four characters long'
 				ret,sort_key,idtype = str(id_str),'z_'+id_str,'non-mmgen'
@@ -663,21 +663,23 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 		me.obj = ret
 		me.sort_key = sort_key
 		me.type = idtype
+		me.proto = proto
 		return me
 
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
-	def __new__(cls,text,on_fail='die'):
+	def __new__(cls,proto,text,on_fail='die'):
 		if type(text) == cls:
 			return text
 		cls.arg_chk(on_fail)
 		try:
 			ts = text.split(None,1)
-			mmid = TwMMGenID(ts[0],on_fail='raise')
+			mmid = TwMMGenID(proto,ts[0],on_fail='raise')
 			comment = TwComment(ts[1] if len(ts) == 2 else '',on_fail='raise')
 			me = str.__new__(cls,'{}{}'.format(mmid,' {}'.format(comment) if comment else ''))
 			me.mmid = mmid
 			me.comment = comment
+			me.proto = proto
 			return me
 		except Exception as e:
 			return cls.init_fail(e,text)
@@ -704,7 +706,7 @@ class HexStr(str,Hilite,InitErrors):
 
 class CoinTxID(HexStr):       color,width,hexcase = 'purple',64,'lower'
 class WalletPassword(HexStr): color,width,hexcase = 'blue',32,'lower'
-class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower'
+class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower' # FIXME - no checking performed
 class MMGenTxID(HexStr):      color,width,hexcase = 'red',6,'upper'
 
 class WifKey(str,Hilite,InitErrors):
@@ -714,13 +716,13 @@ class WifKey(str,Hilite,InitErrors):
 	"""
 	width = 53
 	color = 'blue'
-	def __new__(cls,wif,on_fail='die'):
+	def __new__(cls,proto,wif,on_fail='die'):
 		if type(wif) == cls:
 			return wif
 		cls.arg_chk(on_fail)
 		try:
 			assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-			g.proto.parse_wif(wif) # raises exception on error
+			proto.parse_wif(wif) # raises exception on error
 			return str.__new__(cls,wif)
 		except Exception as e:
 			return cls.init_fail(e,wif)
@@ -751,7 +753,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	wif        = ImmutableAttr(WifKey,typeconv=False)
 
 	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
+	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
 
 		if type(s) == cls: return s
 		cls.arg_chk(on_fail)
@@ -760,18 +762,19 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			try:
 				assert s == None,"'wif' and key hex args are mutually exclusive"
 				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-				k = g.proto.parse_wif(wif) # raises exception on error
+				k = proto.parse_wif(wif) # raises exception on error
 				me = str.__new__(cls,k.sec.hex())
 				me.compressed = k.compressed
 				me.pubkey_type = k.pubkey_type
 				me.wif = str.__new__(WifKey,wif) # check has been done
 				me.orig_hex = None
-				if k.sec != g.proto.preprocess_key(k.sec,k.pubkey_type):
+				if k.sec != proto.preprocess_key(k.sec,k.pubkey_type):
 					raise PrivateKeyError(
-						f'{g.proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}')
+						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}')
+				me.proto = proto
 				return me
 			except Exception as e:
-				return cls.init_fail(e,s,objname='{} WIF key'.format(g.coin))
+				return cls.init_fail(e,s,objname=f'{proto.coin} WIF key')
 		else:
 			try:
 				assert s,'private key bytes data missing'
@@ -782,11 +785,12 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 				else:
 					assert compressed is not None, "'compressed' arg missing"
 					assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
-					me = str.__new__(cls,g.proto.preprocess_key(s,pubkey_type).hex())
-					me.wif = WifKey(g.proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
+					me = str.__new__(cls,proto.preprocess_key(s,pubkey_type).hex())
+					me.wif = WifKey(proto,proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
 					me.compressed = compressed
 				me.pubkey_type = pubkey_type
 				me.orig_hex = s.hex() # save the non-preprocessed key
+				me.proto = proto
 				return me
 			except Exception as e:
 				return cls.init_fail(e,s)
@@ -915,20 +919,21 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
-	def __new__(cls,id_str,on_fail='die',errmsg=None):
+	def __new__(cls,proto,id_str,on_fail='die',errmsg=None):
 		if type(id_str) == cls:
 			return id_str
 		cls.arg_chk(on_fail)
 		try:
-			for k,v in list(cls.mmtypes.items()):
+			for k,v in cls.mmtypes.items():
 				if id_str in (k,v.name):
 					if id_str == v.name:
 						id_str = k
 					me = str.__new__(cls,id_str)
 					for k in v._fields:
 						setattr(me,k,getattr(v,k))
-					if me not in g.proto.mmtypes + ('P',):
-						raise ValueError(f'{me.name!r}: invalid address type for {g.proto.cls_name}')
+					if me not in proto.mmtypes + ('P',):
+						raise ValueError(f'{me.name!r}: invalid address type for {proto.name} protocol')
+					me.proto = proto
 					return me
 			raise ValueError(f'{id_str}: unrecognized address type for protocol {proto.name}')
 		except Exception as e:

@@ -23,6 +23,7 @@ regtest: Coin daemon regression test mode setup and operations for the MMGen sui
 import os,time,shutil,re,json
 from subprocess import run,PIPE
 from .common import *
+from .protocol import init_proto
 from .daemon import CoinDaemon
 
 def create_data_dir(data_dir):
@@ -79,6 +80,7 @@ class MMGenRegtest(MMGenObject):
 
 	def __init__(self,coin):
 		self.coin = coin.lower()
+		self.proto = init_proto(self.coin,regtest=True)
 		self.test_suite = os.getenv('MMGEN_TEST_SUITE_REGTEST')
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=self.test_suite)
 
@@ -152,12 +154,12 @@ class MMGenRegtest(MMGenObject):
 			err = cp.stderr.decode()
 			if err:
 				if "couldn't connect to server" in err:
-					rdie(1,f'Error stopping the {g.proto.name} daemon:\n{err}')
+					rdie(1,f'Error stopping the {self.proto.name} daemon:\n{err}')
 				else:
 					msg(err)
 
 	def current_user_unix(self,quiet=False):
-		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(g.proto.daemon_name,self.d.rpc_port)]
+		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(self.proto.daemon_name,self.d.rpc_port)]
 		cmdout = run(cmd,stdout=PIPE).stdout.decode()
 		if cmdout:
 			for k in self.users:
@@ -271,12 +273,11 @@ class MMGenRegtest(MMGenObject):
 
 	def fork(self,coin): # currently disabled
 
-		from .protocol import init_proto
-		forks = init_proto(coin,False).forks
-		if not [f for f in forks if f[2] == g.coin.lower() and f[3] == True]:
-			die(1,"Coin {} is not a replayable fork of coin {}".format(g.coin,coin))
+		proto = init_proto(coin,False)
+		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] == True]:
+			die(1,"Coin {} is not a replayable fork of coin {}".format(proto.coin,coin))
 
-		gmsg('Creating fork from coin {} to coin {}'.format(coin,g.coin))
+		gmsg('Creating fork from coin {} to coin {}'.format(coin,proto.coin))
 
 		source_rt = MMGenRegtest(coin)
 
@@ -300,4 +301,4 @@ class MMGenRegtest(MMGenObject):
 		self.start_daemon('miner',reindex=True)
 		self.stop_daemon()
 
-		gmsg('Fork {} successfully created'.format(g.coin))
+		gmsg('Fork {} successfully created'.format(proto.coin))

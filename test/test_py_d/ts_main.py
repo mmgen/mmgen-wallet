@@ -23,6 +23,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.wallet import Wallet,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
+from mmgen.rpc import rpc_init
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -144,21 +145,20 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
-		if g.coin.lower() not in self.networks:
+		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		if self.proto.coin.lower() not in self.networks:
 			return
-		from mmgen.rpc import rpc_init
-		self.rpc = run_session(rpc_init())
+		self.rpc = run_session(rpc_init(self.proto))
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]
-		if g.coin in ('BTC','BCH','LTC'):
-			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[g.coin.lower()]
-			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[g.coin.lower()]
-		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		if self.proto.coin in ('BTC','BCH','LTC'):
+			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]
+			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.proto.coin.lower()]
 
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')
 		silence()
 		from mmgen.addr import AddrList
-		chk = AddrList(addrfile).chksum
+		chk = AddrList(self.proto,addrfile).chksum
 		if opt.verbose and display: msg('Checksum: {}'.format(cyan(chk)))
 		end_silence()
 		return chk
@@ -295,20 +295,20 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			sys.stderr.write("Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
 
 	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
-		if 'S' not in g.proto.mmtypes: segwit = False
+		if 'S' not in self.proto.mmtypes: segwit = False
 		if lbl: lbl = ' ' + lbl
 		k = coinaddr.addr_fmt
 		if not segwit and k == 'p2sh': k = 'p2pkh'
 		s_beg,s_end = { 'p2pkh':  ('76a914','88ac'),
 						'p2sh':   ('a914','87'),
-						'bech32': (g.proto.witness_vernum_hex + '14','') }[k]
-		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[g.coin.lower()]
+						'bech32': (self.proto.witness_vernum_hex + '14','') }[k]
+		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[self.proto.coin.lower()]
 		ret = {
-			self.lbl_id: '{}:{}'.format(g.proto.base_coin.lower(),coinaddr) if non_mmgen \
+			self.lbl_id: '{}:{}'.format(self.proto.base_coin.lower(),coinaddr) if non_mmgen \
 				else ('{}:{}{}'.format(al_id,idx,lbl)),
 			'vout': int(getrandnum(4) % 8),
 			'txid': os.urandom(32).hex(),
-			'amount': g.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
+			'amount': self.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 			'address': coinaddr,
 			'spendable': False,
 			'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
@@ -330,18 +330,20 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		if non_mmgen_input:
 			from mmgen.obj import PrivKey
 			privkey = PrivKey(
+				self.proto,
 				os.urandom(32),
 				compressed  = non_mmgen_input_compressed,
 				pubkey_type = 'std' )
 			from mmgen.addr import AddrGenerator,KeyGenerator
 			rand_coinaddr = AddrGenerator(
+				self.proto,
 				'p2pkh'
-				).to_addr(KeyGenerator(g.proto,'std').to_pubhex(privkey))
+				).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(
 				outfile           = of,
 				data              = privkey.wif + '\n',
-				desc              = f'compressed {g.proto.name} key',
+				desc              = f'compressed {self.proto.name} key',
 				quiet             = True,
 				ignore_opt_outdir = True )
 			out.append(self._create_fake_unspent_entry(rand_coinaddr,non_mmgen=True,segwit=False))
@@ -351,10 +353,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def _create_tx_data(self,sources,addrs_per_wallet=addrs_per_wallet):
 		from mmgen.addr import AddrData,AddrList
 		from mmgen.obj import AddrIdxList
-		tx_data,ad = {},AddrData()
+		tx_data,ad = {},AddrData(self.proto)
 		for s in sources:
 			afile = get_file_with_ext(self.cfgs[s]['tmpdir'],'addrs')
-			al = AddrList(afile)
+			al = AddrList(self.proto,afile)
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
@@ -371,13 +373,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def _make_txcreate_cmdline(self,tx_data):
 		from mmgen.obj import PrivKey
-		privkey = PrivKey(os.urandom(32),compressed=True,pubkey_type='std')
-		t = ('p2pkh','segwit')['S' in g.proto.mmtypes]
+		privkey = PrivKey(self.proto,os.urandom(32),compressed=True,pubkey_type='std')
+		t = ('p2pkh','segwit')['S' in self.proto.mmtypes]
 		from mmgen.addr import AddrGenerator,KeyGenerator
-		rand_coinaddr = AddrGenerator(t).to_addr(KeyGenerator('std').to_pubhex(privkey))
+		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
-		mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[g.coin.lower()]
+		mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[self.proto.coin.lower()]
 		for k in self.cfgs:
 			self.cfgs[k]['amts'] = [None,None]
 			for idx,mod in enumerate(mods):
@@ -405,7 +407,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 						view                       = 'n',
 						addrs_per_wallet           = addrs_per_wallet,
 						non_mmgen_input_compressed = True,
-						cmdline_inputs             = False )
+						cmdline_inputs             = False,
+						tweaks                     = [] ):
 
 		if opt.verbose or opt.exact_output:
 			sys.stderr.write(green('Generating fake tracking wallet info\n'))
@@ -415,13 +418,15 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		dfake = self._create_fake_unspent_data(ad,tx_data,non_mmgen_input,non_mmgen_input_compressed)
 		self._write_fake_data_to_file(repr(dfake))
 		cmd_args = self._make_txcreate_cmdline(tx_data)
+
 		if cmdline_inputs:
 			from mmgen.tx import TwLabel
 			cmd_args = ['--inputs={},{},{},{},{},{}'.format(
-				TwLabel(dfake[0][self.lbl_id]).mmid,dfake[1]['address'],
-				TwLabel(dfake[2][self.lbl_id]).mmid,dfake[3]['address'],
-				TwLabel(dfake[4][self.lbl_id]).mmid,dfake[5]['address']
+				TwLabel(self.proto,dfake[0][self.lbl_id]).mmid,dfake[1]['address'],
+				TwLabel(self.proto,dfake[2][self.lbl_id]).mmid,dfake[3]['address'],
+				TwLabel(self.proto,dfake[4][self.lbl_id]).mmid,dfake[5]['address']
 				),'--outdir='+self.tr.trash_dir] + cmd_args[1:]
+
 		end_silence()
 
 		if opt.verbose or opt.exact_output:
@@ -429,10 +434,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		t = self.spawn(
 			'mmgen-'+('txcreate','txdo')[bool(txdo_args)],
-			([],['--rbf'])[g.proto.cap('rbf')] +
+			([],['--rbf'])[self.proto.cap('rbf')] +
 			['-f',self.tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 
-		if t.expect([('Get','Transac')[cmdline_inputs],'Unable to connect to \S+'],regex=True) == 1:
+		if t.expect([('Get','Unsigned transac')[cmdline_inputs],'Unable to connect to \S+'],regex=True) == 1:
 			raise TestSuiteException('\n'+t.p.after)
 
 		if cmdline_inputs:
@@ -440,9 +445,6 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			return t
 
 		t.license()
-
-		if txdo_args and add_args: # txdo4
-			t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 
 		for num in tx_data:
 			t.expect_getend('ting address data from file ')
@@ -462,7 +464,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 					inputs           = ' '.join(map(str,outputs_list)),
 					add_comment      = ('',tx_label_lat_cyr_gr)[do_label],
 					non_mmgen_inputs = (0,1)[bool(non_mmgen_input and not txdo_args)],
-					view             = view )
+					view             = view,
+					tweaks           = tweaks )
+
+		if txdo_args and add_args: # txdo4
+			t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 
 		return t
 
@@ -470,7 +476,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.txcreate_common(sources=['1'],add_args=['--vsize-adj=1.01'])
 
 	def txbump(self,txfile,prepend_args=[],seed_args=[]):
-		if not g.proto.cap('rbf'):
+		if not self.proto.cap('rbf'):
 			msg('Skipping RBF'); return 'skip'
 		args = prepend_args + ['--quiet','--outdir='+self.tmpdir,txfile] + seed_args
 		t = self.spawn('mmgen-txbump',args)
@@ -490,8 +496,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				t.written_to_file('Transaction')
 		else:
 			t.do_comment(False)
-			t.expect('Save transaction? (y/N): ','y')
-			t.written_to_file('Transaction')
+			t.expect('Save fee-bumped transaction? (y/N): ','y')
+			t.written_to_file('Fee-bumped transaction')
 		os.unlink(txfile) # our tx file replaces the original
 		cmd = 'touch ' + joinpath(self.tmpdir,'txbump')
 		os.system(cmd)
@@ -619,8 +625,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def txsign_keyaddr(self,keyaddr_file,txfile):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,'-p1','-M',keyaddr_file,txfile])
 		t.license()
-		t.do_decrypt_ka_data(hp='1',pw=self.kapasswd)
 		t.view_tx('n')
+		t.do_decrypt_ka_data(hp='1',pw=self.kapasswd)
 		self.txsign_end(t)
 		return t
 
@@ -694,7 +700,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			sources         = ['1', '2', '3', '4', '14'],
 			non_mmgen_input = '4',
 			do_label        = True,
-			view            = 'y' )
+			view            = 'y',
+			tweaks          = ['confirm_non_mmgen'] )
 
 	def txsign4(self,f1,f2,f3,f4,f5,f6):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
@@ -708,8 +715,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			f1, f2, f3, f4, f5 ]
 		t = self.spawn('mmgen-txsign',add_args)
 		t.license()
-		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 		t.view_tx('t')
+		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 
 		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
 			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
@@ -754,7 +761,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.txcreate_common(
 			sources                    = ['20'],
 			non_mmgen_input            = '20',
-			non_mmgen_input_compressed = False )
+			non_mmgen_input_compressed = False,
+			tweaks                     = ['confirm_non_mmgen'] )
 
 	def txsign5(self,wf,txf,bad_vsize=True,add_args=[]):
 		non_mm_file = joinpath(self.tmpdir,non_mmgen_fn)
@@ -786,7 +794,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			sources                    = ['21'],
 			non_mmgen_input            = '21',
 			non_mmgen_input_compressed = False,
-			add_args                   = ['--vsize-adj=1.08'] )
+			add_args                   = ['--vsize-adj=1.08'],
+			tweaks                     = ['confirm_non_mmgen'] )
 
 	def txsign6(self,txf,wf):
 		return self.txsign5(txf,wf,bad_vsize=False,add_args=['--vsize-adj=1.08'])

@@ -9,14 +9,17 @@ objects
 """
 
 from .oat_common import *
+from mmgen.protocol import init_proto
+
+proto = init_proto('btc')
 
 sample_objs.update({
-	'PrivKey':   PrivKey(seed_bin,compressed=True,pubkey_type='std'),
-	'WifKey':    WifKey('5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'),
-	'CoinAddr':  CoinAddr('1111111111111111111114oLvT2'),
+	'PrivKey':   PrivKey(proto,seed_bin,compressed=True,pubkey_type='std'),
+	'WifKey':    WifKey(proto,'5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'),
+	'CoinAddr':  CoinAddr(proto,'1111111111111111111114oLvT2'),
 	'BTCAmt':    BTCAmt('0.01'),
-	'MMGenID':   MMGenID('F00F00BB:B:1'),
-	'TwMMGenID': TwMMGenID('F00F00BB:S:23'),
+	'MMGenID':   MMGenID(proto,'F00F00BB:B:1'),
+	'TwMMGenID': TwMMGenID(proto,'F00F00BB:S:23'),
 })
 
 tests = {
@@ -29,7 +32,7 @@ tests = {
 #		'viewkey':       (0b001, ViewKey),        # TODO
 #		'wallet_passwd': (0b001, WalletPassword), # TODO
 		},
-		[],
+		(proto,),
 		{}
 	),
 	'PasswordListEntry': atd({
@@ -38,7 +41,7 @@ tests = {
 		'label':  (0b101, TwComment),
 		'sec':    (0b001, PrivKey),
 		},
-		[],
+		(proto,),
 		{'passwd':'ΑlphaΩmega', 'idx':1 },
 	),
 	# obj.py
@@ -46,7 +49,7 @@ tests = {
 		'compressed': (0b001, bool),
 		'wif':        (0b001, WifKey),
 		},
-		[seed_bin],
+		(proto,seed_bin),
 		{'compressed':True, 'pubkey_type':'std'},
 	),
 	'MMGenAddrType': atd({
@@ -59,7 +62,7 @@ tests = {
 		'extra_attrs': (0b001, tuple),
 		'desc':        (0b001, str),
 		},
-		['S'],
+		(proto,'S'),
 		{},
 	),
 	# seed.py
@@ -118,7 +121,7 @@ tests = {
 		'scriptPubKey': (0b001, HexStr),
 		'skip':         (0b101, str),
 		},
-		[],
+		(proto,),
 		{
 			'amt':BTCAmt('0.01'),
 			'twmmid':'F00F00BB:B:17',
@@ -126,7 +129,6 @@ tests = {
 			'confs': 100000,
 			'scriptPubKey':'ff',
 		},
-
 	),
 	# tx.py
 	'MMGenTxInput': atd({
@@ -141,7 +143,7 @@ tests = {
 		'scriptPubKey': (0b001, HexStr),
 		'sequence':     (0b001, int),
 		},
-		[],
+		(proto,),
 		{ 'amt':BTCAmt('0.01'), 'addr':sample_objs['CoinAddr'] },
 	),
 	'MMGenTxOutput': atd({
@@ -155,9 +157,9 @@ tests = {
 		'have_wif':     (0b011, bool),
 		'is_chg':       (0b001, bool),
 		},
-		[],
+		(proto,),
 		{ 'amt':BTCAmt('0.01'), 'addr':sample_objs['CoinAddr'] },
 	),
 }
 
-tests['MMGenPasswordType'] = atd(tests['MMGenAddrType'].attrs, ['P'], {})
+tests['MMGenPasswordType'] = atd(tests['MMGenAddrType'].attrs, [proto,'P'], {})

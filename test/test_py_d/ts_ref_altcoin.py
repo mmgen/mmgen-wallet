@@ -77,44 +77,42 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		('ref_keyaddrfile_chk_zec_z','reference key-address file (ZEC-Z)'),
 		('ref_keyaddrfile_chk_xmr', 'reference key-address file (XMR)'),
 	)
-	# Check saved transaction files for *all* configured altcoins
-	# Though this basically duplicates the autosign test, here we do everything
-	# via the command line, so it's worth doing
+
 	def ref_altcoin_tx_chk(self):
+		"""
+		Check saved transaction files for *all* configured altcoins
+		Though this basically duplicates the autosign test, here we do everything
+		via the command line, so it's worth doing
+		"""
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
-		pf = joinpath(self.tmpdir,pwfile)
-		from mmgen.protocol import init_proto
-		from mmgen.daemon import CoinDaemon
-		for k in ('bch','eth','mm1','etc'):
-			coin,token = ('eth','mm1') if k == 'mm1' else (k,None)
-			ref_subdir = self._get_ref_subdir_by_coin(coin)
-			for tn in (False,True):
-				extra_opts = ['--coin='+coin,f'--testnet={int(tn)}']
-				if tn and coin == 'etc':
+		passfile = joinpath(self.tmpdir,pwfile)
+		from mmgen.txfile import MMGenTxFile
+		src = TestSuiteRef.sources['ref_tx_file']
+		for coin,files in src.items():
+			if coin == 'mm1':
+				coin = 'eth'
+				token_desc = ':MM1'
+			else:
+				token_desc = ''
+			for fn in files:
+				if not fn: # no etc testnet TX file
 					continue
-				if coin == 'bch':
-					network_id = get_network_id('bch',tn)
-					start_test_daemons(network_id)
-					extra_opts += [
-						'--daemon-data-dir=test/daemons/bch',
-						'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port) ]
-				g.proto = init_proto(coin,testnet=tn)
-				fn = TestSuiteRef.sources['ref_tx_file'][token or coin][bool(tn)]
-				tf = joinpath(ref_dir,ref_subdir,fn)
-				wf = dfl_words_file
-				if token:
-					extra_opts += ['--token='+token]
-				t = self.txsign(wf, tf, pf,
-								save       = False,
-								has_label  = True,
-								extra_desc = '({}{})'.format(token or coin,' testnet' if tn else ''),
-								extra_opts = extra_opts )
-				if coin == 'bch':
-					stop_test_daemons(network_id)
-				ok_msg()
-		g.proto = init_proto('btc')
-		t.skip_ok = True
-		return t
+				txfile = joinpath(
+					ref_dir,
+					self._get_ref_subdir_by_coin(coin),
+					fn )
+				proto = MMGenTxFile.get_proto(txfile,quiet_open=True)
+				if proto.sign_mode == 'daemon':
+					start_test_daemons(proto.network_id)
+				t = self.spawn(
+					'mmgen-txsign',
+					['--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
+					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
+				t.read()
+				t.ok()
+				if proto.sign_mode == 'daemon':
+					stop_test_daemons(proto.network_id)
+		return 'ok'
 
 	def ref_altcoin_addrgen(self,coin,mmtype,gen_what='addr',coin_suf='',add_args=[]):
 		wf = dfl_words_file

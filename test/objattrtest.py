@@ -147,16 +147,16 @@ def test_object(test_data,objname):
 
 def do_loop():
 	import importlib
-	modname = 'test.objattrtest_py_d.oat_{}_{}'.format(g.coin.lower(),g.proto.network)
+	modname = f'test.objattrtest_py_d.oat_{proto.coin.lower()}_{proto.network}'
 	test_data = importlib.import_module(modname).tests
-	gmsg('Running immutable attribute tests for {} {}'.format(g.coin,g.proto.network))
+	gmsg(f'Running immutable attribute tests for {proto.coin} {proto.network}')
 
 	utests = cmd_args
 	for obj in test_data:
 		if utests and obj not in utests: continue
-		clr = blue if opt.verbose else nocolor
-		msg(clr('Testing {}'.format(obj)))
+		msg((blue if opt.verbose else nocolor)(f'Testing {obj}'))
 		test_object(test_data,obj)
 
-g.proto = init_proto(g.coin)
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
 do_loop()

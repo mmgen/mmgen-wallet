@@ -47,9 +47,11 @@ class TransactionChainMismatch(Exception):mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3
+class RPCChainMismatch(Exception):        mmcode = 3
 class BadTxSizeEstimate(Exception):       mmcode = 3
 class MaxInputSizeExceeded(Exception):    mmcode = 3
 class MaxFileSizeExceeded(Exception):     mmcode = 3
+class MaxFeeExceeded(Exception):          mmcode = 3
 class WalletFileError(Exception):         mmcode = 3
 class HexadecimalStringError(Exception):  mmcode = 3
 class SeedLengthError(Exception):         mmcode = 3

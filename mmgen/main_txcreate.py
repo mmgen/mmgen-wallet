@@ -61,14 +61,14 @@ opts_data = {
 		'notes': '\n{}{}',
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda proto,help_notes,s: s.format(
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
 			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
-			cu=g.coin,
+			cu=proto.coin,
 			g=g),
-		'notes': lambda s: s.format(
+		'notes': lambda help_notes,s: s.format(
 			help_notes('txcreate'),
 			help_notes('fee'))
 	}
@@ -79,10 +79,27 @@ cmd_args = opts.init(opts_data)
 g.use_cached_balances = opt.cached_balances
 
 async def main():
+
+	from .protocol import init_proto_from_opts
+	proto = init_proto_from_opts()
+
 	from .tx import MMGenTX
 	from .tw import TrackingWallet
-	tx = MMGenTX(tw=await TrackingWallet() if g.token else None)
-	await tx.create(cmd_args,int(opt.locktime or 0),do_info=opt.info)
-	tx.write_to_file(ask_write=not opt.yes,ask_overwrite=not opt.yes,ask_write_default_yes=False)
+	tx1 = MMGenTX.New(
+		proto = proto,
+		tw    = await TrackingWallet(proto) if proto.tokensym else None )
+
+	from .rpc import rpc_init
+	tx1.rpc = await rpc_init(proto)
+
+	tx2 = await tx1.create(
+		cmd_args = cmd_args,
+		locktime = int(opt.locktime or 0),
+		do_info  = opt.info )
+
+	tx2.write_to_file(
+		ask_write             = not opt.yes,
+		ask_overwrite         = not opt.yes,
+		ask_write_default_yes = False )
 
 run_session(main())

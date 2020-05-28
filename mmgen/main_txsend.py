@@ -41,37 +41,36 @@ opts_data = {
 cmd_args = opts.init(opts_data)
 
 if len(cmd_args) == 1:
-	infile = cmd_args[0]; check_infile(infile)
+	infile = cmd_args[0]
+	check_infile(infile)
 else:
 	opts.usage()
 
 if not opt.status:
 	do_license_msg()
 
-from .tx import *
-
 async def main():
 
-	from .tw import TrackingWallet
-	tx = MMGenTX(infile,quiet_open=True,tw=await TrackingWallet() if g.token else None)
+	from .tx import MMGenTX
 
-	if g.token:
-		from .tw import TrackingWallet
-		tx.tw = await TrackingWallet()
+	tx = MMGenTX.Signed(
+		filename   = infile,
+		quiet_open = True,
+		tw         = await MMGenTX.Signed.get_tracking_wallet(infile) )
 
-	vmsg("Signed transaction file '{}' is valid".format(infile))
+	from .rpc import rpc_init
+	tx.rpc = await rpc_init(tx.proto)
 
-	if not tx.marked_signed():
-		die(1,'Transaction is not signed!')
+	vmsg(f'Signed transaction file {infile!r} is valid')
 
 	if opt.status:
 		if tx.coin_txid:
-			qmsg('{} txid: {}'.format(g.coin,tx.coin_txid.hl()))
+			qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
 		await tx.get_status(status=True)
 		sys.exit(0)
 
 	if not opt.yes:
-		tx.view_with_prompt('View transaction data?')
+		tx.view_with_prompt('View transaction details?')
 		if tx.add_comment(): # edits an existing comment, returns true if changed
 			tx.write_to_file(ask_write_default_yes=True)
 

@@ -22,8 +22,8 @@ test/test.py: Test suite for the MMGen wallet system
 
 def check_segwit_opts():
 	for k,m in (('segwit','S'),('segwit_random','S'),('bech32','B')):
-		if getattr(opt,k) and m not in g.proto.mmtypes:
-			die(1,f'--{k.replace("_","-")} option incompatible with {g.proto.cls_name}')
+		if getattr(opt,k) and m not in proto.mmtypes:
+			die(1,f'--{k.replace("_","-")} option incompatible with {proto.cls_name}')
 
 def create_shm_dir(data_dir,trash_dir):
 	# Laggy flash media can cause pexpect to fail, so create a temporary directory
@@ -140,7 +140,7 @@ If no command is given, the whole test suite is run.
 	}
 }
 
-data_dir = os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])
+data_dir = get_data_dir() # include/common.py
 
 # we need some opt values before running opts.init, so parse without initializing:
 _uopts = opts.init(opts_data,parse_only=True).user_opts
@@ -150,21 +150,35 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	try: os.unlink(data_dir)
 	except: pass
 
-def get_coin():
-	return (_uopts.get('coin') or 'btc').lower()
+def add_cmdline_opts():
+	"""
+	These are set automatically now when g.test_suite == True:
+	  --data-dir in opts.init()
+	  --daemon-data-dir and --rpc-port by CoinDaemon()
+	"""
+	def get_coin():
+		return (_uopts.get('coin') or 'btc').lower()
 
-network_id = get_network_id(get_coin(),bool(_uopts.get('testnet')))
+	network_id = get_coin().lower() + ('_tn' if _uopts.get('testnet') else '')
 
-sys.argv.insert(1,'--data-dir=' + data_dir)
-sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
-sys.argv.insert(1,'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port))
+	sys.argv.insert(1,'--data-dir=' + data_dir)
+	sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
+	sys.argv.insert(1,'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port))
+
+# add_cmdline_opts()
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
 
+network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
+
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
+
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
-if not ('resume' in _uopts or 'skip_deps' in _uopts):
+
+if not (opt.resume or opt.skip_deps):
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
@@ -673,7 +687,7 @@ class TestSuiteRunner(object):
 
 		if opt.log:
 			self.log_fd.write('[{}][{}:{}] {}\n'.format(
-				g.coin.lower(),
+				proto.coin.lower(),
 				self.ts.group_name,
 				self.ts.test_name,
 				cmd_disp))
@@ -699,7 +713,7 @@ class TestSuiteRunner(object):
 		def gen_msg():
 			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname,c=cmd)
 			if len(ts_cls.networks) != 1:
-				yield ' for {} {}'.format(g.proto.coin,g.proto.network)
+				yield ' for {} {}'.format(proto.coin,proto.network)
 			if segwit_opt:
 				yield ' (--{})'.format(segwit_opt.replace('_','-'))
 
@@ -712,8 +726,8 @@ class TestSuiteRunner(object):
 		# 'networks = ()' means all networks allowed
 		nws = [(e.split('_')[0],'testnet') if '_' in e else (e,'mainnet') for e in ts_cls.networks]
 		if nws:
-			coin = g.coin.lower()
-			nw = ('mainnet','testnet')[g.proto.testnet]
+			coin = proto.coin.lower()
+			nw = ('mainnet','testnet')[proto.testnet]
 			for a,b in nws:
 				if a == coin and b == nw:
 					break

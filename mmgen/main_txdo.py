@@ -93,7 +93,7 @@ column below:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda proto,help_notes,s: s.format(
 			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			fu=help_notes('rel_fee_desc'),
@@ -103,8 +103,8 @@ column below:
 			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
 			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
 			kg=g.key_generator,
-			cu=g.coin),
-		'notes': lambda s: s.format(
+			cu=proto.coin),
+		'notes': lambda help_notes,s: s.format(
 			help_notes('txcreate'),
 			help_notes('fee'),
 			help_notes('txsign'),
@@ -121,24 +121,36 @@ from .txsign import *
 
 seed_files = get_seed_files(opt,cmd_args)
 
-kal = get_keyaddrlist(opt)
-kl = get_keylist(opt)
-if kl and kal:
-	kl.remove_dup_keys(kal)
-
 async def main():
 	from .tw import TrackingWallet
-	tx1 = MMGenTX(caller='txdo',tw=await TrackingWallet() if g.token else None)
 
-	await tx1.create(cmd_args,int(opt.locktime or 0))
+	from .protocol import init_proto_from_opts
+	proto = init_proto_from_opts()
 
-	tx2 = MMGenTxForSigning(data=tx1.__dict__)
+	tx1 = MMGenTX.New(
+		proto = proto,
+		tw    = await TrackingWallet(proto) if proto.tokensym else None )
 
-	if await txsign(tx2,seed_files,kl,kal):
-		tx2.write_to_file(ask_write=False)
-		await tx2.send(exit_on_fail=True)
-		tx2.write_to_file(ask_overwrite=False,ask_write=False)
-		tx2.print_contract_addr()
+	from .rpc import rpc_init
+	tx1.rpc = await rpc_init(proto)
+
+	tx2 = await tx1.create(
+		cmd_args = cmd_args,
+		locktime = int(opt.locktime or 0),
+		caller   = 'txdo' )
+
+	kal = get_keyaddrlist(proto,opt)
+	kl = get_keylist(proto,opt)
+	if kl and kal:
+		kl.remove_dup_keys(kal)
+
+	tx3 = await txsign(tx2,seed_files,kl,kal)
+
+	if tx3:
+		tx3.write_to_file(ask_write=False)
+		await tx3.send(exit_on_fail=True)
+		tx3.write_to_file(ask_overwrite=False,ask_write=False)
+		tx3.print_contract_addr()
 	else:
 		die(2,'Transaction could not be signed')
 

@@ -58,19 +58,20 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 	)
 
 	def split_setup(self):
-		if g.coin != 'BTC': die(1,'Test valid only for coin BTC')
-		opt.coin = 'BTC'
+		if self.proto.coin != 'BTC':
+			die(1,'Test valid only for coin BTC')
+		self.coin = 'BTC'
 		return self.setup()
 
 	def split_fork(self):
-		opt.coin = 'B2X'
+		self.coin = 'B2X'
 		t = self.spawn('mmgen-regtest',['fork','btc'])
 		t.expect('Creating fork from coin')
 		t.expect('successfully created')
 		t.ok()
 
 	def split_start(self,coin):
-		opt.coin = coin
+		self.coin = coin
 		t = self.spawn('mmgen-regtest',['bob'])
 		t.expect('Starting')
 		t.expect('done')
@@ -83,7 +84,7 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 	def split_gen_b2x2(self):  self.regtest_generate(coin='B2X')
 
 	def split_do_split(self):
-		opt.coin = 'B2X'
+		self.coin = 'B2X'
 		sid = self.regtest_user_sid('bob')
 		t = self.spawn('mmgen-split',[
 			'--bob',
@@ -105,7 +106,7 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 	def split_sign(self,coin,ext):
 		wf = get_file_with_ext(self.regtest_user_dir('bob',coin=coin.lower()),'mmdat')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		opt.coin = coin
+		self.coin = coin
 		self.txsign(txfile,wf,extra_opts=['--bob'])
 
 	def split_sign_b2x(self):
@@ -115,7 +116,7 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 		return self.regtest_sign(coin='BTC',ext='9997].rawtx')
 
 	def split_send(self,coin,ext):
-		opt.coin = coin
+		self.coin = coin
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		self.txsend(txfile,bogus_send=False,extra_opts=['--bob'])
 
@@ -126,7 +127,7 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 		return self.regtest_send(coin='BTC',ext='9997].sigtx')
 
 	def split_txdo_timelock(self,coin,locktime,bad_locktime):
-		opt.coin = coin
+		self.coin = coin
 		sid = self.regtest_user_sid('bob')
 		self.regtest_user_txdo( 'bob','0.0001',[sid+':S:5'],'1',pw=rt_pw,
 								extra_args=['--locktime='+str(locktime)],

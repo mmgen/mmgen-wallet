@@ -11,6 +11,10 @@ from mmgen.obj import *
 from mmgen.seed import *
 from .ot_common import *
 
+from mmgen.protocol import init_proto
+proto = init_proto('btc')
+tw_pfx = proto.base_coin.lower() + ':'
+
 ssm = str(SeedShareCount.max_val)
 
 tests = {
@@ -82,8 +86,15 @@ tests = {
 		)
 	},
 	'CoinAddr': {
-		'bad':  (1,'x','я'),
-		'good': ('1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr','32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj'),
+		'good':  (
+			{'addr':'1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr', 'proto':proto},
+			{'addr':'32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj', 'proto':proto},
+		),
+		'bad':  (
+			{'addr':1,   'proto':proto},
+			{'addr':'x', 'proto':proto},
+			{'addr':'я', 'proto':proto},
+		),
 	},
 	'SeedID': {
 		'bad':  (
@@ -93,7 +104,8 @@ tests = {
 			{'sid':1},
 			{'sid':'F00BAA123'},
 			{'sid':'f00baa12'},
-			'я',r32,'abc'),
+			'я',r32,'abc'
+			),
 		'good': (({'sid':'F00BAA12'},'F00BAA12'),(Seed(r16),Seed(r16).sid))
 	},
 	'SubSeedIdx': {
@@ -101,12 +113,41 @@ tests = {
 		'good': (('1','1L'),('1s','1S'),'20S','30L',('300l','300L'),('200','200L'),str(SubSeedIdxRange.max_idx)+'S')
 	},
 	'MMGenID': {
-		'bad':  ('x',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99'),
-		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:99')
+		'bad':  (
+			{'id_str':'x',             'proto':proto},
+			{'id_str':1,               'proto':proto},
+			{'id_str':'f00f00f',       'proto':proto},
+			{'id_str':'a:b',           'proto':proto},
+			{'id_str':'x:L:3',         'proto':proto},
+			{'id_str':'F00BAA12',      'proto':proto},
+			{'id_str':'F00BAA12:Z:99', 'proto':proto},
+		),
+		'good':  (
+			{'id_str':'F00BAA12:99',   'proto':proto, 'ret':'F00BAA12:L:99'},
+			{'id_str':'F00BAA12:L:99', 'proto':proto},
+			{'id_str':'F00BAA12:S:99', 'proto':proto},
+		),
 	},
 	'TwMMGenID': {
-		'bad':  ('x','я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0','F00BAA12:Z:99',tw_pfx,tw_pfx+'я'),
-		'good': (('F00BAA12:99','F00BAA12:L:99'),'F00BAA12:L:99','F00BAA12:S:9999999',tw_pfx+'x')
+		'bad':  (
+			{'id_str':'x',             'proto':proto},
+			{'id_str':'я',             'proto':proto},
+			{'id_str':'я:я',           'proto':proto},
+			{'id_str':1,               'proto':proto},
+			{'id_str':'f00f00f',       'proto':proto},
+			{'id_str':'a:b',           'proto':proto},
+			{'id_str':'x:L:3',         'proto':proto},
+			{'id_str':'F00BAA12:0',    'proto':proto},
+			{'id_str':'F00BAA12:Z:99', 'proto':proto},
+			{'id_str':tw_pfx,          'proto':proto},
+			{'id_str':tw_pfx+'я',      'proto':proto},
+		),
+		'good':  (
+			{'id_str':tw_pfx+'x',           'proto':proto},
+			{'id_str':'F00BAA12:99',        'proto':proto, 'ret':'F00BAA12:L:99'},
+			{'id_str':'F00BAA12:L:99',      'proto':proto},
+			{'id_str':'F00BAA12:S:9999999', 'proto':proto},
+		),
 	},
 	'TwLabel': {
 		'bad':  ('x x','x я','я:я',1,'f00f00f','a:b','x:L:3','F00BAA12:0 x',
@@ -120,6 +161,30 @@ tests = {
 			'F00BAA12:S:9999999 comment',
 			tw_pfx+'x comment')
 	},
+	'TwLabel': {
+		'bad':  (
+			{'text':'x x',           'proto':proto},
+			{'text':'x я',           'proto':proto},
+			{'text':'я:я',           'proto':proto},
+			{'text':1,               'proto':proto},
+			{'text':'f00f00f',       'proto':proto},
+			{'text':'a:b',           'proto':proto},
+			{'text':'x:L:3',         'proto':proto},
+			{'text':'F00BAA12:0 x',  'proto':proto},
+			{'text':'F00BAA12:Z:99', 'proto':proto},
+			{'text':tw_pfx+' x',     'proto':proto},
+			{'text':tw_pfx+'я x',    'proto':proto},
+			{'text':utf8_ctrl[:40],  'proto':proto},
+			{'text':'F00BAA12:S:1 '+ utf8_ctrl[:40], 'proto':proto, 'on_fail':'raise','ExcType':'BadTwComment'},
+		),
+		'good':  (
+			{'text':'F00BAA12:99 a comment',            'proto':proto, 'ret':'F00BAA12:L:99 a comment'},
+			{'text':'F00BAA12:L:99 a comment',          'proto':proto},
+			{'text': 'F00BAA12:L:99 comment (UTF-8) α', 'proto':proto},
+			{'text':'F00BAA12:S:9999999 comment',       'proto':proto},
+			{'text':tw_pfx+'x comment',                 'proto':proto},
+		),
+	},
 	'MMGenTxID': {
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012'),
 		'good': ('DEADBE','F00BAA')
@@ -129,9 +194,23 @@ tests = {
 		'good': (r32.hex(),)
 	},
 	'WifKey': {
-		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00',r16.hex(),'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'),
-		'good': ('5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
-				'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk'),
+		'bad': (
+			{'proto':proto, 'wif':1},
+			{'proto':proto, 'wif':[]},
+			{'proto':proto, 'wif':'\0'},
+			{'proto':proto, 'wif':'\1'},
+			{'proto':proto, 'wif':'я'},
+			{'proto':proto, 'wif':'g'},
+			{'proto':proto, 'wif':'gg'},
+			{'proto':proto, 'wif':'FF'},
+			{'proto':proto, 'wif':'f00'},
+			{'proto':proto, 'wif':r16.hex()},
+			{'proto':proto, 'wif':'2MspvWFjBbkv2wzQGqhxJUYPCk3Y2jMaxLN'},
+		),
+		'good': (
+			{'proto':proto, 'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',  'ret_idx':1},
+			{'proto':proto, 'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk', 'ret_idx':1},
+		)
 	},
 	'PubKey': {
 		'bad':  ({'arg':1,'compressed':False},{'arg':'F00BAA12','compressed':False},),
@@ -139,24 +218,24 @@ tests = {
 	},
 	'PrivKey': {
 		'bad': (
-			{'wif':1},
-			{'wif':'1'},
-			{'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'},
-			{'s':r32,'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
-			{'pubkey_type':'std'},
-			{'s':r32},
-			{'s':r32,'compressed':'yes'},
-			{'s':r32,'compressed':'yes','pubkey_type':'std'},
-			{'s':r32,'compressed':True,'pubkey_type':'nonstd'},
-			{'s':r32+b'x','compressed':True,'pubkey_type':'std'}
+			{'proto':proto, 'wif':1},
+			{'proto':proto, 'wif':'1'},
+			{'proto':proto, 'wif':'cMsqcmDYZP1LdKgqRh9L4ZRU9br28yvdmTPwW2YQwVSN9aQiMAoR'},
+			{'proto':proto, 's':r32,'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb'},
+			{'proto':proto, 'pubkey_type':'std'},
+			{'proto':proto, 's':r32},
+			{'proto':proto, 's':r32,'compressed':'yes'},
+			{'proto':proto, 's':r32,'compressed':'yes','pubkey_type':'std'},
+			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'nonstd'},
+			{'proto':proto, 's':r32+b'x','compressed':True,'pubkey_type':'std'}
 		),
 		'good': (
-			{'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
+			{'proto':proto, 'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
 			'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
-			{'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
+			{'proto':proto, 'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
 			'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'},
-			{'s':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
-			{'s':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+			{'proto':proto, 's':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
+			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
 		)
 	},
 	'AddrListID': { # a rather pointless test, but do it anyway
@@ -164,8 +243,8 @@ tests = {
 			{'sid':SeedID(sid='F00BAA12'),'mmtype':'Z','ret':'F00BAA12:Z'},
 		),
 		'good':  (
-			{'sid':SeedID(sid='F00BAA12'),'mmtype':MMGenAddrType('S'),'ret':'F00BAA12:S'},
-			{'sid':SeedID(sid='F00BAA12'),'mmtype':MMGenAddrType('L'),'ret':'F00BAA12:L'},
+			{'sid':SeedID(sid='F00BAA12'),'mmtype':proto.addr_type(id_str='S'),'ret':'F00BAA12:S'},
+			{'sid':SeedID(sid='F00BAA12'),'mmtype':proto.addr_type(id_str='L'),'ret':'F00BAA12:L'},
 		)
 	},
 	'MMGenWalletLabel': {
@@ -193,23 +272,34 @@ tests = {
 		'good': ('qwerty@яяя',)
 	},
 	'MMGenAddrType': {
-		'bad': ('U','z','xx',1,'dogecoin'),
+		'bad':  (
+			{'proto':proto, 'id_str':'U',        'ret':'L'},
+			{'proto':proto, 'id_str':'z',        'ret':'L'},
+			{'proto':proto, 'id_str':'xx',       'ret':'C'},
+			{'proto':proto, 'id_str':'dogecoin', 'ret':'C'},
+		),
 		'good':  (
-			{'s':'legacy','ret':'L'},
-			{'s':'L','ret':'L'},
-			{'s':'compressed','ret':'C'},
-			{'s':'C','ret':'C'},
-			{'s':'segwit','ret':'S'},
-			{'s':'S','ret':'S'},
-			{'s':'bech32','ret':'B'},
-			{'s':'B','ret':'B'}
+			{'proto':proto, 'id_str':'legacy',    'ret':'L'},
+			{'proto':proto, 'id_str':'L',         'ret':'L'},
+			{'proto':proto, 'id_str':'compressed','ret':'C'},
+			{'proto':proto, 'id_str':'C',         'ret':'C'},
+			{'proto':proto, 'id_str':'segwit',    'ret':'S'},
+			{'proto':proto, 'id_str':'S',         'ret':'S'},
+			{'proto':proto, 'id_str':'bech32',    'ret':'B'},
+			{'proto':proto, 'id_str':'B',         'ret':'B'}
 		)
 	},
 	'MMGenPasswordType': {
-		'bad': ('U','z','я',1,'passw0rd'),
+		'bad':  (
+			{'proto':proto, 'id_str':'U',        'ret':'L'},
+			{'proto':proto, 'id_str':'z',        'ret':'L'},
+			{'proto':proto, 'id_str':'я',        'ret':'C'},
+			{'proto':proto, 'id_str':1,          'ret':'C'},
+			{'proto':proto, 'id_str':'passw0rd', 'ret':'C'},
+		),
 		'good': (
-			{'s':'password','ret':'P'},
-			{'s':'P','ret':'P'},
+			{'proto':proto, 'id_str':'password', 'ret':'P'},
+			{'proto':proto, 'id_str':'P',        'ret':'P'},
 		)
 	},
 	'SeedSplitSpecifier': {

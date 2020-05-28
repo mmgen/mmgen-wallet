@@ -30,15 +30,22 @@ from decimal import Decimal
 from include.tests_header import repo_root
 from mmgen.common import *
 from test.include.common import *
-from mmgen.obj import is_wif,is_coin_addr
 from mmgen.wallet import is_bip39_mnemonic,is_mmgen_mnemonic
 from mmgen.addr import is_xmrseed
 from mmgen.baseconv import *
+
+skipped_tests = ['mn2hex_interactive']
 
 NL = ('\n','\r\n')[g.platform=='win']
 
 def is_str(s):
 	return type(s) == str
+
+from mmgen.obj import is_wif,is_coin_addr
+def is_wif_loc(s):
+	return is_wif(proto,s)
+def is_coin_addr_loc(s):
+	return is_coin_addr(proto,s)
 
 def md5_hash(s):
 	from hashlib import md5
@@ -559,12 +566,12 @@ tests = {
 			],
 		},
 		'randpair': {
-			'btc_mainnet': [ ( [], [is_wif,is_coin_addr], ['-r0'] ) ],
-			'btc_testnet': [ ( [], [is_wif,is_coin_addr], ['-r0'] ) ],
+			'btc_mainnet': [ ( [], [is_wif_loc,is_coin_addr_loc], ['-r0'] ) ],
+			'btc_testnet': [ ( [], [is_wif_loc,is_coin_addr_loc], ['-r0'] ) ],
 		},
 		'randwif': {
-			'btc_mainnet': [ ( [], is_wif, ['-r0'] ) ],
-			'btc_testnet': [ ( [], is_wif, ['-r0'] ) ],
+			'btc_mainnet': [ ( [], is_wif_loc, ['-r0'] ) ],
+			'btc_testnet': [ ( [], is_wif_loc, ['-r0'] ) ],
 		},
 		'wif2addr': {
 			'btc_mainnet': [
@@ -773,11 +780,13 @@ tests = {
 
 coin_dependent_groups = ('Coin','File') # TODO: do this as attr of each group in tool.py
 
-def run_test(gid,cmd_name):
+async def run_test(gid,cmd_name):
 	data = tests[gid][cmd_name]
-	# behavior is like test.py: run coin-dependent tests only if g.proto.testnet or g.coin != BTC
+	# behavior is like test.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
 	if gid in coin_dependent_groups:
-		k = '{}_{}net'.format((g.token.lower() if g.token else g.coin.lower()),('main','test')[g.proto.testnet])
+		k = '{}_{}'.format(
+			( g.token.lower() if proto.tokensym else proto.coin.lower() ),
+			('mainnet','testnet')[proto.testnet] )
 		if k in data:
 			data = data[k]
 			m2 = ' ({})'.format(k)
@@ -785,7 +794,7 @@ def run_test(gid,cmd_name):
 			qmsg(f'-- no data for {cmd_name} ({k}) - skipping')
 			return
 	else:
-		if g.coin != 'BTC' or g.proto.testnet:
+		if proto.coin != 'BTC' or proto.testnet:
 			return
 		m2 = ''
 	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else docstring_head(tc[cmd_name]),m2)
@@ -810,7 +819,7 @@ def run_test(gid,cmd_name):
 
 		return cmd_out.strip()
 
-	def run_func(cmd_name,args,out,opts,exec_code):
+	async def run_func(cmd_name,args,out,opts,exec_code):
 		vmsg('{}: {}{}'.format(purple('Running'),
 				' '.join([cmd_name]+[repr(e) for e in args]),
 				' '+exec_code if exec_code else '' ))
@@ -837,6 +846,8 @@ def run_test(gid,cmd_name):
 				sys.exit(0)
 		else:
 			ret = tc.call(cmd_name,*aargs,**kwargs)
+			if type(ret).__name__ == 'coroutine':
+				ret = await ret
 			opt.quiet = oq_save
 			return ret
 
@@ -873,7 +884,7 @@ def run_test(gid,cmd_name):
 			if stdin_input and g.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
-			cmd_out = run_func(cmd_name,args,out,opts,exec_code)
+			cmd_out = await run_func(cmd_name,args,out,opts,exec_code)
 
 		try:    vmsg('Output:\n{}\n'.format(cmd_out))
 		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
@@ -925,12 +936,14 @@ def run_test(gid,cmd_name):
 def docstring_head(obj):
 	return obj.__doc__.strip().split('\n')[0]
 
-def do_group(gid):
+async def do_group(gid):
 	qmsg(blue('Testing ' +
 		f'command group {gid!r}' if opt.names else
 		docstring_head(tc.classes['MMGenToolCmd'+gid]) ))
 
 	for cname in tc.classes['MMGenToolCmd'+gid].user_commands:
+		if cname in skipped_tests:
+			continue
 		if cname not in tests[gid]:
 			m = f'No test for command {cname!r} in group {gid!r}!'
 			if opt.die_on_missing:
@@ -938,7 +951,7 @@ def do_group(gid):
 			else:
 				msg(m)
 				continue
-		run_test(gid,cname)
+		await run_test(gid,cname)
 
 def do_cmd_in_group(cmd):
 	for gid in tests:
@@ -955,6 +968,9 @@ def list_tested_cmds():
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(opts_data,add_opts=['use_old_ed25519'])
+
+from mmgen.protocol import init_proto_from_opts
+proto = init_proto_from_opts()
 
 if opt.tool_api:
 	del tests['Wallet']
@@ -1003,7 +1019,7 @@ else:
 
 start_time = int(time.time())
 
-def main():
+async def main():
 	try:
 		if cmd_args:
 			for cmd in cmd_args:
@@ -1018,7 +1034,7 @@ def main():
 	except KeyboardInterrupt:
 		die(1,green('\nExiting at user request'))
 
-main()
+run_session(main())
 
 t = int(time.time()) - start_time
 gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
