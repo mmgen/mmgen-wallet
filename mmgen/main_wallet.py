@@ -198,21 +198,27 @@ if invoked_as != 'gen':
 	gmsg_r('Processing output wallet' + ('\n',' ')[invoked_as == 'seedsplit'])
 
 if invoked_as == 'subgen':
-	ss_out = Wallet(seed_bin=ss_in.seed.subseed(ss_idx,print_msg=True).data)
+	ss_out = Wallet( seed_bin = ss_in.seed.subseed(ss_idx,print_msg=True).data )
 elif invoked_as == 'seedsplit':
 	shares = ss_in.seed.split(sss.count,sss.id,master_share)
 	seed_out = shares.get_share_by_idx(sss.idx,base_seed=True)
 	msg(seed_out.get_desc(ui=True))
 	ss_out = Wallet(seed=seed_out)
 else:
-	ss_out = Wallet(ss=ss_in,passchg=invoked_as=='passchg')
+	ss_out = Wallet(
+		ss      = ss_in,
+		passchg = invoked_as == 'passchg' )
 
 if invoked_as == 'gen':
-	qmsg("This wallet's Seed ID: {}".format(ss_out.seed.sid.hl()))
+	qmsg(f"This wallet's Seed ID: {ss_out.seed.sid.hl()}")
 
 if invoked_as == 'passchg':
-	if not (opt.force_update or [k for k in ('passwd','hash_preset','label')
-		if getattr(ss_out.ssdata,k) != getattr(ss_in.ssdata,k)]):
+	def data_changed(attrs):
+		for attr in attrs:
+			if getattr(ss_out.ssdata,attr) != getattr(ss_in.ssdata,attr):
+				return True
+		return False
+	if not ( opt.force_update or data_changed(('passwd','hash_preset','label')) ):
 		die(1,'Password, hash preset and label are unchanged.  Taking no action')
 
 if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
@@ -226,18 +232,20 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	try:
 		run(wipe_cmd + [ss_in.infile.name],check=True)
 	except:
-		ymsg("WARNING: '{}' command failed, using regular file delete instead".format(wipe_cmd[0]))
+		ymsg(f'WARNING: {wipe_cmd[0]!r} command failed, using regular file delete instead')
 		os.unlink(ss_in.infile.name)
 else:
 	try:
-		assert invoked_as == 'gen','dw'
-		assert not opt.outdir,'dw'
-		assert not opt.stdout,'dw'
-		assert not find_file_in_dir(MMGenWallet,g.data_dir),'dw'
-		m = 'Make this wallet your default and move it to the data directory?'
-		assert keypress_confirm(m,default_yes=True),'dw'
+		assert invoked_as == 'gen', 'dw'
+		assert not opt.outdir, 'dw'
+		assert not opt.stdout, 'dw'
+		assert not find_file_in_dir( MMGenWallet, g.data_dir ), 'dw'
+		assert keypress_confirm(
+			'Make this wallet your default and move it to the data directory?',
+			default_yes = True ), 'dw'
 	except Exception as e:
-		if e.args[0] != 'dw': raise
+		if str(e) != 'dw':
+			raise
 		ss_out.write_to_file()
 	else:
 		ss_out.write_to_file(outdir=g.data_dir)
@@ -248,4 +256,4 @@ if invoked_as == 'passchg':
 	else:
 		msg('Wallet passphrase has changed')
 	if ss_out.ssdata.hash_preset != ss_in.ssdata.hash_preset:
-		msg("Hash preset has been changed to '{}'".format(ss_out.ssdata.hash_preset))
+		msg(f'Hash preset has been changed to {ss_out.ssdata.hash_preset!r}')

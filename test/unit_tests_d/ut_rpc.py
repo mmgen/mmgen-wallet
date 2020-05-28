@@ -92,22 +92,24 @@ class unit_tests:
 			if not opt.no_daemon_autostart:
 				md.start()
 
-			g.monero_wallet_rpc_password = 'passwOrd'
-			mwd = MoneroWalletDaemon(wallet_dir='test/trash',test_suite=True)
-			mwd.start()
+			wd = MoneroWalletDaemon(
+				wallet_dir = 'test/trash',
+				passwd     = 'ut_rpc_passw0rd',
+				test_suite = True )
+			wd.start()
 
 			c = MoneroWalletRPCClient(
-				host = g.monero_wallet_rpc_host,
-				port = mwd.rpc_port,
-				user = g.monero_wallet_rpc_user,
-				passwd = g.monero_wallet_rpc_password)
+				host   = wd.host,
+				port   = wd.rpc_port,
+				user   = wd.user,
+				passwd = wd.passwd )
 
 			await c.call('get_version')
 
 			gmsg('OK')
 
-			mwd.wait = False
-			mwd.stop()
+			wd.wait = False
+			wd.stop()
 
 			if not opt.no_daemon_stop:
 				md.wait = False

@@ -11,7 +11,7 @@ class unit_test(object):
 		from mmgen.seed import Seed,SeedShareList
 		from mmgen.obj import SeedShareIdx
 
-		g.debug_subseed = opt.verbose
+		g.debug_subseed = bool(opt.verbose)
 
 		def basic_ops(master_idx):
 			test_data = {

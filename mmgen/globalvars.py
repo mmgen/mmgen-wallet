@@ -62,9 +62,9 @@ class GlobalContext:
 
 	# Variables - these might be altered at runtime:
 
-	user_entropy   = ''
-	hash_preset    = '3'
-	usr_randchars  = 30
+	user_entropy    = b''
+	hash_preset     = '3'
+	usr_randchars   = 30
 
 	tx_fee_adj   = Decimal('1.0')
 	tx_confs     = 3

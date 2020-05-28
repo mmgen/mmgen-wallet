@@ -360,11 +360,8 @@ class MMGenToolTestCmds(object):
 	def pubhex2redeem_script(self,name,f1,f2,f3): # from above
 		addr = read_from_file(f3).strip()
 		tu.run_cmd_out(name,addr,add_opts=type_segwit_arg,fn_idx=3)
-		type_save = opt.type
-		opt.type = 'segwit'
 		rs = read_from_tmpfile(cfg,'privhex2pubhex3.out').strip()
 		tu.run_cmd_out('pubhex2addr',rs,add_opts=type_segwit_arg,fn_idx=3,hush=True)
-		opt.type = type_save
 		addr1 = read_from_tmpfile(cfg,'pubhex2addr3.out').strip()
 		addr2 = read_from_tmpfile(cfg,'randpair3.out').split()[1]
 		cmp_or_die(addr1,addr2)

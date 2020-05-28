@@ -953,11 +953,11 @@ async def do_group(gid):
 				continue
 		await run_test(gid,cname)
 
-def do_cmd_in_group(cmd):
+async def do_cmd_in_group(cmd):
 	for gid in tests:
 		for cname in tests[gid]:
 			if cname == cmd:
-				run_test(gid,cname)
+				await run_test(gid,cname)
 				return True
 	return False
 
@@ -1026,7 +1026,7 @@ async def main():
 				if cmd in tests:
 					await do_group(cmd)
 				else:
-					if not do_cmd_in_group(cmd):
+					if not await do_cmd_in_group(cmd):
 						die(1,f'{cmd!r}: not a recognized test or test group')
 		else:
 			for garg in tests:

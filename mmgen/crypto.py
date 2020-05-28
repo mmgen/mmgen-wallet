@@ -203,19 +203,18 @@ def add_user_random(rand_bytes,desc):
 	else:
 		return rand_bytes
 
-def get_hash_preset_from_user(hp=g.hash_preset,desc='data'):
-	prompt = """Enter hash preset for {},
- or hit ENTER to accept the default value ('{}'): """.format(desc,hp)
+def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
+	prompt = f'Enter hash preset for {desc},\n or hit ENTER to accept the default value ({hp!r}): '
 	while True:
 		ret = my_raw_input(prompt)
 		if ret:
-			if ret in g.hash_presets.keys():
+			if ret in g.hash_presets:
 				return ret
 			else:
-				m = 'Invalid input.  Valid choices are {}'
-				msg(m.format(', '.join(sorted(g.hash_presets.keys()))))
+				msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
 				continue
-		else: return hp
+		else:
+			return hp
 
 _salt_len,_sha256_len,_nonce_len = 32,32,32
 
@@ -226,15 +225,15 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	hp    = hash_preset or (
 		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
 	m     = ('user-requested','default')[hp=='3']
-	vmsg('Encrypting {}'.format(desc))
-	qmsg("Using {} hash preset of '{}'".format(m,hp))
+	vmsg(f'Encrypting {desc}')
+	qmsg(f'Using {m} hash preset of {hp!r}')
 	passwd = get_new_passphrase(desc,{})
 	key    = make_key(passwd,salt,hp)
 	enc_d  = encrypt_data(sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc)
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
-	vmsg('Preparing to decrypt {}'.format(desc))
+	vmsg(f'Preparing to decrypt {desc}')
 	dstart = _salt_len + g.aesctr_iv_len
 	salt   = data[:_salt_len]
 	iv     = data[_salt_len:dstart]
@@ -242,8 +241,8 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 	hp     = hash_preset or (
 		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
 	m  = ('user-requested','default')[hp=='3']
-	qmsg("Using {} hash preset of '{}'".format(m,hp))
-	passwd = get_mmgen_passphrase(desc)
+	qmsg(f'Using {m} hash preset of {hp!r}')
+	passwd = get_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
 	dec_d  = decrypt_data(enc_d,key,iv,desc)
 	if dec_d[:_sha256_len] == sha256(dec_d[_sha256_len:]).digest():

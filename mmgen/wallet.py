@@ -30,8 +30,7 @@ from .seed import Seed
 
 def check_usr_seed_len(seed_len):
 	if opt.seed_len != seed_len and 'seed_len' in opt.set_by_user:
-		m = "ERROR: requested seed length ({}) doesn't match seed length of source ({})"
-		die(1,m.format((opt.seed_len,seed_len)))
+		die(1,f"ERROR: requested seed length ({opt.seed_len}) doesn't match seed length of source ({seed_len})")
 
 def _is_mnemonic(s,fmt):
 	oq_save = opt.quiet
@@ -66,8 +65,15 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 
 	class WalletData(MMGenObject): pass
 
-	def __new__(cls,fn=None,ss=None,seed_bin=None,seed=None,
-				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
+	def __new__(cls,
+		fn            = None,
+		ss            = None,
+		seed_bin      = None,
+		seed          = None,
+		passchg       = False,
+		in_data       = None,
+		ignore_in_fmt = False,
+		in_fmt        = None ):
 
 		in_fmt = in_fmt or opt.in_fmt
 
@@ -115,9 +121,17 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 
 		return me
 
-	def __init__(self,fn=None,ss=None,seed_bin=None,seed=None,
-				passchg=False,in_data=None,ignore_in_fmt=False,in_fmt=None):
+	def __init__(self,
+		fn            = None,
+		ss            = None,
+		seed_bin      = None,
+		seed          = None,
+		passchg       = False,
+		in_data       = None,
+		ignore_in_fmt = False,
+		in_fmt        = None ):
 
+		self.passwd_file = opt.passwd_file
 		self.ssdata = self.WalletData()
 		self.msg = {}
 		self.in_data = in_data
@@ -168,7 +182,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		while True:
 			if self._decrypt():
 				break
-			if opt.passwd_file:
+			if self.passwd_file:
 				die(2,'Passphrase from password file, so exiting')
 			msg('Trying again...')
 
@@ -295,20 +309,20 @@ an empty passphrase, just hit ENTER twice.
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
 			old_hp = self.ss_in.ssdata.hash_preset
 			if opt.keep_hash_preset:
-				qmsg("Reusing hash preset '{}' at user request".format(old_hp))
+				qmsg(f'Reusing hash preset {old_hp!r} at user request')
 				self.ssdata.hash_preset = old_hp
 			elif 'hash_preset' in opt.set_by_user:
 				hp = self.ssdata.hash_preset = opt.hash_preset
-				qmsg("Using hash preset '{}' requested on command line".format(opt.hash_preset))
+				qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
 			else: # Prompt, using old value as default
 				hp = self._get_hash_preset_from_user(old_hp,desc_suf)
 
 			if (not opt.keep_hash_preset) and self.op == 'pwchg_new':
-				m = ("changed to '{}'".format(hp),'unchanged')[hp==old_hp]
-				qmsg('Hash preset {}'.format(m))
+				m = (f'changed to {hp!r}','unchanged')[hp==old_hp]
+				qmsg(f'Hash preset {m}')
 		elif 'hash_preset' in opt.set_by_user:
 			self.ssdata.hash_preset = opt.hash_preset
-			qmsg("Using hash preset '{}' requested on command line".format(opt.hash_preset))
+			qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
 		else:
 			self._get_hash_preset_from_user(opt.hash_preset,desc_suf)
 
@@ -318,21 +332,23 @@ an empty passphrase, just hit ENTER twice.
 				('','new ')[self.op in ('new','conv')],
 				self.desc
 			)
-		if opt.passwd_file:
-			w = pwfile_reuse_warning()
-			pw = ' '.join(get_words_from_file(opt.passwd_file,desc,quiet=w))
+		if self.passwd_file:
+			pw = ' '.join(get_words_from_file(
+				self.passwd_file,
+				desc,
+				quiet = pwfile_reuse_warning(self.passwd_file) ))
 		elif opt.echo_passphrase:
-			pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
+			pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
 		else:
 			for i in range(g.passwd_max_tries):
-				pw = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
-				pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
-				dmsg('Passphrases: [{}] [{}]'.format(pw,pw2))
-				if pw == pw2:
+				pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
+				pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
+				dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
+				if pw == pw_chk:
 					vmsg('Passphrases match'); break
 				else: msg('Passphrases do not match.  Try again.')
 			else:
-				die(2,'User failed to duplicate passphrase in {} attempts'.format(g.passwd_max_tries))
+				die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
 
 		if pw == '':
 			qmsg('WARNING: Empty passphrase')
@@ -345,9 +361,11 @@ an empty passphrase, just hit ENTER twice.
 			self.desc,
 			('',' '+desc_suf)[bool(desc_suf)]
 		)
-		if opt.passwd_file:
-			w = pwfile_reuse_warning()
-			ret = ' '.join(get_words_from_file(opt.passwd_file,desc,quiet=w))
+		if self.passwd_file:
+			ret = ' '.join(get_words_from_file(
+				self.passwd_file,
+				desc,
+				quiet = pwfile_reuse_warning(self.passwd_file) ))
 		else:
 			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
 		self.ssdata.passwd = ret
@@ -691,11 +709,20 @@ class MMGenWallet(WalletEnc):
 	desc = g.proj_name + ' wallet'
 	ext = 'mmdat'
 
+	def __init__(self,*args,**kwargs):
+		if opt.label:
+			self.label = MMGenWalletLabel(
+				opt.label,
+				msg = "Error in option '--label'" )
+		else:
+			self.label = None
+		super().__init__(*args,**kwargs)
+
 	def _get_label_from_user(self,old_lbl=''):
-		d = "to reuse the label '{}'".format(old_lbl.hl()) if old_lbl else 'for no label'
-		p = 'Enter a wallet label, or hit ENTER {}: '.format(d)
+		prompt = 'Enter a wallet label, or hit ENTER {}: '.format(
+			f'to reuse the label {old_lbl.hl()!r}' if old_lbl else 'for no label' )
 		while True:
-			msg_r(p)
+			msg_r(prompt)
 			ret = my_raw_input('')
 			if ret:
 				self.ssdata.label = MMGenWalletLabel(ret,on_fail='return')
@@ -713,20 +740,20 @@ class MMGenWallet(WalletEnc):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
-				qmsg("Reusing label '{}' at user request".format(old_lbl.hl()))
+				qmsg(f'Reusing label {old_lbl.hl()!r} at user request')
 				self.ssdata.label = old_lbl
-			elif opt.label:
-				qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
-				lbl = self.ssdata.label = opt.label
+			elif self.label:
+				qmsg(f'Using label {self.label.hl()!r} requested on command line')
+				lbl = self.ssdata.label = self.label
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 
 			if (not opt.keep_label) and self.op == 'pwchg_new':
-				m = ("changed to '{}'".format(lbl),'unchanged')[lbl==old_lbl]
-				qmsg('Label {}'.format(m))
-		elif opt.label:
-			qmsg("Using label '{}' requested on command line".format(opt.label.hl()))
-			self.ssdata.label = opt.label
+				m = (f'changed to {lbl!r}','unchanged')[lbl==old_lbl]
+				qmsg(f'Label {m}')
+		elif self.label:
+			qmsg(f'Using label {self.label.hl()!r} requested on command line')
+			self.ssdata.label = self.label
 		else:
 			self._get_label_from_user()
 
@@ -797,7 +824,7 @@ class MMGenWallet(WalletEnc):
 		hash_params = list(map(int,hpdata[1:]))
 
 		if hash_params != get_hash_params(d.hash_preset):
-			msg("Hash parameters '{}' don't match hash preset '{}'".format(' '.join(hash_params),d.hash_preset))
+			msg(f"Hash parameters {' '.join(hash_params)!r} don't match hash preset {d.hash_preset!r}")
 			return False
 
 		lmin,foo,lmax = sorted(baseconv.seedlen_map_rev['b58']) # 22,33,44
@@ -866,19 +893,24 @@ class Brainwallet(WalletEnc):
 
 	def _decrypt(self):
 		d = self.ssdata
-		# Don't set opt.seed_len! In txsign, BW seed len might differ from other seed srcs
 		if opt.brain_params:
-			seed_len,d.hash_preset = self.get_bw_params()
+			"""
+			Don't set opt.seed_len!  When using multiple wallets, BW seed len might differ from others
+			"""
+			bw_seed_len,d.hash_preset = self.get_bw_params()
 		else:
 			if 'seed_len' not in opt.set_by_user:
-				m1 = 'Using default seed length of {} bits\n'
-				m2 = 'If this is not what you want, use the --seed-len option'
-				qmsg((m1+m2).format(yellow(str(opt.seed_len))))
+				qmsg(f'Using default seed length of {yellow(str(opt.seed_len))} bits\n'
+					+ 'If this is not what you want, use the --seed-len option' )
 			self._get_hash_preset()
-			seed_len = opt.seed_len
+			bw_seed_len = opt.seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = scrypt_hash_passphrase(self.brainpasswd.encode(),b'',d.hash_preset,buflen=seed_len//8)
+		seed = scrypt_hash_passphrase(
+			self.brainpasswd.encode(),
+			b'',
+			d.hash_preset,
+			buflen = bw_seed_len // 8 )
 		qmsg('Done')
 		self.seed = Seed(seed)
 		msg('Seed ID: {}'.format(self.seed.sid))
@@ -922,19 +954,19 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
 		dlen = len(self.fmt_data)
-		valid_dlen = self._get_incog_data_len(opt.seed_len)
+		seed_len = opt.seed_len
+		valid_dlen = self._get_incog_data_len(seed_len)
 		if dlen == valid_dlen:
 			return True
 		else:
 			if opt.old_incog_fmt:
 				msg('WARNING: old-style incognito format requested.  Are you sure this is correct?')
-			m = 'Invalid incognito data size ({} bytes) for this seed length ({} bits)'
-			msg(m.format(dlen,opt.seed_len))
-			msg('Valid data size for this seed length: {} bytes'.format(valid_dlen))
+			msg(f'Invalid incognito data size ({dlen} bytes) for this seed length ({seed_len} bits)')
+			msg(f'Valid data size for this seed length: {valid_dlen} bytes')
 			for sl in g.seed_lens:
 				if dlen == self._get_incog_data_len(sl):
-					die(1,'Valid seed length for this data size: {} bits'.format(sl))
-			msg('This data size ({} bytes) is invalid for all available seed lengths'.format(dlen))
+					die(1,f'Valid seed length for this data size: {sl} bits')
+			msg(f'This data size ({dlen} bytes) is invalid for all available seed lengths')
 			return False
 
 	def _encrypt (self):

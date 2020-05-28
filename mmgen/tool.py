@@ -636,11 +636,13 @@ class MMGenToolCmdFile(MMGenToolCmds):
 	"utilities for viewing/checking MMGen address and transaction files"
 
 	def _file_chksum(self,mmgen_addrfile,objname):
+		verbose = opt.verbose
+		opt.verbose = False
 		opt.yes = True
 		opt.quiet = True
 		from .addr import AddrList,KeyAddrList,PasswordList
 		ret = locals()[objname](self.proto,mmgen_addrfile)
-		if opt.verbose:
+		if verbose:
 			if ret.al_id.mmtype.name == 'password':
 				fs = 'Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'
 				msg(fs.format(capfirst(ret.pw_info[ret.pw_fmt].desc),ret.pw_len,ret.pw_id_str))
@@ -1117,15 +1119,17 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			gmsg('\n{}ing {} wallet{}'.format(op.desc,dl,suf(dl)))
 
 			from .daemon import MoneroWalletDaemon
-			wd = MoneroWalletDaemon(opt.outdir or '.',test_suite=g.test_suite)
+			wd = MoneroWalletDaemon(
+				wallet_dir = opt.outdir or '.',
+				test_suite = g.test_suite )
 			wd.restart()
 
 			from .rpc import MoneroWalletRPCClient
 			c = MoneroWalletRPCClient(
-				host = g.monero_wallet_rpc_host,
+				host = wd.host,
 				port = wd.rpc_port,
-				user = g.monero_wallet_rpc_user,
-				passwd = g.monero_wallet_rpc_password)
+				user = wd.user,
+				passwd = wd.passwd )
 
 			wallets_processed = 0
 			for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]

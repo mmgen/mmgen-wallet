@@ -31,7 +31,7 @@ import mmgen.share.Opts
 from .util import *
 
 def usage():
-	Die(1,'USAGE: {} {}'.format(g.prog_name,usage_txt))
+	Die(1,f'USAGE: {g.prog_name} {usage_txt}')
 
 def version():
 	Die(0,fmt("""
