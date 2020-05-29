@@ -93,11 +93,6 @@ sample_text_hexdump = (
 	'000040: 6261 6e6b 73').format(n=NL)
 
 kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
-kafile_code = (
-	"\nopt.hash_preset = '1'" +
-	"\nopt.set_by_user = ['hash_preset']" +
-	"\nopt.use_old_ed25519 = None" +
-	"\nopt.passwd_file = 'test/ref/keyaddrfile_password'" )
 
 from test.unit_tests_d.ut_bip39 import unit_test as bip39
 tests = {
@@ -418,11 +413,11 @@ tests = {
 		'pubhash2addr': {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5'], '12bYUGXS8SRArZneQDN9YEEYAtEa59Rykm',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['8e34586186551f6320fa3eb2d238a9c61ab8264b'], '3Eevao3DRVXnYym3tdrJDqS3Wc39PQzahn',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['3057f66ddd26fa6ef826b0d5ca067ec3e8f3c178'], 'bc1qxptlvmwaymaxa7pxkr2u5pn7c0508stcncv7ms',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 		},
 		'addr2scriptpubkey': {
@@ -443,32 +438,32 @@ tests = {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=compressed'], 'opt.type="compressed"' ),
+					['--type=compressed'], 'compressed' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 		},
 		'privhex2addr': {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF',
-					['--type=compressed'], 'opt.type="compressed"' ),
+					['--type=compressed'], 'compressed' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 			'eth_mainnet': [
 				( ['0000000000000000000000000000000000000000000000000000000000000001'],
@@ -501,68 +496,68 @@ tests = {
 			'zec_mainnet': [
 				( ['0000000000000000000000000000000000000000000000000000000000000001'],
 			'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
 			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['0fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
 			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['00000000000000000000000000000000000000000000000000000000000000ff'],
 			'zcck12KgVY34LJwVEDLN8sXhL787zmjKqPsP1uBYRHs75bL9sQu4P7wcc5ZJTjKsL376zaSpsYqGxK94JbiYcNoH8DkeGbN',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0f'],
 			'zcJ9hEezG1Jeye5dciqiMDh6SXtYbUsircGmpVyhHWyzyxDVRRDs5Q8M7hG3c7nDcvd5Pw4u4wV9RAQmq5RCBZq5wVyMQV8',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
 			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 			],
 		},
 		'privhex2pubhex': {
 			'btc_mainnet': [
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=compressed'], 'opt.type="compressed"' ),
+					['--type=compressed'], 'compressed' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492'],
 					'024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 		},
 		'pubhex2addr': {
 			'btc_mainnet': [
 				( ['044281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e972757f3254c322eeaa3cb6bf97cc5ecf8d4387b0df2c0b1e6ee18fe3a6977a7d57a'],
 					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
 					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF',
-					['--type=compressed'], 'opt.type="compressed"' ),
+					['--type=compressed'], 'compressed' ),
 				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
 					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
 					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 		},
 		'pubhex2redeem_script': {
 			'btc_mainnet': [
 				( ['024281a85c9ce87279e028410b851410d65136304cfbbbeaaa8e2e3931cf4e9727'],
 					'0014d04134b9ddb7399907657514d846aa495b4e474c',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 			],
 		},
 		'redeem_script2addr': {
 			'btc_mainnet': [
 				( ['0014d04134b9ddb7399907657514d846aa495b4e474c'],
 					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 			],
 		},
 		'randpair': {
@@ -576,13 +571,13 @@ tests = {
 		'wif2addr': {
 			'btc_mainnet': [
 				( ['5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'],
-					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1', ['--type=legacy'], 'opt.type="legacy"' ),
+					'1C5VPtgq9xQ6AcTgMAR3J6GDrs72HC4pS1', ['--type=legacy'], 'legacy' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF', ['--type=compressed'], 'opt.type="compressed"' ),
+					'1Kz9fVSUMshzPejpzW9D95kScgA3rY6QxF', ['--type=compressed'], 'compressed' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg', ['--type=segwit'], 'opt.type="segwit"' ),
+					'3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg', ['--type=segwit'], 'segwit' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
-					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c', ['--type=bech32'], 'opt.type="bech32"' ),
+					'bc1q6pqnfwwakuuejpm9w52ds342f9d5u36v0qnz7c', ['--type=bech32'], 'bech32' ),
 			],
 			'eth_mainnet': [
 				( ['0000000000000000000000000000000000000000000000000000000000000001'],
@@ -615,52 +610,52 @@ tests = {
 			'zec_mainnet': [
 				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56FjqVUYR'],
 			'zceQDpyNwek7dKqF5ZuFGj7YrNVxh7X1aPkrVxDLVxWSiZAFDEuy5C7XNV8VhyZ3ghTPQ61xjCGiyLT3wqpiN1Yi6mdmaCq',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
 			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcf7C2umc'],
 			'zcY1hqJ3P5ifjnWk1BcXpjrLG5XeJZUSPCiiVTF9LXrejxBzAsFWcNyr6PudwQHm8DnQpD8HEaM3dh8sB6cf91ciAa53YQ1',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxny894fJe2rmZjeuoE6GVfNkWoXfPp8337VrLLNWG56kQw4qjm'],
 			'zcck12KgVY34LJwVEDLN8sXhL787zmjKqPsP1uBYRHs75bL9sQu4P7wcc5ZJTjKsL376zaSpsYqGxK94JbiYcNoH8DkeGbN',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxv1peuQvMT4TvqPLqKy1px3oqLm98Evi948VU8N8VKcBwrLwiu'],
 			'zcJ9hEezG1Jeye5dciqiMDh6SXtYbUsircGmpVyhHWyzyxDVRRDs5Q8M7hG3c7nDcvd5Pw4u4wV9RAQmq5RCBZq5wVyMQV8',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 				( ['SKxuS56e99jpCeD9mMQ5o63zoGPakNdM9HCvt4Vt2cypvRjCdvGJ'],
 			'zchFELwBxqsAubsLQ8yZgPCDDGukjXJssgCbiTPwFNmFwn9haLnDatzfhLdZzJT4PcU4o2yr92B52UFirUzEdF6ZYM2gBkM',
-					['--type=zcash_z'], 'opt.type="zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 			],
 		},
 		'wif2hex': {
 			'btc_mainnet': [
 				( ['5HwzecKMWD82ppJK3qMKpC7ohXXAwcyAN5VgdJ9PLFaAzpBG4sX'],
 					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					None, 'opt.type="legacy"' ),
+					None, 'legacy' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
 					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=compressed'], 'opt.type="compressed"' ),
+					['--type=compressed'], 'compressed' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
 					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
 					'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',
-					['--type=bech32'], 'opt.type="bech32"' ),
+					['--type=bech32'], 'bech32' ),
 			],
 		},
 		'wif2redeem_script': {
 			'btc_mainnet': [
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
 					'0014d04134b9ddb7399907657514d846aa495b4e474c',
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 			],
 		},
 		'wif2segwit_pair': {
 			'btc_mainnet': [
 				( ['KwojSzt1VvW343mQfWQi3J537siAt5ktL2qbuCg1ZyKR8BLQ6UJm'],
 					('0014d04134b9ddb7399907657514d846aa495b4e474c','3AhjTiWHhVJAi1s5CfKMcLzYps12x3gZhg'),
-					['--type=segwit'], 'opt.type="segwit"' ),
+					['--type=segwit'], 'segwit' ),
 			],
 		},
 	},
@@ -720,43 +715,43 @@ tests = {
 		'keyaddrfile_chksum': {
 			'btc_mainnet': [
 				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].akeys.mmenc'],
-					'9F2D D781 1812 8BAD', kafile_opts, kafile_code ),
+					'9F2D D781 1812 8BAD', kafile_opts ),
 			],
 			'btc_testnet': [
 				( ['test/ref/98831F3A[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
-					'88CC 5120 9A91 22C2', kafile_opts, kafile_code ),
+					'88CC 5120 9A91 22C2', kafile_opts ),
 			],
 			'ltc_mainnet': [
 				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].akeys.mmenc'],
-					'B804 978A 8796 3ED4', kafile_opts, kafile_code ),
+					'B804 978A 8796 3ED4', kafile_opts ),
 			],
 			'ltc_testnet': [
 				( ['test/ref/litecoin/98831F3A-LTC[1,31-33,500-501,1010-1011].testnet.akeys.mmenc'],
-					'98B5 AC35 F334 0398', kafile_opts, kafile_code ),
+					'98B5 AC35 F334 0398', kafile_opts ),
 			],
 			'zec_mainnet': [
 				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'F05A 5A5C 0C8E 2617', kafile_opts, kafile_code ),
+				'F05A 5A5C 0C8E 2617', kafile_opts ),
 				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'], '6B87 9B2D 0D8D 8D1E',
-					kafile_opts + ['--type=zcash_z'], kafile_code + '\nopt.type = "zcash_z"' ),
+					kafile_opts + ['--type=zcash_z'], 'opt.type = "zcash_z"' ),
 			],
 			'xmr_mainnet': [
 				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E0D7 9612 3D67 404A', kafile_opts, kafile_code ), ],
+				'E0D7 9612 3D67 404A', kafile_opts ), ],
 			'dash_mainnet': [
 				( ['test/ref/dash/98831F3A-DASH-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E83D 2C63 FEA2 4142', kafile_opts, kafile_code ), ],
+				'E83D 2C63 FEA2 4142', kafile_opts ), ],
 			'eth_mainnet': [
 				( ['test/ref/ethereum/98831F3A-ETH[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'E400 70D9 0AE3 C7C2', kafile_opts, kafile_code ), ],
+				'E400 70D9 0AE3 C7C2', kafile_opts ), ],
 			'etc_mainnet': [
 				( ['test/ref/ethereum_classic/98831F3A-ETC[1,31-33,500-501,1010-1011].akeys.mmenc'],
-				'EF49 967D BD6C FE45', kafile_opts, kafile_code ), ],
+				'EF49 967D BD6C FE45', kafile_opts ), ],
 		},
 		'passwdfile_chksum': {
 			'btc_mainnet': [
 				( ['test/ref/98831F3A-фубар@crypto.org-b58-20[1,4,1100].pws'],
-					'DDD9 44B0 CA28 183F', kafile_opts, kafile_code ), ],
+					'DDD9 44B0 CA28 183F', kafile_opts ), ],
 		},
 		'txview': {
 			'btc_mainnet': [ ( ['test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'], None ), ],
@@ -801,7 +796,7 @@ async def run_test(gid,cmd_name):
 
 	msg_r(green(m)+'\n' if opt.verbose else m)
 
-	def fork_cmd(cmd_name,args,out,opts,exec_code):
+	def fork_cmd(cmd_name,args,out,opts):
 		cmd = list(tool_cmd) + (opts or []) + [cmd_name] + args
 		vmsg('{} {}'.format(green('Executing'),cyan(' '.join(cmd))))
 		cp = run(cmd,input=stdin_input or None,stdout=PIPE,stderr=PIPE)
@@ -819,13 +814,16 @@ async def run_test(gid,cmd_name):
 
 		return cmd_out.strip()
 
-	async def run_func(cmd_name,args,out,opts,exec_code):
+	async def run_func(cmd_name,args,out,opts,mmtype):
 		vmsg('{}: {}{}'.format(purple('Running'),
 				' '.join([cmd_name]+[repr(e) for e in args]),
-				' '+exec_code if exec_code else '' ))
-		if exec_code: exec(exec_code)
+				' '+mmtype if mmtype else '' ))
 		aargs,kwargs = tool._process_args(cmd_name,args)
-		oq_save = opt.quiet
+		tm = tool.MMGenToolCmdMeta
+		cls_name = tm.classname(tm,cmd_name)
+		tobj = getattr(tool,cls_name)(mmtype=mmtype)
+		method = getattr(tobj,cmd_name)
+		oq_save = bool(opt.quiet)
 		if not opt.verbose:
 			opt.quiet = True
 		if stdin_input:
@@ -834,7 +832,7 @@ async def run_test(gid,cmd_name):
 				os.close(fd1)
 				stdin_save = os.dup(0)
 				os.dup2(fd0,0)
-				cmd_out = tc.call(cmd_name,*aargs,**kwargs)
+				cmd_out = method(*aargs,**kwargs)
 				os.dup2(stdin_save,0)
 				os.wait()
 				opt.quiet = oq_save
@@ -845,13 +843,13 @@ async def run_test(gid,cmd_name):
 				vmsg('Input: {!r}'.format(stdin_input))
 				sys.exit(0)
 		else:
-			ret = tc.call(cmd_name,*aargs,**kwargs)
+			ret = method(*aargs,**kwargs)
 			if type(ret).__name__ == 'coroutine':
 				ret = await ret
 			opt.quiet = oq_save
 			return ret
 
-	def tool_api(cmd_name,args,out,opts,exec_code):
+	def tool_api(cmd_name,args,out,opts):
 		from mmgen.tool import tool_api
 		tool = tool_api()
 		if opts:
@@ -868,7 +866,7 @@ async def run_test(gid,cmd_name):
 		return getattr(tool,cmd_name)(*pargs,**kwargs)
 
 	for d in data:
-		args,out,opts,exec_code = d + tuple([None] * (4-len(d)))
+		args,out,opts,mmtype = d + tuple([None] * (4-len(d)))
 		stdin_input = None
 		if args and type(args[0]) == bytes:
 			stdin_input = args[0]
@@ -877,14 +875,14 @@ async def run_test(gid,cmd_name):
 		if opt.tool_api:
 			if args and args[0 ]== '-':
 				continue
-			cmd_out = tool_api(cmd_name,args,out,opts,exec_code)
+			cmd_out = tool_api(cmd_name,args,out,opts)
 		elif opt.fork:
-			cmd_out = fork_cmd(cmd_name,args,out,opts,exec_code)
+			cmd_out = fork_cmd(cmd_name,args,out,opts)
 		else:
 			if stdin_input and g.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
-			cmd_out = await run_func(cmd_name,args,out,opts,exec_code)
+			cmd_out = await run_func(cmd_name,args,out,opts,mmtype)
 
 		try:    vmsg('Output:\n{}\n'.format(cmd_out))
 		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
@@ -967,7 +965,14 @@ def list_tested_cmds():
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cmd_args = opts.init(opts_data,add_opts=['use_old_ed25519'])
+cmd_args = opts.init(
+	opts_data,
+	add_opts  = ['use_old_ed25519'],
+	init_opts = {
+		'usr_randchars': 0,
+		'hash_preset': '1',
+		'passwd_file': 'test/ref/keyaddrfile_password',
+	})
 
 from mmgen.protocol import init_proto_from_opts
 proto = init_proto_from_opts()
@@ -1014,8 +1019,6 @@ if opt.fork:
 		tool_cmd = ('python3','-m','trace','--count','--coverdir='+d,'--file='+f) + tool_cmd
 	elif g.platform == 'win':
 		tool_cmd = ('python3',) + tool_cmd
-else:
-	opt.usr_randchars = 0
 
 start_time = int(time.time())
 

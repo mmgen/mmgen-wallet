@@ -505,27 +505,6 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 
 	return cmd_args[0] if cmd_args else (wf,None)[wd_from_opt]
 
-def get_new_passphrase(desc,passchg=False):
-
-	w = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
-	if opt.passwd_file:
-		pw = ' '.join(get_words_from_file(opt.passwd_file,w))
-	elif opt.echo_passphrase:
-		pw = ' '.join(get_words_from_user('Enter {}: '.format(w)))
-	else:
-		for i in range(g.passwd_max_tries):
-			pw = ' '.join(get_words_from_user('Enter {}: '.format(w)))
-			pw2 = ' '.join(get_words_from_user('Repeat passphrase: '))
-			dmsg('Passphrases: [{}] [{}]'.format(pw,pw2))
-			if pw == pw2:
-				vmsg('Passphrases match'); break
-			else: msg('Passphrases do not match.  Try again.')
-		else:
-			die(2,'User failed to duplicate passphrase in {} attempts'.format(g.passwd_max_tries))
-
-	if pw == '': qmsg('WARNING: Empty passphrase')
-	return pw
-
 def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 	m = message.strip()
 	if m: msg(m)
@@ -701,20 +680,14 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 	return data
 
-def pwfile_reuse_warning():
-	if 'passwd_file_used' in globals():
-		qmsg("Reusing passphrase from file '{}' at user request".format(opt.passwd_file))
-		return True
-	globals()['passwd_file_used'] = True
-	return False
+passwd_files_used = {}
 
-def get_mmgen_passphrase(desc,passchg=False):
-	prompt ='Enter {}passphrase for {}: '.format(('','old ')[bool(passchg)],desc)
-	if opt.passwd_file:
-		pwfile_reuse_warning()
-		return ' '.join(get_words_from_file(opt.passwd_file,'passphrase'))
-	else:
-		return ' '.join(get_words_from_user(prompt))
+def pwfile_reuse_warning(passwd_file):
+	if passwd_file in passwd_files_used:
+		qmsg(f'Reusing passphrase from file {passwd_file!r} at user request')
+		return True
+	passwd_files_used[passwd_file] = True
+	return False
 
 def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
@@ -760,7 +733,7 @@ def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete
 	p = prompt if complete_prompt else '{} {}: '.format(prompt,q)
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
-	if opt.accept_defaults:
+	if g.accept_defaults:
 		msg(p)
 		return default_yes
 

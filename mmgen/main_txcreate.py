@@ -76,8 +76,6 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-g.use_cached_balances = opt.cached_balances
-
 async def main():
 
 	from .protocol import init_proto_from_opts

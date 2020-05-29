@@ -29,11 +29,11 @@ from .baseconv import *
 from .seed import Seed
 
 def check_usr_seed_len(seed_len):
-	if opt.seed_len != seed_len and 'seed_len' in opt.set_by_user:
+	if opt.seed_len and opt.seed_len != seed_len:
 		die(1,f"ERROR: requested seed length ({opt.seed_len}) doesn't match seed length of source ({seed_len})")
 
 def _is_mnemonic(s,fmt):
-	oq_save = opt.quiet
+	oq_save = bool(opt.quiet)
 	opt.quiet = True
 	try:
 		Wallet(in_data=s,in_fmt=fmt)
@@ -311,7 +311,7 @@ an empty passphrase, just hit ENTER twice.
 			if opt.keep_hash_preset:
 				qmsg(f'Reusing hash preset {old_hp!r} at user request')
 				self.ssdata.hash_preset = old_hp
-			elif 'hash_preset' in opt.set_by_user:
+			elif opt.hash_preset:
 				hp = self.ssdata.hash_preset = opt.hash_preset
 				qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
 			else: # Prompt, using old value as default
@@ -320,11 +320,11 @@ an empty passphrase, just hit ENTER twice.
 			if (not opt.keep_hash_preset) and self.op == 'pwchg_new':
 				m = (f'changed to {hp!r}','unchanged')[hp==old_hp]
 				qmsg(f'Hash preset {m}')
-		elif 'hash_preset' in opt.set_by_user:
+		elif opt.hash_preset:
 			self.ssdata.hash_preset = opt.hash_preset
 			qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
 		else:
-			self._get_hash_preset_from_user(opt.hash_preset,desc_suf)
+			self._get_hash_preset_from_user(g.dfl_hash_preset,desc_suf)
 
 	def _get_new_passphrase(self):
 		desc = '{}passphrase for {}{}'.format(
@@ -816,10 +816,8 @@ class MMGenWallet(WalletEnc):
 
 		d.hash_preset = hp = hpdata[0][:-1]  # a string!
 		qmsg("Hash preset of wallet: '{}'".format(hp))
-		if 'hash_preset' in opt.set_by_user:
-			uhp = opt.hash_preset
-			if uhp != hp:
-				qmsg("Warning: ignoring user-requested hash preset '{}'".format(uhp))
+		if opt.hash_preset and opt.hash_preset != hp:
+			qmsg('Warning: ignoring user-requested hash preset {opt.hash_preset}')
 
 		hash_params = list(map(int,hpdata[1:]))
 
@@ -899,11 +897,11 @@ class Brainwallet(WalletEnc):
 			"""
 			bw_seed_len,d.hash_preset = self.get_bw_params()
 		else:
-			if 'seed_len' not in opt.set_by_user:
-				qmsg(f'Using default seed length of {yellow(str(opt.seed_len))} bits\n'
+			if not opt.seed_len:
+				qmsg(f'Using default seed length of {yellow(str(g.dfl_seed_len))} bits\n'
 					+ 'If this is not what you want, use the --seed-len option' )
 			self._get_hash_preset()
-			bw_seed_len = opt.seed_len
+			bw_seed_len = opt.seed_len or g.dfl_seed_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
 		seed = scrypt_hash_passphrase(
@@ -954,7 +952,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
 		dlen = len(self.fmt_data)
-		seed_len = opt.seed_len
+		seed_len = opt.seed_len or g.dfl_seed_len
 		valid_dlen = self._get_incog_data_len(seed_len)
 		if dlen == valid_dlen:
 			return True
@@ -1139,7 +1137,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		qmsg("Getting hidden incog data from file '{}'".format(self.infile.name))
 
 		# Already sanity-checked:
-		d.target_data_len = self._get_incog_data_len(opt.seed_len)
+		d.target_data_len = self._get_incog_data_len(opt.seed_len or g.dfl_seed_len)
 		self._check_valid_offset(self.infile,'read')
 
 		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY

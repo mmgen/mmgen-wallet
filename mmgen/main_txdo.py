@@ -56,7 +56,7 @@ opts_data = {
                        outputs associated with each address will be included.
 -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
                        is required only for brainwallet and incognito inputs
-                       with non-standard (< {g.seed_len}-bit) seed lengths.
+                       with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --key-generator= m Use method 'm' for public key generation
                        Options: {kgs}
@@ -71,7 +71,7 @@ opts_data = {
                        mappings, so the user should record its checksum.
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{g.hash_preset}')
+                       for password hashing (default: '{g.dfl_hash_preset}')
 -P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -r, --rbf              Make transaction BIP 125 (replace-by-fee) replaceable
 -q, --quiet            Suppress warnings; overwrite files without prompting
@@ -113,8 +113,6 @@ column below:
 }
 
 cmd_args = opts.init(opts_data)
-
-g.use_cached_balances = opt.cached_balances
 
 from .tx import *
 from .txsign import *

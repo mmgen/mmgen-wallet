@@ -25,12 +25,14 @@ from decimal import Decimal
 from collections import namedtuple
 from .devtools import *
 
+from .base_obj import Lockable
+
 def die(exit_val,s=''):
 	if s:
 		sys.stderr.write(s+'\n')
 	sys.exit(exit_val)
 
-class GlobalContext:
+class GlobalContext(Lockable):
 	"""
 	Set global vars to default values
 	Globals are overridden in this order:
@@ -38,6 +40,10 @@ class GlobalContext:
 	  2 - environmental vars
 	  3 - command line
 	"""
+	_set_ok = ('user_entropy','session')
+	_reset_ok = ('stdout','stderr','accept_defaults')
+	_use_class_attr = True
+
 	# Constants:
 	version      = '0.12.099'
 	release_date = 'May 2020'
@@ -63,12 +69,12 @@ class GlobalContext:
 	# Variables - these might be altered at runtime:
 
 	user_entropy    = b''
-	hash_preset     = '3'
+	dfl_hash_preset = '3'
+	dfl_seed_len    = 256
 	usr_randchars   = 30
 
 	tx_fee_adj   = Decimal('1.0')
 	tx_confs     = 3
-	seed_len     = 256
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
 
@@ -97,7 +103,8 @@ class GlobalContext:
 	monero_wallet_rpc_password = ''
 	rpc_fail_on_command  = ''
 	aiohttp_rpc_queue_len = 16
-	use_cached_balances  = False
+	session              = None
+	cached_balances      = False
 
 	# regtest:
 	bob                  = False
@@ -141,11 +148,12 @@ class GlobalContext:
 	daemon_data_dir = '' # set by user
 
 	# global var sets user opt:
-	global_sets_opt = ( 'minconf','seed_len','hash_preset','usr_randchars','debug',
-						'quiet','tx_confs','tx_fee_adj','key_generator' )
+	global_sets_opt = (
+		'minconf','usr_randchars','debug', 'quiet','tx_confs','tx_fee_adj','key_generator' )
 
 	# user opt sets global var:
-	opt_sets_global = ( 'use_internal_keccak_module','subseeds' )
+	opt_sets_global = (
+		'use_internal_keccak_module','subseeds','cached_balances' )
 
 	# 'long' opts - opt sets global var
 	common_opts = (
@@ -160,7 +168,7 @@ class GlobalContext:
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
 		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator',
-		'hidden_incog_input_params','in_fmt'
+		'hidden_incog_input_params','in_fmt','hash_preset','seed_len',
 	)
 	incompatible_opts = (
 		('help','longhelp'),
@@ -229,6 +237,10 @@ class GlobalContext:
 	if platform == 'win':
 		autoset_opts['rpc_backend'].choices.remove('aiohttp')
 
+	auto_typeset_opts = {
+		'seed_len': int,
+	}
+
 	min_screen_width = 80
 	minconf = 1
 	max_tx_file_size = 100000
@@ -271,6 +283,9 @@ class GlobalContext:
 		short_disp_timeout = 0.1
 		if os.getenv('MMGEN_TEST_SUITE_POPEN_SPAWN'):
 			stdin_tty = True
+		if prog_name == 'unit_tests.py':
+			_set_ok += ('debug_subseed',)
+			_reset_ok += ('force_standalone_scrypt_module','session')
 
 	if os.getenv('MMGEN_DEBUG_ALL'):
 		for name in env_opts:

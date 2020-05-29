@@ -49,7 +49,7 @@ opts_data = {
 -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
 -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
                        is required only for brainwallet and incognito inputs
-                       with non-standard (< {g.seed_len}-bit) seed lengths.
+                       with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --key-generator= m Use method 'm' for public key generation
                        Options: {kgs}
@@ -63,7 +63,7 @@ opts_data = {
                        for the transaction's change output, if present)
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
-                       for password hashing (default: '{g.hash_preset}')
+                       for password hashing (default: '{g.dfl_hash_preset}')
 -P, --passwd-file=   f Get {pnm} wallet or {dn} passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -s, --send             Sign and send the transaction (the default if seed

@@ -21,13 +21,17 @@ opts.py:  MMGen-specific options processing after generic processing by share.Op
 """
 import sys,os,stat
 
-class opt_cls(object):
-	pass
-opt = opt_cls()
-
 from .exception import UserOptError
 from .globalvars import g
+from .base_obj import Lockable
 import mmgen.share.Opts
+
+class UserOpts(Lockable):
+	_set_ok = ('usr_randchars',)
+	_reset_ok = ('quiet','verbose','yes')
+
+opt = UserOpts()
+
 from .util import *
 
 def usage():
@@ -228,7 +232,7 @@ opts_data_dfl = {
 	}
 }
 
-def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
+def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=False):
 
 	if opts_data is None:
 		opts_data = opts_data_dfl
@@ -237,6 +241,11 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 
 	# po: (user_opts,cmd_args,opts,skipped_opts)
 	po = mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
+
+	if init_opts: # allow programs to preload user opts
+		for uopt,val in init_opts.items():
+			if uopt not in po.user_opts:
+				po.user_opts[uopt] = val
 
 	if parse_only:
 		return po
@@ -248,7 +257,8 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	for o in set(
 			po.opts
 			+ po.skipped_opts
-			+ tuple(add_opts)
+			+ tuple(add_opts or [])
+			+ tuple(init_opts or [])
 			+ g.required_opts
 			+ g.common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
@@ -309,11 +319,9 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	# Set user opts from globals:
 	# - if opt is unset, set it to global value
 	# - if opt is set, convert its type to that of global value
-	opt.set_by_user = []
 	for k in g.global_sets_opt:
 		if hasattr(opt,k) and getattr(opt,k) != None:
 			setattr(opt,k,set_for_type(getattr(opt,k),getattr(g,k),'--'+k))
-			opt.set_by_user.append(k)
 		else:
 			setattr(opt,k,getattr(g,k))
 
@@ -355,6 +363,8 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	# Check all opts against g.autoset_opts, setting if unset
 	check_and_set_autoset_opts()
 
+	set_auto_typeset_opts()
+
 	if opt.verbose:
 		opt.quiet = None
 
@@ -369,6 +379,9 @@ def init(opts_data=None,add_opts=[],opt_filter=None,parse_only=False):
 	for k in ('text','notes','code'):
 		if k in opts_data:
 			del opts_data[k]
+
+	g.lock()
+	opt.lock()
 
 	return po.cmd_args
 
@@ -574,6 +587,13 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			cfuncs['chk_'+key](key,val,desc)
 		elif g.debug:
 			Msg('check_usr_opts(): No test for opt {!r}'.format(key))
+
+def set_auto_typeset_opts():
+	for key,ref_type in g.auto_typeset_opts.items():
+		if hasattr(opt,key):
+			val = getattr(opt,key)
+			if val is not None: # typeset only if opt is set
+				setattr(opt,key,ref_type(val))
 
 def check_and_set_autoset_opts(): # Raises exception if any check fails
 

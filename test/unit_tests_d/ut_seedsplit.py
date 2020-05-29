@@ -149,7 +149,6 @@ class unit_test(object):
 			seed = Seed(seed_bin)
 			ssm_save = SeedShareIdx.max_val
 			ssm = SeedShareIdx.max_val = 2048
-			g.debug_last_share_sid_len = 3
 			shares = SeedShareList(seed,count=ssm,id_str='foo',master_idx=1,debug_last_share=True)
 			lsid = shares.last_share.sid
 			collisions = shares.data['long'][lsid][1]

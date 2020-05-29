@@ -100,6 +100,7 @@ setup(
 			'mmgen.addr',
 			'mmgen.altcoin',
 			'mmgen.baseconv',
+			'mmgen.base_obj',
 			'mmgen.bech32',
 			'mmgen.bip39',
 			'mmgen.cfg',

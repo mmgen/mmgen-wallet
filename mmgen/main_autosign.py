@@ -31,6 +31,8 @@ wallet_dir   = '/dev/shm/autosign'
 key_fn       = 'autosign.key'
 
 from .common import *
+opts.UserOpts._set_ok += ('outdir','passwd_file')
+
 prog_name = os.path.basename(sys.argv[0])
 opts_data = {
 	'sets': [('stealth_led', True, 'led', True)],
@@ -107,11 +109,22 @@ This command is currently available only on Linux-based platforms.
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['mmgen_keys_from_file','in_fmt'])
+cmd_args = opts.init(
+	opts_data,
+	add_opts = ['mmgen_keys_from_file','hidden_incog_input_params'],
+	init_opts = {
+		'quiet': True,
+		'in_fmt': 'words',
+		'out_fmt': 'wallet',
+		'usr_randchars': 0,
+		'hash_preset': '1',
+		'label': 'Autosign Wallet',
+	})
 
 exit_if_mswin('autosigning')
 
 import mmgen.tx
+from .wallet import Wallet
 from .txsign import txsign
 from .protocol import init_proto
 from .rpc import rpc_init
@@ -123,6 +136,7 @@ if opt.mountpoint:
 	mountpoint = opt.mountpoint
 
 opt.outdir = tx_dir = os.path.join(mountpoint,'tx')
+opt.passwd_file = os.path.join(tx_dir,key_fn)
 
 async def check_daemons_running():
 	if opt.coin:
@@ -220,15 +234,11 @@ async def sign():
 		return True
 
 def decrypt_wallets():
-	opt.hash_preset = '1'
-	opt.set_by_user = ['hash_preset']
-	opt.passwd_file = os.path.join(tx_dir,key_fn)
-	from .wallet import Wallet
 	msg(f'Unlocking wallet{suf(wfs)} with key from {opt.passwd_file!r}')
 	fails = 0
 	for wf in wfs:
 		try:
-			Wallet(wf)
+			Wallet(wf,ignore_in_fmt=True)
 		except SystemExit as e:
 			if e.code != 0:
 				fails += 1
@@ -335,18 +345,7 @@ def create_wallet_dir():
 def setup():
 	remove_wallet_dir()
 	gen_key(no_unmount=True)
-	from .wallet import Wallet
-	opt.hidden_incog_input_params = None
-	opt.quiet = True
-	opt.in_fmt = 'words'
 	ss_in = Wallet()
-	opt.out_fmt = 'wallet'
-	opt.usr_randchars = 0
-	opt.hash_preset = '1'
-	opt.set_by_user = ['hash_preset']
-	opt.passwd_file = os.path.join(tx_dir,key_fn)
-	from .obj import MMGenWalletLabel
-	opt.label = MMGenWalletLabel('Autosign Wallet')
 	ss_out = Wallet(ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)
 

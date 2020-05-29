@@ -801,7 +801,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	def get_cached_balance(self,addr,session_cache,data_root):
 		if addr in session_cache:
 			return self.proto.coin_amt(session_cache[addr])
-		if not g.use_cached_balances:
+		if not g.cached_balances:
 			return None
 		if addr in data_root and 'balance' in data_root[addr]:
 			return self.proto.coin_amt(data_root[addr]['balance'])

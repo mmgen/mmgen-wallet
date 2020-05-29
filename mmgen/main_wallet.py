@@ -101,12 +101,12 @@ opts_data = {
 -K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
-                      with non-standard (< {g.seed_len}-bit) seed lengths.
+                      with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -L, --label=       l  Specify a label 'l' for output wallet
 -m, --keep-label      Reuse label of input wallet for output wallet
 -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.hash_preset}')
+                      for password hashing (default: '{g.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -143,9 +143,6 @@ FMT CODES:
 }
 
 cmd_args = opts.init(opts_data,opt_filter=opt_filter)
-
-if opt.label:
-	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
 
 if invoked_as == 'subgen':
 	from .obj import SubSeedIdx

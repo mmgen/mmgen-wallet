@@ -45,9 +45,9 @@ opts_data = {
 -O, --old-incog-fmt   Specify old-format incognito input
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits. This option
                       is required only for brainwallet and incognito inputs
-                      with non-standard (< {g.seed_len}-bit) seed lengths.
+                      with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -p, --hash-preset=p   Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.hash_preset}')
+                      for password hashing (default: '{g.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --key-generator=m Use method 'm' for public key generation

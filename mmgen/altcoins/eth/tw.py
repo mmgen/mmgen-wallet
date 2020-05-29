@@ -244,7 +244,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
 
 	async def __ainit__(self,proto,*args,**kwargs):
-		if g.use_cached_balances:
+		if g.cached_balances:
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
 		await TwUnspentOutputs.__ainit__(self,proto,*args,**kwargs)
 

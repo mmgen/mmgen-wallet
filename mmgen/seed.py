@@ -32,7 +32,7 @@ class SeedBase(MMGenObject):
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
 			# Truncate random data for smaller seed lengths
-			seed_bin = sha256(get_random(1033)).digest()[:opt.seed_len//8]
+			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or g.dfl_seed_len)//8]
 		elif len(seed_bin)*8 not in g.seed_lens:
 			die(3,'{}: invalid seed length'.format(len(seed_bin)))
 
@@ -58,6 +58,7 @@ class SeedBase(MMGenObject):
 class SubSeedList(MMGenObject):
 	have_short = True
 	nonce_start = 0
+	debug_last_share_sid_len = 3
 
 	def __init__(self,parent_seed):
 		self.member_type = SubSeed
@@ -134,7 +135,7 @@ class SubSeedList(MMGenObject):
 			m2 = 'collision with parent Seed ID {},'.format(sid)
 		else:
 			if debug_last_share:
-				sl = g.debug_last_share_sid_len
+				sl = self.debug_last_share_sid_len
 				colliding_idx = [d[:sl] for d in self.data[slen].keys].index(sid[:sl]) + 1
 				sid = sid[:sl]
 			else:
@@ -285,7 +286,7 @@ class SeedShareList(SubSeedList):
 		def last_share_debug(last_share):
 			if not debug_last_share:
 				return False
-			sid_len = g.debug_last_share_sid_len
+			sid_len = self.debug_last_share_sid_len
 			lsid = last_share.sid[:sid_len]
 			psid = parent_seed.sid[:sid_len]
 			ssids = [d[:sid_len] for d in self.data['long'].keys]

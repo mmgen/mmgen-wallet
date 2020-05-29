@@ -269,9 +269,10 @@ class MMGenToolCmdMeta(type):
 
 class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 
-	def __init__(self,proto=None):
+	def __init__(self,proto=None,mmtype=None):
 		from .protocol import init_proto_from_opts
 		self.proto = proto or init_proto_from_opts()
+		self.mmtype = mmtype or getattr(opt,'type',None) or self.proto.dfl_mmtype
 		if g.token:
 			self.proto.tokensym = g.token.upper()
 
@@ -279,7 +280,7 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 		global at,kg,ag
 		at = MMGenAddrType(
 			proto = self.proto,
-			id_str = getattr(opt,'type',None) or self.proto.dfl_mmtype )
+			id_str = self.mmtype )
 		if arg != 'at':
 			kg = KeyGenerator(self.proto,at)
 			ag = AddrGenerator(self.proto,at)
@@ -460,7 +461,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
-		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
 		self.init_generators()
 		privhex = PrivKey(
 			self.proto,
@@ -469,7 +470,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
-		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
 		self.init_generators()
 		pubhex = kg.to_pubhex(PrivKey(
 			self.proto,
@@ -495,26 +496,26 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
-		if opt.type == 'segwit':
+		if self.mmtype == 'segwit':
 			return self.proto.pubhex2segwitaddr(pubkeyhex)
 		else:
 			return self.pubhash2addr(hash160(pubkeyhex))
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
-		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
 		return self.proto.pubhex2redeem_script(pubkeyhex)
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
-		assert opt.type == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
 		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
 		return self.pubhash2addr(hash160(redeem_scripthex))
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
-		if opt.type == 'bech32':
+		if self.mmtype == 'bech32':
 			return self.proto.pubhash2bech32addr(pubhashhex)
 		else:
 			self.init_generators('at')
@@ -1108,7 +1109,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			return True
 
 		async def process_wallets(op):
-			opt.accept_defaults = opt.accept_defaults or op.accept_defaults
+			g.accept_defaults = g.accept_defaults or op.accept_defaults
 			from .protocol import init_proto
 			proto = init_proto('xmr',network='mainnet')
 			from .addr import AddrList
@@ -1223,8 +1224,7 @@ class tool_api(
 		super().__init__()
 		if not hasattr(opt,'version'):
 			opts.init()
-		opt.use_old_ed25519 = None
-		opt.type = None
+		self.mmtype = self.proto.dfl_mmtype
 
 	def init_coin(self,coinsym,network):
 		"""
@@ -1277,11 +1277,11 @@ class tool_api(
 	@property
 	def addrtype(self):
 		"""The currently configured address type (is assignable)"""
-		return opt.type
+		return self.mmtype
 
 	@addrtype.setter
 	def addrtype(self,val):
-		opt.type = val
+		self.mmtype = val
 
 	@property
 	def usr_randchars(self):

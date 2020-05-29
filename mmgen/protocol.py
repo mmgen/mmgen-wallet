@@ -554,7 +554,6 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 		tokensym  = tokensym )
 
 def init_proto_from_opts():
-	from .opts import opt
 	return init_proto(
 		coin      = g.coin,
 		testnet   = g.testnet,

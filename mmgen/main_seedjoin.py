@@ -48,7 +48,7 @@ opts_data = {
 -L, --label=       l  Specify a label 'l' for output wallet
 -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.hash_preset}')
+                      for password hashing (default: '{g.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -q, --quiet           Produce quieter output; suppress some warnings
@@ -109,9 +109,6 @@ cmd_args = opts.init(opts_data)
 
 if len(cmd_args) + bool(opt.hidden_incog_input_params) < 2:
 	opts.usage()
-
-if opt.label:
-	opt.label = MMGenWalletLabel(opt.label,msg="Error in option '--label'")
 
 if opt.master_share:
 	master_idx = MasterShareIdx(opt.master_share)

@@ -216,14 +216,44 @@ def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
 		else:
 			return hp
 
-_salt_len,_sha256_len,_nonce_len = 32,32,32
+def get_new_passphrase(desc,passchg=False):
+
+	w = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
+	if opt.passwd_file:
+		pw = ' '.join(get_words_from_file(opt.passwd_file,w))
+	elif opt.echo_passphrase:
+		pw = ' '.join(get_words_from_user(f'Enter {w}: '))
+	else:
+		for i in range(g.passwd_max_tries):
+			pw = ' '.join(get_words_from_user(f'Enter {w}: '))
+			pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
+			dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
+			if pw == pw_chk:
+				vmsg('Passphrases match'); break
+			else: msg('Passphrases do not match.  Try again.')
+		else:
+			die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
+
+	if pw == '':
+		qmsg('WARNING: Empty passphrase')
+
+	return pw
+
+def get_passphrase(desc,passchg=False):
+	prompt ='Enter {}passphrase for {}: '.format(('','old ')[bool(passchg)],desc)
+	if opt.passwd_file:
+		pwfile_reuse_warning(opt.passwd_file)
+		return ' '.join(get_words_from_file(opt.passwd_file,'passphrase'))
+	else:
+		return ' '.join(get_words_from_user(prompt))
+
+_salt_len,_sha256_len,_nonce_len = (32,32,32)
 
 def mmgen_encrypt(data,desc='data',hash_preset=''):
 	salt  = get_random(_salt_len)
 	iv    = get_random(g.aesctr_iv_len)
 	nonce = get_random(_nonce_len)
-	hp    = hash_preset or (
-		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
+	hp    = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
 	m     = ('user-requested','default')[hp=='3']
 	vmsg(f'Encrypting {desc}')
 	qmsg(f'Using {m} hash preset of {hp!r}')
@@ -238,8 +268,7 @@ def mmgen_decrypt(data,desc='data',hash_preset=''):
 	salt   = data[:_salt_len]
 	iv     = data[_salt_len:dstart]
 	enc_d  = data[dstart:]
-	hp     = hash_preset or (
-		opt.hash_preset if 'hash_preset' in opt.set_by_user else get_hash_preset_from_user('3',desc))
+	hp     = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
 	m  = ('user-requested','default')[hp=='3']
 	qmsg(f'Using {m} hash preset of {hp!r}')
 	passwd = get_passphrase(desc)
