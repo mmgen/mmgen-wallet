@@ -274,57 +274,50 @@ class WalletEnc(Wallet):
 
 	_msg = {
 		'choose_passphrase': """
-You must choose a passphrase to encrypt your new {} with.
-A key will be generated from your passphrase using a hash preset of '{}'.
-Please note that no strength checking of passphrases is performed.  For
-an empty passphrase, just hit ENTER twice.
-	""".strip()
+			You must choose a passphrase to encrypt your new {} with.
+			A key will be generated from your passphrase using a hash preset of '{}'.
+			Please note that no strength checking of passphrases is performed.
+			For an empty passphrase, just hit ENTER twice.
+		"""
 	}
 
-	def _get_hash_preset_from_user(self,hp,desc_suf=''):
-		n = ('','old ')[self.op=='pwchg_old']
-		m,n = (('to accept the default',n),('to reuse the old','new '))[self.op=='pwchg_new']
-		fs = "Enter {}hash preset for {}{}{},\n or hit ENTER {} value ('{}'): "
-		p = fs.format(
-			n,
+	def _get_hash_preset_from_user(self,hp,add_desc=''):
+		prompt = 'Enter {}hash preset for {}{}{},\nor hit ENTER to {} value ({!r}): '.format(
+			('old ' if self.op=='pwchg_old' else 'new ' if self.op=='pwchg_new' else ''),
 			('','new ')[self.op=='new'],
 			self.desc,
-			('',' '+desc_suf)[bool(desc_suf)],
-			m,
-			hp
-		)
+			('',' '+add_desc)[bool(add_desc)],
+			('accept the default','reuse the old')[self.op=='pwchg_new'],
+			hp )
 		while True:
-			ret = my_raw_input(p)
+			ret = my_raw_input(prompt)
 			if ret:
 				if ret in g.hash_presets:
-					self.ssdata.hash_preset = ret
 					return ret
 				else:
 					msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
 			else:
-				self.ssdata.hash_preset = hp
 				return hp
 
-	def _get_hash_preset(self,desc_suf=''):
+	def _get_hash_preset(self,add_desc=''):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
 			old_hp = self.ss_in.ssdata.hash_preset
 			if opt.keep_hash_preset:
-				qmsg(f'Reusing hash preset {old_hp!r} at user request')
-				self.ssdata.hash_preset = old_hp
+				hp = old_hp
+				qmsg(f'Reusing hash preset {hp!r} at user request')
 			elif opt.hash_preset:
-				hp = self.ssdata.hash_preset = opt.hash_preset
-				qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
+				hp = opt.hash_preset
+				qmsg(f'Using hash preset {hp!r} requested on command line')
 			else: # Prompt, using old value as default
-				hp = self._get_hash_preset_from_user(old_hp,desc_suf)
-
+				hp = self._get_hash_preset_from_user(old_hp,add_desc)
 			if (not opt.keep_hash_preset) and self.op == 'pwchg_new':
-				m = (f'changed to {hp!r}','unchanged')[hp==old_hp]
-				qmsg(f'Hash preset {m}')
+				qmsg('Hash preset {}'.format('unchanged' if hp==old_hp else f'changed to {hp!r}'))
 		elif opt.hash_preset:
-			self.ssdata.hash_preset = opt.hash_preset
-			qmsg(f'Using hash preset {opt.hash_preset!r} requested on command line')
+			hp = opt.hash_preset
+			qmsg(f'Using hash preset {hp!r} requested on command line')
 		else:
-			self._get_hash_preset_from_user(g.dfl_hash_preset,desc_suf)
+			hp = self._get_hash_preset_from_user(g.dfl_hash_preset,add_desc)
+		self.ssdata.hash_preset = hp
 
 	def _get_new_passphrase(self):
 		desc = '{}passphrase for {}{}'.format(
@@ -337,29 +330,33 @@ an empty passphrase, just hit ENTER twice.
 				self.passwd_file,
 				desc,
 				quiet = pwfile_reuse_warning(self.passwd_file) ))
-		elif opt.echo_passphrase:
-			pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
 		else:
-			for i in range(g.passwd_max_tries):
+			qmsg('\n'+fmt(self.msg['choose_passphrase'].format(self.desc,self.ssdata.hash_preset),indent='  '))
+			if opt.echo_passphrase:
 				pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
-				pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
-				dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
-				if pw == pw_chk:
-					vmsg('Passphrases match'); break
-				else: msg('Passphrases do not match.  Try again.')
 			else:
-				die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
+				for i in range(g.passwd_max_tries):
+					pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
+					pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
+					dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
+					if pw == pw_chk:
+						vmsg('Passphrases match')
+						break
+					else:
+						msg('Passphrases do not match.  Try again.')
+				else:
+					die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
 
 		if pw == '':
 			qmsg('WARNING: Empty passphrase')
 		self.ssdata.passwd = pw
 		return pw
 
-	def _get_passphrase(self,desc_suf=''):
+	def _get_passphrase(self,add_desc=''):
 		desc = '{}passphrase for {}{}'.format(
 			('','old ')[self.op=='pwchg_old'],
 			self.desc,
-			('',' '+desc_suf)[bool(desc_suf)]
+			('',' '+add_desc)[bool(add_desc)]
 		)
 		if self.passwd_file:
 			ret = ' '.join(get_words_from_file(
@@ -367,7 +364,7 @@ an empty passphrase, just hit ENTER twice.
 				desc,
 				quiet = pwfile_reuse_warning(self.passwd_file) ))
 		else:
-			ret = ' '.join(get_words_from_user('Enter {}: '.format(desc)))
+			ret = ' '.join(get_words_from_user(f'Enter {desc}: '))
 		self.ssdata.passwd = ret
 
 	def _get_first_pw_and_hp_and_encrypt_seed(self):
@@ -382,10 +379,8 @@ an empty passphrase, just hit ENTER twice.
 			else:
 				pw = self._get_new_passphrase()
 				if self.op == 'pwchg_new':
-					m = ('changed','unchanged')[pw==old_pw]
-					qmsg('Passphrase {}'.format(m))
+					qmsg('Passphrase {}'.format('unchanged' if pw==old_pw else 'changed'))
 		else:
-			qmsg(self.msg['choose_passphrase'].format(self.desc,d.hash_preset))
 			self._get_new_passphrase()
 
 		d.salt     = sha256(get_random(128)).digest()[:g.salt_len]
@@ -718,44 +713,43 @@ class MMGenWallet(WalletEnc):
 			self.label = None
 		super().__init__(*args,**kwargs)
 
+	# logic identical to _get_hash_preset_from_user()
 	def _get_label_from_user(self,old_lbl=''):
 		prompt = 'Enter a wallet label, or hit ENTER {}: '.format(
-			f'to reuse the label {old_lbl.hl()!r}' if old_lbl else 'for no label' )
+			'to reuse the label {}'.format(old_lbl.hl(encl="''")) if old_lbl else
+			'for no label' )
 		while True:
 			msg_r(prompt)
 			ret = my_raw_input('')
 			if ret:
-				self.ssdata.label = MMGenWalletLabel(ret,on_fail='return')
-				if self.ssdata.label:
-					break
+				lbl = MMGenWalletLabel(ret,on_fail='return')
+				if lbl:
+					return lbl
 				else:
 					msg('Invalid label.  Trying again...')
 			else:
-				self.ssdata.label = old_lbl or MMGenWalletLabel('No Label')
-				break
-		return self.ssdata.label
+				return old_lbl or MMGenWalletLabel('No Label')
 
-	# nearly identical to _get_hash_preset() - factor?
+	# logic identical to _get_hash_preset()
 	def _get_label(self):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'label'):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
-				qmsg(f'Reusing label {old_lbl.hl()!r} at user request')
-				self.ssdata.label = old_lbl
+				lbl = old_lbl
+				qmsg('Reusing label {} at user request'.format(lbl.hl(encl="''")))
 			elif self.label:
-				qmsg(f'Using label {self.label.hl()!r} requested on command line')
-				lbl = self.ssdata.label = self.label
+				lbl = self.label
+				qmsg('Using label {} requested on command line'.format(lbl.hl(encl="''")))
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
-
 			if (not opt.keep_label) and self.op == 'pwchg_new':
-				m = (f'changed to {lbl!r}','unchanged')[lbl==old_lbl]
-				qmsg(f'Label {m}')
+				qmsg('Label {}'.format('unchanged' if lbl==old_lbl else f'changed to {lbl!r}'))
 		elif self.label:
-			qmsg(f'Using label {self.label.hl()!r} requested on command line')
-			self.ssdata.label = self.label
+			lbl = self.label
+			qmsg('Using label {} requested on command line'.format(lbl.hl(encl="''")))
 		else:
-			self._get_label_from_user()
+			lbl = self._get_label_from_user()
+		self.ssdata.label = lbl
 
 	def _encrypt(self):
 		self._get_first_pw_and_hp_and_encrypt_seed()
@@ -851,8 +845,8 @@ class MMGenWallet(WalletEnc):
 	def _decrypt(self):
 		d = self.ssdata
 		# Needed for multiple transactions with {}-txsign
-		suf = ('',os.path.basename(self.infile.name))[bool(opt.quiet)]
-		self._get_passphrase(desc_suf=suf)
+		self._get_passphrase(
+			add_desc = os.path.basename(self.infile.name) if opt.quiet else '' )
 		key = make_key(d.passwd, d.salt, d.hash_preset)
 		ret = decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)
 		if ret:
@@ -1038,8 +1032,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _decrypt(self):
 		d = self.ssdata
-		self._get_hash_preset(desc_suf=d.incog_id)
-		self._get_passphrase(desc_suf=d.incog_id)
+		self._get_hash_preset(add_desc=d.incog_id)
+		self._get_passphrase(add_desc=d.incog_id)
 
 		# IV is used BOTH to initialize counter and to salt password!
 		key = make_key(d.passwd, d.iv, d.hash_preset, 'wrapper key')

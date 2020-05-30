@@ -204,7 +204,7 @@ def add_user_random(rand_bytes,desc):
 		return rand_bytes
 
 def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
-	prompt = f'Enter hash preset for {desc},\n or hit ENTER to accept the default value ({hp!r}): '
+	prompt = f'Enter hash preset for {desc},\nor hit ENTER to accept the default value ({hp!r}): '
 	while True:
 		ret = my_raw_input(prompt)
 		if ret:
@@ -218,14 +218,14 @@ def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
 
 def get_new_passphrase(desc,passchg=False):
 
-	w = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
+	pw_desc = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
 	if opt.passwd_file:
-		pw = ' '.join(get_words_from_file(opt.passwd_file,w))
+		pw = ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
 	elif opt.echo_passphrase:
-		pw = ' '.join(get_words_from_user(f'Enter {w}: '))
+		pw = ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
 	else:
 		for i in range(g.passwd_max_tries):
-			pw = ' '.join(get_words_from_user(f'Enter {w}: '))
+			pw = ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
 			pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
 			dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
 			if pw == pw_chk:
@@ -240,12 +240,12 @@ def get_new_passphrase(desc,passchg=False):
 	return pw
 
 def get_passphrase(desc,passchg=False):
-	prompt ='Enter {}passphrase for {}: '.format(('','old ')[bool(passchg)],desc)
+	pw_desc ='{}passphrase for {}'.format(('','old ')[bool(passchg)],desc)
 	if opt.passwd_file:
 		pwfile_reuse_warning(opt.passwd_file)
-		return ' '.join(get_words_from_file(opt.passwd_file,'passphrase'))
+		return ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
 	else:
-		return ' '.join(get_words_from_user(prompt))
+		return ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
 
 _salt_len,_sha256_len,_nonce_len = (32,32,32)
 
@@ -257,7 +257,7 @@ def mmgen_encrypt(data,desc='data',hash_preset=''):
 	m     = ('user-requested','default')[hp=='3']
 	vmsg(f'Encrypting {desc}')
 	qmsg(f'Using {m} hash preset of {hp!r}')
-	passwd = get_new_passphrase(desc,{})
+	passwd = get_new_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
 	enc_d  = encrypt_data(sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc)
 	return salt+iv+enc_d

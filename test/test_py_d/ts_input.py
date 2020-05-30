@@ -20,6 +20,9 @@ class TestSuiteInput(TestSuiteBase):
 	networks = ('btc',)
 	tmpdir_nums = []
 	cmd_group = (
+		('get_passphrase_ui',             (1,"hash preset, password and label (wallet.py)", [])),
+		('get_passphrase_cmdline',        (1,"hash preset, password and label (wallet.py - from cmdline)", [])),
+		('get_passphrase_crypto',         (1,"hash preset, password and label (crypto.py)", [])),
 		('password_entry_noecho',         (1,"utf8 password entry", [])),
 		('password_entry_echo',           (1,"utf8 password entry (echoed)", [])),
 		('mnemonic_entry_mmgen',          (1,"stealth mnemonic entry (mmgen)", [])),
@@ -36,6 +39,120 @@ class TestSuiteInput(TestSuiteBase):
 		('dieroll_entry',                 (1,"dieroll entry (base6d)", [])),
 		('dieroll_entry_usrrand',         (1,"dieroll entry (base6d) with added user entropy", [])),
 	)
+
+	def get_passphrase_ui(self):
+		t = self.spawn('test/misc/get_passphrase.py',['--usr-randchars=0','seed'],cmd_dir='.')
+
+		# 1 - new wallet, default hp,label;empty pw
+		t.expect('accept the default.*: ','\n',regex=True)
+
+		# bad repeat
+		t.expect('new MMGen wallet: ','pass1\n')
+		t.expect('peat passphrase: ','pass2\n')
+
+		# good repeat
+		t.expect('new MMGen wallet: ','\n')
+		t.expect('peat passphrase: ','\n')
+		t.expect('mpty pass')
+
+		t.expect('no label: ','\n')
+
+		t.expect('[][3][No Label]')
+
+		# 2 - new wallet, user-selected hp,pw,label
+		t.expect('accept the default.*: ', '1\n', regex=True)
+
+		t.expect('new MMGen wallet: ','pass1\n')
+		t.expect('peat passphrase: ','pass1\n')
+
+		t.expect('no label: ','lbl1\n')
+
+		t.expect('[pass1][1][lbl1]')
+
+		# 3 - passchg, nothing changes
+		t.expect('new hash preset')
+		t.expect('reuse the old value.*: ','\n',regex=True)
+		t.expect('unchanged')
+
+		t.expect('new passphrase.*: ','pass1\n',regex=True)
+		t.expect('peat passphrase: ','pass1\n')
+		t.expect('unchanged')
+
+		t.expect('reuse the label .*: ','\n',regex=True)
+		t.expect('unchanged')
+
+		t.expect('[pass1][1][lbl1]')
+
+		# 4 - passchg, everything changes
+		t.expect('new hash preset')
+		t.expect('reuse the old value.*: ','2\n',regex=True)
+		t.expect(' changed to')
+
+		t.expect('new passphrase.*: ','pass2\n',regex=True)
+		t.expect('peat passphrase: ','pass2\n')
+		t.expect(' changed')
+
+		t.expect('reuse the label .*: ','lbl2\n',regex=True)
+		t.expect(' changed to')
+		t.expect('[pass2][2][lbl2]')
+
+		# 5 - wallet from file
+		t.expect('from file')
+
+		# bad passphrase
+		t.expect('passphrase for MMGen wallet: ','bad\n')
+		t.expect('Trying again')
+
+		# good passphrase
+		t.expect('passphrase for MMGen wallet: ','reference password\n')
+		t.expect('[reference password][1][No Label]')
+
+		t.read()
+
+		return t
+
+	def get_passphrase_cmdline(self):
+		open('test/trash/pwfile','w').write('reference password\n')
+		t = self.spawn('test/misc/get_passphrase.py', [
+			'--usr-randchars=0',
+			'--label=MyLabel',
+			'--passwd-file=test/trash/pwfile',
+			'--hash-preset=1',
+			'seed' ],
+			cmd_dir = '.' )
+		for foo in range(4):
+			t.expect('[reference password][1][MyLabel]')
+		t.read()
+		return t
+
+	def get_passphrase_crypto(self):
+		t = self.spawn('test/misc/get_passphrase.py',['--usr-randchars=0','crypto'],cmd_dir='.')
+
+		# new passwd
+		t.expect('passphrase for .*: ', 'x\n', regex=True)
+		t.expect('peat passphrase: ', '\n')
+		t.expect('passphrase for .*: ', 'pass1\n', regex=True)
+		t.expect('peat passphrase: ', 'pass1\n')
+		t.expect('[pass1]')
+
+		# existing passwd
+		t.expect('passphrase for .*: ', 'pass2\n', regex=True)
+		t.expect('[pass2]')
+
+		# hash preset
+		t.expect('accept the default .*: ', '0\n', regex=True)
+		t.expect('nvalid')
+		t.expect('accept the default .*: ', '8\n', regex=True)
+		t.expect('nvalid')
+		t.expect('accept the default .*: ', '7\n', regex=True)
+		t.expect('[7]')
+
+		# hash preset (default)
+		t.expect('accept the default .*: ', '\n', regex=True)
+		t.expect(f'[{g.dfl_hash_preset}]')
+
+		t.read()
+		return t
 
 	def password_entry(self,prompt,cmd_args):
 		t = self.spawn('test/misc/password_entry.py',cmd_args,cmd_dir='.')
