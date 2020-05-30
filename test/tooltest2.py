@@ -700,7 +700,7 @@ tests = {
 			'zec_mainnet': [
 				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].addrs'],'903E 7225 DD86 6E01'),
 				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].addrs'], '9C7A 72DC 3D4A B3AF',
-					['--type=zcash_z'], 'opt.type = "zcash_z"' ),
+					['--type=zcash_z'], 'zcash_z' ),
 			],
 			'xmr_mainnet': [
 				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].addrs'],'4369 0253 AC2C 0E38'), ],
@@ -733,7 +733,7 @@ tests = {
 				( ['test/ref/zcash/98831F3A-ZEC-C[1,31-33,500-501,1010-1011].akeys.mmenc'],
 				'F05A 5A5C 0C8E 2617', kafile_opts ),
 				( ['test/ref/zcash/98831F3A-ZEC-Z[1,31-33,500-501,1010-1011].akeys.mmenc'], '6B87 9B2D 0D8D 8D1E',
-					kafile_opts + ['--type=zcash_z'], 'opt.type = "zcash_z"' ),
+					kafile_opts + ['--type=zcash_z'], 'zcash_z' ),
 			],
 			'xmr_mainnet': [
 				( ['test/ref/monero/98831F3A-XMR-M[1,31-33,500-501,1010-1011].akeys.mmenc'],

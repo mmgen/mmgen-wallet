@@ -34,7 +34,7 @@ to all your crypto assets.  The seed can be stored in many different formats:
 as a password-encrypted wallet (the default), as a one-line base58 or
 hexadecimal seed file, as formatted “dieroll base6” data, as an Electrum-based
 or BIP39 mnemonic seed phrase, as a brainwallet passphrase, or as “incognito
-data” hideable within random data in a file or block device.  Conversion between
+data” hideable within random data in a file or block device.  Conversion among
 all formats is supported.
 
 ***mmgen-txcreate running in a terminal window***
@@ -60,9 +60,9 @@ found in contemporary English poetry.  The high emotional impact of these words
 makes seed phrases easy to memorize.  Curiously, only 861 of them are shared by
 the more prosaic 2048-word [BIP39 wordlist][bw] used in most wallets today.
 
-Beginning with version 0.12.0, BIP39 mnemonic format is also supported, allowing
-you to use MMGen as a master wallet for other wallets supporting that widespread
-standard.
+Beginning with version 0.12.0, the BIP39 mnemonic format is also supported,
+allowing you to use MMGen as a master wallet for other wallets supporting that
+widespread standard.
 
 #### A brief overview of MMGen’s unique feature set:
 

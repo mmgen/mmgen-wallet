@@ -25,9 +25,9 @@ class AttrCtrl:
 	After instance is locked, forbid setting any attribute if the attribute is not present
 	in either the class or instance dict.
 
-	If _use_class_attr is True, ensure that attribute's type matches that of the class
-	attribute, unless the class attribute is set to None, in which case no type checking
-	is performed.
+	Ensure that attribute's type matches that of the instance attribute, or the class
+	attribute, if _use_class_attr is True.  If the instance or class attribute is set
+	to None, no type checking is performed.
 	"""
 	_lock = False
 	_use_class_attr = False
@@ -61,12 +61,12 @@ class AttrCtrl:
 class Lockable(AttrCtrl):
 	"""
 	After instance is locked, its attributes become read-only, with the following exceptions:
-	  - if the attribute's name is in _set_ok, attr can be set once after locking, if unset
-	  - if the attribute's name is in _reset_ok, read-only restrictions are bypassed and only
+	  - if an attribute's name is in _set_ok, it can be set once after locking, if unset
+	  - if an attribute's name is in _reset_ok, read-only restrictions are bypassed and only
 	    AttrCtrl checking is performed
 
-	To determine whether an attribute is set, it's matched against either None or the class attribute,
-	if _use_class_attr is True
+	An attribute is considered unset if its value is None, or if it is present in the instance
+	__dict__, if _use_class_attr is True.
 	"""
 	_set_ok = ()
 	_reset_ok = ()
@@ -83,6 +83,6 @@ class Lockable(AttrCtrl):
 					raise AttributeError(
 						f'attribute {name!r} of {type(self).__name__} object is already set,'
 						+ ' and resetting is forbidden' )
-			# name is in (_set_ok + _reset_ok) -- allow name to be in both lists
+			# else name is in (_set_ok + _reset_ok) -- allow name to be in both lists
 
 		return AttrCtrl.__setattr__(self,name,value)

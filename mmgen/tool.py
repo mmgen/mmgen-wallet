@@ -637,20 +637,20 @@ class MMGenToolCmdFile(MMGenToolCmds):
 	"utilities for viewing/checking MMGen address and transaction files"
 
 	def _file_chksum(self,mmgen_addrfile,objname):
-		verbose = opt.verbose
-		opt.verbose = False
-		opt.yes = True
-		opt.quiet = True
-		from .addr import AddrList,KeyAddrList,PasswordList
-		ret = locals()[objname](self.proto,mmgen_addrfile)
+		verbose,yes,quiet = [bool(i) for i in (opt.verbose,opt.yes,opt.quiet)]
+		opt.verbose,opt.yes,opt.quiet = (False,True,True)
+		ret = globals()[objname](self.proto,mmgen_addrfile)
+		opt.verbose,opt.yes,opt.quiet = (verbose,yes,quiet)
 		if verbose:
 			if ret.al_id.mmtype.name == 'password':
-				fs = 'Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'
-				msg(fs.format(capfirst(ret.pw_info[ret.pw_fmt].desc),ret.pw_len,ret.pw_id_str))
+				msg('Passwd fmt:  {}\nPasswd len:  {}\nID string:   {}'.format(
+					capfirst(ret.pw_info[ret.pw_fmt].desc),
+					ret.pw_len,
+					ret.pw_id_str ))
 			else:
 				msg(f'Base coin:   {ret.base_coin} {capfirst(ret.network)}')
-				msg('MMType:      {}'.format(capfirst(ret.al_id.mmtype.name)))
-			msg('List length: {}'.format(len(ret.data)))
+				msg(f'MMType:      {capfirst(ret.al_id.mmtype.name)}')
+			msg(    f'List length: {len(ret.data)}')
 		return ret.chksum
 
 	def addrfile_chksum(self,mmgen_addrfile:str):
@@ -1112,7 +1112,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			g.accept_defaults = g.accept_defaults or op.accept_defaults
 			from .protocol import init_proto
 			proto = init_proto('xmr',network='mainnet')
-			from .addr import AddrList
 			al = KeyAddrList(proto,infile)
 			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
 			dl = len(data)
