@@ -167,6 +167,8 @@ def add_cmdline_opts():
 
 # add_cmdline_opts()
 
+opts.UserOpts._reset_ok += ('skip_deps',)
+
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
 

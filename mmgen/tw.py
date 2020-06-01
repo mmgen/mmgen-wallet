@@ -32,9 +32,12 @@ CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
 def get_tw_label(proto,s):
-	try: return TwLabel(proto,s,on_fail='raise')
-	except BadTwComment: raise
-	except: return None
+	try:
+		return TwLabel(proto,s,on_fail='raise')
+	except BadTwComment:
+		raise
+	except:
+		return None
 
 _date_formatter = {
 	'days':      lambda rpc,secs: (rpc.cur_date - secs) // 86400,
@@ -113,13 +116,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 			def amt2(self,value):
 				return self.proto.coin_amt(value)
 
-	wmsg = {
-	'no_spendable_outputs': """
-No spendable outputs found!  Import addresses with balances into your
-watch-only wallet using '{}-addrimport' and then re-run this program.
-""".strip().format(g.proj_name.lower())
-	}
-
 	async def __ainit__(self,proto,minconf=1,addrs=[]):
 		self.proto        = proto
 		self.unspent      = self.MMGenTwOutputList()
@@ -146,7 +142,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	@age_fmt.setter
 	def age_fmt(self,val):
 		if val not in self.age_fmts:
-			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(val,self.age_fmts))
+			raise BadAgeFormat(f'{val!r}: invalid age format (must be one of {self.age_fmts!r})')
 		self._age_fmt = val
 
 	def get_display_precision(self):
@@ -176,7 +172,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			us_raw = await self.get_unspent_rpc()
 
 		if not us_raw:
-			die(0,self.wmsg['no_spendable_outputs'])
+			die(0,fmt(f"""
+				No spendable outputs found!  Import addresses with balances into your
+				watch-only wallet using '{g.proj_name.lower()}-addrimport' and then re-run this program.
+			""").strip())
 
 		lbl_id = ('account','label')['label_api' in self.rpc.caps]
 
@@ -214,7 +213,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		}
 		key = key or self.sort_key
 		if key not in sort_funcs:
-			die(1,"'{}': invalid sort key.  Valid options: {}".format(key,' '.join(sort_funcs.keys())))
+			die(1,f'{key!r}: invalid sort key.  Valid options: {" ".join(sort_funcs.keys())}')
 		self.sort_key = key
 		assert type(reverse) == bool
 		self.unspent.sort(key=sort_funcs[key],reverse=reverse or self.reverse)
@@ -230,10 +229,11 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 		from .term import get_terminal_size
 		while True:
 			self.cols = g.terminal_width or get_terminal_size().width
-			if self.cols >= g.min_screen_width: break
-			m1 = 'Screen too narrow to display the tracking wallet\n'
-			m2 = 'Please resize your screen to at least {} characters and hit ENTER '
-			my_raw_input((m1+m2).format(g.min_screen_width))
+			if self.cols >= g.min_screen_width:
+				break
+			my_raw_input(
+				'Screen too narrow to display the tracking wallet\n'
+				+ f'Please resize your screen to at least {g.min_screen_width} characters and hit ENTER ' )
 
 	def get_display_constants(self):
 		unsp = self.unspent
@@ -360,20 +360,29 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 			max_lbl_len = max([len(i.label) for i in self.unspent if i.label] or [2])
 			for n,i in enumerate(self.unspent):
 				yield fs.format(
-					n  = str(n+1)+')',
-					t  = '{},{}'.format('|'+'.'*63 if i.skip == 'txid' and self.group else i.txid,i.vout),
+					n  = str(n+1) + ')',
+					t  = '{},{}'.format(
+							('|'+'.'*63 if i.skip == 'txid' and self.group else i.txid),
+							i.vout ),
 					a  = (
 						'|'+'.' * addr_w if i.skip == 'addr' and self.group else
 						i.addr.fmt(color=color,width=addr_w) ),
-					m  = MMGenID.fmtc(i.twmmid if i.twmmid.type=='mmgen' else
-						'Non-{}'.format(g.proj_name),width = mmid_w,color=color),
+					m  = MMGenID.fmtc(
+							(i.twmmid if i.twmmid.type == 'mmgen' else f'Non-{g.proj_name}'),
+							width = mmid_w,
+							color = color ),
 					A  = i.amt.fmt(color=color),
 					A2 = ( i.amt2.fmt(color=color) if i.amt2 is not None else '' ),
 					c  = i.confs,
 					b  = self.rpc.blockcount - (i.confs - 1),
 					D  = self.age_disp(i,'date_time'),
 					l  = i.label.hl(color=color) if i.label else
-						TwComment.fmtc('',color = color,nullrepl='-',width=max_lbl_len) ).rstrip()
+						TwComment.fmtc(
+							s        = '',
+							color    = color,
+							nullrepl = '-',
+							width    = max_lbl_len )
+					).rstrip()
 
 		fs2 = '{} (block #{}, {} UTC)\n{}Sort order: {}\n{}\n\nTotal {}: {}\n'
 		self.fmt_print = fs2.format(
@@ -399,11 +408,11 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 	def get_idx_from_user(self,action):
 		msg('')
 		while True:
-			ret = my_raw_input('Enter {} number (or RETURN to return to main menu): '.format(self.item_desc))
+			ret = my_raw_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
 			if ret == '': return (None,None) if action == 'a_lbl_add' else None
 			n = AddrIdx(ret,on_fail='silent')
 			if not n or n < 1 or n > len(self.unspent):
-				msg('Choice must be a single number between 1 and {}'.format(len(self.unspent)))
+				msg(f'Choice must be a single number between 1 and {len(self.unspent)}')
 			else:
 				if action == 'a_lbl_add':
 					while True:
@@ -411,17 +420,17 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 						if s == 'q':
 							return None,None
 						elif s == '':
-							fs = "Removing label for {} #{}.  Is this what you want?"
-							if keypress_confirm(fs.format(self.item_desc,n)):
+							if keypress_confirm(
+									f'Removing label for {self.item_desc} #{n}.  Is this what you want?'):
 								return n,s
 						elif s:
 							if TwComment(s,on_fail='return'):
 								return n,s
 				else:
 					if action == 'a_addr_delete':
-						fs = "Removing {} #{} from tracking wallet.  Is this what you want?"
+						fs = 'Removing {} #{} from tracking wallet.  Is this what you want?'
 					elif action == 'a_balance_refresh':
-						fs = "Refreshing tracking wallet {} #{}.  Is this what you want?"
+						fs = 'Refreshing tracking wallet {} #{}.  Is this what you want?'
 					if keypress_confirm(fs.format(self.item_desc,n)):
 						return n
 
@@ -468,7 +477,7 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					e = self.unspent[idx-1]
 					bal = await self.wallet.get_balance(e.addr,force_rpc=True)
 					await self.get_unspent_data()
-					oneshot_msg = yellow('{} balance for account #{} refreshed\n\n'.format(self.proto.dcoin,idx))
+					oneshot_msg = yellow(f'{self.proto.dcoin} balance for account #{idx} refreshed\n\n')
 				self.display_constants = self.get_display_constants()
 			elif action == 'a_lbl_add':
 				idx,lbl = self.get_idx_from_user(action)
@@ -476,8 +485,10 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					e = self.unspent[idx-1]
 					if await self.wallet.add_label(e.twmmid,lbl,addr=e.addr):
 						await self.get_unspent_data()
-						a = 'added to' if lbl else 'removed from'
-						oneshot_msg = yellow("Label {} {} #{}\n\n".format(a,self.item_desc,idx))
+						oneshot_msg = yellow('Label {} {} #{}\n\n'.format(
+							('added to' if lbl else 'removed from'),
+							self.item_desc,
+							idx ))
 					else:
 						oneshot_msg = red('Label could not be added\n\n')
 				self.display_constants = self.get_display_constants()
@@ -487,22 +498,29 @@ watch-only wallet using '{}-addrimport' and then re-run this program.
 					e = self.unspent[idx-1]
 					if await self.wallet.remove_address(e.addr):
 						await self.get_unspent_data()
-						oneshot_msg = yellow("{} #{} removed\n\n".format(capfirst(self.item_desc),idx))
+						oneshot_msg = yellow(f'{capfirst(self.item_desc)} #{idx} removed\n\n')
 					else:
 						oneshot_msg = red('Address could not be removed\n\n')
 				self.display_constants = self.get_display_constants()
 			elif action == 'a_print':
-				of = '{}-{}[{}].out'.format(self.dump_fn_pfx,self.proto.dcoin,
-										','.join(self.sort_info(include_group=False)).lower())
+				of = '{}-{}[{}].out'.format(
+					self.dump_fn_pfx,
+					self.proto.dcoin,
+					','.join(self.sort_info(include_group=False)).lower() )
 				msg('')
 				try:
-					write_data_to_file(of,await self.format_for_printing(),desc='{} listing'.format(self.desc))
+					write_data_to_file(
+						of,
+						await self.format_for_printing(),
+						desc = f'{self.desc} listing' )
 				except UserNonConfirmation as e:
-					oneshot_msg = red("File '{}' not overwritten by user request\n\n".format(of))
+					oneshot_msg = red(f'File {of!r} not overwritten by user request\n\n')
 				else:
-					oneshot_msg = yellow("Data written to '{}'\n\n".format(of))
+					oneshot_msg = yellow(f'Data written to {of!r}\n\n')
 			elif action in ('a_view','a_view_wide'):
-				do_pager(self.fmt_display if action == 'a_view' else await self.format_for_printing(color=True))
+				do_pager(
+					self.fmt_display if action == 'a_view' else
+					await self.format_for_printing(color=True) )
 				if g.platform == 'linux' and oneshot_msg == None:
 					msg_r(CUR_RIGHT(len(prompt.split('\n')[-1])-2))
 					no_output = True
@@ -533,7 +551,7 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 			for mmid in sorted(a.mmid for a in acct_labels if a):
 				if mmid == mmid_prev:
 					err = True
-					msg('Duplicate MMGen ID ({}) discovered in tracking wallet!\n'.format(mmid))
+					msg(f'Duplicate MMGen ID ({mmid}) discovered in tracking wallet!\n')
 				mmid_prev = mmid
 			if err: rdie(3,'Tracking wallet is corrupted!')
 
@@ -567,14 +585,15 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 						die(2,'duplicate {} address ({}) for this MMGen address! ({})'.format(
 							proto.coin,
 							d['address'],
-							self[lm]['addr']) )
+							self[lm]['addr'] ))
 				else:
 					lm.confs = d['confirmations']
 					lm.txid = d['txid']
 					lm.date = None
-					self[lm] = {'amt': proto.coin_amt('0'),
-								'lbl': label,
-								'addr': CoinAddr(proto,d['address'])}
+					self[lm] = {
+						'amt': proto.coin_amt('0'),
+						'lbl': label,
+						'addr': CoinAddr(proto,d['address']) }
 				self[lm]['amt'] += d['amount']
 				self.total += d['amount']
 
@@ -614,7 +633,7 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 		if not self.has_age:
 			show_age = False
 		if age_fmt not in self.age_fmts:
-			raise BadAgeFormat("'{}': invalid age format (must be one of {!r})".format(age_fmt,self.age_fmts))
+			raise BadAgeFormat(f'{age_fmt!r}: invalid age format (must be one of {self.age_fmts!r})')
 		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10
@@ -671,7 +690,9 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 					age=self.age_disp(mmid,age_fmt) if show_age and hasattr(mmid,'confs') else '-'
 					).rstrip()
 
-			yield '\nTOTAL: {} {}'.format(self.total.hl(color=True),self.proto.dcoin)
+			yield '\nTOTAL: {} {}'.format(
+				self.total.hl(color=True),
+				self.proto.dcoin )
 
 		return '\n'.join(gen_output())
 
@@ -694,7 +715,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 			mode = 'w'
 
 		if g.debug:
-			print_stack_trace('TW INIT {!r} {!r}'.format(mode,self))
+			print_stack_trace(f'TW INIT {mode!r} {self!r}')
 
 		self.rpc = await rpc_init(proto) # TODO: create on demand - only certain ops require RPC
 		self.proto = proto
@@ -707,8 +728,10 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 			self.init_empty()
 
 		if self.data['coin'] != self.proto.coin: # TODO remove?
-			m = 'Tracking wallet coin ({}) does not match current coin ({})!'
-			raise WalletFileError(m.format(self.data['coin'],self.proto.coin))
+			raise WalletFileError(
+				'Tracking wallet coin ({}) does not match current coin ({})!'.format(
+					self.data['coin'],
+					self.proto.coin ))
 
 		self.conv_types(self.data[self.data_key])
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
@@ -739,8 +762,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 				self.init_empty()
 				self.force_write()
 			else:
-				m = "File '{}' exists but does not contain valid json data"
-				raise WalletFileError(m.format(self.tw_fn))
+				raise WalletFileError(f'File {self.tw_fn!r} exists but does not contain valid json data')
 		else:
 			self.upgrade_wallet_maybe()
 
@@ -748,7 +770,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 		if self.mode == 'w':
 			import atexit
 			def del_tw(tw):
-				dmsg('Running exit handler del_tw() for {!r}'.format(tw))
+				dmsg(f'Running exit handler del_tw() for {tw!r}')
 				del tw
 			atexit.register(del_tw,self)
 
@@ -766,7 +788,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 		Since no exceptions are raised, errors will not be caught by the test suite.
 		"""
 		if g.debug:
-			print_stack_trace('TW DEL {!r}'.format(self))
+			print_stack_trace(f'TW DEL {self!r}')
 
 		if self.mode == 'w':
 			self.write()
@@ -846,17 +868,22 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	@write_mode
 	def write_changed(self,data):
 		write_data_to_file(
-			self.tw_fn,data,
-			desc='{} data'.format(self.base_desc),
-			ask_overwrite=False,ignore_opt_outdir=True,quiet=True,
-			check_data=True,cmp_data=self.orig_data)
+			self.tw_fn,
+			data,
+			desc              = f'{self.base_desc} data',
+			ask_overwrite     = False,
+			ignore_opt_outdir = True,
+			quiet             = True,
+			check_data        = True,
+			cmp_data          = self.orig_data )
+
 		self.orig_data = data
 
 	def write(self): # use 'check_data' to check wallet hasn't been altered by another program
 		if not self.use_tw_file:
 			dmsg("'use_tw_file' is False, doing nothing")
 			return
-		dmsg('write(): checking if {} data has changed'.format(self.desc))
+		dmsg(f'write(): checking if {self.desc} data has changed')
 		wdata = json.dumps(self.data)
 
 		if self.orig_data != wdata:
@@ -903,11 +930,11 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 		try:
 			if not is_mmgen_id(self.proto,arg1):
-				assert coinaddr,"Invalid coin address for this chain: {}".format(arg1)
-			assert coinaddr,"{pn} address '{ma}' not found in tracking wallet"
-			assert await self.is_in_wallet(coinaddr),"Address '{ca}' not found in tracking wallet"
+				assert coinaddr, f'Invalid coin address for this chain: {arg1}'
+			assert coinaddr, f'{g.proj_name} address {mmaddr!r} not found in tracking wallet'
+			assert await self.is_in_wallet(coinaddr), f'Address {coinaddr!r} not found in tracking wallet'
 		except Exception as e:
-			msg(e.args[0].format(pn=g.proj_name,ma=mmaddr,ca=coinaddr))
+			msg(str(e))
 			return False
 
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
@@ -917,7 +944,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 			mmaddr = (await TwAddrData(proto=self.proto)).coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr:
-			mmaddr = '{}:{}'.format(self.proto.base_coin.lower(),coinaddr)
+			mmaddr = f'{self.proto.base_coin.lower()}:{coinaddr}'
 
 		mmaddr = TwMMGenID(self.proto,mmaddr)
 
@@ -929,14 +956,16 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 		if await self.set_label(coinaddr,lbl) == False:
 			if not silent:
-				msg('Label could not be {}'.format(('removed','added')[bool(label)]))
+				msg( 'Label could not be {}'.format('added' if label else 'removed') )
 			return False
 		else:
-			m = mmaddr.type.replace('mmg','MMG')
-			a = mmaddr.replace(self.proto.base_coin.lower()+':','')
-			s = '{} address {} in tracking wallet'.format(m,a)
-			if label: msg("Added label '{}' to {}".format(label,s))
-			else:     msg('Removed label from {}'.format(s))
+			desc = '{} address {} in tracking wallet'.format(
+				mmaddr.type.replace('mmg','MMG'),
+				mmaddr.replace(self.proto.base_coin.lower()+':','') )
+			if label:
+				msg(f'Added label {label!r} to {desc}')
+			else:
+				msg(f'Removed label from {desc}')
 			return True
 
 	@write_mode
@@ -945,7 +974,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 	@write_mode
 	async def remove_address(self,addr):
-		raise NotImplementedError('address removal not implemented for coin {}'.format(self.proto.coin))
+		raise NotImplementedError(f'address removal not implemented for coin {self.proto.coin}')
 
 class TwGetBalance(MMGenObject,metaclass=aInitMeta):
 

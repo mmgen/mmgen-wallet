@@ -166,7 +166,7 @@ class CoinProtocol(MMGenObject):
 			return False
 
 		def coin_addr(self,addr):
-			return CoinAddr(proto=self,addr=addr)
+			return CoinAddr( proto=self, addr=addr )
 
 		def addr_type(self,id_str,on_fail='die'):
 			return MMGenAddrType(proto=self,id_str=id_str,on_fail=on_fail)

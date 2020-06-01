@@ -108,13 +108,15 @@ class InitErrors(object):
 			e2_fmt = '({}) '.format(e2.args[0]) if e2 else ''
 			errmsg = fs.format(m,objname or cls.__name__,e2_fmt,e.args[0])
 
-		if m2: errmsg = '{!r}\n{}'.format(m2,errmsg)
+		if m2:
+			errmsg = '{!r}\n{}'.format(m2,errmsg)
 
 		from .util import die,msg
 		if cls.on_fail == 'silent':
 			return None # TODO: return False instead?
 		elif cls.on_fail == 'return':
-			if errmsg: msg(errmsg)
+			if errmsg:
+				msg(errmsg)
 			return None # TODO: return False instead?
 		elif g.traceback or cls.on_fail == 'raise':
 			if hasattr(cls,'exc'):
@@ -127,8 +129,9 @@ class InitErrors(object):
 	@classmethod
 	def method_not_implemented(cls):
 		import traceback
-		raise NotImplementedError('method {!r} not implemented for class {!r}'.format(
-				traceback.extract_stack()[-2].name, cls.__name__))
+		raise NotImplementedError(
+			'method {!r} not implemented for class {!r}'.format(
+				traceback.extract_stack()[-2].name, cls.__name__) )
 
 class Hilite(object):
 
@@ -231,8 +234,10 @@ class ImmutableAttr: # Descriptor
 
 	def __init__(self,dtype,typeconv=True,set_none_ok=False,include_proto=False):
 		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
-		if include_proto: assert typeconv and type(dtype) == str, 'ImmutableAttr_check2'
-		if set_none_ok:   assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
+		if include_proto:
+			assert typeconv and type(dtype) == str, 'ImmutableAttr_check2'
+		if set_none_ok:
+			assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
 
 		if dtype is None:
 			'use instance-defined conversion function for this attribute'
@@ -365,14 +370,16 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 					j = i.split('-')
 					if len(j) == 1:
 						idx = AddrIdx(i,on_fail='raise')
-						if not idx: break
+						if not idx:
+							break
 						ret.append(idx)
 					elif len(j) == 2:
 						beg = AddrIdx(j[0],on_fail='raise')
-						if not beg: break
+						if not beg:
+							break
 						end = AddrIdx(j[1],on_fail='raise')
-						if not beg: break
-						if end < beg: break
+						if not beg or (end < beg):
+							break
 						ret.extend([AddrIdx(x,on_fail='raise') for x in range(beg,end+1)])
 					else: break
 				else:
@@ -391,7 +398,8 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 		try:
 			if len(args) == 1:
 				s = args[0]
-				if type(s) == cls: return s
+				if type(s) == cls:
+					return s
 				assert isinstance(s,str),'not a string or string subclass'
 				ss = s.split('-',1)
 				first = int(ss[0])
@@ -442,7 +450,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 
 	# NB: 'from_decimal' rounds down to precision of 'min_coin_unit'
 	def __new__(cls,num,from_unit=None,from_decimal=False,on_fail='die'):
-		if type(num) == cls: return num
+		if type(num) == cls:
+			return num
 		cls.arg_chk(on_fail)
 		try:
 			if from_unit:
@@ -480,7 +489,8 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 		cls.method_not_implemented()
 
 	def fmt(self,fs=None,color=False,suf='',prec=1000):
-		if fs == None: fs = self.amt_fs
+		if fs == None:
+			fs = self.amt_fs
 		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
 		if '.' in fs:
 			p1,p2 = list(map(int,fs.split('.',1)))
@@ -576,7 +586,8 @@ class SeedID(str,Hilite,InitErrors):
 	width = 8
 	trunc_ok = False
 	def __new__(cls,seed=None,sid=None,on_fail='die'):
-		if type(sid) == cls: return sid
+		if type(sid) == cls:
+			return sid
 		cls.arg_chk(on_fail)
 		try:
 			if seed:
@@ -586,7 +597,7 @@ class SeedID(str,Hilite,InitErrors):
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
 				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
-				assert len(sid) == cls.width,'not {} characters wide'.format(cls.width)
+				assert len(sid) == cls.width, f'not {cls.width} characters wide'
 				return str.__new__(cls,sid)
 			raise ValueError('no arguments provided')
 		except Exception as e:
@@ -596,7 +607,8 @@ class SubSeedIdx(str,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die'):
-		if type(s) == cls: return s
+		if type(s) == cls:
+			return s
 		cls.arg_chk(on_fail)
 		try:
 			assert isinstance(s,str),'not a string or string subclass'
@@ -676,7 +688,7 @@ class TwLabel(str,InitErrors,MMGenObject):
 			ts = text.split(None,1)
 			mmid = TwMMGenID(proto,ts[0],on_fail='raise')
 			comment = TwComment(ts[1] if len(ts) == 2 else '',on_fail='raise')
-			me = str.__new__(cls,'{}{}'.format(mmid,' {}'.format(comment) if comment else ''))
+			me = str.__new__( cls, mmid + (' ' + comment if comment else '') )
 			me.mmid = mmid
 			me.comment = comment
 			me.proto = proto
@@ -690,16 +702,18 @@ class HexStr(str,Hilite,InitErrors):
 	hexcase = 'lower'
 	trunc_ok = False
 	def __new__(cls,s,on_fail='die',case=None):
-		if type(s) == cls: return s
+		if type(s) == cls:
+			return s
 		cls.arg_chk(on_fail)
-		if case == None: case = cls.hexcase
+		if case == None:
+			case = cls.hexcase
 		try:
 			assert isinstance(s,str),'not a string or string subclass'
-			assert case in ('upper','lower'),"'{}' incorrect case specifier".format(case)
-			assert set(s) <= set(getattr(hexdigits,case)()),'not {}case hexadecimal symbols'.format(case)
+			assert case in ('upper','lower'), f'{case!r} incorrect case specifier'
+			assert set(s) <= set(getattr(hexdigits,case)()), f'not {case}case hexadecimal symbols'
 			assert not len(s) % 2,'odd-length string'
 			if cls.width:
-				assert len(s) == cls.width,'Value is not {} characters wide'.format(cls.width)
+				assert len(s) == cls.width, f'Value is not {cls.width} characters wide'
 			return str.__new__(cls,s)
 		except Exception as e:
 			return cls.init_fail(e,s)
@@ -755,7 +769,8 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	# initialize with (priv_bin,compressed), WIF or self
 	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
 
-		if type(s) == cls: return s
+		if type(s) == cls:
+			return s
 		cls.arg_chk(on_fail)
 
 		if wif:
@@ -821,7 +836,8 @@ class MMGenLabel(str,Hilite,InitErrors):
 	max_screen_width = 0 # if != 0, overrides max_len
 	desc = 'label'
 	def __new__(cls,s,on_fail='die',msg=None):
-		if type(s) == cls: return s
+		if type(s) == cls:
+			return s
 		cls.arg_chk(on_fail)
 		for k in cls.forbidden,cls.allowed:
 			assert type(k) == list
@@ -874,7 +890,8 @@ class MMGenPWIDString(MMGenLabel):
 class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
 	color = 'red'
 	def __new__(cls,s,on_fail='raise'):
-		if type(s) == cls: return s
+		if type(s) == cls:
+			return s
 		cls.arg_chk(on_fail)
 		try:
 			arr = s.split(':')

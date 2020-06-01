@@ -100,6 +100,7 @@ def run_test(test,arg,input_data):
 			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
 		if opt.silent and input_data=='good' and ret==bad_ret:
 			raise UserWarning("'None' returned with good input data")
+
 		if input_data=='good':
 			if ret_idx:
 				ret_chk = arg[list(arg.keys())[ret_idx]].encode()
@@ -108,7 +109,8 @@ def run_test(test,arg,input_data):
 		if not opt.super_silent:
 			try: ret_disp = ret.decode()
 			except: ret_disp = ret
-			msg('==> {!r}'.format(ret_disp))
+			msg(f'==> {ret_disp!r}')
+
 		if opt.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 	except Exception as e:
@@ -121,10 +123,10 @@ def run_test(test,arg,input_data):
 		if input_data == 'good':
 			raise ValueError('Error on good input data')
 		if opt.verbose:
-			msg('exitval: {}'.format(e.code))
+			msg(f'exitval: {e.code}')
 	except UserWarning as e:
-		msg('==> {!r}'.format(ret))
-		die(2,red('{}'.format(e.args[0])))
+		msg(f'==> {ret!r}')
+		die(2,red(str(e)))
 
 def do_loop():
 	import importlib
@@ -143,7 +145,11 @@ def do_loop():
 			if not opt.silent:
 				msg(purple(capfirst(k)+' input:'))
 			for arg in test_data[test][k]:
-				run_test(test,arg,input_data=k)
+				run_test(
+					test,
+					arg,
+					input_data = k,
+				)
 
 from mmgen.protocol import init_proto_from_opts
 proto = init_proto_from_opts()

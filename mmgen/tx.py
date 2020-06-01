@@ -737,7 +737,7 @@ class MMGenTX:
 					if selected:
 						if selected[-1] <= len(unspent):
 							return selected
-						msg('Unspent output number must be <= {}'.format(len(unspent)))
+						msg(f'Unspent output number must be <= {len(unspent)}')
 
 		def select_unspent_cmdline(self,unspent):
 
