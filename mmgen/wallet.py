@@ -724,7 +724,7 @@ class MMGenWallet(WalletEnc):
 			msg_r(prompt)
 			ret = my_raw_input('')
 			if ret:
-				lbl = MMGenWalletLabel(ret,on_fail='return')
+				lbl = get_obj(MMGenWalletLabel,s=ret)
 				if lbl:
 					return lbl
 				else:

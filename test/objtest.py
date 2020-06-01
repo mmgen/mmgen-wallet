@@ -41,6 +41,7 @@ opts_data = {
 		'options': """
 -h, --help         Print this help message
 --, --longhelp     Print help message for long options (common options)
+-g, --getobj       Instantiate objects with get_obj() wrapper
 -q, --quiet        Produce quieter output
 -s, --silent       Silence output of tested objects
 -S, --super-silent Silence all output except for errors
@@ -51,12 +52,11 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-def run_test(test,arg,input_data):
+def run_test(test,arg,input_data,arg1,exc_name):
 	arg_copy = arg
-	kwargs = {'on_fail':'silent'} if opt.silent else {'on_fail':'die'}
+	kwargs = {}
 	ret_chk = arg
 	ret_idx = None
-	exc_type = None
 	if input_data == 'good' and type(arg) == tuple:
 		arg,ret_chk = arg
 	if type(arg) == dict: # pass one arg + kwargs to constructor
@@ -76,28 +76,42 @@ def run_test(test,arg,input_data):
 			ret_idx = arg['ret_idx']
 			del arg['ret_idx']
 			del arg_copy['ret_idx']
-		if 'ExcType' in arg:
-			exc_type = arg['ExcType']
-			del arg['ExcType']
-			del arg_copy['ExcType']
 		kwargs.update(arg)
 	elif type(arg) == tuple:
 		args = arg
 	else:
 		args = [arg]
+
+	if opt.getobj:
+		if args:
+			assert len(args) == 1, 'objtest_chk1: only one positional arg is allowed'
+			kwargs.update( { arg1: args[0] } )
+		if opt.silent:
+			kwargs.update( { 'silent': True } )
+
 	try:
 		if not opt.super_silent:
 			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
 			msg_r((orange,green)[input_data=='good']('{:<22}'.format(arg_disp+':')))
 		cls = globals()[test]
-		ret = cls(*args,**kwargs)
+
+		if opt.getobj:
+			ret = get_obj(globals()[test],**kwargs)
+		else:
+			ret = cls(*args,**kwargs)
+
 		bad_ret = list() if issubclass(cls,list) else None
 
 		if isinstance(ret_chk,str): ret_chk = ret_chk.encode()
 		if isinstance(ret,str): ret = ret.encode()
 
-		if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
-			raise UserWarning("Non-'None' return value {} with bad input data".format(repr(ret)))
+		if opt.getobj:
+			if input_data == 'bad':
+				assert ret == False, 'non-False return on bad input data'
+		else:
+			if (opt.silent and input_data=='bad' and ret!=bad_ret) or (not opt.silent and input_data=='bad'):
+				raise UserWarning(f"Non-'None' return value {ret!r} with bad input data")
+
 		if opt.silent and input_data=='good' and ret==bad_ret:
 			raise UserWarning("'None' returned with good input data")
 
@@ -105,20 +119,31 @@ def run_test(test,arg,input_data):
 			if ret_idx:
 				ret_chk = arg[list(arg.keys())[ret_idx]].encode()
 			if ret != ret_chk and repr(ret) != repr(ret_chk):
-				raise UserWarning("Return value ({!r}) doesn't match expected value ({!r})".format(ret,ret_chk))
-		if not opt.super_silent:
+				raise UserWarning(f"Return value ({ret!r}) doesn't match expected value ({ret_chk!r})")
+
+		if opt.super_silent:
+			return
+
+		if opt.getobj and (not opt.silent and input_data == 'bad'):
+			pass
+		else:
 			try: ret_disp = ret.decode()
 			except: ret_disp = ret
 			msg(f'==> {ret_disp!r}')
 
 		if opt.verbose and issubclass(cls,MMGenObject):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
+
 	except Exception as e:
-		if not type(e).__name__ == exc_type:
+		if not type(e).__name__ == exc_name:
+			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
-		if not opt.super_silent:
-			msg_r(' {}'.format(yellow(exc_type+':')))
-			msg(e.args[0])
+		if opt.super_silent:
+			pass
+		elif opt.silent:
+			msg(f'==> {exc_name}')
+		else:
+			msg( yellow(f' {exc_name}:') + str(e) )
 	except SystemExit as e:
 		if input_data == 'good':
 			raise ValueError('Error on good input data')
@@ -137,10 +162,17 @@ def do_loop():
 	clr = None
 	utests = cmd_args
 	for test in test_data:
+		arg1 = test_data[test].get('arg1')
 		if utests and test not in utests: continue
 		nl = ('\n','')[bool(opt.super_silent) or clr == None]
 		clr = (blue,nocolor)[bool(opt.super_silent)]
-		msg(clr('{}Testing {}'.format(nl,test)))
+
+		if opt.getobj and arg1 is None:
+			msg(gray(f'{nl}Skipping {test}'))
+			continue
+		else:
+			msg(clr(f'{nl}Testing {test}'))
+
 		for k in ('bad','good'):
 			if not opt.silent:
 				msg(purple(capfirst(k)+' input:'))
@@ -149,6 +181,8 @@ def do_loop():
 					test,
 					arg,
 					input_data = k,
+					arg1       = arg1,
+					exc_name   = test_data[test].get('exc_name') or 'ObjectInitError',
 				)
 
 from mmgen.protocol import init_proto_from_opts

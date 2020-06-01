@@ -40,10 +40,11 @@ class InvalidTokenAddress(Exception):     mmcode = 2
 class UnrecognizedTokenSymbol(Exception): mmcode = 2
 class TokenNotInBlockchain(Exception):    mmcode = 2
 class TokenNotInWallet(Exception):        mmcode = 2
-class BadTwComment(Exception):            mmcode = 2
+class BadTwLabel(Exception):              mmcode = 2
 class BaseConversionError(Exception):     mmcode = 2
 class BaseConversionPadError(Exception):  mmcode = 2
 class TransactionChainMismatch(Exception):mmcode = 2
+class ObjectInitError(Exception):         mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3

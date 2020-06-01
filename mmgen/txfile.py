@@ -65,13 +65,13 @@ class MMGenTxFile:
 			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
 			assert len(tx_data[0]) == 6,'invalid length of first line'
-			self.chksum = HexStr(tx_data.pop(0),on_fail='raise')
+			self.chksum = HexStr(tx_data.pop(0))
 			assert self.chksum == make_chksum_6(' '.join(tx_data)),'file data does not match checksum'
 
 			if len(tx_data) == 6:
 				assert len(tx_data[-1]) == 64,'invalid coin TxID length'
 				desc = f'coin TxID'
-				tx.coin_txid = CoinTxID(tx_data.pop(-1),on_fail='raise')
+				tx.coin_txid = CoinTxID(tx_data.pop(-1))
 
 			if len(tx_data) == 5:
 				# rough check: allow for 4-byte utf8 characters + base58 (4 * 11 / 8 = 6 (rounded up))
@@ -83,7 +83,7 @@ class MMGenTxFile:
 					comment = baseconv.tobytes(c,'b58').decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
-					tx.label = MMGenTxLabel(comment,on_fail='raise')
+					tx.label = MMGenTxLabel(comment)
 
 			desc = 'number of lines' # four required lines
 			metadata,tx.hex,inputs_data,outputs_data = tx_data
@@ -113,7 +113,7 @@ class MMGenTxFile:
 			txid,send_amt,tx.timestamp,blockcount = metadata
 
 			desc = 'TxID in metadata'
-			tx.txid = MMGenTxID(txid,on_fail='raise')
+			tx.txid = MMGenTxID(txid)
 			desc = 'send amount in metadata'
 			tx.send_amt = tx.proto.coin_amt(send_amt)
 			desc = 'block count in metadata'

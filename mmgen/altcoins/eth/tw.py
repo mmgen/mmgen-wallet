@@ -257,7 +257,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		if self.addrs:
 			wl = [d for d in wl if d['addr'] in self.addrs]
 		return [{
-				'account': TwLabel(self.proto,d['mmid']+' '+d['comment'],on_fail='raise'),
+				'account': TwLabel(self.proto,d['mmid']+' '+d['comment']),
 				'address': d['addr'],
 				'amount': await self.wallet.get_balance(d['addr']),
 				'confirmations': 0, # TODO
@@ -298,7 +298,7 @@ class EthereumTwAddrList(TwAddrList):
 		from mmgen.obj import CoinAddr
 		for mmid,d in list(tw_dict.items()):
 #			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
-			label = TwLabel(self.proto,mmid+' '+d['comment'],on_fail='raise')
+			label = TwLabel(self.proto,mmid+' '+d['comment'])
 			if usr_addr_list and (label.mmid not in usr_addr_list):
 				continue
 			bal = await self.wallet.get_balance(d['addr'])

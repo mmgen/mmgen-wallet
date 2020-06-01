@@ -168,11 +168,11 @@ class CoinProtocol(MMGenObject):
 		def coin_addr(self,addr):
 			return CoinAddr( proto=self, addr=addr )
 
-		def addr_type(self,id_str,on_fail='die'):
-			return MMGenAddrType(proto=self,id_str=id_str,on_fail=on_fail)
+		def addr_type(self,id_str):
+			return MMGenAddrType( proto=self, id_str=id_str )
 
-		def priv_key(self,s,on_fail='die'):
-			return PrivKey(proto=self,s=s,on_fail=on_fail)
+		def priv_key(self,s):
+			return PrivKey( proto=self, s=s )
 
 	class Secp256k1(Base):
 		"""

@@ -248,6 +248,7 @@ i_obj='Data object'
 s_obj='Testing data objects'
 t_obj="
 	$objtest_py --coin=btc
+	$objtest_py --getobj --coin=btc
 	$objtest_py --coin=btc --testnet=1
 	$objtest_py --coin=ltc
 	$objtest_py --coin=ltc --testnet=1

@@ -19,6 +19,7 @@ ssm = str(SeedShareCount.max_val)
 
 tests = {
 	'Int': {
+		'arg1': 'n',
 		'bad':  ('1L',0.0,'0.0','1.0',1.0,'s',1.1,'1.1'),
 		'good': (
 			('0',0),('-1',-1),('7',7),-1,0,1,9999999,
@@ -29,22 +30,27 @@ tests = {
 		)
 	},
 	'AddrIdx': {
+		'arg1': 'n',
 		'bad':  ('s',1.1,10000000,-1,0),
 		'good': (('7',7),(1,1),(9999999,9999999))
 	},
 	'SeedShareIdx': {
+		'arg1': 'n',
 		'bad':  ('s',1.1,1025,-1,0),
 		'good': (('7',7),(1,1),(1024,1024))
 	},
 	'SeedShareCount': {
+		'arg1': 'n',
 		'bad':  ('s',2.1,1025,-1,0,1),
 		'good': (('7',7),(2,2),(1024,1024))
 	},
 	'MasterShareIdx': {
+		'arg1': 'n',
 		'bad':  ('s',1.1,1025,-1,0),
 		'good': (('7',7),(1,1),(1024,1024))
 	},
 	'AddrIdxList': {
+		'arg1': 'fmt_str',
 		'bad':  ('x','5,9,1-2-3','8,-11','66,3-2'),
 		'good': (
 			('3,2,2',[2,3]),
@@ -63,6 +69,7 @@ tests = {
 		)
 	},
 	'BTCAmt': {
+		'arg1': 'num',
 		'bad':  ('-3.2','0.123456789',123,'123L','22000000',20999999.12345678,
 					{'num':'1','from_decimal':True},
 					{'num':1,'from_decimal':True},
@@ -86,6 +93,7 @@ tests = {
 		)
 	},
 	'CoinAddr': {
+		'arg1': 'addr',
 		'good':  (
 			{'addr':'1MjjELEy6EJwk8fSNfpS8b5teFRo4X5fZr', 'proto':proto},
 			{'addr':'32GiSWo9zJQgkCmjAaLRrbPwXhKry2jHhj', 'proto':proto},
@@ -97,6 +105,7 @@ tests = {
 		),
 	},
 	'SeedID': {
+		'arg1': 'sid',
 		'bad':  (
 			{'sid':'я'},
 			{'sid':'F00F00'},
@@ -106,13 +115,19 @@ tests = {
 			{'sid':'f00baa12'},
 			'я',r32,'abc'
 			),
-		'good': (({'sid':'F00BAA12'},'F00BAA12'),(Seed(r16),Seed(r16).sid))
+		'good': (
+			{'sid':'F00BAA12'},
+			{'seed': Seed(r16),    'ret': SeedID(seed=Seed(r16))},
+			{'sid': Seed(r16).sid, 'ret': SeedID(seed=Seed(r16))}
+			)
 	},
 	'SubSeedIdx': {
+		'arg1': 's',
 		'bad':  (33,'x','я','1x',200,'1ss','L','s','200LS','30ll','s100',str(SubSeedIdxRange.max_idx+1),'0'),
 		'good': (('1','1L'),('1s','1S'),'20S','30L',('300l','300L'),('200','200L'),str(SubSeedIdxRange.max_idx)+'S')
 	},
 	'MMGenID': {
+		'arg1': 'id_str',
 		'bad':  (
 			{'id_str':'x',             'proto':proto},
 			{'id_str':1,               'proto':proto},
@@ -129,6 +144,7 @@ tests = {
 		),
 	},
 	'TwMMGenID': {
+		'arg1': 'id_str',
 		'bad':  (
 			{'id_str':'x',             'proto':proto},
 			{'id_str':'я',             'proto':proto},
@@ -150,6 +166,8 @@ tests = {
 		),
 	},
 	'TwLabel': {
+		'arg1': 'proto',
+		'exc_name': 'BadTwLabel',
 		'bad':  (
 			{'text':'x x',           'proto':proto},
 			{'text':'x я',           'proto':proto},
@@ -163,7 +181,7 @@ tests = {
 			{'text':tw_pfx+' x',     'proto':proto},
 			{'text':tw_pfx+'я x',    'proto':proto},
 			{'text':utf8_ctrl[:40],  'proto':proto},
-			{'text':'F00BAA12:S:1 '+ utf8_ctrl[:40], 'proto':proto, 'on_fail':'raise','ExcType':'BadTwComment'},
+			{'text':'F00BAA12:S:1 '+ utf8_ctrl[:40], 'proto':proto, },
 		),
 		'good':  (
 			{'text':'F00BAA12:99 a comment',            'proto':proto, 'ret':'F00BAA12:L:99 a comment'},
@@ -174,14 +192,17 @@ tests = {
 		),
 	},
 	'MMGenTxID': {
+		'arg1': 's',
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012'),
 		'good': ('DEADBE','F00BAA')
 	},
 	'CoinTxID':{
+		'arg1': 's',
 		'bad':  (1,[],'\0','\1','я','g','gg','FF','f00','F00F0012',r16.hex(),r32.hex()+'ee'),
 		'good': (r32.hex(),)
 	},
 	'WifKey': {
+		'arg1': 'proto',
 		'bad': (
 			{'proto':proto, 'wif':1},
 			{'proto':proto, 'wif':[]},
@@ -201,10 +222,12 @@ tests = {
 		)
 	},
 	'PubKey': {
+		'arg1': 's',
 		'bad':  ({'arg':1,'compressed':False},{'arg':'F00BAA12','compressed':False},),
 		'good': ({'arg':'deadbeef','compressed':True},) # TODO: add real pubkeys
 	},
 	'PrivKey': {
+		'arg1': 'proto',
 		'bad': (
 			{'proto':proto, 'wif':1},
 			{'proto':proto, 'wif':'1'},
@@ -227,6 +250,7 @@ tests = {
 		)
 	},
 	'AddrListID': { # a rather pointless test, but do it anyway
+		'arg1': 'sid',
 		'bad':  (
 			{'sid':SeedID(sid='F00BAA12'),'mmtype':'Z','ret':'F00BAA12:Z'},
 		),
@@ -236,10 +260,12 @@ tests = {
 		)
 	},
 	'MMGenWalletLabel': {
+		'arg1': 's',
 		'bad': (utf8_text[:49],utf8_combining[:48],utf8_ctrl[:48],gr_uc_w_ctrl),
 		'good':  (utf8_text[:48],)
 	},
 	'TwComment': {
+		'arg1': 's',
 		'bad': (    utf8_combining[:40],
 					utf8_ctrl[:40],
 					text_jp[:41],
@@ -252,14 +278,17 @@ tests = {
 					text_zh[:40] )
 	},
 	'MMGenTxLabel':{
+		'arg1': 's',
 		'bad': (utf8_text[:73],utf8_combining[:72],utf8_ctrl[:72],gr_uc_w_ctrl),
 		'good':  (utf8_text[:72],)
 	},
 	'MMGenPWIDString': { # forbidden = list(u' :/\\')
+		'arg1': 's',
 		'bad': ('foo/','foo:','foo:\\'),
 		'good': ('qwerty@яяя',)
 	},
 	'MMGenAddrType': {
+		'arg1': 'proto',
 		'bad':  (
 			{'proto':proto, 'id_str':'U',        'ret':'L'},
 			{'proto':proto, 'id_str':'z',        'ret':'L'},
@@ -278,6 +307,7 @@ tests = {
 		)
 	},
 	'MMGenPasswordType': {
+		'arg1': 'proto',
 		'bad':  (
 			{'proto':proto, 'id_str':'U',        'ret':'L'},
 			{'proto':proto, 'id_str':'z',        'ret':'L'},
@@ -291,6 +321,7 @@ tests = {
 		)
 	},
 	'SeedSplitSpecifier': {
+		'arg1': 's',
 		'bad': ('M','αβ:2',1,'0:1','1:1','2:1','3:2','1:2000','abc:0:2'),
 		'good': (
 			('1:2','2:2','alice:2:2','αβ:2:2','1:'+ssm,ssm+':'+ssm)

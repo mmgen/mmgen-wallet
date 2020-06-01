@@ -34,14 +34,42 @@ class aInitMeta(type):
 		await instance.__ainit__(*args,**kwargs)
 		return instance
 
-def is_mmgen_seed_id(s):        return SeedID(sid=s,on_fail='silent')
-def is_mmgen_idx(s):            return AddrIdx(s,on_fail='silent')
-def is_addrlist_id(s):          return AddrListID(s,on_fail='silent')
-def is_seed_split_specifier(s): return SeedSplitSpecifier(s,on_fail='silent')
+def get_obj(objname,*args,**kwargs):
+	"""
+	Wrapper for data objects
+	- If the object throws an exception on instantiation, return False, otherwise return the object.
+	- If silent is True, suppress display of the exception.
+	- If return_bool is True, return True instead of the object.
+	Only keyword args are accepted.
+	"""
+	assert args == (), 'get_obj_chk1'
 
-def is_mmgen_id(proto,s):  return MMGenID(proto,s,on_fail='silent')
-def is_coin_addr(proto,s): return CoinAddr(proto,s,on_fail='silent')
-def is_wif(proto,s):       return WifKey(proto,s,on_fail='silent')
+	silent,return_bool = (False,False)
+	if 'silent' in kwargs:
+		silent = kwargs['silent']
+		del kwargs['silent']
+	if 'return_bool' in kwargs:
+		return_bool = kwargs['return_bool']
+		del kwargs['return_bool']
+
+	try:
+		ret = objname(**kwargs)
+	except Exception as e:
+		if not silent:
+			from .util import msg
+			msg(f'{e!s}')
+		return False
+	else:
+		return True if return_bool else ret
+
+def is_mmgen_seed_id(s):   return get_obj(SeedID,     sid=s, silent=True,return_bool=True)
+def is_mmgen_idx(s):       return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
+def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_bool=True)
+def is_seed_split_specifier(s): return get_obj(SeedSplitSpecifier, s=s, silent=True,return_bool=True)
+
+def is_mmgen_id(proto,s):  return get_obj(MMGenID,  proto=proto, id_str=s, silent=True,return_bool=True)
+def is_coin_addr(proto,s): return get_obj(CoinAddr, proto=proto, addr=s,   silent=True,return_bool=True)
+def is_wif(proto,s):       return get_obj(WifKey,   proto=proto, wif=s,    silent=True,return_bool=True)
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0
@@ -88,15 +116,7 @@ class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
 class AddrListData(list,MMGenObject): pass
 
-class InitErrors(object):
-
-	on_fail='die'
-
-	@classmethod
-	def arg_chk(cls,on_fail):
-		cls.on_fail = on_fail
-		assert on_fail in ('die','return','silent','raise'),(
-			"'{}': invalid value for 'on_fail' in class {}".format(on_fail,cls.__name__) )
+class InitErrors:
 
 	@classmethod
 	def init_fail(cls,e,m,e2=None,m2=None,objname=None,preformat=False):
@@ -104,27 +124,19 @@ class InitErrors(object):
 		if preformat:
 			errmsg = m
 		else:
-			fs = "{!r}: value cannot be converted to {} {}({})"
-			e2_fmt = '({}) '.format(e2.args[0]) if e2 else ''
-			errmsg = fs.format(m,objname or cls.__name__,e2_fmt,e.args[0])
+			errmsg = '{!r}: value cannot be converted to {} {}({!s})'.format(
+				m,
+				(objname or cls.__name__),
+				(f'({e2!s}) ' if e2 else ''),
+				e )
 
 		if m2:
-			errmsg = '{!r}\n{}'.format(m2,errmsg)
+			errmsg = repr(m2) + '\n' + errmsg
 
-		from .util import die,msg
-		if cls.on_fail == 'silent':
-			return None # TODO: return False instead?
-		elif cls.on_fail == 'return':
-			if errmsg:
-				msg(errmsg)
-			return None # TODO: return False instead?
-		elif g.traceback or cls.on_fail == 'raise':
-			if hasattr(cls,'exc'):
-				raise cls.exc(errmsg)
-			else:
-				raise
-		elif cls.on_fail == 'die':
-			die(1,errmsg)
+		if hasattr(cls,'exc'):
+			raise cls.exc(errmsg)
+		else:
+			raise ObjectInitError(errmsg)
 
 	@classmethod
 	def method_not_implemented(cls):
@@ -201,10 +213,9 @@ class Int(int,Hilite,InitErrors):
 	max_digits = None
 	color = 'red'
 
-	def __new__(cls,n,base=10,on_fail='raise'):
+	def __new__(cls,n,base=10):
 		if type(n) == cls:
 			return n
-		cls.arg_chk(on_fail)
 		try:
 			me = int.__new__(cls,str(n),base)
 			if cls.min_val != None:
@@ -246,9 +257,9 @@ class ImmutableAttr: # Descriptor
 			"convert this attribute's type"
 			if type(dtype) == str:
 				if include_proto:
-					self.conv = lambda instance,value: globals()[dtype](instance.proto,value,on_fail='raise')
+					self.conv = lambda instance,value: globals()[dtype](instance.proto,value)
 				else:
-					self.conv = lambda instance,value: globals()[dtype](value,on_fail='raise')
+					self.conv = lambda instance,value: globals()[dtype](value)
 			else:
 				if set_none_ok:
 					self.conv = lambda instance,value: None if value is None else dtype(value)
@@ -359,28 +370,27 @@ class AddrIdx(MMGenIdx): max_digits = 7
 
 class AddrIdxList(list,InitErrors,MMGenObject):
 	max_len = 1000000
-	def __init__(self,fmt_str=None,idx_list=None,on_fail='die',sep=','):
-		type(self).arg_chk(on_fail)
+	def __init__(self,fmt_str=None,idx_list=None,sep=','):
 		try:
 			if idx_list:
-				return list.__init__(self,sorted({AddrIdx(i,on_fail='raise') for i in idx_list}))
+				return list.__init__(self,sorted({AddrIdx(i) for i in idx_list}))
 			elif fmt_str:
 				ret = []
 				for i in (fmt_str.split(sep)):
 					j = i.split('-')
 					if len(j) == 1:
-						idx = AddrIdx(i,on_fail='raise')
+						idx = AddrIdx(i)
 						if not idx:
 							break
 						ret.append(idx)
 					elif len(j) == 2:
-						beg = AddrIdx(j[0],on_fail='raise')
+						beg = AddrIdx(j[0])
 						if not beg:
 							break
-						end = AddrIdx(j[1],on_fail='raise')
+						end = AddrIdx(j[1])
 						if not beg or (end < beg):
 							break
-						ret.extend([AddrIdx(x,on_fail='raise') for x in range(beg,end+1)])
+						ret.extend([AddrIdx(x) for x in range(beg,end+1)])
 					else: break
 				else:
 					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
@@ -393,8 +403,7 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 	min_idx = None
 	max_idx = None
 
-	def __new__(cls,*args,on_fail='die'):
-		cls.arg_chk(on_fail)
+	def __new__(cls,*args):
 		try:
 			if len(args) == 1:
 				s = args[0]
@@ -449,10 +458,9 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	forbidden_types = (float,int)
 
 	# NB: 'from_decimal' rounds down to precision of 'min_coin_unit'
-	def __new__(cls,num,from_unit=None,from_decimal=False,on_fail='die'):
+	def __new__(cls,num,from_unit=None,from_decimal=False):
 		if type(num) == cls:
 			return num
-		cls.arg_chk(on_fail)
 		try:
 			if from_unit:
 				assert from_unit in cls.units,(
@@ -546,10 +554,9 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 	hex_width = 40
 	width = 1
 	trunc_ok = False
-	def __new__(cls,proto,addr,on_fail='die'):
+	def __new__(cls,proto,addr):
 		if type(addr) == cls:
 			return addr
-		cls.arg_chk(on_fail)
 		try:
 			assert set(addr) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
 			me = str.__new__(cls,addr)
@@ -571,11 +578,11 @@ class TokenAddr(CoinAddr):
 	color = 'blue'
 
 class ViewKey(object):
-	def __new__(cls,proto,viewkey,on_fail='die'):
+	def __new__(cls,proto,viewkey):
 		if proto.name == 'Zcash':
-			return ZcashViewKey.__new__(ZcashViewKey,proto,viewkey,on_fail)
+			return ZcashViewKey.__new__(ZcashViewKey,proto,viewkey)
 		elif proto.name == 'Monero':
-			return MoneroViewKey.__new__(MoneroViewKey,viewkey,on_fail)
+			return MoneroViewKey.__new__(MoneroViewKey,viewkey)
 		else:
 			raise ValueError(f'{proto.name}: protocol does not support view keys')
 
@@ -585,10 +592,9 @@ class SeedID(str,Hilite,InitErrors):
 	color = 'blue'
 	width = 8
 	trunc_ok = False
-	def __new__(cls,seed=None,sid=None,on_fail='die'):
+	def __new__(cls,seed=None,sid=None):
 		if type(sid) == cls:
 			return sid
-		cls.arg_chk(on_fail)
 		try:
 			if seed:
 				from .seed import SeedBase
@@ -606,10 +612,9 @@ class SeedID(str,Hilite,InitErrors):
 class SubSeedIdx(str,Hilite,InitErrors):
 	color = 'red'
 	trunc_ok = False
-	def __new__(cls,s,on_fail='die'):
+	def __new__(cls,s):
 		if type(s) == cls:
 			return s
-		cls.arg_chk(on_fail)
 		try:
 			assert isinstance(s,str),'not a string or string subclass'
 			idx = s[:-1] if s[-1] in 'SsLl' else s
@@ -631,15 +636,14 @@ class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,proto,id_str,on_fail='die'):
-		cls.arg_chk(on_fail)
+	def __new__(cls,proto,id_str):
 		try:
 			ss = str(id_str).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
-			t = proto.addr_type((ss[1],proto.dfl_mmtype)[len(ss)==2],on_fail='raise')
+			t = proto.addr_type((ss[1],proto.dfl_mmtype)[len(ss)==2])
 			me = str.__new__(cls,'{}:{}:{}'.format(ss[0],t,ss[-1]))
-			me.sid = SeedID(sid=ss[0],on_fail='raise')
-			me.idx = AddrIdx(ss[-1],on_fail='raise')
+			me.sid = SeedID(sid=ss[0])
+			me.idx = AddrIdx(ss[-1])
 			me.mmtype = t
 			assert t in proto.mmtypes, f'{t}: invalid address type for {proto.cls_name}'
 			me.al_id = str.__new__(AddrListID,me.sid+':'+me.mmtype) # checks already done
@@ -653,13 +657,12 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
-	def __new__(cls,proto,id_str,on_fail='die'):
+	def __new__(cls,proto,id_str):
 		if type(id_str) == cls:
 			return id_str
-		cls.arg_chk(on_fail)
 		ret = None
 		try:
-			ret = MMGenID(proto,id_str,on_fail='raise')
+			ret = MMGenID(proto,id_str)
 			sort_key,idtype = ret.sort_key,'mmgen'
 		except Exception as e:
 			try:
@@ -680,14 +683,14 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
-	def __new__(cls,proto,text,on_fail='die'):
+	exc = BadTwLabel
+	def __new__(cls,proto,text):
 		if type(text) == cls:
 			return text
-		cls.arg_chk(on_fail)
 		try:
 			ts = text.split(None,1)
-			mmid = TwMMGenID(proto,ts[0],on_fail='raise')
-			comment = TwComment(ts[1] if len(ts) == 2 else '',on_fail='raise')
+			mmid = TwMMGenID(proto,ts[0])
+			comment = TwComment(ts[1] if len(ts) == 2 else '')
 			me = str.__new__( cls, mmid + (' ' + comment if comment else '') )
 			me.mmid = mmid
 			me.comment = comment
@@ -701,10 +704,9 @@ class HexStr(str,Hilite,InitErrors):
 	width = None
 	hexcase = 'lower'
 	trunc_ok = False
-	def __new__(cls,s,on_fail='die',case=None):
+	def __new__(cls,s,case=None):
 		if type(s) == cls:
 			return s
-		cls.arg_chk(on_fail)
 		if case == None:
 			case = cls.hexcase
 		try:
@@ -730,10 +732,9 @@ class WifKey(str,Hilite,InitErrors):
 	"""
 	width = 53
 	color = 'blue'
-	def __new__(cls,proto,wif,on_fail='die'):
+	def __new__(cls,proto,wif):
 		if type(wif) == cls:
 			return wif
-		cls.arg_chk(on_fail)
 		try:
 			assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
 			proto.parse_wif(wif) # raises exception on error
@@ -742,12 +743,12 @@ class WifKey(str,Hilite,InitErrors):
 			return cls.init_fail(e,wif)
 
 class PubKey(HexStr,MMGenObject): # TODO: add some real checks
-	def __new__(cls,s,compressed,on_fail='die'):
+	def __new__(cls,s,compressed):
 		try:
 			assert type(compressed) == bool,"'compressed' must be of type bool"
 		except Exception as e:
 			return cls.init_fail(e,s)
-		me = HexStr.__new__(cls,s,case='lower',on_fail=on_fail)
+		me = HexStr.__new__(cls,s,case='lower')
 		if me:
 			me.compressed = compressed
 			return me
@@ -767,12 +768,9 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	wif        = ImmutableAttr(WifKey,typeconv=False)
 
 	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None,on_fail='die'):
-
+	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None):
 		if type(s) == cls:
 			return s
-		cls.arg_chk(on_fail)
-
 		if wif:
 			try:
 				assert s == None,"'wif' and key hex args are mutually exclusive"
@@ -801,7 +799,7 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 					assert compressed is not None, "'compressed' arg missing"
 					assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
 					me = str.__new__(cls,proto.preprocess_key(s,pubkey_type).hex())
-					me.wif = WifKey(proto,proto.hex2wif(me,pubkey_type,compressed),on_fail='raise')
+					me.wif = WifKey(proto,proto.hex2wif(me,pubkey_type,compressed))
 					me.compressed = compressed
 				me.pubkey_type = pubkey_type
 				me.orig_hex = s.hex() # save the non-preprocessed key
@@ -814,8 +812,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10
 	trunc_ok = False
 	color = 'yellow'
-	def __new__(cls,sid,mmtype,on_fail='die'):
-		cls.arg_chk(on_fail)
+	def __new__(cls,sid,mmtype):
 		try:
 			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
 			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
@@ -835,10 +832,9 @@ class MMGenLabel(str,Hilite,InitErrors):
 	min_len = 0
 	max_screen_width = 0 # if != 0, overrides max_len
 	desc = 'label'
-	def __new__(cls,s,on_fail='die',msg=None):
+	def __new__(cls,s,msg=None):
 		if type(s) == cls:
 			return s
-		cls.arg_chk(on_fail)
 		for k in cls.forbidden,cls.allowed:
 			assert type(k) == list
 			for ch in k: assert type(ch) == str and len(ch) == 1
@@ -874,7 +870,6 @@ class MMGenWalletLabel(MMGenLabel):
 class TwComment(MMGenLabel):
 	max_screen_width = 80
 	desc = 'tracking wallet comment'
-	exc = BadTwComment
 
 class MMGenTxLabel(MMGenLabel):
 	max_len = 72
@@ -889,18 +884,17 @@ class MMGenPWIDString(MMGenLabel):
 
 class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
 	color = 'red'
-	def __new__(cls,s,on_fail='raise'):
+	def __new__(cls,s):
 		if type(s) == cls:
 			return s
-		cls.arg_chk(on_fail)
 		try:
 			arr = s.split(':')
 			assert len(arr) in (2,3), 'cannot be parsed'
 			a,b,c = arr if len(arr) == 3 else ['default'] + arr
 			me = str.__new__(cls,s)
-			me.id = SeedSplitIDString(a,on_fail=on_fail)
-			me.idx = SeedShareIdx(b,on_fail=on_fail)
-			me.count = SeedShareCount(c,on_fail=on_fail)
+			me.id = SeedSplitIDString(a)
+			me.idx = SeedShareIdx(b)
+			me.count = SeedShareCount(c)
 			assert me.idx <= me.count, 'share index greater than share count'
 			return me
 		except Exception as e:
@@ -936,10 +930,9 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		'Z': ati('zcash_z','zcash_z',False,'zcash_z', 'zcash_z', 'wif',     ('viewkey',),      'Zcash z-address'),
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
-	def __new__(cls,proto,id_str,on_fail='die',errmsg=None):
+	def __new__(cls,proto,id_str,errmsg=None):
 		if type(id_str) == cls:
 			return id_str
-		cls.arg_chk(on_fail)
 		try:
 			for k,v in cls.mmtypes.items():
 				if id_str in (k,v.name):

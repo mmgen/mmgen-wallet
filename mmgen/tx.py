@@ -616,8 +616,9 @@ class MMGenTX:
 		# given tx size and absolute fee or fee spec, return absolute fee
 		# relative fee is N+<first letter of unit name>
 		def process_fee_spec(self,tx_fee,tx_size):
-			if self.proto.coin_amt(tx_fee,on_fail='silent'):
-				return self.proto.coin_amt(tx_fee)
+			fee = get_obj(self.proto.coin_amt,num=tx_fee,silent=True)
+			if fee:
+				return fee
 			else:
 				import re
 				units = {u[0]:u for u in self.proto.coin_amt.units}
@@ -733,7 +734,7 @@ class MMGenTX:
 			while True:
 				reply = my_raw_input(prompt).strip()
 				if reply:
-					selected = AddrIdxList(fmt_str=','.join(reply.split()),on_fail='return')
+					selected = get_obj(AddrIdxList, fmt_str=','.join(reply.split()) )
 					if selected:
 						if selected[-1] <= len(unspent):
 							return selected
@@ -1004,7 +1005,7 @@ class MMGenTX:
 			return self.inputs[0].sequence == g.max_int - 2
 
 		def check_txfile_hex_data(self):
-			self.hex = HexStr(self.hex,on_fail='raise')
+			self.hex = HexStr(self.hex)
 
 		def parse_txfile_hex_data(self):
 			pass
@@ -1242,7 +1243,7 @@ class MMGenTX:
 				tx_decoded = await self.rpc.call('decoderawtransaction',ret['hex'])
 				new.compare_size_and_estimated_size(tx_decoded)
 				new.check_hex_tx_matches_mmgen_tx(dtx)
-				new.coin_txid = CoinTxID(dtx['txid'],on_fail='raise')
+				new.coin_txid = CoinTxID(dtx['txid'])
 				if not new.coin_txid == tx_decoded['txid']:
 					raise BadMMGenTxID('txid mismatch (after signing)')
 				msg('OK')

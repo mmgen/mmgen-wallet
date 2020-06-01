@@ -104,7 +104,7 @@ if len(cmd_args) != 2:
 
 from .obj import MMGenID
 try:
-	mmids = [MMGenID(a,on_fail='die') for a in cmd_args]
+	mmids = [MMGenID(a) for a in cmd_args]
 except:
 	die(1,'Command line arguments must be valid MMGen IDs')
 

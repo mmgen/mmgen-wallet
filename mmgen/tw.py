@@ -33,8 +33,8 @@ def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
 def get_tw_label(proto,s):
 	try:
-		return TwLabel(proto,s,on_fail='raise')
-	except BadTwComment:
+		return TwLabel(proto,s)
+	except BadTwLabel:
 		raise
 	except:
 		return None
@@ -410,7 +410,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		while True:
 			ret = my_raw_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
 			if ret == '': return (None,None) if action == 'a_lbl_add' else None
-			n = AddrIdx(ret,on_fail='silent')
+			n = get_obj(AddrIdx,n=ret,silent=True)
 			if not n or n < 1 or n > len(self.unspent):
 				msg(f'Choice must be a single number between 1 and {len(self.unspent)}')
 			else:
@@ -424,7 +424,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 									f'Removing label for {self.item_desc} #{n}.  Is this what you want?'):
 								return n,s
 						elif s:
-							if TwComment(s,on_fail='return'):
+							if get_obj(TwComment,s=s):
 								return n,s
 				else:
 					if action == 'a_addr_delete':
@@ -801,8 +801,8 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	def conv_types(self,ad):
 		for k,v in ad.items():
 			if k not in ('params','coin'):
-				v['mmid'] = TwMMGenID(self.proto,v['mmid'],on_fail='raise')
-				v['comment'] = TwComment(v['comment'],on_fail='raise')
+				v['mmid'] = TwMMGenID(self.proto,v['mmid'])
+				v['comment'] = TwComment(v['comment'])
 
 	@property
 	def data_root(self):
@@ -918,9 +918,10 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	# returns on failure
 	@write_mode
 	async def add_label(self,arg1,label='',addr=None,silent=False,on_fail='return'):
+		assert on_fail in ('return','raise'), 'add_label_chk1'
 		mmaddr,coinaddr = None,None
 		if is_coin_addr(self.proto,addr or arg1):
-			coinaddr = CoinAddr(self.proto,addr or arg1,on_fail='return')
+			coinaddr = get_obj(CoinAddr,proto=self.proto,addr=addr or arg1)
 		if is_mmgen_id(self.proto,arg1):
 			mmaddr = TwMMGenID(self.proto,arg1)
 
@@ -948,11 +949,14 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 		mmaddr = TwMMGenID(self.proto,mmaddr)
 
-		cmt = TwComment(label,on_fail=on_fail)
+		cmt = TwComment(label) if on_fail=='raise' else get_obj(TwComment,s=label)
 		if cmt in (False,None):
 			return False
 
-		lbl = TwLabel(self.proto,mmaddr + ('',' '+cmt)[bool(cmt)],on_fail=on_fail)
+		lbl_txt = mmaddr + (' ' + cmt if cmt else '')
+		lbl = (
+			TwLabel(self.proto,lbl_txt) if on_fail == 'raise' else
+			get_obj(TwLabel,proto=self.proto,text=lbl_txt) )
 
 		if await self.set_label(coinaddr,lbl) == False:
 			if not silent:

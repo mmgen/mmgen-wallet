@@ -1159,7 +1159,7 @@ class TwAddrData(AddrData,metaclass=aInitMeta):
 		twd = await self.get_tw_data(wallet)
 		out,i = {},0
 		for acct,addr_array in twd:
-			l = TwLabel(self.proto,acct,on_fail='silent')
+			l = get_obj(TwLabel,proto=self.proto,text=acct,silent=True)
 			if l and l.mmid.type == 'mmgen':
 				obj = l.mmid.obj
 				if len(addr_array) != 1:

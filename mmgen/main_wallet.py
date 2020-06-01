@@ -148,10 +148,10 @@ if invoked_as == 'subgen':
 	from .obj import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
-	from .obj import SeedSplitSpecifier
+	from .obj import get_obj,SeedSplitSpecifier
 	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
 	if cmd_args:
-		sss = SeedSplitSpecifier(cmd_args.pop(),on_fail='silent')
+		sss = get_obj(SeedSplitSpecifier,s=cmd_args.pop(),silent=True)
 		if master_share:
 			if not sss:
 				sss = SeedSplitSpecifier('1:2')
