@@ -876,6 +876,7 @@ class MMGenWalletLabel(MMGenLabel):
 class TwComment(MMGenLabel):
 	max_screen_width = 80
 	desc = 'tracking wallet comment'
+	exc = BadTwComment
 
 class MMGenTxLabel(MMGenLabel):
 	max_len = 72

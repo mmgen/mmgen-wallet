@@ -265,6 +265,7 @@ tests = {
 		'good':  (utf8_text[:48],)
 	},
 	'TwComment': {
+		'exc_name': 'BadTwComment',
 		'arg1': 's',
 		'bad': (    utf8_combining[:40],
 					utf8_ctrl[:40],

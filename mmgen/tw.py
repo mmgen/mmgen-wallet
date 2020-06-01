@@ -32,9 +32,13 @@ CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
 def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
 def get_tw_label(proto,s):
+	"""
+	We must fail only on malformed comment, not on empty label.
+	Otherwise, listaddresses showempty=1 will fail.
+	"""
 	try:
 		return TwLabel(proto,s)
-	except BadTwLabel:
+	except BadTwComment:
 		raise
 	except:
 		return None
