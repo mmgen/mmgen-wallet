@@ -565,7 +565,9 @@ class DieRollSeedFile(WalletUnenc):
 
 		if self.interactive_input and opt.usr_randchars:
 			if keypress_confirm(self.user_entropy_prompt):
-				seed_bytes = add_user_random(seed_bytes,'die roll data')
+				seed_bytes = add_user_random(
+					rand_bytes = seed_bytes,
+					desc       = 'gathered from your die rolls' )
 				self.desc += ' plus user-supplied entropy'
 
 		self.seed = Seed(seed_bytes)
