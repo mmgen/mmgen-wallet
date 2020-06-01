@@ -110,7 +110,7 @@ class IndexedDict(dict):
 	def update(self,*args):      self.die('updating')
 
 	def die(self,desc):
-		raise NotImplementedError('{} not implemented for type {}'.format(desc,type(self).__name__))
+		raise NotImplementedError(f'{desc} not implemented for type {type(self).__name__}')
 
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
@@ -169,8 +169,7 @@ class Hilite(object):
 			trunc_ok = cls.trunc_ok
 		if g.test_suite:
 			assert isinstance(encl,str) and len(encl) in (0,2),"'encl' must be 2-character str"
-			assert width >= 2 + add_len,( # 2 because CJK
-				"'{!r}': invalid width ({}) (width must be at least 2)".format(s,width))
+			assert width >= 2 + add_len, f'{s!r}: invalid width ({width}) (must be at least 2)' # CJK: 2 cells
 		if len(s) + s_wide_count + add_len > width:
 			assert trunc_ok, "If 'trunc_ok' is false, 'width' must be >= screen width of string"
 			s = truncate_str(s,width-add_len)
@@ -181,8 +180,11 @@ class Hilite(object):
 			if center:
 				s = s.center(width)
 		if append_chars:
-			return cls.colorize(s,color=color) + \
-					cls.colorize(append_chars.ljust(width-len(s)-s_wide_count),color_override=append_color)
+			return (
+				cls.colorize(s,color=color)
+				+ cls.colorize(
+					append_chars.ljust(width-len(s)-s_wide_count),
+					color_override = append_color ))
 		else:
 			return cls.colorize(s.ljust(width-s_wide_count),color=color)
 
@@ -219,11 +221,11 @@ class Int(int,Hilite,InitErrors):
 		try:
 			me = int.__new__(cls,str(n),base)
 			if cls.min_val != None:
-				assert me >= cls.min_val,'is less than cls.min_val ({})'.format(cls.min_val)
+				assert me >= cls.min_val, f'is less than cls.min_val ({cls.min_val})'
 			if cls.max_val != None:
-				assert me <= cls.max_val,'is greater than cls.max_val ({})'.format(cls.max_val)
+				assert me <= cls.max_val, f'is greater than cls.max_val ({cls.max_val})'
 			if cls.max_digits != None:
-				assert len(str(me)) <= cls.max_digits,'has more than {} digits'.format(cls.max_digits)
+				assert len(str(me)) <= cls.max_digits, f'has more than {cls.max_digits} digits'
 			return me
 		except Exception as e:
 			return cls.init_fail(e,n)
@@ -394,7 +396,7 @@ class AddrIdxList(list,InitErrors,MMGenObject):
 					else: break
 				else:
 					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
-				raise ValueError("{!r}: invalid range".format(i))
+				raise ValueError(f'{i!r}: invalid range')
 		except Exception as e:
 			return type(self).init_fail(e,idx_list or fmt_str)
 
@@ -419,9 +421,9 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 				first,last = args
 			assert first <= last, 'start of range greater than end of range'
 			if cls.min_idx is not None:
-				assert first >= cls.min_idx, 'start of range < {:,}'.format(cls.min_idx)
+				assert first >= cls.min_idx, f'start of range < {cls.min_idx:,}'
 			if cls.max_idx is not None:
-				assert last <= cls.max_idx, 'end of range > {:,}'.format(cls.max_idx)
+				assert last <= cls.max_idx, f'end of range > {cls.max_idx:,}'
 			return tuple.__new__(cls,(first,last))
 		except Exception as e:
 			return cls.init_fail(e,s)
@@ -463,21 +465,19 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 			return num
 		try:
 			if from_unit:
-				assert from_unit in cls.units,(
-					"'{}': unrecognized denomination for {}".format(from_unit,cls.__name__))
+				assert from_unit in cls.units, f'{from_unit!r}: unrecognized denomination for {cls.__name__}'
 				assert type(num) == int,'value is not an integer'
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			elif from_decimal:
-				assert type(num) == Decimal,(
-					"number is not of type Decimal (type is {!r})".format(type(num).__name__))
+				assert type(num) == Decimal, f'number must be of type Decimal, not {type(num).__name__})'
 				me = Decimal.__new__(cls,num).quantize(cls.min_coin_unit)
 			else:
 				for t in cls.forbidden_types:
-					assert type(num) is not t,"number is of forbidden type '{}'".format(t.__name__)
+					assert type(num) is not t, f'number is of forbidden type {t.__name__}'
 				me = Decimal.__new__(cls,str(num))
 			assert me.normalize().as_tuple()[-1] >= -cls.max_prec,'too many decimal places in coin amount'
 			if cls.max_amt:
-				assert me <= cls.max_amt,'{}: coin amount too large (>{})'.format(me,cls.max_amt)
+				assert me <= cls.max_amt, f'{me}: coin amount too large (>{cls.max_amt})'
 			assert me >= 0,'coin amount cannot be negative'
 			return me
 		except Exception as e:
@@ -792,12 +792,13 @@ class PrivKey(str,Hilite,InitErrors,MMGenObject):
 			try:
 				assert s,'private key bytes data missing'
 				assert pubkey_type is not None,"'pubkey_type' arg missing"
-				assert len(s) == cls.width // 2,'key length must be {}'.format(cls.width // 2)
+				assert len(s) == cls.width // 2, f'key length must be {cls.width // 2} bytes'
 				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
 					me = str.__new__(cls,s.hex())
 				else:
 					assert compressed is not None, "'compressed' arg missing"
-					assert type(compressed) == bool,"{!r}: 'compressed' not of type 'bool'".format(compressed)
+					assert type(compressed) == bool,(
+						f"'compressed' must be of type bool, not {type(compressed).__name__}" )
 					me = str.__new__(cls,proto.preprocess_key(s,pubkey_type).hex())
 					me.wif = WifKey(proto,proto.hex2wif(me,pubkey_type,compressed))
 					me.compressed = compressed
@@ -814,7 +815,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	color = 'yellow'
 	def __new__(cls,sid,mmtype):
 		try:
-			assert type(sid) == SeedID,"{!r} not a SeedID instance".format(sid)
+			assert type(sid) == SeedID, f'{sid!r} not a SeedID instance'
 			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
 				raise ValueError(f'{mmtype!r}: not an instance of MMGenAddrType or MMGenPasswordType')
 			me = str.__new__(cls,sid+':'+mmtype)
@@ -822,7 +823,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 			me.mmtype = mmtype
 			return me
 		except Exception as e:
-			return cls.init_fail(e,'sid={}, mmtype={}'.format(sid,mmtype))
+			return cls.init_fail(e, f'sid={sid}, mmtype={mmtype}')
 
 class MMGenLabel(str,Hilite,InitErrors):
 	color = 'pink'
@@ -844,21 +845,26 @@ class MMGenLabel(str,Hilite,InitErrors):
 				# Allow:    (L)etter,(N)umber,(P)unctuation,(S)ymbol,(Z)space
 				# Disallow: (C)ontrol,(M)combining
 				# Combining characters create width formatting issues, so disallow them for now
-				if unicodedata.category(ch)[0] in 'CM':
-					t = { 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]]
-					raise ValueError('{}: {} characters not allowed'.format(ascii(ch),t))
+				if unicodedata.category(ch)[0] in ('C','M'):
+					raise ValueError('{!a}: {} characters not allowed'.format(ch,
+						{ 'C':'control', 'M':'combining' }[unicodedata.category(ch)[0]] ))
+
 			me = str.__new__(cls,s)
+
 			if cls.max_screen_width:
 				me.screen_width = len(s) + len([1 for ch in s if unicodedata.east_asian_width(ch) in ('F','W')])
-				assert me.screen_width <= cls.max_screen_width,(
-					'too wide (>{} screen width)'.format(cls.max_screen_width))
+				assert me.screen_width <= cls.max_screen_width, f'too wide (>{cls.max_screen_width} screen width)'
 			else:
-				assert len(s) <= cls.max_len, 'too long (>{} symbols)'.format(cls.max_len)
-			assert len(s) >= cls.min_len, 'too short (<{} symbols)'.format(cls.min_len)
-			assert not cls.allowed or set(list(s)).issubset(set(cls.allowed)),\
-				'contains non-allowed symbols: {}'.format(' '.join(set(list(s)) - set(cls.allowed)))
-			assert not cls.forbidden or not any(ch in s for ch in cls.forbidden),\
-				"contains one of these forbidden symbols: '{}'".format("', '".join(cls.forbidden))
+				assert len(s) <= cls.max_len, f'too long (>{cls.max_len} symbols)'
+
+			assert len(s) >= cls.min_len, f'too short (<{cls.min_len} symbols)'
+
+			if cls.allowed and not set(list(s)).issubset(set(cls.allowed)):
+				raise ValueError('contains non-allowed symbols: ' + ' '.join(set(list(s)) - set(cls.allowed)) )
+
+			if cls.forbidden and any(ch in s for ch in cls.forbidden):
+				raise ValueError('contains one of these forbidden symbols: ' + ' '.join(cls.forbidden) )
+
 			return me
 		except Exception as e:
 			return cls.init_fail(e,s)

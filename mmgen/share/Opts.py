@@ -31,8 +31,6 @@ def usage(opts_data):
 
 def print_help(proto,po,opts_data,opt_filter):
 
-	from mmgen.util import pdie # DEBUG
-
 	def parse_lines(text):
 		filtered = False
 		for line in text.strip().splitlines():
