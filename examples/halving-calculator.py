@@ -27,8 +27,13 @@ def time_diff_warning(t_diff):
 			('behind','ahead of')[t_diff<0]))
 
 async def main():
+
+	from mmgen.protocol import init_proto_from_opts
+	proto = init_proto_from_opts()
+
 	from mmgen.rpc import rpc_init
-	c = await rpc_init()
+	c = await rpc_init(proto)
+
 	tip = await c.call('getblockcount')
 	remaining = HalvingInterval - tip % HalvingInterval
 	sample_size = max(remaining,144)
@@ -52,4 +57,4 @@ async def main():
 	print(f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}')
 	print(f'Est. time until halving:  {dhms(cur["time"] + t_rem - clock_time)}')
 
-run_session(main(),do_rpc_init=False)
+run_session(main())
