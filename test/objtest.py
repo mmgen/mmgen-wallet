@@ -72,6 +72,10 @@ def run_test(test,arg,input_data,arg1,exc_name):
 			ret_chk = arg['ret']
 			del arg['ret']
 			del arg_copy['ret']
+		if 'exc_name' in arg:
+			exc_name = arg['exc_name']
+			del arg['exc_name']
+			del arg_copy['exc_name']
 		if 'ret_idx' in arg:
 			ret_idx = arg['ret_idx']
 			del arg['ret_idx']

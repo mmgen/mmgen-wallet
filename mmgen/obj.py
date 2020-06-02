@@ -133,7 +133,9 @@ class InitErrors:
 		if m2:
 			errmsg = repr(m2) + '\n' + errmsg
 
-		if hasattr(cls,'exc'):
+		if hasattr(cls,'passthru_excs') and type(e) in cls.passthru_excs:
+			raise
+		elif hasattr(cls,'exc'):
 			raise cls.exc(errmsg)
 		else:
 			raise ObjectInitError(errmsg)
@@ -684,6 +686,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
 	exc = BadTwLabel
+	passthru_excs = (BadTwComment,)
 	def __new__(cls,proto,text):
 		if type(text) == cls:
 			return text

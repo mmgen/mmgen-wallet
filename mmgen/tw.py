@@ -33,8 +33,7 @@ def CUR_RIGHT(n): return '\033[{}C'.format(n)
 
 def get_tw_label(proto,s):
 	"""
-	We must fail only on malformed comment, not on empty label.
-	Otherwise, listaddresses showempty=1 will fail.
+	raise an exception on a malformed comment, return None on an empty or invalid label
 	"""
 	try:
 		return TwLabel(proto,s)

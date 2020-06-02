@@ -181,7 +181,7 @@ tests = {
 			{'text':tw_pfx+' x',     'proto':proto},
 			{'text':tw_pfx+'я x',    'proto':proto},
 			{'text':utf8_ctrl[:40],  'proto':proto},
-			{'text':'F00BAA12:S:1 '+ utf8_ctrl[:40], 'proto':proto, },
+			{'text':'F00BAA12:S:1 ' + utf8_ctrl[:40], 'proto':proto, 'exc_name': 'BadTwComment'},
 		),
 		'good':  (
 			{'text':'F00BAA12:99 a comment',            'proto':proto, 'ret':'F00BAA12:L:99 a comment'},
