@@ -2,15 +2,28 @@
 
 # Demonstrates use of the MMGen asyncio/aiohttp JSON-RPC interface
 # https://github.com/mmgen/mmgen
-# Requires a running Bitcoin Core node
-# If necessary, invoke with --rpc-host/--rpc-port/--rpc-user/--rpc-password
-# Specify aiohttp backend with --rpc-backend=aiohttp (Linux only)
 
 import time
 from decimal import Decimal
 from mmgen.common import *
 
-opts.init()
+opts.init({
+	'text': {
+		'desc': 'Estimate date of next Bitcoin halving',
+		'usage':'[opts]',
+		'options': """
+-h, --help          Print this help message
+--, --longhelp      Print help message for long options (common options)
+-s, --sample-size=N Specify sample block range for block discovery time
+                    estimate
+""",
+	'notes': """
+Requires a running Bitcoin Core node
+If necessary, invoke with --rpc-host/--rpc-port/--rpc-user/--rpc-password
+Specify aiohttp backend with --rpc-backend=aiohttp (Linux only)
+"""
+	}
+})
 
 HalvingInterval = 210000 # src/chainparams.cpp
 
@@ -36,7 +49,7 @@ async def main():
 
 	tip = await c.call('getblockcount')
 	remaining = HalvingInterval - tip % HalvingInterval
-	sample_size = max(remaining,144)
+	sample_size = int(opt.sample_size) if opt.sample_size else max(remaining,144)
 
 	# aiohttp backend will perform these two calls concurrently:
 	cur,old = await c.gathered_call('getblockstats',((tip,),(tip - sample_size,)))

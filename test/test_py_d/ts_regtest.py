@@ -143,6 +143,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
 		('current_user',             'current user'),
+		('halving_calculator_bob',   'halving calculator (Bob)'),
 		('walletgen_bob',            'wallet generation (Bob)'),
 		('walletgen_alice',          'wallet generation (Alice)'),
 		('addrgen_bob',              'address generation (Bob)'),
@@ -281,6 +282,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def current_user(self):
 		t = self.spawn('mmgen-regtest', ['user'])
 		t.expect('Bob')
+		return t
+
+	def halving_calculator_bob(self):
+		t = self.spawn('halving-calculator.py',['--bob','--sample-size=144'],cmd_dir='examples')
+		t.expect('time until halving')
+		t.read()
 		return t
 
 	def walletgen(self,user):
