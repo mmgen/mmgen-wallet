@@ -30,14 +30,15 @@ opts_data = {
 		'desc': "Unit tests for the MMGen suite",
 		'usage':'[options] [test | test.subtest]...',
 		'options': """
--h, --help       Print this help message
+-h, --help                Print this help message
+-a, --no-altcoin-deps     Skip tests requiring altcoin daemons, libs or utils
 -A, --no-daemon-autostart Don't start and stop daemons automatically
--D, --no-daemon-stop Don't stop auto-started daemons after running tests
--f, --fast       Speed up execution by reducing rounds on some tests
--l, --list       List available tests
--n, --names      Print command names instead of descriptions
--q, --quiet      Produce quieter output
--v, --verbose    Produce more verbose output
+-D, --no-daemon-stop      Don't stop auto-started daemons after running tests
+-f, --fast                Speed up execution by reducing rounds on some tests
+-l, --list                List available tests
+-n, --names               Print command names instead of descriptions
+-q, --quiet               Produce quieter output
+-v, --verbose             Produce more verbose output
 """,
 	'notes': """
 If no test is specified, all available tests are run
@@ -52,7 +53,8 @@ def exit_msg():
 	t = int(time.time()) - start_time
 	gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
 
-all_tests = [fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == 'ut_']
+all_tests = sorted(
+	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == 'ut_'])
 
 start_time = int(time.time())
 
@@ -97,10 +99,14 @@ def run_test(test,subtest=None):
 		run_subtest(subtest)
 	else:
 		gmsg(f'Running unit test {test}')
-		if hasattr(mod,'unit_tests'):
+		if hasattr(mod,'unit_tests'): # new class-based API
 			t = getattr(mod,'unit_tests')
+			altcoin_deps = getattr(t,'altcoin_deps',())
 			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
 			for subtest in subtests:
+				if opt.no_altcoin_deps and subtest in altcoin_deps:
+					qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest!r}'))
+					continue
 				run_subtest(subtest)
 		else:
 			if not mod.unit_test().run_test(test,UnitTestHelpers):

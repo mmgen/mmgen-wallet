@@ -76,6 +76,8 @@ def run_test(coin,auth):
 
 class unit_tests:
 
+	altcoin_deps = ('bch','eth','xmr_wallet')
+
 	def bch(self,name,ut):
 		return run_test('bch',auth=True)
 
