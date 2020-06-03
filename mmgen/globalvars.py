@@ -120,7 +120,10 @@ class GlobalContext(Lockable):
 	terminal_width       = 0
 
 	mnemonic_entry_modes = {}
-	color = sys.stdout.isatty()
+	color = bool(
+		( sys.stdout.isatty() and not os.getenv('MMGEN_TEST_SUITE_PEXPECT') ) or
+		os.getenv('MMGEN_FORCE_COLOR')
+	)
 
 	for k in ('linux','win','msys'):
 		if sys.platform[:len(k)] == k:

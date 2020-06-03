@@ -178,7 +178,7 @@ def do_loop():
 			msg(clr(f'{nl}Testing {test}'))
 
 		for k in ('bad','good'):
-			if not opt.silent:
+			if not opt.super_silent:
 				msg(purple(capfirst(k)+' input:'))
 			for arg in test_data[test][k]:
 				run_test(

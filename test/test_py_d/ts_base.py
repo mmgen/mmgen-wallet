@@ -33,6 +33,7 @@ class TestSuiteBase(object):
 	extra_spawn_args = []
 	networks = ()
 	segwit_opts_ok = False
+	color = False
 
 	def __init__(self,trunner,cfgs,spawn):
 		from mmgen.protocol import init_proto_from_opts

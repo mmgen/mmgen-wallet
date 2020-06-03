@@ -19,6 +19,7 @@ class TestSuiteInput(TestSuiteBase):
 	'user input'
 	networks = ('btc',)
 	tmpdir_nums = []
+	color = True
 	cmd_group = (
 		('get_passphrase_ui',             (1,"hash preset, password and label (wallet.py)", [])),
 		('get_passphrase_cmdline',        (1,"hash preset, password and label (wallet.py - from cmdline)", [])),
@@ -185,7 +186,7 @@ class TestSuiteInput(TestSuiteBase):
 		mne = mn_entry(fmt,entry_mode)
 		t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
 		t.expect('Using (.+) entry mode',regex=True)
-		mode = t.p.match.group(1).lower()
+		mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 		assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
 		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)
 		t.expect(sample_mn[fmt]['hex'])
@@ -202,7 +203,7 @@ class TestSuiteInput(TestSuiteBase):
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
-		t.expect('{} type: {}'.format(capfirst(wcls.wclass),wcls.mn_type))
+		t.expect('{} type:.*{}'.format(capfirst(wcls.wclass),wcls.mn_type),regex=True)
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
 		if wcls.wclass == 'mnemonic':
@@ -212,7 +213,7 @@ class TestSuiteInput(TestSuiteBase):
 			mne = mn_entry(fmt,entry_mode)
 			t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
 			t.expect('Using (.+) entry mode',regex=True)
-			mode = t.p.match.group(1).lower()
+			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 			assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
 			stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode)
 		elif wcls.wclass == 'dieroll':
@@ -224,7 +225,8 @@ class TestSuiteInput(TestSuiteBase):
 				t.expect(wcls.user_entropy_prompt,'n')
 		if not usr_rand:
 			sid_chk = 'FE3C6545'
-			sid = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))[:8]
+			sid = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))
+			sid = strip_ansi_escapes(sid.split(',')[0])
 			assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
 		t.expect('to confirm: ','YES\n')
 		t.read()

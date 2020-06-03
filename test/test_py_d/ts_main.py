@@ -42,6 +42,7 @@ def make_brainwallet_file(fn):
 	write_data_to_file(fn,d,'brainwallet password',quiet=True,ignore_opt_outdir=True)
 
 def verify_checksum_or_exit(checksum,chk):
+	chk = strip_ansi_escapes(chk)
 	if checksum != chk:
 		raise TestSuiteFatalException('Checksum error: {}'.format(chk))
 	vmsg(green('Checksums match: ') + cyan(chk))
@@ -66,6 +67,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	networks = ('btc','btc_tn','ltc','ltc_tn','bch','bch_tn')
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	segwit_opts_ok = True
+	color = True
 	cmd_group = (
 		('walletgen_dfl_wallet', (15,'wallet generation (default wallet)',[[[],15]])),
 		('subwalletgen_dfl_wallet', (15,'subwallet generation (default wallet)',[[[pwfile],15]])),
@@ -221,7 +223,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'])
-		t.expect('Generating subseed 10S')
+		t.expect('Generating subseed.*10S',regex=True)
 		t.passphrase_new('new '+wcls.desc,'foo')
 		t.usr_rand(self.usr_rand_chars)
 		fn = t.written_to_file(capfirst(wcls.desc))
@@ -236,7 +238,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-subwalletgen', args)
 		t.license()
 		t.passphrase(icls.desc,self.cfgs['1']['wpasswd'])
-		t.expect('Generating subseed 3L')
+		t.expect('Generating subseed.*3L',regex=True)
 		fn = t.written_to_file(capfirst(ocls.desc))
 		ext = get_extension(fn)
 		assert ext == ocls.ext,'incorrect file extension: {}'.format(ext)

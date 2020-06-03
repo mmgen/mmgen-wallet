@@ -151,7 +151,11 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 
 	if type(refval) == bool:
 		v = str(val).lower()
-		ret = True if v in ('true','yes','1') else False if v in ('false','no','none','0') else None
+		ret = (
+			True  if v in ('true','yes','1','on') else
+			False if v in ('false','no','none','0','off','') else
+			None
+		)
 		if ret is not None:
 			return not ret if invert_bool else ret
 	else:

@@ -169,6 +169,7 @@ tests = {
 		'arg1': 'proto',
 		'exc_name': 'BadTwLabel',
 		'bad':  (
+			{'text':'',              'proto':proto},
 			{'text':'x x',           'proto':proto},
 			{'text':'x я',           'proto':proto},
 			{'text':'я:я',           'proto':proto},

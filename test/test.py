@@ -460,8 +460,13 @@ def set_environ_for_spawned_scripts():
 		for name in g.env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
-	if not opt.pexpect_spawn: os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '1'
-	if not opt.system: os.environ['PYTHONPATH'] = repo_root
+
+	if not opt.pexpect_spawn:
+		os.environ['MMGEN_TEST_SUITE_POPEN_SPAWN'] = '1'
+
+	if not opt.system:
+		os.environ['PYTHONPATH'] = repo_root
+
 	if not opt.buf_keypress:
 		os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
 
@@ -469,11 +474,10 @@ def set_environ_for_spawned_scripts():
 	if os.getenv('MMGEN_TRACEBACK') and not opt.traceback:
 		os.environ['MMGEN_TRACEBACK'] = ''
 
-	# Disable color in spawned scripts so pexpect can parse their output
-	os.environ['MMGEN_DISABLE_COLOR'] = '1'
 	os.environ['MMGEN_NO_LICENSE'] = '1'
 	os.environ['MMGEN_MIN_URANDCHARS'] = '3'
 	os.environ['MMGEN_BOGUS_SEND'] = '1'
+	os.environ['MMGEN_TEST_SUITE_PEXPECT'] = '1'
 
 def set_restore_term_at_exit():
 	import termios,atexit
@@ -693,6 +697,8 @@ class TestSuiteRunner(object):
 				self.ts.group_name,
 				self.ts.test_name,
 				cmd_disp))
+
+		os.environ['MMGEN_FORCE_COLOR'] = ('1' if self.ts.color else '')
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect(args,no_output=no_output)
