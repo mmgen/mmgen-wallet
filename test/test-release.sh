@@ -101,7 +101,7 @@ do
 		echo
 		echo   "  By default, all tests are run"
 		exit ;;
-	A)  SKIP_ALT_DEP=1 unit_tests_py+=" --no-altcoin-deps";;
+	A)  SKIP_ALT_DEP=1 unit_tests_py+=" --no-altcoin-deps" ;;
 	b)  test_py+=" --buf-keypress" ;;
 	C)  mkdir -p 'test/trace'
 		touch 'test/trace.acc'
@@ -153,7 +153,7 @@ case $1 in
 	'')        tests=$dfl_tests ;;
 	'default') tests=$dfl_tests ;;
 	'extra')   tests=$extra_tests ;;
-	'noalt')   tests=$noalt_tests SKIP_ALT_DEP=1 ;;
+	'noalt')   tests=$noalt_tests SKIP_ALT_DEP=1 unit_tests_py+=" --no-altcoin-deps" ;;
 	'quick')   tests=$quick_tests ;;
 	'qskip')   tests=$qskip_tests ;;
 	*)         tests="$*" ;;
@@ -493,7 +493,7 @@ t_tool2="
 	$tooltest2_py --fork # run once with --fork so commands are actually executed
 "
 f_tool2='tooltest2 tests completed'
-[ "$SKIP_ALT_DEP" ] && t_tool2_skip='17 18'
+[ "$SKIP_ALT_DEP" ] && t_tool2_skip='15 16 17 18 19' # skip ETH,ETC: txview requires py_ecc
 
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
@@ -563,6 +563,13 @@ prompt_skip() {
 
 run_tests() {
 	for t in $1; do
+		if [ "$SKIP_ALT_DEP" ]; then
+			ok=$(for a in $noalt_tests; do if [ $t == $a ]; then echo 'ok'; fi; done)
+			if [ ! "$ok" ]; then
+				echo -e "${BLUE}Skipping altcoin test '$t'$RESET"
+				continue
+			fi
+		fi
 		if [ "$LIST_CMDS" ]; then
 			eval echo -e '\\n#' $(echo \$i_$t) "\($t\)"
 		else

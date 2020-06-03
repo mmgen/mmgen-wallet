@@ -106,7 +106,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					start_test_daemons(proto.network_id)
 				t = self.spawn(
 					'mmgen-txsign',
-					['--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
+					['--outdir=test/trash','--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()
 				t.ok()
