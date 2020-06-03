@@ -179,12 +179,15 @@ class TestSuiteInput(TestSuiteBase):
 			return ('skip_warn',m)
 		return self.password_entry('Enter passphrase (echoed): ',['--echo-passphrase'])
 
-	def _mn2hex(self,fmt,entry_mode='full',mn=None,pad_entry=False):
+	def _mn2hex(self,fmt,entry_mode='full',mn=None,pad_entry=False,enter_for_dfl=False):
 		mn = mn or sample_mn[fmt]['mn'].split()
 		t = self.spawn('mmgen-tool',['mn2hex_interactive','fmt='+fmt,'mn_len=12','print_mn=1'])
 		from mmgen.mn_entry import mn_entry
 		mne = mn_entry(fmt,entry_mode)
-		t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+		t.expect(
+			'Type a number.*: ',
+			('\n' if enter_for_dfl else str(mne.entry_modes.index(entry_mode)+1)),
+			regex = True )
 		t.expect('Using (.+) entry mode',regex=True)
 		mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 		assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
@@ -207,11 +210,11 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
 		if wcls.wclass == 'mnemonic':
-			t.expect('Entry mode: ','6')
+			t.expect('Type a number.*: ','6',regex=True)
 			t.expect('invalid')
 			from mmgen.mn_entry import mn_entry
 			mne = mn_entry(fmt,entry_mode)
-			t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 			t.expect('Using (.+) entry mode',regex=True)
 			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 			assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
@@ -262,7 +265,7 @@ class TestSuiteInput(TestSuiteBase):
 	def mn2hex_interactive_mmgen_fixed(self): return self._mn2hex('mmgen',entry_mode='fixed')
 	def mn2hex_interactive_bip39(self):       return self._mn2hex('bip39',entry_mode='full')
 	def mn2hex_interactive_bip39_short(self): return self._mn2hex('bip39',entry_mode='short',pad_entry=True)
-	def mn2hex_interactive_bip39_fixed(self): return self._mn2hex('bip39',entry_mode='fixed')
+	def mn2hex_interactive_bip39_fixed(self): return self._mn2hex('bip39',entry_mode='fixed',enter_for_dfl=True)
 	def mn2hex_interactive_xmr(self):         return self._mn2hex('xmrseed',entry_mode='full')
 	def mn2hex_interactive_xmr_short(self):   return self._mn2hex('xmrseed',entry_mode='short')
 

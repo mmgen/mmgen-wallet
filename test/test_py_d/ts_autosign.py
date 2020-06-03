@@ -80,7 +80,7 @@ class TestSuiteAutosign(TestSuiteBase):
 			from mmgen.mn_entry import mn_entry
 			entry_mode = 'full'
 			mne = mn_entry('mmgen',entry_mode)
-			t.expect('Entry mode: ',str(mne.entry_modes.index(entry_mode)+1))
+			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 			wf = t.written_to_file('Autosign wallet')
 			t.ok()

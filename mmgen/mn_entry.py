@@ -241,7 +241,7 @@ class MnemonicEntry(object):
 		""",
 	}
 	word_prompt = ('Enter word #{}: ','Incorrect entry. Repeat word #{}: ')
-	dfl_entry_mode = None
+	usr_dfl_entry_mode = None
 	_lw = None
 	_sw = None
 	_usl = None
@@ -319,21 +319,27 @@ class MnemonicEntry(object):
 				mode.name + ':',
 				fmt(mode.choose_info,' '*14).lstrip().format(usl=self.uniq_ss_len),
 			))
+		prompt = f'Type a number, or hit ENTER for the default ({capfirst(self.dfl_entry_mode)}): '
+		erase = '\r' + ' ' * (len(prompt)+19) + '\r'
 		while True:
-			uret = get_char('Entry mode: ')
-			if uret in [str(i) for i in range(1,len(em_objs)+1)]:
+			uret = get_char(prompt).strip()
+			if uret == '':
+				msg_r(erase)
+				return self.get_cls_by_entry_mode(self.dfl_entry_mode)(self)
+			elif uret in [str(i) for i in range(1,len(em_objs)+1)]:
+				msg_r(erase)
 				return em_objs[int(uret)-1]
 			else:
-				msg_r('\b {!r}: invalid choice '.format(uret))
+				msg_r(f'\b {uret!r}: invalid choice ')
 				time.sleep(g.err_disp_timeout)
-				msg_r('\r'+' '*38+'\r')
+				msg_r(erase)
 
 	def get_mnemonic_from_user(self,mn_len,validate=True):
 		mll = list(self.conv_cls.seedlen_map_rev[self.wl_id])
 		assert mn_len in mll, '{}: invalid mnemonic length (must be one of {})'.format(mn_len,mll)
 
-		if self.dfl_entry_mode:
-			em = self.get_cls_by_entry_mode(self.dfl_entry_mode)(self)
+		if self.usr_dfl_entry_mode:
+			em = self.get_cls_by_entry_mode(self.usr_dfl_entry_mode)(self)
 			i_add = ' (user-configured)'
 		else:
 			em = self.choose_entry_mode()
@@ -342,7 +348,7 @@ class MnemonicEntry(object):
 		msg('\r' + 'Using {} entry mode{}'.format(cyan(em.name.upper()),i_add))
 		self.em = em
 
-		if not self.dfl_entry_mode:
+		if not self.usr_dfl_entry_mode:
 			m = (
 				fmt(self.prompt_info['intro'])
 				+ '\n'
@@ -371,7 +377,10 @@ class MnemonicEntry(object):
 
 		if validate:
 			self.conv_cls.tohex(words,self.wl_id)
-			qmsg('Mnemonic is valid')
+			if self.has_chksum:
+				qmsg('Mnemonic is valid')
+			else:
+				qmsg('Mnemonic is well-formed (mnemonic format has no checksum to validate)')
 
 		return ' '.join(words)
 
@@ -395,22 +404,28 @@ class MnemonicEntry(object):
 			if v not in tcls.entry_modes:
 				m = 'entry mode {!r} not recognized for wordlist {!r}:\n    (valid options: {})'
 				raise ValueError(m.format(v,k,fmt_list(tcls.entry_modes)))
-			tcls.dfl_entry_mode = v
+			tcls.usr_dfl_entry_mode = v
 
 class MnemonicEntryMMGen(MnemonicEntry):
 	wl_id = 'mmgen'
 	modname = 'baseconv'
 	entry_modes = ('full','minimal','fixed')
+	dfl_entry_mode = 'minimal'
+	has_chksum = False
 
 class MnemonicEntryBIP39(MnemonicEntry):
 	wl_id = 'bip39'
 	modname = 'bip39'
 	entry_modes = ('full','short','fixed')
+	dfl_entry_mode = 'fixed'
+	has_chksum = True
 
 class MnemonicEntryMonero(MnemonicEntry):
 	wl_id = 'xmrseed'
 	modname = 'baseconv'
 	entry_modes = ('full','short')
+	dfl_entry_mode = 'short'
+	has_chksum = True
 
 try:
 	MnemonicEntry.get_cfg_vars()
