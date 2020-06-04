@@ -75,11 +75,8 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		return t
 
 	def tool_twview_bad_comment(self): # test correct operation of get_tw_label()
-		bw_save = os.getenv('MMGEN_BOGUS_WALLET_DATA')
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = joinpath(ref_dir,'bad-comment-unspent.json')
 		t = self.spawn('mmgen-tool',['twview'])
-		if bw_save:
-			os.environ['MMGEN_BOGUS_WALLET_DATA'] = bw_save
 		t.read()
 		t.req_exit_val = 2
 		return t

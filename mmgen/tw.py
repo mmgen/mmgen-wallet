@@ -169,8 +169,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		return await self.rpc.call('listunspent',self.minconf,*add_args)
 
 	async def get_unspent_data(self,sort_key=None,reverse_sort=False):
-		if g.bogus_wallet_data: # for debugging purposes only
-			us_raw = eval(get_data_from_file(g.bogus_wallet_data)) # testing, so ok
+		if g.bogus_wallet_data: # for debugging and test suite
+			us_raw = json.loads(get_data_from_file(g.bogus_wallet_data),parse_float=Decimal)
 		else:
 			us_raw = await self.get_unspent_rpc()
 

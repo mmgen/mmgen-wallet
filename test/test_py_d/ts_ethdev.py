@@ -311,7 +311,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.proto = init_proto(g.coin,network='regtest')
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 
 	@property
 	def eth_args(self):

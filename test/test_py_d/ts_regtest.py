@@ -269,7 +269,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		end_silence()
 
 	def setup(self):
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = ''
 		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal

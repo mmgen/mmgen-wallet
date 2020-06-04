@@ -418,7 +418,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		silence()
 		ad,tx_data = self._create_tx_data(sources,addrs_per_wallet)
 		dfake = self._create_fake_unspent_data(ad,tx_data,non_mmgen_input,non_mmgen_input_compressed)
-		self._write_fake_data_to_file(repr(dfake))
+		import json
+		from mmgen.rpc import json_encoder
+		self._write_fake_data_to_file(json.dumps(dfake,cls=json_encoder))
 		cmd_args = self._make_txcreate_cmdline(tx_data)
 
 		if cmdline_inputs:

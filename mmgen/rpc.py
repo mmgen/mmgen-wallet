@@ -604,4 +604,7 @@ async def rpc_init(proto,backend=None):
 				proto.chain_name.upper(),
 				rpc.chain.upper() ))
 
+	if g.bogus_wallet_data:
+		rpc.blockcount = 1000000
+
 	return rpc

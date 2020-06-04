@@ -746,6 +746,7 @@ class TestSuiteRunner(object):
 		if not quiet:
 			bmsg('Executing ' + m)
 
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test group doesn't have to
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 
 		if opt.resume_after:
