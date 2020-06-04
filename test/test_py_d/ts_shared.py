@@ -70,7 +70,8 @@ class TestSuiteShared(object):
 				t.expect('or gas price: ',interactive_fee+'\n')
 			else:
 				t.send(interactive_fee+'\n')
-			if fee_res: t.expect(fee_res)
+			if fee_res:
+				t.expect(fee_res,regex=True)
 			t.expect('OK? (Y/n): ','y')
 
 		t.expect('(Y/n): ','\n')     # chg amt OK?

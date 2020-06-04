@@ -144,6 +144,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
 	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
+	color = True
 	cmd_group = (
 		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(coin)),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
@@ -382,11 +383,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txcreate(self,args=[],menu=[],acct='1',non_mmgen_inputs=0,caller='txcreate',
 						interactive_fee = '50G',
 						eth_fee_res     = None,
-						fee_res_fs      = '0.00105 {} (50 gas price in Gwei)',
+						fee_res_data    = ('0.00105','50'),
 						fee_desc        = 'gas price',
 						no_read         = False,
 						tweaks          = [] ):
-		fee_res = fee_res_fs.format(self.proto.coin)
+		fee_res = r'\D{}\D.* {c} (.*\D{}\D.* gas price in Gwei)'.format(*fee_res_data,c=self.proto.coin)
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
@@ -483,14 +484,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx',expect_str='has 2 confirmations')
 
 	def txcreate4(self):
-		args = ['98831F3A:E:2,23.45495']
-		interactive_fee='40G'
-		fee_res_fs='0.00084 {} (40 gas price in Gwei)'
-		return self.txcreate(   args             = args,
+		return self.txcreate(   args             = ['98831F3A:E:2,23.45495'],
 								acct             = '1',
 								non_mmgen_inputs = 0,
-								interactive_fee  = interactive_fee,
-								fee_res_fs       = fee_res_fs,
+								interactive_fee  = '40G',
+								fee_res_data     = ('0.00084','40'),
 								eth_fee_res      = True )
 
 	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
@@ -515,27 +513,30 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	#bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
 	bal_corr = Decimal('0.0000000') # update: Parity team seems to have corrected this
 
-	def bal(self,n=None):
+	def bal(self,n):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
+		text = strip_ansi_escapes(t.read())
 		for b in bals[n]:
 			addr,amt,adj = b if len(b) == 3 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				amt = str(Decimal(amt) + Decimal(adj[1]) * self.bal_corr)
-			pat = r'{}\s+{}\s'.format(addr,amt.replace('.',r'\.'))
-			t.expect(pat,regex=True)
-		t.read()
+			pat = r'\D{}\D.*\D{}\D'.format(addr,amt.replace('.',r'\.'))
+			assert re.search(pat,text), pat
+		ss = f'Total {self.proto.coin}:'
+		assert re.search(ss,text),ss
 		return t
 
 	def token_bal(self,n=None):
 		t = self.spawn('mmgen-tool', self.eth_args + ['--token=mm1','twview','wide=1'])
+		text = strip_ansi_escapes(t.read())
 		for b in token_bals[n]:
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
-			pat = r'{}\s+{}\s+{}\s'.format(addr,_amt1.replace('.',r'\.'),_amt2.replace('.',r'\.'))
-			t.expect(pat,regex=True)
-		t.expect('Total MM1:')
-		t.read()
+			pat = r'{}\b.*\D{}\D.*\b{}\D'.format(addr,_amt1,_amt2)
+			assert re.search(pat,text), pat
+		ss = 'Total MM1:'
+		assert re.search(ss,text),ss
 		return t
 
 	def bal_getbalance(self,idx,etc_adj=False,extra_args=[]):
@@ -545,9 +546,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if etc_adj and self.proto.coin == 'ETC':
 			bal1 += self.bal_corr
 		t = self.spawn('mmgen-tool', self.eth_args + extra_args + ['getbalance'])
-		t.expect(r'\n[0-9A-F]{8}: .* '+str(bal1),regex=True)
-		t.expect(r'\nNon-MMGen: .* '+bal2,regex=True)
-		total = t.expect_getend(r'\nTOTAL:\s+',regex=True).split()[0]
+		t.expect(r'\n[0-9A-F]{8}: .*\D'+str(bal1),regex=True)
+		t.expect(r'\nNon-MMGen: .*\D'+bal2,regex=True)
+		total = strip_ansi_escapes(t.expect_getend(r'\nTOTAL:\s+',regex=True)).split()[0]
 		t.read()
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
@@ -559,7 +560,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def chk_label(self,lbl_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,lbl_pat),regex=True)
+		t.expect(r'{}\b.*\S{{30}}\b.*{}\b'.format(addr,lbl_pat),regex=True)
 		return t
 
 	def add_label1(self): return self.add_label(lbl=tw_label_zh)
@@ -635,7 +636,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		txid = self.txsend_ui_common(t,caller=mmgen_cmd,
 			quiet = mmgen_cmd == 'txdo' or not g.debug,
 			bogus_send=False)
-		addr = t.expect_getend('Contract address: ')
+		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
 		assert (await self.get_exec_status(txid)) != 0, f'Contract {num}:{key} failed to execute. Aborting'
 		if key == 'Token':
 			self.write_to_tmpfile( f'token_addr{num}', addr+'\n' )
@@ -874,11 +875,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txdo_cached_balances(self,
 			acct = '2',
-			fee_res_fs = '0.00105 {} (50 gas price in Gwei)',
+			fee_res_data = ('0.00105','50'),
 			add_args = ['98831F3A:E:3,0.4321']):
 		args = ['--tx-fee=20G','--cached-balances'] + add_args + [dfl_words_file]
 		os.environ['MMGEN_BOGUS_SEND'] = ''
-		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_fs=fee_res_fs,no_read=True)
+		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		self._do_confirm_send(t,quiet=not g.debug,sure=False)
 		t.read()
@@ -902,7 +903,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.expect(' main menu): ',n)
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
-		t.expect('Total unspent: {} {}'.format(total,total_coin))
+		t.expect('Total unspent: .*\D{}\D.*{}'.format(total,total_coin),regex=True)
 		t.read()
 		return t
 
@@ -911,7 +912,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_txdo_cached_balances(self):
 		return self.txdo_cached_balances(
 					acct='1',
-					fee_res_fs='0.0026 {} (50 gas price in Gwei)',
+					fee_res_data=('0.0026','50'),
 					add_args=['--token=mm1','98831F3A:E:12,43.21'])
 
 	def token_txcreate_refresh_balances(self):
