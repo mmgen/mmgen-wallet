@@ -28,7 +28,7 @@ from .addr import *
 NL = ('\n','\r\n')[g.platform=='win']
 
 def _options_annot_str(l):
-	return '(valid options: {})'.format(','.join(l))
+	return "(valid options: '{}')".format("','".join(l))
 
 def _create_call_sig(cmd,parsed=False):
 
@@ -227,7 +227,7 @@ mnemonic_fmts = {
 	'bip39': { 'fmt': 'bip39', 'conv_cls': conv_cls_bip39 },
 	'xmrseed': { 'fmt': 'xmrseed','conv_cls': lambda: baseconv },
 }
-mn_opts_disp = "(valid options: '{}')".format("', '".join(mnemonic_fmts))
+mn_opts_disp = _options_annot_str(mnemonic_fmts)
 
 class MMGenToolCmdMeta(type):
 	classes = {}
@@ -587,12 +587,6 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		"generate random 256-bit mnemonic seed phrase"
 		return self._do_random_mn(32,fmt)
 
-	def _get_mnemonic_fmt(self,fmt):
-		if fmt not in mnemonic_fmts:
-			m = '{!r}: invalid format (valid options: {})'
-			die(1,m.format(fmt,', '.join(mnemonic_fmts)))
-		return mnemonic_fmts[fmt]['fmt']
-
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
 		if fmt == 'bip39':
@@ -612,7 +606,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		else:
 			return baseconv.tohex(seed_mnemonic.split(),fmt,'seed')
 
-	def mn2hex_interactive( self, fmt:mn_opts_disp=dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
+	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
 		from .mn_entry import mn_entry
 		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
@@ -675,8 +669,8 @@ class MMGenToolCmdFile(MMGenToolCmds):
 					'dfls': ( False, False, 'addr', 'mtime' ),
 					'annots': {
 						'mmgen_tx_file(s)': str,
-						'sort': '(valid options: addr,raw)',
-						'filesort': '(valid options: mtime,ctime,atime)'
+						'sort': _options_annot_str(['addr','raw']),
+						'filesort': _options_annot_str(['mtime','ctime','atime']),
 						} },
 				*infiles,**kwargs):
 		"show raw/signed MMGen transaction in human-readable form"
@@ -919,7 +913,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 						pager = False,
 						showbtcaddrs = True,
 						all_labels = False,
-						sort:'(valid options: reverse,age)' = '',
+						sort: _options_annot_str(['reverse','age']) = '',
 						age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
 						):
 		"list MMGen addresses and their balances"
