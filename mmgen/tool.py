@@ -20,6 +20,7 @@
 tool.py:  Routines for the 'mmgen-tool' utility
 """
 
+from collections import namedtuple
 from .protocol import hash160
 from .common import *
 from .crypto import *
@@ -277,13 +278,21 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 			self.proto.tokensym = g.token.upper()
 
 	def init_generators(self,arg=None):
-		global at,kg,ag
+		gd = namedtuple('generator_data',['at','kg','ag'])
+
 		at = MMGenAddrType(
 			proto = self.proto,
 			id_str = self.mmtype )
-		if arg != 'at':
-			kg = KeyGenerator(self.proto,at)
-			ag = AddrGenerator(self.proto,at)
+
+		if arg == 'addrtype_only':
+			return gd(at,None,None)
+		else:
+			return gd(
+				at,
+				KeyGenerator(self.proto,at),
+				AddrGenerator(self.proto,at),
+			)
+
 
 class MMGenToolCmdMisc(MMGenToolCmds):
 	"miscellaneous commands"
@@ -417,22 +426,22 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	"""
 	def randwif(self):
 		"generate a random private key in WIF format"
-		self.init_generators('at')
+		gd = self.init_generators('addrtype_only')
 		return PrivKey(
 			self.proto,
 			get_random(32),
-			pubkey_type = at.pubkey_type,
-			compressed  = at.compressed ).wif
+			pubkey_type = gd.at.pubkey_type,
+			compressed  = gd.at.compressed ).wif
 
 	def randpair(self):
 		"generate a random private key/address pair"
-		self.init_generators()
+		gd = self.init_generators()
 		privhex = PrivKey(
 			self.proto,
 			get_random(32),
-			pubkey_type = at.pubkey_type,
-			compressed  = at.compressed )
-		addr = ag.to_addr(kg.to_pubhex(privhex))
+			pubkey_type = gd.at.pubkey_type,
+			compressed  = gd.at.compressed )
+		addr = gd.ag.to_addr(gd.kg.to_pubhex(privhex))
 		return (privhex.wif,addr)
 
 	def wif2hex(self,wifkey:'sstr'):
@@ -443,52 +452,52 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
-		self.init_generators('at')
+		gd = self.init_generators('addrtype_only')
 		return PrivKey(
 			self.proto,
 			bytes.fromhex(privhex),
-			pubkey_type = at.pubkey_type,
-			compressed  = at.compressed ).wif
+			pubkey_type = gd.at.pubkey_type,
+			compressed  = gd.at.compressed ).wif
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
-		self.init_generators()
+		gd = self.init_generators()
 		privhex = PrivKey(
 			self.proto,
 			wif = wifkey )
-		addr = ag.to_addr(kg.to_pubhex(privhex))
+		addr = gd.ag.to_addr(gd.kg.to_pubhex(privhex))
 		return addr
 
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
-		self.init_generators()
+		gd = self.init_generators()
 		privhex = PrivKey(
 			self.proto,
 			wif = wifkey )
-		return ag.to_segwit_redeem_script(kg.to_pubhex(privhex))
+		return gd.ag.to_segwit_redeem_script(gd.kg.to_pubhex(privhex))
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
 		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
-		self.init_generators()
-		pubhex = kg.to_pubhex(PrivKey(
+		gd = self.init_generators()
+		pubhex = gd.kg.to_pubhex(PrivKey(
 			self.proto,
 			wif = wifkey ))
-		addr = ag.to_addr(pubhex)
-		rs = ag.to_segwit_redeem_script(pubhex)
+		addr = gd.ag.to_addr(pubhex)
+		rs = gd.ag.to_segwit_redeem_script(pubhex)
 		return (rs,addr)
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
-		self.init_generators()
+		gd = self.init_generators()
 		pk = PrivKey(
 			self.proto,
 			bytes.fromhex(privhex),
-			compressed  = at.compressed,
-			pubkey_type = at.pubkey_type )
-		ph = kg.to_pubhex(pk)
-		return ph if output_pubhex else ag.to_addr(ph)
+			compressed  = gd.at.compressed,
+			pubkey_type = gd.at.pubkey_type )
+		ph = gd.kg.to_pubhex(pk)
+		return ph if output_pubhex else gd.ag.to_addr(ph)
 
 	def privhex2pubhex(self,privhex:'sstr'): # new
 		"generate a hex public key from a hex private key"
@@ -518,8 +527,8 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 		if self.mmtype == 'bech32':
 			return self.proto.pubhash2bech32addr(pubhashhex)
 		else:
-			self.init_generators('at')
-			return self.proto.pubhash2addr(pubhashhex,at.addr_fmt=='p2sh')
+			gd = self.init_generators('addrtype_only')
+			return self.proto.pubhash2addr(pubhashhex,gd.at.addr_fmt=='p2sh')
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
@@ -1156,7 +1165,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		bals = {} # locked,unlocked
 
-		from collections import namedtuple
 		wo = namedtuple('mwo',['name','desc','action','func','accept_defaults'])
 		op = { # reusing name!
 			'create': wo('create', 'Creat', 'Generat', create, False),
