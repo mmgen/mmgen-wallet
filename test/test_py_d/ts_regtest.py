@@ -140,6 +140,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	passthru_opts = ('coin',)
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
+	color = True
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
 		('current_user',             'current user'),
@@ -231,11 +232,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('alice_add_label_badaddr2', 'adding a label with invalid address for this chain'),
 		('alice_add_label_badaddr3', 'adding a label with wrong MMGen address'),
 		('alice_add_label_badaddr4', 'adding a label with wrong coin address'),
-		('alice_listaddresses',                 'listaddresses'),
+		('alice_listaddresses1',                'listaddresses'),
 		('alice_listaddresses_days',            'listaddresses (age_fmt=days)'),
 		('alice_listaddresses_date',            'listaddresses (age_fmt=date)'),
 		('alice_listaddresses_date_time',       'listaddresses (age_fmt=date_time)'),
-		('alice_twview',                 'twview'),
+		('alice_twview1',                'twview'),
 		('alice_twview_days',            'twview (age_fmt=days)'),
 		('alice_twview_date',            'twview (age_fmt=date)'),
 		('alice_twview_date_time',       'twview (age_fmt=date_time)'),
@@ -378,20 +379,21 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def fund_alice(self):
 		return self.fund_wallet('alice',('L','S')[self.proto.cap('segwit')],rtFundAmt)
 
-	def user_twview(self,user,chk=None,sort='age'):
+	def user_twview(self,user,chk,sort='age'):
 		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
-		if chk: t.expect(chk,regex=True)
+		if chk:
+			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
 		t.read()
 		return t
 
-	def bob_twview1(self): return self.user_twview('bob',chk=r'1\).*\b{}\b'.format(rtAmts[0]))
+	def bob_twview1(self): return self.user_twview('bob', chk = ('1',rtAmts[0]) )
 
 	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False,exit_val=0):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
 		if skip_check:
 			t.read()
 		else:
-			cmp_or_die(f'{bal} {self.proto.coin}',t.expect_getend('TOTAL: '))
+			cmp_or_die(f'{bal} {self.proto.coin}',strip_ansi_escapes(t.expect_getend('TOTAL: ')))
 		t.req_exit_val = exit_val
 		return t
 
@@ -460,11 +462,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_twview2(self):
 		sid1 = self._get_user_subsid('bob','29L')
-		return self.user_twview('bob',chk=r'\b{}:C:2\b\s+{}'.format(sid1,'0.29'),sort='twmmid')
+		return self.user_twview('bob',chk=(sid1+':C:2','0.29'),sort='twmmid')
 
 	def bob_twview3(self):
 		sid2 = self._get_user_subsid('bob','127S')
-		return self.user_twview('bob',chk=r'\b{}:C:3\b\s+{}'.format(sid2,'0.127'),sort='amt')
+		return self.user_twview('bob',chk=(sid2+':C:3','0.127'),sort='amt')
 
 	def bob_subwallet_txcreate(self):
 		sid1 = self._get_user_subsid('bob','29L')
@@ -494,14 +496,20 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_twview4(self):
 		sid = self._user_sid('bob')
 		amt = ('0.4169328','0.41364')[self.proto.coin=='LTC']
-		return self.user_twview('bob',chk=r'\b{}:L:5\b\s+.*\s+\b{}\b'.format(sid,amt),sort='twmmid')
+		return self.user_twview('bob',chk=(sid+':L:5',amt),sort='twmmid')
 
 	def bob_getbalance(self,bals,confs=1):
 		for i in (0,1,2):
 			assert Decimal(bals['mmgen'][i]) + Decimal(bals['nonmm'][i]) == Decimal(bals['total'][i])
 		t = self.spawn('mmgen-tool',['--bob','getbalance','minconf={}'.format(confs)])
+		t.expect('Wallet')
 		for k in ('mmgen','nonmm','total'):
-			t.expect(r'\n\S+:\s+{} {c}\s+{} {c}\s+{} {c}'.format(*bals[k],c=self.proto.coin),regex=True)
+			ret = strip_ansi_escapes(t.expect_getend(r'\S+: ',regex=True))
+			cmp_or_die(
+				' '.join(bals[k]),
+				re.sub(rf'\s+{self.proto.coin}\s*',' ',ret).strip(),
+				desc=k,
+			)
 		t.read()
 		return t
 
@@ -799,13 +807,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def _user_chk_label(self,user,addr,label):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses','all_labels=1'])
-		t.expect(r'{}\s+\S{{30}}\S+\s+{}\s+'.format(addr,label),regex=True)
+		ret = strip_ansi_escapes(t.expect_getend(addr)).strip().split(None,1)[1]
+		cmp_or_die(ret[:len(label)],label)
 		return t
 
 	def alice_add_label_coinaddr(self):
 		mmid = self._user_sid('alice') + (':S:1',':L:1')[self.proto.coin=='BCH']
 		t = self.spawn('mmgen-tool',['--alice','listaddress',mmid],no_msg=True)
-		addr = [i for i in t.read().splitlines() if i.startswith(mmid)][0].split()[1]
+		addr = [i for i in strip_ansi_escapes(t.read()).splitlines() if i.startswith(mmid)][0].split()[1]
 		return self.user_add_label('alice',addr,'Label added using coin address of MMGen address')
 
 	def alice_chk_label_coinaddr(self):
@@ -877,50 +886,73 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t.expect(r'\[q\]uit view, .*?:.','q',regex=True)
 		return t
 
-	def alice_listaddresses(self,args=[],expect=None):
-		expect = expect or rf'{rtAmts[1]}\b'
+	def alice_listaddresses(self,args,expect):
 		t = self.spawn('mmgen-tool',['--alice','listaddresses','showempty=1'] + args)
-		t.expect(expect,regex=True)
+		expect_str = r'\D{}\D.*\b{}'.format(*expect)
+		t.expect(expect_str,regex=True)
 		t.read()
 		return t
 
+	def alice_listaddresses1(self):
+		return self.alice_listaddresses(
+			args = [],
+			expect = (rtAmts[1],r'\d+') )
+
 	def alice_listaddresses_days(self):
-		return self.alice_listaddresses(args=['age_fmt=days'],expect=rf'{rtAmts[1]}\s+\d+\b')
+		return self.alice_listaddresses(
+			args = ['age_fmt=days'],
+			expect = (rtAmts[1],r'\d+') )
 
 	def alice_listaddresses_date(self):
-		return self.alice_listaddresses(args=['age_fmt=date'],expect=rf'{rtAmts[1]}\s+'+pat_date)
+		return self.alice_listaddresses(
+			args = ['age_fmt=date'],
+			expect = (rtAmts[1],pat_date) )
 
 	def alice_listaddresses_date_time(self):
 		return self.alice_listaddresses(
-			args=['age_fmt=date_time'],
-			expect=rf'{rtAmts[1]}\s+'+pat_date_time)
+			args = ['age_fmt=date_time'],
+			expect = (rtAmts[1],pat_date_time) )
 
-	def alice_twview(self,args=[],expect=None):
-		expect = expect or rf'{rtAmts[0]}\b'
+	def alice_twview(self,args,expect):
 		t = self.spawn('mmgen-tool',['--alice','twview'] + args)
-		t.expect(expect,regex=True)
+		expect_str = r'\D{}\D.*\b{}'.format(*expect)
+		t.expect(expect_str,regex=True)
 		t.read()
 		return t
 
+	def alice_twview1(self):
+		return self.alice_twview(
+			args = [],
+			expect = (rtAmts[0],r'\d+') )
+
 	def alice_twview_days(self):
-		return self.alice_twview(args=['age_fmt=days'],expect=rf'{rtAmts[0]}\s+\d+\b')
+		return self.alice_twview(
+			args = ['age_fmt=days'],
+			expect = (rtAmts[0],r'\d+') )
 
 	def alice_twview_date(self):
-		return self.alice_twview(args=['age_fmt=date'],expect=rf'{rtAmts[0]}\s+'+pat_date)
+		return self.alice_twview(
+			args = ['age_fmt=date'],
+			expect = (rtAmts[0],pat_date) )
 
 	def alice_twview_date_time(self):
-		return self.alice_twview(args=['age_fmt=date_time'],expect=rf'{rtAmts[0]}\s+'+pat_date_time)
+		return self.alice_twview(
+			args = ['age_fmt=date_time'],
+			expect = (rtAmts[0],pat_date_time) )
 
 	def alice_txcreate_info(self,args=[]):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
-		for e,s in (
-				(rf'{rtAmts[0]}\s+\d+\b','D'),
-				(rf'{rtAmts[0]}\s+\d+\b','D'),
-				(rf'{rtAmts[0]}\s+\d+\b','D'),
-				(rf'{rtAmts[0]}\s+'+pat_date,'w'),
-				(rf'{rtAmts[0]}\s+\d+\s+\d+\s+'+pat_date_time,'q'),
+		for d,s in (
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( pat_date,                    'w'),
+				( '\d+\s+\d+\s+'+pat_date_time,'q'),
 			):
-			t.expect(e,s,regex=True)
+			t.expect(
+				r'\D{}\D.*\b{}\b'.format(rtAmts[0],d),
+				s,
+				regex=True )
 		t.read()
 		return t
 

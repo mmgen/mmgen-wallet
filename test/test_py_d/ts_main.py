@@ -553,7 +553,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		f,t = self._walletconv_export(wf,out_fmt=out_fmt,pf=pf)
 		silence()
 		wcls = Wallet.fmt_code_to_type(out_fmt)
-		msg('{}: {}'.format(capfirst(wcls.desc),cyan(get_data_from_file(f,wcls.desc))))
+		msg('==> {}: {}'.format(wcls.desc,cyan(get_data_from_file(f,wcls.desc))))
 		end_silence()
 		return t
 

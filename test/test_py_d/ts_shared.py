@@ -133,7 +133,7 @@ class TestSuiteShared(object):
 			txid = ''
 			t.expect('BOGUS transaction NOT sent')
 		else:
-			txid = t.expect_getend('Transaction sent: ')
+			txid = strip_ansi_escapes(t.expect_getend('Transaction sent: '))
 			assert len(txid) == 64,"'{}': Incorrect txid length!".format(txid)
 
 		t.written_to_file(file_desc)
