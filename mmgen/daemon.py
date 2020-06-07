@@ -451,7 +451,10 @@ class BitcoinDaemon(CoinDaemon):
 		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
 			self.daemonize_args = ['--daemon']
 
-		if self.daemon_id == 'bch':
+		if self.daemon_id == 'btc':
+			if self.network == 'regtest':
+				self.coin_specific_coind_args = ['--fallbackfee=0.0002']
+		elif self.daemon_id == 'bch':
 			self.coin_specific_coind_args = ['--usecashaddr=0']
 		elif self.daemon_id == 'ltc':
 			self.coin_specific_coind_args = ['--mempoolreplacement=1']
