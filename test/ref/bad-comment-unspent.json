@@ -1,8 +1,12 @@
-[{'address': '153AwzcymCgiy7dBxHkpeSn8yzbfnRvVPx',
-  'amount': BTCAmt('34.21677044'),
-  'confirmations': 7528082,
-  'label': '96325D83:L:99 This label has a control character (tab) here: [	]',
-  'scriptPubKey': '76a9142c49a3ad8d89af713197e55190a7c3bc47e0208e88ac',
-  'spendable': False,
-  'txid': '2588cbbea1f3413ee4556c0f12f825f8670771862864a44f5ad39a71e1afdb13',
-  'vout': 3}]
+[
+    {
+        "address": "153AwzcymCgiy7dBxHkpeSn8yzbfnRvVPx",
+        "amount": "34.21677044",
+        "confirmations": 7528082,
+        "label": "96325D83:L:99 This label has a control character (tab) here: [\t]",
+        "scriptPubKey": "76a9142c49a3ad8d89af713197e55190a7c3bc47e0208e88ac",
+        "spendable": false,
+        "txid": "2588cbbea1f3413ee4556c0f12f825f8670771862864a44f5ad39a71e1afdb13",
+        "vout": 3
+    }
+]

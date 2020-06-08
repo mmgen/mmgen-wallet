@@ -223,7 +223,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.license()
 		wcls = MMGenWallet
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'])
-		t.expect('Generating subseed.*10S',regex=True)
+		t.expect(r'Generating subseed.*\D10S',regex=True)
 		t.passphrase_new('new '+wcls.desc,'foo')
 		t.usr_rand(self.usr_rand_chars)
 		fn = t.written_to_file(capfirst(wcls.desc))
@@ -238,7 +238,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-subwalletgen', args)
 		t.license()
 		t.passphrase(icls.desc,self.cfgs['1']['wpasswd'])
-		t.expect('Generating subseed.*3L',regex=True)
+		t.expect(r'Generating subseed.*\D3L',regex=True)
 		fn = t.written_to_file(capfirst(ocls.desc))
 		ext = get_extension(fn)
 		assert ext == ocls.ext,'incorrect file extension: {}'.format(ext)

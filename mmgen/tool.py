@@ -273,7 +273,7 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 	def __init__(self,proto=None,mmtype=None):
 		from .protocol import init_proto_from_opts
 		self.proto = proto or init_proto_from_opts()
-		self.mmtype = mmtype or getattr(opt,'type',None) or self.proto.dfl_mmtype
+		self.mmtype = MMGenAddrType(self.proto,(mmtype or getattr(opt,'type',None) or self.proto.dfl_mmtype))
 		if g.token:
 			self.proto.tokensym = g.token.upper()
 
@@ -470,7 +470,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
-		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		gd = self.init_generators()
 		privhex = PrivKey(
 			self.proto,
@@ -479,7 +479,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
-		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		gd = self.init_generators()
 		pubhex = gd.kg.to_pubhex(PrivKey(
 			self.proto,
@@ -505,26 +505,26 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
-		if self.mmtype == 'segwit':
+		if self.mmtype.name == 'segwit':
 			return self.proto.pubhex2segwitaddr(pubkeyhex)
 		else:
 			return self.pubhash2addr(hash160(pubkeyhex))
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
-		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		return self.proto.pubhex2redeem_script(pubkeyhex)
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
-		assert self.mmtype == 'segwit','This command is meaningful only for --type=segwit'
+		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
 		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
 		return self.pubhash2addr(hash160(redeem_scripthex))
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
-		if self.mmtype == 'bech32':
+		if self.mmtype.name == 'bech32':
 			return self.proto.pubhash2bech32addr(pubhashhex)
 		else:
 			gd = self.init_generators('addrtype_only')
@@ -1222,10 +1222,11 @@ class tool_api(
 		"""
 		Initializer - takes no arguments
 		"""
-		super().__init__()
+		import mmgen.opts
+		opts.UserOpts._reset_ok += ('usr_randchars',)
 		if not hasattr(opt,'version'):
-			opts.init()
-		self.mmtype = self.proto.dfl_mmtype
+			opts.init(add_opts=['use_old_ed25519'])
+		super().__init__()
 
 	def init_coin(self,coinsym,network):
 		"""
@@ -1236,7 +1237,7 @@ class tool_api(
 		from .protocol import init_proto,init_genonly_altcoins
 		altcoin_trust_level = init_genonly_altcoins(coinsym,testnet=network in ('testnet','regtest'))
 		warn_altcoins(coinsym,altcoin_trust_level)
-		self.proto = init_proto(coinsym,network=network) # FIXME
+		self.proto = init_proto(coinsym,network=network)
 		return self.proto
 
 	@property
@@ -1265,14 +1266,14 @@ class tool_api(
 		The available address types for current coin/network pair.  The
 		first-listed is the default
 		"""
-		return [MMGenAddrType(proto=proto,id_str=id_str).name for id_str in self.proto.mmtypes]
+		return [MMGenAddrType(proto=self.proto,id_str=id_str).name for id_str in self.proto.mmtypes]
 
 	def print_addrtypes(self):
 		"""
 		Print the available address types for current coin/network pair along with
 		a description.  The first-listed is the default
 		"""
-		for t in [MMGenAddrType(proto=proto,id_str=id_str).name for id_str in self.proto.mmtypes]:
+		for t in [MMGenAddrType(proto=self.proto,id_str=id_str) for id_str in self.proto.mmtypes]:
 			print('{:<12} - {}'.format(t.name,t.desc))
 
 	@property
@@ -1282,7 +1283,7 @@ class tool_api(
 
 	@addrtype.setter
 	def addrtype(self,val):
-		self.mmtype = val
+		self.mmtype = MMGenAddrType(self.proto,val)
 
 	@property
 	def usr_randchars(self):
