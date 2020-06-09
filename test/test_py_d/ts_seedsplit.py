@@ -36,6 +36,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 	'splitting and joining seeds'
 	networks = ('btc',)
 	tmpdir_nums = [23]
+	color = True
 	cmd_group = (
 		('ss_walletgen',                'wallet generation'),
 		('ss_2way_A_dfl1',              '2-way seed split (share A)'),
@@ -86,7 +87,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		t = self.spawn('mmgen-walletgen', ['-r0','-p1'])
 		t.passphrase_new('new '+dfl_wcls.desc,wpasswd)
 		t.label()
-		self.write_to_tmpfile('dfl.sid',t.expect_getend('Seed ID: '))
+		self.write_to_tmpfile('dfl.sid',strip_ansi_escapes(t.expect_getend('Seed ID: ')))
 		t.expect('move it to the data directory? (Y/n): ','y')
 		t.written_to_file(capfirst(dfl_wcls.desc))
 		return t
@@ -106,7 +107,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if spec:
 			from mmgen.obj import SeedSplitSpecifier
 			sss = SeedSplitSpecifier(spec)
-			pat = "Processing .* {} of {} of .* id '{}'".format(sss.idx,sss.count,sss.id)
+			pat = r"Processing .*\b{}\b of \b{}\b of .* id .*'{}'".format(sss.idx,sss.count,sss.id)
 		else:
 			pat = "master share #{}".format(master)
 		t.expect(pat,regex=True)
@@ -145,10 +146,10 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if icls:
 			t.passphrase(icls.desc,sh1_passwd)
 		if master:
-			fs = "master share #{}, split id '{}', share count {}"
+			fs = "master share #{}, split id.*'{}'.*, share count {}"
 			pat = fs.format(master,id_str or 'default',len(shares)+(icls==IncogWalletHidden))
 			t.expect(pat,regex=True)
-		sid_cmp = t.expect_getend('Joined Seed ID: ')
+		sid_cmp = strip_ansi_escapes(t.expect_getend('Joined Seed ID: '))
 		cmp_or_die(sid,sid_cmp)
 		ocls = Wallet.fmt_code_to_type(ofmt)
 		if ocls == MMGenWallet:
