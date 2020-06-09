@@ -339,7 +339,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			from mmgen.addr import AddrGenerator,KeyGenerator
 			rand_coinaddr = AddrGenerator(
 				self.proto,
-				'p2pkh'
+				'compressed'
 				).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(
@@ -376,7 +376,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def _make_txcreate_cmdline(self,tx_data):
 		from mmgen.obj import PrivKey
 		privkey = PrivKey(self.proto,os.urandom(32),compressed=True,pubkey_type='std')
-		t = ('p2pkh','segwit')['S' in self.proto.mmtypes]
+		t = ('compressed','segwit')['S' in self.proto.mmtypes]
 		from mmgen.addr import AddrGenerator,KeyGenerator
 		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
 

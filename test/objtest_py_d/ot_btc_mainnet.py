@@ -16,6 +16,7 @@ proto = init_proto('btc')
 tw_pfx = proto.base_coin.lower() + ':'
 
 ssm = str(SeedShareCount.max_val)
+privkey = PrivKey(proto=proto,s=bytes.fromhex('deadbeef'*8),compressed=True,pubkey_type='std')
 
 tests = {
 	'Int': {
@@ -224,8 +225,8 @@ tests = {
 	},
 	'PubKey': {
 		'arg1': 's',
-		'bad':  ({'arg':1,'compressed':False},{'arg':'F00BAA12','compressed':False},),
-		'good': ({'arg':'deadbeef','compressed':True},) # TODO: add real pubkeys
+		'bad':  ({'s':1,'privkey':False},{'s':'F00BAA12','privkey':False},),
+		'good': ({'s':'deadbeef','privkey':privkey},) # TODO: add real pubkeys
 	},
 	'PrivKey': {
 		'arg1': 'proto',

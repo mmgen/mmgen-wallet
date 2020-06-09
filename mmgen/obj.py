@@ -746,15 +746,14 @@ class WifKey(str,Hilite,InitErrors):
 			return cls.init_fail(e,wif)
 
 class PubKey(HexStr,MMGenObject): # TODO: add some real checks
-	def __new__(cls,s,compressed):
+	def __new__(cls,s,privkey):
 		try:
-			assert type(compressed) == bool,"'compressed' must be of type bool"
+			me = HexStr.__new__(cls,s,case='lower')
+			me.privkey = privkey
+			me.compressed = privkey.compressed
+			return me
 		except Exception as e:
 			return cls.init_fail(e,s)
-		me = HexStr.__new__(cls,s,case='lower')
-		if me:
-			me.compressed = compressed
-			return me
 
 class PrivKey(str,Hilite,InitErrors,MMGenObject):
 	"""
