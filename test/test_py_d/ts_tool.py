@@ -26,7 +26,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		('tool_encrypt',         (9,"'mmgen-tool encrypt' (random data)",     [])),
 		('tool_decrypt',         (9,"'mmgen-tool decrypt' (random data)", [[[enc_infn+'.mmenc'],9]])),
 		('tool_twview_bad_comment',(9,"'mmgen-tool twview' (with bad comment)", [])),
-		('tool_api',             (9,'tool API (initialization, config methods)',[])),
+		('tool_api',             (9,'tool API (initialization, config methods, wif2addr)',[])),
 		# ('tool_encrypt_ref', (9,"'mmgen-tool encrypt' (reference text)",  [])),
 	)
 
