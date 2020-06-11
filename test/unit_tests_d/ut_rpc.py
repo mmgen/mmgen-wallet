@@ -13,11 +13,11 @@ from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 def auth_test(proto,d):
 	d.stop()
 	if g.platform != 'win':
-		qmsg(f'\n  Testing authentication with credentials from bitcoin.conf:')
+		qmsg(f'\n  Testing authentication with credentials from {d.cfg_file}:')
 		d.remove_datadir()
 		os.makedirs(d.datadir)
 
-		cf = os.path.join(d.datadir,'bitcoin.conf')
+		cf = os.path.join(d.datadir,d.cfg_file)
 		open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
 
 		d.add_flag('keep_cfg_file')
@@ -25,7 +25,7 @@ def auth_test(proto,d):
 
 		async def do():
 			rpc = await rpc_init(proto)
-			assert rpc.auth.user == 'ut_rpc', 'user is not ut_rpc!'
+			assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
 
 		run_session(do())
 		d.stop()
@@ -54,6 +54,8 @@ class init_test:
 		rpc = await rpc_init(proto,backend)
 		do_msg(rpc)
 
+	ltc = bch
+
 	async def eth(proto,backend):
 		rpc = await rpc_init(proto,backend)
 		do_msg(rpc)
@@ -76,13 +78,16 @@ def run_test(coin,auth):
 
 class unit_tests:
 
-	altcoin_deps = ('bch','eth','xmr_wallet')
-
-	def bch(self,name,ut):
-		return run_test('bch',auth=True)
+	altcoin_deps = ('ltc','bch','eth','xmr_wallet')
 
 	def btc(self,name,ut):
 		return run_test('btc',auth=True)
+
+	def ltc(self,name,ut):
+		return run_test('ltc',auth=True)
+
+	def bch(self,name,ut):
+		return run_test('bch',auth=True)
 
 	def eth(self,name,ut):
 		return run_test('eth',auth=False)

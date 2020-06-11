@@ -285,7 +285,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def halving_calculator_bob(self):
-		t = self.spawn('halving-calculator.py',['--bob','--sample-size=144'],cmd_dir='examples')
+		t = self.spawn('halving-calculator.py',['--bob'],cmd_dir='examples')
 		t.expect('time until halving')
 		t.read()
 		return t

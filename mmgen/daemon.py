@@ -457,7 +457,7 @@ class BitcoinDaemon(CoinDaemon):
 		elif self.daemon_id == 'bch':
 			self.coin_specific_coind_args = ['--usecashaddr=0']
 		elif self.daemon_id == 'ltc':
-			self.coin_specific_coind_args = ['--mempoolreplacement=1']
+			self.coin_specific_coind_args = ['--mempoolreplacement=1','--txindex=1']
 
 		if self.network == 'testnet':
 			self.lockfile = os.path.join(self.datadir,self.testnet_dir,'.cookie')

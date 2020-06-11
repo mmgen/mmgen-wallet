@@ -329,7 +329,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 	async def __ainit__(self,proto,daemon,backend):
 
 		self.proto = proto
-		self.daemon_data_dir = daemon.datadir
+		self.daemon = daemon
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
@@ -387,14 +387,13 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 	def get_daemon_cfg_fn(self):
 		# Use dirname() to remove 'bob' or 'alice' component
-		cfg_dir = os.path.dirname(g.data_dir) if self.proto.regtest else self.daemon_data_dir
 		return os.path.join(
-			cfg_dir,
-			(self.proto.is_fork_of or self.proto.name).lower() + '.conf' )
+			(os.path.dirname(g.data_dir) if self.proto.regtest else self.daemon.datadir),
+			self.daemon.cfg_file )
 
 	def get_daemon_auth_cookie_fn(self):
 		return os.path.join(
-			self.daemon_data_dir,
+			self.daemon.datadir,
 			self.proto.daemon_data_subdir,
 			'.cookie' )
 
@@ -482,7 +481,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
 	async def __ainit__(self,proto,daemon,backend):
 		self.proto = proto
-		self.daemon_data_dir = daemon.datadir
+		self.daemon = daemon
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),

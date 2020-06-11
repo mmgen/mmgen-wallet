@@ -231,6 +231,7 @@ class CoinProtocol(MMGenObject):
 		bech32_hrp      = 'bc'
 		sign_mode       = 'daemon'
 		avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
+		halving_interval = 210000
 
 		def hex2wif(self,hexpriv,pubkey_type,compressed): # input is preprocessed hex
 			sec = bytes.fromhex(hexpriv)
@@ -366,6 +367,7 @@ class CoinProtocol(MMGenObject):
 		forks           = []
 		bech32_hrp      = 'ltc'
 		avg_bdi         = 150
+		halving_interval = 840000
 
 	class LitecoinTestnet(Litecoin):
 		# addr ver nums same as Bitcoin testnet, except for 'p2sh'

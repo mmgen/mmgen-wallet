@@ -9,7 +9,7 @@ from mmgen.common import *
 
 opts.init({
 	'text': {
-		'desc': 'Estimate date of next Bitcoin halving',
+		'desc': 'Estimate date of next block subsidy halving',
 		'usage':'[opts]',
 		'options': """
 -h, --help          Print this help message
@@ -18,20 +18,20 @@ opts.init({
                     estimate
 """,
 	'notes': """
-Requires a running Bitcoin Core node
+Requires a running coin daemon
+Specify coin with --coin=btc (default)/--coin=bch/--coin=ltc
 If necessary, invoke with --rpc-host/--rpc-port/--rpc-user/--rpc-password
 Specify aiohttp backend with --rpc-backend=aiohttp (Linux only)
 """
 	}
 })
 
-HalvingInterval = 210000 # src/chainparams.cpp
-
 def date(t):
 	return '{}-{:02}-{:02} {:02}:{:02}:{:02}'.format(*time.gmtime(t)[:6])
 
 def dhms(t):
-	return f'{t//60//60//24} days, {t//60//60%24:02}:{t//60%60:02}:{t%60:02} h/m/s'
+	t,neg = (-t,'-') if t < 0 else (t,' ')
+	return f'{neg}{t//60//60//24} days, {t//60//60%24:02}:{t//60%60:02}:{t%60:02} h/m/s'
 
 def time_diff_warning(t_diff):
 	if abs(t_diff) > 60*60:
@@ -48,8 +48,9 @@ async def main():
 	c = await rpc_init(proto)
 
 	tip = await c.call('getblockcount')
-	remaining = HalvingInterval - tip % HalvingInterval
-	sample_size = int(opt.sample_size) if opt.sample_size else max(remaining,144)
+	assert tip > 1, 'block tip must be > 1'
+	remaining = proto.halving_interval - tip % proto.halving_interval
+	sample_size = int(opt.sample_size) if opt.sample_size else min(tip-1,max(remaining,144))
 
 	# aiohttp backend will perform these two calls concurrently:
 	cur,old = await c.gathered_call('getblockstats',((tip,),(tip - sample_size,)))
@@ -64,10 +65,10 @@ async def main():
 	print(f'Current block:      {tip}')
 	print(f'Next halving block: {tip + remaining}')
 	print(f'Blocks until halving: {remaining}')
-	print('Current block subsidy: {} BTC'.format(str(sub).rstrip('0')))
+	print('Current block subsidy: {} {}'.format(str(sub).rstrip('0'),proto.coin))
 	print(f'Current block discovery rate (over last {sample_size} blocks): {bdr/60:0.1f} minutes')
 	print(f'Current clock time (UTC): {date(clock_time)}')
 	print(f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}')
-	print(f'Est. time until halving:  {dhms(cur["time"] + t_rem - clock_time)}')
+	print(f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}')
 
 run_session(main())
