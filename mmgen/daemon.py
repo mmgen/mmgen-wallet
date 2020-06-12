@@ -341,19 +341,16 @@ class CoinDaemon(Daemon):
 			me.desc = 'test suite daemon'
 			rel_datadir = os.path.join('test','daemons',daemon_id)
 		else:
-			if proto:
-				datadir = proto.daemon_data_dir
-			else:
-				from .protocol import init_proto
-				datadir = init_proto(coin=daemon_id,testnet=False).daemon_data_dir
+			datadir = me.dfl_datadir
 
 		if test_suite:
 			datadir = os.path.join(os.getcwd(),rel_datadir)
 
-		if g.daemon_data_dir: # user-set value must override
+		if g.daemon_data_dir: # user-set value overrides everything else
 			datadir = g.daemon_data_dir
 
 		me.datadir = os.path.abspath(datadir)
+		me.data_subdir = (lambda x: x if network == 'testnet' and x else '')(me.daemon_ids[daemon_id].testnet_dir)
 
 		me.port_shift = 1237 if test_suite else 0
 		me.platform = g.platform
@@ -394,11 +391,36 @@ class CoinDaemon(Daemon):
 				'regtest': self.dfl_rpc_rt,
 			}[self.network] + self.port_shift
 
-		if g.rpc_port: # user-set value must override
+		if g.rpc_port: # user-set value overrides everything else
 			self.rpc_port = g.rpc_port
 
 		self.net_desc = '{} {}'.format(self.coin,self.network)
 		self.subclass_init()
+
+	@property
+	def dfl_datadir(self):
+		if g.platform == 'linux':
+			path_data = {
+				'btc': ['.bitcoin'],
+				'bch': ['.bitcoin-abc'],
+				'ltc': ['.litecoin'],
+				'xmr': ['.bitmonero'],
+				'eth': ['.local','share','io.parity.ethereum'],
+				'etc': ['.local','share','io.parity.ethereum'],
+			}
+			return os.path.join( *([g.home_dir] + path_data[self.daemon_id]) )
+		elif g.platform == 'win':
+			path_data = {
+				'btc': [os.getenv('APPDATA'),'Bitcoin'],
+				'bch': [os.getenv('APPDATA'),'Bitcoin_ABC'],
+				'ltc': [os.getenv('APPDATA'),'Litecoin'],
+				'xmr': ['/','c','ProgramData','bitmonero'],
+				'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
+				'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
+			}
+			return os.path.join(*path_data[self.daemon_id])
+		else:
+			raise ValueError(f'{g.platform}: unrecognized platform')
 
 	@property
 	def start_cmd(self):

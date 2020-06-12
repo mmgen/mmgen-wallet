@@ -18,7 +18,6 @@ class unit_tests:
 		proto = init_proto('btc')
 		d = CoinDaemon('btc',test_suite=True)
 		d.start()
-		proto.daemon_data_dir = d.datadir # location of cookie file
 		proto.rpc_port = d.rpc_port
 
 		async def do():

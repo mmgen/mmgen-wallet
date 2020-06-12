@@ -208,12 +208,8 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num     = { 'std': '80' }
 		mmtypes         = ('L','C','S','B')
 		dfl_mmtype      = 'L'
-		rpc_port        = 8332
 		coin_amt        = BTCAmt
 		max_tx_fee      = BTCAmt('0.003')
-		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin') if g.platform == 'win' else
-							os.path.join(g.home_dir,'.bitcoin') )
-		daemon_data_subdir = ''
 		sighash_type    = 'ALL'
 		block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 		forks           = [
@@ -299,8 +295,6 @@ class CoinProtocol(MMGenObject):
 	class BitcoinTestnet(Bitcoin):
 		addr_ver_bytes      = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num         = { 'std': 'ef' }
-		daemon_data_subdir  = 'testnet3'
-		rpc_port            = 18332
 		bech32_hrp          = 'tb'
 
 	class BitcoinRegtest(BitcoinTestnet):
@@ -310,9 +304,6 @@ class CoinProtocol(MMGenObject):
 		is_fork_of      = 'Bitcoin'
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
 		daemon_name     = 'bitcoind-abc'
-		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin_ABC') if g.platform == 'win' else
-							os.path.join(g.home_dir,'.bitcoin-abc') )
-		rpc_port        = 8442
 		mmtypes         = ('L','C')
 		sighash_type    = 'ALL|FORKID'
 		forks = [
@@ -326,10 +317,8 @@ class CoinProtocol(MMGenObject):
 		def pubhex2segwitaddr(self,pubhex):    raise NotImplementedError
 
 	class BitcoinCashTestnet(BitcoinCash):
-		rpc_port       = 18442
 		addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num    = { 'std': 'ef' }
-		daemon_data_subdir = 'testnet3'
 
 	class BitcoinCashRegtest(BitcoinCashTestnet):
 		pass
@@ -337,9 +326,6 @@ class CoinProtocol(MMGenObject):
 	class B2X(Bitcoin):
 		is_fork_of      = 'Bitcoin'
 		daemon_name     = 'bitcoind-2x'
-		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Bitcoin_2X') if g.platform == 'win' else
-							os.path.join(g.home_dir,'.bitcoin-2x') )
-		rpc_port        = 8338
 		coin_amt        = B2XAmt
 		max_tx_fee      = B2XAmt('0.1')
 		forks = [
@@ -349,18 +335,13 @@ class CoinProtocol(MMGenObject):
 	class B2XTestnet(B2X):
 		addr_ver_bytes     = { '6f': 'p2pkh', 'c4': 'p2sh' }
 		wif_ver_num        = { 'std': 'ef' }
-		daemon_data_subdir = 'testnet5'
-		rpc_port           = 18338
 
 	class Litecoin(Bitcoin):
 		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
 		daemon_name     = 'litecoind'
-		daemon_data_dir = ( os.path.join(os.getenv('APPDATA'),'Litecoin') if g.platform == 'win' else
-							os.path.join(g.home_dir,'.litecoin') )
 		addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
 		wif_ver_num     = { 'std': 'b0' }
 		mmtypes         = ('L','C','S','B')
-		rpc_port        = 9332
 		coin_amt        = LTCAmt
 		max_tx_fee      = LTCAmt('0.3')
 		base_coin       = 'LTC'
@@ -373,8 +354,6 @@ class CoinProtocol(MMGenObject):
 		# addr ver nums same as Bitcoin testnet, except for 'p2sh'
 		addr_ver_bytes     = { '6f':'p2pkh', '3a':'p2sh', 'c4':'p2sh' }
 		wif_ver_num        = { 'std': 'ef' } # same as Bitcoin testnet
-		daemon_data_subdir = 'testnet4'
-		rpc_port           = 19332
 		bech32_hrp         = 'tltc'
 
 	class LitecoinRegtest(LitecoinTestnet):
@@ -401,9 +380,6 @@ class CoinProtocol(MMGenObject):
 
 		daemon_name   = 'parity'
 		daemon_family = 'parity'
-		daemon_data_dir = os.path.join(g.home_dir,'.local','share','io.parity.ethereum')
-		daemon_data_subdir = ''
-		rpc_port      = 8545
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')
 		chain_name    = 'foundation'
@@ -431,18 +407,15 @@ class CoinProtocol(MMGenObject):
 			return pubkey_hash
 
 	class EthereumTestnet(Ethereum):
-		rpc_port    = 8547 # start Parity with --jsonrpc-port=8547 or --ports-shift=2
 		chain_name  = 'kovan'
 
 	class EthereumRegtest(EthereumTestnet):
 		chain_name  = 'developmentchain'
 
 	class EthereumClassic(Ethereum):
-		rpc_port   = 8555 # start Parity with --jsonrpc-port=8555 or --ports-shift=10
 		chain_name = 'ethereum_classic' # chain_id 0x3d (61)
 
 	class EthereumClassicTestnet(EthereumClassic):
-		rpc_port   = 8557 # start Parity with --jsonrpc-port=8557 or --ports-shift=12
 		chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
 
 	class EthereumClassicRegtest(EthereumClassicTestnet):
@@ -482,8 +455,6 @@ class CoinProtocol(MMGenObject):
 	# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 	class Monero(DummyWIF,Base):
 		base_coin      = 'XMR'
-		daemon_data_dir = ( os.path.join('/','c','ProgramData','bitmonero') if g.platform == 'win' else
-							os.path.join(g.home_dir,'.bitmonero') )
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 		addr_len       = 68
 		wif_ver_num    = {}
