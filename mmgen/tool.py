@@ -1076,9 +1076,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				password=d.wallet_passwd )
 			msg('done')
 
-			msg_r('  Getting wallet height...')
+			msg_r('  Getting wallet height (be patient, this could take a long time)...')
 			wallet_height = (await c.call('get_height'))['height']
-			msg('\r  Wallet height: {}        '.format(wallet_height))
+			msg('\r{}\r  Wallet height: {}        '.format(' '*68,wallet_height))
 
 			behind = chain_height - wallet_height
 			if behind > 1000:

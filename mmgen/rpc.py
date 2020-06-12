@@ -558,6 +558,7 @@ class MoneroWalletRPCClient(RPCClient):
 	def __init__(self,host,port,user,passwd):
 		super().__init__(host,port)
 		self.auth = auth_data(user,passwd)
+		self.timeout = 3600 # allow enough time to sync ≈1,000,000 blocks
 		if True:
 			self.set_backend('requests')
 		else: # insecure, for debugging only

@@ -482,6 +482,8 @@ class CoinProtocol(MMGenObject):
 	# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 	class Monero(DummyWIF,Base):
 		base_coin      = 'XMR'
+		daemon_data_dir = ( os.path.join('/','c','ProgramData','bitmonero') if g.platform == 'win' else
+							os.path.join(g.home_dir,'.bitmonero') )
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 		addr_len       = 68
 		wif_ver_num    = {}
