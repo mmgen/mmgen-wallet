@@ -1203,7 +1203,7 @@ class MMGenTX:
 
 			self.check_pubkey_scripts()
 
-			qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.proto.daemon_name}')
+			qmsg(f'Passing {len(keys)} key{suf(keys)} to {self.rpc.daemon.coind_exec}')
 
 			if self.has_segwit_inputs():
 				from .addr import KeyGenerator,AddrGenerator

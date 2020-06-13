@@ -159,7 +159,7 @@ class MMGenRegtest(MMGenObject):
 					msg(err)
 
 	def current_user_unix(self,quiet=False):
-		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(self.proto.daemon_name,self.d.rpc_port)]
+		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(self.d.coind_exec,self.d.rpc_port)]
 		cmdout = run(cmd,stdout=PIPE).stdout.decode()
 		if cmdout:
 			for k in self.users:

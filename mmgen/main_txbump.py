@@ -64,7 +64,7 @@ opts_data = {
 -O, --old-incog-fmt    Specify old-format incognito input
 -p, --hash-preset=   p Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{g.dfl_hash_preset}')
--P, --passwd-file=   f Get {pnm} wallet or {dn} passphrase from file 'f'
+-P, --passwd-file=   f Get {pnm} wallet passphrase from file 'f'
 -q, --quiet            Suppress warnings; overwrite files without prompting
 -s, --send             Sign and send the transaction (the default if seed
                        data is provided)
@@ -85,8 +85,8 @@ column below:
 			g=g,
 			pnm=g.proj_name,
 			pnl=g.proj_name.lower(),
-			dn=proto.daemon_name,
-			fu=help_notes('rel_fee_desc'),fl=help_notes('fee_spec_letters'),
+			fu=help_notes('rel_fee_desc'),
+			fl=help_notes('fee_spec_letters'),
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			cu=proto.coin),

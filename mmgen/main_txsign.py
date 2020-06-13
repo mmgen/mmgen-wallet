@@ -57,7 +57,7 @@ opts_data = {
                       online signing without an {pnm} seed source. The
                       key-address file is also used to verify {pnm}-to-{cu}
                       mappings, so the user should record its checksum.
--P, --passwd-file= f  Get {pnm} wallet or {dn} passphrase from file 'f'
+-P, --passwd-file= f  Get {pnm} wallet passphrase from file 'f'
 -q, --quiet           Suppress warnings; overwrite files without prompting
 -I, --info            Display information about the transaction and exit
 -t, --terse-info      Like '--info', but produce more concise output
@@ -81,7 +81,6 @@ column below:
 			g=g,
 			pnm=g.proj_name,
 			pnl=g.proj_name.lower(),
-			dn=proto.daemon_name,
 			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			ss=g.subseeds,

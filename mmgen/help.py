@@ -32,7 +32,16 @@ def help_notes_func(proto,k):
 		cu = proto.coin_amt.units
 		return ', '.join(cu[:-1]) + ('',' and ')[len(cu)>1] + cu[-1] + ('',',\nrespectively')[len(cu)>1]
 
+	def coind_exec():
+		from .daemon import CoinDaemon
+		return (
+			CoinDaemon(proto.coin).coind_exec if proto.coin.lower() in CoinDaemon.daemon_ids else
+			'bitcoind' )
+
 	class help_notes:
+
+		def coind_exec():
+			return coind_exec()
 
 		def rel_fee_desc():
 			from .tx import MMGenTX
@@ -96,10 +105,11 @@ one address with no amount on the command line.
 """
 
 		def txsign():
+			from .protocol import CoinProtocol
 			return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
-To sign non-{pnm} inputs, a {dn} wallet dump or flat key list is used
+To sign non-{pnm} inputs, a {wd}flat key list is used
 as the key source ('--keys-from-file' option).
 
 To sign {pnm} inputs, key data is generated from a seed as with the
@@ -117,7 +127,7 @@ source.  Therefore, seed files or a key-address file for all {pnm} outputs
 must also be supplied on the command line if the data can't be found in the
 default wallet.
 """.format(
-	dn  = proto.daemon_name,
+	wd  = (f'{coind_exec()} wallet dump or ' if isinstance(proto,CoinProtocol.Bitcoin) else ''),
 	pnm = g.proj_name,
 	pnu = proto.name,
 	pnl = g.proj_name.lower() )

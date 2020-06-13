@@ -84,6 +84,7 @@ class CoinProtocol(MMGenObject):
 	core_coins = tuple(coins.keys()) # coins may be added by init_genonly_altcoins(), so save
 
 	class Base(MMGenObject):
+		base_proto = None
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
 
@@ -201,7 +202,6 @@ class CoinProtocol(MMGenObject):
 		All Bitcoin code and chain forks inherit from this class
 		"""
 		mod_clsname     = 'Bitcoin'
-		daemon_name     = 'bitcoind'
 		daemon_family   = 'bitcoind'
 		addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
 		addr_len        = 20
@@ -303,7 +303,6 @@ class CoinProtocol(MMGenObject):
 	class BitcoinCash(Bitcoin):
 		is_fork_of      = 'Bitcoin'
 		# TODO: assumes MSWin user installs in custom dir 'Bitcoin_ABC'
-		daemon_name     = 'bitcoind-abc'
 		mmtypes         = ('L','C')
 		sighash_type    = 'ALL|FORKID'
 		forks = [
@@ -325,7 +324,6 @@ class CoinProtocol(MMGenObject):
 
 	class B2X(Bitcoin):
 		is_fork_of      = 'Bitcoin'
-		daemon_name     = 'bitcoind-2x'
 		coin_amt        = B2XAmt
 		max_tx_fee      = B2XAmt('0.1')
 		forks = [
@@ -338,7 +336,6 @@ class CoinProtocol(MMGenObject):
 
 	class Litecoin(Bitcoin):
 		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
-		daemon_name     = 'litecoind'
 		addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
 		wif_ver_num     = { 'std': 'b0' }
 		mmtypes         = ('L','C','S','B')
@@ -378,7 +375,6 @@ class CoinProtocol(MMGenObject):
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 
-		daemon_name   = 'parity'
 		daemon_family = 'parity'
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')

@@ -214,9 +214,9 @@ common_opts_data = {
 --, --bob                  Switch to user "Bob" in MMGen regtest setup
 --, --alice                Switch to user "Alice" in MMGen regtest setup
 	""",
-	'code': lambda proto,s: s.format(
+	'code': lambda help_notes,proto,s: s.format(
 			pnm    = g.proj_name,
-			dn     = proto.daemon_name,
+			dn     = help_notes('coind_exec'),
 			cu_dfl = proto.coin,
 		)
 }

@@ -78,7 +78,7 @@ EXAMPLES:
   Test speed of mmgen-secp256k1 address generation, 10,000 rounds:
   $ {prog} 2 10000
 
-  Compare mmgen-secp256k1-generated bech32 addrs to {dn} wallet dump:
+  Compare mmgen-secp256k1-generated bech32 addrs to coin daemon wallet dump:
   $ {prog} --type=bech32 2 bech32wallet.dump
 
 Supported external tools:
@@ -105,8 +105,7 @@ Supported external tools:
 		'notes': lambda s: s.format(
 			prog='test/gentest.py',
 			pnm=g.proj_name,
-			snum=rounds,
-			dn=proto.daemon_name)
+			snum=rounds )
 	}
 }
 
