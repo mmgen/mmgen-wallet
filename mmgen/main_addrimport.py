@@ -158,10 +158,14 @@ async def main():
 	from .tw import TrackingWallet
 	if opt.token_addr:
 		proto.tokensym = 'foo' # hack to trigger 'Token' in altcoin_subclass()
+
 	tw = await TrackingWallet(
 		proto      = proto,
 		token_addr = opt.token_addr,
 		mode       = 'i' )
+
+	if opt.token or opt.token_addr:
+		msg(f'Importing for token {tw.token.hl()} ({tw.token.hlc(proto.tokensym)})')
 
 	from .rpc import rpc_init
 	tw.rpc = await rpc_init(proto)

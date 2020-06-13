@@ -170,13 +170,14 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 		from mmgen.obj import TokenAddr
 		self.token = TokenAddr(proto,token_addr)
 
-		if self.token in self.data['tokens']:
-			self.decimals = self.get_param('decimals')
-			self.symbol   = self.get_param('symbol')
-		elif self.importing:
-			await self.import_token(self.token) # sets self.decimals, self.symbol
-		else:
-			raise TokenNotInWallet(f'Specified token {self.token!r} not in wallet!')
+		if self.token not in self.data['tokens']:
+			if self.importing:
+				await self.import_token(self.token)
+			else:
+				raise TokenNotInWallet(f'Specified token {self.token!r} not in wallet!')
+
+		self.decimals = self.get_param('decimals')
+		self.symbol   = self.get_param('symbol')
 
 		proto.tokensym = self.symbol
 

@@ -216,8 +216,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_addrgen',        'generating token addresses'),
 		('token_addrimport_badaddr1','importing token addresses (no token address)'),
 		('token_addrimport_badaddr2','importing token addresses (bad token address)'),
-		('token_addrimport',     'importing token addresses'),
-		('token_addrimport_batch','importing token addresses (dummy batch mode)'),
+		('token_addrimport_addr1','importing token addresses using token address (MM1)'),
+		('token_addrimport_addr2','importing token addresses using token address (MM2)'),
+		('token_addrimport_batch','importing token addresses (dummy batch mode) (MM1)'),
+		('token_addrimport_sym',  'importing token addresses using token symbol (MM2)'),
 
 		('bal7',                'the {} balance'.format(coin)),
 		('token_bal1',          'the {} balance and token balance'.format(coin)),
@@ -729,20 +731,27 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.req_exit_val = 2
 		return t
 
-	def token_addrimport(self,extra_args=[],expect='3/3'):
-		for n,r in ('1','11-13'),('2','21-23'):
-			tk_addr = self.read_from_tmpfile('token_addr'+n).strip()
-			t = self.addrimport(
-				ext      = f'[{r}]{{}}.regtest.addrs',
-				expect   = expect,
-				add_args = ['--token-addr='+tk_addr]+extra_args )
-			t.p.wait()
-			ok_msg()
-		t.skip_ok = True
-		return t
+	def token_addrimport(self,addr_file,addr_range,expect,extra_args=[]):
+		token_addr = self.read_from_tmpfile(addr_file).strip()
+		return self.addrimport(
+			ext      = f'[{addr_range}]{{}}.regtest.addrs',
+			expect   = expect,
+			add_args = ['--token-addr='+token_addr]+extra_args )
+
+	def token_addrimport_addr1(self):
+		return self.token_addrimport('token_addr1','11-13',expect='3/3')
+
+	def token_addrimport_addr2(self):
+		return self.token_addrimport('token_addr2','21-23',expect='3/3')
 
 	def token_addrimport_batch(self):
-		return self.token_addrimport(extra_args=['--batch'],expect='OK: 3')
+		return self.token_addrimport('token_addr1','11-13',expect='OK: 3',extra_args=['--batch'])
+
+	def token_addrimport_sym(self):
+		return self.addrimport(
+			ext      = '[21-23]{}.regtest.addrs',
+			expect   = '3/3',
+			add_args = ['--token=MM2'] )
 
 	def bal7(self):       return self.bal5()
 	def token_bal1(self): return self.token_bal(n='1')
