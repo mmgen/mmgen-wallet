@@ -11,7 +11,6 @@ from mmgen.rpc import rpc_init,MoneroWalletRPCClient
 from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
 def auth_test(proto,d):
-	d.stop()
 	if g.platform != 'win':
 		qmsg(f'\n  Testing authentication with credentials from {d.cfg_file}:')
 		d.remove_datadir()
@@ -71,6 +70,7 @@ def run_test(coin,auth):
 	for backend in g.autoset_opts['rpc_backend'].choices:
 		run_session(getattr(init_test,coin)(proto,backend),backend=backend)
 
+	d.stop()
 	if auth:
 		auth_test(proto,d)
 	qmsg('  OK')

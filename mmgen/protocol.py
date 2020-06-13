@@ -375,7 +375,7 @@ class CoinProtocol(MMGenObject):
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 
-		daemon_family = 'parity'
+		daemon_family = 'openethereum'
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')
 		chain_name    = 'foundation'

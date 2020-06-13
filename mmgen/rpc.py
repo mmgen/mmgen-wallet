@@ -588,7 +588,7 @@ async def rpc_init(proto,backend=None):
 	from .daemon import CoinDaemon
 	rpc = await {
 		'bitcoind': BitcoinRPCClient,
-		'parity':   EthereumRPCClient,
+		'openethereum': EthereumRPCClient,
 	}[proto.daemon_family](
 		proto   = proto,
 		daemon  = CoinDaemon(proto=proto,test_suite=g.test_suite),

@@ -84,7 +84,7 @@ EXAMPLES:
 Supported external tools:
 
   + ethkey (for ETH,ETC)
-    https://github.com/paritytech/parity-ethereum
+	https://github.com/openethereum/openethereum
     (build with 'cargo build -p ethkey-cli --release')
 
   + zcash-mini (for Zcash Z-addresses)

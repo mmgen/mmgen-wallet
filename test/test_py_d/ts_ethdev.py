@@ -34,7 +34,7 @@ from .common import *
 del_addrs = ('4','1')
 dfl_sid = '98831F3A'
 
-# The Parity dev address with lots of coins.  Create with "ethkey -b info ''":
+# The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
 dfl_privkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
@@ -42,8 +42,7 @@ burn_addr = 'deadbeef'*5
 amt1 = '999999.12345689012345678'
 amt2 = '888.111122223333444455'
 
-parity_pid_fn = 'parity.pid'
-parity_key_fn = 'parity.devkey'
+openethereum_key_fn = 'openethereum.devkey'
 
 # Token sends require varying amounts of gas, depending on compiler version
 def get_solc_ver():
@@ -146,12 +145,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
 	color = True
 	cmd_group = (
-		('setup',               'Ethereum Parity dev mode tests for coin {} (start parity)'.format(coin)),
+		('setup',               'OpenEthereum dev mode tests for coin {} (start openethereum)'.format(coin)),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
 		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
 		('addrgen',             'generating addresses'),
 		('addrimport',          'importing addresses'),
-		('addrimport_dev_addr', "importing Parity dev address 'Ox00a329c..'"),
+		('addrimport_dev_addr', "importing OpenEthereum dev address 'Ox00a329c..'"),
 
 		('txcreate1',           'creating a transaction (spend from dev address to address :1)'),
 		('txview1_raw',         'viewing the raw transaction'),
@@ -303,7 +302,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],coin)),
 		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],coin)),
 
-		('stop',                'stopping parity'),
+		('stop',                'stopping openethereum'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -409,7 +408,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
-		keyfile = joinpath(self.tmpdir,parity_key_fn)
+		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
 		write_to_file(keyfile,dfl_privkey+'\n')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
@@ -511,7 +510,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def bal5(self):    return self.bal(n='5')
 
 	#bal_corr = Decimal('0.0000032') # gas use for token sends varies between ETH and ETC!
-	bal_corr = Decimal('0.0000000') # update: Parity team seems to have corrected this
+	bal_corr = Decimal('0.0000000') # update: OpenEthereum team seems to have corrected this
 
 	def bal(self,n):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview','wide=1'])
@@ -612,7 +611,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return await tx.get_exec_status(txid,True)
 
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
-		keyfile = joinpath(self.tmpdir,parity_key_fn)
+		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 		args = ['-B',

@@ -131,7 +131,7 @@ class Daemon(MMGenObject):
 			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
-			# Parity just overwrites the data in an existing pidfile without zeroing it first,
+			# OpenEthereum just overwrites the data in the existing pidfile without zeroing it first,
 			# leading to interesting consequences.
 			os.unlink(self.pidfile)
 
@@ -302,8 +302,8 @@ class CoinDaemon(Daemon):
 'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf', 'testnet3',8442,18442,18553),
 'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf','testnet4',9332,19332,19444),
 'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',None,     18081,None,None),
-'eth': cd('Ethereum',        'Ethereum','parity',      'parity',      'parity.conf',   None,     8545, 8545,8545),
-'etc': cd('Ethereum Classic','Ethereum','parity',      'parity',      'parity.conf',   None,     8545, 8545,8545)
+'eth': cd('Ethereum',        'Ethereum','openethereum','openethereum','parity.conf',   None,     8545, 8545,8545),
+'etc': cd('Ethereum Classic','Ethereum','openethereum','openethereum','parity.conf',   None,     8545, 8545,8545)
 	}
 
 	def __new__(cls,network_id=None,test_suite=False,flags=None,proto=None):
@@ -557,7 +557,7 @@ class MoneroDaemon(CoinDaemon):
 
 class EthereumDaemon(CoinDaemon):
 
-	exec_fn_mswin = 'parity.exe'
+	exec_fn_mswin = 'openethereum.exe'
 	ps_pid_mswin = True
 
 	def subclass_init(self):
@@ -575,7 +575,7 @@ class EthereumDaemon(CoinDaemon):
 		return ['--ports-shift={}'.format(self.port_shift),
 				'--base-path={}'.format(self.chaindir),
 				'--config=dev',
-				'--log-file={}'.format(os.path.join(self.datadir,'parity.log')) ]
+				'--log-file={}'.format(os.path.join(self.datadir,'openethereum.log')) ]
 
 	@property
 	def state(self):
