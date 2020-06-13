@@ -202,7 +202,6 @@ class CoinProtocol(MMGenObject):
 		All Bitcoin code and chain forks inherit from this class
 		"""
 		mod_clsname     = 'Bitcoin'
-		daemon_family   = 'bitcoind'
 		addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
 		addr_len        = 20
 		wif_ver_num     = { 'std': '80' }
@@ -375,7 +374,6 @@ class CoinProtocol(MMGenObject):
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 
-		daemon_family = 'openethereum'
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')
 		chain_name    = 'foundation'
