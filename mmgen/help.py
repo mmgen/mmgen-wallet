@@ -164,60 +164,60 @@ master share index is used in all split and join commands.
 
 EXAMPLES:
 
- Split a BIP39 seed phrase into two BIP39 shares.  Rejoin the split:
+  Split a BIP39 seed phrase into two BIP39 shares.  Rejoin the split:
 
-   $ echo 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong' > sample.bip39
+    $ echo 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong' > sample.bip39
 
-   $ mmgen-seedsplit -o bip39 sample.bip39 1:2
-   BIP39 mnemonic data written to file '03BAE887-default-1of2[D51CB683][128].bip39'
+    $ mmgen-seedsplit -o bip39 sample.bip39 1:2
+    BIP39 mnemonic data written to file '03BAE887-default-1of2[D51CB683][128].bip39'
 
-   $ mmgen-seedsplit -o bip39 sample.bip39 2:2
-   BIP39 mnemonic data written to file '03BAE887-default-2of2[67BFD36E][128].bip39'
+    $ mmgen-seedsplit -o bip39 sample.bip39 2:2
+    BIP39 mnemonic data written to file '03BAE887-default-2of2[67BFD36E][128].bip39'
 
-   $ mmgen-seedjoin -o bip39 \\
-       '03BAE887-default-2of2[67BFD36E][128].bip39' \\
-       '03BAE887-default-1of2[D51CB683][128].bip39'
-   BIP39 mnemonic data written to file '03BAE887[128].bip39'
+    $ mmgen-seedjoin -o bip39 \\
+        '03BAE887-default-2of2[67BFD36E][128].bip39' \\
+        '03BAE887-default-1of2[D51CB683][128].bip39'
+    BIP39 mnemonic data written to file '03BAE887[128].bip39'
 
-   $ cat '03BAE887[128].bip39'
-   zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong
+    $ cat '03BAE887[128].bip39'
+    zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong
 
- Create a 3-way default split of your default wallet, outputting all shares
- to default wallet format.  Rejoin the split:
+  Create a 3-way default split of your default wallet, outputting all shares
+  to default wallet format.  Rejoin the split:
 
-   $ mmgen-seedsplit 1:3 # Step A
-   $ mmgen-seedsplit 2:3 # Step B
-   $ mmgen-seedsplit 3:3 # Step C
-   $ mmgen-seedjoin <output_of_step_A> <output_of_step_B> <output_of_step_C>
+    $ mmgen-seedsplit 1:3 # Step A
+    $ mmgen-seedsplit 2:3 # Step B
+    $ mmgen-seedsplit 3:3 # Step C
+    $ mmgen-seedjoin <output_of_step_A> <output_of_step_B> <output_of_step_C>
 
- Create a 2-way split of your default wallet with ID string 'alice',
- outputting shares to MMGen native mnemonic format.  Rejoin the split:
+  Create a 2-way split of your default wallet with ID string 'alice',
+  outputting shares to MMGen native mnemonic format.  Rejoin the split:
 
-   $ mmgen-seedsplit -o words alice:1:2 # Step D
-   $ mmgen-seedsplit -o words alice:2:2 # Step E
-   $ mmgen-seedjoin <output_of_step_D> <output_of_step_E>
+    $ mmgen-seedsplit -o words alice:1:2 # Step D
+    $ mmgen-seedsplit -o words alice:2:2 # Step E
+    $ mmgen-seedjoin <output_of_step_D> <output_of_step_E>
 
- Create a 2-way split of your default wallet with ID string 'bob' using
- master share #7, outputting share #1 (the master share) to default wallet
- format and share #2 to BIP39 format.  Rejoin the split:
+  Create a 2-way split of your default wallet with ID string 'bob' using
+  master share #7, outputting share #1 (the master share) to default wallet
+  format and share #2 to BIP39 format.  Rejoin the split:
 
-   $ mmgen-seedsplit -M7                   # Step X
-   $ mmgen-seedsplit -M7 -o bip39 bob:2:2  # Step Y
-   $ mmgen-seedjoin -M7 --id-str=bob <output_of_step_X> <output_of_step_Y>
+    $ mmgen-seedsplit -M7                   # Step X
+    $ mmgen-seedsplit -M7 -o bip39 bob:2:2  # Step Y
+    $ mmgen-seedjoin -M7 --id-str=bob <output_of_step_X> <output_of_step_Y>
 
- Create a 2-way split of your default wallet with ID string 'alice' using
- master share #7.  Rejoin the split using master share #7 generated in the
- previous example:
+  Create a 2-way split of your default wallet with ID string 'alice' using
+  master share #7.  Rejoin the split using master share #7 generated in the
+  previous example:
 
-   $ mmgen-seedsplit -M7 -o bip39 alice:2:2 # Step Z
-   $ mmgen-seedjoin -M7 --id-str=alice <output_of_step_X> <output_of_step_Z>
+    $ mmgen-seedsplit -M7 -o bip39 alice:2:2 # Step Z
+    $ mmgen-seedjoin -M7 --id-str=alice <output_of_step_X> <output_of_step_Z>
 
- Create a 2-way default split of your default wallet with an incognito-format
- master share hidden in file 'my.hincog' at offset 1325.  Rejoin the split:
+  Create a 2-way default split of your default wallet with an incognito-format
+  master share hidden in file 'my.hincog' at offset 1325.  Rejoin the split:
 
-   $ mmgen-seedsplit -M4 -o hincog -J my.hincog,1325 1:2 # Step M (share A)
-   $ mmgen-seedsplit -M4 -o bip39 2:2                    # Step N (share B)
-   $ mmgen-seedjoin -M4 -H my.hincog,1325 <output_of_step_N>
+    $ mmgen-seedsplit -M4 -o hincog -J my.hincog,1325 1:2 # Step M (share A)
+    $ mmgen-seedsplit -M4 -o bip39 2:2                    # Step N (share B)
+    $ mmgen-seedjoin -M4 -H my.hincog,1325 <output_of_step_N>
 
 """.strip().format(
 	si = SeedShareIdx,
@@ -231,8 +231,8 @@ SUBWALLETS:
 
 Subwallets (subseeds) are specified by a "Subseed Index" consisting of:
 
- a) an integer in the range 1-{SubSeedIdxRange.max_idx}, plus
- b) an optional single letter, 'L' or 'S'
+  a) an integer in the range 1-{SubSeedIdxRange.max_idx}, plus
+  b) an optional single letter, 'L' or 'S'
 
 The letter designates the length of the subseed.  If omitted, 'L' is assumed.
 
