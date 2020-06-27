@@ -208,8 +208,7 @@ class Daemon(MMGenObject):
 
 	def remove_datadir(self):
 		if self.state == 'stopped':
-			import shutil
-			shutil.rmtree(self.datadir,ignore_errors=True)
+			run(['/bin/rm','-rf',self.datadir])
 		else:
 			msg(f'Cannot remove {self.datadir!r} - daemon is not stopped')
 

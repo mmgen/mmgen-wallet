@@ -117,7 +117,7 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 def tt_urand():
 	cmsg('Testing _get_random_data_from_user():')
 	from mmgen.crypto import _get_random_data_from_user
-	ret = _get_random_data_from_user(10,desc='data',test_suite=True).decode()
+	ret = _get_random_data_from_user(10,desc='data').decode()
 	msg('USER ENTROPY (user input + keystroke timings):\n\n{}'.format(fmt(ret,'  ')))
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
@@ -132,7 +132,7 @@ def tt_txview():
 	cmsg('Testing tx.view_with_prompt() (try each viewing option)')
 	from mmgen.tx import MMGenTX
 	fn = 'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'
-	tx = MMGenTX(fn,offline=True)
+	tx = MMGenTX.Unsigned(filename=fn,quiet_open=True)
 	while True:
 		tx.view_with_prompt('View data for transaction?',pause=False)
 		if not keypress_confirm('Continue testing transaction view?',default_yes=True):

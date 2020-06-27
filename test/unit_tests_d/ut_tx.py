@@ -15,12 +15,11 @@ class unit_tests:
 
 	def tx(self,name,ut):
 		qmsg('  Testing transaction objects')
-		proto = init_proto('btc')
 		d = CoinDaemon('btc',test_suite=True)
 		d.start()
-		proto.rpc_port = d.rpc_port
 
 		async def do():
+			proto = init_proto('btc')
 			tx = MMGenTX.New(proto=proto)
 			tx.rpc = await rpc_init(proto=proto)
 
@@ -46,6 +45,8 @@ class unit_tests:
 			f = MMGenTxFile(tx)
 
 			fn_gen = f.make_filename()
+			if g.debug_utf8:
+				fn_gen = fn_gen.replace('-α','')
 			assert fn_gen == fn, f'{fn_gen} != {fn}'
 
 			text = f.format()

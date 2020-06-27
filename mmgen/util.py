@@ -207,6 +207,9 @@ def check_or_create_dir(path):
 	try:
 		os.listdir(path)
 	except:
+		if os.getenv('MMGEN_TEST_SUITE'):
+			from subprocess import run
+			run(['/bin/rm','-rf',path])
 		try:
 			os.makedirs(path,0o700)
 		except:

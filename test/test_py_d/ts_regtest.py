@@ -734,14 +734,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	@staticmethod
 	def _gen_pairs(n):
-		disable_debug()
+		if not g.debug_utf8:
+			disable_debug()
 		from subprocess import run,PIPE
 		ret = [run(['python3',joinpath('cmds','mmgen-tool'),'--regtest=1'] +
 					(['--type=compressed'],[])[i==0] +
 					['-r0','randpair'],
 					stdout=PIPE,check=True
 				).stdout.decode().split() for i in range(n)]
-		restore_debug()
+		if not g.debug_utf8:
+			restore_debug()
 		return ret
 
 	def bob_pre_import(self):

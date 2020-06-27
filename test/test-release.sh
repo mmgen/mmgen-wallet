@@ -351,11 +351,11 @@ i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_xmr='The monerod (mainnet) daemon must be running for the following tests'
 t_xmr="
-	mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
+	cmds/mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
 	$mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	cs1=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
+	cs1=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	cs2=\$(mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
+	cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	[ \"\$cs1\" == \"\$cs2\" ]
 	test/start-coin-daemons.py xmr
 	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23

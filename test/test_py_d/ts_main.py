@@ -148,7 +148,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-		if self.proto.coin.lower() not in self.networks:
+		if trunner == None or self.proto.coin.lower() not in self.networks:
 			return
 		self.rpc = run_session(rpc_init(self.proto))
 		self.lbl_id = ('account','label')['label_api' in self.rpc.caps]

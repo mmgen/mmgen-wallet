@@ -588,7 +588,7 @@ class CmdGroupMgr(object):
 			ginfo = [g for g in ginfo
 						if network_id in g[1].networks
 							and not g[0] in exclude
-							and g[0] in self.cmd_groups_dfl + tuple(usr_args) ]
+							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
 
 		for name,cls in ginfo:
 			msg('{:17} - {}'.format(name,cls.__doc__))
@@ -989,7 +989,7 @@ if opt.pause:
 
 set_environ_for_spawned_scripts()
 if network_id not in ('eth','etc'):
-	start_test_daemons(network_id)
+	start_test_daemons(network_id,remove_datadir=True)
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)

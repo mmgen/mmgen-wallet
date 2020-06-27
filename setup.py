@@ -33,6 +33,7 @@ have_msys2 = subprocess.check_output(['uname','-s']).strip()[:7] == b'MSYS_NT'
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.install_data import install_data
+from distutils.command.build_py import build_py
 
 cwd = os.getcwd()
 
@@ -66,8 +67,12 @@ class my_install_data(install_data):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
 			os.chmod(os.path.join('data_files',f),0o644)
-		link_or_copy('test','start-coin-daemons.py','stop-coin-daemons.py')
 		install_data.run(self)
+
+class my_build_py(build_py):
+	def run(self):
+		link_or_copy('test','start-coin-daemons.py','stop-coin-daemons.py')
+		build_py.run(self)
 
 module1 = Extension(
 	name         = 'mmgen.secp256k1',
@@ -88,7 +93,11 @@ setup(
 		license      = 'GNU GPL v3',
 		platforms    = 'Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian',
 		keywords     = g.keywords,
-		cmdclass     = { 'build_ext': my_build_ext, 'install_data': my_install_data },
+		cmdclass     = {
+			'build_ext': my_build_ext,
+			'build_py': my_build_py,
+			'install_data': my_install_data,
+		},
 		ext_modules  = [module1],
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode

@@ -281,10 +281,12 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	def ref_tool_decrypt(self):
 		f = joinpath(ref_dir,ref_enc_fn)
-		disable_debug()
+		if not g.debug_utf8:
+			disable_debug()
 		dec_file = joinpath(self.tmpdir,'famous.txt')
 		t = self.spawn('mmgen-tool', ['-q','decrypt',f,'outfile='+dec_file,'hash_preset=1'])
-		restore_debug()
+		if not g.debug_utf8:
+			restore_debug()
 		t.passphrase('user data',tool_enc_passwd)
 		t.written_to_file('Decrypted data')
 		dec_txt = read_from_file(dec_file)

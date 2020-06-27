@@ -63,8 +63,8 @@ class init_test:
 def run_test(coin,auth):
 	proto = init_proto(coin,network=('mainnet','regtest')[coin=='eth']) # FIXME CoinDaemon's network handling broken
 	d = CoinDaemon(network_id=coin,test_suite=True)
-	if auth:
-		d.remove_datadir()
+	d.stop()
+	d.remove_datadir()
 	d.start()
 
 	for backend in g.autoset_opts['rpc_backend'].choices:

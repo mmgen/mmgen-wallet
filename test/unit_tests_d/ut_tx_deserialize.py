@@ -127,9 +127,10 @@ class unit_test(object):
 					n        = n+1 )
 			Msg('OK')
 
-		start_test_daemons('btc','btc_tn') # ,'bch')
+		start_test_daemons('btc',remove_datadir=True)
+		start_test_daemons('btc_tn')
 		run_session(test_core_vectors())
 		run_session(test_mmgen_txs())
-		stop_test_daemons('btc','btc_tn') # ,'bch')
+		stop_test_daemons('btc','btc_tn')
 
 		return True

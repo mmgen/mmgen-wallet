@@ -330,7 +330,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			from shutil import copytree
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
-		restart_test_daemons(self.proto.coin)
+		start_test_daemons(self.proto.coin,remove_datadir=True)
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):
@@ -388,7 +388,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 						fee_desc        = 'gas price',
 						no_read         = False,
 						tweaks          = [] ):
-		fee_res = r'\D{}\D.* {c} (.*\D{}\D.* gas price in Gwei)'.format(*fee_res_data,c=self.proto.coin)
+		fee_res = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_res_data,c=self.proto.coin)
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
@@ -911,7 +911,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.expect(' main menu): ',n)
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
-		t.expect('Total unspent: .*\D{}\D.*{}'.format(total,total_coin),regex=True)
+		t.expect('Total unspent:.*\D{}\D.*{}'.format(total,total_coin),regex=True)
 		t.read()
 		return t
 

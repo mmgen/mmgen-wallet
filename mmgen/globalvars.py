@@ -239,6 +239,7 @@ class GlobalContext(Lockable):
 	}
 	if platform == 'win':
 		autoset_opts['rpc_backend'].choices.remove('aiohttp')
+		_skip_type_check = ('stdout','stderr')
 
 	auto_typeset_opts = {
 		'seed_len': int,
