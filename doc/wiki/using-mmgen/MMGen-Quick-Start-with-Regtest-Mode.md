@@ -109,7 +109,7 @@ step 7 will look something like this:
 
 13. View the transaction in the mempool:
 
-		$ mmgen-regtest show_mempool
+		$ mmgen-regtest mempool
 		['78ca853816b55527b42ca8784c887a5f482c752522f914d2f17d6afcd8a3b076']
 
 14. Mine a block:
@@ -118,7 +118,7 @@ step 7 will look something like this:
 
 15. Check the mempool again:
 
-		$ mmgen-regtest show_mempool
+		$ mmgen-regtest mempool
 		[]
 
 16. List Alice’s addresses.  Note that Alice has lost a bit to transaction fees:

@@ -1,7 +1,7 @@
 ## Table of Contents
 
 #### [Full support for Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
-* [Install and run Parity Ethereum](#a_par)
+* [Install and run OpenEthereum](#a_oe)
 * [Install Ethereum dependencies](#a_ed)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
@@ -20,31 +20,30 @@ Ethereum, Ethereum Classic and ERC20 tokens are fully supported by MMGen, on the
 same level as Bitcoin.  In addition, ERC20 token creation and deployment are
 supported via the `create-token.py` script.
 
-#### <a name='a_par'>Install and run Parity Ethereum</a>
+#### <a name='a_oe'>Install and run OpenEthereum</a>
 
-MMGen uses Parity to communicate with the Ethereum blockchain.  For information
-on installing Parity on your system, visit the Parity Ethereum [homepage][h] or
-[Git repository][g].  [MMGenLive][l] users can install Parity automatically from
-signed binaries using the [`mmlive-daemon-upgrade`][U] script.  Parity is not
-used for transaction signing, so you needn’t install it on your offline machine.
+MMGen uses OpenEthereum to communicate with the Ethereum blockchain.  For
+information on installing OpenEthereum on your system, visit the OpenEthereum
+[wiki][ow] or [Git repository][og].  OpenEthereum is not used for transaction
+signing, so you needn’t install it on your offline machine.
 
-Parity must be invoked with the `--jsonrpc-apis=all` option so that MMGen can
-communicate with it.  If you’re running the daemon and MMGen on different
+OpenEthereum must be invoked with the `--jsonrpc-apis=all` option so that MMGen
+can communicate with it.  If you’re running the daemon and MMGen on different
 machines you’ll also need the following:
 
-	--jsonrpc-hosts=all --jsonrpc-interface=<IP of Parity’s host>
+	--jsonrpc-hosts=all --jsonrpc-interface=<IP of OpenEthereum’s host>
 
 To transact Ethereum Classic, use `--chain=classic --jsonrpc-port=8555`
 
 To run the daemon offline, use `--mode=offline`, otherwise `--mode=active`.
 
-MMGen can also be used with Parity’s light client mode, which queries other
-nodes on the Ethereum network for blockchain data.  Add the `--light` option to
-the Parity command line and read the applicable note in the [Transacting](#a_tx)
-section below.
+MMGen can also be used with OpenEthereum’s light client mode, which queries
+other nodes on the Ethereum network for blockchain data.  Add the `--light`
+option to the OpenEthereum command line and read the applicable note in the
+[Transacting](#a_tx) section below.
 
-You may require other options as well.  Consult `parity --help` for the full
-list.
+You may require other options as well.  Consult `openethereum --help` for the
+full list.
 
 #### <a name='a_ed'>Install Ethereum dependencies</a>
 
@@ -68,13 +67,13 @@ Basic operations with ETH, ETC and ERC20 tokens work as described in the
 [Getting Started][bo] guide, with some differences.  Please note the following:
 
 * Don’t forget to invoke all commands with `--coin=eth` or `--coin=etc`.
-* Use the `--token` switch with all token operations.  When importing addresses
-  into your token tracking wallet you must use the token’s address as the
-  argument.  After this, the token symbol, e.g. `--token=eos`, is sufficient.
+* Use the `--token` option with the token symbol as parameter for all token
+  operations.  When importing addresses for a new token into your tracking
+  wallet, use the `--token-addr` option with the token address instead.
 * Addresses and other hexadecimal values are given without the leading `0x`.
 * Fees are expressed in Gas price, e.g. `12G` for 12 Gwei or `1000M` for 1000
   Mwei.  This works at both the command line and interactive prompt.
-* When using Parity in light client mode, the `--cached-balances` option
+* When using OpenEthereum in light client mode, the `--cached-balances` option
   will greatly speed up operations of the `mmgen-txcreate`, `mmgen-txdo` and
   `mmgen-tool twview` commands by reducing network queries to a minimum.  If
   your account balances have changed, they may be refreshed interactively within
@@ -92,7 +91,7 @@ Generate some ETH addresses with your default wallet:
 
 Create an EOS token tracking wallet and import the addresses into it:
 
-	$ mmgen-addrimport --coin=eth --token=86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0 ABCDABCD-ETH[1-5].addrs
+	$ mmgen-addrimport --coin=eth --token-addr=86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0 ABCDABCD-ETH[1-5].addrs
 
 *Unlike the case with BTC and derivatives, ETH and ETC tracking wallets are
 created and managed by MMGen itself and located under the MMGen data directory.
@@ -121,7 +120,7 @@ View your EOS tracking wallet:
 
 	$ mmgen-tool --coin=eth --token=eos twview
 
-To transact ETH instead of EOS, omit the `--token` arguments.
+To transact ETH instead of EOS, omit the `--token` and `--token-addr` arguments.
 
 #### <a name='a_dt'>Creating and deploying ERC20 tokens</a>
 
@@ -189,7 +188,7 @@ price!*
 
 Create an MFT token tracking wallet and import your ETH addresses into it:
 
-	$ mmgen-addrimport --coin=eth --token=abcd1234abcd1234abcd1234abcd1234abcd1234 ABCDABCD-ETH[1-5].addrs
+	$ mmgen-addrimport --coin=eth --token-addr=abcd1234abcd1234abcd1234abcd1234abcd1234 ABCDABCD-ETH[1-5].addrs
 
 View your MFT tracking wallet:
 
@@ -318,9 +317,8 @@ received only minimal testing, or no testing at all.  At startup you’ll be
 informed of the level of your selected coin’s support reliability as deemed by
 the MMGen Project.
 
-[h]: https://www.parity.io/ethereum
-[g]: https://github.com/paritytech/parity-ethereum/releases
-[l]: https://github.com/mmgen/MMGenLive
+[ow]: https://openethereum.github.io/wiki
+[og]: https://github.com/openethereum/openethereum/releases
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
 [M]: https://getmonero.org/downloads/#linux

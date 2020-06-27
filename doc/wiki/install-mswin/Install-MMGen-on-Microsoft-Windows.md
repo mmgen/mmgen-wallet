@@ -295,12 +295,12 @@ Enter the directory and install:
 
 **Note:** if you want to use features that have appeared since the latest
 `stable_msys2` release, then you can omit the `git checkout` step and remain on
-the `master` branch.  But please be aware that security vulnerabilities are more
-likely to be present in new code than in a stable release.  In addition, while
-the tip of `master` is always tested on Linux before being pushed to the public
-repository, it’s not guaranteed to install or run on MSYS2.  Installation or
-runtime issues may also arise due to missing dependencies or installation steps
-not yet covered in the documentation.
+the `master` branch.  Please bear in mind, however, that security
+vulnerabilities are more likely to be present in new code than in a stable
+release.  In addition, while the tip of `master` is always tested on Linux
+before being pushed to the public repository, it’s not guaranteed to install or
+run on MSYS2.  Installation or runtime issues may also arise due to missing
+dependencies or installation steps not yet covered in the documentation.
 
 ### 11. Install and launch your coin daemons
 
@@ -316,16 +316,16 @@ about adding to the Windows path, since your `PATH` variable was taken care of
 in Step 5.  Note that the daemons must be installed on both your online and
 offline machines.
 
-To transact ETH, ETC or ERC20 tokens you’ll need the latest Windows `parity.exe`
-binary from the [Parity Github repository][pg].  Parity, unlike the other coin
-daemons, needs to be installed on the online machine only.  Copy the binary to
-your executable path, preferably `/usr/local/bin`.
+To transact ETH, ETC or ERC20 tokens you’ll need the latest Windows
+`openethereum.exe` binary from the [OpenEthereum Github repository][og].
+OpenEthereum, unlike the other coin daemons, is installed on the online machine
+only.  Copy the binary to your executable path, preferably `/usr/local/bin`.
 
-Typically you’ll wish to launch Parity as follows:
+Typically you’ll wish to launch OpenEthereum as follows:
 
-	$ parity.exe --jsonrpc-apis=all
+	$ openethereum.exe --jsonrpc-apis=all
 
-More information on Parity’s command-line options can be found [here][pl].
+More information on OpenEthereum’s command-line options can be found [here][pl].
 
 ### 12. You’re done!
 
@@ -335,17 +335,20 @@ MMGen on Linux, except for [autosigning][ax], are now supported on MSYS2 too.
 Please be aware of the following, however:
 
 + Non-ASCII filenames cannot be used with the Monero wallet syncing tool.  This
-  appears to be an issue with the Monero wallet RPC daemon rather than MMGen.
+  is an issue with the Monero wallet RPC daemon rather than MMGen.
+
++ The Bitcoin-ABC daemon cannot handle non-ASCII pathnames.  This is an issue
+  with the Bitcoin-ABC implementation for Windows, not MMGen.
 
 [mh]: https://www.msys2.org
 [mp]: https://sourceforge.net/projects/msys2
 [mw]: https://github.com/msys2/msys2/wiki
 [ov]: https://github.com/mmgen/mmgen/releases/tag/v0.9.8
 [sd]: https://download.sysinternals.com/files/SDelete.zip
-[pg]: https://github.com/paritytech/parity-ethereum/releases
+[og]: https://github.com/openethereum/openethereum/releases
 [di]: Deprecated-MSWin-Installation
 [ib]: Install-Bitcoind
 [gs]: Getting-Started-with-MMGen
-[pl]: Altcoin-and-Forkcoin-Support#a_par
+[pl]: Altcoin-and-Forkcoin-Support#a_oe
 [ax]: autosign-[MMGen-command-help]
 [mc]: Altcoin-and-Forkcoin-Support#a_xmr
