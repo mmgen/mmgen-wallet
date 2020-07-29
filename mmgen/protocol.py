@@ -227,6 +227,7 @@ class CoinProtocol(MMGenObject):
 		sign_mode       = 'daemon'
 		avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
 		halving_interval = 210000
+		max_halvings    = 64
 
 		def hex2wif(self,hexpriv,pubkey_type,compressed): # input is preprocessed hex
 			sec = bytes.fromhex(hexpriv)
@@ -298,6 +299,7 @@ class CoinProtocol(MMGenObject):
 
 	class BitcoinRegtest(BitcoinTestnet):
 		bech32_hrp          = 'bcrt'
+		halving_interval    = 150
 
 	class BitcoinCash(Bitcoin):
 		is_fork_of      = 'Bitcoin'
@@ -353,7 +355,8 @@ class CoinProtocol(MMGenObject):
 		bech32_hrp         = 'tltc'
 
 	class LitecoinRegtest(LitecoinTestnet):
-		bech32_hrp        = 'rltc'
+		bech32_hrp         = 'rltc'
+		halving_interval   = 150
 
 	class DummyWIF:
 

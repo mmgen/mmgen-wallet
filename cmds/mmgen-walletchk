@@ -17,8 +17,7 @@
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-mmgen-walletchk: Check integrity of an MMGen deterministic wallet, display
-                 information about it and export it to various formats
+mmgen-walletchk: Check integrity of an MMGen deterministic wallet
 """
 
 from mmgen.main import launch

@@ -60,15 +60,17 @@ async def main():
 
 	bdr = (cur['time'] - old['time']) / sample_size
 	t_rem = remaining * int(bdr)
-	sub = cur['subsidy'] * Decimal('0.00000001')
+	sub = cur['subsidy'] * proto.coin_amt.min_coin_unit
 
-	print(f'Current block:      {tip}')
-	print(f'Next halving block: {tip + remaining}')
-	print(f'Blocks until halving: {remaining}')
-	print('Current block subsidy: {} {}'.format(str(sub).rstrip('0'),proto.coin))
-	print(f'Current block discovery rate (over last {sample_size} blocks): {bdr/60:0.1f} minutes')
-	print(f'Current clock time (UTC): {date(clock_time)}')
-	print(f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}')
-	print(f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}')
+	print(
+		f'Current block:      {tip}\n'
+		f'Next halving block: {tip + remaining}\n'
+		f'Blocks until halving: {remaining}\n'
+		f'Current block subsidy: {str(sub).rstrip("0")} {proto.coin}\n'
+		f'Current block discovery rate (over last {sample_size} blocks): {bdr/60:0.1f} minutes\n'
+		f'Current clock time (UTC): {date(clock_time)}\n'
+		f'Est. halving date (UTC):  {date(cur["time"] + t_rem)}\n'
+		f'Est. time until halving: {dhms(cur["time"] + t_rem - clock_time)}\n'
+	)
 
 run_session(main())
