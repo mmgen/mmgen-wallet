@@ -1095,10 +1095,11 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 			t_elapsed = int(time.time() - t_start)
 
-			ret = await c.call('get_balance') # account_index=0, address_indices=[0,1]
+			ret = await c.call('get_accounts')
 
 			from .obj import XMRAmt
-			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit') for k in ('balance','unlocked_balance')])
+			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit')
+					for k in ('total_balance','total_unlocked_balance')])
 
 			if opt.debug:
 				pp_msg(ret)
