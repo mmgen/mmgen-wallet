@@ -704,7 +704,7 @@ class MMGenTX:
 				die(2,( 'ERROR: No change output specified',
 						self.msg_no_change_output.format(self.dcoin))[len(self.outputs) == 1])
 
-			if not self.rpc.info('segwit_is_active') and self.has_segwit_outputs():
+			if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
 				rdie(2,f'{g.proj_name} Segwit address requested on the command line, '
 						+ 'but Segwit is not active on this chain')
 
@@ -1399,9 +1399,10 @@ class MMGenTX:
 			self.check_pubkey_scripts()
 			self.check_hex_tx_matches_mmgen_tx(DeserializedTX(self.proto,self.hex))
 
-			if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active') and not g.bogus_send:
-				die(2,'Transaction has Segwit outputs, but this blockchain does not support Segwit'
-						+ ' at the current height')
+			if not g.bogus_send:
+				if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
+					die(2,'Transaction has Segwit outputs, but this blockchain does not support Segwit'
+							+ ' at the current height')
 
 			if self.get_fee() > self.proto.max_tx_fee:
 				die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
@@ -1421,10 +1422,10 @@ class MMGenTX:
 				try:
 					ret = await self.rpc.call('sendrawtransaction',self.hex)
 				except Exception as e:
+					errmsg = e
 					ret = False
 
-			if ret == False:
-				errmsg = e
+			if ret == False: # TODO: test send errors
 				if 'Signature must use SIGHASH_FORKID' in errmsg:
 					m = ('The Aug. 1 2017 UAHF has activated on this chain.\n'
 						+ 'Re-run the script with the --coin=bch option.' )

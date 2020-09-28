@@ -425,12 +425,22 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 			d = self.cached['blockchaininfo']
 			if d['chain'] == 'regtest':
 				return True
-			if (    'bip9_softforks' in d
-					and 'segwit' in d['bip9_softforks']
-					and d['bip9_softforks']['segwit']['status'] == 'active'):
-				return True
+
+			try:
+				if d['softforks']['segwit']['active'] == True:
+					return True
+			except:
+				pass
+
+			try:
+				if d['bip9_softforks']['segwit']['status'] == 'active':
+					return True
+			except:
+				pass
+
 			if g.test_suite:
 				return True
+
 			return False
 
 		return locals()[info_id]()
