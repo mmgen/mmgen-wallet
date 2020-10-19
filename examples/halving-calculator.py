@@ -22,6 +22,9 @@ Requires a running coin daemon
 Specify coin with --coin=btc (default)/--coin=bch/--coin=ltc
 If necessary, invoke with --rpc-host/--rpc-port/--rpc-user/--rpc-password
 Specify aiohttp backend with --rpc-backend=aiohttp (Linux only)
+
+A more full-featured version of this program can be found in the
+mmgen-node-tools repository.
 """
 	}
 })

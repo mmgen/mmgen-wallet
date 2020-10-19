@@ -418,6 +418,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 				msg(f'Choice must be a single number between 1 and {len(self.unspent)}')
 			else:
 				if action == 'a_lbl_add':
+					cur_lbl = self.unspent[n-1].label
+					msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 					while True:
 						s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
 						if s == 'q':
