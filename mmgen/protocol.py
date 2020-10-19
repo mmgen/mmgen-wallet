@@ -228,6 +228,7 @@ class CoinProtocol(MMGenObject):
 		avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
 		halving_interval = 210000
 		max_halvings    = 64
+		start_subsidy   = 50
 
 		def hex2wif(self,hexpriv,pubkey_type,compressed): # input is preprocessed hex
 			sec = bytes.fromhex(hexpriv)
@@ -321,7 +322,7 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num    = { 'std': 'ef' }
 
 	class BitcoinCashRegtest(BitcoinCashTestnet):
-		pass
+		halving_interval = 150
 
 	class B2X(Bitcoin):
 		is_fork_of      = 'Bitcoin'
