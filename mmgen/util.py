@@ -173,29 +173,44 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
 # GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
+bytespec_map = (
+	('c',  1),
+	('w',  2),
+	('b',  512),
+	('kB', 1000),
+	('K',  1024),
+	('MB', 1000000),
+	('M',  1048576),
+	('GB', 1000000000),
+	('G',  1073741824),
+	('TB', 1000000000000),
+	('T',  1099511627776),
+	('PB', 1000000000000000),
+	('P',  1125899906842624),
+	('EB', 1000000000000000000),
+	('E',  1152921504606846976),
+)
+
+def int2bytespec(n,spec,fmt,print_sym=True):
+	def spec2int(spec):
+		for k,v in bytespec_map:
+			if k == spec:
+				return v
+		else:
+			die('{spec}: unrecognized bytespec')
+	return '{:{}f}{}'.format( n / spec2int(spec), fmt, spec if print_sym else '' )
 
 def parse_bytespec(nbytes):
-	smap = (('c',   1),
-			('w',   2),
-			('b',   512),
-			('kB',  1000),
-			('K',   1024),
-			('MB',  1000*1000),
-			('M',   1024*1024),
-			('GB',  1000*1000*1000),
-			('G',   1024*1024*1024),
-			('TB',  1000*1000*1000*1000),
-			('T',   1024*1024*1024*1024))
 	import re
 	m = re.match(r'([0123456789.]+)(.*)',nbytes)
 	if m:
 		if m.group(2):
-			for k,v in smap:
+			for k,v in bytespec_map:
 				if k == m.group(2):
 					from decimal import Decimal
 					return int(Decimal(m.group(1)) * v)
 			else:
-				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in smap])))
+				msg("Valid byte specifiers: '{}'".format("' '".join([i[0] for i in bytespec_map])))
 		elif '.' in nbytes:
 			raise ValueError('fractional bytes not allowed')
 		else:
@@ -346,6 +361,16 @@ def is_ascii(s,enc='ascii'):
 	try:    s.decode(enc)
 	except: return False
 	else:   return True
+
+def check_int_between(n,lo,hi,desc='value'):
+	import re
+	m = re.match(r'-{0,1}[0-9]+',str(n))
+	if m == None:
+		raise NotAnInteger(f'{n}: {desc} must be an integer')
+	n = int(n)
+	if n < lo or n > hi:
+		raise IntegerOutOfRange(f'{n}: {desc} must be between {lo} and {hi}')
+	return n
 
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext

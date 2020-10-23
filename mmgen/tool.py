@@ -310,6 +310,14 @@ class MMGenToolCmdUtil(MMGenToolCmds):
 		"convert a byte specifier such as '1GB' into an integer"
 		return parse_bytespec(dd_style_byte_specifier)
 
+	def to_bytespec(self,
+			n: int,
+			dd_style_byte_specifier: str,
+			fmt = '0.2',
+			print_sym = True ):
+		"convert an integer to a byte specifier such as '1GB'"
+		return int2bytespec(n,dd_style_byte_specifier,fmt,print_sym)
+
 	def randhex(self,nbytes='32'):
 		"print 'n' bytes (default 32) of random data in hex format"
 		return get_random(int(nbytes)).hex()
