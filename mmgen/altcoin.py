@@ -62,7 +62,7 @@ class CoinInfo(object):
 #   Non core-coin fork coins (i.e. BCG) must be disabled here to prevent generation from
 #   incorrect scrambled seed.
 	ce('Bitcoin',               'BTC',     0x80,   (0x00,'1'),       (0x05,'3'),       True,  5),
-	ce('Bcash',                 'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False, 5),
+	ce('BitcoinCashNode',       'BCH',     0x80,   (0x00,'1'),       (0x05,'3'),       False, 5),
 	ce('BitcoinGold',           'BCG',     0x80,   (0x00,'1'),       (0x05,'3'),       True, -1),
 	ce('2GiveCoin',             '2GIVE',   0xa7,   (0x27,('G','H')), None,             False, 0),
 	ce('42Coin',                '42',      0x88,   (0x08,'4'),       None,             False, 1),
@@ -214,7 +214,7 @@ class CoinInfo(object):
 
 	coin_constants['testnet'] = (
 	ce('Bitcoin',     'BTC',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
-	ce('Bcash',       'BCH',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
+	ce('BitcoinCashNode','BCH',0xef,   (0x6f,('m','n')), (0xc4,'2'),       True,  5),
 	ce('BitcoinGold', 'BCG',   0xef,   (0x6f,('m','n')), (0xc4,'2'),       True, -1),
 	ce('Dash',        'DASH',  0xef,   (0x8c,'y'),       (0x13,('8','9')), False, 1),
 	ce('Decred',      'DCR',   0x230e, (0x0f21,'T'),     (0x0e6c,'S'),     False, 1),

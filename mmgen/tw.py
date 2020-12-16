@@ -904,7 +904,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 
 	@write_mode
 	async def set_label(self,coinaddr,lbl):
-		# bitcoin-abc 'setlabel' RPC is broken, so use old 'importaddress' method to set label
+		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# broken behavior: new label is set OK, but old label gets attached to another address
 		if 'label_api' in self.rpc.caps and self.proto.coin != 'BCH':
 			args = ('setlabel',coinaddr,lbl)

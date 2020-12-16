@@ -298,7 +298,7 @@ class CoinDaemon(Daemon):
 
 	daemon_ids = { # for BCH we use non-standard RPC ports
 'btc': cd('Bitcoin',         'Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf', 'testnet3',8332,18332,18444),
-'bch': cd('Bcash',           'Bitcoin', 'bitcoind-abc','bitcoin-cli', 'bitcoin.conf', 'testnet3',8442,18442,18553),
+'bch': cd('BitcoinCashNode', 'Bitcoin', 'bitcoind-bchn','bitcoin-cli-bchn','bitcoin.conf','testnet3',8442,18442,18553),
 'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf','testnet4',9332,19332,19444),
 'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',None,     18081,None,None),
 'eth': cd('Ethereum',        'Ethereum','openethereum','openethereum','parity.conf',   None,     8545, 8545,8545),
@@ -401,7 +401,7 @@ class CoinDaemon(Daemon):
 		if g.platform == 'linux':
 			path_data = {
 				'btc': ['.bitcoin'],
-				'bch': ['.bitcoin-abc'],
+				'bch': ['.bitcoin-bchn'],
 				'ltc': ['.litecoin'],
 				'xmr': ['.bitmonero'],
 				'eth': ['.local','share','io.parity.ethereum'],

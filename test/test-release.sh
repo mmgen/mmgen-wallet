@@ -263,7 +263,7 @@ t_color="$colortest_py"
 f_color='Terminal color tests completed'
 
 i_unit='Unit'
-s_unit='The bitcoin and bitcoin-abc mainnet daemons must be running for the following tests'
+s_unit='The bitcoin and bitcoin-bchn mainnet daemons must be running for the following tests'
 t_unit="$unit_tests_py"
 f_unit='Unit tests completed'
 
@@ -386,7 +386,7 @@ t_etc="
 f_etc='Ethereum Classic tests completed'
 
 i_autosign='Autosign'
-s_autosign='The bitcoin, bitcoin-abc and litecoin mainnet and testnet daemons must be running for the following test'
+s_autosign='The bitcoin, bitcoin-bchn and litecoin mainnet and testnet daemons must be running for the following test'
 t_autosign="$test_py autosign"
 f_autosign='Autosign test completed'
 
@@ -428,17 +428,17 @@ s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_btc_rt="$test_py regtest"
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
-i_bch='Bcash (BCH) mainnet'
-s_bch='The bitcoin-abc mainnet daemon must both be running for the following tests'
+i_bch='BitcoinCashNode (BCH) mainnet'
+s_bch='The bitcoin-bchn mainnet daemon must both be running for the following tests'
 t_bch="$test_py --coin=bch --exclude regtest"
-f_bch='Bcash (BCH) mainnet tests completed'
+f_bch='BitcoinCashNode (BCH) mainnet tests completed'
 
-i_bch_tn='Bcash (BCH) testnet'
-s_bch_tn='The bitcoin-abc testnet daemon must both be running for the following tests'
+i_bch_tn='BitcoinCashNode (BCH) testnet'
+s_bch_tn='The bitcoin-bchn testnet daemon must both be running for the following tests'
 t_bch_tn="$test_py --coin=bch --testnet=1 --exclude regtest"
-f_bch_tn='Bcash (BCH) testnet tests completed'
+f_bch_tn='BitcoinCashNode (BCH) testnet tests completed'
 
-i_bch_rt='Bcash (BCH) regtest'
+i_bch_rt='BitcoinCashNode (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
 t_bch_rt="$test_py --coin=bch regtest"
 f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
