@@ -868,19 +868,13 @@ async def run_test(gid,cmd_name):
 			return ret
 
 	def tool_api(cmd_name,args,out,opts):
-		from mmgen.tool import tool_api
+		from mmgen.tool import tool_api,_process_args
 		tool = tool_api()
 		if opts:
 			for o in opts:
 				if o.startswith('--type='):
 					tool.addrtype = o.split('=')[1]
-		pargs,kwargs = [],{}
-		for a in args:
-			if '=' in a:
-				a1,a2 = a.split('=')
-				kwargs[a1] = int(a2) if is_int(a2) else a2
-			else:
-				pargs.append(a)
+		pargs,kwargs = _process_args(cmd_name,args)
 		return getattr(tool,cmd_name)(*pargs,**kwargs)
 
 	for d in data:
