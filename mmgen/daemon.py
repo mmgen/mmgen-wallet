@@ -208,7 +208,10 @@ class Daemon(MMGenObject):
 
 	def remove_datadir(self):
 		if self.state == 'stopped':
-			run(['/bin/rm','-rf',self.datadir])
+			try: # exception handling required for MSWin/MSYS2
+				run(['/bin/rm','-rf',self.datadir])
+			except:
+				pass
 		else:
 			msg(f'Cannot remove {self.datadir!r} - daemon is not stopped')
 

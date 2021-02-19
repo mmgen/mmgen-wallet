@@ -81,8 +81,7 @@ class MMGenRegtest(MMGenObject):
 	def __init__(self,coin):
 		self.coin = coin.lower()
 		self.proto = init_proto(self.coin,regtest=True)
-		self.test_suite = os.getenv('MMGEN_TEST_SUITE_REGTEST')
-		self.d = CoinDaemon(self.coin+'_rt',test_suite=self.test_suite)
+		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite_regtest)
 
 		assert self.coin in self.coins,'{!r}: invalid coin for regtest'.format(user)
 
@@ -118,18 +117,16 @@ class MMGenRegtest(MMGenObject):
 		return self.test_daemon().state
 
 	def daemon_shared_args(self):
-		return ['--rpcuser={}'.format(self.rpc_user),
-				'--rpcpassword={}'.format(self.rpc_password),
-				'--regtest' ]
+		return [f'--rpcuser={self.rpc_user}', f'--rpcpassword={self.rpc_password}', '--regtest']
 
 	def daemon_coind_args(self,user):
-		return ['--wallet=wallet.dat.{}'.format(user)]
+		return [f'--wallet={user}']
 
 	def test_daemon(self,user=None,reindex=False):
 
 		assert user is None or user in self.users,'{!r}: invalid user for regtest'.format(user)
 
-		d = CoinDaemon(self.coin+'_rt',test_suite=self.test_suite)
+		d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite_regtest)
 
 		type(d).generate = RegtestDaemon.generate
 
@@ -163,7 +160,7 @@ class MMGenRegtest(MMGenObject):
 		cmdout = run(cmd,stdout=PIPE).stdout.decode()
 		if cmdout:
 			for k in self.users:
-				if 'wallet.dat.'+k in cmdout:
+				if '--wallet='+k in cmdout:
 					return k
 		return None
 
@@ -182,7 +179,7 @@ class MMGenRegtest(MMGenObject):
 
 		lines = reversed(get_log_tail(40_000).decode().splitlines())
 
-		pat = re.compile(r'\bwallet\.dat\.([a-z]+)')
+		pat = re.compile(r'\b(alice|bob|miner)\b')
 		for ss in ( 'BerkeleyEnvironment::Open',
 					'Wallet completed loading in',
 					'Using wallet wallet' ):

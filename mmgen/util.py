@@ -224,7 +224,10 @@ def check_or_create_dir(path):
 	except:
 		if os.getenv('MMGEN_TEST_SUITE'):
 			from subprocess import run
-			run(['/bin/rm','-rf',path])
+			try: # exception handling required for MSWin/MSYS2
+				run(['/bin/rm','-rf',path])
+			except:
+				pass
 		try:
 			os.makedirs(path,0o700)
 		except:

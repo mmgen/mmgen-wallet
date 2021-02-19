@@ -551,15 +551,15 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #			m = '--rbf requested, but {} does not support replace-by-fee transactions'
 #			raise UserOptError(m.format(proto.coin))
 
-	def chk_bob(key,val,desc):
-		m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
-		from .regtest import MMGenRegtest
-		try:
-			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
-		except:
-			raise UserOptError(m.format(g.proj_name.lower()))
-
-	chk_alice = chk_bob
+#	def chk_bob(key,val,desc):
+#		m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
+#		from .regtest import MMGenRegtest
+#		try:
+#			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
+#		except:
+#			raise UserOptError(m.format(g.proj_name.lower()))
+#
+#	chk_alice = chk_bob
 
 	def chk_locktime(key,val,desc):
 		opt_is_int(val,desc)
