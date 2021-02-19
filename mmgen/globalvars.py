@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2020 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2021 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ class GlobalContext(Lockable):
 	prog_name = os.path.basename(sys.argv[0])
 	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
-	Cdates    = '2013-2020'
+	Cdates    = '2013-2021'
 	keywords  = 'Bitcoin, BTC, Ethereum, ETH, Monero, XMR, ERC20, cryptocurrency, wallet, BIP32, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MSYS2, MinGW, MinGW64, MSWin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, SHA256Compress, monerod, EMC, Emercoin, token, deploy, contract, gas, fee, smart contract, solidity, Parity, OpenEthereum, testnet, devmode, Kovan'
 	max_int   = 0xffffffff
 

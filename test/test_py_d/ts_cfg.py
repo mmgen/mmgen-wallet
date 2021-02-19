@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
-# Copyright (C)2013-2020 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2021 The MMGen Project <mmgen@tuta.io>
 #
 # Project source code repository: https://github.com/mmgen/mmgen
 # Licensed according to the terms of GPL Version 3.  See LICENSE for details.

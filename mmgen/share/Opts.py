@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Opts.py, an options parsing library for Python.
-# Copyright (C)2013-2020 The MMGen Project <mmgen@tuta.io>
+# Copyright (C)2013-2021 The MMGen Project <mmgen@tuta.io>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
