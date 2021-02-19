@@ -146,6 +146,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	color = True
 	cmd_group = (
 		('setup',               'OpenEthereum dev mode tests for coin {} (start openethereum)'.format(coin)),
+		('daemon_version',      'mmgen-tool daemon_version'),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
 		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
 		('addrgen',             'generating addresses'),
@@ -347,6 +348,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool', self.eth_args + ['twview'])
 		t.read()
 		os.unlink(w_to)
+		return t
+
+	def daemon_version(self):
+		t = self.spawn('mmgen-tool', self.eth_args + ['daemon_version'])
+		t.expect('version')
 		return t
 
 	def wallet_upgrade1(self): return self.wallet_upgrade('tracking-wallet-v1.json')

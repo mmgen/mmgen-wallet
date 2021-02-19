@@ -901,6 +901,12 @@ from .tw import TwAddrList,TwUnspentOutputs
 class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
 
+	async def daemon_version(self):
+		"print coin daemon version"
+		from .rpc import rpc_init
+		r = await rpc_init(self.proto,ignore_daemon_version=True)
+		return f'{r.daemon.coind_name} version {r.daemon_version} ({r.daemon_version_str})'
+
 	async def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
 		from .tw import TwGetBalance

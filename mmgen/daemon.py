@@ -293,16 +293,74 @@ class CoinDaemon(Daemon):
 
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
-	cd = namedtuple('daemon_data',
-		['coin','cls_pfx','coind_exec','cli_exec','cfg_file','testnet_dir','dfl_rpc','dfl_rpc_tn','dfl_rpc_rt'])
+	cd = namedtuple('daemon_data', [
+		'coin',
+		'cls_pfx',
+		'coind_name',
+		'coind_exec',
+		'coind_version', 'coind_version_str', # latest tested version
+		'cli_exec',
+		'cfg_file',
+		'testnet_dir',
+		'dfl_rpc',
+		'dfl_rpc_tn',
+		'dfl_rpc_rt' ])
 
-	daemon_ids = { # for BCH we use non-standard RPC ports
-'btc': cd('Bitcoin',         'Bitcoin', 'bitcoind',    'bitcoin-cli', 'bitcoin.conf', 'testnet3',8332,18332,18444),
-'bch': cd('BitcoinCashNode', 'Bitcoin', 'bitcoind-bchn','bitcoin-cli-bchn','bitcoin.conf','testnet3',8442,18442,18553),
-'ltc': cd('Litecoin',        'Bitcoin', 'litecoind',   'litecoin-cli','litecoin.conf','testnet4',9332,19332,19444),
-'xmr': cd('Monero',          'Monero',  'monerod',     'monerod',     'bitmonero.conf',None,     18081,None,None),
-'eth': cd('Ethereum',        'Ethereum','openethereum','openethereum','parity.conf',   None,     8545, 8545,8545),
-'etc': cd('Ethereum Classic','Ethereum','openethereum','openethereum','parity.conf',   None,     8545, 8545,8545)
+	daemon_ids = {
+		'btc': cd(
+			'Bitcoin',
+			'Bitcoin',
+			'Bitcoin Core',
+			'bitcoind', 200100, '0.20.1',
+			'bitcoin-cli',
+			'bitcoin.conf',
+			'testnet3',
+			8332, 18332, 18444),
+		'bch': cd(
+			'BitcoinCashNode',
+			'Bitcoin',
+			'Bitcoin Cash Node',
+			'bitcoind-bchn', 22020000, '22.2.0',
+			'bitcoin-cli-bchn',
+			'bitcoin.conf',
+			'testnet3',
+			8442, 18442, 18553), # for BCH we use non-standard RPC ports
+		'ltc': cd(
+			'Litecoin',
+			'Bitcoin',
+			'Litecoin Core',
+			'litecoind', 180100, '0.18.1',
+			'litecoin-cli',
+			'litecoin.conf',
+			'testnet4',
+			9332, 19332, 19444),
+		'xmr': cd(
+			'Monero',
+			'Monero',
+			'Monero',
+			'monerod', 'N/A', 'N/A',
+			'monerod',
+			'bitmonero.conf',
+			None,
+			18081, None, None),
+		'eth': cd(
+			'Ethereum',
+			'Ethereum',
+			'OpenEthereum',
+			'openethereum', 3000001, '3.0.1',
+			'openethereum',
+			'parity.conf',
+			None,
+			8545, 8545, 8545),
+		'etc': cd(
+			'Ethereum Classic',
+			'Ethereum',
+			'OpenEthereum',
+			'openethereum', 3000001, '3.0.1',
+			'openethereum',
+			'parity.conf',
+			None,
+			8545, 8545, 8545)
 	}
 
 	def __new__(cls,network_id=None,test_suite=False,flags=None,proto=None):

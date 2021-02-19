@@ -355,6 +355,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 				('getblockhash',(0,)),
 			))
 		self.daemon_version = self.cached['networkinfo']['version']
+		self.daemon_version_str = self.cached['networkinfo']['subversion']
 		self.chain = self.cached['blockchaininfo']['chain']
 
 		tip = await self.call('getblockhash',self.blockcount)
@@ -505,7 +506,12 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 				('parity_nodeKind',()),
 			))
 
-		self.daemon_version = vi['version']
+		self.daemon_version = int((
+				lambda v: '{:d}{:03d}{:03d}'.format(v['major'],v['minor'],v['patch'])
+			)(vi['version']))
+		self.daemon_version_str = (
+				lambda v: '{}.{}.{}'.format(v['major'],v['minor'],v['patch'])
+			)(vi['version'])
 		self.cur_date = int(bh['timestamp'],16)
 		self.chain = ch.replace(' ','_')
 		self.caps = ('full_node',) if nk['capability'] == 'full' else ()
@@ -590,7 +596,7 @@ class MoneroWalletRPCClient(RPCClient):
 		'refresh',       # start_height
 	)
 
-async def rpc_init(proto,backend=None):
+async def rpc_init(proto,backend=None,ignore_daemon_version=False):
 
 	if not 'rpc' in proto.mmcaps:
 		die(1,f'Coin daemon operations not supported for {proto.name} protocol!')
@@ -603,6 +609,24 @@ async def rpc_init(proto,backend=None):
 		proto   = proto,
 		daemon  = CoinDaemon(proto=proto,test_suite=g.test_suite),
 		backend = backend or opt.rpc_backend )
+
+	if not (ignore_daemon_version or opt.ignore_daemon_version):
+		if rpc.daemon_version > rpc.daemon.coind_version:
+			rdie(1,fmt(
+				"""
+				The running {} daemon has version {}.
+				This version of MMGen is tested only on {} v{} and below.
+
+				To avoid this error, downgrade your daemon to a supported version.
+
+				Alternatively, you may invoke the command with the --ignore-daemon-version
+				option, in which case you proceed at your own risk.
+				""".format(
+						rpc.daemon.coind_name,
+						rpc.daemon_version_str,
+						rpc.daemon.coind_name,
+						rpc.daemon.coind_version_str,
+						),indent='    ').rstrip())
 
 	if proto.chain_name != rpc.chain:
 		raise RPCChainMismatch(

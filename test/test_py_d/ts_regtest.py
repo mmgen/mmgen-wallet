@@ -143,6 +143,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	color = True
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
+		('daemon_version',           'mmgen-tool daemon_version'),
 		('current_user',             'current user'),
 		('halving_calculator_bob',   'halving calculator (Bob)'),
 		('walletgen_bob',            'wallet generation (Bob)'),
@@ -277,6 +278,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_TEST_SUITE'] = '1'
 		for s in ('Starting','Creating','Mined','Creating','Creating','Setup complete'):
 			t.expect(s)
+		return t
+
+	def daemon_version(self):
+		t = self.spawn('mmgen-tool', ['--bob','daemon_version'])
+		t.expect('version')
 		return t
 
 	def current_user(self):

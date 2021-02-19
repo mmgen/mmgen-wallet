@@ -197,6 +197,7 @@ common_opts_data = {
 --, --force-256-color      Force 256-color output when color is enabled
 --, --data-dir=path        Specify {pnm} data directory location
 --, --daemon-data-dir=path Specify {dn} data directory location
+--, --ignore-daemon-version Ignore {dn} version check
 --, --no-license           Suppress the GPL license prompt
 --, --rpc-host=host        Communicate with {dn} running on host 'host'
 --, --rpc-port=port        Communicate with {dn} listening on port 'port'
