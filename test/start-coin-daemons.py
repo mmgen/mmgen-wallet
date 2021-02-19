@@ -74,7 +74,7 @@ for network_id in ids:
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:
-		print('{} {} is {}'.format(d.net_desc,d.desc,d.state))
+		print('{} {} (port {}) is {}'.format(d.net_desc,d.desc,d.rpc_port,d.state))
 	elif opt.testing:
 		print(' '.join(getattr(d,action+'_cmd')))
 	else:

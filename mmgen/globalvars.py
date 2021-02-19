@@ -46,7 +46,7 @@ class GlobalContext(Lockable):
 
 	# Constants:
 	version      = '0.12.199'
-	release_date = 'July 2020'
+	release_date = 'February 2021'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
