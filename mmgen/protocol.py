@@ -87,6 +87,7 @@ class CoinProtocol(MMGenObject):
 		base_proto = None
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
+		ignore_daemon_version = False
 
 		def __init__(self,coin,name,network,tokensym=None):
 			self.coin       = coin.upper()

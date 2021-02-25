@@ -596,6 +596,28 @@ class MoneroWalletRPCClient(RPCClient):
 		'refresh',       # start_height
 	)
 
+def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,warning_shown=[]):
+	if ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version:
+		if not type(proto) in warning_shown:
+			ymsg(f'WARNING: ignoring unsupported {rpc.daemon.coind_name} daemon version at user request')
+			warning_shown.append(type(proto))
+	else:
+		rdie(1,fmt(
+			"""
+			The running {} daemon has version {}.
+			This version of MMGen is tested only on {} v{} and below.
+
+			To avoid this error, downgrade your daemon to a supported version.
+
+			Alternatively, you may invoke the command with the --ignore-daemon-version
+			option, in which case you proceed at your own risk.
+			""".format(
+					rpc.daemon.coind_name,
+					rpc.daemon_version_str,
+					rpc.daemon.coind_name,
+					rpc.daemon.coind_version_str,
+					),indent='    ').rstrip())
+
 async def rpc_init(proto,backend=None,ignore_daemon_version=False):
 
 	if not 'rpc' in proto.mmcaps:
@@ -610,23 +632,8 @@ async def rpc_init(proto,backend=None,ignore_daemon_version=False):
 		daemon  = CoinDaemon(proto=proto,test_suite=g.test_suite),
 		backend = backend or opt.rpc_backend )
 
-	if not (ignore_daemon_version or opt.ignore_daemon_version):
-		if rpc.daemon_version > rpc.daemon.coind_version:
-			rdie(1,fmt(
-				"""
-				The running {} daemon has version {}.
-				This version of MMGen is tested only on {} v{} and below.
-
-				To avoid this error, downgrade your daemon to a supported version.
-
-				Alternatively, you may invoke the command with the --ignore-daemon-version
-				option, in which case you proceed at your own risk.
-				""".format(
-						rpc.daemon.coind_name,
-						rpc.daemon_version_str,
-						rpc.daemon.coind_name,
-						rpc.daemon.coind_version_str,
-						),indent='    ').rstrip())
+	if rpc.daemon_version > rpc.daemon.coind_version:
+		handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version)
 
 	if proto.chain_name != rpc.chain:
 		raise RPCChainMismatch(

@@ -98,6 +98,7 @@ class GlobalContext(Lockable):
 	rpc_port             = 0
 	rpc_user             = ''
 	rpc_password         = ''
+	ignore_daemon_version  = False
 	monero_wallet_rpc_host = 'localhost'
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
@@ -165,7 +166,7 @@ class GlobalContext(Lockable):
 		'rpc_host','rpc_port','rpc_user','rpc_password','rpc_backend','aiohttp_rpc_queue_len',
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
-		'accept_defaults','token'
+		'accept_defaults','token','ignore_daemon_version'
 	)
 	# opts initialized to None by opts.init() if not set by user
 	required_opts = (
@@ -188,6 +189,8 @@ class GlobalContext(Lockable):
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','subseeds','mnemonic_entry_modes',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
+		'btc_ignore_daemon_version','bch_ignore_daemon_version',
+		'ltc_ignore_daemon_version','eth_ignore_daemon_version',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
 		'max_tx_file_size','max_input_size'
 	)
@@ -219,6 +222,7 @@ class GlobalContext(Lockable):
 		'MMGEN_REGTEST',
 		'MMGEN_TRACEBACK',
 		'MMGEN_RPC_BACKEND',
+		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
 
 		'MMGEN_DISABLE_COLOR',
