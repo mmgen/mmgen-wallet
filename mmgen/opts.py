@@ -130,10 +130,10 @@ def override_globals_from_cfg_file(ucfg):
 			ns = d.name.split('_')
 			if ns[0] in CoinProtocol.coins:
 				nse,tn = (ns[2:],True) if len(ns) > 2 and ns[1] == 'testnet' else (ns[1:],False)
-				cls = init_proto(ns[0],tn)
+				cls = type(init_proto(ns[0],tn)) # no instance yet, so override _class_ attr
 				attr = '_'.join(nse)
 			else:
-				cls = g
+				cls = g                          # g is "singleton" instance, so override _instance_ attr
 				attr = d.name
 			refval = getattr(cls,attr)
 			if type(refval) is dict and type(val) is str: # hack - catch single colon-separated value
