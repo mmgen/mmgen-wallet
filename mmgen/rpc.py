@@ -618,7 +618,7 @@ def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,warning_sh
 					rpc.daemon.coind_version_str,
 					),indent='    ').rstrip())
 
-async def rpc_init(proto,backend=None,ignore_daemon_version=False):
+async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 
 	if not 'rpc' in proto.mmcaps:
 		die(1,f'Coin daemon operations not supported for {proto.name} protocol!')
@@ -629,7 +629,7 @@ async def rpc_init(proto,backend=None,ignore_daemon_version=False):
 		'Ethereum': EthereumRPCClient,
 	}[proto.base_proto](
 		proto   = proto,
-		daemon  = CoinDaemon(proto=proto,test_suite=g.test_suite),
+		daemon  = daemon or CoinDaemon(proto=proto,test_suite=g.test_suite),
 		backend = backend or opt.rpc_backend )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:

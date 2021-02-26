@@ -189,8 +189,8 @@ class GlobalContext(Lockable):
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','subseeds','mnemonic_entry_modes',
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
-		'btc_ignore_daemon_version','bch_ignore_daemon_version',
-		'ltc_ignore_daemon_version','eth_ignore_daemon_version',
+		'btc_ignore_daemon_version','bch_ignore_daemon_version','ltc_ignore_daemon_version',
+		'eth_ignore_daemon_version','etc_ignore_daemon_version',
 		'eth_mainnet_chain_name','eth_testnet_chain_name',
 		'max_tx_file_size','max_input_size'
 	)

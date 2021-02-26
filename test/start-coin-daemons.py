@@ -57,7 +57,11 @@ else:
 		opts.usage()
 	for i in ids:
 		if i not in CoinDaemon.network_ids:
-			die(1,'{!r}: invalid network ID'.format(i))
+			die(1,f'{i!r}: invalid network ID')
+		if i.endswith('_rt'):
+			die(1,'For regtest, use the plain coin symbol and the --regtest-user option')
+		if opt.regtest_user and i not in MMGenRegtest.coins:
+			die(1,f'For regtest, coin symbol must be one of {MMGenRegtest.coins}')
 
 if 'eth' in ids and 'etc' in ids:
 	msg('Cannot run ETH and ETC simultaneously, so skipping ETC')
@@ -68,8 +72,6 @@ for network_id in ids:
 	if opt.regtest_user:
 		d = MMGenRegtest(network_id).test_daemon(opt.regtest_user)
 	else:
-		if network_id.endswith('_rt'):
-			continue
 		d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
