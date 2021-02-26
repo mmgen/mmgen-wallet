@@ -332,7 +332,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	g.coin = g.coin.upper() or 'BTC'
 	g.token = g.token.upper() or None
 
-	if g.bob or g.alice:
+	if g.bob or g.alice or (g.prog_name == 'mmgen-regtest'):
 		g.regtest = True
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])

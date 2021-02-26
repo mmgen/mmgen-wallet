@@ -80,4 +80,7 @@ elif cmd_args[0] not in MMGenRegtest.usr_cmds:
 elif cmd_args[0] not in ('cli','balances'):
 	check_num_args()
 
-MMGenRegtest(g.coin).cmd(cmd_args)
+async def main():
+	await MMGenRegtest(g.coin).cmd(cmd_args)
+
+run_session(main())

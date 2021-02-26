@@ -70,7 +70,9 @@ if 'eth' in ids and 'etc' in ids:
 for network_id in ids:
 	network_id = network_id.lower()
 	if opt.regtest_user:
-		d = MMGenRegtest(network_id).test_daemon(opt.regtest_user)
+		rt = MMGenRegtest(network_id)
+		rt.init_daemon(opt.regtest_user)
+		d = rt.d
 	else:
 		d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
 	d.debug = opt.debug
