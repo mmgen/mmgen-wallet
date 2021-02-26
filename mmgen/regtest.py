@@ -61,7 +61,7 @@ class MMGenRegtest(MMGenObject):
 	async def generate(self,blocks=1,silent=False):
 
 		blocks = int(blocks)
-		self.switch_user('miner',quiet=True)
+		await self.switch_user('miner',quiet=True)
 
 		async def have_generatetoaddress():
 			ret = await self.rpc_call('help','generatetoaddress')
@@ -130,49 +130,15 @@ class MMGenRegtest(MMGenObject):
 
 	async def rpc_call(self,*args):
 		from .rpc import rpc_init
-		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
+		rpc = await rpc_init(self.proto,backend=None,daemon=self.d,caller='regtest')
 		return await rpc.call(*args)
 
-	def current_user_unix(self,quiet=False):
-		cmd = ['pgrep','-af','{}.*--rpcport={}.*'.format(self.d.coind_exec,self.d.rpc_port)]
-		cmdout = run(cmd,stdout=PIPE).stdout.decode()
-		if cmdout:
-			for k in self.users:
-				if '--wallet='+k in cmdout:
-					return k
-		return None
-
-	def current_user_win(self,quiet=False):
-
-		if self.d.state == 'stopped':
+	async def current_user(self):
+		try:
+			return (await self.rpc_call('getwalletinfo'))['walletname']
+		except SocketError as e:
+			msg(str(e))
 			return None
-
-		debug_logfile = os.path.join(self.d.datadir,'regtest','debug.log')
-		fd = os.open(debug_logfile,os.O_RDONLY|os.O_BINARY)
-		file_size = os.fstat(fd).st_size
-
-		def get_log_tail(num_bytes):
-			os.lseek(fd,max(0,file_size-num_bytes),os.SEEK_SET)
-			return os.read(fd,num_bytes)
-
-		lines = reversed(get_log_tail(40_000).decode().splitlines())
-
-		import re
-		pat = re.compile(r'\b(alice|bob|miner)\b')
-		for ss in ( 'BerkeleyEnvironment::Open',
-					'Wallet completed loading in',
-					'Using wallet wallet' ):
-			for line in lines:
-				if ss in line:
-					m = pat.search(line)
-					if m and m.group(1) in self.users:
-						return m.group(1)
-
-		return None # failure to determine current user is not fatal, so don't raise exception
-
-	current_user = {
-		'win': current_user_win,
-		'linux': current_user_unix }[g.platform]
 
 	async def stop(self):
 		await self.rpc_call('stop')
@@ -182,13 +148,13 @@ class MMGenRegtest(MMGenObject):
 
 	async def balances(self,*users):
 		users = list(set(users or ['bob','alice']))
-		cur_user = self.current_user()
+		cur_user = await self.current_user()
 		if cur_user in users:
 			users.remove(cur_user)
 			users = [cur_user] + users
 		bal = {}
 		for user in users:
-			self.switch_user(user,quiet=True)
+			await self.switch_user(user,quiet=True)
 			out = await self.rpc_call('listunspent',0)
 			bal[user] = sum(e['amount'] for e in out)
 
@@ -198,7 +164,7 @@ class MMGenRegtest(MMGenObject):
 		msg(fs.format('Total balance:',sum(v for k,v in bal.items())))
 
 	async def send(self,addr,amt):
-		self.switch_user('miner',quiet=True)
+		await self.switch_user('miner',quiet=True)
 		gmsg('Sending {} miner {} to address {}'.format(amt,self.d.daemon_id.upper(),addr))
 		cp = await self.rpc_call('sendtoaddress',addr,str(amt))
 		await self.generate(1)
@@ -215,28 +181,29 @@ class MMGenRegtest(MMGenObject):
 		ret = getattr(self,args[0])(*args[1:])
 		return (await ret) if type(ret).__name__ == 'coroutine' else ret
 
-	def user(self):
-		u = self.current_user()
-		msg(u.capitalize() if u else str(u))
+	async def user(self):
+		ret = await self.current_user()
+		msg(ret.capitalize() if ret else 'None')
 
-	def bob(self):   self.switch_user('bob')
-	def alice(self): self.switch_user('alice')
-	def miner(self): self.switch_user('miner')
+	async def bob(self):   await self.switch_user('bob')
+	async def alice(self): await self.switch_user('alice')
+	async def miner(self): await self.switch_user('miner')
 
-	def switch_user(self,user,quiet=False):
+	async def switch_user(self,user,quiet=False):
 
 		if self.d.state == 'busy':
 			self.d.wait_for_state('ready')
 
 		if self.d.state == 'ready':
-			if user == self.current_user():
+			cur_user = await self.current_user()
+			if user == cur_user:
 				if not quiet:
 					msg('{} is already the current user for {}'.format(user.capitalize(),self.d.net_desc))
 				return
 			gmsg_r('Switching to user {} for {}'.format(user.capitalize(),self.d.net_desc))
-			self.d.stop(silent=True)
-			time.sleep(0.1) # file lock has race condition - TODO: test for lock file
-			self.start_daemon(user)
+			if cur_user:
+				await self.rpc_call('unloadwallet',cur_user)
+			await self.rpc_call('loadwallet',user)
 		else:
 			m = 'Starting {} {} with current user {}'
 			gmsg_r(m.format(self.d.net_desc,self.d.desc,user.capitalize()))

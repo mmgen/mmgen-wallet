@@ -326,7 +326,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 	def __init__(self,*args,**kwargs):
 		pass
 
-	async def __ainit__(self,proto,daemon,backend):
+	async def __ainit__(self,proto,daemon,backend,caller):
 
 		self.proto = proto
 		self.daemon = daemon
@@ -338,9 +338,9 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 		self.set_auth() # set_auth() requires cookie, so must be called after __init__() tests daemon is listening
 		self.set_backend(backend) # backend requires self.auth
 
-		if g.bob or g.alice:
+		if caller != 'regtest' and (g.bob or g.alice):
 			from .regtest import MMGenRegtest
-			MMGenRegtest(self.proto.coin).switch_user(('alice','bob')[g.bob],quiet=True)
+			await MMGenRegtest(self.proto.coin).switch_user(('alice','bob')[g.bob],quiet=True)
 
 		self.cached = {}
 		(
@@ -487,7 +487,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 	def __init__(self,*args,**kwargs):
 		pass
 
-	async def __ainit__(self,proto,daemon,backend):
+	async def __ainit__(self,proto,daemon,backend,caller):
 		self.proto = proto
 		self.daemon = daemon
 
@@ -618,7 +618,7 @@ def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,warning_sh
 					rpc.daemon.coind_version_str,
 					),indent='    ').rstrip())
 
-async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
+async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False,caller=None):
 
 	if not 'rpc' in proto.mmcaps:
 		die(1,f'Coin daemon operations not supported for {proto.name} protocol!')
@@ -630,7 +630,8 @@ async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 	}[proto.base_proto](
 		proto   = proto,
 		daemon  = daemon or CoinDaemon(proto=proto,test_suite=g.test_suite),
-		backend = backend or opt.rpc_backend )
+		backend = backend or opt.rpc_backend,
+		caller  = caller )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:
 		handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version)
