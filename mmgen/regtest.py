@@ -87,6 +87,20 @@ class MMGenRegtest(MMGenObject):
 
 		gmsg('Mined {} block{}'.format(blocks,suf(blocks)))
 
+	async def create_tracking_wallet(self,user):
+		try:
+			await self.rpc_call('getbalance')
+		except:
+			await self.rpc_call('createwallet',
+					user,            # wallet_name
+					user != 'miner', # disable_private_keys
+					user != 'miner', # blank (no keys or seed)
+					'',              # passphrase (empty string for non-encrypted)
+					False,           # avoid_reuse (track address reuse)
+					False,           # descriptors (native descriptor wallet)
+					False            # load_on_startup
+				)
+
 	async def setup(self):
 
 		try: os.makedirs(self.d.datadir)
@@ -101,6 +115,7 @@ class MMGenRegtest(MMGenObject):
 
 		gmsg('Creating miner wallet')
 		self.start_daemon('miner')
+		await self.create_tracking_wallet('miner')
 
 		await self.generate(432,silent=True)
 		await self.rpc_call('stop')
@@ -109,6 +124,7 @@ class MMGenRegtest(MMGenObject):
 		for user in ('alice','bob'):
 			gmsg("Creating {}'s tracking wallet".format(user.capitalize()))
 			self.start_daemon(user)
+			await self.create_tracking_wallet(user)
 			if user == 'bob' and opt.setup_no_stop_daemon:
 				msg('Leaving daemon running with Bob as current user')
 			else:

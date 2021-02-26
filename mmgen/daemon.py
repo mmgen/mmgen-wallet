@@ -313,7 +313,7 @@ class CoinDaemon(Daemon):
 		'btc': cd(
 			'Bitcoin',
 			'Bitcoin',
-			'Bitcoin Core', 200100, '0.20.1',
+			'Bitcoin Core', 210000, '0.21.0',
 			'bitcoind',
 			'bitcoin-cli',
 			'bitcoin.conf',
@@ -508,6 +508,7 @@ class CoinDaemon(Daemon):
 
 class BitcoinDaemon(CoinDaemon):
 	cfg_file_hdr = '# BitcoinDaemon config file\n'
+	tracking_wallet_name = 'mmgen-tracking-wallet'
 
 	def subclass_init(self):
 
