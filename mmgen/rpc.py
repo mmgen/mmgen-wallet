@@ -70,6 +70,7 @@ class RPCBackends:
 			self.url            = caller.url
 			self.timeout        = caller.timeout
 			self.http_hdrs      = caller.http_hdrs
+			self.make_host_path = caller.make_host_path
 
 	class aiohttp(base):
 
@@ -82,10 +83,10 @@ class RPCBackends:
 			else:
 				self.auth = None
 
-		async def run(self,payload,timeout):
+		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (aiohttp) ==>\n{}\n',payload)
 			async with self.session.post(
-				url     = self.url,
+				url     = self.url + self.make_host_path(wallet),
 				auth    = self.auth,
 				data    = json.dumps(payload,cls=json_encoder),
 				timeout = timeout or self.timeout,
@@ -104,10 +105,10 @@ class RPCBackends:
 				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
 				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
 
-		async def run(self,payload,timeout):
+		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
 			res = self.session.post(
-				url     = self.url,
+				url     = self.url + self.make_host_path(wallet),
 				data    = json.dumps(payload,cls=json_encoder),
 				timeout = timeout or self.timeout,
 				verify  = False )
@@ -126,7 +127,7 @@ class RPCBackends:
 				fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
 				dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
 
-		async def run(self,payload,timeout):
+		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
 			if timeout:
 				import http.client
@@ -136,7 +137,7 @@ class RPCBackends:
 			try:
 				s.request(
 					method  = 'POST',
-					url     = '/',
+					url     = self.make_host_path(wallet),
 					body    = json.dumps(payload,cls=json_encoder),
 					headers = self.http_hdrs )
 				r = s.getresponse() # => http.client.HTTPResponse instance
@@ -168,7 +169,7 @@ class RPCBackends:
 			self.exec_opts = list(gen_opts()) + ['--silent']
 			self.arg_max = 8192 # set way below system ARG_MAX, just to be safe
 
-		async def run(self,payload,timeout):
+		async def run(self,payload,timeout,wallet):
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
 				return self.httplib(payload,timeout=timeout)
@@ -180,7 +181,7 @@ class RPCBackends:
 				'--request', 'POST',
 				'--write-out', '%{http_code}',
 				'--data-binary', data
-				] + self.exec_opts + [self.url]
+				] + self.exec_opts + [self.url + self.make_host_path(wallet)]
 
 			dmsg_rpc('    RPC curl exec data ==>\n{}\n',exec_cmd)
 
@@ -217,6 +218,10 @@ class RPCClient(MMGenObject):
 		self.timeout = g.http_timeout
 		self.auth = None
 
+	@staticmethod
+	def make_host_path(foo):
+		return ''
+
 	def set_backend(self,backend=None):
 		bn = backend or opt.rpc_backend
 		if bn == 'auto':
@@ -249,9 +254,9 @@ class RPCClient(MMGenObject):
 		))
 
 	# Call family of methods - direct-to-daemon RPC call:
-	# positional params are passed to the daemon, 'timeout' kwarg to the backend
+	# positional params are passed to the daemon, 'timeout' and 'wallet' kwargs to the backend
 
-	async def call(self,method,*params,timeout=None):
+	async def call(self,method,*params,timeout=None,wallet=None):
 		"""
 		default call: call with param list unrolled, exactly as with cli
 		"""
@@ -260,9 +265,10 @@ class RPCClient(MMGenObject):
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
 			timeout = timeout,
+			wallet  = wallet
 		))
 
-	async def batch_call(self,method,param_list,timeout=None):
+	async def batch_call(self,method,param_list,timeout=None,wallet=None):
 		"""
 		Make a single call with a list of tuples as first argument
 		For RPC calls that return a list of results
@@ -274,9 +280,10 @@ class RPCClient(MMGenObject):
 				'method': method,
 				'params': params } for n,params in enumerate(param_list,1) ],
 			timeout = timeout,
+			wallet  = wallet
 		),batch=True)
 
-	async def gathered_call(self,method,args_list,timeout=None):
+	async def gathered_call(self,method,args_list,timeout=None,wallet=None):
 		"""
 		Perform multiple RPC calls, returning results in a list
 		Can be called two ways:
@@ -293,6 +300,7 @@ class RPCClient(MMGenObject):
 			tasks = [self.process_http_resp(self.backend.run(
 						payload = {'id': n, 'jsonrpc': '2.0', 'method': method, 'params': params },
 						timeout = timeout,
+						wallet  = wallet
 					)) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
 			ret.extend(await asyncio.gather(*tasks))
 			cur_pos += chunk_size
@@ -445,6 +453,12 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 	def get_daemon_auth_cookie(self):
 		fn = self.get_daemon_auth_cookie_fn()
 		return get_lines_from_file(fn,'')[0] if file_is_readable(fn) else ''
+
+	@staticmethod
+	def make_host_path(wallet):
+		return (
+			'/wallet/{}'.format(wallet) if wallet else '/'
+		)
 
 	def info(self,info_id):
 
@@ -609,6 +623,7 @@ class MoneroWalletRPCClient(RPCClient):
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
 			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
+			wallet = None
 		))
 
 	rpcmethods = (
