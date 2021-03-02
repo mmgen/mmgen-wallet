@@ -144,7 +144,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
 		('daemon_version',           'mmgen-tool daemon_version'),
-		('current_user',             'current user'),
 		('halving_calculator_bob',   'halving calculator (Bob)'),
 		('walletgen_bob',            'wallet generation (Bob)'),
 		('walletgen_alice',          'wallet generation (Alice)'),
@@ -276,18 +275,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
 		t = self.spawn('mmgen-regtest',['-n','setup'])
 		os.environ['MMGEN_TEST_SUITE'] = '1'
-		for s in ('Starting','Creating','Mined','Creating','Creating','Setup complete'):
+		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
 			t.expect(s)
 		return t
 
 	def daemon_version(self):
 		t = self.spawn('mmgen-tool', ['--bob','daemon_version'])
 		t.expect('version')
-		return t
-
-	def current_user(self):
-		t = self.spawn('mmgen-regtest', ['user'])
-		t.expect('Bob')
 		return t
 
 	def halving_calculator_bob(self):
@@ -526,11 +520,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_alice_bal(self):
 		t = self.spawn('mmgen-regtest',['balances'])
-		t.expect('Switching')
-		ret = t.expect_getend("Alice's balance:").strip()
-		cmp_or_die(rtBals[5],ret)
 		ret = t.expect_getend("Bob's balance:").strip()
 		cmp_or_die(rtBals[4],ret)
+		ret = t.expect_getend("Alice's balance:").strip()
+		cmp_or_die(rtBals[5],ret)
 		ret = t.expect_getend("Total balance:").strip()
 		cmp_or_die(rtBals[6],ret)
 		return t

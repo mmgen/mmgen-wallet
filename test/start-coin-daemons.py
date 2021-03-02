@@ -4,7 +4,6 @@ import sys
 from include.tests_header import repo_root
 from mmgen.common import *
 from mmgen.daemon import CoinDaemon
-from mmgen.regtest import MMGenRegtest
 
 action = g.prog_name.split('-')[0]
 
@@ -18,7 +17,6 @@ opts_data = {
 --, --longhelp       Print help message for long options (common options)
 -d, --debug          Produce debugging output (implies --verbose)
 -D, --no-daemonize   Don't fork daemon to background
--r, --regtest-user=U {a} a regtest daemon for user 'U'
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
 -v, --verbose        Produce more verbose output
@@ -26,17 +24,11 @@ opts_data = {
 """,
 	'notes': """
 Valid network IDs: {nid}, all, or no_xmr
-Valid Regtest network IDs: {rid}, or all
-Valid Regtest users:       {ru}
 """
 	},
 	'code': {
 		'options': lambda s: s.format(a=action.capitalize(),pn=g.prog_name),
-		'notes': lambda s: s.format(
-			nid=', '.join(CoinDaemon.network_ids),
-			rid=', '.join(MMGenRegtest.coins),
-			ru=', '.join(MMGenRegtest.users),
-		)
+		'notes': lambda s: s.format(nid=', '.join(CoinDaemon.network_ids))
 	}
 }
 
@@ -45,8 +37,6 @@ cmd_args = opts.init(opts_data)
 if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
-	if opt.regtest_user:
-		ids = MMGenRegtest.coins
 	else:
 		ids = list(CoinDaemon.network_ids)
 		if cmd_args[0] == 'no_xmr':
@@ -58,10 +48,6 @@ else:
 	for i in ids:
 		if i not in CoinDaemon.network_ids:
 			die(1,f'{i!r}: invalid network ID')
-		if i.endswith('_rt'):
-			die(1,'For regtest, use the plain coin symbol and the --regtest-user option')
-		if opt.regtest_user and i not in MMGenRegtest.coins:
-			die(1,f'For regtest, coin symbol must be one of {MMGenRegtest.coins}')
 
 if 'eth' in ids and 'etc' in ids:
 	msg('Cannot run ETH and ETC simultaneously, so skipping ETC')
@@ -69,12 +55,7 @@ if 'eth' in ids and 'etc' in ids:
 
 for network_id in ids:
 	network_id = network_id.lower()
-	if opt.regtest_user:
-		rt = MMGenRegtest(network_id)
-		rt.init_daemon(opt.regtest_user)
-		d = rt.d
-	else:
-		d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
+	d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:
