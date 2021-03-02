@@ -193,6 +193,47 @@ class RPCBackends:
 from collections import namedtuple
 auth_data = namedtuple('rpc_auth_data',['user','passwd'])
 
+class CallSigs:
+
+	class Bitcoin:
+
+		class bitcoin_core:
+
+			@classmethod
+			def createwallet(cls,wallet_name,no_keys=True,passphrase='',load_on_startup=True):
+				"""
+				Quirk: when --datadir is specified (even if standard), wallet is created directly in
+				datadir, otherwise in datadir/wallets
+				"""
+				return (
+					'createwallet',
+					wallet_name,    # 1. wallet_name
+					no_keys,        # 2. disable_private_keys
+					no_keys,        # 3. blank (no keys or seed)
+					passphrase,     # 4. passphrase (empty string for non-encrypted)
+					False,          # 5. avoid_reuse (track address reuse)
+					False,          # 6. descriptors (native descriptor wallet)
+					load_on_startup # 7. load_on_startup
+				)
+
+		class litecoin_core(bitcoin_core):
+
+			@classmethod
+			def createwallet(cls,wallet_name,no_keys=True,passphrase='',load_on_startup=True):
+				return (
+					'createwallet',
+					wallet_name,    # 1. wallet_name
+					no_keys,        # 2. disable_private_keys
+					no_keys,        # 3. blank (no keys or seed)
+				)
+
+		class bitcoin_cash_node(litecoin_core): pass
+
+	class Ethereum:
+
+		class openethereum: pass
+
+
 class RPCClient(MMGenObject):
 
 	auth_type = None
@@ -307,6 +348,19 @@ class RPCClient(MMGenObject):
 
 		return ret
 
+	# Icall family of methods - indirect RPC call using CallSigs mechanism:
+	# - 'timeout' and 'wallet' kwargs are passed to corresponding Call method
+	# - remaining kwargs are passed to CallSigs method
+	# - CallSigs method returns method and positional params for Call method
+
+	def icall(self,method,**kwargs):
+		timeout = kwargs.pop('timeout',None)
+		wallet = kwargs.pop('wallet',None)
+		return self.call(
+			*getattr(self.call_sigs,method)(**kwargs),
+			timeout = timeout,
+			wallet = wallet )
+
 	async def process_http_resp(self,coro,batch=False):
 		text,status = await coro
 		if status == 200:
@@ -341,6 +395,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 		self.proto = proto
 		self.daemon = daemon
+		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id)
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
@@ -530,6 +585,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 	async def __ainit__(self,proto,daemon,backend,caller):
 		self.proto = proto
 		self.daemon = daemon
+		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id)
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),

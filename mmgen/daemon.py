@@ -297,6 +297,7 @@ class CoinDaemon(Daemon):
 	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
 
 	cd = namedtuple('daemon_data', [
+		'id',
 		'coin',
 		'cls_pfx',
 		'coind_name',
@@ -311,6 +312,7 @@ class CoinDaemon(Daemon):
 
 	daemon_ids = {
 		'btc': cd(
+			'bitcoin_core',
 			'Bitcoin',
 			'Bitcoin',
 			'Bitcoin Core', 210000, '0.21.0',
@@ -320,6 +322,7 @@ class CoinDaemon(Daemon):
 			'testnet3',
 			8332, 18332, 18444),
 		'bch': cd(
+			'bitcoin_cash_node',
 			'BitcoinCashNode',
 			'Bitcoin',
 			'Bitcoin Cash Node', 22020000, '22.2.0',
@@ -329,6 +332,7 @@ class CoinDaemon(Daemon):
 			'testnet3',
 			8442, 18442, 18553), # for BCH we use non-standard RPC ports
 		'ltc': cd(
+			'litecoin_core',
 			'Litecoin',
 			'Bitcoin',
 			'Litecoin Core', 180100, '0.18.1',
@@ -338,6 +342,7 @@ class CoinDaemon(Daemon):
 			'testnet4',
 			9332, 19332, 19444),
 		'xmr': cd(
+			'monerod',
 			'Monero',
 			'Monero',
 			'Monero', 'N/A', 'N/A',
@@ -347,6 +352,7 @@ class CoinDaemon(Daemon):
 			None,
 			18081, None, None),
 		'eth': cd(
+			'openethereum',
 			'Ethereum',
 			'Ethereum',
 			'OpenEthereum', 3000001, '3.0.1',
@@ -356,6 +362,7 @@ class CoinDaemon(Daemon):
 			None,
 			8545, 8545, 8545),
 		'etc': cd(
+			'openethereum',
 			'Ethereum Classic',
 			'Ethereum',
 			'OpenEthereum', 3000001, '3.0.1',
