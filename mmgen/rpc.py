@@ -62,20 +62,27 @@ class json_encoder(json.JSONEncoder):
 
 class RPCBackends:
 
-	class aiohttp:
+	class base:
 
 		def __init__(self,caller):
-			self.caller = caller
+			self.host           = caller.host
+			self.port           = caller.port
+			self.url            = caller.url
+			self.timeout        = caller.timeout
+			self.http_hdrs      = caller.http_hdrs
+
+	class aiohttp(base):
+
+		def __init__(self,caller):
+			super().__init__(caller)
 			self.session = g.session
-			self.url = caller.url
-			self.timeout = caller.timeout
 			if caller.auth_type == 'basic':
 				import aiohttp
 				self.auth = aiohttp.BasicAuth(*caller.auth,encoding='UTF-8')
 			else:
 				self.auth = None
 
-		async def run(self,payload,timeout=None):
+		async def run(self,payload,timeout):
 			dmsg_rpc('\n    RPC PAYLOAD data (aiohttp) ==>\n{}\n',payload)
 			async with self.session.post(
 				url     = self.url,
@@ -85,11 +92,10 @@ class RPCBackends:
 			) as res:
 				return (await res.text(),res.status)
 
-	class requests:
+	class requests(base):
 
 		def __init__(self,caller):
-			self.url = caller.url
-			self.timeout = caller.timeout
+			super().__init__(caller)
 			import requests,urllib3
 			urllib3.disable_warnings()
 			self.session = requests.Session()
@@ -98,23 +104,21 @@ class RPCBackends:
 				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
 				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
 
-		async def run(self,payload,timeout=None):
+		async def run(self,payload,timeout):
 			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
 			res = self.session.post(
-				url = self.url,
-				data = json.dumps(payload,cls=json_encoder),
+				url     = self.url,
+				data    = json.dumps(payload,cls=json_encoder),
 				timeout = timeout or self.timeout,
-				verify = False )
+				verify  = False )
 			return (res.content,res.status_code)
 
-	class httplib:
+	class httplib(base):
 
 		def __init__(self,caller):
+			super().__init__(caller)
 			import http.client
 			self.session = http.client.HTTPConnection(caller.host,caller.port,caller.timeout)
-			self.http_hdrs = caller.http_hdrs
-			self.host = caller.host
-			self.port = caller.port
 			if caller.auth_type == 'basic':
 				auth_str = f'{caller.auth.user}:{caller.auth.passwd}'
 				auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
@@ -122,7 +126,7 @@ class RPCBackends:
 				fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
 				dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
 
-		async def run(self,payload,timeout=None):
+		async def run(self,payload,timeout):
 			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
 			if timeout:
 				import http.client
@@ -140,7 +144,7 @@ class RPCBackends:
 				raise RPCFailure(str(e))
 			return (r.read(),r.status)
 
-	class curl:
+	class curl(base):
 
 		def __init__(self,caller):
 
@@ -160,12 +164,11 @@ class RPCBackends:
 				if caller.network_proto == 'https' and caller.verify_server == False:
 					yield '--insecure'
 
-			self.url = caller.url
+			super().__init__(caller)
 			self.exec_opts = list(gen_opts()) + ['--silent']
 			self.arg_max = 8192 # set way below system ARG_MAX, just to be safe
-			self.timeout = caller.timeout
 
-		async def run(self,payload,timeout=None):
+		async def run(self,payload,timeout):
 			data = json.dumps(payload,cls=json_encoder)
 			if len(data) > self.arg_max:
 				return self.httplib(payload,timeout=timeout)
@@ -245,10 +248,10 @@ class RPCClient(MMGenObject):
 			cf_name = (self.proto.is_fork_of or self.proto.name).lower(),
 		))
 
-	# positional params are passed to the daemon, kwargs to the backend
-	# 'timeout' is currently the only supported kwarg
+	# Call family of methods - direct-to-daemon RPC call:
+	# positional params are passed to the daemon, 'timeout' kwarg to the backend
 
-	async def call(self,method,*params,**kwargs):
+	async def call(self,method,*params,timeout=None):
 		"""
 		default call: call with param list unrolled, exactly as with cli
 		"""
@@ -256,10 +259,10 @@ class RPCClient(MMGenObject):
 			method = 'badcommand_' + method
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
-			**kwargs
+			timeout = timeout,
 		))
 
-	async def batch_call(self,method,param_list,**kwargs):
+	async def batch_call(self,method,param_list,timeout=None):
 		"""
 		Make a single call with a list of tuples as first argument
 		For RPC calls that return a list of results
@@ -270,10 +273,10 @@ class RPCClient(MMGenObject):
 				'jsonrpc': '2.0',
 				'method': method,
 				'params': params } for n,params in enumerate(param_list,1) ],
-			**kwargs
+			timeout = timeout,
 		),batch=True)
 
-	async def gathered_call(self,method,args_list,**kwargs):
+	async def gathered_call(self,method,args_list,timeout=None):
 		"""
 		Perform multiple RPC calls, returning results in a list
 		Can be called two ways:
@@ -289,7 +292,7 @@ class RPCClient(MMGenObject):
 		while cur_pos < len(cmd_list):
 			tasks = [self.process_http_resp(self.backend.run(
 						payload = {'id': n, 'jsonrpc': '2.0', 'method': method, 'params': params },
-						**kwargs
+						timeout = timeout,
 					)) for n,(method,params)  in enumerate(cmd_list[cur_pos:chunk_size+cur_pos],1)]
 			ret.extend(await asyncio.gather(*tasks))
 			cur_pos += chunk_size
@@ -594,7 +597,6 @@ class MoneroWalletRPCClient(RPCClient):
 	def __init__(self,host,port,user,passwd):
 		super().__init__(host,port)
 		self.auth = auth_data(user,passwd)
-		self.timeout = 3600 # allow enough time to sync ≈1,000,000 blocks
 		if True:
 			self.set_backend('requests')
 		else: # insecure, for debugging only
@@ -606,6 +608,7 @@ class MoneroWalletRPCClient(RPCClient):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 0, 'jsonrpc': '2.0', 'method': method, 'params': kwargs },
+			timeout = 3600, # allow enough time to sync ≈1,000,000 blocks
 		))
 
 	rpcmethods = (
