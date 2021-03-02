@@ -885,7 +885,6 @@ def run_session(callback,backend=None):
 				connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len),
 			) as g.session:
 				ret = await callback
-			g.session = None
 			return ret
 		else:
 			return await callback

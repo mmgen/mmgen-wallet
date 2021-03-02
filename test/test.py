@@ -362,6 +362,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'34': {},
 	'40': {},
 	'41': {},
+	'99': {}, # dummy
 }
 
 def fixup_cfgs():
@@ -490,6 +491,7 @@ def set_restore_term_at_exit():
 class CmdGroupMgr(object):
 
 	cmd_groups_dfl = {
+		'misc':             ('TestSuiteMisc',{}),
 		'opts':             ('TestSuiteOpts',{'full_data':True}),
 		'cfg':              ('TestSuiteCfg',{'full_data':True}),
 		'helpscreens':      ('TestSuiteHelp',{'modname':'misc','full_data':True}),

@@ -26,39 +26,14 @@ from .common import *
 from .ts_base import *
 from .ts_main import TestSuiteMain
 
-class TestSuiteHelp(TestSuiteBase):
-	'help, info and usage screens'
-	networks = ('btc','ltc','bch','eth')
-	tmpdir_nums = []
-	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
+class TestSuiteMisc(TestSuiteBase):
+	'miscellaneous tests (RPC backends)'
+	networks = ('btc',)
+	tmpdir_nums = [99]
+	passthru_opts = ('daemon_data_dir','rpc_port')
 	cmd_group = (
-		('helpscreens',     (1,'help screens',             [])),
-		('longhelpscreens', (1,'help screens (--longhelp)',[])),
-		('opt_show_hash_presets', (1,'info screen (--show-hash-presets)',[])),
-		('tool_help',       (1,"'mmgen-tool' usage screen",[])),
-		('test_help',       (1,"'test.py' help screens",[])),
+		('rpc_backends', 'RPC backends'),
 	)
-	def helpscreens(self,
-		arg = '--help',
-		scripts = ( 'walletgen','walletconv','walletchk','passchg','subwalletgen',
-					'addrgen','keygen','passgen',
-					'seedsplit','seedjoin',
-					'txcreate','txsign','txsend','txdo','txbump',
-					'addrimport','regtest','autosign')):
-		for s in scripts:
-			t = self._run_cmd('mmgen-'+s,[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
-		return t
-
-	def longhelpscreens(self):
-		return self.helpscreens(arg='--longhelp')
-
-	def opt_show_hash_presets(self):
-		return self.helpscreens(
-			arg = '--show-hash-presets',
-			scripts = (
-					'walletgen','walletconv','walletchk','passchg','subwalletgen',
-					'addrgen','keygen','passgen',
-					'txsign','txdo','txbump'))
 
 	def _run_cmd(   self, cmd_name,
 					cmd_args = [],
@@ -80,6 +55,49 @@ class TestSuiteHelp(TestSuiteBase):
 			rdie(1,"\n'{}' returned {}".format(self.test_name,ret))
 		t.skip_ok = True
 		return t
+
+	def rpc_backends(self):
+		backends = g.autoset_opts['rpc_backend'][1]
+		for backend in backends:
+			t = self._run_cmd('mmgen-tool',[f'--rpc-backend={backend}','daemon_version'],extra_desc=f' ({backend})')
+		return t
+
+class TestSuiteHelp(TestSuiteMisc,TestSuiteBase):
+	'help, info and usage screens'
+	networks = ('btc','ltc','bch','eth')
+	tmpdir_nums = []
+	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
+	cmd_group = (
+		('helpscreens',     (1,'help screens',             [])),
+		('longhelpscreens', (1,'help screens (--longhelp)',[])),
+		('opt_show_hash_presets', (1,'info screen (--show-hash-presets)',[])),
+		('tool_help',       (1,"'mmgen-tool' usage screen",[])),
+		('test_help',       (1,"'test.py' help screens",[])),
+	)
+	def helpscreens(self,
+		arg = '--help',
+		scripts = ( 'walletgen','walletconv','walletchk','passchg','subwalletgen',
+					'addrgen','keygen','passgen',
+					'seedsplit','seedjoin',
+					'txcreate','txsign','txsend','txdo','txbump',
+					'addrimport','autosign')
+		):
+		if self.test_name == 'helpscreens' and self.proto.base_coin != 'ETH':
+			scripts += ('regtest',)
+		for s in scripts:
+			t = self._run_cmd('mmgen-'+s,[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
+		return t
+
+	def longhelpscreens(self):
+		return self.helpscreens(arg='--longhelp')
+
+	def opt_show_hash_presets(self):
+		return self.helpscreens(
+			arg = '--show-hash-presets',
+			scripts = (
+					'walletgen','walletconv','walletchk','passchg','subwalletgen',
+					'addrgen','keygen','passgen',
+					'txsign','txdo','txbump'))
 
 	def tool_help(self):
 		self._run_cmd('mmgen-tool',['--help'],extra_desc="('mmgen-tool --help')")
