@@ -453,27 +453,18 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 				self.caps += (cap,)
 
 		if caller != 'regtest':
-			try:
-				await self.call('getbalance')
-			except:
-				await self.create_tracking_wallet()
+			await self.check_tracking_wallet()
 
-	async def create_tracking_wallet(self):
-		"""
-		Quirk: when --datadir is specified (even if standard), wallet is created directly in
-		datadir, otherwise in datadir/wallets
-		"""
-		wname = self.daemon.tracking_wallet_name
-		await self.call('createwallet',
-				wname,  # wallet_name
-				True,   # disable_private_keys
-				True,   # blank (no keys or seed)
-				'',     # passphrase (empty string for non-encrypted)
-				False,  # avoid_reuse (track address reuse)
-				False,  # descriptors (native descriptor wallet)
-				True    # load_on_startup
-			)
-		ymsg(f'Created {self.daemon.coind_name} wallet {wname!r}')
+	async def check_tracking_wallet(self,wallet_checked=[]):
+		if not wallet_checked:
+			wallets = await self.call('listwallets')
+			if len(wallets) == 0:
+				wname = self.daemon.tracking_wallet_name
+				await self.icall('createwallet',wallet_name=wname)
+				ymsg(f'Created {self.daemon.coind_name} wallet {wname!r}')
+			elif len(wallets) > 1: # support only one loaded wallet for now
+				rdie(2,f'ERROR: more than one {self.daemon.coind_name} wallet loaded: {wallets}')
+			wallet_checked.append(True)
 
 	def get_daemon_cfg_fn(self):
 		# Use dirname() to remove 'bob' or 'alice' component
