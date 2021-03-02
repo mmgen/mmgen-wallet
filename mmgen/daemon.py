@@ -541,6 +541,13 @@ class BitcoinDaemon(CoinDaemon):
 		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
 			self.daemonize_args = ['--daemon']
 
+		if self.network == 'regtest':
+			from mmgen.regtest import MMGenRegtest
+			self.shared_args += [
+				f'--rpcuser={MMGenRegtest.rpc_user}',
+				f'--rpcpassword={MMGenRegtest.rpc_password}',
+				'--regtest' ]
+
 		if self.daemon_id == 'btc':
 			if self.network == 'regtest':
 				self.coin_specific_coind_args = ['--fallbackfee=0.0002']

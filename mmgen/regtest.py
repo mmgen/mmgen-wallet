@@ -25,6 +25,7 @@ from subprocess import run,PIPE
 from .common import *
 from .protocol import init_proto
 from .daemon import CoinDaemon
+from .rpc import rpc_init
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
@@ -56,7 +57,6 @@ class MMGenRegtest(MMGenObject):
 
 		self.proto = init_proto(self.coin,regtest=True)
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite_regtest)
-		self.d.usr_shared_args = [f'--rpcuser={self.rpc_user}', f'--rpcpassword={self.rpc_password}', '--regtest']
 
 	async def generate(self,blocks=1,silent=False):
 
@@ -111,7 +111,7 @@ class MMGenRegtest(MMGenObject):
 
 		create_data_dir(self.d.datadir)
 
-		gmsg('Starting {} regtest setup'.format(self.coin))
+		gmsg('Starting {} regtest setup'.format(self.coin.upper()))
 
 		gmsg('Creating miner wallet')
 		self.start_daemon('miner')
@@ -145,7 +145,6 @@ class MMGenRegtest(MMGenObject):
 		self.d.start(silent=silent)
 
 	async def rpc_call(self,*args):
-		from .rpc import rpc_init
 		rpc = await rpc_init(self.proto,backend=None,daemon=self.d,caller='regtest')
 		return await rpc.call(*args)
 
@@ -191,7 +190,8 @@ class MMGenRegtest(MMGenObject):
 	async def cli(self,*args):
 		import json
 		from .rpc import json_encoder
-		print(json.dumps(await self.rpc_call(*args),cls=json_encoder))
+		ret = await self.rpc_call(*args)
+		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder))
 
 	async def cmd(self,args):
 		ret = getattr(self,args[0])(*args[1:])
