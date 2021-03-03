@@ -74,21 +74,24 @@ class TestSuiteAutosign(TestSuiteBase):
 				t.ok()
 				self.key_generated = True
 
-		def make_wallet(opts):
+		def make_wallet(opts,mn_type=None):
+			mn_desc = mn_type or 'default'
+			mn_type = mn_type or 'mmgen'
 
 			t = self.spawn(
 				'mmgen-autosign',
 				opts +
+				([] if mn_desc == 'default' else [f'--mnemonic-fmt={mn_type}']) +
 				['setup'],
-				extra_desc = '(setup)' )
+				extra_desc = f'(setup - {mn_desc} mnemonic)' )
 
 			t.expect('words: ','3')
 			t.expect('OK? (Y/n): ','\n')
-			mn_file = dfl_words_file
+			mn_file = { 'mmgen': dfl_words_file, 'bip39': dfl_bip39_file }[mn_type]
 			mn = read_from_file(mn_file).strip().split()
 			from mmgen.mn_entry import mn_entry
 			entry_mode = 'full'
-			mne = mn_entry('mmgen',entry_mode)
+			mne = mn_entry(mn_type,entry_mode)
 			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 			stealth_mnemonic_entry(t,mne,mn,entry_mode)
 			wf = t.written_to_file('Autosign wallet')
@@ -186,7 +189,7 @@ class TestSuiteAutosign(TestSuiteBase):
 				t.expect("Stopping LED")
 			return t
 
-		def do_autosign(opts,mountpoint):
+		def do_autosign(opts,mountpoint,mn_type=None,short=False):
 
 			def autosign_expect(t,txcount):
 				t.expect('{} transactions signed'.format(txcount))
@@ -199,11 +202,14 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			if not opt.skip_deps:
 				gen_key(opts)
-				make_wallet(opts)
+				make_wallet(opts,mn_type)
 
 			copy_files(mountpoint,include_bad_tx=True)
 			t = self.spawn('mmgen-autosign',opts+['--quiet','wait'],extra_desc='(sign)')
 			autosign_expect(t,txcount)
+
+			if short:
+				return t
 
 			copy_files(mountpoint,remove_signed_only=True)
 			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
@@ -271,6 +277,8 @@ class TestSuiteAutosign(TestSuiteBase):
 			opts = ['--no-insert-check','--mountpoint='+mountpoint,'--coins='+','.join(coins)]
 			try: os.mkdir(joinpath(mountpoint,'tx'))
 			except: pass
+			foo = do_autosign(opts,mountpoint,mn_type='mmgen',short=True)
+			foo = do_autosign(opts,mountpoint,mn_type='bip39',short=True)
 			ret = do_autosign(opts,mountpoint)
 
 		stop_test_daemons(*network_ids)

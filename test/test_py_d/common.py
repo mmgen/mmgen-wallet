@@ -46,6 +46,7 @@ non_mmgen_fn = 'coinkey'
 
 ref_dir = os.path.join('test','ref')
 dfl_words_file = os.path.join(ref_dir,'98831F3A.mmwords')
+dfl_bip39_file = os.path.join(ref_dir,'98831F3A.bip39')
 
 from mmgen.obj import MMGenTxLabel,TwComment
 

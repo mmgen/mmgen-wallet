@@ -29,6 +29,11 @@ tx_dir       = '/mnt/tx/tx'
 part_label   = 'MMGEN_TX'
 wallet_dir   = '/dev/shm/autosign'
 key_fn       = 'autosign.key'
+mn_fmts      = {
+	'mmgen': 'words',
+	'bip39': 'bip39',
+}
+mn_fmt_dfl   = 'mmgen'
 
 from .common import *
 opts.UserOpts._set_ok += ('outdir','passwd_file')
@@ -46,6 +51,8 @@ opts_data = {
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
 -m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: '{mp}')
+-M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format
+                      'F' (choices: {mc}; default: '{md}')
 -n, --no-summary      Don’t print a transaction summary
 -s, --stealth-led     Stealth LED mode - signal busy and error only, and only
                       after successful authorization.
@@ -55,6 +62,8 @@ opts_data = {
 -q, --quiet           Produce quieter output
 -v, --verbose         Produce more verbose output
 """.format(
+		md = mn_fmt_dfl,
+		mc = fmt_list(mn_fmts,fmt='no_spc'),
 		mp = mountpoint
 	),
 	'notes': """
@@ -116,7 +125,6 @@ cmd_args = opts.init(
 	add_opts = ['mmgen_keys_from_file','hidden_incog_input_params'],
 	init_opts = {
 		'quiet': True,
-		'in_fmt': 'words',
 		'out_fmt': 'wallet',
 		'usr_randchars': 0,
 		'hash_preset': '1',
@@ -124,6 +132,12 @@ cmd_args = opts.init(
 	})
 
 exit_if_mswin('autosigning')
+
+if opt.mnemonic_fmt:
+	if opt.mnemonic_fmt not in mn_fmts:
+		die(1,'{!r}: invalid mnemonic format (must be one of: {})'.format(
+			opt.mnemonic_fmt,
+			fmt_list(mn_fmts,fmt='no_spc') ))
 
 import mmgen.tx
 from .wallet import Wallet
@@ -347,7 +361,7 @@ def create_wallet_dir():
 def setup():
 	remove_wallet_dir()
 	gen_key(no_unmount=True)
-	ss_in = Wallet()
+	ss_in = Wallet(in_fmt=mn_fmts[opt.mnemonic_fmt or mn_fmt_dfl])
 	ss_out = Wallet(ss=ss_in)
 	ss_out.write_to_file(desc='autosign wallet',outdir=wallet_dir)
 
