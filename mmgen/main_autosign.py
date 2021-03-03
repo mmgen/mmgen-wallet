@@ -40,21 +40,23 @@ opts_data = {
 		'desc': 'Auto-sign MMGen transactions',
 		'usage':'[opts] [command]',
 		'options': """
--h, --help          Print this help message
---, --longhelp      Print help message for long options (common options)
--c, --coins=c       Coins to sign for (comma-separated list)
--I, --no-insert-check Don't check for device insertion
--l, --led           Use status LED to signal standby, busy and error
--m, --mountpoint=m  Specify an alternate mountpoint (default: '{mp}')
--n, --no-summary    Don't print a transaction summary
--s, --stealth-led   Stealth LED mode - signal busy and error only, and only
-                    after successful authorization.
--S, --full-summary  Print a full summary of each signed transaction after
-                    each autosign run. The default list of non-MMGen outputs
-                    will not be printed.
--q, --quiet         Produce quieter output
--v, --verbose       Produce more verbose output
-""".format(mp=mountpoint),
+-h, --help            Print this help message
+--, --longhelp        Print help message for long options (common options)
+-c, --coins=c         Coins to sign for (comma-separated list)
+-I, --no-insert-check Don’t check for device insertion
+-l, --led             Use status LED to signal standby, busy and error
+-m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: '{mp}')
+-n, --no-summary      Don’t print a transaction summary
+-s, --stealth-led     Stealth LED mode - signal busy and error only, and only
+                      after successful authorization.
+-S, --full-summary    Print a full summary of each signed transaction after
+                      each autosign run. The default list of non-MMGen outputs
+                      will not be printed.
+-q, --quiet           Produce quieter output
+-v, --verbose         Produce more verbose output
+""".format(
+		mp = mountpoint
+	),
 	'notes': """
 
                               COMMANDS

@@ -67,12 +67,21 @@ class TestSuiteAutosign(TestSuiteBase):
 		if self.skip_for_win():
 			return 'skip'
 
-		def make_wallet(opts):
-			t = self.spawn('mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
-			t.expect_getend('Wrote key file ')
-			t.ok()
+		def gen_key(opts):
+			if not getattr(self,'key_generated',False):
+				t = self.spawn('mmgen-autosign',opts+['gen_key'],extra_desc='(gen_key)')
+				t.expect_getend('Wrote key file ')
+				t.ok()
+				self.key_generated = True
 
-			t = self.spawn('mmgen-autosign',opts+['setup'],extra_desc='(setup)')
+		def make_wallet(opts):
+
+			t = self.spawn(
+				'mmgen-autosign',
+				opts +
+				['setup'],
+				extra_desc = '(setup)' )
+
 			t.expect('words: ','3')
 			t.expect('OK? (Y/n): ','\n')
 			mn_file = dfl_words_file
@@ -135,6 +144,7 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			if gen_wallet:
 				if not opt.skip_deps:
+					gen_key(opts)
 					make_wallet(opts)
 			else:
 				do_mount()
@@ -178,50 +188,38 @@ class TestSuiteAutosign(TestSuiteBase):
 
 		def do_autosign(opts,mountpoint):
 
+			def autosign_expect(t,txcount):
+				t.expect('{} transactions signed'.format(txcount))
+				t.expect('2 transactions failed to sign')
+				t.expect('Waiting')
+				t.kill(2)
+				t.req_exit_val = 1
+				imsg('')
+				t.ok()
+
 			if not opt.skip_deps:
+				gen_key(opts)
 				make_wallet(opts)
 
 			copy_files(mountpoint,include_bad_tx=True)
-
-			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
-			t.expect('{} transactions signed'.format(txcount))
-			t.expect('2 transactions failed to sign')
-			t.expect('Waiting')
-			t.kill(2)
-			t.req_exit_val = 1
-			imsg('')
-			t.ok()
+			t = self.spawn('mmgen-autosign',opts+['--quiet','wait'],extra_desc='(sign)')
+			autosign_expect(t,txcount)
 
 			copy_files(mountpoint,remove_signed_only=True)
-			t = self.spawn('mmgen-autosign',opts+['--quiet','wait'],extra_desc='(sign)')
-			t.expect('{} transactions signed'.format(txcount))
-			t.expect('2 transactions failed to sign')
-			t.expect('Waiting')
-			t.kill(2)
-			t.req_exit_val = 1
-			imsg('')
-			t.ok()
+			t = self.spawn('mmgen-autosign',opts+['--full-summary','wait'],extra_desc='(sign - full summary)')
+			autosign_expect(t,txcount)
 
 			copy_files(mountpoint,include_bad_tx=True,fdata_in=(('btc',''),))
 			t = self.spawn(
 				'mmgen-autosign',
 				opts + ['--quiet','--stealth-led','wait'],
 				extra_desc='(sign - --quiet --stealth-led)' )
-			t.expect('2 transactions failed to sign')
-			t.expect('Waiting')
-			t.kill(2)
-			t.req_exit_val = 1
-			imsg('')
-			t.ok()
+			autosign_expect(t,txcount)
 
 			copy_files(mountpoint,include_bad_tx=False,fdata_in=(('btc',''),))
-			t = self.spawn(
-				'mmgen-autosign',
-				opts + ['--quiet','--led'],
-				extra_desc='(sign - --quiet --led)' )
+			t = self.spawn('mmgen-autosign',opts+['--quiet','--led'],extra_desc='(sign - --quiet --led)')
 			t.read()
 			imsg('')
-			t.ok()
 
 			return t
 
