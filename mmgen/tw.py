@@ -335,8 +335,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		return self.fmt_display
 
 	async def format_for_printing(self,color=False,show_confs=True):
-		if self.age_fmt in self.age_fmts_date_dependent:
-			await _set_dates(self.rpc,self.unspent)
+		await _set_dates(self.rpc,self.unspent)
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = self.proto.coin_amt.max_prec + 5
