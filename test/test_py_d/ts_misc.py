@@ -35,44 +35,23 @@ class TestSuiteMisc(TestSuiteBase):
 		('rpc_backends', 'RPC backends'),
 	)
 
-	def _run_cmd(   self, cmd_name,
-					cmd_args = [],
-					no_msg = False,
-					extra_desc = '',
-					cmd_dir = 'cmds',
-					no_output = False):
-		t = self.spawn( cmd_name,
-						args       = cmd_args,
-						no_msg     = no_msg,
-						extra_desc = extra_desc,
-						cmd_dir    = cmd_dir,
-						no_output  = no_output)
-		t.read()
-		ret = t.p.wait()
-		if ret == 0:
-			msg('OK')
-		else:
-			rdie(1,"\n'{}' returned {}".format(self.test_name,ret))
-		t.skip_ok = True
-		return t
-
 	def rpc_backends(self):
 		backends = g.autoset_opts['rpc_backend'][1]
-		for backend in backends:
-			t = self._run_cmd('mmgen-tool',[f'--rpc-backend={backend}','daemon_version'],extra_desc=f' ({backend})')
+		for b in backends:
+			t = self.spawn_chk('mmgen-tool',[f'--rpc-backend={b}','daemon_version'],extra_desc=f' ({b})')
 		return t
 
-class TestSuiteHelp(TestSuiteMisc,TestSuiteBase):
+class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
 	networks = ('btc','ltc','bch','eth')
 	tmpdir_nums = []
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	cmd_group = (
-		('helpscreens',     (1,'help screens',             [])),
-		('longhelpscreens', (1,'help screens (--longhelp)',[])),
+		('helpscreens',           (1,'help screens',             [])),
+		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
 		('opt_show_hash_presets', (1,'info screen (--show-hash-presets)',[])),
-		('tool_help',       (1,"'mmgen-tool' usage screen",[])),
-		('test_help',       (1,"'test.py' help screens",[])),
+		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
+		('test_help',             (1,"'test.py' help screens",[])),
 	)
 	def helpscreens(self,
 		arg = '--help',
@@ -85,7 +64,7 @@ class TestSuiteHelp(TestSuiteMisc,TestSuiteBase):
 		if self.test_name == 'helpscreens' and self.proto.base_coin != 'ETH':
 			scripts += ('regtest',)
 		for s in scripts:
-			t = self._run_cmd('mmgen-'+s,[arg],extra_desc='(mmgen-{})'.format(s),no_output=True)
+			t = self.spawn_chk(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})',no_output=True)
 		return t
 
 	def longhelpscreens(self):
@@ -100,16 +79,24 @@ class TestSuiteHelp(TestSuiteMisc,TestSuiteBase):
 					'txsign','txdo','txbump'))
 
 	def tool_help(self):
-		self._run_cmd('mmgen-tool',['--help'],extra_desc="('mmgen-tool --help')")
-		self._run_cmd('mmgen-tool',['--longhelp'],extra_desc="('mmgen-tool --longhelp')")
-		self._run_cmd('mmgen-tool',['help'],extra_desc="('mmgen-tool help')")
-		self._run_cmd('mmgen-tool',['usage'],extra_desc="('mmgen-tool usage')")
-		return self._run_cmd('mmgen-tool',['help','randpair'],extra_desc="('mmgen-tool help randpair')")
+		for args in (
+			['--help'],
+			['--longhelp'],
+			['help'],
+			['usage'],
+			['help','randpair']
+		):
+			t = self.spawn_chk('mmgen-tool',args,extra_desc=f"('mmgen-tool {fmt_list(args,fmt='bare')}')")
+		return t
 
 	def test_help(self):
-		self._run_cmd('test.py',['-h'],cmd_dir='test')
-		self._run_cmd('test.py',['-L'],cmd_dir='test',extra_desc='(cmd group list)')
-		return self._run_cmd('test.py',['-l'],cmd_dir='test',extra_desc='(cmd list)')
+		for args in (
+			['--help'],
+			['--list-cmds'],
+			['--list-cmd-groups']
+		):
+			t = self.spawn_chk('test.py',args,cmd_dir='test',extra_desc=f"('test.py {fmt_list(args,fmt='bare')}')")
+		return t
 
 class TestSuiteOutput(TestSuiteBase):
 	'screen output'

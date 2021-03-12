@@ -76,3 +76,15 @@ class TestSuiteBase(object):
 			return True
 		else:
 			return False
+
+	def spawn_chk(self,*args,**kwargs):
+		"""
+		Drop-in replacement for spawn() + t.read() for tests that spawn more than one process.
+		Ensures that test script execution stops when a spawned process fails.
+
+		"""
+		t = self.spawn(*args,**kwargs)
+		t.read()
+		t.ok()
+		t.skip_ok = True
+		return t
