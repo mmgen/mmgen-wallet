@@ -87,7 +87,6 @@ class CoinProtocol(MMGenObject):
 		base_proto = None
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
-		ignore_daemon_version = False
 
 		def __init__(self,coin,name,network,tokensym=None):
 			self.coin       = coin.upper()
@@ -230,6 +229,7 @@ class CoinProtocol(MMGenObject):
 		halving_interval = 210000
 		max_halvings    = 64
 		start_subsidy   = 50
+		ignore_daemon_version = False
 
 		def hex2wif(self,hexpriv,pubkey_type,compressed): # input is preprocessed hex
 			sec = bytes.fromhex(hexpriv)
@@ -314,6 +314,7 @@ class CoinProtocol(MMGenObject):
 		caps = ()
 		coin_amt        = BCHAmt
 		max_tx_fee      = BCHAmt('0.1')
+		ignore_daemon_version = False
 
 		def pubhex2redeem_script(self,pubhex): raise NotImplementedError
 		def pubhex2segwitaddr(self,pubhex):    raise NotImplementedError
@@ -332,6 +333,7 @@ class CoinProtocol(MMGenObject):
 		forks = [
 			finfo(None,'','BTC',True) # activation: 494784
 		]
+		ignore_daemon_version = False
 
 	class B2XTestnet(B2X):
 		addr_ver_bytes     = { '6f': 'p2pkh', 'c4': 'p2sh' }
@@ -349,6 +351,7 @@ class CoinProtocol(MMGenObject):
 		bech32_hrp      = 'ltc'
 		avg_bdi         = 150
 		halving_interval = 840000
+		ignore_daemon_version = False
 
 	class LitecoinTestnet(Litecoin):
 		# addr ver nums same as Bitcoin testnet, except for 'p2sh'
@@ -387,6 +390,7 @@ class CoinProtocol(MMGenObject):
 		mmcaps        = ('key','addr','rpc','tx')
 		base_proto    = 'Ethereum'
 		avg_bdi       = 15
+		ignore_daemon_version = False
 
 		@property
 		def dcoin(self):
@@ -413,6 +417,8 @@ class CoinProtocol(MMGenObject):
 
 	class EthereumClassic(Ethereum):
 		chain_name = 'ethereum_classic' # chain_id 0x3d (61)
+		max_tx_fee = ETHAmt('0.005')
+		ignore_daemon_version = False
 
 	class EthereumClassicTestnet(EthereumClassic):
 		chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
@@ -463,6 +469,7 @@ class CoinProtocol(MMGenObject):
 		avg_bdi        = 120
 		privkey_len    = 32
 		mmcaps         = ('key','addr')
+		ignore_daemon_version = False
 
 		def preprocess_key(self,sec,pubkey_type): # reduce key
 			from .ed25519 import l

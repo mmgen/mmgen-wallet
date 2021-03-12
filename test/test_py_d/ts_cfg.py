@@ -29,14 +29,20 @@ class TestSuiteCfg(TestSuiteBase):
 		('altered_sample',     (40,'init with user-modified cfg sample file', [])),
 		('old_sample',         (40,'init with old v2 cfg sample file', [])),
 		('old_sample_bad_var', (40,'init with old v2 cfg sample file and bad variable in mmgen.cfg', [])),
+		('coin_specific_vars', (40,'test setting of coin-specific vars', [])),
+		('chain_names',        (40,'test setting of chain names', [])),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
 		os.environ['MMGEN_TEST_SUITE_CFGTEST'] = '1'
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
-	def spawn_test(self,args=[]):
-		return self.spawn('test/misc/cfg.py',['--data-dir={}'.format(self.path('data_dir'))]+args,cmd_dir='.')
+	def spawn_test(self,args=[],extra_desc=''):
+		return self.spawn(
+			'test/misc/cfg.py',
+			[f'--data-dir={self.path("data_dir")}'] + args,
+			cmd_dir = '.',
+			extra_desc = extra_desc )
 
 	def path(self,id_str):
 		return {
@@ -148,3 +154,74 @@ class TestSuiteCfg(TestSuiteBase):
 		d = ['foo true','bar false']
 		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
 		return self.old_sample_common(old_set=True)
+
+	def coin_specific_vars(self):
+		"""
+		ensure that derived classes explicitly set these variables
+		"""
+		d = [
+			'btc_max_tx_fee 1.2345',
+			'eth_max_tx_fee 5.4321',
+			'btc_ignore_daemon_version true',
+			'eth_ignore_daemon_version true'
+		]
+		write_to_file(self.path('usr'),'\n'.join(d) + '\n')
+		imsg(yellow('Wrote cfg file:\n  {}'.format('\n  '.join(d))))
+
+		for coin,res1_chk,res2_chk,res2_chk_eq in (
+			('BTC','True', '1.2345',True),
+			('LTC','False','1.2345',False),
+			('BCH','False','1.2345',False),
+			('ETH','True', '5.4321',True),
+			('ETC','False','5.4321',False)
+		):
+			t = self.spawn_test(
+				args = [
+					f'--coin={coin}',
+					'coin_specific_vars',
+					'ignore_daemon_version',
+					'max_tx_fee'
+				],
+				extra_desc=f'({coin})' )
+			res1 = t.expect_getend('ignore_daemon_version: ')
+			res2 = t.expect_getend('max_tx_fee: ')
+			assert res1 == res1_chk, f'{res1} != {res1_chk}'
+			if res2_chk_eq:
+				assert res2 == res2_chk, f'{res2} != {res2_chk}'
+			else:
+				assert res2 != res2_chk, f'{res2} == {res2_chk}'
+			t.read()
+			t.ok()
+
+		t.skip_ok = True
+		return t
+
+	def chain_names(self):
+
+		def run(chk,testnet):
+			for coin,chain_chk in (('ETH',chk),('ETC',None)):
+				t = self.spawn_test(
+					args       = [f'--coin={coin}',f'--testnet={(0,1)[testnet]}','coin_specific_vars','chain_name'],
+					extra_desc = f'({coin} testnet={testnet} chain={chain_chk})' )
+				chain = t.expect_getend('chain_name: ')
+				if chain_chk:
+					assert chain == chain_chk, f'{chain} != {chain_chk}'
+				else:
+					assert chain != chain_chk, f'{chain} == {chain_chk}'
+				t.read()
+				t.ok()
+			return t
+
+		write_to_file(self.path('usr'),'eth_mainnet_chain_name foobar\n')
+		imsg(yellow('Wrote cfg file: "eth_mainnet_chain_name foobar"'))
+		t = run('foobar',False)
+		t = run(None,True)
+
+		write_to_file(self.path('usr'),'eth_testnet_chain_name foobar\n')
+		imsg(yellow('Wrote cfg file: "eth_testnet_chain_name foobar"'))
+		t = run(None,False)
+		t = run('foobar',True)
+
+		t.skip_ok = True
+		return t
+

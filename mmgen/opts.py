@@ -129,7 +129,10 @@ def override_globals_from_cfg_file(ucfg):
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in CoinProtocol.coins:
-				nse,tn = (ns[2:],True) if len(ns) > 2 and ns[1] == 'testnet' else (ns[1:],False)
+				nse,tn = (
+					(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
+					(ns[1:],False)
+				)
 				cls = type(init_proto(ns[0],tn)) # no instance yet, so override _class_ attr
 				attr = '_'.join(nse)
 			else:
