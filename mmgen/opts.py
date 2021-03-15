@@ -35,7 +35,8 @@ opt = UserOpts()
 from .util import *
 
 def usage():
-	Die(1,f'USAGE: {g.prog_name} {usage_txt}')
+	from mmgen.share import Opts
+	Die(1,Opts.make_usage_str(g.prog_name,'user',usage_data))
 
 def version():
 	Die(0,fmt("""
@@ -268,8 +269,8 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
 
 	# Make this available to usage()
-	global usage_txt
-	usage_txt = opts_data['text']['usage']
+	global usage_data
+	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 
 	if opt.version:
 		version() # exits

@@ -25,9 +25,25 @@ from collections import namedtuple
 
 pat = re.compile(r'^-([a-zA-Z0-9-]), --([a-zA-Z0-9-]{2,64})(=| )(.+)')
 
+def make_usage_str(prog_name,caller,data):
+	lines = [data.strip()] if type(data) == str else data
+	indent,col1_w = {
+		'help': (2,len(prog_name)+1),
+		'user': (0,len('USAGE:')),
+	}[caller]
+	def gen():
+		ulbl = 'USAGE:'
+		for line in lines:
+			yield '{:{w}} {} {}'.format(ulbl,prog_name,line,w=col1_w)
+			ulbl = ''
+	return ('\n'+(' '*indent)).join(gen())
+
 def usage(opts_data):
-	print('USAGE: {} {}'.format(opts_data['prog_name'], opts_data['usage']))
-	sys.exit(2)
+	print(make_usage_str(
+		prog_name = opts_data['prog_name'],
+		caller    = 'user',
+		data      = opts_data['text'].get('usage2') or opts_data['text']['usage'] ))
+	sys.exit(1)
 
 def print_help(proto,po,opts_data,opt_filter):
 
@@ -59,8 +75,8 @@ def print_help(proto,po,opts_data,opt_filter):
 			yield d[arg] if arg in d else text
 
 	def gen_text():
-		yield '  {:<{p}} {}'.format(pn.upper()+':',t['desc'].strip(),p=len(pn)+1)
-		yield '{:<{p}} {} {}'.format('USAGE:',pn,t['usage'].strip(),p=len(pn)+1)
+		yield '  {} {}'.format(pn.upper()+':',t['desc'].strip())
+		yield make_usage_str(pn,'help',t.get('usage2') or t['usage'])
 		yield opts_type.upper().replace('_',' ') + ':'
 
 		# process code for options
@@ -141,8 +157,9 @@ def parse_opts(opts_data,opt_filter=None,parse_only=False):
 						short_opts.append(m[1] + ('',':')[m[3] == '='])
 					long_opts.append(m[2] + ('','=')[m[3] == '='])
 
-	for opts_type in ('options','long_options'):
-		parse_lines(opts_type)
+	parse_lines('options')
+	if 'long_options' in opts_data['text']:
+		parse_lines('long_options')
 
 	uopts,uargs = process_uopts(opts_data,short_opts,long_opts)
 
