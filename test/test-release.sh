@@ -131,7 +131,8 @@ do
 	R)  NO_TMPFILE_REMOVAL=1 ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
-	V)  VERBOSE=1 [ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
+	V)  VERBOSE=1
+		[ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
 		altcoin_py="${altcoin_py/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"

@@ -35,6 +35,7 @@ opts_data = {
 -A, --no-daemon-autostart Don't start and stop daemons automatically
 -D, --no-daemon-stop      Don't stop auto-started daemons after running tests
 -f, --fast                Speed up execution by reducing rounds on some tests
+-n, --node-tools          Select node-tools unit tests
 -l, --list                List available tests
 -n, --names               Print command names instead of descriptions
 -q, --quiet               Produce quieter output
@@ -49,12 +50,14 @@ If no test is specified, all available tests are run
 sys.argv.insert(1,'--skip-cfg-file')
 cmd_args = opts.init(opts_data)
 
+file_pfx = 'nt_' if opt.node_tools else 'ut_'
+
 def exit_msg():
 	t = int(time.time()) - start_time
-	gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
+	gmsg('All requested unit tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
 
 all_tests = sorted(
-	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == 'ut_'])
+	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
 
 start_time = int(time.time())
 
@@ -85,7 +88,7 @@ class UnitTestHelpers(object):
 				rdie(3,m_noraise.format(desc,exc_chk))
 
 def run_test(test,subtest=None):
-	modname = 'test.unit_tests_d.ut_{}'.format(test)
+	modname = 'test.unit_tests_d.{}{}'.format(file_pfx,test)
 	mod = importlib.import_module(modname)
 
 	def run_subtest(subtest):
