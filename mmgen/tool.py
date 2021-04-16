@@ -1006,7 +1006,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 
 class MMGenToolCmdMonero(MMGenToolCmds):
 	"""
-	Monero wallet utilities
+	Monero wallet operations
 
 	Note that the use of these commands requires private data to be exposed on
 	a network-connected machine in order to unlock the Monero wallets.  This is
@@ -1034,19 +1034,29 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		return self._monero_chain_height
 
-	def keyaddrlist2monerowallets(  self,
-									xmr_keyaddrfile:str,
-									blockheight:'(default: current height)' = 0,
-									addrs:'(integer range or list)' = ''):
-		"create Monero wallets from a key-address list"
-		return self.monero_wallet_ops(  infile = xmr_keyaddrfile,
-										op = 'create',
-										blockheight = blockheight,
-										addrs = addrs)
+	def xmrwallet(
+		self,
+		op:str,
+		xmr_keyaddrfile:str,
+		blockheight:'(default: current height)' = 0,
+		addrs:'(integer range or list)' = '',
+	):
+		"""
+		perform various Monero wallet operations for addresses in XMR key-address file
+		  Supported operations:
+		    create - create wallet for all or specified addresses in key-address file
+		    sync   - sync wallet for all or specified addresses in key-address file
+		"""
 
-	def syncmonerowallets(self,xmr_keyaddrfile:str,addrs:'(integer range or list)'=''):
-		"sync Monero wallets from a key-address list"
-		return self.monero_wallet_ops(infile=xmr_keyaddrfile,op='sync',addrs=addrs)
+		if op == 'sync' and blockheight != 0:
+			die(1,'sync operation does not support blockheight arg')
+
+		return self.monero_wallet_ops(
+			infile = xmr_keyaddrfile,
+			op = op,
+			blockheight = blockheight,
+			addrs = addrs
+		)
 
 	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[]):
 

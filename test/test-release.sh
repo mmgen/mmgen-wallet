@@ -359,13 +359,13 @@ t_xmr="
 	cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	[ \"\$cs1\" == \"\$cs2\" ]
 	test/start-coin-daemons.py xmr
-	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=23
-	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys addrs=103-200
+	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=23
+	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=103-200
 	rm $TMPDIR/*-MoneroWallet*
-	$mmgen_tool_xmr keyaddrlist2monerowallets $TMPDIR/*-XMR*.akeys
-	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=3
-	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys addrs=23-29
-	$mmgen_tool_xmr syncmonerowallets $TMPDIR/*-XMR*.akeys
+	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
+	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=3
+	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=23-29
+	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
 	test/stop-coin-daemons.py -W xmr
 "
 f_xmr='Monero tests completed'

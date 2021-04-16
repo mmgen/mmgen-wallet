@@ -159,7 +159,7 @@ if opt.list_names:
 			'addrfile_chksum','keyaddrfile_chksum','passwdfile_chksum',
 			'add_label','remove_label','remove_address','twview',
 			'getbalance','listaddresses','listaddress'),
-		'test-release.sh': ('keyaddrlist2monerowallets','syncmonerowallets'),
+		'test-release.sh': ('xmrwallet',),
 		'tooltest2.py': run(tcmd,stdout=PIPE,check=True).stdout.decode().split()
 	}
 	for v in cmd_data.values():
