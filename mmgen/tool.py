@@ -1013,34 +1013,17 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 	a violation of good security practice.
 	"""
 
-	_monero_chain_height = None
-	monerod_args = []
-
-	@property
-	def monero_chain_height(self):
-		if self._monero_chain_height == None:
-			from .daemon import CoinDaemon
-			port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
-			cmd = ['monerod','--rpc-bind-port={}'.format(port)] + self.monerod_args + ['status']
-
-			from subprocess import run,PIPE,DEVNULL
-			cp = run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
-			import re
-			m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
-			if not m:
-				die(1,'Unable to connect to monerod!')
-			self._monero_chain_height = int(m.group(1))
-			msg('Chain height: {}'.format(self._monero_chain_height))
-
-		return self._monero_chain_height
-
 	def xmrwallet(
 		self,
-		op:str,
-		xmr_keyaddrfile:str,
-		blockheight:'(default: current height)' = 0,
-		addrs:'(integer range or list)' = '',
+		op:                  str,
+		xmr_keyaddrfile:     str,
+		blockheight:         '(default: current height)' = 0,
+		addrs:               '(integer range or list)'   = '',
+		start_wallet_daemon: bool                        = True,
+		stop_wallet_daemon:  bool                        = True,
+		monerod_args:        str                         = '',
 	):
+
 		"""
 		perform various Monero wallet operations for addresses in XMR key-address file
 		  Supported operations:
@@ -1048,166 +1031,218 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		    sync   - sync wallet for all or specified addresses in key-address file
 		"""
 
-		if op == 'sync' and blockheight != 0:
-			die(1,'sync operation does not support blockheight arg')
+		class MoneroWalletOps:
 
-		return self.monero_wallet_ops(
-			infile = xmr_keyaddrfile,
-			op = op,
-			blockheight = blockheight,
-			addrs = addrs
-		)
+			ops = ('create','sync')
 
-	def monero_wallet_ops(self,infile:str,op:str,blockheight=0,addrs='',monerod_args=[]):
+			class base:
 
-		if monerod_args:
-			self.monerod_args = monerod_args
+				wallet_exists = True
+				_monero_chain_height = None
 
-		async def create(n,d,fn,c,m):
-			try: os.stat(fn)
-			except: pass
-			else:
-				ymsg("Wallet '{}' already exists!".format(fn))
-				return False
-			gmsg(m)
+				def __init__(self,start_daemon=True):
 
-			from .baseconv import baseconv
-			ret = await c.call(
-				'restore_deterministic_wallet',
-				filename  = os.path.basename(fn),
-				password  = d.wallet_passwd,
-				seed      = baseconv.fromhex(d.sec,'xmrseed',tostr=True),
-				restore_height = blockheight,
-				language  = 'English' )
+					def wallet_exists(fn):
+						try: os.stat(fn)
+						except: return False
+						else: return True
 
-			pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
-			return True
+					def check_wallets():
+						for d in addr_data:
+							fn = self.get_wallet_fn(d)
+							exists = wallet_exists(fn)
+							if exists and not self.wallet_exists:
+								die(1,f'Wallet {fn!r} already exists!')
+							elif not exists and self.wallet_exists:
+								die(1,f'Wallet {fn!r} not found!')
 
-		async def sync(n,d,fn,c,m):
-			try:
-				os.stat(fn)
-			except:
-				ymsg("Wallet '{}' does not exist!".format(fn))
-				return False
+					check_wallets()
 
-			chain_height = self.monero_chain_height
-			gmsg(m)
+					from .daemon import MoneroWalletDaemon
+					self.wd = MoneroWalletDaemon(
+						wallet_dir = opt.outdir or '.',
+						test_suite = g.test_suite
+					)
 
-			import time
-			t_start = time.time()
+					if start_daemon:
+						self.wd.restart()
 
-			msg_r('  Opening wallet...')
-			await c.call(
-				'open_wallet',
-				filename=os.path.basename(fn),
-				password=d.wallet_passwd )
-			msg('done')
+					from .rpc import MoneroWalletRPCClient
+					self.c = MoneroWalletRPCClient(
+						host   = self.wd.host,
+						port   = self.wd.rpc_port,
+						user   = self.wd.user,
+						passwd = self.wd.passwd
+					)
 
-			msg_r('  Getting wallet height (be patient, this could take a long time)...')
-			wallet_height = (await c.call('get_height'))['height']
-			msg('\r{}\r  Wallet height: {}        '.format(' '*68,wallet_height))
+					self.bals = {}
 
-			behind = chain_height - wallet_height
-			if behind > 1000:
-				m = '  Wallet is {} blocks behind chain tip.  Please be patient.  Syncing...'
-				msg_r(m.format(behind))
+				def stop_daemon(self):
+					self.wd.stop()
 
-			ret = await c.call('refresh')
+				def post_process(self): pass
 
-			if behind > 1000:
-				msg('done')
+				def get_wallet_fn(self,d):
+					return os.path.join(
+						opt.outdir or '.','{}-{}-MoneroWallet{}'.format(
+							kal.al_id.sid,
+							d.idx,
+							'-α' if g.debug_utf8 else ''))
 
-			if ret['received_money']:
-				msg('  Wallet has received funds')
+				def process_wallets(self):
+					gmsg('\n{}ing {} wallet{}'.format(self.desc,len(addr_data),suf(addr_data)))
+					processed = 0
+					for n,d in enumerate(addr_data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
+						fn = self.get_wallet_fn(d)
+						gmsg('\n{}ing wallet {}/{} ({})'.format(
+							self.action,
+							n+1,
+							len(addr_data),
+							os.path.basename(fn),
+						))
+						processed += run_session(self.run(d,fn))
+					gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
+					return processed
 
-			t_elapsed = int(time.time() - t_start)
+				@property
+				def monero_chain_height(self):
+					if self._monero_chain_height == None:
+						from .daemon import CoinDaemon
+						port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
+						cmd = ['monerod','--rpc-bind-port={}'.format(port)] + monerod_args.split() + ['status']
 
-			ret = await c.call('get_accounts')
+						from subprocess import run,PIPE,DEVNULL
+						cp = run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
+						import re
+						m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
+						if not m:
+							die(1,'Unable to connect to monerod!')
+						self._monero_chain_height = int(m.group(1))
+						msg('Chain height: {}'.format(self._monero_chain_height))
 
+					return self._monero_chain_height
+
+			class create(base):
+				name    = 'create'
+				desc    = 'Creat'
+				action  = 'Creat'
+				past    = 'created'
+				wallet_exists = False
+
+				async def run(self,d,fn):
+
+					from .baseconv import baseconv
+					ret = await self.c.call(
+						'restore_deterministic_wallet',
+						filename       = os.path.basename(fn),
+						password       = d.wallet_passwd,
+						seed           = baseconv.fromhex(d.sec,'xmrseed',tostr=True),
+						restore_height = blockheight,
+						language       = 'English' )
+
+					pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
+					return True
+
+			class sync(base):
+				name    = 'sync'
+				desc    = 'Sync'
+				action  = 'Sync'
+				past    = 'synced'
+
+				async def run(self,d,fn):
+
+					chain_height = self.monero_chain_height
+
+					import time
+					t_start = time.time()
+
+					msg_r('  Opening wallet...')
+					await self.c.call(
+						'open_wallet',
+						filename=os.path.basename(fn),
+						password=d.wallet_passwd )
+					msg('done')
+
+					msg_r('  Getting wallet height (be patient, this could take a long time)...')
+					wallet_height = (await self.c.call('get_height'))['height']
+					msg_r('\r' + ' '*68 + '\r')
+					msg(f'  Wallet height: {wallet_height}        ')
+
+					behind = chain_height - wallet_height
+					if behind > 1000:
+						msg_r(f'  Wallet is {behind} blocks behind chain tip.  Please be patient.  Syncing...')
+
+					ret = await self.c.call('refresh')
+
+					if behind > 1000:
+						msg('done')
+
+					if ret['received_money']:
+						msg('  Wallet has received funds')
+
+					t_elapsed = int(time.time() - t_start)
+
+					ret = await self.c.call('get_accounts')
+
+					bn = os.path.basename(fn)
+					self.bals[bn] = tuple(ret[k] for k in ('total_balance','total_unlocked_balance'))
+
+					if opt.debug:
+						pp_msg(ret)
+					else:
+						msg('  Balance: {} Unlocked balance: {}'.format(*[fmtXMRamt(bal) for bal in self.bals[bn]]))
+
+					msg('  Wallet height: {}'.format( (await self.c.call('get_height'))['height'] ))
+					msg('  Sync time: {:02}:{:02}'.format( t_elapsed//60, t_elapsed%60 ))
+
+					await self.c.call('close_wallet')
+					return True
+
+				def post_process(self):
+					col1_w = max(map(len,self.bals)) + 1
+					fs = '{:%s} {} {}' % col1_w
+					msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
+					tbals = [0,0]
+					for k in self.bals:
+						for i in (0,1):
+							tbals[i] += self.bals[k][i]
+						msg(fs.format(k+':',*[fmtXMRamt(bal) for bal in self.bals[k]]))
+					msg(fs.format('-'*col1_w,'-'*18,'-'*18))
+					msg(fs.format('TOTAL:',*[fmtXMRamt(bal) for bal in tbals]))
+
+		def fmtXMRamt(amt):
 			from .obj import XMRAmt
-			bals[fn] = tuple([XMRAmt(ret[k],from_unit='min_coin_unit')
-					for k in ('total_balance','total_unlocked_balance')])
+			return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
 
-			if opt.debug:
-				pp_msg(ret)
-			else:
-				msg('  Balance: {} Unlocked balance: {}'.format(*[b.hl() for b in bals[fn]]))
+		def check_args():
+			assert addr_data, f'No addresses in addrfile within range {addrs!r}'
 
-			msg('  Wallet height: {}'.format((await c.call('get_height'))['height']))
-			msg('  Sync time: {:02}:{:02}'.format(t_elapsed//60,t_elapsed%60))
+			if op not in MoneroWalletOps.ops:
+				die(1,f'{op!r}: unrecognized operation')
 
-			await c.call('close_wallet')
-			return True
+			if op == 'sync' and blockheight != 0:
+				die(1,'Sync operation does not support blockheight arg')
 
-		async def process_wallets(op):
-			g.accept_defaults = g.accept_defaults or op.accept_defaults
-			from .protocol import init_proto
-			proto = init_proto('xmr',network='mainnet')
-			al = KeyAddrList(proto,infile)
-			data = [d for d in al.data if addrs == '' or d.idx in AddrIdxList(addrs)]
-			dl = len(data)
-			assert dl,"No addresses in addrfile within range '{}'".format(addrs)
-			gmsg('\n{}ing {} wallet{}'.format(op.desc,dl,suf(dl)))
+		# start execution
+		from .protocol import init_proto
 
-			from .daemon import MoneroWalletDaemon
-			wd = MoneroWalletDaemon(
-				wallet_dir = opt.outdir or '.',
-				test_suite = g.test_suite )
-			wd.restart()
+		kal = KeyAddrList(init_proto('xmr',network='mainnet'),xmr_keyaddrfile)
+		addr_data = [
+			d for d in kal.data if addrs == '' or d.idx in AddrIdxList(addrs)
+		]
 
-			from .rpc import MoneroWalletRPCClient
-			c = MoneroWalletRPCClient(
-				host = wd.host,
-				port = wd.rpc_port,
-				user = wd.user,
-				passwd = wd.passwd )
-
-			wallets_processed = 0
-			for n,d in enumerate(data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
-				fn = os.path.join(
-					opt.outdir or '.','{}-{}-MoneroWallet{}'.format(
-						al.al_id.sid,
-						d.idx,
-						'-α' if g.debug_utf8 else ''))
-
-				info = '\n{}ing wallet {}/{} ({})'.format(op.action,n+1,dl,fn)
-				wallets_processed += await op.func(n,d,fn,c,info)
-
-			wd.stop()
-			gmsg('\n{} wallet{} {}ed'.format(wallets_processed,suf(wallets_processed),op.desc.lower()))
-
-			if wallets_processed and op.name == 'sync':
-				col1_w = max(map(len,bals)) + 1
-				fs = '{:%s} {} {}' % col1_w
-				msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
-				from .obj import XMRAmt
-				tbals = [XMRAmt('0'),XMRAmt('0')]
-				for bal in bals:
-					for i in (0,1): tbals[i] += bals[bal][i]
-					msg(fs.format(bal+':',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in bals[bal]]))
-				msg(fs.format('-'*col1_w,'-'*18,'-'*18))
-				msg(fs.format('TOTAL:',*[XMRAmt(b).fmt(fs='5.12',color=True) for b in tbals]))
+		check_args()
 
 		if blockheight < 0:
 			blockheight = 0 # TODO: handle the non-zero case
 
-		bals = {} # locked,unlocked
+		m = getattr(MoneroWalletOps,op)(start_daemon=start_wallet_daemon)
 
-		wo = namedtuple('mwo',['name','desc','action','func','accept_defaults'])
-		op = { # reusing name!
-			'create': wo('create', 'Creat', 'Generat', create, False),
-			'sync':   wo('sync',   'Sync',  'Sync',    sync,   True) }[op]
-		try:
-			run_session(process_wallets(op))
-		except KeyboardInterrupt:
-			rdie(1,'\nUser interrupt\n')
-		except EOFError:
-			rdie(2,'\nEnd of file\n')
-		except Exception as e:
-			try:
-				die(1,'Error: {}'.format(e.args[0]))
-			except:
-				rdie(1,'Error: {!r}'.format(e.args[0]))
+		if m.process_wallets():
+			m.post_process()
+
+		if stop_wallet_daemon:
+			m.stop_daemon()
 
 		return True
 

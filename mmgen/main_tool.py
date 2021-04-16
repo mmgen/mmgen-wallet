@@ -72,6 +72,7 @@ opts_data = {
                       'compressed', 'segwit', 'bech32', 'zcash_z')
 -v, --verbose         Produce more verbose output
 -X, --cached-balances Use cached balances (Ethereum only)
+-y, --yes             Answer 'yes' to prompts, suppress non-essential output
 """,
 	'notes': """
 

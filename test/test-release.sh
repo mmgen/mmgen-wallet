@@ -340,7 +340,7 @@ else
 	create_tmpdir
 fi
 
-mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
+mmgen_tool_xmr="$mmgen_tool -q --yes --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
 i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_xmr='The monerod (mainnet) daemon must be running for the following tests'
