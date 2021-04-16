@@ -60,7 +60,7 @@ do
 		echo   "           '-l'  List the test name symbols"
 		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
 		echo   "           '-p'  Pause between tests"
-		echo   "           '-R'  Don't remove temporary files after program has exited"
+		echo   "           '-R'  Re-run fast XMR test with existing tmp data, leave daemon running"
 		echo   "           '-t'  Print the tests without running them"
 		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with"
 		echo   "                 '--verbose' switch"
@@ -128,7 +128,7 @@ do
 		exit ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
-	R)  NO_TMPFILE_REMOVAL=1 ;;
+	R)  RERUN_XMR=1 ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1
@@ -335,16 +335,21 @@ t_alts="
 
 f_alts='Gen-only altcoin tests completed'
 
-if [ "$NO_TMPFILE_REMOVAL" ]; then
-	TMPDIR=$(echo /tmp/mmgen-test-release*)
-else
-	rm -rf /tmp/mmgen-test-release*
+create_tmpdir() {
 	if [ "$MSYS2" ]; then
 		TMPDIR='/tmp/mmgen-test-release'
 	else
 		TMPDIR='/tmp/mmgen-test-release-'$(cat /dev/urandom | base32 - | head -n1 | cut -b 1-16)
 	fi
 	mkdir -p $TMPDIR
+}
+
+if [ "$RERUN_XMR" ]; then
+	TMPDIR=/tmp/mmgen-test-release*
+	if [ -e $TMPDIR ]; then HAVE_XMR_DATA=1; else create_tmpdir; fi
+else
+	rm -rf /tmp/mmgen-test-release*
+	create_tmpdir
 fi
 
 mmgen_tool_xmr="$mmgen_tool -q --accept-defaults --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
@@ -370,7 +375,9 @@ t_xmr="
 "
 f_xmr='Monero tests completed'
 
-[ "$xmr_addrs" == '3,23' ] && t_xmr_skip='4 9 14'
+[ "$FAST" ]                          && t_xmr_skip='4 9 14'
+[ "$RERUN_XMR" ]                     && t_xmr_skip='4 9 14 16'
+[ "$RERUN_XMR" -a "$HAVE_XMR_DATA" ] && t_xmr_skip='1 2 3 4 5 6 7 8 9 10 11 14 16'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
@@ -597,6 +604,6 @@ run_tests "$tests"
 TIME=$(($(date +%s)-START))
 MS=$(printf %02d:%02d $((TIME/60)) $((TIME%60)))
 
-[ "$NO_TMPFILE_REMOVAL" ] || rm -rf /tmp/mmgen-test-release-*
+[ "$RERUN_XMR" ] || rm -rf /tmp/mmgen-test-release-*
 
 [ "$LIST_CMDS" ] || echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"
