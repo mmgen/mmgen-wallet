@@ -202,134 +202,122 @@ install() {
 
 do_test() {
 	set +x
-	tests=$(eval echo \"'$'"t_$1"\")
-	skips=$(eval echo \"'$'"t_$1_skip"\")
+	tests="t_$1"
+	skips="t_$1_skip"
 
-	declare -a tests_arr
+	while read skip test; do
+		[ "$test" ] || continue
+		echo "${!skips}" | grep -q $skip && continue
 
-	n=0
-	while read test; do
-		tests_arr[n]="$test"
-		let n+=1
-	done <<-EOF
-	$tests
-	EOF
-
-	n=0
-	for test in "${tests_arr[@]}"; do
-		[ -z "$test" ] && continue
-		test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
-		[ "${test:0:1}" == '#' ] && {
-			[ "$LIST_CMDS" ] || echo -e "$test_disp"
-			continue
-		}
-		let n+=1
-		echo $skips | grep -q "\<$n\>" && continue
 		if [ "$LIST_CMDS" ]; then
 			echo $test
 		else
-			echo -e "${GREEN}Running:$RESET $test_disp"
+			test_disp=$YELLOW${test/\#/$RESET$MAGENTA\#}$RESET
+			if [ "${test:0:1}" == '#' ]; then
+				echo -e "$test_disp"
+			else
+				echo -e "${GREEN}Running:$RESET $test_disp"
+				eval "$test" || {
+					echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
+					exit 1
+				}
+			fi
 		fi
-#		continue
-		[ "$LIST_CMDS" ] || eval "$test" || {
-			echo -e $RED"test-release.sh: test '$CUR_TEST' failed at command '$test'"$RESET
-			exit 1
-		}
-	done
+	done <<<${!tests}
 }
 
 i_misc='Miscellaneous'
 s_misc='Testing various subsystems'
 t_misc="
-	$altcoin_py
+	- $altcoin_py
 "
 f_misc='Miscellaneous tests completed'
 
 i_obj='Data object'
 s_obj='Testing data objects'
 t_obj="
-	$objtest_py --coin=btc
-	$objtest_py --getobj --coin=btc
-	$objtest_py --coin=btc --testnet=1
-	$objtest_py --coin=ltc
-	$objtest_py --coin=ltc --testnet=1
-	$objtest_py --coin=eth
-	$objattrtest_py
+	- $objtest_py --coin=btc
+	- $objtest_py --getobj --coin=btc
+	- $objtest_py --coin=btc --testnet=1
+	- $objtest_py --coin=ltc
+	- $objtest_py --coin=ltc --testnet=1
+	- $objtest_py --coin=eth
+	- $objattrtest_py
 "
 f_obj='Data object tests completed'
 
 i_color='Color'
 s_color='Testing terminal colors'
-t_color="$colortest_py"
+t_color="- $colortest_py"
 f_color='Terminal color tests completed'
 
 i_unit='Unit'
 s_unit='The bitcoin and bitcoin-bchn mainnet daemons must be running for the following tests'
-t_unit="$unit_tests_py"
+t_unit="- $unit_tests_py"
 f_unit='Unit tests completed'
 
 i_hash='Internal hash function implementations'
 s_hash='Testing internal hash function implementations'
 t_hash="
-	$python test/hashfunc.py sha256 $rounds_max
-	$python test/hashfunc.py sha512 $rounds_max # native SHA512 - not used by the MMGen wallet
-	$python test/hashfunc.py keccak $rounds_max
+	256    $python test/hashfunc.py sha256 $rounds_max
+	512    $python test/hashfunc.py sha512 $rounds_max # native SHA512 - not used by the MMGen wallet
+	keccak $python test/hashfunc.py keccak $rounds_max
 "
 f_hash='Hash function tests completed'
 
-[ "$ARM32" ] && t_hash_skip='2' # gmpy produces invalid init constants
-[ "$MSYS2" ] && t_hash_skip='2 3' # 2:py_long_long issues, 3:no pysha3 for keccak reference
+[ "$ARM32" ] && t_hash_skip='512'        # gmpy produces invalid init constants
+[ "$MSYS2" ] && t_hash_skip='512 keccak' # 2:py_long_long issues, 3:no pysha3 for keccak reference
 
 i_ref='Miscellaneous reference data'
 s_ref='The following tests will test some generated values against reference data'
 t_ref="
-	$scrambletest_py
+	- $scrambletest_py
 "
 f_ref='Miscellaneous reference data tests completed'
 
 i_altref='Altcoin reference file'
 s_altref='The following tests will test some generated altcoin files against reference data'
 t_altref="
-	$test_py ref_altcoin # generated addrfiles verified against checksums
+	- $test_py ref_altcoin # generated addrfiles verified against checksums
 "
 f_altref='Altcoin reference file tests completed'
 
 i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
-	# speed tests, no verification:
-	$gentest_py --coin=etc 2 $rounds
-	$gentest_py --coin=etc --use-internal-keccak-module 2 $rounds_min
-	$gentest_py --coin=eth 2 $rounds
-	$gentest_py --coin=eth --use-internal-keccak-module 2 $rounds_min
-	$gentest_py --coin=xmr 2 $rounds
-	$gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
-	$gentest_py --coin=zec 2 $rounds
-	$gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
-	# verification against external libraries and tools:
-	#   pycoin
-	$gentest_py --all --type=legacy 2:pycoin $rounds
-	$gentest_py --all --type=compressed 2:pycoin $rounds
-	$gentest_py --all --type=segwit 2:pycoin $rounds
-	$gentest_py --all --type=bech32 2:pycoin $rounds
+	- # speed tests, no verification:
+	- $gentest_py --coin=etc 2 $rounds
+	- $gentest_py --coin=etc --use-internal-keccak-module 2 $rounds_min
+	- $gentest_py --coin=eth 2 $rounds
+	- $gentest_py --coin=eth --use-internal-keccak-module 2 $rounds_min
+	- $gentest_py --coin=xmr 2 $rounds
+	- $gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
+	- $gentest_py --coin=zec 2 $rounds
+	- $gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
+	- # verification against external libraries and tools:
+	- #   pycoin
+	- $gentest_py --all --type=legacy 2:pycoin $rounds
+	- $gentest_py --all --type=compressed 2:pycoin $rounds
+	- $gentest_py --all --type=segwit 2:pycoin $rounds
+	- $gentest_py --all --type=bech32 2:pycoin $rounds
 
-	$gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
-	$gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
-	$gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
-	$gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
-	#   keyconv
-	$gentest_py --all --type=legacy 2:keyconv $rounds
-	$gentest_py --all --type=compressed 2:keyconv $rounds
-	#   ethkey
-	$gentest_py --all 2:ethkey $rounds
+	- $gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
+	- $gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
+	- $gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
+	- $gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
+	- #   keyconv
+	- $gentest_py --all --type=legacy 2:keyconv $rounds
+	- $gentest_py --all --type=compressed 2:keyconv $rounds
+	- #   ethkey
+	- $gentest_py --all 2:ethkey $rounds
 "
 
 [ "$MSYS2" ] || { # no moneropy (pysha3), zcash-mini (golang)
 	t_alts+="
-		#   moneropy
-		$gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
-		#   zcash-mini
-		$gentest_py --all 2:zcash-mini $rounds_mid
+		- #   moneropy
+		- $gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
+		- #   zcash-mini
+		- $gentest_py --all 2:zcash-mini $rounds_mid
 	"
 }
 
@@ -357,201 +345,201 @@ i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
 s_xmr='The monerod (mainnet) daemon must be running for the following tests'
 t_xmr="
-	cmds/mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
-	$mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	cs1=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
-	$mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
-	[ \"\$cs1\" == \"\$cs2\" ]
-	test/start-coin-daemons.py xmr
-	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=23
-	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=103-200
-	rm $TMPDIR/*-MoneroWallet*
-	$mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
-	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=3
-	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=23-29
-	$mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
-	test/stop-coin-daemons.py -W xmr
+	a cmds/mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
+	a $mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
+	a cs1=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
+	x $mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
+	x cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
+	x [ \"\$cs1\" == \"\$cs2\" ]
+	a test/start-coin-daemons.py xmr
+	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=23
+	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=103-200
+	x rm $TMPDIR/*-MoneroWallet*
+	a $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
+	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=3
+	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=23-29
+	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
+	s test/stop-coin-daemons.py -W xmr
 "
 f_xmr='Monero tests completed'
 
-[ "$FAST" ]                          && t_xmr_skip='4 9 14'
-[ "$RERUN_XMR" ]                     && t_xmr_skip='4 9 14 16'
-[ "$RERUN_XMR" -a "$HAVE_XMR_DATA" ] && t_xmr_skip='1 2 3 4 5 6 7 8 9 10 11 14 16'
+[ "$FAST" ]                          && t_xmr_skip='x'
+[ "$RERUN_XMR" ]                     && t_xmr_skip='x s'
+[ "$RERUN_XMR" -a "$HAVE_XMR_DATA" ] && t_xmr_skip='a x s'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
 t_eth="
-	$test_py --coin=eth ethdev
+	- $test_py --coin=eth ethdev
 "
 f_eth='Ethereum tests completed'
 
 i_etc='Ethereum Classic'
 s_etc='Testing transaction and tracking wallet operations for Ethereum Classic'
 t_etc="
-	$test_py --coin=etc ethdev
+	- $test_py --coin=etc ethdev
 "
 f_etc='Ethereum Classic tests completed'
 
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-bchn and litecoin mainnet and testnet daemons must be running for the following test'
-t_autosign="$test_py autosign"
+t_autosign="- $test_py autosign"
 f_autosign='Autosign test completed'
 
 i_autosign_btc='Autosign BTC'
 s_autosign_btc='The bitcoin mainnet and testnet daemons must be running for the following test'
-t_autosign_btc="$test_py autosign_btc"
+t_autosign_btc="- $test_py autosign_btc"
 f_autosign_btc='Autosign BTC test completed'
 
 i_autosign_live='Autosign Live'
 s_autosign_live="The bitcoin mainnet and testnet daemons must be running for the following test\n"
 s_autosign_live+="${YELLOW}Mountpoint, '/etc/fstab' and removable device must be configured "
 s_autosign_live+="as described in 'mmgen-autosign --help'${RESET}"
-t_autosign_live="$test_py autosign_live"
+t_autosign_live="- $test_py autosign_live"
 f_autosign_live='Autosign Live test completed'
 
 i_btc='Bitcoin mainnet'
 s_btc='The bitcoin (mainnet) daemon must both be running for the following tests'
 t_btc="
-	$test_py --exclude regtest,autosign,ref_altcoin
-	$test_py --segwit
-	$test_py --segwit-random
-	$test_py --bech32
-	$python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
+	- $test_py --exclude regtest,autosign,ref_altcoin
+	- $test_py --segwit
+	- $test_py --segwit-random
+	- $test_py --bech32
+	- $python scripts/compute-file-chksum.py $REFDIR/*testnet.rawtx >/dev/null 2>&1
 "
 f_btc='Bitcoin mainnet tests completed'
 
 i_btc_tn='Bitcoin testnet'
 s_btc_tn='The bitcoin testnet daemon must both be running for the following tests'
 t_btc_tn="
-	$test_py --testnet=1
-	$test_py --testnet=1 --segwit
-	$test_py --testnet=1 --segwit-random
-	$test_py --testnet=1 --bech32
+	- $test_py --testnet=1
+	- $test_py --testnet=1 --segwit
+	- $test_py --testnet=1 --segwit-random
+	- $test_py --testnet=1 --bech32
 "
 f_btc_tn='Bitcoin testnet tests completed'
 
 i_btc_rt='Bitcoin regtest'
 s_btc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_btc_rt="$test_py regtest"
+t_btc_rt="- $test_py regtest"
 f_btc_rt='Regtest (Bob and Alice) mode tests for BTC completed'
 
 i_bch='BitcoinCashNode (BCH) mainnet'
 s_bch='The bitcoin-bchn mainnet daemon must both be running for the following tests'
-t_bch="$test_py --coin=bch --exclude regtest"
+t_bch="- $test_py --coin=bch --exclude regtest"
 f_bch='BitcoinCashNode (BCH) mainnet tests completed'
 
 i_bch_tn='BitcoinCashNode (BCH) testnet'
 s_bch_tn='The bitcoin-bchn testnet daemon must both be running for the following tests'
-t_bch_tn="$test_py --coin=bch --testnet=1 --exclude regtest"
+t_bch_tn="- $test_py --coin=bch --testnet=1 --exclude regtest"
 f_bch_tn='BitcoinCashNode (BCH) testnet tests completed'
 
 i_bch_rt='BitcoinCashNode (BCH) regtest'
 s_bch_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_bch_rt="$test_py --coin=bch regtest"
+t_bch_rt="- $test_py --coin=bch regtest"
 f_bch_rt='Regtest (Bob and Alice) mode tests for BCH completed'
 
 i_ltc='Litecoin'
 s_ltc='The litecoin mainnet daemon must both be running for the following tests'
 t_ltc="
-	$test_py --coin=ltc --exclude regtest
-	$test_py --coin=ltc --segwit
-	$test_py --coin=ltc --segwit-random
-	$test_py --coin=ltc --bech32
+	- $test_py --coin=ltc --exclude regtest
+	- $test_py --coin=ltc --segwit
+	- $test_py --coin=ltc --segwit-random
+	- $test_py --coin=ltc --bech32
 "
 f_ltc='Litecoin mainnet tests completed'
 
 i_ltc_tn='Litecoin testnet'
 s_ltc_tn='The litecoin testnet daemon must both be running for the following tests'
 t_ltc_tn="
-	$test_py --coin=ltc --testnet=1 --exclude regtest
-	$test_py --coin=ltc --testnet=1 --segwit
-	$test_py --coin=ltc --testnet=1 --segwit-random
-	$test_py --coin=ltc --testnet=1 --bech32
+	- $test_py --coin=ltc --testnet=1 --exclude regtest
+	- $test_py --coin=ltc --testnet=1 --segwit
+	- $test_py --coin=ltc --testnet=1 --segwit-random
+	- $test_py --coin=ltc --testnet=1 --bech32
 "
 f_ltc_tn='Litecoin testnet tests completed'
 
 i_ltc_rt='Litecoin regtest'
 s_ltc_rt="The following tests will test MMGen's regtest (Bob and Alice) mode"
-t_ltc_rt="$test_py --coin=ltc regtest"
+t_ltc_rt="- $test_py --coin=ltc regtest"
 f_ltc_rt='Regtest (Bob and Alice) mode tests for LTC completed'
 
 i_tool2='Tooltest2'
 s_tool2="The following tests will run '$tooltest2_py' for all supported coins"
 t_tool2="
-	$tooltest2_py --tool-api # test the tool_api subsystem
-	$tooltest2_py --tool-api --testnet=1
-	$tooltest2_py --tool-api --coin=eth
-	$tooltest2_py --tool-api --coin=xmr
-	$tooltest2_py --tool-api --coin=zec
-	$tooltest2_py
-	$tooltest2_py --testnet=1
-	$tooltest2_py --coin=ltc
-	$tooltest2_py --coin=ltc --testnet=1
-	$tooltest2_py --coin=bch
-	$tooltest2_py --coin=bch --testnet=1
-	$tooltest2_py --coin=zec
-	$tooltest2_py --coin=xmr
-	$tooltest2_py --coin=dash
-	$tooltest2_py --coin=eth
-	$tooltest2_py --coin=eth --testnet=1
-	$tooltest2_py --coin=eth --token=mm1
-	$tooltest2_py --coin=eth --token=mm1 --testnet=1
-	$tooltest2_py --coin=etc
-	$tooltest2_py --fork # run once with --fork so commands are actually executed
+	- $tooltest2_py --tool-api # test the tool_api subsystem
+	- $tooltest2_py --tool-api --testnet=1
+	- $tooltest2_py --tool-api --coin=eth
+	- $tooltest2_py --tool-api --coin=xmr
+	- $tooltest2_py --tool-api --coin=zec
+	- $tooltest2_py
+	- $tooltest2_py --testnet=1
+	- $tooltest2_py --coin=ltc
+	- $tooltest2_py --coin=ltc --testnet=1
+	- $tooltest2_py --coin=bch
+	- $tooltest2_py --coin=bch --testnet=1
+	- $tooltest2_py --coin=zec
+	- $tooltest2_py --coin=xmr
+	- $tooltest2_py --coin=dash
+	e $tooltest2_py --coin=eth
+	e $tooltest2_py --coin=eth --testnet=1
+	e $tooltest2_py --coin=eth --token=mm1
+	e $tooltest2_py --coin=eth --token=mm1 --testnet=1
+	e $tooltest2_py --coin=etc
+	- $tooltest2_py --fork # run once with --fork so commands are actually executed
 "
 f_tool2='tooltest2 tests completed'
-[ "$SKIP_ALT_DEP" ] && t_tool2_skip='15 16 17 18 19' # skip ETH,ETC: txview requires py_ecc
+[ "$SKIP_ALT_DEP" ] && t_tool2_skip='e' # skip ETH,ETC: txview requires py_ecc
 
 i_tool='Tooltest'
 s_tool="The following tests will run '$tooltest_py' for all supported coins"
 t_tool="
-	$tooltest_py --coin=btc cryptocoin
-	$tooltest_py --coin=btc mnemonic
-	$tooltest_py --coin=ltc cryptocoin
-	$tooltest_py --coin=eth cryptocoin
-	$tooltest_py --coin=etc cryptocoin
-	$tooltest_py --coin=dash cryptocoin
-	$tooltest_py --coin=doge cryptocoin
-	$tooltest_py --coin=emc cryptocoin
-	$tooltest_py --coin=zec cryptocoin
-	$tooltest_py --coin=zec --type=zcash_z cryptocoin
+	- $tooltest_py --coin=btc cryptocoin
+	- $tooltest_py --coin=btc mnemonic
+	- $tooltest_py --coin=ltc cryptocoin
+	- $tooltest_py --coin=eth cryptocoin
+	- $tooltest_py --coin=etc cryptocoin
+	- $tooltest_py --coin=dash cryptocoin
+	- $tooltest_py --coin=doge cryptocoin
+	- $tooltest_py --coin=emc cryptocoin
+	- $tooltest_py --coin=zec cryptocoin
+	z $tooltest_py --coin=zec --type=zcash_z cryptocoin
 "
-[ "$MSYS2" ] && t_tool_skip='10'
+[ "$MSYS2" ] && t_tool_skip='z'
 
 f_tool='tooltest tests completed'
 
 i_gen='Gentest'
 s_gen="The following tests will run '$gentest_py' for BTC and LTC mainnet and testnet"
 t_gen="
-	# speed tests, no verification:
-	$gentest_py --coin=btc 2 $rounds
-	$gentest_py --coin=btc --type=compressed 2 $rounds
-	$gentest_py --coin=btc --type=segwit 2 $rounds
-	$gentest_py --coin=btc --type=bech32 2 $rounds
-	$gentest_py --coin=ltc 2 $rounds
-	$gentest_py --coin=ltc --type=compressed 2 $rounds
-	$gentest_py --coin=ltc --type=segwit 2 $rounds
-	$gentest_py --coin=ltc --type=bech32 2 $rounds
-	# wallet dumps:
-	$gentest_py 2 $REFDIR/btcwallet.dump
-	$gentest_py --type=segwit 2 $REFDIR/btcwallet-segwit.dump
-	$gentest_py --type=bech32 2 $REFDIR/btcwallet-bech32.dump
-	$gentest_py --testnet=1 2 $REFDIR/btcwallet-testnet.dump
-	$gentest_py --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump
-	$gentest_py --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump
-	$gentest_py --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump
-	$gentest_py --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump
-	# libsecp256k1 vs python-ecdsa:
-	$gentest_py 1:2 $rounds
-	$gentest_py --type=segwit 1:2 $rounds
-	$gentest_py --type=bech32 1:2 $rounds
-	$gentest_py --testnet=1 1:2 $rounds
-	$gentest_py --testnet=1 --type=segwit 1:2 $rounds
-	$gentest_py --coin=ltc 1:2 $rounds
-	$gentest_py --coin=ltc --type=segwit 1:2 $rounds
-	$gentest_py --coin=ltc --testnet=1 1:2 $rounds
-	$gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
+	- # speed tests, no verification:
+	- $gentest_py --coin=btc 2 $rounds
+	- $gentest_py --coin=btc --type=compressed 2 $rounds
+	- $gentest_py --coin=btc --type=segwit 2 $rounds
+	- $gentest_py --coin=btc --type=bech32 2 $rounds
+	- $gentest_py --coin=ltc 2 $rounds
+	- $gentest_py --coin=ltc --type=compressed 2 $rounds
+	- $gentest_py --coin=ltc --type=segwit 2 $rounds
+	- $gentest_py --coin=ltc --type=bech32 2 $rounds
+	- # wallet dumps:
+	- $gentest_py 2 $REFDIR/btcwallet.dump
+	- $gentest_py --type=segwit 2 $REFDIR/btcwallet-segwit.dump
+	- $gentest_py --type=bech32 2 $REFDIR/btcwallet-bech32.dump
+	- $gentest_py --testnet=1 2 $REFDIR/btcwallet-testnet.dump
+	- $gentest_py --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump
+	- $gentest_py --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump
+	- $gentest_py --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump
+	- $gentest_py --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump
+	- # libsecp256k1 vs python-ecdsa:
+	- $gentest_py 1:2 $rounds
+	- $gentest_py --type=segwit 1:2 $rounds
+	- $gentest_py --type=bech32 1:2 $rounds
+	- $gentest_py --testnet=1 1:2 $rounds
+	- $gentest_py --testnet=1 --type=segwit 1:2 $rounds
+	- $gentest_py --coin=ltc 1:2 $rounds
+	- $gentest_py --coin=ltc --type=segwit 1:2 $rounds
+	- $gentest_py --coin=ltc --testnet=1 1:2 $rounds
+	- $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
 "
 f_gen='gentest tests completed'
 
