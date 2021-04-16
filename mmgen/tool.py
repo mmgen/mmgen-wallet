@@ -100,8 +100,11 @@ def _usage(cmd=None,exit_val=1):
 			Msg('')
 		Msg(m2)
 	elif cmd in MMGenToolCmds:
-		msg('{}'.format(capfirst(MMGenToolCmds[cmd].__doc__.strip())))
-		msg('USAGE: {} {} {}'.format(g.prog_name,cmd,_create_call_sig(cmd)))
+		msg('{}USAGE: {} {} {}'.format(
+			fmt(capfirst(MMGenToolCmds[cmd].__doc__.strip()),strip_char='\t'),
+			g.prog_name,cmd,
+			_create_call_sig(cmd))
+		)
 	else:
 		die(1,"'{}': no such tool command".format(cmd))
 

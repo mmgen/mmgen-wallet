@@ -1361,7 +1361,7 @@ class MMGenTX:
 						msg('Transaction is in mempool')
 					else:
 						msg(f'TX status: in mempool, {rep}')
-						msg('Sent {} ({} h/m/s ago)'.format(
+						msg('Sent {} ({} ago)'.format(
 							time.strftime('%c',time.gmtime(t)),
 							secs_to_dhms(int(time.time()-t))) )
 				else:

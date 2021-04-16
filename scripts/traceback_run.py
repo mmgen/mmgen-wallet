@@ -58,4 +58,4 @@ except Exception as e:
 	sys.exit(retval)
 
 blue = lambda s: s if os.getenv('MMGEN_DISABLE_COLOR') else '\033[34;1m{}\033[0m'.format(s)
-sys.stdout.write(blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))
+sys.stderr.write(blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))

@@ -82,6 +82,8 @@ module1 = Extension(
 	include_dirs = ['/usr/local/include',r'C:\msys64\mingw64\include',r'C:\msys64\usr\include'],
 	)
 
+os.umask(0o0022)
+
 from mmgen.globalvars import g
 setup(
 		name         = 'mmgen',
