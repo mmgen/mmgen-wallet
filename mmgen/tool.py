@@ -100,8 +100,10 @@ def _usage(cmd=None,exit_val=1):
 			Msg('')
 		Msg(m2)
 	elif cmd in MMGenToolCmds:
-		msg('{}USAGE: {} {} {}'.format(
-			fmt(capfirst(MMGenToolCmds[cmd].__doc__.strip()),strip_char='\t'),
+		p1 = fmt(capfirst(MMGenToolCmds[cmd].__doc__.strip()),strip_char='\t').strip()
+		msg('{}{}\nUSAGE: {} {} {}'.format(
+			p1,
+			('\n' if '\n' in p1 else ''),
 			g.prog_name,cmd,
 			_create_call_sig(cmd))
 		)
@@ -1019,9 +1021,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		xmr_keyaddrfile:     str,
 		blockheight:         '(default: current height)' = 0,
 		wallets:             '(integer range or list)'   = '',
-		start_wallet_daemon: bool                        = True,
-		stop_wallet_daemon:  bool                        = True,
-		monerod_args:        str                         = '',
+		start_wallet_daemon  = True,
+		stop_wallet_daemon   = True,
+		monerod_args         = '',
 	):
 
 		"""
