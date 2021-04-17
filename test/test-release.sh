@@ -352,12 +352,12 @@ t_xmr="
 	x cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
 	x [ \"\$cs1\" == \"\$cs2\" ]
 	a test/start-coin-daemons.py xmr
-	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=23
-	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys addrs=103-200
+	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=23
+	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=103-200
 	x rm $TMPDIR/*-MoneroWallet*
 	a $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
-	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=3
-	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys addrs=23-29
+	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=3
+	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=23-29
 	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
 	s test/stop-coin-daemons.py -W xmr
 "

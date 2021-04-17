@@ -1018,7 +1018,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		op:                  str,
 		xmr_keyaddrfile:     str,
 		blockheight:         '(default: current height)' = 0,
-		addrs:               '(integer range or list)'   = '',
+		wallets:             '(integer range or list)'   = '',
 		start_wallet_daemon: bool                        = True,
 		stop_wallet_daemon:  bool                        = True,
 		monerod_args:        str                         = '',
@@ -1215,7 +1215,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
 
 		def check_args():
-			assert addr_data, f'No addresses in addrfile within range {addrs!r}'
+			assert addr_data, f'No addresses in addrfile within range {wallets!r}'
 
 			if op not in MoneroWalletOps.ops:
 				die(1,f'{op!r}: unrecognized operation')
@@ -1228,7 +1228,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		kal = KeyAddrList(init_proto('xmr',network='mainnet'),xmr_keyaddrfile)
 		addr_data = [
-			d for d in kal.data if addrs == '' or d.idx in AddrIdxList(addrs)
+			d for d in kal.data if wallets == '' or d.idx in AddrIdxList(wallets)
 		]
 
 		check_args()
