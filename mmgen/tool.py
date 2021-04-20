@@ -1020,7 +1020,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		op:                  str,
 		xmr_keyaddrfile:     str,
 		blockheight:         '(default: current height)' = 0,
-		wallets:             '(integer range or list)' = '',
+		wallets:             '(integer range or list, or sweep specifier)' = '',
 		start_wallet_daemon  = True,
 		stop_wallet_daemon   = True,
 		monerod_args         = '',
@@ -1033,11 +1033,30 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		    create - create wallet for all or specified addresses in key-address file
 		    sync   - sync wallet for all or specified addresses in key-address file
+		    sweep  - sweep funds in specified wallet:account to new address in same
+		             account or new account in another wallet
+
+		                               SWEEP OPERATION NOTES
+
+		    For the sweep operation, the parameter to the 'wallets' arg has a different
+		    format, known as a 'sweep specifier':
+
+		        SOURCE:ACCOUNT[,DEST]
+
+		    where SOURCE and DEST are wallet numbers and ACCOUNT an account index.
+
+		    If DEST is omitted, a new address will be created in ACCOUNT of SOURCE and
+		    all funds from ACCOUNT of SOURCE will be swept into it.
+
+		    If DEST is included, a new account will be created in DEST and all funds
+		    from ACCOUNT of SOURCE will be swept into the new account.
+
+		    The user is prompted before addresses are created or funds are transferred.
 		"""
 
 		class MoneroWalletOps:
 
-			ops = ('create','sync')
+			ops = ('create','sync','sweep')
 
 			class base:
 
@@ -1233,6 +1252,198 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					msg(fs.format( '-'*col1_w, '-'*18, '-'*18 ))
 					msg(fs.format( 'TOTAL:', fmtXMRamt(tbals[0]), fmtXMRamt(tbals[1]) ))
+
+			class sweep(base):
+				name    = 'sweep'
+				desc    = 'Sweep'
+				past    = 'swept'
+
+				def create_addr_data(self):
+					import re
+					m = re.match('(\d+):(\d+)(?:,(\d+))?$',wallets,re.ASCII)
+					if not m:
+						die(1,
+							"{!r}: invalid 'wallets' arg: for sweep operation, it must have format {}".format(
+							wallets,
+							'SOURCE:ACCOUNT[,DEST]'
+						))
+
+					def gen():
+						for i,k in ( (1,'source'), (3,'dest') ):
+							if m[i] == None:
+								setattr(self,k,None)
+							else:
+								idx = int(m[i])
+								try:
+									res = [d for d in self.kal.data if d.idx == idx][0]
+								except:
+									die(1,'Supplied key-address file does not contain address {}:{}'.format(
+										self.kal.al_id.sid,
+										idx ))
+								else:
+									setattr(self,k,res)
+									yield res
+
+					self.addr_data = list(gen())
+					self.account = int(m[2])
+
+				async def process_wallets(self):
+					gmsg(f'\nSweeping account #{self.account} of wallet {self.source.idx}' + (
+						' to new address' if self.dest is None else
+						f' to new account in wallet {self.dest.idx}' ))
+
+					h = xmr_rpc_methods(self,self.source)
+
+					await h.open_wallet('source')
+					accts_data = await h.get_accts()
+
+					max_acct = len(accts_data['subaddress_accounts']) - 1
+					if self.account > max_acct:
+						die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
+
+					await h.get_addrs(accts_data,self.account)
+
+					if self.dest == None:
+						if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
+							new_addr = await h.create_new_addr(self.account)
+						elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
+							new_addr = await h.get_last_addr(self.account)
+						else:
+							die(1,'Exiting at user request')
+						await h.get_addrs(accts_data,self.account)
+					else:
+						bn = os.path.basename(self.get_wallet_fn(self.dest))
+						h = xmr_rpc_methods(self,self.dest)
+						await h.open_wallet('destination')
+						accts_data = await h.get_accts()
+
+						if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
+							new_addr = await h.create_acct()
+							await h.get_accts()
+						elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
+							new_addr = h.get_last_acct(accts_data)
+						else:
+							die(1,'Exiting at user request')
+
+						h = xmr_rpc_methods(self,self.source)
+						await h.open_wallet('source')
+
+					if keypress_confirm(
+						'\nSweep balance of wallet {}, account #{} to {}?'.format(
+							self.source.idx,
+							self.account,
+							cyan(new_addr),
+						)):
+						await h.do_sweep(self.account,new_addr)
+					else:
+						die(1,'Exiting at user request')
+
+		class xmr_rpc_methods:
+
+			def __init__(self,parent,d):
+				self.parent = parent
+				self.c = parent.c
+				self.d = d
+				self.fn = parent.get_wallet_fn(d)
+
+			async def open_wallet(self,desc):
+				gmsg_r(f'\n  Opening {desc} wallet...')
+				ret = await self.c.call( # returns {}
+					'open_wallet',
+					filename=os.path.basename(self.fn),
+					password=self.d.wallet_passwd )
+				gmsg('done')
+
+			def print_accts(self,data,indent='    '):
+				d = data['subaddress_accounts']
+				msg('\n' + indent + f'Accounts of wallet {os.path.basename(self.fn)}:')
+				fs = indent + '  {:6}  {:18}  {:%s}  {}' % max(len(e['label']) for e in d)
+				msg(fs.format('Index ','Base Address','Label','Balance'))
+				for e in d:
+					msg(fs.format(
+						str(e['account_index']),
+						e['base_address'][:15] + '...',
+						e['label'],
+						fmtXMRamt(e['balance']),
+					))
+
+			async def get_accts(self):
+				data = await self.c.call('get_accounts')
+				self.print_accts(data)
+				return data
+
+			async def create_acct(self):
+				msg('\n    Creating new account...')
+				ret = await self.c.call(
+					'create_account',
+					label = f'Sweep from {self.parent.source.idx}:{self.parent.account}'
+				)
+				msg('      Index:   {}'.format( pink(str(ret['account_index'])) ))
+				msg('      Address: {}'.format( cyan(ret['address']) ))
+				return ret['address']
+
+			def get_last_acct(self,accts_data):
+				msg('\n    Getting last account...')
+				data = accts_data['subaddress_accounts'][-1]
+				msg('      Index:   {}'.format( pink(str(data['account_index'])) ))
+				msg('      Address: {}'.format( cyan(data['base_address']) ))
+				return data['base_address']
+
+			async def get_addrs(self,accts_data,account):
+				ret = await self.c.call('get_address',account_index=account)
+				d = ret['addresses']
+				msg('\n      Addresses of account #{} ({}):'.format(
+					account,
+					accts_data['subaddress_accounts'][account]['label']))
+				fs = '        {:6}  {:18}  {:%s}  {}' % max(len(e['label']) for e in d)
+				msg(fs.format('Index ','Address','Label','Used'))
+				for e in d:
+					msg(fs.format(
+						str(e['address_index']),
+						e['address'][:15] + '...',
+						e['label'],
+						e['used']
+					))
+				return ret
+
+			async def create_new_addr(self,account):
+				msg_r('\n    Creating new address: ')
+				ret = await self.c.call(
+					'create_address',
+					account_index = account,
+					label         = 'Sweep from this account',
+				)
+				msg(cyan(ret['address']))
+				return ret['address']
+
+			async def get_last_addr(self,account):
+				msg('\n    Getting last address:')
+				ret = (await self.c.call(
+					'get_address',
+					account_index = account,
+				))['addresses'][-1]['address']
+				msg('      ' + cyan(ret))
+				return ret
+
+			async def do_sweep(self,account,addr):
+				msg(f'\n    Sweeping account balance...')
+				ret = { # debug
+					'amount_list': [322222330000],
+					'fee_list': [10600000],
+					'tx_hash_list': ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
+				}
+				ret = await self.c.call(
+					'sweep_all',
+					address = addr,
+					account_index = account,
+				)
+				from .obj import CoinTxID
+				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
+					CoinTxID(ret['tx_hash_list'][0]).hl(),
+					hlXMRamt(ret['amount_list'][0]),
+					hlXMRamt(ret['fee_list'][0]),
+				))
+				return ret
 
 		def fmtXMRamt(amt):
 			from .obj import XMRAmt
