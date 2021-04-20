@@ -371,17 +371,23 @@ class RPCClient(MMGenObject):
 				try:
 					return json.loads(text,parse_float=Decimal,encoding='UTF-8')['result']
 				except:
-					raise RPCFailure(json.loads(text)['error']['message'])
+					t = json.loads(text)
+					try:
+						m = t['error']['message']
+					except:
+						try: m = t['error']
+						except: m = t
+					raise RPCFailure(m)
 		else:
 			import http
-			s = http.HTTPStatus(status)
-			m = ''
+			m,s = ( '', http.HTTPStatus(status) )
 			if text:
-				try: m = ': ' + json.loads(text)['error']['message']
+				try:
+					m = json.loads(text)['error']['message']
 				except:
-					try: m = f': {text.decode()}'
-					except: m = f': {text}'
-			raise RPCFailure(f'{s.value} {s.name}{m}')
+					try: m = text.decode()
+					except: m = text
+			raise RPCFailure(f'{s.value} {s.name}: {m}')
 
 class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
