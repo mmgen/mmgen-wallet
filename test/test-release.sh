@@ -340,6 +340,7 @@ else
 	create_tmpdir
 fi
 
+# xmr_addrs: normal: 3,99,2,22-24,101-104 fast: 3,23
 mmgen_tool_xmr="$mmgen_tool -q --yes --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
 i_xmr='Monero'
 s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
@@ -353,11 +354,11 @@ t_xmr="
 	x [ \"\$cs1\" == \"\$cs2\" ]
 	a test/start-coin-daemons.py xmr
 	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=23
-	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=103-200
+	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=101-104
 	x rm $TMPDIR/*-MoneroWallet*
 	a $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
-	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=3
-	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=23-29
+	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=3,23
+	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=101-104
 	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
 	s test/stop-coin-daemons.py -W xmr
 "

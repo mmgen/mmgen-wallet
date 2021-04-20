@@ -1020,7 +1020,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		op:                  str,
 		xmr_keyaddrfile:     str,
 		blockheight:         '(default: current height)' = 0,
-		wallets:             '(integer range or list)'   = '',
+		wallets:             '(integer range or list)' = '',
 		start_wallet_daemon  = True,
 		stop_wallet_daemon   = True,
 		monerod_args         = '',
@@ -1028,7 +1028,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		"""
 		perform various Monero wallet operations for addresses in XMR key-address file
+
 		  Supported operations:
+
 		    create - create wallet for all or specified addresses in key-address file
 		    sync   - sync wallet for all or specified addresses in key-address file
 		"""
@@ -1050,13 +1052,17 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						else: return True
 
 					def check_wallets():
-						for d in addr_data:
+						for d in self.addr_data:
 							fn = self.get_wallet_fn(d)
 							exists = wallet_exists(fn)
 							if exists and not self.wallet_exists:
 								die(1,f'Wallet {fn!r} already exists!')
 							elif not exists and self.wallet_exists:
 								die(1,f'Wallet {fn!r} not found!')
+
+					from .protocol import init_proto
+					self.kal = KeyAddrList(init_proto('xmr',network='mainnet'),xmr_keyaddrfile)
+					self.create_addr_data()
 
 					check_wallets()
 
@@ -1077,7 +1083,16 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						passwd = self.wd.passwd
 					)
 
-					self.bals = {}
+					self.accts_data = {}
+
+				def create_addr_data(self):
+					if wallets:
+						idxs = AddrIdxList(wallets)
+						self.addr_data = [d for d in self.kal.data if d.idx in idxs]
+						if len(self.addr_data) != len(idxs):
+							die(1,f'List {wallets!r} contains addresses not present in supplied key-address file')
+					else:
+						self.addr_data = self.kal.data
 
 				def stop_daemon(self):
 					self.wd.stop()
@@ -1087,22 +1102,22 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				def get_wallet_fn(self,d):
 					return os.path.join(
 						opt.outdir or '.','{}-{}-MoneroWallet{}'.format(
-							kal.al_id.sid,
+							self.kal.al_id.sid,
 							d.idx,
 							'-α' if g.debug_utf8 else ''))
 
-				def process_wallets(self):
-					gmsg('\n{}ing {} wallet{}'.format(self.desc,len(addr_data),suf(addr_data)))
+				async def process_wallets(self):
+					gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
 					processed = 0
-					for n,d in enumerate(addr_data): # [d.sec,d.wallet_passwd,d.viewkey,d.addr]
+					for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 						fn = self.get_wallet_fn(d)
 						gmsg('\n{}ing wallet {}/{} ({})'.format(
-							self.action,
+							self.desc,
 							n+1,
-							len(addr_data),
+							len(self.addr_data),
 							os.path.basename(fn),
 						))
-						processed += run_session(self.run(d,fn))
+						processed += await self.run(d,fn)
 					gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
 					return processed
 
@@ -1127,7 +1142,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			class create(base):
 				name    = 'create'
 				desc    = 'Creat'
-				action  = 'Creat'
 				past    = 'created'
 				wallet_exists = False
 
@@ -1148,7 +1162,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			class sync(base):
 				name    = 'sync'
 				desc    = 'Sync'
-				action  = 'Sync'
 				past    = 'synced'
 
 				async def run(self,d,fn):
@@ -1184,15 +1197,14 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					t_elapsed = int(time.time() - t_start)
 
-					ret = await self.c.call('get_accounts')
-
 					bn = os.path.basename(fn)
-					self.bals[bn] = tuple(ret[k] for k in ('total_balance','total_unlocked_balance'))
 
-					if opt.debug:
-						pp_msg(ret)
-					else:
-						msg('  Balance: {} Unlocked balance: {}'.format(*[fmtXMRamt(bal) for bal in self.bals[bn]]))
+					ret = self.accts_data[bn] = await self.c.call('get_accounts')
+
+					msg('  Balance: {} Unlocked balance: {}'.format(
+						hlXMRamt(ret['total_balance']),
+						hlXMRamt(ret['total_unlocked_balance']),
+					))
 
 					msg('  Wallet height: {}'.format( (await self.c.call('get_height'))['height'] ))
 					msg('  Sync time: {:02}:{:02}'.format( t_elapsed//60, t_elapsed%60 ))
@@ -1201,24 +1213,36 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					return True
 
 				def post_process(self):
-					col1_w = max(map(len,self.bals)) + 1
+					d = self.accts_data
+
+					for n,k in enumerate(d):
+						ad = self.addr_data[n]
+						xmr_rpc_methods(self,ad).print_accts(d[k],indent='')
+
+					col1_w = max(map(len,d)) + 1
 					fs = '{:%s} {} {}' % col1_w
-					msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance  '))
 					tbals = [0,0]
-					for k in self.bals:
-						for i in (0,1):
-							tbals[i] += self.bals[k][i]
-						msg(fs.format(k+':',*[fmtXMRamt(bal) for bal in self.bals[k]]))
-					msg(fs.format('-'*col1_w,'-'*18,'-'*18))
-					msg(fs.format('TOTAL:',*[fmtXMRamt(bal) for bal in tbals]))
+					msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance'))
+
+					for k in d:
+						b  = d[k]['total_balance']
+						ub = d[k]['total_unlocked_balance']
+						msg(fs.format( k + ':', fmtXMRamt(b), fmtXMRamt(ub) ))
+						tbals[0] += b
+						tbals[1] += ub
+
+					msg(fs.format( '-'*col1_w, '-'*18, '-'*18 ))
+					msg(fs.format( 'TOTAL:', fmtXMRamt(tbals[0]), fmtXMRamt(tbals[1]) ))
 
 		def fmtXMRamt(amt):
 			from .obj import XMRAmt
 			return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
 
-		def check_args():
-			assert addr_data, f'No addresses in addrfile within range {wallets!r}'
+		def hlXMRamt(amt):
+			from .obj import XMRAmt
+			return XMRAmt(amt,from_unit='min_coin_unit').hl()
 
+		def check_args():
 			if op not in MoneroWalletOps.ops:
 				die(1,f'{op!r}: unrecognized operation')
 
@@ -1226,13 +1250,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				die(1,'Sync operation does not support blockheight arg')
 
 		# start execution
-		from .protocol import init_proto
-
-		kal = KeyAddrList(init_proto('xmr',network='mainnet'),xmr_keyaddrfile)
-		addr_data = [
-			d for d in kal.data if wallets == '' or d.idx in AddrIdxList(wallets)
-		]
-
 		check_args()
 
 		if blockheight < 0:
@@ -1240,7 +1257,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 		m = getattr(MoneroWalletOps,op)(start_daemon=start_wallet_daemon)
 
-		if m.process_wallets():
+		if run_session(m.process_wallets()):
 			m.post_process()
 
 		if stop_wallet_daemon:
