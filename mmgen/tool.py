@@ -1102,7 +1102,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						passwd = self.wd.passwd
 					)
 
-					self.accts_data = {}
+					self.post_init()
 
 				def create_addr_data(self):
 					if wallets:
@@ -1116,6 +1116,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				def stop_daemon(self):
 					self.wd.stop()
 
+				def post_init(self): pass
 				def post_process(self): pass
 
 				def get_wallet_fn(self,d):
@@ -1230,6 +1231,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					await self.c.call('close_wallet')
 					return True
+
+				def post_init(self):
+					self.accts_data = {}
 
 				def post_process(self):
 					d = self.accts_data
