@@ -1219,12 +1219,14 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					bn = os.path.basename(fn)
 
-					ret = self.accts_data[bn] = await self.c.call('get_accounts')
+					a,b = await xmr_rpc_methods(self,d).get_accts(print=False)
 
 					msg('  Balance: {} Unlocked balance: {}'.format(
-						hlXMRamt(ret['total_balance']),
-						hlXMRamt(ret['total_unlocked_balance']),
+						hlXMRamt(a['total_balance']),
+						hlXMRamt(a['total_unlocked_balance']),
 					))
+
+					self.accts_data[bn] = { 'accts': a, 'addrs': b }
 
 					msg('  Wallet height: {}'.format( (await self.c.call('get_height'))['height'] ))
 					msg('  Sync time: {:02}:{:02}'.format( t_elapsed//60, t_elapsed%60 ))
@@ -1240,7 +1242,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					for n,k in enumerate(d):
 						ad = self.addr_data[n]
-						xmr_rpc_methods(self,ad).print_accts(d[k],indent='')
+						xmr_rpc_methods(self,ad).print_accts( d[k]['accts'], d[k]['addrs'], indent='')
 
 					col1_w = max(map(len,d)) + 1
 					fs = '{:%s} {} {}' % col1_w
@@ -1248,8 +1250,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					msg('\n'+fs.format('Wallet','Balance           ','Unlocked Balance'))
 
 					for k in d:
-						b  = d[k]['total_balance']
-						ub = d[k]['total_unlocked_balance']
+						b  = d[k]['accts']['total_balance']
+						ub = d[k]['accts']['total_unlocked_balance']
 						msg(fs.format( k + ':', fmtXMRamt(b), fmtXMRamt(ub) ))
 						tbals[0] += b
 						tbals[1] += ub
@@ -1299,7 +1301,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					h = xmr_rpc_methods(self,self.source)
 
 					await h.open_wallet('source')
-					accts_data = await h.get_accts()
+					accts_data = (await h.get_accts())[0]
 
 					max_acct = len(accts_data['subaddress_accounts']) - 1
 					if self.account > max_acct:
@@ -1319,7 +1321,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						bn = os.path.basename(self.get_wallet_fn(self.dest))
 						h = xmr_rpc_methods(self,self.dest)
 						await h.open_wallet('destination')
-						accts_data = await h.get_accts()
+						accts_data = (await h.get_accts())[0]
 
 						if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
 							new_addr = await h.create_acct()
@@ -1358,23 +1360,29 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					password=self.d.wallet_passwd )
 				gmsg('done')
 
-			def print_accts(self,data,indent='    '):
+			def print_accts(self,data,addrs_data,indent='    '):
 				d = data['subaddress_accounts']
 				msg('\n' + indent + f'Accounts of wallet {os.path.basename(self.fn)}:')
-				fs = indent + '  {:6}  {:18}  {:%s}  {}' % max(len(e['label']) for e in d)
-				msg(fs.format('Index ','Base Address','Label','Balance'))
-				for e in d:
+				fs = indent + '  {:6}  {:18}  {:<6} {:%s}  {}' % max(len(e['label']) for e in d)
+				msg(fs.format('Index ','Base Address','nAddrs','Label','Balance'))
+				for i,e in enumerate(d):
 					msg(fs.format(
 						str(e['account_index']),
 						e['base_address'][:15] + '...',
+						len(addrs_data[i]['addresses']),
 						e['label'],
 						fmtXMRamt(e['balance']),
 					))
 
-			async def get_accts(self):
+			async def get_accts(self,print=True):
 				data = await self.c.call('get_accounts')
-				self.print_accts(data)
-				return data
+				addrs_data = [
+					await self.c.call('get_address',account_index=i)
+						for i in range(len(data['subaddress_accounts']))
+				]
+				if print:
+					self.print_accts(data,addrs_data)
+				return ( data, addrs_data )
 
 			async def create_acct(self):
 				msg('\n    Creating new account...')
