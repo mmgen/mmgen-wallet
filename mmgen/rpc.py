@@ -651,16 +651,17 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		'parity_versionInfo',
 	)
 
-class MoneroWalletRPCClient(RPCClient):
+class MoneroRPCClient(RPCClient):
 
-	auth_type = 'digest'
+	auth_type = None
 	network_proto = 'https'
 	host_path = '/json_rpc'
 	verify_server = False
 
 	def __init__(self,host,port,user,passwd):
 		super().__init__(host,port)
-		self.auth = auth_data(user,passwd)
+		if self.auth_type:
+			self.auth = auth_data(user,passwd)
 		if True:
 			self.set_backend('requests')
 		else: # insecure, for debugging only
@@ -676,6 +677,11 @@ class MoneroWalletRPCClient(RPCClient):
 			wallet = None
 		))
 
+	rpcmethods = ( 'get_info', )
+
+class MoneroWalletRPCClient(MoneroRPCClient):
+
+	auth_type = 'digest'
 	rpcmethods = (
 		'get_version',
 		'get_height',    # sync height of the open wallet
