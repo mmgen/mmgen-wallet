@@ -148,6 +148,7 @@ setup(
 			'mmgen.txsign',
 			'mmgen.util',
 			'mmgen.wallet',
+			'mmgen.xmrwallet',
 
 			'mmgen.altcoins.__init__',
 
