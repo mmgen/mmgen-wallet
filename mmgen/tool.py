@@ -20,6 +20,7 @@
 tool.py:  Routines for the 'mmgen-tool' utility
 """
 
+import re
 from collections import namedtuple
 from .protocol import hash160
 from .common import *
@@ -1023,7 +1024,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		wallets:             '(integer range or list, or sweep specifier)' = '',
 		start_wallet_daemon  = True,
 		stop_wallet_daemon   = True,
-		monerod_args         = '',
 	):
 
 		"""
@@ -1062,7 +1062,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 				wallet_exists = True
 
-				def __init__(self,start_daemon=True):
+				def __init__(self):
 
 					def wallet_exists(fn):
 						try: os.stat(fn)
@@ -1090,7 +1090,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						test_suite = g.test_suite
 					)
 
-					if start_daemon:
+					if start_wallet_daemon:
 						self.wd.restart()
 
 					from .rpc import MoneroWalletRPCClient
@@ -1112,8 +1112,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					else:
 						self.addr_data = self.kal.data
 
-				def stop_daemon(self):
-					self.wd.stop()
+				def stop_daemons(self):
+					if stop_wallet_daemon:
+						self.wd.stop()
 
 				def post_init(self): pass
 				def post_process(self): pass
@@ -1253,7 +1254,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				past    = 'swept'
 
 				def create_addr_data(self):
-					import re
 					m = re.match('(\d+):(\d+)(?:,(\d+))?$',wallets,re.ASCII)
 					if not m:
 						die(1,
@@ -1454,6 +1454,10 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			return XMRAmt(amt,from_unit='min_coin_unit').hl()
 
 		def check_args():
+
+			if blockheight < 0:
+				die(1,f"{blockheight}: invalid 'blockheight' arg (<0)")
+
 			if op not in MoneroWalletOps.ops:
 				die(1,f'{op!r}: unrecognized operation')
 
@@ -1463,16 +1467,15 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		# start execution
 		check_args()
 
-		if blockheight < 0:
-			blockheight = 0 # TODO: handle the non-zero case
+		m = getattr(MoneroWalletOps,op)()
 
-		m = getattr(MoneroWalletOps,op)(start_daemon=start_wallet_daemon)
-
-		if run_session(m.process_wallets()):
-			m.post_process()
-
-		if stop_wallet_daemon:
-			m.stop_daemon()
+		try:
+			if run_session(m.process_wallets()):
+				m.post_process()
+		except KeyboardInterrupt:
+			ymsg('\nUser interrupt')
+		finally:
+			m.stop_daemons()
 
 		return True
 
