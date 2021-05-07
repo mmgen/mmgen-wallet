@@ -229,15 +229,19 @@ class MoneroWalletDaemon(Daemon):
 			test_suite     = False,
 			host           = None,
 			user           = None,
-			passwd         = None ):
+			passwd         = None,
+			rpc_port_shift = None ):
 
 		super().__init__()
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
 		self.rpc_port = 13142 if test_suite else 13131
+		if rpc_port_shift:
+			self.rpc_port += rpc_port_shift
 
-		id_str = 'monero-wallet-rpc'
-		self.datadir = os.path.join('test',id_str) if test_suite else id_str
+		bn = 'monero-wallet-rpc'
+		id_str = f'{bn}-{self.rpc_port}'
+		self.datadir = os.path.join('test',bn) if test_suite else bn
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
