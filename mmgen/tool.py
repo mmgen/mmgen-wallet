@@ -32,6 +32,11 @@ NL = ('\n','\r\n')[g.platform=='win']
 def _options_annot_str(l):
 	return "(valid options: '{}')".format("','".join(l))
 
+def _create_argtuple(method,localvars):
+	co = method.__code__
+	args = co.co_varnames[1:co.co_argcount]
+	return namedtuple('cmd_args',args)(*(localvars[a] for a in args))
+
 def _create_call_sig(cmd,parsed=False):
 
 	m = MMGenToolCmds[cmd]
@@ -1007,6 +1012,25 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 			msg("Address '{}' deleted from tracking wallet".format(ret))
 		return ret
 
+from .obj import XMRAmt
+
+def fmtXMRamt(amt):
+	return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
+
+def hlXMRamt(amt):
+	return XMRAmt(amt,from_unit='min_coin_unit').hl()
+
+def make_uarg_info():
+	e = namedtuple('uarg_info_entry',['annot','pat'])
+	hp = r'(?:[^:]+):(?:\d+)'
+	return {
+		'daemon':          e('HOST:PORT', hp),
+		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', r'({p})(?::({p}))?'.format(p=hp)),
+		'wallets_sweep':   e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
+	}
+
+uarg_info = make_uarg_info()
+
 class MMGenToolCmdMonero(MMGenToolCmds):
 	"""
 	Monero wallet operations
@@ -1020,12 +1044,12 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		self,
 		op:                  str,
 		xmr_keyaddrfile:     str,
-		blockheight:         '(default: current height)' = 0,
+		restore_height       = 0,
 		wallets:             '(integer range or list, or sweep specifier)' = '',
 		start_wallet_daemon  = True,
 		stop_wallet_daemon   = True,
-		daemon:              'HOST:PORT' = '',
-		tx_relay_daemon:     'HOST:PORT[:PROXY_HOST:PROXY_PORT]' = '',
+		daemon:              uarg_info['daemon'].annot = '',
+		tx_relay_daemon:     uarg_info['tx_relay_daemon'].annot = '',
 	):
 
 		"""
@@ -1072,7 +1096,29 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				wallet_exists = True
 				tx_relay = False
 
-				def __init__(self):
+				def check_uargs(self):
+
+					def check_host_arg(name):
+						val = getattr(uarg,name)
+						if not re.fullmatch(uarg_info[name].pat,val,re.ASCII):
+							die(1,'{!r}: invalid {!r} parameter: it must have format {!r}'.format(
+								val, name, uarg_info[name].annot ))
+
+					if uarg.op != 'create' and uarg.restore_height != 0:
+						die(1,"'restore_height' arg is supported only for create operation")
+
+					if uarg.restore_height < 0:
+						die(1,f"{uarg.restore_height}: invalid 'restore_height' arg (<0)")
+
+					if uarg.daemon:
+						check_host_arg('daemon')
+
+					if uarg.tx_relay_daemon:
+						if not self.tx_relay:
+							die(1,f"'tx_relay_daemon' arg is not recognized for operation {uarg.op!r}")
+						check_host_arg('tx_relay_daemon')
+
+				def __init__(self,uarg_tuple):
 
 					def wallet_exists(fn):
 						try: os.stat(fn)
@@ -1088,8 +1134,13 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 							elif not exists and self.wallet_exists:
 								die(1,f'Wallet {fn!r} not found!')
 
+					global uarg
+					uarg = uarg_tuple
+
+					self.check_uargs()
+
 					from .protocol import init_proto
-					self.kal = KeyAddrList(init_proto('xmr',network='mainnet'),xmr_keyaddrfile)
+					self.kal = KeyAddrList(init_proto('xmr',network='mainnet'),uarg.xmr_keyaddrfile)
 					self.create_addr_data()
 
 					check_wallets()
@@ -1098,10 +1149,10 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					self.wd = MoneroWalletDaemon(
 						wallet_dir = opt.outdir or '.',
 						test_suite = g.test_suite,
-						daemon_addr = daemon or None,
+						daemon_addr = uarg.daemon or None,
 					)
 
-					if start_wallet_daemon:
+					if uarg.start_wallet_daemon:
 						self.wd.restart()
 
 					from .rpc import MoneroWalletRPCClient
@@ -1115,18 +1166,18 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					self.post_init()
 
 				def create_addr_data(self):
-					if wallets:
-						idxs = AddrIdxList(wallets)
+					if uarg.wallets:
+						idxs = AddrIdxList(uarg.wallets)
 						self.addr_data = [d for d in self.kal.data if d.idx in idxs]
 						if len(self.addr_data) != len(idxs):
-							die(1,f'List {wallets!r} contains addresses not present in supplied key-address file')
+							die(1,f'List {uarg.wallets!r} contains addresses not present in supplied key-address file')
 					else:
 						self.addr_data = self.kal.data
 
 				def stop_daemons(self):
-					if stop_wallet_daemon:
+					if uarg.stop_wallet_daemon:
 						self.wd.stop()
-						if tx_relay_daemon:
+						if uarg.tx_relay_daemon:
 							self.wd2.stop()
 
 				def post_init(self): pass
@@ -1168,7 +1219,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 						filename       = os.path.basename(fn),
 						password       = d.wallet_passwd,
 						seed           = baseconv.fromhex(d.sec,'xmrseed',tostr=True),
-						restore_height = blockheight,
+						restore_height = uarg.restore_height,
 						language       = 'English' )
 
 					pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
@@ -1231,7 +1282,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					return True
 
 				def post_init(self):
-					host,port = daemon.split(':') if daemon else ('localhost',self.wd.daemon_port)
+					host,port = uarg.daemon.split(':') if uarg.daemon else ('localhost',self.wd.daemon_port)
 					from .rpc import MoneroRPCClient
 					self.dc = MoneroRPCClient(host=host, port=int(port), user=None, passwd=None)
 					self.accts_data = {}
@@ -1265,13 +1316,10 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				tx_relay = True
 
 				def create_addr_data(self):
-					m = re.match('(\d+):(\d+)(?:,(\d+))?$',wallets,re.ASCII)
+					m = re.fullmatch(uarg_info['wallets_sweep'].pat,uarg.wallets,re.ASCII)
 					if not m:
-						die(1,
-							"{!r}: invalid 'wallets' arg: for sweep operation, it must have format {}".format(
-							wallets,
-							'SOURCE:ACCOUNT[,DEST]'
-						))
+						fs = "{!r}: invalid 'wallets' arg: for sweep operation, it must have format {!r}"
+						die(1,fs.format( uarg.wallets, uarg_info['wallets_sweep'].annot ))
 
 					def gen():
 						for i,k in ( (1,'source'), (3,'dest') ):
@@ -1294,8 +1342,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 				def post_init(self):
 
-					if tx_relay_daemon:
-						m = re.fullmatch(hostproxy_pat,tx_relay_daemon,re.ASCII)
+					if uarg.tx_relay_daemon:
+						m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uarg.tx_relay_daemon,re.ASCII)
 
 						from .daemon import MoneroWalletDaemon
 						self.wd2 = MoneroWalletDaemon(
@@ -1306,7 +1354,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 							rpc_port_shift = 16,
 						)
 
-						if start_wallet_daemon:
+						if uarg.start_wallet_daemon:
 							self.wd2.restart()
 
 						from .rpc import MoneroWalletRPCClient
@@ -1368,7 +1416,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 					if keypress_confirm('Relay sweep transaction?'):
 						w_desc = 'source'
-						if tx_relay_daemon:
+						if uarg.tx_relay_daemon:
 							await h.close_wallet('source')
 							self.c = self.c2
 							h = xmr_rpc_methods(self,self.source)
@@ -1513,45 +1561,13 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				except:
 					print(ret)
 
-		def fmtXMRamt(amt):
-			from .obj import XMRAmt
-			return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
-
-		def hlXMRamt(amt):
-			from .obj import XMRAmt
-			return XMRAmt(amt,from_unit='min_coin_unit').hl()
-
-		def check_args(localvars):
-
-			def check_host_arg(arg_name,pat):
-				val = localvars[arg_name]
-				if not re.fullmatch(pat,val,re.ASCII):
-					annot = MMGenToolCmdMonero.xmrwallet.__annotations__[arg_name]
-					die(1,f'{val!r}: invalid {arg_name!r} parameter: it must have format {annot!r}')
-
-			if blockheight < 0:
-				die(1,f"{blockheight}: invalid 'blockheight' arg (<0)")
-
-			if op not in MoneroWalletOps.ops:
-				die(1,f'{op!r}: unrecognized operation')
-
-			if op == 'sync' and blockheight != 0:
-				die(1,'Sync operation does not support blockheight arg')
-
-			if daemon:
-				check_host_arg('daemon',host_pat)
-
-			if tx_relay_daemon:
-				if not getattr(MoneroWalletOps,op).tx_relay:
-					die(1,f"'tx_relay_daemon' arg is not recognized for operation {op!r}")
-				check_host_arg('tx_relay_daemon',hostproxy_pat)
-
 		# start execution
-		host_pat = r'(?:[^:]+):(?:\d+)'
-		hostproxy_pat = r'({p})(?::({p}))?'.format(p=host_pat)
-		check_args(locals())
+		if op not in MoneroWalletOps.ops:
+			die(1,f'{op!r}: unrecognized operation')
 
-		m = getattr(MoneroWalletOps,op)()
+		m = getattr(MoneroWalletOps,op)(
+			_create_argtuple( MMGenToolCmdMonero.xmrwallet, locals() )
+		)
 
 		try:
 			if run_session(m.process_wallets()):
