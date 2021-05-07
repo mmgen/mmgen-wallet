@@ -1061,7 +1061,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			class base:
 
 				wallet_exists = True
-				_monero_chain_height = None
 
 				def __init__(self,start_daemon=True):
 
@@ -1141,24 +1140,6 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
 					return processed
 
-				@property
-				def monero_chain_height(self):
-					if self._monero_chain_height == None:
-						from .daemon import CoinDaemon
-						port = CoinDaemon('xmr',test_suite=g.test_suite).rpc_port
-						cmd = ['monerod','--rpc-bind-port={}'.format(port)] + monerod_args.split() + ['status']
-
-						from subprocess import run,PIPE,DEVNULL
-						cp = run(cmd,stdout=PIPE,stderr=DEVNULL,check=True)
-						import re
-						m = re.search(r'Height: (\d+)/\d+ ',cp.stdout.decode())
-						if not m:
-							die(1,'Unable to connect to monerod!')
-						self._monero_chain_height = int(m.group(1))
-						msg('Chain height: {}'.format(self._monero_chain_height))
-
-					return self._monero_chain_height
-
 			class create(base):
 				name    = 'create'
 				desc    = 'Creat'
@@ -1186,7 +1167,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 
 				async def run(self,d,fn):
 
-					chain_height = self.monero_chain_height
+					chain_height = (await self.dc.call('get_info'))['height']
+					msg(f'  Chain height: {chain_height}')
 
 					import time
 					t_start = time.time()
@@ -1235,6 +1217,12 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					return True
 
 				def post_init(self):
+					from .daemon import CoinDaemon
+					md = CoinDaemon(network_id='xmr',test_suite=g.test_suite)
+					host,port = (md.host,md.rpc_port)
+
+					from .rpc import MoneroRPCClient
+					self.dc = MoneroRPCClient(host=host, port=port, user=None, passwd=None)
 					self.accts_data = {}
 
 				def post_process(self):
