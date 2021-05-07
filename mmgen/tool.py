@@ -1024,10 +1024,19 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 		wallets:             '(integer range or list, or sweep specifier)' = '',
 		start_wallet_daemon  = True,
 		stop_wallet_daemon   = True,
+		daemon:              'HOST:PORT' = '',
+		tx_relay_daemon:     'HOST:PORT[:PROXY_HOST:PROXY_PORT]' = '',
 	):
 
 		"""
 		perform various Monero wallet operations for addresses in XMR key-address file
+
+		  Requires a running monerod daemon.  Unless 'daemon' is specified, the daemon
+		  is assumed to be listening on localhost at the default RPC port.
+
+		  If 'tx_relay_daemon' is specified, the monerod daemon at HOST:PORT will be
+		  used to relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified,
+		  may point to a Tor SOCKS proxy, in which case HOST may be a Tor onion address.
 
 		  Supported operations:
 
@@ -1061,6 +1070,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			class base:
 
 				wallet_exists = True
+				tx_relay = False
 
 				def __init__(self):
 
@@ -1087,7 +1097,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					from .daemon import MoneroWalletDaemon
 					self.wd = MoneroWalletDaemon(
 						wallet_dir = opt.outdir or '.',
-						test_suite = g.test_suite
+						test_suite = g.test_suite,
+						daemon_addr = daemon or None,
 					)
 
 					if start_wallet_daemon:
@@ -1115,6 +1126,8 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				def stop_daemons(self):
 					if stop_wallet_daemon:
 						self.wd.stop()
+						if tx_relay_daemon:
+							self.wd2.stop()
 
 				def post_init(self): pass
 				def post_process(self): pass
@@ -1218,12 +1231,9 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					return True
 
 				def post_init(self):
-					from .daemon import CoinDaemon
-					md = CoinDaemon(network_id='xmr',test_suite=g.test_suite)
-					host,port = (md.host,md.rpc_port)
-
+					host,port = daemon.split(':') if daemon else ('localhost',self.wd.daemon_port)
 					from .rpc import MoneroRPCClient
-					self.dc = MoneroRPCClient(host=host, port=port, user=None, passwd=None)
+					self.dc = MoneroRPCClient(host=host, port=int(port), user=None, passwd=None)
 					self.accts_data = {}
 
 				def post_process(self):
@@ -1252,6 +1262,7 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				name    = 'sweep'
 				desc    = 'Sweep'
 				past    = 'swept'
+				tx_relay = True
 
 				def create_addr_data(self):
 					m = re.match('(\d+):(\d+)(?:,(\d+))?$',wallets,re.ASCII)
@@ -1281,6 +1292,31 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					self.addr_data = list(gen())
 					self.account = int(m[2])
 
+				def post_init(self):
+
+					if tx_relay_daemon:
+						m = re.fullmatch(hostproxy_pat,tx_relay_daemon,re.ASCII)
+
+						from .daemon import MoneroWalletDaemon
+						self.wd2 = MoneroWalletDaemon(
+							wallet_dir = opt.outdir or '.',
+							test_suite = g.test_suite,
+							daemon_addr = m[1],
+							proxy = m[2],
+							rpc_port_shift = 16,
+						)
+
+						if start_wallet_daemon:
+							self.wd2.restart()
+
+						from .rpc import MoneroWalletRPCClient
+						self.c2 = MoneroWalletRPCClient(
+							host   = self.wd2.host,
+							port   = self.wd2.rpc_port,
+							user   = self.wd2.user,
+							passwd = self.wd2.passwd
+						)
+
 				async def process_wallets(self):
 					gmsg(f'\nSweeping account #{self.account} of wallet {self.source.idx}' + (
 						' to new address' if self.dest is None else
@@ -1306,31 +1342,48 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 							die(1,'Exiting at user request')
 						await h.get_addrs(accts_data,self.account)
 					else:
+						await h.close_wallet('source')
 						bn = os.path.basename(self.get_wallet_fn(self.dest))
-						h = xmr_rpc_methods(self,self.dest)
-						await h.open_wallet('destination')
-						accts_data = (await h.get_accts())[0]
+						h2 = xmr_rpc_methods(self,self.dest)
+						await h2.open_wallet('destination')
+						accts_data = (await h2.get_accts())[0]
 
 						if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
-							new_addr = await h.create_acct()
-							await h.get_accts()
+							new_addr = await h2.create_acct()
+							await h2.get_accts()
 						elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
-							new_addr = h.get_last_acct(accts_data)
+							new_addr = h2.get_last_acct(accts_data)
 						else:
 							die(1,'Exiting at user request')
 
-						h = xmr_rpc_methods(self,self.source)
+						await h2.close_wallet('destination')
 						await h.open_wallet('source')
 
-					if keypress_confirm(
-						'\nSweep balance of wallet {}, account #{} to {}?'.format(
-							self.source.idx,
-							self.account,
-							cyan(new_addr),
-						)):
-						await h.do_sweep(self.account,new_addr)
+					msg('\nCreating sweep transaction: balance of wallet {}, account #{} => {}'.format(
+						self.source.idx,
+						self.account,
+						cyan(new_addr),
+					))
+					sweep_tx = await h.make_sweep_tx(self.account,new_addr)
+
+					if keypress_confirm('Relay sweep transaction?'):
+						w_desc = 'source'
+						if tx_relay_daemon:
+							await h.close_wallet('source')
+							self.c = self.c2
+							h = xmr_rpc_methods(self,self.source)
+							w_desc = 'TX relay source'
+							await h.open_wallet(w_desc)
+						msg(f'\n    Relaying sweep transaction...')
+						await h.relay_sweep_tx( sweep_tx['tx_metadata_list'][0] )
+						await h.close_wallet(w_desc)
+
+						gmsg('\n\nAll done')
 					else:
-						die(1,'Exiting at user request')
+						await h.close_wallet('source')
+						die(1,'\nExiting at user request')
+
+					return True
 
 		class xmr_rpc_methods:
 
@@ -1347,6 +1400,11 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 					filename=os.path.basename(self.fn),
 					password=self.d.wallet_passwd )
 				gmsg('done')
+
+			async def close_wallet(self,desc):
+				gmsg_r(f'\n  Closing {desc} wallet...')
+				await self.c.call('close_wallet')
+				gmsg_r('done')
 
 			def print_accts(self,data,addrs_data,indent='    '):
 				d = data['subaddress_accounts']
@@ -1425,25 +1483,35 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 				msg('      ' + cyan(ret))
 				return ret
 
-			async def do_sweep(self,account,addr):
-				msg(f'\n    Sweeping account balance...')
-				ret = { # debug
-					'amount_list': [322222330000],
-					'fee_list': [10600000],
-					'tx_hash_list': ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-				}
+			def display_sweep_tx(self,data):
+				from .obj import CoinTxID
+				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
+					CoinTxID(data['tx_hash_list'][0]).hl(),
+					hlXMRamt(data['amount_list'][0]),
+					hlXMRamt(data['fee_list'][0]),
+				))
+
+			async def make_sweep_tx(self,account,addr):
 				ret = await self.c.call(
 					'sweep_all',
 					address = addr,
 					account_index = account,
+					do_not_relay = True,
+					get_tx_metadata = True
 				)
-				from .obj import CoinTxID
-				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
-					CoinTxID(ret['tx_hash_list'][0]).hl(),
-					hlXMRamt(ret['amount_list'][0]),
-					hlXMRamt(ret['fee_list'][0]),
-				))
+				self.display_sweep_tx(ret)
 				return ret
+
+			def display_txid(self,data):
+				from .obj import CoinTxID
+				msg('    Relayed {}'.format( CoinTxID(data['tx_hash']).hl() ))
+
+			async def relay_sweep_tx(self,tx_hex):
+				ret = await self.c.call('relay_tx',hex=tx_hex)
+				try:
+					self.display_txid(ret)
+				except:
+					print(ret)
 
 		def fmtXMRamt(amt):
 			from .obj import XMRAmt
@@ -1453,7 +1521,13 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			from .obj import XMRAmt
 			return XMRAmt(amt,from_unit='min_coin_unit').hl()
 
-		def check_args():
+		def check_args(localvars):
+
+			def check_host_arg(arg_name,pat):
+				val = localvars[arg_name]
+				if not re.fullmatch(pat,val,re.ASCII):
+					annot = MMGenToolCmdMonero.xmrwallet.__annotations__[arg_name]
+					die(1,f'{val!r}: invalid {arg_name!r} parameter: it must have format {annot!r}')
 
 			if blockheight < 0:
 				die(1,f"{blockheight}: invalid 'blockheight' arg (<0)")
@@ -1464,8 +1538,18 @@ class MMGenToolCmdMonero(MMGenToolCmds):
 			if op == 'sync' and blockheight != 0:
 				die(1,'Sync operation does not support blockheight arg')
 
+			if daemon:
+				check_host_arg('daemon',host_pat)
+
+			if tx_relay_daemon:
+				if not getattr(MoneroWalletOps,op).tx_relay:
+					die(1,f"'tx_relay_daemon' arg is not recognized for operation {op!r}")
+				check_host_arg('tx_relay_daemon',hostproxy_pat)
+
 		# start execution
-		check_args()
+		host_pat = r'(?:[^:]+):(?:\d+)'
+		hostproxy_pat = r'({p})(?::({p}))?'.format(p=host_pat)
+		check_args(locals())
 
 		m = getattr(MoneroWalletOps,op)()
 

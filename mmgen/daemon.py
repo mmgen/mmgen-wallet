@@ -230,6 +230,8 @@ class MoneroWalletDaemon(Daemon):
 			host           = None,
 			user           = None,
 			passwd         = None,
+			daemon_addr    = None,
+			proxy          = None,
 			rpc_port_shift = None ):
 
 		super().__init__()
@@ -245,7 +247,10 @@ class MoneroWalletDaemon(Daemon):
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
-		self.daemon_port = CoinDaemon('xmr',test_suite=test_suite).rpc_port
+		self.proxy = proxy
+		self.daemon_addr = daemon_addr
+		if not daemon_addr:
+			self.daemon_port = CoinDaemon('xmr',test_suite=test_suite).rpc_port
 
 		if self.platform == 'win':
 			self.use_pidfile = False
@@ -267,11 +272,20 @@ class MoneroWalletDaemon(Daemon):
 	def start_cmd(self):
 		cmd = [
 			'monero-wallet-rpc',
-			'--daemon-port={}'.format(self.daemon_port),
+			'--untrusted-daemon',
 			'--rpc-bind-port={}'.format(self.rpc_port),
 			'--wallet-dir='+self.wallet_dir,
 			'--log-file='+self.logfile,
 			'--rpc-login={}:{}'.format(self.user,self.passwd) ]
+
+		if self.daemon_addr:
+			cmd.append(f'--daemon-address={self.daemon_addr}')
+		else:
+			cmd.append(f'--daemon-port={self.daemon_port}')
+
+		if self.proxy:
+			cmd.append(f'--proxy={self.proxy}')
+
 		if self.platform == 'linux':
 			cmd += ['--pidfile={}'.format(self.pidfile)]
 			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
