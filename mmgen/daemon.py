@@ -66,7 +66,7 @@ class Daemon(MMGenObject):
 
 	def run_cmd(self,cmd,silent=False,check=True,is_daemon=False):
 		if is_daemon and not silent:
-			msg('Starting {} {}'.format(self.net_desc,self.desc))
+			msg('Starting {} {} on port {}'.format(self.net_desc,self.desc,self.rpc_port))
 
 		if self.debug:
 			msg('\nExecuting: {}'.format(' '.join(cmd)))
@@ -106,12 +106,12 @@ class Daemon(MMGenObject):
 
 	def do_start(self,silent=False):
 		if not silent:
-			msg('Starting {} {}'.format(self.net_desc,self.desc))
+			msg('Starting {} {} on port {}'.format(self.net_desc,self.desc,self.rpc_port))
 		return self.run_cmd(self.start_cmd,silent=True,is_daemon=True)
 
 	def do_stop(self,silent=False):
 		if not silent:
-			msg('Stopping {} {}'.format(self.net_desc,self.desc))
+			msg('Stopping {} {} on port {}'.format(self.net_desc,self.desc,self.rpc_port))
 		return self.run_cmd(self.stop_cmd,silent=True)
 
 	def cli(self,*cmds,silent=False,check=True):
@@ -158,7 +158,7 @@ class Daemon(MMGenObject):
 			return ret
 		else:
 			if not silent:
-				msg('{} {} not running'.format(self.net_desc,self.desc))
+				msg('{} {} on port {} not running'.format(self.net_desc,self.desc,self.rpc_port))
 
 	def restart(self,silent=False):
 		self.stop(silent=silent)
@@ -225,19 +225,23 @@ class MoneroWalletDaemon(Daemon):
 	exec_fn_mswin = 'monero-wallet-rpc.exe'
 	ps_pid_mswin = True
 
-	def __init__(self,wallet_dir,test_suite=False,host=None,user=None,passwd=None):
+	def __init__(self, wallet_dir,
+			test_suite     = False,
+			host           = None,
+			user           = None,
+			passwd         = None ):
+
 		super().__init__()
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
-		if test_suite:
-			self.datadir = os.path.join('test','monero-wallet-rpc')
-			self.rpc_port = 13142
-		else:
-			self.datadir = 'monero-wallet-rpc'
-			self.rpc_port = 13131
+		self.rpc_port = 13142 if test_suite else 13131
+
+		id_str = 'monero-wallet-rpc'
+		self.datadir = os.path.join('test',id_str) if test_suite else id_str
+		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
+		self.logfile = os.path.join(self.datadir,id_str+'.log')
+
 		self.daemon_port = CoinDaemon('xmr',test_suite=test_suite).rpc_port
-		self.pidfile = os.path.join(self.datadir,'monero-wallet-rpc.pid')
-		self.logfile = os.path.join(self.datadir,'monero-wallet-rpc.log')
 
 		if self.platform == 'win':
 			self.use_pidfile = False
