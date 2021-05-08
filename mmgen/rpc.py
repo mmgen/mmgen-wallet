@@ -236,6 +236,7 @@ class CallSigs:
 
 class RPCClient(MMGenObject):
 
+	json_rpc = True
 	auth_type = None
 	has_auth_cookie = False
 	network_proto = 'http'
@@ -369,7 +370,10 @@ class RPCClient(MMGenObject):
 				return [r['result'] for r in json.loads(text,parse_float=Decimal,encoding='UTF-8')]
 			else:
 				try:
-					return json.loads(text,parse_float=Decimal,encoding='UTF-8')['result']
+					if self.json_rpc:
+						return json.loads(text,parse_float=Decimal,encoding='UTF-8')['result']
+					else:
+						return json.loads(text,parse_float=Decimal,encoding='UTF-8')
 				except:
 					t = json.loads(text)
 					try:
@@ -678,6 +682,25 @@ class MoneroRPCClient(RPCClient):
 		))
 
 	rpcmethods = ( 'get_info', )
+
+class MoneroRPCClientRaw(MoneroRPCClient):
+
+	json_rpc = False
+	host_path = '/'
+
+	async def call(self,method,*params,**kwargs):
+		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
+		return await self.process_http_resp(self.backend.run(
+			payload = kwargs,
+			timeout = self.timeout,
+			wallet = method
+		))
+
+	@staticmethod
+	def make_host_path(arg):
+		return arg
+
+	rpcmethods = ( 'get_height', 'send_raw_transaction' )
 
 class MoneroWalletRPCClient(MoneroRPCClient):
 

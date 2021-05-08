@@ -24,7 +24,7 @@ import os,re
 from collections import namedtuple
 from .common import *
 from .addr import KeyAddrList,AddrIdxList
-from .rpc import MoneroRPCClient, MoneroWalletRPCClient
+from .rpc import MoneroRPCClientRaw, MoneroWalletRPCClient
 from .daemon import MoneroWalletDaemon
 
 xmrwallet_uarg_info = (
@@ -322,7 +322,7 @@ class MoneroWalletOps:
 
 		async def run(self,d,fn):
 
-			chain_height = (await self.dc.call('get_info'))['height']
+			chain_height = (await self.dc.call('get_height'))['height']
 			msg(f'  Chain height: {chain_height}')
 
 			import time
@@ -373,7 +373,7 @@ class MoneroWalletOps:
 
 		def post_init(self):
 			host,port = uarg.daemon.split(':') if uarg.daemon else ('localhost',self.wd.daemon_port)
-			self.dc = MoneroRPCClient(host=host, port=int(port), user=None, passwd=None)
+			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
 			self.accts_data = {}
 
 		def post_process(self):
