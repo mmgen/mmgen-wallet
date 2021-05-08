@@ -141,6 +141,12 @@ class MoneroWalletOps:
 				msg('      ' + cyan(ret))
 				return ret
 
+			def display_tx_relay_info(self):
+				msg('\n    TX relay host: {}\n    Proxy:         {}'.format(
+					blue(self.parent.wd2.daemon_addr),
+					blue(self.parent.wd2.proxy)
+				))
+
 			def display_sweep_tx(self,data):
 				from .obj import CoinTxID
 				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
@@ -162,14 +168,14 @@ class MoneroWalletOps:
 
 			def display_txid(self,data):
 				from .obj import CoinTxID
-				msg('    Relayed {}'.format( CoinTxID(data['tx_hash']).hl() ))
+				msg('\n    Relayed {}'.format( CoinTxID(data['tx_hash']).hl() ))
 
 			async def relay_sweep_tx(self,tx_hex):
 				ret = await self.c.call('relay_tx',hex=tx_hex)
 				try:
 					self.display_txid(ret)
 				except:
-					print(ret)
+					msg('\n'+str(ret))
 
 		wallet_exists = True
 		tx_relay = False
@@ -488,7 +494,7 @@ class MoneroWalletOps:
 				await h2.close_wallet('destination')
 				await h.open_wallet('source')
 
-			msg('\nCreating sweep transaction: balance of wallet {}, account #{} => {}'.format(
+			msg('\n    Creating sweep transaction: balance of wallet {}, account #{} => {}'.format(
 				self.source.idx,
 				self.account,
 				cyan(new_addr),
@@ -503,7 +509,8 @@ class MoneroWalletOps:
 					h = self.rpc(self,self.source)
 					w_desc = 'TX relay source'
 					await h.open_wallet(w_desc)
-				msg(f'\n    Relaying sweep transaction...')
+				h.display_tx_relay_info()
+				msg_r(f'    Relaying sweep transaction...')
 				await h.relay_sweep_tx( sweep_tx['tx_metadata_list'][0] )
 				await h.close_wallet(w_desc)
 
