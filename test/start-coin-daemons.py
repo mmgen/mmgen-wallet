@@ -16,7 +16,9 @@ opts_data = {
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -D, --debug          Produce debugging output (implies --verbose)
+-d, --datadir=       Override the default datadir
 -n, --no-daemonize   Don't fork daemon to background
+-p, --port-shift=    Shift the RPC port by this number
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
 -v, --verbose        Produce more verbose output
@@ -58,7 +60,9 @@ for network_id in ids:
 	d = CoinDaemon(
 		network_id,
 		test_suite = True,
-		opts       = ['no_daemonize'] if opt.no_daemonize else None )
+		opts       = ['no_daemonize'] if opt.no_daemonize else None,
+		port_shift = int(opt.port_shift or 0),
+		datadir    = opt.datadir )
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:

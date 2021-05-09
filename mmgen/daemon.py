@@ -423,7 +423,9 @@ class CoinDaemon(Daemon):
 			test_suite = False,
 			flags      = None,
 			proto      = None,
-			opts       = None ):
+			opts       = None,
+			port_shift = None,
+			datadir    = None ):
 
 		assert network_id or proto,        'CoinDaemon_chk1'
 		assert not (network_id and proto), 'CoinDaemon_chk2'
@@ -450,7 +452,9 @@ class CoinDaemon(Daemon):
 			test_suite = False,
 			flags      = None,
 			proto      = None,
-			opts       = None ):
+			opts       = None,
+			port_shift = None,
+			datadir    = None ):
 
 		super().__init__()
 
@@ -495,8 +499,8 @@ class CoinDaemon(Daemon):
 		if test_suite:
 			dfl_datadir = os.path.join(os.getcwd(),rel_datadir)
 
-		# user-set value takes precedence
-		datadir = g.daemon_data_dir or dfl_datadir
+		# user-set values take precedence
+		datadir = datadir or g.daemon_data_dir or dfl_datadir
 
 		self.datadir = os.path.abspath(datadir)
 
@@ -505,7 +509,7 @@ class CoinDaemon(Daemon):
 			if self.datadir_is_subdir:
 				self.datadir = os.path.join(self.datadir,self.testnet_dir)
 
-		self.port_shift = 1237 if test_suite else 0
+		self.port_shift = (1237 if test_suite else 0) + (port_shift or 0)
 		self.rpc_port = {
 				'mainnet': self.dfl_rpc,
 				'testnet': self.dfl_rpc_tn,
