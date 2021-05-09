@@ -49,6 +49,8 @@ _date_formatter = {
 }
 
 async def _set_dates(rpc,us):
+	if rpc.proto.base_proto != 'Bitcoin':
+		return
 	if us and us[0].date is None:
 		# 'blocktime' differs from 'time', is same as getblockheader['time']
 		dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
