@@ -141,4 +141,3 @@ class TestSuiteChainsplit(TestSuiteRegtest):
 		self.regtest_txdo_timelock('B2X',locktime=8888,bad_locktime=True)
 	def split_txdo_timelock_good_b2x(self):
 		self.regtest_txdo_timelock('B2X',locktime=1321009871,bad_locktime=False)
-

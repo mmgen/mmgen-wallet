@@ -520,4 +520,3 @@ class MoneroWalletOps:
 				die(1,'\nExiting at user request')
 
 			return True
-

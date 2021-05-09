@@ -224,4 +224,3 @@ class TestSuiteCfg(TestSuiteBase):
 
 		t.skip_ok = True
 		return t
-

@@ -1183,4 +1183,3 @@ class TwAddrData(AddrData,metaclass=aInitMeta):
 		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(twd)))
 		for al_id in out:
 			self.add(AddrList(self.proto,al_id=al_id,adata=AddrListData(sorted(out[al_id],key=lambda a: a.idx))))
-
