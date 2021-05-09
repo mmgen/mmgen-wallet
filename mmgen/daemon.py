@@ -311,13 +311,15 @@ class CoinDaemon(Daemon):
 	subclasses_must_implement = ('state','stop_cmd')
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize','online')
+	datadir_is_subdir = False
 	data_subdir = ''
 
 	network_ids = (
 		'btc','btc_tn','btc_rt',
 		'bch','bch_tn','bch_rt',
 		'ltc','ltc_tn','ltc_rt',
-		'xmr','eth','etc'
+		'xmr','xmr_tn',
+		'eth','etc'
 	)
 
 	cd = namedtuple('daemon_data', [
@@ -374,7 +376,7 @@ class CoinDaemon(Daemon):
 			'monerod',
 			'bitmonero.conf',
 			'testnet',
-			18081, None, None),
+			18081, 28081, None),
 		'eth': cd(
 			'openethereum',
 			'Ethereum',
@@ -500,6 +502,8 @@ class CoinDaemon(Daemon):
 
 		if self.network == 'testnet' and self.testnet_dir:
 			self.data_subdir = self.testnet_dir
+			if self.datadir_is_subdir:
+				self.datadir = os.path.join(self.datadir,self.testnet_dir)
 
 		self.port_shift = 1237 if test_suite else 0
 		self.rpc_port = {
@@ -591,6 +595,7 @@ class MoneroDaemon(CoinDaemon):
 	ps_pid_mswin = True
 	new_console_mswin = True
 	host = 'localhost' # FIXME
+	datadir_is_subdir = True
 
 	def subclass_init(self):
 		if self.platform == 'win':
@@ -599,6 +604,7 @@ class MoneroDaemon(CoinDaemon):
 		self.shared_args = list_gen(
 			[f'--zmq-rpc-bind-port={self.rpc_port+1}'],
 			[f'--rpc-bind-port={self.rpc_port}'],
+			['--testnet', self.network == 'testnet'],
 		)
 
 		self.coind_args = list_gen(
