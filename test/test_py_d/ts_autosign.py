@@ -126,7 +126,7 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			# make 2 bad tx files
 			for n in (1,2):
-				bad_tx = joinpath(mountpoint,'tx','bad{}.rawtx'.format(n))
+				bad_tx = joinpath(mountpoint,'tx',f'bad{n}.rawtx')
 				if include_bad_tx and not remove_signed_only:
 					open(bad_tx,'w').write('bad tx data')
 				if not include_bad_tx:
@@ -134,6 +134,10 @@ class TestSuiteAutosign(TestSuiteBase):
 					except: pass
 
 		def do_autosign_live(opts,mountpoint,led_opts=[],gen_wallet=True):
+
+			omsg(purple('Running autosign test with {}'.format(
+				f"'{' '.join(led_opts)}'" if led_opts else 'no LED'
+			)))
 
 			def do_mount():
 				try: run(['mount',mountpoint],check=True)
@@ -220,7 +224,7 @@ class TestSuiteAutosign(TestSuiteBase):
 				'mmgen-autosign',
 				opts + ['--quiet','--stealth-led','wait'],
 				extra_desc='(sign - --quiet --stealth-led)' )
-			autosign_expect(t,txcount)
+			autosign_expect(t,3)
 
 			copy_files(mountpoint,include_bad_tx=False,fdata_in=(('btc',''),))
 			t = self.spawn('mmgen-autosign',opts+['--quiet','--led'],extra_desc='(sign - --quiet --led)')
@@ -228,6 +232,32 @@ class TestSuiteAutosign(TestSuiteBase):
 			imsg('')
 
 			return t
+
+		def check_mountpoint(mountpoint):
+			if not os.path.ismount(mountpoint):
+				try:
+					run(['mount',mountpoint],check=True)
+					imsg(f'Mounted {mountpoint}')
+				except:
+					ydie(1,f'Could not mount {mountpoint}!  Exiting')
+
+			txdir = joinpath(mountpoint,'tx')
+			if not os.path.isdir(txdir):
+				ydie(1,f'Directory {txdir} does not exist!  Exiting')
+
+		def init_led():
+			from mmgen.led import LEDControl
+			if simulate:
+				LEDControl.create_dummy_control_files()
+			try:
+				cf = LEDControl(enabled=True,simulate=simulate)
+			except:
+				ydie(2,"'no LED support detected'")
+
+			for fn in (cf.board.status,cf.board.trigger):
+				if fn:
+					run(['sudo','chmod','0666',fn],check=True)
+			os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LIVE'] = '1'
 
 		# begin execution
 
@@ -237,51 +267,26 @@ class TestSuiteAutosign(TestSuiteBase):
 		network_ids = [c+'_tn' for c in daemon_coins] + daemon_coins
 		start_test_daemons(*network_ids)
 
-		if live:
-			mountpoint = '/mnt/tx'
-			if not os.path.ismount(mountpoint):
-				try:
-					run(['mount',mountpoint],check=True)
-					imsg("Mounted '{}'".format(mountpoint))
-				except:
-					ydie(1,"Could not mount '{}'!  Exiting".format(mountpoint))
-
-			txdir = joinpath(mountpoint,'tx')
-			if not os.path.isdir(txdir):
-				ydie(1,"Directory '{}' does not exist!  Exiting".format(mountpoint))
-
-			opts = ['--coins='+','.join(coins)]
-
-			from mmgen.led import LEDControl
-
-			if simulate:
-				LEDControl.create_dummy_control_files()
-
-			try:
-				cf = LEDControl(enabled=True,simulate=simulate)
-			except:
-				ret = "'no LED support detected'"
-			else:
-				for fn in (cf.board.status,cf.board.trigger):
-					if fn:
-						run(['sudo','chmod','0666',fn],check=True)
-				os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LIVE'] = '1'
-				omsg(purple('Running autosign test with no LED'))
-				do_autosign_live(opts,mountpoint)
-				omsg(purple("Running autosign test with '--led'"))
-				do_autosign_live(opts,mountpoint,led_opts=['--led'],gen_wallet=False)
-				omsg(purple("Running autosign test with '--stealth-led'"))
+		try:
+			if live:
+				mountpoint = '/mnt/tx'
+				opts = ['--coins='+','.join(coins)]
+				check_mountpoint(mountpoint)
+				init_led()
+				foo = do_autosign_live(opts,mountpoint)
+				foo = do_autosign_live(opts,mountpoint,led_opts=['--led'],gen_wallet=False)
 				ret = do_autosign_live(opts,mountpoint,led_opts=['--stealth-led'],gen_wallet=False)
-		else:
-			mountpoint = self.tmpdir
-			opts = ['--no-insert-check','--mountpoint='+mountpoint,'--coins='+','.join(coins)]
-			try: os.mkdir(joinpath(mountpoint,'tx'))
-			except: pass
-			foo = do_autosign(opts,mountpoint,mn_type='mmgen',short=True)
-			foo = do_autosign(opts,mountpoint,mn_type='bip39',short=True)
-			ret = do_autosign(opts,mountpoint)
+			else:
+				mountpoint = self.tmpdir
+				opts = ['--no-insert-check','--mountpoint='+mountpoint,'--coins='+','.join(coins)]
+				try: os.mkdir(joinpath(mountpoint,'tx'))
+				except: pass
+				foo = do_autosign(opts,mountpoint,mn_type='mmgen',short=True)
+				foo = do_autosign(opts,mountpoint,mn_type='bip39',short=True)
+				ret = do_autosign(opts,mountpoint)
+		finally:
+			stop_test_daemons(*network_ids)
 
-		stop_test_daemons(*network_ids)
 		return ret
 
 class TestSuiteAutosignBTC(TestSuiteAutosign):
