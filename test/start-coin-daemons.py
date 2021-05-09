@@ -15,8 +15,8 @@ opts_data = {
 		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
--d, --debug          Produce debugging output (implies --verbose)
--D, --no-daemonize   Don't fork daemon to background
+-D, --debug          Produce debugging output (implies --verbose)
+-n, --no-daemonize   Don't fork daemon to background
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
 -v, --verbose        Produce more verbose output
@@ -55,7 +55,10 @@ if 'eth' in ids and 'etc' in ids:
 
 for network_id in ids:
 	network_id = network_id.lower()
-	d = CoinDaemon(network_id,test_suite=True,flags=['no_daemonize'] if opt.no_daemonize else None)
+	d = CoinDaemon(
+		network_id,
+		test_suite = True,
+		opts       = ['no_daemonize'] if opt.no_daemonize else None )
 	d.debug = opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:

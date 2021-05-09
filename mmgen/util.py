@@ -27,6 +27,9 @@ from .color import *
 from .exception import *
 from .globalvars import *
 
+CUR_HIDE = '\033[?25l'
+CUR_SHOW = '\033[?25h'
+
 if g.platform == 'win':
 	def msg_r(s):
 		try:
@@ -113,8 +116,18 @@ def fmt_list(l,fmt='dfl',indent=''):
 	}[fmt]
 	return lq + sep.join(l) + rq
 
-CUR_HIDE = '\033[?25l'
-CUR_SHOW = '\033[?25h'
+def list_gen(*data):
+	"""
+	add element to list if condition is true or absent
+	"""
+	assert type(data) in (list,tuple), f'{type(data).__name__} not in (list,tuple)'
+	def gen():
+		for i in data:
+			assert type(i) == list, f'{type(i).__name__} != list'
+			assert len(i) in (1,2), f'{len(i)} not in (1,2)'
+			if len(i) == 1 or i[1]:
+				yield i[0]
+	return list(gen())
 
 def exit_if_mswin(feature):
 	if g.platform == 'win':

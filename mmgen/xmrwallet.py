@@ -439,7 +439,7 @@ class MoneroWalletOps:
 					test_suite = g.test_suite,
 					daemon_addr = m[1],
 					proxy = m[2],
-					rpc_port_shift = 16,
+					port_shift = 16,
 				)
 
 				if uarg.start_wallet_daemon:

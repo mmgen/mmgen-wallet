@@ -28,6 +28,7 @@ from .common import *
 
 class Daemon(MMGenObject):
 
+	desc = 'daemon'
 	debug = False
 	wait = True
 	use_pidfile = True
@@ -35,9 +36,11 @@ class Daemon(MMGenObject):
 	new_console_mswin = False
 	ps_pid_mswin = False
 	lockfile = None
-	avail_flags = ()
+	avail_opts = ()
+	avail_flags = () # like opts, but can be added or removed after instantiation
 
 	def __init__(self):
+		self.opts = []
 		self._flags = []
 
 	def subclass_init(self): pass
@@ -226,20 +229,20 @@ class MoneroWalletDaemon(Daemon):
 	ps_pid_mswin = True
 
 	def __init__(self, wallet_dir,
-			test_suite     = False,
-			host           = None,
-			user           = None,
-			passwd         = None,
-			daemon_addr    = None,
-			proxy          = None,
-			rpc_port_shift = None ):
+			test_suite  = False,
+			host        = None,
+			user        = None,
+			passwd      = None,
+			daemon_addr = None,
+			proxy       = None,
+			port_shift  = None ):
 
 		super().__init__()
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
 		self.rpc_port = 13142 if test_suite else 13131
-		if rpc_port_shift:
-			self.rpc_port += rpc_port_shift
+		if port_shift:
+			self.rpc_port += port_shift
 
 		bn = 'monero-wallet-rpc'
 		id_str = f'{bn}-{self.rpc_port}'
@@ -268,32 +271,24 @@ class MoneroWalletDaemon(Daemon):
 				"option (insecure, not recommended), or by setting 'monero_wallet_rpc_password'\n" +
 				"in the MMGen config file." )
 
-	@property
-	def start_cmd(self):
-		cmd = [
-			'monero-wallet-rpc',
-			'--untrusted-daemon',
-			'--rpc-bind-port={}'.format(self.rpc_port),
-			'--wallet-dir='+self.wallet_dir,
-			'--log-file='+self.logfile,
-			'--rpc-login={}:{}'.format(self.user,self.passwd) ]
-
-		if self.daemon_addr:
-			cmd.append(f'--daemon-address={self.daemon_addr}')
-		else:
-			cmd.append(f'--daemon-port={self.daemon_port}')
-
-		if self.proxy:
-			cmd.append(f'--proxy={self.proxy}')
-
-		if self.platform == 'linux':
-			cmd += ['--pidfile={}'.format(self.pidfile)]
-			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
-		return cmd
+		self.start_cmd = list_gen(
+			['monero-wallet-rpc'],
+			['--untrusted-daemon'],
+			[f'--rpc-bind-port={self.rpc_port}'],
+			['--wallet-dir='+self.wallet_dir],
+			['--log-file='+self.logfile],
+			[f'--rpc-login={self.user}:{self.passwd}'],
+			[f'--daemon-address={self.daemon_addr}', self.daemon_addr],
+			[f'--daemon-port={self.daemon_port}',    not self.daemon_addr],
+			[f'--proxy={self.proxy}',                self.proxy],
+			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
+			['--detach',                             not 'no_daemonize' in self.opts],
+		)
 
 	@property
 	def state(self):
 		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
+		# TBD:
 		if not self.test_socket(self.host,self.rpc_port):
 			return 'stopped'
 		from .rpc import MoneroWalletRPCClient
@@ -314,9 +309,16 @@ class MoneroWalletDaemon(Daemon):
 class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	subclasses_must_implement = ('state','stop_cmd')
-	avail_flags = ('no_daemonize','keep_cfg_file')
+	avail_flags = ('keep_cfg_file',)
+	avail_opts = ('no_daemonize','online')
+	data_subdir = ''
 
-	network_ids = ('btc','btc_tn','btc_rt','bch','bch_tn','bch_rt','ltc','ltc_tn','ltc_rt','xmr','eth','etc')
+	network_ids = (
+		'btc','btc_tn','btc_rt',
+		'bch','bch_tn','bch_rt',
+		'ltc','ltc_tn','ltc_rt',
+		'xmr','eth','etc'
+	)
 
 	cd = namedtuple('daemon_data', [
 		'id',
@@ -371,7 +373,7 @@ class CoinDaemon(Daemon):
 			'monerod',
 			'monerod',
 			'bitmonero.conf',
-			None,
+			'testnet',
 			18081, None, None),
 		'eth': cd(
 			'openethereum',
@@ -395,9 +397,33 @@ class CoinDaemon(Daemon):
 			8545, 8545, 8545)
 	}
 
-	def __new__(cls,network_id=None,test_suite=False,flags=None,proto=None):
+	dfl_datadirs = {
+		'linux': {
+			'btc': [g.home_dir,'.bitcoin'],
+			'bch': [g.home_dir,'.bitcoin-bchn'],
+			'ltc': [g.home_dir,'.litecoin'],
+			'xmr': [g.home_dir,'.bitmonero'],
+			'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
+			'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
+		},
+		'win': {
+			'btc': [os.getenv('APPDATA'),'Bitcoin'],
+			'bch': [os.getenv('APPDATA'),'Bitcoin_ABC'],
+			'ltc': [os.getenv('APPDATA'),'Litecoin'],
+			'xmr': ['/','c','ProgramData','bitmonero'],
+			'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
+			'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
+		},
+	}
 
-		assert network_id or proto, 'CoinDaemon_chk1'
+	def __new__(cls,
+			network_id = None,
+			test_suite = False,
+			flags      = None,
+			proto      = None,
+			opts       = None ):
+
+		assert network_id or proto,        'CoinDaemon_chk1'
 		assert not (network_id and proto), 'CoinDaemon_chk2'
 
 		if proto:
@@ -406,7 +432,7 @@ class CoinDaemon(Daemon):
 			daemon_id  = proto.coin.lower()
 		else:
 			network_id = network_id.lower()
-			assert network_id in cls.network_ids, '{!r}: invalid network ID'.format(network_id)
+			assert network_id in cls.network_ids, f'{network_id!r}: invalid network ID'
 			from mmgen.protocol import CoinProtocol
 			daemon_id,network = CoinProtocol.Base.parse_network_id(network_id)
 
@@ -415,125 +441,91 @@ class CoinDaemon(Daemon):
 		me.network = network
 		me.daemon_id = daemon_id
 
-		me.desc = 'daemon'
-		if network == 'regtest':
-			me.desc = 'regtest daemon'
+		return me
+
+	def __init__(self,
+			network_id = None,
+			test_suite = False,
+			flags      = None,
+			proto      = None,
+			opts       = None ):
+
+		super().__init__()
+
+		self.shared_args = []
+		self.usr_coind_args = []
+		self.platform = g.platform
+
+		if opts:
+			if type(opts) not in (list,tuple):
+				die(1,f'{opts!r}: illegal value for opts (must be list or tuple)')
+			for o in opts:
+				if o not in self.avail_opts:
+					die(1,f'{o!r}: unrecognized opt')
+			self.opts = list(opts)
+
+		if flags:
+			if type(flags) not in (list,tuple):
+				die(1,f'{flags!r}: illegal value for flags (must be list or tuple)')
+			for flag in flags:
+				self.add_flag(flag)
+
+		for k in self.daemon_ids[self.daemon_id]._fields:
+			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
+
+		if self.network == 'regtest':
+			self.desc = 'regtest daemon'
 			if test_suite:
 				rel_datadir = os.path.join(
 					'test',
 					'data_dir{}'.format('-α' if g.debug_utf8 else ''),
 					'regtest',
-					daemon_id )
+					self.daemon_id )
 			else:
-				datadir = os.path.join(g.data_dir_root,'regtest',daemon_id)
+				dfl_datadir = os.path.join(g.data_dir_root,'regtest',self.daemon_id)
 		elif test_suite:
-			me.desc = 'test suite daemon'
-			rel_datadir = os.path.join('test','daemons',daemon_id)
+			self.desc = 'test suite daemon'
+			rel_datadir = os.path.join('test','daemons',self.daemon_id)
 		else:
-			datadir = me.dfl_datadir
+			dfl_datadir = os.path.join( *self.dfl_datadirs[g.platform][self.daemon_id] )
+
 
 		if test_suite:
-			datadir = os.path.join(os.getcwd(),rel_datadir)
+			dfl_datadir = os.path.join(os.getcwd(),rel_datadir)
 
-		if g.daemon_data_dir: # user-set value overrides everything else
-			datadir = g.daemon_data_dir
+		# user-set value takes precedence
+		datadir = g.daemon_data_dir or dfl_datadir
 
-		me.datadir = os.path.abspath(datadir)
-		me.data_subdir = (lambda x: x if network == 'testnet' and x else '')(me.daemon_ids[daemon_id].testnet_dir)
+		self.datadir = os.path.abspath(datadir)
 
-		me.port_shift = 1237 if test_suite else 0
-		me.platform = g.platform
-		return me
+		if self.network == 'testnet' and self.testnet_dir:
+			self.data_subdir = self.testnet_dir
 
-	def __init__(self,network_id=None,test_suite=False,flags=None,proto=None):
-		super().__init__()
-
-		self.testnet_arg = []
-		self.daemonize_args = []
-		self.cli_args = []
-		self.coind_cmd = []
-
-		self.coin_specific_coind_args = []
-		self.coin_specific_cli_args = []
-		self.coin_specific_shared_args = []
-
-		self.usr_coind_args = []
-		self.usr_cli_args = []
-		self.usr_shared_args = []
-
-
-		if flags:
-			if type(flags) not in (list,tuple):
-				m = '{!r}: illegal value for flags (must be list or tuple)'
-				die(1,m.format(flags))
-			for flag in flags:
-				self.add_flag(flag)
-
-		self.pidfile = '{}/{}-daemon.pid'.format(self.datadir,self.network)
-
-		for k in self.daemon_ids[self.daemon_id]._fields:
-			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
-
+		self.port_shift = 1237 if test_suite else 0
 		self.rpc_port = {
 				'mainnet': self.dfl_rpc,
 				'testnet': self.dfl_rpc_tn,
 				'regtest': self.dfl_rpc_rt,
 			}[self.network] + self.port_shift
 
-		if g.rpc_port: # user-set value overrides everything else
+		if g.rpc_port: # user-set global overrides everything else
 			self.rpc_port = g.rpc_port
 
+		self.pidfile = '{}/{}-daemon-{}.pid'.format(self.datadir,self.network,self.rpc_port)
 		self.net_desc = '{} {}'.format(self.coin,self.network)
 		self.subclass_init()
 
 	@property
-	def dfl_datadir(self):
-		if g.platform == 'linux':
-			path_data = {
-				'btc': ['.bitcoin'],
-				'bch': ['.bitcoin-bchn'],
-				'ltc': ['.litecoin'],
-				'xmr': ['.bitmonero'],
-				'eth': ['.local','share','io.parity.ethereum'],
-				'etc': ['.local','share','io.parity.ethereum'],
-			}
-			return os.path.join( *([g.home_dir] + path_data[self.daemon_id]) )
-		elif g.platform == 'win':
-			path_data = {
-				'btc': [os.getenv('APPDATA'),'Bitcoin'],
-				'bch': [os.getenv('APPDATA'),'Bitcoin_ABC'],
-				'ltc': [os.getenv('APPDATA'),'Litecoin'],
-				'xmr': ['/','c','ProgramData','bitmonero'],
-				'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
-				'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
-			}
-			return os.path.join(*path_data[self.daemon_id])
-		else:
-			raise ValueError(f'{g.platform}: unrecognized platform')
-
-	@property
 	def start_cmd(self):
 		return ([self.coind_exec]
-				+ self.testnet_arg
 				+ self.coind_args
 				+ self.shared_args
-				+ self.coin_specific_coind_args
-				+ self.coin_specific_shared_args
-				+ self.usr_coind_args
-				+ self.usr_shared_args
-				+ self.daemonize_args
-				+ self.coind_cmd )
+				+ self.usr_coind_args )
 
 	def cli_cmd(self,*cmds):
 		return ([self.cli_exec]
-				+ self.testnet_arg
-				+ self.cli_args
 				+ self.shared_args
-				+ self.coin_specific_cli_args
-				+ self.coin_specific_shared_args
-				+ self.usr_cli_args
-				+ self.usr_shared_args
-				+ list(cmds))
+				+ list(cmds) )
 
 class BitcoinDaemon(CoinDaemon):
 	cfg_file_hdr = '# BitcoinDaemon config file\n'
@@ -544,39 +536,28 @@ class BitcoinDaemon(CoinDaemon):
 		if self.platform == 'win' and self.daemon_id == 'bch':
 			self.use_pidfile = False
 
-		if self.network == 'testnet':
-			self.testnet_arg = ['--testnet']
+		from mmgen.regtest import MMGenRegtest
+		self.shared_args = list_gen(
+			[f'--datadir={self.datadir}'],
+			[f'--rpcport={self.rpc_port}'],
+			[f'--rpcuser={MMGenRegtest.rpc_user}',         self.network == 'regtest'],
+			[f'--rpcpassword={MMGenRegtest.rpc_password}', self.network == 'regtest'],
+			['--testnet',                                  self.network == 'testnet'],
+			['--regtest',                                  self.network == 'regtest'],
+		)
 
-		self.shared_args = [
-			'--datadir={}'.format(self.datadir),
-			'--rpcport={}'.format(self.rpc_port) ]
-
-		self.coind_args = [
-			'--listen=0',
-			'--keypool=1',
-			'--rpcallowip=127.0.0.1',
-			'--rpcbind=127.0.0.1:{}'.format(self.rpc_port) ]
-
-		if self.use_pidfile:
-			self.coind_args += ['--pid='+self.pidfile]
-
-		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
-			self.daemonize_args = ['--daemon']
-
-		if self.network == 'regtest':
-			from mmgen.regtest import MMGenRegtest
-			self.shared_args += [
-				f'--rpcuser={MMGenRegtest.rpc_user}',
-				f'--rpcpassword={MMGenRegtest.rpc_password}',
-				'--regtest' ]
-
-		if self.daemon_id == 'btc':
-			if self.network == 'regtest':
-				self.coin_specific_coind_args = ['--fallbackfee=0.0002']
-		elif self.daemon_id == 'bch':
-			self.coin_specific_coind_args = ['--usecashaddr=0']
-		elif self.daemon_id == 'ltc':
-			self.coin_specific_coind_args = ['--mempoolreplacement=1','--txindex=1']
+		self.coind_args = list_gen(
+			['--listen=0'],
+			['--keypool=1'],
+			['--rpcallowip=127.0.0.1'],
+			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
+			['--pid='+self.pidfile,    self.use_pidfile],
+			['--daemon',               self.platform == 'linux' and not 'no_daemonize' in self.opts],
+			['--fallbackfee=0.0002',   self.daemon_id == 'btc' and self.network == 'regtest'],
+			['--usecashaddr=0',        self.daemon_id == 'bch'],
+			['--mempoolreplacement=1', self.daemon_id == 'ltc'],
+			['--txindex=1',            self.daemon_id == 'ltc'],
+		)
 
 		if self.network == 'testnet':
 			self.lockfile = os.path.join(self.datadir,self.testnet_dir,'.cookie')
@@ -591,10 +572,7 @@ class BitcoinDaemon(CoinDaemon):
 			or "error: Could not connect" in err
 			or "does not exist" in err ):
 			# regtest has no cookie file, so test will always fail
-			if self.lockfile and os.path.exists(self.lockfile):
-				ret = 'busy'
-			else:
-				ret = 'stopped'
+			ret = 'busy' if (self.lockfile and os.path.exists(self.lockfile)) else 'stopped'
 		elif cp.returncode == 0:
 			ret = 'ready'
 		else:
@@ -618,23 +596,24 @@ class MoneroDaemon(CoinDaemon):
 		if self.platform == 'win':
 			self.use_pidfile = False
 
-	@property
-	def shared_args(self):
-		return ['--zmq-rpc-bind-port={}'.format(self.rpc_port+1),'--rpc-bind-port={}'.format(self.rpc_port)]
+		self.shared_args = list_gen(
+			[f'--zmq-rpc-bind-port={self.rpc_port+1}'],
+			[f'--rpc-bind-port={self.rpc_port}'],
+		)
 
-	@property
-	def coind_args(self):
-		cmd = [
-			'--bg-mining-enable',
-			'--data-dir={}'.format(self.datadir),
-			'--offline' ]
-		if self.platform == 'linux':
-			cmd += ['--pidfile={}'.format(self.pidfile)]
-			cmd += [] if 'no_daemonize' in self.flags else ['--detach']
-		return cmd
+		self.coind_args = list_gen(
+			['--hide-my-port'],
+			['--no-igd'],
+			[f'--data-dir={self.datadir}'],
+			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
+			['--detach',                  not 'no_daemonize' in self.opts],
+			['--offline',                 not 'online' in self.opts],
+		)
 
 	@property
 	def state(self):
+		return 'ready' if self.test_socket(self.host,self.rpc_port) else 'stopped'
+		# TODO:
 		if not self.test_socket(self.host,self.rpc_port):
 			return 'stopped'
 		cp = self.run_cmd(
@@ -658,21 +637,22 @@ class EthereumDaemon(CoinDaemon):
 	ps_pid_mswin = True
 
 	def subclass_init(self):
-		self.shared_args = []
 		# defaults:
 		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
 		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
-		self.chaindir = os.path.join(self.datadir,'devchain')
-		shutil.rmtree(self.chaindir,ignore_errors=True)
-		if self.platform == 'linux' and not 'no_daemonize' in self.flags:
-			self.daemonize_args = ['daemon',self.pidfile]
 
-	@property
-	def coind_args(self):
-		return ['--ports-shift={}'.format(self.port_shift),
-				'--base-path={}'.format(self.chaindir),
-				'--config=dev',
-				'--log-file={}'.format(os.path.join(self.datadir,'openethereum.log')) ]
+		chaindir = os.path.join(self.datadir,'devchain')
+		shutil.rmtree(chaindir,ignore_errors=True)
+
+		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
+		self.coind_args = list_gen(
+			[f'--ports-shift={self.port_shift}'],
+			[f'--base-path={chaindir}'],
+			['--config=dev'],
+			['--log-file='+os.path.join(self.datadir,'openethereum.log')],
+			['daemon',     ld],
+			[self.pidfile, ld],
+		)
 
 	@property
 	def state(self):
