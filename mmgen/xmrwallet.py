@@ -144,7 +144,7 @@ class MoneroWalletOps:
 			def display_tx_relay_info(self):
 				msg('\n    TX relay host: {}\n    Proxy:         {}'.format(
 					blue(self.parent.wd2.daemon_addr),
-					blue(self.parent.wd2.proxy)
+					blue(self.parent.wd2.proxy or 'None')
 				))
 
 			def display_sweep_tx(self,data):
