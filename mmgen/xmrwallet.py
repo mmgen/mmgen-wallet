@@ -509,7 +509,7 @@ class MoneroWalletOps:
 					h = self.rpc(self,self.source)
 					w_desc = 'TX relay source'
 					await h.open_wallet(w_desc)
-				h.display_tx_relay_info()
+					h.display_tx_relay_info()
 				msg_r(f'    Relaying sweep transaction...')
 				await h.relay_sweep_tx( sweep_tx['tx_metadata_list'][0] )
 				await h.close_wallet(w_desc)
