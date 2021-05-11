@@ -46,7 +46,7 @@ class MMGenRegtest(MMGenObject):
 	rpc_password = 'hodltothemoon'
 	users        = ('bob','alice','miner')
 	coins        = ('btc','bch','ltc')
-	usr_cmds     = ('setup','generate','send','stop', 'state', 'balances','mempool','cli')
+	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli')
 
 	def __init__(self,coin):
 		self.coin = coin.lower()
@@ -136,8 +136,18 @@ class MMGenRegtest(MMGenObject):
 		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
 		return await rpc.call(*args,wallet=wallet)
 
+	async def start(self):
+		if self.d.state == 'stopped':
+			await self.start_daemon(silent=False)
+		else:
+			msg(f'{g.coin} regtest daemon already started')
+
 	async def stop(self):
-		await self.rpc_call('stop')
+		if self.d.state == 'stopped':
+			msg(f'{g.coin} regtest daemon already stopped')
+		else:
+			msg(f'Stopping {g.coin} regtest daemon')
+			await self.rpc_call('stop',start_daemon=False)
 
 	def state(self):
 		msg(self.d.state)

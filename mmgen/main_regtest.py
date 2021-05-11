@@ -41,6 +41,7 @@ opts_data = {
                          AVAILABLE COMMANDS
 
   setup           - set up Bob and Alice regtest mode
+  start           - start the regtest coin daemon
   stop            - stop the regtest coin daemon
   bob             - switch to Bob's wallet, starting daemon if necessary
   alice           - switch to Alice's wallet, starting daemon if necessary
