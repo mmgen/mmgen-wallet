@@ -241,6 +241,7 @@ class MoneroWalletOps:
 				wallet_dir = opt.outdir or '.',
 				test_suite = g.test_suite,
 				daemon_addr = uarg.daemon or None,
+				testnet = g.testnet,
 			)
 
 			if uarg.start_wallet_daemon:
@@ -275,10 +276,11 @@ class MoneroWalletOps:
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
-				opt.outdir or '.','{}-{}-MoneroWallet{}'.format(
+				opt.outdir or '.','{}-{}-MoneroWallet{}{}'.format(
 					self.kal.al_id.sid,
 					d.idx,
-					'-α' if g.debug_utf8 else ''))
+					'.testnet' if g.testnet else '',
+					'-α' if g.debug_utf8 else '' ))
 
 		async def process_wallets(self):
 			gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
@@ -441,6 +443,7 @@ class MoneroWalletOps:
 					daemon_addr = m[1],
 					proxy = m[2],
 					port_shift = 16,
+					testnet = g.testnet,
 				)
 
 				if g.test_suite:

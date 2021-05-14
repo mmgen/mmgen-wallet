@@ -34,7 +34,6 @@ mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
-xmr_addrs='3,99,2,22-24,101-104'
 
 dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
 extra_tests='autosign_btc autosign_live etc ltc_tn bch_tn'
@@ -43,7 +42,7 @@ quick_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_r
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hAbCfFi:I:lOpRtvV OPT
+while getopts hAbCfFi:I:lOptvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -60,7 +59,6 @@ do
 		echo   "           '-l'  List the test name symbols"
 		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
 		echo   "           '-p'  Pause between tests"
-		echo   "           '-R'  Re-run fast XMR test with existing tmp data, leave daemon running"
 		echo   "           '-t'  Print the tests without running them"
 		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with"
 		echo   "                 '--verbose' switch"
@@ -74,7 +72,7 @@ do
 		echo   "     ref      - reference file checks"
 		echo   "     altref   - altcoin reference file checks"
 		echo   "     alts     - operations for all supported gen-only altcoins"
-		echo   "     xmr      - operations for Monero"
+		echo   "     xmr      - Monero xmrwallet operations"
 		echo   "     eth      - operations for Ethereum"
 		echo   "     etc      - operations for Ethereum Classic"
 		echo   "     autosign - autosign"
@@ -116,8 +114,8 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
-	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
-	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 xmr_addrs='3,23' unit_tests_py+=" --fast" ;;
+	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 unit_tests_py+=" --fast" ;;
+	F)  FAST=1 rounds=3 rounds_min=1 rounds_mid=3 rounds_max=5 unit_tests_py+=" --fast" ;;
 	i)  INSTALL=$OPTARG ;;
 	I)  INSTALL=$OPTARG INSTALL_ONLY=1 ;;
 	l)  echo -e "Default tests:\n  $dfl_tests"
@@ -128,7 +126,6 @@ do
 		exit ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
-	R)  RERUN_XMR=1 ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1
@@ -332,41 +329,15 @@ create_tmpdir() {
 	mkdir -p $TMPDIR
 }
 
-if [ "$RERUN_XMR" ]; then
-	TMPDIR=/tmp/mmgen-test-release*
-	if [ -e $TMPDIR ]; then HAVE_XMR_DATA=1; else create_tmpdir; fi
-else
-	rm -rf /tmp/mmgen-test-release*
-	create_tmpdir
-fi
+rm -rf /tmp/mmgen-test-release*
+create_tmpdir
 
-# xmr_addrs: normal: 3,99,2,22-24,101-104 fast: 3,23
-mmgen_tool_xmr="$mmgen_tool -q --yes --outdir $TMPDIR --monero-wallet-rpc-password=passw0rd"
-i_xmr='Monero'
-s_xmr='Testing key-address file generation and wallet creation and sync operations for Monero'
-s_xmr='The monerod (mainnet) daemon must be running for the following tests'
+i_xmr='Monero xmrwallet'
+s_xmr='Testing xmrwallet operations'
 t_xmr="
-	a cmds/mmgen-walletgen -q -r0 -p1 -Llabel --outdir $TMPDIR -o words
-	a $mmgen_keygen -q --accept-defaults --use-internal-keccak-module --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	a cs1=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
-	x $mmgen_keygen -q --use-old-ed25519 --accept-defaults --outdir $TMPDIR --coin=xmr $TMPDIR/*.mmwords $xmr_addrs
-	x cs2=\$(cmds/mmgen-tool -q --accept-defaults --coin=xmr keyaddrfile_chksum $TMPDIR/*-XMR*.akeys)
-	x [ \"\$cs1\" == \"\$cs2\" ]
-	a test/start-coin-daemons.py xmr
-	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=23
-	x $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys wallets=101-104
-	x rm $TMPDIR/*-MoneroWallet*
-	a $mmgen_tool_xmr xmrwallet create $TMPDIR/*-XMR*.akeys
-	- $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=3,23
-	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys wallets=101-104
-	x $mmgen_tool_xmr xmrwallet sync $TMPDIR/*-XMR*.akeys
-	s test/stop-coin-daemons.py -W xmr
+	- $test_py --coin=xmr xmrwallet
 "
-f_xmr='Monero tests completed'
-
-[ "$FAST" ]                          && t_xmr_skip='x'
-[ "$RERUN_XMR" ]                     && t_xmr_skip='x s'
-[ "$RERUN_XMR" -a "$HAVE_XMR_DATA" ] && t_xmr_skip='a x s'
+f_xmr='Monero xmrwallet tests completed'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
@@ -592,7 +563,5 @@ START=$(date +%s)
 run_tests "$tests"
 TIME=$(($(date +%s)-START))
 MS=$(printf %02d:%02d $((TIME/60)) $((TIME%60)))
-
-[ "$RERUN_XMR" ] || rm -rf /tmp/mmgen-test-release-*
 
 [ "$LIST_CMDS" ] || echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"

@@ -356,6 +356,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'22': {},
 	'23': {},
 	# 26,27,28 are taken
+	'29': {}, # xmrwallet
 	'31': {},
 	'32': {},
 	'33': {},
@@ -509,6 +510,7 @@ class CmdGroupMgr(object):
 		'regtest':          ('TestSuiteRegtest',{}),
 #		'chainsplit':       ('TestSuiteChainsplit',{}),
 		'ethdev':           ('TestSuiteEthdev',{}),
+		'xmrwallet':        ('TestSuiteXMRWallet',{}),
 	}
 
 	cmd_groups_extra = {
@@ -1000,17 +1002,17 @@ if opt.pause:
 	set_restore_term_at_exit()
 
 set_environ_for_spawned_scripts()
-if network_id not in ('eth','etc'):
+if network_id not in ('eth','etc','xmr'):
 	start_test_daemons(network_id,remove_datadir=True)
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
 	tr.run_tests(usr_args)
 	tr.warn_skipped()
-	if network_id not in ('eth','etc'):
+	if network_id not in ('eth','etc','xmr'):
 		stop_test_daemons(network_id)
 except KeyboardInterrupt:
-	if network_id not in ('eth','etc'):
+	if network_id not in ('eth','etc','xmr'):
 		stop_test_daemons(network_id)
 	tr.warn_skipped()
 	die(1,'\ntest.py exiting at user request')
