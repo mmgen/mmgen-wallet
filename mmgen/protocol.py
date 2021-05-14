@@ -500,8 +500,8 @@ class CoinProtocol(MMGenObject):
 
 			return self.parse_addr_bytes(ret)
 
-	class MoneroTestnet(Monero):
-		addr_ver_bytes = { '35': 'monero', '3f': 'monero_sub' }
+	class MoneroTestnet(Monero): # use stagenet for testnet
+		addr_ver_bytes = { '18': 'monero', '24': 'monero_sub' } # testnet is ('35','3f')
 
 def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None):
 

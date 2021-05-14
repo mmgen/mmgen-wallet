@@ -283,7 +283,7 @@ class MoneroWalletDaemon(Daemon):
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
 			['--detach',                             not 'no_daemonize' in self.opts],
-			['--testnet',                            testnet],
+			['--stagenet',                           testnet],
 		)
 
 		self.usr_daemon_args = []
@@ -382,8 +382,8 @@ class CoinDaemon(Daemon):
 			'monerod',
 			'monerod',
 			'bitmonero.conf',
-			'testnet',
-			18081, 28081, None),
+			'stagenet',
+			18081, 38081, None),
 		'eth': cd(
 			'openethereum',
 			'Ethereum',
@@ -609,6 +609,8 @@ class MoneroDaemon(CoinDaemon):
 	datadir_is_subdir = True
 
 	def subclass_init(self):
+		if self.network == 'testnet':
+			self.net_desc = f'{self.coin} stagenet'
 
 		self.p2p_port = self.rpc_port - 1
 		self.zmq_port = self.rpc_port + 1
@@ -620,7 +622,7 @@ class MoneroDaemon(CoinDaemon):
 			[f'--p2p-bind-port={self.p2p_port}'],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			[f'--zmq-rpc-bind-port={self.zmq_port}'],
-			['--testnet', self.network == 'testnet'],
+			['--stagenet', self.network == 'testnet'],
 		)
 
 		self.coind_args = list_gen(
