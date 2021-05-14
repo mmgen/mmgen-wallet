@@ -223,16 +223,16 @@ class MoneroWalletOps:
 			uarg = uarg_tuple
 			uarg_info = xmrwallet_uarg_info
 
-			from .obj import XMRAmt
 			def fmt_amt(amt):
-				return XMRAmt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
 			def hl_amt(amt):
-				return XMRAmt(amt,from_unit='min_coin_unit').hl()
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').hl()
 
 			self.check_uargs()
 
 			from .protocol import init_proto
-			self.kal = KeyAddrList(init_proto('xmr',network='mainnet'),uarg.xmr_keyaddrfile)
+			self.proto = init_proto('xmr',testnet=g.testnet)
+			self.kal = KeyAddrList(self.proto,uarg.xmr_keyaddrfile)
 			self.create_addr_data()
 
 			check_wallets()
@@ -302,6 +302,7 @@ class MoneroWalletOps:
 		wallet_exists = False
 
 		async def run(self,d,fn):
+			msg_r('') # for pexpect
 
 			from .baseconv import baseconv
 			ret = await self.c.call(
@@ -441,6 +442,9 @@ class MoneroWalletOps:
 					proxy = m[2],
 					port_shift = 16,
 				)
+
+				if g.test_suite:
+					self.wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
 
 				if uarg.start_wallet_daemon:
 					self.wd2.restart()

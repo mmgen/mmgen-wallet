@@ -90,7 +90,7 @@ Type '{pn} help <command>' for help on a particular command
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt','use_old_ed25519'])
+cmd_args = opts.init(opts_data,add_opts=['hidden_incog_input_params','in_fmt'])
 
 if len(cmd_args) < 1:
 	opts.usage()

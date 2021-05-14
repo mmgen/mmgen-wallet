@@ -147,11 +147,11 @@ def init_coverage():
 
 devnull_fh = open(('/dev/null','null.out')[g.platform == 'win'],'w')
 def silence():
-	if not (opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output)):
+	if not (opt.verbose or getattr(opt,'exact_output',None)):
 		g.stdout = g.stderr = devnull_fh
 
 def end_silence():
-	if not (opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output)):
+	if not (opt.verbose or getattr(opt,'exact_output',None)):
 		g.stdout = sys.stdout
 		g.stderr = sys.stderr
 
@@ -160,16 +160,27 @@ def omsg(s):
 def omsg_r(s):
 	sys.stderr.write(s)
 	sys.stderr.flush()
+
 def imsg(s):
-	if opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output):
+	if opt.verbose or getattr(opt,'exact_output',None):
 		omsg(s)
 def imsg_r(s):
-	if opt.verbose or (hasattr(opt,'exact_output') and opt.exact_output):
+	if opt.verbose or getattr(opt,'exact_output',None):
 		omsg_r(s)
+
 def iqmsg(s):
-	if not opt.quiet: omsg(s)
+	if not opt.quiet:
+		omsg(s)
 def iqmsg_r(s):
-	if not opt.quiet: omsg_r(s)
+	if not opt.quiet:
+		omsg_r(s)
+
+def oqmsg(s):
+	if not (opt.verbose or getattr(opt,'exact_output',None)):
+		omsg(s)
+def oqmsg_r(s):
+	if not (opt.verbose or getattr(opt,'exact_output',None)):
+		omsg_r(s)
 
 def start_test_daemons(*network_ids,remove_datadir=False):
 	if not opt.no_daemon_autostart:

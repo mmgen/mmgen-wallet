@@ -111,7 +111,7 @@ Supported external tools:
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cmd_args = opts.init(opts_data,add_opts=['exact_output','use_old_ed25519'])
+cmd_args = opts.init(opts_data,add_opts=['exact_output'])
 
 if not 1 <= len(cmd_args) <= 2:
 	opts.usage()

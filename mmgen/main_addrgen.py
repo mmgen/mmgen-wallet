@@ -139,7 +139,7 @@ addr_type = MMGenAddrType(
 
 if len(cmd_args) < 1: opts.usage()
 
-if opt.use_old_ed25519:
+if getattr(opt,'use_old_ed25519',False):
 	msg('Using old (slow) ed25519 module by user request')
 
 idxs = AddrIdxList(fmt_str=cmd_args.pop())

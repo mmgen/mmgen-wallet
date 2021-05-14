@@ -25,7 +25,7 @@ from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
-from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,ETHAmt,CoinAddr,MMGenAddrType,PrivKey
+from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,XMRAmt,ETHAmt,CoinAddr,MMGenAddrType,PrivKey
 from .globalvars import g
 import mmgen.bech32 as bech32
 
@@ -470,6 +470,7 @@ class CoinProtocol(MMGenObject):
 		privkey_len    = 32
 		mmcaps         = ('key','addr')
 		ignore_daemon_version = False
+		coin_amt       = XMRAmt
 
 		def preprocess_key(self,sec,pubkey_type): # reduce key
 			from .ed25519 import l

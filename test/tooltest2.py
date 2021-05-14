@@ -979,7 +979,6 @@ sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
 cmd_args = opts.init(
 	opts_data,
-	add_opts  = ['use_old_ed25519'],
 	init_opts = {
 		'usr_randchars': 0,
 		'hash_preset': '1',

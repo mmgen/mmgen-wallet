@@ -158,7 +158,7 @@ class AddrGeneratorMonero(AddrGenerator):
 		from .protocol import hash256
 		self.hash256 = hash256
 
-		if opt.use_old_ed25519:
+		if getattr(opt,'use_old_ed25519',False):
 			from .ed25519 import edwards,encodepoint,B,scalarmult
 		else:
 			from .ed25519ll_djbec import scalarmult
@@ -398,16 +398,19 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	line_ctr = 0
 
 	def __init__(self,proto,
-		addrfile  = '',
-		al_id     = '',
-		adata     = [],
-		seed      = '',
-		addr_idxs = '',
-		src       = '',
-		addrlist  = '',
-		keylist   = '',
-		mmtype    = None ):
+			addrfile  = '',
+			al_id     = '',
+			adata     = [],
+			seed      = '',
+			addr_idxs = '',
+			src       = '',
+			addrlist  = '',
+			keylist   = '',
+			mmtype    = None,
+			skip_key_address_validity_check = False,
+		):
 
+		self.skip_ka_check = skip_key_address_validity_check
 		do_chksum = True
 		self.update_msgs()
 		mmtype = mmtype or proto.dfl_mmtype
@@ -702,8 +705,8 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			ret.append(a)
 
-		if self.has_keys:
-			if (hasattr(opt,'yes') and opt.yes) or keypress_confirm('Check key-to-address validity?'):
+		if self.has_keys and not self.skip_ka_check:
+			if getattr(opt,'yes',False) or keypress_confirm('Check key-to-address validity?'):
 				kg = KeyGenerator(self.proto,self.al_id.mmtype)
 				ag = AddrGenerator(self.proto,self.al_id.mmtype)
 				llen = len(ret)

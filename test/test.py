@@ -780,15 +780,25 @@ class TestSuiteRunner(object):
 				else:
 					if ':' in arg:
 						gname,arg = arg.split(':')
+						direct_call_ok = True # allow calling of functions not in cmd_group
 					else:
 						gname = self.gm.find_cmd_in_groups(arg)
+						direct_call_ok = False
 					if gname:
 						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
 						if not self.init_group(gname,arg,quiet=same_grp):
 							continue
 						if not same_grp:
 							clean(self.ts.tmpdir_nums)
-						self.check_needs_rerun(arg,build=True)
+						try:
+							self.check_needs_rerun(arg,build=True)
+						except:
+							if direct_call_ok:
+								ret = getattr(self.ts,arg)()
+								if type(ret).__name__ == 'coroutine':
+									run_session(ret)
+							else:
+								raise
 						do_between()
 						gname_save = gname
 					else:

@@ -178,7 +178,6 @@ class RPCBackends:
 				'curl',
 				'--proxy', '',
 				'--connect-timeout', str(timeout or self.timeout),
-				'--request', 'POST',
 				'--write-out', '%{http_code}',
 				'--data-binary', data
 				] + self.exec_opts + [self.url + self.make_host_path(wallet)]
@@ -242,16 +241,17 @@ class RPCClient(MMGenObject):
 	network_proto = 'http'
 	host_path = ''
 
-	def __init__(self,host,port):
+	def __init__(self,host,port,test_connection=True):
 
 		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
 		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')
 
-		import socket
-		try:
-			socket.create_connection((host,port),timeout=1).close()
-		except:
-			raise SocketError(f'Unable to connect to {host}:{port}')
+		if test_connection:
+			import socket
+			try:
+				socket.create_connection((host,port),timeout=1).close()
+			except:
+				raise SocketError(f'Unable to connect to {host}:{port}')
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
 		self.url = f'{self.network_proto}://{host}:{port}{self.host_path}'
@@ -662,8 +662,8 @@ class MoneroRPCClient(RPCClient):
 	host_path = '/json_rpc'
 	verify_server = False
 
-	def __init__(self,host,port,user,passwd):
-		super().__init__(host,port)
+	def __init__(self,host,port,user,passwd,test_connection=True):
+		super().__init__(host,port,test_connection)
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
 		if True:

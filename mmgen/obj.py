@@ -546,8 +546,9 @@ class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
 class XMRAmt(BTCAmt):
-	min_coin_unit = Decimal('0.000000000001')
-	units = ('min_coin_unit',)
+	units = ('min_coin_unit','atomic')
+	min_coin_unit = atomic = Decimal('0.000000000001')
+	max_prec = 12
 
 from .altcoins.eth.obj import ETHAmt,ETHNonce
 

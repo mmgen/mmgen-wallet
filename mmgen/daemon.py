@@ -235,7 +235,9 @@ class MoneroWalletDaemon(Daemon):
 			passwd      = None,
 			daemon_addr = None,
 			proxy       = None,
-			port_shift  = None ):
+			port_shift  = None,
+			datadir     = None,
+			testnet     = False ):
 
 		super().__init__()
 		self.platform = g.platform
@@ -246,14 +248,13 @@ class MoneroWalletDaemon(Daemon):
 
 		bn = 'monero-wallet-rpc'
 		id_str = f'{bn}-{self.rpc_port}'
-		self.datadir = os.path.join('test',bn) if test_suite else bn
+		self.datadir = os.path.join(datadir or ('','test')[test_suite], bn)
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
 		self.proxy = proxy
 		self.daemon_addr = daemon_addr
-		if not daemon_addr:
-			self.daemon_port = CoinDaemon('xmr',test_suite=test_suite).rpc_port
+		self.daemon_port = None if daemon_addr else CoinDaemon('xmr',test_suite=test_suite).rpc_port
 
 		if self.platform == 'win':
 			self.use_pidfile = False
@@ -271,8 +272,7 @@ class MoneroWalletDaemon(Daemon):
 				"option (insecure, not recommended), or by setting 'monero_wallet_rpc_password'\n" +
 				"in the MMGen config file." )
 
-		self.start_cmd = list_gen(
-			['monero-wallet-rpc'],
+		self.daemon_args = list_gen(
 			['--untrusted-daemon'],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			['--wallet-dir='+self.wallet_dir],
@@ -283,7 +283,14 @@ class MoneroWalletDaemon(Daemon):
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
 			['--detach',                             not 'no_daemonize' in self.opts],
+			['--testnet',                            testnet],
 		)
+
+		self.usr_daemon_args = []
+
+	@property
+	def start_cmd(self):
+		return (['monero-wallet-rpc'] + self.daemon_args + self.usr_daemon_args )
 
 	@property
 	def state(self):
@@ -602,12 +609,17 @@ class MoneroDaemon(CoinDaemon):
 	datadir_is_subdir = True
 
 	def subclass_init(self):
+
+		self.p2p_port = self.rpc_port - 1
+		self.zmq_port = self.rpc_port + 1
+
 		if self.platform == 'win':
 			self.use_pidfile = False
 
 		self.shared_args = list_gen(
-			[f'--zmq-rpc-bind-port={self.rpc_port+1}'],
+			[f'--p2p-bind-port={self.p2p_port}'],
 			[f'--rpc-bind-port={self.rpc_port}'],
+			[f'--zmq-rpc-bind-port={self.zmq_port}'],
 			['--testnet', self.network == 'testnet'],
 		)
 

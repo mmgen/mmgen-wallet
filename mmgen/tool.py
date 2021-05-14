@@ -1129,7 +1129,7 @@ class tool_api(
 		import mmgen.opts
 		opts.UserOpts._reset_ok += ('usr_randchars',)
 		if not hasattr(opt,'version'):
-			opts.init(add_opts=['use_old_ed25519'])
+			opts.init()
 		super().__init__()
 
 	def init_coin(self,coinsym,network):
