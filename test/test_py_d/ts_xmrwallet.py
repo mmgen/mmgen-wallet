@@ -78,6 +78,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for v in self.users.values():
 			run(['mkdir','-p',v.udir])
 
+		self.init_proxy()
+
 		if not opt.no_daemon_autostart:
 			self.start_daemons()
 			self.start_wallet_daemons()
@@ -86,12 +88,22 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			atexit.register(self.stop_daemons)
 			atexit.register(self.stop_wallet_daemons)
 
-		self.init_proxy()
 		self.balance = None
 
 	# init methods
 
 	def init_proxy(self):
+
+		def port_in_use(port):
+			import socket
+			try: socket.create_connection(('localhost',port)).close()
+			except: return False
+			else: return True
+
+		def start_proxy():
+			if not opt.no_daemon_autostart:
+				run(a+b2)
+				omsg(f'SSH SOCKS server started, listening at localhost:{self.socks_port}')
 
 		def kill_proxy():
 			omsg(f'Killing SSH SOCKS server at localhost:{self.socks_port}')
@@ -101,24 +113,60 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.use_proxy = False
 		self.socks_port = 9060
 		a = ['ssh','-x','-o','ExitOnForwardFailure=True','-D',f'localhost:{self.socks_port}']
+		b0 = ['-o','PasswordAuthentication=False']
 		b1 = ['localhost','true']
 		b2 = ['-fN','-E','txrelay-proxy.debug','localhost']
 
-		cp = run(a+b1,stdout=PIPE,stderr=PIPE)
-
-		if cp.returncode == 0:
-			if not opt.no_daemon_autostart:
-				run(a+b2)
-				omsg(f'SSH SOCKS server started, listening at localhost:{self.socks_port}')
-				self.use_proxy = True
-		elif b'already in use' in cp.stderr:
+		if port_in_use(self.socks_port):
 			omsg(f'Port {self.socks_port} already in use.  Assuming SSH SOCKS server is running')
 			self.use_proxy = True
 		else:
-			m1 = 'Unable to start command {!r}\n'.format(' '.join(a + b))
-			m2 = 'Will not test proxied TX relay daemon'
-			omsg(cp.stderr.decode())
-			omsg(yellow(m1+m2))
+			cp = run(a+b0+b1,stdout=PIPE,stderr=PIPE)
+			err = cp.stderr.decode()
+			if err:
+				omsg(err)
+
+			if cp.returncode == 0:
+				start_proxy()
+				self.use_proxy = True
+			elif 'onnection refused' in err:
+				die(2,fmt("""
+					The SSH daemon must running and listening on localhost in order to test XMR
+					TX relaying via SOCKS proxy.  If sshd is not running, please start it.
+					Otherwise, add the line 'ListenAddress 127.0.0.1' to your sshd_config, and
+					then restart the daemon.
+				""",indent='    '))
+			elif 'ermission denied' in err:
+				msg(fmt(f"""
+					In order to test XMR TX relaying via SOCKS proxy, it’s desirable to enable
+					SSH to localhost without a password, which is not currently supported by
+					your configuration.  Your possible courses of action:
+
+					1. Continue by answering 'y' at this prompt, and enter your system password
+					   at the following prompt;
+
+					2. Exit the test here, add your user SSH public key to your user
+					   'authorized_keys' file, and restart the test; or
+
+					3. Exit the test here, start the SSH SOCKS proxy manually by entering the
+					   following command, and restart the test:
+
+							 {' '.join(a+b2)}
+				""",indent='    ',strip_char='\t'))
+
+				if keypress_confirm('Continue?'):
+					start_proxy()
+					self.use_proxy = True
+				else:
+					die(1,'Exiting at user request')
+			else:
+				die(2,fmt(f"""
+					Please start the SSH SOCKS proxy by entering the following command:
+
+						{' '.join(a+b2)}
+
+					Then restart the test.
+				""",indent='    '))
 
 		if not opt.no_daemon_stop:
 			atexit.register(kill_proxy)
