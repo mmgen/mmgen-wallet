@@ -31,7 +31,7 @@ xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', r'({p})(?::({p}))?'.format(p=hp)),
-		'wallets_sweep':   e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
+		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
@@ -408,10 +408,10 @@ class MoneroWalletOps:
 		tx_relay = True
 
 		def create_addr_data(self):
-			m = re.fullmatch(uarg_info['wallets_sweep'].pat,uarg.wallets,re.ASCII)
+			m = re.fullmatch(uarg_info['sweep_spec'].pat,uarg.spec,re.ASCII)
 			if not m:
-				fs = "{!r}: invalid 'wallets' arg: for sweep operation, it must have format {!r}"
-				die(1,fs.format( uarg.wallets, uarg_info['wallets_sweep'].annot ))
+				fs = "{!r}: invalid 'sweep_spec' arg: for sweep operation, it must have format {!r}"
+				die(1,fs.format( uarg.spec, uarg_info['sweep_spec'].annot ))
 
 			def gen():
 				for i,k in ( (1,'source'), (3,'dest') ):

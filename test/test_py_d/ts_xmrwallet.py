@@ -71,7 +71,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		from mmgen.protocol import init_proto
 		self.proto = init_proto('XMR',network='testnet')
 		self.datadir_base  = os.path.join('test','daemons','xmrtest')
-		self.tool_args = ['--testnet=1', '--monero-wallet-rpc-password=passw0rd']
+		self.long_opts = ['--testnet=1', '--monero-wallet-rpc-password=passw0rd']
 		self.init_users()
 		self.init_daemon_args()
 
@@ -283,11 +283,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			if not data.kal_range:
 				continue
 			run('rm -f {}*'.format( data.walletfile_fs.format('*') ),shell=True)
-			dir_arg = [f'--outdir='+data.udir]
-			cmd_opts = ['wallets={}'.format(data.kal_range)]
+			dir_opt = [f'--outdir={data.udir}']
 			t = self.spawn(
-				'mmgen-tool',
-				self.tool_args + dir_arg + [ 'xmrwallet', 'create', data.kafile ] + cmd_opts,
+				'mmgen-xmrwallet',
+				self.long_opts + dir_opt + [ 'create', data.kafile, data.kal_range ],
 				extra_desc = f'({capfirst(user)})' )
 			t.expect('Check key-to-address validity? (y/N): ','n')
 			for i in MMGenRange(data.kal_range).items:
@@ -318,14 +317,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def sync_wallets(self,wallets=None):
 		data = self.users['alice']
-		dir_arg = [f'--outdir={data.udir}']
-		cmd_opts = list_gen(
-			[f'daemon=localhost:{data.md.rpc_port}'],
-			[f'wallets={wallets}', wallets],
-		)
+		dir_opt = [f'--outdir={data.udir}']
+		cmd_opts = [f'--daemon=localhost:{data.md.rpc_port}']
 		t = self.spawn(
-			'mmgen-tool',
-			self.tool_args + dir_arg + [ 'xmrwallet', 'sync', data.kafile ] + cmd_opts )
+			'mmgen-xmrwallet',
+			self.long_opts + dir_opt + cmd_opts + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
@@ -342,15 +338,14 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def _sweep_user(self,user,spec,tx_relay_daemon=None):
 		data = self.users[user]
-		dir_arg = [f'--outdir='+data.udir]
+		dir_opt = [f'--outdir={data.udir}']
 		cmd_opts = list_gen(
-			[f'daemon=localhost:{data.md.rpc_port}'],
-			[f'wallets={spec}'],
-			[f'tx_relay_daemon={tx_relay_daemon}', tx_relay_daemon]
+			[f'--daemon=localhost:{data.md.rpc_port}'],
+			[f'--tx-relay-daemon={tx_relay_daemon}', tx_relay_daemon]
 		)
 		t = self.spawn(
-			'mmgen-tool',
-			self.tool_args + dir_arg + [ 'xmrwallet', 'sweep', data.kafile ] + cmd_opts,
+			'mmgen-xmrwallet',
+			self.long_opts + dir_opt + cmd_opts + [ 'sweep', data.kafile, spec ],
 			extra_desc = f'({capfirst(user)})' )
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		t.expect(

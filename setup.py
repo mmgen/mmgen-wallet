@@ -148,6 +148,7 @@ setup(
 			'mmgen.txsign',
 			'mmgen.util',
 			'mmgen.wallet',
+			'mmgen.xmrwallet',
 
 			'mmgen.altcoins.__init__',
 
@@ -189,6 +190,7 @@ setup(
 			'mmgen.main_txsend',
 			'mmgen.main_txsign',
 			'mmgen.main_wallet',
+			'mmgen.main_xmrwallet',
 
 			'mmgen.share.__init__',
 			'mmgen.share.Opts',
@@ -214,5 +216,6 @@ setup(
 			'cmds/mmgen-walletchk',
 			'cmds/mmgen-walletconv',
 			'cmds/mmgen-walletgen',
+			'cmds/mmgen-xmrwallet',
 		]
 	)
