@@ -131,8 +131,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				self.use_proxy = True
 			elif 'onnection refused' in err:
 				die(2,fmt("""
-					The SSH daemon must running and listening on localhost in order to test XMR
-					TX relaying via SOCKS proxy.  If sshd is not running, please start it.
+					The SSH daemon must be running and listening on localhost in order to test
+					XMR TX relaying via SOCKS proxy.  If sshd is not running, please start it.
 					Otherwise, add the line 'ListenAddress 127.0.0.1' to your sshd_config, and
 					then restart the daemon.
 				""",indent='    '))

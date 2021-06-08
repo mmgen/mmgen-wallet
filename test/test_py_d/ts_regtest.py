@@ -731,19 +731,15 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			'Replacement transaction has 2 confirmations',
 			'Replacing transactions:\s+{}'.format(new_txid))
 
-	@staticmethod
-	def _gen_pairs(n):
-		if not g.debug_utf8:
-			disable_debug()
-		from subprocess import run,PIPE
-		ret = [run(['python3',joinpath('cmds','mmgen-tool'),'--regtest=1'] +
-					(['--type=compressed'],[])[i==0] +
-					['-r0','randpair'],
-					stdout=PIPE,check=True
-				).stdout.decode().split() for i in range(n)]
-		if not g.debug_utf8:
-			restore_debug()
-		return ret
+	def _gen_pairs(self,n):
+		from mmgen.tool import tool_api
+		t = tool_api()
+		t.init_coin(self.proto.coin,self.proto.network)
+		t.usr_randchars = 0
+		t.addrtype = 'legacy'
+		ret = [t.randpair()]
+		t.addrtype = 'compressed'
+		return ret + [t.randpair() for i in range(n-1)]
 
 	def bob_pre_import(self):
 		pairs = self._gen_pairs(5)

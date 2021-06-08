@@ -672,7 +672,7 @@ class TestSuiteRunner(object):
 			args = ['python3'] + args
 
 		for i in args:
-			if type(i) != str:
+			if not isinstance(i,str):
 				m = 'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'
 				die(2,m.format(self.ts.test_name,args))
 
