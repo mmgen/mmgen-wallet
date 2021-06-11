@@ -147,30 +147,34 @@ class MoneroWalletOps:
 					blue(self.parent.wd2.proxy or 'None')
 				))
 
-			def display_sweep_tx(self,data):
+			def display_tx(self,txid,amt,fee):
 				from .obj import CoinTxID
 				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
-					CoinTxID(data['tx_hash_list'][0]).hl(),
-					hl_amt(data['amount_list'][0]),
-					hl_amt(data['fee_list'][0]),
+					CoinTxID(txid).hl(),
+					hl_amt(amt),
+					hl_amt(fee),
 				))
 
 			async def make_sweep_tx(self,account,addr):
-				ret = await self.c.call(
+				res = await self.c.call(
 					'sweep_all',
 					address = addr,
 					account_index = account,
 					do_not_relay = True,
 					get_tx_metadata = True
 				)
-				self.display_sweep_tx(ret)
-				return ret
+
+				if len(res['tx_hash_list']) > 1:
+					die(3,'More than one TX required.  Cannot perform this sweep')
+
+				self.display_tx( res['tx_hash_list'][0], res['amount_list'][0], res['fee_list'][0] )
+				return res['tx_metadata_list'][0]
 
 			def display_txid(self,data):
 				from .obj import CoinTxID
 				msg('\n    Relayed {}'.format( CoinTxID(data['tx_hash']).hl() ))
 
-			async def relay_sweep_tx(self,tx_hex):
+			async def relay_tx(self,tx_hex):
 				ret = await self.c.call('relay_tx',hex=tx_hex)
 				try:
 					self.display_txid(ret)
@@ -406,15 +410,17 @@ class MoneroWalletOps:
 		desc    = 'Sweep'
 		past    = 'swept'
 		tx_relay = True
+		spec_id = 'sweep_spec'
+		spec_key = ( (1,'source'), (3,'dest') )
 
 		def create_addr_data(self):
-			m = re.fullmatch(uarg_info['sweep_spec'].pat,uarg.spec,re.ASCII)
+			m = re.fullmatch(uarg_info[self.spec_id].pat,uarg.spec,re.ASCII)
 			if not m:
-				fs = "{!r}: invalid 'sweep_spec' arg: for sweep operation, it must have format {!r}"
-				die(1,fs.format( uarg.spec, uarg_info['sweep_spec'].annot ))
+				fs = "{!r}: invalid {!r} arg: for {} operation, it must have format {!r}"
+				die(1,fs.format( uarg.spec, self.spec_id, self.name, uarg_info[self.spec_id].annot ))
 
 			def gen():
-				for i,k in ( (1,'source'), (3,'dest') ):
+				for i,k in self.spec_key:
 					if m[i] == None:
 						setattr(self,k,None)
 					else:
@@ -460,9 +466,9 @@ class MoneroWalletOps:
 				)
 
 		async def process_wallets(self):
-			gmsg(f'\nSweeping account #{self.account} of wallet {self.source.idx}' + (
-				' to new address' if self.dest is None else
-				f' to new account in wallet {self.dest.idx}' ))
+			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
+				' to new address' if self.dest is None
+				else f' to new account in wallet {self.dest.idx}' ))
 
 			h = self.rpc(self,self.source)
 
@@ -506,9 +512,9 @@ class MoneroWalletOps:
 				self.account,
 				cyan(new_addr),
 			))
-			sweep_tx = await h.make_sweep_tx(self.account,new_addr)
+			tx_metadata = await h.make_sweep_tx(self.account,new_addr)
 
-			if keypress_confirm('Relay sweep transaction?'):
+			if keypress_confirm(f'\nRelay {self.name} transaction?'):
 				w_desc = 'source'
 				if uarg.tx_relay_daemon:
 					await h.close_wallet('source')
@@ -517,8 +523,8 @@ class MoneroWalletOps:
 					w_desc = 'TX relay source'
 					await h.open_wallet(w_desc)
 					h.display_tx_relay_info()
-				msg_r(f'    Relaying sweep transaction...')
-				await h.relay_sweep_tx( sweep_tx['tx_metadata_list'][0] )
+				msg_r(f'\n    Relaying {self.name} transaction...')
+				await h.relay_tx(tx_metadata)
 				await h.close_wallet(w_desc)
 
 				gmsg('\n\nAll done')

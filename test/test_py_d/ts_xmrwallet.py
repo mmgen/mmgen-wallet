@@ -80,6 +80,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		self.init_proxy()
 
+		self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users['bob'].md.rpc_port)
+		self.tx_relay_daemon_proxy_parm = (
+			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' # proxy must be IP, not 'localhost'
+			if self.use_proxy else None )
+
 		if not opt.no_daemon_autostart:
 			self.start_daemons()
 			self.start_wallet_daemons()
@@ -309,7 +314,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			1234567891234,
 			read_from_file(self.users['alice'].addrfile_fs.format(1)),
 		)
-		self.set_dest('alice',1,0,lambda x: x > 1,'unlocked balance > 1')
+		self.set_dest('alice',1,0,lambda x: str(x) == '1.234567891234','unlocked balance == 1.234567891234')
 		return 'ok'
 
 	def sync_wallets_selected(self):
@@ -336,48 +341,38 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.read()
 		return t
 
-	def _sweep_user(self,user,spec,tx_relay_daemon=None):
+	def do_op(self,op,user,spec,tx_relay_parm):
 		data = self.users[user]
 		dir_opt = [f'--outdir={data.udir}']
 		cmd_opts = list_gen(
 			[f'--daemon=localhost:{data.md.rpc_port}'],
-			[f'--tx-relay-daemon={tx_relay_daemon}', tx_relay_daemon]
+			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm]
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + dir_opt + cmd_opts + [ 'sweep', data.kafile, spec ],
+			self.long_opts + dir_opt + cmd_opts + [ op, data.kafile, spec ],
 			extra_desc = f'({capfirst(user)})' )
 		t.expect('Check key-to-address validity? (y/N): ','n')
-		t.expect(
-			'Create new {} .* \(y/N\): '.format('account' if ',' in spec else 'address'),
-			'y', regex=True )
-		t.expect('Relay sweep transaction? (y/N): ','y')
+		if op == 'sweep':
+			t.expect(
+				'Create new {} .* \(y/N\): '.format('account' if ',' in spec else 'address'),
+				'y', regex=True )
+		t.expect(f'Relay {op} transaction? (y/N): ','y')
 		t.read()
 		return t
 
 	def sweep_to_address_proxy(self):
-		ret = self._sweep_user(
-			'alice',
-			'1:0',
-			tx_relay_daemon = 'localhost:{}:127.0.0.1:{}'.format( # proxy must be IP, not 'localhost'
-				self.users['bob'].md.rpc_port,
-				self.socks_port
-			) if self.use_proxy else None
-		)
+		ret = self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
 		self.set_dest('alice',1,0,lambda x: x > 1,'unlocked balance > 1')
 		return ret
 
 	def sweep_to_account(self):
-		ret = self._sweep_user('alice','1:0,2')
+		ret = self.do_op('sweep','alice','1:0,2',None)
 		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
 		return ret
 
 	def sweep_to_address_noproxy(self):
-		ret = self._sweep_user(
-			'alice',
-			'2:1',
-			tx_relay_daemon = 'localhost:{}'.format(self.users['bob'].md.rpc_port)
-		)
+		ret = self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
 		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
 		return ret
 
