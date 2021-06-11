@@ -61,6 +61,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		('sweep_to_address_noproxy',  'sweeping to new address (via TX relay)'),
 		('mine_blocks',               'mining blocks'),
+
+		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
+		('mine_blocks_extra',         'mining blocks'),
+		('sync_wallet_2',             'syncing Alice’s wallet #2'),
+
+		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay)'),
+		('mine_blocks',               'mining blocks'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -197,7 +204,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			'wd_rpc',
 		])
 		for user,sid,shift,kal_range in ( # kal_range must be None, a single digit, or a single hyphenated range
-				('miner', '98831F3A', 130,  '1'),
+				('miner', '98831F3A', 130,  '1-2'),
 				('bob',   '1378FC64', 140, None),
 				('alice', 'FE3C6545', 150, '1-4'),
 			):
@@ -320,6 +327,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def sync_wallets_selected(self):
 		return self.sync_wallets(wallets='1,3-4')
 
+	def sync_wallet_2(self):
+		return self.sync_wallets(wallets='2')
+
 	def sync_wallets(self,wallets=None):
 		data = self.users['alice']
 		dir_opt = [f'--outdir={data.udir}']
@@ -376,6 +386,19 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
 		return ret
 
+	def transfer_to_miner_proxy(self):
+		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		amt = '0.135'
+		ret = self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
+		self.set_dest('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
+		return ret
+
+	def transfer_to_miner_noproxy(self):
+		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		ret = self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
+		self.set_dest('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
+		return ret
+
 	# wallet methods
 
 	async def open_wallet_user(self,user,wnum):
@@ -420,7 +443,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ret = await self.users['miner'].md_rpc.call('stop_mining')
 		return self.get_status(ret)
 
-	async def mine_blocks(self,random_txs=None):
+	async def mine_blocks(self,random_txs=None,extra_blocks=None):
 		"""
 		- open destination wallet
 		- optionally create and broadcast random TXs
@@ -446,6 +469,18 @@ class TestSuiteXMRWallet(TestSuiteBase):
 						raise
 			else:
 				die(2,'Restart attempt limit exceeded')
+
+		async def mine_extra_blocks():
+			h_start = await get_height()
+			imsg_r(f'[+{extra_blocks} blocks]: ')
+			oqmsg_r('|')
+			while True:
+				await asyncio.sleep(2)
+				h = await get_height()
+				imsg_r(f'{h} ')
+				oqmsg_r('+')
+				if h - h_start > extra_blocks:
+					break
 
 		async def send_random_txs():
 			from mmgen.tool import tool_api
@@ -480,8 +515,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		self.do_msg(extra_desc=f'+{random_txs} random TXs' if random_txs else None)
 
-		if self.dest.user != 'miner':
-			await self.open_wallet_user(self.dest.user,self.dest.wnum)
+		await self.open_wallet_user(self.dest.user,self.dest.wnum)
 
 		if random_txs:
 			await send_random_txs()
@@ -494,6 +528,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		while True:
 			ub = await get_balance(self.dest)
 			if self.dest.test(ub):
+				if extra_blocks:
+					await mine_extra_blocks()
 				imsg('')
 				oqmsg_r('+')
 				print_balance(self.dest,ub)
@@ -514,6 +550,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def mine_blocks_tx(self):
 		return await self.mine_blocks(random_txs=self.dfl_random_txs)
+
+	async def mine_blocks_extra(self):
+		return await self.mine_blocks(extra_blocks=100) # TODO: 100 is arbitrary value
 
 	# util methods
 

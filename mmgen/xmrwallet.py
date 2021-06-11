@@ -26,11 +26,13 @@ from .common import *
 from .addr import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw, MoneroWalletRPCClient
 from .daemon import MoneroWalletDaemon
+from .protocol import _b58a
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', r'({p})(?::({p}))?'.format(p=hp)),
+		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{_b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),
@@ -39,7 +41,7 @@ xmrwallet_uarg_info = (
 
 class MoneroWalletOps:
 
-	ops = ('create','sync','sweep')
+	ops = ('create','sync','transfer','sweep')
 
 	class base:
 
@@ -154,6 +156,20 @@ class MoneroWalletOps:
 					hl_amt(amt),
 					hl_amt(fee),
 				))
+
+			async def make_transfer_tx(self,account,addr,amt):
+				res = await self.c.call(
+					'transfer',
+					account_index = account,
+					destinations = [{
+						'amount':  amt.to_unit('atomic'),
+						'address': addr
+					}],
+					do_not_relay = True,
+					get_tx_metadata = True
+				)
+				self.display_tx( res['tx_hash'], res['amount'], res['fee'] )
+				return res['tx_metadata']
 
 			async def make_sweep_tx(self,account,addr):
 				res = await self.c.call(
@@ -438,6 +454,11 @@ class MoneroWalletOps:
 			self.addr_data = list(gen())
 			self.account = int(m[2])
 
+			if self.name == 'transfer':
+				from mmgen.obj import CoinAddr
+				self.dest_addr = CoinAddr(self.proto,m[3])
+				self.amount = self.proto.coin_amt(m[4])
+
 		def post_init(self):
 
 			if uarg.tx_relay_daemon:
@@ -467,7 +488,8 @@ class MoneroWalletOps:
 
 		async def process_wallets(self):
 			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
-				' to new address' if self.dest is None
+				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
+				else ' to new address' if self.dest == None
 				else f' to new account in wallet {self.dest.idx}' ))
 
 			h = self.rpc(self,self.source)
@@ -481,7 +503,9 @@ class MoneroWalletOps:
 
 			await h.get_addrs(accts_data,self.account)
 
-			if self.dest == None:
+			if self.name == 'transfer':
+				new_addr = self.dest_addr
+			elif self.dest == None:
 				if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
 					new_addr = await h.create_new_addr(self.account)
 				elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
@@ -507,12 +531,14 @@ class MoneroWalletOps:
 				await h2.close_wallet('destination')
 				await h.open_wallet('source')
 
-			msg('\n    Creating sweep transaction: balance of wallet {}, account #{} => {}'.format(
-				self.source.idx,
-				self.account,
-				cyan(new_addr),
-			))
-			tx_metadata = await h.make_sweep_tx(self.account,new_addr)
+			msg_r(f'\n    Creating {self.name} transaction: wallet {self.source.idx}, account #{self.account}')
+
+			if self.name == 'transfer':
+				msg(f', {self.amount} XMR => {cyan(new_addr)}')
+				tx_metadata = await h.make_transfer_tx(self.account,new_addr,self.amount)
+			elif self.name == 'sweep':
+				msg(f' => {cyan(new_addr)}')
+				tx_metadata = await h.make_sweep_tx(self.account,new_addr)
 
 			if keypress_confirm(f'\nRelay {self.name} transaction?'):
 				w_desc = 'source'
@@ -533,3 +559,10 @@ class MoneroWalletOps:
 				die(1,'\nExiting at user request')
 
 			return True
+
+	class transfer(sweep):
+		name    = 'transfer'
+		desc    = 'Transfer'
+		past    = 'transferred'
+		spec_id = 'transfer_spec'
+		spec_key = ( (1,'source'), )

@@ -29,9 +29,10 @@ opts_data = {
 		'desc': """Perform various Monero wallet operations for addresses
                    in an MMGen XMR key-address file""",
 		'usage2': [
-			'[opts] create <xmr_keyaddrfile> [wallets]',
-			'[opts] sync   <xmr_keyaddrfile> [wallets]',
-			'[opts] sweep  <xmr_keyaddrfile> <sweep_spec>',
+			'[opts] create   <xmr_keyaddrfile> [wallets]',
+			'[opts] sync     <xmr_keyaddrfile> [wallets]',
+			'[opts] transfer <xmr_keyaddrfile> <transfer_spec>',
+			'[opts] sweep    <xmr_keyaddrfile> <sweep_spec>',
 		],
 		'options': """
 -h, --help                       Print this help message
@@ -61,10 +62,12 @@ may point to a SOCKS proxy, in which case HOST may be a Tor onion address.
 
                         SUPPORTED OPERATIONS
 
-create - create wallet for all or specified addresses in key-address file
-sync   - sync wallet for all or specified addresses in key-address file
-sweep  - sweep funds in specified wallet:account to new address in same
-         account or new account in another wallet
+create    - create wallet for all or specified addresses in key-address file
+sync      - sync wallet for all or specified addresses in key-address file
+transfer  - transfer specified XMR amount to specified address from specified
+            wallet:account
+sweep     - sweep funds in specified wallet:account to new address in same
+            account or new account in another wallet
 
 
                    CREATE AND SYNC OPERATION NOTES
@@ -73,6 +76,17 @@ These operations take an optional `wallets` argument: a comma-separated list,
 hyphenated range, or combination of both, of address indexes in the specified
 key-address file, each corresponding to a Monero wallet to be created or
 synced.  If omitted, all wallets are operated upon.
+
+
+                       TRANSFER OPERATION NOTES
+
+The transfer operation takes a `transfer specifier` arg with the following
+format:
+
+    SOURCE:ACCOUNT:ADDRESS,AMOUNT
+
+where SOURCE is a wallet index; ACCOUNT the source account index; and ADDRESS
+and AMOUNT the destination Monero address and XMR amount, respectively.
 
 
                         SWEEP OPERATION NOTES
@@ -126,7 +140,7 @@ if op in ('create','sync'):
 		opts.usage()
 	if cmd_args:
 		wallets = cmd_args[0]
-elif op == 'sweep':
+elif op in ('transfer','sweep'):
 	if len(cmd_args) != 1:
 		opts.usage()
 	spec = cmd_args[0]
