@@ -113,16 +113,6 @@ def opt_postproc_debug():
 		Msg('        {:<20}: {}'.format(e, getattr(g,e)))
 	Msg('\n=== end opts.py debug ===\n')
 
-def init_term_and_color():
-	from .term import init_term
-	init_term()
-
-	if g.color: # MMGEN_DISABLE_COLOR sets this to False
-		from .color import start_mscolor,init_color
-		if g.platform == 'win':
-			start_mscolor()
-		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
-
 def override_globals_from_cfg_file(ucfg):
 	from .protocol import CoinProtocol,init_proto
 	for d in ucfg.parse():
@@ -297,11 +287,13 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 
 	check_or_create_dir(g.data_dir_root)
 
-	init_term_and_color()
+	from .term import init_term
+	init_term()
 
 	if not opt.skip_cfg_file:
 		from .cfg import cfg_file
-		cfg_file('sample') # check for changes in system template file
+		# check for changes in system template file - term must be initialized
+		cfg_file('sample')
 		override_globals_from_cfg_file(cfg_file('usr'))
 
 	override_globals_and_set_opts_from_env(opt)
@@ -313,6 +305,15 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 			val = getattr(opt,k)
 			if val != None and hasattr(g,k):
 				setattr(g,k,set_for_type(val,getattr(g,k),'--'+k))
+
+	"""
+	g.color is finalized, so initialize color
+	"""
+	if g.color: # MMGEN_DISABLE_COLOR sets this to False
+		from .color import start_mscolor,init_color
+		if g.platform == 'win':
+			start_mscolor()
+		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 	"""
 	g.testnet and g.regtest are finalized, so we can set g.data_dir
