@@ -20,7 +20,7 @@
 obj.py: MMGen native classes
 """
 
-import sys,os,unicodedata
+import sys,os,re,unicodedata
 from decimal import *
 from string import hexdigits,ascii_letters,digits
 
@@ -912,6 +912,33 @@ class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
 
 class SeedSplitIDString(MMGenPWIDString):
 	desc = 'seed split ID string'
+
+class IPPort(str,Hilite,InitErrors,MMGenObject):
+	color = 'yellow'
+	width = 0
+	trunc_ok = False
+	min_len = 9  # 0.0.0.0:0
+	max_len = 21 # 255.255.255.255:65535
+	def __new__(cls,s):
+		if type(s) == cls:
+			return s
+		try:
+			m = re.fullmatch('{q}\.{q}\.{q}\.{q}:(\d{{1,10}})'.format(q=r'([0-9]{1,3})'),s)
+			assert m is not None, f'{s!r}: invalid IP:HOST specifier'
+			for e in m.groups():
+				if len(e) != 1 and e[0] == '0':
+					die(2,f'{e}: leading zeroes not permitted in dotted decimal element or port number')
+			res = [int(e) for e in m.groups()]
+			for e in res[:4]:
+				assert e <= 255, f'{e}: dotted decimal element > 255'
+			assert res[4] <= 65535, f'{res[4]}: port number > 65535'
+			me = str.__new__(cls,s)
+			me.ip = '{}.{}.{}.{}'.format(*res)
+			me.ip_num = sum( res[i] * ( 2 ** (-(i-3)*8) ) for i in range(4) )
+			me.port = res[4]
+			return me
+		except Exception as e:
+			return cls.init_fail(e,s)
 
 from collections import namedtuple
 ati = namedtuple('addrtype_info',
