@@ -67,6 +67,7 @@ class RPCBackends:
 		def __init__(self,caller):
 			self.host           = caller.host
 			self.port           = caller.port
+			self.proxy          = caller.proxy
 			self.url            = caller.url
 			self.timeout        = caller.timeout
 			self.http_hdrs      = caller.http_hdrs
@@ -104,6 +105,11 @@ class RPCBackends:
 			if caller.auth_type:
 				auth = 'HTTP' + caller.auth_type.capitalize() + 'Auth'
 				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
+			if self.proxy:
+				self.session.proxies.update({
+					'http':  f'socks5://{self.proxy}',
+					'https': f'socks5://{self.proxy}'
+				})
 
 		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (requests) ==>\n{}\n',payload)
@@ -176,7 +182,7 @@ class RPCBackends:
 			dmsg_rpc('\n    RPC PAYLOAD data (curl) ==>\n{}\n',payload)
 			exec_cmd = [
 				'curl',
-				'--proxy', '',
+				'--proxy', f'socks5://{self.proxy}' if self.proxy else '',
 				'--connect-timeout', str(timeout or self.timeout),
 				'--write-out', '%{http_code}',
 				'--data-binary', data
@@ -240,6 +246,7 @@ class RPCClient(MMGenObject):
 	has_auth_cookie = False
 	network_proto = 'http'
 	host_path = ''
+	proxy = None
 
 	def __init__(self,host,port,test_connection=True):
 
@@ -662,7 +669,10 @@ class MoneroRPCClient(RPCClient):
 	host_path = '/json_rpc'
 	verify_server = False
 
-	def __init__(self,host,port,user,passwd,test_connection=True):
+	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None):
+		if proxy is not None:
+			from .obj import IPPort
+			self.proxy = IPPort(proxy)
 		super().__init__(host,port,test_connection)
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
