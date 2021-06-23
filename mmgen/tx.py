@@ -940,8 +940,12 @@ class MMGenTX:
 		dfl_view_sort_order = 'addr'
 		txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
 		txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
-		txview_ftr_fs = 'Total input:  {i} {d}\nTotal output: {o} {d}\nTX fee:       {a} {c}{r}\n'
-		txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
+		txview_ftr_fs = fmt("""
+			Input amount: {i} {d}
+			Change:       {C} {d}
+			Spend amount: {s} {d}
+			Fee:          {a} {c}{r}
+		""")
 		parsed_hex = None
 
 		def __init__(self,filename=None,quiet_open=False,data=None):
@@ -1075,9 +1079,11 @@ class MMGenTX:
 				+ ''.join(format_io('outputs')) )
 
 		def format_view_rel_fee(self,terse):
-			return ' ({} {})\n'.format(
+			return ' ({} {}, {} of spend amount)'.format(
 				pink(str(self.fee_abs2rel(self.get_fee()))),
-				self.rel_fee_disp)
+				self.rel_fee_disp,
+				pink('{:0.6f}%'.format( self.get_fee() / self.send_amt * 100 ))
+			)
 
 		def format_view_abs_fee(self):
 			return self.proto.coin_amt(self.get_fee()).hl()
@@ -1132,9 +1138,11 @@ class MMGenTX:
 
 				yield self.format_view_body(blockcount,nonmm_str,max_mmwid,enl,terse=terse,sort=sort)
 
-				yield (self.txview_ftr_fs_short if terse else self.txview_ftr_fs).format(
+				yield self.txview_ftr_fs.format(
 					i = self.sum_inputs().hl(),
 					o = self.sum_outputs().hl(),
+					C = (self.sum_outputs() - self.send_amt).hl(),
+					s = self.send_amt.hl(),
 					a = self.format_view_abs_fee(),
 					r = self.format_view_rel_fee(terse),
 					d = self.dcoin,

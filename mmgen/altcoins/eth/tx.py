@@ -222,7 +222,6 @@ class EthereumMMGenTX:
 		txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
 		txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
 		txview_ftr_fs = 'Total in account: {i} {d}\nTotal to spend:   {o} {d}\nTX fee:           {a} {c}{r}\n'
-		txview_ftr_fs_short = 'In {i} {d} - Out {o} {d}\nFee {a} {c}{r}\n'
 		fmt_keys = ('from','to','amt','nonce')
 
 		def check_txfile_hex_data(self):
