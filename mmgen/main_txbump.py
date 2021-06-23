@@ -152,6 +152,7 @@ async def main():
 	fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
 	tx.update_fee(op_idx,fee)
+	tx.update_send_amt()
 
 	d = tx.get_fee()
 	assert d == fee and d <= tx.proto.max_tx_fee

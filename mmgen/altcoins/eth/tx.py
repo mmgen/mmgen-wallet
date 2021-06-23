@@ -187,7 +187,7 @@ class EthereumMMGenTX:
 			if self.outputs and self.outputs[0].is_chg:
 				self.update_output_amt(0,ETHAmt(change_amt))
 
-		def update_send_amt(self,foo):
+		def update_send_amt(self):
 			if self.outputs:
 				self.send_amt = self.outputs[0].amt
 

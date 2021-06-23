@@ -834,9 +834,10 @@ class MMGenTX:
 			else:
 				self.update_output_amt(chg_idx,self.proto.coin_amt(change_amt))
 
-		def update_send_amt(self,change_amt):
-			if not self.send_amt:
-				self.send_amt = change_amt
+		def update_send_amt(self):
+			self.send_amt = self.sum_outputs(exclude =
+				None if len(self.outputs) == 1 else self.get_chg_output_idx()
+			)
 
 		def check_fee(self):
 			fee = self.sum_inputs() - self.sum_outputs()
@@ -893,7 +894,7 @@ class MMGenTX:
 			self.check_non_mmgen_inputs(caller)
 
 			self.update_change_output(change_amt)
-			self.update_send_amt(change_amt)
+			self.update_send_amt()
 
 			if self.proto.base_proto == 'Bitcoin':
 				self.inputs.sort_bip69()
