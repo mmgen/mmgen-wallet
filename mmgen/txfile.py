@@ -114,8 +114,6 @@ class MMGenTxFile:
 
 			desc = 'TxID in metadata'
 			tx.txid = MMGenTxID(txid)
-			desc = 'send amount in metadata'
-			tx.send_amt = tx.proto.coin_amt(send_amt)
 			desc = 'block count in metadata'
 			tx.blockcount = int(blockcount)
 
@@ -130,6 +128,8 @@ class MMGenTxFile:
 			tx.inputs  = eval_io_data(inputs_data,'inputs')
 			desc = 'outputs data'
 			tx.outputs = eval_io_data(outputs_data,'outputs')
+			desc = 'send amount in metadata'
+			assert Decimal(send_amt) == tx.send_amt, f'{send_amt} != {tx.send_amt}'
 		except Exception as e:
 			die(2,f'Invalid {desc} in transaction file: {e!s}')
 

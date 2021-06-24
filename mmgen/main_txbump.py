@@ -152,7 +152,6 @@ async def main():
 	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
 	tx.bump_fee(output_idx,tx.usr_fee)
-	tx.update_send_amt()
 
 	assert tx.fee <= tx.proto.max_tx_fee
 

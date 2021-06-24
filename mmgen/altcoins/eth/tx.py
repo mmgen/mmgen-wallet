@@ -186,10 +186,6 @@ class EthereumMMGenTX:
 			if self.outputs and self.outputs[0].is_chg:
 				self.update_output_amt(0,ETHAmt(funds_left))
 
-		def update_send_amt(self):
-			if self.outputs:
-				self.send_amt = self.outputs[0].amt
-
 		async def get_cmdline_input_addrs(self):
 			ret = []
 			if opt.inputs:
@@ -228,6 +224,10 @@ class EthereumMMGenTX:
 			TX fee:            {a} {c}{r}
 		""")
 		fmt_keys = ('from','to','amt','nonce')
+
+		@property
+		def send_amt(self):
+			return self.outputs[0].amt if self.outputs else self.proto.coin_amt('0')
 
 		@property
 		def fee(self):

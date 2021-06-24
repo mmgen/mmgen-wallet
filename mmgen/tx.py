@@ -371,6 +371,13 @@ class MMGenTX:
 				return self.proto.coin_amt('0')
 			return self.proto.coin_amt(sum(e.amt for e in olist))
 
+		def get_chg_output_idx(self):
+			ch_ops = [x.is_chg for x in self.outputs]
+			try:
+				return ch_ops.index(True)
+			except ValueError:
+				return None
+
 		def has_segwit_inputs(self):
 			return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
 
@@ -519,13 +526,6 @@ class MMGenTX:
 			MMGenTX.Base.__init__(self)
 			self.proto = proto
 			self.tw    = tw
-
-		def get_chg_output_idx(self):
-			ch_ops = [x.is_chg for x in self.outputs]
-			try:
-				return ch_ops.index(True)
-			except ValueError:
-				return None
 
 		def del_output(self,idx):
 			self.outputs.pop(idx)
@@ -835,11 +835,6 @@ class MMGenTX:
 			else:
 				self.update_output_amt(chg_idx,self.proto.coin_amt(funds_left))
 
-		def update_send_amt(self):
-			self.send_amt = self.sum_outputs(exclude =
-				None if len(self.outputs) == 1 else self.get_chg_output_idx()
-			)
-
 		def check_fee(self):
 			fee = self.sum_inputs() - self.sum_outputs()
 			if fee > self.proto.max_tx_fee:
@@ -1078,6 +1073,12 @@ class MMGenTX:
 				+ ('\n\n','\n')[terse]
 				+ ''.join(format_io('inputs'))
 				+ ''.join(format_io('outputs')) )
+
+		@property
+		def send_amt(self):
+			return self.sum_outputs(
+				exclude = None if len(self.outputs) == 1 else self.get_chg_output_idx()
+			)
 
 		@property
 		def fee(self):
