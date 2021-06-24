@@ -265,7 +265,9 @@ class EthereumMMGenTX:
 			return self.fee.hl() + (' (max)' if self.txobj['data'] else '')
 
 		def format_view_rel_fee(self,terse):
-			return ''
+			return ' ({} of spend amount)'.format(
+				pink('{:0.6f}%'.format( self.fee / self.send_amt * 100 ))
+			)
 
 		def format_view_verbose_footer(self):
 			if self.txobj['data']:
@@ -522,6 +524,9 @@ class EthereumTokenMMGenTX:
 
 	class Completed(Base,EthereumMMGenTX.Completed):
 		fmt_keys = ('from','token_to','amt','nonce')
+
+		def format_view_rel_fee(self,terse):
+			return ''
 
 		def format_view_body(self,*args,**kwargs):
 			return 'Token:     {d} {c}\n{r}'.format(
