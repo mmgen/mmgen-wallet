@@ -576,10 +576,12 @@ class MMGenTX:
 			return fee_per_kb,fe_type
 
 		# given tx size, rel fee and units, return absolute fee
-		def convert_fee_spec(self,tx_size,units,amt,unit):
+		def fee_rel2abs(self,tx_size,units,amt,unit):
 			self.usr_rel_fee = None # TODO
-			return self.proto.coin_amt(int(amt)*tx_size*getattr(self.proto.coin_amt,units[unit])) \
-				if tx_size else None
+			if tx_size:
+				return self.proto.coin_amt(amt * tx_size * getattr(self.proto.coin_amt,units[unit]))
+			else:
+				return None
 
 		# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 		def fee_est2abs(self,fee_per_kb,fe_type=None):
@@ -596,7 +598,7 @@ class MMGenTX:
 			return ret
 
 		def convert_and_check_fee(self,tx_fee,desc='Missing description'):
-			abs_fee = self.process_fee_spec(tx_fee,self.estimate_size())
+			abs_fee = self.feespec2abs(tx_fee,self.estimate_size())
 			if abs_fee == None:
 				raise ValueError(f'{tx_fee}: cannot convert {self.rel_fee_desc} to {self.coin}'
 									+ ' because transaction size is unknown')
@@ -615,7 +617,7 @@ class MMGenTX:
 
 		# given tx size and absolute fee or fee spec, return absolute fee
 		# relative fee is N+<first letter of unit name>
-		def process_fee_spec(self,tx_fee,tx_size):
+		def feespec2abs(self,tx_fee,tx_size):
 			fee = get_obj(self.proto.coin_amt,num=tx_fee,silent=True)
 			if fee:
 				return fee
@@ -625,7 +627,7 @@ class MMGenTX:
 				pat = re.compile(r'([1-9][0-9]*)({})'.format('|'.join(units)))
 				if pat.match(tx_fee):
 					amt,unit = pat.match(tx_fee).groups()
-					return self.convert_fee_spec(tx_size,units,amt,unit)
+					return self.fee_rel2abs(tx_size,units,int(amt),unit)
 			return False
 
 		def get_usr_fee_interactive(self,tx_fee=None,desc='Starting'):
@@ -769,12 +771,12 @@ class MMGenTX:
 			return set(get_uo_nums()) # silently discard duplicates
 
 		# we don't know fee yet, so perform preliminary check with fee == 0
-		async def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
-			if self.twuo.total < self.send_amt:
-				msg(self.msg_wallet_low_coin.format(self.send_amt-inputs_sum,self.dcoin))
+		async def precheck_sufficient_funds(self,inputs_sum,sel_unspent,outputs_sum):
+			if self.twuo.total < outputs_sum:
+				msg(self.msg_wallet_low_coin.format(outputs_sum-inputs_sum,self.dcoin))
 				return False
-			if inputs_sum < self.send_amt:
-				msg(self.msg_low_coin.format(self.send_amt-inputs_sum,self.dcoin))
+			if inputs_sum < outputs_sum:
+				msg(self.msg_low_coin.format(outputs_sum-inputs_sum,self.dcoin))
 				return False
 			return True
 
@@ -789,16 +791,19 @@ class MMGenTX:
 					yield i
 			self.inputs = MMGenTxInputList(self,list(gen_inputs()))
 
-		async def get_change_amt(self):
-			return self.sum_inputs() - self.send_amt - self.fee
+		async def get_funds_left(self,fee,outputs_sum):
+			return self.sum_inputs() - outputs_sum - fee
 
-		def final_inputs_ok_msg(self,change_amt):
-			return f'Transaction produces {self.proto.coin_amt(change_amt).hl()} {self.coin} in change'
+		def final_inputs_ok_msg(self,funds_left):
+			return 'Transaction produces {} {} in change'.format(
+				self.proto.coin_amt(funds_left).hl(),
+				self.coin
+			)
 
-		def warn_insufficient_chg(self,change_amt):
-			msg(self.msg_low_coin.format(self.proto.coin_amt(-change_amt).hl(),self.coin))
+		def warn_insufficient_funds(self,funds_left):
+			msg(self.msg_low_coin.format(self.proto.coin_amt(-funds_left).hl(),self.coin))
 
-		async def get_inputs_from_user(self):
+		async def get_inputs_from_user(self,outputs_sum):
 
 			while True:
 				us_f = self.select_unspent_cmdline if opt.inputs else self.select_unspent
@@ -808,31 +813,31 @@ class MMGenTX:
 				sel_unspent = self.twuo.MMGenTwOutputList([self.twuo.unspent[i-1] for i in sel_nums])
 
 				inputs_sum = sum(s.amt for s in sel_unspent)
-				if not await self.precheck_sufficient_funds(inputs_sum,sel_unspent):
+				if not await self.precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum):
 					continue
 
 				self.copy_inputs_from_tw(sel_unspent)  # makes self.inputs
 
-				self.fee = await self.get_fee_from_user()
+				self.usr_fee = await self.get_fee_from_user()
 
-				change_amt = await self.get_change_amt()
+				funds_left = await self.get_funds_left(self.usr_fee,outputs_sum)
 
-				if change_amt >= 0:
-					p = self.final_inputs_ok_msg(change_amt)
+				if funds_left >= 0:
+					p = self.final_inputs_ok_msg(funds_left)
 					if opt.yes or keypress_confirm(p+'. OK?',default_yes=True):
 						if opt.yes:
 							msg(p)
-						return change_amt
+						return funds_left
 				else:
-					self.warn_insufficient_chg(change_amt)
+					self.warn_insufficient_funds(funds_left)
 
-		def update_change_output(self,change_amt):
+		def update_change_output(self,funds_left):
 			chg_idx = self.get_chg_output_idx()
-			if change_amt == 0:
+			if funds_left == 0:
 				msg(self.no_chg_msg)
 				self.del_output(chg_idx)
 			else:
-				self.update_output_amt(chg_idx,self.proto.coin_amt(change_amt))
+				self.update_output_amt(chg_idx,self.proto.coin_amt(funds_left))
 
 		def update_send_amt(self):
 			self.send_amt = self.sum_outputs(exclude =
@@ -884,17 +889,17 @@ class MMGenTX:
 				del self.twuo.wallet
 				sys.exit(0)
 
-			self.send_amt = self.sum_outputs()
+			outputs_sum = self.sum_outputs()
 
-			msg_r('Total amount to spend: ')
-			msg(f'{self.send_amt.hl()} {self.dcoin}' if self.send_amt else 'Unknown')
+			msg('Total amount to spend: {}'.format(
+				f'{outputs_sum.hl()} {self.dcoin}' if outputs_sum else 'Unknown'
+			))
 
-			change_amt = await self.get_inputs_from_user()
+			funds_left = await self.get_inputs_from_user(outputs_sum)
 
 			self.check_non_mmgen_inputs(caller)
 
-			self.update_change_output(change_amt)
-			self.update_send_amt()
+			self.update_change_output(funds_left)
 
 			if self.proto.base_proto == 'Bitcoin':
 				self.inputs.sort_bip69()
@@ -942,8 +947,8 @@ class MMGenTX:
 		txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} RBF={r} Sig={s} Locktime={l}\n'
 		txview_ftr_fs = fmt("""
 			Input amount: {i} {d}
-			Change:       {C} {d}
 			Spend amount: {s} {d}
+			Change:       {C} {d}
 			Fee:          {a} {c}{r}
 		""")
 		parsed_hex = None
@@ -1497,7 +1502,7 @@ class MMGenTX:
 
 			self.coin_txid = ''
 
-		def check_bumpable(self):
+		def check_sufficient_funds_for_bump(self):
 			if not [o.amt for o in self.outputs if o.amt >= self.min_fee]:
 				die(1,
 					'Transaction cannot be bumped.\n' +
@@ -1549,9 +1554,11 @@ class MMGenTX:
 		def min_fee(self):
 			return self.sum_inputs() - self.sum_outputs() + self.relay_fee
 
-		def update_fee(self,op_idx,fee):
-			amt = self.sum_inputs() - self.sum_outputs(exclude=op_idx) - fee
-			self.update_output_amt(op_idx,amt)
+		def bump_fee(self,idx,fee):
+			self.update_output_amt(
+				idx,
+				self.sum_inputs() - self.sum_outputs(exclude=idx) - fee
+			)
 
 		def convert_and_check_fee(self,tx_fee,desc):
 			ret = super().convert_and_check_fee(tx_fee,desc)
@@ -1607,18 +1614,17 @@ class MMGenTX:
 #			await self.get_outputs_from_cmdline(mmid)
 #
 #			while True:
-#				change_amt = self.sum_inputs() - self.get_split_fee_from_user()
-#				if change_amt >= 0:
-#					p = 'Transaction produces {} {} in change'.format(change_amt.hl(),self.coin)
+#				funds_left = self.sum_inputs() - self.get_split_fee_from_user()
+#				if funds_left >= 0:
+#					p = 'Transaction produces {} {} in change'.format(funds_left.hl(),self.coin)
 #					if opt.yes or keypress_confirm(p+'.  OK?',default_yes=True):
 #						if opt.yes:
 #							msg(p)
 #						break
 #				else:
-#					self.warn_insufficient_chg(change_amt)
+#					self.warn_insufficient_funds(funds_left)
 #
-#			self.update_output_amt(0,change_amt)
-#			self.send_amt = change_amt
+#			self.update_output_amt(0,funds_left)
 #
 #			if not opt.yes:
 #				self.add_comment()  # edits an existing comment

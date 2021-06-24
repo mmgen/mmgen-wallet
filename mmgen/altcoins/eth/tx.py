@@ -55,8 +55,8 @@ class EthereumMMGenTX:
 		def get_hex_locktime(self):
 			return None # TODO
 
-		# given rel fee in wei, return absolute fee using tx_gas (not in MMGenTX)
-		def fee_rel2abs(self,rel_fee):
+		# given rel fee (gasPrice) in wei, return absolute fee using tx_gas (not in MMGenTX)
+		def fee_gasPrice2abs(self,rel_fee):
 			assert isinstance(rel_fee,int),"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
 			return ETHAmt(rel_fee * self.tx_gas.toWei(),'wei')
 
@@ -158,22 +158,25 @@ class EthereumMMGenTX:
 			return Int(await self.rpc.call('eth_gasPrice'),16),'eth_gasPrice' # ==> rel_fee,fe_type
 
 		def check_fee(self):
-			assert self.disable_fee_check or (self.fee <= self.proto.max_tx_fee)
+			if not self.disable_fee_check:
+				assert self.usr_fee <= self.proto.max_tx_fee
 
 		# given rel fee and units, return absolute fee using tx_gas
-		def convert_fee_spec(self,foo,units,amt,unit):
-			self.usr_rel_fee = ETHAmt(int(amt),units[unit])
-			return ETHAmt(self.usr_rel_fee.toWei() * self.tx_gas.toWei(),'wei')
+		def fee_rel2abs(self,tx_size,units,amt,unit):
+			return ETHAmt(
+				ETHAmt(amt,units[unit]).toWei() * self.tx_gas.toWei(),
+				from_unit='wei'
+			)
 
 		# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.tx_fee_adj
 		def fee_est2abs(self,rel_fee,fe_type=None):
-			ret = self.fee_rel2abs(rel_fee) * opt.tx_fee_adj
+			ret = self.fee_gasPrice2abs(rel_fee) * opt.tx_fee_adj
 			if opt.verbose:
 				msg('Estimated fee: {} ETH'.format(ret))
 			return ret
 
 		def convert_and_check_fee(self,tx_fee,desc='Missing description'):
-			abs_fee = self.process_fee_spec(tx_fee,None)
+			abs_fee = self.feespec2abs(tx_fee,None)
 			if abs_fee == False:
 				return False
 			elif not self.disable_fee_check and (abs_fee > self.proto.max_tx_fee):
@@ -183,9 +186,9 @@ class EthereumMMGenTX:
 			else:
 				return abs_fee
 
-		def update_change_output(self,change_amt):
+		def update_change_output(self,funds_left):
 			if self.outputs and self.outputs[0].is_chg:
-				self.update_output_amt(0,ETHAmt(change_amt))
+				self.update_output_amt(0,ETHAmt(funds_left))
 
 		def update_send_amt(self):
 			if self.outputs:
@@ -212,16 +215,22 @@ class EthereumMMGenTX:
 						die(1,"'{}': not an MMGen ID or coin address".format(i))
 			return ret
 
-		def final_inputs_ok_msg(self,change_amt):
-			m = "Transaction leaves {} {} in the sender's account"
-			chg = '0' if (self.outputs and self.outputs[0].is_chg) else change_amt
-			return m.format(ETHAmt(chg).hl(),self.proto.coin)
+		def final_inputs_ok_msg(self,funds_left):
+			chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
+			return "Transaction leaves {} {} in the sender's account".format(
+				ETHAmt(chg).hl(),
+				self.proto.coin
+			)
 
 	class Completed(Base,MMGenTX.Completed):
 		fn_fee_unit = 'Mwei'
 		txview_hdr_fs = 'TRANSACTION DATA\n\nID={i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
 		txview_hdr_fs_short = 'TX {i} ({a} {c}) UTC={t} Sig={s} Locktime={l}\n'
-		txview_ftr_fs = 'Total in account: {i} {d}\nTotal to spend:   {o} {d}\nTX fee:           {a} {c}{r}\n'
+		txview_ftr_fs = fmt("""
+			Total in account:  {i} {d}
+			Total to spend:    {o} {d}
+			TX fee:            {a} {c}{r}
+		""")
 		fmt_keys = ('from','to','amt','nonce')
 
 		def check_txfile_hex_data(self):
@@ -253,9 +262,8 @@ class EthereumMMGenTX:
 				f_mmid = m['inputs'] )
 
 		def format_view_abs_fee(self):
-			fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
-			note = ' (max)' if self.txobj['data'] else ''
-			return fee.hl() + note
+			fee = self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
+			return fee.hl() + (' (max)' if self.txobj['data'] else '')
 
 		def format_view_rel_fee(self,terse):
 			return ''
@@ -292,7 +300,7 @@ class EthereumMMGenTX:
 				'chainId':  Int(d['chainId']),
 				'data':     HexStr(d['data']) }
 			self.tx_gas = o['startGas'] # approximate, but better than nothing
-			self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
+			self.fee = self.fee_gasPrice2abs(o['gasPrice'].toWei())
 			self.txobj = o
 			return d # 'token_addr','decimals' required by Token subclass
 
@@ -371,7 +379,7 @@ class EthereumMMGenTX:
 			txid = CoinTxID(etx.hash.hex())
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 			self.tx_gas = o['startGas'] # approximate, but better than nothing
-			self.fee = self.fee_rel2abs(o['gasPrice'].toWei())
+			self.fee = self.fee_gasPrice2abs(o['gasPrice'].toWei())
 			self.txobj = o
 			return d # 'token_addr','decimals' required by Token subclass
 
@@ -413,7 +421,7 @@ class EthereumMMGenTX:
 
 			self.check_correct_chain()
 
-			fee = self.fee_rel2abs(self.txobj['gasPrice'].toWei())
+			fee = self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
 
 			if not self.disable_fee_check and (fee > self.proto.max_tx_fee):
 				die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
@@ -463,7 +471,7 @@ class EthereumMMGenTX:
 		def min_fee(self):
 			return ETHAmt(self.fee * Decimal('1.101'))
 
-		def update_fee(self,foo,fee):
+		def bump_fee(self,idx,fee):
 			self.fee = fee
 
 		async def get_nonce(self):
@@ -489,28 +497,33 @@ class EthereumTokenMMGenTX:
 			o['token_to'] = o['to']
 			o['data'] = t.create_data(o['token_to'],o['amt'])
 
-		def update_change_output(self,change_amt):
+		def update_change_output(self,funds_left):
 			if self.outputs[0].is_chg:
 				self.update_output_amt(0,self.inputs[0].amt)
 
 		# token transaction, so check both eth and token balances
 		# TODO: add test with insufficient funds
-		async def precheck_sufficient_funds(self,inputs_sum,sel_unspent):
+		async def precheck_sufficient_funds(self,inputs_sum,sel_unspent,outputs_sum):
 			eth_bal = await self.tw.get_eth_balance(sel_unspent[0].addr)
 			if eth_bal == 0: # we don't know the fee yet
 				msg('This account has no ether to pay for the transaction fee!')
 				return False
-			return await super().precheck_sufficient_funds(inputs_sum,sel_unspent)
+			return await super().precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum)
 
-		async def get_change_amt(self): # here we know the fee
-			eth_bal = await self.tw.get_eth_balance(self.inputs[0].addr)
-			return eth_bal - self.fee
+		async def get_funds_left(self,fee,outputs_sum):
+			return ( await self.tw.get_eth_balance(self.inputs[0].addr) ) - fee
 
-		def final_inputs_ok_msg(self,change_amt):
-			token_bal   = ( ETHAmt('0') if self.outputs[0].is_chg else
-							self.inputs[0].amt - self.outputs[0].amt )
-			m = "Transaction leaves ≈{} {} and {} {} in the sender's account"
-			return m.format( change_amt.hl(), self.proto.coin, token_bal.hl(), self.proto.dcoin )
+		def final_inputs_ok_msg(self,funds_left):
+			token_bal = (
+				ETHAmt('0') if self.outputs[0].is_chg
+				else self.inputs[0].amt - self.outputs[0].amt
+			)
+			return "Transaction leaves ≈{} {} and {} {} in the sender's account".format(
+				funds_left.hl(),
+				self.proto.coin,
+				token_bal.hl(),
+				self.proto.dcoin
+			)
 
 	class Completed(Base,EthereumMMGenTX.Completed):
 		fmt_keys = ('from','token_to','amt','nonce')

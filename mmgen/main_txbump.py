@@ -140,22 +140,22 @@ async def main():
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(tx.proto)
 
-	tx.check_bumpable() # needs cached networkinfo['relayfee']
-
 	msg('Creating replacement transaction')
 
-	op_idx = tx.choose_output()
+	tx.check_sufficient_funds_for_bump()
+
+	output_idx = tx.choose_output()
 
 	if not silent:
 		msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),tx.proto.coin))
 
-	fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
+	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 
-	tx.update_fee(op_idx,fee)
+	tx.bump_fee(output_idx,tx.usr_fee)
 	tx.update_send_amt()
 
 	d = tx.get_fee()
-	assert d == fee and d <= tx.proto.max_tx_fee
+	assert d == tx.usr_fee and d <= tx.proto.max_tx_fee
 
 	if tx.proto.base_proto == 'Bitcoin':
 		tx.outputs.sort_bip69() # output amts have changed, so re-sort
