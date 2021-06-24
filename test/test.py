@@ -649,7 +649,8 @@ class TestSuiteRunner(object):
 						no_output  = False,
 						msg_only   = False,
 						no_msg     = False,
-						cmd_dir    = 'cmds' ):
+						cmd_dir    = 'cmds',
+						no_traceback = False ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc: desc += ' ' + extra_desc
@@ -665,7 +666,7 @@ class TestSuiteRunner(object):
 
 		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
-		if opt.traceback:
+		if opt.traceback and not no_traceback:
 			args = ['scripts/traceback_run.py'] + args
 
 		if g.platform == 'win':
