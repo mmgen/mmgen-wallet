@@ -1084,6 +1084,10 @@ class MMGenTX:
 		def fee(self):
 			return self.sum_inputs() - self.sum_outputs()
 
+		@property
+		def change(self):
+			return self.sum_outputs() - self.send_amt
+
 		def format_view_rel_fee(self,terse):
 			return ' ({} {}, {} of spend amount)'.format(
 				pink(str(self.fee_abs2rel(self.fee))),
@@ -1147,7 +1151,7 @@ class MMGenTX:
 				yield self.txview_ftr_fs.format(
 					i = self.sum_inputs().hl(),
 					o = self.sum_outputs().hl(),
-					C = (self.sum_outputs() - self.send_amt).hl(),
+					C = self.change.hl(),
 					s = self.send_amt.hl(),
 					a = self.format_view_abs_fee(),
 					r = self.format_view_rel_fee(terse),

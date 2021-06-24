@@ -221,6 +221,7 @@ class EthereumMMGenTX:
 		txview_ftr_fs = fmt("""
 			Total in account:  {i} {d}
 			Total to spend:    {o} {d}
+			Remaining balance: {C} {d}
 			TX fee:            {a} {c}{r}
 		""")
 		fmt_keys = ('from','to','amt','nonce')
@@ -232,6 +233,10 @@ class EthereumMMGenTX:
 		@property
 		def fee(self):
 			return self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
+
+		@property
+		def change(self):
+			return self.sum_inputs() - self.send_amt - self.fee
 
 		def check_txfile_hex_data(self):
 			pass
@@ -524,6 +529,10 @@ class EthereumTokenMMGenTX:
 
 	class Completed(Base,EthereumMMGenTX.Completed):
 		fmt_keys = ('from','token_to','amt','nonce')
+
+		@property
+		def change(self):
+			return self.sum_inputs() - self.send_amt
 
 		def format_view_rel_fee(self,terse):
 			return ''
