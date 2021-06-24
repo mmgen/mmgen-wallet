@@ -1025,7 +1025,6 @@ class MMGenTX:
 				io = getattr(self,desc)
 				is_input = desc == 'inputs'
 				yield desc.capitalize() + ':\n' + enl
-				addr_w = max(len(e.addr) for e in io)
 				confs_per_day = 60*60*24 // self.proto.avg_bdi
 				io_sorted = {
 					# prepend '/' (sorts before '0') to ensure non-MMGen addrs are displayed first
@@ -1055,18 +1054,20 @@ class MMGenTX:
 					else:
 						def gen():
 							if is_input:
-								yield (n+1,      'tx,vout:', e.txid + ',' + str(e.vout))
-								yield ('',       'address:', e.addr.fmt(color=True,width=addr_w) + ' ' + mmid_fmt)
+								yield (n+1, 'tx,vout:', f'{e.txid.hl()},{red(str(e.vout))}')
+								yield ('',  'address:', f'{e.addr.hl()} {mmid_fmt}')
 							else:
-								yield (n+1,      'address:', e.addr.fmt(color=True,width=addr_w) + ' ' + mmid_fmt)
+								yield (n+1, 'address:', f'{e.addr.hl()} {mmid_fmt}')
 							if e.label:
-								yield ('',       'comment:', e.label.hl())
-							yield     ('',       'amount:',  e.amt.hl() + ' ' + self.dcoin)
+								yield ('',  'comment:', e.label.hl())
+							yield     ('',  'amount:',  f'{e.amt.hl()} {self.dcoin}')
 							if is_input and blockcount:
-								yield ('',       'confirmations:', f'{confs} (around {days} days)')
+								yield ('',  'confirmations:', f'{confs} (around {days} days)')
 							if not is_input and e.is_chg:
-								yield ('',       'change:',  green('True'))
+								yield ('',  'change:',  green('True'))
 						yield '\n'.join('{:>3} {:<8} {}'.format(*d) for d in gen()) + '\n\n'
+
+			addr_w = max(len(e.addr) for f in (self.inputs,self.outputs) for e in f)
 
 			return (
 				'Displaying inputs and outputs in {} sort order'.format({'raw':'raw','addr':'address'}[sort])
