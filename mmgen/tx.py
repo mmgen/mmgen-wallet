@@ -457,9 +457,6 @@ class MMGenTX:
 			unit = getattr(self.proto.coin_amt,to_unit or 'min_coin_unit')
 			return int(abs_fee // unit // self.estimate_size())
 
-		def get_fee(self):
-			return self.sum_inputs() - self.sum_outputs()
-
 		def get_hex_locktime(self):
 			return int(bytes.fromhex(self.hex[-8:])[::-1].hex(),16)
 
@@ -577,7 +574,6 @@ class MMGenTX:
 
 		# given tx size, rel fee and units, return absolute fee
 		def fee_rel2abs(self,tx_size,units,amt,unit):
-			self.usr_rel_fee = None # TODO
 			if tx_size:
 				return self.proto.coin_amt(amt * tx_size * getattr(self.proto.coin_amt,units[unit]))
 			else:
@@ -1083,15 +1079,19 @@ class MMGenTX:
 				+ ''.join(format_io('inputs'))
 				+ ''.join(format_io('outputs')) )
 
+		@property
+		def fee(self):
+			return self.sum_inputs() - self.sum_outputs()
+
 		def format_view_rel_fee(self,terse):
 			return ' ({} {}, {} of spend amount)'.format(
-				pink(str(self.fee_abs2rel(self.get_fee()))),
+				pink(str(self.fee_abs2rel(self.fee))),
 				self.rel_fee_disp,
-				pink('{:0.6f}%'.format( self.get_fee() / self.send_amt * 100 ))
+				pink('{:0.6f}%'.format( self.fee / self.send_amt * 100 ))
 			)
 
 		def format_view_abs_fee(self):
-			return self.proto.coin_amt(self.get_fee()).hl()
+			return self.proto.coin_amt(self.fee).hl()
 
 		def format_view_verbose_footer(self):
 			tsize = len(self.hex)//2 if self.hex else 'unknown'
@@ -1418,9 +1418,9 @@ class MMGenTX:
 					die(2,'Transaction has Segwit outputs, but this blockchain does not support Segwit'
 							+ ' at the current height')
 
-			if self.get_fee() > self.proto.max_tx_fee:
+			if self.fee > self.proto.max_tx_fee:
 				die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-					self.get_fee(),
+					self.fee,
 					self.proto.name,
 					self.proto.max_tx_fee,
 					self.proto.coin ))

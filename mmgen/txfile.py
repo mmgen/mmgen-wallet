@@ -141,7 +141,7 @@ class MMGenTxFile:
 				yield '-' + tx.dcoin
 			yield f'[{tx.send_amt!s}'
 			if tx.is_replaceable():
-				yield ',{}'.format(tx.fee_abs2rel(tx.get_fee(),to_unit=tx.fn_fee_unit))
+				yield ',{}'.format(tx.fee_abs2rel(tx.fee,to_unit=tx.fn_fee_unit))
 			if tx.get_hex_locktime():
 				yield ',tl={}'.format(tx.get_hex_locktime())
 			yield ']'

@@ -49,9 +49,6 @@ class EthereumMMGenTX:
 			dmsg('fee_abs2rel() ==> {} ETH'.format(ret))
 			return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
-		def get_fee(self):
-			return self.fee
-
 		def get_hex_locktime(self):
 			return None # TODO
 
@@ -76,7 +73,6 @@ class EthereumMMGenTX:
 		fee_fail_fs = 'Network fee estimation failed'
 		no_chg_msg = 'Warning: Transaction leaves account with zero balance'
 		usr_fee_prompt = 'Enter transaction fee or gas price: '
-		usr_rel_fee = None # not in MMGenTX
 
 		def __init__(self,*args,**kwargs):
 			MMGenTX.New.__init__(self,*args,**kwargs)
@@ -97,7 +93,7 @@ class EthereumMMGenTX:
 				'from': self.inputs[0].addr,
 				'to':   self.outputs[0].addr if self.outputs else Str(''),
 				'amt':  self.outputs[0].amt if self.outputs else ETHAmt('0'),
-				'gasPrice': self.usr_rel_fee or self.fee_abs2rel(self.fee,to_unit='eth'),
+				'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
 				'startGas': self.start_gas,
 				'nonce': await self.get_nonce(),
 				'chainId': Int(await self.rpc.call(chain_id_method),16),
@@ -233,6 +229,10 @@ class EthereumMMGenTX:
 		""")
 		fmt_keys = ('from','to','amt','nonce')
 
+		@property
+		def fee(self):
+			return self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
+
 		def check_txfile_hex_data(self):
 			pass
 
@@ -262,8 +262,7 @@ class EthereumMMGenTX:
 				f_mmid = m['inputs'] )
 
 		def format_view_abs_fee(self):
-			fee = self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
-			return fee.hl() + (' (max)' if self.txobj['data'] else '')
+			return self.fee.hl() + (' (max)' if self.txobj['data'] else '')
 
 		def format_view_rel_fee(self,terse):
 			return ''
@@ -300,7 +299,6 @@ class EthereumMMGenTX:
 				'chainId':  Int(d['chainId']),
 				'data':     HexStr(d['data']) }
 			self.tx_gas = o['startGas'] # approximate, but better than nothing
-			self.fee = self.fee_gasPrice2abs(o['gasPrice'].toWei())
 			self.txobj = o
 			return d # 'token_addr','decimals' required by Token subclass
 
@@ -379,7 +377,6 @@ class EthereumMMGenTX:
 			txid = CoinTxID(etx.hash.hex())
 			assert txid == self.coin_txid,"txid in tx.hex doesn't match value in MMGen transaction file"
 			self.tx_gas = o['startGas'] # approximate, but better than nothing
-			self.fee = self.fee_gasPrice2abs(o['gasPrice'].toWei())
 			self.txobj = o
 			return d # 'token_addr','decimals' required by Token subclass
 
@@ -421,11 +418,9 @@ class EthereumMMGenTX:
 
 			self.check_correct_chain()
 
-			fee = self.fee_gasPrice2abs(self.txobj['gasPrice'].toWei())
-
-			if not self.disable_fee_check and (fee > self.proto.max_tx_fee):
+			if not self.disable_fee_check and (self.fee > self.proto.max_tx_fee):
 				die(2,'Transaction fee ({}) greater than {} max_tx_fee ({} {})!'.format(
-					fee,
+					self.fee,
 					self.proto.name,
 					self.proto.max_tx_fee,
 					self.proto.coin ))
@@ -472,7 +467,7 @@ class EthereumMMGenTX:
 			return ETHAmt(self.fee * Decimal('1.101'))
 
 		def bump_fee(self,idx,fee):
-			self.fee = fee
+			self.txobj['gasPrice'] = self.fee_abs2rel(fee,to_unit='eth')
 
 		async def get_nonce(self):
 			return self.txobj['nonce']

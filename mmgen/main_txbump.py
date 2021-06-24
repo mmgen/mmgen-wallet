@@ -154,8 +154,7 @@ async def main():
 	tx.bump_fee(output_idx,tx.usr_fee)
 	tx.update_send_amt()
 
-	d = tx.get_fee()
-	assert d == tx.usr_fee and d <= tx.proto.max_tx_fee
+	assert tx.fee <= tx.proto.max_tx_fee
 
 	if tx.proto.base_proto == 'Bitcoin':
 		tx.outputs.sort_bip69() # output amts have changed, so re-sort
