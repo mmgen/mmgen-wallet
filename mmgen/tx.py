@@ -302,7 +302,7 @@ class MMGenTX:
 		locktime     = None
 		chain        = None
 		rel_fee_desc = 'satoshis per byte'
-		rel_fee_disp = 'satoshis per byte'
+		rel_fee_disp = 'sat/byte'
 		non_mmgen_inputs_msg = f"""
 			This transaction includes inputs with non-{g.proj_name} addresses.  When
 			signing the transaction, private keys for the addresses must be supplied using
@@ -655,7 +655,10 @@ class MMGenTX:
 				desc = 'User-selected'
 				start_fee = opt.tx_fee
 			else:
-				desc = f'Network-estimated (mode: {opt.fee_estimate_mode.upper()})'
+				desc = 'Network-estimated ({}, {} conf{})'.format(
+					opt.fee_estimate_mode.upper(),
+					pink(str(opt.tx_confs)),
+					suf(opt.tx_confs) )
 				fee_per_kb,fe_type = await self.get_rel_fee_from_network()
 
 				if fee_per_kb < 0:
