@@ -43,10 +43,26 @@ class MoneroWalletOps:
 
 	ops = ('create','sync','transfer','sweep')
 
-	class base:
+	class base(MMGenObject):
 
-		wallet_exists = True
 		tx_relay = False
+
+		def __init__(self,uarg_tuple):
+
+			global uarg, uarg_info, fmt_amt, hl_amt
+
+			uarg = uarg_tuple
+			uarg_info = xmrwallet_uarg_info
+
+			def fmt_amt(amt):
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
+			def hl_amt(amt):
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').hl()
+
+			self.check_uargs()
+
+			from .protocol import init_proto
+			self.proto = init_proto('xmr',testnet=g.testnet)
 
 		def check_uargs(self):
 
@@ -70,6 +86,10 @@ class MoneroWalletOps:
 					die(1,f"'tx_relay_daemon' arg is not recognized for operation {uarg.op!r}")
 				check_host_arg('tx_relay_daemon')
 
+	class wallet(base):
+
+		wallet_exists = True
+
 		def __init__(self,uarg_tuple):
 
 			def wallet_exists(fn):
@@ -86,20 +106,8 @@ class MoneroWalletOps:
 					elif not exists and self.wallet_exists:
 						die(1,f'Wallet {fn!r} not found!')
 
-			global uarg, uarg_info, fmt_amt, hl_amt
+			super().__init__(uarg_tuple,uopt_tuple)
 
-			uarg = uarg_tuple
-			uarg_info = xmrwallet_uarg_info
-
-			def fmt_amt(amt):
-				return self.proto.coin_amt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
-			def hl_amt(amt):
-				return self.proto.coin_amt(amt,from_unit='min_coin_unit').hl()
-
-			self.check_uargs()
-
-			from .protocol import init_proto
-			self.proto = init_proto('xmr',testnet=g.testnet)
 			self.kal = KeyAddrList(self.proto,uarg.xmr_keyaddrfile)
 			self.create_addr_data()
 
@@ -317,7 +325,7 @@ class MoneroWalletOps:
 				except:
 					msg('\n'+str(ret))
 
-	class create(base):
+	class create(wallet):
 		name    = 'create'
 		desc    = 'Creat'
 		past    = 'created'
@@ -338,7 +346,7 @@ class MoneroWalletOps:
 			pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
 			return True
 
-	class sync(base):
+	class sync(wallet):
 		name    = 'sync'
 		desc    = 'Sync'
 		past    = 'synced'
@@ -421,7 +429,7 @@ class MoneroWalletOps:
 			msg(fs.format( '-'*col1_w, '-'*18, '-'*18 ))
 			msg(fs.format( 'TOTAL:', fmt_amt(tbals[0]), fmt_amt(tbals[1]) ))
 
-	class sweep(base):
+	class sweep(wallet):
 		name    = 'sweep'
 		desc    = 'Sweep'
 		past    = 'swept'
