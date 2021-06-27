@@ -311,11 +311,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def set_dest_miner(self):
 		self.do_msg()
 		self.set_dest('miner',1,0,lambda x: x > 20,'unlocked balance > 20')
-		await self.open_wallet_user('miner',1)
 		return 'ok'
 
 	async def fund_alice(self):
 		self.do_msg()
+		await self.open_wallet_user('miner',1)
 		await self.transfer(
 			'miner',
 			1234567891234,
@@ -406,6 +406,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		silence()
 		kal = KeyAddrList(self.proto,data.kafile,skip_key_address_validity_check=True)
 		end_silence()
+		if user != 'miner':
+			self.users[user].wd.start()
 		return await data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
@@ -413,6 +415,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def close_wallet_user(self,user):
 		ret = await self.users[user].wd_rpc.call('close_wallet')
+		if user != 'miner':
+			self.users[user].wd.stop()
 		return 'ok'
 
 	# mining methods
@@ -529,8 +533,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.stop_mining()
 
-		if self.dest.user != 'miner':
-			await self.close_wallet_user(self.dest.user)
+		await self.close_wallet_user(self.dest.user)
 
 		return 'ok'
 
@@ -573,11 +576,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		run(['rm','-rf',self.datadir_base])
 
 	def start_wallet_daemons(self):
-		for v in self.users.values():
-			if v.kal_range:
-				v.wd.start()
+		self.users['miner'].wd.start()
 
 	def stop_wallet_daemons(self):
-		for v in self.users.values():
-			if v.kal_range and v.wd.state != 'stopped':
-				v.wd.stop()
+		self.users['miner'].wd.stop()
