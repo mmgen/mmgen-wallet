@@ -45,6 +45,126 @@ class MoneroWalletOps:
 
 	class base:
 
+		wallet_exists = True
+		tx_relay = False
+
+		def check_uargs(self):
+
+			def check_host_arg(name):
+				val = getattr(uarg,name)
+				if not re.fullmatch(uarg_info[name].pat,val,re.ASCII):
+					die(1,'{!r}: invalid {!r} parameter: it must have format {!r}'.format(
+						val, name, uarg_info[name].annot ))
+
+			if uarg.op != 'create' and uarg.restore_height != 0:
+				die(1,"'restore_height' arg is supported only for create operation")
+
+			if uarg.restore_height < 0:
+				die(1,f"{uarg.restore_height}: invalid 'restore_height' arg (<0)")
+
+			if uarg.daemon:
+				check_host_arg('daemon')
+
+			if uarg.tx_relay_daemon:
+				if not self.tx_relay:
+					die(1,f"'tx_relay_daemon' arg is not recognized for operation {uarg.op!r}")
+				check_host_arg('tx_relay_daemon')
+
+		def __init__(self,uarg_tuple):
+
+			def wallet_exists(fn):
+				try: os.stat(fn)
+				except: return False
+				else: return True
+
+			def check_wallets():
+				for d in self.addr_data:
+					fn = self.get_wallet_fn(d)
+					exists = wallet_exists(fn)
+					if exists and not self.wallet_exists:
+						die(1,f'Wallet {fn!r} already exists!')
+					elif not exists and self.wallet_exists:
+						die(1,f'Wallet {fn!r} not found!')
+
+			global uarg, uarg_info, fmt_amt, hl_amt
+
+			uarg = uarg_tuple
+			uarg_info = xmrwallet_uarg_info
+
+			def fmt_amt(amt):
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
+			def hl_amt(amt):
+				return self.proto.coin_amt(amt,from_unit='min_coin_unit').hl()
+
+			self.check_uargs()
+
+			from .protocol import init_proto
+			self.proto = init_proto('xmr',testnet=g.testnet)
+			self.kal = KeyAddrList(self.proto,uarg.xmr_keyaddrfile)
+			self.create_addr_data()
+
+			check_wallets()
+
+			self.wd = MoneroWalletDaemon(
+				wallet_dir = opt.outdir or '.',
+				test_suite = g.test_suite,
+				daemon_addr = uarg.daemon or None,
+				testnet = g.testnet,
+			)
+
+			if uarg.start_wallet_daemon:
+				self.wd.restart()
+
+			self.c = MoneroWalletRPCClient(
+				host   = self.wd.host,
+				port   = self.wd.rpc_port,
+				user   = self.wd.user,
+				passwd = self.wd.passwd
+			)
+
+			self.post_init()
+
+		def create_addr_data(self):
+			if uarg.wallets:
+				idxs = AddrIdxList(uarg.wallets)
+				self.addr_data = [d for d in self.kal.data if d.idx in idxs]
+				if len(self.addr_data) != len(idxs):
+					die(1,f'List {uarg.wallets!r} contains addresses not present in supplied key-address file')
+			else:
+				self.addr_data = self.kal.data
+
+		def stop_daemons(self):
+			if uarg.stop_wallet_daemon:
+				self.wd.stop()
+				if uarg.tx_relay_daemon:
+					self.wd2.stop()
+
+		def post_init(self): pass
+		def post_process(self): pass
+
+		def get_wallet_fn(self,d):
+			return os.path.join(
+				opt.outdir or '.','{}-{}-MoneroWallet{}{}'.format(
+					self.kal.al_id.sid,
+					d.idx,
+					'.testnet' if g.testnet else '',
+					'-α' if g.debug_utf8 else '' ))
+
+		async def process_wallets(self):
+			gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
+			processed = 0
+			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
+				fn = self.get_wallet_fn(d)
+				gmsg('\n{}ing wallet {}/{} ({})'.format(
+					self.desc,
+					n+1,
+					len(self.addr_data),
+					os.path.basename(fn),
+				))
+				processed += await self.run(d,fn)
+			gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
+			return processed
+
 		class rpc:
 
 			def __init__(self,parent,d):
@@ -196,126 +316,6 @@ class MoneroWalletOps:
 					self.display_txid(ret)
 				except:
 					msg('\n'+str(ret))
-
-		wallet_exists = True
-		tx_relay = False
-
-		def check_uargs(self):
-
-			def check_host_arg(name):
-				val = getattr(uarg,name)
-				if not re.fullmatch(uarg_info[name].pat,val,re.ASCII):
-					die(1,'{!r}: invalid {!r} parameter: it must have format {!r}'.format(
-						val, name, uarg_info[name].annot ))
-
-			if uarg.op != 'create' and uarg.restore_height != 0:
-				die(1,"'restore_height' arg is supported only for create operation")
-
-			if uarg.restore_height < 0:
-				die(1,f"{uarg.restore_height}: invalid 'restore_height' arg (<0)")
-
-			if uarg.daemon:
-				check_host_arg('daemon')
-
-			if uarg.tx_relay_daemon:
-				if not self.tx_relay:
-					die(1,f"'tx_relay_daemon' arg is not recognized for operation {uarg.op!r}")
-				check_host_arg('tx_relay_daemon')
-
-		def __init__(self,uarg_tuple):
-
-			def wallet_exists(fn):
-				try: os.stat(fn)
-				except: return False
-				else: return True
-
-			def check_wallets():
-				for d in self.addr_data:
-					fn = self.get_wallet_fn(d)
-					exists = wallet_exists(fn)
-					if exists and not self.wallet_exists:
-						die(1,f'Wallet {fn!r} already exists!')
-					elif not exists and self.wallet_exists:
-						die(1,f'Wallet {fn!r} not found!')
-
-			global uarg, uarg_info, fmt_amt, hl_amt
-
-			uarg = uarg_tuple
-			uarg_info = xmrwallet_uarg_info
-
-			def fmt_amt(amt):
-				return self.proto.coin_amt(amt,from_unit='min_coin_unit').fmt(fs='5.12',color=True)
-			def hl_amt(amt):
-				return self.proto.coin_amt(amt,from_unit='min_coin_unit').hl()
-
-			self.check_uargs()
-
-			from .protocol import init_proto
-			self.proto = init_proto('xmr',testnet=g.testnet)
-			self.kal = KeyAddrList(self.proto,uarg.xmr_keyaddrfile)
-			self.create_addr_data()
-
-			check_wallets()
-
-			self.wd = MoneroWalletDaemon(
-				wallet_dir = opt.outdir or '.',
-				test_suite = g.test_suite,
-				daemon_addr = uarg.daemon or None,
-				testnet = g.testnet,
-			)
-
-			if uarg.start_wallet_daemon:
-				self.wd.restart()
-
-			self.c = MoneroWalletRPCClient(
-				host   = self.wd.host,
-				port   = self.wd.rpc_port,
-				user   = self.wd.user,
-				passwd = self.wd.passwd
-			)
-
-			self.post_init()
-
-		def create_addr_data(self):
-			if uarg.wallets:
-				idxs = AddrIdxList(uarg.wallets)
-				self.addr_data = [d for d in self.kal.data if d.idx in idxs]
-				if len(self.addr_data) != len(idxs):
-					die(1,f'List {uarg.wallets!r} contains addresses not present in supplied key-address file')
-			else:
-				self.addr_data = self.kal.data
-
-		def stop_daemons(self):
-			if uarg.stop_wallet_daemon:
-				self.wd.stop()
-				if uarg.tx_relay_daemon:
-					self.wd2.stop()
-
-		def post_init(self): pass
-		def post_process(self): pass
-
-		def get_wallet_fn(self,d):
-			return os.path.join(
-				opt.outdir or '.','{}-{}-MoneroWallet{}{}'.format(
-					self.kal.al_id.sid,
-					d.idx,
-					'.testnet' if g.testnet else '',
-					'-α' if g.debug_utf8 else '' ))
-
-		async def process_wallets(self):
-			gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
-			processed = 0
-			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
-				fn = self.get_wallet_fn(d)
-				gmsg('\n{}ing wallet {}/{} ({})'.format(
-					self.desc,
-					n+1,
-					len(self.addr_data),
-					os.path.basename(fn),
-				))
-				processed += await self.run(d,fn)
-			gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
-			return processed
 
 	class create(base):
 		name    = 'create'
