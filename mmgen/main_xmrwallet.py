@@ -145,31 +145,25 @@ elif op in ('transfer','sweep'):
 		opts.usage()
 	spec = cmd_args[0]
 
-ua = namedtuple('uargs',[
-	'op',
-	'xmr_keyaddrfile',
-	'wallets',
-	'spec',
+ua = namedtuple('uargs',[ 'op', 'infile', 'wallets', 'spec' ])
+uo = namedtuple('uopts',[
 	'daemon',
 	'tx_relay_daemon',
 	'restore_height',
-	'start_wallet_daemon',
-	'stop_wallet_daemon',
+	'no_start_wallet_daemon',
+	'no_stop_wallet_daemon',
 ])
 
-uargs = ua(
-	op,
-	infile,
-	wallets,
-	spec,
+uargs = ua( op, infile, wallets, spec )
+uopts = uo(
 	opt.daemon or '',
 	opt.tx_relay_daemon or '',
 	opt.restore_height or 0,
-	not opt.no_start_wallet_daemon,
-	not opt.no_stop_wallet_daemon,
+	opt.no_start_wallet_daemon,
+	opt.no_stop_wallet_daemon,
 )
 
-m = getattr(MoneroWalletOps,op)(uargs)
+m = getattr(MoneroWalletOps,op)(uargs,uopts)
 
 try:
 	if run_session(m.process_wallets()):
