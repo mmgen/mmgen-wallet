@@ -63,8 +63,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('mine_blocks',               'mining blocks'),
 
 		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
-		('mine_blocks_extra',         'mining blocks'),
-		('sync_wallet_2',             'syncing Alice’s wallet #2'),
+		('mine_blocks',               'mining blocks'),
 
 		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay)'),
 		('mine_blocks',               'mining blocks'),
@@ -325,10 +324,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		return 'ok'
 
 	def sync_wallets_selected(self):
-		return self.sync_wallets(wallets='1,3-4')
-
-	def sync_wallet_2(self):
-		return self.sync_wallets(wallets='2')
+		return self.sync_wallets(wallets='1-2,4')
 
 	def sync_wallets(self,wallets=None):
 		data = self.users['alice']
@@ -443,7 +439,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ret = await self.users['miner'].md_rpc.call('stop_mining')
 		return self.get_status(ret)
 
-	async def mine_blocks(self,random_txs=None,extra_blocks=None):
+	async def mine_blocks(self,random_txs=None):
 		"""
 		- open destination wallet
 		- optionally create and broadcast random TXs
@@ -469,18 +465,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 						raise
 			else:
 				die(2,'Restart attempt limit exceeded')
-
-		async def mine_extra_blocks():
-			h_start = await get_height()
-			imsg_r(f'[+{extra_blocks} blocks]: ')
-			oqmsg_r('|')
-			while True:
-				await asyncio.sleep(2)
-				h = await get_height()
-				imsg_r(f'{h} ')
-				oqmsg_r('+')
-				if h - h_start > extra_blocks:
-					break
 
 		async def send_random_txs():
 			from mmgen.tool import tool_api
@@ -528,8 +512,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		while True:
 			ub = await get_balance(self.dest)
 			if self.dest.test(ub):
-				if extra_blocks:
-					await mine_extra_blocks()
 				imsg('')
 				oqmsg_r('+')
 				print_balance(self.dest,ub)
@@ -550,9 +532,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	async def mine_blocks_tx(self):
 		return await self.mine_blocks(random_txs=self.dfl_random_txs)
-
-	async def mine_blocks_extra(self):
-		return await self.mine_blocks(extra_blocks=100) # TODO: 100 is arbitrary value
 
 	# util methods
 

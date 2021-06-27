@@ -164,8 +164,6 @@ class MoneroWalletOps:
 				passwd = self.wd.passwd
 			)
 
-			self.post_init()
-
 		def create_addr_data(self):
 			if uarg.wallets:
 				idxs = AddrIdxList(uarg.wallets)
@@ -180,8 +178,6 @@ class MoneroWalletOps:
 				self.wd.stop()
 				if uopt.tx_relay_daemon:
 					self.wd2.stop()
-
-		def post_init(self): pass
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
@@ -214,13 +210,20 @@ class MoneroWalletOps:
 				self.d = d
 				self.fn = parent.get_wallet_fn(d)
 
-			async def open_wallet(self,desc):
+			async def open_wallet(self,desc,refresh=True):
 				gmsg_r(f'\n  Opening {desc} wallet...')
-				ret = await self.c.call( # returns {}
+				await self.c.call( # returns {}
 					'open_wallet',
 					filename=os.path.basename(self.fn),
 					password=self.d.wallet_passwd )
 				gmsg('done')
+
+				if refresh:
+					gmsg_r(f'  Refreshing {desc} wallet...')
+					ret = await self.c.call('refresh')
+					gmsg('done')
+					if ret['received_money']:
+						msg('  Wallet has received funds')
 
 			async def close_wallet(self,desc):
 				gmsg_r(f'\n  Closing {desc} wallet...')
@@ -231,14 +234,14 @@ class MoneroWalletOps:
 				d = data['subaddress_accounts']
 				msg('\n' + indent + f'Accounts of wallet {os.path.basename(self.fn)}:')
 				fs = indent + '  {:6}  {:18}  {:<6} {:%s}  {}' % max(len(e['label']) for e in d)
-				msg(fs.format('Index ','Base Address','nAddrs','Label','Balance'))
+				msg(fs.format('Index ','Base Address','nAddrs','Label','Unlocked Balance'))
 				for i,e in enumerate(d):
 					msg(fs.format(
 						str(e['account_index']),
 						e['base_address'][:15] + '...',
 						len(addrs_data[i]['addresses']),
 						e['label'],
-						fmt_amt(e['balance']),
+						fmt_amt(e['unlocked_balance']),
 					))
 
 			async def get_accts(self,print=True):
@@ -389,6 +392,14 @@ class MoneroWalletOps:
 		desc    = 'Sync'
 		past    = 'synced'
 
+		def __init__(self,uarg_tuple,uopt_tuple):
+
+			super().__init__(uarg_tuple,uopt_tuple)
+
+			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
+			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
+			self.accts_data = {}
+
 		async def process_wallet(self,d,fn):
 
 			chain_height = (await self.dc.call('get_height'))['height']
@@ -439,11 +450,6 @@ class MoneroWalletOps:
 
 			await self.c.call('close_wallet')
 			return True
-
-		def post_init(self):
-			host,port = uopt.daemon.split(':') if uopt.daemon else ('localhost',self.wd.daemon_port)
-			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
-			self.accts_data = {}
 
 		def post_main(self):
 			d = self.accts_data
@@ -505,32 +511,30 @@ class MoneroWalletOps:
 				self.dest_addr = CoinAddr(self.proto,m[3])
 				self.amount = self.proto.coin_amt(m[4])
 
-		def post_init(self):
+		def init_tx_relay_daemon(self):
 
-			if uopt.tx_relay_daemon:
-				m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 
-				self.wd2 = MoneroWalletDaemon(
-					wallet_dir = opt.outdir or '.',
-					test_suite = g.test_suite,
-					daemon_addr = m[1],
-					proxy = m[2],
-					port_shift = 16,
-					testnet = g.testnet,
-				)
+			self.wd2 = MoneroWalletDaemon(
+				wallet_dir = opt.outdir or '.',
+				test_suite = g.test_suite,
+				daemon_addr = m[1],
+				proxy = m[2],
+				port_shift = 16,
+				testnet = g.testnet,
+			)
 
-				if g.test_suite:
-					self.wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
+			if g.test_suite:
+				self.wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
 
-				if not uopt.no_start_wallet_daemon:
-					self.wd2.restart()
+			self.wd2.start()
 
-				self.c2 = MoneroWalletRPCClient(
-					host   = self.wd2.host,
-					port   = self.wd2.rpc_port,
-					user   = self.wd2.user,
-					passwd = self.wd2.passwd
-				)
+			self.c = MoneroWalletRPCClient(
+				host   = self.wd2.host,
+				port   = self.wd2.rpc_port,
+				user   = self.wd2.user,
+				passwd = self.wd2.passwd
+			)
 
 		async def main(self):
 			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
@@ -575,7 +579,7 @@ class MoneroWalletOps:
 					die(1,'Exiting at user request')
 
 				await h2.close_wallet('destination')
-				await h.open_wallet('source')
+				await h.open_wallet('source',refresh=False)
 
 			msg_r(f'\n    Creating {self.name} transaction: wallet {self.source.idx}, account #{self.account}')
 
@@ -590,10 +594,11 @@ class MoneroWalletOps:
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
 					await h.close_wallet('source')
-					self.c = self.c2
+					msg('')
+					self.init_tx_relay_daemon()
 					h = self.rpc(self,self.source)
 					w_desc = 'TX relay source'
-					await h.open_wallet(w_desc)
+					await h.open_wallet(w_desc,refresh=False)
 					h.display_tx_relay_info()
 				msg_r(f'\n    Relaying {self.name} transaction...')
 				await h.relay_tx(tx_metadata)
