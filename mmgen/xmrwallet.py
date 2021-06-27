@@ -111,6 +111,8 @@ class MoneroWalletOps:
 				if getattr(uopt,opt):
 					check_pat_opt(opt)
 
+		def post_main(self): pass
+
 	class wallet(base):
 
 		opts = (
@@ -180,7 +182,6 @@ class MoneroWalletOps:
 					self.wd2.stop()
 
 		def post_init(self): pass
-		def post_process(self): pass
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
@@ -190,7 +191,7 @@ class MoneroWalletOps:
 					'.testnet' if g.testnet else '',
 					'-α' if g.debug_utf8 else '' ))
 
-		async def process_wallets(self):
+		async def main(self):
 			gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
@@ -201,7 +202,7 @@ class MoneroWalletOps:
 					len(self.addr_data),
 					os.path.basename(fn),
 				))
-				processed += await self.run(d,fn)
+				processed += await self.process_wallet(d,fn)
 			gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
 			return processed
 
@@ -368,7 +369,7 @@ class MoneroWalletOps:
 			if int(uopt.restore_height) < 0:
 				die(1,f"{uopt.restore_height}: invalid value for --restore-height (less than zero)")
 
-		async def run(self,d,fn):
+		async def process_wallet(self,d,fn):
 			msg_r('') # for pexpect
 
 			from .baseconv import baseconv
@@ -388,7 +389,7 @@ class MoneroWalletOps:
 		desc    = 'Sync'
 		past    = 'synced'
 
-		async def run(self,d,fn):
+		async def process_wallet(self,d,fn):
 
 			chain_height = (await self.dc.call('get_height'))['height']
 			msg(f'  Chain height: {chain_height}')
@@ -444,7 +445,7 @@ class MoneroWalletOps:
 			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
 			self.accts_data = {}
 
-		def post_process(self):
+		def post_main(self):
 			d = self.accts_data
 
 			for n,k in enumerate(d):
@@ -531,7 +532,7 @@ class MoneroWalletOps:
 					passwd = self.wd2.passwd
 				)
 
-		async def process_wallets(self):
+		async def main(self):
 			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
 				f': {self.amount} XMR to {self.dest_addr}' if self.name == 'transfer'
 				else ' to new address' if self.dest == None

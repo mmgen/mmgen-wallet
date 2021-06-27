@@ -166,8 +166,8 @@ uopts = uo(
 m = getattr(MoneroWalletOps,op)(uargs,uopts)
 
 try:
-	if run_session(m.process_wallets()):
-		m.post_process()
+	if run_session(m.main()):
+		m.post_main()
 except KeyboardInterrupt:
 	ymsg('\nUser interrupt')
 finally:
