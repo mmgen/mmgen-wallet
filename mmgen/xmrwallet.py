@@ -391,6 +391,7 @@ class MoneroWalletOps:
 		name    = 'sync'
 		desc    = 'Sync'
 		past    = 'synced'
+		opts    = ('rescan_blockchain',)
 
 		def __init__(self,uarg_tuple,uopt_tuple):
 
@@ -432,6 +433,17 @@ class MoneroWalletOps:
 			if ret['received_money']:
 				msg('  Wallet has received funds')
 
+			while True:
+				wallet_height = (await self.c.call('get_height'))['height']
+				if wallet_height >= chain_height:
+					break
+				ymsg(f'  Wallet failed to sync (wallet height [{wallet_height}] < chain height [{chain_height}])')
+				if not uopt.rescan_blockchain:
+					break
+				msg('  Rescanning blockchain...')
+				await self.c.call('rescan_blockchain')
+				await self.c.call('refresh')
+
 			t_elapsed = int(time.time() - t_start)
 
 			bn = os.path.basename(fn)
@@ -445,11 +457,11 @@ class MoneroWalletOps:
 
 			self.accts_data[bn] = { 'accts': a, 'addrs': b }
 
-			msg('  Wallet height: {}'.format( (await self.c.call('get_height'))['height'] ))
+			msg('  Wallet height: {}'.format(wallet_height))
 			msg('  Sync time: {:02}:{:02}'.format( t_elapsed//60, t_elapsed%60 ))
 
 			await self.c.call('close_wallet')
-			return True
+			return wallet_height >= chain_height
 
 		def post_main(self):
 			d = self.accts_data

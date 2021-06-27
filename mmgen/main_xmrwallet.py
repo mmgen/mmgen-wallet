@@ -38,6 +38,7 @@ opts_data = {
 -h, --help                       Print this help message
 --, --longhelp                   Print help message for long options (common
                                  options)
+-b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
 -d, --outdir=D                   Output or operate on wallets in directory 'D'
                                  instead of working dir
 -D, --daemon=H:P                 Connect to monerod at {D}
@@ -150,6 +151,7 @@ uo = namedtuple('uopts',[
 	'daemon',
 	'tx_relay_daemon',
 	'restore_height',
+	'rescan_blockchain',
 	'no_start_wallet_daemon',
 	'no_stop_wallet_daemon',
 ])
@@ -159,6 +161,7 @@ uopts = uo(
 	opt.daemon or '',
 	opt.tx_relay_daemon or '',
 	opt.restore_height or 0,
+	opt.rescan_blockchain,
 	opt.no_start_wallet_daemon,
 	opt.no_stop_wallet_daemon,
 )

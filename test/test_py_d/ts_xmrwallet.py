@@ -325,7 +325,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		return 'ok'
 
 	def sync_wallets_selected(self):
-		return self.sync_wallets(wallets='1-2,4')
+		return self.sync_wallets(wallets='1-2,4',add_opts=['--rescan-blockchain'])
 
 	def sync_wallets(self,wallets=None,add_opts=None):
 		data = self.users['alice']
