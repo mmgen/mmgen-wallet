@@ -20,13 +20,14 @@
 xmrwallet.py - MoneroWalletOps class
 """
 
-import os,re
+import os,re,time
 from collections import namedtuple
 from .common import *
 from .addr import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw, MoneroWalletRPCClient
 from .daemon import MoneroWalletDaemon
-from .protocol import _b58a
+from .protocol import _b58a,init_proto
+from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {
@@ -38,6 +39,75 @@ xmrwallet_uarg_info = (
 		namedtuple('uarg_info_entry',['annot','pat']),
 		r'(?:[^:]+):(?:\d+)'
 	)
+
+class MMGenMoneroTX:
+
+	class Base:
+
+		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
+			'op',
+			'time',
+			'network',
+			'seed_id',
+			'source_idx',
+			'source_account',
+			'dest_idx',
+			'dest_address',
+			'txid',
+			'amount',
+			'fee',
+			'blob',
+			'metadata',
+		])
+
+		def get_info(self,indent=''):
+			d = self.data
+			return fmt("""
+				Transaction info [Seed ID: {}. Network: {}]:
+				  TxID: {}
+				  Type: {}
+				  From: Wallet {}, account {}{}
+				  Amt:  {} XMR
+				  Fee:  {} XMR
+				  Dest: {}
+			""",strip_char='\t',indent=indent).format(
+					d.seed_id.hl(), d.network.upper(),
+					d.txid.hl(),
+					blue(capfirst(d.op)),
+					d.source_idx.hl(), red(f'#{d.source_account}'),
+					(
+						'' if d.op == 'transfer'
+						else (
+							f'\n{indent}  To:   ' +
+							(f'Wallet {d.dest_idx.hl()}, new account' if d.dest_idx else 'Same account')
+						)
+					),
+					d.amount.hl(),
+					d.fee.hl(),
+					d.dest_address.hl()
+				)
+
+	class New(Base):
+
+		def __init__(self,*args,**kwargs):
+			assert not args, 'Non-keyword args not permitted'
+			d = self.xmrwallet_tx_data(**kwargs)
+			proto = init_proto('xmr',network=d.network)
+			self.data = self.xmrwallet_tx_data(
+				op             = d.op,
+				time           = int(d.time),
+				network        = d.network,
+				seed_id        = SeedID(sid=d.seed_id),
+				source_idx     = AddrIdx(d.source_idx),
+				source_account = d.source_account,
+				dest_idx       = None if d.dest_idx == None else AddrIdx(d.dest_idx),
+				dest_address   = CoinAddr(proto,d.dest_address),
+				txid           = CoinTxID(d.txid),
+				amount         = proto.coin_amt(d.amount,from_unit='atomic'),
+				fee            = proto.coin_amt(d.fee,from_unit='atomic'),
+				blob           = d.blob,
+				metadata       = d.metadata,
+			)
 
 class MoneroWalletOps:
 
@@ -86,7 +156,6 @@ class MoneroWalletOps:
 					cls.check_uopts(self)
 					id_cur = id(cls.check_uopts)
 
-			from .protocol import init_proto
 			self.proto = init_proto('xmr',testnet=g.testnet)
 
 		def check_uopts(self):
@@ -111,7 +180,17 @@ class MoneroWalletOps:
 				if getattr(uopt,opt):
 					check_pat_opt(opt)
 
+		def display_tx_relay_info(self,indent=''):
+			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+			msg(fmt(f"""
+				TX relay info:
+				  Host:  {blue(m[1])}
+				  Proxy: {blue(m[2] or 'None')}
+				""",strip_char='\t',indent=indent))
+
 		def post_main(self): pass
+
+		def stop_daemons(self): pass
 
 	class wallet(base):
 
@@ -176,7 +255,7 @@ class MoneroWalletOps:
 		def stop_daemons(self):
 			if not uopt.no_stop_wallet_daemon:
 				self.wd.stop()
-				if uopt.tx_relay_daemon:
+				if uopt.tx_relay_daemon and hasattr(self,'wd2'):
 					self.wd2.stop()
 
 		def get_wallet_fn(self,d):
@@ -307,20 +386,6 @@ class MoneroWalletOps:
 				msg('      ' + cyan(ret))
 				return ret
 
-			def display_tx_relay_info(self):
-				msg('\n    TX relay host: {}\n    Proxy:         {}'.format(
-					blue(self.parent.wd2.daemon_addr),
-					blue(self.parent.wd2.proxy or 'None')
-				))
-
-			def display_tx(self,txid,amt,fee):
-				from .obj import CoinTxID
-				msg('    TxID:   {}\n    Amount: {}\n    Fee:    {}'.format(
-					CoinTxID(txid).hl(),
-					hl_amt(amt),
-					hl_amt(fee),
-				))
-
 			async def make_transfer_tx(self,account,addr,amt):
 				res = await self.c.call(
 					'transfer',
@@ -330,10 +395,24 @@ class MoneroWalletOps:
 						'address': addr
 					}],
 					do_not_relay = True,
+					get_tx_hex = True,
 					get_tx_metadata = True
 				)
-				self.display_tx( res['tx_hash'], res['amount'], res['fee'] )
-				return res['tx_metadata']
+				return MMGenMoneroTX.New(
+					op             = uarg.op,
+					time           = time.time(),
+					network        = self.parent.proto.network,
+					seed_id        = self.parent.kal.al_id.sid,
+					source_idx     = self.parent.source.idx,
+					source_account = self.parent.account,
+					dest_idx       = None,
+					dest_address   = addr,
+					txid           = res['tx_hash'],
+					amount         = res['amount'],
+					fee            = res['fee'],
+					blob           = res['tx_blob'],
+					metadata       = res['tx_metadata'],
+				)
 
 			async def make_sweep_tx(self,account,addr):
 				res = await self.c.call(
@@ -341,25 +420,35 @@ class MoneroWalletOps:
 					address = addr,
 					account_index = account,
 					do_not_relay = True,
+					get_tx_hex = True,
 					get_tx_metadata = True
 				)
 
 				if len(res['tx_hash_list']) > 1:
 					die(3,'More than one TX required.  Cannot perform this sweep')
 
-				self.display_tx( res['tx_hash_list'][0], res['amount_list'][0], res['fee_list'][0] )
-				return res['tx_metadata_list'][0]
-
-			def display_txid(self,data):
-				from .obj import CoinTxID
-				msg('\n    Relayed {}'.format( CoinTxID(data['tx_hash']).hl() ))
+				return MMGenMoneroTX.New(
+					op             = uarg.op,
+					time           = time.time(),
+					network        = self.parent.proto.network,
+					seed_id        = self.parent.kal.al_id.sid,
+					source_idx     = self.parent.source.idx,
+					source_account = self.parent.account,
+					dest_idx       = self.parent.dest.idx if self.parent.dest else None,
+					dest_address   = addr,
+					txid           = res['tx_hash_list'][0],
+					amount         = res['amount_list'][0],
+					fee            = res['fee_list'][0],
+					blob           = res['tx_blob_list'][0],
+					metadata       = res['tx_metadata_list'][0],
+				)
 
 			async def relay_tx(self,tx_hex):
 				ret = await self.c.call('relay_tx',hex=tx_hex)
 				try:
-					self.display_txid(ret)
+					msg('\n    Relayed {}'.format( CoinTxID(ret['tx_hash']).hl() ))
 				except:
-					msg('\n'+str(ret))
+					msg(f'\n   Server returned: {ret!s}')
 
 	class create(wallet):
 		name    = 'create'
@@ -406,7 +495,6 @@ class MoneroWalletOps:
 			chain_height = (await self.dc.call('get_height'))['height']
 			msg(f'  Chain height: {chain_height}')
 
-			import time
 			t_start = time.time()
 
 			msg_r('  Opening wallet...')
@@ -519,7 +607,6 @@ class MoneroWalletOps:
 			self.account = int(m[2])
 
 			if self.name == 'transfer':
-				from mmgen.obj import CoinAddr
 				self.dest_addr = CoinAddr(self.proto,m[3])
 				self.amount = self.proto.coin_amt(m[4])
 
@@ -593,16 +680,19 @@ class MoneroWalletOps:
 				await h2.close_wallet('destination')
 				await h.open_wallet('source',refresh=False)
 
-			msg_r(f'\n    Creating {self.name} transaction: wallet {self.source.idx}, account #{self.account}')
+			msg(f'\n    Creating {self.name} transaction...')
 
 			if self.name == 'transfer':
-				msg(f', {self.amount} XMR => {cyan(new_addr)}')
-				tx_metadata = await h.make_transfer_tx(self.account,new_addr,self.amount)
+				new_tx = await h.make_transfer_tx(self.account,new_addr,self.amount)
 			elif self.name == 'sweep':
-				msg(f' => {cyan(new_addr)}')
-				tx_metadata = await h.make_sweep_tx(self.account,new_addr)
+				new_tx = await h.make_sweep_tx(self.account,new_addr)
 
-			if keypress_confirm(f'\nRelay {self.name} transaction?'):
+			msg('\n' + new_tx.get_info(indent='    '))
+
+			if uopt.tx_relay_daemon:
+				self.display_tx_relay_info(indent='    ')
+
+			if keypress_confirm(f'Relay {self.name} transaction?'):
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
 					await h.close_wallet('source')
@@ -611,9 +701,8 @@ class MoneroWalletOps:
 					h = self.rpc(self,self.source)
 					w_desc = 'TX relay source'
 					await h.open_wallet(w_desc,refresh=False)
-					h.display_tx_relay_info()
 				msg_r(f'\n    Relaying {self.name} transaction...')
-				await h.relay_tx(tx_metadata)
+				await h.relay_tx(new_tx.data.metadata)
 				await h.close_wallet(w_desc)
 
 				gmsg('\n\nAll done')
