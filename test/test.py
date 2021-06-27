@@ -830,6 +830,7 @@ class TestSuiteRunner(object):
 			dpy=False
 		):
 
+		self.ts.test_name = cmd
 		rerun = root # force_delete is not passed to recursive call
 
 		fns = []
@@ -894,7 +895,6 @@ class TestSuiteRunner(object):
 		if opt.profile: start = time.time()
 
 		cdata = self.gm.dpy_data[cmd]
-		self.ts.test_name = cmd
 #		self.ts.test_dpydata = cdata
 		self.ts.tmpdir_num = cdata[0]
 #		self.ts.cfg = cfgs[str(cdata[0])] # will remove this eventually

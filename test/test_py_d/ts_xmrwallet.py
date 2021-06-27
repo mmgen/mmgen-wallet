@@ -40,9 +40,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	passthru_opts = ('coin',)
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
+	color = True
 	cmd_group = (
 		('gen_kafiles',               'generating key-address files'),
-		('create_wallets',            'creating Monero wallets'),
+		('create_wallets_miner',      'creating Monero wallets (Miner)'),
+		('create_wallets_alice',      'creating Monero wallets (Alice)'),
 
 		('set_dest_miner',            'opening miner wallet'),
 		('mine_blocks',               'mining blocks'),
@@ -289,22 +291,21 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.skip_ok = True
 		return t
 
-	def create_wallets(self):
-		for user,data in self.users.items():
-			if not data.kal_range:
-				continue
-			run('rm -f {}*'.format( data.walletfile_fs.format('*') ),shell=True)
-			dir_opt = [f'--outdir={data.udir}']
-			t = self.spawn(
-				'mmgen-xmrwallet',
-				self.long_opts + dir_opt + [ 'create', data.kafile, data.kal_range ],
-				extra_desc = f'({capfirst(user)})' )
-			t.expect('Check key-to-address validity? (y/N): ','n')
-			for i in MMGenRange(data.kal_range).items:
-				t.expect('Address: ')
-			t.read()
-			t.ok()
-		t.skip_ok = True
+	def create_wallets_miner(self): return self.create_wallets('miner')
+	def create_wallets_alice(self): return self.create_wallets('alice')
+
+	def create_wallets(self,user):
+		data = self.users[user]
+		run('rm -f {}*'.format( data.walletfile_fs.format('*') ),shell=True)
+		dir_opt = [f'--outdir={data.udir}']
+		t = self.spawn(
+			'mmgen-xmrwallet',
+			self.long_opts + dir_opt + [ 'create', data.kafile, data.kal_range ],
+			extra_desc = f'({capfirst(user)})' )
+		t.expect('Check key-to-address validity? (y/N): ','n')
+		for i in MMGenRange(data.kal_range).items:
+			t.expect('Address: ')
+		t.read()
 		return t
 
 	async def set_dest_miner(self):
@@ -326,13 +327,15 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def sync_wallets_selected(self):
 		return self.sync_wallets(wallets='1-2,4')
 
-	def sync_wallets(self,wallets=None):
+	def sync_wallets(self,wallets=None,add_opts=None):
 		data = self.users['alice']
-		dir_opt = [f'--outdir={data.udir}']
-		cmd_opts = [f'--daemon=localhost:{data.md.rpc_port}']
+		cmd_opts = list_gen(
+			[f'--outdir={data.udir}'],
+			[f'--daemon=localhost:{data.md.rpc_port}'],
+		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + dir_opt + cmd_opts + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
+			self.long_opts + cmd_opts + (add_opts or []) + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
@@ -347,21 +350,22 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.read()
 		return t
 
-	def do_op(self,op,user,spec,tx_relay_parm):
+	def do_op(self,op,user,arg2,tx_relay_parm=None):
 		data = self.users[user]
-		dir_opt = [f'--outdir={data.udir}']
 		cmd_opts = list_gen(
+			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm]
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + dir_opt + cmd_opts + [ op, data.kafile, spec ],
+			self.long_opts + cmd_opts + [ op, data.kafile, arg2 ],
 			extra_desc = f'({capfirst(user)})' )
+
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		if op == 'sweep':
 			t.expect(
-				'Create new {} .* \(y/N\): '.format('account' if ',' in spec else 'address'),
+				'Create new {} .* \(y/N\): '.format('account' if ',' in arg2 else 'address'),
 				'y', regex=True )
 		t.expect(f'Relay {op} transaction? (y/N): ','y')
 		t.read()
@@ -373,13 +377,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		return ret
 
 	def sweep_to_account(self):
-		ret = self.do_op('sweep','alice','1:0,2',None)
+		ret = self.do_op('sweep','alice','1:0,2')
 		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
 		return ret
 
 	def sweep_to_address_noproxy(self):
 		ret = self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
-		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
+		self.set_dest('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 		return ret
 
 	def transfer_to_miner_proxy(self):
@@ -509,19 +513,19 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		h = await get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		while True:
+		for i in range(500):
 			ub = await get_balance(self.dest)
 			if self.dest.test(ub):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(self.dest,ub)
 				break
-#			else:
-#				imsg(f'Test {self.dest.test_desc!r} failed')
 			await asyncio.sleep(2)
 			h = await get_height()
 			imsg_r(f'{h} ')
 			oqmsg_r('+')
+		else:
+			die(2,'Timeout exceeded, balance {ub!r}')
 
 		await self.stop_mining()
 
