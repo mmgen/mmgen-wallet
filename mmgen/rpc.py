@@ -673,6 +673,7 @@ class MoneroRPCClient(RPCClient):
 		if proxy is not None:
 			from .obj import IPPort
 			self.proxy = IPPort(proxy)
+			test_connection = False
 		super().__init__(host,port,test_connection)
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
