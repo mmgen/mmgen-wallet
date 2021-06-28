@@ -521,16 +521,17 @@ class MoneroWalletOps:
 			if ret['received_money']:
 				msg('  Wallet has received funds')
 
-			while True:
+			for i in range(2):
 				wallet_height = (await self.c.call('get_height'))['height']
 				if wallet_height >= chain_height:
 					break
 				ymsg(f'  Wallet failed to sync (wallet height [{wallet_height}] < chain height [{chain_height}])')
-				if not uopt.rescan_blockchain:
+				if i or not uopt.rescan_blockchain:
 					break
-				msg('  Rescanning blockchain...')
+				msg_r('  Rescanning blockchain, please be patient...')
 				await self.c.call('rescan_blockchain')
 				await self.c.call('refresh')
+				msg('done')
 
 			t_elapsed = int(time.time() - t_start)
 
