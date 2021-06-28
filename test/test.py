@@ -684,14 +684,15 @@ class TestSuiteRunner(object):
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
 		if not no_msg:
+			t_fmt = f'{time.time() - self.start_time:08.2f}'
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
 				clr1,clr2 = ((green,cyan),(nocolor,nocolor))[bool(opt.print_cmdline)]
-				omsg(green('Testing: {}'.format(desc)))
+				omsg(green(f'[{t_fmt}] Testing: {desc}'))
 				if not msg_only:
 					s = repr(cmd_disp) if g.platform == 'win' else cmd_disp
 					omsg(clr1('Executing: ') + clr2(s))
 			else:
-				omsg_r('Testing {}: '.format(desc))
+				omsg_r(f'[{t_fmt}] Testing {desc}: ')
 
 		if msg_only:
 			return
@@ -709,7 +710,7 @@ class TestSuiteRunner(object):
 		return MMGenPexpect(args,no_output=no_output)
 
 	def end_msg(self):
-		t = int(time.time()) - self.start_time
+		t = int(time.time() - self.start_time)
 		m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
 		sys.stderr.write(green(m.format(self.cmd_total,suf(self.cmd_total),t//60,t%60)))
 
@@ -765,7 +766,7 @@ class TestSuiteRunner(object):
 		return True
 
 	def run_tests(self,usr_args):
-		self.start_time = int(time.time())
+		self.start_time = time.time()
 		gname_save = None
 		if usr_args:
 			for arg in usr_args:
@@ -894,6 +895,7 @@ class TestSuiteRunner(object):
 
 		if opt.profile: start = time.time()
 
+		self.ts.test_name = cmd # NB: Do not remove, this needs to set twice
 		cdata = self.gm.dpy_data[cmd]
 #		self.ts.test_dpydata = cdata
 		self.ts.tmpdir_num = cdata[0]
