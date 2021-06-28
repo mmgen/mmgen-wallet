@@ -44,31 +44,18 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	cmd_group = (
 		('gen_kafiles',               'generating key-address files'),
 		('create_wallets_miner',      'creating Monero wallets (Miner)'),
+		('mine_initial_coins',        'mining initial coins'),
 		('create_wallets_alice',      'creating Monero wallets (Alice)'),
-
-		('set_dest_miner',            'opening miner wallet'),
-		('mine_blocks',               'mining blocks'),
-
 		('fund_alice',                'sending funds'),
-		('mine_blocks_tx',            'mining blocks'),
 
-		('sync_wallets',              'syncing all wallets'),
+		('sync_wallets_all',          'syncing all wallets'),
 		('sync_wallets_selected',     'syncing selected wallets'),
 
 		('sweep_to_address_proxy',    'sweeping to new address (via TX relay + proxy)'),
-		('mine_blocks',               'mining blocks'),
-
 		('sweep_to_account',          'sweeping to new account'),
-		('mine_blocks',               'mining blocks'),
-
 		('sweep_to_address_noproxy',  'sweeping to new address (via TX relay)'),
-		('mine_blocks',               'mining blocks'),
-
 		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
-		('mine_blocks',               'mining blocks'),
-
 		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay)'),
-		('mine_blocks',               'mining blocks'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -294,41 +281,45 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def create_wallets_miner(self): return self.create_wallets('miner')
 	def create_wallets_alice(self): return self.create_wallets('alice')
 
-	def create_wallets(self,user):
+	def create_wallets(self,user,wallet=None):
+		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
-		run('rm -f {}*'.format( data.walletfile_fs.format('*') ),shell=True)
+		run('rm -f {}*'.format( data.walletfile_fs.format(wallet or '*') ),shell=True)
 		dir_opt = [f'--outdir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + dir_opt + [ 'create', data.kafile, data.kal_range ],
-			extra_desc = f'({capfirst(user)})' )
+			self.long_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
 		t.expect('Check key-to-address validity? (y/N): ','n')
-		for i in MMGenRange(data.kal_range).items:
+		for i in MMGenRange(wallet or data.kal_range).items:
 			t.expect('Address: ')
 		t.read()
 		return t
 
-	async def set_dest_miner(self):
-		self.do_msg()
-		self.set_dest('miner',1,0,lambda x: x > 20,'unlocked balance > 20')
-		return 'ok'
+	async def mine_initial_coins(self):
+		return await self.mine_chk('miner',1,0,lambda x: x > 20,'unlocked balance > 20')
 
 	async def fund_alice(self):
-		self.do_msg()
 		await self.open_wallet_user('miner',1)
 		await self.transfer(
 			'miner',
 			1234567891234,
 			read_from_file(self.users['alice'].addrfile_fs.format(1)),
 		)
-		self.set_dest('alice',1,0,lambda x: str(x) == '1.234567891234','unlocked balance == 1.234567891234')
-		return 'ok'
+		bal = '1.234567891234'
+		return await self.mine_chk(
+			'alice',1,0,
+			lambda x: str(x) == bal,f'unlocked balance == {bal}',
+			random_txs = self.dfl_random_txs
+		)
+
+	def sync_wallets_all(self):
+		return self.sync_wallets('alice')
 
 	def sync_wallets_selected(self):
-		return self.sync_wallets(wallets='1-2,4',add_opts=['--rescan-blockchain'])
+		return self.sync_wallets('alice',wallets='1-2,4',add_opts=['--rescan-blockchain'])
 
-	def sync_wallets(self,wallets=None,add_opts=None):
-		data = self.users['alice']
+	def sync_wallets(self,user,wallets=None,add_opts=None):
+		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
@@ -350,7 +341,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.read()
 		return t
 
-	def do_op(self,op,user,arg2,tx_relay_parm=None):
+	def do_op(self,op,user,arg2,tx_relay_parm=None,min_amt=None,do_ret=False):
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--outdir={data.udir}'],
@@ -363,41 +354,48 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			extra_desc = f'({capfirst(user)})' )
 
 		t.expect('Check key-to-address validity? (y/N): ','n')
+
 		if op == 'sweep':
 			t.expect(
 				'Create new {} .* \(y/N\): '.format('account' if ',' in arg2 else 'address'),
 				'y', regex=True )
+
+		if min_amt:
+			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())
+			min_amt = XMRAmt(str(min_amt))
+			if amt < min_amt:
+				ydie(2,f'Transaction amount ({amt}) less than minimum ({min_amt})')
+
 		t.expect(f'Relay {op} transaction? (y/N): ','y')
 		t.read()
-		return t
+
+		if do_ret:
+			return t
+		else:
+			t.ok()
 
 	def sweep_to_address_proxy(self):
-		ret = self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
-		self.set_dest('alice',1,0,lambda x: x > 1,'unlocked balance > 1')
-		return ret
+		self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
+		return self.mine_chk('alice',1,0,lambda x: x > 1,'unlocked balance > 1')
 
 	def sweep_to_account(self):
-		ret = self.do_op('sweep','alice','1:0,2')
-		self.set_dest('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
-		return ret
+		self.do_op('sweep','alice','1:0,2')
+		return self.mine_chk('alice',2,1,lambda x: x > 1,'unlocked balance > 1')
 
 	def sweep_to_address_noproxy(self):
-		ret = self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
-		self.set_dest('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
-		return ret
+		self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
+		return self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
 	def transfer_to_miner_proxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		amt = '0.135'
-		ret = self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
-		self.set_dest('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
-		return ret
+		self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
+		return self.mine_chk('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
 
 	def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
-		ret = self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
-		self.set_dest('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
-		return ret
+		self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
+		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
 
 	# wallet methods
 
@@ -407,7 +405,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		kal = KeyAddrList(self.proto,data.kafile,skip_key_address_validity_check=True)
 		end_silence()
 		if user != 'miner':
-			self.users[user].wd.start()
+			self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
 		return await data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
@@ -416,7 +414,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	async def close_wallet_user(self,user):
 		ret = await self.users[user].wd_rpc.call('close_wallet')
 		if user != 'miner':
-			self.users[user].wd.stop()
+			self.users[user].wd.stop(silent=not (opt.exact_output or opt.verbose))
 		return 'ok'
 
 	# mining methods
@@ -447,7 +445,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ret = await self.users['miner'].md_rpc.call('stop_mining')
 		return self.get_status(ret)
 
-	async def mine_blocks(self,random_txs=None):
+	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None):
 		"""
 		- open destination wallet
 		- optionally create and broadcast random TXs
@@ -492,22 +490,31 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			imsg('')
 
 		def print_balance(dest,ub):
-			imsg('Total balance in {}’s wallet #{}, account {}: {}'.format(
+			imsg('Total balance in {}’s wallet {}, account #{}: {}'.format(
 				capfirst(dest.user),
 				dest.wnum,
 				dest.account,
 				ub.hl()
 			))
 
-		async def get_balance(dest):
+		async def get_balance(dest,count):
 			data = self.users[dest.user]
 			await data.wd_rpc.call('refresh')
+			if count and not count % 20:
+				await data.wd_rpc.call('rescan_blockchain')
 			ret = await data.wd_rpc.call('get_accounts')
 			return XMRAmt(ret['subaddress_accounts'][dest.account]['unlocked_balance'],from_unit='atomic')
 
-		self.do_msg(extra_desc=f'+{random_txs} random TXs' if random_txs else None)
+		# start execution:
 
-		await self.open_wallet_user(self.dest.user,self.dest.wnum)
+		self.do_msg(extra_desc =
+			(f'sending {random_txs} random TXs, ' if random_txs else '') +
+			f'mining, checking wallet {user}:{wnum}:{account}' )
+
+		dest = namedtuple(
+			'dest_info',['user','wnum','account','test','test_desc'])(user,wnum,account,test,test_desc)
+
+		await self.open_wallet_user(dest.user,dest.wnum)
 
 		if random_txs:
 			await send_random_txs()
@@ -517,12 +524,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		h = await get_height()
 		imsg_r(f'Chain height: {h} ')
 
-		for i in range(500):
-			ub = await get_balance(self.dest)
-			if self.dest.test(ub):
+		for count in range(500):
+			ub = await get_balance(dest,count)
+			if dest.test(ub):
 				imsg('')
 				oqmsg_r('+')
-				print_balance(self.dest,ub)
+				print_balance(dest,ub)
 				break
 			await asyncio.sleep(2)
 			h = await get_height()
@@ -533,12 +540,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.stop_mining()
 
-		await self.close_wallet_user(self.dest.user)
+		await self.close_wallet_user(dest.user)
 
 		return 'ok'
-
-	async def mine_blocks_tx(self):
-		return await self.mine_blocks(random_txs=self.dfl_random_txs)
 
 	# util methods
 
@@ -553,10 +557,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			msg_only = True,
 			extra_desc = f'({extra_desc})' if extra_desc else None
 		)
-
-	def set_dest(self,user,wnum,account,test,test_desc):
-		self.dest = namedtuple(
-			'dest_info',['user','wnum','account','test','test_desc'])(user,wnum,account,test,test_desc)
 
 	async def transfer(self,user,amt,addr):
 		return await self.users[user].wd_rpc.call('transfer',destinations=[{'amount':amt,'address':addr}])
