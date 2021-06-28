@@ -313,10 +313,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 
 	def sync_wallets_all(self):
-		return self.sync_wallets('alice')
+		return self.sync_wallets('alice',add_opts=['--rescan-blockchain'])
 
 	def sync_wallets_selected(self):
-		return self.sync_wallets('alice',wallets='1-2,4',add_opts=['--rescan-blockchain'])
+		return self.sync_wallets('alice',wallets='1-2,4')
 
 	def sync_wallets(self,user,wallets=None,add_opts=None):
 		data = self.users[user]
@@ -341,38 +341,43 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.read()
 		return t
 
-	def do_op(self,op,user,arg2,tx_relay_parm=None,min_amt=None,do_ret=False):
+	def do_op(self, op, user, arg2,
+			tx_relay_parm = None,
+			return_amt    = False,
+			reuse_acct    = False,
+			add_desc      = None,
+			do_ret        = False ):
+
 		data = self.users[user]
 		cmd_opts = list_gen(
 			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm]
 		)
+		add_desc = (', ' + add_desc) if add_desc else ''
+
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.long_opts + cmd_opts + [ op, data.kafile, arg2 ],
-			extra_desc = f'({capfirst(user)})' )
+			extra_desc = f'({capfirst(user)}{add_desc})' )
 
 		t.expect('Check key-to-address validity? (y/N): ','n')
 
 		if op == 'sweep':
 			t.expect(
-				'Create new {} .* \(y/N\): '.format('account' if ',' in arg2 else 'address'),
-				'y', regex=True )
+				'Create new {} .* \(y/N\): '.format(('address','account')[',' in arg2]),
+				('y','n')[reuse_acct],
+				regex=True )
+			if reuse_acct:
+				t.expect( 'to last existing account .* \(y/N\): ','y', regex=True )
 
-		if min_amt:
+		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())
-			min_amt = XMRAmt(str(min_amt))
-			if amt < min_amt:
-				ydie(2,f'Transaction amount ({amt}) less than minimum ({min_amt})')
 
 		t.expect(f'Relay {op} transaction? (y/N): ','y')
 		t.read()
 
-		if do_ret:
-			return t
-		else:
-			t.ok()
+		return t if do_ret else amt if return_amt else t.ok()
 
 	def sweep_to_address_proxy(self):
 		self.do_op('sweep','alice','1:0',self.tx_relay_daemon_proxy_parm)
@@ -516,6 +521,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.open_wallet_user(dest.user,dest.wnum)
 
+		ub_start = await get_balance(dest,0)
+
 		if random_txs:
 			await send_random_txs()
 
@@ -526,7 +533,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		for count in range(500):
 			ub = await get_balance(dest,count)
-			if dest.test(ub):
+			ret = dest.test(ub)
+			return_bal = isinstance(ret,XMRAmt)
+			if ret is True or ( return_bal and ret > ub_start ):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(dest,ub)
@@ -542,7 +551,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.close_wallet_user(dest.user)
 
-		return 'ok'
+		return ub if return_bal else 'ok'
 
 	# util methods
 
