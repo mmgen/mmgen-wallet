@@ -20,11 +20,11 @@
 xmrwallet.py - MoneroWalletOps class
 """
 
-import os,re,time
+import os,re,time,json
 from collections import namedtuple
 from .common import *
 from .addr import KeyAddrList,AddrIdxList
-from .rpc import MoneroRPCClientRaw, MoneroWalletRPCClient
+from .rpc import MoneroRPCClientRaw,MoneroWalletRPCClient,json_encoder
 from .daemon import MoneroWalletDaemon
 from .protocol import _b58a,init_proto
 from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx,Hilite,InitErrors
@@ -77,6 +77,23 @@ class MoneroMMGenTX:
 
 	class Base:
 
+		def make_chksum(self,keys=None):
+			res = json.dumps(
+				dict( (k,v) for k,v in self.data._asdict().items() if (not keys or k in keys) ),
+				cls = json_encoder
+			)
+			return make_chksum_6(res)
+
+		@property
+		def base_chksum(self):
+			return self.make_chksum(
+				('op','create_time','network','seed_id','source','dest','amount')
+			)
+
+		@property
+		def full_chksum(self):
+			return self.make_chksum(set(self.data._fields) - {'metadata'})
+
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
 			'create_time',
@@ -123,6 +140,29 @@ class MoneroMMGenTX:
 					d.dest_address.hl()
 				)
 
+		def write(self,delete_metadata=False):
+			dict_data = self.data._asdict()
+			if delete_metadata:
+				dict_data['metadata'] = None
+
+			out = json.dumps(
+				{ 'MoneroMMGenTX': {
+						'base_chksum': self.base_chksum,
+						'full_chksum': self.full_chksum,
+						'data': dict_data,
+					}
+				},
+				cls = json_encoder,
+				indent = 4 # DEBUG
+			)
+			fn = '{}{}-XMR[{!s}]{}.sigtx'.format(
+				self.base_chksum.upper(),
+				('-'+self.full_chksum.upper()) if self.full_chksum else '',
+				self.data.amount,
+				(lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
+			)
+			write_data_to_file(fn,out,desc='MoneroMMGenTX data',ask_write=True,ask_write_default_yes=False)
+
 	class NewSigned(Base):
 
 		def __init__(self,*args,**kwargs):
@@ -146,9 +186,36 @@ class MoneroMMGenTX:
 				metadata       = d.metadata,
 			)
 
+	class Signed(Base):
+
+		def __init__(self,fn):
+			self.fn = fn
+			d_wrap = json.loads(get_data_from_file(fn))['MoneroMMGenTX']
+			d = self.xmrwallet_tx_data(**d_wrap['data'])
+			proto = init_proto('xmr',network=d.network)
+			self.data = self.xmrwallet_tx_data(
+				op             = d.op,
+				create_time    = d.create_time,
+				sign_time      = d.sign_time,
+				network        = d.network,
+				seed_id        = SeedID(sid=d.seed_id),
+				source         = XMRWalletAddrSpec(d.source),
+				dest           = None if d.dest is None else XMRWalletAddrSpec(d.dest),
+				dest_address   = CoinAddr(proto,d.dest_address),
+				txid           = CoinTxID(d.txid),
+				amount         = proto.coin_amt(d.amount),
+				fee            = proto.coin_amt(d.fee),
+				blob           = d.blob,
+				metadata       = d.metadata,
+			)
+			for k in ('base_chksum','full_chksum'):
+				a = getattr(self,k)
+				b = d_wrap[k]
+				assert a == b, f'{k} mismatch: {a} != {b}'
+
 class MoneroWalletOps:
 
-	ops = ('create','sync','transfer','sweep')
+	ops = ('create','sync','transfer','sweep','relay')
 	opts = (
 		'wallet_dir',
 		'daemon',
@@ -158,6 +225,7 @@ class MoneroWalletOps:
 		'restore_height',
 		'no_start_wallet_daemon',
 		'no_stop_wallet_daemon',
+		'do_not_relay',
 	)
 	pat_opts = ('daemon','tx_relay_daemon')
 
@@ -618,7 +686,7 @@ class MoneroWalletOps:
 		past     = 'swept'
 		spec_id  = 'sweep_spec'
 		spec_key = ( (1,'source'), (3,'dest') )
-		opts     = ('tx_relay_daemon',)
+		opts     = ('do_not_relay','tx_relay_daemon')
 
 		def create_addr_data(self):
 			m = re.fullmatch(uarg_info[self.spec_id].pat,uarg.spec,re.ASCII)
@@ -737,7 +805,10 @@ class MoneroWalletOps:
 			if uopt.tx_relay_daemon:
 				self.display_tx_relay_info(indent='    ')
 
-			if keypress_confirm(f'Relay {self.name} transaction?'):
+			if uopt.do_not_relay:
+				msg('Saving TX data to file')
+				new_tx.write(delete_metadata=True)
+			elif keypress_confirm(f'Relay {self.name} transaction?'):
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
 					await h.close_wallet('source')
@@ -763,3 +834,53 @@ class MoneroWalletOps:
 		past    = 'transferred'
 		spec_id = 'transfer_spec'
 		spec_key = ( (1,'source'), )
+
+	class relay(base):
+		name = 'relay'
+		desc = 'Relay'
+		past = 'relayed'
+		opts = ('tx_relay_daemon',)
+
+		def __init__(self,uarg_tuple,uopt_tuple):
+
+			super().__init__(uarg_tuple,uopt_tuple)
+
+			if uopt.tx_relay_daemon:
+				m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
+				host,port = m[1].split(':')
+				proxy = m[2]
+			else:
+				from .daemon import CoinDaemon
+				md = CoinDaemon('xmr',test_suite=g.test_suite)
+				host,port = md.host,md.rpc_port
+				proxy = None
+
+			self.dc = MoneroRPCClientRaw(
+				host   = host,
+				port   = int(port),
+				user   = None,
+				passwd = None,
+				proxy  = proxy )
+
+			self.tx = MoneroMMGenTX.Signed(uarg.infile)
+
+		async def main(self):
+			msg('\n' + self.tx.get_info())
+
+			if uopt.tx_relay_daemon:
+				self.display_tx_relay_info()
+
+			if keypress_confirm('Relay transaction?'):
+				res = await self.dc.call(
+					'send_raw_transaction',
+					tx_as_hex = self.tx.data.blob
+				)
+				if res['status'] == 'OK':
+					msg('Status: ' + green('OK'))
+					if res['not_relayed']:
+						ymsg('Transaction not relayed')
+					return True
+				else:
+					raise RPCFailure(repr(res))
+			else:
+				die(1,'Exiting at user request')

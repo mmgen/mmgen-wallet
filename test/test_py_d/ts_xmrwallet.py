@@ -56,6 +56,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		('sweep_to_address_noproxy',  'sweeping to new address (via TX relay, no proxy)'),
 		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
 		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay, no proxy)'),
+
+		('transfer_to_miner_create1', 'transferring funds to Miner (create TX)'),
+		('transfer_to_miner_send1',   'transferring funds to Miner (send TX via proxy)'),
+		('transfer_to_miner_create2', 'transferring funds to Miner (create TX)'),
+		('transfer_to_miner_send2',   'transferring funds to Miner (send TX, no proxy)'),
+
+		('sweep_create_and_send',     'sweeping to new account (create TX + send TX, in stages)'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -343,6 +350,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def do_op(self, op, user, arg2,
 			tx_relay_parm = None,
+			do_not_relay  = False,
 			return_amt    = False,
 			reuse_acct    = False,
 			add_desc      = None,
@@ -353,7 +361,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			[f'--wallet-dir={data.udir}'],
 			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
-			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm]
+			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm],
+			['--do-not-relay', do_not_relay]
 		)
 		add_desc = (', ' + add_desc) if add_desc else ''
 
@@ -375,7 +384,12 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())
 
-		t.expect(f'Relay {op} transaction? (y/N): ','y')
+		if do_not_relay:
+			t.expect('Save MoneroMMGenTX data? (y/N): ','y')
+			t.written_to_file('MoneroMMGenTX data')
+		else:
+			t.expect(f'Relay {op} transaction? (y/N): ','y')
+
 		t.read()
 
 		return t if do_ret else amt if return_amt else t.ok()
@@ -402,6 +416,61 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
 		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
+
+	def transfer_to_miner_create(self,amt):
+		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
+		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
+		return self.do_op('transfer','alice',f'2:1:{addr},{amt}',do_not_relay=True,do_ret=True)
+
+	def transfer_to_miner_create1(self):
+		return self.transfer_to_miner_create('0.0111')
+
+	def transfer_to_miner_create2(self):
+		return self.transfer_to_miner_create('0.0012')
+
+	def relay_tx(self,relay_opt=None,add_desc=None):
+		user = 'alice'
+		data = self.users[user]
+		fn = get_file_with_ext(data.udir,'sigtx')
+		add_desc = (', ' + add_desc) if add_desc else ''
+		t = self.spawn(
+			'mmgen-xmrwallet',
+			self.long_opts
+			+ ([relay_opt] if relay_opt else [])
+			+ [ 'relay', fn ],
+			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})' )
+		t.expect('Relay transaction? ','y')
+		t.read()
+		t.ok()
+
+	def transfer_to_miner_send1(self):
+		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}',add_desc='via proxy')
+		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2456','unlocked balance == 0.2456')
+
+	def transfer_to_miner_send2(self):
+		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc='no proxy')
+		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2468','unlocked balance == 0.2468')
+
+	async def sweep_create_and_send(self):
+		bal = XMRAmt('0')
+		min_bal = XMRAmt('0.9')
+
+		for i in range(4):
+			if i: ok()
+			get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
+			send_amt = self.do_op(
+				'sweep','alice','2:1,3', # '2:1,3'
+				do_not_relay = True,
+				reuse_acct   = True,
+				add_desc     = f'TX #{i+1}',
+				return_amt   = True )
+			ok()
+			self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc=f'send amt: {send_amt} XMR')
+			bal += await self.mine_chk('alice',3,0,lambda x: 'chk_bal_chg','balance has changed') # 3,0
+			if bal >= min_bal:
+				return 'ok'
+
+		return False
 
 	# wallet methods
 

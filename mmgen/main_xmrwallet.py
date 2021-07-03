@@ -33,12 +33,15 @@ opts_data = {
 			'[opts] sync     <xmr_keyaddrfile> [wallets]',
 			'[opts] transfer <xmr_keyaddrfile> <transfer_spec>',
 			'[opts] sweep    <xmr_keyaddrfile> <sweep_spec>',
+			'[opts] relay    <TX_file>',
 		],
 		'options': """
 -h, --help                       Print this help message
 --, --longhelp                   Print help message for long options (common
                                  options)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
+-d, --outdir=D                   Save transaction files to directory 'D'
+                                 instead of the working directory
 -D, --daemon=H:P                 Connect to the monerod at {D}
 -R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
                                  {R}
@@ -46,6 +49,7 @@ opts_data = {
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
                                  hashing (default: '{g.dfl_hash_preset}')
 -r, --restore-height=H           Scan from height 'H' when creating wallets
+-R, --do-not-relay               Save transaction to file instead of relaying
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
@@ -72,6 +76,8 @@ transfer  - transfer specified XMR amount to specified address from specified
             wallet:account
 sweep     - sweep funds in specified wallet:account to new address in same
             account or new account in another wallet
+relay     - relay a transaction from a transaction file created using 'sweep'
+            or 'transfer' with the --do-not-relay option
 
 
                       CREATE AND SYNC OPERATION NOTES
@@ -113,11 +119,21 @@ The user is prompted before addresses are created or funds are transferred.
 Note that multiple sweep operations may be required to sweep all the funds
 in an account.
 
+
+                           RELAY OPERATION NOTES
+
+By default, transactions are relayed to a monerod running on localhost at the
+default RPC port.  To relay transactions to a remote or non-default monerod
+via optional SOCKS proxy, use the --tx-relay-daemon option described above.
+
+
                                   WARNING
 
-Note that the use of this command requires private data to be exposed on a
-network-connected machine in order to unlock the Monero wallets.  This is a
-violation of good security practice.
+To avoid exposing your private keys on a network-connected machine, you’re
+strongly advised to create all transactions offline using the --do-not-relay
+option.  For this, a monerod with a fully synced blockchain must be running
+on the offline machine.  The resulting transaction files are then sent using
+the 'relay' operation.
 
 
                                   EXAMPLES
@@ -142,6 +158,13 @@ $ mmgen-xmrwallet sweep *.akeys.mmenc 1:0,2
 
 Send 0.1 XMR from account #0 of wallet 2 to an external address:
 $ mmgen-xmrwallet transfer *.akeys.mmenc 2:0:<monero address>,0.1
+
+Sweep all funds from account #0 of wallet 2 to a new address, saving the
+transaction to a file:
+$ mmgen-xmrwallet --do-not-relay sweep *.akeys.mmenc 2:0
+
+Relay the created sweep transaction via a host on the Tor network:
+$ mmgen-xmrwallet --tx-relay-daemon=abcdefghijklmnop.onion:127.0.0.1:9050 relay *XMR*.sigtx
 """
 	},
 	'code': {
@@ -166,7 +189,10 @@ if op not in MoneroWalletOps.ops:
 
 wallets = spec = ''
 
-if op in ('create','sync'):
+if op == 'relay':
+	if len(cmd_args) != 0:
+		opts.usage()
+elif op in ('create','sync'):
 	if len(cmd_args) not in (0,1):
 		opts.usage()
 	if cmd_args:
@@ -184,6 +210,7 @@ uo = namedtuple('uopts',[
 	'rescan_blockchain',
 	'no_start_wallet_daemon',
 	'no_stop_wallet_daemon',
+	'do_not_relay',
 	'wallet_dir',
 ])
 
@@ -195,6 +222,7 @@ uopts = uo(
 	opt.rescan_blockchain,
 	opt.no_start_wallet_daemon,
 	opt.no_stop_wallet_daemon,
+	opt.do_not_relay,
 	opt.wallet_dir,
 )
 
