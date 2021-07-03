@@ -40,13 +40,14 @@ xmrwallet_uarg_info = (
 		r'(?:[^:]+):(?:\d+)'
 	)
 
-class MMGenMoneroTX:
+class MoneroMMGenTX:
 
 	class Base:
 
 		xmrwallet_tx_data = namedtuple('xmrwallet_tx_data',[
 			'op',
-			'time',
+			'create_time',
+			'sign_time',
 			'network',
 			'seed_id',
 			'source_idx',
@@ -87,15 +88,17 @@ class MMGenMoneroTX:
 					d.dest_address.hl()
 				)
 
-	class New(Base):
+	class NewSigned(Base):
 
 		def __init__(self,*args,**kwargs):
 			assert not args, 'Non-keyword args not permitted'
-			d = self.xmrwallet_tx_data(**kwargs)
+			d = namedtuple('kwargs_tuple',kwargs)(**kwargs)
 			proto = init_proto('xmr',network=d.network)
+			now = int(time.time())
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
-				time           = int(d.time),
+				create_time    = now,
+				sign_time      = now,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
 				source_idx     = AddrIdx(d.source_idx),
@@ -351,7 +354,7 @@ class MoneroWalletOps:
 				msg('      Address: {}'.format( cyan(ret['base_address']) ))
 				return (ret['account_index'], ret['base_address'])
 
-			async def get_addrs(self,accts_data,account):
+			async def print_addrs(self,accts_data,account):
 				ret = await self.c.call('get_address',account_index=account)
 				d = ret['addresses']
 				msg('\n      Addresses of account #{} ({}):'.format(
@@ -366,7 +369,6 @@ class MoneroWalletOps:
 						e['label'],
 						e['used']
 					))
-				return ret
 
 			async def create_new_addr(self,account):
 				msg_r('\n    Creating new address: ')
@@ -399,9 +401,8 @@ class MoneroWalletOps:
 					get_tx_hex = True,
 					get_tx_metadata = True
 				)
-				return MMGenMoneroTX.New(
+				return MoneroMMGenTX.NewSigned(
 					op             = uarg.op,
-					time           = time.time(),
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source_idx     = self.parent.source.idx,
@@ -429,9 +430,8 @@ class MoneroWalletOps:
 				if len(res['tx_hash_list']) > 1:
 					die(3,'More than one TX required.  Cannot perform this sweep')
 
-				return MMGenMoneroTX.New(
+				return MoneroMMGenTX.NewSigned(
 					op             = uarg.op,
-					time           = time.time(),
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
 					source_idx     = self.parent.source.idx,
@@ -654,19 +654,19 @@ class MoneroWalletOps:
 			if self.account > max_acct:
 				die(1,f'{self.account}: requested account index out of bounds (>{max_acct})')
 
-			await h.get_addrs(accts_data,self.account)
+			await h.print_addrs(accts_data,self.account)
 
 			if self.name == 'transfer':
-				new_addr = self.dest_addr
+				dest_addr = self.dest_addr
 			elif self.dest == None:
 				dest_acct = None
 				if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
-					new_addr = await h.create_new_addr(self.account)
+					dest_addr = await h.create_new_addr(self.account)
 				elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
-					new_addr = await h.get_last_addr(self.account)
+					dest_addr = await h.get_last_addr(self.account)
 				else:
 					die(1,'Exiting at user request')
-				await h.get_addrs(accts_data,self.account)
+				await h.print_addrs(accts_data,self.account)
 			else:
 				await h.close_wallet('source')
 				bn = os.path.basename(self.get_wallet_fn(self.dest))
@@ -675,10 +675,10 @@ class MoneroWalletOps:
 				accts_data = (await h2.get_accts())[0]
 
 				if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
-					dest_acct,new_addr = await h2.create_acct()
+					dest_acct,dest_addr = await h2.create_acct()
 					await h2.get_accts()
 				elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
-					dest_acct,new_addr = h2.get_last_acct(accts_data)
+					dest_acct,dest_addr = h2.get_last_acct(accts_data)
 				else:
 					die(1,'Exiting at user request')
 
@@ -688,9 +688,9 @@ class MoneroWalletOps:
 			msg(f'\n    Creating {self.name} transaction...')
 
 			if self.name == 'transfer':
-				new_tx = await h.make_transfer_tx(self.account,new_addr,self.amount)
+				new_tx = await h.make_transfer_tx(self.account,dest_addr,self.amount)
 			elif self.name == 'sweep':
-				new_tx = await h.make_sweep_tx(self.account,dest_acct,new_addr)
+				new_tx = await h.make_sweep_tx(self.account,dest_acct,dest_addr)
 
 			msg('\n' + new_tx.get_info(indent='    '))
 
