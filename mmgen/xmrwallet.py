@@ -27,7 +27,7 @@ from .addr import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw, MoneroWalletRPCClient
 from .daemon import MoneroWalletDaemon
 from .protocol import _b58a,init_proto
-from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx
+from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx,Hilite,InitErrors
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {
@@ -40,6 +40,39 @@ xmrwallet_uarg_info = (
 		r'(?:[^:]+):(?:\d+)'
 	)
 
+class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
+	color = 'cyan'
+	width = 0
+	trunc_ok = False
+	min_len = 5  # 1:0:0
+	max_len = 14 # 9999:9999:9999
+	def __new__(cls,arg1,arg2=None,arg3=None):
+		if type(arg1) == cls:
+			return arg1
+
+		try:
+			if isinstance(arg1,str):
+				me = str.__new__(cls,arg1)
+				m = re.fullmatch('({n}):({n}):({n}|None)'.format(n=r'[0-9]{1,4}'),arg1)
+				assert m is not None, f'{arg1!r}: invalid XMRWalletAddrSpec'
+				for e in m.groups():
+					if len(e) != 1 and e[0] == '0':
+						die(2,f'{e}: leading zeroes not permitted in XMRWalletAddrSpec element')
+				me.wallet = AddrIdx(m[1])
+				me.account = int(m[2])
+				me.account_address = None if m[3] == 'None' else int(m[3])
+			else:
+				me = str.__new__(cls,f'{arg1}:{arg2}:{arg3}')
+				for arg in [arg1,arg2] + ([] if arg3 is None else [arg3]):
+					assert isinstance(arg,int), f'{arg}: XMRWalletAddrSpec component not of type int'
+					assert arg is None or arg <= 9999, f'{arg}: XMRWalletAddrSpec component greater than 9999'
+				me.wallet = AddrIdx(arg1)
+				me.account = arg2
+				me.account_address = arg3
+			return me
+		except Exception as e:
+			return cls.init_fail(e,me)
+
 class MoneroMMGenTX:
 
 	class Base:
@@ -50,10 +83,8 @@ class MoneroMMGenTX:
 			'sign_time',
 			'network',
 			'seed_id',
-			'source_idx',
-			'source_account',
-			'dest_idx',
-			'dest_account',
+			'source',
+			'dest',
 			'dest_address',
 			'txid',
 			'amount',
@@ -64,10 +95,14 @@ class MoneroMMGenTX:
 
 		def get_info(self,indent=''):
 			d = self.data
-			to_entry = f'\n{indent}  To:   ' + (
-				'Wallet {}, account {}'.format( d.dest_idx.hl(), red(f'#{d.dest_account}') )
-				if d.dest_idx else 'Same account'
-			)
+			if d.dest:
+				to_entry = f'\n{indent}  To:   ' + (
+					'Wallet {}, account {}, address {}'.format(
+						d.dest.wallet.hl(),
+						red(f'#{d.dest.account}'),
+						red(f'#{d.dest.account_address}')
+					)
+				)
 			return fmt("""
 				Transaction info [Seed ID: {}. Network: {}]:
 				  TxID: {}
@@ -80,9 +115,9 @@ class MoneroMMGenTX:
 					d.seed_id.hl(), d.network.upper(),
 					d.txid.hl(),
 					blue(capfirst(d.op)),
-					d.source_idx.hl(),
-					red(f'#{d.source_account}'),
-					'' if d.op == 'transfer' else to_entry,
+					d.source.wallet.hl(),
+					red(f'#{d.source.account}'),
+					to_entry if d.dest else '',
 					d.amount.hl(),
 					d.fee.hl(),
 					d.dest_address.hl()
@@ -101,10 +136,8 @@ class MoneroMMGenTX:
 				sign_time      = now,
 				network        = d.network,
 				seed_id        = SeedID(sid=d.seed_id),
-				source_idx     = AddrIdx(d.source_idx),
-				source_account = d.source_account,
-				dest_idx       = None if d.dest_idx == None else AddrIdx(d.dest_idx),
-				dest_account   = d.dest_account,
+				source         = XMRWalletAddrSpec(d.source),
+				dest           = None if d.dest is None else XMRWalletAddrSpec(d.dest),
 				dest_address   = CoinAddr(proto,d.dest_address),
 				txid           = CoinTxID(d.txid),
 				amount         = proto.coin_amt(d.amount,from_unit='atomic'),
@@ -380,14 +413,17 @@ class MoneroWalletOps:
 				msg(cyan(ret['address']))
 				return ret['address']
 
-			async def get_last_addr(self,account):
-				msg('\n    Getting last address:')
+			async def get_last_addr(self,account,display=True):
+				if display:
+					msg('\n    Getting last address:')
 				ret = (await self.c.call(
 					'get_address',
 					account_index = account,
-				))['addresses'][-1]['address']
-				msg('      ' + cyan(ret))
-				return ret
+				))['addresses']
+				addr = ret[-1]['address']
+				if display:
+					msg('      ' + cyan(addr))
+				return ( addr, len(ret) - 1 )
 
 			async def make_transfer_tx(self,account,addr,amt):
 				res = await self.c.call(
@@ -405,10 +441,8 @@ class MoneroWalletOps:
 					op             = uarg.op,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
-					source_idx     = self.parent.source.idx,
-					source_account = self.parent.account,
-					dest_idx       = None,
-					dest_account   = None,
+					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
+					dest           = None,
 					dest_address   = addr,
 					txid           = res['tx_hash'],
 					amount         = res['amount'],
@@ -417,7 +451,7 @@ class MoneroWalletOps:
 					metadata       = res['tx_metadata'],
 				)
 
-			async def make_sweep_tx(self,account,dest_acct,addr):
+			async def make_sweep_tx(self,account,dest_acct,dest_addr_idx,addr):
 				res = await self.c.call(
 					'sweep_all',
 					address = addr,
@@ -434,10 +468,11 @@ class MoneroWalletOps:
 					op             = uarg.op,
 					network        = self.parent.proto.network,
 					seed_id        = self.parent.kal.al_id.sid,
-					source_idx     = self.parent.source.idx,
-					source_account = self.parent.account,
-					dest_idx       = self.parent.dest.idx if self.parent.dest else None,
-					dest_account   = dest_acct,
+					source         = XMRWalletAddrSpec(self.parent.source.idx,self.parent.account,None),
+					dest           = XMRWalletAddrSpec(
+										(self.parent.dest or self.parent.source).idx,
+										dest_acct,
+										dest_addr_idx),
 					dest_address   = addr,
 					txid           = res['tx_hash_list'][0],
 					amount         = res['amount_list'][0],
@@ -659,13 +694,15 @@ class MoneroWalletOps:
 			if self.name == 'transfer':
 				dest_addr = self.dest_addr
 			elif self.dest == None:
-				dest_acct = None
+				dest_acct = self.account
 				if keypress_confirm(f'\nCreate new address for account #{self.account}?'):
-					dest_addr = await h.create_new_addr(self.account)
+					dest_addr_chk = await h.create_new_addr(self.account)
 				elif keypress_confirm(f'Sweep to last existing address of account #{self.account}?'):
-					dest_addr = await h.get_last_addr(self.account)
+					dest_addr_chk = None
 				else:
 					die(1,'Exiting at user request')
+				dest_addr,dest_addr_idx = await h.get_last_addr(self.account,display=not dest_addr_chk)
+				assert dest_addr_chk in (None,dest_addr), 'dest_addr_chk1'
 				await h.print_addrs(accts_data,self.account)
 			else:
 				await h.close_wallet('source')
@@ -676,9 +713,12 @@ class MoneroWalletOps:
 
 				if keypress_confirm(f'\nCreate new account for wallet {bn!r}?'):
 					dest_acct,dest_addr = await h2.create_acct()
+					dest_addr_idx = 0
 					await h2.get_accts()
 				elif keypress_confirm(f'Sweep to last existing account of wallet {bn!r}?'):
-					dest_acct,dest_addr = h2.get_last_acct(accts_data)
+					dest_acct,dest_addr_chk = h2.get_last_acct(accts_data)
+					dest_addr,dest_addr_idx = await h2.get_last_addr(dest_acct,display=False)
+					assert dest_addr_chk == dest_addr, 'dest_addr_chk2'
 				else:
 					die(1,'Exiting at user request')
 
@@ -690,7 +730,7 @@ class MoneroWalletOps:
 			if self.name == 'transfer':
 				new_tx = await h.make_transfer_tx(self.account,dest_addr,self.amount)
 			elif self.name == 'sweep':
-				new_tx = await h.make_sweep_tx(self.account,dest_acct,dest_addr)
+				new_tx = await h.make_sweep_tx(self.account,dest_acct,dest_addr_idx,dest_addr)
 
 			msg('\n' + new_tx.get_info(indent='    '))
 
