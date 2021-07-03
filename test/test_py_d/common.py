@@ -96,7 +96,7 @@ def restore_debug():
 	for k in save_debug:
 		os.environ[k] = save_debug[k] or ''
 
-def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False,quiet=False):
+def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete_all=False):
 
 	dot = ('.','')[bool(no_dot)]
 	flist = [os.path.join(tdir,f) for f in os.listdir(tdir) if f == ext or f[-len(dot+ext):] == dot+ext]
@@ -106,7 +106,7 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 
 	if len(flist) > 1 or delete_all:
 		if delete or delete_all:
-			if not (quiet or opt.quiet):
+			if (opt.exact_output or opt.verbose) and not opt.quiet:
 				msg("Multiple *.{} files in '{}' - deleting".format(ext,tdir))
 			for f in flist:
 				os.unlink(f)

@@ -53,9 +53,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		('sweep_to_address_proxy',    'sweeping to new address (via TX relay + proxy)'),
 		('sweep_to_account',          'sweeping to new account'),
-		('sweep_to_address_noproxy',  'sweeping to new address (via TX relay)'),
+		('sweep_to_address_noproxy',  'sweeping to new address (via TX relay, no proxy)'),
 		('transfer_to_miner_proxy',   'transferring funds to Miner (via TX relay + proxy)'),
-		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay)'),
+		('transfer_to_miner_noproxy', 'transferring funds to Miner (via TX relay, no proxy)'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -522,6 +522,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		await self.open_wallet_user(dest.user,dest.wnum)
 
 		ub_start = await get_balance(dest,0)
+		chk_bal_chg = dest.test(ub_start) == 'chk_bal_chg'
 
 		if random_txs:
 			await send_random_txs()
@@ -533,9 +534,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		for count in range(500):
 			ub = await get_balance(dest,count)
-			ret = dest.test(ub)
-			return_bal = isinstance(ret,XMRAmt)
-			if ret is True or ( return_bal and ret > ub_start ):
+			if dest.test(ub) is True or ( chk_bal_chg and ub != ub_start ):
 				imsg('')
 				oqmsg_r('+')
 				print_balance(dest,ub)
@@ -551,7 +550,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.close_wallet_user(dest.user)
 
-		return ub if return_bal else 'ok'
+		return ub if chk_bal_chg else 'ok'
 
 	# util methods
 
