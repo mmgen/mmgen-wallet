@@ -107,8 +107,8 @@ class RPCBackends:
 				self.session.auth = getattr(requests.auth,auth)(*caller.auth)
 			if self.proxy:
 				self.session.proxies.update({
-					'http':  f'socks5://{self.proxy}',
-					'https': f'socks5://{self.proxy}'
+					'http':  f'socks5h://{self.proxy}',
+					'https': f'socks5h://{self.proxy}'
 				})
 
 		async def run(self,payload,timeout,wallet):
@@ -182,7 +182,7 @@ class RPCBackends:
 			dmsg_rpc('\n    RPC PAYLOAD data (curl) ==>\n{}\n',payload)
 			exec_cmd = [
 				'curl',
-				'--proxy', f'socks5://{self.proxy}' if self.proxy else '',
+				'--proxy', f'socks5h://{self.proxy}' if self.proxy else '',
 				'--connect-timeout', str(timeout or self.timeout),
 				'--write-out', '%{http_code}',
 				'--data-binary', data
@@ -674,6 +674,8 @@ class MoneroRPCClient(RPCClient):
 			from .obj import IPPort
 			self.proxy = IPPort(proxy)
 			test_connection = False
+			if host.endswith('.onion'):
+				network_proto = 'http'
 		super().__init__(host,port,test_connection)
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
