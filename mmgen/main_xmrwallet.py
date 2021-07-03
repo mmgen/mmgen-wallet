@@ -53,12 +53,15 @@ opts_data = {
 """,
 	'notes': """
 
-Command requires a running monerod daemon.  Unless --daemon is specified,
-monerod is assumed to be listening on localhost at the default RPC port.
+All operations require a running Monero daemon.  Unless --daemon is specified,
+the monerod is assumed to be listening on localhost at the default RPC port.
 
 If --tx-relay-daemon is specified, the monerod daemon at HOST:PORT will be
 used to relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified,
 may point to a SOCKS proxy, in which case HOST may be a Tor onion address.
+
+All connections are via the RPC protocol using SSL (HTTPS) or Tor.  RPC via
+plain HTTP is not supported.
 
 
                         SUPPORTED OPERATIONS
@@ -86,7 +89,7 @@ format:
 
     SOURCE:ACCOUNT:ADDRESS,AMOUNT
 
-where SOURCE is a wallet index; ACCOUNT the source account index; and ADDRESS
+where SOURCE is a wallet number; ACCOUNT the source account index; and ADDRESS
 and AMOUNT the destination Monero address and XMR amount, respectively.
 
 
@@ -96,16 +99,19 @@ The sweep operation takes a `sweep specifier` arg with the following format:
 
     SOURCE:ACCOUNT[,DEST]
 
-where SOURCE and DEST are wallet indexes and ACCOUNT an account index.
+where SOURCE and DEST are wallet numbers and ACCOUNT an account index.
 
 If DEST is omitted, a new address will be created in ACCOUNT of SOURCE and
 all funds from ACCOUNT of SOURCE will be swept into it.
 
-If DEST is included, a new account will be created in DEST and all funds
-from ACCOUNT of SOURCE will be swept into the new account.
+If DEST is included, all funds from ACCOUNT of SOURCE will be swept into a
+newly created account in DEST, or the last existing account, if requested
+by the user.
 
 The user is prompted before addresses are created or funds are transferred.
 
+Note that multiple sweep operations may be required to sweep all the funds
+in an account.
 
                               WARNING
 
