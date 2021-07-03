@@ -39,8 +39,6 @@ opts_data = {
 --, --longhelp                   Print help message for long options (common
                                  options)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
--d, --outdir=D                   Output or operate on wallets in directory 'D'
-                                 instead of working dir
 -D, --daemon=H:P                 Connect to monerod at {D}
 -R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via monerod specified by
                                  {R}
@@ -50,6 +48,8 @@ opts_data = {
 -r, --restore-height=H           Scan from height 'H' when creating wallets
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
+-w, --wallet-dir=D               Output or operate on wallets in directory 'D'
+                                 instead of working directory
 """,
 	'notes': """
 
@@ -160,6 +160,7 @@ uo = namedtuple('uopts',[
 	'rescan_blockchain',
 	'no_start_wallet_daemon',
 	'no_stop_wallet_daemon',
+	'wallet_dir',
 ])
 
 uargs = ua( op, infile, wallets, spec )
@@ -170,6 +171,7 @@ uopts = uo(
 	opt.rescan_blockchain,
 	opt.no_start_wallet_daemon,
 	opt.no_stop_wallet_daemon,
+	opt.wallet_dir,
 )
 
 m = getattr(MoneroWalletOps,op)(uargs,uopts)

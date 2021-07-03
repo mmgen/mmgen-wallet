@@ -150,7 +150,7 @@ class MoneroWalletOps:
 
 	ops = ('create','sync','transfer','sweep')
 	opts = (
-		'outdir',
+		'wallet_dir',
 		'daemon',
 		'tx_relay_daemon',
 		'use_internal_keccak_module',
@@ -163,7 +163,7 @@ class MoneroWalletOps:
 
 	class base(MMGenObject):
 
-		opts = ('outdir',)
+		opts = ('wallet_dir',)
 
 		def __init__(self,uarg_tuple,uopt_tuple):
 
@@ -264,7 +264,7 @@ class MoneroWalletOps:
 			check_wallets()
 
 			self.wd = MoneroWalletDaemon(
-				wallet_dir = opt.outdir or '.',
+				wallet_dir = uopt.wallet_dir or '.',
 				test_suite = g.test_suite,
 				daemon_addr = uopt.daemon or None,
 				testnet = g.testnet,
@@ -297,7 +297,7 @@ class MoneroWalletOps:
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
-				opt.outdir or '.','{}-{}-MoneroWallet{}{}'.format(
+				uopt.wallet_dir or '.','{}-{}-MoneroWallet{}{}'.format(
 					self.kal.al_id.sid,
 					d.idx,
 					'.testnet' if g.testnet else '',
@@ -654,7 +654,7 @@ class MoneroWalletOps:
 			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 
 			self.wd2 = MoneroWalletDaemon(
-				wallet_dir = opt.outdir or '.',
+				wallet_dir = uopt.wallet_dir or '.',
 				test_suite = g.test_suite,
 				daemon_addr = m[1],
 				proxy = m[2],

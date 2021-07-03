@@ -285,7 +285,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
 		run('rm -f {}*'.format( data.walletfile_fs.format(wallet or '*') ),shell=True)
-		dir_opt = [f'--outdir={data.udir}']
+		dir_opt = [f'--wallet-dir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
 			self.long_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
@@ -321,7 +321,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def sync_wallets(self,user,wallets=None,add_opts=None):
 		data = self.users[user]
 		cmd_opts = list_gen(
-			[f'--outdir={data.udir}'],
+			[f'--wallet-dir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 		)
 		t = self.spawn(
@@ -350,6 +350,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		data = self.users[user]
 		cmd_opts = list_gen(
+			[f'--wallet-dir={data.udir}'],
 			[f'--outdir={data.udir}'],
 			[f'--daemon=localhost:{data.md.rpc_port}'],
 			[f'--tx-relay-daemon={tx_relay_parm}', tx_relay_parm]
