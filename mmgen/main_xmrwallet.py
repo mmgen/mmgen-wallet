@@ -39,8 +39,8 @@ opts_data = {
 --, --longhelp                   Print help message for long options (common
                                  options)
 -b, --rescan-blockchain          Rescan the blockchain if wallet fails to sync
--D, --daemon=H:P                 Connect to monerod at {D}
--R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via monerod specified by
+-D, --daemon=H:P                 Connect to the monerod at {D}
+-R, --tx-relay-daemon=H:P[:H:P]  Relay transactions via a monerod specified by
                                  {R}
 -k, --use-internal-keccak-module Force use of the internal keccak module
 -p, --hash-preset=P              Use scrypt hash preset 'P' for password
@@ -49,22 +49,22 @@ opts_data = {
 -s, --no-start-wallet-daemon     Don’t start the wallet daemon at startup
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
-                                 instead of working directory
+                                 instead of the working directory
 """,
 	'notes': """
 
 All operations require a running Monero daemon.  Unless --daemon is specified,
 the monerod is assumed to be listening on localhost at the default RPC port.
 
-If --tx-relay-daemon is specified, the monerod daemon at HOST:PORT will be
-used to relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified,
-may point to a SOCKS proxy, in which case HOST may be a Tor onion address.
+If --tx-relay-daemon is specified, the monerod at HOST:PORT will be used to
+relay any created transactions.  PROXY_HOST:PROXY_PORT, if specified, may
+point to a SOCKS proxy, in which case HOST may be a Tor onion address.
 
-All connections are via the RPC protocol using SSL (HTTPS) or Tor.  RPC via
+All communications use the RPC protocol via SSL (HTTPS) or Tor.  RPC over
 plain HTTP is not supported.
 
 
-                        SUPPORTED OPERATIONS
+                            SUPPORTED OPERATIONS
 
 create    - create wallet for all or specified addresses in key-address file
 sync      - sync wallet for all or specified addresses in key-address file
@@ -74,15 +74,15 @@ sweep     - sweep funds in specified wallet:account to new address in same
             account or new account in another wallet
 
 
-                   CREATE AND SYNC OPERATION NOTES
+                      CREATE AND SYNC OPERATION NOTES
 
-These operations take an optional `wallets` argument: a comma-separated list,
-hyphenated range, or combination of both, of address indexes in the specified
-key-address file, each corresponding to a Monero wallet to be created or
-synced.  If omitted, all wallets are operated upon.
+These operations take an optional `wallets` argument: one or more address
+indexes (expressed as a comma-separated list, hyphenated range, or both)
+in the specified key-address file, each corresponding to a Monero wallet
+to be created or synced.  If omitted, all wallets are operated upon.
 
 
-                       TRANSFER OPERATION NOTES
+                          TRANSFER OPERATION NOTES
 
 The transfer operation takes a `transfer specifier` arg with the following
 format:
@@ -93,7 +93,7 @@ where SOURCE is a wallet number; ACCOUNT the source account index; and ADDRESS
 and AMOUNT the destination Monero address and XMR amount, respectively.
 
 
-                        SWEEP OPERATION NOTES
+                           SWEEP OPERATION NOTES
 
 The sweep operation takes a `sweep specifier` arg with the following format:
 
@@ -113,11 +113,35 @@ The user is prompted before addresses are created or funds are transferred.
 Note that multiple sweep operations may be required to sweep all the funds
 in an account.
 
-                              WARNING
+                                  WARNING
 
 Note that the use of this command requires private data to be exposed on a
 network-connected machine in order to unlock the Monero wallets.  This is a
 violation of good security practice.
+
+
+                                  EXAMPLES
+
+Generate an XMR key-address file with 5 addresses from your default wallet:
+$ mmgen-keygen --coin=xmr 1-5
+
+Create 3 Monero wallets from the key-address file:
+$ mmgen-xmrwallet create *.akeys.mmenc 1-3
+
+After updating the blockchain, sync wallets 1 and 2:
+$ mmgen-xmrwallet sync *.akeys.mmenc 1,2
+
+Sweep all funds from account #0 of wallet 1 to a new address:
+$ mmgen-xmrwallet sweep *.akeys.mmenc 1:0
+
+Same as above, but use a TX relay on the Tor network:
+$ mmgen-xmrwallet --tx-relay-daemon=abcdefghijklmnop.onion:127.0.0.1:9050 sweep *.akeys.mmenc 1:0
+
+Sweep all funds from account #0 of wallet 1 to wallet 2:
+$ mmgen-xmrwallet sweep *.akeys.mmenc 1:0,2
+
+Send 0.1 XMR from account #0 of wallet 2 to an external address:
+$ mmgen-xmrwallet transfer *.akeys.mmenc 2:0:<monero address>,0.1
 """
 	},
 	'code': {

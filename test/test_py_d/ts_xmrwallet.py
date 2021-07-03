@@ -37,7 +37,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	Monero wallet operations
 	"""
 	networks = ('xmr',)
-	passthru_opts = ('coin',)
+	passthru_opts = ()
 	tmpdir_nums = [29]
 	dfl_random_txs = 3
 	color = True
