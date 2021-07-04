@@ -675,7 +675,7 @@ class MoneroRPCClient(RPCClient):
 			self.proxy = IPPort(proxy)
 			test_connection = False
 			if host.endswith('.onion'):
-				network_proto = 'http'
+				self.network_proto = 'http'
 		super().__init__(host,port,test_connection)
 		if self.auth_type:
 			self.auth = auth_data(user,passwd)
