@@ -153,11 +153,10 @@ class MoneroMMGenTX:
 					}
 				},
 				cls = json_encoder,
-				indent = 4 # DEBUG
 			)
 			fn = '{}{}-XMR[{!s}]{}.sigtx'.format(
 				self.base_chksum.upper(),
-				('-'+self.full_chksum.upper()) if self.full_chksum else '',
+				(lambda s: f'-{s.upper()}' if s else '')(self.full_chksum),
 				self.data.amount,
 				(lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
 			)

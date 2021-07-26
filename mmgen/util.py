@@ -21,6 +21,7 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 """
 
 import sys,os,time,stat,re
+from subprocess import run
 from hashlib import sha256
 from string import hexdigits,digits
 from .color import *
@@ -236,7 +237,6 @@ def check_or_create_dir(path):
 		os.listdir(path)
 	except:
 		if os.getenv('MMGEN_TEST_SUITE'):
-			from subprocess import run
 			try: # exception handling required for MSWin/MSYS2
 				run(['/bin/rm','-rf',path])
 			except:
@@ -813,7 +813,6 @@ def do_pager(text):
 
 	for pager in pagers:
 		try:
-			from subprocess import run
 			m = text + ('' if pager == 'less' else end_msg)
 			p = run([pager],input=m.encode(),check=True)
 			msg_r('\r')

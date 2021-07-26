@@ -331,7 +331,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			from shutil import copytree
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
-		start_test_daemons(self.proto.coin,remove_datadir=True)
+		if not opt.no_daemon_autostart:
+			start_test_daemons(self.proto.coin,remove_datadir=True)
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):
@@ -993,5 +994,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def stop(self):
 		self.spawn('',msg_only=True)
-		stop_test_daemons(self.proto.coin)
+		if not opt.no_daemon_stop:
+			stop_test_daemons(self.proto.coin)
 		return 'ok'

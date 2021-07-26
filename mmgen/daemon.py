@@ -463,6 +463,8 @@ class CoinDaemon(Daemon):
 			port_shift = None,
 			datadir    = None ):
 
+		self.test_suite = test_suite
+
 		super().__init__()
 
 		self.shared_args = []
@@ -673,6 +675,7 @@ class EthereumDaemon(CoinDaemon):
 			[f'--ports-shift={self.port_shift}'],
 			[f'--base-path={chaindir}'],
 			['--config=dev'],
+			['--mode=offline',self.test_suite],
 			['--log-file='+os.path.join(self.datadir,'openethereum.log')],
 			['daemon',     ld],
 			[self.pidfile, ld],
