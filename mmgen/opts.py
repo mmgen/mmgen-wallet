@@ -310,9 +310,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	g.color is finalized, so initialize color
 	"""
 	if g.color: # MMGEN_DISABLE_COLOR sets this to False
-		from .color import start_mscolor,init_color
-		if g.platform == 'win':
-			start_mscolor()
+		from .color import init_color
 		init_color(num_colors=('auto',256)[bool(g.force_256_color)])
 
 	"""

@@ -52,6 +52,13 @@ for _c in _colors:
 
 def nocolor(s): return s
 
+def set_vt100():
+	'hack to put term into VT100 mode under MSWin'
+	from .globalvars import g
+	if g.platform == 'win':
+		from subprocess import run
+		run([],shell=True)
+
 def get_terminfo_colors(term=None):
 	from subprocess import run,PIPE
 	cmd = ['infocmp','-0']
@@ -91,15 +98,4 @@ def init_color(num_colors='auto'):
 	for c in _colors:
 		globals()['_clr_'+c] = globals()[pfx+c]
 
-def start_mscolor():
-	import sys
-	from .globalvars import g
-	try:
-		import colorama
-		colorama.init(strip=True,convert=True)
-	except:
-		from .util import msg
-		msg('Import of colorama module failed')
-	else:
-		g.stdout = sys.stdout
-		g.stderr = sys.stderr
+	set_vt100()

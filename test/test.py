@@ -704,7 +704,7 @@ class TestSuiteRunner(object):
 				self.ts.test_name,
 				cmd_disp))
 
-		os.environ['MMGEN_FORCE_COLOR'] = ('1' if self.ts.color and g.platform == 'linux' else '')
+		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
 		from test.include.pexpect import MMGenPexpect
 		return MMGenPexpect(args,no_output=no_output)

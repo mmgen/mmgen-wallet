@@ -11,20 +11,16 @@ import include.tests_header
 from include.common import *
 from mmgen.color import *
 from mmgen.color import _colors
-init_color()
 
 def test_color():
-	try:
-		import colorama
-		start_mscolor()
-	except:
-		pass
 
+	init_color()
 	gmsg("Parsed terminfo 'colors' values:")
 
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
 		if ret == None:
+			set_vt100()
 			ymsg('Warning: unable to get info for terminal {!r}'.format(t))
 			continue
 		msg('{}: {}'.format(t,ret))
@@ -32,7 +28,7 @@ def test_color():
 
 	ret = get_terminfo_colors()
 	msg('This terminal ({}): {}'.format(os.getenv('TERM'),ret))
-
+	set_vt100()
 	gmsg("Terminal display:")
 
 	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
