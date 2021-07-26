@@ -601,18 +601,16 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		self.blockcount = int(await self.call('eth_blockNumber'),16)
 
 		vi,bh,ch,nk = await self.gathered_call(None, (
-				('parity_versionInfo',()),
+				('web3_clientVersion',()),
 				('parity_getBlockHeaderByNumber',()),
 				('parity_chain',()),
 				('parity_nodeKind',()),
 			))
 
-		self.daemon_version = int((
-				lambda v: '{:d}{:03d}{:03d}'.format(v['major'],v['minor'],v['patch'])
-			)(vi['version']))
-		self.daemon_version_str = (
-				lambda v: '{}.{}.{}'.format(v['major'],v['minor'],v['patch'])
-			)(vi['version'])
+		import re
+		vip = re.match(r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)',vi,re.ASCII)
+		self.daemon_version = int('{:d}{:03d}{:03d}'.format(*[int(e) for e in vip.groups()]))
+		self.daemon_version_str = '{}.{}.{}'.format(*vip.groups())
 		self.cur_date = int(bh['timestamp'],16)
 		self.chain = ch.replace(' ','_')
 		self.caps = ('full_node',) if nk['capability'] == 'full' else ()
