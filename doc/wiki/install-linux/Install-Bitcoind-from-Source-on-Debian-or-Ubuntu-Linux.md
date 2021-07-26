@@ -43,17 +43,13 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 	$ cd src
 	$ sudo install -sv bitcoind bitcoin-cli /usr/local/bin
 
-### Compile and install Bitcoin ABC (optional):
+### Compile and install Bitcoin Cash Node (optional):
 
-> *Consider Bitcoin ABC to be experimental software.  The author of the MMGen
-> project has only partially reviewed its codebase and makes no guarantees
-> regarding its safety or reliability.*
+> If you want to transact BCH, also known as “Bitcoin Cash Node”, then first
+> clone the Bitcoin Cash Node repository:
 
-> If you want to transact BCH, also known as “Bitcoin Cash” or “Bcash”, then
-> first clone the Bitcoin ABC repository:
-
-	$ git clone https://github.com/Bitcoin-ABC/bitcoin-abc
-	$ cd bitcoin-abc
+	$ git clone https://github.com/bitcoin-cash-node/bitcoin-cash-node
+	$ cd bitcoin-cash-node
 
 > Then configure and build using the same configure and build steps as with
 > Bitcoin Core above.
@@ -62,9 +58,9 @@ binaries are available for Bitcoin Core, Bitcoin ABC and Litecoin.  See the
 > under a different name to avoid overwriting your Core daemon:
 
 	$ cd src
-	$ sudo install -sv bitcoind /usr/local/bin/bitcoind-abc
+	$ sudo install -sv bitcoind /usr/local/bin/bitcoind-bchn
 
-> From now on, you’ll invoke the daemon as 'bitcoind-abc' instead of 'bitcoind'.
+> From now on, you’ll invoke the daemon as 'bitcoind-bchn' instead of 'bitcoind'.
 
 ### Compile and install Litecoin Core (optional):
 
@@ -92,3 +88,4 @@ same machine:
 [01]: Install-Bitcoind
 [02]: Install-Bitcoind#a_r
 [bu]: https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md
+[bcha]: https://github.com/Bitcoin-ABC/bitcoin-abc

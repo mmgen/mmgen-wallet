@@ -6,7 +6,7 @@
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
-#### [Full support for Bcash (BCH) and Litecoin](#a_bch)
+#### [Full support for Bitcoin Cash Node (BCH) and Litecoin](#a_bch)
 
 #### [Key/address generation for Zcash (ZEC)](#a_zec)
 
@@ -109,8 +109,7 @@ On your offline machine, sign the TX:
 
 	$ mmgen-txsign --coin=eth --token=eos ABC123-EOS[10,50000].rawtx
 
-*You can also set up and use [autosigning][X] on the offline machine, of
-course.*
+*You can also set up and use [autosigning][X] on the offline machine.*
 
 On your online machine, send the TX:
 
@@ -197,15 +196,16 @@ View your MFT tracking wallet:
 Other token parameters can also be customized.  Type `scripts/create-token.py --help`
 for details.
 
-### <a name='a_bch'>Full support for Bcash (BCH) and Litecoin</a>
+### <a name='a_bch'>Full support for Bitcoin Cash Node (BCH) and Litecoin</a>
 
-Bcash and Litecoin are fully supported by MMGen, on the same level as Bitcoin.
+Bitcoin Cash Node (BCH) and Litecoin are fully supported by MMGen, on the same
+level as Bitcoin.
 
-To use MMGen with Bcash or Litecoin, first make sure the respective Bitcoin ABC
-and Litecoin daemons are properly installed ([source][si])([binaries][bi]),
+To use MMGen with BCH or Litecoin, first make sure the Bitcoin Cash Node or
+Litecoin daemons are properly installed ([source][si])([binaries][bi]),
 [running][p8] and synced.
 
-MMGen requires that the bitcoin-abc daemon be listening on non-standard
+MMGen requires that the bitcoin-bchn daemon be listening on non-standard
 [RPC port 8442][p8].  If your daemon version is >= 0.16.2, you must use the
 `--usecashaddr=0` option.
 

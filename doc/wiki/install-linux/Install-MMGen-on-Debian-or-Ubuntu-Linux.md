@@ -3,7 +3,7 @@
 Install required Debian/Ubuntu packages:
 
 	$ sudo apt-get install autoconf git libgmp-dev libssl-dev libpcre3-dev libtool wipe curl
-	$ sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-cryptography python3-nacl python3-pip python3-gmpy2 python3-sha3 python3-requests python3-aiohttp
+	$ sudo apt-get install python3-dev python3-ecdsa python3-pexpect python3-setuptools python3-cryptography python3-nacl python3-pip python3-gmpy2 python3-sha3 python3-requests python3-aiohttp python3-socks
 
 Using the [pip3][P] installer, install the scrypt Python package:
 

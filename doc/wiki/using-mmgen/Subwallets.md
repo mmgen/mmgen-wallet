@@ -122,7 +122,7 @@ wallet’s search like this:
 
 This is basically all you need to know about subwallets.  For live versions of
 the above examples that can be run as-is, see commits [`7538a94`][c1],
-[`d1b8aef`][c2 ]and [`82086c9`][c3].
+[`d1b8aef`][c2] and [`82086c9`][c3].
 
 For more detailed usage information, see the [`mmgen-subwalletgen` help
 screen][sh].

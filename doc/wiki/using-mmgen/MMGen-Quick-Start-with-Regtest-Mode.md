@@ -14,7 +14,6 @@ This tutorial provides a quick, hands-on introduction.
 1. Initialize MMGen regtest mode and start the regtest daemon:
 
 		$ mmgen-regtest setup
-		$ mmgen-regtest bob
 
 2. Generate Bob’s MMGen wallet:
 
@@ -174,5 +173,9 @@ step 7 will look something like this:
 		1163DDF1:C:1   mw42oJ94yRA6ZUNSzmMpjZDR74JNyvqzzZ      -      500
 		1163DDF1:C:2   n1oszhfAyRrHi7qJupyzaWXTcpMQGsGJEf  From Alice  10
 		TOTAL: 510 BTC
+
+22. When you’re finished, stop the regtest daemon:
+
+		$ mmgen-regtest stop
 
 [G]: Getting-Started-with-MMGen#a_ct

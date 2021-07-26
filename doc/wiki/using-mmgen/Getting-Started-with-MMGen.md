@@ -43,6 +43,11 @@ place.
 The up arrow (for repeating commands) and tab key (or Ctrl-I) (for completing
 commands and filenames) will speed up your work at the command line greatly.
 
+The examples in this tutorial are geared towards Bitcoin, but with some
+modification they may be used with altcoins and forkcoins for which MMGen
+supports transaction operations (BCH, LTC, ETH and ETC as of this writing).
+See [Altcoin-and-Forkcoin-Support][09] for more details.
+
 #### <a name='a_iv'>Invocation</a>
 
 The MMGen wallet system is not a single program but a suite of lightweight
@@ -220,7 +225,7 @@ Note that for non-legacy address types the code letter is included in the
 filename.
 
 To fund your MMGen wallet, first import the addresses into your tracking wallet
-and then spend some BTC into any of them.  If you run out of addresses, generate
+and then send some BTC to any of them.  If you run out of addresses, generate
 more.  To generate a hundred addresses you’d specify an address range of
 `1-100`.
 
@@ -261,10 +266,20 @@ Save the file, copy it onto a USB stick and transfer it to your online computer.
 
 #### <a name='a_ia'>Import addresses (online computer)</a>
 
-On your online computer, go to your bitcoind data directory and move any
-existing `wallet.dat` file out of harm’s way.  Start bitcoind and let it
-generate a new `wallet.dat`; this you’ll use as your tracking wallet.  Import
-your ten addresses into the new tracking wallet with the command:
+On your online computer, go to your coin daemon’s data directory (`~/.bitcoin`
+by default for Bitcoin Core) and move any existing `wallet.dat` file out of
+harm’s way.  With more recent coin daemons, `wallet.dat` can be found in the
+`wallets` subdirectory of the daemon data directory.
+
+Start the coin daemon with the required options (see the [Install-Bitcoind][08]
+wiki page for more details on invoking the daemon for your coin and platform).
+
+Upon startup, older daemons will automatically generate a new default
+`wallet.dat`, which MMGen will use as its tracking wallet.  With newer daemons
+(e.g. Core 0.21.0 and above), the tracking wallet will be a directory named
+`mmgen-tracking-wallet` located by default in the `wallets` subdirectory.
+
+Import your ten addresses into the new tracking wallet with the command:
 
 	$ mmgen-addrimport --batch my.addrs
 
@@ -963,5 +978,7 @@ features or requirements.  Now perform the install:
 [05]: Key-address-files
 [06]: Subwallets
 [07]: autosign-[MMGen-command-help]
+[08]: Install-Bitcoind
+[09]: Altcoin-and-Forkcoin-Support
 [hc]: https://github.com/mmgen/mmgen/commits/master
 [lc]: https://gitlab.com/mmgen/mmgen/commits/master

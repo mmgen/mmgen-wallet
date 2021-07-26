@@ -25,13 +25,11 @@ more low-powered computer as your online machine.
 >> 32-bit or 64-bit versions appropriate for your online and offline computers.
 >> Windows users should choose the executable installer.
 
-> **Bitcoin ABC (optional):**
+> **Bitcoin Cash Node (optional):**
 
->> If you wish to transact BCH (Bcash), then download the appropriate [Bitcoin
->> ABC binary][abc] for your system as well.  Windows users should choose the
->> executable installer.
->> *Consider the Bitcoin ABC binaries untrusted software.  The author of the
->> MMGen project makes no guarantees regarding their safety or reliability.*
+>> If you wish to transact BCH (Bitcoin Cash Node), then download the
+>> appropriate [Bitcoin Cash Node binary][bch] for your system.
+>> Windows users should choose the executable installer.
 
 > **Litecoin (optional):**
 
@@ -46,19 +44,20 @@ more low-powered computer as your online machine.
 >> **Windows:** Run the Windows installer with the default settings.
 >> At the end of the installation process, uncheck the Run box to prevent the
 >> client from starting.
->> Add `C:\Program Files\Bitcoin\daemon` to your [path][05].  
+>>
 >> **Linux:** Unpack the archive and copy the `bitcoind` and `bitcoin-cli`
 >> binaries to `/usr/local/bin`.
 
-> **Bitcoin ABC (optional):**
+> **Bitcoin Cash Node (optional):**
 
 >> **Windows:** Run the Windows installer with the default settings.
 >> At the end of the installation process, uncheck the Run box to prevent the
 >> client from starting.
->> Add `C:\Program Files\Bitcoin-abc\daemon` to your [path][05].
->> Rename the file `bitcoind` in that folder to `bitcoind-abc` and
->> `bitcoin-cli` to `bitcoin-cli-abc`.  
->> **Linux:** Unpack the archive, rename `bitcoind` to `bitcoind-abc` and
+>>
+>> Navigate to `C:\Program Files\Bitcoin-Cash-Node\daemon` and rename the file
+>> `bitcoind` to `bitcoind-bchn` and `bitcoin-cli` to `bitcoin-cli-bchn`.
+>>
+>> **Linux:** Unpack the archive, rename `bitcoind` to `bitcoind-bchn` and
 >> copy it to `/usr/local/bin`.
 
 > **Litecoin (optional):**
@@ -66,7 +65,7 @@ more low-powered computer as your online machine.
 >> **Windows:** Run the Windows installer with the default settings.
 >> At the end of the installation process, uncheck the Run box to prevent the
 >> client from starting.
->> Add `C:\Program Files\Litecoin\daemon` to your [path][05].  
+>>
 >> **Linux:** Unpack the archive and copy the `litecoind` and
 >> `litecoin-cli` binaries to `/usr/local/bin`.
 
@@ -81,14 +80,15 @@ more low-powered computer as your online machine.
 	# Bitcoin Core:
 	$ bitcoind
 
-	# ABC:
-	$ mkdir $APPDATA/Bitcoin_ABC
-	$ bitcoind-abc --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin_ABC --usecashaddr=0
+	# Bitcoin Cash Node:
+	$ mkdir $APPDATA/Bitcoin-Cash-Node
+	$ bitcoind-bchn --listen=0 --rpcport=8442 --datadir=$APPDATA/Bitcoin-Cash-Node --usecashaddr=0
 
 	# Litecoin
 	$ litecoind
 
->> Note that the `--listen=0` argument is required only when running Core and ABC simultaneously.
+>> Note that the `--listen=0` argument is required only when running Bitcoin
+>> Core and Bitcoin Cash Node simultaneously.
 
 > **Linux:**
 
@@ -97,9 +97,9 @@ more low-powered computer as your online machine.
 	# Bitcoin Core:
 	$ bitcoind --daemon
 
-	# ABC:
-	$ mkdir ~/.bitcoin-abc
-	$ bitcoind-abc --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-abc --usecashaddr=0
+	# Bitcoin Cash Node:
+	$ mkdir ~/.bitcoin-bchn
+	$ bitcoind-bchn --daemon --listen=0 --rpcport=8442 --datadir=$HOME/.bitcoin-bchn --usecashaddr=0
 
 	# Litecoin:
 	$ litecoind --daemon
@@ -109,8 +109,8 @@ more low-powered computer as your online machine.
 	# Core:
 	$ bitcoin-cli help
 
-	# ABC:
-	$ bitcoin-cli-abc --rpcport=8442 help
+	# Bitcoin Cash Node:
+	$ bitcoin-cli-bchn --rpcport=8442 help
 
 	# Litecoin:
 	$ litecoin-cli help
@@ -132,9 +132,8 @@ more low-powered computer as your online machine.
 > have a blockchain consisting of one block, and use practically no CPU power
 > once running.
 
-[00]: https://bitcoin.org/bin/
-[01]: https://bitcoincore.org/bin/
-[bd]: https://bitcoin.org/bin/blockchain/
-[05]: Editing-the-user-path-in-Windows
-[abc]: https://download.bitcoinabc.org/
-[lc]: https://download.litecoin.org/litecoin-0.17.1/
+[00]:  https://bitcoin.org/bin/
+[01]:  https://bitcoincore.org/bin/
+[bd]:  https://bitcoin.org/bin/blockchain/
+[lc]:  https://litecoin.org
+[bch]: https://bitcoincashnode.org/en/download.html

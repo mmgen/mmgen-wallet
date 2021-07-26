@@ -82,29 +82,15 @@ will produce a listing of the same directory.
 > Internet on your online computer and copy them to your offline box.  A USB
 > flash drive works ideally for this.
 
-> It’s highly recommended to update the mirror list files located in the
-> directory `/etc/pacman.d`, as these lists allow you to specify the servers
-> you’ll be downloading from.  To view the contents of these files, issue the
-> following commands in your terminal:
+> The mirror list files located in the directory `/etc/pacman.d` specify the
+> servers to download packages from.
 
-		$ cat /etc/pacman.d/mirrorlist.msys
-		$ cat /etc/pacman.d/mirrorlist.mingw64
-		$ cat /etc/pacman.d/mirrorlist.mingw32
+> The server that’s listed first in these files is the one that will used by
+> default, so you may wish to edit them and place the server you wish to use
+> first in the list.  For this you may use a text editor such as Notepad:
 
-> Note that the first-listed server is the one used by default.  On your online
-> computer, download more recent versions of these files from the MSYS2 Github
-> repository:
-
->> <https://raw.githubusercontent.com/msys2/MSYS2-packages/master/pacman-mirrors/mirrorlist.msys>  
->> <https://raw.githubusercontent.com/msys2/MSYS2-packages/master/pacman-mirrors/mirrorlist.mingw64>  
->> <https://raw.githubusercontent.com/msys2/MSYS2-packages/master/pacman-mirrors/mirrorlist.mingw32>
-
-> Optionally edit the files using a text editor such as Notepad, placing the
-> server you wish to use first in the list.  Security-conscious users will
-> prefer the HTTPS servers.  The yandex mirror seems to be the fastest as of
-> this writing.  Now transfer the mirror files to your offline computer,
-> replacing the old ones at `C:\\msys64\etc\pacman.d`.  You can check that the
-> files have indeed been replaced by reissuing the `cat` commands above.
+		$ notepad /etc/pacman.d/mirrorlist.msys
+		... repeat for remaining mirrorlist files ...
 
 > You need to update your database files as well.  The database files and their
 > associated signature files can be listed by issuing the following command:
@@ -118,35 +104,48 @@ will produce a listing of the same directory.
 >> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/x86_64/mingw64.db>  
 >> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/x86_64/mingw64.db.sig>  
 >> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686/mingw32.db>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686/mingw32.db.sig>
+>> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686/mingw32.db.sig> 
+>> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/clang64/clang64.db> 
+>> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/clang64/clang64.db.sig> 
+>> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/ucrt64/ucrt64.db> 
+>> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/ucrt64/ucrt64.db.sig>
 
 > Copy the files to your offline machine as you did with the mirror files, replacing
 > the originals at `C:\msys64\var\lib\pacman\sync`.
 
 > Now issue the following command:
 
-		$ pacman -Sup
+		$ pacman -Sup > urls.txt
 
-> This will produce a list of download URLs.  If you add `> urls.txt` to the end
-> of this command, its output will be saved in the file `urls.txt`, which you
-> can then copy to your online machine.  (This redirection trick works for most
-> shell commands, by the way.)  On your online machine, download the files
-> listed in `urls.txt`.  Transfer the downloaded files to your offline machine,
-> copying them to the package cache directory `C:\msys64\var\cache\pacman\pkg`.
+> This command may cause your MSYS terminal window to close.  If so, simply
+> reopen another one.
+
+> The command's output is now saved in the file `urls.txt` (this redirection
+> trick using '>' works for most shell commands, by the way).  Copy `urls.txt`
+> to your online machine and download the URLs listed in it.  Transfer the
+> downloaded files to your offline machine, copying them to the package cache
+> directory `C:\msys64\var\cache\pacman\pkg`.
 
 > Now issue the following command to perform the initial upgrade:
 
 		$ pacman -Su
 
 > When the process is finished, close your terminal window as requested and
-> reopen another one.  Your mirror lists may have been overwritten by the
-> upgrade operation, in which case you should restore them from your modified
-> versions.
+> reopen another one.  If any mirror lists have have been added by the upgrade
+> operation, you may wish to edit them as you did above.
 
 > Now reissue the `pacman -Sup` command, which will generate a much longer list
-> of URLs this time.  Download and copy the listed files to the package cache
-> directory just as you did with the previous list.  Invoke `pacman -Su` once
-> again to complete your system upgrade. 
+> of URLs this time.  Download the listed files on your online machine.  Create
+> a new folder on your offline machine:
+
+		$ mkdir packages1
+
+> Copy the downloaded package files to this folder and execute the following
+> command to install them:
+
+		$ (cd packages1; pacman -U *)
+
+> Your system upgrade is now complete.
 
 ### 4. Install MSYS2 MMGen dependencies
 
@@ -159,13 +158,13 @@ specifically required by MMGen.
 > while `pacman -Sp <pgknames>` prints a list of download URLs for the packages
 > and their dependencies.  So before running the command shown below, you’ll
 > first need to issue it with `-Sp` instead of `-S` to produce a URL list.
-> Download these URLs on your online machine and copy the downloaded files to
-> the package cache directory of your offline machine just as you did with the
-> system upgrade.
+> Download these URLs on your online machine and copy and install the
+> downloaded files to the your offline machine just as you did in the previous
+> step, substituting `packages2` for `packages1` in both commands.
 
 Install the packages and their dependencies:
 
-	$ pacman -S tar git nano vim autoconf automake-wrapper autogen \
+	$ pacman -S tar git vim autoconf automake-wrapper autogen \
 		mingw64/mingw-w64-x86_64-libtool \
 		mingw64/mingw-w64-x86_64-pcre \
 		mingw64/mingw-w64-x86_64-make \
@@ -187,32 +186,37 @@ binaries required by MMGen:
 
 Open your shell’s runtime configuration file in a text editor:
 
-	$ nano ~/.bashrc
+	$ notepad ~/.bashrc
 
-Add the following two lines to the end of the file, save and exit:
+Add the following two lines to the end of the file (if this is a Bitcoin-only
+installation, you may omit the Litecoin and Bitcoin Cash Node components of the
+path):
 
-	export PATH="/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-abc/daemon"
+	export PATH="/mingw64/bin:$PATH:/c/Program Files/Bitcoin/daemon:/c/Program Files/Litecoin/daemon:/c/Program Files/Bitcoin-Cash-Node/daemon"
 	export PYTHONUTF8=1
 
-Close and reopen the terminal window to update your working environment.
+Save and exit.  Close and reopen the terminal window to update your working
+environment.
 
 ### 6. Install MMGen dependencies not provided by MSYS2
 
-Three of MMGen’s Python dependencies, `ecdsa`, `py_ecc` and `mypy_extensions`,
-are not provided by MSYS2.  If you’re online, you can install them using the pip
-package installer as follows:
+Four of MMGen’s Python dependencies, `ecdsa`, `py_ecc`, `mypy_extensions` and
+`socks`, are not provided by MSYS2.  If you’re online, you can install them
+using the pip package installer as follows:
 
-	$ pip3 install --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1
+	$ pip3 install --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1 socks
 
 For an offline install, first download the packages on your online machine like
 this:
 
-	$ pip3 download --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1
+	$ pip3 download --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1 socks
 
-Then transfer the `*.whl` files to your offline machine, `cd` to the directory
+Then transfer the downloaded files to your offline machine, `cd` to the directory
 containing the files and install them as follows:
 
 	$ pip3 install --no-deps *.whl
+	$ tar zxvf socks-0.tar.gz
+	$ (cd socks-0; python3 setup.py install)
 
 ### 7. Install the standalone scrypt package (required for strong password hashing)
 
@@ -264,19 +268,11 @@ to your offline machine.
 Enter the directory, configure, build and install:
 
 	$ cd secp256k1
-	$ libtoolize
 	$ ./autogen.sh
-	$ ./configure
-	$ mingw32-make.exe install MAKE=mingw32-make LIBTOOL=$(which libtool) 
+	$ ./configure --disable-dependency-tracking
+	$ mingw32-make.exe install MAKE=mingw32-make LIBTOOL=$(which libtool)
 
-### 9. Install the sdelete utility (required for secure wallet deletion)
-
-Grab the latest SDelete [zip archive][sd], and unzip and copy `sdelete.exe` to
-`/usr/local/bin`.  You must run the program once manually to accept the license
-agreement.  Failing to do this will cause some scripts to hang, so you should do
-it now.
-
-### 10. Install MMGen
+### 9. Install MMGen
 
 Now you’re ready to install MMGen itself.  On your online machine, clone the
 repository:
@@ -302,7 +298,7 @@ before being pushed to the public repository, it’s not guaranteed to install o
 run on MSYS2.  Installation or runtime issues may also arise due to missing
 dependencies or installation steps not yet covered in the documentation.
 
-### 11. Install and launch your coin daemons
+### 10. Install and launch your coin daemons
 
 At this point your MMGen installation will be able to generate wallets, along
 with keys and addresses for all supported coins.  However, if you intend to do
@@ -316,10 +312,13 @@ about adding to the Windows path, since your `PATH` variable was taken care of
 in Step 5.  Note that the daemons must be installed on both your online and
 offline machines.
 
-To transact ETH, ETC or ERC20 tokens you’ll need the latest Windows
-`openethereum.exe` binary from the [OpenEthereum Github repository][og].
-OpenEthereum, unlike the other coin daemons, is installed on the online machine
-only.  Copy the binary to your executable path, preferably `/usr/local/bin`.
+To transact ETH, ETC or ERC20 tokens you’ll need the latest OpenEthereum binary
+build for Windows from the [OpenEthereum Github repository][og].  OpenEthereum,
+unlike the other coin daemons, is installed on the online machine only.  Copy
+the `openethereum.exe` and `ethkey.exe` binaries to `/usr/local/bin`.  Please
+note that OpenEthereum performs very poorly under Windows due to threading
+limitations.  Unless you have very fast hardware, transacting and syncing the
+blockchain could be painfully slow.
 
 Typically you’ll wish to launch OpenEthereum as follows:
 
@@ -327,7 +326,7 @@ Typically you’ll wish to launch OpenEthereum as follows:
 
 More information on OpenEthereum’s command-line options can be found [here][pl].
 
-### 12. You’re done!
+### 11. You’re done!
 
 Congratulations, your installation is now complete, and you can proceed to
 [**Getting Started with MMGen**][gs].  Note that all features supported by
@@ -337,8 +336,8 @@ Please be aware of the following, however:
 + Non-ASCII filenames cannot be used with the Monero wallet syncing tool.  This
   is an issue with the Monero wallet RPC daemon rather than MMGen.
 
-+ The Bitcoin-ABC daemon cannot handle non-ASCII pathnames.  This is an issue
-  with the Bitcoin-ABC implementation for Windows, not MMGen.
++ The Bitcoin Cash Node daemon cannot handle non-ASCII pathnames.  This is an
+  issue with the Bitcoin Cash Node implementation for Windows, not MMGen.
 
 [mh]: https://www.msys2.org
 [mp]: https://sourceforge.net/projects/msys2
