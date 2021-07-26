@@ -34,15 +34,15 @@ class LEDControl:
 			trigger = '/sys/class/leds/led0/trigger',
 			trigger_states = ('none','mmc0') ),
 		'orange_pi': binfo(
-			name    = 'Orange Pi',
+			name    = 'Orange Pi (Armbian)',
 			status  = '/sys/class/leds/orangepi:red:status/brightness',
 			trigger = None,
 			trigger_states = None ),
-#		'rock_pi': binfo( # TODO
-#			name    = 'Rock Pi',
-#			status  = '/sys/class/leds/user-led1/brightness',
-#			trigger = '/sys/class/leds/user-led1/trigger',
-#			trigger_states = ('none','heartbeat') ),
+		'rock_pi': binfo(
+			name    = 'Rock Pi (Armbian)',
+			status  = '/sys/class/leds/status/brightness',
+			trigger = '/sys/class/leds/status/trigger',
+			trigger_states = ('none','heartbeat') ),
 		'dummy': binfo(
 			name    = 'Fake',
 			status  = '/tmp/led_status',
