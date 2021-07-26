@@ -223,14 +223,13 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	m2 = 'update the default wallet'
 	confirm_or_raise(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
-	msg('Securely deleting old wallet')
+	bmsg('Securely deleting old wallet')
 	from subprocess import run
-	wipe_cmd = ['sdelete','-p','20'] if g.platform=='win' else ['wipe','-sf']
-	try:
-		run(wipe_cmd + [ss_in.infile.name],check=True)
-	except:
-		ymsg(f'WARNING: {wipe_cmd[0]!r} command failed, using regular file delete instead')
-		os.unlink(ss_in.infile.name)
+	run(
+		['shred','--iterations=30','--zero','--remove=wipesync']
+		+ (['--verbose'] if opt.verbose else [])
+		+ [ss_in.infile.name],
+		check=True )
 else:
 	try:
 		assert invoked_as == 'gen', 'dw'
