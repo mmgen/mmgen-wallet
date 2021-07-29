@@ -191,7 +191,7 @@ class GlobalContext(Lockable):
 		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
 		'btc_ignore_daemon_version','bch_ignore_daemon_version','ltc_ignore_daemon_version',
 		'eth_ignore_daemon_version','etc_ignore_daemon_version',
-		'eth_mainnet_chain_name','eth_testnet_chain_name',
+		'eth_mainnet_chain_names','eth_testnet_chain_names',
 		'max_tx_file_size','max_input_size'
 	)
 	# Supported environmental vars

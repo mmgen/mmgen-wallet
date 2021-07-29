@@ -102,8 +102,8 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
-			if not hasattr(self,'chain_name'):
-				self.chain_name = self.network
+			# first chain name is default
+			self.chain_name = self.chain_names[0] if hasattr(self,'chain_names') else self.network
 
 			if self.tokensym:
 				assert isinstance(self,CoinProtocol.Ethereum), 'CoinProtocol.Base_chk1'
@@ -122,16 +122,11 @@ class CoinProtocol(MMGenObject):
 			the attribute 'chain_name' is used, while 'network' retains the generic name.
 			For Bitcoin and Bitcoin forks, 'network' and 'chain_name' are equivalent.
 			"""
-			for network,suf in (
-					('mainnet',''),
-					('testnet','Testnet'),
-					('regtest','Regtest' ),
-				):
-				name = CoinProtocol.coins[coin.lower()].name + suf
-				proto = getattr(CoinProtocol,name)
-				proto_chain_name = getattr(proto,'chain_name',None) or network
-				if chain_name == proto_chain_name:
-					return network
+			for network in ('mainnet','testnet','regtest'):
+				proto = init_proto(coin,network=network)
+				for proto_chain_name in ( getattr(proto,'chain_names',None) or [network] ):
+					if chain_name == proto_chain_name:
+						return network
 			raise ValueError(f'{chain_name}: unrecognized chain name for coin {coin}')
 
 		@staticmethod
@@ -143,6 +138,10 @@ class CoinProtocol(MMGenObject):
 				return nid(network_id[:-3],'regtest')
 			else:
 				return nid(network_id,'mainnet')
+
+		@staticmethod
+		def create_network_id(coin,network):
+			return coin.lower() + { 'mainnet':'', 'testnet':'_tn', 'regtest':'_rt' }[network]
 
 		def cap(self,s):
 			return s in self.caps
@@ -384,7 +383,7 @@ class CoinProtocol(MMGenObject):
 
 		coin_amt      = ETHAmt
 		max_tx_fee    = ETHAmt('0.005')
-		chain_name    = 'foundation'
+		chain_names   = ['ethereum','foundation']
 		sign_mode     = 'standalone'
 		caps          = ('token',)
 		mmcaps        = ('key','addr','rpc','tx')
@@ -410,21 +409,21 @@ class CoinProtocol(MMGenObject):
 			return pubkey_hash
 
 	class EthereumTestnet(Ethereum):
-		chain_name  = 'kovan'
+		chain_names = ['kovan']
 
 	class EthereumRegtest(EthereumTestnet):
-		chain_name  = 'developmentchain'
+		chain_names = ['developmentchain']
 
 	class EthereumClassic(Ethereum):
-		chain_name = 'ethereum_classic' # chain_id 0x3d (61)
-		max_tx_fee = ETHAmt('0.005')
+		chain_names = ['ethereum_classic'] # chain_id 0x3d (61)
+		max_tx_fee  = ETHAmt('0.005')
 		ignore_daemon_version = False
 
 	class EthereumClassicTestnet(EthereumClassic):
-		chain_name = 'classic-testnet' # aka Morden, chain_id 0x3e (62) (UNTESTED)
+		chain_names = ['classic-testnet'] # aka Morden, chain_id 0x3e (62) (UNTESTED)
 
 	class EthereumClassicRegtest(EthereumClassicTestnet):
-		chain_name  = 'developmentchain'
+		chain_names = ['developmentchain']
 
 	class Zcash(Bitcoin):
 		base_coin      = 'ZEC'

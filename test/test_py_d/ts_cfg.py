@@ -216,9 +216,9 @@ class TestSuiteCfg(TestSuiteBase):
 		def run(chk,testnet):
 			for coin,chain_chk in (('ETH',chk),('ETC',None)):
 				t = self.spawn_test(
-					args       = [f'--coin={coin}',f'--testnet={(0,1)[testnet]}','coin_specific_vars','chain_name'],
-					extra_desc = f'({coin} testnet={testnet} chain={chain_chk})' )
-				chain = t.expect_getend('chain_name: ')
+					args = [f'--coin={coin}',f'--testnet={(0,1)[testnet]}','coin_specific_vars','chain_names'],
+					extra_desc = f'({coin} testnet={testnet} chain_names={chain_chk})' )
+				chain = t.expect_getend('chain_names: ')
 				if chain_chk:
 					assert chain == chain_chk, f'{chain} != {chain_chk}'
 				else:
@@ -227,15 +227,17 @@ class TestSuiteCfg(TestSuiteBase):
 				t.ok()
 			return t
 
-		write_to_file(self.path('usr'),'eth_mainnet_chain_name foobar\n')
-		imsg(yellow('Wrote cfg file: "eth_mainnet_chain_name foobar"'))
-		t = run('foobar',False)
+		txt = 'eth_mainnet_chain_names istanbul constantinople'
+		write_to_file(self.path('usr'),txt+'\n')
+		imsg(yellow(f'Wrote cfg file: "{txt}"'))
+		t = run("['istanbul', 'constantinople']",False)
 		t = run(None,True)
 
-		write_to_file(self.path('usr'),'eth_testnet_chain_name foobar\n')
-		imsg(yellow('Wrote cfg file: "eth_testnet_chain_name foobar"'))
+		txt = 'eth_testnet_chain_names rinkeby'
+		write_to_file(self.path('usr'),txt+'\n')
+		imsg(yellow(f'Wrote cfg file: "{txt}"'))
 		t = run(None,False)
-		t = run('foobar',True)
+		t = run("['rinkeby']",True)
 
 		t.skip_ok = True
 		return t
