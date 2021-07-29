@@ -114,8 +114,7 @@ class TokenBase(MMGenObject): # ERC20
 		from .pyethereum.transactions import Transaction
 
 		if chain_id is None:
-			chain_id_method = ('parity_chainId','eth_chainId')['eth_chainId' in self.rpc.caps]
-			chain_id = int(await self.rpc.call(chain_id_method),16)
+			chain_id = int(await self.rpc.call('eth_chainId'),16)
 		tx = Transaction(**tx_in).sign(key,chain_id)
 		hex_tx = rlp.encode(tx).hex()
 		coin_txid = CoinTxID(tx.hash.hex())

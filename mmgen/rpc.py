@@ -643,21 +643,10 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		'net_version',
 		'parity_chain',
 		'parity_chainId', # superseded by eth_chainId
-		'parity_chainStatus',
-		'parity_composeTransaction',
-		'parity_gasCeilTarget',
-		'parity_gasFloorTarget',
 		'parity_getBlockHeaderByNumber',
-		'parity_localTransactions',
-		'parity_minGasPrice',
-		'parity_mode',
-		'parity_netPeers',
 		'parity_nextNonce',
 		'parity_nodeKind',
-		'parity_nodeName',
 		'parity_pendingTransactions',
-		'parity_pendingTransactionsStats',
-		'parity_versionInfo',
 	)
 
 class MoneroRPCClient(RPCClient):

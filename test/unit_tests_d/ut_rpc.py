@@ -58,7 +58,7 @@ class init_test:
 	async def eth(proto,backend):
 		rpc = await rpc_init(proto,backend)
 		do_msg(rpc)
-		await rpc.call('parity_versionInfo',timeout=300)
+		await rpc.call('eth_blockNumber',timeout=300)
 
 def run_test(coin,auth):
 	proto = init_proto(coin,network=('mainnet','regtest')[coin=='eth']) # FIXME CoinDaemon's network handling broken
