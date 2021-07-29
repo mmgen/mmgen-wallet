@@ -61,18 +61,27 @@ class init_test:
 		await rpc.call('eth_blockNumber',timeout=300)
 
 def run_test(coin,auth):
+
 	proto = init_proto(coin,network=('mainnet','regtest')[coin=='eth']) # FIXME CoinDaemon's network handling broken
+
 	d = CoinDaemon(network_id=coin,test_suite=True)
-	d.stop()
-	d.remove_datadir()
-	d.start()
+
+	if not opt.no_daemon_stop:
+		d.stop()
+
+	if not opt.no_daemon_autostart:
+		d.remove_datadir()
+		d.start()
 
 	for backend in g.autoset_opts['rpc_backend'].choices:
 		run_session(getattr(init_test,coin)(proto,backend),backend=backend)
 
-	d.stop()
+	if not opt.no_daemon_stop:
+		d.stop()
+
 	if auth:
 		auth_test(proto,d)
+
 	qmsg('  OK')
 	return True
 
