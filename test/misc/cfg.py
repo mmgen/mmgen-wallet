@@ -17,9 +17,9 @@ msg('Sample cfg file: {}'.format(cf_sample.fn))
 
 if cmd_args:
 	if cmd_args[0] == 'parse_test':
-		ps = cf_sample.parse(parse_vars=True)
+		ps = cf_sample.get_lines()
 		msg('parsed chunks: {}'.format(len(ps)))
-		pu = cf_usr.parse()
+		pu = cf_usr.get_lines()
 		msg('usr cfg: {}'.format(' '.join(['{}={}'.format(i.name,i.value) for i in pu])))
 	elif cmd_args[0] == 'coin_specific_vars':
 		from mmgen.protocol import init_proto_from_opts

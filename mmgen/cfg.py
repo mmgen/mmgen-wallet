@@ -41,6 +41,7 @@ class CfgFile(object):
 	write_metadata = False
 	fn_base = g.proj_name.lower() + '.cfg'
 	file_not_found_fs = 'WARNING: {} not found at {!r}'
+	line_data = namedtuple('cfgfile_line',['name','value','lineno','chunk'])
 
 	def __init__(self):
 		self.fn = os.path.join(self.fn_dir,self.fn_base)
@@ -65,22 +66,31 @@ class CfgFile(object):
 			except:
 				die(2,'ERROR: unable to write to {!r}'.format(self.fn))
 
-	def parse_var(self,line,lineno):
-		try:
-			m = re.match(r'(\w+)(\s+(\S+)|(\s+\w+:\S+)+)$',line) # allow multiple colon-separated values
-			return (m[1], dict([i.split(':') for i in m[2].split()]) if m[4] else m[3])
-		except:
-			raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
+	def parse_value(self,value,refval):
+		if isinstance(refval,dict):
+			m = re.fullmatch(r'((\s+\w+:\S+)+)',' '+value) # expect one or more colon-separated values
+			if m:
+				return dict([i.split(':') for i in m[1].split()])
+		elif isinstance(refval,list) or isinstance(refval,tuple):
+			m = re.fullmatch(r'((\s+\S+)+)',' '+value)     # expect single value or list
+			if m:
+				ret = m[1].split()
+				return ret if isinstance(refval,list) else tuple(ret)
+		else:
+			return value
 
-	def parse(self):
-		cdata = namedtuple('cfg_var',['name','value','lineno'])
-		def do_parse():
-			for n,line in enumerate(self.data,1):
+	def get_lines(self):
+		def gen_lines():
+			for lineno,line in enumerate(self.data,1):
 				line = strip_comments(line)
 				if line == '':
 					continue
-				yield cdata(*self.parse_var(line,n),n)
-		return do_parse()
+				m = re.fullmatch(r'(\w+)(\s+)(.*)',line)
+				if m:
+					yield self.line_data(m[1],m[3],lineno,None)
+				else:
+					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
+		return gen_lines()
 
 	@classmethod
 	def get_cls_by_id(self,id_str):
@@ -106,7 +116,7 @@ class CfgFileSample(CfgFile):
 	def computed_chksum(self):
 		return type(self).compute_chksum(self.data)
 
-	def parse(self,parse_vars=False):
+	def get_lines(self):
 		"""
 		The config file template contains some 'magic':
 		- lines must either be empty or begin with '# '
@@ -117,16 +127,12 @@ class CfgFileSample(CfgFile):
 		- last line is metadata line of the form '# Version VER_NUM HASH'
 		"""
 
-		cdata = namedtuple('chunk_data',['name','lines','lineno','parsed'])
-
-		def process_chunk(chunk,n):
-			last_line = chunk[-1].split()
-			return cdata(
-				last_line[1],
-				chunk,
-				n,
-				self.parse_var(' '.join(last_line[1:]),n) if parse_vars else None,
-			)
+		def process_chunk(chunk,lineno):
+			m = re.fullmatch(r'(#\s*)(\w+)(\s+)(.*)',chunk[-1])
+			if m:
+				return self.line_data(m[2],m[4],lineno,chunk)
+			else:
+				raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
 
 		def gen_chunks(lines):
 			hdr = True
@@ -212,7 +218,7 @@ class CfgFileSampleUsr(CfgFileSample):
 		if self.data:
 			if self.parse_metadata():
 				if self.chksum == self.computed_chksum:
-					diff = self.diff(self.parse(),src.parse())
+					diff = self.diff(self.get_lines(),src.get_lines())
 					if not diff:
 						return
 					self.show_changes(diff)
@@ -260,7 +266,7 @@ class CfgFileSampleUsr(CfgFileSample):
 				msg(m1.format(suf(data,verb='has'),desc,opts))
 				if desc == 'removed' and data:
 					uc = cfg_file('usr')
-					usr_names = [i.name for i in uc.parse()]
+					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
 					if bad:
@@ -277,7 +283,7 @@ class CfgFileSampleUsr(CfgFileSample):
 						yield (
 							'{} section{}:'.format(capfirst(desc),suf(data))
 							+ sep2
-							+ sep2.join(['{}'.format(sep.join(v.lines)) for v in data])
+							+ sep2.join(['{}'.format(sep.join(v.chunk)) for v in data])
 						)
 
 			do_pager(

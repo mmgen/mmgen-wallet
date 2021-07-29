@@ -115,8 +115,7 @@ def opt_postproc_debug():
 
 def override_globals_from_cfg_file(ucfg):
 	from .protocol import CoinProtocol,init_proto
-	for d in ucfg.parse():
-		val = d.value
+	for d in ucfg.get_lines():
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in CoinProtocol.coins:
@@ -130,11 +129,9 @@ def override_globals_from_cfg_file(ucfg):
 				cls = g                          # g is "singleton" instance, so override _instance_ attr
 				attr = d.name
 			refval = getattr(cls,attr)
-			if type(refval) is dict and type(val) is str: # hack - catch single colon-separated value
-				try:
-					val = dict([val.split(':')])
-				except:
-					raise CfgFileParseError(f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
+			val = ucfg.parse_value(d.value,refval)
+			if not val:
+				raise CfgFileParseError(f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			setattr(cls,attr,val_conv)
 		else:
