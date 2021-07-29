@@ -165,7 +165,7 @@ class MMGenRegtest(MMGenObject):
 		msg(fs.format('Total balance:',sum(v for k,v in bal.items())))
 
 	async def send(self,addr,amt):
-		gmsg('Sending {} miner {} to address {}'.format(amt,self.d.daemon_id.upper(),addr))
+		gmsg('Sending {} miner {} to address {}'.format(amt,self.d.coin,addr))
 		cp = await self.rpc_call('sendtoaddress',addr,str(amt),wallet='miner')
 		await self.generate(1)
 

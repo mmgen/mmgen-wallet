@@ -8,7 +8,7 @@ from mmgen.exception import *
 
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init,MoneroWalletRPCClient
-from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
+from mmgen.daemon import CoinDaemon,MoneroWalletDaemon,bitcoin_core_daemon
 
 def auth_test(proto,d):
 	if g.platform != 'win':
@@ -62,9 +62,9 @@ class init_test:
 
 def run_test(coin,auth):
 
-	proto = init_proto(coin,network=('mainnet','regtest')[coin=='eth']) # FIXME CoinDaemon's network handling broken
+	proto = init_proto(coin)
 
-	d = CoinDaemon(network_id=coin,test_suite=True)
+	d = CoinDaemon(proto=proto,test_suite=True)
 
 	if not opt.no_daemon_stop:
 		d.stop()

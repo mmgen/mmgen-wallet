@@ -332,7 +332,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 		if not opt.no_daemon_autostart:
-			start_test_daemons(self.proto.coin,remove_datadir=True)
+			if not start_test_daemons(self.proto.coin+'_rt',remove_datadir=True):
+				return False
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):
@@ -995,5 +996,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def stop(self):
 		self.spawn('',msg_only=True)
 		if not opt.no_daemon_stop:
-			stop_test_daemons(self.proto.coin)
+			if not stop_test_daemons(self.proto.coin+'_rt'):
+				return False
 		return 'ok'

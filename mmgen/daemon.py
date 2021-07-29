@@ -26,6 +26,9 @@ from collections import namedtuple
 from .exception import *
 from .common import *
 
+_dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
+_pd = namedtuple('rpc_ports_data',['mainnet','testnet','regtest'])
+
 class Daemon(MMGenObject):
 
 	desc = 'daemon'
@@ -181,7 +184,7 @@ class Daemon(MMGenObject):
 			time.sleep(0.2)
 		else:
 			m = 'Wait for state {!r} timeout exceeded for daemon {} {} (port {})'
-			die(2,m.format(req_state,self.daemon_id.upper(),self.network,self.rpc_port))
+			die(2,m.format(req_state,self.coin,self.network,self.rpc_port))
 
 	@classmethod
 	def check_implement(cls):
@@ -223,7 +226,7 @@ class MoneroWalletDaemon(Daemon):
 
 	desc = 'RPC daemon'
 	net_desc = 'Monero wallet'
-	daemon_id = 'xmr'
+	coin = 'XMR'
 	network = 'wallet RPC'
 	new_console_mswin = True
 	ps_pid_mswin = True
@@ -314,6 +317,7 @@ class MoneroWalletDaemon(Daemon):
 		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
 
 class CoinDaemon(Daemon):
+	networks = ('mainnet','testnet','regtest')
 	cfg_file_hdr = ''
 	subclasses_must_implement = ('state','stop_cmd')
 	avail_flags = ('keep_cfg_file',)
@@ -321,109 +325,24 @@ class CoinDaemon(Daemon):
 	datadir_is_subdir = False
 	data_subdir = ''
 
-	network_ids = (
-		'btc','btc_tn','btc_rt',
-		'bch','bch_tn','bch_rt',
-		'ltc','ltc_tn','ltc_rt',
-		'xmr','xmr_tn',
-		'eth','etc'
-	)
-
-	cd = namedtuple('daemon_data', [
-		'id',
-		'coin',
-		'cls_pfx',
-		'coind_name',
-		'coind_version', 'coind_version_str', # latest tested version
-		'exec_fn',
-		'cli_fn',
-		'cfg_file',
-		'testnet_dir',
-		'dfl_rpc',
-		'dfl_rpc_tn',
-		'dfl_rpc_rt' ])
-
-	daemon_ids = {
-		'btc': cd(
-			'bitcoin_core',
-			'Bitcoin',
-			'Bitcoin',
-			'Bitcoin Core', 210100, '0.21.1',
-			'bitcoind',
-			'bitcoin-cli',
-			'bitcoin.conf',
-			'testnet3',
-			8332, 18332, 18444),
-		'bch': cd(
-			'bitcoin_cash_node',
-			'BitcoinCashNode',
-			'Bitcoin',
-			'Bitcoin Cash Node', 23000000, '23.0.0',
-			'bitcoind-bchn',
-			'bitcoin-cli-bchn',
-			'bitcoin.conf',
-			'testnet3',
-			8442, 18442, 18553), # for BCH we use non-standard RPC ports
-		'ltc': cd(
-			'litecoin_core',
-			'Litecoin',
-			'Bitcoin',
-			'Litecoin Core', 180100, '0.18.1',
-			'litecoind',
-			'litecoin-cli',
-			'litecoin.conf',
-			'testnet4',
-			9332, 19332, 19444),
-		'xmr': cd(
-			'monerod',
-			'Monero',
-			'Monero',
-			'Monero', 'N/A', 'N/A',
-			'monerod',
-			'monerod',
-			'bitmonero.conf',
-			'stagenet',
-			18081, 38081, None),
-		'eth': cd(
-			'openethereum',
-			'Ethereum',
-			'Ethereum',
-			'OpenEthereum', 3003000, '3.3.0',
-			'openethereum',
-			'openethereum',
-			'parity.conf',
-			None,
-			8545, 8545, 8545),
-		'etc': cd(
-			'openethereum',
-			'Ethereum Classic',
-			'Ethereum',
-			'OpenEthereum', 3003000, '3.3.0',
-			'openethereum',
-			'openethereum',
-			'parity.conf',
-			None,
-			8545, 8545, 8545)
+	_cd = namedtuple('coins_data',['coin_name','daemon_ids'])
+	coins = {
+		'BTC': _cd('Bitcoin',           ['bitcoin_core']),
+		'BCH': _cd('Bitcoin Cash Node', ['bitcoin_cash_node']),
+		'LTC': _cd('Litecoin',          ['litecoin_core']),
+		'XMR': _cd('Monero',            ['monero']),
+		'ETH': _cd('Ethereum',          ['openethereum']),
+		'ETC': _cd('Ethereum Classic',  ['openethereum_etc']),
 	}
 
-	dfl_datadirs = {
-		'linux': {
-			'btc': [g.home_dir,'.bitcoin'],
-			'bch': [g.home_dir,'.bitcoin-bchn'],
-			'ltc': [g.home_dir,'.litecoin'],
-			'xmr': [g.home_dir,'.bitmonero'],
-			'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
-			'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
-		},
-		'win': {
-			'btc': [os.getenv('APPDATA'),'Bitcoin'],
-			'bch': [os.getenv('APPDATA'),'Bitcoin_ABC'],
-			'ltc': [os.getenv('APPDATA'),'Litecoin'],
-			'xmr': ['/','c','ProgramData','bitmonero'],
-			'eth': [g.home_dir,'.local','share','io.parity.ethereum'],
-			'etc': [g.home_dir,'.local','share','io.parity.ethereum'],
-		},
-	}
+	@classmethod
+	def get_network_ids(cls): # FIXME: gets IDs for _default_ daemon only
+		from .protocol import CoinProtocol
+		def gen():
+			for coin,data in cls.coins.items():
+				for network in globals()[data.daemon_ids[0]+'_daemon'].networks:
+					yield CoinProtocol.Base.create_network_id(coin,network)
+		return list(gen())
 
 	def __new__(cls,
 			network_id = None,
@@ -440,17 +359,23 @@ class CoinDaemon(Daemon):
 		if proto:
 			network_id = proto.network_id
 			network    = proto.network
-			daemon_id  = proto.coin.lower()
+			coin       = proto.coin
 		else:
 			network_id = network_id.lower()
-			assert network_id in cls.network_ids, f'{network_id!r}: invalid network ID'
-			from .protocol import CoinProtocol
-			daemon_id,network = CoinProtocol.Base.parse_network_id(network_id)
+			from .protocol import CoinProtocol,init_proto
+			proto = init_proto(network_id=network_id)
+			coin,network = CoinProtocol.Base.parse_network_id(network_id)
+			coin = coin.upper()
 
-		me = Daemon.__new__(globals()[cls.daemon_ids[daemon_id].cls_pfx+'Daemon'])
-		me.network_id = network_id
+		daemon_id = cls.coins[coin].daemon_ids[0]
+		me = Daemon.__new__(globals()[daemon_id + '_daemon'])
+		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network = network
-		me.daemon_id = daemon_id
+		me.network_id = network_id
+		me.coin = coin
+		me.coin_name = cls.coins[coin].coin_name
+		me.id = daemon_id
+		me.proto = proto
 
 		return me
 
@@ -485,25 +410,23 @@ class CoinDaemon(Daemon):
 			for flag in flags:
 				self.add_flag(flag)
 
-		for k in self.daemon_ids[self.daemon_id]._fields:
-			setattr(self,k,getattr(self.daemon_ids[self.daemon_id],k))
+		for k,v in self.daemon_data._asdict().items():
+			setattr(self,k,v)
 
-		if self.network == 'regtest':
-			self.desc = 'regtest daemon'
+		if self.network == 'regtest' and isinstance(self,bitcoin_core_daemon):
 			if test_suite:
 				rel_datadir = os.path.join(
 					'test',
 					'data_dir{}'.format('-α' if g.debug_utf8 else ''),
 					'regtest',
-					self.daemon_id )
+					self.coin.lower() )
 			else:
-				dfl_datadir = os.path.join(g.data_dir_root,'regtest',self.daemon_id)
+				dfl_datadir = os.path.join(g.data_dir_root,'regtest',self.coin.lower())
 		elif test_suite:
 			self.desc = 'test suite daemon'
-			rel_datadir = os.path.join('test','daemons',self.daemon_id)
+			rel_datadir = os.path.join('test','daemons',self.coin.lower())
 		else:
-			dfl_datadir = os.path.join( *self.dfl_datadirs[g.platform][self.daemon_id] )
-
+			dfl_datadir = os.path.join(*self.datadirs[g.platform])
 
 		if test_suite:
 			dfl_datadir = os.path.join(os.getcwd(),rel_datadir)
@@ -519,17 +442,13 @@ class CoinDaemon(Daemon):
 				self.datadir = os.path.join(self.datadir,self.testnet_dir)
 
 		self.port_shift = (1237 if test_suite else 0) + (port_shift or 0)
-		self.rpc_port = {
-				'mainnet': self.dfl_rpc,
-				'testnet': self.dfl_rpc_tn,
-				'regtest': self.dfl_rpc_rt,
-			}[self.network] + self.port_shift
+		self.rpc_port = getattr(self.rpc_ports,self.network) + self.port_shift
 
 		if g.rpc_port: # user-set global overrides everything else
 			self.rpc_port = g.rpc_port
 
 		self.pidfile = '{}/{}-daemon-{}.pid'.format(self.datadir,self.network,self.rpc_port)
-		self.net_desc = '{} {}'.format(self.coin,self.network)
+		self.net_desc = '{} {}'.format(self.coin_name,self.network)
 		self.subclass_init()
 
 	@property
@@ -544,13 +463,23 @@ class CoinDaemon(Daemon):
 				+ self.shared_args
 				+ list(cmds) )
 
-class BitcoinDaemon(CoinDaemon):
-	cfg_file_hdr = '# BitcoinDaemon config file\n'
+class bitcoin_core_daemon(CoinDaemon):
+	daemon_data = _dd('Bitcoin Core', 210100, '0.21.1')
+	exec_fn = 'bitcoind'
+	cli_fn = 'bitcoin-cli'
+	testnet_dir = 'testnet3'
+	cfg_file_hdr = '# BitcoinCoreDaemon config file\n'
 	tracking_wallet_name = 'mmgen-tracking-wallet'
+	rpc_ports = _pd(8332, 18332, 18444)
+	cfg_file = 'bitcoin.conf'
+	datadirs = {
+		'linux': [g.home_dir,'.bitcoin'],
+		'win':   [os.getenv('APPDATA'),'Bitcoin']
+	}
 
 	def subclass_init(self):
 
-		if self.platform == 'win' and self.daemon_id == 'bch':
+		if self.platform == 'win' and self.coin == 'BCH':
 			self.use_pidfile = False
 
 		from .regtest import MMGenRegtest
@@ -570,10 +499,10 @@ class BitcoinDaemon(CoinDaemon):
 			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
 			['--pid='+self.pidfile,    self.use_pidfile],
 			['--daemon',               self.platform == 'linux' and not 'no_daemonize' in self.opts],
-			['--fallbackfee=0.0002',   self.daemon_id == 'btc' and self.network == 'regtest'],
-			['--usecashaddr=0',        self.daemon_id == 'bch'],
-			['--mempoolreplacement=1', self.daemon_id == 'ltc'],
-			['--txindex=1',            self.daemon_id == 'ltc'],
+			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
+			['--usecashaddr=0',        self.coin == 'BCH'],
+			['--mempoolreplacement=1', self.coin == 'LTC'],
+			['--txindex=1',            self.coin == 'LTC'],
 		)
 
 		if self.network == 'testnet':
@@ -602,16 +531,47 @@ class BitcoinDaemon(CoinDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
-class MoneroDaemon(CoinDaemon):
+class bitcoin_cash_node_daemon(bitcoin_core_daemon):
+	daemon_data = _dd('Bitcoin Cash Node', 23000000, '23.0.0')
+	exec_fn = 'bitcoind-bchn'
+	cli_fn = 'bitcoin-cli-bchn'
+	rpc_ports = _pd(8442, 18442, 18553) # use non-standard ports
+	datadirs = {
+		'linux': [g.home_dir,'.bitcoin-bchn'],
+		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
+	}
 
+class litecoin_core_daemon(bitcoin_core_daemon):
+	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')
+	exec_fn = 'litecoind'
+	cli_fn = 'litecoin-cli'
+	testnet_dir = 'testnet4'
+	rpc_ports = _pd(9332, 19332, 19444)
+	cfg_file = 'litecoin.conf'
+	datadirs = {
+		'linux': [g.home_dir,'.litecoin'],
+		'win':   [os.getenv('APPDATA'),'Litecoin']
+	}
+
+class monero_daemon(CoinDaemon):
+	daemon_data = _dd('Monero', 'N/A', 'N/A')
+	networks = ('mainnet','testnet')
+	exec_fn = 'monerod'
+	testnet_dir = 'stagenet'
 	ps_pid_mswin = True
 	new_console_mswin = True
 	host = 'localhost' # FIXME
+	rpc_ports = _pd(18081, 38081, None)
+	cfg_file = 'bitmonero.conf'
 	datadir_is_subdir = True
+	datadirs = {
+		'linux': [g.home_dir,'.bitmonero'],
+		'win':   ['/','c','ProgramData','bitmonero']
+	}
 
 	def subclass_init(self):
 		if self.network == 'testnet':
-			self.net_desc = f'{self.coin} stagenet'
+			self.net_desc = f'{self.coin_name} stagenet'
 
 		self.p2p_port = self.rpc_port - 1
 		self.zmq_port = self.rpc_port + 1
@@ -656,28 +616,40 @@ class MoneroDaemon(CoinDaemon):
 		else:
 			return [self.exec_fn] + self.shared_args + ['exit']
 
-class EthereumDaemon(CoinDaemon):
-
+class openethereum_daemon(CoinDaemon):
+	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
+	exec_fn = 'openethereum'
 	ps_pid_mswin = True
+	ports_shift = { 'mainnet': 0, 'testnet': 20, 'regtest': 40 }
+	rpc_ports = _pd(*[8545 + n for n in ports_shift.values()]) # testnet and regtest are non-standard
+	cfg_file = 'parity.conf'
+	datadirs = {
+		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
+		'win':   [g.home_dir,'.local','share','io.parity.ethereum'] # FIXME
+	}
+	testnet_dir = 'testnet' # FIXME
 
 	def subclass_init(self):
 		# defaults:
 		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
 		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
 
-		base_path = os.path.join(self.datadir,'devchain')
+		base_path = os.path.join(self.datadir,self.proto.chain_name)
 		shutil.rmtree(base_path,ignore_errors=True)
 
+		ps = self.port_shift + self.ports_shift[self.network]
 		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
+
 		self.coind_args = list_gen(
 			['--no-ws'],
 			['--no-ipc'],
 			['--no-secretstore'],
-			[f'--ports-shift={self.port_shift}'],
+			[f'--ports-shift={ps}'],
 			[f'--base-path={base_path}'],
-			['--config=dev'],
-			['--mode=offline',self.test_suite],
-			['--log-file='+os.path.join(self.datadir,'openethereum.log')],
+			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
+			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
+			['--mode=offline', self.test_suite or self.network=='regtest'],
+			['--log-file='+os.path.join(self.datadir, f'openethereum-{self.network}.log')],
 			['daemon', ld],
 			[self.pidfile, ld],
 		)
@@ -699,5 +671,8 @@ class EthereumDaemon(CoinDaemon):
 	@property
 	def stop_cmd(self):
 		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
+
+class openethereum_etc_daemon(openethereum_daemon):
+	rpc_ports = _pd(*[8645 + n for n in openethereum_daemon.ports_shift.values()])
 
 CoinDaemon.check_implement()

@@ -5,7 +5,7 @@ from include.tests_header import repo_root
 from mmgen.common import *
 from mmgen.daemon import CoinDaemon
 
-network_ids = CoinDaemon.network_ids
+network_ids = CoinDaemon.get_network_ids()
 
 action = g.prog_name.split('-')[0]
 
