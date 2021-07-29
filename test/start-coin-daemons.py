@@ -53,10 +53,6 @@ else:
 		if i not in network_ids:
 			die(1,f'{i!r}: invalid network ID')
 
-if 'eth' in ids and 'etc' in ids:
-	msg('Cannot run ETH and ETC simultaneously, so skipping ETC')
-	ids.remove('etc')
-
 for network_id in ids:
 	network_id = network_id.lower()
 	d = CoinDaemon(

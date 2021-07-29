@@ -332,7 +332,7 @@ class CoinDaemon(Daemon):
 		'LTC': _cd('Litecoin',          ['litecoin_core']),
 		'XMR': _cd('Monero',            ['monero']),
 		'ETH': _cd('Ethereum',          ['openethereum']),
-		'ETC': _cd('Ethereum Classic',  ['openethereum_etc']),
+#		'ETC': _cd('Ethereum Classic',  ['openethereum_etc']),
 	}
 
 	@classmethod
@@ -672,7 +672,7 @@ class openethereum_daemon(CoinDaemon):
 	def stop_cmd(self):
 		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
 
-class openethereum_etc_daemon(openethereum_daemon):
-	rpc_ports = _pd(*[8645 + n for n in openethereum_daemon.ports_shift.values()])
+# class openethereum_etc_daemon(openethereum_daemon):
+#	rpc_ports = _pd(*[8645 + n for n in openethereum_daemon.ports_shift.values()])
 
 CoinDaemon.check_implement()

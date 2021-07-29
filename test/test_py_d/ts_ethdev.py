@@ -138,7 +138,7 @@ coin = g.coin
 
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
-	networks = ('eth','etc')
+	networks = ('eth',) # 'etc' temporarily disabled
 	passthru_opts = ('coin',)
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
