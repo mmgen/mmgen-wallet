@@ -30,3 +30,5 @@ if cmd_args:
 				varname,
 				getattr(proto,varname)
 			))
+	elif cmd_args[0] == 'mnemonic_entry_modes':
+		print( 'mnemonic_entry_modes: {}'.format(g.mnemonic_entry_modes) )

@@ -31,6 +31,7 @@ class TestSuiteCfg(TestSuiteBase):
 		('old_sample_bad_var', (40,'init with old v2 cfg sample file and bad variable in mmgen.cfg', [])),
 		('coin_specific_vars', (40,'test setting of coin-specific vars', [])),
 		('chain_names',        (40,'test setting of chain names', [])),
+		('mnemonic_entry_modes',(40,'test setting of mnemonic entry modes', [])),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -195,6 +196,20 @@ class TestSuiteCfg(TestSuiteBase):
 
 		t.skip_ok = True
 		return t
+
+	def mnemonic_entry_modes(self):
+
+		def run(modes_chk):
+			t = self.spawn_test(args=['mnemonic_entry_modes'])
+			modes = t.expect_getend('mnemonic_entry_modes: ')
+			assert modes_chk == modes, f'{modes_chk} != {modes}'
+			t.read()
+			return t
+
+		txt = 'mnemonic_entry_modes mmgen:full bip39:short'
+		write_to_file(self.path('usr'),txt+'\n')
+		imsg(yellow(f'Wrote cfg file: "{txt}"'))
+		return run("{'mmgen': 'full', 'bip39': 'short'}")
 
 	def chain_names(self):
 
