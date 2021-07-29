@@ -60,7 +60,7 @@ class TestSuiteCfg(TestSuiteBase):
 		for i in (1,2,3,4,5):
 			t.expect(errstr)
 		for k in ('usr','sys','sample'):
-			t.expect('{} cfg: {}'.format(k,self.path(k)))
+			t.expect('{} cfg file:\s+{}'.format(capfirst(k),self.path(k)),regex=True)
 			assert not os.path.exists(self.path(k)), self.path(k)
 		t.read()
 		return t

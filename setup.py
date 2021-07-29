@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys,os,subprocess
+import sys,os
+from subprocess import run,PIPE
 from shutil import copy2
 
 sys_ver = sys.version_info[:2]
@@ -24,11 +25,13 @@ req_ver = (3,6)
 ver2f = lambda t: float('{}.{:03}'.format(*t))
 
 if ver2f(sys_ver) < ver2f(req_ver):
-	m = '{}.{}: wrong Python version.  MMGen requires Python {}.{} or greater\n'
+	m = '{}.{}: incorrect Python version.  MMGen requires Python {}.{} or greater\n'
 	sys.stderr.write(m.format(*sys_ver,*req_ver))
 	sys.exit(1)
 
-have_msys2 = subprocess.check_output(['uname','-s']).strip()[:7] == b'MSYS_NT'
+have_msys2 = run(['uname','-s'],stdout=PIPE,check=True).stdout.startswith(b'MSYS_NT')
+if have_msys2:
+	print('MSYS2 system detected')
 
 from distutils.core import setup,Extension
 from distutils.command.build_ext import build_ext
@@ -50,7 +53,7 @@ class my_build_ext(build_ext):
 		ext_dest = os.path.join('mmgen',os.path.basename(ext_src))
 		try: os.unlink(ext_dest)
 		except: pass
-		os.chmod(ext_src,0o755)
+		os.chmod(ext_src,0o755) # required if user has non-standard umask
 		print('copying {} to {}'.format(ext_src,ext_dest))
 		copy2(ext_src,ext_dest)
 		copy_owner(cwd,ext_dest)
@@ -66,7 +69,7 @@ def link_or_copy(tdir,a,b):
 class my_install_data(install_data):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
-			os.chmod(os.path.join('data_files',f),0o644)
+			os.chmod(os.path.join('data_files',f),0o644) # required if user has non-standard umask
 		install_data.run(self)
 
 class my_build_py(build_py):

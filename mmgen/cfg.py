@@ -128,20 +128,23 @@ class CfgFileSample(CfgFile):
 				self.parse_var(' '.join(last_line[1:]),n) if parse_vars else None,
 			)
 
-		def get_chunks(lines):
+		def gen_chunks(lines):
 			hdr = True
 			chunk = []
 			in_chunk = False
-			for n,line in enumerate(lines,1):
+
+			for lineno,line in enumerate(lines,1):
+
 				if line.startswith('##'):
 					hdr = False
 					continue
+
 				if hdr:
 					continue
 
 				if line == '':
 					in_chunk = False
-				elif line.startswith('# '):
+				elif line.startswith('#'):
 					if in_chunk == False:
 						if chunk:
 							yield process_chunk(chunk,last_nonblank)
@@ -149,14 +152,14 @@ class CfgFileSample(CfgFile):
 						in_chunk = True
 					else:
 						chunk.append(line)
-					last_nonblank = n
+					last_nonblank = lineno
 				else:
-					die(2,'parse error in file {!r}, line {}'.format(self.fn,n))
+					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
 
 			if chunk:
 				yield process_chunk(chunk,last_nonblank)
 
-		return list(get_chunks(self.data))
+		return list(gen_chunks(self.data))
 
 class CfgFileUsr(CfgFile):
 	desc = 'user configuration file'

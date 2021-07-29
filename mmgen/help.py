@@ -35,7 +35,7 @@ def help_notes_func(proto,k):
 	def coind_exec():
 		from .daemon import CoinDaemon
 		return (
-			CoinDaemon(proto.coin).coind_exec if proto.coin.lower() in CoinDaemon.daemon_ids else
+			CoinDaemon(proto.coin).exec_fn if proto.coin.lower() in CoinDaemon.coins else
 			'bitcoind' )
 
 	class help_notes:

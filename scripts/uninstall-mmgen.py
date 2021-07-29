@@ -54,7 +54,11 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-if len(cmd_args): opts.usage()
+if g.platform == 'linux' and os.getenv('USER') != 'root':
+	die(1,'This program must be run as root')
+
+if len(cmd_args):
+	opts.usage()
 
 mod_dir = os.path.split(normalize_path(modpath_save))[0]
 mod_pardir = os.path.split(mod_dir)[0]

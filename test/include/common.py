@@ -191,18 +191,19 @@ def stop_test_daemons(*network_ids):
 		return test_daemons_ops(*network_ids,op='stop')
 
 def restart_test_daemons(*network_ids,remove_datadir=False):
-	stop_test_daemons(*network_ids)
+	if not stop_test_daemons(*network_ids):
+		return False
 	return start_test_daemons(*network_ids,remove_datadir=remove_datadir)
 
 def test_daemons_ops(*network_ids,op,remove_datadir=False):
 	if not opt.no_daemon_autostart:
 		from mmgen.daemon import CoinDaemon
 		silent = not opt.verbose and not getattr(opt,'exact_output',False)
+		ret = False
 		for network_id in network_ids:
-			if network_id.lower() not in CoinDaemon.network_ids: # silently ignore invalid IDs
-				continue
 			d = CoinDaemon(network_id,test_suite=True)
 			if remove_datadir:
 				d.stop(silent=True)
 				d.remove_datadir()
-			d.cmd(op,silent=silent)
+			ret = d.cmd(op,silent=silent)
+		return ret

@@ -95,7 +95,7 @@ class Daemon(MMGenObject):
 			# TODO: assumes only one running instance of given daemon
 			cp = self.run_cmd(['ps','-Wl'],silent=True,check=False)
 			for line in cp.stdout.decode().splitlines():
-				if self.exec_fn_mswin in line:
+				if f'{self.exec_fn}.exe' in line:
 					return line.split()[3] # use Windows, not Cygwin, PID
 			die(2,'PID for {!r} not found in ps output'.format(ss))
 		elif self.use_pidfile:
@@ -125,7 +125,7 @@ class Daemon(MMGenObject):
 			if not silent:
 				m = '{} {} already running with pid {}'
 				msg(m.format(self.net_desc,self.desc,self.pid))
-			return
+			return True
 
 		self.wait_for_state('stopped')
 
@@ -162,6 +162,7 @@ class Daemon(MMGenObject):
 		else:
 			if not silent:
 				msg('{} {} on port {} not running'.format(self.net_desc,self.desc,self.rpc_port))
+			return True
 
 	def restart(self,silent=False):
 		self.stop(silent=silent)
@@ -225,7 +226,6 @@ class MoneroWalletDaemon(Daemon):
 	daemon_id = 'xmr'
 	network = 'wallet RPC'
 	new_console_mswin = True
-	exec_fn_mswin = 'monero-wallet-rpc.exe'
 	ps_pid_mswin = True
 
 	def __init__(self, wallet_dir,
@@ -335,8 +335,8 @@ class CoinDaemon(Daemon):
 		'cls_pfx',
 		'coind_name',
 		'coind_version', 'coind_version_str', # latest tested version
-		'coind_exec',
-		'cli_exec',
+		'exec_fn',
+		'cli_fn',
 		'cfg_file',
 		'testnet_dir',
 		'dfl_rpc',
@@ -444,7 +444,7 @@ class CoinDaemon(Daemon):
 		else:
 			network_id = network_id.lower()
 			assert network_id in cls.network_ids, f'{network_id!r}: invalid network ID'
-			from mmgen.protocol import CoinProtocol
+			from .protocol import CoinProtocol
 			daemon_id,network = CoinProtocol.Base.parse_network_id(network_id)
 
 		me = Daemon.__new__(globals()[cls.daemon_ids[daemon_id].cls_pfx+'Daemon'])
@@ -534,13 +534,13 @@ class CoinDaemon(Daemon):
 
 	@property
 	def start_cmd(self):
-		return ([self.coind_exec]
+		return ([self.exec_fn]
 				+ self.coind_args
 				+ self.shared_args
 				+ self.usr_coind_args )
 
 	def cli_cmd(self,*cmds):
-		return ([self.cli_exec]
+		return ([self.cli_fn]
 				+ self.shared_args
 				+ list(cmds) )
 
@@ -553,7 +553,7 @@ class BitcoinDaemon(CoinDaemon):
 		if self.platform == 'win' and self.daemon_id == 'bch':
 			self.use_pidfile = False
 
-		from mmgen.regtest import MMGenRegtest
+		from .regtest import MMGenRegtest
 		self.shared_args = list_gen(
 			[f'--datadir={self.datadir}'],
 			[f'--rpcport={self.rpc_port}'],
@@ -604,7 +604,6 @@ class BitcoinDaemon(CoinDaemon):
 
 class MoneroDaemon(CoinDaemon):
 
-	exec_fn_mswin = 'monerod.exe'
 	ps_pid_mswin = True
 	new_console_mswin = True
 	host = 'localhost' # FIXME
@@ -643,7 +642,7 @@ class MoneroDaemon(CoinDaemon):
 		if not self.test_socket(self.host,self.rpc_port):
 			return 'stopped'
 		cp = self.run_cmd(
-			[self.coind_exec]
+			[self.exec_fn]
 			+ self.shared_args
 			+ ['status'],
 			silent=True,
@@ -655,11 +654,10 @@ class MoneroDaemon(CoinDaemon):
 		if self.platform == 'win':
 			return ['kill','-Wf',self.pid]
 		else:
-			return [self.coind_exec] + self.shared_args + ['exit']
+			return [self.exec_fn] + self.shared_args + ['exit']
 
 class EthereumDaemon(CoinDaemon):
 
-	exec_fn_mswin = 'openethereum.exe'
 	ps_pid_mswin = True
 
 	def subclass_init(self):
@@ -667,17 +665,20 @@ class EthereumDaemon(CoinDaemon):
 		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
 		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
 
-		chaindir = os.path.join(self.datadir,'devchain')
-		shutil.rmtree(chaindir,ignore_errors=True)
+		base_path = os.path.join(self.datadir,'devchain')
+		shutil.rmtree(base_path,ignore_errors=True)
 
 		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
 		self.coind_args = list_gen(
+			['--no-ws'],
+			['--no-ipc'],
+			['--no-secretstore'],
 			[f'--ports-shift={self.port_shift}'],
-			[f'--base-path={chaindir}'],
+			[f'--base-path={base_path}'],
 			['--config=dev'],
 			['--mode=offline',self.test_suite],
 			['--log-file='+os.path.join(self.datadir,'openethereum.log')],
-			['daemon',     ld],
+			['daemon', ld],
 			[self.pidfile, ld],
 		)
 

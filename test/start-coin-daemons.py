@@ -5,6 +5,8 @@ from include.tests_header import repo_root
 from mmgen.common import *
 from mmgen.daemon import CoinDaemon
 
+network_ids = CoinDaemon.network_ids
+
 action = g.prog_name.split('-')[0]
 
 opts_data = {
@@ -30,7 +32,7 @@ Valid network IDs: {nid}, all, or no_xmr
 	},
 	'code': {
 		'options': lambda s: s.format(a=action.capitalize(),pn=g.prog_name),
-		'notes': lambda s: s.format(nid=', '.join(CoinDaemon.network_ids))
+		'notes': lambda s: s.format(nid=', '.join(network_ids))
 	}
 }
 
@@ -40,7 +42,7 @@ if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
 	else:
-		ids = list(CoinDaemon.network_ids)
+		ids = list(network_ids)
 		if cmd_args[0] == 'no_xmr':
 			ids.remove('xmr')
 else:
@@ -48,7 +50,7 @@ else:
 	if not ids:
 		opts.usage()
 	for i in ids:
-		if i not in CoinDaemon.network_ids:
+		if i not in network_ids:
 			die(1,f'{i!r}: invalid network ID')
 
 if 'eth' in ids and 'etc' in ids:
@@ -63,7 +65,7 @@ for network_id in ids:
 		opts       = ['no_daemonize'] if opt.no_daemonize else None,
 		port_shift = int(opt.port_shift or 0),
 		datadir    = opt.datadir )
-	d.debug = opt.debug
+	d.debug = d.debug or opt.debug
 	d.wait = not opt.no_wait
 	if opt.get_state:
 		print('{} {} (port {}) is {}'.format(d.net_desc,d.desc,d.rpc_port,d.state))
