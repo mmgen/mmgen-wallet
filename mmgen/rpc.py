@@ -238,6 +238,7 @@ class CallSigs:
 
 		class openethereum: pass
 
+		class parity: pass
 
 class RPCClient(MMGenObject):
 
@@ -619,7 +620,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		self.cur_date = int(bh['timestamp'],16)
 
 		self.caps = ()
-		if self.daemon.id == 'openethereum':
+		if self.daemon.id in ('parity','openethereum'):
 			if (await self.call('parity_nodeKind'))['capability'] == 'full':
 				self.caps += ('full_node',)
 			self.chainID = None

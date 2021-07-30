@@ -418,12 +418,12 @@ class CoinProtocol(MMGenObject):
 		chain_names = ['developmentchain']
 
 	class EthereumClassic(Ethereum):
-		chain_names = ['ethereum_classic'] # chain_id 0x3d (61)
+		chain_names = ['classic','ethereum_classic']
 		max_tx_fee  = ETHAmt('0.005')
 		ignore_daemon_version = False
 
 	class EthereumClassicTestnet(EthereumClassic):
-		chain_names = ['classic-testnet'] # aka Morden, chain_id 0x3e (62) (UNTESTED)
+		chain_names = ['morden','morden_testnet','classic-testnet']
 
 	class EthereumClassicRegtest(EthereumClassicTestnet):
 		chain_names = ['developmentchain']

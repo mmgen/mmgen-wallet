@@ -310,7 +310,7 @@ class CoinDaemon(Daemon):
 		'LTC': _cd('Litecoin',          ['litecoin_core']),
 		'XMR': _cd('Monero',            ['monero']),
 		'ETH': _cd('Ethereum',          ['openethereum']),
-#		'ETC': _cd('Ethereum Classic',  ['openethereum_etc']),
+		'ETC': _cd('Ethereum Classic',  ['parity']),
 	}
 
 	@classmethod
@@ -608,7 +608,15 @@ class openethereum_daemon(CoinDaemon):
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
 			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
-			['--log-file='+os.path.join(self.datadir, f'openethereum-{self.network}.log')],
+			['--log-file='+os.path.join(self.datadir, f'{self.id}-{self.network}.log')],
 			['daemon', ld],
 			[self.pidfile, ld],
 		)
+
+class parity_daemon(openethereum_daemon):
+	daemon_data = _dd('Parity', 2007002, '2.7.2')
+	version_pat = r'Parity-Ethereum//v(\d+)\.(\d+)\.(\d+)'
+
+	exec_fn = 'parity'
+	ports_shift = _nw(100,120,140)
+	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard

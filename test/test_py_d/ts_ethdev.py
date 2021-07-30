@@ -138,14 +138,14 @@ coin = g.coin
 
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
-	networks = ('eth',) # 'etc' temporarily disabled
+	networks = ('eth','etc')
 	passthru_opts = ('coin',)
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
 	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
 	color = True
 	cmd_group = (
-		('setup',               'OpenEthereum dev mode tests for coin {} (start openethereum)'.format(coin)),
+		('setup',               'dev mode tests for coin {} (start daemon)'.format(coin)),
 		('daemon_version',      'mmgen-tool daemon_version'),
 		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
 		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
@@ -305,7 +305,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],coin)),
 		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],coin)),
 
-		('stop',                'stopping openethereum'),
+		('stop',                'stopping daemon'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):

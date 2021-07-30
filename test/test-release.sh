@@ -36,7 +36,7 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 
 dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
-extra_tests='autosign_btc autosign_live ltc_tn bch_tn' # 'etc' temporarily disabled
+extra_tests='autosign_btc autosign_live etc ltc_tn bch_tn'
 noalt_tests='misc obj color unit hash ref autosign_btc btc btc_tn btc_rt tool tool2 gen'
 quick_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'

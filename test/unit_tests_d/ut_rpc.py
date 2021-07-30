@@ -60,6 +60,8 @@ class init_test:
 		do_msg(rpc)
 		await rpc.call('eth_blockNumber',timeout=300)
 
+	etc = eth
+
 def run_test(coin,auth):
 
 	proto = init_proto(coin)
@@ -86,7 +88,7 @@ def run_test(coin,auth):
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','eth','xmr_wallet')
+	altcoin_deps = ('ltc','bch','eth','etc','xmr_wallet')
 
 	def btc(self,name,ut):
 		return run_test('btc',auth=True)
@@ -99,6 +101,9 @@ class unit_tests:
 
 	def eth(self,name,ut):
 		return run_test('eth',auth=False)
+
+	def etc(self,name,ut):
+		return run_test('etc',auth=False)
 
 	def xmr_wallet(self,name,ut):
 
