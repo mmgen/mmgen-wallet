@@ -27,7 +27,8 @@ from .exception import *
 from .common import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
-_pd = namedtuple('rpc_ports_data',['mainnet','testnet','regtest'])
+_cd = namedtuple('coins_data',['coin_name','daemon_ids'])
+_nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
 class Daemon(MMGenObject):
 
@@ -106,6 +107,13 @@ class Daemon(MMGenObject):
 		else:
 			return '(unknown)'
 
+	@property
+	def state(self):
+		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
+
+	@property
+	def stop_cmd(self):
+		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
 
 	def cmd(self,action,*args,**kwargs):
 		return getattr(self,action)(*args,**kwargs)
@@ -185,13 +193,6 @@ class Daemon(MMGenObject):
 		else:
 			m = 'Wait for state {!r} timeout exceeded for daemon {} {} (port {})'
 			die(2,m.format(req_state,self.coin,self.network,self.rpc_port))
-
-	@classmethod
-	def check_implement(cls):
-		m = 'required method {}() missing in class {}'
-		for subcls in cls.__subclasses__():
-			for k in cls.subclasses_must_implement:
-				assert k in subcls.__dict__, m.format(k,subcls.__name__)
 
 	@property
 	def flags(self):
@@ -295,37 +296,14 @@ class MoneroWalletDaemon(Daemon):
 	def start_cmd(self):
 		return (['monero-wallet-rpc'] + self.daemon_args + self.usr_daemon_args )
 
-	@property
-	def state(self):
-		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
-		# TBD:
-		if not self.test_socket(self.host,self.rpc_port):
-			return 'stopped'
-		from .rpc import MoneroWalletRPCClient
-		try:
-			MoneroWalletRPCClient(
-				self.host,
-				self.rpc_port,
-				self.user,
-				self.passwd).call('get_version')
-			return 'ready'
-		except:
-			return 'stopped'
-
-	@property
-	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
-
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')
 	cfg_file_hdr = ''
-	subclasses_must_implement = ('state','stop_cmd')
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize','online')
 	datadir_is_subdir = False
 	data_subdir = ''
 
-	_cd = namedtuple('coins_data',['coin_name','daemon_ids'])
 	coins = {
 		'BTC': _cd('Bitcoin',           ['bitcoin_core']),
 		'BCH': _cd('Bitcoin Cash Node', ['bitcoin_cash_node']),
@@ -470,7 +448,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	testnet_dir = 'testnet3'
 	cfg_file_hdr = '# BitcoinCoreDaemon config file\n'
 	tracking_wallet_name = 'mmgen-tracking-wallet'
-	rpc_ports = _pd(8332, 18332, 18444)
+	rpc_ports = _nw(8332, 18332, 18444)
 	cfg_file = 'bitcoin.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.bitcoin'],
@@ -535,7 +513,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Bitcoin Cash Node', 23000000, '23.0.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
-	rpc_ports = _pd(8442, 18442, 18553) # use non-standard ports
+	rpc_ports = _nw(8442, 18442, 18553) # use non-standard ports
 	datadirs = {
 		'linux': [g.home_dir,'.bitcoin-bchn'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
@@ -546,7 +524,7 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	exec_fn = 'litecoind'
 	cli_fn = 'litecoin-cli'
 	testnet_dir = 'testnet4'
-	rpc_ports = _pd(9332, 19332, 19444)
+	rpc_ports = _nw(9332, 19332, 19444)
 	cfg_file = 'litecoin.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.litecoin'],
@@ -561,7 +539,7 @@ class monero_daemon(CoinDaemon):
 	ps_pid_mswin = True
 	new_console_mswin = True
 	host = 'localhost' # FIXME
-	rpc_ports = _pd(18081, 38081, None)
+	rpc_ports = _nw(18081, 38081, None)
 	cfg_file = 'bitmonero.conf'
 	datadir_is_subdir = True
 	datadirs = {
@@ -596,48 +574,29 @@ class monero_daemon(CoinDaemon):
 		)
 
 	@property
-	def state(self):
-		return 'ready' if self.test_socket(self.host,self.rpc_port) else 'stopped'
-		# TODO:
-		if not self.test_socket(self.host,self.rpc_port):
-			return 'stopped'
-		cp = self.run_cmd(
-			[self.exec_fn]
-			+ self.shared_args
-			+ ['status'],
-			silent=True,
-			check=False )
-		return 'stopped' if 'Error:' in cp.stdout.decode() else 'ready'
-
-	@property
 	def stop_cmd(self):
-		if self.platform == 'win':
-			return ['kill','-Wf',self.pid]
-		else:
-			return [self.exec_fn] + self.shared_args + ['exit']
+		return ['kill','-Wf',self.pid] if self.platform == 'win' else [self.exec_fn] + self.shared_args + ['exit']
 
 class openethereum_daemon(CoinDaemon):
 	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
+	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
+	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'openethereum'
 	ps_pid_mswin = True
-	ports_shift = { 'mainnet': 0, 'testnet': 20, 'regtest': 40 }
-	rpc_ports = _pd(*[8545 + n for n in ports_shift.values()]) # testnet and regtest are non-standard
+	ports_shift = _nw(0,20,40)
+	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # testnet and regtest are non-standard
 	cfg_file = 'parity.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
-		'win':   [g.home_dir,'.local','share','io.parity.ethereum'] # FIXME
+		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
-	testnet_dir = 'testnet' # FIXME
+	testnet_dir = None
 
 	def subclass_init(self):
-		# defaults:
-		# linux: $HOME/.local/share/io.parity.ethereum/chains/DevelopmentChain
-		# win:   $LOCALAPPDATA/Parity/Ethereum/chains/DevelopmentChain
-
-		base_path = os.path.join(self.datadir,self.proto.chain_name)
+		base_path = os.path.join(self.datadir,'chains',getattr(self.chain_subdirs,self.network))
 		shutil.rmtree(base_path,ignore_errors=True)
 
-		ps = self.port_shift + self.ports_shift[self.network]
+		ps = self.port_shift + getattr(self.ports_shift,self.network)
 		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
 
 		self.coind_args = list_gen(
@@ -653,26 +612,3 @@ class openethereum_daemon(CoinDaemon):
 			['daemon', ld],
 			[self.pidfile, ld],
 		)
-
-	@property
-	def state(self):
-		return 'ready' if self.test_socket('localhost',self.rpc_port) else 'stopped'
-
-		# the following code does not work
-		async def do():
-			ret = await self.rpc.call('eth_chainId')
-			return ('stopped','ready')[ret == '0x11']
-
-		try:
-			return run_session(do()) # socket exception is not propagated
-		except:# SocketError:
-			return 'stopped'
-
-	@property
-	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if self.platform == 'win' else ['kill',self.pid]
-
-# class openethereum_etc_daemon(openethereum_daemon):
-#	rpc_ports = _pd(*[8645 + n for n in openethereum_daemon.ports_shift.values()])
-
-CoinDaemon.check_implement()

@@ -102,8 +102,11 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
-			# first chain name is default
-			self.chain_name = self.chain_names[0] if hasattr(self,'chain_names') else self.network
+			if hasattr(self,'chain_names'):
+				self.chain_name = self.chain_names[0] # first chain name is default
+			else:
+				self.chain_name = self.network
+				self.chain_names = [self.network]
 
 			if self.tokensym:
 				assert isinstance(self,CoinProtocol.Ethereum), 'CoinProtocol.Base_chk1'
@@ -124,7 +127,7 @@ class CoinProtocol(MMGenObject):
 			"""
 			for network in ('mainnet','testnet','regtest'):
 				proto = init_proto(coin,network=network)
-				for proto_chain_name in ( getattr(proto,'chain_names',None) or [network] ):
+				for proto_chain_name in proto.chain_names:
 					if chain_name == proto_chain_name:
 						return network
 			raise ValueError(f'{chain_name}: unrecognized chain name for coin {coin}')

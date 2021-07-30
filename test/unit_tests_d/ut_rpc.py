@@ -8,7 +8,7 @@ from mmgen.exception import *
 
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init,MoneroWalletRPCClient
-from mmgen.daemon import CoinDaemon,MoneroWalletDaemon,bitcoin_core_daemon
+from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
 def auth_test(proto,d):
 	if g.platform != 'win':
@@ -82,7 +82,6 @@ def run_test(coin,auth):
 	if auth:
 		auth_test(proto,d)
 
-	qmsg('  OK')
 	return True
 
 class unit_tests:

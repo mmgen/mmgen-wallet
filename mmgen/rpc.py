@@ -598,28 +598,32 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 
 		self.set_backend(backend)
 
-		self.blockcount = int(await self.call('eth_blockNumber'),16)
-
-		vi,bh,ch,nk = await self.gathered_call(None, (
+		vi,bh,ci = await self.gathered_call(None, (
 				('web3_clientVersion',()),
-				('parity_getBlockHeaderByNumber',()),
-				('parity_chain',()),
-				('parity_nodeKind',()),
+				('eth_getBlockByNumber',('latest',False)),
+				('eth_chainId',()),
 			))
 
 		import re
-		vip = re.match(r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)',vi,re.ASCII)
+		vip = re.match(self.daemon.version_pat,vi,re.ASCII)
+		if not vip:
+			ydie(1,fmt(f"""
+			Aborting on daemon mismatch:
+			  Requested daemon: {self.daemon.id}
+			  Running daemon:   {vi}
+			""",strip_char='\t').rstrip())
 		self.daemon_version = int('{:d}{:03d}{:03d}'.format(*[int(e) for e in vip.groups()]))
 		self.daemon_version_str = '{}.{}.{}'.format(*vip.groups())
-		self.cur_date = int(bh['timestamp'],16)
-		self.chain = ch.replace(' ','_')
-		self.caps = ('full_node',) if nk['capability'] == 'full' else ()
 
-		try:
-			await self.call('eth_chainId')
-			self.caps += ('eth_chainId',)
-		except RPCFailure:
-			pass
+		self.blockcount = int(bh['number'],16)
+		self.cur_date = int(bh['timestamp'],16)
+
+		self.caps = ()
+		if self.daemon.id == 'openethereum':
+			if (await self.call('parity_nodeKind'))['capability'] == 'full':
+				self.caps += ('full_node',)
+			self.chainID = None
+			self.chain = (await self.call('parity_chain')).replace(' ','_')
 
 	rpcmethods = (
 		'eth_accounts',
@@ -642,7 +646,6 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		'net_peerCount',
 		'net_version',
 		'parity_chain',
-		'parity_chainId', # superseded by eth_chainId
 		'parity_getBlockHeaderByNumber',
 		'parity_nextNonce',
 		'parity_nodeKind',
@@ -755,12 +758,12 @@ async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 	if rpc.daemon_version > rpc.daemon.coind_version:
 		handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version)
 
-	if proto.chain_name != rpc.chain:
-		raise RPCChainMismatch(
-			'{} protocol chain is {}, but coin daemon chain is {}'.format(
-				proto.cls_name,
-				proto.chain_name.upper(),
-				rpc.chain.upper() ))
+	if rpc.chain not in proto.chain_names:
+		raise RPCChainMismatch('\n'+fmt(f"""
+			Protocol:           {proto.cls_name}
+			Valid chain names:  {fmt_list(proto.chain_names,fmt='bare')}
+			RPC client chain:   {rpc.chain}
+			""",indent='  ').rstrip())
 
 	if g.bogus_wallet_data:
 		rpc.blockcount = 1000000
