@@ -117,7 +117,7 @@ class MMGenRegtest(MMGenObject):
 			await self.rpc_call('stop')
 
 	def init_daemon(self,reindex=False):
-		self.d.net_desc = self.coin.upper()
+		self.d.desc = f'{self.d.coind_name} regtest daemon'
 		if reindex:
 			self.d.usr_coind_args.append('--reindex')
 

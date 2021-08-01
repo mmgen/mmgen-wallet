@@ -319,7 +319,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def eth_args(self):
 		return ['--outdir={}'.format(self.tmpdir),'--coin='+self.proto.coin,'--rpc-port={}'.format(self.rpc_port),'--quiet']
 
-	def setup(self):
+	async def setup(self):
 		self.spawn('',msg_only=True)
 		if solc_ver in self.solc_vers:
 			imsg('Found solc version {}'.format(solc_ver))
@@ -334,6 +334,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not opt.no_daemon_autostart:
 			if not start_test_daemons(self.proto.coin+'_rt',remove_datadir=True):
 				return False
+			from mmgen.rpc import rpc_init
+			rpc = await rpc_init(self.proto)
+			imsg('Daemon: {} v{}'.format(rpc.daemon.coind_name,rpc.daemon_version_str))
 		return 'ok'
 
 	def wallet_upgrade(self,src_file):

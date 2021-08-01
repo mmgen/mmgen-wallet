@@ -201,7 +201,7 @@ def test_daemons_ops(*network_ids,op,remove_datadir=False):
 		silent = not opt.verbose and not getattr(opt,'exact_output',False)
 		ret = False
 		for network_id in network_ids:
-			d = CoinDaemon(network_id,test_suite=True)
+			d = CoinDaemon(network_id,test_suite=True,daemon_id=g.daemon_id)
 			if remove_datadir:
 				d.stop(silent=True)
 				d.remove_datadir()

@@ -234,11 +234,7 @@ class CallSigs:
 
 		class bitcoin_cash_node(litecoin_core): pass
 
-	class Ethereum:
-
-		class openethereum: pass
-
-		class parity: pass
+	class Ethereum: pass
 
 class RPCClient(MMGenObject):
 
@@ -413,7 +409,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 
 		self.proto = proto
 		self.daemon = daemon
-		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id)
+		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id,None)
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
@@ -591,7 +587,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 	async def __ainit__(self,proto,daemon,backend):
 		self.proto = proto
 		self.daemon = daemon
-		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id)
+		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id,None)
 
 		super().__init__(
 			host = 'localhost' if g.test_suite else (g.rpc_host or 'localhost'),
