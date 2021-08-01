@@ -85,7 +85,7 @@ class EthereumMMGenTX:
 				self.disable_fee_check = True
 
 		async def get_nonce(self):
-			return ETHNonce(int(await self.rpc.call('parity_nextNonce','0x'+self.inputs[0].addr),16))
+			return ETHNonce(int(await self.rpc.call('eth_getTransactionCount','0x'+self.inputs[0].addr,'pending'),16))
 
 		async def make_txobj(self): # called by create_raw()
 			self.txobj = {
@@ -95,7 +95,7 @@ class EthereumMMGenTX:
 				'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
 				'startGas': self.start_gas,
 				'nonce': await self.get_nonce(),
-				'chainId': Int(await self.rpc.call('eth_chainId'),16),
+				'chainId': self.rpc.chainID,
 				'data':  self.usr_contract_data,
 			}
 
@@ -302,7 +302,7 @@ class EthereumMMGenTX:
 				'gasPrice': ETHAmt(d['gasPrice']),
 				'startGas': ETHAmt(d['startGas']),
 				'nonce':    ETHNonce(d['nonce']),
-				'chainId':  Int(d['chainId']),
+				'chainId':  None if d['chainId'] == 'None' else Int(d['chainId']),
 				'data':     HexStr(d['data']) }
 			self.tx_gas = o['startGas'] # approximate, but better than nothing
 			self.txobj = o
@@ -394,8 +394,9 @@ class EthereumMMGenTX:
 			async def is_in_mempool():
 				if not 'full_node' in self.rpc.caps:
 					return False
-				return '0x'+self.coin_txid in [
-					x['hash'] for x in await self.rpc.call('parity_pendingTransactions') ]
+				if self.rpc.daemon.id in ('parity','openethereum'):
+					pool = [x['hash'] for x in await self.rpc.call('parity_pendingTransactions')]
+				return '0x'+self.coin_txid in pool
 
 			async def is_in_wallet():
 				d = await self.rpc.call('eth_getTransactionReceipt','0x'+self.coin_txid)

@@ -75,7 +75,7 @@ class EthereumTrackingWallet(TrackingWallet):
 			msg('{} upgraded successfully!'.format(self.desc))
 
 	async def rpc_get_balance(self,addr):
-		return ETHAmt(int(await self.rpc.call('eth_getBalance','0x'+addr),16),'wei')
+		return ETHAmt(int(await self.rpc.call('eth_getBalance','0x'+addr,'latest'),16),'wei')
 
 	@write_mode
 	async def batch_import_address(self,args_list):

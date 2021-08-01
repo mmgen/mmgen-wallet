@@ -613,42 +613,35 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 			  Requested daemon: {self.daemon.id}
 			  Running daemon:   {vi}
 			""",strip_char='\t').rstrip())
+
 		self.daemon_version = int('{:d}{:03d}{:03d}'.format(*[int(e) for e in vip.groups()]))
 		self.daemon_version_str = '{}.{}.{}'.format(*vip.groups())
+		self.daemon_version_info = vi
 
 		self.blockcount = int(bh['number'],16)
 		self.cur_date = int(bh['timestamp'],16)
 
 		self.caps = ()
+		from .obj import Int
 		if self.daemon.id in ('parity','openethereum'):
 			if (await self.call('parity_nodeKind'))['capability'] == 'full':
 				self.caps += ('full_node',)
-			self.chainID = None
-			self.chain = (await self.call('parity_chain')).replace(' ','_')
+			self.chainID = None if ci == None else Int(ci,16) # parity/oe return chainID only for dev chain
+			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
 
 	rpcmethods = (
-		'eth_accounts',
 		'eth_blockNumber',
 		'eth_call',
 		# Returns the EIP155 chain ID used for transaction signing at the current best block.
-		# Null is returned if not available.
+		# Parity: Null is returned if not available, ID not required in transactions
 		'eth_chainId',
 		'eth_gasPrice',
 		'eth_getBalance',
-		'eth_getBlockByHash',
 		'eth_getCode',
-		'eth_getTransactionByHash',
+		'eth_getTransactionCount',
 		'eth_getTransactionReceipt',
-		'eth_protocolVersion',
 		'eth_sendRawTransaction',
-		'eth_signTransaction',
-		'eth_syncing',
-		'net_listening',
-		'net_peerCount',
-		'net_version',
 		'parity_chain',
-		'parity_getBlockHeaderByNumber',
-		'parity_nextNonce',
 		'parity_nodeKind',
 		'parity_pendingTransactions',
 	)
