@@ -345,7 +345,12 @@ class CoinDaemon(Daemon):
 			coin,network = CoinProtocol.Base.parse_network_id(network_id)
 			coin = coin.upper()
 
-		daemon_id = cls.coins[coin].daemon_ids[0]
+		daemon_ids = cls.coins[coin].daemon_ids
+		daemon_id = g.daemon_id or daemon_ids[0]
+
+		if daemon_id not in daemon_ids:
+			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
+
 		me = Daemon.__new__(globals()[daemon_id + '_daemon'])
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network = network

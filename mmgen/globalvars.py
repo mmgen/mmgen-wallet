@@ -151,6 +151,7 @@ class GlobalContext(Lockable):
 	)
 	data_dir_root,data_dir,cfg_file = None,None,None
 	daemon_data_dir = '' # set by user
+	daemon_id = ''
 
 	# global var sets user opt:
 	global_sets_opt = (
@@ -166,7 +167,7 @@ class GlobalContext(Lockable):
 		'rpc_host','rpc_port','rpc_user','rpc_password','rpc_backend','aiohttp_rpc_queue_len',
 		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
-		'accept_defaults','token','ignore_daemon_version'
+		'accept_defaults','token','ignore_daemon_version','daemon_id'
 	)
 	# opts initialized to None by opts.init() if not set by user
 	required_opts = (
