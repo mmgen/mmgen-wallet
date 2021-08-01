@@ -139,7 +139,7 @@ coin = g.coin
 class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	'Ethereum transacting, token deployment and tracking wallet operations'
 	networks = ('eth','etc')
-	passthru_opts = ('coin',)
+	passthru_opts = ('coin','daemon_id','http_timeout')
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
 	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic

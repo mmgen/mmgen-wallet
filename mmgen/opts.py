@@ -190,6 +190,7 @@ common_opts_data = {
 --, --daemon-data-dir=path Specify {dn} data directory location
 --, --daemon-id=ID         Specify the coin daemon ID
 --, --ignore-daemon-version Ignore {dn} version check
+--, --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 --, --no-license           Suppress the GPL license prompt
 --, --rpc-host=host        Communicate with {dn} running on host 'host'
 --, --rpc-port=port        Communicate with {dn} listening on port 'port'
