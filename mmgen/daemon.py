@@ -243,14 +243,26 @@ class Daemon(MMGenObject):
 			else:
 				msg(f'Cannot remove {self.datadir!r} - daemon is not stopped')
 
-class MoneroWalletDaemon(Daemon):
+class RPCDaemon(Daemon):
 
+	def __init__(self):
+		super().__init__()
+		self.desc = '{} {} {}RPC daemon'.format(
+			self.rpc_type,
+			getattr(self.proto.network_names,self.proto.network),
+			'test suite ' if self.test_suite else '' )
+
+class MoneroWalletDaemon(RPCDaemon):
+
+	master_daemon = 'monero_daemon'
+	rpc_type = 'Monero wallet'
 	exec_fn = 'monero-wallet-rpc'
 	coin = 'XMR'
 	new_console_mswin = True
 	ps_pid_mswin = True
+	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 
-	def __init__(self, wallet_dir,
+	def __init__(self, proto, wallet_dir,
 			test_suite  = False,
 			host        = None,
 			user        = None,
@@ -258,19 +270,19 @@ class MoneroWalletDaemon(Daemon):
 			daemon_addr = None,
 			proxy       = None,
 			port_shift  = None,
-			datadir     = None,
-			testnet     = False ):
+			datadir     = None ):
+
+		self.proto = proto
+		self.test_suite = test_suite
 
 		super().__init__()
+
+		self.network = proto.network
 		self.platform = g.platform
 		self.wallet_dir = wallet_dir
-		self.rpc_port = 13142 if test_suite else 13131
+		self.rpc_port = getattr(self.rpc_ports,self.network) + (11 if test_suite else 0)
 		if port_shift:
 			self.rpc_port += port_shift
-
-		self.desc = 'Monero wallet {} {}RPC daemon'.format(
-			'testnet' if testnet else 'mainnet',
-			'test suite ' if test_suite else '' )
 
 		id_str = f'{self.exec_fn}-{self.bind_port}'
 		self.datadir = os.path.join(datadir or ('','test')[test_suite], self.exec_fn)
@@ -279,7 +291,7 @@ class MoneroWalletDaemon(Daemon):
 
 		self.proxy = proxy
 		self.daemon_addr = daemon_addr
-		self.daemon_port = None if daemon_addr else CoinDaemon('xmr',test_suite=test_suite).rpc_port
+		self.daemon_port = None if daemon_addr else CoinDaemon(proto=proto,test_suite=test_suite).rpc_port
 
 		if self.platform == 'win':
 			self.use_pidfile = False
@@ -308,7 +320,7 @@ class MoneroWalletDaemon(Daemon):
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
 			['--detach',                             not 'no_daemonize' in self.opts],
-			['--stagenet',                           testnet],
+			['--stagenet',                           self.network == 'testnet'],
 		)
 
 		self.usr_daemon_args = []
@@ -376,7 +388,6 @@ class CoinDaemon(Daemon):
 		me = Daemon.__new__(globals()[daemon_id + '_daemon'])
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network = network
-		me.network_id = network_id
 		me.coin = coin
 		me.coin_name = cls.coins[coin].coin_name
 		me.id = daemon_id
@@ -449,7 +460,10 @@ class CoinDaemon(Daemon):
 		self.init_rpc_port(test_suite,port_shift)
 
 		self.pidfile = '{}/{}-daemon-{}.pid'.format(self.datadir,self.network,self.rpc_port)
-		self.desc = '{} {} {}daemon'.format(self.coind_name,self.network,'test suite ' if test_suite else '')
+		self.desc = '{} {} {}daemon'.format(
+			self.coind_name,
+			getattr(self.proto.network_names,self.network),
+			'test suite ' if test_suite else '' )
 		self.subclass_init()
 
 	def init_rpc_port(self,test_suite,port_shift):
@@ -578,19 +592,14 @@ class monero_daemon(CoinDaemon):
 	}
 
 	def subclass_init(self):
-		if self.network == 'testnet':
-			self.desc = 'Monero stagenet {}daemon'.format('test suite ' if self.test_suite else '')
-
-		self.p2p_port = self.rpc_port - 1
-		self.zmq_port = self.rpc_port + 1
 
 		if self.platform == 'win':
 			self.use_pidfile = False
 
 		self.shared_args = list_gen(
-			[f'--p2p-bind-port={self.p2p_port}'],
+			[f'--p2p-bind-port={self.rpc_port-1}'],
 			[f'--rpc-bind-port={self.rpc_port}'],
-			[f'--zmq-rpc-bind-port={self.zmq_port}'],
+			[f'--zmq-rpc-bind-port={self.rpc_port+1}'],
 			['--stagenet', self.network == 'testnet'],
 		)
 

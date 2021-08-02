@@ -108,32 +108,34 @@ class unit_tests:
 	def xmr_wallet(self,name,ut):
 
 		async def run():
-			md = CoinDaemon('xmr',test_suite=True)
-			if not opt.no_daemon_autostart:
-				md.start()
+			networks = init_proto('xmr').networks
+			daemons = [(
+					CoinDaemon(proto=proto),
+					MoneroWalletDaemon(
+						proto      = proto,
+						wallet_dir = 'test/trash',
+						passwd     = 'ut_rpc_passw0rd' )
+				) for proto in (init_proto('xmr',network=network) for network in networks) ]
 
-			wd = MoneroWalletDaemon(
-				wallet_dir = 'test/trash',
-				passwd     = 'ut_rpc_passw0rd',
-				test_suite = True )
-			wd.start()
+			for md,wd in daemons:
+				if not opt.no_daemon_autostart:
+					md.start()
+				wd.start()
+				c = MoneroWalletRPCClient(
+					host   = wd.host,
+					port   = wd.rpc_port,
+					user   = wd.user,
+					passwd = wd.passwd )
+				await c.call('get_version')
 
-			c = MoneroWalletRPCClient(
-				host   = wd.host,
-				port   = wd.rpc_port,
-				user   = wd.user,
-				passwd = wd.passwd )
-
-			await c.call('get_version')
+			for md,wd in daemons:
+				wd.wait = False
+				wd.stop()
+				if not opt.no_daemon_stop:
+					md.wait = False
+					md.stop()
 
 			gmsg('OK')
-
-			wd.wait = False
-			wd.stop()
-
-			if not opt.no_daemon_stop:
-				md.wait = False
-				md.stop()
 
 		run_session(run())
 		return True

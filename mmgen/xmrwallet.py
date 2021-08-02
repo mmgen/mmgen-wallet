@@ -331,10 +331,10 @@ class MoneroWalletOps:
 			check_wallets()
 
 			self.wd = MoneroWalletDaemon(
-				wallet_dir = uopt.wallet_dir or '.',
-				test_suite = g.test_suite,
+				proto       = self.proto,
+				wallet_dir  = uopt.wallet_dir or '.',
+				test_suite  = g.test_suite,
 				daemon_addr = uopt.daemon or None,
-				testnet = g.testnet,
 			)
 
 			if not uopt.no_start_wallet_daemon:
@@ -721,13 +721,12 @@ class MoneroWalletOps:
 			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 
 			self.wd2 = MoneroWalletDaemon(
-				wallet_dir = uopt.wallet_dir or '.',
-				test_suite = g.test_suite,
+				proto       = self.proto,
+				wallet_dir  = uopt.wallet_dir or '.',
+				test_suite  = g.test_suite,
 				daemon_addr = m[1],
-				proxy = m[2],
-				port_shift = 16,
-				testnet = g.testnet,
-			)
+				proxy       = m[2],
+				port_shift  = 16 )
 
 			if g.test_suite:
 				self.wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']

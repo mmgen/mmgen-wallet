@@ -68,6 +68,7 @@ def _b58chk_decode(s):
 	return out[:-4]
 
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
+_nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
 class CoinProtocol(MMGenObject):
 
@@ -96,6 +97,7 @@ class CoinProtocol(MMGenObject):
 			self.cls_name   = type(self).__name__
 			self.testnet    = network in ('testnet','regtest')
 			self.regtest    = network == 'regtest'
+			self.networks   = tuple(k for k,v in self.network_names._asdict().items() if v)
 			self.network_id = coin.lower() + {
 				'mainnet': '',
 				'testnet': '_tn',
@@ -204,6 +206,7 @@ class CoinProtocol(MMGenObject):
 		All Bitcoin code and chain forks inherit from this class
 		"""
 		mod_clsname     = 'Bitcoin'
+		network_names   = _nw('mainnet','testnet','regtest')
 		addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
 		addr_len        = 20
 		wif_ver_num     = { 'std': '80' }
@@ -376,6 +379,7 @@ class CoinProtocol(MMGenObject):
 
 	class Ethereum(DummyWIF,Secp256k1):
 
+		network_names = _nw('mainnet','testnet','devnet')
 		addr_len      = 20
 		mmtypes       = ('E',)
 		dfl_mmtype    = 'E'
@@ -460,6 +464,8 @@ class CoinProtocol(MMGenObject):
 
 	# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
 	class Monero(DummyWIF,Base):
+
+		network_names  = _nw('mainnet','stagenet',None)
 		base_coin      = 'XMR'
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 		addr_len       = 68

@@ -227,14 +227,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				test_connection = False,
 			)
 			wd = MoneroWalletDaemon(
-				user = 'foo',
-				passwd = 'bar',
+				proto      = self.proto,
 				wallet_dir = udir,
-				test_suite = True,
+				user       = 'foo',
+				passwd     = 'bar',
 				port_shift = shift,
 				datadir    = os.path.join('test','daemons'),
 				daemon_addr = f'127.0.0.1:{md.rpc_port}',
-				testnet = True
 			)
 			wd_rpc = MoneroWalletRPCClient(
 				host   = wd.host,
