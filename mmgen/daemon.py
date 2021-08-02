@@ -39,7 +39,6 @@ class Daemon(MMGenObject):
 	use_threads = False
 	cfg_file = None
 	new_console_mswin = False
-	ps_pid_mswin = False
 	lockfile = None
 	private_port = None
 	avail_opts = ()
@@ -48,6 +47,8 @@ class Daemon(MMGenObject):
 	def __init__(self):
 		self.opts = []
 		self._flags = []
+		if self.platform == 'win':
+			self.use_pidfile = False
 
 	def subclass_init(self): pass
 
@@ -100,17 +101,21 @@ class Daemon(MMGenObject):
 
 	@property
 	def pid(self):
-		if self.ps_pid_mswin and self.platform == 'win':
+		if self.use_pidfile:
+			return open(self.pidfile).read().strip()
+		elif self.platform == 'win':
 			# TODO: assumes only one running instance of given daemon
+			ss = f'{self.exec_fn}.exe'
 			cp = self.run_cmd(['ps','-Wl'],silent=True)
 			for line in cp.stdout.decode().splitlines():
-				if f'{self.exec_fn}.exe' in line:
+				if ss in line:
 					return line.split()[3] # use Windows, not Cygwin, PID
-			die(2,f'PID for {ss!r} not found in ps output')
-		elif self.use_pidfile:
-			return open(self.pidfile).read().strip()
-		else:
-			return '(N/A)'
+		elif self.platform == 'linux':
+			ss = ' '.join(self.start_cmd)
+			cp = self.run_cmd(['pgrep','-f',ss],silent=True)
+			if cp.stdout:
+				return cp.stdout.strip().decode()
+		die(2,f'{ss!r} not found in process list, cannot determine PID')
 
 	@property
 	def bind_port(self):
@@ -259,7 +264,6 @@ class MoneroWalletDaemon(RPCDaemon):
 	exec_fn = 'monero-wallet-rpc'
 	coin = 'XMR'
 	new_console_mswin = True
-	ps_pid_mswin = True
 	rpc_ports = _nw(13131, 13141, None) # testnet is non-standard
 
 	def __init__(self, proto, wallet_dir,
@@ -292,9 +296,6 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.proxy = proxy
 		self.daemon_addr = daemon_addr
 		self.daemon_port = None if daemon_addr else CoinDaemon(proto=proto,test_suite=test_suite).rpc_port
-
-		if self.platform == 'win':
-			self.use_pidfile = False
 
 		self.host = host or g.monero_wallet_rpc_host
 		self.user = user or g.monero_wallet_rpc_user
@@ -501,9 +502,6 @@ class bitcoin_core_daemon(CoinDaemon):
 
 	def subclass_init(self):
 
-		if self.platform == 'win' and self.coin == 'BCH':
-			self.use_pidfile = False
-
 		from .regtest import MMGenRegtest
 		self.shared_args = list_gen(
 			[f'--datadir={self.datadir}'],
@@ -580,7 +578,6 @@ class monero_daemon(CoinDaemon):
 	networks = ('mainnet','testnet')
 	exec_fn = 'monerod'
 	testnet_dir = 'stagenet'
-	ps_pid_mswin = True
 	new_console_mswin = True
 	host = 'localhost' # FIXME
 	rpc_ports = _nw(18081, 38081, None)
@@ -592,9 +589,6 @@ class monero_daemon(CoinDaemon):
 	}
 
 	def subclass_init(self):
-
-		if self.platform == 'win':
-			self.use_pidfile = False
 
 		self.shared_args = list_gen(
 			[f'--p2p-bind-port={self.rpc_port-1}'],
@@ -621,7 +615,6 @@ class openethereum_daemon(CoinDaemon):
 	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
 	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'openethereum'
-	ps_pid_mswin = True
 	ports_shift = _nw(0,10,20)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # testnet and regtest are non-standard
 	cfg_file = 'parity.conf'
