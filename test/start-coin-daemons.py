@@ -53,7 +53,8 @@ def run(network_id=None,proto=None,daemon_id=None):
 	if opt.get_state:
 		print(d.state_msg())
 	elif opt.testing:
-		print(' '.join(getattr(d,action+'_cmd')))
+		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
+			print(' '.join(cmd))
 	else:
 		d.cmd(action,quiet=opt.quiet)
 

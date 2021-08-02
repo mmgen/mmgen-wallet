@@ -62,7 +62,7 @@ class init_test:
 
 	etc = eth
 
-def run_test(coin,auth):
+def run_test(coin,auth): # TODO: run all available networks simultaneously
 
 	proto = init_proto(coin)
 
@@ -110,9 +110,10 @@ class unit_tests:
 		async def run():
 			networks = init_proto('xmr').networks
 			daemons = [(
-					CoinDaemon(proto=proto),
+					CoinDaemon(proto=proto,test_suite=True),
 					MoneroWalletDaemon(
 						proto      = proto,
+						test_suite = True,
 						wallet_dir = 'test/trash',
 						passwd     = 'ut_rpc_passw0rd' )
 				) for proto in (init_proto('xmr',network=network) for network in networks) ]

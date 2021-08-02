@@ -47,8 +47,10 @@ class Daemon(MMGenObject):
 	def __init__(self):
 		self.opts = []
 		self._flags = []
+		self.platform = g.platform
 		if self.platform == 'win':
 			self.use_pidfile = False
+			self.use_threads = True
 
 	def subclass_init(self): pass
 
@@ -68,9 +70,10 @@ class Daemon(MMGenObject):
 		p = Popen(cmd,creationflags=CREATE_NEW_CONSOLE,startupinfo=si)
 		p.wait()
 
-	def exec_cmd(self,cmd):
+	def exec_cmd(self,cmd,is_daemon=False):
+		out = None if (is_daemon and 'no_daemonize' in self.opts) else PIPE
 		try:
-			cp = run(cmd,check=False,stdout=PIPE,stderr=PIPE)
+			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except Exception as e:
 			raise MMGenCalledProcessError(f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
 		if self.debug:
@@ -85,10 +88,10 @@ class Daemon(MMGenObject):
 		if self.debug:
 			msg('\nExecuting: {}'.format(' '.join(cmd)))
 
-		if (self.platform == 'win' or self.use_threads) and is_daemon:
+		if self.use_threads and (is_daemon and not 'no_daemonize' in self.opts):
 			ret = self.exec_cmd_thread(cmd)
 		else:
-			ret = self.exec_cmd(cmd)
+			ret = self.exec_cmd(cmd,is_daemon)
 
 		if isinstance(ret,CompletedProcess):
 			if ret.stdout and (self.debug or not silent):
@@ -125,6 +128,10 @@ class Daemon(MMGenObject):
 		if self.debug:
 			msg(f'Testing port {self.bind_port}')
 		return 'ready' if self.test_socket('localhost',self.bind_port) else 'stopped'
+
+	@property
+	def start_cmds(self):
+		return [self.start_cmd]
 
 	@property
 	def stop_cmd(self):
@@ -246,6 +253,11 @@ class RPCDaemon(Daemon):
 			self.rpc_type,
 			getattr(self.proto.network_names,self.proto.network),
 			'test suite ' if self.test_suite else '' )
+		self.usr_daemon_args = []
+
+	@property
+	def start_cmd(self):
+		return ([self.exec_fn] + self.daemon_args + self.usr_daemon_args)
 
 class MoneroWalletDaemon(RPCDaemon):
 
@@ -272,7 +284,6 @@ class MoneroWalletDaemon(RPCDaemon):
 		super().__init__()
 
 		self.network = proto.network
-		self.platform = g.platform
 		self.wallet_dir = wallet_dir
 		self.rpc_port = getattr(self.rpc_ports,self.network) + (11 if test_suite else 0)
 		if port_shift:
@@ -313,12 +324,6 @@ class MoneroWalletDaemon(RPCDaemon):
 			['--detach',                             not 'no_daemonize' in self.opts],
 			['--stagenet',                           self.network == 'testnet'],
 		)
-
-		self.usr_daemon_args = []
-
-	@property
-	def start_cmd(self):
-		return ([self.exec_fn] + self.daemon_args + self.usr_daemon_args )
 
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')
@@ -402,14 +407,18 @@ class CoinDaemon(Daemon):
 
 		self.shared_args = []
 		self.usr_coind_args = []
-		self.platform = g.platform
+
+		for k,v in self.daemon_data._asdict().items():
+			setattr(self,k,v)
 
 		if opts:
 			if type(opts) not in (list,tuple):
 				die(1,f'{opts!r}: illegal value for opts (must be list or tuple)')
 			for o in opts:
-				if o not in self.avail_opts:
-					die(1,f'{o!r}: unrecognized opt')
+				if o not in CoinDaemon.avail_opts:
+					die(1,f'{o!r}: unrecognized option')
+				elif o not in self.avail_opts:
+					die(1,f'{o!r}: option not supported for {self.coind_name} daemon')
 			self.opts = list(opts)
 
 		if flags:
@@ -417,9 +426,6 @@ class CoinDaemon(Daemon):
 				die(1,f'{flags!r}: illegal value for flags (must be list or tuple)')
 			for flag in flags:
 				self.add_flag(flag)
-
-		for k,v in self.daemon_data._asdict().items():
-			setattr(self,k,v)
 
 		if self.network == 'regtest' and isinstance(self,bitcoin_core_daemon):
 			if test_suite:
@@ -433,7 +439,7 @@ class CoinDaemon(Daemon):
 		elif test_suite:
 			rel_datadir = os.path.join('test','daemons',self.coin.lower())
 		else:
-			dfl_datadir = os.path.join(*self.datadirs[g.platform])
+			dfl_datadir = os.path.join(*self.datadirs[self.platform])
 
 		if test_suite:
 			dfl_datadir = os.path.join(os.getcwd(),rel_datadir)
@@ -580,10 +586,12 @@ class monero_daemon(CoinDaemon):
 
 	def subclass_init(self):
 
+		self.p2p_port = self.rpc_port - 1
+
 		self.shared_args = list_gen(
-			[f'--p2p-bind-port={self.rpc_port-1}'],
+			[f'--no-zmq'],
+			[f'--p2p-bind-port={self.p2p_port}'],
 			[f'--rpc-bind-port={self.rpc_port}'],
-			[f'--zmq-rpc-bind-port={self.rpc_port+1}'],
 			['--stagenet', self.network == 'testnet'],
 		)
 

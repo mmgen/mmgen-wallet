@@ -228,6 +228,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			)
 			wd = MoneroWalletDaemon(
 				proto      = self.proto,
+				test_suite = True,
 				wallet_dir = udir,
 				user       = 'foo',
 				passwd     = 'bar',
