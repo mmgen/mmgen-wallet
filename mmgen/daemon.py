@@ -154,9 +154,9 @@ class Daemon(MMGenObject):
 			f'port {self.bind_port}',
 			w = 52 + len(extra_text) )
 
-	def start(self,silent=False):
+	def start(self,quiet=False,silent=False):
 		if self.state == 'ready':
-			if not silent:
+			if not (quiet or silent):
 				msg(self.state_msg(extra_text='already'))
 			return True
 
@@ -179,14 +179,14 @@ class Daemon(MMGenObject):
 
 		return ret
 
-	def stop(self,silent=False):
+	def stop(self,quiet=False,silent=False):
 		if self.state == 'ready':
 			ret = self.do_stop(silent=silent)
 			if self.wait:
 				self.wait_for_state('stopped')
 			return ret
 		else:
-			if not silent:
+			if not (quiet or silent):
 				msg(f'{self.desc} on port {self.bind_port} not running')
 			return True
 

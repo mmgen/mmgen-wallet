@@ -23,6 +23,7 @@ opts_data = {
 -p, --port-shift=    Shift the RPC port by this number
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
+-q, --quiet          Produce quieter output
 -v, --verbose        Produce more verbose output
 -W, --no-wait        Don't wait for daemons to change state before exiting
 """,
@@ -54,7 +55,7 @@ def run(network_id=None,proto=None,daemon_id=None):
 	elif opt.testing:
 		print(' '.join(getattr(d,action+'_cmd')))
 	else:
-		d.cmd(action)
+		d.cmd(action,quiet=opt.quiet)
 
 if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:
