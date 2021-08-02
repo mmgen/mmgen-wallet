@@ -72,8 +72,7 @@ class Daemon(MMGenObject):
 		try:
 			cp = run(cmd,check=False,stdout=PIPE,stderr=PIPE)
 		except Exception as e:
-			ymsg(f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
-			raise
+			raise MMGenCalledProcessError(f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
 		if self.debug:
 			print(cp)
 		return cp
@@ -173,16 +172,7 @@ class Daemon(MMGenObject):
 			# leading to interesting consequences.
 			os.unlink(self.pidfile)
 
-		for i in range(20):
-			try:
-				ret = self.do_start(silent=silent)
-			except Exception as e:
-				ymsg(str(e))
-			else:
-				break
-			time.sleep(1)
-		else:
-			die(2,'Unable to start daemon')
+		ret = self.do_start(silent=silent)
 
 		if self.wait:
 			self.wait_for_state('ready')
