@@ -709,11 +709,11 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'refresh',       # start_height
 	)
 
-def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,warning_shown=[]):
+def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,unsupported_daemon_warning_shown=[]):
 	if ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version:
-		if not type(proto) in warning_shown:
+		if not type(proto) in unsupported_daemon_warning_shown:
 			ymsg(f'WARNING: ignoring unsupported {rpc.daemon.coind_name} daemon version at user request')
-			warning_shown.append(type(proto))
+			unsupported_daemon_warning_shown.append(type(proto))
 	else:
 		rdie(1,fmt(
 			"""

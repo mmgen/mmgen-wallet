@@ -77,7 +77,6 @@ try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
 
 from mmgen.common import *
-from mmgen.daemon import CoinDaemon
 from test.include.common import *
 from test.test_py_d.common import *
 
@@ -163,6 +162,7 @@ def add_cmdline_opts():
 
 	sys.argv.insert(1,'--data-dir=' + data_dir)
 	sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
+	from mmgen.daemon import CoinDaemon
 	sys.argv.insert(1,'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port))
 
 # add_cmdline_opts()

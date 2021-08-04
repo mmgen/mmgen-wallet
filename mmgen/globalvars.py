@@ -65,12 +65,12 @@ class GlobalContext(Lockable):
 	err_disp_timeout = 0.7
 	short_disp_timeout = 0.3
 	min_time_precision = 18
+	dfl_seed_len = 256
 
 	# Variables - these might be altered at runtime:
 
 	user_entropy    = b''
 	dfl_hash_preset = '3'
-	dfl_seed_len    = 256
 	usr_randchars   = 30
 
 	tx_fee_adj   = Decimal('1.0')
@@ -91,7 +91,6 @@ class GlobalContext(Lockable):
 	testnet              = False
 	regtest              = False
 	accept_defaults      = False
-	use_internal_keccak_module = False
 
 	# rpc:
 	rpc_host             = ''
@@ -110,6 +109,9 @@ class GlobalContext(Lockable):
 	# regtest:
 	bob                  = False
 	alice                = False
+
+	# miscellaneous features:
+	use_internal_keccak_module = False
 
 	# test suite:
 	bogus_wallet_data    = ''

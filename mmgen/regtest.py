@@ -24,7 +24,6 @@ import os,time,shutil
 from subprocess import run,PIPE
 from .common import *
 from .protocol import init_proto
-from .daemon import CoinDaemon
 from .rpc import rpc_init
 
 def create_data_dir(data_dir):
@@ -52,6 +51,7 @@ class MMGenRegtest(MMGenObject):
 		self.coin = coin.lower()
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
+		from .daemon import CoinDaemon
 		self.proto = init_proto(self.coin,regtest=True)
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite_regtest)
 

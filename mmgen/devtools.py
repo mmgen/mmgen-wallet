@@ -28,14 +28,21 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 		pexit(*args,out=sys.stdout)
 
 	def print_stack_trace(message=None):
-		tb1 = traceback.extract_stack()
-		tb2 = [t for t in tb1 if t.filename[:1] != '<'][2:-2]
-		sys.stderr.write('STACK TRACE {}:\n'.format(message or '(unnamed)'))
-		fs = '    {}:{}: in {}:\n        {}\n'
-		for t in tb2:
-			fn = re.sub(r'^\./','',os.path.relpath(t.filename))
-			func = t.name+'()' if t.name[-1] != '>' else t.name
-			sys.stderr.write(fs.format(fn,t.lineno,func,t.line or '(none)'))
+		tb = [t for t in traceback.extract_stack() if t.filename[:1] != '<'][:-1]
+		fs = '{}:{}: in {}:\n    {}'
+		out = [
+			fs.format(
+				re.sub(r'^\./','',os.path.relpath(t.filename)),
+				t.lineno,
+				(t.name+'()' if t.name[-1] != '>' else t.name),
+				t.line or '(none)')
+			for t in tb ]
+
+		sys.stderr.write(
+			'STACK TRACE {}:\n  '.format(message or '[unnamed]') +
+			'\n  '.join(out) + '\n' )
+
+		open('devtools.trace','w').write('\n'.join(out))
 
 	class MMGenObject(object):
 
