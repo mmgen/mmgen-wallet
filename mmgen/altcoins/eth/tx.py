@@ -396,6 +396,10 @@ class EthereumMMGenTX:
 					return False
 				if self.rpc.daemon.id in ('parity','openethereum'):
 					pool = [x['hash'] for x in await self.rpc.call('parity_pendingTransactions')]
+				elif self.rpc.daemon.id == 'erigon':
+					res = await self.rpc.call('txpool_content')
+					pmsg('txpool_content:',res) # DEBUG
+					pool = list(res['pending']) + list(res['queued'])
 				return '0x'+self.coin_txid in pool
 
 			async def is_in_wallet():

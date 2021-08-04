@@ -397,6 +397,19 @@ class CoinProtocol(MMGenObject):
 		avg_bdi       = 15
 		ignore_daemon_version = False
 
+		chain_ids = {
+			1:    'ethereum',         # ethereum mainnet
+			2:    'morden',           # morden testnet (deprecated)
+			3:    'ropsten',          # ropsten testnet
+			4:    'rinkeby',          # rinkeby testnet
+			5:    'goerli',           # goerli testnet
+			42:   'kovan',            # kovan testnet
+			61:   'classic',          # ethereum classic mainnet
+			62:   'morden',           # ethereum classic testnet
+			17:   'developmentchain', # parity dev chain
+			1337: 'developmentchain', # erigon dev chain
+		}
+
 		@property
 		def dcoin(self):
 			return self.tokensym or self.coin
@@ -415,7 +428,7 @@ class CoinProtocol(MMGenObject):
 			return pubkey_hash
 
 	class EthereumTestnet(Ethereum):
-		chain_names = ['kovan']
+		chain_names = ['kovan','goerli','rinkeby']
 
 	class EthereumRegtest(EthereumTestnet):
 		chain_names = ['developmentchain']

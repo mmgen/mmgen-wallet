@@ -112,6 +112,7 @@ class GlobalContext(Lockable):
 
 	# miscellaneous features:
 	use_internal_keccak_module = False
+	enable_erigon = False
 
 	# test suite:
 	bogus_wallet_data    = ''
@@ -227,6 +228,7 @@ class GlobalContext(Lockable):
 		'MMGEN_RPC_BACKEND',
 		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',
+		'MMGEN_ENABLE_ERIGON',
 
 		'MMGEN_DISABLE_COLOR',
 		'MMGEN_DISABLE_MSWIN_PW_WARNING',

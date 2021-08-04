@@ -342,7 +342,7 @@ class CoinDaemon(Daemon):
 		'BCH': _cd('Bitcoin Cash Node', ['bitcoin_cash_node']),
 		'LTC': _cd('Litecoin',          ['litecoin_core']),
 		'XMR': _cd('Monero',            ['monero']),
-		'ETH': _cd('Ethereum',          ['openethereum']),
+		'ETH': _cd('Ethereum',          ['openethereum'] + (['erigon'] if g.enable_erigon else []) ),
 		'ETC': _cd('Ethereum Classic',  ['parity']),
 	}
 
@@ -656,3 +656,84 @@ class parity_daemon(openethereum_daemon):
 	exec_fn = 'parity'
 	ports_shift = _nw(100,110,120)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
+
+# https://github.com/ledgerwatch/erigon
+class erigon_daemon(CoinDaemon):
+	avail_opts = ('online',)
+	daemon_data = _dd('Erigon', 2021007005, '2021.07.5')
+	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
+	exec_fn = 'erigon'
+	cfg_file = 'erigon.conf'
+	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
+	ports_shift = _nw(200,210,220)
+	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
+	use_pidfile = False
+	use_threads = True
+	datadirs = {
+		'linux': [g.home_dir,'.local','share','erigon'],
+		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
+	}
+	datadir_is_subdir = True
+	testnet_dir = 'erigon_testnet'
+
+	def subclass_init(self):
+		self.private_port = getattr(self.private_ports,self.network)
+		if self.network == 'regtest':
+			self.datadir = None
+		self.coind_args = list_gen(
+			['--verbosity=0'],
+			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
+			[f'--datadir={self.datadir}', self.network!='regtest'],
+			['--chain=dev', self.network=='regtest'],
+			['--chain=goerli', self.network=='testnet'],
+			['--miner.etherbase=00a329c0648769a73afac7f9381e08fb43dbea72', self.network=='regtest'],
+		)
+		self.rpc_d = erigon_rpcdaemon(
+			proto        = self.proto,
+			rpc_port     = self.rpc_port,
+			private_port = self.private_port,
+			test_suite   = self.test_suite,
+			datadir      = self.datadir )
+
+	def start(self,quiet=False,silent=False):
+		super().start(quiet=quiet,silent=silent)
+		self.rpc_d.debug = self.debug
+		return self.rpc_d.start(quiet=quiet,silent=silent)
+
+	def stop(self,quiet=False,silent=False):
+		self.rpc_d.debug = self.debug
+		self.rpc_d.stop(quiet=quiet,silent=silent)
+		return super().stop(quiet=quiet,silent=silent)
+
+	@property
+	def start_cmds(self):
+		return [self.start_cmd,self.rpc_d.start_cmd]
+
+class erigon_rpcdaemon(RPCDaemon):
+
+	master_daemon = 'erigon_daemon'
+	rpc_type = 'Erigon'
+	exec_fn = 'rpcdaemon'
+	use_pidfile = False
+	use_threads = True
+
+	def __init__(self,proto,rpc_port,private_port,test_suite,datadir):
+
+		self.proto = proto
+		self.test_suite = test_suite
+
+		super().__init__()
+
+		self.network = proto.network
+		self.rpc_port = rpc_port
+		self.datadir = datadir
+
+		self.daemon_args = list_gen(
+			['--verbosity=0'],
+			[f'--private.api.addr=127.0.0.1:{private_port}'],
+			[f'--datadir={self.datadir}', self.network != 'regtest'],
+			['--http.api=eth,erigon,web3,net,txpool'],
+			[f'--http.port={self.rpc_port}'],
+		)
+
+		self.lock()

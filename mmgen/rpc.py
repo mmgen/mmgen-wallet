@@ -624,12 +624,18 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 				self.caps += ('full_node',)
 			self.chainID = None if ci == None else Int(ci,16) # parity/oe return chainID only for dev chain
 			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
+		elif self.daemon.id == 'erigon':
+			do_erigon_warning()
+			self.caps += ('full_node',)
+			self.chainID = Int(ci,16)
+			self.chain = self.proto.chain_ids[self.chainID]
 
 	rpcmethods = (
 		'eth_blockNumber',
 		'eth_call',
 		# Returns the EIP155 chain ID used for transaction signing at the current best block.
 		# Parity: Null is returned if not available, ID not required in transactions
+		# Erigon: always returns ID, requires ID in transactions
 		'eth_chainId',
 		'eth_gasPrice',
 		'eth_getBalance',
@@ -640,6 +646,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 		'parity_chain',
 		'parity_nodeKind',
 		'parity_pendingTransactions',
+		'txpool_content',
 	)
 
 class MoneroRPCClient(RPCClient):
@@ -708,6 +715,11 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'restore_deterministic_wallet', # name,password,seed (restore_height,language,seed_offset,autosave_current)
 		'refresh',       # start_height
 	)
+
+def do_erigon_warning(erigon_warning_shown=[]):
+	if not erigon_warning_shown:
+		rmsg(f'WARNING: Erigon support is EXPERIMENTAL.  Use at your own risk!!!')
+		erigon_warning_shown.append(1)
 
 def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,unsupported_daemon_warning_shown=[]):
 	if ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version:
