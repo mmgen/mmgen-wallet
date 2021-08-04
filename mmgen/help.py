@@ -42,6 +42,11 @@ def help_notes_func(proto,k):
 		def coind_exec():
 			return coind_exec()
 
+		def coin_daemon_network_ids():
+			from .daemon import CoinDaemon
+			from .util import fmt_list
+			return fmt_list(CoinDaemon.get_network_ids(),fmt='bare')
+
 		def rel_fee_desc():
 			from .tx import MMGenTX
 			return MMGenTX.Base().rel_fee_desc

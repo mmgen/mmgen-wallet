@@ -3,9 +3,6 @@
 import sys
 from include.tests_header import repo_root
 from mmgen.common import *
-from mmgen.daemon import *
-
-network_ids = CoinDaemon.get_network_ids()
 
 action = g.prog_name.split('-')[0]
 
@@ -33,11 +30,13 @@ Valid network IDs: {nid}, all, or no_xmr
 	},
 	'code': {
 		'options': lambda s: s.format(a=action.capitalize(),pn=g.prog_name),
-		'notes': lambda s: s.format(nid=', '.join(network_ids))
+		'notes': lambda s,help_notes: s.format(nid=help_notes('coin_daemon_network_ids'))
 	}
 }
 
 cmd_args = opts.init(opts_data)
+
+from mmgen.daemon import *
 
 def run(network_id=None,proto=None,daemon_id=None):
 	d = CoinDaemon(
@@ -70,6 +69,7 @@ if 'all' in cmd_args or 'no_xmr' in cmd_args:
 				run(proto=init_proto(coin=coin,network=network),daemon_id=daemon_id)
 else:
 	ids = cmd_args
+	network_ids = CoinDaemon.get_network_ids()
 	if not ids:
 		opts.usage()
 	for i in ids:
