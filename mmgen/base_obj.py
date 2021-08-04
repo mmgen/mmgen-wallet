@@ -70,20 +70,21 @@ class Lockable(AttrCtrl):
 	  - if an attribute's name is in _reset_ok, read-only restrictions are bypassed and only
 	    AttrCtrl checking is performed
 
-	An attribute is considered unset if its value is None, or if it is present in the instance
-	__dict__, if _use_class_attr is True.
+	An attribute is considered unset if its value is None, or if it evaluates to False but is
+	not zero; or if it is not present in the instance __dict__ when _use_class_attr is True.
 	"""
 	_set_ok = ()
 	_reset_ok = ()
 
 	def __setattr__(self,name,value):
 		if self._lock and hasattr(self,name):
+			val = getattr(self,name)
 			if name not in (self._set_ok + self._reset_ok):
 				raise AttributeError(f'attribute {name!r} of {type(self).__name__} object is read-only')
 			elif name not in self._reset_ok:
 				#print(self.__dict__)
 				if not (
-					getattr(self,name) is None or
+					val is None or (not (val == 0) and not val) or
 					( self._use_class_attr and name not in self.__dict__ ) ):
 					raise AttributeError(
 						f'attribute {name!r} of {type(self).__name__} object is already set,'

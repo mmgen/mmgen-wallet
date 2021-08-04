@@ -11,6 +11,7 @@ class unit_test(object):
 	def run_test(self,name,ut):
 
 		from mmgen.base_obj import AttrCtrl,Lockable
+		from decimal import Decimal
 
 		qmsg_r('Testing class AttrCtrl...')
 
@@ -38,7 +39,7 @@ class unit_test(object):
 		qmsg_r('Testing class Lockable...')
 
 		class MyLockable(Lockable): # class has no attrs, like UserOpts
-			_set_ok = ('foo','baz')
+			_set_ok = ('foo','baz','alpha','beta','gamma','delta','epsilon')
 			_reset_ok = ('bar','baz')
 
 		lc = MyLockable()
@@ -46,6 +47,14 @@ class unit_test(object):
 		lc.bar = 'barval'
 		lc.baz = 1
 		lc.qux = 1
+
+		# are these considered set?
+		lc.alpha = 0             # yes
+		lc.beta = False          # yes
+		lc.gamma = Decimal('0')  # yes
+		lc.delta = 0.0           # yes
+		lc.epsilon = []          # no
+
 		lc.lock()
 
 		lc.foo = 'fooval2'
@@ -53,6 +62,8 @@ class unit_test(object):
 		lc.bar = 'barval3'
 		lc.baz = 2
 		lc.baz = 3
+
+		lc.epsilon = [0]
 
 		class MyLockableClsCheck(Lockable): # class has attrs, like GlobalContext
 			_use_class_attr = True
@@ -86,6 +97,12 @@ class unit_test(object):
 		def bad9(): lc.x = 1
 		def bad10(): lcc.x = 1
 
+		def bad11(): lc.alpha = 0
+		def bad12(): lc.beta = False
+		def bad13(): lc.gamma = Decimal('0')
+		def bad14(): lc.delta = float(0)
+		def bad15(): lc.epsilon = [0]
+
 		ut.process_bad_data((
 			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
 			('attr (2)',           'AttributeError', 'has no attr', bad9 ),
@@ -97,6 +114,11 @@ class unit_test(object):
 			("attr (can't set)",   'AttributeError', 'read-only',   bad7 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad3 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad8 ),
+			("attr (can't reset)", 'AttributeError', 'reset',       bad11 ),
+			("attr (can't reset)", 'AttributeError', 'reset',       bad12 ),
+			("attr (can't reset)", 'AttributeError', 'reset',       bad13 ),
+			("attr (can't reset)", 'AttributeError', 'reset',       bad14 ),
+			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
 		))
 
 		qmsg('OK')
