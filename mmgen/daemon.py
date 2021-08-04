@@ -30,7 +30,7 @@ _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str'
 _cd = namedtuple('coins_data',['coin_name','daemon_ids'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
-class Daemon(MMGenObject):
+class Daemon(Lockable):
 
 	desc = 'daemon'
 	debug = False
@@ -43,6 +43,7 @@ class Daemon(MMGenObject):
 	private_port = None
 	avail_opts = ()
 	avail_flags = () # like opts, but can be added or removed after instantiation
+	_reset_ok = ('debug','wait','_flags')
 
 	def __init__(self):
 		self.opts = []
@@ -253,6 +254,7 @@ class RPCDaemon(Daemon):
 			self.rpc_type,
 			getattr(self.proto.network_names,self.proto.network),
 			'test suite ' if self.test_suite else '' )
+		self._set_ok += ('usr_daemon_args',)
 		self.usr_daemon_args = []
 
 	@property
@@ -324,6 +326,8 @@ class MoneroWalletDaemon(RPCDaemon):
 			['--detach',                             not 'no_daemonize' in self.opts],
 			['--stagenet',                           self.network == 'testnet'],
 		)
+
+		self.lock()
 
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')
@@ -405,6 +409,7 @@ class CoinDaemon(Daemon):
 
 		super().__init__()
 
+		self._set_ok += ('shared_args','usr_coind_args')
 		self.shared_args = []
 		self.usr_coind_args = []
 
@@ -462,6 +467,8 @@ class CoinDaemon(Daemon):
 			getattr(self.proto.network_names,self.network),
 			'test suite ' if test_suite else '' )
 		self.subclass_init()
+
+		self.lock()
 
 	def init_rpc_port(self,test_suite,port_shift):
 		self.port_shift = (1237 if test_suite else 0) + (port_shift or 0)
