@@ -53,8 +53,6 @@ class Daemon(Lockable):
 			self.use_pidfile = False
 			self.use_threads = True
 
-	def subclass_init(self): pass
-
 	def exec_cmd_thread(self,cmd):
 		import threading
 		tname = ('exec_cmd','exec_cmd_win_console')[self.platform == 'win' and self.new_console_mswin]
@@ -292,7 +290,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			self.rpc_port += port_shift
 
 		id_str = f'{self.exec_fn}-{self.bind_port}'
-		self.datadir = os.path.join(datadir or ('','test')[test_suite], self.exec_fn)
+		self.datadir = os.path.join((datadir or self.exec_fn),('','test_suite')[test_suite])
 		self.pidfile = os.path.join(self.datadir,id_str+'.pid')
 		self.logfile = os.path.join(self.datadir,id_str+'.log')
 
@@ -334,9 +332,7 @@ class CoinDaemon(Daemon):
 	cfg_file_hdr = ''
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize','online')
-	datadir_is_subdir = False
 	testnet_dir = None
-	data_subdir = ''
 	test_suite_port_shift = 1237
 
 	coins = {
@@ -418,6 +414,11 @@ class CoinDaemon(Daemon):
 		for k,v in self.daemon_data._asdict().items():
 			setattr(self,k,v)
 
+		self.desc = '{} {} {}daemon'.format(
+			self.coind_name,
+			getattr(self.proto.network_names,self.network),
+			'test suite ' if test_suite else '' )
+
 		if opts:
 			if type(opts) not in (list,tuple):
 				die(1,f'{opts!r}: illegal value for opts (must be list or tuple)')
@@ -434,50 +435,38 @@ class CoinDaemon(Daemon):
 			for flag in flags:
 				self.add_flag(flag)
 
-		if self.network == 'regtest' and isinstance(self,bitcoin_core_daemon):
-			if test_suite:
-				rel_datadir = os.path.join(
-					'test',
-					'data_dir{}'.format('-α' if g.debug_utf8 else ''),
-					'regtest',
-					self.coin.lower() )
-			else:
-				dfl_datadir = os.path.join(g.data_dir_root,'regtest',self.coin.lower())
-		elif test_suite:
-			rel_datadir = os.path.join('test','daemons',self.coin.lower())
-		else:
-			dfl_datadir = os.path.join(*self.datadirs[self.platform])
-
-		if test_suite:
-			dfl_datadir = os.path.join(os.getcwd(),rel_datadir)
-
 		# user-set values take precedence
-		datadir = datadir or g.daemon_data_dir or dfl_datadir
+		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
 
-		self.datadir = os.path.abspath(datadir)
+		# init_datadir() may optionally initialize logdir
+		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
 
-		if self.network == 'testnet' and self.testnet_dir:
-			self.data_subdir = self.testnet_dir
-			if self.datadir_is_subdir:
-				self.datadir = os.path.join(self.datadir,self.testnet_dir)
+		self.data_subdir = self.init_data_subdir()
 
-		self.init_rpc_port(test_suite,port_shift)
+		self.port_shift = (self.test_suite_port_shift if self.test_suite else 0) + (port_shift or 0)
 
-		self.pidfile = '{}/{}-daemon-{}.pid'.format(self.datadir,self.network,self.rpc_port)
-		self.desc = '{} {} {}daemon'.format(
-			self.coind_name,
-			getattr(self.proto.network_names,self.network),
-			'test suite ' if test_suite else '' )
+		# user-set value takes precedence
+		self.rpc_port = g.rpc_port or getattr(self.rpc_ports,self.network) + self.port_shift
 
-		self.subclass_init()
+		# bind_port depends on private_port
+		if hasattr(self,'private_ports'):
+			self.private_port = getattr(self.private_ports,self.network)
+
+		self.pidfile = '{}/{}-{}-daemon-{}.pid'.format(self.logdir,self.id,self.network,self.bind_port)
+		self.logfile = '{}/{}-{}-daemon-{}.log'.format(self.logdir,self.id,self.network,self.bind_port)
+
+		self.init_subclass()
+
 		self.lock()
 
-	def init_rpc_port(self,test_suite,port_shift):
-		self.port_shift = (self.test_suite_port_shift if test_suite else 0) + (port_shift or 0)
-		self.rpc_port = getattr(self.rpc_ports,self.network) + self.port_shift
+	def init_datadir(self):
+		if self.test_suite:
+			return os.path.join('test','daemons',self.coin.lower())
+		else:
+			return os.path.join(*self.datadirs[self.platform])
 
-		if g.rpc_port: # user-set global overrides everything else
-			self.rpc_port = g.rpc_port
+	def init_data_subdir(self):
+		return ''
 
 	@property
 	def start_cmd(self):
@@ -505,7 +494,10 @@ class bitcoin_core_daemon(CoinDaemon):
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
 
-	def subclass_init(self):
+	def init_data_subdir(self):
+		return self.testnet_dir if self.network == 'testnet' else ''
+
+	def init_subclass(self):
 
 		from .regtest import MMGenRegtest
 		self.shared_args = list_gen(
@@ -587,13 +579,18 @@ class monero_daemon(CoinDaemon):
 	host = 'localhost' # FIXME
 	rpc_ports = _nw(18081, 38081, None)
 	cfg_file = 'bitmonero.conf'
-	datadir_is_subdir = True
 	datadirs = {
 		'linux': [g.home_dir,'.bitmonero'],
 		'win':   ['/','c','ProgramData','bitmonero']
 	}
 
-	def subclass_init(self):
+	def init_datadir(self):
+		self.logdir = super().init_datadir()
+		return os.path.join(
+			self.logdir,
+			self.testnet_dir if self.network == 'testnet' else '' )
+
+	def init_subclass(self):
 
 		self.p2p_port = self.rpc_port - 1
 
@@ -617,9 +614,18 @@ class monero_daemon(CoinDaemon):
 	def stop_cmd(self):
 		return ['kill','-Wf',self.pid] if self.platform == 'win' else [self.exec_fn] + self.shared_args + ['exit']
 
-class openethereum_daemon(CoinDaemon):
-	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
+class ethereum_daemon(CoinDaemon):
 	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
+
+	def init_datadir(self):
+		self.logdir = super().init_datadir()
+		return os.path.join(
+			self.logdir,
+			self.id,
+			getattr(self.chain_subdirs,self.network) )
+
+class openethereum_daemon(ethereum_daemon):
+	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
 	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'openethereum'
 	ports_shift = _nw(0,10,20)
@@ -630,9 +636,7 @@ class openethereum_daemon(CoinDaemon):
 		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
 
-	def subclass_init(self):
-		base_path = os.path.join(self.datadir,self.id,getattr(self.chain_subdirs,self.network))
-		shutil.rmtree(base_path,ignore_errors=True)
+	def init_subclass(self):
 
 		ps = self.port_shift + getattr(self.ports_shift,self.network)
 		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
@@ -642,11 +646,11 @@ class openethereum_daemon(CoinDaemon):
 			['--no-ipc'],
 			['--no-secretstore'],
 			[f'--ports-shift={ps}'],
-			[f'--base-path={base_path}'],
+			[f'--base-path={self.datadir}'],
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
 			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
-			['--log-file='+os.path.join(self.datadir, f'{self.id}-{self.network}.log')],
+			[f'--log-file={self.logfile}'],
 			['daemon', ld],
 			[self.pidfile, ld],
 		)
@@ -658,12 +662,13 @@ class parity_daemon(openethereum_daemon):
 	ports_shift = _nw(100,110,120)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
 
-class geth_daemon(CoinDaemon):
+class geth_daemon(ethereum_daemon):
 	daemon_data = _dd('Geth', 1010007, '1.10.7')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
 	ports_shift = _nw(300,310,320)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
+	p2p_ports = _nw(*[30303 + n for n in (0,10,20)])  # testnet and regtest are non-standard
 	use_pidfile = False
 	use_threads = True
 	datadirs = {
@@ -671,16 +676,16 @@ class geth_daemon(CoinDaemon):
 		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
 	}
 
-	def subclass_init(self):
-		self.datadir = os.path.join(self.datadir,self.id,getattr(self.proto.network_names,self.network))
+	def init_subclass(self):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
 			['--http'],
 			['--http.api=eth,web3,txpool'], # ,clique,personal,net'],
 			[f'--http.port={self.rpc_port}'],
+			[f'--port={getattr(self.p2p_ports,self.network)}'],
 			['--maxpeers=0', not 'online' in self.opts],
 			[f'--datadir={self.datadir}'],
-			['--chain=goerli', self.network=='testnet'],
+			['--goerli', self.network=='testnet'],
 			['--dev', self.network=='regtest'],
 		)
 
@@ -693,16 +698,16 @@ class erigon_daemon(geth_daemon):
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
 	ports_shift = _nw(200,210,220)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
+	p2p_ports = _nw(*[30303 + n for n in (30,40,50)]) # non-standard
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
 
-	def subclass_init(self):
-		self.private_port = getattr(self.private_ports,self.network)
-		self.datadir = os.path.join(self.datadir,self.id,getattr(self.proto.network_names,self.network))
+	def init_subclass(self):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
+			[f'--port={getattr(self.p2p_ports,self.network)}'],
 			['--maxpeers=0', not 'online' in self.opts],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
 			[f'--datadir={self.datadir}'],
