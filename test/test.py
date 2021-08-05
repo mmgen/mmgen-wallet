@@ -167,7 +167,7 @@ def add_cmdline_opts():
 
 # add_cmdline_opts()
 
-opts.UserOpts._reset_ok += ('skip_deps',)
+opts.UserOpts._reset_ok += ('skip_deps','no_daemon_autostart')
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
@@ -194,6 +194,7 @@ if opt.exact_output:
 
 if opt.resume or opt.resume_after:
 	opt.skip_deps = True
+	opt.no_daemon_autostart = True
 	resume = opt.resume or opt.resume_after
 else:
 	resume = False

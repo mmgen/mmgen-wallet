@@ -28,6 +28,7 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die
 from mmgen.exception import *
+from mmgen.obj import ETHAmt
 from ..include.common import *
 from .common import *
 
@@ -689,7 +690,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				imsg_r( '\n' + await tk.info() )
 				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_addr)))
 				imsg('Sending {} {} to address {} ({})'.format(amt,self.proto.dcoin,usr_addrs[i],usr_mmaddrs[i]))
-				from mmgen.obj import ETHAmt
 				txid = await tk.transfer(
 					dfl_addr,
 					usr_addrs[i],

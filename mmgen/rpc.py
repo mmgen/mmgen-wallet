@@ -727,21 +727,16 @@ def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,unsupporte
 			ymsg(f'WARNING: ignoring unsupported {rpc.daemon.coind_name} daemon version at user request')
 			unsupported_daemon_warning_shown.append(type(proto))
 	else:
-		rdie(1,fmt(
-			"""
-			The running {} daemon has version {}.
-			This version of MMGen is tested only on {} v{} and below.
+		name = rpc.daemon.coind_name
+		rdie(1,'\n'+fmt(f"""
+			The running {name} daemon has version {rpc.daemon_version_str}.
+			This version of MMGen is tested only on {name} v{rpc.daemon.coind_version_str} and below.
 
 			To avoid this error, downgrade your daemon to a supported version.
 
 			Alternatively, you may invoke the command with the --ignore-daemon-version
 			option, in which case you proceed at your own risk.
-			""".format(
-					rpc.daemon.coind_name,
-					rpc.daemon_version_str,
-					rpc.daemon.coind_name,
-					rpc.daemon.coind_version_str,
-					),indent='    ').rstrip())
+			""",indent='    '))
 
 async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 

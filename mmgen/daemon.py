@@ -335,7 +335,9 @@ class CoinDaemon(Daemon):
 	avail_flags = ('keep_cfg_file',)
 	avail_opts = ('no_daemonize','online')
 	datadir_is_subdir = False
+	testnet_dir = None
 	data_subdir = ''
+	test_suite_port_shift = 1237
 
 	coins = {
 		'BTC': _cd('Bitcoin',           ['bitcoin_core']),
@@ -466,12 +468,12 @@ class CoinDaemon(Daemon):
 			self.coind_name,
 			getattr(self.proto.network_names,self.network),
 			'test suite ' if test_suite else '' )
-		self.subclass_init()
 
+		self.subclass_init()
 		self.lock()
 
 	def init_rpc_port(self,test_suite,port_shift):
-		self.port_shift = (1237 if test_suite else 0) + (port_shift or 0)
+		self.port_shift = (self.test_suite_port_shift if test_suite else 0) + (port_shift or 0)
 		self.rpc_port = getattr(self.rpc_ports,self.network) + self.port_shift
 
 		if g.rpc_port: # user-set global overrides everything else
@@ -627,10 +629,9 @@ class openethereum_daemon(CoinDaemon):
 		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
 	}
-	testnet_dir = None
 
 	def subclass_init(self):
-		base_path = os.path.join(self.datadir,'chains',getattr(self.chain_subdirs,self.network))
+		base_path = os.path.join(self.datadir,self.id,getattr(self.chain_subdirs,self.network))
 		shutil.rmtree(base_path,ignore_errors=True)
 
 		ps = self.port_shift + getattr(self.ports_shift,self.network)
@@ -663,7 +664,6 @@ class erigon_daemon(CoinDaemon):
 	daemon_data = _dd('Erigon', 2021007005, '2021.07.5')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
-	cfg_file = 'erigon.conf'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
 	ports_shift = _nw(200,210,220)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
@@ -673,17 +673,15 @@ class erigon_daemon(CoinDaemon):
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
 	}
-	datadir_is_subdir = True
-	testnet_dir = 'erigon_testnet'
 
 	def subclass_init(self):
 		self.private_port = getattr(self.private_ports,self.network)
-		if self.network == 'regtest':
-			self.datadir = None
+		self.datadir = os.path.join(self.datadir,self.id,getattr(self.proto.network_names,self.network))
 		self.coind_args = list_gen(
 			['--verbosity=0'],
+			['--maxpeers=0', not 'online' in self.opts],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.network!='regtest'],
+			[f'--datadir={self.datadir}'],
 			['--chain=dev', self.network=='regtest'],
 			['--chain=goerli', self.network=='testnet'],
 			['--miner.etherbase=00a329c0648769a73afac7f9381e08fb43dbea72', self.network=='regtest'],
@@ -732,7 +730,7 @@ class erigon_rpcdaemon(RPCDaemon):
 			['--verbosity=0'],
 			[f'--private.api.addr=127.0.0.1:{private_port}'],
 			[f'--datadir={self.datadir}', self.network != 'regtest'],
-			['--http.api=eth,erigon,web3,net,txpool'],
+			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
 		)
 
