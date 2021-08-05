@@ -733,6 +733,27 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 passwd_files_used = {}
 
+class oneshot_warning:
+
+	def __init__(self,wcls,div=None,fmt_args=[]):
+
+		def do_warning():
+			cls = getattr(self,wcls)
+			message = getattr(cls,'message')
+			color = globals()[getattr(cls,'color')]
+			msg(color('WARNING: ' + message.format(*fmt_args)))
+
+		flag = wcls+'_warning_shown'
+
+		if not hasattr(self,flag):
+			setattr(type(self),flag,[])
+
+		attr = getattr(type(self),flag)
+
+		if not div in attr:
+			do_warning()
+			attr.append(div)
+
 def pwfile_reuse_warning(passwd_file):
 	if passwd_file in passwd_files_used:
 		qmsg(f'Reusing passphrase from file {passwd_file!r} at user request')

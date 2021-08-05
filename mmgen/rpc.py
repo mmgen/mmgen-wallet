@@ -625,7 +625,7 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 			self.chainID = None if ci == None else Int(ci,16) # parity/oe return chainID only for dev chain
 			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
 		elif self.daemon.id == 'erigon':
-			do_erigon_warning()
+			daemon_warning(self.daemon.id)
 			self.caps += ('full_node',)
 			self.chainID = Int(ci,16)
 			self.chain = self.proto.chain_ids[self.chainID]
@@ -716,16 +716,19 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'refresh',       # start_height
 	)
 
-def do_erigon_warning(erigon_warning_shown=[]):
-	if not erigon_warning_shown:
-		rmsg(f'WARNING: Erigon support is EXPERIMENTAL.  Use at your own risk!!!')
-		erigon_warning_shown.append(1)
+class daemon_warning(oneshot_warning):
 
-def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version,unsupported_daemon_warning_shown=[]):
+	class erigon:
+		color = 'red'
+		message = 'Erigon support is EXPERIMENTAL.  Use at your own risk!!!'
+
+	class version:
+		color = 'yellow'
+		message = 'ignoring unsupported {} daemon version at user request'
+
+def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version):
 	if ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version:
-		if not type(proto) in unsupported_daemon_warning_shown:
-			ymsg(f'WARNING: ignoring unsupported {rpc.daemon.coind_name} daemon version at user request')
-			unsupported_daemon_warning_shown.append(type(proto))
+		daemon_warning('version',div=proto.name,fmt_args=[rpc.daemon.coind_name])
 	else:
 		name = rpc.daemon.coind_name
 		rdie(1,'\n'+fmt(f"""
