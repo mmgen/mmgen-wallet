@@ -344,7 +344,7 @@ class CoinDaemon(Daemon):
 		'BCH': _cd('Bitcoin Cash Node', ['bitcoin_cash_node']),
 		'LTC': _cd('Litecoin',          ['litecoin_core']),
 		'XMR': _cd('Monero',            ['monero']),
-		'ETH': _cd('Ethereum',          ['openethereum'] + (['erigon'] if g.enable_erigon else []) ),
+		'ETH': _cd('Ethereum',          ['openethereum','geth'] + (['erigon'] if g.enable_erigon else []) ),
 		'ETC': _cd('Ethereum Classic',  ['parity']),
 	}
 
@@ -658,8 +658,34 @@ class parity_daemon(openethereum_daemon):
 	ports_shift = _nw(100,110,120)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
 
+class geth_daemon(CoinDaemon):
+	daemon_data = _dd('Geth', 1010007, '1.10.7')
+	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
+	exec_fn = 'geth'
+	ports_shift = _nw(300,310,320)
+	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
+	use_pidfile = False
+	use_threads = True
+	datadirs = {
+		'linux': [g.home_dir,'.ethereum','geth'],
+		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
+	}
+
+	def subclass_init(self):
+		self.datadir = os.path.join(self.datadir,self.id,getattr(self.proto.network_names,self.network))
+		self.coind_args = list_gen(
+			['--verbosity=0'],
+			['--http'],
+			['--http.api=eth,web3,txpool'], # ,clique,personal,net'],
+			[f'--http.port={self.rpc_port}'],
+			['--maxpeers=0', not 'online' in self.opts],
+			[f'--datadir={self.datadir}'],
+			['--chain=goerli', self.network=='testnet'],
+			['--dev', self.network=='regtest'],
+		)
+
 # https://github.com/ledgerwatch/erigon
-class erigon_daemon(CoinDaemon):
+class erigon_daemon(geth_daemon):
 	avail_opts = ('online',)
 	daemon_data = _dd('Erigon', 2021007005, '2021.07.5')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
@@ -667,8 +693,6 @@ class erigon_daemon(CoinDaemon):
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
 	ports_shift = _nw(200,210,220)
 	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
-	use_pidfile = False
-	use_threads = True
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME

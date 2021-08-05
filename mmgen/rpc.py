@@ -624,8 +624,9 @@ class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
 				self.caps += ('full_node',)
 			self.chainID = None if ci == None else Int(ci,16) # parity/oe return chainID only for dev chain
 			self.chain = (await self.call('parity_chain')).replace(' ','_').replace('_testnet','')
-		elif self.daemon.id == 'erigon':
-			daemon_warning(self.daemon.id)
+		elif self.daemon.id in ('geth','erigon'):
+			if self.daemon.network == 'mainnet':
+				daemon_warning(self.daemon.id)
 			self.caps += ('full_node',)
 			self.chainID = Int(ci,16)
 			self.chain = self.proto.chain_ids[self.chainID]
@@ -717,6 +718,10 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 	)
 
 class daemon_warning(oneshot_warning):
+
+	class geth:
+		color = 'yellow'
+		message = 'Geth has not been tested on mainnet.  You may experience problems.'
 
 	class erigon:
 		color = 'red'

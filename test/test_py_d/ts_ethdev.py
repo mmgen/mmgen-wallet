@@ -152,7 +152,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
 		('addrgen',             'generating addresses'),
 		('addrimport',          'importing addresses'),
-		('addrimport_dev_addr', "importing OpenEthereum dev address 'Ox00a329c..'"),
+		('addrimport_dev_addr', "importing dev faucet address 'Ox00a329c..'"),
 
 		('txcreate1',           'creating a transaction (spend from dev address to address :1)'),
 		('txview1_raw',         'viewing the raw transaction'),
@@ -333,12 +333,86 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
 		if not opt.no_daemon_autostart:
-			if not start_test_daemons(self.proto.coin+'_rt',remove_datadir=True):
+			if g.daemon_id == 'geth':
+				self.geth_setup()
+			if not start_test_daemons(
+					self.proto.coin+'_rt',
+					remove_datadir = not g.daemon_id=='geth' ):
 				return False
 			from mmgen.rpc import rpc_init
 			rpc = await rpc_init(self.proto)
 			imsg('Daemon: {} v{}'.format(rpc.daemon.coind_name,rpc.daemon_version_str))
 		return 'ok'
+
+	def geth_setup(self):
+
+		def make_key(keystore):
+			pwfile = joinpath(self.tmpdir,'account_passwd')
+			write_to_file(pwfile,'')
+			run(['rm','-rf',keystore])
+			cmd = f'geth account new --password={pwfile} --lightkdf --keystore {keystore}'
+			cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+			if cp.returncode:
+				die(1,cp.stderr.decode())
+			keyfile = os.path.join(keystore,os.listdir(keystore)[0])
+			return json.loads(open(keyfile).read())['address']
+
+		def make_genesis(signer_addr,prealloc_addr,prealloc_amt):
+			return {
+				'config': {
+					'chainId': 1337, # TODO: replace constant with var
+					'homesteadBlock': 0,
+					'eip150Block': 0,
+					'eip155Block': 0,
+					'eip158Block': 0,
+					'byzantiumBlock': 0,
+					'constantinopleBlock': 0,
+					'petersburgBlock': 0,
+					'clique': {
+						'period': 0,
+						'epoch': 30000
+					}
+				},
+				'difficulty': '1',
+				'gasLimit': '8000000',
+				'extradata': '0x' + 64*'0' + signer_addr + 130*'0',
+				'alloc': {
+					prealloc_addr: { 'balance': str(prealloc_amt.toWei()) }
+				}
+			}
+
+		def init_genesis(fn):
+			cmd = f'geth init --datadir {d.datadir} {fn}'
+			cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
+			if cp.returncode:
+				die(1,cp.stderr.decode())
+
+		from mmgen.daemon import CoinDaemon
+		import json
+
+		d = CoinDaemon(proto=self.proto,test_suite=True)
+		d.stop(quiet=True)
+		d.remove_datadir()
+
+		imsg(cyan('Initializing Geth:'))
+
+		keystore = os.path.relpath(os.path.join(d.datadir,'keystore'))
+		imsg(f'  Keystore:           {keystore}')
+
+		signer_addr = make_key(keystore)
+		imsg(f'  Signer address:     {signer_addr}')
+
+		prealloc_amt = ETHAmt('1_000_000_000')
+		imsg(f'  Faucet:             {dfl_addr} ({prealloc_amt} ETH)')
+
+		genesis_data = make_genesis(signer_addr,dfl_addr,prealloc_amt)
+
+		genesis_fn = joinpath(self.tmpdir,'genesis.json')
+		imsg(f'  Genesis block data: {genesis_fn}')
+
+		write_to_file( genesis_fn, json.dumps(genesis_data,indent='  ')+'\n' )
+
+		init_genesis(genesis_fn)
 
 	def wallet_upgrade(self,src_file):
 		if self.proto.coin == 'ETC':

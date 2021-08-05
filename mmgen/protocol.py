@@ -407,7 +407,7 @@ class CoinProtocol(MMGenObject):
 			61:   'classic',          # ethereum classic mainnet
 			62:   'morden',           # ethereum classic testnet
 			17:   'developmentchain', # parity dev chain
-			1337: 'developmentchain', # erigon dev chain
+			1337: 'developmentchain', # geth dev chain
 		}
 
 		@property
