@@ -10,24 +10,23 @@ from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init,MoneroWalletRPCClient
 from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
 
-def auth_test(proto,d):
-	if g.platform != 'win':
-		qmsg(f'\n  Testing authentication with credentials from {d.cfg_file}:')
-		d.remove_datadir()
-		os.makedirs(d.datadir)
+def cfg_file_auth_test(proto,d):
+	qmsg(cyan(f'\n  Testing authentication with credentials from {d.cfg_file}:'))
+	d.remove_datadir() # removes cookie file to force authentication from cfg file
+	os.makedirs(d.network_datadir)
 
-		cf = os.path.join(d.datadir,d.cfg_file)
-		open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
+	cf = os.path.join(d.datadir,d.cfg_file)
+	open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
 
-		d.add_flag('keep_cfg_file')
-		d.start()
+	d.add_flag('keep_cfg_file')
+	d.start()
 
-		async def do():
-			rpc = await rpc_init(proto)
-			assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
+	async def do():
+		rpc = await rpc_init(proto)
+		assert rpc.auth.user == 'ut_rpc', f'{rpc.auth.user}: user is not ut_rpc!'
 
-		run_session(do())
-		d.stop()
+	run_session(do())
+	d.stop()
 
 def do_msg(rpc):
 	qmsg('  Testing backend {!r}'.format(type(rpc.backend).__name__))
@@ -37,13 +36,6 @@ class init_test:
 	async def btc(proto,backend):
 		rpc = await rpc_init(proto,backend)
 		do_msg(rpc)
-		addrs = (
-			('bc1qvmqas4maw7lg9clqu6kqu9zq9cluvlln5hw97q','test address #1'), # deadbeef * 8
-			('bc1qe50rj25cldtskw5huxam335kyshtqtlrf4pt9x','test address #2'), # deadbeef * 7 + deadbeee
-		)
-		await rpc.batch_call('importaddress',addrs,timeout=120)
-		ret = await rpc.batch_call('getaddressesbylabel',[(l,) for a,l in addrs])
-		assert list(ret[0].keys())[0] == addrs[0][0]
 
 		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
@@ -62,50 +54,54 @@ class init_test:
 
 	etc = eth
 
-def run_test(coin,auth): # TODO: run all available networks simultaneously
+def run_test(network_ids,test_cf_auth): # TODO: run all available networks simultaneously
 
-	proto = init_proto(coin)
+	for network_id in network_ids:
 
-	d = CoinDaemon(proto=proto,test_suite=True)
+		proto = init_proto(network_id=network_id)
 
-	if not opt.no_daemon_stop:
-		d.stop()
+		d = CoinDaemon(proto=proto,test_suite=True)
 
-	if not opt.no_daemon_autostart:
-		d.remove_datadir()
-		d.start()
+		if not opt.no_daemon_stop:
+			d.stop()
 
-	for backend in g.autoset_opts['rpc_backend'].choices:
-		run_session(getattr(init_test,coin)(proto,backend),backend=backend)
+		if not opt.no_daemon_autostart:
+			d.remove_datadir()
+			d.start()
 
-	if not opt.no_daemon_stop:
-		d.stop()
+		for backend in g.autoset_opts['rpc_backend'].choices:
+			run_session(getattr(init_test,proto.coin.lower())(proto,backend),backend=backend)
 
-	if auth:
-		auth_test(proto,d)
+		if not opt.no_daemon_stop:
+			d.stop()
+
+		if test_cf_auth and g.platform != 'win':
+			cfg_file_auth_test(proto,d)
+
+		qmsg('')
 
 	return True
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','eth','etc','xmr_wallet')
+	altcoin_deps = ('ltc','bch','eth','etc','xmrwallet')
 
 	def btc(self,name,ut):
-		return run_test('btc',auth=True)
+		return run_test(['btc','btc_tn'],test_cf_auth=True)
 
 	def ltc(self,name,ut):
-		return run_test('ltc',auth=True)
+		return run_test(['ltc','ltc_tn'],test_cf_auth=True)
 
 	def bch(self,name,ut):
-		return run_test('bch',auth=True)
+		return run_test(['bch','bch_tn'],test_cf_auth=True)
 
 	def eth(self,name,ut):
-		return run_test('eth',auth=False)
+		return run_test(['eth'],test_cf_auth=False)
 
 	def etc(self,name,ut):
-		return run_test('etc',auth=False)
+		return run_test(['etc'],test_cf_auth=False)
 
-	def xmr_wallet(self,name,ut):
+	def xmrwallet(self,name,ut):
 
 		async def run():
 			networks = init_proto('xmr').networks
