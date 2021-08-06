@@ -483,7 +483,7 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 			self.daemon.cfg_file )
 
 	def get_daemon_auth_cookie_fn(self):
-		return os.path.join( self.daemon.datadir, self.daemon.data_subdir, '.cookie' )
+		return os.path.join(self.daemon.network_datadir,'.cookie')
 
 	def get_daemon_cfg_options(self,req_keys):
 

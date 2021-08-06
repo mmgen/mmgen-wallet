@@ -160,6 +160,8 @@ class Daemon(Lockable):
 			f'port {self.bind_port}',
 			w = 52 + len(extra_text) )
 
+	def pre_start(self): pass
+
 	def start(self,quiet=False,silent=False):
 		if self.state == 'ready':
 			if not (quiet or silent):
@@ -168,15 +170,7 @@ class Daemon(Lockable):
 
 		self.wait_for_state('stopped')
 
-		if self.datadir:
-			os.makedirs(self.datadir,exist_ok=True)
-			if self.cfg_file and not 'keep_cfg_file' in self.flags:
-				open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
-
-		if self.use_pidfile and os.path.exists(self.pidfile):
-			# OpenEthereum just overwrites the data in the existing pidfile without zeroing it first,
-			# leading to interesting consequences.
-			os.unlink(self.pidfile)
+		self.pre_start()
 
 		ret = self.do_start(silent=silent)
 
@@ -233,16 +227,6 @@ class Daemon(Lockable):
 		if val not in self._flags:
 			die(1,'Flag {!r} not set, so cannot be removed'.format(val))
 		self._flags.remove(val)
-
-	def remove_datadir(self):
-		if self.datadir:
-			if self.state == 'stopped':
-				try: # exception handling required for MSWin/MSYS2
-					run(['/bin/rm','-rf',self.datadir])
-				except:
-					pass
-			else:
-				msg(f'Cannot remove {self.datadir!r} - daemon is not stopped')
 
 class RPCDaemon(Daemon):
 
@@ -438,20 +422,18 @@ class CoinDaemon(Daemon):
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
 
-		# init_datadir() may optionally initialize logdir
+		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
-
-		self.data_subdir = self.init_data_subdir()
 
 		self.port_shift = (self.test_suite_port_shift if self.test_suite else 0) + (port_shift or 0)
 
 		# user-set value takes precedence
 		self.rpc_port = g.rpc_port or getattr(self.rpc_ports,self.network) + self.port_shift
 
-		# bind_port depends on private_port
 		if hasattr(self,'private_ports'):
 			self.private_port = getattr(self.private_ports,self.network)
 
+		# bind_port == self.private_port or self.rpc_port
 		self.pidfile = '{}/{}-{}-daemon-{}.pid'.format(self.logdir,self.id,self.network,self.bind_port)
 		self.logfile = '{}/{}-{}-daemon-{}.log'.format(self.logdir,self.id,self.network,self.bind_port)
 
@@ -465,8 +447,9 @@ class CoinDaemon(Daemon):
 		else:
 			return os.path.join(*self.datadirs[self.platform])
 
-	def init_data_subdir(self):
-		return ''
+	@property
+	def network_datadir(self):
+		return self.datadir
 
 	@property
 	def start_cmd(self):
@@ -479,6 +462,28 @@ class CoinDaemon(Daemon):
 		return ([self.cli_fn]
 				+ self.shared_args
 				+ list(cmds) )
+
+	def pre_start(self):
+		os.makedirs(self.datadir,exist_ok=True)
+
+		if self.cfg_file and not 'keep_cfg_file' in self.flags:
+			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
+
+		if self.use_pidfile and os.path.exists(self.pidfile):
+			# Parity overwrites the data in the existing pidfile without zeroing it first, leading
+			# to interesting consequences when the new PID has fewer digits than the previous one.
+			os.unlink(self.pidfile)
+
+	def remove_datadir(self):
+		"remove the network's datadir"
+		assert self.test_suite, 'datadir removal permitted only for test suite'
+		if self.state == 'stopped':
+			try: # exception handling required for MSWin/MSYS2
+				run(['/bin/rm','-rf',self.network_datadir])
+			except:
+				pass
+		else:
+			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')
 
 class bitcoin_core_daemon(CoinDaemon):
 	daemon_data = _dd('Bitcoin Core', 210100, '0.21.1')
@@ -494,8 +499,15 @@ class bitcoin_core_daemon(CoinDaemon):
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
 
-	def init_data_subdir(self):
-		return self.testnet_dir if self.network == 'testnet' else ''
+	@property
+	def network_datadir(self):
+		"location of the network's blockchain data and authentication cookie"
+		return os.path.join (
+			self.datadir, {
+				'mainnet': '',
+				'testnet': self.testnet_dir,
+				'regtest': 'regtest',
+			}[self.network] )
 
 	def init_subclass(self):
 
