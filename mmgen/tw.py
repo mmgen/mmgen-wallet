@@ -64,7 +64,7 @@ if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 		for o in us:
 			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
 
-class TwUnspentOutputs(MMGenObject,metaclass=aInitMeta):
+class TwUnspentOutputs(MMGenObject,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
@@ -121,7 +121,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 			def amt2(self,value):
 				return self.proto.coin_amt(value)
 
-	async def __ainit__(self,proto,minconf=1,addrs=[]):
+	async def __init__(self,proto,minconf=1,addrs=[]):
 		self.proto        = proto
 		self.unspent      = self.MMGenTwOutputList()
 		self.fmt_display  = ''
@@ -539,7 +539,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		else:
 			return _date_formatter[age_fmt](self.rpc,o.date)
 
-class TwAddrList(MMGenDict,metaclass=aInitMeta):
+class TwAddrList(MMGenDict,metaclass=AsyncInit):
 	has_age = True
 	age_fmts = TwUnspentOutputs.age_fmts
 	age_disp = TwUnspentOutputs.age_disp
@@ -547,10 +547,7 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,proto,'tw'),*args,**kwargs)
 
-	def __init__(self,proto,*args,**kwargs):
-		pass
-
-	async def __ainit__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
 		def check_dup_mmid(acct_labels):
 			mmid_prev,err = None,False
@@ -702,7 +699,7 @@ class TwAddrList(MMGenDict,metaclass=aInitMeta):
 
 		return '\n'.join(gen_output())
 
-class TrackingWallet(MMGenObject,metaclass=aInitMeta):
+class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	caps = ('rescan','batch')
 	data_key = 'addresses'
@@ -713,7 +710,7 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
 
-	async def __ainit__(self,proto,mode='r',token_addr=None):
+	async def __init__(self,proto,mode='r',token_addr=None):
 
 		assert mode in ('r','w','i'), "{!r}: wallet mode must be 'r','w' or 'i'".format(mode)
 		if mode == 'i':
@@ -986,14 +983,14 @@ class TrackingWallet(MMGenObject,metaclass=aInitMeta):
 	async def remove_address(self,addr):
 		raise NotImplementedError(f'address removal not implemented for coin {self.proto.coin}')
 
-class TwGetBalance(MMGenObject,metaclass=aInitMeta):
+class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 
 	fs = '{w:13} {u:<16} {p:<16} {c}'
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
 
-	async def __ainit__(self,proto,minconf,quiet):
+	async def __init__(self,proto,minconf,quiet):
 
 		self.minconf = minconf
 		self.quiet = quiet

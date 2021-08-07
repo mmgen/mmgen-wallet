@@ -1140,15 +1140,12 @@ re-import your addresses.
 			d.update(self.al_ids[al_id].make_reverse_dict_addrlist(coinaddrs))
 		return d
 
-class TwAddrData(AddrData,metaclass=aInitMeta):
+class TwAddrData(AddrData,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
 
-	def __init__(self,proto,*args,**kwargs):
-		pass
-
-	async def __ainit__(self,proto,wallet=None):
+	async def __init__(self,proto,wallet=None):
 		self.proto = proto
 		from .rpc import rpc_init
 		self.rpc = await rpc_init(proto)

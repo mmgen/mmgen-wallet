@@ -28,10 +28,10 @@ from .exception import *
 from .globalvars import *
 from .color import *
 
-class aInitMeta(type):
+class AsyncInit(type):
 	async def __call__(cls,*args,**kwargs):
-		instance = super().__call__(*args,**kwargs)
-		await instance.__ainit__(*args,**kwargs)
+		instance = cls.__new__(cls,*args,**kwargs)
+		await type(instance).__init__(instance,*args,**kwargs)
 		return instance
 
 def get_obj(objname,*args,**kwargs):

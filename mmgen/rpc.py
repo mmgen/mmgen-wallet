@@ -23,7 +23,7 @@ rpc.py:  Cryptocoin RPC library for the MMGen suite
 import base64,json,asyncio
 from decimal import Decimal
 from .common import *
-from .obj import aInitMeta
+from .obj import AsyncInit
 
 rpc_credentials_msg = '\n'+fmt("""
 	Error: no {proto_name} RPC authentication method found
@@ -397,15 +397,12 @@ class RPCClient(MMGenObject):
 					except: m = text
 			raise RPCFailure(f'{s.value} {s.name}: {m}')
 
-class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
+class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	auth_type = 'basic'
 	has_auth_cookie = True
 
-	def __init__(self,*args,**kwargs):
-		pass
-
-	async def __ainit__(self,proto,daemon,backend):
+	async def __init__(self,proto,daemon,backend):
 
 		self.proto = proto
 		self.daemon = daemon
@@ -579,12 +576,9 @@ class BitcoinRPCClient(RPCClient,metaclass=aInitMeta):
 		'walletpassphrase',
 	)
 
-class EthereumRPCClient(RPCClient,metaclass=aInitMeta):
+class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 
-	def __init__(self,*args,**kwargs):
-		pass
-
-	async def __ainit__(self,proto,daemon,backend):
+	async def __init__(self,proto,daemon,backend):
 		self.proto = proto
 		self.daemon = daemon
 		self.call_sigs = getattr(getattr(CallSigs,proto.base_proto),daemon.id,None)

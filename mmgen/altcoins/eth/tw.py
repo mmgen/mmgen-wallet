@@ -152,8 +152,8 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 	symbol = None
 	cur_eth_balances = {}
 
-	async def __ainit__(self,proto,mode='r',token_addr=None):
-		await super().__ainit__(proto,mode=mode)
+	async def __init__(self,proto,mode='r',token_addr=None):
+		await super().__init__(proto,mode=mode)
 
 		for v in self.data['tokens'].values():
 			self.conv_types(v)
@@ -244,10 +244,10 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide',
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
 
-	async def __ainit__(self,proto,*args,**kwargs):
+	async def __init__(self,proto,*args,**kwargs):
 		if g.cached_balances:
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
-		await TwUnspentOutputs.__ainit__(self,proto,*args,**kwargs)
+		await TwUnspentOutputs.__init__(self,proto,*args,**kwargs)
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
@@ -289,7 +289,7 @@ class EthereumTwAddrList(TwAddrList):
 
 	has_age = False
 
-	async def __ainit__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
+	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
 		self.proto = proto
 		self.wallet = wallet or await TrackingWallet(self.proto,mode='w')
@@ -322,9 +322,9 @@ class EthereumTwGetBalance(TwGetBalance):
 
 	fs = '{w:13} {c}\n' # TODO - for now, just suppress display of meaningless data
 
-	async def __ainit__(self,proto,*args,**kwargs):
+	async def __init__(self,proto,*args,**kwargs):
 		self.wallet = await TrackingWallet(proto,mode='w')
-		await TwGetBalance.__ainit__(self,proto,*args,**kwargs)
+		await TwGetBalance.__init__(self,proto,*args,**kwargs)
 
 	async def create_data(self):
 		data = self.wallet.mmid_ordered_dict

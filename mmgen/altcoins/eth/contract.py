@@ -25,7 +25,7 @@ from . import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
-from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt,aInitMeta
+from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt,AsyncInit
 from mmgen.util import msg
 
 try:
@@ -156,12 +156,9 @@ class Token(TokenBase):
 		self.base_unit = Decimal('10') ** -self.decimals
 		self.rpc = rpc
 
-class TokenResolve(TokenBase,metaclass=aInitMeta):
+class TokenResolve(TokenBase,metaclass=AsyncInit):
 
-	def __init__(self,*args,**kwargs):
-		return super().__init__()
-
-	async def __ainit__(self,proto,rpc,addr):
+	async def __init__(self,proto,rpc,addr):
 		self.proto = proto
 		self.rpc = rpc
 		self.addr = TokenAddr(proto,addr)
