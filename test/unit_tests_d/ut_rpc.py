@@ -33,34 +33,30 @@ def do_msg(rpc):
 
 class init_test:
 
-	async def btc(proto,backend):
-		rpc = await rpc_init(proto,backend)
+	async def btc(proto,backend,daemon):
+		rpc = await rpc_init(proto,backend,daemon)
 		do_msg(rpc)
 
 		bh = (await rpc.call('getblockchaininfo',timeout=300))['bestblockhash']
 		await rpc.gathered_call('getblock',((bh,),(bh,1)),timeout=300)
 		await rpc.gathered_call(None,(('getblock',(bh,)),('getblock',(bh,1))),timeout=300)
 
-	async def bch(proto,backend):
-		rpc = await rpc_init(proto,backend)
+	async def bch(proto,backend,daemon):
+		rpc = await rpc_init(proto,backend,daemon)
 		do_msg(rpc)
 
 	ltc = bch
 
-	async def eth(proto,backend):
-		rpc = await rpc_init(proto,backend)
+	async def eth(proto,backend,daemon):
+		rpc = await rpc_init(proto,backend,daemon)
 		do_msg(rpc)
 		await rpc.call('eth_blockNumber',timeout=300)
 
 	etc = eth
 
-def run_test(network_ids,test_cf_auth): # TODO: run all available networks simultaneously
+def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
-	for network_id in network_ids:
-
-		proto = init_proto(network_id=network_id)
-
-		d = CoinDaemon(proto=proto,test_suite=True)
+	def do(d):
 
 		if not opt.no_daemon_stop:
 			d.stop()
@@ -70,15 +66,24 @@ def run_test(network_ids,test_cf_auth): # TODO: run all available networks simul
 			d.start()
 
 		for backend in g.autoset_opts['rpc_backend'].choices:
-			run_session(getattr(init_test,proto.coin.lower())(proto,backend),backend=backend)
+			test = getattr(init_test,d.proto.coin.lower())
+			run_session(test(d.proto,backend,d),backend=backend)
 
 		if not opt.no_daemon_stop:
 			d.stop()
 
 		if test_cf_auth and g.platform != 'win':
-			cfg_file_auth_test(proto,d)
+			cfg_file_auth_test(d.proto,d)
 
 		qmsg('')
+
+	for network_id in network_ids:
+		proto = init_proto(network_id=network_id)
+		daemon_ids = (lambda x:
+			set(daemon_ids) & set(x) if daemon_ids else x
+			)(CoinDaemon.coins[proto.coin].daemon_ids)
+		for daemon_id in daemon_ids:
+			do( CoinDaemon(proto=proto,test_suite=True,daemon_id=daemon_id) )
 
 	return True
 
@@ -96,10 +101,11 @@ class unit_tests:
 		return run_test(['bch','bch_tn'],test_cf_auth=True)
 
 	def eth(self,name,ut):
-		return run_test(['eth'],test_cf_auth=False)
+		run_test(['eth','eth_tn','eth_rt'],daemon_ids=['openethereum','erigon'])
+		return run_test(['eth_tn','eth_rt'],daemon_ids=['geth']) # mainnet returns EIP-155 error on empty blockchain
 
 	def etc(self,name,ut):
-		return run_test(['etc'],test_cf_auth=False)
+		return run_test(['etc'])
 
 	def xmrwallet(self,name,ut):
 
