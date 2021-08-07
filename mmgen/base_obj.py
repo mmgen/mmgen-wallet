@@ -20,7 +20,14 @@
 base_obj.py: base objects with no internal imports for the MMGen suite
 """
 
-class AttrCtrl:
+class AttrCtrlMeta(type):
+	def __call__(cls,*args,**kwargs):
+		instance = super().__call__(*args,**kwargs)
+		if instance._autolock:
+			instance._lock = True
+		return instance
+
+class AttrCtrl(metaclass=AttrCtrlMeta):
 	"""
 	After instance is locked, forbid setting any attribute if the attribute is not present
 	in either the class or instance dict.
@@ -29,6 +36,7 @@ class AttrCtrl:
 	attribute, if _use_class_attr is True.  If the instance or class attribute is set
 	to None, no type checking is performed.
 	"""
+	_autolock = True
 	_lock = False
 	_use_class_attr = False
 	_skip_type_check = ()

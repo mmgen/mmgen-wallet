@@ -40,6 +40,7 @@ class GlobalContext(Lockable):
 	  2 - environmental vars
 	  3 - command line
 	"""
+	_autolock = False
 	_set_ok = ('user_entropy','session')
 	_reset_ok = ('stdout','stderr','accept_defaults')
 	_use_class_attr = True

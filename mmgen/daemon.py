@@ -309,8 +309,6 @@ class MoneroWalletDaemon(RPCDaemon):
 			['--stagenet',                           self.network == 'testnet'],
 		)
 
-		self.lock()
-
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')
 	cfg_file_hdr = ''
@@ -438,8 +436,6 @@ class CoinDaemon(Daemon):
 		self.logfile = '{}/{}-{}-daemon-{}.log'.format(self.logdir,self.id,self.network,self.bind_port)
 
 		self.init_subclass()
-
-		self.lock()
 
 	def init_datadir(self):
 		if self.test_suite:
@@ -774,5 +770,3 @@ class erigon_rpcdaemon(RPCDaemon):
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
 		)
-
-		self.lock()

@@ -39,6 +39,7 @@ class unit_test(object):
 		qmsg_r('Testing class Lockable...')
 
 		class MyLockable(Lockable): # class has no attrs, like UserOpts
+			_autolock = False
 			_set_ok = ('foo','baz','alpha','beta','gamma','delta','epsilon')
 			_reset_ok = ('bar','baz')
 
@@ -66,6 +67,7 @@ class unit_test(object):
 		lc.epsilon = [0]
 
 		class MyLockableClsCheck(Lockable): # class has attrs, like GlobalContext
+			_autolock = False
 			_use_class_attr = True
 			_set_ok = ('foo','baz')
 			_reset_ok = ('bar','baz')
@@ -82,9 +84,22 @@ class unit_test(object):
 		lcc.bar = 3   # bar is in reset list
 		lcc.baz = 3.2
 		lcc.baz = 3.1 # baz is in both lists
-		qmsg('OK')
 
-		qmsg('Checking error handling:')
+		qmsg('OK')
+		qmsg_r('Testing class Lockable with autolock...')
+
+		class MyLockableAutolock(Lockable):
+			def __init__(self):
+				self.foo = True
+
+		lca = MyLockableAutolock()
+		assert lca._autolock == True
+		assert lca._lock == True
+		assert lca.foo == True
+
+		qmsg('OK')
+		qmsg_r('Checking error handling...')
+		vmsg('')
 
 		def bad1(): ac.x = 1
 		def bad2(): acc.foo = 1
@@ -103,6 +118,8 @@ class unit_test(object):
 		def bad14(): lc.delta = float(0)
 		def bad15(): lc.epsilon = [0]
 
+		def bad16(): lca.foo = None
+
 		ut.process_bad_data((
 			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
 			('attr (2)',           'AttributeError', 'has no attr', bad9 ),
@@ -119,6 +136,7 @@ class unit_test(object):
 			("attr (can't reset)", 'AttributeError', 'reset',       bad13 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad14 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
+			("attr (can't set)",   'AttributeError', 'read-only',   bad16 ),
 		))
 
 		qmsg('OK')

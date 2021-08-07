@@ -27,6 +27,7 @@ from .base_obj import Lockable
 import mmgen.share.Opts
 
 class UserOpts(Lockable):
+	_autolock = False
 	_set_ok = ('usr_randchars',)
 	_reset_ok = ('quiet','verbose','yes')
 
