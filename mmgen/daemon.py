@@ -640,14 +640,19 @@ class ethereum_daemon(CoinDaemon):
 	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
 	base_rpc_port = 8545  # same for all networks!
 	base_p2p_port = 30303 # same for all networks!
+	daemon_port_offset = 100
 	network_port_offsets = _nw(0,10,20)
 
-	@property
-	def port_offset(self):
-		return (
-			(self.coins['ETH'].daemon_ids + self.coins['ETC'].daemon_ids).index(self.id) * 100
-			+ getattr(self.network_port_offsets,self.network)
-		)
+	def __init__(self,*args,**kwargs):
+
+		if not hasattr(ethereum_daemon,'all_daemons'):
+			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon,names=True)
+
+		self.port_offset = (
+			self.all_daemons.index(self.id+'_daemon') * self.daemon_port_offset
+			+ getattr(self.network_port_offsets,self.network) )
+
+		return super().__init__(*args,**kwargs)
 
 	def get_rpc_port(self):
 		return self.base_rpc_port + self.port_offset
@@ -786,7 +791,7 @@ class erigon_rpcdaemon(RPCDaemon):
 		self.daemon_args = list_gen(
 			['--verbosity=0'],
 			[f'--private.api.addr=127.0.0.1:{private_port}'],
+			[f'--http.port={self.rpc_port}'],
 			[f'--datadir={self.datadir}', self.network != 'regtest'],
 			['--http.api=eth,web3,txpool'],
-			[f'--http.port={self.rpc_port}'],
 		)

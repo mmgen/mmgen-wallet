@@ -731,8 +731,6 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 	return data
 
-passwd_files_used = {}
-
 class oneshot_warning:
 
 	def __init__(self,wcls,div=None,fmt_args=[]):
@@ -753,6 +751,8 @@ class oneshot_warning:
 		if not div in attr:
 			do_warning()
 			attr.append(div)
+
+passwd_files_used = {}
 
 def pwfile_reuse_warning(passwd_file):
 	if passwd_file in passwd_files_used:
@@ -876,6 +876,14 @@ def format_par(s,indent=0,width=80,as_list=False):
 			line += ('',' ')[bool(line)] + words.pop(0)
 		lines.append(' '*indent + line)
 	return lines if as_list else '\n'.join(lines) + '\n'
+
+def get_subclasses(cls,names=False):
+	def gen(cls):
+		for i in cls.__subclasses__():
+			yield i
+			for j in gen(i):
+				yield j
+	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
 def altcoin_subclass(cls,proto,mod_dir):
 	"""

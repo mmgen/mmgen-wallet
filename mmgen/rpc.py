@@ -725,9 +725,9 @@ class daemon_warning(oneshot_warning):
 		color = 'yellow'
 		message = 'ignoring unsupported {} daemon version at user request'
 
-def handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version):
-	if ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version:
-		daemon_warning('version',div=proto.name,fmt_args=[rpc.daemon.coind_name])
+def handle_unsupported_daemon_version(rpc,name,warn_only):
+	if warn_only:
+		daemon_warning('version',div=name,fmt_args=[rpc.daemon.coind_name])
 	else:
 		name = rpc.daemon.coind_name
 		rdie(1,'\n'+fmt(f"""
@@ -755,7 +755,10 @@ async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 		backend = backend or opt.rpc_backend )
 
 	if rpc.daemon_version > rpc.daemon.coind_version:
-		handle_unsupported_daemon_version(rpc,proto,ignore_daemon_version)
+		handle_unsupported_daemon_version(
+			rpc,
+			proto.name,
+			ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
 
 	if rpc.chain not in proto.chain_names:
 		raise RPCChainMismatch('\n'+fmt(f"""

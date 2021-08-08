@@ -342,7 +342,8 @@ f_xmr='Monero xmrwallet tests completed'
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
 t_eth="
-	- $test_py --coin=eth ethdev
+	- $test_py --coin=eth --daemon-id=openethereum ethdev
+	- $test_py --coin=eth --daemon-id=geth ethdev
 "
 f_eth='Ethereum tests completed'
 
