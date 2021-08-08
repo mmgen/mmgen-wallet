@@ -342,6 +342,7 @@ class CoinDaemon(Daemon):
 			proto      = None,
 			opts       = None,
 			port_shift = None,
+			p2p_port   = None,
 			datadir    = None,
 			daemon_id  = None ):
 
@@ -382,6 +383,7 @@ class CoinDaemon(Daemon):
 			proto      = None,
 			opts       = None,
 			port_shift = None,
+			p2p_port   = None,
 			datadir    = None,
 			daemon_id  = None ):
 
@@ -419,14 +421,19 @@ class CoinDaemon(Daemon):
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
+		self.non_dfl_datadir = bool(datadir or g.daemon_data_dir or test_suite)
 
 		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
 
-		self.port_shift = (self.test_suite_port_shift if self.test_suite else 0) + (port_shift or 0)
+		ps_adj = (port_shift or 0) + (self.test_suite_port_shift if test_suite else 0)
 
-		# user-set value takes precedence
-		self.rpc_port = g.rpc_port or getattr(self.rpc_ports,self.network) + self.port_shift
+		# user-set values take precedence
+		self.rpc_port = (g.rpc_port or 0) + (port_shift or 0) if g.rpc_port else ps_adj + self.get_rpc_port()
+		self.p2p_port = (
+			p2p_port or (
+				self.get_p2p_port() + ps_adj if self.get_p2p_port() and (test_suite or ps_adj) else None
+			) if self.network != 'regtest' else None )
 
 		if hasattr(self,'private_ports'):
 			self.private_port = getattr(self.private_ports,self.network)
@@ -446,6 +453,12 @@ class CoinDaemon(Daemon):
 	@property
 	def network_datadir(self):
 		return self.datadir
+
+	def get_rpc_port(self):
+		return getattr(self.rpc_ports,self.network)
+
+	def get_p2p_port(self):
+		return None
 
 	@property
 	def start_cmd(self):
@@ -488,7 +501,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	testnet_dir = 'testnet3'
 	cfg_file_hdr = '# BitcoinCoreDaemon config file\n'
 	tracking_wallet_name = 'mmgen-tracking-wallet'
-	rpc_ports = _nw(8332, 18332, 18444)
+	rpc_ports = _nw(8332, 18332, 18443)
 	cfg_file = 'bitcoin.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.bitcoin'],
@@ -509,7 +522,7 @@ class bitcoin_core_daemon(CoinDaemon):
 
 		from .regtest import MMGenRegtest
 		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}'],
+			[f'--datadir={self.datadir}',                  self.non_dfl_datadir],
 			[f'--rpcport={self.rpc_port}'],
 			[f'--rpcuser={MMGenRegtest.rpc_user}',         self.network == 'regtest'],
 			[f'--rpcpassword={MMGenRegtest.rpc_password}', self.network == 'regtest'],
@@ -560,7 +573,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Bitcoin Cash Node', 23000000, '23.0.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
-	rpc_ports = _nw(8442, 18442, 18553) # use non-standard ports
+	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
 	datadirs = {
 		'linux': [g.home_dir,'.bitcoin-bchn'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
@@ -571,7 +584,7 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 	exec_fn = 'litecoind'
 	cli_fn = 'litecoin-cli'
 	testnet_dir = 'testnet4'
-	rpc_ports = _nw(9332, 19332, 19444)
+	rpc_ports = _nw(9332, 19332, 19443)
 	cfg_file = 'litecoin.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.litecoin'],
@@ -585,7 +598,7 @@ class monero_daemon(CoinDaemon):
 	testnet_dir = 'stagenet'
 	new_console_mswin = True
 	host = 'localhost' # FIXME
-	rpc_ports = _nw(18081, 38081, None)
+	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
 	cfg_file = 'bitmonero.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.bitmonero'],
@@ -598,13 +611,14 @@ class monero_daemon(CoinDaemon):
 			self.logdir,
 			self.testnet_dir if self.network == 'testnet' else '' )
 
-	def init_subclass(self):
+	def get_p2p_port(self):
+		return self.rpc_port - 1
 
-		self.p2p_port = self.rpc_port - 1
+	def init_subclass(self):
 
 		self.shared_args = list_gen(
 			[f'--no-zmq'],
-			[f'--p2p-bind-port={self.p2p_port}'],
+			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
 			[f'--rpc-bind-port={self.rpc_port}'],
 			['--stagenet', self.network == 'testnet'],
 		)
@@ -612,7 +626,7 @@ class monero_daemon(CoinDaemon):
 		self.coind_args = list_gen(
 			['--hide-my-port'],
 			['--no-igd'],
-			[f'--data-dir={self.datadir}'],
+			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
 			['--detach',                  not 'no_daemonize' in self.opts],
 			['--offline',                 not 'online' in self.opts],
@@ -624,6 +638,22 @@ class monero_daemon(CoinDaemon):
 
 class ethereum_daemon(CoinDaemon):
 	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
+	base_rpc_port = 8545  # same for all networks!
+	base_p2p_port = 30303 # same for all networks!
+	network_port_offsets = _nw(0,10,20)
+
+	@property
+	def port_offset(self):
+		return (
+			(self.coins['ETH'].daemon_ids + self.coins['ETC'].daemon_ids).index(self.id) * 100
+			+ getattr(self.network_port_offsets,self.network)
+		)
+
+	def get_rpc_port(self):
+		return self.base_rpc_port + self.port_offset
+
+	def get_p2p_port(self):
+		return self.base_p2p_port + self.port_offset
 
 	def init_datadir(self):
 		self.logdir = super().init_datadir()
@@ -636,8 +666,6 @@ class openethereum_daemon(ethereum_daemon):
 	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
 	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'openethereum'
-	ports_shift = _nw(0,10,20)
-	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # testnet and regtest are non-standard
 	cfg_file = 'parity.conf'
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
@@ -646,19 +674,19 @@ class openethereum_daemon(ethereum_daemon):
 
 	def init_subclass(self):
 
-		ps = self.port_shift + getattr(self.ports_shift,self.network)
 		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
 
 		self.coind_args = list_gen(
 			['--no-ws'],
 			['--no-ipc'],
 			['--no-secretstore'],
-			[f'--ports-shift={ps}'],
-			[f'--base-path={self.datadir}'],
+			[f'--jsonrpc-port={self.rpc_port}'],
+			[f'--port={self.p2p_port}', self.p2p_port],
+			[f'--base-path={self.datadir}', self.non_dfl_datadir],
 			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
 			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
 			['--mode=offline', self.test_suite or self.network=='regtest'],
-			[f'--log-file={self.logfile}'],
+			[f'--log-file={self.logfile}', self.non_dfl_datadir],
 			['daemon', ld],
 			[self.pidfile, ld],
 		)
@@ -667,16 +695,11 @@ class parity_daemon(openethereum_daemon):
 	daemon_data = _dd('Parity', 2007002, '2.7.2')
 	version_pat = r'Parity-Ethereum//v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'parity'
-	ports_shift = _nw(100,110,120)
-	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
 
 class geth_daemon(ethereum_daemon):
 	daemon_data = _dd('Geth', 1010007, '1.10.7')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
-	ports_shift = _nw(300,310,320)
-	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
-	p2p_ports = _nw(*[30303 + n for n in (0,10,20)])  # testnet and regtest are non-standard
 	use_pidfile = False
 	use_threads = True
 	datadirs = {
@@ -688,11 +711,11 @@ class geth_daemon(ethereum_daemon):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
 			['--http'],
-			['--http.api=eth,web3,txpool'], # ,clique,personal,net'],
+			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
-			[f'--port={getattr(self.p2p_ports,self.network)}'],
+			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
 			['--maxpeers=0', not 'online' in self.opts],
-			[f'--datadir={self.datadir}'],
+			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--goerli', self.network=='testnet'],
 			['--dev', self.network=='regtest'],
 		)
@@ -704,9 +727,6 @@ class erigon_daemon(geth_daemon):
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
-	ports_shift = _nw(200,210,220)
-	rpc_ports = _nw(*[8545 + n for n in ports_shift]) # non-standard
-	p2p_ports = _nw(*[30303 + n for n in (30,40,50)]) # non-standard
 	datadirs = {
 		'linux': [g.home_dir,'.local','share','erigon'],
 		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
@@ -715,10 +735,10 @@ class erigon_daemon(geth_daemon):
 	def init_subclass(self):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
-			[f'--port={getattr(self.p2p_ports,self.network)}'],
+			[f'--port={self.p2p_port}', self.p2p_port],
 			['--maxpeers=0', not 'online' in self.opts],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}'],
+			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--chain=dev', self.network=='regtest'],
 			['--chain=goerli', self.network=='testnet'],
 			['--miner.etherbase=00a329c0648769a73afac7f9381e08fb43dbea72', self.network=='regtest'],
