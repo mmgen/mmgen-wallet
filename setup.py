@@ -127,6 +127,7 @@ setup(
 			'mmgen.ed25519ll_djbec',
 			'mmgen.exception',
 			'mmgen.filename',
+			'mmgen.flags',
 			'mmgen.globalvars',
 			'mmgen.help',
 			'mmgen.keccak',

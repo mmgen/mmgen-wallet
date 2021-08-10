@@ -48,6 +48,7 @@ class BaseConversionError(Exception):     mmcode = 2
 class BaseConversionPadError(Exception):  mmcode = 2
 class TransactionChainMismatch(Exception):mmcode = 2
 class ObjectInitError(Exception):         mmcode = 2
+class ClassFlagsError(Exception):         mmcode = 2
 
 # 3: yellow hl, 'MMGen Error' + exception + message
 class RPCFailure(Exception):              mmcode = 3
