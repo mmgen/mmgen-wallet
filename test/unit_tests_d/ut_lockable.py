@@ -16,6 +16,7 @@ class unit_test(object):
 		qmsg_r('Testing class AttrCtrl...')
 
 		class MyAttrCtrl(AttrCtrl):
+			_autolock = False
 			foo = 'fooval'
 		ac = MyAttrCtrl()
 		ac.lock()
@@ -23,7 +24,11 @@ class unit_test(object):
 		ac.foo = 'new fooval'
 		ac.foo = 'new fooval2'
 
+		class MyAttrCtrlAutolock(AttrCtrl): pass
+		aca = MyAttrCtrlAutolock()
+
 		class MyAttrCtrlClsCheck(AttrCtrl):
+			_autolock = False
 			_use_class_attr = True
 			foo = 'fooval'
 			bar = None
@@ -97,6 +102,10 @@ class unit_test(object):
 		assert lca._lock == True
 		assert lca.foo == True
 
+		class MyLockableBad(Lockable):
+			_set_ok = ('foo','bar')
+			foo = 1
+
 		qmsg('OK')
 		qmsg_r('Checking error handling...')
 		vmsg('')
@@ -119,6 +128,8 @@ class unit_test(object):
 		def bad15(): lc.epsilon = [0]
 
 		def bad16(): lca.foo = None
+		def bad17(): lb = MyLockableBad()
+		def bad18(): aca.lock()
 
 		ut.process_bad_data((
 			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
@@ -137,6 +148,8 @@ class unit_test(object):
 			("attr (can't reset)", 'AttributeError', 'reset',       bad14 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad15 ),
 			("attr (can't set)",   'AttributeError', 'read-only',   bad16 ),
+			("attr (bad _set_ok)", 'AssertionError', 'not found in',bad17 ),
+			("call to lock()",     'AssertionError', 'only once',   bad18 ),
 		))
 
 		qmsg('OK')

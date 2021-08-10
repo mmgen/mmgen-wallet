@@ -24,7 +24,7 @@ class AttrCtrlMeta(type):
 	def __call__(cls,*args,**kwargs):
 		instance = super().__call__(*args,**kwargs)
 		if instance._autolock:
-			instance._lock = True
+			instance.lock()
 		return instance
 
 class AttrCtrl(metaclass=AttrCtrlMeta):
@@ -45,7 +45,10 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 		self._lock = True
 
 	def __setattr__(self,name,value):
+
 		if self._lock:
+			assert name != '_lock', 'lock can be set only once'
+
 			def do_error(name,value,ref_val):
 				raise AttributeError(
 					f'{value!r}: invalid value for attribute {name!r}'
@@ -83,6 +86,13 @@ class Lockable(AttrCtrl):
 	"""
 	_set_ok = ()
 	_reset_ok = ()
+
+	def lock(self):
+		for name in ('_set_ok','_reset_ok'):
+			for attr in getattr(self,name):
+				assert hasattr(self,attr), (
+					f'attribute {attr!r} in {name!r} not found in {type(self).__name__} object {id(self)}' )
+		super().lock()
 
 	def __setattr__(self,name,value):
 		if self._lock and hasattr(self,name):
