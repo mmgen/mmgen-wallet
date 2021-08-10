@@ -18,7 +18,7 @@ def cfg_file_auth_test(proto,d):
 	cf = os.path.join(d.datadir,d.cfg_file)
 	open(cf,'a').write('\nrpcuser = ut_rpc\nrpcpassword = ut_rpc_passw0rd\n')
 
-	d.add_flag('keep_cfg_file')
+	d.flag.keep_cfg_file = True
 	d.start()
 
 	async def do():

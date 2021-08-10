@@ -21,6 +21,7 @@ opts_data = {
 -s, --get-state      Get the state of the daemon(s) and exit
 -t, --testing        Testing mode.  Print commands but don't execute them
 -q, --quiet          Produce quieter output
+-u, --usermode       Run the daemon in user (non test-suite) mode
 -v, --verbose        Produce more verbose output
 -W, --no-wait        Don't wait for daemons to change state before exiting
 """,
@@ -42,7 +43,7 @@ def run(network_id=None,proto=None,daemon_id=None):
 	d = CoinDaemon(
 		network_id = network_id,
 		proto      = proto,
-		test_suite = True,
+		test_suite = not opt.usermode,
 		opts       = ['no_daemonize'] if opt.no_daemonize else None,
 		port_shift = int(opt.port_shift or 0),
 		datadir    = opt.datadir,

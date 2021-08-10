@@ -25,6 +25,7 @@ from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 from .exception import *
 from .common import *
+from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
 _cd = namedtuple('coins_data',['coin_name','daemon_ids'])
@@ -43,15 +44,17 @@ class Daemon(Lockable):
 	private_port = None
 	avail_opts = ()
 	avail_flags = () # like opts, but can be added or removed after instantiation
-	_reset_ok = ('debug','wait','_flags')
+	_reset_ok = ('debug','wait')
 
-	def __init__(self):
-		self.opts = []
-		self._flags = []
+	def __init__(self,opts=None,flags=None):
+
 		self.platform = g.platform
 		if self.platform == 'win':
 			self.use_pidfile = False
 			self.use_threads = True
+
+		self.opt = ClassOpts(self,opts)
+		self.flag = ClassFlags(self,flags)
 
 	def exec_cmd_thread(self,cmd):
 		import threading
@@ -70,7 +73,7 @@ class Daemon(Lockable):
 		p.wait()
 
 	def exec_cmd(self,cmd,is_daemon=False):
-		out = None if (is_daemon and 'no_daemonize' in self.opts) else PIPE
+		out = (PIPE,None)[is_daemon and self.opt.no_daemonize]
 		try:
 			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except Exception as e:
@@ -87,7 +90,7 @@ class Daemon(Lockable):
 		if self.debug:
 			msg('\nExecuting: {}'.format(' '.join(cmd)))
 
-		if self.use_threads and (is_daemon and not 'no_daemonize' in self.opts):
+		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
 		else:
 			ret = self.exec_cmd(cmd,is_daemon)
@@ -208,27 +211,9 @@ class Daemon(Lockable):
 		else:
 			die(2,f'Wait for state {req_state!r} timeout exceeded for {self.desc} (port {self.bind_port})')
 
-	@property
-	def flags(self):
-		return self._flags
-
-	def add_flag(self,val):
-		if val not in self.avail_flags:
-			m = '{!r}: unrecognized flag (available options: {})'
-			die(1,m.format(val,self.avail_flags))
-		if val in self._flags:
-			die(1,'Flag {!r} already set'.format(val))
-		self._flags.append(val)
-
-	def remove_flag(self,val):
-		if val not in self.avail_flags:
-			m = '{!r}: unrecognized flag (available options: {})'
-			die(1,m.format(val,self.avail_flags))
-		if val not in self._flags:
-			die(1,'Flag {!r} not set, so cannot be removed'.format(val))
-		self._flags.remove(val)
-
 class RPCDaemon(Daemon):
+
+	avail_opts = ('no_daemonize',)
 
 	def __init__(self):
 		super().__init__()
@@ -305,7 +290,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--daemon-port={self.daemon_port}',    not self.daemon_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
-			['--detach',                             not 'no_daemonize' in self.opts],
+			['--detach',                             not self.opt.no_daemonize],
 			['--stagenet',                           self.network == 'testnet'],
 		)
 
@@ -337,10 +322,10 @@ class CoinDaemon(Daemon):
 
 	def __new__(cls,
 			network_id = None,
-			test_suite = False,
-			flags      = None,
 			proto      = None,
 			opts       = None,
+			flags      = None,
+			test_suite = False,
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
@@ -378,10 +363,10 @@ class CoinDaemon(Daemon):
 
 	def __init__(self,
 			network_id = None,
-			test_suite = False,
-			flags      = None,
 			proto      = None,
 			opts       = None,
+			flags      = None,
+			test_suite = False,
 			port_shift = None,
 			p2p_port   = None,
 			datadir    = None,
@@ -389,7 +374,7 @@ class CoinDaemon(Daemon):
 
 		self.test_suite = test_suite
 
-		super().__init__()
+		super().__init__(opts=opts,flags=flags)
 
 		self._set_ok += ('shared_args','usr_coind_args')
 		self.shared_args = []
@@ -402,22 +387,6 @@ class CoinDaemon(Daemon):
 			self.coind_name,
 			getattr(self.proto.network_names,self.network),
 			'test suite ' if test_suite else '' )
-
-		if opts:
-			if type(opts) not in (list,tuple):
-				die(1,f'{opts!r}: illegal value for opts (must be list or tuple)')
-			for o in opts:
-				if o not in CoinDaemon.avail_opts:
-					die(1,f'{o!r}: unrecognized option')
-				elif o not in self.avail_opts:
-					die(1,f'{o!r}: option not supported for {self.coind_name} daemon')
-			self.opts = list(opts)
-
-		if flags:
-			if type(flags) not in (list,tuple):
-				die(1,f'{flags!r}: illegal value for flags (must be list or tuple)')
-			for flag in flags:
-				self.add_flag(flag)
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
@@ -475,7 +444,7 @@ class CoinDaemon(Daemon):
 	def pre_start(self):
 		os.makedirs(self.datadir,exist_ok=True)
 
-		if self.cfg_file and not 'keep_cfg_file' in self.flags:
+		if self.cfg_file and not self.flag.keep_cfg_file:
 			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
@@ -536,7 +505,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--rpcallowip=127.0.0.1'],
 			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
 			['--pid='+self.pidfile,    self.use_pidfile],
-			['--daemon',               self.platform == 'linux' and not 'no_daemonize' in self.opts],
+			['--daemon',               self.platform == 'linux' and not self.opt.no_daemonize],
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--usecashaddr=0',        self.coin == 'BCH'],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
@@ -628,8 +597,8 @@ class monero_daemon(CoinDaemon):
 			['--no-igd'],
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
-			['--detach',                  not 'no_daemonize' in self.opts],
-			['--offline',                 not 'online' in self.opts],
+			['--detach',                  not self.opt.no_daemonize],
+			['--offline',                 not self.opt.online],
 		)
 
 	@property
@@ -645,7 +614,7 @@ class ethereum_daemon(CoinDaemon):
 
 	def __init__(self,*args,**kwargs):
 
-		if not hasattr(ethereum_daemon,'all_daemons'):
+		if not hasattr(self,'all_daemons'):
 			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon,names=True)
 
 		self.port_offset = (
@@ -679,7 +648,7 @@ class openethereum_daemon(ethereum_daemon):
 
 	def init_subclass(self):
 
-		ld = self.platform == 'linux' and not 'no_daemonize' in self.opts
+		ld = self.platform == 'linux' and not self.opt.no_daemonize
 
 		self.coind_args = list_gen(
 			['--no-ws'],
@@ -719,7 +688,7 @@ class geth_daemon(ethereum_daemon):
 			['--http.api=eth,web3,txpool'],
 			[f'--http.port={self.rpc_port}'],
 			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
-			['--maxpeers=0', not 'online' in self.opts],
+			['--maxpeers=0', not self.opt.online],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--goerli', self.network=='testnet'],
 			['--dev', self.network=='regtest'],
@@ -727,7 +696,6 @@ class geth_daemon(ethereum_daemon):
 
 # https://github.com/ledgerwatch/erigon
 class erigon_daemon(geth_daemon):
-	avail_opts = ('online',)
 	daemon_data = _dd('Erigon', 2021007005, '2021.07.5')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
@@ -741,7 +709,7 @@ class erigon_daemon(geth_daemon):
 		self.coind_args = list_gen(
 			['--verbosity=0'],
 			[f'--port={self.p2p_port}', self.p2p_port],
-			['--maxpeers=0', not 'online' in self.opts],
+			['--maxpeers=0', not self.opt.online],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
 			[f'--datadir={self.datadir}', self.non_dfl_datadir],
 			['--chain=dev', self.network=='regtest'],
