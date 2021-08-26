@@ -371,13 +371,13 @@ class RPCClient(MMGenObject):
 		if status == 200:
 			dmsg_rpc('    RPC RESPONSE data ==>\n{}\n',text,is_json=True)
 			if batch:
-				return [r['result'] for r in json.loads(text,parse_float=Decimal,encoding='UTF-8')]
+				return [r['result'] for r in json.loads(text,parse_float=Decimal)]
 			else:
 				try:
 					if self.json_rpc:
-						return json.loads(text,parse_float=Decimal,encoding='UTF-8')['result']
+						return json.loads(text,parse_float=Decimal)['result']
 					else:
-						return json.loads(text,parse_float=Decimal,encoding='UTF-8')
+						return json.loads(text,parse_float=Decimal)
 				except:
 					t = json.loads(text)
 					try:
