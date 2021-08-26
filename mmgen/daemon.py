@@ -43,7 +43,7 @@ class Daemon(Lockable):
 	lockfile = None
 	private_port = None
 	avail_opts = ()
-	avail_flags = () # like opts, but can be added or removed after instantiation
+	avail_flags = () # like opts, but can be set or unset after instantiation
 	_reset_ok = ('debug','wait')
 
 	def __init__(self,opts=None,flags=None):
@@ -512,10 +512,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--txindex=1',            self.coin == 'LTC'],
 		)
 
-		if self.network == 'testnet':
-			self.lockfile = os.path.join(self.datadir,self.testnet_dir,'.cookie')
-		elif self.network == 'mainnet':
-			self.lockfile = os.path.join(self.datadir,'.cookie')
+		self.lockfile = os.path.join(self.network_datadir,'.cookie')
 
 	@property
 	def state(self):
@@ -539,7 +536,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		return self.cli_cmd('stop')
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 23000000, '23.0.0')
+	daemon_data = _dd('Bitcoin Cash Node', 23010000, '23.1.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
