@@ -261,7 +261,7 @@ class EthereumMMGenTX:
 				d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else Str('None'),
 				c      = self.proto.dcoin if len(self.outputs) else '',
 				g      = yellow(str(t['gasPrice'].to_unit('Gwei',show_decimal=True))),
-				G      = yellow(str(t['startGas'].toKwei())),
+				G      = yellow(str(t['startGas'].to_unit('Kwei'))),
 				t_mmid = m['outputs'] if len(self.outputs) else '',
 				f_mmid = m['inputs'] )
 

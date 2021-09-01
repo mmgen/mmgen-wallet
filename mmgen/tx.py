@@ -283,7 +283,7 @@ class MMGenTxOutputList(MMGenTxIOList):
 	def sort_bip69(self):
 		def sort_func(a):
 			return (
-				int.to_bytes(a.amt.toSatoshi(),8,'big')
+				int.to_bytes(a.amt.to_unit('satoshi'),8,'big')
 				+ bytes.fromhex(addr2scriptPubKey(self.parent.proto,a.addr)) )
 		self.sort(key=sort_func)
 
@@ -462,7 +462,7 @@ class MMGenTX:
 		# convert absolute BTC fee to satoshis-per-byte using estimated size
 		def fee_abs2rel(self,abs_fee,to_unit=None):
 			unit = getattr(self.proto.coin_amt,to_unit or 'satoshi')
-			return int(abs_fee // unit // self.estimate_size())
+			return int(abs_fee / unit / self.estimate_size())
 
 		def get_hex_locktime(self):
 			return int(bytes.fromhex(self.hex[-8:])[::-1].hex(),16)
@@ -556,7 +556,7 @@ class MMGenTX:
 		@property
 		def relay_fee(self):
 			kb_fee = self.proto.coin_amt(self.rpc.cached['networkinfo']['relayfee'])
-			ret = kb_fee * self.estimate_size() // 1024
+			ret = kb_fee * self.estimate_size() / 1024
 			vmsg('Relay fee: {} {c}/kB, for transaction: {} {c}'.format(kb_fee,ret,c=self.coin))
 			return ret
 

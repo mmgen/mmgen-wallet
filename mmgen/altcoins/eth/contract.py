@@ -96,7 +96,7 @@ class TokenBase(MMGenObject): # ERC20
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
 		to_arg = to_addr.rjust(64,'0')
-		amt_arg = '{:064x}'.format(int(amt//self.base_unit))
+		amt_arg = '{:064x}'.format(int(amt / self.base_unit))
 		return create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
 	def make_tx_in( self,from_addr,to_addr,amt,start_gas,gasPrice,nonce,

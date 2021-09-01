@@ -35,12 +35,8 @@ class ETHAmt(CoinAmt):
 	units   = ('wei','Kwei','Mwei','Gwei','szabo','finney')
 	amt_fs  = '4.18'
 
-	def toWei(self):    return int(Decimal(self) // self.wei)
-	def toKwei(self):   return int(Decimal(self) // self.Kwei)
-	def toMwei(self):   return int(Decimal(self) // self.Mwei)
-	def toGwei(self):   return int(Decimal(self) // self.Gwei)
-	def toSzabo(self):  return int(Decimal(self) // self.szabo)
-	def toFinney(self): return int(Decimal(self) // self.finney)
+	def toWei(self):
+		return int(Decimal(self) // self.wei)
 
 class ETHNonce(Int):
 	min_val = 0

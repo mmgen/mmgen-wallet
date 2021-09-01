@@ -451,7 +451,15 @@ class SubSeedIdxRange(MMGenRange):
 
 class UnknownCoinAmt(Decimal): pass
 
+class DecimalNegateResult(Decimal): pass
+
 class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
+	"""
+	Instantiating with 'from_decimal' rounds value down to 'max_prec' precision.
+	For addition and subtraction, operand types must match.
+	For multiplication and division, operand types may differ.
+	Negative amounts, floor division and modulus operation are unimplemented.
+	"""
 	color = 'yellow'
 	forbidden_types = (float,int)
 
@@ -482,9 +490,6 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 			return me
 		except Exception as e:
 			return cls.init_fail(e,num)
-
-	def toSatoshi(self):
-		return int(Decimal(self) // self.satoshi)
 
 	def to_unit(self,unit,show_decimal=False):
 		ret = Decimal(self) // getattr(self,unit)
@@ -524,21 +529,55 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def __repr__(self):
 		return "{}('{}')".format(type(self).__name__,self.__str__())
 
-	def __add__(self,other):
-		return type(self)(Decimal.__add__(self,other))
+	def __add__(self,other,*args,**kwargs):
+		"""
+		we must allow other to be int(0) to use the sum() builtin
+		"""
+		if other != 0 and type(other) not in ( type(self), DecimalNegateResult ):
+			raise ValueError(
+				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
+		return type(self)(Decimal.__add__(self,other,*args,**kwargs))
+
 	__radd__ = __add__
 
-	def __sub__(self,other):
-		return type(self)(Decimal.__sub__(self,other))
+	def __sub__(self,other,*args,**kwargs):
+		if type(other) is not type(self):
+			raise ValueError(
+				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
+		return type(self)(Decimal.__sub__(self,other,*args,**kwargs))
 
-	def __mul__(self,other):
-		return type(self)('{:0.8f}'.format(Decimal.__mul__(self,Decimal(other))))
+	def copy_negate(self,*args,**kwargs):
+		"""
+		We implement this so that __add__() can check type, because:
+			class Decimal:
+				def __sub__(self, other, ...):
+					...
+					return self.__add__(other.copy_negate(), ...)
+		"""
+		return DecimalNegateResult(Decimal.copy_negate(self,*args,**kwargs))
 
-	def __div__(self,other):
-		return type(self)('{:0.8f}'.format(Decimal.__div__(self,Decimal(other))))
+	def __mul__(self,other,*args,**kwargs):
+		return type(self)('{:0.{p}f}'.format(
+			Decimal.__mul__(self,Decimal(other,*args,**kwargs),*args,**kwargs),
+			p = self.max_prec
+		))
 
-	def __neg__(self,other):
-		return type(self)(Decimal.__neg__(self,other))
+	__rmul__ = __mul__
+
+	def __truediv__(self,other,*args,**kwargs):
+		return type(self)('{:0.{p}f}'.format(
+			Decimal.__truediv__(self,Decimal(other,*args,**kwargs),*args,**kwargs),
+			p = self.max_prec
+		))
+
+	def __neg__(self,*args,**kwargs):
+		self.method_not_implemented()
+
+	def __floordiv__(self,*args,**kwargs):
+		self.method_not_implemented()
+
+	def __mod__(self,*args,**kwargs):
+		self.method_not_implemented()
 
 class BTCAmt(CoinAmt):
 	max_prec = 8

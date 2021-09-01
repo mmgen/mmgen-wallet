@@ -597,8 +597,9 @@ class TwAddrList(MMGenDict,metaclass=AsyncInit):
 						'amt': proto.coin_amt('0'),
 						'lbl': label,
 						'addr': CoinAddr(proto,d['address']) }
-				self[lm]['amt'] += d['amount']
-				self.total += d['amount']
+				amt = proto.coin_amt(d['amount'])
+				self[lm]['amt'] += amt
+				self.total += amt
 
 		# We use listaccounts only for empty addresses, as it shows false positive balances
 		if showempty or all_labels:
@@ -1014,17 +1015,19 @@ class TwGetBalance(MMGenObject,metaclass=AsyncInit):
 			else:
 				lbl,key = None,'Non-wallet'
 
+			amt = self.proto.coin_amt(d['amount'])
+
 			if not d['confirmations']:
-				self.data['TOTAL'][0] += d['amount']
-				self.data[key][0] += d['amount']
+				self.data['TOTAL'][0] += amt
+				self.data[key][0] += amt
 
 			conf_level = (1,2)[d['confirmations'] >= self.minconf]
 
-			self.data['TOTAL'][conf_level] += d['amount']
-			self.data[key][conf_level] += d['amount']
+			self.data['TOTAL'][conf_level] += amt
+			self.data[key][conf_level] += amt
 
 			if d['spendable']:
-				self.data[key][3] += d['amount']
+				self.data[key][3] += amt
 
 	def format(self):
 		def gen_output():
