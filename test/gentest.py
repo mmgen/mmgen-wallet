@@ -413,7 +413,7 @@ else:
 	opts.usage()
 
 if type(a) == type(b):
-	die(1,'Address generators are the same!')
+	rdie(1,'Address generators are the same!')
 
 arg2 = parse_arg2()
 

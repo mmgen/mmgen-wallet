@@ -144,7 +144,7 @@ class InitErrors:
 	def method_not_implemented(cls):
 		import traceback
 		raise NotImplementedError(
-			'method {!r} not implemented for class {!r}'.format(
+			'method {}() not implemented for class {!r}'.format(
 				traceback.extract_stack()[-2].name, cls.__name__) )
 
 class Hilite(object):
@@ -472,7 +472,7 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 				me = Decimal.__new__(cls,num * getattr(cls,from_unit))
 			elif from_decimal:
 				assert type(num) == Decimal, f'number must be of type Decimal, not {type(num).__name__})'
-				me = Decimal.__new__(cls,num).quantize(cls.min_coin_unit)
+				me = Decimal.__new__(cls,num.quantize(Decimal('10') ** -cls.max_prec))
 			else:
 				for t in cls.forbidden_types:
 					assert type(num) is not t, f'number is of forbidden type {t.__name__}'
@@ -927,7 +927,7 @@ class IPPort(str,Hilite,InitErrors,MMGenObject):
 			assert m is not None, f'{s!r}: invalid IP:HOST specifier'
 			for e in m.groups():
 				if len(e) != 1 and e[0] == '0':
-					die(2,f'{e}: leading zeroes not permitted in dotted decimal element or port number')
+					raise ValueError(f'{e}: leading zeroes not permitted in dotted decimal element or port number')
 			res = [int(e) for e in m.groups()]
 			for e in res[:4]:
 				assert e <= 255, f'{e}: dotted decimal element > 255'

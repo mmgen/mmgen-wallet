@@ -36,6 +36,7 @@ class TestSuiteAutosign(TestSuiteBase):
 	'autosigning with BTC, BCH, LTC, ETH and ETC'
 	networks = ('btc',)
 	tmpdir_nums = [18]
+	color = True
 	cmd_group = (
 		('autosign', 'transaction autosigning (BTC,BCH,LTC,ETH,ETC)'),
 	)

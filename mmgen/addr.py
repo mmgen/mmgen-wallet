@@ -246,7 +246,9 @@ class KeyGenerator(MMGenObject):
 			m = 'Unable to execute priv2pub() from secp256k1 extension module'
 			assert priv2pub(bytes.fromhex('deadbeef'*8),1),m
 			return True
-		except:
+		except Exception as e:
+			if not silent:
+				ymsg(str(e))
 			return False
 
 import ecdsa

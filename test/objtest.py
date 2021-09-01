@@ -139,6 +139,8 @@ def run_test(test,arg,input_data,arg1,exc_name):
 			ret.pmsg() if hasattr(ret,'pmsg') else pmsg(ret)
 
 	except Exception as e:
+		if input_data == 'good':
+			raise ValueError('Error on good input data')
 		if not type(e).__name__ == exc_name:
 			msg(f'Incorrect exception: expected {exc_name} but got {type(e).__name__}')
 			raise
@@ -186,7 +188,7 @@ def do_loop():
 					arg,
 					input_data = k,
 					arg1       = arg1,
-					exc_name   = test_data[test].get('exc_name') or 'ObjectInitError',
+					exc_name   = test_data[test].get('exc_name') or ('ObjectInitError','None')[k=='good'],
 				)
 
 from mmgen.protocol import init_proto_from_opts

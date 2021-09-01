@@ -4,6 +4,11 @@
 REFDIR='test/ref'
 SUDO='sudo'
 
+[ -e "$CORE_REPO_ROOT/src/test/data/tx_valid.json" ] || {
+	echo "CORE_REPO_ROOT not set, or does not point to Bitcoin Core repository"
+	exit 1
+}
+
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif uname -a | grep -q 'MSYS'; then
@@ -264,6 +269,7 @@ f_hash='Hash function tests completed'
 
 [ "$ARM32" ] && t_hash_skip='512'        # gmpy produces invalid init constants
 [ "$MSYS2" ] && t_hash_skip='512 keccak' # 2:py_long_long issues, 3:no pysha3 for keccak reference
+[ "$SKIP_ALT_DEP" ] && t_hash_skip+=' keccak'
 
 i_ref='Miscellaneous reference data'
 s_ref='The following tests will test some generated values against reference data'
