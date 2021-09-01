@@ -21,20 +21,19 @@ altcoins.eth.obj: Ethereum data type classes for the MMGen suite
 """
 
 from decimal import Decimal
-from mmgen.obj import BTCAmt,Int
+from mmgen.obj import CoinAmt,Int
 
 # Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
-class ETHAmt(BTCAmt):
+class ETHAmt(CoinAmt):
 	max_prec = 18
-	max_amt = None
 	wei     = Decimal('0.000000000000000001')
 	Kwei    = Decimal('0.000000000000001')
 	Mwei    = Decimal('0.000000000001')
 	Gwei    = Decimal('0.000000001')
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
-	units = ('wei','Kwei','Mwei','Gwei','szabo','finney')
-	amt_fs = '4.18'
+	units   = ('wei','Kwei','Mwei','Gwei','szabo','finney')
+	amt_fs  = '4.18'
 
 	def toWei(self):    return int(Decimal(self) // self.wei)
 	def toKwei(self):   return int(Decimal(self) // self.Kwei)

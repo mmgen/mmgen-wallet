@@ -451,14 +451,14 @@ class SubSeedIdxRange(MMGenRange):
 
 class UnknownCoinAmt(Decimal): pass
 
-class BTCAmt(Decimal,Hilite,InitErrors):
+class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	color = 'yellow'
-	max_prec = 8
-	max_amt = 21000000
-	satoshi = Decimal('0.00000001')
-	amt_fs = '4.8'
-	units = ('satoshi',)
 	forbidden_types = (float,int)
+
+	max_prec = 0      # number of decimal places for this coin
+	max_amt  = None   # coin supply if known, otherwise None
+	units    = ()     # defined unit names, e.g. ('satoshi',...)
+	amt_fs   = '0.0'  # format string for the fmt() method
 
 	def __new__(cls,num,from_unit=None,from_decimal=False):
 		if type(num) == cls:
@@ -540,13 +540,22 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	def __neg__(self,other):
 		return type(self)(Decimal.__neg__(self,other))
 
+class BTCAmt(CoinAmt):
+	max_prec = 8
+	max_amt = 21000000
+	satoshi = Decimal('0.00000001')
+	units = ('satoshi',)
+	amt_fs = '4.8'
+
 class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
-class XMRAmt(BTCAmt):
+
+class XMRAmt(CoinAmt):
 	max_prec = 12
 	atomic = Decimal('0.000000000001')
 	units = ('atomic',)
+	amt_fs = '4.12'
 
 from .altcoins.eth.obj import ETHAmt,ETHNonce
 
