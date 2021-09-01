@@ -33,7 +33,6 @@ class ETHAmt(BTCAmt):
 	Gwei    = Decimal('0.000000001')
 	szabo   = Decimal('0.000001')
 	finney  = Decimal('0.001')
-	min_coin_unit = wei
 	units = ('wei','Kwei','Mwei','Gwei','szabo','finney')
 	amt_fs = '4.18'
 

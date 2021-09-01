@@ -456,12 +456,10 @@ class BTCAmt(Decimal,Hilite,InitErrors):
 	max_prec = 8
 	max_amt = 21000000
 	satoshi = Decimal('0.00000001')
-	min_coin_unit = satoshi
 	amt_fs = '4.8'
 	units = ('satoshi',)
 	forbidden_types = (float,int)
 
-	# NB: 'from_decimal' rounds down to precision of 'min_coin_unit'
 	def __new__(cls,num,from_unit=None,from_decimal=False):
 		if type(num) == cls:
 			return num
@@ -546,9 +544,9 @@ class BCHAmt(BTCAmt): pass
 class B2XAmt(BTCAmt): pass
 class LTCAmt(BTCAmt): max_amt = 84000000
 class XMRAmt(BTCAmt):
-	units = ('min_coin_unit','atomic')
-	min_coin_unit = atomic = Decimal('0.000000000001')
 	max_prec = 12
+	atomic = Decimal('0.000000000001')
+	units = ('atomic',)
 
 from .altcoins.eth.obj import ETHAmt,ETHNonce
 

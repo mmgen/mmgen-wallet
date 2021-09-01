@@ -63,7 +63,7 @@ async def main():
 
 	bdr = (cur['time'] - old['time']) / sample_size
 	t_rem = remaining * int(bdr)
-	sub = cur['subsidy'] * proto.coin_amt.min_coin_unit
+	sub = cur['subsidy'] * proto.coin_amt.satoshi
 
 	print(
 		f'Current block:      {tip}\n'

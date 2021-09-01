@@ -116,7 +116,7 @@ class DeserializedTX(dict,MMGenObject):
 			return int(bytes_le[::-1].hex(),16)
 
 		def bytes2coin_amt(bytes_le):
-			return proto.coin_amt(bytes2int(bytes_le) * proto.coin_amt.min_coin_unit)
+			return proto.coin_amt(bytes2int(bytes_le) * proto.coin_amt.satoshi)
 
 		def bshift(n,skip=False,sub_null=False):
 			ret = tx[self.idx:self.idx+n]
@@ -461,7 +461,7 @@ class MMGenTX:
 
 		# convert absolute BTC fee to satoshis-per-byte using estimated size
 		def fee_abs2rel(self,abs_fee,to_unit=None):
-			unit = getattr(self.proto.coin_amt,to_unit or 'min_coin_unit')
+			unit = getattr(self.proto.coin_amt,to_unit or 'satoshi')
 			return int(abs_fee // unit // self.estimate_size())
 
 		def get_hex_locktime(self):
