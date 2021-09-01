@@ -21,7 +21,7 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 """
 
 import sys,os,time,stat,re
-from subprocess import run
+from subprocess import run,PIPE,DEVNULL
 from hashlib import sha256
 from string import hexdigits,digits
 from .color import *
@@ -486,6 +486,20 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 		die(3,"{}: {} ({}) doesn't match {} ({})".format(e,desc2,val2,desc1,val1))
 	dmsg('{} OK ({})'.format(capfirst(desc2),val2))
 	return True
+
+def check_binary(args):
+	try:
+		run(args,stdout=DEVNULL,stderr=DEVNULL,check=True)
+	except:
+		rdie(2,f'{args[0]!r} binary missing, not in path, or not executable')
+
+def shred_file(fn,verbose=False):
+	check_binary(['shred','--version'])
+	run(
+		['shred','--force','--iterations=30','--zero','--remove=wipesync']
+		+ (['--verbose'] if verbose else [])
+		+ [fn],
+		check=True )
 
 def open_file_or_exit(filename,mode,silent=False):
 	try:

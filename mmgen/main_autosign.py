@@ -322,8 +322,8 @@ def wipe_existing_key():
 	try: os.stat(fn)
 	except: pass
 	else:
-		msg(f'\nWiping existing key {fn!r}')
-		run(['wipe','-cf',fn],check=True)
+		msg(f'\nShredding existing key {fn!r}')
+		shred_file( fn, verbose=opt.verbose )
 
 def create_key():
 	kdata = os.urandom(32).hex()
@@ -372,12 +372,6 @@ def get_insert_status():
 	except: return False
 	else: return True
 
-def check_wipe_present():
-	try:
-		run(['wipe','-v'],stdout=DEVNULL,stderr=DEVNULL,check=True)
-	except:
-		die(2,"The 'wipe' utility must be installed before running this program")
-
 async def do_loop():
 	n,prev_status = 0,False
 	if not opt.stealth_led:
@@ -406,7 +400,6 @@ if len(cmd_args) == 1:
 	elif cmd != 'wait':
 		die(1,f'{cmd!r}: unrecognized command')
 
-check_wipe_present()
 wfs = get_wallet_files()
 
 def at_exit(exit_val,message='\nCleaning up...'):

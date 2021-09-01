@@ -224,12 +224,9 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	confirm_or_raise(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
 	bmsg('Securely deleting old wallet')
-	from subprocess import run
-	run(
-		['shred','--iterations=30','--zero','--remove=wipesync']
-		+ (['--verbose'] if opt.verbose else [])
-		+ [ss_in.infile.name],
-		check=True )
+	shred_file(
+		ss_in.infile.name,
+		verbose = opt.verbose )
 else:
 	try:
 		assert invoked_as == 'gen', 'dw'
