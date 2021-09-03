@@ -504,7 +504,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def fmt(self,fs=None,color=False,suf='',prec=1000):
 		if fs == None:
 			fs = self.amt_fs
-		s = str(int(self)) if int(self) == self else self.normalize().__format__('f')
+		s = self.__str__()
 		if '.' in fs:
 			p1,p2 = list(map(int,fs.split('.',1)))
 			ss = s.split('.',1)
@@ -518,13 +518,10 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		return self.colorize(ret,color=color)
 
 	def hl(self,color=True):
-		return self.__str__(color=color)
+		return self.colorize(self.__str__(),color=color)
 
-	def __str__(self,color=False): # format simply, no exponential notation
-		return self.colorize(
-				str(int(self)) if int(self) == self else
-				self.normalize().__format__('f'),
-			color=color)
+	def __str__(self): # format simply, with no exponential notation
+		return str(int(self)) if int(self) == self else self.normalize().__format__('f')
 
 	def __repr__(self):
 		return "{}('{}')".format(type(self).__name__,self.__str__())
@@ -533,7 +530,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 		"""
 		we must allow other to be int(0) to use the sum() builtin
 		"""
-		if other != 0 and type(other) not in ( type(self), DecimalNegateResult ):
+		if type(other) not in ( type(self), DecimalNegateResult ) and other != 0:
 			raise ValueError(
 				f'operand {other} of incorrect type ({type(other).__name__} != {type(self).__name__})')
 		return type(self)(Decimal.__add__(self,other,*args,**kwargs))
@@ -558,7 +555,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 
 	def __mul__(self,other,*args,**kwargs):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__mul__(self,Decimal(other,*args,**kwargs),*args,**kwargs),
+			Decimal.__mul__(self,Decimal(other),*args,**kwargs),
 			p = self.max_prec
 		))
 
@@ -566,7 +563,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 
 	def __truediv__(self,other,*args,**kwargs):
 		return type(self)('{:0.{p}f}'.format(
-			Decimal.__truediv__(self,Decimal(other,*args,**kwargs),*args,**kwargs),
+			Decimal.__truediv__(self,Decimal(other),*args,**kwargs),
 			p = self.max_prec
 		))
 

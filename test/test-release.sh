@@ -4,11 +4,6 @@
 REFDIR='test/ref'
 SUDO='sudo'
 
-[ -e "$CORE_REPO_ROOT/src/test/data/tx_valid.json" ] || {
-	echo "CORE_REPO_ROOT not set, or does not point to Bitcoin Core repository"
-	exit 1
-}
-
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
 elif uname -a | grep -q 'MSYS'; then
@@ -175,9 +170,9 @@ check() {
 	[ "$BRANCH" ] || { echo 'No branch specified.  Exiting'; exit; }
 	[ "$(git diff $BRANCH)" == "" ] || {
 		echo "Unmerged changes from branch '$BRANCH'. Exiting"
-		exit
+		exit 1
 	}
-	git diff $BRANCH >/dev/null 2>&1 || exit
+	git diff $BRANCH >/dev/null 2>&1 || exit 1
 }
 uninstall() {
 	set +e
@@ -558,12 +553,23 @@ run_tests() {
 	done
 }
 
+check_core_repo() {
+	[ -e "$CORE_REPO_ROOT/src/test/data/tx_valid.json" ] || {
+		echo "CORE_REPO_ROOT not set, or does not point to Bitcoin Core repository"
+		exit 1
+	}
+}
+
 check_args() {
 	for i in $tests; do
-		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || { echo "$i: unrecognized argument"; exit; }
+		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || {
+			echo "$i: unrecognized argument"
+			exit 1
+		}
 	done
 }
 
+check_core_repo
 check_args
 [ "$LIST_CMDS" ] || echo "Running tests: $tests"
 START=$(date +%s)

@@ -27,7 +27,12 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 	def Pexit(*args):
 		pexit(*args,out=sys.stdout)
 
-	def print_stack_trace(message=None):
+	def print_stack_trace(message=None,fh=[],nl='\n',sep='\n  '):
+
+		if not fh:
+			fh.append(open(f'devtools.trace.{os.getpid()}','w'))
+			nl = ''
+
 		tb = [t for t in traceback.extract_stack() if t.filename[:1] != '<'][:-1]
 		fs = '{}:{}: in {}:\n    {}'
 		out = [
@@ -38,11 +43,9 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 				t.line or '(none)')
 			for t in tb ]
 
-		sys.stderr.write(
-			'STACK TRACE {}:\n  '.format(message or '[unnamed]') +
-			'\n  '.join(out) + '\n' )
-
-		open('devtools.trace','w').write('\n'.join(out))
+		text = f'{nl}STACK TRACE {message or "[unnamed]"}:{sep}{sep.join(out)}\n'
+		sys.stderr.write(text)
+		fh[0].write(text)
 
 	class MMGenObject(object):
 
