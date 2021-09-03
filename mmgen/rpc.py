@@ -711,7 +711,7 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'refresh',       # start_height
 	)
 
-class daemon_warning(oneshot_warning):
+class daemon_warning(oneshot_warning_group):
 
 	class geth:
 		color = 'yellow'

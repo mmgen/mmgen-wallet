@@ -106,8 +106,10 @@ class TestSuiteOutput(TestSuiteBase):
 		('output_gr', (1,"Greek text", [])),
 		('output_ru', (1,"Russian text", [])),
 		('output_zh', (1,"Chinese text", [])),
-		('output_jp', (1,"Japanese text", []))
+		('output_jp', (1,"Japanese text", [])),
+		('oneshot_warning', (1,"Oneshot warnings", []))
 	)
+	color = True
 
 	def screen_output(self,lang):
 		t = self.spawn('test/misc/utf8_output.py',[lang],cmd_dir='.')
@@ -118,6 +120,21 @@ class TestSuiteOutput(TestSuiteBase):
 	def output_ru(self): return self.screen_output('ru')
 	def output_zh(self): return self.screen_output('zh')
 	def output_jp(self): return self.screen_output('jp')
+
+	def oneshot_warning(self):
+		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.')
+		for s in (
+			'foo is experimental',
+			'The bar command is dangerous',
+			'baz variant alpha',
+			'baz variant beta',
+			'foo variant alpha',
+			'foo variant beta',
+			'bar is experimental',
+			'loop', 'loop', 'loop',
+		):
+			t.expect(s)
+		return t
 
 class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	'create a reference transaction file (administrative command)'

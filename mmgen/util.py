@@ -747,24 +747,31 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 class oneshot_warning:
 
-	def __init__(self,wcls,div=None,fmt_args=[]):
+	def __init__(self,div=None,fmt_args=[]):
+		self.do(type(self),div,fmt_args)
+
+	def do(self,wcls,div,fmt_args):
 
 		def do_warning():
-			cls = getattr(self,wcls)
-			message = getattr(cls,'message')
-			color = globals()[getattr(cls,'color')]
+			message = getattr(wcls,'message')
+			color = globals()[getattr(wcls,'color')]
 			msg(color('WARNING: ' + message.format(*fmt_args)))
 
-		flag = wcls+'_warning_shown'
+		flag = 'warning_shown'
 
-		if not hasattr(self,flag):
-			setattr(type(self),flag,[])
+		if not hasattr(wcls,flag):
+			setattr(wcls,flag,[])
 
-		attr = getattr(type(self),flag)
+		attr = getattr(wcls,flag)
 
 		if not div in attr:
 			do_warning()
 			attr.append(div)
+
+class oneshot_warning_group(oneshot_warning):
+
+	def __init__(self,wcls,div=None,fmt_args=[]):
+		self.do(getattr(self,wcls),div,fmt_args)
 
 passwd_files_used = {}
 
