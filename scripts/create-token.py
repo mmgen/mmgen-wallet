@@ -19,56 +19,46 @@
 import sys,os,json,re
 from subprocess import run,PIPE
 from mmgen.common import *
-from mmgen.obj import CoinAddr,is_coin_addr
 
-decimals = 18
-supply   = 10**26
-name   = 'MMGen Token'
-symbol = 'MMT'
-solc_version_pat = r'0.5.[123]'
+class TokenData:
+	attrs = ('decimals','supply','name','symbol','owner_addr')
+	decimals = 18
+	supply = 10**26
+	name = 'MMGen Token'
+	symbol = 'MMT'
+	owner_addr = None
+
+token_data = TokenData()
+
+req_solc_ver_pat = '^0.5.2'
 
 opts_data = {
 	'text': {
 		'desc': 'Create an ERC20 token contract',
 		'usage':'[opts] <owner address>',
-		'options': """
--h, --help       Print this help message
--o, --outdir=  d Specify output directory for *.bin files
--d, --decimals=d Number of decimals for the token (default: {d})
--n, --name=n     Token name (default: {n})
--t, --supply=  t Total supply of the token (default: {t})
--s, --symbol=  s Token symbol (default: {s})
--S, --stdout     Output data in JSON format to stdout instead of files
--v, --verbose    Produce more verbose output
+		'options': f"""
+-h, --help        Print this help message
+-o, --outdir=D    Specify output directory for *.bin files
+-d, --decimals=D  Number of decimals for the token (default: {token_data.decimals})
+-n, --name=N      Token name (default: {token_data.name!r})
+-t, --supply=T    Total supply of the token (default: {token_data.supply})
+-s, --symbol=S    Token symbol (default: {token_data.symbol!r})
+-S, --stdout      Output JSON data to stdout instead of files
+-v, --verbose     Produce more verbose output
+-c, --check-solc-version Check the installed solc version
+""",
+	'notes': """
+The owner address must be in checksummed format
 """
-	},
-	'code': {
-		'options': lambda s: s.format(
-			d=decimals,
-			n=name,
-			s=symbol,
-			t=supply)
 	}
 }
-
-cmd_args = opts.init(opts_data)
-
-from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts()
-
-assert proto.coin in ('ETH','ETC'),'--coin option must be set to ETH or ETC'
-
-if not len(cmd_args) == 1 or not is_coin_addr(proto,cmd_args[0].lower()):
-	opts.usage()
-
-owner_addr = '0x' + cmd_args[0]
 
 # ERC Token Standard #20 Interface
 # https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
 
-code_in = """
+solidity_code_template = """
 
-pragma solidity >0.5.0 <0.5.4;
+pragma solidity %s;
 
 contract SafeMath {
     function safeAdd(uint a, uint b) public pure returns (uint c) {
@@ -180,23 +170,49 @@ contract Token is ERC20Interface, Owned, SafeMath {
         return ERC20Interface(tokenAddress).transfer(owner, tokens);
     }
 }
-"""
+""" % req_solc_ver_pat
 
-def create_src(code):
-	for k in ('decimals','supply','name','symbol','owner_addr'):
-		if hasattr(opt,k) and getattr(opt,k): globals()[k] = getattr(opt,k)
-		code = code.replace('<{}>'.format(k.upper()),str(globals()[k]))
+def create_src(code,token_data,owner_addr):
+	token_data.owner_addr = '0x' + owner_addr
+	for k in token_data.attrs:
+		if getattr(opt,k,None):
+			setattr( token_data, k, getattr(opt,k) )
+		code = code.replace( f'<{k.upper()}>', str(getattr(token_data,k)) )
 	return code
 
-def check_version():
-	res = run(['solc','--version'],stdout=PIPE).stdout.decode()
-	ver = re.search(r'Version:\s*(.*)',res).group(1)
-	msg(f'Installed solc version: {ver}')
-	if not re.search(r'{}\b'.format(solc_version_pat),ver):
-		ydie(1,f'Incorrect Solidity compiler version (need version {solc_version_pat})')
+def check_solc_version():
+	"""
+	The output is used by other programs, so write to stdout only
+	"""
+	try:
+		cp = run(['solc','--version'],check=True,stdout=PIPE)
+	except:
+		msg('solc missing or could not be executed') # this must go to stderr
+		return False
+
+	if cp.returncode != 0:
+		Msg('solc exited with error')
+		return False
+
+	line = cp.stdout.decode().splitlines()[1]
+	version_str = re.sub(r'Version:\s*','',line)
+	m = re.match(r'(\d+)\.(\d+)\.(\d+)',version_str)
+
+	if not m:
+		Msg(f'Unrecognized solc version string: {version_str}')
+		return False
+
+	from semantic_version import Version,NpmSpec
+	version = Version('{}.{}.{}'.format(*m.groups()))
+
+	if version in NpmSpec(req_solc_ver_pat):
+		Msg(str(version))
+		return True
+	else:
+		Msg(f'solc version ({version_str}) does not match requirement ({req_solc_ver_pat})')
+		return False
 
 def compile_code(code):
-	check_version()
 	cmd = ['solc','--optimize','--bin','--overwrite']
 	if not opt.stdout:
 		cmd += ['--output-dir', opt.outdir or '.']
@@ -218,9 +234,33 @@ def compile_code(code):
 	else:
 		vmsg(out)
 
-src = create_src(code_in)
-out = compile_code(src)
-if opt.stdout:
-	print(json.dumps(out))
+if __name__ == '__main__':
 
-msg('Contract successfully compiled')
+	cmd_args = opts.init(opts_data)
+
+	if opt.check_solc_version:
+		sys.exit(0 if check_solc_version() else 1)
+
+	from mmgen.protocol import init_proto_from_opts
+	proto = init_proto_from_opts()
+
+	if not proto.coin in ('ETH','ETC'):
+		die(1,'--coin option must be ETH or ETC')
+
+	if not len(cmd_args) == 1:
+		opts.usage()
+
+	owner_addr = cmd_args[0]
+
+	from mmgen.obj import is_coin_addr
+	if not is_coin_addr( proto, owner_addr.lower() ):
+		die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
+
+	out = compile_code(
+		create_src( solidity_code_template, token_data, owner_addr )
+	)
+
+	if opt.stdout:
+		print(json.dumps(out))
+
+	msg('Contract successfully compiled')

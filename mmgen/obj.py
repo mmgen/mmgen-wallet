@@ -520,6 +520,14 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def hl(self,color=True):
 		return self.colorize(self.__str__(),color=color)
 
+	def hl2(self,color=True,encl=''): # display with coin symbol
+		return (
+			encl[:-1]
+			+ self.colorize(self.__str__(),color=color)
+			+ ' ' + type(self).__name__[:-3]
+			+ encl[1:]
+		)
+
 	def __str__(self): # format simply, with no exponential notation
 		return str(int(self)) if int(self) == self else self.normalize().__format__('f')
 

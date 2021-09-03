@@ -45,32 +45,30 @@ amt2 = '888.111122223333444455'
 
 openethereum_key_fn = 'openethereum.devkey'
 
-# Token sends require varying amounts of gas, depending on compiler version
-def get_solc_ver():
-	try: cp = run(['solc','--version'],stdout=PIPE)
-	except: return None
+tested_solc_ver = '0.5.3'
 
-	if cp.returncode:
-		return None
+def check_solc_ver():
+	cmd = 'scripts/create-token.py --check-solc-version'
+	try:
+		cp = run(cmd.split(),check=False,stdout=PIPE)
+	except Exception as e:
+		rdie(2,f'Unable to execute {cmd!r}: {e}')
+	res = cp.stdout.decode().strip()
+	if cp.returncode == 0:
+		omsg(
+			orange(f'Found supported solc version {res}') if res == tested_solc_ver else
+			yellow(f'WARNING: solc version ({res}) does not match tested version ({tested_solc_ver})')
+		)
+		return True
+	else:
+		omsg(yellow(res + '\nUsing precompiled contract data'))
+		return False
 
-	line = cp.stdout.decode().splitlines()[1]
-	m = re.search(r'Version:\s*(\d+)\.(\d+)\.(\d+)',line)
-	return '.'.join(m.groups()) if m else None
-
-solc_ver = get_solc_ver()
-
-if solc_ver == '0.5.1':
-	vbal1 = '1.2288337'
-	vbal1a = 'TODO'
-	vbal2 = '99.997085083'
-	vbal3 = '1.23142165'
-	vbal4 = '127.0287837'
-else: # 0.5.3 or precompiled 0.5.3
-	vbal1 = '1.2288487'
-	vbal1a = '1.22627465'
-	vbal2 = '99.997092733'
-	vbal3 = '1.23142915'
-	vbal4 = '127.0287987'
+vbal1 = '1.2288487'
+vbal9 = '1.22627465'
+vbal2 = '99.997092733'
+vbal3 = '1.23142915'
+vbal4 = '127.0287987'
 
 bals = {
 	'1': [  ('98831F3A:E:1','123.456')],
@@ -122,7 +120,7 @@ token_bals = {
 			('98831F3A:E:12','0',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
-	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal1a,'a2'),
+	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9,'a2'),
 			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
 			(burn_addr + '\s+Non-MMGen',amt2,amt1)]
@@ -143,7 +141,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	passthru_opts = ('coin','daemon_id','http_timeout')
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [22]
-	solc_vers = ('0.5.1','0.5.3') # 0.5.1: Raspbian Stretch, 0.5.3: Ubuntu Bionic
 	color = True
 	cmd_group = (
 		('setup',               'dev mode tests for coin {} (start daemon)'.format(coin)),
@@ -311,10 +308,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		if trunner == None:
+			return
 		from mmgen.protocol import init_proto
 		self.proto = init_proto(g.coin,network='regtest')
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
+		self.using_solc = check_solc_ver()
 
 	@property
 	def eth_args(self):
@@ -322,16 +322,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	async def setup(self):
 		self.spawn('',msg_only=True)
-		if solc_ver in self.solc_vers:
-			imsg('Found solc version {}'.format(solc_ver))
-		else:
-			imsg('Solc compiler {}. Using precompiled contract data'.format(
-				'version {} not supported by test suite'.format(solc_ver)
-				if solc_ver else 'not found' ))
+
+		if not self.using_solc:
 			srcdir = os.path.join(self.tr.repo_root,'test','ref','ethereum','bin')
 			from shutil import copytree
 			for d in ('mm1','mm2'):
 				copytree(os.path.join(srcdir,d),os.path.join(self.tmpdir,d))
+
 		if not opt.no_daemon_autostart:
 			if g.daemon_id == 'geth':
 				self.geth_setup()
@@ -342,6 +339,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			from mmgen.rpc import rpc_init
 			rpc = await rpc_init(self.proto)
 			imsg('Daemon: {} v{}'.format(rpc.daemon.coind_name,rpc.daemon_version_str))
+
 		return 'ok'
 
 	def geth_setup(self):
@@ -662,8 +660,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_compile(self,token_data={}):
 		odir = joinpath(self.tmpdir,token_data['symbol'].lower())
-		if not solc_ver:
-			imsg('Using precompiled contract data in {}'.format(odir))
+		if not self.using_solc:
+			imsg(f'Using precompiled contract data in {odir}')
 			return 'skip' if os.path.exists(odir) else False
 		self.spawn('',msg_only=True)
 		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
@@ -679,7 +677,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg("Executing: {}".format(' '.join(cmd)))
 		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
 		if cp.returncode != 0:
-			rdie(2,'solc failed with the following output: {}'.format(cp.stderr))
+			rmsg('solc failed with the following output:')
+			ydie(2,cp.stderr.decode())
 		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
 		return 'ok'
 
@@ -691,12 +690,18 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		token_data = { 'name':'MMGen Token 2', 'symbol':'MM2', 'supply':10**18, 'decimals':10 }
 		return self.token_compile(token_data)
 
-	async def get_exec_status(self,txid):
+	async def get_tx_receipt(self,txid):
 		from mmgen.tx import MMGenTX
 		tx = MMGenTX.New(proto=self.proto)
 		from mmgen.rpc import rpc_init
 		tx.rpc = await rpc_init(self.proto)
-		return await tx.get_exec_status(txid,True)
+		res = await tx.get_receipt(txid)
+		imsg(f'Gas sent:  {res.gas_sent.hl():<9} {(res.gas_sent*res.gas_price).hl2(encl="()")}')
+		imsg(f'Gas used:  {res.gas_used.hl():<9} {(res.gas_used*res.gas_price).hl2(encl="()")}')
+		imsg(f'Gas price: {res.gas_price.hl2()}')
+		if res.gas_used == res.gas_sent:
+			omsg(yellow(f'Warning: all gas was used!'))
+		return res
 
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
@@ -724,7 +729,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			quiet = mmgen_cmd == 'txdo' or not g.debug,
 			bogus_send=False)
 		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
-		assert (await self.get_exec_status(txid)) != 0, f'Contract {num}:{key} failed to execute. Aborting'
+		if (await self.get_tx_receipt(txid)).status == 0:
+			die(2,f'Contract {num}:{key} failed to execute. Aborting')
 		if key == 'Token':
 			self.write_to_tmpfile( f'token_addr{num}', addr+'\n' )
 			imsg(f'\nToken MM{num} deployed!')
@@ -771,7 +777,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					dfl_privkey,
 					start_gas = ETHAmt(60000,'wei'),
 					gasPrice  = ETHAmt(8,'Gwei') )
-				assert (await self.get_exec_status(txid)) != 0,'Transfer of token funds failed. Aborting'
+				if (await self.get_tx_receipt(txid)).status == 0:
+					die(2,'Transfer of token funds failed. Aborting')
 
 		async def show_bals(rpc):
 			for i in range(2):

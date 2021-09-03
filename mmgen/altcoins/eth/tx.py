@@ -60,12 +60,20 @@ class EthereumMMGenTX:
 		def is_replaceable(self):
 			return True
 
-		async def get_exec_status(self,txid,silent=False):
-			d = await self.rpc.call('eth_getTransactionReceipt','0x'+txid)
-			if not silent:
-				if 'contractAddress' in d and d['contractAddress']:
-					msg('Contract address: {}'.format(d['contractAddress'].replace('0x','')))
-			return int(d['status'],16)
+		async def get_receipt(self,txid,silent=False):
+			rx = await self.rpc.call('eth_getTransactionReceipt','0x'+txid) # -> null if pending
+			if not rx:
+				return None
+			tx = await self.rpc.call('eth_getTransactionByHash','0x'+txid)
+			return namedtuple('exec_status',['status','gas_sent','gas_used','gas_price','contract_addr','tx','rx'])(
+				status        = Int(rx['status'],16), # zero is failure, non-zero success
+				gas_sent      = Int(tx['gas'],16),
+				gas_used      = Int(rx['gasUsed'],16),
+				gas_price     = ETHAmt(int(tx['gasPrice'],16),from_unit='wei'),
+				contract_addr = self.proto.coin_addr(rx['contractAddress'][2:]) if rx['contractAddress'] else None,
+				tx            = tx,
+				rx            = rx,
+			)
 
 	class New(Base,MMGenTX.New):
 		hexdata_type = 'hex'
