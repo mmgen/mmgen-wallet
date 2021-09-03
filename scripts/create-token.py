@@ -30,7 +30,7 @@ class TokenData:
 
 token_data = TokenData()
 
-req_solc_ver_pat = '^0.5.2'
+req_solc_ver_pat = '^0.8.6'
 
 opts_data = {
 	'text': {
@@ -79,13 +79,13 @@ contract SafeMath {
     }
 }
 
-contract ERC20Interface {
-    function totalSupply() public returns (uint);
-    function balanceOf(address tokenOwner) public returns (uint balance);
-    function allowance(address tokenOwner, address spender) public returns (uint remaining);
-    function transfer(address to, uint tokens) public returns (bool success);
-    function approve(address spender, uint tokens) public returns (bool success);
-    function transferFrom(address from, address to, uint tokens) public returns (bool success);
+abstract contract ERC20Interface {
+    function totalSupply() public virtual returns (uint);
+    function balanceOf(address tokenOwner) public virtual returns (uint balance);
+    function allowance(address tokenOwner, address spender) public virtual returns (uint remaining);
+    function transfer(address to, uint tokens) public virtual returns (bool success);
+    function approve(address spender, uint tokens) public virtual returns (bool success);
+    function transferFrom(address from, address to, uint tokens) public virtual returns (bool success);
 
     event Transfer(address indexed from, address indexed to, uint tokens);
     event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
@@ -138,31 +138,31 @@ contract Token is ERC20Interface, Owned, SafeMath {
         balances[<OWNER_ADDR>] = _totalSupply;
         emit Transfer(address(0), <OWNER_ADDR>, _totalSupply);
     }
-    function totalSupply() public returns (uint) {
+    function totalSupply() public override returns (uint) {
         return _totalSupply  - balances[address(0)];
     }
-    function balanceOf(address tokenOwner) public returns (uint balance) {
+    function balanceOf(address tokenOwner) public override returns (uint balance) {
         return balances[tokenOwner];
     }
-    function transfer(address to, uint tokens) public returns (bool success) {
+    function transfer(address to, uint tokens) public override returns (bool success) {
         balances[msg.sender] = safeSub(balances[msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
         emit Transfer(msg.sender, to, tokens);
         return true;
     }
-    function approve(address spender, uint tokens) public returns (bool success) {
+    function approve(address spender, uint tokens) public override returns (bool success) {
         allowed[msg.sender][spender] = tokens;
         emit Approval(msg.sender, spender, tokens);
         return true;
     }
-    function transferFrom(address from, address to, uint tokens) public returns (bool success) {
+    function transferFrom(address from, address to, uint tokens) public override returns (bool success) {
         balances[from] = safeSub(balances[from], tokens);
         allowed[from][msg.sender] = safeSub(allowed[from][msg.sender], tokens);
         balances[to] = safeAdd(balances[to], tokens);
         emit Transfer(from, to, tokens);
         return true;
     }
-    function allowance(address tokenOwner, address spender) public returns (uint remaining) {
+    function allowance(address tokenOwner, address spender) public override returns (uint remaining) {
         return allowed[tokenOwner][spender];
     }
     // Owner can transfer out any accidentally sent ERC20 tokens

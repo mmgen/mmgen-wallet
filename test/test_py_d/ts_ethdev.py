@@ -45,7 +45,7 @@ amt2 = '888.111122223333444455'
 
 openethereum_key_fn = 'openethereum.devkey'
 
-tested_solc_ver = '0.5.3'
+tested_solc_ver = '0.8.7'
 
 def check_solc_ver():
 	cmd = 'scripts/create-token.py --check-solc-version'
@@ -64,11 +64,12 @@ def check_solc_ver():
 		omsg(yellow(res + '\nUsing precompiled contract data'))
 		return False
 
-vbal1 = '1.2288487'
-vbal9 = '1.22627465'
-vbal2 = '99.997092733'
-vbal3 = '1.23142915'
-vbal4 = '127.0287987'
+vbal1 = '1.2288409'
+vbal9 = '1.22626295'
+vbal2 = '99.997088755'
+vbal3 = '1.23142525'
+vbal4 = '127.0287909'
+vbal5 = '1000126.14828654512345678'
 
 bals = {
 	'1': [  ('98831F3A:E:1','123.456')],
@@ -736,21 +737,21 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			imsg(f'\nToken MM{num} deployed!')
 		return t
 
-	async def token_deploy1a(self): return await self.token_deploy(num=1,key='SafeMath',gas=200000)
-	async def token_deploy1b(self): return await self.token_deploy(num=1,key='Owned',gas=250000)
-	async def token_deploy1c(self): return await self.token_deploy(num=1,key='Token',gas=1100000,tx_fee='7G')
+	async def token_deploy1a(self): return await self.token_deploy(num=1,key='SafeMath',gas=500_000)
+	async def token_deploy1b(self): return await self.token_deploy(num=1,key='Owned',   gas=1_000_000)
+	async def token_deploy1c(self): return await self.token_deploy(num=1,key='Token',   gas=4_000_000,tx_fee='7G')
 
 	def tx_status2(self):
 		return self.tx_status(ext=self.proto.coin+'[0,7000]{}.regtest.sigtx',expect_str='successfully executed')
 
 	def bal6(self): return self.bal5()
 
-	async def token_deploy2a(self): return await self.token_deploy(num=2,key='SafeMath',gas=200000)
-	async def token_deploy2b(self): return await self.token_deploy(num=2,key='Owned',gas=250000)
-	async def token_deploy2c(self): return await self.token_deploy(num=2,key='Token',gas=1100000)
+	async def token_deploy2a(self): return await self.token_deploy(num=2,key='SafeMath',gas=500_000)
+	async def token_deploy2b(self): return await self.token_deploy(num=2,key='Owned',   gas=1_000_000)
+	async def token_deploy2c(self): return await self.token_deploy(num=2,key='Token',   gas=4_000_000)
 
 	async def contract_deploy(self): # test create,sign,send
-		return await self.token_deploy(num=2,key='SafeMath',gas=1100000,mmgen_cmd='txcreate')
+		return await self.token_deploy(num=2,key='SafeMath',gas=500_000,mmgen_cmd='txcreate')
 
 	async def token_transfer_ops(self,op,amt=1000):
 		self.spawn('',msg_only=True)
@@ -988,7 +989,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txcreate_refresh_balances(self,
 			bals=['2','3'],
 			args=['-B','--cached-balances','-i'],
-			total= '1000126.14829832312345678',
+			total=vbal5,
 			adj_total=True,
 			total_coin=None ):
 
