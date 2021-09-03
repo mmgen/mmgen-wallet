@@ -43,17 +43,18 @@ class CfgFile(object):
 	file_not_found_fs = 'WARNING: {} not found at {!r}'
 	line_data = namedtuple('cfgfile_line',['name','value','lineno','chunk'])
 
+	class warn_missing_file(oneshot_warning):
+		color = 'yellow' # has no effect, as color not initialized yet
+		message = '{} not found at {!r}'
+
 	def __init__(self):
 		self.fn = os.path.join(self.fn_dir,self.fn_base)
-		self.data = self.get_data()
-
-	def get_data(self):
 		try:
-			return open(self.fn).read().splitlines()
+			self.data = open(self.fn).read().splitlines()
 		except:
 			if self.warn_missing:
-				msg(self.file_not_found_fs.format(self.desc,self.fn))
-			return ''
+				self.warn_missing_file( div=self.fn, fmt_args=(self.desc,self.fn) )
+			self.data = ''
 
 	def copy_data(self):
 		assert self.write_ok, 'writing to file {!r} not allowed!'.format(self.fn)

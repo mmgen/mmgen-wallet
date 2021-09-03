@@ -21,6 +21,7 @@ class TestSuiteCfg(TestSuiteBase):
 	networks = ('btc',)
 	tmpdir_nums = [40]
 	base_passthru_opts = ()
+	color = True
 
 	cmd_group = (
 		('nosysfile',          (40,'init with missing system cfg sample file', [])),
@@ -58,8 +59,7 @@ class TestSuiteCfg(TestSuiteBase):
 	def nosysfile(self):
 		t = self.spawn_test()
 		errstr = CfgFile.file_not_found_fs.format(CfgFileSampleSys.desc,self.path('shared_data')+'/mmgen.cfg')
-		for i in (1,2,3,4,5):
-			t.expect(errstr)
+		t.expect(errstr)
 		for k in ('usr','sys','sample'):
 			t.expect('{} cfg file:\s+{}'.format(capfirst(k),self.path(k)),regex=True)
 			assert not os.path.exists(self.path(k)), self.path(k)
