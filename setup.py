@@ -33,10 +33,10 @@ have_msys2 = run(['uname','-s'],stdout=PIPE,check=True).stdout.startswith(b'MSYS
 if have_msys2:
 	print('MSYS2 system detected')
 
-from distutils.core import setup,Extension
-from distutils.command.build_ext import build_ext
-from distutils.command.install_data import install_data
-from distutils.command.build_py import build_py
+from setuptools import setup,Extension
+from setuptools.command.install import install
+from setuptools.command.build_py import build_py
+from setuptools.command.build_ext import build_ext
 
 cwd = os.getcwd()
 
@@ -66,11 +66,11 @@ def link_or_copy(tdir,a,b):
 	copy_owner(a,b)
 	os.chdir(cwd)
 
-class my_install_data(install_data):
+class my_install(install):
 	def run(self):
 		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
 			os.chmod(os.path.join('data_files',f),0o644) # required if user has non-standard umask
-		install_data.run(self)
+		install.run(self)
 
 class my_build_py(build_py):
 	def run(self):
@@ -94,16 +94,20 @@ setup(
 		version      = g.version,
 		author       = g.author,
 		author_email = g.email,
+		maintainer   = g.author,
 		url          = g.proj_url,
 		license      = 'GNU GPL v3',
-		platforms    = 'Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian',
+		platforms    = 'Linux, Debian, Ubuntu, Arch Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian, Rock Pi/Armbian',
 		keywords     = g.keywords,
 		cmdclass     = {
-			'build_ext': my_build_ext,
+			'install': my_install,
 			'build_py': my_build_py,
-			'install_data': my_install_data,
+			'build_ext': my_build_ext,
 		},
 		ext_modules  = [module1],
+		# TODO:
+		# https://setuptools.readthedocs.io/en/latest/references/keywords.html:
+		#   data_files is deprecated. It does not work with wheels, so it should be avoided.
 		data_files = [('share/mmgen', [
 				'data_files/mmgen.cfg',     # source files must have 0644 mode
 				'data_files/mn_wordlist.c',
