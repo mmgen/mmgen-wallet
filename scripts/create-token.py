@@ -18,15 +18,17 @@
 
 import sys,os,json,re
 from subprocess import run,PIPE
+from collections import namedtuple
 from mmgen.common import *
 
+ti = namedtuple('token_param_info',['default','conversion','test'])
 class TokenData:
-	attrs = ('decimals','supply','name','symbol','owner_addr')
-	decimals = 18
-	supply = 10**26
-	name = 'MMGen Token'
-	symbol = 'MMT'
-	owner_addr = None
+	fields = ('decimals','supply','name','symbol','owner_addr')
+	decimals   = ti('18', int, lambda s: s.isdigit() and 0 < int(s) <= 36)
+	name       = ti(None, str, lambda s: s.isascii() and s.isprintable() and len(s) < 256)
+	supply     = ti(None, int, lambda s: s.isdigit() and 0 < int(s) <= 2**256 - 1)
+	symbol     = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) <= 20)
+	owner_addr = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) == 40) # checked separately
 
 token_data = TokenData()
 
@@ -39,10 +41,11 @@ opts_data = {
 		'options': f"""
 -h, --help        Print this help message
 -o, --outdir=D    Specify output directory for *.bin files
--d, --decimals=D  Number of decimals for the token (default: {token_data.decimals})
--n, --name=N      Token name (default: {token_data.name!r})
--t, --supply=T    Total supply of the token (default: {token_data.supply})
--s, --symbol=S    Token symbol (default: {token_data.symbol!r})
+-d, --decimals=D  Number of decimals for the token (default: {token_data.decimals.default})
+-n, --name=N      Token name (REQUIRED)
+-p, --preprocess  Print the preprocessed code to stdout
+-t, --supply=T    Total supply of the token (REQUIRED)
+-s, --symbol=S    Token symbol (REQUIRED)
 -S, --stdout      Output JSON data to stdout instead of files
 -v, --verbose     Produce more verbose output
 -c, --check-solc-version Check the installed solc version
@@ -131,12 +134,12 @@ contract Token is ERC20Interface, Owned, SafeMath {
     mapping(address => mapping(address => uint)) allowed;
 
     constructor() public {
-        symbol = "<SYMBOL>";
-        name = "<NAME>";
-        decimals = <DECIMALS>;
-        _totalSupply = <SUPPLY>;
-        balances[<OWNER_ADDR>] = _totalSupply;
-        emit Transfer(address(0), <OWNER_ADDR>, _totalSupply);
+        symbol = "$symbol";
+        name = "$name";
+        decimals = $decimals;
+        _totalSupply = $supply;
+        balances[$owner_addr] = _totalSupply;
+        emit Transfer(address(0), $owner_addr, _totalSupply);
     }
     function totalSupply() public override returns (uint) {
         return _totalSupply  - balances[address(0)];
@@ -172,13 +175,30 @@ contract Token is ERC20Interface, Owned, SafeMath {
 }
 """ % req_solc_ver_pat
 
-def create_src(code,token_data,owner_addr):
-	token_data.owner_addr = '0x' + owner_addr
-	for k in token_data.attrs:
-		if getattr(opt,k,None):
-			setattr( token_data, k, getattr(opt,k) )
-		code = code.replace( f'<{k.upper()}>', str(getattr(token_data,k)) )
-	return code
+def create_src(proto,template,token_data,owner_addr):
+
+	def gen():
+		for k in token_data.fields:
+			field = getattr(token_data,k)
+			val = (
+				owner_addr     if k == 'owner_addr' else
+				getattr(opt,k) if getattr(opt,k,None) else
+				field.default  if field.default is not None else
+				die(1,f'The --{k} option must be specified')
+			)
+
+			if k == 'owner_addr':
+				from mmgen.obj import is_coin_addr
+				if not is_coin_addr( proto, owner_addr.lower() ):
+					die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
+				val = '0x' + val
+			elif not field.test(val):
+				die(1,f'{val!r}: invalid parameter for option --{k}')
+
+			yield(k,field.conversion(val))
+
+	from string import Template
+	return Template(template).substitute(**dict(gen()))
 
 def check_solc_version():
 	"""
@@ -250,15 +270,12 @@ if __name__ == '__main__':
 	if not len(cmd_args) == 1:
 		opts.usage()
 
-	owner_addr = cmd_args[0]
+	code = create_src( proto, solidity_code_template, token_data, cmd_args[0] )
 
-	from mmgen.obj import is_coin_addr
-	if not is_coin_addr( proto, owner_addr.lower() ):
-		die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
+	if opt.preprocess:
+		Die(0,code)
 
-	out = compile_code(
-		create_src( solidity_code_template, token_data, owner_addr )
-	)
+	out = compile_code(code)
 
 	if opt.stdout:
 		print(json.dumps(out))
