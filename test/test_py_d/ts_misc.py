@@ -123,15 +123,22 @@ class TestSuiteOutput(TestSuiteBase):
 
 	def oneshot_warning(self):
 		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.')
+		t.expect('pw\nwg1')
 		for s in (
 			'foo is experimental',
-			'The bar command is dangerous',
-			'baz variant alpha',
-			'baz variant beta',
-			'foo variant alpha',
-			'foo variant beta',
-			'bar is experimental',
-			'loop', 'loop', 'loop',
+			'wg2', 'The bar command is dangerous',
+			'wg3', 'baz variant alpha',
+			'wg4', 'baz variant beta',
+			'w1', 'foo variant alpha',
+			'w2', 'foo variant beta',
+			'w3', 'bar is experimental',
+			'bottom',
+			"passphrase from file 'A'",
+			"passphrase from file 'B'",
+			'bottom',
+			"passphrase from file 'A'",
+			"passphrase from file 'B'",
+			'bottom',
 		):
 			t.expect(s)
 		return t

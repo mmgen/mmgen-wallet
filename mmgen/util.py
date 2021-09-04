@@ -747,40 +747,42 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 class oneshot_warning:
 
-	def __init__(self,div=None,fmt_args=[]):
-		self.do(type(self),div,fmt_args)
+	color = 'nocolor'
 
-	def do(self,wcls,div,fmt_args):
+	def __init__(self,div=None,fmt_args=[],reverse=False):
+		self.do(type(self),div,fmt_args,reverse)
+
+	def do(self,wcls,div,fmt_args,reverse):
 
 		def do_warning():
 			message = getattr(wcls,'message')
 			color = globals()[getattr(wcls,'color')]
 			msg(color('WARNING: ' + message.format(*fmt_args)))
 
-		flag = 'warning_shown'
+		if not hasattr(wcls,'data'):
+			setattr(wcls,'data',[])
 
-		if not hasattr(wcls,flag):
-			setattr(wcls,flag,[])
+		data = getattr(wcls,'data')
+		condition = (div in data) if reverse else (not div in data)
 
-		attr = getattr(wcls,flag)
+		if not div in data:
+			data.append(div)
 
-		if not div in attr:
+		if condition:
 			do_warning()
-			attr.append(div)
+			self.warning_shown = True
+		else:
+			self.warning_shown = False
 
 class oneshot_warning_group(oneshot_warning):
 
-	def __init__(self,wcls,div=None,fmt_args=[]):
-		self.do(getattr(self,wcls),div,fmt_args)
+	def __init__(self,wcls,div=None,fmt_args=[],reverse=False):
+		self.do(getattr(self,wcls),div,fmt_args,reverse)
 
-passwd_files_used = {}
-
-def pwfile_reuse_warning(passwd_file):
-	if passwd_file in passwd_files_used:
-		qmsg(f'Reusing passphrase from file {passwd_file!r} at user request')
-		return True
-	passwd_files_used[passwd_file] = True
-	return False
+class pwfile_reuse_warning(oneshot_warning):
+	message = 'Reusing passphrase from file {!r} at user request'
+	def __init__(self,fn):
+		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
 def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 

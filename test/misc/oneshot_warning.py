@@ -29,11 +29,25 @@ class wg(oneshot_warning_group):
 		message = 'baz variant {} selected'
 
 for i in (1,2,3):
+
+	msg('\npw')
+	for k in ('A','B'):
+		assert pwfile_reuse_warning(k).warning_shown == (i != 1), 'warning_shown incorrect'
+
+	msg('wg1')
 	wg('foo')
+	msg('wg2')
 	wg('bar',fmt_args=['dangerous','computer'])
+	msg('wg3')
 	wg('baz',div='alpha',fmt_args=['alpha'])
+	msg('wg4')
 	wg('baz',div='beta',fmt_args=['beta'])
+
+	msg('w1')
 	foo(div='alpha',fmt_args=['alpha'])
+	msg('w2')
 	foo(div='beta',fmt_args=['beta'])
+	msg('w3')
 	bar()
-	msg('loop')
+
+	msg('bottom')

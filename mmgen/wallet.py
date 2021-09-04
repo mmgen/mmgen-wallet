@@ -329,7 +329,7 @@ class WalletEnc(Wallet):
 			pw = ' '.join(get_words_from_file(
 				self.passwd_file,
 				desc,
-				quiet = pwfile_reuse_warning(self.passwd_file) ))
+				quiet = pwfile_reuse_warning(self.passwd_file).warning_shown ))
 		else:
 			qmsg('\n'+fmt(self.msg['choose_passphrase'].format(self.desc,self.ssdata.hash_preset),indent='  '))
 			if opt.echo_passphrase:
@@ -362,7 +362,7 @@ class WalletEnc(Wallet):
 			ret = ' '.join(get_words_from_file(
 				self.passwd_file,
 				desc,
-				quiet = pwfile_reuse_warning(self.passwd_file) ))
+				quiet = pwfile_reuse_warning(self.passwd_file).warning_shown ))
 		else:
 			ret = ' '.join(get_words_from_user(f'Enter {desc}: '))
 		self.ssdata.passwd = ret
