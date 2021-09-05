@@ -202,7 +202,7 @@ class TestSuiteInput(TestSuiteBase):
 		if wcls.wclass == 'mnemonic':
 			mn = mn or read_from_file(wf).strip().split()
 		elif wcls.wclass == 'dieroll':
-			mn = mn or list(read_from_file(wf).strip().translate(dict((ord(ws),None) for ws in '\t\n ')))
+			mn = mn or list(remove_whitespace(read_from_file(wf)))
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])

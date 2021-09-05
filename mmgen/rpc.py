@@ -505,7 +505,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	def get_daemon_auth_cookie(self):
 		fn = self.get_daemon_auth_cookie_fn()
-		return get_lines_from_file(fn,'')[0] if file_is_readable(fn) else ''
+		return get_lines_from_file(fn,'')[0] if os.access(fn,os.R_OK) else ''
 
 	@staticmethod
 	def make_host_path(wallet):

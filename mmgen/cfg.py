@@ -83,7 +83,7 @@ class CfgFile(object):
 	def get_lines(self):
 		def gen_lines():
 			for lineno,line in enumerate(self.data,1):
-				line = strip_comments(line)
+				line = strip_comment(line)
 				if line == '':
 					continue
 				m = re.fullmatch(r'(\w+)(\s+)(.*)',line)

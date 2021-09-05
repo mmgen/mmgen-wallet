@@ -394,28 +394,12 @@ def check_int_between(n,lo,hi,desc='value'):
 def match_ext(addr,ext):
 	return addr.split('.')[-1] == ext
 
-def file_exists(f):
-	try:
-		os.stat(f)
-		return True
-	except:
-		return False
-
-def file_is_readable(f):
-	from stat import S_IREAD
-	try:
-		assert os.stat(f).st_mode & S_IREAD
-	except:
-		return False
-	else:
-		return True
-
 def get_from_brain_opt_params():
 	l,p = opt.from_brain.split(',')
 	return(int(l),p)
 
-def remove_whitespace(s):
-	return s.translate(dict((ord(ws),None) for ws in '\t\r\n '))
+def remove_whitespace(s,ws='\t\r\n '):
+	return s.translate(dict((ord(e),None) for e in ws))
 
 def pretty_format(s,width=80,pfx=''):
 	out = []
@@ -455,11 +439,11 @@ def decode_pretty_hexdump(data):
 		msg('Data not in hexdump format')
 		return False
 
-def strip_comments(line):
-	return re.sub(r'\s+$','',re.sub(r'#.*','',line,1))
+def strip_comment(line):
+	return re.sub(r'\s+$','',re.sub(r'#.*','',line))
 
-def remove_comments(lines):
-	return [m for m in [strip_comments(l) for l in lines] if m != '']
+def strip_comments(lines):
+	return [m for m in [strip_comment(l) for l in lines] if m != '']
 
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
@@ -510,15 +494,19 @@ def open_file_or_exit(filename,mode,silent=False):
 
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
-	a = ((os.R_OK,'read'),(os.W_OK,'writ'))
-	access,m = a[ftype in ('output file','output directory')]
+	access,op_desc = (
+		(os.W_OK,'writ') if ftype in ('output file','output directory') else
+		(os.R_OK,'read') )
 
-	ok_types = [
-		(stat.S_ISREG,'regular file'),
-		(stat.S_ISLNK,'symbolic link')
-	]
-	if blkdev_ok: ok_types.append((stat.S_ISBLK,'block device'))
-	if ftype == 'output directory': ok_types = [(stat.S_ISDIR, 'output directory')]
+	if ftype == 'output directory':
+		ok_types = [(stat.S_ISDIR, 'output directory')]
+	else:
+		ok_types = [
+			(stat.S_ISREG,'regular file'),
+			(stat.S_ISLNK,'symbolic link')
+		]
+		if blkdev_ok:
+			ok_types.append((stat.S_ISBLK,'block device'))
 
 	try:
 		mode = os.stat(fname).st_mode
@@ -533,7 +521,7 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 		die(1,f'Requested {ftype} {fname!r} is not a {ok_list}')
 
 	if not os.access(fname,access):
-		die(1,f'Requested {ftype} {fname!r} is not {m}able by you')
+		die(1,f'Requested {ftype} {fname!r} is not {op_desc}able by you')
 
 	return True
 
@@ -645,7 +633,7 @@ def write_data_to_file( outfile,data,desc='data',
 				die(1,f'{capfirst(desc)} not saved')
 
 		hush = False
-		if file_exists(outfile) and ask_overwrite:
+		if os.path.lexists(outfile) and ask_overwrite:
 			confirm_or_raise('',f'File {outfile!r} already exists\nOverwrite?')
 			msg(f'Overwriting file {outfile!r}')
 			hush = True
@@ -719,7 +707,8 @@ def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False):
 	dec = mmgen_decrypt_file_maybe(fn,desc,quiet=quiet,silent=silent)
 	ret = dec.decode().splitlines()
-	if trim_comments: ret = remove_comments(ret)
+	if trim_comments:
+		ret = strip_comments(ret)
 	dmsg(f'Got {len(ret)} lines from file {fn!r}')
 	return ret
 
