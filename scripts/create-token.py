@@ -24,9 +24,9 @@ from mmgen.common import *
 ti = namedtuple('token_param_info',['default','conversion','test'])
 class TokenData:
 	fields = ('decimals','supply','name','symbol','owner_addr')
-	decimals   = ti('18', int, lambda s: s.isdigit() and 0 < int(s) <= 36)
+	decimals   = ti('18', int, lambda s: s.isascii() and s.isdigit() and 0 < int(s) <= 36)
 	name       = ti(None, str, lambda s: s.isascii() and s.isprintable() and len(s) < 256)
-	supply     = ti(None, int, lambda s: s.isdigit() and 0 < int(s) <= 2**256 - 1)
+	supply     = ti(None, int, lambda s: s.isascii() and s.isdigit() and 0 < int(s) <= 2**256 - 1)
 	symbol     = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) <= 20)
 	owner_addr = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) == 40) # checked separately
 
@@ -180,20 +180,19 @@ def create_src(proto,template,token_data,owner_addr):
 	def gen():
 		for k in token_data.fields:
 			field = getattr(token_data,k)
-			val = (
-				owner_addr     if k == 'owner_addr' else
-				getattr(opt,k) if getattr(opt,k,None) else
-				field.default  if field.default is not None else
-				die(1,f'The --{k} option must be specified')
-			)
-
 			if k == 'owner_addr':
 				from mmgen.obj import is_coin_addr
 				if not is_coin_addr( proto, owner_addr.lower() ):
 					die(1,f'{owner_addr}: not a valid {proto.coin} coin address')
-				val = '0x' + val
-			elif not field.test(val):
-				die(1,f'{val!r}: invalid parameter for option --{k}')
+				val = '0x' + owner_addr
+			else:
+				val = (
+					getattr(opt,k) if getattr(opt,k,None) else
+					field.default  if field.default is not None else
+					die(1,f'The --{k} option must be specified')
+				)
+				if not field.test(val):
+					die(1,f'{val!r}: invalid parameter for option --{k}')
 
 			yield(k,field.conversion(val))
 
