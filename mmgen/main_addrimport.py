@@ -118,7 +118,7 @@ def check_opts(tw):
 
 async def import_addr(tw,addr,label,rescan,msg_fmt,msg_args):
 	try:
-		task = asyncio.ensure_future(tw.import_address(addr,label,rescan)) # Python 3.7+: create_task()
+		task = asyncio.create_task(tw.import_address(addr,label,rescan))
 		if rescan:
 			start = time.time()
 			while True:

@@ -927,5 +927,4 @@ def run_session(callback,backend=None):
 		else:
 			return await callback
 
-	# return asyncio.run(do()) # Python 3.7+
-	return asyncio.get_event_loop().run_until_complete(do())
+	return asyncio.run(do())

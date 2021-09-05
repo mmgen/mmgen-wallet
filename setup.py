@@ -21,11 +21,11 @@ from subprocess import run,PIPE
 from shutil import copy2
 
 sys_ver = sys.version_info[:2]
-req_ver = (3,6)
+req_ver = (3,7)
 ver2f = lambda t: float('{}.{:03}'.format(*t))
 
 if ver2f(sys_ver) < ver2f(req_ver):
-	m = '{}.{}: incorrect Python version.  MMGen requires Python {}.{} or greater\n'
+	m = '{}.{}: unsupported Python version.  MMGen requires Python {}.{} or greater\n'
 	sys.stderr.write(m.format(*sys_ver,*req_ver))
 	sys.exit(1)
 
