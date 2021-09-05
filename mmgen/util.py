@@ -362,7 +362,6 @@ def secs_to_hms(secs):
 def secs_to_ms(secs):
 	return '{:02d}:{:02d}'.format(secs//60, secs % 60)
 
-def is_digits(s): return set(list(s)) <= set(list(digits))
 def is_int(s):
 	try:
 		int(str(s))
@@ -372,31 +371,11 @@ def is_int(s):
 
 def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
 def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
-def is_hex_str_uc(s): return set(list(s))         <= set(list(hexdigits.upper()))
 
 def is_utf8(s):
-	return is_ascii(s,enc='utf8')
-def is_ascii(s,enc='ascii'):
-	try:    s.decode(enc)
+	try:    s.decode('utf8')
 	except: return False
 	else:   return True
-
-def check_int_between(n,lo,hi,desc='value'):
-	import re
-	m = re.match(r'-{0,1}[0-9]+',str(n))
-	if m == None:
-		raise NotAnInteger(f'{n}: {desc} must be an integer')
-	n = int(n)
-	if n < lo or n > hi:
-		raise IntegerOutOfRange(f'{n}: {desc} must be between {lo} and {hi}')
-	return n
-
-def match_ext(addr,ext):
-	return addr.split('.')[-1] == ext
-
-def get_from_brain_opt_params():
-	l,p = opt.from_brain.split(',')
-	return(int(l),p)
 
 def remove_whitespace(s,ws='\t\r\n '):
 	return s.translate(dict((ord(e),None) for e in ws))
