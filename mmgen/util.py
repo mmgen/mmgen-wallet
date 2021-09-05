@@ -465,7 +465,7 @@ def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
 		return g.hash_presets[hash_preset] # N,p,r,buflen
 	else: # Shouldn't be here
-		die(3,"{}: invalid 'hash_preset' value".format(hash_preset))
+		die(3,f"{hash_preset}: invalid 'hash_preset' value")
 
 def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
 
@@ -478,13 +478,13 @@ def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False
 			vmsg(m,force=verbose)
 			return False
 
-	vmsg('{} checksum OK ({})'.format(capfirst(desc1),chk1))
+	vmsg(f'{capfirst(desc1)} checksum OK ({chk1})')
 	return True
 
 def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 	if val1 != val2:
-		die(3,"{}: {} ({}) doesn't match {} ({})".format(e,desc2,val2,desc1,val1))
-	dmsg('{} OK ({})'.format(capfirst(desc2),val2))
+		die(3,f"{e}: {desc2} ({val2}) doesn't match {desc1} ({val1})")
+	dmsg(f'{capfirst(desc2)} OK ({val2})')
 	return True
 
 def check_binary(args):
@@ -506,7 +506,7 @@ def open_file_or_exit(filename,mode,silent=False):
 		return open(filename, mode)
 	except:
 		op = ('writing','reading')['r' in mode]
-		die(2,("Unable to open file '{}' for {}".format(filename,op),'')[silent])
+		die(2,'' if silent else f'Unable to open file {filename!r} for {op}')
 
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
@@ -520,17 +520,20 @@ def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 	if blkdev_ok: ok_types.append((stat.S_ISBLK,'block device'))
 	if ftype == 'output directory': ok_types = [(stat.S_ISDIR, 'output directory')]
 
-	try: mode = os.stat(fname).st_mode
+	try:
+		mode = os.stat(fname).st_mode
 	except:
-		raise FileNotFound("Requested {} '{}' not found".format(ftype,fname))
+		raise FileNotFound(f'Requested {ftype} {fname!r} not found')
 
 	for t in ok_types:
-		if t[0](mode): break
+		if t[0](mode):
+			break
 	else:
-		die(1,"Requested {} '{}' is not a {}".format(ftype,fname,' or '.join([t[1] for t in ok_types])))
+		ok_list = ' or '.join( t[1] for t in ok_types )
+		die(1,f'Requested {ftype} {fname!r} is not a {ok_list}')
 
-	if not os.access(fname, access):
-		die(1,"Requested {} '{}' is not {}able by you".format(ftype,fname,m))
+	if not os.access(fname,access):
+		die(1,f'Requested {ftype} {fname!r} is not {m}able by you')
 
 	return True
 
@@ -543,7 +546,7 @@ def check_outdir(f):
 def check_wallet_extension(fn):
 	from .wallet import Wallet
 	if not Wallet.ext_to_type(get_extension(fn)):
-		raise BadFileExtension("'{}': unrecognized seed source file extension".format(fn))
+		raise BadFileExtension(f'{fn!r}: unrecognized seed source file extension')
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 
@@ -571,10 +574,10 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 	return cmd_args[0] if cmd_args else (wf,None)[wd_from_opt]
 
 def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
-	m = message.strip()
-	if m: msg(m)
-	a = q+'  ' if q[0].isupper() else 'Are you sure you want to {}?\n'.format(q)
-	b = "Type uppercase '{}' to confirm: ".format(expect)
+	if message.strip():
+		msg(message.strip())
+	a = f'{q}  ' if q[0].isupper() else f'Are you sure you want to {q}?\n'
+	b = f'Type uppercase {expect!r} to confirm: '
 	if my_raw_input(a+b).strip() != expect:
 		raise UserNonConfirmation(exit_msg)
 
@@ -601,22 +604,22 @@ def write_data_to_file( outfile,data,desc='data',
 		qmsg('Output to STDOUT requested')
 		if g.stdin_tty:
 			if no_tty:
-				die(2,'Printing {} to screen is not allowed'.format(desc))
+				die(2,f'Printing {desc} to screen is not allowed')
 			if (ask_tty and not opt.quiet) or binary:
-				confirm_or_raise('','output {} to screen'.format(desc))
+				confirm_or_raise('',f'output {desc} to screen')
 		else:
-			try:    of = os.readlink('/proc/{}/fd/1'.format(os.getpid())) # Linux
+			try:    of = os.readlink(f'/proc/{os.getpid()}/fd/1') # Linux
 			except: of = None # Windows
 
 			if of:
 				if of[:5] == 'pipe:':
 					if no_tty:
-						die(2,'Writing {} to pipe is not allowed'.format(desc))
+						die(2,f'Writing {desc} to pipe is not allowed')
 					if ask_tty and not opt.quiet:
-						confirm_or_raise('','output {} to pipe'.format(desc))
+						confirm_or_raise('',f'output {desc} to pipe')
 						msg('')
 				of2,pd = os.path.relpath(of),os.path.pardir
-				msg("Redirecting output to file '{}'".format((of2,of)[of2[:len(pd)] == pd]))
+				msg('Redirecting output to file {!r}'.format(of if of2[:len(pd)] == pd else of2))
 			else:
 				msg('Redirecting output to file')
 
@@ -635,16 +638,16 @@ def write_data_to_file( outfile,data,desc='data',
 			outfile = make_full_path(opt.outdir,outfile)
 
 		if ask_write:
-			if not ask_write_prompt: ask_write_prompt = 'Save {}?'.format(desc)
+			if not ask_write_prompt:
+				ask_write_prompt = f'Save {desc}?'
 			if not keypress_confirm(ask_write_prompt,
 						default_yes=ask_write_default_yes):
-				die(1,'{} not saved'.format(capfirst(desc)))
+				die(1,f'{capfirst(desc)} not saved')
 
 		hush = False
 		if file_exists(outfile) and ask_overwrite:
-			q = "File '{}' already exists\nOverwrite?".format(outfile)
-			confirm_or_raise('',q)
-			msg("Overwriting file '{}'".format(outfile))
+			confirm_or_raise('',f'File {outfile!r} already exists\nOverwrite?')
+			msg(f'Overwriting file {outfile!r}')
 			hush = True
 
 		# not atomic, but better than nothing
@@ -658,8 +661,7 @@ def write_data_to_file( outfile,data,desc='data',
 				if d != cmp_data:
 					if g.test_suite:
 						print_diff(cmp_data,d)
-					m = "{} in file '{}' has been altered by some other program!  Aborting file write"
-					die(3,m.format(desc,outfile))
+					die(3,f'{desc} in file {outfile!r} has been altered by some other program! Aborting file write')
 
 		# To maintain portability, always open files in binary mode
 		# If 'binary' option not set, encode/decode data before writing and after reading
@@ -668,11 +670,11 @@ def write_data_to_file( outfile,data,desc='data',
 		try:
 			f.write(data if binary else data.encode())
 		except:
-			die(2,"Failed to write {} to file '{}'".format(desc,outfile))
+			die(2,f'Failed to write {desc} to file {outfile!r}')
 		f.close
 
 		if not (hush or quiet):
-			msg("{} written to file '{}'".format(capfirst(desc),outfile))
+			msg(f'{capfirst(desc)} written to file {outfile!r}')
 
 		return True
 
@@ -690,10 +692,10 @@ def get_words_from_user(prompt):
 
 def get_words_from_file(infile,desc,quiet=False):
 	if not quiet:
-		qmsg("Getting {} from file '{}'".format(desc,infile))
+		qmsg(f'Getting {desc} from file {infile!r}')
 	f = open_file_or_exit(infile, 'rb')
 	try: words = f.read().decode().split()
-	except: die(1,'{} data must be UTF-8 encoded.'.format(capfirst(desc)))
+	except: die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
 	f.close()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
@@ -709,7 +711,7 @@ def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 	have_enc_ext = get_extension(fn) == g.mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
-		qmsg("{} {} '{}'".format(m,desc,fn))
+		qmsg(f'{m} {desc} {fn!r}')
 		from .crypto import mmgen_decrypt_retry
 		d = mmgen_decrypt_retry(d,desc)
 	return d
@@ -718,19 +720,19 @@ def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False)
 	dec = mmgen_decrypt_file_maybe(fn,desc,quiet=quiet,silent=silent)
 	ret = dec.decode().splitlines()
 	if trim_comments: ret = remove_comments(ret)
-	dmsg("Got {} lines from file '{}'".format(len(ret),fn))
+	dmsg(f'Got {len(ret)} lines from file {fn!r}')
 	return ret
 
 def get_data_from_user(desc='data'): # user input MUST be UTF-8
-	p = ('','Enter {}: '.format(desc))[g.stdin_tty]
+	p = f'Enter {desc}: ' if g.stdin_tty else ''
 	data = my_raw_input(p,echo=opt.echo_passphrase)
-	dmsg('User input: [{}]'.format(data))
+	dmsg(f'User input: [{data}]')
 	return data
 
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,quiet=False):
 
 	if not opt.quiet and not silent and not quiet and desc:
-		qmsg("Getting {} from file '{}'".format(desc,infile))
+		qmsg(f'Getting {desc} from file {infile!r}')
 
 	if dash and infile == '-':
 		data = os.fdopen(0,'rb').read(g.max_input_size+1)
@@ -741,7 +743,7 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 		data = data.decode()
 
 	if len(data) == g.max_input_size + 1:
-		raise MaxInputSizeExceeded('Too much input data!  Max input data size: {} bytes'.format(g.max_input_size))
+		raise MaxInputSizeExceeded(f'Too much input data!  Max input data size: {f.max_input_size} bytes')
 
 	return data
 
@@ -872,12 +874,11 @@ def do_license_msg(immed=False):
 	if opt.quiet or g.no_license or opt.yes or not g.stdin_tty:
 		return
 
-	p = "Press 'w' for conditions and warranty info, or 'c' to continue:"
 	import mmgen.license as gpl
 	msg(gpl.warning)
-	prompt = '{} '.format(p.strip())
 
 	from .term import get_char
+	prompt = "Press 'w' for conditions and warranty info, or 'c' to continue: "
 	while True:
 		reply = get_char(prompt, immed_chars=('','wc')[bool(immed)])
 		if reply == 'w':
@@ -936,8 +937,10 @@ def altcoin_subclass(cls,proto,mod_dir):
 def write_mode(orig_func):
 	def f(self,*args,**kwargs):
 		if self.mode != 'w':
-			m = '{} opened in read-only mode: cannot execute method {}()'
-			die(1,m.format(type(self).__name__,locals()['orig_func'].__name__))
+			die(1,'{} opened in read-only mode: cannot execute method {}()'.format(
+				type(self).__name__,
+				locals()['orig_func'].__name__
+			))
 		return orig_func(self,*args,**kwargs)
 	return f
 
