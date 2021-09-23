@@ -26,7 +26,7 @@ class TokenData:
 	fields = ('decimals','supply','name','symbol','owner_addr')
 	decimals   = ti('18', int, lambda s: s.isascii() and s.isdigit() and 0 < int(s) <= 36)
 	name       = ti(None, str, lambda s: s.isascii() and s.isprintable() and len(s) < 256)
-	supply     = ti(None, int, lambda s: s.isascii() and s.isdigit() and 0 < int(s) <= 2**256 - 1)
+	supply     = ti(None, int, lambda s: s.isascii() and s.isdigit() and 0 < int(s) < 2**256)
 	symbol     = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) <= 20)
 	owner_addr = ti(None, str, lambda s: s.isascii() and s.isalnum() and len(s) == 40) # checked separately
 

@@ -40,7 +40,6 @@ class CfgFile(object):
 	warn_missing = True
 	write_metadata = False
 	fn_base = g.proj_name.lower() + '.cfg'
-	file_not_found_fs = 'WARNING: {} not found at {!r}'
 	line_data = namedtuple('cfgfile_line',['name','value','lineno','chunk'])
 
 	class warn_missing_file(oneshot_warning):
@@ -99,7 +98,6 @@ class CfgFile(object):
 			'usr':    CfgFileUsr,
 			'sys':    CfgFileSampleSys,
 			'sample': CfgFileSampleUsr,
-			'dist':   CfgFileSampleDist,
 		}
 		return d[id_str]
 
@@ -178,10 +176,6 @@ class CfgFileUsr(CfgFile):
 		super().__init__()
 		if not self.data:
 			self.copy_data()
-
-class CfgFileSampleDist(CfgFileSample):
-	desc = 'source distribution configuration file'
-	fn_dir = 'data_files'
 
 class CfgFileSampleSys(CfgFileSample):
 	desc = 'system sample configuration file'
