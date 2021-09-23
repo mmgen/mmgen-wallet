@@ -46,8 +46,6 @@ class GlobalContext(Lockable):
 	_use_class_attr = True
 
 	# Constants:
-	version      = '0.12.199'
-	release_date = 'February 2021'
 
 	proj_name = 'MMGen'
 	proj_url  = 'https://github.com/mmgen/mmgen'
@@ -55,7 +53,15 @@ class GlobalContext(Lockable):
 	author    = 'The MMGen Project'
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2021'
-	keywords  = 'Bitcoin, BTC, Ethereum, ETH, Monero, XMR, ERC20, cryptocurrency, wallet, BIP32, cold storage, offline, online, spending, open-source, command-line, Python, Linux, Bitcoin Core, bitcoind, hd, deterministic, hierarchical, secure, anonymous, Electrum, seed, mnemonic, brainwallet, Scrypt, utility, script, scriptable, blockchain, raw, transaction, permissionless, console, terminal, curses, ansi, color, tmux, remote, client, daemon, RPC, json, entropy, xterm, rxvt, PowerShell, MSYS, MSYS2, MinGW, MinGW64, MSWin, Armbian, Raspbian, Raspberry Pi, Orange Pi, BCash, BCH, Litecoin, LTC, altcoin, ZEC, Zcash, DASH, Dashpay, SHA256Compress, monerod, EMC, Emercoin, token, deploy, contract, gas, fee, smart contract, solidity, Parity, OpenEthereum, testnet, devmode, Kovan'
+
+	try:
+		from importlib.resources import files # Python 3.9
+	except ImportError:
+		from importlib_resources import files
+
+	version      = files('mmgen').joinpath('data','version').read_text().strip()
+	release_date = files('mmgen').joinpath('data','release_date').read_text().strip()
+
 	max_int   = 0xffffffff
 
 	stdin_tty = sys.stdin.isatty()
