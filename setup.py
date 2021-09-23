@@ -66,12 +66,6 @@ def link_or_copy(tdir,a,b):
 	copy_owner(a,b)
 	os.chdir(cwd)
 
-class my_install(install):
-	def run(self):
-		for f in 'mmgen.cfg','mnemonic.py','mn_wordlist.c':
-			os.chmod(os.path.join('data_files',f),0o644) # required if user has non-standard umask
-		install.run(self)
-
 class my_build_py(build_py):
 	def run(self):
 		link_or_copy('test','start-coin-daemons.py','stop-coin-daemons.py')
@@ -100,19 +94,12 @@ setup(
 		platforms    = 'Linux, Debian, Ubuntu, Arch Linux, MS Windows, Raspberry Pi/Raspbian, Orange Pi/Armbian, Rock Pi/Armbian',
 		keywords     = g.keywords,
 		cmdclass     = {
-			'install': my_install,
 			'build_py': my_build_py,
 			'build_ext': my_build_ext,
 		},
 		ext_modules  = [module1],
-		# TODO:
-		# https://setuptools.readthedocs.io/en/latest/references/keywords.html:
-		#   data_files is deprecated. It does not work with wheels, so it should be avoided.
-		data_files = [('share/mmgen', [
-				'data_files/mmgen.cfg',     # source files must have 0644 mode
-				'data_files/mn_wordlist.c',
-				'data_files/mnemonic.py'
-				]),],
+		packages = ['mmgen'],
+		include_package_data = True,
 		py_modules = [
 			'mmgen.__init__',
 			'mmgen.addr',

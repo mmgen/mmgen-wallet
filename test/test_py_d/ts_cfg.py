@@ -24,7 +24,6 @@ class TestSuiteCfg(TestSuiteBase):
 	color = True
 
 	cmd_group = (
-		('nosysfile',          (40,'init with missing system cfg sample file', [])),
 		('sysfile',            (40,'init with system cfg sample file in place', [])),
 		('no_metadata_sample', (40,'init with unversioned cfg sample file', [])),
 		('altered_sample',     (40,'init with user-modified cfg sample file', [])),
@@ -55,16 +54,6 @@ class TestSuiteCfg(TestSuiteBase):
 			'sys':         '{}/data_dir/{}/mmgen.cfg'.format(self.tmpdir,CfgFileSampleSys.test_fn_subdir),
 			'sample':      '{}/data_dir/mmgen.cfg.sample'.format(self.tmpdir),
 		}[id_str]
-
-	def nosysfile(self):
-		t = self.spawn_test()
-		errstr = CfgFile.file_not_found_fs.format(CfgFileSampleSys.desc,self.path('shared_data')+'/mmgen.cfg')
-		t.expect(errstr)
-		for k in ('usr','sys','sample'):
-			t.expect('{} cfg file:\s+{}'.format(capfirst(k),self.path(k)),regex=True)
-			assert not os.path.exists(self.path(k)), self.path(k)
-		t.read()
-		return t
 
 	def copy_sys_sample(self):
 		os.makedirs(self.path('shared_data'),exist_ok=True)

@@ -187,12 +187,24 @@ class CfgFileSampleSys(CfgFileSample):
 	desc = 'system sample configuration file'
 	test_fn_subdir = 'usr.local.share'
 
-	@property
-	def fn_dir(self):
+	def __init__(self):
 		if os.getenv('MMGEN_TEST_SUITE_CFGTEST'):
-			return os.path.join(g.data_dir_root,self.test_fn_subdir)
+			self.fn = os.path.join(g.data_dir_root,self.test_fn_subdir,self.fn_base)
+			self.data = open(self.fn).read().splitlines()
 		else:
-			return g.shared_data_path
+			# self.fn is used for error msgs only, so file need not exist on filesystem
+			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)
+			# Resource will be unpacked and then cleaned up if necessary, see:
+			#    https://docs.python.org/3/library/importlib.html:
+			#        Note: This module provides functionality similar to pkg_resources Basic
+			#        Resource Access without the performance overhead of that package.
+			#    https://importlib-resources.readthedocs.io/en/latest/migration.html
+			#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
+			try:
+				from importlib.resources import files # Python 3.9
+			except ImportError:
+				from importlib_resources import files
+			self.data = files('mmgen').joinpath('data',self.fn_base).read_text().splitlines()
 
 	def make_metadata(self):
 		return ['# Version {} {}'.format(self.cur_ver,self.computed_chksum)]

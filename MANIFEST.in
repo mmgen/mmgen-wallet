@@ -1,3 +1,5 @@
+include mmgen/data/*
+
 include README.md SIGNING_KEYS.pub LICENSE INSTALL
 include doc/wiki/using-mmgen/*
 
