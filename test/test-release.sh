@@ -35,10 +35,10 @@ mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 
-dfl_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
-extra_tests='autosign_btc autosign_live etc ltc_tn bch_tn'
-noalt_tests='misc obj color unit hash ref autosign_btc btc btc_tn btc_rt tool tool2 gen'
-quick_tests='misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
+dfl_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
+extra_tests='dep autosign_btc autosign_live etc ltc_tn bch_tn'
+noalt_tests='dep misc obj color unit hash ref autosign_btc btc btc_tn btc_rt tool tool2 gen'
+quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
@@ -248,9 +248,14 @@ s_color='Testing terminal colors'
 t_color="- $colortest_py"
 f_color='Terminal color tests completed'
 
+i_dep='Dependency'
+s_dep='Testing for installed dependencies'
+t_dep="- $unit_tests_py dep"
+f_dep='Dependency tests completed'
+
 i_unit='Unit'
 s_unit='The bitcoin and bitcoin-bchn mainnet daemons must be running for the following tests'
-t_unit="- $unit_tests_py"
+t_unit="- $unit_tests_py --exclude dep"
 f_unit='Unit tests completed'
 
 i_hash='Internal hash function implementations'
