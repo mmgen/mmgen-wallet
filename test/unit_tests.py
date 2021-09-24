@@ -39,6 +39,7 @@ opts_data = {
 -l, --list                List available tests
 -n, --names               Print command names instead of descriptions
 -q, --quiet               Produce quieter output
+-x, --exclude=T           Exclude tests 'T' (comma-separated)
 -v, --verbose             Produce more verbose output
 """,
 	'notes': """
@@ -58,6 +59,12 @@ def exit_msg():
 
 all_tests = sorted(
 	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
+
+exclude = opt.exclude.split(',') if opt.exclude else []
+
+for e in exclude:
+	if e not in all_tests:
+		die(1,f'{e!r}: invalid parameter for --exclude (no such test)')
 
 start_time = int(time.time())
 
@@ -123,7 +130,8 @@ try:
 			subtest = None
 		if test not in all_tests:
 			die(1,f'{test!r}: test not recognized')
-		run_test(test,subtest=subtest)
+		if test not in exclude:
+			run_test(test,subtest=subtest)
 	exit_msg()
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))
