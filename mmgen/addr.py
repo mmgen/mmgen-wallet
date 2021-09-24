@@ -251,29 +251,16 @@ class KeyGenerator(MMGenObject):
 				ymsg(str(e))
 			return False
 
-import ecdsa
 class KeyGeneratorPython(KeyGenerator):
 
 	desc = 'mmgen-python-ecdsa'
-
-	def __init__(self,*args,**kwargs):
-		# secp256k1: http://www.oid-info.com/get/1.3.132.0.10
-		p = 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f
-		r = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
-		b = 0x0000000000000000000000000000000000000000000000000000000000000007
-		a = 0x0000000000000000000000000000000000000000000000000000000000000000
-		Gx = 0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798
-		Gy = 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8
-		curve_fp = ecdsa.ellipticcurve.CurveFp(p,a,b)
-		G = ecdsa.ellipticcurve.Point(curve_fp,Gx,Gy,r)
-		oid = (1,3,132,0,10)
-		self.secp256k1 = ecdsa.curves.Curve('secp256k1',curve_fp,G,oid)
 
 	# devdoc/guide_wallets.md:
 	# Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
 	# 0x02 depending on whether they're greater or less than the midpoint of the curve.
 	def privnum2pubhex(self,numpriv,compressed=False):
-		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self.secp256k1)
+		import ecdsa
+		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,curve=ecdsa.SECP256k1)
 		# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
 		pubkey = pko.get_verifying_key().to_string().hex()
 		if compressed: # discard Y coord, replace with appropriate version byte
