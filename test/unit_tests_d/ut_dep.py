@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-test.unit_tests_d.ut_rpc: dependency unit tests for the MMGen suite
+test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
+
+  Test whether dependencies are installed and functional.
+  No data verification is performed.
 """
 
 from mmgen.common import *

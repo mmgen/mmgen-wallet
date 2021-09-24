@@ -275,7 +275,7 @@ class KeyGeneratorPython(KeyGenerator):
 	def privnum2pubhex(self,numpriv,compressed=False):
 		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,self.secp256k1)
 		# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-		pubkey = (pko.get_verifying_key().to_string()).hex()
+		pubkey = pko.get_verifying_key().to_string().hex()
 		if compressed: # discard Y coord, replace with appropriate version byte
 			# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
 			return ('03','02')[pubkey[-1] in '02468ace'] + pubkey[:64]

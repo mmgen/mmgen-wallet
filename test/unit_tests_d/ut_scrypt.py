@@ -35,7 +35,7 @@ class unit_test(object):
 					if opt.quiet:
 						omsg_r('.')
 					else:
-						msg_r('  password {:9} '.format(pw_disp))
+						msg_r('\n  password {:9} '.format(pw_disp))
 					ret = scrypt_hash_passphrase(pw,salt,'1').hex()
 					assert ret == res, ret
 
@@ -48,14 +48,15 @@ class unit_test(object):
 				if opt.quiet:
 					omsg_r('.')
 				else:
-					msg_r('  {!r:3}: {!r:12}  '.format(hp,g.hash_presets[hp]))
+					msg_r('\n  {!r:3}: {!r:12}  '.format(hp,g.hash_presets[hp]))
 				st = time.time()
 				ret = scrypt_hash_passphrase(pw,salt,hp).hex()
 				t = time.time() - st
 				vmsg('  {:0.4f} secs'.format(t))
 				assert ret == res, ret
 
-		if opt.quiet: silence()
+		if opt.quiet:
+			silence()
 
 		g.force_standalone_scrypt_module = False
 		vmsg('Passwords:')
@@ -69,7 +70,8 @@ class unit_test(object):
 		vmsg('Hash presets (standalone scrypt):')
 		test_presets((1,2,3))
 
-		if opt.quiet: end_silence()
+		if opt.quiet:
+			end_silence()
 
 		msg('OK')
 		return True

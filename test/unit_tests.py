@@ -20,7 +20,7 @@
 test/unit_tests.py:  Unit tests for the MMGen suite
 """
 
-import sys,os,time
+import sys,os,time,importlib
 
 from include.tests_header import repo_root
 from mmgen.common import *
@@ -116,7 +116,6 @@ def run_test(test,subtest=None):
 				rdie(1,'Unit test {test!r} failed')
 
 try:
-	import importlib
 	for test in (cmd_args or all_tests):
 		if '.' in test:
 			test,subtest = test.split('.')
