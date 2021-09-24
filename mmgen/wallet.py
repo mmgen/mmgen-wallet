@@ -815,7 +815,7 @@ class MMGenWallet(WalletEnc):
 		if opt.hash_preset and opt.hash_preset != hp:
 			qmsg('Warning: ignoring user-requested hash preset {opt.hash_preset}')
 
-		hash_params = list(map(int,hpdata[1:]))
+		hash_params = tuple(map(int,hpdata[1:]))
 
 		if hash_params != get_hash_params(d.hash_preset):
 			msg(f"Hash parameters {' '.join(hash_params)!r} don't match hash preset {d.hash_preset!r}")

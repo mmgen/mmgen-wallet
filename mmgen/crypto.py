@@ -96,26 +96,39 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 
 	# Buflen arg is for brainwallets only, which use this function to generate
 	# the seed directly.
-	N,r,p = get_hash_params(hash_preset)
-	if isinstance(passwd,str): passwd = passwd.encode()
+	ps = get_hash_params(hash_preset)
+
+	if isinstance(passwd,str):
+		passwd = passwd.encode()
 
 	def do_hashlib_scrypt():
-		from hashlib import scrypt # Python >= v3.6
-		return scrypt(passwd,salt=salt,n=2**N,r=r,p=p,maxmem=0,dklen=buflen)
+		from hashlib import scrypt
+		return scrypt(
+			password = passwd,
+			salt     = salt,
+			n        = 2**ps.N,
+			r        = ps.r,
+			p        = ps.p,
+			maxmem   = 0,
+			dklen    = buflen )
 
 	def do_standalone_scrypt():
 		import scrypt
-		return scrypt.hash(passwd,salt,2**N,r,p,buflen=buflen)
+		return scrypt.hash(
+			password = passwd,
+			salt     = salt,
+			N        = 2**ps.N,
+			r        = ps.r,
+			p        = ps.p,
+			buflen   = buflen )
 
 	if int(hash_preset) > 3:
 		msg_r('Hashing passphrase, please wait...')
 
-	# hashlib.scrypt doesn't support N > 14 (hash preset 3)
-	if N > 14 or g.force_standalone_scrypt_module:
-		ret = do_standalone_scrypt()
-	else:
-		try: ret = do_hashlib_scrypt()
-		except: ret = do_standalone_scrypt()
+	# hashlib.scrypt doesn't support N > 14 (hash preset > 3)
+	ret = (
+		do_standalone_scrypt() if ps.N > 14 or g.force_standalone_scrypt_module else
+		do_hashlib_scrypt() )
 
 	if int(hash_preset) > 3:
 		msg_r('\b'*34 + ' '*34 + '\b'*34)

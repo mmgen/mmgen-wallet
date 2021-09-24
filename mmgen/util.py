@@ -426,7 +426,7 @@ def strip_comments(lines):
 
 def get_hash_params(hash_preset):
 	if hash_preset in g.hash_presets:
-		return g.hash_presets[hash_preset] # N,p,r,buflen
+		return g.hash_presets[hash_preset] # N,r,p
 	else: # Shouldn't be here
 		die(3,f"{hash_preset}: invalid 'hash_preset' value")
 
