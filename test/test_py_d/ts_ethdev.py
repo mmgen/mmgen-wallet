@@ -144,167 +144,167 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	tmpdir_nums = [22]
 	color = True
 	cmd_group = (
-		('setup',               'dev mode tests for coin {} (start daemon)'.format(coin)),
-		('daemon_version',      'mmgen-tool daemon_version'),
-		('wallet_upgrade1',     'upgrading the tracking wallet (v1 -> v2)'),
-		('wallet_upgrade2',     'upgrading the tracking wallet (v2 -> v3)'),
-		('addrgen',             'generating addresses'),
-		('addrimport',          'importing addresses'),
-		('addrimport_dev_addr', "importing dev faucet address 'Ox00a329c..'"),
+		('setup',                          f'dev mode tests for coin {coin} (start daemon)'),
+		('daemon_version',                  'mmgen-tool daemon_version'),
+		('wallet_upgrade1',                 'upgrading the tracking wallet (v1 -> v2)'),
+		('wallet_upgrade2',                 'upgrading the tracking wallet (v2 -> v3)'),
+		('addrgen',                         'generating addresses'),
+		('addrimport',                      'importing addresses'),
+		('addrimport_dev_addr',             "importing dev faucet address 'Ox00a329c..'"),
 
-		('txcreate1',           'creating a transaction (spend from dev address to address :1)'),
-		('txview1_raw',         'viewing the raw transaction'),
-		('txsign1',             'signing the transaction'),
-		('txview1_sig',         'viewing the signed transaction'),
-		('tx_status0_bad',      'getting the transaction status'),
-		('txsign1_ni',          'signing the transaction (non-interactive)'),
-		('txsend1',             'sending the transaction'),
-		('bal1',                'the {} balance'.format(coin)),
+		('txcreate1',                       'creating a transaction (spend from dev address to address :1)'),
+		('txview1_raw',                     'viewing the raw transaction'),
+		('txsign1',                         'signing the transaction'),
+		('txview1_sig',                     'viewing the signed transaction'),
+		('tx_status0_bad',                  'getting the transaction status'),
+		('txsign1_ni',                      'signing the transaction (non-interactive)'),
+		('txsend1',                         'sending the transaction'),
+		('bal1',                           f'the {coin} balance'),
 
-		('txcreate2',           'creating a transaction (spend from dev address to address :11)'),
-		('txsign2',             'signing the transaction'),
-		('txsend2',             'sending the transaction'),
-		('bal2',                'the {} balance'.format(coin)),
+		('txcreate2',                       'creating a transaction (spend from dev address to address :11)'),
+		('txsign2',                         'signing the transaction'),
+		('txsend2',                         'sending the transaction'),
+		('bal2',                           f'the {coin} balance'),
 
-		('txcreate3',           'creating a transaction (spend from dev address to address :21)'),
-		('txsign3',             'signing the transaction'),
-		('txsend3',             'sending the transaction'),
-		('bal3',                'the {} balance'.format(coin)),
+		('txcreate3',                       'creating a transaction (spend from dev address to address :21)'),
+		('txsign3',                         'signing the transaction'),
+		('txsend3',                         'sending the transaction'),
+		('bal3',                           f'the {coin} balance'),
 
-		('tx_status1',          'getting the transaction status'),
+		('tx_status1',                      'getting the transaction status'),
 
-		('txcreate4',           'creating a transaction (spend from MMGen address, low TX fee)'),
-		('txbump',              'bumping the transaction fee'),
+		('txcreate4',                       'creating a transaction (spend from MMGen address, low TX fee)'),
+		('txbump',                          'bumping the transaction fee'),
 
-		('txsign4',             'signing the transaction'),
-		('txsend4',             'sending the transaction'),
-		('tx_status1a',         'getting the transaction status'),
-		('bal4',                'the {} balance'.format(coin)),
+		('txsign4',                         'signing the transaction'),
+		('txsend4',                         'sending the transaction'),
+		('tx_status1a',                     'getting the transaction status'),
+		('bal4',                           f'the {coin} balance'),
 
-		('txcreate5',           'creating a transaction (fund burn address)'),
-		('txsign5',             'signing the transaction'),
-		('txsend5',             'sending the transaction'),
+		('txcreate5',                       'creating a transaction (fund burn address)'),
+		('txsign5',                         'signing the transaction'),
+		('txsend5',                         'sending the transaction'),
 
-		('addrimport_burn_addr',"importing burn address"),
-		('bal5',                'the {} balance'.format(coin)),
+		('addrimport_burn_addr',            'importing burn address'),
+		('bal5',                           f'the {coin} balance'),
 
-		('add_label1',          'adding a UTF-8 label (zh)'),
-		('chk_label1',          'the label'),
-		('add_label2',          'adding a UTF-8 label (lat+cyr+gr)'),
-		('chk_label2',          'the label'),
-		('remove_label',        'removing the label'),
+		('add_label1',                      'adding a UTF-8 label (zh)'),
+		('chk_label1',                      'the label'),
+		('add_label2',                      'adding a UTF-8 label (lat+cyr+gr)'),
+		('chk_label2',                      'the label'),
+		('remove_label',                    'removing the label'),
 
-		('token_compile1',       'compiling ERC20 token #1'),
+		('token_compile1',                  'compiling ERC20 token #1'),
 
-		('token_deploy1a',       'deploying ERC20 token #1 (SafeMath)'),
-		('token_deploy1b',       'deploying ERC20 token #1 (Owned)'),
-		('token_deploy1c',       'deploying ERC20 token #1 (Token)'),
+		('token_deploy1a',                  'deploying ERC20 token #1 (SafeMath)'),
+		('token_deploy1b',                  'deploying ERC20 token #1 (Owned)'),
+		('token_deploy1c',                  'deploying ERC20 token #1 (Token)'),
 
-		('tx_status2',           'getting the transaction status'),
-		('bal6',                 'the {} balance'.format(coin)),
+		('tx_status2',                      'getting the transaction status'),
+		('bal6',                           f'the {coin} balance'),
 
-		('token_compile2',       'compiling ERC20 token #2'),
+		('token_compile2',                  'compiling ERC20 token #2'),
 
-		('token_deploy2a',       'deploying ERC20 token #2 (SafeMath)'),
-		('token_deploy2b',       'deploying ERC20 token #2 (Owned)'),
-		('token_deploy2c',       'deploying ERC20 token #2 (Token)'),
+		('token_deploy2a',                  'deploying ERC20 token #2 (SafeMath)'),
+		('token_deploy2b',                  'deploying ERC20 token #2 (Owned)'),
+		('token_deploy2c',                  'deploying ERC20 token #2 (Token)'),
 
-		('contract_deploy',      'deploying contract (create,sign,send)'),
+		('contract_deploy',                 'deploying contract (create,sign,send)'),
 
-		('token_fund_users',     'transferring token funds from dev to user'),
-		('token_user_bals',      'show balances after transfer'),
-		('token_addrgen',        'generating token addresses'),
-		('token_addrimport_badaddr1','importing token addresses (no token address)'),
-		('token_addrimport_badaddr2','importing token addresses (bad token address)'),
-		('token_addrimport_addr1','importing token addresses using token address (MM1)'),
-		('token_addrimport_addr2','importing token addresses using token address (MM2)'),
-		('token_addrimport_batch','importing token addresses (dummy batch mode) (MM1)'),
-		('token_addrimport_sym',  'importing token addresses using token symbol (MM2)'),
+		('token_fund_users',                'transferring token funds from dev to user'),
+		('token_user_bals',                 'show balances after transfer'),
+		('token_addrgen',                   'generating token addresses'),
+		('token_addrimport_badaddr1',       'importing token addresses (no token address)'),
+		('token_addrimport_badaddr2',       'importing token addresses (bad token address)'),
+		('token_addrimport_addr1',          'importing token addresses using token address (MM1)'),
+		('token_addrimport_addr2',          'importing token addresses using token address (MM2)'),
+		('token_addrimport_batch',          'importing token addresses (dummy batch mode) (MM1)'),
+		('token_addrimport_sym',            'importing token addresses using token symbol (MM2)'),
 
-		('bal7',                'the {} balance'.format(coin)),
-		('token_bal1',          'the {} balance and token balance'.format(coin)),
+		('bal7',                           f'the {coin} balance'),
+		('token_bal1',                     f'the {coin} balance and token balance'),
 
-		('token_txcreate1',     'creating a token transaction'),
-		('token_txview1_raw',   'viewing the raw transaction'),
-		('token_txsign1',       'signing the transaction'),
-		('token_txsend1',       'sending the transaction'),
-		('token_txview1_sig',   'viewing the signed transaction'),
-		('tx_status3',          'getting the transaction status'),
-		('token_bal2',          'the {} balance and token balance'.format(coin)),
+		('token_txcreate1',                 'creating a token transaction'),
+		('token_txview1_raw',               'viewing the raw transaction'),
+		('token_txsign1',                   'signing the transaction'),
+		('token_txsend1',                   'sending the transaction'),
+		('token_txview1_sig',               'viewing the signed transaction'),
+		('tx_status3',                      'getting the transaction status'),
+		('token_bal2',                     f'the {coin} balance and token balance'),
 
-		('token_txcreate2',     'creating a token transaction (to burn address)'),
-		('token_txbump',        'bumping the transaction fee'),
+		('token_txcreate2',                 'creating a token transaction (to burn address)'),
+		('token_txbump',                    'bumping the transaction fee'),
 
-		('token_txsign2',       'signing the transaction'),
-		('token_txsend2',       'sending the transaction'),
-		('token_bal3',          'the {} balance and token balance'.format(coin)),
+		('token_txsign2',                   'signing the transaction'),
+		('token_txsend2',                   'sending the transaction'),
+		('token_bal3',                     f'the {coin} balance and token balance'),
 
-		('del_dev_addr',        "deleting the dev address"),
+		('del_dev_addr',                    'deleting the dev address'),
 
-		('bal1_getbalance',     'the {} balance (getbalance)'.format(coin)),
+		('bal1_getbalance',                f'the {coin} balance (getbalance)'),
 
-		('addrimport_token_burn_addr',"importing the token burn address"),
+		('addrimport_token_burn_addr',      'importing the token burn address'),
 
-		('token_bal4',          'the {} balance and token balance'.format(coin)),
-		('token_bal_getbalance','the token balance (getbalance)'),
+		('token_bal4',                     f'the {coin} balance and token balance'),
+		('token_bal_getbalance',            'the token balance (getbalance)'),
 
-		('txcreate_noamt',     'creating a transaction (full amount send)'),
-		('txsign_noamt',       'signing the transaction'),
-		('txsend_noamt',       'sending the transaction'),
+		('txcreate_noamt',                  'creating a transaction (full amount send)'),
+		('txsign_noamt',                    'signing the transaction'),
+		('txsend_noamt',                    'sending the transaction'),
 
-		('bal8',                'the {} balance'.format(coin)),
-		('token_bal5',          'the token balance'),
+		('bal8',                           f'the {coin} balance'),
+		('token_bal5',                      'the token balance'),
 
-		('token_txcreate_noamt', 'creating a token transaction (full amount send)'),
-		('token_txsign_noamt',   'signing the transaction'),
-		('token_txsend_noamt',   'sending the transaction'),
+		('token_txcreate_noamt',            'creating a token transaction (full amount send)'),
+		('token_txsign_noamt',              'signing the transaction'),
+		('token_txsend_noamt',              'sending the transaction'),
 
-		('bal9',                'the {} balance'.format(coin)),
-		('token_bal6',          'the token balance'),
+		('bal9',                           f'the {coin} balance'),
+		('token_bal6',                      'the token balance'),
 
-		('listaddresses1',      'listaddresses'),
-		('listaddresses2',      'listaddresses minconf=999999999 (ignored)'),
-		('listaddresses3',      'listaddresses sort=age (ignored)'),
-		('listaddresses4',      'listaddresses showempty=1 sort=age (ignored)'),
+		('listaddresses1',                  'listaddresses'),
+		('listaddresses2',                  'listaddresses minconf=999999999 (ignored)'),
+		('listaddresses3',                  'listaddresses sort=age (ignored)'),
+		('listaddresses4',                  'listaddresses showempty=1 sort=age (ignored)'),
 
-		('token_listaddresses1','listaddresses --token=mm1'),
-		('token_listaddresses2','listaddresses --token=mm1 showempty=1'),
+		('token_listaddresses1',            'listaddresses --token=mm1'),
+		('token_listaddresses2',            'listaddresses --token=mm1 showempty=1'),
 
-		('twview_cached_balances','twview (cached balances)'),
-		('token_twview_cached_balances','token twview (cached balances)'),
-		('txcreate_cached_balances','txcreate (cached balances)'),
-		('token_txcreate_cached_balances','token txcreate (cached balances)'),
+		('twview_cached_balances',          'twview (cached balances)'),
+		('token_twview_cached_balances',    'token twview (cached balances)'),
+		('txcreate_cached_balances',        'txcreate (cached balances)'),
+		('token_txcreate_cached_balances',  'token txcreate (cached balances)'),
 
-		('txdo_cached_balances',     'txdo (cached balances)'),
-		('txcreate_refresh_balances','refreshing balances'),
-		('bal10',                    'the {} balance'.format(coin)),
+		('txdo_cached_balances',            'txdo (cached balances)'),
+		('txcreate_refresh_balances',       'refreshing balances'),
+		('bal10',                          f'the {coin} balance'),
 
-		('token_txdo_cached_balances',     'token txdo (cached balances)'),
-		('token_txcreate_refresh_balances','refreshing token balances'),
-		('token_bal7',                     'the token balance'),
+		('token_txdo_cached_balances',      'token txdo (cached balances)'),
+		('token_txcreate_refresh_balances', 'refreshing token balances'),
+		('token_bal7',                      'the token balance'),
 
-		('twview1','twview'),
-		('twview2','twview wide=1'),
-		('twview3','twview wide=1 sort=age (ignored)'),
-		('twview4','twview wide=1 minconf=999999999 (ignored)'),
-		('twview5','twview wide=1 minconf=0 (ignored)'),
+		('twview1',                         'twview'),
+		('twview2',                         'twview wide=1'),
+		('twview3',                         'twview wide=1 sort=age (ignored)'),
+		('twview4',                         'twview wide=1 minconf=999999999 (ignored)'),
+		('twview5',                         'twview wide=1 minconf=0 (ignored)'),
 
-		('token_twview1','twview --token=mm1'),
-		('token_twview2','twview --token=mm1 wide=1'),
-		('token_twview3','twview --token=mm1 wide=1 sort=age (ignored)'),
+		('token_twview1',                   'twview --token=mm1'),
+		('token_twview2',                   'twview --token=mm1 wide=1'),
+		('token_twview3',                   'twview --token=mm1 wide=1 sort=age (ignored)'),
 
-		('edit_label1','adding label to addr #{} in {} tracking wallet (zh)'.format(del_addrs[0],coin)),
-		('edit_label2','adding label to addr #{} in {} tracking wallet (lat+cyr+gr)'.format(del_addrs[1],coin)),
-		('edit_label3','removing label from addr #{} in {} tracking wallet'.format(del_addrs[0],coin)),
+		('edit_label1',        f'adding label to addr #{del_addrs[0]} in {coin} tracking wallet (zh)'),
+		('edit_label2',        f'adding label to addr #{del_addrs[1]} in {coin} tracking wallet (lat+cyr+gr)'),
+		('edit_label3',        f'removing label from addr #{del_addrs[0]} in {coin} tracking wallet'),
 
-		('token_edit_label1','adding label to addr #{} in {} token tracking wallet'.format(del_addrs[0],coin)),
+		('token_edit_label1',  f'adding label to addr #{del_addrs[0]} in {coin} token tracking wallet'),
 
-		('remove_addr1','removing addr #{} from {} tracking wallet'.format(del_addrs[0],coin)),
-		('remove_addr2','removing addr #{} from {} tracking wallet'.format(del_addrs[1],coin)),
-		('token_remove_addr1','removing addr #{} from {} token tracking wallet'.format(del_addrs[0],coin)),
-		('token_remove_addr2','removing addr #{} from {} token tracking wallet'.format(del_addrs[1],coin)),
+		('remove_addr1',       f'removing addr #{del_addrs[0]} from {coin} tracking wallet'),
+		('remove_addr2',       f'removing addr #{del_addrs[1]} from {coin} tracking wallet'),
+		('token_remove_addr1', f'removing addr #{del_addrs[0]} from {coin} token tracking wallet'),
+		('token_remove_addr2', f'removing addr #{del_addrs[1]} from {coin} token tracking wallet'),
 
-		('stop',                'stopping daemon'),
+		('stop',               'stopping daemon'),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -512,7 +512,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
 		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,quiet=not g.debug,bogus_send=bogus_send,has_label=True)
+		txid = self.txsend_ui_common(t,
+			quiet      = not g.debug,
+			bogus_send = False,
+			has_label  = True )
 		return t
 
 	def txview(self,ext_fs):
@@ -714,7 +717,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				'--contract-data='+fn,
 				'--inputs='+dfl_addr,
 				'--yes' ]
-		if mmgen_cmd == 'txdo': args += ['-k',keyfile]
+		if mmgen_cmd == 'txdo':
+			args += ['-k',keyfile]
 		t = self.spawn( 'mmgen-'+mmgen_cmd, self.eth_args + args)
 		if mmgen_cmd == 'txcreate':
 			t.written_to_file('transaction')
@@ -726,9 +730,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t = self.spawn('mmgen-txsend', self.eth_args + [txfile],no_msg=True)
 
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
-		txid = self.txsend_ui_common(t,caller=mmgen_cmd,
+		txid = self.txsend_ui_common(t,
+			caller = mmgen_cmd,
 			quiet = mmgen_cmd == 'txdo' or not g.debug,
-			bogus_send=False)
+			bogus_send = False )
 		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
 		if (await self.get_tx_receipt(txid)).status == 0:
 			die(2,f'Contract {num}:{key} failed to execute. Aborting')

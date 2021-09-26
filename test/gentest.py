@@ -400,9 +400,11 @@ from mmgen.addr import KeyGenerator,AddrGenerator
 addr_type = MMGenAddrType(
 	proto = proto,
 	id_str = opt.type or proto.dfl_mmtype )
+
 ext_progs = list(ci.external_tests[proto.network])
 
 arg1 = cmd_args[0].split(':')
+
 if len(arg1) == 1:
 	a,a_num = parse_arg1(arg1[0],'a')
 	b = None

@@ -474,9 +474,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		outputs_cl = [sid1+':C:5,0.0159',sid2+':C:5']
 		t = self.spawn('mmgen-txcreate',['-d',self.tmpdir,'-B','--bob'] + outputs_cl)
 		return self.txcreate_ui_common(t,
-								menu            = ['a'],
-								inputs          = ('1,2','2,3')[self.proto.coin=='BCH'],
-								interactive_fee = '0.00001')
+			menu            = ['a'],
+			inputs          = ('1,2','2,3')[self.proto.coin=='BCH'],
+			interactive_fee = '0.00001')
 
 	def bob_subwallet_txsign(self):
 		fn = get_file_with_ext(self.tmpdir,'rawtx')
@@ -537,13 +537,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def user_txdo(  self, user, fee, outputs_cl, outputs_list,
-					extra_args   = [],
-					wf           = None,
-					do_label     = False,
-					bad_locktime = False,
-					full_tx_view = False,
-					menu         = ['M'],
-					bogus_send   = False):
+			extra_args   = [],
+			wf           = None,
+			do_label     = False,
+			bad_locktime = False,
+			full_tx_view = False,
+			menu         = ['M'],
+			bogus_send   = False):
 		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
@@ -552,13 +552,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 		self.txcreate_ui_common(t,
-								caller          = 'txdo',
-								menu            = menu,
-								inputs          = outputs_list,
-								file_desc       = 'Signed transaction',
-								interactive_fee = (tx_fee,'')[bool(fee)],
-								add_comment     = tx_label_jp,
-								view            = 't',save=True)
+			caller          = 'txdo',
+			menu            = menu,
+			inputs          = outputs_list,
+			file_desc       = 'Signed transaction',
+			interactive_fee = (tx_fee,'')[bool(fee)],
+			add_comment     = tx_label_jp,
+			view            = 't',save=True)
 
 		t.passphrase(dfl_wcls.desc,rt_pw)
 		t.written_to_file('Signed transaction')

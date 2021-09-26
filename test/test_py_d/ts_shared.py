@@ -31,22 +31,21 @@ from .common import *
 class TestSuiteShared(object):
 	'shared methods for the test.py test suite'
 
-	def txcreate_ui_common( self,t,
-							caller            = None,
-							menu              = [],
-							inputs            = '1',
-							file_desc         = 'Unsigned transaction',
-							input_sels_prompt = 'to spend',
-							bad_input_sels    = False,
-							non_mmgen_inputs  = 0,
-							interactive_fee   = '',
-							fee_desc          = 'transaction fee',
-							fee_res           = None,
-							eth_fee_res       = None,
-							add_comment       = '',
-							view              = 't',
-							save              = True,
-							tweaks            = [] ):
+	def txcreate_ui_common(self,t,
+			caller            = None,
+			menu              = [],
+			inputs            = '1',
+			file_desc         = 'Unsigned transaction',
+			input_sels_prompt = 'to spend',
+			bad_input_sels    = False,
+			interactive_fee   = '',
+			fee_desc          = 'transaction fee',
+			fee_res           = None,
+			eth_fee_res       = None,
+			add_comment       = '',
+			view              = 't',
+			save              = True,
+			tweaks            = [] ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -87,15 +86,15 @@ class TestSuiteShared(object):
 
 		return t
 
-	def txsign_ui_common(   self,t,
-							caller      = None,
-							view        = 't',
-							add_comment = '',
-							file_desc   = 'Signed transaction',
-							ni          = False,
-							save        = True,
-							do_passwd   = False,
-							has_label   = False ):
+	def txsign_ui_common(self,t,
+			caller      = None,
+			view        = 't',
+			add_comment = '',
+			file_desc   = 'Signed transaction',
+			ni          = False,
+			save        = True,
+			do_passwd   = False,
+			has_label   = False ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -111,15 +110,15 @@ class TestSuiteShared(object):
 
 		return t
 
-	def txsend_ui_common(   self,t,
-							caller       = None,
-							view         = 'n',
-							add_comment  = '',
-							file_desc    = 'Sent transaction',
-							confirm_send = True,
-							bogus_send   = True,
-							quiet        = False,
-							has_label    = False ):
+	def txsend_ui_common(self,t,
+			caller       = None,
+			view         = 'n',
+			add_comment  = '',
+			file_desc    = 'Sent transaction',
+			confirm_send = True,
+			bogus_send   = True,
+			quiet        = False,
+			has_label    = False ):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
@@ -148,15 +147,15 @@ class TestSuiteShared(object):
 		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 		return t
 
-	def txsign( self, wf, txfile,
-				pf         = '',
-				bumpf      = '',
-				save       = True,
-				has_label  = False,
-				extra_opts = [],
-				extra_desc = '',
-				view       = 'n',
-				dfl_wallet = False ):
+	def txsign(self,wf,txfile,
+			pf         = '',
+			bumpf      = '',
+			save       = True,
+			has_label  = False,
+			extra_opts = [],
+			extra_desc = '',
+			view       = 'n',
+			dfl_wallet = False ):
 		opts = extra_opts + ['-d',self.tmpdir,txfile] + ([wf] if wf else [])
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
@@ -197,14 +196,14 @@ class TestSuiteShared(object):
 		return t
 
 	def addrgen(self,wf,
-				pf         = None,
-				check_ref  = False,
-				ftype      = 'addr',
-				id_str     = None,
-				extra_args = [],
-				mmtype     = None,
-				stdout     = False,
-				dfl_wallet = False ):
+			pf         = None,
+			check_ref  = False,
+			ftype      = 'addr',
+			id_str     = None,
+			extra_args = [],
+			mmtype     = None,
+			stdout     = False,
+			dfl_wallet = False ):
 		passgen = ftype[:4] == 'pass'
 		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
