@@ -509,10 +509,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		os.system(cmd)
 		return t
 
-	def txsend(self,sigfile,bogus_send=True,extra_opts=[]):
-		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
+	def txsend(self,sigfile,extra_opts=[]):
 		t = self.spawn('mmgen-txsend', extra_opts + ['-d',self.tmpdir,sigfile])
-		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
 		self.txsend_ui_common(t,view='t',add_comment='')
 		return t
 

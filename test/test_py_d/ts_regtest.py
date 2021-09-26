@@ -256,6 +256,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		for k in rt_data:
 			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None
 
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+
+	def __del__(self):
+		os.environ['MMGEN_TEST_SUITE_REGTEST'] = ''
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
+
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
 		silence()
 		gmsg("Adding comments to address file '{}'".format(addrfile))
@@ -528,10 +534,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		cmp_or_die(rtBals[6],ret)
 		return t
 
-	def user_txsend_status(self,user,tx_file,exp1='',exp2='',extra_args=[],bogus_send=False):
-		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
+	def user_txsend_status(self,user,tx_file,exp1='',exp2='',extra_args=[]):
 		t = self.spawn('mmgen-txsend',['-d',self.tmpdir,'--'+user,'--status'] + extra_args + [tx_file])
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		if exp1: t.expect(exp1,regex=True)
 		if exp2: t.expect(exp2,regex=True)
 		return t
@@ -542,14 +546,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			do_label     = False,
 			bad_locktime = False,
 			full_tx_view = False,
-			menu         = ['M'],
-			bogus_send   = False):
-		os.environ['MMGEN_BOGUS_SEND'] = ('','1')[bool(bogus_send)]
+			menu         = ['M'] ):
+
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
 			(['--tx-fee='+fee] if fee else []) +
 			extra_args + ([],[wf])[bool(wf)] + outputs_cl)
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 		self.txcreate_ui_common(t,
 			caller          = 'txdo',
@@ -629,10 +631,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def user_txbump(self,user,outdir,txfile,fee,add_args=[],has_label=True,signed_tx=True,one_output=False):
 		if not self.proto.cap('rbf'):
 			return 'skip'
-		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txbump',
 			['-d',outdir,'--'+user,'--tx-fee='+fee,'--output-to-reduce=c'] + add_args + [txfile])
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		if not one_output:
 			t.expect('OK? (Y/n): ','y') # output OK?
 		t.expect('OK? (Y/n): ','y') # fee OK?

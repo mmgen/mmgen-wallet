@@ -316,6 +316,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
 		self.using_solc = check_solc_ver()
+		os.environ['MMGEN_BOGUS_SEND'] = ''
+
+	def __del__(self):
+		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 	@property
 	def eth_args(self):
@@ -506,12 +510,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 						+ ['-k', keyfile, txfile, dfl_words_file] )
 		return self.txsign_ui_common(t,ni=ni,has_label=True)
 
-	def txsend(self,ni=False,bogus_send=False,ext='{}.regtest.sigtx',add_args=[]):
+	def txsend(self,ni=False,ext='{}.regtest.sigtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.spawn('mmgen-txsend', self.eth_args + add_args + [txfile])
-		if not bogus_send: os.environ['MMGEN_BOGUS_SEND'] = '1'
 		txid = self.txsend_ui_common(t,
 			quiet      = not g.debug,
 			bogus_send = False,
@@ -710,7 +712,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
-		os.environ['MMGEN_BOGUS_SEND'] = ''
 		args = ['-B',
 				'--tx-fee='+tx_fee,
 				'--tx-gas={}'.format(gas),
@@ -729,7 +730,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			txfile = txfile.replace('.rawtx','.sigtx')
 			t = self.spawn('mmgen-txsend', self.eth_args + [txfile],no_msg=True)
 
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
 			quiet = mmgen_cmd == 'txdo' or not g.debug,
@@ -984,9 +984,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			fee_res_data = ('0.00105','50'),
 			add_args = ['98831F3A:E:3,0.4321']):
 		args = ['--tx-fee=20G','--cached-balances'] + add_args + [dfl_words_file]
-		os.environ['MMGEN_BOGUS_SEND'] = ''
 		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
-		os.environ['MMGEN_BOGUS_SEND'] = '1'
 		self._do_confirm_send(t,quiet=not g.debug,sure=False)
 		t.read()
 		return t
