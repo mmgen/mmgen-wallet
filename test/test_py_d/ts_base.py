@@ -48,6 +48,8 @@ class TestSuiteBase(object):
 		self.tn_ext = ('','.testnet')[self.proto.testnet]
 		d = {'bch':'btc','btc':'btc','ltc':'ltc'}
 		self.fork = d[self.proto.coin.lower()] if self.proto.coin.lower() in d else None
+		if len(self.tmpdir_nums) == 1:
+			self.tmpdir_num = self.tmpdir_nums[0]
 
 	@property
 	def tmpdir(self):

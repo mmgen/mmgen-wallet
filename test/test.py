@@ -715,8 +715,12 @@ class TestSuiteRunner(object):
 		m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
 		sys.stderr.write(green(m.format(self.cmd_total,suf(self.cmd_total),t//60,t%60)))
 
-	def init_group(self,gname,cmd=None,quiet=False):
+	def init_group(self,gname,cmd=None,quiet=False,do_clean=True):
+
 		ts_cls = CmdGroupMgr().load_mod(gname)
+
+		if do_clean:
+			clean(ts_cls.tmpdir_nums)
 
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(opt,k):
@@ -774,7 +778,6 @@ class TestSuiteRunner(object):
 				if arg in self.gm.cmd_groups:
 					if not self.init_group(arg):
 						continue
-					clean(self.ts.tmpdir_nums)
 					for cmd in self.gm.cmd_list:
 						self.check_needs_rerun(cmd,build=True)
 						do_between()
@@ -789,10 +792,8 @@ class TestSuiteRunner(object):
 						gname = self.gm.find_cmd_in_groups(arg)
 					if gname:
 						same_grp = gname == gname_save # same group as previous cmd: don't clean, suppress blue msg
-						if not self.init_group(gname,arg,quiet=same_grp):
+						if not self.init_group(gname,arg,quiet=same_grp,do_clean=not same_grp):
 							continue
-						if not same_grp:
-							clean(self.ts.tmpdir_nums)
 						try:
 							self.check_needs_rerun(arg,build=True)
 						except Exception as e: # allow calling of functions not in cmd_group
@@ -817,7 +818,6 @@ class TestSuiteRunner(object):
 					continue
 				if not self.init_group(gname):
 					continue
-				clean(self.ts.tmpdir_nums)
 				for cmd in self.gm.cmd_list:
 					self.check_needs_rerun(cmd,build=True)
 					do_between()
