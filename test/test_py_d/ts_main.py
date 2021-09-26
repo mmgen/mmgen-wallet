@@ -38,13 +38,14 @@ def make_brainwallet_file(fn):
 		return ''.join([ws_list[getrandnum_range(1,200) % len(ws_list)] for i in range(nchars)])
 	rand_pairs = [wl[getrandnum_range(1,200) % len(wl)] + rand_ws_seq() for i in range(nwords)]
 	d = ''.join(rand_pairs).rstrip() + '\n'
-	if opt.verbose: msg_r('Brainwallet password:\n{}'.format(cyan(d)))
+	if opt.verbose:
+		msg_r(f'Brainwallet password:\n{cyan(d)}')
 	write_data_to_file(fn,d,'brainwallet password',quiet=True,ignore_opt_outdir=True)
 
 def verify_checksum_or_exit(checksum,chk):
 	chk = strip_ansi_escapes(chk)
 	if checksum != chk:
-		raise TestSuiteFatalException('Checksum error: {}'.format(chk))
+		raise TestSuiteFatalException(f'Checksum error: {chk}')
 	vmsg(green('Checksums match: ') + cyan(chk))
 
 addrs_per_wallet = 8
@@ -161,7 +162,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		silence()
 		from mmgen.addr import AddrList
 		chk = AddrList(self.proto,addrfile).chksum
-		if opt.verbose and display: msg('Checksum: {}'.format(cyan(chk)))
+		if opt.verbose and display:
+			msg(f'Checksum: {cyan(chk)}')
 		end_silence()
 		return chk
 
@@ -228,7 +230,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.usr_rand(self.usr_rand_chars)
 		fn = t.written_to_file(capfirst(wcls.desc))
 		ext = get_extension(fn)
-		assert ext,'incorrect file extension: {}'.format(ext)
+		assert ext,f'incorrect file extension: {ext}'
 		return t
 
 	def subwalletgen_mnemonic(self,wf):
@@ -241,7 +243,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect(r'Generating subseed.*\D3L',regex=True)
 		fn = t.written_to_file(capfirst(ocls.desc))
 		ext = get_extension(fn)
-		assert ext == ocls.ext,'incorrect file extension: {}'.format(ext)
+		assert ext == ocls.ext,f'incorrect file extension: {ext}'
 		return t
 
 	def passchg(self,wf,pf,label_action='cmdline',dfl_wallet=False):
@@ -288,13 +290,13 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		unspent_data_file = joinpath(self.tmpdir,'unspent.json')
 		write_data_to_file(unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
-		bwd_msg = 'MMGEN_BOGUS_WALLET_DATA={}'.format(unspent_data_file)
+		bwd_msg = f'MMGEN_BOGUS_WALLET_DATA={unspent_data_file}'
 		if opt.print_cmdline:
 			msg(bwd_msg)
 		if opt.log:
 			self.tr.log_fd.write(bwd_msg + ' ')
 		if opt.verbose or opt.exact_output:
-			sys.stderr.write("Fake transaction wallet data written to file {!r}\n".format(unspent_data_file))
+			sys.stderr.write(f'Fake transaction wallet data written to file {unspent_data_file!r}\n')
 
 	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 		if 'S' not in self.proto.mmtypes: segwit = False
@@ -306,14 +308,15 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 						'bech32': (self.proto.witness_vernum_hex + '14','') }[k]
 		amt1,amt2 = {'btc':(10,40),'bch':(10,40),'ltc':(1000,4000)}[self.proto.coin.lower()]
 		ret = {
-			self.lbl_id: '{}:{}'.format(self.proto.base_coin.lower(),coinaddr) if non_mmgen \
-				else ('{}:{}{}'.format(al_id,idx,lbl)),
+			self.lbl_id: (
+				f'{self.proto.base_coin.lower()}:{coinaddr}' if non_mmgen
+				else f'{al_id}:{idx}{lbl}' ),
 			'vout': int(getrandnum(4) % 8),
 			'txid': os.urandom(32).hex(),
 			'amount': self.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
 			'address': coinaddr,
 			'spendable': False,
-			'scriptPubKey': '{}{}{}'.format(s_beg,coinaddr.hex,s_end),
+			'scriptPubKey': f'{s_beg}{coinaddr.hex}{s_end}',
 			'confirmations': getrandnum(3) // 20 # max: 838860 (6 digits)
 		}
 		return ret
@@ -362,8 +365,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
-				raise TestSuiteFatalException(
-					'Address index list length != {}: {}'.format(addrs_per_wallet,repr(aix)))
+				raise TestSuiteFatalException(f'Address index list length != {addrs_per_wallet}: {repr(aix)}')
 			tx_data[s] = {
 				'addrfile': afile,
 				'chk': al.chksum,
@@ -577,7 +579,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	# TODO: make outdir and hidden incog compatible (ignore --outdir and warn user?)
 	def export_incog_hidden(self,wf):
 		rf = joinpath(self.tmpdir,hincog_fn)
-		add_args = ['-J','{},{}'.format(rf,hincog_offset)]
+		add_args = ['-J',f'{rf},{hincog_offset}']
 		return self.export_incog(wf,out_fmt='hi',add_args=add_args)
 
 	def addrgen_seed(self,wf,foo,in_fmt='seed'):
@@ -587,7 +589,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-addrgen', add_args +
 				['-i'+in_fmt,'-d',self.tmpdir,wf,self.addr_idx_list])
 		t.license()
-		t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))
+		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 		vmsg('Comparing generated checksum with checksum from previous address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		if stdout: t.read()
@@ -624,7 +626,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def addrgen_incog_hidden(self,wf,foo):
 		rf = joinpath(self.tmpdir,hincog_fn)
 		return self.addrgen_incog([],'',in_fmt='hi',
-			args=['-H','{},{}'.format(rf,hincog_offset),'-l',str(hincog_seedlen)])
+			args=['-H',f'{rf},{hincog_offset}','-l',str(hincog_seedlen)])
 
 	def txsign_keyaddr(self,keyaddr_file,txfile):
 		t = self.spawn('mmgen-txsign', ['-d',self.tmpdir,'-p1','-M',keyaddr_file,txfile])
@@ -723,7 +725,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
 
 		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
-			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
+			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_end(t,has_label=True)
 		return t
@@ -742,7 +744,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 					non_mmgen_input='4',do_label=True,txdo_args=[f7,f8,f9,f10],add_args=add_args)
 
 		for cnum,wcls in (('1',IncogWallet),('3',MMGenWallet)):
-			t.passphrase('{}'.format(wcls.desc),self.cfgs[cnum]['wpasswd'])
+			t.passphrase(wcls.desc,self.cfgs[cnum]['wpasswd'])
 
 		self.txsign_ui_common(t)
 		self.txsend_ui_common(t)
