@@ -14,9 +14,22 @@ def build_libsecp256k1():
 	if not os.path.exists(ext_path):
 		run(['git','clone','https://github.com/bitcoin-core/secp256k1.git'],check=True,cwd=cache_path)
 	if not os.path.exists(os.path.join(ext_path,'.libs/libsecp256k1.a')):
-		run(['./autogen.sh'],check=True,cwd=ext_path)
-		run(['./configure','CFLAGS=-g -O2 -fPIC'],check=True,cwd=ext_path)
-		run(['make','-j4'],check=True,cwd=ext_path)
+		import platform
+		cmds = {
+			'Windows': (
+				['sh','./autogen.sh'],
+				['sh','./configure','CFLAGS=-g -O2 -fPIC','--disable-dependency-tracking'],
+				['mingw32-make','MAKE=mingw32-make','LIBTOOL=/mingw64/bin/libtool']
+			),
+			'Linux': (
+				['./autogen.sh'],
+				['./configure','CFLAGS=-g -O2 -fPIC'],
+				['make','-j4']
+			),
+		}[platform.system()]
+		for cmd in cmds:
+			print('Executing {}'.format(' '.join(cmd)))
+			run(cmd,check=True,cwd=ext_path)
 
 have_msys2 = run(['uname','-s'],stdout=PIPE,check=True).stdout.startswith(b'MSYS_NT')
 if have_msys2:
