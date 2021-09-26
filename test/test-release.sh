@@ -250,12 +250,12 @@ f_color='Terminal color tests completed'
 
 i_dep='Dependency'
 s_dep='Testing for installed dependencies'
-t_dep="- $unit_tests_py dep"
+t_dep="- $unit_tests_py testdep dep daemon.exec"
 f_dep='Dependency tests completed'
 
 i_unit='Unit'
 s_unit='The bitcoin and bitcoin-bchn mainnet daemons must be running for the following tests'
-t_unit="- $unit_tests_py --exclude dep"
+t_unit="- $unit_tests_py --exclude testdep,dep,daemon"
 f_unit='Unit tests completed'
 
 i_hash='Internal hash function implementations'

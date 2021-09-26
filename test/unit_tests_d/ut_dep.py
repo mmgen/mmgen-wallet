@@ -11,6 +11,7 @@ from mmgen.common import *
 class unit_tests:
 
 	altcoin_deps = ('keccak','py_ecc')
+	win_skip = ('aiohttp',)
 
 	def keccak(self,name,ut): # ETH,XMR
 		from sha3 import keccak_256
