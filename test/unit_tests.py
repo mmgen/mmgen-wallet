@@ -94,28 +94,37 @@ class UnitTestHelpers(object):
 			else:
 				rdie(3,m_noraise.format(desc,exc_chk))
 
+tests_seen = []
+
 def run_test(test,subtest=None):
 	modname = 'test.unit_tests_d.{}{}'.format(file_pfx,test)
 	mod = importlib.import_module(modname)
 
 	def run_subtest(subtest):
-		gmsg(f'Running unit subtest {test}.{subtest}')
+		msg(f'Running unit subtest {test}.{subtest}')
 		t = getattr(mod,'unit_tests')()
 		if not getattr(t,subtest)(test,UnitTestHelpers):
 			rdie(1,f'Unit subtest {subtest!r} failed')
 		pass
 
+	if test not in tests_seen:
+		gmsg(f'Running unit test {test}')
+		tests_seen.append(test)
+
 	if subtest:
 		run_subtest(subtest)
 	else:
-		gmsg(f'Running unit test {test}')
 		if hasattr(mod,'unit_tests'): # new class-based API
 			t = getattr(mod,'unit_tests')
 			altcoin_deps = getattr(t,'altcoin_deps',())
+			win_skip = getattr(t,'win_skip',())
 			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
 			for subtest in subtests:
 				if opt.no_altcoin_deps and subtest in altcoin_deps:
 					qmsg(gray(f'Invoked with --no-altcoin-deps, so skipping {subtest!r}'))
+					continue
+				if g.platform == 'win' and subtest in win_skip:
+					qmsg(gray(f'Skipping {subtest!r} for Windows platform'))
 					continue
 				run_subtest(subtest)
 		else:
