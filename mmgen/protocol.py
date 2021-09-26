@@ -422,6 +422,12 @@ class CoinProtocol(MMGenObject):
 				Msg(f'Invalid address: {addr}')
 			return False
 
+		@classmethod
+		def checksummed_addr(cls,addr):
+			from .keccak import keccak_256
+			h = keccak_256(addr.encode()).digest().hex()
+			return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
+
 		def pubhash2addr(self,pubkey_hash,p2sh):
 			assert len(pubkey_hash) == 40, f'{len(pubkey_hash)}: invalid length for {self.name} pubkey hash'
 			assert not p2sh, f'{self.name} protocol has no P2SH address format'

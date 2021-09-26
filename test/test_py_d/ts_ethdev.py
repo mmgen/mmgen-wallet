@@ -29,6 +29,7 @@ from mmgen.opts import opt
 from mmgen.util import die
 from mmgen.exception import *
 from mmgen.obj import ETHAmt
+from mmgen.protocol import CoinProtocol
 from ..include.common import *
 from .common import *
 
@@ -37,7 +38,6 @@ dfl_sid = '98831F3A'
 
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
-dfl_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
 dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 burn_addr = 'deadbeef'*5
 amt1 = '999999.12345689012345678'
@@ -684,7 +684,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			'scripts/create-token.py',
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir
-		] + cmd_args + [dfl_addr_chk]
+		] + cmd_args + [CoinProtocol.Ethereum.checksummed_addr(dfl_devaddr)]
 		imsg("Executing: {}".format(' '.join(cmd)))
 		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
 		if cp.returncode != 0:
