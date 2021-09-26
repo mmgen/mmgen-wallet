@@ -53,6 +53,9 @@ class TokenBase(MMGenObject): # ERC20
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
 		ret = await self.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data },'pending')
+		if self.proto.network == 'regtest' and g.daemon_id == 'erigon': # ERIGON
+			import asyncio
+			await asyncio.sleep(5)
 		if toUnit:
 			return int(ret,16) * self.base_unit
 		else:

@@ -49,8 +49,15 @@ class TestSuiteShared(object):
 
 		txdo = (caller or self.test_name)[:4] == 'txdo'
 
+		expect_pat = r'\[q\]uit view, .*?:.'
+		delete_pat = r'Enter account number .*:.'
+		confirm_pat = r'Is this what you want.*:.'
+		pat = expect_pat
 		for choice in menu + ['q']:
-			t.expect(r'\[q\]uit view, .*?:.',choice,regex=True)
+			t.expect(pat,choice,regex=True)
+			if self.proto.base_proto == 'Ethereum':
+				pat = confirm_pat if pat == delete_pat else delete_pat if choice == 'D' else expect_pat
+
 		if bad_input_sels:
 			for r in ('x','3-1','9999'):
 				t.expect(input_sels_prompt+': ',r+'\n')

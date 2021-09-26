@@ -22,6 +22,7 @@ ts_ethdev.py: Ethdev tests for the test.py test suite
 
 import sys,os,re,shutil
 from decimal import Decimal
+from collections import namedtuple
 from subprocess import run,PIPE,DEVNULL
 
 from mmgen.globalvars import g
@@ -39,11 +40,17 @@ dfl_sid = '98831F3A'
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
 dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
-burn_addr = 'deadbeef'*5
+
+prealloc_amt = ETHAmt('1_000_000_000')
+
+burn_addr  = 'deadbeef'*5
+burn_addr2 = 'babaeb1a'*5
+
 amt1 = '999999.12345689012345678'
 amt2 = '888.111122223333444455'
 
 parity_devkey_fn = 'parity.devkey'
+erigon_devkey_fn = 'erigon.devkey'
 
 tested_solc_ver = '0.8.7'
 
@@ -151,7 +158,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		('addrgen',                         'generating addresses'),
 		('addrimport',                      'importing addresses'),
 		('addrimport_dev_addr',             "importing dev faucet address 'Ox00a329c..'"),
+		('addrimport_erigon_dev_addr',      'importing Erigon dev faucet address'),
 
+		('fund_dev_address',                'funding the default (Parity dev) address'),
 		('txcreate1',                       'creating a transaction (spend from dev address to address :1)'),
 		('txview1_raw',                     'viewing the raw transaction'),
 		('txsign1',                         'signing the transaction'),
@@ -316,6 +325,22 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
 		self.using_solc = check_solc_ver()
+
+		write_to_file(
+			joinpath(self.tmpdir,parity_devkey_fn),
+			dfl_devkey+'\n' )
+
+		if g.daemon_id == 'erigon':
+			from hashlib import sha256
+			from mmgen.tool import tool_api
+			devkey = sha256(b'erigon devnet key').hexdigest()
+			t = tool_api()
+			t.init_coin(g.coin,'regtest')
+			self.erigon_devaddr = t.wif2addr(devkey)
+			write_to_file(
+				joinpath(self.tmpdir,erigon_devkey_fn),
+				devkey+'\n' )
+
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 
 	def __del__(self):
@@ -339,7 +364,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				self.geth_setup()
 			if not start_test_daemons(
 					self.proto.coin+'_rt',
-					remove_datadir = not g.daemon_id=='geth' ):
+					remove_datadir = not g.daemon_id in ('geth','erigon') ):
 				return False
 			from mmgen.rpc import rpc_init
 			rpc = await rpc_init(self.proto)
@@ -360,7 +385,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			keyfile = os.path.join(keystore,os.listdir(keystore)[0])
 			return json.loads(open(keyfile).read())['address']
 
-		def make_genesis(signer_addr,prealloc_addr,prealloc_amt):
+		def make_genesis(signer_addr,prealloc_addr):
 			return {
 				'config': {
 					'chainId': 1337, # TODO: replace constant with var
@@ -405,10 +430,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		signer_addr = make_key(keystore)
 		imsg(f'  Signer address:     {signer_addr}')
 
-		prealloc_amt = ETHAmt('1_000_000_000')
 		imsg(f'  Faucet:             {dfl_devaddr} ({prealloc_amt} ETH)')
 
-		genesis_data = make_genesis(signer_addr,dfl_devaddr,prealloc_amt)
+		genesis_data = make_genesis(signer_addr,dfl_devaddr)
 
 		genesis_fn = joinpath(self.tmpdir,'genesis.json')
 		imsg(f'  Genesis block data: {genesis_fn}')
@@ -467,6 +491,11 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrimport_dev_addr(self):
 		return self.addrimport_one_addr(addr=dfl_devaddr)
 
+	def addrimport_erigon_dev_addr(self):
+		if not g.daemon_id == 'erigon':
+			return 'skip'
+		return self.addrimport_one_addr(addr=self.erigon_devaddr)
+
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
 
@@ -505,7 +534,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
-		write_to_file(keyfile,dfl_devkey+'\n')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
 						['--outdir={}'.format(self.tmpdir),'--coin='+self.proto.coin,'--quiet']
@@ -532,9 +560,37 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.read()
 		return t
 
+	def fund_dev_address(self):
+		"""
+		For Erigon, fund the default (Parity) dev address from the Erigon dev address
+		For the others, send a junk TX to keep block counts equal for all daemons
+		"""
+		dt = namedtuple('data',['devkey_fn','dest','amt'])
+		if g.daemon_id == 'erigon':
+			d = dt( erigon_devkey_fn, dfl_devaddr, prealloc_amt )
+		else:
+			d = dt( parity_devkey_fn, burn_addr2, '1' )
+		t = self.txcreate(
+			args    = [
+				f'--keys-from-file={joinpath(self.tmpdir,d.devkey_fn)}',
+				f'{d.dest},{d.amt}',
+			],
+			menu    = ['a','r'],
+			caller  = 'txdo',
+			acct    = '1',
+			no_read = True )
+		self._do_confirm_send(t,quiet=not g.debug,sure=False)
+		t.read()
+		self.get_file_with_ext('sigtx',delete_all=True)
+		return t
+
 	def txcreate1(self):
-		# valid_keypresses = EthereumTwUnspentOutputs.key_mappings.keys()
-		menu = ['a','d','r','M','X','e','m','m'] # include one invalid keypress, 'X'
+		if g.daemon_id == 'erigon':
+			# delete Erigon devaddr so that wallet is same as for other daemons
+			menu = ['a','r','D','1\n','y\n'] # sort by reverse amount
+		else:
+			# include one invalid keypress 'X' -- see EthereumTwUnspentOutputs.key_mappings
+			menu = ['a','d','r','M','X','e','m','m']
 		args = ['98831F3A:E:1,123.456']
 		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):

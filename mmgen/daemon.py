@@ -693,7 +693,7 @@ class geth_daemon(ethereum_daemon):
 
 # https://github.com/ledgerwatch/erigon
 class erigon_daemon(geth_daemon):
-	daemon_data = _dd('Erigon', 2021007005, '2021.07.5')
+	daemon_data = _dd('Erigon', 2021009005, '2021.09.5')
 	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'erigon'
 	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
@@ -708,10 +708,10 @@ class erigon_daemon(geth_daemon):
 			[f'--port={self.p2p_port}', self.p2p_port],
 			['--maxpeers=0', not self.opt.online],
 			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir],
-			['--chain=dev', self.network=='regtest'],
+			[f'--datadir={self.datadir}', self.non_dfl_datadir and not self.network=='regtest'],
 			['--chain=goerli', self.network=='testnet'],
-			['--miner.etherbase=00a329c0648769a73afac7f9381e08fb43dbea72', self.network=='regtest'],
+			['--chain=dev', self.network=='regtest'],
+			['--mine', self.network=='regtest'],
 		)
 		self.rpc_d = erigon_rpcdaemon(
 			proto        = self.proto,

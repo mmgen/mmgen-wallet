@@ -468,6 +468,9 @@ class EthereumMMGenTX:
 				else:
 					m = 'Transaction sent: {}'
 					assert ret == '0x'+self.coin_txid,'txid mismatch (after sending)'
+					if self.proto.network == 'regtest' and g.daemon_id == 'erigon': # ERIGON
+						import asyncio
+						await asyncio.sleep(5)
 				self.desc = 'sent transaction'
 				msg(m.format(self.coin_txid.hl()))
 				self.add_timestamp()
