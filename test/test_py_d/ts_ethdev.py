@@ -470,29 +470,34 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
 
-	def txcreate(self,args=[],menu=[],acct='1',non_mmgen_inputs=0,caller='txcreate',
-						interactive_fee = '50G',
-						eth_fee_res     = None,
-						fee_res_data    = ('0.00105','50'),
-						fee_desc        = 'gas price',
-						no_read         = False,
-						tweaks          = [] ):
+	def txcreate(self,
+			args            = [],
+			menu            = [],
+			acct            = '1',
+			caller          = 'txcreate',
+			interactive_fee = '50G',
+			eth_fee_res     = None,
+			fee_res_data    = ('0.00105','50'),
+			fee_desc        = 'gas price',
+			no_read         = False,
+			tweaks          = [] ):
 		fee_res = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_res_data,c=self.proto.coin)
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
-		t = self.txcreate_ui_common( t, menu=menu, caller=caller,
-										input_sels_prompt = 'to spend from',
-										inputs            = acct,
-										file_desc         = 'transaction',
-										bad_input_sels    = True,
-										non_mmgen_inputs  = non_mmgen_inputs,
-										interactive_fee   = interactive_fee,
-										fee_res           = fee_res,
-										fee_desc          = fee_desc,
-										eth_fee_res       = eth_fee_res,
-										add_comment       = tx_label_jp,
-										tweaks            = tweaks )
+		t = self.txcreate_ui_common(t,
+			menu              = menu,
+			caller            = caller,
+			input_sels_prompt = 'to spend from',
+			inputs            = acct,
+			file_desc         = 'transaction',
+			bad_input_sels    = True,
+			interactive_fee   = interactive_fee,
+			fee_res           = fee_res,
+			fee_desc          = fee_desc,
+			eth_fee_res       = eth_fee_res,
+			add_comment       = tx_label_jp,
+			tweaks            = tweaks )
 		if not no_read:
 			t.read()
 		return t
@@ -531,7 +536,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		# valid_keypresses = EthereumTwUnspentOutputs.key_mappings.keys()
 		menu = ['a','d','r','M','X','e','m','m'] # include one invalid keypress, 'X'
 		args = ['98831F3A:E:1,123.456']
-		return self.txcreate(args=args,menu=menu,acct='1',non_mmgen_inputs=1,tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args,menu=menu,acct='1',tweaks=['confirm_non_mmgen'])
 	def txview1_raw(self):
 		return self.txview(ext_fs='{}.regtest.rawtx')
 	def txsign1(self):    return self.txsign(add_args=['--use-internal-keccak-module'])
@@ -545,14 +550,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txcreate2(self):
 		args = ['98831F3A:E:11,1.234']
-		return self.txcreate(args=args,acct='10',non_mmgen_inputs=1,tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
 	def txsign2(self): return self.txsign(ni=True,ext='1.234,50000]{}.regtest.rawtx')
 	def txsend2(self): return self.txsend(ext='1.234,50000]{}.regtest.sigtx')
 	def bal2(self):    return self.bal(n='2')
 
 	def txcreate3(self):
 		args = ['98831F3A:E:21,2.345']
-		return self.txcreate(args=args,acct='10',non_mmgen_inputs=1,tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
 	def txsign3(self): return self.txsign(ni=True,ext='2.345,50000]{}.regtest.rawtx')
 	def txsend3(self): return self.txsend(ext='2.345,50000]{}.regtest.sigtx')
 	def bal3(self):    return self.bal(n='3')
@@ -575,12 +580,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.tx_status(ext='2.345,50000]{}.regtest.sigtx',expect_str='has 2 confirmations')
 
 	def txcreate4(self):
-		return self.txcreate(   args             = ['98831F3A:E:2,23.45495'],
-								acct             = '1',
-								non_mmgen_inputs = 0,
-								interactive_fee  = '40G',
-								fee_res_data     = ('0.00084','40'),
-								eth_fee_res      = True )
+		return self.txcreate(
+			args             = ['98831F3A:E:2,23.45495'],
+			acct             = '1',
+			interactive_fee  = '40G',
+			fee_res_data     = ('0.00084','40'),
+			eth_fee_res      = True )
 
 	def txbump(self,ext=',40000]{}.regtest.rawtx',fee='50G',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
@@ -596,7 +601,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txcreate5(self):
 		args = [burn_addr + ','+amt1]
-		return self.txcreate(args=args,acct='10',non_mmgen_inputs=1,tweaks=['confirm_non_mmgen'])
+		return self.txcreate(args=args,acct='10',tweaks=['confirm_non_mmgen'])
 	def txsign5(self): return self.txsign(ni=True,ext=amt1+',50000]{}.regtest.rawtx')
 	def txsend5(self): return self.txsend(ext=amt1+',50000]{}.regtest.sigtx')
 	def bal5(self):    return self.bal(n='5')
@@ -732,7 +737,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		txid = self.txsend_ui_common(t,
 			caller = mmgen_cmd,
-			quiet = mmgen_cmd == 'txdo' or not g.debug,
+			quiet  = mmgen_cmd == 'txdo' or not g.debug,
 			bogus_send = False )
 		addr = strip_ansi_escapes(t.expect_getend('Contract address: '))
 		if (await self.get_tx_receipt(txid)).status == 0:

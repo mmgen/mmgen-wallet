@@ -466,12 +466,11 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			outputs_list.append(len(tx_data)*(addrs_per_wallet+1) + 1)
 
 		self.txcreate_ui_common(t,
-			menu             = (['M'],['M','D','m','g'])[self.test_name=='txcreate'],
-			inputs           = ' '.join(map(str,outputs_list)),
-			add_comment      = ('',tx_label_lat_cyr_gr)[do_label],
-			non_mmgen_inputs = (0,1)[bool(non_mmgen_input and not txdo_args)],
-			view             = view,
-			tweaks           = tweaks )
+			menu        = (['M'],['M','D','m','g'])[self.test_name=='txcreate'],
+			inputs      = ' '.join(map(str,outputs_list)),
+			add_comment = ('',tx_label_lat_cyr_gr)[do_label],
+			view        = view,
+			tweaks      = tweaks )
 
 		if txdo_args and add_args: # txdo4
 			t.do_decrypt_ka_data(hp='1',pw=self.cfgs['14']['kapasswd'])
