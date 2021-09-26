@@ -36,14 +36,14 @@ del_addrs = ('4','1')
 dfl_sid = '98831F3A'
 
 # The OpenEthereum dev address with lots of coins.  Create with "ethkey -b info ''":
-dfl_addr = '00a329c0648769a73afac7f9381e08fb43dbea72'
+dfl_devaddr = '00a329c0648769a73afac7f9381e08fb43dbea72'
 dfl_addr_chk = '00a329c0648769A73afAc7F9381E08FB43dBEA72'
-dfl_privkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
+dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 burn_addr = 'deadbeef'*5
 amt1 = '999999.12345689012345678'
 amt2 = '888.111122223333444455'
 
-openethereum_key_fn = 'openethereum.devkey'
+parity_devkey_fn = 'parity.devkey'
 
 tested_solc_ver = '0.8.7'
 
@@ -406,9 +406,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		imsg(f'  Signer address:     {signer_addr}')
 
 		prealloc_amt = ETHAmt('1_000_000_000')
-		imsg(f'  Faucet:             {dfl_addr} ({prealloc_amt} ETH)')
+		imsg(f'  Faucet:             {dfl_devaddr} ({prealloc_amt} ETH)')
 
-		genesis_data = make_genesis(signer_addr,dfl_addr,prealloc_amt)
+		genesis_data = make_genesis(signer_addr,dfl_devaddr,prealloc_amt)
 
 		genesis_fn = joinpath(self.tmpdir,'genesis.json')
 		imsg(f'  Genesis block data: {genesis_fn}')
@@ -465,7 +465,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def addrimport_dev_addr(self):
-		return self.addrimport_one_addr(addr=dfl_addr)
+		return self.addrimport_one_addr(addr=dfl_devaddr)
 
 	def addrimport_burn_addr(self):
 		return self.addrimport_one_addr(addr=burn_addr)
@@ -499,8 +499,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def txsign(self,ni=False,ext='{}.regtest.rawtx',add_args=[]):
 		ext = ext.format('-α' if g.debug_utf8 else '')
-		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
-		write_to_file(keyfile,dfl_privkey+'\n')
+		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
+		write_to_file(keyfile,dfl_devkey+'\n')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
 						['--outdir={}'.format(self.tmpdir),'--coin='+self.proto.coin,'--quiet']
@@ -710,13 +710,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return res
 
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
-		keyfile = joinpath(self.tmpdir,openethereum_key_fn)
+		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
 		args = ['-B',
 				'--tx-fee='+tx_fee,
 				'--tx-gas={}'.format(gas),
 				'--contract-data='+fn,
-				'--inputs='+dfl_addr,
+				'--inputs='+dfl_devaddr,
 				'--yes' ]
 		if mmgen_cmd == 'txdo':
 			args += ['-k',keyfile]
@@ -774,13 +774,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
 				imsg_r( '\n' + await tk.info() )
-				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_addr)))
+				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
 				imsg('Sending {} {} to address {} ({})'.format(amt,self.proto.dcoin,usr_addrs[i],usr_mmaddrs[i]))
 				txid = await tk.transfer(
-					dfl_addr,
+					dfl_devaddr,
 					usr_addrs[i],
 					amt,
-					dfl_privkey,
+					dfl_devkey,
 					start_gas = ETHAmt(60000,'wei'),
 					gasPrice  = ETHAmt(8,'Gwei') )
 				if (await self.get_tx_receipt(txid)).status == 0:
@@ -793,7 +793,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
 				imsg('Token: {}'.format(await tk.get_symbol()))
-				imsg('dev token balance: {}'.format(await tk.get_balance(dfl_addr)))
+				imsg('dev token balance: {}'.format(await tk.get_balance(dfl_devaddr)))
 				imsg('usr token balance: {} ({} {})'.format(
 						await tk.get_balance(usr_addrs[i]),usr_mmaddrs[i],usr_addrs[i]))
 
@@ -911,7 +911,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_bal(n='3')
 
 	def del_dev_addr(self):
-		t = self.spawn('mmgen-tool', self.eth_args + ['remove_address',dfl_addr])
+		t = self.spawn('mmgen-tool', self.eth_args + ['remove_address',dfl_devaddr])
 		t.read() # TODO
 		return t
 
