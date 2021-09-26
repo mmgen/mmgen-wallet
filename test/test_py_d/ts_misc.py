@@ -122,9 +122,10 @@ class TestSuiteOutput(TestSuiteBase):
 	def output_jp(self): return self.screen_output('jp')
 
 	def oneshot_warning(self):
+		nl = '\r\n' if g.platform == 'win' else '\n'
 		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.')
 		for s in (
-			'pw\nwg1',
+			f'pw{nl}wg1',
 			'foo is experimental',
 			'wg2', 'The bar command is dangerous',
 			'wg3', 'baz variant alpha',
@@ -135,11 +136,11 @@ class TestSuiteOutput(TestSuiteBase):
 			'pw',
 			"passphrase from file 'A'",
 			"passphrase from file 'B'",
-			'wg1\nwg2\nwg3\nwg4\nw1\nw2\nw3',
+			f'wg1{nl}wg2{nl}wg3{nl}wg4{nl}w1{nl}w2{nl}w3',
 			'pw',
 			"passphrase from file 'A'",
 			"passphrase from file 'B'",
-			'wg1\nwg2\nwg3\nwg4\nw1\nw2\nw3',
+			f'wg1{nl}wg2{nl}wg3{nl}wg4{nl}w1{nl}w2{nl}w3',
 			'bottom',
 		):
 			t.expect(s)

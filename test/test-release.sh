@@ -558,13 +558,6 @@ run_tests() {
 	done
 }
 
-check_core_repo() {
-	[ -e "$CORE_REPO_ROOT/src/test/data/tx_valid.json" ] || {
-		echo "CORE_REPO_ROOT not set, or does not point to Bitcoin Core repository"
-		exit 1
-	}
-}
-
 check_args() {
 	for i in $tests; do
 		echo "$dfl_tests $extra_tests" | grep -q "\<$i\>" || {
@@ -574,7 +567,6 @@ check_args() {
 	done
 }
 
-check_core_repo
 check_args
 [ "$LIST_CMDS" ] || echo "Running tests: $tests"
 START=$(date +%s)

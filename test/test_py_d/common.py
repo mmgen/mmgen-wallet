@@ -107,7 +107,10 @@ def get_file_with_ext(tdir,ext,delete=True,no_dot=False,return_list=False,delete
 	if len(flist) > 1 or delete_all:
 		if delete or delete_all:
 			if (opt.exact_output or opt.verbose) and not opt.quiet:
-				msg("Multiple *.{} files in '{}' - deleting".format(ext,tdir))
+				if delete_all:
+					msg(f'Deleting all *.{ext} files in {tdir!r}')
+				else:
+					msg(f'Multiple *.{ext} files in {tdir!r} - deleting')
 			for f in flist:
 				os.unlink(f)
 		return False

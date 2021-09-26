@@ -48,21 +48,21 @@ _date_formatter = {
 	'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
 }
 
-async def _set_dates(rpc,us):
-	if rpc.proto.base_proto != 'Bitcoin':
-		return
-	if us and us[0].date is None:
-		# 'blocktime' differs from 'time', is same as getblockheader['time']
-		dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
-		for idx,o in enumerate(us):
-			o.date = dates[idx]
-
 if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
 	_date_formatter['days'] = lambda rpc,secs: (1831006505 - secs) // 86400
 	async def _set_dates(rpc,us):
 		for o in us:
 			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
+else:
+	async def _set_dates(rpc,us):
+		if rpc.proto.base_proto != 'Bitcoin':
+			return
+		if us and us[0].date is None:
+			# 'blocktime' differs from 'time', is same as getblockheader['time']
+			dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
+			for idx,o in enumerate(us):
+				o.date = dates[idx]
 
 class TwUnspentOutputs(MMGenObject,metaclass=AsyncInit):
 
