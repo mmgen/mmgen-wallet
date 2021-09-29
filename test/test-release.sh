@@ -44,7 +44,7 @@ quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc b
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hAbCfFi:I:lOptvV OPT
+while getopts hAbCfFi:I:lNOptvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -59,6 +59,7 @@ do
 		echo   "                 must be supplied as a parameter"
 		echo   "           '-I'  Like '-i', but install the package without running the tests"
 		echo   "           '-l'  List the test name symbols"
+		echo   "           '-N'  Pass the --no-timings switch to test/test.py"
 		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
 		echo   "           '-p'  Pause between tests"
 		echo   "           '-t'  Print the tests without running them"
@@ -126,6 +127,7 @@ do
 		echo -e "'quick' test group:\n  $quick_tests"
 		echo -e "'qskip' test group:\n  $qskip_tests"
 		exit ;;
+	N)  test_py+=" --no-timings" ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
 	t)  LIST_CMDS=1 ;;

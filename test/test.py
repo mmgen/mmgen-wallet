@@ -107,6 +107,7 @@ opts_data = {
 -L, --list-cmd-groups Output a list of command groups with descriptions
 -g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
+-N, --no-timings     Suppress display of timing information
 -o, --log            Log commands to file {lf}
 -O, --pexpect-spawn  Use pexpect.spawn instead of popen_spawn (much slower,
                      kut does real terminal emulation)
@@ -685,15 +686,15 @@ class TestSuiteRunner(object):
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
 		if not no_msg:
-			t_fmt = f'{time.time() - self.start_time:08.2f}'
+			t_pfx = '' if opt.no_timings else f'[{time.time() - self.start_time:08.2f}] '
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
 				clr1,clr2 = ((green,cyan),(nocolor,nocolor))[bool(opt.print_cmdline)]
-				omsg(green(f'[{t_fmt}] Testing: {desc}'))
+				omsg(green(f'{t_pfx}Testing: {desc}'))
 				if not msg_only:
 					s = repr(cmd_disp) if g.platform == 'win' else cmd_disp
 					omsg(clr1('Executing: ') + clr2(s))
 			else:
-				omsg_r(f'[{t_fmt}] Testing {desc}: ')
+				omsg_r(f'{t_pfx}Testing {desc}: ')
 
 		if msg_only:
 			return
@@ -712,8 +713,10 @@ class TestSuiteRunner(object):
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)
-		m = '{} test{} performed.  Elapsed time: {:02d}:{:02d}\n'
-		sys.stderr.write(green(m.format(self.cmd_total,suf(self.cmd_total),t//60,t%60)))
+		sys.stderr.write(green(
+			f'{self.cmd_total} test{suf(self.cmd_total)} performed.' +
+			('' if opt.no_timings else f'  Elapsed time: {t//60:02d}:{t%60:02d}\n')
+		))
 
 	def init_group(self,gname,cmd=None,quiet=False,do_clean=True):
 
