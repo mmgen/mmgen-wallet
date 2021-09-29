@@ -10,8 +10,10 @@ elif uname -a | grep -q 'MSYS'; then
 	SUDO='' MSYS2=1;
 fi
 
-RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
-RESET="\e[0m"
+[ "$MMGEN_DISABLE_COLOR" ] || {
+	RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
+	RESET="\e[0m"
+}
 
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 

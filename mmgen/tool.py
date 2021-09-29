@@ -208,7 +208,7 @@ def _process_result(ret,pager=False,print_result=False):
 	if ret == True:
 		return True
 	elif ret in (False,None):
-		ydie(1,"tool command returned '{}'".format(ret))
+		ydie(1,f'tool command returned {ret!r}')
 	elif isinstance(ret,str):
 		return triage_result(ret)
 	elif isinstance(ret,int):
