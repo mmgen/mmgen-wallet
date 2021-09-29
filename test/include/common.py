@@ -98,7 +98,8 @@ def cleandir(d,do_msg=False):
 	except: return
 
 	from shutil import rmtree
-	if do_msg: gmsg("Cleaning directory '{}'".format(d))
+	if do_msg:
+		gmsg(f'Cleaning directory {d!r}')
 	for f in files:
 		try:
 			os.unlink(os.path.join(d_enc,f))
@@ -110,7 +111,7 @@ def mk_tmpdir(d):
 	except OSError as e:
 		if e.errno != 17: raise
 	else:
-		vmsg("Created directory '{}'".format(d))
+		vmsg(f'Created directory {d!r}')
 
 def get_tmpfile(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
@@ -143,9 +144,10 @@ def ok():
 
 def cmp_or_die(s,t,desc=None):
 	if s != t:
-		m = 'ERROR: recoded data:\n{!r}\ndiffers from original data:\n{!r}'
-		if desc: m = 'For {}:\n{}'.format(desc,m)
-		raise TestSuiteFatalException(m.format(t,s))
+		raise TestSuiteFatalException(
+			(f'For {desc}:\n' if desc else '') +
+			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}'
+		)
 
 def init_coverage():
 	coverdir = os.path.join('test','trace')

@@ -55,7 +55,7 @@ file_pfx = 'nt_' if opt.node_tools else 'ut_'
 
 def exit_msg():
 	t = int(time.time()) - start_time
-	gmsg('All requested unit tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
+	gmsg(f'All requested unit tests finished OK, elapsed time: {t//60:02}:{t%60:02}')
 
 all_tests = sorted(
 	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
@@ -83,12 +83,12 @@ class UnitTestHelpers(object):
 		m_noraise = "\nillegal action 'bad {}' failed to raise exception {!r}"
 		for (desc,exc_chk,emsg_chk,func) in data:
 			try:
-				vmsg_r('  bad {:{w}}'.format(desc+':',w=desc_w+1))
+				vmsg_r('  bad {:{w}}'.format( desc+':', w=desc_w+1 ))
 				func()
 			except Exception as e:
 				exc = type(e).__name__
 				emsg = e.args[0]
-				vmsg(' {:{w}} [{}]'.format(exc,emsg,w=exc_w))
+				vmsg(' {:{w}} [{}]'.format( exc, emsg, w=exc_w ))
 				assert exc == exc_chk, m_exc.format(exc,exc_chk)
 				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:
@@ -97,7 +97,7 @@ class UnitTestHelpers(object):
 tests_seen = []
 
 def run_test(test,subtest=None):
-	modname = 'test.unit_tests_d.{}{}'.format(file_pfx,test)
+	modname = f'test.unit_tests_d.{file_pfx}{test}'
 	mod = importlib.import_module(modname)
 
 	def run_subtest(subtest):

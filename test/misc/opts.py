@@ -35,7 +35,7 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda s: s.format(
-			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			g=g,
 		),
@@ -61,11 +61,11 @@ for k in (
 	'key_generator',     # global_sets_opt
 	'hidden_incog_input_params',
 	):
-	msg('{:30} {}'.format('opt.'+k+':',getattr(opt,k)))
+	msg('{:30} {}'.format( f'opt.{k}:', getattr(opt,k) ))
 
 msg('')
 for k in (
 	'subseeds',          # opt_sets_global
 	'key_generator',     # global_sets_opt
 	):
-	msg('{:30} {}'.format('g.'+k+':',getattr(opt,k)))
+	msg('{:30} {}'.format( f'g.{k}:', getattr(opt,k) ))

@@ -34,7 +34,7 @@ class TestSuiteOpts(TestSuiteBase):
 	def check_vals(self,args,vals):
 		t = self.spawn_prog(args)
 		for k,v in vals:
-			t.expect(r'{}:\s+{}'.format(k,v),regex=True)
+			t.expect(rf'{k}:\s+{v}',regex=True)
 		t.read()
 		return t
 
@@ -82,7 +82,7 @@ class TestSuiteOpts(TestSuiteBase):
 					'--passwd-file='+pf,
 					'--outdir='+self.tmpdir,
 					'--subseeds=200',
-					'--hidden-incog-input-params={},123'.format(pf),
+					f'--hidden-incog-input-params={pf},123',
 				],
 				(
 					('opt.print_checksum',    'True'),

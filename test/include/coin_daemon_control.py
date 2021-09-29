@@ -8,7 +8,7 @@ action = g.prog_name.split('-')[0]
 opts_data = {
 	'sets': [('debug',True,'verbose',True)],
 	'text': {
-		'desc': '{} coin daemons for the MMGen test suite'.format(action.capitalize()),
+		'desc': f'{action.capitalize()} coin daemons for the MMGen test suite',
 		'usage':'[opts] <network IDs>',
 		'options': """
 -h, --help           Print this help message

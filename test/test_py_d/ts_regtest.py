@@ -264,13 +264,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
 		silence()
-		gmsg("Adding comments to address file '{}'".format(addrfile))
+		gmsg(f'Adding comments to address file {addrfile!r}')
 		a = AddrList(self.proto,addrfile)
 		for n,idx in enumerate(a.idxs(),1):
 			if use_labels:
 				a.set_comment(idx,get_label())
 			else:
-				if n % 2: a.set_comment(idx,'Test address {}'.format(n))
+				if n % 2: a.set_comment(idx,f'Test address {n}')
 		a.format(add_comments=True)
 		write_data_to_file(outfile,a.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
@@ -330,11 +330,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		from mmgen.addr import MMGenAddrType
 		for mmtype in mmtypes or self.proto.mmtypes:
 			t = self.spawn('mmgen-addrgen',
-				['--quiet','--'+user,'--type='+mmtype,'--outdir={}'.format(self._user_dir(user))] +
+				['--quiet','--'+user,'--type='+mmtype,f'--outdir={self._user_dir(user)}'] +
 				([wf] if wf else []) +
 				(['--subwallet='+subseed_idx] if subseed_idx else []) +
 				[addr_range],
-				extra_desc='({})'.format(MMGenAddrType.mmtypes[mmtype].name))
+				extra_desc='({})'.format( MMGenAddrType.mmtypes[mmtype].name ))
 			t.passphrase(dfl_wcls.desc,rt_pw)
 			t.written_to_file('Addresses')
 			ok_msg()
@@ -356,13 +356,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 					x='-α' if g.debug_utf8 else ''))
 			if mmtype == self.proto.mmtypes[0] and user == 'bob':
 				self._add_comments_to_addr_file(addrfile,addrfile,use_labels=True)
-			t = self.spawn( 'mmgen-addrimport',
-							['--quiet', '--'+user, '--batch', addrfile],
-							extra_desc='({})'.format(desc))
+			t = self.spawn(
+				'mmgen-addrimport',
+				['--quiet', '--'+user, '--batch', addrfile],
+				extra_desc=f'({desc})' )
 			if g.debug:
 				t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 			t.expect('Importing')
-			t.expect('{} addresses imported'.format(num_addrs))
+			t.expect(f'{num_addrs} addresses imported')
 			ok_msg()
 
 		t.skip_ok = True
@@ -507,7 +508,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def bob_getbalance(self,bals,confs=1):
 		for i in (0,1,2):
 			assert Decimal(bals['mmgen'][i]) + Decimal(bals['nonmm'][i]) == Decimal(bals['total'][i])
-		t = self.spawn('mmgen-tool',['--bob','getbalance','minconf={}'.format(confs)])
+		t = self.spawn('mmgen-tool',['--bob','getbalance',f'minconf={confs}'])
 		t.expect('Wallet')
 		for k in ('mmgen','nonmm','total'):
 			ret = strip_ansi_escapes(t.expect_getend(r'\S+: ',regex=True))
@@ -655,7 +656,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def generate(self,coin=None,num_blocks=1):
 		int(num_blocks)
 		t = self.spawn('mmgen-regtest',['generate',str(num_blocks)])
-		t.expect('Mined {} block'.format(num_blocks))
+		t.expect(f'Mined {num_blocks} block')
 		return t
 
 	def _get_mempool(self):
@@ -703,7 +704,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
-			'Transaction has been replaced','{} in mempool'.format(new_txid))
+			'Transaction has been replaced',f'{new_txid} in mempool')
 
 	def bob_rbf_status3(self):
 		if not self.proto.cap('rbf'):
@@ -716,7 +717,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 1 confirmation',
-			'Replacing transactions:\s+{}'.format(new_txid))
+			f'Replacing transactions:\s+{new_txid}' )
 
 	def bob_rbf_status5(self):
 		if not self.proto.cap('rbf'):
@@ -729,7 +730,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		new_txid = self.read_from_tmpfile('rbf_txid2').strip()
 		return self.bob_rbf_status(rtFee[1],
 			'Replacement transaction has 2 confirmations',
-			'Replacing transactions:\s+{}'.format(new_txid))
+			f'Replacing transactions:\s+{new_txid}' )
 
 	def _gen_pairs(self,n):
 		from mmgen.tool import tool_api
@@ -947,7 +948,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				( '\d+\s+\d+\s+'+pat_date_time,'q'),
 			):
 			t.expect(
-				r'\D{}\D.*\b{}\b'.format(rtAmts[0],d),
+				r'\D{}\D.*\b{}\b'.format( rtAmts[0], d ),
 				s,
 				regex=True )
 		t.read()

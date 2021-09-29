@@ -160,7 +160,7 @@ class TestSuiteInput(TestSuiteBase):
 		pw = 'abc-α'
 		t.expect(prompt,pw)
 		ret = t.expect_getend('Entered: ')
-		assert ret == pw,'Password mismatch! {} != {}'.format(ret,pw)
+		assert ret == pw, f'Password mismatch! {ret} != {pw}'
 		return t
 
 	def password_entry_noecho(self):
@@ -190,7 +190,7 @@ class TestSuiteInput(TestSuiteBase):
 			regex = True )
 		t.expect('Using (.+) entry mode',regex=True)
 		mode = strip_ansi_escapes(t.p.match.group(1)).lower()
-		assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
+		assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)
 		t.expect(sample_mn[fmt]['hex'])
 		t.read()
@@ -198,7 +198,7 @@ class TestSuiteInput(TestSuiteBase):
 
 	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
 		wcls = Wallet.fmt_code_to_type(fmt)
-		wf = os.path.join(ref_dir,'FE3C6545.{}'.format(wcls.ext))
+		wf = os.path.join(ref_dir,f'FE3C6545.{wcls.ext}')
 		if wcls.wclass == 'mnemonic':
 			mn = mn or read_from_file(wf).strip().split()
 		elif wcls.wclass == 'dieroll':
@@ -206,7 +206,7 @@ class TestSuiteInput(TestSuiteBase):
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
-		t.expect('{} type:.*{}'.format(capfirst(wcls.wclass),wcls.mn_type),regex=True)
+		t.expect(f'{capfirst(wcls.wclass)} type:.*{wcls.mn_type}',regex=True)
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
 		if wcls.wclass == 'mnemonic':
@@ -217,7 +217,7 @@ class TestSuiteInput(TestSuiteBase):
 			t.expect('Type a number.*: ',str(mne.entry_modes.index(entry_mode)+1),regex=True)
 			t.expect('Using (.+) entry mode',regex=True)
 			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
-			assert mode == mne.em.name.lower(), '{} != {}'.format(mode,mne.em.name.lower())
+			assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 			stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode)
 		elif wcls.wclass == 'dieroll':
 			user_dieroll_entry(t,mn)
@@ -228,9 +228,9 @@ class TestSuiteInput(TestSuiteBase):
 				t.expect(wcls.user_entropy_prompt,'n')
 		if not usr_rand:
 			sid_chk = 'FE3C6545'
-			sid = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))
+			sid = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 			sid = strip_ansi_escapes(sid.split(',')[0])
-			assert sid == sid_chk,'Seed ID mismatch! {} != {}'.format(sid,sid_chk)
+			assert sid == sid_chk, f'Seed ID mismatch! {sid} != {sid_chk}'
 		t.expect('to confirm: ','YES\n')
 		t.read()
 		return t

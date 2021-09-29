@@ -29,7 +29,7 @@ def cfg_file_auth_test(proto,d):
 	d.stop()
 
 def do_msg(rpc):
-	qmsg('  Testing backend {!r}'.format(type(rpc.backend).__name__))
+	qmsg('  Testing backend {!r}'.format( type(rpc.backend).__name__ ))
 
 class init_test:
 

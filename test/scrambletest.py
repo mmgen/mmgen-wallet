@@ -91,17 +91,17 @@ passwd_data = {
 'xmrseed_dfl_αω':td('62f5b72a5ca89cab', 'xmrseed:25:αω','-αω-xmrseed-25','αω xmrseed:25','tequila eden skulls giving jester hospital dreams bakery adjust nanny cactus inwardly films amply nanny soggy vials muppet yellow woken ashtray organs exhale foes eden'),
 }
 
-cvr_opts = ' -m trace --count --coverdir={} --file={}'.format(*init_coverage()) if opt.coverage else ''
-cmd_base = 'python3{} cmds/mmgen-{{}}gen -qS'.format(cvr_opts)
+cvr_opts = ' -m trace --count --coverdir={} --file={}'.format( *init_coverage() ) if opt.coverage else ''
+cmd_base = f'python3{cvr_opts} cmds/mmgen-{{}}gen -qS'
 
 def get_cmd_output(cmd):
 	cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
 	if cp.returncode != 0:
-		ydie(2,'\nSpawned program exited with error code {}:\n{}'.format(cp.returncode,cp.stderr.decode()))
+		ydie(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr.decode()}')
 	return cp.stdout.decode().splitlines()
 
 def do_test(cmd,tdata,msg_str,addr_desc):
-	vmsg(green('Executing: {}'.format(cmd)))
+	vmsg(green(f'Executing: {cmd}'))
 	msg_r('Testing: ' + msg_str)
 
 	lines = get_cmd_output(cmd)
@@ -113,9 +113,9 @@ def do_test(cmd,tdata,msg_str,addr_desc):
 	for k in ref_data:
 		if cmd_out[k] == ref_data[k]:
 			s = k.replace('seed','seed[:8]').replace('addr',addr_desc)
-			vmsg('  {:9}: {}'.format(s,cmd_out[k]))
+			vmsg(f'  {s:9}: {cmd_out[k]}')
 		else:
-			rdie(1,'\nError: sc_{} value {} does not match reference value {}'.format(k,cmd_out[k],ref_data[k]))
+			rdie(1,f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
 	msg('OK')
 
 def do_coin_tests():
@@ -126,15 +126,15 @@ def do_coin_tests():
 			continue
 		coin,mmtype = tname.split('_',1) if '_' in tname else (tname,None)
 		type_arg = ' --type='+mmtype if mmtype else ''
-		cmd = cmd_base.format('addr') + ' --coin={}{} test/ref/98831F3A.mmwords 1'.format(coin,type_arg)
-		do_test(cmd,tdata,'--coin {:4} {:22}'.format(coin.upper(),type_arg),'address')
+		cmd = cmd_base.format('addr') + f' --coin={coin}{type_arg} test/ref/98831F3A.mmwords 1'
+		do_test(cmd,tdata,f'--coin {coin.upper():4} {type_arg:22}','address')
 
 def do_passwd_tests():
 	bmsg('Testing password scramble strings and list IDs')
 	for tname,tdata in passwd_data.items():
 		a,b,pwid = tname.split('_')
-		fmt_arg = '' if a == 'dfl' else '--passwd-fmt={} '.format(a)
-		len_arg = '' if b == 'dfl' else '--passwd-len={} '.format(b)
+		fmt_arg = '' if a == 'dfl' else f'--passwd-fmt={a} '
+		len_arg = '' if b == 'dfl' else f'--passwd-len={b} '
 		fs = '{}' + fmt_arg + len_arg + '{}' + pwid + ' 1'
 		cmd = cmd_base.format('pass') + ' ' + fs.format('--accept-defaults ','test/ref/98831F3A.mmwords ')
 		s = fs.format('','')

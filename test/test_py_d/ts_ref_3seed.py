@@ -73,7 +73,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 	def __init__(self,trunner,cfgs,spawn):
 		for k,j in self.cmd_group:
 			for n in (1,2,3): # 128,192,256 bits
-				setattr(self,'{}_{}'.format(k,n),getattr(self,k))
+				setattr(self,f'{k}_{n}',getattr(self,k))
 		if cfgs:
 			for n in self.tmpdir_nums:
 				cfgs[str(n)]['addr_idx_list'] = self.addr_idx_list_in
@@ -85,7 +85,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf=None,sid=self.seed_id)
 
 	def ref_ss_chk(self,ss=None):
-		wf = joinpath(ref_dir,'{}.{}'.format(self.seed_id,ss.ext))
+		wf = joinpath(ref_dir,f'{self.seed_id}.{ss.ext}')
 		return self.walletchk(wf,pf=None,wcls=ss,sid=self.seed_id)
 
 	def ref_seed_chk(self):
@@ -110,8 +110,11 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		source = TestSuiteWalletConv.sources[str(self.seed_len)]
 		for wtype,edesc,of_arg in ('hic_wallet','',[]), \
 								('hic_wallet_old','(old format)',['-O']):
-			ic_arg = ['-H{},{}'.format(joinpath(ref_dir,source[wtype]),ref_wallet_incog_offset)]
-			slarg = ['-l{} '.format(self.seed_len)]
+			ic_arg = ['-H{},{}'.format(
+				joinpath(ref_dir,source[wtype]),
+				ref_wallet_incog_offset )
+			]
+			slarg = [f'-l{self.seed_len} ']
 			hparg = ['-p1']
 			if wtype == 'hic_wallet_old' and opt.profile: msg('')
 			t = self.spawn('mmgen-walletchk',
@@ -128,9 +131,9 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return t
 
 	def ref_walletgen_brain(self):
-		sl_arg = '-l{}'.format(self.seed_len)
-		hp_arg = '-p{}'.format(ref_wallet_hash_preset)
-		label = "test.py ref. wallet (pw '{}', seed len {}) α".format(ref_wallet_brainpass,self.seed_len)
+		sl_arg = f'-l{self.seed_len}'
+		hp_arg = f'-p{ref_wallet_hash_preset}'
+		label = f'test.py ref. wallet (pw {ref_wallet_brainpass!r}, seed len {self.seed_len}) α'
 		bf = 'ref.mmbrain'
 		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ib','-L',label]
 		self.write_to_tmpfile(bf,ref_wallet_brainpass)
@@ -148,7 +151,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			self.chk_data['sids'][idx],
 			self.chk_data['lens'][idx],
 			'-α' if g.debug_utf8 else '')
-		assert re.match(pat,fn),'{} != {}'.format(pat,fn)
+		assert re.match(pat,fn), f'{pat} != {fn}'
 		sid = os.path.basename(fn.split('-')[0])
 		cmp_or_die(sid,self.seed_id,desc='Seed ID')
 		return t
@@ -165,9 +168,14 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		if re_pat:
 			import re
 			pat = re_pat.format(sid,slen)
-			assert re.match(pat,fn),'{} != {}'.format(pat,fn)
+			assert re.match(pat,fn), f'{pat} != {fn}'
 		else:
-			cmp_or_die('{}[{}]{}.{}'.format(sid,slen,'-α' if g.debug_utf8 else '',wcls.ext),fn)
+			cmp_or_die('{}[{}]{}.{}'.format(
+				sid,
+				slen,
+				'-α' if g.debug_utf8 else '',
+				wcls.ext),
+				fn )
 		return t
 
 	def ref_walletconv_words(self):        return self.ref_walletconv(ofmt='mn')

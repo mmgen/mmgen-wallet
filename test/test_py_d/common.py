@@ -72,7 +72,7 @@ def ok_msg():
 	sys.stderr.write(green('\nOK\n') if opt.exact_output or opt.verbose else ' OK\n')
 
 def skip(name,reason=None):
-	msg('Skipping {}{}'.format(name,' ({})'.format(reason) if reason else ''))
+	msg('Skipping {}{}'.format( name, f' ({reason})' if reason else '' ))
 	return 'skip'
 
 def confirm_continue():

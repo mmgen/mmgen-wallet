@@ -116,7 +116,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 
 	def ref_altcoin_addrgen(self,coin,mmtype,gen_what='addr',coin_suf='',add_args=[]):
 		wf = dfl_words_file
-		t = self.spawn('mmgen-{}gen'.format(gen_what),
+		t = self.spawn(f'mmgen-{gen_what}gen',
 				['-Sq','--coin='+coin] +
 				(['--type='+mmtype] if mmtype else []) +
 				add_args +
@@ -124,9 +124,14 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		if gen_what == 'key':
 			t.expect('Encrypt key list? (y/N): ','N')
 		chk = t.expect_getend(r'.* data checksum for \S*: ',regex=True)
-		chk_ref = self.chk_data['ref_{}addrfile_chksum_{}{}'.format(('','key')[gen_what=='key'],coin.lower(),coin_suf)]
+		chk_ref = self.chk_data[
+			'ref_{}addrfile_chksum_{}{}'.format(
+				('key' if gen_what == 'key' else ''),
+				coin.lower(),
+				coin_suf )
+		]
 		t.read()
-		cmp_or_die(chk,chk_ref,desc='{}list data checksum'.format(gen_what))
+		cmp_or_die(chk,chk_ref,desc=f'{gen_what}list data checksum')
 		return t
 
 	def ref_addrfile_gen_eth(self):

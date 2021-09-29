@@ -43,7 +43,7 @@ class TestSuiteBase(object):
 		self.spawn = spawn
 		self.have_dfl_wallet = False
 		self.usr_rand_chars = (5,30)[bool(opt.usr_random)]
-		self.usr_rand_arg = '-r{}'.format(self.usr_rand_chars)
+		self.usr_rand_arg = f'-r{self.usr_rand_chars}'
 		self.altcoin_pfx = '' if self.proto.base_coin == 'BTC' else '-'+self.proto.base_coin
 		self.tn_ext = ('','.testnet')[self.proto.testnet]
 		d = {'bch':'btc','btc':'btc','ltc':'ltc'}
@@ -74,7 +74,7 @@ class TestSuiteBase(object):
 
 	def skip_for_win(self):
 		if g.platform == 'win':
-			msg("Skipping test '{}': not supported on MSys2 platform".format(self.test_name))
+			msg(f'Skipping test {self.test_name!r}: not supported on MSys2 platform')
 			return True
 		else:
 			return False

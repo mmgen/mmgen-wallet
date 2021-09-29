@@ -88,7 +88,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	def __init__(self,trunner,cfgs,spawn):
 		for k,j in self.cmd_group:
 			for n in (1,2,3):
-				setattr(self,'{}_{}'.format(k,n),getattr(self,k))
+				setattr(self,f'{k}_{n}',getattr(self,k))
 		return TestSuiteBase.__init__(self,trunner,cfgs,spawn)
 
 	def ref_wallet_conv(self):
@@ -120,7 +120,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	def ref_hincog_conv(self,wfk='hic_wallet',add_uopts=[]):
 		ic_f = joinpath(ref_dir,self.sources[str(self.seed_len)][wfk])
 		uopts = ['-i','hi','-p','1','-l',str(self.seed_len)] + add_uopts
-		hi_opt = ['-H','{},{}'.format(ic_f,ref_wallet_incog_offset)]
+		hi_opt = ['-H',f'{ic_f},{ref_wallet_incog_offset}']
 		return self.walletconv_in(None,uopts+hi_opt,oo=True,icls=IncogWalletHidden)
 
 	def ref_hincog_conv_old(self):
@@ -139,7 +139,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	def ref_hincog_conv_out(self,ic_f=None):
 		if not ic_f:
 			ic_f = joinpath(self.tmpdir,hincog_fn)
-		hi_parms = '{},{}'.format(ic_f,ref_wallet_incog_offset)
+		hi_parms = f'{ic_f},{ref_wallet_incog_offset}'
 		sl_parm = '-l' + str(self.seed_len)
 		return self.walletconv_out('hi',
 									uopts     = ['-J',hi_parms,sl_parm],
@@ -154,16 +154,16 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		ic_img = joinpath(self.tmpdir,'hincog_blkdev_img')
 		do_run(['dd','if=/dev/zero','of='+ic_img,'bs=1K','count=1'])
 		ic_dev = do_run(['sudo','/sbin/losetup','-f']).stdout.strip().decode()
-		ic_dev_mode_orig = '{:o}'.format(os.stat(ic_dev).st_mode & 0xfff)
+		ic_dev_mode_orig = '{:o}'.format( os.stat(ic_dev).st_mode & 0xfff )
 		ic_dev_mode = '0666'
-		imsg("Changing permissions on loop device to '{}'".format(ic_dev_mode))
+		imsg(f'Changing permissions on loop device to {ic_dev_mode!r}')
 		do_run(['sudo','chmod',ic_dev_mode,ic_dev])
-		imsg("Attaching loop device '{}'".format(ic_dev))
+		imsg(f'Attaching loop device {ic_dev!r}')
 		do_run(['sudo','/sbin/losetup',ic_dev,ic_img])
 		self.ref_hincog_conv_out(ic_f=ic_dev)
-		imsg("Detaching loop device '{}'".format(ic_dev))
+		imsg(f'Detaching loop device {ic_dev!r}')
 		do_run(['sudo','/sbin/losetup','-d',ic_dev])
-		imsg("Resetting permissions on loop device to '{}'".format(ic_dev_mode_orig))
+		imsg(f'Resetting permissions on loop device to {ic_dev_mode_orig!r}')
 		do_run(['sudo','chmod',ic_dev_mode_orig,ic_dev])
 		return 'ok'
 
@@ -200,7 +200,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		infile = joinpath(ref_dir,self.seed_id+'.mmwords')
 		t = self.spawn('mmgen-walletconv',[self.usr_rand_arg]+opts+[infile],extra_desc='(convert)')
 
-		add_args = ['-l{}'.format(self.seed_len)]
+		add_args = [f'-l{self.seed_len}']
 		t.license()
 		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
 		if pw:

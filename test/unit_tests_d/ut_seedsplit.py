@@ -50,7 +50,7 @@ class unit_test(object):
 				test_data = test_data_master[str(master_idx)]
 
 			for id_str in (None,'default','φυβαρ'):
-				msg_r('Testing basic ops (id_str={!r}, master_idx={})...'.format(id_str,master_idx))
+				msg_r(f'Testing basic ops (id_str={id_str!r}, master_idx={master_idx})...')
 				vmsg('')
 
 				for a,b,c,d,e,f,h,i,p in test_data[id_str if id_str is not None else 'default']:
@@ -65,7 +65,7 @@ class unit_test(object):
 						assert A == share_count, A
 
 						s = shares.format()
-						vmsg_r('\n{}'.format(s))
+						vmsg_r(f'\n{s}')
 						assert len(s.strip().split('\n')) == share_count+6, s
 
 						if master_idx:
@@ -103,7 +103,7 @@ class unit_test(object):
 
 			shares = seed.split(SeedShareIdx.max_val)
 			s = shares.format()
-#			vmsg_r('\n{}'.format(s))
+#			vmsg_r(f'\n{s}')
 			assert len(s.strip().split('\n')) == 1030, s
 
 			A = shares.get_share_by_idx(1024).sid
@@ -119,7 +119,7 @@ class unit_test(object):
 
 		def collisions(seed_hex,ss_count,last_sid,collisions_chk,master_idx):
 
-			msg_r('Testing Seed ID collisions ({} seed shares, master_idx={})...'.format(ss_count,master_idx))
+			msg_r(f'Testing Seed ID collisions ({ss_count} seed shares, master_idx={master_idx})...')
 			vmsg('')
 
 			seed_bin = bytes.fromhex(seed_hex)
@@ -139,7 +139,7 @@ class unit_test(object):
 				collisions += shares.data['long'][sid][1]
 
 			assert collisions == collisions_chk, collisions
-			vmsg_r('{} collisions, last_sid {}'.format(collisions,last_sid))
+			vmsg_r(f'{collisions} collisions, last_sid {last_sid}')
 			msg('OK')
 
 		def last_share_collisions():
@@ -155,7 +155,7 @@ class unit_test(object):
 			assert collisions == 2, collisions
 			assert lsid == 'B5B8AD09', lsid
 			SeedShareIdx.max_val = ssm_save
-			vmsg_r('{} collisions, last_share sid {}'.format(collisions,lsid))
+			vmsg_r(f'{collisions} collisions, last_share sid {lsid}')
 			msg('..OK')
 
 		basic_ops(master_idx=None)

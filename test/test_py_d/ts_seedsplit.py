@@ -99,7 +99,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				['-q','-d',self.get_tmp_subdir(tdir),'-r0','-o',ofmt]
 				+ (['-L',(spec or 'label')] if ofmt == 'w' else [])
 				+ add_args
-				+ (['--master-share={}'.format(master)] if master else [])
+				+ ([f'--master-share={master}'] if master else [])
 				+ ([wf] if wf else [])
 				+ ([spec] if spec else []))
 		if not wf:
@@ -107,9 +107,9 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if spec:
 			from mmgen.obj import SeedSplitSpecifier
 			sss = SeedSplitSpecifier(spec)
-			pat = r"Processing .*\b{}\b of \b{}\b of .* id .*'{}'".format(sss.idx,sss.count,sss.id)
+			pat = rf'Processing .*\b{sss.idx}\b of \b{sss.count}\b of .* id .*{sss.id!r}'
 		else:
-			pat = "master share #{}".format(master)
+			pat = f'master share #{master}'
 		t.expect(pat,regex=True)
 		ocls = Wallet.fmt_code_to_type(ofmt)
 		pw = issubclass(ocls,WalletEnc)
@@ -128,8 +128,8 @@ class TestSuiteSeedSplit(TestSuiteBase):
 			sid = self.read_from_tmpfile('dfl.sid')
 		t = self.spawn('mmgen-seedjoin',
 				add_args
-				+ (['--master-share={}'.format(master)] if master else [])
-				+ (['--id-str={}'.format(id_str)] if id_str else [])
+				+ ([f'--master-share={master}'] if master else [])
+				+ ([f'--id-str={id_str}'] if id_str else [])
 				+ ['-d',td,'-o',ofmt]
 				+ (['--label','Joined Wallet Label','-r0'] if ofmt == 'w' else [])
 				+ shares)

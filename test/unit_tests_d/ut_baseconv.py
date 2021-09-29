@@ -157,8 +157,9 @@ class unit_test(object):
 		qmsg_r('\nChecking hex-to-base conversion:')
 		for base,data in self.vectors.items():
 			fs = "  {h:%s}  {p:<6} {r}" % max(len(d[0][0]) for d in data)
-			if not opt.verbose: qmsg_r(' {}'.format(base))
-			vmsg('\nBase: {}'.format(base))
+			if not opt.verbose:
+				qmsg_r(f' {base}')
+			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
 			for (hexstr,pad),ret_chk in data:
 				ret = baseconv.fromhex(hexstr,wl_id=base,pad=pad,tostr=True)
@@ -172,8 +173,9 @@ class unit_test(object):
 		qmsg_r('\nChecking base-to-hex conversion:')
 		for base,data in self.vectors.items():
 			fs = "  {h:%s}  {p:<6} {r}" % max(len(d[1]) for d in data)
-			if not opt.verbose: qmsg_r(' {}'.format(base))
-			vmsg('\nBase: {}'.format(base))
+			if not opt.verbose:
+				qmsg_r(f' {base}')
+			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
 			for (hexstr,pad),ret_chk in data:
 				if type(pad) == int:

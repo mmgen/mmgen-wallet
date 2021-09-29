@@ -30,12 +30,12 @@ try:
 	import pexpect
 	from pexpect.popen_spawn import PopenSpawn
 except ImportError as e:
-	die(2,red('Pexpect module is missing.  Cannnot run test suite ({!r})'.format(e)))
+	die(2,red(f'Pexpect module is missing.  Cannnot run test suite ({e!r})'))
 
 def debug_pexpect_msg(p):
 	if opt.debug_pexpect:
-		msg('\n{}{}{}'.format(red('BEFORE ['),p.before,red(']')))
-		msg('{}{}{}'.format(red('MATCH ['),p.after,red(']')))
+		msg('\n{}{}{}'.format( red('BEFORE ['), p.before, red(']') ))
+		msg('{}{}{}'.format( red('MATCH ['), p.after, red(']') ))
 
 NL = '\n'
 
@@ -75,14 +75,14 @@ class MMGenPexpect(object):
 
 	def do_comment(self,add_comment,has_label=False):
 		p = ('Add a comment to transaction','Edit transaction comment')[has_label]
-		self.expect('{}? (y/N): '.format(p),('n','y')[bool(add_comment)])
+		self.expect(f'{p}? (y/N): ',('n','y')[bool(add_comment)])
 		if add_comment:
 			self.expect('Comment: ',add_comment+'\n')
 
 	def ok(self):
 		ret = self.p.wait()
 		if ret != self.req_exit_val and not opt.coverage:
-			die(1,red('test.py: spawned program exited with value {}'.format(ret)))
+			die(1,red(f'test.py: spawned program exited with value {ret}'))
 		if opt.profile:
 			return
 		if not self.skip_ok:
@@ -110,19 +110,19 @@ class MMGenPexpect(object):
 			self.expect('ENTER to continue: ','\n')
 
 	def passphrase_new(self,desc,passphrase):
-		self.expect('Enter passphrase for {}: '.format(desc),passphrase+'\n')
+		self.expect(f'Enter passphrase for {desc}: ',passphrase+'\n')
 		self.expect('Repeat passphrase: ',passphrase+'\n')
 
 	def passphrase(self,desc,passphrase,pwtype=''):
 		if pwtype: pwtype += ' '
-		self.expect('Enter {}passphrase for {}.*?: '.format(pwtype,desc),passphrase+'\n',regex=True)
+		self.expect(f'Enter {pwtype}passphrase for {desc}.*?: ',passphrase+'\n',regex=True)
 
 	def hash_preset(self,desc,preset=''):
-		self.expect('Enter hash preset for {}'.format(desc))
+		self.expect(f'Enter hash preset for {desc}')
 		self.expect('or hit ENTER .*?:',str(preset)+'\n',regex=True)
 
 	def written_to_file(self,desc,overwrite_unlikely=False,query='Overwrite?  ',oo=False):
-		s1 = '{} written to file '.format(desc)
+		s1 = f'{desc} written to file '
 		s2 = query + "Type uppercase 'YES' to confirm: "
 		ret = self.expect(([s1,s2],s1)[overwrite_unlikely])
 		if ret == 1:
@@ -131,8 +131,8 @@ class MMGenPexpect(object):
 		self.expect(NL,nonl=True)
 		outfile = self.p.before.strip().strip("'")
 		if opt.debug_pexpect:
-			rmsg('Outfile [{}]'.format(outfile))
-		vmsg('{} file: {}'.format(desc,cyan(outfile.replace("'",''))))
+			rmsg(f'Outfile [{outfile}]')
+		vmsg('{} file: {}'.format( desc, cyan(outfile.replace('"',"")) ))
 		return outfile
 
 	def hincog_create(self,hincog_bytes):
@@ -156,7 +156,7 @@ class MMGenPexpect(object):
 		debug_pexpect_msg(self.p)
 		end = self.p.before.rstrip()
 		if not g.debug:
-			vmsg(' ==> {}'.format(cyan(end)))
+			vmsg(f' ==> {cyan(end)}')
 		return end
 
 	def interactive(self):
@@ -181,18 +181,18 @@ class MMGenPexpect(object):
 				ret = f(s)
 		except pexpect.TIMEOUT:
 			if opt.debug_pexpect: raise
-			m1 = red('\nERROR.  Expect {!r} timed out.  Exiting\n'.format(s))
-			m2 = 'before: [{}]\n'.format(self.p.before)
-			m3 = 'sent value: [{}]'.format(self.sent_value) if self.sent_value != None else ''
+			m1 = red(f'\nERROR.  Expect {s!r} timed out.  Exiting\n')
+			m2 = f'before: [{self.p.before}]\n'
+			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
 			rdie(1,m1+m2+m3)
 
 		debug_pexpect_msg(self.p)
 
 		if opt.verbose and type(s) != str:
-			msg_r(' ==> {} '.format(ret))
+			msg_r(f' ==> {ret} ')
 
 		if ret == -1:
-			rdie(1,'Error.  Expect returned {}'.format(ret))
+			rdie(1,f'Error.  Expect returned {ret}')
 		else:
 			if t == '':
 				if not nonl and not silent: vmsg('')
@@ -209,9 +209,10 @@ class MMGenPexpect(object):
 			self.sent_value = t
 		if delay: time.sleep(delay)
 		if opt.verbose:
-			ls = (' ','')[bool(opt.debug or not s)]
-			es = ('  ','')[bool(s)]
-			msg('{}SEND {}{}'.format(ls,es,yellow("'{}'".format(t.replace('\n',r'\n')))))
+			ls = '' if opt.debug or not s else ' '
+			es = '' if s else '  '
+			yt = yellow('{!r}'.format( t.replace('\n',r'\n') ))
+			msg(f'{ls}SEND {es}{yt}')
 		return ret
 
 	def read(self,n=-1):

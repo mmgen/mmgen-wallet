@@ -38,7 +38,7 @@ class unit_test(object):
 					)):
 					vmsg(f'Cfg {n+1}:')
 					for k in ('opt','flag'):
-						vmsg('  {}s: {}'.format( k, getattr(cls,k) ))
+						vmsg(f'  {k}s: {getattr(cls,k)}')
 					yield cls
 			return list(gen())
 

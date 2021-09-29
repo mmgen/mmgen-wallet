@@ -76,7 +76,9 @@ def test_cmds(op):
 						if cp.returncode:
 							ydie(1,f'Unable to execute {d.exec_fn}')
 						else:
-							vmsg('{:16} {}'.format(d.exec_fn+':',cp.stdout.decode().splitlines()[0]))
+							vmsg('{:16} {}'.format(
+								d.exec_fn+':',
+								cp.stdout.decode().splitlines()[0] ))
 					else:
 						if opt.quiet:
 							msg_r('.')

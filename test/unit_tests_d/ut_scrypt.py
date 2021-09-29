@@ -35,7 +35,7 @@ class unit_test(object):
 					if opt.quiet:
 						omsg_r('.')
 					else:
-						msg_r('\n  password {:9} '.format(pw_disp))
+						msg_r(f'\n  password {pw_disp:9} ')
 					ret = scrypt_hash_passphrase(pw,salt,'1').hex()
 					assert ret == res, ret
 
@@ -48,11 +48,11 @@ class unit_test(object):
 				if opt.quiet:
 					omsg_r('.')
 				else:
-					msg_r('\n  {!r:3}: {!r:12}  '.format(hp,g.hash_presets[hp]))
+					msg_r(f'\n  {hp!r:3}: {g.hash_presets[hp]!r:12}  ')
 				st = time.time()
 				ret = scrypt_hash_passphrase(pw,salt,hp).hex()
 				t = time.time() - st
-				vmsg('  {:0.4f} secs'.format(t))
+				vmsg(f'  {t:0.4f} secs')
 				assert ret == res, ret
 
 		if opt.quiet:

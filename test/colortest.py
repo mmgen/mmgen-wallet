@@ -21,18 +21,20 @@ def test_color():
 		ret = get_terminfo_colors(t)
 		if ret == None:
 			set_vt100()
-			ymsg('Warning: unable to get info for terminal {!r}'.format(t))
+			ymsg(f'Warning: unable to get info for terminal {t!r}')
 			continue
-		msg('{}: {}'.format(t,ret))
-		assert c == ret, "'colors' value for terminal {} ({}) does not match expected value of {}".format(t,ret,c)
+		msg(f'{t}: {ret}')
+		assert c == ret, f"'colors' value for terminal {t} ({ret}) does not match expected value of {c}"
 
 	ret = get_terminfo_colors()
-	msg('This terminal ({}): {}'.format(os.getenv('TERM'),ret))
+	msg(f'This terminal ({os.getenv("TERM")}): {ret}')
 	set_vt100()
 	gmsg("Terminal display:")
 
 	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
 		init_color(num_colors=n)
-		msg('{:9}: {}'.format(desc,' '.join([globals()[c](c) for c in sorted(_colors)])))
+		msg('{:9}: {}'.format(
+			desc,
+			' '.join(globals()[c](c) for c in sorted(_colors)) ))
 
 test_color()

@@ -189,8 +189,8 @@ def is_coin_addr_loc(s):
 
 msg_w = 35
 def test_msg(m):
-	m2 = 'Testing {}'.format(m)
-	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format(m2,w=msg_w+8))
+	m2 = f'Testing {m}'
+	msg_r(green(m2+'\n') if opt.verbose else '{:{w}}'.format( m2, w=msg_w+8 ))
 
 compressed = ('','compressed')['C' in proto.mmtypes]
 segwit     = ('','segwit')['S' in proto.mmtypes]
@@ -211,14 +211,14 @@ class MMGenToolTestUtils(object):
 			tool_args +
 			kwargs.split()
 		)
-		if extra_msg: extra_msg = '({})'.format(extra_msg)
+		if extra_msg: extra_msg = f'({extra_msg})'
 		full_name = ' '.join([name.lower()]+add_opts+kwargs.split()+extra_msg.split())
 		if not silent:
 			if opt.verbose:
-				sys.stderr.write(green('Testing {}\nExecuting '.format(full_name)))
+				sys.stderr.write(green(f'Testing {full_name}\nExecuting '))
 				sys.stderr.write(cyan(' '.join(sys_cmd)+'\n'))
 			else:
-				msg_r('Testing {:{w}}'.format(full_name+':',w=msg_w))
+				msg_r('Testing {:{w}}'.format( full_name+':', w=msg_w ))
 
 		cp = run(sys_cmd,stdout=PIPE,stderr=PIPE)
 		out = cp.stdout
@@ -229,8 +229,11 @@ class MMGenToolTestUtils(object):
 		if not binary:
 			out = out.decode()
 		if cp.returncode != 0:
-			msg('{}\n{}\n{}'.format(red('FAILED'),yellow('Command stderr output:'),err.decode()))
-			rdie(1,'Called process returned with an error (retcode {})'.format(cp.returncode))
+			msg('{}\n{}\n{}'.format(
+				red('FAILED'),
+				yellow('Command stderr output:'),
+				err.decode() ))
+			rdie(1,f'Called process returned with an error (retcode {cp.returncode})')
 		return (out,out.rstrip())[bool(strip)]
 
 	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg='',strip_hex=False,add_opts=[]):
@@ -256,13 +259,13 @@ class MMGenToolTestUtils(object):
 
 	def run_cmd_out(self,name,carg=None,Return=False,kwargs='',fn_idx='',extra_msg='',
 						literal=False,chkdata='',hush=False,add_opts=[]):
-		if carg: write_to_tmpfile(cfg,'{}{}.in'.format(name,fn_idx),carg+'\n')
+		if carg: write_to_tmpfile(cfg,f'{name}{fn_idx}.in',carg+'\n')
 		ret = self.run_cmd(name,([],[carg])[bool(carg)],kwargs=kwargs,
 								extra_msg=extra_msg,add_opts=add_opts)
 		if carg: vmsg('In:   ' + repr(carg))
 		vmsg('Out:  ' + (repr(ret),ret)[literal])
 		if ret or ret == '':
-			write_to_tmpfile(cfg,'{}{}.out'.format(name,fn_idx),ret+'\n')
+			write_to_tmpfile(cfg,f'{name}{fn_idx}.out',ret+'\n')
 			if chkdata:
 				cmp_or_die(ret,chkdata)
 				return
@@ -270,7 +273,7 @@ class MMGenToolTestUtils(object):
 			else:
 				if not hush: ok()
 		else:
-			rdie(3,"Error for command '{}'".format(name))
+			rdie(3,f'Error for command {name!r}')
 
 	def run_cmd_randinput(self,name,strip=True,add_opts=[]):
 		s = os.urandom(128)
@@ -280,7 +283,7 @@ class MMGenToolTestUtils(object):
 		fn = name+'.out'
 		write_to_tmpfile(cfg,fn,ret+'\n')
 		ok()
-		vmsg('Returned: {}'.format(ret))
+		vmsg(f'Returned: {ret}')
 
 tu = MMGenToolTestUtils()
 
@@ -290,7 +293,7 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 	if ret:
 		if not skip_ok: ok()
 	else:
-		rdie(3,"Returned value '{}' is not a {}".format((val,s)))
+		rdie(3,f'Returned value {val!r} is not a {s}')
 
 class MMGenToolTestCmds(object):
 
@@ -320,8 +323,8 @@ class MMGenToolTestCmds(object):
 		for n,f,m in (
 			(1,f1,''),
 			(2,f2,compressed),
-			(3,f3,'{} for {}'.format(compressed or 'uncompressed',segwit or 'p2pkh')),
-			(4,f4,'{} for {}'.format(compressed or 'uncompressed',bech32 or 'p2pkh'))
+			(3,f3,'{} for {}'.format( compressed or 'uncompressed', segwit or 'p2pkh' )),
+			(4,f4,'{} for {}'.format( compressed or 'uncompressed', bech32 or 'p2pkh' ))
 			):
 			wif = read_from_file(f).split()[0]
 			tu.run_cmd_out(name,wif,fn_idx=n,extra_msg=m)
@@ -330,8 +333,8 @@ class MMGenToolTestCmds(object):
 		for n,k in enumerate(('',compressed,segwit,bech32)):
 			ao = ['--type='+k] if k else []
 			ret = tu.run_cmd(name,[keys[n]],add_opts=ao).rstrip()
-			iaddr = read_from_tmpfile(cfg,'randpair{}.out'.format(n+1)).split()[-1]
-			vmsg('Out: {}'.format(ret))
+			iaddr = read_from_tmpfile(cfg,f'randpair{n+1}.out').split()[-1]
+			vmsg(f'Out: {ret}')
 			cmp_or_die(iaddr,ret)
 			ok()
 	def hex2wif(self,name,f1,f2,f3,f4):
@@ -341,7 +344,7 @@ class MMGenToolTestCmds(object):
 	def addr2pubhash(self,name,f1,f2,f3,f4):
 		for n,f,m,ao in (
 			(1,f1,'',[]),
-			(2,f2,'from {}'.format(compressed or 'uncompressed'),[]),
+			(2,f2,'from {}'.format( compressed or 'uncompressed' ),[]),
 			(4,f4,'',type_bech32_arg),
 			):
 			addr = read_from_file(f).split()[-1]
@@ -349,7 +352,7 @@ class MMGenToolTestCmds(object):
 	def pubhash2addr(self,name,f1,f2,f3,f4,f5,f6,f7,f8):
 		for n,fi,fo,m,ao in (
 			(1,f1,f2,'',[]),
-			(2,f3,f4,'from {}'.format(compressed or 'uncompressed'),[]),
+			(2,f3,f4,'from {}'.format( compressed or 'uncompressed' ),[]),
 			(4,f7,f8,'',type_bech32_arg)
 			):
 			tu.run_cmd_chk(name,fi,fo,add_opts=ao,extra_msg=m)
@@ -423,7 +426,11 @@ def gen_deps_for_cmd(cmd,cdata):
 		name,code = cdata
 		io,count = (code[:-1],int(code[-1])) if code[-1] in '0123456789' else (code,1)
 		for c in range(count):
-			fns += ['{}{}{}'.format(name,('',c+1)[count > 1],('.out','.in')[ch=='i']) for ch in io]
+			fns += ['{}{}{}'.format(
+				name,
+				(c+1 if count > 1 else ''),
+				('.in' if ch == 'i' else '.out'),
+			) for ch in io]
 	return fns
 
 def do_cmds(cmd_group):
@@ -441,21 +448,21 @@ try:
 		cmd = cmd_args[0]
 		if cmd in cmd_data:
 			cleandir(cfg['tmpdir'],do_msg=True)
-			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
+			msg('Running tests for {}:'.format( cmd_data[cmd]['desc'] ))
 			do_cmds(cmd)
 		elif cmd == 'clean':
 			cleandir(cfg['tmpdir'],do_msg=True)
 			sys.exit(0)
 		else:
-			die(1,"'{}': unrecognized command".format(cmd))
+			die(1,f'{cmd!r}: unrecognized command')
 	else:
 		cleandir(cfg['tmpdir'],do_msg=True)
 		for cmd in cmd_data:
-			msg('Running tests for {}:'.format(cmd_data[cmd]['desc']))
+			msg('Running tests for {}:'.format( cmd_data[cmd]['desc'] ))
 			do_cmds(cmd)
 			if cmd is not list(cmd_data.keys())[-1]: msg('')
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))
 
 t = int(time.time()) - start_time
-gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
+gmsg(f'All requested tests finished OK, elapsed time: {t//60:02}:{t%60:02}')

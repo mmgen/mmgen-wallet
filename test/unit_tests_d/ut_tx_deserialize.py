@@ -39,7 +39,7 @@ class unit_test(object):
 
 			if opt.verbose:
 				Msg('\n====================================================')
-			Msg_r('.' if opt.quiet else '{:>3}) {}\n'.format(n,desc))
+			Msg_r('.' if opt.quiet else f'{n:>3}) {desc}\n')
 			if opt.verbose:
 				Pmsg(d)
 				Msg('----------------------------------------------------')
@@ -53,13 +53,13 @@ class unit_test(object):
 			# inputs
 			a,b = d['vin'],dt['txins']
 			for i in range(len(a)):
-				assert a[i]['txid'] == b[i]['txid'],'TxID of input {} does not match'.format(i)
-				assert a[i]['vout'] == b[i]['vout'],'vout of input {} does not match'.format(i)
+				assert a[i]['txid'] == b[i]['txid'],f'TxID of input {i} does not match'
+				assert a[i]['vout'] == b[i]['vout'],f'vout of input {i} does not match'
 				assert a[i]['sequence'] == int(b[i]['nSeq'],16),(
-					'nSeq of input {} does not match'.format(i))
+					f'nSeq of input {i} does not match')
 				if 'txinwitness' in a[i]:
 					assert a[i]['txinwitness'] == b[i]['witness'],(
-						'witness of input {} does not match'.format(i))
+						f'witness of input {i} does not match')
 
 			# outputs
 			a,b = d['vout'],dt['txouts']

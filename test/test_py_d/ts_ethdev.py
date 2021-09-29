@@ -348,7 +348,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	@property
 	def eth_args(self):
-		return ['--outdir={}'.format(self.tmpdir),'--coin='+self.proto.coin,'--rpc-port={}'.format(self.rpc_port),'--quiet']
+		return [
+			f'--outdir={self.tmpdir}',
+			f'--coin={self.proto.coin}',
+			f'--rpc-port={self.rpc_port}',
+			'--quiet'
+		]
 
 	async def setup(self):
 		self.spawn('',msg_only=True)
@@ -368,7 +373,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 				return False
 			from mmgen.rpc import rpc_init
 			rpc = await rpc_init(self.proto)
-			imsg('Daemon: {} v{}'.format(rpc.daemon.coind_name,rpc.daemon_version_str))
+			imsg(f'Daemon: {rpc.daemon.coind_name} v{rpc.daemon_version_str}')
 
 		return 'ok'
 
@@ -443,7 +448,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def wallet_upgrade(self,src_file):
 		if self.proto.coin == 'ETC':
-			msg('skipping test {!r} for ETC'.format(self.test_name))
+			msg(f'skipping test {self.test_name!r} for ETC')
 			return 'skip'
 		src_dir = joinpath(ref_dir,'ethereum')
 		dest_dir = joinpath(self.tr.data_dir,'altcoins',self.proto.coin.lower())
@@ -510,7 +515,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			fee_desc        = 'gas price',
 			no_read         = False,
 			tweaks          = [] ):
-		fee_res = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format(*fee_res_data,c=self.proto.coin)
+		fee_res = r'\D{}\D.*{c} .*\D{}\D.*gas price in Gwei'.format( *fee_res_data, c=self.proto.coin )
 		t = self.spawn('mmgen-'+caller, self.eth_args + ['-B'] + args)
 		t.expect(r'add \[l\]abel, .*?:.','p', regex=True)
 		t.written_to_file('Account balances listing')
@@ -536,7 +541,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn( 'mmgen-txsign',
-						['--outdir={}'.format(self.tmpdir),'--coin='+self.proto.coin,'--quiet']
+						[f'--outdir={self.tmpdir}']
+						+ [f'--coin={self.proto.coin}']
+						+ ['--quiet']
 						+ ['--rpc-host=bad_host'] # ETH signing must work without RPC
 						+ add_args
 						+ ([],['--yes'])[ni]
@@ -672,7 +679,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			addr,amt,adj = b if len(b) == 3 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				amt = str(Decimal(amt) + Decimal(adj[1]) * self.bal_corr)
-			pat = r'\D{}\D.*\D{}\D'.format(addr,amt.replace('.',r'\.'))
+			pat = r'\D{}\D.*\D{}\D'.format( addr, amt.replace('.',r'\.') )
 			assert re.search(pat,text), pat
 		ss = f'Total {self.proto.coin}:'
 		assert re.search(ss,text),ss
@@ -685,7 +692,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
-			pat = r'{}\b.*\D{}\D.*\b{}\D'.format(addr,_amt1,_amt2)
+			pat = rf'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
 			assert re.search(pat,text), pat
 		ss = 'Total MM1:'
 		assert re.search(ss,text),ss
@@ -712,7 +719,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def chk_label(self,lbl_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(r'{}\b.*\S{{30}}\b.*{}\b'.format(addr,lbl_pat),regex=True)
+		t.expect(rf'{addr}\b.*\S{{30}}\b.*{lbl_pat}\b',regex=True)
 		return t
 
 	def add_label1(self): return self.add_label(lbl=tw_label_zh)
@@ -731,8 +738,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			imsg(f'Using precompiled contract data in {odir}')
 			return 'skip' if os.path.exists(odir) else False
 		self.spawn('',msg_only=True)
-		cmd_args = ['--{}={}'.format(k,v) for k,v in list(token_data.items())]
-		imsg("Compiling solidity token contract '{}' with 'solc'".format(token_data['symbol']))
+		cmd_args = [f'--{k}={v}' for k,v in list(token_data.items())]
+		imsg("Compiling solidity token contract '{}' with 'solc'".format( token_data['symbol'] ))
 		try: os.mkdir(odir)
 		except: pass
 		cmd = [
@@ -741,12 +748,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir
 		] + cmd_args + [CoinProtocol.Ethereum.checksummed_addr(dfl_devaddr)]
-		imsg("Executing: {}".format(' '.join(cmd)))
+		imsg('Executing: {}'.format( ' '.join(cmd) ))
 		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
 		if cp.returncode != 0:
 			rmsg('solc failed with the following output:')
 			ydie(2,cp.stderr.decode())
-		imsg("ERC20 token '{}' compiled".format(token_data['symbol']))
+		imsg('ERC20 token {!r} compiled'.format( token_data['symbol'] ))
 		return 'ok'
 
 	def token_compile1(self):
@@ -773,12 +780,14 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def token_deploy(self,num,key,gas,mmgen_cmd='txdo',tx_fee='8G'):
 		keyfile = joinpath(self.tmpdir,parity_devkey_fn)
 		fn = joinpath(self.tmpdir,'mm'+str(num),key+'.bin')
-		args = ['-B',
-				'--tx-fee='+tx_fee,
-				'--tx-gas={}'.format(gas),
-				'--contract-data='+fn,
-				'--inputs='+dfl_devaddr,
-				'--yes' ]
+		args = [
+			'-B',
+			f'--tx-fee={tx_fee}',
+			f'--tx-gas={gas}',
+			f'--contract-data={fn}',
+			f'--inputs={dfl_devaddr}',
+			'--yes',
+		]
 		if mmgen_cmd == 'txdo':
 			args += ['-k',keyfile]
 		t = self.spawn( 'mmgen-'+mmgen_cmd, self.eth_args + args)
@@ -823,7 +832,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.spawn('',msg_only=True)
 		sid = dfl_sid
 		from mmgen.tool import MMGenToolCmdWallet
-		usr_mmaddrs = ['{}:E:{}'.format(sid,i) for i in (11,21)]
+		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
 		usr_addrs = [MMGenToolCmdWallet(proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
 		from mmgen.altcoins.eth.contract import TokenResolve
@@ -835,8 +844,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
 				imsg_r( '\n' + await tk.info() )
-				imsg('dev token balance (pre-send): {}'.format(await tk.get_balance(dfl_devaddr)))
-				imsg('Sending {} {} to address {} ({})'.format(amt,self.proto.dcoin,usr_addrs[i],usr_mmaddrs[i]))
+				imsg('dev token balance (pre-send): {}'.format( await tk.get_balance(dfl_devaddr) ))
+				imsg(f'Sending {amt} {self.proto.dcoin} to address {usr_addrs[i]} ({usr_mmaddrs[i]})')
 				txid = await tk.transfer(
 					dfl_devaddr,
 					usr_addrs[i],
@@ -853,10 +862,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 					self.proto,
 					rpc,
 					self.read_from_tmpfile(f'token_addr{i+1}').strip() )
-				imsg('Token: {}'.format(await tk.get_symbol()))
-				imsg('dev token balance: {}'.format(await tk.get_balance(dfl_devaddr)))
+				imsg('Token: {}'.format( await tk.get_symbol() ))
+				imsg(f'dev token balance: {await tk.get_balance(dfl_devaddr)}')
 				imsg('usr token balance: {} ({} {})'.format(
-						await tk.get_balance(usr_addrs[i]),usr_mmaddrs[i],usr_addrs[i]))
+					await tk.get_balance(usr_addrs[i]),
+					usr_mmaddrs[i],
+					usr_addrs[i] ))
 
 		from mmgen.rpc import rpc_init
 		rpc = await rpc_init(self.proto)
@@ -1068,7 +1079,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.expect(' main menu): ',n)
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
-		t.expect('Total unspent:.*\D{}\D.*{}'.format(total,total_coin),regex=True)
+		t.expect(f'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
 		t.read()
 		return t
 

@@ -40,7 +40,7 @@ def create_shm_dir(data_dir,trash_dir):
 					try:
 						run(['python3',os.path.join('cmds','mmgen-regtest'),'stop'],check=True)
 					except:
-						rdie(1,"Unable to remove {!r}!".format(tdir))
+						rdie(1,f'Unable to remove {tdir!r}!')
 					else:
 						time.sleep(2)
 						shutil.rmtree(tdir)
@@ -49,14 +49,14 @@ def create_shm_dir(data_dir,trash_dir):
 	else:
 		tdir,pfx = '/dev/shm','mmgen-test-'
 		try:
-			run('rm -rf {}/{}*'.format(tdir,pfx),shell=True,check=True)
+			run(f'rm -rf {tdir}/{pfx}*',shell=True,check=True)
 		except Exception as e:
-			die(2,'Unable to delete directory tree {}/{}* ({})'.format(tdir,pfx,e.args[0]))
+			die(2,f'Unable to delete directory tree {tdir}/{pfx}* ({e.args[0]})')
 		try:
 			import tempfile
 			shm_dir = str(tempfile.mkdtemp('',pfx,tdir))
 		except Exception as e:
-			die(2,'Unable to create temporary directory in {} ({})'.format(tdir,e.args[0]))
+			die(2,f'Unable to create temporary directory in {tdir} ({e.args[0]})')
 
 		dest = os.path.join(shm_dir,os.path.basename(trash_dir))
 		os.mkdir(dest,0o755)
@@ -164,7 +164,9 @@ def add_cmdline_opts():
 	sys.argv.insert(1,'--data-dir=' + data_dir)
 	sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
 	from mmgen.daemon import CoinDaemon
-	sys.argv.insert(1,'--rpc-port={}'.format(CoinDaemon(network_id,test_suite=True).rpc_port))
+	sys.argv.insert(1,'--rpc-port={}'.format(
+		CoinDaemon(network_id,test_suite=True).rpc_port
+	))
 
 # add_cmdline_opts()
 
@@ -374,7 +376,7 @@ def fixup_cfgs():
 		cfgs['2'+k].update(cfgs[k])
 
 	for k in cfgs:
-		cfgs[k]['tmpdir'] = os.path.join('test','tmp{}'.format(k))
+		cfgs[k]['tmpdir'] = os.path.join('test',f'tmp{k}')
 		cfgs[k]['segwit'] = randbool() if opt.segwit_random else bool(opt.segwit or opt.bech32)
 
 	from copy import deepcopy
@@ -402,15 +404,18 @@ def list_cmds():
 		cw = max(max(len(k) for k in gm.dpy_data),cw)
 
 	for gname,gdesc,clist,dpdata in d:
-		Msg('\n'+green('{!r} - {}:'.format(gname,gdesc)))
+		Msg('\n'+green(f'{gname!r} - {gdesc}:'))
 		for cmd in clist:
 			data = dpdata[cmd]
-			Msg('    {:{w}} - {}'.format(cmd,data if type(data) == str else data[1],w=cw))
+			Msg('    {:{w}} - {}'.format(
+				cmd,
+				(data if type(data) == str else data[1]),
+				w = cw ))
 
 	w = max(map(len,utils))
 	Msg('\n'+green('AVAILABLE UTILITIES:'))
 	for cmd in sorted(utils):
-		Msg('  {:{w}} - {}'.format(cmd,utils[cmd],w=w))
+		Msg('  {:{w}} - {}'.format( cmd, utils[cmd], w=w ))
 
 	sys.exit(0)
 
@@ -433,12 +438,15 @@ def clean(usr_dirs=None):
 		if d in all_dirs:
 			cleandir(all_dirs[d])
 		else:
-			die(1,'{}: invalid directory number'.format(d))
+			die(1,f'{d}: invalid directory number')
 	if dirlist:
-		iqmsg(green('Cleaned tmp director{} {}'.format(suf(dirlist,'ies'),' '.join(dirlist))))
+		iqmsg(green('Cleaned tmp director{} {}'.format(
+			suf(dirlist,'ies'),
+			' '.join(dirlist))
+		))
 	cleandir(data_dir)
 	cleandir(trash_dir)
-	iqmsg(green("Cleaned directories '{}'".format("' '".join([data_dir,trash_dir]))))
+	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r}'))
 
 def create_tmp_dirs(shm_dir):
 	if g.platform == 'win':
@@ -530,7 +538,7 @@ class CmdGroupMgr(object):
 		if modname == None and 'modname' in kwargs:
 			modname = kwargs['modname']
 		import importlib
-		modpath = 'test.test_py_d.ts_{}'.format(modname or gname)
+		modpath = f'test.test_py_d.ts_{modname or gname}'
 		return getattr(importlib.import_module(modpath),clsname)
 
 	def create_group(self,gname,full_data=False,modname=None,is3seed=False,add_dpy=False):
@@ -557,14 +565,14 @@ class CmdGroupMgr(object):
 		for a,b in cls.cmd_group:
 			if is3seed:
 				for n,(i,j) in enumerate(zip(cls.tmpdir_nums,(128,192,256))):
-					k = '{}_{}'.format(a,n+1)
+					k = f'{a}_{n+1}'
 					if hasattr(cls,'skip_cmds') and k in cls.skip_cmds:
 						continue
 					sdeps = get_shared_deps(k,i)
 					if type(b) == str:
-						cdata.append( (k, (i,'{} ({}-bit)'.format(b,j),[[[]+sdeps,i]])) )
+						cdata.append( (k, (i,f'{b} ({j}-bit)',[[[]+sdeps,i]])) )
 					else:
-						cdata.append( (k, (i,'{} ({}-bit)'.format(b[1],j),[[b[0]+sdeps,i]])) )
+						cdata.append( (k, (i,f'{b[1]} ({j}-bit)',[[b[0]+sdeps,i]])) )
 			else:
 				cdata.append( (a, b if full_data else (cls.tmpdir_nums[0],b,[[[],cls.tmpdir_nums[0]]])) )
 
@@ -597,7 +605,7 @@ class CmdGroupMgr(object):
 							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
 
 		for name,cls in ginfo:
-			msg('{:17} - {}'.format(name,cls.__doc__))
+			msg(f'{name:17} - {cls.__doc__}')
 
 		Die(0,'\n'+' '.join(e[0] for e in ginfo))
 
@@ -608,7 +616,7 @@ class CmdGroupMgr(object):
 		"""
 		if group:
 			if not group in [e[0] for e in self.cmd_groups]:
-				die(1,'{!r}: unrecognized group'.format(group))
+				die(1,f'{group!r}: unrecognized group')
 			groups = [self.cmd_groups[group]]
 		else:
 			groups = self.cmd_groups
@@ -626,6 +634,7 @@ class TestSuiteRunner(object):
 	'test suite runner'
 
 	def __init__(self,data_dir,trash_dir):
+
 		self.data_dir = data_dir
 		self.trash_dir = trash_dir
 		self.cmd_total = 0
@@ -636,23 +645,23 @@ class TestSuiteRunner(object):
 
 		if opt.log:
 			self.log_fd = open(log_file,'a')
-			self.log_fd.write('\nLog started: {} UTC\n'.format(make_timestr()))
-			omsg('INFO → Logging to file {!r}'.format(log_file))
+			self.log_fd.write(f'\nLog started: {make_timestr()} UTC\n')
+			omsg(f'INFO → Logging to file {log_file!r}')
 		else:
 			self.log_fd = None
 
 		if opt.coverage:
 			self.coverdir,self.accfile = init_coverage()
-			omsg('INFO → Writing coverage files to {!r}'.format(self.coverdir))
+			omsg(f'INFO → Writing coverage files to {self.coverdir!r}')
 
-	def spawn_wrapper(  self, cmd,
-						args       = [],
-						extra_desc = '',
-						no_output  = False,
-						msg_only   = False,
-						no_msg     = False,
-						cmd_dir    = 'cmds',
-						no_traceback = False ):
+	def spawn_wrapper(self,cmd,
+			args         = [],
+			extra_desc   = '',
+			no_output    = False,
+			msg_only     = False,
+			no_msg       = False,
+			cmd_dir      = 'cmds',
+			no_traceback = False ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc: desc += ' ' + extra_desc
@@ -662,9 +671,10 @@ class TestSuiteRunner(object):
 		elif g.platform == 'win':
 			cmd = os.path.join('/mingw64','opt','bin',cmd)
 
-		passthru_opts = ['--{}{}'.format(k.replace('_','-'),
-							'=' + getattr(opt,k) if getattr(opt,k) != True else '')
-								for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
+		passthru_opts = ['--{}{}'.format(
+				k.replace('_','-'),
+				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
+			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
 
 		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
@@ -682,7 +692,10 @@ class TestSuiteRunner(object):
 		if opt.coverage:
 			args = ['python3','-m','trace','--count','--coverdir='+self.coverdir,'--file='+self.accfile] + args
 
-		qargs = ['{q}{}{q}'.format(a,q=('',"'")[' ' in a]) for a in args]
+		qargs = ['{q}{}{q}'.format(
+				a,
+				q = "'" if ' ' in a else ''
+			) for a in args]
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
 		if not no_msg:
@@ -735,9 +748,9 @@ class TestSuiteRunner(object):
 		def gen_msg():
 			yield ('{g}:{c}' if cmd else 'test group {g!r}').format(g=gname,c=cmd)
 			if len(ts_cls.networks) != 1:
-				yield ' for {} {}'.format(proto.coin,proto.network)
+				yield f' for {proto.coin} {proto.network}'
 			if segwit_opt:
-				yield ' (--{})'.format(segwit_opt.replace('_','-'))
+				yield ' (--{})'.format( segwit_opt.replace('_','-') )
 
 		m = ''.join(gen_msg())
 
@@ -769,7 +782,7 @@ class TestSuiteRunner(object):
 			omsg(f'INFO → Resuming at command {resume!r}')
 
 		if opt.exit_after and opt.exit_after not in self.gm.cmd_list:
-			die(1,'{!r}: command not recognized'.format(opt.exit_after))
+			die(1,f'{opt.exit_after!r}: command not recognized')
 
 		return True
 
@@ -809,13 +822,13 @@ class TestSuiteRunner(object):
 						do_between()
 						gname_save = gname
 					else:
-						die(1,'{!r}: command not recognized'.format(arg))
+						die(1,f'{arg!r}: command not recognized')
 		else:
 			if opt.exclude_groups:
 				exclude = opt.exclude_groups.split(',')
 				for e in exclude:
 					if e not in self.gm.cmd_groups_dfl:
-						die(1,'{!r}: group not recognized'.format(e))
+						die(1,f'{e!r}: group not recognized')
 			for gname in self.gm.cmd_groups_dfl:
 				if opt.exclude_groups and gname in exclude:
 					continue
@@ -827,13 +840,11 @@ class TestSuiteRunner(object):
 
 		self.end_msg()
 
-	def check_needs_rerun(self,
-			cmd,
-			build=False,
-			root=True,
-			force_delete=False,
-			dpy=False
-		):
+	def check_needs_rerun(self,cmd,
+			build        = False,
+			root         = True,
+			force_delete = False,
+			dpy          = False ):
 
 		self.ts.test_name = cmd
 		rerun = root # force_delete is not passed to recursive call
@@ -893,13 +904,14 @@ class TestSuiteRunner(object):
 		if resume:
 			if cmd != resume:
 				return
-			bmsg('Resuming at {!r}'.format(cmd))
+			bmsg(f'Resuming at {cmd!r}')
 			resume = False
 			opt.skip_deps = False
 
-		if opt.profile: start = time.time()
+		if opt.profile:
+			start = time.time()
 
-		self.ts.test_name = cmd # NB: Do not remove, this needs to set twice
+		self.ts.test_name = cmd # NB: Do not remove, this needs to be set twice
 		cdata = self.gm.dpy_data[cmd]
 #		self.ts.test_dpydata = cdata
 		self.ts.tmpdir_num = cdata[0]
@@ -919,7 +931,7 @@ class TestSuiteRunner(object):
 		self.process_retval(cmd,ret)
 
 		if opt.profile:
-			omsg('\r\033[50C{:.4f}'.format(time.time() - start))
+			omsg('\r\033[50C{:.4f}'.format( time.time() - start ))
 
 		if cmd == opt.exit_after:
 			sys.exit(0)
@@ -943,19 +955,19 @@ class TestSuiteRunner(object):
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))
 		else:
-			rdie(1,'{!r} returned {}'.format(cmd,ret))
+			rdie(1,f'{cmd!r} returned {ret}')
 
 	def check_deps(self,cmds): # TODO: broken
 		if len(cmds) != 1:
-			die(1,'Usage: {} check_deps <command>'.format(g.prog_name))
+			die(1,f'Usage: {g.prog_name} check_deps <command>')
 
 		cmd = cmds[0]
 
 		if cmd not in self.gm.cmd_list:
-			die(1,'{!r}: unrecognized command'.format(cmd))
+			die(1,f'{cmd!r}: unrecognized command')
 
 		if not opt.quiet:
-			omsg('Checking dependencies for {!r}'.format(cmd))
+			omsg(f'Checking dependencies for {cmd!r}')
 
 		self.check_needs_rerun(self.ts,cmd,build=False)
 
@@ -963,7 +975,7 @@ class TestSuiteRunner(object):
 		for cmd in self.rebuild_list:
 			c = self.rebuild_list[cmd]
 			m = 'Rebuild' if (c[0] and c[1]) else 'Build' if c[0] else 'OK'
-			omsg('cmd {:<{w}} {}'.format(cmd+':', m, w=w))
+			omsg('cmd {:<{w}} {}'.format( cmd+':', m, w=w ))
 
 	def generate_file_deps(self,cmd):
 		return [(str(n),e) for exts,n in self.gm.dpy_data[cmd][2] for e in exts]
@@ -975,14 +987,14 @@ class TestSuiteRunner(object):
 		try:
 			num = str(self.gm.dpy_data[cmd][0])
 		except KeyError:
-			qmsg_r('Missing dependency {!r}'.format(cmd))
+			qmsg_r(f'Missing dependency {cmd!r}')
 			gname = self.gm.find_cmd_in_groups(cmd)
 			if gname:
 				kwargs = self.gm.cmd_groups[gname][1]
 				kwargs.update({'add_dpy':True})
 				self.gm.create_group(gname,**kwargs)
 				num = str(self.gm.dpy_data[cmd][0])
-				qmsg(' found in group {!r}'.format(gname))
+				qmsg(f' found in group {gname!r}')
 			else:
 				qmsg(' not found in any command group!')
 				raise

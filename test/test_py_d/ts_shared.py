@@ -141,7 +141,7 @@ class TestSuiteShared(object):
 			t.expect('BOGUS transaction NOT sent')
 		else:
 			txid = strip_ansi_escapes(t.expect_getend('Transaction sent: '))
-			assert len(txid) == 64,"'{}': Incorrect txid length!".format(txid)
+			assert len(txid) == 64, f'{txid!r}: Incorrect txid length!'
 
 		t.written_to_file(file_desc)
 
@@ -181,7 +181,7 @@ class TestSuiteShared(object):
 
 	def ref_brain_chk(self,bw_file=ref_bw_file):
 		wf = joinpath(ref_dir,bw_file)
-		add_args = ['-l{}'.format(self.seed_len), '-p'+ref_bw_hash_preset]
+		add_args = [f'-l{self.seed_len}', f'-p{ref_bw_hash_preset}']
 		return self.walletchk(wf,pf=None,add_args=add_args,sid=self.ref_bw_seed_id)
 
 	def walletchk(self,wf,pf,wcls=None,add_args=[],sid=None,extra_desc='',dfl_wallet=False):
@@ -193,12 +193,12 @@ class TestSuiteShared(object):
 				+ ([wf] if wf else []),
 				extra_desc=extra_desc)
 		if wcls != IncogWalletHidden:
-			t.expect("Getting {} from file '".format(wcls.desc))
+			t.expect(f"Getting {wcls.desc} from file '")
 		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
 		if pw:
 			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
-		chk = t.expect_getend('Valid {} for Seed ID '.format(wcls.desc))[:8]
+		chk = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
 		if sid: cmp_or_die(chk,sid)
 		return t
 
@@ -215,27 +215,27 @@ class TestSuiteShared(object):
 		if not mmtype and not passgen:
 			mmtype = self.segwit_mmtype
 		cmd_pfx = (ftype,'pass')[passgen]
-		t = self.spawn('mmgen-{}gen'.format(cmd_pfx),
+		t = self.spawn(f'mmgen-{cmd_pfx}gen',
 				['-d',self.tmpdir] + extra_args +
 				([],['--type='+str(mmtype)])[bool(mmtype)] +
 				([],['--stdout'])[stdout] +
 				([],[wf])[bool(wf)] +
 				([],[id_str])[bool(id_str)] +
-				[getattr(self,'{}_idx_list'.format(cmd_pfx))],
-				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
+				[getattr(self,f'{cmd_pfx}_idx_list')],
+				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
 		t.license()
 		wcls = MMGenWallet if dfl_wallet else Wallet.ext_to_type(get_extension(wf))
 		t.passphrase(wcls.desc,self.wpasswd)
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[passgen]
-		chk = t.expect_getend(r'Checksum for {} data .*?: '.format(desc),regex=True)
+		chk = t.expect_getend(rf'Checksum for {desc} data .*?: ',regex=True)
 		if passgen:
 			t.expect('Encrypt password list? (y/N): ','N')
 		t.read() if stdout else t.written_to_file(('Addresses','Password list')[passgen])
 		if check_ref:
 			chk_ref = (self.chk_data[self.test_name] if passgen else
 						self.chk_data[self.test_name][self.fork][self.proto.testnet])
-			cmp_or_die(chk,chk_ref,desc='{}list data checksum'.format(ftype))
+			cmp_or_die(chk,chk_ref,desc=f'{ftype}list data checksum')
 		return t
 
 	def keyaddrgen(self,wf,pf=None,check_ref=False,mmtype=None):
@@ -244,7 +244,7 @@ class TestSuiteShared(object):
 		args = ['-d',self.tmpdir,self.usr_rand_arg,wf,self.addr_idx_list]
 		t = self.spawn('mmgen-keygen',
 				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
-				extra_desc='({})'.format(mmtype) if mmtype in ('segwit','bech32') else '')
+				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
 		t.license()
 		wcls = Wallet.ext_to_type(get_extension(wf))
 		t.passphrase(wcls.desc,self.wpasswd)
@@ -263,4 +263,4 @@ class TestSuiteShared(object):
 		if sure:
 			t.expect('Are you sure you want to broadcast this')
 		m = ('YES, I REALLY WANT TO DO THIS','YES')[quiet]
-		t.expect("'{}' to confirm: ".format(m),('',m)[confirm_send]+'\n')
+		t.expect(f'{m!r} to confirm: ',('',m)[confirm_send]+'\n')

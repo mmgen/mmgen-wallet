@@ -802,7 +802,7 @@ async def run_test(gid,cmd_name):
 			('mainnet','testnet')[proto.testnet] )
 		if k in data:
 			data = data[k]
-			m2 = ' ({})'.format(k)
+			m2 = f' ({k})'
 		else:
 			qmsg(f'-- no data for {cmd_name} ({k}) - skipping')
 			return
@@ -810,16 +810,23 @@ async def run_test(gid,cmd_name):
 		if proto.coin != 'BTC' or proto.testnet:
 			return
 		m2 = ''
-	m = '{} {}{}'.format(purple('Testing'), cmd_name if opt.names else docstring_head(tc[cmd_name]),m2)
+	m = '{} {}{}'.format(
+		purple('Testing'),
+		cmd_name if opt.names else docstring_head(tc[cmd_name]),
+		m2 )
 
 	msg_r(green(m)+'\n' if opt.verbose else m)
 
 	def fork_cmd(cmd_name,args,out,opts):
 		cmd = list(tool_cmd) + (opts or []) + [cmd_name] + args
-		vmsg('{} {}'.format(green('Executing'),cyan(' '.join(cmd))))
+		vmsg('{} {}'.format(
+			green('Executing'),
+			cyan(' '.join(cmd)) ))
 		cp = run(cmd,input=stdin_input or None,stdout=PIPE,stderr=PIPE)
-		try:    cmd_out = cp.stdout.decode()
-		except: cmd_out = cp.stdout
+		try:
+			cmd_out = cp.stdout.decode()
+		except:
+			cmd_out = cp.stdout
 		if cp.stderr:
 			vmsg(cp.stderr.strip().decode())
 		if cp.returncode != 0:
@@ -858,7 +865,7 @@ async def run_test(gid,cmd_name):
 			else: # child
 				os.close(fd0)
 				os.write(fd1,stdin_input)
-				vmsg('Input: {!r}'.format(stdin_input))
+				vmsg(f'Input: {stdin_input!r}')
 				sys.exit(0)
 		else:
 			ret = method(*aargs,**kwargs)
@@ -896,8 +903,8 @@ async def run_test(gid,cmd_name):
 				continue
 			cmd_out = await run_func(cmd_name,args,out,opts,mmtype)
 
-		try:    vmsg('Output:\n{}\n'.format(cmd_out))
-		except: vmsg('Output:\n{}\n'.format(repr(cmd_out)))
+		try:    vmsg(f'Output:\n{cmd_out}\n')
+		except: vmsg(f'Output:\n{cmd_out!r}\n')
 
 		def check_output(out,chk):
 			if isinstance(chk,str):
@@ -1051,4 +1058,4 @@ async def main():
 run_session(main())
 
 t = int(time.time()) - start_time
-gmsg('All requested tests finished OK, elapsed time: {:02}:{:02}'.format(t//60,t%60))
+gmsg(f'All requested tests finished OK, elapsed time: {t//60:02}:{t%60:02}')

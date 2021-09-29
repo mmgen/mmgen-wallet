@@ -179,7 +179,7 @@ class GenToolPycoin(GenTool):
 		network = self.nfnc(vcoin)
 		key = network.keys.private(secret_exponent=int(sec,16),is_compressed=addr_type.name != 'legacy')
 		if key is None:
-			die(1,"can't parse {}".format(sec))
+			die(1,f'can’t parse {sec}')
 		if addr_type.name in ('segwit','bech32'):
 			hash160_c = key.hash160(is_compressed=True)
 			if addr_type.name == 'segwit':
@@ -214,7 +214,7 @@ class GenToolMoneropy(GenTool):
 def get_tool(arg):
 
 	if arg not in ext_progs + ['ext']:
-		die(1,'{!r}: unsupported tool for network {}'.format(arg,proto.network))
+		die(1,f'{arg!r}: unsupported tool for network {proto.network}')
 
 	if opt.all:
 		if arg == 'ext':
@@ -268,7 +268,7 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 	def do_compare_test(n,trounds,in_bytes):
 		global last_t
 		if opt.verbose or time.time() - last_t >= 0.1:
-			qmsg_r('\rRound {}/{} '.format(i+1,trounds))
+			qmsg_r(f'\rRound {i+1}/{trounds} ')
 			last_t = time.time()
 		sec = PrivKey(proto,in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		a_ph = kg_a.to_pubhex(sec)
@@ -286,7 +286,7 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 			b_addr = ag.to_addr(kg_b.to_pubhex(sec))
 			test_equal('addresses',a_addr,b_addr,*tinfo)
 		vmsg(fs.format(b=in_bytes.hex(),k=sec.wif,v=a_vk,a=a_addr))
-		qmsg_r('\rRound {}/{} '.format(n+1,trounds))
+		qmsg_r(f'\rRound {n+1}/{trounds} ')
 
 	fs  = ( '\ninput:    {b}\n%-9s {k}\naddr:     {a}\n',
 			'\ninput:    {b}\n%-9s {k}\nviewkey:  {v}\naddr:     {a}\n')[
@@ -317,37 +317,39 @@ def speed_test(kg,ag,rounds):
 	from struct import pack,unpack
 	seed = os.urandom(28)
 	qmsg('Incrementing key with each round')
-	qmsg('Starting key: {}'.format((seed + pack('I',0)).hex()))
+	qmsg('Starting key: {}'.format(
+		(seed + pack('I',0)).hex()
+	))
 	import time
 	start = last_t = time.time()
 
 	for i in range(rounds):
 		if time.time() - last_t >= 0.1:
-			qmsg_r('\rRound {}/{} '.format(i+1,rounds))
+			qmsg_r(f'\rRound {i+1}/{rounds} ')
 			last_t = time.time()
 		sec = PrivKey(proto,seed+pack('I',i),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		addr = ag.to_addr(kg.to_pubhex(sec))
-		vmsg('\nkey:  {}\naddr: {}\n'.format(sec.wif,addr))
-	qmsg_r('\rRound {}/{} '.format(i+1,rounds))
-	qmsg('\n{} addresses generated in {:.2f} seconds'.format(rounds,time.time()-start))
+		vmsg(f'\nkey:  {sec.wif}\naddr: {addr}\n')
+	qmsg_r(f'\rRound {i+1}/{rounds} ')
+	qmsg(f'\n{rounds} addresses generated in {time.time()-start:.2f} seconds')
 
 def dump_test(kg,ag,fh):
 
 	dump = [[*(e.split()[0] for e in line.split('addr='))] for line in fh.readlines() if 'addr=' in line]
 	if not dump:
-		die(1,'File {!r} appears not to be a wallet dump'.format(fh.name))
+		die(1,f'File {fh.name!r} appears not to be a wallet dump')
 
 	m = 'Comparing output of address generator {!r} against wallet dump {!r}'
 	qmsg(green(m.format(kg.desc,fh.name)))
 
 	for count,(b_wif,b_addr) in enumerate(dump,1):
-		qmsg_r('\rKey {}/{} '.format(count,len(dump)))
+		qmsg_r(f'\rKey {count}/{len(dump)} ')
 		try:
 			b_sec = PrivKey(proto,wif=b_wif)
 		except:
-			die(2,'\nInvalid {} WIF address in dump file: {}'.format(proto.network,b_wif))
+			die(2,f'\nInvalid {proto.network} WIF address in dump file: {b_wif}')
 		a_addr = ag.to_addr(kg.to_pubhex(b_sec))
-		vmsg('\nwif: {}\naddr: {}\n'.format(b_wif,b_addr))
+		vmsg(f'\nwif: {b_wif}\naddr: {b_addr}\n')
 		tinfo = (bytes.fromhex(b_sec),b_sec,b_wif,kg.desc,fh.name)
 		test_equal('addresses',a_addr,b_addr,*tinfo)
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
@@ -362,7 +364,7 @@ def parse_arg1(arg,arg_id):
 
 	def check_gen_num(n):
 		if not (1 <= int(n) <= len(g.key_generators)):
-			die(1,'{}: invalid generator ID'.format(n))
+			die(1,f'{n}: invalid generator ID')
 		return int(n)
 
 	if arg_id == 'a':
@@ -432,7 +434,7 @@ elif a and b and type(arg2) == int:
 		init_genonly_altcoins(testnet=proto.testnet)
 		for coin in ci.external_tests[proto.network][b.desc]:
 			if coin.lower() not in CoinProtocol.coins:
-#				ymsg('Coin {} not configured'.format(coin))
+#				ymsg(f'Coin {coin} not configured')
 				continue
 			proto = init_proto(coin)
 			if addr_type not in proto.mmtypes:

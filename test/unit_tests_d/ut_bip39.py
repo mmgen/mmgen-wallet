@@ -99,7 +99,7 @@ class unit_test(object):
 			chk = tuple(v[1].split())
 			vmsg('    '+v[1])
 			res = bip39.fromhex(v[0],'bip39')
-			assert res == chk, 'mismatch:\nres: {}\nchk: {}'.format(res,chk)
+			assert res == chk, f'mismatch:\nres: {res}\nchk: {chk}'
 
 		vmsg('')
 		qmsg('Checking mnemonic to seed conversion:')
@@ -107,7 +107,7 @@ class unit_test(object):
 			chk = v[0]
 			vmsg('    '+chk)
 			res = bip39.tohex(v[1].split(),'bip39')
-			assert res == chk, 'mismatch:\nres: {}\nchk: {}'.format(res,chk)
+			assert res == chk, f'mismatch:\nres: {res}\nchk: {chk}'
 
 		vmsg('')
 		qmsg('Checking error handling:')

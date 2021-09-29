@@ -50,7 +50,7 @@ class unit_test(object):
 			for j,k in (('uniq_ss_len','usl'),('shortest_word','sw'),('longest_word','lw')):
 				a = getattr(mn_entry(wl_id),j)
 				b = self.vectors[wl_id][k]
-				assert a == b, '{}:{} {} != {}'.format(wl_id,j,a,b)
+				assert a == b, f'{wl_id}:{j} {a} != {b}'
 		msg('OK')
 
 		msg_r('Testing idx()...')
@@ -62,11 +62,11 @@ class unit_test(object):
 			for entry_mode in ('full','short'):
 				for a,word in enumerate(m.wl):
 					b = m.idx(word,entry_mode)
-					assert a == b, '{} != {} ({!r} - entry mode: {!r})'.format(a,b,word,entry_mode)
+					assert a == b, f'{a} != {b} ({word!r} - entry mode: {entry_mode!r})'
 				a = None
 				for word in junk.split():
 					b = m.idx(word,entry_mode)
-					assert a == b, '{} != {} ({!r} - entry mode: {!r})'.format(a,b,word,entry_mode)
+					assert a == b, f'{a} != {b} ({word!r} - entry mode: {entry_mode!r})'
 			if 'idx_minimal' in self.vectors[wl_id]:
 				for vec in self.vectors[wl_id]['idx_minimal']:
 					chk = vec[1]

@@ -65,7 +65,7 @@ def tt_my_raw_input():
 	"""))
 	get_char_raw('Ready? ',num_chars=1)
 	reply = my_raw_input('\nEnter text: ')
-	confirm('Did you enter the text {!r}?'.format(reply))
+	confirm(f'Did you enter the text {reply!r}?')
 
 def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	fname = ('get_char','get_char_raw')[raw]
@@ -81,11 +81,11 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	)[raw]
 	m2 = (
 		'',
-		'\nA delay of {} seconds will added before each prompt'.format(sleep)
+		f'\nA delay of {sleep} seconds will added before each prompt'
 	)[bool(sleep)]
 	m3 = (
 		'',
-		'\nThe characters {!r} will be repeated immediately, the others with delay.'.format(immed_chars)
+		f'\nThe characters {immed_chars!r} will be repeated immediately, the others with delay.'
 	)[bool(immed_chars)]
 	m4 = 'The F1-F12 keys will be ' + (
 		'blocked entirely.'
@@ -104,13 +104,16 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 	if immed_chars:
 		kwargs.update({'immed_chars':immed_chars})
 
-	cmsg('Testing {}({}):'.format(fname,','.join(['{}={!r}'.format(*i) for i in kwargs.items()])))
-	msg(fs.format(m1,yellow(m2),yellow(m3),yellow(m4)))
+	cmsg('Testing {}({}):'.format(
+		fname,
+		','.join(f'{a}={b!r}' for a,b in kwargs.items())
+	))
+	msg(fs.format( m1, yellow(m2), yellow(m3), yellow(m4) ))
 
 	try:
 		while True:
 			ret = globals()[fname]('Enter a letter: ',**kwargs)
-			msg('You typed {!r}'.format(ret))
+			msg(f'You typed {ret!r}')
 	except KeyboardInterrupt:
 		msg('\nDone')
 
@@ -118,14 +121,13 @@ def tt_urand():
 	cmsg('Testing _get_random_data_from_user():')
 	from mmgen.crypto import _get_random_data_from_user
 	ret = _get_random_data_from_user(10,desc='data').decode()
-	msg('USER ENTROPY (user input + keystroke timings):\n\n{}'.format(fmt(ret,'  ')))
+	msg(f'USER ENTROPY (user input + keystroke timings):\n\n{fmt(ret,"  ")}')
 	times = ret.splitlines()[1:]
 	avg_prec = sum(len(t.split('.')[1]) for t in times) // len(times)
 	if avg_prec < g.min_time_precision:
-		m = 'WARNING: Avg. time precision of only {} decimal points.  User entropy quality is degraded!'
-		ymsg(m.format(avg_prec))
+		ymsg(f'WARNING: Avg. time precision of only {avg_prec} decimal points.  User entropy quality is degraded!')
 	else:
-		msg('Average time precision: {} decimal points - OK'.format(avg_prec))
+		msg(f'Average time precision: {avg_prec} decimal points - OK')
 	my_raw_input('Press ENTER to continue: ')
 
 def tt_txview():

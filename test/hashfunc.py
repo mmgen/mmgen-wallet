@@ -67,7 +67,7 @@ class TestHashFunc(object):
 			'\x00\x0f'*1024,'\x0e\x0f'*1023,'\x0a\x0d'*1025 )
 
 		for i,data in enumerate([inputs[input_n]] if input_n is not None else inputs):
-			msg('\rTesting reference input data: {:4}/{} '.format(i+1,len(inputs)))
+			msg(f'\rTesting reference input data: {i+1:4}/{len(inputs)} ')
 			self.compare_hashes(len(data),data.encode())
 
 		msg('OK\n')
@@ -75,7 +75,7 @@ class TestHashFunc(object):
 	def test_random(self,rounds):
 		for i in range(rounds):
 			if i+1 in (1,rounds) or not (i+1) % 10:
-				msg('\rTesting random input data:    {:4}/{} '.format(i+1,rounds))
+				msg(f'\rTesting random input data:    {i+1:4}/{rounds} ')
 			dlen = int(os.urandom(4).hex(),16) >> 18
 			self.compare_hashes(dlen,os.urandom(dlen))
 		msg('OK\n')
@@ -136,7 +136,7 @@ class TestSha512(TestSha2):
 		0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817 )
 
 t = globals()['Test'+test]()
-msg('Testing internal implementation of {}\n'.format(t.desc))
+msg(f'Testing internal implementation of {t.desc}\n')
 t.test_constants()
 t.test_ref()
 t.test_random(random_rounds)

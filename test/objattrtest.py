@@ -65,7 +65,7 @@ def get_descriptor_obj(objclass,attrname):
 	for o in (objclass,objclass.__bases__[0]): # assume there's only one base class
 		if attrname in o.__dict__:
 			return o.__dict__[attrname]
-	rdie(3,'unable to find descriptor {}.{}'.format(objclass.__name__,attrname))
+	rdie(3,f'unable to find descriptor {objclass.__name__}.{attrname}')
 
 def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 
@@ -81,7 +81,7 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 			try:
 				so = sample_objs[attrval_type.__name__]
 			except:
-				raise SampleObjError('unable to find sample object of type {!r}'.format(attrval_type.__name__))
+				raise SampleObjError(f'unable to find sample object of type {attrval_type.__name__!r}')
 			# ListItemAttr allows setting an attribute if its value is None
 			if type(dobj) == ListItemAttr and getattr(obj,attrname) == None:
 				setattr(obj,attrname,so)
@@ -89,7 +89,7 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 		elif perm_name == 'delete_ok':
 			delattr(obj,attrname)
 	except SampleObjError as e:
-		rdie(2,'Test script error ({})'.format(e))
+		rdie(2,f'Test script error ({e})')
 	except Exception as e:
 		if perm_value == True:
 			fs = '{!r}: unable to {} attribute {!r}, though {}ing is allowed ({})'
@@ -116,12 +116,12 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 					fs = 'init value {iv}={a} for attr {n!r} does not match test data ({iv}={b})'
 					rdie(2,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
 				if opt.verbose and d[k] == True:
-					msg_r(' {}={!r}'.format(k,d[k]))
+					msg_r(f' {k}={d[k]!r}')
 
 		if opt.show_nonstandard_init:
 			for k,v in (('typeconv',False),('set_none_ok',True)):
 				if d[k] == v:
-					msg_r(' {}={}'.format(k,v))
+					msg_r(f' {k}={v}')
 
 def test_object(test_data,objname):
 

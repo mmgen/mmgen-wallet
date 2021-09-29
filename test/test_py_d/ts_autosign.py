@@ -136,9 +136,10 @@ class TestSuiteAutosign(TestSuiteBase):
 
 		def do_autosign_live(opts,mountpoint,led_opts=[],gen_wallet=True):
 
-			omsg(purple('Running autosign test with {}'.format(
-				f"'{' '.join(led_opts)}'" if led_opts else 'no LED'
-			)))
+			omsg(purple(
+				'Running autosign test with ' +
+				(f"'{' '.join(led_opts)}'" if led_opts else 'no LED')
+			))
 
 			def do_mount():
 				try: run(['mount',mountpoint],check=True)
@@ -173,7 +174,7 @@ class TestSuiteAutosign(TestSuiteBase):
 
 			def do_loop():
 				omsg(blue(m2))
-				t.expect('{} transactions signed'.format(txcount))
+				t.expect(f'{txcount} transactions signed')
 				if not led_opts:
 					t.expect('2 transactions failed to sign')
 				t.expect('Waiting')
@@ -197,7 +198,7 @@ class TestSuiteAutosign(TestSuiteBase):
 		def do_autosign(opts,mountpoint,mn_type=None,short=False):
 
 			def autosign_expect(t,txcount):
-				t.expect('{} transactions signed'.format(txcount))
+				t.expect(f'{txcount} transactions signed')
 				t.expect('2 transactions failed to sign')
 				t.expect('Waiting')
 				t.kill(2)

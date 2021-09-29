@@ -82,7 +82,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		self.init_proxy()
 
-		self.tx_relay_daemon_parm = 'localhost:{}'.format(self.users['bob'].md.rpc_port)
+		self.tx_relay_daemon_parm = 'localhost:{}'.format( self.users['bob'].md.rpc_port )
 		self.tx_relay_daemon_proxy_parm = (
 			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' # proxy must be IP, not 'localhost'
 			if self.use_proxy else None )
@@ -291,7 +291,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	def create_wallets(self,user,wallet=None):
 		assert wallet is None or is_int(wallet), 'wallet arg'
 		data = self.users[user]
-		run('rm -f {}*'.format( data.walletfile_fs.format(wallet or '*') ),shell=True)
+		run(
+			'rm -f {}*'.format( data.walletfile_fs.format(wallet or '*') ),
+			shell = True
+		)
 		dir_opt = [f'--wallet-dir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
@@ -626,7 +629,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def get_status(self,ret):
 		if ret['status'] != 'OK':
-			imsg( 'RPC status: {}'.format(ret['status']) )
+			imsg( 'RPC status: {}'.format( ret['status'] ))
 		return ret['status']
 
 	def do_msg(self,extra_desc=None):

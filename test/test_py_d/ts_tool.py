@@ -34,10 +34,13 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		outfile = os.path.join(self.tmpdir,'rand2file.out')
 		from mmgen.tool import MMGenToolCmdUtil
 		for nbytes in ('1','1023','1K','1048575','1M','1048577','123M'):
-			t = self.spawn( 'mmgen-tool',
-							['-d',self.tmpdir,'-r0','rand2file','rand2file.out',nbytes],
-							extra_desc='({} byte{})'.format(nbytes,suf(MMGenToolCmdUtil().bytespec(nbytes)))
-							)
+			t = self.spawn(
+				'mmgen-tool',
+				['-d',self.tmpdir,'-r0','rand2file','rand2file.out',nbytes],
+				extra_desc='({} byte{})'.format(
+					nbytes,
+					suf(MMGenToolCmdUtil().bytespec(nbytes)) )
+			)
 			t.expect('random data written to file')
 			t.read()
 			t.p.wait()
@@ -67,9 +70,9 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 
 	def tool_find_incog_data(self,f1,f2):
 		i_id = read_from_file(f2).rstrip()
-		vmsg('Incog ID: {}'.format(cyan(i_id)))
+		vmsg(f'Incog ID: {cyan(i_id)}')
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'find_incog_data',f1,i_id])
-		o = t.expect_getend('Incog data for ID {} found at offset '.format(i_id))
+		o = t.expect_getend(f'Incog data for ID {i_id} found at offset ')
 		if not g.platform == 'win':
 			os.unlink(f1) # causes problems with MSYS2
 		cmp_or_die(hincog_offset,int(o))

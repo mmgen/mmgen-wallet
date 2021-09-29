@@ -96,7 +96,7 @@ def run_test(test,arg,input_data,arg1,exc_name):
 	try:
 		if not opt.super_silent:
 			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
-			msg_r((orange,green)[input_data=='good']('{:<22}'.format(arg_disp+':')))
+			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))
 		cls = globals()[test]
 
 		if opt.getobj:

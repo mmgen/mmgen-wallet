@@ -76,14 +76,14 @@ class unit_test(object):
 
 				ss_idx = str(g.subseeds+2) + 'S'
 				a = seed.subseed(ss_idx).sid
-				b = [e for e in s_lines if ' {}:'.format(ss_idx) in e][0].strip().split()[3]
+				b = [e for e in s_lines if f' {ss_idx}:' in e][0].strip().split()[3]
 				assert a == b, b
 
 				s = seed.subseeds.format(1,10)
 				s_lines = s.strip().split('\n')
 				assert len(s_lines) == 14, s
 
-				vmsg_r('\n{}'.format(s))
+				vmsg_r(f'\n{s}')
 
 			msg('OK')
 
@@ -135,7 +135,7 @@ class unit_test(object):
 			r = SubSeedIdxRange('3-3')
 			assert r.items == [3], r.items
 
-			r = SubSeedIdxRange('{}-{}'.format(g.subseeds-1,g.subseeds))
+			r = SubSeedIdxRange(f'{g.subseeds-1}-{g.subseeds}')
 			assert r.items == [g.subseeds-1,g.subseeds], r.items
 
 			for n,e in enumerate(SubSeedIdxRange('1-5').iterate(),1):
@@ -153,7 +153,7 @@ class unit_test(object):
 
 			last_idx = str(ss_count) + ltr
 
-			msg_r('Testing Seed ID collisions ({} subseed pairs)...'.format(ss_count))
+			msg_r(f'Testing Seed ID collisions ({ss_count} subseed pairs)...')
 
 			seed_bin = bytes.fromhex('12abcdef' * 8) # 95B3D78D
 			seed = Seed(seed_bin)
@@ -173,7 +173,7 @@ class unit_test(object):
 					collisions += ss.data[k][sid][1]
 
 			assert collisions == collisions_chk, collisions
-			vmsg_r('\n{} collisions, last_sid {}'.format(collisions,last_sid))
+			vmsg_r(f'\n{collisions} collisions, last_sid {last_sid}')
 			msg('OK')
 
 		basic_ops()

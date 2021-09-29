@@ -313,7 +313,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				else f'{al_id}:{idx}{lbl}' ),
 			'vout': int(getrandnum(4) % 8),
 			'txid': os.urandom(32).hex(),
-			'amount': self.proto.coin_amt('{}.{}'.format(amt1 + getrandnum(4) % amt2, getrandnum(4) % 100000000)),
+			'amount': self.proto.coin_amt('{}.{}'.format(
+				amt1 + getrandnum(4) % amt2,
+				getrandnum(4) % 100000000 )),
 			'address': coinaddr,
 			'spendable': False,
 			'scriptPubKey': f'{s_beg}{coinaddr.hex}{s_end}',
@@ -387,18 +389,28 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		for k in self.cfgs:
 			self.cfgs[k]['amts'] = [None,None]
 			for idx,mod in enumerate(mods):
-				self.cfgs[k]['amts'][idx] = '{}.{}'.format(getrandnum(4) % mod, str(getrandnum(4))[:5])
+				self.cfgs[k]['amts'][idx] = '{}.{}'.format(
+					getrandnum(4) % mod,
+					str(getrandnum(4))[:5] )
 
 		cmd_args = ['--outdir='+self.tmpdir]
 		for num in tx_data:
 			s = tx_data[num]
 			cmd_args += [
-				'{}:{},{}'.format(s['al_id'],s['addr_idxs'][0],self.cfgs[num]['amts'][0]),
-			]
+				'{}:{},{}'.format(
+					s['al_id'],
+					s['addr_idxs'][0],
+					self.cfgs[num]['amts'][0] )]
 			# + one change address and one BTC address
 			if num is list(tx_data.keys())[-1]:
-				cmd_args += ['{}:{}'.format(s['al_id'],s['addr_idxs'][1])]
-				cmd_args += ['{},{}'.format(rand_coinaddr,self.cfgs[num]['amts'][1])]
+				cmd_args += [
+					'{}:{}'.format(
+						s['al_id'],
+						s['addr_idxs'][1] )]
+				cmd_args += [
+					'{},{}'.format(
+						rand_coinaddr,
+						self.cfgs[num]['amts'][1] )]
 
 		return cmd_args + [tx_data[num]['addrfile'] for num in tx_data]
 
@@ -427,11 +439,14 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 		if cmdline_inputs:
 			from mmgen.tx import TwLabel
-			cmd_args = ['--inputs={},{},{},{},{},{}'.format(
-				TwLabel(self.proto,dfake[0][self.lbl_id]).mmid,dfake[1]['address'],
-				TwLabel(self.proto,dfake[2][self.lbl_id]).mmid,dfake[3]['address'],
-				TwLabel(self.proto,dfake[4][self.lbl_id]).mmid,dfake[5]['address']
-				),'--outdir='+self.tr.trash_dir] + cmd_args[1:]
+			cmd_args = [
+				'--inputs={},{},{},{},{},{}'.format(
+					TwLabel(self.proto,dfake[0][self.lbl_id]).mmid,dfake[1]['address'],
+					TwLabel(self.proto,dfake[2][self.lbl_id]).mmid,dfake[3]['address'],
+					TwLabel(self.proto,dfake[4][self.lbl_id]).mmid,dfake[5]['address']
+				),
+				f'--outdir={self.tr.trash_dir}'
+			] + cmd_args[1:]
 
 		end_silence()
 
@@ -552,7 +567,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		f,t = self._walletconv_export(wf,out_fmt=out_fmt,pf=pf)
 		silence()
 		wcls = Wallet.fmt_code_to_type(out_fmt)
-		msg('==> {}: {}'.format(wcls.desc,cyan(get_data_from_file(f,wcls.desc))))
+		msg('==> {}: {}'.format(
+			wcls.desc,
+			cyan(get_data_from_file(f,wcls.desc)) ))
 		end_silence()
 		return t
 
@@ -609,7 +626,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect_getend('Incog Wallet ID: ')
 		wcls = Wallet.fmt_code_to_type(in_fmt)
 		t.hash_preset(wcls.desc,'1')
-		t.passphrase('{} \w{{8}}'.format(wcls.desc),self.wpasswd)
+		t.passphrase(f'{wcls.desc} \w{{8}}',self.wpasswd)
 		vmsg('Comparing generated checksum with checksum from address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)

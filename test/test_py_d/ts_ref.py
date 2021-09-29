@@ -137,7 +137,9 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	@property
 	def nw_desc(self):
-		return '{} {}'.format(self.proto.coin,('Mainnet','Testnet')[self.proto.testnet])
+		return '{} {}'.format(
+			self.proto.coin,
+			('Mainnet','Testnet')[self.proto.testnet] )
 
 	def _get_ref_subdir_by_coin(self,coin):
 		return {'btc': '',
@@ -165,30 +167,30 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		args = ['-d',self.tr.trash_dir,'-o',ocls.fmt_codes[-1],wf,ss_idx]
 
 		t = self.spawn('mmgen-subwalletgen',args,extra_desc='(generate subwallet)')
-		t.expect('Generating subseed {}'.format(ss_idx))
-		chk_sid = self.chk_data['ref_subwallet_sid']['98831F3A:{}'.format(ss_idx)]
+		t.expect(f'Generating subseed {ss_idx}')
+		chk_sid = self.chk_data['ref_subwallet_sid'][f'98831F3A:{ss_idx}']
 		fn = t.written_to_file(capfirst(ocls.desc))
-		assert chk_sid in fn,'incorrect filename: {} (does not contain {})'.format(fn,chk_sid)
+		assert chk_sid in fn,f'incorrect filename: {fn} (does not contain {chk_sid})'
 		ok()
 
 		t = self.spawn('mmgen-walletchk',[fn],extra_desc='(check subwallet)')
 		t.expect(r'Valid MMGen native mnemonic data for Seed ID ([0-9A-F]*)\b',regex=True)
 		sid = t.p.match.group(1)
-		assert sid == chk_sid,'subseed ID {} does not match expected value {}'.format(sid,chk_sid)
+		assert sid == chk_sid,f'subseed ID {sid} does not match expected value {chk_sid}'
 		t.read()
 		return t
 
 	def ref_subwallet_addrgen(self,ss_idx,target='addr'):
 		wf = dfl_words_file
 		args = ['-d',self.tr.trash_dir,'--subwallet='+ss_idx,wf,'1-10']
-		t = self.spawn('mmgen-{}gen'.format(target),args)
-		t.expect('Generating subseed {}'.format(ss_idx))
-		chk_sid = self.chk_data['ref_subwallet_sid']['98831F3A:{}'.format(ss_idx)]
+		t = self.spawn(f'mmgen-{target}gen',args)
+		t.expect(f'Generating subseed {ss_idx}')
+		chk_sid = self.chk_data['ref_subwallet_sid'][f'98831F3A:{ss_idx}']
 		assert chk_sid == t.expect_getend('Checksum for .* data ',regex=True)[:8]
 		if target == 'key':
 			t.expect('Encrypt key list? (y/N): ','n')
 		fn = t.written_to_file(('Addresses','Secret keys')[target=='key'])
-		assert chk_sid in fn,'incorrect filename: {} (does not contain {})'.format(fn,chk_sid)
+		assert chk_sid in fn,f'incorrect filename: {fn} (does not contain {chk_sid})'
 		return t
 
 	def ref_subwallet_addrgen1(self):
@@ -215,7 +217,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			pat      = None ):
 
 		pat = pat or f'{self.nw_desc}.*Legacy'
-		af_key = 'ref_{}file'.format(ftype) + ('_' + id_key if id_key else '')
+		af_key = f'ref_{ftype}file' + ('_' + id_key if id_key else '')
 		af_fn = TestSuiteRef.sources[af_key].format(pfx or self.altcoin_pfx,'' if coin else self.tn_ext)
 		af = joinpath(ref_dir,(subdir or self.ref_subdir,'')[ftype=='passwd'],af_fn)
 		coin_arg = [] if coin == None else ['--coin='+coin]
@@ -237,12 +239,12 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 	def ref_segwitaddrfile_chk(self):
 		if not 'S' in self.proto.mmtypes:
 			return skip(f'not supported by {self.proto.cls_name} protocol')
-		return self.ref_addrfile_chk(ftype='segwitaddr',pat='{}.*Segwit'.format(self.nw_desc))
+		return self.ref_addrfile_chk(ftype='segwitaddr',pat=f'{self.nw_desc}.*Segwit')
 
 	def ref_bech32addrfile_chk(self):
 		if not 'B' in self.proto.mmtypes:
 			return skip(f'not supported by {self.proto.cls_name} protocol')
-		return self.ref_addrfile_chk(ftype='bech32addr',pat='{}.*Bech32'.format(self.nw_desc))
+		return self.ref_addrfile_chk(ftype='bech32addr',pat=f'{self.nw_desc}.*Bech32')
 
 	def ref_keyaddrfile_chk(self):
 		return self.ref_addrfile_chk(ftype='keyaddr')
