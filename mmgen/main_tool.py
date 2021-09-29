@@ -25,7 +25,7 @@ from .common import *
 
 def make_cmd_help():
 	import mmgen.tool
-	def make_help():
+	def do():
 		for bc in mmgen.tool.MMGenToolCmds.classes.values():
 			cls_doc = bc.__doc__.strip().split('\n')
 			for l in cls_doc:
@@ -40,22 +40,23 @@ def make_cmd_help():
 			yield ''
 
 			max_w = max(map(len,bc.user_commands))
-			fs = '  {{:{}}} - {{}}'.format(max_w)
 			for name,code in sorted(bc.user_commands.items()):
 				if code.__doc__:
-					yield fs.format(name,
+					yield '  {:{}} - {}'.format(
+						name,
+						max_w,
 						pretty_format(
 							code.__doc__.strip().replace('\n\t\t',' '),
-							width=79-(max_w+7),
-							pfx=' '*(max_w+5)).lstrip()
+							width = 79-(max_w+7),
+							pfx   = ' '*(max_w+5)).lstrip()
 					)
 			yield ''
 
-	return '\n'.join(make_help())
+	return '\n'.join(do())
 
 opts_data = {
 	'text': {
-		'desc':    'Perform various {pnm}- and cryptocoin-related operations'.format(pnm=g.proj_name),
+		'desc':    f'Perform various {g.proj_name}- and cryptocoin-related operations',
 		'usage':   '[opts] <command> <command args>',
 		'options': """
 -d, --outdir=       d Specify an alternate directory 'd' for output
@@ -103,7 +104,7 @@ if cmd in ('help','usage') and cmd_args:
 	cmd_args[0] = 'command_name=' + cmd_args[0]
 
 if cmd not in tool.MMGenToolCmds:
-	die(1,"'{}': no such command".format(cmd))
+	die(1,f'{cmd!r}: no such command')
 
 args,kwargs = tool._process_args(cmd,cmd_args)
 

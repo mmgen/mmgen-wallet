@@ -30,8 +30,8 @@ def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
 	except: pass
 	else:
-		m = "Delete your existing MMGen regtest setup at '{}' and create a new one?"
-		if keypress_confirm(m.format(data_dir)):
+		if keypress_confirm(
+				f'Delete your existing MMGen regtest setup at {data_dir!r} and create a new one?'):
 			shutil.rmtree(data_dir)
 		else:
 			die()
@@ -81,7 +81,7 @@ class MMGenRegtest(MMGenObject):
 		if len(out) != blocks:
 			rdie(1,'Error generating blocks')
 
-		gmsg('Mined {} block{}'.format(blocks,suf(blocks)))
+		gmsg(f'Mined {blocks} block{suf(blocks)}')
 
 	async def setup(self):
 
@@ -93,7 +93,7 @@ class MMGenRegtest(MMGenObject):
 
 		create_data_dir(self.d.datadir)
 
-		gmsg('Starting {} regtest setup'.format(self.coin.upper()))
+		gmsg(f'Starting {self.coin.upper()} regtest setup')
 
 		self.d.start(silent=True)
 
@@ -164,7 +164,7 @@ class MMGenRegtest(MMGenObject):
 		msg(fs.format('Total balance:',sum(v for k,v in bal.items())))
 
 	async def send(self,addr,amt):
-		gmsg('Sending {} miner {} to address {}'.format(amt,self.d.coin,addr))
+		gmsg(f'Sending {amt} miner {self.d.coin} to address {addr}')
 		cp = await self.rpc_call('sendtoaddress',addr,str(amt),wallet='miner')
 		await self.generate(1)
 
@@ -185,14 +185,16 @@ class MMGenRegtest(MMGenObject):
 
 		proto = init_proto(coin,False)
 		if not [f for f in proto.forks if f[2] == proto.coin.lower() and f[3] == True]:
-			die(1,"Coin {} is not a replayable fork of coin {}".format(proto.coin,coin))
+			die(1,f'Coin {proto.coin} is not a replayable fork of coin {coin}')
 
-		gmsg('Creating fork from coin {} to coin {}'.format(coin,proto.coin))
+		gmsg(f'Creating fork from coin {coin} to coin {proto.coin}')
 
 		source_rt = MMGenRegtest(coin)
 
-		try: os.stat(source_rt.d.datadir)
-		except: die(1,"Source directory '{}' does not exist!".format(source_rt.d.datadir))
+		try:
+			os.stat(source_rt.d.datadir)
+		except:
+			die(1,f'Source directory {source_rt.d.datadir!r} does not exist!')
 
 		# stop the source daemon
 		if source_rt.d.state != 'stopped':
@@ -211,4 +213,4 @@ class MMGenRegtest(MMGenObject):
 		await self.start_daemon(reindex=True)
 		await self.rpc_call('stop')
 
-		gmsg('Fork {} successfully created'.format(proto.coin))
+		gmsg(f'Fork {proto.coin} successfully created')

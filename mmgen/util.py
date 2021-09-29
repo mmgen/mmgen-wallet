@@ -230,7 +230,7 @@ def parse_bytespec(nbytes):
 		else:
 			return int(nbytes)
 
-	die(1,"'{}': invalid byte specifier".format(nbytes))
+	die(1,f'{nbytes!r}: invalid byte specifier')
 
 def check_or_create_dir(path):
 	try:
@@ -290,7 +290,7 @@ def suf(arg,suf_type='s',verb='none'):
 	elif isinstance(arg,(list,tuple,set,dict)):
 		n = len(arg)
 	else:
-		die(2,'{}: invalid parameter for suf()'.format(arg))
+		die(2,f'{arg}: invalid parameter for suf()')
 	return suf_types[verb][suf_type][n == 1]
 
 def get_extension(fn):
@@ -795,7 +795,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 
 	q = ('(y/N)','(Y/n)')[bool(default_yes)]
-	p = prompt if complete_prompt else '{} {}: '.format(prompt,q)
+	p = prompt if complete_prompt else f'{prompt} {q}: '
 	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
 
 	if g.accept_defaults:

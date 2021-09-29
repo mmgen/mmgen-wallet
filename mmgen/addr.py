@@ -347,7 +347,11 @@ class AddrListIDStr(str,Hilite):
 		else:
 			bc = (addrlist.proto.base_coin,addrlist.proto.coin)[addrlist.proto.base_coin=='ETH']
 			mt = addrlist.al_id.mmtype
-			ret = '{}{}{}[{}]'.format(addrlist.al_id.sid,('-'+bc,'')[bc=='BTC'],('-'+mt,'')[mt in ('L','E')],s)
+			ret = '{}{}{}[{}]'.format(
+				addrlist.al_id.sid,
+				('-'+bc,'')[bc == 'BTC'],
+				('-'+mt,'')[mt in ('L','E')],
+				s )
 
 		dmsg_sc('id_str',ret[8:].split('[')[0])
 
@@ -355,7 +359,7 @@ class AddrListIDStr(str,Hilite):
 
 class AddrList(MMGenObject): # Address info for a single seed ID
 	msgs = {
-	'file_header': """
+		'file_header': """
 # {pnm} address file
 #
 # This file is editable.
@@ -364,13 +368,13 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 # address, and it will be appended to the tracking wallet label upon import.
 # The label may contain any printable ASCII symbol.
 """.strip().format(n=TwComment.max_screen_width,pnm=pnm),
-	'record_chksum': """
+		'record_chksum': """
 Record this checksum: it will be used to verify the address file in the future
 """.strip(),
-	'check_chksum': 'Check this value against your records',
-	'removed_dup_keys': """
+		'check_chksum': 'Check this value against your records',
+		'removed_dup_keys': f"""
 Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
-""".strip().format(pnm=pnm)
+""".strip(),
 	}
 	entry_type = AddrListEntry
 	main_attr = 'addr'
@@ -431,7 +435,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		elif al_id or adata:
 			die(3,'Must specify both al_id and adata')
 		else:
-			die(3,'Incorrect arguments for {}'.format(type(self).__name__))
+			die(3,f'Incorrect arguments for {type(self).__name__}')
 
 		# al_id,adata now set
 		self.data = adata
@@ -446,8 +450,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		if do_chksum:
 			self.chksum = AddrListChksum(self)
-			qmsg('Checksum for {} data {}: {}'.format(
-					self.data_desc,self.id_str.hl(),self.chksum.hl()))
+			qmsg(f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}')
 			qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
 
 	def update_msgs(self):
@@ -482,7 +485,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			pos += 1
 
 			if not g.debug:
-				qmsg_r('\rGenerating {} #{} ({} of {})'.format(self.gen_desc,num,pos,t_addrs))
+				qmsg_r(f'\rGenerating {self.gen_desc} #{num} ({pos} of {t_addrs})')
 
 			e = le(proto=self.proto,idx=num)
 
@@ -503,14 +506,19 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			if type(self) == PasswordList:
 				e.passwd = str(self.make_passwd(e.sec)) # TODO - own type
-				dmsg('Key {:>03}: {}'.format(pos,e.passwd))
+				dmsg(f'Key {pos:>03}: {e.passwd}')
 
 			out.append(e)
 			if g.debug_addrlist:
-				Msg('generate():\n{}'.format(e.pfmt()))
+				Msg(f'generate():\n{e.pfmt()}')
 
 		qmsg('\r{}: {} {}{} generated{}'.format(
-				self.al_id.hl(),t_addrs,self.gen_desc,suf(t_addrs,self.gen_desc_pl),' '*15))
+			self.al_id.hl(),
+			t_addrs,
+			self.gen_desc,
+			suf(t_addrs,self.gen_desc_pl),
+			' ' * 15 ))
+
 		return out
 
 	def check_format(self,addr):
@@ -546,7 +554,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		return [e.idx for e in self.data]
 
 	def addrs(self):
-		return ['{}:{}'.format(self.al_id.sid,e.idx) for e in self.data]
+		return [f'{self.al_id.sid}:{e.idx}' for e in self.data]
 
 	def addrpairs(self):
 		return [(e.idx,e.addr) for e in self.data]
@@ -612,11 +620,11 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		ag = AddrGenerator(self.proto,at)
 		d = self.data
 		for n,e in enumerate(d,1):
-			qmsg_r('\rGenerating addresses from keylist: {}/{}'.format(n,len(d)))
+			qmsg_r(f'\rGenerating addresses from keylist: {n}/{len(d)}')
 			e.addr = ag.to_addr(kg.to_pubhex(e.sec))
 			if g.debug_addrlist:
-				Msg('generate_addrs_from_keys():\n{}'.format(e.pfmt()))
-		qmsg('\rGenerated addresses from keylist: {}/{} '.format(n,len(d)))
+				Msg(f'generate_addrs_from_keys():\n{e.pfmt()}')
+		qmsg(f'\rGenerated addresses from keylist: {n}/{len(d)} ')
 
 	def make_label(self):
 		bc,mt = self.proto.base_coin,self.al_id.mmtype
@@ -630,30 +638,29 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		out = [self.msgs['file_header']+'\n']
 		if self.chksum:
-			out.append('# {} data checksum for {}: {}'.format(
-						capfirst(self.data_desc),self.id_str,self.chksum))
+			out.append(f'# {capfirst(self.data_desc)} data checksum for {self.id_str}: {self.chksum}')
 			out.append('# Record this value to a secure location.\n')
 
 		lbl = self.make_label()
 		dmsg_sc('lbl',lbl[9:])
-		out.append('{} {{'.format(lbl))
+		out.append(f'{lbl} {{')
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
 		for e in self.data:
 			c = ' '+e.label if add_comments and e.label else ''
 			if type(self) == KeyList:
-				out.append(fs.format(e.idx,'{}: {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
+				out.append(fs.format( e.idx, f'{self.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 			elif type(self) == PasswordList:
 				out.append(fs.format(e.idx,e.passwd,c))
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
 				if self.has_keys:
 					if opt.b16:
-						out.append(fs.format('', 'orig_hex: '+e.sec.orig_hex,c))
-					out.append(fs.format('','{}: {}'.format(self.al_id.mmtype.wif_label,e.sec.wif),c))
+						out.append(fs.format( '', f'orig_hex: {e.sec.orig_hex}', c ))
+					out.append(fs.format( '', f'{self.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
-						if v: out.append(fs.format('','{}: {}'.format(k,v),c))
+						if v: out.append(fs.format( '', f'{k}: {v}', c ))
 
 		out.append('}')
 		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
@@ -682,14 +689,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
 				d = self.get_line(lines)
-				assert d[0] == self.al_id.mmtype.wif_label+':',iifs.format(d[0],self.al_id.mmtype.wif_label)
+				assert d[0] == self.al_id.mmtype.wif_label+':', iifs.format(d[0],self.al_id.mmtype.wif_label)
 				a.sec = PrivKey(proto=self.proto,wif=d[1])
 				for k,dtype,add_proto in (
 					('viewkey',ViewKey,True),
 					('wallet_passwd',WalletPassword,False) ):
 					if k in self.al_id.mmtype.extra_attrs:
 						d = self.get_line(lines)
-						assert d[0] == k+':',iifs.format(d[0],k)
+						assert d[0] == k+':', iifs.format(d[0],k)
 						setattr(a,k,dtype( *((self.proto,d[1]) if add_proto else (d[1],)) ) )
 
 			ret.append(a)
@@ -700,9 +707,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				ag = AddrGenerator(self.proto,self.al_id.mmtype)
 				llen = len(ret)
 				for n,e in enumerate(ret):
-					qmsg_r('\rVerifying keys {}/{}'.format(n+1,llen))
+					qmsg_r(f'\rVerifying keys {n+1}/{llen}')
 					assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
-						"Key doesn't match address!\n  {}\n  {}".format(e.sec.wif,e.addr))
+						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
 				qmsg(' - done')
 
 		return ret
@@ -934,9 +941,9 @@ Record this checksum: it will be used to verify the password file in the future
 		self.fmt_data = ''
 		self.chksum = AddrListChksum(self)
 
-		fs = '{}-{}-{}-{}[{{}}]'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
+		fs = f'{self.al_id.sid}-{self.pw_id_str}-{self.pw_fmt_disp}-{self.pw_len}[{{}}]'
 		self.id_str = AddrListIDStr(self,fs)
-		qmsg('Checksum for {} data {}: {}'.format(self.data_desc,self.id_str.hl(),self.chksum.hl()))
+		qmsg(f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}')
 		qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
 
 	def set_pw_fmt(self,pw_fmt):
@@ -964,11 +971,11 @@ Record this checksum: it will be used to verify the password file in the future
 		d = self.pw_info[self.pw_fmt]
 		if d.valid_lens:
 			if pw_len not in d.valid_lens:
-				die(2,fs.format(l=pw_len,b=d.desc,c='not one of ',m=d.valid_lens,pw=passwd))
+				die(2, fs.format( l=pw_len, b=d.desc, c='not one of ', m=d.valid_lens, pw=passwd ))
 		elif pw_len > d.max_len:
-			die(2,fs.format(l=pw_len,b=d.desc,c='>',m=d.max_len,pw=passwd))
+			die(2, fs.format( l=pw_len, b=d.desc, c='>', m=d.max_len, pw=passwd ))
 		elif pw_len < d.min_len:
-			die(2,fs.format(l=pw_len,b=d.desc,c='<',m=d.min_len,pw=passwd))
+			die(2, fs.format( l=pw_len, b=d.desc, c='<', m=d.min_len, pw=passwd ))
 
 	def set_pw_len(self,pw_len):
 		d = self.pw_info[self.pw_fmt]
@@ -978,7 +985,7 @@ Record this checksum: it will be used to verify the password file in the future
 			return
 
 		if not is_int(pw_len):
-			die(2,"'{}': invalid user-requested password length (not an integer)".format(pw_len,d.desc))
+			die(2,f'{pw_len!r}: invalid user-requested password length (not an integer)')
 		self.pw_len = int(pw_len)
 		self.chk_pw_len()
 
@@ -996,24 +1003,27 @@ Record this checksum: it will be used to verify the password file in the future
 			try:
 				good_pw_len = baseconv.seedlen_map['xmrseed'][seed.byte_len]
 			except:
-				die(1,'{}: unsupported seed length for Monero new-style mnemonic'.format(seed.byte_len*8))
+				die(1,f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
 			good_pw_len = len(baseconv.frombytes(b'\xff'*seed.byte_len,wl_id=pf))
 		else:
-			raise NotImplementedError('{!r}: unknown password format'.format(pf))
+			raise NotImplementedError(f'{pf!r}: unknown password format')
 
 		if pw_bytes > seed.byte_len:
-			m1 = 'Cannot generate passwords with more entropy than underlying seed! ({} bits)'
-			m2  = ( 'Re-run the command with --passwd-len={}' if pf in ('bip39','hex') else
-					'Re-run the command, specifying a password length of {} or less' )
-			die(1,(m1+'\n'+m2).format(len(seed.data) * 8,good_pw_len))
+			die(1,
+				'Cannot generate passwords with more entropy than underlying seed! ({} bits)\n'.format(
+					len(seed.data) * 8 ) + (
+					'Re-run the command with --passwd-len={}' if pf in ('bip39','hex') else
+					'Re-run the command, specifying a password length of {} or less'
+				).format(good_pw_len) )
 
 		if pf in ('bip39','hex') and pw_bytes < seed.byte_len:
-			m1 = 'WARNING: requested {} length has less entropy than underlying seed!'
-			m2 = 'Is this what you want?'
-			if not keypress_confirm((m1+'\n'+m2).format(self.pw_info[pf].desc),default_yes=True):
+			if not keypress_confirm(
+					f'WARNING: requested {self.pw_info[pf].desc} length has less entropy ' +
+					'than underlying seed!\nIs this what you want?',
+					default_yes = True ):
 				die(1,'Exiting at user request')
 
 	def make_passwd(self,hex_sec):
@@ -1038,22 +1048,22 @@ Record this checksum: it will be used to verify the password file in the future
 
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):
-			raise ValueError('Password is not valid {} data'.format(self.pw_info[self.pw_fmt].desc))
+			raise ValueError(f'Password is not valid {self.pw_info[self.pw_fmt].desc} data')
 		pwlen = len(pw.split()) if self.pw_fmt in ('bip39','xmrseed') else len(pw)
 		if pwlen != self.pw_len:
-			raise ValueError('Password has incorrect length ({} != {})'.format(pwlen,self.pw_len))
+			raise ValueError(f'Password has incorrect length ({pwlen} != {self.pw_len})')
 		return True
 
 	def scramble_seed(self,seed):
 		# Changing either pw_fmt or pw_len will cause a different, unrelated
 		# set of passwords to be generated: this is what we want.
 		# NB: In original implementation, pw_id_str was 'baseN', not 'bN'
-		scramble_key = '{}:{}:{}'.format(self.pw_fmt,self.pw_len,self.pw_id_str)
+		scramble_key = f'{self.pw_fmt}:{self.pw_len}:{self.pw_id_str}'
 
 		if self.hex2bip39:
 			from .bip39 import bip39
 			pwlen = bip39.nwords2seedlen(self.pw_len,in_hex=True)
-			scramble_key = '{}:{}:{}'.format('hex',pwlen,self.pw_id_str)
+			scramble_key = f'hex:{pwlen}:{self.pw_id_str}'
 
 		from .crypto import scramble_seed
 		dmsg_sc('str',scramble_key)
@@ -1064,11 +1074,11 @@ Record this checksum: it will be used to verify the password file in the future
 		if self.pw_fmt in ('bip39','xmrseed'):
 			ret = lines.pop(0).split(None,self.pw_len+1)
 			if len(ret) > self.pw_len+1:
-				m1 = 'extraneous text {!r} found after password'.format(ret[self.pw_len+1])
+				m1 = f'extraneous text {ret[self.pw_len+1]!r} found after password'
 				m2 = '[bare comments not allowed in BIP39 password files]'
 				m = m1+' '+m2
 			elif len(ret) < self.pw_len+1:
-				m = 'invalid password length {}'.format(len(ret)-1)
+				m = f'invalid password length {len(ret)-1}'
 			else:
 				return (ret[0],' '.join(ret[1:self.pw_len+1]),'')
 			raise ValueError(m)
@@ -1077,16 +1087,16 @@ Record this checksum: it will be used to verify the password file in the future
 			return ret if len(ret) == 3 else ret + ['']
 
 	def make_label(self):
-		return '{} {} {}:{}'.format(self.al_id.sid,self.pw_id_str,self.pw_fmt_disp,self.pw_len)
+		return f'{self.al_id.sid} {self.pw_id_str} {self.pw_fmt_disp}:{self.pw_len}'
 
 class AddrData(MMGenObject):
 	msgs = {
-	'too_many_acct_addresses': """
+	'too_many_acct_addresses': f"""
 ERROR: More than one address found for account: '{{}}'.
 Your 'wallet.dat' file appears to have been altered by a non-{pnm} program.
 Please restore your tracking wallet from a backup or create a new one and
 re-import your addresses.
-""".strip().format(pnm=pnm)
+""".strip()
 	}
 
 	def __new__(cls,proto,*args,**kwargs):
@@ -1121,7 +1131,7 @@ re-import your addresses.
 			self.al_ids[addrlist.al_id] = addrlist
 			return True
 		else:
-			raise TypeError('Error: object {!r} is not of type AddrList'.format(addrlist))
+			raise TypeError(f'Error: object {addrlist!r} is not of type AddrList')
 
 	def make_reverse_dict(self,coinaddrs):
 		d = MMGenDict()
@@ -1169,6 +1179,6 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				out[al_id].append(AddrListEntry(self.proto,idx=obj.idx,addr=addr_array[0],label=l.comment))
 				i += 1
 
-		vmsg('{n} {pnm} addresses found, {m} accounts total'.format(n=i,pnm=pnm,m=len(twd)))
+		vmsg(f'{i} {pnm} addresses found, {len(twd)} accounts total')
 		for al_id in out:
 			self.add(AddrList(self.proto,al_id=al_id,adata=AddrListData(sorted(out[al_id],key=lambda a: a.idx))))

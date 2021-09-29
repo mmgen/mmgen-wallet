@@ -36,7 +36,9 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
 import sys
-def msg(s): sys.stderr.write(s+'\n')
+
+def msg(s):
+	sys.stderr.write(s+'\n')
 
 def test_equal(desc,a,b,*cdata):
 	if type(a) == int:
@@ -44,11 +46,16 @@ def test_equal(desc,a,b,*cdata):
 		b = hex(b)
 	(network,coin,e,b_desc,verbose) = cdata
 	if verbose:
-		m = '  {:20}: {!r}'
-		msg(m.format(desc,a))
+		msg(f'  {desc:20}: {a!r}')
 	if a != b:
-		m = '{}s for {} {} do not match:\n  CoinInfo: {}\n  {}: {}'
-		raise ValueError(m.format(desc.capitalize(),coin.upper(),network,a,b_desc,b))
+		raise ValueError(
+			'{}s for {} {} do not match:\n  CoinInfo: {}\n  {}: {}'.format(
+				desc.capitalize(),
+				coin.upper(),
+				network,
+				a,
+				b_desc,
+				b ))
 
 from collections import namedtuple
 ce = namedtuple('CoinInfoEntry',
@@ -415,7 +422,7 @@ class CoinInfo(object):
 				cdata = (network,coin,e,'Computed value',verbose)
 
 				if not quiet:
-					msg('{} {}'.format(coin,network))
+					msg(f'{coin} {network}')
 
 				vn_info = e.p2pkh_info
 				ret = cls.find_addr_leading_symbol(vn_info[0])
@@ -437,7 +444,7 @@ class CoinInfo(object):
 					proto = init_proto(coin,testnet=network=='testnet')
 					cdata = (network,coin,e,type(proto).__name__,verbose)
 					if not quiet:
-						msg('Verifying {} {}'.format(coin.upper(),network))
+						msg(f'Verifying {coin.upper()} {network}')
 
 					if coin != 'bch': # TODO
 						test_equal('coin name',e.name,proto.name,*cdata)
@@ -490,9 +497,9 @@ class CoinInfo(object):
 			e[k] = list(e[k])
 			e[k][0] = myhex(e[k][0])
 			s1 = cls.find_addr_leading_symbol(int(e[k][0][2:],16))
-			m = 'Fixing leading address letter for coin {} ({!r} --> {})'.format(e['symbol'],e[k][1],s1)
+			m = f'Fixing leading address letter for coin {e["symbol"]} ({e[k][1]!r} --> {s1})'
 			if e[k][1] != '?':
-				assert s1 == e[k][1],'First letters do not match! {}'.format(m)
+				assert s1 == e[k][1], f'First letters do not match! {m}'
 			else:
 				msg(m)
 				e[k][1] = s1
@@ -501,7 +508,7 @@ class CoinInfo(object):
 		old_sym = None
 		for sym in sorted([e.symbol for e in data]):
 			if sym == old_sym:
-				msg("'{}': duplicate coin symbol in data!".format(sym))
+				msg(f'{sym!r}: duplicate coin symbol in data!')
 				sys.exit(2)
 			old_sym = sym
 
@@ -528,20 +535,20 @@ class CoinInfo(object):
 				if sym in tt:
 					src = tt[sym]
 					if src != trust:
-						msg("Updating trust for coin '{}': {} -> {}".format(sym,trust,src))
+						msg(f'Updating trust for coin {sym!r}: {trust} -> {src}')
 						e['trust_level'] = src
 				else:
 					if trust != 0:
-						msg("Downgrading trust for coin '{}': {} -> {}".format(sym,trust,0))
+						msg(f'Downgrading trust for coin {sym!r}: {trust} -> 0')
 						e['trust_level'] = 0
 
 				if sym in cls.cross_checks:
 					if int(e['trust_level']) == 0 and len(cls.cross_checks[sym]) > 1:
-						msg("Upgrading trust for coin '{}': {} -> {}".format(sym,e['trust_level'],1))
+						msg(f'Upgrading trust for coin {sym!r}: {e["trust_level"]} -> 1')
 						e['trust_level'] = 1
 
 			print(fs.format(*e.values()))
-		msg('Processed {} entries'.format(len(data)))
+		msg(f'Processed {len(data)} entries')
 
 	@classmethod
 	def find_addr_leading_symbol(cls,ver_num,verbose=False):
@@ -569,17 +576,17 @@ class CoinInfo(object):
 	def print_symbols(cls,include_names=False,reverse=False):
 		for e in cls.coin_constants['mainnet']:
 			if reverse:
-				print('{:6} {}'.format(e.symbol,e.name))
+				print(f'{e.symbol:6} {e.name}')
 			else:
 				name_w = max(len(e.name) for e in cls.coin_constants['mainnet'])
-				print(('{:{}} '.format(e.name,name_w) if include_names else '') + e.symbol)
+				print((f'{e.name:{name_w}} ' if include_names else '') + e.symbol)
 
 	@classmethod
 	def create_trust_table(cls):
 		tt = {}
 		mn = cls.external_tests['mainnet']
 		for ext_prog in mn:
-			assert len(set(mn[ext_prog])) == len(mn[ext_prog]),"Duplicate entry in '{}'!".format(ext_prog)
+			assert len(set(mn[ext_prog])) == len(mn[ext_prog]), f'Duplicate entry in {ext_prog!r}!'
 			for coin in mn[ext_prog]:
 				if coin in tt:
 					tt[coin] += 1
@@ -609,8 +616,7 @@ class CoinInfo(object):
 			if verbose:
 				m1 = 'Requested tool {t!r} does not support coin {c} on network {n}'
 				m2 = 'No test tool found for coin {c} on network {n}'
-				m = m1 if tool_arg else m2
-				msg(m.format(t=tool,c=coin,n=network))
+				msg((m1 if tool_arg else m2).format(t=tool,c=coin,n=network))
 			return None
 
 		if addr_type == 'zcash_z':
@@ -618,8 +624,7 @@ class CoinInfo(object):
 				return 'zcash-mini'
 			else:
 				if verbose:
-					m = "Address type {a!r} supported only by tool 'zcash-mini'"
-					msg(m.format(a=addr_type))
+					msg(f"Address type {addr_type!r} supported only by tool 'zcash-mini'")
 				return None
 
 		try:
@@ -630,8 +635,7 @@ class CoinInfo(object):
 			pass
 		else:
 			if verbose:
-				m = 'Tool {t!r} blacklisted for coin {c}, addr_type {a!r}'
-				msg(m.format(t=tool,c=coin,a=addr_type))
+				msg(f'Tool {tool!r} blacklisted for coin {coin}, addr_type {addr_type!r}')
 			return None
 
 		if tool_arg: # skip whitelists
@@ -645,8 +649,7 @@ class CoinInfo(object):
 				if verbose:
 					m1 = 'Requested tool {t!r} does not support coin {c}, addr_type {a!r}, on network {n}'
 					m2 = 'No test tool found supporting coin {c}, addr_type {a!r}, on network {n}'
-					m = m1 if tool_arg else m2
-					msg(m.format(t=tool,c=coin,n=network,a=addr_type))
+					msg((m1 if tool_arg else m2).format(t=tool,c=coin,n=network,a=addr_type))
 				return None
 
 		return tool

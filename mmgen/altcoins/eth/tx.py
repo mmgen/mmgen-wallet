@@ -46,7 +46,7 @@ class EthereumMMGenTX:
 		# given absolute fee in ETH, return gas price in Gwei using tx_gas
 		def fee_abs2rel(self,abs_fee,to_unit='Gwei'):
 			ret = ETHAmt(int(abs_fee.toWei() // self.tx_gas.toWei()),'wei')
-			dmsg('fee_abs2rel() ==> {} ETH'.format(ret))
+			dmsg(f'fee_abs2rel() ==> {ret} ETH')
 			return ret if to_unit == 'eth' else ret.to_unit(to_unit,show_decimal=True)
 
 		def get_hex_locktime(self):
@@ -54,7 +54,7 @@ class EthereumMMGenTX:
 
 		# given rel fee (gasPrice) in wei, return absolute fee using tx_gas (not in MMGenTX)
 		def fee_gasPrice2abs(self,rel_fee):
-			assert isinstance(rel_fee,int),"'{}': incorrect type for fee estimate (not an integer)".format(rel_fee)
+			assert isinstance(rel_fee,int), f'{rel_fee!r}: incorrect type for fee estimate (not an integer)'
 			return ETHAmt(rel_fee * self.tx_gas.toWei(),'wei')
 
 		def is_replaceable(self):
@@ -114,7 +114,7 @@ class EthereumMMGenTX:
 			assert len(self.inputs) == 1,'Transaction has more than one input!'
 			o_num = len(self.outputs)
 			o_ok = 0 if self.usr_contract_data else 1
-			assert o_num == o_ok,'Transaction has {} output{} (should have {})'.format(o_num,suf(o_num),o_ok)
+			assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
 			await self.make_txobj()
 			odict = { k: str(v) for k,v in self.txobj.items() if k != 'token_to' }
 			self.hex = json.dumps(odict)
@@ -147,7 +147,7 @@ class EthereumMMGenTX:
 					elif int(reply) < 1:
 						msg('Account number must be >= 1')
 					elif int(reply) > len(unspent):
-						msg('Account number must be <= {}'.format(len(unspent)))
+						msg(f'Account number must be <= {len(unspent)}')
 					else:
 						return [int(reply)]
 
@@ -175,7 +175,7 @@ class EthereumMMGenTX:
 		def fee_est2abs(self,rel_fee,fe_type=None):
 			ret = self.fee_gasPrice2abs(rel_fee) * opt.tx_fee_adj
 			if opt.verbose:
-				msg('Estimated fee: {} ETH'.format(ret))
+				msg(f'Estimated fee: {ret} ETH')
 			return ret
 
 		def convert_and_check_fee(self,tx_fee,desc='Missing description'):
@@ -183,8 +183,11 @@ class EthereumMMGenTX:
 			if abs_fee == False:
 				return False
 			elif not self.disable_fee_check and (abs_fee > self.proto.max_tx_fee):
-				m = '{} {c}: {} fee too large (maximum fee: {} {c})'
-				msg(m.format(abs_fee.hl(),desc,self.proto.max_tx_fee.hl(),c=self.proto.coin))
+				msg('{} {c}: {} fee too large (maximum fee: {} {c})'.format(
+					abs_fee.hl(),
+					desc,
+					self.proto.max_tx_fee.hl(),
+					c = self.proto.coin ))
 				return False
 			else:
 				return abs_fee
@@ -211,12 +214,12 @@ class EthereumMMGenTX:
 							raise UserAddressNotInWallet(m.format(i))
 						ret.append(i)
 					else:
-						die(1,"'{}': not an MMGen ID or coin address".format(i))
+						die(1,f'{i!r}: not an MMGen ID or coin address')
 			return ret
 
 		def final_inputs_ok_msg(self,funds_left):
 			chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
-			return "Transaction leaves {} {} in the sender's account".format(
+			return 'Transaction leaves {} {} in the sender’s account'.format(
 				ETHAmt(chg).hl(),
 				self.proto.coin
 			)
@@ -426,10 +429,10 @@ class EthereumMMGenTX:
 					if self.txobj['data']:
 						cd = capfirst(self.contract_desc)
 						if r.exec_status == 0:
-							msg('{} failed to execute!'.format(cd))
+							msg(f'{cd} failed to execute!')
 						else:
-							msg('{} successfully executed with status {}'.format(cd,r.exec_status))
-					die(0,'Transaction has {} confirmation{}'.format(r.confs,suf(r.confs)))
+							msg(f'{cd} successfully executed with status {r.exec_status}')
+					die(0,f'Transaction has {r.confs} confirmation{suf(r.confs)}')
 				die(1,'Transaction is neither in mempool nor blockchain!')
 
 		async def send(self,prompt_user=True,exit_on_fail=False):
@@ -458,7 +461,7 @@ class EthereumMMGenTX:
 					ret = False
 
 			if ret == False:
-				msg(red('Send of MMGen transaction {} failed'.format(self.txid)))
+				msg(red(f'Send of MMGen transaction {self.txid} failed'))
 				if exit_on_fail:
 					sys.exit(1)
 				return False
@@ -553,9 +556,9 @@ class EthereumTokenMMGenTX:
 
 		def format_view_body(self,*args,**kwargs):
 			return 'Token:     {d} {c}\n{r}'.format(
-				d=self.txobj['token_addr'].hl(),
-				c=blue('(' + self.proto.dcoin + ')'),
-				r=super().format_view_body(*args,**kwargs))
+				d = self.txobj['token_addr'].hl(),
+				c = blue('(' + self.proto.dcoin + ')'),
+				r = super().format_view_body(*args,**kwargs ))
 
 	class Unsigned(Completed,EthereumMMGenTX.Unsigned):
 		desc = 'unsigned transaction'

@@ -127,7 +127,7 @@ FMT CODES:
 
 cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
 
-errmsg = "'{}': invalid parameter for --type option".format(opt.type)
+errmsg = f'{opt.type!r}: invalid parameter for --type option'
 
 from .protocol import init_proto_from_opts
 proto = init_proto_from_opts()

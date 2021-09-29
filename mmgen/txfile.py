@@ -45,9 +45,9 @@ class MMGenTxFile:
 					ymsg('Warning: transaction data appears to be in old format')
 				import re
 				d = literal_eval(re.sub(r"[A-Za-z]+?\(('.+?')\)",r'\1',raw_data))
-			assert type(d) == list,'{} data not a list!'.format(desc)
+			assert type(d) == list, f'{desc} data not a list!'
 			if not (desc == 'outputs' and tx.proto.base_coin == 'ETH'): # ETH txs can have no outputs
-				assert len(d),'no {}!'.format(desc)
+				assert len(d), f'no {desc}!'
 			for e in d:
 				e['amt'] = tx.proto.coin_amt(e['amt'])
 			io,io_list = (
@@ -167,7 +167,7 @@ class MMGenTxFile:
 				tx.send_amt,
 				tx.timestamp,
 				tx.blockcount,
-				('',' LT={}'.format(tx.locktime))[bool(tx.locktime)]
+				(f' LT={tx.locktime}' if tx.locktime else ''),
 			),
 			tx.hex,
 			ascii([amt_to_str(e._asdict()) for e in tx.inputs]),

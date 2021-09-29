@@ -43,7 +43,7 @@ class EthereumTrackingWallet(TrackingWallet):
 		upgraded = False
 
 		if not 'accounts' in self.data or not 'coin' in self.data:
-			ymsg('Upgrading {} (v1->v2: accounts field added)'.format(self.desc))
+			ymsg(f'Upgrading {self.desc} (v1->v2: accounts field added)')
 			if not 'accounts' in self.data:
 				self.data = {}
 				import json
@@ -66,13 +66,13 @@ class EthereumTrackingWallet(TrackingWallet):
 			upgraded = True
 
 		if self.data['tokens'] and not have_token_params_fields():
-			ymsg('Upgrading {} (v2->v3: token params fields added)'.format(self.desc))
+			ymsg(f'Upgrading {self.desc} (v2->v3: token params fields added)')
 			add_token_params_fields()
 			upgraded = True
 
 		if upgraded:
 			self.force_write()
-			msg('{} upgraded successfully!'.format(self.desc))
+			msg(f'{self.desc} upgraded successfully!')
 
 	async def rpc_get_balance(self,addr):
 		return ETHAmt(int(await self.rpc.call('eth_getBalance','0x'+addr,'latest'),16),'wei')

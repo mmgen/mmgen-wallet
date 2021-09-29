@@ -60,7 +60,7 @@ def strfmt_locktime(num,terse=False):
 	elif num > 0:
 		return '{}{}'.format(('block height ','')[terse],num)
 	else:
-		die(2,"'{}': invalid nLockTime value!".format(num))
+		die(2,f'{num!r}: invalid nLockTime value!')
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 
@@ -83,7 +83,7 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 
 def addr2pubhash(proto,addr):
 	ap = proto.parse_addr(addr)
-	assert ap,'coin address {!r} could not be parsed'.format(addr)
+	assert ap,f'coin address {addr!r} could not be parsed'
 	return ap.bytes.hex()
 
 def addr2scriptPubKey(proto,addr):
@@ -101,7 +101,7 @@ def scriptPubKey2addr(proto,s):
 	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
 		return proto.pubhash2bech32addr(s[4:]),'bech32'
 	else:
-		raise NotImplementedError('Unknown scriptPubKey ({})'.format(s))
+		raise NotImplementedError(f'Unknown scriptPubKey ({s})')
 
 class DeserializedTX(dict,MMGenObject):
 	"""
@@ -159,7 +159,7 @@ class DeserializedTX(dict,MMGenObject):
 		if has_witness:
 			u = bshift(2,skip=True).hex()
 			if u != '0001':
-				raise IllegalWitnessFlagValue("'{}': Illegal value for flag in transaction!".format(u))
+				raise IllegalWitnessFlagValue(f'{u!r}: Illegal value for flag in transaction!')
 
 		d['num_txins'] = readVInt()
 
@@ -1021,8 +1021,9 @@ class MMGenTX:
 		def format_view_body(self,blockcount,nonmm_str,max_mmwid,enl,terse,sort):
 
 			if sort not in self.view_sort_orders:
-				die(1,f'{sort!r}: invalid transaction view sort order. Valid options: {{}}'.format(
-						','.join(self.view_sort_orders) ))
+				die(1,'{!r}: invalid transaction view sort order. Valid options: {}'.format(
+					sort,
+					','.join(self.view_sort_orders) ))
 
 			def format_io(desc):
 				io = getattr(self,desc)
@@ -1323,7 +1324,7 @@ class MMGenTX:
 
 			uh = dtx['unsigned_hex']
 			if str(self.txid) != make_chksum_6(bytes.fromhex(uh)).upper():
-				raise TxHexMismatch('MMGen TxID ({}) does not match hex transaction data!\n{}'.format(self.txid,m))
+				raise TxHexMismatch(f'MMGen TxID ({self.txid}) does not match hex transaction data!\n{m}')
 
 		def compare_size_and_estimated_size(self,tx_decoded):
 			est_vsize = self.estimate_size()

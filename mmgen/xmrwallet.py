@@ -32,7 +32,7 @@ from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx,Hilite,InitErrors
 xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
-		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', r'({p})(?::({p}))?'.format(p=hp)),
+		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', rf'({hp})(?::({hp}))?'),
 		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{_b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
 	})(
@@ -53,7 +53,7 @@ class XMRWalletAddrSpec(str,Hilite,InitErrors,MMGenObject):
 		try:
 			if isinstance(arg1,str):
 				me = str.__new__(cls,arg1)
-				m = re.fullmatch('({n}):({n}):({n}|None)'.format(n=r'[0-9]{1,4}'),arg1)
+				m = re.fullmatch( '({n}):({n}):({n}|None)'.format(n=r'[0-9]{1,4}'), arg1 )
 				assert m is not None, f'{arg1!r}: invalid XMRWalletAddrSpec'
 				for e in m.groups():
 					if len(e) != 1 and e[0] == '0':
@@ -371,7 +371,10 @@ class MoneroWalletOps:
 					'-α' if g.debug_utf8 else '' ))
 
 		async def main(self):
-			gmsg('\n{}ing {} wallet{}'.format(self.desc,len(self.addr_data),suf(self.addr_data)))
+			gmsg('\n{}ing {} wallet{}'.format(
+				self.desc,
+				len(self.addr_data),
+				suf(self.addr_data) ))
 			processed = 0
 			for n,d in enumerate(self.addr_data): # [d.sec,d.addr,d.wallet_passwd,d.viewkey]
 				fn = self.get_wallet_fn(d)
@@ -382,7 +385,7 @@ class MoneroWalletOps:
 					os.path.basename(fn),
 				))
 				processed += await self.process_wallet(d,fn)
-			gmsg('\n{} wallet{} {}'.format(processed,suf(processed),self.past))
+			gmsg(f'\n{processed} wallet{suf(processed)} {self.past}')
 			return processed
 
 		class rpc:
@@ -578,7 +581,7 @@ class MoneroWalletOps:
 				restore_height = uopt.restore_height,
 				language       = 'English' )
 
-			pp_msg(ret) if opt.debug else msg('  Address: {}'.format(ret['address']))
+			pp_msg(ret) if opt.debug else msg('  Address: {}'.format( ret['address'] ))
 			return True
 
 	class sync(wallet):
@@ -651,8 +654,10 @@ class MoneroWalletOps:
 
 			self.accts_data[bn] = { 'accts': a, 'addrs': b }
 
-			msg('  Wallet height: {}'.format(wallet_height))
-			msg('  Sync time: {:02}:{:02}'.format( t_elapsed//60, t_elapsed%60 ))
+			msg(f'  Wallet height: {wallet_height}')
+			msg('  Sync time: {:02}:{:02}'.format(
+				t_elapsed // 60,
+				t_elapsed % 60 ))
 
 			await self.c.call('close_wallet')
 			return wallet_height >= chain_height

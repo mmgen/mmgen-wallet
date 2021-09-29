@@ -88,7 +88,7 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 	for e in need_keys:
 		for kal in d:
 			for f in kal.data:
-				mmid = '{}:{}'.format(kal.al_id,f.idx)
+				mmid = f'{kal.al_id}:{f.idx}'
 				if mmid == e.mmid:
 					if f.addr == e.addr:
 						e.have_wif = True
@@ -151,10 +151,11 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
 		if m:
-			die(2, fmt(f"""
-				ERROR: a key file must be supplied for the following non-{g.proj_name} address{suf(m,'es')}:
-				    {{}}
-				""".format('\n    '.join(m)),strip_char='\t').strip())
+			die(2, fmt("""
+					ERROR: a key file must be supplied for the following non-{} address{}:
+						{{}}
+					""".format( g.proj_name, suf(m,'es'), '\n    '.join(m) ),
+				strip_char='\t').strip() )
 		keys += tmp.data
 
 	if opt.mmgen_keys_from_file:

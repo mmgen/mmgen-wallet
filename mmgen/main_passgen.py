@@ -33,10 +33,10 @@ pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
 	'text': {
-		'desc': """
-                 Generate a range or list of passwords from an {pnm} wallet,
+		'desc': f"""
+                 Generate a range or list of passwords from an {g.proj_name} wallet,
                  mnemonic, seed or brainwallet for the given ID string
-		 """.format(pnm=g.proj_name),
+		 """,
 		'usage':'[opts] [seed source] <ID string> <index list or range(s)>',
 		'options': """
 -h, --help            Print this help message
@@ -118,7 +118,7 @@ FMT CODES:
 			seed_lens=', '.join(map(str,g.seed_lens)),
 			g=g,pnm=g.proj_name,
 			dpf=PasswordList.dfl_pw_fmt,
-			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)])
+			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)])
 		),
 		'notes': lambda help_notes,s: s.format(
 				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],

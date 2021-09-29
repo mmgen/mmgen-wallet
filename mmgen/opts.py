@@ -40,11 +40,11 @@ def usage():
 	Die(1,Opts.make_usage_str(g.prog_name,'user',usage_data))
 
 def version():
-	Die(0,fmt("""
-		{pn} version {g.version}
+	Die(0,fmt(f"""
+		{g.prog_name.upper()} version {g.version}
 		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
 		command line.  Copyright (C){g.Cdates} {g.author} {g.email}
-	""".format(g=g,pn=g.prog_name.upper()),indent='    ').rstrip())
+	""",indent='    ').rstrip())
 
 def print_help(po,opts_data,opt_filter):
 	if not 'code' in opts_data:
@@ -167,14 +167,9 @@ def show_common_opts_diff():
 	a = set(g.common_opts)
 	b = set(common_opts_data_to_list())
 
-	m1 = 'g.common_opts - common_opts_data:\n   {}\n'
-	msg(m1.format(do_fmt(a-b) if a-b else 'None'))
-
-	m2 = 'common_opts_data - g.common_opts (these do not set global var):\n{}\n'
-	msg(m2.format(do_fmt(b-a)))
-
-	m3 = 'common_opts_data ^ g.common_opts (these set global var):\n{}\n'
-	msg(m3.format(do_fmt(b.intersection(a))))
+	msg(f'g.common_opts - common_opts_data:\n   {do_fmt(a-b) if a-b else "None"}\n')
+	msg(f'common_opts_data - g.common_opts (these do not set global var):\n{do_fmt(b-a)}\n')
+	msg(f'common_opts_data ^ g.common_opts (these set global var):\n{do_fmt(b.intersection(a))}\n')
 
 	sys.exit(0)
 
@@ -407,11 +402,18 @@ def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
 
 	if ret == False:
 		raise UserOptError('{!r}: invalid {}\n(not a {} amount or {} specification)'.format(
-				val,desc,tx.proto.coin.upper(),tx.rel_fee_desc))
+			val,
+			desc,
+			tx.proto.coin.upper(),
+			tx.rel_fee_desc ))
 
 	if ret > tx.proto.max_tx_fee:
 		raise UserOptError('{!r}: invalid {}\n({} > max_tx_fee ({} {}))'.format(
-				val,desc,ret.fmt(fs='1.1'),tx.proto.max_tx_fee,tx.proto.coin.upper()))
+			val,
+			desc,
+			ret.fmt(fs='1.1'),
+			tx.proto.max_tx_fee,
+			tx.proto.coin.upper() ))
 
 def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
@@ -420,40 +422,45 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		try:
 			l = val.split(sep)
 		except:
-			raise UserOptError('{!r}: invalid {} (not {}-separated list)'.format(val,desc,sepword))
+			raise UserOptError(f'{val!r}: invalid {desc} (not {sepword}-separated list)')
 
 		if len(l) != n:
-			raise UserOptError('{!r}: invalid {} ({} {}-separated items required)'.format(val,desc,n,sepword))
+			raise UserOptError(f'{val!r}: invalid {desc} ({n} {sepword}-separated items required)')
 
 	def opt_compares(val,op_str,target,desc,desc2=''):
 		import operator as o
 		op_f = { '<':o.lt, '<=':o.le, '>':o.gt, '>=':o.ge, '=':o.eq }[op_str]
 		if not op_f(val,target):
 			d2 = desc2 + ' ' if desc2 else ''
-			raise UserOptError('{}: invalid {} ({}not {} {})'.format(val,desc,d2,op_str,target))
+			raise UserOptError(f'{val}: invalid {desc} ({d2}not {op_str} {target})')
 
 	def opt_is_int(val,desc):
 		if not is_int(val):
-			raise UserOptError('{!r}: invalid {} (not an integer)'.format(val,desc))
+			raise UserOptError(f'{val!r}: invalid {desc} (not an integer)')
 
 	def opt_is_float(val,desc):
 		try:
 			float(val)
 		except:
-			raise UserOptError('{!r}: invalid {} (not a floating-point number)'.format(val,desc))
+			raise UserOptError(f'{val!r}: invalid {desc} (not a floating-point number)')
 
 	def opt_is_in_list(val,tlist,desc):
 		if val not in tlist:
 			q,sep = (('',','),("'","','"))[type(tlist[0]) == str]
-			fs = '{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'
-			raise UserOptError(fs.format(v=val,w=desc,q=q,o=sep.join(map(str,sorted(tlist)))))
+			raise UserOptError('{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(
+				v = val,
+				w = desc,
+				q = q,
+				o = sep.join(map(str,sorted(tlist))) ))
 
 	def opt_unrecognized(key,val,desc='value'):
-		raise UserOptError('{!r}: unrecognized {} for option {!r}'.format(val,desc,fmt_opt(key)))
+		raise UserOptError(f'{val!r}: unrecognized {desc} for option {fmt_opt(key)!r}')
 
 	def opt_display(key,val='',beg='For selected',end=':\n'):
-		s = '{}={}'.format(fmt_opt(key),val) if val else fmt_opt(key)
-		msg_r('{} option {!r}{}'.format(beg,s,end))
+		msg_r('{} option {!r}{}'.format(
+			beg,
+			f'{fmt_opt(key)}={val}' if val else fmt_opt(key),
+			end ))
 
 	def chk_in_fmt(key,val,desc):
 		from .wallet import Wallet,IncogWallet,Brainwallet,IncogWalletHidden
@@ -463,9 +470,9 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		if key == 'out_fmt':
 			p = 'hidden_incog_output_params'
 			if sstype == IncogWalletHidden and not getattr(opt,p):
-				m1 = 'Hidden incog format output requested.  '
-				m2 = 'You must supply a file and offset with the {!r} option'
-				raise UserOptError(m1+m2.format(fmt_opt(p)))
+				raise UserOptError(
+					'Hidden incog format output requested.  ' +
+					f'You must supply a file and offset with the {fmt_opt(p)!r} option' )
 			if issubclass(sstype,IncogWallet) and opt.old_incog_fmt:
 				opt_display(key,val,beg='Selected',end=' ')
 				opt_display('old_incog_fmt',beg='conflicts with',end=':\n')
@@ -500,8 +507,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			val2 = getattr(opt,key2)
 			from .wallet import IncogWalletHidden
 			if val2 and val2 not in IncogWalletHidden.fmt_codes:
-				fs = 'Option conflict:\n  {}, with\n  {}={}'
-				raise UserOptError(fs.format(fmt_opt(key),fmt_opt(key2),val2))
+				raise UserOptError(f'Option conflict:\n  {fmt_opt(key)}, with\n  {fmt_opt(key2)}={val2}')
 
 	chk_hidden_incog_output_params = chk_hidden_incog_input_params
 
@@ -538,7 +544,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 	def chk_vsize_adj(key,val,desc):
 		opt_is_float(val,desc)
-		ymsg('Adjusting transaction vsize by a factor of {:1.2f}'.format(float(val)))
+		ymsg(f'Adjusting transaction vsize by a factor of {float(val):1.2f}')
 
 	def chk_key_generator(key,val,desc):
 		opt_compares(val,'<=',len(g.key_generators),desc)
@@ -551,16 +557,16 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 # TODO: move this check elsewhere
 #	def chk_rbf(key,val,desc):
 #		if not proto.cap('rbf'):
-#			m = '--rbf requested, but {} does not support replace-by-fee transactions'
-#			raise UserOptError(m.format(proto.coin))
+#			raise UserOptError(f'--rbf requested, but {proto.coin} does not support replace-by-fee transactions')
 
 #	def chk_bob(key,val,desc):
-#		m = "Regtest (Bob and Alice) mode not set up yet.  Run '{}-regtest setup' to initialize."
 #		from .regtest import MMGenRegtest
 #		try:
 #			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
 #		except:
-#			raise UserOptError(m.format(g.proj_name.lower()))
+#			raise UserOptError(
+#				'Regtest (Bob and Alice) mode not set up yet.  ' +
+#				f"Run '{g.proj_name.lower()}-regtest setup' to initialize." )
 #
 #	chk_alice = chk_bob
 
@@ -571,17 +577,17 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 # TODO: move this check elsewhere
 #	def chk_token(key,val,desc):
 #		if not 'token' in proto.caps:
-#			raise UserOptError('Coin {!r} does not support the --token option'.format(tx.coin))
+#			raise UserOptError(f'Coin {tx.coin!r} does not support the --token option')
 #		if len(val) == 40 and is_hex_str(val):
 #			return
 #		if len(val) > 20 or not all(s.isalnum() for s in val):
-#			raise UserOptError('{!r}: invalid parameter for --token option'.format(val))
+#			raise UserOptError(f'{val!r}: invalid parameter for --token option')
 
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 
 	for key in usr_opts:
 		val = getattr(opt,key)
-		desc = 'parameter for {!r} option'.format(fmt_opt(key))
+		desc = f'parameter for {fmt_opt(key)!r} option'
 
 		if key in g.infile_opts:
 			check_infile(val) # file exists and is readable - dies on error
@@ -590,7 +596,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		elif 'chk_'+key in cfuncs:
 			cfuncs['chk_'+key](key,val,desc)
 		elif g.debug:
-			Msg('check_usr_opts(): No test for opt {!r}'.format(key))
+			Msg(f'check_usr_opts(): No test for opt {key!r}')
 
 def set_auto_typeset_opts():
 	for key,ref_type in g.auto_typeset_opts.items():
@@ -622,8 +628,12 @@ def check_and_set_autoset_opts(): # Raises exception if any check fails
 			else:
 				ret = locals()[asd.type](key,val,asd)
 				if type(ret) is str:
-					m = '{!r}: invalid parameter for option --{} (not {}: {})'
-					raise UserOptError(m.format(val,key.replace('_','-'),ret,fmt_list(asd.choices)))
+					raise UserOptError(
+						'{!r}: invalid parameter for option --{} (not {}: {})'.format(
+							val,
+							key.replace('_','-'),
+							ret,
+							fmt_list(asd.choices) ))
 				elif ret is True:
 					setattr(opt,key,val)
 				else:

@@ -102,7 +102,7 @@ def print_shares_info():
 				len(shares) )
 		si = 1
 	for n,s in enumerate(shares[si:],si+1):
-		out += '{:3}: {}\n'.format(n,s.sid)
+		out += f'{n:3}: {s.sid}\n'
 	qmsg(out)
 
 cmd_args = opts.init(opts_data)
@@ -139,6 +139,6 @@ msg_r('Joining {n}-of-{n} XOR split...'.format(n=len(shares)))
 
 seed_out = Seed.join_shares([share1]+shares[1:])
 
-msg('OK\nJoined Seed ID: {}'.format(seed_out.sid.hl()))
+msg(f'OK\nJoined Seed ID: {seed_out.sid.hl()}')
 
 Wallet(seed=seed_out).write_to_file()

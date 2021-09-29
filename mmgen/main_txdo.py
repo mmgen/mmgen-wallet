@@ -27,7 +27,7 @@ from .obj import SubSeedIdxRange
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': 'Create, sign and send an {g.proj_name} transaction'.format(g=g),
+		'desc': f'Create, sign and send an {g.proj_name} transaction',
 		'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ... [seed source] ...',
 		'options': """
 -h, --help             Print this help message
@@ -95,7 +95,7 @@ column below:
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
 			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
-			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			ss=g.subseeds,

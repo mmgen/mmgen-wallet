@@ -51,7 +51,9 @@ class TokenBase(MMGenObject): # ERC20
 	async def do_call(self,method_sig,method_args='',toUnit=False):
 		data = create_method_id(method_sig) + method_args
 		if g.debug:
-			msg('ETH_CALL {}:  {}'.format(method_sig,'\n  '.join(parse_abi(data))))
+			msg('ETH_CALL {}:  {}'.format(
+				method_sig,
+				'\n  '.join(parse_abi(data)) ))
 		ret = await self.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data },'pending')
 		if self.proto.network == 'regtest' and g.daemon_id == 'erigon': # ERIGON
 			import asyncio
@@ -79,19 +81,19 @@ class TokenBase(MMGenObject): # ERC20
 			assert ret[:2] == '0x'
 			return int(ret,16)
 		except:
-			msg("RPC call to decimals() failed (returned '{}')".format(ret))
+			msg(f'RPC call to decimals() failed (returned {ret!r})')
 			return None
 
 	async def get_total_supply(self):
 		return await self.do_call('totalSupply()',toUnit=True)
 
 	async def info(self):
-		fs = '{:15}{}\n' * 5
-		return fs.format('token address:', self.addr,
-						'token symbol:',   await self.get_symbol(),
-						'token name:',     await self.get_name(),
-						'decimals:',       self.decimals,
-						'total supply:',   await self.get_total_supply())
+		return ('{:15}{}\n' * 5).format(
+			'token address:', self.addr,
+			'token symbol:',  await self.get_symbol(),
+			'token name:',    await self.get_name(),
+			'decimals:',      self.decimals,
+			'total supply:',  await self.get_total_supply() )
 
 	async def code(self):
 		return (await self.rpc.call('eth_getCode','0x'+self.addr))[2:]
@@ -99,7 +101,7 @@ class TokenBase(MMGenObject): # ERC20
 	def create_data(self,to_addr,amt,method_sig='transfer(address,uint256)',from_addr=None):
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
 		to_arg = to_addr.rjust(64,'0')
-		amt_arg = '{:064x}'.format(int(amt / self.base_unit))
+		amt_arg = '{:064x}'.format( int(amt / self.base_unit) )
 		return create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
 	def make_tx_in( self,from_addr,to_addr,amt,start_gas,gasPrice,nonce,
@@ -128,7 +130,8 @@ class TokenBase(MMGenObject): # ERC20
 		if g.debug:
 			msg('TOKEN DATA:')
 			pp_msg(tx.to_dict())
-			msg('PARSED ABI DATA:\n  {}'.format('\n  '.join(parse_abi(tx.data.hex()))))
+			msg('PARSED ABI DATA:\n  {}'.format(
+				'\n  '.join(parse_abi(tx.data.hex())) ))
 		return hex_tx,coin_txid
 
 # The following are used for token deployment only:

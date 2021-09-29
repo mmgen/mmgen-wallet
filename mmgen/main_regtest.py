@@ -26,7 +26,7 @@ from .common import *
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': 'Coin daemon regression test mode setup and operations for the {} suite'.format(g.proj_name),
+		'desc': f'Coin daemon regression test mode setup and operations for the {g.proj_name} suite',
 		'usage':   '[opts] <command>',
 		'options': """
 -h, --help          Print this help message
@@ -77,7 +77,7 @@ def check_num_args():
 if not cmd_args:
 	opts.usage()
 elif cmd_args[0] not in MMGenRegtest.usr_cmds:
-	die(1,'{!r}: invalid command'.format(cmd_args[0]))
+	die(1,f'{cmd_args[0]!r}: invalid command')
 elif cmd_args[0] not in ('cli','balances'):
 	check_num_args()
 

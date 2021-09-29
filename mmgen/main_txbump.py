@@ -27,12 +27,12 @@ from .wallet import Wallet
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': """
+		'desc': f"""
                 Increase the fee on a replaceable (RBF) {g.proj_name} transaction,
                 creating a new transaction, and optionally sign and send the
                 new transaction
-		 """.format(g=g),
-		'usage':   '[opts] <{g.proj_name} TX file> [seed source] ...'.format(g=g),
+		 """,
+		'usage':   f'[opts] <{g.proj_name} TX file> [seed source] ...',
 		'options': """
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
@@ -87,7 +87,7 @@ column below:
 			pnl=g.proj_name.lower(),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
-			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
+			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
 			kg=g.key_generator,
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
@@ -147,7 +147,7 @@ async def main():
 	output_idx = tx.choose_output()
 
 	if not silent:
-		msg('Minimum fee for new transaction: {} {}'.format(tx.min_fee.hl(),tx.proto.coin))
+		msg(f'Minimum fee for new transaction: {tx.min_fee.hl()} {tx.proto.coin}')
 
 	tx.usr_fee = tx.get_usr_fee_interactive(tx_fee=opt.tx_fee,desc='User-selected')
 

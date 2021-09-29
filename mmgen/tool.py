@@ -28,7 +28,7 @@ from .addr import *
 NL = ('\n','\r\n')[g.platform=='win']
 
 def _options_annot_str(l):
-	return "(valid options: '{}')".format("','".join(l))
+	return "(valid options: '{}')".format( "','".join(l) )
 
 def _create_argtuple(method,localvars):
 	co = method.__code__
@@ -59,10 +59,11 @@ def _create_call_sig(cmd,parsed=False):
 		c_kwargs = [(a,dfls[n]) for n,a in enumerate(args[nargs:])]
 		return c_args,dict(c_kwargs),'STDIN_OK' if c_args and ann[args[0]] == 'sstr' else flag
 	else:
-		c_args = ['{} [{}]'.format(a,get_type_from_ann(a)) for a in args[:nargs]]
+		c_args = [f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]]
 		c_kwargs = ['"{}" [{}={!r}{}]'.format(
-					a, type(dfls[n]).__name__, dfls[n],
-					(' ' + ann[a] if a in ann else ''))
+					a,
+					type(dfls[n]).__name__, dfls[n],
+					(' ' + ann[a] if a in ann else '') )
 						for n,a in enumerate(args[nargs:])]
 		return ' '.join(c_args + c_kwargs)
 
@@ -100,7 +101,7 @@ def _usage(cmd=None,exit_val=1):
 			Msg('  {}{}\n'.format(cls_info[0].upper(),cls_info[1:]))
 			max_w = max(map(len,bc.user_commands))
 			for cmd in sorted(bc.user_commands):
-				Msg('    {:{w}} {}'.format(cmd,_create_call_sig(cmd),w=max_w))
+				Msg(f'    {cmd:{max_w}} {_create_call_sig(cmd)}')
 			Msg('')
 		Msg(m2)
 	elif cmd in MMGenToolCmds:
@@ -112,7 +113,7 @@ def _usage(cmd=None,exit_val=1):
 			_create_call_sig(cmd))
 		)
 	else:
-		die(1,"'{}': no such tool command".format(cmd))
+		die(1,f'{cmd!r}: no such tool command')
 
 	sys.exit(exit_val)
 
@@ -122,8 +123,7 @@ def _process_args(cmd,cmd_args):
 
 	if flag != 'VAR_ARGS':
 		if len(cmd_args) < len(c_args):
-			m1 = 'Command requires exactly {} non-keyword argument{}'
-			msg(m1.format(len(c_args),suf(c_args)))
+			msg(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
 			_usage(cmd)
 
 		u_args = cmd_args[:len(c_args)]
@@ -138,9 +138,9 @@ def _process_args(cmd,cmd_args):
 				u_args[0] = os.read(0,max_dlen)
 				have_stdin_input = True
 				if len(u_args[0]) >= max_dlen:
-					die(2,'Maximum data input for this command is {}'.format(max_dlen_spec))
+					die(2,f'Maximum data input for this command is {max_dlen_spec}')
 				if not u_args[0]:
-					die(2,'{}: ERROR: no output from previous command in pipe'.format(cmd))
+					die(2,f'{cmd}: ERROR: no output from previous command in pipe')
 
 	u_nkwargs = len(cmd_args) - len(c_args)
 	u_kwargs = {}
@@ -149,21 +149,21 @@ def _process_args(cmd,cmd_args):
 		tk = [a[0] for a in t]
 		tk_bad = [a for a in tk if a not in c_kwargs]
 		if set(tk_bad) != set(tk[:len(tk_bad)]): # permit non-kw args to contain '='
-			die(1,"'{}': illegal keyword argument".format(tk_bad[-1]))
+			die(1,f'{tk_bad[-1]!r}: illegal keyword argument')
 		u_kwargs = dict(t[len(tk_bad):])
 		u_args = cmd_args[:-len(u_kwargs) or None]
 	elif u_nkwargs > 0:
 		u_kwargs = dict([a.split('=',1) for a in cmd_args[len(c_args):] if '=' in a])
 		if len(u_kwargs) != u_nkwargs:
-			msg('Command requires exactly {} non-keyword argument{}'.format(len(c_args),suf(c_args)))
+			msg(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
 			_usage(cmd)
 		if len(u_kwargs) > len(c_kwargs):
-			msg('Command accepts no more than {} keyword argument{}'.format(len(c_kwargs),suf(c_kwargs)))
+			msg(f'Command accepts no more than {len(c_kwargs)} keyword argument{suf(c_kwargs)}')
 			_usage(cmd)
 
 	for k in u_kwargs:
 		if k not in c_kwargs:
-			msg("'{}': invalid keyword argument".format(k))
+			msg(f'{k!r}: invalid keyword argument')
 			_usage(cmd)
 
 	def conv_type(arg,arg_name,arg_type):
@@ -179,13 +179,13 @@ def _process_args(cmd,cmd_args):
 			if arg.lower() in ('true','yes','1','on'): arg = True
 			elif arg.lower() in ('false','no','0','off'): arg = False
 			else:
-				msg("'{}': invalid boolean value for keyword argument".format(arg))
+				msg(f'{arg!r}: invalid boolean value for keyword argument')
 				_usage(cmd)
 
 		try:
 			return __builtins__[arg_type](arg)
 		except:
-			die(1,"'{}': Invalid argument for argument {} ('{}' required)".format(arg,arg_name,arg_type))
+			die(1,f'{arg!r}: Invalid argument for argument {arg_name} ({arg_type!r} required)')
 
 	if flag == 'VAR_ARGS':
 		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
@@ -223,7 +223,7 @@ def _process_result(ret,pager=False,print_result=False):
 			# don't add NL to binary data if it can't be converted to utf8
 			return ret if not print_result else os.write(1,ret)
 	else:
-		ydie(1,"tool.py: can't handle return value of type '{}'".format(type(ret).__name__))
+		ydie(1,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
 
 from .obj import MMGenAddrType
 
@@ -534,9 +534,9 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
-		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
-		assert redeem_scripthex[:4] == '0014','{!r}: invalid redeem script'.format(redeem_scripthex)
-		assert len(redeem_scripthex) == 44,'{} bytes: invalid redeem script length'.format(len(redeem_scripthex)//2)
+		assert self.mmtype.name == 'segwit', 'This command is meaningful only for --type=segwit'
+		assert redeem_scripthex[:4] == '0014', f'{redeem_scripthex!r}: invalid redeem script'
+		assert len(redeem_scripthex) == 44, f'{len(redeem_scripthex)//2} bytes: invalid redeem script length'
 		return self.pubhash2addr(hash160(redeem_scripthex))
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
@@ -588,8 +588,9 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		from .protocol import init_proto
 		proto = init_proto('xmr')
 		if len(bytestr) != proto.privkey_len:
-			m = '{!r}: invalid bit length for Monero private key (must be {})'
-			die(1,m.format(len(bytestr*8),proto.privkey_len*8))
+			die(1,'{!r}: invalid bit length for Monero private key (must be {})'.format(
+				len(bytestr*8),
+				proto.privkey_len*8 ))
 		return proto.preprocess_key(bytestr,None)
 
 	def _do_random_mn(self,nbytes:int,fmt:str):
@@ -598,7 +599,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		if fmt == 'xmrseed':
 			randbytes = self._xmr_reduce(randbytes)
 		if opt.verbose:
-			msg('Seed: {}'.format(randbytes.hex()))
+			msg(f'Seed: {randbytes.hex()}')
 		return self.hex2mn(randbytes.hex(),fmt=fmt)
 
 	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
@@ -650,7 +651,7 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
 		ret = conv_cls.get_wordlist(fmt)
 		if enum:
-			ret = ['{:>4} {}'.format(n,e) for n,e in enumerate(ret)]
+			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]
 		return '\n'.join(ret)
 
 class MMGenToolCmdFile(MMGenToolCmds):
@@ -738,7 +739,7 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 		data = get_data_from_file(infile,'data for encryption',binary=True)
 		enc_d = mmgen_encrypt(data,'user data',hash_preset)
 		if not outfile:
-			outfile = '{}.{}'.format(os.path.basename(infile),g.mmenc_ext)
+			outfile = f'{os.path.basename(infile)}.{g.mmenc_ext}'
 		write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
 		return True
 
@@ -767,20 +768,22 @@ class MMGenToolCmdFileUtil(MMGenToolCmds):
 		f = os.open(filename,flgs)
 		for ch in incog_id:
 			if ch not in '0123456789ABCDEF':
-				die(2,"'{}': invalid Incog ID".format(incog_id))
+				die(2,f'{incog_id!r}: invalid Incog ID')
 		while True:
 			d = os.read(f,bsize)
 			if not d: break
 			d = carry + d
 			for i in range(bsize):
 				if sha256(d[i:i+ivsize]).hexdigest()[:8].upper() == incog_id:
-					if n+i < ivsize: continue
-					msg('\rIncog data for ID {} found at offset {}'.format(incog_id,n+i-ivsize))
-					if not keep_searching: sys.exit(0)
+					if n+i < ivsize:
+						continue
+					msg(f'\rIncog data for ID {incog_id} found at offset {n+i-ivsize}')
+					if not keep_searching:
+						sys.exit(0)
 			carry = d[len(d)-ivsize:]
 			n += bsize
 			if not n % mod:
-				msg_r('\rSearched: {} bytes'.format(n))
+				msg_r(f'\rSearched: {n} bytes')
 
 		msg('')
 		os.close(f)
@@ -826,7 +829,7 @@ class MMGenToolCmdFileUtil(MMGenToolCmds):
 		blk_size = 1024 * 1024
 		for i in range(nbytes // blk_size):
 			if not i % 4:
-				msg_r('\rRead: {} bytes'.format(i * blk_size))
+				msg_r(f'\rRead: {i * blk_size} bytes')
 			q1.put(os.urandom(blk_size))
 
 		if nbytes % blk_size:
@@ -838,11 +841,11 @@ class MMGenToolCmdFileUtil(MMGenToolCmds):
 
 		fsize = os.stat(outfile).st_size
 		if fsize != nbytes:
-			die(3,'{}: incorrect random file size (should be {})'.format(fsize,nbytes))
+			die(3,f'{fsize}: incorrect random file size (should be {nbytes})')
 
 		if not silent:
-			msg('\rRead: {} bytes'.format(nbytes))
-			qmsg("\r{} byte{} of random data written to file '{}'".format(nbytes,suf(nbytes),outfile))
+			msg(f'\rRead: {nbytes} bytes')
+			qmsg(f'\r{nbytes} byte{suf(nbytes)} of random data written to file {outfile!r}')
 
 		return True
 
@@ -872,10 +875,10 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		return Wallet(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
 
 	def list_shares(self,
-			share_count:int,
-			id_str='default',
-			master_share:"(min:1, max:{}, 0=no master share)".format(MasterShareIdx.max_val)=0,
-			wallet=''):
+			share_count: int,
+			id_str = 'default',
+			master_share: f'(min:1, max:{MasterShareIdx.max_val}, 0=no master share)' = 0,
+			wallet = '' ):
 		"list the Seed IDs of the shares resulting from a split of default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
@@ -894,8 +897,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		from .wallet import Wallet
 		ss = Wallet(sf)
 		if ss.seed.sid != addr.sid:
-			m = 'Seed ID of requested address ({}) does not match wallet ({})'
-			die(1,m.format(addr.sid,ss.seed.sid))
+			die(1,f'Seed ID of requested address ({addr.sid}) does not match wallet ({ss.seed.sid})')
 		al = AddrList(
 			proto     = self.proto,
 			seed      = ss.seed,
@@ -955,14 +957,15 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 			sort = set(sort.split(','))
 			sort_params = {'reverse','age'}
 			if not sort.issubset(sort_params):
-				die(1,"The sort option takes the following parameters: '{}'".format("','".join(sort_params)))
+				die(1,"The sort option takes the following parameters: '{}'".format( "','".join(sort_params) ))
 
 		usr_addr_list = []
 		if mmgen_addrs:
 			a = mmgen_addrs.rsplit(':',1)
 			if len(a) != 2:
-				m = "'{}': invalid address list argument (must be in form <seed ID>:[<type>:]<idx list>)"
-				die(1,m.format(mmgen_addrs))
+				die(1,
+					f'{mmgen_addrs}: invalid address list argument ' +
+					'(must be in form <seed ID>:[<type>:]<idx list>)' )
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
 		al = await TwAddrList(self.proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
@@ -1007,7 +1010,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 		from .tw import TrackingWallet
 		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
-			msg("Address '{}' deleted from tracking wallet".format(ret))
+			msg(f'Address {ret!r} deleted from tracking wallet')
 		return ret
 
 class tool_api(
@@ -1101,7 +1104,7 @@ class tool_api(
 		a description.  The first-listed is the default
 		"""
 		for t in [MMGenAddrType(proto=self.proto,id_str=id_str) for id_str in self.proto.mmtypes]:
-			print('{:<12} - {}'.format(t.name,t.desc))
+			print(f'{t.name:<12} - {t.desc}')
 
 	@property
 	def addrtype(self):

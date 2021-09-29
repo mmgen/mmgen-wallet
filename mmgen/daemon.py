@@ -88,7 +88,7 @@ class Daemon(Lockable):
 			msg(f'Starting {self.desc} on port {self.bind_port}')
 
 		if self.debug:
-			msg('\nExecuting: {}'.format(' '.join(cmd)))
+			msg(f'\nExecuting: {" ".join(cmd)}')
 
 		if self.use_threads and is_daemon and not self.opt.no_daemonize:
 			ret = self.exec_cmd_thread(cmd)
@@ -445,7 +445,7 @@ class CoinDaemon(Daemon):
 		os.makedirs(self.datadir,exist_ok=True)
 
 		if self.cfg_file and not self.flag.keep_cfg_file:
-			open('{}/{}'.format(self.datadir,self.cfg_file),'w').write(self.cfg_file_hdr)
+			open(f'{self.datadir}/{self.cfg_file}','w').write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
 			# Parity overwrites the data in the existing pidfile without zeroing it first, leading

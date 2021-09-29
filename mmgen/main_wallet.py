@@ -43,11 +43,11 @@ invoked_as = {
 	'mmgen-seedsplit':    'seedsplit',
 }[g.prog_name]
 
-dsw = 'the default or specified {pnm} wallet'
+dsw = f'the default or specified {g.proj_name} wallet'
 
 # full: defhHiJkKlLmoOpPqrSvz-
 if invoked_as == 'gen':
-	desc = 'Generate an {pnm} wallet from a random seed'
+	desc = f'Generate an {g.proj_name} wallet from a random seed'
 	opt_filter = 'ehdoJlLpPqrSvz-'
 	usage = '[opts]'
 	oaction = 'output'
@@ -81,7 +81,7 @@ elif invoked_as == 'seedsplit':
 
 opts_data = {
 	'text': {
-		'desc': desc.format(pnm=g.proj_name),
+		'desc': desc,
 		'usage': usage,
 		'options': """
 -h, --help            Print this help message
@@ -187,7 +187,7 @@ else:
 
 if invoked_as == 'chk':
 	lbl = ss_in.ssdata.label.hl() if hasattr(ss_in.ssdata,'label') else 'NONE'
-	vmsg('Wallet label: {}'.format(lbl))
+	vmsg(f'Wallet label: {lbl}')
 	# TODO: display creation date
 	sys.exit(0)
 

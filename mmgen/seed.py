@@ -34,7 +34,7 @@ class SeedBase(MMGenObject):
 			# Truncate random data for smaller seed lengths
 			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or g.dfl_seed_len)//8]
 		elif len(seed_bin)*8 not in g.seed_lens:
-			die(3,'{}: invalid seed length'.format(len(seed_bin)))
+			die(3,f'{len(seed_bin)}: invalid seed length')
 
 		self.data = seed_bin
 		self.sid  = SeedID(seed=self)
@@ -83,14 +83,16 @@ class SubSeedList(MMGenObject):
 		sid = self.data[ss_idx.type].key(ss_idx.idx-1)
 		idx,nonce = self.data[ss_idx.type][sid]
 		if idx != ss_idx.idx:
-			m = "{} != {}: self.data[{t!r}].key(i) does not match self.data[{t!r}][i]!"
-			die(3,m.format(idx,ss_idx.idx,t=ss_idx.type))
+			die(3, "{} != {}: self.data[{t!r}].key(i) does not match self.data[{t!r}][i]!".format(
+				idx,
+				ss_idx.idx,
+				t = ss_idx.type ))
 
 		if print_msg:
-			msg('\b\b\b => {}'.format(SeedID.hlc(sid)))
+			msg(f'\b\b\b => {SeedID.hlc(sid)}')
 
 		seed = self.member_type(self,idx,nonce,length=ss_idx.type)
-		assert seed.sid == sid,'{} != {}: Seed ID mismatch!'.format(seed.sid,sid)
+		assert seed.sid == sid, f'{seed.sid} != {sid}: Seed ID mismatch!'
 		return seed
 
 	def get_subseed_by_seed_id(self,sid,last_idx=None,print_msg=False):
@@ -130,9 +132,9 @@ class SubSeedList(MMGenObject):
 
 	def _collision_debug_msg(self,sid,idx,nonce,nonce_desc='nonce',debug_last_share=False):
 		slen = 'short' if sid in self.data['short'] else 'long'
-		m1 = 'add_subseed(idx={},{}):'.format(idx,slen)
+		m1 = f'add_subseed(idx={idx},{slen}):'
 		if sid == self.parent_seed.sid:
-			m2 = 'collision with parent Seed ID {},'.format(sid)
+			m2 = f'collision with parent Seed ID {sid},'
 		else:
 			if debug_last_share:
 				sl = self.debug_last_share_sid_len
@@ -140,8 +142,8 @@ class SubSeedList(MMGenObject):
 				sid = sid[:sl]
 			else:
 				colliding_idx = self.data[slen][sid][0]
-			m2 = 'collision with ID {} (idx={},{}),'.format(sid,colliding_idx,slen)
-		msg('{:30} {:46} incrementing {} to {}'.format(m1,m2,nonce_desc,nonce+1))
+			m2 = f'collision with ID {sid} (idx={colliding_idx},{slen}),'
+		msg(f'{m1:30} {m2:46} incrementing {nonce_desc} to {nonce+1}')
 
 	def _generate(self,last_idx=None,last_sid=None):
 
@@ -184,13 +186,13 @@ class SubSeedList(MMGenObject):
 		fs1 = '{:>18} {:>18}\n'
 		fs2 = '{i:>7}L: {:8} {i:>7}S: {:8}\n'
 
-		hdr = '{:>16} {} ({} bits)\n\n'.format('Parent Seed:',self.parent_seed.sid.hl(),self.parent_seed.bitlen)
+		hdr = f'    Parent Seed: {self.parent_seed.sid.hl()} ({self.parent_seed.bitlen} bits)\n\n'
 		hdr += fs1.format('Long Subseeds','Short Subseeds')
 		hdr += fs1.format('-------------','--------------')
 
 		sl = self.data['long'].keys
 		ss = self.data['short'].keys
-		body = (fs2.format(sl[n-1],ss[n-1],i=n) for n in r.iterate())
+		body = (fs2.format( sl[n-1], ss[n-1], i=n ) for n in r.iterate())
 
 		return hdr + ''.join(body)
 
@@ -219,7 +221,7 @@ class Seed(SeedBase):
 
 		def add_share(ss):
 			if d.byte_len:
-				assert ss.byte_len == d.byte_len,'Seed length mismatch! {} != {}'.format(ss.byte_len,d.byte_len)
+				assert ss.byte_len == d.byte_len, f'Seed length mismatch! {ss.byte_len} != {d.byte_len}'
 			else:
 				d.byte_len = ss.byte_len
 			d.ret ^= int(ss.data.hex(),16)
@@ -277,8 +279,7 @@ class SeedShareList(SubSeedList):
 				ms = SeedShareMaster(self,master_idx,nonce)
 				if ms.sid == parent_seed.sid:
 					if g.debug_subseed:
-						m = 'master_share seed ID collision with parent seed, incrementing nonce to {}'
-						msg(m.format(nonce+1))
+						msg(f'master_share seed ID collision with parent seed, incrementing nonce to {nonce+1}')
 				else:
 					return ms
 			raise SubSeedNonceRangeExceeded('nonce range exceeded')
@@ -314,11 +315,11 @@ class SeedShareList(SubSeedList):
 		if g.debug_subseed:
 			A = parent_seed.data
 			B = self.join().data
-			assert A == B,'Data mismatch!\noriginal seed: {!r}\nrejoined seed: {!r}'.format(A,B)
+			assert A == B, f'Data mismatch!\noriginal seed: {A!r}\nrejoined seed: {B!r}'
 
 	def get_share_by_idx(self,idx,base_seed=False):
 		if idx < 1 or idx > self.count:
-			raise RangeError('{}: share index out of range'.format(idx))
+			raise RangeError(f'{idx}: share index out of range')
 		elif idx == self.count:
 			return self.last_share
 		elif self.master_share and idx == 1:
@@ -364,7 +365,7 @@ class SeedShareBase(MMGenObject):
 	@property
 	def fn_stem(self):
 		pl = self.parent_list
-		msdata = '_with_master{}'.format(pl.master_share.idx) if pl.master_share else ''
+		msdata = f'_with_master{pl.master_share.idx}' if pl.master_share else ''
 		return '{}-{}-{}of{}{}[{}]'.format(
 			pl.parent_seed.sid,
 			pl.id_str,
@@ -379,7 +380,7 @@ class SeedShareBase(MMGenObject):
 
 	def get_desc(self,ui=False):
 		pl = self.parent_list
-		mss = ', with master share #{}'.format(pl.master_share.idx) if pl.master_share else ''
+		mss = f', with master share #{pl.master_share.idx}' if pl.master_share else ''
 		if ui:
 			m   = ( yellow("(share {} of {} of ")
 					+ pl.parent_seed.sid.hl()
@@ -398,10 +399,17 @@ class SeedShare(SeedShareBase,SubSeed):
 		assert parent_list.have_short == False
 		assert length == 'long'
 		# field maximums: id_str: none (256 chars), count: 65535 (1024), idx: 65535 (1024), nonce: 65535 (1000)
-		scramble_key = '{}:{}:'.format(parent_list.split_type,parent_list.id_str).encode() + \
-						parent_list.count.to_bytes(2,'big') + idx.to_bytes(2,'big') + nonce.to_bytes(2,'big')
+		scramble_key = (
+			f'{parent_list.split_type}:{parent_list.id_str}:'.encode() +
+			parent_list.count.to_bytes(2,'big') +
+			idx.to_bytes(2,'big') +
+			nonce.to_bytes(2,'big')
+		)
 		if parent_list.master_share:
-			scramble_key += b':master:' + parent_list.master_share.idx.to_bytes(2,'big')
+			scramble_key += (
+				b':master:' +
+				parent_list.master_share.idx.to_bytes(2,'big')
+			)
 		return scramble_seed(seed.data,scramble_key)[:seed.byte_len]
 
 class SeedShareLast(SeedShareBase,SeedBase):
@@ -443,7 +451,7 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 		return '{}-MASTER{}[{}]'.format(
 			self.parent_list.parent_seed.sid,
 			self.idx,
-			self.sid)
+			self.sid )
 
 	def make_base_seed_bin(self):
 		seed = self.parent_list.parent_seed
@@ -460,7 +468,7 @@ class SeedShareMaster(SeedBase,SeedShareBase):
 
 	def get_desc(self,ui=False):
 		psid = self.parent_list.parent_seed.sid
-		mss = 'master share #{} of '.format(self.idx)
+		mss = f'master share #{self.idx} of '
 		return yellow('(' + mss) + psid.hl() + yellow(')') if ui else mss + psid
 
 class SeedShareMasterJoining(SeedShareMaster):

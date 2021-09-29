@@ -43,10 +43,10 @@ class my_build_ext(build_ext):
 setup(
 	cmdclass = { 'build_ext': my_build_ext },
 	ext_modules = [Extension(
-		name         = 'mmgen.secp256k1',
-		sources      = ['extmod/secp256k1mod.c'],
-		libraries    = ([],['gmp'])[have_msys2],
+		name          = 'mmgen.secp256k1',
+		sources       = ['extmod/secp256k1mod.c'],
+		libraries     = ([],['gmp'])[have_msys2],
 		extra_objects = [os.path.join(ext_path,'.libs/libsecp256k1.a')],
-		include_dirs = [os.path.join(ext_path,'include')],
+		include_dirs  = [os.path.join(ext_path,'include')],
 	)]
 )

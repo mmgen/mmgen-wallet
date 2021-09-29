@@ -2099,7 +2099,7 @@ zoo
 		for k,v in cls.constants.items():
 			if v[1] == nwords:
 				return int(k)//8 if in_bytes else int(k)//4 if in_hex else int(k)
-		raise MnemonicError('{!r}: invalid word length for BIP39 mnemonic'.format(nwords))
+		raise MnemonicError(f'{nwords!r}: invalid word length for BIP39 mnemonic')
 
 	@classmethod
 	def seedlen2nwords(cls,seed_len,in_bytes=False,in_hex=False):
@@ -2107,7 +2107,7 @@ zoo
 		try:
 			return cls.constants[str(seed_bits)][1]
 		except:
-			raise ValueError('{!r}: invalid seed length for BIP39 mnemonic'.format(seed_bits))
+			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic')
 
 	@classmethod
 	def tohex(cls,words,wl_id,pad=None):
@@ -2118,7 +2118,7 @@ zoo
 
 		for n,w in enumerate(words):
 			if w not in wl:
-				raise MnemonicError('word #{} is not in the BIP39 word list'.format(n+1))
+				raise MnemonicError(f'word #{n+1} is not in the BIP39 word list')
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
 
@@ -2127,10 +2127,10 @@ zoo
 				bitlen = int(k)
 				break
 		else:
-			raise MnemonicError('{}: invalid BIP39 seed phrase length'.format(len(words)))
+			raise MnemonicError(f'{len(words)}: invalid BIP39 seed phrase length')
 
 		if pad != None:
-			assert pad * 4 == bitlen, '{}: invalid pad length'.format(pad)
+			assert pad * 4 == bitlen, f'{pad}: invalid pad length'
 
 		seed_bin = res[:bitlen]
 		chk_bin = res[bitlen:]
@@ -2157,11 +2157,11 @@ zoo
 		seed_bytes = bytes.fromhex(seed_hex)
 		bitlen = len(seed_bytes) * 8
 
-		assert str(bitlen) in cls.constants,'{}: invalid seed bit length'.format(bitlen)
+		assert str(bitlen) in cls.constants, f'{bitlen}: invalid seed bit length'
 		chk_len,mn_len = cls.constants[str(bitlen)]
 
 		if pad != None:
-			assert mn_len == pad, '{}: invalid pad length'.format(pad)
+			assert mn_len == pad, f'{pad}: invalid pad length'
 
 		chk_hex = sha256(seed_bytes).hexdigest()
 

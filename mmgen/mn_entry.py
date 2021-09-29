@@ -219,7 +219,7 @@ def mn_entry(wl_id,entry_mode=None):
 		wl_id = 'mmgen'
 	me = MnemonicEntry.get_cls_by_wordlist(wl_id)
 	import importlib
-	me.conv_cls = getattr(importlib.import_module('mmgen.{}'.format(me.modname)),me.modname)
+	me.conv_cls = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)
 	me.conv_cls.init_mn(wl_id)
 	me.wl = me.conv_cls.digits[wl_id]
 	obj = me()
@@ -336,7 +336,7 @@ class MnemonicEntry(object):
 
 	def get_mnemonic_from_user(self,mn_len,validate=True):
 		mll = list(self.conv_cls.seedlen_map_rev[self.wl_id])
-		assert mn_len in mll, '{}: invalid mnemonic length (must be one of {})'.format(mn_len,mll)
+		assert mn_len in mll, f'{mn_len}: invalid mnemonic length (must be one of {mll})'
 
 		if self.usr_dfl_entry_mode:
 			em = self.get_cls_by_entry_mode(self.usr_dfl_entry_mode)(self)
@@ -345,20 +345,19 @@ class MnemonicEntry(object):
 			em = self.choose_entry_mode()
 			i_add = '.'
 
-		msg('\r' + 'Using {} entry mode{}'.format(cyan(em.name.upper()),i_add))
+		msg('\r' + f'Using {cyan(em.name.upper())} entry mode{i_add}')
 		self.em = em
 
 		if not self.usr_dfl_entry_mode:
-			m = (
-				fmt(self.prompt_info['intro'])
-				+ '\n'
-				+ fmt(self.prompt_info['pad_info'].rstrip() + em.pad_max_info + em.prompt_info, indent='  ')
-			)
-			msg('\n' + m.format(
-				ml       = mn_len,
-				ssl      = em.ss_len,
-				pad_max  = em.pad_max,
-				sw       = self.shortest_word,
+			msg('\n' + (
+					fmt(self.prompt_info['intro'])
+					+ '\n'
+					+ fmt(self.prompt_info['pad_info'].rstrip() + em.pad_max_info + em.prompt_info, indent='  ')
+				).format(
+					ml       = mn_len,
+					ssl      = em.ss_len,
+					pad_max  = em.pad_max,
+					sw       = self.shortest_word,
 			))
 
 		clear_line = '\n' if g.test_suite else '{r}{s}{r}'.format(r='\r',s=' '*40)
@@ -393,8 +392,7 @@ class MnemonicEntry(object):
 		}
 		wl = wl.lower()
 		if wl not in d:
-			m = 'wordlist {!r} not recognized (valid options: {})'
-			raise ValueError(m.format(wl,fmt_list(list(d))))
+			raise ValueError(f'wordlist {wl!r} not recognized (valid options: {fmt_list(list(d))})')
 		return d[wl]
 
 	@classmethod
@@ -402,8 +400,9 @@ class MnemonicEntry(object):
 		for k,v in g.mnemonic_entry_modes.items():
 			tcls = cls.get_cls_by_wordlist(k)
 			if v not in tcls.entry_modes:
-				m = 'entry mode {!r} not recognized for wordlist {!r}:\n    (valid options: {})'
-				raise ValueError(m.format(v,k,fmt_list(tcls.entry_modes)))
+				raise ValueError(
+					f'entry mode {v!r} not recognized for wordlist {k!r}:' +
+					f'\n    (valid options: {fmt_list(tcls.entry_modes)})' )
 			tcls.usr_dfl_entry_mode = v
 
 class MnemonicEntryMMGen(MnemonicEntry):
@@ -430,5 +429,4 @@ class MnemonicEntryMonero(MnemonicEntry):
 try:
 	MnemonicEntry.get_cfg_vars()
 except Exception as e:
-	m = "Error in cfg file option 'mnemonic_entry_modes':\n  {}"
-	die(2,m.format(e.args[0]))
+	die(2, f"Error in cfg file option 'mnemonic_entry_modes':\n  {e.args[0]}")

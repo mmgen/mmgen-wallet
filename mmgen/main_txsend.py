@@ -25,7 +25,7 @@ from .common import *
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc':    'Send a signed {pnm} cryptocoin transaction'.format(pnm=g.proj_name),
+		'desc':    f'Send a signed {g.proj_name} cryptocoin transaction',
 		'usage':   '[opts] <signed transaction file>',
 		'options': """
 -h, --help      Print this help message

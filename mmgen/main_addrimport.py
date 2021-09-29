@@ -38,10 +38,10 @@ WARNING: If any of the addresses you're importing is already in the blockchain,
 has a balance and is not in your tracking wallet, you must exit the program now
 and rerun it using the '--rescan' option.
 """.strip(),
-	'bad_args': """
-You must specify an {pnm} address file, a single address with the '--address'
-option, or a list of non-{pnm} addresses with the '--addrlist' option
-""".strip().format(pnm=g.proj_name)
+	'bad_args': f"""
+You must specify an {g.proj_name} address file, a single address with the '--address'
+option, or a list of non-{g.proj_name} addresses with the '--addrlist' option
+""".strip()
 }[k]
 
 # In batch mode, daemon just rescans each address separately anyway, so make
@@ -49,7 +49,7 @@ option, or a list of non-{pnm} addresses with the '--addrlist' option
 
 opts_data = {
 	'text': {
-		'desc': """Import addresses into an {} tracking wallet""".format(g.proj_name),
+		'desc': f'Import addresses into an {g.proj_name} tracking wallet',
 		'usage':'[opts] [mmgen address file]',
 		'options': """
 -h, --help         Print this help message
@@ -87,7 +87,7 @@ def parse_cmd_args(rpc,cmd_args):
 		if opt.addrlist:
 			al = AddrList(
 				proto = proto,
-				addrlist = get_lines_from_file(infile,'non-{pnm} addresses'.format(pnm=g.proj_name),
+				addrlist = get_lines_from_file(infile,f'non-{g.proj_name} addresses',
 				trim_comments = True) )
 		else:
 			al = import_mmgen_list(infile)
@@ -104,14 +104,14 @@ def check_opts(tw):
 	rescan = bool(opt.rescan)
 
 	if rescan and not 'rescan' in tw.caps:
-		msg("'--rescan' ignored: not supported by {}".format(type(tw).__name__))
+		msg(f"'--rescan' ignored: not supported by {type(tw).__name__}")
 		rescan = False
 
 	if rescan and not opt.quiet:
 		confirm_or_raise(ai_msgs('rescan'),'continue',expect='YES')
 
 	if batch and not 'batch' in tw.caps:
-		msg("'--batch' ignored: not supported by {}".format(type(tw).__name__))
+		msg(f"'--batch' ignored: not supported by {type(tw).__name__}")
 		batch = False
 
 	return batch,rescan
@@ -124,7 +124,9 @@ async def import_addr(tw,addr,label,rescan,msg_fmt,msg_args):
 			while True:
 				if task.done():
 					break
-				msg_r(('\r{} '+msg_fmt).format(secs_to_hms(int(time.time()-start)),*msg_args))
+				msg_r(('\r{} '+msg_fmt).format(
+					secs_to_hms(int(time.time()-start)),
+					*msg_args ))
 				await asyncio.sleep(0.5)
 			await task
 			msg('\nOK')
@@ -132,7 +134,7 @@ async def import_addr(tw,addr,label,rescan,msg_fmt,msg_args):
 			await task
 			qmsg(msg_fmt.format(*msg_args) + ' - OK')
 	except Exception as e:
-		die(2,'\nImport of address {!r} failed: {!r}'.format(addr,e.args[0]))
+		die(2,f'\nImport of address {addr!r} failed: {e.args[0]!r}')
 
 def make_args_list(tw,al,batch,rescan):
 
@@ -142,10 +144,10 @@ def make_args_list(tw,al,batch,rescan):
 
 	for num,e in enumerate(al.data,1):
 		if e.idx:
-			label = '{}:{}'.format(al.al_id,e.idx) + (' ' + e.label if e.label else '')
+			label = f'{al.al_id}:{e.idx}' + (' ' + e.label if e.label else '')
 			add_msg = label
 		else:
-			label = '{}:{}'.format(proto.base_coin.lower(),e.addr)
+			label = f'{proto.base_coin.lower()}:{e.addr}'
 			add_msg = 'non-'+g.proj_name
 
 		if batch:

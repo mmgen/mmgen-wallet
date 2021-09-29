@@ -30,7 +30,7 @@ from .seed import Seed
 
 def check_usr_seed_len(seed_len):
 	if opt.seed_len and opt.seed_len != seed_len:
-		die(1,f"ERROR: requested seed length ({opt.seed_len}) doesn't match seed length of source ({seed_len})")
+		die(1,f'ERROR: requested seed length ({opt.seed_len}) doesn’t match seed length of source ({seed_len})')
 
 def _is_mnemonic(s,fmt):
 	oq_save = bool(opt.quiet)
@@ -80,7 +80,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		if hasattr(opt,'out_fmt') and opt.out_fmt:
 			out_cls = cls.fmt_code_to_type(opt.out_fmt)
 			if not out_cls:
-				die(1,'{!r}: unrecognized output format'.format(opt.out_fmt))
+				die(1,f'{opt.out_fmt!r}: unrecognized output format')
 		else:
 			out_cls = None
 
@@ -148,12 +148,15 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 			self._decrypt_retry()
 		else:
 			if not self.stdin_ok:
-				die(1,'Reading from standard input not supported for {} format'.format(self.desc))
+				die(1,f'Reading from standard input not supported for {self.desc} format')
 			self._deformat_retry()
 			self._decrypt_retry()
 
-		m = ('',', seed length {}'.format(self.seed.bitlen))[self.seed.bitlen!=256]
-		qmsg('Valid {} for Seed ID {}{}'.format(self.desc,self.seed.sid.hl(),m))
+		qmsg('Valid {} for Seed ID {}{}'.format(
+			self.desc,
+			self.seed.sid.hl(),
+			(f', seed length {self.seed.bitlen}' if self.seed.bitlen != 256 else '')
+		))
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
@@ -212,7 +215,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 					for c in cls.wallet_classes
 				if hasattr(c,'fmt_codes')]
 		w = max(len(i[0]) for i in d)
-		ret = ['{:<{w}}  {:<9} {}'.format(a,b,c,w=w) for a,b,c in [
+		ret = [f'{a:<{w}}  {b:<9} {c}' for a,b,c in [
 			('Format','FileExt','Valid codes'),
 			('------','-------','-----------')
 			] + sorted(d)]
@@ -260,9 +263,10 @@ class WalletUnenc(Wallet):
 			msg_r(('\r','\n')[g.test_suite] + ' '*len(prompt) + '\r')
 			return ok_lens[int(r)-1]
 
-		m1 = blue('{} type:'.format(capfirst(desc)))
-		m2 = yellow(subtype)
-		msg('{} {}'.format(m1,m2))
+		msg('{} {}'.format(
+			blue(f'{capfirst(desc)} type:'),
+			yellow(subtype)
+		))
 
 		while True:
 			usr_len = choose_len()
@@ -311,7 +315,7 @@ class WalletEnc(Wallet):
 			else: # Prompt, using old value as default
 				hp = self._get_hash_preset_from_user(old_hp,add_desc)
 			if (not opt.keep_hash_preset) and self.op == 'pwchg_new':
-				qmsg('Hash preset {}'.format('unchanged' if hp==old_hp else f'changed to {hp!r}'))
+				qmsg('Hash preset {}'.format( 'unchanged' if hp == old_hp else f'changed to {hp!r}' ))
 		elif opt.hash_preset:
 			hp = opt.hash_preset
 			qmsg(f'Using hash preset {hp!r} requested on command line')
@@ -379,7 +383,7 @@ class WalletEnc(Wallet):
 			else:
 				pw = self._get_new_passphrase()
 				if self.op == 'pwchg_new':
-					qmsg('Passphrase {}'.format('unchanged' if pw==old_pw else 'changed'))
+					qmsg('Passphrase {}'.format( 'unchanged' if pw == old_pw else 'changed' ))
 		else:
 			self._get_new_passphrase()
 
@@ -434,13 +438,14 @@ class Mnemonic(WalletUnenc):
 		mn = self.fmt_data.split()
 
 		if len(mn) not in self.mn_lens:
-			m = 'Invalid mnemonic ({} words).  Valid numbers of words: {}'
-			msg(m.format(len(mn),', '.join(map(str,self.mn_lens))))
+			msg('Invalid mnemonic ({} words).  Valid numbers of words: {}'.format(
+				len(mn),
+				', '.join(map(str,self.mn_lens)) ))
 			return False
 
 		for n,w in enumerate(mn,1):
 			if w not in self.conv_cls.digits[self.wl_id]:
-				msg('Invalid mnemonic: word #{} is not in the {} wordlist'.format(n,self.wl_id.upper()))
+				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
 		hexseed = self.conv_cls.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
@@ -492,27 +497,29 @@ class MMGenSeedFile(WalletUnenc):
 		b58seed = baseconv.frombytes(self.seed.data,'b58',pad='seed',tostr=True)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
-		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum,split_into_cols(4,b58seed))
+		self.fmt_data = '{} {}\n'.format(
+			self.ssdata.chksum,
+			split_into_cols(4,b58seed) )
 
 	def _deformat(self):
 		desc = self.desc
 		ld = self.fmt_data.split()
 
 		if not (7 <= len(ld) <= 12): # 6 <= padded b58 data (ld[1:]) <= 11
-			msg('Invalid data length ({}) in {}'.format(len(ld),desc))
+			msg(f'Invalid data length ({len(ld)}) in {desc}')
 			return False
 
 		a,b = ld[0],''.join(ld[1:])
 
 		if not is_chksum_6(a):
-			msg("'{}': invalid checksum format in {}".format(a, desc))
+			msg(f'{a!r}: invalid checksum format in {desc}')
 			return False
 
 		if not is_b58_str(b):
-			msg("'{}': not a base 58 string, in {}".format(b, desc))
+			msg(f'{b!r}: not a base 58 string, in {desc}')
 			return False
 
-		vmsg_r('Validating {} checksum...'.format(desc))
+		vmsg_r(f'Validating {desc} checksum...')
 
 		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
@@ -520,7 +527,7 @@ class MMGenSeedFile(WalletUnenc):
 		ret = baseconv.tobytes(b,'b58',pad='seed')
 
 		if ret == False:
-			msg('Invalid base-58 encoded seed: {}'.format(val))
+			msg(f'Invalid base-58 encoded seed: {val}')
 			return False
 
 		self.seed = Seed(ret)
@@ -556,8 +563,10 @@ class DieRollSeedFile(WalletUnenc):
 
 		rmap = self.conv_cls.seedlen_map_rev['b6d']
 		if not len(d) in rmap:
-			m = '{!r}: invalid length for {} (must be one of {})'
-			raise SeedLengthError(m.format(len(d),self.desc,list(rmap)))
+			raise SeedLengthError('{!r}: invalid length for {} (must be one of {})'.format(
+				len(d),
+				self.desc,
+				list(rmap) ))
 
 		# truncate seed to correct length, discarding high bits
 		seed_len = rmap[len(d)]
@@ -595,7 +604,7 @@ class DieRollSeedFile(WalletUnenc):
 		b6d_digits = self.conv_cls.digits['b6d']
 
 		cr = '\n' if g.test_suite else '\r'
-		prompt_fs = '\b\b\b   {}Enter die roll #{{}}: {}'.format(cr,CUR_SHOW)
+		prompt_fs = f'\b\b\b   {cr}Enter die roll #{{}}: {CUR_SHOW}'
 		clear_line = '' if g.test_suite else '\r' + ' ' * 25
 		invalid_msg = CUR_HIDE + cr + 'Invalid entry' + ' ' * 11
 
@@ -638,11 +647,11 @@ class PlainHexSeedFile(WalletUnenc):
 		d = self.fmt_data.strip()
 
 		if not is_hex_str_lc(d):
-			msg("'{}': not a lowercase hexadecimal string, in {}".format(d,desc))
+			msg(f'{d!r}: not a lowercase hexadecimal string, in {desc}')
 			return False
 
 		if not len(d)*4 in g.seed_lens:
-			msg('Invalid data length ({}) in {}'.format(len(d),desc))
+			msg(f'Invalid data length ({len(d)}) in {desc}')
 			return False
 
 		self.seed = Seed(bytes.fromhex(d))
@@ -663,7 +672,9 @@ class MMGenHexSeedFile(WalletUnenc):
 		h = self.seed.hexdata
 		self.ssdata.chksum = make_chksum_6(h)
 		self.ssdata.hexseed = h
-		self.fmt_data = '{} {}\n'.format(self.ssdata.chksum, split_into_cols(4,h))
+		self.fmt_data = '{} {}\n'.format(
+			self.ssdata.chksum,
+			split_into_cols(4,h) )
 
 	def _deformat(self):
 		desc = self.desc
@@ -672,22 +683,22 @@ class MMGenHexSeedFile(WalletUnenc):
 			d[1]
 			chk,hstr = d[0],''.join(d[1:])
 		except:
-			msg("'{}': invalid {}".format(self.fmt_data.strip(),desc))
+			msg(f'{self.fmt_data.strip()!r}: invalid {desc}')
 			return False
 
 		if not len(hstr)*4 in g.seed_lens:
-			msg('Invalid data length ({}) in {}'.format(len(hstr),desc))
+			msg(f'Invalid data length ({len(hstr)}) in {desc}')
 			return False
 
 		if not is_chksum_6(chk):
-			msg("'{}': invalid checksum format in {}".format(chk, desc))
+			msg(f'{chk!r}: invalid checksum format in {desc}')
 			return False
 
 		if not is_hex_str(hstr):
-			msg("'{}': not a hexadecimal string, in {}".format(hstr, desc))
+			msg(f'{hstr!r}: not a hexadecimal string, in {desc}')
 			return False
 
-		vmsg_r('Validating {} checksum...'.format(desc))
+		vmsg_r(f'Validating {desc} checksum...')
 
 		if not compare_chksums(chk,'file',make_chksum_6(hstr),'computed',verbose=True):
 			return False
@@ -738,17 +749,17 @@ class MMGenWallet(WalletEnc):
 			old_lbl = self.ss_in.ssdata.label
 			if opt.keep_label:
 				lbl = old_lbl
-				qmsg('Reusing label {} at user request'.format(lbl.hl(encl="''")))
+				qmsg('Reusing label {} at user request'.format( lbl.hl(encl="''") ))
 			elif self.label:
 				lbl = self.label
-				qmsg('Using label {} requested on command line'.format(lbl.hl(encl="''")))
+				qmsg('Using label {} requested on command line'.format( lbl.hl(encl="''") ))
 			else: # Prompt, using old value as default
 				lbl = self._get_label_from_user(old_lbl)
 			if (not opt.keep_label) and self.op == 'pwchg_new':
-				qmsg('Label {}'.format('unchanged' if lbl==old_lbl else f'changed to {lbl!r}'))
+				qmsg('Label {}'.format( 'unchanged' if lbl == old_lbl else f'changed to {lbl!r}' ))
 		elif self.label:
 			lbl = self.label
-			qmsg('Using label {} requested on command line'.format(lbl.hl(encl="''")))
+			qmsg('Using label {} requested on command line'.format( lbl.hl(encl="''") ))
 		else:
 			lbl = self._get_label_from_user()
 		self.ssdata.label = lbl
@@ -767,11 +778,10 @@ class MMGenWallet(WalletEnc):
 		es_fmt = baseconv.frombytes(d.enc_seed,'b58',pad='seed',tostr=True)
 		lines = (
 			d.label,
-			'{} {} {} {} {}'.format(s.sid.lower(), d.key_id.lower(),
-										s.bitlen, d.pw_status, d.timestamp),
-			'{}: {} {} {}'.format(d.hash_preset,*get_hash_params(d.hash_preset)),
-			'{} {}'.format(make_chksum_6(slt_fmt),split_into_cols(4,slt_fmt)),
-			'{} {}'.format(make_chksum_6(es_fmt), split_into_cols(4,es_fmt))
+			'{} {} {} {} {}'.format( s.sid.lower(), d.key_id.lower(), s.bitlen, d.pw_status, d.timestamp ),
+			'{}: {} {} {}'.format( d.hash_preset, *get_hash_params(d.hash_preset) ),
+			'{} {}'.format( make_chksum_6(slt_fmt), split_into_cols(4,slt_fmt) ),
+			'{} {}'.format( make_chksum_6(es_fmt),  split_into_cols(4,es_fmt) )
 		)
 		chksum = make_chksum_6(' '.join(lines).encode())
 		self.fmt_data = '\n'.join((chksum,)+lines) + '\n'
@@ -781,11 +791,11 @@ class MMGenWallet(WalletEnc):
 		def check_master_chksum(lines,desc):
 
 			if len(lines) != 6:
-				msg('Invalid number of lines ({}) in {} data'.format(len(lines),desc))
+				msg(f'Invalid number of lines ({len(lines)}) in {desc} data')
 				return False
 
 			if not is_chksum_6(lines[0]):
-				msg('Incorrect master checksum ({}) in {} data'.format(lines[0],desc))
+				msg(f'Incorrect master checksum ({lines[0]}) in {desc} data')
 				return False
 
 			chk = make_chksum_6(' '.join(lines[1:]))
@@ -811,14 +821,14 @@ class MMGenWallet(WalletEnc):
 		hpdata = lines[3].split()
 
 		d.hash_preset = hp = hpdata[0][:-1]  # a string!
-		qmsg("Hash preset of wallet: '{}'".format(hp))
+		qmsg(f'Hash preset of wallet: {hp!r}')
 		if opt.hash_preset and opt.hash_preset != hp:
 			qmsg('Warning: ignoring user-requested hash preset {opt.hash_preset}')
 
 		hash_params = tuple(map(int,hpdata[1:]))
 
 		if hash_params != get_hash_params(d.hash_preset):
-			msg(f"Hash parameters {' '.join(hash_params)!r} don't match hash preset {d.hash_preset!r}")
+			msg(f'Hash parameters {" ".join(hash_params)!r} don’t match hash preset {d.hash_preset!r}')
 			return False
 
 		lmin,foo,lmax = sorted(baseconv.seedlen_map_rev['b58']) # 22,33,44
@@ -828,7 +838,7 @@ class MMGenWallet(WalletEnc):
 			b58_val = ''.join(l)
 
 			if len(b58_val) < lmin or len(b58_val) > lmax:
-				msg('Invalid format for {} in {}: {}'.format(key,self.desc,l))
+				msg(f'Invalid format for {key} in {self.desc}: {l}')
 				return False
 
 			if not compare_chksums(chk,key,
@@ -837,7 +847,7 @@ class MMGenWallet(WalletEnc):
 
 			val = baseconv.tobytes(b58_val,'b58',pad='seed')
 			if val == False:
-				msg('Invalid base 58 number: {}'.format(b58_val))
+				msg(f'Invalid base 58 number: {b58_val}')
 				return False
 
 			setattr(d,key,val)
@@ -907,7 +917,7 @@ class Brainwallet(WalletEnc):
 			buflen = bw_seed_len // 8 )
 		qmsg('Done')
 		self.seed = Seed(seed)
-		msg('Seed ID: {}'.format(self.seed.sid))
+		msg(f'Seed ID: {self.seed.sid}')
 		qmsg('Check this value against your records')
 		return True
 
@@ -971,7 +981,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		# IV is used BOTH to initialize counter and to salt password!
 		d.iv = get_random(g.aesctr_iv_len)
 		d.iv_id = self._make_iv_chksum(d.iv)
-		msg('New Incog Wallet ID: {}'.format(d.iv_id))
+		msg(f'New Incog Wallet ID: {d.iv_id}')
 		qmsg('Make a record of this value')
 		vmsg(self.msg['record_incog_id'])
 
@@ -982,7 +992,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, 'incog wrapper key')
 		d.key_id = make_chksum_8(d.wrapper_key)
-		vmsg('Key ID: {}'.format(d.key_id))
+		vmsg(f'Key ID: {d.key_id}')
 		d.target_data_len = self._get_incog_data_len(self.seed.bitlen)
 
 	def _format(self):
@@ -1010,7 +1020,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.iv             = self.fmt_data[0:g.aesctr_iv_len]
 		d.incog_id       = self._make_iv_chksum(d.iv)
 		d.enc_incog_data = self.fmt_data[g.aesctr_iv_len:]
-		msg('Incog Wallet ID: {}'.format(d.incog_id))
+		msg(f'Incog Wallet ID: {d.incog_id}')
 		qmsg('Check this value against your records')
 		vmsg(self.msg['check_incog_id'])
 
@@ -1019,14 +1029,14 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _verify_seed_newfmt(self,data):
 		chk,seed = data[:8],data[8:]
 		if sha256(seed).digest()[:8] == chk:
-			qmsg('Passphrase{} are correct'.format(self.msg['dec_chk'].format('and')))
+			qmsg('Passphrase{} are correct'.format( self.msg['dec_chk'].format('and') ))
 			return seed
 		else:
-			msg('Incorrect passphrase{}'.format(self.msg['dec_chk'].format('or')))
+			msg('Incorrect passphrase{}'.format( self.msg['dec_chk'].format('or') ))
 			return False
 
 	def _verify_seed_oldfmt(self,seed):
-		m = 'Seed ID: {}.  Is the Seed ID correct?'.format(make_chksum_8(seed))
+		m = f'Seed ID: {make_chksum_8(seed)}.  Is the Seed ID correct?'
 		if keypress_confirm(m, True):
 			return seed
 		else:
@@ -1045,7 +1055,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		d.enc_seed = dd[g.salt_len:]
 
 		key = make_key(d.passwd, d.salt, d.hash_preset, 'main key')
-		qmsg('Key ID: {}'.format(make_chksum_8(key)))
+		qmsg(f'Key ID: {make_chksum_8(key)}')
 
 		verify_seed = getattr(self,'_verify_seed_'+
 						('newfmt','oldfmt')[bool(opt.old_incog_fmt)])
@@ -1054,7 +1064,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		if seed:
 			self.seed = Seed(seed)
-			msg('Seed ID: {}'.format(self.seed.sid))
+			msg(f'Seed ID: {self.seed.sid}')
 			return True
 		else:
 			return False
@@ -1123,14 +1133,19 @@ harder to find, you're advised to choose a much larger file size than this.
 		d = self.ssdata
 		m = ('Input','Destination')[action=='write']
 		if fn.size < d.hincog_offset + d.target_data_len:
-			fs = "{} file '{}' has length {}, too short to {} {} bytes of data at offset {}"
-			die(1,fs.format(m,fn.name,fn.size,action,d.target_data_len,d.hincog_offset))
+			die(1,'{} file {!r} has length {}, too short to {} {} bytes of data at offset {}'.format(
+				m,
+				fn.name,
+				fn.size,
+				action,
+				d.target_data_len,
+				d.hincog_offset ))
 
 	def _get_data(self):
 		d = self.ssdata
 		d.hincog_offset = self._get_hincog_params('input')[1]
 
-		qmsg("Getting hidden incog data from file '{}'".format(self.infile.name))
+		qmsg(f'Getting hidden incog data from file {self.infile.name!r}')
 
 		# Already sanity-checked:
 		d.target_data_len = self._get_incog_data_len(opt.seed_len or g.dfl_seed_len)
@@ -1141,7 +1156,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		os.lseek(fh,int(d.hincog_offset),os.SEEK_SET)
 		self.fmt_data = os.read(fh,d.target_data_len)
 		os.close(fh)
-		qmsg("Data read from file '{}' at offset {}".format(self.infile.name,d.hincog_offset))
+		qmsg(f'Data read from file {self.infile.name!r} at offset {d.hincog_offset}')
 
 	# overrides method in Wallet
 	def write_to_file(self):
@@ -1160,14 +1175,16 @@ harder to find, you're advised to choose a much larger file size than this.
 		try:
 			os.stat(fn)
 		except:
-			if keypress_confirm("Requested file '{}' does not exist.  Create?".format(fn),default_yes=True):
+			if keypress_confirm(
+					f'Requested file {fn!r} does not exist.  Create?',
+					default_yes = True ):
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
 					fsize = parse_bytespec(my_raw_input('Enter file size: '))
 					if fsize >= min_fsize:
 						break
-					msg('File size must be an integer no less than {}'.format(min_fsize))
+					msg(f'File size must be an integer no less than {min_fsize}')
 
 				from .tool import MMGenToolCmdFileUtil
 				MMGenToolCmdFileUtil().rand2file(fn,str(fsize))
@@ -1178,16 +1195,22 @@ harder to find, you're advised to choose a much larger file size than this.
 		from .filename import Filename
 		f = Filename(fn,ftype=type(self),write=True)
 
-		dmsg('{} data len {}, offset {}'.format(capfirst(self.desc),d.target_data_len,d.hincog_offset))
+		dmsg('{} data len {}, offset {}'.format(
+			capfirst(self.desc),
+			d.target_data_len,
+			d.hincog_offset ))
 
 		if check_offset:
 			self._check_valid_offset(f,'write')
 			if not opt.quiet:
-				confirm_or_raise('',"alter file '{}'".format(f.name))
+				confirm_or_raise( '', f'alter file {f.name!r}' )
 
 		flgs = os.O_RDWR|os.O_BINARY if g.platform == 'win' else os.O_RDWR
 		fh = os.open(f.name,flgs)
 		os.lseek(fh, int(d.hincog_offset), os.SEEK_SET)
 		os.write(fh, self.fmt_data)
 		os.close(fh)
-		msg("{} written to file '{}' at offset {}".format(capfirst(self.desc),f.name,d.hincog_offset))
+		msg('{} written to file {!r} at offset {}'.format(
+			capfirst(self.desc),
+			f.name,
+			d.hincog_offset ))

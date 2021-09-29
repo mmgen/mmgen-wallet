@@ -29,10 +29,10 @@ from .common import *
 
 opts_data = {
 	'text': {
-		'desc': """
-               Split funds in a {pnm} wallet after a chain fork using a
+		'desc': f"""
+               Split funds in an {g.proj_name} wallet after a chain fork using a
                timelocked transaction
-		 """.format(pnm=g.proj_name),
+		 """,
 		'usage':'[opts] [output addr1] [output addr2]',
 		'options': """
 -h, --help           Print this help message
@@ -51,10 +51,10 @@ opts_data = {
 -L, --locktime=    t Lock time (block height or unix seconds)
                      (default: {bh})
 """,
-	'notes': """\n
+	'notes': f"""\n
 This command creates two transactions: one (with the timelock) to be broadcast
 on the long chain and one on the short chain after a replayable chain fork.
-Only {pnm} addresses may be spent to.
+Only {g.proj_name} addresses may be spent to.
 
 The command must be run on the longest chain.  The user is reponsible for
 ensuring that the current chain is the longest.  The other chain is specified
@@ -77,7 +77,7 @@ attacks on the majority chain or reorg attacks on the minority chain if the
 minority chain is ahead of the timelock.  If the reorg'd minority chain is
 behind the timelock, protection is contingent on getting the non-timelocked
 transaction reconfirmed before the timelock expires. Use at your own risk.
-""".format(pnm=g.proj_name)
+"""
 	},
 	'code': {
 		'options': lambda proto,s: s.format(
@@ -96,11 +96,10 @@ die(1,'This command is disabled')
 # the following code is broken:
 opt.other_coin = opt.other_coin.upper() if opt.other_coin else proto.forks[-1][2].upper()
 if opt.other_coin.lower() not in [e[2] for e in proto.forks if e[3] == True]:
-	die(1,"'{}': not a replayable fork of {} chain".format(opt.other_coin,proto.coin))
+	die(1,f'{opt.other_coin!r}: not a replayable fork of {proto.coin} chain')
 
 if len(cmd_args) != 2:
-	fs = 'This command requires exactly two {} addresses as arguments'
-	die(1,fs.format(g.proj_name))
+	die(1,f'This command requires exactly two {g.proj_name} addresses as arguments')
 
 from .obj import MMGenID
 try:
@@ -109,7 +108,7 @@ except:
 	die(1,'Command line arguments must be valid MMGen IDs')
 
 if mmids[0] == mmids[1]:
-	die(2,'Both transactions have the same output! ({})'.format(mmids[0]))
+	die(2,f'Both transactions have the same output! ({mmids[0]})')
 
 from .tx import MMGenSplitTX
 from .protocol import init_proto
@@ -124,7 +123,7 @@ tx1 = MMGenSplitTX()
 opt.no_blank = True
 
 async def main():
-	gmsg("Creating timelocked transaction for long chain ({})".format(proto.coin))
+	gmsg(f'Creating timelocked transaction for long chain ({proto.coin})')
 	locktime = int(opt.locktime)
 	if not locktime:
 		rpc = rpc_init(proto)
@@ -134,7 +133,7 @@ async def main():
 	tx1.format()
 	tx1.create_fn()
 
-	gmsg("\nCreating transaction for short chain ({})".format(opt.other_coin))
+	gmsg(f'\nCreating transaction for short chain ({opt.other_coin})')
 
 	proto = init_proto(opt.other_coin)
 

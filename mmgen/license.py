@@ -22,11 +22,11 @@ license.py:  Copyright notice and text of GPLv3
 
 from .globalvars import g
 
-warning = """
-  {pnm} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
+warning = f"""
+  {g.proj_name} Copyright (C) {g.Cdates} by {g.author} {g.email}.  This
   program comes with ABSOLUTELY NO WARRANTY.  This is free software, and
   you are welcome to redistribute it under certain conditions.
-""".format(g=g,pnm=g.proj_name)
+"""
 
 conditions = """
                        TERMS AND CONDITIONS

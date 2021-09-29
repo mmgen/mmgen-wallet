@@ -85,7 +85,7 @@ class baseconv(object):
 			from .mn_tirosh import words
 			cls.digits[mn_id] = words[:cls.mn_base]
 		else:
-			raise ValueError('{}: unrecognized mnemonic ID'.format(mn_id))
+			raise ValueError(f'{mn_id}: unrecognized mnemonic ID')
 
 	@classmethod
 	def get_wordlist(cls,wl_id):
@@ -101,7 +101,7 @@ class baseconv(object):
 	def check_wordlists(cls):
 		for k,v in list(cls.wl_chksums.items()):
 			res = cls.get_wordlist_chksum(k)
-			assert res == v,'{}: checksum mismatch for {} (should be {})'.format(res,k,v)
+			assert res == v,f'{res}: checksum mismatch for {k} (should be {v})'
 		return True
 
 	@classmethod
@@ -110,7 +110,7 @@ class baseconv(object):
 
 		wl = cls.digits[wl_id]
 		from .util import qmsg,compare_chksums
-		ret = 'Wordlist: {}\nLength: {} words'.format(wl_id,len(wl))
+		ret = f'Wordlist: {wl_id}\nLength: {len(wl)} words'
 		new_chksum = cls.get_wordlist_chksum(wl_id)
 
 		a,b = 'generated','saved'
@@ -136,8 +136,7 @@ class baseconv(object):
 		elif pad == 'seed':
 			return seed_pad_func()
 		else:
-			m = "{!r}: illegal value for 'pad' (must be None,'seed' or int)"
-			raise BaseConversionPadError(m.format(pad))
+			raise BaseConversionPadError(f"{pad!r}: illegal value for 'pad' (must be None,'seed' or int)")
 
 	@staticmethod
 	def monero_mn_checksum(words):
@@ -161,14 +160,14 @@ class baseconv(object):
 		desc = cls.desc[wl_id][0]
 
 		if len(words) == 0:
-			raise BaseConversionError('empty {} data'.format(desc))
+			raise BaseConversionError(f'empty {desc} data')
 
 		def get_seed_pad():
-			assert wl_id in cls.seedlen_map_rev,'seed padding not supported for base {!r}'.format(wl_id)
+			assert wl_id in cls.seedlen_map_rev,f'seed padding not supported for base {wl_id!r}'
 			d = cls.seedlen_map_rev[wl_id]
 			if not len(words) in d:
-				m = '{}: invalid length for seed-padded {} data in base conversion'
-				raise BaseConversionError(m.format(len(words),desc))
+				raise BaseConversionError(
+					f'{len(words)}: invalid length for seed-padded {desc} data in base conversion' )
 			return d[len(words)]
 
 		pad_val = max(cls.get_pad(pad,get_seed_pad),1)
@@ -176,12 +175,13 @@ class baseconv(object):
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			m = ('{w!r}:','seed data')[pad=='seed'] + ' not in {d} format'
-			raise BaseConversionError(m.format(w=words_arg,d=desc))
+			raise BaseConversionError(
+				( 'seed data' if pad == 'seed' else f'{words_arg!r}:' ) +
+				f' not in {desc} format' )
 
 		if wl_id == 'xmrseed':
 			if len(words) not in cls.seedlen_map_rev['xmrseed']:
-				die(2,'{}: invalid length for Monero mnemonic'.format(len(words)))
+				die(2,f'{len(words)}: invalid length for Monero mnemonic')
 
 			z = cls.monero_mn_checksum(words[:-1])
 			assert z == words[-1],'invalid Monero mnemonic checksum'
@@ -204,8 +204,9 @@ class baseconv(object):
 
 		from .util import is_hex_str
 		if not is_hex_str(hexstr):
-			m = ('{h!r}:','seed data')[pad=='seed'] + ' not a hexadecimal string'
-			raise HexadecimalStringError(m.format(h=hexstr))
+			raise HexadecimalStringError(
+				( 'seed data' if pad == 'seed' else f'{hexstr!r}:' ) +
+				' not a hexadecimal string' )
 
 		return cls.frombytes(bytes.fromhex(hexstr),wl_id,pad,tostr)
 
@@ -220,11 +221,11 @@ class baseconv(object):
 			raise BaseConversionError('empty data not allowed in base conversion')
 
 		def get_seed_pad():
-			assert wl_id in cls.seedlen_map,'seed padding not supported for base {!r}'.format(wl_id)
+			assert wl_id in cls.seedlen_map, f'seed padding not supported for base {wl_id!r}'
 			d = cls.seedlen_map[wl_id]
 			if not len(bytestr) in d:
-				m = '{}: invalid byte length for seed data in seed-padded base conversion'
-				raise SeedLengthError(m.format(len(bytestr)))
+				raise SeedLengthError(
+					f'{len(bytestr)}: invalid byte length for seed data in seed-padded base conversion' )
 			return d[len(bytestr)]
 
 		pad = max(cls.get_pad(pad,get_seed_pad),1)
@@ -233,7 +234,7 @@ class baseconv(object):
 
 		if wl_id == 'xmrseed':
 			if len(bytestr) not in cls.seedlen_map['xmrseed']:
-				die(2,'{}: invalid seed byte length for Monero mnemonic'.format(len(bytestr)))
+				die(2, f'{len(bytestr)}: invalid seed byte length for Monero mnemonic')
 
 			def num2base_monero(num):
 				w1 = num % base

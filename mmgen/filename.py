@@ -47,20 +47,19 @@ class Filename(MMGenObject):
 					self.ftype = ftype
 				# elif: # other MMGen file types
 				else:
-					die(3,"'{}': not a recognized file type for Wallet".format(ftype))
+					die(3,f'{ftype!r}: not a recognized file type for Wallet')
 			else:
-				die(3,"'{}': not a class".format(ftype))
+				die(3,f'{ftype!r}: not a class')
 		else:
 			# TODO: other file types
 			self.ftype = Wallet.ext_to_type(self.ext)
 			if not self.ftype:
-				m = "'{}': not a recognized Wallet file extension".format(self.ext)
-				raise BadFileExtension(m)
+				raise BadFileExtension(f'{self.ext!r}: not a recognized Wallet file extension')
 
 		try:
 			st = os.stat(fn)
 		except:
-			raise FileNotFound('{!r}: file not found'.format(fn))
+			raise FileNotFound(f'{fn!r}: file not found')
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):
@@ -70,7 +69,7 @@ class Filename(MMGenObject):
 				fd = os.open(fn, mode)
 			except OSError as e:
 				if e.errno == 13:
-					die(2,"'{}': permission denied".format(fn))
+					die(2,f'{fn!r}: permission denied')
 #				if e.errno != 17: raise
 			else:
 				self.size = os.lseek(fd, 0, os.SEEK_END)
@@ -92,25 +91,27 @@ class MMGenFileList(list,MMGenObject):
 
 	def sort_by_age(self,key='mtime',reverse=False):
 		if key not in ('atime','ctime','mtime'):
-			die(1,"'{}': illegal sort key".format(key))
+			die(1,f'{key!r}: illegal sort key')
 		self.sort(key=lambda a: getattr(a,key),reverse=reverse)
 
 def find_files_in_dir(ftype,fdir,no_dups=False):
 	if not isinstance(ftype,type):
-		die(3,"'{}': is of type {} (not a subclass of type 'type')".format(ftype,type(ftype)))
+		die(3,f"{ftype!r}: is of type {type(ftype)} (not a subclass of type 'type')")
 
 	from .wallet import Wallet
 	if not issubclass(ftype,Wallet):
-		die(3,"'{}': not a recognized file type".format(ftype))
+		die(3,f'{ftype!r}: not a recognized file type')
 
-	try: dirlist = os.listdir(fdir)
-	except: die(3,"ERROR: unable to read directory '{}'".format(fdir))
+	try:
+		dirlist = os.listdir(fdir)
+	except:
+		die(3,f'ERROR: unable to read directory {fdir!r}')
 
 	matches = [l for l in dirlist if l[-len(ftype.ext)-1:]=='.'+ftype.ext]
 
 	if no_dups:
 		if len(matches) > 1:
-			die(1,"ERROR: more than one {} file in directory '{}'".format(ftype.__name__,fdir))
+			die(1,f'ERROR: more than one {ftype.__name__} file in directory {fdir!r}')
 		return os.path.join(fdir,matches[0]) if len(matches) else None
 	else:
 		return [os.path.join(fdir,m) for m in matches]

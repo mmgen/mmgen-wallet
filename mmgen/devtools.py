@@ -64,24 +64,27 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 					if is_dict:
 						out.append('{s}{:<{l}}'.format(i,s=' '*(4*lvl+8),l=10,l2=8*(lvl+1)+8))
 					if hasattr(el,'pfmt'):
-						out.append('{:>{l}}{}'.format('',el.pfmt(
-							lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl+1)*8))
+						out.append('{:>{l}}{}'.format(
+							'',
+							el.pfmt( lvl=lvl+1, id_list=id_list+[id(self)] ),
+							l = (lvl+1)*8 ))
 					elif isinstance(el,scalars):
 						if isList(e):
-							out.append('{:>{l}}{:16}\n'.format('',repr(el),l=lvl*8))
+							out.append( '{:>{l}}{!r:16}\n'.format( '', el, l=lvl*8 ))
 						else:
-							out.append(' {}'.format(repr(el)))
+							out.append(f' {el!r}')
 					elif isList(el) or isDict(el):
 						indent = 1 if is_dict else lvl*8+4
-						out.append('{:>{l}}{:16}'.format('','<'+type(el).__name__+'>',l=indent))
+						out.append('{:>{l}}{:16}'.format( '', f'<{type(el).__name__}>', l=indent ))
 						if isList(el) and isinstance(el[0],scalars):
 							out.append('\n')
 						do_list(out,el,lvl=lvl+1,is_dict=isDict(el))
 					else:
-						out.append('{:>{l}}{:16} {}\n'.format(
-							'','<'+type(el).__name__+'>',repr(el),l=(lvl*8)+8))
+						out.append('{:>{l}}{:16} {!r}\n'.format( '', f'<{type(el).__name__}>', el, l=(lvl*8)+8 ))
 					out.append('\n')
-				if not e: out.append('{}\n'.format(repr(e)))
+
+				if not e:
+					out.append(f'{e!r}\n')
 
 			def isDict(obj):
 				return isinstance(obj,dict)
@@ -90,7 +93,8 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 			def isScalar(obj):
 				return isinstance(obj,scalars)
 
-			out = ['<{}>{}\n'.format(type(self).__name__,' '+repr(self) if isScalar(self) else '')]
+			out = [f'<{type(self).__name__}>{" "+repr(self) if isScalar(self) else ""}\n']
+
 			if id(self) in id_list:
 				return out[-1].rstrip() + ' [RECURSION]\n'
 			if isList(self) or isDict(self):
@@ -99,14 +103,21 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 			for k in self.__dict__:
 				e = getattr(self,k)
 				if isList(e) or isDict(e):
-					out.append('{:>{l}}{:<10} {:16}'.format('',k,'<'+type(e).__name__+'>',l=(lvl*8)+4))
+					out.append('{:>{l}}{:<10} {:16}'.format( '', k, f'<{type(e).__name__}>', l=(lvl*8)+4 ))
 					do_list(out,e,lvl=lvl,is_dict=isDict(e))
 				elif hasattr(e,'pfmt') and type(e) != type:
 					out.append('{:>{l}}{:10} {}'.format(
-						'',k,e.pfmt(lvl=lvl+1,id_list=id_list+[id(self)]),l=(lvl*8)+4))
+						'',
+						k,
+						e.pfmt( lvl=lvl+1, id_list=id_list+[id(self)] ),
+						l = (lvl*8)+4 ))
 				else:
 					out.append('{:>{l}}{:<10} {:16} {}\n'.format(
-						'',k,'<'+type(e).__name__+'>',repr(e),l=(lvl*8)+4))
+						'',
+						k,
+						f'<{type(e).__name__}>',
+						repr(e),
+						l=(lvl*8)+4 ))
 
 			import re
 			return re.sub('\n+','\n',''.join(out))
@@ -123,11 +134,11 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 							attr = o.__dict__[attrname]
 							break
 					else:
-						rdie(3,'unable to find descriptor {}.{}'.format(cls.__name__,attrname))
+						rdie(3,f'unable to find descriptor {cls.__name__}.{attrname}')
 					if type(attr).__name__ == 'ImmutableAttr':
 						if attrname not in self.__dict__:
-							fs = 'attribute {!r} of {} has not been initialized in constructor!'
-							rdie(3,fs.format(attrname,cls.__name__))
+							rdie(3,
+						f'attribute {attrname!r} of {cls.__name__} has not been initialized in constructor!')
 
 	def print_diff(a,b,from_file='',to_file='',from_json=True):
 		if from_json:
@@ -136,7 +147,8 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 		else:
 			a = a.split('\n')
 			b = b.split('\n')
-		sys.stderr.write('  DIFF:\n    {}\n'.format('\n    '.join(unified_diff(a,b,from_file,to_file))))
+		sys.stderr.write('  DIFF:\n    {}\n'.format(
+			'\n    '.join(unified_diff(a,b,from_file,to_file)) ))
 
 	def get_ndiff(a,b):
 		a = a.split('\n')

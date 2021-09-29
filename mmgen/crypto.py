@@ -34,8 +34,7 @@ def scramble_seed(seed,scramble_key):
 	import hmac
 	step1 = hmac.new(seed,scramble_key,sha256).digest()
 	if g.debug:
-		fs = 'Seed:  {!r}\nScramble key: {}\nScrambled seed: {}\n'
-		msg(fs.format(seed.hex(),scramble_key,step1.hex()))
+		msg(f'Seed:  {seed.hex()!r}\nScramble key: {scramble_key}\nScrambled seed: {step1.hex()}\n')
 	return sha256_rounds(step1,g.scramble_hash_rounds)
 
 def encrypt_seed(seed,key):
@@ -64,30 +63,30 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 			vmsg('')
 			return False
 #	else:
-#		qmsg('Generated IDs (Seed/Key): {}/{}'.format(chk2,chk1))
+#		qmsg(f'Generated IDs (Seed/Key): {chk2}/{chk1}')
 
-	dmsg('Decrypted seed: {}'.format(dec_seed.hex()))
+	dmsg(f'Decrypted seed: {dec_seed.hex()}')
 	return dec_seed
 
 def encrypt_data(data,key,iv=g.aesctr_dfl_iv,desc='data',verify=True):
-	vmsg('Encrypting {}'.format(desc))
+	vmsg(f'Encrypting {desc}')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()
 	enc_data = encryptor.update(data) + encryptor.finalize()
 
 	if verify:
-		vmsg_r('Performing a test decryption of the {}...'.format(desc))
+		vmsg_r(f'Performing a test decryption of the {desc}...')
 		c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 		encryptor = c.encryptor()
 		dec_data = encryptor.update(enc_data) + encryptor.finalize()
 		if dec_data != data:
-			die(2,"ERROR.\nDecrypted {s} doesn't match original {s}".format(s=desc))
+			die(2,f'ERROR.\nDecrypted {desc} doesn’t match original {desc}')
 		vmsg('done')
 
 	return enc_data
 
 def decrypt_data(enc_data,key,iv=g.aesctr_dfl_iv,desc='data'):
-	vmsg_r('Decrypting {} with key...'.format(desc))
+	vmsg_r(f'Decrypting {desc} with key...')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()
 	return encryptor.update(enc_data) + encryptor.finalize()
@@ -136,12 +135,11 @@ def scrypt_hash_passphrase(passwd,salt,hash_preset,buflen=32):
 	return ret
 
 def make_key(passwd,salt,hash_preset,desc='encryption key',from_what='passphrase',verbose=False):
-	if from_what: desc += ' from '
 	if opt.verbose or verbose:
-		msg_r('Generating {}{}...'.format(desc,from_what))
+		msg_r(f"Generating {desc}{' from ' + from_what if from_what else ''}...")
 	key = scrypt_hash_passphrase(passwd,salt,hash_preset)
 	if opt.verbose or verbose: msg('done')
-	dmsg('Key: {}'.format(key.hex()))
+	dmsg(f'Key: {key.hex()}')
 	return key
 
 def _get_random_data_from_user(uchars,desc):
@@ -166,9 +164,8 @@ def _get_random_data_from_user(uchars,desc):
 	"""
 
 	msg(f'Enter {uchars} random symbols' if opt.quiet else
-		'\n{}\n{}'.format( fmt(info1,indent='  '), fmt(info2) ))
-
-	prompt = 'You may begin typing.  {} symbols left: '
+		'\n' + fmt(info1,indent='  ') +
+		'\n' + fmt(info2) )
 
 	import time
 	from .term import get_char_raw
@@ -176,12 +173,12 @@ def _get_random_data_from_user(uchars,desc):
 	time_data = []
 
 	for i in range(uchars):
-		key_data += get_char_raw('\r'+prompt.format(uchars-i))
+		key_data += get_char_raw(f'\rYou may begin typing.  {uchars-i} symbols left: ')
 		time_data.append(time.time())
 
-	msg_r( '\r' if opt.quiet else f"\rThank you.  That's enough.{' '*18}\n\n" )
+	msg_r( '\r' if opt.quiet else f'\rThank you.  That’s enough.{" "*18}\n\n' )
 
-	time_data = ['{:.22f}'.format(t).rstrip('0') for t in time_data]
+	time_data = [f'{t:.22f}'.rstrip('0') for t in time_data]
 
 	avg_prec = sum(len(t.split('.')[1]) for t in time_data) // len(time_data)
 
@@ -217,21 +214,21 @@ def add_user_random(rand_bytes,desc):
 		return rand_bytes
 
 def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
-	prompt = f'Enter hash preset for {desc},\nor hit ENTER to accept the default value ({hp!r}): '
 	while True:
-		ret = my_raw_input(prompt)
+		ret = my_raw_input(
+			f'Enter hash preset for {desc},\n' +
+			f'or hit ENTER to accept the default value ({hp!r}): ' )
 		if ret:
 			if ret in g.hash_presets:
 				return ret
 			else:
-				msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
+				msg(f'Invalid input.  Valid choices are {", ".join(g.hash_presets)}')
 				continue
 		else:
 			return hp
 
 def get_new_passphrase(desc,passchg=False):
-
-	pw_desc = '{}passphrase for {}'.format(('','new ')[bool(passchg)], desc)
+	pw_desc = f"{'new ' if passchg else ''}passphrase for {desc}"
 	if opt.passwd_file:
 		pw = ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
 	elif opt.echo_passphrase:
@@ -253,7 +250,7 @@ def get_new_passphrase(desc,passchg=False):
 	return pw
 
 def get_passphrase(desc,passchg=False):
-	pw_desc ='{}passphrase for {}'.format(('','old ')[bool(passchg)],desc)
+	pw_desc = f"{'old ' if passchg else ''}passphrase for {desc}"
 	if opt.passwd_file:
 		pwfile_reuse_warning(opt.passwd_file)
 		return ' '.join(get_words_from_file(opt.passwd_file,pw_desc))

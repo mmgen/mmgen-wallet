@@ -34,7 +34,7 @@ def make_usage_str(prog_name,caller,data):
 	def gen():
 		ulbl = 'USAGE:'
 		for line in lines:
-			yield '{:{w}} {} {}'.format(ulbl,prog_name,line,w=col1_w)
+			yield f'{ulbl:{col1_w}} {prog_name} {line}'
 			ulbl = ''
 	return ('\n'+(' '*indent)).join(gen())
 

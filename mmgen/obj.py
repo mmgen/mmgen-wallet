@@ -494,7 +494,7 @@ class CoinAmt(Decimal,Hilite,InitErrors): # abstract class
 	def to_unit(self,unit,show_decimal=False):
 		ret = Decimal(self) // getattr(self,unit)
 		if show_decimal and ret < 1:
-			return '{:.8f}'.format(ret).rstrip('0')
+			return f'{ret:.8f}'.rstrip('0')
 		return int(ret)
 
 	@classmethod
@@ -675,8 +675,8 @@ class SubSeedIdx(str,Hilite,InitErrors):
 			from .util import is_int
 			assert is_int(idx),"valid format: an integer, plus optional letter 'S','s','L' or 'l'"
 			idx = int(idx)
-			assert idx >= SubSeedIdxRange.min_idx, 'subseed index < {:,}'.format(SubSeedIdxRange.min_idx)
-			assert idx <= SubSeedIdxRange.max_idx, 'subseed index > {:,}'.format(SubSeedIdxRange.max_idx)
+			assert idx >= SubSeedIdxRange.min_idx, f'subseed index < {SubSeedIdxRange.min_idx:,}'
+			assert idx <= SubSeedIdxRange.max_idx, f'subseed index > {SubSeedIdxRange.max_idx:,}'
 
 			sstype,ltr = ('short','S') if s[-1] in 'Ss' else ('long','L')
 			me = str.__new__(cls,str(idx)+ltr)

@@ -26,7 +26,7 @@ from .common import *
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],
 	'text': {
-		'desc': 'Create a transaction with outputs to specified coin or {g.proj_name} addresses'.format(g=g),
+		'desc': f'Create a transaction with outputs to specified coin or {g.proj_name} addresses',
 		'usage':   '[opts]  <addr,amt> ... [change addr] [addr file] ...',
 		'options': """
 -h, --help            Print this help message

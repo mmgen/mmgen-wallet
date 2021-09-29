@@ -44,15 +44,15 @@ opts_data = {
 	'text': {
 		'desc': 'Auto-sign MMGen transactions',
 		'usage':'[opts] [command]',
-		'options': """
+		'options': f"""
 -h, --help            Print this help message
 --, --longhelp        Print help message for long options (common options)
 -c, --coins=c         Coins to sign for (comma-separated list)
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
--m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: '{mp}')
+-m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: '{mountpoint}')
 -M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format
-                      'F' (choices: {mc}; default: '{md}')
+                      'F' (choices: {fmt_list(mn_fmts,fmt='no_spc')}; default: {mn_fmt_dfl!r})
 -n, --no-summary      Don’t print a transaction summary
 -s, --stealth-led     Stealth LED mode - signal busy and error only, and only
                       after successful authorization.
@@ -61,16 +61,12 @@ opts_data = {
                       will not be printed.
 -q, --quiet           Produce quieter output
 -v, --verbose         Produce more verbose output
-""".format(
-		md = mn_fmt_dfl,
-		mc = fmt_list(mn_fmts,fmt='no_spc'),
-		mp = mountpoint
-	),
-	'notes': """
+""",
+	'notes': f"""
 
                               COMMANDS
 
-gen_key - generate the wallet encryption key and copy it to '{td}'
+gen_key - generate the wallet encryption key and copy it to '{tx_dir}'
 setup   - generate the wallet encryption key and wallet
 wait    - start in loop mode: wait-mount-sign-unmount-wait
 
@@ -91,13 +87,13 @@ ready for device insertion or removal.
 The removable device must have a partition labeled MMGEN_TX and a user-
 writable directory '/tx', where unsigned MMGen transactions are placed.
 
-On the signing machine the mount point '{mp}' must exist and /etc/fstab
+On the signing machine the mount point '{mountpoint}' must exist and /etc/fstab
 must contain the following entry:
 
     LABEL='MMGEN_TX' /mnt/tx auto noauto,user 0 0
 
 Transactions are signed with a wallet on the signing machine (in the directory
-'{wd}') encrypted with a 64-character hexadecimal password on the
+'{wallet_dir}') encrypted with a 64-character hexadecimal password on the
 removable device.
 
 The password and wallet can be created in one operation by invoking the
@@ -108,7 +104,7 @@ Alternatively, the password and wallet can be created separately by first
 invoking the command with 'gen_key' and then creating and encrypting the
 wallet using the -P (--passwd-file) option:
 
-    $ mmgen-walletconv -r0 -q -iwords -d{wd} -p1 -P{td}/{kf} -Llabel
+    $ mmgen-walletconv -r0 -q -iwords -d{wallet_dir} -p1 -P{tx_dir}/{key_fn} -Llabel
 
 Note that the hash preset must be '1'.  Multiple wallets are permissible.
 
@@ -116,7 +112,7 @@ For good security, it's advisable to re-generate a new wallet and key for
 each signing session.
 
 This command is currently available only on Linux-based platforms.
-""".format(pnm=prog_name,wd=wallet_dir,td=tx_dir,kf=key_fn,mp=mountpoint)
+"""
 	}
 }
 

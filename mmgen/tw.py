@@ -29,7 +29,9 @@ from .tx import is_mmgen_id,is_coin_addr
 from .rpc import rpc_init
 
 CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
-def CUR_RIGHT(n): return '\033[{}C'.format(n)
+
+def CUR_RIGHT(n):
+	return f'\033[{n}C'
 
 def get_tw_label(proto,s):
 	"""
@@ -213,7 +215,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 			'addr':  lambda i: i.addr,
 			'age':   lambda i: 0 - i.confs,
 			'amt':   lambda i: i.amt,
-			'txid':  lambda i: '{} {:04}'.format(i.txid,i.vout),
+			'txid':  lambda i: f'{i.txid} {i.vout:04}',
 			'twmmid':  lambda i: i.twmmid.sort_key
 		}
 		key = key or self.sort_key
@@ -296,16 +298,21 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 				n  = 'Num',
 				t  = 'TXid'.ljust(c.tx_w - 2) + ' Vout',
 				a  = 'Address'.ljust(c.addr_w),
-				A  = 'Amt({})'.format(self.proto.dcoin).ljust(self.disp_prec+5),
-				A2 = ' Amt({})'.format(self.proto.coin).ljust(self.disp_prec+4),
+				A  = f'Amt({self.proto.dcoin})'.ljust(self.disp_prec+5),
+				A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
 				c  =  date_hdr[self.age_fmt],
 				).rstrip()
 
 			for n,i in enumerate(unsp):
 				addr_dots = '|' + '.'*(c.addr_w-1)
-				mmid_disp = MMGenID.fmtc('.'*c.mmid_w if i.skip=='addr'
-					else i.twmmid if i.twmmid.type=='mmgen'
-						else 'Non-{}'.format(g.proj_name),width=c.mmid_w,color=True)
+				mmid_disp = MMGenID.fmtc(
+					(
+						'.'*c.mmid_w if i.skip == 'addr' else
+						i.twmmid if i.twmmid.type == 'mmgen' else
+						f'Non-{g.proj_name}'
+					),
+					width = c.mmid_w,
+					color = True )
 
 				if self.show_mmid:
 					addr_out = '{} {}{}'.format((
@@ -354,8 +361,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 				t  = 'Tx ID,Vout',
 				a  = 'Address'.ljust(addr_w),
 				m  = 'MMGen ID'.ljust(mmid_w),
-				A  = 'Amount({})'.format(self.proto.dcoin),
-				A2 = 'Amount({})'.format(self.proto.coin),
+				A  = f'Amount({self.proto.dcoin})',
+				A2 = f'Amount({self.proto.coin})',
 				c  = 'Confs',  # skipped for eth
 				b  = 'Block',  # skipped for eth
 				D  = 'Date',
@@ -713,7 +720,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	async def __init__(self,proto,mode='r',token_addr=None):
 
-		assert mode in ('r','w','i'), "{!r}: wallet mode must be 'r','w' or 'i'".format(mode)
+		assert mode in ('r','w','i'), f"{mode!r}: wallet mode must be 'r','w' or 'i'"
 		if mode == 'i':
 			self.importing = True
 			mode = 'w'
@@ -892,7 +899,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 		if self.orig_data != wdata:
 			if g.debug:
-				print_stack_trace('TW DATA CHANGED {!r}'.format(self))
+				print_stack_trace(f'TW DATA CHANGED {self!r}')
 				print_diff(self.orig_data,wdata,from_json=True)
 			self.write_changed(wdata)
 		elif g.debug:

@@ -51,7 +51,10 @@ rpc_credentials_msg = '\n'+fmt("""
 
 def dmsg_rpc(fs,data=None,is_json=False):
 	if g.debug_rpc:
-		msg(fs if data == None else fs.format(pp_fmt(json.loads(data) if is_json else data)))
+		msg(
+			fs if data == None else
+			fs.format(pp_fmt(json.loads(data) if is_json else data))
+		)
 
 class json_encoder(json.JSONEncoder):
 	def default(self,obj):
@@ -130,8 +133,10 @@ class RPCBackends:
 				auth_str = f'{caller.auth.user}:{caller.auth.passwd}'
 				auth_str_b64 = 'Basic ' + base64.b64encode(auth_str.encode()).decode()
 				self.http_hdrs.update({ 'Host': self.host, 'Authorization': auth_str_b64 })
-				fs = '    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'
-				dmsg_rpc(fs.format(auth_str,'',auth_str_b64))
+				dmsg_rpc('    RPC AUTHORIZATION data ==> raw: [{}]\n{:>31}enc: [{}]\n'.format(
+					auth_str,
+					'',
+					auth_str_b64 ))
 
 		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
@@ -247,7 +252,7 @@ class RPCClient(MMGenObject):
 
 	def __init__(self,host,port,test_connection=True):
 
-		dmsg_rpc('=== {}.__init__() debug ==='.format(type(self).__name__))
+		dmsg_rpc(f'=== {type(self).__name__}.__init__() debug ===')
 		dmsg_rpc(f'    cls [{type(self).__name__}] host [{host}] port [{port}]\n')
 
 		if test_connection:

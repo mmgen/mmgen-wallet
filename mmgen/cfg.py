@@ -56,7 +56,7 @@ class CfgFile(object):
 			self.data = ''
 
 	def copy_data(self):
-		assert self.write_ok, 'writing to file {!r} not allowed!'.format(self.fn)
+		assert self.write_ok, f'writing to file {self.fn!r} not allowed!'
 		src = cfg_file('sys')
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
@@ -64,7 +64,7 @@ class CfgFile(object):
 				open(self.fn,'w').write('\n'.join(data)+'\n')
 				os.chmod(self.fn,0o600)
 			except:
-				die(2,'ERROR: unable to write to {!r}'.format(self.fn))
+				die(2,f'ERROR: unable to write to {self.fn!r}')
 
 	def parse_value(self,value,refval):
 		if isinstance(refval,dict):
@@ -89,7 +89,7 @@ class CfgFile(object):
 				if m:
 					yield self.line_data(m[1],m[3],lineno,None)
 				else:
-					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
+					raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
 		return gen_lines()
 
 	@classmethod
@@ -105,7 +105,7 @@ class CfgFileSample(CfgFile):
 
 	@classmethod
 	def cls_make_metadata(cls,data):
-		return ['# Version {} {}'.format(cls.cur_ver,cls.compute_chksum(data))]
+		return [f'# Version {cls.cur_ver} {cls.compute_chksum(data)}']
 
 	@staticmethod
 	def compute_chksum(data):
@@ -131,7 +131,7 @@ class CfgFileSample(CfgFile):
 			if m:
 				return self.line_data(m[2],m[4],lineno,chunk)
 			else:
-				raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
+				raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
 
 		def gen_chunks(lines):
 			hdr = True
@@ -159,7 +159,7 @@ class CfgFileSample(CfgFile):
 						chunk.append(line)
 					last_nonblank = lineno
 				else:
-					raise CfgFileParseError('Parse error in file {!r}, line {}'.format(self.fn,lineno))
+					raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
 
 			if chunk:
 				yield process_chunk(chunk,last_nonblank)
@@ -201,7 +201,7 @@ class CfgFileSampleSys(CfgFileSample):
 			self.data = files('mmgen').joinpath('data',self.fn_base).read_text().splitlines()
 
 	def make_metadata(self):
-		return ['# Version {} {}'.format(self.cur_ver,self.computed_chksum)]
+		return [f'# Version {self.cur_ver} {self.computed_chksum}']
 
 class CfgFileSampleUsr(CfgFileSample):
 	desc = 'sample configuration file'
@@ -260,25 +260,23 @@ class CfgFileSampleUsr(CfgFileSample):
 
 	def show_changes(self,diff):
 		ymsg('Warning: configuration file options have changed!\n')
-		m1 = '  The following option{} been {}:\n    {}\n'
-		m2 = """
-			The following removed option{} set in {!r}
-			and must be deleted or commented out:
-			{}
-		"""
 		for desc in ('added','removed'):
 			data = diff[desc]
 			if data:
 				opts = fmt_list([i.name for i in data],fmt='bare')
-				msg(m1.format(suf(data,verb='has'),desc,opts))
+				msg(f'  The following option{suf(data,verb="has")} been {desc}:\n    {opts}\n')
 				if desc == 'removed' and data:
 					uc = cfg_file('usr')
 					usr_names = [i.name for i in uc.get_lines()]
 					rm_names = [i.name for i in data]
 					bad = sorted(set(usr_names).intersection(rm_names))
 					if bad:
-						ymsg(fmt(m2,'  ').format(suf(bad,verb='is'),uc.fn,'  '+fmt_list(bad,fmt='bare')))
-
+						m = f"""
+							The following removed option{suf(bad,verb='is')} set in {uc.fn!r}
+							and must be deleted or commented out:
+							{'  ' + fmt_list(bad,fmt='bare')}
+						"""
+						ymsg(fmt(m,indent='  ',strip_char='\t'))
 		while True:
 			if not keypress_confirm(self.details_confirm_prompt,no_nl=True):
 				return
@@ -288,9 +286,9 @@ class CfgFileSampleUsr(CfgFileSample):
 					sep,sep2 = ('\n  ','\n\n  ')
 					if data:
 						yield (
-							'{} section{}:'.format(capfirst(desc),suf(data))
+							f'{capfirst(desc)} section{suf(data)}:'
 							+ sep2
-							+ sep2.join(['{}'.format(sep.join(v.chunk)) for v in data])
+							+ sep2.join([f'{sep.join(v.chunk)}' for v in data])
 						)
 
 			do_pager(
