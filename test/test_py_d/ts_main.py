@@ -327,7 +327,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		for d in tx_data.values():
 			al = adata.addrlist(al_id=d['al_id'])
 			for n,(idx,coinaddr) in enumerate(al.addrpairs()):
-				lbl = get_label(do_shuffle=True)
+				lbl = get_label(do_shuffle=not g.test_suite_deterministic)
 				out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 				if n == 0:  # create a duplicate address. This means addrs_per_wallet += 1
 					out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))

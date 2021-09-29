@@ -145,6 +145,7 @@ def get_label(do_shuffle=False):
 	try:
 		return next(label_iter)
 	except:
-		if do_shuffle: shuffle(labels)
+		if do_shuffle:
+			shuffle(labels)
 		label_iter = iter(labels)
 		return next(label_iter)

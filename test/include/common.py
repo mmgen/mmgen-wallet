@@ -66,12 +66,21 @@ sample_mn = {
 ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
 
-def getrandnum(n): return int(os.urandom(n).hex(),16)
-def getrandhex(n): return os.urandom(n).hex()
+def ts_urandom(n):
+	assert n < 70, f'{n} > len(sample_text) (69 bytes)'
+	return sample_text.encode()[:n] if g.test_suite_deterministic else os.urandom(n)
+
+def getrandnum(n):
+	return int(ts_urandom(n).hex(),16)
+
+def getrandhex(n):
+	return ts_urandom(n).hex()
+
 def getrandnum_range(nbytes,rn_max):
 	while True:
-		rn = int(os.urandom(nbytes).hex(),16)
-		if rn < rn_max: return rn
+		rn = int(ts_urandom(nbytes).hex(),16)
+		if rn < rn_max:
+			return rn
 
 def getrandstr(num_chars,no_space=False):
 	n,m = 95,32

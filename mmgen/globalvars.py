@@ -127,6 +127,7 @@ class GlobalContext(Lockable):
 	debug_utf8           = False
 	traceback            = False
 	test_suite           = False
+	test_suite_deterministic = False
 	test_suite_regtest   = False
 	test_suite_popen_spawn = False
 	terminal_width       = 0
@@ -204,6 +205,7 @@ class GlobalContext(Lockable):
 		'MMGEN_DEBUG_ALL', # special: there is no g.debug_all var
 
 		'MMGEN_TEST_SUITE',
+		'MMGEN_TEST_SUITE_DETERMINISTIC',
 		'MMGEN_TEST_SUITE_REGTEST',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_TERMINAL_WIDTH',
