@@ -6,6 +6,13 @@
 
 import sys,os,time
 
+def traceback_get_colors():
+	from collections import namedtuple
+	return namedtuple('colors',['red','yellow','blue'])(*[
+			(lambda s:s) if os.getenv('MMGEN_DISABLE_COLOR') else
+			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
+		for n in (31,33,34) ])
+
 def traceback_run_init():
 	import os
 	sys.path[0] = 'test' if os.path.dirname(sys.argv[1]) == 'test' else '.'
@@ -32,12 +39,8 @@ def traceback_run_process_exception():
 	if exc.startswith('SystemExit:'):
 		lines.pop()
 
-	if False: # was: if os.getenv('MMGEN_DISABLE_COLOR'):
-		sys.stdout.write('{}{}'.format(''.join(lines),exc))
-	else:
-		yellow = lambda s: f'\033[33;1m{s}\033[0m'
-		red    = lambda s: f'\033[31;1m{s}\033[0m'
-		sys.stdout.write('{}{}'.format(yellow(''.join(lines)),red(exc)))
+	c = traceback_get_colors()
+	sys.stdout.write('{}{}'.format(c.yellow(''.join(lines)),c.red(exc)))
 
 	open(traceback_run_outfile,'w').write(''.join(lines+[exc]))
 
@@ -57,5 +60,5 @@ except Exception as e:
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 
-blue = lambda s: s if os.getenv('MMGEN_DISABLE_COLOR') else '\033[34;1m{}\033[0m'.format(s)
-sys.stderr.write(blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))
+c = traceback_get_colors()
+sys.stderr.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))
