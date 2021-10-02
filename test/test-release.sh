@@ -40,7 +40,7 @@ quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc b
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hAbCfFi:I:lNOptvV OPT
+while getopts hAbCfFi:I:lNOps:tvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -58,6 +58,7 @@ do
 		echo   "           -N      Pass the --no-timings switch to test/test.py"
 		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
 		echo   "           -p      Pause between tests"
+		echo   "           -s LIST Skip tests in LIST (space-separated)"
 		echo   "           -t      Print the tests without running them"
 		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
 		echo   "                   with '--verbose' switch"
@@ -126,6 +127,7 @@ do
 	N)  test_py+=" --no-timings" ;;
 	O)  test_py+=" --pexpect-spawn" ;;
 	p)  PAUSE=1 ;;
+	s)  SKIP_LIST="$OPTARG" ;;
 	t)  LIST_CMDS=1 ;;
 	v)  EXACT_OUTPUT=1 test_py+=" --exact-output" ;&
 	V)  VERBOSE=1
@@ -572,6 +574,16 @@ check_args() {
 		}
 	done
 }
+
+remove_skipped_tests() {
+	tests=$(for t in $tests; do
+		[ "$(for s in $SKIP_LIST; do [ $t == $s ] && echo y; done)" ] && continue
+		echo $t
+	done)
+	tests=$(echo $tests)
+}
+
+remove_skipped_tests
 
 check_args
 
