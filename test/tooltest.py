@@ -464,5 +464,4 @@ try:
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))
 
-t = int(time.time()) - start_time
-gmsg(f'All requested tests finished OK, elapsed time: {t//60:02}:{t%60:02}')
+end_msg(int(time.time()) - start_time)

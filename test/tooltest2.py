@@ -1057,5 +1057,4 @@ async def main():
 
 run_session(main())
 
-t = int(time.time()) - start_time
-gmsg(f'All requested tests finished OK, elapsed time: {t//60:02}:{t%60:02}')
+end_msg(int(time.time()) - start_time)

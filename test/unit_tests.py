@@ -23,6 +23,7 @@ test/unit_tests.py:  Unit tests for the MMGen suite
 import sys,os,time,importlib
 
 from include.tests_header import repo_root
+from include.common import end_msg
 from mmgen.common import *
 
 opts_data = {
@@ -52,10 +53,6 @@ sys.argv.insert(1,'--skip-cfg-file')
 cmd_args = opts.init(opts_data)
 
 file_pfx = 'nt_' if opt.node_tools else 'ut_'
-
-def exit_msg():
-	t = int(time.time()) - start_time
-	gmsg(f'All requested unit tests finished OK, elapsed time: {t//60:02}:{t%60:02}')
 
 all_tests = sorted(
 	[fn[3:-3] for fn in os.listdir(os.path.join(repo_root,'test','unit_tests_d')) if fn[:3] == file_pfx])
@@ -141,6 +138,6 @@ try:
 			die(1,f'{test!r}: test not recognized')
 		if test not in exclude:
 			run_test(test,subtest=subtest)
-	exit_msg()
+	end_msg(int(time.time()) - start_time)
 except KeyboardInterrupt:
 	die(1,green('\nExiting at user request'))

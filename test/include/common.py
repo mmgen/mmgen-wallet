@@ -192,6 +192,12 @@ def oqmsg_r(s):
 	if not (opt.verbose or getattr(opt,'exact_output',None)):
 		omsg_r(s)
 
+def end_msg(t):
+	omsg(green(
+		'All requested tests finished OK' +
+		('' if g.test_suite_deterministic else f', elapsed time: {t//60:02d}:{t%60:02d}')
+	))
+
 def start_test_daemons(*network_ids,remove_datadir=False):
 	if not opt.no_daemon_autostart:
 		return test_daemons_ops(*network_ids,op='start',remove_datadir=remove_datadir)

@@ -146,6 +146,4 @@ cmds = cmd_args or ('coin','pw')
 for cmd in cmds:
 	{'coin': do_coin_tests, 'pw': do_passwd_tests }[cmd]()
 
-t = int(time.time()) - start_time
-m = 'All requested tests finished OK, elapsed time: {:02}:{:02}'
-gmsg(m.format(t//60,t%60))
+end_msg(int(time.time()) - start_time)
