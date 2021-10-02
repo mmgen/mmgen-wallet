@@ -28,6 +28,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
+from test.include.common import getrand
 
 rounds = 100
 opts_data = {
@@ -308,14 +309,14 @@ def gentool_test(kg_a,kg_b,ag,rounds):
 
 	qmsg(purple('random input:'))
 	for i in range(rounds):
-		do_compare_test(i,rounds,os.urandom(32))
+		do_compare_test(i,rounds,getrand(32))
 	qmsg(green('\rOK            ' if opt.verbose else 'OK'))
 
 def speed_test(kg,ag,rounds):
 	m = "Testing speed of address generator '{}' for coin {}"
 	qmsg(green(m.format(kg.desc,proto.coin)))
 	from struct import pack,unpack
-	seed = os.urandom(28)
+	seed = getrand(28)
 	qmsg('Incrementing key with each round')
 	qmsg('Starting key: {}'.format(
 		(seed + pack('I',0)).hex()

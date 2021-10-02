@@ -312,7 +312,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				f'{self.proto.base_coin.lower()}:{coinaddr}' if non_mmgen
 				else f'{al_id}:{idx}{lbl}' ),
 			'vout': int(getrandnum(4) % 8),
-			'txid': os.urandom(32).hex(),
+			'txid': getrandhex(32),
 			'amount': self.proto.coin_amt('{}.{}'.format(
 				amt1 + getrandnum(4) % amt2,
 				getrandnum(4) % 100000000 )),
@@ -338,7 +338,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			from mmgen.obj import PrivKey
 			privkey = PrivKey(
 				self.proto,
-				os.urandom(32),
+				getrand(32),
 				compressed  = non_mmgen_input_compressed,
 				pubkey_type = 'std' )
 			from mmgen.addr import AddrGenerator,KeyGenerator
@@ -379,7 +379,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 
 	def _make_txcreate_cmdline(self,tx_data):
 		from mmgen.obj import PrivKey
-		privkey = PrivKey(self.proto,os.urandom(32),compressed=True,pubkey_type='std')
+		privkey = PrivKey(self.proto,getrand(32),compressed=True,pubkey_type='std')
 		t = ('compressed','segwit')['S' in self.proto.mmtypes]
 		from mmgen.addr import AddrGenerator,KeyGenerator
 		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))

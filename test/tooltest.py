@@ -276,7 +276,7 @@ class MMGenToolTestUtils(object):
 			rdie(3,f'Error for command {name!r}')
 
 	def run_cmd_randinput(self,name,strip=True,add_opts=[]):
-		s = os.urandom(128)
+		s = getrand(128)
 		fn = name+'.in'
 		write_to_tmpfile(cfg,fn,s,binary=True)
 		ret = self.run_cmd(name,[get_tmpfile(cfg,fn)],strip=strip,add_opts=add_opts)

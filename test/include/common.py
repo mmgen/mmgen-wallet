@@ -66,25 +66,24 @@ sample_mn = {
 ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
 
-def ts_urandom(n):
-	assert n < 70, f'{n} > len(sample_text) (69 bytes)'
-	return sample_text.encode()[:n] if g.test_suite_deterministic else os.urandom(n)
+def getrand(n):
+	return os.urandom(n)
 
 def getrandnum(n):
-	return int(ts_urandom(n).hex(),16)
+	return int(getrand(n).hex(),16)
 
 def getrandhex(n):
-	return ts_urandom(n).hex()
+	return getrand(n).hex()
 
 def getrandnum_range(nbytes,rn_max):
 	while True:
-		rn = int(ts_urandom(nbytes).hex(),16)
+		rn = int(getrand(nbytes).hex(),16)
 		if rn < rn_max:
 			return rn
 
 def getrandstr(num_chars,no_space=False):
 	n,m = (94,33) if no_space else (95,32)
-	return ''.join([chr(i%n+m) for i in list(os.urandom(num_chars))])
+	return ''.join( chr(i % n + m) for i in list(getrand(num_chars)) )
 
 def get_data_dir():
 	return os.path.join('test','data_dir' + ('','-α')[bool(os.getenv('MMGEN_DEBUG_UTF8'))])

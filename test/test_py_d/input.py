@@ -12,6 +12,7 @@ input.py: Shared input routines for the test.py test suite
 
 import os,time
 from .common import randbool
+from ..include.common import getrand
 
 def stealth_mnemonic_entry(t,mne,mn,entry_mode,pad_entry=False):
 
@@ -19,7 +20,7 @@ def stealth_mnemonic_entry(t,mne,mn,entry_mode,pad_entry=False):
 		def get_pad_chars(n):
 			ret = ''
 			for i in range(n):
-				m = int.from_bytes(os.urandom(1),'big') % 32
+				m = int.from_bytes(getrand(1),'big') % 32
 				ret += r'123579!@#$%^&*()_+-=[]{}"?/,.<>|'[m]
 			return ret
 		ret = []

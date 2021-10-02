@@ -50,7 +50,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 
 	def tool_encrypt(self):
 		infile = joinpath(self.tmpdir,self.enc_infn)
-		write_to_file(infile,os.urandom(1033),binary=True)
+		write_to_file(infile,getrand(1033),binary=True)
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,self.usr_rand_arg,'encrypt',infile])
 		t.usr_rand(self.usr_rand_chars)
 		t.hash_preset('user data','1')

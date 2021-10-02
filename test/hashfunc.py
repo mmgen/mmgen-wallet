@@ -22,6 +22,7 @@ test/hashfunc.py: Test internal implementations of SHA256, SHA512 and Keccak256
 import sys,os
 import include.tests_header
 from mmgen.util import die
+from test.include.common import getrand
 
 assert len(sys.argv) in (2,3),"Test takes 1 or 2 arguments: test name, plus optional rounds count"
 test = sys.argv[1].capitalize()
@@ -76,8 +77,8 @@ class TestHashFunc(object):
 		for i in range(rounds):
 			if i+1 in (1,rounds) or not (i+1) % 10:
 				msg(f'\rTesting random input data:    {i+1:4}/{rounds} ')
-			dlen = int(os.urandom(4).hex(),16) >> 18
-			self.compare_hashes(dlen,os.urandom(dlen))
+			dlen = int(getrand(4).hex(),16) >> 18
+			self.compare_hashes(dlen,getrand(dlen))
 		msg('OK\n')
 
 class TestKeccak(TestHashFunc):

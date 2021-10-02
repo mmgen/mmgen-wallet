@@ -82,7 +82,7 @@ def confirm_continue():
 		raise KeyboardInterrupt('Exiting at user request')
 
 def randbool():
-	return os.urandom(1).hex()[0] in '02468ace'
+	return getrand(1).hex()[0] in '02468ace'
 
 def disable_debug():
 	global save_debug

@@ -16,11 +16,12 @@ from mmgen.protocol import *
 from mmgen.addr import *
 from mmgen.tx import *
 from mmgen.tw import *
+from ..include.common import getrand
 
 from collections import namedtuple
 atd = namedtuple('attrtest_entry',['attrs','args','kwargs'])
 
-seed_bin = os.urandom(32)
+seed_bin = getrand(32)
 
 # use the constructors here! otherwise reassignment test might fail when
 # reassignment would otherwise succeed

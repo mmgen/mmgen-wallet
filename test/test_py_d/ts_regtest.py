@@ -736,11 +736,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		from mmgen.tool import tool_api
 		t = tool_api()
 		t.init_coin(self.proto.coin,self.proto.network)
-		t.usr_randchars = 0
-		t.addrtype = 'legacy'
-		ret = [t.randpair()]
-		t.addrtype = 'compressed'
-		return ret + [t.randpair() for i in range(n-1)]
+
+		def gen_addr(Type):
+			t.addrtype = Type
+			wif = t.hex2wif(getrandhex(32))
+			return ( wif, t.wif2addr(wif) )
+
+		return [gen_addr('legacy')] + [gen_addr('compressed') for i in range(n-1)]
 
 	def bob_pre_import(self):
 		pairs = self._gen_pairs(5)

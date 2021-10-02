@@ -11,4 +11,4 @@ import os
 from mmgen.globalvars import g
 from ..include.common import *
 
-r32,r24,r16,r17,r18 = os.urandom(32),os.urandom(24),os.urandom(16),os.urandom(17),os.urandom(18)
+r32,r24,r16,r17,r18 = getrand(32),getrand(24),getrand(16),getrand(17),getrand(18)
