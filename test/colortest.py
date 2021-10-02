@@ -31,7 +31,7 @@ def test_color():
 	set_vt100()
 	gmsg("Terminal display:")
 
-	for desc,n in (('auto','auto'),('8-color',8),('256-color',256)):
+	for desc,n in (('auto','auto'),('8-color',8),('256-color',256),('off',0)):
 		init_color(num_colors=n)
 		msg('{:9}: {}'.format(
 			desc,

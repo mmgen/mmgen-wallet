@@ -90,11 +90,11 @@ def get_terminfo_colors(term=None):
 			return None
 
 def init_color(num_colors='auto'):
-	assert num_colors in ('auto',8,16,256)
+	assert num_colors in ('auto',8,16,256,0)
 
-	globals()['_reset'] = '\033[0m'
+	globals()['_reset'] = '\033[0m' if num_colors else ''
 
-	if num_colors in (8,16):
+	if num_colors in (0,8,16):
 		pfx = '_16_'
 	else:
 		import os
@@ -105,6 +105,9 @@ def init_color(num_colors='auto'):
 			pfx = '_16_'
 
 	for c in _colors:
-		globals()['_clr_'+c] = globals()[pfx+c]
+		if num_colors == 0:
+			globals()['_clr_'+c] = ''
+		else:
+			globals()['_clr_'+c] = globals()[pfx+c]
 
 	set_vt100()
