@@ -130,6 +130,20 @@ def list_gen(*data):
 				yield i[0]
 	return list(gen())
 
+def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
+	"""
+	Remove duplicate occurrences of iterable elements, preserving first occurrence
+	If iterable is a generator, return a list, else type(iterable)
+	"""
+	ret = []
+	for e in iterable:
+		if e in ret:
+			if not quiet:
+				ymsg(f'Warning: removing duplicate {edesc} {"(hidden)" if hide else e} in {desc}')
+		else:
+			ret.append(e)
+	return ret if type(iterable).__name__ == 'generator' else type(iterable)(ret)
+
 def exit_if_mswin(feature):
 	if g.platform == 'win':
 		m = capfirst(feature) + ' not supported on the MSWin / MSYS2 platform'

@@ -217,9 +217,8 @@ async def sign_tx_file(txfile):
 		return False
 
 async def sign():
-	dirlist  = os.listdir(tx_dir)
-	raw,signed = [set(f[:-6] for f in dirlist if f.endswith(ext)) for ext in ('.rawtx','.sigtx')]
-	unsigned = [os.path.join(tx_dir,f+'.rawtx') for f in raw - signed]
+	raw,signed = [tuple(f[:-6] for f in os.listdir(tx_dir) if f.endswith(ext)) for ext in ('.rawtx','.sigtx')]
+	unsigned = [os.path.join(tx_dir,f+'.rawtx') for f in raw if f not in signed]
 
 	if unsigned:
 		signed_txs,fails = [],[]

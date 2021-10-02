@@ -164,12 +164,15 @@ def show_common_opts_diff():
 	def do_fmt(set_data):
 		return fmt_list(['--'+s.replace('_','-') for s in set_data],fmt='col',indent='   ')
 
-	a = set(g.common_opts)
-	b = set(common_opts_data_to_list())
+	a = g.common_opts
+	b = list(common_opts_data_to_list())
+	a_minus_b = [e for e in a if e not in b]
+	b_minus_a = [e for e in b if e not in a]
+	a_and_b   = [e for e in a if e in b]
 
-	msg(f'g.common_opts - common_opts_data:\n   {do_fmt(a-b) if a-b else "None"}\n')
-	msg(f'common_opts_data - g.common_opts (these do not set global var):\n{do_fmt(b-a)}\n')
-	msg(f'common_opts_data ^ g.common_opts (these set global var):\n{do_fmt(b.intersection(a))}\n')
+	msg(f'g.common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
+	msg(f'common_opts_data - g.common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
+	msg(f'common_opts_data ^ g.common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
 
 	sys.exit(0)
 

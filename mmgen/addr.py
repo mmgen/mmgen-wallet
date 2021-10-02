@@ -426,10 +426,12 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			do_chksum = False
 		elif addrlist:           # data from flat address list
 			self.al_id = None
-			adata = AddrListData([AddrListEntry(proto=proto,addr=a) for a in set(addrlist)])
+			addrlist = remove_dups(addrlist,edesc='address',desc='address list')
+			adata = AddrListData([AddrListEntry(proto=proto,addr=a) for a in addrlist])
 		elif keylist:            # data from flat key list
 			self.al_id = None
-			adata = AddrListData([AddrListEntry(proto=proto,sec=PrivKey(proto=proto,wif=k)) for k in set(keylist)])
+			keylist = remove_dups(keylist,edesc='key',desc='key list',hide=True)
+			adata = AddrListData([AddrListEntry(proto=proto,sec=PrivKey(proto=proto,wif=k)) for k in keylist])
 		elif seed or addr_idxs:
 			die(3,'Must specify both seed and addr indexes')
 		elif al_id or adata:

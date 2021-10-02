@@ -495,7 +495,10 @@ class MMGenTX:
 				return False
 
 		def get_non_mmaddrs(self,desc):
-			return {i.addr for i in getattr(self,desc) if not i.mmid}
+			return remove_dups(
+				(i.addr for i in getattr(self,desc) if not i.mmid),
+				edesc = 'non-MMGen address',
+				quiet = True )
 
 		def check_non_mmgen_inputs(self,caller,non_mmaddrs=None):
 			non_mmaddrs = non_mmaddrs or self.get_non_mmaddrs('inputs')
@@ -714,8 +717,16 @@ class MMGenTX:
 
 		async def get_outputs_from_cmdline(self,cmd_args):
 			from .addr import AddrList,AddrData,TwAddrData
-			addrfiles = [a for a in cmd_args if get_extension(a) == AddrList.ext]
-			cmd_args = set(cmd_args) - set(addrfiles)
+			addrfiles = remove_dups(
+				tuple(a for a in cmd_args if get_extension(a) == AddrList.ext),
+				desc = 'command line',
+				edesc = 'argument',
+			)
+			cmd_args  = remove_dups(
+				tuple(a for a in cmd_args if a not in addrfiles),
+				desc = 'command line',
+				edesc = 'argument',
+			)
 
 			ad_f = AddrData(self.proto)
 			for a in addrfiles:
@@ -1208,11 +1219,10 @@ class MMGenTX:
 				if hasattr(e,attr):
 					delattr(e,attr)
 
-		def get_input_sids(self):
-			return set(e.mmid.sid for e in self.inputs if e.mmid)
-
-		def get_output_sids(self):
-			return set(e.mmid.sid for e in self.outputs if e.mmid)
+		def get_sids(self,desc):
+			return remove_dups(
+				(e.mmid.sid for e in getattr(self,desc) if e.mmid),
+				quiet = True )
 
 		async def sign(self,tx_num_str,keys): # return signed object or False; don't exit or raise exception
 

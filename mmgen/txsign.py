@@ -57,7 +57,7 @@ def get_seed_for_seed_id(sid,infiles,saved_seeds):
 
 def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds,proto):
 	mmids = [e.mmid for e in need_keys]
-	sids = {i.sid for i in mmids}
+	sids = remove_dups((i.sid for i in mmids),quiet=True)
 	vmsg(f"Need seed{suf(sids)}: {' '.join(sids)}")
 	def gen_kals():
 		for sid in sids:
@@ -169,7 +169,10 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 	tx.delete_attrs('inputs','have_wif')
 	tx.delete_attrs('outputs','have_wif')
 
-	extra_sids = set(saved_seeds) - tx.get_input_sids() - tx.get_output_sids()
+	extra_sids = remove_dups(
+		(s for s in saved_seeds if s not in tx.get_sids('inputs') + tx.get_sids('outputs')),
+		quiet = True )
+
 	if extra_sids:
 		msg(f"Unused Seed ID{suf(extra_sids)}: {' '.join(extra_sids)}")
 
