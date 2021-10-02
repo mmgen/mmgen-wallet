@@ -401,10 +401,9 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			keylist   = '',
 			mmtype    = None,
 			skip_key_address_validity_check = False,
-		):
+			skip_chksum = False ):
 
 		self.skip_ka_check = skip_key_address_validity_check
-		do_chksum = True
 		self.update_msgs()
 		mmtype = mmtype or proto.dfl_mmtype
 		assert mmtype in MMGenAddrType.mmtypes, f'{mmtype}: mmtype not in {MMGenAddrType.mmtypes!r}'
@@ -415,15 +414,17 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 
 		self.proto = proto
 
+		do_chksum = False
 		if seed and addr_idxs:   # data from seed + idxs
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
 			adata = self.generate(seed,addr_idxs)
+			do_chksum = True
 		elif addrfile:           # data from MMGen address file
 			self.infile = addrfile
 			adata = self.parse_file(addrfile) # sets self.al_id
+			do_chksum = True
 		elif al_id and adata:    # data from tracking wallet
 			self.al_id = al_id
-			do_chksum = False
 		elif addrlist:           # data from flat address list
 			self.al_id = None
 			addrlist = remove_dups(addrlist,edesc='address',desc='address list')
@@ -450,10 +451,11 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		self.id_str = AddrListIDStr(self)
 		if type(self) == KeyList: return
 
-		if do_chksum:
+		if do_chksum and not skip_chksum:
 			self.chksum = AddrListChksum(self)
-			qmsg(f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}')
-			qmsg(self.msgs[('check_chksum','record_chksum')[src=='gen']])
+			qmsg(
+				f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
+				self.msgs[('check_chksum','record_chksum')[src=='gen']] )
 
 	def update_msgs(self):
 		self.msgs = AddrList.msgs
@@ -945,8 +947,9 @@ Record this checksum: it will be used to verify the password file in the future
 
 		fs = f'{self.al_id.sid}-{self.pw_id_str}-{self.pw_fmt_disp}-{self.pw_len}[{{}}]'
 		self.id_str = AddrListIDStr(self,fs)
-		qmsg(f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}')
-		qmsg(self.msgs[('record_chksum','check_chksum')[bool(infile)]])
+		qmsg(
+			f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
+			self.msgs[('record_chksum','check_chksum')[bool(infile)]] )
 
 	def set_pw_fmt(self,pw_fmt):
 		if pw_fmt == 'hex2bip39':

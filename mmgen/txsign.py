@@ -70,7 +70,8 @@ def generate_kals_for_mmgen_addrs(need_keys,infiles,saved_seeds,proto):
 						proto     = proto,
 						seed      = seed,
 						addr_idxs = AddrIdxList(idx_list=idx_list),
-						mmtype    = MMGenAddrType(proto,id_str) )
+						mmtype    = MMGenAddrType(proto,id_str),
+						skip_chksum = True )
 	return MMGenList(gen_kals())
 
 def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
@@ -133,7 +134,10 @@ def get_keyaddrlist(proto,opt):
 def get_keylist(proto,opt):
 	if opt.keys_from_file:
 		l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
-		kal = KeyAddrList(proto=proto,keylist=[m.split()[0] for m in l]) # accept coin daemon wallet dumps
+		kal = KeyAddrList(
+			proto     = proto,
+			keylist   = [m.split()[0] for m in l], # accept coin daemon wallet dumps
+			skip_chksum = True )
 		kal.generate_addrs_from_keys()
 		return kal
 	return None
@@ -147,7 +151,8 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 		tx.check_non_mmgen_inputs(caller='txsign',non_mmaddrs=non_mmaddrs)
 		tmp = KeyAddrList(
 			proto = tx.proto,
-			addrlist = non_mmaddrs )
+			addrlist = non_mmaddrs,
+			skip_chksum = True )
 		tmp.add_wifs(kl)
 		m = tmp.list_missing('sec')
 		if m:
