@@ -10,11 +10,6 @@ elif uname -a | grep -q 'MSYS'; then
 	SUDO='' MSYS2=1;
 fi
 
-[ "$MMGEN_DISABLE_COLOR" ] || {
-	RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
-	RESET="\e[0m"
-}
-
 trap 'echo -e "${GREEN}Exiting at user request$RESET"; exit' INT
 
 umask 0022
@@ -22,6 +17,7 @@ umask 0022
 export MMGEN_TEST_SUITE=1
 export MMGEN_NO_LICENSE=1
 export PYTHONPATH=.
+
 test_py='test/test.py -n'
 objtest_py='test/objtest.py'
 objattrtest_py='test/objattrtest.py'
@@ -49,23 +45,23 @@ do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
 		echo   "  USAGE:           $PROGNAME [options] [tests or test group]"
-		echo   "  OPTIONS: '-h'  Print this help message"
-		echo   "           '-A'  Skip tests requiring altcoin modules or daemons"
-		echo   "           '-b'  Buffer keypresses for all invocations of 'test/test.py'"
-		echo   "           '-C'  Run tests in coverage mode"
-		echo   "           '-f'  Speed up the tests by using fewer rounds"
-		echo   "           '-F'  Reduce rounds even further"
-		echo   "           '-i'  Create and install Python package, then run tests.  A branch"
-		echo   "                 must be supplied as a parameter"
-		echo   "           '-I'  Like '-i', but install the package without running the tests"
-		echo   "           '-l'  List the test name symbols"
-		echo   "           '-N'  Pass the --no-timings switch to test/test.py"
-		echo   "           '-O'  Use pexpect.spawn rather than popen_spawn for applicable tests"
-		echo   "           '-p'  Pause between tests"
-		echo   "           '-t'  Print the tests without running them"
-		echo   "           '-v'  Run test/test.py with '--exact-output' and other commands with"
-		echo   "                 '--verbose' switch"
-		echo   "           '-V'  Run test/test.py and other commands with '--verbose' switch"
+		echo   "  OPTIONS: -h      Print this help message"
+		echo   "           -A      Skip tests requiring altcoin modules or daemons"
+		echo   "           -b      Buffer keypresses for all invocations of 'test/test.py'"
+		echo   "           -C      Run tests in coverage mode"
+		echo   "           -f      Speed up the tests by using fewer rounds"
+		echo   "           -F      Reduce rounds even further"
+		echo   "           -i BRANCH Create and install Python package from cloned BRANCH, then"
+		echo   "                   run tests in installed package"
+		echo   "           -I BRANCH Like '-i', but install the package without running the tests"
+		echo   "           -l      List the test name symbols"
+		echo   "           -N      Pass the --no-timings switch to test/test.py"
+		echo   "           -O      Use pexpect.spawn rather than popen_spawn where applicable"
+		echo   "           -p      Pause between tests"
+		echo   "           -t      Print the tests without running them"
+		echo   "           -v      Run test/test.py with '--exact-output' and other commands"
+		echo   "                   with '--verbose' switch"
+		echo   "           -V      Run test/test.py and other commands with '--verbose' switch"
 		echo
 		echo   "  AVAILABLE TESTS:"
 		echo   "     obj      - data objects"
@@ -145,6 +141,11 @@ do
 	*)  exit ;;
 	esac
 done
+
+[ "$MMGEN_DISABLE_COLOR" ] || {
+	RED="\e[31;1m" GREEN="\e[32;1m" YELLOW="\e[33;1m" BLUE="\e[34;1m" MAGENTA="\e[35;1m" CYAN="\e[36;1m"
+	RESET="\e[0m"
+}
 
 [ "$MSYS2" -a ! "$FAST" ] && tooltest2_py+=' --fork'
 [ "$EXACT_OUTPUT" -o "$VERBOSE" ] || objtest_py+=" -S"
@@ -541,6 +542,7 @@ prompt_skip() {
 }
 
 run_tests() {
+	[ "$LIST_CMDS" ] || echo "Running tests: $1"
 	for t in $1; do
 		if [ "$SKIP_ALT_DEP" ]; then
 			ok=$(for a in $noalt_tests; do if [ $t == $a ]; then echo 'ok'; fi; done)
@@ -572,10 +574,14 @@ check_args() {
 }
 
 check_args
-[ "$LIST_CMDS" ] || echo "Running tests: $tests"
-START=$(date +%s)
-run_tests "$tests"
-TIME=$(($(date +%s)-START))
-MS=$(printf %02d:%02d $((TIME/60)) $((TIME%60)))
 
-[ "$LIST_CMDS" ] || echo -e "${GREEN}All OK.  Total elapsed time: $MS$RESET"
+start_time=$(date +%s)
+
+run_tests "$tests"
+
+elapsed=$(($(date +%s)-start_time))
+elapsed_fmt=$(printf %02d:%02d $((elapsed/60)) $((elapsed%60)))
+
+[ "$LIST_CMDS" ] || {
+	echo -e "${GREEN}All OK.  Total elapsed time: $elapsed_fmt$RESET"
+}

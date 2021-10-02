@@ -83,8 +83,7 @@ def getrandnum_range(nbytes,rn_max):
 			return rn
 
 def getrandstr(num_chars,no_space=False):
-	n,m = 95,32
-	if no_space: n,m = 94,33
+	n,m = (94,33) if no_space else (95,32)
 	return ''.join([chr(i%n+m) for i in list(os.urandom(num_chars))])
 
 def get_data_dir():

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from mmgen.util import msg
 from mmgen.common import *
 
 cmd_args = opts.init()

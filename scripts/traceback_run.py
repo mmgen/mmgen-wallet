@@ -1,25 +1,26 @@
 #!/usr/bin/env python3
 
 # Import as few modules and define as few names as possible at global level before exec'ing the
-# file, as all names will be seen by the exec'ed file.  To prevent name collisions, all names
+# file, as all names will be seen by the exec'ed code.  To prevent name collisions, all names
 # defined here should begin with 'traceback_run_'
 
 import sys,os,time
 
-def traceback_get_colors():
+def traceback_run_get_colors():
 	from collections import namedtuple
-	return namedtuple('colors',['red','yellow','blue'])(*[
+	return namedtuple('colors',['red','green','yellow','blue'])(*[
 			(lambda s:s) if os.getenv('MMGEN_DISABLE_COLOR') else
 			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
-		for n in (31,33,34) ])
+		for n in (31,32,33,34) ])
 
 def traceback_run_init():
-	import os
+
 	sys.path[0] = 'test' if os.path.dirname(sys.argv[1]) == 'test' else '.'
 
-	if 'TMUX' in os.environ: del os.environ['TMUX']
 	os.environ['MMGEN_TRACEBACK'] = '1'
 	os.environ['PYTHONPATH'] = '.'
+	if 'TMUX' in os.environ:
+		del os.environ['TMUX']
 
 	of = 'my.err'
 	try: os.unlink(of)
@@ -39,12 +40,12 @@ def traceback_run_process_exception():
 	if exc.startswith('SystemExit:'):
 		lines.pop()
 
-	c = traceback_get_colors()
+	c = traceback_run_get_colors()
 	sys.stdout.write('{}{}'.format(c.yellow(''.join(lines)),c.red(exc)))
 
 	open(traceback_run_outfile,'w').write(''.join(lines+[exc]))
 
-traceback_run_outfile = traceback_run_init()
+traceback_run_outfile = traceback_run_init() # sets sys.path[0]
 traceback_run_tstart = time.time()
 
 try:
@@ -60,5 +61,5 @@ except Exception as e:
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 
-c = traceback_get_colors()
+c = traceback_run_get_colors()
 sys.stderr.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - traceback_run_tstart)))

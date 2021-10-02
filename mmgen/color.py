@@ -41,16 +41,23 @@ _colors = {
 	'yelbg':       ( (232,229), (30,103) ),
 }
 
+_reset = ''
+
 for _c in _colors:
 	_e = _colors[_c]
-	globals()['_256_'+_c]   = '\033[38;5;{};1m'.format(_e[0]) if type(_e[0]) == int \
-						else '\033[38;5;{};48;5;{};1m'.format(*_e[0])
-	globals()['_16_'+_c]    = '\033[{}m'.format(_e[1][0]) if _e[1][1] == 0 \
-						else '\033[{};{}m'.format(*_e[1])
-	globals()['_clr_'+_c] = ''; _reset = ''
-	exec('def {c}(s): return _clr_{c}+s+_reset'.format(c=_c))
+	globals()['_256_'+_c] = (
+		'\033[38;5;{};1m'.format(_e[0]) if type(_e[0]) == int else
+		'\033[38;5;{};48;5;{};1m'.format(*_e[0])
+	)
+	globals()['_16_'+_c] = (
+		'\033[{}m'.format(_e[1][0]) if _e[1][1] == 0 else
+		'\033[{};{}m'.format(*_e[1])
+	)
+	globals()['_clr_'+_c] = ''
+	exec(f'{_c} = lambda s: _clr_{_c}+s+_reset')
 
-def nocolor(s): return s
+def nocolor(s):
+	return s
 
 def set_vt100():
 	'hack to put term into VT100 mode under MSWin'
@@ -84,16 +91,18 @@ def get_terminfo_colors(term=None):
 
 def init_color(num_colors='auto'):
 	assert num_colors in ('auto',8,16,256)
+
 	globals()['_reset'] = '\033[0m'
 
-	import os
-	t = os.getenv('TERM')
 	if num_colors in (8,16):
 		pfx = '_16_'
-	elif num_colors == 256 or (t and t.endswith('256color')) or get_terminfo_colors() == 256:
-		pfx = '_256_'
 	else:
-		pfx = '_16_'
+		import os
+		t = os.getenv('TERM')
+		if num_colors == 256 or (t and t.endswith('256color')) or get_terminfo_colors() == 256:
+			pfx = '_256_'
+		else:
+			pfx = '_16_'
 
 	for c in _colors:
 		globals()['_clr_'+c] = globals()[pfx+c]
