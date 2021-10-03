@@ -1042,8 +1042,9 @@ class MMGenTX:
 				yield desc.capitalize() + ':\n' + enl
 				confs_per_day = 60*60*24 // self.proto.avg_bdi
 				io_sorted = {
-					# prepend '/' (sorts before '0') to ensure non-MMGen addrs are displayed first
-					'addr': lambda: sorted(io,key=lambda o: o.mmid.sort_key if o.mmid else '/'+o.addr),
+					'addr': lambda: sorted(
+						io, # prepend '+' (sorts before '0') to ensure non-MMGen addrs are displayed first
+						key = lambda o: (o.mmid.sort_key if o.mmid else f'+{o.addr}') + f'{o.amt:040.20f}' ),
 					'raw':  lambda: io
 				}[sort]
 				for n,e in enumerate(io_sorted()):
