@@ -75,7 +75,7 @@ opts_data = {
                      those in the repo root
 -t, --type=          Specify coin type
 -f, --fork           Run commands via tool executable instead of importing tool module
--t, --traceback      Run tool inside traceback script
+-x, --exec-wrapper   Run tool inside exec_wrapper script
 -v, --verbose        Produce more verbose output
 """,
 	'notes': """
@@ -1029,8 +1029,8 @@ if opt.fork:
 		'='+getattr(opt,k) if getattr(opt,k) != True else ''
 		) for k in passthru_args if getattr(opt,k)])
 
-	if opt.traceback:
-		tool_cmd = (os.path.join('scripts','traceback_run.py'),) + tool_cmd
+	if opt.exec_wrapper:
+		tool_cmd = (os.path.join('scripts','exec_wrapper.py'),) + tool_cmd
 
 	if opt.coverage:
 		d,f = init_coverage()

@@ -743,7 +743,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		try: os.mkdir(odir)
 		except: pass
 		cmd = [
-			'scripts/traceback_run.py',
+			'scripts/exec_wrapper.py',
 			'scripts/create-token.py',
 			'--coin=' + self.proto.coin,
 			'--outdir=' + odir

@@ -320,7 +320,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		icls = MMGenWallet
 		fn = get_file_with_ext(self._user_dir(user),icls.ext)
-		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True,no_traceback=True)
+		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True,no_exec_wrapper=True)
 		t.passphrase(icls.desc,rt_pw)
 		sid = t.read().strip()[:8]
 		self.usr_subsids[user][subseed_idx] = sid

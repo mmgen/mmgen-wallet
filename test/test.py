@@ -120,10 +120,10 @@ opts_data = {
                      than those in the repo root
 -S, --skip-deps      Skip dependency checking for command
 -u, --usr-random     Get random data interactively from user
--t, --traceback      Run the command inside the '{tbc}' script
 -T, --pexpect-timeout=T Set the timeout for pexpect
 -v, --verbose        Produce more verbose output
 -W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
+-x, --exec-wrapper   Run the command inside the '{ew}' script
 -X, --exit-after=C   Exit after command 'C'
 -y, --segwit         Generate and use Segwit addresses
 -Y, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
@@ -135,7 +135,7 @@ If no command is given, the whole test suite is run.
 	},
 	'code': {
 		'options': lambda s: s.format(
-			tbc='scripts/traceback_run.py',
+			ew='scripts/exec_wrapper.py',
 			lf=log_file),
 	}
 }
@@ -482,8 +482,8 @@ def set_environ_for_spawned_scripts():
 	if not opt.buf_keypress:
 		os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
 
-	# If test.py itself is running under traceback, the spawned script shouldn't be, so disable this:
-	if os.getenv('MMGEN_TRACEBACK') and not opt.traceback:
+	# If test.py itself is running under exec_wrapper, the spawned script shouldn't be, so disable this:
+	if os.getenv('MMGEN_TRACEBACK') and not opt.exec_wrapper:
 		os.environ['MMGEN_TRACEBACK'] = ''
 
 	os.environ['MMGEN_NO_LICENSE'] = '1'
@@ -661,7 +661,7 @@ class TestSuiteRunner(object):
 			msg_only     = False,
 			no_msg       = False,
 			cmd_dir      = 'cmds',
-			no_traceback = False ):
+			no_exec_wrapper = False ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
 		if extra_desc: desc += ' ' + extra_desc
@@ -678,8 +678,8 @@ class TestSuiteRunner(object):
 
 		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
-		if opt.traceback and not no_traceback:
-			args = ['scripts/traceback_run.py'] + args
+		if opt.exec_wrapper and not no_exec_wrapper:
+			args = ['scripts/exec_wrapper.py'] + args
 
 		if g.platform == 'win':
 			args = ['python3'] + args
@@ -1038,7 +1038,7 @@ except TestSuiteException as e:
 except TestSuiteFatalException as e:
 	rdie(1,e.args[0])
 except Exception:
-	if opt.traceback:
+	if opt.exec_wrapper:
 		msg(blue('Spawned script exited with error'))
 	else:
 		import traceback
