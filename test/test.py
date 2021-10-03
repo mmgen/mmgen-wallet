@@ -168,7 +168,7 @@ def add_cmdline_opts():
 
 # add_cmdline_opts()
 
-opts.UserOpts._reset_ok += ('skip_deps','no_daemon_autostart')
+opts.UserOpts._reset_ok += ('skip_deps','no_daemon_autostart','names','no_timings')
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
 usr_args = opts.init(opts_data)
@@ -185,6 +185,11 @@ if not (opt.resume or opt.skip_deps):
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
+
+if g.test_suite_deterministic:
+	opt.no_timings = True
+	init_color(num_colors=0)
+	os.environ['MMGEN_DISABLE_COLOR'] = '1'
 
 if opt.profile:
 	opt.names = True

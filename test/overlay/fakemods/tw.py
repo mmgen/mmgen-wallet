@@ -1,5 +1,21 @@
 from .tw_orig import *
 
+if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
+	def _time_gen():
+		""" add a minute to each successive time value """
+		for i in range(1000000):
+			yield 1321009871 + (i*60)
+
+	_time_iter = _time_gen()
+
+	TwUnspentOutputs.date_formatter = {
+		'days':      lambda rpc,secs: (next(_time_iter) - secs) // 86400,
+		'date':      lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(next(_time_iter))[:3])[2:],
+		'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(next(_time_iter))[:5]),
+	}
+
+	TwAddrList.date_formatter = TwUnspentOutputs.date_formatter
+
 if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
 	TwUnspentOutputs.date_formatter['days'] = lambda rpc,secs: (1831006505 - secs) // 86400

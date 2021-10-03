@@ -50,7 +50,7 @@ def exec_wrapper_write_traceback():
 	open('my.err','w').write(''.join(lines+[exc]))
 
 def exec_wrapper_end_msg():
-	if os.getenv('EXEC_WRAPPER_SPAWN'):
+	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 		c = exec_wrapper_get_colors()
 		# write to stdout to ensure script output gets to terminal first
 		sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))

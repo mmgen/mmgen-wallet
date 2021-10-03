@@ -52,7 +52,7 @@ class unit_test(object):
 				st = time.time()
 				ret = scrypt_hash_passphrase(pw,salt,hp).hex()
 				t = time.time() - st
-				vmsg(f'  {t:0.4f} secs')
+				vmsg('' if g.test_suite_deterministic else f'  {t:0.4f} secs')
 				assert ret == res, ret
 
 		if opt.quiet:

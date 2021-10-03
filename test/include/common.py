@@ -67,7 +67,11 @@ ref_kafile_pass = 'kafile password'
 ref_kafile_hash_preset = '1'
 
 def getrand(n):
-	return os.urandom(n)
+	if g.test_suite_deterministic:
+		from mmgen.crypto import fake_urandom
+		return fake_urandom(n)
+	else:
+		return os.urandom(n)
 
 def getrandnum(n):
 	return int(getrand(n).hex(),16)

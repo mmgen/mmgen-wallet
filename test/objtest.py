@@ -97,6 +97,8 @@ def run_test(test,arg,input_data,arg1,exc_name):
 	try:
 		if not opt.super_silent:
 			arg_disp = repr(arg_copy[0] if type(arg_copy) == tuple else arg_copy)
+			if g.test_suite_deterministic and isinstance(arg_copy,dict):
+				arg_disp = re.sub(r'object at 0x[0-9a-f]+','object at [SCRUBBED]',arg_disp)
 			msg_r((green if input_data=='good' else orange)(f'{arg_disp+":":<22}'))
 		cls = globals()[test]
 
