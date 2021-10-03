@@ -331,8 +331,10 @@ def speed_test(kg,ag,rounds):
 		sec = PrivKey(proto,seed+pack('I',i),compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
 		addr = ag.to_addr(kg.to_pubhex(sec))
 		vmsg(f'\nkey:  {sec.wif}\naddr: {addr}\n')
-	qmsg_r(f'\rRound {i+1}/{rounds} ')
-	qmsg(f'\n{rounds} addresses generated in {time.time()-start:.2f} seconds')
+	qmsg(
+		f'\rRound {i+1}/{rounds} ' +
+		f'\n{rounds} addresses generated in {time.time()-start:.2f} seconds'
+	)
 
 def dump_test(kg,ag,fh):
 

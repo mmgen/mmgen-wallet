@@ -71,6 +71,7 @@ def create_shm_dir(data_dir,trash_dir):
 	return shm_dir
 
 import sys,os,time
+
 from include.tests_header import repo_root
 
 try: os.unlink(os.path.join(repo_root,'my.err'))
@@ -88,7 +89,7 @@ opts_data = {
 	'text': {
 		'desc': 'Test suite for the MMGen suite',
 		'usage':'[options] [command(s) or metacommand(s)]',
-		'options': """
+		'options': f"""
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -A, --no-daemon-autostart Don't start and stop daemons automatically
@@ -108,7 +109,7 @@ opts_data = {
 -g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
 -N, --no-timings     Suppress display of timing information
--o, --log            Log commands to file {lf}
+-o, --log            Log commands to file {log_file!r}
 -O, --pexpect-spawn  Use pexpect.spawn instead of popen_spawn (much slower,
                      kut does real terminal emulation)
 -p, --pause          Pause between tests, resuming on keypress
@@ -133,11 +134,6 @@ opts_data = {
 If no command is given, the whole test suite is run.
 """
 	},
-	'code': {
-		'options': lambda s: s.format(
-			ew='scripts/exec_wrapper.py',
-			lf=log_file),
-	}
 }
 
 data_dir = get_data_dir() # include/common.py
@@ -773,6 +769,10 @@ class TestSuiteRunner(object):
 		if not quiet:
 			bmsg('Executing ' + m)
 
+		if not self.daemons_started and network_id not in ('eth','etc','xmr'):
+			start_test_daemons(network_id,remove_datadir=True)
+			self.daemons_started = True
+
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test group doesn't have to
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 
@@ -788,19 +788,20 @@ class TestSuiteRunner(object):
 
 	def run_tests(self,usr_args):
 		self.start_time = time.time()
+		self.daemons_started = False
 		gname_save = None
 		if usr_args:
 			for arg in usr_args:
+				if arg in utils:
+					params = usr_args[usr_args.index(arg)+1:]
+					globals()[arg](*params)
+					sys.exit(0)
 				if arg in self.gm.cmd_groups:
 					if not self.init_group(arg):
 						continue
 					for cmd in self.gm.cmd_list:
 						self.check_needs_rerun(cmd,build=True)
 						do_between()
-				elif arg in utils:
-					params = usr_args[usr_args.index(arg)+1:]
-					globals()[arg](*params)
-					sys.exit(0)
 				else:
 					if ':' in arg:
 						gname,arg = arg.split(':')
@@ -944,6 +945,7 @@ class TestSuiteRunner(object):
 
 	def process_retval(self,cmd,ret):
 		if type(ret).__name__ == 'MMGenPexpect':
+			ret.read()
 			ret.ok()
 			self.cmd_total += 1
 		elif ret == 'ok':
@@ -1019,8 +1021,6 @@ if opt.pause:
 	set_restore_term_at_exit()
 
 set_environ_for_spawned_scripts()
-if network_id not in ('eth','etc','xmr'):
-	start_test_daemons(network_id,remove_datadir=True)
 
 try:
 	tr = TestSuiteRunner(data_dir,trash_dir)
@@ -1038,12 +1038,12 @@ except TestSuiteException as e:
 except TestSuiteFatalException as e:
 	rdie(1,e.args[0])
 except Exception:
-	if opt.exec_wrapper:
-		msg(blue('Spawned script exited with error'))
-	else:
+	if 'exec_wrapper_init' in globals(): # test.py itself is running under exec_wrapper
 		import traceback
 		print(''.join(traceback.format_exception(*sys.exc_info())))
 		msg(blue('Test script exited with error'))
+	else:
+		msg(blue('Spawned script exited with error'))
 	raise
 except:
 	raise

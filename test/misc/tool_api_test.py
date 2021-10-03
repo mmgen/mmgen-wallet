@@ -8,8 +8,7 @@ tool_api_test.py: test the MMGen suite tool API
 """
 
 import sys,os
-os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0])))))
-sys.path[0] = os.curdir
+from mmgen.common import *
 from mmgen.obj import PrivKey,CoinAddr
 
 keys = [

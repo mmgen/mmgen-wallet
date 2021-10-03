@@ -818,7 +818,11 @@ async def run_test(gid,cmd_name):
 	msg_r(green(m)+'\n' if opt.verbose else m)
 
 	def fork_cmd(cmd_name,args,out,opts):
-		cmd = list(tool_cmd) + (opts or []) + [cmd_name] + args
+		cmd = (
+			list(tool_cmd) +
+			(opts or []) +
+			[cmd_name] + args
+		)
 		vmsg('{} {}'.format(
 			green('Executing'),
 			cyan(' '.join(cmd)) ))
