@@ -73,6 +73,9 @@ def create_shm_dir(data_dir,trash_dir):
 import sys,os,time
 
 from include.tests_header import repo_root
+from test.overlay import overlay_setup
+overlay_dir = overlay_setup()
+sys.path.insert(0,overlay_dir)
 
 try: os.unlink(os.path.join(repo_root,'my.err'))
 except: pass
@@ -124,7 +127,6 @@ opts_data = {
 -T, --pexpect-timeout=T Set the timeout for pexpect
 -v, --verbose        Produce more verbose output
 -W, --no-dw-delete   Don't remove default wallet from data dir after dw tests are done
--x, --exec-wrapper   Run the command inside the '{ew}' script
 -X, --exit-after=C   Exit after command 'C'
 -y, --segwit         Generate and use Segwit addresses
 -Y, --segwit-random  Generate and use a random mix of Segwit and Legacy addrs
@@ -424,7 +426,7 @@ def do_between():
 def list_tmpdirs():
 	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
-def clean(usr_dirs=None):
+def clean(usr_dirs=None,clean_overlay=True):
 	if opt.skip_deps:
 		return
 	all_dirs = list_tmpdirs()
@@ -443,6 +445,10 @@ def clean(usr_dirs=None):
 	cleandir(data_dir)
 	cleandir(trash_dir)
 	iqmsg(green(f'Cleaned directories {data_dir!r} {trash_dir!r}'))
+
+	if clean_overlay:
+		cleandir(overlay_dir)
+		iqmsg(green(f'Cleaned directory {os.path.relpath(overlay_dir)!r}'))
 
 def create_tmp_dirs(shm_dir):
 	if g.platform == 'win':
@@ -477,10 +483,6 @@ def set_environ_for_spawned_scripts():
 
 	if not opt.buf_keypress:
 		os.environ['MMGEN_DISABLE_HOLD_PROTECT'] = '1'
-
-	# If test.py itself is running under exec_wrapper, the spawned script shouldn't be, so disable this:
-	if os.getenv('MMGEN_TRACEBACK') and not opt.exec_wrapper:
-		os.environ['MMGEN_TRACEBACK'] = ''
 
 	os.environ['MMGEN_NO_LICENSE'] = '1'
 	os.environ['MMGEN_MIN_URANDCHARS'] = '3'
@@ -674,7 +676,7 @@ class TestSuiteRunner(object):
 
 		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
 
-		if opt.exec_wrapper and not no_exec_wrapper:
+		if not no_exec_wrapper:
 			args = ['scripts/exec_wrapper.py'] + args
 
 		if g.platform == 'win':
@@ -717,8 +719,13 @@ class TestSuiteRunner(object):
 
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
+		env = { 'EXEC_WRAPPER_SPAWN':'1' }
+		if 'exec_wrapper_init' in globals(): # Python 3.9: OR the dicts
+			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' })
+		env.update(os.environ)
+
 		from test.include.pexpect import MMGenPexpect
-		return MMGenPexpect(args,no_output=no_output)
+		return MMGenPexpect( args, no_output=no_output, env=env )
 
 	def end_msg(self):
 		t = int(time.time() - self.start_time)
@@ -732,7 +739,7 @@ class TestSuiteRunner(object):
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
 		if do_clean:
-			clean(ts_cls.tmpdir_nums)
+			clean(ts_cls.tmpdir_nums,clean_overlay=False)
 
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(opt,k):

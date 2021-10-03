@@ -772,7 +772,4 @@ async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 			RPC client chain:   {rpc.chain}
 			""",indent='  ').rstrip())
 
-	if g.bogus_wallet_data:
-		rpc.blockcount = 1000000
-
 	return rpc

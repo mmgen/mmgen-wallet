@@ -44,28 +44,6 @@ def get_tw_label(proto,s):
 	except:
 		return None
 
-_date_formatter = {
-	'days':      lambda rpc,secs: (rpc.cur_date - secs) // 86400,
-	'date':      lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:],
-	'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
-}
-
-if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
-	# 1831006505 (09 Jan 2028) = projected time of block 1000000
-	_date_formatter['days'] = lambda rpc,secs: (1831006505 - secs) // 86400
-	async def _set_dates(rpc,us):
-		for o in us:
-			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
-else:
-	async def _set_dates(rpc,us):
-		if rpc.proto.base_proto != 'Bitcoin':
-			return
-		if us and us[0].date is None:
-			# 'blocktime' differs from 'time', is same as getblockheader['time']
-			dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
-			for idx,o in enumerate(us):
-				o.date = dates[idx]
-
 class TwUnspentOutputs(MMGenObject,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
@@ -173,10 +151,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		return await self.rpc.call('listunspent',self.minconf,*add_args)
 
 	async def get_unspent_data(self,sort_key=None,reverse_sort=False):
-		if g.bogus_wallet_data: # for debugging and test suite
-			us_raw = json.loads(get_data_from_file(g.bogus_wallet_data),parse_float=Decimal)
-		else:
-			us_raw = await self.get_unspent_rpc()
+
+		us_raw = await self.get_unspent_rpc()
 
 		if not us_raw:
 			die(0,fmt(f"""
@@ -263,10 +239,20 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		dc = namedtuple('display_constants',['col1_w','mmid_w','addr_w','btaddr_w','label_w','tx_w','txdots'])
 		return dc(col1_w,mmid_w,addr_w,btaddr_w,label_w,tx_w,txdots)
 
+	@staticmethod
+	async def set_dates(rpc,us):
+		if rpc.proto.base_proto != 'Bitcoin':
+			return
+		if us and us[0].date is None:
+			# 'blocktime' differs from 'time', is same as getblockheader['time']
+			dates = [o['blocktime'] for o in await rpc.gathered_call('gettransaction',[(o.txid,) for o in us])]
+			for idx,o in enumerate(us):
+				o.date = dates[idx]
+
 	async def format_for_display(self):
 		unsp = self.unspent
 		if self.age_fmt in self.age_fmts_date_dependent:
-			await _set_dates(self.rpc,unsp)
+			await self.set_dates(self.rpc,unsp)
 		self.set_term_columns()
 
 		c = getattr(self,'display_constants',None)
@@ -344,7 +330,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		return self.fmt_display
 
 	async def format_for_printing(self,color=False,show_confs=True):
-		await _set_dates(self.rpc,self.unspent)
+		await self.set_dates(self.rpc,self.unspent)
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
 		amt_w = self.proto.coin_amt.max_prec + 5
@@ -544,12 +530,20 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		elif age_fmt == 'block':
 			return self.rpc.blockcount - (o.confs - 1)
 		else:
-			return _date_formatter[age_fmt](self.rpc,o.date)
+			return self.date_formatter[age_fmt](self.rpc,o.date)
+
+	date_formatter = {
+		'days':      lambda rpc,secs: (rpc.cur_date - secs) // 86400,
+		'date':      lambda rpc,secs: '{}-{:02}-{:02}'.format(*time.gmtime(secs)[:3])[2:],
+		'date_time': lambda rpc,secs: '{}-{:02}-{:02} {:02}:{:02}'.format(*time.gmtime(secs)[:5]),
+	}
+
 
 class TwAddrList(MMGenDict,metaclass=AsyncInit):
 	has_age = True
 	age_fmts = TwUnspentOutputs.age_fmts
 	age_disp = TwUnspentOutputs.age_disp
+	date_formatter = TwUnspentOutputs.date_formatter
 
 	def __new__(cls,proto,*args,**kwargs):
 		return MMGenDict.__new__(altcoin_subclass(cls,proto,'tw'),*args,**kwargs)
@@ -665,7 +659,9 @@ class TwAddrList(MMGenDict,metaclass=AsyncInit):
 
 		mmids = sorted(self,key=sort_algo,reverse=bool(sort and 'reverse' in sort))
 		if show_age:
-			await _set_dates(self.rpc,[o for o in mmids if hasattr(o,'confs')])
+			await TwUnspentOutputs.set_dates(
+				self.rpc,
+				[o for o in mmids if hasattr(o,'confs')] )
 
 		def gen_output():
 

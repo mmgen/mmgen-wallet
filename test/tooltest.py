@@ -24,6 +24,9 @@ import sys,os,binascii
 from subprocess import run,PIPE
 
 from include.tests_header import repo_root
+from test.overlay import overlay_setup
+sys.path.insert(0,overlay_setup())
+
 from mmgen.common import *
 from test.include.common import *
 
@@ -130,7 +133,8 @@ if not opt.system:
 	os.environ['PYTHONPATH'] = repo_root
 	mmgen_cmd = os.path.relpath(os.path.join(repo_root,'cmds',mmgen_cmd))
 
-spawn_cmd = [mmgen_cmd]
+spawn_cmd = ['scripts/exec_wrapper.py',mmgen_cmd]
+
 if opt.coverage:
 	d,f = init_coverage()
 	spawn_cmd = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f] + spawn_cmd

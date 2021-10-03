@@ -20,10 +20,11 @@
 test/objtest.py:  Test MMGen data objects
 """
 
-import sys,os
-pn = os.path.dirname(sys.argv[0])
-os.chdir(os.path.join(pn,os.pardir))
-sys.path.__setitem__(0,os.path.abspath(os.curdir))
+import sys,os,re
+
+from include.tests_header import repo_root
+from test.overlay import overlay_setup
+sys.path.insert(0,overlay_setup())
 
 os.environ['MMGEN_TEST_SUITE'] = '1'
 

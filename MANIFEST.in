@@ -19,6 +19,8 @@ include test/ref/monero/*
 include test/ref/ethereum/bin/mm1/*
 include test/ref/ethereum/bin/mm2/*
 include test/misc/*.py
+include test/overlay/*.py
+include test/overlay/fakemods/*.py
 
 include test/test-release.sh
 

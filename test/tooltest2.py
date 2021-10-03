@@ -28,6 +28,9 @@ from subprocess import run,PIPE
 from decimal import Decimal
 
 from include.tests_header import repo_root
+from test.overlay import overlay_setup
+sys.path.insert(0,overlay_setup())
+
 from mmgen.common import *
 from test.include.common import *
 from mmgen.wallet import is_bip39_mnemonic,is_mmgen_mnemonic
@@ -819,6 +822,7 @@ async def run_test(gid,cmd_name):
 
 	def fork_cmd(cmd_name,args,out,opts):
 		cmd = (
+			['scripts/exec_wrapper.py'] +
 			list(tool_cmd) +
 			(opts or []) +
 			[cmd_name] + args

@@ -21,10 +21,10 @@ test/gentest.py:  Cryptocoin key/address generation tests for the MMGen suite
 """
 
 import sys,os
-pn = os.path.dirname(sys.argv[0])
-os.chdir(os.path.join(pn,os.pardir))
-sys.path.__setitem__(0,os.path.abspath(os.curdir))
-os.environ['MMGEN_TEST_SUITE'] = '1'
+
+from include.tests_header import repo_root
+from test.overlay import overlay_setup
+sys.path.insert(0,overlay_setup())
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *

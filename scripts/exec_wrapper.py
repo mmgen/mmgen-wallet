@@ -13,20 +13,24 @@ def exec_wrapper_get_colors():
 			(lambda s,n=n:f'\033[{n};1m{s}\033[0m' )
 		for n in (31,32,33,34) ])
 
-def exec_wrapper_init():
+def exec_wrapper_init(): # don't change: name is used to test if script is running under exec_wrapper
 
-	sys.path[0] = 'test' if os.path.dirname(sys.argv[1]) == 'test' else '.'
+	if os.path.dirname(sys.argv[1]) == 'test': # scripts in ./test do overlay setup themselves
+		sys.path[0] = 'test'
+	else:
+		from test.overlay import overlay_setup
+		sys.path[0] = overlay_setup()
 
 	os.environ['MMGEN_TRACEBACK'] = '1'
 	os.environ['PYTHONPATH'] = '.'
 	if 'TMUX' in os.environ:
 		del os.environ['TMUX']
 
-	of = 'my.err'
-	try: os.unlink(of)
-	except: pass
-
-	return of
+	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
+		try:
+			os.unlink('my.err')
+		except:
+			pass
 
 def exec_wrapper_write_traceback():
 	import traceback,re
@@ -43,9 +47,15 @@ def exec_wrapper_write_traceback():
 	c = exec_wrapper_get_colors()
 	sys.stdout.write('{}{}'.format(c.yellow(''.join(lines)),c.red(exc)))
 
-	open(exec_wrapper_traceback_file,'w').write(''.join(lines+[exc]))
+	open('my.err','w').write(''.join(lines+[exc]))
 
-exec_wrapper_traceback_file = exec_wrapper_init() # sets sys.path[0]
+def exec_wrapper_end_msg():
+	if os.getenv('EXEC_WRAPPER_SPAWN'):
+		c = exec_wrapper_get_colors()
+		# write to stdout to ensure script output gets to terminal first
+		sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
+
+exec_wrapper_init() # sets sys.path[0]
 exec_wrapper_tstart = time.time()
 
 try:
@@ -53,13 +63,14 @@ try:
 	exec_wrapper_execed_file = sys.argv[0]
 	exec(open(sys.argv[0]).read())
 except SystemExit as e:
-	if e.code != 0:
+	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		exec_wrapper_write_traceback()
+	else:
+		exec_wrapper_end_msg()
 	sys.exit(e.code)
 except Exception as e:
 	exec_wrapper_write_traceback()
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 
-c = exec_wrapper_get_colors()
-sys.stderr.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
+exec_wrapper_end_msg()

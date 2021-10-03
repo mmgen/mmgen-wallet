@@ -122,7 +122,6 @@ class GlobalContext(Lockable):
 	enable_erigon = False
 
 	# test suite:
-	bogus_wallet_data    = ''
 	bogus_send           = False
 	debug_utf8           = False
 	traceback            = False
@@ -209,7 +208,6 @@ class GlobalContext(Lockable):
 		'MMGEN_TEST_SUITE_REGTEST',
 		'MMGEN_TEST_SUITE_POPEN_SPAWN',
 		'MMGEN_TERMINAL_WIDTH',
-		'MMGEN_BOGUS_WALLET_DATA',
 		'MMGEN_BOGUS_SEND',
 		'MMGEN_DEBUG',
 		'MMGEN_DEBUG_OPTS',
