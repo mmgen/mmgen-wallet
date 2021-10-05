@@ -210,7 +210,7 @@ class CallSigs:
 		class bitcoin_core:
 
 			@classmethod
-			def createwallet(cls,wallet_name,no_keys=True,passphrase='',load_on_startup=True):
+			def createwallet(cls,wallet_name,no_keys=True,blank=True,passphrase='',load_on_startup=True):
 				"""
 				Quirk: when --datadir is specified (even if standard), wallet is created directly in
 				datadir, otherwise in datadir/wallets
@@ -219,7 +219,7 @@ class CallSigs:
 					'createwallet',
 					wallet_name,    # 1. wallet_name
 					no_keys,        # 2. disable_private_keys
-					no_keys,        # 3. blank (no keys or seed)
+					blank,          # 3. blank (no keys or seed)
 					passphrase,     # 4. passphrase (empty string for non-encrypted)
 					False,          # 5. avoid_reuse (track address reuse)
 					False,          # 6. descriptors (native descriptor wallet)
@@ -229,12 +229,12 @@ class CallSigs:
 		class litecoin_core(bitcoin_core):
 
 			@classmethod
-			def createwallet(cls,wallet_name,no_keys=True,passphrase='',load_on_startup=True):
+			def createwallet(cls,wallet_name,no_keys=True,blank=True,passphrase='',load_on_startup=True):
 				return (
 					'createwallet',
 					wallet_name,    # 1. wallet_name
 					no_keys,        # 2. disable_private_keys
-					no_keys,        # 3. blank (no keys or seed)
+					blank,          # 3. blank (no keys or seed)
 				)
 
 		class bitcoin_cash_node(litecoin_core): pass

@@ -39,6 +39,17 @@ def create_data_dir(data_dir):
 	try: os.makedirs(data_dir)
 	except: pass
 
+def create_hdseed(proto):
+	# cTqgRxqSER1iZ4SoUKhaXUF3PzEADyhjHPXf19KW78GGGW7RxSWz hdseed=1
+	#   addr=bcrt1q2lew38703pdzvq529hefsl9f9z9a3j3mxwt4f0
+	# cPNPEyVQpX5H9MKDwt73BScKvDh3Kk8MMEGowneT2RKFZ7Dfh3FL label=
+	#   addr=bcrt1qy7hwy8jx7w7lmm8v63hur5xzvqqhcyk8w85v9h hdkeypath=m/0'/0'/0'
+	from .tool import tool_api
+	t = tool_api()
+	t.init_coin(proto.coin,proto.network)
+	t.addrtype = 'bech32'
+	return t.hex2wif('babaeb1a'*8)
+
 def cliargs_convert(args):
 	def gen():
 		for arg in args:
@@ -115,8 +126,16 @@ class MMGenRegtest(MMGenObject):
 			await rpc.icall(
 				'createwallet',
 				wallet_name     = user,
+				blank           = user != 'miner' or self.coin == 'btc',
 				no_keys         = user != 'miner',
 				load_on_startup = False )
+
+		if self.coin == 'btc': # BCH,LTC refuse to set HD seed while in IBD
+			await rpc.call(
+				'sethdseed',
+				True,
+				create_hdseed(self.proto),
+				wallet = 'miner' )
 
 		await self.generate(432,silent=True)
 
