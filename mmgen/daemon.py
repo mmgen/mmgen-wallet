@@ -390,7 +390,7 @@ class CoinDaemon(Daemon):
 
 		# user-set values take precedence
 		self.datadir = os.path.abspath(datadir or g.daemon_data_dir or self.init_datadir())
-		self.non_dfl_datadir = bool(datadir or g.daemon_data_dir or test_suite)
+		self.non_dfl_datadir = bool(datadir or g.daemon_data_dir or test_suite or self.network == 'regtest')
 
 		# init_datadir() may have already initialized logdir
 		self.logdir = os.path.abspath(getattr(self,'logdir',self.datadir))
@@ -484,6 +484,12 @@ class bitcoin_core_daemon(CoinDaemon):
 		'linux': [g.home_dir,'.bitcoin'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
+
+	def init_datadir(self):
+		if self.network == 'regtest' and not self.test_suite:
+			return os.path.join( g.data_dir_root, 'regtest', g.coin.lower() )
+		else:
+			return super().init_datadir()
 
 	@property
 	def network_datadir(self):

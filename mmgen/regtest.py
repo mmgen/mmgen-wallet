@@ -53,7 +53,7 @@ class MMGenRegtest(MMGenObject):
 
 		from .daemon import CoinDaemon
 		self.proto = init_proto(self.coin,regtest=True)
-		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite_regtest)
+		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite)
 
 	async def generate(self,blocks=1,silent=False):
 

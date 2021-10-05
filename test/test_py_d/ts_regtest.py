@@ -248,7 +248,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
-		os.environ['MMGEN_TEST_SUITE_REGTEST'] = '1'
 		if self.proto.testnet:
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
 		self.proto = init_proto(self.proto.coin,network='regtest')
@@ -259,7 +258,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 
 	def __del__(self):
-		os.environ['MMGEN_TEST_SUITE_REGTEST'] = ''
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
 
 	def _add_comments_to_addr_file(self,addrfile,outfile,use_labels=False):
@@ -278,9 +276,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def setup(self):
 		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass
-		os.environ['MMGEN_TEST_SUITE'] = '' # mnemonic is piped to stdin, so stop being a terminal
 		t = self.spawn('mmgen-regtest',['-n','setup'])
-		os.environ['MMGEN_TEST_SUITE'] = '1'
 		for s in ('Starting','Creating','Creating','Creating','Mined','Setup complete'):
 			t.expect(s)
 		return t
