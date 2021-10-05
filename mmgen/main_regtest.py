@@ -43,16 +43,14 @@ opts_data = {
   setup           - set up Bob and Alice regtest mode
   start           - start the regtest coin daemon
   stop            - stop the regtest coin daemon
-  bob             - switch to Bob's wallet, starting daemon if necessary
-  alice           - switch to Alice's wallet, starting daemon if necessary
-  miner           - switch to Miner's wallet, starting daemon if necessary
-  user            - show current user
   generate N      - mine N blocks (defaults to 1)
   send ADDR AMT   - send amount AMT of miner funds to address ADDR
   state           - show current state of daemon (ready, busy, or stopped)
   balances        - get Bob and Alice's balances
   mempool         - show transaction IDs in mempool
   cli             - execute an RPC call with supplied arguments
+  wallet_cli      - execute a wallet RPC call with supplied arguments (wallet
+                    is first argument)
 	"""
 	}
 }
@@ -78,7 +76,7 @@ if not cmd_args:
 	opts.usage()
 elif cmd_args[0] not in MMGenRegtest.usr_cmds:
 	die(1,f'{cmd_args[0]!r}: invalid command')
-elif cmd_args[0] not in ('cli','balances'):
+elif cmd_args[0] not in ('cli','wallet_cli','balances'):
 	check_num_args()
 
 async def main():

@@ -20,11 +20,11 @@
 regtest: Coin daemon regression test mode setup and operations for the MMGen suite
 """
 
-import os,time,shutil
+import os,time,shutil,json,re
 from subprocess import run,PIPE
 from .common import *
 from .protocol import init_proto
-from .rpc import rpc_init
+from .rpc import rpc_init,json_encoder
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
@@ -39,13 +39,25 @@ def create_data_dir(data_dir):
 	try: os.makedirs(data_dir)
 	except: pass
 
+def cliargs_convert(args):
+	def gen():
+		for arg in args:
+			if arg.lower() in ('true','false'):
+				yield (True,False)[arg.lower() == 'false']
+			elif len(str(arg)) < 20 and re.match(r'[0-9]+',arg):
+				yield int(arg)
+			else:
+				yield arg
+
+	return tuple(gen())
+
 class MMGenRegtest(MMGenObject):
 
 	rpc_user     = 'bobandalice'
 	rpc_password = 'hodltothemoon'
 	users        = ('bob','alice','miner')
 	coins        = ('btc','bch','ltc')
-	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli')
+	usr_cmds     = ('setup','generate','send','start','stop', 'state', 'balances','mempool','cli','wallet_cli')
 
 	def __init__(self,coin):
 		self.coin = coin.lower()
@@ -172,10 +184,12 @@ class MMGenRegtest(MMGenObject):
 		await self.cli('getrawmempool')
 
 	async def cli(self,*args):
-		import json
-		from .rpc import json_encoder
-		ret = await self.rpc_call(*args)
-		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder))
+		ret = await self.rpc_call(*cliargs_convert(args))
+		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder,indent=4))
+
+	async def wallet_cli(self,wallet,*args):
+		ret = await self.rpc_call(*cliargs_convert(args),wallet=wallet)
+		print(ret if type(ret) == str else json.dumps(ret,cls=json_encoder,indent=4))
 
 	async def cmd(self,args):
 		ret = getattr(self,args[0])(*args[1:])
