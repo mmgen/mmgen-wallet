@@ -441,6 +441,14 @@ class CoinDaemon(Daemon):
 				+ self.shared_args
 				+ list(cmds) )
 
+	def start(self,*args,**kwargs):
+		assert self.test_suite or self.network == 'regtest', 'start() restricted to test suite and regtest'
+		return super().start(*args,**kwargs)
+
+	def stop(self,*args,**kwargs):
+		assert self.test_suite or self.network == 'regtest', 'stop() restricted to test suite and regtest'
+		return super().stop(*args,**kwargs)
+
 	def pre_start(self):
 		os.makedirs(self.datadir,exist_ok=True)
 
