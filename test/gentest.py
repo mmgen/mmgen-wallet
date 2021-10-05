@@ -24,7 +24,7 @@ import sys,os
 
 from include.tests_header import repo_root
 from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup())
+sys.path.insert(0,overlay_setup(repo_root))
 
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *

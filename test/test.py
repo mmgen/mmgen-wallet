@@ -74,7 +74,7 @@ import sys,os,time
 
 from include.tests_header import repo_root
 from test.overlay import overlay_setup
-overlay_dir = overlay_setup()
+overlay_dir = overlay_setup(repo_root)
 sys.path.insert(0,overlay_dir)
 
 try: os.unlink(os.path.join(repo_root,'my.err'))

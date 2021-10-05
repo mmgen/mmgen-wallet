@@ -25,7 +25,7 @@ from subprocess import run,PIPE
 
 from include.tests_header import repo_root
 from test.overlay import overlay_setup
-sys.path.insert(0,overlay_setup())
+sys.path.insert(0,overlay_setup(repo_root))
 
 from mmgen.common import *
 from test.include.common import *

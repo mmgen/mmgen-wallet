@@ -19,7 +19,7 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 		sys.path[0] = 'test'
 	else:
 		from test.overlay import overlay_setup
-		sys.path[0] = overlay_setup()
+		sys.path[0] = overlay_setup(repo_root=os.getcwd()) # assume we're in the repo root
 
 	os.environ['MMGEN_TRACEBACK'] = '1'
 	os.environ['PYTHONPATH'] = '.'

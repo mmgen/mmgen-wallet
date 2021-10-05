@@ -1,6 +1,6 @@
 import sys,os
 
-def overlay_setup():
+def overlay_setup(repo_root):
 
 	def process_srcdir(d):
 		srcdir = os.path.join(repo_root,*d.split('.'))
@@ -23,7 +23,6 @@ def overlay_setup():
 					os.path.join(srcdir,fn),
 					os.path.join(destdir,link_fn) )
 
-	repo_root = os.path.dirname(os.path.abspath(os.path.dirname(sys.argv[0])))
 	overlay_dir = os.path.join(repo_root,'test','overlay','tree')
 	fakemod_dir = os.path.join(repo_root,'test','overlay','fakemods')
 	fakemods  = os.listdir(fakemod_dir)
