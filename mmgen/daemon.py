@@ -454,7 +454,7 @@ class CoinDaemon(Daemon):
 
 	def remove_datadir(self):
 		"remove the network's datadir"
-		assert self.test_suite, 'datadir removal permitted only for test suite'
+		assert self.test_suite, 'datadir removal restricted to test suite'
 		if self.state == 'stopped':
 			try: # exception handling required for MSWin/MSYS2
 				run(['/bin/rm','-rf',self.network_datadir])
@@ -468,7 +468,7 @@ class bitcoin_core_daemon(CoinDaemon):
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
-	cfg_file_hdr = '# BitcoinCoreDaemon config file\n'
+	cfg_file_hdr = '# Bitcoin Core config file\n'
 	tracking_wallet_name = 'mmgen-tracking-wallet'
 	rpc_ports = _nw(8332, 18332, 18443)
 	cfg_file = 'bitcoin.conf'
@@ -544,6 +544,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 		'linux': [g.home_dir,'.bitcoin-bchn'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
 	}
+	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
 
 class litecoin_core_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')
@@ -556,6 +557,7 @@ class litecoin_core_daemon(bitcoin_core_daemon):
 		'linux': [g.home_dir,'.litecoin'],
 		'win':   [os.getenv('APPDATA'),'Litecoin']
 	}
+	cfg_file_hdr = '# Litecoin Core config file\n'
 
 class monero_daemon(CoinDaemon):
 	daemon_data = _dd('Monero', 'N/A', 'N/A')
