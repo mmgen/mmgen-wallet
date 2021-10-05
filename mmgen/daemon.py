@@ -484,6 +484,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		'linux': [g.home_dir,'.bitcoin'],
 		'win':   [os.getenv('APPDATA'),'Bitcoin']
 	}
+	nonstd_datadir = False
 
 	def init_datadir(self):
 		if self.network == 'regtest' and not self.test_suite:
@@ -505,7 +506,7 @@ class bitcoin_core_daemon(CoinDaemon):
 
 		from .regtest import MMGenRegtest
 		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}',                  self.non_dfl_datadir],
+			[f'--datadir={self.datadir}',                  self.nonstd_datadir or self.non_dfl_datadir],
 			[f'--rpcport={self.rpc_port}'],
 			[f'--rpcuser={MMGenRegtest.rpc_user}',         self.network == 'regtest'],
 			[f'--rpcpassword={MMGenRegtest.rpc_password}', self.network == 'regtest'],
@@ -523,7 +524,7 @@ class bitcoin_core_daemon(CoinDaemon):
 			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
 			['--usecashaddr=0',        self.coin == 'BCH'],
 			['--mempoolreplacement=1', self.coin == 'LTC'],
-			['--txindex=1',            self.coin == 'LTC'],
+			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
 		)
 
 		self.lockfile = os.path.join(self.network_datadir,'.cookie')
@@ -559,6 +560,7 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
 	}
 	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
+	nonstd_datadir = True
 
 class litecoin_core_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')
