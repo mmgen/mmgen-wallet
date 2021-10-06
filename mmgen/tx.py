@@ -222,6 +222,19 @@ class MMGenTxIO(MMGenListItem):
 		self.__dict__['proto'] = proto
 		MMGenListItem.__init__(self,**kwargs)
 
+	@property
+	def mmtype(self):
+		"""
+		Attempt to determine input or output’s MMGenAddrType.  For non-MMGen
+		addresses, infer the type from the address format, returning None for
+		P2PKH, which could be either 'L' or 'C'.
+		"""
+		return (
+			str(self.mmid.mmtype) if self.mmid else
+			'B' if self.addr.addr_fmt == 'bech32' else
+			'S' if self.addr.addr_fmt == 'p2sh' else
+			None )
+
 	class conv_funcs:
 		def amt(self,value):
 			return self.proto.coin_amt(value)
@@ -373,10 +386,10 @@ class MMGenTX:
 				return None
 
 		def has_segwit_inputs(self):
-			return any(i.mmid and i.mmid.mmtype in ('S','B') for i in self.inputs)
+			return any(i.mmtype in ('S','B') for i in self.inputs)
 
 		def has_segwit_outputs(self):
-			return any(o.mmid and o.mmid.mmtype in ('S','B') for o in self.outputs)
+			return any(o.mmtype in ('S','B') for o in self.outputs)
 
 		# https://bitcoin.stackexchange.com/questions/1195/how-to-calculate-transaction-size-before-sending
 		# 180: uncompressed, 148: compressed
@@ -407,12 +420,12 @@ class MMGenTX:
 					'S': isize_common + 23,                                  # = 64
 					'B': isize_common + 0                                    # = 41
 				}
-				ret = sum(input_size[i.mmid.mmtype] for i in self.inputs if i.mmid)
+				ret = sum(input_size[i.mmtype] for i in self.inputs if i.mmtype)
 
-				# We have no way of knowing whether a non-MMGen addr is compressed or uncompressed until
-				# we see the key, so assume compressed for fee-estimation purposes.  If fee estimate is
-				# off by more than 5%, sign() aborts and user is instructed to use --vsize-adj option
-				return ret + sum(input_size['C'] for i in self.inputs if not i.mmid)
+				# We have no way of knowing whether a non-MMGen P2PKH addr is compressed or uncompressed
+				# until we see the key, so assume compressed for fee-estimation purposes. If fee estimate
+				# is off by more than 5%, sign() aborts and user is instructed to use --vsize-adj option.
+				return ret + sum(input_size['C'] for i in self.inputs if not i.mmtype)
 
 			def get_outputs_size():
 				# output bytes = amt: 8, byte_count: 1+, pk_script
@@ -431,7 +444,7 @@ class MMGenTX:
 				if not self.has_segwit_inputs():
 					return 0
 				wf_size = 1 + 1 + sig_size + 1 + pubkey_size_compressed # vInt vInt sig vInt pubkey = 108
-				return sum((1,wf_size)[bool(i.mmid) and i.mmid.mmtype in ('S','B')] for i in self.inputs)
+				return sum((1,wf_size)[i.mmtype in ('S','B')] for i in self.inputs)
 
 			isize = get_inputs_size()
 			osize = get_outputs_size()
@@ -984,12 +997,9 @@ class MMGenTX:
 					assert 'witness' in ti, 'missing witness'
 					assert type(ti['witness']) == list and len(ti['witness']) == 2, 'malformed witness'
 					assert len(ti['witness'][1]) == 66, 'incorrect witness pubkey length'
-					assert mmti.mmid, fs.format('witness-type','non-MMGen')
-					assert mmti.mmid.mmtype == ('S','B')[ti['scriptSig']==''],(
-								fs.format('witness-type',mmti.mmid.mmtype))
+					assert mmti.mmtype == ('S','B')[ti['scriptSig']==''], fs.format('witness-type',mmti.mmtype)
 				else: # non-witness
-					if mmti.mmid:
-						assert mmti.mmid.mmtype not in ('S','B'), fs.format('signature in',mmti.mmid.mmtype)
+					assert mmti.mmtype not in ('S','B'), fs.format('signature in',mmti.mmtype)
 					assert not 'witness' in ti, 'non-witness input has witness'
 					# sig_size 72 (DER format), pubkey_size 'compressed':33, 'uncompressed':65
 					assert (200 < len(ti['scriptSig']) < 300), 'malformed scriptSig' # VERY rough check
@@ -1246,7 +1256,7 @@ class MMGenTX:
 				e = {k:getattr(d,k) for k in ('txid','vout','scriptPubKey','amt')}
 				e['amount'] = e['amt']
 				del e['amt']
-				if d.mmid and d.mmid.mmtype == 'S':
+				if d.mmtype == 'S':
 					e['redeemScript'] = ag.to_segwit_redeem_script(kg.to_pubhex(keydict[d.addr]))
 				sig_data.append(e)
 
