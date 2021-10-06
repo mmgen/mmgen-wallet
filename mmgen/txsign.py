@@ -133,13 +133,7 @@ def get_keyaddrlist(proto,opt):
 
 def get_keylist(proto,opt):
 	if opt.keys_from_file:
-		l = get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
-		kal = KeyAddrList(
-			proto     = proto,
-			keylist   = [m.split()[0] for m in l], # accept coin daemon wallet dumps
-			skip_chksum = True )
-		kal.generate_addrs_from_keys()
-		return kal
+		return get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
 	return None
 
 async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
@@ -153,7 +147,8 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 			proto = tx.proto,
 			addrlist = non_mmaddrs,
 			skip_chksum = True )
-		tmp.add_wifs(kl)
+		if kl:
+			tmp.add_wifs(kl)
 		missing = tmp.list_missing('sec')
 		if missing:
 			sep = '\n    '

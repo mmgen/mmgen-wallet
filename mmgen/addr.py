@@ -596,39 +596,34 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 				pass
 		return d
 
-	def remove_dup_keys(self,cmplist):
-		assert self.has_keys
-		pop_list = []
-		for n,d in enumerate(self.data):
-			for e in cmplist.data:
-				if e.sec.wif == d.sec.wif:
-					pop_list.append(n)
-		for n in reversed(pop_list): self.data.pop(n)
-		if pop_list:
-			vmsg(self.msgs['removed_dup_keys'].format(len(pop_list),suf(removed)))
-
 	def add_wifs(self,key_list):
-		if not key_list: return
+		"""
+		Match WIF keys in a flat list to addresses in self by generating all
+		possible addresses for each key.
+		"""
+		def gen_addr(pk,t):
+			at = self.proto.addr_type(t)
+			kg = KeyGenerator(self.proto,at.pubkey_type)
+			ag = AddrGenerator(self.proto,at)
+			return ag.to_addr(kg.to_pubhex(pk))
+
+		compressed_types = set(self.proto.mmtypes) - {'L','E'}
+		uncompressed_types = set(self.proto.mmtypes) & {'L','E'}
+
+		def gen():
+			for wif in key_list:
+				pk = PrivKey(proto=self.proto,wif=wif)
+				for t in (compressed_types if pk.compressed else uncompressed_types):
+					yield ( gen_addr(pk,t), pk )
+
+		addrs4keys = dict(gen())
+
 		for d in self.data:
-			for e in key_list.data:
-				if e.addr and e.sec and e.addr == d.addr:
-					d.sec = e.sec
+			if d.addr in addrs4keys:
+				d.sec = addrs4keys[d.addr]
 
-	def list_missing(self,key):
-		return [d.addr for d in self.data if not getattr(d,key)]
-
-	def generate_addrs_from_keys(self):
-		# assume that the first listed mmtype is valid for flat key list
-		at = self.proto.addr_type(self.proto.mmtypes[0])
-		kg = KeyGenerator(self.proto,at.pubkey_type)
-		ag = AddrGenerator(self.proto,at)
-		d = self.data
-		for n,e in enumerate(d,1):
-			qmsg_r(f'\rGenerating addresses from keylist: {n}/{len(d)}')
-			e.addr = ag.to_addr(kg.to_pubhex(e.sec))
-			if g.debug_addrlist:
-				Msg(f'generate_addrs_from_keys():\n{e.pfmt()}')
-		qmsg(f'\rGenerated addresses from keylist: {n}/{len(d)} ')
+	def list_missing(self,attr):
+		return [d.addr for d in self.data if not getattr(d,attr)]
 
 	def make_label(self):
 		bc,mt = self.proto.base_coin,self.al_id.mmtype

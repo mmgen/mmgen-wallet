@@ -139,8 +139,6 @@ async def main():
 
 	kal = get_keyaddrlist(proto,opt)
 	kl = get_keylist(proto,opt)
-	if kl and kal:
-		kl.remove_dup_keys(kal)
 
 	tx3 = await txsign(tx2,seed_files,kl,kal)
 
