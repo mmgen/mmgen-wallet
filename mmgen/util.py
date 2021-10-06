@@ -808,17 +808,18 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 
-	q = ('(y/N)','(Y/n)')[bool(default_yes)]
-	p = prompt if complete_prompt else f'{prompt} {q}: '
-	nl = ('\n','\r{}\r'.format(' '*len(p)))[no_nl]
+	if not complete_prompt:
+		prompt = '{} {}: '.format( prompt, '(Y/n)' if default_yes else '(y/N)' )
+
+	nl = f'\r{" "*len(prompt)}\r' if no_nl else '\n'
 
 	if g.accept_defaults:
-		msg(p)
+		msg(prompt)
 		return default_yes
 
 	from .term import get_char
 	while True:
-		reply = get_char(p,immed_chars='yYnN').strip('\n\r')
+		reply = get_char(prompt,immed_chars='yYnN').strip('\n\r')
 		if not reply:
 			msg_r(nl)
 			return True if default_yes else False

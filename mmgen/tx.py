@@ -260,12 +260,6 @@ class MMGenTxInputList(MMGenTxIOList):
 	desc = 'transaction inputs'
 	member_type = 'MMGenTxInput'
 
-#	def convert_coin(self,verbose=False):
-#		if verbose:
-#			msg(f'{self.desc}:')
-#		for i in self:
-#			i.amt = self.parent.proto.coin_amt(i.amt)
-
 	# Lexicographical Indexing of Transaction Inputs and Outputs
 	# https://github.com/bitcoin/bips/blob/master/bip-0069.mediawiki
 	def sort_bip69(self):
@@ -305,10 +299,10 @@ class MMGenTX:
 		rel_fee_disp = 'sat/byte'
 		non_mmgen_inputs_msg = f"""
 			This transaction includes inputs with non-{g.proj_name} addresses.  When
-			signing the transaction, private keys for the addresses must be supplied using
-			the --keys-from-file option.  The key file must contain one key per line.
-			Please note that this transaction cannot be autosigned, as autosigning does
-			not support the use of key files.
+			signing the transaction, private keys for the addresses listed below must
+			be supplied using the --keys-from-file option.  The key file must contain
+			one key per line.  Please note that this transaction cannot be autosigned,
+			as autosigning does not support the use of key files.
 
 			Non-{g.proj_name} addresses found in inputs:
 			    {{}}
@@ -503,13 +497,14 @@ class MMGenTX:
 		def check_non_mmgen_inputs(self,caller,non_mmaddrs=None):
 			non_mmaddrs = non_mmaddrs or self.get_non_mmaddrs('inputs')
 			if non_mmaddrs:
-				fs = fmt(self.non_mmgen_inputs_msg,strip_char='\t')
+				indent = '  '
+				fs = fmt(self.non_mmgen_inputs_msg,strip_char='\t',indent=indent).strip()
 				m = fs.format('\n    '.join(non_mmaddrs))
 				if caller in ('txdo','txsign'):
 					if not opt.keys_from_file:
-						raise UserOptError('ERROR: ' + m)
+						raise UserOptError(f'\n{indent}ERROR: {m}\n')
 				else:
-					msg('WARNING: ' + m)
+					msg(f'\n{indent}WARNING: {m}\n')
 					if not (opt.yes or keypress_confirm('Continue?',default_yes=True)):
 						die(1,'Exiting at user request')
 

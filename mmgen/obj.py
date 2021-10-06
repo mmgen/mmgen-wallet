@@ -1019,7 +1019,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		'M': ati('monero', 'monero', False,'monero',  'monero',  'spendkey',('viewkey','wallet_passwd'),'Monero address'),
 	}
 	def __new__(cls,proto,id_str,errmsg=None):
-		if type(id_str) == cls:
+		if isinstance(id_str,cls):
 			return id_str
 		try:
 			for k,v in cls.mmtypes.items():

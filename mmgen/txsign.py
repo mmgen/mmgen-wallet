@@ -154,13 +154,13 @@ async def txsign(tx,seed_files,kl,kal,tx_num_str=''):
 			addrlist = non_mmaddrs,
 			skip_chksum = True )
 		tmp.add_wifs(kl)
-		m = tmp.list_missing('sec')
-		if m:
-			die(2, fmt("""
-					ERROR: a key file must be supplied for the following non-{} address{}:
-						{{}}
-					""".format( g.proj_name, suf(m,'es'), '\n    '.join(m) ),
-				strip_char='\t').strip() )
+		missing = tmp.list_missing('sec')
+		if missing:
+			sep = '\n    '
+			die(2,'ERROR: a key file must be supplied for the following non-{} address{}:{}'.format(
+				g.proj_name,
+				suf(missing,'es'),
+				sep + sep.join(missing) ))
 		keys += tmp.data
 
 	if opt.mmgen_keys_from_file:
