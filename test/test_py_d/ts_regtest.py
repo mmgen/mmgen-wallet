@@ -141,6 +141,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
 	color = True
+	test_rbf = False
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
 		('daemon_version',           'mmgen-tool daemon_version'),
@@ -254,6 +255,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		coin = self.proto.coin.lower()
 		for k in rt_data:
 			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None
+
+		if self.proto.coin == 'BTC':
+			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 
@@ -369,7 +373,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def addrimport_alice(self): return self.addrimport('alice')
 
 	def fund_wallet(self,user,mmtype,amt,sid=None,addr_range='1-5'):
-		if not sid: sid = self._user_sid(user)
+		if not sid:
+			sid = self._user_sid(user)
 		addr = self.get_addr_from_addrlist(user,sid,mmtype,0,addr_range=addr_range)
 		t = self.spawn('mmgen-regtest', ['send',str(addr),str(amt)])
 		t.expect(f'Sending {amt} miner {self.proto.coin}')
@@ -543,7 +548,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			do_label     = False,
 			bad_locktime = False,
 			full_tx_view = False,
-			menu         = ['M'] ):
+			menu         = ['M'],
+			skip_passphrase = False ):
 
 		t = self.spawn('mmgen-txdo',
 			['-d',self.tmpdir,'-B','--'+user] +
@@ -559,7 +565,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			add_comment     = tx_label_jp,
 			view            = 't',save=True)
 
-		t.passphrase(dfl_wcls.desc,rt_pw)
+		if not skip_passphrase:
+			t.passphrase(dfl_wcls.desc,rt_pw)
+
 		t.written_to_file('Signed transaction')
 		self._do_confirm_send(t)
 		s,exit_val = (('Transaction sent',0),("can't be included",1))[bad_locktime]
@@ -587,14 +595,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return [self.get_addr_from_addrlist(user,sid,mmtype,idx-1)+amt_str for mmtype,idx,amt_str in data]
 
 	def bob_rbf_1output_create(self):
-		if self.proto.coin != 'BTC': # non-coin-dependent test, so run just once for BTC
+		if not self.test_rbf:
 			return 'skip'
 		out_addr = self._create_tx_outputs('alice',(('B',5,''),))
 		t = self.spawn('mmgen-txcreate',['-d',self.tr.trash_dir,'-B','--bob','--rbf'] + out_addr)
 		return self.txcreate_ui_common(t,menu=[],inputs='3',interactive_fee='3s') # out amt: 199.99999343
 
 	def bob_rbf_1output_bump(self):
-		if self.proto.coin != 'BTC':
+		if not self.test_rbf:
 			return 'skip'
 		ext = '9343,3]{x}.regtest.rawtx'.format(x='-α' if g.debug_utf8 else '')
 		txfile = get_file_with_ext(self.tr.trash_dir,ext,delete=False,no_dot=True)

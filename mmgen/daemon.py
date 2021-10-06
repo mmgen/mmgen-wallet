@@ -452,8 +452,9 @@ class CoinDaemon(Daemon):
 	def pre_start(self):
 		os.makedirs(self.datadir,exist_ok=True)
 
-		if self.cfg_file and not self.flag.keep_cfg_file:
-			open(f'{self.datadir}/{self.cfg_file}','w').write(self.cfg_file_hdr)
+		if self.test_suite or self.network == 'regtest':
+			if self.cfg_file and not self.flag.keep_cfg_file:
+				open(f'{self.datadir}/{self.cfg_file}','w').write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
 			# Parity overwrites the data in the existing pidfile without zeroing it first, leading

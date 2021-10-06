@@ -797,7 +797,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		if g.debug:
 			print_stack_trace(f'TW DEL {self!r}')
 
-		if self.mode == 'w':
+		if getattr(self,'mode',None) == 'w': # mode attr might not exist in this state
 			self.write()
 		elif g.debug:
 			msg('read-only wallet, doing nothing')

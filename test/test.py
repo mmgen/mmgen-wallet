@@ -735,8 +735,8 @@ class TestSuiteRunner(object):
 	def end_msg(self):
 		t = int(time.time() - self.start_time)
 		sys.stderr.write(green(
-			f'{self.cmd_total} test{suf(self.cmd_total)} performed.' +
-			('' if opt.no_timings else f'  Elapsed time: {t//60:02d}:{t%60:02d}\n')
+			f'{self.cmd_total} test{suf(self.cmd_total)} performed' +
+			('\n' if opt.no_timings else f'.  Elapsed time: {t//60:02d}:{t%60:02d}\n')
 		))
 
 	def init_group(self,gname,cmd=None,quiet=False,do_clean=True):

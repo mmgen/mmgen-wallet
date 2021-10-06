@@ -288,7 +288,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	from .term import init_term
 	init_term()
 
-	if not opt.skip_cfg_file:
+	if not (opt.skip_cfg_file or opt.bob or opt.alice or g.prog_name == 'mmgen-regtest'):
 		from .cfg import cfg_file
 		# check for changes in system template file - term must be initialized
 		cfg_file('sample')
@@ -333,7 +333,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	g.coin = g.coin.upper() or 'BTC'
 	g.token = g.token.upper() or None
 
-	if g.prog_name == 'mmgen-regtest' or g.bob or g.alice:
+	if g.bob or g.alice or g.prog_name == 'mmgen-regtest':
 		g.regtest = True
 		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])

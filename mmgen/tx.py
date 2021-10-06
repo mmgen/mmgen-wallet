@@ -1466,13 +1466,13 @@ class MMGenTX:
 					ret = False
 
 			if ret == False: # TODO: test send errors
-				if 'Signature must use SIGHASH_FORKID' in errmsg:
+				if errmsg.count('Signature must use SIGHASH_FORKID'):
 					m = ('The Aug. 1 2017 UAHF has activated on this chain.\n'
 						+ 'Re-run the script with the --coin=bch option.' )
-				elif 'Illegal use of SIGHASH_FORKID' in errmsg:
+				elif errmsg.count('Illegal use of SIGHASH_FORKID'):
 					m  = ('The Aug. 1 2017 UAHF is not yet active on this chain.\n'
 						+ 'Re-run the script without the --coin=bch option.' )
-				elif '64: non-final' in errmsg:
+				elif errmsg.count('64: non-final'):
 					m = "Transaction with nLockTime {!r} can't be included in this block!".format(
 						strfmt_locktime(self.get_hex_locktime()) )
 				else:

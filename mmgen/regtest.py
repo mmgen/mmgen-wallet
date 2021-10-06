@@ -40,15 +40,15 @@ def create_data_dir(data_dir):
 	except: pass
 
 def create_hdseed(proto):
-	# cTqgRxqSER1iZ4SoUKhaXUF3PzEADyhjHPXf19KW78GGGW7RxSWz hdseed=1
-	#   addr=bcrt1q2lew38703pdzvq529hefsl9f9z9a3j3mxwt4f0
-	# cPNPEyVQpX5H9MKDwt73BScKvDh3Kk8MMEGowneT2RKFZ7Dfh3FL label=
-	#   addr=bcrt1qy7hwy8jx7w7lmm8v63hur5xzvqqhcyk8w85v9h hdkeypath=m/0'/0'/0'
+	# cTyMdQ2BgfAsjopRVZrj7AoEGp97pKfrC2NkqLuwHr4KHfPNAKwp hdseed=1
+	#   addr=bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd
+	# cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn label=
+	#   addr=bcrt1q537rgyctcqdgs8nm8gvku05znka4h2m00lx8ps hdkeypath=m/0'/0'/0'
 	from .tool import tool_api
 	t = tool_api()
 	t.init_coin(proto.coin,proto.network)
 	t.addrtype = 'bech32'
-	return t.hex2wif('babaeb1a'*8)
+	return t.hex2wif('beadcafe'*8)
 
 def cliargs_convert(args):
 	def gen():
@@ -122,7 +122,7 @@ class MMGenRegtest(MMGenObject):
 
 		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
 		for user in ('miner','bob','alice'):
-			gmsg(f'Creating {capfirst(user)}’s wallet')
+			gmsg(f'Creating {capfirst(user)}’s tracking wallet')
 			await rpc.icall(
 				'createwallet',
 				wallet_name     = user,
@@ -159,8 +159,6 @@ class MMGenRegtest(MMGenObject):
 			await self.rpc_call('loadwallet',user,start_daemon=False)
 
 	async def rpc_call(self,*args,wallet=None,start_daemon=True):
-		# g.prog_name == 'mmgen-regtest' test is used by .rpc to identify caller, so require this:
-		assert g.prog_name == 'mmgen-regtest', 'only mmgen-regtest util is allowed to use this method'
 		if start_daemon and self.d.state == 'stopped':
 			await self.start_daemon()
 		rpc = await rpc_init(self.proto,backend=None,daemon=self.d)
@@ -177,7 +175,7 @@ class MMGenRegtest(MMGenObject):
 			msg(f'{g.coin} regtest daemon already stopped')
 		else:
 			msg(f'Stopping {g.coin} regtest daemon')
-			await self.rpc_call('stop',start_daemon=False)
+			self.d.stop(silent=True)
 
 	def state(self):
 		msg(self.d.state)

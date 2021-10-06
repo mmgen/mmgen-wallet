@@ -44,7 +44,7 @@ dfl_devkey = '4d5db4107d237df6a3d58ee5f70ae63d73d7658d4026f2eefd2f204c81682cb7'
 prealloc_amt = ETHAmt('1_000_000_000')
 
 burn_addr  = 'deadbeef'*5
-burn_addr2 = 'babaeb1a'*5
+burn_addr2 = 'beadcafe'*5
 
 amt1 = '999999.12345689012345678'
 amt2 = '888.111122223333444455'

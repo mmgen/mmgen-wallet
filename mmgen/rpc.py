@@ -464,7 +464,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 			if len((await self.call('help',func)).split('\n')) > 3:
 				self.caps += (cap,)
 
-		if not (g.prog_name == 'mmgen-regtest' or g.bob or g.alice):
+		if not self.chain == 'regtest':
 			await self.check_tracking_wallet()
 
 	async def check_tracking_wallet(self,wallet_checked=[]):

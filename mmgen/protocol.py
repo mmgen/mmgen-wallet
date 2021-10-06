@@ -265,7 +265,10 @@ class CoinProtocol(MMGenObject):
 			else:
 				raise ValueError(f'{len(key)}: invalid key length')
 
-			return parsed_wif(key[:self.privkey_len], pubkey_type, compressed)
+			return parsed_wif(
+				sec         = key[:self.privkey_len],
+				pubkey_type = pubkey_type,
+				compressed  = compressed )
 
 		def parse_addr(self,addr):
 
@@ -375,7 +378,10 @@ class CoinProtocol(MMGenObject):
 			return hexpriv
 
 		def parse_wif(self,wif):
-			return parsed_wif(bytes.fromhex(wif), self.pubkey_type, False)
+			return parsed_wif(
+				sec         = bytes.fromhex(wif),
+				pubkey_type = self.pubkey_type,
+				compressed  = False )
 
 	class Ethereum(DummyWIF,Secp256k1):
 
