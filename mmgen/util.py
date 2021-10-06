@@ -767,15 +767,20 @@ class pwfile_reuse_warning(oneshot_warning):
 	def __init__(self,fn):
 		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
-def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
+def my_raw_input(prompt,echo=True,insert_txt=''):
 
-	try: import readline
-	except: use_readline = False # Windows
+	assert prompt,'calling my_raw_input() with an empty prompt not allowed due to readline issues'
 
-	if use_readline and sys.stdout.isatty():
-		def st_hook(): readline.insert_text(insert_txt)
-		readline.set_startup_hook(st_hook)
-	else:
+	def init_readline():
+		try:
+			import readline
+		except ImportError:
+			return False
+		else:
+			readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
+			return True
+
+	if not sys.stdout.isatty():
 		msg_r(prompt)
 		prompt = ''
 
@@ -787,7 +792,11 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 		sys.stderr.flush()
 		reply = os.read(0,4096).decode()
 	elif echo or not sys.stdin.isatty():
+		using_readline = init_readline() if sys.stdin.isatty() else False
 		reply = input(prompt)
+		if using_readline:
+			import readline
+			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
 		from getpass import getpass
 		if g.platform == 'win':
