@@ -706,8 +706,7 @@ def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False)
 	return ret
 
 def get_data_from_user(desc='data'): # user input MUST be UTF-8
-	p = f'Enter {desc}: ' if g.stdin_tty else ''
-	data = my_raw_input(p,echo=opt.echo_passphrase)
+	data = my_raw_input(f'Enter {desc}: ',echo=opt.echo_passphrase)
 	dmsg(f'User input: [{data}]')
 	return data
 
@@ -801,10 +800,7 @@ def my_raw_input(prompt,echo=True,insert_txt='',use_readline=True):
 
 	kb_hold_protect()
 
-	try:
-		return reply.strip()
-	except:
-		die(1,'User input must be UTF-8 encoded.')
+	return reply.strip()
 
 def keypress_confirm(prompt,default_yes=False,verbose=False,no_nl=False,complete_prompt=False):
 

@@ -493,12 +493,11 @@ class MMGenTX:
 				if keypress_confirm(m,default_yes=False):
 					while True:
 						s = MMGenTxLabel(my_raw_input('Comment: ',insert_txt=self.label))
-						if s:
-							lbl_save = self.label
-							self.label = s
-							return (True,False)[lbl_save == self.label]
-						else:
-							msg('Invalid comment')
+						if not s:
+							ymsg('Warning: comment is empty')
+						lbl_save = self.label
+						self.label = s
+						return (True,False)[lbl_save == self.label]
 				return False
 
 		def get_non_mmaddrs(self,desc):

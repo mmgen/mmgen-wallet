@@ -732,8 +732,7 @@ class MMGenWallet(WalletEnc):
 			'to reuse the label {}'.format(old_lbl.hl(encl="''")) if old_lbl else
 			'for no label' )
 		while True:
-			msg_r(prompt)
-			ret = my_raw_input('')
+			ret = my_raw_input(prompt)
 			if ret:
 				lbl = get_obj(MMGenWalletLabel,s=ret)
 				if lbl:

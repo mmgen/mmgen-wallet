@@ -39,6 +39,12 @@ def cleanup_file(fn):
 cleaned_texts = [cleanup_file(fn) for fn in fns]
 
 if len(fns) == 2:
-	print('\n'.join(unified_diff(*cleaned_texts)))
+	"""
+	chunk headers have trailing newlines, hence the rstrip()
+	"""
+	print(
+		f'diff a/{fns[0]} b/{fns[1]}\n' +
+		'\n'.join(a.rstrip() for a in unified_diff(*cleaned_texts,fromfile=f'a/{fns[0]}',tofile=f'b/{fns[1]}'))
+	)
 else:
 	print(f'{len(fns)} input files.  Not generating diff.')
