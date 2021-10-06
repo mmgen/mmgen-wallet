@@ -301,6 +301,8 @@ class CoinDaemon(Daemon):
 	avail_opts = ('no_daemonize','online')
 	testnet_dir = None
 	test_suite_port_shift = 1237
+	rpc_user = None
+	rpc_password = None
 
 	coins = {
 		'BTC': _cd('Bitcoin',           ['bitcoin_core']),
@@ -505,14 +507,21 @@ class bitcoin_core_daemon(CoinDaemon):
 
 	def init_subclass(self):
 
-		from .regtest import MMGenRegtest
+		if self.network == 'regtest':
+			"""
+			fall back on hard-coded credentials
+			"""
+			from .regtest import MMGenRegtest
+			self.rpc_user = MMGenRegtest.rpc_user
+			self.rpc_password = MMGenRegtest.rpc_password
+
 		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}',                  self.nonstd_datadir or self.non_dfl_datadir],
+			[f'--datadir={self.datadir}',         self.nonstd_datadir or self.non_dfl_datadir],
 			[f'--rpcport={self.rpc_port}'],
-			[f'--rpcuser={MMGenRegtest.rpc_user}',         self.network == 'regtest'],
-			[f'--rpcpassword={MMGenRegtest.rpc_password}', self.network == 'regtest'],
-			['--testnet',                                  self.network == 'testnet'],
-			['--regtest',                                  self.network == 'regtest'],
+			[f'--rpcuser={self.rpc_user}',         self.network == 'regtest'],
+			[f'--rpcpassword={self.rpc_password}', self.network == 'regtest'],
+			['--testnet',                          self.network == 'testnet'],
+			['--regtest',                          self.network == 'regtest'],
 		)
 
 		self.coind_args = list_gen(

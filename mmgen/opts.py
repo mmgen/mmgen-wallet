@@ -335,12 +335,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 
 	if g.bob or g.alice or g.prog_name == 'mmgen-regtest':
 		g.regtest = True
-		g.rpc_host = 'localhost'
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
-		from .regtest import MMGenRegtest
-		g.rpc_user = MMGenRegtest.rpc_user
-		g.rpc_password = MMGenRegtest.rpc_password
-		g.rpc_port = MMGenRegtest(g.coin).d.rpc_port
 
 	from .protocol import init_genonly_altcoins
 	altcoin_trust_level = init_genonly_altcoins(

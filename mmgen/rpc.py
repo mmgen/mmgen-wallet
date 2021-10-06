@@ -289,6 +289,9 @@ class RPCClient(MMGenObject):
 		else:
 			user,passwd = self.get_daemon_cfg_options(('rpcuser','rpcpassword')).values()
 
+		if not (user and passwd):
+			user,passwd = (self.daemon.rpc_user,self.daemon.rpc_password)
+
 		if user and passwd:
 			self.auth = auth_data(user,passwd)
 			return
