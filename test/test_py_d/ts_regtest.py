@@ -131,6 +131,13 @@ rt_data = {
 	}
 }
 
+def create_burn_addr(proto):
+	from mmgen.tool import tool_api
+	t = tool_api()
+	t.init_coin(proto.coin,proto.network)
+	t.addrtype = 'compressed'
+	return t.privhex2addr('beadface'*8)
+
 from .ts_base import *
 from .ts_shared import *
 
@@ -141,6 +148,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	extra_spawn_args = ['--regtest=1']
 	tmpdir_nums = [17]
 	color = True
+	deterministic = False
 	test_rbf = False
 	cmd_group = (
 		('setup',                    'regtest (Bob and Alice) mode setup'),
@@ -152,8 +160,14 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('addrgen_alice',            'address generation (Alice)'),
 		('addrimport_bob',           "importing Bob's addresses"),
 		('addrimport_alice',         "importing Alice's addresses"),
+		('bob_import_miner_addr',    "importing miner’s coinbase addr into Bob’s wallet"),
+		('fund_bob2',                "funding Bob’s first MMGen address"),
+		('fund_alice2',              "funding Alice’s first MMGen address"),
+		('bob_recreate_tracking_wallet','creation of new tracking wallet (Bob)'),
+		('addrimport_bob2',          "reimporting Bob's addresses"),
 		('fund_bob',                 "funding Bob's wallet"),
 		('fund_alice',               "funding Alice's wallet"),
+		('generate',                 'mining a block'),
 		('bob_bal1',                 "Bob's balance"),
 		('bob_add_label',            "adding an 80-screen-width label (lat+cyr+gr)"),
 		('bob_twview1',              "viewing Bob's tracking wallet"),
@@ -258,6 +272,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC
+			if g.test_suite_deterministic:
+				self.deterministic = True
+				self.burn_addr = create_burn_addr(self.proto)
+				self.miner_addr = 'bcrt1q537rgyctcqdgs8nm8gvku05znka4h2m00lx8ps' # regtest.create_hdseed()
+				self.miner_wif = 'cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn'
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
 
@@ -372,7 +391,61 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def addrimport_bob(self):   return self.addrimport('bob')
 	def addrimport_alice(self): return self.addrimport('alice')
 
+	def bob_import_miner_addr(self):
+		if not self.deterministic:
+			return 'skip'
+		return self.spawn('mmgen-addrimport', [ '--bob', '--rescan', '--quiet', f'--address={self.miner_addr}' ])
+
+	def fund_wallet2(self,user,addr,utxo_nums,skip_passphrase=False):
+		"""
+		the deterministic funding method using specific inputs
+		"""
+		if not self.deterministic:
+			return 'skip'
+		self.write_to_tmpfile('miner.key',f'{self.miner_wif}\n')
+		keyfile = joinpath(self.tmpdir,'miner.key')
+		return self.user_txdo(
+			'bob', '40s',
+			[ f'{addr},{rtFundAmt}', self.burn_addr ],
+			utxo_nums,
+			extra_args = [f'--keys-from-file={keyfile}'],
+			skip_passphrase = skip_passphrase )
+
+	def fund_bob2(self):
+		return self.fund_wallet2( 'bob', f'{self._user_sid("bob")}:C:1', '1-11' )
+
+	def fund_alice2(self):
+		sid = self._user_sid('alice')
+		mmtype = ('L','S')[self.proto.cap('segwit')]
+		addr = self.get_addr_from_addrlist('alice',sid,mmtype,0,addr_range='1-5')
+		return self.fund_wallet2( 'alice', addr, '1-11', skip_passphrase=True )
+
+	async def bob_recreate_tracking_wallet(self):
+		if not self.deterministic:
+			return 'skip'
+		self.spawn('',msg_only=True)
+		from mmgen.regtest import MMGenRegtest
+		rt = MMGenRegtest(self.proto.coin)
+		await rt.stop()
+		from shutil import rmtree
+		imsg(f'Deleting Bob’s old tracking wallet')
+		rmtree(os.path.join(rt.d.datadir,'regtest','wallets','bob'),ignore_errors=True)
+		rt.init_daemon()
+		rt.d.start(silent=True)
+		imsg(f'Creating Bob’s new tracking wallet')
+		await rt.rpc_call('createwallet','bob',True,True,None,False,False,False)
+		await rt.stop()
+		await rt.start()
+		return 'ok'
+
+	def addrimport_bob2(self):
+		if not self.deterministic:
+			return 'skip'
+		return self.addrimport('bob')
+
 	def fund_wallet(self,user,mmtype,amt,sid=None,addr_range='1-5'):
+		if self.deterministic:
+			return 'skip'
 		if not sid:
 			sid = self._user_sid(user)
 		addr = self.get_addr_from_addrlist(user,sid,mmtype,0,addr_range=addr_range)
