@@ -68,8 +68,11 @@ widespread standard.
 
 - **[Full transaction and address tracking support][T]** for Bitcoin, [Bcash][bx],
   [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
-- **[Address generation support][ag]** for the above coins, plus [Monero][mx],
-  [Zcash][zx] (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
+- **Monero transacting and wallet management** via the interactive
+  [`mmgen-xmrwallet`][xm] command.  Offline transaction signing is possible
+  using a shared blockchain between online and offline machines.
+- **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
+  (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
 - **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.
 - **Independent key derivation for each address type:** No two addresses ever
   share the same private key.  Certain wallets in wide use today regrettably
@@ -189,6 +192,7 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 [fl]: https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/Contemporary_poetry
 [U]: https://github.com/mmgen/mmgen/wiki/Subwallets
 [X]: https://github.com/mmgen/mmgen/wiki/autosign-[MMGen-command-help]
+[xm]: https://github.com/mmgen/mmgen/wiki/xmrwallet-[MMGen-command-help]
 [G]: https://github.com/mmgen/mmgen/wiki/passgen-[MMGen-command-help]
 [T]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen#a_ct
 [E]: https://github.com/mmgen/mmgen/wiki/Altcoin-and-Forkcoin-Support#a_tx
