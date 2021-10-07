@@ -1020,11 +1020,16 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_txcreate_info(self,args=[]):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
 		pats = (
-			( '\d+',                       'D'),
-			( '\d+',                       'D'),
-			( '\d+',                       'D'),
-			( pat_date,                    'w'),
-			( '\d+\s+\d+\s+'+pat_date_time,'q'),
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( pat_date,                    'q'),
+		) if opt.pexpect_spawn else (
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( '\d+',                       'D'),
+				( pat_date,                    'w'),
+				( '\d+\s+\d+\s+'+pat_date_time,'q'),
 		)
 		for d,s in pats:
 			t.expect(

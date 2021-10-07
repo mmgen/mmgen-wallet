@@ -67,6 +67,8 @@ ref_enc_fn = 'sample-text.mmenc'
 tool_enc_passwd = "Scrypt it, don't hash it!"
 chksum_pat = r'\b[A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4} [A-F0-9]{4}\b'
 
+Ctrl_U = '\x15'
+
 def ok_msg():
 	if opt.profile: return
 	sys.stderr.write(green('\nOK\n') if opt.exact_output or opt.verbose else ' OK\n')

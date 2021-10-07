@@ -657,6 +657,9 @@ class TestSuiteRunner(object):
 			self.coverdir,self.accfile = init_coverage()
 			omsg(f'INFO → Writing coverage files to {self.coverdir!r}')
 
+		if opt.pexpect_spawn:
+			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
+
 	def spawn_wrapper(self,cmd,
 			args         = [],
 			extra_desc   = '',

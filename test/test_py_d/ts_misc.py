@@ -122,7 +122,7 @@ class TestSuiteOutput(TestSuiteBase):
 	def output_jp(self): return self.screen_output('jp')
 
 	def oneshot_warning(self):
-		nl = '\r\n' if g.platform == 'win' else '\n'
+		nl = '\r\n' if g.platform == 'win' or opt.pexpect_spawn else '\n'
 		t = self.spawn('test/misc/oneshot_warning.py',cmd_dir='.')
 		for s in (
 			f'pw{nl}wg1',
