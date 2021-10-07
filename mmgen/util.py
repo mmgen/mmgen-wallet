@@ -768,8 +768,12 @@ class pwfile_reuse_warning(oneshot_warning):
 		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
 def line_input(prompt,echo=True,insert_txt=''):
-
-	assert prompt,'calling line_input() with an empty prompt not allowed due to readline issues'
+	"""
+	multi-line prompts OK
+	one-line prompts must begin at beginning of line
+	empty prompts forbidden due to interactions with readline
+	"""
+	assert prompt,'calling line_input() with an empty prompt forbidden'
 
 	def init_readline():
 		try:
@@ -777,8 +781,11 @@ def line_input(prompt,echo=True,insert_txt=''):
 		except ImportError:
 			return False
 		else:
-			readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
-			return True
+			if insert_txt:
+				readline.set_startup_hook(lambda: readline.insert_text(insert_txt))
+				return True
+			else:
+				return False
 
 	if not sys.stdout.isatty():
 		msg_r(prompt)
@@ -792,9 +799,9 @@ def line_input(prompt,echo=True,insert_txt=''):
 		sys.stderr.flush()
 		reply = os.read(0,4096).decode()
 	elif echo or not sys.stdin.isatty():
-		using_readline = init_readline() if sys.stdin.isatty() else False
+		clear_buffer = init_readline() if sys.stdin.isatty() else False
 		reply = input(prompt)
-		if using_readline:
+		if clear_buffer:
 			import readline
 			readline.set_startup_hook(lambda: readline.insert_text(''))
 	else:
