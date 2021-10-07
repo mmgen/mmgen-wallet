@@ -415,7 +415,9 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 					cur_lbl = self.unspent[n-1].label
 					msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 					while True:
-						s = line_input("Enter label text (or 'q' to return to main menu): ")
+						s = line_input(
+							"Enter label text (or 'q' to return to main menu): ",
+							insert_txt = cur_lbl )
 						if s == 'q':
 							return None,None
 						elif s == '':
