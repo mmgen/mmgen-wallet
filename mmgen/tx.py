@@ -492,7 +492,7 @@ class MMGenTX:
 				m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
 				if keypress_confirm(m,default_yes=False):
 					while True:
-						s = MMGenTxLabel(my_raw_input('Comment: ',insert_txt=self.label))
+						s = MMGenTxLabel(line_input('Comment: ',insert_txt=self.label))
 						if not s:
 							ymsg('Warning: comment is empty')
 						lbl_save = self.label
@@ -656,7 +656,7 @@ class MMGenTX:
 						if opt.yes:
 							msg(prompt)
 						return abs_fee
-				tx_fee = my_raw_input(self.usr_fee_prompt)
+				tx_fee = line_input(self.usr_fee_prompt)
 				desc = 'User-selected'
 
 		async def get_fee_from_user(self,have_estimate_fail=[]):
@@ -751,7 +751,7 @@ class MMGenTX:
 		def select_unspent(self,unspent):
 			prompt = 'Enter a range or space-separated list of outputs to spend: '
 			while True:
-				reply = my_raw_input(prompt).strip()
+				reply = line_input(prompt).strip()
 				if reply:
 					selected = get_obj(AddrIdxList, fmt_str=','.join(reply.split()) )
 					if selected:
@@ -1553,7 +1553,7 @@ class MMGenTX:
 			while True:
 				if init_reply == None:
 					m = 'Choose an output to deduct the fee from (Hit ENTER for the change output): '
-					reply = my_raw_input(m) or 'c'
+					reply = line_input(m) or 'c'
 				else:
 					reply,init_reply = init_reply,None
 				if chg_idx == None and not is_int(reply):

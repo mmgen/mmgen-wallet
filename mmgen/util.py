@@ -559,7 +559,7 @@ def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 		msg(message.strip())
 	a = f'{q}  ' if q[0].isupper() else f'Are you sure you want to {q}?\n'
 	b = f'Type uppercase {expect!r} to confirm: '
-	if my_raw_input(a+b).strip() != expect:
+	if line_input(a+b).strip() != expect:
 		raise UserNonConfirmation(exit_msg)
 
 def write_data_to_file( outfile,data,desc='data',
@@ -667,7 +667,7 @@ def write_data_to_file( outfile,data,desc='data',
 		do_file(outfile,ask_write_prompt)
 
 def get_words_from_user(prompt):
-	words = my_raw_input(prompt, echo=opt.echo_passphrase).split()
+	words = line_input(prompt, echo=opt.echo_passphrase).split()
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
@@ -706,7 +706,7 @@ def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False)
 	return ret
 
 def get_data_from_user(desc='data'): # user input MUST be UTF-8
-	data = my_raw_input(f'Enter {desc}: ',echo=opt.echo_passphrase)
+	data = line_input(f'Enter {desc}: ',echo=opt.echo_passphrase)
 	dmsg(f'User input: [{data}]')
 	return data
 
@@ -767,9 +767,9 @@ class pwfile_reuse_warning(oneshot_warning):
 	def __init__(self,fn):
 		oneshot_warning.__init__(self,div=fn,fmt_args=[fn],reverse=True)
 
-def my_raw_input(prompt,echo=True,insert_txt=''):
+def line_input(prompt,echo=True,insert_txt=''):
 
-	assert prompt,'calling my_raw_input() with an empty prompt not allowed due to readline issues'
+	assert prompt,'calling line_input() with an empty prompt not allowed due to readline issues'
 
 	def init_readline():
 		try:

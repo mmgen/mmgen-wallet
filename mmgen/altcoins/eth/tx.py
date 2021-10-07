@@ -139,7 +139,7 @@ class EthereumMMGenTX:
 
 		def select_unspent(self,unspent):
 			while True:
-				reply = my_raw_input('Enter an account to spend from: ').strip()
+				reply = line_input('Enter an account to spend from: ').strip()
 				if reply:
 					if not is_int(reply):
 						msg('Account number must be an integer')

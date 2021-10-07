@@ -55,8 +55,8 @@ def tt_license():
 	ymsg('Press "w" to test the pager, then "c" to continue')
 	do_license_msg()
 
-def tt_my_raw_input():
-	cmsg('Testing my_raw_input():')
+def tt_line_input():
+	cmsg('Testing line_input():')
 	msg(fmt("""
 		At the Ready? prompt type and hold down "y".
 		Then Enter some text, followed by held-down ENTER.
@@ -64,7 +64,7 @@ def tt_my_raw_input():
 		on screen or entered text.
 	"""))
 	get_char_raw('Ready? ',num_chars=1)
-	reply = my_raw_input('\nEnter text: ')
+	reply = line_input('\nEnter text: ')
 	confirm(f'Did you enter the text {reply!r}?')
 
 def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
@@ -128,7 +128,7 @@ def tt_urand():
 		ymsg(f'WARNING: Avg. time precision of only {avg_prec} decimal points.  User entropy quality is degraded!')
 	else:
 		msg(f'Average time precision: {avg_prec} decimal points - OK')
-	my_raw_input('Press ENTER to continue: ')
+	line_input('Press ENTER to continue: ')
 
 def tt_txview():
 	cmsg('Testing tx.view_with_prompt() (try each viewing option)')
@@ -151,7 +151,7 @@ tt_start()
 tt_get_terminal_size()
 tt_color()
 tt_license()
-tt_my_raw_input()
+tt_line_input()
 tt_urand()
 tt_txview()
 

@@ -190,7 +190,7 @@ def _get_random_data_from_user(uchars,desc):
 	if g.debug:
 		msg(f'USER ENTROPY (user input + keystroke timings):\n{ret}')
 
-	my_raw_input('User random data successfully acquired.  Press ENTER to continue: ')
+	line_input('User random data successfully acquired.  Press ENTER to continue: ')
 
 	return ret.encode()
 
@@ -215,7 +215,7 @@ def add_user_random(rand_bytes,desc):
 
 def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
 	while True:
-		ret = my_raw_input(
+		ret = line_input(
 			f'Enter hash preset for {desc},\n' +
 			f'or hit ENTER to accept the default value ({hp!r}): ' )
 		if ret:

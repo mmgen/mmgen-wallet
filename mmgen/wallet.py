@@ -294,7 +294,7 @@ class WalletEnc(Wallet):
 			('accept the default','reuse the old')[self.op=='pwchg_new'],
 			hp )
 		while True:
-			ret = my_raw_input(prompt)
+			ret = line_input(prompt)
 			if ret:
 				if ret in g.hash_presets:
 					return ret
@@ -732,7 +732,7 @@ class MMGenWallet(WalletEnc):
 			'to reuse the label {}'.format(old_lbl.hl(encl="''")) if old_lbl else
 			'for no label' )
 		while True:
-			ret = my_raw_input(prompt)
+			ret = line_input(prompt)
 			if ret:
 				lbl = get_obj(MMGenWalletLabel,s=ret)
 				if lbl:
@@ -1180,7 +1180,7 @@ harder to find, you're advised to choose a much larger file size than this.
 				min_fsize = d.target_data_len + d.hincog_offset
 				msg(self.msg['choose_file_size'].format(min_fsize))
 				while True:
-					fsize = parse_bytespec(my_raw_input('Enter file size: '))
+					fsize = parse_bytespec(line_input('Enter file size: '))
 					if fsize >= min_fsize:
 						break
 					msg(f'File size must be an integer no less than {min_fsize}')

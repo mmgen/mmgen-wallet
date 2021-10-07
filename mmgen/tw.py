@@ -214,7 +214,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 			self.cols = g.terminal_width or get_terminal_size().width
 			if self.cols >= g.min_screen_width:
 				break
-			my_raw_input(
+			line_input(
 				'Screen too narrow to display the tracking wallet\n'
 				+ f'Please resize your screen to at least {g.min_screen_width} characters and hit ENTER ' )
 
@@ -405,7 +405,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	def get_idx_from_user(self,action):
 		msg('')
 		while True:
-			ret = my_raw_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
+			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
 			if ret == '': return (None,None) if action == 'a_lbl_add' else None
 			n = get_obj(AddrIdx,n=ret,silent=True)
 			if not n or n < 1 or n > len(self.unspent):
@@ -415,7 +415,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 					cur_lbl = self.unspent[n-1].label
 					msg('Current label: {}'.format(cur_lbl.hl() if cur_lbl else '(none)'))
 					while True:
-						s = my_raw_input("Enter label text (or 'q' to return to main menu): ")
+						s = line_input("Enter label text (or 'q' to return to main menu): ")
 						if s == 'q':
 							return None,None
 						elif s == '':
