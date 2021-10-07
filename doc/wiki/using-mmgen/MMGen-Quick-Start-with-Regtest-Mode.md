@@ -14,6 +14,7 @@ This tutorial provides a quick, hands-on introduction.
 1. Initialize MMGen regtest mode and start the regtest daemon:
 
 		$ mmgen-regtest setup
+		$ mmgen-regtest start
 
 2. Generate Bob’s MMGen wallet:
 

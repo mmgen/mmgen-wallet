@@ -25,8 +25,8 @@ against the possibility of private data leakage.
 
 With some extra steps, it’s possible to perform the installation on a machine
 that’s *already* offline.  These steps will be additionally outlined in
-sections entitled “Offline users”.  When doing an online install you may skip
-over these sections.
+sections entitled **Offline install.**  When doing an online install you may
+skip over these sections.
 
 ### 1. Install MSYS2
 
@@ -61,22 +61,21 @@ will produce a listing of the same directory.
 
 #### Online users:
 
-> Optionally download and edit your mirror lists as described in **Offline
-> users** below.
+> Optionally edit your mirror lists as described in **Offline install** below.
 
 > Update the package database and core system packages:
 
 		$ pacman -Syu
 
-> Exit and restart the terminal.  If you’re using custom mirror lists, they were
-> overwritten by the update operation, so you must restore them from your
-> modified versions.
+> Exit and restart the terminal.  If you’re using modified mirror lists, they
+> may have been overwritten by the update operation, in which case you should
+> restore them from your modified versions.
 
-> Now complete updating the packages:
+> Now complete upgrading the system:
 
 		$ pacman -Su
 
-#### Offline users:
+#### Offline install:
 
 > You must now download the required database and package files from the
 > Internet on your online computer and copy them to your offline box.  A USB
@@ -97,53 +96,50 @@ will produce a listing of the same directory.
 
 		$ ls /var/lib/pacman/sync
 
-> Download up-to-date versions of these files from the MSYS2 project site:
+> Download up-to-date versions of these files from a fast MSYS2 mirror:
 
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MSYS2/x86_64/msys.db>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MSYS2/x86_64/msys.db.sig>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/x86_64/mingw64.db>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/x86_64/mingw64.db.sig>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686/mingw32.db>  
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/i686/mingw32.db.sig> 
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/clang64/clang64.db> 
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/clang64/clang64.db.sig> 
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/ucrt64/ucrt64.db> 
->> <https://downloads.sourceforge.net/project/msys2/REPOS/MINGW/ucrt64/ucrt64.db.sig>
+>> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db.sig>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db.sig>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db.sig>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db.sig>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db.sig>
 
-> Copy the files to your offline machine as you did with the mirror files, replacing
-> the originals at `C:\msys64\var\lib\pacman\sync`.
+> Copy the files to your offline machine, replacing the originals at
+> `C:\msys64\var\lib\pacman\sync`.
 
 > Now issue the following command:
 
 		$ pacman -Sup > urls.txt
 
-> This command may cause your MSYS terminal window to close.  If so, simply
+> This command may cause your MSYS terminal window to close.  If so, just
 > reopen another one.
 
 > The command's output is now saved in the file `urls.txt` (this redirection
 > trick using '>' works for most shell commands, by the way).  Copy `urls.txt`
-> to your online machine and download the URLs listed in it.  Transfer the
-> downloaded files to your offline machine, copying them to the package cache
-> directory `C:\msys64\var\cache\pacman\pkg`.
+> to your online machine and download the URLs listed in it.
 
-> Now issue the following command to perform the initial upgrade:
-
-		$ pacman -Su
-
-> When the process is finished, close your terminal window as requested and
-> reopen another one.  If any mirror lists have have been added by the upgrade
-> operation, you may wish to edit them as you did above.
-
-> Now reissue the `pacman -Sup` command, which will generate a much longer list
-> of URLs this time.  Download the listed files on your online machine.  Create
-> a new folder on your offline machine:
+> Create a new folder on your offline machine:
 
 		$ mkdir packages1
 
-> Copy the downloaded package files to this folder and execute the following
-> command to install them:
+Transfer the downloaded package files to the offline machine and place them in
+this folder.
 
-		$ (cd packages1; pacman -U *)
+> Now issue the following command to install the packages:
+
+		$ pacman -U packages1/*
+
+> When the process is finished, close your terminal window and reopen another
+> one.
+
+> Now reissue the `pacman -Sup` command, which will generate a much longer list
+> of URLs this time.  Repeat the same download/copy/install procedure with the
+> new URLs, only using a new `packages2` directory instead of `packages1`.
 
 > Your system upgrade is now complete.
 
@@ -152,30 +148,34 @@ will produce a listing of the same directory.
 Now that your system’s fully up to date, you’re ready to install the packages
 specifically required by MMGen.
 
-#### Offline users:
+#### Offline install:
 
-> The command `pacman -S <pgknames>` installs the requested MSYS2 packages,
-> while `pacman -Sp <pgknames>` prints a list of download URLs for the packages
-> and their dependencies.  So before running the command shown below, you’ll
-> first need to issue it with `-Sp` instead of `-S` to produce a URL list.
-> Download these URLs on your online machine and copy and install the
-> downloaded files to the your offline machine just as you did in the previous
-> step, substituting `packages2` for `packages1` in both commands.
+> As you’ve probably noticed by now, the command `pacman -S <pgknames>`
+> installs MSYS2 packages and their dependencies, while `pacman -Sp
+> <pgknames>` prints a list of download URLs for the same packages and
+> dependencies.  So before running the command shown below, you must first
+> issue it with `-Sp` instead of `-S` to produce a URL list. Then repeat the
+> above download/copy/install steps once again with the new URLs, replacing
+> `packages2` with `packages3`.
 
-Install the packages and their dependencies:
+Install the MMGen requirements and their dependencies:
 
 	$ pacman -S tar git vim autoconf automake-wrapper autogen \
 		mingw64/mingw-w64-x86_64-libtool \
-		mingw64/mingw-w64-x86_64-pcre \
+		mingw64/mingw-w64-x86_64-gcc \
 		mingw64/mingw-w64-x86_64-make \
-		mingw64/mingw-w64-x86_64-python3-cryptography \
-		mingw64/mingw-w64-x86_64-python3-six \
-		mingw64/mingw-w64-x86_64-python3-pexpect \
-		mingw64/mingw-w64-x86_64-python3-gmpy2 \
+		mingw64/mingw-w64-x86_64-pcre \
 		mingw64/mingw-w64-x86_64-libsodium \
-		mingw64/mingw-w64-x86_64-python3-pynacl \
-		mingw64/mingw-w64-x86_64-python3-pip \
-		mingw64/mingw-w64-x86_64-gcc
+		mingw64/mingw-w64-x86_64-python-build \
+		mingw64/mingw-w64-x86_64-python-wheel \
+		mingw64/mingw-w64-x86_64-python-cryptography \
+		mingw64/mingw-w64-x86_64-python-six \
+		mingw64/mingw-w64-x86_64-python-pexpect \
+		mingw64/mingw-w64-x86_64-python-gmpy2 \
+		mingw64/mingw-w64-x86_64-python-pynacl \
+		mingw64/mingw-w64-x86_64-python-pip \
+		mingw64/mingw-w64-x86_64-python-pysocks \
+		mingw64/mingw-w64-x86_64-python-requests
 
 ### 5. Set up your environment
 
@@ -198,25 +198,15 @@ path):
 Save and exit.  Close and reopen the terminal window to update your working
 environment.
 
-### 6. Install MMGen dependencies not provided by MSYS2
+### 6. Install the Python ECDSA library (offline install only)
 
-Four of MMGen’s Python dependencies, `ecdsa`, `py_ecc`, `mypy_extensions` and
-`socks`, are not provided by MSYS2.  If you’re online, you can install them
-using the pip package installer as follows:
+On your online machine:
 
-	$ pip3 install --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1 socks
+	$ pip3 download ecdsa
 
-For an offline install, first download the packages on your online machine like
-this:
+Copy the downloaded file to your offline machine and install:
 
-	$ pip3 download --no-deps ecdsa==0.13 py_ecc==1.6.0 mypy_extensions==0.4.1 socks
-
-Then transfer the downloaded files to your offline machine, `cd` to the directory
-containing the files and install them as follows:
-
-	$ pip3 install --no-deps *.whl
-	$ tar zxvf socks-0.tar.gz
-	$ (cd socks-0; python3 setup.py install)
+	$ pip3 install --user ecdsa-*.whl
 
 ### 7. Install the standalone scrypt package (required for strong password hashing)
 
@@ -256,21 +246,18 @@ Save the file and exit the editor.  Now build and install:
 	$ python3 setup.py build --compiler=mingw32
 	$ python3 setup.py install
 
-### 8. Install the secp256k1 library
+### 8. Clone and copy the secp256k1 library (offline install only)
 
-On your online machine, clone the repository:
+On your online machine, clone the secp256k1 repository from Github:
 
 	$ git clone https://github.com/bitcoin-core/secp256k1.git
 
-If you’re doing an offline install, copy the cloned secp256k1 directory
-to your offline machine.
+On your offline machine, create a magic location and copy the cloned secp256k1
+directory into it:
 
-Enter the directory, configure, build and install:
-
-	$ cd secp256k1
-	$ ./autogen.sh
-	$ ./configure --disable-dependency-tracking
-	$ mingw32-make.exe install MAKE=mingw32-make LIBTOOL=$(which libtool)
+	$ mkdir -p ~/.cache/mmgen
+	$ cp -a /path/to/secp256k1/repo/secp256k1 ~/.cache/mmgen
+	$ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that the location is correct
 
 ### 9. Install MMGen
 
@@ -280,8 +267,8 @@ repository:
 	$ git clone https://github.com/mmgen/mmgen
 	Cloning into ’mmgen’...
 
-If you’re doing an offline install, you can then copy the cloned mmgen directory
-to your offline machine.
+If you’re doing an offline install, then copy the cloned mmgen directory to
+your offline machine.
 
 Enter the directory and install:
 
@@ -298,7 +285,23 @@ before being pushed to the public repository, it’s not guaranteed to install o
 run on MSYS2.  Installation or runtime issues may also arise due to missing
 dependencies or installation steps not yet covered in the documentation.
 
-### 10. Install and launch your coin daemons
+### 10. Install Python Ethereum dependencies (Ethereum users only)
+
+If you’ll be using MMGen with Ethereum, then you must install a few
+dependencies.  From the MMGen repository root, type the following:
+
+	$ pip3 install --no-deps --user -r eth-requirements.txt
+
+For an offline install, do this instead:
+
+	$ pip3 download --no-deps -r eth-requirements.txt
+
+Then transfer the downloaded files to your offline machine, `cd` to the
+directory containing the files and install them as follows:
+
+	$ pip3 install --no-deps --user *.whl
+
+### 11. Install and launch your coin daemons
 
 At this point your MMGen installation will be able to generate wallets, along
 with keys and addresses for all supported coins.  However, if you intend to do
@@ -326,7 +329,7 @@ Typically you’ll wish to launch OpenEthereum as follows:
 
 More information on OpenEthereum’s command-line options can be found [here][pl].
 
-### 11. You’re done!
+### 12. You’re done!
 
 Congratulations, your installation is now complete, and you can proceed to
 [**Getting Started with MMGen**][gs].  Note that all features supported by

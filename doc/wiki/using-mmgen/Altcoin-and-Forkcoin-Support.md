@@ -1,65 +1,71 @@
 ## Table of Contents
 
-#### [Full support for Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
-* [Install and run OpenEthereum](#a_oe)
-* [Install Ethereum dependencies](#a_ed)
+#### [Introduction](#a_g)
+
+#### [Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens](#a_eth)
+* [Install the Ethereum dependencies](#a_ed)
+* [Install and run Geth or OpenEthereum](#a_oe)
 * [Transacting and other basic operations](#a_tx)
 * [Creating and deploying ERC20 tokens](#a_dt)
 
-#### [Full support for Bitcoin Cash Node (BCH) and Litecoin](#a_bch)
+#### [Bitcoin Cash Node (BCH) and Litecoin (LTC)](#a_bch)
+
+#### [Monero (XMR)](#a_xmr)
 
 #### [Key/address generation for Zcash (ZEC)](#a_zec)
 
-#### [Key/address generation and wallet creation/syncing for Monero (XMR)](#a_xmr)
+#### [Key/address generation for 144 Bitcoin-derived altcoins](#a_kg)
 
-#### [Key/address generation support for 144 Bitcoin-derived altcoins](#a_kg)
+### <a name='a_g'>Introduction</a>
 
-### <a name='a_eth'>Full support for Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens</a>
+Depending on your setup, the instructions on this page may apply to your
+offline machine, your online machine, or both.  If you’re confused as to
+which, please familiarize yourself with the basics of MMGen by reading the
+[**Getting Started**][gs] guide.
 
-Ethereum, Ethereum Classic and ERC20 tokens are fully supported by MMGen, on the
-same level as Bitcoin.  In addition, ERC20 token creation and deployment are
-supported via the `create-token.py` script.
+### <a name='a_eth'>Ethereum (ETH), Ethereum Classic (ETC) and ERC20 Tokens</a>
 
-#### <a name='a_oe'>Install and run OpenEthereum</a>
+MMGen supports all operations for Ethereum, Ethereum Classic and ERC20 tokens.
+In addition, ERC20 token creation and deployment are supported via the
+`create-token.py` script.
 
-MMGen uses OpenEthereum to communicate with the Ethereum blockchain.  For
-information on installing OpenEthereum on your system, visit the OpenEthereum
-[wiki][ow] or [Git repository][og].  OpenEthereum is not used for transaction
-signing, so you needn’t install it on your offline machine.
+#### <a name='a_ed'>Install the Ethereum dependencies</a>
 
-OpenEthereum must be invoked with the `--jsonrpc-apis=all` option so that MMGen
-can communicate with it.  If you’re running the daemon and MMGen on different
-machines you’ll also need the following:
+From the MMGen repository root, type:
 
-	--jsonrpc-hosts=all --jsonrpc-interface=<IP of OpenEthereum’s host>
+	$ pip3 install --no-deps --user -r eth-requirements.txt
 
-To transact Ethereum Classic, use `--chain=classic --jsonrpc-port=8555`
+#### <a name='a_oe'>Install and run Geth or OpenEthereum</a>
 
-To run the daemon offline, use `--mode=offline`, otherwise `--mode=active`.
+MMGen can use either Go-Ethereum (Geth) or OpenEthereum to communicate with
+the Ethereum network.  For information on installing Geth or OE on your
+system, visit the the Geth [Github repo][ge], or the OpenEthereum [wiki][ow]
+or [Github repo][og].  The daemons are not used for transaction signing, so
+you needn’t install them on your offline machine.
 
-MMGen can also be used with OpenEthereum’s light client mode, which queries
-other nodes on the Ethereum network for blockchain data.  Add the `--light`
-option to the OpenEthereum command line and read the applicable note in the
-[Transacting](#a_tx) section below.
+For Geth, the following command-line options are required:
 
-You may require other options as well.  Consult `openethereum --help` for the
-full list.
+	--http --http.api=eth,web3,txpool --http.port=8745
 
-#### <a name='a_ed'>Install Ethereum dependencies</a>
+Geth and OE have dropped support for Ethereum Classic, but MMGen supports
+transacting ETC via the legacy [Parity][pd] daemon.  Invoke Parity with
+`--chain=classic --jsonrpc-port=8645`.  Other command-line options are the
+same as for OpenEthereum.
 
-Ensure that Python version 3.6 or above is installed on your system:
+If you’re running OE or Parity on a different machine from MMGen, add the
+following options to the daemon command line:
 
-	$ python3 --version
+	--jsonrpc-hosts=all --jsonrpc-interface=<daemon IP address>
 
-If the version is below 3.6.0, then you must upgrade the Python interpreter and
-Python dependencies listed in the [Install wiki][iw] before proceeding.  Ubuntu
-users can do this by adding the Bionic repository to 'sources.list' and
-reinstalling the relevant packages with '-t bionic'
+To run OE or Parity offline, use `--mode=offline`, otherwise `--mode=active`.
 
-Install the Ethereum-specific Python dependencies.  The `--no-deps` option
-will prevent pip from installing a lot of unneeded stuff:
+MMGen can also be used with Parity’s light client mode, which queries other
+nodes on the network for blockchain data.  Add the `--light` option to the
+Parity command line and read the applicable note in the [Transacting](#a_tx)
+section below.
 
-	$ sudo -H pip3 install --no-deps py_ecc==1.6.0 mypy_extensions==0.4.1
+You may require other options as well.  Invoke your daemon with the `--help`
+switch for more complete information.
 
 #### <a name='a_tx'>Transacting and other basic operations</a>
 
@@ -82,8 +88,8 @@ Basic operations with ETH, ETC and ERC20 tokens work as described in the
 
 ##### Transacting example:
 
-*Note: All addresses and filenames in the examples to follow are bogus.  You
-must replace them with real ones.*
+*Note: All addresses and filenames in the examples to follow are bogus and
+must be replaced with real ones.*
 
 Generate some ETH addresses with your default wallet:
 
@@ -125,43 +131,22 @@ To transact ETH instead of EOS, omit the `--token` and `--token-addr` arguments.
 
 ##### Install the Solidity compiler
 
-To deploy Ethereum contracts with MMGen, you need between **v0.5.1** and
-**v0.5.3** of the the Solidity compiler (`solc`) installed on your system.  The
-best way to ensure you have the correct version is to compile it from source.
-Alternatively, on Ubuntu 18.04 systems a binary distribution is also available.
-Instructions for installing it are provided below.
-
-##### *To compile solc from source:*
+To deploy Ethereum contracts with MMGen, you need version **0.8.7** of the
+Solidity compiler (`solc`) installed on your system.  Although binary builds
+may be available for some distributions, the best way to ensure you have the
+correct version is to compile it from source.
 
 Clone the repository and build:
 
 	$ git clone --recursive https://github.com/ethereum/solidity.git
 	$ cd solidity
-	$ git checkout v0.5.1 # or v0.5.3, if not Raspbian Stretch
-	$ ./scripts/install_deps.sh # Raspbian Stretch: add `DISTRO='Debian'` after line 55
+	$ git checkout v0.8.7
+	$ ./scripts/install_deps.sh
 	$ mkdir build
 	$ cd build
 	$ cmake -DUSE_CVC4=OFF -DUSE_Z3=OFF ..
-	$ make solc
+	$ make -j4 solc
 	$ sudo install -v --strip solc/solc /usr/local/bin
-
-##### *To install solc from binary distribution (Ubuntu 18.04):*
-
-First add the following line to your /etc/apt/sources.list:
-
-	deb http://ppa.launchpad.net/ethereum/ethereum/ubuntu bionic main
-
-Now obtain the Ethereum PPA key `2A518C819BE37D2C2031944D1C52189C923F6CA9`
-from a PGP keyserver using your method of choice.  Save the key to file, and
-then add it to your APT keyring as follows:
-
-	$ sudo apt-key add <key file>
-
-Now you can proceed with the install:
-
-	$ sudo apt-get update
-	$ sudo apt-get install solc
-	$ solc --version # make sure the version is correct!
 
 ##### Create and deploy a token
 
@@ -193,10 +178,10 @@ View your MFT tracking wallet:
 
 	$ mmgen-tool --coin=eth --token=mft twview
 
-Other token parameters can also be customized.  Type `scripts/create-token.py --help`
+Other token parameters can be customized too.  Type `scripts/create-token.py --help`
 for details.
 
-### <a name='a_bch'>Full support for Bitcoin Cash Node (BCH) and Litecoin</a>
+### <a name='a_bch'>Bitcoin Cash Node (BCH) and Litecoin (LTC)</a>
 
 Bitcoin Cash Node (BCH) and Litecoin are fully supported by MMGen, on the same
 level as Bitcoin.
@@ -211,6 +196,50 @@ MMGen requires that the bitcoin-bchn daemon be listening on non-standard
 
 Then just add the `--coin=bch` or `--coin=ltc` option to all your MMGen
 commands.  It’s that simple!
+
+### <a name='a_xmr'>Monero (XMR)</a>
+
+MMGen’s Monero support includes automated wallet creation/syncing and
+transaction creation/relaying via the `mmgen-xmrwallet` command.  Make sure
+that [Monerod][M] is installed and running and that `monero-wallet-rpc` is
+located in your executable path.
+
+*NOTE: by storing the Monero blockchain on a removable drive and installing
+Monerod on both your online and offline machines, it’s possible to perform
+wallet and transaction creation operations offline and thus avoid exposing
+private data on your online machine.*
+
+To generate five Monero key/address pairs from your default wallet, invoke the
+following, making sure to answer ‘y’ at the Encrypt prompt:
+
+	$ mmgen-keygen --coin=xmr 1-5
+
+In addition to spend and view keys, the resulting key/address file also
+includes a wallet password for each address (the double SHA256 hash of the
+spend key, truncated to 16 bytes).
+
+Now create a Monero wallet for each address in the file by invoking the
+following command:
+
+	$ mmgen-xmrwallet create *XMR*.akeys.mmenc
+
+Each wallet will be uniquely named using the address index and encrypted with
+the address’ unique wallet password.  No user interaction is required during
+the creation process.  By default, wallets are synced to the current block
+height, as they’re assumed to be empty, but this behavior can be overridden:
+
+	$ mmgen-xmrwallet --restore-height=123456 create *XMR*.akeys.mmenc
+
+To keep your wallets in sync as the Monero blockchain grows, use the `sync`
+subcommand:
+
+	$ mmgen-xmrwallet sync *XMR*.akeys.mmenc
+
+No user interaction is required here either, which is very helpful when you
+have multiple wallets requiring long sync times.
+
+`mmgen-xmrwallet` supports transacting via the `sweep` and `transfer`
+subcommands.  Type `mmgen-xmrwallet --help` for details.
 
 ### <a name='a_zec'>Key/address generation for Zcash (ZEC)</a>
 
@@ -231,56 +260,7 @@ To generate Zcash t-addresses, just omit the `--type` argument:
 
 	$ mmgen-keygen --coin=zec 1-10
 
-### <a name='a_xmr'>Key/address generation and wallet creation/syncing for Monero (XMR)</a>
-
-Generate ten Monero key/address pairs from your default wallet:
-
-	$ mmgen-keygen --coin=xmr 1-10
-
-MMGen’s enhanced support for Monero includes automated Monero wallet creation
-and syncing tools.
-
-*Note that the use of these tools requires private data to be exposed on a
-network-connected machine in order to unlock the Monero wallets, which is a
-violation of MMGen’s security policy.*
-
-Install the following dependencies:
-
-	$ sudo -H pip3 install pysha3
-	$ sudo -H pip3 install ed25519ll # optional, but greatly speeds up address generation
-
-In addition to spend and view keys, Monero key/address files also include a
-wallet password for each address (the password is the double SHA256 of the spend
-key, truncated to 16 bytes).  This allows you to generate a wallet from each
-key in the key/address file by running the following command:
-
-	$ monero-wallet-cli --generate-from-spend-key MyMoneroWallet
-
-and pasting in the key and password data when prompted.  [Monerod][M] must be
-installed and running and `monero-wallet-cli` be located in your executable
-path.  Launch monerod with the `--bg-mining-enable` switch.
-
-To save your time and labor, the `mmgen-tool` utility includes a command that
-completely automates this process:
-
-	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc
-
-This will generate a uniquely-named Monero wallet for each key/address pair in
-the key/address file and encrypt it with its respective password.  No user
-interaction is required.  By default, wallets are synced to the current block
-height, as they’re assumed to be empty, but this behavior can be overridden:
-
-	$ mmgen-tool keyaddrlist2monerowallets *XMR*.akeys.mmenc blockheight=123456
-
-To keep your wallets in sync as the Monero blockchain grows, `mmgen-tool`
-includes another utility:
-
-	$ mmgen-tool syncmonerowallets *XMR*.akeys.mmenc
-
-This command also requires no user interaction, a very handy feature when you
-have a large batch of wallets requiring long sync times.
-
-### <a name='a_kg'>Key/address generation support for 144 Bitcoin-derived altcoins</a>
+### <a name='a_kg'>Key/address generation for 144 Bitcoin-derived altcoins</a>
 
 To generate key/address pairs for these coins, just specify the coin’s symbol
 with the `--coin` argument:
@@ -319,13 +299,15 @@ the MMGen Project.
 
 [ow]: https://openethereum.github.io/wiki
 [og]: https://github.com/openethereum/openethereum/releases
+[pd]: https://github.com/openethereum/parity-ethereum/releases/tag/v2.7.2
 [y]: https://github.com/ethereum/pyethereum
 [P]: https://pypi.org/project/pip
 [M]: https://getmonero.org/downloads/#linux
 [U]: https://github.com/mmgen/MMGenLive/blob/master/home.mmgen/bin/mmlive-daemon-upgrade
 [X]: autosign-[MMGen-command-help]
+[gs]: Getting-Started-with-MMGen
 [bo]: Getting-Started-with-MMGen#a_bo
 [si]: Install-Bitcoind-from-Source-on-Debian-or-Ubuntu-Linux
 [bi]: Install-Bitcoind#a_d
 [p8]: Install-Bitcoind#a_r
-[iw]: Install-MMGen-on-Debian-or-Ubuntu-Linux
+[ge]: https://github.com/ethereum/go-ethereum
