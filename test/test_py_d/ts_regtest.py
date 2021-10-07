@@ -1019,18 +1019,18 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def alice_txcreate_info(self,args=[]):
 		t = self.spawn('mmgen-txcreate',['--alice','-Bi'])
-		for d,s in (
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( '\d+',                       'D'),
-				( pat_date,                    'w'),
-				( '\d+\s+\d+\s+'+pat_date_time,'q'),
-			):
+		pats = (
+			( '\d+',                       'D'),
+			( '\d+',                       'D'),
+			( '\d+',                       'D'),
+			( pat_date,                    'w'),
+			( '\d+\s+\d+\s+'+pat_date_time,'q'),
+		)
+		for d,s in pats:
 			t.expect(
 				r'\D{}\D.*\b{}\b'.format( rtAmts[0], d ),
 				s,
 				regex=True )
-		t.read()
 		return t
 
 	def stop(self):

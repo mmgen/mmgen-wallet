@@ -406,7 +406,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		msg('')
 		while True:
 			ret = line_input(f'Enter {self.item_desc} number (or RETURN to return to main menu): ')
-			if ret == '': return (None,None) if action == 'a_lbl_add' else None
+			if ret == '':
+				return (None,None) if action == 'a_lbl_add' else None
 			n = get_obj(AddrIdx,n=ret,silent=True)
 			if not n or n < 1 or n > len(self.unspent):
 				msg(f'Choice must be a single number between 1 and {len(self.unspent)}')

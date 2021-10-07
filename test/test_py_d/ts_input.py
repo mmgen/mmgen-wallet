@@ -158,7 +158,7 @@ class TestSuiteInput(TestSuiteBase):
 	def password_entry(self,prompt,cmd_args):
 		t = self.spawn('test/misc/password_entry.py',cmd_args,cmd_dir='.')
 		pw = 'abc-α'
-		t.expect(prompt,pw)
+		t.expect(prompt,pw+'\n')
 		ret = t.expect_getend('Entered: ')
 		assert ret == pw, f'Password mismatch! {ret} != {pw}'
 		return t

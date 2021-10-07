@@ -797,7 +797,7 @@ def line_input(prompt,echo=True,insert_txt=''):
 	if g.test_suite_popen_spawn:
 		msg(prompt)
 		sys.stderr.flush()
-		reply = os.read(0,4096).decode()
+		reply = os.read(0,4096).decode().rstrip('\n') # strip NL to mimic behavior of input()
 	elif echo or not sys.stdin.isatty():
 		clear_buffer = init_readline() if sys.stdin.isatty() else False
 		reply = input(prompt)

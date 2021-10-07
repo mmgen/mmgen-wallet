@@ -108,8 +108,9 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):
 		source = TestSuiteWalletConv.sources[str(self.seed_len)]
-		for wtype,edesc,of_arg in ('hic_wallet','',[]), \
-								('hic_wallet_old','(old format)',['-O']):
+		for wtype,edesc,of_arg in (
+				('hic_wallet',    '',            []),
+				('hic_wallet_old','(old format)',['-O']) ):
 			ic_arg = ['-H{},{}'.format(
 				joinpath(ref_dir,source[wtype]),
 				ref_wallet_incog_offset )
@@ -120,11 +121,10 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 			t = self.spawn('mmgen-walletchk',
 				slarg + hparg + of_arg + ic_arg,
 				extra_desc=edesc)
-			t.passphrase(desc,self.wpasswd)
+			t.passphrase(desc,self.wpasswd+'\n')
 			if wtype == 'hic_wallet_old':
 				t.expect('Is the Seed ID correct? (Y/n): ','\n')
 			chk = t.expect_getend('Seed ID: ')
-			t.close()
 			cmp_or_die(self.seed_id,chk)
 			ok_msg()
 		t.skip_ok = True

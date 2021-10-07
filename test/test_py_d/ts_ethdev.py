@@ -1076,7 +1076,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-txcreate', self.eth_args + args)
 		for n in bals:
 			t.expect('[R]efresh balance:\b','R')
-			t.expect(' main menu): ',n)
+			t.expect(' main menu): ',n+'\n')
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
 		t.expect(f'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)

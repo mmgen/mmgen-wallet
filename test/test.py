@@ -608,7 +608,7 @@ class CmdGroupMgr(object):
 							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
 
 		for name,cls in ginfo:
-			msg(f'{name:17} - {cls.__doc__}')
+			msg(f'{name:17} - {cls.__doc__.strip()}')
 
 		Die(0,'\n'+' '.join(e[0] for e in ginfo))
 

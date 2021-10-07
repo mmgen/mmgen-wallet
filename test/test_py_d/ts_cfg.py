@@ -118,9 +118,12 @@ class TestSuiteCfg(TestSuiteBase):
 				t.expect(s)
 
 		cp = CfgFileSampleUsr.details_confirm_prompt + ' (y/N): '
+
 		t.expect(cp,'y')
+
 		for s in ('CHANGES','Removed','# zcash_','# foo','# bar','Added','# monero_'):
 			t.expect(s)
+
 		t.expect(cp,'n')
 
 		if old_set:
@@ -130,8 +133,6 @@ class TestSuiteCfg(TestSuiteBase):
 		if args == ['parse_test']:
 			t.expect('parsed chunks: 29')
 			t.expect('usr cfg: testnet=true rpc_password=passwOrd')
-
-		t.read()
 
 		if not old_set:
 			self.check_replaced_sample()
