@@ -475,7 +475,7 @@ class CoinDaemon(Daemon):
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')
 
 class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 210100, '0.21.1')
+	daemon_data = _dd('Bitcoin Core', 220000, '22.0.0')
 	exec_fn = 'bitcoind'
 	cli_fn = 'bitcoin-cli'
 	testnet_dir = 'testnet3'
