@@ -64,10 +64,11 @@ class unit_test(object):
 			# outputs
 			a,b = d['vout'],dt['txouts']
 			for i in range(len(a)):
-				A = a[i]['scriptPubKey']['addresses'][0]
-				B = b[i]['address']
-				fs = 'address of output {} does not match\nA: {}\nB: {}'
-				assert A == B, fs.format(i,A,B)
+				if 'addresses' in a[i]['scriptPubKey']:
+					A = a[i]['scriptPubKey']['addresses'][0]
+					B = b[i]['address']
+					fs = 'address of output {} does not match\nA: {}\nB: {}'
+					assert A == B, fs.format(i,A,B)
 
 				A = a[i]['value']
 				B = b[i]['amount']
