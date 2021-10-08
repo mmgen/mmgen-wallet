@@ -62,7 +62,7 @@ class TestSuiteHelp(TestSuiteBase):
 					'addrimport','autosign')
 		):
 		if self.test_name == 'helpscreens' and self.proto.base_coin != 'ETH':
-			scripts += ('regtest',)
+			scripts += ('regtest','xmrwallet')
 		for s in scripts:
 			t = self.spawn_chk(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})',no_output=True)
 		return t

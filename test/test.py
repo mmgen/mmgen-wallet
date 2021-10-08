@@ -672,19 +672,15 @@ class TestSuiteRunner(object):
 			no_exec_wrapper = False ):
 
 		desc = self.ts.test_name if opt.names else self.gm.dpy_data[self.ts.test_name][1]
-		if extra_desc: desc += ' ' + extra_desc
+		if extra_desc:
+			desc += ' ' + extra_desc
 
 		if not opt.system:
 			cmd = os.path.relpath(os.path.join(repo_root,cmd_dir,cmd))
 		elif g.platform == 'win':
 			cmd = os.path.join('/mingw64','opt','bin',cmd)
 
-		passthru_opts = ['--{}{}'.format(
-				k.replace('_','-'),
-				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
-			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
-
-		args = [cmd] + passthru_opts + self.ts.extra_spawn_args + args
+		args = [cmd] + self.passthru_opts + self.ts.extra_spawn_args + args
 
 		if not no_exec_wrapper:
 			args = ['scripts/exec_wrapper.py'] + args
@@ -694,26 +690,26 @@ class TestSuiteRunner(object):
 
 		for i in args:
 			if not isinstance(i,str):
-				m = 'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'
-				die(2,m.format(self.ts.test_name,args))
+				die(2,'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
+					self.ts.test_name,
+					args ))
 
 		if opt.coverage:
 			args = ['python3','-m','trace','--count','--coverdir='+self.coverdir,'--file='+self.accfile] + args
 
-		qargs = ['{q}{}{q}'.format(
-				a,
-				q = "'" if ' ' in a else ''
-			) for a in args]
+		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw
 
 		if not no_msg:
 			t_pfx = '' if opt.no_timings else f'[{time.time() - self.start_time:08.2f}] '
 			if opt.verbose or opt.print_cmdline or opt.exact_output:
-				clr1,clr2 = ((green,cyan),(nocolor,nocolor))[bool(opt.print_cmdline)]
 				omsg(green(f'{t_pfx}Testing: {desc}'))
 				if not msg_only:
-					s = repr(cmd_disp) if g.platform == 'win' else cmd_disp
-					omsg(clr1('Executing: ') + clr2(s))
+					clr1,clr2 = (nocolor,nocolor) if opt.print_cmdline else (green,cyan)
+					omsg(
+						clr1('Executing: ') +
+						clr2(repr(cmd_disp) if g.platform == 'win' else cmd_disp)
+					)
 			else:
 				omsg_r(f'{t_pfx}Testing {desc}: ')
 
@@ -748,9 +744,6 @@ class TestSuiteRunner(object):
 
 		ts_cls = CmdGroupMgr().load_mod(gname)
 
-		if do_clean:
-			clean(ts_cls.tmpdir_nums,clean_overlay=False)
-
 		for k in ('segwit','segwit_random','bech32'):
 			if getattr(opt,k):
 				segwit_opt = k
@@ -783,6 +776,9 @@ class TestSuiteRunner(object):
 				iqmsg('INFO → skipping ' + m)
 				return False
 
+		if do_clean:
+			clean(ts_cls.tmpdir_nums,clean_overlay=False)
+
 		if not quiet:
 			bmsg('Executing ' + m)
 
@@ -793,6 +789,11 @@ class TestSuiteRunner(object):
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test group doesn't have to
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
+
+		self.passthru_opts = ['--{}{}'.format(
+				k.replace('_','-'),
+				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
+			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
 
 		if opt.resume_after:
 			global resume
