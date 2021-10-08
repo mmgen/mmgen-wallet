@@ -297,6 +297,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		end_silence()
 
 	def setup(self):
+		stop_test_daemons(self.proto.network_id)
 		try: shutil.rmtree(joinpath(self.tr.data_dir,'regtest'))
 		except: pass
 		t = self.spawn('mmgen-regtest',['-n','setup'])

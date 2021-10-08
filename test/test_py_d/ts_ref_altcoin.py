@@ -110,7 +110,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 					extra_desc = f'{proto.coin}{token_desc} {proto.network}')
 				t.read()
 				t.ok()
-				if proto.sign_mode == 'daemon':
+				if proto.sign_mode == 'daemon' and not proto.network_id == 'btc':
 					stop_test_daemons(proto.network_id)
 		return 'ok'
 

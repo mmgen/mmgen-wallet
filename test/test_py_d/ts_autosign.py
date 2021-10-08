@@ -287,7 +287,7 @@ class TestSuiteAutosign(TestSuiteBase):
 				foo = do_autosign(opts,mountpoint,mn_type='bip39',short=True)
 				ret = do_autosign(opts,mountpoint)
 		finally:
-			stop_test_daemons(*network_ids)
+			stop_test_daemons(*[i for i in network_ids if i != 'btc'])
 
 		return ret
 
