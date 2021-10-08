@@ -142,7 +142,7 @@ Linux, Armbian, Raspbian, Windows/MSYS2
 
 > #### [Install from source on Microsoft Windows][1]
 
-> #### [Install from source on Debian, Ubuntu, Raspbian or Armbian Linux][2]
+> #### [Install from source on Debian, Ubuntu, Raspbian, Armbian or Arch Linux][2]
 
 
 ### Using MMGen
@@ -174,7 +174,7 @@ Donate (BTC,BCH): 15TLdmi5NYLdqmtCqczUs5pBPkJDXRs83w
 
 [0]: https://www.reddit.com/user/mmgen-py
 [1]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Microsoft-Windows
-[2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Debian-or-Ubuntu-Linux
+[2]: https://github.com/mmgen/mmgen/wiki/Install-MMGen-on-Linux
 [3]: https://github.com/mmgen/mmgen/wiki/Getting-Started-with-MMGen
 [4]: https://bitcointalk.org/index.php?topic=567069.0
 [5]: https://github.com/mmgen/mmgen/wiki/MMGen-Signing-Keys
