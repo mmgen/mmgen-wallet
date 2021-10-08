@@ -186,6 +186,8 @@ if not (opt.resume or opt.skip_deps):
 
 check_segwit_opts()
 
+testing_segwit = opt.segwit or opt.segwit_random or opt.bech32
+
 if g.test_suite_deterministic:
 	opt.no_timings = True
 	init_color(num_colors=0)
@@ -790,6 +792,7 @@ class TestSuiteRunner(object):
 
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test group doesn't have to
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
+		self.ts_clsname = type(self.ts).__name__
 
 		if opt.resume_after:
 			global resume
@@ -863,6 +866,10 @@ class TestSuiteRunner(object):
 			dpy          = False ):
 
 		self.ts.test_name = cmd
+
+		if self.ts_clsname == 'TestSuiteMain' and testing_segwit and cmd not in self.ts.segwit_do:
+			return False
+
 		rerun = root # force_delete is not passed to recursive call
 
 		fns = []
