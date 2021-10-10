@@ -37,6 +37,7 @@ class Daemon(Lockable):
 	debug = False
 	wait = True
 	use_pidfile = True
+	pids = ()
 	use_threads = False
 	cfg_file = None
 	new_console_mswin = False
@@ -44,7 +45,7 @@ class Daemon(Lockable):
 	private_port = None
 	avail_opts = ()
 	avail_flags = () # like opts, but can be set or unset after instantiation
-	_reset_ok = ('debug','wait')
+	_reset_ok = ('debug','wait','pids')
 
 	def __init__(self,opts=None,flags=None):
 
@@ -108,12 +109,19 @@ class Daemon(Lockable):
 		if self.use_pidfile:
 			return open(self.pidfile).read().strip()
 		elif self.platform == 'win':
-			# TODO: assumes only one running instance of given daemon
+			"""
+			Assumes only one running instance of given daemon.  If multiple daemons are running,
+			the first PID in the list is returned and self.pids is set to the PID list.
+			"""
 			ss = f'{self.exec_fn}.exe'
 			cp = self.run_cmd(['ps','-Wl'],silent=True)
-			for line in cp.stdout.decode().splitlines():
-				if ss in line:
-					return line.split()[3] # use Windows, not Cygwin, PID
+			self.pids = ()
+			# use Windows, not Cygwin, PID
+			pids = tuple(line.split()[3] for line in cp.stdout.decode().splitlines() if ss in line)
+			if pids:
+				if len(pids) > 1:
+					self.pids = pids
+				return pids[0]
 		elif self.platform == 'linux':
 			ss = ' '.join(self.start_cmd)
 			cp = self.run_cmd(['pgrep','-f',ss],silent=True)
@@ -159,7 +167,7 @@ class Daemon(Lockable):
 		extra_text = f'{extra_text} ' if extra_text else ''
 		return '{:{w}} {:10} {}'.format(
 			f'{self.desc} {extra_text}running',
-			f'pid {self.pid}',
+			'pid N/A' if self.pid is None or self.pids else f'pid {self.pid}',
 			f'port {self.bind_port}',
 			w = 52 + len(extra_text) )
 
@@ -185,6 +193,10 @@ class Daemon(Lockable):
 	def stop(self,quiet=False,silent=False):
 		if self.state == 'ready':
 			ret = self.do_stop(silent=silent)
+			if self.pids:
+				msg('Warning: multiple PIDs [{}] -- we may be stopping the wrong instance'.format(
+					fmt_list(self.pids,fmt='bare')
+				))
 			if self.wait:
 				self.wait_for_state('stopped')
 			return ret
