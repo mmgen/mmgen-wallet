@@ -20,7 +20,7 @@
 ts_xmrwallet.py: xmrwallet tests for the test.py test suite
 """
 
-import sys,os,atexit,asyncio
+import sys,os,atexit,asyncio,shutil
 from subprocess import run,PIPE
 
 from mmgen.globalvars import g
@@ -89,11 +89,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		if not opt.no_daemon_stop:
 			atexit.register(self.stop_daemons)
-			atexit.register(self.stop_wallet_daemons)
+			atexit.register(self.stop_miner_wallet_daemon)
 
 		if not opt.no_daemon_autostart:
+			self.stop_daemons()
+			shutil.rmtree(self.datadir_base,ignore_errors=True)
+			os.makedirs(self.datadir_base)
 			self.start_daemons()
-			self.start_wallet_daemons()
 
 		self.balance = None
 
@@ -113,9 +115,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				omsg(f'SSH SOCKS server started, listening at localhost:{self.socks_port}')
 
 		def kill_proxy():
-			omsg(f'Killing SSH SOCKS server at localhost:{self.socks_port}')
-			cmd = [ 'pkill', '-f', ' '.join(a + b2) ]
-			run(cmd)
+			if g.platform == 'linux':
+				omsg(f'Killing SSH SOCKS server at localhost:{self.socks_port}')
+				cmd = [ 'pkill', '-f', ' '.join(a + b2) ]
+				run(cmd)
 
 		self.use_proxy = False
 		self.socks_port = 9060
@@ -300,10 +303,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		return t
 
 	async def mine_initial_coins(self):
+		await self.open_wallet_user('miner',1)
 		return await self.mine_chk('miner',1,0,lambda x: x > 20,'unlocked balance > 20')
 
 	async def fund_alice(self):
-		await self.open_wallet_user('miner',1)
 		await self.transfer(
 			'miner',
 			1234567891234,
@@ -403,16 +406,22 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		self.do_op('sweep','alice','2:1',self.tx_relay_daemon_parm)
 		return self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
-	def transfer_to_miner_proxy(self):
+	async def transfer_to_miner_proxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		amt = '0.135'
 		self.do_op('transfer','alice',f'2:1:{addr},{amt}',self.tx_relay_daemon_proxy_parm)
-		return self.mine_chk('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
+		await self.stop_wallet_user('miner')
+		await self.open_wallet_user('miner',2)
+		await self.mine_chk('miner',2,0,lambda x: str(x) == amt,f'unlocked balance == {amt}')
+		ok()
+		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
-	def transfer_to_miner_noproxy(self):
+	async def transfer_to_miner_noproxy(self):
 		addr = read_from_file(self.users['miner'].addrfile_fs.format(2))
 		self.do_op('transfer','alice',f'2:1:{addr},0.0995',self.tx_relay_daemon_parm)
-		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
+		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2345','unlocked balance == 0.2345')
+		ok()
+		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
 	def transfer_to_miner_create(self,amt):
 		get_file_with_ext(self.users['alice'].udir,'sigtx',delete_all=True)
@@ -440,13 +449,17 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.read()
 		t.ok()
 
-	def transfer_to_miner_send1(self):
+	async def transfer_to_miner_send1(self):
 		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_proxy_parm}',add_desc='via proxy')
-		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2456','unlocked balance == 0.2456')
+		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2456','unlocked balance == 0.2456')
+		ok()
+		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
-	def transfer_to_miner_send2(self):
+	async def transfer_to_miner_send2(self):
 		self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc='no proxy')
-		return self.mine_chk('miner',2,0,lambda x: str(x) == '0.2468','unlocked balance == 0.2468')
+		await self.mine_chk('miner',2,0,lambda x: str(x) == '0.2468','unlocked balance == 0.2468')
+		ok()
+		return await self.mine_chk('alice',2,1,lambda x: x > 0.9,'unlocked balance > 0.9')
 
 	async def sweep_create_and_send(self):
 		bal = XMRAmt('0')
@@ -463,7 +476,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				return_amt   = True )
 			ok()
 			self.relay_tx(f'--tx-relay-daemon={self.tx_relay_daemon_parm}',add_desc=f'send amt: {send_amt} XMR')
-			bal += await self.mine_chk('alice',3,0,lambda x: 'chk_bal_chg','balance has changed') # 3,0
+			await self.mine_chk('alice',2,1,lambda x: 'chk_bal_chg','balance has changed')
+			ok()
+			bal += await self.mine_chk('alice',3,0,lambda x,y=bal: x > y, f'bal > {bal}',return_amt=True)
 			if bal >= min_bal:
 				return 'ok'
 
@@ -476,17 +491,14 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		silence()
 		kal = KeyAddrList(self.proto,data.kafile,skip_key_address_validity_check=True)
 		end_silence()
-		if user != 'miner':
-			self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
+		self.users[user].wd.start(silent=not (opt.exact_output or opt.verbose))
 		return await data.wd_rpc.call(
 			'open_wallet',
 			filename = os.path.basename(data.walletfile_fs.format(wnum)),
 			password = kal.entry(wnum).wallet_passwd )
 
-	async def close_wallet_user(self,user):
-		ret = await self.users[user].wd_rpc.call('close_wallet')
-		if user != 'miner':
-			self.users[user].wd.stop(silent=not (opt.exact_output or opt.verbose))
+	async def stop_wallet_user(self,user):
+		await self.users[user].wd_rpc.stop_daemon(silent=not (opt.exact_output or opt.verbose))
 		return 'ok'
 
 	# mining methods
@@ -517,7 +529,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		ret = await self.users['miner'].md_rpc.call('stop_mining')
 		return self.get_status(ret)
 
-	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None):
+	async def mine_chk(self,user,wnum,account,test,test_desc,random_txs=None,return_amt=False):
 		"""
 		- open destination wallet
 		- optionally create and broadcast random TXs
@@ -586,7 +598,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		dest = namedtuple(
 			'dest_info',['user','wnum','account','test','test_desc'])(user,wnum,account,test,test_desc)
 
-		await self.open_wallet_user(dest.user,dest.wnum)
+		if dest.user != 'miner':
+			await self.open_wallet_user(dest.user,dest.wnum)
 
 		ub_start = await get_balance(dest,0)
 		chk_bal_chg = dest.test(ub_start) == 'chk_bal_chg'
@@ -615,9 +628,10 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		await self.stop_mining()
 
-		await self.close_wallet_user(dest.user)
+		if user != 'miner':
+			await self.stop_wallet_user(dest.user)
 
-		return ub if chk_bal_chg else 'ok'
+		return ub if return_amt else 'ok'
 
 	# util methods
 
@@ -639,7 +653,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 	# daemon start/stop methods
 
 	def start_daemons(self):
-		self.stop_daemons()
 		for v in self.users.values():
 			run(['mkdir','-p',v.datadir])
 			v.md.start()
@@ -648,10 +661,9 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		for v in self.users.values():
 			if v.md.state != 'stopped':
 				v.md.stop()
-		run(['rm','-rf',self.datadir_base])
 
 	def start_wallet_daemons(self):
 		self.users['miner'].wd.start()
 
-	def stop_wallet_daemons(self):
+	def stop_miner_wallet_daemon(self):
 		self.users['miner'].wd.stop()
