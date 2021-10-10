@@ -341,12 +341,7 @@ class MoneroWalletOps:
 			if not uopt.no_start_wallet_daemon:
 				self.wd.restart()
 
-			self.c = MoneroWalletRPCClient(
-				host   = self.wd.host,
-				port   = self.wd.rpc_port,
-				user   = self.wd.user,
-				passwd = self.wd.passwd
-			)
+			self.c = MoneroWalletRPCClient(daemon=self.wd)
 
 		def create_addr_data(self):
 			if uarg.wallets:
@@ -742,12 +737,7 @@ class MoneroWalletOps:
 
 			self.wd2.start()
 
-			self.c = MoneroWalletRPCClient(
-				host   = self.wd2.host,
-				port   = self.wd2.rpc_port,
-				user   = self.wd2.user,
-				passwd = self.wd2.passwd
-			)
+			self.c = MoneroWalletRPCClient(daemon=self.wd2)
 
 		async def main(self):
 			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (

@@ -706,6 +706,19 @@ class MoneroRPCClientRaw(MoneroRPCClient):
 class MoneroWalletRPCClient(MoneroRPCClient):
 
 	auth_type = 'digest'
+
+	def __init__(self,daemon,test_connection=True):
+
+		RPCClient.__init__(
+			self,
+			daemon.host,
+			daemon.rpc_port,
+			test_connection = test_connection )
+
+		self.daemon = daemon
+		self.auth = auth_data(daemon.user,daemon.passwd)
+		self.set_backend('requests')
+
 	rpcmethods = (
 		'get_version',
 		'get_height',    # sync height of the open wallet

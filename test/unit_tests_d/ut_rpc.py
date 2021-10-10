@@ -124,11 +124,7 @@ class unit_tests:
 				if not opt.no_daemon_autostart:
 					md.start()
 				wd.start()
-				c = MoneroWalletRPCClient(
-					host   = wd.host,
-					port   = wd.rpc_port,
-					user   = wd.user,
-					passwd = wd.passwd )
+				c = MoneroWalletRPCClient(daemon=wd)
 				await c.call('get_version')
 
 			for md,wd in daemons:
