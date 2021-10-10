@@ -108,7 +108,6 @@ class GlobalContext(Lockable):
 	monero_wallet_rpc_host = 'localhost'
 	monero_wallet_rpc_user = 'monero'
 	monero_wallet_rpc_password = ''
-	rpc_fail_on_command  = ''
 	aiohttp_rpc_queue_len = 16
 	session              = None
 	cached_balances      = False

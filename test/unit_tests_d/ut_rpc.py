@@ -116,7 +116,7 @@ class unit_tests:
 					MoneroWalletDaemon(
 						proto      = proto,
 						test_suite = True,
-						wallet_dir = 'test/trash',
+						wallet_dir = 'test/trash2',
 						passwd     = 'ut_rpc_passw0rd' )
 				) for proto in (init_proto('xmr',network=network) for network in networks) ]
 
@@ -140,5 +140,8 @@ class unit_tests:
 
 			gmsg('OK')
 
+		import shutil
+		shutil.rmtree('test/trash2',ignore_errors=True)
+		os.makedirs('test/trash2')
 		run_session(run())
 		return True

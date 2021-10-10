@@ -292,7 +292,8 @@ class MoneroWalletOps:
 				  Proxy: {blue(m[2] or 'None')}
 				""",strip_char='\t',indent=indent))
 
-		def post_main(self): pass
+		def post_main(self):
+			pass
 
 		def stop_daemons(self): pass
 
@@ -384,7 +385,10 @@ class MoneroWalletOps:
 					len(self.addr_data),
 					os.path.basename(fn),
 				))
-				processed += await self.process_wallet(d,fn)
+				processed += await self.process_wallet(
+					d,
+					fn,
+					last = n == len(self.addr_data)-1 )
 			gmsg(f'\n{processed} wallet{suf(processed)} {self.past}')
 			return processed
 
@@ -569,7 +573,7 @@ class MoneroWalletOps:
 			if int(uopt.restore_height) < 0:
 				die(1,f"{uopt.restore_height}: invalid value for --restore-height (less than zero)")
 
-		async def process_wallet(self,d,fn):
+		async def process_wallet(self,d,fn,last):
 			msg_r('') # for pexpect
 
 			from .baseconv import baseconv
@@ -598,7 +602,7 @@ class MoneroWalletOps:
 			self.dc = MoneroRPCClientRaw(host=host, port=int(port), user=None, passwd=None)
 			self.accts_data = {}
 
-		async def process_wallet(self,d,fn):
+		async def process_wallet(self,d,fn,last):
 
 			chain_height = (await self.dc.call('get_height'))['height']
 			msg(f'  Chain height: {chain_height}')

@@ -314,8 +314,6 @@ class RPCClient(MMGenObject):
 		"""
 		default call: call with param list unrolled, exactly as with cli
 		"""
-		if method == g.rpc_fail_on_command:
-			method = 'badcommand_' + method
 		return await self.process_http_resp(self.backend.run(
 			payload = {'id': 1, 'jsonrpc': '2.0', 'method': method, 'params': params },
 			timeout = timeout,
@@ -715,7 +713,8 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'create_wallet', # filename, password, language="English"
 		'open_wallet',   # filename, password
 		'close_wallet',
-		'restore_deterministic_wallet', # name,password,seed (restore_height,language,seed_offset,autosave_current)
+		# filename,password,seed (restore_height,language,seed_offset,autosave_current)
+		'restore_deterministic_wallet',
 		'refresh',       # start_height
 	)
 

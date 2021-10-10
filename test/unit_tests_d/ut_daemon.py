@@ -121,6 +121,13 @@ class unit_tests:
 		msg('OK')
 		return True
 
+	def status(self,name,ut):
+		msg_r('Checking status of coin daemons...')
+		qmsg('')
+		test_cmds('start')
+		msg('OK')
+		return True
+
 	def stop(self,name,ut):
 		msg_r('Stopping coin daemons...')
 		qmsg('')

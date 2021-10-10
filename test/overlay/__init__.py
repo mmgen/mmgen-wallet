@@ -29,6 +29,7 @@ def overlay_setup(repo_root):
 	make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
 
 	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
+		sys.stderr.write('Setting up overlay tree\n')
 		for d in (
 				'mmgen',
 				'mmgen.data',

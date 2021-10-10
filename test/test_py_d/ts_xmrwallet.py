@@ -87,13 +87,13 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			self.tx_relay_daemon_parm + f':127.0.0.1:{self.socks_port}' # proxy must be IP, not 'localhost'
 			if self.use_proxy else None )
 
-		if not opt.no_daemon_autostart:
-			self.start_daemons()
-			self.start_wallet_daemons()
-
 		if not opt.no_daemon_stop:
 			atexit.register(self.stop_daemons)
 			atexit.register(self.stop_wallet_daemons)
+
+		if not opt.no_daemon_autostart:
+			self.start_daemons()
+			self.start_wallet_daemons()
 
 		self.balance = None
 

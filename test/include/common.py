@@ -139,10 +139,12 @@ def joinpath(*args,**kwargs):
 	return os.path.join(*args,**kwargs)
 
 def ok():
-	if opt.profile: return
+	if opt.profile:
+		return
 	if opt.verbose or opt.exact_output:
 		gmsg('OK')
-	else: msg(' OK')
+	else:
+		msg(' OK')
 
 def cmp_or_die(s,t,desc=None):
 	if s != t:
