@@ -10,9 +10,9 @@ cf_usr = cfg_file('usr')
 cf_sys = cfg_file('sys')
 cf_sample = cfg_file('sample')
 
-msg(f'Usr cfg file:    {cf_usr.fn}')
-msg(f'Sys cfg file:    {cf_sys.fn}')
-msg(f'Sample cfg file: {cf_sample.fn}')
+msg(f'Usr cfg file:    {os.path.relpath(cf_usr.fn)}')
+msg(f'Sys cfg file:    {os.path.relpath(cf_sys.fn)}')
+msg(f'Sample cfg file: {os.path.relpath(cf_sample.fn)}')
 
 if cmd_args:
 	if cmd_args[0] == 'parse_test':

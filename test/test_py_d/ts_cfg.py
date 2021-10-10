@@ -55,7 +55,7 @@ class TestSuiteCfg(TestSuiteBase):
 			'shared_data': '{}/data_dir/{}'.format(self.tmpdir,CfgFileSampleSys.test_fn_subdir),
 			'usr':         '{}/data_dir/mmgen.cfg'.format(self.tmpdir),
 			'sys':         '{}/data_dir/{}/mmgen.cfg'.format(self.tmpdir,CfgFileSampleSys.test_fn_subdir),
-			'sample':      '{}/data_dir/mmgen.cfg.sample'.format(self.tmpdir),
+			'sample':      '{}/data_dir/mmgen.cfg.sample'.format(os.path.abspath(self.tmpdir)),
 		}[id_str]
 
 	def copy_sys_sample(self):

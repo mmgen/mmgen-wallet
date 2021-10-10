@@ -210,7 +210,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		('bob_bal5',                 "Bob's balance"),
 		('bob_send_non_mmgen',       'sending funds to Alice (from non-MMGen addrs)'),
 		('generate',                 'mining a block'),
-		('alice_bal_rpcfail',        'RPC failure code'),
 		('alice_send_estimatefee',   'tx creation with no fee on command line'),
 		('generate',                 'mining a block'),
 		('bob_bal6',                 "Bob's balance"),
@@ -918,16 +917,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def alice_add_label_badaddr4(self):
 		addr = self.proto.pubhash2addr('00'*20,False) # regtest (testnet) zero address
 		return self.alice_add_label_badaddr( addr, f'Address {addr!r} not found in tracking wallet' )
-
-	def alice_bal_rpcfail(self):
-		addr = self._user_sid('alice') + ':C:2'
-		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = 'listunspent'
-		t = self.spawn('mmgen-tool',['--alice','getbalance'])
-		os.environ['MMGEN_RPC_FAIL_ON_COMMAND'] = ''
-		t.expect('Method not found')
-		t.read()
-		t.req_exit_val = 3
-		return t
 
 	def alice_remove_label1(self):
 		sid = self._user_sid('alice')
