@@ -125,17 +125,26 @@ class unit_tests:
 					md.start()
 				wd.start()
 				c = MoneroWalletRPCClient(daemon=wd)
-				await c.call('get_version')
+				fn = f'monero-{wd.network}-junk-wallet'
+				qmsg(f'Creating {wd.network} wallet')
+				await c.call(
+					'restore_deterministic_wallet',
+					filename = fn,
+					password = 'foo',
+					seed     = baseconv.fromhex('beadface'*8,'xmrseed',tostr=True) )
+				qmsg(f'Opening {wd.network} wallet')
+				await c.call( 'open_wallet', filename=fn, password='foo' )
 
 			for md,wd in daemons:
 				wd.wait = False
-				wd.stop()
+				await wd.rpc.stop_daemon()
 				if not opt.no_daemon_stop:
 					md.wait = False
-					md.stop()
+					await md.rpc.stop_daemon()
 
 			gmsg('OK')
 
+		from mmgen.baseconv import baseconv
 		import shutil
 		shutil.rmtree('test/trash2',ignore_errors=True)
 		os.makedirs('test/trash2')

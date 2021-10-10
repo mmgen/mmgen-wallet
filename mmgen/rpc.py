@@ -403,6 +403,23 @@ class RPCClient(MMGenObject):
 					except: m = text
 			raise RPCFailure(f'{s.value} {s.name}: {m}')
 
+	async def stop_daemon(self,quiet=False,silent=False):
+		if self.daemon.state == 'ready':
+			if not (quiet or silent):
+				msg(f'Stopping {self.daemon.desc} on port {self.daemon.bind_port}')
+			ret = await self.do_stop_daemon(silent=silent)
+			if self.daemon.wait:
+				self.daemon.wait_for_state('stopped')
+			return ret
+		else:
+			if not (quiet or silent):
+				msg(f'{self.daemon.desc} on port {self.daemon.bind_port} not running')
+			return True
+
+	async def restart_daemon(self,quiet=False,silent=False):
+		await self.stop_daemon(quiet=quiet,silent=silent)
+		return self.daemon.start(silent=silent)
+
 class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	auth_type = 'basic'
@@ -657,7 +674,7 @@ class MoneroRPCClient(RPCClient):
 	host_path = '/json_rpc'
 	verify_server = False
 
-	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None):
+	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None,daemon=None):
 		if proxy is not None:
 			from .obj import IPPort
 			self.proxy = IPPort(proxy)
@@ -673,6 +690,7 @@ class MoneroRPCClient(RPCClient):
 			self.set_backend('curl')
 			self.backend.exec_opts.remove('--silent')
 			self.backend.exec_opts.append('--verbose')
+		self.daemon = daemon
 
 	async def call(self,method,*params,**kwargs):
 		assert params == (), f'{type(self).__name__}.call() accepts keyword arguments only'
@@ -701,7 +719,10 @@ class MoneroRPCClientRaw(MoneroRPCClient):
 	def make_host_path(arg):
 		return arg
 
-	rpcmethods = ( 'get_height', 'send_raw_transaction' )
+	async def do_stop_daemon(self,silent=False):
+		return await self.call('stop_daemon')
+
+	rpcmethods = ( 'get_height', 'send_raw_transaction', 'stop_daemon' )
 
 class MoneroWalletRPCClient(MoneroRPCClient):
 
@@ -730,6 +751,13 @@ class MoneroWalletRPCClient(MoneroRPCClient):
 		'restore_deterministic_wallet',
 		'refresh',       # start_height
 	)
+
+	async def do_stop_daemon(self,silent=False):
+		"""
+		NB: the 'stop_wallet' RPC call closes the open wallet before shutting down the daemon,
+		returning an error if no wallet is open
+		"""
+		return await self.call('stop_wallet')
 
 class daemon_warning(oneshot_warning_group):
 

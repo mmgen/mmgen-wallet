@@ -55,7 +55,10 @@ def run(network_id=None,proto=None,daemon_id=None):
 		for cmd in d.start_cmds if action == 'start' else [d.stop_cmd]:
 			print(' '.join(cmd))
 	else:
-		d.cmd(action,quiet=opt.quiet)
+		if action == 'stop' and hasattr(d,'rpc'):
+			run_session(d.rpc.stop_daemon(quiet=opt.quiet))
+		else:
+			d.cmd(action,quiet=opt.quiet)
 
 if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:

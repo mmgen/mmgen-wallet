@@ -306,6 +306,9 @@ class MoneroWalletDaemon(RPCDaemon):
 			['--stagenet',                           self.network == 'testnet'],
 		)
 
+		from .rpc import MoneroWalletRPCClient
+		self.rpc = MoneroWalletRPCClient( daemon=self, test_connection=False )
+
 class CoinDaemon(Daemon):
 	networks = ('mainnet','testnet','regtest')
 	cfg_file_hdr = ''
@@ -621,6 +624,15 @@ class monero_daemon(CoinDaemon):
 		return self.rpc_port - 1
 
 	def init_subclass(self):
+
+		from .rpc import MoneroRPCClientRaw
+		self.rpc = MoneroRPCClientRaw(
+			host   = self.host,
+			port   = self.rpc_port,
+			user   = None,
+			passwd = None,
+			test_connection = False,
+			daemon = self )
 
 		self.shared_args = list_gen(
 			[f'--no-zmq'],

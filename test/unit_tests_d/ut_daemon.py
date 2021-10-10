@@ -82,7 +82,10 @@ def test_cmds(op):
 					else:
 						if opt.quiet:
 							msg_r('.')
-						getattr(d,op)(silent=opt.quiet)
+						if op == 'stop' and hasattr(d,'rpc'):
+							run_session(d.rpc.stop_daemon(quiet=opt.quiet))
+						else:
+							getattr(d,op)(silent=opt.quiet)
 
 class unit_tests:
 

@@ -234,4 +234,4 @@ try:
 except KeyboardInterrupt:
 	ymsg('\nUser interrupt')
 finally:
-	m.stop_daemons()
+	run_session(m.stop_wallet_daemon())

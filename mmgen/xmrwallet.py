@@ -295,7 +295,8 @@ class MoneroWalletOps:
 		def post_main(self):
 			pass
 
-		def stop_daemons(self): pass
+		async def stop_wallet_daemon(self):
+			pass
 
 	class wallet(base):
 
@@ -338,10 +339,10 @@ class MoneroWalletOps:
 				daemon_addr = uopt.daemon or None,
 			)
 
-			if not uopt.no_start_wallet_daemon:
-				self.wd.restart()
+			self.c = MoneroWalletRPCClient(daemon=self.wd,test_connection=False)
 
-			self.c = MoneroWalletRPCClient(daemon=self.wd)
+			if not uopt.no_start_wallet_daemon:
+				run_session(self.c.restart_daemon())
 
 		def create_addr_data(self):
 			if uarg.wallets:
@@ -352,11 +353,9 @@ class MoneroWalletOps:
 			else:
 				self.addr_data = self.kal.data
 
-		def stop_daemons(self):
+		async def stop_wallet_daemon(self):
 			if not uopt.no_stop_wallet_daemon:
-				self.wd.stop()
-				if uopt.tx_relay_daemon and hasattr(self,'wd2'):
-					self.wd2.stop()
+				await self.c.stop_daemon()
 
 		def get_wallet_fn(self,d):
 			return os.path.join(
@@ -413,6 +412,12 @@ class MoneroWalletOps:
 			async def close_wallet(self,desc):
 				gmsg_r(f'\n  Closing {desc} wallet...')
 				await self.c.call('close_wallet')
+				gmsg_r('done')
+
+			async def stop_wallet(self,desc):
+				msg(f'Stopping {self.c.daemon.desc} on port {self.c.daemon.bind_port}')
+				gmsg_r(f'\n  Stopping {desc} wallet...')
+				await self.c.stop_daemon(quiet=True) # closes wallet
 				gmsg_r('done')
 
 			def print_accts(self,data,addrs_data,indent='    '):
@@ -658,7 +663,9 @@ class MoneroWalletOps:
 				t_elapsed // 60,
 				t_elapsed % 60 ))
 
-			await self.c.call('close_wallet')
+			if not last:
+				await self.c.call('close_wallet')
+
 			return wallet_height >= chain_height
 
 		def post_main(self):
@@ -724,20 +731,19 @@ class MoneroWalletOps:
 
 			m = re.fullmatch(uarg_info['tx_relay_daemon'].pat,uopt.tx_relay_daemon,re.ASCII)
 
-			self.wd2 = MoneroWalletDaemon(
+			wd2 = MoneroWalletDaemon(
 				proto       = self.proto,
 				wallet_dir  = uopt.wallet_dir or '.',
 				test_suite  = g.test_suite,
 				daemon_addr = m[1],
-				proxy       = m[2],
-				port_shift  = 16 )
+				proxy       = m[2] )
 
 			if g.test_suite:
-				self.wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
+				wd2.usr_daemon_args = ['--daemon-ssl-allow-any-cert']
 
-			self.wd2.start()
+			wd2.start()
 
-			self.c = MoneroWalletRPCClient(daemon=self.wd2)
+			self.c = MoneroWalletRPCClient(daemon=wd2)
 
 		async def main(self):
 			gmsg(f'\n{self.desc}ing account #{self.account} of wallet {self.source.idx}' + (
@@ -808,7 +814,7 @@ class MoneroWalletOps:
 			elif keypress_confirm(f'Relay {self.name} transaction?'):
 				w_desc = 'source'
 				if uopt.tx_relay_daemon:
-					await h.close_wallet('source')
+					await h.stop_wallet('source')
 					msg('')
 					self.init_tx_relay_daemon()
 					h = self.rpc(self,self.source)
@@ -816,11 +822,9 @@ class MoneroWalletOps:
 					await h.open_wallet(w_desc,refresh=False)
 				msg_r(f'\n    Relaying {self.name} transaction...')
 				await h.relay_tx(new_tx.data.metadata)
-				await h.close_wallet(w_desc)
 
 				gmsg('\n\nAll done')
 			else:
-				await h.close_wallet('source')
 				die(1,'\nExiting at user request')
 
 			return True

@@ -221,6 +221,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				user   = None,
 				passwd = None,
 				test_connection = False,
+				daemon = md,
 			)
 			md_json_rpc = MoneroRPCClient(
 				host   = md.host,
@@ -228,6 +229,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				user   = None,
 				passwd = None,
 				test_connection = False,
+				daemon = md,
 			)
 			wd = MoneroWalletDaemon(
 				proto      = self.proto,
@@ -659,11 +661,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 	def stop_daemons(self):
 		for v in self.users.values():
-			if v.md.state != 'stopped':
-				v.md.stop()
-
-	def start_wallet_daemons(self):
-		self.users['miner'].wd.start()
+			run_session(v.md_rpc.stop_daemon())
 
 	def stop_miner_wallet_daemon(self):
-		self.users['miner'].wd.stop()
+		run_session(self.users['miner'].wd_rpc.stop_daemon())
