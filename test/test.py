@@ -148,26 +148,6 @@ if not ('resume' in _uopts or 'skip_deps' in _uopts):
 	try: os.unlink(data_dir)
 	except: pass
 
-def add_cmdline_opts():
-	"""
-	These are set automatically now when g.test_suite == True:
-	  --data-dir in opts.init()
-	  --daemon-data-dir and --rpc-port by CoinDaemon()
-	"""
-	def get_coin():
-		return (_uopts.get('coin') or 'btc').lower()
-
-	network_id = get_coin().lower() + ('_tn' if _uopts.get('testnet') else '')
-
-	sys.argv.insert(1,'--data-dir=' + data_dir)
-	sys.argv.insert(1,'--daemon-data-dir=test/daemons/' + get_coin())
-	from mmgen.daemon import CoinDaemon
-	sys.argv.insert(1,'--rpc-port={}'.format(
-		CoinDaemon(network_id,test_suite=True).rpc_port
-	))
-
-# add_cmdline_opts()
-
 opts.UserOpts._reset_ok += ('skip_deps','no_daemon_autostart','names','no_timings')
 
 # step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
@@ -656,8 +636,11 @@ class TestSuiteRunner(object):
 			self.log_fd = None
 
 		if opt.coverage:
-			self.coverdir,self.accfile = init_coverage()
-			omsg(f'INFO → Writing coverage files to {self.coverdir!r}')
+			coverdir,accfile = init_coverage()
+			omsg(f'INFO → Writing coverage files to {coverdir!r}')
+			self.pre_args = ['python3','-m','trace','--count','--coverdir='+coverdir,'--file='+accfile]
+		else:
+			self.pre_args = ['python3'] if g.platform == 'win' else []
 
 		if opt.pexpect_spawn:
 			omsg(f'INFO → Using pexpect.spawn() for real terminal emulation')
@@ -675,27 +658,23 @@ class TestSuiteRunner(object):
 		if extra_desc:
 			desc += ' ' + extra_desc
 
-		if not opt.system:
-			cmd = os.path.relpath(os.path.join(repo_root,cmd_dir,cmd))
-		elif g.platform == 'win':
-			cmd = os.path.join('/mingw64','opt','bin',cmd)
+		cmd_path = (
+			cmd if opt.system # opt.system is broken for main test group with overlay tree
+			else os.path.relpath(os.path.join(repo_root,cmd_dir,cmd)) )
 
-		args = [cmd] + self.passthru_opts + self.ts.extra_spawn_args + args
-
-		if not no_exec_wrapper:
-			args = ['scripts/exec_wrapper.py'] + args
-
-		if g.platform == 'win':
-			args = ['python3'] + args
+		args = (
+			self.pre_args +
+			([] if no_exec_wrapper else ['scripts/exec_wrapper.py']) +
+			[cmd_path] +
+			self.passthru_opts +
+			self.ts.extra_spawn_args +
+			args )
 
 		for i in args:
 			if not isinstance(i,str):
 				die(2,'Error: missing input files in cmd line?:\nName: {}\nCmdline: {!r}'.format(
 					self.ts.test_name,
 					args ))
-
-		if opt.coverage:
-			args = ['python3','-m','trace','--count','--coverdir='+self.coverdir,'--file='+self.accfile] + args
 
 		qargs = ['{q}{}{q}'.format( a, q = "'" if ' ' in a else '' ) for a in args]
 		cmd_disp = ' '.join(qargs).replace('\\','/') # for mingw

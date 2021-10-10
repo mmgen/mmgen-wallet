@@ -158,7 +158,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 					3. Exit the test here, start the SSH SOCKS proxy manually by entering the
 					   following command, and restart the test:
 
-							 {' '.join(a+b2)}
+					      {' '.join(a+b2)}
 				""",indent='    ',strip_char='\t'))
 
 				if keypress_confirm('Continue?'):

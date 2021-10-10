@@ -696,7 +696,7 @@ class parity_daemon(openethereum_daemon):
 	exec_fn = 'parity'
 
 class geth_daemon(ethereum_daemon):
-	daemon_data = _dd('Geth', 1010007, '1.10.7')
+	daemon_data = _dd('Geth', 1010009, '1.10.9')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
 	use_pidfile = False
