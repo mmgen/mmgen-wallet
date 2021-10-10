@@ -104,6 +104,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 				proto = MMGenTxFile.get_proto(txfile,quiet_open=True)
 				if proto.sign_mode == 'daemon':
 					start_test_daemons(proto.network_id)
+					set_vt100()
 				t = self.spawn(
 					'mmgen-txsign',
 					['--outdir=test/trash','--yes', f'--passwd-file={passfile}', dfl_words_file, txfile],

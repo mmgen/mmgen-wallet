@@ -290,7 +290,7 @@ class MoneroWalletDaemon(RPCDaemon):
 			[f'--daemon-port={self.daemon_port}',    not self.daemon_addr],
 			[f'--proxy={self.proxy}',                self.proxy],
 			[f'--pidfile={self.pidfile}',            self.platform == 'linux'],
-			['--detach',                             not self.opt.no_daemonize],
+			['--detach',                             not (self.opt.no_daemonize or self.platform=='win')],
 			['--stagenet',                           self.network == 'testnet'],
 		)
 
@@ -622,7 +622,7 @@ class monero_daemon(CoinDaemon):
 			['--no-igd'],
 			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
 			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
-			['--detach',                  not self.opt.no_daemonize],
+			['--detach',                  not (self.opt.no_daemonize or self.platform=='win')],
 			['--offline',                 not self.opt.online],
 		)
 

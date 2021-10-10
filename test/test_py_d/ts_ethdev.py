@@ -55,7 +55,7 @@ erigon_devkey_fn = 'erigon.devkey'
 tested_solc_ver = '0.8.7'
 
 def check_solc_ver():
-	cmd = 'scripts/create-token.py --check-solc-version'
+	cmd = 'python3 scripts/create-token.py --check-solc-version'
 	try:
 		cp = run(cmd.split(),check=False,stdout=PIPE)
 	except Exception as e:
@@ -370,6 +370,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not opt.no_daemon_autostart:
 			if g.daemon_id == 'geth':
 				self.geth_setup()
+				set_vt100()
 			if not start_test_daemons(
 					self.proto.coin+'_rt',
 					remove_datadir = not g.daemon_id in ('geth','erigon') ):
@@ -746,6 +747,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		try: os.mkdir(odir)
 		except: pass
 		cmd = [
+			'python3',
 			'scripts/exec_wrapper.py',
 			'scripts/create-token.py',
 			'--coin=' + self.proto.coin,

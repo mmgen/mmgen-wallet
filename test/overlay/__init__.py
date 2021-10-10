@@ -1,4 +1,4 @@
-import sys,os
+import sys,os,shutil
 
 def overlay_setup(repo_root):
 
@@ -13,19 +13,21 @@ def overlay_setup(repo_root):
 				d == 'mmgen' and fn.startswith('secp256k1')
 			):
 				if fn in fakemods:
-					os.symlink(
+					make_link(
 						os.path.join(fakemod_dir,fn),
 						os.path.join(destdir,fn) )
 					link_fn = fn.removesuffix('.py') + '_orig.py'
 				else:
 					link_fn = fn
-				os.symlink(
+				make_link(
 					os.path.join(srcdir,fn),
 					os.path.join(destdir,link_fn) )
 
 	overlay_dir = os.path.join(repo_root,'test','overlay','tree')
 	fakemod_dir = os.path.join(repo_root,'test','overlay','fakemods')
 	fakemods  = os.listdir(fakemod_dir)
+	make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
+
 	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
 		for d in (
 				'mmgen',
