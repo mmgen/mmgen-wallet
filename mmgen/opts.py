@@ -276,7 +276,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	  finalized before setting data_dir
 	"""
 	if opt.data_dir:
-		g.data_dir_root = os.path.normpath(os.path.expanduser(opt.data_dir))
+		g.data_dir_root = os.path.normpath(os.path.abspath(opt.data_dir))
 	elif os.getenv('MMGEN_TEST_SUITE'):
 		from test.include.common import get_data_dir
 		g.data_dir_root = get_data_dir()
