@@ -1163,4 +1163,5 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		if not opt.no_daemon_stop:
 			if not stop_test_daemons(self.proto.coin+'_rt'):
 				return False
+		set_vt100()
 		return 'ok'

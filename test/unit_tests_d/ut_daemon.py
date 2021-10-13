@@ -89,6 +89,8 @@ def test_cmds(op):
 
 class unit_tests:
 
+	win_skip = ('start','status','stop')
+
 	def flags(self,name,ut):
 
 		qmsg_r('Testing flags and opts...')

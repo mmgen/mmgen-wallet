@@ -90,6 +90,7 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 class unit_tests:
 
 	altcoin_deps = ('ltc','bch','eth','etc','xmrwallet')
+	win_skip = ('xmrwallet',) # FIXME - wallet doesn't open
 
 	def btc(self,name,ut):
 		return run_test(['btc','btc_tn'],test_cf_auth=True)

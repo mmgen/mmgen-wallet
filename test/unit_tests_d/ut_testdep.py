@@ -10,7 +10,7 @@ sec = 'deadbeef' * 8
 class unit_tests:
 
 	altcoin_deps = ('pycoin','moneropy','keyconv','zcash_mini','ethkey')
-	win_skip = ('losetup',)
+	win_skip = ('losetup','moneropy','zcash_mini')
 
 	def core_repo(self,name,ut):
 		crr = os.getenv('CORE_REPO_ROOT')

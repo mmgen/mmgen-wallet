@@ -10,10 +10,10 @@ from mmgen.common import *
 
 class unit_tests:
 
-	altcoin_deps = ('keccak','py_ecc')
-	win_skip = ('aiohttp',)
+	altcoin_deps = ('pysha3','py_ecc')
+	win_skip = ('aiohttp','pysha3')
 
-	def keccak(self,name,ut): # ETH,XMR
+	def pysha3(self,name,ut): # ETH,XMR
 		from sha3 import keccak_256
 		return True
 
