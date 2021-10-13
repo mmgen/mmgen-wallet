@@ -101,21 +101,18 @@ class LEDControl:
 				iv = init_val or open(fn).read().strip()
 				open(fn,'w').write(f'{iv}\n')
 				return True
-			except:
-				msg('\n'+fmt(f"""
+			except PermissionError:
+				ydie(1,'\n'+fmt(f"""
 					You do not have access to the {desc} file
 					To allow access, run the following command:
 
 					    sudo chmod 0666 {fn}
 				""",indent='  ',strip_char='\t'))
-				return False
 
-		if not check_access(board.status,desc='status LED control'):
-			sys.exit(1)
+		check_access(board.status,desc='status LED control')
 
 		if board.trigger:
-			if not check_access(board.trigger,desc='LED trigger',init_val=board.trigger_states[0]):
-				sys.exit(1)
+			check_access(board.trigger,desc='LED trigger',init_val=board.trigger_states[0])
 
 		self.board = board
 

@@ -11,7 +11,12 @@ from mmgen.common import *
 class unit_tests:
 
 	altcoin_deps = ('pysha3','py_ecc')
-	win_skip = ('aiohttp','pysha3')
+	win_skip = ('aiohttp','pysha3','led')
+
+	def led(self,name,ut):
+		from mmgen.led import LEDControl
+		LEDControl(enabled=True)
+		return True
 
 	def pysha3(self,name,ut): # ETH,XMR
 		from sha3 import keccak_256
