@@ -50,7 +50,7 @@ opts_data = {
 -c, --coins=c         Coins to sign for (comma-separated list)
 -I, --no-insert-check Don’t check for device insertion
 -l, --led             Use status LED to signal standby, busy and error
--m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: '{mountpoint}')
+-m, --mountpoint=M    Specify an alternate mountpoint 'M' (default: {mountpoint!r})
 -M, --mnemonic-fmt=F  During setup, prompt for mnemonic seed phrase of format
                       'F' (choices: {fmt_list(mn_fmts,fmt='no_spc')}; default: {mn_fmt_dfl!r})
 -n, --no-summary      Don’t print a transaction summary
@@ -80,20 +80,20 @@ device and exits.
 If invoked with 'wait', the program waits in a loop, mounting, signing and
 unmounting every time the removable device is inserted.
 
-On supported platforms (currently Orange Pi and Raspberry Pi boards), the
-status LED indicates whether the program is busy or in standby mode, i.e.
+On supported platforms (currently Orange Pi, Rock Pi and Raspberry Pi boards),
+the status LED indicates whether the program is busy or in standby mode, i.e.
 ready for device insertion or removal.
 
-The removable device must have a partition labeled MMGEN_TX and a user-
+The removable device must have a partition labeled MMGEN_TX with a user-
 writable directory '/tx', where unsigned MMGen transactions are placed.
 
-On the signing machine the mount point '{mountpoint}' must exist and /etc/fstab
+On the signing machine the mount point {mountpoint!r} must exist and /etc/fstab
 must contain the following entry:
 
     LABEL='MMGEN_TX' /mnt/tx auto noauto,user 0 0
 
 Transactions are signed with a wallet on the signing machine (in the directory
-'{wallet_dir}') encrypted with a 64-character hexadecimal password on the
+{wallet_dir!r}) encrypted with a 64-character hexadecimal password on the
 removable device.
 
 The password and wallet can be created in one operation by invoking the
