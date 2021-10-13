@@ -34,7 +34,7 @@ python='python3'
 rounds=100 rounds_min=20 rounds_mid=250 rounds_max=500
 
 dfl_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc btc_tn btc_rt bch bch_rt ltc ltc_rt tool tool2 gen'
-extra_tests='dep autosign_btc autosign_live etc ltc_tn bch_tn'
+extra_tests='dep autosign_btc autosign_live ltc_tn bch_tn'
 noalt_tests='dep misc obj color unit hash ref autosign_btc btc btc_tn btc_rt tool tool2 gen'
 quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc btc_rt tool tool2 gen'
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
@@ -74,8 +74,7 @@ do
 		echo   "     altref   - altcoin reference file checks"
 		echo   "     alts     - operations for all supported gen-only altcoins"
 		echo   "     xmr      - Monero xmrwallet operations"
-		echo   "     eth      - operations for Ethereum"
-		echo   "     etc      - operations for Ethereum Classic"
+		echo   "     eth      - operations for Ethereum and Ethereum Classic"
 		echo   "     autosign - autosign"
 		echo   "     btc      - bitcoin"
 		echo   "     btc_tn   - bitcoin testnet"
@@ -321,18 +320,15 @@ t_alts="
 	- #   keyconv
 	- $gentest_py --all --type=legacy 2:keyconv $rounds
 	- $gentest_py --all --type=compressed 2:keyconv $rounds
-	- #   ethkey
-	- $gentest_py --all 2:ethkey $rounds
+	e #   ethkey
+	e $gentest_py --all 2:ethkey $rounds
+	m #   moneropy
+	m $gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
+	z #   zcash-mini
+	z $gentest_py --all 2:zcash-mini $rounds_mid
 "
 
-[ "$MSYS2" ] || { # no moneropy (pysha3), zcash-mini (golang)
-	t_alts+="
-		- #   moneropy
-		- $gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
-		- #   zcash-mini
-		- $gentest_py --all 2:zcash-mini $rounds_mid
-	"
-}
+[ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
 
 f_alts='Gen-only altcoin tests completed'
 
@@ -358,17 +354,13 @@ f_xmr='Monero xmrwallet tests completed'
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'
 t_eth="
-	- $test_py --coin=eth --daemon-id=openethereum ethdev
-	- $test_py --coin=eth --daemon-id=geth ethdev
+	oe     $test_py --coin=eth --daemon-id=openethereum ethdev
+	geth   $test_py --coin=eth --daemon-id=geth ethdev
+	parity $test_py --coin=etc ethdev
 "
 f_eth='Ethereum tests completed'
 
-i_etc='Ethereum Classic'
-s_etc='Testing transaction and tracking wallet operations for Ethereum Classic'
-t_etc="
-	- $test_py --coin=etc ethdev
-"
-f_etc='Ethereum Classic tests completed'
+[ "$FAST" ] && t_eth_skip='oe'
 
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-bchn and litecoin mainnet and testnet daemons must be running for the following test'

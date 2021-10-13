@@ -16,7 +16,8 @@ def overlay_setup(repo_root):
 					make_link(
 						os.path.join(fakemod_dir,fn),
 						os.path.join(destdir,fn) )
-					link_fn = fn.removesuffix('.py') + '_orig.py'
+#					link_fn = fn.removesuffix('.py') + '_orig.py' # Python 3.9
+					link_fn = fn[:-3] + '_orig.py'
 				else:
 					link_fn = fn
 				make_link(
@@ -30,6 +31,7 @@ def overlay_setup(repo_root):
 
 	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
 		sys.stderr.write('Setting up overlay tree\n')
+		shutil.rmtree(overlay_dir,ignore_errors=True)
 		for d in (
 				'mmgen',
 				'mmgen.data',

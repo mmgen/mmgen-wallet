@@ -79,17 +79,17 @@ def run_test(network_ids,test_cf_auth=False,daemon_ids=None):
 
 	for network_id in network_ids:
 		proto = init_proto(network_id=network_id)
-		daemon_ids = (lambda x:
+		ids = (lambda x:
 			set(daemon_ids) & set(x) if daemon_ids else x
 			)(CoinDaemon.coins[proto.coin].daemon_ids)
-		for daemon_id in daemon_ids:
+		for daemon_id in ids:
 			do( CoinDaemon(proto=proto,test_suite=True,daemon_id=daemon_id) )
 
 	return True
 
 class unit_tests:
 
-	altcoin_deps = ('ltc','bch','eth','etc','xmrwallet')
+	altcoin_deps = ('ltc','bch','geth','erigon','openethereum','parity','xmrwallet')
 	win_skip = ('xmrwallet',) # FIXME - wallet doesn't open
 
 	def btc(self,name,ut):
@@ -101,11 +101,16 @@ class unit_tests:
 	def bch(self,name,ut):
 		return run_test(['bch','bch_tn'],test_cf_auth=True)
 
-	def eth(self,name,ut):
-		run_test(['eth','eth_tn','eth_rt'],daemon_ids=['openethereum','erigon'])
+	def geth(self,name,ut):
 		return run_test(['eth_tn','eth_rt'],daemon_ids=['geth']) # mainnet returns EIP-155 error on empty blockchain
 
-	def etc(self,name,ut):
+	def erigon(self,name,ut):
+		return run_test(['eth','eth_tn','eth_rt'],daemon_ids=['erigon'])
+
+	def openethereum(self,name,ut):
+		return run_test(['eth','eth_tn','eth_rt'],daemon_ids=['openethereum'])
+
+	def parity(self,name,ut):
 		return run_test(['etc'])
 
 	def xmrwallet(self,name,ut):
