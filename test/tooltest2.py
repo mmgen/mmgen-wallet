@@ -78,7 +78,6 @@ opts_data = {
                      those in the repo root
 -t, --type=          Specify coin type
 -f, --fork           Run commands via tool executable instead of importing tool module
--x, --exec-wrapper   Run tool inside exec_wrapper script
 -v, --verbose        Produce more verbose output
 """,
 	'notes': """
@@ -822,8 +821,8 @@ async def run_test(gid,cmd_name):
 
 	def fork_cmd(cmd_name,args,out,opts):
 		cmd = (
-			['scripts/exec_wrapper.py'] +
-			list(tool_cmd) +
+			tool_cmd_preargs +
+			tool_cmd +
 			(opts or []) +
 			[cmd_name] + args
 		)
@@ -1030,21 +1029,18 @@ else:
 	tool_exec = os.path.relpath(os.path.join('cmds','mmgen-tool'))
 
 if opt.fork:
-	tool_cmd = (tool_exec,'--skip-cfg-file')
-
 	passthru_args = ['coin','type','testnet','token']
-	tool_cmd += tuple(['--{}{}'.format(k.replace('_','-'),
-		'='+getattr(opt,k) if getattr(opt,k) != True else ''
-		) for k in passthru_args if getattr(opt,k)])
-
-	if opt.exec_wrapper:
-		tool_cmd = (os.path.join('scripts','exec_wrapper.py'),) + tool_cmd
+	tool_cmd = [ tool_exec, '--skip-cfg-file' ] + [
+		'--{}{}'.format(
+			k.replace('_','-'),
+			'='+getattr(opt,k) if getattr(opt,k) != True else '')
+		for k in passthru_args if getattr(opt,k) ]
 
 	if opt.coverage:
 		d,f = init_coverage()
-		tool_cmd = ('python3','-m','trace','--count','--coverdir='+d,'--file='+f) + tool_cmd
-	elif g.platform == 'win':
-		tool_cmd = ('python3',) + tool_cmd
+		tool_cmd_preargs = ['python3','-m','trace','--count','--coverdir='+d,'--file='+f]
+	else:
+		tool_cmd_preargs = ['python3','scripts/exec_wrapper.py']
 
 start_time = int(time.time())
 
