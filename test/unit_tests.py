@@ -20,7 +20,7 @@
 test/unit_tests.py:  Unit tests for the MMGen suite
 """
 
-import sys,os,time,importlib
+import sys,os,time,importlib,platform
 
 from include.tests_header import repo_root
 from include.common import end_msg
@@ -115,6 +115,7 @@ def run_test(test,subtest=None):
 			t = getattr(mod,'unit_tests')
 			altcoin_deps = getattr(t,'altcoin_deps',())
 			win_skip = getattr(t,'win_skip',())
+			arm_skip = getattr(t,'arm_skip',())
 			subtests = [k for k,v in t.__dict__.items() if type(v).__name__ == 'function']
 			for subtest in subtests:
 				if opt.no_altcoin_deps and subtest in altcoin_deps:
@@ -122,6 +123,9 @@ def run_test(test,subtest=None):
 					continue
 				if g.platform == 'win' and subtest in win_skip:
 					qmsg(gray(f'Skipping {subtest!r} for Windows platform'))
+					continue
+				elif platform.machine() == 'aarch64' and subtest in arm_skip:
+					qmsg(gray(f'Skipping {subtest!r} for ARM platform'))
 					continue
 				run_subtest(subtest)
 		else:

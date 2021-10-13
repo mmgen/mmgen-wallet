@@ -52,12 +52,16 @@ def test_flags_err(ut,d):
 		('flag (4)', 'ClassFlagsError', 'already set',       bad7 ),
 	))
 
+arm_skip_daemons = ('openethereum','parity')
+
 def test_cmds(op):
 	network_ids = CoinDaemon.get_network_ids()
 	for test_suite in [True,False] if op == 'print' else [True]:
 		vmsg(orange(f'Start commands (op={op}, test_suite={test_suite}):'))
 		for coin,data in CoinDaemon.coins.items():
 			for daemon_id in data.daemon_ids:
+				if daemon_id in arm_skip_daemons:
+					continue
 				for network in globals()[daemon_id+'_daemon'].networks:
 					if opt.no_altcoin_deps and coin != 'BTC':
 						continue

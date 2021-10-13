@@ -6,6 +6,8 @@ SUDO='sudo'
 
 if [ "$(uname -m)" == 'armv7l' ]; then
 	ARM32=1
+elif [ "$(uname -m)" == 'aarch64' ]; then
+	ARM64=1
 elif uname -a | grep -q 'MSYS'; then
 	SUDO='' MSYS2=1;
 fi
@@ -329,6 +331,7 @@ t_alts="
 "
 
 [ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
+[ "$ARM32" -o "$ARM64" ] && t_alts_skip='z e'
 
 f_alts='Gen-only altcoin tests completed'
 
@@ -361,6 +364,7 @@ t_eth="
 f_eth='Ethereum tests completed'
 
 [ "$FAST" ] && t_eth_skip='oe'
+[ "$ARM32" -o "$ARM64" ] && t_eth_skip='oe parity'
 
 i_autosign='Autosign'
 s_autosign='The bitcoin, bitcoin-bchn and litecoin mainnet and testnet daemons must be running for the following test'
@@ -486,7 +490,7 @@ t_tool="
 	- $tooltest_py --coin=zec cryptocoin
 	z $tooltest_py --coin=zec --type=zcash_z cryptocoin
 "
-[ "$MSYS2" ] && t_tool_skip='z'
+[ "$MSYS2" -o "$ARM32" -o "$ARM64" ] && t_tool_skip='z'
 
 f_tool='tooltest tests completed'
 

@@ -91,6 +91,7 @@ class unit_tests:
 
 	altcoin_deps = ('ltc','bch','geth','erigon','openethereum','parity','xmrwallet')
 	win_skip = ('xmrwallet',) # FIXME - wallet doesn't open
+	arm_skip = ('openethereum','parity') # no prebuilt binaries for ARM
 
 	def btc(self,name,ut):
 		return run_test(['btc','btc_tn'],test_cf_auth=True)
