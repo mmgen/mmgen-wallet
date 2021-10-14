@@ -137,6 +137,7 @@ def tt_txview():
 	tx = MMGenTX.Unsigned(filename=fn,quiet_open=True)
 	while True:
 		tx.view_with_prompt('View data for transaction?',pause=False)
+		set_vt100()
 		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
 			break
 
@@ -151,6 +152,7 @@ tt_start()
 tt_get_terminal_size()
 tt_color()
 tt_license()
+set_vt100()
 tt_line_input()
 tt_urand()
 tt_txview()
