@@ -98,15 +98,15 @@ will produce a listing of the same directory.
 
 > Download up-to-date versions of these files from a fast MSYS2 mirror:
 
->> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db>
->> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db.sig>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db.sig>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db.sig>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db.sig>
->> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db>
+>> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db>  
+>> <https://mirror.yandex.ru/mirrors/msys2/msys/x86_64/msys.db.sig>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/mingw64.db.sig>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/i686/mingw32.db.sig>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/clang64/clang64.db.sig>  
+>> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db>  
 >> <https://mirror.yandex.ru/mirrors/msys2/mingw/ucrt64/ucrt64.db.sig>
 
 > Copy the files to your offline machine, replacing the originals at

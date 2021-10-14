@@ -33,7 +33,7 @@ In addition, ERC20 token creation and deployment are supported via the
 
 From the MMGen repository root, type:
 
-	$ pip3 install --no-deps --user -r eth-requirements.txt
+	$ python3 -m pip install --no-deps --user -r eth-requirements.txt
 
 #### <a name='a_oe'>Install and run Geth or OpenEthereum</a>
 

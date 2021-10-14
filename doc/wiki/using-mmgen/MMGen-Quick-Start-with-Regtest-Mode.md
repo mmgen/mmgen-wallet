@@ -6,8 +6,7 @@ All of MMGen’s functionality is available in regtest mode, making it an ideal
 way to learn to use the MMGen wallet without risking real coins.
 
 To send a transaction or perform any other operation as Bob or Alice, just add
-the `--bob` or `--alice` option to the relevant MMGen command.  MMGen will start
-and stop the Bitcoin daemon automatically as needed.
+the `--bob` or `--alice` option to the relevant MMGen command.
 
 This tutorial provides a quick, hands-on introduction.
 
