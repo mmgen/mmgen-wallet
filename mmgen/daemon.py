@@ -576,7 +576,7 @@ class bitcoin_core_daemon(CoinDaemon):
 		return self.cli_cmd('stop')
 
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 23010000, '23.1.0')
+	daemon_data = _dd('Bitcoin Cash Node', 24000000, '24.0.0')
 	exec_fn = 'bitcoind-bchn'
 	cli_fn = 'bitcoin-cli-bchn'
 	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
@@ -720,7 +720,7 @@ class parity_daemon(openethereum_daemon):
 	exec_fn = 'parity'
 
 class geth_daemon(ethereum_daemon):
-	daemon_data = _dd('Geth', 1010009, '1.10.9')
+	daemon_data = _dd('Geth', 1010014, '1.10.14')
 	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
 	exec_fn = 'geth'
 	use_pidfile = False
