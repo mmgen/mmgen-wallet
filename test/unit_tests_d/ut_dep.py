@@ -15,7 +15,12 @@ class unit_tests:
 
 	def led(self,name,ut):
 		from mmgen.led import LEDControl
-		LEDControl(enabled=True)
+		try:
+			LEDControl(enabled=True)
+		except NoLEDSupport:
+			ymsg('Warning: no LED support on this platform')
+		else:
+			gmsg('LED support found!')
 		return True
 
 	def pysha3(self,name,ut): # ETH,XMR
