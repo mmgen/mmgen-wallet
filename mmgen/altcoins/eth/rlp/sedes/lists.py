@@ -1,7 +1,7 @@
 """
 Module for sedes objects that use lists as serialization format.
 """
-from collections import Sequence
+from collections.abc import Sequence
 
 from ...pyethereum.utils import to_list,to_tuple
 

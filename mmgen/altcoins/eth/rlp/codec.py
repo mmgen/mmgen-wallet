@@ -70,7 +70,7 @@ def encode_raw(item):
             return item
         payload = item
         prefix_offset = 128  # string
-    elif not isinstance(item, str) and isinstance(item, collections.Sequence):
+    elif not isinstance(item, str) and isinstance(item, collections.abc.Sequence):
         payload = b''.join(encode_raw(x) for x in item)
         prefix_offset = 192  # list
     else:
@@ -267,7 +267,7 @@ def infer_sedes(obj):
         return big_endian_int
     elif BinaryClass.is_valid_type(obj):
         return binary
-    elif not isinstance(obj, str) and isinstance(obj, collections.Sequence):
+    elif not isinstance(obj, str) and isinstance(obj, collections.abc.Sequence):
         return List(map(infer_sedes, obj))
     elif isinstance(obj, bool):
         return boolean

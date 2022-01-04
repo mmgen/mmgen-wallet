@@ -182,7 +182,7 @@ def Changeset(obj, changes):
     return cls(obj, changes)
 
 
-class BaseSerializable(collections.Sequence):
+class BaseSerializable(collections.abc.Sequence):
     def __init__(self, *args, **kwargs):
         if kwargs:
             field_values = merge_kwargs_to_args(args, kwargs, self._meta.field_names)
