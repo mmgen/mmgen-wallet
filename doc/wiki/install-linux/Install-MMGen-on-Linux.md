@@ -22,6 +22,9 @@ For computers with no Internet connection, see **Note for offline machines** bel
 
 #### Install MMGen:
 
+Make sure that `~/.local/bin` is in `PATH`.  Existing MMGen users should delete
+any old installations under `/usr` or `/usr/local`.
+
 	$ git clone https://github.com/mmgen/mmgen.git
 	$ cd mmgen
 	$ git checkout stable_linux # see 'Note' below
@@ -37,11 +40,11 @@ security vulnerabilities are more likely to be present in new code than in a
 stable release.  In addition, new code may require dependencies or installation
 steps not yet covered in the documentation.
 
-Install your coin daemon(s).  To install prebuilt binaries, go [here][01].  To
-install from source, go [here][02].
-
 **Testing Note:** MMGen may be tested in place prior to installation.  Refer to
 the [Test Suite][ts] wiki page for details.
+
+Install your coin daemon(s).  To install prebuilt binaries, go [here][01].  To
+install from source, go [here][02].
 
 ##### Note for offline machines:
 

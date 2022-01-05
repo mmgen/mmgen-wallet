@@ -1,4 +1,27 @@
-## Introduction
+## Table of Contents
+
+#### [Introduction](#a_i)
+
+#### [Install MSYS2 and MMGen](#a_m)
+* [1. Install MSYS2](#a_ms)
+* [2. Set up PowerShell as your MSYS2 terminal](#a_ps)
+* [3. Upgrade MSYS2](#a_ug)
+	* [Online users](#a_ug1)
+	* [Offline install](#a_ug2)
+* [4. Install MSYS2 MMGen dependencies](#a_md)
+	* [Offline install](#a_md1)
+* [5. Set up your environment](#a_ev)
+* [6. Install the Python ECDSA library (offline install only)](#a_ec)
+* [7. Install the standalone scrypt package (required for strong password hashing)](#a_sc)
+* [8. Clone and copy the secp256k1 library (offline install only)](#a_se)
+* [9. Install MMGen](#a_mm)
+* [10. Install Python Ethereum dependencies (Ethereum users only)](#a_pe)
+* [11. Install and launch your coin daemons](#a_cd)
+* [12. You’re done!](#a_do)
+
+#### [Keeping your MMGen installation up to date](#a_u)
+
+## <a name='a_i'>Introduction</a>
 
 MMGen is supported on Microsoft Windows via [MSYS2][mh], which provides a
 Unix-like command-line environment within Windows.  Windows 7 and later versions
@@ -28,7 +51,9 @@ that’s *already* offline.  These steps will be additionally outlined in
 sections entitled **Offline install.**  When doing an online install you may
 skip over these sections.
 
-### 1. Install MSYS2
+## <a name='a_m'>Install MSYS2 and MMGen</a>
+
+### <a name='a_ms'>1. Install MSYS2</a>
 
 Download the MSYS2 executable installer for your architecture from the [MSYS2
 homepage][mh], but ignore the installation instructions there.
@@ -36,7 +61,7 @@ homepage][mh], but ignore the installation instructions there.
 Run the installer, accepting all defaults.  At the end of the installation,
 uncheck “Run MSYS2 now” and click Finish.
 
-### 2. Set up PowerShell as your MSYS2 terminal
+### <a name='a_ps'>2. Set up PowerShell as your MSYS2 terminal</a>
 
 MMGen is incompatible with the terminal provided by the MSYS2 project.  However,
 it works just fine with Windows’ native PowerShell.
@@ -57,9 +82,9 @@ following commands, for example:
 
 will produce a listing of the same directory.
 
-### 3. Upgrade MSYS2
+### <a name='a_ug'>3. Upgrade MSYS2</a>
 
-#### Online users:
+#### <a name='a_ug1'>Online users:</a>
 
 > Optionally edit your mirror lists as described in **Offline install** below.
 
@@ -75,7 +100,7 @@ will produce a listing of the same directory.
 
 		$ pacman -Su
 
-#### Offline install:
+#### <a name='a_ug2'>Offline install:</a>
 
 > You must now download the required database and package files from the
 > Internet on your online computer and copy them to your offline box.  A USB
@@ -143,12 +168,12 @@ this folder.
 
 > Your system upgrade is now complete.
 
-### 4. Install MSYS2 MMGen dependencies
+### <a name='a_md'>4. Install MSYS2 MMGen dependencies</a>
 
 Now that your system’s fully up to date, you’re ready to install the packages
 specifically required by MMGen.
 
-#### Offline install:
+#### <a name='a_md1'>Offline install:</a>
 
 > As you’ve probably noticed by now, the command `pacman -S <pgknames>`
 > installs MSYS2 packages and their dependencies, while `pacman -Sp
@@ -160,24 +185,24 @@ specifically required by MMGen.
 
 Install the MMGen requirements and their dependencies:
 
-	$ pacman -S tar git vim autoconf automake-wrapper autogen \
-		mingw64/mingw-w64-x86_64-libtool \
+	$ pacman -S tar git vim autoconf automake-wrapper autogen libtool \
+		mingw64/mingw-w64-x86_64-python-build \
+		mingw64/mingw-w64-x86_64-python-wheel \
+		mingw64/mingw-w64-x86_64-python-pip \
+		mingw64/mingw-w64-x86_64-libltdl \
 		mingw64/mingw-w64-x86_64-gcc \
 		mingw64/mingw-w64-x86_64-make \
 		mingw64/mingw-w64-x86_64-pcre \
 		mingw64/mingw-w64-x86_64-libsodium \
-		mingw64/mingw-w64-x86_64-python-build \
-		mingw64/mingw-w64-x86_64-python-wheel \
 		mingw64/mingw-w64-x86_64-python-cryptography \
 		mingw64/mingw-w64-x86_64-python-six \
 		mingw64/mingw-w64-x86_64-python-pexpect \
 		mingw64/mingw-w64-x86_64-python-gmpy2 \
 		mingw64/mingw-w64-x86_64-python-pynacl \
-		mingw64/mingw-w64-x86_64-python-pip \
 		mingw64/mingw-w64-x86_64-python-pysocks \
 		mingw64/mingw-w64-x86_64-python-requests
 
-### 5. Set up your environment
+### <a name='a_ev'>5. Set up your environment</a>
 
 Create the `/usr/local/bin` directory.  This is where you’ll place various
 binaries required by MMGen:
@@ -198,7 +223,7 @@ path):
 Save and exit.  Close and reopen the terminal window to update your working
 environment.
 
-### 6. Install the Python ECDSA library (offline install only)
+### <a name='a_ec'>6. Install the Python ECDSA library (offline install only)</a>
 
 On your online machine:
 
@@ -208,7 +233,7 @@ Copy the downloaded file to your offline machine and install:
 
 	$ pip3 install --user ecdsa-*.whl
 
-### 7. Install the standalone scrypt package (required for strong password hashing)
+### <a name='a_sc'>7. Install the standalone scrypt package (required for strong password hashing)</a>
 
 Thanks to a faulty implementation of the `scrypt` function included in Python’s
 `hashlib`, the standalone `scrypt` module is required for stronger-than-default
@@ -246,7 +271,7 @@ Save the file and exit the editor.  Now build and install:
 	$ python3 setup.py build --compiler=mingw32
 	$ python3 setup.py install
 
-### 8. Clone and copy the secp256k1 library (offline install only)
+### <a name='a_se'>8. Clone and copy the secp256k1 library (offline install only)</a>
 
 On your online machine, clone the secp256k1 repository from Github:
 
@@ -259,7 +284,7 @@ directory into it:
 	$ cp -a /path/to/secp256k1/repo/secp256k1 ~/.cache/mmgen
 	$ ls ~/.cache/mmgen/secp256k1/autogen.sh # check that the location is correct
 
-### 9. Install MMGen
+### <a name='a_mm'>9. Install MMGen</a>
 
 Now you’re ready to install MMGen itself.  On your online machine, clone the
 repository:
@@ -270,11 +295,16 @@ repository:
 If you’re doing an offline install, then copy the cloned mmgen directory to
 your offline machine.
 
-Enter the directory and install:
+Enter the repo directory and build:
 
 	$ cd mmgen
 	$ git checkout stable_msys2 # See 'Note' below
-	$ ./setup.py install
+	$ python3 -m build --no-isolation
+
+Exit the repo directory and install:
+
+	$ cd ..
+	$ python3 -m pip install --upgrade mmgen/dist/*.whl
 
 **Note:** if you want to use features that have appeared since the latest
 `stable_msys2` release, then you can omit the `git checkout` step and remain on
@@ -285,7 +315,7 @@ before being pushed to the public repository, it’s not guaranteed to install o
 run on MSYS2.  Installation or runtime issues may also arise due to missing
 dependencies or installation steps not yet covered in the documentation.
 
-### 10. Install Python Ethereum dependencies (Ethereum users only)
+### <a name='a_pe'>10. Install Python Ethereum dependencies (Ethereum users only)</a>
 
 If you’ll be using MMGen with Ethereum, then you must install a few
 dependencies.  From the MMGen repository root, type the following:
@@ -301,7 +331,7 @@ directory containing the files and install them as follows:
 
 	$ pip3 install --no-deps --user *.whl
 
-### 11. Install and launch your coin daemons
+### <a name='a_cd'>11. Install and launch your coin daemons</a>
 
 At this point your MMGen installation will be able to generate wallets, along
 with keys and addresses for all supported coins.  However, if you intend to do
@@ -329,7 +359,7 @@ Typically you’ll wish to launch OpenEthereum as follows:
 
 More information on OpenEthereum’s command-line options can be found [here][pl].
 
-### 12. You’re done!
+### <a name='a_do'>12. You’re done!</a>
 
 Congratulations, your installation is now complete, and you can proceed to
 [**Getting Started with MMGen**][gs].  Note that all features supported by
@@ -341,6 +371,31 @@ Please be aware of the following, however:
 
 + The Bitcoin Cash Node daemon cannot handle non-ASCII pathnames.  This is an
   issue with the Bitcoin Cash Node implementation for Windows, not MMGen.
+
+## <a name='a_u'>Keeping your MMGen installation up to date</a>
+
+You should periodically update your MMGen installation from the MMGen public
+repository, especially when new releases appear.  This can be done by entering
+the MMGen repository root on your online computer and issuing the following
+commands:
+
+	$ git checkout master
+	$ git pull
+	$ git checkout stable_msys2 # See 'Note' to step 9
+
+Then invoke the following (for newer MSYS2 installations):
+
+	$ python3 -m build --no-isolation
+	$ cd ..
+	$ python3 -m pip install --upgrade mmgen/dist/*.whl
+
+Or the following (for pre-November 2021 MSYS2 installations):
+
+	$ python3 setup.py install
+
+To update your offline installation, copy the updated repository (after `git
+pull`) to your offline machine, `cd` to the root of the copied repository and
+continue from the `git checkout stable_msys2` step.
 
 [mh]: https://www.msys2.org
 [mp]: https://sourceforge.net/projects/msys2
