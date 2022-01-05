@@ -160,20 +160,20 @@ specifically required by MMGen.
 
 Install the MMGen requirements and their dependencies:
 
-	$ pacman -S tar git vim autoconf automake-wrapper autogen \
-		mingw64/mingw-w64-x86_64-libtool \
+	$ pacman -S tar git vim autoconf automake-wrapper autogen libtool \
+		mingw64/mingw-w64-x86_64-python-build \
+		mingw64/mingw-w64-x86_64-python-wheel \
+		mingw64/mingw-w64-x86_64-python-pip \
+		mingw64/mingw-w64-x86_64-libltdl \
 		mingw64/mingw-w64-x86_64-gcc \
 		mingw64/mingw-w64-x86_64-make \
 		mingw64/mingw-w64-x86_64-pcre \
 		mingw64/mingw-w64-x86_64-libsodium \
-		mingw64/mingw-w64-x86_64-python-build \
-		mingw64/mingw-w64-x86_64-python-wheel \
 		mingw64/mingw-w64-x86_64-python-cryptography \
 		mingw64/mingw-w64-x86_64-python-six \
 		mingw64/mingw-w64-x86_64-python-pexpect \
 		mingw64/mingw-w64-x86_64-python-gmpy2 \
 		mingw64/mingw-w64-x86_64-python-pynacl \
-		mingw64/mingw-w64-x86_64-python-pip \
 		mingw64/mingw-w64-x86_64-python-pysocks \
 		mingw64/mingw-w64-x86_64-python-requests
 
@@ -270,11 +270,16 @@ repository:
 If you’re doing an offline install, then copy the cloned mmgen directory to
 your offline machine.
 
-Enter the directory and install:
+Enter the repo directory and build:
 
 	$ cd mmgen
 	$ git checkout stable_msys2 # See 'Note' below
-	$ ./setup.py install
+	$ python3 -m build --no-isolation
+
+Exit the repo directory and install:
+
+	$ cd ..
+	$ python3 -m pip install --upgrade mmgen/dist/*.whl
 
 **Note:** if you want to use features that have appeared since the latest
 `stable_msys2` release, then you can omit the `git checkout` step and remain on
