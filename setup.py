@@ -19,7 +19,7 @@ def build_libsecp256k1():
 			'Windows': (
 				['sh','./autogen.sh'],
 				['sh','./configure','CFLAGS=-g -O2 -fPIC','--disable-dependency-tracking'],
-				['mingw32-make','MAKE=mingw32-make','LIBTOOL=/mingw64/bin/libtool']
+				['mingw32-make']
 			),
 			'Linux': (
 				['./autogen.sh'],
