@@ -99,6 +99,9 @@ class RPCBackends:
 
 	class requests(base):
 
+		def __del__(self):
+			self.session.close()
+
 		def __init__(self,caller):
 			super().__init__(caller)
 			import requests,urllib3
@@ -124,6 +127,9 @@ class RPCBackends:
 			return (res.content,res.status_code)
 
 	class httplib(base):
+
+		def __del__(self):
+			self.session.close()
 
 		def __init__(self,caller):
 			super().__init__(caller)
@@ -156,7 +162,13 @@ class RPCBackends:
 				r = s.getresponse() # => http.client.HTTPResponse instance
 			except Exception as e:
 				raise RPCFailure(str(e))
-			return (r.read(),r.status)
+
+			if timeout:
+				ret = ( r.read(), r.status )
+				s.close()
+				return ret
+			else:
+				return ( r.read(), r.status )
 
 	class curl(base):
 

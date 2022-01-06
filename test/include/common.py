@@ -160,13 +160,14 @@ def init_coverage():
 	except: pass
 	return coverdir,acc_file
 
-devnull_fh = open(('/dev/null','null.out')[g.platform == 'win'],'w')
 def silence():
 	if not (opt.verbose or getattr(opt,'exact_output',None)):
-		g.stdout = g.stderr = devnull_fh
+		devnull_fn = ('/dev/null','null.out')[g.platform == 'win']
+		g.stdout = g.stderr = open(devnull_fn,'w')
 
 def end_silence():
 	if not (opt.verbose or getattr(opt,'exact_output',None)):
+		g.stdout.close()
 		g.stdout = sys.stdout
 		g.stderr = sys.stderr
 

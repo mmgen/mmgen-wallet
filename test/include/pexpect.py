@@ -81,6 +81,8 @@ class MMGenPexpect(object):
 			self.expect('Comment: ',add_comment+'\n')
 
 	def ok(self):
+		self.p.sendeof()
+		self.p.read()
 		ret = self.p.wait()
 		if ret != self.req_exit_val and not opt.coverage:
 			die(1,red(f'test.py: spawned program exited with value {ret}'))

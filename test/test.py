@@ -618,6 +618,10 @@ class CmdGroupMgr(object):
 class TestSuiteRunner(object):
 	'test suite runner'
 
+	def __del__(self):
+		if opt.log:
+			self.log_fd.close()
+
 	def __init__(self,data_dir,trash_dir):
 
 		self.data_dir = data_dir
@@ -949,7 +953,6 @@ class TestSuiteRunner(object):
 
 	def process_retval(self,cmd,ret):
 		if type(ret).__name__ == 'MMGenPexpect':
-			ret.read()
 			ret.ok()
 			self.cmd_total += 1
 		elif ret == 'ok':

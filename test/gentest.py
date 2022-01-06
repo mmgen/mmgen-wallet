@@ -342,6 +342,7 @@ def dump_test(kg,ag,fh):
 	dump = [[*(e.split()[0] for e in line.split('addr='))] for line in fh.readlines() if 'addr=' in line]
 	if not dump:
 		die(1,f'File {fh.name!r} appears not to be a wallet dump')
+	fh.close()
 
 	m = 'Comparing output of address generator {!r} against wallet dump {!r}'
 	qmsg(green(m.format(kg.desc,fh.name)))
