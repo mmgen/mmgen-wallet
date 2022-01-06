@@ -42,7 +42,7 @@ quick_tests='dep misc obj color unit hash ref altref alts xmr eth autosign btc b
 qskip_tests='btc_tn bch bch_rt ltc ltc_rt'
 
 PROGNAME=$(basename $0)
-while getopts hAbCDfFi:I:lNOps:tvV OPT
+while getopts hAbCdDfFi:I:lNOps:tvV OPT
 do
 	case "$OPT" in
 	h)  printf "  %-16s Test MMGen release\n" "${PROGNAME}:"
@@ -51,6 +51,7 @@ do
 		echo   "           -A      Skip tests requiring altcoin modules or daemons"
 		echo   "           -b      Buffer keypresses for all invocations of 'test/test.py'"
 		echo   "           -C      Run tests in coverage mode"
+		echo   "           -d      Enable Python Development Mode"
 		echo   "           -D      Run tests in deterministic mode"
 		echo   "           -f      Speed up the tests by using fewer rounds"
 		echo   "           -F      Reduce rounds even further"
@@ -116,6 +117,8 @@ do
 		gentest_py="$python $gentest_py"
 		mmgen_tool="$python $mmgen_tool"
 		mmgen_keygen="$python $mmgen_keygen" ;&
+	d)  export PYTHONDEVMODE=1
+		export PYTHONWARNINGS='error' ;;
 	D)  export MMGEN_TEST_SUITE_DETERMINISTIC=1
 		export MMGEN_DISABLE_COLOR=1 ;;
 	f)  FAST=1 rounds=10 rounds_min=3 rounds_mid=25 rounds_max=50 unit_tests_py+=" --fast" ;;
