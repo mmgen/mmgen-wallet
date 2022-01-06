@@ -53,7 +53,9 @@ class unit_tests:
 			# New in version 3.3: Support for the unicode legacy literal (u'value') was
 			# reintroduced to simplify the maintenance of dual Python 2.x and 3.x codebases.
 			# See PEP 414 for more information.
-			chk = re.subn(r"\bu(['\"])",r"\1",open(fpath).read())[0] # remove Python2 'u' string prefixes from ref files
+			with open(fpath) as fp:
+				# remove Python2 'u' string prefixes from ref files
+				chk = re.subn( r"\bu(['\"])", r'\1', fp.read() )[0]
 			diff = get_ndiff(chk,text)
 			#print('\n'.join(diff))
 			nLines = len([i for i in diff if i.startswith('-')])

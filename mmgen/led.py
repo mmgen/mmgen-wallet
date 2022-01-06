@@ -98,8 +98,11 @@ class LEDControl:
 
 		def check_access(fn,desc,init_val=None):
 			try:
-				iv = init_val or open(fn).read().strip()
-				open(fn,'w').write(f'{iv}\n')
+				if not init_val:
+					with open(fn) as fp:
+						init_val = fp.read().strip()
+				with open(fn,'w') as fp:
+					fp.write(f'{init_val}\n')
 				return True
 			except PermissionError:
 				ydie(1,'\n'+fmt(f"""
@@ -119,8 +122,10 @@ class LEDControl:
 	@classmethod
 	def create_dummy_control_files(cls):
 		db = cls.boards['dummy']
-		open(db.status,'w').write('0\n')
-		open(db.trigger,'w').write(db.trigger_states[1]+'\n')
+		with open(db.status,'w') as fp:
+			fp.write('0\n')
+		with open(db.trigger,'w') as fp:
+			fp.write(db.trigger_states[1]+'\n')
 
 	def noop(self,*args,**kwargs): pass
 
@@ -134,7 +139,8 @@ class LEDControl:
 			msg(f'led_loop({on_secs},{off_secs})')
 
 		if not on_secs:
-			open(self.board.status,'w').write('0\n')
+			with open(self.board.status,'w') as fp:
+				fp.write('0\n')
 			while True:
 				if self.ev_sleep(3600):
 					return
@@ -143,7 +149,8 @@ class LEDControl:
 			for s_time,val in ((on_secs,255),(off_secs,0)):
 				if self.debug:
 					msg_r(('^','+')[bool(val)])
-				open(self.board.status,'w').write(f'{val}\n')
+				with open(self.board.status,'w') as fp:
+					fp.write(f'{val}\n')
 				if self.ev_sleep(s_time):
 					if self.debug:
 						msg('\n')
@@ -178,4 +185,5 @@ class LEDControl:
 			msg('Stopping LED')
 
 		if self.board.trigger:
-			open(self.board.trigger,'w').write(self.board.trigger_states[1]+'\n')
+			with open(self.board.trigger,'w') as fp:
+				fp.write(self.board.trigger_states[1]+'\n')

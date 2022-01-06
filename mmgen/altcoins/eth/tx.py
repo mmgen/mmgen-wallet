@@ -89,7 +89,8 @@ class EthereumMMGenTX:
 			if getattr(opt,'contract_data',None):
 				m = "'--contract-data' option may not be used with token transaction"
 				assert not 'Token' in type(self).__name__, m
-				self.usr_contract_data = HexStr(open(opt.contract_data).read().strip())
+				with open(opt.contract_data) as fp:
+					self.usr_contract_data = HexStr(fp.read().strip())
 				self.disable_fee_check = True
 
 		async def get_nonce(self):

@@ -98,7 +98,8 @@ class unit_test(object):
 			self._get_core_repo_root()
 			fn_b = 'src/test/data/tx_valid.json'
 			fn = os.path.join(self.core_repo_root,fn_b)
-			data = json.loads(open(fn).read())
+			with open(fn) as fp:
+				data = json.loads(fp.read())
 			print_info(fn_b,'Core test vector')
 			n = 1
 			for e in data:

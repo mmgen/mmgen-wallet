@@ -638,7 +638,8 @@ def write_data_to_file( outfile,data,desc='data',
 		# if cmp_data is empty, file can be either empty or non-existent
 		if check_data:
 			try:
-				d = open(outfile,('r','rb')[bool(binary)]).read()
+				with open(outfile,('r','rb')[bool(binary)]) as fp:
+					d = fp.read()
 			except:
 				d = ''
 			finally:

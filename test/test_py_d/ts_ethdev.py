@@ -392,7 +392,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			if cp.returncode:
 				die(1,cp.stderr.decode())
 			keyfile = os.path.join(keystore,os.listdir(keystore)[0])
-			return json.loads(open(keyfile).read())['address']
+			with open(keyfile) as fp:
+				return json.loads(fp.read())['address']
 
 		def make_genesis(signer_addr,prealloc_addr):
 			return {

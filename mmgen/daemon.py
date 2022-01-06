@@ -107,7 +107,8 @@ class Daemon(Lockable):
 	@property
 	def pid(self):
 		if self.use_pidfile:
-			return open(self.pidfile).read().strip()
+			with open(self.pidfile) as fp:
+				return fp.read().strip()
 		elif self.platform == 'win':
 			"""
 			Assumes only one running instance of given daemon.  If multiple daemons are running,
@@ -471,7 +472,8 @@ class CoinDaemon(Daemon):
 
 		if self.test_suite or self.network == 'regtest':
 			if self.cfg_file and not self.flag.keep_cfg_file:
-				open(f'{self.datadir}/{self.cfg_file}','w').write(self.cfg_file_hdr)
+				with open(f'{self.datadir}/{self.cfg_file}','w') as fp:
+					fp.write(self.cfg_file_hdr)
 
 		if self.use_pidfile and os.path.exists(self.pidfile):
 			# Parity overwrites the data in the existing pidfile without zeroing it first, leading

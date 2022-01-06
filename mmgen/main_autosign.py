@@ -326,7 +326,8 @@ def create_key():
 	desc = f'key file {fn!r}'
 	msg('Creating ' + desc)
 	try:
-		open(fn,'w').write(kdata+'\n')
+		with open(fn,'w') as fp:
+			fp.write(kdata+'\n')
 		os.chmod(fn,0o400)
 		msg('Wrote ' + desc)
 	except:

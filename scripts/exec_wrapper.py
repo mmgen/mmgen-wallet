@@ -47,7 +47,8 @@ def exec_wrapper_write_traceback():
 	c = exec_wrapper_get_colors()
 	sys.stdout.write('{}{}'.format(c.yellow(''.join(lines)),c.red(exc)))
 
-	open('my.err','w').write(''.join(lines+[exc]))
+	with open('my.err','w') as fp:
+		fp.write(''.join(lines+[exc]))
 
 def exec_wrapper_end_msg():
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
@@ -61,7 +62,9 @@ exec_wrapper_tstart = time.time()
 try:
 	sys.argv.pop(0)
 	exec_wrapper_execed_file = sys.argv[0]
-	exec(open(sys.argv[0]).read())
+	with open(sys.argv[0]) as fp:
+		text = fp.read()
+	exec(text)
 except SystemExit as e:
 	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		exec_wrapper_write_traceback()

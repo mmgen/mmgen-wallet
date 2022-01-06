@@ -113,7 +113,8 @@ class TestSuiteInput(TestSuiteBase):
 		return t
 
 	def get_passphrase_cmdline(self):
-		open('test/trash/pwfile','w').write('reference password\n')
+		with open('test/trash/pwfile','w') as fp:
+			fp.write('reference password\n')
 		t = self.spawn('test/misc/get_passphrase.py', [
 			'--usr-randchars=0',
 			'--label=MyLabel',

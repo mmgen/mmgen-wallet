@@ -49,7 +49,8 @@ class CfgFile(object):
 	def __init__(self):
 		self.fn = os.path.join(self.fn_dir,self.fn_base)
 		try:
-			self.data = open(self.fn).read().splitlines()
+			with open(self.fn) as fp:
+				self.data = fp.read().splitlines()
 		except:
 			if self.warn_missing:
 				self.warn_missing_file( div=self.fn, fmt_args=(self.desc,self.fn) )
@@ -61,7 +62,8 @@ class CfgFile(object):
 		if src.data:
 			data = src.data + src.make_metadata() if self.write_metadata else src.data
 			try:
-				open(self.fn,'w').write('\n'.join(data)+'\n')
+				with open(self.fn,'w') as fp:
+					fp.write('\n'.join(data)+'\n')
 				os.chmod(self.fn,0o600)
 			except:
 				die(2,f'ERROR: unable to write to {self.fn!r}')
@@ -184,7 +186,8 @@ class CfgFileSampleSys(CfgFileSample):
 	def __init__(self):
 		if os.getenv('MMGEN_TEST_SUITE_CFGTEST'):
 			self.fn = os.path.join(g.data_dir_root,self.test_fn_subdir,self.fn_base)
-			self.data = open(self.fn).read().splitlines()
+			with open(self.fn) as fp:
+				self.data = fp.read().splitlines()
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
 			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)

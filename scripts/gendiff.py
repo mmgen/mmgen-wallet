@@ -24,7 +24,8 @@ translate = {
 }
 
 def cleanup_file(fn):
-	data = open(fn).read()
+	with open(fn) as fp:
+		data = fp.read()
 	def gen_text():
 		for line in data.splitlines():
 			line = re.sub('\r\n','\n',line) # DOS CRLF to Unix LF
@@ -32,8 +33,10 @@ def cleanup_file(fn):
 			line = re.sub(r'\s+$','',line)  # trailing whitespace
 			yield line
 	ret = list(gen_text())
-	open(fn+'.orig','w').write(data)
-	open(fn,'w').write('\n'.join(ret))
+	with open(fn+'.orig','w') as fp:
+		fp.write(data)
+	with open(fn,'w') as fp:
+		fp.write('\n'.join(ret))
 	return ret
 
 cleaned_texts = [cleanup_file(fn) for fn in fns]
