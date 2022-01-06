@@ -950,18 +950,17 @@ def write_mode(orig_func):
 	return f
 
 def run_session(callback,backend=None):
-	backend = backend or opt.rpc_backend
-	import asyncio
+
 	async def do():
-		if backend == 'aiohttp':
+		if (backend or opt.rpc_backend) == 'aiohttp':
 			import aiohttp
 			async with aiohttp.ClientSession(
 				headers = { 'Content-Type': 'application/json' },
 				connector = aiohttp.TCPConnector(limit_per_host=g.aiohttp_rpc_queue_len),
 			) as g.session:
-				ret = await callback
-			return ret
+				return await callback
 		else:
 			return await callback
 
+	import asyncio
 	return asyncio.run(do())
