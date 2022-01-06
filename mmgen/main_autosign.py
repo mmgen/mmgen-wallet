@@ -411,7 +411,9 @@ signal.signal(signal.SIGTERM,handler)
 signal.signal(signal.SIGINT,handler)
 
 from .led import LEDControl
-led = LEDControl(enabled=opt.led,simulate=g.test_suite and not os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LIVE'))
+led = LEDControl(
+	enabled = opt.led,
+	simulate = os.getenv('MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE') )
 led.set('off')
 
 async def main():

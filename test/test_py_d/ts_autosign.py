@@ -32,6 +32,8 @@ from .ts_base import *
 from .ts_shared import *
 from .input import *
 
+from mmgen.led import LEDControl
+
 class TestSuiteAutosign(TestSuiteBase):
 	'autosigning with BTC, BCH, LTC, ETH and ETC'
 	networks = ('btc',)
@@ -249,24 +251,25 @@ class TestSuiteAutosign(TestSuiteBase):
 				ydie(1,f'Directory {txdir} does not exist!  Exiting')
 
 		def init_led():
-			from mmgen.led import LEDControl
-			if simulate:
-				LEDControl.create_dummy_control_files()
 			try:
 				cf = LEDControl(enabled=True,simulate=simulate)
-			except:
-				ydie(2,"'no LED support detected'")
-
+			except Exception as e:
+				msg(str(e))
+				ydie(2,'LEDControl initialization failed')
 			for fn in (cf.board.status,cf.board.trigger):
 				if fn:
 					run(['sudo','chmod','0666',fn],check=True)
-			os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LIVE'] = '1'
 
 		# begin execution
 
 		if simulate and not opt.exact_output:
 			rmsg('This command must be run with --exact-output enabled!')
 			return False
+
+		if simulate or not live:
+			os.environ['MMGEN_TEST_SUITE_AUTOSIGN_LED_SIMULATE'] = '1'
+			LEDControl.create_dummy_control_files()
+
 		network_ids = [c+'_tn' for c in daemon_coins] + daemon_coins
 		start_test_daemons(*network_ids)
 
@@ -288,6 +291,8 @@ class TestSuiteAutosign(TestSuiteBase):
 				foo = do_autosign(opts,mountpoint,mn_type='bip39',short=True)
 				ret = do_autosign(opts,mountpoint)
 		finally:
+			if simulate or not live:
+				LEDControl.delete_dummy_control_files()
 			stop_test_daemons(*[i for i in network_ids if i != 'btc'])
 
 		return ret

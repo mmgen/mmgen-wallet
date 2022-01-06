@@ -53,7 +53,7 @@ class LEDControl:
 	def __init__(self,enabled,simulate=False,debug=False):
 
 		self.enabled = enabled
-		self.debug = debug
+		self.debug = debug or simulate
 
 		if not enabled:
 			self.set = self.stop = self.noop
@@ -62,11 +62,9 @@ class LEDControl:
 		self.ev = threading.Event()
 		self.led_thread = None
 
-		if simulate:
-			type(self).create_dummy_control_files()
-			self.debug = True
-
 		for board_id,board in self.boards.items():
+			if board_id == 'dummy' and not simulate:
+				continue
 			try: os.stat(board.status)
 			except: pass
 			else: break
@@ -81,20 +79,6 @@ class LEDControl:
 			Status file:  {board.status}
 			Trigger file: {board.trigger}
 			""",indent='  ',strip_char='\t'))
-
-		if board_id == 'dummy' and not simulate:
-			if g.test_suite:
-				msg('Warning: no simulation requested but dummy LED control files detected')
-				self.debug = True
-			else:
-				die(1,fmt(f"""
-				No simulation requested but dummy LED control files detected:
-
-				  {board.status}
-				  {board.trigger}
-
-				You may wish to remove them and restart
-				""",indent='  ',strip_char='\t'))
 
 		def check_access(fn,desc,init_val=None):
 			try:
@@ -126,6 +110,12 @@ class LEDControl:
 			fp.write('0\n')
 		with open(db.trigger,'w') as fp:
 			fp.write(db.trigger_states[1]+'\n')
+
+	@classmethod
+	def delete_dummy_control_files(cls):
+		db = cls.boards['dummy']
+		os.unlink(db.status)
+		os.unlink(db.trigger)
 
 	def noop(self,*args,**kwargs): pass
 
