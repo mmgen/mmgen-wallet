@@ -497,7 +497,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			([],['--rbf'])[self.proto.cap('rbf')] +
 			['-f',self.tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 
-		if t.expect([('Get','Unsigned transac')[cmdline_inputs],'Unable to connect to \S+'],regex=True) == 1:
+		if t.expect([('Get','Unsigned transac')[cmdline_inputs],r'Unable to connect to \S+'],regex=True) == 1:
 			raise TestSuiteException('\n'+t.p.after)
 
 		if cmdline_inputs:
@@ -665,7 +665,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect_getend('Incog Wallet ID: ')
 		wcls = Wallet.fmt_code_to_type(in_fmt)
 		t.hash_preset(wcls.desc,'1')
-		t.passphrase(f'{wcls.desc} \w{{8}}',self.wpasswd)
+		t.passphrase(rf'{wcls.desc} \w{{8}}',self.wpasswd)
 		vmsg('Comparing generated checksum with checksum from address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
 		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)

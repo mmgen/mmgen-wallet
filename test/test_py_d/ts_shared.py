@@ -150,7 +150,7 @@ class TestSuiteShared(object):
 	def txsign_end(self,t,tnum=None,has_label=False):
 		t.expect('Signing transaction')
 		t.do_comment(False,has_label=has_label)
-		t.expect('Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
+		t.expect(r'Save signed transaction.*?\? \(Y/n\): ','y',regex=True)
 		t.written_to_file('Signed transaction' + (' #' + tnum if tnum else ''), oo=True)
 		return t
 

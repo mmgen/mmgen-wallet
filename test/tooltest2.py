@@ -56,7 +56,7 @@ def md5_hash(s):
 
 def md5_hash_strip(s):
 	import re
-	s = re.sub('\x1b\[[;0-9]+?m','',s) # strip ANSI color sequences
+	s = re.sub('\x1b' + r'\[[;0-9]+?m','',s) # strip ANSI color sequences
 	s = s.replace(NL,'\n')             # fix DOS newlines
 	return md5_hash(s.strip())
 

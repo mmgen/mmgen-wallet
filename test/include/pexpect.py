@@ -70,7 +70,7 @@ class MMGenPexpect(object):
 			self.expect('Check key-to-address validity? (y/N): ',('n','y')[check])
 
 	def view_tx(self,view):
-		self.expect('View.* transaction.*\? .*: ',view,regex=True)
+		self.expect(r'View.* transaction.*\? .*: ',view,regex=True)
 		if view not in 'n\n':
 			self.expect('to continue: ','\n')
 

@@ -210,7 +210,7 @@ def decode(rlp, sedes=None, strict=True, recursive_cache=False, **kwargs):
 
     :param sedes: an object implementing a function ``deserialize(code)`` which will be applied
                   after decoding, or ``None`` if no deserialization should be performed
-    :param \*\*kwargs: additional keyword arguments that will be passed to the deserializer
+    :param **kwargs: additional keyword arguments that will be passed to the deserializer
     :param strict: if false inputs that are longer than necessary don't cause an exception
     :returns: the decoded and maybe deserialized Python object
     :raises: :exc:`rlp.DecodingError` if the input string does not end after the root item and

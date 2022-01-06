@@ -377,11 +377,11 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		if op == 'sweep':
 			t.expect(
-				'Create new {} .* \(y/N\): '.format(('address','account')[',' in arg2]),
+				r'Create new {} .* \(y/N\): '.format(('address','account')[',' in arg2]),
 				('y','n')[reuse_acct],
 				regex=True )
 			if reuse_acct:
-				t.expect( 'to last existing account .* \(y/N\): ','y', regex=True )
+				t.expect( r'to last existing account .* \(y/N\): ','y', regex=True )
 
 		if return_amt:
 			amt = XMRAmt(strip_ansi_escapes(t.expect_getend('Amt: ')).replace('XMR','').strip())

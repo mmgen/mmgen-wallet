@@ -974,7 +974,7 @@ class IPPort(str,Hilite,InitErrors,MMGenObject):
 		if type(s) == cls:
 			return s
 		try:
-			m = re.fullmatch('{q}\.{q}\.{q}\.{q}:(\d{{1,10}})'.format(q=r'([0-9]{1,3})'),s)
+			m = re.fullmatch(r'{q}\.{q}\.{q}\.{q}:(\d{{1,10}})'.format(q=r'([0-9]{1,3})'),s)
 			assert m is not None, f'{s!r}: invalid IP:HOST specifier'
 			for e in m.groups():
 				if len(e) != 1 and e[0] == '0':

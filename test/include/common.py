@@ -29,7 +29,7 @@ from mmgen.devtools import *
 
 def strip_ansi_escapes(s):
 	import re
-	return re.sub('\x1b\[[;0-9]+?m','',s)
+	return re.sub('\x1b' + r'\[[;0-9]+?m','',s)
 
 ascii_uc   = ''.join(map(chr,list(range(65,91))))   # 26 chars
 ascii_lc   = ''.join(map(chr,list(range(97,123))))  # 26 chars

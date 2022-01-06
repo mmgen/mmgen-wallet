@@ -90,26 +90,26 @@ bals = {
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11','1.234'),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + '\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt1)],
 	'8': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12','99.99895'),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + '\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt1)],
 	'9': [  ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.45495'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + '\s+Non-MMGen',amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt1)],
 	'10': [ ('98831F3A:E:1','0'),
 			('98831F3A:E:2','23.0218'),
 			('98831F3A:E:3','0.4321'),
 			('98831F3A:E:11',vbal1,'a1'),
 			('98831F3A:E:12',vbal2),
 			('98831F3A:E:21','2.345'),
-			(burn_addr + '\s+Non-MMGen',amt1)]
+			(burn_addr + r'\s+Non-MMGen',amt1)]
 }
 
 token_bals = {
@@ -120,18 +120,18 @@ token_bals = {
 			('98831F3A:E:12','1.23456','0')],
 	'4': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','0'),
-			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
 	'5': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','1.23456','99.99895'),
-			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
 	'6': [  ('98831F3A:E:11','110.654317776666555545',vbal1,'a1'),
 			('98831F3A:E:12','0',vbal2),
 			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + '\s+Non-MMGen',amt2,amt1)],
+			(burn_addr + r'\s+Non-MMGen',amt2,amt1)],
 	'7': [  ('98831F3A:E:11','67.444317776666555545',vbal9,'a2'),
 			('98831F3A:E:12','43.21',vbal2),
 			('98831F3A:E:13','1.23456','0'),
-			(burn_addr + '\s+Non-MMGen',amt2,amt1)]
+			(burn_addr + r'\s+Non-MMGen',amt2,amt1)]
 }
 token_bals_getbalance = {
 	'1': (vbal4,'999999.12345689012345678'),
@@ -696,7 +696,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			addr,_amt1,_amt2,adj = b if len(b) == 4 else b + (False,)
 			if adj and self.proto.coin == 'ETC':
 				_amt2 = str(Decimal(_amt2) + Decimal(adj[1]) * self.bal_corr)
-			pat = rf'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
+			pat = fr'{addr}\b.*\D{_amt1}\D.*\b{_amt2}\D'
 			assert re.search(pat,text), pat
 		ss = 'Total MM1:'
 		assert re.search(ss,text),ss
@@ -723,7 +723,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def chk_label(self,lbl_pat,addr='98831F3A:E:3'):
 		t = self.spawn('mmgen-tool', self.eth_args + ['listaddresses','all_labels=1'])
-		t.expect(rf'{addr}\b.*\S{{30}}\b.*{lbl_pat}\b',regex=True)
+		t.expect(fr'{addr}\b.*\S{{30}}\b.*{lbl_pat}\b',regex=True)
 		return t
 
 	def add_label1(self): return self.add_label(lbl=tw_label_zh)
@@ -1084,7 +1084,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.expect(' main menu): ',n+'\n')
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
-		t.expect(f'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
+		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
 		t.read()
 		return t
 
