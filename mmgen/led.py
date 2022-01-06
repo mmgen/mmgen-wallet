@@ -121,7 +121,7 @@ class LEDControl:
 
 	def ev_sleep(self,secs):
 		self.ev.wait(secs)
-		return self.ev.isSet()
+		return self.ev.is_set()
 
 	def led_loop(self,on_secs,off_secs):
 
