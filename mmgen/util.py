@@ -674,6 +674,7 @@ def get_words_from_user(prompt):
 	return words
 
 def get_words_from_file(infile,desc,quiet=False):
+
 	if not quiet:
 		qmsg(f'Getting {desc} from file {infile!r}')
 
@@ -686,6 +687,7 @@ def get_words_from_file(infile,desc,quiet=False):
 		die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
 
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
+
 	return words
 
 def get_words(infile,desc,prompt):

@@ -881,10 +881,12 @@ class TestSuiteRunner(object):
 		if build:
 			if rerun:
 				for fn in fns:
-					if not root: os.unlink(fn)
+					if not root:
+						os.unlink(fn)
 				if not (dpy and opt.skip_deps):
 					self.run_test(cmd)
-				if not root: do_between()
+				if not root:
+					do_between()
 		else:
 			# If prog produces multiple files:
 			if cmd not in self.rebuild_list or rerun == True:

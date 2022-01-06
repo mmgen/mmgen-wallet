@@ -140,11 +140,13 @@ class RPCBackends:
 
 		async def run(self,payload,timeout,wallet):
 			dmsg_rpc('\n    RPC PAYLOAD data (httplib) ==>\n{}\n',payload)
+
 			if timeout:
 				import http.client
 				s = http.client.HTTPConnection(self.host,self.port,timeout)
 			else:
 				s = self.session
+
 			try:
 				s.request(
 					method  = 'POST',

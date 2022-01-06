@@ -212,9 +212,12 @@ class Daemon(Lockable):
 
 	def test_socket(self,host,port,timeout=10):
 		import socket
-		try: socket.create_connection((host,port),timeout=timeout).close()
-		except: return False
-		else: return True
+		try:
+			socket.create_connection((host,port),timeout=timeout).close()
+		except:
+			return False
+		else:
+			return True
 
 	def wait_for_state(self,req_state):
 		for i in range(300):
