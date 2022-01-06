@@ -478,12 +478,15 @@ def shred_file(fn,verbose=False):
 		+ [fn],
 		check=True )
 
-def open_file_or_exit(filename,mode,silent=False):
+def open_or_die(filename,mode,silent=False):
 	try:
-		return open(filename, mode)
+		return open(filename,mode)
 	except:
-		op = ('writing','reading')['r' in mode]
-		die(2,'' if silent else f'Unable to open file {filename!r} for {op}')
+		die(2,'' if silent else
+			'Unable to open file {!r} for {}'.format(
+				({0:'STDIN',1:'STDOUT',2:'STDERR'}[filename] if type(filename) == int else filename),
+				('reading' if 'r' in mode else 'writing')
+			))
 
 def check_file_type_and_access(fname,ftype,blkdev_ok=False):
 
@@ -646,13 +649,11 @@ def write_data_to_file( outfile,data,desc='data',
 
 		# To maintain portability, always open files in binary mode
 		# If 'binary' option not set, encode/decode data before writing and after reading
-		f = open_file_or_exit(outfile,'wb')
-
 		try:
-			f.write(data if binary else data.encode())
+			with open_or_die(outfile,'wb') as fp:
+				fp.write(data if binary else data.encode())
 		except:
 			die(2,f'Failed to write {desc} to file {outfile!r}')
-		f.close
 
 		if not (hush or quiet):
 			msg(f'{capfirst(desc)} written to file {outfile!r}')
@@ -674,10 +675,15 @@ def get_words_from_user(prompt):
 def get_words_from_file(infile,desc,quiet=False):
 	if not quiet:
 		qmsg(f'Getting {desc} from file {infile!r}')
-	f = open_file_or_exit(infile, 'rb')
-	try: words = f.read().decode().split()
-	except: die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
-	f.close()
+
+	with open_or_die(infile, 'rb') as fp:
+		data = fp.read()
+
+	try:
+		words = data.decode().split()
+	except:
+		die(1,f'{capfirst(desc)} data must be UTF-8 encoded.')
+
 	dmsg('Sanitized input: [{}]'.format(' '.join(words)))
 	return words
 
@@ -715,10 +721,11 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 	if not opt.quiet and not silent and not quiet and desc:
 		qmsg(f'Getting {desc} from file {infile!r}')
 
-	if dash and infile == '-':
-		data = os.fdopen(0,'rb').read(g.max_input_size+1)
-	else:
-		data = open_file_or_exit(infile,'rb',silent=silent).read(g.max_input_size+1)
+	with open_or_die(
+			(0 if dash and infile == '-' else infile),
+			'rb',
+			silent=silent) as fp:
+		data = fp.read(g.max_input_size+1)
 
 	if not binary:
 		data = data.decode()
