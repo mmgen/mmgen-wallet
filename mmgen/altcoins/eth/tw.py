@@ -166,6 +166,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			assert token_addr == None,'EthereumTokenTrackingWallet_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto,token_addr):
+				from mmgen.exception import UnrecognizedTokenSymbol
 				raise UnrecognizedTokenSymbol(f'Specified token {proto.tokensym!r} could not be resolved!')
 
 		from mmgen.obj import TokenAddr
@@ -246,7 +247,9 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
 
 	async def __init__(self,proto,*args,**kwargs):
+		from mmgen.globalvars import g
 		if g.cached_balances:
+			from mmgen.color import yellow
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
 		await TwUnspentOutputs.__init__(self,proto,*args,**kwargs)
 

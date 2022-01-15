@@ -22,7 +22,7 @@ tool.py:  Routines for the 'mmgen-tool' utility
 
 from .protocol import hash160
 from .common import *
-from .crypto import *
+from .crypto import get_random
 from .key import PrivKey
 from .seedsplit import MasterShareIdx
 from .addr import *
@@ -506,9 +506,9 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 		pubhex = gd.kg.to_pubhex(PrivKey(
 			self.proto,
 			wif = wifkey ))
-		addr = gd.ag.to_addr(pubhex)
-		rs = gd.ag.to_segwit_redeem_script(pubhex)
-		return (rs,addr)
+		return (
+			gd.ag.to_segwit_redeem_script(pubhex),
+			gd.ag.to_addr(pubhex) )
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
@@ -742,22 +742,24 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	def encrypt(self,infile:str,outfile='',hash_preset=''):
 		"encrypt a file"
 		data = get_data_from_file(infile,'data for encryption',binary=True)
+		from .crypto import mmgen_encrypt,mmenc_ext
 		enc_d = mmgen_encrypt(data,'user data',hash_preset)
 		if not outfile:
-			outfile = f'{os.path.basename(infile)}.{g.mmenc_ext}'
+			outfile = f'{os.path.basename(infile)}.{mmenc_ext}'
 		write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
 		return True
 
 	def decrypt(self,infile:str,outfile='',hash_preset=''):
 		"decrypt a file"
 		enc_d = get_data_from_file(infile,'encrypted data',binary=True)
+		from .crypto import mmgen_decrypt,mmenc_ext
 		while True:
 			dec_d = mmgen_decrypt(enc_d,'user data',hash_preset)
 			if dec_d: break
 			msg('Trying again...')
 		if not outfile:
 			o = os.path.basename(infile)
-			outfile = remove_extension(o,g.mmenc_ext)
+			outfile = remove_extension(o,mmenc_ext)
 			if outfile == o: outfile += '.dec'
 		write_data_to_file(outfile,dec_d,'decrypted data',binary=True)
 		return True

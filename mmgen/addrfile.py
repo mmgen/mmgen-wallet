@@ -57,10 +57,10 @@ class AddrFile(MMGenObject):
 		self.infile = None
 
 	def encrypt(self,desc='new key list'):
-		from .crypto import mmgen_encrypt
+		from .crypto import mmgen_encrypt,mmenc_ext
 		from .globalvars import g
 		self.fmt_data = mmgen_encrypt(self.fmt_data.encode(),desc,'')
-		self.ext += f'.{g.mmenc_ext}'
+		self.ext += f'.{mmenc_ext}'
 
 	@property
 	def filename(self):

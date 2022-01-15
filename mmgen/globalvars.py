@@ -266,7 +266,6 @@ class GlobalContext(Lockable):
 	scramble_hash_rounds = 10
 	subseeds = 100
 
-	mmenc_ext      = 'mmenc'
 	salt_len       = 16
 	aesctr_iv_len  = 16
 	aesctr_dfl_iv  = int.to_bytes(1,aesctr_iv_len,'big')

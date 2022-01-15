@@ -139,7 +139,8 @@ addr_type = MMGenAddrType(
 	id_str = opt.type or proto.dfl_mmtype,
 	errmsg = errmsg )
 
-if len(cmd_args) < 1: opts.usage()
+if len(cmd_args) < 1:
+	opts.usage()
 
 if getattr(opt,'use_old_ed25519',False):
 	msg('Using old (slow) ed25519 module by user request')

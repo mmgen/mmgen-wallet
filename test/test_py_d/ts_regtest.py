@@ -338,10 +338,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if subseed_idx in self.usr_subsids[user]:
 			return self.usr_subsids[user][subseed_idx]
 
-		icls = MMGenWallet
-		fn = get_file_with_ext(self._user_dir(user),icls.ext)
+		wcls = MMGenWallet
+		fn = get_file_with_ext(self._user_dir(user),wcls.ext)
 		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True,no_exec_wrapper=True)
-		t.passphrase(icls.desc,rt_pw)
+		t.passphrase(wcls.desc,rt_pw)
 		sid = t.read().strip()[:8]
 		self.usr_subsids[user][subseed_idx] = sid
 		return sid

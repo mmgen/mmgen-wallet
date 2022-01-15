@@ -380,7 +380,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 				getrand(32),
 				compressed  = non_mmgen_input_compressed,
 				pubkey_type = 'std' )
-			from mmgen.addr import AddrGenerator,KeyGenerator
+			from mmgen.addr import KeyGenerator,AddrGenerator
 			rand_coinaddr = AddrGenerator(
 				self.proto,
 				'compressed'

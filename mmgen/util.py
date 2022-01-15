@@ -713,7 +713,8 @@ def get_words(infile,desc,prompt):
 
 def mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 	d = get_data_from_file(fn,desc,binary=True,quiet=quiet,silent=silent)
-	have_enc_ext = get_extension(fn) == g.mmenc_ext
+	from .crypto import mmenc_ext
+	have_enc_ext = get_extension(fn) == mmenc_ext
 	if have_enc_ext or not is_utf8(d):
 		m = ('Attempting to decrypt','Decrypting')[have_enc_ext]
 		qmsg(f'{m} {desc} {fn!r}')

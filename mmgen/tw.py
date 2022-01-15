@@ -20,20 +20,36 @@
 tw: Tracking wallet methods for the MMGen suite
 """
 
-import json
+import os,json,time
 from collections import namedtuple
-from .exception import *
-from .common import *
+from string import ascii_letters,digits
+
+from .globalvars import g
+from .color import red,yellow,green
+from .exception import BadTwLabel,BadTwComment,BadAgeFormat,WalletFileError
+from .util import (
+	msg,
+	msg_r,
+	dmsg,
+	die,
+	capfirst,
+	suf,
+	fmt,
+	make_timestr,
+	check_or_create_dir,
+	keypress_confirm,
+	write_data_to_file,
+	get_data_from_file,
+	line_input,
+	do_pager,
+	write_mode,
+	altcoin_subclass
+)
 from .base_obj import AsyncInit
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import *
 from .tx import is_mmgen_id,is_coin_addr
 from .rpc import rpc_init
-
-CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
-
-def CUR_RIGHT(n):
-	return f'\033[{n}C'
 
 def get_tw_label(proto,s):
 	"""
@@ -442,6 +458,10 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		from .term import get_char
 		prompt = self.prompt.strip() + '\b'
 		no_output,oneshot_msg = False,None
+		from .opts import opt
+		CUR_HOME,ERASE_ALL = '\033[H','\033[0J'
+		CUR_RIGHT = lambda n: f'\033[{n}C'
+
 		while True:
 			msg_r('' if no_output else '\n\n' if opt.no_blank else CUR_HOME+ERASE_ALL)
 			reply = get_char(

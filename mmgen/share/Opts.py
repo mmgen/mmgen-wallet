@@ -67,7 +67,7 @@ def print_help(proto,po,opts_data,opt_filter):
 
 	from mmgen.help import help_notes_func
 	def help_notes(k):
-		return help_notes_func(proto,k)
+		return help_notes_func(proto,po,k)
 
 	def gen_arg_tuple(func,text):
 		d = {'proto': proto,'help_notes':help_notes}

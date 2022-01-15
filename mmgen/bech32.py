@@ -8,7 +8,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 # Unaltered except for the following changes by the MMGen Project:
-#   'python3' changed to 'python' in the hashbang
 #   leading spaces converted to tabs
 #
 """Reference implementation for Bech32 and segwit addresses."""

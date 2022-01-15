@@ -27,6 +27,7 @@ from mmgen.obj import *
 
 from mmgen.tx import MMGenTX
 from mmgen.tw import TrackingWallet
+
 from .contract import Token
 from .obj import ETHAmt,ETHNonce
 
@@ -268,6 +269,7 @@ class EthereumMMGenTX:
 					\n""".replace('\t','')
 			t = self.txobj
 			td = t['data']
+			from mmgen.color import yellow
 			return fs.format(
 				*((t[k] if t[k] != '' else Str('None')).hl() for k in self.fmt_keys),
 				d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else Str('None'),

@@ -23,7 +23,6 @@ seed.py:  Seed-related classes and methods for the MMGen suite
 from .common import *
 from .objmethods import Hilite,InitErrors
 from .obj import ImmutableAttr,get_obj
-from .crypto import get_random,scramble_seed
 
 class SeedID(str,Hilite,InitErrors):
 	color = 'blue'
@@ -54,6 +53,7 @@ class SeedBase(MMGenObject):
 
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
+			from .crypto import get_random
 			# Truncate random data for smaller seed lengths
 			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or g.dfl_seed_len)//8]
 		elif len(seed_bin)*8 not in g.seed_lens:

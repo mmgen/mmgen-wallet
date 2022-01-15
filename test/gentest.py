@@ -334,7 +334,7 @@ def speed_test(kg,ag,rounds):
 	qmsg(
 		f'\rRound {i+1}/{rounds} ' +
 		f'\n{rounds} addresses generated' +
-		('' if g.test_suite_deterministic else ' in {time.time()-start:.2f} seconds')
+		('' if g.test_suite_deterministic else f' in {time.time()-start:.2f} seconds')
 	)
 
 def dump_test(kg,ag,fh):

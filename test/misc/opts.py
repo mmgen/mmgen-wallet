@@ -16,11 +16,11 @@ opts_data = {
 -E, --fee-estimate-mode=M Specify the network fee estimate mode.
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
--K, --key-generator=m Use method 'm' for public key generation
-                      Options: {kgs} (default: {kg})
+-k, --keep-label      Reuse label of input wallet for output wallet
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.
 -L, --label=       l  Specify a label 'l' for output wallet
--m, --keep-label      Reuse label of input wallet for output wallet
+-m, --minconf=     n  Minimum number of confirmations required to spend
+                      outputs (default: 1)
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
 -u, --subseeds=    n  The number of subseed pairs to scan for
@@ -35,8 +35,6 @@ opts_data = {
 	},
 	'code': {
 		'options': lambda s: s.format(
-			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
-			kg=g.key_generator,
 			g=g,
 		),
 		'notes': lambda s: s.format(nn='a note'),
@@ -58,7 +56,7 @@ for k in (
 	'passwd_file',       # infile_opts - check_infile()
 	'outdir',            # check_outdir()
 	'subseeds',          # opt_sets_global
-	'key_generator',     # global_sets_opt
+	'minconf',           # global_sets_opt
 	'hidden_incog_input_params',
 	):
 	msg('{:30} {}'.format( f'opt.{k}:', getattr(opt,k) ))
@@ -66,6 +64,6 @@ for k in (
 msg('')
 for k in (
 	'subseeds',          # opt_sets_global
-	'key_generator',     # global_sets_opt
+	'minconf',           # global_sets_opt
 	):
 	msg('{:30} {}'.format( f'g.{k}:', getattr(opt,k) ))

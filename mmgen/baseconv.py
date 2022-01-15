@@ -24,8 +24,14 @@ from hashlib import sha256
 from .exception import *
 from .util import die
 
-def is_b58_str(s): return set(list(s)) <= set(baseconv.digits['b58'])
-def is_b32_str(s): return set(list(s)) <= set(baseconv.digits['b32'])
+def is_b58_str(s):
+	return set(list(s)) <= set(baseconv.digits['b58'])
+
+def is_b32_str(s):
+	return set(list(s)) <= set(baseconv.digits['b32'])
+
+def is_xmrseed(s):
+	return bool(baseconv.tobytes(s.split(),wl_id='xmrseed'))
 
 class baseconv(object):
 

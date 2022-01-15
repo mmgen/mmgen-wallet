@@ -20,7 +20,7 @@
 help.py:  help notes for MMGen suite commands
 """
 
-def help_notes_func(proto,k):
+def help_notes_func(proto,po,k):
 	from .globalvars import g
 
 	def fee_spec_letters(use_quotes=False):

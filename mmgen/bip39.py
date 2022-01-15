@@ -2110,6 +2110,14 @@ zoo
 			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic')
 
 	@classmethod
+	def tobytes(cls,*args,**kwargs):
+		raise NotImplementedError('Method not supported')
+
+	@classmethod
+	def frombytes(cls,*args,**kwargs):
+		raise NotImplementedError('Method not supported')
+
+	@classmethod
 	def tohex(cls,words,wl_id,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
 		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
@@ -2175,3 +2183,6 @@ zoo
 	@classmethod
 	def init_mn(cls,mn_id):
 		assert mn_id == 'bip39', "'mn_id' must be 'bip39'"
+
+def is_bip39_str(s):
+	return bool(bip39.tohex(s.split(),wl_id='bip39'))

@@ -48,7 +48,7 @@ class TestSuiteOpts(TestSuiteBase):
 	def opt_helpscreen(self):
 		return self.do_run(
 			['--help'],
-			r'OPTS.PY: Opts test.*USAGE:\s+opts.py.*1:python-ecdsa 2:libsecp256k1 \(default: 2\).*'
+			r'OPTS.PY: Opts test.*USAGE:\s+opts.py.*--minconf.*'
 			+ r'NOTES FOR THIS.*a note',
 			0,
 			regex=True )
@@ -65,9 +65,9 @@ class TestSuiteOpts(TestSuiteBase):
 					('opt.passwd_file',       'None'),         # infile_opts - check_infile()
 					('opt.outdir',            'None'),         # check_outdir()
 					('opt.subseeds',          'None'),         # opt_sets_global
-					('opt.key_generator',     '2'),            # global_sets_opt
+					('opt.minconf',           '1'),            # global_sets_opt
 					('g.subseeds',            'None'),
-					('g.key_generator',       '2'),
+					('g.minconf',             '1'),
 				)
 			)
 

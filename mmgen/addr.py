@@ -279,10 +279,3 @@ class KeyGeneratorDummy(KeyGenerator):
 		return PubKey(
 			s       = privhex,
 			privkey = privhex )
-
-def is_bip39_str(s):
-	from .bip39 import bip39
-	return bool(bip39.tohex(s.split(),wl_id='bip39'))
-
-def is_xmrseed(s):
-	return bool(baseconv.tobytes(s.split(),wl_id='xmrseed'))

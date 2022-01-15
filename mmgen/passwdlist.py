@@ -25,9 +25,10 @@ from collections import namedtuple
 from .exception import InvalidPasswdFormat
 from .util import ymsg,is_hex_str,is_int,keypress_confirm
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString
-from .baseconv import baseconv,is_b32_str,is_b58_str
+from .baseconv import baseconv,is_b32_str,is_b58_str,is_xmrseed
+from .bip39 import is_bip39_str
 from .key import PrivKey
-from .addr import MMGenPasswordType,AddrIdx,AddrListID,is_xmrseed,is_bip39_str
+from .addr import MMGenPasswordType,AddrIdx,AddrListID
 from .addrlist import (
 	AddrListChksum,
 	AddrListIDStr,
@@ -197,13 +198,18 @@ class PasswordList(AddrList):
 		elif self.pw_fmt == 'xmrseed':
 			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
 			# take most significant part
-			bytes_trunc = bytes.fromhex(hex_sec[:pw_len_hex])
 			from .protocol import init_proto
-			bytes_preproc = init_proto('xmr').preprocess_key(bytes_trunc,None)
+			bytes_preproc = init_proto('xmr').preprocess_key(
+				bytes.fromhex(hex_sec[:pw_len_hex]),
+				None )
 			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
 		else:
 			# take least significant part
-			return baseconv.fromhex(hex_sec,self.pw_fmt,pad=self.pw_len,tostr=True)[-self.pw_len:]
+			return baseconv.fromhex(
+				hex_sec,
+				self.pw_fmt,
+				pad = self.pw_len,
+				tostr = True )[-self.pw_len:]
 
 	def check_format(self,pw):
 		if not self.pw_info[self.pw_fmt].chk_func(pw):

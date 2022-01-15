@@ -57,11 +57,18 @@ def get_obj(objname,*args,**kwargs):
 	else:
 		return True if return_bool else ret
 
-def is_addr_idx(s):        return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
-def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_bool=True)
+def is_addr_idx(s):
+	return get_obj(AddrIdx, n=s, silent=True, return_bool=True)
 
-def is_mmgen_id(proto,s):  return get_obj(MMGenID,  proto=proto, id_str=s, silent=True,return_bool=True)
-def is_coin_addr(proto,s): return get_obj(CoinAddr, proto=proto, addr=s,   silent=True,return_bool=True)
+def is_addrlist_id(s):
+	return get_obj(AddrListID, sid=s, silent=True, return_bool=True)
+
+def is_mmgen_id(proto,s):
+	return get_obj(MMGenID, proto=proto, id_str=s, silent=True, return_bool=True)
+
+def is_coin_addr(proto,s):
+	return get_obj(CoinAddr, proto=proto, addr=s, silent=True, return_bool=True)
+
 # dict that keeps a list of keys for efficient lookup by index
 class IndexedDict(dict):
 
@@ -92,9 +99,14 @@ class IndexedDict(dict):
 	def die(self,desc):
 		raise NotImplementedError(f'{desc} not implemented for type {type(self).__name__}')
 
-class MMGenList(list,MMGenObject): pass
-class MMGenDict(dict,MMGenObject): pass
-class Str(str,Hilite): pass
+class MMGenList(list,MMGenObject):
+	pass
+
+class MMGenDict(dict,MMGenObject):
+	pass
+
+class Str(str,Hilite):
+	pass
 
 class Int(int,Hilite,InitErrors):
 	min_val = None
@@ -253,8 +265,11 @@ class MMGenListItem(MMGenObject):
 	def _asdict(self):
 		return dict((k,v) for k,v in self.__dict__.items() if k in self.valid_attrs)
 
-class MMGenIdx(Int): min_val = 1
-class AddrIdx(MMGenIdx): max_digits = 7
+class MMGenIdx(Int):
+	min_val = 1
+
+class AddrIdx(MMGenIdx):
+	max_digits = 7
 
 class MMGenRange(tuple,InitErrors,MMGenObject):
 
@@ -428,10 +443,17 @@ class HexStr(str,Hilite,InitErrors):
 		except Exception as e:
 			return cls.init_fail(e,s)
 
-class CoinTxID(HexStr):       color,width,hexcase = 'purple',64,'lower'
-class WalletPassword(HexStr): color,width,hexcase = 'blue',32,'lower'
-class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower' # FIXME - no checking performed
-class MMGenTxID(HexStr):      color,width,hexcase = 'red',6,'upper'
+class CoinTxID(HexStr):
+	color,width,hexcase = ('purple',64,'lower')
+
+class WalletPassword(HexStr):
+	color,width,hexcase = ('blue',32,'lower')
+
+class MoneroViewKey(HexStr):
+	color,width,hexcase = ('cyan',64,'lower') # FIXME - no checking performed
+
+class MMGenTxID(HexStr):
+	color,width,hexcase = ('red',6,'upper')
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10

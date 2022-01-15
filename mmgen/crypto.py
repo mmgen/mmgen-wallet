@@ -25,6 +25,8 @@ from cryptography.hazmat.backends import default_backend
 from hashlib import sha256
 from .common import *
 
+mmenc_ext = 'mmenc'
+
 def sha256_rounds(s,n):
 	for i in range(n):
 		s = sha256(s).digest()

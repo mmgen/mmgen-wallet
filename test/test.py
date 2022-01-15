@@ -321,7 +321,7 @@ cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	},
 	'17': {},
 	'18': {},
-	'19': { 'wpasswd':'abc' }, # B2X
+	'19': { 'wpasswd':'abc' },
 	'20': { 'wpasswd':       'Vsize it',
 			'addr_idx_list': '1-8',
 			'seed_len':      256,

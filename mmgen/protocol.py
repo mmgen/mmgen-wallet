@@ -27,7 +27,7 @@ from .util import msg,ymsg,Msg,ydie
 from .devtools import *
 from .obj import CoinAddr,MMGenAddrType
 from .globalvars import g
-from .amt import BTCAmt,LTCAmt,BCHAmt,B2XAmt,XMRAmt
+from .amt import BTCAmt,LTCAmt,BCHAmt,XMRAmt
 from .altcoins.eth.obj import ETHAmt
 import mmgen.bech32 as bech32
 
@@ -52,13 +52,13 @@ _b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 # The 'zero address':
 # 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
 
-def _b58chk_encode(bstr):
-	lzeroes = len(bstr) - len(bstr.lstrip(b'\x00'))
+def _b58chk_encode(in_bytes):
+	lzeroes = len(in_bytes) - len(in_bytes.lstrip(b'\x00'))
 	def do_enc(n):
 		while n:
 			yield _b58a[n % 58]
 			n //= 58
-	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(bstr+hash256bytes(bstr)[:4],'big')))[::-1]
+	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(in_bytes+hash256bytes(in_bytes)[:4],'big')))[::-1]
 
 def _b58chk_decode(s):
 	lzeroes = len(s) - len(s.lstrip('1'))
@@ -177,9 +177,11 @@ class CoinProtocol(MMGenObject):
 			return False
 
 		def coin_addr(self,addr):
+			from .addr import CoinAddr
 			return CoinAddr( proto=self, addr=addr )
 
 		def addr_type(self,id_str):
+			from .addr import MMGenAddrType
 			return MMGenAddrType( proto=self, id_str=id_str )
 
 	class Secp256k1(Base):
@@ -221,7 +223,6 @@ class CoinProtocol(MMGenObject):
 		block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 		forks           = [
 			_finfo(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','BCH',False),
-			_finfo(None,'','B2X',True),
 		]
 		caps            = ('rbf','segwit')
 		mmcaps          = ('key','addr','rpc','tx')
@@ -288,8 +289,9 @@ class CoinProtocol(MMGenObject):
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
 			assert len(pubkey_hash) == 40, f'{len(pubkey_hash)}: invalid length for pubkey hash'
-			s = self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=True) + pubkey_hash
-			return _b58chk_encode(bytes.fromhex(s))
+			return _b58chk_encode(bytes.fromhex(
+				self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=True) + pubkey_hash
+			))
 
 		# Segwit:
 		def pubhex2redeem_script(self,pubhex):
@@ -299,7 +301,8 @@ class CoinProtocol(MMGenObject):
 			return self.witness_vernum_hex + '14' + hash160(pubhex)
 
 		def pubhex2segwitaddr(self,pubhex):
-			return self.pubhash2addr(hash160(self.pubhex2redeem_script(pubhex)),p2sh=True)
+			return self.pubhash2addr(
+				hash160( self.pubhex2redeem_script(pubhex)), p2sh=True )
 
 		def pubhash2bech32addr(self,pubhash):
 			d = list(bytes.fromhex(pubhash))
@@ -335,19 +338,6 @@ class CoinProtocol(MMGenObject):
 
 	class BitcoinCashRegtest(BitcoinCashTestnet):
 		halving_interval = 150
-
-	class B2X(Bitcoin):
-		is_fork_of      = 'Bitcoin'
-		coin_amt        = B2XAmt
-		max_tx_fee      = B2XAmt('0.1')
-		forks = [
-			_finfo(None,'','BTC',True) # activation: 494784
-		]
-		ignore_daemon_version = False
-
-	class B2XTestnet(B2X):
-		addr_ver_bytes     = { '6f': 'p2pkh', 'c4': 'p2sh' }
-		wif_ver_num        = { 'std': 'ef' }
 
 	class Litecoin(Bitcoin):
 		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
@@ -508,8 +498,10 @@ class CoinProtocol(MMGenObject):
 
 		def preprocess_key(self,sec,pubkey_type): # reduce key
 			from .ed25519 import l
-			n = int.from_bytes(sec[::-1],'big') % l
-			return int.to_bytes(n,self.privkey_len,'big')[::-1]
+			return int.to_bytes(
+				int.from_bytes( sec[::-1], 'big' ) % l,
+				self.privkey_len,
+				'big' )[::-1]
 
 		def parse_addr(self,addr):
 

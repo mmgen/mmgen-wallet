@@ -168,9 +168,6 @@ class BTCAmt(CoinAmt):
 class BCHAmt(BTCAmt):
 	pass
 
-class B2XAmt(BTCAmt):
-	pass
-
 class LTCAmt(BTCAmt):
 	max_amt = 84000000
 
