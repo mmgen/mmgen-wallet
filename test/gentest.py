@@ -155,13 +155,13 @@ class GenTool(object):
 	def run_tool(self,sec):
 		vcoin = 'BTC' if self.proto.coin == 'BCH' else self.proto.coin
 		ret = self.run(sec,vcoin)
-		self.data[sec] = ret._asdict()
+		self.data[sec.hex()] = ret._asdict()
 		return ret
 
 class GenToolEthkey(GenTool):
 	desc = 'ethkey'
 	def run(self,sec,vcoin):
-		o = get_cmd_output(['ethkey','info',sec])
+		o = get_cmd_output(['ethkey','info',sec.hex()])
 		return gtr(o[0].split()[1],o[-1].split()[1],None)
 
 class GenToolKeyconv(GenTool):
@@ -194,10 +194,10 @@ class GenToolPycoin(GenTool):
 			vcoin = ci.external_tests['testnet']['pycoin'][vcoin]
 		network = self.nfnc(vcoin)
 		key = network.keys.private(
-			secret_exponent = int(sec,16),
+			secret_exponent = int(sec.hex(),16),
 			is_compressed = self.addr_type.name != 'legacy' )
 		if key is None:
-			die(1,f'can’t parse {sec}')
+			die(1,f'can’t parse {sec.hex()}')
 		if self.addr_type.name in ('segwit','bech32'):
 			hash160_c = key.hash160(is_compressed=True)
 			if self.addr_type.name == 'segwit':
@@ -221,10 +221,10 @@ class GenToolMoneropy(GenTool):
 		self.mpa = moneropy.account
 
 	def run(self,sec,vcoin):
-		if sec in self.data:
-			return gtr(**self.data[sec])
+		if sec.hex() in self.data:
+			return gtr(**self.data[sec.hex()])
 		else:
-			sk,vk,addr = self.mpa.account_from_spend_key(sec) # VERY slow!
+			sk,vk,addr = self.mpa.account_from_spend_key(sec.hex()) # VERY slow!
 			return gtr(sk,addr,vk)
 
 def find_or_check_tool(proto,addr_type,toolname):
@@ -274,14 +274,14 @@ def do_ab_test(proto,addr_type,kg_b,rounds,backend_num):
 			qmsg_r(f'\rRound {i+1}/{trounds} ')
 			last_t = time.time()
 		sec = PrivKey(proto,in_bytes,compressed=addr_type.compressed,pubkey_type=addr_type.pubkey_type)
-		data = kg_a.to_pubhex(sec)
+		data = kg_a.gen_data(sec)
 		ag = AddrGenerator(proto,addr_type)
 		a_addr = ag.to_addr(data)
 		tinfo = (in_bytes,sec,sec.wif,type(kg_a).__name__,type(kg_b).__name__)
 		a_vk = None
 
 		def do_msg():
-			vmsg( fs.format( b=in_bytes.hex(), r=sec, k=sec.wif, v=a_vk, a=a_addr ))
+			vmsg( fs.format( b=in_bytes.hex(), r=sec.hex(), k=sec.wif, v=a_vk, a=a_addr ))
 
 		if isinstance(kg_b,GenTool):
 			def run_tool():
@@ -294,12 +294,12 @@ def do_ab_test(proto,addr_type,kg_b,rounds,backend_num):
 			a_vk = run_tool()
 			do_msg()
 		else:
-			test_equal( 'addresses', a_addr, ag.to_addr(kg_b.to_pubhex(sec)), *tinfo )
+			test_equal( 'addresses', a_addr, ag.to_addr(kg_b.gen_data(sec)), *tinfo )
 			do_msg()
 
 		qmsg_r(f'\rRound {n+1}/{trounds} ')
 
-	kg_a = KeyGenerator(proto,addr_type,backend_num)
+	kg_a = KeyGenerator(proto,addr_type.pubkey_type,backend_num)
 	if type(kg_a) == type(kg_b):
 		rdie(1,'Key generators are the same!')
 
@@ -349,16 +349,13 @@ def do_ab_test(proto,addr_type,kg_b,rounds,backend_num):
 def init_tool(proto,addr_type,toolname):
 	return globals()['GenTool'+capfirst(toolname.replace('-','_'))](proto,addr_type)
 
-def get_backends(proto,foo):
-	return (1,) if isinstance(proto,CoinProtocol.Zcash) else (1,2)
-
 def ab_test(proto,gen_num,rounds,toolname_or_gen2_num):
 
 	addr_type = MMGenAddrType( proto=proto, id_str=opt.type or proto.dfl_mmtype )
 
 	if is_int(toolname_or_gen2_num):
 		assert gen_num != 'all', "'all' must be used only with external tool"
-		tool = KeyGenerator( proto, addr_type, int(toolname_or_gen2_num) )
+		tool = KeyGenerator( proto, addr_type.pubkey_type, int(toolname_or_gen2_num) )
 	else:
 		toolname = find_or_check_tool( proto, addr_type, toolname_or_gen2_num )
 		if toolname == None:
@@ -367,12 +364,12 @@ def ab_test(proto,gen_num,rounds,toolname_or_gen2_num):
 		tool = init_tool( proto, addr_type, toolname )
 
 	if gen_num == 'all': # check all backends against external tool
-		for n in range(len(get_backends(proto,addr_type.pubkey_type))):
+		for n in range(len(get_backends(addr_type.pubkey_type))):
 			do_ab_test( proto, addr_type, tool, rounds, n+1 )
 	else:                # check specific backend against external tool or another backend
-		do_ab_test( proto, addr_type, tool, rounds, int(gen_num) )
+		do_ab_test( proto, addr_type, tool, rounds, gen_num )
 
-def speed_test(proto,addr_type,kg,ag,rounds):
+def speed_test(proto,kg,ag,rounds):
 	qmsg(green('Testing speed of address generator {!r} for coin {}'.format(
 		type(kg).__name__,
 		proto.coin )))
@@ -387,8 +384,8 @@ def speed_test(proto,addr_type,kg,ag,rounds):
 		if time.time() - last_t >= 0.1:
 			qmsg_r(f'\rRound {i+1}/{rounds} ')
 			last_t = time.time()
-		sec = PrivKey( proto, seed+pack('I', i), compressed=addr_type.compressed, pubkey_type=addr_type.pubkey_type )
-		addr = ag.to_addr(kg.to_pubhex(sec))
+		sec = PrivKey( proto, seed+pack('I', i), compressed=ag.compressed, pubkey_type=ag.pubkey_type )
+		addr = ag.to_addr(kg.gen_data(sec))
 		vmsg(f'\nkey:  {sec.wif}\naddr: {addr}\n')
 	qmsg(
 		f'\rRound {i+1}/{rounds} ' +
@@ -415,9 +412,9 @@ def dump_test(proto,kg,ag,filename):
 			b_sec = PrivKey(proto,wif=b_wif)
 		except:
 			die(2,f'\nInvalid {proto.network} WIF address in dump file: {b_wif}')
-		a_addr = ag.to_addr(kg.to_pubhex(b_sec))
+		a_addr = ag.to_addr(kg.gen_data(b_sec))
 		vmsg(f'\nwif: {b_wif}\naddr: {b_addr}\n')
-		tinfo = (b_sec,b_sec,b_wif,type(kg).__name__,filename)
+		tinfo = (b_sec,b_sec.hex(),b_wif,type(kg).__name__,filename)
 		test_equal('addresses',a_addr,b_addr,*tinfo)
 
 	qmsg(green(('\n','')[bool(opt.verbose)] + 'OK'))
@@ -481,10 +478,10 @@ def main():
 		for proto in protos:
 			ab_test( proto, pa.gen_num, pa.rounds, toolname_or_gen2_num=pa.arg )
 	else:
-		kg = KeyGenerator( proto, addr_type, pa.gen_num )
+		kg = KeyGenerator( proto, addr_type.pubkey_type, pa.gen_num )
 		ag = AddrGenerator( proto, addr_type )
 		if pa.test == 'speed':
-			speed_test( proto, addr_type, kg, ag, pa.rounds )
+			speed_test( proto, kg, ag, pa.rounds )
 		elif pa.test == 'dump':
 			dump_test( proto, kg, ag, filename=pa.arg )
 
@@ -499,6 +496,7 @@ from mmgen.protocol import init_proto,init_proto_from_opts,CoinProtocol,init_gen
 from mmgen.altcoin import CoinInfo as ci
 from mmgen.key import PrivKey
 from mmgen.addr import KeyGenerator,AddrGenerator,MMGenAddrType
+from mmgen.keygen import get_backends
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 cmd_args = opts.init(opts_data,add_opts=['exact_output'])

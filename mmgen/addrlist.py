@@ -227,7 +227,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 
 		if self.gen_addrs:
 			from .addr import KeyGenerator,AddrGenerator
-			kg = KeyGenerator( self.proto, mmtype )
+			kg = KeyGenerator( self.proto, mmtype.pubkey_type )
 			ag = AddrGenerator( self.proto, mmtype )
 
 		t_addrs,out = ( len(addr_idxs), AddrListData() )
@@ -258,12 +258,12 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 				pubkey_type = mmtype.pubkey_type )
 
 			if self.gen_addrs:
-				pubhex = kg.to_pubhex(e.sec)
-				e.addr = ag.to_addr(pubhex)
+				data = kg.gen_data(e.sec)
+				e.addr = ag.to_addr(data)
 				if gen_viewkey:
-					e.viewkey = ag.to_viewkey(pubhex)
+					e.viewkey = ag.to_viewkey(data)
 				if gen_wallet_passwd:
-					e.wallet_passwd = ag.to_wallet_passwd(e.sec)
+					e.wallet_passwd = self.gen_wallet_passwd(e.sec)
 			elif self.gen_passwds:
 				e.passwd = self.gen_passwd(e.sec) # TODO - own type
 
@@ -356,9 +356,9 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		def gen_addr(pk,t):
 			at = self.proto.addr_type(t)
 			from .addr import KeyGenerator,AddrGenerator
-			kg = KeyGenerator(self.proto,at)
+			kg = KeyGenerator(self.proto,at.pubkey_type)
 			ag = AddrGenerator(self.proto,at)
-			return ag.to_addr(kg.to_pubhex(pk))
+			return ag.to_addr(kg.gen_data(pk))
 
 		compressed_types = set(self.proto.mmtypes) - {'L','E'}
 		uncompressed_types = set(self.proto.mmtypes) & {'L','E'}

@@ -119,7 +119,7 @@ class AddrFile(MMGenObject):
 				if p.has_keys:
 					from .opts import opt
 					if opt.b16:
-						out.append(fs.format( '', f'orig_hex: {e.sec.orig_hex()}', c ))
+						out.append(fs.format( '', f'orig_hex: {e.sec.orig_bytes.hex()}', c ))
 					out.append(fs.format( '', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)
@@ -174,7 +174,7 @@ class AddrFile(MMGenObject):
 				llen = len(ret)
 				for n,e in enumerate(ret):
 					qmsg_r(f'\rVerifying keys {n+1}/{llen}')
-					assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
+					assert e.addr == ag.to_addr(kg.gen_data(e.sec)),(
 						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
 				qmsg(' - done')
 

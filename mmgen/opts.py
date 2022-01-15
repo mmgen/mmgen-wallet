@@ -544,10 +544,6 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_float(val,desc)
 		ymsg(f'Adjusting transaction vsize by a factor of {float(val):1.2f}')
 
-	def chk_key_generator(key,val,desc):
-		opt_compares(val,'<=',len(g.key_generators),desc)
-		opt_compares(val,'>',0,desc)
-
 	def chk_coin(key,val,desc):
 		from .protocol import CoinProtocol
 		opt_is_in_list(val.lower(),CoinProtocol.coins,'coin')

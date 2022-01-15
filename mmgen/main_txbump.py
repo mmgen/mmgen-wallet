@@ -51,9 +51,8 @@ opts_data = {
                        is required only for brainwallet and incognito inputs
                        with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --key-generator= m Use method 'm' for public key generation
-                       Options: {kgs}
-                       (default: {kg})
+-K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+                       for {coin_id}: {kgs}
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                        address file (output of '{pnl}-keygen'). Permits
                        online signing without an {pnm} seed source. The
@@ -87,8 +86,8 @@ column below:
 			pnl=g.proj_name.lower(),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
-			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
-			kg=g.key_generator,
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
 			help_notes('fee'),

@@ -96,11 +96,11 @@ def addr2scriptPubKey(proto,addr):
 
 def scriptPubKey2addr(proto,s):
 	if len(s) == 50 and s[:6] == '76a914' and s[-4:] == '88ac':
-		return proto.pubhash2addr(s[6:-4],p2sh=False),'p2pkh'
+		return proto.pubhash2addr(bytes.fromhex(s[6:-4]),p2sh=False),'p2pkh'
 	elif len(s) == 46 and s[:4] == 'a914' and s[-2:] == '87':
-		return proto.pubhash2addr(s[4:-2],p2sh=True),'p2sh'
+		return proto.pubhash2addr(bytes.fromhex(s[4:-2]),p2sh=True),'p2sh'
 	elif len(s) == 44 and s[:4] == proto.witness_vernum_hex + '14':
-		return proto.pubhash2bech32addr(s[4:]),'bech32'
+		return proto.pubhash2bech32addr(bytes.fromhex(s[4:])),'bech32'
 	else:
 		raise NotImplementedError(f'Unknown scriptPubKey ({s})')
 
@@ -1260,7 +1260,7 @@ class MMGenTX:
 				e['amount'] = e['amt']
 				del e['amt']
 				if d.mmtype == 'S':
-					e['redeemScript'] = ag.to_segwit_redeem_script(kg.to_pubhex(keydict[d.addr]))
+					e['redeemScript'] = ag.to_segwit_redeem_script(kg.gen_data(keydict[d.addr]))
 				sig_data.append(e)
 
 			msg_r(f'Signing transaction{tx_num_str}...')

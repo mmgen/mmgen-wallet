@@ -58,9 +58,8 @@ opts_data = {
                        is required only for brainwallet and incognito inputs
                        with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --key-generator= m Use method 'm' for public key generation
-                       Options: {kgs}
-                       (default: {kg})
+-K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+                       for {coin_id}: {kgs}
 -L, --locktime=      t Lock time (block height or unix seconds) (default: 0)
 -m, --minconf=n        Minimum number of confirmations required to spend
                        outputs (default: 1)
@@ -95,14 +94,14 @@ column below:
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
 			g=g,pnm=g.proj_name,pnl=g.proj_name.lower(),
-			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
 			ss=g.subseeds,
 			ss_max=SubSeedIdxRange.max_idx,
 			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
 			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
-			kg=g.key_generator,
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
 			help_notes('txcreate'),

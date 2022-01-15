@@ -39,6 +39,17 @@ def help_notes_func(proto,po,k):
 
 	class help_notes:
 
+		def coin_id():
+			return proto.coin_id
+
+		def keygen_backends():
+			from .keygen import get_backends
+			from .addr import MMGenAddrType
+			backends = get_backends(
+				MMGenAddrType(proto,po.user_opts.get('type') or proto.dfl_mmtype).pubkey_type
+			)
+			return ' '.join( f'{n}:{k}{" [default]" if n==1 else ""}' for n,k in enumerate(backends,1) )
+
 		def coind_exec():
 			return coind_exec()
 

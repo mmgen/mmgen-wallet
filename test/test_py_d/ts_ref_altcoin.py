@@ -53,8 +53,8 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		('ref_addrfile_gen_zec',  'generate address file (ZEC-T)'),
 		('ref_addrfile_gen_zec_z','generate address file (ZEC-Z)'),
 		('ref_addrfile_gen_xmr',  'generate address file (XMR)'),
-		# we test the old ed25519 library in test-release.sh, so skip this
-#	('ref_addrfile_gen_xmr_old','generate address file (XMR - old (slow) ed25519 library)'),
+		# we test the unoptimized ed25519 mod in unit_tests.py, so skip this
+#		('ref_addrfile_gen_xmr_slow','generate address file (XMR - unoptimized ed25519 module)'),
 
 		('ref_keyaddrfile_gen_eth',  'generate key-address file (ETH)'),
 		('ref_keyaddrfile_gen_etc',  'generate key-address file (ETC)'),
@@ -153,8 +153,8 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 	def ref_addrfile_gen_xmr(self):
 		return self.ref_altcoin_addrgen(coin='XMR',mmtype='monero')
 
-	def ref_addrfile_gen_xmr_old(self):
-		return self.ref_altcoin_addrgen(coin='XMR',mmtype='monero',add_args=['--use-old-ed25519'])
+	def ref_addrfile_gen_xmr_slow(self):
+		return self.ref_altcoin_addrgen(coin='XMR',mmtype='monero',add_args=['--keygen-backend=2'])
 
 	def ref_keyaddrfile_gen_eth(self):
 		return self.ref_altcoin_addrgen(coin='ETH',mmtype='ethereum',gen_what='key')

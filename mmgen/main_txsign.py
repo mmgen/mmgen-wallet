@@ -50,8 +50,8 @@ opts_data = {
                       for password hashing (default: '{g.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
--K, --key-generator=m Use method 'm' for public key generation
-                      Options: {kgs} (default: {kg})
+-K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+                      for {coin_id}: {kgs}
 -M, --mmgen-keys-from-file=f Provide keys for {pnm} addresses in a key-
                       address file (output of '{pnl}-keygen'). Permits
                       online signing without an {pnm} seed source. The
@@ -77,12 +77,12 @@ column below:
 """
 	},
 	'code': {
-		'options': lambda proto,s: s.format(
+		'options': lambda proto,help_notes,s: s.format(
 			g=g,
 			pnm=g.proj_name,
 			pnl=g.proj_name.lower(),
-			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)]),
-			kg=g.key_generator,
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
 			ss=g.subseeds,
 			ss_max=SubSeedIdxRange.max_idx,
 			cu=proto.coin),

@@ -227,8 +227,13 @@ tests = {
 	},
 	'PubKey': {
 		'arg1': 's',
-		'bad':  ({'s':1,'privkey':False},{'s':'F00BAA12','privkey':False},),
-		'good': ({'s':'deadbeef','privkey':privkey},) # TODO: add real pubkeys
+		'bad':  (
+			{'s':1, 'compressed':True },
+			{'s':'F00BAA12','compressed':False},
+		),
+		'good': ( # TODO: add real pubkeys
+			{'s':bytes.fromhex('deadbeef'),'compressed':True},
+		)
 	},
 	'PrivKey': {
 		'arg1': 'proto',
@@ -246,11 +251,11 @@ tests = {
 		),
 		'good': (
 			{'proto':proto, 'wif':'5KXEpVzjWreTcQoG5hX357s1969MUKNLuSfcszF6yu84kpsNZKb',
-			'ret':'e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c'},
+			'ret':bytes.fromhex('e0aef965b905a2fedf907151df8e0a6bac832aa697801c51f58bd2ecb4fd381c')},
 			{'proto':proto, 'wif':'KwWr9rDh8KK5TtDa3HLChEvQXNYcUXpwhRFUPc5uSNnMtqNKLFhk',
-			'ret':'08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f'},
-			{'proto':proto, 's':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
-			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+			'ret':bytes.fromhex('08d0ed83b64b68d56fa064be48e2385060ed205be2b1e63cd56d218038c3a05f')},
+			{'proto':proto, 's':r32,'compressed':False,'pubkey_type':'std','ret':r32},
+			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32}
 		)
 	},
 	'AddrListID': { # a rather pointless test, but do it anyway

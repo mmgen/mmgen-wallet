@@ -173,7 +173,7 @@ class GlobalContext(Lockable):
 	required_opts = (
 		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
 		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars','coin','bob','alice','key_generator',
+		'brain_params','b16','usr_randchars','coin','bob','alice',
 		'hidden_incog_input_params','in_fmt','hash_preset','seed_len',
 	)
 	incompatible_opts = (
@@ -270,9 +270,6 @@ class GlobalContext(Lockable):
 	aesctr_iv_len  = 16
 	aesctr_dfl_iv  = int.to_bytes(1,aesctr_iv_len,'big')
 	hincog_chk_len = 8
-
-	key_generators = ('python-ecdsa','libsecp256k1') # '1','2'
-	key_generator  = 2 # libsecp256k1 is default
 
 	force_standalone_scrypt_module = False
 	# Scrypt params: 'id_num': [N, r, p] (N is an exponent of two)

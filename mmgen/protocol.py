@@ -33,14 +33,11 @@ import mmgen.bech32 as bech32
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
 parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
 
-def hash160(hexnum): # take hex, return hex - OP_HASH160
-	return hashlib.new('ripemd160',hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
+def hash160(in_bytes): # OP_HASH160
+	return hashlib.new('ripemd160',hashlib.sha256(in_bytes).digest()).digest()
 
-def hash256(hexnum): # take hex, return hex - OP_HASH256
-	return hashlib.sha256(hashlib.sha256(bytes.fromhex(hexnum)).digest()).hexdigest()
-
-def hash256bytes(bstr): # bytes in, bytes out - OP_HASH256
-	return hashlib.sha256(hashlib.sha256(bstr).digest()).digest()
+def hash256(in_bytes): # OP_HASH256
+	return hashlib.sha256(hashlib.sha256(in_bytes).digest()).digest()
 
 _b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 
@@ -57,14 +54,14 @@ def _b58chk_encode(in_bytes):
 		while n:
 			yield _b58a[n % 58]
 			n //= 58
-	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(in_bytes+hash256bytes(in_bytes)[:4],'big')))[::-1]
+	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(in_bytes+hash256(in_bytes)[:4],'big')))[::-1]
 
 def _b58chk_decode(s):
 	lzeroes = len(s) - len(s.lstrip('1'))
 	res = sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1]))
 	bl = res.bit_length()
 	out = b'\x00' * lzeroes + res.to_bytes(bl//8 + bool(bl%8),'big')
-	if out[-4:] != hash256bytes(out[:-4])[:4]:
+	if out[-4:] != hash256(out[:-4])[:4]:
 		raise ValueError('_b58chk_decode(): incorrect checksum')
 	return out[:-4]
 
@@ -190,6 +187,7 @@ class CoinProtocol(MMGenObject):
 		"""
 		secp256k1_ge = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 		privkey_len  = 32
+		pubkey_types = ('std',)
 
 		def preprocess_key(self,sec,pubkey_type):
 			# Key must be non-zero and less than group order of secp256k1 curve
@@ -240,13 +238,12 @@ class CoinProtocol(MMGenObject):
 		start_subsidy   = 50
 		ignore_daemon_version = False
 
-		def hex2wif(self,hexpriv,pubkey_type,compressed): # input is preprocessed hex
-			sec = bytes.fromhex(hexpriv)
-			assert len(sec) == self.privkey_len, f'{len(sec)} bytes: incorrect private key length!'
+		def bytes2wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
+			assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
 			assert pubkey_type in self.wif_ver_num, f'{pubkey_type!r}: invalid pubkey_type'
 			return _b58chk_encode(
 				bytes.fromhex(self.wif_ver_num[pubkey_type])
-				+ sec
+				+ privbytes
 				+ (b'',b'\x01')[bool(compressed)])
 
 		def parse_wif(self,wif):
@@ -288,24 +285,24 @@ class CoinProtocol(MMGenObject):
 			return self.parse_addr_bytes(_b58chk_decode(addr))
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
-			assert len(pubkey_hash) == 40, f'{len(pubkey_hash)}: invalid length for pubkey hash'
-			return _b58chk_encode(bytes.fromhex(
-				self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=True) + pubkey_hash
-			))
+			assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for pubkey hash'
+			return _b58chk_encode(
+				self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubkey_hash
+			)
 
 		# Segwit:
-		def pubhex2redeem_script(self,pubhex):
+		def pubkey2redeem_script(self,pubkey):
 			# https://bitcoincore.org/en/segwit_wallet_dev/
 			# The P2SH redeemScript is always 22 bytes. It starts with a OP_0, followed
 			# by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
-			return self.witness_vernum_hex + '14' + hash160(pubhex)
+			return bytes.fromhex(self.witness_vernum_hex + '14') + hash160(pubkey)
 
-		def pubhex2segwitaddr(self,pubhex):
+		def pubkey2segwitaddr(self,pubkey):
 			return self.pubhash2addr(
-				hash160( self.pubhex2redeem_script(pubhex)), p2sh=True )
+				hash160( self.pubkey2redeem_script(pubkey)), p2sh=True )
 
 		def pubhash2bech32addr(self,pubhash):
-			d = list(bytes.fromhex(pubhash))
+			d = list(pubhash)
 			return bech32.bech32_encode(self.bech32_hrp,[self.witness_vernum]+bech32.convertbits(d,8,5))
 
 	class BitcoinTestnet(Bitcoin):
@@ -329,8 +326,8 @@ class CoinProtocol(MMGenObject):
 		max_tx_fee      = BCHAmt('0.1')
 		ignore_daemon_version = False
 
-		def pubhex2redeem_script(self,pubhex): raise NotImplementedError
-		def pubhex2segwitaddr(self,pubhex):    raise NotImplementedError
+		def pubkey2redeem_script(self,pubkey): raise NotImplementedError
+		def pubkey2segwitaddr(self,pubkey):    raise NotImplementedError
 
 	class BitcoinCashTestnet(BitcoinCash):
 		addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
@@ -365,10 +362,10 @@ class CoinProtocol(MMGenObject):
 
 	class DummyWIF:
 
-		def hex2wif(self,hexpriv,pubkey_type,compressed):
+		def bytes2wif(self,privbytes,pubkey_type,compressed):
 			assert pubkey_type == self.pubkey_type, f'{pubkey_type}: invalid pubkey_type for {self.name} protocol!'
 			assert compressed == False, f'{self.name} protocol does not support compressed pubkeys!'
-			return hexpriv
+			return privbytes.hex()
 
 		def parse_wif(self,wif):
 			return parsed_wif(
@@ -427,9 +424,9 @@ class CoinProtocol(MMGenObject):
 			return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
-			assert len(pubkey_hash) == 40, f'{len(pubkey_hash)}: invalid length for {self.name} pubkey hash'
+			assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for {self.name} pubkey hash'
 			assert not p2sh, f'{self.name} protocol has no P2SH address format'
-			return pubkey_hash
+			return pubkey_hash.hex()
 
 	class EthereumTestnet(Ethereum):
 		chain_names = ['kovan','goerli','rinkeby']
@@ -452,6 +449,7 @@ class CoinProtocol(MMGenObject):
 		base_coin      = 'ZEC'
 		addr_ver_bytes = { '1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey' }
 		wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
+		pubkey_types   = ('std','zcash_z')
 		mmtypes        = ('L','C','Z')
 		mmcaps         = ('key','addr')
 		dfl_mmtype     = 'L'
@@ -473,9 +471,9 @@ class CoinProtocol(MMGenObject):
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
 			hash_len = len(pubkey_hash)
-			if hash_len == 40:
+			if hash_len == 20:
 				return super().pubhash2addr(pubkey_hash,p2sh)
-			elif hash_len == 128:
+			elif hash_len == 64:
 				raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
 			else:
 				raise ValueError(f'{hash_len}: incorrect pubkey_hash length')
@@ -492,6 +490,7 @@ class CoinProtocol(MMGenObject):
 		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 		addr_len       = 68
 		wif_ver_num    = {}
+		pubkey_types   = ('monero',)
 		mmtypes        = ('M',)
 		dfl_mmtype     = 'M'
 		pubkey_type    = 'monero' # required by DummyWIF

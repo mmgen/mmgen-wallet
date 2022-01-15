@@ -303,34 +303,35 @@ i_alts='Gen-only altcoin'
 s_alts='The following tests will test generation operations for all supported altcoins'
 t_alts="
 	- # speed tests, no verification:
-	- $gentest_py --coin=etc 2 $rounds
-	- $gentest_py --coin=etc --use-internal-keccak-module 2 $rounds_min
-	- $gentest_py --coin=eth 2 $rounds
-	- $gentest_py --coin=eth --use-internal-keccak-module 2 $rounds_min
-	- $gentest_py --coin=xmr 2 $rounds
-	- $gentest_py --coin=xmr --use-internal-keccak-module 2 $rounds_min
-	- $gentest_py --coin=zec 2 $rounds
-	- $gentest_py --coin=zec --type=zcash_z 2 $rounds_mid
+	- $gentest_py --coin=etc 1 $rounds
+	- $gentest_py --coin=etc --use-internal-keccak-module 1 $rounds_min
+	- $gentest_py --coin=eth 1 $rounds
+	- $gentest_py --coin=eth --use-internal-keccak-module 1 $rounds_min
+	- $gentest_py --coin=xmr 1 $rounds
+	- $gentest_py --coin=xmr --use-internal-keccak-module 1 $rounds_min
+	- $gentest_py --coin=zec 1 $rounds
+	- $gentest_py --coin=zec --type=zcash_z 1 $rounds_mid
 	- # verification against external libraries and tools:
 	- #   pycoin
-	- $gentest_py --all --type=legacy 2:pycoin $rounds
-	- $gentest_py --all --type=compressed 2:pycoin $rounds
-	- $gentest_py --all --type=segwit 2:pycoin $rounds
-	- $gentest_py --all --type=bech32 2:pycoin $rounds
+	- $gentest_py --all-coins --type=legacy 1:pycoin $rounds
+	- $gentest_py --all-coins --type=compressed 1:pycoin $rounds
+	- $gentest_py --all-coins --type=segwit 1:pycoin $rounds
+	- $gentest_py --all-coins --type=bech32 1:pycoin $rounds
 
-	- $gentest_py --all --type=legacy --testnet=1 2:pycoin $rounds
-	- $gentest_py --all --type=compressed --testnet=1 2:pycoin $rounds
-	- $gentest_py --all --type=segwit --testnet=1 2:pycoin $rounds
-	- $gentest_py --all --type=bech32 --testnet=1 2:pycoin $rounds
+	- $gentest_py --all-coins --type=legacy --testnet=1 1:pycoin $rounds
+	- $gentest_py --all-coins --type=compressed --testnet=1 1:pycoin $rounds
+	- $gentest_py --all-coins --type=segwit --testnet=1 1:pycoin $rounds
+	- $gentest_py --all-coins --type=bech32 --testnet=1 1:pycoin $rounds
 	- #   keyconv
-	- $gentest_py --all --type=legacy 2:keyconv $rounds
-	- $gentest_py --all --type=compressed 2:keyconv $rounds
+	- $gentest_py --all-coins --type=legacy 1:keyconv $rounds
+	- $gentest_py --all-coins --type=compressed 1:keyconv $rounds
 	e #   ethkey
-	e $gentest_py --all 2:ethkey $rounds
+	e $gentest_py --coin=eth 1:ethkey $rounds
+	e $gentest_py --coin=eth --use-internal-keccak-module 2:ethkey $rounds_mid
 	m #   moneropy
-	m $gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
+	m $gentest_py --coin=xmr all:moneropy $rounds_mid # very slow, please be patient!
 	z #   zcash-mini
-	z $gentest_py --all --coin=zec --type=zcash_z 1:zcash-mini $rounds_mid
+	z $gentest_py --coin=zec --type=zcash_z all:zcash-mini $rounds_mid
 "
 
 [ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
@@ -501,23 +502,23 @@ i_gen='Gentest'
 s_gen="The following tests will run '$gentest_py' for BTC and LTC mainnet and testnet"
 t_gen="
 	- # speed tests, no verification:
-	- $gentest_py --coin=btc 2 $rounds
-	- $gentest_py --coin=btc --type=compressed 2 $rounds
-	- $gentest_py --coin=btc --type=segwit 2 $rounds
-	- $gentest_py --coin=btc --type=bech32 2 $rounds
-	- $gentest_py --coin=ltc 2 $rounds
-	- $gentest_py --coin=ltc --type=compressed 2 $rounds
-	- $gentest_py --coin=ltc --type=segwit 2 $rounds
-	- $gentest_py --coin=ltc --type=bech32 2 $rounds
+	- $gentest_py --coin=btc 1 $rounds
+	- $gentest_py --coin=btc --type=compressed 1 $rounds
+	- $gentest_py --coin=btc --type=segwit 1 $rounds
+	- $gentest_py --coin=btc --type=bech32 1 $rounds
+	- $gentest_py --coin=ltc 1 $rounds
+	- $gentest_py --coin=ltc --type=compressed 1 $rounds
+	- $gentest_py --coin=ltc --type=segwit 1 $rounds
+	- $gentest_py --coin=ltc --type=bech32 1 $rounds
 	- # wallet dumps:
-	- $gentest_py 2 $REFDIR/btcwallet.dump
-	- $gentest_py --type=segwit 2 $REFDIR/btcwallet-segwit.dump
-	- $gentest_py --type=bech32 2 $REFDIR/btcwallet-bech32.dump
-	- $gentest_py --testnet=1 2 $REFDIR/btcwallet-testnet.dump
-	- $gentest_py --coin=ltc 2 $REFDIR/litecoin/ltcwallet.dump
-	- $gentest_py --coin=ltc --type=segwit 2 $REFDIR/litecoin/ltcwallet-segwit.dump
-	- $gentest_py --coin=ltc --type=bech32 2 $REFDIR/litecoin/ltcwallet-bech32.dump
-	- $gentest_py --coin=ltc --testnet=1 2 $REFDIR/litecoin/ltcwallet-testnet.dump
+	- $gentest_py --type=compressed 1 $REFDIR/btcwallet.dump
+	- $gentest_py --type=segwit 1 $REFDIR/btcwallet-segwit.dump
+	- $gentest_py --type=bech32 1 $REFDIR/btcwallet-bech32.dump
+	- $gentest_py --type=compressed --testnet=1 1 $REFDIR/btcwallet-testnet.dump
+	- $gentest_py --coin=ltc --type=compressed 1 $REFDIR/litecoin/ltcwallet.dump
+	- $gentest_py --coin=ltc --type=segwit 1 $REFDIR/litecoin/ltcwallet-segwit.dump
+	- $gentest_py --coin=ltc --type=bech32 1 $REFDIR/litecoin/ltcwallet-bech32.dump
+	- $gentest_py --coin=ltc --type=compressed --testnet=1 1 $REFDIR/litecoin/ltcwallet-testnet.dump
 	- # libsecp256k1 vs python-ecdsa:
 	- $gentest_py 1:2 $rounds
 	- $gentest_py --type=segwit 1:2 $rounds
@@ -528,6 +529,8 @@ t_gen="
 	- $gentest_py --coin=ltc --type=segwit 1:2 $rounds
 	- $gentest_py --coin=ltc --testnet=1 1:2 $rounds
 	- $gentest_py --coin=ltc --testnet=1 --type=segwit 1:2 $rounds
+	- # all backends vs pycoin:
+	- $gentest_py all:pycoin $rounds
 "
 f_gen='gentest tests completed'
 

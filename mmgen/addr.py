@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-addr.py:  Address generation/display routines for the MMGen suite
+addr.py: MMGen address-related types
 """
 
 from string import ascii_letters,digits
@@ -179,260 +179,43 @@ class MoneroViewKey(HexStr):
 class ZcashViewKey(CoinAddr):
 	hex_width = 128
 
-from .opts import opt
-from .util import qmsg
-from .protocol import hash160
-from .key import PrivKey,PubKey
-from .baseconv import baseconv
+def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
+	"""
+	factory function returning a key generator backend for the specified pubkey type
+	"""
+	assert pubkey_type in proto.pubkey_types, f'{pubkey_type!r}: invalid pubkey type for coin {proto.coin}'
 
-class AddrGenerator(MMGenObject):
-	def __new__(cls,proto,addr_type):
+	from .keygen import keygen_backend,_check_backend
 
-		if type(addr_type) == str:
-			addr_type = MMGenAddrType(proto=proto,id_str=addr_type)
-		elif type(addr_type) == MMGenAddrType:
-			assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
-		else:
-			raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
+	pubkey_type_cls = getattr(keygen_backend,pubkey_type)
 
-		addr_generators = {
-			'p2pkh':    AddrGeneratorP2PKH,
-			'segwit':   AddrGeneratorSegwit,
-			'bech32':   AddrGeneratorBech32,
-			'ethereum': AddrGeneratorEthereum,
-			'zcash_z':  AddrGeneratorZcashZ,
-			'monero':   AddrGeneratorMonero,
-		}
-		me = super(cls,cls).__new__(addr_generators[addr_type.gen_method])
-		me.desc = type(me).__name__
-		me.proto = proto
-		me.addr_type = addr_type
-		me.pubkey_type = addr_type.pubkey_type
-		return me
+	from .opts import opt
+	backend = backend or getattr(opt,'keygen_backend',None)
 
-class AddrGeneratorP2PKH(AddrGenerator):
-	def to_addr(self,pubhex):
-		assert pubhex.privkey.pubkey_type == self.pubkey_type
-		return CoinAddr(self.proto,self.proto.pubhash2addr(hash160(pubhex),p2sh=False))
+	if backend:
+		_check_backend(backend,pubkey_type)
 
-	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError('Segwit redeem script not supported by this address type')
+	backend_id = pubkey_type_cls.backends[int(backend) - 1 if backend else 0]
 
-class AddrGeneratorSegwit(AddrGenerator):
-	def to_addr(self,pubhex):
-		assert pubhex.privkey.pubkey_type == self.pubkey_type
-		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return CoinAddr(self.proto,self.proto.pubhex2segwitaddr(pubhex))
+	if backend_id == 'libsecp256k1':
+		if not pubkey_type_cls.libsecp256k1.test_avail(silent=silent):
+			backend_id = 'python-ecdsa'
+			if not backend:
+				qmsg('Using (slow) native Python ECDSA library for public key generation')
 
-	def to_segwit_redeem_script(self,pubhex):
-		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return HexStr(self.proto.pubhex2redeem_script(pubhex))
+	return getattr(pubkey_type_cls,backend_id.replace('-','_'))()
 
-class AddrGeneratorBech32(AddrGenerator):
-	def to_addr(self,pubhex):
-		assert pubhex.privkey.pubkey_type == self.pubkey_type
-		assert pubhex.compressed,'Uncompressed public keys incompatible with Segwit'
-		return CoinAddr(self.proto,self.proto.pubhash2bech32addr(hash160(pubhex)))
+def AddrGenerator(proto,addr_type):
+	"""
+	factory function returning an address generator for the specified address type
+	"""
+	if type(addr_type) == str:
+		addr_type = MMGenAddrType(proto=proto,id_str=addr_type)
+	elif type(addr_type) == MMGenAddrType:
+		assert addr_type in proto.mmtypes, f'{addr_type}: invalid address type for coin {proto.coin}'
+	else:
+		raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
 
-	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError('Segwit redeem script not supported by this address type')
+	from .addrgen import addr_generator
 
-class AddrGeneratorEthereum(AddrGenerator):
-
-	def __init__(self,proto,addr_type):
-
-		from .util import get_keccak
-		self.keccak_256 = get_keccak()
-
-		from .protocol import hash256
-		self.hash256 = hash256
-
-	def to_addr(self,pubhex):
-		assert pubhex.privkey.pubkey_type == self.pubkey_type
-		return CoinAddr(self.proto,self.keccak_256(bytes.fromhex(pubhex[2:])).hexdigest()[24:])
-
-	def to_wallet_passwd(self,sk_hex):
-		return WalletPassword(self.hash256(sk_hex)[:32])
-
-	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError('Segwit redeem script not supported by this address type')
-
-# github.com/FiloSottile/zcash-mini/zcash/address.go
-class AddrGeneratorZcashZ(AddrGenerator):
-
-	def zhash256(self,s,t):
-		s = bytearray(s + bytes(32))
-		s[0] |= 0xc0
-		s[32] = t
-		from .sha2 import Sha256
-		return Sha256(s,preprocess=False).digest()
-
-	def to_addr(self,pubhex): # pubhex is really privhex
-		assert pubhex.privkey.pubkey_type == self.pubkey_type
-		key = bytes.fromhex(pubhex)
-		assert len(key) == 32, f'{len(key)}: incorrect privkey length'
-		from nacl.bindings import crypto_scalarmult_base
-		p2 = crypto_scalarmult_base(self.zhash256(key,1))
-		from .protocol import _b58chk_encode
-		ver_bytes = self.proto.addr_fmt_to_ver_bytes('zcash_z')
-		ret = _b58chk_encode(ver_bytes + self.zhash256(key,0) + p2)
-		return CoinAddr(self.proto,ret)
-
-	def to_viewkey(self,pubhex): # pubhex is really privhex
-		key = bytes.fromhex(pubhex)
-		assert len(key) == 32, f'{len(key)}: incorrect privkey length'
-		vk = bytearray(self.zhash256(key,0)+self.zhash256(key,1))
-		vk[32] &= 0xf8
-		vk[63] &= 0x7f
-		vk[63] |= 0x40
-		from .protocol import _b58chk_encode
-		ver_bytes = self.proto.addr_fmt_to_ver_bytes('viewkey')
-		ret = _b58chk_encode(ver_bytes + vk)
-		return ZcashViewKey(self.proto,ret)
-
-	def to_segwit_redeem_script(self,pubhex):
-		raise NotImplementedError('Zcash z-addresses incompatible with Segwit')
-
-class AddrGeneratorMonero(AddrGenerator):
-
-	def __init__(self,proto,addr_type):
-
-		from .util import get_keccak
-		self.keccak_256 = get_keccak()
-
-		from .protocol import hash256
-		self.hash256 = hash256
-
-		if getattr(opt,'use_old_ed25519',False):
-			from .ed25519 import edwards,encodepoint,B,scalarmult
-		else:
-			from .ed25519ll_djbec import scalarmult
-			from .ed25519 import edwards,encodepoint,B
-
-		self.edwards     = edwards
-		self.encodepoint = encodepoint
-		self.scalarmult  = scalarmult
-		self.B           = B
-
-	def b58enc(self,addr_bytes):
-		enc = baseconv.frombytes
-		l = len(addr_bytes)
-		a = ''.join([enc(addr_bytes[i*8:i*8+8],'b58',pad=11,tostr=True) for i in range(l//8)])
-		b = enc(addr_bytes[l-l%8:],'b58',pad=7,tostr=True)
-		return a + b
-
-	def to_addr(self,sk_hex): # sk_hex instead of pubhex
-		assert sk_hex.privkey.pubkey_type == self.pubkey_type
-
-		# Source and license for scalarmultbase function:
-		#   https://github.com/bigreddmachine/MoneroPy/blob/master/moneropy/crypto/ed25519.py
-		# Copyright (c) 2014-2016, The Monero Project
-		# All rights reserved.
-		def scalarmultbase(e):
-			if e == 0: return [0, 1]
-			Q = self.scalarmult(self.B, e//2)
-			Q = self.edwards(Q, Q)
-			if e & 1: Q = self.edwards(Q, self.B)
-			return Q
-
-		def hex2int_le(hexstr):
-			return int((bytes.fromhex(hexstr)[::-1]).hex(),16)
-
-		vk_hex = self.to_viewkey(sk_hex)
-		pk_str  = self.encodepoint(scalarmultbase(hex2int_le(sk_hex)))
-		pvk_str = self.encodepoint(scalarmultbase(hex2int_le(vk_hex)))
-		addr_p1 = self.proto.addr_fmt_to_ver_bytes('monero') + pk_str + pvk_str
-
-		return CoinAddr(
-			proto = self.proto,
-			addr = self.b58enc(addr_p1 + self.keccak_256(addr_p1).digest()[:4]) )
-
-	def to_wallet_passwd(self,sk_hex):
-		return WalletPassword(self.hash256(sk_hex)[:32])
-
-	def to_viewkey(self,sk_hex):
-		assert len(sk_hex) == 64, f'{len(sk_hex)}: incorrect privkey length'
-		return MoneroViewKey(
-			self.proto.preprocess_key(self.keccak_256(bytes.fromhex(sk_hex)).digest(),None).hex() )
-
-	def to_segwit_redeem_script(self,sk_hex):
-		raise NotImplementedError('Monero addresses incompatible with Segwit')
-
-class KeyGenerator(MMGenObject):
-
-	def __new__(cls,proto,addr_type,generator=None,silent=False):
-		if type(addr_type) == str: # allow override w/o check
-			pubkey_type = addr_type
-		elif type(addr_type) == MMGenAddrType:
-			assert addr_type in proto.mmtypes, f'{address}: invalid address type for coin {proto.coin}'
-			pubkey_type = addr_type.pubkey_type
-		else:
-			raise TypeError(f'{type(addr_type)}: incorrect argument type for {cls.__name__}()')
-		if pubkey_type == 'std':
-			if cls.test_for_secp256k1(silent=silent) and generator != 1:
-				if not opt.key_generator or opt.key_generator == 2 or generator == 2:
-					me = super(cls,cls).__new__(KeyGeneratorSecp256k1)
-			else:
-				qmsg('Using (slow) native Python ECDSA library for address generation')
-				me = super(cls,cls).__new__(KeyGeneratorPython)
-		elif pubkey_type in ('zcash_z','monero'):
-			me = super(cls,cls).__new__(KeyGeneratorDummy)
-			me.desc = 'mmgen-'+pubkey_type
-		else:
-			raise ValueError(f'{pubkey_type}: invalid pubkey_type argument')
-
-		me.proto = proto
-		return me
-
-	@classmethod
-	def test_for_secp256k1(self,silent=False):
-		try:
-			from .secp256k1 import priv2pub
-			m = 'Unable to execute priv2pub() from secp256k1 extension module'
-			assert priv2pub(bytes.fromhex('deadbeef'*8),1),m
-			return True
-		except Exception as e:
-			if not silent:
-				ymsg(str(e))
-			return False
-
-class KeyGeneratorPython(KeyGenerator):
-
-	desc = 'mmgen-python-ecdsa'
-
-	# devdoc/guide_wallets.md:
-	# Uncompressed public keys start with 0x04; compressed public keys begin with 0x03 or
-	# 0x02 depending on whether they're greater or less than the midpoint of the curve.
-	def privnum2pubhex(self,numpriv,compressed=False):
-		import ecdsa
-		pko = ecdsa.SigningKey.from_secret_exponent(numpriv,curve=ecdsa.SECP256k1)
-		# pubkey = x (32 bytes) + y (32 bytes) (unsigned big-endian)
-		pubkey = pko.get_verifying_key().to_string().hex()
-		if compressed: # discard Y coord, replace with appropriate version byte
-			# even y: <0, odd y: >0 -- https://bitcointalk.org/index.php?topic=129652.0
-			return ('03','02')[pubkey[-1] in '02468ace'] + pubkey[:64]
-		else:
-			return '04' + pubkey
-
-	def to_pubhex(self,privhex):
-		assert type(privhex) == PrivKey
-		return PubKey(
-			s       = self.privnum2pubhex(int(privhex,16),compressed=privhex.compressed),
-			privkey = privhex )
-
-class KeyGeneratorSecp256k1(KeyGenerator):
-	desc = 'mmgen-secp256k1'
-	def to_pubhex(self,privhex):
-		assert type(privhex) == PrivKey
-		from .secp256k1 import priv2pub
-		return PubKey(
-			s       = priv2pub(bytes.fromhex(privhex),int(privhex.compressed)).hex(),
-			privkey = privhex )
-
-class KeyGeneratorDummy(KeyGenerator):
-	desc = 'mmgen-dummy'
-	def to_pubhex(self,privhex):
-		assert type(privhex) == PrivKey
-		return PubKey(
-			s       = privhex,
-			privkey = privhex )
+	return getattr(addr_generator,addr_type.name)(proto,addr_type)

@@ -303,7 +303,7 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 		else:
 			return gd(
 				at,
-				KeyGenerator(self.proto,at),
+				KeyGenerator(self.proto,at.pubkey_type),
 				AddrGenerator(self.proto,at),
 			)
 
@@ -364,7 +364,7 @@ class MMGenToolCmdUtil(MMGenToolCmds):
 
 	def hash160(self,hexstr:'sstr'):
 		"compute ripemd160(sha256(data)) (convert hex pubkey to hex addr)"
-		return hash160(hexstr)
+		return hash160(bytes.fromhex(hexstr)).hex()
 
 	def hash256(self,string_or_bytes:str,file_input=False,hex_input=False): # TODO: handle stdin
 		"compute sha256(sha256(data)) (double sha256)"
@@ -458,19 +458,19 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def randpair(self):
 		"generate a random private key/address pair"
 		gd = self.init_generators()
-		privhex = PrivKey(
+		privkey = PrivKey(
 			self.proto,
 			get_random(32),
 			pubkey_type = gd.at.pubkey_type,
 			compressed  = gd.at.compressed )
-		addr = gd.ag.to_addr(gd.kg.to_pubhex(privhex))
-		return (privhex.wif,addr)
+		addr = gd.ag.to_addr(gd.kg.gen_data(privkey))
+		return ( privkey.wif, addr )
 
 	def wif2hex(self,wifkey:'sstr'):
 		"convert a private key from WIF to hex format"
 		return PrivKey(
 			self.proto,
-			wif = wifkey )
+			wif = wifkey ).hex()
 
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
@@ -484,31 +484,31 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
 		gd = self.init_generators()
-		privhex = PrivKey(
+		privkey = PrivKey(
 			self.proto,
 			wif = wifkey )
-		addr = gd.ag.to_addr(gd.kg.to_pubhex(privhex))
+		addr = gd.ag.to_addr(gd.kg.gen_data(privkey))
 		return addr
 
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		gd = self.init_generators()
-		privhex = PrivKey(
+		privkey = PrivKey(
 			self.proto,
 			wif = wifkey )
-		return gd.ag.to_segwit_redeem_script(gd.kg.to_pubhex(privhex))
+		return gd.ag.to_segwit_redeem_script(gd.kg.gen_data(privkey))
 
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
 		gd = self.init_generators()
-		pubhex = gd.kg.to_pubhex(PrivKey(
+		data = gd.kg.gen_data(PrivKey(
 			self.proto,
 			wif = wifkey ))
 		return (
-			gd.ag.to_segwit_redeem_script(pubhex),
-			gd.ag.to_addr(pubhex) )
+			gd.ag.to_segwit_redeem_script(data),
+			gd.ag.to_addr(data) )
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
@@ -518,8 +518,8 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 			bytes.fromhex(privhex),
 			compressed  = gd.at.compressed,
 			pubkey_type = gd.at.pubkey_type )
-		ph = gd.kg.to_pubhex(pk)
-		return ph if output_pubhex else gd.ag.to_addr(ph)
+		data = gd.kg.gen_data(pk)
+		return data.pubkey.hex() if output_pubhex else gd.ag.to_addr(data)
 
 	def privhex2pubhex(self,privhex:'sstr'): # new
 		"generate a hex public key from a hex private key"
@@ -527,30 +527,32 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def pubhex2addr(self,pubkeyhex:'sstr'):
 		"convert a hex pubkey to an address"
+		pubkey = bytes.fromhex(pubkeyhex)
 		if self.mmtype.name == 'segwit':
-			return self.proto.pubhex2segwitaddr(pubkeyhex)
+			return self.proto.pubkey2segwitaddr( pubkey )
 		else:
-			return self.pubhash2addr(hash160(pubkeyhex))
+			return self.pubhash2addr( hash160(pubkey).hex() )
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
 		"convert a hex pubkey to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
-		return self.proto.pubhex2redeem_script(pubkeyhex)
+		return self.proto.pubkey2redeem_script( bytes.fromhex(pubkeyhex) ).hex()
 
 	def redeem_script2addr(self,redeem_scripthex:'sstr'): # new
 		"convert a Segwit P2SH-P2WPKH redeem script to an address"
 		assert self.mmtype.name == 'segwit', 'This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014', f'{redeem_scripthex!r}: invalid redeem script'
 		assert len(redeem_scripthex) == 44, f'{len(redeem_scripthex)//2} bytes: invalid redeem script length'
-		return self.pubhash2addr(hash160(redeem_scripthex))
+		return self.pubhash2addr( hash160(bytes.fromhex(redeem_scripthex)).hex() )
 
 	def pubhash2addr(self,pubhashhex:'sstr'):
 		"convert public key hash to address"
+		pubhash = bytes.fromhex(pubhashhex)
 		if self.mmtype.name == 'bech32':
-			return self.proto.pubhash2bech32addr(pubhashhex)
+			return self.proto.pubhash2bech32addr( pubhash )
 		else:
 			gd = self.init_generators('addrtype_only')
-			return self.proto.pubhash2addr(pubhashhex,gd.at.addr_fmt=='p2sh')
+			return self.proto.pubhash2addr( pubhash, gd.at.addr_fmt=='p2sh' )
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"

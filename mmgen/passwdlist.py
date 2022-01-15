@@ -185,28 +185,27 @@ class PasswordList(AddrList):
 					default_yes = True ):
 				die(1,'Exiting at user request')
 
-	def gen_passwd(self,hex_sec):
+	def gen_passwd(self,secbytes):
 		assert self.pw_fmt in self.pw_info
 		if self.pw_fmt == 'hex':
 			# take most significant part
-			return hex_sec[:self.pw_len]
+			return secbytes.hex()[:self.pw_len]
 		elif self.pw_fmt == 'bip39':
 			from .bip39 import bip39
-			pw_len_hex = bip39.nwords2seedlen(self.pw_len,in_hex=True)
+			pw_len_bytes = bip39.nwords2seedlen( self.pw_len, in_bytes=True )
 			# take most significant part
-			return ' '.join(bip39.fromhex(hex_sec[:pw_len_hex],wl_id='bip39'))
+			return ' '.join( bip39.fromhex( secbytes[:pw_len_bytes].hex(), wl_id='bip39' ) )
 		elif self.pw_fmt == 'xmrseed':
-			pw_len_hex = baseconv.seedlen_map_rev['xmrseed'][self.pw_len] * 2
-			# take most significant part
+			pw_len_bytes = baseconv.seedlen_map_rev['xmrseed'][self.pw_len]
 			from .protocol import init_proto
 			bytes_preproc = init_proto('xmr').preprocess_key(
-				bytes.fromhex(hex_sec[:pw_len_hex]),
+				secbytes[:pw_len_bytes], # take most significant part
 				None )
 			return ' '.join( baseconv.frombytes( bytes_preproc, wl_id='xmrseed' ) )
 		else:
 			# take least significant part
-			return baseconv.fromhex(
-				hex_sec,
+			return baseconv.frombytes(
+				secbytes,
 				self.pw_fmt,
 				pad = self.pw_len,
 				tostr = True )[-self.pw_len:]

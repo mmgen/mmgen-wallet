@@ -59,11 +59,11 @@ tests = {
 		),
 		'good': (
 			{'proto':proto, 'wif':'92iqzh6NqiKawyB1ronw66YtEHrU4rxRJ5T4aHniZqvuSVZS21f',
-			'ret':'95b2aa7912550eacdd3844dcc14bee08ce7bc2434ad4858beb136021e945afeb'},
+			'ret':bytes.fromhex('95b2aa7912550eacdd3844dcc14bee08ce7bc2434ad4858beb136021e945afeb')},
 			{'proto':proto, 'wif':'cSaJAXBAm9ooHpVJgoxqjDG3AcareFy29Cz8mhnNTRijjv2HLgta',
-			'ret':'94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c'},
-			{'proto':proto, 's':r32,'compressed':False,'pubkey_type':'std','ret':r32.hex()},
-			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32.hex()}
+			'ret':bytes.fromhex('94fa8b90c11fea8fb907c9376b919534b0a75b9a9621edf71a78753544b4101c')},
+			{'proto':proto, 's':r32,'compressed':False,'pubkey_type':'std','ret':r32},
+			{'proto':proto, 's':r32,'compressed':True,'pubkey_type':'std','ret':r32}
 		)
 	},
 }

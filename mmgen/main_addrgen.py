@@ -56,15 +56,13 @@ opts_data = {
 -c, --print-checksum  Print address list checksum and exit
 -d, --outdir=      d  Output files to directory 'd' instead of working dir
 -e, --echo-passphrase Echo passphrase or mnemonic to screen upon entry
--E, --use-old-ed25519 Use original (and slow) ed25519 module for Monero
-                      address generation instead of ed25519ll_djbec
 -i, --in-fmt=      f  Input is from wallet format 'f' (see FMT CODES below)
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)
 -O, --old-incog-fmt   Specify old-format incognito input
 -k, --use-internal-keccak-module Force use of the internal keccak module
--K, --key-generator=m Use method 'm' for public key generation
-                      Options: {kgs} (default: {kg})
+-K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+                      for {coin_id}: {kgs}
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
                       with non-standard (< {g.dfl_seed_len}-bit) seed lengths
@@ -106,11 +104,11 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda proto,s: s.format(
+		'options': lambda proto,help_notes,s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
 			dmat="'{}' or '{}'".format(proto.dfl_mmtype,MMGenAddrType.mmtypes[proto.dfl_mmtype].name),
-			kgs=' '.join(['{}:{}'.format(n,k) for n,k in enumerate(g.key_generators,1)]),
-			kg=g.key_generator,
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
 			pnm=g.proj_name,
 			what=gen_what,
 			g=g,
@@ -142,8 +140,9 @@ addr_type = MMGenAddrType(
 if len(cmd_args) < 1:
 	opts.usage()
 
-if getattr(opt,'use_old_ed25519',False):
-	msg('Using old (slow) ed25519 module by user request')
+if opt.keygen_backend:
+	from .keygen import check_backend
+	check_backend( proto, opt.keygen_backend, opt.type )
 
 idxs = AddrIdxList(fmt_str=cmd_args.pop())
 

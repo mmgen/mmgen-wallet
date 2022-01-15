@@ -34,7 +34,9 @@ opts_data = {
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda help_notes,s: s.format(
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
 			g=g,
 		),
 		'notes': lambda s: s.format(nn='a note'),

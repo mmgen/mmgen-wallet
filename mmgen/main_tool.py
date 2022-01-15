@@ -63,6 +63,8 @@ opts_data = {
 -h, --help             Print this help message
 --, --longhelp         Print help message for long options (common options)
 -k, --use-internal-keccak-module Force use of the internal keccak module
+-K, --keygen-backend=n Use backend 'n' for public key generation.  Options
+                       for {coin_id}: {kgs}
 -p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
                        for password hashing (default: '{g.dfl_hash_preset}')
 -P, --passwd-file= f   Get passphrase from file 'f'.
@@ -84,7 +86,11 @@ Type '{pn} help <command>' for help on a particular command
 """
 	},
 	'code': {
-		'options': lambda s: s.format(g=g),
+		'options': lambda s, help_notes: s.format(
+			kgs=help_notes('keygen_backends'),
+			coin_id=help_notes('coin_id'),
+			g=g,
+		),
 		'notes': lambda s: s.format(
 			ch=make_cmd_help(),
 			pn=g.prog_name)
