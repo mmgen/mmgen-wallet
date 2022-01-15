@@ -37,6 +37,7 @@ from mmgen.addr import *
 from mmgen.addrlist import *
 from mmgen.addrdata import *
 from mmgen.amt import *
+from mmgen.key import *
 
 opts_data = {
 	'sets': [('super_silent', True, 'silent', True)],

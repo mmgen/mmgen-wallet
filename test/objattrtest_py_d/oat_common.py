@@ -16,6 +16,7 @@ from mmgen.protocol import *
 from mmgen.addr import *
 from mmgen.tx import *
 from mmgen.tw import *
+from mmgen.key import *
 from ..include.common import getrand
 
 from collections import namedtuple

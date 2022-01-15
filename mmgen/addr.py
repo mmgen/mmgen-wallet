@@ -26,6 +26,7 @@ from .objmethods import MMGenObject
 from .obj import *
 from .baseconv import *
 from .protocol import hash160
+from .key import PrivKey,PubKey
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,proto,addr_type):

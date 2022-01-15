@@ -9,7 +9,8 @@ tool_api_test.py: test the MMGen suite tool API
 
 import sys,os
 from mmgen.common import *
-from mmgen.obj import PrivKey,CoinAddr
+from mmgen.key import PrivKey
+from mmgen.addr import CoinAddr
 
 keys = [
 	'118089d66b4a5853765e94923abdd5de4616c6e5118089d66b4a5853765e9492',

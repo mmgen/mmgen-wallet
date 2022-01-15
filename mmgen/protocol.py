@@ -25,7 +25,7 @@ from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
-from .obj import CoinAddr,MMGenAddrType,PrivKey
+from .obj import CoinAddr,MMGenAddrType
 from .globalvars import g
 from .amt import BTCAmt,LTCAmt,BCHAmt,B2XAmt,XMRAmt
 from .altcoins.eth.obj import ETHAmt
@@ -177,9 +177,6 @@ class CoinProtocol(MMGenObject):
 
 		def addr_type(self,id_str):
 			return MMGenAddrType( proto=self, id_str=id_str )
-
-		def priv_key(self,s):
-			return PrivKey( proto=self, s=s )
 
 	class Secp256k1(Base):
 		"""

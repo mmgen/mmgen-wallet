@@ -374,7 +374,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 					out.append(self._create_fake_unspent_entry(coinaddr,d['al_id'],idx,lbl,segwit=d['segwit']))
 
 		if non_mmgen_input:
-			from mmgen.obj import PrivKey
+			from mmgen.key import PrivKey
 			privkey = PrivKey(
 				self.proto,
 				getrand(32),
@@ -417,7 +417,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return ad,tx_data
 
 	def _make_txcreate_cmdline(self,tx_data):
-		from mmgen.obj import PrivKey
+		from mmgen.key import PrivKey
 		privkey = PrivKey(self.proto,getrand(32),compressed=True,pubkey_type='std')
 		t = ('compressed','segwit')['S' in self.proto.mmtypes]
 		from mmgen.addr import AddrGenerator,KeyGenerator

@@ -44,7 +44,8 @@ NL = ('\n','\r\n')[g.platform=='win']
 def is_str(s):
 	return type(s) == str
 
-from mmgen.obj import is_wif,is_coin_addr
+from mmgen.key import is_wif
+from mmgen.obj import is_coin_addr
 def is_wif_loc(s):
 	return is_wif(proto,s)
 def is_coin_addr_loc(s):

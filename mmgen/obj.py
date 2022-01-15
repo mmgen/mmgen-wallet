@@ -62,8 +62,6 @@ def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_
 
 def is_mmgen_id(proto,s):  return get_obj(MMGenID,  proto=proto, id_str=s, silent=True,return_bool=True)
 def is_coin_addr(proto,s): return get_obj(CoinAddr, proto=proto, addr=s,   silent=True,return_bool=True)
-def is_wif(proto,s):       return get_obj(WifKey,   proto=proto, wif=s,    silent=True,return_bool=True)
-
 # dict that keeps a list of keys for efficient lookup by index
 class IndexedDict(dict):
 
@@ -434,89 +432,6 @@ class CoinTxID(HexStr):       color,width,hexcase = 'purple',64,'lower'
 class WalletPassword(HexStr): color,width,hexcase = 'blue',32,'lower'
 class MoneroViewKey(HexStr):  color,width,hexcase = 'cyan',64,'lower' # FIXME - no checking performed
 class MMGenTxID(HexStr):      color,width,hexcase = 'red',6,'upper'
-
-class WifKey(str,Hilite,InitErrors):
-	"""
-	Initialize a WIF key, checking its well-formedness.
-	The numeric validity of the private key it encodes is not checked.
-	"""
-	width = 53
-	color = 'blue'
-	def __new__(cls,proto,wif):
-		if type(wif) == cls:
-			return wif
-		try:
-			assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-			proto.parse_wif(wif) # raises exception on error
-			return str.__new__(cls,wif)
-		except Exception as e:
-			return cls.init_fail(e,wif)
-
-class PubKey(HexStr,MMGenObject): # TODO: add some real checks
-	def __new__(cls,s,privkey):
-		try:
-			me = HexStr.__new__(cls,s,case='lower')
-			me.privkey = privkey
-			me.compressed = privkey.compressed
-			return me
-		except Exception as e:
-			return cls.init_fail(e,s)
-
-class PrivKey(str,Hilite,InitErrors,MMGenObject):
-	"""
-	Input:   a) raw, non-preprocessed bytes; or b) WIF key.
-	Output:  preprocessed hexadecimal key, plus WIF key in 'wif' attribute
-	For coins without a WIF format, 'wif' contains the preprocessed hex.
-	The numeric validity of the resulting key is always checked.
-	"""
-	color = 'red'
-	width = 64
-	trunc_ok = False
-
-	compressed = ImmutableAttr(bool,typeconv=False)
-	wif        = ImmutableAttr(WifKey,typeconv=False)
-
-	# initialize with (priv_bin,compressed), WIF or self
-	def __new__(cls,proto,s=None,compressed=None,wif=None,pubkey_type=None):
-		if type(s) == cls:
-			return s
-		if wif:
-			try:
-				assert s == None,"'wif' and key hex args are mutually exclusive"
-				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
-				k = proto.parse_wif(wif) # raises exception on error
-				me = str.__new__(cls,k.sec.hex())
-				me.compressed = k.compressed
-				me.pubkey_type = k.pubkey_type
-				me.wif = str.__new__(WifKey,wif) # check has been done
-				me.orig_hex = None
-				if k.sec != proto.preprocess_key(k.sec,k.pubkey_type):
-					raise PrivateKeyError(
-						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}')
-				me.proto = proto
-				return me
-			except Exception as e:
-				return cls.init_fail(e,s,objname=f'{proto.coin} WIF key')
-		else:
-			try:
-				assert s,'private key bytes data missing'
-				assert pubkey_type is not None,"'pubkey_type' arg missing"
-				assert len(s) == cls.width // 2, f'key length must be {cls.width // 2} bytes'
-				if pubkey_type == 'password': # skip WIF creation and pre-processing for passwds
-					me = str.__new__(cls,s.hex())
-				else:
-					assert compressed is not None, "'compressed' arg missing"
-					assert type(compressed) == bool,(
-						f"'compressed' must be of type bool, not {type(compressed).__name__}" )
-					me = str.__new__(cls,proto.preprocess_key(s,pubkey_type).hex())
-					me.wif = WifKey(proto,proto.hex2wif(me,pubkey_type,compressed))
-					me.compressed = compressed
-				me.pubkey_type = pubkey_type
-				me.orig_hex = s.hex() # save the non-preprocessed key
-				me.proto = proto
-				return me
-			except Exception as e:
-				return cls.init_fail(e,s)
 
 class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	width = 10

@@ -401,7 +401,8 @@ def parse_arg2():
 # begin execution
 from mmgen.protocol import init_proto
 from mmgen.altcoin import CoinInfo as ci
-from mmgen.obj import MMGenAddrType,PrivKey
+from mmgen.obj import MMGenAddrType
+from mmgen.key import PrivKey
 from mmgen.addr import KeyGenerator,AddrGenerator
 
 addr_type = MMGenAddrType(

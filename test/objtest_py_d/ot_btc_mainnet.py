@@ -10,6 +10,7 @@ test.objtest_py_d.ot_btc_mainnet: BTC mainnet test vectors for MMGen data object
 from mmgen.obj import *
 from mmgen.addrlist import AddrIdxList
 from mmgen.seedsplit import *
+from mmgen.key import *
 from .ot_common import *
 
 from mmgen.protocol import init_proto

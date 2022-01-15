@@ -33,6 +33,7 @@ from .util import (
 from .protocol import init_proto
 from .obj import *
 from .seed import SeedID,is_seed_id
+from .key import PrivKey
 from .addrlist import KeyList,AddrListData,dmsg_sc
 from .passwdlist import PasswordList
 

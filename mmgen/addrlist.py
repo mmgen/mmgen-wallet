@@ -23,8 +23,9 @@ addrlist.py: Address list classes for the MMGen suite
 from hashlib import sha256,sha512
 from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg
 from .objmethods import MMGenObject,Hilite,InitErrors
-from .obj import MMGenListItem,ListItemAttr,MMGenDict,WalletPassword,PrivKey
+from .obj import MMGenListItem,ListItemAttr,MMGenDict,WalletPassword
 from .seed import SeedID
+from .key import PrivKey
 from .obj import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
 
 def dmsg_sc(desc,data):

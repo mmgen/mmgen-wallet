@@ -24,8 +24,9 @@ from collections import namedtuple
 
 from .exception import InvalidPasswdFormat
 from .util import ymsg,is_hex_str,is_int,keypress_confirm
-from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,PrivKey
+from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString
 from .baseconv import baseconv,is_b32_str,is_b58_str
+from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID,is_xmrseed,is_bip39_str
 from .addrlist import (
 	AddrListChksum,
