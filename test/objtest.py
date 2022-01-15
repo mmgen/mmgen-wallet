@@ -38,6 +38,7 @@ from mmgen.addrlist import *
 from mmgen.addrdata import *
 from mmgen.amt import *
 from mmgen.key import *
+from mmgen.rpc import IPPort
 
 opts_data = {
 	'sets': [('super_silent', True, 'silent', True)],

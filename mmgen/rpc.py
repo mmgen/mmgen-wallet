@@ -57,6 +57,33 @@ def dmsg_rpc(fs,data=None,is_json=False):
 			fs.format(pp_fmt(json.loads(data) if is_json else data))
 		)
 
+class IPPort(str,Hilite,InitErrors):
+	color = 'yellow'
+	width = 0
+	trunc_ok = False
+	min_len = 9  # 0.0.0.0:0
+	max_len = 21 # 255.255.255.255:65535
+	def __new__(cls,s):
+		if type(s) == cls:
+			return s
+		try:
+			m = re.fullmatch(r'{q}\.{q}\.{q}\.{q}:(\d{{1,10}})'.format(q=r'([0-9]{1,3})'),s)
+			assert m is not None, f'{s!r}: invalid IP:HOST specifier'
+			for e in m.groups():
+				if len(e) != 1 and e[0] == '0':
+					raise ValueError(f'{e}: leading zeroes not permitted in dotted decimal element or port number')
+			res = [int(e) for e in m.groups()]
+			for e in res[:4]:
+				assert e <= 255, f'{e}: dotted decimal element > 255'
+			assert res[4] <= 65535, f'{res[4]}: port number > 65535'
+			me = str.__new__(cls,s)
+			me.ip = '{}.{}.{}.{}'.format(*res)
+			me.ip_num = sum( res[i] * ( 2 ** (-(i-3)*8) ) for i in range(4) )
+			me.port = res[4]
+			return me
+		except Exception as e:
+			return cls.init_fail(e,s)
+
 class json_encoder(json.JSONEncoder):
 	def default(self,obj):
 		if isinstance(obj,Decimal):
@@ -691,7 +718,6 @@ class MoneroRPCClient(RPCClient):
 
 	def __init__(self,host,port,user,passwd,test_connection=True,proxy=None,daemon=None):
 		if proxy is not None:
-			from .obj import IPPort
 			self.proxy = IPPort(proxy)
 			test_connection = False
 			if host.endswith('.onion'):
