@@ -25,7 +25,8 @@ from . import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
-from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,AsyncInit
+from mmgen.base_obj import AsyncInit
+from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID
 from mmgen.util import msg
 from .obj import ETHAmt
 

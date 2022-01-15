@@ -28,12 +28,6 @@ from .exception import *
 from .globalvars import *
 from .color import *
 
-class AsyncInit(type):
-	async def __call__(cls,*args,**kwargs):
-		instance = cls.__new__(cls,*args,**kwargs)
-		await type(instance).__init__(instance,*args,**kwargs)
-		return instance
-
 def get_obj(objname,*args,**kwargs):
 	"""
 	Wrapper for data objects

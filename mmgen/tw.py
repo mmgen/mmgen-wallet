@@ -24,6 +24,7 @@ import json
 from collections import namedtuple
 from .exception import *
 from .common import *
+from .base_obj import AsyncInit
 from .obj import *
 from .tx import is_mmgen_id,is_coin_addr
 from .rpc import rpc_init

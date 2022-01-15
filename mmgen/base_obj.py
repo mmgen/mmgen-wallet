@@ -20,6 +20,12 @@
 base_obj.py: base objects with no internal imports for the MMGen suite
 """
 
+class AsyncInit(type):
+	async def __call__(cls,*args,**kwargs):
+		instance = cls.__new__(cls,*args,**kwargs)
+		await type(instance).__init__(instance,*args,**kwargs)
+		return instance
+
 class AttrCtrlMeta(type):
 	def __call__(cls,*args,**kwargs):
 		instance = super().__call__(*args,**kwargs)
