@@ -21,7 +21,7 @@ amt.py: MMGen CoinAmt and related classes
 """
 
 from decimal import Decimal
-from .obj import Hilite,InitErrors
+from .objmethods import Hilite,InitErrors
 
 class UnknownCoinAmt(Decimal): pass
 

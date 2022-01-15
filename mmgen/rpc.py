@@ -23,6 +23,7 @@ rpc.py:  Cryptocoin RPC library for the MMGen suite
 import base64,json,asyncio
 from decimal import Decimal
 from .common import *
+from .objmethods import Hilite,InitErrors
 from .base_obj import AsyncInit
 
 rpc_credentials_msg = '\n'+fmt("""

@@ -23,6 +23,7 @@ addr.py:  Address generation/display routines for the MMGen suite
 from hashlib import sha256,sha512
 from .common import *
 from .base_obj import AsyncInit
+from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import *
 from .baseconv import *
 from .protocol import init_proto,hash160

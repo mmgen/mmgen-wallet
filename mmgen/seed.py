@@ -21,7 +21,8 @@ seed.py:  Seed-related classes and methods for the MMGen suite
 """
 
 from .common import *
-from .obj import *
+from .objmethods import Hilite,InitErrors
+from .obj import ImmutableAttr,get_obj
 from .crypto import get_random,scramble_seed
 
 class SeedID(str,Hilite,InitErrors):
