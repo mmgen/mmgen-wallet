@@ -47,9 +47,56 @@ from .util import (
 )
 from .base_obj import AsyncInit
 from .objmethods import Hilite,InitErrors,MMGenObject
-from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenList,MMGenDict,TwComment,get_obj,TwLabel,TwMMGenID
+from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenList,MMGenDict,TwComment,get_obj
 from .addr import CoinAddr,MMGenID,AddrIdx,is_mmgen_id,is_coin_addr
 from .rpc import rpc_init
+
+class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
+	color = 'orange'
+	width = 0
+	trunc_ok = False
+	def __new__(cls,proto,id_str):
+		if type(id_str) == cls:
+			return id_str
+		ret = None
+		try:
+			ret = MMGenID(proto,id_str)
+			sort_key,idtype = ret.sort_key,'mmgen'
+		except Exception as e:
+			try:
+				assert id_str.split(':',1)[0] == proto.base_coin.lower(),(
+					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
+				assert set(id_str[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
+				assert len(id_str) > 4,'not more that four characters long'
+				ret,sort_key,idtype = str(id_str),'z_'+id_str,'non-mmgen'
+			except Exception as e2:
+				return cls.init_fail(e,id_str,e2=e2)
+
+		me = str.__new__(cls,ret)
+		me.obj = ret
+		me.sort_key = sort_key
+		me.type = idtype
+		me.proto = proto
+		return me
+
+# non-displaying container for TwMMGenID,TwComment
+class TwLabel(str,InitErrors,MMGenObject):
+	exc = BadTwLabel
+	passthru_excs = (BadTwComment,)
+	def __new__(cls,proto,text):
+		if type(text) == cls:
+			return text
+		try:
+			ts = text.split(None,1)
+			mmid = TwMMGenID(proto,ts[0])
+			comment = TwComment(ts[1] if len(ts) == 2 else '')
+			me = str.__new__( cls, mmid + (' ' + comment if comment else '') )
+			me.mmid = mmid
+			me.comment = comment
+			me.proto = proto
+			return me
+		except Exception as e:
+			return cls.init_fail(e,text)
 
 def get_tw_label(proto,s):
 	"""

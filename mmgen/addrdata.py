@@ -84,7 +84,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 
 	async def __init__(self,proto,wallet=None):
 		from .rpc import rpc_init
-		from .obj import TwLabel
+		from .tw import TwLabel
 		from .globalvars import g
 		from .seed import SeedID
 		self.proto = proto

@@ -24,7 +24,7 @@ import time
 
 from .common import *
 from .addrlist import AddrList,KeyAddrList
-from .obj import TwLabel
+from .tw import TwLabel
 
 ai_msgs = lambda k: {
 	'rescan': """
