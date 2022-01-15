@@ -9,7 +9,7 @@ class unit_test(object):
 
 	def run_test(self,name,ut):
 		from mmgen.seed import Seed
-		from mmgen.obj import SubSeedIdxRange
+		from mmgen.subseed import SubSeedIdxRange
 
 		def basic_ops():
 			msg_r('Testing basic ops...')

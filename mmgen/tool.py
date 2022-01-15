@@ -873,6 +873,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)
 		from .wallet import Wallet
+		from .subseed import SubSeedIdxRange
 		return Wallet(sf).seed.subseeds.format(*SubSeedIdxRange(subseed_idx_range))
 
 	def list_shares(self,

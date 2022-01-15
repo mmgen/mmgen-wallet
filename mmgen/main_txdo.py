@@ -22,7 +22,7 @@ mmgen-txdo: Create, sign and broadcast an online MMGen transaction
 
 from .common import *
 from .wallet import Wallet
-from .obj import SubSeedIdxRange
+from .subseed import SubSeedIdxRange
 
 opts_data = {
 	'sets': [('yes', True, 'quiet', True)],

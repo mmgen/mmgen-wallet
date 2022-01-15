@@ -146,7 +146,7 @@ FMT CODES:
 cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 
 if invoked_as == 'subgen':
-	from .obj import SubSeedIdx
+	from .subseed import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
 	from .obj import get_obj

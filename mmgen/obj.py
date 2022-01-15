@@ -441,10 +441,6 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 	def items(self):
 		return list(self.iterate())
 
-class SubSeedIdxRange(MMGenRange):
-	min_idx = 1
-	max_idx = 1000000
-
 class UnknownCoinAmt(Decimal): pass
 
 class DecimalNegateResult(Decimal): pass
@@ -658,29 +654,6 @@ class SeedID(str,Hilite,InitErrors):
 			raise ValueError('no arguments provided')
 		except Exception as e:
 			return cls.init_fail(e,seed or sid)
-
-class SubSeedIdx(str,Hilite,InitErrors):
-	color = 'red'
-	trunc_ok = False
-	def __new__(cls,s):
-		if type(s) == cls:
-			return s
-		try:
-			assert isinstance(s,str),'not a string or string subclass'
-			idx = s[:-1] if s[-1] in 'SsLl' else s
-			from .util import is_int
-			assert is_int(idx),"valid format: an integer, plus optional letter 'S','s','L' or 'l'"
-			idx = int(idx)
-			assert idx >= SubSeedIdxRange.min_idx, f'subseed index < {SubSeedIdxRange.min_idx:,}'
-			assert idx <= SubSeedIdxRange.max_idx, f'subseed index > {SubSeedIdxRange.max_idx:,}'
-
-			sstype,ltr = ('short','S') if s[-1] in 'Ss' else ('long','L')
-			me = str.__new__(cls,str(idx)+ltr)
-			me.idx = idx
-			me.type = sstype
-			return me
-		except Exception as e:
-			return cls.init_fail(e,s)
 
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'

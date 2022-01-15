@@ -22,7 +22,7 @@ seedsplit.py: Seed split classes and methods for the MMGen suite
 
 from .exception import RangeError
 from .obj import MMGenPWIDString,MMGenIdx
-from .seed import *
+from .subseed import *
 
 class SeedShareIdx(MMGenIdx):
 	max_val = 1024

@@ -226,7 +226,7 @@ EXAMPLES:
 	mi = MasterShareIdx )
 
 		def subwallet():
-			from .obj import SubSeedIdxRange
+			from .subseed import SubSeedIdxRange
 			return f"""
 SUBWALLETS:
 
