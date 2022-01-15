@@ -938,7 +938,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			mmaddr = TwMMGenID(self.proto,arg1)
 
 		if mmaddr and not coinaddr:
-			from .addr import TwAddrData
+			from .addrdata import TwAddrData
 			coinaddr = (await TwAddrData(self.proto)).mmaddr2coinaddr(mmaddr)
 
 		try:
@@ -953,7 +953,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		# Allow for the possibility that BTC addr of MMGen addr was entered.
 		# Do reverse lookup, so that MMGen addr will not be marked as non-MMGen.
 		if not mmaddr:
-			from .addr import TwAddrData
+			from .addrdata import TwAddrData
 			mmaddr = (await TwAddrData(proto=self.proto)).coinaddr2mmaddr(coinaddr)
 
 		if not mmaddr:

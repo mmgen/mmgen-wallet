@@ -723,7 +723,8 @@ class MMGenTX:
 				die(2,'At least one output must be specified on the command line')
 
 		async def get_outputs_from_cmdline(self,cmd_args):
-			from .addr import AddrList,AddrData,TwAddrData
+			from .addr import AddrList
+			from .addrdata import AddrData,TwAddrData
 			from .addrfile import AddrFile
 			addrfiles = remove_dups(
 				tuple(a for a in cmd_args if get_extension(a) == AddrFile.ext),
@@ -1612,7 +1613,7 @@ class MMGenTX:
 #
 #		async def get_outputs_from_cmdline(self,mmid): # TODO: check that addr is empty
 #
-#			from .addr import TwAddrData
+#			from .addrdata import TwAddrData
 #			ad_w = await TwAddrData()
 #
 #			if is_mmgen_id(self.proto,mmid):

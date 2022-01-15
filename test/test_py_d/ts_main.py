@@ -397,8 +397,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return out
 
 	def _create_tx_data(self,sources,addrs_per_wallet=addrs_per_wallet):
-		from mmgen.addr import AddrData,AddrList
+		from mmgen.addr import AddrList
 		from mmgen.obj import AddrIdxList
+		from mmgen.addrdata import AddrData
 		tx_data,ad = {},AddrData(self.proto)
 		for s in sources:
 			afile = get_file_with_ext(self.cfgs[s]['tmpdir'],'addrs')

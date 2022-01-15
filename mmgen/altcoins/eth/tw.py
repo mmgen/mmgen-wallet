@@ -23,7 +23,7 @@ altcoins.eth.tw: Ethereum tracking wallet and related classes for the MMGen suit
 from mmgen.common import *
 from mmgen.obj import TwLabel,is_coin_addr,is_mmgen_id,ListItemAttr,ImmutableAttr
 from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs,TwGetBalance
-from mmgen.addr import AddrData,TwAddrData
+from mmgen.addrdata import AddrData,TwAddrData
 from .contract import Token,TokenResolve
 from .obj import ETHAmt
 
