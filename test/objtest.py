@@ -33,6 +33,7 @@ from mmgen.common import *
 from mmgen.obj import *
 from mmgen.altcoins.eth.obj import *
 from mmgen.seedsplit import *
+from mmgen.amt import *
 
 opts_data = {
 	'sets': [('super_silent', True, 'silent', True)],

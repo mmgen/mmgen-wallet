@@ -25,8 +25,9 @@ from . import rlp
 
 from mmgen.globalvars import g
 from mmgen.common import *
-from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,ETHAmt,AsyncInit
+from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID,AsyncInit
 from mmgen.util import msg
+from .obj import ETHAmt
 
 try:
 	assert not g.use_internal_keccak_module

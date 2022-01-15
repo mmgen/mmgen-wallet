@@ -28,6 +28,7 @@ from mmgen.obj import *
 from mmgen.tx import MMGenTX
 from mmgen.tw import TrackingWallet
 from .contract import Token
+from .obj import ETHAmt,ETHNonce
 
 class EthereumMMGenTX:
 

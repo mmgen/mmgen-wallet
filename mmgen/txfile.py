@@ -21,8 +21,9 @@ txfile.py:  Transaction file operations for the MMGen suite
 """
 
 from .common import *
-from .obj import HexStr,MMGenTxID,UnknownCoinAmt,CoinTxID,MMGenTxLabel
+from .obj import HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
 from .tx import MMGenTxOutput,MMGenTxOutputList,MMGenTxInput,MMGenTxInputList
+from .amt import UnknownCoinAmt
 from .exception import MaxFileSizeExceeded
 
 class MMGenTxFile:

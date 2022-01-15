@@ -21,7 +21,8 @@ altcoins.eth.obj: Ethereum data type classes for the MMGen suite
 """
 
 from decimal import Decimal
-from mmgen.obj import CoinAmt,Int
+from mmgen.obj import Int
+from mmgen.amt import CoinAmt
 
 # Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
 class ETHAmt(CoinAmt):

@@ -25,8 +25,10 @@ from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
-from .obj import BTCAmt,LTCAmt,BCHAmt,B2XAmt,XMRAmt,ETHAmt,CoinAddr,MMGenAddrType,PrivKey
+from .obj import CoinAddr,MMGenAddrType,PrivKey
 from .globalvars import g
+from .amt import BTCAmt,LTCAmt,BCHAmt,B2XAmt,XMRAmt
+from .altcoins.eth.obj import ETHAmt
 import mmgen.bech32 as bech32
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
