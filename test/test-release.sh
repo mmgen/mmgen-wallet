@@ -330,7 +330,7 @@ t_alts="
 	m #   moneropy
 	m $gentest_py --all --coin=xmr 2:moneropy $rounds_min # very slow, be patient!
 	z #   zcash-mini
-	z $gentest_py --all 2:zcash-mini $rounds_mid
+	z $gentest_py --all --coin=zec --type=zcash_z 1:zcash-mini $rounds_mid
 "
 
 [ "$MSYS2" ] && t_alts_skip='m z'  # no moneropy (pysha3), zcash-mini (golang)
