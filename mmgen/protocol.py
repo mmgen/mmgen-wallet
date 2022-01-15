@@ -92,6 +92,7 @@ class CoinProtocol(MMGenObject):
 
 		def __init__(self,coin,name,network,tokensym=None):
 			self.coin       = coin.upper()
+			self.coin_id    = self.coin
 			self.name       = name
 			self.network    = network
 			self.tokensym   = tokensym
@@ -456,6 +457,11 @@ class CoinProtocol(MMGenObject):
 		dfl_mmtype     = 'L'
 		avg_bdi        = 75
 
+		def __init__(self,*args,**kwargs):
+			super().__init__(*args,**kwargs)
+			from .opts import opt
+			self.coin_id = 'ZEC-Z' if getattr(opt,'type',None) in ('zcash_z','Z') else 'ZEC-T'
+
 		def get_addr_len(self,addr_fmt):
 			return (20,64)[addr_fmt in ('zcash_z','viewkey')]
 
@@ -470,7 +476,7 @@ class CoinProtocol(MMGenObject):
 			if hash_len == 40:
 				return super().pubhash2addr(pubkey_hash,p2sh)
 			elif hash_len == 128:
-				raise NotImplementedError('Zcash z-addresses have no pubkey hash')
+				raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
 			else:
 				raise ValueError(f'{hash_len}: incorrect pubkey_hash length')
 

@@ -107,7 +107,7 @@ def get_tw_label(proto,s):
 	except BadTwComment:
 		raise
 	except Exception as e:
-		print(e)
+#		print(e)
 		return None
 
 class TwUnspentOutputs(MMGenObject,metaclass=AsyncInit):

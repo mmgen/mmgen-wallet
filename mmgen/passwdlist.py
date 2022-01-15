@@ -202,7 +202,7 @@ class PasswordList(AddrList):
 			bytes_preproc = init_proto('xmr').preprocess_key(
 				bytes.fromhex(hex_sec[:pw_len_hex]),
 				None )
-			return ' '.join(baseconv.frombytes(bytes_preproc,wl_id='xmrseed'))
+			return ' '.join( baseconv.frombytes( bytes_preproc, wl_id='xmrseed' ) )
 		else:
 			# take least significant part
 			return baseconv.fromhex(

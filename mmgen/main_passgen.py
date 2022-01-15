@@ -119,7 +119,6 @@ FMT CODES:
 			seed_lens=', '.join(map(str,g.seed_lens)),
 			g=g,pnm=g.proj_name,
 			dpf=PasswordList.dfl_pw_fmt,
-			kgs=' '.join([f'{n}:{k}' for n,k in enumerate(g.key_generators,1)])
 		),
 		'notes': lambda help_notes,s: s.format(
 				o=opts,g=g,i58=pwi['b58'],i32=pwi['b32'],i39=pwi['bip39'],

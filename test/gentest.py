@@ -242,7 +242,7 @@ def find_or_check_tool(proto,addr_type,toolname):
 			addr_type.name,
 			proto.network,
 			verbose = not opt.quiet,
-			tool = toolname if toolname != 'ext' else None )
+			toolname = toolname if toolname != 'ext' else None )
 		if tool and toolname in ext_progs and toolname != tool:
 			sys.exit(3)
 		if tool == None:

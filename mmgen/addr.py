@@ -20,13 +20,11 @@
 addr.py:  Address generation/display routines for the MMGen suite
 """
 
-from hashlib import sha256,sha512
-from .common import *
-from .objmethods import MMGenObject
-from .obj import *
-from .baseconv import *
-from .protocol import hash160
-from .key import PrivKey,PubKey
+from string import ascii_letters,digits
+from collections import namedtuple
+
+from .objmethods import Hilite,InitErrors,MMGenObject
+from .obj import ImmutableAttr,MMGenIdx,HexStr,get_obj
 from .seed import SeedID
 
 ati = namedtuple('addrtype_info',
@@ -59,6 +57,7 @@ class MMGenAddrType(str,Hilite,InitErrors,MMGenObject):
 		if isinstance(id_str,cls):
 			return id_str
 		try:
+			id_str = id_str.replace('-','_')
 			for k,v in cls.mmtypes.items():
 				if id_str in (k,v.name):
 					if id_str == v.name:
@@ -179,6 +178,12 @@ class MoneroViewKey(HexStr):
 
 class ZcashViewKey(CoinAddr):
 	hex_width = 128
+
+from .opts import opt
+from .util import qmsg
+from .protocol import hash160
+from .key import PrivKey,PubKey
+from .baseconv import baseconv
 
 class AddrGenerator(MMGenObject):
 	def __new__(cls,proto,addr_type):

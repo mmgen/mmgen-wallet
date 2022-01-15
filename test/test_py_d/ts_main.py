@@ -383,7 +383,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			from mmgen.addr import KeyGenerator,AddrGenerator
 			rand_coinaddr = AddrGenerator(
 				self.proto,
-				'compressed'
+				('legacy','compressed')[non_mmgen_input_compressed]
 				).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
 			of = joinpath(self.cfgs[non_mmgen_input]['tmpdir'],non_mmgen_fn)
 			write_data_to_file(
@@ -420,8 +420,10 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		from mmgen.key import PrivKey
 		privkey = PrivKey(self.proto,getrand(32),compressed=True,pubkey_type='std')
 		t = ('compressed','segwit')['S' in self.proto.mmtypes]
-		from mmgen.addr import AddrGenerator,KeyGenerator
-		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(KeyGenerator(self.proto,'std').to_pubhex(privkey))
+		from mmgen.addr import KeyGenerator,AddrGenerator
+		rand_coinaddr = AddrGenerator(self.proto,t).to_addr(
+			KeyGenerator(self.proto,'std').to_pubhex(privkey)
+		)
 
 		# total of two outputs must be < 10 BTC (<1000 LTC)
 		mods = {'btc':(6,4),'bch':(6,4),'ltc':(600,400)}[self.proto.coin.lower()]

@@ -36,9 +36,7 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
 import sys
-
-def msg(s):
-	sys.stderr.write(s+'\n')
+from mmgen.util import msg
 
 def test_equal(desc,a,b,*cdata):
 	if type(a) == int:
@@ -599,14 +597,13 @@ class CoinInfo(object):
 	trust_override = {'BTC':3,'BCH':3,'LTC':3,'DASH':1,'EMC':2}
 
 	@classmethod
-	def get_test_support(cls,coin,addr_type,network,tool=None,verbose=False):
+	def get_test_support(cls,coin,addr_type,network,toolname=None,verbose=False):
 		"""
 		If requested tool supports coin/addr_type/network triplet, return tool name.
 		If 'tool' is None, return tool that supports coin/addr_type/network triplet.
 		Return None on failure.
 		"""
-		tool_arg = tool
-		all_tools = [tool] if tool else list(cls.external_tests[network].keys())
+		all_tools = [toolname] if toolname else list(cls.external_tests[network].keys())
 		coin = coin.upper()
 
 		for tool in all_tools:
@@ -616,11 +613,11 @@ class CoinInfo(object):
 			if verbose:
 				m1 = 'Requested tool {t!r} does not support coin {c} on network {n}'
 				m2 = 'No test tool found for coin {c} on network {n}'
-				msg((m1 if tool_arg else m2).format(t=tool,c=coin,n=network))
+				msg((m1 if toolname else m2).format(t=tool,c=coin,n=network))
 			return None
 
 		if addr_type == 'zcash_z':
-			if tool_arg in (None,'zcash-mini'):
+			if toolname in (None,'zcash-mini'):
 				return 'zcash-mini'
 			else:
 				if verbose:
@@ -638,7 +635,7 @@ class CoinInfo(object):
 				msg(f'Tool {tool!r} blacklisted for coin {coin}, addr_type {addr_type!r}')
 			return None
 
-		if tool_arg: # skip whitelists
+		if toolname: # skip whitelists
 			return tool
 
 		if addr_type in ('segwit','bech32'):
@@ -649,7 +646,7 @@ class CoinInfo(object):
 				if verbose:
 					m1 = 'Requested tool {t!r} does not support coin {c}, addr_type {a!r}, on network {n}'
 					m2 = 'No test tool found supporting coin {c}, addr_type {a!r}, on network {n}'
-					msg((m1 if tool_arg else m2).format(t=tool,c=coin,n=network,a=addr_type))
+					msg((m1 if toolname else m2).format(t=tool,c=coin,n=network,a=addr_type))
 				return None
 
 		return tool

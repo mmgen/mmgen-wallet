@@ -59,21 +59,21 @@ opts_data = {
 		'desc':    f'Perform various {g.proj_name}- and cryptocoin-related operations',
 		'usage':   '[opts] <command> <command args>',
 		'options': """
--d, --outdir=       d Specify an alternate directory 'd' for output
--h, --help            Print this help message
---, --longhelp        Print help message for long options (common options)
+-d, --outdir=       d  Specify an alternate directory 'd' for output
+-h, --help             Print this help message
+--, --longhelp         Print help message for long options (common options)
 -k, --use-internal-keccak-module Force use of the internal keccak module
--p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
-                      for password hashing (default: '{g.dfl_hash_preset}')
--P, --passwd-file= f  Get passphrase from file 'f'.
--q, --quiet           Produce quieter output
--r, --usr-randchars=n Get 'n' characters of additional randomness from
-                      user (min={g.min_urandchars}, max={g.max_urandchars})
--t, --type=t          Specify address type (valid options: 'legacy',
-                      'compressed', 'segwit', 'bech32', 'zcash_z')
--v, --verbose         Produce more verbose output
--X, --cached-balances Use cached balances (Ethereum only)
--y, --yes             Answer 'yes' to prompts, suppress non-essential output
+-p, --hash-preset= p   Use the scrypt hash parameters defined by preset 'p'
+                       for password hashing (default: '{g.dfl_hash_preset}')
+-P, --passwd-file= f   Get passphrase from file 'f'.
+-q, --quiet            Produce quieter output
+-r, --usr-randchars=n  Get 'n' characters of additional randomness from
+                       user (min={g.min_urandchars}, max={g.max_urandchars})
+-t, --type=t           Specify address type (valid options: 'legacy',
+                       'compressed', 'segwit', 'bech32', 'zcash_z')
+-v, --verbose          Produce more verbose output
+-X, --cached-balances  Use cached balances (Ethereum only)
+-y, --yes              Answer 'yes' to prompts, suppress non-essential output
 """,
 	'notes': """
 
