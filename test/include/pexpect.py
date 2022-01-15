@@ -81,7 +81,8 @@ class MMGenPexpect(object):
 			self.expect('Comment: ',add_comment+'\n')
 
 	def ok(self):
-		self.p.sendeof()
+		if not opt.pexpect_spawn:
+			self.p.sendeof()
 		self.p.read()
 		ret = self.p.wait()
 		if ret != self.req_exit_val and not opt.coverage:
