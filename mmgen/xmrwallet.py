@@ -24,11 +24,11 @@ import os,re,time,json
 from collections import namedtuple
 from .common import *
 from .objmethods import Hilite,InitErrors
-from .addr import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw,MoneroWalletRPCClient,json_encoder
 from .seed import SeedID
 from .daemon import MoneroWalletDaemon
 from .protocol import _b58a,init_proto
+from .addrlist import KeyAddrList,AddrIdxList
 from .obj import CoinAddr,CoinTxID,AddrIdx
 
 xmrwallet_uarg_info = (

@@ -26,7 +26,7 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die,gmsg,write_data_to_file
 from mmgen.protocol import init_proto
-from mmgen.addr import AddrList
+from mmgen.addrlist import AddrList
 from mmgen.wallet import MMGenWallet
 from ..include.common import *
 from .common import *

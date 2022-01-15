@@ -27,7 +27,7 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.obj import MMGenRange
 from mmgen.amt import XMRAmt
-from mmgen.addr import KeyAddrList,AddrIdxList
+from mmgen.addrlist import KeyAddrList,AddrIdxList
 from ..include.common import *
 from .common import *
 

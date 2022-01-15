@@ -23,7 +23,8 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 
 from .common import *
 from .crypto import *
-from .addr import AddrList,KeyAddrList,KeyList,MMGenAddrType,AddrIdxList
+from .addr import MMGenAddrType
+from .addrlist import AddrList,KeyAddrList,KeyList,AddrIdxList
 from .addrfile import AddrFile
 from .wallet import Wallet
 

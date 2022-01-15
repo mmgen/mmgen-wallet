@@ -33,7 +33,8 @@ from .util import (
 from .protocol import init_proto
 from .obj import *
 from .seed import SeedID,is_seed_id
-from .addr import KeyList,PasswordList,dmsg_sc
+from .addrlist import KeyList,AddrListData,dmsg_sc
+from .passwdlist import PasswordList
 
 class AddrFile(MMGenObject):
 	desc        = 'addresses'
@@ -116,7 +117,7 @@ class AddrFile(MMGenObject):
 				if p.has_keys:
 					from .opts import opt
 					if opt.b16:
-						out.append(fs.format( '', f'orig_hex: {e.sec.orig_bytes.hex()}', c ))
+						out.append(fs.format( '', f'orig_hex: {e.sec.orig_hex()}', c ))
 					out.append(fs.format( '', f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
 					for k in ('viewkey','wallet_passwd'):
 						v = getattr(e,k)

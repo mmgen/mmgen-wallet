@@ -199,7 +199,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')
 		silence()
-		from mmgen.addr import AddrList
+		from mmgen.addrlist import AddrList
 		chk = AddrList(self.proto,addrfile).chksum
 		if opt.verbose and display:
 			msg(f'Checksum: {cyan(chk)}')
@@ -397,8 +397,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return out
 
 	def _create_tx_data(self,sources,addrs_per_wallet=addrs_per_wallet):
-		from mmgen.addr import AddrList
-		from mmgen.obj import AddrIdxList
+		from mmgen.addrlist import AddrList,AddrIdxList
 		from mmgen.addrdata import AddrData
 		tx_data,ad = {},AddrData(self.proto)
 		for s in sources:

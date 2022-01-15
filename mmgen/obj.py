@@ -96,8 +96,6 @@ class IndexedDict(dict):
 
 class MMGenList(list,MMGenObject): pass
 class MMGenDict(dict,MMGenObject): pass
-class AddrListData(list,MMGenObject): pass
-
 class Str(str,Hilite): pass
 
 class Int(int,Hilite,InitErrors):
@@ -139,7 +137,7 @@ class ImmutableAttr: # Descriptor
 	def __init__(self,dtype,typeconv=True,set_none_ok=False,include_proto=False):
 		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
 		if include_proto:
-			assert typeconv and type(dtype) == str, 'ImmutableAttr_check2'
+			assert typeconv, 'ImmutableAttr_check2'
 		if set_none_ok:
 			assert typeconv and type(dtype) != str, 'ImmutableAttr_check3'
 
@@ -156,6 +154,8 @@ class ImmutableAttr: # Descriptor
 			else:
 				if set_none_ok:
 					self.conv = lambda instance,value: None if value is None else dtype(value)
+				elif include_proto:
+					self.conv = lambda instance,value: dtype(instance.proto,value)
 				else:
 					self.conv = lambda instance,value: dtype(value)
 		else:
@@ -257,36 +257,6 @@ class MMGenListItem(MMGenObject):
 
 class MMGenIdx(Int): min_val = 1
 class AddrIdx(MMGenIdx): max_digits = 7
-
-class AddrIdxList(list,InitErrors,MMGenObject):
-	max_len = 1000000
-	def __init__(self,fmt_str=None,idx_list=None,sep=','):
-		try:
-			if idx_list:
-				return list.__init__(self,sorted({AddrIdx(i) for i in idx_list}))
-			elif fmt_str:
-				ret = []
-				for i in (fmt_str.split(sep)):
-					j = i.split('-')
-					if len(j) == 1:
-						idx = AddrIdx(i)
-						if not idx:
-							break
-						ret.append(idx)
-					elif len(j) == 2:
-						beg = AddrIdx(j[0])
-						if not beg:
-							break
-						end = AddrIdx(j[1])
-						if not beg or (end < beg):
-							break
-						ret.extend([AddrIdx(x) for x in range(beg,end+1)])
-					else: break
-				else:
-					return list.__init__(self,sorted(set(ret))) # fell off end of loop - success
-				raise ValueError(f'{i!r}: invalid range')
-		except Exception as e:
-			return type(self).init_fail(e,idx_list or fmt_str)
 
 class MMGenRange(tuple,InitErrors,MMGenObject):
 

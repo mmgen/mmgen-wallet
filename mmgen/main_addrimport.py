@@ -23,7 +23,7 @@ mmgen-addrimport: Import addresses into a MMGen coin daemon tracking wallet
 import time
 
 from .common import *
-from .addr import AddrList,KeyAddrList
+from .addrlist import AddrList,KeyAddrList
 from .obj import TwLabel
 
 ai_msgs = lambda k: {

@@ -25,6 +25,9 @@ from .common import *
 from .crypto import *
 from .seedsplit import MasterShareIdx
 from .addr import *
+from .addrlist import AddrList,KeyAddrList
+from .passwdlist import PasswordList
+from .baseconv import baseconv
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -900,6 +903,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		ss = Wallet(sf)
 		if ss.seed.sid != addr.sid:
 			die(1,f'Seed ID of requested address ({addr.sid}) does not match wallet ({ss.seed.sid})')
+		from .addrlist import AddrList,AddrIdxList
 		al = AddrList(
 			proto     = self.proto,
 			seed      = ss.seed,
@@ -968,6 +972,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				die(1,
 					f'{mmgen_addrs}: invalid address list argument ' +
 					'(must be in form <seed ID>:[<type>:]<idx list>)' )
+			from .addrlist import AddrIdxList
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
 		al = await TwAddrList(self.proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)

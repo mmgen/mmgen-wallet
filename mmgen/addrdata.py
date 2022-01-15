@@ -22,8 +22,9 @@ addrdata.py: MMGen AddrData and related classes
 
 from .util import vmsg,altcoin_subclass
 from .base_obj import AsyncInit
-from .obj import MMGenObject,MMGenDict,get_obj,AddrListID,AddrListData
-from .addr import MMGenID,AddrListEntry,AddrList
+from .obj import MMGenObject,MMGenDict,get_obj,AddrListID
+from .addr import MMGenID
+from .addrlist import AddrListEntry,AddrListData,AddrList
 
 class AddrData(MMGenObject):
 	msgs = {
@@ -63,6 +64,7 @@ re-import your addresses.
 		return (list(d.values())[0][0]) if d else None
 
 	def add(self,addrlist):
+		from .addrlist import AddrList
 		if type(addrlist) == AddrList:
 			self.al_ids[addrlist.al_id] = addrlist
 			return True

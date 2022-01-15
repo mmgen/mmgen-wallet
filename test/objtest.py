@@ -33,6 +33,9 @@ from mmgen.common import *
 from mmgen.obj import *
 from mmgen.altcoins.eth.obj import *
 from mmgen.seedsplit import *
+from mmgen.addr import *
+from mmgen.addrlist import *
+from mmgen.addrdata import *
 from mmgen.amt import *
 
 opts_data = {
