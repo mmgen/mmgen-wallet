@@ -101,7 +101,7 @@ if opt.other_coin.lower() not in [e[2] for e in proto.forks if e[3] == True]:
 if len(cmd_args) != 2:
 	die(1,f'This command requires exactly two {g.proj_name} addresses as arguments')
 
-from .obj import MMGenID
+from .addr import MMGenID
 try:
 	mmids = [MMGenID(a) for a in cmd_args]
 except:

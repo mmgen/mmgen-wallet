@@ -20,9 +20,12 @@
 altcoins.eth.tw: Ethereum tracking wallet and related classes for the MMGen suite
 """
 
-from mmgen.common import *
-from mmgen.obj import TwLabel,is_coin_addr,is_mmgen_id,ListItemAttr,ImmutableAttr
-from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs,TwGetBalance
+import os
+
+from mmgen.util import msg,vmsg,ymsg,write_mode
+from mmgen.obj import ListItemAttr,ImmutableAttr
+from mmgen.tw import TrackingWallet,TwAddrList,TwUnspentOutputs,TwGetBalance,TwLabel
+from mmgen.addr import is_coin_addr,is_mmgen_id
 from mmgen.addrdata import AddrData,TwAddrData
 from .contract import Token,TokenResolve
 from .obj import ETHAmt
@@ -169,7 +172,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 				from mmgen.exception import UnrecognizedTokenSymbol
 				raise UnrecognizedTokenSymbol(f'Specified token {proto.tokensym!r} could not be resolved!')
 
-		from mmgen.obj import TokenAddr
+		from mmgen.addr import TokenAddr
 		self.token = TokenAddr(proto,token_addr)
 
 		if self.token not in self.data['tokens']:
@@ -300,7 +303,7 @@ class EthereumTwAddrList(TwAddrList):
 		tw_dict = self.wallet.mmid_ordered_dict
 		self.total = self.proto.coin_amt('0')
 
-		from mmgen.obj import CoinAddr
+		from mmgen.addr import CoinAddr
 		for mmid,d in list(tw_dict.items()):
 #			if d['confirmations'] < minconf: continue # cannot get confirmations for eth account
 			label = TwLabel(self.proto,mmid+' '+d['comment'])

@@ -230,7 +230,7 @@ def _process_result(ret,pager=False,print_result=False):
 	else:
 		ydie(1,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
 
-from .obj import MMGenAddrType
+from .addr import MMGenAddrType
 
 def conv_cls_bip39():
 	from .bip39 import bip39

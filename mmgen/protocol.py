@@ -25,7 +25,6 @@ from collections import namedtuple
 
 from .util import msg,ymsg,Msg,ydie
 from .devtools import *
-from .obj import CoinAddr,MMGenAddrType
 from .globalvars import g
 from .amt import BTCAmt,LTCAmt,BCHAmt,XMRAmt
 from .altcoins.eth.obj import ETHAmt

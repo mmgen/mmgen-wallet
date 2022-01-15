@@ -26,7 +26,7 @@ from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,WalletPassword
 from .seed import SeedID
 from .key import PrivKey
-from .obj import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
+from .addr import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
 
 def dmsg_sc(desc,data):
 	from .globalvars import g

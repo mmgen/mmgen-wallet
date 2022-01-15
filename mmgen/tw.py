@@ -47,8 +47,8 @@ from .util import (
 )
 from .base_obj import AsyncInit
 from .objmethods import Hilite,InitErrors,MMGenObject
-from .obj import *
-from .tx import is_mmgen_id,is_coin_addr
+from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenList,MMGenDict,TwComment,get_obj,TwLabel,TwMMGenID
+from .addr import CoinAddr,MMGenID,AddrIdx,is_mmgen_id,is_coin_addr
 from .rpc import rpc_init
 
 def get_tw_label(proto,s):
@@ -59,7 +59,8 @@ def get_tw_label(proto,s):
 		return TwLabel(proto,s)
 	except BadTwComment:
 		raise
-	except:
+	except Exception as e:
+		print(e)
 		return None
 
 class TwUnspentOutputs(MMGenObject,metaclass=AsyncInit):
@@ -98,8 +99,8 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		amt          = ImmutableAttr(None)
 		amt2         = ListItemAttr(None)
 		label        = ListItemAttr('TwComment',reassign_ok=True)
-		twmmid       = ImmutableAttr('TwMMGenID',include_proto=True)
-		addr         = ImmutableAttr('CoinAddr',include_proto=True)
+		twmmid       = ImmutableAttr(TwMMGenID,include_proto=True)
+		addr         = ImmutableAttr(CoinAddr,include_proto=True)
 		confs        = ImmutableAttr(int,typeconv=False)
 		date         = ListItemAttr(int,typeconv=False,reassign_ok=True)
 		scriptPubKey = ImmutableAttr('HexStr')

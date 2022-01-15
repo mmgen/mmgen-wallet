@@ -24,6 +24,7 @@ import sys,os,json
 from stat import *
 from .common import *
 from .obj import *
+from .addr import MMGenID,CoinAddr,is_mmgen_id,is_coin_addr
 
 wmsg = lambda k: {
 	'addr_in_addrfile_only': """
@@ -210,8 +211,8 @@ class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(int,typeconv=False)
 	amt      = ImmutableAttr(None)
 	label    = ListItemAttr('TwComment',reassign_ok=True)
-	mmid     = ListItemAttr('MMGenID',include_proto=True)
-	addr     = ImmutableAttr('CoinAddr',include_proto=True)
+	mmid     = ListItemAttr(MMGenID,include_proto=True)
+	addr     = ImmutableAttr(CoinAddr,include_proto=True)
 	confs    = ListItemAttr(int) # confs of type long exist in the wild, so convert
 	txid     = ListItemAttr('CoinTxID')
 	have_wif = ListItemAttr(bool,typeconv=False,delete_ok=True)

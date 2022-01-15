@@ -22,8 +22,8 @@ addrdata.py: MMGen AddrData and related classes
 
 from .util import vmsg,altcoin_subclass
 from .base_obj import AsyncInit
-from .obj import MMGenObject,MMGenDict,get_obj,AddrListID
-from .addr import MMGenID
+from .obj import MMGenObject,MMGenDict,get_obj
+from .addr import MMGenID,AddrListID
 from .addrlist import AddrListEntry,AddrListData,AddrList
 
 class AddrData(MMGenObject):

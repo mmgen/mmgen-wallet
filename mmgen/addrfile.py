@@ -31,9 +31,10 @@ from .util import (
 	keypress_confirm,
 )
 from .protocol import init_proto
-from .obj import *
+from .obj import MMGenObject,TwComment,WalletPassword,MMGenPWIDString
 from .seed import SeedID,is_seed_id
 from .key import PrivKey
+from .addr import ViewKey,AddrListID,MMGenPasswordType,is_addr_idx
 from .addrlist import KeyList,AddrListData,dmsg_sc
 from .passwdlist import PasswordList
 

@@ -23,11 +23,11 @@ altcoins.eth.contract: Ethereum contract and token classes for the MMGen suite
 from decimal import Decimal
 from . import rlp
 
+from mmgen.util import msg,pp_msg
 from mmgen.globalvars import g
-from mmgen.common import *
 from mmgen.base_obj import AsyncInit
-from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID
-from mmgen.util import msg
+from mmgen.obj import MMGenObject,CoinTxID
+from mmgen.addr import CoinAddr,TokenAddr
 from .obj import ETHAmt
 
 def parse_abi(s):

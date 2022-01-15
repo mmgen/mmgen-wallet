@@ -21,9 +21,17 @@ altcoins.eth.tx: Ethereum transaction classes for the MMGen suite
 """
 
 import json
-from mmgen.common import *
+from collections import namedtuple
+
+from decimal import Decimal
+
+from mmgen.globalvars import g
+from mmgen.color import red,yellow,blue,pink
+from mmgen.opts import opt
+from mmgen.util import msg,msg_r,ymsg,dmsg,fmt,line_input,is_int,is_hex_str,make_chksum_6,die,suf,capfirst,pp_fmt
 from mmgen.exception import TransactionChainMismatch
-from mmgen.obj import *
+from mmgen.obj import Int,Str,HexStr,CoinTxID,MMGenTxID
+from mmgen.addr import MMGenID,CoinAddr,TokenAddr,is_mmgen_id,is_coin_addr
 
 from mmgen.tx import MMGenTX
 from mmgen.tw import TrackingWallet
