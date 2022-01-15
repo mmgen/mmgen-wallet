@@ -11,7 +11,7 @@ import os
 from decimal import Decimal
 
 from mmgen.obj import *
-from mmgen.seed import *
+from mmgen.seedsplit import *
 from mmgen.protocol import *
 from mmgen.addr import *
 from mmgen.tx import *

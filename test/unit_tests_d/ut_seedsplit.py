@@ -8,8 +8,8 @@ from mmgen.common import *
 class unit_test(object):
 
 	def run_test(self,name,ut):
-		from mmgen.seed import Seed,SeedShareList
-		from mmgen.obj import SeedShareIdx
+		from mmgen.seed import Seed
+		from mmgen.seedsplit import SeedShareList,SeedShareIdx
 
 		g.debug_subseed = bool(opt.verbose)
 

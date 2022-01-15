@@ -105,7 +105,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		if not wf:
 			t.passphrase(dfl_wcls.desc,wpasswd)
 		if spec:
-			from mmgen.obj import SeedSplitSpecifier
+			from mmgen.seedsplit import SeedSplitSpecifier
 			sss = SeedSplitSpecifier(spec)
 			pat = rf'Processing .*\b{sss.idx}\b of \b{sss.count}\b of .* id .*{sss.id!r}'
 		else:

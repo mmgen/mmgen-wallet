@@ -22,9 +22,10 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 
 import os
 from .common import *
+from .obj import MMGenWalletLabel
+from .seedsplit import MasterShareIdx
 from .wallet import Wallet,MMGenWallet
 from .filename import find_file_in_dir
-from .obj import MMGenWalletLabel,MasterShareIdx
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -148,7 +149,8 @@ if invoked_as == 'subgen':
 	from .obj import SubSeedIdx
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
-	from .obj import get_obj,SeedSplitSpecifier
+	from .obj import get_obj
+	from .seedsplit import SeedSplitSpecifier
 	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
 	if cmd_args:
 		sss = get_obj(SeedSplitSpecifier,s=cmd_args.pop(),silent=True)

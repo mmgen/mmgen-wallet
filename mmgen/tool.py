@@ -23,6 +23,7 @@ tool.py:  Routines for the 'mmgen-tool' utility
 from .protocol import hash160
 from .common import *
 from .crypto import *
+from .seedsplit import MasterShareIdx
 from .addr import *
 
 NL = ('\n','\r\n')[g.platform=='win']

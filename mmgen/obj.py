@@ -65,7 +65,6 @@ def get_obj(objname,*args,**kwargs):
 def is_mmgen_seed_id(s):   return get_obj(SeedID,     sid=s, silent=True,return_bool=True)
 def is_mmgen_idx(s):       return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
 def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_bool=True)
-def is_seed_split_specifier(s): return get_obj(SeedSplitSpecifier, s=s, silent=True,return_bool=True)
 
 def is_mmgen_id(proto,s):  return get_obj(MMGenID,  proto=proto, id_str=s, silent=True,return_bool=True)
 def is_coin_addr(proto,s): return get_obj(CoinAddr, proto=proto, addr=s,   silent=True,return_bool=True)
@@ -367,9 +366,6 @@ class MMGenListItem(MMGenObject):
 		return dict((k,v) for k,v in self.__dict__.items() if k in self.valid_attrs)
 
 class MMGenIdx(Int): min_val = 1
-class SeedShareIdx(MMGenIdx): max_val = 1024
-class SeedShareCount(SeedShareIdx): min_val = 2
-class MasterShareIdx(MMGenIdx): max_val = 1024
 class AddrIdx(MMGenIdx): max_digits = 7
 
 class AddrIdxList(list,InitErrors,MMGenObject):
@@ -942,27 +938,6 @@ class MMGenPWIDString(MMGenLabel):
 	desc = 'password ID string'
 	forbidden = list(' :/\\')
 	trunc_ok = False
-
-class SeedSplitSpecifier(str,Hilite,InitErrors,MMGenObject):
-	color = 'red'
-	def __new__(cls,s):
-		if type(s) == cls:
-			return s
-		try:
-			arr = s.split(':')
-			assert len(arr) in (2,3), 'cannot be parsed'
-			a,b,c = arr if len(arr) == 3 else ['default'] + arr
-			me = str.__new__(cls,s)
-			me.id = SeedSplitIDString(a)
-			me.idx = SeedShareIdx(b)
-			me.count = SeedShareCount(c)
-			assert me.idx <= me.count, 'share index greater than share count'
-			return me
-		except Exception as e:
-			return cls.init_fail(e,s)
-
-class SeedSplitIDString(MMGenPWIDString):
-	desc = 'seed split ID string'
 
 class IPPort(str,Hilite,InitErrors,MMGenObject):
 	color = 'yellow'

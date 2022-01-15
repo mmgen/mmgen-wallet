@@ -32,7 +32,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 from mmgen.common import *
 from mmgen.obj import *
 from mmgen.altcoins.eth.obj import *
-from mmgen.seed import *
+from mmgen.seedsplit import *
 
 opts_data = {
 	'sets': [('super_silent', True, 'silent', True)],

@@ -134,7 +134,7 @@ default wallet.
 	pnl = g.proj_name.lower() )
 
 		def seedsplit():
-			from .obj import SeedShareIdx,SeedShareCount,MasterShareIdx
+			from .seedsplit import SeedShareIdx,SeedShareCount,MasterShareIdx
 			return """
 COMMAND NOTES:
 
