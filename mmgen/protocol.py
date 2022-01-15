@@ -115,6 +115,10 @@ class CoinProtocol(MMGenObject):
 			if self.tokensym:
 				assert isinstance(self,CoinProtocol.Ethereum), 'CoinProtocol.Base_chk1'
 
+			if self.base_coin in ('ETH','XMR'):
+				from .util import get_keccak
+				self.keccak_256 = get_keccak()
+
 		@property
 		def dcoin(self):
 			return self.coin
@@ -429,8 +433,7 @@ class CoinProtocol(MMGenObject):
 
 		@classmethod
 		def checksummed_addr(cls,addr):
-			from .keccak import keccak_256
-			h = keccak_256(addr.encode()).digest().hex()
+			h = self.keccak_256(addr.encode()).digest().hex()
 			return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
 
 		def pubhash2addr(self,pubkey_hash,p2sh):
@@ -520,13 +523,8 @@ class CoinProtocol(MMGenObject):
 
 			ret = b58dec(addr)
 
-			try:
-				assert not g.use_internal_keccak_module
-				from sha3 import keccak_256
-			except:
-				from .keccak import keccak_256
+			chk = self.keccak_256(ret[:-4]).digest()[:4]
 
-			chk = keccak_256(ret[:-4]).digest()[:4]
 			assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
 
 			return self.parse_addr_bytes(ret)

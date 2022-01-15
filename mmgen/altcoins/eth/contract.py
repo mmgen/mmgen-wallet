@@ -30,19 +30,13 @@ from mmgen.obj import MMGenObject,CoinAddr,TokenAddr,CoinTxID
 from mmgen.util import msg
 from .obj import ETHAmt
 
-try:
-	assert not g.use_internal_keccak_module
-	from sha3 import keccak_256
-except:
-	from mmgen.keccak import keccak_256
-
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
-def create_method_id(sig):
-	return keccak_256(sig.encode()).hexdigest()[:8]
-
 class TokenBase(MMGenObject): # ERC20
+
+	def create_method_id(self,sig):
+		return self.keccak_256(sig.encode()).hexdigest()[:8]
 
 	def transferdata2sendaddr(self,data): # online
 		return CoinAddr(self.proto,parse_abi(data)[1][-40:])
@@ -51,7 +45,7 @@ class TokenBase(MMGenObject): # ERC20
 		return ETHAmt(int(parse_abi(data)[-1],16) * self.base_unit)
 
 	async def do_call(self,method_sig,method_args='',toUnit=False):
-		data = create_method_id(method_sig) + method_args
+		data = self.create_method_id(method_sig) + method_args
 		if g.debug:
 			msg('ETH_CALL {}:  {}'.format(
 				method_sig,
@@ -104,7 +98,7 @@ class TokenBase(MMGenObject): # ERC20
 		from_arg = from_addr.rjust(64,'0') if from_addr else ''
 		to_arg = to_addr.rjust(64,'0')
 		amt_arg = '{:064x}'.format( int(amt / self.base_unit) )
-		return create_method_id(method_sig) + from_arg + to_arg + amt_arg
+		return self.create_method_id(method_sig) + from_arg + to_arg + amt_arg
 
 	def make_tx_in( self,from_addr,to_addr,amt,start_gas,gasPrice,nonce,
 					method_sig='transfer(address,uint256)',from_addr2=None):
@@ -157,6 +151,9 @@ class TokenBase(MMGenObject): # ERC20
 class Token(TokenBase):
 
 	def __init__(self,proto,addr,decimals,rpc=None):
+		if type(self).__name__ == 'Token':
+			from mmgen.util import get_keccak
+			self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.addr = TokenAddr(proto,addr)
 		assert isinstance(decimals,int),f'decimals param must be int instance, not {type(decimals)}'
@@ -167,6 +164,8 @@ class Token(TokenBase):
 class TokenResolve(TokenBase,metaclass=AsyncInit):
 
 	async def __init__(self,proto,rpc,addr):
+		from mmgen.util import get_keccak
+		self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.rpc = rpc
 		self.addr = TokenAddr(proto,addr)

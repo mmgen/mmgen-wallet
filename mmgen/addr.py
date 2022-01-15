@@ -84,12 +84,8 @@ class AddrGeneratorEthereum(AddrGenerator):
 
 	def __init__(self,proto,addr_type):
 
-		try:
-			assert not g.use_internal_keccak_module
-			from sha3 import keccak_256
-		except:
-			from .keccak import keccak_256
-		self.keccak_256 = keccak_256
+		from .util import get_keccak
+		self.keccak_256 = get_keccak()
 
 		from .protocol import hash256
 		self.hash256 = hash256
@@ -144,12 +140,8 @@ class AddrGeneratorMonero(AddrGenerator):
 
 	def __init__(self,proto,addr_type):
 
-		try:
-			assert not g.use_internal_keccak_module
-			from sha3 import keccak_256
-		except:
-			from .keccak import keccak_256
-		self.keccak_256 = keccak_256
+		from .util import get_keccak
+		self.keccak_256 = get_keccak()
 
 		from .protocol import hash256
 		self.hash256 = hash256

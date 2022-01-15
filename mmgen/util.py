@@ -175,6 +175,21 @@ def warn_altcoins(coinsym,trust_level):
 	if not keypress_confirm(m,default_yes=True):
 		sys.exit(0)
 
+def get_keccak():
+
+	from .opts import opt
+	if getattr(opt,'use_internal_keccak_module',False):
+		from .keccak import keccak_256
+		qmsg('Using internal keccak module by user request')
+		return keccak_256
+
+	try:
+		from sha3 import keccak_256
+	except:
+		from .keccak import keccak_256
+
+	return keccak_256
+
 def set_for_type(val,refval,desc,invert_bool=False,src=None):
 
 	if type(refval) == bool:

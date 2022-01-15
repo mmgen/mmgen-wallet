@@ -155,11 +155,11 @@ class GlobalContext(Lockable):
 
 	# global var sets user opt:
 	global_sets_opt = (
-		'minconf','usr_randchars','debug', 'quiet','tx_confs','tx_fee_adj','key_generator' )
+		'use_internal_keccak_module',
+		'minconf','usr_randchars','debug','quiet','tx_confs','tx_fee_adj' )
 
 	# user opt sets global var:
-	opt_sets_global = (
-		'use_internal_keccak_module','subseeds','cached_balances' )
+	opt_sets_global = ( 'subseeds','cached_balances' )
 
 	# 'long' opts - opt sets global var
 	common_opts = (
