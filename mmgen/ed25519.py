@@ -7,9 +7,11 @@ q = 2**255 - 19
 l = 2**252 + 27742317777372353535851937790883648493
 
 def expmod(b, e, m):
-	if e == 0: return 1
+	if e == 0:
+		return 1
 	t = expmod(b, e//2, m)**2 % m
-	if e & 1: t = (t*b) % m
+	if e & 1:
+		t = (t*b) % m
 	return t
 
 def inv(x):
@@ -21,8 +23,10 @@ I = expmod(2, (q-1)//4, q)
 def xrecover(y):
 	xx = (y*y-1) * inv(d*y*y+1)
 	x = expmod(xx, (q+3)//8, q)
-	if (x*x - xx) % q != 0: x = (x*I) % q
-	if x % 2 != 0: x = q-x
+	if (x*x - xx) % q != 0:
+		x = (x*I) % q
+	if x % 2 != 0:
+		x = q-x
 	return x
 
 By = 4 * inv(5)
@@ -39,10 +43,12 @@ def edwards(P, Q):
 	return [x3%q, y3%q]
 
 def scalarmult(P, e):
-	if e == 0: return [0, 1]
+	if e == 0:
+		return [0, 1]
 	Q = scalarmult(P, e//2)
 	Q = edwards(Q, Q)
-	if e & 1: Q = edwards(Q, P)
+	if e & 1:
+		Q = edwards(Q, P)
 	return Q
 
 def encodepoint(P):
