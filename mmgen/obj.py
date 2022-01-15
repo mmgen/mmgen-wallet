@@ -24,10 +24,8 @@ import sys,os,re,unicodedata
 from decimal import *
 from string import hexdigits,ascii_letters,digits
 
-from .exception import *
-from .globalvars import *
-from .color import *
 from .objmethods import *
+from .exception import BadTwComment
 
 def get_obj(objname,*args,**kwargs):
 	"""
@@ -92,38 +90,6 @@ class MMGenList(list,MMGenObject):
 
 class MMGenDict(dict,MMGenObject):
 	pass
-
-class Str(str,Hilite):
-	pass
-
-class Int(int,Hilite,InitErrors):
-	min_val = None
-	max_val = None
-	max_digits = None
-	color = 'red'
-
-	def __new__(cls,n,base=10):
-		if type(n) == cls:
-			return n
-		try:
-			me = int.__new__(cls,str(n),base)
-			if cls.min_val != None:
-				assert me >= cls.min_val, f'is less than cls.min_val ({cls.min_val})'
-			if cls.max_val != None:
-				assert me <= cls.max_val, f'is greater than cls.max_val ({cls.max_val})'
-			if cls.max_digits != None:
-				assert len(str(me)) <= cls.max_digits, f'has more than {cls.max_digits} digits'
-			return me
-		except Exception as e:
-			return cls.init_fail(e,n)
-
-	@classmethod
-	def fmtc(cls,*args,**kwargs):
-		cls.method_not_implemented()
-
-	@classmethod
-	def colorize(cls,n,color=True):
-		return super().colorize(repr(n),color=color)
 
 class ImmutableAttr: # Descriptor
 	"""
@@ -253,9 +219,6 @@ class MMGenListItem(MMGenObject):
 	def _asdict(self):
 		return dict((k,v) for k,v in self.__dict__.items() if k in self.valid_attrs)
 
-class MMGenIdx(Int):
-	min_val = 1
-
 class MMGenRange(tuple,InitErrors,MMGenObject):
 
 	min_idx = None
@@ -298,6 +261,41 @@ class MMGenRange(tuple,InitErrors,MMGenObject):
 	@property
 	def items(self):
 		return list(self.iterate())
+
+class Int(int,Hilite,InitErrors):
+	min_val = None
+	max_val = None
+	max_digits = None
+	color = 'red'
+
+	def __new__(cls,n,base=10):
+		if type(n) == cls:
+			return n
+		try:
+			me = int.__new__(cls,str(n),base)
+			if cls.min_val != None:
+				assert me >= cls.min_val, f'is less than cls.min_val ({cls.min_val})'
+			if cls.max_val != None:
+				assert me <= cls.max_val, f'is greater than cls.max_val ({cls.max_val})'
+			if cls.max_digits != None:
+				assert len(str(me)) <= cls.max_digits, f'has more than {cls.max_digits} digits'
+			return me
+		except Exception as e:
+			return cls.init_fail(e,n)
+
+	@classmethod
+	def fmtc(cls,*args,**kwargs):
+		cls.method_not_implemented()
+
+	@classmethod
+	def colorize(cls,n,color=True):
+		return super().colorize(repr(n),color=color)
+
+class MMGenIdx(Int):
+	min_val = 1
+
+class Str(str,Hilite):
+	pass
 
 class HexStr(str,Hilite,InitErrors):
 	color = 'red'
