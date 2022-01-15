@@ -291,8 +291,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				a.set_comment(idx,get_label())
 			else:
 				if n % 2: a.set_comment(idx,f'Test address {n}')
-		a.format(add_comments=True)
-		write_data_to_file(outfile,a.fmt_data,quiet=True,ignore_opt_outdir=True)
+		af = a.get_file()
+		af.format(add_comments=True)
+		write_data_to_file(outfile,af.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
 
 	def setup(self):

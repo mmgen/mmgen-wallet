@@ -169,12 +169,14 @@ al = PasswordList(
 	pw_len    = pw_len,
 	pw_fmt    = pw_fmt )
 
-al.format()
+af = al.get_file()
+
+af.format()
 
 if keypress_confirm('Encrypt password list?'):
-	al.encrypt(desc='password list')
-	al.write_to_file(binary=True,desc='encrypted password list')
+	af.encrypt(desc='password list')
+	af.write(binary=True,desc='encrypted password list')
 else:
 	if g.test_suite_popen_spawn and g.platform == 'win':
 		time.sleep(0.1)
-	al.write_to_file(desc='password list')
+	af.write(desc='password list')

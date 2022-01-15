@@ -57,7 +57,7 @@ def get_obj(objname,*args,**kwargs):
 	else:
 		return True if return_bool else ret
 
-def is_mmgen_idx(s):       return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
+def is_addr_idx(s):        return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
 def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_bool=True)
 
 def is_mmgen_id(proto,s):  return get_obj(MMGenID,  proto=proto, id_str=s, silent=True,return_bool=True)

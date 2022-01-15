@@ -724,8 +724,9 @@ class MMGenTX:
 
 		async def get_outputs_from_cmdline(self,cmd_args):
 			from .addr import AddrList,AddrData,TwAddrData
+			from .addrfile import AddrFile
 			addrfiles = remove_dups(
-				tuple(a for a in cmd_args if get_extension(a) == AddrList.ext),
+				tuple(a for a in cmd_args if get_extension(a) == AddrFile.ext),
 				desc = 'command line',
 				edesc = 'argument',
 			)

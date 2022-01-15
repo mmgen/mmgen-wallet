@@ -362,15 +362,6 @@ class AddrListIDStr(str,Hilite):
 
 class AddrList(MMGenObject): # Address info for a single seed ID
 	msgs = {
-		'file_header': """
-# {pnm} address file
-#
-# This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {n} screen cells or less may be added to the right of each
-# address, and it will be appended to the tracking wallet label upon import.
-# The label may contain any printable ASCII symbol.
-""".strip().format(n=TwComment.max_screen_width,pnm=pnm),
 		'record_chksum': """
 Record this checksum: it will be used to verify the address file in the future
 """.strip(),
@@ -381,17 +372,14 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	}
 	entry_type = AddrListEntry
 	main_attr = 'addr'
-	data_desc = 'address'
-	file_desc = 'addresses'
+	desc      = 'address'
 	gen_desc  = 'address'
 	gen_desc_pl = 'es'
 	gen_addrs = True
 	gen_passwds = False
 	gen_keys = False
 	has_keys = False
-	ext      = 'addrs'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr)
-	line_ctr = 0
 
 	def __init__(self,proto,
 			addrfile  = '',
@@ -424,7 +412,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			do_chksum = True
 		elif addrfile:           # data from MMGen address file
 			self.infile = addrfile
-			adata = self.parse_file(addrfile) # sets self.al_id
+			adata = self.get_file().parse_file(addrfile) # sets self.al_id
 			do_chksum = True
 		elif al_id and adata:    # data from tracking wallet
 			self.al_id = al_id
@@ -457,7 +445,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		if do_chksum and not skip_chksum:
 			self.chksum = AddrListChksum(self)
 			qmsg(
-				f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
+				f'Checksum for {self.desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
 				self.msgs[('check_chksum','record_chksum')[src=='gen']] )
 
 	def update_msgs(self):
@@ -546,17 +534,6 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
 
-	def encrypt(self,desc='new key list'):
-		from .crypto import mmgen_encrypt
-		self.fmt_data = mmgen_encrypt(self.fmt_data.encode(),desc,'')
-		self.ext += '.'+g.mmenc_ext
-
-	def write_to_file(self,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
-		tn = ('.' + self.proto.network) if self.proto.testnet else ''
-		fn = '{}{x}{}.{}'.format(self.id_str,tn,self.ext,x='-α' if g.debug_utf8 else '')
-		ask_tty = self.has_keys and not opt.quiet
-		write_data_to_file(fn,self.fmt_data,desc or self.file_desc,ask_tty=ask_tty,binary=binary)
-
 	def idxs(self):
 		return [e.idx for e in self.data]
 
@@ -628,225 +605,26 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 	def list_missing(self,attr):
 		return [d.addr for d in self.data if not getattr(d,attr)]
 
-	def make_label(self):
-		bc,mt = self.proto.base_coin,self.al_id.mmtype
-		l_coin = [] if bc == 'BTC' else [self.proto.coin] if bc == 'ETH' else [bc]
-		l_type = [] if mt == 'E' or (mt == 'L' and not self.proto.testnet) else [mt.name.upper()]
-		l_tn   = [] if not self.proto.testnet else [self.proto.network.upper()]
-		lbl_p2 = ':'.join(l_coin+l_type+l_tn)
-		return self.al_id.sid + ('',' ')[bool(lbl_p2)] + lbl_p2
-
-	def format(self,add_comments=False):
-
-		out = [self.msgs['file_header']+'\n']
-		if self.chksum:
-			out.append(f'# {capfirst(self.data_desc)} data checksum for {self.id_str}: {self.chksum}')
-			out.append('# Record this value to a secure location.\n')
-
-		lbl = self.make_label()
-		dmsg_sc('lbl',lbl[9:])
-		out.append(f'{lbl} {{')
-
-		fs = '  {:<%s}  {:<34}{}' % len(str(self.data[-1].idx))
-		for e in self.data:
-			c = ' '+e.label if add_comments and e.label else ''
-			if type(self) == KeyList:
-				out.append(fs.format( e.idx, f'{self.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
-			elif type(self) == PasswordList:
-				out.append(fs.format(e.idx,e.passwd,c))
-			else: # First line with idx
-				out.append(fs.format(e.idx,e.addr,c))
-				if self.has_keys:
-					if opt.b16:
-						out.append(fs.format( '', f'orig_hex: {e.sec.orig_hex}', c ))
-					out.append(fs.format( '', f'{self.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
-					for k in ('viewkey','wallet_passwd'):
-						v = getattr(e,k)
-						if v: out.append(fs.format( '', f'{k}: {v}', c ))
-
-		out.append('}')
-		self.fmt_data = '\n'.join([l.rstrip() for l in out]) + '\n'
-
-	def get_line(self,lines):
-		ret = lines.pop(0).split(None,2)
-		self.line_ctr += 1
-		if ret[0] == 'orig_hex:': # hacky
-			ret = lines.pop(0).split(None,2)
-			self.line_ctr += 1
-		return ret if len(ret) == 3 else ret + ['']
-
-	def parse_file_body(self,lines):
-
-		ret = AddrListData()
-		le = self.entry_type
-		iifs = "{!r}: invalid identifier [expected '{}:']"
-
-		while lines:
-			idx,addr,lbl = self.get_line(lines)
-
-			assert is_mmgen_idx(idx), f'invalid address index {idx!r}'
-			self.check_format(addr)
-
-			a = le(**{ 'proto': self.proto, 'idx':int(idx), self.main_attr:addr, 'label':lbl })
-
-			if self.has_keys: # order: wif,(orig_hex),viewkey,wallet_passwd
-				d = self.get_line(lines)
-				assert d[0] == self.al_id.mmtype.wif_label+':', iifs.format(d[0],self.al_id.mmtype.wif_label)
-				a.sec = PrivKey(proto=self.proto,wif=d[1])
-				for k,dtype,add_proto in (
-					('viewkey',ViewKey,True),
-					('wallet_passwd',WalletPassword,False) ):
-					if k in self.al_id.mmtype.extra_attrs:
-						d = self.get_line(lines)
-						assert d[0] == k+':', iifs.format(d[0],k)
-						setattr(a,k,dtype( *((self.proto,d[1]) if add_proto else (d[1],)) ) )
-
-			ret.append(a)
-
-		if self.has_keys and not self.skip_ka_check:
-			if getattr(opt,'yes',False) or keypress_confirm('Check key-to-address validity?'):
-				kg = KeyGenerator(self.proto,self.al_id.mmtype)
-				ag = AddrGenerator(self.proto,self.al_id.mmtype)
-				llen = len(ret)
-				for n,e in enumerate(ret):
-					qmsg_r(f'\rVerifying keys {n+1}/{llen}')
-					assert e.addr == ag.to_addr(kg.to_pubhex(e.sec)),(
-						f'Key doesn’t match address!\n  {e.sec.wif}\n  {e.addr}')
-				qmsg(' - done')
-
-		return ret
-
-	def parse_file(self,fn,buf=[],exit_on_error=True):
-
-		def parse_addrfile_label(lbl):
-			"""
-			label examples:
-			- Bitcoin legacy mainnet:   no label
-			- Bitcoin legacy testnet:   'LEGACY:TESTNET'
-			- Bitcoin Segwit:           'SEGWIT'
-			- Bitcoin Segwit testnet:   'SEGWIT:TESTNET'
-			- Bitcoin Bech32 regtest:   'BECH32:REGTEST'
-			- Litecoin legacy mainnet:  'LTC'
-			- Litecoin Bech32 mainnet:  'LTC:BECH32'
-			- Litecoin legacy testnet:  'LTC:LEGACY:TESTNET'
-			- Ethereum mainnet:         'ETH'
-			- Ethereum Classic mainnet: 'ETC'
-			- Ethereum regtest:         'ETH:REGTEST'
-			"""
-			lbl = lbl.lower()
-
-			# remove the network component:
-			if lbl.endswith(':testnet'):
-				network = 'testnet'
-				lbl = lbl[:-8]
-			elif lbl.endswith(':regtest'):
-				network = 'regtest'
-				lbl = lbl[:-8]
-			else:
-				network = 'mainnet'
-
-			if lbl in self.bitcoin_addrtypes:
-				coin,mmtype_key = ( 'BTC', lbl )
-			elif ':' in lbl: # first component is coin, second is mmtype_key
-				coin,mmtype_key = lbl.split(':')
-			else:            # only component is coin
-				coin,mmtype_key = ( lbl, None )
-
-			proto = init_proto(coin=coin,network=network)
-
-			if mmtype_key == None:
-				mmtype_key = proto.mmtypes[0]
-
-			return ( proto, proto.addr_type(mmtype_key) )
-
-		lines = get_lines_from_file(fn,self.data_desc+' data',trim_comments=True)
-
-		try:
-			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
-			ls = lines[0].split()
-			assert 1 < len(ls) < 5, f'Invalid first line for {self.gen_desc} file: {lines[0]!r}'
-			assert ls.pop() == '{', f'{ls!r}: invalid first line'
-			assert lines[-1] == '}', f'{lines[-1]!r}: invalid last line'
-			sid = ls.pop(0)
-			assert is_seed_id(sid), f'{sid!r}: invalid Seed ID'
-
-			if type(self) == PasswordList and len(ls) == 2:
-				ss = ls.pop().split(':')
-				assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
-				self.set_pw_fmt(ss[0])
-				self.set_pw_len(ss[1])
-				self.pw_id_str = MMGenPWIDString(ls.pop())
-				proto = init_proto('btc')# FIXME: dummy protocol
-				mmtype = MMGenPasswordType(proto,'P')
-			elif len(ls) == 1:
-				proto,mmtype = parse_addrfile_label(ls[0])
-			elif len(ls) == 0:
-				proto = init_proto('btc')
-				mmtype = proto.addr_type('L')
-			else:
-				raise ValueError(f'{lines[0]}: Invalid first line for {self.gen_desc} file {fn!r}')
-
-			if type(self) != PasswordList:
-				if proto.base_coin != self.proto.base_coin or proto.network != self.proto.network:
-					"""
-					Having caller supply protocol and checking address file protocol against it here
-					allows us to catch all mismatches in one place.  This behavior differs from that of
-					transaction files, which determine the protocol independently, requiring the caller
-					to check for protocol mismatches (e.g. MMGenTX.check_correct_chain())
-					"""
-					raise ValueError(
-						f'{self.data_desc} file is '
-						+ f'{proto.base_coin} {proto.network} but protocol is '
-						+ f'{self.proto.base_coin} {self.proto.network}' )
-
-			self.base_coin = proto.base_coin
-			self.network = proto.network
-			self.al_id = AddrListID(SeedID(sid=sid),mmtype)
-
-			data = self.parse_file_body(lines[1:-1])
-			assert isinstance(data,list),'Invalid file body data'
-		except Exception as e:
-			m = 'Invalid data in {} list file {!r}{} ({!s})'.format(
-				self.data_desc,
-				self.infile,
-				(f', content line {self.line_ctr}' if self.line_ctr else ''),
-				e )
-			if exit_on_error:
-				die(3,m)
-			else:
-				msg(m)
-				return False
-
-		return data
+	def get_file(self):
+		import mmgen.addrfile as mod
+		return getattr( mod, type(self).__name__.replace('List','File') )(self)
 
 class KeyAddrList(AddrList):
-	data_desc = 'key-address'
-	file_desc = 'secret keys'
+	desc = 'key-address'
 	gen_desc = 'key/address pair'
 	gen_desc_pl = 's'
 	gen_addrs = True
 	gen_keys = True
 	has_keys = True
-	ext      = 'akeys'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
 
 class KeyList(AddrList):
-	msgs = {
-	'file_header': f"""
-# {pnm} key file
-#
-# This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-""".strip()
-	}
-	data_desc = 'key'
-	file_desc = 'secret keys'
+	desc     = 'key'
 	gen_desc = 'key'
 	gen_desc_pl = 's'
 	gen_addrs = False
 	gen_keys = True
 	has_keys = True
-	ext      = 'keys'
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.addr, e.sec.wif)
 
 def is_bip39_str(s):
@@ -859,37 +637,19 @@ def is_xmrseed(s):
 from collections import namedtuple
 class PasswordList(AddrList):
 	msgs = {
-	'file_header': f"""
-# {pnm} password file
-#
-# This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-# A text label of {TwComment.max_screen_width} screen cells or less may be added to the right of each
-# password.  The label may contain any printable ASCII symbol.
-#
-""".strip(),
-	'file_header_mn': f"""
-# {pnm} {{}} password file
-#
-# This file is editable.
-# Everything following a hash symbol '#' is a comment and ignored by {pnm}.
-#
-""".strip(),
 	'record_chksum': """
 Record this checksum: it will be used to verify the password file in the future
 """.strip()
 	}
 	entry_type  = PasswordListEntry
 	main_attr   = 'passwd'
-	data_desc   = 'password'
-	file_desc   = 'passwords'
+	desc        = 'password'
 	gen_desc    = 'password'
 	gen_desc_pl = 's'
 	gen_addrs   = False
 	gen_keys    = False
 	gen_passwds = True
 	has_keys    = False
-	ext         = 'pws'
 	pw_len      = None
 	dfl_pw_fmt  = 'b58'
 	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
@@ -920,7 +680,7 @@ Record this checksum: it will be used to verify the password file in the future
 
 		if infile:
 			self.infile = infile
-			self.data = self.parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
+			self.data = self.get_file().parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
 		else:
 			if not chk_params_only:
 				for k in (seed,pw_idxs):
@@ -936,9 +696,6 @@ Record this checksum: it will be used to verify the password file in the future
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType(self.proto,'P'))
 			self.data = self.generate(seed,pw_idxs)
 
-		if self.pw_fmt in ('bip39','xmrseed'):
-			self.msgs['file_header'] = self.msgs['file_header_mn'].format(self.pw_fmt.upper())
-
 		self.num_addrs = len(self.data)
 		self.fmt_data = ''
 		self.chksum = AddrListChksum(self)
@@ -946,7 +703,7 @@ Record this checksum: it will be used to verify the password file in the future
 		fs = f'{self.al_id.sid}-{self.pw_id_str}-{self.pw_fmt_disp}-{self.pw_len}[{{}}]'
 		self.id_str = AddrListIDStr(self,fs)
 		qmsg(
-			f'Checksum for {self.data_desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
+			f'Checksum for {self.desc} data {self.id_str.hl()}: {self.chksum.hl()}\n' +
 			self.msgs[('record_chksum','check_chksum')[bool(infile)]] )
 
 	def set_pw_fmt(self,pw_fmt):
@@ -1071,26 +828,6 @@ Record this checksum: it will be used to verify the password file in the future
 		from .crypto import scramble_seed
 		dmsg_sc('str',scramble_key)
 		return scramble_seed(seed,scramble_key.encode())
-
-	def get_line(self,lines):
-		self.line_ctr += 1
-		if self.pw_fmt in ('bip39','xmrseed'):
-			ret = lines.pop(0).split(None,self.pw_len+1)
-			if len(ret) > self.pw_len+1:
-				m1 = f'extraneous text {ret[self.pw_len+1]!r} found after password'
-				m2 = '[bare comments not allowed in BIP39 password files]'
-				m = m1+' '+m2
-			elif len(ret) < self.pw_len+1:
-				m = f'invalid password length {len(ret)-1}'
-			else:
-				return (ret[0],' '.join(ret[1:self.pw_len+1]),'')
-			raise ValueError(m)
-		else:
-			ret = lines.pop(0).split(None,2)
-			return ret if len(ret) == 3 else ret + ['']
-
-	def make_label(self):
-		return f'{self.al_id.sid} {self.pw_id_str} {self.pw_fmt_disp}:{self.pw_len}'
 
 class AddrData(MMGenObject):
 	msgs = {

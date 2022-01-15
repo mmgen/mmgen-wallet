@@ -24,6 +24,7 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 from .common import *
 from .crypto import *
 from .addr import AddrList,KeyAddrList,KeyList,MMGenAddrType,AddrIdxList
+from .addrfile import AddrFile
 from .wallet import Wallet
 
 if g.prog_name == 'mmgen-keygen':
@@ -161,13 +162,17 @@ al = globals()[gen_clsname](
 	addr_idxs = idxs,
 	mmtype    = addr_type )
 
-al.format()
+af = al.get_file()
+
+af.format()
 
 if al.gen_addrs and opt.print_checksum:
 	Die(0,al.checksum)
 
 if al.gen_keys and keypress_confirm('Encrypt key list?'):
-	al.encrypt()
-	al.write_to_file(binary=True,desc='encrypted '+al.file_desc)
+	af.encrypt()
+	af.write(
+		binary = True,
+		desc = f'encrypted {af.desc}' )
 else:
-	al.write_to_file()
+	af.write()
