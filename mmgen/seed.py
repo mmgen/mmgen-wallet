@@ -24,6 +24,28 @@ from .common import *
 from .obj import *
 from .crypto import get_random,scramble_seed
 
+class SeedID(str,Hilite,InitErrors):
+	color = 'blue'
+	width = 8
+	trunc_ok = False
+	def __new__(cls,seed=None,sid=None):
+		if type(sid) == cls:
+			return sid
+		try:
+			if seed:
+				assert isinstance(seed,SeedBase),'not a subclass of SeedBase'
+				return str.__new__(cls,make_chksum_8(seed.data))
+			elif sid:
+				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
+				assert len(sid) == cls.width, f'not {cls.width} characters wide'
+				return str.__new__(cls,sid)
+			raise ValueError('no arguments provided')
+		except Exception as e:
+			return cls.init_fail(e,seed or sid)
+
+def is_seed_id(s):
+	return get_obj( SeedID, sid=s, silent=True, return_bool=True )
+
 class SeedBase(MMGenObject):
 
 	data = ImmutableAttr(bytes,typeconv=False)

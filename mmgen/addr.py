@@ -25,6 +25,7 @@ from .common import *
 from .obj import *
 from .baseconv import *
 from .protocol import init_proto,hash160
+from .seed import SeedID,is_seed_id
 
 pnm = g.proj_name
 
@@ -765,7 +766,7 @@ Removed {{}} duplicate WIF key{{}} from keylist (also in {pnm} key-address file
 			assert ls.pop() == '{', f'{ls!r}: invalid first line'
 			assert lines[-1] == '}', f'{lines[-1]!r}: invalid last line'
 			sid = ls.pop(0)
-			assert is_mmgen_seed_id(sid), f'{sid!r}: invalid Seed ID'
+			assert is_seed_id(sid), f'{sid!r}: invalid Seed ID'
 
 			if type(self) == PasswordList and len(ls) == 2:
 				ss = ls.pop().split(':')

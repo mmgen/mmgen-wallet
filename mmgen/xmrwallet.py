@@ -25,9 +25,10 @@ from collections import namedtuple
 from .common import *
 from .addr import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw,MoneroWalletRPCClient,json_encoder
+from .seed import SeedID
 from .daemon import MoneroWalletDaemon
 from .protocol import _b58a,init_proto
-from .obj import CoinAddr,CoinTxID,SeedID,AddrIdx,Hilite,InitErrors
+from .obj import CoinAddr,CoinTxID,AddrIdx,Hilite,InitErrors
 
 xmrwallet_uarg_info = (
 	lambda e,hp: {

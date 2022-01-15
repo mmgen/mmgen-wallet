@@ -62,7 +62,6 @@ def get_obj(objname,*args,**kwargs):
 	else:
 		return True if return_bool else ret
 
-def is_mmgen_seed_id(s):   return get_obj(SeedID,     sid=s, silent=True,return_bool=True)
 def is_mmgen_idx(s):       return get_obj(AddrIdx,    n=s,   silent=True,return_bool=True)
 def is_addrlist_id(s):     return get_obj(AddrListID, sid=s, silent=True,return_bool=True)
 
@@ -634,32 +633,12 @@ class ViewKey(object):
 
 class ZcashViewKey(CoinAddr): hex_width = 128
 
-class SeedID(str,Hilite,InitErrors):
-	color = 'blue'
-	width = 8
-	trunc_ok = False
-	def __new__(cls,seed=None,sid=None):
-		if type(sid) == cls:
-			return sid
-		try:
-			if seed:
-				from .seed import SeedBase
-				assert isinstance(seed,SeedBase),'not a subclass of SeedBase'
-				from .util import make_chksum_8
-				return str.__new__(cls,make_chksum_8(seed.data))
-			elif sid:
-				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
-				assert len(sid) == cls.width, f'not {cls.width} characters wide'
-				return str.__new__(cls,sid)
-			raise ValueError('no arguments provided')
-		except Exception as e:
-			return cls.init_fail(e,seed or sid)
-
 class MMGenID(str,Hilite,InitErrors,MMGenObject):
 	color = 'orange'
 	width = 0
 	trunc_ok = False
 	def __new__(cls,proto,id_str):
+		from .seed import SeedID
 		try:
 			ss = str(id_str).split(':')
 			assert len(ss) in (2,3),'not 2 or 3 colon-separated items'
@@ -837,6 +816,7 @@ class AddrListID(str,Hilite,InitErrors,MMGenObject):
 	trunc_ok = False
 	color = 'yellow'
 	def __new__(cls,sid,mmtype):
+		from .seed import SeedID
 		try:
 			assert type(sid) == SeedID, f'{sid!r} not a SeedID instance'
 			if not isinstance(mmtype,(MMGenAddrType,MMGenPasswordType)):
