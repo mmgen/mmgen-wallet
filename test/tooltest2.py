@@ -34,6 +34,7 @@ sys.path.insert(0,overlay_setup(repo_root))
 from mmgen.common import *
 from test.include.common import *
 from mmgen.wallet import is_bip39_mnemonic,is_mmgen_mnemonic
+from mmgen.xmrseed import is_xmrseed
 from mmgen.baseconv import *
 
 skipped_tests = ['mn2hex_interactive']

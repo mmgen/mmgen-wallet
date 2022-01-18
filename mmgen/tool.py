@@ -29,6 +29,7 @@ from .addr import *
 from .addrlist import AddrList,KeyAddrList
 from .passwdlist import PasswordList
 from .baseconv import baseconv
+from .xmrseed import xmrseed
 from .bip39 import bip39
 
 NL = ('\n','\r\n')[g.platform=='win']
@@ -238,7 +239,7 @@ mft = namedtuple('mnemonic_format',['fmt','pad','conv_cls'])
 mnemonic_fmts = {
 	'mmgen':   mft( 'words',  'seed', baseconv ),
 	'bip39':   mft( 'bip39',   None,  bip39 ),
-	'xmrseed': mft( 'xmrseed', None,  baseconv ),
+	'xmrseed': mft( 'xmrseed', None,  xmrseed ),
 }
 mn_opts_disp = _options_annot_str(mnemonic_fmts)
 

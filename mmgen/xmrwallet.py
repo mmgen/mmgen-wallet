@@ -579,12 +579,12 @@ class MoneroWalletOps:
 		async def process_wallet(self,d,fn,last):
 			msg_r('') # for pexpect
 
-			from .baseconv import baseconv
+			from .xmrseed import xmrseed
 			ret = await self.c.call(
 				'restore_deterministic_wallet',
 				filename       = os.path.basename(fn),
 				password       = d.wallet_passwd,
-				seed           = baseconv('xmrseed').fromhex(d.sec.wif,tostr=True),
+				seed           = xmrseed().fromhex(d.sec.wif,tostr=True),
 				restore_height = uopt.restore_height,
 				language       = 'English' )
 

@@ -30,9 +30,6 @@ def is_b58_str(s):
 def is_b32_str(s):
 	return set(list(s)) <= set(baseconv.digits['b32'])
 
-def is_xmrseed(s):
-	return bool( baseconv('xmrseed').tobytes(s.split()) )
-
 class baseconv(object):
 
 	desc = {
@@ -45,7 +42,6 @@ class baseconv(object):
 #		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
 		'mmgen': ('MMGen native mnemonic',
 		'MMGen native mnemonic seed phrase created using old Electrum wordlist and simple base conversion'),
-		'xmrseed': ('Monero mnemonic', 'Monero new-style mnemonic seed phrase'),
 	}
 	# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 	# https://tools.ietf.org/html/rfc4648
@@ -60,7 +56,6 @@ class baseconv(object):
 	mn_base = 1626
 	wl_chksums = {
 		'mmgen':  '5ca31424',
-		'xmrseed':'3c381ebb',
 #		'tirosh': '48f05e1f', # tirosh truncated to mn_base
 #		'tirosh1633': '1a5faeff' # tirosh list is 1633 words long!
 	}
@@ -68,22 +63,17 @@ class baseconv(object):
 		'b58': { 16:22, 24:33, 32:44 },
 		'b6d': { 16:50, 24:75, 32:100 },
 		'mmgen': { 16:12, 24:18, 32:24 },
-		'xmrseed': { 32:25 },
 	}
 	seedlen_map_rev = {
 		'b58': { 22:16, 33:24, 44:32 },
 		'b6d': { 50:16, 75:24, 100:32 },
 		'mmgen': { 12:16, 18:24, 24:32 },
-		'xmrseed': { 25:32 },
 	}
 
 	def __init__(self,wl_id):
 
 		if wl_id == 'mmgen':
 			from .mn_electrum import words
-			self.digits[wl_id] = words
-		elif wl_id == 'xmrseed':
-			from .mn_monero import words
 			self.digits[wl_id] = words
 		elif wl_id not in self.digits:
 			raise ValueError(f'{wl_id}: unrecognized mnemonic ID')
@@ -132,12 +122,6 @@ class baseconv(object):
 		else:
 			raise BaseConversionPadError(f"{pad!r}: illegal value for 'pad' (must be None,'seed' or int)")
 
-	@staticmethod
-	def monero_mn_checksum(words):
-		from binascii import crc32
-		wstr = ''.join(word[:3] for word in words)
-		return words[crc32(wstr.encode()) % len(words)]
-
 	def tohex(self,words_arg,pad=None):
 		"convert string or list data of instance base to hex string"
 		return self.tobytes(words_arg,pad//2 if type(pad)==int else pad).hex()
@@ -167,21 +151,6 @@ class baseconv(object):
 			raise BaseConversionError(
 				( 'seed data' if pad == 'seed' else f'{words_arg!r}:' ) +
 				f' not in {desc} format' )
-
-		if self.wl_id == 'xmrseed':
-			if len(words) not in self.seedlen_map_rev['xmrseed']:
-				die(2,f'{len(words)}: invalid length for Monero mnemonic')
-
-			z = self.monero_mn_checksum(words[:-1])
-			assert z == words[-1],'invalid Monero mnemonic checksum'
-			words = tuple(words[:-1])
-
-			ret = b''
-			for i in range(len(words)//3):
-				w1,w2,w3 = [wl.index(w) for w in words[3*i:3*i+3]]
-				x = w1 + base*((w2-w1)%base) + base*base*((w3-w2)%base)
-				ret += x.to_bytes(4,'big')[::-1]
-			return ret
 
 		ret = sum([wl.index(words[::-1][i])*(base**i) for i in range(len(words))])
 		bl = ret.bit_length()
@@ -214,28 +183,15 @@ class baseconv(object):
 
 		pad = max(self.get_pad(pad,get_seed_pad),1)
 		wl = self.digits[self.wl_id]
-		base = len(wl)
 
-		if self.wl_id == 'xmrseed':
-			if len(bytestr) not in self.seedlen_map['xmrseed']:
-				die(2, f'{len(bytestr)}: invalid seed byte length for Monero mnemonic')
-
-			def num2base_monero(num):
-				w1 = num % base
-				w2 = (num//base + w1) % base
-				w3 = (num//base//base + w2) % base
-				return [wl[w1], wl[w2], wl[w3]]
-
-			o = []
-			for i in range(len(bytestr)//4):
-				o += num2base_monero(int.from_bytes(bytestr[i*4:i*4+4][::-1],'big'))
-			o.append(self.monero_mn_checksum(o))
-		else:
+		def gen():
 			num = int.from_bytes(bytestr,'big')
-			ret = []
+			base = len(wl)
 			while num:
-				ret.append(num % base)
+				yield num % base
 				num //= base
-			o = [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 
-		return (' ' if self.wl_id in ('mmgen','xmrseed') else '').join(o) if tostr else o
+		ret = list(gen())
+		o = [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
+
+		return (' ' if self.wl_id == 'mmgen' else '').join(o) if tostr else o

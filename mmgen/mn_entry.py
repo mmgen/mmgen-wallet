@@ -420,7 +420,7 @@ class MnemonicEntryBIP39(MnemonicEntry):
 
 class MnemonicEntryMonero(MnemonicEntry):
 	wl_id = 'xmrseed'
-	modname = 'baseconv'
+	modname = 'xmrseed'
 	entry_modes = ('full','short')
 	dfl_entry_mode = 'short'
 	has_chksum = True

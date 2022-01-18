@@ -139,7 +139,7 @@ class unit_tests:
 					'restore_deterministic_wallet',
 					filename = fn,
 					password = 'foo',
-					seed     = baseconv('xmrseed').fromhex('beadface'*8,tostr=True) )
+					seed     = xmrseed().fromhex('beadface'*8,tostr=True) )
 				qmsg(f'Opening {wd.network} wallet')
 				await c.call( 'open_wallet', filename=fn, password='foo' )
 
@@ -152,7 +152,7 @@ class unit_tests:
 
 			gmsg('OK')
 
-		from mmgen.baseconv import baseconv
+		from mmgen.xmrseed import xmrseed
 		import shutil
 		shutil.rmtree('test/trash2',ignore_errors=True)
 		os.makedirs('test/trash2')

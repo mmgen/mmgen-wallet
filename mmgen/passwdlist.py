@@ -25,8 +25,9 @@ from collections import namedtuple
 from .exception import InvalidPasswdFormat
 from .util import ymsg,is_hex_str,is_int,keypress_confirm
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString
-from .baseconv import baseconv,is_b32_str,is_b58_str,is_xmrseed
+from .baseconv import baseconv,is_b32_str,is_b58_str
 from .bip39 import is_bip39_str
+from .xmrseed import is_xmrseed
 from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID
 from .addrlist import (
@@ -158,9 +159,10 @@ class PasswordList(AddrList):
 			pw_bytes = bip39.nwords2seedlen(self.pw_len,in_bytes=True)
 			good_pw_len = bip39.seedlen2nwords(seed.byte_len,in_bytes=True)
 		elif pf == 'xmrseed':
-			pw_bytes = baseconv.seedlen_map_rev['xmrseed'][self.pw_len]
+			from .xmrseed import xmrseed
+			pw_bytes = xmrseed.seedlen_map_rev['xmrseed'][self.pw_len]
 			try:
-				good_pw_len = baseconv.seedlen_map['xmrseed'][seed.byte_len]
+				good_pw_len = xmrseed.seedlen_map['xmrseed'][seed.byte_len]
 			except:
 				die(1,f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
 		elif pf in ('b32','b58'):
@@ -196,12 +198,13 @@ class PasswordList(AddrList):
 			# take most significant part
 			return ' '.join( bip39().fromhex(secbytes[:pw_len_bytes].hex()) )
 		elif self.pw_fmt == 'xmrseed':
-			pw_len_bytes = baseconv.seedlen_map_rev['xmrseed'][self.pw_len]
+			from .xmrseed import xmrseed
+			pw_len_bytes = xmrseed.seedlen_map_rev['xmrseed'][self.pw_len]
 			from .protocol import init_proto
 			bytes_preproc = init_proto('xmr').preprocess_key(
 				secbytes[:pw_len_bytes], # take most significant part
 				None )
-			return ' '.join( baseconv('xmrseed').frombytes(bytes_preproc) )
+			return ' '.join( xmrseed().frombytes(bytes_preproc) )
 		else:
 			# take least significant part
 			return baseconv(self.pw_fmt).frombytes(
