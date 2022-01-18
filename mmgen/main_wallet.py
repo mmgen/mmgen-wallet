@@ -134,7 +134,7 @@ FMT CODES:
 			g=g,
 		),
 		'notes': lambda help_notes,s: s.format(
-			f='\n  '.join(Wallet.format_fmt_codes().splitlines()),
+			f=help_notes('fmt_codes'),
 			n_ss=('',help_notes('seedsplit')+'\n\n')[do_ss_note],
 			n_sw=('',help_notes('subwallet')+'\n\n')[do_sw_note],
 			n_pw=help_notes('passwd'),

@@ -84,7 +84,7 @@ FMT CODES:
 			g=g,
 		),
 		'notes': lambda help_notes,s: s.format(
-			f='\n  '.join(Wallet.format_fmt_codes().splitlines()),
+			f=help_notes('fmt_codes'),
 			n_pw=help_notes('passwd'),
 		)
 	}

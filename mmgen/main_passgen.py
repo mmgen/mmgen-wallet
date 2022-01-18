@@ -29,7 +29,6 @@ from .wallet import Wallet
 from .obj import MMGenPWIDString
 
 pwi = PasswordList.pw_info
-pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
 
 opts_data = {
 	'sets': [('print_checksum',True,'quiet',True)],
@@ -126,10 +125,8 @@ FMT CODES:
 				fs="', '".join(MMGenPWIDString.forbidden),
 				n_pw=help_notes('passwd'),
 				n_bw=help_notes('brainwallet'),
-				pfi='\n  '.join(
-					[pwi_fs.format('Code','','Description','Min Len','Max Len','Default Len')] +
-					[pwi_fs.format(k,'-',v.desc,v.min_len,v.max_len,v.dfl_len) for k,v in pwi.items()]),
-				n_fmt='\n  '.join(Wallet.format_fmt_codes().splitlines())
+				pfi=help_notes('password_formats'),
+				n_fmt=help_notes('fmt_codes'),
 		)
 	}
 }

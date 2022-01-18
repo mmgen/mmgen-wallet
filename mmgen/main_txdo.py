@@ -88,6 +88,8 @@ opts_data = {
 Seed source files must have the canonical extensions listed in the 'FileExt'
 column below:
 
+FMT CODES:
+
   {f}
 """
 	},
@@ -107,7 +109,7 @@ column below:
 			help_notes('txcreate'),
 			help_notes('fee'),
 			help_notes('txsign'),
-			f='\n  '.join(Wallet.format_fmt_codes().splitlines()))
+			f=help_notes('fmt_codes')),
 	}
 }
 

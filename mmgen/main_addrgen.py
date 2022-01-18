@@ -106,7 +106,7 @@ FMT CODES:
 	'code': {
 		'options': lambda proto,help_notes,s: s.format(
 			seed_lens=', '.join(map(str,g.seed_lens)),
-			dmat="'{}' or '{}'".format(proto.dfl_mmtype,MMGenAddrType.mmtypes[proto.dfl_mmtype].name),
+			dmat=help_notes('dfl_mmtype'),
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			pnm=g.proj_name,
@@ -118,9 +118,8 @@ FMT CODES:
 			n_sw=help_notes('subwallet')+'\n\n',
 			n_pw=help_notes('passwd')+'\n\n',
 			n_bw=help_notes('brainwallet'),
-			n_fmt='\n  '.join(Wallet.format_fmt_codes().splitlines()),
-			n_at='\n  '.join(["'{}','{:<12} - {}".format(
-				k,v.name+"'",v.desc) for k,v in MMGenAddrType.mmtypes.items()])
+			n_fmt=help_notes('fmt_codes'),
+			n_at=help_notes('address_types'),
 		)
 	}
 }

@@ -39,6 +39,31 @@ def help_notes_func(proto,po,k):
 
 	class help_notes:
 
+		def password_formats():
+			from .passwdlist import PasswordList
+			pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'
+			return '\n  '.join(
+				[pwi_fs.format('Code','','Description','Min Len','Max Len','Default Len')] +
+				[pwi_fs.format(k,'-',v.desc,v.min_len,v.max_len,v.dfl_len) for k,v in PasswordList.pw_info.items()]
+			)
+
+		def dfl_mmtype():
+			from .addr import MMGenAddrType
+			return "'{}' or '{}'".format(
+				proto.dfl_mmtype,
+				MMGenAddrType.mmtypes[proto.dfl_mmtype].name )
+
+		def address_types():
+			from .addr import MMGenAddrType
+			return '\n  '.join([
+				"'{}','{:<12} - {}".format( k, v.name+"'", v.desc )
+					for k,v in MMGenAddrType.mmtypes.items()
+			])
+
+		def fmt_codes():
+			from .wallet import Wallet
+			return '\n  '.join( Wallet.format_fmt_codes().splitlines() )
+
 		def coin_id():
 			return proto.coin_id
 
