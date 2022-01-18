@@ -77,7 +77,7 @@ class bip39(baseconv):
 
 	def tohex(self,words,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
-		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
+		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits['bip39']
 
@@ -112,7 +112,7 @@ class bip39(baseconv):
 	def fromhex(self,seed_hex,pad=None,tostr=False):
 		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
 		assert tostr == False,"'tostr' must be False for 'bip39'"
-		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
+		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
 		wl = self.digits['bip39']
 		seed_bytes = bytes.fromhex(seed_hex)

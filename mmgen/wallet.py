@@ -413,24 +413,16 @@ class Mnemonic(WalletUnenc):
 		mn_len = self._choose_seedlen(self.wclass,self.mn_lens,self.mn_type)
 		return mn_entry(self.wl_id).get_mnemonic_from_user(mn_len)
 
-	@staticmethod
-	def _mn2hex_pad(mn):
-		return len(mn) * 8 // 3
-
-	@staticmethod
-	def _hex2mn_pad(hexnum):
-		return len(hexnum) * 3 // 8
-
 	def _format(self):
 
 		hexseed = self.seed.hexdata
 
 		bc = self.conv_cls(self.wl_id)
-		mn  = bc.fromhex( hexseed, self._hex2mn_pad(hexseed) )
-		ret = bc.tohex( mn, self._mn2hex_pad(mn) )
+		mn  = bc.fromhex( hexseed, 'seed' )
+		rev = bc.tohex( mn, 'seed' )
 
 		# Internal error, so just die on fail
-		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
+		compare_or_die( rev, 'recomputed seed', hexseed, 'original', e='Internal error' )
 
 		self.ssdata.mnemonic = mn
 		self.fmt_data = ' '.join(mn) + '\n'
@@ -451,15 +443,15 @@ class Mnemonic(WalletUnenc):
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
-		hexseed = bc.tohex( mn, self._mn2hex_pad(mn) )
-		ret     = bc.fromhex( hexseed, self._hex2mn_pad(hexseed) )
+		hexseed = bc.tohex( mn, 'seed' )
+		rev     = bc.fromhex( hexseed, 'seed' )
 
 		if len(hexseed) * 4 not in g.seed_lens:
 			msg('Invalid mnemonic (produces too large a number)')
 			return False
 
 		# Internal error, so just die
-		compare_or_die(' '.join(ret),'recomputed mnemonic',' '.join(mn),'original',e='Internal error')
+		compare_or_die( ' '.join(rev), 'recomputed mnemonic', ' '.join(mn), 'original', e='Internal error' )
 
 		self.seed = Seed(bytes.fromhex(hexseed))
 		self.ssdata.mnemonic = mn
@@ -488,12 +480,6 @@ class BIP39Mnemonic(Mnemonic):
 		from .bip39 import bip39
 		self.conv_cls = bip39
 		super().__init__(*args,**kwargs)
-
-	@staticmethod
-	def _mn2hex_pad(mn): return None
-
-	@staticmethod
-	def _hex2mn_pad(hexnum): return None
 
 class MMGenSeedFile(WalletUnenc):
 
