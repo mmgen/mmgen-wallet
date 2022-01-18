@@ -625,15 +625,14 @@ class CoinInfo(object):
 				return None
 
 		try:
-			assert (
-				cls.external_tests_blacklist[addr_type][tool] == True
-				or coin in cls.external_tests_blacklist[addr_type][tool] )
+			bl = cls.external_tests_blacklist[addr_type][tool]
 		except:
 			pass
 		else:
-			if verbose:
-				msg(f'Tool {tool!r} blacklisted for coin {coin}, addr_type {addr_type!r}')
-			return None
+			if bl == True or coin in bl:
+				if verbose:
+					msg(f'Tool {tool!r} blacklisted for coin {coin}, addr_type {addr_type!r}')
+				return None
 
 		if toolname: # skip whitelists
 			return tool
