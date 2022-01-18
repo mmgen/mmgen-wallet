@@ -97,10 +97,10 @@ class addr_generator:
 
 		def b58enc(self,addr_bytes):
 			from .baseconv import baseconv
-			enc = baseconv.frombytes
+			enc = baseconv('b58').frombytes
 			l = len(addr_bytes)
-			a = ''.join([enc( addr_bytes[i*8:i*8+8], 'b58', pad=11, tostr=True ) for i in range(l//8)])
-			b = enc( addr_bytes[l-l%8:], 'b58', pad=7, tostr=True )
+			a = ''.join([enc( addr_bytes[i*8:i*8+8], pad=11, tostr=True ) for i in range(l//8)])
+			b = enc( addr_bytes[l-l%8:], pad=7, tostr=True )
 			return a + b
 
 		@check_data

@@ -139,7 +139,7 @@ class unit_tests:
 					'restore_deterministic_wallet',
 					filename = fn,
 					password = 'foo',
-					seed     = baseconv.fromhex('beadface'*8,'xmrseed',tostr=True) )
+					seed     = baseconv('xmrseed').fromhex('beadface'*8,tostr=True) )
 				qmsg(f'Opening {wd.network} wallet')
 				await c.call( 'open_wallet', filename=fn, password='foo' )
 

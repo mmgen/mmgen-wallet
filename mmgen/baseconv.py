@@ -31,7 +31,7 @@ def is_b32_str(s):
 	return set(list(s)) <= set(baseconv.digits['b32'])
 
 def is_xmrseed(s):
-	return bool(baseconv.tobytes(s.split(),wl_id='xmrseed'))
+	return bool( baseconv('xmrseed').tobytes(s.split()) )
 
 class baseconv(object):
 
@@ -77,58 +77,49 @@ class baseconv(object):
 		'xmrseed': { 25:32 },
 	}
 
-	@classmethod
-	def init_mn(cls,mn_id):
-		if mn_id in cls.digits:
-			return
-		if mn_id == 'mmgen':
+	def __init__(self,wl_id):
+
+		if wl_id == 'mmgen':
 			from .mn_electrum import words
-			cls.digits[mn_id] = words
-		elif mn_id == 'xmrseed':
+			self.digits[wl_id] = words
+		elif wl_id == 'xmrseed':
 			from .mn_monero import words
-			cls.digits[mn_id] = words
-		elif mn_id == 'tirosh':
+			self.digits[wl_id] = words
+		elif wl_id == 'tirosh':
 			from .mn_tirosh import words
-			cls.digits[mn_id] = words[:cls.mn_base]
-		else:
-			raise ValueError(f'{mn_id}: unrecognized mnemonic ID')
+			self.digits[wl_id] = words[:self.mn_base]
+		elif wl_id not in self.digits:
+			raise ValueError(f'{wl_id}: unrecognized mnemonic ID')
 
-	@classmethod
-	def get_wordlist(cls,wl_id):
-		cls.init_mn(wl_id)
-		return cls.digits[wl_id]
+		self.wl_id = wl_id
 
-	@classmethod
-	def get_wordlist_chksum(cls,wl_id):
-		cls.init_mn(wl_id)
-		return sha256(' '.join(cls.digits[wl_id]).encode()).hexdigest()[:8]
+	def get_wordlist(self):
+		return self.digits[self.wl_id]
 
-	@classmethod
-	def check_wordlists(cls):
-		for k,v in list(cls.wl_chksums.items()):
-			res = cls.get_wordlist_chksum(k)
-			assert res == v,f'{res}: checksum mismatch for {k} (should be {v})'
-		return True
+	def get_wordlist_chksum(self):
+		return sha256(' '.join(self.digits[self.wl_id]).encode()).hexdigest()[:8]
 
-	@classmethod
-	def check_wordlist(cls,wl_id):
-		cls.init_mn(wl_id)
+	def check_wordlist(self):
 
-		wl = cls.digits[wl_id]
+		wl = self.digits[self.wl_id]
 		from .util import qmsg,compare_chksums
-		ret = f'Wordlist: {wl_id}\nLength: {len(wl)} words'
-		new_chksum = cls.get_wordlist_chksum(wl_id)
+		ret = f'Wordlist: {self.wl_id}\nLength: {len(wl)} words'
+		new_chksum = self.get_wordlist_chksum()
 
-		a,b = 'generated','saved'
-		compare_chksums(new_chksum,a,cls.wl_chksums[wl_id],b,die_on_fail=True)
+		compare_chksums(
+			new_chksum,
+			'generated',
+			self.wl_chksums[self.wl_id],
+			'saved',
+			die_on_fail = True )
 
 		if tuple(sorted(wl)) == wl:
 			return ret + '\nList is sorted'
 		else:
 			die(3,'ERROR: List is not sorted!')
 
-	@classmethod
-	def get_pad(cls,pad,seed_pad_func):
+	@staticmethod
+	def get_pad(pad,seed_pad_func):
 		"""
 		'pad' argument to baseconv conversion methods must be either None, 'seed' or an integer.
 		If None, output of minimum (but never zero) length will be produced.
@@ -150,34 +141,29 @@ class baseconv(object):
 		wstr = ''.join(word[:3] for word in words)
 		return words[crc32(wstr.encode()) % len(words)]
 
-	@classmethod
-	def tohex(cls,words_arg,wl_id,pad=None):
-		"convert string or list data of base 'wl_id' to hex string"
-		return cls.tobytes(words_arg,wl_id,pad//2 if type(pad)==int else pad).hex()
+	def tohex(self,words_arg,pad=None):
+		"convert string or list data of instance base to hex string"
+		return self.tobytes(words_arg,pad//2 if type(pad)==int else pad).hex()
 
-	@classmethod
-	def tobytes(cls,words_arg,wl_id,pad=None):
-		"convert string or list data of base 'wl_id' to byte string"
-
-		if wl_id not in cls.digits:
-			cls.init_mn(wl_id)
+	def tobytes(self,words_arg,pad=None):
+		"convert string or list data of instance base to byte string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
-		desc = cls.desc[wl_id][0]
+		desc = self.desc[self.wl_id][0]
 
 		if len(words) == 0:
 			raise BaseConversionError(f'empty {desc} data')
 
 		def get_seed_pad():
-			assert wl_id in cls.seedlen_map_rev,f'seed padding not supported for base {wl_id!r}'
-			d = cls.seedlen_map_rev[wl_id]
+			assert self.wl_id in self.seedlen_map_rev, f'seed padding not supported for base {self.wl_id!r}'
+			d = self.seedlen_map_rev[self.wl_id]
 			if not len(words) in d:
 				raise BaseConversionError(
 					f'{len(words)}: invalid length for seed-padded {desc} data in base conversion' )
 			return d[len(words)]
 
-		pad_val = max(cls.get_pad(pad,get_seed_pad),1)
-		wl = cls.digits[wl_id]
+		pad_val = max(self.get_pad(pad,get_seed_pad),1)
+		wl = self.digits[self.wl_id]
 		base = len(wl)
 
 		if not set(words) <= set(wl):
@@ -185,11 +171,11 @@ class baseconv(object):
 				( 'seed data' if pad == 'seed' else f'{words_arg!r}:' ) +
 				f' not in {desc} format' )
 
-		if wl_id == 'xmrseed':
-			if len(words) not in cls.seedlen_map_rev['xmrseed']:
+		if self.wl_id == 'xmrseed':
+			if len(words) not in self.seedlen_map_rev['xmrseed']:
 				die(2,f'{len(words)}: invalid length for Monero mnemonic')
 
-			z = cls.monero_mn_checksum(words[:-1])
+			z = self.monero_mn_checksum(words[:-1])
 			assert z == words[-1],'invalid Monero mnemonic checksum'
 			words = tuple(words[:-1])
 
@@ -204,9 +190,8 @@ class baseconv(object):
 		bl = ret.bit_length()
 		return ret.to_bytes(max(pad_val,bl//8+bool(bl%8)),'big')
 
-	@classmethod
-	def fromhex(cls,hexstr,wl_id,pad=None,tostr=False):
-		"convert hex string to list or string data of base 'wl_id'"
+	def fromhex(self,hexstr,pad=None,tostr=False):
+		"convert hex string to list or string data of instance base"
 
 		from .util import is_hex_str
 		if not is_hex_str(hexstr):
@@ -214,32 +199,28 @@ class baseconv(object):
 				( 'seed data' if pad == 'seed' else f'{hexstr!r}:' ) +
 				' not a hexadecimal string' )
 
-		return cls.frombytes(bytes.fromhex(hexstr),wl_id,pad,tostr)
+		return self.frombytes( bytes.fromhex(hexstr), pad, tostr )
 
-	@classmethod
-	def frombytes(cls,bytestr,wl_id,pad=None,tostr=False):
-		"convert byte string to list or string data of base 'wl_id'"
-
-		if wl_id not in cls.digits:
-			cls.init_mn(wl_id)
+	def frombytes(self,bytestr,pad=None,tostr=False):
+		"convert byte string to list or string data of instance base"
 
 		if not bytestr:
 			raise BaseConversionError('empty data not allowed in base conversion')
 
 		def get_seed_pad():
-			assert wl_id in cls.seedlen_map, f'seed padding not supported for base {wl_id!r}'
-			d = cls.seedlen_map[wl_id]
+			assert self.wl_id in self.seedlen_map, f'seed padding not supported for base {self.wl_id!r}'
+			d = self.seedlen_map[self.wl_id]
 			if not len(bytestr) in d:
 				raise SeedLengthError(
 					f'{len(bytestr)}: invalid byte length for seed data in seed-padded base conversion' )
 			return d[len(bytestr)]
 
-		pad = max(cls.get_pad(pad,get_seed_pad),1)
-		wl = cls.digits[wl_id]
+		pad = max(self.get_pad(pad,get_seed_pad),1)
+		wl = self.digits[self.wl_id]
 		base = len(wl)
 
-		if wl_id == 'xmrseed':
-			if len(bytestr) not in cls.seedlen_map['xmrseed']:
+		if self.wl_id == 'xmrseed':
+			if len(bytestr) not in self.seedlen_map['xmrseed']:
 				die(2, f'{len(bytestr)}: invalid seed byte length for Monero mnemonic')
 
 			def num2base_monero(num):
@@ -251,7 +232,7 @@ class baseconv(object):
 			o = []
 			for i in range(len(bytestr)//4):
 				o += num2base_monero(int.from_bytes(bytestr[i*4:i*4+4][::-1],'big'))
-			o.append(cls.monero_mn_checksum(o))
+			o.append(self.monero_mn_checksum(o))
 		else:
 			num = int.from_bytes(bytestr,'big')
 			ret = []
@@ -260,4 +241,4 @@ class baseconv(object):
 				num //= base
 			o = [wl[n] for n in [0] * (pad-len(ret)) + ret[::-1]]
 
-		return (' ' if wl_id in ('mmgen','xmrseed') else '').join(o) if tostr else o
+		return (' ' if self.wl_id in ('mmgen','xmrseed') else '').join(o) if tostr else o

@@ -390,24 +390,24 @@ class MMGenToolCmdUtil(MMGenToolCmds):
 
 	def randb58(self,nbytes=32,pad=0):
 		"generate random data (default: 32 bytes) and convert it to base 58"
-		return baseconv.frombytes(get_random(nbytes),'b58',pad=pad,tostr=True)
+		return baseconv('b58').frombytes(get_random(nbytes),pad=pad,tostr=True)
 
 	def bytestob58(self,infile:str,pad=0):
 		"convert bytes to base 58 (supply data via STDIN)"
 		data = get_data_from_file(infile,dash=True,quiet=True,binary=True)
-		return baseconv.frombytes(data,'b58',pad=pad,tostr=True)
+		return baseconv('b58').frombytes(data,pad=pad,tostr=True)
 
 	def b58tobytes(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to bytes (warning: outputs binary data)"
-		return baseconv.tobytes(b58num,'b58',pad=pad)
+		return baseconv('b58').tobytes(b58num,pad=pad)
 
 	def hextob58(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to base 58"
-		return baseconv.fromhex(hexstr,'b58',pad=pad,tostr=True)
+		return baseconv('b58').fromhex(hexstr,pad=pad,tostr=True)
 
 	def b58tohex(self,b58num:'sstr',pad=0):
 		"convert a base 58 number to hexadecimal"
-		return baseconv.tohex(b58num,'b58',pad=pad)
+		return baseconv('b58').tohex(b58num,pad=pad)
 
 	def hextob58chk(self,hexstr:'sstr'):
 		"convert a hexadecimal number to base58-check encoding"
@@ -421,20 +421,20 @@ class MMGenToolCmdUtil(MMGenToolCmds):
 
 	def hextob32(self,hexstr:'sstr',pad=0):
 		"convert a hexadecimal number to MMGen's flavor of base 32"
-		return baseconv.fromhex(hexstr,'b32',pad,tostr=True)
+		return baseconv('b32').fromhex(hexstr,pad,tostr=True)
 
 	def b32tohex(self,b32num:'sstr',pad=0):
 		"convert an MMGen-flavor base 32 number to hexadecimal"
-		return baseconv.tohex(b32num.upper(),'b32',pad)
+		return baseconv('b32').tohex(b32num.upper(),pad)
 
 	def hextob6d(self,hexstr:'sstr',pad=0,add_spaces=True):
 		"convert a hexadecimal number to die roll base6 (base6d)"
-		ret = baseconv.fromhex(hexstr,'b6d',pad,tostr=True)
+		ret = baseconv('b6d').fromhex(hexstr,pad,tostr=True)
 		return block_format(ret,gw=5,cols=None).strip() if add_spaces else ret
 
 	def b6dtohex(self,b6d_num:'sstr',pad=0):
 		"convert a die roll base6 (base6d) number to hexadecimal"
-		return baseconv.tohex(remove_whitespace(b6d_num),'b6d',pad)
+		return baseconv('b6d').tohex(remove_whitespace(b6d_num),pad)
 
 class MMGenToolCmdCoin(MMGenToolCmds):
 	"""
@@ -625,20 +625,20 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
 		if fmt == 'bip39':
 			from .bip39 import bip39
-			return ' '.join(bip39.fromhex(hexstr,fmt))
+			return ' '.join(bip39(fmt).fromhex(hexstr))
 		else:
 			bytestr = bytes.fromhex(hexstr)
 			if fmt == 'xmrseed':
 				bytestr = self._xmr_reduce(bytestr)
-			return baseconv.frombytes(bytestr,fmt,'seed',tostr=True)
+			return baseconv(fmt).frombytes(bytestr,'seed',tostr=True)
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a mnemonic seed phrase to a hexadecimal number"
 		if fmt == 'bip39':
 			from .bip39 import bip39
-			return bip39.tohex(seed_mnemonic.split(),fmt)
+			return bip39(fmt).tohex(seed_mnemonic.split())
 		else:
-			return baseconv.tohex(seed_mnemonic.split(),fmt,'seed')
+			return baseconv(fmt).tohex(seed_mnemonic.split(),'seed')
 
 	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
@@ -651,12 +651,12 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		return conv_cls.check_wordlist(fmt)
+		return conv_cls(fmt).check_wordlist()
 
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
 		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		ret = conv_cls.get_wordlist(fmt)
+		ret = conv_cls(fmt).get_wordlist()
 		if enum:
 			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]
 		return '\n'.join(ret)

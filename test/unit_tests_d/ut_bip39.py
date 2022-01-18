@@ -90,15 +90,15 @@ class unit_test(object):
 
 		from mmgen.bip39 import bip39
 
-		bip39.check_wordlists()
-		bip39.check_wordlist('bip39')
+		b = bip39()
+		b.check_wordlist()
 
 		vmsg('')
 		qmsg('Checking seed to mnemonic conversion:')
 		for v in self.vectors:
 			chk = tuple(v[1].split())
 			vmsg('    '+v[1])
-			res = bip39.fromhex(v[0],'bip39')
+			res = b.fromhex( v[0] )
 			assert res == chk, f'mismatch:\nres: {res}\nchk: {chk}'
 
 		vmsg('')
@@ -106,7 +106,7 @@ class unit_test(object):
 		for v in self.vectors:
 			chk = v[0]
 			vmsg('    '+chk)
-			res = bip39.tohex(v[1].split(),'bip39')
+			res = b.tohex( v[1].split() )
 			assert res == chk, f'mismatch:\nres: {res}\nchk: {chk}'
 
 		vmsg('')
@@ -119,20 +119,18 @@ class unit_test(object):
 		bad_seed = 'deadbeef'
 		good_seed = 'deadbeef' * 4
 
-		th = bip39.tohex
-		fh = bip39.fromhex
+		th = b.tohex
+		fh = b.fromhex
 		bad_data = (
-('hex',              'AssertionError', 'not a hexadecimal',lambda:fh('xx','bip39')),
-('id (tohex)',       'AssertionError', "must be 'bip39'",  lambda:fh(good_seed,'foo')),
-('seed len',         'AssertionError', 'invalid seed bit', lambda:fh(bad_seed,'bip39')),
-('mnemonic type',    'AssertionError', 'must be list',     lambda:th('string','bip39')),
-('id (fromhex)',     'AssertionError', "must be 'bip39'",  lambda:th(good_mn,'foo')),
-('arg (tostr=True)', 'AssertionError', "'tostr' must be",  lambda:fh(good_seed,'bip39',tostr=True)),
-('pad len (fromhex)','AssertionError', "invalid 'pad' arg",lambda:fh(good_seed,'bip39',pad=23)),
-('pad len (tohex)',  'AssertionError', "invalid 'pad' arg",lambda:th(good_mn,'bip39',pad=23)),
-('word',             'MnemonicError',  "not in the BIP39", lambda:th(bad_word_mn,'bip39')),
-('checksum',         'MnemonicError',  "checksum",         lambda:th(bad_chksum_mn,'bip39')),
-('seed phrase len',  'MnemonicError',  "phrase len",       lambda:th(bad_len_mn,'bip39')),
+('hex',              'AssertionError', 'not a hexadecimal',lambda:fh('xx')),
+('seed len',         'AssertionError', 'invalid seed bit', lambda:fh(bad_seed)),
+('mnemonic type',    'AssertionError', 'must be list',     lambda:th('string')),
+('arg (tostr=True)', 'AssertionError', "'tostr' must be",  lambda:fh(good_seed,tostr=True)),
+('pad len (fromhex)','AssertionError', "invalid 'pad' arg",lambda:fh(good_seed,pad=23)),
+('pad len (tohex)',  'AssertionError', "invalid 'pad' arg",lambda:th(good_mn,pad=23)),
+('word',             'MnemonicError',  "not in the BIP39", lambda:th(bad_word_mn)),
+('checksum',         'MnemonicError',  "checksum",         lambda:th(bad_chksum_mn)),
+('seed phrase len',  'MnemonicError',  "phrase len",       lambda:th(bad_len_mn)),
 		)
 
 		ut.process_bad_data(bad_data)

@@ -27,7 +27,7 @@ from .baseconv import baseconv
 from .util import is_hex_str
 
 def is_bip39_str(s):
-	return bool( bip39.tohex(s.split(), wl_id='bip39') )
+	return bool( bip39().tohex(s.split()) )
 
 # implements a subset of the baseconv API
 class bip39(baseconv):
@@ -47,8 +47,12 @@ class bip39(baseconv):
 		224: bc(7, 21),
 		256: bc(8, 24),
 	}
-	from .mn_bip39 import words
-	digits = { 'bip39': words }
+
+	def __init__(self,wl_id='bip39'):
+		assert wl_id == 'bip39', "initialize with 'bip39' for compatibility with baseconv API"
+		from .mn_bip39 import words
+		self.digits = { 'bip39': words }
+		self.wl_id = 'bip39'
 
 	@classmethod
 	def nwords2seedlen(cls,nwords,in_bytes=False,in_hex=False):
@@ -65,21 +69,17 @@ class bip39(baseconv):
 		except:
 			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic')
 
-	@classmethod
-	def tobytes(cls,*args,**kwargs):
+	def tobytes(self,*args,**kwargs):
 		raise NotImplementedError('Method not supported')
 
-	@classmethod
-	def frombytes(cls,*args,**kwargs):
+	def frombytes(self,*args,**kwargs):
 		raise NotImplementedError('Method not supported')
 
-	@classmethod
-	def tohex(cls,words,wl_id,pad=None):
+	def tohex(self,words,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
-		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
 		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
-		wl = cls.digits[wl_id]
+		wl = self.digits['bip39']
 
 		for n,w in enumerate(words):
 			if w not in wl:
@@ -87,7 +87,7 @@ class bip39(baseconv):
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
 
-		for k,v in cls.constants.items():
+		for k,v in self.constants.items():
 			if len(words) == v.mn_len:
 				bitlen = k
 				break
@@ -100,7 +100,7 @@ class bip39(baseconv):
 		seed_hex = '{:0{w}x}'.format(int(seed_bin,2),w=bitlen//4)
 		seed_bytes = bytes.fromhex(seed_hex)
 
-		chk_len = cls.constants[bitlen].chk_len
+		chk_len = self.constants[bitlen].chk_len
 		chk_hex_chk = sha256(seed_bytes).hexdigest()
 		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
 
@@ -109,19 +109,17 @@ class bip39(baseconv):
 
 		return seed_hex
 
-	@classmethod
-	def fromhex(cls,seed_hex,wl_id,pad=None,tostr=False):
+	def fromhex(self,seed_hex,pad=None,tostr=False):
 		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
-		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
 		assert tostr == False,"'tostr' must be False for 'bip39'"
 		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
-		wl = cls.digits[wl_id]
+		wl = self.digits['bip39']
 		seed_bytes = bytes.fromhex(seed_hex)
 		bitlen = len(seed_bytes) * 8
 
-		assert bitlen in cls.constants, f'{bitlen}: invalid seed bit length'
-		c = cls.constants[bitlen]
+		assert bitlen in self.constants, f'{bitlen}: invalid seed bit length'
+		c = self.constants[bitlen]
 
 		chk_hex = sha256(seed_bytes).hexdigest()
 
@@ -131,7 +129,3 @@ class bip39(baseconv):
 		res = seed_bin + chk_bin
 
 		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(c.mn_len))
-
-	@classmethod
-	def init_mn(cls,mn_id):
-		assert mn_id == 'bip39', "'mn_id' must be 'bip39'"

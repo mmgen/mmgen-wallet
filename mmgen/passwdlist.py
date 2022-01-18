@@ -166,7 +166,7 @@ class PasswordList(AddrList):
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
-			good_pw_len = len(baseconv.frombytes(b'\xff'*seed.byte_len,wl_id=pf))
+			good_pw_len = len( baseconv(pf).frombytes(b'\xff'*seed.byte_len) )
 		else:
 			raise NotImplementedError(f'{pf!r}: unknown password format')
 
@@ -194,19 +194,18 @@ class PasswordList(AddrList):
 			from .bip39 import bip39
 			pw_len_bytes = bip39.nwords2seedlen( self.pw_len, in_bytes=True )
 			# take most significant part
-			return ' '.join( bip39.fromhex( secbytes[:pw_len_bytes].hex(), wl_id='bip39' ) )
+			return ' '.join( bip39().fromhex(secbytes[:pw_len_bytes].hex()) )
 		elif self.pw_fmt == 'xmrseed':
 			pw_len_bytes = baseconv.seedlen_map_rev['xmrseed'][self.pw_len]
 			from .protocol import init_proto
 			bytes_preproc = init_proto('xmr').preprocess_key(
 				secbytes[:pw_len_bytes], # take most significant part
 				None )
-			return ' '.join( baseconv.frombytes( bytes_preproc, wl_id='xmrseed' ) )
+			return ' '.join( baseconv('xmrseed').frombytes(bytes_preproc) )
 		else:
 			# take least significant part
-			return baseconv.frombytes(
+			return baseconv(self.pw_fmt).frombytes(
 				secbytes,
-				self.pw_fmt,
 				pad = self.pw_len,
 				tostr = True )[-self.pw_len:]
 

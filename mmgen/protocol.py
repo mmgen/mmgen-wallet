@@ -512,9 +512,10 @@ class CoinProtocol(MMGenObject):
 			from .baseconv import baseconv,is_b58_str
 
 			def b58dec(addr_str):
+				bc = baseconv('b58')
 				l = len(addr_str)
-				a = b''.join([baseconv.tobytes(addr_str[i*11:i*11+11],'b58',pad=8) for i in range(l//11)])
-				b = baseconv.tobytes(addr_str[-(l%11):],'b58',pad=5)
+				a = b''.join([bc.tobytes( addr_str[i*11:i*11+11], pad=8 ) for i in range(l//11)])
+				b = bc.tobytes( addr_str[-(l%11):], pad=5 )
 				return a + b
 
 			ret = b58dec(addr)

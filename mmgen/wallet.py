@@ -425,8 +425,9 @@ class Mnemonic(WalletUnenc):
 
 		hexseed = self.seed.hexdata
 
-		mn  = self.conv_cls.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
-		ret = self.conv_cls.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
+		bc = self.conv_cls(self.wl_id)
+		mn  = bc.fromhex( hexseed, self._hex2mn_pad(hexseed) )
+		ret = bc.tohex( mn, self._mn2hex_pad(mn) )
 
 		# Internal error, so just die on fail
 		compare_or_die(ret,'recomputed seed',hexseed,'original',e='Internal error')
@@ -436,7 +437,7 @@ class Mnemonic(WalletUnenc):
 
 	def _deformat(self):
 
-		self.conv_cls.init_mn(self.wl_id)
+		bc = self.conv_cls(self.wl_id)
 		mn = self.fmt_data.split()
 
 		if len(mn) not in self.mn_lens:
@@ -446,12 +447,12 @@ class Mnemonic(WalletUnenc):
 			return False
 
 		for n,w in enumerate(mn,1):
-			if w not in self.conv_cls.digits[self.wl_id]:
+			if w not in bc.digits[self.wl_id]:
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
-		hexseed = self.conv_cls.tohex(mn,self.wl_id,self._mn2hex_pad(mn))
-		ret     = self.conv_cls.fromhex(hexseed,self.wl_id,self._hex2mn_pad(hexseed))
+		hexseed = bc.tohex( mn, self._mn2hex_pad(mn) )
+		ret     = bc.fromhex( hexseed, self._hex2mn_pad(hexseed) )
 
 		if len(hexseed) * 4 not in g.seed_lens:
 			msg('Invalid mnemonic (produces too large a number)')
@@ -502,7 +503,7 @@ class MMGenSeedFile(WalletUnenc):
 	ext = 'mmseed'
 
 	def _format(self):
-		b58seed = baseconv.frombytes(self.seed.data,'b58',pad='seed',tostr=True)
+		b58seed = baseconv('b58').frombytes(self.seed.data,pad='seed',tostr=True)
 		self.ssdata.chksum = make_chksum_6(b58seed)
 		self.ssdata.b58seed = b58seed
 		self.fmt_data = '{} {}\n'.format(
@@ -532,7 +533,7 @@ class MMGenSeedFile(WalletUnenc):
 		if not compare_chksums(a,'file',make_chksum_6(b),'computed',verbose=True):
 			return False
 
-		ret = baseconv.tobytes(b,'b58',pad='seed')
+		ret = baseconv('b58').tobytes(b,pad='seed')
 
 		if ret == False:
 			msg(f'Invalid base-58 encoded seed: {val}')
@@ -562,7 +563,7 @@ class DieRollSeedFile(WalletUnenc):
 	interactive_input = False
 
 	def _format(self):
-		d = baseconv.frombytes(self.seed.data,'b6d',pad='seed',tostr=True) + '\n'
+		d = baseconv('b6d').frombytes(self.seed.data,pad='seed',tostr=True) + '\n'
 		self.fmt_data = block_format(d,gw=5,cols=5)
 
 	def _deformat(self):
@@ -578,7 +579,7 @@ class DieRollSeedFile(WalletUnenc):
 
 		# truncate seed to correct length, discarding high bits
 		seed_len = rmap[len(d)]
-		seed_bytes = baseconv.tobytes(d,'b6d',pad='seed')[-seed_len:]
+		seed_bytes = baseconv('b6d').tobytes(d,pad='seed')[-seed_len:]
 
 		if self.interactive_input and opt.usr_randchars:
 			if keypress_confirm(self.user_entropy_prompt):
@@ -781,8 +782,9 @@ class MMGenWallet(WalletEnc):
 	def _format(self):
 		d = self.ssdata
 		s = self.seed
-		slt_fmt  = baseconv.frombytes(d.salt,'b58',pad='seed',tostr=True)
-		es_fmt = baseconv.frombytes(d.enc_seed,'b58',pad='seed',tostr=True)
+		bc = baseconv('b58')
+		slt_fmt  = bc.frombytes(d.salt,pad='seed',tostr=True)
+		es_fmt = bc.frombytes(d.enc_seed,pad='seed',tostr=True)
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format( s.sid.lower(), d.key_id.lower(), s.bitlen, d.pw_status, d.timestamp ),
@@ -852,7 +854,7 @@ class MMGenWallet(WalletEnc):
 					make_chksum_6(b58_val),'computed checksum',verbose=True):
 				return False
 
-			val = baseconv.tobytes(b58_val,'b58',pad='seed')
+			val = baseconv('b58').tobytes(b58_val,pad='seed')
 			if val == False:
 				msg(f'Invalid base 58 number: {b58_val}')
 				return False

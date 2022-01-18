@@ -162,7 +162,7 @@ class unit_test(object):
 			vmsg(f'\nBase: {base}')
 			vmsg(fs.format(h='Input',p='Pad',r='Output'))
 			for (hexstr,pad),ret_chk in data:
-				ret = baseconv.fromhex(hexstr,wl_id=base,pad=pad,tostr=True)
+				ret = baseconv(base).fromhex(hexstr,pad=pad,tostr=True)
 				if pad != 'seed':
 					assert len(ret) >= (pad or 0), perr.format(ret,pad or 0)
 				assert ret == ret_chk, rerr.format(ret,ret_chk)
@@ -180,9 +180,8 @@ class unit_test(object):
 			for (hexstr,pad),ret_chk in data:
 				if type(pad) == int:
 					pad = len(hexstr)
-				ret = baseconv.tohex(
+				ret = baseconv(base).tohex(
 					ret_chk.split() if base == 'xmrseed' else ret_chk,
-					wl_id=base,
 					pad=pad)
 				if pad == None:
 					assert int(ret,16) == int(hexstr,16), rerr.format(int(ret,16),int(hexstr,16))
@@ -191,34 +190,43 @@ class unit_test(object):
 				vmsg(fs.format(h=ret_chk,r=ret,p=str(pad)))
 #				msg("(('{h}',{p}),'{r}'),".format(h=hexstr,r=ret_chk,c=ret_chk,p=pad))
 
+		qmsg_r('\nChecking wordlist checksums:')
+		vmsg('')
+
+		for wl_id in baseconv.wl_chksums:
+			vmsg_r(f'  {wl_id+":":9}')
+			baseconv(wl_id).check_wordlist()
+
 		qmsg('')
 
-		vmsg('')
 		qmsg('Checking error handling:')
 
 		bad_b58 = 'I'*22
 		bad_b58len = 'a'*23
 
-		th = baseconv.tohex
-		fh = baseconv.fromhex
+		fr58 = baseconv('b58').fromhex
+		to58 = baseconv('b58').tohex
+		to32 = baseconv('b32').tohex
+		to8  = baseconv('b8').tohex
+
 		bad_data = (
-('hexstr',          'HexadecimalStringError', ': not a hexadecimal str', lambda:fh('x','b58')),
-('hexstr (seed)',   'HexadecimalStringError', 'seed data not a hexadec', lambda:fh('x','b58',pad='seed')),
-('hexstr (empty)',  'BaseConversionError',    'empty data not allowed',  lambda:fh('','b58')),
-('b58 data',        'BaseConversionError',    ': not in base58',         lambda:th('IfFzZ','b58')),
-('b58 data (seed)', 'BaseConversionError',    'seed data not in base58', lambda:th(bad_b58,'b58',pad='seed')),
-('b58 len (seed)',  'BaseConversionError',    'invalid length for',      lambda:th(bad_b58len,'b58',pad='seed')),
-('b58 data (empty)','BaseConversionError',    'empty base58 data',       lambda:th('','b58')),
-('b8 data (empty)' ,'BaseConversionError',    'empty base8 string data', lambda:th('','b8')),
-('b32 data',        'BaseConversionError',    'not in MMGen base32',     lambda:th('1az','b32')),
-('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad='foo')),
-('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad=False)),
-('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fh('ff','b58',pad=True)),
-('seedlen (in)',    'SeedLengthError',        'invalid byte length',     lambda:fh('ff','b58',pad='seed')),
-('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad='foo')),
-('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad=False)),
-('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:th('Z','b58',pad=True)),
-('seedlen (out)',   'BaseConversionError',    'invalid length for seed', lambda:th('Z','b58',pad='seed')),
+('hexstr',          'HexadecimalStringError', ': not a hexadecimal str', lambda:fr58('x')),
+('hexstr (seed)',   'HexadecimalStringError', 'seed data not a hexadec', lambda:fr58('x',pad='seed')),
+('hexstr (empty)',  'BaseConversionError',    'empty data not allowed',  lambda:fr58('')),
+('b58 data',        'BaseConversionError',    ': not in base58',         lambda:to58('IfFzZ')),
+('b58 data (seed)', 'BaseConversionError',    'seed data not in base58', lambda:to58(bad_b58,pad='seed')),
+('b58 len (seed)',  'BaseConversionError',    'invalid length for',      lambda:to58(bad_b58len,pad='seed')),
+('b58 data (empty)','BaseConversionError',    'empty base58 data',       lambda:to58('')),
+('b8 data (empty)' ,'BaseConversionError',    'empty base8 string data', lambda:to8('')),
+('b32 data',        'BaseConversionError',    'not in MMGen base32',     lambda:to32('1az')),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fr58('ff',pad='foo')),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fr58('ff',pad=False)),
+('pad arg (in)',    'BaseConversionPadError', "illegal value for 'pad'", lambda:fr58('ff',pad=True)),
+('seedlen (in)',    'SeedLengthError',        'invalid byte length',     lambda:fr58('ff',pad='seed')),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:to58('Z',pad='foo')),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:to58('Z',pad=False)),
+('pad arg (out)',   'BaseConversionPadError', "illegal value for 'pad'", lambda:to58('Z',pad=True)),
+('seedlen (out)',   'BaseConversionError',    'invalid length for seed', lambda:to58('Z',pad='seed')),
 		)
 
 		ut.process_bad_data(bad_data)

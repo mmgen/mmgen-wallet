@@ -81,7 +81,7 @@ class MMGenTxFile:
 				if c != '-':
 					desc = 'encoded comment (not base58)'
 					from .baseconv import baseconv
-					comment = baseconv.tobytes(c,'b58').decode()
+					comment = baseconv('b58').tobytes(c).decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
 					tx.label = MMGenTxLabel(comment)
@@ -177,7 +177,7 @@ class MMGenTxFile:
 
 		if tx.label:
 			from .baseconv import baseconv
-			lines.append(baseconv.frombytes(tx.label.encode(),'b58',tostr=True))
+			lines.append(baseconv('b58').frombytes(tx.label.encode(),tostr=True))
 
 		if tx.coin_txid:
 			if not tx.label:

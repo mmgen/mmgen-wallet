@@ -584,7 +584,7 @@ class MoneroWalletOps:
 				'restore_deterministic_wallet',
 				filename       = os.path.basename(fn),
 				password       = d.wallet_passwd,
-				seed           = baseconv.fromhex(d.sec.wif,'xmrseed',tostr=True),
+				seed           = baseconv('xmrseed').fromhex(d.sec.wif,tostr=True),
 				restore_height = uopt.restore_height,
 				language       = 'English' )
 
