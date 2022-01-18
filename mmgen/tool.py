@@ -29,6 +29,7 @@ from .addr import *
 from .addrlist import AddrList,KeyAddrList
 from .passwdlist import PasswordList
 from .baseconv import baseconv
+from .bip39 import bip39
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -232,15 +233,12 @@ def _process_result(ret,pager=False,print_result=False):
 
 from .addr import MMGenAddrType
 
-def conv_cls_bip39():
-	from .bip39 import bip39
-	return bip39
-
 dfl_mnemonic_fmt = 'mmgen'
+mft = namedtuple('mnemonic_format',['fmt','pad','conv_cls'])
 mnemonic_fmts = {
-	'mmgen': { 'fmt': 'words', 'conv_cls': lambda: baseconv },
-	'bip39': { 'fmt': 'bip39', 'conv_cls': conv_cls_bip39 },
-	'xmrseed': { 'fmt': 'xmrseed','conv_cls': lambda: baseconv },
+	'mmgen':   mft( 'words',  'seed', baseconv ),
+	'bip39':   mft( 'bip39',   None,  bip39 ),
+	'xmrseed': mft( 'xmrseed', None,  baseconv ),
 }
 mn_opts_disp = _options_annot_str(mnemonic_fmts)
 
@@ -623,22 +621,15 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
-		if fmt == 'bip39':
-			from .bip39 import bip39
-			return ' '.join(bip39(fmt).fromhex(hexstr))
-		else:
-			bytestr = bytes.fromhex(hexstr)
-			if fmt == 'xmrseed':
-				bytestr = self._xmr_reduce(bytestr)
-			return baseconv(fmt).frombytes(bytestr,'seed',tostr=True)
+		if fmt == 'xmrseed':
+			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
+		f = mnemonic_fmts[fmt]
+		return ' '.join( f.conv_cls(fmt).fromhex(hexstr,f.pad) )
 
 	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"convert a mnemonic seed phrase to a hexadecimal number"
-		if fmt == 'bip39':
-			from .bip39 import bip39
-			return bip39(fmt).tohex(seed_mnemonic.split())
-		else:
-			return baseconv(fmt).tohex(seed_mnemonic.split(),'seed')
+		f = mnemonic_fmts[fmt]
+		return f.conv_cls(fmt).tohex( seed_mnemonic.split(), f.pad )
 
 	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
 		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
@@ -650,13 +641,11 @@ class MMGenToolCmdMnemonic(MMGenToolCmds):
 
 	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
 		"show stats for mnemonic wordlist"
-		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		return conv_cls(fmt).check_wordlist()
+		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist()
 
 	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
 		"print mnemonic wordlist"
-		conv_cls = mnemonic_fmts[fmt]['conv_cls']()
-		ret = conv_cls(fmt).get_wordlist()
+		ret = mnemonic_fmts[fmt].conv_cls(fmt).get_wordlist()
 		if enum:
 			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]
 		return '\n'.join(ret)

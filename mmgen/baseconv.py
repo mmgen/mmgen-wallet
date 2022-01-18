@@ -42,7 +42,7 @@ class baseconv(object):
 		'b10':   ('base10 string',     'base10 (decimal) string data'),
 		'b8':    ('base8 string',      'base8 (octal) string data'),
 		'b6d':   ('base6d (die roll)', 'base6 data using the digits from one to six'),
-		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
+#		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
 		'mmgen': ('MMGen native mnemonic',
 		'MMGen native mnemonic seed phrase created using old Electrum wordlist and simple base conversion'),
 		'xmrseed': ('Monero mnemonic', 'Monero new-style mnemonic seed phrase'),
@@ -57,12 +57,12 @@ class baseconv(object):
 		'b8':  tuple('01234567'),
 		'b6d': tuple('123456'),
 	}
-	mn_base = 1626 # tirosh list is 1633 words long!
+	mn_base = 1626
 	wl_chksums = {
 		'mmgen':  '5ca31424',
 		'xmrseed':'3c381ebb',
-		'tirosh': '48f05e1f', # tirosh truncated to mn_base (1626)
-		# 'tirosh1633': '1a5faeff'
+#		'tirosh': '48f05e1f', # tirosh truncated to mn_base
+#		'tirosh1633': '1a5faeff' # tirosh list is 1633 words long!
 	}
 	seedlen_map = {
 		'b58': { 16:22, 24:33, 32:44 },
@@ -85,9 +85,6 @@ class baseconv(object):
 		elif wl_id == 'xmrseed':
 			from .mn_monero import words
 			self.digits[wl_id] = words
-		elif wl_id == 'tirosh':
-			from .mn_tirosh import words
-			self.digits[wl_id] = words[:self.mn_base]
 		elif wl_id not in self.digits:
 			raise ValueError(f'{wl_id}: unrecognized mnemonic ID')
 
