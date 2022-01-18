@@ -23,23 +23,29 @@ bip39.py - Data and routines for BIP39 mnemonic seed phrases
 from hashlib import sha256
 
 from .exception import *
-from .baseconv import *
+from .baseconv import baseconv
 from .util import is_hex_str
+
+def is_bip39_str(s):
+	return bool( bip39.tohex(s.split(), wl_id='bip39') )
 
 # implements a subset of the baseconv API
 class bip39(baseconv):
 
-	mn_base = 2048
-	wl_chksums = { 'bip39': 'f18b9a84' }
+	desc            = { 'bip39': ('BIP39 mnemonic', 'BIP39 mnemonic seed phrase') }
+	wl_chksums      = { 'bip39': 'f18b9a84' }
 	seedlen_map     = { 'bip39': { 16:12, 24:18, 32:24 } }
 	seedlen_map_rev = { 'bip39': { 12:16, 18:24, 24:32 } }
+
+	from collections import namedtuple
+	bc = namedtuple('bip39_constants',['chk_len','mn_len'])
 	#    ENT   CS  MS
 	constants = {
-		'128': (4, 12),
-		'160': (5, 15),
-		'192': (6, 18),
-		'224': (7, 21),
-		'256': (8, 24),
+		128: bc(4, 12),
+		160: bc(5, 15),
+		192: bc(6, 18),
+		224: bc(7, 21),
+		256: bc(8, 24),
 	}
 	from .mn_bip39 import words
 	digits = { 'bip39': words }
@@ -47,15 +53,15 @@ class bip39(baseconv):
 	@classmethod
 	def nwords2seedlen(cls,nwords,in_bytes=False,in_hex=False):
 		for k,v in cls.constants.items():
-			if v[1] == nwords:
-				return int(k)//8 if in_bytes else int(k)//4 if in_hex else int(k)
+			if v.mn_len == nwords:
+				return k//8 if in_bytes else k//4 if in_hex else k
 		raise MnemonicError(f'{nwords!r}: invalid word length for BIP39 mnemonic')
 
 	@classmethod
 	def seedlen2nwords(cls,seed_len,in_bytes=False,in_hex=False):
 		seed_bits = seed_len * 8 if in_bytes else seed_len * 4 if in_hex else seed_len
 		try:
-			return cls.constants[str(seed_bits)][1]
+			return cls.constants[seed_bits].mn_len
 		except:
 			raise ValueError(f'{seed_bits!r}: invalid seed length for BIP39 mnemonic')
 
@@ -71,6 +77,7 @@ class bip39(baseconv):
 	def tohex(cls,words,wl_id,pad=None):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
 		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
+		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		wl = cls.digits[wl_id]
 
@@ -80,15 +87,12 @@ class bip39(baseconv):
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
 
-		for k in cls.constants:
-			if len(words) == cls.constants[k][1]:
-				bitlen = int(k)
+		for k,v in cls.constants.items():
+			if len(words) == v.mn_len:
+				bitlen = k
 				break
 		else:
 			raise MnemonicError(f'{len(words)}: invalid BIP39 seed phrase length')
-
-		if pad != None:
-			assert pad * 4 == bitlen, f'{pad}: invalid pad length'
 
 		seed_bin = res[:bitlen]
 		chk_bin = res[bitlen:]
@@ -96,7 +100,7 @@ class bip39(baseconv):
 		seed_hex = '{:0{w}x}'.format(int(seed_bin,2),w=bitlen//4)
 		seed_bytes = bytes.fromhex(seed_hex)
 
-		chk_len = cls.constants[str(bitlen)][0]
+		chk_len = cls.constants[bitlen].chk_len
 		chk_hex_chk = sha256(seed_bytes).hexdigest()
 		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
 
@@ -110,29 +114,24 @@ class bip39(baseconv):
 		assert is_hex_str(seed_hex),'seed data not a hexadecimal string'
 		assert wl_id == 'bip39',"'wl_id' must be 'bip39'"
 		assert tostr == False,"'tostr' must be False for 'bip39'"
+		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
 		wl = cls.digits[wl_id]
 		seed_bytes = bytes.fromhex(seed_hex)
 		bitlen = len(seed_bytes) * 8
 
-		assert str(bitlen) in cls.constants, f'{bitlen}: invalid seed bit length'
-		chk_len,mn_len = cls.constants[str(bitlen)]
-
-		if pad != None:
-			assert mn_len == pad, f'{pad}: invalid pad length'
+		assert bitlen in cls.constants, f'{bitlen}: invalid seed bit length'
+		c = cls.constants[bitlen]
 
 		chk_hex = sha256(seed_bytes).hexdigest()
 
 		seed_bin = '{:0{w}b}'.format(int(seed_hex,16),w=bitlen)
-		chk_bin = '{:0{w}b}'.format(int(chk_hex,16),w=256)[:chk_len]
+		chk_bin = '{:0{w}b}'.format(int(chk_hex,16),w=256)[:c.chk_len]
 
 		res = seed_bin + chk_bin
 
-		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(mn_len))
+		return tuple(wl[int(res[i*11:(i+1)*11],2)] for i in range(c.mn_len))
 
 	@classmethod
 	def init_mn(cls,mn_id):
 		assert mn_id == 'bip39', "'mn_id' must be 'bip39'"
-
-def is_bip39_str(s):
-	return bool(bip39.tohex(s.split(),wl_id='bip39'))

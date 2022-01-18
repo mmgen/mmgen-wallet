@@ -414,10 +414,12 @@ class Mnemonic(WalletUnenc):
 		return mn_entry(self.wl_id).get_mnemonic_from_user(mn_len)
 
 	@staticmethod
-	def _mn2hex_pad(mn): return len(mn) * 8 // 3
+	def _mn2hex_pad(mn):
+		return len(mn) * 8 // 3
 
 	@staticmethod
-	def _hex2mn_pad(hexnum): return len(hexnum) * 3 // 8
+	def _hex2mn_pad(hexnum):
+		return len(hexnum) * 3 // 8
 
 	def _format(self):
 
@@ -485,6 +487,12 @@ class BIP39Mnemonic(Mnemonic):
 		from .bip39 import bip39
 		self.conv_cls = bip39
 		super().__init__(*args,**kwargs)
+
+	@staticmethod
+	def _mn2hex_pad(mn): return None
+
+	@staticmethod
+	def _hex2mn_pad(hexnum): return None
 
 class MMGenSeedFile(WalletUnenc):
 
