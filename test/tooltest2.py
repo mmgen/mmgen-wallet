@@ -97,58 +97,21 @@ sample_text_hexdump = (
 
 kafile_opts = ['-p1','-Ptest/ref/keyaddrfile_password']
 
-from test.unit_tests_d.ut_bip39 import unit_test as bip39
+from test.unit_tests_d.ut_baseconv import unit_test as ut_baseconv
+from test.unit_tests_d.ut_bip39 import unit_test as ut_bip39
+from test.unit_tests_d.ut_xmrseed import unit_test as ut_xmrseed
 tests = {
 	'Mnemonic': {
-		'hex2mn': [
-			( ['deadbeefdeadbeefdeadbeefdeadbeef','fmt=mmgen'],
-			'table cast forgive master funny gaze sadness ripple million paint moral match' ),
-			( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-			('swirl maybe anymore mix scale stray fog use approach page crime rhyme ' +
-			'class former strange window snap soon') ),
-			( ['deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'],
-			('swell type milk figure cheese phone fill black test bloom heard comfort ' +
-			'image terrible radio lesson own reply battle goal goodbye need laugh stream') ),
-			( ['ffffffffffffffffffffffffffffffff'],
-			'yellow yeah show bowl season spider cling defeat poison law shelter reflect' ),
-			( ['ffffffffffffffffffffffffffffffffffffffffffffffff'],
-			('yeah youth quit fail perhaps drum out person young click skin ' +
-			'weird inside silently perfectly together anyone memory') ),
-			( ['ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'],
-			('wrote affection object cell opinion here laughter stare honest north cost begin ' +
-			'murder something yourself effort acid dot doubt game broke tell guilt innocent') ),
-			( ['0000000000000000000000000000000000000000000000000000000000000001'],
-			('able able able able able able able able able able able able ' +
-			'able able able able able able able able able able able about') ),
-			( ['e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f','fmt=xmrseed'],
-			('viewpoint donuts ardent template unveil agile meant unafraid urgent athlete rustled mime azure ' +
-			'jaded hawk baby jagged haystack baby jagged haystack ramped oncoming point template') ),
-		] + [([a,'fmt=bip39'],b) for a,b in bip39.vectors],
-		'mn2hex': [
-			( ['table cast forgive master funny gaze sadness ripple million paint moral match','fmt=mmgen'],
-				'deadbeefdeadbeefdeadbeefdeadbeef' ),
-			( ['swirl maybe anymore mix scale stray fog use approach page crime rhyme ' +
-				'class former strange window snap soon'],
-				'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'),
-			( ['swell type milk figure cheese phone fill black test bloom heard comfort ' +
-				'image terrible radio lesson own reply battle goal goodbye need laugh stream'],
-				'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' ),
-			( ['yellow yeah show bowl season spider cling defeat poison law shelter reflect'],
-				'ffffffffffffffffffffffffffffffff' ),
-			( ['yeah youth quit fail perhaps drum out person young click skin ' +
-				'weird inside silently perfectly together anyone memory'],
-				'ffffffffffffffffffffffffffffffffffffffffffffffff' ) ,
-			( ['wrote affection object cell opinion here laughter stare honest north cost begin ' +
-				'murder something yourself effort acid dot doubt game broke tell guilt innocent'],
-				'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff'),
-			( ['able able able able able able able able able able able able ' +
-				'able able able able able able able able able able able about'],
-				'0000000000000000000000000000000000000000000000000000000000000001'),
-			( ['viewpoint donuts ardent template unveil agile meant unafraid urgent athlete ' +
-				'rustled mime azure jaded hawk baby jagged haystack baby jagged haystack ' +
-				'ramped oncoming point template','fmt=xmrseed'],
-				'e8164dda6d42bd1e261a3406b2038dcbddadbeefdeadbeefdeadbeefdeadbe0f'),
-		] + [([b,'fmt=bip39'],a) for a,b in bip39.vectors],
+		'hex2mn': (
+			[([a[0]],b) for a,b in ut_baseconv.vectors['mmgen']] +
+			[([a,'fmt=bip39'],b) for a,b in ut_bip39.vectors] +
+			[([a,'fmt=xmrseed'],b) for a,b in ut_xmrseed.vectors]
+		),
+		'mn2hex': (
+			[([b,'fmt=mmgen'],a[0]) for a,b in ut_baseconv.vectors['mmgen']] +
+			[([b,'fmt=bip39'],a) for a,b in ut_bip39.vectors] +
+			[([b,'fmt=xmrseed'],a) for a,b in ut_xmrseed.vectors]
+		),
 		'mn_rand128': [
 			( [], is_mmgen_mnemonic, ['-r0']),
 			( ['fmt=mmgen'], is_mmgen_mnemonic, ['-r0']),

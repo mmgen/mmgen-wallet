@@ -127,6 +127,30 @@ class unit_test(object):
 			(('00'*24,'seed'),'1'*75),
 			(('00'*32,'seed'),'1'*100),
 		),
+		'mmgen': (
+			(('deadbeefdeadbeefdeadbeefdeadbeef','seed'),
+			'table cast forgive master funny gaze sadness ripple million paint moral match' ),
+			(('deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef','seed'),
+			'swirl maybe anymore mix scale stray fog use approach page crime rhyme ' +
+			'class former strange window snap soon'),
+			(('deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef','seed'),
+			'swell type milk figure cheese phone fill black test bloom heard comfort ' +
+			'image terrible radio lesson own reply battle goal goodbye need laugh stream'),
+			(('ffffffffffffffffffffffffffffffff','seed'),
+			'yellow yeah show bowl season spider cling defeat poison law shelter reflect'),
+			(('ffffffffffffffffffffffffffffffffffffffffffffffff','seed'),
+			'yeah youth quit fail perhaps drum out person young click skin ' +
+			'weird inside silently perfectly together anyone memory'),
+			(('ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff','seed'),
+			'wrote affection object cell opinion here laughter stare honest north cost begin ' +
+			'murder something yourself effort acid dot doubt game broke tell guilt innocent'),
+			(('00000000000000000000000000000001','seed'),
+			'able ' * 11 + 'about'),
+			(('000000000000000000000000000000000000000000000001','seed'),
+			'able ' * 17 + 'about'),
+			(('0000000000000000000000000000000000000000000000000000000000000001','seed'),
+			'able ' * 23 + 'about'),
+		),
 	}
 
 	def run_test(self,name,ut):
@@ -163,7 +187,7 @@ class unit_test(object):
 			for (hexstr,pad),ret_chk in data:
 				if type(pad) == int:
 					pad = len(hexstr)
-				ret = baseconv(base).tohex( ret_chk, pad=pad )
+				ret = baseconv(base).tohex( ret_chk.split() if base == 'mmgen' else ret_chk, pad=pad )
 				if pad == None:
 					assert int(ret,16) == int(hexstr,16), rerr.format(int(ret,16),int(hexstr,16))
 				else:
