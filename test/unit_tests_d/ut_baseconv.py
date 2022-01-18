@@ -198,7 +198,7 @@ class unit_test(object):
 		qmsg_r('\nChecking wordlist checksums:')
 		vmsg('')
 
-		for wl_id in baseconv.wl_chksums:
+		for wl_id in baseconv.constants['wl_chksum']:
 			vmsg_r(f'  {wl_id+":":9}')
 			baseconv(wl_id).check_wordlist()
 

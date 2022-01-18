@@ -160,9 +160,9 @@ class PasswordList(AddrList):
 			good_pw_len = bip39.seedlen2nwords(seed.byte_len,in_bytes=True)
 		elif pf == 'xmrseed':
 			from .xmrseed import xmrseed
-			pw_bytes = xmrseed.seedlen_map_rev['xmrseed'][self.pw_len]
+			pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
 			try:
-				good_pw_len = xmrseed.seedlen_map['xmrseed'][seed.byte_len]
+				good_pw_len = xmrseed().seedlen_map[seed.byte_len]
 			except:
 				die(1,f'{seed.byte_len*8}: unsupported seed length for Monero new-style mnemonic')
 		elif pf in ('b32','b58'):
@@ -199,7 +199,7 @@ class PasswordList(AddrList):
 			return ' '.join( bip39().fromhex(secbytes[:pw_len_bytes].hex()) )
 		elif self.pw_fmt == 'xmrseed':
 			from .xmrseed import xmrseed
-			pw_len_bytes = xmrseed.seedlen_map_rev['xmrseed'][self.pw_len]
+			pw_len_bytes = xmrseed().seedlen_map_rev[self.pw_len]
 			from .protocol import init_proto
 			bytes_preproc = init_proto('xmr').preprocess_key(
 				secbytes[:pw_len_bytes], # take most significant part

@@ -402,7 +402,7 @@ class Mnemonic(WalletUnenc):
 
 	@property
 	def mn_lens(self):
-		return sorted(self.conv_cls.seedlen_map_rev[self.wl_id])
+		return sorted(self.conv_cls(self.wl_id).seedlen_map_rev)
 
 	def _get_data_from_user(self,desc):
 
@@ -439,7 +439,7 @@ class Mnemonic(WalletUnenc):
 			return False
 
 		for n,w in enumerate(mn,1):
-			if w not in bc.digits[self.wl_id]:
+			if w not in bc.digits:
 				msg(f'Invalid mnemonic: word #{n} is not in the {self.wl_id.upper()} wordlist')
 				return False
 
@@ -555,8 +555,9 @@ class DieRollSeedFile(WalletUnenc):
 	def _deformat(self):
 
 		d = remove_whitespace(self.fmt_data)
+		bc = baseconv('b6d')
+		rmap = bc.seedlen_map_rev
 
-		rmap = self.conv_cls.seedlen_map_rev['b6d']
 		if not len(d) in rmap:
 			raise SeedLengthError('{!r}: invalid length for {} (must be one of {})'.format(
 				len(d),
@@ -565,7 +566,7 @@ class DieRollSeedFile(WalletUnenc):
 
 		# truncate seed to correct length, discarding high bits
 		seed_len = rmap[len(d)]
-		seed_bytes = baseconv('b6d').tobytes(d,pad='seed')[-seed_len:]
+		seed_bytes = bc.tobytes( d, pad='seed' )[-seed_len:]
 
 		if self.interactive_input and opt.usr_randchars:
 			if keypress_confirm(self.user_entropy_prompt):
@@ -585,9 +586,11 @@ class DieRollSeedFile(WalletUnenc):
 		if not g.stdin_tty:
 			return get_data_from_user(desc)
 
-		seed_bitlens = [n*8 for n in sorted(self.conv_cls.seedlen_map['b6d'])]
-		seed_bitlen = self._choose_seedlen(self.wclass,seed_bitlens,self.mn_type)
-		nDierolls = self.conv_cls.seedlen_map['b6d'][seed_bitlen // 8]
+		bc = baseconv('b6d')
+
+		seed_bitlens = [ n*8 for n in sorted(bc.seedlen_map) ]
+		seed_bitlen = self._choose_seedlen( self.wclass, seed_bitlens, self.mn_type )
+		nDierolls = bc.seedlen_map[seed_bitlen // 8]
 
 		m = """
 			For a {sb}-bit seed you must roll the die {nd} times.  After each die roll,
@@ -595,8 +598,6 @@ class DieRollSeedFile(WalletUnenc):
 			you'll be prompted to re-enter it.
 		"""
 		msg('\n'+fmt(m.strip()).format(sb=seed_bitlen,nd=nDierolls)+'\n')
-
-		b6d_digits = self.conv_cls.digits['b6d']
 
 		cr = '\n' if g.test_suite else '\r'
 		prompt_fs = f'\b\b\b   {cr}Enter die roll #{{}}: {CUR_SHOW}'
@@ -609,7 +610,7 @@ class DieRollSeedFile(WalletUnenc):
 			sleep = g.short_disp_timeout
 			while True:
 				ch = get_char(p.format(n),num_chars=1,sleep=sleep)
-				if ch in b6d_digits:
+				if ch in bc.digits:
 					msg_r(CUR_HIDE + ' OK')
 					return ch
 				else:
@@ -826,7 +827,7 @@ class MMGenWallet(WalletEnc):
 			msg(f'Hash parameters {" ".join(hash_params)!r} don’t match hash preset {d.hash_preset!r}')
 			return False
 
-		lmin,foo,lmax = sorted(baseconv.seedlen_map_rev['b58']) # 22,33,44
+		lmin,foo,lmax = sorted(baseconv('b58').seedlen_map_rev) # 22,33,44
 		for i,key in (4,'salt'),(5,'enc_seed'):
 			l = lines[i].split(' ')
 			chk = l.pop(0)

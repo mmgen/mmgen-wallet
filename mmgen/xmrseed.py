@@ -30,15 +30,15 @@ def is_xmrseed(s):
 # implements a subset of the baseconv API
 class xmrseed(baseconv):
 
-	desc            = { 'xmrseed': ('Monero mnemonic', 'Monero new-style mnemonic seed phrase') }
-	wl_chksums      = { 'xmrseed': '3c381ebb' }
-	seedlen_map     = { 'xmrseed': { 32:25 } }
-	seedlen_map_rev = { 'xmrseed': { 25:32 } }
+	desc            = baseconv.dt('Monero mnemonic', 'Monero new-style mnemonic seed phrase')
+	wl_chksum       = '3c381ebb'
+	seedlen_map     = { 32:25 }
+	seedlen_map_rev = { 25:32 }
 
 	def __init__(self,wl_id='xmrseed'):
 		assert wl_id == 'xmrseed', "initialize with 'xmrseed' for compatibility with baseconv API"
 		from .mn_monero import words
-		self.digits = { 'xmrseed': words }
+		self.digits = words
 		self.wl_id = 'xmrseed'
 
 	@staticmethod
@@ -51,14 +51,14 @@ class xmrseed(baseconv):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
 		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
-		desc = self.desc[self.wl_id][0]
-		wl = self.digits[self.wl_id]
+		desc = self.desc.short
+		wl = self.digits
 		base = len(wl)
 
 		if not set(words) <= set(wl):
 			raise MnemonicError( f'{words!r}: not in {desc} format' )
 
-		if len(words) not in self.seedlen_map_rev['xmrseed']:
+		if len(words) not in self.seedlen_map_rev:
 			raise MnemonicError( f'{len(words)}: invalid seed phrase length for {desc}' )
 
 		z = self.monero_mn_checksum(words[:-1])
@@ -77,11 +77,11 @@ class xmrseed(baseconv):
 	def frombytes(self,bytestr,pad=None,tostr=False):
 		assert pad == None, f"{pad}: invalid 'pad' argument (must be None)"
 
-		desc = self.desc[self.wl_id][0]
-		wl = self.digits[self.wl_id]
+		desc = self.desc.short
+		wl = self.digits
 		base = len(wl)
 
-		if len(bytestr) not in self.seedlen_map['xmrseed']:
+		if len(bytestr) not in self.seedlen_map:
 			raise SeedLengthError(f'{len(bytestr)}: invalid seed byte length for {desc}')
 
 		def num2base_monero(num):

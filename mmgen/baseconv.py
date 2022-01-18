@@ -23,82 +23,84 @@ baseconv.py:  base conversion class for the MMGen suite
 from hashlib import sha256
 from .exception import *
 from .util import die
+from collections import namedtuple
 
 def is_b58_str(s):
-	return set(list(s)) <= set(baseconv.digits['b58'])
+	return set(list(s)) <= set(baseconv('b58').digits)
 
 def is_b32_str(s):
-	return set(list(s)) <= set(baseconv.digits['b32'])
+	return set(list(s)) <= set(baseconv('b32').digits)
 
 class baseconv(object):
-
-	desc = {
-		'b58':   ('base58',            'base58-encoded data'),
-		'b32':   ('MMGen base32',      'MMGen base32-encoded data created using simple base conversion'),
-		'b16':   ('hexadecimal string','base16 (hexadecimal) string data'),
-		'b10':   ('base10 string',     'base10 (decimal) string data'),
-		'b8':    ('base8 string',      'base8 (octal) string data'),
-		'b6d':   ('base6d (die roll)', 'base6 data using the digits from one to six'),
+	mn_base = 1626
+	dt = namedtuple('desc_tuple',['short','long'])
+	constants = {
+	'desc': {
+		'b58':   dt('base58',            'base58-encoded data'),
+		'b32':   dt('MMGen base32',      'MMGen base32-encoded data created using simple base conversion'),
+		'b16':   dt('hexadecimal string','base16 (hexadecimal) string data'),
+		'b10':   dt('base10 string',     'base10 (decimal) string data'),
+		'b8':    dt('base8 string',      'base8 (octal) string data'),
+		'b6d':   dt('base6d (die roll)', 'base6 data using the digits from one to six'),
 #		'tirosh':('Tirosh mnemonic',   'base1626 mnemonic using truncated Tirosh wordlist'), # not used by wallet
-		'mmgen': ('MMGen native mnemonic',
+		'mmgen': dt('MMGen native mnemonic',
 		'MMGen native mnemonic seed phrase created using old Electrum wordlist and simple base conversion'),
-	}
+	},
 	# https://en.wikipedia.org/wiki/Base32#RFC_4648_Base32_alphabet
 	# https://tools.ietf.org/html/rfc4648
-	digits = {
+	'digits': {
 		'b58': tuple('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'),
 		'b32': tuple('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'), # RFC 4648 alphabet
 		'b16': tuple('0123456789abcdef'),
 		'b10': tuple('0123456789'),
 		'b8':  tuple('01234567'),
 		'b6d': tuple('123456'),
-	}
-	mn_base = 1626
-	wl_chksums = {
+	},
+	'wl_chksum': {
 		'mmgen':  '5ca31424',
 #		'tirosh': '48f05e1f', # tirosh truncated to mn_base
 #		'tirosh1633': '1a5faeff' # tirosh list is 1633 words long!
-	}
-	seedlen_map = {
+	},
+	'seedlen_map': {
 		'b58': { 16:22, 24:33, 32:44 },
 		'b6d': { 16:50, 24:75, 32:100 },
 		'mmgen': { 16:12, 24:18, 32:24 },
-	}
-	seedlen_map_rev = {
+	},
+	'seedlen_map_rev': {
 		'b58': { 22:16, 33:24, 44:32 },
 		'b6d': { 50:16, 75:24, 100:32 },
 		'mmgen': { 12:16, 18:24, 24:32 },
+	}
 	}
 
 	def __init__(self,wl_id):
 
 		if wl_id == 'mmgen':
 			from .mn_electrum import words
-			self.digits[wl_id] = words
-		elif wl_id not in self.digits:
+			self.constants['digits'][wl_id] = words
+		elif wl_id not in self.constants['digits']:
 			raise ValueError(f'{wl_id}: unrecognized mnemonic ID')
+
+		for k,v in self.constants.items():
+			if wl_id in v:
+				setattr(self,k,v[wl_id])
 
 		self.wl_id = wl_id
 
 	def get_wordlist(self):
-		return self.digits[self.wl_id]
+		return self.digits
 
 	def get_wordlist_chksum(self):
-		return sha256(' '.join(self.digits[self.wl_id]).encode()).hexdigest()[:8]
+		return sha256( ' '.join(self.digits).encode() ).hexdigest()[:8]
 
 	def check_wordlist(self):
 
-		wl = self.digits[self.wl_id]
+		wl = self.digits
 		from .util import qmsg,compare_chksums
 		ret = f'Wordlist: {self.wl_id}\nLength: {len(wl)} words'
 		new_chksum = self.get_wordlist_chksum()
 
-		compare_chksums(
-			new_chksum,
-			'generated',
-			self.wl_chksums[self.wl_id],
-			'saved',
-			die_on_fail = True )
+		compare_chksums( new_chksum, 'generated', self.wl_chksum, 'saved', die_on_fail=True )
 
 		if tuple(sorted(wl)) == wl:
 			return ret + '\nList is sorted'
@@ -130,21 +132,21 @@ class baseconv(object):
 		"convert string or list data of instance base to byte string"
 
 		words = words_arg if isinstance(words_arg,(list,tuple)) else tuple(words_arg.strip())
-		desc = self.desc[self.wl_id][0]
+		desc = self.desc.short
 
 		if len(words) == 0:
 			raise BaseConversionError(f'empty {desc} data')
 
 		def get_seed_pad():
-			assert self.wl_id in self.seedlen_map_rev, f'seed padding not supported for base {self.wl_id!r}'
-			d = self.seedlen_map_rev[self.wl_id]
+			assert hasattr(self,'seedlen_map_rev'), f'seed padding not supported for base {self.wl_id!r}'
+			d = self.seedlen_map_rev
 			if not len(words) in d:
 				raise BaseConversionError(
 					f'{len(words)}: invalid length for seed-padded {desc} data in base conversion' )
 			return d[len(words)]
 
 		pad_val = max(self.get_pad(pad,get_seed_pad),1)
-		wl = self.digits[self.wl_id]
+		wl = self.digits
 		base = len(wl)
 
 		if not set(words) <= set(wl):
@@ -174,15 +176,15 @@ class baseconv(object):
 			raise BaseConversionError('empty data not allowed in base conversion')
 
 		def get_seed_pad():
-			assert self.wl_id in self.seedlen_map, f'seed padding not supported for base {self.wl_id!r}'
-			d = self.seedlen_map[self.wl_id]
+			assert hasattr(self,'seedlen_map'), f'seed padding not supported for base {self.wl_id!r}'
+			d = self.seedlen_map
 			if not len(bytestr) in d:
 				raise SeedLengthError(
 					f'{len(bytestr)}: invalid byte length for seed data in seed-padded base conversion' )
 			return d[len(bytestr)]
 
 		pad = max(self.get_pad(pad,get_seed_pad),1)
-		wl = self.digits[self.wl_id]
+		wl = self.digits
 
 		def gen():
 			num = int.from_bytes(bytestr,'big')

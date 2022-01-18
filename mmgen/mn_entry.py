@@ -220,7 +220,7 @@ def mn_entry(wl_id,entry_mode=None):
 	me = MnemonicEntry.get_cls_by_wordlist(wl_id)
 	import importlib
 	me.bconv = getattr(importlib.import_module(f'mmgen.{me.modname}'),me.modname)(wl_id)
-	me.wl = me.bconv.digits[wl_id]
+	me.wl = me.bconv.digits
 	obj = me()
 	if entry_mode:
 		obj.em = globals()['MnEntryMode'+capfirst(entry_mode)](obj)
@@ -334,7 +334,7 @@ class MnemonicEntry(object):
 				msg_r(erase)
 
 	def get_mnemonic_from_user(self,mn_len,validate=True):
-		mll = list(self.bconv.seedlen_map_rev[self.wl_id])
+		mll = list(self.bconv.seedlen_map_rev)
 		assert mn_len in mll, f'{mn_len}: invalid mnemonic length (must be one of {mll})'
 
 		if self.usr_dfl_entry_mode:

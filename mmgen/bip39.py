@@ -32,10 +32,10 @@ def is_bip39_str(s):
 # implements a subset of the baseconv API
 class bip39(baseconv):
 
-	desc            = { 'bip39': ('BIP39 mnemonic', 'BIP39 mnemonic seed phrase') }
-	wl_chksums      = { 'bip39': 'f18b9a84' }
-	seedlen_map     = { 'bip39': { 16:12, 24:18, 32:24 } }
-	seedlen_map_rev = { 'bip39': { 12:16, 18:24, 24:32 } }
+	desc            = baseconv.dt('BIP39 mnemonic', 'BIP39 mnemonic seed phrase')
+	wl_chksum       = 'f18b9a84'
+	seedlen_map     = { 16:12, 24:18, 32:24 }
+	seedlen_map_rev = { 12:16, 18:24, 24:32 }
 
 	from collections import namedtuple
 	bc = namedtuple('bip39_constants',['chk_len','mn_len'])
@@ -51,7 +51,7 @@ class bip39(baseconv):
 	def __init__(self,wl_id='bip39'):
 		assert wl_id == 'bip39', "initialize with 'bip39' for compatibility with baseconv API"
 		from .mn_bip39 import words
-		self.digits = { 'bip39': words }
+		self.digits = words
 		self.wl_id = 'bip39'
 
 	@classmethod
@@ -79,7 +79,7 @@ class bip39(baseconv):
 		assert isinstance(words,(list,tuple)),'words must be list or tuple'
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
-		wl = self.digits['bip39']
+		wl = self.digits
 
 		for n,w in enumerate(words):
 			if w not in wl:
@@ -114,7 +114,7 @@ class bip39(baseconv):
 		assert tostr == False,"'tostr' must be False for 'bip39'"
 		assert pad in (None,'seed'), f"{pad}: invalid 'pad' argument (must be None or 'seed')"
 
-		wl = self.digits['bip39']
+		wl = self.digits
 		seed_bytes = bytes.fromhex(seed_hex)
 		bitlen = len(seed_bytes) * 8
 
