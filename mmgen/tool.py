@@ -247,7 +247,7 @@ class MMGenToolCmdMeta(type):
 	classes = {}
 	methods = {}
 	def __new__(mcls,name,bases,namespace):
-		methods = {k:v for k,v in namespace.items() if k[0] != '_' and callable(v) and v.__doc__}
+		methods = { k:v for k,v in namespace.items() if k[0] != '_' and callable(v) }
 		cls = super().__new__(mcls,name,bases,namespace)
 		if bases and name != 'tool_api':
 			mcls.classes[name] = cls
@@ -273,6 +273,7 @@ class MMGenToolCmdMeta(type):
 	def user_commands(cls):
 		return {k:v for k,v in cls.__dict__.items() if k in cls.methods}
 
+# all non-user-visible methods must begin with an underscore!
 class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 
 	def __init__(self,proto=None,mmtype=None):
@@ -282,7 +283,7 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 		if g.token:
 			self.proto.tokensym = g.token.upper()
 
-	def init_generators(self,arg=None):
+	def _init_generators(self,arg=None):
 		gd = namedtuple('generator_data',['at','kg','ag'])
 
 		at = MMGenAddrType(
@@ -439,7 +440,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	"""
 	def randwif(self):
 		"generate a random private key in WIF format"
-		gd = self.init_generators('addrtype_only')
+		gd = self._init_generators('addrtype_only')
 		return PrivKey(
 			self.proto,
 			get_random(32),
@@ -448,7 +449,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def randpair(self):
 		"generate a random private key/address pair"
-		gd = self.init_generators()
+		gd = self._init_generators()
 		privkey = PrivKey(
 			self.proto,
 			get_random(32),
@@ -465,7 +466,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def hex2wif(self,privhex:'sstr'):
 		"convert a private key from hex to WIF format"
-		gd = self.init_generators('addrtype_only')
+		gd = self._init_generators('addrtype_only')
 		return PrivKey(
 			self.proto,
 			bytes.fromhex(privhex),
@@ -474,7 +475,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def wif2addr(self,wifkey:'sstr'):
 		"generate a coin address from a key in WIF format"
-		gd = self.init_generators()
+		gd = self._init_generators()
 		privkey = PrivKey(
 			self.proto,
 			wif = wifkey )
@@ -484,7 +485,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def wif2redeem_script(self,wifkey:'sstr'): # new
 		"convert a WIF private key to a Segwit P2SH-P2WPKH redeem script"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
-		gd = self.init_generators()
+		gd = self._init_generators()
 		privkey = PrivKey(
 			self.proto,
 			wif = wifkey )
@@ -493,7 +494,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 	def wif2segwit_pair(self,wifkey:'sstr'):
 		"generate both a Segwit P2SH-P2WPKH redeem script and address from WIF"
 		assert self.mmtype.name == 'segwit','This command is meaningful only for --type=segwit'
-		gd = self.init_generators()
+		gd = self._init_generators()
 		data = gd.kg.gen_data(PrivKey(
 			self.proto,
 			wif = wifkey ))
@@ -503,7 +504,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 
 	def privhex2addr(self,privhex:'sstr',output_pubhex=False):
 		"generate coin address from raw private key data in hexadecimal format"
-		gd = self.init_generators()
+		gd = self._init_generators()
 		pk = PrivKey(
 			self.proto,
 			bytes.fromhex(privhex),
@@ -542,7 +543,7 @@ class MMGenToolCmdCoin(MMGenToolCmds):
 		if self.mmtype.name == 'bech32':
 			return self.proto.pubhash2bech32addr( pubhash )
 		else:
-			gd = self.init_generators('addrtype_only')
+			gd = self._init_generators('addrtype_only')
 			return self.proto.pubhash2addr( pubhash, gd.at.addr_fmt=='p2sh' )
 
 	def addr2pubhash(self,addr:'sstr'):

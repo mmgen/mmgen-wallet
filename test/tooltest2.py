@@ -922,12 +922,14 @@ async def run_test(gid,cmd_name):
 		msg('OK')
 
 def docstring_head(obj):
-	return obj.__doc__.strip().split('\n')[0]
+	return obj.__doc__.strip().split('\n')[0] if obj.__doc__ else None
 
 async def do_group(gid):
+	desc = f'command group {gid!r}'
 	qmsg(blue('Testing ' +
-		f'command group {gid!r}' if opt.names else
-		docstring_head(tc.classes['MMGenToolCmd'+gid]) ))
+		desc if opt.names else
+		( docstring_head(tc.classes['MMGenToolCmd'+gid]) or desc )
+	))
 
 	for cname in tc.classes['MMGenToolCmd'+gid].user_commands:
 		if cname in skipped_tests:

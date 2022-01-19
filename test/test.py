@@ -385,7 +385,8 @@ def list_cmds():
 	Msg(green('AVAILABLE COMMANDS:'))
 	for gname in gm.cmd_groups:
 		ts = gm.gm_init_group(None,gname,None)
-		d.append((gname,ts.__doc__.strip(),gm.cmd_list,gm.dpy_data))
+		desc = ts.__doc__.strip() if ts.__doc__ else type(ts).__name__
+		d.append( (gname,desc,gm.cmd_list,gm.dpy_data) )
 		cw = max(max(len(k) for k in gm.dpy_data),cw)
 
 	for gname,gdesc,clist,dpdata in d:
@@ -590,7 +591,10 @@ class CmdGroupMgr(object):
 							and g[0] in tuple(self.cmd_groups_dfl) + tuple(usr_args) ]
 
 		for name,cls in ginfo:
-			msg(f'{name:17} - {cls.__doc__.strip()}')
+			msg('{:17} - {}'.format(
+				name,
+				cls.__doc__.strip() if cls.__doc__ else cls.__name__
+			))
 
 		Die(0,'\n'+' '.join(e[0] for e in ginfo))
 
