@@ -73,7 +73,8 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		passchg       = False,
 		in_data       = None,
 		ignore_in_fmt = False,
-		in_fmt        = None ):
+		in_fmt        = None,
+		passwd_file   = None ):
 
 		in_fmt = in_fmt or opt.in_fmt
 
@@ -129,9 +130,10 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		passchg       = False,
 		in_data       = None,
 		ignore_in_fmt = False,
-		in_fmt        = None ):
+		in_fmt        = None,
+		passwd_file   = None ):
 
-		self.passwd_file = opt.passwd_file
+		self.passwd_file = passwd_file or opt.passwd_file
 		self.ssdata = self.WalletData()
 		self.msg = {}
 		self.in_data = in_data

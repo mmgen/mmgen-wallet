@@ -64,9 +64,9 @@ class TestSuiteOpts(TestSuiteBase):
 					('opt.fee_estimate_mode', 'conservative'), # autoset_opts
 					('opt.passwd_file',       'None'),         # infile_opts - check_infile()
 					('opt.outdir',            'None'),         # check_outdir()
-					('opt.subseeds',          'None'),         # opt_sets_global
+					('opt.cached_balances',   'None'),         # opt_sets_global
 					('opt.minconf',           '1'),            # global_sets_opt
-					('g.subseeds',            'None'),
+					('g.cached_balances',     'None'),
 					('g.minconf',             '1'),
 				)
 			)
@@ -81,7 +81,7 @@ class TestSuiteOpts(TestSuiteBase):
 					'--fee-estimate-mode=E',
 					'--passwd-file='+pf,
 					'--outdir='+self.tmpdir,
-					'--subseeds=200',
+					'--cached-balances',
 					f'--hidden-incog-input-params={pf},123',
 				],
 				(
@@ -90,9 +90,9 @@ class TestSuiteOpts(TestSuiteBase):
 					('opt.fee_estimate_mode', 'economical'),
 					('opt.passwd_file',       pf),
 					('opt.outdir',            self.tmpdir),
-					('opt.subseeds',          '200'),
+					('opt.cached_balances',   'True'),
 					('opt.hidden_incog_input_params', pf+',123'),
-					('g.subseeds',            '200'),
+					('g.cached_balances',     'True'),
 				)
 			)
 

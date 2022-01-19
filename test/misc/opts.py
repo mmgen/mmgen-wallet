@@ -23,8 +23,8 @@ opts_data = {
                       outputs (default: 1)
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
 -P, --passwd-file= f  Get wallet passphrase from file 'f'
--u, --subseeds=    n  The number of subseed pairs to scan for
 -q, --quiet           Be quieter
+-X, --cached-balances Use cached balances (Ethereum only)
 -v, --verbose         Be more verbose
 """,
 	'notes': """
@@ -57,7 +57,7 @@ for k in (
 	'fee_estimate_mode', # autoset_opts
 	'passwd_file',       # infile_opts - check_infile()
 	'outdir',            # check_outdir()
-	'subseeds',          # opt_sets_global
+	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
 	'hidden_incog_input_params',
 	):
@@ -65,7 +65,7 @@ for k in (
 
 msg('')
 for k in (
-	'subseeds',          # opt_sets_global
+	'cached_balances',   # opt_sets_global
 	'minconf',           # global_sets_opt
 	):
 	msg('{:30} {}'.format( f'g.{k}:', getattr(opt,k) ))

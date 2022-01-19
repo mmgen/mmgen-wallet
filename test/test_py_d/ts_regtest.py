@@ -258,7 +258,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 		('stop',                     'stopping regtest daemon'),
 	)
-	usr_subsids = { 'bob': {}, 'alice': {} }
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
@@ -278,6 +277,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				self.miner_wif = 'cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn'
 
 		os.environ['MMGEN_BOGUS_SEND'] = ''
+		self.write_to_tmpfile('wallet_password',rt_pw)
 
 	def __del__(self):
 		os.environ['MMGEN_BOGUS_SEND'] = '1'
@@ -334,17 +334,11 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
 
 	def _get_user_subsid(self,user,subseed_idx):
-
-		if subseed_idx in self.usr_subsids[user]:
-			return self.usr_subsids[user][subseed_idx]
-
-		wcls = MMGenWallet
-		fn = get_file_with_ext(self._user_dir(user),wcls.ext)
-		t = self.spawn('mmgen-tool',['get_subseed',subseed_idx,'wallet='+fn],no_msg=True,no_exec_wrapper=True)
-		t.passphrase(wcls.desc,rt_pw)
-		sid = t.read().strip()[:8]
-		self.usr_subsids[user][subseed_idx] = sid
-		return sid
+		fn = get_file_with_ext(self._user_dir(user),MMGenWallet.ext)
+		silence()
+		w = Wallet( fn=fn, passwd_file=os.path.join(self.tmpdir,'wallet_password') )
+		end_silence()
+		return w.seed.subseed(subseed_idx).sid
 
 	def addrgen(self,user,wf=None,addr_range='1-5',subseed_idx=None,mmtypes=[]):
 		from mmgen.addr import MMGenAddrType
