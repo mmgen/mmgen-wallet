@@ -32,7 +32,8 @@ for i in (1,2,3):
 
 	msg('\npw')
 	for k in ('A','B'):
-		assert pwfile_reuse_warning(k).warning_shown == (i != 1), 'warning_shown incorrect'
+		ret = pwfile_reuse_warning(k).warning_shown
+		assert ret == (i != 1), 'warning_shown incorrect'
 
 	msg('wg1')
 	wg('foo')

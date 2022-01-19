@@ -230,7 +230,8 @@ class AddrFile(MMGenObject):
 			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
 			ls = lines[0].split()
 			assert 1 < len(ls) < 5, f'Invalid first line for {p.gen_desc} file: {lines[0]!r}'
-			assert ls.pop() == '{', f'{ls!r}: invalid first line'
+			assert ls[-1] == '{', f'{ls!r}: invalid first line'
+			ls.pop()
 			assert lines[-1] == '}', f'{lines[-1]!r}: invalid last line'
 			sid = ls.pop(0)
 			assert is_seed_id(sid), f'{sid!r}: invalid Seed ID'
