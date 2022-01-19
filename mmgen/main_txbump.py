@@ -49,7 +49,7 @@ opts_data = {
 -i, --in-fmt=        f Input is from wallet format 'f' (see FMT CODES below)
 -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
                        is required only for brainwallet and incognito inputs
-                       with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
+                       with non-standard (< {dsl}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
@@ -90,6 +90,7 @@ FMT CODES:
 			fl=help_notes('fee_spec_letters'),
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
+			dsl=help_notes('dfl_seed_len'),
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
 			help_notes('fee'),

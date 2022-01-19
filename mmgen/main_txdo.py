@@ -56,7 +56,7 @@ opts_data = {
                        outputs associated with each address will be included.
 -l, --seed-len=      l Specify wallet seed length of 'l' bits. This option
                        is required only for brainwallet and incognito inputs
-                       with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
+                       with non-standard (< {dsl}-bit) seed lengths.
 -k, --keys-from-file=f Provide additional keys for non-{pnm} addresses
 -K, --keygen-backend=n Use backend 'n' for public key generation.  Options
                        for {coin_id}: {kgs}
@@ -104,6 +104,7 @@ FMT CODES:
 			ss_max=SubSeedIdxRange.max_idx,
 			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
 			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],
+			dsl=help_notes('dfl_seed_len'),
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
 			help_notes('txcreate'),

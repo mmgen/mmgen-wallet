@@ -39,6 +39,10 @@ def help_notes_func(proto,po,k):
 
 	class help_notes:
 
+		def dfl_seed_len():
+			from .seed import Seed
+			return str(Seed.dfl_len)
+
 		def password_formats():
 			from .passwdlist import PasswordList
 			pwi_fs = '{:8} {:1} {:26} {:<7}  {:<7}  {}'

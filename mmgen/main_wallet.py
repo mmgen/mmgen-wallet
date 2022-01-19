@@ -102,7 +102,7 @@ opts_data = {
 -K, --keep-hash-preset Reuse hash preset of input wallet for output wallet
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
-                      with non-standard (< {g.dfl_seed_len}-bit) seed lengths.
+                      with non-standard (< {dsl}-bit) seed lengths.
 -L, --label=       l  Specify a label 'l' for output wallet
 -m, --keep-label      Reuse label of input wallet for output wallet
 -M, --master-share=i  Use a master share with index 'i' (min:{ms_min}, max:{ms_max})
@@ -126,11 +126,12 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
+		'options': lambda help_notes,s: s.format(
 			iaction=capfirst(iaction),
 			oaction=capfirst(oaction),
 			ms_min=MasterShareIdx.min_val,
 			ms_max=MasterShareIdx.max_val,
+			dsl=help_notes('dfl_seed_len'),
 			g=g,
 		),
 		'notes': lambda help_notes,s: s.format(

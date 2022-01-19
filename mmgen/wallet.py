@@ -446,7 +446,7 @@ class Mnemonic(WalletUnenc):
 		hexseed = bc.tohex( mn, 'seed' )
 		rev     = bc.fromhex( hexseed, 'seed' )
 
-		if len(hexseed) * 4 not in g.seed_lens:
+		if len(hexseed) * 4 not in Seed.lens:
 			msg('Invalid mnemonic (produces too large a number)')
 			return False
 
@@ -646,7 +646,7 @@ class PlainHexSeedFile(WalletUnenc):
 			msg(f'{d!r}: not a lowercase hexadecimal string, in {desc}')
 			return False
 
-		if not len(d)*4 in g.seed_lens:
+		if not len(d)*4 in Seed.lens:
 			msg(f'Invalid data length ({len(d)}) in {desc}')
 			return False
 
@@ -682,7 +682,7 @@ class MMGenHexSeedFile(WalletUnenc):
 			msg(f'{self.fmt_data.strip()!r}: invalid {desc}')
 			return False
 
-		if not len(hstr)*4 in g.seed_lens:
+		if not len(hstr)*4 in Seed.lens:
 			msg(f'Invalid data length ({len(hstr)}) in {desc}')
 			return False
 
@@ -900,10 +900,10 @@ class Brainwallet(WalletEnc):
 			bw_seed_len,d.hash_preset = self.get_bw_params()
 		else:
 			if not opt.seed_len:
-				qmsg(f'Using default seed length of {yellow(str(g.dfl_seed_len))} bits\n'
+				qmsg(f'Using default seed length of {yellow(str(Seed.dfl_len))} bits\n'
 					+ 'If this is not what you want, use the --seed-len option' )
 			self._get_hash_preset()
-			bw_seed_len = opt.seed_len or g.dfl_seed_len
+			bw_seed_len = opt.seed_len or Seed.dfl_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
 		seed = scrypt_hash_passphrase(
@@ -954,7 +954,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
 		dlen = len(self.fmt_data)
-		seed_len = opt.seed_len or g.dfl_seed_len
+		seed_len = opt.seed_len or Seed.dfl_len
 		valid_dlen = self._get_incog_data_len(seed_len)
 		if dlen == valid_dlen:
 			return True
@@ -963,7 +963,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 				msg('WARNING: old-style incognito format requested.  Are you sure this is correct?')
 			msg(f'Invalid incognito data size ({dlen} bytes) for this seed length ({seed_len} bits)')
 			msg(f'Valid data size for this seed length: {valid_dlen} bytes')
-			for sl in g.seed_lens:
+			for sl in Seed.lens:
 				if dlen == self._get_incog_data_len(sl):
 					die(1,f'Valid seed length for this data size: {sl} bits')
 			msg(f'This data size ({dlen} bytes) is invalid for all available seed lengths')
@@ -1144,7 +1144,7 @@ harder to find, you're advised to choose a much larger file size than this.
 		qmsg(f'Getting hidden incog data from file {self.infile.name!r}')
 
 		# Already sanity-checked:
-		d.target_data_len = self._get_incog_data_len(opt.seed_len or g.dfl_seed_len)
+		d.target_data_len = self._get_incog_data_len(opt.seed_len or Seed.dfl_len)
 		self._check_valid_offset(self.infile,'read')
 
 		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY

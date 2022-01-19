@@ -20,8 +20,10 @@
 seed.py:  Seed-related classes and methods for the MMGen suite
 """
 
-from .common import *
-from .objmethods import Hilite,InitErrors
+from string import hexdigits
+
+from .util import make_chksum_8
+from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 
 class SeedID(str,Hilite,InitErrors):
@@ -48,16 +50,21 @@ def is_seed_id(s):
 
 class SeedBase(MMGenObject):
 
+	lens = ( 128, 192, 256 )
+	dfl_len = 256
+
 	data = ImmutableAttr(bytes,typeconv=False)
 	sid  = ImmutableAttr(SeedID,typeconv=False)
 
 	def __init__(self,seed_bin=None):
 		if not seed_bin:
+			from .opts import opt
 			from .crypto import get_random
+			from hashlib import sha256
 			# Truncate random data for smaller seed lengths
-			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or g.dfl_seed_len)//8]
-		elif len(seed_bin)*8 not in g.seed_lens:
-			die(3,f'{len(seed_bin)}: invalid seed length')
+			seed_bin = sha256(get_random(1033)).digest()[:(opt.seed_len or self.dfl_len)//8]
+		elif len(seed_bin)*8 not in self.lens:
+			die(3,f'{len(seed_bin)*8}: invalid seed bit length')
 
 		self.data = seed_bin
 		self.sid  = SeedID(seed=self)

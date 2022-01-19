@@ -72,7 +72,6 @@ class GlobalContext(Lockable):
 	err_disp_timeout = 0.7
 	short_disp_timeout = 0.3
 	min_time_precision = 18
-	dfl_seed_len = 256
 
 	# Variables - these might be altered at runtime:
 
@@ -262,7 +261,6 @@ class GlobalContext(Lockable):
 	max_urandchars = 80
 	min_urandchars = 10
 
-	seed_lens = 128,192,256
 	scramble_hash_rounds = 10
 	subseeds = 100
 

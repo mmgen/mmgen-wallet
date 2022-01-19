@@ -54,7 +54,7 @@ opts_data = {
                       generate passwords of half the default length.
 -l, --seed-len=    l  Specify wallet seed length of 'l' bits.  This option
                       is required only for brainwallet and incognito inputs
-                      with non-standard (< {g.dfl_seed_len}-bit) seed lengths
+                      with non-standard (< {dsl}-bit) seed lengths.
 -p, --hash-preset= p  Use the scrypt hash parameters defined by preset 'p'
                       for password hashing (default: '{g.dfl_hash_preset}')
 -z, --show-hash-presets Show information on available hash presets
@@ -114,9 +114,9 @@ FMT CODES:
 """
 	},
 	'code': {
-		'options': lambda s: s.format(
-			seed_lens=', '.join(map(str,g.seed_lens)),
+		'options': lambda help_notes,s: s.format(
 			g=g,pnm=g.proj_name,
+			dsl=help_notes('dfl_seed_len'),
 			dpf=PasswordList.dfl_pw_fmt,
 		),
 		'notes': lambda help_notes,s: s.format(

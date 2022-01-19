@@ -510,19 +510,21 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 	chk_hidden_incog_output_params = chk_hidden_incog_input_params
 
 	def chk_seed_len(key,val,desc):
+		from .seed import Seed
 		opt_is_int(val,desc)
-		opt_is_in_list(int(val),g.seed_lens,desc)
+		opt_is_in_list(int(val),Seed.lens,desc)
 
 	def chk_hash_preset(key,val,desc):
 		opt_is_in_list(val,list(g.hash_presets.keys()),desc)
 
 	def chk_brain_params(key,val,desc):
+		from .seed import Seed
 		a = val.split(',')
 		if len(a) != 2:
 			opt_display(key,val)
 			raise UserOptError('Option requires two comma-separated arguments')
 		opt_is_int(a[0],'seed length '+desc)
-		opt_is_in_list(int(a[0]),g.seed_lens,'seed length '+desc)
+		opt_is_in_list(int(a[0]),Seed.lens,'seed length '+desc)
 		opt_is_in_list(a[1],list(g.hash_presets.keys()),'hash preset '+desc)
 
 	def chk_usr_randchars(key,val,desc):

@@ -20,6 +20,9 @@
 subseed.py:  Subseed classes and methods for the MMGen suite
 """
 
+from .common import *
+from .color import green
+from .util import msg_r,msg,qmsg
 from .exception import SubSeedNonceRangeExceeded
 from .obj import MMGenRange,IndexedDict
 from .seed import *
