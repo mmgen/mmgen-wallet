@@ -338,9 +338,10 @@ class MMGenLabel(str,Hilite,InitErrors):
 	def __new__(cls,s,msg=None):
 		if type(s) == cls:
 			return s
-		for k in cls.forbidden,cls.allowed:
+		for k in ( cls.forbidden, cls.allowed ):
 			assert type(k) == list
-			for ch in k: assert type(ch) == str and len(ch) == 1
+			for ch in k:
+				assert type(ch) == str and len(ch) == 1
 		try:
 			s = s.strip()
 			for ch in s:

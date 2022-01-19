@@ -100,7 +100,7 @@ class keygen_backend:
 					compressed = privkey.compressed )
 
 	class monero:
-		backends = ('nacl','ed25519ll_djbec','ed25519')
+		backends = ('nacl','ed25519ll-djbec','ed25519')
 
 		class base(keygen_base):
 

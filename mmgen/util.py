@@ -96,7 +96,7 @@ def ydie(ev=0,s=''): die(ev,yellow(s))
 
 def pp_fmt(d):
 	import pprint
-	return pprint.PrettyPrinter(indent=4,compact=True).pformat(d)
+	return pprint.PrettyPrinter(indent=4,compact=False).pformat(d)
 def pp_msg(d):
 	msg(pp_fmt(d))
 

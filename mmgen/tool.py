@@ -248,14 +248,6 @@ class MMGenToolCmdMeta(type):
 	methods = {}
 	def __new__(mcls,name,bases,namespace):
 		methods = {k:v for k,v in namespace.items() if k[0] != '_' and callable(v) and v.__doc__}
-		if g.test_suite:
-			if name in mcls.classes:
-				raise ValueError(f'Class {name!r} already defined!')
-			for m in methods:
-				if m in mcls.methods:
-					raise ValueError(f'Method {m!r} already defined!')
-				if not getattr(m,'__doc__',None):
-					raise ValueError(f'Method {m!r} has no doc string!')
 		cls = super().__new__(mcls,name,bases,namespace)
 		if bases and name != 'tool_api':
 			mcls.classes[name] = cls
