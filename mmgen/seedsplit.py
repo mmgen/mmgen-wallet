@@ -20,6 +20,8 @@
 seedsplit.py: Seed split classes and methods for the MMGen suite
 """
 
+from .globalvars import g
+from .color import yellow
 from .exception import RangeError
 from .obj import MMGenPWIDString,MMGenIdx
 from .subseed import *
@@ -69,6 +71,7 @@ class SeedShareList(SubSeedList):
 		self.parent_seed = parent_seed
 		self.id_str = id_str or 'default'
 		self.count = count
+		self.len = 2 # placeholder, always overridden
 
 		def make_master_share():
 			for nonce in range(SeedShare.max_nonce+1):

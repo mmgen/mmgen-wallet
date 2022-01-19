@@ -100,7 +100,7 @@ FMT CODES:
 			coin_id=help_notes('coin_id'),
 			fu=help_notes('rel_fee_desc'),
 			fl=help_notes('fee_spec_letters'),
-			ss=g.subseeds,
+			ss=help_notes('dfl_subseeds'),
 			ss_max=SubSeedIdxRange.max_idx,
 			fe_all=fmt_list(g.autoset_opts['fee_estimate_mode'].choices,fmt='no_spc'),
 			fe_dfl=g.autoset_opts['fee_estimate_mode'].choices[0],

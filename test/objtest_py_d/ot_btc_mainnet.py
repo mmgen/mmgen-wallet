@@ -67,7 +67,7 @@ tests = {
 			('3',(3,3)),
 			((3,5),(3,5)),
 			('1-2',(1,2)),
-			(str(g.subseeds),(g.subseeds,g.subseeds)),
+			(str(SubSeedList.dfl_len),(SubSeedList.dfl_len,SubSeedList.dfl_len)),
 			(str(SubSeedIdxRange.max_idx),(SubSeedIdxRange.max_idx,SubSeedIdxRange.max_idx)),
 		)
 	},

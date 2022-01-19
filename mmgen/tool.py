@@ -24,6 +24,7 @@ from .protocol import hash160
 from .common import *
 from .crypto import get_random
 from .key import PrivKey
+from .subseed import SubSeedList
 from .seedsplit import MasterShareIdx
 from .addr import *
 from .addrlist import AddrList,KeyAddrList
@@ -851,7 +852,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		from .wallet import Wallet
 		return Wallet(sf).seed.subseed(subseed_idx).sid
 
-	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=g.subseeds):
+	def get_subseed_by_seed_id(self,seed_id:str,wallet='',last_idx=SubSeedList.dfl_len):
 		"get the Subseed Index of a single subseed by Seed ID for default or specified wallet"
 		opt.quiet = True
 		sf = get_seed_file([wallet] if wallet else [],1)

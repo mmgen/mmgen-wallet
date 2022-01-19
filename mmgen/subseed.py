@@ -20,7 +20,6 @@
 subseed.py:  Subseed classes and methods for the MMGen suite
 """
 
-from .common import *
 from .color import green
 from .util import msg_r,msg,qmsg
 from .exception import SubSeedNonceRangeExceeded
@@ -81,11 +80,13 @@ class SubSeedList(MMGenObject):
 	have_short = True
 	nonce_start = 0
 	debug_last_share_sid_len = 3
+	dfl_len = 100
 
-	def __init__(self,parent_seed):
+	def __init__(self,parent_seed,length=None):
 		self.member_type = SubSeed
 		self.parent_seed = parent_seed
 		self.data = { 'long': IndexedDict(), 'short': IndexedDict() }
+		self.len = length or self.dfl_len
 
 	def __len__(self):
 		return len(self.data['long'])
@@ -135,7 +136,7 @@ class SubSeedList(MMGenObject):
 				))
 
 		if last_idx == None:
-			last_idx = g.subseeds
+			last_idx = self.len
 
 		subseed = get_existing_subseed_by_seed_id(sid)
 		if subseed:
@@ -170,7 +171,7 @@ class SubSeedList(MMGenObject):
 	def _generate(self,last_idx=None,last_sid=None):
 
 		if last_idx == None:
-			last_idx = g.subseeds
+			last_idx = self.len
 
 		first_idx = len(self) + 1
 
@@ -184,6 +185,7 @@ class SubSeedList(MMGenObject):
 			for nonce in range(self.nonce_start,self.member_type.max_nonce+1): # handle SeedID collisions
 				sid = make_chksum_8(self.member_type.make_subseed_bin(self,idx,nonce,length))
 				if sid in self.data['long'] or sid in self.data['short'] or sid == self.parent_seed.sid:
+					from .globalvars import g
 					if g.debug_subseed: # should get ≈450 collisions for first 1,000,000 subseeds
 						self._collision_debug_msg(sid,idx,nonce)
 				else:

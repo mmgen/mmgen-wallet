@@ -158,7 +158,7 @@ class GlobalContext(Lockable):
 		'minconf','usr_randchars','debug','quiet','tx_confs','tx_fee_adj' )
 
 	# user opt sets global var:
-	opt_sets_global = ( 'subseeds','cached_balances' )
+	opt_sets_global = ( 'cached_balances', )
 
 	# 'long' opts - opt sets global var
 	common_opts = (
@@ -249,6 +249,7 @@ class GlobalContext(Lockable):
 
 	auto_typeset_opts = {
 		'seed_len': int,
+		'subseeds': int,
 	}
 
 	min_screen_width = 80
@@ -262,7 +263,6 @@ class GlobalContext(Lockable):
 	min_urandchars = 10
 
 	scramble_hash_rounds = 10
-	subseeds = 100
 
 	salt_len       = 16
 	aesctr_iv_len  = 16

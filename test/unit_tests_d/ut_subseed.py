@@ -9,7 +9,9 @@ class unit_test(object):
 
 	def run_test(self,name,ut):
 		from mmgen.seed import Seed
-		from mmgen.subseed import SubSeedIdxRange
+		from mmgen.subseed import SubSeedList,SubSeedIdxRange
+
+		nSubseeds = SubSeedList.dfl_len
 
 		def basic_ops():
 			msg_r('Testing basic ops...')
@@ -55,9 +57,9 @@ class unit_test(object):
 
 				assert seed.pfmt() == seed2.pfmt()
 
-				s = seed.subseeds.format(1,g.subseeds)
+				s = seed.subseeds.format(1,nSubseeds)
 				s_lines = s.strip().split('\n')
-				assert len(s_lines) == g.subseeds + 4, s
+				assert len(s_lines) == nSubseeds + 4, s
 
 				a = seed.subseed('2L').sid
 				b = [e for e in s_lines if ' 2L:' in e][0].strip().split()[1]
@@ -70,11 +72,11 @@ class unit_test(object):
 				b = [e for e in s_lines if ' 5S:' in e][0].strip().split()[3]
 				assert a == b, b
 
-				s = seed.subseeds.format(g.subseeds+1,g.subseeds+2)
+				s = seed.subseeds.format(nSubseeds+1,nSubseeds+2)
 				s_lines = s.strip().split('\n')
 				assert len(s_lines) == 6, s
 
-				ss_idx = str(g.subseeds+2) + 'S'
+				ss_idx = str(nSubseeds+2) + 'S'
 				a = seed.subseed(ss_idx).sid
 				b = [e for e in s_lines if f' {ss_idx}:' in e][0].strip().split()[3]
 				assert a == b, b
@@ -91,17 +93,24 @@ class unit_test(object):
 			msg_r('Testing defaults and limits...')
 
 			seed_bin = bytes.fromhex('deadbeef' * 8)
+
+			seed = Seed(seed_bin,nSubseeds=11)
+			seed.subseeds._generate()
+			ss = seed.subseeds
+			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
+			assert len(ss) == 11, len(ss)
+
 			seed = Seed(seed_bin)
 			seed.subseeds._generate()
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
-			assert len(ss) == g.subseeds, len(ss)
+			assert len(ss) == nSubseeds, len(ss)
 
 			seed = Seed(seed_bin)
 			seed.subseed_by_seed_id('EEEEEEEE')
 			ss = seed.subseeds
 			assert len(ss.data['long']) == len(ss.data['short']), len(ss.data['short'])
-			assert len(ss) == g.subseeds, len(ss)
+			assert len(ss) == nSubseeds, len(ss)
 
 			seed = Seed(seed_bin)
 			subseed = seed.subseed_by_seed_id('803B165C')
@@ -135,8 +144,8 @@ class unit_test(object):
 			r = SubSeedIdxRange('3-3')
 			assert r.items == [3], r.items
 
-			r = SubSeedIdxRange(f'{g.subseeds-1}-{g.subseeds}')
-			assert r.items == [g.subseeds-1,g.subseeds], r.items
+			r = SubSeedIdxRange(f'{nSubseeds-1}-{nSubseeds}')
+			assert r.items == [nSubseeds-1,nSubseeds], r.items
 
 			for n,e in enumerate(SubSeedIdxRange('1-5').iterate(),1):
 				assert n == e, e

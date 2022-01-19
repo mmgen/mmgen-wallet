@@ -509,6 +509,12 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 	chk_hidden_incog_output_params = chk_hidden_incog_input_params
 
+	def chk_subseeds(key,val,desc):
+		from .subseed import SubSeedIdxRange
+		opt_is_int(val,desc)
+		opt_compares(int(val),'>=',SubSeedIdxRange.min_idx,desc)
+		opt_compares(int(val),'<=',SubSeedIdxRange.max_idx,desc)
+
 	def chk_seed_len(key,val,desc):
 		from .seed import Seed
 		opt_is_int(val,desc)

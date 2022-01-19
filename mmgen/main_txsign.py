@@ -86,7 +86,7 @@ FMT CODES:
 			kgs=help_notes('keygen_backends'),
 			coin_id=help_notes('coin_id'),
 			dsl=help_notes('dfl_seed_len'),
-			ss=g.subseeds,
+			ss=help_notes('dfl_subseeds'),
 			ss_max=SubSeedIdxRange.max_idx,
 			cu=proto.coin),
 		'notes': lambda help_notes,s: s.format(
