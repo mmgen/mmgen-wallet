@@ -900,6 +900,9 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return self._user_chk_label('alice',mmid,'Label added using coin address of MMGen address')
 
 	def alice_add_label_badaddr(self,addr,reply):
+		if os.getenv('PYTHONOPTIMIZE'):
+			omsg(yellow(f'PYTHONOPTIMIZE set, skipping test {self.test_name!r}'))
+			return 'skip'
 		t = self.spawn('mmgen-tool',['--alice','add_label',addr,'(none)'])
 		t.expect(reply,regex=True)
 		return t

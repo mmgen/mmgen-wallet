@@ -257,6 +257,11 @@ t_obj="
 "
 f_obj='Data object tests completed'
 
+[ "$PYTHONOPTIMIZE" ] && {
+	echo -e "${YELLOW}PYTHONOPTIMIZE set, skipping object tests$RESET"
+	t_obj_skip='-'
+}
+
 i_color='Color'
 s_color='Testing terminal colors'
 t_color="- $colortest_py"

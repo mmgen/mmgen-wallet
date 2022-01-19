@@ -79,6 +79,11 @@ class TestSuiteHelp(TestSuiteBase):
 					'txsign','txdo','txbump'))
 
 	def tool_help(self):
+
+		if os.getenv('PYTHONOPTIMIZE') == '2':
+			ymsg('Skipping tool help with PYTHONOPTIMIZE=2 (no docstrings)')
+			return 'skip'
+
 		for args in (
 			['--help'],
 			['--longhelp'],

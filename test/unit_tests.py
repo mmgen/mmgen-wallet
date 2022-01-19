@@ -75,6 +75,9 @@ class UnitTestHelpers(object):
 
 	@classmethod
 	def process_bad_data(cls,data):
+		if os.getenv('PYTHONOPTIMIZE'):
+			ymsg('PYTHONOPTIMIZE set, skipping error handling tests')
+			return
 		import re
 		desc_w = max(len(e[0]) for e in data)
 		exc_w = max(len(e[1]) for e in data)
