@@ -40,6 +40,16 @@ class unit_test(object):
 		acc.bar = 'bar val'
 		acc.bar = 1 # class attribute bar is None, so can be set to any type
 
+		class MyAttrCtrlDflNone(AttrCtrl):
+			_default_to_none = True
+			foo = 'fooval'
+			bar = None
+
+		acdn = MyAttrCtrlDflNone()
+		assert acdn.foo == 'fooval', f'{acdn.foo}'
+		assert acdn.bar == None, f'{acdn.bar}'
+		assert acdn.baz == None, f'{acdn.baz}'
+
 		qmsg('OK')
 		qmsg_r('Testing class Lockable...')
 
@@ -102,6 +112,14 @@ class unit_test(object):
 		assert lca._lock == True
 		assert lca.foo == True
 
+		class MyLockableAutolockDflNone(Lockable):
+			_default_to_none = True
+			foo = 0
+
+		lcdn = MyLockableAutolockDflNone()
+		assert lcdn.foo == 0
+		assert lcdn.bar == None
+
 		class MyLockableBad(Lockable):
 			_set_ok = ('foo','bar')
 			foo = 1
@@ -131,15 +149,22 @@ class unit_test(object):
 		def bad17(): lb = MyLockableBad()
 		def bad18(): aca.lock()
 
+		def bad19(): acdn.baz = None
+		def bad20(): lcdn.foo = 1
+		def bad21(): lcdn.bar = None
+
 		ut.process_bad_data((
 			('attr (1)',           'AttributeError', 'has no attr', bad1 ),
 			('attr (2)',           'AttributeError', 'has no attr', bad9 ),
 			('attr (3)',           'AttributeError', 'has no attr', bad10 ),
+			('attr (4)',           'AttributeError', 'has no attr', bad19 ),
+			('attr (5)',           'AttributeError', 'has no attr', bad21 ),
 			('attr type (1)',      'AttributeError', 'type',        bad2 ),
 			("attr type (2)",      'AttributeError', 'type',        bad4 ),
 			("attr type (3)",      'AttributeError', 'type',        bad5 ),
 			("attr (can't set)",   'AttributeError', 'read-only',   bad6 ),
 			("attr (can't set)",   'AttributeError', 'read-only',   bad7 ),
+			("attr (can't set)",   'AttributeError', 'read-only',   bad20 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad3 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad8 ),
 			("attr (can't reset)", 'AttributeError', 'reset',       bad11 ),

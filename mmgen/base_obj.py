@@ -41,14 +41,24 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 	Ensure that attribute's type matches that of the instance attribute, or the class
 	attribute, if _use_class_attr is True.  If the instance or class attribute is set
 	to None, no type checking is performed.
+
+	If _default_to_none is True, return None when accessing non-existent attributes
+	instead of raising AttributeError.
 	"""
 	_autolock = True
 	_lock = False
 	_use_class_attr = False
+	_default_to_none = False
 	_skip_type_check = ()
 
 	def lock(self):
 		self._lock = True
+
+	def __getattr__(self,name):
+		if self._lock and self._default_to_none:
+			return None
+		else:
+			raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
 	def __setattr__(self,name,value):
 
@@ -63,7 +73,7 @@ class AttrCtrl(metaclass=AttrCtrlMeta):
 						type(ref_val).__name__,
 						type(value).__name__ ) )
 
-			if not hasattr(self,name):
+			if not (name in self.__dict__ or hasattr(type(self),name)):
 				raise AttributeError(f'{type(self).__name__} object has no attribute {name!r}')
 
 			ref_val = getattr(type(self),name) if self._use_class_attr else getattr(self,name)
@@ -101,15 +111,15 @@ class Lockable(AttrCtrl):
 		super().lock()
 
 	def __setattr__(self,name,value):
-		if self._lock and hasattr(self,name):
+		if self._lock and (name in self.__dict__ or hasattr(type(self),name)):
 			val = getattr(self,name)
 			if name not in (self._set_ok + self._reset_ok):
 				raise AttributeError(f'attribute {name!r} of {type(self).__name__} object is read-only')
 			elif name not in self._reset_ok:
 				#print(self.__dict__)
 				if not (
-					val is None or (not (val == 0) and not val) or
-					( self._use_class_attr and name not in self.__dict__ ) ):
+					(val != 0 and not val) or
+					(self._use_class_attr and name not in self.__dict__) ):
 					raise AttributeError(
 						f'attribute {name!r} of {type(self).__name__} object is already set,'
 						+ ' and resetting is forbidden' )
