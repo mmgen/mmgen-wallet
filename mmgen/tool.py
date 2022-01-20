@@ -280,7 +280,9 @@ class MMGenToolCmds(metaclass=MMGenToolCmdMeta):
 	def __init__(self,proto=None,mmtype=None):
 		from .protocol import init_proto_from_opts
 		self.proto = proto or init_proto_from_opts()
-		self.mmtype = MMGenAddrType(self.proto,(mmtype or getattr(opt,'type',None) or self.proto.dfl_mmtype))
+		self.mmtype = MMGenAddrType(
+			self.proto,
+			mmtype or opt.type or self.proto.dfl_mmtype )
 		if g.token:
 			self.proto.tokensym = g.token.upper()
 
@@ -1050,7 +1052,7 @@ class tool_api(
 		"""
 		import mmgen.opts
 		opts.UserOpts._reset_ok += ('usr_randchars',)
-		if not hasattr(opt,'version'):
+		if not opt._lock:
 			opts.init()
 		super().__init__()
 

@@ -250,6 +250,7 @@ class GlobalContext(Lockable):
 	auto_typeset_opts = {
 		'seed_len': int,
 		'subseeds': int,
+		'vsize_adj': float,
 	}
 
 	min_screen_width = 80

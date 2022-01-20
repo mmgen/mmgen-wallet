@@ -458,7 +458,7 @@ class CoinProtocol(MMGenObject):
 		def __init__(self,*args,**kwargs):
 			super().__init__(*args,**kwargs)
 			from .opts import opt
-			self.coin_id = 'ZEC-Z' if getattr(opt,'type',None) in ('zcash_z','Z') else 'ZEC-T'
+			self.coin_id = 'ZEC-Z' if opt.type in ('zcash_z','Z') else 'ZEC-T'
 
 		def get_addr_len(self,addr_fmt):
 			return (20,64)[addr_fmt in ('zcash_z','viewkey')]

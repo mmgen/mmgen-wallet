@@ -94,9 +94,9 @@ class EthereumMMGenTX:
 
 		def __init__(self,*args,**kwargs):
 			MMGenTX.New.__init__(self,*args,**kwargs)
-			if getattr(opt,'tx_gas',None):
+			if opt.tx_gas:
 				self.tx_gas = self.start_gas = ETHAmt(int(opt.tx_gas),'wei')
-			if getattr(opt,'contract_data',None):
+			if opt.contract_data:
 				m = "'--contract-data' option may not be used with token transaction"
 				assert not 'Token' in type(self).__name__, m
 				with open(opt.contract_data) as fp:

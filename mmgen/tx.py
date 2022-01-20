@@ -465,7 +465,7 @@ class MMGenTX:
 			dmsg(f'  inputs size: {isize}, outputs size: {osize}, witness size: {wsize}')
 			dmsg(f'  size: {new_size}, vsize: {ret}, old_size: {old_size}')
 
-			return int(ret * float(opt.vsize_adj)) if hasattr(opt,'vsize_adj') and opt.vsize_adj else ret
+			return int(ret * (opt.vsize_adj or 1))
 
 		# convert absolute BTC fee to satoshis-per-byte using estimated size
 		def fee_abs2rel(self,abs_fee,to_unit=None):

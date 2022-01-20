@@ -161,12 +161,12 @@ def init_coverage():
 	return coverdir,acc_file
 
 def silence():
-	if not (opt.verbose or getattr(opt,'exact_output',None)):
+	if not (opt.verbose or opt.exact_output):
 		devnull_fn = ('/dev/null','null.out')[g.platform == 'win']
 		g.stdout = g.stderr = open(devnull_fn,'w')
 
 def end_silence():
-	if not (opt.verbose or getattr(opt,'exact_output',None)):
+	if not (opt.verbose or opt.exact_output):
 		g.stdout.close()
 		g.stdout = sys.stdout
 		g.stderr = sys.stderr
@@ -178,10 +178,10 @@ def omsg_r(s):
 	sys.stderr.flush()
 
 def imsg(s):
-	if opt.verbose or getattr(opt,'exact_output',None):
+	if opt.verbose or opt.exact_output:
 		omsg(s)
 def imsg_r(s):
-	if opt.verbose or getattr(opt,'exact_output',None):
+	if opt.verbose or opt.exact_output:
 		omsg_r(s)
 
 def iqmsg(s):
@@ -192,10 +192,10 @@ def iqmsg_r(s):
 		omsg_r(s)
 
 def oqmsg(s):
-	if not (opt.verbose or getattr(opt,'exact_output',None)):
+	if not (opt.verbose or opt.exact_output):
 		omsg(s)
 def oqmsg_r(s):
-	if not (opt.verbose or getattr(opt,'exact_output',None)):
+	if not (opt.verbose or opt.exact_output):
 		omsg_r(s)
 
 def end_msg(t):
@@ -220,7 +220,7 @@ def restart_test_daemons(*network_ids,remove_datadir=False):
 def test_daemons_ops(*network_ids,op,remove_datadir=False):
 	if not opt.no_daemon_autostart:
 		from mmgen.daemon import CoinDaemon
-		silent = not opt.verbose and not getattr(opt,'exact_output',False)
+		silent = not (opt.verbose or opt.exact_output)
 		ret = False
 		for network_id in network_ids:
 			d = CoinDaemon(network_id,test_suite=True,daemon_id=g.daemon_id)

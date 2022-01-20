@@ -95,7 +95,7 @@ class Seed(SeedBase):
 			from .opts import opt
 			self._subseeds = SubSeedList(
 				self,
-				length = self.nSubseeds or getattr(opt,'subseeds',None) )
+				length = self.nSubseeds or opt.subseeds )
 		return self._subseeds
 
 	def subseed(self,*args,**kwargs):

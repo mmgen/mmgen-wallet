@@ -78,7 +78,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 
 		in_fmt = in_fmt or opt.in_fmt
 
-		if hasattr(opt,'out_fmt') and opt.out_fmt:
+		if opt.out_fmt:
 			out_cls = cls.fmt_code_to_type(opt.out_fmt)
 			if not out_cls:
 				die(1,f'{opt.out_fmt!r}: unrecognized output format')

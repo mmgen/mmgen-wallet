@@ -190,7 +190,7 @@ def KeyGenerator(proto,pubkey_type,backend=None,silent=False):
 	pubkey_type_cls = getattr(keygen_backend,pubkey_type)
 
 	from .opts import opt
-	backend = backend or getattr(opt,'keygen_backend',None)
+	backend = backend or opt.keygen_backend
 
 	if backend:
 		_check_backend(backend,pubkey_type)

@@ -28,6 +28,7 @@ import mmgen.share.Opts
 
 class UserOpts(Lockable):
 	_autolock = False
+	_default_to_none = True
 	_set_ok = ('usr_randchars',)
 	_reset_ok = ('quiet','verbose','yes')
 

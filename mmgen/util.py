@@ -178,6 +178,7 @@ def warn_altcoins(coinsym,trust_level):
 def get_keccak():
 
 	from .opts import opt
+	# called in opts.init() via CoinProtocol, so must use getattr():
 	if getattr(opt,'use_internal_keccak_module',False):
 		from .keccak import keccak_256
 		qmsg('Using internal keccak module by user request')
