@@ -881,7 +881,7 @@ class MMGenTX:
 
 			assert isinstance(locktime,int),'locktime must be of type int'
 
-			from .tw import TwUnspentOutputs
+			from .twuo import TwUnspentOutputs
 
 			if opt.comment_file:
 				self.add_comment(opt.comment_file)
@@ -1506,7 +1506,7 @@ class MMGenTX:
 			tmp_tx = MMGenTX.Base()
 			MMGenTxFile(tmp_tx).parse(filename,metadata_only=True)
 			if tmp_tx.proto.tokensym:
-				from .tw import TrackingWallet
+				from .twctl import TrackingWallet
 				return await TrackingWallet(tmp_tx.proto)
 			else:
 				return None

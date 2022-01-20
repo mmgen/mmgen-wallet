@@ -82,7 +82,7 @@ async def main():
 	proto = init_proto_from_opts()
 
 	from .tx import MMGenTX
-	from .tw import TrackingWallet
+	from .twctl import TrackingWallet
 	tx1 = MMGenTX.New(
 		proto = proto,
 		tw    = await TrackingWallet(proto) if proto.tokensym else None )

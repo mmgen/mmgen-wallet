@@ -4,8 +4,8 @@
 # Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
 
 """
-test.objattrtest_py_d.oat_btc_mainnet: BTC mainnet test vectors for MMGen data
-objects
+test.objattrtest_py_d.oat_btc_mainnet:
+    BTC mainnet test vectors for MMGen data objects
 """
 
 from .oat_common import *
@@ -108,7 +108,7 @@ tests = {
 		[sample_objs['MasterShareIdx'], sample_objs['Seed'], 'foo', 2],
 		{},
 	),
-	# tw.py
+	# twuo.py
 	'TwUnspentOutputs.MMGenTwUnspentOutput': atd({
 		'txid':         (0b001, CoinTxID),
 		'vout':         (0b001, int),

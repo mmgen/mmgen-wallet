@@ -34,7 +34,7 @@ from mmgen.obj import Int,Str,HexStr,CoinTxID,MMGenTxID
 from mmgen.addr import MMGenID,CoinAddr,TokenAddr,is_mmgen_id,is_coin_addr
 
 from mmgen.tx import MMGenTX
-from mmgen.tw import TrackingWallet
+from mmgen.twctl import TrackingWallet
 
 from .contract import Token
 from .obj import ETHAmt,ETHNonce

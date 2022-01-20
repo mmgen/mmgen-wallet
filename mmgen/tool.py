@@ -904,7 +904,7 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		ret = d.sec.wif if target=='wif' else d.addr
 		return ret
 
-from .tw import TwAddrList,TwUnspentOutputs
+from .tw import TwCommon
 
 class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
@@ -917,7 +917,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 
 	async def getbalance(self,minconf=1,quiet=False,pager=False):
 		"list confirmed/unconfirmed, spendable/unspendable balances in tracking wallet"
-		from .tw import TwGetBalance
+		from .twbal import TwGetBalance
 		return (await TwGetBalance(self.proto,minconf,quiet)).format()
 
 	async def listaddress(self,
@@ -926,7 +926,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 					pager = False,
 					showempty = True,
 					showbtcaddr = True,
-					age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
+					age_fmt: _options_annot_str(TwCommon.age_fmts) = 'confs',
 					):
 		"list the specified MMGen address and its balance"
 		return await self.listaddresses(  mmgen_addrs = mmgen_addr,
@@ -945,7 +945,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 						showbtcaddrs = True,
 						all_labels = False,
 						sort: _options_annot_str(['reverse','age']) = '',
-						age_fmt: _options_annot_str(TwAddrList.age_fmts) = 'confs',
+						age_fmt: _options_annot_str(TwCommon.age_fmts) = 'confs',
 						):
 		"list MMGen addresses and their balances"
 		show_age = bool(age_fmt)
@@ -966,6 +966,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 			from .addrlist import AddrIdxList
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
+		from .twaddrs import TwAddrList
 		al = await TwAddrList(self.proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels)
 		if not al:
 			die(0,('No tracked addresses with balances!','No tracked addresses!')[showempty])
@@ -977,10 +978,11 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				wide = False,
 				minconf = 1,
 				sort = 'age',
-				age_fmt: _options_annot_str(TwUnspentOutputs.age_fmts) = 'confs',
+				age_fmt: _options_annot_str(TwCommon.age_fmts) = 'confs',
 				show_mmid = True,
 				wide_show_confs = True):
 		"view tracking wallet"
+		from .twuo import TwUnspentOutputs
 		twuo = await TwUnspentOutputs(self.proto,minconf=minconf)
 		await twuo.get_unspent_data(reverse_sort=reverse)
 		twuo.age_fmt = age_fmt
@@ -994,7 +996,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 
 	async def add_label(self,mmgen_or_coin_addr:str,label:str):
 		"add descriptive label for address in tracking wallet"
-		from .tw import TrackingWallet
+		from .twctl import TrackingWallet
 		await (await TrackingWallet(self.proto,mode='w')).add_label(mmgen_or_coin_addr,label,on_fail='raise')
 		return True
 
@@ -1005,7 +1007,7 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 
 	async def remove_address(self,mmgen_or_coin_addr:str):
 		"remove an address from tracking wallet"
-		from .tw import TrackingWallet
+		from .twctl import TrackingWallet
 		ret = await (await TrackingWallet(self.proto,mode='w')).remove_address(mmgen_or_coin_addr) # returns None on failure
 		if ret:
 			msg(f'Address {ret!r} deleted from tracking wallet')

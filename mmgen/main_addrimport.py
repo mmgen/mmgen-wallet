@@ -157,7 +157,7 @@ def make_args_list(tw,al,batch,rescan):
 			yield (tw,e.addr,TwLabel(proto,label),rescan,fs,msg_args)
 
 async def main():
-	from .tw import TrackingWallet
+	from .twctl import TrackingWallet
 	if opt.token_addr:
 		proto.tokensym = 'foo' # hack to trigger 'Token' in altcoin_subclass()
 
