@@ -146,7 +146,7 @@ class GlobalContext(Lockable):
 	else:
 		die(2,'$HOME is not set!  Unable to determine home directory')
 
-	data_dir_root,data_dir,cfg_file = None,None,None
+	data_dir_root,data_dir,cfg_file = (None,None,None)
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
 
@@ -163,7 +163,7 @@ class GlobalContext(Lockable):
 	# user opt sets global var:
 	opt_sets_global = ( 'cached_balances', )
 
-	# 'long' opts - opt sets global var (see common_opts_data)
+	# 'long' opt sets global var (subset of common_opts_data):
 	common_opts = (
 		'accept_defaults',
 		'aiohttp_rpc_queue_len',

@@ -20,9 +20,9 @@
 cfg.py: API for the MMGen runtime configuration file and related files
 """
 
-# NB: This module is used by override_from_cfg_file(), which is called before override_from_env()
-# during init, so global config vars that are set from the environment (such as g.test_suite)
-# cannot be used here.
+# NB: This module is used by override_globals_from_cfg_file(), which is called before
+# override_from_env() during init, so global config vars that are set from the environment
+# (such as g.test_suite) cannot be used here.
 
 import sys,os,re,hashlib
 from collections import namedtuple

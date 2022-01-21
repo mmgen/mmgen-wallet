@@ -184,30 +184,29 @@ common_opts_data = {
 --, --accept-defaults      Accept defaults at all prompts
 --, --coin=c               Choose coin unit. Default: BTC. Current choice: {cu_dfl}
 --, --token=t              Specify an ERC20 token by address or symbol
---, --color=0|1            Disable or enable color output
+--, --color=0|1            Disable or enable color output (enabled by default)
 --, --force-256-color      Force 256-color output when color is enabled
 --, --data-dir=path        Specify {pnm} data directory location
---, --daemon-data-dir=path Specify {dn} data directory location
+--, --daemon-data-dir=path Specify coin daemon data directory location
 --, --daemon-id=ID         Specify the coin daemon ID
---, --ignore-daemon-version Ignore {dn} version check
+--, --ignore-daemon-version Ignore coin daemon version check
 --, --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 --, --no-license           Suppress the GPL license prompt
---, --rpc-host=host        Communicate with {dn} running on host 'host'
---, --rpc-port=port        Communicate with {dn} listening on port 'port'
---, --rpc-user=user        Authenticate to {dn} using username 'user'
---, --rpc-password=pass    Authenticate to {dn} using password 'pass'
+--, --rpc-host=host        Communicate with coin daemon running on host 'host'
+--, --rpc-port=port        Communicate with coin daemon listening on port 'port'
+--, --rpc-user=user        Authenticate to coin daemon using username 'user'
+--, --rpc-password=pass    Authenticate to coin daemon using password 'pass'
 --, --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
 --, --aiohttp-rpc-queue-len=N Use 'N' simultaneous RPC connections with aiohttp
 --, --regtest=0|1          Disable or enable regtest mode
 --, --testnet=0|1          Disable or enable testnet
 --, --skip-cfg-file        Skip reading the configuration file
 --, --version              Print version information and exit
---, --bob                  Switch to user "Bob" in MMGen regtest setup
---, --alice                Switch to user "Alice" in MMGen regtest setup
+--, --bob                  Specify user "Bob" in MMGen regtest mode
+--, --alice                Specify user "Alice" in MMGen regtest mode
 	""",
 	'code': lambda help_notes,proto,s: s.format(
 			pnm    = g.proj_name,
-			dn     = help_notes('coind_exec'),
 			cu_dfl = proto.coin,
 		)
 }
