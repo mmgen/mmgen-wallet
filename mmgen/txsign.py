@@ -134,6 +134,7 @@ def get_keyaddrlist(proto,opt):
 
 def get_keylist(proto,opt):
 	if opt.keys_from_file:
+		from .fileutil import get_lines_from_file
 		return get_lines_from_file(opt.keys_from_file,'key-address data',trim_comments=True)
 	return None
 

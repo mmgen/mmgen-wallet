@@ -22,15 +22,7 @@ twctl: Tracking wallet control class for the MMGen suite
 
 from .globalvars import g
 from .exception import WalletFileError
-from .util import (
-	msg,
-	dmsg,
-	check_or_create_dir,
-	write_data_to_file,
-	get_data_from_file,
-	write_mode,
-	altcoin_subclass
-)
+from .util import msg,dmsg,write_mode,altcoin_subclass
 from .base_obj import AsyncInit
 from .objmethods import MMGenObject
 from .obj import TwComment,get_obj
@@ -93,6 +85,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			))
 		self.tw_fn = os.path.join(tw_dir,'tracking-wallet.json')
 
+		from .fileutil import check_or_create_dir,get_data_from_file
 		check_or_create_dir(tw_dir)
 
 		try:
@@ -210,6 +203,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	@write_mode
 	def write_changed(self,data):
+		from .fileutil import write_data_to_file
 		write_data_to_file(
 			self.tw_fn,
 			data,

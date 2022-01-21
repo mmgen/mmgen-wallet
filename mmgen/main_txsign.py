@@ -100,6 +100,7 @@ infiles = opts.init(opts_data)
 if not infiles:
 	opts.usage()
 
+from .fileutil import check_infile
 for i in infiles:
 	check_infile(i)
 

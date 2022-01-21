@@ -169,6 +169,8 @@ elif invoked_as == 'seedsplit':
 	else:
 		opts.usage()
 
+from .fileutil import check_infile,get_seed_file
+
 if cmd_args:
 	if invoked_as == 'gen' or len(cmd_args) > 1:
 		opts.usage()
@@ -227,6 +229,7 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	confirm_or_raise(m1,m2,exit_msg='Password not changed')
 	ss_out.write_to_file(desc='New wallet',outdir=g.data_dir)
 	bmsg('Securely deleting old wallet')
+	from .fileutil import shred_file
 	shred_file(
 		ss_in.infile.name,
 		verbose = opt.verbose )

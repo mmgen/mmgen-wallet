@@ -26,8 +26,6 @@ from .util import (
 	qmsg_r,
 	die,
 	capfirst,
-	get_lines_from_file,
-	write_data_to_file,
 	keypress_confirm,
 )
 from .protocol import init_proto
@@ -74,6 +72,7 @@ class AddrFile(MMGenObject):
 
 	def write(self,fn=None,ask_tty=True,ask_write_default_yes=False,binary=False,desc=None):
 		from .opts import opt
+		from .fileutil import write_data_to_file
 		write_data_to_file(
 			fn or self.filename,
 			self.fmt_data,
@@ -224,6 +223,7 @@ class AddrFile(MMGenObject):
 			return ( proto, proto.addr_type(mmtype_key) )
 
 		p = self.parent
+		from .fileutil import get_lines_from_file
 		lines = get_lines_from_file(fn,p.desc+' data',trim_comments=True)
 
 		try:

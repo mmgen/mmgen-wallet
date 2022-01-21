@@ -42,6 +42,7 @@ cmd_args = opts.init(opts_data)
 
 if len(cmd_args) == 1:
 	infile = cmd_args[0]
+	from .fileutil import check_infile
 	check_infile(infile)
 else:
 	opts.usage()

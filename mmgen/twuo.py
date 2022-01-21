@@ -35,7 +35,6 @@ from .util import (
 	fmt,
 	make_timestr,
 	keypress_confirm,
-	write_data_to_file,
 	line_input,
 	do_pager,
 	altcoin_subclass
@@ -507,6 +506,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 					self.proto.dcoin,
 					','.join(self.sort_info(include_group=False)).lower() )
 				msg('')
+				from .fileutil import write_data_to_file
 				try:
 					write_data_to_file(
 						of,

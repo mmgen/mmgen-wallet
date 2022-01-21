@@ -26,6 +26,7 @@ class TestSuiteFatalException(Exception): pass
 import os
 from mmgen.common import *
 from mmgen.devtools import *
+from mmgen.fileutil import write_data_to_file,get_data_from_file
 
 def strip_ansi_escapes(s):
 	import re
@@ -130,7 +131,6 @@ def write_to_tmpfile(cfg,fn,data,binary=False):
 	write_to_file(  os.path.join(cfg['tmpdir'],fn), data=data, binary=binary )
 
 def read_from_file(fn,binary=False):
-	from mmgen.util import get_data_from_file
 	return get_data_from_file(fn,quiet=True,binary=binary)
 
 def read_from_tmpfile(cfg,fn,binary=False):

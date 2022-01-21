@@ -24,7 +24,7 @@ import os,json
 from decimal import Decimal
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.util import die,gmsg,write_data_to_file
+from mmgen.util import die,gmsg
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
 from mmgen.wallet import MMGenWallet
@@ -293,6 +293,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				if n % 2: a.set_comment(idx,f'Test address {n}')
 		af = a.get_file()
 		af.format(add_comments=True)
+		from mmgen.fileutil import write_data_to_file
 		write_data_to_file(outfile,af.fmt_data,quiet=True,ignore_opt_outdir=True)
 		end_silence()
 

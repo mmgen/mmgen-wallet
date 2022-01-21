@@ -22,6 +22,7 @@ ts_main.py: Basic operations tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
+from mmgen.fileutil import get_data_from_file,write_data_to_file
 from mmgen.wallet import Wallet,MMGenWallet,MMGenMnemonic,IncogWallet,MMGenSeedFile
 from mmgen.rpc import rpc_init
 from ..include.common import *

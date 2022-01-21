@@ -162,6 +162,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 
 	def _get_data(self):
 		if hasattr(self,'infile'):
+			from .fileutil import get_data_from_file
 			self.fmt_data = get_data_from_file(self.infile.name,self.desc,binary=self.file_mode=='binary')
 		elif self.in_data:
 			self.fmt_data = self.in_data
@@ -238,6 +239,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		# write_data_to_file(): outfile with absolute path overrides opt.outdir
 		if outdir:
 			of = os.path.abspath(os.path.join(outdir,self._filename()))
+		from .fileutil import write_data_to_file
 		write_data_to_file(of if outdir else self._filename(),self.fmt_data,**kwargs)
 
 class WalletUnenc(Wallet):
@@ -332,6 +334,7 @@ class WalletEnc(Wallet):
 				self.desc
 			)
 		if self.passwd_file:
+			from .fileutil import get_words_from_file
 			pw = ' '.join(get_words_from_file(
 				self.passwd_file,
 				desc,
@@ -365,6 +368,7 @@ class WalletEnc(Wallet):
 			('',' '+add_desc)[bool(add_desc)]
 		)
 		if self.passwd_file:
+			from .fileutil import get_words_from_file
 			ret = ' '.join(get_words_from_file(
 				self.passwd_file,
 				desc,

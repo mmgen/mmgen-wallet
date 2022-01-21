@@ -32,6 +32,7 @@ from .passwdlist import PasswordList
 from .baseconv import baseconv
 from .xmrseed import xmrseed
 from .bip39 import bip39
+from .fileutil import get_seed_file,get_data_from_file,write_data_to_file
 
 NL = ('\n','\r\n')[g.platform=='win']
 

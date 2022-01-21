@@ -10,7 +10,7 @@ if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 	async def fake_get_unspent_rpc(foo):
 		from decimal import Decimal
 		import json
-		from mmgen.util import get_data_from_file
+		from mmgen.fileutil import get_data_from_file
 		return json.loads(get_data_from_file(os.getenv('MMGEN_BOGUS_WALLET_DATA')),parse_float=Decimal)
 
 	TwUnspentOutputs.set_dates = fake_set_dates

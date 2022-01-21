@@ -57,6 +57,7 @@ class MMGenTxFile:
 			)[desc=='inputs']
 			return io_list(tx,[io(tx.proto,**e) for e in d])
 
+		from .fileutil import get_data_from_file
 		tx_data = get_data_from_file(infile,tx.desc+' data',quiet=quiet_open)
 
 		try:
@@ -206,6 +207,7 @@ class MMGenTxFile:
 		if not self.fmt_data:
 			self.fmt_data = self.format()
 
+		from .fileutil import write_data_to_file
 		write_data_to_file(
 			outfile               = self.filename,
 			data                  = self.fmt_data,

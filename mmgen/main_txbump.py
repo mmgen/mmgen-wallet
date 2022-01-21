@@ -102,6 +102,8 @@ FMT CODES:
 cmd_args = opts.init(opts_data)
 
 tx_file = cmd_args.pop(0)
+
+from .fileutil import check_infile
 check_infile(tx_file)
 
 from .tx import *

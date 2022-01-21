@@ -118,6 +118,7 @@ if opt.master_share:
 if opt.id_str and not opt.master_share:
 	die(1,'--id-str option meaningless in context of non-master-share join')
 
+from .fileutil import check_infile
 for arg in cmd_args:
 	check_wallet_extension(arg)
 	check_infile(arg)

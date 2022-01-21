@@ -163,6 +163,7 @@ class MoneroMMGenTX:
 				self.data.amount,
 				(lambda s: '' if s == 'mainnet' else f'.{s}')(self.data.network),
 			)
+			from .fileutil import write_data_to_file
 			write_data_to_file(fn,out,desc='MoneroMMGenTX data',ask_write=True,ask_write_default_yes=False)
 
 	class NewSigned(Base):
@@ -191,6 +192,7 @@ class MoneroMMGenTX:
 	class Signed(Base):
 
 		def __init__(self,fn):
+			from .fileutil import get_data_from_file
 			self.fn = fn
 			d_wrap = json.loads(get_data_from_file(fn))['MoneroMMGenTX']
 			d = self.xmrwallet_tx_data(**d_wrap['data'])

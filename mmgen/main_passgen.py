@@ -139,6 +139,7 @@ pw_idxs = AddrIdxList(fmt_str=cmd_args.pop())
 
 pw_id_str = cmd_args.pop()
 
+from .fileutil import get_seed_file
 sf = get_seed_file(cmd_args,1)
 
 pw_fmt = opt.passwd_fmt or PasswordList.dfl_pw_fmt

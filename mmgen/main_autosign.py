@@ -317,6 +317,7 @@ def wipe_existing_key():
 	try: os.stat(fn)
 	except: pass
 	else:
+		from .fileutil import shred_file
 		msg(f'\nShredding existing key {fn!r}')
 		shred_file( fn, verbose=opt.verbose )
 

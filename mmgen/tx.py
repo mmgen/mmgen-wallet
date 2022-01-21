@@ -488,6 +488,7 @@ class MMGenTX:
 		# returns true if comment added or changed
 		def add_comment(self,infile=None):
 			if infile:
+				from .fileutil import get_data_from_file
 				self.label = MMGenTxLabel(get_data_from_file(infile,'transaction comment'))
 			else: # get comment from user, or edit existing comment
 				m = ('Add a comment to transaction?','Edit transaction comment?')[bool(self.label)]
@@ -739,6 +740,7 @@ class MMGenTX:
 			)
 
 			ad_f = AddrData(self.proto)
+			from .fileutil import check_infile
 			for a in addrfiles:
 				check_infile(a)
 				ad_f.add(AddrList(self.proto,a))

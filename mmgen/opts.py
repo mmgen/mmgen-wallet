@@ -24,6 +24,7 @@ import sys,os,stat
 from .exception import UserOptError
 from .globalvars import g
 from .base_obj import Lockable
+
 import mmgen.share.Opts
 
 class UserOpts(Lockable):
@@ -307,7 +308,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	else:
 		g.data_dir_root = os.path.join(g.home_dir,'.'+g.proj_name.lower())
 
-	from .util import check_or_create_dir
+	from .fileutil import check_or_create_dir
 	check_or_create_dir(g.data_dir_root)
 
 	from .term import init_term
@@ -516,7 +517,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		fn,offset = a
 		opt_is_int(offset,desc)
 
-		from .util import check_infile,check_outdir,check_outfile
+		from .fileutil import check_infile,check_outdir,check_outfile
 		if key == 'hidden_incog_input_params':
 			check_infile(fn,blkdev_ok=True)
 			key2 = 'in_fmt'
@@ -624,10 +625,10 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		desc = f'parameter for {fmt_opt(key)!r} option'
 
 		if key in g.infile_opts:
-			from .util import check_infile
+			from .fileutil import check_infile
 			check_infile(val) # file exists and is readable - dies on error
 		elif key == 'outdir':
-			from .util import check_outdir
+			from .fileutil import check_outdir
 			check_outdir(val) # dies on error
 		elif 'chk_'+key in cfuncs:
 			cfuncs['chk_'+key](key,val,desc)

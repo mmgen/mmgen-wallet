@@ -232,6 +232,7 @@ def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
 def get_new_passphrase(desc,passchg=False):
 	pw_desc = f"{'new ' if passchg else ''}passphrase for {desc}"
 	if opt.passwd_file:
+		from .fileutil import get_words_from_file
 		pw = ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
 	elif opt.echo_passphrase:
 		pw = ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
@@ -254,6 +255,7 @@ def get_new_passphrase(desc,passchg=False):
 def get_passphrase(desc,passchg=False):
 	pw_desc = f"{'old ' if passchg else ''}passphrase for {desc}"
 	if opt.passwd_file:
+		from .fileutil import get_words_from_file
 		pwfile_reuse_warning(opt.passwd_file)
 		return ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
 	else:

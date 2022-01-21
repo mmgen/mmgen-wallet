@@ -83,6 +83,7 @@ def parse_cmd_args(rpc,cmd_args):
 
 	if len(cmd_args) == 1:
 		infile = cmd_args[0]
+		from .fileutil import check_infile,get_lines_from_file
 		check_infile(infile)
 		if opt.addrlist:
 			al = AddrList(

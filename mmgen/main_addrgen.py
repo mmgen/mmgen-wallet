@@ -145,6 +145,7 @@ if opt.keygen_backend:
 
 idxs = AddrIdxList(fmt_str=cmd_args.pop())
 
+from .fileutil import get_seed_file
 sf = get_seed_file(cmd_args,1)
 
 do_license_msg()
