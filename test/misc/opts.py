@@ -53,7 +53,7 @@ if cmd_args == ['show_common_opts_diff']:
 for k in (
 	'foo',               # added opt
 	'print_checksum',    # sets 'quiet'
-	'quiet','verbose',   # required_opts, incompatible_opts
+	'quiet','verbose',   # init_opts, incompatible_opts
 	'fee_estimate_mode', # autoset_opts
 	'passwd_file',       # infile_opts - check_infile()
 	'outdir',            # check_outdir()

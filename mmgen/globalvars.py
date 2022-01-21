@@ -168,13 +168,8 @@ class GlobalContext(Lockable):
 		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
 		'accept_defaults','token','ignore_daemon_version','daemon_id','http_timeout',
 	)
-	# opts initialized to None by opts.init() if not set by user
-	required_opts = (
-		'quiet','verbose','debug','outdir','echo_passphrase','passwd_file','stdout',
-		'show_hash_presets','label','keep_passphrase','keep_hash_preset','yes',
-		'brain_params','b16','usr_randchars','coin','bob','alice',
-		'hidden_incog_input_params','in_fmt','hash_preset','seed_len',
-	)
+	# opts not in common_opts but required to be set during opts initialization
+	init_opts = ('show_hash_presets','yes','verbose')
 	incompatible_opts = (
 		('help','longhelp'),
 		('bob','alice'),

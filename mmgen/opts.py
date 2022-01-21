@@ -253,7 +253,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 			+ po.skipped_opts
 			+ tuple(add_opts or [])
 			+ tuple(init_opts or [])
-			+ g.required_opts
+			+ g.init_opts
 			+ g.common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
 

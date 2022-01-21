@@ -59,8 +59,8 @@ class TestSuiteOpts(TestSuiteBase):
 				(
 					('opt.foo',               'None'),         # added opt
 					('opt.print_checksum',    'None'),         # sets 'quiet'
-					('opt.quiet',             'False'),        # required_opts, incompatible_opts
-					('opt.verbose',           'None'),         # required_opts, incompatible_opts
+					('opt.quiet',             'False'),        # init_opts, incompatible_opts
+					('opt.verbose',           'None'),         # init_opts, incompatible_opts
 					('opt.fee_estimate_mode', 'conservative'), # autoset_opts
 					('opt.passwd_file',       'None'),         # infile_opts - check_infile()
 					('opt.outdir',            'None'),         # check_outdir()
