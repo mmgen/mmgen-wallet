@@ -34,13 +34,12 @@ class UserOpts(Lockable):
 
 opt = UserOpts()
 
-from .util import *
-
 def usage():
-	from mmgen.share import Opts
-	Die(1,Opts.make_usage_str(g.prog_name,'user',usage_data))
+	from .util import Die
+	Die(1,mmgen.share.Opts.make_usage_str(g.prog_name,'user',usage_data))
 
 def version():
+	from .util import Die
 	Die(0,fmt(f"""
 		{g.prog_name.upper()} version {g.version}
 		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the
@@ -78,10 +77,12 @@ def die_on_incompatible_opts(incompat_list):
 	for group in incompat_list:
 		bad = [k for k in opt.__dict__ if k in group and getattr(opt,k) != None]
 		if len(bad) > 1:
+			from .util import die
 			die(1,'Conflicting options: {}'.format(', '.join(map(fmt_opt,bad))))
 
 def _show_hash_presets():
 	fs = '  {:<7} {:<6} {:<3}  {}'
+	from .util import msg
 	msg('Available parameters for scrypt.hash():')
 	msg(fs.format('Preset','N','r','p'))
 	for i in sorted(g.hash_presets.keys()):
@@ -187,6 +188,7 @@ def show_common_opts_diff():
 				yield l.split()[1].split('=')[0][2:].replace('-','_')
 
 	def do_fmt(set_data):
+		from .util import fmt_list
 		return fmt_list(['--'+s.replace('_','-') for s in set_data],fmt='col',indent='   ')
 
 	a = g.common_opts
@@ -195,6 +197,7 @@ def show_common_opts_diff():
 	b_minus_a = [e for e in b if e not in a]
 	a_and_b   = [e for e in a if e in b]
 
+	from .util import msg
 	msg(f'g.common_opts - common_opts_data:\n   {do_fmt(a_minus_b) if a_minus_b else "None"}\n')
 	msg(f'common_opts_data - g.common_opts (these do not set global var):\n{do_fmt(b_minus_a)}\n')
 	msg(f'common_opts_data ^ g.common_opts (these set global var):\n{do_fmt(a_and_b)}\n')
@@ -304,6 +307,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	else:
 		g.data_dir_root = os.path.join(g.home_dir,'.'+g.proj_name.lower())
 
+	from .util import check_or_create_dir
 	check_or_create_dir(g.data_dir_root)
 
 	from .term import init_term
@@ -369,6 +373,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
 		print_help(po,opts_data,opt_filter) # exits
 
+	from .util import warn_altcoins
 	warn_altcoins(g.coin,altcoin_trust_level)
 
 	die_on_incompatible_opts(g.incompatible_opts)
@@ -476,6 +481,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		raise UserOptError(f'{val!r}: unrecognized {desc} for option {fmt_opt(key)!r}')
 
 	def opt_display(key,val='',beg='For selected',end=':\n'):
+		from .util import msg_r
 		msg_r('{} option {!r}{}'.format(
 			beg,
 			f'{fmt_opt(key)}={val}' if val else fmt_opt(key),
@@ -510,6 +516,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		fn,offset = a
 		opt_is_int(offset,desc)
 
+		from .util import check_infile,check_outdir,check_outfile
 		if key == 'hidden_incog_input_params':
 			check_infile(fn,blkdev_ok=True)
 			key2 = 'in_fmt'
@@ -571,6 +578,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 	def chk_vsize_adj(key,val,desc):
 		opt_is_float(val,desc)
+		from .util import ymsg
 		ymsg(f'Adjusting transaction vsize by a factor of {float(val):1.2f}')
 
 	def chk_coin(key,val,desc):
@@ -606,6 +614,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #		if len(val) > 20 or not all(s.isalnum() for s in val):
 #			raise UserOptError(f'{val!r}: invalid parameter for --token option')
 
+	from .util import is_int
+
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 
 	for key in usr_opts:
@@ -613,8 +623,10 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		desc = f'parameter for {fmt_opt(key)!r} option'
 
 		if key in g.infile_opts:
+			from .util import check_infile
 			check_infile(val) # file exists and is readable - dies on error
 		elif key == 'outdir':
+			from .util import check_outdir
 			check_outdir(val) # dies on error
 		elif 'chk_'+key in cfuncs:
 			cfuncs['chk_'+key](key,val,desc)
@@ -651,6 +663,7 @@ def check_and_set_autoset_opts(): # Raises exception if any check fails
 			else:
 				ret = locals()[asd.type](key,val,asd)
 				if type(ret) is str:
+					from .util import fmt_list
 					raise UserOptError(
 						'{!r}: invalid parameter for option --{} (not {}: {})'.format(
 							val,
