@@ -922,9 +922,9 @@ class MMGenTX:
 				self.outputs.sort_bip69()
 				# do this only after inputs are sorted
 				if opt.rbf:
-					self.inputs[0].sequence = g.max_int - 2 # handles the nLockTime case too
+					self.inputs[0].sequence = self.proto.max_int - 2 # handles the nLockTime case too
 				elif locktime:
-					self.inputs[0].sequence = g.max_int - 1
+					self.inputs[0].sequence = self.proto.max_int - 1
 
 			if not opt.yes:
 				self.add_comment()  # edits an existing comment
@@ -1022,10 +1022,10 @@ class MMGenTX:
 
 #		def is_replaceable_from_rpc(self):
 #			dec_tx = await self.rpc.call('decoderawtransaction',self.hex)
-#			return None < dec_tx['vin'][0]['sequence'] <= g.max_int - 2
+#			return None < dec_tx['vin'][0]['sequence'] <= self.proto.max_int - 2
 
 		def is_replaceable(self):
-			return self.inputs[0].sequence == g.max_int - 2
+			return self.inputs[0].sequence == self.proto.max_int - 2
 
 		def check_txfile_hex_data(self):
 			self.hex = HexStr(self.hex)
@@ -1330,7 +1330,7 @@ class MMGenTX:
 					raise TxHexMismatch((m2+m).format(desc.capitalize()))
 
 			seq_hex   = [int(i['nSeq'],16) for i in dtx['txins']]
-			seq_mmgen = [i.sequence or g.max_int for i in self.inputs]
+			seq_mmgen = [i.sequence or self.proto.max_int for i in self.inputs]
 			check_equal('sequence numbers',seq_hex,seq_mmgen)
 
 			d_hex   = sorted((i['txid'],i['vout']) for i in dtx['txins'])

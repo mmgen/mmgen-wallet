@@ -237,6 +237,7 @@ class CoinProtocol(MMGenObject):
 		max_halvings    = 64
 		start_subsidy   = 50
 		ignore_daemon_version = False
+		max_int         = 0xffffffff
 
 		def bytes2wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
 			assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'

@@ -62,8 +62,6 @@ class GlobalContext(Lockable):
 	version      = files('mmgen').joinpath('data','version').read_text().strip()
 	release_date = files('mmgen').joinpath('data','release_date').read_text().strip()
 
-	max_int   = 0xffffffff
-
 	stdin_tty = sys.stdin.isatty()
 	stdout = sys.stdout
 	stderr = sys.stderr
