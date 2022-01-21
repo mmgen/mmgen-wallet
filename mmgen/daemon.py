@@ -283,18 +283,18 @@ class MoneroWalletDaemon(RPCDaemon):
 		self.daemon_addr = daemon_addr
 		self.daemon_port = None if daemon_addr else CoinDaemon(proto=proto,test_suite=test_suite).rpc_port
 
-		self.host = host or g.monero_wallet_rpc_host
-		self.user = user or g.monero_wallet_rpc_user
-		self.passwd = passwd or g.monero_wallet_rpc_password
+		self.host = host or opt.wallet_rpc_host or g.monero_wallet_rpc_host
+		self.user = user or opt.wallet_rpc_user or g.monero_wallet_rpc_user
+		self.passwd = passwd or opt.wallet_rpc_password or g.monero_wallet_rpc_password
 
 		assert self.host
 		assert self.user
 		if not self.passwd:
 			die(1,
 				'You must set your Monero wallet RPC password.\n' +
-				'This can be done on the command line, with the --monero-wallet-rpc-password\n' +
-				"option (insecure, not recommended), or by setting 'monero_wallet_rpc_password'\n" +
-				"in the MMGen config file." )
+				'This can be done on the command line with the --wallet-rpc-password option\n' +
+				"(insecure, not recommended), or by setting 'monero_wallet_rpc_password' in\n" +
+				"the MMGen config file." )
 
 		self.daemon_args = list_gen(
 			['--untrusted-daemon'],

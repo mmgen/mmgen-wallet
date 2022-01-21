@@ -74,7 +74,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		from mmgen.protocol import init_proto
 		self.proto = init_proto('XMR',network='testnet')
 		self.datadir_base  = os.path.join('test','daemons','xmrtest')
-		self.long_opts = ['--testnet=1', '--monero-wallet-rpc-password=passw0rd']
+		self.extra_opts = ['--testnet=1', '--wallet-rpc-password=passw0rd']
 		self.init_users()
 		self.init_daemon_args()
 
@@ -298,7 +298,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		dir_opt = [f'--wallet-dir={data.udir}']
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
+			self.extra_opts + dir_opt + [ 'create', data.kafile, (wallet or data.kal_range) ] )
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		for i in MMGenRange(wallet or data.kal_range).items:
 			t.expect('Address: ')
@@ -336,7 +336,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		)
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + cmd_opts + (add_opts or []) + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
+			self.extra_opts + cmd_opts + (add_opts or []) + [ 'sync', data.kafile ] + ([wallets] if wallets else []) )
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		wlist = AddrIdxList(wallets) if wallets else MMGenRange(data.kal_range).items
 		for n,wnum in enumerate(wlist):
@@ -371,7 +371,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts + cmd_opts + [ op, data.kafile, arg2 ],
+			self.extra_opts + cmd_opts + [ op, data.kafile, arg2 ],
 			extra_desc = f'({capfirst(user)}{add_desc})' )
 
 		t.expect('Check key-to-address validity? (y/N): ','n')
@@ -444,7 +444,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		add_desc = (', ' + add_desc) if add_desc else ''
 		t = self.spawn(
 			'mmgen-xmrwallet',
-			self.long_opts
+			self.extra_opts
 			+ ([relay_opt] if relay_opt else [])
 			+ [ 'relay', fn ],
 			extra_desc = f'(relaying TX, {capfirst(user)}{add_desc})' )

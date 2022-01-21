@@ -54,6 +54,9 @@ opts_data = {
 -S, --no-stop-wallet-daemon      Don’t stop the wallet daemon at exit
 -w, --wallet-dir=D               Output or operate on wallets in directory 'D'
                                  instead of the working directory
+-H, --wallet-rpc-host=host       Wallet RPC hostname (default: {g.monero_wallet_rpc_host!r})
+-U, --wallet-rpc-user=user       Wallet RPC username (default: {g.monero_wallet_rpc_user!r})
+-P, --wallet-rpc-password=pass   Wallet RPC password (default: {g.monero_wallet_rpc_password!r})
 """,
 	'notes': """
 

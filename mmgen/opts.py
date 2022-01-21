@@ -198,9 +198,6 @@ common_opts_data = {
 --, --rpc-password=pass    Authenticate to {dn} using password 'pass'
 --, --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
 --, --aiohttp-rpc-queue-len=N Use 'N' simultaneous RPC connections with aiohttp
---, --monero-wallet-rpc-host=host  Specify Monero wallet daemon host
---, --monero-wallet-rpc-user=user  Specify Monero wallet daemon username
---, --monero-wallet-rpc-password=pass  Specify Monero wallet daemon password
 --, --regtest=0|1          Disable or enable regtest mode
 --, --testnet=0|1          Disable or enable testnet
 --, --skip-cfg-file        Skip reading the configuration file
