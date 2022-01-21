@@ -152,19 +152,40 @@ class GlobalContext(Lockable):
 
 	# global var sets user opt:
 	global_sets_opt = (
+		'debug',
+		'minconf',
+		'quiet',
+		'tx_confs',
+		'tx_fee_adj',
 		'use_internal_keccak_module',
-		'minconf','usr_randchars','debug','quiet','tx_confs','tx_fee_adj' )
+		'usr_randchars' )
 
 	# user opt sets global var:
 	opt_sets_global = ( 'cached_balances', )
 
 	# 'long' opts - opt sets global var (see common_opts_data)
 	common_opts = (
-		'color','no_license','testnet',
-		'rpc_host','rpc_port','rpc_user','rpc_password','rpc_backend','aiohttp_rpc_queue_len',
-		'daemon_data_dir','force_256_color','regtest','coin','bob','alice',
-		'accept_defaults','token','ignore_daemon_version','daemon_id','http_timeout',
-	)
+		'accept_defaults',
+		'aiohttp_rpc_queue_len',
+		'alice',
+		'bob',
+		'coin',
+		'color',
+		'daemon_data_dir',
+		'daemon_id',
+		'force_256_color',
+		'http_timeout',
+		'ignore_daemon_version',
+		'no_license',
+		'regtest',
+		'rpc_backend',
+		'rpc_host',
+		'rpc_password',
+		'rpc_port',
+		'rpc_user',
+		'testnet',
+		'token' )
+
 	# opts not in common_opts but required to be set during opts initialization
 	init_opts = ('show_hash_presets','yes','verbose')
 	incompatible_opts = (
@@ -176,16 +197,41 @@ class GlobalContext(Lockable):
 		('batch','rescan'), # TODO: still incompatible?
 	)
 	cfg_file_opts = (
-		'color','debug','hash_preset','http_timeout','no_license','rpc_host','rpc_port',
-		'quiet','tx_fee_adj','usr_randchars','testnet','rpc_user','rpc_password',
-		'monero_wallet_rpc_host','monero_wallet_rpc_user','monero_wallet_rpc_password',
-		'daemon_data_dir','force_256_color','regtest','subseeds','mnemonic_entry_modes',
-		'btc_max_tx_fee','ltc_max_tx_fee','bch_max_tx_fee','eth_max_tx_fee',
-		'btc_ignore_daemon_version','bch_ignore_daemon_version','ltc_ignore_daemon_version',
-		'eth_ignore_daemon_version','etc_ignore_daemon_version',
-		'eth_mainnet_chain_names','eth_testnet_chain_names',
-		'max_tx_file_size','max_input_size'
-	)
+		'color',
+		'daemon_data_dir',
+		'debug',
+		'force_256_color',
+		'hash_preset',
+		'http_timeout',
+		'max_input_size',
+		'max_tx_file_size',
+		'mnemonic_entry_modes',
+		'monero_wallet_rpc_host',
+		'monero_wallet_rpc_password',
+		'monero_wallet_rpc_user',
+		'no_license',
+		'quiet',
+		'regtest',
+		'rpc_host',
+		'rpc_password',
+		'rpc_port',
+		'rpc_user',
+		'subseeds',
+		'testnet',
+		'tx_fee_adj',
+		'usr_randchars',
+		'bch_max_tx_fee',
+		'btc_max_tx_fee',
+		'eth_max_tx_fee',
+		'ltc_max_tx_fee',
+		'bch_ignore_daemon_version',
+		'btc_ignore_daemon_version',
+		'etc_ignore_daemon_version',
+		'eth_ignore_daemon_version',
+		'ltc_ignore_daemon_version',
+		'eth_mainnet_chain_names',
+		'eth_testnet_chain_names' )
+
 	# Supported environmental vars
 	# The corresponding vars (lowercase, minus 'mmgen_') must be initialized in g
 	# 'DISABLE_' env vars disable the corresponding var in g
