@@ -524,7 +524,8 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			try: os.stat(fn)
 			except:
 				b = os.path.dirname(fn)
-				if b: check_outdir(b)
+				if b:
+					check_outdir(b)
 			else:
 				check_outfile(fn,blkdev_ok=True)
 			key2 = 'out_fmt'

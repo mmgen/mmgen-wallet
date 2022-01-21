@@ -376,8 +376,11 @@ def is_int(s):
 	except:
 		return False
 
-def is_hex_str(s):    return set(list(s.lower())) <= set(list(hexdigits.lower()))
-def is_hex_str_lc(s): return set(list(s))         <= set(list(hexdigits.lower()))
+def is_hex_str(s):
+	return set(list(s.lower())) <= set(list(hexdigits.lower()))
+
+def is_hex_str_lc(s):
+	return set(list(s)) <= set(list(hexdigits.lower()))
 
 def is_utf8(s):
 	try:    s.decode('utf8')
@@ -524,6 +527,7 @@ def check_wallet_extension(fn):
 	from .wallet import Wallet
 	if not Wallet.ext_to_type(get_extension(fn)):
 		raise BadFileExtension(f'{fn!r}: unrecognized seed source file extension')
+
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
 

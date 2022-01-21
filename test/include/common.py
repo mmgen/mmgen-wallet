@@ -119,11 +119,12 @@ def get_tmpfile(cfg,fn):
 	return os.path.join(cfg['tmpdir'],fn)
 
 def write_to_file(fn,data,binary=False):
-	write_data_to_file( fn,
-						data,
-						quiet = True,
-						binary = binary,
-						ignore_opt_outdir = True )
+	write_data_to_file(
+		fn,
+		data,
+		quiet = True,
+		binary = binary,
+		ignore_opt_outdir = True )
 
 def write_to_tmpfile(cfg,fn,data,binary=False):
 	write_to_file(  os.path.join(cfg['tmpdir'],fn), data=data, binary=binary )
