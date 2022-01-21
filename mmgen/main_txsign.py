@@ -95,7 +95,7 @@ FMT CODES:
 	}
 }
 
-infiles = opts.init(opts_data,add_opts=['b16'])
+infiles = opts.init(opts_data)
 
 if not infiles:
 	opts.usage()

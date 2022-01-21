@@ -131,7 +131,7 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['b16'])
+cmd_args = opts.init(opts_data)
 
 if len(cmd_args) < 2: opts.usage()
 

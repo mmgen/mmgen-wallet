@@ -542,6 +542,6 @@ from mmgen.addr import KeyGenerator,AddrGenerator,MMGenAddrType
 from mmgen.keygen import get_backends
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
-cmd_args = opts.init(opts_data,add_opts=['exact_output'])
+cmd_args = opts.init(opts_data)
 
 main()

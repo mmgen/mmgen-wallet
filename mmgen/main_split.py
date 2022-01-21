@@ -86,7 +86,7 @@ transaction reconfirmed before the timelock expires. Use at your own risk.
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['tx_fee','tx_fee_adj','comment_file'])
+cmd_args = opts.init(opts_data)
 
 from .protocol import init_proto_from_opts
 proto = init_proto_from_opts()

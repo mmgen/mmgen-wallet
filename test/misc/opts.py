@@ -43,7 +43,7 @@ opts_data = {
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['foo'])
+cmd_args = opts.init(opts_data)
 
 if cmd_args == ['show_common_opts_diff']:
 	from mmgen.opts import show_common_opts_diff

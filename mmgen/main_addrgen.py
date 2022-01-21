@@ -124,7 +124,7 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data,add_opts=['b16'],opt_filter=opt_filter)
+cmd_args = opts.init(opts_data,opt_filter=opt_filter)
 
 errmsg = f'{opt.type!r}: invalid parameter for --type option'
 

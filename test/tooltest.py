@@ -55,7 +55,7 @@ If no command is given, the whole suite of tests is run.
 
 sys.argv = [sys.argv[0]] + ['--skip-cfg-file'] + sys.argv[1:]
 
-cmd_args = opts.init(opts_data,add_opts=['exact_output','profile'])
+cmd_args = opts.init(opts_data)
 
 from mmgen.protocol import init_proto_from_opts
 proto = init_proto_from_opts()

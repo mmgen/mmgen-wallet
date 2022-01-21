@@ -118,7 +118,7 @@ This command is currently available only on Linux-based platforms.
 
 cmd_args = opts.init(
 	opts_data,
-	add_opts = ['mmgen_keys_from_file','hidden_incog_input_params'],
+	add_opts = ['outdir','passwd_file'], # required, because in _set_ok
 	init_opts = {
 		'quiet': True,
 		'out_fmt': 'wallet',
