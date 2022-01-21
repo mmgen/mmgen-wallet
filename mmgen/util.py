@@ -191,29 +191,6 @@ def get_keccak():
 
 	return keccak_256
 
-def set_for_type(val,refval,desc,invert_bool=False,src=None):
-
-	if type(refval) == bool:
-		v = str(val).lower()
-		ret = (
-			True  if v in ('true','yes','1','on') else
-			False if v in ('false','no','none','0','off','') else
-			None
-		)
-		if ret is not None:
-			return not ret if invert_bool else ret
-	else:
-		try:
-			return type(refval)(not val if invert_bool else val)
-		except:
-			pass
-
-	die(1,'{!r}: invalid value for {!r}{} (must be of type {!r})'.format(
-		val,
-		desc,
-		' in {!r}'.format(src) if src else '',
-		type(refval).__name__) )
-
 # From 'man dd':
 # c=1, w=2, b=512, kB=1000, K=1024, MB=1000*1000, M=1024*1024,
 # GB=1000*1000*1000, G=1024*1024*1024, and so on for T, P, E, Z, Y.
