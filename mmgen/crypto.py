@@ -44,6 +44,32 @@ from .util import (
 )
 
 mmenc_ext = 'mmenc'
+scramble_hash_rounds = 10
+
+salt_len       = 16
+aesctr_iv_len  = 16
+aesctr_dfl_iv  = int.to_bytes(1,aesctr_iv_len,'big')
+hincog_chk_len = 8
+
+# Scrypt params: 'id_num': [N, r, p] (N is an exponent of two)
+# NB: hashlib.scrypt in Python (>=v3.6) supports max N value of 14.  This means that
+# for hash presets > 3 the standalone scrypt library must be used!
+_hp = namedtuple('scrypt_preset',['N','r','p'])
+hash_presets = {
+	'1': _hp(12, 8, 1),
+	'2': _hp(13, 8, 4),
+	'3': _hp(14, 8, 8),
+	'4': _hp(15, 8, 12),
+	'5': _hp(16, 8, 16),
+	'6': _hp(17, 8, 20),
+	'7': _hp(18, 8, 24),
+}
+
+def get_hash_params(hash_preset):
+	if hash_preset in hash_presets:
+		return hash_presets[hash_preset] # N,r,p
+	else: # Shouldn't be here
+		die(3,f"{hash_preset}: invalid 'hash_preset' value")
 
 def sha256_rounds(s,n):
 	for i in range(n):
@@ -55,7 +81,7 @@ def scramble_seed(seed,scramble_key):
 	step1 = hmac.digest(seed,scramble_key,'sha256')
 	if g.debug:
 		msg(f'Seed:  {seed.hex()!r}\nScramble key: {scramble_key}\nScrambled seed: {step1.hex()}\n')
-	return sha256_rounds(step1,g.scramble_hash_rounds)
+	return sha256_rounds( step1, scramble_hash_rounds )
 
 def encrypt_seed(seed,key):
 	return encrypt_data(seed,key,desc='seed')
@@ -88,7 +114,7 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 	dmsg(f'Decrypted seed: {dec_seed.hex()}')
 	return dec_seed
 
-def encrypt_data(data,key,iv=g.aesctr_dfl_iv,desc='data',verify=True):
+def encrypt_data(data,key,iv=aesctr_dfl_iv,desc='data',verify=True):
 	vmsg(f'Encrypting {desc}')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()
@@ -105,7 +131,7 @@ def encrypt_data(data,key,iv=g.aesctr_dfl_iv,desc='data',verify=True):
 
 	return enc_data
 
-def decrypt_data(enc_data,key,iv=g.aesctr_dfl_iv,desc='data'):
+def decrypt_data(enc_data,key,iv=aesctr_dfl_iv,desc='data'):
 	vmsg_r(f'Decrypting {desc} with key...')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()
@@ -245,10 +271,10 @@ def get_hash_preset_from_user(
 	while True:
 		ret = line_input(prompt)
 		if ret:
-			if ret in g.hash_presets:
+			if ret in hash_presets:
 				return ret
 			else:
-				msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
+				msg('Invalid input.  Valid choices are {}'.format(', '.join(hash_presets)))
 		else:
 			return hash_preset
 
@@ -302,7 +328,7 @@ mmenc_nonce_len = 32
 
 def mmgen_encrypt(data,desc='data',hash_preset=None):
 	salt  = get_random(mmenc_salt_len)
-	iv    = get_random(g.aesctr_iv_len)
+	iv    = get_random(aesctr_iv_len)
 	nonce = get_random(mmenc_nonce_len)
 	hp    = hash_preset or opt.hash_preset or get_hash_preset_from_user(data_desc=desc)
 	m     = ('user-requested','default')[hp=='3']
@@ -318,7 +344,7 @@ def mmgen_encrypt(data,desc='data',hash_preset=None):
 
 def mmgen_decrypt(data,desc='data',hash_preset=None):
 	vmsg(f'Preparing to decrypt {desc}')
-	dstart = mmenc_salt_len + g.aesctr_iv_len
+	dstart = mmenc_salt_len + aesctr_iv_len
 	salt   = data[:mmenc_salt_len]
 	iv     = data[mmenc_salt_len:dstart]
 	enc_d  = data[dstart:]

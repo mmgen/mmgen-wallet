@@ -23,7 +23,7 @@ tool.py:  Routines for the 'mmgen-tool' utility
 from .common import *
 from .protocol import hash160
 from .fileutil import get_seed_file,get_data_from_file,write_data_to_file
-from .crypto import get_random
+from .crypto import get_random,aesctr_iv_len,mmgen_encrypt,mmgen_decrypt,mmenc_ext
 from .key import PrivKey
 from .subseed import SubSeedList
 from .seedsplit import MasterShareIdx
@@ -730,7 +730,6 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	def encrypt(self,infile:str,outfile='',hash_preset=''):
 		"encrypt a file"
 		data = get_data_from_file(infile,'data for encryption',binary=True)
-		from .crypto import mmgen_encrypt,mmenc_ext
 		enc_d = mmgen_encrypt(data,'data',hash_preset)
 		if not outfile:
 			outfile = f'{os.path.basename(infile)}.{mmenc_ext}'
@@ -740,7 +739,6 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 	def decrypt(self,infile:str,outfile='',hash_preset=''):
 		"decrypt a file"
 		enc_d = get_data_from_file(infile,'encrypted data',binary=True)
-		from .crypto import mmgen_decrypt,mmenc_ext
 		while True:
 			dec_d = mmgen_decrypt(enc_d,'data',hash_preset)
 			if dec_d: break
@@ -757,7 +755,7 @@ class MMGenToolCmdFileUtil(MMGenToolCmds):
 
 	def find_incog_data(self,filename:str,incog_id:str,keep_searching=False):
 		"Use an Incog ID to find hidden incognito wallet data"
-		ivsize,bsize,mod = g.aesctr_iv_len,4096,4096*8
+		ivsize,bsize,mod = ( aesctr_iv_len, 4096, 4096*8 )
 		n,carry = 0,b' '*ivsize
 		flgs = os.O_RDONLY|os.O_BINARY if g.platform == 'win' else os.O_RDONLY
 		f = os.open(filename,flgs)
@@ -792,7 +790,7 @@ class MMGenToolCmdFileUtil(MMGenToolCmds):
 		from cryptography.hazmat.backends import default_backend
 
 		def encrypt_worker(wid):
-			ctr_init_val = os.urandom(g.aesctr_iv_len)
+			ctr_init_val = os.urandom( aesctr_iv_len )
 			c = Cipher(algorithms.AES(key),modes.CTR(ctr_init_val),backend=default_backend())
 			encryptor = c.encryptor()
 			while True:

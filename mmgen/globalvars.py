@@ -301,27 +301,7 @@ class GlobalContext(Lockable):
 	max_urandchars = 80
 	min_urandchars = 10
 
-	scramble_hash_rounds = 10
-
-	salt_len       = 16
-	aesctr_iv_len  = 16
-	aesctr_dfl_iv  = int.to_bytes(1,aesctr_iv_len,'big')
-	hincog_chk_len = 8
-
 	force_standalone_scrypt_module = False
-	# Scrypt params: 'id_num': [N, r, p] (N is an exponent of two)
-	# NB: hashlib.scrypt in Python (>=v3.6) supports max N value of 14.  This means that
-	# for hash presets > 3 the standalone scrypt library must be used!
-	_hp = namedtuple('scrypt_preset',['N','r','p'])
-	hash_presets = {
-		'1': _hp(12, 8, 1),
-		'2': _hp(13, 8, 4),
-		'3': _hp(14, 8, 8),
-		'4': _hp(15, 8, 12),
-		'5': _hp(16, 8, 16),
-		'6': _hp(17, 8, 20),
-		'7': _hp(18, 8, 24),
-	}
 
 	if os.getenv('MMGEN_TEST_SUITE'):
 		err_disp_timeout = 0.1

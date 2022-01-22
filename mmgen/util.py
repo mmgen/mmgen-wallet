@@ -417,12 +417,6 @@ def strip_comment(line):
 def strip_comments(lines):
 	return [m for m in [strip_comment(l) for l in lines] if m != '']
 
-def get_hash_params(hash_preset):
-	if hash_preset in g.hash_presets:
-		return g.hash_presets[hash_preset] # N,r,p
-	else: # Shouldn't be here
-		die(3,f"{hash_preset}: invalid 'hash_preset' value")
-
 def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
 
 	if not chk1 == chk2:

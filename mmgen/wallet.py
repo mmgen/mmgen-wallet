@@ -24,9 +24,9 @@ import os
 
 from .common import *
 from .obj import *
-from .crypto import *
 from .baseconv import *
 from .seed import Seed
+import mmgen.crypto as crypto
 
 def check_usr_seed_len(seed_len):
 	if opt.seed_len and opt.seed_len != seed_len:
@@ -298,8 +298,7 @@ class WalletEnc(Wallet):
 			('',' '+add_desc)[bool(add_desc)],
 			('accept the default','reuse the old')[self.op=='pwchg_new'],
 			hp )
-		from .crypto import get_hash_preset_from_user
-		return get_hash_preset_from_user( hash_preset=hp, prompt=prompt )
+		return crypto.get_hash_preset_from_user( hash_preset=hp, prompt=prompt )
 
 	def _get_hash_preset(self,add_desc=''):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
@@ -322,8 +321,7 @@ class WalletEnc(Wallet):
 		self.ssdata.hash_preset = hp
 
 	def _get_new_passphrase(self):
-		from .crypto import get_new_passphrase
-		self.ssdata.passwd = get_new_passphrase(
+		self.ssdata.passwd = crypto.get_new_passphrase(
 			data_desc = ('new ' if self.op in ('new','conv') else '') + self.desc,
 			hash_preset = self.ssdata.hash_preset,
 			passwd_file = self.passwd_file,
@@ -331,8 +329,7 @@ class WalletEnc(Wallet):
 		return self.ssdata.passwd
 
 	def _get_passphrase(self,add_desc=''):
-		from .crypto import get_passphrase
-		self.ssdata.passwd = get_passphrase(
+		self.ssdata.passwd = crypto.get_passphrase(
 			data_desc = self.desc + (f' {add_desc}' if add_desc else ''),
 			passwd_file = self.passwd_file,
 			pw_desc = ('old ' if self.op == 'pwchg_old' else '') + 'passphrase' )
@@ -353,10 +350,10 @@ class WalletEnc(Wallet):
 		else:
 			self._get_new_passphrase()
 
-		d.salt     = sha256(get_random(128)).digest()[:g.salt_len]
-		key        = make_key(d.passwd, d.salt, d.hash_preset)
+		d.salt     = sha256( crypto.get_random(128) ).digest()[:crypto.salt_len]
+		key        = crypto.make_key( d.passwd, d.salt, d.hash_preset )
 		d.key_id   = make_chksum_8(key)
-		d.enc_seed = encrypt_seed(self.seed.data,key)
+		d.enc_seed = crypto.encrypt_seed( self.seed.data, key )
 
 class Mnemonic(WalletUnenc):
 
@@ -536,7 +533,7 @@ class DieRollSeedFile(WalletUnenc):
 
 		if self.interactive_input and opt.usr_randchars:
 			if keypress_confirm(self.user_entropy_prompt):
-				seed_bytes = add_user_random(
+				seed_bytes = crypto.add_user_random(
 					rand_bytes = seed_bytes,
 					desc       = 'gathered from your die rolls' )
 				self.desc += ' plus user-supplied entropy'
@@ -741,7 +738,7 @@ class MMGenWallet(WalletEnc):
 		lines = (
 			d.label,
 			'{} {} {} {} {}'.format( s.sid.lower(), d.key_id.lower(), s.bitlen, d.pw_status, d.timestamp ),
-			'{}: {} {} {}'.format( d.hash_preset, *get_hash_params(d.hash_preset) ),
+			'{}: {} {} {}'.format( d.hash_preset, *crypto.get_hash_params(d.hash_preset) ),
 			'{} {}'.format( make_chksum_6(slt_fmt), split_into_cols(4,slt_fmt) ),
 			'{} {}'.format( make_chksum_6(es_fmt),  split_into_cols(4,es_fmt) )
 		)
@@ -789,7 +786,7 @@ class MMGenWallet(WalletEnc):
 
 		hash_params = tuple(map(int,hpdata[1:]))
 
-		if hash_params != get_hash_params(d.hash_preset):
+		if hash_params != crypto.get_hash_params(d.hash_preset):
 			msg(f'Hash parameters {" ".join(hash_params)!r} don’t match hash preset {d.hash_preset!r}')
 			return False
 
@@ -821,8 +818,8 @@ class MMGenWallet(WalletEnc):
 		# Needed for multiple transactions with {}-txsign
 		self._get_passphrase(
 			add_desc = os.path.basename(self.infile.name) if opt.quiet else '' )
-		key = make_key(d.passwd, d.salt, d.hash_preset)
-		ret = decrypt_seed(d.enc_seed, key, d.seed_id, d.key_id)
+		key = crypto.make_key( d.passwd, d.salt, d.hash_preset )
+		ret = crypto.decrypt_seed( d.enc_seed, key, d.seed_id, d.key_id )
 		if ret:
 			self.seed = Seed(ret)
 			return True
@@ -872,7 +869,7 @@ class Brainwallet(WalletEnc):
 			bw_seed_len = opt.seed_len or Seed.dfl_len
 		qmsg_r('Hashing brainwallet data.  Please wait...')
 		# Use buflen arg of scrypt.hash() to get seed of desired length
-		seed = scrypt_hash_passphrase(
+		seed = crypto.scrypt_hash_passphrase(
 			self.brainpasswd.encode(),
 			b'',
 			d.hash_preset,
@@ -914,8 +911,11 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	def _make_iv_chksum(self,s): return sha256(s).hexdigest()[:8].upper()
 
 	def _get_incog_data_len(self,seed_len):
-		e = (g.hincog_chk_len,0)[bool(opt.old_incog_fmt)]
-		return g.aesctr_iv_len + g.salt_len + e + seed_len//8
+		return (
+			crypto.aesctr_iv_len
+			+ crypto.salt_len
+			+ (0 if opt.old_incog_fmt else crypto.hincog_chk_len)
+			+ seed_len//8 )
 
 	def _incog_data_size_chk(self):
 		# valid sizes: 56, 64, 72
@@ -941,25 +941,33 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 			die(1,'Writing old-format incog wallets is unsupported')
 		d = self.ssdata
 		# IV is used BOTH to initialize counter and to salt password!
-		d.iv = get_random(g.aesctr_iv_len)
+		d.iv = crypto.get_random( crypto.aesctr_iv_len )
 		d.iv_id = self._make_iv_chksum(d.iv)
 		msg(f'New Incog Wallet ID: {d.iv_id}')
 		qmsg('Make a record of this value')
 		vmsg(self.msg['record_incog_id'])
 
-		d.salt = get_random(g.salt_len)
-		key = make_key(d.passwd, d.salt, d.hash_preset, 'incog wallet key')
+		d.salt = crypto.get_random( crypto.salt_len )
+		key = crypto.make_key( d.passwd, d.salt, d.hash_preset, 'incog wallet key' )
 		chk = sha256(self.seed.data).digest()[:8]
-		d.enc_seed = encrypt_data(chk+self.seed.data, key, g.aesctr_dfl_iv, 'seed')
+		d.enc_seed = crypto.encrypt_data(
+			chk + self.seed.data,
+			key,
+			crypto.aesctr_dfl_iv,
+			'seed' )
 
-		d.wrapper_key = make_key(d.passwd, d.iv, d.hash_preset, 'incog wrapper key')
+		d.wrapper_key = crypto.make_key( d.passwd, d.iv, d.hash_preset, 'incog wrapper key' )
 		d.key_id = make_chksum_8(d.wrapper_key)
 		vmsg(f'Key ID: {d.key_id}')
 		d.target_data_len = self._get_incog_data_len(self.seed.bitlen)
 
 	def _format(self):
 		d = self.ssdata
-		self.fmt_data = d.iv + encrypt_data(d.salt+d.enc_seed, d.wrapper_key, d.iv, self.desc)
+		self.fmt_data = d.iv + crypto.encrypt_data(
+			d.salt + d.enc_seed,
+			d.wrapper_key,
+			d.iv,
+			self.desc )
 
 	def _filename(self):
 		s = self.seed
@@ -979,9 +987,9 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 			return False
 
 		d = self.ssdata
-		d.iv             = self.fmt_data[0:g.aesctr_iv_len]
+		d.iv             = self.fmt_data[0:crypto.aesctr_iv_len]
 		d.incog_id       = self._make_iv_chksum(d.iv)
-		d.enc_incog_data = self.fmt_data[g.aesctr_iv_len:]
+		d.enc_incog_data = self.fmt_data[crypto.aesctr_iv_len:]
 		msg(f'Incog Wallet ID: {d.incog_id}')
 		qmsg('Check this value against your records')
 		vmsg(self.msg['check_incog_id'])
@@ -1010,19 +1018,19 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		self._get_passphrase(add_desc=d.incog_id)
 
 		# IV is used BOTH to initialize counter and to salt password!
-		key = make_key(d.passwd, d.iv, d.hash_preset, 'wrapper key')
-		dd = decrypt_data(d.enc_incog_data, key, d.iv, 'incog data')
+		key = crypto.make_key( d.passwd, d.iv, d.hash_preset, 'wrapper key' )
+		dd = crypto.decrypt_data( d.enc_incog_data, key, d.iv, 'incog data' )
 
-		d.salt     = dd[0:g.salt_len]
-		d.enc_seed = dd[g.salt_len:]
+		d.salt     = dd[0:crypto.salt_len]
+		d.enc_seed = dd[crypto.salt_len:]
 
-		key = make_key(d.passwd, d.salt, d.hash_preset, 'main key')
+		key = crypto.make_key( d.passwd, d.salt, d.hash_preset, 'main key' )
 		qmsg(f'Key ID: {make_chksum_8(key)}')
 
 		verify_seed = getattr(self,'_verify_seed_'+
 						('newfmt','oldfmt')[bool(opt.old_incog_fmt)])
 
-		seed = verify_seed(decrypt_seed(d.enc_seed, key, '', ''))
+		seed = verify_seed( crypto.decrypt_seed(d.enc_seed, key, '', '') )
 
 		if seed:
 			self.seed = Seed(seed)
