@@ -22,43 +22,47 @@ filename.py:  Filename class and methods for the MMGen suite
 
 import sys,os
 
-from .exception import BadFileExtension,FileNotFound
 from .obj import *
 from .util import die,get_extension
 from .seed import *
 
 class Filename(MMGenObject):
 
-	def __init__(self,fn,ftype=None,write=False):
+	def __init__(self,fn,ftype=None,from_extension=None,write=False):
+		"""
+		'ftype'          - a subclass with an 'ext' attribute
+		'from_extension' - a base class with an 'ext_to_type' method
+
+		One or the other must be provided, but not both.
+
+		The base class signals support for the Filename API by setting its 'filename_api'
+		attribute to True.
+		"""
 		self.name     = fn
 		self.dirname  = os.path.dirname(fn)
 		self.basename = os.path.basename(fn)
 		self.ext      = get_extension(fn)
-		self.ftype    = None # the file's associated class
 		self.mtime    = None
 		self.ctime    = None
 		self.atime    = None
 
-		from .wallet import Wallet
-		from .tx import MMGenTX
-		if ftype:
-			if isinstance(ftype,type):
-				if issubclass(ftype,(Wallet,MMGenTX)):
-					self.ftype = ftype
-				# elif: # other MMGen file types
-				else:
-					die(3,f'{ftype!r}: not a recognized file type for Wallet')
-			else:
-				die(3,f'{ftype!r}: not a class')
-		else:
-			# TODO: other file types
-			self.ftype = Wallet.ext_to_type(self.ext)
-			if not self.ftype:
-				raise BadFileExtension(f'{self.ext!r}: not a recognized Wallet file extension')
+		assert (ftype or from_extension) and not (ftype and from_extension), 'Filename chk1'
+
+		if not getattr(ftype or from_extension,'filename_api',False):
+			die(3,f'Class {(ftype or from_extension).__name__!r} does not support the Filename API')
+
+		if from_extension:
+			ftype = from_extension.ext_to_type(self.ext)
+			if not ftype:
+				from .exception import BadFileExtension
+				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {self.from_extension}')
+
+		self.ftype = ftype
 
 		try:
 			st = os.stat(fn)
 		except:
+			from .exception import FileNotFound
 			raise FileNotFound(f'{fn!r}: file not found')
 
 		import stat
@@ -96,26 +100,23 @@ class MMGenFileList(list,MMGenObject):
 		self.sort(key=lambda a: getattr(a,key),reverse=reverse)
 
 def find_files_in_dir(ftype,fdir,no_dups=False):
-	if not isinstance(ftype,type):
-		die(3,f"{ftype!r}: is of type {type(ftype)} (not a subclass of type 'type')")
 
-	from .wallet import Wallet
-	if not issubclass(ftype,Wallet):
-		die(3,f'{ftype!r}: not a recognized file type')
+	assert isinstance(ftype,type), f'{ftype}: not a class'
 
-	try:
-		dirlist = os.listdir(fdir)
-	except:
-		die(3,f'ERROR: unable to read directory {fdir!r}')
+	if not getattr(ftype,'filename_api',False):
+		die(3,f'Class {ftype.__name__!r} does not support the Filename API')
 
-	matches = [l for l in dirlist if l[-len(ftype.ext)-1:]=='.'+ftype.ext]
+	matches = [l for l in os.listdir(fdir) if l.endswith('.'+ftype.ext)]
 
 	if no_dups:
-		if len(matches) > 1:
+		if len(matches) == 1:
+			return os.path.join(fdir,matches[0])
+		elif matches:
 			die(1,f'ERROR: more than one {ftype.__name__} file in directory {fdir!r}')
-		return os.path.join(fdir,matches[0]) if len(matches) else None
+		else:
+			return None
 	else:
 		return [os.path.join(fdir,m) for m in matches]
 
-def find_file_in_dir(ftype,fdir,no_dups=True):
-	return find_files_in_dir(ftype,fdir,no_dups=no_dups)
+def find_file_in_dir(ftype,fdir):
+	return find_files_in_dir(ftype,fdir,no_dups=True)

@@ -297,6 +297,8 @@ class MMGenTxOutputList(MMGenTxIOList):
 
 class MMGenTX:
 
+	filename_api = True
+
 	class Base(MMGenObject):
 		desc         = 'transaction'
 		hex          = ''                     # raw serialized hex transaction

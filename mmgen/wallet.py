@@ -57,6 +57,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 
 	desc = g.proj_name + ' seed source'
 	file_mode = 'text'
+	filename_api = True
 	stdin_ok = False
 	ask_tty = True
 	no_tty  = False
@@ -102,7 +103,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		elif fn or opt.hidden_incog_input_params:
 			from .filename import Filename
 			if fn:
-				f = Filename(fn)
+				f = Filename(fn,from_extension=cls)
 			else:
 				# permit comma in filename
 				fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1])
