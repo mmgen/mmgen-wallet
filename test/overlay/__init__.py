@@ -12,7 +12,7 @@ def overlay_setup(repo_root):
 				d == 'mmgen.data' or
 				d == 'mmgen' and fn.startswith('secp256k1')
 			):
-				if fn in fakemods:
+				if d == 'mmgen' and fn in fakemods:
 					make_link(
 						os.path.join(fakemod_dir,fn),
 						os.path.join(destdir,fn) )

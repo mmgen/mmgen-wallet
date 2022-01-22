@@ -1,10 +1,13 @@
 from .crypto_orig import *
 
 if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
+
 	get_random_orig = get_random
 	add_user_random_orig = add_user_random
 
+	import sys
 	fake_rand_h = sha256('.'.join(sys.argv).encode())
+
 	def fake_urandom(n):
 
 		def gen(rounds):
