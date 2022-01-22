@@ -22,7 +22,7 @@ bip39.py - Data and routines for BIP39 mnemonic seed phrases
 
 from hashlib import sha256
 
-from .exception import *
+from .exception import MnemonicError
 from .baseconv import baseconv
 from .util import is_hex_str
 

@@ -20,7 +20,6 @@
 xmrseed.py: Monero mnemonic conversion class for the MMGen suite
 """
 
-from .exception import *
 from .baseconv import baseconv
 from .util import die
 
@@ -55,6 +54,8 @@ class xmrseed(baseconv):
 		wl = self.digits
 		base = len(wl)
 
+		from .exception import MnemonicError
+
 		if not set(words) <= set(wl):
 			raise MnemonicError( f'{words!r}: not in {desc} format' )
 
@@ -64,6 +65,7 @@ class xmrseed(baseconv):
 		z = self.monero_mn_checksum(words[:-1])
 		if z != words[-1]:
 			raise MnemonicError(f'invalid {desc} checksum')
+
 		words = tuple(words[:-1])
 
 		def gen():
@@ -82,6 +84,7 @@ class xmrseed(baseconv):
 		base = len(wl)
 
 		if len(bytestr) not in self.seedlen_map:
+			from .exception import SeedLengthError
 			raise SeedLengthError(f'{len(bytestr)}: invalid seed byte length for {desc}')
 
 		def num2base_monero(num):

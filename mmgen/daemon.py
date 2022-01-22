@@ -20,11 +20,13 @@
 daemon.py:  Daemon control interface for the MMGen suite
 """
 
-import shutil
+import os,shutil,time
 from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
-from .exception import *
-from .common import *
+
+from .globalvars import g
+from .opts import opt
+from .util import msg,die,list_gen,get_subclasses
 from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
@@ -78,6 +80,7 @@ class Daemon(Lockable):
 		try:
 			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except Exception as e:
+			from .exception import MMGenCalledProcessError
 			raise MMGenCalledProcessError(f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
 		if self.debug:
 			print(cp)

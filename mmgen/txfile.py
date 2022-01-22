@@ -23,8 +23,6 @@ txfile.py:  Transaction file operations for the MMGen suite
 from .common import *
 from .obj import HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
 from .tx import MMGenTxOutput,MMGenTxOutputList,MMGenTxInput,MMGenTxInputList
-from .amt import UnknownCoinAmt
-from .exception import MaxFileSizeExceeded
 
 class MMGenTxFile:
 
@@ -63,6 +61,7 @@ class MMGenTxFile:
 		try:
 			desc = 'data'
 			if len(tx_data) > g.max_tx_file_size:
+				from .exception import MaxFileSizeExceeded
 				raise MaxFileSizeExceeded(f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)')
 			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
@@ -188,6 +187,7 @@ class MMGenTxFile:
 		self.chksum = make_chksum_6(' '.join(lines))
 		fmt_data = '\n'.join([self.chksum] + lines) + '\n'
 		if len(fmt_data) > g.max_tx_file_size:
+			from .exception import MaxFileSizeExceeded
 			raise MaxFileSizeExceeded(f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)')
 		return fmt_data
 

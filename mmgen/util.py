@@ -25,8 +25,8 @@ from hashlib import sha256
 from string import hexdigits,digits
 
 from .color import *
-from .exception import BadFileExtension,UserNonConfirmation
 from .globalvars import g
+from .opts import opt
 
 CUR_HIDE = '\033[?25l'
 CUR_SHOW = '\033[?25h'
@@ -65,6 +65,24 @@ def gmsg(s):   msg(green(s))
 def gmsg_r(s): msg_r(green(s))
 def bmsg(s):   msg(blue(s))
 def bmsg_r(s): msg_r(blue(s))
+def qmsg(s,alt=None):
+	if opt.quiet:
+		if alt != None: msg(alt)
+	else: msg(s)
+def qmsg_r(s,alt=None):
+	if opt.quiet:
+		if alt != None: msg_r(alt)
+	else: msg_r(s)
+def vmsg(s,force=False):
+	if opt.verbose or force: msg(s)
+def vmsg_r(s,force=False):
+	if opt.verbose or force: msg_r(s)
+def Vmsg(s,force=False):
+	if opt.verbose or force: Msg(s)
+def Vmsg_r(s,force=False):
+	if opt.verbose or force: Msg_r(s)
+def dmsg(s):
+	if opt.debug: msg(s)
 
 def mmsg(*args):
 	for d in args: Msg(repr(d))
@@ -238,27 +256,6 @@ def parse_bytespec(nbytes):
 			return int(nbytes)
 
 	die(1,f'{nbytes!r}: invalid byte specifier')
-
-from .opts import opt
-
-def qmsg(s,alt=None):
-	if opt.quiet:
-		if alt != None: msg(alt)
-	else: msg(s)
-def qmsg_r(s,alt=None):
-	if opt.quiet:
-		if alt != None: msg_r(alt)
-	else: msg_r(s)
-def vmsg(s,force=False):
-	if opt.verbose or force: msg(s)
-def vmsg_r(s,force=False):
-	if opt.verbose or force: msg_r(s)
-def Vmsg(s,force=False):
-	if opt.verbose or force: Msg(s)
-def Vmsg_r(s,force=False):
-	if opt.verbose or force: Msg_r(s)
-def dmsg(s):
-	if opt.debug: msg(s)
 
 def suf(arg,suf_type='s',verb='none'):
 	suf_types = {
@@ -449,6 +446,7 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 def check_wallet_extension(fn):
 	from .wallet import Wallet
 	if not Wallet.ext_to_type(get_extension(fn)):
+		from .exception import BadFileExtension
 		raise BadFileExtension(f'{fn!r}: unrecognized seed source file extension')
 
 def make_full_path(outdir,outfile):
@@ -460,6 +458,7 @@ def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 	a = f'{q}  ' if q[0].isupper() else f'Are you sure you want to {q}?\n'
 	b = f'Type uppercase {expect!r} to confirm: '
 	if line_input(a+b).strip() != expect:
+		from .exception import UserNonConfirmation
 		raise UserNonConfirmation(exit_msg)
 
 def get_words_from_user(prompt):

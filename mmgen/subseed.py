@@ -22,7 +22,6 @@ subseed.py:  Subseed classes and methods for the MMGen suite
 
 from .color import green
 from .util import msg_r,msg,qmsg
-from .exception import SubSeedNonceRangeExceeded
 from .obj import MMGenRange,IndexedDict
 from .seed import *
 from .crypto import scramble_seed
@@ -192,6 +191,7 @@ class SubSeedList(MMGenObject):
 					self.data[length][sid] = (idx,nonce)
 					return last_sid == sid
 			else: # must exit here, as this could leave self.data in inconsistent state
+				from .exception import SubSeedNonceRangeExceeded
 				raise SubSeedNonceRangeExceeded('add_subseed(): nonce range exceeded')
 
 		for idx in SubSeedIdxRange(first_idx,last_idx).iterate():

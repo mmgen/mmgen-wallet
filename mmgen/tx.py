@@ -20,10 +20,45 @@
 tx.py:  Transaction routines for the MMGen suite
 """
 
-import sys,os,json
-from stat import *
-from .common import *
-from .obj import *
+import sys,time
+from .globalvars import g
+from .opts import opt
+from .color import *
+from .util import (
+	msg,
+	ymsg,
+	dmsg,
+	vmsg,
+	qmsg,
+	msg_r,
+	die,
+	is_int,
+	fmt,
+	suf,
+	altcoin_subclass,
+	confirm_or_raise,
+	remove_dups,
+	get_extension,
+	keypress_confirm,
+	do_license_msg,
+	line_input,
+	make_chksum_6,
+	make_timestamp,
+	secs_to_dhms,
+)
+from .objmethods import MMGenObject
+from .obj import (
+	ImmutableAttr,
+	ListItemAttr,
+	MMGenList,
+	MMGenListItem,
+	MMGenTxLabel,
+	HexStr,
+	MMGenTxID,
+	MMGenDict,
+	CoinTxID,
+	get_obj,
+)
 from .addr import MMGenID,CoinAddr,is_mmgen_id,is_coin_addr
 
 wmsg = lambda k: {
@@ -148,6 +183,7 @@ class DeserializedTX(dict,MMGenObject):
 				return int(vbytes[::-1].hex(),16)
 
 		def make_txid(tx_bytes):
+			from hashlib import sha256
 			return sha256(sha256(tx_bytes).digest()).digest()[::-1].hex()
 
 		self.idx = 0
@@ -1356,6 +1392,7 @@ class MMGenTX:
 			vmsg(f'\nVsize: {vsize} (true) {est_vsize} (estimated)')
 			ratio = float(est_vsize) / vsize
 			if not (0.95 < ratio < 1.05): # allow for 5% error
+				from .exception import BadTxSizeEstimate
 				raise BadTxSizeEstimate(fmt(f"""
 					Estimated transaction vsize is {ratio:1.2f} times the true vsize
 					Your transaction fee estimates will be inaccurate

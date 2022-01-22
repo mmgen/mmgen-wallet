@@ -21,9 +21,10 @@ baseconv.py:  base conversion class for the MMGen suite
 """
 
 from hashlib import sha256
-from .exception import *
-from .util import die
 from collections import namedtuple
+
+from .exception import BaseConversionError,BaseConversionPadError,HexadecimalStringError,SeedLengthError
+from .util import die
 
 def is_b58_str(s):
 	return set(list(s)) <= set(baseconv('b58').digits)

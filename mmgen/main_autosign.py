@@ -24,6 +24,8 @@ import sys,os,time,signal,shutil
 from subprocess import run,PIPE,DEVNULL
 from stat import *
 
+from .common import *
+
 mountpoint   = '/mnt/tx'
 tx_dir       = '/mnt/tx/tx'
 part_label   = 'MMGEN_TX'
@@ -35,10 +37,8 @@ mn_fmts      = {
 }
 mn_fmt_dfl   = 'mmgen'
 
-from .common import *
 opts.UserOpts._set_ok += ('outdir','passwd_file')
 
-prog_name = os.path.basename(sys.argv[0])
 opts_data = {
 	'sets': [('stealth_led', True, 'led', True)],
 	'text': {
@@ -118,7 +118,7 @@ This command is currently available only on Linux-based platforms.
 
 cmd_args = opts.init(
 	opts_data,
-	add_opts = ['outdir','passwd_file'], # required, because in _set_ok
+	add_opts = ['outdir','passwd_file'], # in _set_ok, so must be set
 	init_opts = {
 		'quiet': True,
 		'out_fmt': 'wallet',
@@ -135,14 +135,11 @@ if opt.mnemonic_fmt:
 			opt.mnemonic_fmt,
 			fmt_list(mn_fmts,fmt='no_spc') ))
 
-import mmgen.tx
 from .wallet import Wallet
+from .tx import MMGenTX
 from .txsign import txsign
 from .protocol import init_proto
 from .rpc import rpc_init
-
-if g.test_suite:
-	from .daemon import CoinDaemon
 
 if opt.mountpoint:
 	mountpoint = opt.mountpoint
@@ -198,7 +195,6 @@ def do_umount():
 		run(['umount',mountpoint],check=True)
 
 async def sign_tx_file(txfile):
-	from .tx import MMGenTX
 	try:
 		tx1 = MMGenTX.Unsigned(filename=txfile)
 		if tx1.proto.sign_mode == 'daemon':

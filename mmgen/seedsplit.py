@@ -22,7 +22,6 @@ seedsplit.py: Seed split classes and methods for the MMGen suite
 
 from .globalvars import g
 from .color import yellow
-from .exception import RangeError
 from .obj import MMGenPWIDString,MMGenIdx
 from .subseed import *
 
@@ -81,6 +80,7 @@ class SeedShareList(SubSeedList):
 						msg(f'master_share seed ID collision with parent seed, incrementing nonce to {nonce+1}')
 				else:
 					return ms
+			from .exception import SubSeedNonceRangeExceeded
 			raise SubSeedNonceRangeExceeded('nonce range exceeded')
 
 		def last_share_debug(last_share):
@@ -109,6 +109,7 @@ class SeedShareList(SubSeedList):
 				self.data['long'][ls.sid] = (count,nonce)
 				break
 		else:
+			from .exception import SubSeedNonceRangeExceeded
 			raise SubSeedNonceRangeExceeded('nonce range exceeded')
 
 		if g.debug_subseed:
@@ -118,6 +119,7 @@ class SeedShareList(SubSeedList):
 
 	def get_share_by_idx(self,idx,base_seed=False):
 		if idx < 1 or idx > self.count:
+			from .exception import RangeError
 			raise RangeError(f'{idx}: share index out of range')
 		elif idx == self.count:
 			return self.last_share

@@ -31,6 +31,7 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 
 # Import these _after_ local path's been added to sys.path
 from test.objattrtest_py_d.oat_common import *
+from mmgen.common import *
 from mmgen.addrlist import *
 from mmgen.passwdlist import *
 

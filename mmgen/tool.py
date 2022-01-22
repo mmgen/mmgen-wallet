@@ -20,19 +20,20 @@
 tool.py:  Routines for the 'mmgen-tool' utility
 """
 
-from .protocol import hash160
 from .common import *
+from .protocol import hash160
+from .fileutil import get_seed_file,get_data_from_file,write_data_to_file
 from .crypto import get_random
 from .key import PrivKey
 from .subseed import SubSeedList
 from .seedsplit import MasterShareIdx
 from .addr import *
-from .addrlist import AddrList,KeyAddrList
+from .addrlist import AddrList,KeyAddrList,AddrIdxList
 from .passwdlist import PasswordList
 from .baseconv import baseconv
 from .xmrseed import xmrseed
 from .bip39 import bip39
-from .fileutil import get_seed_file,get_data_from_file,write_data_to_file
+from .tw import TwCommon
 
 NL = ('\n','\r\n')[g.platform=='win']
 
@@ -233,8 +234,6 @@ def _process_result(ret,pager=False,print_result=False):
 			return ret if not print_result else os.write(1,ret)
 	else:
 		ydie(1,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
-
-from .addr import MMGenAddrType
 
 dfl_mnemonic_fmt = 'mmgen'
 mft = namedtuple('mnemonic_format',['fmt','pad','conv_cls'])
@@ -895,7 +894,6 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		ss = Wallet(sf)
 		if ss.seed.sid != addr.sid:
 			die(1,f'Seed ID of requested address ({addr.sid}) does not match wallet ({ss.seed.sid})')
-		from .addrlist import AddrList,AddrIdxList
 		al = AddrList(
 			proto     = self.proto,
 			seed      = ss.seed,
@@ -904,8 +902,6 @@ class MMGenToolCmdWallet(MMGenToolCmds):
 		d = al.data[0]
 		ret = d.sec.wif if target=='wif' else d.addr
 		return ret
-
-from .tw import TwCommon
 
 class MMGenToolCmdRPC(MMGenToolCmds):
 	"tracking wallet commands using the JSON-RPC interface"
@@ -964,7 +960,6 @@ class MMGenToolCmdRPC(MMGenToolCmds):
 				die(1,
 					f'{mmgen_addrs}: invalid address list argument ' +
 					'(must be in form <seed ID>:[<type>:]<idx list>)' )
-			from .addrlist import AddrIdxList
 			usr_addr_list = [MMGenID(self.proto,f'{a[0]}:{i}') for i in AddrIdxList(a[1])]
 
 		from .twaddrs import TwAddrList

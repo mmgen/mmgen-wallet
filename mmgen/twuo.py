@@ -25,7 +25,6 @@ from collections import namedtuple
 
 from .globalvars import g
 from .color import red,yellow,green
-from .exception import BadAgeFormat
 from .util import (
 	msg,
 	msg_r,
@@ -129,6 +128,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	@age_fmt.setter
 	def age_fmt(self,val):
 		if val not in self.age_fmts:
+			from .exception import BadAgeFormat
 			raise BadAgeFormat(f'{val!r}: invalid age format (must be one of {self.age_fmts!r})')
 		self._age_fmt = val
 

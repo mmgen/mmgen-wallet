@@ -21,7 +21,6 @@ twaddrs: Tracking wallet listaddresses class for the MMGen suite
 """
 
 from .color import green
-from .exception import BadAgeFormat
 from .util import msg,die,altcoin_subclass
 from .base_obj import AsyncInit
 from .obj import MMGenList,MMGenDict,TwComment
@@ -125,6 +124,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 		if not self.has_age:
 			show_age = False
 		if age_fmt not in self.age_fmts:
+			from .exception import BadAgeFormat
 			raise BadAgeFormat(f'{age_fmt!r}: invalid age format (must be one of {self.age_fmts!r})')
 		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
