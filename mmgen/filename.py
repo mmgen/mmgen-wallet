@@ -55,7 +55,7 @@ class Filename(MMGenObject):
 			ftype = from_extension.ext_to_type(self.ext)
 			if not ftype:
 				from .exception import BadFileExtension
-				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {self.from_extension}')
+				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {from_extension}')
 
 		self.ftype = ftype
 

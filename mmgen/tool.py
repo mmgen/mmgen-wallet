@@ -1053,7 +1053,6 @@ class tool_api(
 		"""
 		Initializer - takes no arguments
 		"""
-		import mmgen.opts
 		opts.UserOpts._reset_ok += ('usr_randchars',)
 		if not opt._lock:
 			opts.init()

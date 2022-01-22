@@ -220,12 +220,12 @@ common_opts_data = {
 --, --ignore-daemon-version Ignore coin daemon version check
 --, --http-timeout=t       Set HTTP timeout in seconds for JSON-RPC connections
 --, --no-license           Suppress the GPL license prompt
---, --rpc-host=host        Communicate with coin daemon running on host 'host'
---, --rpc-port=port        Communicate with coin daemon listening on port 'port'
---, --rpc-user=user        Authenticate to coin daemon using username 'user'
---, --rpc-password=pass    Authenticate to coin daemon using password 'pass'
+--, --rpc-host=HOST        Communicate with coin daemon running on host HOST
+--, --rpc-port=PORT        Communicate with coin daemon listening on port PORT
+--, --rpc-user=USER        Authenticate to coin daemon using username USER
+--, --rpc-password=PASS    Authenticate to coin daemon using password PASS
 --, --rpc-backend=backend  Use backend 'backend' for JSON-RPC communications
---, --aiohttp-rpc-queue-len=N Use 'N' simultaneous RPC connections with aiohttp
+--, --aiohttp-rpc-queue-len=N Use N simultaneous RPC connections with aiohttp
 --, --regtest=0|1          Disable or enable regtest mode
 --, --testnet=0|1          Disable or enable testnet
 --, --skip-cfg-file        Skip reading the configuration file
@@ -280,10 +280,6 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 			+ g.init_opts
 			+ g.common_opts ):
 		setattr(opt,o,po.user_opts[o] if o in po.user_opts else None)
-
-	# Make this available to usage()
-	global usage_data
-	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 
 	if opt.version:
 		version() # exits
@@ -374,6 +370,10 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	if getattr(opt,'help',None) or getattr(opt,'longhelp',None):
 		print_help(po,opts_data,opt_filter) # exits
 
+	del mmgen.share.Opts.print_help
+	del mmgen.share.Opts.process_uopts
+	del mmgen.share.Opts.parse_opts
+
 	from .util import warn_altcoins
 	warn_altcoins(g.coin,altcoin_trust_level)
 
@@ -398,8 +398,11 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	if g.debug_opts:
 		opt_postproc_debug()
 
+	# Make this available to usage()
+	global usage_data
+	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
+
 	# We don't need this data anymore
-	del mmgen.share.Opts
 	for k in ('text','notes','code'):
 		if k in opts_data:
 			del opts_data[k]
