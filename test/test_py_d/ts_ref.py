@@ -289,7 +289,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool', ['-q','decrypt',f,'outfile='+dec_file,'hash_preset=1'])
 		if not g.debug_utf8:
 			restore_debug()
-		t.passphrase('user data',tool_enc_passwd)
+		t.passphrase('data',tool_enc_passwd)
 		t.written_to_file('Decrypted data')
 		dec_txt = read_from_file(dec_file)
 		imsg_r(dec_txt)

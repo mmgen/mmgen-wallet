@@ -254,8 +254,8 @@ class TestSuiteShared(object):
 			cmp_or_die(chk,chk_ref,desc='key-address list data checksum')
 		t.expect('Encrypt key list? (y/N): ','y')
 		t.usr_rand(self.usr_rand_chars)
-		t.hash_preset('new key list','1')
-		t.passphrase_new('new key list',self.kapasswd)
+		t.hash_preset('new key-address list','1')
+		t.passphrase_new('new key-address list',self.kapasswd)
 		t.written_to_file('Encrypted secret keys',oo=True)
 		return t
 

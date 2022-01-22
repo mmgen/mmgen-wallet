@@ -25,16 +25,18 @@ from mmgen.crypto import get_passphrase,get_new_passphrase,get_hash_preset_from_
 from mmgen.wallet import Wallet
 
 def crypto():
-	pw = get_new_passphrase(desc='test script')
+	desc = 'test data'
+
+	pw = get_new_passphrase(desc=desc)
 	msg(f'==> got new passphrase: [{pw}]\n')
 
-	pw = get_passphrase(desc='test script')
+	pw = get_passphrase(desc=desc)
 	msg(f'==> got passphrase: [{pw}]\n')
 
-	hp = get_hash_preset_from_user(desc='test script')
+	hp = get_hash_preset_from_user(desc=desc)
 	msg(f'==> got hash preset: [{hp}]')
 
-	hp = get_hash_preset_from_user(desc='test script')
+	hp = get_hash_preset_from_user(desc=desc)
 	msg(f'==> got hash preset: [{hp}]')
 
 def seed():

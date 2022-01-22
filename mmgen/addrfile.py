@@ -55,10 +55,12 @@ class AddrFile(MMGenObject):
 		self.parent = parent
 		self.infile = None
 
-	def encrypt(self,desc='new key list'):
+	def encrypt(self):
 		from .crypto import mmgen_encrypt,mmenc_ext
 		from .globalvars import g
-		self.fmt_data = mmgen_encrypt(self.fmt_data.encode(),desc,'')
+		self.fmt_data = mmgen_encrypt(
+			data = self.fmt_data.encode(),
+			desc = f'new {self.parent.desc} list' )
 		self.ext += f'.{mmenc_ext}'
 
 	@property

@@ -53,15 +53,15 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 		write_to_file(infile,getrand(1033),binary=True)
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,self.usr_rand_arg,'encrypt',infile])
 		t.usr_rand(self.usr_rand_chars)
-		t.hash_preset('user data','1')
-		t.passphrase_new('user data',tool_enc_passwd)
+		t.hash_preset('data','1')
+		t.passphrase_new('data',tool_enc_passwd)
 		t.written_to_file('Encrypted data')
 		return t
 
 	def tool_decrypt(self,f1):
 		out_fn = 'tool_encrypt.out'
 		t = self.spawn('mmgen-tool',['-d',self.tmpdir,'decrypt',f1,'outfile='+out_fn,'hash_preset=1'])
-		t.passphrase('user data',tool_enc_passwd)
+		t.passphrase('data',tool_enc_passwd)
 		t.written_to_file('Decrypted data')
 		d1 = self.read_from_tmpfile(self.enc_infn,binary=True)
 		d2 = self.read_from_tmpfile(out_fn,binary=True)

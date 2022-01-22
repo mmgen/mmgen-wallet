@@ -731,7 +731,7 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 		"encrypt a file"
 		data = get_data_from_file(infile,'data for encryption',binary=True)
 		from .crypto import mmgen_encrypt,mmenc_ext
-		enc_d = mmgen_encrypt(data,'user data',hash_preset)
+		enc_d = mmgen_encrypt(data,'data',hash_preset)
 		if not outfile:
 			outfile = f'{os.path.basename(infile)}.{mmenc_ext}'
 		write_data_to_file(outfile,enc_d,'encrypted data',binary=True)
@@ -742,7 +742,7 @@ class MMGenToolCmdFileCrypt(MMGenToolCmds):
 		enc_d = get_data_from_file(infile,'encrypted data',binary=True)
 		from .crypto import mmgen_decrypt,mmenc_ext
 		while True:
-			dec_d = mmgen_decrypt(enc_d,'user data',hash_preset)
+			dec_d = mmgen_decrypt(enc_d,'data',hash_preset)
 			if dec_d: break
 			msg('Trying again...')
 		if not outfile:

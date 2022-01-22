@@ -172,7 +172,7 @@ af = al.get_file()
 af.format()
 
 if keypress_confirm('Encrypt password list?'):
-	af.encrypt(desc='password list')
+	af.encrypt()
 	af.write(binary=True,desc='encrypted password list')
 else:
 	if g.test_suite_popen_spawn and g.platform == 'win':

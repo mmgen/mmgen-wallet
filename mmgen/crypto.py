@@ -261,36 +261,38 @@ def get_passphrase(desc,passchg=False):
 	else:
 		return ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
 
-_salt_len,_sha256_len,_nonce_len = (32,32,32)
+mmenc_salt_len = 32
+mmenc_nonce_len = 32
 
 def mmgen_encrypt(data,desc='data',hash_preset=''):
-	salt  = get_random(_salt_len)
+	salt  = get_random(mmenc_salt_len)
 	iv    = get_random(g.aesctr_iv_len)
-	nonce = get_random(_nonce_len)
+	nonce = get_random(mmenc_nonce_len)
 	hp    = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
 	m     = ('user-requested','default')[hp=='3']
 	vmsg(f'Encrypting {desc}')
 	qmsg(f'Using {m} hash preset of {hp!r}')
 	passwd = get_new_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
-	enc_d  = encrypt_data(sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc)
+	enc_d  = encrypt_data( sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc )
 	return salt+iv+enc_d
 
 def mmgen_decrypt(data,desc='data',hash_preset=''):
 	vmsg(f'Preparing to decrypt {desc}')
-	dstart = _salt_len + g.aesctr_iv_len
-	salt   = data[:_salt_len]
-	iv     = data[_salt_len:dstart]
+	dstart = mmenc_salt_len + g.aesctr_iv_len
+	salt   = data[:mmenc_salt_len]
+	iv     = data[mmenc_salt_len:dstart]
 	enc_d  = data[dstart:]
 	hp     = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
 	m  = ('user-requested','default')[hp=='3']
 	qmsg(f'Using {m} hash preset of {hp!r}')
 	passwd = get_passphrase(desc)
 	key    = make_key(passwd,salt,hp)
-	dec_d  = decrypt_data(enc_d,key,iv,desc)
-	if dec_d[:_sha256_len] == sha256(dec_d[_sha256_len:]).digest():
+	dec_d  = decrypt_data( enc_d, key, iv, desc )
+	sha256_len = 32
+	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
 		vmsg('OK')
-		return dec_d[_sha256_len+_nonce_len:]
+		return dec_d[sha256_len+mmenc_nonce_len:]
 	else:
 		msg('Incorrect passphrase or hash preset')
 		return False
