@@ -215,78 +215,101 @@ def add_user_random(rand_bytes,desc):
 	else:
 		return rand_bytes
 
-def get_hash_preset_from_user(hp=g.dfl_hash_preset,desc='data'):
+def get_hash_preset_from_user(
+		hash_preset = g.dfl_hash_preset,
+		data_desc = 'data',
+		prompt = None ):
+
+	prompt = prompt or (
+		f'Enter hash preset for {data_desc},\n' +
+		f'or hit ENTER to accept the default value ({hash_preset!r}): ' )
+
 	while True:
-		ret = line_input(
-			f'Enter hash preset for {desc},\n' +
-			f'or hit ENTER to accept the default value ({hp!r}): ' )
+		ret = line_input(prompt)
 		if ret:
 			if ret in g.hash_presets:
 				return ret
 			else:
-				msg(f'Invalid input.  Valid choices are {", ".join(g.hash_presets)}')
-				continue
+				msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
 		else:
-			return hp
+			return hash_preset
 
-def get_new_passphrase(desc,passchg=False):
-	pw_desc = f"{'new ' if passchg else ''}passphrase for {desc}"
-	if opt.passwd_file:
+def get_new_passphrase(data_desc,hash_preset,passwd_file,pw_desc='passphrase'):
+	message = f"""
+			You must choose a passphrase to encrypt your {data_desc} with.
+			A key will be generated from your passphrase using a hash preset of '{hash_preset}'.
+			Please note that no strength checking of passphrases is performed.
+			For an empty passphrase, just hit ENTER twice.
+		"""
+	if passwd_file:
 		from .fileutil import get_words_from_file
-		pw = ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
-	elif opt.echo_passphrase:
-		pw = ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
+		pw = ' '.join(get_words_from_file(
+			infile = passwd_file,
+			desc = f'{pw_desc} for {data_desc}',
+			quiet = pwfile_reuse_warning(passwd_file).warning_shown ))
 	else:
-		for i in range(g.passwd_max_tries):
-			pw = ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
-			pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
-			dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
-			if pw == pw_chk:
-				vmsg('Passphrases match'); break
-			else: msg('Passphrases do not match.  Try again.')
+		qmsg('\n'+fmt(message,indent='  '))
+		if opt.echo_passphrase:
+			pw = ' '.join(get_words_from_user(f'Enter {pw_desc} for {data_desc}: '))
 		else:
-			die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
+			for i in range(g.passwd_max_tries):
+				pw = ' '.join(get_words_from_user(f'Enter {pw_desc} for {data_desc}: '))
+				pw_chk = ' '.join(get_words_from_user(f'Repeat {pw_desc}: '))
+				dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
+				if pw == pw_chk:
+					vmsg('Passphrases match')
+					break
+				else:
+					msg('Passphrases do not match.  Try again.')
+			else:
+				die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
 
 	if pw == '':
 		qmsg('WARNING: Empty passphrase')
 
 	return pw
 
-def get_passphrase(desc,passchg=False):
-	pw_desc = f"{'old ' if passchg else ''}passphrase for {desc}"
-	if opt.passwd_file:
+def get_passphrase(data_desc,passwd_file,pw_desc='passphrase'):
+	if passwd_file:
 		from .fileutil import get_words_from_file
-		pwfile_reuse_warning(opt.passwd_file)
-		return ' '.join(get_words_from_file(opt.passwd_file,pw_desc))
+		return ' '.join(get_words_from_file(
+			infile = passwd_file,
+			desc = f'{pw_desc} for {data_desc}',
+			quiet = pwfile_reuse_warning(passwd_file).warning_shown ))
 	else:
-		return ' '.join(get_words_from_user(f'Enter {pw_desc}: '))
+		return ' '.join(get_words_from_user(f'Enter {pw_desc} for {data_desc}: '))
 
 mmenc_salt_len = 32
 mmenc_nonce_len = 32
 
-def mmgen_encrypt(data,desc='data',hash_preset=''):
+def mmgen_encrypt(data,desc='data',hash_preset=None):
 	salt  = get_random(mmenc_salt_len)
 	iv    = get_random(g.aesctr_iv_len)
 	nonce = get_random(mmenc_nonce_len)
-	hp    = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
+	hp    = hash_preset or opt.hash_preset or get_hash_preset_from_user(data_desc=desc)
 	m     = ('user-requested','default')[hp=='3']
 	vmsg(f'Encrypting {desc}')
 	qmsg(f'Using {m} hash preset of {hp!r}')
-	passwd = get_new_passphrase(desc)
+	passwd = get_new_passphrase(
+		data_desc = desc,
+		hash_preset = hp,
+		passwd_file = opt.passwd_file )
 	key    = make_key(passwd,salt,hp)
 	enc_d  = encrypt_data( sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc )
 	return salt+iv+enc_d
 
-def mmgen_decrypt(data,desc='data',hash_preset=''):
+def mmgen_decrypt(data,desc='data',hash_preset=None):
 	vmsg(f'Preparing to decrypt {desc}')
 	dstart = mmenc_salt_len + g.aesctr_iv_len
 	salt   = data[:mmenc_salt_len]
 	iv     = data[mmenc_salt_len:dstart]
 	enc_d  = data[dstart:]
-	hp     = hash_preset or opt.hash_preset or get_hash_preset_from_user('3',desc)
+	hp     = hash_preset or opt.hash_preset or get_hash_preset_from_user(data_desc=desc)
 	m  = ('user-requested','default')[hp=='3']
 	qmsg(f'Using {m} hash preset of {hp!r}')
-	passwd = get_passphrase(desc)
+	passwd = get_passphrase(
+		data_desc = desc,
+		passwd_file = opt.passwd_file )
 	key    = make_key(passwd,salt,hp)
 	dec_d  = decrypt_data( enc_d, key, iv, desc )
 	sha256_len = 32

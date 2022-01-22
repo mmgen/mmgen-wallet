@@ -76,7 +76,7 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect('unchanged')
 
 		t.expect('new passphrase.*: ','pass1\n',regex=True)
-		t.expect('peat passphrase: ','pass1\n')
+		t.expect('peat new passphrase: ','pass1\n')
 		t.expect('unchanged')
 
 		t.expect('reuse the label .*: ','\n',regex=True)
@@ -90,7 +90,7 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect(' changed to')
 
 		t.expect('new passphrase.*: ','pass2\n',regex=True)
-		t.expect('peat passphrase: ','pass2\n')
+		t.expect('peat new passphrase: ','pass2\n')
 		t.expect(' changed')
 
 		t.expect('reuse the label .*: ','lbl2\n',regex=True)

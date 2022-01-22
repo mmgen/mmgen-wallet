@@ -298,15 +298,8 @@ class WalletEnc(Wallet):
 			('',' '+add_desc)[bool(add_desc)],
 			('accept the default','reuse the old')[self.op=='pwchg_new'],
 			hp )
-		while True:
-			ret = line_input(prompt)
-			if ret:
-				if ret in g.hash_presets:
-					return ret
-				else:
-					msg('Invalid input.  Valid choices are {}'.format(', '.join(g.hash_presets)))
-			else:
-				return hp
+		from .crypto import get_hash_preset_from_user
+		return get_hash_preset_from_user( hash_preset=hp, prompt=prompt )
 
 	def _get_hash_preset(self,add_desc=''):
 		if hasattr(self,'ss_in') and hasattr(self.ss_in.ssdata,'hash_preset'):
@@ -329,54 +322,20 @@ class WalletEnc(Wallet):
 		self.ssdata.hash_preset = hp
 
 	def _get_new_passphrase(self):
-		desc = '{}passphrase for {}{}'.format(
-				('','new ')[self.op=='pwchg_new'],
-				('','new ')[self.op in ('new','conv')],
-				self.desc
-			)
-		if self.passwd_file:
-			from .fileutil import get_words_from_file
-			pw = ' '.join(get_words_from_file(
-				self.passwd_file,
-				desc,
-				quiet = pwfile_reuse_warning(self.passwd_file).warning_shown ))
-		else:
-			qmsg('\n'+fmt(self.msg['choose_passphrase'].format(self.desc,self.ssdata.hash_preset),indent='  '))
-			if opt.echo_passphrase:
-				pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
-			else:
-				for i in range(g.passwd_max_tries):
-					pw = ' '.join(get_words_from_user(f'Enter {desc}: '))
-					pw_chk = ' '.join(get_words_from_user('Repeat passphrase: '))
-					dmsg(f'Passphrases: [{pw}] [{pw_chk}]')
-					if pw == pw_chk:
-						vmsg('Passphrases match')
-						break
-					else:
-						msg('Passphrases do not match.  Try again.')
-				else:
-					die(2,f'User failed to duplicate passphrase in {g.passwd_max_tries} attempts')
-
-		if pw == '':
-			qmsg('WARNING: Empty passphrase')
-		self.ssdata.passwd = pw
-		return pw
+		from .crypto import get_new_passphrase
+		self.ssdata.passwd = get_new_passphrase(
+			data_desc = ('new ' if self.op in ('new','conv') else '') + self.desc,
+			hash_preset = self.ssdata.hash_preset,
+			passwd_file = self.passwd_file,
+			pw_desc = ('new ' if self.op=='pwchg_new' else '') + 'passphrase' )
+		return self.ssdata.passwd
 
 	def _get_passphrase(self,add_desc=''):
-		desc = '{}passphrase for {}{}'.format(
-			('','old ')[self.op=='pwchg_old'],
-			self.desc,
-			('',' '+add_desc)[bool(add_desc)]
-		)
-		if self.passwd_file:
-			from .fileutil import get_words_from_file
-			ret = ' '.join(get_words_from_file(
-				self.passwd_file,
-				desc,
-				quiet = pwfile_reuse_warning(self.passwd_file).warning_shown ))
-		else:
-			ret = ' '.join(get_words_from_user(f'Enter {desc}: '))
-		self.ssdata.passwd = ret
+		from .crypto import get_passphrase
+		self.ssdata.passwd = get_passphrase(
+			data_desc = self.desc + (f' {add_desc}' if add_desc else ''),
+			passwd_file = self.passwd_file,
+			pw_desc = ('old ' if self.op == 'pwchg_old' else '') + 'passphrase' )
 
 	def _get_first_pw_and_hp_and_encrypt_seed(self):
 		d = self.ssdata
@@ -826,7 +785,7 @@ class MMGenWallet(WalletEnc):
 		d.hash_preset = hp = hpdata[0][:-1]  # a string!
 		qmsg(f'Hash preset of wallet: {hp!r}')
 		if opt.hash_preset and opt.hash_preset != hp:
-			qmsg('Warning: ignoring user-requested hash preset {opt.hash_preset}')
+			qmsg(f'Warning: ignoring user-requested hash preset {opt.hash_preset!r}')
 
 		hash_params = tuple(map(int,hpdata[1:]))
 

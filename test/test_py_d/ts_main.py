@@ -300,7 +300,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.passphrase(wcls.desc,self.cfgs['1']['wpasswd'],pwtype='old')
 		t.expect_getend('Hash preset changed to ')
 		t.passphrase(wcls.desc,self.wpasswd,pwtype='new') # reuse passphrase?
-		t.expect('Repeat passphrase: ',self.wpasswd+'\n')
+		t.expect('Repeat new passphrase: ',self.wpasswd+'\n')
 		t.usr_rand(self.usr_rand_chars)
 		if label_action == 'user':
 			t.expect('Enter a wallet label.*: ','Interactive Label (UTF-8) α\n',regex=True)
