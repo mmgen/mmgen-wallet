@@ -20,10 +20,28 @@
 crypto.py:  Cryptographic and related routines for the MMGen suite
 """
 
+import os
 from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
 from cryptography.hazmat.backends import default_backend
 from hashlib import sha256
-from .common import *
+from collections import namedtuple
+
+from .globalvars import g
+from .opts import opt
+from .util import (
+	msg,
+	msg_r,
+	dmsg,
+	vmsg,
+	vmsg_r,
+	qmsg,
+	fmt,
+	line_input,
+	get_words_from_user,
+	make_chksum_8,
+	compare_chksums,
+	pwfile_reuse_warning,
+)
 
 mmenc_ext = 'mmenc'
 
