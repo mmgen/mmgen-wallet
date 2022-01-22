@@ -19,20 +19,19 @@ from difflib import unified_diff
 fns = sys.argv[1:]
 
 translate = {
-#	'\r': '[CR]\n',
-	'\r': '',
+	'\r': None,
 	'\b': '[BS]',
 #	chr(4): '', # Ctrl-D, EOT
 }
 
 def cleanup_file(fn):
 
-	with open(fn) as fp:
-		data = fp.read()
+	# must use binary mode to prevent conversion of DOS CR into newline
+	with open(fn,'rb') as fp:
+		data = fp.read().decode()
 
 	def gen_text():
-		for line in data.splitlines():
-#			line = re.sub('\r\n','\n',line) # DOS CRLF to Unix LF
+		for line in data.split('\n'): # do not use splitlines()
 			line = line.translate({ord(a):b for a,b in translate.items()})
 			line = re.sub(r'\s+$','',line)  # trailing whitespace
 			yield line
