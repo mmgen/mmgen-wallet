@@ -56,8 +56,38 @@ def exec_wrapper_end_msg():
 		# write to stdout to ensure script output gets to terminal first
 		sys.stdout.write(c.blue('Runtime: {:0.5f} secs\n'.format(time.time() - exec_wrapper_tstart)))
 
+def exec_wrapper_tracemalloc_setup():
+	if os.getenv('MMGEN_TRACEMALLOC'):
+		os.environ['PYTHONTRACEMALLOC'] = '1'
+		import tracemalloc
+		tracemalloc.start()
+		sys.stderr.write("INFO → Appending memory allocation stats to 'tracemalloc.log'\n")
+
+def exec_wrapper_tracemalloc_log():
+	if os.getenv('MMGEN_TRACEMALLOC'):
+		import tracemalloc,re
+		snapshot = tracemalloc.take_snapshot()
+		stats = snapshot.statistics('lineno')
+		depth = 100
+		col1w = 100
+		with open('tracemalloc.log','a') as fp:
+			fp.write('##### TOP {} {} #####\n'.format(depth,' '.join(sys.argv)))
+			for stat in stats[:depth]:
+				frame = stat.traceback[0]
+				fn = re.sub(r'.*\/site-packages\/|.*\/mmgen\/test\/overlay\/tree\/','',frame.filename)
+				fn = re.sub(r'.*\/mmgen\/test\/','test/',fn)
+				fp.write('{f:{w}} {s:>8.2f} KiB\n'.format(
+					f = f'{fn}:{frame.lineno}:',
+					s = stat.size/1024,
+					w = col1w ))
+			fp.write('{f:{w}} {s:8.2f} KiB\n\n'.format(
+				f = 'TOTAL {}:'.format(' '.join(sys.argv))[:col1w],
+				s = sum(stat.size for stat in stats) / 1024,
+				w = col1w ))
+
 exec_wrapper_init() # sets sys.path[0]
 exec_wrapper_tstart = time.time()
+exec_wrapper_tracemalloc_setup()
 
 try:
 	sys.argv.pop(0)
@@ -69,6 +99,7 @@ except SystemExit as e:
 	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		exec_wrapper_write_traceback()
 	else:
+		exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
 	sys.exit(e.code)
 except Exception as e:
@@ -76,4 +107,5 @@ except Exception as e:
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 
+exec_wrapper_tracemalloc_log()
 exec_wrapper_end_msg()
