@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-crypto.py:  Cryptographic and related routines for the MMGen suite
+crypto.py: Random number, password hashing and symmetric encryption routines for the MMGen suite
 """
 
 import os

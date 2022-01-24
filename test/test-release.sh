@@ -356,12 +356,12 @@ create_tmpdir() {
 rm -rf /tmp/mmgen-test-release*
 create_tmpdir
 
-i_xmr='Monero xmrwallet'
-s_xmr='Testing xmrwallet operations'
+i_xmr='Monero'
+s_xmr='Testing Monero operations'
 t_xmr="
-	- $test_py --coin=xmr xmrwallet
+	- $test_py --coin=xmr
 "
-f_xmr='Monero xmrwallet tests completed'
+f_xmr='Monero tests completed'
 
 i_eth='Ethereum'
 s_eth='Testing transaction and tracking wallet operations for Ethereum'

@@ -261,6 +261,8 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def __init__(self,trunner,cfgs,spawn):
 		TestSuiteBase.__init__(self,trunner,cfgs,spawn)
+		if trunner == None:
+			return
 		if self.proto.testnet:
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
 		self.proto = init_proto(self.proto.coin,network='regtest')

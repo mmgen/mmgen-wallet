@@ -43,40 +43,55 @@ class TestSuiteMisc(TestSuiteBase):
 
 class TestSuiteHelp(TestSuiteBase):
 	'help, info and usage screens'
-	networks = ('btc','ltc','bch','eth')
+	networks = ('btc','ltc','bch','eth','xmr')
 	tmpdir_nums = []
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	cmd_group = (
+		('usage',                 (1,'usage message',[])),
 		('helpscreens',           (1,'help screens',             [])),
 		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
-		('opt_show_hash_presets', (1,'info screen (--show-hash-presets)',[])),
+		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
 		('tool_help',             (1,"'mmgen-tool' usage screen",[])),
 		('test_help',             (1,"'test.py' help screens",[])),
 	)
-	def helpscreens(self,
-		arg = '--help',
-		scripts = ( 'walletgen','walletconv','walletchk','passchg','subwalletgen',
-					'addrgen','keygen','passgen',
-					'seedsplit','seedjoin',
-					'txcreate','txsign','txsend','txdo','txbump',
-					'addrimport','autosign')
-		):
-		if self.test_name == 'helpscreens' and self.proto.base_coin != 'ETH':
-			scripts += ('regtest','xmrwallet')
+
+	def usage(self):
+		t = self.spawn(f'mmgen-walletgen',['foo'])
+		t.expect('USAGE: mmgen-walletgen')
+		t.req_exit_val = 1
+		return t
+
+	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:'):
+
+		scripts = scripts or tuple(s.replace('mmgen-','') for s in os.listdir('cmds'))
+
+		if self.test_name.endswith('helpscreens'):
+			skip = (
+				['regtest','xmrwallet'] if self.proto.base_coin == 'ETH' else
+				['regtest'] if self.proto.base_coin == 'XMR' else
+				[] )
+			scripts = sorted( set(scripts) - set(skip) )
+
 		for s in scripts:
-			t = self.spawn_chk(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})',no_output=True)
+			t = self.spawn(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})')
+			t.expect(expect,regex=True)
+			t.read()
+			t.ok()
+			t.skip_ok = True
+
 		return t
 
 	def longhelpscreens(self):
-		return self.helpscreens(arg='--longhelp')
+		return self.helpscreens(arg='--longhelp',expect='USAGE:.*LONG OPTIONS:')
 
-	def opt_show_hash_presets(self):
+	def show_hash_presets(self):
 		return self.helpscreens(
 			arg = '--show-hash-presets',
 			scripts = (
 					'walletgen','walletconv','walletchk','passchg','subwalletgen',
 					'addrgen','keygen','passgen',
-					'txsign','txdo','txbump'))
+					'txsign','txdo','txbump'),
+			expect = 'Available parameters.*Preset' )
 
 	def tool_help(self):
 
@@ -85,8 +100,6 @@ class TestSuiteHelp(TestSuiteBase):
 			return 'skip'
 
 		for args in (
-			['--help'],
-			['--longhelp'],
 			['help'],
 			['usage'],
 			['help','randpair']
