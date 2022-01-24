@@ -63,7 +63,7 @@ def test_triplet(tool,coin,network,addrtype,key_idx,wif_chk,addr_chk):
 
 def run_test():
 
-	from mmgen.tool import tool_api
+	from mmgen.tool.api import tool_api
 	tool = tool_api()
 
 	tool.coins

@@ -335,7 +335,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 		if g.daemon_id == 'erigon':
 			from hashlib import sha256
-			from mmgen.tool import tool_api
+			from mmgen.tool.api import tool_api
 			devkey = sha256(b'erigon devnet key').hexdigest()
 			t = tool_api()
 			t.init_coin(g.coin,'regtest')
@@ -837,9 +837,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	async def token_transfer_ops(self,op,amt=1000):
 		self.spawn('',msg_only=True)
 		sid = dfl_sid
-		from mmgen.tool import MMGenToolCmdWallet
+		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
-		usr_addrs = [MMGenToolCmdWallet(proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
+		usr_addrs = [tool_cmd(proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
 		from mmgen.altcoins.eth.contract import TokenResolve
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx

@@ -32,14 +32,14 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 
 	def tool_rand2file(self):
 		outfile = os.path.join(self.tmpdir,'rand2file.out')
-		from mmgen.tool import MMGenToolCmdUtil
+		from mmgen.util import parse_bytespec
 		for nbytes in ('1','1023','1K','1048575','1M','1048577','123M'):
 			t = self.spawn(
 				'mmgen-tool',
 				['-d',self.tmpdir,'-r0','rand2file','rand2file.out',nbytes],
 				extra_desc='({} byte{})'.format(
 					nbytes,
-					suf(MMGenToolCmdUtil().bytespec(nbytes)) )
+					suf(parse_bytespec(nbytes)) )
 			)
 			t.expect('random data written to file')
 			t.read()

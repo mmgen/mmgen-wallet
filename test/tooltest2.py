@@ -23,7 +23,7 @@ test/tooltest2.py:  Simple tests for the 'mmgen-tool' utility
 # TODO: move all non-interactive 'mmgen-tool' tests in 'test.py' here
 # TODO: move all(?) tests in 'tooltest.py' here (or duplicate them?)
 
-import sys,os,time
+import sys,os,time,importlib
 from subprocess import run,PIPE
 from decimal import Decimal
 
@@ -757,10 +757,105 @@ tests = {
 	},
 }
 
-coin_dependent_groups = ('Coin','File') # TODO: do this as attr of each group in tool.py
+coin_dependent_groups = ('Coin','File')
 
-async def run_test(gid,cmd_name):
+def fork_cmd(cmd_name,args,out,opts,stdin_input):
+	cmd = (
+		tool_cmd_preargs +
+		tool_cmd +
+		(opts or []) +
+		[cmd_name] + args
+	)
+	vmsg('{} {}'.format(
+		green('Executing'),
+		cyan(' '.join(cmd)) ))
+	cp = run(cmd,input=stdin_input or None,stdout=PIPE,stderr=PIPE)
+	try:
+		cmd_out = cp.stdout.decode()
+	except:
+		cmd_out = cp.stdout
+	if cp.stderr:
+		vmsg(cp.stderr.strip().decode())
+	if cp.returncode != 0:
+		import re
+		m = re.match(b'tool command returned (None|False)'+NL.encode(),cp.stderr)
+		if m:
+			return { b'None': None, b'False': False }[m.group(1)]
+		else:
+			ydie(1,f'Spawned program exited with error: {cp.stderr}')
+
+	return cmd_out.strip()
+
+async def call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input):
+	vmsg('{}: {}{}'.format(purple('Running'),
+			' '.join([cmd_name]+[repr(e) for e in args]),
+			' '+mmtype if mmtype else '' ))
+	aargs,kwargs = main_tool.process_args(cmd_name,args,cls)
+	oq_save = bool(opt.quiet)
+	if not opt.verbose:
+		opt.quiet = True
+	if stdin_input:
+		fd0,fd1 = os.pipe()
+		if os.fork(): # parent
+			os.close(fd1)
+			stdin_save = os.dup(0)
+			os.dup2(fd0,0)
+			cmd_out = method(*aargs,**kwargs)
+			os.dup2(stdin_save,0)
+			os.wait()
+			opt.quiet = oq_save
+			return cmd_out
+		else: # child
+			os.close(fd0)
+			os.write(fd1,stdin_input)
+			vmsg(f'Input: {stdin_input!r}')
+			sys.exit(0)
+	else:
+		ret = method(*aargs,**kwargs)
+		if type(ret).__name__ == 'coroutine':
+			ret = await ret
+		opt.quiet = oq_save
+		return ret
+
+def tool_api(cls,cmd_name,args,out,opts):
+	from mmgen.tool.api import tool_api
+	tool = tool_api()
+	if opts:
+		for o in opts:
+			if o.startswith('--type='):
+				tool.addrtype = o.split('=')[1]
+	pargs,kwargs = main_tool.process_args(cmd_name,args,cls)
+	return getattr(tool,cmd_name)(*pargs,**kwargs)
+
+def check_output(out,chk):
+	if isinstance(chk,str):
+		chk = chk.encode()
+	if isinstance(out,int):
+		out = str(out).encode()
+	if isinstance(out,str):
+		out = out.encode()
+	err_fs = "Output ({!r}) doesn't match expected output ({!r})"
+	try: outd = out.decode()
+	except: outd = None
+
+	if type(chk).__name__ == 'function':
+		assert chk(outd), f'{chk.__name__}({outd}) failed!'
+	elif type(chk) == dict:
+		for k,v in chk.items():
+			if k == 'boolfunc':
+				assert v(outd), f'{v.__name__}({outd}) failed!'
+			elif k == 'value':
+				assert outd == v, err_fs.format(outd,v)
+			else:
+				outval = getattr(__builtins__,k)(out)
+				if outval != v:
+					die(1,f'{k}({out}) returned {outval}, not {v}!')
+	elif chk is not None:
+		assert out == chk, err_fs.format(out,chk)
+
+async def run_test(cls,gid,cmd_name):
 	data = tests[gid][cmd_name]
+
 	# behavior is like test.py: run coin-dependent tests only if proto.testnet or proto.coin != BTC
 	if gid in coin_dependent_groups:
 		k = '{}_{}'.format(
@@ -776,84 +871,13 @@ async def run_test(gid,cmd_name):
 		if proto.coin != 'BTC' or proto.testnet:
 			return
 		m2 = ''
+
 	m = '{} {}{}'.format(
 		purple('Testing'),
-		cmd_name if opt.names else docstring_head(tc[cmd_name]),
+		cmd_name if opt.names else docstring_head(getattr(cls,cmd_name)),
 		m2 )
 
 	msg_r(green(m)+'\n' if opt.verbose else m)
-
-	def fork_cmd(cmd_name,args,out,opts):
-		cmd = (
-			tool_cmd_preargs +
-			tool_cmd +
-			(opts or []) +
-			[cmd_name] + args
-		)
-		vmsg('{} {}'.format(
-			green('Executing'),
-			cyan(' '.join(cmd)) ))
-		cp = run(cmd,input=stdin_input or None,stdout=PIPE,stderr=PIPE)
-		try:
-			cmd_out = cp.stdout.decode()
-		except:
-			cmd_out = cp.stdout
-		if cp.stderr:
-			vmsg(cp.stderr.strip().decode())
-		if cp.returncode != 0:
-			import re
-			m = re.match(b'tool command returned (None|False)'+NL.encode(),cp.stderr)
-			if m:
-				return { b'None': None, b'False': False }[m.group(1)]
-			else:
-				ydie(1,f'Spawned program exited with error: {cp.stderr}')
-
-		return cmd_out.strip()
-
-	async def run_func(cmd_name,args,out,opts,mmtype):
-		vmsg('{}: {}{}'.format(purple('Running'),
-				' '.join([cmd_name]+[repr(e) for e in args]),
-				' '+mmtype if mmtype else '' ))
-		aargs,kwargs = tool._process_args(cmd_name,args)
-		tm = tool.MMGenToolCmdMeta
-		cls_name = tm.classname(tm,cmd_name)
-		tobj = getattr(tool,cls_name)(mmtype=mmtype)
-		method = getattr(tobj,cmd_name)
-		oq_save = bool(opt.quiet)
-		if not opt.verbose:
-			opt.quiet = True
-		if stdin_input:
-			fd0,fd1 = os.pipe()
-			if os.fork(): # parent
-				os.close(fd1)
-				stdin_save = os.dup(0)
-				os.dup2(fd0,0)
-				cmd_out = method(*aargs,**kwargs)
-				os.dup2(stdin_save,0)
-				os.wait()
-				opt.quiet = oq_save
-				return cmd_out
-			else: # child
-				os.close(fd0)
-				os.write(fd1,stdin_input)
-				vmsg(f'Input: {stdin_input!r}')
-				sys.exit(0)
-		else:
-			ret = method(*aargs,**kwargs)
-			if type(ret).__name__ == 'coroutine':
-				ret = await ret
-			opt.quiet = oq_save
-			return ret
-
-	def tool_api(cmd_name,args,out,opts):
-		from mmgen.tool import tool_api,_process_args
-		tool = tool_api()
-		if opts:
-			for o in opts:
-				if o.startswith('--type='):
-					tool.addrtype = o.split('=')[1]
-		pargs,kwargs = _process_args(cmd_name,args)
-		return getattr(tool,cmd_name)(*pargs,**kwargs)
 
 	for d in data:
 		args,out,opts,mmtype = d + tuple([None] * (4-len(d)))
@@ -865,43 +889,20 @@ async def run_test(gid,cmd_name):
 		if opt.tool_api:
 			if args and args[0 ]== '-':
 				continue
-			cmd_out = tool_api(cmd_name,args,out,opts)
+			cmd_out = tool_api(cls,cmd_name,args,out,opts)
 		elif opt.fork:
-			cmd_out = fork_cmd(cmd_name,args,out,opts)
+			cmd_out = fork_cmd(cmd_name,args,out,opts,stdin_input)
 		else:
 			if stdin_input and g.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
-			cmd_out = await run_func(cmd_name,args,out,opts,mmtype)
+			method = getattr(cls(proto=proto,mmtype=mmtype),cmd_name)
+			cmd_out = await call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input)
 
-		try:    vmsg(f'Output:\n{cmd_out}\n')
-		except: vmsg(f'Output:\n{cmd_out!r}\n')
-
-		def check_output(out,chk):
-			if isinstance(chk,str):
-				chk = chk.encode()
-			if isinstance(out,int):
-				out = str(out).encode()
-			if isinstance(out,str):
-				out = out.encode()
-			err_fs = "Output ({!r}) doesn't match expected output ({!r})"
-			try: outd = out.decode()
-			except: outd = None
-
-			if type(chk).__name__ == 'function':
-				assert chk(outd), f'{chk.__name__}({outd}) failed!'
-			elif type(chk) == dict:
-				for k,v in chk.items():
-					if k == 'boolfunc':
-						assert v(outd), f'{v.__name__}({outd}) failed!'
-					elif k == 'value':
-						assert outd == v, err_fs.format(outd,v)
-					else:
-						outval = getattr(__builtins__,k)(out)
-						if outval != v:
-							die(1,f'{k}({out}) returned {outval}, not {v}!')
-			elif chk is not None:
-				assert out == chk, err_fs.format(out,chk)
+		try:
+			vmsg(f'Output:\n{cmd_out}\n')
+		except:
+			vmsg(f'Output:\n{cmd_out!r}\n')
 
 		if type(out) == tuple and type(out[0]).__name__ == 'function':
 			func_out = out[0](cmd_out)
@@ -917,7 +918,9 @@ async def run_test(gid,cmd_name):
 		else:
 			check_output(cmd_out,out)
 
-		if not opt.verbose: msg_r('.')
+		if not opt.verbose:
+			msg_r('.')
+
 	if not opt.verbose:
 		msg('OK')
 
@@ -926,28 +929,30 @@ def docstring_head(obj):
 
 async def do_group(gid):
 	desc = f'command group {gid!r}'
+	cls = main_tool.get_mod_cls(gid.lower())
 	qmsg(blue('Testing ' +
 		desc if opt.names else
-		( docstring_head(tc.classes['MMGenToolCmd'+gid]) or desc )
+		( docstring_head(cls) or desc )
 	))
 
-	for cname in tc.classes['MMGenToolCmd'+gid].user_commands:
-		if cname in skipped_tests:
+	for cmdname in cls().user_commands:
+		if cmdname in skipped_tests:
 			continue
-		if cname not in tests[gid]:
-			m = f'No test for command {cname!r} in group {gid!r}!'
+		if cmdname not in tests[gid]:
+			m = f'No test for command {cmdname!r} in group {gid!r}!'
 			if opt.die_on_missing:
 				die(1,m+'  Aborting')
 			else:
 				msg(m)
 				continue
-		await run_test(gid,cname)
+		await run_test(cls,gid,cmdname)
 
-async def do_cmd_in_group(cmd):
-	for gid in tests:
-		for cname in tests[gid]:
-			if cname == cmd:
-				await run_test(gid,cname)
+async def do_cmd_in_group(cmdname):
+	cls = main_tool.get_cmd_cls(cmdname)
+	for gid,cmds in tests.items():
+		for cmd in cmds:
+			if cmd == cmdname:
+				await run_test(cls,gid,cmdname)
 				return True
 	return False
 
@@ -972,15 +977,13 @@ if opt.tool_api:
 	del tests['Wallet']
 	del tests['File']
 
-import mmgen.tool as tool
-tc = tool.MMGenToolCmds
+import mmgen.main_tool as main_tool
 
 if opt.list_tests:
 	Msg('Available tests:')
-	for gid in tests:
-		Msg('  {:6} - {}'.format(
-			gid,
-			docstring_head(tc.classes['MMGenToolCmd'+gid]) ))
+	for modname,cmdlist in main_tool.mods.items():
+		cls = getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
+		Msg('  {:6} - {}'.format( modname, docstring_head(cls) ))
 	sys.exit(0)
 
 if opt.list_tested_cmds:

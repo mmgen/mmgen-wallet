@@ -39,6 +39,10 @@ def help_notes_func(proto,po,k):
 
 	class help_notes:
 
+		def tool_help():
+			from .tool.help import main_help
+			return main_help()
+
 		def dfl_subseeds():
 			from .subseed import SubSeedList
 			return str(SubSeedList.dfl_len)

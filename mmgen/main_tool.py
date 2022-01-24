@@ -21,38 +21,8 @@ mmgen-tool:  Perform various MMGen- and cryptocoin-related operations.
              Part of the MMGen suite
 """
 
+import os,importlib
 from .common import *
-
-def make_cmd_help():
-	import mmgen.tool
-	def do():
-		for bc in mmgen.tool.MMGenToolCmds.classes.values():
-			cls_doc = bc.__doc__.strip().split('\n')
-			for l in cls_doc:
-				if l is cls_doc[0]:
-					l += ':'
-				l = l.replace('\t','',1)
-				if l:
-					l = l.replace('\t','  ')
-					yield l[0].upper() + l[1:]
-				else:
-					yield ''
-			yield ''
-
-			max_w = max(map(len,bc.user_commands))
-			for name,code in sorted(bc.user_commands.items()):
-				if code.__doc__:
-					yield '  {:{}} - {}'.format(
-						name,
-						max_w,
-						pretty_format(
-							code.__doc__.strip().replace('\n\t\t',' '),
-							width = 79-(max_w+7),
-							pfx   = ' '*(max_w+5)).lstrip()
-					)
-			yield ''
-
-	return '\n'.join(do())
 
 opts_data = {
 	'text': {
@@ -91,32 +61,288 @@ Type '{pn} help <command>' for help on a particular command
 			coin_id=help_notes('coin_id'),
 			g=g,
 		),
-		'notes': lambda s: s.format(
-			ch=make_cmd_help(),
+		'notes': lambda s, help_notes: s.format(
+			ch=help_notes('tool_help'),
 			pn=g.prog_name)
 	}
 }
 
-cmd_args = opts.init(opts_data)
+mods = {
+	'help': (
+		'help',
+		'usage',
+	),
+	'util': (
+		'bytespec',
+		'to_bytespec',
+		'randhex',
+		'hexreverse',
+		'hexlify',
+		'unhexlify',
+		'hexdump',
+		'unhexdump',
+		'hash160',
+		'hash256',
+		'id6',
+		'str2id6',
+		'id8',
+		'randb58',
+		'bytestob58',
+		'b58tobytes',
+		'hextob58',
+		'b58tohex',
+		'hextob58chk',
+		'b58chktohex',
+		'hextob32',
+		'b32tohex',
+		'hextob6d',
+		'b6dtohex',
+	),
+	'coin': (
+		'randwif',
+		'randpair',
+		'wif2hex',
+		'hex2wif',
+		'wif2addr',
+		'wif2redeem_script',
+		'wif2segwit_pair',
+		'privhex2addr',
+		'privhex2pubhex',
+		'pubhex2addr',
+		'pubhex2redeem_script',
+		'redeem_script2addr',
+		'pubhash2addr',
+		'addr2pubhash',
+		'addr2scriptpubkey',
+		'scriptpubkey2addr',
+	),
+	'mnemonic': (
+		'mn_rand128',
+		'mn_rand192',
+		'mn_rand256',
+		'hex2mn',
+		'mn2hex',
+		'mn2hex_interactive',
+		'mn_stats',
+		'mn_printlist',
+	),
+	'file': (
+		'addrfile_chksum',
+		'keyaddrfile_chksum',
+		'passwdfile_chksum',
+		'txview',
+	),
+	'filecrypt': (
+		'encrypt',
+		'decrypt',
+	),
+	'fileutil': (
+		'find_incog_data',
+		'rand2file',
+	),
+	'wallet': (
+		'get_subseed',
+		'get_subseed_by_seed_id',
+		'list_subseeds',
+		'list_shares',
+		'gen_key',
+		'gen_addr',
+	),
+	'rpc': (
+		'daemon_version',
+		'getbalance',
+		'listaddress',
+		'listaddresses',
+		'twview',
+		'add_label',
+		'remove_label',
+		'remove_address',
+	),
+}
 
-if len(cmd_args) < 1:
-	opts.usage()
+def create_call_sig(cmd,cls,parsed=False):
 
-cmd = cmd_args.pop(0)
+	m = getattr(cls,cmd)
 
-import mmgen.tool as tool
+	if 'varargs_call_sig' in m.__code__.co_varnames: # hack
+		flag = 'VAR_ARGS'
+		va = m.__defaults__[0]
+		args,dfls,ann = va['args'],va['dfls'],va['annots']
+	else:
+		flag = None
+		args = m.__code__.co_varnames[1:m.__code__.co_argcount]
+		dfls = m.__defaults__ or ()
+		ann  = m.__annotations__
 
-if cmd in ('help','usage') and cmd_args:
-	cmd_args[0] = 'command_name=' + cmd_args[0]
+	nargs = len(args) - len(dfls)
 
-if cmd not in tool.MMGenToolCmds:
-	die(1,f'{cmd!r}: no such command')
+	def get_type_from_ann(arg):
+		return ann[arg][1:] + (' or STDIN','')[parsed] if ann[arg] == 'sstr' else ann[arg].__name__
 
-args,kwargs = tool._process_args(cmd,cmd_args)
+	if parsed:
+		c_args = [(a,get_type_from_ann(a)) for a in args[:nargs]]
+		c_kwargs = [(a,dfls[n]) for n,a in enumerate(args[nargs:])]
+		return (
+			c_args,
+			dict(c_kwargs),
+			'STDIN_OK' if c_args and ann[args[0]] == 'sstr' else flag )
+	else:
+		c_args = [f'{a} [{get_type_from_ann(a)}]' for a in args[:nargs]]
+		c_kwargs = ['"{}" [{}={!r}{}]'.format(
+			a,
+			type(dfls[n]).__name__, dfls[n],
+			(' ' + ann[a] if a in ann else '') )
+				for n,a in enumerate(args[nargs:])]
+		return ' '.join(c_args + c_kwargs)
 
-ret = tool.MMGenToolCmds.call(cmd,*args,**kwargs)
+def process_args(cmd,cmd_args,cls):
+	c_args,c_kwargs,flag = create_call_sig(cmd,cls,parsed=True)
+	have_stdin_input = False
 
-if type(ret).__name__ == 'coroutine':
-	ret = run_session(ret)
+	def usage_die(s):
+		msg(s)
+		from .tool.help import usage
+		usage(cmd)
 
-tool._process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)
+	if flag != 'VAR_ARGS':
+		if len(cmd_args) < len(c_args):
+			usage_die(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
+
+		u_args = cmd_args[:len(c_args)]
+
+		# If we're reading from a pipe, replace '-' with output of previous command
+		if flag == 'STDIN_OK' and u_args and u_args[0] == '-':
+			if sys.stdin.isatty():
+				raise BadFilename("Standard input is a TTY.  Can't use '-' as a filename")
+			else:
+				max_dlen_spec = '10kB' # limit input to 10KB for now
+				max_dlen = parse_bytespec(max_dlen_spec)
+				u_args[0] = os.read(0,max_dlen)
+				have_stdin_input = True
+				if len(u_args[0]) >= max_dlen:
+					die(2,f'Maximum data input for this command is {max_dlen_spec}')
+				if not u_args[0]:
+					die(2,f'{cmd}: ERROR: no output from previous command in pipe')
+
+	u_nkwargs = len(cmd_args) - len(c_args)
+	u_kwargs = {}
+	if flag == 'VAR_ARGS':
+		t = [a.split('=',1) for a in cmd_args if '=' in a]
+		tk = [a[0] for a in t]
+		tk_bad = [a for a in tk if a not in c_kwargs]
+		if set(tk_bad) != set(tk[:len(tk_bad)]): # permit non-kw args to contain '='
+			die(1,f'{tk_bad[-1]!r}: illegal keyword argument')
+		u_kwargs = dict(t[len(tk_bad):])
+		u_args = cmd_args[:-len(u_kwargs) or None]
+	elif u_nkwargs > 0:
+		u_kwargs = dict([a.split('=',1) for a in cmd_args[len(c_args):] if '=' in a])
+		if len(u_kwargs) != u_nkwargs:
+			usage_die(f'Command requires exactly {len(c_args)} non-keyword argument{suf(c_args)}')
+		if len(u_kwargs) > len(c_kwargs):
+			usage_die(f'Command accepts no more than {len(c_kwargs)} keyword argument{suf(c_kwargs)}')
+
+	for k in u_kwargs:
+		if k not in c_kwargs:
+			usage_die(f'{k!r}: invalid keyword argument')
+
+	def conv_type(arg,arg_name,arg_type):
+		if arg_type == 'bytes' and type(arg) != bytes:
+			die(1,"'Binary input data must be supplied via STDIN")
+
+		if have_stdin_input and arg_type == 'str' and isinstance(arg,bytes):
+			from .globalvars import g
+			NL = '\r\n' if g.platform == 'win' else '\n'
+			arg = arg.decode()
+			if arg[-len(NL):] == NL: # rstrip one newline
+				arg = arg[:-len(NL)]
+
+		if arg_type == 'bool':
+			if arg.lower() in ('true','yes','1','on'):
+				arg = True
+			elif arg.lower() in ('false','no','0','off'):
+				arg = False
+			else:
+				usage_die(f'{arg!r}: invalid boolean value for keyword argument')
+
+		try:
+			return __builtins__[arg_type](arg)
+		except:
+			die(1,f'{arg!r}: Invalid argument for argument {arg_name} ({arg_type!r} required)')
+
+	if flag == 'VAR_ARGS':
+		args = [conv_type(u_args[i],c_args[0][0],c_args[0][1]) for i in range(len(u_args))]
+	else:
+		args = [conv_type(u_args[i],c_args[i][0],c_args[i][1]) for i in range(len(c_args))]
+	kwargs = {k:conv_type(u_kwargs[k],k,type(c_kwargs[k]).__name__) for k in u_kwargs}
+
+	return ( args, kwargs )
+
+def process_result(ret,pager=False,print_result=False):
+	from .util import Msg,ydie,parse_bytespec
+	"""
+	Convert result to something suitable for output to screen and return it.
+	If result is bytes and not convertible to utf8, output as binary using os.write().
+	If 'print_result' is True, send the converted result directly to screen or
+	pager instead of returning it.
+	"""
+	def triage_result(o):
+		return o if not print_result else do_pager(o) if pager else Msg(o)
+
+	if ret == True:
+		return True
+	elif ret in (False,None):
+		ydie(1,f'tool command returned {ret!r}')
+	elif isinstance(ret,str):
+		return triage_result(ret)
+	elif isinstance(ret,int):
+		return triage_result(str(ret))
+	elif isinstance(ret,tuple):
+		return triage_result('\n'.join([r.decode() if isinstance(r,bytes) else r for r in ret]))
+	elif isinstance(ret,bytes):
+		try:
+			o = ret.decode()
+			return o if not print_result else do_pager(o) if pager else Msg(o)
+		except:
+			# don't add NL to binary data if it can't be converted to utf8
+			if print_result:
+				return os.write(1,ret)
+			else:
+				return ret
+	else:
+		ydie(1,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
+
+def get_cmd_cls(cmd):
+	for modname,cmdlist in mods.items():
+		if cmd in cmdlist:
+			return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
+	else:
+		return False
+
+def get_mod_cls(modname):
+	return getattr(importlib.import_module(f'mmgen.tool.{modname}'),'tool_cmd')
+
+if g.prog_name == 'mmgen-tool' and not opt._lock:
+
+	cmd_args = opts.init(opts_data)
+
+	if len(cmd_args) < 1:
+		opts.usage()
+
+	cmd = cmd_args.pop(0)
+
+	if cmd in ('help','usage') and cmd_args:
+		cmd_args[0] = 'command_name=' + cmd_args[0]
+
+	cls = get_cmd_cls(cmd)
+
+	if not cls:
+		die(1,f'{cmd!r}: no such command')
+
+	args,kwargs = process_args(cmd,cmd_args,cls)
+
+	ret = getattr(cls(),cmd)(*args,**kwargs)
+
+	if type(ret).__name__ == 'coroutine':
+		ret = run_session(ret)
+
+	process_result(ret,pager='pager' in kwargs and kwargs['pager'],print_result=True)

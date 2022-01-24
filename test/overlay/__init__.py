@@ -36,6 +36,7 @@ def overlay_setup(repo_root):
 				'mmgen',
 				'mmgen.data',
 				'mmgen.share',
+				'mmgen.tool',
 				'mmgen.altcoins',
 				'mmgen.altcoins.eth',
 				'mmgen.altcoins.eth.pyethereum',

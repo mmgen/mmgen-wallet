@@ -132,7 +132,7 @@ rt_data = {
 }
 
 def create_burn_addr(proto):
-	from mmgen.tool import tool_api
+	from mmgen.tool.api import tool_api
 	t = tool_api()
 	t.init_coin(proto.coin,proto.network)
 	t.addrtype = 'compressed'
@@ -808,7 +808,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			f'Replacing transactions:\s+{new_txid}' )
 
 	def _gen_pairs(self,n):
-		from mmgen.tool import tool_api
+		from mmgen.tool.api import tool_api
 		t = tool_api()
 		t.init_coin(self.proto.coin,self.proto.network)
 

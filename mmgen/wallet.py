@@ -1156,8 +1156,8 @@ harder to find, you're advised to choose a much larger file size than this.
 						break
 					msg(f'File size must be an integer no less than {min_fsize}')
 
-				from .tool import MMGenToolCmdFileUtil
-				MMGenToolCmdFileUtil().rand2file(fn,str(fsize))
+				from .tool.fileutil import tool_cmd
+				tool_cmd().rand2file(fn,str(fsize))
 				check_offset = False
 			else:
 				die(1,'Exiting at user request')

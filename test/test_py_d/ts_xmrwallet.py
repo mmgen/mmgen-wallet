@@ -560,7 +560,7 @@ class TestSuiteXMRWallet(TestSuiteBase):
 				die(2,'Restart attempt limit exceeded')
 
 		async def send_random_txs():
-			from mmgen.tool import tool_api
+			from mmgen.tool.api import tool_api
 			t = tool_api()
 			t.init_coin('XMR','testnet')
 			t.usr_randchars = 0

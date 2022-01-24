@@ -44,7 +44,7 @@ def create_hdseed(proto):
 	#   addr=bcrt1qaq8t3pakcftpk095tnqfv5cmmczysls024atnd
 	# cTEkSYCWKvNo757uwFPd4yuCXsbZvfJDipHsHWFRapXpnikMHvgn label=
 	#   addr=bcrt1q537rgyctcqdgs8nm8gvku05znka4h2m00lx8ps hdkeypath=m/0'/0'/0'
-	from .tool import tool_api
+	from .tool.api import tool_api
 	t = tool_api()
 	t.init_coin(proto.coin,proto.network)
 	t.addrtype = 'bech32'

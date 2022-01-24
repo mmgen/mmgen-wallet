@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, command-line Bitcoin cold storage solution
+# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+tool/mnemonic.py: Mnemonic routines for the 'mmgen-tool' utility
+"""
+
+from collections import namedtuple
+
+from .common import tool_cmd_base,options_annot_str
+
+from ..baseconv import baseconv
+from ..xmrseed import xmrseed
+from ..bip39 import bip39
+
+dfl_mnemonic_fmt = 'mmgen'
+mft = namedtuple('mnemonic_format',['fmt','pad','conv_cls'])
+mnemonic_fmts = {
+	'mmgen':   mft( 'words',  'seed', baseconv ),
+	'bip39':   mft( 'bip39',   None,  bip39 ),
+	'xmrseed': mft( 'xmrseed', None,  xmrseed ),
+}
+mn_opts_disp = options_annot_str(mnemonic_fmts)
+
+class tool_cmd(tool_cmd_base):
+	"""
+	seed phrase utilities (valid formats: 'mmgen' (default), 'bip39', 'xmrseed')
+
+		IMPORTANT NOTE: MMGen's default seed phrase format uses the Electrum
+		wordlist, however seed phrases are computed using a different algorithm
+		and are NOT Electrum-compatible!
+
+		BIP39 support is fully compatible with the standard, allowing users to
+		import and export seed entropy from BIP39-compatible wallets.  However,
+		users should be aware that BIP39 support does not imply BIP32 support!
+		MMGen uses its own key derivation scheme differing from the one described
+		by the BIP32 protocol.
+
+		For Monero ('xmrseed') seed phrases, input data is reduced to a spendkey
+		before conversion so that a canonical seed phrase is produced.  This is
+		required because Monero seeds, unlike ordinary wallet seeds, are tied
+		to a concrete key/address pair.  To manually generate a Monero spendkey,
+		use the 'hex2wif' command.
+	"""
+
+	@staticmethod
+	def _xmr_reduce(bytestr):
+		from ..protocol import init_proto
+		proto = init_proto('xmr')
+		if len(bytestr) != proto.privkey_len:
+			die(1,'{!r}: invalid bit length for Monero private key (must be {})'.format(
+				len(bytestr*8),
+				proto.privkey_len*8 ))
+		return proto.preprocess_key(bytestr,None)
+
+	def _do_random_mn(self,nbytes:int,fmt:str):
+		assert nbytes in (16,24,32), 'nbytes must be 16, 24 or 32'
+		from ..crypto import get_random
+		randbytes = get_random(nbytes)
+		if fmt == 'xmrseed':
+			randbytes = self._xmr_reduce(randbytes)
+		from ..opts import opt
+		if opt.verbose:
+			from ..util import msg
+			msg(f'Seed: {randbytes.hex()}')
+		return self.hex2mn(randbytes.hex(),fmt=fmt)
+
+	def mn_rand128(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"generate random 128-bit mnemonic seed phrase"
+		return self._do_random_mn(16,fmt)
+
+	def mn_rand192(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"generate random 192-bit mnemonic seed phrase"
+		return self._do_random_mn(24,fmt)
+
+	def mn_rand256(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"generate random 256-bit mnemonic seed phrase"
+		return self._do_random_mn(32,fmt)
+
+	def hex2mn( self, hexstr:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"convert a 16, 24 or 32-byte hexadecimal number to a mnemonic seed phrase"
+		if fmt == 'xmrseed':
+			hexstr = self._xmr_reduce(bytes.fromhex(hexstr)).hex()
+		f = mnemonic_fmts[fmt]
+		return ' '.join( f.conv_cls(fmt).fromhex(hexstr,f.pad) )
+
+	def mn2hex( self, seed_mnemonic:'sstr', fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"convert a mnemonic seed phrase to a hexadecimal number"
+		f = mnemonic_fmts[fmt]
+		return f.conv_cls(fmt).tohex( seed_mnemonic.split(), f.pad )
+
+	def mn2hex_interactive( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, mn_len=24, print_mn=False ):
+		"convert an interactively supplied mnemonic seed phrase to a hexadecimal number"
+		from ..mn_entry import mn_entry
+		mn = mn_entry(fmt).get_mnemonic_from_user(25 if fmt == 'xmrseed' else mn_len,validate=False)
+		if print_mn:
+			from ..util import msg
+			msg(mn)
+		return self.mn2hex(seed_mnemonic=mn,fmt=fmt)
+
+	def mn_stats(self, fmt:mn_opts_disp = dfl_mnemonic_fmt ):
+		"show stats for mnemonic wordlist"
+		return mnemonic_fmts[fmt].conv_cls(fmt).check_wordlist()
+
+	def mn_printlist( self, fmt:mn_opts_disp = dfl_mnemonic_fmt, enum=False, pager=False ):
+		"print mnemonic wordlist"
+		ret = mnemonic_fmts[fmt].conv_cls(fmt).get_wordlist()
+		if enum:
+			ret = [f'{n:>4} {e}' for n,e in enumerate(ret)]
+		return '\n'.join(ret)
