@@ -40,7 +40,7 @@ def usage():
 	Die(1,mmgen.share.Opts.make_usage_str(g.prog_name,'user',usage_data))
 
 def version():
-	from .util import Die
+	from .util import Die,fmt
 	Die(0,fmt(f"""
 		{g.prog_name.upper()} version {g.version}
 		Part of the {g.proj_name} suite, an online/offline cryptocurrency wallet for the

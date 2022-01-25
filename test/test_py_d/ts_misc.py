@@ -48,6 +48,7 @@ class TestSuiteHelp(TestSuiteBase):
 	passthru_opts = ('daemon_data_dir','rpc_port','coin','testnet')
 	cmd_group = (
 		('usage',                 (1,'usage message',[])),
+		('version',               (1,'version message',[])),
 		('helpscreens',           (1,'help screens',             [])),
 		('longhelpscreens',       (1,'help screens (--longhelp)',[])),
 		('show_hash_presets',     (1,'info screen (--show-hash-presets)',[])),
@@ -59,6 +60,11 @@ class TestSuiteHelp(TestSuiteBase):
 		t = self.spawn(f'mmgen-walletgen',['foo'])
 		t.expect('USAGE: mmgen-walletgen')
 		t.req_exit_val = 1
+		return t
+
+	def version(self):
+		t = self.spawn(f'mmgen-tool',['--version'])
+		t.expect('MMGEN-TOOL version')
 		return t
 
 	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:'):
