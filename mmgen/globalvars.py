@@ -142,6 +142,9 @@ class GlobalContext(Lockable):
 	daemon_data_dir = '' # set by user
 	daemon_id = ''
 
+	# must match CoinProtocol.coins
+	core_coins = ('btc','bch','ltc','eth','etc','zec','xmr')
+
 	# global var sets user opt:
 	global_sets_opt = (
 		'debug',

@@ -147,7 +147,7 @@ def override_globals_from_cfg_file(ucfg):
 	for d in ucfg.get_lines():
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
-			if ns[0] in CoinProtocol.coins:
+			if ns[0] in g.core_coins:
 				nse,tn = (
 					(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
 					(ns[1:],False)

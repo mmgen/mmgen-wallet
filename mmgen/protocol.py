@@ -68,6 +68,8 @@ _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 class CoinProtocol(MMGenObject):
 
 	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin.py
+
+	# keys are mirrored in g.core_coins:
 	coins = {
 		'btc': proto_info('Bitcoin',         5),
 		'bch': proto_info('BitcoinCash',     5),
@@ -77,7 +79,6 @@ class CoinProtocol(MMGenObject):
 		'zec': proto_info('Zcash',           2),
 		'xmr': proto_info('Monero',          4)
 	}
-	core_coins = tuple(coins) # coins may be added by init_genonly_altcoins(), so save
 
 	class Base(MMGenObject):
 		base_proto = None
@@ -590,7 +591,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 			data[network] = CoinInfo.get_supported_coins(network)
 		trust_level = 0
 	else:
-		if usr_coin.lower() in CoinProtocol.core_coins: # core coin, so return immediately
+		if usr_coin.lower() in g.core_coins: # core coin, so return immediately
 			return CoinProtocol.coins[usr_coin.lower()].trust_level
 		from .altcoin import CoinInfo
 		for network in networks:

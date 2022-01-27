@@ -434,9 +434,10 @@ class CoinInfo(object):
 	@classmethod
 	def verify_core_coin_data(cls,quiet=False,verbose=False):
 		from .protocol import CoinProtocol,init_proto
+		from .globalvars import g
 
 		for network in ('mainnet','testnet'):
-			for coin in CoinProtocol.core_coins:
+			for coin in g.core_coins:
 				e = cls.get_entry(coin,network)
 				if e:
 					proto = init_proto(coin,testnet=network=='testnet')
