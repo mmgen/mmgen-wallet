@@ -54,14 +54,6 @@ class GlobalContext(Lockable):
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2022'
 
-	try:
-		from importlib.resources import files # Python 3.9
-	except ImportError:
-		from importlib_resources import files
-
-	version      = files('mmgen').joinpath('data','version').read_text().strip()
-	release_date = files('mmgen').joinpath('data','release_date').read_text().strip()
-
 	stdin_tty = sys.stdin.isatty()
 	stdout = sys.stdout
 	stderr = sys.stderr
@@ -316,5 +308,25 @@ class GlobalContext(Lockable):
 		for name in env_opts:
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
+
+	def _get_importlib_resources_files(self):
+		"""
+		this is an expensive import, so do only when required
+		"""
+		try:
+			from importlib.resources import files # Python 3.9
+		except ImportError:
+			from importlib_resources import files
+		return files
+
+	@property
+	def version(self):
+		files = self._get_importlib_resources_files()
+		return files('mmgen').joinpath('data','version').read_text().strip()
+
+	@property
+	def release_date(self):
+		files = self._get_importlib_resources_files()
+		return files('mmgen').joinpath('data','release_date').read_text().strip()
 
 g = GlobalContext()
