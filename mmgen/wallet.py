@@ -562,6 +562,8 @@ class DieRollSeedFile(WalletUnenc):
 		"""
 		msg('\n'+fmt(m.strip()).format(sb=seed_bitlen,nd=nDierolls)+'\n')
 
+		CUR_HIDE = '\033[?25l'
+		CUR_SHOW = '\033[?25h'
 		cr = '\n' if g.test_suite else '\r'
 		prompt_fs = f'\b\b\b   {cr}Enter die roll #{{}}: {CUR_SHOW}'
 		clear_line = '' if g.test_suite else '\r' + ' ' * 25
@@ -908,7 +910,8 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 		'dec_chk': " {} hash preset"
 	}
 
-	def _make_iv_chksum(self,s): return sha256(s).hexdigest()[:8].upper()
+	def _make_iv_chksum(self,s):
+		return sha256(s).hexdigest()[:8].upper()
 
 	def _get_incog_data_len(self,seed_len):
 		return (

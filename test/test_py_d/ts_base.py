@@ -28,7 +28,7 @@ from .common import *
 
 class TestSuiteBase(object):
 	'initializer class for the test.py test suite'
-	base_passthru_opts = ('data_dir',)
+	base_passthru_opts = ('data_dir','skip_cfg_file')
 	passthru_opts = ()
 	extra_spawn_args = []
 	networks = ()

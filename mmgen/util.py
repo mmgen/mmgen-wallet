@@ -28,9 +28,6 @@ from .color import *
 from .globalvars import g
 from .opts import opt
 
-CUR_HIDE = '\033[?25l'
-CUR_SHOW = '\033[?25h'
-
 if g.platform == 'win':
 	def msg_r(s):
 		try:
@@ -38,83 +35,122 @@ if g.platform == 'win':
 			g.stderr.flush()
 		except:
 			os.write(2,s.encode())
+
+	def msg(s):
+		msg_r(s + '\n')
+
 	def Msg_r(s):
 		try:
 			g.stdout.write(s)
 			g.stdout.flush()
 		except:
 			os.write(1,s.encode())
-	def msg(s): msg_r(s + '\n')
-	def Msg(s): Msg_r(s + '\n')
+
+	def Msg(s):
+		Msg_r(s + '\n')
 else:
+	def msg(s):
+		g.stderr.write(s + '\n')
+
 	def msg_r(s):
 		g.stderr.write(s)
 		g.stderr.flush()
+
+	def Msg(s):
+		g.stdout.write(s + '\n')
+
 	def Msg_r(s):
 		g.stdout.write(s)
 		g.stdout.flush()
-	def msg(s):   g.stderr.write(s + '\n')
-	def Msg(s):   g.stdout.write(s + '\n')
 
-def msgred(s): msg(red(s))
-def rmsg(s):   msg(red(s))
-def rmsg_r(s): msg_r(red(s))
-def ymsg(s):   msg(yellow(s))
-def ymsg_r(s): msg_r(yellow(s))
-def gmsg(s):   msg(green(s))
-def gmsg_r(s): msg_r(green(s))
-def bmsg(s):   msg(blue(s))
-def bmsg_r(s): msg_r(blue(s))
-def qmsg(s,alt=None):
-	if opt.quiet:
-		if alt != None: msg(alt)
-	else: msg(s)
-def qmsg_r(s,alt=None):
-	if opt.quiet:
-		if alt != None: msg_r(alt)
-	else: msg_r(s)
+def rmsg(s):
+	msg(red(s))
+
+def ymsg(s):
+	msg(yellow(s))
+
+def gmsg(s):
+	msg(green(s))
+
+def gmsg_r(s):
+	msg_r(green(s))
+
+def bmsg(s):
+	msg(blue(s))
+
+def qmsg(s):
+	if not opt.quiet:
+		msg(s)
+
+def qmsg_r(s):
+	if not opt.quiet:
+		msg_r(s)
+
 def vmsg(s,force=False):
-	if opt.verbose or force: msg(s)
+	if opt.verbose or force:
+		msg(s)
+
 def vmsg_r(s,force=False):
-	if opt.verbose or force: msg_r(s)
+	if opt.verbose or force:
+		msg_r(s)
+
 def Vmsg(s,force=False):
-	if opt.verbose or force: Msg(s)
+	if opt.verbose or force:
+		Msg(s)
+
 def Vmsg_r(s,force=False):
-	if opt.verbose or force: Msg_r(s)
+	if opt.verbose or force:
+		Msg_r(s)
+
 def dmsg(s):
-	if opt.debug: msg(s)
+	if opt.debug:
+		msg(s)
 
 def mmsg(*args):
-	for d in args: Msg(repr(d))
+	for d in args:
+		Msg(repr(d))
+
 def mdie(*args):
-	mmsg(*args); sys.exit(0)
+	mmsg(*args)
+	sys.exit(0)
+
+def die(ev=0,s=''):
+	assert isinstance(ev,int)
+	if s:
+		msg(s)
+	sys.exit(ev)
 
 def die_wait(delay,ev=0,s=''):
 	assert isinstance(delay,int)
 	assert isinstance(ev,int)
-	if s: msg(s)
+	if s:
+		msg(s)
 	time.sleep(delay)
 	sys.exit(ev)
+
 def die_pause(ev=0,s=''):
 	assert isinstance(ev,int)
-	if s: msg(s)
+	if s:
+		msg(s)
 	input('Press ENTER to exit')
 	sys.exit(ev)
-def die(ev=0,s=''):
-	assert isinstance(ev,int)
-	if s: msg(s)
-	sys.exit(ev)
+
 def Die(ev=0,s=''):
 	assert isinstance(ev,int)
-	if s: Msg(s)
+	if s:
+		Msg(s)
 	sys.exit(ev)
 
-def rdie(ev=0,s=''): die(ev,red(s))
-def ydie(ev=0,s=''): die(ev,yellow(s))
+def rdie(ev=0,s=''):
+	die(ev,red(s))
+
+def ydie(ev=0,s=''):
+	die(ev,yellow(s))
 
 def pp_fmt(d):
 	import pprint
 	return pprint.PrettyPrinter(indent=4,compact=False).pformat(d)
+
 def pp_msg(d):
 	msg(pp_fmt(d))
 
@@ -291,8 +327,10 @@ def remove_extension(fn,ext):
 	return a if b[1:] == ext else fn
 
 def make_chksum_N(s,nchars,sep=False):
-	if isinstance(s,str): s = s.encode()
-	if nchars%4 or not (4 <= nchars <= 64): return False
+	if isinstance(s,str):
+		s = s.encode()
+	if nchars%4 or not (4 <= nchars <= 64):
+		return False
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = ('',' ')[bool(sep)]
 	return sep.join([s[i*4:i*4+4] for i in range(nchars//4)])
@@ -303,17 +341,25 @@ def make_chksum_8(s,sep=False):
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
 def make_chksum_6(s):
 	from .obj import HexStr
-	if isinstance(s,str): s = s.encode()
+	if isinstance(s,str):
+		s = s.encode()
 	return HexStr(sha256(s).hexdigest()[:6])
-def is_chksum_6(s): return len(s) == 6 and is_hex_str_lc(s)
 
-def make_iv_chksum(s): return sha256(s).hexdigest()[:8].upper()
+def is_chksum_6(s):
+	return len(s) == 6 and is_hex_str_lc(s)
 
-def splitN(s,n,sep=None):                      # always return an n-element list
+def make_iv_chksum(s):
+	return sha256(s).hexdigest()[:8].upper()
+
+def splitN(s,n,sep=None): # always return an n-element list
 	ret = s.split(sep,n-1)
 	return ret + ['' for i in range(n-len(ret))]
-def split2(s,sep=None): return splitN(s,2,sep) # always return a 2-element list
-def split3(s,sep=None): return splitN(s,3,sep) # always return a 3-element list
+
+def split2(s,sep=None):
+	return splitN(s,2,sep) # always return a 2-element list
+
+def split3(s,sep=None):
+	return splitN(s,3,sep) # always return a 3-element list
 
 def split_into_cols(col_wid,s):
 	return ' '.join([s[col_wid*i:col_wid*(i+1)] for i in range(len(s)//col_wid+1)]).rstrip()
@@ -412,10 +458,11 @@ def decode_pretty_hexdump(data):
 		return False
 
 def strip_comment(line):
-	return re.sub(r'\s+$','',re.sub(r'#.*','',line))
+	return re.sub('#.*','',line).rstrip()
 
 def strip_comments(lines):
-	return [m for m in [strip_comment(l) for l in lines] if m != '']
+	pat = re.compile('#.*')
+	return [m for m in [pat.sub('',l).rstrip() for l in lines] if m != '']
 
 def compare_chksums(chk1,desc1,chk2,desc2,hdr='',die_on_fail=False,verbose=False):
 
