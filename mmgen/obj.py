@@ -294,6 +294,9 @@ class Int(int,Hilite,InitErrors):
 class MMGenIdx(Int):
 	min_val = 1
 
+class ETHNonce(Int):
+	min_val = 0
+
 class Str(str,Hilite):
 	pass
 

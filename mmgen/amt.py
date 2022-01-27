@@ -174,3 +174,18 @@ class XMRAmt(CoinAmt):
 	atomic = Decimal('0.000000000001')
 	units = ('atomic',)
 	amt_fs = '4.12'
+
+# Kwei (babbage) 3, Mwei (lovelace) 6, Gwei (shannon) 9, µETH (szabo) 12, mETH (finney) 15, ETH 18
+class ETHAmt(CoinAmt):
+	max_prec = 18
+	wei     = Decimal('0.000000000000000001')
+	Kwei    = Decimal('0.000000000000001')
+	Mwei    = Decimal('0.000000000001')
+	Gwei    = Decimal('0.000000001')
+	szabo   = Decimal('0.000001')
+	finney  = Decimal('0.001')
+	units   = ('wei','Kwei','Mwei','Gwei','szabo','finney')
+	amt_fs  = '4.18'
+
+	def toWei(self):
+		return int(Decimal(self) // self.wei)

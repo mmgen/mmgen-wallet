@@ -25,19 +25,18 @@ from collections import namedtuple
 
 from decimal import Decimal
 
-from mmgen.globalvars import g
-from mmgen.color import red,yellow,blue,pink
-from mmgen.opts import opt
-from mmgen.util import msg,msg_r,ymsg,dmsg,fmt,line_input,is_int,is_hex_str,make_chksum_6,die,suf,capfirst,pp_fmt
-from mmgen.exception import TransactionChainMismatch
-from mmgen.obj import Int,Str,HexStr,CoinTxID,MMGenTxID
-from mmgen.addr import MMGenID,CoinAddr,TokenAddr,is_mmgen_id,is_coin_addr
-
-from mmgen.tx import MMGenTX
-from mmgen.twctl import TrackingWallet
+from ...globalvars import g
+from ...color import red,yellow,blue,pink
+from ...opts import opt
+from ...util import msg,msg_r,ymsg,dmsg,fmt,line_input,is_int,is_hex_str,make_chksum_6,die,suf,capfirst,pp_fmt
+from ...exception import TransactionChainMismatch
+from ...obj import Int,Str,HexStr,CoinTxID,MMGenTxID,ETHNonce
+from ...addr import MMGenID,CoinAddr,TokenAddr,is_mmgen_id,is_coin_addr
+from ...amt import ETHAmt
+from ...tx import MMGenTX
+from ...twctl import TrackingWallet
 
 from .contract import Token
-from .obj import ETHAmt,ETHNonce
 
 class EthereumMMGenTX:
 

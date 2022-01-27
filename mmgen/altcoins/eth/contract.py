@@ -28,7 +28,7 @@ from mmgen.globalvars import g
 from mmgen.base_obj import AsyncInit
 from mmgen.obj import MMGenObject,CoinTxID
 from mmgen.addr import CoinAddr,TokenAddr
-from .obj import ETHAmt
+from mmgen.amt import ETHAmt
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]

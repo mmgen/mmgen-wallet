@@ -23,8 +23,8 @@ altcoins.eth.twctl: Ethereum tracking wallet control class for the MMGen suite
 from mmgen.util import msg,ymsg,write_mode
 from mmgen.twctl import TrackingWallet
 from mmgen.addr import is_coin_addr,is_mmgen_id
+from mmgen.amt import ETHAmt
 from .contract import Token,TokenResolve
-from .obj import ETHAmt
 
 class EthereumTrackingWallet(TrackingWallet):
 

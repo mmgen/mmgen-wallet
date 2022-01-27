@@ -29,7 +29,7 @@ from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import die
 from mmgen.exception import *
-from mmgen.altcoins.eth.obj import ETHAmt
+from mmgen.amt import ETHAmt
 from mmgen.protocol import CoinProtocol
 from ..include.common import *
 from .common import *

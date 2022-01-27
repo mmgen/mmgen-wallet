@@ -9,8 +9,7 @@ class unit_tests:
 
 	def coinamt(self,name,ut):
 
-		from mmgen.amt import BTCAmt,LTCAmt,XMRAmt
-		from mmgen.altcoins.eth.obj import ETHAmt
+		from mmgen.amt import BTCAmt,LTCAmt,XMRAmt,ETHAmt
 
 		for cls,aa,bb in (
 				( BTCAmt, '1.2345', '11234567.897' ),

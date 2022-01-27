@@ -31,7 +31,6 @@ os.environ['MMGEN_TEST_SUITE'] = '1'
 # Import these _after_ local path's been added to sys.path
 from mmgen.common import *
 from mmgen.obj import *
-from mmgen.altcoins.eth.obj import *
 from mmgen.seedsplit import *
 from mmgen.addr import *
 from mmgen.addrlist import *

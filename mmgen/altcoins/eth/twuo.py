@@ -20,8 +20,8 @@
 altcoins.eth.twuo: Ethereum tracking wallet unspent outputs class for the MMGen suite
 """
 
-from mmgen.tw import TwLabel
-from mmgen.twuo import TwUnspentOutputs
+from ...tw import TwLabel
+from ...twuo import TwUnspentOutputs
 
 # No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
@@ -46,9 +46,9 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
 
 	async def __init__(self,proto,*args,**kwargs):
-		from mmgen.globalvars import g
+		from ...globalvars import g
 		if g.cached_balances:
-			from mmgen.color import yellow
+			from ...color import yellow
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
 		await TwUnspentOutputs.__init__(self,proto,*args,**kwargs)
 
