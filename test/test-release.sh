@@ -29,7 +29,7 @@ tooltest_py='test/tooltest.py'
 tooltest2_py='test/tooltest2.py --names --quiet'
 gentest_py='test/gentest.py --quiet'
 scrambletest_py='test/scrambletest.py'
-altcoin_py='mmgen/altcoin.py --quiet'
+altcoin_mod_opts='--quiet'
 mmgen_tool='cmds/mmgen-tool'
 mmgen_keygen='cmds/mmgen-keygen'
 python='python3'
@@ -140,7 +140,7 @@ do
 	V)  VERBOSE=1
 		[ "$EXACT_OUTPUT" ] || test_py+=" --verbose"
 		unit_tests_py="${unit_tests_py/--quiet/--verbose}"
-		altcoin_py="${altcoin_py/--quiet/--verbose}"
+		altcoin_mod_opts="${altcoin_mod_opts/--quiet/--verbose}"
 		tooltest2_py="${tooltest2_py/--quiet/--verbose}"
 		gentest_py="${gentest_py/--quiet/--verbose}"
 		tooltest_py+=" --verbose"
@@ -240,7 +240,7 @@ do_test() {
 i_misc='Miscellaneous'
 s_misc='Testing various subsystems'
 t_misc="
-	- $altcoin_py
+	- python3 -m mmgen.altcoin $altcoin_mod_opts
 "
 f_misc='Miscellaneous tests completed'
 

@@ -36,7 +36,7 @@ altcoin.py - Coin constants for Bitcoin-derived altcoins
 #   NBT:  150/191 c/u,  25/('B'),  26/('B')
 
 import sys
-from mmgen.util import msg
+from .util import msg
 
 def test_equal(desc,a,b,*cdata):
 	if type(a) == int:
@@ -433,7 +433,7 @@ class CoinInfo(object):
 
 	@classmethod
 	def verify_core_coin_data(cls,quiet=False,verbose=False):
-		from mmgen.protocol import CoinProtocol,init_proto
+		from .protocol import CoinProtocol,init_proto
 
 		for network in ('mainnet','testnet'):
 			for coin in CoinProtocol.core_coins:
@@ -555,7 +555,7 @@ class CoinInfo(object):
 			return '1'
 
 		def phash2addr(ver_num,pk_hash):
-			from mmgen.protocol import _b58chk_encode
+			from .protocol import _b58chk_encode
 			bl = ver_num.bit_length()
 			ver_bytes = int.to_bytes(ver_num,bl//8 + bool(bl%8),'big')
 			return _b58chk_encode(ver_bytes + pk_hash)
