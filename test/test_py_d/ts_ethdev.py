@@ -839,7 +839,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		sid = dfl_sid
 		from mmgen.tool.wallet import tool_cmd
 		usr_mmaddrs = [f'{sid}:E:{i}' for i in (11,21)]
-		usr_addrs = [tool_cmd(proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
+		usr_addrs = [tool_cmd(cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
 		from mmgen.altcoins.eth.contract import TokenResolve
 		from mmgen.altcoins.eth.tx import EthereumMMGenTX as etx

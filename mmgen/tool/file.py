@@ -25,12 +25,7 @@ from .common import tool_cmd_base,options_annot_str
 class tool_cmd(tool_cmd_base):
 	"utilities for viewing/checking MMGen address and transaction files"
 
-	def __init__(self,proto=None,mmtype=None):
-		if proto:
-			self.proto = proto
-		else:
-			from ..protocol import init_proto_from_opts
-			self.proto = init_proto_from_opts()
+	need_proto = True
 
 	def _file_chksum(self,mmgen_addrfile,objname):
 		from ..opts import opt

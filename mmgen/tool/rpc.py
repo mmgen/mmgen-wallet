@@ -26,17 +26,7 @@ from ..tw import TwCommon
 class tool_cmd(tool_cmd_base):
 	"tracking wallet commands using the JSON-RPC interface"
 
-	def __init__(self,proto=None,mmtype=None):
-
-		if proto:
-			self.proto = proto
-		else:
-			from ..protocol import init_proto_from_opts
-			self.proto = init_proto_from_opts()
-
-		from ..globalvars import g
-		if g.token:
-			self.proto.tokensym = g.token.upper()
+	need_proto = True
 
 	async def daemon_version(self):
 		"print coin daemon version"

@@ -60,6 +60,9 @@ class tool_api(
 		wif,addr = tool.randpair()
 	"""
 
+	need_proto = True
+	need_addrtype = True
+
 	def __init__(self):
 		"""
 		Initializer - takes no arguments

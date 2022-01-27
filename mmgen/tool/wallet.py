@@ -31,12 +31,10 @@ from ..wallet import Wallet
 class tool_cmd(tool_cmd_base):
 	"key, address or subseed generation from an MMGen wallet"
 
-	def __init__(self,proto=None,mmtype=None):
-		if proto:
-			self.proto = proto
-		else:
-			from ..protocol import init_proto_from_opts
-			self.proto = init_proto_from_opts()
+	def __init__(self,cmdname=None,proto=None,mmtype=None):
+		if cmdname in ('gen_key','gen_addr'):
+			self.need_proto = True
+		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
 
 	def get_subseed(self,subseed_idx:str,wallet=''):
 		"get the Seed ID of a single subseed by Subseed Index for default or specified wallet"

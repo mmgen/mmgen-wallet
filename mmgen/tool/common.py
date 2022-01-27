@@ -25,9 +25,28 @@ def options_annot_str(l):
 
 class tool_cmd_base:
 
-	def __init__(self,proto=None,mmtype=None):
-		pass
+	need_proto = False
+	need_addrtype = False
+
+	def __init__(self,cmdname=None,proto=None,mmtype=None):
+
+		if self.need_proto:
+			if proto:
+				self.proto = proto
+			else:
+				from ..protocol import init_proto_from_opts
+				self.proto = init_proto_from_opts()
+			from ..globalvars import g
+			if g.token:
+				self.proto.tokensym = g.token.upper()
+
+		if self.need_addrtype:
+			from ..opts import opt
+			from ..addr import MMGenAddrType
+			self.mmtype = MMGenAddrType(
+				self.proto,
+				mmtype or opt.type or self.proto.dfl_mmtype )
 
 	@property
 	def user_commands(self):
-		return {k:v for k,v in type(self).__dict__.items() if not k.startswith('_')}
+		return {k:v for k,v in type(self).__dict__.items() if callable(v) and not k.startswith('_')}

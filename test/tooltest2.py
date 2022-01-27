@@ -896,7 +896,7 @@ async def run_test(cls,gid,cmd_name):
 			if stdin_input and g.platform == 'win':
 				msg('Skipping for MSWin - no os.fork()')
 				continue
-			method = getattr(cls(proto=proto,mmtype=mmtype),cmd_name)
+			method = getattr(cls(cmdname=cmd_name,proto=proto,mmtype=mmtype),cmd_name)
 			cmd_out = await call_method(cls,method,cmd_name,args,out,opts,mmtype,stdin_input)
 
 		try:

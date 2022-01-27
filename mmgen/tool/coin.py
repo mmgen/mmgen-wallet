@@ -40,22 +40,8 @@ class tool_cmd(tool_cmd_base):
 			mmgen-tool --coin=zec --type=zcash_z randpair
 	"""
 
-	def __init__(self,proto=None,mmtype=None):
-
-		if proto:
-			self.proto = proto
-		else:
-			from ..protocol import init_proto_from_opts
-			self.proto = init_proto_from_opts()
-
-		from ..opts import opt
-		self.mmtype = MMGenAddrType(
-			self.proto,
-			mmtype or opt.type or self.proto.dfl_mmtype )
-
-		from ..globalvars import g
-		if g.token:
-			self.proto.tokensym = g.token.upper()
+	need_proto = True
+	need_addrtype = True
 
 	def _init_generators(self,arg=None):
 		return generator_data(
