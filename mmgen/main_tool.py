@@ -325,22 +325,22 @@ def get_mod_cls(modname):
 
 if g.prog_name == 'mmgen-tool' and not opt._lock:
 
-	cmd_args = opts.init(opts_data)
+	po = opts.init( opts_data, parse_only=True )
 
-	if len(cmd_args) < 1:
+	if len(po.cmd_args) < 1:
 		opts.usage()
 
-	cmd = cmd_args.pop(0)
-
-	if cmd in ('help','usage') and cmd_args:
-		cmd_args[0] = 'command_name=' + cmd_args[0]
-
-	cls = get_cmd_cls(cmd)
+	cls = get_cmd_cls(po.cmd_args[0])
 
 	if not cls:
-		die(1,f'{cmd!r}: no such command')
+		die(1,f'{po.cmd_args[0]!r}: no such command')
 
-	args,kwargs = process_args(cmd,cmd_args,cls)
+	cmd,*args = opts.init( opts_data, parsed_opts=po, need_proto=cls.need_proto )
+
+	if cmd in ('help','usage') and args:
+		args[0] = 'command_name=' + args[0]
+
+	args,kwargs = process_args(cmd,args,cls)
 
 	ret = getattr(cls(cmdname=cmd),cmd)(*args,**kwargs)
 

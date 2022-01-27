@@ -142,12 +142,15 @@ def set_for_type(val,refval,desc,invert_bool=False,src=None):
 		' in {!r}'.format(src) if src else '',
 		type(refval).__name__) )
 
-def override_globals_from_cfg_file(ucfg):
-	from .protocol import CoinProtocol,init_proto
+def override_globals_from_cfg_file(ucfg,need_proto):
+	if need_proto:
+		from .protocol import init_proto
 	for d in ucfg.get_lines():
 		if d.name in g.cfg_file_opts:
 			ns = d.name.split('_')
 			if ns[0] in g.core_coins:
+				if not need_proto:
+					continue
 				nse,tn = (
 					(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
 					(ns[1:],False)
@@ -251,22 +254,33 @@ opts_data_dfl = {
 	}
 }
 
-def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=False):
+def init(
+	opts_data   = None,
+	add_opts    = None,
+	init_opts   = None,
+	opt_filter  = None,
+	parse_only  = False,
+	parsed_opts = None,
+	need_proto  = True ):
 
 	if opts_data is None:
 		opts_data = opts_data_dfl
 
 	opts_data['text']['long_options'] = common_opts_data['text']
 
+	# Make this available to usage()
+	global usage_data
+	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
+
 	# po: (user_opts,cmd_args,opts,skipped_opts)
-	po = mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
+	po = parsed_opts or mmgen.share.Opts.parse_opts(opts_data,opt_filter=opt_filter,parse_only=parse_only)
 
 	if init_opts: # allow programs to preload user opts
 		for uopt,val in init_opts.items():
 			if uopt not in po.user_opts:
 				po.user_opts[uopt] = val
 
-	if parse_only:
+	if parse_only and not any(k in po.user_opts for k in ('version','help','longhelp')):
 		return po
 
 	if g.debug_opts:
@@ -315,7 +329,7 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 		from .cfg import cfg_file
 		# check for changes in system template file - term must be initialized
 		cfg_file('sample')
-		override_globals_from_cfg_file(cfg_file('usr'))
+		override_globals_from_cfg_file( cfg_file('usr'), need_proto )
 
 	override_globals_and_set_opts_from_env(opt)
 
@@ -360,10 +374,11 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 		g.regtest = True
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 
-	from .protocol import init_genonly_altcoins
-	altcoin_trust_level = init_genonly_altcoins(
-		g.coin,
-		testnet = g.testnet or g.regtest )
+	if need_proto:
+		from .protocol import init_genonly_altcoins
+		altcoin_trust_level = init_genonly_altcoins(
+			g.coin,
+			testnet = g.testnet or g.regtest )
 
 	# === end global var initialization === #
 
@@ -375,8 +390,9 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 	del mmgen.share.Opts.process_uopts
 	del mmgen.share.Opts.parse_opts
 
-	from .util import warn_altcoins
-	warn_altcoins(g.coin,altcoin_trust_level)
+	if need_proto:
+		from .util import warn_altcoins
+		warn_altcoins(g.coin,altcoin_trust_level)
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
@@ -398,10 +414,6 @@ def init(opts_data=None,add_opts=None,init_opts=None,opt_filter=None,parse_only=
 
 	if g.debug_opts:
 		opt_postproc_debug()
-
-	# Make this available to usage()
-	global usage_data
-	usage_data = opts_data['text'].get('usage2') or opts_data['text']['usage']
 
 	# We don't need this data anymore
 	for k in ('text','notes','code'):

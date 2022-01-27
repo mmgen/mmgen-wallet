@@ -142,7 +142,7 @@ FMT CODES:
 	}
 }
 
-cmd_args = opts.init(opts_data,opt_filter=opt_filter)
+cmd_args = opts.init(opts_data,opt_filter=opt_filter,need_proto=False)
 
 if invoked_as == 'subgen':
 	from .subseed import SubSeedIdx
