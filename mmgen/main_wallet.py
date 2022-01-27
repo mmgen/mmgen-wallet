@@ -22,8 +22,6 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 
 import os
 from .common import *
-from .obj import MMGenWalletLabel
-from .seedsplit import MasterShareIdx
 from .wallet import Wallet,MMGenWallet
 from .filename import find_file_in_dir
 
@@ -129,8 +127,8 @@ FMT CODES:
 		'options': lambda help_notes,s: s.format(
 			iaction=capfirst(iaction),
 			oaction=capfirst(oaction),
-			ms_min=MasterShareIdx.min_val,
-			ms_max=MasterShareIdx.max_val,
+			ms_min=help_notes('MasterShareIdx').min_val,
+			ms_max=help_notes('MasterShareIdx').max_val,
 			dsl=help_notes('dfl_seed_len'),
 			g=g,
 		),
@@ -151,7 +149,7 @@ if invoked_as == 'subgen':
 	ss_idx = SubSeedIdx(cmd_args.pop())
 elif invoked_as == 'seedsplit':
 	from .obj import get_obj
-	from .seedsplit import SeedSplitSpecifier
+	from .seedsplit import SeedSplitSpecifier,MasterShareIdx
 	master_share = MasterShareIdx(opt.master_share) if opt.master_share else None
 	if cmd_args:
 		sss = get_obj(SeedSplitSpecifier,s=cmd_args.pop(),silent=True)

@@ -23,10 +23,8 @@ protocol.py: Coin protocol functions, classes and methods
 import sys,os,hashlib
 from collections import namedtuple
 
-from .util import msg,ymsg,Msg,ydie
 from .devtools import *
 from .globalvars import g
-import mmgen.bech32 as bech32
 from .amt import BTCAmt,LTCAmt,BCHAmt,XMRAmt,ETHAmt
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
@@ -193,6 +191,7 @@ class CoinProtocol(MMGenObject):
 			if 0 < int.from_bytes(sec,'big') < self.secp256k1_ge:
 				return sec
 			else: # chance of this is less than 1 in 2^127
+				from .util import ydie
 				pk = int.from_bytes(sec,'big')
 				if pk == 0: # chance of this is 1 in 2^256
 					ydie(3,'Private key is zero!')
@@ -200,6 +199,7 @@ class CoinProtocol(MMGenObject):
 					ydie(3,'Private key == secp256k1_ge!')
 				else:
 					if not g.test_suite:
+						from .util import ymsg
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {hexpriv}')
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 
@@ -274,9 +274,11 @@ class CoinProtocol(MMGenObject):
 		def parse_addr(self,addr):
 
 			if 'B' in self.mmtypes and addr[:len(self.bech32_hrp)] == self.bech32_hrp:
+				import mmgen.bech32 as bech32
 				ret = bech32.decode(self.bech32_hrp,addr)
 
 				if ret[0] != self.witness_vernum:
+					from .util import msg
 					msg(f'{ret[0]}: Invalid witness version number')
 					return False
 
@@ -303,6 +305,7 @@ class CoinProtocol(MMGenObject):
 
 		def pubhash2bech32addr(self,pubhash):
 			d = list(pubhash)
+			import mmgen.bech32 as bech32
 			return bech32.bech32_encode(self.bech32_hrp,[self.witness_vernum]+bech32.convertbits(d,8,5))
 
 	class BitcoinTestnet(Bitcoin):
@@ -415,6 +418,7 @@ class CoinProtocol(MMGenObject):
 			if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
 				return parsed_addr( bytes.fromhex(addr), 'ethereum' )
 			if g.debug:
+				from .util import Msg
 				Msg(f'Invalid address: {addr}')
 			return False
 
@@ -509,7 +513,7 @@ class CoinProtocol(MMGenObject):
 
 		def parse_addr(self,addr):
 
-			from .baseconv import baseconv,is_b58_str
+			from .baseconv import baseconv
 
 			def b58dec(addr_str):
 				bc = baseconv('b58')
@@ -576,20 +580,21 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 	If usr_coin is None, initializes all coins for current network with trust level >-1.
 	Returns trust_level of usr_coin, or 0 (untrusted) if usr_coin is None.
 	"""
-	from .altcoin import CoinInfo as ci
 	data = { 'mainnet': (), 'testnet': () }
 	networks = ['mainnet'] + (['testnet'] if testnet else [])
 	network = 'testnet' if testnet else 'mainnet'
 
 	if usr_coin == None:
+		from .altcoin import CoinInfo
 		for network in networks:
-			data[network] = ci.get_supported_coins(network)
+			data[network] = CoinInfo.get_supported_coins(network)
 		trust_level = 0
 	else:
 		if usr_coin.lower() in CoinProtocol.core_coins: # core coin, so return immediately
 			return CoinProtocol.coins[usr_coin.lower()].trust_level
+		from .altcoin import CoinInfo
 		for network in networks:
-			data[network] = (ci.get_entry(usr_coin,network),)
+			data[network] = (CoinInfo.get_entry(usr_coin,network),)
 
 		cinfo = data[network][0]
 		if not cinfo:

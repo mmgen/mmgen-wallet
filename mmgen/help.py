@@ -39,6 +39,10 @@ def help_notes_func(proto,po,k):
 
 	class help_notes:
 
+		def MasterShareIdx():
+			from .seedsplit import MasterShareIdx
+			return MasterShareIdx
+
 		def tool_help():
 			from .tool.help import main_help
 			return main_help()
@@ -312,4 +316,4 @@ subwallets from a single parent.  This leaves each user with a total of two
 million subwallets, which should be enough for most practical purposes.
 """.strip()
 
-	return getattr(help_notes,k)() + ('-α' if g.debug_utf8 else '')
+	return getattr(help_notes,k)()

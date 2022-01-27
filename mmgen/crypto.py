@@ -21,8 +21,6 @@ crypto.py: Random number, password hashing and symmetric encryption routines for
 """
 
 import os
-from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
-from cryptography.hazmat.backends import default_backend
 from hashlib import sha256
 from collections import namedtuple
 
@@ -115,6 +113,8 @@ def decrypt_seed(enc_seed,key,seed_id,key_id):
 	return dec_seed
 
 def encrypt_data(data,key,iv=aesctr_dfl_iv,desc='data',verify=True):
+	from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
+	from cryptography.hazmat.backends import default_backend
 	vmsg(f'Encrypting {desc}')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()
@@ -132,6 +132,8 @@ def encrypt_data(data,key,iv=aesctr_dfl_iv,desc='data',verify=True):
 	return enc_data
 
 def decrypt_data(enc_data,key,iv=aesctr_dfl_iv,desc='data'):
+	from cryptography.hazmat.primitives.ciphers import Cipher,algorithms,modes
+	from cryptography.hazmat.backends import default_backend
 	vmsg_r(f'Decrypting {desc} with key...')
 	c = Cipher(algorithms.AES(key),modes.CTR(iv),backend=default_backend())
 	encryptor = c.encryptor()

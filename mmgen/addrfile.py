@@ -34,7 +34,6 @@ from .seed import SeedID,is_seed_id
 from .key import PrivKey
 from .addr import ViewKey,AddrListID,MMGenPasswordType,is_addr_idx
 from .addrlist import KeyList,AddrListData,dmsg_sc
-from .passwdlist import PasswordList
 
 class AddrFile(MMGenObject):
 	desc        = 'addresses'
@@ -109,6 +108,7 @@ class AddrFile(MMGenObject):
 		out.append(f'{lbl} {{')
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))
+		from .passwdlist import PasswordList
 		for e in p.data:
 			c = ' '+e.label if add_comments and e.label else ''
 			if type(p) == KeyList:
@@ -228,6 +228,7 @@ class AddrFile(MMGenObject):
 		from .fileutil import get_lines_from_file
 		lines = get_lines_from_file(fn,p.desc+' data',trim_comments=True)
 
+		from .passwdlist import PasswordList
 		try:
 			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
 			ls = lines[0].split()
