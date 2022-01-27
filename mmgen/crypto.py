@@ -21,7 +21,6 @@ crypto.py: Random number, password hashing and symmetric encryption routines for
 """
 
 import os
-from hashlib import sha256
 from collections import namedtuple
 
 from .globalvars import g
@@ -70,6 +69,7 @@ def get_hash_params(hash_preset):
 		die(3,f"{hash_preset}: invalid 'hash_preset' value")
 
 def sha256_rounds(s,n):
+	from hashlib import sha256
 	for i in range(n):
 		s = sha256(s).digest()
 	return s
@@ -251,6 +251,7 @@ def add_user_random(rand_bytes,desc):
 	assert type(rand_bytes) == bytes, 'add_user_random_chk1'
 	if opt.usr_randchars:
 		if not g.user_entropy:
+			from hashlib import sha256
 			g.user_entropy = sha256(_get_random_data_from_user(opt.usr_randchars,desc)).digest()
 			urand_desc = 'user-supplied entropy'
 		else:
@@ -341,6 +342,7 @@ def mmgen_encrypt(data,desc='data',hash_preset=None):
 		hash_preset = hp,
 		passwd_file = opt.passwd_file )
 	key    = make_key(passwd,salt,hp)
+	from hashlib import sha256
 	enc_d  = encrypt_data( sha256(nonce+data).digest() + nonce + data, key, iv, desc=desc )
 	return salt+iv+enc_d
 
@@ -359,6 +361,7 @@ def mmgen_decrypt(data,desc='data',hash_preset=None):
 	key    = make_key(passwd,salt,hp)
 	dec_d  = decrypt_data( enc_d, key, iv, desc )
 	sha256_len = 32
+	from hashlib import sha256
 	if dec_d[:sha256_len] == sha256(dec_d[sha256_len:]).digest():
 		vmsg('OK')
 		return dec_d[sha256_len+mmenc_nonce_len:]

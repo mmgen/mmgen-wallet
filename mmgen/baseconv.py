@@ -20,7 +20,6 @@
 baseconv.py:  base conversion class for the MMGen suite
 """
 
-from hashlib import sha256
 from collections import namedtuple
 
 from .exception import BaseConversionError,BaseConversionPadError,HexadecimalStringError,SeedLengthError
@@ -92,6 +91,7 @@ class baseconv(object):
 		return self.digits
 
 	def get_wordlist_chksum(self):
+		from hashlib import sha256
 		return sha256( ' '.join(self.digits).encode() ).hexdigest()[:8]
 
 	def check_wordlist(self):

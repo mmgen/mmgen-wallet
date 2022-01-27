@@ -350,6 +350,7 @@ class WalletEnc(Wallet):
 		else:
 			self._get_new_passphrase()
 
+		from hashlib import sha256
 		d.salt     = sha256( crypto.get_random(128) ).digest()[:crypto.salt_len]
 		key        = crypto.make_key( d.passwd, d.salt, d.hash_preset )
 		d.key_id   = make_chksum_8(key)
@@ -911,6 +912,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 	}
 
 	def _make_iv_chksum(self,s):
+		from hashlib import sha256
 		return sha256(s).hexdigest()[:8].upper()
 
 	def _get_incog_data_len(self,seed_len):
@@ -952,6 +954,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 		d.salt = crypto.get_random( crypto.salt_len )
 		key = crypto.make_key( d.passwd, d.salt, d.hash_preset, 'incog wallet key' )
+		from hashlib import sha256
 		chk = sha256(self.seed.data).digest()[:8]
 		d.enc_seed = crypto.encrypt_data(
 			chk + self.seed.data,
@@ -1001,6 +1004,7 @@ to exit and re-run the program with the '--old-incog-fmt' option.
 
 	def _verify_seed_newfmt(self,data):
 		chk,seed = data[:8],data[8:]
+		from hashlib import sha256
 		if sha256(seed).digest()[:8] == chk:
 			qmsg('Passphrase{} are correct'.format( self.msg['dec_chk'].format('and') ))
 			return seed

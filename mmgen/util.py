@@ -21,8 +21,6 @@ util.py:  Low-level routines imported by other modules in the MMGen suite
 """
 
 import sys,os,time,re
-from hashlib import sha256
-from string import hexdigits,digits
 
 from .color import *
 from .globalvars import g
@@ -276,7 +274,6 @@ def int2bytespec(n,spec,fmt,print_sym=True):
 	return '{:{}f}{}'.format( n / spec2int(spec), fmt, spec if print_sym else '' )
 
 def parse_bytespec(nbytes):
-	import re
 	m = re.match(r'([0123456789.]+)(.*)',nbytes)
 	if m:
 		if m.group(2):
@@ -331,16 +328,20 @@ def make_chksum_N(s,nchars,sep=False):
 		s = s.encode()
 	if nchars%4 or not (4 <= nchars <= 64):
 		return False
+	from hashlib import sha256
 	s = sha256(sha256(s).digest()).hexdigest().upper()
 	sep = ('',' ')[bool(sep)]
 	return sep.join([s[i*4:i*4+4] for i in range(nchars//4)])
 
 def make_chksum_8(s,sep=False):
 	from .obj import HexStr
+	from hashlib import sha256
 	s = HexStr(sha256(sha256(s).digest()).hexdigest()[:8].upper(),case='upper')
 	return '{} {}'.format(s[:4],s[4:]) if sep else s
+
 def make_chksum_6(s):
 	from .obj import HexStr
+	from hashlib import sha256
 	if isinstance(s,str):
 		s = s.encode()
 	return HexStr(sha256(s).hexdigest()[:6])
@@ -349,6 +350,7 @@ def is_chksum_6(s):
 	return len(s) == 6 and is_hex_str_lc(s)
 
 def make_iv_chksum(s):
+	from hashlib import sha256
 	return sha256(s).hexdigest()[:8].upper()
 
 def splitN(s,n,sep=None): # always return an n-element list
@@ -406,9 +408,11 @@ def is_int(s):
 		return False
 
 def is_hex_str(s):
+	from string import hexdigits
 	return set(list(s.lower())) <= set(list(hexdigits.lower()))
 
 def is_hex_str_lc(s):
+	from string import hexdigits
 	return set(list(s)) <= set(list(hexdigits.lower()))
 
 def is_utf8(s):

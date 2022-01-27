@@ -24,7 +24,7 @@ cfg.py: API for the MMGen runtime configuration file and related files
 # override_from_env() during init, so global config vars that are set from the environment
 # (such as g.test_suite) cannot be used here.
 
-import sys,os,re,hashlib
+import sys,os,re
 from collections import namedtuple
 
 from .globalvars import *
@@ -111,6 +111,7 @@ class CfgFileSample(CfgFile):
 
 	@staticmethod
 	def compute_chksum(data):
+		import hashlib
 		return hashlib.new('ripemd160','\n'.join(data).encode()).hexdigest()
 
 	@property
