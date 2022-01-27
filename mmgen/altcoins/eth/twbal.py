@@ -20,8 +20,8 @@
 altcoins.eth.twbal: Ethereum tracking wallet getbalance class for the MMGen suite
 """
 
-from mmgen.twctl import TrackingWallet
-from mmgen.twbal import TwGetBalance
+from ...twctl import TrackingWallet
+from ...twbal import TwGetBalance
 
 class EthereumTwGetBalance(TwGetBalance):
 

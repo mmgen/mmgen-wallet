@@ -20,7 +20,7 @@
 altcoins.eth.twaddrs: Ethereum tracking wallet listaddresses class for the MMGen suite
 """
 
-from mmgen.twaddrs import TwAddrList
+from ...twaddrs import TwAddrList
 
 class EthereumTwAddrList(TwAddrList):
 
@@ -28,9 +28,9 @@ class EthereumTwAddrList(TwAddrList):
 
 	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 
-		from mmgen.tw import TwLabel
-		from mmgen.twctl import TrackingWallet
-		from mmgen.addr import CoinAddr
+		from ...tw import TwLabel
+		from ...twctl import TrackingWallet
+		from ...addr import CoinAddr
 
 		self.proto = proto
 		self.wallet = wallet or await TrackingWallet(self.proto,mode='w')

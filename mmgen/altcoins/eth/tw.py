@@ -20,13 +20,13 @@
 altcoins.eth.tw: Ethereum tracking wallet dependency classes for the MMGen suite
 """
 
-from mmgen.addrdata import AddrData,TwAddrData
+from ...addrdata import AddrData,TwAddrData
 
 class EthereumTwAddrData(TwAddrData):
 
 	async def get_tw_data(self,wallet=None):
-		from mmgen.twctl import TrackingWallet
-		from mmgen.util import vmsg
+		from ...twctl import TrackingWallet
+		from ...util import vmsg
 		vmsg('Getting address data from tracking wallet')
 		tw = (wallet or await TrackingWallet(self.proto)).mmid_ordered_dict
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'

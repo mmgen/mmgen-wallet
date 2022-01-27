@@ -23,12 +23,12 @@ altcoins.eth.contract: Ethereum contract and token classes for the MMGen suite
 from decimal import Decimal
 from . import rlp
 
-from mmgen.util import msg,pp_msg
-from mmgen.globalvars import g
-from mmgen.base_obj import AsyncInit
-from mmgen.obj import MMGenObject,CoinTxID
-from mmgen.addr import CoinAddr,TokenAddr
-from mmgen.amt import ETHAmt
+from ...util import msg,pp_msg
+from ...globalvars import g
+from ...base_obj import AsyncInit
+from ...obj import MMGenObject,CoinTxID
+from ...addr import CoinAddr,TokenAddr
+from ...amt import ETHAmt
 
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
@@ -152,7 +152,7 @@ class Token(TokenBase):
 
 	def __init__(self,proto,addr,decimals,rpc=None):
 		if type(self).__name__ == 'Token':
-			from mmgen.util import get_keccak
+			from ...util import get_keccak
 			self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.addr = TokenAddr(proto,addr)
@@ -164,7 +164,7 @@ class Token(TokenBase):
 class TokenResolve(TokenBase,metaclass=AsyncInit):
 
 	async def __init__(self,proto,rpc,addr):
-		from mmgen.util import get_keccak
+		from ...util import get_keccak
 		self.keccak_256 = get_keccak()
 		self.proto = proto
 		self.rpc = rpc

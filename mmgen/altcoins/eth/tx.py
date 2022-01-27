@@ -276,7 +276,7 @@ class EthereumMMGenTX:
 					\n""".replace('\t','')
 			t = self.txobj
 			td = t['data']
-			from mmgen.color import yellow
+			from ...color import yellow
 			return fs.format(
 				*((t[k] if t[k] != '' else Str('None')).hl() for k in self.fmt_keys),
 				d      = '{}... ({} bytes)'.format(td[:40],len(td)//2) if len(td) else Str('None'),

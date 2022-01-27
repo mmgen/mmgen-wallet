@@ -20,10 +20,10 @@
 altcoins.eth.twctl: Ethereum tracking wallet control class for the MMGen suite
 """
 
-from mmgen.util import msg,ymsg,write_mode
-from mmgen.twctl import TrackingWallet
-from mmgen.addr import is_coin_addr,is_mmgen_id
-from mmgen.amt import ETHAmt
+from ...util import msg,ymsg,write_mode
+from ...twctl import TrackingWallet
+from ...addr import is_coin_addr,is_mmgen_id
+from ...amt import ETHAmt
 from .contract import Token,TokenResolve
 
 class EthereumTrackingWallet(TrackingWallet):
@@ -165,10 +165,10 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			assert token_addr == None,'EthereumTokenTrackingWallet_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto,token_addr):
-				from mmgen.exception import UnrecognizedTokenSymbol
+				from ...exception import UnrecognizedTokenSymbol
 				raise UnrecognizedTokenSymbol(f'Specified token {proto.tokensym!r} could not be resolved!')
 
-		from mmgen.addr import TokenAddr
+		from ...addr import TokenAddr
 		self.token = TokenAddr(proto,token_addr)
 
 		if self.token not in self.data['tokens']:
