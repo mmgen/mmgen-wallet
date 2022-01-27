@@ -14,8 +14,17 @@ from mmgen.color import _colors
 
 def test_color():
 
+	ymsg("Terminal display:") # init_color() not called yet, so no yellow here
+
+	for desc,nc in (('pre-init',None),('auto','auto'),('8-color',8),('256-color',256),('disabled',0)):
+		if nc != None:
+			init_color(num_colors=nc)
+		msg('{:9}: {}'.format(
+			desc,
+			' '.join(globals()[c](c) for c in sorted(_colors)) ))
+
 	init_color()
-	gmsg("Parsed terminfo 'colors' values:")
+	gmsg("\nParsed terminfo 'colors' values:")
 
 	for t,c in (('rxvt',8),('xterm',8),('rxvt-unicode',88),('screen-256color',256),('xterm-256color',256)):
 		ret = get_terminfo_colors(t)
@@ -23,18 +32,11 @@ def test_color():
 			set_vt100()
 			ymsg(f'Warning: unable to get info for terminal {t!r}')
 			continue
-		msg(f'{t}: {ret}')
+		msg(f'{t}: {orange(str(ret))}')
 		assert c == ret, f"'colors' value for terminal {t} ({ret}) does not match expected value of {c}"
 
 	ret = get_terminfo_colors()
-	msg(f'This terminal ({os.getenv("TERM")}): {ret}')
+	msg(f'{os.getenv("TERM")} (this terminal): {orange(str(ret))}')
 	set_vt100()
-	gmsg("Terminal display:")
-
-	for desc,n in (('auto','auto'),('8-color',8),('256-color',256),('off',0)):
-		init_color(num_colors=n)
-		msg('{:9}: {}'.format(
-			desc,
-			' '.join(globals()[c](c) for c in sorted(_colors)) ))
 
 test_color()

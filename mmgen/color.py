@@ -41,21 +41,6 @@ _colors = {
 	'yelbg':       ( (232,229), (30,103) ),
 }
 
-_reset = ''
-
-for _c in _colors:
-	_e = _colors[_c]
-	globals()['_256_'+_c] = (
-		'\033[38;5;{};1m'.format(_e[0]) if type(_e[0]) == int else
-		'\033[38;5;{};48;5;{};1m'.format(*_e[0])
-	)
-	globals()['_16_'+_c] = (
-		'\033[{}m'.format(_e[1][0]) if _e[1][1] == 0 else
-		'\033[{};{}m'.format(*_e[1])
-	)
-	globals()['_clr_'+_c] = ''
-	exec(f'{_c} = lambda s: _clr_{_c}+s+_reset')
-
 def nocolor(s):
 	return s
 
@@ -92,22 +77,30 @@ def get_terminfo_colors(term=None):
 def init_color(num_colors='auto'):
 	assert num_colors in ('auto',8,16,256,0)
 
-	globals()['_reset'] = '\033[0m' if num_colors else ''
-
-	if num_colors in (0,8,16):
-		pfx = '_16_'
-	else:
+	if num_colors == 'auto':
 		import os
 		t = os.getenv('TERM')
-		if num_colors == 256 or (t and t.endswith('256color')) or get_terminfo_colors() == 256:
-			pfx = '_256_'
-		else:
-			pfx = '_16_'
+		num_colors = 256 if (t and t.endswith('256color')) or get_terminfo_colors() == 256 else 16
 
-	for c in _colors:
-		if num_colors == 0:
-			globals()['_clr_'+c] = ''
-		else:
-			globals()['_clr_'+c] = globals()[pfx+c]
+	reset = '\033[0m'
+	if num_colors == 0:
+		ncc = (lambda s: s).__code__
+		for c in _colors:
+			globals()[c].__code__ = ncc
+	elif num_colors == 256:
+		for c,e in _colors.items():
+			start = (
+				'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
+				'\033[38;5;{};48;5;{};1m'.format(*e[0]) )
+			globals()[c].__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+	elif num_colors in (8,16):
+		for c,e in _colors.items():
+			start = (
+				'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
+				'\033[{};{}m'.format(*e[1]) )
+			globals()[c].__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
 
 	set_vt100()
+
+for _c in _colors:
+	exec(f'{_c} = lambda s: s')
