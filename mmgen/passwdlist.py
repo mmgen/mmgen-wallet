@@ -22,11 +22,8 @@ passwdlist.py: Password list class for the MMGen suite
 
 from collections import namedtuple
 
-from .util import ymsg,is_hex_str,is_int,keypress_confirm
+from .util import ymsg,is_int,keypress_confirm
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString
-from .baseconv import baseconv,is_b32_str,is_b58_str
-from .bip39 import is_bip39_str
-from .xmrseed import is_xmrseed
 from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID
 from .addrlist import (
@@ -56,11 +53,11 @@ class PasswordList(AddrList):
 	dfl_pw_fmt  = 'b58'
 	pwinfo      = namedtuple('passwd_info',['min_len','max_len','dfl_len','valid_lens','desc','chk_func'])
 	pw_info     = {
-		'b32':     pwinfo(10, 42 ,24, None,      'base32 password',          is_b32_str), # 32**24 < 2**128
-		'b58':     pwinfo(8,  36 ,20, None,      'base58 password',          is_b58_str), # 58**20 < 2**128
-		'bip39':   pwinfo(12, 24 ,24, [12,18,24],'BIP39 mnemonic',           is_bip39_str),
-		'xmrseed': pwinfo(25, 25, 25, [25],      'Monero new-style mnemonic',is_xmrseed),
-		'hex':     pwinfo(32, 64 ,64, [32,48,64],'hexadecimal password',     is_hex_str),
+		'b32':     pwinfo(10, 42 ,24, None,      'base32 password',          'baseconv.is_b32_str'), # 32**24 < 2**128
+		'b58':     pwinfo(8,  36 ,20, None,      'base58 password',          'baseconv.is_b58_str'), # 58**20 < 2**128
+		'bip39':   pwinfo(12, 24 ,24, [12,18,24],'BIP39 mnemonic',           'bip39.is_bip39_str'),
+		'xmrseed': pwinfo(25, 25, 25, [25],      'Monero new-style mnemonic','xmrseed.is_xmrseed'),
+		'hex':     pwinfo(32, 64 ,64, [32,48,64],'hexadecimal password',     'util.is_hex_str'),
 	}
 	chksum_rec_f = lambda foo,e: (str(e.idx), e.passwd)
 
@@ -81,7 +78,8 @@ class PasswordList(AddrList):
 
 		if infile:
 			self.infile = infile
-			self.data = self.get_file().parse_file(infile) # sets self.pw_id_str,self.pw_fmt,self.pw_len
+			# sets self.pw_id_str, self.pw_fmt, self.pw_len, self.chk_func:
+			self.data = self.get_file().parse_file(infile)
 		else:
 			if not chk_params_only:
 				for k in (seed,pw_idxs):
@@ -93,7 +91,7 @@ class PasswordList(AddrList):
 				return
 			if self.hex2bip39:
 				ymsg(self.feature_warn_fs.format(pw_fmt))
-			self.set_pw_len_vs_seed_len(pw_len,seed)
+			self.set_pw_len_vs_seed_len(pw_len,seed) # sets self.bip39, self.xmrseed, self.xmrproto self.baseconv
 			self.al_id = AddrListID(seed.sid,MMGenPasswordType(self.proto,'P'))
 			self.data = self.generate(seed,pw_idxs)
 
@@ -156,10 +154,14 @@ class PasswordList(AddrList):
 			good_pw_len = seed.byte_len * 2
 		elif pf == 'bip39':
 			from .bip39 import bip39
+			self.bip39 = bip39()
 			pw_bytes = bip39.nwords2seedlen(self.pw_len,in_bytes=True)
 			good_pw_len = bip39.seedlen2nwords(seed.byte_len,in_bytes=True)
 		elif pf == 'xmrseed':
 			from .xmrseed import xmrseed
+			from .protocol import init_proto
+			self.xmrseed = xmrseed()
+			self.xmrproto = init_proto('xmr')
 			pw_bytes = xmrseed().seedlen_map_rev[self.pw_len]
 			try:
 				good_pw_len = xmrseed().seedlen_map[seed.byte_len]
@@ -168,6 +170,8 @@ class PasswordList(AddrList):
 		elif pf in ('b32','b58'):
 			pw_int = (32 if pf == 'b32' else 58) ** self.pw_len
 			pw_bytes = pw_int.bit_length() // 8
+			from .baseconv import baseconv
+			self.baseconv = baseconv(self.pw_fmt)
 			good_pw_len = len( baseconv(pf).frombytes(b'\xff'*seed.byte_len) )
 		else:
 			raise NotImplementedError(f'{pf!r}: unknown password format')
@@ -193,27 +197,24 @@ class PasswordList(AddrList):
 			# take most significant part
 			return secbytes.hex()[:self.pw_len]
 		elif self.pw_fmt == 'bip39':
-			from .bip39 import bip39
-			pw_len_bytes = bip39.nwords2seedlen( self.pw_len, in_bytes=True )
+			pw_len_bytes = self.bip39.nwords2seedlen( self.pw_len, in_bytes=True )
 			# take most significant part
-			return ' '.join( bip39().fromhex(secbytes[:pw_len_bytes].hex()) )
+			return ' '.join( self.bip39.fromhex(secbytes[:pw_len_bytes].hex()) )
 		elif self.pw_fmt == 'xmrseed':
-			from .xmrseed import xmrseed
-			pw_len_bytes = xmrseed().seedlen_map_rev[self.pw_len]
-			from .protocol import init_proto
-			bytes_preproc = init_proto('xmr').preprocess_key(
+			pw_len_bytes = self.xmrseed.seedlen_map_rev[self.pw_len]
+			bytes_preproc = self.xmrproto.preprocess_key(
 				secbytes[:pw_len_bytes], # take most significant part
 				None )
-			return ' '.join( xmrseed().frombytes(bytes_preproc) )
+			return ' '.join( self.xmrseed.frombytes(bytes_preproc) )
 		else:
 			# take least significant part
-			return baseconv(self.pw_fmt).frombytes(
+			return self.baseconv.frombytes(
 				secbytes,
 				pad = self.pw_len,
 				tostr = True )[-self.pw_len:]
 
 	def check_format(self,pw):
-		if not self.pw_info[self.pw_fmt].chk_func(pw):
+		if not self.chk_func(pw):
 			raise ValueError(f'Password is not valid {self.pw_info[self.pw_fmt].desc} data')
 		pwlen = len(pw.split()) if self.pw_fmt in ('bip39','xmrseed') else len(pw)
 		if pwlen != self.pw_len:
@@ -227,8 +228,7 @@ class PasswordList(AddrList):
 		scramble_key = f'{self.pw_fmt}:{self.pw_len}:{self.pw_id_str}'
 
 		if self.hex2bip39:
-			from .bip39 import bip39
-			pwlen = bip39.nwords2seedlen(self.pw_len,in_hex=True)
+			pwlen = self.bip39.nwords2seedlen(self.pw_len,in_hex=True)
 			scramble_key = f'hex:{pwlen}:{self.pw_id_str}'
 
 		from .crypto import scramble_seed

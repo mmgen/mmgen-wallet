@@ -26,15 +26,17 @@ class tool_cmd(tool_cmd_base):
 	"utilities for viewing/checking MMGen address and transaction files"
 
 	need_proto = True
-	need_amt = True # for txview
 
-	def _file_chksum(self,mmgen_addrfile,objname):
+	def __init__(self,cmdname=None,proto=None,mmtype=None):
+		if cmdname == 'txview':
+			self.need_amt = True
+		super().__init__(cmdname=cmdname,proto=proto,mmtype=mmtype)
+
+	def _file_chksum(self,mmgen_addrfile,obj):
 		from ..opts import opt
-		from ..addrlist import AddrList,KeyAddrList
-		from ..passwdlist import PasswordList
 		verbose,yes,quiet = [bool(i) for i in (opt.verbose,opt.yes,opt.quiet)]
 		opt.verbose,opt.yes,opt.quiet = (False,True,True)
-		ret = locals()[objname](self.proto,mmgen_addrfile)
+		ret = obj(self.proto,mmgen_addrfile)
 		opt.verbose,opt.yes,opt.quiet = (verbose,yes,quiet)
 		if verbose:
 			from ..util import msg,capfirst
@@ -51,15 +53,18 @@ class tool_cmd(tool_cmd_base):
 
 	def addrfile_chksum(self,mmgen_addrfile:str):
 		"compute checksum for MMGen address file"
-		return self._file_chksum(mmgen_addrfile,'AddrList')
+		from ..addrlist import AddrList
+		return self._file_chksum(mmgen_addrfile,AddrList)
 
 	def keyaddrfile_chksum(self,mmgen_keyaddrfile:str):
 		"compute checksum for MMGen key-address file"
-		return self._file_chksum(mmgen_keyaddrfile,'KeyAddrList')
+		from ..addrlist import KeyAddrList
+		return self._file_chksum(mmgen_keyaddrfile,KeyAddrList)
 
 	def passwdfile_chksum(self,mmgen_passwdfile:str):
 		"compute checksum for MMGen password file"
-		return self._file_chksum(mmgen_passwdfile,'PasswordList')
+		from ..passwdlist import PasswordList
+		return self._file_chksum(mmgen_passwdfile,PasswordList)
 
 	async def txview(
 			varargs_call_sig = { # hack to allow for multiple filenames

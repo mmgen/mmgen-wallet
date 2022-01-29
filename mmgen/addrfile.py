@@ -243,6 +243,9 @@ class AddrFile(MMGenObject):
 				p.set_pw_fmt(ss[0])
 				p.set_pw_len(ss[1])
 				p.pw_id_str = MMGenPWIDString(ls.pop())
+				modname,funcname = p.pw_info[p.pw_fmt].chk_func.split('.')
+				import importlib
+				p.chk_func = getattr(importlib.import_module('mmgen.'+modname),funcname)
 				proto = init_proto('btc') # FIXME: dummy protocol
 				mmtype = MMGenPasswordType(proto,'P')
 			elif len(ls) == 1:
