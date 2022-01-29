@@ -80,7 +80,8 @@ class tool_api(
 		Valid choices for coins: one of the symbols returned by the 'coins' attribute
 		Valid choices for network: 'mainnet','testnet','regtest'
 		"""
-		from ..protocol import init_proto,init_genonly_altcoins
+		from ..protocol import init_proto
+		from ..altcoin import init_genonly_altcoins
 		from ..util import warn_altcoins
 		altcoin_trust_level = init_genonly_altcoins(coinsym,testnet=network in ('testnet','regtest'))
 		warn_altcoins(coinsym,altcoin_trust_level)

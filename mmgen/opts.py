@@ -375,7 +375,7 @@ def init(
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 
 	if need_proto:
-		from .protocol import init_genonly_altcoins
+		from .altcoin import init_genonly_altcoins
 		altcoin_trust_level = init_genonly_altcoins(
 			g.coin,
 			testnet = g.testnet or g.regtest )
