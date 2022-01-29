@@ -374,12 +374,6 @@ def init(
 		g.regtest = True
 		g.data_dir = os.path.join(g.data_dir_root,'regtest',g.coin.lower(),('alice','bob')[g.bob])
 
-	if need_proto:
-		from .altcoin import init_genonly_altcoins
-		altcoin_trust_level = init_genonly_altcoins(
-			g.coin,
-			testnet = g.testnet or g.regtest )
-
 	# === end global var initialization === #
 
 	# print help screen only after global vars are initialized:
@@ -391,8 +385,8 @@ def init(
 	del mmgen.share.Opts.parse_opts
 
 	if need_proto:
-		from .util import warn_altcoins
-		warn_altcoins(g.coin,altcoin_trust_level)
+		from .protocol import warn_trustlevel
+		warn_trustlevel(g.coin)
 
 	die_on_incompatible_opts(g.incompatible_opts)
 
@@ -600,10 +594,6 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		opt_is_float(val,desc)
 		from .util import ymsg
 		ymsg(f'Adjusting transaction vsize by a factor of {float(val):1.2f}')
-
-	def chk_coin(key,val,desc):
-		from .protocol import CoinProtocol
-		opt_is_in_list(val.lower(),CoinProtocol.coins,'coin')
 
 # TODO: move this check elsewhere
 #	def chk_rbf(key,val,desc):

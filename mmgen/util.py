@@ -207,32 +207,6 @@ def exit_if_mswin(feature):
 		m = capfirst(feature) + ' not supported on the MSWin / MSYS2 platform'
 		ydie(1,m)
 
-def warn_altcoins(coinsym,trust_level):
-	if trust_level > 3:
-		return
-
-	tl_str = (
-		red('COMPLETELY UNTESTED'),
-		red('LOW'),
-		yellow('MEDIUM'),
-		green('HIGH'),
-	)[trust_level]
-
-	m = """
-		Support for coin {!r} is EXPERIMENTAL.  The {pn} project
-		assumes no responsibility for any loss of funds you may incur.
-		This coin’s {pn} testing status: {}
-		Are you sure you want to continue?
-	"""
-	m = fmt(m).strip().format(coinsym.upper(),tl_str,pn=g.proj_name)
-
-	if g.test_suite:
-		qmsg(m)
-		return
-
-	if not keypress_confirm(m,default_yes=True):
-		sys.exit(0)
-
 def get_keccak():
 
 	from .opts import opt

@@ -731,11 +731,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 		if cinfo.trust_level == -1:
 			raise ValueError(f'{usr_coin.upper()!r}: unsupported (disabled) coin for network {network.upper()}')
 
-		trust_level = cinfo.trust_level
-
 	create_altcoin_protos(data)
-
-	return trust_level
 
 def create_altcoin_protos(data):
 

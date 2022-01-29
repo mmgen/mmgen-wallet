@@ -551,11 +551,10 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 		network = 'regtest' if regtest else 'testnet' if testnet else 'mainnet'
 
 	coin = coin.lower()
+
 	if coin not in CoinProtocol.coins:
-		raise ValueError(
-			f'{coin.upper()}: not a valid coin for network {network.upper()}\n'
-			+ 'Supported coins: '
-			+ ' '.join(c.upper() for c in CoinProtocol.coins) )
+		from .altcoin import init_genonly_altcoins
+		init_genonly_altcoins( coin, testnet=testnet ) # raises exception on failure
 
 	name = CoinProtocol.coins[coin].name
 	proto_name = name + ('' if network == 'mainnet' else network.capitalize())
@@ -572,3 +571,45 @@ def init_proto_from_opts():
 		testnet   = g.testnet,
 		regtest   = g.regtest,
 		tokensym  = g.token )
+
+def warn_trustlevel(coinsym):
+
+	if coinsym.lower() in CoinProtocol.coins:
+		trust_level = CoinProtocol.coins[coinsym.lower()].trust_level
+	else:
+		from .altcoin import CoinInfo
+		e = CoinInfo.get_entry(coinsym,'mainnet')
+		trust_level = e.trust_level if e else None
+		if trust_level in (None,-1):
+			from .util import die
+			die(1,f'Coin {coinsym} is not supported by {g.proj_name}')
+
+	if trust_level > 3:
+		return
+
+	m = """
+		Support for coin {c!r} is EXPERIMENTAL.  The {p} project
+		assumes no responsibility for any loss of funds you may incur.
+		This coin’s {p} testing status: {t}
+		Are you sure you want to continue?
+	"""
+
+	from .util import qmsg,fmt,keypress_confirm
+	from .color import red,yellow,green
+
+	warning = fmt(m).strip().format(
+		c = coinsym.upper(),
+		t = {
+			0: red('COMPLETELY UNTESTED'),
+			1: red('LOW'),
+			2: yellow('MEDIUM'),
+			3: green('OK'),
+		}[trust_level],
+		p = g.proj_name )
+
+	if g.test_suite:
+		qmsg(warning)
+		return
+
+	if not keypress_confirm(warning,default_yes=True):
+		sys.exit(0)
