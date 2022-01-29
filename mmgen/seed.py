@@ -20,9 +20,7 @@
 seed.py:  Seed-related classes and methods for the MMGen suite
 """
 
-from string import hexdigits
-
-from .util import make_chksum_8
+from .util import make_chksum_8,hexdigits_uc
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 
@@ -38,7 +36,7 @@ class SeedID(str,Hilite,InitErrors):
 				assert isinstance(seed,SeedBase),'not a subclass of SeedBase'
 				return str.__new__(cls,make_chksum_8(seed.data))
 			elif sid:
-				assert set(sid) <= set(hexdigits.upper()),'not uppercase hex digits'
+				assert set(sid) <= set(hexdigits_uc), 'not uppercase hex digits'
 				assert len(sid) == cls.width, f'not {cls.width} characters wide'
 				return str.__new__(cls,sid)
 			raise ValueError('no arguments provided')

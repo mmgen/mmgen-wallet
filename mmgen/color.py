@@ -57,16 +57,13 @@ def get_terminfo_colors(term=None):
 	if term:
 		cmd.append(term)
 
-	def is_hex_str(s):
-		from string import hexdigits
-		return set(list(s)) <= set(list(hexdigits))
-
 	try:
 		cmdout = run(cmd,stdout=PIPE,check=True).stdout.decode()
 	except:
 		return None
 	else:
 		s = [e.split('#')[1] for e in cmdout.split(',') if e.startswith('colors')][0]
+		from .util import is_hex_str
 		if s.isdecimal():
 			return int(s)
 		elif s.startswith('0x') and is_hex_str(s[2:]):

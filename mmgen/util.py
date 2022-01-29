@@ -26,6 +26,12 @@ from .color import *
 from .globalvars import g
 from .opts import opt
 
+ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
+
+hexdigits = '0123456789abcdefABCDEF'
+hexdigits_uc = '0123456789ABCDEF'
+hexdigits_lc = '0123456789abcdef'
+
 if g.platform == 'win':
 	def msg_r(s):
 		try:
@@ -347,7 +353,7 @@ def make_chksum_6(s):
 	return HexStr(sha256(s).hexdigest()[:6])
 
 def is_chksum_6(s):
-	return len(s) == 6 and is_hex_str_lc(s)
+	return len(s) == 6 and set(s) <= set(hexdigits_lc)
 
 def make_iv_chksum(s):
 	from hashlib import sha256
@@ -408,12 +414,10 @@ def is_int(s):
 		return False
 
 def is_hex_str(s):
-	from string import hexdigits
-	return set(list(s.lower())) <= set(list(hexdigits.lower()))
+	return set(s) <= set(hexdigits)
 
 def is_hex_str_lc(s):
-	from string import hexdigits
-	return set(list(s)) <= set(list(hexdigits.lower()))
+	return set(s) <= set(hexdigits_lc)
 
 def is_utf8(s):
 	try:    s.decode('utf8')
@@ -452,7 +456,6 @@ def pretty_hexdump(data,gw=2,cols=8,line_nums=None):
 	return block_format(data.hex(),gw,cols,line_nums,data_is_hex=True)
 
 def decode_pretty_hexdump(data):
-	from string import hexdigits
 	pat = re.compile(fr'^[{hexdigits}]+:\s+')
 	lines = [pat.sub('',line) for line in data.splitlines()]
 	try:

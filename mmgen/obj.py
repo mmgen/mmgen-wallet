@@ -21,8 +21,6 @@ obj.py: MMGen native classes
 """
 
 import sys,os,re,unicodedata
-from decimal import *
-from string import hexdigits,ascii_letters,digits
 
 from .objmethods import *
 from .exception import BadTwComment
@@ -310,10 +308,12 @@ class HexStr(str,Hilite,InitErrors):
 			return s
 		if case == None:
 			case = cls.hexcase
+		from .util import hexdigits_lc,hexdigits_uc
 		try:
 			assert isinstance(s,str),'not a string or string subclass'
 			assert case in ('upper','lower'), f'{case!r} incorrect case specifier'
-			assert set(s) <= set(getattr(hexdigits,case)()), f'not {case}case hexadecimal symbols'
+			assert set(s) <= set(hexdigits_lc if case == 'lower' else hexdigits_uc), (
+				f'not {case}case hexadecimal symbols' )
 			assert not len(s) % 2,'odd-length string'
 			if cls.width:
 				assert len(s) == cls.width, f'Value is not {cls.width} characters wide'

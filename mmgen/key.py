@@ -20,7 +20,6 @@
 key.py: MMGen public and private key objects
 """
 
-from string import ascii_letters,digits
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import ImmutableAttr,get_obj
 
@@ -35,7 +34,7 @@ class WifKey(str,Hilite,InitErrors):
 		if type(wif) == cls:
 			return wif
 		try:
-			assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
+			assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 			proto.parse_wif(wif) # raises exception on error
 			return str.__new__(cls,wif)
 		except Exception as e:
@@ -76,7 +75,7 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 		if wif:
 			try:
 				assert s == None,"'wif' and key hex args are mutually exclusive"
-				assert set(wif) <= set(ascii_letters+digits),'not an ascii alphanumeric string'
+				assert wif.isascii() and wif.isalnum(), 'not an ASCII alphanumeric string'
 				k = proto.parse_wif(wif) # raises exception on error
 				me = bytes.__new__(cls,k.sec)
 				me.compressed = k.compressed

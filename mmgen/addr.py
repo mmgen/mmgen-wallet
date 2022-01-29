@@ -20,7 +20,6 @@
 addr.py: MMGen address-related types
 """
 
-from string import ascii_letters,digits
 from collections import namedtuple
 
 from .objmethods import Hilite,InitErrors,MMGenObject
@@ -142,7 +141,7 @@ class CoinAddr(str,Hilite,InitErrors,MMGenObject):
 		if type(addr) == cls:
 			return addr
 		try:
-			assert set(addr) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
+			assert addr.isascii() and addr.isalnum(), 'not an ASCII alphanumeric string'
 			me = str.__new__(cls,addr)
 			ap = proto.parse_addr(addr)
 			assert ap, f'coin address {addr!r} could not be parsed'

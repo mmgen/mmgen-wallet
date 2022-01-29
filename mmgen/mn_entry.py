@@ -23,11 +23,10 @@ mn_entry.py - Mnemonic user entry methods for the MMGen suite
 import time
 
 from .globalvars import *
-from .util import msg,msg_r,qmsg,fmt,fmt_list,capfirst,die
+from .util import msg,msg_r,qmsg,fmt,fmt_list,capfirst,die,ascii_lowercase
 from .term import get_char,get_char_raw
 from .color import cyan
 
-from string import ascii_lowercase as _word_chars
 _return_chars = '\n\r '
 _erase_chars = '\b\x7f'
 
@@ -82,7 +81,7 @@ class MnEntryModeFull(MnEntryMode):
 			if ch in _return_chars:
 				if s:
 					break
-			elif ch in _word_chars:
+			elif ch in ascii_lowercase:
 				s += ch
 			else:
 				pad += 1
@@ -122,7 +121,7 @@ class MnEntryModeShort(MnEntryMode):
 			if ch in _return_chars:
 				if s:
 					break
-			elif ch in _word_chars:
+			elif ch in ascii_lowercase:
 				s += ch
 				if len(s) == self.ss_len:
 					break
@@ -165,7 +164,7 @@ class MnEntryModeFixed(MnEntryMode):
 			if ch in _return_chars:
 				if s:
 					break
-			elif ch in _word_chars:
+			elif ch in ascii_lowercase:
 				s += ch
 				if len(s) + pad == self.ss_len:
 					return mne.idx(s,'short')
@@ -203,7 +202,7 @@ class MnEntryModeMinimal(MnEntryMode):
 			if ch in _return_chars:
 				if s:
 					return mne.idx(s,'full',lo_idx=lo,hi_idx=hi)
-			elif ch in _word_chars:
+			elif ch in ascii_lowercase:
 				s += ch
 				ret = mne.idx(s,'minimal',lo_idx=lo,hi_idx=hi)
 				if type(ret) != tuple:

@@ -21,7 +21,6 @@ tw: Tracking wallet dependency classes for the MMGen suite
 """
 
 import time
-from string import ascii_letters,digits
 
 from .exception import BadTwLabel,BadTwComment
 from .objmethods import Hilite,InitErrors,MMGenObject
@@ -72,7 +71,7 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 			try:
 				assert id_str.split(':',1)[0] == proto.base_coin.lower(),(
 					f'not a string beginning with the prefix {proto.base_coin.lower()!r}:' )
-				assert set(id_str[4:]) <= set(ascii_letters+digits),'contains non-alphanumeric characters'
+				assert id_str.isascii() and id_str[4:].isalnum(), 'not an ASCII alphanumeric string'
 				assert len(id_str) > 4,'not more that four characters long'
 				ret,sort_key,idtype = str(id_str),'z_'+id_str,'non-mmgen'
 			except Exception as e2:
