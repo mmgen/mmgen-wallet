@@ -51,7 +51,7 @@ using standard command-line utilities.
 MMGen also differs from most cryptocurrency wallets today in its use of the
 original 1626-word [Electrum wordlist][ew] for mnemonic seed phrases.  Seed
 phrases are derived using ordinary base conversion, similarly allowing you to
-regenerate your seed from your seed phrase without MMGen program itself, should
+regenerate your seed from your seed phrase without MMGen program itself should
 the need arise.  An example of how to do this at the Python prompt is provided
 [here.][S]
 
@@ -70,7 +70,7 @@ widespread standard.
   [Litecoin][bx], [Ethereum][E], Ethereum Classic and [ERC20 tokens][E].
 - **Monero transacting and wallet management** via the interactive
   [`mmgen-xmrwallet`][xm] command.  Offline transaction signing is possible
-  using a shared blockchain between online and offline machines.
+  using a blockchain shared between online and offline machines.
 - **[Address generation support][ag]** for the above coins, plus [Zcash][zx]
   (t and z addresses) and [144 Bitcoin-derived altcoins][ax].
 - **Support for all Bitcoin address types** including Segwit-P2SH and Bech32.
@@ -117,7 +117,7 @@ widespread standard.
   from your seed phrase at the prompt, allowing you to dispense with a
   physically stored wallet entirely if you wish.
 - Word-completing **mnemonic entry modes** customized for each of MMGen’s
-  supported wordlists minimize keystrokes during seed phrase entry.
+  supported wordlists minimize keystrokes required during seed phrase entry.
 - **Stealth mnemonic entry:** This feature allows you to obfuscate your seed
   phrase with “dead” keystrokes to guard against acoustic side-channel attacks.
 - **Network privacy:** MMGen never “calls home” or checks for upgrades over the

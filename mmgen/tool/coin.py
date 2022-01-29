@@ -25,9 +25,8 @@ generator_data = namedtuple('generator_data',['kg','ag'])
 
 from .common import tool_cmd_base
 
-from ..protocol import init_proto,init_genonly_altcoins,hash160
 from ..key import PrivKey
-from ..addr import KeyGenerator,AddrGenerator,MMGenAddrType,CoinAddr
+from ..addr import KeyGenerator,AddrGenerator,CoinAddr
 
 class tool_cmd(tool_cmd_base):
 	"""
@@ -134,6 +133,7 @@ class tool_cmd(tool_cmd_base):
 		if self.mmtype.name == 'segwit':
 			return self.proto.pubkey2segwitaddr( pubkey )
 		else:
+			from ..protocol import hash160
 			return self.pubhash2addr( hash160(pubkey).hex() )
 
 	def pubhex2redeem_script(self,pubkeyhex:'sstr'): # new
@@ -146,6 +146,7 @@ class tool_cmd(tool_cmd_base):
 		assert self.mmtype.name == 'segwit', 'This command is meaningful only for --type=segwit'
 		assert redeem_scripthex[:4] == '0014', f'{redeem_scripthex!r}: invalid redeem script'
 		assert len(redeem_scripthex) == 44, f'{len(redeem_scripthex)//2} bytes: invalid redeem script length'
+		from ..protocol import hash160
 		return self.pubhash2addr( hash160(bytes.fromhex(redeem_scripthex)).hex() )
 
 	def pubhash2addr(self,pubhashhex:'sstr'):

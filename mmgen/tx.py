@@ -634,7 +634,7 @@ class MMGenTX:
 			from decimal import Decimal
 			tx_size = self.estimate_size()
 			ret = self.proto.coin_amt(
-				Decimal(fee_per_kb * opt.tx_fee_adj * tx_size / 1024),
+				fee_per_kb * Decimal(opt.tx_fee_adj) * tx_size / 1024,
 				from_decimal = True )
 			if opt.verbose:
 				msg(fmt(f"""

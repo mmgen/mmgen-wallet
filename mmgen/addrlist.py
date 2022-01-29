@@ -20,11 +20,9 @@
 addrlist.py: Address list classes for the MMGen suite
 """
 
-from hashlib import sha256,sha512
 from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,WalletPassword
-from .seed import SeedID
 from .key import PrivKey
 from .addr import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
 
@@ -234,6 +232,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		le = self.entry_type
 		num,pos = (0,0)
 
+		from hashlib import sha256,sha512
 		from .globalvars import g
 
 		while pos != t_addrs:

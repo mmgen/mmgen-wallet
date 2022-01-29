@@ -124,7 +124,7 @@ class MMGenTermLinuxStub(MMGenTermLinux):
 
 	@classmethod
 	def init(cls):
-		pass
+		cls.stdin_fd = sys.stdin.fileno()
 
 	@classmethod
 	def get_char(cls,prompt='',immed_chars='',prehold_protect=None,num_chars=None,sleep=None):
@@ -134,6 +134,10 @@ class MMGenTermLinuxStub(MMGenTermLinux):
 		return sys.stdin.read(1)
 
 	get_char_raw = get_char
+
+	@classmethod
+	def kb_hold_protect(cls):
+		pass
 
 class MMGenTermMSWin(MMGenTerm):
 
