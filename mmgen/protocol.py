@@ -605,52 +605,51 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 
 		trust_level = cinfo.trust_level
 
-	exec(make_init_genonly_altcoins_str(data),globals(),globals())
+	create_altcoin_protos(data)
+
 	return trust_level
 
-def make_init_genonly_altcoins_str(data):
+def create_altcoin_protos(data):
 
 	def make_proto(e,testnet=False):
-		tn_str = 'Testnet' if testnet else ''
-		proto = e.name + tn_str
-		coin = e.symbol
-		if proto[0] in '0123456789':
-			proto = 'X_'+proto
-		if hasattr(CoinProtocol,proto) or coin.lower() in CoinProtocol.coins:
-			return ''
+
+		proto = ('X_' if e.name[0] in '0123456789' else '') + e.name + ('Testnet' if testnet else '')
+
+		if hasattr(CoinProtocol,proto):
+			return
 
 		def num2hexstr(n):
-			return "'{:0{}x}'".format(n,(4,2)[n < 256])
+			return '{:0{}x}'.format(n,(4,2)[n < 256])
 
-		p2sh_info = ", {}: 'p2sh'".format(num2hexstr(e.p2sh_info[0])) if e.p2sh_info else ''
-		sw_mmtype = ",'S'" if e.has_segwit else ''
+		setattr(
+			CoinProtocol,
+			proto,
+			type(
+				'CoinProtocol.' + proto,
+				(CoinProtocol.Bitcoin,),
+				{
+					'base_coin': e.symbol,
+					'addr_ver_bytes': dict(
+						[( num2hexstr(e.p2pkh_info[0]), 'p2pkh' )] +
+						([( num2hexstr(e.p2sh_info[0]), 'p2sh' )] if e.p2sh_info else [])
+					),
+					'wif_ver_num': { 'std': num2hexstr(e.wif_ver_num) },
+					'mmtypes':    ('L','C','S') if e.has_segwit else ('L','C'),
+					'dfl_mmtype': 'L',
+					'mmcaps':     ('key','addr'),
+				},
+			)
+		)
 
-		return f"""
-	class {proto}(CoinProtocol.Bitcoin{tn_str}):
-		base_coin      = {coin!r}
-		addr_ver_bytes = {{ {num2hexstr(e.p2pkh_info[0])}: 'p2pkh'{p2sh_info} }}
-		wif_ver_num    = {{ 'std': {num2hexstr(e.wif_ver_num)} }}
-		mmtypes        = ('L','C'{sw_mmtype})
-		dfl_mmtype     = 'L'
-		mmcaps         = ('key','addr')
-		""".rstrip()
+	for e in data['mainnet']:
+		make_proto(e)
 
-	def gen_text():
-		yield "class CoinProtocol(CoinProtocol):"
-		for e in data['mainnet']:
-			yield make_proto(e)
-		for e in data['testnet']:
-			yield make_proto(e,testnet=True)
+	for e in data['testnet']:
+		make_proto(e,testnet=True)
 
-		for e in data['mainnet']:
-			proto,coin = e.name,e.symbol
-			if proto[0] in '0123456789':
-				proto = 'X_'+proto
-			if hasattr(CoinProtocol,proto) or coin.lower() in CoinProtocol.coins:
-				continue
-			yield 'CoinProtocol.coins[{!r}] = CoinProtocol.proto_info({!r},{})'.format(
-				coin.lower(),
-				proto,
-				e.trust_level )
-
-	return '\n'.join(gen_text()) + '\n'
+	for e in data['mainnet']:
+		if e.symbol.lower() in CoinProtocol.coins:
+			continue
+		CoinProtocol.coins[e.symbol.lower()] = CoinProtocol.proto_info(
+			name        = 'X_'+e.name if e.name[0] in '0123456789' else e.name,
+			trust_level = e.trust_level )
