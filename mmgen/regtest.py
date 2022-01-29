@@ -75,7 +75,7 @@ class MMGenRegtest(MMGenObject):
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
 		from .daemon import CoinDaemon
-		self.proto = init_proto(self.coin,regtest=True)
+		self.proto = init_proto(self.coin,regtest=True,need_amt=True)
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite)
 
 	async def generate(self,blocks=1,silent=False):

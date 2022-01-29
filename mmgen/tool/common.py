@@ -27,6 +27,7 @@ class tool_cmd_base:
 
 	need_proto = False
 	need_addrtype = False
+	need_amt = False
 
 	def __init__(self,cmdname=None,proto=None,mmtype=None):
 
@@ -35,7 +36,7 @@ class tool_cmd_base:
 				self.proto = proto
 			else:
 				from ..protocol import init_proto_from_opts
-				self.proto = init_proto_from_opts()
+				self.proto = init_proto_from_opts(need_amt=self.need_amt)
 			from ..globalvars import g
 			if g.token:
 				self.proto.tokensym = g.token.upper()

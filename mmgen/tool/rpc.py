@@ -27,6 +27,7 @@ class tool_cmd(tool_cmd_base):
 	"tracking wallet commands using the JSON-RPC interface"
 
 	need_proto = True
+	need_amt = True
 
 	async def daemon_version(self):
 		"print coin daemon version"

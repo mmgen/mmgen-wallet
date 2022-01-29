@@ -161,5 +161,5 @@ def do_loop():
 		test_object(test_data,obj)
 
 from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+proto = init_proto_from_opts(need_amt=True)
 do_loop()

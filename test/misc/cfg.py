@@ -22,7 +22,7 @@ if cmd_args:
 		msg('usr cfg: {}'.format( ' '.join(f'{i.name}={i.value}' for i in pu) ))
 	elif cmd_args[0] == 'coin_specific_vars':
 		from mmgen.protocol import init_proto_from_opts
-		proto = init_proto_from_opts()
+		proto = init_proto_from_opts(need_amt=True)
 		for varname in cmd_args[1:]:
 			msg('{}.{}: {}'.format(
 				type(proto).__name__,

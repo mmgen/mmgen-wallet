@@ -265,7 +265,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return
 		if self.proto.testnet:
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
-		self.proto = init_proto(self.proto.coin,network='regtest')
+		self.proto = init_proto(self.proto.coin,network='regtest',need_amt=True)
 		coin = self.proto.coin.lower()
 		for k in rt_data:
 			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None

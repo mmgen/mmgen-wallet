@@ -37,7 +37,7 @@ class TestSuiteBase(object):
 
 	def __init__(self,trunner,cfgs,spawn):
 		from mmgen.protocol import init_proto_from_opts
-		self.proto = init_proto_from_opts()
+		self.proto = init_proto_from_opts(need_amt=True)
 		self.tr = trunner
 		self.cfgs = cfgs
 		self.spawn = spawn

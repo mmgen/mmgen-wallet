@@ -79,7 +79,7 @@ cmd_args = opts.init(opts_data)
 async def main():
 
 	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts()
+	proto = init_proto_from_opts(need_amt=True)
 
 	from .tx import MMGenTX
 	from .twctl import TrackingWallet

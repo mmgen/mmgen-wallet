@@ -26,6 +26,7 @@ class tool_cmd(tool_cmd_base):
 	"utilities for viewing/checking MMGen address and transaction files"
 
 	need_proto = True
+	need_amt = True # for txview
 
 	def _file_chksum(self,mmgen_addrfile,objname):
 		from ..opts import opt

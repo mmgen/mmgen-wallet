@@ -82,7 +82,7 @@ class tool_api(
 		"""
 		from ..protocol import init_proto,warn_trustlevel
 		warn_trustlevel(coinsym)
-		self.proto = init_proto(coinsym,network=network)
+		self.proto = init_proto(coinsym,network=network,need_amt=True)
 		return self.proto
 
 	@property

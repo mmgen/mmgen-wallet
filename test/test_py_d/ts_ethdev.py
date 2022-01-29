@@ -324,7 +324,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		self.erase_input = Ctrl_U if opt.pexpect_spawn else ''
 
 		from mmgen.protocol import init_proto
-		self.proto = init_proto(g.coin,network='regtest')
+		self.proto = init_proto(g.coin,network='regtest',need_amt=True)
 		from mmgen.daemon import CoinDaemon
 		self.rpc_port = CoinDaemon(proto=self.proto,test_suite=True).rpc_port
 		self.using_solc = check_solc_ver()

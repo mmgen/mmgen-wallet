@@ -45,7 +45,7 @@ def time_diff_warning(t_diff):
 async def main():
 
 	from mmgen.protocol import init_proto_from_opts
-	proto = init_proto_from_opts()
+	proto = init_proto_from_opts(need_amt=True)
 
 	from mmgen.rpc import rpc_init
 	c = await rpc_init(proto)

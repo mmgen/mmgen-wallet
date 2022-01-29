@@ -106,7 +106,7 @@ class MMGenTxFile:
 			network = CoinProtocol.Base.chain_name_to_network(coin,tx.chain)
 
 			desc = 'initialization of protocol'
-			tx.proto = init_proto(coin,network=network)
+			tx.proto = init_proto(coin,network=network,need_amt=True)
 			if tokensym:
 				tx.proto.tokensym = tokensym
 

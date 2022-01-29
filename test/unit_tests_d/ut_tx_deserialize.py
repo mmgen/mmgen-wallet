@@ -105,7 +105,7 @@ class unit_test(object):
 			for e in data:
 				if type(e[0]) == list:
 					await test_tx(
-						tx_proto = init_proto('btc'),
+						tx_proto = init_proto('btc',need_amt=True),
 						tx_hex   = e[1],
 						desc     = desc,
 						n        = n )

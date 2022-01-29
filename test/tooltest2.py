@@ -971,7 +971,7 @@ cmd_args = opts.init(
 	})
 
 from mmgen.protocol import init_proto_from_opts
-proto = init_proto_from_opts()
+proto = init_proto_from_opts(need_amt=True)
 
 if opt.tool_api:
 	del tests['Wallet']

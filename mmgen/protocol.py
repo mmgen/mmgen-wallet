@@ -25,7 +25,6 @@ from collections import namedtuple
 
 from .devtools import *
 from .globalvars import g
-from .amt import BTCAmt,LTCAmt,BCHAmt,XMRAmt,ETHAmt
 
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
 parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
@@ -85,7 +84,7 @@ class CoinProtocol(MMGenObject):
 		is_fork_of = None
 		networks   = ('mainnet','testnet','regtest')
 
-		def __init__(self,coin,name,network,tokensym=None):
+		def __init__(self,coin,name,network,tokensym=None,need_amt=False):
 			self.coin       = coin.upper()
 			self.coin_id    = self.coin
 			self.name       = name
@@ -113,6 +112,15 @@ class CoinProtocol(MMGenObject):
 			if self.base_coin in ('ETH','XMR'):
 				from .util import get_keccak
 				self.keccak_256 = get_keccak()
+
+			if need_amt:
+				import mmgen.amt
+				setattr( self, 'coin_amt', getattr(mmgen.amt,self.coin_amt) )
+				fee = getattr(self,'max_tx_fee',None)
+				setattr( self, 'max_tx_fee', (self.coin_amt(fee) if fee else None) )
+			else:
+				setattr( self, 'coin_amt', None )
+				setattr( self, 'max_tx_fee', None )
 
 		@property
 		def dcoin(self):
@@ -215,8 +223,8 @@ class CoinProtocol(MMGenObject):
 		wif_ver_num     = { 'std': '80' }
 		mmtypes         = ('L','C','S','B')
 		dfl_mmtype      = 'L'
-		coin_amt        = BTCAmt
-		max_tx_fee      = BTCAmt('0.003')
+		coin_amt        = 'BTCAmt'
+		max_tx_fee      = '0.003'
 		sighash_type    = 'ALL'
 		block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
 		forks           = [
@@ -326,8 +334,8 @@ class CoinProtocol(MMGenObject):
 			_finfo(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','BTC',False)
 		]
 		caps = ()
-		coin_amt        = BCHAmt
-		max_tx_fee      = BCHAmt('0.1')
+		coin_amt        = 'BCHAmt'
+		max_tx_fee      = '0.1'
 		ignore_daemon_version = False
 
 		def pubkey2redeem_script(self,pubkey): raise NotImplementedError
@@ -345,8 +353,8 @@ class CoinProtocol(MMGenObject):
 		addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
 		wif_ver_num     = { 'std': 'b0' }
 		mmtypes         = ('L','C','S','B')
-		coin_amt        = LTCAmt
-		max_tx_fee      = LTCAmt('0.3')
+		coin_amt        = 'LTCAmt'
+		max_tx_fee      = '0.3'
 		base_coin       = 'LTC'
 		forks           = []
 		bech32_hrp      = 'ltc'
@@ -387,8 +395,8 @@ class CoinProtocol(MMGenObject):
 		base_coin     = 'ETH'
 		pubkey_type   = 'std' # required by DummyWIF
 
-		coin_amt      = ETHAmt
-		max_tx_fee    = ETHAmt('0.005')
+		coin_amt      = 'ETHAmt'
+		max_tx_fee    = '0.005'
 		chain_names   = ['ethereum','foundation']
 		sign_mode     = 'standalone'
 		caps          = ('token',)
@@ -441,7 +449,7 @@ class CoinProtocol(MMGenObject):
 
 	class EthereumClassic(Ethereum):
 		chain_names = ['classic','ethereum_classic']
-		max_tx_fee  = ETHAmt('0.005')
+		max_tx_fee  = '0.005'
 		ignore_daemon_version = False
 
 	class EthereumClassicTestnet(EthereumClassic):
@@ -503,7 +511,7 @@ class CoinProtocol(MMGenObject):
 		privkey_len    = 32
 		mmcaps         = ('key','addr')
 		ignore_daemon_version = False
-		coin_amt       = XMRAmt
+		coin_amt       = 'XMRAmt'
 
 		def preprocess_key(self,sec,pubkey_type): # reduce key
 			from .ed25519 import l
@@ -534,7 +542,7 @@ class CoinProtocol(MMGenObject):
 	class MoneroTestnet(Monero): # use stagenet for testnet
 		addr_ver_bytes = { '18': 'monero', '24': 'monero_sub' } # testnet is ('35','3f')
 
-def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None):
+def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None,need_amt=False):
 
 	assert type(testnet) == bool, 'init_proto_chk1'
 	assert type(regtest) == bool, 'init_proto_chk2'
@@ -563,14 +571,16 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 		coin      = coin,
 		name      = name,
 		network   = network,
-		tokensym  = tokensym )
+		tokensym  = tokensym,
+		need_amt  = need_amt )
 
-def init_proto_from_opts():
+def init_proto_from_opts(need_amt=False):
 	return init_proto(
 		coin      = g.coin,
 		testnet   = g.testnet,
 		regtest   = g.regtest,
-		tokensym  = g.token )
+		tokensym  = g.token,
+		need_amt  = need_amt )
 
 def warn_trustlevel(coinsym):
 

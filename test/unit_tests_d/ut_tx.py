@@ -19,7 +19,7 @@ class unit_tests:
 		d.start()
 
 		async def do():
-			proto = init_proto('btc')
+			proto = init_proto('btc',need_amt=True)
 			tx = MMGenTX.New(proto=proto)
 			tx.rpc = await rpc_init(proto=proto)
 

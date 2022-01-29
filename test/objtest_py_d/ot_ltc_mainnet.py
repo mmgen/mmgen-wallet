@@ -11,7 +11,7 @@ from mmgen.obj import *
 from .ot_common import *
 
 from mmgen.protocol import init_proto
-proto = init_proto('ltc')
+proto = init_proto('ltc',need_amt=True)
 
 tests = {
 	'LTCAmt': {

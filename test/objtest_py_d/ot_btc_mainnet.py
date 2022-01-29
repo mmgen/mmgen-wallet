@@ -14,7 +14,7 @@ from mmgen.key import *
 from .ot_common import *
 
 from mmgen.protocol import init_proto
-proto = init_proto('btc')
+proto = init_proto('btc',need_amt=True)
 tw_pfx = proto.base_coin.lower() + ':'
 
 ssm = str(SeedShareCount.max_val)

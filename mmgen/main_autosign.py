@@ -157,7 +157,7 @@ async def check_daemons_running():
 		coins = ['BTC']
 
 	for coin in coins:
-		proto = init_proto(coin,testnet=g.testnet)
+		proto = init_proto(coin,testnet=g.testnet,need_amt=True)
 		if proto.sign_mode == 'daemon':
 			vmsg(f'Checking {coin} daemon')
 			try:

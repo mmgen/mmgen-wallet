@@ -10,8 +10,9 @@ test.objattrtest_py_d.oat_btc_mainnet:
 
 from .oat_common import *
 from mmgen.protocol import init_proto
+from mmgen.amt import BTCAmt
 
-proto = init_proto('btc')
+proto = init_proto('btc',need_amt=True)
 
 sample_objs.update({
 	'PrivKey':   PrivKey(proto,seed_bin,compressed=True,pubkey_type='std'),

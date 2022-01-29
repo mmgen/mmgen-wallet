@@ -171,7 +171,7 @@ class MoneroMMGenTX:
 		def __init__(self,*args,**kwargs):
 			assert not args, 'Non-keyword args not permitted'
 			d = namedtuple('kwargs_tuple',kwargs)(**kwargs)
-			proto = init_proto('xmr',network=d.network)
+			proto = init_proto( 'xmr', network=d.network, need_amt=True )
 			now = int(time.time())
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
@@ -196,7 +196,7 @@ class MoneroMMGenTX:
 			self.fn = fn
 			d_wrap = json.loads(get_data_from_file(fn))['MoneroMMGenTX']
 			d = self.xmrwallet_tx_data(**d_wrap['data'])
-			proto = init_proto('xmr',network=d.network)
+			proto = init_proto( 'xmr', network=d.network, need_amt=True )
 			self.data = self.xmrwallet_tx_data(
 				op             = d.op,
 				create_time    = d.create_time,
@@ -265,7 +265,7 @@ class MoneroWalletOps:
 					cls.check_uopts(self)
 					id_cur = id(cls.check_uopts)
 
-			self.proto = init_proto('xmr',testnet=g.testnet)
+			self.proto = init_proto( 'xmr', testnet=g.testnet, need_amt=True )
 
 		def check_uopts(self):
 

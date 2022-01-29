@@ -52,7 +52,7 @@ def print_help(po,opts_data,opt_filter):
 		opts_data['code'] = {}
 
 	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts()
+	proto = init_proto_from_opts(need_amt=True)
 
 	if getattr(opt,'longhelp',None):
 		opts_data['code']['long_options'] = common_opts_data['code']
@@ -155,7 +155,7 @@ def override_globals_from_cfg_file(ucfg,need_proto):
 					(ns[2:],ns[1]=='testnet') if len(ns) > 2 and ns[1] in ('mainnet','testnet') else
 					(ns[1:],False)
 				)
-				cls = type(init_proto(ns[0],tn)) # no instance yet, so override _class_ attr
+				cls = type(init_proto( ns[0], tn, need_amt=True )) # no instance yet, so override _class_ attr
 				attr = '_'.join(nse)
 			else:
 				cls = g                          # g is "singleton" instance, so override _instance_ attr

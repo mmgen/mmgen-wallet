@@ -126,7 +126,7 @@ class unit_tests:
 						test_suite = True,
 						wallet_dir = 'test/trash2',
 						passwd     = 'ut_rpc_passw0rd' )
-				) for proto in (init_proto('xmr',network=network) for network in networks) ]
+				) for proto in (init_proto( 'xmr', network=network ) for network in networks) ]
 
 			for md,wd in daemons:
 				if not opt.no_daemon_autostart:

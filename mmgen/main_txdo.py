@@ -125,7 +125,7 @@ async def main():
 	from .twctl import TrackingWallet
 
 	from .protocol import init_proto_from_opts
-	proto = init_proto_from_opts()
+	proto = init_proto_from_opts(need_amt=True)
 
 	tx1 = MMGenTX.New(
 		proto = proto,

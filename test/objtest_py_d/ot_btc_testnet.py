@@ -11,7 +11,7 @@ from mmgen.obj import *
 from .ot_common import *
 
 from mmgen.protocol import init_proto
-proto = init_proto('btc',network='testnet')
+proto = init_proto('btc',network='testnet',need_amt=True)
 
 tests = {
 	'CoinAddr': {
