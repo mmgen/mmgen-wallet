@@ -631,14 +631,16 @@ class MMGenTX:
 
 		# given network fee estimate in BTC/kB, return absolute fee using estimated tx size
 		def fee_est2abs(self,fee_per_kb,fe_type=None):
+			from decimal import Decimal
 			tx_size = self.estimate_size()
-			f = fee_per_kb * opt.tx_fee_adj * tx_size / 1024
-			ret = self.proto.coin_amt(f,from_decimal=True)
+			ret = self.proto.coin_amt(
+				Decimal(fee_per_kb * opt.tx_fee_adj * tx_size / 1024),
+				from_decimal = True )
 			if opt.verbose:
 				msg(fmt(f"""
 					{fe_type.upper()} fee for {opt.tx_confs} confirmations: {fee_per_kb} {self.coin}/kB
 					TX size (estimated): {tx_size} bytes
-					Fee adjustment factor: {opt.tx_fee_adj}
+					Fee adjustment factor: {opt.tx_fee_adj:.2f}
 					Absolute fee (fee_per_kb * adj_factor * tx_size / 1024): {ret} {self.coin}
 				""").strip())
 			return ret
@@ -684,7 +686,7 @@ class MMGenTX:
 				if abs_fee:
 					prompt = '{} TX fee{}: {}{} {} ({} {})\n'.format(
 							desc,
-							(f' (after {opt.tx_fee_adj}X adjustment)'
+							(f' (after {opt.tx_fee_adj:.2f}X adjustment)'
 								if opt.tx_fee_adj != 1 and desc.startswith('Network-estimated')
 									else ''),
 							('','≈')[self.fee_is_approximate],

@@ -21,7 +21,6 @@ globalvars.py:  Constants and configuration options for the MMGen suite
 """
 
 import sys,os
-from decimal import Decimal
 from collections import namedtuple
 from .devtools import *
 
@@ -69,7 +68,7 @@ class GlobalContext(Lockable):
 	dfl_hash_preset = '3'
 	usr_randchars   = 30
 
-	tx_fee_adj   = Decimal('1.0')
+	tx_fee_adj   = 1.0
 	tx_confs     = 3
 
 	# Constant vars - some of these might be overridden in opts.py, but they don't change thereafter
