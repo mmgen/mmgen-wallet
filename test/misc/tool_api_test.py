@@ -73,7 +73,7 @@ def run_test():
 	tool.usr_randchars = 0 # setter
 	check_equal(tool.usr_randchars,0)
 
-	check_equal(f'{tool.coin} {tool.proto.cls_name} {tool.addrtype}', 'BTC Bitcoin L' )
+	check_equal(f'{tool.coin} {tool.proto.cls_name} {tool.addrtype}', 'BTC mainnet L' )
 
 	# test vectors from tooltest2.py:
 

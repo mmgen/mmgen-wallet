@@ -556,7 +556,7 @@ class CoinInfo(object):
 			return '1'
 
 		def phash2addr(ver_num,pk_hash):
-			from .protocol import _b58chk_encode
+			from .proto.btc import _b58chk_encode
 			bl = ver_num.bit_length()
 			ver_bytes = int.to_bytes(ver_num,bl//8 + bool(bl%8),'big')
 			return _b58chk_encode(ver_bytes + pk_hash)
@@ -736,6 +736,7 @@ def init_genonly_altcoins(usr_coin=None,testnet=False):
 def create_altcoin_protos(data):
 
 	from .protocol import CoinProtocol
+	from .proto.btc import mainnet
 
 	def make_proto(e,testnet=False):
 
@@ -751,8 +752,8 @@ def create_altcoin_protos(data):
 			CoinProtocol,
 			proto,
 			type(
-				'CoinProtocol.' + proto,
-				(CoinProtocol.Bitcoin,),
+				proto,
+				(mainnet,),
 				{
 					'base_coin': e.symbol,
 					'addr_ver_bytes': dict(

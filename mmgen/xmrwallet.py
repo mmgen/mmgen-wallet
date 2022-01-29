@@ -26,7 +26,7 @@ from .common import *
 from .objmethods import Hilite,InitErrors
 from .obj import CoinTxID
 from .seed import SeedID
-from .protocol import _b58a,init_proto
+from .protocol import init_proto,_b58a
 from .addr import CoinAddr,AddrIdx
 from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw,MoneroWalletRPCClient,json_encoder

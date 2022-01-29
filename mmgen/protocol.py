@@ -17,10 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-protocol.py: Coin protocol functions, classes and methods
+protocol.py: Coin protocol base classes and initializer
 """
 
-import sys,os,hashlib
 from collections import namedtuple
 
 from .devtools import *
@@ -29,40 +28,10 @@ from .globalvars import g
 parsed_wif = namedtuple('parsed_wif',['sec','pubkey_type','compressed'])
 parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
 
-def hash160(in_bytes): # OP_HASH160
-	return hashlib.new('ripemd160',hashlib.sha256(in_bytes).digest()).digest()
-
-def hash256(in_bytes): # OP_HASH256
-	return hashlib.sha256(hashlib.sha256(in_bytes).digest()).digest()
-
-_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
-
-# From en.bitcoin.it:
-#  The Base58 encoding used is home made, and has some differences.
-#  Especially, leading zeroes are kept as single zeroes when conversion happens.
-# Test: 5JbQQTs3cnoYN9vDYaGY6nhQ1DggVsY4FJNBUfEfpSQqrEp3srk
-# The 'zero address':
-# 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
-
-def _b58chk_encode(in_bytes):
-	lzeroes = len(in_bytes) - len(in_bytes.lstrip(b'\x00'))
-	def do_enc(n):
-		while n:
-			yield _b58a[n % 58]
-			n //= 58
-	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(in_bytes+hash256(in_bytes)[:4],'big')))[::-1]
-
-def _b58chk_decode(s):
-	lzeroes = len(s) - len(s.lstrip('1'))
-	res = sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1]))
-	bl = res.bit_length()
-	out = b'\x00' * lzeroes + res.to_bytes(bl//8 + bool(bl%8),'big')
-	if out[-4:] != hash256(out[:-4])[:4]:
-		raise ValueError('_b58chk_decode(): incorrect checksum')
-	return out[:-4]
-
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
+
+_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz' # shared by Bitcoin and Monero
 
 class CoinProtocol(MMGenObject):
 
@@ -107,7 +76,7 @@ class CoinProtocol(MMGenObject):
 				self.chain_names = [self.network]
 
 			if self.tokensym:
-				assert isinstance(self,CoinProtocol.Ethereum), 'CoinProtocol.Base_chk1'
+				assert self.name.startswith('Ethereum'), 'CoinProtocol.Base_chk1'
 
 			if self.base_coin in ('ETH','XMR'):
 				from .util import get_keccak
@@ -212,168 +181,10 @@ class CoinProtocol(MMGenObject):
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {hexpriv}')
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 
-	class Bitcoin(Secp256k1): # chainparams.cpp
-		"""
-		All Bitcoin code and chain forks inherit from this class
-		"""
-		mod_clsname     = 'Bitcoin'
-		network_names   = _nw('mainnet','testnet','regtest')
-		addr_ver_bytes  = { '00': 'p2pkh', '05': 'p2sh' }
-		addr_len        = 20
-		wif_ver_num     = { 'std': '80' }
-		mmtypes         = ('L','C','S','B')
-		dfl_mmtype      = 'L'
-		coin_amt        = 'BTCAmt'
-		max_tx_fee      = '0.003'
-		sighash_type    = 'ALL'
-		block0          = '000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f'
-		forks           = [
-			_finfo(478559,'00000000000000000019f112ec0a9982926f1258cdcc558dd7c3b7e5dc7fa148','BCH',False),
-		]
-		caps            = ('rbf','segwit')
-		mmcaps          = ('key','addr','rpc','tx')
-		base_coin       = 'BTC'
-		base_proto      = 'Bitcoin'
-		# From BIP173: witness version 'n' is stored as 'OP_n'. OP_0 is encoded as 0x00,
-		# but OP_1 through OP_16 are encoded as 0x51 though 0x60 (81 to 96 in decimal).
-		witness_vernum_hex = '00'
-		witness_vernum  = int(witness_vernum_hex,16)
-		bech32_hrp      = 'bc'
-		sign_mode       = 'daemon'
-		avg_bdi         = int(9.7 * 60) # average block discovery interval (historical)
-		halving_interval = 210000
-		max_halvings    = 64
-		start_subsidy   = 50
-		ignore_daemon_version = False
-		max_int         = 0xffffffff
-
-		def bytes2wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
-			assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
-			assert pubkey_type in self.wif_ver_num, f'{pubkey_type!r}: invalid pubkey_type'
-			return _b58chk_encode(
-				bytes.fromhex(self.wif_ver_num[pubkey_type])
-				+ privbytes
-				+ (b'',b'\x01')[bool(compressed)])
-
-		def parse_wif(self,wif):
-			key = _b58chk_decode(wif)
-
-			for k,v in self.wif_ver_num.items():
-				v = bytes.fromhex(v)
-				if key[:len(v)] == v:
-					pubkey_type = k
-					key = key[len(v):]
-					break
-			else:
-				raise ValueError('Invalid WIF version number')
-
-			if len(key) == self.privkey_len + 1:
-				assert key[-1] == 0x01, f'{key[-1]!r}: invalid compressed key suffix byte'
-				compressed = True
-			elif len(key) == self.privkey_len:
-				compressed = False
-			else:
-				raise ValueError(f'{len(key)}: invalid key length')
-
-			return parsed_wif(
-				sec         = key[:self.privkey_len],
-				pubkey_type = pubkey_type,
-				compressed  = compressed )
-
-		def parse_addr(self,addr):
-
-			if 'B' in self.mmtypes and addr[:len(self.bech32_hrp)] == self.bech32_hrp:
-				import mmgen.bech32 as bech32
-				ret = bech32.decode(self.bech32_hrp,addr)
-
-				if ret[0] != self.witness_vernum:
-					from .util import msg
-					msg(f'{ret[0]}: Invalid witness version number')
-					return False
-
-				return parsed_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
-
-			return self.parse_addr_bytes(_b58chk_decode(addr))
-
-		def pubhash2addr(self,pubkey_hash,p2sh):
-			assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for pubkey hash'
-			return _b58chk_encode(
-				self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubkey_hash
-			)
-
-		# Segwit:
-		def pubkey2redeem_script(self,pubkey):
-			# https://bitcoincore.org/en/segwit_wallet_dev/
-			# The P2SH redeemScript is always 22 bytes. It starts with a OP_0, followed
-			# by a canonical push of the keyhash (i.e. 0x0014{20-byte keyhash})
-			return bytes.fromhex(self.witness_vernum_hex + '14') + hash160(pubkey)
-
-		def pubkey2segwitaddr(self,pubkey):
-			return self.pubhash2addr(
-				hash160( self.pubkey2redeem_script(pubkey)), p2sh=True )
-
-		def pubhash2bech32addr(self,pubhash):
-			d = list(pubhash)
-			import mmgen.bech32 as bech32
-			return bech32.bech32_encode(self.bech32_hrp,[self.witness_vernum]+bech32.convertbits(d,8,5))
-
-	class BitcoinTestnet(Bitcoin):
-		addr_ver_bytes      = { '6f': 'p2pkh', 'c4': 'p2sh' }
-		wif_ver_num         = { 'std': 'ef' }
-		bech32_hrp          = 'tb'
-
-	class BitcoinRegtest(BitcoinTestnet):
-		bech32_hrp          = 'bcrt'
-		halving_interval    = 150
-
-	class BitcoinCash(Bitcoin):
-		is_fork_of      = 'Bitcoin'
-		mmtypes         = ('L','C')
-		sighash_type    = 'ALL|FORKID'
-		forks = [
-			_finfo(478559,'000000000000000000651ef99cb9fcbe0dadde1d424bd9f15ff20136191a5eec','BTC',False)
-		]
-		caps = ()
-		coin_amt        = 'BCHAmt'
-		max_tx_fee      = '0.1'
-		ignore_daemon_version = False
-
-		def pubkey2redeem_script(self,pubkey): raise NotImplementedError
-		def pubkey2segwitaddr(self,pubkey):    raise NotImplementedError
-
-	class BitcoinCashTestnet(BitcoinCash):
-		addr_ver_bytes = { '6f': 'p2pkh', 'c4': 'p2sh' }
-		wif_ver_num    = { 'std': 'ef' }
-
-	class BitcoinCashRegtest(BitcoinCashTestnet):
-		halving_interval = 150
-
-	class Litecoin(Bitcoin):
-		block0          = '12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2'
-		addr_ver_bytes  = { '30': 'p2pkh', '32': 'p2sh', '05': 'p2sh' } # new p2sh ver 0x32 must come first
-		wif_ver_num     = { 'std': 'b0' }
-		mmtypes         = ('L','C','S','B')
-		coin_amt        = 'LTCAmt'
-		max_tx_fee      = '0.3'
-		base_coin       = 'LTC'
-		forks           = []
-		bech32_hrp      = 'ltc'
-		avg_bdi         = 150
-		halving_interval = 840000
-		ignore_daemon_version = False
-
-	class LitecoinTestnet(Litecoin):
-		# addr ver nums same as Bitcoin testnet, except for 'p2sh'
-		addr_ver_bytes     = { '6f':'p2pkh', '3a':'p2sh', 'c4':'p2sh' }
-		wif_ver_num        = { 'std': 'ef' } # same as Bitcoin testnet
-		bech32_hrp         = 'tltc'
-
-	class LitecoinRegtest(LitecoinTestnet):
-		bech32_hrp         = 'rltc'
-		halving_interval   = 150
-
 	class DummyWIF:
-
+		"""
+		Ethereum and Monero protocols inherit from this class
+		"""
 		def bytes2wif(self,privbytes,pubkey_type,compressed):
 			assert pubkey_type == self.pubkey_type, f'{pubkey_type}: invalid pubkey_type for {self.name} protocol!'
 			assert compressed == False, f'{self.name} protocol does not support compressed pubkeys!'
@@ -384,163 +195,6 @@ class CoinProtocol(MMGenObject):
 				sec         = bytes.fromhex(wif),
 				pubkey_type = self.pubkey_type,
 				compressed  = False )
-
-	class Ethereum(DummyWIF,Secp256k1):
-
-		network_names = _nw('mainnet','testnet','devnet')
-		addr_len      = 20
-		mmtypes       = ('E',)
-		dfl_mmtype    = 'E'
-		mod_clsname   = 'Ethereum'
-		base_coin     = 'ETH'
-		pubkey_type   = 'std' # required by DummyWIF
-
-		coin_amt      = 'ETHAmt'
-		max_tx_fee    = '0.005'
-		chain_names   = ['ethereum','foundation']
-		sign_mode     = 'standalone'
-		caps          = ('token',)
-		mmcaps        = ('key','addr','rpc','tx')
-		base_proto    = 'Ethereum'
-		avg_bdi       = 15
-		ignore_daemon_version = False
-
-		chain_ids = {
-			1:    'ethereum',         # ethereum mainnet
-			2:    'morden',           # morden testnet (deprecated)
-			3:    'ropsten',          # ropsten testnet
-			4:    'rinkeby',          # rinkeby testnet
-			5:    'goerli',           # goerli testnet
-			42:   'kovan',            # kovan testnet
-			61:   'classic',          # ethereum classic mainnet
-			62:   'morden',           # ethereum classic testnet
-			17:   'developmentchain', # parity dev chain
-			1337: 'developmentchain', # geth dev chain
-		}
-
-		@property
-		def dcoin(self):
-			return self.tokensym or self.coin
-
-		def parse_addr(self,addr):
-			from .util import is_hex_str_lc
-			if is_hex_str_lc(addr) and len(addr) == self.addr_len * 2:
-				return parsed_addr( bytes.fromhex(addr), 'ethereum' )
-			if g.debug:
-				from .util import Msg
-				Msg(f'Invalid address: {addr}')
-			return False
-
-		@classmethod
-		def checksummed_addr(cls,addr):
-			h = self.keccak_256(addr.encode()).digest().hex()
-			return ''.join(addr[i].upper() if int(h[i],16) > 7 else addr[i] for i in range(len(addr)))
-
-		def pubhash2addr(self,pubkey_hash,p2sh):
-			assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for {self.name} pubkey hash'
-			assert not p2sh, f'{self.name} protocol has no P2SH address format'
-			return pubkey_hash.hex()
-
-	class EthereumTestnet(Ethereum):
-		chain_names = ['kovan','goerli','rinkeby']
-
-	class EthereumRegtest(EthereumTestnet):
-		chain_names = ['developmentchain']
-
-	class EthereumClassic(Ethereum):
-		chain_names = ['classic','ethereum_classic']
-		max_tx_fee  = '0.005'
-		ignore_daemon_version = False
-
-	class EthereumClassicTestnet(EthereumClassic):
-		chain_names = ['morden','morden_testnet','classic-testnet']
-
-	class EthereumClassicRegtest(EthereumClassicTestnet):
-		chain_names = ['developmentchain']
-
-	class Zcash(Bitcoin):
-		base_coin      = 'ZEC'
-		addr_ver_bytes = { '1cb8': 'p2pkh', '1cbd': 'p2sh', '169a': 'zcash_z', 'a8abd3': 'viewkey' }
-		wif_ver_num    = { 'std': '80', 'zcash_z': 'ab36' }
-		pubkey_types   = ('std','zcash_z')
-		mmtypes        = ('L','C','Z')
-		mmcaps         = ('key','addr')
-		dfl_mmtype     = 'L'
-		avg_bdi        = 75
-
-		def __init__(self,*args,**kwargs):
-			super().__init__(*args,**kwargs)
-			from .opts import opt
-			self.coin_id = 'ZEC-Z' if opt.type in ('zcash_z','Z') else 'ZEC-T'
-
-		def get_addr_len(self,addr_fmt):
-			return (20,64)[addr_fmt in ('zcash_z','viewkey')]
-
-		def preprocess_key(self,sec,pubkey_type):
-			if pubkey_type == 'zcash_z': # zero the first four bits
-				return bytes([sec[0] & 0x0f]) + sec[1:]
-			else:
-				return super().preprocess_key(sec,pubkey_type)
-
-		def pubhash2addr(self,pubkey_hash,p2sh):
-			hash_len = len(pubkey_hash)
-			if hash_len == 20:
-				return super().pubhash2addr(pubkey_hash,p2sh)
-			elif hash_len == 64:
-				raise NotImplementedError('Zcash z-addresses do not support pubhash2addr()')
-			else:
-				raise ValueError(f'{hash_len}: incorrect pubkey_hash length')
-
-	class ZcashTestnet(Zcash):
-		wif_ver_num  = { 'std': 'ef', 'zcash_z': 'ac08' }
-		addr_ver_bytes = { '1d25': 'p2pkh', '1cba': 'p2sh', '16b6': 'zcash_z', 'a8ac0c': 'viewkey' }
-
-	# https://github.com/monero-project/monero/blob/master/src/cryptonote_config.h
-	class Monero(DummyWIF,Base):
-
-		network_names  = _nw('mainnet','stagenet',None)
-		base_coin      = 'XMR'
-		addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
-		addr_len       = 68
-		wif_ver_num    = {}
-		pubkey_types   = ('monero',)
-		mmtypes        = ('M',)
-		dfl_mmtype     = 'M'
-		pubkey_type    = 'monero' # required by DummyWIF
-		avg_bdi        = 120
-		privkey_len    = 32
-		mmcaps         = ('key','addr')
-		ignore_daemon_version = False
-		coin_amt       = 'XMRAmt'
-
-		def preprocess_key(self,sec,pubkey_type): # reduce key
-			from .ed25519 import l
-			return int.to_bytes(
-				int.from_bytes( sec[::-1], 'big' ) % l,
-				self.privkey_len,
-				'big' )[::-1]
-
-		def parse_addr(self,addr):
-
-			from .baseconv import baseconv
-
-			def b58dec(addr_str):
-				bc = baseconv('b58')
-				l = len(addr_str)
-				a = b''.join([bc.tobytes( addr_str[i*11:i*11+11], pad=8 ) for i in range(l//11)])
-				b = bc.tobytes( addr_str[-(l%11):], pad=5 )
-				return a + b
-
-			ret = b58dec(addr)
-
-			chk = self.keccak_256(ret[:-4]).digest()[:4]
-
-			assert ret[-4:] == chk, f'{ret[-4:].hex()}: incorrect checksum.  Correct value: {chk.hex()}'
-
-			return self.parse_addr_bytes(ret)
-
-	class MoneroTestnet(Monero): # use stagenet for testnet
-		addr_ver_bytes = { '18': 'monero', '24': 'monero_sub' } # testnet is ('35','3f')
 
 def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=None,tokensym=None,need_amt=False):
 
@@ -566,6 +220,14 @@ def init_proto(coin=None,testnet=False,regtest=False,network=None,network_id=Non
 
 	name = CoinProtocol.coins[coin].name
 	proto_name = name + ('' if network == 'mainnet' else network.capitalize())
+
+	if not hasattr(CoinProtocol,proto_name):
+		import importlib
+		setattr(
+			CoinProtocol,
+			proto_name,
+			getattr(importlib.import_module(f'mmgen.proto.{coin}'),network)
+		)
 
 	return getattr(CoinProtocol,proto_name)(
 		coin      = coin,
@@ -622,4 +284,5 @@ def warn_trustlevel(coinsym):
 		return
 
 	if not keypress_confirm(warning,default_yes=True):
+		import sys
 		sys.exit(0)

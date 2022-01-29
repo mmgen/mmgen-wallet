@@ -157,9 +157,9 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		mmtype = mmtype or proto.dfl_mmtype
 		assert mmtype in MMGenAddrType.mmtypes, f'{mmtype}: mmtype not in {MMGenAddrType.mmtypes!r}'
 
-		from .protocol import CoinProtocol
+		from .proto.btc import mainnet
 		self.bitcoin_addrtypes = tuple(
-			MMGenAddrType(CoinProtocol.Bitcoin,key).name for key in CoinProtocol.Bitcoin.mmtypes)
+			MMGenAddrType(mainnet,key).name for key in mainnet.mmtypes )
 
 		if seed and addr_idxs and mmtype: # data from seed + idxs
 			self.al_id,src = AddrListID(seed.sid,mmtype),'gen'
@@ -281,7 +281,7 @@ class AddrList(MMGenObject): # Address info for a single seed ID
 		return out
 
 	def gen_wallet_passwd(self,privbytes):
-		from .protocol import hash256
+		from .proto.btc import hash256
 		return WalletPassword( hash256(privbytes)[:16].hex() )
 
 	def check_format(self,addr):

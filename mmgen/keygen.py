@@ -106,8 +106,8 @@ class keygen_backend:
 
 			def __init__(self):
 
-				from .protocol import CoinProtocol
-				self.proto_cls = CoinProtocol.Monero
+				from .proto.xmr import mainnet
+				self.proto_cls = mainnet
 
 				from .util import get_keccak
 				self.keccak_256 = get_keccak()

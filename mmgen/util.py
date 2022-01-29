@@ -674,8 +674,8 @@ def altcoin_subclass(cls,proto,mod_dir):
 	"""
 	magic module loading and class retrieval
 	"""
-	from .protocol import CoinProtocol
-	if isinstance(proto,CoinProtocol.Bitcoin):
+
+	if proto.base_coin != 'ETH':
 		return cls
 
 	modname = f'mmgen.altcoins.{proto.base_coin.lower()}.{mod_dir}'

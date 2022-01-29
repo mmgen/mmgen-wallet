@@ -158,7 +158,7 @@ one address with no amount on the command line.
 """
 
 		def txsign():
-			from .protocol import CoinProtocol
+			from .proto.btc import mainnet
 			return """
 Transactions may contain both {pnm} or non-{pnm} input addresses.
 
@@ -180,7 +180,7 @@ source.  Therefore, seed files or a key-address file for all {pnm} outputs
 must also be supplied on the command line if the data can't be found in the
 default wallet.
 """.format(
-	wd  = (f'{coind_exec()} wallet dump or ' if isinstance(proto,CoinProtocol.Bitcoin) else ''),
+	wd  = (f'{coind_exec()} wallet dump or ' if isinstance(proto,mainnet) else ''),
 	pnm = g.proj_name,
 	pnu = proto.name,
 	pnl = g.proj_name.lower() )
