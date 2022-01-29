@@ -108,12 +108,11 @@ class AddrFile(MMGenObject):
 		out.append(f'{lbl} {{')
 
 		fs = '  {:<%s}  {:<34}{}' % len(str(p.data[-1].idx))
-		from .passwdlist import PasswordList
 		for e in p.data:
 			c = ' '+e.label if add_comments and e.label else ''
 			if type(p) == KeyList:
 				out.append(fs.format( e.idx, f'{p.al_id.mmtype.wif_label}: {e.sec.wif}', c ))
-			elif type(p) == PasswordList:
+			elif type(p).__name__ == 'PasswordList':
 				out.append(fs.format(e.idx,e.passwd,c))
 			else: # First line with idx
 				out.append(fs.format(e.idx,e.addr,c))
@@ -228,7 +227,6 @@ class AddrFile(MMGenObject):
 		from .fileutil import get_lines_from_file
 		lines = get_lines_from_file(fn,p.desc+' data',trim_comments=True)
 
-		from .passwdlist import PasswordList
 		try:
 			assert len(lines) >= 3, f'Too few lines in address file ({len(lines)})'
 			ls = lines[0].split()
@@ -239,7 +237,7 @@ class AddrFile(MMGenObject):
 			sid = ls.pop(0)
 			assert is_seed_id(sid), f'{sid!r}: invalid Seed ID'
 
-			if type(p) == PasswordList and len(ls) == 2:
+			if type(p).__name__ == 'PasswordList' and len(ls) == 2:
 				ss = ls.pop().split(':')
 				assert len(ss) == 2, f'{ss!r}: invalid password length specifier (must contain colon)'
 				p.set_pw_fmt(ss[0])
@@ -255,7 +253,7 @@ class AddrFile(MMGenObject):
 			else:
 				raise ValueError(f'{lines[0]}: Invalid first line for {p.gen_desc} file {fn!r}')
 
-			if type(p) != PasswordList:
+			if type(p).__name__ != 'PasswordList':
 				if proto.base_coin != p.proto.base_coin or proto.network != p.proto.network:
 					"""
 					Having caller supply protocol and checking address file protocol against it here
