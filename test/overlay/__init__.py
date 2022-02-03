@@ -1,5 +1,8 @@
 import sys,os,shutil
 
+def get_overlay_dir(repo_root):
+	return os.path.join(repo_root,'test','overlay','tree')
+
 def overlay_setup(repo_root):
 
 	def process_srcdir(d):
@@ -24,7 +27,7 @@ def overlay_setup(repo_root):
 					os.path.join(srcdir,fn),
 					os.path.join(destdir,link_fn) )
 
-	overlay_dir = os.path.join(repo_root,'test','overlay','tree')
+	overlay_dir = get_overlay_dir(repo_root)
 	fakemod_dir = os.path.join(repo_root,'test','overlay','fakemods')
 	fakemods  = os.listdir(fakemod_dir)
 	make_link = os.symlink if sys.platform == 'linux' else shutil.copy2

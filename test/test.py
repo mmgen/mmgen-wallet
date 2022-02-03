@@ -73,8 +73,8 @@ def create_shm_dir(data_dir,trash_dir):
 import sys,os,time
 
 from include.tests_header import repo_root
-from test.overlay import overlay_setup
-overlay_dir = overlay_setup(repo_root)
+from test.overlay import get_overlay_dir,overlay_setup
+overlay_dir = get_overlay_dir(repo_root)
 sys.path.insert(0,overlay_dir)
 
 try: os.unlink(os.path.join(repo_root,'my.err'))
@@ -796,12 +796,9 @@ class TestSuiteRunner(object):
 		self.start_time = time.time()
 		self.daemons_started = False
 		gname_save = None
+		overlay_setup(repo_root)
 		if usr_args:
 			for arg in usr_args:
-				if arg in utils:
-					params = usr_args[usr_args.index(arg)+1:]
-					globals()[arg](*params)
-					sys.exit(0)
 				if arg in self.gm.cmd_groups:
 					if not self.init_group(arg):
 						continue
@@ -1027,6 +1024,9 @@ if opt.list_cmd_groups:
 	CmdGroupMgr().list_cmd_groups()
 elif opt.list_cmds:
 	list_cmds()
+elif usr_args and usr_args[0] in utils:
+	globals()[usr_args[0]](*usr_args[1:])
+	sys.exit(0)
 
 if opt.pause:
 	set_restore_term_at_exit()
