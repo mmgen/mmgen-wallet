@@ -52,12 +52,11 @@ if not opt.status:
 
 async def main():
 
-	from .tx import MMGenTX
+	from .tx import OnlineSignedTX
 
-	tx = MMGenTX.Signed(
+	tx = await OnlineSignedTX(
 		filename   = infile,
-		quiet_open = True,
-		tw         = await MMGenTX.Signed.get_tracking_wallet(infile) )
+		quiet_open = True )
 
 	from .rpc import rpc_init
 	tx.rpc = await rpc_init(tx.proto)
@@ -67,16 +66,16 @@ async def main():
 	if opt.status:
 		if tx.coin_txid:
 			qmsg(f'{tx.proto.coin} txid: {tx.coin_txid.hl()}')
-		await tx.get_status(status=True)
+		await tx.status.display(usr_req=True)
 		sys.exit(0)
 
 	if not opt.yes:
-		tx.view_with_prompt('View transaction details?')
+		tx.info.view_with_prompt('View transaction details?')
 		if tx.add_comment(): # edits an existing comment, returns true if changed
-			tx.write_to_file(ask_write_default_yes=True)
+			tx.file.write(ask_write_default_yes=True)
 
 	await tx.send(exit_on_fail=True)
-	tx.write_to_file(ask_overwrite=False,ask_write=False)
+	tx.file.write(ask_overwrite=False,ask_write=False)
 	tx.print_contract_addr()
 
 run_session(main())

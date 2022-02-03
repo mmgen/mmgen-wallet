@@ -116,7 +116,7 @@ FMT CODES:
 
 cmd_args = opts.init(opts_data)
 
-from .tx import *
+from .tx import NewTX,OnlineSignedTX
 from .txsign import *
 
 seed_files = get_seed_files(opt,cmd_args)
@@ -127,9 +127,7 @@ async def main():
 	from .protocol import init_proto_from_opts
 	proto = init_proto_from_opts(need_amt=True)
 
-	tx1 = MMGenTX.New(
-		proto = proto,
-		tw    = await TrackingWallet(proto) if proto.tokensym else None )
+	tx1 = await NewTX(proto=proto)
 
 	from .rpc import rpc_init
 	tx1.rpc = await rpc_init(proto)
@@ -145,10 +143,11 @@ async def main():
 	tx3 = await txsign(tx2,seed_files,kl,kal)
 
 	if tx3:
-		tx3.write_to_file(ask_write=False)
-		await tx3.send(exit_on_fail=True)
-		tx3.write_to_file(ask_overwrite=False,ask_write=False)
-		tx3.print_contract_addr()
+		tx4 = await OnlineSignedTX(data=tx3.__dict__)
+		tx4.file.write(ask_write=False)
+		await tx4.send(exit_on_fail=True)
+		tx4.file.write(ask_overwrite=False,ask_write=False)
+		tx4.print_contract_addr()
 	else:
 		die(2,'Transaction could not be signed')
 

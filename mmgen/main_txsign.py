@@ -123,7 +123,8 @@ async def main():
 			tx_num_disp = f' #{tx_num}'
 			msg(f'\nTransaction{tx_num_disp} of {len(tx_files)}:')
 
-		tx1 = MMGenTX.Unsigned(filename=tx_file)
+		from .tx import UnsignedTX
+		tx1 = UnsignedTX(filename=tx_file)
 
 		vmsg(f'Successfully opened transaction file {tx_file!r}')
 
@@ -140,7 +141,7 @@ async def main():
 			continue
 
 		if not opt.yes:
-			tx1.view_with_prompt(f'View data for transaction{tx_num_disp}?')
+			tx1.info.view_with_prompt(f'View data for transaction{tx_num_disp}?')
 
 		kal = get_keyaddrlist(tx1.proto,opt)
 		kl = get_keylist(tx1.proto,opt)
@@ -149,7 +150,7 @@ async def main():
 		if tx2:
 			if not opt.yes:
 				tx2.add_comment() # edits an existing comment
-			tx2.write_to_file(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_disp)
+			tx2.file.write(ask_write=not opt.yes,ask_write_default_yes=True,add_desc=tx_num_disp)
 		else:
 			ymsg('Transaction could not be signed')
 			bad_tx_count += 1

@@ -145,4 +145,4 @@ async def main():
 
 	for tx,desc in ((tx1,'Long chain (timelocked)'),(tx2,'Short chain')):
 		tx.desc = desc + ' transaction'
-		tx.write_to_file(ask_write=False,ask_overwrite=not opt.yes,ask_write_default_yes=False)
+		tx.file.write(ask_write=False,ask_overwrite=not opt.yes,ask_write_default_yes=False)

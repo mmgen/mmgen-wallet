@@ -25,7 +25,6 @@ from .obj import MMGenList
 from .addr import MMGenAddrType
 from .addrlist import AddrIdxList,KeyAddrList
 from .wallet import Wallet,WalletUnenc,WalletEnc,MMGenWallet
-from .tx import MMGenTX
 
 saved_seeds = {}
 
@@ -110,7 +109,8 @@ def _pop_and_return(args,cmplist): # strips found args
 	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
 def get_tx_files(opt,args):
-	ret = _pop_and_return(args,[MMGenTX.Unsigned.ext])
+	from .tx.unsigned import Unsigned
+	ret = _pop_and_return(args,[Unsigned.ext])
 	if not ret:
 		die(1,'You must specify a raw transaction file!')
 	return ret

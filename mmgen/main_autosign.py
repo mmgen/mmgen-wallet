@@ -137,7 +137,7 @@ if opt.mnemonic_fmt:
 			fmt_list(mn_fmts,fmt='no_spc') ))
 
 from .wallet import Wallet
-from .tx import MMGenTX
+from .tx import UnsignedTX
 from .txsign import txsign
 from .protocol import init_proto
 from .rpc import rpc_init
@@ -197,12 +197,12 @@ def do_umount():
 
 async def sign_tx_file(txfile):
 	try:
-		tx1 = MMGenTX.Unsigned(filename=txfile)
+		tx1 = UnsignedTX(filename=txfile)
 		if tx1.proto.sign_mode == 'daemon':
 			tx1.rpc = await rpc_init(tx1.proto)
 		tx2 = await txsign(tx1,wfs,None,None)
 		if tx2:
-			tx2.write_to_file(ask_write=False)
+			tx2.file.write(ask_write=False)
 			return tx2
 		else:
 			return False
@@ -260,7 +260,7 @@ def print_summary(signed_txs):
 		bmsg('\nAutosign summary:\n')
 		def gen():
 			for tx in signed_txs:
-				yield tx.format_view(terse=True)
+				yield tx.info.format(terse=True)
 		msg_r(''.join(gen()))
 		return
 

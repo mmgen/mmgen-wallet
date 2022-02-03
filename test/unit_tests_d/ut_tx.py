@@ -5,7 +5,7 @@ test.unit_tests_d.ut_tx: TX unit test for the MMGen suite
 
 import re
 from mmgen.common import *
-from mmgen.tx import MMGenTX
+from mmgen.tx import NewTX,UnsignedTX
 from mmgen.txfile import MMGenTxFile
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
@@ -20,7 +20,7 @@ class unit_tests:
 
 		async def do():
 			proto = init_proto('btc',need_amt=True)
-			tx = MMGenTX.New(proto=proto)
+			tx = await NewTX(proto=proto)
 			tx.rpc = await rpc_init(proto=proto)
 
 		run_session(do())
@@ -41,7 +41,7 @@ class unit_tests:
 		for fn in fns:
 			vmsg(f'    parsing: {fn}')
 			fpath = os.path.join('test','ref',fn)
-			tx = MMGenTX.Unsigned(filename=fpath,quiet_open=True)
+			tx = UnsignedTX(filename=fpath,quiet_open=True)
 			f = MMGenTxFile(tx)
 
 			fn_gen = f.make_filename()

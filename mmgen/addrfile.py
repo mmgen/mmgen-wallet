@@ -262,7 +262,7 @@ class AddrFile(MMGenObject):
 					Having caller supply protocol and checking address file protocol against it here
 					allows us to catch all mismatches in one place.  This behavior differs from that of
 					transaction files, which determine the protocol independently, requiring the caller
-					to check for protocol mismatches (e.g. MMGenTX.check_correct_chain())
+					to check for protocol mismatches (e.g. mmgen.tx.completed.check_correct_chain())
 					"""
 					raise ValueError(
 						f'{p.desc} file is '

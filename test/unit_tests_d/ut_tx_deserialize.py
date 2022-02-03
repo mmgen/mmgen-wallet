@@ -8,7 +8,8 @@ import os,json
 from mmgen.common import *
 from ..include.common import *
 from mmgen.protocol import init_proto
-from mmgen.tx import MMGenTX,DeserializedTX
+from mmgen.tx import UnsignedTX
+from mmgen.base_proto.bitcoin.tx.base import DeserializeTX
 from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
 
@@ -35,7 +36,7 @@ class unit_test(object):
 
 			if has_nonstandard_outputs(d['vout']): return False
 
-			dt = DeserializedTX(tx_proto,tx_hex)
+			dt = DeserializeTX(tx_proto,tx_hex)
 
 			if opt.verbose:
 				Msg('\n====================================================')
@@ -46,12 +47,12 @@ class unit_test(object):
 				Pmsg(dt)
 
 			# metadata
-			assert dt['txid'] == d['txid'],'TXID does not match'
-			assert dt['lock_time'] == d['locktime'],'Locktime does not match'
-			assert dt['version'] == d['version'],'Version does not match'
+			assert dt.txid == d['txid'],'TXID does not match'
+			assert dt.locktime == d['locktime'],'Locktime does not match'
+			assert dt.version == d['version'],'Version does not match'
 
 			# inputs
-			a,b = d['vin'],dt['txins']
+			a,b = d['vin'],dt.txins
 			for i in range(len(a)):
 				assert a[i]['txid'] == b[i]['txid'],f'TxID of input {i} does not match'
 				assert a[i]['vout'] == b[i]['vout'],f'vout of input {i} does not match'
@@ -62,7 +63,7 @@ class unit_test(object):
 						f'witness of input {i} does not match')
 
 			# outputs
-			a,b = d['vout'],dt['txouts']
+			a,b = d['vout'],dt.txouts
 			for i in range(len(a)):
 				if 'addresses' in a[i]['scriptPubKey']:
 					A = a[i]['scriptPubKey']['addresses'][0]
@@ -121,10 +122,10 @@ class unit_test(object):
 				)
 			print_info('test/ref/*rawtx','MMGen reference')
 			for n,(coin,testnet,fn) in enumerate(fns):
-				tx = MMGenTX.Unsigned(filename=fn)
+				tx = UnsignedTX(filename=fn)
 				await test_tx(
 					tx_proto = tx.proto,
-					tx_hex   = tx.hex,
+					tx_hex   = tx.serialized,
 					desc     = fn,
 					n        = n+1 )
 			Msg('OK')

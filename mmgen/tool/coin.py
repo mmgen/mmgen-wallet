@@ -159,15 +159,15 @@ class tool_cmd(tool_cmd_base):
 
 	def addr2pubhash(self,addr:'sstr'):
 		"convert coin address to public key hash"
-		from ..tx import addr2pubhash
+		from ..base_proto.bitcoin.tx.base import addr2pubhash
 		return addr2pubhash( self.proto, CoinAddr(self.proto,addr) )
 
 	def addr2scriptpubkey(self,addr:'sstr'):
 		"convert coin address to scriptPubKey"
-		from ..tx import addr2scriptPubKey
+		from ..base_proto.bitcoin.tx.base import addr2scriptPubKey
 		return addr2scriptPubKey( self.proto, CoinAddr(self.proto,addr) )
 
 	def scriptpubkey2addr(self,hexstr:'sstr'):
 		"convert scriptPubKey to coin address"
-		from ..tx import scriptPubKey2addr
+		from ..base_proto.bitcoin.tx.base import scriptPubKey2addr
 		return scriptPubKey2addr( self.proto, hexstr )[0]

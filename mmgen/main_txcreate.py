@@ -81,11 +81,9 @@ async def main():
 	from .protocol import init_proto_from_opts
 	proto = init_proto_from_opts(need_amt=True)
 
-	from .tx import MMGenTX
+	from .tx import NewTX
 	from .twctl import TrackingWallet
-	tx1 = MMGenTX.New(
-		proto = proto,
-		tw    = await TrackingWallet(proto) if proto.tokensym else None )
+	tx1 = await NewTX(proto=proto)
 
 	from .rpc import rpc_init
 	tx1.rpc = await rpc_init(proto)
@@ -95,7 +93,7 @@ async def main():
 		locktime = int(opt.locktime or 0),
 		do_info  = opt.info )
 
-	tx2.write_to_file(
+	tx2.file.write(
 		ask_write             = not opt.yes,
 		ask_overwrite         = not opt.yes,
 		ask_write_default_yes = False )

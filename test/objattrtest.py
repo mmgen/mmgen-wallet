@@ -34,6 +34,7 @@ from test.objattrtest_py_d.oat_common import *
 from mmgen.common import *
 from mmgen.addrlist import *
 from mmgen.passwdlist import *
+from mmgen.tx.base import Base
 
 opts_data = {
 	'sets': [

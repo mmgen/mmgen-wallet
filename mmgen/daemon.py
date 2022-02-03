@@ -595,6 +595,12 @@ class bitcoin_core_daemon(CoinDaemon):
 			# RPC args: addr,label,rescan[=true],p2sh[=none]
 			return ('importaddress',coinaddr,lbl,False)
 
+	def estimatefee_args(self,rpc):
+		return (opt.tx_confs,)
+
+	def sigfail_errmsg(self,e):
+		return e.args[0]
+
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Bitcoin Cash Node', 24000000, '24.0.0')
 	exec_fn = 'bitcoind-bchn'
@@ -611,6 +617,15 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
 		# Broken behavior: new label is set OK, but old label gets attached to another address
 		return ('importaddress',coinaddr,lbl,False)
+
+	def estimatefee_args(self,rpc):
+		return () if rpc.daemon_version >= 190100 else (opt.tx_confs,)
+
+	def sigfail_errmsg(self,e):
+		return (
+			'This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
+				if 'Invalid sighash param' in e.args[0] else
+			e.args[0] )
 
 class litecoin_core_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')

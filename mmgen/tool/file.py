@@ -90,20 +90,13 @@ class tool_cmd(tool_cmd_base):
 		file_sort = kwargs.get('filesort') or 'mtime'
 
 		from ..filename import MMGenFileList
-		from ..tx import MMGenTX
-		flist = MMGenFileList( infiles, ftype=MMGenTX )
+		from ..tx import completed,CompletedTX
+		flist = MMGenFileList( infiles, ftype=completed.Completed )
 		flist.sort_by_age( key=file_sort ) # in-place sort
 
-		async def process_file(fn):
-			if fn.endswith(MMGenTX.Signed.ext):
-				tx = MMGenTX.Signed(
-					filename   = fn,
-					quiet_open = True,
-					tw         = await MMGenTX.Signed.get_tracking_wallet(fn) )
-			else:
-				tx = MMGenTX.Unsigned(
-					filename   = fn,
-					quiet_open = True )
-			return tx.format_view( terse=terse, sort=tx_sort )
+		async def process_file(f):
+			return (await CompletedTX(
+				filename   = f.name,
+				quiet_open = True)).info.format( terse=terse, sort=tx_sort )
 
-		return ('—'*77+'\n').join([await process_file(fn) for fn in flist.names()]).rstrip()
+		return ('—'*77+'\n').join([await process_file(f) for f in flist]).rstrip()

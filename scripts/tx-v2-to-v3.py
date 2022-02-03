@@ -24,10 +24,11 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-from mmgen.tx import *
+import asyncio
+from mmgen.tx import CompletedTX
 
 if len(cmd_args) != 1:
 	opts.usage()
 
-tx = MMGenTX(cmd_args[0],quiet_open=True)
-tx.write_to_file(ask_tty=False,ask_overwrite=not opt.quiet,ask_write=not opt.quiet)
+tx = asyncio.run(CompletedTX(cmd_args[0],quiet_open=True))
+tx.file.write(ask_tty=False,ask_overwrite=not opt.quiet,ask_write=not opt.quiet)

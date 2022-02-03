@@ -132,12 +132,12 @@ def tt_urand():
 	line_input('Press ENTER to continue: ')
 
 def tt_txview():
-	cmsg('Testing tx.view_with_prompt() (try each viewing option)')
-	from mmgen.tx import MMGenTX
+	cmsg('Testing tx.info.view_with_prompt() (try each viewing option)')
+	from mmgen.tx import UnsignedTX
 	fn = 'test/ref/0B8D5A[15.31789,14,tl=1320969600].rawtx'
-	tx = MMGenTX.Unsigned(filename=fn,quiet_open=True)
+	tx = UnsignedTX(filename=fn,quiet_open=True)
 	while True:
-		tx.view_with_prompt('View data for transaction?',pause=False)
+		tx.info.view_with_prompt('View data for transaction?',pause=False)
 		set_vt100()
 		if not keypress_confirm('Continue testing transaction view?',default_yes=True):
 			break

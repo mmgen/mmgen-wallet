@@ -104,14 +104,14 @@ def help_notes_func(proto,po,k):
 			return fmt_list(CoinDaemon.get_network_ids(),fmt='bare')
 
 		def rel_fee_desc():
-			from .tx import MMGenTX
-			return MMGenTX.Base().rel_fee_desc
+			from .tx import BaseTX
+			return BaseTX(proto=proto).rel_fee_desc
 
 		def fee_spec_letters():
 			return fee_spec_letters()
 
 		def fee():
-			from .tx import MMGenTX
+			from .tx import BaseTX
 			return """
 FEE SPECIFICATION: Transaction fees, both on the command line and at the
 interactive prompt, may be specified as either absolute {c} amounts, using
@@ -119,7 +119,7 @@ a plain decimal number, or as {r}, using an integer followed by
 '{l}', for {u}.
 """.format(
 	c = proto.coin,
-	r = MMGenTX.Base().rel_fee_desc,
+	r = BaseTX(proto=proto).rel_fee_desc,
 	l = fee_spec_letters(use_quotes=True),
 	u = fee_spec_names() )
 

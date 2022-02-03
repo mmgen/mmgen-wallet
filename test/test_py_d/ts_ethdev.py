@@ -771,8 +771,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_compile(token_data)
 
 	async def get_tx_receipt(self,txid):
-		from mmgen.tx import MMGenTX
-		tx = MMGenTX.New(proto=self.proto)
+		from mmgen.tx import NewTX
+		tx = await NewTX(proto=self.proto)
 		from mmgen.rpc import rpc_init
 		tx.rpc = await rpc_init(self.proto)
 		res = await tx.get_receipt(txid)

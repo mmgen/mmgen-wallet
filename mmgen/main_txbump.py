@@ -115,28 +115,22 @@ do_license_msg()
 
 silent = opt.yes and opt.tx_fee != None and opt.output_to_reduce != None
 
-ext = get_extension(tx_file)
-ext_data = {
-	MMGenTX.Unsigned.ext: 'Unsigned',
-	MMGenTX.Signed.ext:   'Signed',
-}
-if ext not in ext_data:
-	die(1,f'{ext!r}: unrecognized file extension')
+from .tx import CompletedTX,BumpTX,UnsignedTX,OnlineSignedTX
 
 async def main():
 
-	orig_tx = getattr(MMGenTX,ext_data[ext])(filename=tx_file)
+	orig_tx = await CompletedTX(filename=tx_file)
 
 	if not silent:
 		msg(green('ORIGINAL TRANSACTION'))
-		msg(orig_tx.format_view(terse=True))
+		msg(orig_tx.info.format(terse=True))
 
 	kal = get_keyaddrlist(orig_tx.proto,opt)
 	kl = get_keylist(orig_tx.proto,opt)
 	sign_and_send = bool(seed_files or kl or kal)
 
 	from .twctl import TrackingWallet
-	tx = MMGenTX.Bump(
+	tx = await BumpTX(
 		data = orig_tx.__dict__,
 		send = sign_and_send,
 		tw   = await TrackingWallet(orig_tx.proto) if orig_tx.proto.tokensym else None )
@@ -159,13 +153,10 @@ async def main():
 
 	assert tx.fee <= tx.proto.max_tx_fee
 
-	if tx.proto.base_proto == 'Bitcoin':
-		tx.outputs.sort_bip69() # output amts have changed, so re-sort
-
 	if not opt.yes:
 		tx.add_comment()   # edits an existing comment
 
-	await tx.create_raw() # creates tx.hex, tx.txid
+	await tx.create_serialized(bump=True)
 
 	tx.add_timestamp()
 	tx.add_blockcount()
@@ -174,18 +165,19 @@ async def main():
 
 	if not silent:
 		msg(green('\nREPLACEMENT TRANSACTION:'))
-		msg_r(tx.format_view(terse=True))
+		msg_r(tx.info.format(terse=True))
 
 	if sign_and_send:
-		tx2 = MMGenTX.Unsigned(data=tx.__dict__)
+		tx2 = UnsignedTX(data=tx.__dict__)
 		tx3 = await txsign(tx2,seed_files,kl,kal)
 		if tx3:
-			tx3.write_to_file(ask_write=False)
-			await tx3.send(exit_on_fail=True)
-			tx3.write_to_file(ask_write=False)
+			tx4 = await OnlineSignedTX(data=tx3.__dict__)
+			tx4.file.write(ask_write=False)
+			await tx4.send(exit_on_fail=True)
+			tx4.file.write(ask_write=False)
 		else:
 			die(2,'Transaction could not be signed')
 	else:
-		tx.write_to_file(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
+		tx.file.write(ask_write=not opt.yes,ask_write_default_yes=False,ask_overwrite=not opt.yes)
 
 run_session(main())

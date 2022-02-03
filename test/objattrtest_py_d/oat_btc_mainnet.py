@@ -132,7 +132,7 @@ tests = {
 		},
 	),
 	# tx.py
-	'MMGenTxInput': atd({
+	'Base.Input': atd({
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
 		'label':        (0b101, TwComment),
@@ -147,7 +147,7 @@ tests = {
 		(proto,),
 		{ 'amt':BTCAmt('0.01'), 'addr':sample_objs['CoinAddr'] },
 	),
-	'MMGenTxOutput': atd({
+	'Base.Output': atd({
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
 		'label':        (0b101, TwComment),

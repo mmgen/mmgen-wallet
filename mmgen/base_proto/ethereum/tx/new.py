@@ -1,0 +1,197 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
+# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen
+#   https://gitlab.com/mmgen/mmgen
+
+"""
+base_proto.ethereum.tx.new: Ethereum new transaction class
+"""
+
+import json
+
+import mmgen.tx.new as TxBase
+from .base import Base,TokenBase
+from ....opts import opt
+from ....obj import Int,ETHNonce,MMGenTxID,Str
+from ....amt import ETHAmt
+from ....util import msg,line_input,is_int,is_hex_str,make_chksum_6
+from ....twctl import TrackingWallet
+from ....addr import is_mmgen_id,is_coin_addr
+from ..contract import Token
+
+class New(Base,TxBase.New):
+	desc = 'transaction'
+	fee_fail_fs = 'Network fee estimation failed'
+	no_chg_msg = 'Warning: Transaction leaves account with zero balance'
+	usr_fee_prompt = 'Enter transaction fee or gas price: '
+	hexdata_type = 'hex'
+
+	async def get_nonce(self):
+		return ETHNonce(int(await self.rpc.call('eth_getTransactionCount','0x'+self.inputs[0].addr,'pending'),16))
+
+	async def make_txobj(self): # called by create_serialized()
+		self.txobj = {
+			'from': self.inputs[0].addr,
+			'to':   self.outputs[0].addr if self.outputs else Str(''),
+			'amt':  self.outputs[0].amt if self.outputs else ETHAmt('0'),
+			'gasPrice': self.fee_abs2rel(self.usr_fee,to_unit='eth'),
+			'startGas': self.start_gas,
+			'nonce': await self.get_nonce(),
+			'chainId': self.rpc.chainID,
+			'data':  self.usr_contract_data,
+		}
+
+	# Instead of serializing tx data as with BTC, just create a JSON dump.
+	# This complicates things but means we avoid using the rlp library to deserialize the data,
+	# thus removing an attack vector
+	async def create_serialized(self,locktime=None,bump=None):
+		assert len(self.inputs) == 1,'Transaction has more than one input!'
+		o_num = len(self.outputs)
+		o_ok = 0 if self.usr_contract_data else 1
+		assert o_num == o_ok, f'Transaction has {o_num} output{suf(o_num)} (should have {o_ok})'
+		await self.make_txobj()
+		odict = { k: str(v) for k,v in self.txobj.items() if k != 'token_to' }
+		self.serialized = json.dumps(odict)
+		self.update_txid()
+
+	def update_txid(self):
+		assert not is_hex_str(self.serialized), (
+			'update_txid() must be called only when self.serialized is not hex data' )
+		self.txid = MMGenTxID(make_chksum_6(self.serialized).upper())
+
+	def process_cmd_args(self,cmd_args,ad_f,ad_w):
+		lc = len(cmd_args)
+		if lc == 0 and self.usr_contract_data and not 'Token' in type(self).__name__:
+			return
+		if lc != 1:
+			die(1,f'{lc} output{suf(lc)} specified, but Ethereum transactions must have exactly one')
+
+		for a in cmd_args:
+			self.process_cmd_arg(a,ad_f,ad_w)
+
+	def select_unspent(self,unspent):
+		while True:
+			reply = line_input('Enter an account to spend from: ').strip()
+			if reply:
+				if not is_int(reply):
+					msg('Account number must be an integer')
+				elif int(reply) < 1:
+					msg('Account number must be >= 1')
+				elif int(reply) > len(unspent):
+					msg(f'Account number must be <= {len(unspent)}')
+				else:
+					return [int(reply)]
+
+	# get rel_fee (gas price) from network, return in native wei
+	async def get_rel_fee_from_network(self):
+		return Int(await self.rpc.call('eth_gasPrice'),16),'eth_gasPrice' # ==> rel_fee,fe_type
+
+	def check_fee(self):
+		if not self.disable_fee_check:
+			assert self.usr_fee <= self.proto.max_tx_fee
+
+	# given rel fee and units, return absolute fee using self.tx_gas
+	def fee_rel2abs(self,tx_size,units,amt,unit):
+		return ETHAmt(
+			ETHAmt(amt,units[unit]).toWei() * self.tx_gas.toWei(),
+			from_unit='wei'
+		)
+
+	# given fee estimate (gas price) in wei, return absolute fee, adjusting by opt.tx_fee_adj
+	def fee_est2abs(self,rel_fee,fe_type=None):
+		ret = self.fee_gasPrice2abs(rel_fee) * opt.tx_fee_adj
+		if opt.verbose:
+			msg(f'Estimated fee: {ret} ETH')
+		return ret
+
+	def convert_and_check_fee(self,tx_fee,desc):
+		abs_fee = self.feespec2abs(tx_fee,None)
+		if abs_fee == False:
+			return False
+		elif not self.disable_fee_check and (abs_fee > self.proto.max_tx_fee):
+			msg('{} {c}: {} fee too large (maximum fee: {} {c})'.format(
+				abs_fee.hl(),
+				desc,
+				self.proto.max_tx_fee.hl(),
+				c = self.proto.coin ))
+			return False
+		else:
+			return abs_fee
+
+	def update_change_output(self,funds_left):
+		if self.outputs and self.outputs[0].is_chg:
+			self.update_output_amt(0,ETHAmt(funds_left))
+
+	async def get_cmdline_input_addrs(self):
+		ret = []
+		if opt.inputs:
+			data_root = (await TrackingWallet(self.proto)).data_root # must create new instance here
+			errmsg = 'Address {!r} not in tracking wallet'
+			for addr in opt.inputs.split(','):
+				if is_mmgen_id(self.proto,addr):
+					for waddr in data_root:
+						if data_root[waddr]['mmid'] == addr:
+							ret.append(waddr)
+							break
+					else:
+						raise UserAddressNotInWallet(errmsg.format(addr))
+				elif is_coin_addr(self.proto,addr):
+					if not addr in data_root:
+						raise UserAddressNotInWallet(errmsg.format(addr))
+					ret.append(addr)
+				else:
+					die(1,f'{addr!r}: not an MMGen ID or coin address')
+		return ret
+
+	def final_inputs_ok_msg(self,funds_left):
+		chg = '0' if (self.outputs and self.outputs[0].is_chg) else funds_left
+		return 'Transaction leaves {} {} in the sender’s account'.format(
+			ETHAmt(chg).hl(),
+			self.proto.coin
+		)
+
+class TokenNew(TokenBase,New):
+	desc = 'transaction'
+	fee_is_approximate = True
+
+	async def make_txobj(self): # called by create_serialized()
+		await super().make_txobj()
+		t = Token(self.proto,self.tw.token,self.tw.decimals)
+		o = self.txobj
+		o['token_addr'] = t.addr
+		o['decimals'] = t.decimals
+		o['token_to'] = o['to']
+		o['data'] = t.create_data(o['token_to'],o['amt'])
+
+	def update_change_output(self,funds_left):
+		if self.outputs[0].is_chg:
+			self.update_output_amt(0,self.inputs[0].amt)
+
+	# token transaction, so check both eth and token balances
+	# TODO: add test with insufficient funds
+	async def precheck_sufficient_funds(self,inputs_sum,sel_unspent,outputs_sum):
+		eth_bal = await self.tw.get_eth_balance(sel_unspent[0].addr)
+		if eth_bal == 0: # we don't know the fee yet
+			msg('This account has no ether to pay for the transaction fee!')
+			return False
+		return await super().precheck_sufficient_funds(inputs_sum,sel_unspent,outputs_sum)
+
+	async def get_funds_left(self,fee,outputs_sum):
+		return ( await self.tw.get_eth_balance(self.inputs[0].addr) ) - fee
+
+	def final_inputs_ok_msg(self,funds_left):
+		token_bal = (
+			ETHAmt('0') if self.outputs[0].is_chg
+			else self.inputs[0].amt - self.outputs[0].amt
+		)
+		return "Transaction leaves ≈{} {} and {} {} in the sender's account".format(
+			funds_left.hl(),
+			self.proto.coin,
+			token_bal.hl(),
+			self.proto.dcoin
+		)

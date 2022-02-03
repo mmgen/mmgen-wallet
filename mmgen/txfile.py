@@ -21,10 +21,9 @@ txfile.py:  Transaction file operations for the MMGen suite
 """
 
 from .common import *
-from .obj import HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
-from .tx import MMGenTxOutput,MMGenTxOutputList,MMGenTxInput,MMGenTxInputList
+from .obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
 
-class MMGenTxFile:
+class MMGenTxFile(MMGenObject):
 
 	def __init__(self,tx):
 		self.tx       = tx
@@ -50,8 +49,8 @@ class MMGenTxFile:
 			for e in d:
 				e['amt'] = tx.proto.coin_amt(e['amt'])
 			io,io_list = {
-				'inputs':  (MMGenTxInput,MMGenTxInputList),
-				'outputs': (MMGenTxOutput,MMGenTxOutputList),
+				'inputs':  ( tx.Input, tx.InputList ),
+				'outputs': ( tx.Output, tx.OutputList ),
 			}[desc]
 			return io_list( parent=tx, data=[io(tx.proto,**e) for e in d] )
 
@@ -124,7 +123,7 @@ class MMGenTxFile:
 			desc = 'transaction file hex data'
 			tx.check_txfile_hex_data()
 			desc = 'Ethereum RLP or JSON data'
-			tx.parse_txfile_hex_data()
+			tx.parse_txfile_serialized_data()
 			desc = 'inputs data'
 			tx.inputs  = eval_io_data(inputs_data,'inputs')
 			desc = 'outputs data'
@@ -144,8 +143,8 @@ class MMGenTxFile:
 			yield f'[{tx.send_amt!s}'
 			if tx.is_replaceable():
 				yield ',{}'.format(tx.fee_abs2rel(tx.fee,to_unit=tx.fn_fee_unit))
-			if tx.get_hex_locktime():
-				yield ',tl={}'.format(tx.get_hex_locktime())
+			if tx.get_serialized_locktime():
+				yield ',tl={}'.format(tx.get_serialized_locktime())
 			yield ']'
 			if g.debug_utf8:
 				yield '-α'
@@ -171,7 +170,7 @@ class MMGenTxFile:
 				tx.blockcount,
 				(f' LT={tx.locktime}' if tx.locktime else ''),
 			),
-			tx.hex,
+			tx.serialized,
 			ascii([amt_to_str(e._asdict()) for e in tx.inputs]),
 			ascii([amt_to_str(e._asdict()) for e in tx.outputs])
 		]
@@ -220,7 +219,7 @@ class MMGenTxFile:
 
 	@classmethod
 	def get_proto(cls,filename,quiet_open=False):
-		from .tx import MMGenTX
-		tmp_tx = MMGenTX.Base()
+		from .tx import BaseTX
+		tmp_tx = BaseTX()
 		cls(tmp_tx).parse(filename,metadata_only=True,quiet_open=quiet_open)
 		return tmp_tx.proto
