@@ -49,11 +49,11 @@ class MMGenTxFile:
 				assert len(d), f'no {desc}!'
 			for e in d:
 				e['amt'] = tx.proto.coin_amt(e['amt'])
-			io,io_list = (
-				(MMGenTxOutput,MMGenTxOutputList),
-				(MMGenTxInput,MMGenTxInputList)
-			)[desc=='inputs']
-			return io_list(tx,[io(tx.proto,**e) for e in d])
+			io,io_list = {
+				'inputs':  (MMGenTxInput,MMGenTxInputList),
+				'outputs': (MMGenTxOutput,MMGenTxOutputList),
+			}[desc]
+			return io_list( parent=tx, data=[io(tx.proto,**e) for e in d] )
 
 		from .fileutil import get_data_from_file
 		tx_data = get_data_from_file(infile,tx.desc+' data',quiet=quiet_open)

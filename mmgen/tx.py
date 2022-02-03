@@ -285,26 +285,16 @@ class MMGenTxInput(MMGenTxIO):
 class MMGenTxOutput(MMGenTxIO):
 	is_chg = ListItemAttr(bool,typeconv=False)
 
-class MMGenTxIOList(MMGenObject):
+class MMGenTxIOList(list,MMGenObject):
 
 	def __init__(self,parent,data=None):
 		self.parent = parent
 		if data:
 			assert isinstance(data,list), 'MMGenTxIOList_check1'
-			self.data = data
+			data = data
 		else:
-			self.data = list()
-
-	def __getitem__(self,val):     return self.data.__getitem__(val)
-	def __setitem__(self,key,val): return self.data.__setitem__(key,val)
-	def __delitem__(self,val):     return self.data.__delitem__(val)
-	def __contains__(self,val):    return self.data.__contains__(val)
-	def __iter__(self):            return self.data.__iter__()
-	def __len__(self):             return self.data.__len__()
-	def __add__(self,val):         return self.data.__add__(val)
-	def __eq__(self,val):          return self.data.__eq__(val)
-	def append(self,val):          return self.data.append(val)
-	def sort(self,*args,**kwargs): return self.data.sort(*args,**kwargs)
+			data = list()
+		list.__init__(self,data)
 
 class MMGenTxInputList(MMGenTxIOList):
 
