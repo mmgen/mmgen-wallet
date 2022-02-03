@@ -56,6 +56,7 @@ from .obj import (
 	HexStr,
 	MMGenTxID,
 	MMGenDict,
+	TwComment,
 	CoinTxID,
 	get_obj,
 )
@@ -246,11 +247,11 @@ class DeserializedTX(dict,MMGenObject):
 class MMGenTxIO(MMGenListItem):
 	vout     = ListItemAttr(int,typeconv=False)
 	amt      = ImmutableAttr(None)
-	label    = ListItemAttr('TwComment',reassign_ok=True)
+	label    = ListItemAttr(TwComment,reassign_ok=True)
 	mmid     = ListItemAttr(MMGenID,include_proto=True)
 	addr     = ImmutableAttr(CoinAddr,include_proto=True)
 	confs    = ListItemAttr(int) # confs of type long exist in the wild, so convert
-	txid     = ListItemAttr('CoinTxID')
+	txid     = ListItemAttr(CoinTxID)
 	have_wif = ListItemAttr(bool,typeconv=False,delete_ok=True)
 
 	invalid_attrs = {'proto','tw_copy_attrs'}
@@ -277,7 +278,7 @@ class MMGenTxIO(MMGenListItem):
 			return self.proto.coin_amt(value)
 
 class MMGenTxInput(MMGenTxIO):
-	scriptPubKey = ListItemAttr('HexStr')
+	scriptPubKey = ListItemAttr(HexStr)
 	sequence     = ListItemAttr(int,typeconv=False)
 	tw_copy_attrs = { 'scriptPubKey','vout','amt','label','mmid','addr','confs','txid' }
 

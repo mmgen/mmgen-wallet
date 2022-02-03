@@ -40,7 +40,7 @@ from .util import (
 )
 from .base_obj import AsyncInit
 from .objmethods import MMGenObject
-from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj
+from .obj import ImmutableAttr,ListItemAttr,MMGenListItem,TwComment,get_obj,HexStr,CoinTxID
 from .addr import CoinAddr,MMGenID,AddrIdx
 from .rpc import rpc_init
 from .tw import TwCommon,TwMMGenID,get_tw_label
@@ -75,16 +75,16 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	class MMGenTwOutputList(list,MMGenObject): pass
 
 	class MMGenTwUnspentOutput(MMGenListItem):
-		txid         = ListItemAttr('CoinTxID')
+		txid         = ListItemAttr(CoinTxID)
 		vout         = ListItemAttr(int,typeconv=False)
 		amt          = ImmutableAttr(None)
 		amt2         = ListItemAttr(None)
-		label        = ListItemAttr('TwComment',reassign_ok=True)
+		label        = ListItemAttr(TwComment,reassign_ok=True)
 		twmmid       = ImmutableAttr(TwMMGenID,include_proto=True)
 		addr         = ImmutableAttr(CoinAddr,include_proto=True)
 		confs        = ImmutableAttr(int,typeconv=False)
 		date         = ListItemAttr(int,typeconv=False,reassign_ok=True)
-		scriptPubKey = ImmutableAttr('HexStr')
+		scriptPubKey = ImmutableAttr(HexStr)
 		skip         = ListItemAttr(str,typeconv=False,reassign_ok=True)
 
 		# required by gen_unspent(); setting valid_attrs explicitly is also more efficient

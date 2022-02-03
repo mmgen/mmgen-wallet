@@ -22,7 +22,7 @@ addrlist.py: Address list classes for the MMGen suite
 
 from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg
 from .objmethods import MMGenObject,Hilite,InitErrors
-from .obj import MMGenListItem,ListItemAttr,MMGenDict,WalletPassword
+from .obj import MMGenListItem,ListItemAttr,MMGenDict,TwComment,WalletPassword
 from .key import PrivKey
 from .addr import MMGenID,MMGenAddrType,CoinAddr,AddrIdx,AddrListID,ViewKey
 
@@ -70,10 +70,10 @@ class AddrListEntryBase(MMGenListItem):
 class AddrListEntry(AddrListEntryBase):
 	addr          = ListItemAttr(CoinAddr,include_proto=True)
 	idx           = ListItemAttr(AddrIdx) # not present in flat addrlists
-	label         = ListItemAttr('TwComment',reassign_ok=True)
+	label         = ListItemAttr(TwComment,reassign_ok=True)
 	sec           = ListItemAttr(PrivKey,include_proto=True)
 	viewkey       = ListItemAttr(ViewKey,include_proto=True)
-	wallet_passwd = ListItemAttr('WalletPassword')
+	wallet_passwd = ListItemAttr(WalletPassword)
 
 class AddrListChksum(str,Hilite):
 	color = 'pink'

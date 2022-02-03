@@ -94,7 +94,7 @@ class ImmutableAttr: # Descriptor
 	For attributes that are always present in the data instance
 	Reassignment and deletion forbidden
 	"""
-	ok_dtypes = (str,type,type(None),type(lambda:0))
+	ok_dtypes = (type,type(None),type(lambda:0))
 
 	def __init__(self,dtype,typeconv=True,set_none_ok=False,include_proto=False):
 		assert isinstance(dtype,self.ok_dtypes), 'ImmutableAttr_check1'
@@ -108,18 +108,12 @@ class ImmutableAttr: # Descriptor
 			self.conv = lambda instance,value: getattr(instance.conv_funcs,self.name)(instance,value)
 		elif typeconv:
 			"convert this attribute's type"
-			if type(dtype) == str:
-				if include_proto:
-					self.conv = lambda instance,value: globals()[dtype](instance.proto,value)
-				else:
-					self.conv = lambda instance,value: globals()[dtype](value)
+			if set_none_ok:
+				self.conv = lambda instance,value: None if value is None else dtype(value)
+			elif include_proto:
+				self.conv = lambda instance,value: dtype(instance.proto,value)
 			else:
-				if set_none_ok:
-					self.conv = lambda instance,value: None if value is None else dtype(value)
-				elif include_proto:
-					self.conv = lambda instance,value: dtype(instance.proto,value)
-				else:
-					self.conv = lambda instance,value: dtype(value)
+				self.conv = lambda instance,value: dtype(value)
 		else:
 			"check this attribute's type"
 			def assign_with_check(instance,value):

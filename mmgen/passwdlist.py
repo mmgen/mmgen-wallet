@@ -23,7 +23,7 @@ passwdlist.py: Password list class for the MMGen suite
 from collections import namedtuple
 
 from .util import ymsg,is_int,keypress_confirm
-from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString
+from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,TwComment
 from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID
 from .addrlist import (
@@ -37,7 +37,7 @@ from .addrlist import (
 class PasswordListEntry(AddrListEntryBase):
 	passwd = ListItemAttr(str,typeconv=False) # TODO: create Password type
 	idx    = ImmutableAttr(AddrIdx)
-	label  = ListItemAttr('TwComment',reassign_ok=True)
+	label  = ListItemAttr(TwComment,reassign_ok=True)
 	sec    = ListItemAttr(PrivKey,include_proto=True)
 
 class PasswordList(AddrList):
