@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.contract: Ethereum contract and token classes for the MMGen suite
+altcoins.base_proto.ethereum.contract: Ethereum contract and token classes
 """
 
 from decimal import Decimal

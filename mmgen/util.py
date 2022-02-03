@@ -677,10 +677,10 @@ def altcoin_subclass(cls,proto,mod_dir):
 	magic module loading and class retrieval
 	"""
 
-	if proto.base_coin != 'ETH':
+	if proto.base_proto != 'Ethereum':
 		return cls
 
-	modname = f'mmgen.altcoins.{proto.base_coin.lower()}.{mod_dir}'
+	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.{mod_dir}'
 
 	import importlib
 	if mod_dir == 'tx': # nested classes

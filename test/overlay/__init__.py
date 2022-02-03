@@ -41,11 +41,11 @@ def overlay_setup(repo_root):
 				'mmgen.share',
 				'mmgen.tool',
 				'mmgen.proto',
-				'mmgen.altcoins',
-				'mmgen.altcoins.eth',
-				'mmgen.altcoins.eth.pyethereum',
-				'mmgen.altcoins.eth.rlp',
-				'mmgen.altcoins.eth.rlp.sedes' ):
+				'mmgen.base_proto',
+				'mmgen.base_proto.ethereum',
+				'mmgen.base_proto.ethereum.pyethereum',
+				'mmgen.base_proto.ethereum.rlp',
+				'mmgen.base_proto.ethereum.rlp.sedes' ):
 			process_srcdir(d)
 
 	return overlay_dir

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.tw: Ethereum tracking wallet dependency classes for the MMGen suite
+altcoins.base_proto.ethereum.tw: Ethereum tracking wallet dependency classes
 """
 
 from ...addrdata import AddrData,TwAddrData

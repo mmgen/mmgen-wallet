@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.twaddrs: Ethereum tracking wallet listaddresses class for the MMGen suite
+altcoins.base_proto.ethereum.twaddrs: Ethereum tracking wallet listaddresses class
 """
 
 from ...twaddrs import TwAddrList

@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.twctl: Ethereum tracking wallet control class for the MMGen suite
+altcoins.base_proto.ethereum.twctl: Ethereum tracking wallet control class
 """
 
 from ...util import msg,ymsg,write_mode

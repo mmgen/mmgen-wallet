@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.twbal: Ethereum tracking wallet getbalance class for the MMGen suite
+altcoins.base_proto.ethereum.twbal: Ethereum tracking wallet getbalance class
 """
 
 from ...twctl import TrackingWallet

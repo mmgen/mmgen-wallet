@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.eth.twuo: Ethereum tracking wallet unspent outputs class for the MMGen suite
+altcoins.base_proto.ethereum.twuo: Ethereum tracking wallet unspent outputs class
 """
 
 from ...tw import TwLabel
