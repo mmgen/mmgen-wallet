@@ -20,7 +20,7 @@
 addrdata.py: MMGen AddrData and related classes
 """
 
-from .util import vmsg,altcoin_subclass
+from .util import vmsg,base_proto_subclass
 from .base_obj import AsyncInit
 from .obj import MMGenObject,MMGenDict,get_obj
 from .addr import MMGenID,AddrListID
@@ -37,7 +37,7 @@ re-import your addresses.
 	}
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw'))
 
 	def __init__(self,proto,*args,**kwargs):
 		self.al_ids = {}
@@ -80,7 +80,7 @@ re-import your addresses.
 class TwAddrData(AddrData,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,proto,'tw'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw'))
 
 	async def __init__(self,proto,wallet=None):
 		from .rpc import rpc_init

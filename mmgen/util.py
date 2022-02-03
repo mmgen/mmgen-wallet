@@ -672,7 +672,7 @@ def get_subclasses(cls,names=False):
 				yield j
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def altcoin_subclass(cls,proto,mod_dir):
+def base_proto_subclass(cls,proto,mod_dir):
 	"""
 	magic module loading and class retrieval
 	"""

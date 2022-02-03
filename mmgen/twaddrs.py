@@ -21,7 +21,7 @@ twaddrs: Tracking wallet listaddresses class for the MMGen suite
 """
 
 from .color import green
-from .util import msg,die,altcoin_subclass
+from .util import msg,die,base_proto_subclass
 from .base_obj import AsyncInit
 from .obj import MMGenList,MMGenDict,TwComment
 from .addr import CoinAddr,MMGenID
@@ -32,7 +32,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 	has_age = True
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenDict.__new__(altcoin_subclass(cls,proto,'twaddrs'),*args,**kwargs)
+		return MMGenDict.__new__(base_proto_subclass(cls,proto,'twaddrs'),*args,**kwargs)
 
 	async def __init__(self,proto,usr_addr_list,minconf,showempty,showbtcaddrs,all_labels,wallet=None):
 

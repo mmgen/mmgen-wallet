@@ -35,7 +35,7 @@ from .util import (
 	is_int,
 	fmt,
 	suf,
-	altcoin_subclass,
+	base_proto_subclass,
 	confirm_or_raise,
 	remove_dups,
 	get_extension,
@@ -353,14 +353,14 @@ class MMGenTX:
 
 		def __new__(cls,*args,**kwargs):
 			"""
-			determine correct protocol and pass the proto to altcoin_subclass(), which returns the
+			determine correct protocol and pass the proto to base_proto_subclass(), which returns the
 			transaction object
 			"""
 			assert args == (), f'MMGenTX.Base_chk1: only keyword args allowed in {cls.__name__} initializer'
 			if 'proto' in kwargs:
-				return MMGenObject.__new__(altcoin_subclass(cls,kwargs['proto'],'tx'))
+				return MMGenObject.__new__(base_proto_subclass(cls,kwargs['proto'],'tx'))
 			elif 'data' in kwargs:
-				return MMGenObject.__new__(altcoin_subclass(cls,kwargs['data']['proto'],'tx'))
+				return MMGenObject.__new__(base_proto_subclass(cls,kwargs['data']['proto'],'tx'))
 			elif 'filename' in kwargs:
 				from .txfile import MMGenTxFile
 				tmp_tx = MMGenObject.__new__(cls)
@@ -368,7 +368,7 @@ class MMGenTX:
 					infile        = kwargs['filename'],
 					quiet_open    = kwargs.get('quiet_open'),
 					metadata_only = True )
-				me = MMGenObject.__new__(altcoin_subclass(cls,tmp_tx.proto,'tx'))
+				me = MMGenObject.__new__(base_proto_subclass(cls,tmp_tx.proto,'tx'))
 				me.proto = tmp_tx.proto
 				return me
 			elif cls.__name__ == 'Base' and args == () and kwargs == {}: # allow instantiation of empty Base()

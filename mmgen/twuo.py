@@ -36,7 +36,7 @@ from .util import (
 	keypress_confirm,
 	line_input,
 	do_pager,
-	altcoin_subclass
+	base_proto_subclass
 )
 from .base_obj import AsyncInit
 from .objmethods import MMGenObject
@@ -48,7 +48,7 @@ from .tw import TwCommon,TwMMGenID,get_tw_label
 class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 
 	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(altcoin_subclass(cls,proto,'twuo'))
+		return MMGenObject.__new__(base_proto_subclass(cls,proto,'twuo'))
 
 	txid_w = 64
 	disp_type = 'btc'
