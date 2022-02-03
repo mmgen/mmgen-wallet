@@ -23,9 +23,10 @@ mmgen-addrgen: Generate a series or range of addresses from an MMGen
 
 from .common import *
 from .addr import MMGenAddrType
-from .addrlist import AddrList,KeyAddrList,KeyList,AddrIdxList
 from .addrfile import AddrFile
 from .wallet import Wallet
+
+import mmgen.addrlist
 
 if g.prog_name == 'mmgen-keygen':
 	gen_what = 'keys'
@@ -142,7 +143,7 @@ if opt.keygen_backend:
 	from .keygen import check_backend
 	check_backend( proto, opt.keygen_backend, opt.type )
 
-idxs = AddrIdxList(fmt_str=cmd_args.pop())
+idxs = mmgen.addrlist.AddrIdxList( fmt_str=cmd_args.pop() )
 
 from .fileutil import get_seed_file
 sf = get_seed_file(cmd_args,1)
@@ -156,7 +157,7 @@ ss_seed = ss.seed if opt.subwallet is None else ss.seed.subseed(opt.subwallet,pr
 if opt.no_addresses:
 	gen_clsname = 'KeyList'
 
-al = globals()[gen_clsname](
+al = getattr( mmgen.addrlist, gen_clsname )(
 	proto     = proto,
 	seed      = ss_seed,
 	addr_idxs = idxs,

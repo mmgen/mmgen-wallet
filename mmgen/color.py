@@ -74,6 +74,8 @@ def get_terminfo_colors(term=None):
 def init_color(num_colors='auto'):
 	assert num_colors in ('auto',8,16,256,0)
 
+	import mmgen.color as self
+
 	if num_colors == 'auto':
 		import os
 		t = os.getenv('TERM')
@@ -83,19 +85,19 @@ def init_color(num_colors='auto'):
 	if num_colors == 0:
 		ncc = (lambda s: s).__code__
 		for c in _colors:
-			globals()[c].__code__ = ncc
+			getattr(self,c).__code__ = ncc
 	elif num_colors == 256:
 		for c,e in _colors.items():
 			start = (
 				'\033[38;5;{};1m'.format(e[0]) if type(e[0]) == int else
 				'\033[38;5;{};48;5;{};1m'.format(*e[0]) )
-			globals()[c].__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+			getattr(self,c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
 	elif num_colors in (8,16):
 		for c,e in _colors.items():
 			start = (
 				'\033[{}m'.format(e[1][0]) if e[1][1] == 0 else
 				'\033[{};{}m'.format(*e[1]) )
-			globals()[c].__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
+			getattr(self,c).__code__ = eval(f'(lambda s: "{start}" + s + "{reset}").__code__')
 
 	set_vt100()
 

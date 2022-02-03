@@ -10,7 +10,7 @@ colortest.py:  test color handling for the MMGen suite
 import include.tests_header
 from include.common import *
 from mmgen.color import *
-from mmgen.color import _colors
+import mmgen.color as color_mod
 
 def test_color():
 
@@ -21,7 +21,7 @@ def test_color():
 			init_color(num_colors=nc)
 		msg('{:9}: {}'.format(
 			desc,
-			' '.join(globals()[c](c) for c in sorted(_colors)) ))
+			' '.join( getattr(color_mod,c)(c) for c in sorted(color_mod._colors) ) ))
 
 	init_color()
 	gmsg("\nParsed terminfo 'colors' values:")

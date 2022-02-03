@@ -22,6 +22,7 @@ opts_data = {
 cmd_args = opts.init(opts_data)
 
 from mmgen.term import get_char,get_char_raw,get_terminal_size
+import mmgen.term as term_mod
 
 def cmsg(m):
 	msg('\n'+cyan(m))
@@ -68,7 +69,7 @@ def tt_line_input():
 	confirm(f'Did you enter the text {reply!r}?')
 
 def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
-	fname = ('get_char','get_char_raw')[raw]
+	funcname = ('get_char','get_char_raw')[raw]
 	fs = fmt("""
 		Press some keys in quick succession.
 		{}{}{}
@@ -105,14 +106,14 @@ def tt_get_char(raw=False,one_char=False,sleep=0,immed_chars=''):
 		kwargs.update({'immed_chars':immed_chars})
 
 	cmsg('Testing {}({}):'.format(
-		fname,
+		funcname,
 		','.join(f'{a}={b!r}' for a,b in kwargs.items())
 	))
 	msg(fs.format( m1, yellow(m2), yellow(m3), yellow(m4) ))
 
 	try:
 		while True:
-			ret = globals()[fname]('Enter a letter: ',**kwargs)
+			ret = getattr( term_mod, funcname )('Enter a letter: ',**kwargs)
 			msg(f'You typed {ret!r}')
 	except KeyboardInterrupt:
 		msg('\nDone')

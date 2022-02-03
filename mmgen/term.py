@@ -238,7 +238,6 @@ def init_term():
 
 	term.init()
 
-	global get_char,get_char_raw,kb_hold_protect,get_terminal_size
-
+	import mmgen.term as self
 	for var in ('get_char','get_char_raw','kb_hold_protect','get_terminal_size'):
-		globals()[var] = getattr(term,var)
+		setattr( self, var, getattr(term,var) )

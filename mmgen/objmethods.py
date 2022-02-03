@@ -21,9 +21,9 @@ objmethods.py: Mixin classes for MMGen data objects
 """
 
 import unicodedata
-from .color import *
 from .globalvars import g
 from .devtools import *
+import mmgen.color as color_mod
 
 def truncate_str(s,width): # width = screen width
 	wide_count = 0
@@ -81,7 +81,7 @@ class Hilite:
 
 	@classmethod
 	def colorize(cls,s,color=True,color_override=''):
-		return globals()[color_override or cls.color](s) if color else s
+		return getattr( color_mod, color_override or cls.color )(s) if color else s
 
 	def fmt(self,*args,**kwargs):
 		assert args == () # forbid invocation w/o keywords

@@ -64,11 +64,12 @@ if 'all' in cmd_args or 'no_xmr' in cmd_args:
 	if len(cmd_args) != 1:
 		die(1,"'all' or 'no_xmr' must be the sole argument")
 	from mmgen.protocol import init_proto
+	import mmgen.daemon as daemon_mod
 	for coin,data in CoinDaemon.coins.items():
 		if coin == 'XMR' and cmd_args[0] == 'no_xmr':
 			continue
 		for daemon_id in data.daemon_ids:
-			for network in globals()[daemon_id+'_daemon'].networks:
+			for network in getattr( daemon_mod, daemon_id+'_daemon' ).networks:
 				run(proto=init_proto(coin=coin,network=network),daemon_id=daemon_id)
 else:
 	ids = cmd_args

@@ -338,9 +338,10 @@ class CoinDaemon(Daemon):
 	@classmethod
 	def get_network_ids(cls): # FIXME: gets IDs for _default_ daemon only
 		from .protocol import CoinProtocol
+		import mmgen.daemon as daemon_mod
 		def gen():
 			for coin,data in cls.coins.items():
-				for network in globals()[data.daemon_ids[0]+'_daemon'].networks:
+				for network in getattr( daemon_mod, data.daemon_ids[0]+'_daemon' ).networks:
 					yield CoinProtocol.Base.create_network_id(coin,network)
 		return list(gen())
 
@@ -375,7 +376,9 @@ class CoinDaemon(Daemon):
 		if daemon_id not in daemon_ids:
 			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
 
-		me = Daemon.__new__(globals()[daemon_id + '_daemon'])
+		import mmgen.daemon
+		me = Daemon.__new__( getattr(mmgen.daemon, daemon_id+'_daemon') )
+
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network = network
 		me.coin = coin

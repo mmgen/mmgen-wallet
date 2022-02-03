@@ -26,6 +26,8 @@ from .color import *
 from .globalvars import g
 from .opts import opt
 
+import mmgen.color as color_mod
+
 ascii_lowercase = 'abcdefghijklmnopqrstuvwxyz'
 
 hexdigits = '0123456789abcdefABCDEF'
@@ -504,7 +506,7 @@ class oneshot_warning:
 
 		def do_warning():
 			message = getattr(wcls,'message')
-			color = globals()[getattr(wcls,'color')]
+			color = getattr( color_mod, getattr(wcls,'color') )
 			msg(color('WARNING: ' + message.format(*fmt_args)))
 
 		if not hasattr(wcls,'data'):

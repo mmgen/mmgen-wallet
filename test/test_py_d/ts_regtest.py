@@ -267,8 +267,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			die(2,'--testnet and --regtest options incompatible with regtest test suite')
 		self.proto = init_proto(self.proto.coin,network='regtest',need_amt=True)
 		coin = self.proto.coin.lower()
+
+		import test.test_py_d.ts_regtest as rt_mod
 		for k in rt_data:
-			globals()[k] = rt_data[k][coin] if coin in rt_data[k] else None
+			setattr( rt_mod, k, rt_data[k][coin] if coin in rt_data[k] else None )
 
 		if self.proto.coin == 'BTC':
 			self.test_rbf = True # tests are non-coin-dependent, so run just once for BTC

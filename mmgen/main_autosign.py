@@ -388,7 +388,7 @@ if len(cmd_args) not in (0,1):
 if len(cmd_args) == 1:
 	cmd = cmd_args[0]
 	if cmd in ('gen_key','setup'):
-		globals()[cmd]()
+		(gen_key if cmd == 'gen_key' else setup)()
 		sys.exit(0)
 	elif cmd != 'wait':
 		die(1,f'{cmd!r}: unrecognized command')

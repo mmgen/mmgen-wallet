@@ -222,7 +222,8 @@ def mn_entry(wl_id,entry_mode=None):
 	me.wl = me.bconv.digits
 	obj = me()
 	if entry_mode:
-		obj.em = globals()['MnEntryMode'+capfirst(entry_mode)](obj)
+		import mmgen.mn_entry
+		obj.em = getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )(obj)
 	return obj
 
 class MnemonicEntry(object):
@@ -306,7 +307,8 @@ class MnemonicEntry(object):
 				lo = idx + 1
 
 	def get_cls_by_entry_mode(self,entry_mode):
-		return globals()['MnEntryMode'+capfirst(entry_mode)]
+		import mmgen.mn_entry
+		return getattr( mmgen.mn_entry, 'MnEntryMode'+capfirst(entry_mode) )
 
 	def choose_entry_mode(self):
 		msg('Choose an entry mode:\n')
