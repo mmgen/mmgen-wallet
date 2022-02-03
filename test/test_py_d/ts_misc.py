@@ -69,16 +69,15 @@ class TestSuiteHelp(TestSuiteBase):
 
 	def helpscreens(self,arg='--help',scripts=(),expect='USAGE:.*OPTIONS:'):
 
-		scripts = scripts or tuple(s.replace('mmgen-','') for s in os.listdir('cmds'))
+		scripts = list(scripts) or [s.replace('mmgen-','') for s in os.listdir('cmds')]
 
-		if self.test_name.endswith('helpscreens'):
-			skip = (
-				['regtest','xmrwallet'] if self.proto.base_coin == 'ETH' else
-				['regtest'] if self.proto.base_coin == 'XMR' else
-				[] )
-			scripts = sorted( set(scripts) - set(skip) )
+		if 'tx' not in self.proto.mmcaps:
+			scripts = [s for s in scripts if not (s == 'regtest' or s.startswith('tx'))]
 
-		for s in scripts:
+		if self.proto.coin not in ('BTC','XMR') and 'xmrwallet' in scripts:
+			scripts.remove('xmrwallet')
+
+		for s in sorted(scripts):
 			t = self.spawn(f'mmgen-{s}',[arg],extra_desc=f'(mmgen-{s})')
 			t.expect(expect,regex=True)
 			t.read()

@@ -240,16 +240,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 
 	@write_mode
 	async def set_label(self,coinaddr,lbl):
-		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
-		# broken behavior: new label is set OK, but old label gets attached to another address
-		if 'label_api' in self.rpc.caps and self.proto.coin != 'BCH':
-			args = ('setlabel',coinaddr,lbl)
-		else:
-			# NOTE: this works because importaddress() removes the old account before
-			# associating the new account with the address.
-			# RPC args: addr,label,rescan[=true],p2sh[=none]
-			args = ('importaddress',coinaddr,lbl,False)
-
+		args = self.rpc.daemon.set_label_args( self.rpc, coinaddr, lbl )
 		try:
 			return await self.rpc.call(*args)
 		except Exception as e:

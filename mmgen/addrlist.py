@@ -20,7 +20,7 @@
 addrlist.py: Address list classes for the MMGen suite
 """
 
-from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg
+from .util import qmsg,qmsg_r,suf,make_chksum_N,Msg,die
 from .objmethods import MMGenObject,Hilite,InitErrors
 from .obj import MMGenListItem,ListItemAttr,MMGenDict,TwComment,WalletPassword
 from .key import PrivKey

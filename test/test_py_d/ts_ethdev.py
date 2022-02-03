@@ -842,7 +842,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		usr_addrs = [tool_cmd(cmdname='gen_addr',proto=self.proto).gen_addr(addr,dfl_words_file) for addr in usr_mmaddrs]
 
 		from mmgen.base_proto.ethereum.contract import TokenResolve
-		from mmgen.base_proto.ethereum.tx import EthereumMMGenTX as etx
 		async def do_transfer(rpc):
 			for i in range(2):
 				tk = await TokenResolve(

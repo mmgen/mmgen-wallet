@@ -74,15 +74,18 @@ import sys,os,time
 
 from include.tests_header import repo_root
 from test.overlay import get_overlay_dir,overlay_setup
+
 overlay_dir = get_overlay_dir(repo_root)
 sys.path.insert(0,overlay_dir)
 
-try: os.unlink(os.path.join(repo_root,'my.err'))
-except: pass
+if not (len(sys.argv) == 2 and sys.argv[1] == 'clean'):
+	'hack: overlay must be set up before mmgen mods are imported'
+	overlay_setup(repo_root)
 
 from mmgen.common import *
-from test.include.common import *
-from test.test_py_d.common import *
+
+try: os.unlink(os.path.join(repo_root,'my.err'))
+except: pass
 
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts
@@ -92,7 +95,7 @@ opts_data = {
 	'text': {
 		'desc': 'Test suite for the MMGen suite',
 		'usage':'[options] [command(s) or metacommand(s)]',
-		'options': f"""
+		'options': """
 -h, --help           Print this help message
 --, --longhelp       Print help message for long options (common options)
 -A, --no-daemon-autostart Don't start and stop daemons automatically
@@ -112,7 +115,7 @@ opts_data = {
 -g, --list-current-cmd-groups List command groups for current configuration
 -n, --names          Display command names instead of descriptions
 -N, --no-timings     Suppress display of timing information
--o, --log            Log commands to file {log_file!r}
+-o, --log            Log commands to file {lf!r}
 -O, --pexpect-spawn  Use pexpect.spawn instead of popen_spawn (much slower,
                      kut does real terminal emulation)
 -p, --pause          Pause between tests, resuming on keypress
@@ -136,15 +139,23 @@ opts_data = {
 If no command is given, the whole test suite is run.
 """
 	},
+	'code': {
+		'options': lambda proto,help_notes,s: s.format(
+				lf = help_notes('test_py_log_file')
+			)
+	}
 }
+
+# we need some opt values before running opts.init, so parse without initializing:
+po = opts.init(opts_data,parse_only=True)
+
+from test.include.common import *
+from test.test_py_d.common import *
 
 data_dir = get_data_dir() # include/common.py
 
-# we need some opt values before running opts.init, so parse without initializing:
-_uopts = opts.init(opts_data,parse_only=True).user_opts
-
 # step 1: delete data_dir symlink in ./test;
-if not ('resume' in _uopts or 'skip_deps' in _uopts):
+if not ('resume' in po.user_opts or 'skip_deps' in po.user_opts):
 	try: os.unlink(data_dir)
 	except: pass
 
@@ -773,7 +784,8 @@ class TestSuiteRunner(object):
 			start_test_daemons(network_id,remove_datadir=True)
 			self.daemons_started = True
 
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test group doesn't have to
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = '' # zero this here, so test groups don't have to
+
 		self.ts = self.gm.gm_init_group(self,gname,self.spawn_wrapper)
 		self.ts_clsname = type(self.ts).__name__
 
@@ -796,7 +808,6 @@ class TestSuiteRunner(object):
 		self.start_time = time.time()
 		self.daemons_started = False
 		gname_save = None
-		overlay_setup(repo_root)
 		if usr_args:
 			for arg in usr_args:
 				if arg in self.gm.cmd_groups:

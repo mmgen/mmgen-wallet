@@ -67,6 +67,10 @@ class CoinProtocol(MMGenObject):
 				'regtest': '_rt',
 			}[network]
 
+			if 'tx' not in self.mmcaps and g.is_txprog:
+				from .util import die
+				die(1,f'Command {g.prog_name!r} not supported for coin {self.coin}')
+
 			if hasattr(self,'chain_names'):
 				self.chain_name = self.chain_names[0] # first chain name is default
 			else:

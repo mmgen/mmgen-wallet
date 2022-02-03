@@ -42,7 +42,7 @@ opts_data = {
 -d, --outdir=        d Specify an alternate directory 'd' for output
 -e, --echo-passphrase  Print passphrase to screen when typing it
 -f, --tx-fee=        f Transaction fee, as a decimal {cu} amount or as
-                       {fu} (an integer followed by {fl}).
+                       {fu} (an integer followed by {fl!r}).
                        See FEE SPECIFICATION below.
 -H, --hidden-incog-input-params=f,o  Read hidden incognito data from file
                       'f' at offset 'o' (comma-separated)

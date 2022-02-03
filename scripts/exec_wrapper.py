@@ -92,9 +92,8 @@ exec_wrapper_tracemalloc_setup()
 try:
 	sys.argv.pop(0)
 	exec_wrapper_execed_file = sys.argv[0]
-	with open(sys.argv[0]) as fp:
-		text = fp.read()
-	exec(text)
+	with open(exec_wrapper_execed_file) as fp:
+		exec(fp.read())
 except SystemExit as e:
 	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		exec_wrapper_write_traceback()

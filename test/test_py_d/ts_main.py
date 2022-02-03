@@ -197,6 +197,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			self.tx_fee     = {'btc':'0.0001','bch':'0.001','ltc':'0.01'}[self.proto.coin.lower()]
 			self.txbump_fee = {'btc':'123s','bch':'567s','ltc':'12345s'}[self.proto.coin.lower()]
 
+		self.unspent_data_file = joinpath('test','trash','unspent.json')
+		os.environ['MMGEN_BOGUS_WALLET_DATA'] = self.unspent_data_file
+
 	def _get_addrfile_checksum(self,display=False):
 		addrfile = self.get_file_with_ext('addrs')
 		silence()
@@ -327,16 +330,9 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf,wcls=wcls,dfl_wallet=dfl_wallet)
 
 	def _write_fake_data_to_file(self,d):
-		unspent_data_file = joinpath(self.tmpdir,'unspent.json')
-		write_data_to_file(unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
-		os.environ['MMGEN_BOGUS_WALLET_DATA'] = unspent_data_file
-		bwd_msg = f'MMGEN_BOGUS_WALLET_DATA={unspent_data_file}'
-		if opt.print_cmdline:
-			msg(bwd_msg)
-		if opt.log:
-			self.tr.log_fd.write(bwd_msg + ' ')
+		write_data_to_file(self.unspent_data_file,d,'Unspent outputs',quiet=True,ignore_opt_outdir=True)
 		if opt.verbose or opt.exact_output:
-			sys.stderr.write(f'Fake transaction wallet data written to file {unspent_data_file!r}\n')
+			sys.stderr.write(f'Fake transaction wallet data written to file {self.unspent_data_file!r}\n')
 
 	def _create_fake_unspent_entry(self,coinaddr,al_id=None,idx=None,lbl=None,non_mmgen=False,segwit=False):
 		if 'S' not in self.proto.mmtypes: segwit = False

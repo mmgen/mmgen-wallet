@@ -17,12 +17,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.base_proto.ethereum.contract: Ethereum contract and token classes
+altcoins.base_proto.ethereum.contract: Ethereum ERC20 token classes
 """
 
 from decimal import Decimal
 from . import rlp
 
+from . import erigon_sleep
 from ...util import msg,pp_msg
 from ...globalvars import g
 from ...base_obj import AsyncInit
@@ -33,7 +34,7 @@ from ...amt import ETHAmt
 def parse_abi(s):
 	return [s[:8]] + [s[8+x*64:8+(x+1)*64] for x in range(len(s[8:])//64)]
 
-class TokenBase(MMGenObject): # ERC20
+class TokenCommon(MMGenObject):
 
 	def create_method_id(self,sig):
 		return self.keccak_256(sig.encode()).hexdigest()[:8]
@@ -51,9 +52,7 @@ class TokenBase(MMGenObject): # ERC20
 				method_sig,
 				'\n  '.join(parse_abi(data)) ))
 		ret = await self.rpc.call('eth_call',{ 'to': '0x'+self.addr, 'data': '0x'+data },'pending')
-		if self.proto.network == 'regtest' and g.daemon_id == 'erigon': # ERIGON
-			import asyncio
-			await asyncio.sleep(5)
+		await erigon_sleep(self)
 		if toUnit:
 			return int(ret,16) * self.base_unit
 		else:
@@ -119,21 +118,25 @@ class TokenBase(MMGenObject): # ERC20
 			chain_id = None if res == None else int(res,16)
 
 		tx = Transaction(**tx_in).sign(key,chain_id)
-		hex_tx = rlp.encode(tx).hex()
-		coin_txid = CoinTxID(tx.hash.hex())
+
 		if tx.sender.hex() != from_addr:
 			die(3,f'Sender address {from_addr!r} does not match address of key {tx.sender.hex()!r}!')
+
 		if g.debug:
 			msg('TOKEN DATA:')
 			pp_msg(tx.to_dict())
 			msg('PARSED ABI DATA:\n  {}'.format(
 				'\n  '.join(parse_abi(tx.data.hex())) ))
-		return hex_tx,coin_txid
+
+		return (
+			rlp.encode(tx).hex(),
+			CoinTxID(tx.hash.hex())
+		)
 
 # The following are used for token deployment only:
 
-	async def txsend(self,hex_tx):
-		return (await self.rpc.call('eth_sendRawTransaction','0x'+hex_tx)).replace('0x','',1)
+	async def txsend(self,txhex):
+		return (await self.rpc.call('eth_sendRawTransaction','0x'+txhex)).replace('0x','',1)
 
 	async def transfer(   self,from_addr,to_addr,amt,key,start_gas,gasPrice,
 					method_sig='transfer(address,uint256)',
@@ -145,10 +148,10 @@ class TokenBase(MMGenObject): # ERC20
 					nonce = int(await self.rpc.call('eth_getTransactionCount','0x'+from_addr,'pending'),16),
 					method_sig = method_sig,
 					from_addr2 = from_addr2 )
-		(hex_tx,coin_txid) = await self.txsign(tx_in,key,from_addr)
-		return await self.txsend(hex_tx)
+		(txhex,coin_txid) = await self.txsign(tx_in,key,from_addr)
+		return await self.txsend(txhex)
 
-class Token(TokenBase):
+class Token(TokenCommon):
 
 	def __init__(self,proto,addr,decimals,rpc=None):
 		if type(self).__name__ == 'Token':
@@ -161,7 +164,7 @@ class Token(TokenBase):
 		self.base_unit = Decimal('10') ** -self.decimals
 		self.rpc = rpc
 
-class TokenResolve(TokenBase,metaclass=AsyncInit):
+class TokenResolve(TokenCommon,metaclass=AsyncInit):
 
 	async def __init__(self,proto,rpc,addr):
 		from ...util import get_keccak

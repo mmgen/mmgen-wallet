@@ -303,6 +303,7 @@ class RPCClient(MMGenObject):
 			try:
 				socket.create_connection((host,port),timeout=1).close()
 			except:
+				from .exception import SocketError
 				raise SocketError(f'Unable to connect to {host}:{port}')
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
@@ -552,7 +553,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 		fn = self.get_daemon_cfg_fn()
 		try:
-			lines = get_lines_from_file(fn,'',silent=not opt.verbose)
+			lines = get_lines_from_file(fn,'daemon config file',silent=not opt.verbose)
 		except:
 			vmsg(f'Warning: {fn!r} does not exist or is unreadable')
 			return dict((k,None) for k in req_keys)
@@ -571,7 +572,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 
 	def get_daemon_auth_cookie(self):
 		fn = self.get_daemon_auth_cookie_fn()
-		return get_lines_from_file(fn,'')[0] if os.access(fn,os.R_OK) else ''
+		return get_lines_from_file(fn,'cookie',quiet=True)[0] if os.access(fn,os.R_OK) else ''
 
 	@staticmethod
 	def make_host_path(wallet):

@@ -6,6 +6,7 @@ if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 	add_user_random_orig = add_user_random
 
 	import sys
+	from hashlib import sha256
 	fake_rand_h = sha256('.'.join(sys.argv).encode())
 
 	def fake_urandom(n):

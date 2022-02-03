@@ -276,7 +276,7 @@ def get_words_from_file(infile,desc,quiet=False):
 def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,quiet=False):
 
 	from .opts import opt
-	if not opt.quiet and not silent and not quiet and desc:
+	if not (opt.quiet or silent or quiet):
 		qmsg(f'Getting {desc} from file {infile!r}')
 
 	with _open_or_die(
@@ -294,8 +294,8 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 
 	return data
 
-def _mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
-	d = get_data_from_file(fn,desc,binary=True,quiet=quiet,silent=silent)
+def _mmgen_decrypt_file_maybe(fn,desc='data',quiet=False,silent=False):
+	d = get_data_from_file(fn,desc=desc,binary=True,quiet=quiet,silent=silent)
 	from .crypto import mmenc_ext
 	have_enc_ext = get_extension(fn) == mmenc_ext
 	if have_enc_ext or not is_utf8(d):
@@ -305,8 +305,8 @@ def _mmgen_decrypt_file_maybe(fn,desc='',quiet=False,silent=False):
 		d = mmgen_decrypt_retry(d,desc)
 	return d
 
-def get_lines_from_file(fn,desc='',trim_comments=False,quiet=False,silent=False):
-	dec = _mmgen_decrypt_file_maybe(fn,desc,quiet=quiet,silent=silent)
+def get_lines_from_file(fn,desc='data',trim_comments=False,quiet=False,silent=False):
+	dec = _mmgen_decrypt_file_maybe(fn,desc=desc,quiet=quiet,silent=silent)
 	ret = dec.decode().splitlines()
 	if trim_comments:
 		ret = strip_comments(ret)

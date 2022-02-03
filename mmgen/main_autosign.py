@@ -25,6 +25,7 @@ from subprocess import run,PIPE,DEVNULL
 from stat import *
 
 from .common import *
+from .color import red
 
 mountpoint   = '/mnt/tx'
 tx_dir       = '/mnt/tx/tx'
@@ -232,8 +233,9 @@ async def sign():
 		if signed_txs and not opt.no_summary:
 			print_summary(signed_txs)
 		if fails:
-			rmsg('\nFailed transactions:')
-			rmsg('  ' + '\n  '.join(sorted(fails)) + '\n')
+			msg('')
+			rmsg('Failed transactions:')
+			msg('  ' + '\n  '.join(red(s) for s in sorted(fails)) + '\n') # avoid the 'less' NL color bug
 		return False if fails else True
 	else:
 		msg('No unsigned transactions')

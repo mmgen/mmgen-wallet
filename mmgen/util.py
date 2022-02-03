@@ -164,7 +164,7 @@ def fmt(s,indent='',strip_char=None):
 	"de-indent multiple lines of text, or indent with specified string"
 	return indent + ('\n'+indent).join([l.strip(strip_char) for l in s.strip().splitlines()]) + '\n'
 
-def fmt_list(l,fmt='dfl',indent=''):
+def fmt_list(iterable,fmt='dfl',indent=''):
 	"pretty-format a list"
 	sep,lq,rq = {
 		'utf8':      ("“, ”",      "“",    "”"),
@@ -175,7 +175,7 @@ def fmt_list(l,fmt='dfl',indent=''):
 		'min':       (",",         "'",    "'"),
 		'col':       ('\n'+indent, indent, '' ),
 	}[fmt]
-	return lq + sep.join(l) + rq
+	return lq + sep.join(iterable) + rq
 
 def list_gen(*data):
 	"""
@@ -354,24 +354,22 @@ def capfirst(s): # different from str.capitalize() - doesn't downcase any uc in 
 def decode_timestamp(s):
 #	tz_save = open('/etc/timezone').read().rstrip()
 	os.environ['TZ'] = 'UTC'
-	ts = time.strptime(s,'%Y%m%d_%H%M%S')
-	t = time.mktime(ts)
 #	os.environ['TZ'] = tz_save
-	return int(t)
+	return int(time.mktime( time.strptime(s,'%Y%m%d_%H%M%S') ))
 
 def make_timestamp(secs=None):
-	t = int(secs) if secs else time.time()
-	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*time.gmtime(t)[:6])
+	return '{:04d}{:02d}{:02d}_{:02d}{:02d}{:02d}'.format(*time.gmtime(
+		int(secs) if secs else time.time() )[:6])
 
 def make_timestr(secs=None):
-	t = int(secs) if secs else time.time()
-	return '{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(*time.gmtime(t)[:6])
+	return '{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}'.format(*time.gmtime(
+		int(secs) if secs else time.time() )[:6])
 
 def secs_to_dhms(secs):
-	dsecs = secs // 3600
+	hrs = secs // 3600
 	return '{}{:02d}:{:02d}:{:02d} h/m/s'.format(
-		('{} day{}, '.format(dsecs//24,suf(dsecs//24)) if dsecs > 24 else ''),
-		dsecs % 24,
+		('{} day{}, '.format(hrs//24,suf(hrs//24)) if hrs > 24 else ''),
+		hrs % 24,
 		(secs // 60) % 60,
 		secs % 60
 	)

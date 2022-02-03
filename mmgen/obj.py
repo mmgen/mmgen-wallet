@@ -173,6 +173,7 @@ class MMGenListItem(MMGenObject):
 	valid_attrs = set()
 	valid_attrs_extra = set()
 	invalid_attrs = {
+		'print_stack_trace',
 		'pfmt',
 		'pmsg',
 		'pdie',

@@ -49,12 +49,17 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 
 	class MMGenObject(object):
 
+		def print_stack_trace(self,*args,**kwargs):
+			print_stack_trace(*args,**kwargs)
+
 		# Pretty-print any object subclassed from MMGenObject, recursing into sub-objects - WIP
 		def pmsg(self):
 			print(self.pfmt())
+
 		def pdie(self):
 			print(self.pfmt())
 			sys.exit(1)
+
 		def pfmt(self,lvl=0,id_list=[]):
 			scalars = (str,int,float,Decimal)
 			def do_list(out,e,lvl=0,is_dict=False):

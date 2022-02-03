@@ -87,7 +87,7 @@ class MMGenTxFile:
 					tx.label = MMGenTxLabel(comment)
 
 			desc = 'number of lines' # four required lines
-			metadata,tx.hex,inputs_data,outputs_data = tx_data
+			( metadata, tx.serialized, inputs_data, outputs_data ) = tx_data
 			assert len(metadata) < 100,'invalid metadata length' # rough check
 			metadata = metadata.split()
 
@@ -123,7 +123,7 @@ class MMGenTxFile:
 
 			desc = 'transaction file hex data'
 			tx.check_txfile_hex_data()
-			desc = 'Ethereum transaction file hex or json data'
+			desc = 'Ethereum RLP or JSON data'
 			tx.parse_txfile_hex_data()
 			desc = 'inputs data'
 			tx.inputs  = eval_io_data(inputs_data,'inputs')

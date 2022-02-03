@@ -28,6 +28,7 @@ import sys,os,re
 from collections import namedtuple
 
 from .globalvars import *
+from .exception import CfgFileParseError
 from .util import *
 
 def cfg_file(id_str):
@@ -192,17 +193,7 @@ class CfgFileSampleSys(CfgFileSample):
 		else:
 			# self.fn is used for error msgs only, so file need not exist on filesystem
 			self.fn = os.path.join(os.path.dirname(__file__),'data',self.fn_base)
-			# Resource will be unpacked and then cleaned up if necessary, see:
-			#    https://docs.python.org/3/library/importlib.html:
-			#        Note: This module provides functionality similar to pkg_resources Basic
-			#        Resource Access without the performance overhead of that package.
-			#    https://importlib-resources.readthedocs.io/en/latest/migration.html
-			#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
-			try:
-				from importlib.resources import files # Python 3.9
-			except ImportError:
-				from importlib_resources import files
-			self.data = files('mmgen').joinpath('data',self.fn_base).read_text().splitlines()
+			self.data = g.get_mmgen_data_file(self.fn_base).splitlines()
 
 	def make_metadata(self):
 		return [f'# Version {self.cur_ver} {self.computed_chksum}']

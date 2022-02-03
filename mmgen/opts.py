@@ -21,7 +21,7 @@ opts.py:  MMGen-specific options processing after generic processing by share.Op
 """
 import sys,os,stat
 
-from .exception import UserOptError
+from .exception import UserOptError,CfgFileParseError
 from .globalvars import g
 from .base_obj import Lockable
 
@@ -418,37 +418,6 @@ def init(
 	opt.lock()
 
 	return po.cmd_args
-
-# DISABLED
-def opt_is_tx_fee(key,val,desc): # 'key' must remain a placeholder
-
-	# contract data or non-standard startgas: disable fee checking
-	if hasattr(opt,'contract_data') and opt.contract_data:
-		return
-	if hasattr(opt,'tx_gas') and opt.tx_gas:
-		return
-
-	from .tx import MMGenTX
-	from .protocol import init_proto_from_opts
-	tx = MMGenTX.New(init_proto_from_opts())
-	# Size of 224 is just a ball-park figure to eliminate the most extreme cases at startup
-	# This check will be performed again once we know the true size
-	ret = tx.feespec2abs(val,224)
-
-	if ret == False:
-		raise UserOptError('{!r}: invalid {}\n(not a {} amount or {} specification)'.format(
-			val,
-			desc,
-			tx.proto.coin.upper(),
-			tx.rel_fee_desc ))
-
-	if ret > tx.proto.max_tx_fee:
-		raise UserOptError('{!r}: invalid {}\n({} > max_tx_fee ({} {}))'.format(
-			val,
-			desc,
-			ret.fmt(fs='1.1'),
-			tx.proto.max_tx_fee,
-			tx.proto.coin.upper() ))
 
 def check_usr_opts(usr_opts): # Raises an exception if any check fails
 

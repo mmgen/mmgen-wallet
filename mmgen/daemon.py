@@ -586,6 +586,15 @@ class bitcoin_core_daemon(CoinDaemon):
 	def stop_cmd(self):
 		return self.cli_cmd('stop')
 
+	def set_label_args(self,rpc,coinaddr,lbl):
+		if 'label_api' in rpc.caps:
+			return ('setlabel',coinaddr,lbl)
+		else:
+			# NOTE: this works because importaddress() removes the old account before
+			# associating the new account with the address.
+			# RPC args: addr,label,rescan[=true],p2sh[=none]
+			return ('importaddress',coinaddr,lbl,False)
+
 class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Bitcoin Cash Node', 24000000, '24.0.0')
 	exec_fn = 'bitcoind-bchn'
@@ -597,6 +606,11 @@ class bitcoin_cash_node_daemon(bitcoin_core_daemon):
 	}
 	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
 	nonstd_datadir = True
+
+	def set_label_args(self,rpc,coinaddr,lbl):
+		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
+		# Broken behavior: new label is set OK, but old label gets attached to another address
+		return ('importaddress',coinaddr,lbl,False)
 
 class litecoin_core_daemon(bitcoin_core_daemon):
 	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')

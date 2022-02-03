@@ -53,6 +53,8 @@ class GlobalContext(Lockable):
 	email     = '<mmgen@tuta.io>'
 	Cdates    = '2013-2022'
 
+	is_txprog = prog_name == 'mmgen-regtest' or prog_name.startswith('mmgen-tx')
+
 	stdin_tty = sys.stdin.isatty()
 	stdout = sys.stdout
 	stderr = sys.stderr
@@ -311,24 +313,28 @@ class GlobalContext(Lockable):
 			if name[:11] == 'MMGEN_DEBUG':
 				os.environ[name] = '1'
 
-	def _get_importlib_resources_files(self):
+	def get_mmgen_data_file(self,filename):
 		"""
 		this is an expensive import, so do only when required
 		"""
+		# Resource will be unpacked and then cleaned up if necessary, see:
+		#    https://docs.python.org/3/library/importlib.html:
+		#        Note: This module provides functionality similar to pkg_resources Basic
+		#        Resource Access without the performance overhead of that package.
+		#    https://importlib-resources.readthedocs.io/en/latest/migration.html
+		#    https://setuptools.readthedocs.io/en/latest/pkg_resources.html
 		try:
 			from importlib.resources import files # Python 3.9
 		except ImportError:
 			from importlib_resources import files
-		return files
+		return files('mmgen').joinpath('data',filename).read_text()
 
 	@property
 	def version(self):
-		files = self._get_importlib_resources_files()
-		return files('mmgen').joinpath('data','version').read_text().strip()
+		return self.get_mmgen_data_file('version').strip()
 
 	@property
 	def release_date(self):
-		files = self._get_importlib_resources_files()
-		return files('mmgen').joinpath('data','release_date').read_text().strip()
+		return self.get_mmgen_data_file('release_date').strip()
 
 g = GlobalContext()
