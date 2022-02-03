@@ -21,6 +21,7 @@ class TestSuiteInput(TestSuiteBase):
 	tmpdir_nums = []
 	color = True
 	cmd_group = (
+		('get_seed_from_stdin',           (1,'reading seed phrase from STDIN', [])),
 		('get_passphrase_ui',             (1,"hash preset, password and label (wallet.py)", [])),
 		('get_passphrase_cmdline',        (1,"hash preset, password and label (wallet.py - from cmdline)", [])),
 		('get_passphrase_crypto',         (1,"hash preset, password and label (crypto.py)", [])),
@@ -40,6 +41,18 @@ class TestSuiteInput(TestSuiteBase):
 		('dieroll_entry',                 (1,"dieroll entry (base6d)", [])),
 		('dieroll_entry_usrrand',         (1,"dieroll entry (base6d) with added user entropy", [])),
 	)
+
+	def get_seed_from_stdin(self):
+		self.spawn('',msg_only=True)
+		from subprocess import run,PIPE
+		cmd = ['cmds/mmgen-walletconv','--in-fmt=words','--out-fmt=bip39','--outdir=test/trash']
+		mn = sample_mn['mmgen']['mn']
+		os.environ['MMGEN_TEST_SUITE'] = ''
+		cp = run( cmd, input=mn.encode(), stdout=PIPE, stderr=PIPE )
+		os.environ['MMGEN_TEST_SUITE'] = '1'
+		assert b'written to file' in cp.stderr, "test 'get_seed_from_stdin' failed"
+		imsg(cp.stderr.decode().strip())
+		return 'ok'
 
 	def get_passphrase_ui(self):
 		t = self.spawn('test/misc/get_passphrase.py',['--usr-randchars=0','seed'],cmd_dir='.')
