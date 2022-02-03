@@ -31,8 +31,6 @@ parsed_addr = namedtuple('parsed_addr',['bytes','fmt'])
 _finfo = namedtuple('fork_info',['height','hash','name','replayable'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
-_b58a='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz' # shared by Bitcoin and Monero
-
 class CoinProtocol(MMGenObject):
 
 	proto_info = namedtuple('proto_info',['name','trust_level']) # trust levels: see altcoin.py

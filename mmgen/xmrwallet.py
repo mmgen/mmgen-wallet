@@ -26,7 +26,8 @@ from .common import *
 from .objmethods import Hilite,InitErrors
 from .obj import CoinTxID
 from .seed import SeedID
-from .protocol import init_proto,_b58a
+from .protocol import init_proto
+from .proto.common import b58a
 from .addr import CoinAddr,AddrIdx
 from .addrlist import KeyAddrList,AddrIdxList
 from .rpc import MoneroRPCClientRaw,MoneroWalletRPCClient,json_encoder
@@ -36,7 +37,7 @@ xmrwallet_uarg_info = (
 	lambda e,hp: {
 		'daemon':          e('HOST:PORT', hp),
 		'tx_relay_daemon': e('HOST:PORT[:PROXY_HOST:PROXY_PORT]', rf'({hp})(?::({hp}))?'),
-		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{_b58a}]+),([0-9.]+)'),
+		'transfer_spec':   e('SOURCE_WALLET_NUM:ACCOUNT:ADDRESS,AMOUNT', rf'(\d+):(\d+):([{b58a}]+),([0-9.]+)'),
 		'sweep_spec':      e('SOURCE_WALLET_NUM:ACCOUNT[,DEST_WALLET_NUM]', r'(\d+):(\d+)(?:,(\d+))?'),
 	})(
 		namedtuple('uarg_info_entry',['annot','pat']),

@@ -20,7 +20,7 @@
 addrgen.py: Address and view key generation classes for the MMGen suite
 """
 
-from .proto.btc import hash160,_b58chk_encode
+from .proto.common import hash160,b58chk_encode
 from .addr import CoinAddr,MMGenAddrType,MoneroViewKey,ZcashViewKey
 
 # decorator for to_addr() and to_viewkey()
@@ -118,14 +118,14 @@ class addr_generator:
 
 		@check_data
 		def to_addr(self,data):
-			ret = _b58chk_encode(
+			ret = b58chk_encode(
 				self.proto.addr_fmt_to_ver_bytes('zcash_z')
 				+ data.pubkey )
 			return CoinAddr( self.proto, ret )
 
 		@check_data
 		def to_viewkey(self,data):
-			ret = _b58chk_encode(
+			ret = b58chk_encode(
 				self.proto.addr_fmt_to_ver_bytes('viewkey')
 				+ data.viewkey_bytes )
 			return ZcashViewKey( self.proto, ret )

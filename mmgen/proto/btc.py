@@ -12,38 +12,8 @@
 Bitcoin protocol
 """
 
-from ..protocol import CoinProtocol,parsed_wif,parsed_addr,_finfo,_b58a,_nw
-import hashlib
-
-def hash160(in_bytes): # OP_HASH160
-	return hashlib.new('ripemd160',hashlib.sha256(in_bytes).digest()).digest()
-
-def hash256(in_bytes): # OP_HASH256
-	return hashlib.sha256(hashlib.sha256(in_bytes).digest()).digest()
-
-# From en.bitcoin.it:
-#  The Base58 encoding used is home made, and has some differences.
-#  Especially, leading zeroes are kept as single zeroes when conversion happens.
-# Test: 5JbQQTs3cnoYN9vDYaGY6nhQ1DggVsY4FJNBUfEfpSQqrEp3srk
-# The 'zero address':
-# 1111111111111111111114oLvT2 (pubkeyhash = '\0'*20)
-
-def _b58chk_encode(in_bytes):
-	lzeroes = len(in_bytes) - len(in_bytes.lstrip(b'\x00'))
-	def do_enc(n):
-		while n:
-			yield _b58a[n % 58]
-			n //= 58
-	return ('1' * lzeroes) + ''.join(do_enc(int.from_bytes(in_bytes+hash256(in_bytes)[:4],'big')))[::-1]
-
-def _b58chk_decode(s):
-	lzeroes = len(s) - len(s.lstrip('1'))
-	res = sum(_b58a.index(ch) * 58**n for n,ch in enumerate(s[::-1]))
-	bl = res.bit_length()
-	out = b'\x00' * lzeroes + res.to_bytes(bl//8 + bool(bl%8),'big')
-	if out[-4:] != hash256(out[:-4])[:4]:
-		raise ValueError('_b58chk_decode(): incorrect checksum')
-	return out[:-4]
+from ..protocol import CoinProtocol,parsed_wif,parsed_addr,_finfo,_nw
+from .common import *
 
 class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	"""
@@ -83,13 +53,13 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	def bytes2wif(self,privbytes,pubkey_type,compressed): # input is preprocessed hex
 		assert len(privbytes) == self.privkey_len, f'{len(privbytes)} bytes: incorrect private key length!'
 		assert pubkey_type in self.wif_ver_num, f'{pubkey_type!r}: invalid pubkey_type'
-		return _b58chk_encode(
+		return b58chk_encode(
 			bytes.fromhex(self.wif_ver_num[pubkey_type])
 			+ privbytes
 			+ (b'',b'\x01')[bool(compressed)])
 
 	def parse_wif(self,wif):
-		key = _b58chk_decode(wif)
+		key = b58chk_decode(wif)
 
 		for k,v in self.wif_ver_num.items():
 			v = bytes.fromhex(v)
@@ -126,11 +96,11 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 			return parsed_addr( bytes(ret[1]), 'bech32' ) if ret[1] else False
 
-		return self.parse_addr_bytes(_b58chk_decode(addr))
+		return self.parse_addr_bytes(b58chk_decode(addr))
 
 	def pubhash2addr(self,pubkey_hash,p2sh):
 		assert len(pubkey_hash) == 20, f'{len(pubkey_hash)}: invalid length for pubkey hash'
-		return _b58chk_encode(
+		return b58chk_encode(
 			self.addr_fmt_to_ver_bytes(('p2pkh','p2sh')[p2sh],return_hex=False) + pubkey_hash
 		)
 
