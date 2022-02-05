@@ -45,6 +45,7 @@ def overlay_setup(repo_root):
 				'mmgen.base_proto.ethereum.rlp',
 				'mmgen.base_proto.ethereum.rlp.sedes',
 				'mmgen.base_proto.ethereum.tx',
+				'mmgen.base_proto.monero',
 				'mmgen.data',
 				'mmgen.proto',
 				'mmgen.share',

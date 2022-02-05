@@ -183,7 +183,8 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			atexit.register(kill_proxy)
 
 	def init_users(self):
-		from mmgen.daemon import CoinDaemon,MoneroWalletDaemon
+		from mmgen.daemon import CoinDaemon
+		from mmgen.base_proto.monero.daemon import MoneroWalletDaemon
 		from mmgen.rpc import MoneroRPCClient,MoneroRPCClientRaw,MoneroWalletRPCClient
 		self.users = {}
 		n = self.tmpdir_nums[0]
