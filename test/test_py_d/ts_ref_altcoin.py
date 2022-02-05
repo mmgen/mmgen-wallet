@@ -131,7 +131,6 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 				coin.lower(),
 				coin_suf )
 		]
-		t.read()
 		cmp_or_die(chk,chk_ref,desc=f'{gen_what}list data checksum')
 		return t
 

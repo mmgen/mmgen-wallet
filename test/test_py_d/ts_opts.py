@@ -35,13 +35,11 @@ class TestSuiteOpts(TestSuiteBase):
 		t = self.spawn_prog(args)
 		for k,v in vals:
 			t.expect(rf'{k}:\s+{v}',regex=True)
-		t.read()
 		return t
 
 	def do_run(self,args,expect,exit_val,regex=False):
 		t = self.spawn_prog(args)
 		t.expect(expect,regex=regex)
-		t.read()
 		t.req_exit_val = exit_val
 		return t
 

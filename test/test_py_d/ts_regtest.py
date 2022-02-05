@@ -318,7 +318,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def halving_calculator_bob(self):
 		t = self.spawn('halving-calculator.py',['--bob'],cmd_dir='examples')
 		t.expect('time until halving')
-		t.read()
 		return t
 
 	def walletgen(self,user):
@@ -464,16 +463,13 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool',['--'+user,'twview','sort='+sort])
 		if chk:
 			t.expect(r'{}\b.*\D{}\b'.format(*chk),regex=True)
-		t.read()
 		return t
 
 	def bob_twview1(self): return self.user_twview('bob', chk = ('1',rtAmts[0]) )
 
 	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
-		if skip_check:
-			t.read()
-		else:
+		if not skip_check:
 			cmp_or_die(f'{bal} {self.proto.coin}',strip_ansi_escapes(t.expect_getend('TOTAL: ')))
 		return t
 
@@ -590,7 +586,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 				re.sub(rf'\s+{self.proto.coin}\s*',' ',ret).strip(),
 				desc=k,
 			)
-		t.read()
 		return t
 
 	def bob_0conf0_getbalance(self): return self.bob_getbalance(rtBals_gb['0conf0'],confs=0)
@@ -721,7 +716,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		else:
 			t.expect('Save fee-bumped transaction? (y/N): ','y')
 			t.written_to_file('Fee-bumped transaction')
-		t.read()
 		return t
 
 	def bob_rbf_bump(self):
@@ -832,7 +826,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			t.expect("Type uppercase 'YES' to confirm: ",'YES\n')
 		t.expect('Importing')
 		t.expect('OK')
-		t.read()
 		return t
 
 	def bob_import_addr(self):
@@ -959,7 +952,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool',['--alice','listaddresses','showempty=1'] + args)
 		expect_str = r'\D{}\D.*\b{}'.format(*expect)
 		t.expect(expect_str,regex=True)
-		t.read()
 		return t
 
 	def alice_listaddresses1(self):
@@ -986,7 +978,6 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-tool',['--alice','twview'] + args)
 		expect_str = r'\D{}\D.*\b{}'.format(*expect)
 		t.expect(expect_str,regex=True)
-		t.read()
 		return t
 
 	def alice_twview1(self):

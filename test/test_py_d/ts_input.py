@@ -121,8 +121,6 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect('passphrase for MMGen wallet: ','reference password\n')
 		t.expect('[reference password][1][No Label]')
 
-		t.read()
-
 		return t
 
 	def get_passphrase_cmdline(self):
@@ -137,7 +135,7 @@ class TestSuiteInput(TestSuiteBase):
 			cmd_dir = '.' )
 		for foo in range(4):
 			t.expect('[reference password][1][MyLabel]')
-		t.read()
+
 		return t
 
 	def get_passphrase_crypto(self):
@@ -166,7 +164,6 @@ class TestSuiteInput(TestSuiteBase):
 		t.expect('accept the default .*: ', '\n', regex=True)
 		t.expect(f'[{g.dfl_hash_preset}]')
 
-		t.read()
 		return t
 
 	def password_entry(self,prompt,cmd_args):
@@ -207,7 +204,6 @@ class TestSuiteInput(TestSuiteBase):
 		assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 		stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode,pad_entry=pad_entry)
 		t.expect(sample_mn[fmt]['hex'])
-		t.read()
 		return t
 
 	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
@@ -246,7 +242,6 @@ class TestSuiteInput(TestSuiteBase):
 			sid = strip_ansi_escapes(sid.split(',')[0])
 			assert sid == sid_chk, f'Seed ID mismatch! {sid} != {sid_chk}'
 		t.expect('to confirm: ','YES\n')
-		t.read()
 		return t
 
 	def mnemonic_entry_mmgen_minimal(self):

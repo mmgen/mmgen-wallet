@@ -198,7 +198,6 @@ class TestSuiteCfg(TestSuiteBase):
 			t = self.spawn_test(args=['mnemonic_entry_modes'])
 			modes = t.expect_getend('mnemonic_entry_modes: ')
 			assert modes_chk == modes, f'{modes_chk} != {modes}'
-			t.read()
 			return t
 
 		txt = 'mnemonic_entry_modes mmgen:full bip39:short'

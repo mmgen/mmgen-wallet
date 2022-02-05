@@ -88,5 +88,4 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	def tool_api(self):
 		t = self.spawn('tool_api_test.py',cmd_dir='test/misc')
 		t.expect('legacy.*compressed.*segwit.*bech32',regex=True)
-		t.read()
 		return t

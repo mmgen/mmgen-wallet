@@ -177,7 +177,6 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 		t.expect(r'Valid MMGen native mnemonic data for Seed ID ([0-9A-F]*)\b',regex=True)
 		sid = t.p.match.group(1)
 		assert sid == chk_sid,f'subseed ID {sid} does not match expected value {chk_sid}'
-		t.read()
 		return t
 
 	def ref_subwallet_addrgen(self,ss_idx,target='addr'):
@@ -232,7 +231,6 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 			t.expect(pat,regex=True)
 		t.expect(chksum_pat,regex=True)
 		m = t.p.match.group(0)
-		t.read()
 		cmp_or_die(ref_chksum,m)
 		return t
 

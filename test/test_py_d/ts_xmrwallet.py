@@ -302,7 +302,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 		t.expect('Check key-to-address validity? (y/N): ','n')
 		for i in MMGenRange(wallet or data.kal_range).items:
 			t.expect('Address: ')
-		t.read()
 		return t
 
 	async def mine_initial_coins(self):
@@ -348,7 +347,6 @@ class TestSuiteXMRWallet(TestSuiteBase):
 			t.expect('Chain height: ')
 			t.expect('Wallet height: ')
 			t.expect('Balance: ')
-		t.read()
 		return t
 
 	def do_op(self, op, user, arg2,

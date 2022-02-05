@@ -136,9 +136,7 @@ class TestSuiteOutput(TestSuiteBase):
 	color = True
 
 	def screen_output(self,lang):
-		t = self.spawn('test/misc/utf8_output.py',[lang],cmd_dir='.')
-		t.read()
-		return t
+		return self.spawn('test/misc/utf8_output.py',[lang],cmd_dir='.')
 
 	def output_gr(self): return self.screen_output('gr')
 	def output_ru(self): return self.screen_output('ru')
@@ -195,9 +193,7 @@ class TestSuiteRefTX(TestSuiteMain,TestSuiteBase):
 	def ref_tx_addrgen(self,atype):
 		if atype not in self.proto.mmtypes:
 			return
-		t = self.spawn('mmgen-addrgen',['--outdir='+self.tmpdir,'--type='+atype,dfl_words_file,'1-2'])
-		t.read()
-		return t
+		return self.spawn('mmgen-addrgen',['--outdir='+self.tmpdir,'--type='+atype,dfl_words_file,'1-2'])
 
 	def ref_tx_addrgen1(self): return self.ref_tx_addrgen(atype='L')
 	def ref_tx_addrgen2(self): return self.ref_tx_addrgen(atype='C')

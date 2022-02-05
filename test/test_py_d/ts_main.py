@@ -644,7 +644,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 		vmsg('Comparing generated checksum with checksum from previous address file')
 		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
-		if stdout: t.read()
+		if stdout:
+			t.read()
 		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)
 		if in_fmt != 'seed':
 			t.no_overwrite()
@@ -837,7 +838,6 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.do_comment(False)
 			t.expect('Save signed transaction? (Y/n): ','y')
 			exit_val = 0
-		t.read()
 		t.req_exit_val = exit_val
 		return t
 

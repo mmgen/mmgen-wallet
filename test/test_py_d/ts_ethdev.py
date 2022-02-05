@@ -478,7 +478,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def addrgen(self,addrs='1-3,11-13,21-23'):
 		t = self.spawn('mmgen-addrgen', self.eth_args + [dfl_words_file,addrs])
 		t.written_to_file('Addresses')
-		t.read()
 		return t
 
 	def addrimport(self,ext='21-23]{}.regtest.addrs',expect='9/9',add_args=[],bad_input=False):
@@ -566,9 +565,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def txview(self,ext_fs):
 		ext = ext_fs.format('-α' if g.debug_utf8 else '')
 		txfile = self.get_file_with_ext(ext,no_dot=True)
-		t = self.spawn( 'mmgen-tool',['--verbose','txview',txfile] )
-		t.read()
-		return t
+		return self.spawn( 'mmgen-tool',['--verbose','txview',txfile] )
 
 	def fund_dev_address(self):
 		"""
@@ -657,7 +654,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		txfile = self.get_file_with_ext(ext,no_dot=True)
 		t = self.spawn('mmgen-txbump', self.eth_args + add_args + ['--yes',txfile])
 		t.expect('or gas price: ',fee+'\n')
-		t.read()
 		return t
 
 	def txsign4(self): return self.txsign(ni=True,ext='.45495,50000]{}.regtest.rawtx')
@@ -710,7 +706,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect(r'\n[0-9A-F]{8}: .*\D'+str(bal1),regex=True)
 		t.expect(r'\nNon-MMGen: .*\D'+bal2,regex=True)
 		total = strip_ansi_escapes(t.expect_getend(r'\nTOTAL:\s+',regex=True)).split()[0]
-		t.read()
 		assert Decimal(bal1) + Decimal(bal2) == Decimal(total)
 		return t
 
@@ -931,15 +926,12 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_bal1(self): return self.token_bal(n='1')
 
 	def token_txcreate(self,args=[],token='',inputs='1',fee='50G'):
-		t = self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args)
-		t = self.txcreate_ui_common(
-			t,
+		return self.txcreate_ui_common(
+			self.spawn('mmgen-txcreate', self.eth_args + ['--token='+token,'-B','--tx-fee='+fee] + args),
 			menu              = [],
 			inputs            = inputs,
 			input_sels_prompt = 'to spend from',
 			add_comment       = tx_label_lat_cyr_gr )
-		t.read()
-		return t
 	def token_txsign(self,ext='',token=''):
 		return self.txsign(ni=True,ext=ext,add_args=['--token='+token])
 	def token_txsend(self,ext='',token=''):
@@ -985,9 +977,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		return self.token_bal(n='3')
 
 	def del_dev_addr(self):
-		t = self.spawn('mmgen-tool', self.eth_args + ['remove_address',dfl_devaddr])
-		t.read() # TODO
-		return t
+		return self.spawn('mmgen-tool', self.eth_args + ['remove_address',dfl_devaddr])
 
 	def bal1_getbalance(self):
 		return self.bal_getbalance('1',etc_adj=True)
@@ -1057,7 +1047,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		args = ['--tx-fee=20G','--cached-balances'] + add_args + [dfl_words_file]
 		t = self.txcreate(args=args,acct=acct,caller='txdo',fee_res_data=fee_res_data,no_read=True)
 		self._do_confirm_send(t,quiet=not g.debug,sure=False)
-		t.read()
 		return t
 
 	def txcreate_refresh_balances(self,
@@ -1079,7 +1068,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 			t.expect('Is this what you want? (y/N): ','y')
 		t.expect('[R]efresh balance:\b','q')
 		t.expect(rf'Total unspent:.*\D{total}\D.*{total_coin}',regex=True)
-		t.read()
 		return t
 
 	def bal10(self): return self.bal(n='10')
@@ -1130,7 +1118,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		for p,r in zip((p1,p1),('M','q')):
 			t.expect(p,r)
 		t.expect('Total unspent:')
-		t.read()
 		return t
 
 	def edit_label1(self):
