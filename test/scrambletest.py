@@ -97,7 +97,7 @@ cmd_base = f'python3{cvr_opts} cmds/mmgen-{{}}gen -qS'
 def get_cmd_output(cmd):
 	cp = run(cmd.split(),stdout=PIPE,stderr=PIPE)
 	if cp.returncode != 0:
-		ydie(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr.decode()}')
+		die(2,f'\nSpawned program exited with error code {cp.returncode}:\n{cp.stderr.decode()}')
 	return cp.stdout.decode().splitlines()
 
 def do_test(cmd,tdata,msg_str,addr_desc):
@@ -115,7 +115,7 @@ def do_test(cmd,tdata,msg_str,addr_desc):
 			s = k.replace('seed','seed[:8]').replace('addr',addr_desc)
 			vmsg(f'  {s:9}: {cmd_out[k]}')
 		else:
-			rdie(1,f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
+			die(4,f'\nError: sc_{k} value {cmd_out[k]} does not match reference value {ref_data[k]}')
 	msg('OK')
 
 def do_coin_tests():

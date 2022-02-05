@@ -741,7 +741,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 	def get_mempool1(self):
 		mp = self._get_mempool()
 		if len(mp) != 1:
-			rdie(2,'Mempool has more or less than one TX!')
+			die(4,'Mempool has more or less than one TX!')
 		self.write_to_tmpfile('rbf_txid',mp[0]+'\n')
 		return 'ok'
 
@@ -762,10 +762,10 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 			return 'skip'
 		mp = self._get_mempool()
 		if len(mp) != 1:
-			rdie(2,'Mempool has more or less than one TX!')
+			die(4,'Mempool has more or less than one TX!')
 		chk = self.read_from_tmpfile('rbf_txid')
 		if chk.strip() == mp[0]:
-			rdie(2,'TX in mempool has not changed!  RBF bump failed')
+			die(4,'TX in mempool has not changed!  RBF bump failed')
 		self.write_to_tmpfile('rbf_txid2',mp[0]+'\n')
 		return 'ok'
 

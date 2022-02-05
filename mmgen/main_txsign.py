@@ -156,6 +156,6 @@ async def main():
 			bad_tx_count += 1
 
 	if bad_tx_count:
-		ydie(2,f'{bad_tx_count} transaction{suf(bad_tx_count)} could not be signed')
+		die(2,f'{bad_tx_count} transaction{suf(bad_tx_count)} could not be signed')
 
 run_session(main())

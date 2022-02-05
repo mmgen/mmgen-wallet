@@ -120,11 +120,13 @@ def mdie(*args):
 	mmsg(*args)
 	sys.exit(0)
 
-def die(ev=0,s=''):
+def die(ev,s='',stdout=False):
 	assert isinstance(ev,int)
-	if s:
-		msg(s)
-	sys.exit(ev)
+	from .exception import MMGenSystemExit,MMGenError
+	if ev <= 2:
+		raise MMGenSystemExit(ev,s,stdout)
+	else:
+		raise MMGenError(ev,s,stdout)
 
 def die_wait(delay,ev=0,s=''):
 	assert isinstance(delay,int)
@@ -142,16 +144,7 @@ def die_pause(ev=0,s=''):
 	sys.exit(ev)
 
 def Die(ev=0,s=''):
-	assert isinstance(ev,int)
-	if s:
-		Msg(s)
-	sys.exit(ev)
-
-def rdie(ev=0,s=''):
-	die(ev,red(s))
-
-def ydie(ev=0,s=''):
-	die(ev,yellow(s))
+	die(ev=ev,s=s,stdout=True)
 
 def pp_fmt(d):
 	import pprint
@@ -206,8 +199,7 @@ def remove_dups(iterable,edesc='element',desc='list',quiet=False,hide=False):
 
 def exit_if_mswin(feature):
 	if g.platform == 'win':
-		m = capfirst(feature) + ' not supported on the MSWin / MSYS2 platform'
-		ydie(1,m)
+		die(2, capfirst(feature) + ' not supported on the MSWin / MSYS2 platform' )
 
 def get_keccak():
 

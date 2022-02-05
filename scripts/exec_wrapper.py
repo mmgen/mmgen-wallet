@@ -32,7 +32,7 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 		except:
 			pass
 
-def exec_wrapper_write_traceback():
+def exec_wrapper_write_traceback(e):
 	import traceback,re
 	lines = traceback.format_exception(*sys.exc_info()) # returns a list
 
@@ -45,7 +45,11 @@ def exec_wrapper_write_traceback():
 		lines.pop()
 
 	c = exec_wrapper_get_colors()
-	sys.stdout.write('{}{}'.format(c.yellow(''.join(lines)),c.red(exc)))
+	message = ( repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else exc )
+	sys.stdout.write('{}{}'.format(
+		c.yellow( ''.join(lines) ),
+		c.red(message) )
+	+ '\n' )
 
 	with open('my.err','w') as fp:
 		fp.write(''.join(lines+[exc]))
@@ -96,13 +100,13 @@ try:
 		exec(fp.read())
 except SystemExit as e:
 	if e.code != 0 and not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
-		exec_wrapper_write_traceback()
+		exec_wrapper_write_traceback(e)
 	else:
 		exec_wrapper_tracemalloc_log()
 		exec_wrapper_end_msg()
 	sys.exit(e.code)
 except Exception as e:
-	exec_wrapper_write_traceback()
+	exec_wrapper_write_traceback(e)
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 

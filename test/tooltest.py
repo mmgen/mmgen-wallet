@@ -238,7 +238,7 @@ class MMGenToolTestUtils(object):
 				red('FAILED'),
 				yellow('Command stderr output:'),
 				err.decode() ))
-			rdie(1,f'Called process returned with an error (retcode {cp.returncode})')
+			die(2,f'Called process returned with an error (retcode {cp.returncode})')
 		return (out,out.rstrip())[bool(strip)]
 
 	def run_cmd_chk(self,name,f1,f2,kwargs='',extra_msg='',strip_hex=False,add_opts=[]):
@@ -251,8 +251,7 @@ class MMGenToolTestUtils(object):
 			return (a.lstrip('0') == b.lstrip('0')) if strip_hex else (a == b)
 		if cmp_equal(ret,idata): ok()
 		else:
-			fs = "Error: values don't match:\nIn:  {!r}\nOut: {!r}"
-			rdie(3,fs.format(idata,ret))
+			die(4, "Error: values don't match:\nIn:  {!r}\nOut: {!r}".format(idata,ret))
 		return ret
 
 	def run_cmd_nochk(self,name,f1,kwargs='',add_opts=[]):
@@ -278,7 +277,7 @@ class MMGenToolTestUtils(object):
 			else:
 				if not hush: ok()
 		else:
-			rdie(3,f'Error for command {name!r}')
+			die(4,f'Error for command {name!r}')
 
 	def run_cmd_randinput(self,name,strip=True,add_opts=[]):
 		s = getrand(128)
@@ -298,7 +297,7 @@ def ok_or_die(val,chk_func,s,skip_ok=False):
 	if ret:
 		if not skip_ok: ok()
 	else:
-		rdie(3,f'Returned value {val!r} is not a {s}')
+		die(4,f'Returned value {val!r} is not a {s}')
 
 class MMGenToolTestCmds(object):
 

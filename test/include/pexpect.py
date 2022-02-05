@@ -23,7 +23,7 @@ test/pexpect.py: pexpect implementation for MMGen test suites
 import sys,os,time
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.util import msg,msg_r,vmsg,vmsg_r,rmsg,red,yellow,green,cyan,die,rdie
+from mmgen.util import msg,msg_r,vmsg,vmsg_r,rmsg,red,yellow,green,cyan,die
 from .common import *
 
 try:
@@ -184,11 +184,12 @@ class MMGenPexpect(object):
 				f = (self.p.expect_exact,self.p.expect)[bool(regex)]
 				ret = f(s)
 		except pexpect.TIMEOUT:
-			if opt.debug_pexpect: raise
-			m1 = red(f'\nERROR.  Expect {s!r} timed out.  Exiting\n')
+			if opt.debug_pexpect:
+				raise
+			m1 = f'\nERROR.  Expect {s!r} timed out.  Exiting\n'
 			m2 = f'before: [{self.p.before}]\n'
 			m3 = f'sent value: [{self.sent_value}]' if self.sent_value != None else ''
-			rdie(1,m1+m2+m3)
+			die(2,m1+m2+m3)
 
 		debug_pexpect_msg(self.p)
 
@@ -196,7 +197,7 @@ class MMGenPexpect(object):
 			msg_r(f' ==> {ret} ')
 
 		if ret == -1:
-			rdie(1,f'Error.  Expect returned {ret}')
+			die(4,f'Error.  Expect returned {ret}')
 		else:
 			if t == '':
 				if not nonl and not silent: vmsg('')

@@ -89,7 +89,7 @@ class LEDControl:
 					fp.write(f'{init_val}\n')
 				return True
 			except PermissionError:
-				ydie(1,'\n'+fmt(f"""
+				die(2,'\n'+fmt(f"""
 					You do not have access to the {desc} file
 					To allow access, run the following command:
 

@@ -21,7 +21,7 @@ class unit_test(object):
 		def bad4(): d.clear()
 		def bad5(): d.update(d)
 
-		def odie(n): rdie(3,f'\nillegal action {bad_msg[n]!r} failed to raise exception')
+		def odie(n): die(4,f'\nillegal action {bad_msg[n]!r} failed to raise exception')
 		def omsg(e): vmsg(' - ' + e.args[0])
 
 		msg_r('Testing class IndexedDict...')

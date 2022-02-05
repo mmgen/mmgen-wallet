@@ -537,7 +537,7 @@ class BitcoinRPCClient(RPCClient,metaclass=AsyncInit):
 				await self.icall('createwallet',wallet_name=wname)
 				ymsg(f'Created {self.daemon.coind_name} wallet {wname!r}')
 			elif len(wallets) > 1: # support only one loaded wallet for now
-				rdie(2,f'ERROR: more than one {self.daemon.coind_name} wallet loaded: {wallets}')
+				die(4,f'ERROR: more than one {self.daemon.coind_name} wallet loaded: {wallets}')
 			wallet_checked.append(True)
 
 	def get_daemon_cfg_fn(self):
@@ -665,7 +665,7 @@ class EthereumRPCClient(RPCClient,metaclass=AsyncInit):
 		import re
 		vip = re.match(self.daemon.version_pat,vi,re.ASCII)
 		if not vip:
-			ydie(1,fmt(f"""
+			die(2,fmt(f"""
 			Aborting on daemon mismatch:
 			  Requested daemon: {self.daemon.id}
 			  Running daemon:   {vi}
@@ -821,7 +821,7 @@ def handle_unsupported_daemon_version(rpc,name,warn_only):
 		daemon_warning('version',div=name,fmt_args=[rpc.daemon.coind_name])
 	else:
 		name = rpc.daemon.coind_name
-		rdie(1,'\n'+fmt(f"""
+		die(2,'\n'+fmt(f"""
 			The running {name} daemon has version {rpc.daemon_version_str}.
 			This version of MMGen is tested only on {name} v{rpc.daemon.coind_version_str} and below.
 

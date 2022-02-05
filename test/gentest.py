@@ -318,7 +318,7 @@ def do_ab_test(proto,cfg,addr_type,gen1,kg2,ag,tool,cache_data):
 
 	kg1 = KeyGenerator( proto, addr_type.pubkey_type, gen1 )
 	if type(kg1) == type(kg2):
-		rdie(1,'Key generators are the same!')
+		die(4,'Key generators are the same!')
 
 	e = cinfo.get_entry(proto.coin,proto.network)
 	qmsg(green("Comparing address generators '{A}' and '{B}' for {N} {c} ({n}), addrtype {a!r}".format(

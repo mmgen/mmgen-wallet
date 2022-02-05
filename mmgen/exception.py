@@ -20,6 +20,19 @@
 mmgen.exception: Exception classes for the MMGen suite
 """
 
+class MMGenError(Exception):
+
+	def __init__(self,errno,strerror,stdout):
+		self.mmcode = errno
+		self.stdout = stdout
+		super().__init__(strerror)
+
+	def __repr__(self):
+		return f'{type(self).__name__}({self.mmcode}): {self}'
+
+class MMGenSystemExit(MMGenError):
+	pass
+
 # 1: no hl, message only
 class UserNonConfirmation(Exception):     mmcode = 1
 class BadAgeFormat(Exception):            mmcode = 1

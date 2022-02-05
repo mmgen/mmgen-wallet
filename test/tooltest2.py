@@ -782,7 +782,7 @@ def fork_cmd(cmd_name,args,out,opts,stdin_input):
 		if m:
 			return { b'None': None, b'False': False }[m.group(1)]
 		else:
-			ydie(1,f'Spawned program exited with error: {cp.stderr}')
+			die(2,f'Spawned program exited with error: {cp.stderr}')
 
 	return cmd_out.strip()
 

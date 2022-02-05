@@ -59,7 +59,7 @@ def check_solc_ver():
 	try:
 		cp = run(cmd.split(),check=False,stdout=PIPE)
 	except Exception as e:
-		rdie(2,f'Unable to execute {cmd!r}: {e}')
+		die(4,f'Unable to execute {cmd!r}: {e}')
 	res = cp.stdout.decode().strip()
 	if cp.returncode == 0:
 		omsg(
@@ -750,7 +750,7 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		cp = run(cmd,stdout=DEVNULL,stderr=PIPE)
 		if cp.returncode != 0:
 			rmsg('solc failed with the following output:')
-			ydie(2,cp.stderr.decode())
+			die(2,cp.stderr.decode())
 		imsg('ERC20 token {!r} compiled'.format( token_data['symbol'] ))
 		return 'ok'
 

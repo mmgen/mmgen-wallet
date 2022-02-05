@@ -164,7 +164,7 @@ async def check_daemons_running():
 			try:
 				await rpc_init(proto)
 			except SocketError as e:
-				ydie(1,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
+				die(2,f'{coin} daemon not running or not listening on port {proto.rpc_port}')
 
 def get_wallet_files():
 	try:

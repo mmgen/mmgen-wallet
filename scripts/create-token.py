@@ -243,7 +243,7 @@ def compile_code(code):
 	if cp.returncode != 0:
 		rmsg('Solidity compiler produced the following error:')
 		msg(err)
-		rdie(2,f'Solidity compiler exited with error (return val: {cp.returncode})')
+		die(4,f'Solidity compiler exited with error (return val: {cp.returncode})')
 	if err:
 		ymsg('Solidity compiler produced the following warning:')
 		msg(err)

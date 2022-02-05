@@ -226,11 +226,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation1(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',[],1,'SystemExit: 1')
+			'mmgen-seedsplit',[],1,'MMGenSystemExit(1)')
 
 	def ss_bad_invocation2(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',['-M1','1:9'],1,'SystemExit: 1')
+			'mmgen-seedsplit',['-M1','1:9'],1,'MMGenSystemExit(1)')
 
 	def ss_bad_invocation3(self):
 		return self.ss_bad_invocation(
@@ -242,11 +242,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation5(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[],1,'SystemExit: 1')
+			'mmgen-seedjoin',[],1,'MMGenSystemExit(1)')
 
 	def ss_bad_invocation6(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedjoin',[self.tmpdir+'/a'],1,'SystemExit: 1')
+			'mmgen-seedjoin',[self.tmpdir+'/a'],1,'MMGenSystemExit(1)')
 
 	def ss_bad_invocation7(self):
 		return self.ss_bad_invocation(
@@ -258,7 +258,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 
 	def ss_bad_invocation9(self):
 		return self.ss_bad_invocation(
-			'mmgen-seedsplit',['x'],1,'SystemExit: 1')
+			'mmgen-seedsplit',['x'],1,'MMGenSystemExit(1)')
 
 	def ss_bad_invocation10(self):
 		return self.ss_bad_invocation(

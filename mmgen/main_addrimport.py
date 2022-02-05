@@ -78,7 +78,7 @@ def parse_cmd_args(rpc,cmd_args):
 		al = (AddrList,KeyAddrList)[bool(opt.keyaddr_file)](proto,infile)
 		if al.al_id.mmtype in ('S','B'):
 			if not rpc.info('segwit_is_active'):
-				rdie(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
+				die(2,'Segwit is not active on this chain. Cannot import Segwit addresses')
 		return al
 
 	if len(cmd_args) == 1:

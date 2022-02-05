@@ -95,7 +95,7 @@ class UnitTestHelpers(object):
 				assert exc == exc_chk, m_exc.format(exc,exc_chk)
 				assert re.search(emsg_chk,emsg), m_err.format(emsg,emsg_chk)
 			else:
-				rdie(3,m_noraise.format(desc,exc_chk))
+				die(4,m_noraise.format(desc,exc_chk))
 
 tests_seen = []
 
@@ -110,7 +110,7 @@ def run_test(test,subtest=None):
 		if type(ret).__name__ == 'coroutine':
 			ret = run_session(ret)
 		if not ret:
-			rdie(1,f'Unit subtest {subtest!r} failed')
+			die(4,f'Unit subtest {subtest!r} failed')
 		pass
 
 	if test not in tests_seen:
@@ -139,7 +139,7 @@ def run_test(test,subtest=None):
 				run_subtest(subtest)
 		else:
 			if not mod.unit_test().run_test(test,UnitTestHelpers):
-				rdie(1,'Unit test {test!r} failed')
+				die(4,'Unit test {test!r} failed')
 
 try:
 	for test in (cmd_args or all_tests):

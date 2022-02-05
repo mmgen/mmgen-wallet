@@ -281,7 +281,7 @@ def process_args(cmd,cmd_args,cls):
 	return ( args, kwargs )
 
 def process_result(ret,pager=False,print_result=False):
-	from .util import Msg,ydie,parse_bytespec
+	from .util import Msg,die,parse_bytespec
 	"""
 	Convert result to something suitable for output to screen and return it.
 	If result is bytes and not convertible to utf8, output as binary using os.write().
@@ -294,7 +294,7 @@ def process_result(ret,pager=False,print_result=False):
 	if ret == True:
 		return True
 	elif ret in (False,None):
-		ydie(1,f'tool command returned {ret!r}')
+		die(2,f'tool command returned {ret!r}')
 	elif isinstance(ret,str):
 		return triage_result(ret)
 	elif isinstance(ret,int):
@@ -312,7 +312,7 @@ def process_result(ret,pager=False,print_result=False):
 			else:
 				return ret
 	else:
-		ydie(1,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
+		die(2,f'tool.py: can’t handle return value of type {type(ret).__name__!r}')
 
 def get_cmd_cls(cmd):
 	for modname,cmdlist in mods.items():

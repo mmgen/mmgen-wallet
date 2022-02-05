@@ -102,7 +102,7 @@ class MMGenRegtest(MMGenObject):
 		out = await self.rpc_call(*cmd_args,wallet='miner')
 
 		if len(out) != blocks:
-			rdie(1,'Error generating blocks')
+			die(4,'Error generating blocks')
 
 		gmsg(f'Mined {blocks} block{suf(blocks)}')
 

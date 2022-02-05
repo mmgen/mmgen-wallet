@@ -59,7 +59,7 @@ class TestSuiteHelp(TestSuiteBase):
 	def usage(self):
 		t = self.spawn(f'mmgen-walletgen',['foo'])
 		t.expect('USAGE: mmgen-walletgen')
-		t.expect('SystemExit: 1')
+		t.expect('MMGenSystemExit(1)')
 		t.req_exit_val = 1
 		return t
 

@@ -77,9 +77,9 @@ def test_cmds(op):
 						try:
 							cp = run([d.exec_fn,'--help'],stdout=PIPE,stderr=PIPE)
 						except:
-							ydie(1,f'Unable to execute {d.exec_fn}')
+							die(2,f'Unable to execute {d.exec_fn}')
 						if cp.returncode:
-							ydie(1,f'Unable to execute {d.exec_fn}')
+							die(2,f'Unable to execute {d.exec_fn}')
 						else:
 							vmsg('{:16} {}'.format(
 								d.exec_fn+':',

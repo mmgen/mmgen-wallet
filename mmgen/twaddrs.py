@@ -43,7 +43,8 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 					err = True
 					msg(f'Duplicate MMGen ID ({mmid}) discovered in tracking wallet!\n')
 				mmid_prev = mmid
-			if err: rdie(3,'Tracking wallet is corrupted!')
+			if err:
+				die(4,'Tracking wallet is corrupted!')
 
 		def check_addr_array_lens(acct_pairs):
 			err = False
@@ -55,7 +56,8 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 						msg(f'Label {label!r}: has no associated address!')
 					else:
 						msg(f'{addrs!r}: more than one {proto.coin} address in account!')
-			if err: rdie(3,'Tracking wallet is corrupted!')
+			if err:
+				die(4,'Tracking wallet is corrupted!')
 
 		self.rpc   = await rpc_init(proto)
 		self.total = proto.coin_amt('0')

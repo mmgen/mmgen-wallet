@@ -135,7 +135,7 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 		def immutable_attr_init_check(self):
 			from .globalvars import g
 			if g.test_suite:
-				from .util import rdie
+				from .util import die
 				cls = type(self)
 				for attrname in sorted({a for a in self.valid_attrs if a[0] != '_'}):
 					for o in (cls,cls.__bases__[0]): # assume there's only one base class
@@ -143,10 +143,10 @@ if os.getenv('MMGEN_DEBUG') or os.getenv('MMGEN_TEST_SUITE') or os.getenv('MMGEN
 							attr = o.__dict__[attrname]
 							break
 					else:
-						rdie(3,f'unable to find descriptor {cls.__name__}.{attrname}')
+						die(4,f'unable to find descriptor {cls.__name__}.{attrname}')
 					if type(attr).__name__ == 'ImmutableAttr':
 						if attrname not in self.__dict__:
-							rdie(3,
+							die(4,
 						f'attribute {attrname!r} of {cls.__name__} has not been initialized in constructor!')
 
 	def print_diff(a,b,from_file='',to_file='',from_json=True):

@@ -43,21 +43,35 @@ def launch(mod):
 	except EOFError:
 		sys.stderr.write('\nEnd of file\n')
 	except Exception as e:
+
 		if os.getenv('MMGEN_EXEC_WRAPPER'):
 			raise
 		else:
-			try: m = '{}'.format(e.args[0])
-			except: m = repr(e.args[0])
+			try:
+				errmsg = '{}'.format(e.args[0])
+			except:
+				errmsg = repr(e.args[0])
 
-			from .util import die,ydie,rdie
-			d = [   (ydie,2,'\nMMGen Unhandled Exception ({n}): {m}'),
-					(die, 1,'{m}'),
-					(ydie,2,'{m}'),
-					(ydie,3,'\nMMGen Error ({n}): {m}'),
-					(rdie,4,'\nMMGen Fatal Error ({n}): {m}')
-				][e.mmcode if hasattr(e,'mmcode') else 0]
+			from collections import namedtuple
+			from mmgen.color import nocolor,yellow,red
 
-			d[0](d[1],d[2].format(n=type(e).__name__,m=m))
+			_o = namedtuple('exit_data',['color','exit_val','fs'])
+			d = {
+				1:   _o(nocolor, 1, '{message}'),
+				2:   _o(yellow,  2, '{message}'),
+				3:   _o(yellow,  3, '\nMMGen Error ({name}): {message}'),
+				4:   _o(red,     4, '\nMMGen Fatal Error ({name}): {message}'),
+				'x': _o(yellow,  5, '\nMMGen Unhandled Exception ({name}): {message}'),
+			}[getattr(e,'mmcode','x')]
+
+			(sys.stdout if getattr(e,'stdout',None) else sys.stderr).write(
+				d.color(d.fs.format(
+					name = type(e).__name__,
+					message = errmsg ))
+				+ '\n' )
+
+			sys.exit(d.exit_val)
+
 	except SystemExit as e:
 		if os.getenv('MMGEN_EXEC_WRAPPER') and e.code != 0:
 			from mmgen.color import red

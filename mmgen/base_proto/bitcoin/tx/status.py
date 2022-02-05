@@ -82,7 +82,7 @@ class Status(TxBase.Status):
 		elif await is_in_wallet():
 			die(0,f'Transaction has {r.confs} confirmation{suf(r.confs)}')
 		elif await is_in_utxos():
-			rdie(2,'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
+			die(4,'ERROR: transaction is in the blockchain (but not in the tracking wallet)!')
 		elif await is_replaced():
 			msg('Transaction has been replaced')
 			msg('Replacement transaction ' + (

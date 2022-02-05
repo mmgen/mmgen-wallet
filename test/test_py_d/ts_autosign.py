@@ -244,18 +244,18 @@ class TestSuiteAutosign(TestSuiteBase):
 					run(['mount',mountpoint],check=True)
 					imsg(f'Mounted {mountpoint}')
 				except:
-					ydie(1,f'Could not mount {mountpoint}!  Exiting')
+					die(2,f'Could not mount {mountpoint}!  Exiting')
 
 			txdir = joinpath(mountpoint,'tx')
 			if not os.path.isdir(txdir):
-				ydie(1,f'Directory {txdir} does not exist!  Exiting')
+				die(2,f'Directory {txdir} does not exist!  Exiting')
 
 		def init_led():
 			try:
 				cf = LEDControl(enabled=True,simulate=simulate)
 			except Exception as e:
 				msg(str(e))
-				ydie(2,'LEDControl initialization failed')
+				die(2,'LEDControl initialization failed')
 			for fn in (cf.board.status,cf.board.trigger):
 				if fn:
 					run(['sudo','chmod','0666',fn],check=True)

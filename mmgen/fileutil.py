@@ -57,7 +57,7 @@ def check_binary(args):
 	try:
 		run(args,stdout=DEVNULL,stderr=DEVNULL,check=True)
 	except:
-		rdie(2,f'{args[0]!r} binary missing, not in path, or not executable')
+		die(2,f'{args[0]!r} binary missing, not in path, or not executable')
 
 def shred_file(fn,verbose=False):
 	check_binary(['shred','--version'])

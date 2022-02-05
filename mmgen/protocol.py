@@ -69,7 +69,7 @@ class CoinProtocol(MMGenObject):
 
 			if 'tx' not in self.mmcaps and g.is_txprog:
 				from .util import die
-				die(1,f'Command {g.prog_name!r} not supported for coin {self.coin}')
+				die(2,f'Command {g.prog_name!r} not supported for coin {self.coin}')
 
 			if hasattr(self,'chain_names'):
 				self.chain_name = self.chain_names[0] # first chain name is default
@@ -171,15 +171,14 @@ class CoinProtocol(MMGenObject):
 			if 0 < int.from_bytes(sec,'big') < self.secp256k1_ge:
 				return sec
 			else: # chance of this is less than 1 in 2^127
-				from .util import ydie
+				from .util import die,ymsg
 				pk = int.from_bytes(sec,'big')
 				if pk == 0: # chance of this is 1 in 2^256
-					ydie(3,'Private key is zero!')
+					die(4,'Private key is zero!')
 				elif pk == self.secp256k1_ge: # ditto
-					ydie(3,'Private key == secp256k1_ge!')
+					die(4,'Private key == secp256k1_ge!')
 				else:
 					if not g.test_suite:
-						from .util import ymsg
 						ymsg(f'Warning: private key is greater than secp256k1 group order!:\n  {hexpriv}')
 					return (pk % self.secp256k1_ge).to_bytes(self.privkey_len,'big')
 

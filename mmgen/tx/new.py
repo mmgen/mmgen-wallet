@@ -17,7 +17,7 @@ from ..opts import opt
 from .base import Base
 from ..color import pink
 from ..obj import get_obj,HexStr
-from ..util import msg,qmsg,fmt,suf,remove_dups,get_extension,keypress_confirm,do_license_msg,line_input
+from ..util import msg,qmsg,fmt,die,suf,remove_dups,get_extension,keypress_confirm,do_license_msg,line_input
 from ..addr import is_mmgen_id,CoinAddr,is_coin_addr
 
 def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
@@ -53,9 +53,9 @@ def mmaddr2coinaddr(mmaddr,ad_w,ad_f,proto):
 				if not (opt.yes or keypress_confirm('Continue anyway?')):
 					sys.exit(1)
 			else:
-				ydie(2,wmsg('addr_not_found'))
+				die(2,wmsg('addr_not_found'))
 		else:
-			ydie(2,wmsg('addr_not_found_no_addrfile'))
+			die(2,wmsg('addr_not_found_no_addrfile'))
 
 	return CoinAddr(proto,coin_addr)
 
@@ -208,7 +208,7 @@ class New(Base):
 				'ERROR: No change output specified' ))
 
 		if self.has_segwit_outputs() and not self.rpc.info('segwit_is_active'):
-			rdie(2,f'{g.proj_name} Segwit address requested on the command line, '
+			die(2,f'{g.proj_name} Segwit address requested on the command line, '
 					+ 'but Segwit is not active on this chain')
 
 		if not self.outputs:

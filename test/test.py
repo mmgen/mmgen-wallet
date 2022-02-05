@@ -40,7 +40,7 @@ def create_shm_dir(data_dir,trash_dir):
 					try:
 						run(['python3',os.path.join('cmds','mmgen-regtest'),'stop'],check=True)
 					except:
-						rdie(1,f'Unable to remove {tdir!r}!')
+						die(4,f'Unable to remove {tdir!r}!')
 					else:
 						time.sleep(2)
 						shutil.rmtree(tdir)
@@ -977,7 +977,7 @@ class TestSuiteRunner(object):
 			self.skipped_warnings.append(
 				'Test {!r} was skipped:\n  {}'.format(cmd,'\n  '.join(ret[1].split('\n'))))
 		else:
-			rdie(1,f'{cmd!r} returned {ret}')
+			die(2,f'{cmd!r} returned {ret}')
 
 	def check_deps(self,cmds): # TODO: broken
 		if len(cmds) != 1:
@@ -1057,9 +1057,9 @@ except KeyboardInterrupt:
 	tr.warn_skipped()
 	die(1,'\ntest.py exiting at user request')
 except TestSuiteException as e:
-	ydie(1,e.args[0])
+	die(2,e.args[0])
 except TestSuiteFatalException as e:
-	rdie(1,e.args[0])
+	die(4,e.args[0])
 except Exception:
 	if 'exec_wrapper_init' in globals(): # test.py itself is running under exec_wrapper
 		import traceback

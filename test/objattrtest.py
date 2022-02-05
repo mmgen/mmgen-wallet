@@ -69,7 +69,7 @@ def get_descriptor_obj(objclass,attrname):
 	for o in (objclass,objclass.__bases__[0]): # assume there's only one base class
 		if attrname in o.__dict__:
 			return o.__dict__[attrname]
-	rdie(3,f'unable to find descriptor {objclass.__name__}.{attrname}')
+	die(4,f'unable to find descriptor {objclass.__name__}.{attrname}')
 
 def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 
@@ -93,15 +93,15 @@ def test_attr_perm(obj,attrname,perm_name,perm_value,dobj,attrval_type):
 		elif perm_name == 'delete_ok':
 			delattr(obj,attrname)
 	except SampleObjError as e:
-		rdie(2,f'Test script error ({e})')
+		die(4,f'Test script error ({e})')
 	except Exception as e:
 		if perm_value == True:
 			fs = '{!r}: unable to {} attribute {!r}, though {}ing is allowed ({})'
-			rdie(2,fs.format(type(obj).__name__,pname,attrname,pstem,e))
+			die(4,fs.format(type(obj).__name__,pname,attrname,pstem,e))
 	else:
 		if perm_value == False:
 			fs = '{!r}: attribute {!r} is {n}able, though {n}ing is forbidden'
-			rdie(2,fs.format(type(obj).__name__,attrname,n=pstem))
+			die(4,fs.format(type(obj).__name__,attrname,n=pstem))
 
 def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 	if hasattr(obj,attrname): # TODO
@@ -109,7 +109,7 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 
 		if attrval_type not in (td_attrval_type,type(None)):
 			fs = '\nattribute {!r} of {!r} instance has incorrect type {!r} (should be {!r})'
-			rdie(2,fs.format(attrname,type(obj).__name__,attrval_type.__name__,td_attrval_type.__name__))
+			die(4,fs.format(attrname,type(obj).__name__,attrval_type.__name__,td_attrval_type.__name__))
 
 	if hasattr(dobj,'__dict__'):
 		d = dobj.__dict__
@@ -118,7 +118,7 @@ def test_attr(data,obj,attrname,dobj,bits,attrval_type):
 			if k in d:
 				if d[k] != bits[k]:
 					fs = 'init value {iv}={a} for attr {n!r} does not match test data ({iv}={b})'
-					rdie(2,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
+					die(4,fs.format(iv=k,n=attrname,a=d[k],b=bits[k]))
 				if opt.verbose and d[k] == True:
 					msg_r(f' {k}={d[k]!r}')
 
