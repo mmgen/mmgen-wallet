@@ -28,10 +28,10 @@ from .seed import *
 
 class Filename(MMGenObject):
 
-	def __init__(self,fn,ftype=None,from_extension=None,write=False):
+	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
 		"""
-		'ftype'          - a subclass with an 'ext' attribute
-		'from_extension' - a base class with an 'ext_to_type' method
+		'base_class' - a base class with an 'ext_to_type' method
+		'subclass'   - a subclass with an 'ext' attribute
 
 		One or the other must be provided, but not both.
 
@@ -46,18 +46,18 @@ class Filename(MMGenObject):
 		self.ctime    = None
 		self.atime    = None
 
-		assert (ftype or from_extension) and not (ftype and from_extension), 'Filename chk1'
+		assert (subclass or base_class) and not (subclass and base_class), 'Filename chk1'
 
-		if not getattr(ftype or from_extension,'filename_api',False):
-			die(3,f'Class {(ftype or from_extension).__name__!r} does not support the Filename API')
+		if not getattr(subclass or base_class,'filename_api',False):
+			die(3,f'Class {(subclass or base_class).__name__!r} does not support the Filename API')
 
-		if from_extension:
-			ftype = from_extension.ext_to_type(self.ext)
-			if not ftype:
+		if base_class:
+			subclass = base_class.ext_to_type(self.ext,proto)
+			if not subclass:
 				from .exception import BadFileExtension
-				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {from_extension}')
+				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {base_class}')
 
-		self.ftype = ftype
+		self.subclass = subclass
 
 		try:
 			st = os.stat(fn)
@@ -87,8 +87,8 @@ class Filename(MMGenObject):
 
 class MMGenFileList(list,MMGenObject):
 
-	def __init__(self,fns,ftype):
-		flist = [Filename(fn,ftype) for fn in fns]
+	def __init__(self,fns,base_class,proto=None):
+		flist = [Filename( fn, base_class=base_class, proto=proto ) for fn in fns]
 		return list.__init__(self,flist)
 
 	def names(self):
@@ -97,26 +97,26 @@ class MMGenFileList(list,MMGenObject):
 	def sort_by_age(self,key='mtime',reverse=False):
 		if key not in ('atime','ctime','mtime'):
 			die(1,f'{key!r}: illegal sort key')
-		self.sort(key=lambda a: getattr(a,key),reverse=reverse)
+		self.sort( key=lambda a: getattr(a,key), reverse=reverse )
 
-def find_files_in_dir(ftype,fdir,no_dups=False):
+def find_files_in_dir(subclass,fdir,no_dups=False):
 
-	assert isinstance(ftype,type), f'{ftype}: not a class'
+	assert isinstance(subclass,type), f'{subclass}: not a class'
 
-	if not getattr(ftype,'filename_api',False):
-		die(3,f'Class {ftype.__name__!r} does not support the Filename API')
+	if not getattr(subclass,'filename_api',False):
+		die(3,f'Class {subclass.__name__!r} does not support the Filename API')
 
-	matches = [l for l in os.listdir(fdir) if l.endswith('.'+ftype.ext)]
+	matches = [l for l in os.listdir(fdir) if l.endswith('.'+subclass.ext)]
 
 	if no_dups:
 		if len(matches) == 1:
 			return os.path.join(fdir,matches[0])
 		elif matches:
-			die(1,f'ERROR: more than one {ftype.__name__} file in directory {fdir!r}')
+			die(1,f'ERROR: more than one {subclass.__name__} file in directory {fdir!r}')
 		else:
 			return None
 	else:
 		return [os.path.join(fdir,m) for m in matches]
 
-def find_file_in_dir(ftype,fdir):
-	return find_files_in_dir(ftype,fdir,no_dups=True)
+def find_file_in_dir(subclass,fdir):
+	return find_files_in_dir(subclass,fdir,no_dups=True)

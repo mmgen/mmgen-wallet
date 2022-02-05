@@ -103,14 +103,14 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		elif fn or opt.hidden_incog_input_params:
 			from .filename import Filename
 			if fn:
-				f = Filename(fn,from_extension=cls)
+				f = Filename(fn,base_class=cls)
 			else:
 				# permit comma in filename
 				fn = ','.join(opt.hidden_incog_input_params.split(',')[:-1])
-				f = Filename(fn,ftype=IncogWalletHidden)
+				f = Filename(fn,subclass=IncogWalletHidden)
 			if in_fmt and not ignore_in_fmt:
-				die_on_opt_mismatch(in_fmt,f.ftype)
-			me = super(cls,cls).__new__(f.ftype)
+				die_on_opt_mismatch(in_fmt,f.subclass)
+			me = super(cls,cls).__new__(f.subclass)
 			me.infile = f
 			me.op = ('old','pwchg_old')[bool(passchg)]
 		elif in_fmt:
@@ -206,12 +206,10 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		return None
 
 	@classmethod
-	def ext_to_type(cls,ext):
-		if ext:
-			for c in cls.wallet_classes:
-				if ext == getattr(c,'ext',None):
-					return c
-		return None
+	def ext_to_type(cls,ext,proto):
+		for c in cls.wallet_classes:
+			if ext == getattr(c,'ext',None):
+				return c
 
 	@classmethod
 	def format_fmt_codes(cls):
@@ -1170,7 +1168,7 @@ harder to find, you're advised to choose a much larger file size than this.
 				die(1,'Exiting at user request')
 
 		from .filename import Filename
-		f = Filename(fn,ftype=type(self),write=True)
+		f = Filename(fn,subclass=type(self),write=True)
 
 		dmsg('{} data len {}, offset {}'.format(
 			capfirst(self.desc),
