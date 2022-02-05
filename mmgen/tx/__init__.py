@@ -41,20 +41,14 @@ def _get_cls_info(clsname,modname,args,kwargs):
 			f"{clsname} must be instantiated with 'proto','data' or 'filename' keyword" )
 
 	if clsname == 'Completed':
-		from ..util import get_extension,fmt_list
-		from .unsigned import Unsigned
-		from .signed import Signed
-
-		ext = get_extension(kwargs['filename'])
-		cls_data = {
-			Unsigned.ext: ('Unsigned','unsigned'),
-			Signed.ext:   ('OnlineSigned','online') if proto.tokensym else ('Signed','signed')
-		}
-
-		if ext not in cls_data:
-			die(1,f'{ext!r}: unrecognized file extension for CompletedTX (not in {fmt_list(cls_data)})')
-
-		clsname,modname = cls_data[ext]
+		from ..util import get_extension
+		from .completed import Completed
+		ext = get_extension( kwargs['filename'] )
+		cls = Completed.ext_to_type( ext, proto )
+		if not cls:
+			die(1,f'{ext!r}: unrecognized file extension for CompletedTX')
+		clsname = cls.__name__
+		modname = cls.__module__.split('.')[-1]
 
 	kwargs['proto'] = proto
 

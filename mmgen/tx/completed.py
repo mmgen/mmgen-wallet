@@ -51,3 +51,19 @@ class Completed(Base):
 	def file(self):
 		from ..txfile import MMGenTxFile
 		return MMGenTxFile(self)
+
+	@classmethod
+	def ext_to_type(cls,ext,proto):
+		"""
+		see twctl:import_token()
+		"""
+		from .unsigned import Unsigned
+		if ext == Unsigned.ext:
+			return Unsigned
+
+		if proto.tokensym:
+			from .online import OnlineSigned as Signed
+		else:
+			from .signed import Signed
+		if ext == Signed.ext:
+			return Signed

@@ -92,7 +92,7 @@ class tool_cmd(tool_cmd_base):
 
 		from ..filename import MMGenFileList
 		from ..tx import completed,CompletedTX
-		flist = MMGenFileList( infiles, ftype=completed.Completed )
+		flist = MMGenFileList( infiles, base_class=completed.Completed, proto=self.proto )
 		flist.sort_by_age( key=file_sort ) # in-place sort
 
 		async def process_file(f):
