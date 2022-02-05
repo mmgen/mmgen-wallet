@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-tw: Tracking wallet dependency classes for the MMGen suite
+tw: Tracking wallet dependency classes and helper functions
 """
 
 import time

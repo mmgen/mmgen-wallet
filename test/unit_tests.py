@@ -69,7 +69,8 @@ for e in exclude:
 start_time = int(time.time())
 
 if opt.list:
-	Die(0,' '.join(all_tests))
+	Msg(' '.join(all_tests))
+	sys.exit(0)
 
 class UnitTestHelpers(object):
 
