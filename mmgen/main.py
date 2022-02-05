@@ -58,3 +58,8 @@ def launch(mod):
 				][e.mmcode if hasattr(e,'mmcode') else 0]
 
 			d[0](d[1],d[2].format(n=type(e).__name__,m=m))
+	except SystemExit as e:
+		if os.getenv('MMGEN_EXEC_WRAPPER') and e.code != 0:
+			from mmgen.color import red
+			sys.stdout.write(red(f'{type(e).__name__}: {e}\n'))
+		raise

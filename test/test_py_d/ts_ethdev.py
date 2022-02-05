@@ -486,11 +486,9 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		fn = self.get_file_with_ext(ext,no_dot=True,delete=False)
 		t = self.spawn('mmgen-addrimport', self.eth_args[1:-1] + add_args + [fn])
 		if bad_input:
-			t.read()
 			return t
 		t.expect('Importing')
 		t.expect(expect)
-		t.read()
 		return t
 
 	def addrimport_one_addr(self,addr=None,extra_args=[]):
@@ -637,7 +635,6 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 		t.expect(expect_str)
 		if expect_str2:
 			t.expect(expect_str2)
-		t.read()
 		t.req_exit_val = exit_val
 		return t
 
@@ -898,11 +895,13 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 
 	def token_addrimport_badaddr1(self):
 		t = self.addrimport(ext='[11-13]{}.regtest.addrs',add_args=['--token=abc'],bad_input=True)
+		t.expect('could not be resolved')
 		t.req_exit_val = 2
 		return t
 
 	def token_addrimport_badaddr2(self):
 		t = self.addrimport(ext='[11-13]{}.regtest.addrs',add_args=['--token='+'00deadbeef'*4],bad_input=True)
+		t.expect('could not be resolved')
 		t.req_exit_val = 2
 		return t
 
@@ -967,12 +966,10 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def token_bal2(self):
 		return self.token_bal(n='2')
 
-	def twview(self,args=[],expect_str='',tool_args=[],exit_val=0):
+	def twview(self,args=[],expect_str='',tool_args=[]):
 		t = self.spawn('mmgen-tool', self.eth_args + args + ['twview'] + tool_args)
 		if expect_str:
 			t.expect(expect_str,regex=True)
-		t.read()
-		t.req_exit_val = exit_val
 		return t
 
 	def token_txcreate2(self):
@@ -1024,11 +1021,8 @@ class TestSuiteEthdev(TestSuiteBase,TestSuiteShared):
 	def bal9(self):       return self.bal(n='9')
 	def token_bal6(self): return self.token_bal(n='6')
 
-	def listaddresses(self,args=[],tool_args=['all_labels=1'],exit_val=0):
-		t = self.spawn('mmgen-tool', self.eth_args + args + ['listaddresses'] + tool_args)
-		t.read()
-		t.req_exit_val = exit_val
-		return t
+	def listaddresses(self,args=[],tool_args=['all_labels=1']):
+		return self.spawn('mmgen-tool', self.eth_args + args + ['listaddresses'] + tool_args)
 
 	def listaddresses1(self):
 		return self.listaddresses()

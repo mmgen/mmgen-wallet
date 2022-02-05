@@ -134,7 +134,6 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				+ (['--label','Joined Wallet Label','-r0'] if ofmt == 'w' else [])
 				+ shares)
 		if bad_invocation:
-			t.read()
 			return t
 		icls = ( MMGenWallet if 'mmdat' in in_exts
 			else IncogWallet if 'mmincog' in in_exts
@@ -209,10 +208,10 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		return self.ss_join(self.tdir2,'seed', ['mmhex','bip39'],
 							['-H',self.get_hincog_arg(self.tdir2,'-master7')],master=7,id_str='φυβαρ')
 
-	def ss_bad_invocation(self,cmd,args,exit_val):
+	def ss_bad_invocation(self,cmd,args,exit_val,errmsg):
 		t = self.spawn(cmd,args)
-		t.read()
 		t.req_exit_val = exit_val
+		t.expect(errmsg)
 		return t
 
 	def ss_3way_join_dfl_bad_invocation(self):
@@ -220,28 +219,51 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				['mmwords','mmincox','bip39'],
 				id_str='foo',
 				bad_invocation=True)
+		t.expect('option meaningless')
 		t.req_exit_val = 1
 		return t
 
+
 	def ss_bad_invocation1(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',[],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',[],1,'SystemExit: 1')
+
 	def ss_bad_invocation2(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',['-M1','1:9'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',['-M1','1:9'],1,'SystemExit: 1')
+
 	def ss_bad_invocation3(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',[self.tmpdir+'/no.mmdat','1:9'],1,'exception.FileNotFound')
+
 	def ss_bad_invocation4(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:9'],1,'exception.BadFileExtension')
+
 	def ss_bad_invocation5(self):
-		return self.ss_bad_invocation('mmgen-seedjoin',[],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedjoin',[],1,'SystemExit: 1')
+
 	def ss_bad_invocation6(self):
-		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedjoin',[self.tmpdir+'/a'],1,'SystemExit: 1')
+
 	def ss_bad_invocation7(self):
-		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedjoin',[self.tmpdir+'/a',self.tmpdir+'/b'],1,'exception.BadFileExtension')
+
 	def ss_bad_invocation8(self):
-		return self.ss_bad_invocation('mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedjoin',[self.tmpdir+'/a.mmdat',self.tmpdir+'/b.mmdat'],1,'exception.FileNotFound')
+
 	def ss_bad_invocation9(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',['x'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',['x'],1,'SystemExit: 1')
+
 	def ss_bad_invocation10(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',[self.tmpdir+'/a.mmdat','1:2'],1,'exception.FileNotFound')
+
 	def ss_bad_invocation11(self):
-		return self.ss_bad_invocation('mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1)
+		return self.ss_bad_invocation(
+			'mmgen-seedsplit',[self.tmpdir+'/dfl.sid','1:2'],1,'exception.BadFileExtension')

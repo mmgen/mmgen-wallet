@@ -469,13 +469,12 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 
 	def bob_twview1(self): return self.user_twview('bob', chk = ('1',rtAmts[0]) )
 
-	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False,exit_val=0):
+	def user_bal(self,user,bal,args=['showempty=1'],skip_check=False):
 		t = self.spawn('mmgen-tool',['--'+user,'listaddresses'] + args)
 		if skip_check:
 			t.read()
 		else:
 			cmp_or_die(f'{bal} {self.proto.coin}',strip_ansi_escapes(t.expect_getend('TOTAL: ')))
-		t.req_exit_val = exit_val
 		return t
 
 	def alice_bal1(self):

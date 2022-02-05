@@ -81,7 +81,7 @@ class TestSuiteTool(TestSuiteMain,TestSuiteBase):
 	def tool_twview_bad_comment(self): # test correct operation of get_tw_label()
 		os.environ['MMGEN_BOGUS_WALLET_DATA'] = joinpath(ref_dir,'bad-comment-unspent.json')
 		t = self.spawn('mmgen-tool',['twview'])
-		t.read()
+		t.expect('cannot be converted to TwComment')
 		t.req_exit_val = 2
 		return t
 
