@@ -36,9 +36,9 @@ opts_data = {
 -A, --no-daemon-autostart Don't start and stop daemons automatically
 -D, --no-daemon-stop      Don't stop auto-started daemons after running tests
 -f, --fast                Speed up execution by reducing rounds on some tests
--n, --node-tools          Select node-tools unit tests
 -l, --list                List available tests
 -n, --names               Print command names instead of descriptions
+-N, --node-tools          Select node-tools unit tests
 -q, --quiet               Produce quieter output
 -x, --exclude=T           Exclude tests 'T' (comma-separated)
 -v, --verbose             Produce more verbose output
@@ -106,7 +106,10 @@ def run_test(test,subtest=None):
 	def run_subtest(subtest):
 		msg(f'Running unit subtest {test}.{subtest}')
 		t = getattr(mod,'unit_tests')()
-		if not getattr(t,subtest)(test,UnitTestHelpers):
+		ret = getattr(t,subtest)(test,UnitTestHelpers)
+		if type(ret).__name__ == 'coroutine':
+			ret = run_session(ret)
+		if not ret:
 			rdie(1,f'Unit subtest {subtest!r} failed')
 		pass
 
