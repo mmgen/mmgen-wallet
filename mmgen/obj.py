@@ -177,6 +177,7 @@ class MMGenListItem(MMGenObject):
 		'pfmt',
 		'pmsg',
 		'pdie',
+		'pexit',
 		'valid_attrs',
 		'valid_attrs_extra',
 		'invalid_attrs',
