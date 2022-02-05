@@ -9,15 +9,69 @@
 #   https://gitlab.com/mmgen/mmgen
 
 """
-base_proto.monero.daemon: Monero daemon classes
+base_proto.monero.daemon: Monero base protocol daemon classes
 """
 
 import os
 
 from ...globalvars import g
 from ...opts import opt
-from ...util import list_gen
-from ...daemon import CoinDaemon,RPCDaemon,_nw
+from ...util import list_gen,die
+from ...daemon import CoinDaemon,RPCDaemon,_nw,_dd
+
+class monero_daemon(CoinDaemon):
+	daemon_data = _dd('Monero', 'N/A', 'N/A')
+	networks = ('mainnet','testnet')
+	exec_fn = 'monerod'
+	testnet_dir = 'stagenet'
+	new_console_mswin = True
+	host = 'localhost' # FIXME
+	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
+	cfg_file = 'bitmonero.conf'
+	datadirs = {
+		'linux': [g.home_dir,'.bitmonero'],
+		'win':   ['/','c','ProgramData','bitmonero']
+	}
+
+	def init_datadir(self):
+		self.logdir = super().init_datadir()
+		return os.path.join(
+			self.logdir,
+			self.testnet_dir if self.network == 'testnet' else '' )
+
+	def get_p2p_port(self):
+		return self.rpc_port - 1
+
+	def init_subclass(self):
+
+		from ...rpc import MoneroRPCClientRaw
+		self.rpc = MoneroRPCClientRaw(
+			host   = self.host,
+			port   = self.rpc_port,
+			user   = None,
+			passwd = None,
+			test_connection = False,
+			daemon = self )
+
+		self.shared_args = list_gen(
+			[f'--no-zmq'],
+			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
+			[f'--rpc-bind-port={self.rpc_port}'],
+			['--stagenet', self.network == 'testnet'],
+		)
+
+		self.coind_args = list_gen(
+			['--hide-my-port'],
+			['--no-igd'],
+			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
+			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
+			['--detach',                  not (self.opt.no_daemonize or self.platform=='win')],
+			['--offline',                 not self.opt.online],
+		)
+
+	@property
+	def stop_cmd(self):
+		return ['kill','-Wf',self.pid] if self.platform == 'win' else [self.exec_fn] + self.shared_args + ['exit']
 
 class MoneroWalletDaemon(RPCDaemon):
 
@@ -65,7 +119,6 @@ class MoneroWalletDaemon(RPCDaemon):
 		assert self.host
 		assert self.user
 		if not self.passwd:
-			from ...util import die
 			die(1,
 				'You must set your Monero wallet RPC password.\n' +
 				'This can be done on the command line with the --wallet-rpc-password option\n' +

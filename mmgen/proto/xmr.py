@@ -19,6 +19,7 @@ class mainnet(CoinProtocol.DummyWIF,CoinProtocol.Base):
 
 	network_names  = _nw('mainnet','stagenet',None)
 	base_coin      = 'XMR'
+	base_proto     = 'Monero'
 	addr_ver_bytes = { '12': 'monero', '2a': 'monero_sub' }
 	addr_len       = 68
 	wif_ver_num    = {}

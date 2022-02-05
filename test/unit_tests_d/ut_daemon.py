@@ -62,7 +62,7 @@ def test_cmds(op):
 			for daemon_id in data.daemon_ids:
 				if daemon_id in arm_skip_daemons:
 					continue
-				for network in getattr( daemon_mod, daemon_id+'_daemon' ).networks:
+				for network in data.networks:
 					if opt.no_altcoin_deps and coin != 'BTC':
 						continue
 					d = CoinDaemon(

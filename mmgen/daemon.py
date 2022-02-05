@@ -20,17 +20,15 @@
 daemon.py:  Daemon control interface for the MMGen suite
 """
 
-import os,shutil,time
+import os,time,importlib
 from subprocess import run,PIPE,CompletedProcess
 from collections import namedtuple
 
 from .globalvars import g
-from .opts import opt
-from .util import msg,die,list_gen,get_subclasses
+from .util import msg,die
 from .flags import *
 
 _dd = namedtuple('daemon_data',['coind_name','coind_version','coind_version_str']) # latest tested version
-_cd = namedtuple('coins_data',['coin_name','daemon_ids'])
 _nw = namedtuple('coin_networks',['mainnet','testnet','regtest'])
 
 class Daemon(Lockable):
@@ -256,22 +254,23 @@ class CoinDaemon(Daemon):
 	rpc_user = None
 	rpc_password = None
 
+	_cd = namedtuple('coins_data',['coin_name','networks','daemon_ids'])
 	coins = {
-		'BTC': _cd('Bitcoin',           ['bitcoin_core']),
-		'BCH': _cd('Bitcoin Cash Node', ['bitcoin_cash_node']),
-		'LTC': _cd('Litecoin',          ['litecoin_core']),
-		'XMR': _cd('Monero',            ['monero']),
-		'ETH': _cd('Ethereum',          ['openethereum','geth'] + (['erigon'] if g.enable_erigon else []) ),
-		'ETC': _cd('Ethereum Classic',  ['parity']),
+		'BTC': _cd('Bitcoin',           networks,              ['bitcoin_core']),
+		'BCH': _cd('Bitcoin Cash Node', networks,              ['bitcoin_cash_node']),
+		'LTC': _cd('Litecoin',          networks,              ['litecoin_core']),
+		'XMR': _cd('Monero',            ('mainnet','testnet'), ['monero']),
+		'ETH': _cd('Ethereum',          networks,              ['openethereum','geth']
+			+ (['erigon'] if g.enable_erigon else []) ),
+		'ETC': _cd('Ethereum Classic',  networks,              ['parity']),
 	}
 
 	@classmethod
 	def get_network_ids(cls): # FIXME: gets IDs for _default_ daemon only
 		from .protocol import CoinProtocol
-		import mmgen.daemon as daemon_mod
 		def gen():
 			for coin,data in cls.coins.items():
-				for network in getattr( daemon_mod, data.daemon_ids[0]+'_daemon' ).networks:
+				for network in data.networks:
 					yield CoinProtocol.Base.create_network_id(coin,network)
 		return list(gen())
 
@@ -306,8 +305,10 @@ class CoinDaemon(Daemon):
 		if daemon_id not in daemon_ids:
 			die(1,f'{daemon_id!r}: invalid daemon_id - valid choices: {fmt_list(daemon_ids)}')
 
-		import mmgen.daemon
-		me = Daemon.__new__( getattr(mmgen.daemon, daemon_id+'_daemon') )
+		me = Daemon.__new__(
+			getattr(
+				importlib.import_module(f'mmgen.base_proto.{proto.base_proto.lower()}.daemon'),
+				daemon_id + '_daemon' ))
 
 		assert network in me.networks, f'{network!r}: unsupported network for daemon {daemon_id}'
 		me.network = network
@@ -429,356 +430,3 @@ class CoinDaemon(Daemon):
 				pass
 		else:
 			msg(f'Cannot remove {self.network_datadir!r} - daemon is not stopped')
-
-class bitcoin_core_daemon(CoinDaemon):
-	daemon_data = _dd('Bitcoin Core', 220000, '22.0.0')
-	exec_fn = 'bitcoind'
-	cli_fn = 'bitcoin-cli'
-	testnet_dir = 'testnet3'
-	cfg_file_hdr = '# Bitcoin Core config file\n'
-	tracking_wallet_name = 'mmgen-tracking-wallet'
-	rpc_ports = _nw(8332, 18332, 18443)
-	cfg_file = 'bitcoin.conf'
-	datadirs = {
-		'linux': [g.home_dir,'.bitcoin'],
-		'win':   [os.getenv('APPDATA'),'Bitcoin']
-	}
-	nonstd_datadir = False
-
-	def init_datadir(self):
-		if self.network == 'regtest' and not self.test_suite:
-			return os.path.join( g.data_dir_root, 'regtest', g.coin.lower() )
-		else:
-			return super().init_datadir()
-
-	@property
-	def network_datadir(self):
-		"location of the network's blockchain data and authentication cookie"
-		return os.path.join (
-			self.datadir, {
-				'mainnet': '',
-				'testnet': self.testnet_dir,
-				'regtest': 'regtest',
-			}[self.network] )
-
-	def init_subclass(self):
-
-		if self.network == 'regtest':
-			"""
-			fall back on hard-coded credentials
-			"""
-			from .regtest import MMGenRegtest
-			self.rpc_user = MMGenRegtest.rpc_user
-			self.rpc_password = MMGenRegtest.rpc_password
-
-		self.shared_args = list_gen(
-			[f'--datadir={self.datadir}',         self.nonstd_datadir or self.non_dfl_datadir],
-			[f'--rpcport={self.rpc_port}'],
-			[f'--rpcuser={self.rpc_user}',         self.network == 'regtest'],
-			[f'--rpcpassword={self.rpc_password}', self.network == 'regtest'],
-			['--testnet',                          self.network == 'testnet'],
-			['--regtest',                          self.network == 'regtest'],
-		)
-
-		self.coind_args = list_gen(
-			['--listen=0'],
-			['--keypool=1'],
-			['--rpcallowip=127.0.0.1'],
-			[f'--rpcbind=127.0.0.1:{self.rpc_port}'],
-			['--pid='+self.pidfile,    self.use_pidfile],
-			['--daemon',               self.platform == 'linux' and not self.opt.no_daemonize],
-			['--fallbackfee=0.0002',   self.coin == 'BTC' and self.network == 'regtest'],
-			['--usecashaddr=0',        self.coin == 'BCH'],
-			['--mempoolreplacement=1', self.coin == 'LTC'],
-			['--txindex=1',            self.coin == 'LTC' or self.network == 'regtest'],
-		)
-
-		self.lockfile = os.path.join(self.network_datadir,'.cookie')
-
-	@property
-	def state(self):
-		cp = self.cli('getblockcount',silent=True)
-		err = cp.stderr.decode()
-		if ("error: couldn't connect" in err
-			or "error: Could not connect" in err
-			or "does not exist" in err ):
-			# regtest has no cookie file, so test will always fail
-			ret = 'busy' if (self.lockfile and os.path.exists(self.lockfile)) else 'stopped'
-		elif cp.returncode == 0:
-			ret = 'ready'
-		else:
-			ret = 'busy'
-		if self.debug:
-			print(f'State: {ret!r}')
-		return ret
-
-	@property
-	def stop_cmd(self):
-		return self.cli_cmd('stop')
-
-	def set_label_args(self,rpc,coinaddr,lbl):
-		if 'label_api' in rpc.caps:
-			return ('setlabel',coinaddr,lbl)
-		else:
-			# NOTE: this works because importaddress() removes the old account before
-			# associating the new account with the address.
-			# RPC args: addr,label,rescan[=true],p2sh[=none]
-			return ('importaddress',coinaddr,lbl,False)
-
-	def estimatefee_args(self,rpc):
-		return (opt.tx_confs,)
-
-	def sigfail_errmsg(self,e):
-		return e.args[0]
-
-class bitcoin_cash_node_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Bitcoin Cash Node', 24000000, '24.0.0')
-	exec_fn = 'bitcoind-bchn'
-	cli_fn = 'bitcoin-cli-bchn'
-	rpc_ports = _nw(8432, 18432, 18543) # use non-standard ports (core+100)
-	datadirs = {
-		'linux': [g.home_dir,'.bitcoin-bchn'],
-		'win':   [os.getenv('APPDATA'),'Bitcoin_ABC']
-	}
-	cfg_file_hdr = '# Bitcoin Cash Node config file\n'
-	nonstd_datadir = True
-
-	def set_label_args(self,rpc,coinaddr,lbl):
-		# bitcoin-{abc,bchn} 'setlabel' RPC is broken, so use old 'importaddress' method to set label
-		# Broken behavior: new label is set OK, but old label gets attached to another address
-		return ('importaddress',coinaddr,lbl,False)
-
-	def estimatefee_args(self,rpc):
-		return () if rpc.daemon_version >= 190100 else (opt.tx_confs,)
-
-	def sigfail_errmsg(self,e):
-		return (
-			'This is not the BCH chain.\nRe-run the script without the --coin=bch option.'
-				if 'Invalid sighash param' in e.args[0] else
-			e.args[0] )
-
-class litecoin_core_daemon(bitcoin_core_daemon):
-	daemon_data = _dd('Litecoin Core', 180100, '0.18.1')
-	exec_fn = 'litecoind'
-	cli_fn = 'litecoin-cli'
-	testnet_dir = 'testnet4'
-	rpc_ports = _nw(9332, 19332, 19443)
-	cfg_file = 'litecoin.conf'
-	datadirs = {
-		'linux': [g.home_dir,'.litecoin'],
-		'win':   [os.getenv('APPDATA'),'Litecoin']
-	}
-	cfg_file_hdr = '# Litecoin Core config file\n'
-
-class monero_daemon(CoinDaemon):
-	daemon_data = _dd('Monero', 'N/A', 'N/A')
-	networks = ('mainnet','testnet')
-	exec_fn = 'monerod'
-	testnet_dir = 'stagenet'
-	new_console_mswin = True
-	host = 'localhost' # FIXME
-	rpc_ports = _nw(18081, 38081, None) # testnet is stagenet
-	cfg_file = 'bitmonero.conf'
-	datadirs = {
-		'linux': [g.home_dir,'.bitmonero'],
-		'win':   ['/','c','ProgramData','bitmonero']
-	}
-
-	def init_datadir(self):
-		self.logdir = super().init_datadir()
-		return os.path.join(
-			self.logdir,
-			self.testnet_dir if self.network == 'testnet' else '' )
-
-	def get_p2p_port(self):
-		return self.rpc_port - 1
-
-	def init_subclass(self):
-
-		from .rpc import MoneroRPCClientRaw
-		self.rpc = MoneroRPCClientRaw(
-			host   = self.host,
-			port   = self.rpc_port,
-			user   = None,
-			passwd = None,
-			test_connection = False,
-			daemon = self )
-
-		self.shared_args = list_gen(
-			[f'--no-zmq'],
-			[f'--p2p-bind-port={self.p2p_port}', self.p2p_port],
-			[f'--rpc-bind-port={self.rpc_port}'],
-			['--stagenet', self.network == 'testnet'],
-		)
-
-		self.coind_args = list_gen(
-			['--hide-my-port'],
-			['--no-igd'],
-			[f'--data-dir={self.datadir}', self.non_dfl_datadir],
-			[f'--pidfile={self.pidfile}', self.platform == 'linux'],
-			['--detach',                  not (self.opt.no_daemonize or self.platform=='win')],
-			['--offline',                 not self.opt.online],
-		)
-
-	@property
-	def stop_cmd(self):
-		return ['kill','-Wf',self.pid] if self.platform == 'win' else [self.exec_fn] + self.shared_args + ['exit']
-
-class ethereum_daemon(CoinDaemon):
-	chain_subdirs = _nw('ethereum','goerli','DevelopmentChain')
-	base_rpc_port = 8545  # same for all networks!
-	base_p2p_port = 30303 # same for all networks!
-	daemon_port_offset = 100
-	network_port_offsets = _nw(0,10,20)
-
-	def __init__(self,*args,**kwargs):
-
-		if not hasattr(self,'all_daemons'):
-			ethereum_daemon.all_daemons = get_subclasses(ethereum_daemon,names=True)
-
-		self.port_offset = (
-			self.all_daemons.index(self.id+'_daemon') * self.daemon_port_offset
-			+ getattr(self.network_port_offsets,self.network) )
-
-		return super().__init__(*args,**kwargs)
-
-	def get_rpc_port(self):
-		return self.base_rpc_port + self.port_offset
-
-	def get_p2p_port(self):
-		return self.base_p2p_port + self.port_offset
-
-	def init_datadir(self):
-		self.logdir = super().init_datadir()
-		return os.path.join(
-			self.logdir,
-			self.id,
-			getattr(self.chain_subdirs,self.network) )
-
-class openethereum_daemon(ethereum_daemon):
-	daemon_data = _dd('OpenEthereum', 3003000, '3.3.0')
-	version_pat = r'OpenEthereum//v(\d+)\.(\d+)\.(\d+)'
-	exec_fn = 'openethereum'
-	cfg_file = 'parity.conf'
-	datadirs = {
-		'linux': [g.home_dir,'.local','share','io.parity.ethereum'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Parity','Ethereum']
-	}
-
-	def init_subclass(self):
-
-		ld = self.platform == 'linux' and not self.opt.no_daemonize
-
-		self.coind_args = list_gen(
-			['--no-ws'],
-			['--no-ipc'],
-			['--no-secretstore'],
-			[f'--jsonrpc-port={self.rpc_port}'],
-			[f'--port={self.p2p_port}', self.p2p_port],
-			[f'--base-path={self.datadir}', self.non_dfl_datadir],
-			[f'--chain={self.proto.chain_name}', self.network!='regtest'],
-			[f'--config=dev', self.network=='regtest'], # no presets for mainnet or testnet
-			['--mode=offline', self.test_suite or self.network=='regtest'],
-			[f'--log-file={self.logfile}', self.non_dfl_datadir],
-			['daemon', ld],
-			[self.pidfile, ld],
-		)
-
-class parity_daemon(openethereum_daemon):
-	daemon_data = _dd('Parity', 2007002, '2.7.2')
-	version_pat = r'Parity-Ethereum//v(\d+)\.(\d+)\.(\d+)'
-	exec_fn = 'parity'
-
-class geth_daemon(ethereum_daemon):
-	daemon_data = _dd('Geth', 1010014, '1.10.14')
-	version_pat = r'Geth/v(\d+)\.(\d+)\.(\d+)'
-	exec_fn = 'geth'
-	use_pidfile = False
-	use_threads = True
-	datadirs = {
-		'linux': [g.home_dir,'.ethereum','geth'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Geth'] # FIXME
-	}
-
-	def init_subclass(self):
-		self.coind_args = list_gen(
-			['--verbosity=0'],
-			['--http'],
-			['--http.api=eth,web3,txpool'],
-			[f'--http.port={self.rpc_port}'],
-			[f'--port={self.p2p_port}', self.p2p_port], # geth binds p2p port even with --maxpeers=0
-			['--maxpeers=0', not self.opt.online],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir],
-			['--goerli', self.network=='testnet'],
-			['--dev', self.network=='regtest'],
-		)
-
-# https://github.com/ledgerwatch/erigon
-class erigon_daemon(geth_daemon):
-	daemon_data = _dd('Erigon', 2021009005, '2021.09.5')
-	version_pat = r'erigon/(\d+)\.(\d+)\.(\d+)'
-	exec_fn = 'erigon'
-	private_ports = _nw(9090,9091,9092) # testnet and regtest are non-standard
-	datadirs = {
-		'linux': [g.home_dir,'.local','share','erigon'],
-		'win':   [os.getenv('LOCALAPPDATA'),'Erigon'] # FIXME
-	}
-
-	def init_subclass(self):
-		self.coind_args = list_gen(
-			['--verbosity=0'],
-			[f'--port={self.p2p_port}', self.p2p_port],
-			['--maxpeers=0', not self.opt.online],
-			[f'--private.api.addr=127.0.0.1:{self.private_port}'],
-			[f'--datadir={self.datadir}', self.non_dfl_datadir and not self.network=='regtest'],
-			['--chain=goerli', self.network=='testnet'],
-			['--chain=dev', self.network=='regtest'],
-			['--mine', self.network=='regtest'],
-		)
-		self.rpc_d = erigon_rpcdaemon(
-			proto        = self.proto,
-			rpc_port     = self.rpc_port,
-			private_port = self.private_port,
-			test_suite   = self.test_suite,
-			datadir      = self.datadir )
-
-	def start(self,quiet=False,silent=False):
-		super().start(quiet=quiet,silent=silent)
-		self.rpc_d.debug = self.debug
-		return self.rpc_d.start(quiet=quiet,silent=silent)
-
-	def stop(self,quiet=False,silent=False):
-		self.rpc_d.debug = self.debug
-		self.rpc_d.stop(quiet=quiet,silent=silent)
-		return super().stop(quiet=quiet,silent=silent)
-
-	@property
-	def start_cmds(self):
-		return [self.start_cmd,self.rpc_d.start_cmd]
-
-class erigon_rpcdaemon(RPCDaemon):
-
-	master_daemon = 'erigon_daemon'
-	rpc_type = 'Erigon'
-	exec_fn = 'rpcdaemon'
-	use_pidfile = False
-	use_threads = True
-
-	def __init__(self,proto,rpc_port,private_port,test_suite,datadir):
-
-		self.proto = proto
-		self.test_suite = test_suite
-
-		super().__init__()
-
-		self.network = proto.network
-		self.rpc_port = rpc_port
-		self.datadir = datadir
-
-		self.daemon_args = list_gen(
-			['--verbosity=0'],
-			[f'--private.api.addr=127.0.0.1:{private_port}'],
-			[f'--http.port={self.rpc_port}'],
-			[f'--datadir={self.datadir}', self.network != 'regtest'],
-			['--http.api=eth,web3,txpool'],
-		)
