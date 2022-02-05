@@ -665,29 +665,21 @@ def get_subclasses(cls,names=False):
 				yield j
 	return tuple((c.__name__ for c in gen(cls)) if names else gen(cls))
 
-def base_proto_subclass(cls,proto,mod_dir):
+def base_proto_subclass(cls,proto,modname):
 	"""
-	magic module loading and class retrieval
+	magic module loading and class selection
 	"""
-
 	if proto.base_proto != 'Ethereum':
 		return cls
 
-	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.{mod_dir}'
+	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.{modname}'
+	clsname = (
+		proto.mod_clsname
+		+ ('Token' if proto.tokensym else '')
+		+ cls.__name__ )
 
 	import importlib
-	if mod_dir == 'tx': # nested classes
-		outer_clsname,inner_clsname = (
-			proto.mod_clsname
-			+ ('Token' if proto.tokensym else '')
-			+ cls.__qualname__ ).split('.')
-		return getattr(getattr(importlib.import_module(modname),outer_clsname),inner_clsname)
-	else:
-		clsname = (
-			proto.mod_clsname
-			+ ('Token' if proto.tokensym else '')
-			+ cls.__name__ )
-		return getattr(importlib.import_module(modname),clsname)
+	return getattr(importlib.import_module(modname),clsname)
 
 # decorator for TrackingWallet
 def write_mode(orig_func):
