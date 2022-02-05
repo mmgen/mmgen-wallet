@@ -23,7 +23,6 @@ obj.py: MMGen native classes
 import sys,os,re,unicodedata
 
 from .objmethods import *
-from .exception import BadTwComment
 
 def get_obj(objname,*args,**kwargs):
 	"""
@@ -378,7 +377,7 @@ class MMGenWalletLabel(MMGenLabel):
 class TwComment(MMGenLabel):
 	max_screen_width = 80
 	desc = 'tracking wallet comment'
-	exc = BadTwComment
+	exc = 'BadTwComment'
 
 class MMGenTxLabel(MMGenLabel):
 	max_len = 72

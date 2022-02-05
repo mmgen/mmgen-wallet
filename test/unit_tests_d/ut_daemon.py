@@ -5,7 +5,6 @@ test/unit_tests_d/ut_daemon.py: unit test for the MMGen suite's Daemon class
 
 from subprocess import run,DEVNULL
 from mmgen.common import *
-from mmgen.exception import *
 from mmgen.daemon import *
 from mmgen.protocol import init_proto
 

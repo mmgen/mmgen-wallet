@@ -89,8 +89,7 @@ def _check_file_type_and_access(fname,ftype,blkdev_ok=False):
 	try:
 		mode = os.stat(fname).st_mode
 	except:
-		from .exception import FileNotFound
-		raise FileNotFound(f'Requested {ftype} {fname!r} not found')
+		die( 'FileNotFound', f'Requested {ftype} {fname!r} not found' )
 
 	for t in ok_types:
 		if t[0](mode):
@@ -289,8 +288,8 @@ def get_data_from_file(infile,desc='data',dash=False,silent=False,binary=False,q
 		data = data.decode()
 
 	if len(data) == g.max_input_size + 1:
-		from .exception import MaxInputSizeExceeded
-		raise MaxInputSizeExceeded(f'Too much input data!  Max input data size: {f.max_input_size} bytes')
+		die( 'MaxInputSizeExceeded',
+			f'Too much input data!  Max input data size: {f.max_input_size} bytes' )
 
 	return data
 

@@ -126,8 +126,7 @@ class TwAddrList(MMGenDict,TwCommon,metaclass=AsyncInit):
 		if not self.has_age:
 			show_age = False
 		if age_fmt not in self.age_fmts:
-			from .exception import BadAgeFormat
-			raise BadAgeFormat(f'{age_fmt!r}: invalid age format (must be one of {self.age_fmts!r})')
+			die( 'BadAgeFormat', f'{age_fmt!r}: invalid age format (must be one of {self.age_fmts!r})' )
 		fs = '{mid}' + ('',' {addr}')[showbtcaddrs] + ' {cmt} {amt}' + ('',' {age}')[show_age]
 		mmaddrs = [k for k in self.keys() if k.type == 'mmgen']
 		max_mmid_len = max(len(k) for k in mmaddrs) + 2 if mmaddrs else 10

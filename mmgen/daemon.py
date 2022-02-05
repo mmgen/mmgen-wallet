@@ -80,8 +80,7 @@ class Daemon(Lockable):
 		try:
 			cp = run(cmd,check=False,stdout=out,stderr=out)
 		except Exception as e:
-			from .exception import MMGenCalledProcessError
-			raise MMGenCalledProcessError(f'Error starting executable: {type(e).__name__} [Errno {e.errno}]')
+			die( 'MMGenCalledProcessError', f'Error starting executable: {type(e).__name__} [Errno {e.errno}]' )
 		if self.debug:
 			print(cp)
 		return cp

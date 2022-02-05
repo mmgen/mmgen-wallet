@@ -4,7 +4,6 @@ test/unit_tests_d/ut_xmrseed: Monero mnemonic unit test for the MMGen suite
 """
 
 from mmgen.common import *
-from mmgen.exception import *
 
 class unit_test(object):
 

@@ -28,7 +28,6 @@ import sys,os,re
 from collections import namedtuple
 
 from .globalvars import *
-from .exception import CfgFileParseError
 from .util import *
 
 def cfg_file(id_str):
@@ -92,7 +91,7 @@ class CfgFile(object):
 				if m:
 					yield self.line_data(m[1],m[3],lineno,None)
 				else:
-					raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
+					die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
 		return gen_lines()
 
 	@classmethod
@@ -135,7 +134,7 @@ class CfgFileSample(CfgFile):
 			if m:
 				return self.line_data(m[2],m[4],lineno,chunk)
 			else:
-				raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
+				die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
 
 		def gen_chunks(lines):
 			hdr = True
@@ -163,7 +162,7 @@ class CfgFileSample(CfgFile):
 						chunk.append(line)
 					last_nonblank = lineno
 				else:
-					raise CfgFileParseError(f'Parse error in file {self.fn!r}, line {lineno}')
+					die( 'CfgFileParseError', f'Parse error in file {self.fn!r}, line {lineno}' )
 
 			if chunk:
 				yield process_chunk(chunk,last_nonblank)

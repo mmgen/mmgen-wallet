@@ -54,17 +54,15 @@ class xmrseed(baseconv):
 		wl = self.digits
 		base = len(wl)
 
-		from .exception import MnemonicError
-
 		if not set(words) <= set(wl):
-			raise MnemonicError( f'{words!r}: not in {desc} format' )
+			die( 'MnemonicError',  f'{words!r}: not in {desc} format'  )
 
 		if len(words) not in self.seedlen_map_rev:
-			raise MnemonicError( f'{len(words)}: invalid seed phrase length for {desc}' )
+			die( 'MnemonicError',  f'{len(words)}: invalid seed phrase length for {desc}' )
 
 		z = self.monero_mn_checksum(words[:-1])
 		if z != words[-1]:
-			raise MnemonicError(f'invalid {desc} checksum')
+			die( 'MnemonicError', f'invalid {desc} checksum' )
 
 		words = tuple(words[:-1])
 
@@ -84,8 +82,7 @@ class xmrseed(baseconv):
 		base = len(wl)
 
 		if len(bytestr) not in self.seedlen_map:
-			from .exception import SeedLengthError
-			raise SeedLengthError(f'{len(bytestr)}: invalid seed byte length for {desc}')
+			die( 'SeedLengthError', f'{len(bytestr)}: invalid seed byte length for {desc}' )
 
 		def num2base_monero(num):
 			w1 = num % base

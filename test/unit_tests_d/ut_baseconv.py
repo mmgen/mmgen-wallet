@@ -4,7 +4,6 @@ test/unit_tests_d/ut_baseconv.py: Base conversion unit test for the MMGen suite
 """
 
 from mmgen.common import *
-from mmgen.exception import *
 
 class unit_test(object):
 

@@ -112,7 +112,8 @@ def cleandir(d,do_msg=False):
 def mk_tmpdir(d):
 	try: os.mkdir(d,0o755)
 	except OSError as e:
-		if e.errno != 17: raise
+		if e.errno != 17:
+			raise
 	else:
 		vmsg(f'Created directory {d!r}')
 
@@ -149,7 +150,7 @@ def ok():
 
 def cmp_or_die(s,t,desc=None):
 	if s != t:
-		raise TestSuiteFatalException(
+		die( 'TestSuiteFatalException',
 			(f'For {desc}:\n' if desc else '') +
 			f'ERROR: recoded data:\n{t!r}\ndiffers from original data:\n{s!r}'
 		)

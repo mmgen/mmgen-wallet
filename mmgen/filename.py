@@ -54,16 +54,14 @@ class Filename(MMGenObject):
 		if base_class:
 			subclass = base_class.ext_to_type(self.ext,proto)
 			if not subclass:
-				from .exception import BadFileExtension
-				raise BadFileExtension(f'{self.ext!r}: not a recognized file extension for {base_class}')
+				die( 'BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}' )
 
 		self.subclass = subclass
 
 		try:
 			st = os.stat(fn)
 		except:
-			from .exception import FileNotFound
-			raise FileNotFound(f'{fn!r}: file not found')
+			die( 'FileNotFound', f'{fn!r}: file not found' )
 
 		import stat
 		if stat.S_ISBLK(st.st_mode):

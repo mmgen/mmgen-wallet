@@ -4,7 +4,6 @@ test/unit_tests_d/ut_lockable.py: unit test for the MMGen suite's Lockable class
 """
 
 from mmgen.common import *
-from mmgen.exception import *
 
 class unit_test(object):
 

@@ -22,9 +22,8 @@ bip39.py - Data and routines for BIP39 mnemonic seed phrases
 
 from hashlib import sha256
 
-from .exception import MnemonicError
 from .baseconv import baseconv
-from .util import is_hex_str
+from .util import is_hex_str,die
 
 def is_bip39_str(s):
 	return bool( bip39().tohex(s.split()) )
@@ -59,7 +58,7 @@ class bip39(baseconv):
 		for k,v in cls.constants.items():
 			if v.mn_len == nwords:
 				return k//8 if in_bytes else k//4 if in_hex else k
-		raise MnemonicError(f'{nwords!r}: invalid word length for BIP39 mnemonic')
+		die( 'MnemonicError', f'{nwords!r}: invalid word length for BIP39 mnemonic' )
 
 	@classmethod
 	def seedlen2nwords(cls,seed_len,in_bytes=False,in_hex=False):
@@ -83,7 +82,7 @@ class bip39(baseconv):
 
 		for n,w in enumerate(words):
 			if w not in wl:
-				raise MnemonicError(f'word #{n+1} is not in the BIP39 word list')
+				die( 'MnemonicError', f'word #{n+1} is not in the BIP39 word list' )
 
 		res = ''.join(['{:011b}'.format(wl.index(w)) for w in words])
 
@@ -92,7 +91,7 @@ class bip39(baseconv):
 				bitlen = k
 				break
 		else:
-			raise MnemonicError(f'{len(words)}: invalid BIP39 seed phrase length')
+			die( 'MnemonicError', f'{len(words)}: invalid BIP39 seed phrase length' )
 
 		seed_bin = res[:bitlen]
 		chk_bin = res[bitlen:]
@@ -105,7 +104,7 @@ class bip39(baseconv):
 		chk_bin_chk = '{:0{w}b}'.format(int(chk_hex_chk,16),w=256)[:chk_len]
 
 		if chk_bin != chk_bin_chk:
-			raise MnemonicError('invalid BIP39 seed phrase checksum')
+			die( 'MnemonicError', 'invalid BIP39 seed phrase checksum' )
 
 		return seed_hex
 

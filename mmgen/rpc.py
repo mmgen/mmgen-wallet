@@ -190,7 +190,7 @@ class RPCBackends:
 					headers = self.http_hdrs )
 				r = s.getresponse() # => http.client.HTTPResponse instance
 			except Exception as e:
-				raise RPCFailure(str(e))
+				die( 'RPCFailure', str(e) )
 
 			if timeout:
 				ret = ( r.read(), r.status )
@@ -303,8 +303,7 @@ class RPCClient(MMGenObject):
 			try:
 				socket.create_connection((host,port),timeout=1).close()
 			except:
-				from .exception import SocketError
-				raise SocketError(f'Unable to connect to {host}:{port}')
+				die( 'SocketError', f'Unable to connect to {host}:{port}' )
 
 		self.http_hdrs = { 'Content-Type': 'application/json' }
 		self.url = f'{self.network_proto}://{host}:{port}{self.host_path}'
@@ -435,7 +434,7 @@ class RPCClient(MMGenObject):
 					except:
 						try: m = t['error']
 						except: m = t
-					raise RPCFailure(m)
+					die( 'RPCFailure', m )
 		else:
 			import http
 			m,s = ( '', http.HTTPStatus(status) )
@@ -445,7 +444,7 @@ class RPCClient(MMGenObject):
 				except:
 					try: m = text.decode()
 					except: m = text
-			raise RPCFailure(f'{s.value} {s.name}: {m}')
+			die( 'RPCFailure', f'{s.value} {s.name}: {m}' )
 
 	async def stop_daemon(self,quiet=False,silent=False):
 		if self.daemon.state == 'ready':
@@ -852,10 +851,10 @@ async def rpc_init(proto,backend=None,daemon=None,ignore_daemon_version=False):
 			ignore_daemon_version or proto.ignore_daemon_version or g.ignore_daemon_version )
 
 	if rpc.chain not in proto.chain_names:
-		raise RPCChainMismatch('\n'+fmt(f"""
+		die( 'RPCChainMismatch', '\n' + fmt(f"""
 			Protocol:           {proto.cls_name}
 			Valid chain names:  {fmt_list(proto.chain_names,fmt='bare')}
 			RPC client chain:   {rpc.chain}
-			""",indent='  ').rstrip())
+			""",indent='  ').rstrip() )
 
 	return rpc

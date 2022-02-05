@@ -115,13 +115,14 @@ class InitErrors:
 		if m2:
 			errmsg = repr(m2) + '\n' + errmsg
 
-		if hasattr(cls,'passthru_excs') and type(e) in cls.passthru_excs:
+		from .util import die
+
+		if hasattr(cls,'passthru_excs') and type(e).__name__ in cls.passthru_excs:
 			raise
 		elif hasattr(cls,'exc'):
-			raise cls.exc(errmsg)
+			die( cls.exc, errmsg )
 		else:
-			from .exception import ObjectInitError
-			raise ObjectInitError(errmsg)
+			die( 'ObjectInitError', errmsg )
 
 	@classmethod
 	def method_not_implemented(cls):

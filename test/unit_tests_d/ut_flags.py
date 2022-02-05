@@ -4,7 +4,6 @@ test/unit_tests_d/ut_flags.py: unit test for the MMGen suite's ClassFlags class
 """
 
 from mmgen.common import *
-from mmgen.exception import *
 from mmgen.flags import *
 
 class unit_test(object):

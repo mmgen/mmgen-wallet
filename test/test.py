@@ -460,7 +460,8 @@ def create_tmp_dirs(shm_dir):
 			try:
 				os.unlink(cfgs[cfg]['tmpdir'])
 			except OSError as e:
-				if e.errno != 2: raise
+				if e.errno != 2:
+					raise
 			finally:
 				os.symlink(src,cfgs[cfg]['tmpdir'])
 

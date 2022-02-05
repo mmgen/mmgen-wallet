@@ -21,7 +21,6 @@ opts.py:  MMGen-specific options processing after generic processing by share.Op
 """
 import sys,os,stat
 
-from .exception import UserOptError,CfgFileParseError
 from .globalvars import g
 from .base_obj import Lockable
 
@@ -163,11 +162,13 @@ def override_globals_from_cfg_file(ucfg,need_proto):
 			refval = getattr(cls,attr)
 			val = ucfg.parse_value(d.value,refval)
 			if not val:
-				raise CfgFileParseError(f'Parse error in file {ucfg.fn!r}, line {d.lineno}')
+				from .util import die
+				die( 'CfgFileParseError', f'Parse error in file {ucfg.fn!r}, line {d.lineno}' )
 			val_conv = set_for_type(val,refval,attr,src=ucfg.fn)
 			setattr(cls,attr,val_conv)
 		else:
-			raise CfgFileParseError(f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}')
+			from .util import die
+			die( 'CfgFileParseError', f'{d.name!r}: unrecognized option in {ucfg.fn!r}, line {d.lineno}' )
 
 def override_globals_and_set_opts_from_env(opt):
 	for name in g.env_opts:
@@ -426,39 +427,39 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		try:
 			l = val.split(sep)
 		except:
-			raise UserOptError(f'{val!r}: invalid {desc} (not {sepword}-separated list)')
+			die( 'UserOptError', f'{val!r}: invalid {desc} (not {sepword}-separated list)' )
 
 		if len(l) != n:
-			raise UserOptError(f'{val!r}: invalid {desc} ({n} {sepword}-separated items required)')
+			die( 'UserOptError', f'{val!r}: invalid {desc} ({n} {sepword}-separated items required)' )
 
 	def opt_compares(val,op_str,target,desc,desc2=''):
 		import operator as o
 		op_f = { '<':o.lt, '<=':o.le, '>':o.gt, '>=':o.ge, '=':o.eq }[op_str]
 		if not op_f(val,target):
 			d2 = desc2 + ' ' if desc2 else ''
-			raise UserOptError(f'{val}: invalid {desc} ({d2}not {op_str} {target})')
+			die( 'UserOptError', f'{val}: invalid {desc} ({d2}not {op_str} {target})' )
 
 	def opt_is_int(val,desc):
 		if not is_int(val):
-			raise UserOptError(f'{val!r}: invalid {desc} (not an integer)')
+			die( 'UserOptError', f'{val!r}: invalid {desc} (not an integer)' )
 
 	def opt_is_float(val,desc):
 		try:
 			float(val)
 		except:
-			raise UserOptError(f'{val!r}: invalid {desc} (not a floating-point number)')
+			die( 'UserOptError', f'{val!r}: invalid {desc} (not a floating-point number)' )
 
 	def opt_is_in_list(val,tlist,desc):
 		if val not in tlist:
 			q,sep = (('',','),("'","','"))[type(tlist[0]) == str]
-			raise UserOptError('{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(
+			die( 'UserOptError', '{q}{v}{q}: invalid {w}\nValid choices: {q}{o}{q}'.format(
 				v = val,
 				w = desc,
 				q = q,
 				o = sep.join(map(str,sorted(tlist))) ))
 
 	def opt_unrecognized(key,val,desc='value'):
-		raise UserOptError(f'{val!r}: unrecognized {desc} for option {fmt_opt(key)!r}')
+		die( 'UserOptError', f'{val!r}: unrecognized {desc} for option {fmt_opt(key)!r}' )
 
 	def opt_display(key,val='',beg='For selected',end=':\n'):
 		from .util import msg_r
@@ -475,15 +476,15 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		if key == 'out_fmt':
 			p = 'hidden_incog_output_params'
 			if sstype == IncogWalletHidden and not getattr(opt,p):
-				raise UserOptError(
+				die( 'UserOptError',
 					'Hidden incog format output requested.  ' +
 					f'You must supply a file and offset with the {fmt_opt(p)!r} option' )
 			if issubclass(sstype,IncogWallet) and opt.old_incog_fmt:
 				opt_display(key,val,beg='Selected',end=' ')
 				opt_display('old_incog_fmt',beg='conflicts with',end=':\n')
-				raise UserOptError('Export to old incog wallet format unsupported')
+				die( 'UserOptError', 'Export to old incog wallet format unsupported' )
 			elif issubclass(sstype,Brainwallet):
-				raise UserOptError('Output to brainwallet format unsupported')
+				die( 'UserOptError', 'Output to brainwallet format unsupported' )
 
 	chk_out_fmt = chk_in_fmt
 
@@ -491,7 +492,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		a = val.rsplit(',',1) # permit comma in filename
 		if len(a) != 2:
 			opt_display(key,val)
-			raise UserOptError('Option requires two comma-separated arguments')
+			die( 'UserOptError', 'Option requires two comma-separated arguments' )
 
 		fn,offset = a
 		opt_is_int(offset,desc)
@@ -514,7 +515,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			val2 = getattr(opt,key2)
 			from .wallet import IncogWalletHidden
 			if val2 and val2 not in IncogWalletHidden.fmt_codes:
-				raise UserOptError(f'Option conflict:\n  {fmt_opt(key)}, with\n  {fmt_opt(key2)}={val2}')
+				die( 'UserOptError', f'Option conflict:\n  {fmt_opt(key)}, with\n  {fmt_opt(key2)}={val2}' )
 
 	chk_hidden_incog_output_params = chk_hidden_incog_input_params
 
@@ -539,7 +540,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 		a = val.split(',')
 		if len(a) != 2:
 			opt_display(key,val)
-			raise UserOptError('Option requires two comma-separated arguments')
+			die( 'UserOptError', 'Option requires two comma-separated arguments' )
 		opt_is_int(a[0],'seed length '+desc)
 		opt_is_in_list(int(a[0]),Seed.lens,'seed length '+desc)
 		opt_is_in_list(a[1],list(hash_presets.keys()),'hash preset '+desc)
@@ -567,14 +568,14 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 # TODO: move this check elsewhere
 #	def chk_rbf(key,val,desc):
 #		if not proto.cap('rbf'):
-#			raise UserOptError(f'--rbf requested, but {proto.coin} does not support replace-by-fee transactions')
+#			die( 'UserOptError', f'--rbf requested, but {proto.coin} does not support replace-by-fee transactions' )
 
 #	def chk_bob(key,val,desc):
 #		from .regtest import MMGenRegtest
 #		try:
 #			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
 #		except:
-#			raise UserOptError(
+#			die( 'UserOptError',
 #				'Regtest (Bob and Alice) mode not set up yet.  ' +
 #				f"Run '{g.proj_name.lower()}-regtest setup' to initialize." )
 #
@@ -587,13 +588,13 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 # TODO: move this check elsewhere
 #	def chk_token(key,val,desc):
 #		if not 'token' in proto.caps:
-#			raise UserOptError(f'Coin {tx.coin!r} does not support the --token option')
+#			die( 'UserOptError', f'Coin {tx.coin!r} does not support the --token option' )
 #		if len(val) == 40 and is_hex_str(val):
 #			return
 #		if len(val) > 20 or not all(s.isalnum() for s in val):
-#			raise UserOptError(f'{val!r}: invalid parameter for --token option')
+#			die( 'UserOptError', f'{val!r}: invalid parameter for --token option' )
 
-	from .util import is_int
+	from .util import is_int,die
 
 	cfuncs = { k:v for k,v in locals().items() if k.startswith('chk_') }
 
@@ -642,8 +643,8 @@ def check_and_set_autoset_opts(): # Raises exception if any check fails
 			else:
 				ret = locals()[asd.type](key,val,asd)
 				if type(ret) is str:
-					from .util import fmt_list
-					raise UserOptError(
+					from .util import fmt_list,die
+					die( 'UserOptError',
 						'{!r}: invalid parameter for option --{} (not {}: {})'.format(
 							val,
 							key.replace('_','-'),

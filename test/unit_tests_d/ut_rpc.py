@@ -4,7 +4,6 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 """
 
 from mmgen.common import *
-from mmgen.exception import *
 
 from mmgen.protocol import init_proto
 from mmgen.rpc import rpc_init,MoneroWalletRPCClient

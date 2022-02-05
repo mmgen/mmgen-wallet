@@ -20,7 +20,7 @@
 altcoins.base_proto.ethereum.twctl: Ethereum tracking wallet control class
 """
 
-from ...util import msg,ymsg,write_mode
+from ...util import msg,ymsg,write_mode,die
 from ...twctl import TrackingWallet
 from ...addr import is_coin_addr,is_mmgen_id
 from ...amt import ETHAmt
@@ -160,13 +160,12 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 
 		if self.importing and token_addr:
 			if not is_coin_addr(proto,token_addr):
-				raise InvalidTokenAddress(f'{token_addr!r}: invalid token address')
+				die( 'InvalidTokenAddress', f'{token_addr!r}: invalid token address' )
 		else:
 			assert token_addr == None,'EthereumTokenTrackingWallet_chk1'
 			token_addr = await self.sym2addr(proto.tokensym) # returns None on failure
 			if not is_coin_addr(proto,token_addr):
-				from ...exception import UnrecognizedTokenSymbol
-				raise UnrecognizedTokenSymbol(f'Specified token {proto.tokensym!r} could not be resolved!')
+				die( 'UnrecognizedTokenSymbol', f'Specified token {proto.tokensym!r} could not be resolved!' )
 
 		from ...addr import TokenAddr
 		self.token = TokenAddr(proto,token_addr)
@@ -175,7 +174,7 @@ class EthereumTokenTrackingWallet(EthereumTrackingWallet):
 			if self.importing:
 				await self.import_token(self.token)
 			else:
-				raise TokenNotInWallet(f'Specified token {self.token!r} not in wallet!')
+				die( 'TokenNotInWallet', f'Specified token {self.token!r} not in wallet!' )
 
 		self.decimals = self.get_param('decimals')
 		self.symbol   = self.get_param('symbol')

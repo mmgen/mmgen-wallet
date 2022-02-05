@@ -20,9 +20,8 @@
 flags.py:  Class flags and opts for the MMGen suite
 """
 
-from .exception import ClassFlagsError
 from .base_obj import AttrCtrl,Lockable
-from .util import fmt_list
+from .util import fmt_list,die
 
 class ClassFlags(AttrCtrl):
 	_name = 'flags'
@@ -35,10 +34,10 @@ class ClassFlags(AttrCtrl):
 
 		for a in self._available:
 			if a.startswith('_'):
-				raise ClassFlagsError(f'{a!r}: {self._desc} cannot begin with an underscore')
+				die( 'ClassFlagsError', f'{a!r}: {self._desc} cannot begin with an underscore' )
 			for b in self.reserved_attrs:
 				if a == b:
-					raise ClassFlagsError(f'{a!r}: {b} is a reserved name for {self._desc}')
+					die( 'ClassFlagsError', f'{a!r}: {b} is a reserved name for {self._desc}' )
 
 		if arg:
 			assert type(arg) in (list,tuple), f"{arg!r}: {self._name!r} must be list or tuple"
@@ -69,14 +68,14 @@ class ClassFlags(AttrCtrl):
 				assert type(val) is bool, f'{val!r} not boolean'
 				old_val = getattr(self,name)
 				if val and old_val:
-					raise ClassFlagsError(f'{self._desc} {name!r} already set')
+					die( 'ClassFlagsError', f'{self._desc} {name!r} already set' )
 				if not val and not old_val:
-					raise ClassFlagsError(f'{self._desc} {name!r} not set, so cannot be unset')
+					die( 'ClassFlagsError', f'{self._desc} {name!r} not set, so cannot be unset' )
 
 		super().__setattr__(name,val)
 
 	def not_available_error(self,name):
-		raise ClassFlagsError('{!r}: unrecognized {} for {}: (available {}: {})'.format(
+		die( 'ClassFlagsError', '{!r}: unrecognized {} for {}: (available {}: {})'.format(
 			name,
 			self._desc,
 			type(self._parent).__name__,

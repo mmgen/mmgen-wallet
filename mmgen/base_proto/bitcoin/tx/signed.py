@@ -14,7 +14,7 @@ base_proto.bitcoin.tx.signed: Bitcoin signed transaction class
 
 import mmgen.tx.signed as TxBase
 from .completed import Completed
-from ....util import fmt,vmsg
+from ....util import fmt,vmsg,die
 
 class Signed(Completed,TxBase.Signed):
 
@@ -25,8 +25,7 @@ class Signed(Completed,TxBase.Signed):
 		vmsg(f'\nVsize: {vsize} (true) {est_vsize} (estimated)')
 		ratio = float(est_vsize) / vsize
 		if not (0.95 < ratio < 1.05): # allow for 5% error
-			from ....exception import BadTxSizeEstimate
-			raise BadTxSizeEstimate(fmt(f"""
+			die( 'BadTxSizeEstimate', fmt(f"""
 				Estimated transaction vsize is {ratio:1.2f} times the true vsize
 				Your transaction fee estimates will be inaccurate
 				Please re-create and re-sign the transaction using the option --vsize-adj={1/ratio:1.2f}

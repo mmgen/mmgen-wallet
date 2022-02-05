@@ -521,7 +521,7 @@ class DieRollSeedFile(WalletUnenc):
 		rmap = bc.seedlen_map_rev
 
 		if not len(d) in rmap:
-			raise SeedLengthError('{!r}: invalid length for {} (must be one of {})'.format(
+			die( 'SeedLengthError', '{!r}: invalid length for {} (must be one of {})'.format(
 				len(d),
 				self.desc,
 				list(rmap) ))

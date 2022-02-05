@@ -22,7 +22,7 @@ passwdlist.py: Password list class for the MMGen suite
 
 from collections import namedtuple
 
-from .util import ymsg,is_int,keypress_confirm
+from .util import ymsg,is_int,keypress_confirm,die
 from .obj import ImmutableAttr,ListItemAttr,MMGenPWIDString,TwComment
 from .key import PrivKey
 from .addr import MMGenPasswordType,AddrIdx,AddrListID
@@ -112,8 +112,7 @@ class PasswordList(AddrList):
 			self.pw_fmt = pw_fmt
 			self.pw_fmt_disp = pw_fmt
 		if self.pw_fmt not in self.pw_info:
-			from .exception import InvalidPasswdFormat
-			raise InvalidPasswdFormat(
+			die( 'InvalidPasswdFormat',
 				'{!r}: invalid password format.  Valid formats: {}'.format(
 					self.pw_fmt,
 					', '.join(self.pw_info) ))

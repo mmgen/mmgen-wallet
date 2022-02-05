@@ -778,7 +778,7 @@ def fork_cmd(cmd_name,args,out,opts,stdin_input):
 		vmsg(cp.stderr.strip().decode())
 	if cp.returncode != 0:
 		import re
-		m = re.match(b'tool command returned (None|False)'+NL.encode(),cp.stderr)
+		m = re.search(b'tool command returned (None|False)',cp.stdout)
 		if m:
 			return { b'None': None, b'False': False }[m.group(1)]
 		else:

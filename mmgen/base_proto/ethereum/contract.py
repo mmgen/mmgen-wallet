@@ -174,5 +174,5 @@ class TokenResolve(TokenCommon,metaclass=AsyncInit):
 		self.addr = TokenAddr(proto,addr)
 		decimals = await self.get_decimals() # requires self.addr!
 		if not decimals:
-			raise TokenNotInBlockchain(f'Token {addr!r} not in blockchain')
+			die( 'TokenNotInBlockchain', f'Token {addr!r} not in blockchain' )
 		Token.__init__(self,proto,addr,decimals,rpc)

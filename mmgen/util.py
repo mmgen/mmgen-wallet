@@ -121,12 +121,17 @@ def mdie(*args):
 	sys.exit(0)
 
 def die(ev,s='',stdout=False):
-	assert isinstance(ev,int)
-	from .exception import MMGenSystemExit,MMGenError
-	if ev <= 2:
-		raise MMGenSystemExit(ev,s,stdout)
+	if isinstance(ev,int):
+		from .exception import MMGenSystemExit,MMGenError
+		if ev <= 2:
+			raise MMGenSystemExit(ev,s,stdout)
+		else:
+			raise MMGenError(ev,s,stdout)
+	elif isinstance(ev,str):
+		import mmgen.exception
+		raise getattr(mmgen.exception,ev)(s)
 	else:
-		raise MMGenError(ev,s,stdout)
+		raise ValueError(f'{ev}: exit value must be string or int instance')
 
 def die_wait(delay,ev=0,s=''):
 	assert isinstance(delay,int)
@@ -460,8 +465,7 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 def check_wallet_extension(fn):
 	from .wallet import Wallet
 	if not Wallet.ext_to_type(get_extension(fn)):
-		from .exception import BadFileExtension
-		raise BadFileExtension(f'{fn!r}: unrecognized seed source file extension')
+		die( 'BadFileExtension', f'{fn!r}: unrecognized seed source file extension' )
 
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))
@@ -472,8 +476,7 @@ def confirm_or_raise(message,q,expect='YES',exit_msg='Exiting at user request'):
 	a = f'{q}  ' if q[0].isupper() else f'Are you sure you want to {q}?\n'
 	b = f'Type uppercase {expect!r} to confirm: '
 	if line_input(a+b).strip() != expect:
-		from .exception import UserNonConfirmation
-		raise UserNonConfirmation(exit_msg)
+		die( 'UserNonConfirmation', exit_msg )
 
 def get_words_from_user(prompt):
 	words = line_input(prompt, echo=opt.echo_passphrase).split()

@@ -46,7 +46,7 @@ def make_brainwallet_file(fn):
 def verify_checksum_or_exit(checksum,chk):
 	chk = strip_ansi_escapes(chk)
 	if checksum != chk:
-		raise TestSuiteFatalException(f'Checksum error: {chk}')
+		die( 'TestSuiteFatalException', f'Checksum error: {chk}' )
 	vmsg(green('Checksums match: ') + cyan(chk))
 
 addrs_per_wallet = 8
@@ -403,7 +403,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			ad.add(al)
 			aix = AddrIdxList(fmt_str=self.cfgs[s]['addr_idx_list'])
 			if len(aix) != addrs_per_wallet:
-				raise TestSuiteFatalException(f'Address index list length != {addrs_per_wallet}: {repr(aix)}')
+				die( 'TestSuiteFatalException', f'Address index list length != {addrs_per_wallet}: {repr(aix)}' )
 			tx_data[s] = {
 				'addrfile': afile,
 				'chk': al.chksum,
@@ -497,7 +497,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			['-f',self.tx_fee,'-B'] + add_args + cmd_args + txdo_args)
 
 		if t.expect([('Get','Unsigned transac')[cmdline_inputs],r'Unable to connect to \S+'],regex=True) == 1:
-			raise TestSuiteException('\n'+t.p.after)
+			die( 'TestSuiteException', '\n'+t.p.after )
 
 		if cmdline_inputs:
 			t.written_to_file('tion')

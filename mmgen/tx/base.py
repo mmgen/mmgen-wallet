@@ -16,7 +16,7 @@ from ..globalvars import *
 from ..objmethods import MMGenObject
 from ..obj import ImmutableAttr,ListItemAttr,MMGenListItem,MMGenTxLabel,TwComment,CoinTxID,HexStr
 from ..addr import MMGenID,CoinAddr
-from ..util import msg,ymsg,fmt,remove_dups,keypress_confirm,make_timestamp,line_input
+from ..util import msg,ymsg,fmt,remove_dups,keypress_confirm,make_timestamp,line_input,die
 from ..opts import opt
 
 class MMGenTxIO(MMGenListItem):
@@ -118,8 +118,8 @@ class Base(MMGenObject):
 	def check_correct_chain(self):
 		if hasattr(self,'rpc'):
 			if self.chain != self.rpc.chain:
-				raise TransactionChainMismatch(
-					f'Transaction is for {self.chain}, but coin daemon chain is {self.rpc.chain}!')
+				die( 'TransactionChainMismatch',
+					f'Transaction is for {self.chain}, but coin daemon chain is {self.rpc.chain}!' )
 
 	def sum_inputs(self):
 		return sum(e.amt for e in self.inputs)
@@ -177,7 +177,7 @@ class Base(MMGenObject):
 			m = fs.format('\n    '.join(non_mmaddrs))
 			if caller in ('txdo','txsign'):
 				if not opt.keys_from_file:
-					raise UserOptError(f'\n{indent}ERROR: {m}\n')
+					die( 'UserOptError', f'\n{indent}ERROR: {m}\n' )
 			else:
 				msg(f'\n{indent}WARNING: {m}\n')
 				if not (opt.yes or keypress_confirm('Continue?',default_yes=True)):

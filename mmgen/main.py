@@ -57,6 +57,7 @@ def launch(mod):
 
 			_o = namedtuple('exit_data',['color','exit_val','fs'])
 			d = {
+				0:   _o(nocolor, 1, '{message}'),
 				1:   _o(nocolor, 1, '{message}'),
 				2:   _o(yellow,  2, '{message}'),
 				3:   _o(yellow,  3, '\nMMGen Error ({name}): {message}'),

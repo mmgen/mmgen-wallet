@@ -16,7 +16,7 @@ import mmgen.tx.new as TxBase
 from .base import Base
 from ....opts import opt
 from ....obj import HexStr,MMGenTxID
-from ....util import dmsg,vmsg,make_chksum_6
+from ....util import dmsg,vmsg,make_chksum_6,die
 
 class New(Base,TxBase.New):
 	usr_fee_prompt = 'Enter transaction fee: '
@@ -98,7 +98,7 @@ class New(Base,TxBase.New):
 		fee = self.sum_inputs() - self.sum_outputs()
 		if fee > self.proto.max_tx_fee:
 			c = self.proto.coin
-			raise MaxFeeExceeded(f'Transaction fee of {fee} {c} too high! (> {self.proto.max_tx_fee} {c})')
+			die( 'MaxFeeExceeded', f'Transaction fee of {fee} {c} too high! (> {self.proto.max_tx_fee} {c})' )
 
 	def final_inputs_ok_msg(self,funds_left):
 		return 'Transaction produces {} {} in change'.format(

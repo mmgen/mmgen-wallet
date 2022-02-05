@@ -60,8 +60,7 @@ class MMGenTxFile(MMGenObject):
 		try:
 			desc = 'data'
 			if len(tx_data) > g.max_tx_file_size:
-				from .exception import MaxFileSizeExceeded
-				raise MaxFileSizeExceeded(f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)')
+				die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)' )
 			tx_data = tx_data.splitlines()
 			assert len(tx_data) >= 5,'number of lines less than 5'
 			assert len(tx_data[0]) == 6,'invalid length of first line'
@@ -187,8 +186,7 @@ class MMGenTxFile(MMGenObject):
 		self.chksum = make_chksum_6(' '.join(lines))
 		fmt_data = '\n'.join([self.chksum] + lines) + '\n'
 		if len(fmt_data) > g.max_tx_file_size:
-			from .exception import MaxFileSizeExceeded
-			raise MaxFileSizeExceeded(f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)')
+			die( 'MaxFileSizeExceeded', f'Transaction file size exceeds limit ({g.max_tx_file_size} bytes)' )
 		return fmt_data
 
 	def write(self,

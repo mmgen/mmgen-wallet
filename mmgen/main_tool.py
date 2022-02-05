@@ -215,7 +215,7 @@ def process_args(cmd,cmd_args,cls):
 		# If we're reading from a pipe, replace '-' with output of previous command
 		if flag == 'STDIN_OK' and u_args and u_args[0] == '-':
 			if sys.stdin.isatty():
-				raise BadFilename("Standard input is a TTY.  Can't use '-' as a filename")
+				die( 'BadFilename', "Standard input is a TTY.  Can't use '-' as a filename" )
 			else:
 				max_dlen_spec = '10kB' # limit input to 10KB for now
 				max_dlen = parse_bytespec(max_dlen_spec)

@@ -22,7 +22,6 @@ tw: Tracking wallet dependency classes for the MMGen suite
 
 import time
 
-from .exception import BadTwLabel,BadTwComment
 from .objmethods import Hilite,InitErrors,MMGenObject
 from .obj import TwComment
 from .addr import MMGenID
@@ -86,8 +85,8 @@ class TwMMGenID(str,Hilite,InitErrors,MMGenObject):
 
 # non-displaying container for TwMMGenID,TwComment
 class TwLabel(str,InitErrors,MMGenObject):
-	exc = BadTwLabel
-	passthru_excs = (BadTwComment,)
+	exc = 'BadTwLabel'
+	passthru_excs = ('BadTwComment',)
 	def __new__(cls,proto,text):
 		if type(text) == cls:
 			return text
@@ -109,8 +108,8 @@ def get_tw_label(proto,s):
 	"""
 	try:
 		return TwLabel(proto,s)
-	except BadTwComment:
-		raise
 	except Exception as e:
-#		print(e)
-		return None
+		if type(e).__name__ == 'BadTwComment': # do it this way to avoid importing .exception
+			raise
+		else:
+			return None

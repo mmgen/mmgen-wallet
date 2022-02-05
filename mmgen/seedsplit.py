@@ -80,8 +80,7 @@ class SeedShareList(SubSeedList):
 						msg(f'master_share seed ID collision with parent seed, incrementing nonce to {nonce+1}')
 				else:
 					return ms
-			from .exception import SubSeedNonceRangeExceeded
-			raise SubSeedNonceRangeExceeded('nonce range exceeded')
+			die( 'SubSeedNonceRangeExceeded', 'nonce range exceeded' )
 
 		def last_share_debug(last_share):
 			if not debug_last_share:
@@ -109,8 +108,7 @@ class SeedShareList(SubSeedList):
 				self.data['long'][ls.sid] = (count,nonce)
 				break
 		else:
-			from .exception import SubSeedNonceRangeExceeded
-			raise SubSeedNonceRangeExceeded('nonce range exceeded')
+			die( 'SubSeedNonceRangeExceeded', 'nonce range exceeded' )
 
 		if g.debug_subseed:
 			A = parent_seed.data
@@ -119,8 +117,7 @@ class SeedShareList(SubSeedList):
 
 	def get_share_by_idx(self,idx,base_seed=False):
 		if idx < 1 or idx > self.count:
-			from .exception import RangeError
-			raise RangeError(f'{idx}: share index out of range')
+			die( 'RangeError', f'{idx}: share index out of range' )
 		elif idx == self.count:
 			return self.last_share
 		elif self.master_share and idx == 1:

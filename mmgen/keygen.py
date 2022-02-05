@@ -64,8 +64,9 @@ class keygen_backend:
 				try:
 					from .secp256k1 import priv2pub
 					if not priv2pub(bytes.fromhex('deadbeef'*8),1):
-						from .exception import ExtensionModuleError
-						raise ExtensionModuleError('Unable to execute priv2pub() from secp256k1 extension module')
+						from .util import die
+						die( 'ExtensionModuleError',
+							'Unable to execute priv2pub() from secp256k1 extension module' )
 					return True
 				except Exception as e:
 					if not silent:

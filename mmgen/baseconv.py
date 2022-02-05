@@ -22,7 +22,6 @@ baseconv.py:  base conversion class for the MMGen suite
 
 from collections import namedtuple
 
-from .exception import BaseConversionError,BaseConversionPadError,HexadecimalStringError,SeedLengthError
 from .util import die
 
 def is_b58_str(s):
@@ -123,7 +122,7 @@ class baseconv(object):
 		elif pad == 'seed':
 			return seed_pad_func()
 		else:
-			raise BaseConversionPadError(f"{pad!r}: illegal value for 'pad' (must be None,'seed' or int)")
+			die('BaseConversionPadError',f"{pad!r}: illegal value for 'pad' (must be None,'seed' or int)")
 
 	def tohex(self,words_arg,pad=None):
 		"convert string or list data of instance base to hex string"
@@ -136,13 +135,13 @@ class baseconv(object):
 		desc = self.desc.short
 
 		if len(words) == 0:
-			raise BaseConversionError(f'empty {desc} data')
+			die('BaseConversionError',f'empty {desc} data')
 
 		def get_seed_pad():
 			assert hasattr(self,'seedlen_map_rev'), f'seed padding not supported for base {self.wl_id!r}'
 			d = self.seedlen_map_rev
 			if not len(words) in d:
-				raise BaseConversionError(
+				die( 'BaseConversionError',
 					f'{len(words)}: invalid length for seed-padded {desc} data in base conversion' )
 			return d[len(words)]
 
@@ -151,7 +150,7 @@ class baseconv(object):
 		base = len(wl)
 
 		if not set(words) <= set(wl):
-			raise BaseConversionError(
+			die( 'BaseConversionError',
 				( 'seed data' if pad == 'seed' else f'{words_arg!r}:' ) +
 				f' not in {desc} format' )
 
@@ -164,7 +163,7 @@ class baseconv(object):
 
 		from .util import is_hex_str
 		if not is_hex_str(hexstr):
-			raise HexadecimalStringError(
+			die( 'HexadecimalStringError',
 				( 'seed data' if pad == 'seed' else f'{hexstr!r}:' ) +
 				' not a hexadecimal string' )
 
@@ -174,13 +173,13 @@ class baseconv(object):
 		"convert byte string to list or string data of instance base"
 
 		if not bytestr:
-			raise BaseConversionError('empty data not allowed in base conversion')
+			die( 'BaseConversionError', 'empty data not allowed in base conversion' )
 
 		def get_seed_pad():
 			assert hasattr(self,'seedlen_map'), f'seed padding not supported for base {self.wl_id!r}'
 			d = self.seedlen_map
 			if not len(bytestr) in d:
-				raise SeedLengthError(
+				die( 'SeedLengthError',
 					f'{len(bytestr)}: invalid byte length for seed data in seed-padded base conversion' )
 			return d[len(bytestr)]
 

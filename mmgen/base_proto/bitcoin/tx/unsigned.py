@@ -73,7 +73,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			new.compare_size_and_estimated_size(tx_decoded)
 			new.coin_txid = CoinTxID(self.deserialized.txid)
 			if not new.coin_txid == tx_decoded['txid']:
-				raise BadMMGenTxID('txid mismatch (after signing)')
+				die( 'BadMMGenTxID', 'txid mismatch (after signing)' )
 			msg('OK')
 			return new
 		except Exception as e:

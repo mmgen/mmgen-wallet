@@ -139,10 +139,10 @@ class New(Base,TxBase.New):
 							ret.append(waddr)
 							break
 					else:
-						raise UserAddressNotInWallet(errmsg.format(addr))
+						die( 'UserAddressNotInWallet', errmsg.format(addr) )
 				elif is_coin_addr(self.proto,addr):
 					if not addr in data_root:
-						raise UserAddressNotInWallet(errmsg.format(addr))
+						die( 'UserAddressNotInWallet', errmsg.format(addr) )
 					ret.append(addr)
 				else:
 					die(1,f'{addr!r}: not an MMGen ID or coin address')

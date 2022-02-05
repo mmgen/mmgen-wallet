@@ -21,7 +21,7 @@ twctl: Tracking wallet control class for the MMGen suite
 """
 
 from .globalvars import g
-from .util import msg,dmsg,write_mode,base_proto_subclass
+from .util import msg,dmsg,write_mode,base_proto_subclass,die
 from .base_obj import AsyncInit
 from .objmethods import MMGenObject
 from .obj import TwComment,get_obj
@@ -61,8 +61,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			self.init_empty()
 
 		if self.data['coin'] != self.proto.coin: # TODO remove?
-			from .exception import WalletFileError
-			raise WalletFileError(
+			die( 'WalletFileError',
 				'Tracking wallet coin ({}) does not match current coin ({})!'.format(
 					self.data['coin'],
 					self.proto.coin ))
@@ -98,8 +97,7 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 				self.init_empty()
 				self.force_write()
 			else:
-				from .exception import WalletFileError
-				raise WalletFileError(f'File {self.tw_fn!r} exists but does not contain valid json data')
+				die( 'WalletFileError', f'File {self.tw_fn!r} exists but does not contain valid json data' )
 		else:
 			self.upgrade_wallet_maybe()
 

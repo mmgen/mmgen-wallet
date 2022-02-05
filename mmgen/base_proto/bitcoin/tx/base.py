@@ -17,7 +17,7 @@ from collections import namedtuple
 import mmgen.tx.base as TxBase
 from ....opts import opt
 from ....obj import MMGenObject,MMGenList,HexStr
-from ....util import msg,dmsg,make_chksum_6
+from ....util import msg,dmsg,make_chksum_6,die
 
 def addr2pubhash(proto,addr):
 	ap = proto.parse_addr(addr)
@@ -100,7 +100,7 @@ def DeserializeTX(proto,txhex):
 	if has_witness:
 		u = bshift(2,skip=True).hex()
 		if u != '0001':
-			raise IllegalWitnessFlagValue(f'{u!r}: Illegal value for flag in transaction!')
+			die( 'IllegalWitnessFlagValue', f'{u!r}: Illegal value for flag in transaction!' )
 
 	d['num_txins'] = readVInt()
 
@@ -140,7 +140,7 @@ def DeserializeTX(proto,txhex):
 		d['witness_size'] = 0
 
 	if len(tx) - var.idx != 4:
-		raise TxHexParseError('TX hex has invalid length: {} extra bytes'.format(len(tx)-var.idx-4))
+		die( 'TxHexParseError', 'TX hex has invalid length: {} extra bytes'.format(len(tx)-var.idx-4) )
 
 	d['locktime'] = bytes2int(bshift(4))
 	d['unsigned_hex'] = var.raw_tx.hex()
@@ -283,8 +283,7 @@ class Base(TxBase.Base):
 		"""
 
 		def do_error(errmsg):
-			from ....exception import TxHexMismatch
-			raise TxHexMismatch(errmsg+'\n'+hdr)
+			die( 'TxHexMismatch', errmsg+'\n'+hdr )
 
 		def check_equal(desc,hexio,mmio):
 			if mmio != hexio:

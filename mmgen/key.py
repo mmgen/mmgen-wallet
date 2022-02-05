@@ -83,9 +83,9 @@ class PrivKey(bytes,Hilite,InitErrors,MMGenObject):
 				me.wif = str.__new__(WifKey,wif) # check has been done
 				me.orig_bytes = None
 				if k.sec != proto.preprocess_key(k.sec,k.pubkey_type):
-					from .exception import PrivateKeyError
-					raise PrivateKeyError(
-						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}')
+					from .util import die
+					die( 'PrivateKeyError',
+						f'{proto.cls_name} WIF key {me.wif!r} encodes private key with invalid value {me}' )
 				me.proto = proto
 				return me
 			except Exception as e:

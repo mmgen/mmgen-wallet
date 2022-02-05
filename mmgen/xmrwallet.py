@@ -888,6 +888,6 @@ class MoneroWalletOps:
 						ymsg('Transaction not relayed')
 					return True
 				else:
-					raise RPCFailure(repr(res))
+					die( 'RPCFailure', repr(res) )
 			else:
 				die(1,'Exiting at user request')
