@@ -43,7 +43,7 @@ def launch(mod):
 	except EOFError:
 		sys.stderr.write('\nEnd of file\n')
 	except Exception as e:
-		if os.getenv('MMGEN_TRACEBACK'):
+		if os.getenv('MMGEN_EXEC_WRAPPER'):
 			raise
 		else:
 			try: m = '{}'.format(e.args[0])

@@ -113,7 +113,7 @@ class GlobalContext(Lockable):
 	# test suite:
 	bogus_send           = False
 	debug_utf8           = False
-	traceback            = False
+	exec_wrapper         = False
 	test_suite           = False
 	test_suite_deterministic = False
 	test_suite_popen_spawn = False
@@ -253,7 +253,7 @@ class GlobalContext(Lockable):
 		'MMGEN_RPC_FAIL_ON_COMMAND',
 		'MMGEN_TESTNET',
 		'MMGEN_REGTEST',
-		'MMGEN_TRACEBACK',
+		'MMGEN_EXEC_WRAPPER',
 		'MMGEN_RPC_BACKEND',
 		'MMGEN_IGNORE_DAEMON_VERSION',
 		'MMGEN_USE_STANDALONE_SCRYPT_MODULE',

@@ -724,7 +724,8 @@ class TestSuiteRunner(object):
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
-		if 'exec_wrapper_init' in globals(): # Python 3.9: OR the dicts
+		if 'exec_wrapper_init' in globals(): # test.py itself is running under exec_wrapper
+			# Python 3.9: OR the dicts
 			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' })
 		env.update(os.environ)
 

@@ -78,7 +78,7 @@ class Unsigned(Completed,TxBase.Unsigned):
 			return new
 		except Exception as e:
 			ymsg(f'\n{e.args[0]}')
-			if g.traceback:
+			if g.exec_wrapper:
 				import traceback
 				ymsg( '\n' + ''.join(traceback.format_exception(*sys.exc_info())) )
 			return False
