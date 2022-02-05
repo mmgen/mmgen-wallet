@@ -20,10 +20,12 @@
 tool/common.py: Base class and shared routines for the 'mmgen-tool' utility
 """
 
+from ..objmethods import MMGenObject
+
 def options_annot_str(l):
 	return "(valid options: '{}')".format( "','".join(l) )
 
-class tool_cmd_base:
+class tool_cmd_base(MMGenObject):
 
 	need_proto = False
 	need_addrtype = False

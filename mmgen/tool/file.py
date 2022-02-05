@@ -67,6 +67,7 @@ class tool_cmd(tool_cmd_base):
 		return self._file_chksum(mmgen_passwdfile,PasswordList)
 
 	async def txview(
+			self,
 			varargs_call_sig = { # hack to allow for multiple filenames
 				'args': (
 					'mmgen_tx_file(s)',

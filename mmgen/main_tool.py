@@ -229,6 +229,7 @@ def process_args(cmd,cmd_args,cls):
 	u_nkwargs = len(cmd_args) - len(c_args)
 	u_kwargs = {}
 	if flag == 'VAR_ARGS':
+		cmd_args = ['dummy_arg'] + cmd_args
 		t = [a.split('=',1) for a in cmd_args if '=' in a]
 		tk = [a[0] for a in t]
 		tk_bad = [a for a in tk if a not in c_kwargs]

@@ -206,7 +206,7 @@ class Wallet(MMGenObject,metaclass=WalletMeta):
 		return None
 
 	@classmethod
-	def ext_to_type(cls,ext,proto):
+	def ext_to_type(cls,ext,proto=None):
 		for c in cls.wallet_classes:
 			if ext == getattr(c,'ext',None):
 				return c
