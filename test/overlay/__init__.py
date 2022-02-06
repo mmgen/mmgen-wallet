@@ -6,8 +6,10 @@ def get_overlay_dir(repo_root):
 def overlay_setup(repo_root):
 
 	def process_srcdir(d):
-		srcdir = os.path.join(repo_root,*d.split('.'))
-		destdir = os.path.join(overlay_dir,*d.split('.'))
+		relpath = d.split('.')
+		srcdir = os.path.join(repo_root,*relpath)
+		destdir = os.path.join(overlay_dir,*relpath)
+		fakemod_dir = os.path.join(fakemod_root,*(relpath[1:]))
 		os.makedirs(destdir)
 		for fn in os.listdir(srcdir):
 			if (
@@ -15,7 +17,7 @@ def overlay_setup(repo_root):
 				d == 'mmgen.data' or
 				d == 'mmgen' and fn.startswith('secp256k1')
 			):
-				if d == 'mmgen' and fn in fakemods:
+				if os.path.exists(os.path.join(fakemod_dir,fn)):
 					make_link(
 						os.path.join(fakemod_dir,fn),
 						os.path.join(destdir,fn) )
@@ -28,8 +30,7 @@ def overlay_setup(repo_root):
 					os.path.join(destdir,link_fn) )
 
 	overlay_dir = get_overlay_dir(repo_root)
-	fakemod_dir = os.path.join(repo_root,'test','overlay','fakemods')
-	fakemods  = os.listdir(fakemod_dir)
+	fakemod_root = os.path.join(repo_root,'test','overlay','fakemods')
 	make_link = os.symlink if sys.platform == 'linux' else shutil.copy2
 
 	if not os.path.exists(os.path.join(overlay_dir,'mmgen','main.py')):
