@@ -30,7 +30,7 @@ class EthereumTwUnspentOutputs(TwUnspentOutputs):
 		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','skip'}
 		invalid_attrs = {'proto'}
 
-	disp_type = 'eth'
+	has_age = False
 	can_group = False
 	col_adj = 29
 	hdr_fmt = 'TRACKED ACCOUNTS (sort order: {})\nTotal {}: {}'
@@ -48,6 +48,9 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		'm':'d_mmid','e':'d_redraw',
 		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide',
 		'l':'a_lbl_add','D':'a_addr_delete','R':'a_balance_refresh' }
+	display_fs_fs = ' {{n:{cw}}} {{a}} {{A}}'
+	print_fs_fs   = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{l}}'
+	display_hdr_fs_fs = display_fs_fs
 
 	async def __init__(self,proto,*args,**kwargs):
 		from ...globalvars import g
@@ -76,9 +79,15 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 
-	disp_type = 'token'
 	prompt_fs = 'Total to spend: {} {}\n\n'
 	col_adj = 37
+	display_fs_fs = ' {{n:{cw}}} {{a}} {{A}} {{A2}}'
+	print_fs_fs   = ' {{n:4}} {{a}} {{m}} {{A:{aw}}} {{A2:{aw}}} {{l}}'
+	display_hdr_fs_fs = display_fs_fs
+
+	async def __init__(self,proto,*args,**kwargs):
+		await super().__init__(proto,*args,**kwargs)
+		self.proto.tokensym = self.wallet.symbol
 
 	def get_display_precision(self):
 		return 10 # truncate precision for narrow display

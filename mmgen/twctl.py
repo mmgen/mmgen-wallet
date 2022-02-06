@@ -69,9 +69,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		self.conv_types(self.data[self.data_key])
 		self.cur_balances = {} # cache balances to prevent repeated lookups per program invocation
 
-	def init_empty(self):
-		self.data = { 'coin': self.proto.coin, 'addresses': {} }
-
 	def init_from_wallet_file(self):
 		import os,json
 		tw_dir = (
@@ -130,9 +127,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 		elif g.debug:
 			msg('read-only wallet, doing nothing')
 
-	def upgrade_wallet_maybe(self):
-		pass
-
 	def conv_types(self,ad):
 		for k,v in ad.items():
 			if k not in ('params','coin'):
@@ -170,9 +164,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 			self.cache_balance(addr,ret,self.cur_balances,self.data_root)
 		return ret
 
-	async def rpc_get_balance(self,addr):
-		raise NotImplementedError('not implemented')
-
 	@property
 	def sorted_list(self):
 		return sorted(
@@ -185,14 +176,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	@property
 	def mmid_ordered_dict(self):
 		return dict((x['mmid'],{'addr':x['addr'],'comment':x['comment']}) for x in self.sorted_list)
-
-	@write_mode
-	async def import_address(self,addr,label,rescan):
-		return await self.rpc.call('importaddress',addr,label,rescan,timeout=(False,3600)[rescan])
-
-	@write_mode
-	def batch_import_address(self,arg_list):
-		return self.rpc.batch_call('importaddress',arg_list)
 
 	def force_write(self):
 		mode_save = self.mode
@@ -235,15 +218,6 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	async def is_in_wallet(self,addr):
 		from .twaddrs import TwAddrList
 		return addr in (await TwAddrList(self.proto,[],0,True,True,True,wallet=self)).coinaddr_list()
-
-	@write_mode
-	async def set_label(self,coinaddr,lbl):
-		args = self.rpc.daemon.set_label_args( self.rpc, coinaddr, lbl )
-		try:
-			return await self.rpc.call(*args)
-		except Exception as e:
-			rmsg(e.args[0])
-			return False
 
 	# returns on failure
 	@write_mode
@@ -305,7 +279,3 @@ class TrackingWallet(MMGenObject,metaclass=AsyncInit):
 	@write_mode
 	async def remove_label(self,mmaddr):
 		await self.add_label(mmaddr,'')
-
-	@write_mode
-	async def remove_address(self,addr):
-		raise NotImplementedError(f'address removal not implemented for coin {self.proto.coin}')

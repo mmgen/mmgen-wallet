@@ -21,8 +21,16 @@ base_proto.ethereum.tw: Ethereum tracking wallet dependency classes
 """
 
 from ...addrdata import TwAddrData
+from ...util import vmsg
 
 class EthereumTwAddrData(TwAddrData):
+
+	msgs = {
+		'multiple_acct_addrs': """
+			ERROR: More than one address found for account: {acct!r}.
+			Your tracking wallet is corrupted!
+		"""
+	}
 
 	async def get_tw_data(self,wallet=None):
 		from ...twctl import TrackingWallet

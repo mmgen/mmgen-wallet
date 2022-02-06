@@ -669,9 +669,6 @@ def base_proto_subclass(cls,proto,modname):
 	"""
 	magic module loading and class selection
 	"""
-	if proto.base_proto != 'Ethereum':
-		return cls
-
 	modname = f'mmgen.base_proto.{proto.base_proto.lower()}.{modname}'
 	clsname = (
 		proto.mod_clsname

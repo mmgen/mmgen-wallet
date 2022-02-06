@@ -9,4 +9,4 @@ if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
 		from mmgen.fileutil import get_data_from_file
 		return json.loads(get_data_from_file(os.getenv('MMGEN_BOGUS_WALLET_DATA')),parse_float=Decimal)
 
-	TwUnspentOutputs.get_unspent_rpc = fake_get_unspent_rpc
+	BitcoinTwUnspentOutputs.get_unspent_rpc = fake_get_unspent_rpc

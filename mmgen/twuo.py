@@ -51,23 +51,6 @@ class TwUnspentOutputs(MMGenObject,TwCommon,metaclass=AsyncInit):
 		return MMGenObject.__new__(base_proto_subclass(cls,proto,'twuo'))
 
 	txid_w = 64
-	disp_type = 'btc'
-	can_group = True
-	hdr_fmt = 'UNSPENT OUTPUTS (sort order: {}) Total {}: {}'
-	desc = 'unspent outputs'
-	item_desc = 'unspent output'
-	dump_fn_pfx = 'listunspent'
-	prompt_fs = 'Total to spend, excluding fees: {} {}\n\n'
-	prompt = """
-Sort options: [t]xid, [a]mount, a[d]dress, [A]ge, [r]everse, [M]mgen addr
-Display options: toggle [D]ays/date, show [g]roup, show [m]mgen addr, r[e]draw
-Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
-"""
-	key_mappings = {
-		't':'s_txid','a':'s_amt','d':'s_addr','A':'s_age','r':'d_reverse','M':'s_twmmid',
-		'D':'d_days','g':'d_group','m':'d_mmid','e':'d_redraw',
-		'q':'a_quit','p':'a_print','v':'a_view','w':'a_view_wide','l':'a_lbl_add' }
-	col_adj = 38
 	age_fmts_date_dependent = ('days','date','date_time')
 	age_fmts_interactive = ('confs','block','days','date')
 	_age_fmt = 'confs'
@@ -86,10 +69,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		date         = ListItemAttr(int,typeconv=False,reassign_ok=True)
 		scriptPubKey = ImmutableAttr(HexStr)
 		skip         = ListItemAttr(str,typeconv=False,reassign_ok=True)
-
-		# required by gen_unspent(); setting valid_attrs explicitly is also more efficient
-		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','date','scriptPubKey','skip'}
-		invalid_attrs = {'proto'}
 
 		def __init__(self,proto,**kwargs):
 			self.__dict__['proto'] = proto
@@ -118,8 +97,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 
 		from .twctl import TrackingWallet
 		self.wallet = await TrackingWallet(proto,mode='w')
-		if self.disp_type == 'token':
-			self.proto.tokensym = self.wallet.symbol
 
 	@property
 	def age_fmt(self):
@@ -137,19 +114,6 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 	@property
 	def total(self):
 		return sum(i.amt for i in self.unspent)
-
-	async def get_unspent_rpc(self):
-		# bitcoin-cli help listunspent:
-		# Arguments:
-		# 1. minconf        (numeric, optional, default=1) The minimum confirmations to filter
-		# 2. maxconf        (numeric, optional, default=9999999) The maximum confirmations to filter
-		# 3. addresses      (json array, optional, default=empty array) A json array of bitcoin addresses
-		# 4. include_unsafe (boolean, optional, default=true) Include outputs that are not safe to spend
-		# 5. query_options  (json object, optional) JSON with query options
-
-		# for now, self.addrs is just an empty list for Bitcoin and friends
-		add_args = (9999999,self.addrs) if self.addrs else ()
-		return await self.rpc.call('listunspent',self.minconf,*add_args)
 
 	async def get_unspent_data(self,sort_key=None,reverse_sort=False):
 
@@ -242,7 +206,7 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 
 	async def format_for_display(self):
 		unsp = self.unspent
-		if self.age_fmt in self.age_fmts_date_dependent:
+		if self.has_age and self.age_fmt in self.age_fmts_date_dependent:
 			await self.set_dates(self.rpc,unsp)
 		self.set_term_columns()
 
@@ -260,24 +224,21 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 			yield self.hdr_fmt.format(' '.join(self.sort_info()),self.proto.dcoin,self.total.hl())
 			if self.proto.chain_name != 'mainnet':
 				yield 'Chain: '+green(self.proto.chain_name.upper())
-			fs = {  'btc':   ' {n:%s} {t:%s} {v:2} {a} {A} {c:<}' % (c.col1_w,c.tx_w),
-					'eth':   ' {n:%s} {a} {A}' % c.col1_w,
-					'token': ' {n:%s} {a} {A} {A2}' % c.col1_w }[self.disp_type]
-			fs_hdr = ' {n:%s} {t:%s} {a} {A} {c:<}' % (c.col1_w,c.tx_w) if self.disp_type == 'btc' else fs
-			date_hdr = {
-				'confs':     'Confs',
-				'block':     'Block',
-				'days':      'Age(d)',
-				'date':      'Date',
-				'date_time': 'Date',
-			}
-			yield fs_hdr.format(
+			fs     = self.display_fs_fs.format(     cw=c.col1_w, tw=c.tx_w )
+			hdr_fs = self.display_hdr_fs_fs.format( cw=c.col1_w, tw=c.tx_w )
+			yield hdr_fs.format(
 				n  = 'Num',
 				t  = 'TXid'.ljust(c.tx_w - 2) + ' Vout',
 				a  = 'Address'.ljust(c.addr_w),
 				A  = f'Amt({self.proto.dcoin})'.ljust(self.disp_prec+5),
 				A2 = f' Amt({self.proto.coin})'.ljust(self.disp_prec+4),
-				c  =  date_hdr[self.age_fmt],
+				c  = {
+						'confs':     'Confs',
+						'block':     'Block',
+						'days':      'Age(d)',
+						'date':      'Date',
+						'date_time': 'Date',
+					}[self.age_fmt],
 				).rstrip()
 
 			for n,i in enumerate(unsp):
@@ -321,16 +282,14 @@ Actions: [q]uit view, [p]rint to file, pager [v]iew, [w]ide view, add [l]abel:
 		return self.fmt_display
 
 	async def format_for_printing(self,color=False,show_confs=True):
-		await self.set_dates(self.rpc,self.unspent)
+		if self.has_age:
+			await self.set_dates(self.rpc,self.unspent)
 		addr_w = max(len(i.addr) for i in self.unspent)
 		mmid_w = max(len(('',i.twmmid)[i.twmmid.type=='mmgen']) for i in self.unspent) or 12 # DEADBEEF:S:1
-		amt_w = self.proto.coin_amt.max_prec + 5
-		cfs = '{c:<8} ' if show_confs else ''
-		fs = {
-			'btc': (' {n:4} {t:%s} {a} {m} {A:%s} ' + cfs + '{b:<8} {D:<19} {l}') % (self.txid_w+3,amt_w),
-			'eth':   ' {n:4} {a} {m} {A:%s} {l}' % amt_w,
-			'token': ' {n:4} {a} {m} {A:%s} {A2:%s} {l}' % (amt_w,amt_w)
-			}[self.disp_type]
+		fs = self.print_fs_fs.format(
+			tw = self.txid_w + 3,
+			cf = '{c:<8} ' if show_confs else '',
+			aw = self.proto.coin_amt.max_prec + 5 )
 
 		def gen_output():
 			yield fs.format(

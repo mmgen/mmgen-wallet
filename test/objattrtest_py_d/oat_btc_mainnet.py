@@ -110,7 +110,7 @@ tests = {
 		{},
 	),
 	# twuo.py
-	'TwUnspentOutputs.MMGenTwUnspentOutput': atd({
+	'BitcoinTwUnspentOutputs.MMGenTwUnspentOutput': atd({
 		'txid':         (0b001, CoinTxID),
 		'vout':         (0b001, int),
 		'amt':          (0b001, BTCAmt),
