@@ -17,10 +17,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.base_proto.ethereum.tw: Ethereum tracking wallet dependency classes
+base_proto.ethereum.tw: Ethereum tracking wallet dependency classes
 """
 
-from ...addrdata import AddrData,TwAddrData
+from ...addrdata import TwAddrData
 
 class EthereumTwAddrData(TwAddrData):
 
@@ -32,7 +32,5 @@ class EthereumTwAddrData(TwAddrData):
 		# emulate the output of RPC 'listaccounts' and 'getaddressesbyaccount'
 		return [(mmid+' '+d['comment'],[d['addr']]) for mmid,d in list(tw.items())]
 
-class EthereumTokenTwAddrData(EthereumTwAddrData): pass
-
-class EthereumAddrData(AddrData): pass
-class EthereumTokenAddrData(EthereumAddrData): pass
+class EthereumTokenTwAddrData(EthereumTwAddrData):
+	pass

@@ -28,10 +28,12 @@ class MMGenError(Exception):
 		super().__init__(strerror)
 
 	def __repr__(self):
-		return f'{type(self).__name__}({self.mmcode}): {self}'
+		return f'{type(self).__name__}({self.mmcode}):\n{self}'
 
 class MMGenSystemExit(MMGenError):
-	pass
+
+	def __repr__(self):
+		return f'{type(self).__name__}({self.mmcode}): {self}'
 
 # 1: no hl, message only
 class UserNonConfirmation(Exception):     mmcode = 1

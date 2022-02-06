@@ -16,5 +16,12 @@ if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
 	}
 
 if os.getenv('MMGEN_BOGUS_WALLET_DATA'):
+
+	async def fake_set_dates(foo,rpc,us):
+		for o in us:
+			o.date = 1831006505 - int(9.7 * 60 * (o.confs - 1))
+
+	TwCommon.set_dates = fake_set_dates
+
 	# 1831006505 (09 Jan 2028) = projected time of block 1000000
 	TwCommon.date_formatter['days'] = lambda rpc,secs: (1831006505 - secs) // 86400

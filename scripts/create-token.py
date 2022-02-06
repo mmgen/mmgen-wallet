@@ -272,7 +272,8 @@ if __name__ == '__main__':
 	code = create_src( proto, solidity_code_template, token_data, cmd_args[0] )
 
 	if opt.preprocess:
-		Die(0,code)
+		Msg(code)
+		sys.exit(0)
 
 	out = compile_code(code)
 

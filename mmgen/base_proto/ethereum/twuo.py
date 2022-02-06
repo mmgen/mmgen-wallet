@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.base_proto.ethereum.twuo: Ethereum tracking wallet unspent outputs class
+base_proto.ethereum.twuo: Ethereum tracking wallet unspent outputs class
 """
 
 from ...tw import TwLabel
@@ -25,6 +25,10 @@ from ...twuo import TwUnspentOutputs
 
 # No unspent outputs with Ethereum, but naming must be consistent
 class EthereumTwUnspentOutputs(TwUnspentOutputs):
+
+	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
+		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','skip'}
+		invalid_attrs = {'proto'}
 
 	disp_type = 'eth'
 	can_group = False
@@ -50,7 +54,7 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 		if g.cached_balances:
 			from ...color import yellow
 			self.hdr_fmt += '\n' + yellow('WARNING: Using cached balances. These may be out of date!')
-		await TwUnspentOutputs.__init__(self,proto,*args,**kwargs)
+		await super().__init__(proto,*args,**kwargs)
 
 	def do_sort(self,key=None,reverse=False):
 		if key == 'txid': return
@@ -67,12 +71,8 @@ Actions:         [q]uit view, [p]rint to file, pager [v]iew, [w]ide view,
 				'confirmations': 0, # TODO
 				} for d in wl]
 
-	class MMGenTwUnspentOutput(TwUnspentOutputs.MMGenTwUnspentOutput):
-		valid_attrs = {'txid','vout','amt','amt2','label','twmmid','addr','confs','skip'}
-		invalid_attrs = {'proto'}
-
 	def age_disp(self,o,age_fmt): # TODO
-		return None
+		pass
 
 class EthereumTokenTwUnspentOutputs(EthereumTwUnspentOutputs):
 

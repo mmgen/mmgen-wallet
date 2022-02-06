@@ -20,24 +20,22 @@
 addrdata.py: MMGen AddrData and related classes
 """
 
-from .util import vmsg,base_proto_subclass
+from .util import vmsg,base_proto_subclass,fmt,die
 from .base_obj import AsyncInit
 from .obj import MMGenObject,MMGenDict,get_obj
 from .addr import MMGenID,AddrListID
 from .addrlist import AddrListEntry,AddrListData,AddrList
 
 class AddrData(MMGenObject):
-	msgs = {
-	'too_many_acct_addresses': """
-ERROR: More than one address found for account: '{}'.
-Your 'wallet.dat' file appears to have been altered by a non-{} program.
-Please restore your tracking wallet from a backup or create a new one and
-re-import your addresses.
-""".strip()
-	}
 
-	def __new__(cls,proto,*args,**kwargs):
-		return MMGenObject.__new__(base_proto_subclass(cls,proto,'tw'))
+	msgs = {
+		'multiple_acct_addrs': """
+			ERROR: More than one address found for account: {acct!r}.
+			Your 'wallet.dat' file appears to have been altered by a non-{proj} program.
+			Please restore your tracking wallet from a backup or create a new one and
+			re-import your addresses.
+		"""
+	}
 
 	def __init__(self,proto,*args,**kwargs):
 		self.al_ids = {}
@@ -97,7 +95,8 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 			if l and l.mmid.type == 'mmgen':
 				obj = l.mmid.obj
 				if len(addr_array) != 1:
-					die(2,self.msgs['too_many_acct_addresses'].format(acct,g.prog_name))
+					message = self.msgs['multiple_acct_addrs'].strip().format( acct=acct, proj=g.proj_name )
+					die(3, fmt( message, indent='  ' ))
 				al_id = AddrListID(SeedID(sid=obj.sid),self.proto.addr_type(obj.mmtype))
 				if al_id not in out:
 					out[al_id] = []
@@ -105,6 +104,7 @@ class TwAddrData(AddrData,metaclass=AsyncInit):
 				i += 1
 
 		vmsg(f'{i} {g.prog_name} addresses found, {len(twd)} accounts total')
+
 		for al_id in out:
 			self.add(AddrList(self.proto,al_id=al_id,adata=AddrListData(sorted(out[al_id],key=lambda a: a.idx))))
 

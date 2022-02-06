@@ -44,6 +44,10 @@ def exec_wrapper_write_traceback(e):
 	if exc.startswith('SystemExit:'):
 		lines.pop()
 
+	if os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
+		pat = re.compile(", line [0-9]+,")
+		lines = [pat.sub(", line (scrubbed),",line) for line in lines]
+
 	c = exec_wrapper_get_colors()
 	message = ( repr(e) if type(e).__name__ in ('MMGenError','MMGenSystemExit') else exc )
 	sys.stdout.write('{}{}'.format(

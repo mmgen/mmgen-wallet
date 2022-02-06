@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-altcoins.base_proto.ethereum.twbal: Ethereum tracking wallet getbalance class
+base_proto.ethereum.twbal: Ethereum tracking wallet getbalance class
 """
 
 from ...twctl import TrackingWallet
@@ -29,7 +29,7 @@ class EthereumTwGetBalance(TwGetBalance):
 
 	async def __init__(self,proto,*args,**kwargs):
 		self.wallet = await TrackingWallet(proto,mode='w')
-		await TwGetBalance.__init__(self,proto,*args,**kwargs)
+		await super().__init__(proto,*args,**kwargs)
 
 	async def create_data(self):
 		data = self.wallet.mmid_ordered_dict

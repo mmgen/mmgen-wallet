@@ -608,7 +608,8 @@ class CmdGroupMgr(object):
 				cls.__doc__.strip() if cls.__doc__ else cls.__name__
 			))
 
-		Die(0,'\n'+' '.join(e[0] for e in ginfo))
+		Msg( '\n' + ' '.join(e[0] for e in ginfo) )
+		sys.exit(0)
 
 	def find_cmd_in_groups(self,cmd,group=None):
 		"""
