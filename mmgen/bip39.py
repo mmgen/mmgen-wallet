@@ -25,7 +25,7 @@ from hashlib import sha256
 from .baseconv import baseconv
 from .util import is_hex_str,die
 
-def is_bip39_str(s):
+def is_bip39_mnemonic(s):
 	return bool( bip39().tohex(s.split()) )
 
 # implements a subset of the baseconv API

@@ -33,7 +33,8 @@ sys.path.insert(0,overlay_setup(repo_root))
 
 from mmgen.common import *
 from test.include.common import *
-from mmgen.wallet import is_bip39_mnemonic,is_mmgen_mnemonic
+from mmgen.bip39 import is_bip39_mnemonic
+from mmgen.baseconv import is_mmgen_mnemonic
 from mmgen.xmrseed import is_xmrseed
 from mmgen.baseconv import *
 

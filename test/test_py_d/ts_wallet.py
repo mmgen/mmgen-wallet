@@ -106,7 +106,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 	def ref_dieroll_conv(self):  return self.ref_mn_conv(ext='b6d')
 
 	def ref_brain_conv(self):
-		uopts = ['-i','b','-p','1','-l',str(self.seed_len)]
+		uopts = ['-i','bw','-p','1','-l',str(self.seed_len)]
 		return self.walletconv_in(None,uopts,oo=True,icls=Brainwallet)
 
 	def ref_incog_conv(self,wfk='ic_wallet',in_fmt='i'):
@@ -121,7 +121,11 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		ic_f = joinpath(ref_dir,self.sources[str(self.seed_len)][wfk])
 		uopts = ['-i','hi','-p','1','-l',str(self.seed_len)] + add_uopts
 		hi_opt = ['-H',f'{ic_f},{ref_wallet_incog_offset}']
-		return self.walletconv_in(None,uopts+hi_opt,oo=True,icls=IncogWalletHidden)
+		return self.walletconv_in(
+			None,
+			uopts + hi_opt,
+			oo = True,
+			icls = IncogWalletHidden )
 
 	def ref_hincog_conv_old(self):
 		return self.ref_hincog_conv(wfk='hic_wallet_old',add_uopts=['-O'])
@@ -178,8 +182,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 		icls = icls or Wallet.ext_to_type(get_extension(infile))
 		if icls == Brainwallet:
 			t.expect('Enter brainwallet: ',ref_wallet_brainpass+'\n')
-		pw = issubclass(icls,WalletEnc) and icls != Brainwallet
-		if pw:
+		if issubclass(icls,WalletEnc) and icls != Brainwallet:
 			t.passphrase(icls.desc,self.wpasswd)
 			if self.test_name[:19] == 'ref_hincog_conv_old':
 				t.expect('Is the Seed ID correct? (Y/n): ','\n')
@@ -202,8 +205,7 @@ class TestSuiteWalletConv(TestSuiteBase,TestSuiteShared):
 
 		add_args = [f'-l{self.seed_len}']
 		t.license()
-		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
-		if pw:
+		if issubclass(wcls,WalletEnc) and wcls != Brainwallet:
 			t.passphrase_new('new '+wcls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
 		if wcls in (IncogWallet,IncogWalletHex,IncogWalletHidden):

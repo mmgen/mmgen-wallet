@@ -41,12 +41,12 @@ async def test_tx(tx_proto,tx_hex,desc,n):
 	dt = DeserializeTX(tx_proto,tx_hex)
 
 	if opt.verbose:
-		Msg('\n====================================================')
+		Msg('\n\n================================ Core vector: ==================================')
 	Msg_r('.' if opt.quiet else f'{n:>3}) {desc}\n')
 	if opt.verbose:
 		Pmsg(d)
-		Msg('----------------------------------------------------')
-		Pmsg(dt)
+		Msg('\n------------------------------ MMGen deserialized: -----------------------------')
+		Pmsg(dt._asdict())
 
 	# metadata
 	assert dt.txid == d['txid'],'TXID does not match'

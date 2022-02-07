@@ -231,15 +231,16 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 	shred_file(
 		ss_in.infile.name,
 		verbose = opt.verbose )
-elif (
-	invoked_as == 'gen'
-	and not opt.outdir
-	and not opt.stdout
-	and not find_file_in_dir( MMGenWallet, g.data_dir )
-	and keypress_confirm(
-		'Make this wallet your default and move it to the data directory?',
-		default_yes = True ) ):
-	ss_out.write_to_file(outdir=g.data_dir)
+elif invoked_as == 'gen' and not opt.outdir and not opt.stdout:
+	from .filename import find_file_in_dir
+	if (
+		not find_file_in_dir( MMGenWallet, g.data_dir )
+		and keypress_confirm(
+			'Make this wallet your default and move it to the data directory?',
+			default_yes = True ) ):
+		ss_out.write_to_file(outdir=g.data_dir)
+	else:
+		ss_out.write_to_file()
 else:
 	ss_out.write_to_file()
 

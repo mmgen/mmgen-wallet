@@ -332,16 +332,6 @@ def make_iv_chksum(s):
 	from hashlib import sha256
 	return sha256(s).hexdigest()[:8].upper()
 
-def splitN(s,n,sep=None): # always return an n-element list
-	ret = s.split(sep,n-1)
-	return ret + ['' for i in range(n-len(ret))]
-
-def split2(s,sep=None):
-	return splitN(s,2,sep) # always return a 2-element list
-
-def split3(s,sep=None):
-	return splitN(s,3,sep) # always return a 3-element list
-
 def split_into_cols(col_wid,s):
 	return ' '.join([s[col_wid*i:col_wid*(i+1)] for i in range(len(s)//col_wid+1)]).rstrip()
 
@@ -645,17 +635,6 @@ def do_license_msg(immed=False):
 		else:
 			msg_r('\r')
 	msg('')
-
-def format_par(s,indent=0,width=80,as_list=False):
-	words,lines = s.split(),[]
-	assert width >= indent + 4,'width must be >= indent + 4'
-	while words:
-		line = ''
-		while len(line) <= (width-indent) and words:
-			if line and len(line) + len(words[0]) + 1 > width-indent: break
-			line += ('',' ')[bool(line)] + words.pop(0)
-		lines.append(' '*indent + line)
-	return lines if as_list else '\n'.join(lines) + '\n'
 
 def get_subclasses(cls,names=False):
 	def gen(cls):

@@ -4,6 +4,7 @@ test.unit_tests_d.ut_testdep: test dependency unit tests for the MMGen suite
 """
 
 from mmgen.common import *
+from subprocess import run,PIPE
 
 sec = 'deadbeef' * 8
 

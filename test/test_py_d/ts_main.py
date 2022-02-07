@@ -583,8 +583,8 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.passphrase(icls.desc,self.wpasswd)
 
 		ocls = Wallet.fmt_code_to_type(out_fmt)
-		out_pw = issubclass(ocls,WalletEnc) and ocls != Brainwallet
-		if out_pw:
+
+		if issubclass(ocls,WalletEnc) and ocls != Brainwallet:
 			t.passphrase_new('new '+ocls.desc,self.wpasswd)
 			t.usr_rand(self.usr_rand_chars)
 
@@ -594,6 +594,7 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 			t.expect(m)
 			incog_id = t.expect_getend('New Incog Wallet ID: ')
 			t.expect(m)
+
 		if ocls == IncogWalletHidden:
 			self.write_to_tmpfile(incog_id_fn,incog_id)
 			t.hincog_create(hincog_bytes)
@@ -637,17 +638,18 @@ class TestSuiteMain(TestSuiteBase,TestSuiteShared):
 	def addrgen_seed(self,wf,foo,in_fmt='seed'):
 		wcls = Wallet.fmt_code_to_type(in_fmt)
 		stdout = wcls == MMGenSeedFile # capture output to screen once
-		add_args = ([],['-S'])[bool(stdout)] + self.segwit_arg
-		t = self.spawn('mmgen-addrgen', add_args +
-				['-i'+in_fmt,'-d',self.tmpdir,wf,self.addr_idx_list])
+		t = self.spawn(
+			'mmgen-addrgen',
+			(['-S'] if stdout else []) +
+			self.segwit_arg +
+			[ '-i' + in_fmt, '-d', self.tmpdir, wf, self.addr_idx_list ] )
 		t.license()
 		t.expect_getend(f'Valid {wcls.desc} for Seed ID ')
 		vmsg('Comparing generated checksum with checksum from previous address file')
-		chk = t.expect_getend(r'Checksum for address data .*?: ',regex=True)
-		if stdout:
-			t.read()
-		verify_checksum_or_exit(self._get_addrfile_checksum(),chk)
-		if in_fmt != 'seed':
+		verify_checksum_or_exit(
+			self._get_addrfile_checksum(),
+			t.expect_getend(r'Checksum for address data .*?: ',regex=True) )
+		if not stdout:
 			t.no_overwrite()
 			t.req_exit_val = 1
 		return t

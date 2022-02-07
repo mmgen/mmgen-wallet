@@ -32,21 +32,6 @@ def check_usr_seed_len(seed_len):
 	if opt.seed_len and opt.seed_len != seed_len:
 		die(1,f'ERROR: requested seed length ({opt.seed_len}) doesn’t match seed length of source ({seed_len})')
 
-def _is_mnemonic(s,fmt):
-	oq_save = bool(opt.quiet)
-	opt.quiet = True
-	try:
-		Wallet(in_data=s,in_fmt=fmt)
-		ret = True
-	except:
-		ret = False
-	finally:
-		opt.quiet = oq_save
-	return ret
-
-def is_bip39_mnemonic(s): return _is_mnemonic(s,fmt='bip39')
-def is_mmgen_mnemonic(s): return _is_mnemonic(s,fmt='words')
-
 class WalletMeta(type):
 	wallet_classes = set() # one-instance class, so store data in class attr
 	def __init__(cls,name,bases,namespace):
@@ -841,7 +826,7 @@ class MMGenWallet(WalletEnc):
 class Brainwallet(WalletEnc):
 
 	stdin_ok = True
-	fmt_codes = ('mmbrain','brainwallet','brain','bw','b')
+	fmt_codes = ('mmbrain','brainwallet','brain','bw')
 	desc = 'brainwallet'
 	ext = 'mmbrain'
 	# brainwallet warning message? TODO

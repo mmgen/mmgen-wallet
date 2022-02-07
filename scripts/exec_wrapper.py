@@ -28,7 +28,7 @@ def exec_wrapper_init(): # don't change: name is used to test if script is runni
 
 	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
 		try:
-			os.unlink('my.err')
+			os.unlink('test.py.err')
 		except:
 			pass
 
@@ -55,8 +55,9 @@ def exec_wrapper_write_traceback(e):
 		c.red(message) )
 	+ '\n' )
 
-	with open('my.err','w') as fp:
-		fp.write(''.join(lines+[exc]))
+	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
+		with open('test.py.err','w') as fp:
+			fp.write(''.join(lines+[exc]))
 
 def exec_wrapper_end_msg():
 	if os.getenv('EXEC_WRAPPER_SPAWN') and not os.getenv('MMGEN_TEST_SUITE_DETERMINISTIC'):
@@ -110,7 +111,8 @@ except SystemExit as e:
 		exec_wrapper_end_msg()
 	sys.exit(e.code)
 except Exception as e:
-	exec_wrapper_write_traceback(e)
+	if not os.getenv('EXEC_WRAPPER_NO_TRACEBACK'):
+		exec_wrapper_write_traceback(e)
 	retval = e.mmcode if hasattr(e,'mmcode') else e.code if hasattr(e,'code') else 1
 	sys.exit(retval)
 

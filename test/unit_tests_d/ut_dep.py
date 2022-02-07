@@ -7,6 +7,7 @@ test.unit_tests_d.ut_dep: dependency unit tests for the MMGen suite
 """
 
 from mmgen.common import *
+from mmgen.exception import NoLEDSupport
 
 class unit_tests:
 

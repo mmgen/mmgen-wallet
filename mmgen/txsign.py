@@ -105,12 +105,12 @@ def add_keys(tx,src,infiles=None,saved_seeds=None,keyaddr_list=None):
 		vmsg(f'Added {len(new_keys)} wif key{suf(new_keys)} from {desc}')
 	return new_keys
 
-def _pop_and_return(args,cmplist): # strips found args
+def _pop_matching_fns(args,cmplist): # strips found args
 	return list(reversed([args.pop(args.index(a)) for a in reversed(args) if get_extension(a) in cmplist]))
 
 def get_tx_files(opt,args):
 	from .tx.unsigned import Unsigned
-	ret = _pop_and_return(args,[Unsigned.ext])
+	ret = _pop_matching_fns(args,[Unsigned.ext])
 	if not ret:
 		die(1,'You must specify a raw transaction file!')
 	return ret
@@ -118,11 +118,12 @@ def get_tx_files(opt,args):
 def get_seed_files(opt,args):
 	# favor unencrypted seed sources first, as they don't require passwords
 	u,e = WalletUnenc,WalletEnc
-	ret = _pop_and_return(args,u.get_extensions())
+	ret = _pop_matching_fns(args,u.get_extensions())
 	from .filename import find_file_in_dir
 	wf = find_file_in_dir(MMGenWallet,g.data_dir) # Make this the first encrypted ss in the list
-	if wf: ret.append(wf)
-	ret += _pop_and_return(args,e.get_extensions())
+	if wf:
+		ret.append(wf)
+	ret += _pop_matching_fns(args,e.get_extensions())
 	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat
 		die(1,'You must specify a seed or key source!')
 	return ret

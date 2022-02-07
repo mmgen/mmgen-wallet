@@ -67,7 +67,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		('ref_walletconv_plainhexseed',([],'wallet filename (plain hex seed)')),
 		('ref_walletconv_dieroll',     ([],'wallet filename (dieroll (b6d) seed)')),
 		('ref_walletconv_incog',       ([],'wallet filename (incog)')),
-		('ref_walletconv_xincog',      ([],'wallet filename (hex incog)')),
+		('ref_walletconv_hexincog',    ([],'wallet filename (hex incog)')),
 	)
 
 	def __init__(self,trunner,cfgs,spawn):
@@ -135,7 +135,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		hp_arg = f'-p{ref_wallet_hash_preset}'
 		label = f'test.py ref. wallet (pw {ref_wallet_brainpass!r}, seed len {self.seed_len}) α'
 		bf = 'ref.mmbrain'
-		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ib','-L',label]
+		args = ['-d',self.tmpdir,hp_arg,sl_arg,'-ibw','-L',label]
 		self.write_to_tmpfile(bf,ref_wallet_brainpass)
 		self.write_to_tmpfile(pwfile,self.wpasswd)
 		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
@@ -190,7 +190,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		pat = r'{}-[0-9A-F]{{8}}-[0-9A-F]{{8}}\[{},1\]' + ('-α' if g.debug_utf8 else '') + '.' + ext
 		return self.ref_walletconv(ofmt=ofmt,extra_args=args,re_pat=pat)
 
-	def ref_walletconv_xincog(self):
+	def ref_walletconv_hexincog(self):
 		return self.ref_walletconv_incog(ofmt='incog_hex',ext='mmincox')
 
 class TestSuiteRef3Addr(TestSuiteRef3Seed):

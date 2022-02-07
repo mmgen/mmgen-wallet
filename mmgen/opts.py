@@ -475,10 +475,12 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			opt_unrecognized(key,val)
 		if key == 'out_fmt':
 			p = 'hidden_incog_output_params'
+
 			if sstype == IncogWalletHidden and not getattr(opt,p):
 				die( 'UserOptError',
 					'Hidden incog format output requested.  ' +
 					f'You must supply a file and offset with the {fmt_opt(p)!r} option' )
+
 			if issubclass(sstype,IncogWallet) and opt.old_incog_fmt:
 				opt_display(key,val,beg='Selected',end=' ')
 				opt_display('old_incog_fmt',beg='conflicts with',end=':\n')

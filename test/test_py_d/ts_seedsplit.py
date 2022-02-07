@@ -112,8 +112,7 @@ class TestSuiteSeedSplit(TestSuiteBase):
 			pat = f'master share #{master}'
 		t.expect(pat,regex=True)
 		ocls = Wallet.fmt_code_to_type(ofmt)
-		pw = issubclass(ocls,WalletEnc)
-		if pw:
+		if issubclass(ocls,WalletEnc):
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,sh1_passwd)
 			if ocls == IncogWalletHidden:

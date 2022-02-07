@@ -30,6 +30,13 @@ def is_b58_str(s):
 def is_b32_str(s):
 	return set(list(s)) <= set(baseconv('b32').digits)
 
+def is_mmgen_mnemonic(s):
+	try:
+		baseconv('mmgen').tobytes(s.split(),pad='seed')
+		return True
+	except:
+		return False
+
 class baseconv(object):
 	mn_base = 1626
 	dt = namedtuple('desc_tuple',['short','long'])

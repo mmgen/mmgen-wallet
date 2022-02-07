@@ -84,8 +84,10 @@ if not (len(sys.argv) == 2 and sys.argv[1] == 'clean'):
 
 from mmgen.common import *
 
-try: os.unlink(os.path.join(repo_root,'my.err'))
-except: pass
+try:
+	os.unlink(os.path.join(repo_root,'test.py.err'))
+except:
+	pass
 
 g.quiet = False # if 'quiet' was set in config file, disable here
 os.environ['MMGEN_QUIET'] = '0' # for this script and spawned scripts

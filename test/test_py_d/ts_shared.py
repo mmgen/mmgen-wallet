@@ -168,8 +168,7 @@ class TestSuiteShared(object):
 		t.license()
 		t.view_tx(view)
 		wcls = MMGenWallet if dfl_wallet else Wallet.ext_to_type(get_extension(wf))
-		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
-		if pw:
+		if issubclass(wcls,WalletEnc) and wcls != Brainwallet:
 			t.passphrase(wcls.desc,self.wpasswd)
 		if save:
 			self.txsign_end(t,has_label=has_label)
@@ -194,12 +193,12 @@ class TestSuiteShared(object):
 				extra_desc=extra_desc)
 		if wcls != IncogWalletHidden:
 			t.expect(f"Getting {wcls.desc} from file '")
-		pw = issubclass(wcls,WalletEnc) and wcls != Brainwallet
-		if pw:
+		if issubclass(wcls,WalletEnc) and wcls != Brainwallet:
 			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
 		chk = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
-		if sid: cmp_or_die(chk,sid)
+		if sid:
+			cmp_or_die(chk,sid)
 		return t
 
 	def addrgen(self,wf,
