@@ -44,7 +44,7 @@ class monero_daemon(CoinDaemon):
 
 	def init_subclass(self):
 
-		from ...rpc import MoneroRPCClientRaw
+		from .rpc import MoneroRPCClientRaw
 		self.rpc = MoneroRPCClientRaw(
 			host   = self.host,
 			port   = self.rpc_port,
@@ -139,5 +139,5 @@ class MoneroWalletDaemon(RPCDaemon):
 			['--stagenet',                           self.network == 'testnet'],
 		)
 
-		from ...rpc import MoneroWalletRPCClient
+		from .rpc import MoneroWalletRPCClient
 		self.rpc = MoneroWalletRPCClient( daemon=self, test_connection=False )

@@ -6,8 +6,9 @@ test.unit_tests_d.ut_rpc: RPC unit test for the MMGen suite
 from mmgen.common import *
 
 from mmgen.protocol import init_proto
-from mmgen.rpc import rpc_init,MoneroWalletRPCClient
+from mmgen.rpc import rpc_init
 from mmgen.daemon import CoinDaemon
+from mmgen.base_proto.monero.rpc import MoneroWalletRPCClient
 from mmgen.base_proto.monero.daemon import MoneroWalletDaemon
 
 def cfg_file_auth_test(proto,d):
