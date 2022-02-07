@@ -125,6 +125,7 @@ opts_data = {
 -q, --quiet          Produce minimal output.  Suppress dependency info
 -r, --resume=c       Resume at command 'c' after interrupted run
 -R, --resume-after=c Same, but resume at command following 'c'
+-t, --step           After resuming, execute one command and stop
 -s, --system         Test scripts and modules installed on system rather
                      than those in the repo root
 -S, --skip-deps      Skip dependency checking for command
@@ -157,13 +158,16 @@ from test.test_py_d.common import *
 data_dir = get_data_dir() # include/common.py
 
 # step 1: delete data_dir symlink in ./test;
-if not ('resume' in po.user_opts or 'skip_deps' in po.user_opts):
+resuming = any(k in po.user_opts for k in ('resume','resume_after'))
+skipping_deps = resuming or 'skip_deps' in po.user_opts
+
+if not skipping_deps:
 	try: os.unlink(data_dir)
 	except: pass
 
-opts.UserOpts._reset_ok += ('skip_deps','no_daemon_autostart','names','no_timings')
+opts.UserOpts._reset_ok += ('no_daemon_autostart','names','no_timings','exit_after')
 
-# step 2: opts.init will create new data_dir in ./test (if not 'resume' or 'skip_deps'):
+# step 2: opts.init will create new data_dir in ./test (if not skipping_deps)
 usr_args = opts.init(opts_data)
 
 network_id = g.coin.lower() + ('_tn' if opt.testnet else '')
@@ -174,7 +178,7 @@ proto = init_proto_from_opts()
 # step 3: move data_dir to /dev/shm and symlink it back to ./test:
 trash_dir = os.path.join('test','trash')
 
-if not (opt.resume or opt.skip_deps):
+if not skipping_deps:
 	shm_dir = create_shm_dir(data_dir,trash_dir)
 
 check_segwit_opts()
@@ -193,12 +197,8 @@ if opt.exact_output:
 	def msg(s): pass
 	qmsg = qmsg_r = vmsg = vmsg_r = msg_r = msg
 
-if opt.resume or opt.resume_after:
-	opt.skip_deps = True
+if skipping_deps:
 	opt.no_daemon_autostart = True
-	resume = opt.resume or opt.resume_after
-else:
-	resume = False
 
 cfgs = { # addr_idx_lists (except 31,32,33,34) must contain exactly 8 addresses
 	'1':  { 'wpasswd':       'Dorian-α',
@@ -421,14 +421,14 @@ def list_cmds():
 def do_between():
 	if opt.pause:
 		confirm_continue()
-	elif (opt.verbose or opt.exact_output) and not opt.skip_deps:
+	elif (opt.verbose or opt.exact_output) and not skipping_deps:
 		sys.stderr.write('\n')
 
 def list_tmpdirs():
 	return {k:cfgs[k]['tmpdir'] for k in cfgs}
 
 def clean(usr_dirs=None,clean_overlay=True):
-	if opt.skip_deps:
+	if skipping_deps:
 		return
 	all_dirs = list_tmpdirs()
 	dirnums = map(int,(usr_dirs if usr_dirs is not None else all_dirs))
@@ -650,6 +650,7 @@ class TestSuiteRunner(object):
 		self.gm = CmdGroupMgr()
 		self.repo_root = repo_root
 		self.skipped_warnings = []
+		self.resume_cmd = None
 
 		if opt.log:
 			self.log_fd = open(log_file,'a')
@@ -728,9 +729,9 @@ class TestSuiteRunner(object):
 		os.environ['MMGEN_FORCE_COLOR'] = '1' if self.ts.color else ''
 
 		env = { 'EXEC_WRAPPER_SPAWN':'1' }
-		if 'exec_wrapper_init' in globals(): # test.py itself is running under exec_wrapper
-			# Python 3.9: OR the dicts
-			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' })
+		if 'exec_wrapper_init' in globals():
+			# test.py itself is running under exec_wrapper, so disable traceback file writing for spawned script
+			env.update({ 'EXEC_WRAPPER_NO_TRACEBACK':'1' }) # Python 3.9: OR the dicts
 		env.update(os.environ)
 
 		from test.include.pexpect import MMGenPexpect
@@ -799,10 +800,13 @@ class TestSuiteRunner(object):
 				'=' + getattr(opt,k) if getattr(opt,k) != True else ''
 			) for k in self.ts.base_passthru_opts + self.ts.passthru_opts if getattr(opt,k)]
 
-		if opt.resume_after:
-			global resume
-			resume = self.gm.cmd_list[self.gm.cmd_list.index(resume)+1]
-			omsg(f'INFO → Resuming at command {resume!r}')
+		if resuming:
+			rc = opt.resume or opt.resume_after
+			offset = 1 if opt.resume_after else 0
+			self.resume_cmd = self.gm.cmd_list[self.gm.cmd_list.index(rc)+offset]
+			omsg(f'INFO → Resuming at command {self.resume_cmd!r}')
+			if opt.step:
+				opt.exit_after = self.resume_cmd
 
 		if opt.exit_after and opt.exit_after not in self.gm.cmd_list:
 			die(1,f'{opt.exit_after!r}: command not recognized')
@@ -904,7 +908,7 @@ class TestSuiteRunner(object):
 				for fn in fns:
 					if not root:
 						os.unlink(fn)
-				if not (dpy and opt.skip_deps):
+				if not (dpy and skipping_deps):
 					self.run_test(cmd)
 				if not root:
 					do_between()
@@ -926,13 +930,14 @@ class TestSuiteRunner(object):
 		if hasattr(self.ts,'shared_deps'):
 			arg_list = arg_list[:-len(self.ts.shared_deps)]
 
-		global resume
-		if resume:
-			if cmd != resume:
+		if self.resume_cmd:
+			if cmd != self.resume_cmd:
 				return
-			bmsg(f'Resuming at {cmd!r}')
-			resume = False
-			opt.skip_deps = False
+			bmsg(f'Resuming at {self.resume_cmd!r}')
+			self.resume_cmd = None
+			global skipping_deps,resuming
+			skipping_deps = False
+			resuming = False
 
 		if opt.profile:
 			start = time.time()
@@ -1033,7 +1038,7 @@ class TestSuiteRunner(object):
 
 # main()
 
-if not opt.skip_deps: # do this before list cmds exit, so we stay in sync with shm_dir
+if not skipping_deps: # do this before list cmds exit, so we stay in sync with shm_dir
 	create_tmp_dirs(shm_dir)
 
 if opt.list_cmd_groups:
