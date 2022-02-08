@@ -13,7 +13,7 @@ ts_input.py: user input tests for the MMGen test.py test suite
 from ..include.common import *
 from .ts_base import *
 from .input import *
-from mmgen.wallet import Wallet
+from mmgen.wallet import get_wallet_cls
 
 class TestSuiteInput(TestSuiteBase):
 	'user input'
@@ -207,19 +207,19 @@ class TestSuiteInput(TestSuiteBase):
 		return t
 
 	def _user_seed_entry(self,fmt,usr_rand=False,out_fmt=None,entry_mode='full',mn=None):
-		wcls = Wallet.fmt_code_to_type(fmt)
+		wcls = get_wallet_cls(fmt_code=fmt)
 		wf = os.path.join(ref_dir,f'FE3C6545.{wcls.ext}')
-		if wcls.wclass == 'mnemonic':
+		if wcls.base_type == 'mnemonic':
 			mn = mn or read_from_file(wf).strip().split()
-		elif wcls.wclass == 'dieroll':
+		elif wcls.type == 'dieroll':
 			mn = mn or list(remove_whitespace(read_from_file(wf)))
 			for idx,val in ((5,'x'),(18,'0'),(30,'7'),(44,'9')):
 				mn.insert(idx,val)
 		t = self.spawn('mmgen-walletconv',['-r10','-S','-i',fmt,'-o',out_fmt or fmt])
-		t.expect(f'{capfirst(wcls.wclass)} type:.*{wcls.mn_type}',regex=True)
+		t.expect(f'{capfirst(wcls.base_type or wcls.type)} type:.*{wcls.mn_type}',regex=True)
 		t.expect(wcls.choose_seedlen_prompt,'1')
 		t.expect('(Y/n): ','y')
-		if wcls.wclass == 'mnemonic':
+		if wcls.base_type == 'mnemonic':
 			t.expect('Type a number.*: ','6',regex=True)
 			t.expect('invalid')
 			from mmgen.mn_entry import mn_entry
@@ -229,7 +229,7 @@ class TestSuiteInput(TestSuiteBase):
 			mode = strip_ansi_escapes(t.p.match.group(1)).lower()
 			assert mode == mne.em.name.lower(), f'{mode} != {mne.em.name.lower()}'
 			stealth_mnemonic_entry(t,mne,mn,entry_mode=entry_mode)
-		elif wcls.wclass == 'dieroll':
+		elif wcls.type == 'dieroll':
 			user_dieroll_entry(t,mn)
 			if usr_rand:
 				t.expect(wcls.user_entropy_prompt,'y')

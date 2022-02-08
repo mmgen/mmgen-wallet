@@ -23,7 +23,7 @@ ts_ref_3seed.py: Saved and generated reference file tests for 128, 192 and
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.wallet import *
+from mmgen.wallet import get_wallet_cls
 from ..include.common import *
 from .common import *
 from .ts_base import *
@@ -89,22 +89,22 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		return self.walletchk(wf,pf=None,wcls=ss,sid=self.seed_id)
 
 	def ref_seed_chk(self):
-		return self.ref_ss_chk(ss=MMGenSeedFile)
+		return self.ref_ss_chk(ss=get_wallet_cls('seed'))
 
 	def ref_hex_chk(self):
-		return self.ref_ss_chk(ss=MMGenHexSeedFile)
+		return self.ref_ss_chk(ss=get_wallet_cls('mmhex'))
 
 	def ref_plainhex_chk(self):
-		return self.ref_ss_chk(ss=PlainHexSeedFile)
+		return self.ref_ss_chk(ss=get_wallet_cls('plainhex'))
 
 	def ref_dieroll_chk(self):
-		return self.ref_ss_chk(ss=DieRollSeedFile)
+		return self.ref_ss_chk(ss=get_wallet_cls('dieroll'))
 
 	def ref_mn_chk(self):
-		return self.ref_ss_chk(ss=MMGenMnemonic)
+		return self.ref_ss_chk(ss=get_wallet_cls('words'))
 
 	def ref_bip39_chk(self):
-		return self.ref_ss_chk(ss=BIP39Mnemonic)
+		return self.ref_ss_chk(ss=get_wallet_cls('bip39'))
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):
 		source = TestSuiteWalletConv.sources[str(self.seed_len)]
@@ -141,7 +141,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		t = self.spawn('mmgen-walletconv', args + [self.usr_rand_arg])
 		t.license()
 		t.expect('Enter brainwallet: ', ref_wallet_brainpass+'\n')
-		ocls = MMGenWallet
+		ocls = get_wallet_cls('mmgen')
 		t.passphrase_new('new '+ocls.desc,self.wpasswd)
 		t.usr_rand(self.usr_rand_chars)
 		fn = os.path.split(t.written_to_file(capfirst(ocls.desc)))[-1]
@@ -160,7 +160,7 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		wf = self.get_file_with_ext('mmdat')
 		pf = joinpath(self.tmpdir,pwfile)
 		t = self.spawn('mmgen-walletconv',extra_args+['-d','test/trash','-o',ofmt,'-P'+pf,wf])
-		wcls = Wallet.fmt_code_to_type(ofmt)
+		wcls = get_wallet_cls(fmt_code=ofmt)
 		fn = os.path.split(t.written_to_file(capfirst(wcls.desc)))[-1]
 		idx = int(self.test_name[-1]) - 1
 		sid = self.chk_data['sids'][idx]

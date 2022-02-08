@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
+# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen
+#   https://gitlab.com/mmgen/mmgen
+
+"""
+wallet.plainhex: plain hexadecimal wallet class
+"""
+
+from ..util import msg,is_hex_str_lc
+from ..seed import Seed
+from .unenc import wallet
+
+class wallet(wallet):
+
+	stdin_ok = True
+	desc = 'plain hexadecimal seed data'
+
+	def _format(self):
+		self.fmt_data = self.seed.hexdata + '\n'
+
+	def _deformat(self):
+		desc = self.desc
+		d = self.fmt_data.strip()
+
+		if not is_hex_str_lc(d):
+			msg(f'{d!r}: not a lowercase hexadecimal string, in {desc}')
+			return False
+
+		if not len(d)*4 in Seed.lens:
+			msg(f'Invalid data length ({len(d)}) in {desc}')
+			return False
+
+		self.seed = Seed(bytes.fromhex(d))
+		self.ssdata.hexseed = d
+
+		self.check_usr_seed_len()
+
+		return True

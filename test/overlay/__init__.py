@@ -51,7 +51,8 @@ def overlay_setup(repo_root):
 				'mmgen.proto',
 				'mmgen.share',
 				'mmgen.tool',
-				'mmgen.tx' ):
+				'mmgen.tx',
+				'mmgen.wallet' ):
 			process_srcdir(d)
 
 	return overlay_dir

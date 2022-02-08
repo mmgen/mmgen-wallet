@@ -24,7 +24,8 @@ import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
 from mmgen.util import ymsg
-from mmgen.wallet import Wallet,WalletEnc,Brainwallet,MMGenWallet,IncogWalletHidden
+from mmgen.wallet import get_wallet_cls
+
 from ..include.common import *
 from .common import *
 
@@ -167,8 +168,8 @@ class TestSuiteShared(object):
 		t = self.spawn('mmgen-txsign', opts, extra_desc)
 		t.license()
 		t.view_tx(view)
-		wcls = MMGenWallet if dfl_wallet else Wallet.ext_to_type(get_extension(wf))
-		if issubclass(wcls,WalletEnc) and wcls != Brainwallet:
+		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )
+		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc,self.wpasswd)
 		if save:
 			self.txsign_end(t,has_label=has_label)
@@ -185,15 +186,15 @@ class TestSuiteShared(object):
 
 	def walletchk(self,wf,pf,wcls=None,add_args=[],sid=None,extra_desc='',dfl_wallet=False):
 		hp = self.hash_preset if hasattr(self,'hash_preset') else '1'
-		wcls = wcls or Wallet.ext_to_type(get_extension(wf))
+		wcls = wcls or get_wallet_cls(ext=get_extension(wf))
 		t = self.spawn('mmgen-walletchk',
 				([] if dfl_wallet else ['-i',wcls.fmt_codes[0]])
 				+ add_args + ['-p',hp]
 				+ ([wf] if wf else []),
 				extra_desc=extra_desc)
-		if wcls != IncogWalletHidden:
+		if wcls.type != 'incog_hidden':
 			t.expect(f"Getting {wcls.desc} from file '")
-		if issubclass(wcls,WalletEnc) and wcls != Brainwallet:
+		if wcls.enc and wcls.type != 'brain':
 			t.passphrase(wcls.desc,self.wpasswd)
 			t.expect(['Passphrase is OK', 'Passphrase.* are correct'],regex=True)
 		chk = t.expect_getend(f'Valid {wcls.desc} for Seed ID ')[:8]
@@ -223,7 +224,7 @@ class TestSuiteShared(object):
 				[getattr(self,f'{cmd_pfx}_idx_list')],
 				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
 		t.license()
-		wcls = MMGenWallet if dfl_wallet else Wallet.ext_to_type(get_extension(wf))
+		wcls = get_wallet_cls( ext = 'mmdat' if dfl_wallet else get_extension(wf) )
 		t.passphrase(wcls.desc,self.wpasswd)
 		t.expect('Passphrase is OK')
 		desc = ('address','password')[passgen]
@@ -245,7 +246,7 @@ class TestSuiteShared(object):
 				([],['--type='+str(mmtype)])[bool(mmtype)] + args,
 				extra_desc=f'({mmtype})' if mmtype in ('segwit','bech32') else '')
 		t.license()
-		wcls = Wallet.ext_to_type(get_extension(wf))
+		wcls = get_wallet_cls(ext=get_extension(wf))
 		t.passphrase(wcls.desc,self.wpasswd)
 		chk = t.expect_getend(r'Checksum for key-address data .*?: ',regex=True)
 		if check_ref:

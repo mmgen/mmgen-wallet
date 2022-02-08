@@ -453,9 +453,8 @@ def compare_or_die(val1, desc1, val2, desc2, e='Error'):
 	return True
 
 def check_wallet_extension(fn):
-	from .wallet import Wallet
-	if not Wallet.ext_to_type(get_extension(fn)):
-		die( 'BadFileExtension', f'{fn!r}: unrecognized seed source file extension' )
+	from .wallet import get_wallet_data
+	get_wallet_data( ext=get_extension(fn), die_on_fail=True ) # raises exception on failure
 
 def make_full_path(outdir,outfile):
 	return os.path.normpath(os.path.join(outdir, os.path.basename(outfile)))

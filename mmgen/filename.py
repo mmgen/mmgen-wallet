@@ -30,7 +30,7 @@ class Filename(MMGenObject):
 
 	def __init__(self,fn,base_class=None,subclass=None,proto=None,write=False):
 		"""
-		'base_class' - a base class with an 'ext_to_type' method
+		'base_class' - a base class with an 'ext_to_cls' method
 		'subclass'   - a subclass with an 'ext' attribute
 
 		One or the other must be provided, but not both.
@@ -52,7 +52,7 @@ class Filename(MMGenObject):
 			die(3,f'Class {(subclass or base_class).__name__!r} does not support the Filename API')
 
 		if base_class:
-			subclass = base_class.ext_to_type(self.ext,proto)
+			subclass = base_class.ext_to_cls( self.ext, proto )
 			if not subclass:
 				die( 'BadFileExtension', f'{self.ext!r}: not a recognized file extension for {base_class}' )
 

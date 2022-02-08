@@ -53,7 +53,7 @@ class Completed(Base):
 		return MMGenTxFile(self)
 
 	@classmethod
-	def ext_to_type(cls,ext,proto):
+	def ext_to_cls(cls,ext,proto):
 		"""
 		see twctl:import_token()
 		"""

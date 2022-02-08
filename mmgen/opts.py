@@ -469,23 +469,23 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 			end ))
 
 	def chk_in_fmt(key,val,desc):
-		from .wallet import Wallet,IncogWallet,Brainwallet,IncogWalletHidden
-		sstype = Wallet.fmt_code_to_type(val)
-		if not sstype:
+		from .wallet import get_wallet_data
+		wd = get_wallet_data(fmt_code=val)
+		if not wd:
 			opt_unrecognized(key,val)
 		if key == 'out_fmt':
 			p = 'hidden_incog_output_params'
 
-			if sstype == IncogWalletHidden and not getattr(opt,p):
+			if wd.type == 'incog_hidden' and not getattr(opt,p):
 				die( 'UserOptError',
 					'Hidden incog format output requested.  ' +
 					f'You must supply a file and offset with the {fmt_opt(p)!r} option' )
 
-			if issubclass(sstype,IncogWallet) and opt.old_incog_fmt:
+			if wd.base_type == 'incog_base' and opt.old_incog_fmt:
 				opt_display(key,val,beg='Selected',end=' ')
 				opt_display('old_incog_fmt',beg='conflicts with',end=':\n')
 				die( 'UserOptError', 'Export to old incog wallet format unsupported' )
-			elif issubclass(sstype,Brainwallet):
+			elif wd.type == 'brain':
 				die( 'UserOptError', 'Output to brainwallet format unsupported' )
 
 	chk_out_fmt = chk_in_fmt
@@ -515,8 +515,9 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 
 		if hasattr(opt,key2):
 			val2 = getattr(opt,key2)
-			from .wallet import IncogWalletHidden
-			if val2 and val2 not in IncogWalletHidden.fmt_codes:
+			from .wallet import get_wallet_data
+			wd = get_wallet_data('incog_hidden')
+			if val2 and val2 not in wd.fmt_codes:
 				die( 'UserOptError', f'Option conflict:\n  {fmt_opt(key)}, with\n  {fmt_opt(key2)}={val2}' )
 
 	chk_hidden_incog_output_params = chk_hidden_incog_input_params

@@ -23,7 +23,7 @@ ts_ref.py: Reference file tests for the test.py test suite
 import os
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.wallet import MMGenMnemonic
+from mmgen.wallet import get_wallet_cls
 from ..include.common import *
 from .common import *
 
@@ -163,7 +163,7 @@ class TestSuiteRef(TestSuiteBase,TestSuiteShared):
 
 	def ref_words_to_subwallet_chk(self,ss_idx):
 		wf = dfl_words_file
-		ocls = MMGenMnemonic
+		ocls = get_wallet_cls('words')
 		args = ['-d',self.tr.trash_dir,'-o',ocls.fmt_codes[-1],wf,ss_idx]
 
 		t = self.spawn('mmgen-subwalletgen',args,extra_desc='(generate subwallet)')

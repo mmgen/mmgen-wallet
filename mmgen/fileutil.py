@@ -116,9 +116,9 @@ def get_seed_file(cmd_args,nargs,invoked_as=None):
 
 	from .opts import opt
 	from .filename import find_file_in_dir
-	from .wallet import MMGenWallet
+	from .wallet.mmgen import wallet
 
-	wf = find_file_in_dir(MMGenWallet,g.data_dir)
+	wf = find_file_in_dir(wallet,g.data_dir)
 
 	wd_from_opt = bool(opt.hidden_incog_input_params or opt.in_fmt) # have wallet data from opt?
 

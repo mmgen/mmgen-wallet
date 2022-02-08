@@ -1,0 +1,26 @@
+#!/usr/bin/env python3
+#
+# mmgen = Multi-Mode GENerator, a command-line cryptocurrency wallet
+# Copyright (C)2013-2022 The MMGen Project <mmgen@tuta.io>
+# Licensed under the GNU General Public License, Version 3:
+#   https://www.gnu.org/licenses
+# Public project repositories:
+#   https://github.com/mmgen/mmgen
+#   https://gitlab.com/mmgen/mmgen
+
+"""
+wallet.bip39: BIP39 mnemonic wallet class
+"""
+
+from .mnemonic import wallet
+
+class wallet(wallet):
+
+	desc = 'BIP39 mnemonic data'
+	mn_type = 'BIP39'
+	wl_id = 'bip39'
+
+	def __init__(self,*args,**kwargs):
+		from ..bip39 import bip39
+		self.conv_cls = bip39
+		super().__init__(*args,**kwargs)

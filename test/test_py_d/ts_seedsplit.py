@@ -22,7 +22,7 @@ ts_seedsplit.py: Seed split/join tests for the test.py test suite
 
 from mmgen.globalvars import g
 from mmgen.opts import opt
-from mmgen.wallet import Wallet,MMGenWallet,IncogWallet,IncogWalletHex,IncogWalletHidden,WalletEnc
+from mmgen.wallet import get_wallet_cls
 
 from .ts_base import *
 
@@ -30,7 +30,7 @@ ref_wf = 'test/ref/98831F3A.bip39'
 ref_sid = '98831F3A'
 wpasswd = 'abc'
 sh1_passwd = 'xyz'
-dfl_wcls = MMGenWallet
+dfl_wcls = get_wallet_cls('mmgen')
 
 class TestSuiteSeedSplit(TestSuiteBase):
 	'splitting and joining seeds'
@@ -111,11 +111,11 @@ class TestSuiteSeedSplit(TestSuiteBase):
 		else:
 			pat = f'master share #{master}'
 		t.expect(pat,regex=True)
-		ocls = Wallet.fmt_code_to_type(ofmt)
-		if issubclass(ocls,WalletEnc):
+		ocls = get_wallet_cls(fmt_code=ofmt)
+		if ocls.enc:
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,sh1_passwd)
-			if ocls == IncogWalletHidden:
+			if ocls.type == 'incog_hidden':
 				t.hincog_create(1234)
 		t.written_to_file(capfirst(ocls.desc))
 		return t
@@ -134,23 +134,26 @@ class TestSuiteSeedSplit(TestSuiteBase):
 				+ shares)
 		if bad_invocation:
 			return t
-		icls = ( MMGenWallet if 'mmdat' in in_exts
-			else IncogWallet if 'mmincog' in in_exts
-			else IncogWalletHex if 'mmincox' in in_exts
-			else IncogWalletHidden if '-H' in add_args
+		icls = ( dfl_wcls if 'mmdat' in in_exts
+			else get_wallet_cls('incog') if 'mmincog' in in_exts
+			else get_wallet_cls('incog_hex') if 'mmincox' in in_exts
+			else get_wallet_cls('incog_hidden') if '-H' in add_args
 			else None )
-		if icls in (IncogWallet,IncogWalletHex,IncogWalletHidden):
+		if icls.type.startswith('incog'):
 			t.hash_preset(icls.desc,'1')
 		if icls:
 			t.passphrase(icls.desc,sh1_passwd)
 		if master:
 			fs = "master share #{}, split id.*'{}'.*, share count {}"
-			pat = fs.format(master,id_str or 'default',len(shares)+(icls==IncogWalletHidden))
+			pat = fs.format(
+				master,
+				id_str or 'default',
+				len(shares) + (icls.type=='incog_hidden') )
 			t.expect(pat,regex=True)
 		sid_cmp = strip_ansi_escapes(t.expect_getend('Joined Seed ID: '))
 		cmp_or_die(sid,sid_cmp)
-		ocls = Wallet.fmt_code_to_type(ofmt)
-		if ocls == MMGenWallet:
+		ocls = get_wallet_cls(fmt_code=ofmt)
+		if ocls.type == 'mmgen':
 			t.hash_preset('new '+ocls.desc,'1')
 			t.passphrase_new('new '+ocls.desc,wpasswd)
 		t.written_to_file(capfirst(ocls.desc))

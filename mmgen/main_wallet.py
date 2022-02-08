@@ -22,8 +22,7 @@ mmgen/main_wallet:  Entry point for MMGen wallet-related scripts
 
 import os
 from .common import *
-from .wallet import Wallet,MMGenWallet
-from .filename import find_file_in_dir
+from .wallet import Wallet,get_wallet_cls
 
 usage = '[opts] [infile]'
 nargs = 1
@@ -234,7 +233,7 @@ if invoked_as == 'passchg' and ss_in.infile.dirname == g.data_dir:
 elif invoked_as == 'gen' and not opt.outdir and not opt.stdout:
 	from .filename import find_file_in_dir
 	if (
-		not find_file_in_dir( MMGenWallet, g.data_dir )
+		not find_file_in_dir( get_wallet_cls('mmgen'), g.data_dir )
 		and keypress_confirm(
 			'Make this wallet your default and move it to the data directory?',
 			default_yes = True ) ):

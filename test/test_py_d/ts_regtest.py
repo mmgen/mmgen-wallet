@@ -27,14 +27,15 @@ from mmgen.opts import opt
 from mmgen.util import die,gmsg
 from mmgen.protocol import init_proto
 from mmgen.addrlist import AddrList
-from mmgen.wallet import MMGenWallet
+from mmgen.wallet import Wallet,get_wallet_cls
 from ..include.common import *
 from .common import *
 
 pat_date = r'\b\d\d-\d\d-\d\d\b'
 pat_date_time = r'\b\d\d\d\d-\d\d-\d\d\s+\d\d:\d\d\b'
 
-dfl_wcls = MMGenWallet
+dfl_wcls = get_wallet_cls('mmgen')
+
 rt_pw = 'abc-α'
 rt_data = {
 	'tx_fee': {'btc':'0.0001','bch':'0.001','ltc':'0.01'},
@@ -338,7 +339,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		return os.path.basename(get_file_with_ext(self._user_dir(user),'mmdat'))[:8]
 
 	def _get_user_subsid(self,user,subseed_idx):
-		fn = get_file_with_ext(self._user_dir(user),MMGenWallet.ext)
+		fn = get_file_with_ext(self._user_dir(user),dfl_wcls.ext)
 		silence()
 		w = Wallet( fn=fn, passwd_file=os.path.join(self.tmpdir,'wallet_password') )
 		end_silence()

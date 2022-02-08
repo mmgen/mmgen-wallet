@@ -81,8 +81,8 @@ def help_notes_func(proto,po,k):
 			])
 
 		def fmt_codes():
-			from .wallet import Wallet
-			return '\n  '.join( Wallet.format_fmt_codes().splitlines() )
+			from .wallet import format_fmt_codes
+			return '\n  '.join( format_fmt_codes().splitlines() )
 
 		def coin_id():
 			return proto.coin_id

@@ -24,7 +24,7 @@ from .common import *
 from .obj import MMGenList
 from .addr import MMGenAddrType
 from .addrlist import AddrIdxList,KeyAddrList
-from .wallet import Wallet,WalletUnenc,WalletEnc,MMGenWallet
+from .wallet import Wallet,get_wallet_extensions,get_wallet_cls
 
 saved_seeds = {}
 
@@ -117,13 +117,12 @@ def get_tx_files(opt,args):
 
 def get_seed_files(opt,args):
 	# favor unencrypted seed sources first, as they don't require passwords
-	u,e = WalletUnenc,WalletEnc
-	ret = _pop_matching_fns(args,u.get_extensions())
+	ret = _pop_matching_fns( args, get_wallet_extensions('unenc') )
 	from .filename import find_file_in_dir
-	wf = find_file_in_dir(MMGenWallet,g.data_dir) # Make this the first encrypted ss in the list
+	wf = find_file_in_dir(get_wallet_cls('mmgen'),g.data_dir) # Make this the first encrypted ss in the list
 	if wf:
 		ret.append(wf)
-	ret += _pop_matching_fns(args,e.get_extensions())
+	ret += _pop_matching_fns( args, get_wallet_extensions('enc') )
 	if not (ret or opt.mmgen_keys_from_file or opt.keys_from_file): # or opt.use_wallet_dat
 		die(1,'You must specify a seed or key source!')
 	return ret

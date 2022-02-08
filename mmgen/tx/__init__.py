@@ -44,7 +44,7 @@ def _get_cls_info(clsname,modname,args,kwargs):
 		from ..util import get_extension
 		from .completed import Completed
 		ext = get_extension( kwargs['filename'] )
-		cls = Completed.ext_to_type( ext, proto )
+		cls = Completed.ext_to_cls( ext, proto )
 		if not cls:
 			die(1,f'{ext!r}: unrecognized file extension for CompletedTX')
 		clsname = cls.__name__
