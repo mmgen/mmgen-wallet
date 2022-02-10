@@ -138,7 +138,7 @@ if opt.mnemonic_fmt:
 
 from .wallet import Wallet
 from .tx import UnsignedTX
-from .txsign import txsign
+from .tx.sign import txsign
 from .protocol import init_proto
 from .rpc import rpc_init
 

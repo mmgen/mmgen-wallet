@@ -17,11 +17,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-txfile.py:  Transaction file operations for the MMGen suite
+tx.file:  Transaction file operations for the MMGen suite
 """
 
-from .common import *
-from .obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
+from ..common import *
+from ..obj import MMGenObject,HexStr,MMGenTxID,CoinTxID,MMGenTxLabel
 
 class MMGenTxFile(MMGenObject):
 
@@ -54,7 +54,7 @@ class MMGenTxFile(MMGenObject):
 			}[desc]
 			return io_list( parent=tx, data=[io(tx.proto,**e) for e in d] )
 
-		from .fileutil import get_data_from_file
+		from ..fileutil import get_data_from_file
 		tx_data = get_data_from_file(infile,tx.desc+' data',quiet=quiet_open)
 
 		try:
@@ -78,7 +78,7 @@ class MMGenTxFile(MMGenObject):
 				c = tx_data.pop(-1)
 				if c != '-':
 					desc = 'encoded comment (not base58)'
-					from .baseconv import baseconv
+					from ..baseconv import baseconv
 					comment = baseconv('b58').tobytes(c).decode()
 					assert comment != False,'invalid comment'
 					desc = 'comment'
@@ -100,7 +100,7 @@ class MMGenTxFile(MMGenObject):
 			desc = 'chain token in metadata'
 			tx.chain = metadata.pop(0).lower() if len(metadata) == 5 else 'mainnet'
 
-			from .protocol import CoinProtocol,init_proto
+			from ..protocol import CoinProtocol,init_proto
 			network = CoinProtocol.Base.chain_name_to_network(coin,tx.chain)
 
 			desc = 'initialization of protocol'
@@ -175,7 +175,7 @@ class MMGenTxFile(MMGenObject):
 		]
 
 		if tx.label:
-			from .baseconv import baseconv
+			from ..baseconv import baseconv
 			lines.append(baseconv('b58').frombytes(tx.label.encode(),tostr=True))
 
 		if tx.coin_txid:
@@ -205,7 +205,7 @@ class MMGenTxFile(MMGenObject):
 		if not self.fmt_data:
 			self.fmt_data = self.format()
 
-		from .fileutil import write_data_to_file
+		from ..fileutil import write_data_to_file
 		write_data_to_file(
 			outfile               = self.filename,
 			data                  = self.fmt_data,
@@ -217,7 +217,7 @@ class MMGenTxFile(MMGenObject):
 
 	@classmethod
 	def get_proto(cls,filename,quiet_open=False):
-		from .tx import BaseTX
+		from . import BaseTX
 		tmp_tx = BaseTX()
 		cls(tmp_tx).parse(filename,metadata_only=True,quiet_open=quiet_open)
 		return tmp_tx.proto

@@ -32,7 +32,7 @@ def _get_cls_info(clsname,modname,args,kwargs):
 	elif 'data' in kwargs:
 		proto = kwargs['data']['proto']
 	elif 'filename' in kwargs:
-		from ..txfile import MMGenTxFile
+		from .file import MMGenTxFile
 		proto = MMGenTxFile.get_proto( kwargs['filename'], quiet_open=True )
 	elif clsname == 'Base':
 		proto = None

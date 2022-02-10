@@ -117,7 +117,7 @@ FMT CODES:
 cmd_args = opts.init(opts_data)
 
 from .tx import NewTX,OnlineSignedTX
-from .txsign import *
+from .tx.sign import *
 
 seed_files = get_seed_files(opt,cmd_args)
 

@@ -7,7 +7,7 @@ import re
 
 from mmgen.common import *
 from mmgen.tx import NewTX,CompletedTX
-from mmgen.txfile import MMGenTxFile
+from mmgen.tx.file import MMGenTxFile
 from mmgen.daemon import CoinDaemon
 from mmgen.protocol import init_proto
 

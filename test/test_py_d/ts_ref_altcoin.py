@@ -86,7 +86,7 @@ class TestSuiteRefAltcoin(TestSuiteRef,TestSuiteBase):
 		"""
 		self.write_to_tmpfile(pwfile,dfl_wpasswd)
 		passfile = joinpath(self.tmpdir,pwfile)
-		from mmgen.txfile import MMGenTxFile
+		from mmgen.tx.file import MMGenTxFile
 		src = TestSuiteRef.sources['ref_tx_file']
 		for coin,files in src.items():
 			if coin == 'mm1':

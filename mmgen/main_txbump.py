@@ -107,7 +107,7 @@ from .fileutil import check_infile
 check_infile(tx_file)
 
 from .tx import *
-from .txsign import *
+from .tx.sign import *
 
 seed_files = get_seed_files(opt,cmd_args) if (cmd_args or opt.send) else None
 

@@ -31,7 +31,7 @@ class Completed(Base):
 			self.__dict__ = data
 			self.name = type(self).__name__
 		else:
-			from ..txfile import MMGenTxFile
+			from .file import MMGenTxFile
 			MMGenTxFile(self).parse(filename,quiet_open=quiet_open)
 
 			self.check_serialized_integrity()
@@ -49,7 +49,7 @@ class Completed(Base):
 
 	@property
 	def file(self):
-		from ..txfile import MMGenTxFile
+		from .file import MMGenTxFile
 		return MMGenTxFile(self)
 
 	@classmethod

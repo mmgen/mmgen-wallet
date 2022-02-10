@@ -108,7 +108,7 @@ for i in infiles:
 if not opt.info and not opt.terse_info:
 	do_license_msg(immed=True)
 
-from .txsign import *
+from .tx.sign import *
 
 tx_files   = get_tx_files(opt,infiles)
 seed_files = get_seed_files(opt,infiles)
