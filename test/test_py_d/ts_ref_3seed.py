@@ -84,27 +84,31 @@ class TestSuiteRef3Seed(TestSuiteBase,TestSuiteShared):
 		wf = joinpath(ref_dir,TestSuiteWalletConv.sources[str(self.seed_len)]['ref_wallet'])
 		return self.walletchk(wf,pf=None,sid=self.seed_id)
 
-	def ref_ss_chk(self,ss=None):
-		wf = joinpath(ref_dir,f'{self.seed_id}.{ss.ext}')
-		return self.walletchk(wf,pf=None,wcls=ss,sid=self.seed_id)
+	def ref_ss_chk(self,ss_type):
+		ss = get_wallet_cls(ss_type)
+		return self.walletchk(
+			wf   = joinpath(ref_dir,f'{self.seed_id}.{ss.ext}'),
+			pf   = None,
+			wcls = ss,
+			sid  = self.seed_id )
 
 	def ref_seed_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('seed'))
+		return self.ref_ss_chk('seed')
 
 	def ref_hex_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('mmhex'))
+		return self.ref_ss_chk('mmhex')
 
 	def ref_plainhex_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('plainhex'))
+		return self.ref_ss_chk('plainhex')
 
 	def ref_dieroll_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('dieroll'))
+		return self.ref_ss_chk('dieroll')
 
 	def ref_mn_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('words'))
+		return self.ref_ss_chk('words')
 
 	def ref_bip39_chk(self):
-		return self.ref_ss_chk(ss=get_wallet_cls('bip39'))
+		return self.ref_ss_chk('bip39')
 
 	def ref_hincog_chk(self,desc='hidden incognito data'):
 		source = TestSuiteWalletConv.sources[str(self.seed_len)]
