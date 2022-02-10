@@ -36,7 +36,7 @@ class xmrseed(baseconv):
 
 	def __init__(self,wl_id='xmrseed'):
 		assert wl_id == 'xmrseed', "initialize with 'xmrseed' for compatibility with baseconv API"
-		from .mn_monero import words
+		from .wordlist.monero import words
 		self.digits = words
 		self.wl_id = 'xmrseed'
 

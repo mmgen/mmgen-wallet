@@ -49,7 +49,7 @@ class bip39(baseconv):
 
 	def __init__(self,wl_id='bip39'):
 		assert wl_id == 'bip39', "initialize with 'bip39' for compatibility with baseconv API"
-		from .mn_bip39 import words
+		from .wordlist.bip39 import words
 		self.digits = words
 		self.wl_id = 'bip39'
 

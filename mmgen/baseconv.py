@@ -82,7 +82,7 @@ class baseconv(object):
 	def __init__(self,wl_id):
 
 		if wl_id == 'mmgen':
-			from .mn_electrum import words
+			from .wordlist.electrum import words
 			self.constants['digits'][wl_id] = words
 		elif wl_id not in self.constants['digits']:
 			raise ValueError(f'{wl_id}: unrecognized mnemonic ID')
