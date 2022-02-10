@@ -57,7 +57,7 @@ opts_data = {
 
 cmd_args = opts.init(opts_data)
 
-from .regtest import MMGenRegtest
+from .base_proto.bitcoin.regtest import MMGenRegtest
 
 def check_num_args():
 	m = getattr(MMGenRegtest,cmd_args[0])

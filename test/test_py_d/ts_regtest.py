@@ -424,7 +424,7 @@ class TestSuiteRegtest(TestSuiteBase,TestSuiteShared):
 		if not self.deterministic:
 			return 'skip'
 		self.spawn('',msg_only=True)
-		from mmgen.regtest import MMGenRegtest
+		from mmgen.base_proto.bitcoin.regtest import MMGenRegtest
 		rt = MMGenRegtest(self.proto.coin)
 		await rt.stop()
 		from shutil import rmtree

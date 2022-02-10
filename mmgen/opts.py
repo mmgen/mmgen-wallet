@@ -574,7 +574,7 @@ def check_usr_opts(usr_opts): # Raises an exception if any check fails
 #			die( 'UserOptError', f'--rbf requested, but {proto.coin} does not support replace-by-fee transactions' )
 
 #	def chk_bob(key,val,desc):
-#		from .regtest import MMGenRegtest
+#		from .base_proto.bitcoin.regtest import MMGenRegtest
 #		try:
 #			os.stat(os.path.join(MMGenRegtest(g.coin).d.datadir,'regtest','debug.log'))
 #		except:

@@ -17,14 +17,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-regtest: Coin daemon regression test mode setup and operations for the MMGen suite
+base_proto.bitcoin.regtest: Coin daemon regression test mode setup and operations
 """
 
 import os,time,shutil,json,re
 from subprocess import run,PIPE
-from .common import *
-from .protocol import init_proto
-from .rpc import rpc_init,json_encoder
+from ...common import *
+from ...protocol import init_proto
+from ...rpc import rpc_init,json_encoder
 
 def create_data_dir(data_dir):
 	try: os.stat(os.path.join(data_dir,'regtest'))
@@ -47,7 +47,7 @@ miner_addr = {
 }
 
 def create_hdseed(proto):
-	from .tool.api import tool_api
+	from ...tool.api import tool_api
 	t = tool_api()
 	t.init_coin(proto.coin,proto.network)
 	t.addrtype = 'compressed' if proto.coin == 'BCH' else 'bech32'
@@ -77,7 +77,7 @@ class MMGenRegtest(MMGenObject):
 		self.coin = coin.lower()
 		assert self.coin in self.coins, f'{coin!r}: invalid coin for regtest'
 
-		from .daemon import CoinDaemon
+		from ...daemon import CoinDaemon
 		self.proto = init_proto(self.coin,regtest=True,need_amt=True)
 		self.d = CoinDaemon(self.coin+'_rt',test_suite=g.test_suite)
 
