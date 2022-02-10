@@ -40,7 +40,7 @@ class GlobalContext(Lockable):
 	  3 - command line
 	"""
 	_autolock = False
-	_set_ok = ('user_entropy','session')
+	_set_ok = ('session',)
 	_reset_ok = ('stdout','stderr','accept_defaults')
 	_use_class_attr = True
 
@@ -66,7 +66,6 @@ class GlobalContext(Lockable):
 
 	# Variables - these might be altered at runtime:
 
-	user_entropy    = b''
 	dfl_hash_preset = '3'
 	usr_randchars   = 30
 
