@@ -23,9 +23,9 @@ from . import Wallet,wallet_data,get_wallet_cls
 class WalletMeta(type):
 
 	def __init__(cls,name,bases,namespace):
-		cls.type = cls.__module__.split('.')[-1]
-		if cls.type in wallet_data:
-			for k,v in wallet_data[cls.type]._asdict().items():
+		t = cls.__module__.split('.')[-1]
+		if t in wallet_data:
+			for k,v in wallet_data[t]._asdict().items():
 				setattr(cls,k,v)
 
 class wallet(MMGenObject,metaclass=WalletMeta):
@@ -42,14 +42,7 @@ class wallet(MMGenObject,metaclass=WalletMeta):
 		pass
 
 	def __init__(self,
-		fn            = None,
-		ss            = None,
-		seed_bin      = None,
-		seed          = None,
-		passchg       = False,
 		in_data       = None,
-		ignore_in_fmt = False,
-		in_fmt        = None,
 		passwd_file   = None ):
 
 		self.passwd_file = passwd_file or opt.passwd_file

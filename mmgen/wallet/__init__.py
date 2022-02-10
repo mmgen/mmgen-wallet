@@ -22,55 +22,60 @@ from ..objmethods import MMGenObject
 from ..seed import Seed
 
 _wd = namedtuple('wallet_data', ['type','name','ext','base_type','enc','fmt_codes'])
-_pd = namedtuple('partial_wallet_data',['name','ext','base_type','enc','fmt_codes'])
 
 wallet_data = {
-	'bip39':       _pd('BIP39Mnemonic',    'bip39',  'mnemonic',  False,('bip39',)),
-	'brain':       _pd('Brainwallet',      'mmbrain',None,        True, ('mmbrain','brainwallet','brain','bw')),
-	'dieroll':     _pd('DieRollWallet',    'b6d',    None,        False,('b6d','die','dieroll')),
-	'incog':       _pd('IncogWallet',      'mmincog','incog_base',True, ('mmincog','incog','icg','i')),
-	'incog_hex':   _pd('IncogWalletHex',   'mmincox','incog_base',True, ('mmincox','incox','incog_hex','ix','xi')),
-	'incog_hidden':_pd('IncogWalletHidden',None,     'incog_base',True, ('incog_hidden','hincog','ih','hi')),
-	'mmgen':       _pd('MMGenWallet',      'mmdat',  None,        True, ('wallet','w')),
-	'mmhex':       _pd('MMGenHexSeedFile', 'mmhex',  None,        False,('seedhex','hexseed','mmhex')),
-	'plainhex':    _pd('PlainHexSeedFile', 'hex',    None,        False,('hex','rawhex','plainhex')),
-	'seed':        _pd('MMGenSeedFile',    'mmseed', None,        False,('mmseed','seed','s')),
-	'words':       _pd('MMGenMnemonic',    'mmwords','mnemonic',  False,('mmwords','words','mnemonic','mn','m')),
+	'bip39':       _wd('bip39',       'BIP39Mnemonic',    'bip39',  'mnemonic',  False,('bip39',)),
+	'brain':       _wd('brain',       'Brainwallet',      'mmbrain',None,        True, ('mmbrain','brainwallet','brain','bw')),
+	'dieroll':     _wd('dieroll',     'DieRollWallet',    'b6d',    None,        False,('b6d','die','dieroll')),
+	'incog':       _wd('incog',       'IncogWallet',      'mmincog','incog_base',True, ('mmincog','incog','icg','i')),
+	'incog_hex':   _wd('incog_hex',   'IncogWalletHex',   'mmincox','incog_base',True, ('mmincox','incox','incog_hex','ix','xi')),
+	'incog_hidden':_wd('incog_hidden','IncogWalletHidden',None,     'incog_base',True, ('incog_hidden','hincog','ih','hi')),
+	'mmgen':       _wd('mmgen',       'MMGenWallet',      'mmdat',  None,        True, ('wallet','w')),
+	'mmhex':       _wd('mmhex',       'MMGenHexSeedFile', 'mmhex',  None,        False,('seedhex','hexseed','mmhex')),
+	'plainhex':    _wd('plainhex',    'PlainHexSeedFile', 'hex',    None,        False,('hex','rawhex','plainhex')),
+	'seed':        _wd('seed',        'MMGenSeedFile',    'mmseed', None,        False,('mmseed','seed','s')),
+	'words':       _wd('words',       'MMGenMnemonic',    'mmwords','mnemonic',  False,('mmwords','words','mnemonic','mn','m')),
 }
 
-def get_wallet_data(*args,**kwargs):
+def get_wallet_data(
+		wtype       = None,
+		fmt_code    = None,
+		ext         = None,
+		die_on_fail = False ):
 
-	if args:
-		return _wd( args[0], *wallet_data[args[0]] )
-
-	for key in ('fmt_code','ext'):
-		if key in kwargs:
-			val = kwargs[key]
-			break
+	if wtype:
+		return wallet_data[wtype]
+	elif fmt_code:
+		for v in wallet_data.values():
+			if fmt_code in v.fmt_codes:
+				return v
+	elif ext is not None: # ext could be the empty string
+		for v in wallet_data.values():
+			if ext == v.ext:
+				return v
 	else:
-		die('{!r}: unrecognized argument'.format( list(kwargs.keys())[0] ))
+		die(4,'no argument supplied!')
 
-	if key == 'fmt_code':
-		for k,v in wallet_data.items():
-			if val in v.fmt_codes:
-				return _wd(k,*v)
-	else:
-		for k,v in wallet_data.items():
-			if val == getattr(v,key):
-				return _wd(k,*v)
+	if die_on_fail:
+		if fmt_code:
+			die(3, f'{fmt_code!r}: unrecognized wallet format code')
+		else:
+			die('BadFileExtension', f'{ext!r}: unrecognized wallet file extension')
 
-	if 'die_on_fail' in kwargs:
-		die( *{
-			'ext':      ('BadFileExtension', f'{val!r}: unrecognized wallet file extension'),
-			'fmt_code': (3, f'{val!r}: unrecognized wallet format code'),
-			'type':     (3, f'{val!r}: unrecognized wallet type'),
-		}[key] )
+def get_wallet_cls(
+		wtype       = None,
+		fmt_code    = None,
+		ext         = None,
+		die_on_fail = False ):
 
-def get_wallet_cls(*args,**kwargs):
 	return getattr(
 		importlib.import_module( 'mmgen.wallet.{}'.format(
-			args[0] if args else get_wallet_data(*args,**kwargs).type)
-		),
+			wtype or
+			get_wallet_data(
+				fmt_code    = fmt_code,
+				ext         = ext,
+				die_on_fail = die_on_fail ).type
+		)),
 		'wallet' )
 
 def get_wallet_extensions(key):
@@ -108,19 +113,18 @@ def Wallet(
 
 	in_fmt = in_fmt or opt.in_fmt
 
-	if opt.out_fmt:
-		ss_out = get_wallet_data(fmt_code=opt.out_fmt)
-		if not ss_out:
-			die(1,f'{opt.out_fmt!r}: unrecognized output format')
-	else:
-		ss_out = None
+	ss_out = (
+		get_wallet_data(
+			fmt_code    = opt.out_fmt,
+			die_on_fail = True ).type
+		if opt.out_fmt else None )
 
 	if seed or seed_bin:
-		me = _get_me( ss_out.type if ss_out else 'mmgen' ) # default to native wallet format
+		me = _get_me( ss_out or 'mmgen' ) # default to native wallet format
 		me.seed = seed or Seed(seed_bin=seed_bin)
 		me.op = 'new'
 	elif ss:
-		me = _get_me( ss.type if passchg else ss_out.type if ss_out else 'mmgen' )
+		me = _get_me( ss.type if passchg else (ss_out or 'mmgen') )
 		me.seed = ss.seed
 		me.ss_in = ss
 		me.op = 'pwchg_new' if passchg else 'conv'
@@ -140,19 +144,12 @@ def Wallet(
 		me = _get_me( get_wallet_data(fmt_code=in_fmt).type )
 		me.op = 'pwchg_old' if passchg else 'old'
 	else: # called with no arguments: initialize with random seed
-		me = _get_me( ss_out.type if ss_out else 'mmgen' ) # default to native wallet format
+		me = _get_me( ss_out or 'mmgen' ) # default to native wallet format
 		me.seed = Seed()
 		me.op = 'new'
 
 	me.__init__(
-		fn            = fn,
-		ss            = ss,
-		seed_bin      = seed_bin,
-		seed          = seed,
-		passchg       = passchg,
-		in_data       = in_data,
-		ignore_in_fmt = ignore_in_fmt,
-		in_fmt        = in_fmt,
-		passwd_file   = passwd_file )
+		in_data     = in_data,
+		passwd_file = passwd_file )
 
 	return me
