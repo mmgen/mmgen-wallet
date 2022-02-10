@@ -86,7 +86,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 	def parse_addr(self,addr):
 
 		if 'B' in self.mmtypes and addr[:len(self.bech32_hrp)] == self.bech32_hrp:
-			import mmgen.bech32 as bech32
+			import mmgen.base_proto.bitcoin.bech32 as bech32
 			ret = bech32.decode(self.bech32_hrp,addr)
 
 			if ret[0] != self.witness_vernum:
@@ -117,7 +117,7 @@ class mainnet(CoinProtocol.Secp256k1): # chainparams.cpp
 
 	def pubhash2bech32addr(self,pubhash):
 		d = list(pubhash)
-		import mmgen.bech32 as bech32
+		import mmgen.base_proto.bitcoin.bech32 as bech32
 		return bech32.bech32_encode(self.bech32_hrp,[self.witness_vernum]+bech32.convertbits(d,8,5))
 
 class testnet(mainnet):
